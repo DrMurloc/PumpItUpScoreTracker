@@ -163,7 +163,7 @@ internal sealed class EFCommentReportRepository : ICommentReportRepository
         return new ReportQueueRow(report.Id, comment.Id, comment.ChartId, comment.UserId,
             comment.CommunityId, comment.Text, report.ReporterUserId,
             ParseReason(report.Reason),
-            report.CreatedAt);
+            report.CreatedAt, report.RenderingLocale);
     }
 
     private static CommentReport Hydrate(CommentReportEntity entity)

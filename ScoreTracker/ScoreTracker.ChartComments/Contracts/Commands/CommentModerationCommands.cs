@@ -8,7 +8,15 @@ namespace ScoreTracker.ChartComments.Contracts.Commands;
 ///     this contract.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record ReportCommentCommand(Guid CommentId, CommentReportReason Reason) : IRequest;
+public sealed record ReportCommentCommand(
+    Guid CommentId,
+    CommentReportReason Reason,
+    /// <summary>
+    ///     The rendering locale the reporter was reading, null for the original. Stamped on the
+    ///     report because translation launders the thing being detected: a moderator reading the
+    ///     original cannot evaluate a report filed against the es-ES rendering.
+    /// </summary>
+    string? ViewedLocale = null) : IRequest;
 
 /// <summary>
 ///     Closes one report on one desk, leaving the comment standing. The site queue requires the

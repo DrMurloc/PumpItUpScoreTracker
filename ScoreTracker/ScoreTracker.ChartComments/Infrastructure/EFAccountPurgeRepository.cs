@@ -46,11 +46,11 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
         _clock = clock;
     }
 
-    public async Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Guid>> DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default)
     {
         // A purge of nobody would tombstone every row already tombstoned. Guarded rather than
         // assumed: this runs from a bus consumer that re-fires daily for a week.
-        if (userId == Guid.Empty) return;
+        if (userId == Guid.Empty) return Array.Empty<Guid>();
 
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var now = _clock.Now;
@@ -95,6 +95,12 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
             .Where(r => myCommentIds.Contains(r.CommentId) || tombstonedIds.Contains(r.CommentId))
             .ExecuteDeleteAsync(cancellationToken);
 
+        // Renderings are the same shape as revisions: no user key of their own, text derived
+        // from the purged words, reachable only by comment id — tombstoned roots included.
+        await database.Set<CommentRenderingEntity>()
+            .Where(r => myCommentIds.Contains(r.CommentId) || tombstonedIds.Contains(r.CommentId))
+            .ExecuteDeleteAsync(cancellationToken);
+
         // 3. Everything else of theirs goes outright: leaf roots, replies, notes. Votes cast on a
         //    comment that is disappearing go with it, and votes this account cast anywhere go too.
         await database.Set<CommentVoteEntity>()
@@ -119,5 +125,7 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
         //    carries. Mutes this account IMPOSED on others stay — the mute belongs to the club,
         //    not the moderator, like DeletedByUserId outliving its account.
         await UserDataPurge.DeleteAll(_factory, UserOwned, userId, cancellationToken);
+
+        return myCommentIds.Concat(tombstonedIds).Distinct().ToArray();
     }
 }

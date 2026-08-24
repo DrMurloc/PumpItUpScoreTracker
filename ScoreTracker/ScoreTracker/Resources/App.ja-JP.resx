@@ -599,6 +599,9 @@
   <data name="Added {0}" xml:space="preserve">
     <value>{0} に追加</value>
   </data>
+  <data name="Added {0} charts, skipped {1} the session could not take." xml:space="preserve">
+    <value>{0}件の譜面を追加し、セッションに入らない{1}件をスキップしました。</value>
+  </data>
   <data name="Additional Comments" xml:space="preserve">
 	  <value>追加コメント</value>
   </data>
@@ -2217,6 +2220,9 @@
   <data name="Download Scores" xml:space="preserve">
     <value>スコアダウンロード</value>
   </data>
+  <data name="Drain now" xml:space="preserve">
+    <value>今すぐ処理</value>
+  </data>
   <data name="Draw a random set of charts" xml:space="preserve">
     <value>ランダムに譜面を抽選</value>
   </data>
@@ -3174,6 +3180,9 @@
   <data name="Import Failures" xml:space="preserve">
     <value>インポートできなかった行があります。失敗分をダウンロードして修正し、再アップロードしてください。</value>
   </data>
+  <data name="Import from your recent plays" xml:space="preserve">
+    <value>最近のプレイからインポート</value>
+  </data>
   <data name="Import Lede" xml:space="preserve">
     <value>PIU Scores が piugame.com のアカウントにログインし、新しいスコアと更新されたスコアをインポートします。開始後はこのページを離れても、バックグラウンドで完了します。</value>
   </data>
@@ -3254,6 +3263,9 @@
   </data>
   <data name="In" xml:space="preserve">
     <value>収録</value>
+  </data>
+  <data name="In flight" xml:space="preserve">
+    <value>処理中</value>
   </data>
   <data name="in our database, locked so it can't be opened alone." xml:space="preserve">
     <value>私たちのデータベース内にあり、単体では開けないようロックされています。</value>
@@ -3492,6 +3504,9 @@
   </data>
   <data name="Last seen" xml:space="preserve">
     <value>最終確認</value>
+  </data>
+  <data name="Last submitted {0} · last collected {1}" xml:space="preserve">
+    <value>最終送信 {0} · 最終取得 {1}</value>
   </data>
   <data name="Last Updated" xml:space="preserve">
     <value>最近更新</value>
@@ -4366,6 +4381,9 @@
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>ランキングはまだありません - 最初の週次インポート後に表示されます。</value>
   </data>
+  <data name="No recent plays found in your score journal. Run Import Scores first, then come back." xml:space="preserve">
+    <value>スコアジャーナルに最近のプレイが見つかりません。先にスコアインポートを実行してから、戻ってきてください。</value>
+  </data>
   <data name="No Recorded Scores" xml:space="preserve">
 	  <value>スコア記録なし</value>
   </data>
@@ -4482,6 +4500,12 @@
   </data>
   <data name="None given" xml:space="preserve">
     <value>指定なし</value>
+  </data>
+  <data name="None of those plays could be added — they repeat charts already in the session, or it is already full." xml:space="preserve">
+    <value>それらのプレイは追加できませんでした。すでにセッションにある譜面と重複しているか、セッションが満杯です。</value>
+  </data>
+  <data name="None of your recent plays score on this board. Check you are on the right chart type." xml:space="preserve">
+    <value>最近のプレイはこのボードで得点になりません。譜面タイプが合っているか確認してください。</value>
   </data>
   <data name="Normalize to 100%" xml:space="preserve">
     <value>100%に正規化</value>
@@ -4679,6 +4703,9 @@
   <data name="Nothing is shared with tools" xml:space="preserve">
     <value>ツールと共有しているものはありません</value>
   </data>
+  <data name="Nothing is translated yet, so there is nothing to re-translate." xml:space="preserve">
+    <value>まだ翻訳されたものがないため、再翻訳するものはありません。</value>
+  </data>
   <data name="nothing lost — a perfect 1,000,000" xml:space="preserve">
     <value>失点なし — 完璧な1,000,000点</value>
   </data>
@@ -4838,6 +4865,9 @@
   <data name="Oldest Score" xml:space="preserve">
     <value>最も古いスコア</value>
   </data>
+  <data name="oldest {0}" xml:space="preserve">
+    <value>最も古いもの {0}</value>
+  </data>
   <data name="On a {0} each plate is worth +{1} a step through {2} and +{3} a step from {4} up, so Rough Game to Perfect Game on one chart is +{5}." xml:space="preserve">
     <value>{0}ではプレートは{2}までは1段ごとに+{1}、{4}から上は1段ごとに+{3}の価値なので、1譜面でRough GameからPerfect Gameまでは+{5}です。</value>
   </data>
@@ -4981,6 +5011,9 @@
   </data>
   <data name="Order by" xml:space="preserve">
     <value>並び替え</value>
+  </data>
+  <data name="Original" xml:space="preserve">
+    <value>原文</value>
   </data>
   <data name="Original Chabala Tier List" xml:space="preserve">
     <value>Chabala氏のオリジナルティアリスト</value>
@@ -5849,6 +5882,9 @@
   <data name="Queued" xml:space="preserve">
     <value>キューに追加しました</value>
   </data>
+  <data name="Queued for translation" xml:space="preserve">
+    <value>翻訳待ち</value>
+  </data>
   <data name="Quick calculator" xml:space="preserve">
     <value>簡易計算機</value>
   </data>
@@ -5935,6 +5971,9 @@
   <data name="Re-pricing stored {0} ratings. Nothing is announced." xml:space="preserve">
     <value>保存された {0} の評定を再計算しています。通知は行われません。</value>
   </data>
+  <data name="Re-queue {0} texts, about {1} — confirm" xml:space="preserve">
+    <value>{0} 件を再キュー、約 {1} — 確認</value>
+  </data>
   <data name="Re-rated" xml:space="preserve">
     <value>難度変更</value>
   </data>
@@ -5944,6 +5983,9 @@
   <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
     <value>譜面変更 — {0} ノーツ（以前は {1}）。</value>
   </data>
+  <data name="Re-translate everything" xml:space="preserve">
+    <value>すべて再翻訳</value>
+  </data>
   <data name="Reachable" xml:space="preserve">
     <value>到達可能</value>
   </data>
@@ -5952,6 +5994,9 @@
   </data>
   <data name="Reached {0}" xml:space="preserve">
     <value>{0}に到達</value>
+  </data>
+  <data name="Read in" xml:space="preserve">
+    <value>表示言語</value>
   </data>
   <data name="Read straight up from the end of a bar to see which level it matches." xml:space="preserve">
     <value>バーの端から真上に読むと、どのレベルと同じか分かります。</value>
@@ -6007,6 +6052,9 @@
   <data name="Recent deliveries" xml:space="preserve">
     <value>最近の配信</value>
   </data>
+  <data name="Recent failures" xml:space="preserve">
+    <value>最近の失敗</value>
+  </data>
   <data name="Recent imports" xml:space="preserve">
     <value>最近のインポート</value>
   </data>
@@ -6052,6 +6100,9 @@
   </data>
   <data name="Recorded {0} days ago" xml:space="preserve">
     <value>{0}日前に記録</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>更新</value>
   </data>
   <data name="Refresh popularity" xml:space="preserve">
     <value>人気度を更新</value>
@@ -6292,6 +6343,9 @@
   </data>
   <data name="Roll up supplemented leaderboards" xml:space="preserve">
     <value>補完ランキングを集計</value>
+  </data>
+  <data name="Rolling 30-day spend" xml:space="preserve">
+    <value>直近30日の支出</value>
   </data>
   <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
     <value>今週のボードを今すぐ更新しますか？現在の週が締められ、次のセットが抽選されます。</value>
@@ -6767,6 +6821,9 @@
   <data name="Show more of {0} scores" xml:space="preserve">
     <value>全{0}件のスコアをもっと見る</value>
   </data>
+  <data name="Show original" xml:space="preserve">
+    <value>原文を表示</value>
+  </data>
   <data name="Show Passed in Another Mix" xml:space="preserve">
     <value>別バージョンでパス済みを表示</value>
   </data>
@@ -6805,6 +6862,9 @@
   </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>最も似ていない譜面を表示</value>
+  </data>
+  <data name="Show translation" xml:space="preserve">
+    <value>翻訳を表示</value>
   </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>このチャンネルの登録内容を表示</value>
@@ -7198,6 +7258,9 @@
   <data name="Submit" xml:space="preserve">
     <value>登録</value>
   </data>
+  <data name="Submit and collect are running. Batches can take up to an hour." xml:space="preserve">
+    <value>送信と取得を実行中です。バッチは最大1時間かかることがあります。</value>
+  </data>
   <data name="Submit for approval" xml:space="preserve">
     <value>承認を申請する</value>
   </data>
@@ -7471,6 +7534,9 @@
   </data>
   <data name="the Phoenix 2 page has its table" xml:space="preserve">
     <value>Phoenix 2のページに表があります</value>
+  </data>
+  <data name="The pipeline is parked: no Claude API key is configured. Queued comments wait; nothing is spent." xml:space="preserve">
+    <value>パイプラインは停止中です。Claude APIキーが設定されていません。キューのコメントは待機し、費用は発生しません。</value>
   </data>
   <data name="The PIU Scores bot" xml:space="preserve">
     <value>PIU Scoresボット</value>
@@ -7989,6 +8055,15 @@
   <data name="Track the grind." xml:space="preserve">
     <value>グラインドを記録しよう。</value>
   </data>
+  <data name="Translated" xml:space="preserve">
+    <value>翻訳済み</value>
+  </data>
+  <data name="Translated from {0}" xml:space="preserve">
+    <value>{0} から翻訳</value>
+  </data>
+  <data name="Translations" xml:space="preserve">
+    <value>翻訳</value>
+  </data>
   <data name="Treat very old scores as unplayed" xml:space="preserve">
     <value>非常に古いスコアは未プレイ扱いにする</value>
   </data>
@@ -8154,6 +8229,9 @@
   </data>
   <data name="up to" xml:space="preserve">
     <value>上限</value>
+  </data>
+  <data name="Up to {0} new texts a night. The ceiling is a fuse, not a budget — if it parks the pipeline, find the bug before raising it." xml:space="preserve">
+    <value>一晚に最大 {0} 件。上限は予算ではなくヒューズです。パイプラインが止まったら、上げる前にバグを探してください。</value>
   </data>
   <data name="up to −{0} mid-combo" xml:space="preserve">
     <value>コンボ中間なら最大 −{0}</value>
@@ -8352,6 +8430,9 @@
   <data name="Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet." xml:space="preserve">
     <value>同レベル比: 競技レベルが近いプレイヤーに対するあなたのスコアの位置を、このフォルダでそのスキルを持つ譜面で平均したものです。グレーのスキルはまだ投票に足るデータがありません。</value>
   </data>
+  <data name="Waiting" xml:space="preserve">
+    <value>待機中</value>
+  </data>
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>人の確認待ちです — ひと声かけてください</value>
   </data>
@@ -8508,6 +8589,9 @@
   </data>
   <data name="What the chart is worth in your pool right now" xml:space="preserve">
     <value>現在あなたのプールでのこの譜面の値</value>
+  </data>
+  <data name="What the reporter saw ({0})" xml:space="preserve">
+    <value>報告者が見ていた内容（{0}）</value>
   </data>
   <data name="What this play added to your PUMBILITY" xml:space="preserve">
     <value>このプレイが PUMBILITY に加えた分</value>
@@ -9301,6 +9385,9 @@
   <data name="{0} connected" xml:space="preserve">
     <value>{0} 人が接続</value>
   </data>
+  <data name="{0} d ago" xml:space="preserve">
+    <value>{0} 日前</value>
+  </data>
   <data name="{0} days ago" xml:space="preserve">
     <value>{0}日前</value>
   </data>
@@ -9352,6 +9439,9 @@
   <data name="{0} folders at 90% or better" xml:space="preserve">
     <value>{0}フォルダが90%以上</value>
   </data>
+  <data name="{0} h ago" xml:space="preserve">
+    <value>{0} 時間前</value>
+  </data>
   <data name="{0} harder for you" xml:space="preserve">
     <value>あなたに難しいのは{0}譜面</value>
   </data>
@@ -9394,8 +9484,14 @@
   <data name="{0} members" xml:space="preserve">
     <value>メンバー{0}人</value>
   </data>
+  <data name="{0} mid-pipeline" xml:space="preserve">
+    <value>{0} 件が処理途中</value>
+  </data>
   <data name="{0} min" xml:space="preserve">
     <value>{0}分</value>
+  </data>
+  <data name="{0} min ago" xml:space="preserve">
+    <value>{0} 分前</value>
   </data>
   <data name="{0} mixes" xml:space="preserve">
     <value>{0}バージョン</value>
@@ -9600,6 +9696,12 @@
   </data>
   <data name="{0} songs left the catalog, taking {1} charts with them. Your scores on them stay on your profile." xml:space="preserve">
     <value>{0} 曲がカタログから削除され、{1} 譜面がなくなりました。記録はプロフィールに残ります。</value>
+  </data>
+  <data name="{0} spent, {1} committed in flight, against a {2} ceiling." xml:space="preserve">
+    <value>支出 {0}、処理中の見込み {1}、上限 {2}。</value>
+  </data>
+  <data name="{0} texts re-queued. They spend against the ceiling on the coming nights." xml:space="preserve">
+    <value>{0} 件を再キューしました。今後の夜間に上限内で処理されます。</value>
   </data>
   <data name="{0} titles" xml:space="preserve">
     <value>タイトル {0} 件</value>

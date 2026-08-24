@@ -55,7 +55,15 @@ public sealed record SiteReportedCommentRecord(
     Name? ReporterName,
     CommentReportReason Reason,
     DateTimeOffset ReportedAt,
-    IReadOnlyList<CommentSpan> Body);
+    IReadOnlyList<CommentSpan> Body,
+    /// <summary>The rendering locale the reporter was reading, null when they read the original.</summary>
+    string? ReporterSawLocale = null,
+    /// <summary>
+    ///     What the reporter actually saw, when it was a rendering — beside the original, never
+    ///     instead of it, because the language-asymmetry attack is only visible with both ends on
+    ///     the page. Null when they read the original or the rendering has since been replaced.
+    /// </summary>
+    IReadOnlyList<CommentSpan>? ReporterSawBody = null);
 
 /// <summary>
 ///     The active mutes in one community — the Members page's lift surface. Callable only by

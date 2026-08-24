@@ -1,0 +1,283 @@
+@page "/Admin/Translations"
+@rendermode RenderModes.Interactive
+@using System.Globalization
+@using MassTransit
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Translations.Contracts
+@using ScoreTracker.Translations.Contracts.Commands
+@using ScoreTracker.Translations.Contracts.Events
+@using ScoreTracker.Translations.Contracts.Messages
+@using ScoreTracker.Translations.Contracts.Queries
+
+<PageTitle>@L["Translations"]</PageTitle>
+
+@* The pipeline's one pane of glass: backlog, spend against the ceiling, failures, and the two
+   levers. Drain now publishes the same triggers the schedule does — catch-up must not drift from
+   the nightly path — and re-translation quotes its cost before a single token is spent. *@
+
+<MudBreadcrumbs Items="_crumbs" Class="pa-0 mb-2"></MudBreadcrumbs>
+<MudText Typo="Typo.h4" Class="mb-1">@L["Translations"]</MudText>
+
+@if (_status == null)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Small"/>
+}
+else
+{
+    @if (!_status.ClientConfigured)
+    {
+        <MudAlert Severity="Severity.Info" Class="mb-3" data-testid="translations-parked">
+            @L["The pipeline is parked: no Claude API key is configured. Queued comments wait; nothing is spent."]
+        </MudAlert>
+    }
+
+    <div class="atr-tiles">
+        <div class="atr-tile" data-testid="translations-pending">
+            <span class="atr-k">@L["Waiting"]</span>
+            <span class="atr-v">@_status.PendingCount</span>
+            @if (_status.OldestPendingAt is { } oldest)
+            {
+                <span class="atr-sub">@L["oldest {0}", Ago(oldest)]</span>
+            }
+        </div>
+        <div class="atr-tile">
+            <span class="atr-k">@L["In flight"]</span>
+            <span class="atr-v">@(_status.InFlightCount + _status.PivotedCount)</span>
+            <span class="atr-sub">@L["{0} mid-pipeline", _status.PivotedCount]</span>
+        </div>
+        <div class="atr-tile">
+            <span class="atr-k">@L["Translated"]</span>
+            <span class="atr-v">@_status.TranslatedCount</span>
+        </div>
+        <div class="atr-tile">
+            <span class="atr-k">@L["Failed"]</span>
+            <span class="atr-v">@_status.FailedCount</span>
+        </div>
+    </div>
+
+    <MudPaper Class="pa-4 mb-3" Outlined="true">
+        <MudText Typo="Typo.subtitle2" Class="mb-1">@L["Rolling 30-day spend"]</MudText>
+        <MudProgressLinear Color="@(SpendShare >= 1 ? Color.Error : Color.Primary)" Rounded="true"
+                           Size="Size.Large" Value="@((double)Math.Min(SpendShare, 1) * 100)"/>
+        <MudText Typo="Typo.body2" Class="mt-1" data-testid="translations-spend">
+            @L["{0} spent, {1} committed in flight, against a {2} ceiling.",
+                Usd(_status.RollingSpendUsd), Usd(_status.InFlightEstimateUsd), Usd(_status.CeilingUsd)]
+        </MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary d-block">
+            @L["Up to {0} new texts a night. The ceiling is a fuse, not a budget — if it parks the pipeline, find the bug before raising it.", _status.NightlyCount]
+        </MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mt-1">
+            @L["Last submitted {0} · last collected {1}",
+                _status.LastSubmittedAt is { } s ? Ago(s) : L["Never"].Value,
+                _status.LastCollectedAt is { } c ? Ago(c) : L["Never"].Value]
+        </MudText>
+    </MudPaper>
+
+    <div class="atr-actions mb-4">
+        <MudButton Color="Color.Warning" Variant="Variant.Filled" Disabled="@(_working || !_status.ClientConfigured)"
+                   data-testid="translations-drain" OnClick="DrainNow">@L["Drain now"]</MudButton>
+        @if (_estimate == null)
+        {
+            <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_working"
+                       data-testid="translations-retranslate" OnClick="QuoteRetranslation">@L["Re-translate everything"]</MudButton>
+        }
+        else
+        {
+            @* The quote renders in place and the commitment is a second, separate press — nothing
+               here spends money on one click. *@
+            <MudButton Color="Color.Error" Variant="Variant.Filled" Disabled="_working"
+                       data-testid="translations-retranslate-confirm" OnClick="RetranslateAll">
+                @L["Re-queue {0} texts, about {1} — confirm", _estimate.TranslatedCount, Usd(_estimate.EstimatedUsd)]
+            </MudButton>
+            <MudButton Variant="Variant.Text" Disabled="_working"
+                       OnClick="() => _estimate = null">@L["Cancel"]</MudButton>
+        }
+        <MudButton Variant="Variant.Text" Disabled="_working" OnClick="Load">@L["Refresh"]</MudButton>
+    </div>
+
+    @if (_status.RecentFailures.Count > 0)
+    {
+        <div class="d-flex align-center gap-3 mb-2">
+            <MudText Typo="Typo.h6">@L["Recent failures"]</MudText>
+            @* Failed must not be a dead end whose only exit is the author editing. The re-queued
+               texts spend against the ceiling on the coming nights like any other pending work. *@
+            <MudButton Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined" Disabled="_working"
+                       data-testid="translations-retry-failed" OnClick="RetryFailed">@L["Retry failed"]</MudButton>
+        </div>
+        <MudSimpleTable Dense="true" Class="mb-4" data-testid="translations-failures">
+            <tbody>
+            @foreach (var failure in _status.RecentFailures)
+            {
+                <tr>
+                    <td><code>@failure.SourceKey</code></td>
+                    <td>@failure.Reason</td>
+                    <td class="mud-text-secondary">@Ago(failure.At)</td>
+                </tr>
+            }
+            </tbody>
+        </MudSimpleTable>
+    }
+}
+
+<style>
+    .atr-tiles {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .atr-tile {
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 8px;
+        padding: 10px 14px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .atr-k {
+        font-size: .7rem;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .atr-v {
+        font-size: 1.5rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .atr-sub {
+        font-size: .72rem;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .atr-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+</style>
+
+@inject IMediator Mediator
+@inject IBus Bus
+@inject ISnackbar Snackbar
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser
+@inject IDateTimeOffsetAccessor Clock
+
+@code {
+    private TranslationPipelineStatusRecord? _status;
+    private RetranslationEstimateRecord? _estimate;
+    private bool _working;
+    private List<BreadcrumbItem> _crumbs = new();
+
+    private decimal SpendShare => _status is { CeilingUsd: > 0 }
+        ? (_status.RollingSpendUsd + _status.InFlightEstimateUsd) / _status.CeilingUsd
+        : 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.User.IsAdmin)
+        {
+            NavManager.NavigateTo("/");
+            return;
+        }
+
+        _crumbs = new List<BreadcrumbItem>
+        {
+            new(L["Admin"].Value, "/Admin"),
+            new(L["Translations"].Value, null, true)
+        };
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        _estimate = null;
+        _status = await Mediator.Send(new GetTranslationPipelineStatusQuery());
+    }
+
+    /// <summary>
+    ///     The same two triggers the schedule publishes, deliberately — catch-up that ran its own
+    ///     code path would drift from the nightly one. Submit still honours the ceiling.
+    /// </summary>
+    private async Task DrainNow()
+    {
+        _working = true;
+        try
+        {
+            await Bus.Publish(new SubmitTranslationBatchesCommand());
+            await Bus.Publish(new CollectTranslationBatchesCommand());
+            Snackbar.Add(L["Submit and collect are running. Batches can take up to an hour."], Severity.Success);
+        }
+        finally
+        {
+            _working = false;
+        }
+
+        await Load();
+    }
+
+    private async Task QuoteRetranslation()
+    {
+        _estimate = await Mediator.Send(new GetRetranslationCostEstimateQuery());
+        if (_estimate.TranslatedCount == 0)
+        {
+            Snackbar.Add(L["Nothing is translated yet, so there is nothing to re-translate."], Severity.Info);
+            _estimate = null;
+        }
+    }
+
+    private async Task RetryFailed()
+    {
+        _working = true;
+        try
+        {
+            var count = await Mediator.Send(new RetryFailedTranslationsCommand());
+            Snackbar.Add(L["{0} texts re-queued. They spend against the ceiling on the coming nights.", count],
+                Severity.Success);
+        }
+        finally
+        {
+            _working = false;
+        }
+
+        await Load();
+    }
+
+    private async Task RetranslateAll()
+    {
+        _working = true;
+        try
+        {
+            var count = await Mediator.Send(new RetranslateAllCommand());
+            Snackbar.Add(L["{0} texts re-queued. They spend against the ceiling on the coming nights.", count],
+                Severity.Success);
+        }
+        finally
+        {
+            _working = false;
+        }
+
+        await Load();
+    }
+
+    private string Ago(DateTimeOffset at)
+    {
+        var span = Clock.Now - at;
+        if (span < TimeSpan.FromMinutes(2)) return L["just now"].Value;
+        if (span < TimeSpan.FromHours(2)) return L["{0} min ago", (int)span.TotalMinutes].Value;
+        if (span < TimeSpan.FromDays(2)) return L["{0} h ago", (int)span.TotalHours].Value;
+
+        return L["{0} d ago", (int)span.TotalDays].Value;
+    }
+
+    private static string Usd(decimal amount)
+    {
+        return "$" + amount.ToString("0.00", CultureInfo.InvariantCulture);
+    }
+}

@@ -400,9 +400,9 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
   <p class="tiny" style="color:var(--note-soft);margin-top:14px">The mocked dialog stays dark in both page themes, because the site is dark-only by design — <code>PaletteLight</code> and <code>PaletteDark</code> are deliberately identical.</p>
   <div class="slices">
     <div class="s done"><b>Slice 1 · shipped</b>Tab strip, Chart Stats, Score History. PR&nbsp;#227.</div>
-    <div class="s now"><b>Slice 2 · building</b>Comments and personal notes: vertical, parser, link trust, threads, votes, composer, rules card. Site-admin removal rides along.</div>
-    <div class="s"><b>Slice 3</b>Community moderation: the permission flag, restrictions, reports, queue panels.</div>
-    <div class="s"><b>Slice 4</b>Translation: batch pipeline, language badges, the spend ceiling.</div>
+    <div class="s done"><b>Slice 2 · shipped</b>Comments and personal notes: vertical, parser, link trust, threads, votes, composer, rules card. PR&nbsp;#237.</div>
+    <div class="s done"><b>Slice 3 · shipped</b>Community moderation: the permission flag, restrictions, reports, queue panels. PR&nbsp;#270.</div>
+    <div class="s now"><b>Slice 4 · building</b>Translation: link markers, the batch pipeline, originals-first display, the spend ceiling.</div>
   </div>
   <div class="flag" style="margin-top:18px"><b>Every frame is tagged with the slice it belongs to.</b> A Slice&nbsp;2 frame is what actually renders when that PR merges — which is why the comments below are in the languages they were written in, and why there are no badges yet. Slice&nbsp;4 is what makes them readable.</div>
 </header>
@@ -822,16 +822,34 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
         </div>
       </div></div>
       <div class="cap" style="margin:12px 0 0;text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:12px;line-height:1.5">
-        Reader's own language → no badge, silence being the common case. Translated → badge plus a per-comment
-        <i>Show original</i>; never rendered back into its own language, because that round trip is a measured
-        rewrite. Pending → the author's own words, badged. Unsupported source detected by stage one and named
-        from <code style="font-size:11px">CultureInfo.DisplayName</code>.
+        The resolution, owner-worded 2026-08-24: comment in the reader's own <b>language</b> (region
+        ignored) → the <b>original</b>, always, no badge — nothing is ever translated inside one
+        language. Otherwise map by <b>language, not region</b> (es-MX → es-ES, en-ZW → the pivot) →
+        the rendering, badged, with <i>Show original</i>. No rendering for the reader's language
+        (ja-JP, it-IT) → the <b>original</b> — forced English is retired. Pending, for mapped readers
+        only → the author's own words, badged <i>Queued</i>. Unsupported source detected by stage one
+        and named from <code style="font-size:11px">CultureInfo.DisplayName</code>.
       </div>
     </div>
   </div>
 
   <div class="note" style="margin-top:20px">
+    <div class="flag"><b>The "Read in" pick is sticky, and total.</b> Manually choosing a
+    localization stores it in UiSettings and substitutes for the reader's locale in the whole
+    resolution — "Read in español" means everything reads Spanish: foreign comments via their
+    es-ES rendering, Spanish comments via their originals (the Spanish asked for, unbadged), and
+    never a fallback to the reader's own language. Choosing <i>Automatic</i> clears it back to the
+    default resolution; the author's words per comment are <i>Show original</i>'s job. Comments are
+    still never rendered <em>into</em> their own language — the pick changes what is shown, never
+    what is made.</div>
     <div class="flag"><b>Source language is left null in Slice 2</b>, not guessed. Stamping the poster's UI culture looks free and isn't: a Korean player browsing in English gets recorded as <code>en-US</code>, and Slice 4 then renders their comment Korean→Korean — precisely the rewrite <code>TranslationTarget.ForSource</code> exists to prevent. The column ships in the Slice 2 migration so Slice 4 adds no schema; the pivot stage fills it, having detected 34/34 across the corpus.</div>
+    <div class="flag"><b>The model never sees a URL.</b> Links lift out to per-comment collision-proof
+    markers before the text is queued (the prompt says they are links, never what they point at) and
+    substitute back on return. A result that mishandles a marker — or grows anything link-shaped —
+    is discarded: the pipeline checks markers at collect, and ChartComments re-parses with the same
+    tokenizer that autolinks before writing a rendering. Failure mode is "no translation", never a
+    broken comment. Tracking parameters (<code>utm_*</code>, <code>si</code>, the click ids) strip at
+    save, fixed list, so they never reach storage or the model at all.</div>
   </div>
 </section>
 
@@ -1224,7 +1242,7 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
         <tr><td><span class="slice">3</span></td><td>Permission backfill</td><td>EF migration</td><td>13&nbsp;→&nbsp;29 and 15&nbsp;→&nbsp;31 across <b>both</b> <code>CommunityMembership.Permissions</code> and <code>Community</code>'s stored default — which is a literal <code>= 13</code> on <code>CommunityEntity</code> as well as the composed <code>DefaultAdminPermissionsSeed</code>. Missing the second means future admins in existing clubs silently lack the power.</td></tr>
         <tr><td><span class="slice">3</span></td><td><code>CommentRestriction</code></td><td>ChartComments</td><td>Two Guid <code>*UserId</code> columns → needs <code>[PurgeKey(nameof(UserId))]</code>, or account deletion purges the wrong person. <b>Community scope only</b> — the site scope is the existing <code>User.IsContentLocked</code>, which is already the soft ban and needs no second mechanism.</td></tr>
         <tr><td><span class="slice">3</span></td><td><code>MyCommunityRoleRecord</code></td><td>Communities</td><td>It carries <code>Name CommunityName</code>, and a comment stores <code>Guid CommunityId</code> — so the moderation check cannot join without adding the id, required rather than optional. Same fix <code>CommunityOverviewRecord</code> took in Slice 2, where required turned a silent <code>Guid.Empty</code> into nine compile errors. Nothing renames a community today; the id is what keeps that true.</td></tr>
-        <tr><td><span class="slice">4</span></td><td>Re-translation cooldown</td><td>ChartComments</td><td>The $30 ceiling is a fuse against bugs. An edit loop is a <i>user-driven</i> cost amplifier the fuse can't see.</td></tr>
+        <tr><td><span class="slice">4</span></td><td>Re-translation cooldown</td><td>ChartComments</td><td>Re-settled at the 2026-08-24 bug check: edits <b>always</b> re-queue; the once-per-24&nbsp;h wait moved to the pipeline's submit step, where it cannot lose a translation (the edit-side block dropped renderings, never re-queued, and was bypassed by editing twice). The $30 ceiling is a fuse against bugs; an edit loop is a <i>user-driven</i> cost amplifier the fuse can't see, and the submit cooldown is what sees it.</td></tr>
       </tbody>
     </table>
   </div>

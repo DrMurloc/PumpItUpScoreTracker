@@ -67,8 +67,13 @@ public sealed class CommentArchiveTests : IAsyncLifetime
         await Comments.Save(survivor);
         await Comments.Save(publicComment);
         await Restrictions.Save(CommentRestriction.Impose(_author, SurvivingClub, _moderator, null, Now));
+        var renderings = new EFCommentRenderingRepository(_fixture.DbContextFactory);
+        await renderings.StoreTranslation(root.Id, "en",
+            new Dictionary<string, string> { ["es-ES"] = "las palabras" }, "sonnet", Now);
+        await renderings.StoreTranslation(publicComment.Id, "en",
+            new Dictionary<string, string> { ["es-ES"] = "también a salvo" }, "sonnet", Now);
 
-        await Archive.ArchiveCommunity(DoomedClub, Name.From("Murloc Lab"), Now.AddHours(1));
+        var archivedIds = await Archive.ArchiveCommunity(DoomedClub, Name.From("Murloc Lab"), Now.AddHours(1));
 
         await using var database = await _fixture.DbContextFactory.CreateDbContextAsync();
 
@@ -89,6 +94,13 @@ public sealed class CommentArchiveTests : IAsyncLifetime
         Assert.False(await database.Set<CommentVoteEntity>().AnyAsync(v => v.CommentId == root.Id));
         Assert.False(await database.Set<CommentRevisionEntity>().AnyAsync(r => r.CommentId == root.Id));
         Assert.False(await database.Set<CommentReportEntity>().AnyAsync());
+        // The archive keeps the author's words, never a machine's — and the ids come back so the
+        // consumer can tell the translation pipeline to forget them.
+        Assert.False(await database.Set<CommentRenderingEntity>().AnyAsync(r => r.CommentId == root.Id));
+        Assert.True(await database.Set<CommentRenderingEntity>()
+            .AnyAsync(r => r.CommentId == publicComment.Id));
+        Assert.Equal(new[] { root.Id, reply.Id }.OrderBy(id => id),
+            archivedIds.OrderBy(id => id));
         Assert.False(await database.Set<CommentRestrictionEntity>()
             .AnyAsync(r => r.CommunityId == DoomedClub));
 

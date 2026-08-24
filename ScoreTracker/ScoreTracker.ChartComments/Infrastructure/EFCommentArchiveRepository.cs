@@ -16,7 +16,7 @@ internal sealed class EFCommentArchiveRepository : ICommentArchiveRepository
         _factory = factory;
     }
 
-    public async Task ArchiveCommunity(Guid communityId, Name communityName, DateTimeOffset now,
+    public async Task<IReadOnlyList<Guid>> ArchiveCommunity(Guid communityId, Name communityName, DateTimeOffset now,
         CancellationToken cancellationToken = default)
     {
         // One explicit transaction: ExecuteDelete runs immediately rather than riding
@@ -62,6 +62,11 @@ internal sealed class EFCommentArchiveRepository : ICommentArchiveRepository
             await database.Set<CommentReportEntity>()
                 .Where(r => ids.Contains(r.CommentId))
                 .ExecuteDeleteAsync(cancellationToken);
+            // Renderings die with the club's comments: the archive keeps the author's words,
+            // never a machine's, and nothing renders archived rows anyway.
+            await database.Set<CommentRenderingEntity>()
+                .Where(r => ids.Contains(r.CommentId))
+                .ExecuteDeleteAsync(cancellationToken);
             await database.Set<CommentEntity>()
                 .Where(c => ids.Contains(c.Id))
                 .ExecuteDeleteAsync(cancellationToken);
@@ -74,5 +79,7 @@ internal sealed class EFCommentArchiveRepository : ICommentArchiveRepository
             .ExecuteDeleteAsync(cancellationToken);
 
         await transaction.CommitAsync(cancellationToken);
+
+        return ids;
     }
 }

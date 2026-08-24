@@ -1,6 +1,7 @@
 using MassTransit;
 using ScoreTracker.ChartComments.Domain;
 using ScoreTracker.Communities.Contracts.Events;
+using ScoreTracker.Translations.Contracts.Messages;
 using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.ChartComments.Application;
@@ -24,7 +25,13 @@ internal sealed class CommunityDeletionConsumer : IConsumer<CommunityDeletedEven
 
     public async Task Consume(ConsumeContext<CommunityDeletedEvent> context)
     {
-        await _archive.ArchiveCommunity(context.Message.CommunityId, context.Message.CommunityName,
-            _clock.Now, context.CancellationToken);
+        var archived = await _archive.ArchiveCommunity(context.Message.CommunityId,
+            context.Message.CommunityName, _clock.Now, context.CancellationToken);
+
+        // Whatever the pipeline still holds for the archived comments answers no question
+        // anybody can still ask — and must not be spent on.
+        if (archived.Count > 0)
+            await context.Publish(new DiscardTranslationRequestsCommand(
+                archived.Select(CommentSourceKeys.For).ToArray()), context.CancellationToken);
     }
 }

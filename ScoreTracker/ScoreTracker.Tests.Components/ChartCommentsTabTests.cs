@@ -48,6 +48,7 @@ public sealed class ChartCommentsTabTests : TestContext
         Services.AddSingleton(_mediator.Object);
         Services.AddSingleton(_currentUser.Object);
         Services.AddSingleton<IStringLocalizer<App>>(new PassThroughLocalizer());
+        Services.AddSingleton(Mock.Of<ScoreTracker.Web.Services.Contracts.IUiSettingsAccessor>());
 
         _currentUser.Setup(u => u.IsLoggedIn).Returns(true);
         _currentUser.SetupGet(u => u.User).Returns(() => _viewer);

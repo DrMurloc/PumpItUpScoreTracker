@@ -1,5 +1,13 @@
 # Community-text translation
 
+> **Status (2026-08-24): built.** This document is the pre-build measurement record, kept as
+> written. The pipeline shipped as chart-comments Slice 4 (PR #293): §5's build-time URL check
+> ships as the link-marker system (`TranslationMarkers` + `CommentText.LinkSetsMatch` — the model
+> never sees a URL at all, which is stronger than the check asked for), and §6's operational
+> design ships as `TranslationPipelineSaga` with the dollar ceiling, nightly count, oldest-first
+> order, provenance column, Drain now, and admin-triggered re-translation, plus a submit-side
+> 24 h per-text cooldown and a Retry-failed lever the design pre-dated.
+
 Exploratory. The chart-comments feature is not being built; this is the localization half of it,
 measured on real data so the design question is settled before anything ships.
 

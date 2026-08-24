@@ -12,6 +12,7 @@ using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.Randomizer.Wiring;
 using ScoreTracker.Rivals.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
+using ScoreTracker.Translations.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
 
 namespace ScoreTracker.CompositionRoot;
@@ -28,7 +29,7 @@ public static class VerticalModelContributions
     {
         return new IDbModelContribution[]
         {
-            new CatalogModelContribution(), new ChartCommentsModelContribution(), new ChartIntelligenceModelContribution(), new CommunitiesModelContribution(), new CommunityToolsModelContribution(), new EventCompetitionModelContribution(), new HomePageModelContribution(), new IdentityModelContribution(), new OfficialMirrorModelContribution(), new PlayerProgressModelContribution(), new RandomizerModelContribution(), new RivalsModelContribution(), new ScoreLedgerModelContribution(), new WeeklyChallengeModelContribution()
+            new CatalogModelContribution(), new ChartCommentsModelContribution(), new ChartIntelligenceModelContribution(), new CommunitiesModelContribution(), new CommunityToolsModelContribution(), new EventCompetitionModelContribution(), new HomePageModelContribution(), new IdentityModelContribution(), new OfficialMirrorModelContribution(), new PlayerProgressModelContribution(), new RandomizerModelContribution(), new RivalsModelContribution(), new ScoreLedgerModelContribution(), new TranslationsModelContribution(), new WeeklyChallengeModelContribution()
         };
     }
 }

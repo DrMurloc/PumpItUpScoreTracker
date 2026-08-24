@@ -1,6 +1,7 @@
 using MassTransit;
 using ScoreTracker.ChartComments.Domain;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Translations.Contracts.Messages;
 
 namespace ScoreTracker.ChartComments.Application;
 
@@ -19,6 +20,12 @@ internal sealed class AccountPurgeConsumer : IConsumer<AccountPurgeStartedEvent>
 
     public async Task Consume(ConsumeContext<AccountPurgeStartedEvent> context)
     {
-        await _purge.DeleteAllForUser(context.Message.RetiredUserId, context.CancellationToken);
+        var touched = await _purge.DeleteAllForUser(context.Message.RetiredUserId, context.CancellationToken);
+
+        // The pipeline holds this account's words too — queued texts and stored pivots. Words a
+        // purge removes must not survive in a translation queue.
+        if (touched.Count > 0)
+            await context.Publish(new DiscardTranslationRequestsCommand(
+                touched.Select(CommentSourceKeys.For).ToArray()), context.CancellationToken);
     }
 }

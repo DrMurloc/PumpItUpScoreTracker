@@ -27,6 +27,7 @@ internal sealed class Comment
         DeletedAt = state.DeletedAt;
         DeletedByUserId = state.DeletedByUserId;
         SourceLanguage = state.SourceLanguage;
+        TranslationQueuedAt = state.TranslationQueuedAt;
     }
 
     public Guid Id { get; }
@@ -56,7 +57,13 @@ internal sealed class Comment
     ///     Korean-to-Korean, which is the one rewrite <c>TranslationTarget.ForSource</c> exists to
     ///     prevent. The pivot stage fills it in when that pipeline lands.
     /// </summary>
-    public string? SourceLanguage { get; }
+    public string? SourceLanguage { get; private set; }
+
+    /// <summary>
+    ///     When this text last went to the translation pipeline. The saga stamps it via
+    ///     <see cref="StampTranslationQueued" /> so the edit-requeue cooldown has a clock.
+    /// </summary>
+    public DateTimeOffset? TranslationQueuedAt { get; private set; }
 
     public bool IsRoot => ParentCommentId == null;
     public bool IsDeleted => DeletedAt != null;
@@ -116,8 +123,16 @@ internal sealed class Comment
         var previous = Text;
         Text = RequireText(text);
         EditedAt = now;
+        // The detection belonged to the old words. An edit can change languages outright, and a
+        // stale value here is what would mis-suppress a translation for the wrong readers.
+        SourceLanguage = null;
 
         return previous;
+    }
+
+    public void StampTranslationQueued(DateTimeOffset now)
+    {
+        TranslationQueuedAt = now;
     }
 
     public void DeleteByAuthor(Guid actorId, DateTimeOffset now)
@@ -191,7 +206,9 @@ internal sealed class Comment
 
     private static string RequireText(string? text)
     {
-        var normalized = CommentText.Normalize(text);
+        // Tracking parameters strip at save, inside the same normalization the cap counts —
+        // no utm_ or click id ever reaches storage, another reader, or the translation model.
+        var normalized = CommentText.StripTrackingParameters(CommentText.Normalize(text));
         if (normalized.Length == 0)
             throw new CommentNotAllowedException("Write something first.");
         if (normalized.Length > CommentText.MaxLength)

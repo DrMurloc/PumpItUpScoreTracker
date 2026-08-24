@@ -12,6 +12,7 @@ using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.Randomizer.Wiring;
 using ScoreTracker.Rivals.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
+using ScoreTracker.Translations.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
 
 namespace ScoreTracker.CompositionRoot;
@@ -50,6 +51,7 @@ public static class VerticalAssemblies
             typeof(RandomizerRegistrationExtensions).Assembly,
             typeof(RivalsRegistrationExtensions).Assembly,
             typeof(ScoreLedgerRegistrationExtensions).Assembly,
+            typeof(TranslationsRegistrationExtensions).Assembly,
             typeof(WeeklyChallengeRegistrationExtensions).Assembly
         };
     }

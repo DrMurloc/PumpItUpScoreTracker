@@ -1,3 +1,4 @@
+using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.ChartComments.Contracts;
@@ -6,6 +7,7 @@ using ScoreTracker.ChartComments.Contracts.Queries;
 using ScoreTracker.ChartComments.Domain;
 using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.CommunityTools.Contracts.Queries;
+using ScoreTracker.Translations.Contracts.Messages;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -40,6 +42,7 @@ internal sealed class CommentSaga :
 
     private const string WorldCommunityName = "World";
 
+    private readonly IBus _bus;
     private readonly IMemoryCache _cache;
     private readonly IDateTimeOffsetAccessor _clock;
     private readonly ICommentConsentRepository _consents;
@@ -47,23 +50,29 @@ internal sealed class CommentSaga :
     private readonly IMediator _mediator;
     private readonly ICommentRepository _comments;
     private readonly ICommentReportRepository _reports;
+    private readonly ICommentRenderingRepository _renderings;
     private readonly ICommentRestrictionRepository _restrictions;
+    private readonly ILanguageModelBatchClient _translationClient;
     private readonly IUserReader _users;
 
     public CommentSaga(ICommentRepository comments, ICommentConsentRepository consents,
         ICommentReportRepository reports, ICommentRestrictionRepository restrictions,
-        ICurrentUserAccessor currentUser, IDateTimeOffsetAccessor clock, IMediator mediator,
-        IUserReader users, IMemoryCache cache)
+        ICommentRenderingRepository renderings, ICurrentUserAccessor currentUser,
+        IDateTimeOffsetAccessor clock, IMediator mediator, IUserReader users, IMemoryCache cache,
+        IBus bus, ILanguageModelBatchClient translationClient)
     {
+        _translationClient = translationClient;
         _comments = comments;
         _consents = consents;
         _reports = reports;
         _restrictions = restrictions;
+        _renderings = renderings;
         _currentUser = currentUser;
         _clock = clock;
         _mediator = mediator;
         _users = users;
         _cache = cache;
+        _bus = bus;
     }
 
     private Guid ViewerId => _currentUser.IsLoggedIn ? _currentUser.User.Id : Guid.Empty;
@@ -77,7 +86,9 @@ internal sealed class CommentSaga :
         await EnsureMayPostTo(request.Audience, cancellationToken);
 
         var comment = Comment.Post(request.ChartId, author, request.Audience, request.Text, _clock.Now);
+        if (!comment.Audience.IsPrivate) comment.StampTranslationQueued(_clock.Now);
         await _comments.Save(comment, cancellationToken);
+        await QueueForTranslation(comment, cancellationToken);
 
         return comment.Id;
     }
@@ -99,7 +110,9 @@ internal sealed class CommentSaga :
         await EnsureMayPostTo(root.Audience, cancellationToken);
 
         var reply = Comment.Reply(root, author, request.Text, _clock.Now);
+        if (!reply.Audience.IsPrivate) reply.StampTranslationQueued(_clock.Now);
         await _comments.Save(reply, cancellationToken);
+        await QueueForTranslation(reply, cancellationToken);
 
         return reply.Id;
     }
@@ -114,11 +127,23 @@ internal sealed class CommentSaga :
         await EnsureMayWriteTo(comment.Audience, actor, cancellationToken);
 
         var replaced = comment.Edit(actor, request.Text, _clock.Now);
+        // Every edit re-queues. The once-per-24h cost cap lives in the pipeline's submit step
+        // now, where waiting cannot lose a translation — the old edit-side block dropped the
+        // renderings and then never re-queued, stranding the comment behind a lying badge.
+        if (!comment.Audience.IsPrivate) comment.StampTranslationQueued(_clock.Now);
 
         // The revision goes in first. If the save then fails, the history has a row the comment
         // never had — which is recoverable; the reverse loses what a moderator would need.
         await _comments.WriteRevision(comment.Id, replaced, _clock.Now, cancellationToken);
         await _comments.Save(comment, cancellationToken);
+
+        if (!comment.Audience.IsPrivate)
+        {
+            // Old renderings describe words that no longer exist — an edited comment must never
+            // show a translation of its previous self.
+            await _renderings.DeleteFor(comment.Id, cancellationToken);
+            await QueueForTranslation(comment, cancellationToken);
+        }
     }
 
     public async Task Handle(DeleteCommentCommand request, CancellationToken cancellationToken)
@@ -128,6 +153,7 @@ internal sealed class CommentSaga :
 
         comment.DeleteByAuthor(actor, _clock.Now);
         await _comments.Save(comment, cancellationToken);
+        await DiscardTranslation(comment, cancellationToken);
     }
 
     public async Task Handle(RemoveCommentCommand request, CancellationToken cancellationToken)
@@ -138,6 +164,7 @@ internal sealed class CommentSaga :
 
         comment.RemoveByModerator(actor, _clock.Now);
         await _comments.Save(comment, cancellationToken);
+        await DiscardTranslation(comment, cancellationToken);
 
         // A removed comment leaves nothing to act on in any queue, so every open report against
         // it resolves — whichever desks were still waiting, stamped by the remover.
@@ -182,6 +209,16 @@ internal sealed class CommentSaga :
             cancellationToken);
 
         var trust = new LinkTrust(await ToolHostAllowlist.Get(_cache, _mediator, cancellationToken));
+        // The queued badge promises a translation is coming, and with the pipeline parked (no
+        // API key) that would be a promise nothing keeps — comments-on, translation-unarmed is a
+        // legitimate long-lived state, not a misconfiguration to surface at readers.
+        var translationArmed = _translationClient.IsConfigured;
+        // Notes are never translated, so their read never touches the renderings table at all.
+        var renderings = request.Audience.IsPrivate
+            ? new Dictionary<Guid, CommentRenderingRow[]>()
+            : (await _renderings.GetFor(rows.Select(r => r.Id).ToArray(), cancellationToken))
+            .GroupBy(r => r.CommentId)
+            .ToDictionary(g => g.Key, g => g.ToArray());
         var authors = (await _users.GetUsers(
                 rows.Select(r => r.UserId).Where(id => id != Guid.Empty).Distinct(), cancellationToken))
             .ToDictionary(u => u.Id);
@@ -199,18 +236,20 @@ internal sealed class CommentSaga :
                 var replies = (repliesByRoot.TryGetValue(root.Id, out var found)
                         ? found.Where(reply => reply.DeletedAt == null)
                         : Enumerable.Empty<CommentRow>())
-                    .Select(reply => Project(reply, request.Audience, trust, authors, viewer,
-                        moderation, Array.Empty<CommentRecord>()))
+                    .Select(reply => Project(reply, request, trust, authors, viewer,
+                        moderation, renderings, translationArmed, Array.Empty<CommentRecord>()))
                     .ToArray();
 
-                return Project(root, request.Audience, trust, authors, viewer, moderation, replies);
+                return Project(root, request, trust, authors, viewer, moderation, renderings,
+                    translationArmed, replies);
             })
             // A deleted root leaves a stub ONLY while something living still hangs off it. Nobody
             // answered, or every answer is gone too, and the whole thread goes with it.
             .Where(record => record.Deletion == null || record.Replies.Count > 0)
             .ToArray();
 
-        return new CommentPageRecord(roots, totalRoots, totalRoots > request.TakeRoots);
+        return new CommentPageRecord(roots, totalRoots, totalRoots > request.TakeRoots,
+            !request.Audience.IsPrivate && translationArmed);
     }
 
     public async Task<IReadOnlyList<CommentScopeRecord>> Handle(GetMyCommentScopesQuery request,
@@ -285,12 +324,21 @@ internal sealed class CommentSaga :
 
     // ----- helpers -----------------------------------------------------------------------------
 
-    private CommentRecord Project(CommentRow row, CommentAudience audience, LinkTrust trust,
+    private CommentRecord Project(CommentRow row, GetChartCommentsQuery request, LinkTrust trust,
         Dictionary<Guid, User> authors, Guid viewer, ModerationContext moderation,
+        Dictionary<Guid, CommentRenderingRow[]> renderings, bool translationArmed,
         IReadOnlyList<CommentRecord> replies)
     {
+        var audience = request.Audience;
         var deletion = DeletionOf(row);
         var author = row.UserId != Guid.Empty && authors.TryGetValue(row.UserId, out var found) ? found : null;
+        var translation = deletion == null && !audience.IsPrivate
+            ? ResolveTranslation(row, trust,
+                renderings.TryGetValue(row.Id, out var mine) ? mine : Array.Empty<CommentRenderingRow>(),
+                request.ReaderLocale, request.PreferredLocale,
+                translationArmed && CommentTranslationPolicy.PromiseStands(row.TranslationQueuedAt, _clock.Now),
+                out var body)
+            : null;
 
         return new CommentRecord(
             row.Id,
@@ -299,7 +347,9 @@ internal sealed class CommentSaga :
             deletion == null ? author?.Name : null,
             deletion == null ? author?.Country : null,
             deletion == null ? author?.ProfileImage : null,
-            deletion == null ? CommentText.Parse(row.Text, trust) : Array.Empty<CommentSpan>(),
+            deletion != null ? Array.Empty<CommentSpan>()
+            : translation != null && translation.BodyIsTranslated ? BodyOf(row, translation, renderings, trust)
+            : CommentText.Parse(row.Text, trust),
             deletion == null ? row.Votes : 0,
             deletion == null && row.ViewerVoted,
             deletion == null && viewer != Guid.Empty && viewer == row.UserId,
@@ -311,7 +361,37 @@ internal sealed class CommentSaga :
             row.CreatedAt,
             deletion == null ? row.EditedAt : null,
             deletion,
-            replies);
+            replies,
+            translation);
+    }
+
+    /// <summary>
+    ///     The display rule, applied per comment. <paramref name="originalBody" /> carries the
+    ///     author's own words only when the resolved body is a rendering — the transient Show
+    ///     original flip needs them, and nobody else pays for the second parse.
+    /// </summary>
+    private static CommentTranslationRecord ResolveTranslation(CommentRow row, LinkTrust trust,
+        IReadOnlyList<CommentRenderingRow> mine, string? readerLocale, string? preferredLocale,
+        bool promiseStands, out IReadOnlyList<CommentSpan> originalBody)
+    {
+        var available = mine.Select(rendering => rendering.Locale).OrderBy(l => l, StringComparer.Ordinal)
+            .ToArray();
+        var resolution = CommentDisplayResolution.Resolve(readerLocale, preferredLocale,
+            row.SourceLanguage, available, promiseStands);
+        var translated = resolution.RenderingLocale != null;
+        originalBody = translated ? CommentText.Parse(row.Text, trust) : Array.Empty<CommentSpan>();
+
+        return new CommentTranslationRecord(row.SourceLanguage, translated, resolution.RenderingLocale,
+            originalBody, available, resolution.Pending);
+    }
+
+    private static IReadOnlyList<CommentSpan> BodyOf(CommentRow row,
+        CommentTranslationRecord translation, Dictionary<Guid, CommentRenderingRow[]> renderings,
+        LinkTrust trust)
+    {
+        var text = renderings[row.Id].First(r => r.Locale == translation.BodyLocale).Text;
+
+        return CommentText.Parse(text, trust);
     }
 
     /// <summary>
@@ -401,6 +481,32 @@ internal sealed class CommentSaga :
         if (row.UserId == Guid.Empty) return CommentDeletion.ByDeletedAccount;
 
         return row.DeletedByUserId == row.UserId ? CommentDeletion.ByAuthor : CommentDeletion.ByModerator;
+    }
+
+    /// <summary>
+    ///     Hands the text to the pipeline with its links already lifted to markers — the model
+    ///     never sees a URL. Never for a note: a personal note has an audience of one who already
+    ///     reads the language it was written in, a permanent exclusion rather than a deferral.
+    /// </summary>
+    private async Task QueueForTranslation(Comment comment, CancellationToken cancellationToken)
+    {
+        if (comment.Audience.IsPrivate) return;
+
+        await _bus.Publish(new QueueTextForTranslationCommand(CommentSourceKeys.For(comment.Id),
+            CommentText.ExtractLinks(comment.Text).Text), cancellationToken);
+    }
+
+    /// <summary>
+    ///     A comment leaving the page takes its translation artifacts with it: stored renderings
+    ///     here, the queued text and stored pivot in the pipeline.
+    /// </summary>
+    private async Task DiscardTranslation(Comment comment, CancellationToken cancellationToken)
+    {
+        if (comment.Audience.IsPrivate) return;
+
+        await _renderings.DeleteFor(comment.Id, cancellationToken);
+        await _bus.Publish(new DiscardTranslationRequestsCommand(
+            new[] { CommentSourceKeys.For(comment.Id) }), cancellationToken);
     }
 
     private Guid RequireSignedIn()

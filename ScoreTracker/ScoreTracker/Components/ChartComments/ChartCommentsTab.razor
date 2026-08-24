@@ -6,8 +6,11 @@
 @using ScoreTracker.Communities.Contracts.Queries
 @using ScoreTracker.Domain.Exceptions
 @using ScoreTracker.Domain.SecondaryPorts
+@using System.Globalization
 @using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.Contracts
 @inject IMediator Mediator
+@inject IUiSettingsAccessor UiSettings
 @inject ICurrentUserAccessor CurrentUser
 @inject ISnackbar Snackbar
 
@@ -46,15 +49,53 @@
 else
 {
     @* No sort control on Notes: with no votes there is only one order. *@
-    @if (!IsNotes && _page.TotalRoots > 1)
+    @if (!IsNotes && (_page.TotalRoots > 1 || ReadInLocales.Count > 0))
     {
+        @* Two quiet text menus, not boxes (owner pick from the density mock, 2026-08-24): the
+           thread's chrome speaks the tab's own language, where the composer is a line and the
+           actions are text. *@
         <div class="cmt-subbar">
-            <span>@L["Sort"]</span>
-            <MudSelect T="CommentSort" Value="_sort" ValueChanged="SelectSort" Dense="true" Margin="Margin.Dense"
-                       Variant="Variant.Outlined" Class="cmt-sort" data-testid="cmt-sort">
-                <MudSelectItem Value="CommentSort.Top">@L["Top"]</MudSelectItem>
-                <MudSelectItem Value="CommentSort.Newest">@L["Newest"]</MudSelectItem>
-            </MudSelect>
+            @if (_page.TotalRoots > 1)
+            {
+                <MudMenu Dense="true" AriaLabel="@L["Sort"]">
+                    <ActivatorContent>
+                        <span class="cmt-tmenu" data-testid="cmt-sort">@L["Sort"]:
+                            <b>@SortLabel(_sort)</b> <span class="cmt-car">▾</span></span>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <MudMenuItem data-testid="cmt-sort-top"
+                                     OnClick="() => SelectSort(CommentSort.Top)">@Ticked(_sort == CommentSort.Top, L["Top"])</MudMenuItem>
+                        <MudMenuItem data-testid="cmt-sort-newest"
+                                     OnClick="() => SelectSort(CommentSort.Newest)">@Ticked(_sort == CommentSort.Newest, L["Newest"])</MudMenuItem>
+                    </ChildContent>
+                </MudMenu>
+            }
+            <MudSpacer></MudSpacer>
+            @if (ReadInLocales.Count > 0)
+            {
+                @* The sticky pick, owner-worded: choosing a localization is remembered and
+                   becomes this reader's default wherever a rendering exists; Automatic clears it
+                   back to the default resolution. Named Automatic rather than Original because
+                   that is what it does — an English reader's default is still the mapped
+                   rendering; the author's words per comment are Show original's job. *@
+                <MudMenu Dense="true" AriaLabel="@L["Read in"]">
+                    <ActivatorContent>
+                        <span class="cmt-tmenu" data-testid="cmt-read-in">@L["Read in"]:
+                            <b>@(_preferredLocale == null ? L["Automatic"] : RenderingLocaleName(_preferredLocale))</b>
+                            <span class="cmt-car">▾</span></span>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <MudMenuItem data-testid="cmt-read-in-auto"
+                                     OnClick="() => SelectReadIn(string.Empty)">@Ticked(_preferredLocale == null, L["Automatic"])</MudMenuItem>
+                        @foreach (var locale in ReadInLocales)
+                        {
+                            var l = locale;
+                            <MudMenuItem data-testid="@($"cmt-read-in-{l}")"
+                                         OnClick="() => SelectReadIn(l)">@Ticked(_preferredLocale == l, RenderingLocaleName(l))</MudMenuItem>
+                        }
+                    </ChildContent>
+                </MudMenu>
+            }
         </div>
     }
 
@@ -293,6 +334,52 @@ else
         font-size: .82rem;
     }
 
+    .cmt-badge {
+        font-size: .62rem;
+        letter-spacing: .04em;
+        padding: 1px 7px;
+        border-radius: 999px;
+        border: 1px solid var(--mud-palette-lines-default);
+        color: var(--mud-palette-text-secondary);
+        white-space: nowrap;
+    }
+
+    .cmt-badge-tr {
+        border-color: var(--mud-palette-info);
+        color: var(--mud-palette-info);
+    }
+
+    .cmt-badge-q {
+        border-color: var(--mud-palette-warning);
+        color: var(--mud-palette-warning);
+    }
+
+    .cmt-tmenu {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: .74rem;
+        color: var(--mud-palette-text-secondary);
+        padding: 2px 5px;
+        border-radius: 5px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .cmt-tmenu:hover {
+        background: var(--mud-palette-action-default-hover);
+        color: var(--mud-palette-text-primary);
+    }
+
+    .cmt-tmenu b {
+        color: var(--mud-palette-text-primary);
+        font-weight: 650;
+    }
+
+    .cmt-car {
+        font-size: .56rem;
+    }
+
     .cmt-meta {
         font-size: .7rem;
         color: var(--mud-palette-text-secondary);
@@ -485,7 +572,76 @@ else
 
     private string? _pendingLink;
 
+    /// <summary>The sticky Read-in pick. Empty-or-missing means default behavior.</summary>
+    private const string ReadInSettingKey = "Comments__ReadIn";
+
+    private string? _preferredLocale;
+    private bool _readInLoaded;
+
     private bool IsNotes => _audience.IsPrivate;
+
+    /// <summary>
+    ///     The picker's vocabulary is the pipeline's FIXED rendering set, not what this page
+    ///     happens to hold — the picker's whole audience is the reader whose language never
+    ///     renders (Italian, Japanese) stating a preference BEFORE translations exist for them.
+    ///     The sticky pick then applies wherever a rendering does exist and falls back to the
+    ///     original (with the queued badge) where one is still coming. Offered while the pipeline
+    ///     is armed, and kept when a page still holds renderings from before it was parked.
+    /// </summary>
+    private IReadOnlyList<string> ReadInLocales =>
+        _page.TranslationOffered || PageRenderingLocales.Count > 0
+            ? new[] { Translations.Contracts.TranslationTarget.Pivot }
+                .Concat(Translations.Contracts.TranslationTarget.All)
+                .OrderBy(locale => locale, StringComparer.Ordinal)
+                .ToArray()
+            : Array.Empty<string>();
+
+    private IReadOnlyList<string> PageRenderingLocales => _page.Roots
+        .SelectMany(root => root.Replies.Prepend(root))
+        .Where(comment => comment.Translation != null)
+        .SelectMany(comment => comment.Translation!.AvailableLocales)
+        .Distinct()
+        .ToArray();
+
+    private async Task SelectReadIn(string value)
+    {
+        var picked = string.IsNullOrEmpty(value) ? null : value;
+        if (picked == _preferredLocale) return;
+
+        _preferredLocale = picked;
+        // Choosing the original clears the memory — back to default behavior; choosing a
+        // localization is remembered sitewide (owner-worded, 2026-08-24).
+        await UiSettings.SetSetting(ReadInSettingKey, picked ?? string.Empty);
+        await Reload();
+    }
+
+    /// <summary>
+    ///     The language alone, in itself — 한국어, español — never the full culture name, whose
+    ///     region suffix (한국어(대한민국)) is what truncated the first cut's control.
+    /// </summary>
+    private static string RenderingLocaleName(string locale)
+    {
+        var primary = locale.Split('-')[0];
+        try
+        {
+            return CultureInfo.GetCultureInfo(primary).NativeName;
+        }
+        catch (CultureNotFoundException)
+        {
+            return locale;
+        }
+    }
+
+    private string SortLabel(CommentSort sort)
+    {
+        return sort == CommentSort.Top ? L["Top"] : L["Newest"];
+    }
+
+    /// <summary>The current choice wears its tick inside the item, popover-menu style.</summary>
+    private static string Ticked(bool on, string label)
+    {
+        return on ? $"✓ {label}" : label;
+    }
 
     private void ShowInterstitial(string? url)
     {
@@ -541,6 +697,15 @@ else
             if (FocusCommentId != null) _take = FocusTake;
         }
 
+        if (!_readInLoaded)
+        {
+            _readInLoaded = true;
+            // Anonymous readers included: the accessor falls back to browser storage for them,
+            // and a pick that saves but never loads is a control that silently resets.
+            var stored = await UiSettings.GetSetting(ReadInSettingKey);
+            _preferredLocale = string.IsNullOrWhiteSpace(stored) ? null : stored;
+        }
+
         if (_scopes.Count == 0 && CurrentUser.IsLoggedIn)
         {
             _scopes = await Mediator.Send(new GetMyCommentScopesQuery());
@@ -575,7 +740,10 @@ else
     {
         _loading = true;
         _consent = await Mediator.Send(new GetCommentConsentQuery(_audience));
-        _page = await Mediator.Send(new GetChartCommentsQuery(ChartId, _audience, _sort, _take));
+        // The reader's language is the request's culture — the vertical judges by language and
+        // never sees a region's difference; the sticky pick rides beside it.
+        _page = await Mediator.Send(new GetChartCommentsQuery(ChartId, _audience, _sort, _take,
+            CultureInfo.CurrentUICulture.Name, _preferredLocale));
         _loading = false;
     }
 
@@ -635,12 +803,13 @@ else
     ///     Reporting reloads nothing — the thread looks exactly the same afterwards, which is the
     ///     point: nothing about a report is advertised, including that one happened.
     /// </summary>
-    private async Task SubmitReport((CommentRecord Comment, CommentReportReason Reason) request)
+    private async Task SubmitReport((CommentRecord Comment, CommentReportReason Reason, string? ViewedLocale) request)
     {
         _reporting = null;
         try
         {
-            await Mediator.Send(new ReportCommentCommand(request.Comment.Id, request.Reason));
+            await Mediator.Send(new ReportCommentCommand(request.Comment.Id, request.Reason,
+                request.ViewedLocale));
         }
         catch (CommentNotAllowedException exception)
         {

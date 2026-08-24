@@ -53,7 +53,7 @@ exists because a rule with no ratchet is what produced the five dialects.
   alone (`BPM`, `NPS`, `CSV`, `URL`, `MB`, `SSS`, `AA`, `PG`, `MG`, `UG`, `API`, `PUMBILITY`), as
   are the protected proper nouns: `Pump It Up`, `Phoenix`, `Discord`, `PIUGame.com`, `piugame.com`,
   `PIU Center`, `piucenter`, `Start.GG`, `SkillAttack`, `piuscores`, `DrMurloc`, `YouTube`,
-  `Iolite Sky`, `BITE`, `Murloc`. A Murloc still has to be able to find the login page.
+  `Iolite Sky`, `BITE`, `Murloc`, `Claude` (the translation pipeline's model vendor, added 2026-08-24). A Murloc still has to be able to find the login page.
 
 ## Syllable inventory
 
@@ -308,6 +308,60 @@ row, the chart journey and the admin backfill.
 | target | murgroblub | Reused from `repriced` — a Murloc names the thing by what it does to the number. `PUMBILITY Targets` is `PUMBILITY Murgroblub`. |
 | Highest / Lowest | Mrrglmrrgl / Glubglub | The doubled root is the superlative, the owner's own repetition device: `mrrgl` (most/above) and `glub` (below). `Mrgl Mrrgl` is very high; `Mrrgl` alone is high. |
 | only | ub | Recovered from `#{0} of {1}` → `#{0} ub {1}` — the same particle carries "of" and "only". |
+
+## The comment-translation batch (2026-08-24)
+
+Coined for the translated-comment display and `/Admin/Translations`. `Grorglrgl` (Original),
+`Lurggrgl` (Queued), `blurgl` (read), `romorg` (show), `marogl` (wait/Waiting), `bomo` (nothing),
+`lu` (is), `a` (the), `blub` (are), `grab` (take), `murgm` (what), `mrgla` (ago), `grrglmrgl`
+(day/days), `grogl` (hour — and ceiling, the file's own established double), `blurpgl`
+(comments) and `blarg` (from) are recoveries from the existing file; everything below is new.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| translate / translation | blubmurm | The root. `Blubmurmgl` (translated), `Blubmurmgrgl` (Translations), `roblubmurm` (re-translate). |
+| text / texts | blubgrgl | The pipeline's unit of work. |
+| queue (verb) | rolurggrgl | `ro` (again) on the recovered `Lurggrgl` (queued). |
+| submit / submitted | blubgrog | |
+| collect / collected | groglub | |
+| pipeline | groplurg | |
+| parked | bloparg | |
+| key (a credential) | grub | |
+| configured | groblarg | |
+| drain | gurgro | |
+| now | bam | |
+| flight (in flight) | glomurg | `Gropmur glomurg` — the recovered "through" preposition carries "in". |
+| last (most recent) | lug | |
+| spend / spent | grumgl | |
+| committed | groblub | |
+| against | apgrog | |
+| budget | grumbgrog | `grumb` (value) + `grog`. |
+| fuse | bruglub | |
+| bug | bugl | Not `blub`, which the file already uses as the be-verb. |
+| before | bagrol | |
+| raising | uplub | |
+| if | ob | |
+| it | ug | |
+| they | ulg | |
+| so (with the result that) | op | The thin-band note's connective, reused. |
+| there | gorp | |
+| new | rogl | |
+| night / nights | plglmurg | Plural `plglmurgrgl`; `plglmurgmr` (nightly) already existed. |
+| coming (the coming nights) | bamgrol | `bam` (now) + `grol`. |
+| rolling (a rolling window) | grolur | |
+| recent | rublarg | |
+| failures | morglrgl | Plural of the established `Morgl` (broken). |
+| refresh | roglurg | |
+| everything | algrog | |
+| confirm | gromarg | |
+| reporter | blargmorp | `Blarg` (report) + `morp` (player). |
+| saw | blomorg | |
+| never | molarg | `mo` (negation) + `larg` (yet). |
+| oldest | glorgglorg | The doubled root, the owner's superlative device, on `glorg` (old). |
+| mid- | mog | `mog-groplurg` is mid-pipeline. |
+| batches | bloglrgl | |
+| running | grogrol | |
+| can | gab | Not `gam`, which the file already uses as "how". |
 
 ## The thin-band note (2026-08-20)
 

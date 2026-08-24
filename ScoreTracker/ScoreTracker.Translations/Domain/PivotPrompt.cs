@@ -61,6 +61,16 @@ internal static class PivotPrompt
                 `canonical` unchanged. A name you cannot place is exactly the kind that gets
                 mangled downstream.
 
+                ## Link markers
+
+                The comment may contain markers such as ⟦1⟧ or ⟦·2⟧. Each one stands for a link
+                the author placed there; you are not shown where it points. Copy every marker
+                into your English exactly as written, positioned where the link reads naturally.
+                Always leave a space on both sides of a marker, even where the language would
+                attach a particle or an article directly to it. Never drop one, invent one,
+                repeat one, or alter one — and never write a URL of your own. Do not list markers
+                as entities; they are handled outside your output.
+
                 {TranslationGlossary.Text}
 
                 {TranslationGlossary.RegisterCaveat}

@@ -1,7 +1,8 @@
 # March of Murlocs Overhaul
 
-Status: **Slice 0 landed. Slice 1 is complete — decisions settled and all six surfaces mocked
-(§11). The remaining slices were re-ordered afterwards (§8).** Explored 2026-08-09, workshopped
+Status: **Slices 0, 1, R, 2 and 3 are shipped** — the tables are live under the old pages
+(PR #274) and MoM's import reads the score journal (§2.5, resolved 2026-08-24). The slice order
+was re-ordered after Slice 1 (§8); next is 4a, the read surfaces, which deletes the old pages. Explored 2026-08-09, workshopped
 and mocked 2026-08-10/11.
 
 March of Murlocs is the site's quarterly stamina ladder: 1 hour 45 minutes to bank as many
@@ -145,12 +146,21 @@ at boundaries.
 selects every session for a tournament and ranks them together. P1 and P2 sessions currently
 share one board — combined with 2.3, P2 players hold an unearned advantage.
 
-### 2.5 Play timestamps are parsed and then discarded
+### 2.5 Play timestamps are parsed and then discarded — **resolved in Slice 3, by subtraction**
 
 `PiuGameGetRecentScoresResult.RecordedAt` is parsed to the second, with the site's own UTC
-offset, at [`PiuGameApi.cs:714`](../../ScoreTracker/ScoreTracker.OfficialMirror/Infrastructure/Apis/PiuGameApi.cs:714).
-[`OfficialSiteClient.cs:838`](../../ScoreTracker/ScoreTracker.OfficialMirror/Infrastructure/OfficialSiteClient.cs:838)
-drops it when building `OfficialRecordedScore`, on exactly the path MoM's import uses.
+offset (`PiuGameApi.ParseRecordedAt`). By the time Slice 3 landed, the main import already kept
+it the whole way down: best attempts store it as `RecordedDate`, and every play the recent
+window observes — stage breaks included — is journaled with its real time
+(`RecordObservedPlaysCommand.PlayedAt`). The one path still dropping the stamp was a
+MoM-only credential overload, `OfficialSiteClient.GetRecentScores(mix, username, password)`,
+whose sole caller was the record page's import dialog.
+
+**Slice 3 deleted that path instead of fixing it** (owner, 2026-08-24): MoM's import reads the
+score journal through ScoreLedger's published `GetPlayerJournalQuery`, which serves
+`OccurredAt`, judgements and stage breaks for free — one scraper, one journal, MoM is a
+reader. The `GetOfficialRecentScoresQuery` contract and the credential overload are gone, and
+with them the last surface outside Import Scores that asked for a piugame password.
 
 ### 2.6 The 1h45m rule is unenforceable
 
@@ -534,7 +544,7 @@ re-ordered after Slice 1** (2026-08-11). What changed and why is under the table
 | **1 — Settle on mocks** ✅ *done* | UX/UI pass across the six surfaces. Design only, no code. D14–D22 and §11; the six mocks are checked in beside this doc. | 0 |
 | **R — The window predicate** ✅ *shipped inside Slice 2* | §2.9 only. One condition, the rest-time floor it implies, and regression tests. No schema, no UI, no scoring change, no dependency on anything below. **§2.8 is not in R and is not being fixed** — Phoenix 1 MoM scoring is frozen (owner, 2026-08-11). Folded into Slice 2's PR rather than shipped alone (owner, 2026-08-14). | — |
 | **2 — Own the data** ✅ | Five tables, model contribution, purge manifest, repository, migrate the seasons, cycle rewritten onto `MoMSeason`. **"Repointed" means the repository is swapped behind the old pages, not that they are rebuilt** — they are deleted in Slice 4 either way, and the point of the swap is to run the new tables under real traffic before the UI depends on them. **D5 (verification removal) rides in this slice** (owner, 2026-08-14): `MoMSession` deliberately has no home for approval state, and dual-storage plumbing for a feature with zero photos ever attached would be built only to be deleted in 4a. Slice R rides here too. | 1 |
-| **3 — Timestamps** *was Slice 5* | Plumb `RecordedAt` through `OfficialRecordedScore` (§2.5). An OfficialMirror change; touches none of MoM's tables. | — |
+| **3 — Timestamps** ✅ *was Slice 5; reshaped 2026-08-24* | §2.5, resolved by subtraction: the journal already stores every observed play's `OccurredAt` (stage breaks included), so MoM's import reads ScoreLedger's `GetPlayerJournalQuery` and the credential-based `GetOfficialRecentScoresQuery` chain is deleted outright. The interim record page repoints onto the journal — functional, not pretty; 4a deletes it. Touches none of MoM's tables. | — |
 | **4a — Read surfaces** | Season, Session Breakdown, Past seasons dialog. The Stamina→MoM rename, the old pages deleted. (Verification removal moved up into Slice 2.) | 2 |
 | **4b — Write surfaces** | Submit — draft/publish lifecycle, minimal-click entry, the import with gap detection — and the Planner with named saved sets and CSV. | 2, 3 |
 | **4c — Discord card** | The fourth `DiscordFeedKind`, the card, `/piu feed mom`. | 2 |
@@ -855,21 +865,23 @@ themselves:
 **The 1h45 budget is visible** — a bar filled by song duration with the rest-time remainder
 called out. There is no meter today at all; `CanAdd` simply refuses and says nothing.
 
-**The import path stays** (D4 is a month away, not today) and it **reuses a stored piugame
-credential** the way `/UploadPhoenixScores` does — a lock chip reading *Saved on this device* and
-a single Import button, rather than prompting for a password this device already holds.
+**The import path stays** (D4 is a month away, not today) and — since Slice 3 — **it reads the
+score journal**, not the site: one Import button, no credential fields at all. The 2026-08-10 rule
+that this page never stores a password is now vacuous in the strongest way: it never sees one.
+Freshness is Import Scores' job — a session missing from the journal means the player runs that
+page first (where the remembered credential lives) and comes back; the empty state links there,
+so the fallback is a fallback rather than a dead end.
 
-**One click is the stored case only.** With nothing saved it is a username, a password and an
-Import button, exactly as the upload page renders it. **This page never offers to save them**
-(owner, 2026-08-10): remembering a credential is Import Scores' job, and a second surface that
-stores passwords is a second surface to get wrong. It points at that page instead, so the fallback
-is a fallback rather than a dead end.
+**If Submit ever triggers that import itself rather than linking to it, one standing trap:**
+`ScoreImportCompletedEvent` publishes *before* the journal write lands, so reading the journal on
+that event reads the pre-import state. Poll the journal or re-query on return — never
+consume the event as "journal is ready".
 
 #### The import flow
 
-What PIUGAME returns is an undifferentiated list of recent plays, so the whole problem is deciding
-which of them were the session. **Timestamps answer it**: a run is a contiguous block, and its
-boundaries are the long gaps either side. The dialog reads the recent plays, splits them wherever
+What the journal returns is an undifferentiated list of recent plays, so the whole problem is
+deciding which of them were the session. **Timestamps answer it**: a session is a contiguous
+block, and its boundaries are the long gaps either side. The dialog reads the recent plays, splits them wherever
 a gap exceeds fifteen minutes, and pre-selects the longest block — everything outside it dims but
 stays on screen, with the gap printed between blocks ("3h 42m gap"), so the choice is legible
 rather than magic. **Clicking any play moves whichever end is nearer**, which needs no drag
@@ -887,8 +899,9 @@ Three checks ride along, and D10 splits them exactly:
 Charts already in the draft are skipped on import rather than doubling up — the repeat ban (§1)
 applies to the import path as much as the picker.
 
-**Without timestamps there is nothing to detect a gap with**, and this degrades to picking the first and last play
-by hand. That is what the page does today, and the reason it needs a range picker at all.
+**Without timestamps there is nothing to detect a gap with** — which is why the pre-Slice-3 page
+needed a hand-picked range. Journal plays always carry `OccurredAt` now; the degraded case left
+is a play the journal never observed, which is a missing import, not a missing stamp.
 
 ### 11.5 Planner
 

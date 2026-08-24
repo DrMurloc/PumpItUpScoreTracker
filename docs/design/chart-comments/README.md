@@ -208,9 +208,10 @@ audience exactly. Four things follow:
 
 - **Translation has nothing to corrupt.** The corpus measured `2:01` and blank lines surviving. It
   never measured `**drill**` going through Sonnet into Korean and back.
-- **The link-set invariance check stays trivial** — set equality on bare URLs. Under markdown,
-  `[label](url)` translates the label and not the target, so the one non-negotiable injection
-  defence would have to reason about a pair instead of a set.
+- **The link-set invariance check stays trivial** — the model never even sees a URL (§3's markers),
+  and what comes back must carry every marker exactly once and nothing link-shaped it added. Under
+  markdown, `[label](url)` translates the label and not the target, so the one non-negotiable
+  injection defence would have to reason about a pair instead of a set.
 - **The cap stops taxing formatting.** `**drill**` spends 9 characters to show 5.
 - **Six toolbar tooltips × nine locales stop existing**, along with the `wrapSelection` JS file and
   the Write/Preview toggle. The composer is one line that grows.
@@ -246,6 +247,14 @@ gets an interstitial naming the host.
 | piuscores, youtube / youtu.be, reddit / redd.it, `pumpout2020.anyhowstep.com`, piugame, piucenter | **Dot-boundary suffix** — `host == d \|\| host.EndsWith("." + d)`, so `youtube.com.evil.tld` cannot slip through |
 | Every **public** Community Tool's URL | **Exact host only** — a tool at `tools.example.com` must not bless `evil.example.com` |
 
+**Tracking parameters are stripped at save** (owner, 2026-08-24 — lands in Slice 4). When a comment
+or note is posted or edited, each link is cleaned against a **fixed list of known trackers**: every
+`utm_*`, YouTube's `si`, the click ids (`fbclid`, `gclid`, `dclid`, `msclkid`, `twclid`, `ttclid`,
+`igshid`, `yclid`), Mailchimp's `mc_cid`/`mc_eid`. Anything not on the list stays — a parameter a
+site actually needs (a YouTube timestamp, a search term) must survive. The stored text itself is
+rewritten, so the author sees the cleaned link on edit. Existing rows are not rewritten
+retroactively; they pick it up on their next edit.
+
 - Only `http` and `https` parse. `javascript:` and `data:` are rejected at parse time.
 - The interstitial shows the **parsed host**, never the link text, which is author-controlled.
 - The tool list is data, so the allowlist is dynamic and memory-cached on a short TTL.
@@ -264,22 +273,49 @@ renders their comment Korean→Korean — precisely the rewrite `TranslationTarg
 prevent. The column ships in the Slice 2 migration so Slice 4 adds no schema; the pivot stage fills
 it, having detected 34/34 across the corpus.
 
-Five renderings: the **en-US pivot** plus **es-ES, fr-FR, ko-KR, pt-BR**. Everything else falls back
-to English.
+Five renderings: the **en-US pivot** plus **es-ES, fr-FR, ko-KR, pt-BR**.
 
 - ja-JP and it-IT are **deliberately out for launch** — a cost decision, revisited if volume proves
-  cheap (§3).
+  cheap (§3). Their readers see **originals**, not forced English (rule 3 below).
 - **es-MX** maps to es-ES. Mutually intelligible, the es-MX catalogue is contaminated, and the
   original is always available.
-- **en-ZW (Murloc) is never a translation target.** Murloc readers get English.
+- **en-ZW (Murloc) is never a translation target.** Murloc readers get the English rendering.
+- **No closeness map, in either direction** (owner, 2026-08-24). Written regional variants of the
+  five pipeline languages are mutually readable — the famous pt-PT/pt-BR gulf is spoken, not
+  written — and cross-language "close enough" guesses (a Portuguese reader handed Spanish) are
+  asymmetric and swamped by individual variation. Being wrong about a pair later is a stage-two
+  backfill, not a redesign.
 
-Display resolution, in order:
+Display resolution (owner-worded, 2026-08-24), per comment, judged against the **language** of the
+locale the reader browses the site in:
 
-1. Reader locale → mapped rendering locale.
-2. Comment's source shares that language → show the **original**, no badge. Silence is the common case.
-3. A rendering exists → show it, badged *Translated from 한국어*, with a per-comment **Show original**.
-4. Not yet translated → show the **original** badged *Queued for translation*. The comment already
-   exists in *some* language; an empty box is worse than the author's own words.
+1. **Comment written in the effective language — region ignored — → the original.** The
+   *effective* language is the reader's own locale, or their Read-in pick where one stands (the
+   pick is total — see below): a Mexican reader sees a peninsular-Spanish comment as written, and
+   vice versa. Nothing is ever translated into its own language.
+2. **Otherwise map by language, not region** → show the rendering for the effective *language*
+   when one exists (es-MX → es-ES, en-ZW → the pivot), badged *Translated from 한국어*, with a
+   per-comment **Show original**.
+3. **No rendering for the reader's language** (ja-JP, it-IT) → the **original**. The first draft's
+   "everything else falls back to English" is retired — nobody is handed a language they did not
+   ask for.
+4. A step-2 reader whose rendering does not exist yet sees the **original** badged *Queued for
+   translation*. A reader whose default is already the original sees no badge at all — the comment
+   exists in *some* language, and an empty box is worse than the author's own words. The badge
+   makes no claim about languages (owner: it also tells same-language readers "others will read
+   this soon"), renders only while the pipeline is armed, and expires after three days with
+   nothing arrived — a promise, never a lie.
+
+**A manually picked localization is sticky, and total.** Choosing a rendering by hand — the way a
+ja-JP reader opts into English — is stored in UiSettings and **substitutes for the reader's locale
+in the whole resolution** (owner, field test 2026-08-24): "Read in español" means everything reads
+Spanish — foreign comments show their es-ES rendering, comments already written in Spanish show
+their originals (which are the Spanish asked for, unbadged), and nothing ever falls back to the
+reader's own language while a pick stands. Half-honouring the pick was measured wrong in the field:
+a Spanish pick once showed a Spanish comment in English. **The clearing option is labeled
+*Automatic*, not *Original*** (same day): it restores the default resolution, which for a
+mapped-language reader still shows renderings — calling it Original lied to exactly those readers.
+The author's words are always and only the per-comment *Show original*, which stays transient.
 
 ⚠ **Never render a comment back into its own language.** The round trip is a measured rewrite —
 register raised, community vocabulary flattened, the most contemptuous phrase dropped, `1000%`
@@ -287,7 +323,7 @@ corrupted to `100%`. `TranslationTarget.ForSource` already encodes this; **absen
 instruction to show the original.**
 
 An unsupported source language (Indonesian, say) is detected by stage one — 34/34 across the
-corpus — and named for the reader via `CultureInfo.DisplayName`.
+corpus — and named on the badge via `CultureInfo.DisplayName`.
 
 ### The rules card
 
@@ -359,20 +395,49 @@ Pending → PivotSubmitted → PivotDone → FanOutSubmitted → Translated
 Two recurring jobs: **Submit** (nightly — builds and submits both stages' batches) and **Collect**
 (hourly — polls open batches, writes results, advances state, records usage).
 
+**The model never sees a URL** (owner, 2026-08-24). Before a comment is queued, every link is lifted
+out and replaced with a **per-comment collision-proof marker** — chosen against that comment's text,
+so an author who happens to type the marker string just gets a different marker; anything *inside* a
+URL leaves with the URL and is never model-visible at all. The prompts say the markers are links the
+author placed (so grammar wraps them correctly) and never say what they point at. The defence is now
+two deterministic layers, and its failure mode is "no translation", never a broken comment:
+
+- **The pipeline verifies markers at collect** — every marker back exactly once, nothing link-shaped
+  added — and marks the text `Failed` otherwise, so the state machine is honest about it.
+- **ChartComments runs the authoritative check on consume**, substituting the links back and parsing
+  the result with the *same tokenizer that autolinks at render* — the rendering's link set must
+  equal the original's or it is never written. Required by
+  [comment-translation.md §5](../comment-translation.md) and non-negotiable: the deterministic, free
+  defence against the only prompt injection worth an attacker's effort.
+
 - **`Audience = Private` is never submitted.** A personal note has an audience of one who already
   reads the language it was written in. This is a permanent exclusion in the submit step, not a
   deferral.
 - The **ceiling is checked at submit time**, against rolling 30-day actual usage from completed
   batches plus an estimate for in-flight ones. Spending is not something to discover afterwards.
+- **Model ids and the ceiling live in config**, not in the command — the probe-shaped
+  `TranslateCommentCommand` keeps its model parameters for the workbench, and production reads its
+  own from the `Translations` section.
+- **Edits always re-queue; the cooldown lives at submit** (owner-approved fix from the 2026-08-24
+  bug check, replacing the edit-side block): a source key **enters a batch at most once per 24 h**
+  (`LastSubmittedAt` survives the upsert). The edit-side block turned out to lose translations —
+  it dropped the stale renderings, never re-queued, and was bypassed by editing twice — while the
+  submit-side wait cannot lose anything: the newest text simply goes next night. The ceiling is a
+  fuse against bugs; an edit loop is a user-driven cost amplifier the fuse cannot see, and this is
+  what sees it.
 - A `translated_by` provenance column on every rendering — model and path. It is what makes "why do
   these two hundred read differently?" answerable.
-- ⚠ **A rendering whose link set differs from the source's is rejected.** Required by
-  [comment-translation.md §5](../comment-translation.md) and non-negotiable: it is the deterministic,
-  free defence against the only prompt injection worth an attacker's effort.
 - Re-translation after a prompt or glossary change is **admin-triggered only**, and quotes its cost
   first.
+- **Failure is told, not just recorded**: every path into `Failed` publishes
+  `TextTranslationFailedEvent`, which clears the comment's queued stamp so the badge stops
+  promising. The badge also carries a **three-day horizon** as the backstop for losses nothing
+  announces (a dropped in-memory message, a crash between complete and publish).
 - Admin page: backlog depth, oldest pending age, rolling spend against the ceiling, last run,
-  failures, **Drain now**.
+  failures with **Retry failed** beside them (Failed is not a dead end), **Drain now**.
+- **No `ClaudeApi:ApiKey` configured ⇒ Submit parks itself** and logs once. The retired "nothing
+  that ships can spend a token" property survives as the default posture; configuration is what
+  arms the pipeline.
 
 ⚠ **This retires a documented safety property.** Today `ILanguageModelClient` has no implementation
 in `Data` and no DI registration, so no shipping code path can spend a token. This feature ends that
@@ -554,11 +619,16 @@ glossary, batch-tracking tables, the spend ceiling, the admin page, and the
 
 ```
 QueueTextForTranslationCommand(sourceKey, text)
-    → publishes → TextTranslatedEvent(sourceKey, pivot, translations, provenance)
+    → publishes → TextTranslatedEvent(sourceKey, sourceLanguage, translations, provenance)
 ```
 
 ChartComments publishes the command on post/edit and consumes the event to write renderings onto the
-comment.
+comment. `sourceKey` is **opaque to Translations** — it never parses one, so community descriptions
+or tool blurbs can ride the same pipeline later. The **marker convention is part of this contract**:
+text arrives with links already lifted to markers (the caller owns extraction and substitution,
+because the caller owns the parser that defines what a link is); the pipeline promises markers
+survive verbatim and rejects a result that mishandles them. A re-queue for a `sourceKey` **replaces**
+its pending row — the pipeline keeps no history.
 
 The rejected alternative was ChartComments building request payloads itself. That leaks
 `LanguageModelRequest` shapes across the boundary and makes any prompt change a two-vertical edit.
@@ -593,7 +663,7 @@ clean for one join that only presentation needs.
 | **Domain** | One new port: `ILanguageModelBatchClient` (submit / status / results), beside `ILanguageModelClient`. `Complete()` is synchronous-per-request and cannot express a 24-hour batch. |
 | **Application** | Nothing. It is shrinking by design and this does not reverse that. |
 | **Data** | `AnthropicBatchClient : ILanguageModelBatchClient` in `Clients/`, plus migrations. Reflection DI binds it automatically. |
-| **Web** | Dialog restructure + `ChartCommentsTab`, `CommentThread`, `CommentComposer`, `CommentTextView`, `CommentRulesCard`, `LinkInterstitialDialog`, `CommentReportPanel` (inline under the comment, for the reason the rules card is), `SimilarChartsCompactGrid`, `ChartScoreHistoryTab`, `ReportedCommentsPanel`, the `/Admin/Comments` page. **No JS file** — plain text needs no `wrapSelection`. Plus `ChartCommentsConfiguration` + `IOptions<T>`, following `DevAuthConfiguration`. |
+| **Web** | Dialog restructure + `ChartCommentsTab`, `CommentThread`, `CommentComposer`, `CommentTextView`, `CommentRulesCard`, `LinkInterstitialDialog`, `CommentReportPanel` (inline under the comment, for the reason the rules card is), `SimilarChartsCompactGrid`, `ChartScoreHistoryTab`, `ReportedCommentsPanel`, the `/Admin/Comments` page. **No JS file** — plain text needs no `wrapSelection`. Plus `ChartCommentsConfiguration` + `IOptions<T>`, following `DevAuthConfiguration`. **Slice 4 adds**: the translated badge + *Show original* + the localization picker on `CommentRow` (sticky pick in UiSettings, cleared by choosing the original), the pending badge for step-2 readers, `/Admin/Translations` (backlog, oldest pending, spend vs ceiling, failures, Drain now, Retranslate with cost quote), original-beside-reported-rendering on both moderation surfaces, and the `Translations` + `ClaudeApi` config sections. |
 | **CompositionRoot** | `AddChartComments()`; `ChartCommentsModelContribution` into `VerticalModelContributions.All()`. |
 
 ### ChartComments internals
@@ -635,6 +705,9 @@ merely discouraged. The parser stays internal.
 | `[PurgeKey(nameof(UserId))]` on `CommentRestriction` | Two `*UserId` columns — purges the moderator instead of the restricted user |
 | resx in all nine locales, alphabetical, no case-collisions | A case collision renders English in every non-English locale while English itself looks perfect |
 | `SCHEDULED-JOBS.md` + `DATABASE-SCHEMA.md` rows | Same-PR requirement |
+| **Translations joins BOTH hand-maintained lists** (`VerticalAssemblies.All()` + `VerticalModelContributions.All()`) **in the same commit as its handlers** | The vertical had neither entry while inert; the moment it has handlers, `MediatRHandlerRegistrationTests` (integration suite) fails an unlisted assembly — and an unlisted contribution silently drops its tables from scaffolded migrations |
+| `Translations` + `ClaudeApi` join `forwardedSections` | Same `AppHostForwardingTests` trip as `ChartComments` — a section missing from the list works in production and silently reads empty locally |
+| Renderings die with their comment | Purge, archive and hard-delete all cascade to `ChartCommentRendering` by `CommentId`; the table has no user key, so it takes an `Exempt` row with its reason (same class as revisions) and the decoy-account purge test extends to it |
 
 ## 10. Build order
 
@@ -645,7 +718,7 @@ foundations that already work.
 |---|---|---|---|---|
 | **1** ✅ | **SHIPPED — [PR #227](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/227)**, eleven commits, all five suites green. Sticky tab strip, `InitialTab`, Chart Stats absorbs the meta/skills/similar charts, Score History tab with the manual score edit | **3** | none | no |
 | **2** ✅ | **BUILT** — comments + personal notes: vertical, aggregate, plain-text parser, link trust, threads, votes, composer, rules card, site-admin removal, `FocusCommentId` | **4** | yes | no |
-| **3** | Community moderation — permission flag + backfill, restrictions, reports, queue panels | 4 | yes | no |
+| **3** ✅ | **SHIPPED — [PR #270](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/270)**, nine commits. Community moderation — permission flag + backfill, restrictions, reports, queue panels | 4 | yes | no |
 | **4** | Translation — batch client, the four-state pipeline, ceiling, admin page | 4 | yes | **yes** |
 
 ⚠ **Slice 1 ships three tabs.** A Comments tab with nothing behind it is not shippable, and

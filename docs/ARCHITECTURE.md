@@ -25,7 +25,7 @@ The verticals: **ScoreLedger** (the system of record for scores), **PlayerProgre
 **ChartComments** (comments and personal notes on a chart, their votes, and the plain-text parser
 that autolinks a URL and decides whether its host is trusted), **Rivals** (the rival graph — a directed edge onto a site player or a board tag, plus the blocks and invite codes that gate it; see [rivals.md](design/rivals.md)), **Identity** (accounts, logins, tokens), and **HomePage** (dashboard layout persistence — pages and widget instances; the widget *render components* live in Web's registry, see [docs/design/HomePageWidgets/README.md](design/HomePageWidgets/README.md)).
 
-**Translations** is a vertical in shape only, and deliberately so: it holds the prompts and glossary for rendering community text across locales, owns no tables, references no `Data`, and is wired into nothing. Its one dependency — the `ILanguageModelClient` Domain port — has no registration anywhere in the application, so no shipping code path can spend a metered token. It exists to be experimented against from `ScoreTracker.ExplorationTests`; see [docs/design/comment-translation.md](design/comment-translation.md).
+**Translations** is a real vertical since the chart-comments feature's translation slice: it owns the batch pipeline that renders community text across locales — prompts and glossary, the queue and spend-ledger tables, the nightly submit / hourly collect jobs, and the rolling dollar ceiling. Its contract is deliberately generic: `QueueTextForTranslationCommand(sourceKey, text)` in, `TextTranslatedEvent` / `TextTranslationFailedEvent` out, with the source key opaque — ChartComments is the first consumer, and community descriptions or tool blurbs can ride the same pipeline later. The old "nothing that ships can spend a metered token" property survives as the shipped *posture* rather than a structural fact: the batch adapter (`ILanguageModelBatchClient` → `AnthropicBatchClient` in `Data`) reports itself unconfigured and the pipeline parks unless a `ClaudeApi:ApiKey` is deliberately supplied, and the submit step checks a rolling 30-day ceiling before any batch goes out. The synchronous `ILanguageModelClient` port still has no shipping implementation — its one adapter lives in `ScoreTracker.ExplorationTests`, whose sweep exercises the same prompts via `InternalsVisibleTo`; see [docs/design/comment-translation.md](design/comment-translation.md).
 
 ### Onion (dependency direction)
 
@@ -98,8 +98,9 @@ ScoreTracker.sln
 │   │                                  board tags, blocks, invite codes
 │   ├── ScoreTracker.HomePage          dashboard layout persistence: pages + widget
 │   │                                  instances (widget UI lives in Web's registry)
-│   ├── ScoreTracker.Translations      community-text translation prompts + glossary
-│   │                                  (exploratory; owns no tables, wired nowhere)
+│   ├── ScoreTracker.Translations      community-text translation: prompts + glossary,
+│   │                                  the batch pipeline, queue + spend-ledger tables,
+│   │                                  the rolling dollar ceiling (parked without a key)
 │   └── ScoreTracker.Identity          accounts, external logins, api tokens, settings
 ├── Infrastructure
 │   └── ScoreTracker.Data              shared DbContext, unextracted repositories,
