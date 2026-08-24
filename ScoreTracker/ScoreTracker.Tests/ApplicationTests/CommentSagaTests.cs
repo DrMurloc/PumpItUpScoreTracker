@@ -41,6 +41,7 @@ public sealed class CommentSagaTests
     private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IBus> _bus = new();
     private readonly Mock<ICommentRenderingRepository> _renderings = new();
+    private readonly Mock<ILanguageModelBatchClient> _translationClient = new();
     private readonly Mock<IUserReader> _users = new();
     private readonly User _viewer = new(Guid.NewGuid(), Name.From("ERRLENA"), true, null,
         new Uri("https://example.com/a.png"), Name.From("US"));
@@ -73,13 +74,15 @@ public sealed class CommentSagaTests
             .ReturnsAsync(Array.Empty<CommentRenderingRow>());
         _renderings.Setup(r => r.AnyFor(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
+        _translationClient.SetupGet(c => c.IsConfigured).Returns(true);
     }
 
     private CommentSaga Subject()
     {
         return new CommentSaga(_comments.Object, _consents.Object, _reports.Object,
             _restrictions.Object, _renderings.Object, _currentUser.Object, FakeDateTime.At(Now).Object,
-            _mediator.Object, _users.Object, new MemoryCache(new MemoryCacheOptions()), _bus.Object);
+            _mediator.Object, _users.Object, new MemoryCache(new MemoryCacheOptions()), _bus.Object,
+            _translationClient.Object);
     }
 
     /// <summary>Gives the viewer a seat (and optionally others their roles) in ClubId.</summary>
@@ -815,6 +818,35 @@ public sealed class CommentSagaTests
         _bus.Verify(b => b.Publish(It.Is<ScoreTracker.Translations.Contracts.Messages
                 .QueueTextForTranslationCommand>(queued => queued.Text == "after"),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AParkedPipelineNeverShowsTheQueuedBadge()
+    {
+        // Comments on, translation unarmed is a legitimate long-lived state. The queued badge
+        // promises a translation is coming; with no API key, nothing keeps that promise.
+        _translationClient.SetupGet(c => c.IsConfigured).Returns(false);
+        SetupRows(new CommentRow(Guid.NewGuid(), ChartId, Guid.NewGuid(), null, "algo en español",
+            Now, null, null, null, 0, false, null, Now));
+
+        var page = await Subject().Handle(
+            new GetChartCommentsQuery(ChartId, CommentAudience.Public, ReaderLocale: "en-US"),
+            CancellationToken.None);
+
+        Assert.False(Assert.Single(page.Roots).Translation!.Pending);
+    }
+
+    [Fact]
+    public async Task AQueuedCommentShowsPendingToAMappedReaderWhileArmed()
+    {
+        SetupRows(new CommentRow(Guid.NewGuid(), ChartId, Guid.NewGuid(), null, "algo en español",
+            Now, null, null, null, 0, false, null, Now));
+
+        var page = await Subject().Handle(
+            new GetChartCommentsQuery(ChartId, CommentAudience.Public, ReaderLocale: "en-US"),
+            CancellationToken.None);
+
+        Assert.True(Assert.Single(page.Roots).Translation!.Pending);
     }
 
     [Fact]

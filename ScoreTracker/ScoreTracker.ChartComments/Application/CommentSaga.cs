@@ -52,14 +52,16 @@ internal sealed class CommentSaga :
     private readonly ICommentReportRepository _reports;
     private readonly ICommentRenderingRepository _renderings;
     private readonly ICommentRestrictionRepository _restrictions;
+    private readonly ILanguageModelBatchClient _translationClient;
     private readonly IUserReader _users;
 
     public CommentSaga(ICommentRepository comments, ICommentConsentRepository consents,
         ICommentReportRepository reports, ICommentRestrictionRepository restrictions,
         ICommentRenderingRepository renderings, ICurrentUserAccessor currentUser,
         IDateTimeOffsetAccessor clock, IMediator mediator, IUserReader users, IMemoryCache cache,
-        IBus bus)
+        IBus bus, ILanguageModelBatchClient translationClient)
     {
+        _translationClient = translationClient;
         _comments = comments;
         _consents = consents;
         _reports = reports;
@@ -210,6 +212,10 @@ internal sealed class CommentSaga :
             cancellationToken);
 
         var trust = new LinkTrust(await ToolHostAllowlist.Get(_cache, _mediator, cancellationToken));
+        // The queued badge promises a translation is coming, and with the pipeline parked (no
+        // API key) that would be a promise nothing keeps — comments-on, translation-unarmed is a
+        // legitimate long-lived state, not a misconfiguration to surface at readers.
+        var translationArmed = _translationClient.IsConfigured;
         // Notes are never translated, so their read never touches the renderings table at all.
         var renderings = request.Audience.IsPrivate
             ? new Dictionary<Guid, CommentRenderingRow[]>()
@@ -234,10 +240,11 @@ internal sealed class CommentSaga :
                         ? found.Where(reply => reply.DeletedAt == null)
                         : Enumerable.Empty<CommentRow>())
                     .Select(reply => Project(reply, request, trust, authors, viewer,
-                        moderation, renderings, Array.Empty<CommentRecord>()))
+                        moderation, renderings, translationArmed, Array.Empty<CommentRecord>()))
                     .ToArray();
 
-                return Project(root, request, trust, authors, viewer, moderation, renderings, replies);
+                return Project(root, request, trust, authors, viewer, moderation, renderings,
+                    translationArmed, replies);
             })
             // A deleted root leaves a stub ONLY while something living still hangs off it. Nobody
             // answered, or every answer is gone too, and the whole thread goes with it.
@@ -321,7 +328,8 @@ internal sealed class CommentSaga :
 
     private CommentRecord Project(CommentRow row, GetChartCommentsQuery request, LinkTrust trust,
         Dictionary<Guid, User> authors, Guid viewer, ModerationContext moderation,
-        Dictionary<Guid, CommentRenderingRow[]> renderings, IReadOnlyList<CommentRecord> replies)
+        Dictionary<Guid, CommentRenderingRow[]> renderings, bool translationArmed,
+        IReadOnlyList<CommentRecord> replies)
     {
         var audience = request.Audience;
         var deletion = DeletionOf(row);
@@ -329,7 +337,7 @@ internal sealed class CommentSaga :
         var translation = deletion == null && !audience.IsPrivate
             ? ResolveTranslation(row, trust,
                 renderings.TryGetValue(row.Id, out var mine) ? mine : Array.Empty<CommentRenderingRow>(),
-                request.ReaderLocale, request.PreferredLocale, out var body)
+                request.ReaderLocale, request.PreferredLocale, translationArmed, out var body)
             : null;
 
         return new CommentRecord(
@@ -364,12 +372,12 @@ internal sealed class CommentSaga :
     /// </summary>
     private static CommentTranslationRecord ResolveTranslation(CommentRow row, LinkTrust trust,
         IReadOnlyList<CommentRenderingRow> mine, string? readerLocale, string? preferredLocale,
-        out IReadOnlyList<CommentSpan> originalBody)
+        bool translationArmed, out IReadOnlyList<CommentSpan> originalBody)
     {
         var available = mine.Select(rendering => rendering.Locale).OrderBy(l => l, StringComparer.Ordinal)
             .ToArray();
         var resolution = CommentDisplayResolution.Resolve(readerLocale, preferredLocale,
-            row.SourceLanguage, available, row.TranslationQueuedAt != null);
+            row.SourceLanguage, available, translationArmed && row.TranslationQueuedAt != null);
         var translated = resolution.RenderingLocale != null;
         originalBody = translated ? CommentText.Parse(row.Text, trust) : Array.Empty<CommentSpan>();
 
