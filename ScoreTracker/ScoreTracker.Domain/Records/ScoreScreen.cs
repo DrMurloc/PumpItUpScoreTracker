@@ -25,7 +25,9 @@ public sealed record ScoreScreen(StepCount Perfects, StepCount Greats, StepCount
     public int MissLoss => (int)(.995 * Misses / TotalCount * 1000000.0);
     public int ComboLoss => (int)(.005 * (TotalCount - MaxCombo) / TotalCount * 1000000.0);
 
-    private static readonly IDictionary<int, int> EstimatedNoteCountThresholds =
+    // Public so the score calculator page can emit the exact same table to its script —
+    // the calories → arrows-pressed estimate is owner-verified and must not fork.
+    public static readonly IReadOnlyDictionary<int, int> EstimatedNoteCountThresholds =
         new Dictionary<int, int>
         {
             { 57, 1 },

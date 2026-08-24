@@ -1,0 +1,140 @@
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.ScoreCalculator
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* Half the chart is holds (design doc D11–D13): hold ticks are perfects for as long as the
+   hold is held, and from level 15 up they are about half of every chart's judgements. Hold
+   density is one of the levers score difficulty is tuned with — and some charts simply are
+   hold songs, which is what the extremes lists show. The numbers are derived estimates and
+   the section says so (owner-required, D7/D12). *@
+<section class="sc-sec" id="sc-holds">
+    <div class="sc-sec-head">
+        <h2 class="sc-h2">@L["Half the chart is holds"]</h2>
+        <span class="sc-sub">@L["Hold ticks are perfects for as long as the hold is held — and from level 15 up they are about half of every chart's judgements. Hold density is one of the levers a chart is tuned with; and some charts simply are hold songs."]</span>
+    </div>
+    @if (Model.Holds.Levels.Count == 0)
+    {
+        <p class="sc-foot">@L["Hold-tick data hasn't been computed for this mix yet — it fills from the chart analysis crawl."]</p>
+    }
+    else
+    {
+        <div class="sc-chartwrap">
+            <svg viewBox="0 0 @Width @Height" role="img"
+                 aria-label="@L["Share of judgements that are hold ticks, by level"]">
+                @foreach (var tick in new[] { 0.0, .2, .4, .6, .8 })
+                {
+                    <line x1="@PadLeft" x2="@(Width - PadRight)" y1="@Y(tick).ToString(F)" y2="@Y(tick).ToString(F)" class="sc-grid" />
+                    @SvgLabel(PadLeft - 8, Y(tick) + 4, "end", "sc-tick", $"{tick * 100:0}%")
+                }
+                <path d="@BandPath()" class="sc-holdband" />
+                <line x1="@PadLeft" x2="@(Width - PadRight)" y1="@Y(PassingFCeiling).ToString(F)" y2="@Y(PassingFCeiling).ToString(F)" class="sc-fline" />
+                @SvgLabel(Width - PadRight - 4, Y(PassingFCeiling) - 6, "end", "sc-fline-label", L["passing-F ceiling · 37.6%"])
+                <polyline points="@MedianPoints()" class="sc-holdline" />
+                @foreach (var (level, index) in Model.Holds.Levels.Select((l, i) => (l, i)))
+                {
+                    <rect x="@((X(index) - Slot / 2).ToString(F))" y="@PadTop" width="@Slot.ToString(F)"
+                          height="@(Height - PadTop - PadBottom)" fill="transparent"
+                          data-sc-tip="@TipFor(level)"></rect>
+                    @SvgLabel(X(index), Height - 8, "middle", "sc-tick", level.Level.ToString())
+                }
+            </svg>
+        </div>
+        <div class="sc-legend">
+            <span class="sc-legend-item"><i class="sc-sw sc-sw-holdline"></i>@L["median share of judgements that are hold ticks"]</span>
+            <span class="sc-legend-item"><i class="sc-sw sc-sw-holdband"></i>@L["middle 80% of charts"]</span>
+            <span class="sc-legend-item"><i class="sc-sw sc-sw-fline"></i>@L["above this line a passing F is impossible"]</span>
+        </div>
+        <div class="sc-holdlists">
+            <div>
+                <h3 class="sc-h3">@L["Most hold-tick heavy"]</h3>
+                <div class="sc-tablewrap">
+                    <table class="sc-table">
+                        <tr><th class="sc-th-left">@L["Chart"]</th><th>@L["ticks"]</th><th>@L["share"]</th></tr>
+                        @foreach (var chart in Model.Holds.MostTicks)
+                        {
+                            <tr>
+                                <td class="sc-td-left">@chart.SongName <b>@chart.Type.GetShortHand()@chart.Level</b></td>
+                                <td class="sc-num">@chart.HoldTicks.ToString("N0") / @chart.NoteCount.ToString("N0")</td>
+                                <td class="sc-num">@chart.Share.ToString("P0")</td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+            </div>
+            <div>
+                <h3 class="sc-h3">@L["Least, level 15+"]</h3>
+                <div class="sc-tablewrap">
+                    <table class="sc-table">
+                        <tr><th class="sc-th-left">@L["Chart"]</th><th>@L["ticks"]</th><th>@L["share"]</th></tr>
+                        @foreach (var chart in Model.Holds.FewestTicksFifteenPlus)
+                        {
+                            <tr>
+                                <td class="sc-td-left">@chart.SongName <b>@chart.Type.GetShortHand()@chart.Level</b></td>
+                                <td class="sc-num">@chart.HoldTicks.ToString("N0") / @chart.NoteCount.ToString("N0")</td>
+                                <td class="sc-num">@chart.Share.ToString("P0")</td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+                <p class="sc-foot">@L["Low tick share is what makes a low score reachable: hold everything, good every tap, and a chart under the dashed line can pass with an F. On a typical level 18 that floor is a D — about 591,000."]</p>
+            </div>
+        </div>
+        <p class="sc-foot">@L["Tick counts are inferred: tap counts come from community simfiles, the totals from real plays, and the difference is the ticks. Treat charts within a few percent of each other as tied — the numbers are estimates right now."]</p>
+    }
+</section>
+
+@code {
+    private const int Width = 960;
+    private const int Height = 300;
+    private const int PadLeft = 46;
+    private const int PadRight = 8;
+    private const int PadTop = 12;
+    private const int PadBottom = 26;
+    private const double MaxShare = .8;
+    private const string F = "0.##";
+
+    /// <summary>
+    ///     Good-spam floors at 1e6 × (h + 0.199(1−h)); a passing F needs under 500,000, which
+    ///     solves to a tick share of 37.6%.
+    /// </summary>
+    private const double PassingFCeiling = .376;
+
+    [Parameter, EditorRequired] public ScoreCalculatorModel Model { get; set; } = default!;
+
+    private double Slot => (Width - PadLeft - PadRight) / (double)Model.Holds.Levels.Count;
+    private double X(int index) => PadLeft + (index + .5) * Slot;
+    private static double Y(double share) => PadTop + (1 - share / MaxShare) * (Height - PadTop - PadBottom);
+
+    /// <summary>Razor reserves the literal &lt;text&gt; tag, so SVG labels render through markup.</summary>
+    private static MarkupString SvgLabel(double x, double y, string anchor, string cssClass, string content)
+    {
+        return (MarkupString)($"<text x=\"{x:0.##}\" y=\"{y:0.##}\" text-anchor=\"{anchor}\" " +
+                              $"class=\"{cssClass}\">{System.Net.WebUtility.HtmlEncode(content)}</text>");
+    }
+
+
+    private string BandPath()
+    {
+        var levels = Model.Holds.Levels;
+        var top = string.Join(" ", levels.Select((l, i) =>
+            $"{(i == 0 ? "M" : "L")}{X(i).ToString(F)},{Y(Math.Min(l.P90Share, MaxShare)).ToString(F)}"));
+        var bottom = string.Join(" ", levels.Select((l, i) => (Level: l, Index: i)).Reverse()
+            .Select(p => $"L{X(p.Index).ToString(F)},{Y(p.Level.P10Share).ToString(F)}"));
+        return $"{top} {bottom} Z";
+    }
+
+    private string MedianPoints()
+    {
+        return string.Join(" ", Model.Holds.Levels.Select((l, i) =>
+            $"{X(i).ToString(F)},{Y(Math.Min(l.MedianShare, MaxShare)).ToString(F)}"));
+    }
+
+    private string TipFor(HoldTickLevelStat level)
+    {
+        return $"{L["Level {0}", level.Level]} · {L["{0} charts", level.Charts.ToString("N0")]} — " +
+               $"{L["median tick share {0}", level.MedianShare.ToString("P0")]} · " +
+               $"{L["middle 80% {0}–{1}", level.P10Share.ToString("P0"), level.P90Share.ToString("P0")]}";
+    }
+}

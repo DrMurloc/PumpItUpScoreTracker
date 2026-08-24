@@ -1,0 +1,107 @@
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.ScoreCalculator
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* How many notes is a level (design doc D10) — the old /NoteCounts display reborn as real
+   HTML: per type and level, the middle-80% band, the median line, the extremes as dots.
+   Both types render; the script toggles which shows. *@
+<section class="sc-sec">
+    <div class="sc-sec-head">
+        <h2 class="sc-h2">@L["How many notes is a level?"]</h2>
+        <span class="sc-sub">@L["Judgement counts per chart, by level — the band is the middle 80% of charts, the line the median, the dots the extremes."]</span>
+    </div>
+    @if (!Types.Any())
+    {
+        <p class="sc-foot">@L["No note counts observed on this mix yet."]</p>
+    }
+    else
+    {
+        <div class="sc-typebar" role="group" aria-label="@L["Chart Type"]" data-sc-typegroup>
+            <button type="button" data-sc-type-button="@ChartType.Single" aria-pressed="true">@L["Singles"]</button>
+            <button type="button" data-sc-type-button="@ChartType.Double" aria-pressed="false">@L["Doubles"]</button>
+        </div>
+        @foreach (var type in Types)
+        {
+            var levels = Model.NoteCounts[type];
+            var maxY = levels.Max(l => l.Max) * 1.04;
+            <div class="sc-chartwrap" data-sc-type="@type" hidden="@(type != ChartType.Single)">
+                <svg viewBox="0 0 @Width @Height" role="img" aria-label="@L["Note count spread by level"]">
+                    @foreach (var tick in YTicks(maxY))
+                    {
+                        <line x1="@PadLeft" x2="@(Width - PadRight)" y1="@Y(tick, maxY).ToString(F)" y2="@Y(tick, maxY).ToString(F)" class="sc-grid" />
+                        @SvgLabel(PadLeft - 8, Y(tick, maxY) + 4, "end", "sc-tick", tick.ToString("N0"))
+                    }
+                    <path d="@BandPath(levels, maxY)" class="sc-noteband" />
+                    <polyline points="@MedianPoints(levels, maxY)" class="sc-noteline" />
+                    @foreach (var (level, index) in levels.Select((l, i) => (l, i)))
+                    {
+                        <circle cx="@X(index, levels.Count).ToString(F)" cy="@Y(level.Min, maxY).ToString(F)" r="2.4" class="sc-notedot" />
+                        <circle cx="@X(index, levels.Count).ToString(F)" cy="@Y(level.Max, maxY).ToString(F)" r="2.4" class="sc-notedot" />
+                        <rect x="@((X(index, levels.Count) - Slot(levels.Count) / 2).ToString(F))" y="@PadTop"
+                              width="@Slot(levels.Count).ToString(F)" height="@(Height - PadTop - PadBottom)" fill="transparent"
+                              data-sc-tip="@TipFor(type, level)"></rect>
+                        @SvgLabel(X(index, levels.Count), Height - 8, "middle", "sc-tick", level.Level.ToString())
+                    }
+                </svg>
+            </div>
+        }
+        <p class="sc-foot">@L["The extremes are real charts, not noise — the shortest and longest chart at each level."]</p>
+    }
+</section>
+
+@code {
+    private const int Width = 960;
+    private const int Height = 330;
+    private const int PadLeft = 56;
+    private const int PadRight = 8;
+    private const int PadTop = 12;
+    private const int PadBottom = 26;
+    private const string F = "0.##";
+
+    [Parameter, EditorRequired] public ScoreCalculatorModel Model { get; set; } = default!;
+
+    private IEnumerable<ChartType> Types => new[] { ChartType.Single, ChartType.Double }
+        .Where(t => Model.NoteCounts.ContainsKey(t) && Model.NoteCounts[t].Count > 0);
+
+    private static double Slot(int count) => (Width - PadLeft - PadRight) / (double)count;
+    private static double X(int index, int count) => PadLeft + (index + .5) * Slot(count);
+    private static double Y(double value, double maxY) => PadTop + (1 - value / maxY) * (Height - PadTop - PadBottom);
+
+    /// <summary>Razor reserves the literal &lt;text&gt; tag, so SVG labels render through markup.</summary>
+    private static MarkupString SvgLabel(double x, double y, string anchor, string cssClass, string content)
+    {
+        return (MarkupString)($"<text x=\"{x:0.##}\" y=\"{y:0.##}\" text-anchor=\"{anchor}\" " +
+                              $"class=\"{cssClass}\">{System.Net.WebUtility.HtmlEncode(content)}</text>");
+    }
+
+
+    private static IEnumerable<int> YTicks(double maxY)
+    {
+        var step = maxY > 3000 ? 1000 : 500;
+        for (var tick = 0; tick <= maxY; tick += step) yield return tick;
+    }
+
+    private static string BandPath(IReadOnlyList<ScoreCalculatorModel.NoteCountLevel> levels, double maxY)
+    {
+        var top = string.Join(" ", levels.Select((l, i) =>
+            $"{(i == 0 ? "M" : "L")}{X(i, levels.Count).ToString(F)},{Y(l.P90, maxY).ToString(F)}"));
+        var bottom = string.Join(" ", levels.Select((l, i) => (Level: l, Index: i)).Reverse()
+            .Select(p => $"L{X(p.Index, levels.Count).ToString(F)},{Y(p.Level.P10, maxY).ToString(F)}"));
+        return $"{top} {bottom} Z";
+    }
+
+    private static string MedianPoints(IReadOnlyList<ScoreCalculatorModel.NoteCountLevel> levels, double maxY)
+    {
+        return string.Join(" ", levels.Select((l, i) =>
+            $"{X(i, levels.Count).ToString(F)},{Y(l.Median, maxY).ToString(F)}"));
+    }
+
+    private string TipFor(ChartType type, ScoreCalculatorModel.NoteCountLevel level)
+    {
+        return $"{type.GetShortHand()}{level.Level} · {L["{0} charts", level.Charts.ToString("N0")]} — " +
+               $"{L["median {0}", level.Median.ToString("N0")]} · " +
+               $"{L["middle 80% {0}–{1}", level.P10.ToString("N0"), level.P90.ToString("N0")]} · " +
+               $"{L["extremes {0}–{1}", level.Min.ToString("N0"), level.Max.ToString("N0")]}";
+    }
+}

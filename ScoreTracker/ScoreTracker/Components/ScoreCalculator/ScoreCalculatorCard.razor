@@ -1,0 +1,100 @@
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.ScoreCalculator
+@namespace ScoreTracker.Web.Components
+
+@* The live calculator (docs/design/phoenix-score-calculator.md D4–D7). Server-rendered as an
+   empty result screen; phoenix-calculator.js computes score, letter, plate, the two bars and
+   the next-letter walk from the constants block below as the counts are typed. The plays
+   dialog is hand-rolled — a static page runs no circuit for MudBlazor (the /Setup precedent)
+   — and fills from the signed-in MyPlays endpoint; anonymous visitors never see the button. *@
+<section class="sc-sec">
+    <div class="sc-sec-head">
+        <h2 class="sc-h2">@L["The calculator"]</h2>
+        <span class="sc-sub">@L["Type the counts from a result screen. Score, letter and plate update as you type."]</span>
+    </div>
+    <div class="sc-card sc-calc" data-sc-calc>
+        @((MarkupString)$"<script type=\"application/json\" data-sc-constants>{Model.ConstantsJson}</script>")
+        <div class="sc-inputs">
+            <label class="sc-field"><span class="sc-lbl"><i class="sc-dot judg-perfect"></i>@L["Perfects"]</span>
+                <input data-sc-in="perfects" inputmode="numeric" autocomplete="off"></label>
+            <label class="sc-field"><span class="sc-lbl"><i class="sc-dot judg-great"></i>@L["Greats"]</span>
+                <input data-sc-in="greats" inputmode="numeric" autocomplete="off"></label>
+            <label class="sc-field"><span class="sc-lbl"><i class="sc-dot judg-good"></i>@L["Goods"]</span>
+                <input data-sc-in="goods" inputmode="numeric" autocomplete="off"></label>
+            <label class="sc-field"><span class="sc-lbl"><i class="sc-dot judg-bad"></i>@L["Bads"]</span>
+                <input data-sc-in="bads" inputmode="numeric" autocomplete="off"></label>
+            <label class="sc-field"><span class="sc-lbl"><i class="sc-dot judg-miss"></i>@L["Misses"]</span>
+                <input data-sc-in="misses" inputmode="numeric" autocomplete="off"></label>
+            <label class="sc-field"><span class="sc-lbl"><i class="sc-dot sc-dot-combo"></i>@L["Max Combo"]</span>
+                <input data-sc-in="combo" inputmode="numeric" autocomplete="off"></label>
+            <label class="sc-field sc-field-cal"><span class="sc-lbl">@L["Calories"] <em>(@L["optional"])</em></span>
+                <input data-sc-in="calories" inputmode="decimal" autocomplete="off"></label>
+            @if (IsLoggedIn)
+            {
+                <div class="sc-loadrow">
+                    <button type="button" class="sc-btn" data-sc-load aria-haspopup="dialog">@L["Load one of your plays"]</button>
+                </div>
+            }
+        </div>
+        <div class="sc-result">
+            <div class="sc-scoreline">
+                <span class="sc-bigscore" data-sc-out="score">—</span>
+                <span class="sc-gradechip" data-sc-out="grade" hidden></span>
+                <span class="sc-platechip" data-sc-out="plate" hidden></span>
+            </div>
+            <p class="sc-crossmix" data-sc-out="crossmix"
+               data-t-other="@L["On {0} this is {1}."]" data-other-mix="@Model.OtherMix.GetName()"></p>
+            <div class="sc-next" data-sc-out="next" hidden
+                 data-t-label="@L["How close were you to the next letter?"]"
+                 data-t-points="@L["{0} points"]"
+                 data-t-best="@L["This is the best grade there is."]"
+                 data-t-get="@L["Get a {0} with"]"
+                 data-t-more-perfects="@L["{0} more Perfects"]"
+                 data-t-fewer-misses="@L["{0} fewer Misses"]"
+                 data-t-fewer-bads="@L["{0} fewer Bads"]"
+                 data-t-fewer-goods="@L["{0} fewer Goods"]"
+                 data-t-fewer-greats="@L["{0} fewer Greats"]"
+                 data-t-more-combo="@L["{0} more Combo"]"></div>
+            <div class="sc-bars" data-sc-out="bars" hidden
+                 data-t-gained="@L["Where your score came from"]"
+                 data-t-lost="@L["Where your loss came from"]"
+                 data-t-not-earned="@L["not earned"]"
+                 data-t-nothing-lost="@L["nothing lost — a perfect 1,000,000"]"
+                 data-t-broken-combo="@L["Broken combo"]"
+                 data-t-clipped="@L["the bar starts mid-segment"]"></div>
+            <p class="sc-calrow" data-sc-out="calories" hidden
+               data-t-arrows="@L["Calories say about {0} arrows pressed."]"></p>
+        </div>
+    </div>
+
+    @if (IsLoggedIn)
+    {
+        <div class="sc-dlg-overlay" data-sc-dialog hidden>
+            <div class="sc-dlg" role="dialog" aria-modal="true" aria-labelledby="sc-dlg-title">
+                <div class="sc-dlg-head">
+                    <h3 id="sc-dlg-title">@L["Load one of your plays"]</h3>
+                    <button type="button" data-sc-dialog-close aria-label="@L["Close"]">×</button>
+                </div>
+                <div class="sc-dlg-body">
+                    <input data-sc-play-filter placeholder="@L["Filter by song…"]" aria-label="@L["Filter by song…"]">
+                    <div class="sc-ptwrap">
+                        <table class="sc-playtable">
+                            <tbody data-sc-play-list
+                                   data-endpoint="@($"{ScoreCalculatorMixes.Root}/MyPlays?mix={Model.Mix}")"
+                                   data-t-loading="@L["Loading your plays…"]"
+                                   data-t-empty="@L["No plays with judgement counts yet — they arrive with recent-plays imports."]"
+                                   data-t-none-match="@L["No plays match."]"
+                                   data-t-fail="@L["fail"]"></tbody>
+                        </table>
+                    </div>
+                    <p class="sc-playsnote">@L["Plays that carry judgement counts — imported from your recent plays. Stage breaks are excluded; finished fails are listed."]</p>
+                </div>
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public ScoreCalculatorModel Model { get; set; } = default!;
+    [Parameter] public bool IsLoggedIn { get; set; }
+}
