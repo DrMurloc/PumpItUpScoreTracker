@@ -146,7 +146,8 @@ public sealed class PiuCenterCrawlSagaTests
         var page = new PiuCenterChartPage(key, new[] { "bracket_drill", "bracket_run", "bracket" }, 8,
             new Dictionary<string, int> { ["twist_90"] = 4, ["drill"] = 2 },
             new Dictionary<string, int> { ["bracket drill-5"] = 2 },
-            new[] { "run" }, true, 12.0m, "12th notes @ 240 bpm", "D20");
+            new[] { "run" }, true, 12.0m, "12th notes @ 240 bpm", "D20",
+            TapRows: 577, HoldRows: 70, HoldTickSum: 481);
         SetupDefaults(new[] { chart }, new[] { Listing(key, ChartType.Double, 20) },
             new[] { new ExternalChartAlias(key, chart.Id, ExternalAliasStatus.Auto, Now) }, page: page);
 
@@ -157,7 +158,10 @@ public sealed class PiuCenterCrawlSagaTests
                 rows.Any(r => r.MetricName == PiuCenterMetrics.DataVersion && r.Value == 50726m) &&
                 rows.Any(r => r.MetricName == "top3:bracket_drill" && r.Value == 1m) &&
                 rows.Any(r => r.MetricName == "badge_fraction:twist_90" && r.Value == 0.5m) &&
-                rows.Any(r => r.MetricName == "last_segment_badge:run")),
+                rows.Any(r => r.MetricName == "last_segment_badge:run") &&
+                rows.Any(r => r.MetricName == PiuCenterMetrics.TapRows && r.Value == 577m) &&
+                rows.Any(r => r.MetricName == PiuCenterMetrics.HoldRows && r.Value == 70m) &&
+                rows.Any(r => r.MetricName == PiuCenterMetrics.HoldTicks && r.Value == 481m)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
