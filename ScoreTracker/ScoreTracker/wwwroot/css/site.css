@@ -17096,6 +17096,16 @@ span.ct-console-pick { cursor: default; }
     vertical-align: middle;
 }
 
+.sc-bigscore.sc-empty {
+    color: color-mix(in srgb, var(--mix-ink) 22%, transparent);
+}
+
+.sc-hint {
+    margin: 8px 0 0;
+    font-size: 13.5px;
+    color: var(--mix-ink-muted);
+}
+
 .sc-crossmix {
     margin: 6px 0 0;
     font-size: 13.5px;

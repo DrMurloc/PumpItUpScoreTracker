@@ -8433,6 +8433,9 @@
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>Serve che ci guardi una persona — fatti sentire</value>
   </data>
+  <data name="Waiting on a result screen." xml:space="preserve">
+    <value>In attesa di una schermata dei risultati.</value>
+  </data>
   <data name="Waiting on the sensors" xml:space="preserve">
     <value>In attesa dei sensori</value>
   </data>

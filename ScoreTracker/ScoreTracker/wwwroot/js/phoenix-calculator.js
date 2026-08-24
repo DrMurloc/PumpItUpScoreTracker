@@ -228,6 +228,8 @@
         var calEl = out('calories');
         if (value === null) {
             out('score').textContent = '—';
+            out('score').classList.add('sc-empty');
+            out('hint').hidden = false;
             gradeChip.hidden = plateChip.hidden = barsEl.hidden = nextEl.hidden = calEl.hidden = true;
             out('crossmix').textContent = '';
             markSpreadRow(null);
@@ -235,6 +237,8 @@
         }
         s.score = value;
         out('score').textContent = n0(value);
+        out('score').classList.remove('sc-empty');
+        out('hint').hidden = true;
         // The letter and plate render as the site's art (LetterGradeIcon / ScoreBreakdown
         // vocabulary) from the URLs the server emitted — never as invented chips.
         var grade = gradeFor(value, MIX);

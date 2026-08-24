@@ -30,11 +30,16 @@ internal sealed class GetHoldTickProfileHandler(
     public async Task<HoldTickProfile> Handle(GetHoldTickProfileQuery request,
         CancellationToken cancellationToken)
     {
-        return (await cache.GetOrCreateAsync($"HoldTickProfile__{request.Mix}", async entry =>
-        {
-            entry.AbsoluteExpirationRelativeToNow = CacheFor;
-            return await Build(request.Mix, cancellationToken);
-        }))!;
+        var key = $"HoldTickProfile__{request.Mix}";
+        if (cache.TryGetValue(key, out HoldTickProfile? cached) && cached != null) return cached;
+
+        var profile = await Build(request.Mix, cancellationToken);
+        // An empty profile is never cached: the admin snapshot upload is what fills the metrics,
+        // and a day-long memory of "nothing there" would swallow it — the upload looked like it
+        // did nothing. The inputs are themselves memory-cached, so recomputing emptiness is cheap.
+        if (profile.ChartsMeasured > 0)
+            cache.Set(key, profile, CacheFor);
+        return profile;
     }
 
     private async Task<HoldTickProfile> Build(MixEnum mix, CancellationToken cancellationToken)

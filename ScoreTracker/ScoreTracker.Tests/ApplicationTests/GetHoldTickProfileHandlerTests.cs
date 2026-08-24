@@ -108,6 +108,30 @@ public sealed class GetHoldTickProfileHandlerTests
     }
 
     [Fact]
+    public async Task AnEmptyProfileIsNeverCachedSoTheSnapshotUploadShowsUpImmediately()
+    {
+        // The admin upload is what fills the metrics. A cached "nothing there" would swallow
+        // it for a day — the exact "I reran the import and nothing happened" report.
+        var chart = new ChartBuilder().WithLevel(18).WithNoteCount(1000).Build();
+        SetupCharts(MixEnum.Phoenix, chart);
+        SetupMetrics();
+        var handler = BuildHandler();
+
+        Assert.Equal(0, (await handler.Handle(new GetHoldTickProfileQuery(MixEnum.Phoenix),
+            CancellationToken.None)).ChartsMeasured);
+
+        SetupMetrics((chart.Id, 600, 50));
+        var afterUpload = await handler.Handle(new GetHoldTickProfileQuery(MixEnum.Phoenix),
+            CancellationToken.None);
+        Assert.Equal(1, afterUpload.ChartsMeasured);
+
+        // A measured profile caches: the third call never reaches the repository again.
+        await handler.Handle(new GetHoldTickProfileQuery(MixEnum.Phoenix), CancellationToken.None);
+        _metrics.Verify(m => m.GetMetricsByChart(PiuCenterMetrics.Source, It.IsAny<CancellationToken>()),
+            Times.Exactly(2));
+    }
+
+    [Fact]
     public async Task ChartsWithoutBankedTapRowsAreAbsentNotZero()
     {
         var unbanked = new ChartBuilder().WithLevel(18).WithNoteCount(1000).Build();

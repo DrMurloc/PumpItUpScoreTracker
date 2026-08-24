@@ -8433,6 +8433,9 @@
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>人の確認待ちです — ひと声かけてください</value>
   </data>
+  <data name="Waiting on a result screen." xml:space="preserve">
+    <value>リザルト画面の入力待ちです。</value>
+  </data>
   <data name="Waiting on the sensors" xml:space="preserve">
     <value>センサーを待っています</value>
   </data>
