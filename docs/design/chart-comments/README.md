@@ -303,13 +303,16 @@ locale the reader browses the site in:
    translation*. A reader whose default is already the original sees no badge at all — the comment
    exists in *some* language, and an empty box is worse than the author's own words.
 
-**A manually picked localization is sticky.** Choosing a rendering by hand — the way a ja-JP reader
-opts into English — is stored in UiSettings and becomes that reader's step 2 wherever a rendering
-exists. **The clearing option is labeled *Automatic*, not *Original*** (owner, field test
-2026-08-24): it restores the default resolution, which for a mapped-language reader still shows
-renderings — calling it Original lied to exactly those readers. The author's words are always and
-only the per-comment *Show original*, which stays transient. Rule 1 beats the stored pick: even a
-reader who asked for English sees comments written in their own language as originals.
+**A manually picked localization is sticky, and total.** Choosing a rendering by hand — the way a
+ja-JP reader opts into English — is stored in UiSettings and **substitutes for the reader's locale
+in the whole resolution** (owner, field test 2026-08-24): "Read in español" means everything reads
+Spanish — foreign comments show their es-ES rendering, comments already written in Spanish show
+their originals (which are the Spanish asked for, unbadged), and nothing ever falls back to the
+reader's own language while a pick stands. Half-honouring the pick was measured wrong in the field:
+a Spanish pick once showed a Spanish comment in English. **The clearing option is labeled
+*Automatic*, not *Original*** (same day): it restores the default resolution, which for a
+mapped-language reader still shows renderings — calling it Original lied to exactly those readers.
+The author's words are always and only the per-comment *Show original*, which stays transient.
 
 ⚠ **Never render a comment back into its own language.** The round trip is a measured rewrite —
 register raised, community vocabulary flattened, the most contemptuous phrase dropped, `1000%`

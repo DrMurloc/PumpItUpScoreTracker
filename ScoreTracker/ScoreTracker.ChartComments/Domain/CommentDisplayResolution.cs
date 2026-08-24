@@ -4,13 +4,14 @@ namespace ScoreTracker.ChartComments.Domain;
 
 /// <summary>
 ///     Which rendering a reader sees, owner-worded (2026-08-24) and judged by language, never
-///     region:
+///     region. <b>A manual pick is total</b> (owner, field test, same day): "Read in Spanish"
+///     substitutes for the reader's own locale entirely, so the one resolution runs for whoever
+///     the reader asked to read as:
 ///     <list type="number">
-///         <item>Comment in the reader's own language → the original. Outranks everything,
-///         including a stored manual pick — nobody is shown a translation of a comment written in
-///         their own language.</item>
-///         <item>Otherwise the reader's stored pick where a rendering exists for it, else the
-///         rendering matching the reader's language.</item>
+///         <item>Comment written in the effective language → the original. A Spanish comment
+///         under a Spanish pick IS the Spanish the reader asked for — never a translation of a
+///         comment into its own language.</item>
+///         <item>Otherwise the rendering matching the effective language.</item>
 ///         <item>No match → the original. Not forced English.</item>
 ///     </list>
 ///     Pure, so the whole table of cases is unit-testable without a repository in sight.
@@ -23,28 +24,26 @@ internal static class CommentDisplayResolution
     public static Resolution Resolve(string? readerLocale, string? preferredLocale, string? sourceLanguage,
         IReadOnlyList<string> availableLocales, bool queued)
     {
+        // The pick replaces the reader, wholesale. Half-honouring it — own-language comments
+        // slipping back to the reader's locale — is how "Read in español" once showed a Spanish
+        // comment in English: the pick had no rendering there, and the fallback mapped to the
+        // reader instead of to what they asked for.
+        var effective = string.IsNullOrWhiteSpace(preferredLocale) ? readerLocale : preferredLocale;
+
         // A caller that has not adopted translation display, or a reader the site cannot place,
         // reads originals — which is also what every reader saw before this feature existed.
-        if (string.IsNullOrWhiteSpace(readerLocale)) return new Resolution(null, false);
+        if (string.IsNullOrWhiteSpace(effective)) return new Resolution(null, false);
 
-        if (sourceLanguage != null && TranslationTarget.SharesLanguage(readerLocale, sourceLanguage))
+        if (sourceLanguage != null && TranslationTarget.SharesLanguage(effective, sourceLanguage))
             return new Resolution(null, false);
 
-        if (preferredLocale != null)
-        {
-            var picked = availableLocales.FirstOrDefault(locale =>
-                string.Equals(locale, preferredLocale, StringComparison.OrdinalIgnoreCase));
-            if (picked != null) return new Resolution(picked, false);
-        }
+        var match = availableLocales.FirstOrDefault(locale =>
+            TranslationTarget.SharesLanguage(locale, effective));
+        if (match != null) return new Resolution(match, false);
 
-        var mapped = availableLocales.FirstOrDefault(locale =>
-            TranslationTarget.SharesLanguage(locale, readerLocale));
-        if (mapped != null) return new Resolution(mapped, false);
-
-        // The queued badge belongs only to a reader whose default would be a rendering that is
-        // still on its way — everyone else's default is the original and needs no explanation.
-        var target = preferredLocale ?? readerLocale;
-        var oneIsComing = queued && availableLocales.Count == 0 && RendersFor(target);
+        // The queued badge belongs only to a reader whose view would be a rendering that is
+        // still on its way — everyone else sees the original and needs no explanation.
+        var oneIsComing = queued && availableLocales.Count == 0 && RendersFor(effective);
 
         return new Resolution(null, oneIsComing);
     }

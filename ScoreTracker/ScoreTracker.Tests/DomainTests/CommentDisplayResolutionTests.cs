@@ -26,11 +26,36 @@ public sealed class CommentDisplayResolutionTests
     }
 
     [Fact]
-    public void TheStoredPickNeverBeatsTheOwnLanguageRule()
+    public void APickIsTotalAndReadsEvenYourOwnLanguageComments()
     {
-        var resolution = CommentDisplayResolution.Resolve("es-MX", "en-US", "es", FullSet, false);
+        // "Read in English" from a Spanish reader means everything reads English — the pick
+        // substitutes for the reader, it does not negotiate with them (owner, field test).
+        Assert.Equal("en-US",
+            CommentDisplayResolution.Resolve("es-MX", "en-US", "es", FullSet, false).RenderingLocale);
+    }
+
+    [Fact]
+    public void ACommentAlreadyInThePickedLanguageIsTheOriginalUnbadged()
+    {
+        // "Read in español" over a Spanish comment: the original IS the Spanish asked for.
+        // Renderings into a comment's own language never exist, and nothing falls back to the
+        // reader's locale — that fallback is how a Spanish pick once showed Spanish in English.
+        var resolution = CommentDisplayResolution.Resolve("en-US", "es-ES", "es", FullSet, false);
 
         Assert.Null(resolution.RenderingLocale);
+        Assert.False(resolution.Pending);
+    }
+
+    [Fact]
+    public void APickedLanguageStillPendingShowsQueuedNotTheReadersMapping()
+    {
+        // Reader is English, picked Spanish, comment is Korean and untranslated: the promise is
+        // Spanish-on-its-way, not a quiet fallback to the English rendering path.
+        var resolution = CommentDisplayResolution.Resolve("en-US", "es-ES", null,
+            System.Array.Empty<string>(), true);
+
+        Assert.Null(resolution.RenderingLocale);
+        Assert.True(resolution.Pending);
     }
 
     [Theory]
