@@ -74,18 +74,19 @@ else
             @if (ReadInLocales.Count > 0)
             {
                 @* The sticky pick, owner-worded: choosing a localization is remembered and
-                   becomes this reader's default wherever a rendering exists; choosing Original
-                   clears it. It replaces the language-mapping step only — a comment in the
-                   reader's own language stays the original whatever is picked here. *@
+                   becomes this reader's default wherever a rendering exists; Automatic clears it
+                   back to the default resolution. Named Automatic rather than Original because
+                   that is what it does — an English reader's default is still the mapped
+                   rendering; the author's words per comment are Show original's job. *@
                 <MudMenu Dense="true" AriaLabel="@L["Read in"]">
                     <ActivatorContent>
                         <span class="cmt-tmenu" data-testid="cmt-read-in">@L["Read in"]:
-                            <b>@(_preferredLocale == null ? L["Original"] : RenderingLocaleName(_preferredLocale))</b>
+                            <b>@(_preferredLocale == null ? L["Automatic"] : RenderingLocaleName(_preferredLocale))</b>
                             <span class="cmt-car">▾</span></span>
                     </ActivatorContent>
                     <ChildContent>
-                        <MudMenuItem data-testid="cmt-read-in-original"
-                                     OnClick="() => SelectReadIn(string.Empty)">@Ticked(_preferredLocale == null, L["Original"])</MudMenuItem>
+                        <MudMenuItem data-testid="cmt-read-in-auto"
+                                     OnClick="() => SelectReadIn(string.Empty)">@Ticked(_preferredLocale == null, L["Automatic"])</MudMenuItem>
                         @foreach (var locale in ReadInLocales)
                         {
                             var l = locale;

@@ -160,8 +160,11 @@ public sealed class CommentTranslationDisplayTests : TestContext
         _mediator.Verify(m => m.Send(It.Is<GetChartCommentsQuery>(q => q.PreferredLocale == "es-ES"),
             It.IsAny<CancellationToken>()), Times.AtLeastOnce);
 
+        // The clear is named Automatic, not Original: it restores the DEFAULT resolution,
+        // which for a mapped-language reader still shows renderings. The author's words are
+        // the per-comment Show original flip, never this menu.
         await tab.Find("[data-testid='cmt-read-in']").ClickAsync(new MouseEventArgs());
-        await tab.Find("[data-testid='cmt-read-in-original']").ClickAsync(new MouseEventArgs());
+        await tab.Find("[data-testid='cmt-read-in-auto']").ClickAsync(new MouseEventArgs());
         _uiSettings.Verify(u => u.SetSetting("Comments__ReadIn", string.Empty, It.IsAny<CancellationToken>()),
             Times.Once);
     }

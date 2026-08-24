@@ -305,9 +305,11 @@ locale the reader browses the site in:
 
 **A manually picked localization is sticky.** Choosing a rendering by hand — the way a ja-JP reader
 opts into English — is stored in UiSettings and becomes that reader's step 2 wherever a rendering
-exists. **Choosing the original clears it** and restores default behavior; a per-comment *Show
-original* is otherwise transient. Rule 1 beats the stored pick: even a reader who asked for English
-sees comments written in their own language as originals.
+exists. **The clearing option is labeled *Automatic*, not *Original*** (owner, field test
+2026-08-24): it restores the default resolution, which for a mapped-language reader still shows
+renderings — calling it Original lied to exactly those readers. The author's words are always and
+only the per-comment *Show original*, which stays transient. Rule 1 beats the stored pick: even a
+reader who asked for English sees comments written in their own language as originals.
 
 ⚠ **Never render a comment back into its own language.** The round trip is a measured rewrite —
 register raised, community vocabulary flattened, the most contemptuous phrase dropped, `1000%`
