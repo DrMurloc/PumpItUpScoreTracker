@@ -10,9 +10,13 @@ public sealed record ScoreScreen(StepCount Perfects, StepCount Greats, StepCount
     private static readonly Random Random = new(1949);
     public int TotalCount => Perfects + Greats + Goods + Bads + Misses;
 
+    // The machine rounds DOWN: floor matched 2,268 of 2,277 real judgement-carrying records
+    // against the game's own score; ceiling matched only the 736 already-integral ones and read
+    // one point high everywhere else. The remaining handful sit one further point low, so the
+    // formula is exact to ±1 — never lean on it to call a grade boundary.
     public PhoenixScore CalculatePhoenixScore => !IsValid
         ? 0
-        : (int)Math.Ceiling((.995 * (1.0 * Perfects + .6 * Greats + .2 * Goods + .1 * Bads) + .005 * MaxCombo) /
+        : (int)Math.Floor((.995 * (1.0 * Perfects + .6 * Greats + .2 * Goods + .1 * Bads) + .005 * MaxCombo) /
             (Perfects + Greats + Goods + Bads + Misses) * 1000000.0);
 
     public int GreatLoss => (int)(.995 * .4 * Greats / TotalCount * 1000000.0);
