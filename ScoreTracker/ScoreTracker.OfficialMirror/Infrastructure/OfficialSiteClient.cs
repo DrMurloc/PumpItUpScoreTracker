@@ -903,43 +903,6 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         return responses;
     }
 
-    public async Task<(IEnumerable<OfficialRecordedScore> results, IEnumerable<string> nonMapped)> GetRecentScores(
-        MixEnum mix, string username, string password, CancellationToken cancellationToken)
-    {
-        var session = (await _piuGame.GetSessionId(mix, username, password, cancellationToken)).client;
-        var account = await _piuGame.GetAccountData(mix, session, cancellationToken);
-        ThrowIfAccountInvalid(account);
-        var results = (await _piuGame.GetRecentScores(mix, session, cancellationToken)).Reverse().ToArray();
-        var result = new List<OfficialRecordedScore>();
-        var nonMapped = new List<string>();
-        var songCharts =
-            (await _charts.GetCharts(mix, cancellationToken: cancellationToken)).GroupBy(c => c.Song.Name)
-            .ToDictionary(g => g.Key, g => g.ToArray());
-
-        foreach (var record in results)
-        {
-            var songName = await GetMappedName(record.SongName, cancellationToken);
-
-            var charts =
-                songCharts.TryGetValue(songName, out var r) ? r : Array.Empty<Chart>();
-
-            var chart = charts.FirstOrDefault(c => c.Type == record.ChartType && c.Level == record.Level);
-            if (chart == null)
-            {
-                nonMapped.Add(record.SongName + " " + record.ChartType.GetShortHand() + record.Level);
-                continue;
-            }
-
-            // A stage break is not a recorded score: no chart score to carry.
-            if (record.IsStageBroken || record.Score == null) continue;
-
-            result.Add(new OfficialRecordedScore(chart, record.Score.Value, record.Plate, record.IsBroken));
-        }
-
-        return (result, nonMapped);
-    }
-
-
     // Loosened from the pinned "https://piugame.com/.../file.png?v=" form: Phoenix 2's
     // markup varies the host, extension, and query, and a miss must never fabricate an
     // empty filename. The optional trailing "2" is load-bearing twice over: Phoenix 2
