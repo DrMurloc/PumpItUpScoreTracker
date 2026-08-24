@@ -92,6 +92,14 @@ internal interface IScoreJournalRepository
     /// <summary>Removes one session's plays. The survivors are what the replay rebuilds from.</summary>
     Task DeleteSession(Guid userId, Guid sessionId, CancellationToken cancellationToken);
 
+    /// <summary>
+    ///     A player's judgement-carrying rows in one mix, newest first, capped — the score
+    ///     calculator's "load one of your plays" list. Stage breaks are excluded (a partial
+    ///     screen is not a screen); finished fails stay in.
+    /// </summary>
+    Task<IReadOnlyList<ScoreJournalEntry>> GetJudgedPlays(Guid userId, MixEnum mix, int limit,
+        CancellationToken cancellationToken);
+
     /// <summary>Every player holding at least one judged row in the mix — the backfill's work list.</summary>
     Task<IReadOnlyList<Guid>> GetUsersWithJudgedEntries(MixEnum mix, CancellationToken cancellationToken);
 

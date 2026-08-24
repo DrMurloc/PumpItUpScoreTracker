@@ -214,6 +214,33 @@ reusable everywhere. Its formula vocabulary is the part most likely to recur.
 | lever | graplub | |
 | ⚠ a lone grade letter | Ｓ Ｄ Ｃ Ｆ | **Fullwidth**, when the letter stands alone as game notation (*the S grades*, *a D pays*, *S + D*). A bare Latin `S` or `D` is a one-letter English word to the alphabet ratchet, and a Murloc syllable in its place would stop naming the grade. Grade names of two or more characters (`AA`, `SSS+`) are already exempt as acronyms. |
 
+## The score calculator batch (2026-08-24)
+
+Coined for `/PhoenixCalculator/{mix}` ([phoenix-score-calculator.md](design/phoenix-score-calculator.md)).
+
+| English | en-ZW | Notes |
+|---|---|---|
+| judgement / judgements | murmgrgl | `murm` + `grgl`. The five result-screen counts as a family. |
+| note / notes | glub | The judgement unit; distinct from `Mrgl` (song). |
+| hold / holds | gurg | Also the verb — *hold everything*. |
+| tick / ticks | prgl | A hold's judgement beats. `Gurg prgl` is a hold tick. |
+| tap / taps | prub | The stepped half of the split. |
+| play / plays / played | lurg | Recovered from the existing `Lurg murgl gropmur`. |
+| point / points | mrglublgl | Score points, as in `{0} points`. |
+| best / bests (records) | mgrlgmrg | Reuses the Score plural — a best IS a score row. |
+| half | blugro | `mid-` compounds ride it: `blugro-grulm` (mid-segment). |
+| median | blugrogl | `blugro` (half) + `gl`. |
+| distribution / spread | grulgro | |
+| machine (the cabinet) | murgmorg | |
+| rounds down | groglo blogro | `groglo` (rounds) + `blogro` (below/down). |
+| earned / gained | grabgro | From `Grab` (get); `bo grabgro` is "not earned". |
+| loss / lost | mrglagro | `mrgla` (miss) + `gro` — what missing costs. |
+| ceiling | grogl | Already the floor's opposite (`blogl`). |
+| simfile(s) | murglgru | `murgl` (chart) + `gru` (data). |
+| estimate / estimates / inferred | blogub / blogubgro | From `blogub` (reverse-engineered/derived). |
+| ⚠ `MR_WEQ` and `daryen` | (protected) | The formula credits — added to the ratchet's proper-noun list; the underscore keeps `MR_WEQ` from reading as an acronym. |
+| ⚠ `900k`-style numbers | 900,000 | A trailing lowercase `k` is a one-letter English word to the ratchet — Murloc writes the number out. |
+
 ## Process for future batches
 
 1. A new en-US key gets an en-ZW value **in the same pass**, like every other locale.

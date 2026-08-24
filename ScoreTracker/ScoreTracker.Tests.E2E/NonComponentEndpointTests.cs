@@ -202,6 +202,38 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
         Assert.Contains("pumbility-calculator", body);
     }
 
+    [Theory]
+    [InlineData("/PhoenixCalculator/phoenix-2", "Phoenix 2", "920,000")]
+    [InlineData("/PhoenixCalculator/phoenix", "Phoenix", "900,000")]
+    public async Task ThePhoenixScorePageServesItsFormulaLadderAndHeadWithoutACircuit(string path,
+        string mixName, string aaFloor)
+    {
+        var response = await _client.GetAsync(path);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        // The em dash in the title serves as a numeric entity, so the assert brackets it.
+        Assert.Contains("<title>Phoenix Score Calculator ", body);
+        Assert.Contains($"{mixName} | PIU Scores</title>", body);
+        Assert.Contains($"rel=\"canonical\" href=\"https://piuscores.arroweclip.se{path}\"", body);
+        Assert.Contains("\"@type\":\"TechArticle\"", body);
+        Assert.Contains("BreadcrumbList", body);
+        // The formula and the mix's own ladder are real markup — the AA floor differs per mix.
+        Assert.Contains("1,000,000 ⌋", body);
+        Assert.Contains(aaFloor, body);
+        // The calculator's markup and the measured sections' frames are real HTML even on an
+        // empty database — the data sections render their not-yet states rather than vanishing.
+        Assert.Contains("data-sc-calc", body);
+        Assert.Contains("How many notes is a level?", body);
+        // The constants block the script computes from survived the static renderer (the K3
+        // script-drop guard), carrying both mixes' floor tables.
+        Assert.Contains("data-sc-constants", body);
+        Assert.Contains("\"floor\":920000", body);
+        Assert.Contains("\"floor\":925000", body);
+        // And the script that works the page is included under its hashed name.
+        Assert.Contains("phoenix-calculator", body);
+    }
+
     [Fact]
     public async Task TheOldRatingCalculatorNameRedirectsPermanently()
     {

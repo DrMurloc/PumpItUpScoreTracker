@@ -280,6 +280,9 @@
   <data name="1+ Level Harder" xml:space="preserve">
     <value>1 레벨 어려움</value>
   </data>
+  <data name="10 misses or fewer" xml:space="preserve">
+    <value>미스 10개 이하</value>
+  </data>
   <data name="10% -> 25%" xml:space="preserve">
     <value>10% -> 25%</value>
   </data>
@@ -292,11 +295,17 @@
   <data name="1st" xml:space="preserve">
     <value>1위</value>
   </data>
+  <data name="20 misses or fewer" xml:space="preserve">
+    <value>미스 20개 이하</value>
+  </data>
   <data name="25% -> 50%" xml:space="preserve">
     <value>25% -> 50%</value>
   </data>
   <data name="30 days" xml:space="preserve">
     <value>30일</value>
+  </data>
+  <data name="5 misses or fewer" xml:space="preserve">
+    <value>미스 5개 이하</value>
   </data>
   <data name="5-Stairs" xml:space="preserve">
     <value>5계단</value>
@@ -370,6 +379,9 @@
   <data name="A good is a dead note" xml:space="preserve">
     <value>Good은 죽은 노트</value>
   </data>
+  <data name="A good keeps the run alive without advancing it; a bad or a miss breaks it. That is why where a miss lands matters — one mid-chart costs several times one at the edges." xml:space="preserve">
+    <value>굿은 콤보를 유지하지만 늘리지 않고, 배드나 미스는 콤보를 끊습니다. 그래서 미스의 위치가 중요합니다. 채보 중간의 미스 하나는 가장자리의 미스보다 몇 배 더 큰 감점이 됩니다.</value>
+  </data>
   <data name="A good, always." xml:space="preserve">
     <value>Good은 언제나.</value>
   </data>
@@ -388,6 +400,9 @@
   <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
     <value>만료가 없는 키는 직접 취소할 때까지 유효합니다 — 노트북을 잃어버리거나 저장소가 공개된 뒤에도요. 특별한 이유가 없다면 날짜를 정하세요.</value>
   </data>
+  <data name="A miss also halves whatever combo it splits — dead-centre on {0} notes it costs {1} points, not {2}. Edges are cheap; middles are not." xml:space="preserve">
+    <value>미스는 끊은 콤보를 절반으로 나눕니다. {0}노트 채보 정중앙이면 {2}점이 아니라 {1}점을 잃습니다. 가장자리는 싸고 중간은 비쌉니다.</value>
+  </data>
   <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
     <value>라이프 100에서의 Miss. 라이프가 줄수록 Miss는 싸집니다.</value>
   </data>
@@ -399,6 +414,9 @@
   </data>
   <data name="A miss right now" xml:space="preserve">
     <value>지금 Miss가 나면</value>
+  </data>
+  <data name="A miss weighs zero — it simply removes the note from the top of the fraction." xml:space="preserve">
+    <value>미스의 가중치는 0입니다. 분자에서 해당 노트가 그대로 빠집니다.</value>
   </data>
   <data name="A miss. In practice: straight to zero." xml:space="preserve">
     <value>Miss. 사실상 0 직행.</value>
@@ -451,11 +469,17 @@
   <data name="About" xml:space="preserve">
     <value>Score Tracker 소개</value>
   </data>
+  <data name="about half of a modern chart is hold ticks" xml:space="preserve">
+    <value>요즘 채보는 절반 정도가 홀드 틱입니다</value>
+  </data>
   <data name="About The Site" xml:space="preserve">
     <value>사이트 소개</value>
   </data>
   <data name="above" xml:space="preserve">
     <value>위</value>
+  </data>
+  <data name="above this line a passing F is impossible" xml:space="preserve">
+    <value>이 선 위에서는 클리어 F가 불가능합니다</value>
   </data>
   <data name="Accept - merge history" xml:space="preserve">
     <value>승인 - 기록 병합</value>
@@ -712,6 +736,9 @@
   <data name="And it barely moves from band to band: score is {0} of the number in {1} and {2} in {3}. What changes between the bands is the level of the charts — average {4} in {1}, {5} in {3} — with S or better on {6}–{7} of the fifty throughout." xml:space="preserve">
     <value>그리고 구간 사이에서 거의 움직이지 않습니다: 점수는 {1}에서 숫자의 {0}, {3}에서 {2}입니다. 구간 사이에 바뀌는 것은 채보의 레벨입니다 — {1}에서 평균 {4}, {3}에서 {5} — 50개 중 S 이상은 내내 {6}–{7}개입니다.</value>
   </data>
+  <data name="and it breaks the combo" xml:space="preserve">
+    <value>그리고 콤보가 끊김</value>
+  </data>
   <data name="and {0} notes of multiplier" xml:space="preserve">
     <value>그리고 배율 {0}노트 분량</value>
   </data>
@@ -919,6 +946,9 @@
   <data name="Badges on the jacket" xml:space="preserve">
     <value>재킷의 배지</value>
   </data>
+  <data name="Bads" xml:space="preserve">
+    <value>배드</value>
+  </data>
   <data name="Bads are cheap, then they are not" xml:space="preserve">
     <value>Bad는 싸다가, 싸지 않습니다</value>
   </data>
@@ -978,6 +1008,9 @@
   </data>
   <data name="below" xml:space="preserve">
     <value>아래</value>
+  </data>
+  <data name="below 900k · {0} and under" xml:space="preserve">
+    <value>900k 미만 · {0} 이하</value>
   </data>
   <data name="below level 10" xml:space="preserve">
     <value>10레벨 미만</value>
@@ -1123,6 +1156,9 @@
   <data name="Broken Best Cleanup Reversible" xml:space="preserve">
     <value>설정을 다시 켜고 가져오면 돌아옵니다. piugame.com에는 그대로 남아 있습니다.</value>
   </data>
+  <data name="Broken combo" xml:space="preserve">
+    <value>끊긴 콤보</value>
+  </data>
   <data name="Broken personal bests" xml:space="preserve">
     <value>브레이크 오프 개인 최고 기록</value>
   </data>
@@ -1198,8 +1234,14 @@
   <data name="Calls" xml:space="preserve">
     <value>호출</value>
   </data>
+  <data name="Calories" xml:space="preserve">
+    <value>칼로리</value>
+  </data>
   <data name="Calories burned (optional — estimates step count)" xml:space="preserve">
     <value>소모 칼로리 (선택 — 화살표 수 추정)</value>
+  </data>
+  <data name="Calories say about {0} arrows pressed." xml:space="preserve">
+    <value>칼로리 기준으로 약 {0}개의 발판을 밟았습니다.</value>
   </data>
   <data name="Can Submit Again" xml:space="preserve">
     <value>예선이 열려 있는 동안 언제든 다시 제출할 수 있습니다.</value>
@@ -1483,6 +1525,12 @@
   <data name="Combo between breaks" xml:space="preserve">
     <value>브레이크 사이 콤보</value>
   </data>
+  <data name="Combo counts perfects and greats only, inside the longest unbroken run." xml:space="preserve">
+    <value>콤보는 가장 긴 무중단 구간 안의 퍼펙트와 그레이트만 셉니다.</value>
+  </data>
+  <data name="combo keeps running" xml:space="preserve">
+    <value>콤보 유지</value>
+  </data>
   <data name="Combo, priced" xml:space="preserve">
     <value>콤보의 가격</value>
   </data>
@@ -1743,6 +1791,9 @@
   </data>
   <data name="Copying existing highlights into the new feed store." xml:space="preserve">
     <value>기존 하이라이트를 새 피드 저장소로 복사하는 중입니다.</value>
+  </data>
+  <data name="Costs scale with the chart — every non-perfect divides by the note count. Pick a chart size:" xml:space="preserve">
+    <value>감점은 채보에 비례합니다. 퍼펙트가 아닌 모든 판정은 노트 수로 나뉩니다. 채보 크기를 선택하세요:</value>
   </data>
   <data name="Could not create the invite link." xml:space="preserve">
     <value>초대 링크를 생성할 수 없습니다.</value>
@@ -2245,6 +2296,9 @@
   <data name="End Date" xml:space="preserve">
     <value>종료일</value>
   </data>
+  <data name="Enter a play above and its grade's row lights up." xml:space="preserve">
+    <value>위에서 플레이를 입력하면 해당 랭크의 행이 강조됩니다.</value>
+  </data>
   <data name="Enter A Score" xml:space="preserve">
     <value>점수를 입력하세요</value>
   </data>
@@ -2323,6 +2377,9 @@
   <data name="Every plate stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
     <value>폴더별로 모든 플레이트를 쌓고, 실패 / 미플레이 구간으로 폴더 전체 수까지 표시.</value>
   </data>
+  <data name="Every Pump It Up Phoenix score is judgement-weighted accuracy out of 1,000,000 — half a percent of it is combo." xml:space="preserve">
+    <value>모든 Pump It Up Phoenix 점수는 판정 가중 정확도를 1,000,000점 만점으로 나타낸 것이며, 그중 0.5%는 콤보입니다.</value>
+  </data>
   <data name="Every record held this week." xml:space="preserve">
     <value>이번 주에는 모든 기록이 유지되었습니다.</value>
   </data>
@@ -2334,6 +2391,9 @@
   </data>
   <data name="Every time you import, PIU Scores hands this tool the session key it uses to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
     <value>임포트할 때마다 piugame.com에 여러분으로 로그인하는 데 사용하는 세션 키를 이 도구에 전달합니다. 그 키가 살아 있는 동안에는 여러분이 그곳에서 할 수 있는 모든 것 — 카드 변경, 설정 변경, PIUGame 계정 삭제까지 — 을 할 수 있습니다.</value>
+  </data>
+  <data name="Every tracked personal best on this mix, stacked by grade band per level. The typical best at almost every level is an S or better." xml:space="preserve">
+    <value>이 시리즈에서 추적된 모든 개인 최고 기록을 레벨별 랭크 구간으로 쌓아 보여줍니다. 거의 모든 레벨에서 일반적인 최고 기록은 S 이상입니다.</value>
   </data>
   <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
     <value>다른 사람들의 도구입니다. 관리할 수 있으며, 제작자에게는 알리지 않습니다.</value>
@@ -2416,6 +2476,9 @@
   <data name="Extra Settings" xml:space="preserve">
     <value>추가 설정</value>
   </data>
+  <data name="extremes {0}–{1}" xml:space="preserve">
+    <value>극단값 {0}–{1}</value>
+  </data>
   <data name="Failed" xml:space="preserve">
     <value>실패</value>
   </data>
@@ -2461,6 +2524,9 @@
   <data name="Fill In The Six Counts" xml:space="preserve">
     <value>여섯 개의 판정 수를 입력하세요</value>
   </data>
+  <data name="Fill out the judgements to see results." xml:space="preserve">
+    <value>판정 수를 입력하면 결과가 표시됩니다.</value>
+  </data>
   <data name="Fill Scores" xml:space="preserve">
     <value>점수 채우기</value>
   </data>
@@ -2472,6 +2538,9 @@
   </data>
   <data name="Filter" xml:space="preserve">
     <value>필터</value>
+  </data>
+  <data name="Filter by song…" xml:space="preserve">
+    <value>노래로 필터…</value>
   </data>
   <data name="Filters" xml:space="preserve">
     <value>필터</value>
@@ -2526,6 +2595,9 @@
   </data>
   <data name="first-ever appearance on any chart board" xml:space="preserve">
     <value>채보 보드 첫 등장</value>
+  </data>
+  <data name="floor" xml:space="preserve">
+    <value>기준선</value>
   </data>
   <data name="Flush Stuck Score Batches" xml:space="preserve">
     <value>정체된 점수 배치 처리</value>
@@ -2592,6 +2664,9 @@
   </data>
   <data name="Forget here" xml:space="preserve">
     <value>이 기기에서 삭제</value>
+  </data>
+  <data name="Formula reverse-engineered by MR_WEQ · letter-grade ranges pinned by daryen." xml:space="preserve">
+    <value>공식은 MR_WEQ 님이 역해석했으며 · 랭크 범위는 daryen 님이 확정했습니다.</value>
   </data>
   <data name="Formulas data-mined from NX2 and Prime by" xml:space="preserve">
     <value>NX2와 Prime에서 데이터마이닝한 출처:</value>
@@ -2686,6 +2761,9 @@
   <data name="Get a new code" xml:space="preserve">
     <value>새 코드 받기</value>
   </data>
+  <data name="Get a {0} with" xml:space="preserve">
+    <value>{0} 달성 조건:</value>
+  </data>
   <data name="Get told when someone plays" xml:space="preserve">
     <value>플레이 소식 받기</value>
   </data>
@@ -2725,6 +2803,9 @@
   <data name="Good count" xml:space="preserve">
     <value>굿 수</value>
   </data>
+  <data name="Goods" xml:space="preserve">
+    <value>굿</value>
+  </data>
   <data name="Goods give no life, and — unlike perfects and greats — they do not build the multiplier either. They never hurt you. They just do not count." xml:space="preserve">
     <value>Good은 라이프를 주지 않고, Perfect나 Great과 달리 배율도 쌓지 않습니다. 해롭지는 않습니다. 그저 셈에 들어가지 않을 뿐입니다.</value>
   </data>
@@ -2761,6 +2842,12 @@
   <data name="Greats" xml:space="preserve">
     <value>그레이트</value>
   </data>
+  <data name="greats allowed" xml:space="preserve">
+    <value>허용 그레이트</value>
+  </data>
+  <data name="Greats-only budgets — the most of that judgement a grade tolerates when everything else is perfect and the combo never breaks. Derived from the formula and this mix's cutoffs." xml:space="preserve">
+    <value>그레이트만 있을 때의 허용치입니다. 나머지가 전부 퍼펙트이고 콤보가 끊기지 않을 때 각 랭크가 허용하는 최대 개수이며, 공식과 이 시리즈의 기준선에서 계산됩니다.</value>
+  </data>
   <data name="Green marks a rival who's also in one of your communities." xml:space="preserve">
     <value>초록색은 내 커뮤니티에도 속한 라이벌을 표시합니다.</value>
   </data>
@@ -2782,8 +2869,14 @@
   <data name="Half bar · 500" xml:space="preserve">
     <value>바의 절반 · 500</value>
   </data>
+  <data name="Half the chart is holds" xml:space="preserve">
+    <value>채보의 절반은 홀드</value>
+  </data>
   <data name="Half-Double" xml:space="preserve">
     <value>하프 더블</value>
+  </data>
+  <data name="Hand math that lands between two points reads one high, not the game. Against real result screens the formula is exact to ±1 point." xml:space="preserve">
+    <value>두 점 사이에 떨어지는 수기 계산은 게임보다 1점 높게 나옵니다. 실제 결과 화면과 비교하면 이 공식은 ±1점 이내로 정확합니다.</value>
   </data>
   <data name="Hand over your communities first" xml:space="preserve">
     <value>먼저 커뮤니티를 넘겨주세요</value>
@@ -2887,8 +2980,17 @@
   <data name="Hold the rainbow, on bads" xml:space="preserve">
     <value>Bad로 레인보우 유지</value>
   </data>
+  <data name="Hold ticks are perfects for as long as the hold is held — and from level 15 up they are about half of every chart's judgements. Hold density is one of the levers a chart is tuned with; and some charts simply are hold songs." xml:space="preserve">
+    <value>홀드 틱은 누르는 동안 계속 퍼펙트로 판정되며, 레벨 15부터는 채보 판정의 절반 정도를 차지합니다. 홀드 밀도는 채보의 점수 난이도를 조율하는 수단 중 하나이고, 어떤 채보는 그냥 홀드가 정체성인 곡이기도 합니다.</value>
+  </data>
+  <data name="Hold-tick data hasn't been computed for this mix yet — it fills from the chart analysis crawl." xml:space="preserve">
+    <value>이 시리즈의 홀드 틱 데이터는 아직 계산되지 않았습니다. 채보 분석 크롤을 통해 채워집니다.</value>
+  </data>
   <data name="Holding a full visible bar costs {0} clean notes per miss, or {1} if you are hitting greats. Simply staying alive costs {2}. Most of your combo budget goes to looking healthy — and below level 10 it cannot be bought at all, because the overflow is thinner than one miss." xml:space="preserve">
     <value>보이는 바를 가득 유지하려면 Miss 하나당 클린 {0}노트, Great 위주라면 {1}노트가 듭니다. 그냥 살아남는 데는 {2}면 충분합니다. 콤보 예산의 대부분이 &quot;건강해 보이는 것&quot;에 쓰이는 셈입니다. 게다가 10레벨 미만에서는 오버플로우가 Miss 하나보다 얇아 아예 살 수 없습니다.</value>
+  </data>
+  <data name="holds the combo, doesn't extend it" xml:space="preserve">
+    <value>콤보를 유지하되 늘리지 않음</value>
   </data>
   <data name="Home" xml:space="preserve">
     <value>메인으로</value>
@@ -2904,6 +3006,9 @@
   </data>
   <data name="hover or tap a marker" xml:space="preserve">
     <value>마커에 커서를 올리거나 탭</value>
+  </data>
+  <data name="How close were you to the next letter?" xml:space="preserve">
+    <value>다음 랭크까지 얼마나 남았을까요?</value>
   </data>
   <data name="How each skill runs against your own average" xml:space="preserve">
     <value>각 스킬이 내 평균 대비 어떤지</value>
@@ -2925,6 +3030,9 @@
   </data>
   <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
     <value>플레이 인원수별로 클리어한 Co-Op 채보 수.</value>
+  </data>
+  <data name="How many notes is a level?" xml:space="preserve">
+    <value>레벨별 노트 수는?</value>
   </data>
   <data name="How many of your 50 they also hold" xml:space="preserve">
     <value>내 50개 중 그들도 보유한 수</value>
@@ -3298,6 +3406,9 @@
   <data name="Join by going public" xml:space="preserve">
     <value>공개로 전환하고 가입</value>
   </data>
+  <data name="Judgement counts per chart, by level — the band is the middle 80% of charts, the line the median, the dots the extremes." xml:space="preserve">
+    <value>채보별 판정 수를 레벨별로 보여줍니다. 띠는 중간 80%의 채보, 선은 중앙값, 점은 극단값입니다.</value>
+  </data>
   <data name="Jumps" xml:space="preserve">
     <value>점프</value>
   </data>
@@ -3400,6 +3511,9 @@
   <data name="Leading The Field" xml:space="preserve">
     <value>1위입니다</value>
   </data>
+  <data name="Least, level 15+" xml:space="preserve">
+    <value>가장 적은 채보, 레벨 15+</value>
+  </data>
   <data name="Leave" xml:space="preserve">
     <value>탈퇴</value>
   </data>
@@ -3432,6 +3546,9 @@
   </data>
   <data name="Letter grades on this board" xml:space="preserve">
     <value>이 보드의 레터 등급</value>
+  </data>
+  <data name="Letter grades on {0}" xml:space="preserve">
+    <value>{0} 랭크</value>
   </data>
   <data name="Level" xml:space="preserve">
     <value>레벨</value>
@@ -3538,6 +3655,12 @@
   <data name="LIVE" xml:space="preserve">
     <value>LIVE</value>
   </data>
+  <data name="Load one of your plays" xml:space="preserve">
+    <value>내 플레이 불러오기</value>
+  </data>
+  <data name="Loading your plays…" xml:space="preserve">
+    <value>플레이를 불러오는 중…</value>
+  </data>
   <data name="Loading..." xml:space="preserve">
     <value>불러오는 중...</value>
   </data>
@@ -3585,6 +3708,9 @@
   </data>
   <data name="Low" xml:space="preserve">
     <value>낮음</value>
+  </data>
+  <data name="Low tick share is what makes a low score reachable: hold everything, good every tap, and a chart under the dashed line can pass with an F. On a typical level 18 that floor is a D — about 591,000." xml:space="preserve">
+    <value>틱 비율이 낮아야 낮은 점수가 가능합니다. 홀드를 전부 누르고 모든 탭을 굿으로 처리하면, 점선 아래의 채보는 F로도 클리어할 수 있습니다. 일반적인 레벨 18에서는 그 하한이 D로, 약 591,000점입니다.</value>
   </data>
   <data name="Lowest" xml:space="preserve">
     <value>최하</value>
@@ -3694,8 +3820,20 @@
   <data name="Maximum" xml:space="preserve">
     <value>최대</value>
   </data>
+  <data name="Measured from {0} real plays with full judgement counts, scaled to 1,000 notes." xml:space="preserve">
+    <value>판정 수가 온전한 실제 플레이 {0}건을 1,000노트 기준으로 환산해 측정했습니다.</value>
+  </data>
   <data name="Median" xml:space="preserve">
     <value>중앙값</value>
+  </data>
+  <data name="median share of judgements that are hold ticks" xml:space="preserve">
+    <value>홀드 틱 판정 비율의 중앙값</value>
+  </data>
+  <data name="median tick share {0}" xml:space="preserve">
+    <value>틱 비율 중앙값 {0}</value>
+  </data>
+  <data name="median {0}" xml:space="preserve">
+    <value>중앙값 {0}</value>
   </data>
   <data name="Medium" xml:space="preserve">
     <value>중간</value>
@@ -3736,6 +3874,12 @@
   <data name="Mid-6 Doubles" xml:space="preserve">
     <value>중앙 6패널</value>
   </data>
+  <data name="middle 80% of charts" xml:space="preserve">
+    <value>중간 80%의 채보</value>
+  </data>
+  <data name="middle 80% {0}–{1}" xml:space="preserve">
+    <value>중간 80% {0}–{1}</value>
+  </data>
   <data name="Min" xml:space="preserve">
     <value>최소</value>
   </data>
@@ -3757,9 +3901,6 @@
   <data name="Minimum, average, and maximum score at each competitive level." xml:space="preserve">
     <value>경쟁 레벨별 최소·평균·최대 점수입니다.</value>
   </data>
-  <data name="Minimums" xml:space="preserve">
-    <value>최소값</value>
-  </data>
   <data name="Minutes" xml:space="preserve">
     <value>분</value>
   </data>
@@ -3774,6 +3915,9 @@
   </data>
   <data name="miss: life -= trunc(min(life, 1000) / 4 + 20) · bad: life -= 50" xml:space="preserve">
     <value>miss: life -= trunc(min(life, 1000) / 4 + 20) · bad: life -= 50</value>
+  </data>
+  <data name="Misses" xml:space="preserve">
+    <value>미스</value>
   </data>
   <data name="Misses left" xml:space="preserve">
     <value>남은 Miss 수</value>
@@ -3844,6 +3988,9 @@
   <data name="More scores" xml:space="preserve">
     <value>그 외 점수</value>
   </data>
+  <data name="more than 20 misses" xml:space="preserve">
+    <value>미스 20개 초과</value>
+  </data>
   <data name="More than 75% of S24+ passed at AA+ or lower." xml:space="preserve">
     <value>S24+의 75% 이상을 AA+ 이하로 클리어.</value>
   </data>
@@ -3861,6 +4008,9 @@
   </data>
   <data name="Most history" xml:space="preserve">
     <value>기록 더 많음</value>
+  </data>
+  <data name="Most hold-tick heavy" xml:space="preserve">
+    <value>홀드 틱이 가장 많은 채보</value>
   </data>
   <data name="Most Recent" xml:space="preserve">
     <value>가장 최근</value>
@@ -4087,9 +4237,6 @@
   <data name="Next Folder" xml:space="preserve">
     <value>다음 폴더</value>
   </data>
-  <data name="Next Letter" xml:space="preserve">
-    <value>다음 랭크</value>
-  </data>
   <data name="Next season" xml:space="preserve">
     <value>다음 시즌</value>
   </data>
@@ -4156,6 +4303,9 @@
   <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
     <value>아직 조건에 맞는 활약이 없습니다. 한계를 밀어붙여 추천을 받아보세요!</value>
   </data>
+  <data name="no misses" xml:space="preserve">
+    <value>미스 없음</value>
+  </data>
   <data name="No missing charts - every scraped board mapped to the catalog." xml:space="preserve">
     <value>누락된 채보 없음 - 수집된 모든 보드가 카탈로그와 일치했습니다.</value>
   </data>
@@ -4168,6 +4318,9 @@
   <data name="No new scores found" xml:space="preserve">
     <value>새로운 점수가 없습니다</value>
   </data>
+  <data name="No note counts observed on this mix yet." xml:space="preserve">
+    <value>이 시리즈에서는 아직 관측된 노트 수가 없습니다.</value>
+  </data>
   <data name="No peer holds it" xml:space="preserve">
     <value>보유한 동료 없음</value>
   </data>
@@ -4176,6 +4329,12 @@
   </data>
   <data name="No Phoenix 2 chart" xml:space="preserve">
     <value>Phoenix 2에 채보 없음</value>
+  </data>
+  <data name="No plays match." xml:space="preserve">
+    <value>일치하는 플레이가 없습니다.</value>
+  </data>
+  <data name="No plays with judgement counts yet — they arrive with recent-plays imports." xml:space="preserve">
+    <value>아직 판정 수가 있는 플레이가 없습니다. 최근 플레이 불러오기를 통해 추가됩니다.</value>
   </data>
   <data name="No pool on PIU Scores has held a level {0} yet, so their base ({1}) follows the curve rather than a reading." xml:space="preserve">
     <value>PIU Scores의 어떤 풀에도 아직 {0}레벨이 들어온 적이 없어서, 그 베이스({1})는 실측이 아니라 곡선을 따릅니다.</value>
@@ -4348,17 +4507,26 @@
   <data name="Not Counting" xml:space="preserve">
     <value>미반영</value>
   </data>
+  <data name="not earned" xml:space="preserve">
+    <value>미획득</value>
+  </data>
   <data name="Not Enough Data" xml:space="preserve">
     <value>데이터 부족</value>
   </data>
   <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
     <value>비슷한 채보를 꼽기엔 아직 데이터가 부족합니다 — 그래프는 매일 밤 다시 계산됩니다.</value>
   </data>
+  <data name="Not enough judged plays on this mix yet — the table fills as recent-plays imports arrive." xml:space="preserve">
+    <value>이 시리즈에는 아직 판정 기록이 있는 플레이가 부족합니다. 최근 플레이를 불러올수록 표가 채워집니다.</value>
+  </data>
   <data name="Not enough players in range to provide results" xml:space="preserve">
     <value>범위 내 플레이어가 부족해 결과를 낼 수 없습니다</value>
   </data>
   <data name="not enough players yet: {0}" xml:space="preserve">
     <value>아직 유저가 부족: {0}</value>
+  </data>
+  <data name="Not enough recorded bests on this mix yet." xml:space="preserve">
+    <value>이 시리즈에는 아직 기록된 최고 기록이 부족합니다.</value>
   </data>
   <data name="not full" xml:space="preserve">
     <value>미달</value>
@@ -4420,6 +4588,9 @@
   <data name="Note Count" xml:space="preserve">
     <value>노트 수</value>
   </data>
+  <data name="Note count spread by level" xml:space="preserve">
+    <value>레벨별 노트 수 분포</value>
+  </data>
   <data name="Note Counts" xml:space="preserve">
     <value>노트 수</value>
   </data>
@@ -4431,6 +4602,9 @@
   </data>
   <data name="Notes before you fail" xml:space="preserve">
     <value>실패까지의 노트 수</value>
+  </data>
+  <data name="Notes is the chart's full judgement count — taps and hold ticks alike — so the same play quality scores the same on a 300-note chart and a 3,000-note one." xml:space="preserve">
+    <value>노트 수는 채보의 전체 판정 수로, 탭과 홀드 틱을 모두 포함합니다. 따라서 같은 플레이 품질이면 300노트 채보든 3,000노트 채보든 점수가 같습니다.</value>
   </data>
   <data name="notes per bad" xml:space="preserve">
     <value>Bad 하나당 노트 수</value>
@@ -4455,6 +4629,9 @@
   </data>
   <data name="nothing above this" xml:space="preserve">
     <value>이 위로는 없음</value>
+  </data>
+  <data name="nothing below good" xml:space="preserve">
+    <value>굿 미만 없음</value>
   </data>
   <data name="Nothing changed between these two mixes." xml:space="preserve">
     <value>이 두 시리즈 사이에 바뀐 것이 없습니다.</value>
@@ -4494,6 +4671,9 @@
   </data>
   <data name="Nothing is translated yet, so there is nothing to re-translate." xml:space="preserve">
     <value>아직 번역된 것이 없어서 다시 번역할 것도 없어요.</value>
+  </data>
+  <data name="nothing lost — a perfect 1,000,000" xml:space="preserve">
+    <value>감점 없음 — 완벽한 1,000,000점</value>
   </data>
   <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
     <value>이 필터에 해당하는 항목이 없습니다. 하나를 해제해 보세요.</value>
@@ -4668,6 +4848,9 @@
   </data>
   <data name="On ToDo List" xml:space="preserve">
     <value>ToDo 목록에 있음</value>
+  </data>
+  <data name="On {0} this is {1}." xml:space="preserve">
+    <value>{0}에서는 {1}입니다.</value>
   </data>
   <data name="On — your scores show on leaderboards and in communities" xml:space="preserve">
     <value>켜짐 — 점수가 리더보드와 커뮤니티에 표시됩니다</value>
@@ -4896,6 +5079,9 @@
   <data name="Passes in Folder" xml:space="preserve">
     <value>폴더 내 클리어 수</value>
   </data>
+  <data name="passing-F ceiling · 37.6%" xml:space="preserve">
+    <value>클리어 F 상한 · 37.6%</value>
+  </data>
   <data name="Password Incorrect" xml:space="preserve">
     <value>비밀번호가 올바르지 않은 것 같습니다. phoenix.piugame.com에 로그인할 수 없었습니다.</value>
   </data>
@@ -4977,6 +5163,12 @@
   <data name="Perfects" xml:space="preserve">
     <value>퍼펙트</value>
   </data>
+  <data name="perfects + greats" xml:space="preserve">
+    <value>퍼펙트 + 그레이트</value>
+  </data>
+  <data name="perfects only" xml:space="preserve">
+    <value>퍼펙트만</value>
+  </data>
   <data name="Permissions" xml:space="preserve">
     <value>권한</value>
   </data>
@@ -5025,14 +5217,26 @@
   <data name="Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does." xml:space="preserve">
     <value>Phoenix 2는 Phoenix보다 약 {0}배 더 점수에 기댑니다.</value>
   </data>
+  <data name="Phoenix 2 moved every letter below AAA —" xml:space="preserve">
+    <value>Phoenix 2는 AAA 미만의 모든 랭크 기준을 옮겼습니다 —</value>
+  </data>
   <data name="Phoenix 2 prices a Singles chart one level up the base curve — an S22 is paid like a 23. Grinding the same charts you ground last mix is the wrong plan." xml:space="preserve">
     <value>Phoenix 2는 Singles 채보를 기본 곡선에서 한 레벨 위로 계산합니다 — S22가 23처럼 매겨집니다. 이전 시리즈와 같은 채보를 파는 것은 잘못된 계획입니다.</value>
+  </data>
+  <data name="Phoenix 2 re-cut every letter below AAA. AAA and up are unchanged from Phoenix." xml:space="preserve">
+    <value>Phoenix 2는 AAA 미만의 모든 랭크 기준을 재조정했습니다. AAA 이상은 Phoenix와 동일합니다.</value>
   </data>
   <data name="Phoenix 2 runs an electric effect along the bar once the overflow is completely full — the one moment the game admits the hidden life is there." xml:space="preserve">
     <value>Phoenix 2에서는 오버플로우가 완전히 가득 차면 바를 따라 전기 효과가 흐릅니다. 게임이 숨겨진 라이프의 존재를 인정하는 유일한 순간입니다.</value>
   </data>
   <data name="Phoenix 2 · same scores, repriced" xml:space="preserve">
     <value>Phoenix 2 · 같은 점수, 재산정</value>
+  </data>
+  <data name="Phoenix and Phoenix 2 score a play identically; Phoenix 2 changed what the letters below AAA demand." xml:space="preserve">
+    <value>Phoenix와 Phoenix 2는 플레이 점수를 동일하게 계산하지만, Phoenix 2는 AAA 미만 랭크의 기준을 변경했습니다.</value>
+  </data>
+  <data name="Phoenix and Phoenix 2 score a play identically; this page reads the original letter table." xml:space="preserve">
+    <value>Phoenix와 Phoenix 2는 플레이 점수를 동일하게 계산하며, 이 페이지는 원래의 랭크 표를 보여줍니다.</value>
   </data>
   <data name="Phoenix grade" xml:space="preserve">
     <value>Phoenix 등급</value>
@@ -5057,6 +5261,9 @@
   </data>
   <data name="Phoenix Score Calculator" xml:space="preserve">
     <value>Phoenix 점수 계산기</value>
+  </data>
+  <data name="Phoenix Score Calculator — {0}" xml:space="preserve">
+    <value>Phoenix 점수 계산기 — {0}</value>
   </data>
   <data name="Phoenix score from" xml:space="preserve">
     <value>Phoenix 최저 점수</value>
@@ -5235,6 +5442,9 @@
   <data name="Plates earned by this board's clears." xml:space="preserve">
     <value>이 보드의 클리어가 획득한 플레이트입니다.</value>
   </data>
+  <data name="Plates read misses and worse, not score — the same rules on every mix." xml:space="preserve">
+    <value>플레이트는 점수가 아니라 미스 이하의 판정으로 결정되며, 모든 시리즈에서 규칙이 같습니다.</value>
+  </data>
   <data name="Plates · smooth" xml:space="preserve">
     <value>플레이트 · 매끈함</value>
   </data>
@@ -5324,6 +5534,9 @@
   </data>
   <data name="Plays a level harder than its label" xml:space="preserve">
     <value>표기보다 한 레벨 어렵게 느껴짐</value>
+  </data>
+  <data name="Plays that carry judgement counts — imported from your recent plays. Stage breaks are excluded; finished fails are listed." xml:space="preserve">
+    <value>판정 수가 기록된 플레이입니다. 최근 플레이에서 불러오며, 스테이지 브레이크는 제외되고 완주한 실패는 표시됩니다.</value>
   </data>
   <data name="Playstyle" xml:space="preserve">
     <value>플레이 스타일</value>
@@ -6133,6 +6346,9 @@
   <data name="S + D" xml:space="preserve">
     <value>S + D</value>
   </data>
+  <data name="same" xml:space="preserve">
+    <value>동일</value>
+  </data>
   <data name="Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts." xml:space="preserve">
     <value>같은 스킬, 두 가지 질문: 폴더 보기는 "여기서 플레이한 채보가 실제로 어떤가"를, 블렌드 보기는 "주변에서 기록한 모든 스코어 중 어떤 스킬이 강하고 약한가"를 묻습니다. 여기서는 괜찮아 보이는 스킬이 채보를 움직일 수도 있습니다.</value>
   </data>
@@ -6175,6 +6391,9 @@
   <data name="Score" xml:space="preserve">
     <value>점수</value>
   </data>
+  <data name="Score Calculator" xml:space="preserve">
+    <value>점수 계산기</value>
+  </data>
   <data name="Score Completion" xml:space="preserve">
     <value>점수 완료율</value>
   </data>
@@ -6187,14 +6406,14 @@
   <data name="Score Distribution" xml:space="preserve">
     <value>점수 분포</value>
   </data>
+  <data name="Score equals the floor of 0.995 times (perfects plus 0.6 greats plus 0.2 goods plus 0.1 bads) plus 0.005 times max combo, divided by the note count, times one million." xml:space="preserve">
+    <value>점수는 0.995 × (퍼펙트 + 0.6×그레이트 + 0.2×굿 + 0.1×배드) + 0.005 × 최대 콤보를 노트 수로 나누고 1,000,000을 곱한 뒤 내림한 값입니다.</value>
+  </data>
   <data name="score floor" xml:space="preserve">
     <value>점수 하한</value>
   </data>
   <data name="Score floors changed below AAA on Phoenix 2 — A {0} · A+ {1} · AA {2} · AA+ {3}." xml:space="preserve">
     <value>Phoenix 2에서는 AAA 아래의 점수 하한이 바뀌었습니다 — A {0} · A+ {1} · AA {2} · AA+ {3}.</value>
-  </data>
-  <data name="Score Formula Shoutout" xml:space="preserve">
-    <value>이 점수공식을 제작해주신 Mr_WEQ님에게 감사드립니다</value>
   </data>
   <data name="Score History" xml:space="preserve">
     <value>점수 기록</value>
@@ -6205,17 +6424,8 @@
   <data name="Score in Folder" xml:space="preserve">
     <value>폴더 내 점수</value>
   </data>
-  <data name="Score Loss" xml:space="preserve">
-    <value>{0} 점수 감소</value>
-  </data>
-  <data name="Score Loss Note" xml:space="preserve">
-    <value>참고: 점수 감소는 반올림으로 인해서 1-4점 차이가 날 수 있습니다.</value>
-  </data>
   <data name="Score Push" xml:space="preserve">
     <value>점수 올리기</value>
-  </data>
-  <data name="Score Range Shoutout" xml:space="preserve">
-    <value>데이터 수집과 점수 등급의 범위를 정리해주신 daryen님에게 감사드립니다.</value>
   </data>
   <data name="Score Ranking" xml:space="preserve">
     <value>점수 등수</value>
@@ -6493,11 +6703,17 @@
   <data name="Shaded range: ±1σ" xml:space="preserve">
     <value>Shaded range: ±1σ</value>
   </data>
+  <data name="share" xml:space="preserve">
+    <value>비율</value>
+  </data>
   <data name="Share my scores with community tools" xml:space="preserve">
     <value>커뮤니티 도구와 내 점수 공유</value>
   </data>
   <data name="Share of chart sections featuring each skill" xml:space="preserve">
     <value>각 스킬이 나오는 채보 구간 비율</value>
+  </data>
+  <data name="Share of judgements that are hold ticks, by level" xml:space="preserve">
+    <value>레벨별 홀드 틱 판정 비율</value>
   </data>
   <data name="Share of the chart each pattern and demand covers" xml:space="preserve">
     <value>각 패턴과 체력 요소가 채보에서 차지하는 비율</value>
@@ -6567,9 +6783,6 @@
   </data>
   <data name="Show Regional Guests" xml:space="preserve">
     <value>지역 게스트 표시</value>
-  </data>
-  <data name="Show Score Distribution" xml:space="preserve">
-    <value>점수 분포 표시</value>
   </data>
   <data name="Show Singles &amp; Doubles as separate data" xml:space="preserve">
     <value>싱글과 더블을 개별 데이터로 표시</value>
@@ -6859,6 +7072,9 @@
   <data name="SSS+ on Uh-Heung S22." xml:space="preserve">
     <value>Uh-Heung S22에서 SSS+.</value>
   </data>
+  <data name="Stacked shares of personal bests by grade band per level" xml:space="preserve">
+    <value>레벨별 랭크 구간에 따른 개인 최고 기록 비율</value>
+  </data>
   <data name="Stage" xml:space="preserve">
     <value>단계</value>
   </data>
@@ -7126,6 +7342,9 @@
   <data name="The bar" xml:space="preserve">
     <value>기준선</value>
   </data>
+  <data name="the bar starts mid-segment" xml:space="preserve">
+    <value>막대가 구간 중간에서 시작됩니다</value>
+  </data>
   <data name="The bar this pool would set" xml:space="preserve">
     <value>이 풀이 만들 기준선</value>
   </data>
@@ -7140,6 +7359,9 @@
   </data>
   <data name="The cabinet" xml:space="preserve">
     <value>진열장</value>
+  </data>
+  <data name="The calculator" xml:space="preserve">
+    <value>계산기</value>
   </data>
   <data name="The cap. Reached after 40 perfects." xml:space="preserve">
     <value>상한. Perfect 40개면 도달.</value>
@@ -7162,11 +7384,17 @@
   <data name="The code may have been revoked, or the community no longer exists." xml:space="preserve">
     <value>코드가 취소되었거나 커뮤니티가 더 이상 존재하지 않습니다.</value>
   </data>
+  <data name="The combo term rarely decides a grade until SSS or SSS+ is the target — and there a mid-song break costs up to 2,500 points, half a letter, where a break at either end costs almost nothing." xml:space="preserve">
+    <value>콤보 항은 SSS나 SSS+를 노리기 전까지는 랭크를 좌우하는 일이 드뭅니다. 그 단계에서는 곡 중간의 콤보 브레이크가 최대 2,500점, 랭크 반 칸의 손해가 되지만, 곡 양 끝의 브레이크는 거의 손해가 없습니다.</value>
+  </data>
   <data name="The constants" xml:space="preserve">
     <value>상수</value>
   </data>
   <data name="The digest posts after the weekly Sunday sweep." xml:space="preserve">
     <value>매주 일요일 집계 후 다이제스트가 게시됩니다.</value>
+  </data>
+  <data name="The distribution leans toward SSS+ and Perfect Games at lower levels: players clearing folders push every chart in them far past a first pass, so low levels read as lamp territory rather than a picture of first attempts. Levels with fewer than 20 recorded bests are hidden." xml:space="preserve">
+    <value>낮은 레벨의 분포는 SSS+와 Perfect Game 쪽으로 치우칩니다. 폴더를 클리어하는 플레이어들이 그 안의 모든 채보를 첫 클리어 수준보다 훨씬 높게 끌어올리기 때문에, 낮은 레벨은 첫 도전의 기록이 아니라 램프의 영역으로 읽힙니다. 기록이 20건 미만인 레벨은 숨겨집니다.</value>
   </data>
   <data name="The endpoint PIU Scores POSTs to when one of your players imports." xml:space="preserve">
     <value>여러분의 플레이어가 기록을 가져올 때 PIU Scores가 POST하는 엔드포인트입니다.</value>
@@ -7182,6 +7410,9 @@
   </data>
   <data name="the exchange rate — scoring got {0}× more powerful relative to passing" xml:space="preserve">
     <value>환율 — 점수가 클리어에 비해 {0}배 더 강력해졌습니다</value>
+  </data>
+  <data name="The extremes are real charts, not noise — the shortest and longest chart at each level." xml:space="preserve">
+    <value>극단값은 잡음이 아니라 실제 채보입니다. 각 레벨에서 가장 짧은 채보와 가장 긴 채보입니다.</value>
   </data>
   <data name="The first Phoenix 2 score to beat your Phoenix 1 best" xml:space="preserve">
     <value>Phoenix 1 최고 기록을 처음으로 넘은 Phoenix 2 점수</value>
@@ -7213,6 +7444,9 @@
   <data name="The level printed on the chart." xml:space="preserve">
     <value>채보에 표기된 레벨.</value>
   </data>
+  <data name="The machine rounds down." xml:space="preserve">
+    <value>기기는 내림으로 계산합니다.</value>
+  </data>
   <data name="The maker sees this on their tool page." xml:space="preserve">
     <value>제작자가 자신의 도구 페이지에서 이 내용을 봅니다.</value>
   </data>
@@ -7236,6 +7470,12 @@
   </data>
   <data name="The opposite is picked from everything in reach, so ranges don't apply to it" xml:space="preserve">
     <value>정반대 채보는 비교 범위 전체에서 뽑히므로 범위 설정이 적용되지 않습니다</value>
+  </data>
+  <data name="The original Phoenix table. AAA and up carried into Phoenix 2 unchanged." xml:space="preserve">
+    <value>원래의 Phoenix 표입니다. AAA 이상은 Phoenix 2에 그대로 이어졌습니다.</value>
+  </data>
+  <data name="the Phoenix 2 page has its table" xml:space="preserve">
+    <value>Phoenix 2 페이지에 해당 표가 있습니다</value>
   </data>
   <data name="The pipeline is parked: no Claude API key is configured. Queued comments wait; nothing is spent." xml:space="preserve">
     <value>파이프라인이 멈춰 있어요. Claude API 키가 설정되지 않았어요. 대기 중인 댓글은 기다리고, 비용은 들지 않아요.</value>
@@ -7264,8 +7504,14 @@
   <data name="The Pump It Up Phoenix 2 PUMBILITY formula: Base(level) × (grade + plate), Base = 130 + 5 × level, singles priced one level up. Every grade multiplier and plate bonus, what any level and grade is worth, and how much scoring buys against passing." xml:space="preserve">
     <value>Pump It Up Phoenix 2의 PUMBILITY 공식: Base(level) × (grade + plate), Base = 130 + 5 × level, 싱글은 한 레벨 위로 책정. 모든 등급 배율과 플레이트 보너스, 어떤 레벨과 등급이 얼마인지, 그리고 점수가 클리어에 비해 얼마나 값어치 있는지.</value>
   </data>
+  <data name="The Pump It Up Phoenix 2 score formula and letter grades: judgement-weighted accuracy out of 1,000,000, floors A 800k · A+ 900k · AA 920k · AA+ 940k, what each judgement costs, and what real scores look like at every level." xml:space="preserve">
+    <value>Pump It Up Phoenix 2의 점수 공식과 랭크: 판정 가중 정확도 1,000,000점 만점, 기준선 A 800k · A+ 900k · AA 920k · AA+ 940k, 판정별 감점, 그리고 각 레벨의 실제 점수 분포.</value>
+  </data>
   <data name="The Pump It Up Phoenix PUMBILITY formula: Base(level) × grade, Base = 100 + 5 × (level − 10) × (level − 9), plates ×1.0. Every grade multiplier, what any level and grade was worth, and how much scoring bought against passing." xml:space="preserve">
     <value>Pump It Up Phoenix의 PUMBILITY 공식: Base(level) × grade, Base = 100 + 5 × (level − 10) × (level − 9), 플레이트 ×1.0. 모든 등급 배율, 어떤 레벨과 등급이 얼마였는지, 그리고 점수가 클리어에 비해 얼마나 값어치 있었는지.</value>
+  </data>
+  <data name="The Pump It Up Phoenix score formula and letter grades: judgement-weighted accuracy out of 1,000,000, floors A 750k · A+ 825k · AA 900k · AA+ 925k, what each judgement costs, and what real scores look like at every level." xml:space="preserve">
+    <value>Pump It Up Phoenix의 점수 공식과 랭크: 판정 가중 정확도 1,000,000점 만점, 기준선 A 750k · A+ 825k · AA 900k · AA+ 925k, 판정별 감점, 그리고 각 레벨의 실제 점수 분포.</value>
   </data>
   <data name="The rainbow bar is 1000 life on a 1 and 1000 life on a 29. What a harder chart hands you is life behind the bar — invisible on the cabinet, and the only thing that changes with level. The combo you need per miss is identical all the way up." xml:space="preserve">
     <value>레인보우 바는 1레벨에서도 29레벨에서도 라이프 1000입니다. 어려운 채보가 주는 것은 바 뒤에 숨은 라이프, 즉 기체에는 보이지 않으면서 레벨에 따라 달라지는 유일한 값입니다. Miss 하나당 필요한 콤보는 끝까지 동일합니다.</value>
@@ -7444,6 +7690,9 @@
   <data name="This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import." xml:space="preserve">
     <value>이것은 영지식이 아닙니다. 로그인은 우리 서버에서 실행되므로, 당신이 가져오는 순간에는 기술적으로 자격 증명을 복호화할 수 있습니다. 우리는 그것을 기록하거나 보관하지 않지만, 매번 수동 가져오기에서 이미 가진 것과 동일한 접근 권한을 당신은 우리에게 맡기는 것입니다.</value>
   </data>
+  <data name="This is the best grade there is." xml:space="preserve">
+    <value>이미 최고 랭크입니다.</value>
+  </data>
   <data name="This is the name other players see — on leaderboards, in communities, and on tier lists. Most people use their game tag." xml:space="preserve">
     <value>다른 플레이어에게 보이는 이름입니다. 리더보드, 커뮤니티, 티어 리스트에 표시됩니다. 보통 게임 닉네임을 사용합니다.</value>
   </data>
@@ -7479,6 +7728,9 @@
   </data>
   <data name="This page is the formula behind the number: what any grade on any level is worth, and where the number actually comes from." xml:space="preserve">
     <value>이 페이지는 그 숫자 뒤의 공식입니다: 어떤 레벨의 어떤 등급이 얼마인지, 그리고 그 숫자가 실제로 어디서 오는지.</value>
+  </data>
+  <data name="This page is the formula, what each judgement costs, the letter cutoffs, and what real scores look like at every level." xml:space="preserve">
+    <value>이 페이지에서는 공식, 판정별 감점, 랭크 기준선, 그리고 각 레벨의 실제 점수 분포를 확인할 수 있습니다.</value>
   </data>
   <data name="This page is the Phoenix formula behind the number: what any grade on any level was worth, and where the number came from." xml:space="preserve">
     <value>이 페이지는 그 숫자 뒤의 Phoenix 공식입니다: 어떤 레벨의 어떤 등급이 얼마였는지, 그리고 그 숫자가 어디서 왔는지.</value>
@@ -7548,6 +7800,12 @@
   </data>
   <data name="Through &quot;share with all tools&quot;" xml:space="preserve">
     <value>"모든 도구와 공유"를 통해</value>
+  </data>
+  <data name="Tick counts are inferred: tap counts come from community simfiles, the totals from real plays, and the difference is the ticks. Treat charts within a few percent of each other as tied — the numbers are estimates right now." xml:space="preserve">
+    <value>틱 수는 추정값입니다. 탭 수는 커뮤니티 채보 파일에서, 합계는 실제 플레이에서 가져오며 그 차이가 틱입니다. 몇 퍼센트 이내의 채보는 동률로 보시기 바랍니다. 현재 이 수치는 추정치입니다.</value>
+  </data>
+  <data name="ticks" xml:space="preserve">
+    <value>틱</value>
   </data>
   <data name="Tier" xml:space="preserve">
     <value>구간</value>
@@ -7795,6 +8053,9 @@
   <data name="Type" xml:space="preserve">
     <value>종류</value>
   </data>
+  <data name="Type the counts from a result screen. Score, letter and plate update as you type." xml:space="preserve">
+    <value>결과 화면의 판정 수를 입력하세요. 입력하는 대로 점수, 랭크, 플레이트가 갱신됩니다.</value>
+  </data>
   <data name="Type the name of the account being deleted to confirm" xml:space="preserve">
     <value>확인을 위해 삭제될 계정의 이름을 입력하세요</value>
   </data>
@@ -7906,8 +8167,14 @@
   <data name="Up" xml:space="preserve">
     <value>갱신</value>
   </data>
+  <data name="up to" xml:space="preserve">
+    <value>상한</value>
+  </data>
   <data name="Up to {0} new texts a night. The ceiling is a fuse, not a budget — if it parks the pipeline, find the bug before raising it." xml:space="preserve">
     <value>하룻밤에 최대 {0}개. 상한은 예산이 아니라 퓨즈예요. 파이프라인이 멈추면 올리기 전에 버그부터 찾으세요.</value>
+  </data>
+  <data name="up to −{0} mid-combo" xml:space="preserve">
+    <value>콤보 중간이면 최대 −{0}</value>
   </data>
   <data name="Update Chart" xml:space="preserve">
     <value>채보 업데이트</value>
@@ -8194,6 +8461,9 @@
   <data name="Welcome to PIUScores" xml:space="preserve">
     <value>PIUScores에 오신 것을 환영합니다</value>
   </data>
+  <data name="What a grade looks like" xml:space="preserve">
+    <value>랭크별 판정 모습</value>
+  </data>
   <data name="What a miss actually costs you, and how much clean combo it takes to earn it back." xml:space="preserve">
     <value>Miss가 실제로 얼마나 손해인지, 그리고 그것을 되찾는 데 필요한 클린 콤보는 얼마인지.</value>
   </data>
@@ -8205,6 +8475,9 @@
   </data>
   <data name="What can it do?" xml:space="preserve">
     <value>어떤 기능이 있나요?</value>
+  </data>
+  <data name="What each judgement costs" xml:space="preserve">
+    <value>판정별 감점</value>
   </data>
   <data name="What holds the rungs" xml:space="preserve">
     <value>각 순위 컷</value>
@@ -8223,6 +8496,9 @@
   </data>
   <data name="What it would add to your PUMBILITY, measured against your bar as it stands" xml:space="preserve">
     <value>지금의 기준선에 대해 산정한, PUMBILITY에 더해질 양</value>
+  </data>
+  <data name="What personal bests look like" xml:space="preserve">
+    <value>개인 최고 기록의 분포</value>
   </data>
   <data name="What Phoenix 1 is worth here" xml:space="preserve">
     <value>여기서 Phoenix 1의 가치</value>
@@ -8326,8 +8602,14 @@
   <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
     <value>내 리스트가 커뮤니티와 다른 곳, 그리고 그걸 밀어낸 스킬. 채보를 탭하면 소스별 전체 분석을 볼 수 있습니다.</value>
   </data>
+  <data name="Where your loss came from" xml:space="preserve">
+    <value>감점의 출처</value>
+  </data>
   <data name="Where your PUMBILITY comes from" xml:space="preserve">
     <value>PUMBILITY가 어디서 오는가</value>
+  </data>
+  <data name="Where your score came from" xml:space="preserve">
+    <value>점수의 출처</value>
   </data>
   <data name="Which Chart Did You Play" xml:space="preserve">
     <value>어떤 채보를 플레이했나요?</value>
@@ -8454,6 +8736,9 @@
   </data>
   <data name="X/Y Uploaded. Z Remaining. W Failed to record" xml:space="preserve">
     <value>{0}/{1} 업로드됨. {2} 남음. {3} 기록 실패</value>
+  </data>
+  <data name="XX and earlier had charts with optional notes — a perfect if you hit them, no cost if you missed. Phoenix removed them; every note on a modern chart counts." xml:space="preserve">
+    <value>XX 이전에는 선택 노트가 있는 채보가 있었습니다. 밟으면 퍼펙트, 놓쳐도 손해가 없었지만 Phoenix에서 사라졌고, 이제 모든 노트가 판정에 포함됩니다.</value>
   </data>
   <data name="XX Conversion Hint" xml:space="preserve">
     <value>XX 기기 기준 — 판정 수는 이 채보의 노트 수로 환산됩니다.</value>
@@ -8950,6 +9235,9 @@
   <data name="{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself." xml:space="preserve">
     <value>{0}님이 이 커뮤니티의 개설자가 되고 회원님은 관리자가 됩니다. 개설자 자리는 하나뿐이라 직접 되돌릴 수 없습니다.</value>
   </data>
+  <data name="{0} bests" xml:space="preserve">
+    <value>기록 {0}건</value>
+  </data>
   <data name="{0} boards held" xml:space="preserve">
     <value>보드 {0}개 보유</value>
   </data>
@@ -9064,6 +9352,18 @@
   <data name="{0} expires in {1} days" xml:space="preserve">
     <value>{0}이(가) {1}일 후 만료됩니다</value>
   </data>
+  <data name="{0} fewer Bads" xml:space="preserve">
+    <value>배드 {0}개 감소</value>
+  </data>
+  <data name="{0} fewer Goods" xml:space="preserve">
+    <value>굿 {0}개 감소</value>
+  </data>
+  <data name="{0} fewer Greats" xml:space="preserve">
+    <value>그레이트 {0}개 감소</value>
+  </data>
+  <data name="{0} fewer Misses" xml:space="preserve">
+    <value>미스 {0}개 감소</value>
+  </data>
   <data name="{0} folder" xml:space="preserve">
     <value>{0} 폴더</value>
   </data>
@@ -9133,6 +9433,9 @@
   <data name="{0} more charts had entries" xml:space="preserve">
     <value>그 외 {0}개 채보에도 기록 있음</value>
   </data>
+  <data name="{0} more Combo" xml:space="preserve">
+    <value>콤보 {0} 추가</value>
+  </data>
   <data name="{0} more keep their profile private." xml:space="preserve">
     <value>{0}명이 프로필을 비공개로 설정했습니다.</value>
   </data>
@@ -9141,6 +9444,9 @@
   </data>
   <data name="{0} more peers below" xml:space="preserve">
     <value>아래로 {0}명 더</value>
+  </data>
+  <data name="{0} more Perfects" xml:space="preserve">
+    <value>퍼펙트 {0}개 추가</value>
   </data>
   <data name="{0} more perfects to cap" xml:space="preserve">
     <value>상한까지 Perfect {0}개 더</value>
@@ -9247,6 +9553,9 @@
   <data name="{0} peers" xml:space="preserve">
     <value>동급 {0}명</value>
   </data>
+  <data name="{0} personal bests of players tracked on PIU Scores, {1}, Singles + Doubles." xml:space="preserve">
+    <value>PIU Scores에서 추적하는 플레이어들의 개인 최고 기록 {0}건, {1}, 싱글 + 더블.</value>
+  </data>
   <data name="{0} Players" xml:space="preserve">
     <value>{0}명</value>
   </data>
@@ -9273,6 +9582,9 @@
   </data>
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>플레이어 {0}명 · {1} 주</value>
+  </data>
+  <data name="{0} points" xml:space="preserve">
+    <value>{0}점</value>
   </data>
   <data name="{0} pools" xml:space="preserve">
     <value>풀 {0}개</value>

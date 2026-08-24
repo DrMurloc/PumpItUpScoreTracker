@@ -470,6 +470,43 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
         Assert.Equal(2, counts.Count);
     }
 
+    [Fact]
+    public async Task JudgedPlaysListJudgementCarryingScreensNewestFirstWithStageBreaksOut()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var stranger = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        var judgements = new JudgementCounts(900, 50, 10, 5, 35, 300);
+        // Oldest to newest: an unjudged play, a judged finished fail, a judged stage break,
+        // and a judged clear -- plus a stranger's judged play that must never surface.
+        await repo.Append(Entry(userId, chart, Now.AddMinutes(-30), 900000), CancellationToken.None);
+        await repo.Append(Entry(userId, chart, Now.AddMinutes(-20), 480000, isBroken: true)
+            with { Judgements = judgements }, CancellationToken.None);
+        await repo.AppendObservations(new[]
+        {
+            Entry(userId, chart, Now.AddMinutes(-10), 0, isBroken: true)
+                with { Judgements = new JudgementCounts(100, 5, 1, 0, 2), IsStageBroken = true, IsBest = false }
+        }, CancellationToken.None);
+        await repo.Append(Entry(userId, chart, Now, 960000) with { Judgements = judgements },
+            CancellationToken.None);
+        await repo.Append(Entry(stranger, chart, Now, 970000) with { Judgements = judgements },
+            CancellationToken.None);
+
+        var plays = await repo.GetJudgedPlays(userId, MixEnum.Phoenix, 10, CancellationToken.None);
+
+        Assert.Equal(2, plays.Count);
+        Assert.Equal(960000, (int)plays[0].Score!.Value);
+        Assert.NotNull(plays[0].Judgements);
+        // The finished fail stays: a broken run that reached the last note is a complete screen.
+        Assert.True(plays[1].IsBroken);
+        Assert.False(plays[1].IsStageBroken);
+        Assert.All(plays, p => Assert.Equal(userId, p.UserId));
+
+        var capped = await repo.GetJudgedPlays(userId, MixEnum.Phoenix, 1, CancellationToken.None);
+        Assert.Equal(960000, (int)Assert.Single(capped).Score!.Value);
+    }
+
     private static ScoreJournalEntry Entry(Guid userId, Guid chartId, DateTimeOffset at, int score,
         Guid? sessionId = null, MixEnum mix = MixEnum.Phoenix, bool isBroken = false)
     {

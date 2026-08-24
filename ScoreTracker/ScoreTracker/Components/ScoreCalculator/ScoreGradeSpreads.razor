@@ -1,0 +1,51 @@
+@using ScoreTracker.Web.Services.ScoreCalculator
+@using ScoreTracker.SharedKernel.Enums
+@namespace ScoreTracker.Web.Components
+
+@* What a grade actually looks like, measured from judgement-carrying bests and scaled to
+   1,000 notes (design doc D8) — it replaced a brute-forced average over judgement
+   combinations that described no real player. The calculator's script highlights the row of
+   its current grade. *@
+<section class="sc-sec">
+    <div class="sc-sec-head">
+        <h2 class="sc-h2">@L["What a grade looks like"]</h2>
+        <span class="sc-sub">@L["Measured from {0} real plays with full judgement counts, scaled to 1,000 notes.", Model.Spreads.Sum(s => s.Plays).ToString("N0")]</span>
+    </div>
+    @if (Model.Spreads.Count == 0)
+    {
+        <p class="sc-foot">@L["Not enough judged plays on this mix yet — the table fills as recent-plays imports arrive."]</p>
+    }
+    else
+    {
+        <div class="sc-tablewrap">
+            <table class="sc-table" data-sc-spreads>
+                <tr>
+                    <th>@L["Grade"]</th>
+                    <th><i class="sc-dot judg-perfect"></i> @L["Perfect"]</th>
+                    <th><i class="sc-dot judg-great"></i> @L["Great"]</th>
+                    <th><i class="sc-dot judg-good"></i> @L["Good"]</th>
+                    <th><i class="sc-dot judg-bad"></i> @L["Bad"]</th>
+                    <th><i class="sc-dot judg-miss"></i> @L["Miss"]</th>
+                    <th>@L["Combo"]</th>
+                </tr>
+                @foreach (var spread in Model.Spreads)
+                {
+                    <tr data-sc-spread-grade="@spread.Grade.GetName()">
+                        <td><LetterGradeIcon Grade="spread.Grade" /></td>
+                        <td class="sc-num">@spread.PerfectsPer1000.ToString("N1")</td>
+                        <td class="sc-num">@spread.GreatsPer1000.ToString("N1")</td>
+                        <td class="sc-num">@spread.GoodsPer1000.ToString("N1")</td>
+                        <td class="sc-num">@spread.BadsPer1000.ToString("N1")</td>
+                        <td class="sc-num">@spread.MissesPer1000.ToString("N1")</td>
+                        <td class="sc-num">@spread.ComboPer1000.ToString("N0")</td>
+                    </tr>
+                }
+            </table>
+        </div>
+        <p class="sc-foot">@L["Enter a play above and its grade's row lights up."]</p>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public ScoreCalculatorModel Model { get; set; } = default!;
+}

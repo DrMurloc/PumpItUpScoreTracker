@@ -73,6 +73,38 @@ public sealed class StaticHeadResolverTests
     }
 
     [Theory]
+    [InlineData("/PhoenixCalculator/phoenix-2", MixEnum.Phoenix, "Phoenix 2", "phoenix-2")]
+    [InlineData("/PhoenixCalculator/phoenix", MixEnum.Phoenix2, "Phoenix", "phoenix")]
+    [InlineData("/PhoenixCalculator", MixEnum.Phoenix2, "Phoenix 2", "phoenix-2")]
+    [InlineData("/PhoenixCalculator", MixEnum.Phoenix, "Phoenix", "phoenix")]
+    [InlineData("/PhoenixCalculator", MixEnum.XX, "Phoenix 2", "phoenix-2")]
+    public async Task ThePhoenixCalculatorHeadIsOnePerMixAndSelfCanonical(string path, MixEnum viewerMix,
+        string mixName, string canonicalSlug)
+    {
+        // Same rules as the PUMBILITY page: the slug wins, the bare route — the pre-rebuild URL —
+        // serves the viewer's mix, and every rendered page is self-canonical.
+        var head = await Build().Resolve(path, viewerMix, CancellationToken.None);
+
+        Assert.NotNull(head);
+        Assert.Equal($"Phoenix Score Calculator — {mixName}", head!.Title);
+        Assert.Equal($"https://piuscores.arroweclip.se/PhoenixCalculator/{canonicalSlug}", head.Canonical);
+        Assert.Contains("score formula", head.Description);
+        Assert.Contains(mixName == "Phoenix 2" ? "AA 920k" : "AA 900k", head.Description);
+        Assert.NotNull(head.ScoreCalculator);
+        Assert.Equal(mixName, head.ScoreCalculator!.MixName);
+        Assert.Null(head.Calculator);
+    }
+
+    [Theory]
+    [InlineData("/PhoenixCalculator/xx")]
+    [InlineData("/PhoenixCalculator/nonsense")]
+    [InlineData("/PhoenixCalculator/phoenix-2/extra")]
+    public async Task AMixWithoutPhoenixScoringOrAnUnknownSlugHasNoScoreCalculatorHead(string path)
+    {
+        Assert.Null(await Build().Resolve(path, MixEnum.Phoenix2, CancellationToken.None));
+    }
+
+    [Theory]
     [InlineData("/PumbilityCalculator/xx")]
     [InlineData("/PumbilityCalculator/nonsense")]
     [InlineData("/PumbilityCalculator/phoenix-2/doubles")]

@@ -61,7 +61,9 @@ namespace ScoreTracker.Web.Controllers
             pages.AddRange(era.Zip(era.Skip(1), (from, to) =>
                 $"https://piuscores.arroweclip.se/MixChanges/{ChartSlugs.MixSlug(from)}/{ChartSlugs.MixSlug(to)}"));
             pages.Add("https://piuscores.arroweclip.se/ChartRandomizer");
-            pages.Add("https://piuscores.arroweclip.se/PhoenixCalculator");
+            // The Phoenix score page: one self-canonical page per mix with Phoenix scoring.
+            pages.AddRange(Web.Services.ScoreCalculator.ScoreCalculatorMixes.All
+                .Select(m => $"https://piuscores.arroweclip.se{Web.Services.ScoreCalculator.ScoreCalculatorMixes.PathFor(m)}"));
             // The PUMBILITY calculator: one self-canonical page per mix with a formula.
             pages.AddRange(Web.Services.PumbilityCalculator.PumbilityCalculatorMixes.All
                 .Select(m => $"https://piuscores.arroweclip.se{Web.Services.PumbilityCalculator.PumbilityCalculatorMixes.PathFor(m)}"));

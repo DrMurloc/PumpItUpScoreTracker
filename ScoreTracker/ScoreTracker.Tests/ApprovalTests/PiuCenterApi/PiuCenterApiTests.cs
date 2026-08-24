@@ -114,6 +114,33 @@ public sealed class PiuCenterApiTests
         Assert.Equal("D20", page.SordChartLevel);
     }
 
+    /// <summary>
+    ///     The note-shape counts behind the hold-tick decomposition
+    ///     (docs/design/phoenix-score-calculator.md D13). Rows, not arrows: Repentance's 627
+    ///     tap arrows share 577 start times because jumps land two arrows on one row and the
+    ///     game judges the row once. Expected values were computed independently from the
+    ///     fixtures' arrays.
+    /// </summary>
+    [Theory]
+    [InlineData("chart-page_Slam_S7.json", "Slam_-_Novasonic_S7_ARCADE", 251, 0, 0)]
+    [InlineData("chart-page_Repentance_D20.json", "Repentance_-_Abel_D20_ARCADE", 577, 70, 481)]
+    [InlineData("chart-page_TribeAttacker_D10HD.json", "Tribe_Attacker_-_Hi-G_D10_HALFDOUBLE_ARCADE", 294, 14, 78)]
+    // The all-hold degenerate: Ugly Dee has not a single tap, and its long overlapping holds
+    // put 67 hold arrows on 53 rows.
+    [InlineData("chart-page_UglyDee_D17.json", "Ugly_Dee_-_Banya_Production_D17_ARCADE", 0, 53, 74)]
+    public async Task ChartPageCountsTapRowsHoldRowsAndTheirTickSum(string fixture, string key,
+        int tapRows, int holdRows, int holdTickSum)
+    {
+        var api = BuildApi(routes: ($"{key}.json", Fixture(fixture)));
+
+        var page = await api.GetChartPage(key, CancellationToken.None);
+
+        Assert.NotNull(page);
+        Assert.Equal(tapRows, page!.TapRows);
+        Assert.Equal(holdRows, page.HoldRows);
+        Assert.Equal(holdTickSum, page.HoldTickSum);
+    }
+
     [Fact]
     public async Task MissingChartPageReturnsNullWhenTheShellComesBack()
     {

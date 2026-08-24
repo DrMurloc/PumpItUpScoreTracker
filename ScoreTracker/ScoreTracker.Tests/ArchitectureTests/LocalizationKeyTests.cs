@@ -177,7 +177,11 @@ public sealed class LocalizationKeyTests
             "Claude",
             // The Discord server rule, quoted verbatim in the toolmaker rules. Translating a quoted
             // rule would make it a different rule, so it travels as written in every locale.
-            "Don't Be An Asshole"
+            "Don't Be An Asshole",
+            // The score formula's credits (the score calculator's Phoenix page): real people,
+            // same standing as DrMurloc. MR_WEQ also needs listing because the underscore keeps
+            // the acronym scrub from seeing a token boundary.
+            "MR_WEQ", "daryen"
         ];
 
         var violations = new List<string>();

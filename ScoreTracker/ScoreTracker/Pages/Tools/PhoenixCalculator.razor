@@ -1,206 +1,103 @@
-﻿@page "/PhoenixCalculator"
-@rendermode RenderModes.Interactive
-@using ScoreTracker.Domain.Records
-@using ScoreTracker.Web.Components
-@using ScoreTracker.Web.Dtos
+@page "/PhoenixCalculator"
+@page "/PhoenixCalculator/{MixSlug}"
+@using MediatR
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.ScoreCalculator
+@inject IMediator Mediator
+@inject IUiSettingsAccessor UiSettings
+@inject NavigationManager Nav
+@inject ICurrentUserAccessor CurrentUser
 
-<PageTitle>Phoenix Score Calculator</PageTitle>
-<HeadContent>
-    <meta name="description" content="Calculate scores based on step counts and see how many judgements a score is from the next grade." />
-    <meta property="og:title" content="Phoenix Score Calculator">
-    <meta property="og:description" content="Calculate scores based on step counts and see how many judgements a score is from the next grade.">
-</HeadContent>
-<MudImage Src="https://piuimages.arroweclip.se/PhoenixBanner.png" Style="width:95%; max-width:800px;"></MudImage>
-<MudGrid>
-    <MudItem xs="12" sm="6">
-        <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Perfects" Value="_perfects" ValueChanged="n=>SetScore(n,_greats,_goods,_bads,_misses,_maxCombo,_calories)" Immediate="true" DebounceInterval="200"></MudTextField>
-    </MudItem>
-    <MudItem xs="12" sm="6">
-        <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Greats" Value="_greats" ValueChanged="n=>SetScore(_perfects,n,_goods,_bads,_misses,_maxCombo,_calories)" Immediate="true" DebounceInterval="200"></MudTextField>
-    </MudItem>
-    <MudItem xs="12" sm="6">
-        <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Goods" Value="_goods" ValueChanged="n=>SetScore(_perfects,_greats,n,_bads,_misses,_maxCombo,_calories)" Immediate="true" DebounceInterval="200"></MudTextField>
-    </MudItem>
-    <MudItem xs="12" sm="6">
-        <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Bads" Value="_bads" ValueChanged="n=>SetScore(_perfects,_greats,_goods,n,_misses,_maxCombo,_calories)" Immediate="true" DebounceInterval="200"></MudTextField>
-    </MudItem>
-    <MudItem xs="12" sm="6">
-        <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Misses" Value="_misses" ValueChanged="n=>SetScore(_perfects,_greats,_goods,_bads,n,_maxCombo,_calories)" Immediate="true" DebounceInterval="200"></MudTextField>
-    </MudItem>
-    <MudItem xs="12" sm="6">
-        <MudTextField T="int" InputMode="InputMode.numeric" MaxLength="5" InputType="InputType.Number" Label="Max Combo" Value="_maxCombo" ValueChanged="n=>SetScore(_perfects,_greats,_goods,_bads,_misses,n,_calories)" Immediate="true" DebounceInterval="200"></MudTextField>
-    </MudItem>
-    <MudItem xs="12" sm="6">
-        <MudTextField T="double?" InputMode="InputMode.numeric" InputType="InputType.Number" Label="Calories" Value="_calories" ValueChanged="n=>SetScore(_perfects,_greats,_goods,_bads,_misses,_maxCombo,n)"></MudTextField>
-    </MudItem>
-    <MudItem xs="12">
-        <ScoreBreakdown Score="@Score.CalculatePhoenixScore" Plate="Score.PlateText" Mix="_currentMix" ShowScore="true"></ScoreBreakdown>
+@* The Phoenix score page (docs/design/phoenix-score-calculator.md). Static SSR — no
+   @rendermode — so the formula, the costs, both mixes' letter cutoffs and the measured
+   sections are real HTML a crawler reads; the head is StaticHeadResolver's, keyed off the
+   route. What moves (the live calculator, its bars and next-letter walk, the plays dialog,
+   the toggles and chart tooltips) is phoenix-calculator.js working on this markup and on
+   the constants block the model emits from the engine. One URL per mix; the bare route —
+   the pre-rebuild URL — serves the viewer's mix. *@
 
+@if (_model != null)
+{
+    <div class="sc-page" data-sc-page data-sc-mix="@_model.Mix">
+        <header class="sc-hero">
+            <div>
+                <div class="sc-eyebrow">
+                    <span>@L["Scoring"]</span><span class="sc-sep">/</span><span class="sc-mix">@_model.Mix.GetName()</span>
+                    <span class="sc-sep">·</span><a href="@ScoreCalculatorMixes.PathFor(_model.OtherMix)">@_model.OtherMix.GetName() →</a>
+                    <span class="sc-sep">·</span><a href="@Services.PumbilityCalculator.PumbilityCalculatorMixes.PathFor(_model.Mix)">@L["PUMBILITY Calculator"] →</a>
+                </div>
+                <h1 class="sc-h1"><span>Phoenix</span> @L["Score Calculator"]</h1>
+                <p class="sc-lede">
+                    @L["Every Pump It Up Phoenix score is judgement-weighted accuracy out of 1,000,000 — half a percent of it is combo."]
+                    @if (_model.Mix == MixEnum.Phoenix2)
+                    {
+                        @L["Phoenix and Phoenix 2 score a play identically; Phoenix 2 changed what the letters below AAA demand."]
+                    }
+                    else
+                    {
+                        @L["Phoenix and Phoenix 2 score a play identically; this page reads the original letter table."]
+                    }
+                    <span class="sc-muted">@L["This page is the formula, what each judgement costs, the letter cutoffs, and what real scores look like at every level."]</span>
+                </p>
+            </div>
+        </header>
 
-        @if (Score.IsValid)
+        <ScoreCalculatorCard Model="_model" IsLoggedIn="CurrentUser.IsLoggedIn" />
+        <ScoreFormulaCard Model="_model" />
+        <ScoreJudgementCosts Model="_model" />
+        <ScoreGradeLadder Model="_model" />
+        <ScoreGradeSpreads Model="_model" />
+        <ScorePopulationChart Model="_model" />
+        <ScoreNoteCountChart Model="_model" />
+        <ScoreHoldTicksCard Model="_model" />
+    </div>
+}
+
+@code {
+    [Parameter] public string? MixSlug { get; set; }
+
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+
+    private ScoreCalculatorModel? _model;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        MixEnum mix;
+        if (MixSlug != null)
         {
-            <MudText>
-                <b>@L["Next Letter"]:</b> @Score.NextLetterGrade(_currentMix)
-            </MudText>
-
-            <MudText><b>@L["Score Loss", "Greats"]:</b> @Score.GreatLoss</MudText>
-
-            <MudText><b>@L["Score Loss", "Goods"]:</b> @Score.GoodLoss</MudText>
-
-            <MudText><b>@L["Score Loss", "Bads"]:</b> @Score.BadLoss</MudText>
-
-            <MudText><b>@L["Score Loss", "Misses"]:</b> @Score.MissLoss</MudText>
-
-            <MudText><b>@L["Score Loss", "Combo"]:</b> @Score.ComboLoss</MudText>
-            <MudText>(@L["Score Loss Note"])</MudText>
-            @if (Score.EstimatedSteps != null)
+            // Only mixes scored by the Phoenix formula have a page; anything else is a real 404.
+            if (!ChartSlugs.TryParseMixSlug(MixSlug, out mix) || !ScoreCalculatorMixes.All.Contains(mix))
             {
-                <MudText><b>@L["Arrows Pressed"]:</b> @Score.EstimatedSteps.Value.ToString("n")</MudText>
+                _model = null;
+                Nav.NotFound();
+                return;
             }
-
-        }
-    </MudItem>
-
-    <MudItem xs="12">
-
-        @if (_showDistribution)
-        {
-
-            <ApexChart TItem="JudgementAllocation"
-                   Title="Score Distribution">
-                <ApexPointSeries TItem="JudgementAllocation"
-                                 Items="_yourAllocations"
-                                 Name="Your Spread"
-                                 SeriesType="SeriesType.Bar"
-                                 XValue="@(e => e.Type)"
-                                 YAggregate="@(e => e.Sum(z=>z.Count))"
-                                 ShowDataLabels />
-
-                <ApexPointSeries TItem="JudgementAllocation"
-                                 Items="_averageAllocation"
-                                 Name="Average Spread For This Score"
-                                 SeriesType="SeriesType.Bar"
-                             XValue="@(e => e.Type)"
-                             YAggregate="@(e => e.Sum(z=>z.Count))"
-                                 ShowDataLabels />
-            </ApexChart>
         }
         else
         {
-            <MudButton Color="Color.Primary" Disabled="!Score.IsValid" Variant="Variant.Outlined" OnClick="ShowDistribution">@L["Show Score Distribution"]</MudButton>
+            // The bare route serves the viewer's mix; a mix without Phoenix scoring falls back
+            // to the newest one that has it.
+            var selected = await UiSettings.GetSelectedMix();
+            mix = ScoreCalculatorMixes.All.Contains(selected) ? selected : ScoreCalculatorMixes.All[0];
         }
-    </MudItem>
-</MudGrid>
-<br/>
-<br/>
-<MudText>
-    @L["Score Formula Shoutout"]<br/>
-</MudText>
 
-<MudImage Src="https://piuimages.arroweclip.se/PhoenixFormula.jpg" Style="max-width:85vw; width:auto;"></MudImage>
-<br/>
-<MudText>
-    @L["Score Range Shoutout"]
-    <br/><br/>
-    @foreach (var grade in Enum.GetValues<PhoenixLetterGrade>().OrderByDescending(g => (int)g.GetMinimumScoreFor(_currentMix)))
-    {
-        <span>@grade.GetName(): @grade.GetMinimumScoreFor(_currentMix) ~ @grade.GetMaximumScoreFor(_currentMix) points</span><br/>
+        var cancellation = HttpContext?.RequestAborted ?? default;
+        var charts = await Mediator.Send(new GetChartsQuery(mix), cancellation);
+        // Phoenix 2's note counts refill from play; unobserved charts read their Phoenix count
+        // (owner ruling, no disclaimer — see the design doc's D10).
+        var fallback = mix == MixEnum.Phoenix
+            ? Array.Empty<Chart>().AsEnumerable()
+            : await Mediator.Send(new GetChartsQuery(MixEnum.Phoenix), cancellation);
+        var population = await Mediator.Send(new GetScorePopulationQuery(mix), cancellation);
+        var spreads = await Mediator.Send(new GetJudgementSpreadsQuery(mix), cancellation);
+        var holds = await Mediator.Send(new GetHoldTickProfileQuery(mix), cancellation);
+        _model = ScoreCalculatorModel.For(mix, charts, fallback, population, spreads, holds);
     }
-    Perfect Game: 100% Perfect<br/>
-    Ultimate Game: 100% Perfect + Great<br/>
-    Extreme Game: 100% Perfect + Great + Good <br/>
-    Superb Game: 0 Miss (previous S)<br/>
-    Marvelous Game: &lt;= 5 misses<br/>
-    Talented Game: &lt;= 10 misses<br/>
-    Fair Game: &lt;= 20 misses<br/>
-    Rough Game: > 20 misses
-</MudText>
-@using ScoreTracker.Web.Services.Contracts
-@inject ISnackbar Snackbar;
-@inject ILogger<PhoenixCalculator> Logger;
-@inject IUiSettingsAccessor UiSettings;
-@code
-{
-    private ApexChart<ScoreDistributionDto> _distributionChart;
-
-    // Grades follow the selected mix's cutoff table (Phoenix 2 re-cut sub-AAA).
-    private MixEnum _currentMix = MixEnum.Phoenix;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var selected = await UiSettings.GetSelectedMix();
-        // The tool computes a Phoenix score from judgements, so it stays on a Phoenix cutoff
-        // table whatever the site mix is. A legacy viewer still gets a working calculator
-        // instead of a locked door — the answer is simply about Phoenix, as the name says.
-        _currentMix = selected.UsesLegacyScoring() ? MixEnum.Phoenix : selected;
-    }
-
-    private sealed record JudgementAllocation(string Type, int Count)
-    {
-
-    }
-    private JudgementAllocation[] _averageAllocation = Array.Empty<JudgementAllocation>();
-    private JudgementAllocation[] _yourAllocations = Array.Empty<JudgementAllocation>();
-
-    private bool _showDistribution = false;
-    private Task SetScore(int perfects, int greats, int goods, int bads, int misses, int maxCombo,double? calories)
-    {
-        _showDistribution = false;
-        _calories = calories == null ? null : Math.Abs(calories.Value);
-        _perfects = Math.Abs(perfects);
-        _greats = Math.Abs(greats);
-        _goods = Math.Abs(goods);
-        _bads = Math.Abs(bads);
-        _misses = Math.Abs(misses);
-        _maxCombo = Math.Abs(maxCombo);
-        Score = new(_perfects, _greats, _goods, _bads, _misses, _maxCombo, calories);
-        return Task.CompletedTask;
-
-    }
-
-    private Task ShowDistribution()
-    {
-        var scoreNoCombo = new ScoreScreen(_perfects, _greats, _goods, _bads, _misses, 0).CalculatePhoenixScore;
-        var distribution = ScoreDistributionDto.Get(scoreNoCombo);
-        var averagePerfect = distribution.AvgPerfect;
-        var averageGreat = distribution.AvgGreat;
-        var averageGood = distribution.AvgGood;
-        var averageBad = distribution.AvgBad;
-        var averageMiss = distribution.AvgMiss;
-        var scalingRatio = Score.TotalCount / (double)(averagePerfect + averageGreat + averageGood + averageBad + averageMiss);
-        _averageAllocation = new JudgementAllocation[]
-        {
-            new("Perfects", (int)(averagePerfect*scalingRatio)),
-            new("Greats", (int)(averageGreat*scalingRatio)),
-            new("Goods", (int)(averageGood*scalingRatio)),
-            new("Bads", (int)(averageBad*scalingRatio)),
-            new("Misses",(int)(averageMiss*scalingRatio))
-        };
-        _yourAllocations = new JudgementAllocation[]
-        {
-
-            new("Perfects", _perfects),
-            new("Greats", _greats),
-            new("Goods",_goods),
-            new("Bads",_bads),
-            new("Misses", _misses)
-        };
-
-        _showDistribution = true;
-        return Task.CompletedTask;
-
-    }
-    public IEnumerable<ScoreDistributionDto> ScoreDistributions = ScoreDistributionDto.DefaultList;
-    private int _perfects = 0;
-    private int _greats = 0;
-    private int _goods = 0;
-    private int _bads = 0;
-    private int _misses = 0;
-    private int _maxCombo = 0;
-    private double? _calories = null;
-    private ScoreScreen Score = new (0, 0, 0, 0, 0, 0);
-    
-
-
 }

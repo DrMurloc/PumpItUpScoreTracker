@@ -1,0 +1,106 @@
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.ScoreCalculator
+@namespace ScoreTracker.Web.Components
+
+@* What personal bests look like (design doc D9): every tracked best stacked by grade metal
+   per level — server-rendered SVG, so the picture is in the HTML. Sixteen grades share five
+   metal bands on purpose (the folder-spectrum precedent); each mix's legend names the
+   letters its bands cover. Tooltips are the script's; the rects carry their own numbers. *@
+<section class="sc-sec">
+    <div class="sc-sec-head">
+        <h2 class="sc-h2">@L["What personal bests look like"]</h2>
+        <span class="sc-sub">@L["Every tracked personal best on this mix, stacked by grade band per level. The typical best at almost every level is an S or better."]</span>
+    </div>
+    @if (Model.Population.Count == 0)
+    {
+        <p class="sc-foot">@L["Not enough recorded bests on this mix yet."]</p>
+    }
+    else
+    {
+        <div class="sc-chartwrap">
+            <svg viewBox="0 0 @Width @Height" role="img"
+                 aria-label="@L["Stacked shares of personal bests by grade band per level"]">
+                @foreach (var tick in new[] { 0.0, .25, .5, .75, 1.0 })
+                {
+                    <line x1="@PadLeft" x2="@(Width - PadRight)" y1="@Y(tick).ToString(F)" y2="@Y(tick).ToString(F)" class="sc-grid" />
+                    @SvgLabel(PadLeft - 8, Y(tick) + 4, "end", "sc-tick", $"{tick * 100:0}%")
+                }
+                @foreach (var (level, index) in Model.Population.Select((l, i) => (l, i)))
+                {
+                    var x = BarX(index);
+                    var acc = 0.0;
+                    <g data-sc-tip="@TipFor(level)">
+                        @foreach (var band in level.Bands)
+                        {
+                            var share = (double)band.Count / level.Total;
+                            if (band.Count > 0)
+                            {
+                                var y0 = Y(acc);
+                                var y1 = Y(acc + share);
+                                <rect x="@x.ToString(F)" y="@((y1 + 1).ToString(F))" width="@BarWidth.ToString(F)"
+                                      height="@(Math.Max(y0 - y1 - 2, .8).ToString(F))" rx="1.5"
+                                      class="sc-band-@band.Key"></rect>
+                            }
+                            acc += share;
+                        }
+                        <rect x="@x.ToString(F)" y="@PadTop" width="@BarWidth.ToString(F)"
+                              height="@((Height - PadTop - PadBottom).ToString(F))" fill="transparent"></rect>
+                    </g>
+                    @SvgLabel(x + BarWidth / 2, Height - 8, "middle", "sc-tick", level.Level.ToString())
+                }
+            </svg>
+        </div>
+        <div class="sc-legend">
+            @foreach (var band in Model.Population[0].Bands)
+            {
+                <span class="sc-legend-item"><i class="sc-sw sc-band-@band.Key"></i>@BandLabel(band)</span>
+            }
+        </div>
+        <p class="sc-foot">@L["The distribution leans toward SSS+ and Perfect Games at lower levels: players clearing folders push every chart in them far past a first pass, so low levels read as lamp territory rather than a picture of first attempts. Levels with fewer than 20 recorded bests are hidden."]</p>
+        <p class="sc-srcline">@L["{0} personal bests of players tracked on PIU Scores, {1}, Singles + Doubles.", Model.PopulationTotal.ToString("N0"), Model.Mix.GetName()]</p>
+    }
+</section>
+
+@code {
+    private const int Width = 960;
+    private const int Height = 330;
+    private const int PadLeft = 46;
+    private const int PadRight = 8;
+    private const int PadTop = 12;
+    private const int PadBottom = 26;
+    private const string F = "0.##";
+
+    [Parameter, EditorRequired] public ScoreCalculatorModel Model { get; set; } = default!;
+
+    private double BarSlot => (Width - PadLeft - PadRight) / (double)Model.Population.Count;
+    private double BarWidth => Math.Max(BarSlot - 4, 3);
+    private double BarX(int index) => PadLeft + index * BarSlot + 2;
+    private static double Y(double share) => PadTop + (1 - share) * (Height - PadTop - PadBottom);
+
+    /// <summary>Razor reserves the literal &lt;text&gt; tag, so SVG labels render through markup.</summary>
+    private static MarkupString SvgLabel(double x, double y, string anchor, string cssClass, string content)
+    {
+        return (MarkupString)($"<text x=\"{x:0.##}\" y=\"{y:0.##}\" text-anchor=\"{anchor}\" " +
+                              $"class=\"{cssClass}\">{System.Net.WebUtility.HtmlEncode(content)}</text>");
+    }
+
+
+    private string BandLabel(ScoreCalculatorModel.PopulationBand band)
+    {
+        return band.Key switch
+        {
+            "below" => L["below 900k · {0} and under", ScoreCalculatorModel.TopGradeBelowTheLine(Model.Mix)],
+            "copper" => $"900–950k · {ScoreCalculatorModel.CoveredGrades(Model.Mix, 900_000, 950_000)}",
+            "silver" => $"950–970k · {ScoreCalculatorModel.CoveredGrades(Model.Mix, 950_000, 970_000)}",
+            "gold" => $"970–990k · {ScoreCalculatorModel.CoveredGrades(Model.Mix, 970_000, 990_000)}",
+            _ => $"990k+ · {ScoreCalculatorModel.CoveredGrades(Model.Mix, 990_000, 1_000_001)}"
+        };
+    }
+
+    private string TipFor(ScoreCalculatorModel.PopulationLevel level)
+    {
+        var bands = string.Join(" · ", level.Bands.Where(b => b.Count > 0)
+            .Select(b => $"{BandLabel(b)} {(double)b.Count / level.Total:P0}"));
+        return $"{L["Level {0}", level.Level]} · {L["{0} bests", level.Total.ToString("N0")]} — {bands}";
+    }
+}

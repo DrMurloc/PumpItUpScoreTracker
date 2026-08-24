@@ -1,0 +1,36 @@
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.ScoreCalculator
+@namespace ScoreTracker.Web.Components
+
+@* The formula in real HTML (docs/design/phoenix-score-calculator.md D3) — the JPG it
+   replaces couldn't say the two things that matter: the machine floors, and what combo
+   actually counts. The credits render on the Phoenix page only (D14). *@
+<section class="sc-sec">
+    <div class="sc-sec-head">
+        <h2 class="sc-h2">@L["The formula"]</h2>
+    </div>
+    <div class="sc-formula" role="img"
+         aria-label="@L["Score equals the floor of 0.995 times (perfects plus 0.6 greats plus 0.2 goods plus 0.1 bads) plus 0.005 times max combo, divided by the note count, times one million."]">
+        Score <i class="sc-op">=</i> ⌊ <i class="sc-op">(</i>0.995 <i class="sc-op">×</i>
+        <i class="sc-op">(</i><b class="judg-perfect">PERFECT</b> <i class="sc-op">+</i> 0.6·<b class="judg-great">GREAT</b>
+        <i class="sc-op">+</i> 0.2·<b class="judg-good">GOOD</b> <i class="sc-op">+</i>
+        0.1·<b class="judg-bad">BAD</b><i class="sc-op">)</i> <i class="sc-op">+</i>
+        0.005 <i class="sc-op">×</i> <b class="sc-t-combo">COMBO</b><i class="sc-op">)</i>
+        <i class="sc-op">÷</i> NOTES <i class="sc-op">×</i> 1,000,000 ⌋
+    </div>
+    <ul class="sc-fnotes">
+        <li>@L["A miss weighs zero — it simply removes the note from the top of the fraction."]</li>
+        <li><b>@L["The machine rounds down."]</b> @L["Hand math that lands between two points reads one high, not the game. Against real result screens the formula is exact to ±1 point."]</li>
+        <li><b>@L["Combo counts perfects and greats only, inside the longest unbroken run."]</b> @L["A good keeps the run alive without advancing it; a bad or a miss breaks it. That is why where a miss lands matters — one mid-chart costs several times one at the edges."] @L["The combo term rarely decides a grade until SSS or SSS+ is the target — and there a mid-song break costs up to 2,500 points, half a letter, where a break at either end costs almost nothing."]</li>
+        <li>@L["Notes is the chart's full judgement count — taps and hold ticks alike — so the same play quality scores the same on a 300-note chart and a 3,000-note one."] — <a href="#sc-holds">@L["about half of a modern chart is hold ticks"]</a>.</li>
+        <li>@L["XX and earlier had charts with optional notes — a perfect if you hit them, no cost if you missed. Phoenix removed them; every note on a modern chart counts."]</li>
+    </ul>
+    @if (Model.Mix == MixEnum.Phoenix)
+    {
+        <p class="sc-credit">@L["Formula reverse-engineered by MR_WEQ · letter-grade ranges pinned by daryen."]</p>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public ScoreCalculatorModel Model { get; set; } = default!;
+}
