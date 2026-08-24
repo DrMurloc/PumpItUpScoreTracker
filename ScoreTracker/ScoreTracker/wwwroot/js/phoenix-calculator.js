@@ -333,6 +333,102 @@
         });
     });
 
+    // ---- the plays dialog: fetched once from the signed-in MyPlays endpoint, filtered
+    // client-side, a row click fills the calculator (design doc D7). Scores render from the
+    // same arithmetic the calculator uses, so a filled row and its result always agree.
+    var loadButton = page.querySelector('[data-sc-load]');
+    var dialog = page.querySelector('[data-sc-dialog]');
+    if (loadButton && dialog) {
+        var playList = dialog.querySelector('[data-sc-play-list]');
+        var playFilter = dialog.querySelector('[data-sc-play-filter]');
+        var plays = null;
+
+        function esc(text) {
+            return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function messageRow(text) {
+            return '<tr><td style="color:var(--mix-ink-muted)">' + esc(text) + '</td></tr>';
+        }
+
+        function renderPlays() {
+            if (!plays) { playList.innerHTML = messageRow(playList.getAttribute('data-t-loading')); return; }
+            if (plays.length === 0) { playList.innerHTML = messageRow(playList.getAttribute('data-t-empty')); return; }
+            var query = playFilter.value.trim().toLowerCase();
+            var rows = plays.filter(function (play) {
+                return !query || (play.song + ' ' + play.difficulty).toLowerCase().indexOf(query) >= 0;
+            }).map(function (play, index) {
+                var value = score(play.perfects, play.greats, play.goods, play.bads, play.misses, play.combo);
+                var grade = value === null ? null : gradeFor(value, MIX);
+                var plate = plateFor(play.greats, play.goods, play.bads, play.misses);
+                var bubbleClass = play.type === 'Double' ? 'sc-bub-double' : 'sc-bub-single';
+                return '<tr data-sc-play="' + play.index + '" tabindex="0">' +
+                    '<td><img class="sc-jk" src="' + esc(play.jacket) + '" alt="" loading="lazy"></td>' +
+                    '<td><span class="sc-bub ' + bubbleClass + '">' + esc(play.difficulty) + '</span></td>' +
+                    '<td class="sc-pt-name">' + esc(play.song) +
+                    (play.isBroken ? '<span class="sc-pt-fail">' + esc(playList.getAttribute('data-t-fail')) + '</span>' : '') +
+                    '</td>' +
+                    '<td class="sc-pt-j">' +
+                    '<span class="judg-perfect">' + n0(play.perfects) + '</span><span class="sc-sl">/</span>' +
+                    '<span class="judg-great">' + n0(play.greats) + '</span><span class="sc-sl">/</span>' +
+                    '<span class="judg-good">' + n0(play.goods) + '</span><span class="sc-sl">/</span>' +
+                    '<span class="judg-bad">' + n0(play.bads) + '</span><span class="sc-sl">/</span>' +
+                    '<span class="judg-miss">' + n0(play.misses) + '</span><span class="sc-sl"> · </span>' +
+                    '<span class="sc-pt-combo">' + n0(play.combo) + '</span></td>' +
+                    '<td class="sc-pt-score"><span class="sc-wrap">' +
+                    '<span class="sc-n">' + (value === null ? '—' : n0(value)) + '</span>' +
+                    '<span class="sc-gstack">' +
+                    (grade === null ? '' :
+                        '<span class="sc-gradechip" style="background:var(' + GRADE_TOKEN[grade.grade] + ')">' + grade.grade + '</span>') +
+                    '<span class="sc-pl" style="color:var(' + PLATE_TOKEN[plate] + ')">' + plateShort(plate) + '</span>' +
+                    '</span></span></td></tr>';
+            });
+            playList.innerHTML = rows.length ? rows.join('') : messageRow(playList.getAttribute('data-t-none-match'));
+        }
+
+        function plateShort(plate) {
+            return plate.split(' ').map(function (word) { return word.charAt(0); }).join('');
+        }
+
+        function openDialog() {
+            dialog.hidden = false;
+            playFilter.value = '';
+            renderPlays();
+            playFilter.focus();
+            if (plays !== null) return;
+            fetch(playList.getAttribute('data-endpoint'), { credentials: 'same-origin' })
+                .then(function (response) { return response.ok ? response.json() : []; })
+                .then(function (rows) {
+                    plays = rows.map(function (row, index) { row.index = index; return row; });
+                    renderPlays();
+                })
+                .catch(function () { plays = []; renderPlays(); });
+        }
+
+        function closeDialog() { dialog.hidden = true; }
+
+        loadButton.addEventListener('click', openDialog);
+        dialog.querySelector('[data-sc-dialog-close]').addEventListener('click', closeDialog);
+        dialog.addEventListener('click', function (e) { if (e.target === dialog) closeDialog(); });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDialog(); });
+        playFilter.addEventListener('input', renderPlays);
+        playList.addEventListener('click', function (e) {
+            var row = e.target.closest('[data-sc-play]');
+            if (!row) return;
+            var play = plays[parseInt(row.getAttribute('data-sc-play'), 10)];
+            if (!play) return;
+            inputs.perfects.value = play.perfects;
+            inputs.greats.value = play.greats;
+            inputs.goods.value = play.goods;
+            inputs.bads.value = play.bads;
+            inputs.misses.value = play.misses;
+            inputs.combo.value = play.combo;
+            closeDialog();
+            recalc();
+        });
+    }
+
     // ---- one tooltip for every [data-sc-tip] carrier (chart hit areas, bar segments).
     var tip = document.createElement('div');
     tip.className = 'sc-tip';
