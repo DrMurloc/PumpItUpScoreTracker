@@ -2389,9 +2389,6 @@
   <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
     <value>스스로 병합된 것을 포함해 사라진 모든 태그입니다. 닉네임 변경을 더 이상 찾지 못하는 규칙은, 전체를 보지 않으면 그냥 조용한 주와 똑같아 보입니다.</value>
   </data>
-  <data name="Every tick of a hold is a perfect while held and a miss when dropped —" xml:space="preserve">
-    <value>홀드의 모든 틱은 누르는 동안 퍼펙트, 놓치면 미스입니다.</value>
-  </data>
   <data name="Every time you import, PIU Scores hands this tool the session key it uses to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
     <value>임포트할 때마다 piugame.com에 여러분으로 로그인하는 데 사용하는 세션 키를 이 도구에 전달합니다. 그 키가 살아 있는 동안에는 여러분이 그곳에서 할 수 있는 모든 것 — 카드 변경, 설정 변경, PIUGame 계정 삭제까지 — 을 할 수 있습니다.</value>
   </data>
@@ -2979,9 +2976,6 @@
   </data>
   <data name="Hold the rainbow, on bads" xml:space="preserve">
     <value>Bad로 레인보우 유지</value>
-  </data>
-  <data name="Hold ticks are judgements too." xml:space="preserve">
-    <value>홀드 틱도 판정입니다.</value>
   </data>
   <data name="Hold ticks are perfects for as long as the hold is held — and from level 15 up they are about half of every chart's judgements. Hold density is one of the levers a chart is tuned with; and some charts simply are hold songs." xml:space="preserve">
     <value>홀드 틱은 누르는 동안 계속 퍼펙트로 판정되며, 레벨 15부터는 채보 판정의 절반 정도를 차지합니다. 홀드 밀도는 채보의 점수 난이도를 조율하는 수단 중 하나이고, 어떤 채보는 그냥 홀드가 정체성인 곡이기도 합니다.</value>
@@ -4606,8 +4600,8 @@
   <data name="Notes before you fail" xml:space="preserve">
     <value>실패까지의 노트 수</value>
   </data>
-  <data name="Notes is the chart's full judgement count, so the same play quality scores the same on a 300-note chart and a 3,000-note one." xml:space="preserve">
-    <value>노트 수는 채보의 전체 판정 수이므로, 같은 플레이 품질이면 300노트 채보든 3,000노트 채보든 점수가 같습니다.</value>
+  <data name="Notes is the chart's full judgement count — taps and hold ticks alike — so the same play quality scores the same on a 300-note chart and a 3,000-note one." xml:space="preserve">
+    <value>노트 수는 채보의 전체 판정 수로, 탭과 홀드 틱을 모두 포함합니다. 따라서 같은 플레이 품질이면 300노트 채보든 3,000노트 채보든 점수가 같습니다.</value>
   </data>
   <data name="notes per bad" xml:space="preserve">
     <value>Bad 하나당 노트 수</value>
@@ -7387,6 +7381,9 @@
   <data name="The code may have been revoked, or the community no longer exists." xml:space="preserve">
     <value>코드가 취소되었거나 커뮤니티가 더 이상 존재하지 않습니다.</value>
   </data>
+  <data name="The combo term rarely decides a grade until SSS or SSS+ is the target — and there a mid-song break costs up to 2,500 points, half a letter, where a break at either end costs almost nothing." xml:space="preserve">
+    <value>콤보 항은 SSS나 SSS+를 노리기 전까지는 랭크를 좌우하는 일이 드뭅니다. 그 단계에서는 곡 중간의 콤보 브레이크가 최대 2,500점, 랭크 반 칸의 손해가 되지만, 곡 양 끝의 브레이크는 거의 손해가 없습니다.</value>
+  </data>
   <data name="The constants" xml:space="preserve">
     <value>상수</value>
   </data>
@@ -8736,6 +8733,9 @@
   </data>
   <data name="X/Y Uploaded. Z Remaining. W Failed to record" xml:space="preserve">
     <value>{0}/{1} 업로드됨. {2} 남음. {3} 기록 실패</value>
+  </data>
+  <data name="XX and earlier had charts with optional notes — a perfect if you hit them, no cost if you missed. Phoenix removed them; every note on a modern chart counts." xml:space="preserve">
+    <value>XX 이전에는 선택 노트가 있는 채보가 있었습니다. 밟으면 퍼펙트, 놓쳐도 손해가 없었지만 Phoenix에서 사라졌고, 이제 모든 노트가 판정에 포함됩니다.</value>
   </data>
   <data name="XX Conversion Hint" xml:space="preserve">
     <value>XX 기기 기준 — 판정 수는 이 채보의 노트 수로 환산됩니다.</value>

@@ -2405,9 +2405,6 @@
   <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
     <value>Ogni tag sparito, compresi quelli che si sono uniti da soli. Una regola che ha smesso di trovare cambi di nome sembra una settimana tranquilla se non puoi vedere tutto.</value>
   </data>
-  <data name="Every tick of a hold is a perfect while held and a miss when dropped —" xml:space="preserve">
-    <value>Ogni tick di una hold è un perfect finché è tenuta e un miss quando è mollata —</value>
-  </data>
   <data name="Every time you import, PIU Scores hands this tool the session key it uses to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
     <value>Ogni volta che importi, PIU Scores consegna a questo strumento la chiave di sessione con cui accede a piugame.com come te. Finché quella chiave è viva può fare tutto quello che puoi fare tu lì — cambiare la tua card, cambiare le tue impostazioni, cancellare il tuo account PIUGame.</value>
   </data>
@@ -2996,9 +2993,6 @@
   </data>
   <data name="Hold the rainbow, on bads" xml:space="preserve">
     <value>Tenere il Rainbow, con i Bad</value>
-  </data>
-  <data name="Hold ticks are judgements too." xml:space="preserve">
-    <value>Anche i tick delle hold sono giudizi.</value>
   </data>
   <data name="Hold ticks are perfects for as long as the hold is held — and from level 15 up they are about half of every chart's judgements. Hold density is one of the levers a chart is tuned with; and some charts simply are hold songs." xml:space="preserve">
     <value>I tick delle hold sono perfects finché la hold è tenuta — e dal livello 15 in su sono circa metà dei giudizi di ogni chart. La densità di hold è una delle leve con cui si regola un chart; e alcuni chart sono semplicemente canzoni di hold.</value>
@@ -4637,8 +4631,8 @@
   <data name="Notes before you fail" xml:space="preserve">
     <value>Note prima di fallire</value>
   </data>
-  <data name="Notes is the chart's full judgement count, so the same play quality scores the same on a 300-note chart and a 3,000-note one." xml:space="preserve">
-    <value>Note è il conteggio totale dei giudizi del chart, quindi la stessa qualità di gioco vale lo stesso su un chart da 300 note e uno da 3.000.</value>
+  <data name="Notes is the chart's full judgement count — taps and hold ticks alike — so the same play quality scores the same on a 300-note chart and a 3,000-note one." xml:space="preserve">
+    <value>Note è il conteggio totale dei giudizi del chart — tap e tick delle hold compresi — quindi la stessa qualità di gioco vale lo stesso su un chart da 300 note e uno da 3.000.</value>
   </data>
   <data name="notes per bad" xml:space="preserve">
     <value>note per Bad</value>
@@ -7445,6 +7439,9 @@
   <data name="The code may have been revoked, or the community no longer exists." xml:space="preserve">
     <value>Il codice potrebbe essere stato revocato o la comunità non esiste più.</value>
   </data>
+  <data name="The combo term rarely decides a grade until SSS or SSS+ is the target — and there a mid-song break costs up to 2,500 points, half a letter, where a break at either end costs almost nothing." xml:space="preserve">
+    <value>Il termine di combo raramente decide una lettera finché l'obiettivo non è SSS o SSS+ — e lì un'interruzione a metà canzone costa fino a 2.500 punti, mezza lettera, mentre un'interruzione a un'estremità non costa quasi nulla.</value>
+  </data>
   <data name="The constants" xml:space="preserve">
     <value>Le costanti</value>
   </data>
@@ -8804,6 +8801,9 @@
   <data name="X/Y Uploaded. Z Remaining. W Failed to record" xml:space="preserve">
     <value>{0}/{1} caricati. {2} rimanenti. {3} non registrati</value>
     <comment>Save progress status. {0}=saved count, {1}=total, {2}=time remaining (m:ss), {3}=failed count</comment>
+  </data>
+  <data name="XX and earlier had charts with optional notes — a perfect if you hit them, no cost if you missed. Phoenix removed them; every note on a modern chart counts." xml:space="preserve">
+    <value>XX e precedenti avevano chart con note opzionali — un perfect se le prendevi, nessun costo se le mancavi. Phoenix le ha rimosse; ogni nota di un chart moderno conta.</value>
   </data>
   <data name="XX Conversion Hint" xml:space="preserve">
     <value>Direttamente da un cabinato XX: i conteggi si convertono con le note di questa chart.</value>

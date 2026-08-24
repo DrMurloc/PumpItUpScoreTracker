@@ -2389,9 +2389,6 @@
   <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
     <value>Todos los tags que desaparecieron, incluidos los que se fusionaron solos. Una regla que ya no encuentra cambios de nombre parece una semana tranquila si no puedes verlo todo.</value>
   </data>
-  <data name="Every tick of a hold is a perfect while held and a miss when dropped —" xml:space="preserve">
-    <value>Cada tick de un hold es un perfect mientras se mantiene y un miss al soltarlo —</value>
-  </data>
   <data name="Every time you import, PIU Scores hands this tool the session key it uses to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
     <value>Cada vez que importas, PIU Scores entrega a esta herramienta la clave de sesión que usa para iniciar sesión en piugame.com como tú. Mientras esa clave siga viva puede hacer todo lo que tú puedes hacer allí — cambiar tu tarjeta, cambiar tus ajustes, borrar tu cuenta de PIUGame.</value>
   </data>
@@ -2979,9 +2976,6 @@
   </data>
   <data name="Hold the rainbow, on bads" xml:space="preserve">
     <value>Mantener el Rainbow, con Bads</value>
-  </data>
-  <data name="Hold ticks are judgements too." xml:space="preserve">
-    <value>Los ticks de hold también son juicios.</value>
   </data>
   <data name="Hold ticks are perfects for as long as the hold is held — and from level 15 up they are about half of every chart's judgements. Hold density is one of the levers a chart is tuned with; and some charts simply are hold songs." xml:space="preserve">
     <value>Los ticks de hold son perfects mientras el hold se mantiene — y desde el nivel 15 son cerca de la mitad de los juicios de cada chart. La densidad de holds es una de las palancas con que se ajusta un chart; y algunos charts simplemente son canciones de holds.</value>
@@ -4606,8 +4600,8 @@
   <data name="Notes before you fail" xml:space="preserve">
     <value>Notas antes de fallar</value>
   </data>
-  <data name="Notes is the chart's full judgement count, so the same play quality scores the same on a 300-note chart and a 3,000-note one." xml:space="preserve">
-    <value>Notas es el conteo total de juicios del chart, así que la misma calidad de intento puntúa igual en un chart de 300 notas y en uno de 3,000.</value>
+  <data name="Notes is the chart's full judgement count — taps and hold ticks alike — so the same play quality scores the same on a 300-note chart and a 3,000-note one." xml:space="preserve">
+    <value>Notas es el conteo total de juicios del chart — taps y ticks de hold por igual — así que la misma calidad de intento puntúa igual en un chart de 300 notas y en uno de 3,000.</value>
   </data>
   <data name="notes per bad" xml:space="preserve">
     <value>notas por Bad</value>
@@ -7387,6 +7381,9 @@
   <data name="The code may have been revoked, or the community no longer exists." xml:space="preserve">
     <value>Es posible que el código haya sido revocado o que la comunidad ya no exista.</value>
   </data>
+  <data name="The combo term rarely decides a grade until SSS or SSS+ is the target — and there a mid-song break costs up to 2,500 points, half a letter, where a break at either end costs almost nothing." xml:space="preserve">
+    <value>El término de combo rara vez decide una letra hasta que el objetivo es SSS o SSS+ — y ahí un corte a mitad de canción cuesta hasta 2,500 puntos, media letra, mientras que un corte en cualquiera de los extremos no cuesta casi nada.</value>
+  </data>
   <data name="The constants" xml:space="preserve">
     <value>Las constantes</value>
   </data>
@@ -8736,6 +8733,9 @@
   </data>
   <data name="X/Y Uploaded. Z Remaining. W Failed to record" xml:space="preserve">
     <value>{0}/{1} subidos. {2} restantes. {3} fallaron al registrarse</value>
+  </data>
+  <data name="XX and earlier had charts with optional notes — a perfect if you hit them, no cost if you missed. Phoenix removed them; every note on a modern chart counts." xml:space="preserve">
+    <value>XX y anteriores tenían charts con notas opcionales — un perfect si las pisabas, sin costo si las fallabas. Phoenix las eliminó; cada nota de un chart moderno cuenta.</value>
   </data>
   <data name="XX Conversion Hint" xml:space="preserve">
     <value>Directo de una máquina XX: los conteos se convierten con las notas de esta tabla.</value>

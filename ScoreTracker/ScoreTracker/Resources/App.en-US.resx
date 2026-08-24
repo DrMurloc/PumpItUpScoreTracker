@@ -2405,9 +2405,6 @@
   <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
     <value>Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it.</value>
   </data>
-  <data name="Every tick of a hold is a perfect while held and a miss when dropped —" xml:space="preserve">
-    <value>Every tick of a hold is a perfect while held and a miss when dropped —</value>
-  </data>
   <data name="Every time you import, PIU Scores hands this tool the session key it uses to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
     <value>Every time you import, PIU Scores hands this tool the session key it uses to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account.</value>
   </data>
@@ -2996,9 +2993,6 @@
   </data>
   <data name="Hold the rainbow, on bads" xml:space="preserve">
     <value>Hold the rainbow, on bads</value>
-  </data>
-  <data name="Hold ticks are judgements too." xml:space="preserve">
-    <value>Hold ticks are judgements too.</value>
   </data>
   <data name="Hold ticks are perfects for as long as the hold is held — and from level 15 up they are about half of every chart's judgements. Hold density is one of the levers a chart is tuned with; and some charts simply are hold songs." xml:space="preserve">
     <value>Hold ticks are perfects for as long as the hold is held — and from level 15 up they are about half of every chart's judgements. Hold density is one of the levers a chart is tuned with; and some charts simply are hold songs.</value>
@@ -4637,8 +4631,8 @@
   <data name="Notes before you fail" xml:space="preserve">
     <value>Notes before you fail</value>
   </data>
-  <data name="Notes is the chart's full judgement count, so the same play quality scores the same on a 300-note chart and a 3,000-note one." xml:space="preserve">
-    <value>Notes is the chart's full judgement count, so the same play quality scores the same on a 300-note chart and a 3,000-note one.</value>
+  <data name="Notes is the chart's full judgement count — taps and hold ticks alike — so the same play quality scores the same on a 300-note chart and a 3,000-note one." xml:space="preserve">
+    <value>Notes is the chart's full judgement count — taps and hold ticks alike — so the same play quality scores the same on a 300-note chart and a 3,000-note one.</value>
   </data>
   <data name="notes per bad" xml:space="preserve">
     <value>notes per bad</value>
@@ -7445,6 +7439,9 @@
   <data name="The code may have been revoked, or the community no longer exists." xml:space="preserve">
     <value>The code may have been revoked, or the community no longer exists.</value>
   </data>
+  <data name="The combo term rarely decides a grade until SSS or SSS+ is the target — and there a mid-song break costs up to 2,500 points, half a letter, where a break at either end costs almost nothing." xml:space="preserve">
+    <value>The combo term rarely decides a grade until SSS or SSS+ is the target — and there a mid-song break costs up to 2,500 points, half a letter, where a break at either end costs almost nothing.</value>
+  </data>
   <data name="The constants" xml:space="preserve">
     <value>The constants</value>
   </data>
@@ -8804,6 +8801,9 @@
   <data name="X/Y Uploaded. Z Remaining. W Failed to record" xml:space="preserve">
 	  <value>{0}/{1} Uploaded. {2} Remaining. {3} Failed to record</value>
 	  <comment>Save progress status. {0}=saved count, {1}=total, {2}=time remaining (m:ss), {3}=failed count</comment>
+  </data>
+  <data name="XX and earlier had charts with optional notes — a perfect if you hit them, no cost if you missed. Phoenix removed them; every note on a modern chart counts." xml:space="preserve">
+    <value>XX and earlier had charts with optional notes — a perfect if you hit them, no cost if you missed. Phoenix removed them; every note on a modern chart counts.</value>
   </data>
   <data name="XX Conversion Hint" xml:space="preserve">
     <value>Straight off an XX cabinet — the counts convert using this chart's note count.</value>

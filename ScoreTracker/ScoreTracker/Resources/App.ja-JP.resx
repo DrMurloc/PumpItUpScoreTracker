@@ -2405,9 +2405,6 @@
   <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
     <value>自動で統合されたものも含め、消えたタグのすべてです。改名を見つけられなくなった規則は、全体を見なければ静かな週と区別がつきません。</value>
   </data>
-  <data name="Every tick of a hold is a perfect while held and a miss when dropped —" xml:space="preserve">
-    <value>ホールドのティックは押している間はPerfect、離すとMissになります。</value>
-  </data>
   <data name="Every time you import, PIU Scores hands this tool the session key it uses to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
     <value>インポートのたびに、piugame.comへあなたとしてログインするためのセッションキーをこのツールに渡します。そのキーが有効な間、そこであなたができることは何でもできます — カードの変更、設定の変更、PIUGameアカウントの削除まで。</value>
   </data>
@@ -2996,9 +2993,6 @@
   </data>
   <data name="Hold the rainbow, on bads" xml:space="preserve">
     <value>Bad で虹色を保つ</value>
-  </data>
-  <data name="Hold ticks are judgements too." xml:space="preserve">
-    <value>ホールドのティックも判定です。</value>
   </data>
   <data name="Hold ticks are perfects for as long as the hold is held — and from level 15 up they are about half of every chart's judgements. Hold density is one of the levers a chart is tuned with; and some charts simply are hold songs." xml:space="preserve">
     <value>ホールドのティックは押している間ずっとPerfectで、レベル15以上では譜面の判定の半分ほどを占めます。ホールドの密度は譜面のスコア難度を調整するレバーのひとつで、そもそもホールドが持ち味の曲もあります。</value>
@@ -4637,8 +4631,8 @@
   <data name="Notes before you fail" xml:space="preserve">
     <value>失敗までのノート数</value>
   </data>
-  <data name="Notes is the chart's full judgement count, so the same play quality scores the same on a 300-note chart and a 3,000-note one." xml:space="preserve">
-    <value>ノーツ数は譜面の判定総数なので、同じ精度なら300ノーツの譜面でも3,000ノーツの譜面でもスコアは同じです。</value>
+  <data name="Notes is the chart's full judgement count — taps and hold ticks alike — so the same play quality scores the same on a 300-note chart and a 3,000-note one." xml:space="preserve">
+    <value>ノーツ数は譜面の判定総数で、タップもホールドのティックも含みます。そのため同じ精度なら300ノーツの譜面でも3,000ノーツの譜面でもスコアは同じです。</value>
   </data>
   <data name="notes per bad" xml:space="preserve">
     <value>Bad 1回あたりのノート数</value>
@@ -7445,6 +7439,9 @@
   <data name="The code may have been revoked, or the community no longer exists." xml:space="preserve">
     <value>コードが取り消されたか、コミュニティが存在しなくなりました。</value>
   </data>
+  <data name="The combo term rarely decides a grade until SSS or SSS+ is the target — and there a mid-song break costs up to 2,500 points, half a letter, where a break at either end costs almost nothing." xml:space="preserve">
+    <value>コンボ項がランクを左右するのは、SSSやSSS+を狙う段階になってからです。そこでは曲中盤のコンボ切れが最大2,500点、ランク半段分の失点になりますが、曲の端での切れはほとんど失点になりません。</value>
+  </data>
   <data name="The constants" xml:space="preserve">
     <value>定数</value>
   </data>
@@ -8804,6 +8801,9 @@
   <data name="X/Y Uploaded. Z Remaining. W Failed to record" xml:space="preserve">
 	  <value>{0}/{1} 成功. {2} 残り. {3}登録失敗</value>
 	  
+  </data>
+  <data name="XX and earlier had charts with optional notes — a perfect if you hit them, no cost if you missed. Phoenix removed them; every note on a modern chart counts." xml:space="preserve">
+    <value>XX以前には任意ノーツのある譜面がありました。踏めばPerfect、外しても失点なしでしたが、Phoenixで廃止され、今はすべてのノーツが判定に含まれます。</value>
   </data>
   <data name="XX Conversion Hint" xml:space="preserve">
     <value>XX 筐体から — 判定数はこの譜面のノーツ数で換算されます。</value>

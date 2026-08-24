@@ -132,8 +132,10 @@ catalog (cached 24h), and note counts compute at render from the already-cached 
    mix's letter when it differs), plate, the two bars (D5), the next-letter walk (D4), arrows
    pressed (D6). Signed in: Load one of your plays (D7).
 3. **The formula** — real HTML with the five notes: a miss weighs zero; the machine rounds
-   down (±1); combo counts perfects+greats in the longest unbroken run (a good holds it, a bad
-   or miss breaks it); hold ticks are judgements; notes normalises chart length. Credits (D14).
+   down (±1); combo counts perfects+greats in the longest unbroken run, and rarely decides a
+   grade below SSS (a mid-song break costs up to 2,500 — half a letter); notes normalises
+   chart length, taps and hold ticks alike; XX-era optional notes are gone since Phoenix.
+   Credits (D14).
 4. **What each judgement costs** — per-judgement cost cards at a selectable chart size
    (500/1,000/1,500/2,000), the mid-combo miss caveat, and the greats-only budget table per
    grade — every number derived from the engine at render.

@@ -126,19 +126,21 @@
         var w = CONST.weights;
         var total = s.p + s.gr + s.gd + s.bd + s.m;
         var pts = function (count, weight) { return w.accuracy * weight * count / total * 1000000; };
+        // [class, label, points, count] — the bar is sized by POINTS, and a bad pays half a
+        // good per note, so the count rides every tooltip to keep the sliver legible.
         var gained = [
-            ['judg-perfect', inputs.perfects.previousElementSibling.textContent.trim(), pts(s.p, 1)],
-            ['judg-great', inputs.greats.previousElementSibling.textContent.trim(), pts(s.gr, w.great)],
-            ['judg-good', inputs.goods.previousElementSibling.textContent.trim(), pts(s.gd, w.good)],
-            ['judg-bad', inputs.bads.previousElementSibling.textContent.trim(), pts(s.bd, w.bad)],
-            ['sc-seg-combo', inputs.combo.previousElementSibling.textContent.trim(), w.combo * s.c / total * 1000000]
+            ['judg-perfect', inputs.perfects.previousElementSibling.textContent.trim(), pts(s.p, 1), s.p],
+            ['judg-great', inputs.greats.previousElementSibling.textContent.trim(), pts(s.gr, w.great), s.gr],
+            ['judg-good', inputs.goods.previousElementSibling.textContent.trim(), pts(s.gd, w.good), s.gd],
+            ['judg-bad', inputs.bads.previousElementSibling.textContent.trim(), pts(s.bd, w.bad), s.bd],
+            ['sc-seg-combo', inputs.combo.previousElementSibling.textContent.trim(), w.combo * s.c / total * 1000000, s.c]
         ];
         var lost = [
-            ['judg-great', inputs.greats.previousElementSibling.textContent.trim(), pts(s.gr, 1 - w.great)],
-            ['judg-good', inputs.goods.previousElementSibling.textContent.trim(), pts(s.gd, 1 - w.good)],
-            ['judg-bad', inputs.bads.previousElementSibling.textContent.trim(), pts(s.bd, 1 - w.bad)],
-            ['judg-miss', inputs.misses.previousElementSibling.textContent.trim(), pts(s.m, 1)],
-            ['sc-seg-combo', el.getAttribute('data-t-broken-combo'), w.combo * (total - s.c) / total * 1000000]
+            ['judg-great', inputs.greats.previousElementSibling.textContent.trim(), pts(s.gr, 1 - w.great), s.gr],
+            ['judg-good', inputs.goods.previousElementSibling.textContent.trim(), pts(s.gd, 1 - w.good), s.gd],
+            ['judg-bad', inputs.bads.previousElementSibling.textContent.trim(), pts(s.bd, 1 - w.bad), s.bd],
+            ['judg-miss', inputs.misses.previousElementSibling.textContent.trim(), pts(s.m, 1), s.m],
+            ['sc-seg-combo', el.getAttribute('data-t-broken-combo'), w.combo * (total - s.c) / total * 1000000, total - s.c]
         ];
         var lo = Math.min(Math.floor(s.score / 100000), 9) * 100000;
         var span = 1000000 - lo;
@@ -150,7 +152,8 @@
             if (b > a) {
                 var clipped = acc < lo;
                 segs1 += segment(g[0] + (clipped ? ' sc-clip' : ''), (a - lo) / span * 100, (b - a) / span * 100,
-                    g[1] + ' — ' + n0(g[2]) + (clipped ? ' (' + el.getAttribute('data-t-clipped') + ')' : ''));
+                    g[1] + ' ×' + n0(g[3]) + ' — +' + n0(g[2]) +
+                    (clipped ? ' (' + el.getAttribute('data-t-clipped') + ')' : ''));
             }
             acc += g[2];
         });
@@ -158,7 +161,7 @@
         var leg1 = gained.filter(function (g) { return g[2] >= .5; }).map(function (g) {
             return '<span class="sc-it"><i class="sc-sw sc-barseg ' + g[0] +
                 '" style="position:static;width:9px;height:9px;border-radius:50%"></i>' +
-                g[1] + ' <b>' + n0(g[2]) + '</b></span>';
+                g[1] + ' <b>+' + n0(g[2]) + '</b></span>';
         }).join('');
         if (missing > 0)
             leg1 += '<span class="sc-it"><i class="sc-sw sc-sw-empty"></i>' +
@@ -172,7 +175,8 @@
             lost.forEach(function (l) {
                 if (l[2] <= 0) return;
                 segs2 += segment(l[0], acc2 / totalLost * 100, Math.max(l[2] / totalLost * 100 - .3, .3),
-                    l[1] + ' — ' + n0(l[2]) + ' / ' + n0(totalLost) + ' (' + Math.round(l[2] / totalLost * 100) + '%)');
+                    l[1] + ' ×' + n0(l[3]) + ' — −' + n0(l[2]) + ' / ' + n0(totalLost) +
+                    ' (' + Math.round(l[2] / totalLost * 100) + '%)');
                 acc2 += l[2];
             });
         var leg2 = totalLost > 0

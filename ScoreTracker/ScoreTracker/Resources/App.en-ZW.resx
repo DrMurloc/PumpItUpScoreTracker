@@ -2405,9 +2405,6 @@
   <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
     <value>Alu morp blurpa, murglub apa oru. Groblu blab mo murpalu problu blaru puru gala, gorap oru bralu alu.</value>
   </data>
-  <data name="Every tick of a hold is a perfect while held and a miss when dropped —" xml:space="preserve">
-    <value>Blub prgl blarg a gurg gro a plglgrgl plgl gurggro ro a mrgla blarg glubgro —</value>
-  </data>
   <data name="Every time you import, PIU Scores hands this tool the session key it uses to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
     <value>Argla murgm gromurp murpo, murm murgargl blu Rorgl murgloborg grabla murm murpmurp blu piugame.com blu gromurp. Grabla mrgloo, murgm murp murpmurp argla gromurp murp — murgloo grglm, murgloo mrpgrogl, murgloo PIUGame Grgl.</value>
   </data>
@@ -2996,9 +2993,6 @@
   </data>
   <data name="Hold the rainbow, on bads" xml:space="preserve">
     <value>Rglmr mrp grorpurgmagl, lurg blubblgrl</value>
-  </data>
-  <data name="Hold ticks are judgements too." xml:space="preserve">
-    <value>Gurg prgl gro murmgrgl ro.</value>
   </data>
   <data name="Hold ticks are perfects for as long as the hold is held — and from level 15 up they are about half of every chart's judgements. Hold density is one of the levers a chart is tuned with; and some charts simply are hold songs." xml:space="preserve">
     <value>Gurg prgl gro plglgrglurg ba gro grogro gro gurg gurggro — ro blarg grorpmurm 15 gro grglblarg gro ro blugro blarg blub murgl murmgrgl. Gurg gromurg gro mrp blarg gro graplub a murgl murmgro plgl; ro glub murgl groblo gro gurg mrgl.</value>
@@ -4637,8 +4631,8 @@
   <data name="Notes before you fail" xml:space="preserve">
     <value>Roblub glorggro blub glorggrorp</value>
   </data>
-  <data name="Notes is the chart's full judgement count, so the same play quality scores the same on a 300-note chart and a 3,000-note one." xml:space="preserve">
-    <value>Glub gro gro murgl mrglmr murmgrgl glorgmurp, ro gro groblub lurg gromb mrglrgl groblub ur a 300-glub murgl ro a 3,000-glub mrp.</value>
+  <data name="Notes is the chart's full judgement count — taps and hold ticks alike — so the same play quality scores the same on a 300-note chart and a 3,000-note one." xml:space="preserve">
+    <value>Glub gro gro murgl mrglmr murmgrgl glorgmurp — prub ro gurg prgl groblub — ro gro groblub lurg gromb mrglrgl groblub ur a 300-glub murgl ro a 3,000-glub mrp.</value>
   </data>
   <data name="notes per bad" xml:space="preserve">
     <value>roblub morg urg</value>
@@ -7445,6 +7439,9 @@
   <data name="The code may have been revoked, or the community no longer exists." xml:space="preserve">
     <value>Mrp mrglrgl murg mrglro murmmrp glgrrglgro, argl mrp plglmurgblub mrp lurgmurp glmrp.</value>
   </data>
+  <data name="The combo term rarely decides a grade until SSS or SSS+ is the target — and there a mid-song break costs up to 2,500 points, half a letter, where a break at either end costs almost nothing." xml:space="preserve">
+    <value>Gro grogrgl grulm mggl groglo a rorgl ro SSS ol SSS+ gro gro morggrol — ro og a blugro-mrgl morgl gogl ro 2,500 mrglublgl, blugro rorgl, blarg a morgl og bralmo gogl ro blab.</value>
+  </data>
   <data name="The constants" xml:space="preserve">
     <value>A plomgru</value>
   </data>
@@ -8804,6 +8801,9 @@
   <data name="X/Y Uploaded. Z Remaining. W Failed to record" xml:space="preserve">
 	  <value>{0}/{1} Murgmrgllurg. {2} Rglblarglurg. {3} Rglmurm grgl blubgrorp</value>
 	  <comment>Save progress status. {0}=saved count, {1}=total, {2}=time remaining (m:ss), {3}=failed count</comment>
+  </data>
+  <data name="XX and earlier had charts with optional notes — a perfect if you hit them, no cost if you missed. Phoenix removed them; every note on a modern chart counts." xml:space="preserve">
+    <value>XX ro urblarggl gurgro murgl plgl opa glub — a plglgrgl plgl marg, bo gogl plgl mrgla. Phoenix margro grglblarg; blub glub ur a murg murgl glorgmurp.</value>
   </data>
   <data name="XX Conversion Hint" xml:space="preserve">
     <value>Lo XX murgla — murmgl obala ba murgl bloga.</value>
