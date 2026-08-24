@@ -61,10 +61,10 @@ Input: one song's charts with their video URLs. Output: a side per chart, or nul
 
 - Group by URL. A group is **pairable** only when it holds exactly two singles-family charts
   (`Single` / `SinglePerformance`) of that one song.
-- S+S with distinct levels → lower Left, higher Right. Equal levels → null.
-- S+SP → null always (research-only sides; the assigner must never overwrite a hand-set side
-  with a level guess — write paths skip pairs whose stored sides are already set and the
-  recompute produces null).
+- S+S (or SP+SP) with distinct levels → lower Left, higher Right. Equal levels → left
+  untouched (never guess, never wipe).
+- S+SP → left untouched always: those sides are hand-researched, and a level guess must never
+  overwrite one.
 - Anything else (solo, doubles, co-op, 3+ charts) → null.
 
 Cross-song sharing never reaches the assigner — it sees one song at a time — so a mislinked
