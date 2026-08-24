@@ -251,7 +251,8 @@ internal sealed class CommentSaga :
             .Where(record => record.Deletion == null || record.Replies.Count > 0)
             .ToArray();
 
-        return new CommentPageRecord(roots, totalRoots, totalRoots > request.TakeRoots);
+        return new CommentPageRecord(roots, totalRoots, totalRoots > request.TakeRoots,
+            !request.Audience.IsPrivate && translationArmed);
     }
 
     public async Task<IReadOnlyList<CommentScopeRecord>> Handle(GetMyCommentScopesQuery request,

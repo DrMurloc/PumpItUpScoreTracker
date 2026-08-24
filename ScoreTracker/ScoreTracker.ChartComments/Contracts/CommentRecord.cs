@@ -59,7 +59,14 @@ public sealed record CommentTranslationRecord(
 public sealed record CommentPageRecord(
     IReadOnlyList<CommentRecord> Roots,
     int TotalRoots,
-    bool HasMore);
+    bool HasMore,
+    /// <summary>
+    ///     Whether the translation pipeline is armed for this scope — what tells the UI to offer
+    ///     the Read-in picker even on a page whose renderings have not arrived yet. A reader whose
+    ///     language never renders (Italian, Japanese) picks a localization here BEFORE anything is
+    ///     translated; that is the picker's whole audience. Always false for Notes.
+    /// </summary>
+    bool TranslationOffered = false);
 
 /// <summary>
 ///     One chip on the scope rail: an audience the reader may read, and — when

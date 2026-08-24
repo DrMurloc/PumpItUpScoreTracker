@@ -541,15 +541,26 @@ else
     private bool IsNotes => _audience.IsPrivate;
 
     /// <summary>
-    ///     The picker's vocabulary: every rendering the page actually holds. Empty threads and
-    ///     all-own-language threads offer no picker, which is most of them.
+    ///     The picker's vocabulary is the pipeline's FIXED rendering set, not what this page
+    ///     happens to hold — the picker's whole audience is the reader whose language never
+    ///     renders (Italian, Japanese) stating a preference BEFORE translations exist for them.
+    ///     The sticky pick then applies wherever a rendering does exist and falls back to the
+    ///     original (with the queued badge) where one is still coming. Offered while the pipeline
+    ///     is armed, and kept when a page still holds renderings from before it was parked.
     /// </summary>
-    private IReadOnlyList<string> ReadInLocales => _page.Roots
+    private IReadOnlyList<string> ReadInLocales =>
+        _page.TranslationOffered || PageRenderingLocales.Count > 0
+            ? new[] { Translations.Contracts.TranslationTarget.Pivot }
+                .Concat(Translations.Contracts.TranslationTarget.All)
+                .OrderBy(locale => locale, StringComparer.Ordinal)
+                .ToArray()
+            : Array.Empty<string>();
+
+    private IReadOnlyList<string> PageRenderingLocales => _page.Roots
         .SelectMany(root => root.Replies.Prepend(root))
         .Where(comment => comment.Translation != null)
         .SelectMany(comment => comment.Translation!.AvailableLocales)
         .Distinct()
-        .OrderBy(locale => locale, StringComparer.Ordinal)
         .ToArray();
 
     private async Task SelectReadIn(string value)

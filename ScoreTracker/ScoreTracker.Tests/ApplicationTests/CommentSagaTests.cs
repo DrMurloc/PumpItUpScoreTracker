@@ -834,6 +834,9 @@ public sealed class CommentSagaTests
             CancellationToken.None);
 
         Assert.False(Assert.Single(page.Roots).Translation!.Pending);
+        // And the page stops offering the Read-in picker: with the pipeline parked there is
+        // nothing a pick could ever show.
+        Assert.False(page.TranslationOffered);
     }
 
     [Fact]
@@ -847,6 +850,7 @@ public sealed class CommentSagaTests
             CancellationToken.None);
 
         Assert.True(Assert.Single(page.Roots).Translation!.Pending);
+        Assert.True(page.TranslationOffered);
     }
 
     [Fact]

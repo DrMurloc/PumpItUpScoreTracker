@@ -149,6 +149,45 @@ public sealed class CommentTranslationDisplayTests : TestContext
     }
 
     [Fact]
+    public void AnArmedPageOffersTheFullLanguageSetBeforeAnythingIsTranslated()
+    {
+        // The picker's whole audience is the reader whose language never renders — they state
+        // the preference FIRST, and renderings meet it as they land. A picker built from what
+        // the page already holds would never appear for exactly that reader.
+        var untranslated = new CommentRecord(Guid.NewGuid(), Chart, Guid.NewGuid(), Name.From("TUSA"),
+            Name.From("KR"), new Uri("https://example.com/t.png"),
+            new[] { CommentSpan.OfText("아직 번역 안 됨") }, 0, false, false, false,
+            DateTimeOffset.UtcNow, null, null, Array.Empty<CommentRecord>(),
+            new CommentTranslationRecord(null, false, null, Array.Empty<CommentSpan>(),
+                Array.Empty<string>(), true));
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartCommentsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CommentPageRecord(new[] { untranslated }, 1, false, TranslationOffered: true));
+
+        var tab = RenderComponent<ChartCommentsTab>(p => p.Add(c => c.ChartId, Chart).Add(c => c.Active, true));
+
+        var readIn = tab.FindComponent<MudBlazor.MudSelect<string>>();
+        Assert.NotNull(readIn);
+        Assert.Contains("cmt-read-in", tab.Markup);
+    }
+
+    [Fact]
+    public void AParkedPageWithNoRenderingsOffersNoPicker()
+    {
+        var plain = new CommentRecord(Guid.NewGuid(), Chart, Guid.NewGuid(), Name.From("TUSA"),
+            Name.From("KR"), new Uri("https://example.com/t.png"),
+            new[] { CommentSpan.OfText("own words") }, 0, false, false, false,
+            DateTimeOffset.UtcNow, null, null, Array.Empty<CommentRecord>(),
+            new CommentTranslationRecord(null, false, null, Array.Empty<CommentSpan>(),
+                Array.Empty<string>(), false));
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartCommentsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CommentPageRecord(new[] { plain }, 1, false));
+
+        var tab = RenderComponent<ChartCommentsTab>(p => p.Add(c => c.ChartId, Chart).Add(c => c.Active, true));
+
+        Assert.DoesNotContain("cmt-read-in", tab.Markup);
+    }
+
+    [Fact]
     public async Task AReportStampsTheRenderingTheReporterWasReading()
     {
         var translated = Translated(out _);
