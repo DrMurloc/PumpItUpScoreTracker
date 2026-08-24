@@ -42,6 +42,11 @@
             @if (!string.IsNullOrWhiteSpace(_videoUrl))
             {
                 <iframe class="chart-details-video" src="@EmbedUrl" allow="@(AutoPlay ? "autoplay; encrypted-media" : "encrypted-media")" allowfullscreen></iframe>
+                @if (_video?.Side is { } side)
+                {
+                    <VideoSideCaption Side="side" OwnLabel="@SideLabel(ViewChart)"
+                                      PartnerLabel="@(_videoPartner == null ? null : SideLabel(_videoPartner))"></VideoSideCaption>
+                }
             }
             <div class="chart-details-title">
                 <DifficultyBubble Chart="ViewChart"></DifficultyBubble>
@@ -298,6 +303,8 @@
         { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.False };
     private Guid _loadedChartId = Guid.Empty;
     private string? _videoUrl;
+    private ChartVideoInformation? _video;
+    private Chart? _videoPartner;
     private DetailsTab _tab = DetailsTab.Leaderboard;
     private DetailsTab? _remembered;
     private bool _wasVisible;
@@ -494,8 +501,18 @@
     private async Task LoadChart(Guid chartId)
     {
         _loadedChartId = chartId;
-        _videoUrl = (await Mediator.Send(new GetChartVideosQuery(new[] { chartId })))
-            .FirstOrDefault()?.VideoUrl.ToString();
+        _video = (await Mediator.Send(new GetChartVideosQuery(new[] { chartId }))).FirstOrDefault();
+        _videoUrl = _video?.VideoUrl.ToString();
+        // The caption names the other half with the SELECTED mix's level, so the partner comes
+        // from this mix's catalog — absent here means the caption shows this chart's half alone.
+        _videoPartner = _video is { Side: not null, PartnerChartId: { } partnerId }
+            ? (await Mediator.Send(new GetChartsQuery(Mix, ChartIds: new[] { partnerId }))).FirstOrDefault()
+            : null;
+    }
+
+    private static string SideLabel(Chart chart)
+    {
+        return $"{chart.Type.GetShortHand()}{chart.Level}";
     }
 
     /// <summary>
