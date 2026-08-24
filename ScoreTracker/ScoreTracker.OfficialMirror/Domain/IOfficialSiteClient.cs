@@ -65,12 +65,6 @@ internal interface IOfficialSiteClient
         int? maxPages,
         CancellationToken cancellationToken);
 
-
-    Task<(IEnumerable<OfficialRecordedScore> results, IEnumerable<string> nonMapped)> GetRecentScores(MixEnum mix,
-        string username,
-        string password,
-        CancellationToken cancellationToken);
-
     Task<PiuGameAccountDataImport>
         GetAccountData(MixEnum mix, string sid, string? id, CancellationToken cancellationToken);
 

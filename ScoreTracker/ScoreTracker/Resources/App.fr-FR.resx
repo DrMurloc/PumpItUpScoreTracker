@@ -575,6 +575,9 @@
   <data name="Added {0}" xml:space="preserve">
     <value>Ajouté {0}</value>
   </data>
+  <data name="Added {0} charts, skipped {1} the session could not take." xml:space="preserve">
+    <value>{0} charts ajoutés, {1} ignorés que la session ne pouvait pas accepter.</value>
+  </data>
   <data name="Additional Comments" xml:space="preserve">
     <value>Commentaires supplémentaires</value>
   </data>
@@ -3062,6 +3065,9 @@
   <data name="Import Failures" xml:space="preserve">
     <value>Certaines lignes n'ont pas pu être importées. Téléchargez les échecs, corrigez-les et réuploadez.</value>
   </data>
+  <data name="Import from your recent plays" xml:space="preserve">
+    <value>Importer depuis vos parties récentes</value>
+  </data>
   <data name="Import Lede" xml:space="preserve">
     <value>PIU Scores se connecte à votre compte piugame.com et importe vos scores nouveaux et améliorés. Une fois l'import lancé, vous pouvez quitter — il se termine en arrière-plan.</value>
   </data>
@@ -4203,6 +4209,9 @@
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>Pas encore de classement - il apparaît après le premier import hebdomadaire.</value>
   </data>
+  <data name="No recent plays found in your score journal. Run Import Scores first, then come back." xml:space="preserve">
+    <value>Aucune partie récente trouvée dans votre journal de scores. Passez d'abord par Importer les scores, puis revenez.</value>
+  </data>
   <data name="No Recorded Scores" xml:space="preserve">
     <value>Aucun score enregistré</value>
   </data>
@@ -4319,6 +4328,12 @@
   </data>
   <data name="None given" xml:space="preserve">
     <value>Non renseigné</value>
+  </data>
+  <data name="None of those plays could be added — they repeat charts already in the session, or it is already full." xml:space="preserve">
+    <value>Aucune de ces parties n’a pu être ajoutée : elles répètent des charts déjà dans la session, ou la session est déjà pleine.</value>
+  </data>
+  <data name="None of your recent plays score on this board. Check you are on the right chart type." xml:space="preserve">
+    <value>Aucune de vos parties récentes ne marque de points sur ce leaderboard. Vérifiez que vous êtes sur le bon type de chart.</value>
   </data>
   <data name="Normalize to 100%" xml:space="preserve">
     <value>Normaliser à 100 %</value>

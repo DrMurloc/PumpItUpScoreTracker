@@ -575,6 +575,9 @@
   <data name="Added {0}" xml:space="preserve">
     <value>Glorg {0}</value>
   </data>
+  <data name="Added {0} charts, skipped {1} the session could not take." xml:space="preserve">
+    <value>Glorg {0} murgl, rorolurg {1} mrp grrglgrrglgl plglurg bo margro.</value>
+  </data>
   <data name="Additional Comments" xml:space="preserve">
 	  <value>Rgllurgblub Gromorggro</value>
   </data>
@@ -3063,6 +3066,9 @@
   <data name="Import Failures" xml:space="preserve">
     <value>Mrgrgl grorpgro glorgmrgrorp glorg plglgromurm. Murlg mrp rglgrglmr, grorp gllurg, ro gl-grglargl.</value>
   </data>
+  <data name="Import from your recent plays" xml:space="preserve">
+    <value>Glorggl romurg gromurp blarggrrgl mrpplgl</value>
+  </data>
   <data name="Import Lede" xml:space="preserve">
     <value>PIU Mgrlgmrg murgro murpgrrgl gromurp piugame.com grgl ro murgmrblarg gromurp grgl ro grrglmurpblub mgrlgmrg. Mrmurm gl rglmagl, blub grorp murmrgl — gl grorglmagl mrp mrp glmurgmurm.</value>
   </data>
@@ -4204,6 +4210,9 @@
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>Mrp maglmrpplgl argl - maglgro gromr glmrp mrp murpargl murmmr glorggl.</value>
   </data>
+  <data name="No recent plays found in your score journal. Run Import Scores first, then come back." xml:space="preserve">
+    <value>Mrp blarggrrgl mrpplgl arglurg mrp gromurp mrglrgl maglgrorp. Plgl Glorggl Mgrlgmrg murpargl, mrplurg murgm blaromurp.</value>
+  </data>
   <data name="No Recorded Scores" xml:space="preserve">
 	  <value>Mrp Murmgrglurg Mgrlgmrg</value>
   </data>
@@ -4320,6 +4329,12 @@
   </data>
   <data name="None given" xml:space="preserve">
     <value>Alla</value>
+  </data>
+  <data name="None of those plays could be added — they repeat charts already in the session, or it is already full." xml:space="preserve">
+    <value>Rglmagl mrgl blgrlmrp mrpplgl plglurg gl glorg — maglgro mrgblub murgl glglgrrgl mrp mrp grrglgrrglgl, ol grg mrp glglgrrgl blubgro.</value>
+  </data>
+  <data name="None of your recent plays score on this board. Check you are on the right chart type." xml:space="preserve">
+    <value>Rglmagl mrgl gromurp blarggrrgl mrpplgl gogl ap grglmrp mrglblarg. Margurg blub mrp ap mrp arglgro murgl morg.</value>
   </data>
   <data name="Normalize to 100%" xml:space="preserve">
     <value>Grglblgrlurg grgl 100%</value>

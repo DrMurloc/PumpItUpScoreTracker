@@ -575,6 +575,9 @@
   <data name="Added {0}" xml:space="preserve">
     <value>{0} に追加</value>
   </data>
+  <data name="Added {0} charts, skipped {1} the session could not take." xml:space="preserve">
+    <value>{0}件の譜面を追加し、セッションに入らない{1}件をスキップしました。</value>
+  </data>
   <data name="Additional Comments" xml:space="preserve">
 	  <value>追加コメント</value>
   </data>
@@ -3063,6 +3066,9 @@
   <data name="Import Failures" xml:space="preserve">
     <value>インポートできなかった行があります。失敗分をダウンロードして修正し、再アップロードしてください。</value>
   </data>
+  <data name="Import from your recent plays" xml:space="preserve">
+    <value>最近のプレイからインポート</value>
+  </data>
   <data name="Import Lede" xml:space="preserve">
     <value>PIU Scores が piugame.com のアカウントにログインし、新しいスコアと更新されたスコアをインポートします。開始後はこのページを離れても、バックグラウンドで完了します。</value>
   </data>
@@ -4204,6 +4210,9 @@
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>ランキングはまだありません - 最初の週次インポート後に表示されます。</value>
   </data>
+  <data name="No recent plays found in your score journal. Run Import Scores first, then come back." xml:space="preserve">
+    <value>スコアジャーナルに最近のプレイが見つかりません。先にスコアインポートを実行してから、戻ってきてください。</value>
+  </data>
   <data name="No Recorded Scores" xml:space="preserve">
 	  <value>スコア記録なし</value>
   </data>
@@ -4320,6 +4329,12 @@
   </data>
   <data name="None given" xml:space="preserve">
     <value>指定なし</value>
+  </data>
+  <data name="None of those plays could be added — they repeat charts already in the session, or it is already full." xml:space="preserve">
+    <value>それらのプレイは追加できませんでした。すでにセッションにある譜面と重複しているか、セッションが満杯です。</value>
+  </data>
+  <data name="None of your recent plays score on this board. Check you are on the right chart type." xml:space="preserve">
+    <value>最近のプレイはこのボードで得点になりません。譜面タイプが合っているか確認してください。</value>
   </data>
   <data name="Normalize to 100%" xml:space="preserve">
     <value>100%に正規化</value>

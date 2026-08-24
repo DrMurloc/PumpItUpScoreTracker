@@ -33,9 +33,7 @@ namespace ScoreTracker.OfficialMirror.Application
         IRequestHandler<GetGameCardsQuery, IEnumerable<GameCardRecord>>,
         IRequestHandler<GetOfficialUcsEntryQuery, PiuGameUcsEntry?>,
         IRequestHandler<GetOfficialAccountDataQuery, PiuGameAccountDataImport>,
-        IRequestHandler<GetPiuGameAccountIdentityQuery, Contracts.PiuGameAccountIdentity>,
-        IRequestHandler<GetOfficialRecentScoresQuery, (IEnumerable<OfficialRecordedScore> results,
-            IEnumerable<string> nonMapped)>
+        IRequestHandler<GetPiuGameAccountIdentityQuery, Contracts.PiuGameAccountIdentity>
     {
         private readonly IOfficialSiteClient _officialSite;
         private readonly IOfficialPlayerIdentityRepository _identity;
@@ -86,13 +84,6 @@ namespace ScoreTracker.OfficialMirror.Application
             CancellationToken cancellationToken)
         {
             return await _officialSite.GetAccountIdentity(request.Mix, request.Username, request.Password,
-                cancellationToken);
-        }
-
-        public async Task<(IEnumerable<OfficialRecordedScore> results, IEnumerable<string> nonMapped)> Handle(
-            GetOfficialRecentScoresQuery request, CancellationToken cancellationToken)
-        {
-            return await _officialSite.GetRecentScores(request.Mix, request.Username, request.Password,
                 cancellationToken);
         }
 
