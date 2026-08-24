@@ -58,7 +58,12 @@ public sealed class RequestHandlerCoverageTests
         ["DrawChartsCommand"] = "Orphaned by 406c03e5 (Match layer deleted) — no sender, no handler.",
         ["FinishCardDrawCommand"] = "Orphaned by 406c03e5 (Match layer deleted) — no sender, no handler.",
         ["SaveRandomSettingsCommand"] = "Orphaned by 406c03e5 (Match layer deleted) — no sender, no handler.",
-        ["GetAllRandomSettingsQuery"] = "Orphaned by 406c03e5 (Match layer deleted) — no sender, no handler."
+        ["GetAllRandomSettingsQuery"] = "Orphaned by 406c03e5 (Match layer deleted) — no sender, no handler.",
+        // The workbench's synchronous probe. Its handler lives in ScoreTracker.ExplorationTests'
+        // own container: the dependency (ILanguageModelClient) deliberately has no shipping
+        // implementation, so a handler in the vertical fails DI validation at app startup — which
+        // is exactly what happened when the vertical joined the host's MediatR scan.
+        ["TranslateCommentCommand"] = "Workbench-only sync probe; handled inside ExplorationTests' container, never the app's."
     };
 
     private static Type[] AllTypes()

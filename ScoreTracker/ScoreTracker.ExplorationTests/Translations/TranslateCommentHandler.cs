@@ -5,11 +5,17 @@ using ScoreTracker.Translations.Contracts;
 using ScoreTracker.Translations.Contracts.Commands;
 using ScoreTracker.Translations.Domain;
 
-namespace ScoreTracker.Translations.Application;
+namespace ScoreTracker.ExplorationTests.Translations;
 
 /// <summary>
-///     Runs the two stages: the comment into English and its register, then that into every
-///     target locale.
+///     The probe-shaped synchronous path: both stages in one call, on the sweep's own
+///     <see cref="ILanguageModelClient" />. It lives in the workbench rather than the vertical
+///     because the app must not be able to construct it — its dependency deliberately has no
+///     shipping implementation, and when the vertical joined the host's MediatR scan this
+///     handler's registration failed DI validation at startup. Production translates through
+///     <c>TranslationPipelineSaga</c> and the batch client; this class exists so the sweep can
+///     iterate on prompts without an hour-long batch loop, reading the vertical's internal
+///     prompts via InternalsVisibleTo so the two paths cannot drift.
 ///     <para>
 ///         The pivot runs even when the comment is already English. It costs a fraction of the
 ///         fan-out and it is what produces the register metadata, without which the four
@@ -17,8 +23,8 @@ namespace ScoreTracker.Translations.Application;
 ///         back out of stage one unchanged.
 ///     </para>
 ///     <para>
-///         Every call's usage is returned rather than logged, because the first caller is a cost
-///         probe and a total it cannot attribute to a stage answers nothing.
+///         Every call's usage is returned rather than logged, because the caller is a cost probe
+///         and a total it cannot attribute to a stage answers nothing.
 ///     </para>
 /// </summary>
 internal sealed class TranslateCommentHandler(ILanguageModelClient languageModel)

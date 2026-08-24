@@ -42,8 +42,10 @@ public sealed class TranslationSweepTests(ITestOutputHelper output)
         // MediatR 14's license accessor resolves a logger during Mediator construction, so a
         // container without logging fails before any handler is reached.
         services.AddLogging();
+        // The handler lives in THIS assembly now (the app must not be able to construct it),
+        // while the prompts it exercises stay internal to the vertical via InternalsVisibleTo.
         services.AddMediatR(o =>
-            o.RegisterServicesFromAssemblies(typeof(TranslateCommentCommand).Assembly));
+            o.RegisterServicesFromAssemblies(typeof(TranslateCommentHandler).Assembly));
         services.AddSingleton<ILanguageModelClient>(AnthropicLanguageModelClient.Create());
 
         return services.BuildServiceProvider().GetRequiredService<IMediator>();
