@@ -2155,6 +2155,9 @@
   <data name="Download Scores" xml:space="preserve">
     <value>점수 다운로드</value>
   </data>
+  <data name="Drain now" xml:space="preserve">
+    <value>지금 처리</value>
+  </data>
   <data name="Draw a random set of charts" xml:space="preserve">
     <value>무작위 채보 뽑기</value>
   </data>
@@ -3133,6 +3136,9 @@
   <data name="In" xml:space="preserve">
     <value>수록</value>
   </data>
+  <data name="In flight" xml:space="preserve">
+    <value>진행 중</value>
+  </data>
   <data name="in our database, locked so it can't be opened alone." xml:space="preserve">
     <value>우리 데이터베이스에 있으며, 단독으로는 열 수 없도록 잠겨 있습니다.</value>
   </data>
@@ -3366,6 +3372,9 @@
   </data>
   <data name="Last seen" xml:space="preserve">
     <value>마지막 발견</value>
+  </data>
+  <data name="Last submitted {0} · last collected {1}" xml:space="preserve">
+    <value>마지막 제출 {0} · 마지막 수집 {1}</value>
   </data>
   <data name="Last Updated" xml:space="preserve">
     <value>최근 업데이트</value>
@@ -4483,6 +4492,9 @@
   <data name="Nothing is shared with tools" xml:space="preserve">
     <value>도구와 공유된 것이 없습니다</value>
   </data>
+  <data name="Nothing is translated yet, so there is nothing to re-translate." xml:space="preserve">
+    <value>아직 번역된 것이 없어서 다시 번역할 것도 없어요.</value>
+  </data>
   <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
     <value>이 필터에 해당하는 항목이 없습니다. 하나를 해제해 보세요.</value>
   </data>
@@ -4639,6 +4651,9 @@
   <data name="Oldest Score" xml:space="preserve">
     <value>가장 오래된 점수</value>
   </data>
+  <data name="oldest {0}" xml:space="preserve">
+    <value>가장 오래된 것 {0}</value>
+  </data>
   <data name="On a {0} each plate is worth +{1} a step through {2} and +{3} a step from {4} up, so Rough Game to Perfect Game on one chart is +{5}." xml:space="preserve">
     <value>{0}에서 플레이트는 {2}까지 한 단계당 +{1}, {4}부터는 한 단계당 +{3}의 가치이므로, 채보 하나에서 Rough Game에서 Perfect Game까지는 +{5}입니다.</value>
   </data>
@@ -4778,6 +4793,9 @@
   </data>
   <data name="Order by" xml:space="preserve">
     <value>정렬 기준</value>
+  </data>
+  <data name="Original" xml:space="preserve">
+    <value>원문</value>
   </data>
   <data name="Original Chabala Tier List" xml:space="preserve">
     <value>Chabala의 오리지널 티어리스트</value>
@@ -5610,6 +5628,9 @@
   <data name="Queued" xml:space="preserve">
     <value>대기열에 추가됨</value>
   </data>
+  <data name="Queued for translation" xml:space="preserve">
+    <value>번역 대기 중</value>
+  </data>
   <data name="Quick calculator" xml:space="preserve">
     <value>간단 계산기</value>
   </data>
@@ -5695,6 +5716,9 @@
   <data name="Re-pricing stored {0} ratings. Nothing is announced." xml:space="preserve">
     <value>저장된 {0} 레이팅을 재계산합니다. 알림은 전송되지 않습니다.</value>
   </data>
+  <data name="Re-queue {0} texts, about {1} — confirm" xml:space="preserve">
+    <value>{0}개 텍스트 다시 대기열로, 약 {1} — 확인</value>
+  </data>
   <data name="Re-rated" xml:space="preserve">
     <value>난이도 변경</value>
   </data>
@@ -5704,6 +5728,9 @@
   <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
     <value>채보 변경 — {0}노트, 이전에는 {1}.</value>
   </data>
+  <data name="Re-translate everything" xml:space="preserve">
+    <value>전체 다시 번역</value>
+  </data>
   <data name="Reachable" xml:space="preserve">
     <value>접근 가능</value>
   </data>
@@ -5712,6 +5739,9 @@
   </data>
   <data name="Reached {0}" xml:space="preserve">
     <value>{0} 달성</value>
+  </data>
+  <data name="Read in" xml:space="preserve">
+    <value>표시 언어</value>
   </data>
   <data name="Read straight up from the end of a bar to see which level it matches." xml:space="preserve">
     <value>막대 끝에서 곧장 위로 읽으면 어느 레벨과 같은지 보입니다.</value>
@@ -5767,6 +5797,9 @@
   <data name="Recent deliveries" xml:space="preserve">
     <value>최근 전달</value>
   </data>
+  <data name="Recent failures" xml:space="preserve">
+    <value>최근 실패</value>
+  </data>
   <data name="Recent imports" xml:space="preserve">
     <value>최근 가져오기</value>
   </data>
@@ -5811,6 +5844,9 @@
   </data>
   <data name="Recorded {0} days ago" xml:space="preserve">
     <value>{0}일 전에 기록됨</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>새로 고침</value>
   </data>
   <data name="Refresh popularity" xml:space="preserve">
     <value>인기도 새로고침</value>
@@ -6048,6 +6084,9 @@
   </data>
   <data name="Roll up supplemented leaderboards" xml:space="preserve">
     <value>보완 리더보드 집계</value>
+  </data>
+  <data name="Rolling 30-day spend" xml:space="preserve">
+    <value>최근 30일 지출</value>
   </data>
   <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
     <value>이번 주 보드를 지금 교체할까요? 현재 주가 마감되고 다음 세트가 뽑힙니다.</value>
@@ -6514,6 +6553,9 @@
   <data name="Show more of {0} scores" xml:space="preserve">
     <value>{0}개 점수 더 보기</value>
   </data>
+  <data name="Show original" xml:space="preserve">
+    <value>원문 보기</value>
+  </data>
   <data name="Show Passed in Another Mix" xml:space="preserve">
     <value>다른 시리즈에서 패스함 표시</value>
   </data>
@@ -6552,6 +6594,9 @@
   </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>가장 안 닮은 채보 보기</value>
+  </data>
+  <data name="Show translation" xml:space="preserve">
+    <value>번역 보기</value>
   </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>이 채널의 등록 내역 보기</value>
@@ -6937,6 +6982,9 @@
   <data name="Submit" xml:space="preserve">
     <value>제출</value>
   </data>
+  <data name="Submit and collect are running. Batches can take up to an hour." xml:space="preserve">
+    <value>제출과 수집을 실행 중이에요. 배치는 최대 1시간까지 걸릴 수 있어요.</value>
+  </data>
   <data name="Submit for approval" xml:space="preserve">
     <value>승인 요청 보내기</value>
   </data>
@@ -7188,6 +7236,9 @@
   </data>
   <data name="The opposite is picked from everything in reach, so ranges don't apply to it" xml:space="preserve">
     <value>정반대 채보는 비교 범위 전체에서 뽑히므로 범위 설정이 적용되지 않습니다</value>
+  </data>
+  <data name="The pipeline is parked: no Claude API key is configured. Queued comments wait; nothing is spent." xml:space="preserve">
+    <value>파이프라인이 멈춰 있어요. Claude API 키가 설정되지 않았어요. 대기 중인 댓글은 기다리고, 비용은 들지 않아요.</value>
   </data>
   <data name="The PIU Scores bot" xml:space="preserve">
     <value>PIU Scores 봇</value>
@@ -7687,6 +7738,15 @@
   <data name="Track the grind." xml:space="preserve">
     <value>그라인딩을 기록하세요.</value>
   </data>
+  <data name="Translated" xml:space="preserve">
+    <value>번역됨</value>
+  </data>
+  <data name="Translated from {0}" xml:space="preserve">
+    <value>{0}에서 번역됨</value>
+  </data>
+  <data name="Translations" xml:space="preserve">
+    <value>번역</value>
+  </data>
   <data name="Treat very old scores as unplayed" xml:space="preserve">
     <value>아주 오래된 기록은 미플레이로 간주</value>
   </data>
@@ -7845,6 +7905,9 @@
   </data>
   <data name="Up" xml:space="preserve">
     <value>갱신</value>
+  </data>
+  <data name="Up to {0} new texts a night. The ceiling is a fuse, not a budget — if it parks the pipeline, find the bug before raising it." xml:space="preserve">
+    <value>하룻밤에 최대 {0}개. 상한은 예산이 아니라 퓨즈예요. 파이프라인이 멈추면 올리기 전에 버그부터 찾으세요.</value>
   </data>
   <data name="Update Chart" xml:space="preserve">
     <value>채보 업데이트</value>
@@ -8038,6 +8101,9 @@
   <data name="Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet." xml:space="preserve">
     <value>또래 대비: 비슷한 경쟁 레벨 플레이어 대비 내 스코어 순위를, 이 폴더에서 해당 스킬이 있는 채보들로 평균한 값입니다. 회색 스킬은 아직 투표할 만큼 근거가 없습니다.</value>
   </data>
+  <data name="Waiting" xml:space="preserve">
+    <value>대기 중</value>
+  </data>
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>사람이 확인해야 합니다 — 한 번 알려 주세요</value>
   </data>
@@ -8184,6 +8250,9 @@
   </data>
   <data name="What the chart is worth in your pool right now" xml:space="preserve">
     <value>지금 내 풀에서 이 채보의 값</value>
+  </data>
+  <data name="What the reporter saw ({0})" xml:space="preserve">
+    <value>신고자가 본 내용 ({0})</value>
   </data>
   <data name="What this play added to your PUMBILITY" xml:space="preserve">
     <value>이 플레이가 PUMBILITY에 더한 값</value>
@@ -8962,6 +9031,9 @@
   <data name="{0} connected" xml:space="preserve">
     <value>{0}명 연결됨</value>
   </data>
+  <data name="{0} d ago" xml:space="preserve">
+    <value>{0}일 전</value>
+  </data>
   <data name="{0} days ago" xml:space="preserve">
     <value>{0}일 전</value>
   </data>
@@ -9000,6 +9072,9 @@
   </data>
   <data name="{0} folders at 90% or better" xml:space="preserve">
     <value>{0}개 폴더 90% 이상</value>
+  </data>
+  <data name="{0} h ago" xml:space="preserve">
+    <value>{0}시간 전</value>
   </data>
   <data name="{0} harder for you" xml:space="preserve">
     <value>{0}개가 나에게 더 어려움</value>
@@ -9043,8 +9118,14 @@
   <data name="{0} members" xml:space="preserve">
     <value>멤버 {0}명</value>
   </data>
+  <data name="{0} mid-pipeline" xml:space="preserve">
+    <value>{0}개 처리 중</value>
+  </data>
   <data name="{0} min" xml:space="preserve">
     <value>{0}분</value>
+  </data>
+  <data name="{0} min ago" xml:space="preserve">
+    <value>{0}분 전</value>
   </data>
   <data name="{0} mixes" xml:space="preserve">
     <value>시리즈 {0}개</value>
@@ -9237,6 +9318,12 @@
   </data>
   <data name="{0} songs left the catalog, taking {1} charts with them. Your scores on them stay on your profile." xml:space="preserve">
     <value>노래 {0}곡이 목록에서 빠지면서 채보 {1}개가 사라졌습니다. 기록은 프로필에 그대로 남습니다.</value>
+  </data>
+  <data name="{0} spent, {1} committed in flight, against a {2} ceiling." xml:space="preserve">
+    <value>{0} 지출, 진행 중 {1}, 상한 {2}.</value>
+  </data>
+  <data name="{0} texts re-queued. They spend against the ceiling on the coming nights." xml:space="preserve">
+    <value>{0}개 텍스트를 다시 대기열에 넣었어요. 앞으로의 밤에 상한 안에서 처리돼요.</value>
   </data>
   <data name="{0} titles" xml:space="preserve">
     <value>타이틀 {0}개</value>

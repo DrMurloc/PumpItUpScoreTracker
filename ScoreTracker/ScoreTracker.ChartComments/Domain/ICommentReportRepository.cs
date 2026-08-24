@@ -49,4 +49,5 @@ internal sealed record ReportQueueRow(
     string CommentText,
     Guid ReporterUserId,
     CommentReportReason Reason,
-    DateTimeOffset ReportedAt);
+    DateTimeOffset ReportedAt,
+    string? RenderingLocale = null);

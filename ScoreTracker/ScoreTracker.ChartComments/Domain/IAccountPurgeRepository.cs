@@ -7,5 +7,9 @@ namespace ScoreTracker.ChartComments.Domain;
 /// </summary>
 internal interface IAccountPurgeRepository
 {
-    Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default);
+    /// <summary>
+    ///     Returns the ids of every comment the purge touched — deleted outright or tombstoned —
+    ///     so the consumer can tell the translation pipeline to drop what it holds for them.
+    /// </summary>
+    Task<IReadOnlyList<Guid>> DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default);
 }

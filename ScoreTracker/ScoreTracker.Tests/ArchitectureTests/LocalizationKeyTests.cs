@@ -172,6 +172,9 @@ public sealed class LocalizationKeyTests
             // Git hosts, named on the toolmaker rules so a maker knows where their source may live.
             // Brands, same standing as Swagger.
             "GitHub", "GitLab", "Codeberg",
+            // The translation pipeline's model vendor, named on the admin page's parked notice.
+            // A brand, same standing as Discord.
+            "Claude",
             // The Discord server rule, quoted verbatim in the toolmaker rules. Translating a quoted
             // rule would make it a different rule, so it travels as written in every locale.
             "Don't Be An Asshole"

@@ -33,7 +33,8 @@ public sealed class MessageTaxonomyTests
         typeof(WeeklyChallenge.Contracts.Messages.RotateWeeklyChartsCommand).Assembly,
         typeof(EventCompetition.Contracts.Messages.TryScheduleMoMCommand).Assembly,
         typeof(Communities.Contracts.Commands.CreateCommunityCommand).Assembly,
-        typeof(Identity.Contracts.Commands.CreateUserCommand).Assembly
+        typeof(Identity.Contracts.Commands.CreateUserCommand).Assembly,
+        typeof(Translations.Contracts.Messages.QueueTextForTranslationCommand).Assembly
     };
 
     private static Type[] TypesIn(string namespaceSuffix)

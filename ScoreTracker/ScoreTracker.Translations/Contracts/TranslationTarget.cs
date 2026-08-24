@@ -54,7 +54,13 @@ public static class TranslationTarget
         return All.Where(locale => !SharesLanguage(locale, sourceLanguage)).ToArray();
     }
 
-    private static bool SharesLanguage(string locale, string sourceLanguage)
+    /// <summary>
+    ///     Whether two tags speak the same language, region ignored — es-MX and es-ES share, and
+    ///     that judgement is deliberately public: the display side's first rule (a comment in the
+    ///     reader's own language is always the original) is this same comparison, and two
+    ///     implementations of it would eventually disagree about somebody.
+    /// </summary>
+    public static bool SharesLanguage(string locale, string sourceLanguage)
     {
         return string.Equals(Primary(locale), Primary(sourceLanguage), StringComparison.OrdinalIgnoreCase);
     }

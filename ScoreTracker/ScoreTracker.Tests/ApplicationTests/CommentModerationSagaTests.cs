@@ -35,6 +35,7 @@ public sealed class CommentModerationSagaTests
         Name.From("DrMurloc"), true, null, new Uri("https://example.com/d.png"), Name.From("US"));
 
     private readonly Mock<ICommentRepository> _comments = new();
+    private readonly Mock<ICommentRenderingRepository> _renderings = new();
     private readonly Mock<ICommentReportRepository> _reports = new();
     private readonly Mock<ICommentRestrictionRepository> _restrictions = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
@@ -58,6 +59,8 @@ public sealed class CommentModerationSagaTests
             .ReturnsAsync(Array.Empty<PublicToolRecord>());
         _users.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<User>());
+        _renderings.Setup(r => r.GetFor(It.IsAny<IReadOnlyList<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<CommentRenderingRow>());
         _reports.Setup(r => r.HasOpenFrom(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         _restrictions.Setup(r => r.GetActive(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
@@ -67,8 +70,8 @@ public sealed class CommentModerationSagaTests
     private CommentModerationSaga Subject()
     {
         return new CommentModerationSaga(_comments.Object, _reports.Object, _restrictions.Object,
-            _currentUser.Object, FakeDateTime.At(Now).Object, _mediator.Object, _users.Object,
-            new MemoryCache(new MemoryCacheOptions()));
+            _renderings.Object, _currentUser.Object, FakeDateTime.At(Now).Object, _mediator.Object,
+            _users.Object, new MemoryCache(new MemoryCacheOptions()));
     }
 
     private void StandingInClub(CommunityRole myRole, CommunityPermission myPermissions,

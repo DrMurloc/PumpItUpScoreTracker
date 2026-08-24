@@ -15,6 +15,7 @@ internal interface ICommentArchiveRepository
     ///     open), and the club's mutes. One transaction; idempotent, because the bus re-fires
     ///     and a second pass must find nothing left to move.
     /// </summary>
-    Task ArchiveCommunity(Guid communityId, Name communityName, DateTimeOffset now,
+    /// <summary>Returns the archived comment ids, so the caller can clear the translation queue.</summary>
+    Task<IReadOnlyList<Guid>> ArchiveCommunity(Guid communityId, Name communityName, DateTimeOffset now,
         CancellationToken cancellationToken = default);
 }

@@ -31,17 +31,20 @@ internal sealed class CommentModerationSaga :
     private readonly ICommentRepository _comments;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
+    private readonly ICommentRenderingRepository _renderings;
     private readonly ICommentReportRepository _reports;
     private readonly ICommentRestrictionRepository _restrictions;
     private readonly IUserReader _users;
 
     public CommentModerationSaga(ICommentRepository comments, ICommentReportRepository reports,
-        ICommentRestrictionRepository restrictions, ICurrentUserAccessor currentUser,
+        ICommentRestrictionRepository restrictions, ICommentRenderingRepository renderings,
+        ICurrentUserAccessor currentUser,
         IDateTimeOffsetAccessor clock, IMediator mediator, IUserReader users, IMemoryCache cache)
     {
         _comments = comments;
         _reports = reports;
         _restrictions = restrictions;
+        _renderings = renderings;
         _currentUser = currentUser;
         _clock = clock;
         _mediator = mediator;
@@ -70,9 +73,11 @@ internal sealed class CommentModerationSaga :
         // changes nothing, and says so by succeeding.
         if (await _reports.HasOpenFrom(comment.Id, reporter, cancellationToken)) return;
 
-        // RenderingLocale stays null until the translation pipeline exists: today everyone reads
-        // the original, and null is exactly how that is recorded.
-        var report = CommentReport.File(comment.Id, reporter, request.Reason, null, _clock.Now);
+        // What the reporter was reading. Translation launders the thing being detected, and the
+        // language-asymmetry case is only a moderation problem — so the locale rides the report,
+        // and null keeps meaning "the original". Length-guarded because the column is.
+        var viewed = request.ViewedLocale is { Length: > 0 and <= 20 } ? request.ViewedLocale : null;
+        var report = CommentReport.File(comment.Id, reporter, request.Reason, viewed, _clock.Now);
         await _reports.Save(report, cancellationToken);
     }
 
@@ -188,6 +193,13 @@ internal sealed class CommentModerationSaga :
         var names = await NamesFor(rows.Where(row => row.CommunityId != null)
             .Select(row => row.CommunityId!.Value), cancellationToken);
         var users = await UsersFor(rows, cancellationToken);
+        // The moderation view shows the original AND what the reporter saw: an admin reading
+        // ko-KR cannot evaluate a report filed against the es-ES rendering. Best effort — a
+        // rendering replaced since the report simply is not there any more.
+        var reportedRenderings = (await _renderings.GetFor(
+                rows.Where(row => row.RenderingLocale != null).Select(row => row.CommentId).Distinct()
+                    .ToArray(), cancellationToken))
+            .ToDictionary(r => (r.CommentId, r.Locale), r => r.Text);
 
         return rows.Select(row => new SiteReportedCommentRecord(row.ReportId, row.CommentId, row.ChartId,
                 row.CommunityId,
@@ -199,7 +211,12 @@ internal sealed class CommentModerationSaga :
                 row.Reason, row.ReportedAt,
                 // The read grant: the reported words, parsed like any other body — spans, never a
                 // string, so this page renders through the same components as the tab.
-                CommentText.Parse(row.CommentText, trust)))
+                CommentText.Parse(row.CommentText, trust),
+                row.RenderingLocale,
+                row.RenderingLocale != null &&
+                reportedRenderings.TryGetValue((row.CommentId, row.RenderingLocale), out var saw)
+                    ? CommentText.Parse(saw, trust)
+                    : null))
             .ToArray();
     }
 

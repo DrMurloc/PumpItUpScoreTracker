@@ -7,21 +7,27 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Only Contracts/ and Wiring/ are public (ADR-001 D2); the vertical's tests see the rest. -->
+    <!-- Only Contracts/ and Wiring/ are public (ADR-001 D2); the vertical's tests see the rest.
+         DynamicProxyGenAssembly2 is Moq's proxy assembly — required to mock internal ports. -->
     <InternalsVisibleTo Include="ScoreTracker.Tests" />
+    <InternalsVisibleTo Include="ScoreTracker.Tests.Integration" />
+    <!-- The workbench's synchronous probe handler reuses this vertical's internal prompts and
+         response reader, so the probe path and the shipping batch path cannot drift. -->
+    <InternalsVisibleTo Include="ScoreTracker.ExplorationTests" />
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="MassTransit" Version="8.5.7" />
+    <PackageReference Include="MassTransit.Abstractions" Version="8.5.7" />
     <PackageReference Include="MediatR" Version="14.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- The only vertical with no ScoreTracker.Data reference: it owns no tables. Translation
-         results have nowhere to live until the comments feature exists, so the handler returns
-         them and the caller decides. -->
     <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
+    <!-- Transitional (P5): the single ChartAttemptDbContext still lives in ScoreTracker.Data. -->
+    <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
 @namespace ScoreTracker.Web.Components.ChartComments
+@using System.Globalization
 @using ScoreTracker.ChartComments.Contracts
 
 @* One comment, reply or note. Which controls appear IS the permission model: ▲ and Reply for
@@ -39,6 +40,18 @@
                 {
                     <span class="cmt-meta">@L["(edited)"]</span>
                 }
+                @if (Comment.Translation is { BodyIsTranslated: true } translated)
+                {
+                    <span class="cmt-badge cmt-badge-tr" data-testid="@($"translated-{Comment.Id}")">
+                        @(_showOriginal
+                            ? L["Original"]
+                            : L["Translated from {0}", LanguageName(translated.SourceLanguage)])
+                    </span>
+                }
+                else if (Comment.Translation is { Pending: true })
+                {
+                    <span class="cmt-badge cmt-badge-q" data-testid="@($"queued-{Comment.Id}")">@L["Queued for translation"]</span>
+                }
                 @if (IsNote)
                 {
                     <MudSpacer></MudSpacer>
@@ -46,7 +59,7 @@
                 }
             </div>
             <div class="cmt-body">
-                <CommentTextView Body="Comment.Body" OnUntrustedLink="OnUntrustedLink"></CommentTextView>
+                <CommentTextView Body="DisplayBody" OnUntrustedLink="OnUntrustedLink"></CommentTextView>
             </div>
             @* Asked in place, under the comment rather than over it: the whole question is
                whether THIS is the one you meant, and a modal that covers it cannot answer that.
@@ -72,7 +85,8 @@
             }
             else if (Reporting)
             {
-                <CommentReportPanel CommentId="Comment.Id" OnSubmit="reason => OnReportSubmit.InvokeAsync((Comment, reason))"
+                <CommentReportPanel CommentId="Comment.Id"
+                                    OnSubmit="reason => OnReportSubmit.InvokeAsync((Comment, reason, ViewedLocale))"
                                     OnCancel="() => OnCancelReport.InvokeAsync()"></CommentReportPanel>
             }
             else if (!IsNote)
@@ -89,6 +103,15 @@
                     {
                         <button type="button" class="cmt-act" data-testid="@($"reply-{Comment.Id}")"
                                 @onclick="() => OnReply.InvokeAsync(Comment)">@L["Reply"]</button>
+                    }
+                    @if (Comment.Translation is { BodyIsTranslated: true })
+                    {
+                        @* Transient by design: the flip lasts as long as the render. The sticky
+                           choice is the thread's Read-in picker, never this. *@
+                        <button type="button" class="cmt-act" data-testid="@($"show-original-{Comment.Id}")"
+                                @onclick="() => _showOriginal = !_showOriginal">
+                            @(_showOriginal ? L["Show translation"] : L["Show original"])
+                        </button>
                     }
                     <MudSpacer></MudSpacer>
                     @if (Comment.ViewerMayModerate)
@@ -146,7 +169,7 @@
 
     [Parameter] public EventCallback<CommentRecord> OnReport { get; set; }
 
-    [Parameter] public EventCallback<(CommentRecord Comment, CommentReportReason Reason)> OnReportSubmit { get; set; }
+    [Parameter] public EventCallback<(CommentRecord Comment, CommentReportReason Reason, string? ViewedLocale)> OnReportSubmit { get; set; }
 
     [Parameter] public EventCallback OnCancelReport { get; set; }
 
@@ -179,6 +202,38 @@
     [Parameter] public EventCallback<CommentRecord> OnDelete { get; set; }
     [Parameter] public EventCallback<CommentRecord> OnRemove { get; set; }
     [Parameter] public EventCallback<string?> OnUntrustedLink { get; set; }
+
+    private bool _showOriginal;
+
+    private IReadOnlyList<CommentSpan> DisplayBody =>
+        _showOriginal && Comment.Translation is { BodyIsTranslated: true } translation
+            ? translation.OriginalBody
+            : Comment.Body;
+
+    /// <summary>
+    ///     What this reader was actually looking at when they reported — the rendering's locale,
+    ///     or null for the original (including a translated row they flipped back). Stamped on
+    ///     the report because a moderator cannot judge a report against words they never saw.
+    /// </summary>
+    private string? ViewedLocale =>
+        Comment.Translation is { BodyIsTranslated: true } viewed && !_showOriginal ? viewed.BodyLocale : null;
+
+    /// <summary>
+    ///     The badge names the language in itself — 한국어, not "Korean" — because the reader it
+    ///     matters to is the one who recognises it. An unknown tag falls back to itself.
+    /// </summary>
+    private static string LanguageName(string? tag)
+    {
+        if (string.IsNullOrWhiteSpace(tag)) return string.Empty;
+        try
+        {
+            return CultureInfo.GetCultureInfo(tag).NativeName;
+        }
+        catch (CultureNotFoundException)
+        {
+            return tag;
+        }
+    }
 
     private bool CanVote => CanInteract && !IsNote && !Comment.ViewerIsAuthor;
 

@@ -2155,6 +2155,9 @@
   <data name="Download Scores" xml:space="preserve">
     <value>Descargar scores</value>
   </data>
+  <data name="Drain now" xml:space="preserve">
+    <value>Vaciar ahora</value>
+  </data>
   <data name="Draw a random set of charts" xml:space="preserve">
     <value>Saca un conjunto aleatorio de charts</value>
   </data>
@@ -3133,6 +3136,9 @@
   <data name="In" xml:space="preserve">
     <value>En</value>
   </data>
+  <data name="In flight" xml:space="preserve">
+    <value>En curso</value>
+  </data>
   <data name="in our database, locked so it can't be opened alone." xml:space="preserve">
     <value>en nuestra base de datos, bloqueada para que no pueda abrirse por sí sola.</value>
   </data>
@@ -3366,6 +3372,9 @@
   </data>
   <data name="Last seen" xml:space="preserve">
     <value>Visto por última vez</value>
+  </data>
+  <data name="Last submitted {0} · last collected {1}" xml:space="preserve">
+    <value>Último envío {0} · última recogida {1}</value>
   </data>
   <data name="Last Updated" xml:space="preserve">
     <value>Última actualización</value>
@@ -4483,6 +4492,9 @@
   <data name="Nothing is shared with tools" xml:space="preserve">
     <value>No se comparte nada con herramientas</value>
   </data>
+  <data name="Nothing is translated yet, so there is nothing to re-translate." xml:space="preserve">
+    <value>Todavía no hay nada traducido, así que no hay nada que retraducir.</value>
+  </data>
   <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
     <value>Nada coincide con estos filtros. Quita uno para ver el resto.</value>
   </data>
@@ -4639,6 +4651,9 @@
   <data name="Oldest Score" xml:space="preserve">
     <value>Score más antiguo</value>
   </data>
+  <data name="oldest {0}" xml:space="preserve">
+    <value>el más antiguo {0}</value>
+  </data>
   <data name="On a {0} each plate is worth +{1} a step through {2} and +{3} a step from {4} up, so Rough Game to Perfect Game on one chart is +{5}." xml:space="preserve">
     <value>En un {0} cada plate vale +{1} por escalón hasta {2} y +{3} por escalón desde {4} en adelante, así que de Rough Game a Perfect Game en un chart son +{5}.</value>
   </data>
@@ -4778,6 +4793,9 @@
   </data>
   <data name="Order by" xml:space="preserve">
     <value>Ordenar por</value>
+  </data>
+  <data name="Original" xml:space="preserve">
+    <value>Original</value>
   </data>
   <data name="Original Chabala Tier List" xml:space="preserve">
     <value>Tier list original de Chabala</value>
@@ -5610,6 +5628,9 @@
   <data name="Queued" xml:space="preserve">
     <value>En cola</value>
   </data>
+  <data name="Queued for translation" xml:space="preserve">
+    <value>En cola para traducción</value>
+  </data>
   <data name="Quick calculator" xml:space="preserve">
     <value>Calculadora rápida</value>
   </data>
@@ -5693,6 +5714,9 @@
   <data name="Re-pricing stored {0} ratings. Nothing is announced." xml:space="preserve">
     <value>Recalculando los ratings guardados de {0}. No se anuncia nada.</value>
   </data>
+  <data name="Re-queue {0} texts, about {1} — confirm" xml:space="preserve">
+    <value>Volver a encolar {0} textos, unos {1} — confirmar</value>
+  </data>
   <data name="Re-rated" xml:space="preserve">
     <value>Renivelados</value>
   </data>
@@ -5702,6 +5726,9 @@
   <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
     <value>Repisado: {0} notas, antes {1}.</value>
   </data>
+  <data name="Re-translate everything" xml:space="preserve">
+    <value>Retraducir todo</value>
+  </data>
   <data name="Reachable" xml:space="preserve">
     <value>Accesible</value>
   </data>
@@ -5710,6 +5737,9 @@
   </data>
   <data name="Reached {0}" xml:space="preserve">
     <value>Ha alcanzado {0}</value>
+  </data>
+  <data name="Read in" xml:space="preserve">
+    <value>Leer en</value>
   </data>
   <data name="Read straight up from the end of a bar to see which level it matches." xml:space="preserve">
     <value>Lee hacia arriba desde el final de una barra para ver con qué nivel coincide.</value>
@@ -5765,6 +5795,9 @@
   <data name="Recent deliveries" xml:space="preserve">
     <value>Entregas recientes</value>
   </data>
+  <data name="Recent failures" xml:space="preserve">
+    <value>Fallos recientes</value>
+  </data>
   <data name="Recent imports" xml:space="preserve">
     <value>Importaciones recientes</value>
   </data>
@@ -5809,6 +5842,9 @@
   </data>
   <data name="Recorded {0} days ago" xml:space="preserve">
     <value>Registrado hace {0} días</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>Actualizar</value>
   </data>
   <data name="Refresh popularity" xml:space="preserve">
     <value>Actualizar popularidad</value>
@@ -6046,6 +6082,9 @@
   </data>
   <data name="Roll up supplemented leaderboards" xml:space="preserve">
     <value>Recopilar leaderboards complementados</value>
+  </data>
+  <data name="Rolling 30-day spend" xml:space="preserve">
+    <value>Gasto móvil de 30 días</value>
   </data>
   <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
     <value>¿Rotar el tablero de esta semana ahora? Cierra la semana actual y sortea el siguiente set.</value>
@@ -6512,6 +6551,9 @@
   <data name="Show more of {0} scores" xml:space="preserve">
     <value>Ver más de {0} puntuaciones</value>
   </data>
+  <data name="Show original" xml:space="preserve">
+    <value>Ver original</value>
+  </data>
   <data name="Show Passed in Another Mix" xml:space="preserve">
     <value>Mostrar pasados en otra versión</value>
   </data>
@@ -6550,6 +6592,9 @@
   </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>Mostrar los charts menos parecidos</value>
+  </data>
+  <data name="Show translation" xml:space="preserve">
+    <value>Ver traducción</value>
   </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>Muestra para qué está registrado este canal</value>
@@ -6935,6 +6980,9 @@
   <data name="Submit" xml:space="preserve">
     <value>Enviar</value>
   </data>
+  <data name="Submit and collect are running. Batches can take up to an hour." xml:space="preserve">
+    <value>El envío y la recogida están en marcha. Los lotes pueden tardar hasta una hora.</value>
+  </data>
   <data name="Submit for approval" xml:space="preserve">
     <value>Enviar para aprobación</value>
   </data>
@@ -7186,6 +7234,9 @@
   </data>
   <data name="The opposite is picked from everything in reach, so ranges don't apply to it" xml:space="preserve">
     <value>El opuesto se elige entre todo lo que está al alcance, así que los rangos no se le aplican</value>
+  </data>
+  <data name="The pipeline is parked: no Claude API key is configured. Queued comments wait; nothing is spent." xml:space="preserve">
+    <value>El proceso está detenido: no hay una clave de la API de Claude configurada. Los comentarios en cola esperan; no se gasta nada.</value>
   </data>
   <data name="The PIU Scores bot" xml:space="preserve">
     <value>El bot de PIU Scores</value>
@@ -7685,6 +7736,15 @@
   <data name="Track the grind." xml:space="preserve">
     <value>Registra el grind.</value>
   </data>
+  <data name="Translated" xml:space="preserve">
+    <value>Traducido</value>
+  </data>
+  <data name="Translated from {0}" xml:space="preserve">
+    <value>Traducido de {0}</value>
+  </data>
+  <data name="Translations" xml:space="preserve">
+    <value>Traducciones</value>
+  </data>
   <data name="Treat very old scores as unplayed" xml:space="preserve">
     <value>Tratar puntuaciones muy antiguas como no jugadas</value>
   </data>
@@ -7843,6 +7903,9 @@
   </data>
   <data name="Up" xml:space="preserve">
     <value>Mejoras</value>
+  </data>
+  <data name="Up to {0} new texts a night. The ceiling is a fuse, not a budget — if it parks the pipeline, find the bug before raising it." xml:space="preserve">
+    <value>Hasta {0} textos nuevos por noche. El límite es un fusible, no un presupuesto: si detiene el proceso, busca el error antes de subirlo.</value>
   </data>
   <data name="Update Chart" xml:space="preserve">
     <value>Actualizar chart</value>
@@ -8036,6 +8099,9 @@
   <data name="Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet." xml:space="preserve">
     <value>Vs. tu nivel: cómo quedan tus scores frente a jugadores de nivel competitivo parecido, de media en los charts de este folder con esa skill. Las skills en gris aún no tienen datos suficientes para votar.</value>
   </data>
+  <data name="Waiting" xml:space="preserve">
+    <value>En espera</value>
+  </data>
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>Falta que lo vea una persona — dale un toque</value>
   </data>
@@ -8182,6 +8248,9 @@
   </data>
   <data name="What the chart is worth in your pool right now" xml:space="preserve">
     <value>Lo que vale el chart en tu conjunto ahora mismo</value>
+  </data>
+  <data name="What the reporter saw ({0})" xml:space="preserve">
+    <value>Lo que vio quien denunció ({0})</value>
   </data>
   <data name="What this play added to your PUMBILITY" xml:space="preserve">
     <value>Lo que esta jugada añadió a tu PUMBILITY</value>
@@ -8960,6 +9029,9 @@
   <data name="{0} connected" xml:space="preserve">
     <value>{0} conectados</value>
   </data>
+  <data name="{0} d ago" xml:space="preserve">
+    <value>hace {0} d</value>
+  </data>
   <data name="{0} days ago" xml:space="preserve">
     <value>hace {0} días</value>
   </data>
@@ -8998,6 +9070,9 @@
   </data>
   <data name="{0} folders at 90% or better" xml:space="preserve">
     <value>{0} folders al 90% o más</value>
+  </data>
+  <data name="{0} h ago" xml:space="preserve">
+    <value>hace {0} h</value>
   </data>
   <data name="{0} harder for you" xml:space="preserve">
     <value>{0} más difíciles para ti</value>
@@ -9041,8 +9116,14 @@
   <data name="{0} members" xml:space="preserve">
     <value>{0} miembros</value>
   </data>
+  <data name="{0} mid-pipeline" xml:space="preserve">
+    <value>{0} en proceso</value>
+  </data>
   <data name="{0} min" xml:space="preserve">
     <value>{0} min</value>
+  </data>
+  <data name="{0} min ago" xml:space="preserve">
+    <value>hace {0} min</value>
   </data>
   <data name="{0} mixes" xml:space="preserve">
     <value>{0} versiones</value>
@@ -9235,6 +9316,12 @@
   </data>
   <data name="{0} songs left the catalog, taking {1} charts with them. Your scores on them stay on your profile." xml:space="preserve">
     <value>{0} canciones salieron del catálogo, llevándose {1} charts. Tus scores siguen en tu perfil.</value>
+  </data>
+  <data name="{0} spent, {1} committed in flight, against a {2} ceiling." xml:space="preserve">
+    <value>{0} gastados, {1} comprometidos en curso, frente a un techo de {2}.</value>
+  </data>
+  <data name="{0} texts re-queued. They spend against the ceiling on the coming nights." xml:space="preserve">
+    <value>{0} textos vueltos a encolar. Gastarán contra el techo en las próximas noches.</value>
   </data>
   <data name="{0} titles" xml:space="preserve">
     <value>{0} títulos</value>

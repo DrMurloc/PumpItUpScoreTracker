@@ -43,6 +43,12 @@ internal sealed class CommentEntity
     [MaxLength(20)]
     public string? SourceLanguage { get; set; }
 
+    /// <summary>
+    ///     When this text last went to the translation pipeline — the edit-requeue cooldown's
+    ///     clock. Null until the first queue, and for notes always.
+    /// </summary>
+    public DateTimeOffset? TranslationQueuedAt { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? EditedAt { get; set; }
     public DateTimeOffset? DeletedAt { get; set; }

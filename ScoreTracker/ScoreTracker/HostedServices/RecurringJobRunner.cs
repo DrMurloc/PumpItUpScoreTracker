@@ -8,6 +8,7 @@ using ScoreTracker.Identity.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.PlayerProgress.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Contracts.Messages;
+using ScoreTracker.Translations.Contracts.Messages;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Web.HostedServices;
@@ -29,6 +30,12 @@ public sealed class RecurringJobRunner
 
     public Task PublishResetDeepScans() =>
         _bus.Publish(new ResetDeepScansCommand());
+
+    public Task PublishSubmitTranslationBatches() =>
+        _bus.Publish(new SubmitTranslationBatchesCommand());
+
+    public Task PublishCollectTranslationBatches() =>
+        _bus.Publish(new CollectTranslationBatchesCommand());
 
     // One command, two consumers: ScoreLedger drains batches sitting past their deadline,
     // OfficialMirror replays sessions whose batch is gone.
