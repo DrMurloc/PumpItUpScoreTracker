@@ -31,6 +31,10 @@
          a comment stores a ChartId and knows nothing about charts. -->
     <ProjectReference Include="..\ScoreTracker.Communities\ScoreTracker.Communities.csproj" />
     <ProjectReference Include="..\ScoreTracker.CommunityTools\ScoreTracker.CommunityTools.csproj" />
+    <!-- The translation pipeline: the marker convention its texts travel under, the queue/discard
+         messages, and the TextTranslatedEvent this vertical consumes. Translations references
+         nothing back, so there is no cycle. -->
+    <ProjectReference Include="..\ScoreTracker.Translations\ScoreTracker.Translations.csproj" />
   </ItemGroup>
 
 </Project>

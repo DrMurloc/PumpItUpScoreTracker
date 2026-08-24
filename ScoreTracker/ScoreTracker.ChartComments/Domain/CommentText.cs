@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using ScoreTracker.ChartComments.Contracts;
+using ScoreTracker.Translations.Contracts;
 
 namespace ScoreTracker.ChartComments.Domain;
 
@@ -115,5 +116,129 @@ internal static partial class CommentText
         }
 
         return url[..end];
+    }
+
+    // A fixed list of known trackers and nothing heuristic: stripping a parameter a site
+    // actually needs breaks the link, so anything not listed stays.
+    private static readonly HashSet<string> TrackingParameters = new(StringComparer.OrdinalIgnoreCase)
+        { "si", "fbclid", "gclid", "dclid", "msclkid", "twclid", "ttclid", "igshid", "yclid", "mc_cid", "mc_eid" };
+
+    /// <summary>
+    ///     Removes known tracking parameters (every <c>utm_*</c>, YouTube's <c>si</c>, the ad
+    ///     click ids, Mailchimp's pair) from each link in already-normalized text. Runs at save,
+    ///     so the stored text itself is rewritten — the author sees the cleaned link on edit, and
+    ///     no tracker ever reaches storage, another reader, or the translation pipeline.
+    /// </summary>
+    public static string StripTrackingParameters(string normalized)
+    {
+        return RewriteLinks(normalized, StripTracking);
+    }
+
+    /// <summary>
+    ///     Lifts every link out for translation, leaving a <see cref="TranslationMarkers" />
+    ///     marker in each one's place — the model is told the markers are links and never sees a
+    ///     URL. The level is picked against this text, so an author who typed a marker-shaped
+    ///     string cannot collide with the real ones.
+    /// </summary>
+    public static MarkedCommentText ExtractLinks(string normalized)
+    {
+        var level = TranslationMarkers.PickLevel(normalized);
+        var links = new List<string>();
+        var marked = RewriteLinks(normalized, url =>
+        {
+            links.Add(url);
+            return TranslationMarkers.Marker(links.Count, level);
+        });
+
+        return new MarkedCommentText(marked, links, level);
+    }
+
+    /// <summary>
+    ///     The links this text renders, exactly as the parser would link them — the authoritative
+    ///     vocabulary for the set-equality check on a translation. A rendering whose set differs
+    ///     from its source's is never stored.
+    /// </summary>
+    public static IReadOnlyList<string> LinksIn(string normalized)
+    {
+        var links = new List<string>();
+        RewriteLinks(normalized, url =>
+        {
+            links.Add(url);
+            return url;
+        });
+
+        return links;
+    }
+
+    public static bool LinkSetsMatch(string original, string rendering)
+    {
+        return new HashSet<string>(LinksIn(original), StringComparer.Ordinal)
+            .SetEquals(LinksIn(rendering));
+    }
+
+    /// <summary>
+    ///     One walk over the text's links, applying <paramref name="rewrite" /> to each — the
+    ///     same match, the same noise trim, and the same parseability bar as
+    ///     <see cref="Parse" />, so every consumer of "a link" means the same thing by it.
+    /// </summary>
+    private static string RewriteLinks(string text, Func<string, string> rewrite)
+    {
+        var builder = new System.Text.StringBuilder(text.Length);
+        var cursor = 0;
+        foreach (Match match in UrlPattern().Matches(text))
+        {
+            var candidate = TrimTrailingNoise(match.Value);
+            if (LinkTrust.TryParse(candidate) == null) continue;
+
+            builder.Append(text, cursor, match.Index - cursor);
+            builder.Append(rewrite(candidate));
+            cursor = match.Index + candidate.Length;
+        }
+
+        builder.Append(text, cursor, text.Length - cursor);
+
+        return builder.ToString();
+    }
+
+    private static string StripTracking(string url)
+    {
+        var fragmentAt = url.IndexOf('#');
+        var fragment = fragmentAt < 0 ? string.Empty : url[fragmentAt..];
+        var beforeFragment = fragmentAt < 0 ? url : url[..fragmentAt];
+
+        var queryAt = beforeFragment.IndexOf('?');
+        if (queryAt < 0) return url;
+
+        var kept = beforeFragment[(queryAt + 1)..]
+            .Split('&')
+            .Where(parameter =>
+            {
+                var name = parameter.Split('=', 2)[0];
+                return !name.StartsWith("utm_", StringComparison.OrdinalIgnoreCase)
+                       && !TrackingParameters.Contains(name);
+            })
+            .ToArray();
+
+        return kept.Length == 0
+            ? beforeFragment[..queryAt] + fragment
+            : beforeFragment[..queryAt] + "?" + string.Join("&", kept) + fragment;
+    }
+}
+
+/// <summary>
+///     A comment body with its links lifted to markers, ready for the translation pipeline —
+///     and the way back: <see cref="Substitute" /> puts the links into a returned rendering.
+///     The caller still runs <see cref="CommentText.LinkSetsMatch" /> on the substituted result;
+///     substitution is mechanical, the check is the guarantee.
+/// </summary>
+internal sealed record MarkedCommentText(string Text, IReadOnlyList<string> Links, int MarkerLevel)
+{
+    public string Substitute(string rendering)
+    {
+        var result = rendering;
+        for (var i = 0; i < Links.Count; i++)
+            result = result.Replace(TranslationMarkers.Marker(i + 1, MarkerLevel), Links[i]);
+
+        return result;
     }
 }
