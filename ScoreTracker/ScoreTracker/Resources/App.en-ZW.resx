@@ -2540,6 +2540,9 @@
   <data name="Fill In The Six Counts" xml:space="preserve">
     <value>Bloga la orgo murmgl</value>
   </data>
+  <data name="Fill out the judgements to see results." xml:space="preserve">
+    <value>Marg blarg gro murmgrgl ro glorg murgrorp.</value>
+  </data>
   <data name="Fill Scores" xml:space="preserve">
     <value>Arglmr Mgrlgmrg</value>
   </data>
@@ -8432,9 +8435,6 @@
   </data>
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>Marogl bloop grumba — golba la</value>
-  </data>
-  <data name="Waiting on a result screen." xml:space="preserve">
-    <value>Glorgro ur a murgrorp mrgl.</value>
   </data>
   <data name="Waiting on the sensors" xml:space="preserve">
     <value>Ogul mrogl</value>

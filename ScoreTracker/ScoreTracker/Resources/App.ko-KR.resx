@@ -2524,6 +2524,9 @@
   <data name="Fill In The Six Counts" xml:space="preserve">
     <value>여섯 개의 판정 수를 입력하세요</value>
   </data>
+  <data name="Fill out the judgements to see results." xml:space="preserve">
+    <value>판정 수를 입력하면 결과가 표시됩니다.</value>
+  </data>
   <data name="Fill Scores" xml:space="preserve">
     <value>점수 채우기</value>
   </data>
@@ -8370,9 +8373,6 @@
   </data>
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>사람이 확인해야 합니다 — 한 번 알려 주세요</value>
-  </data>
-  <data name="Waiting on a result screen." xml:space="preserve">
-    <value>결과 화면 입력을 기다리는 중입니다.</value>
   </data>
   <data name="Waiting on the sensors" xml:space="preserve">
     <value>센서 기다리는 중</value>

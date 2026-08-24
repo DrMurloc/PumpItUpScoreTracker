@@ -2539,6 +2539,9 @@
   <data name="Fill In The Six Counts" xml:space="preserve">
     <value>Renseignez les six compteurs</value>
   </data>
+  <data name="Fill out the judgements to see results." xml:space="preserve">
+    <value>Renseignez les jugements pour voir les résultats.</value>
+  </data>
   <data name="Fill Scores" xml:space="preserve">
     <value>Complétez vos scores</value>
   </data>
@@ -8431,9 +8434,6 @@
   </data>
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>En attente d'un humain — faites signe</value>
-  </data>
-  <data name="Waiting on a result screen." xml:space="preserve">
-    <value>En attente d'un écran de résultat.</value>
   </data>
   <data name="Waiting on the sensors" xml:space="preserve">
     <value>Attente des capteurs</value>
