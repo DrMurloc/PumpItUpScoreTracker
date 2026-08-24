@@ -74,7 +74,13 @@
         {
             @* The PUMBILITY calculator explains one mix's formula: a TechArticle about that game,
                with the trail Tools › the page (docs/design/pumbility-calculator.md D14). *@
-            @((MarkupString)$"<script type=\"application/ld+json\">{CalculatorJsonLd(_head)}</script>")
+            @((MarkupString)$"<script type=\"application/ld+json\">{CalculatorJsonLd(_head, _head.Calculator.MixName, "https://piuscores.arroweclip.se/PumbilityCalculator")}</script>")
+        }
+        else if (_head.ScoreCalculator != null)
+        {
+            @* The Phoenix score page is the same shape: a TechArticle explaining that game's
+               scoring (docs/design/phoenix-score-calculator.md §4). *@
+            @((MarkupString)$"<script type=\"application/ld+json\">{CalculatorJsonLd(_head, _head.ScoreCalculator.MixName, "https://piuscores.arroweclip.se/PhoenixCalculator")}</script>")
         }
     }
     @* The other half of the cache story. Three scripts are ES modules the circuit pulls in by
@@ -297,9 +303,10 @@
         });
     }
 
-    // The calculator is an explainer of a formula: a TechArticle about the game, self-canonical
-    // per mix, under a Tools › page trail.
-    private static string CalculatorJsonLd(StaticHeadModel head)
+    // A calculator page is an explainer of a formula: a TechArticle about the game,
+    // self-canonical per mix, under a Tools › page trail. Shared by the PUMBILITY and the
+    // Phoenix score pages — the same shape, different subject and trail root.
+    private static string CalculatorJsonLd(StaticHeadModel head, string mixName, string rootUrl)
     {
         var article = new Dictionary<string, object?>
         {
@@ -317,7 +324,7 @@
             ["about"] = new Dictionary<string, object?>
             {
                 ["@type"] = "VideoGame",
-                ["name"] = $"Pump It Up {head.Calculator!.MixName}"
+                ["name"] = $"Pump It Up {mixName}"
             }
         };
         return System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object?>
@@ -336,7 +343,7 @@
                             ["@type"] = "ListItem",
                             ["position"] = 1,
                             ["name"] = "Tools",
-                            ["item"] = "https://piuscores.arroweclip.se/PumbilityCalculator"
+                            ["item"] = rootUrl
                         },
                         new Dictionary<string, object?>
                         {

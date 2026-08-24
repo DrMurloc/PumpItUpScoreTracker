@@ -7,6 +7,7 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.WeeklyChallenge.Contracts.Queries;
 using ScoreTracker.Web.Services.PumbilityCalculator;
+using ScoreTracker.Web.Services.ScoreCalculator;
 
 namespace ScoreTracker.Web.Services;
 
@@ -19,7 +20,7 @@ namespace ScoreTracker.Web.Services;
 /// </summary>
 public sealed record StaticHeadModel(string Title, string Description, string? OgImage, string? Canonical,
     string? SongName = null, string? Artist = null, MixDiffHeadModel? MixDiff = null,
-    PumbilityCalculatorHeadModel? Calculator = null);
+    PumbilityCalculatorHeadModel? Calculator = null, ScoreCalculatorHeadModel? ScoreCalculator = null);
 
 /// <summary>
 ///     The PUMBILITY calculator's structured-data payload: an explainer of one mix's formula, so it
@@ -27,6 +28,13 @@ public sealed record StaticHeadModel(string Title, string Description, string? O
 ///     the calculation" rather than tabulating results.
 /// </summary>
 public sealed record PumbilityCalculatorHeadModel(string MixName);
+
+/// <summary>
+///     The Phoenix score page's structured-data payload: an explainer of the scoring formula and
+///     one mix's letter table, so it marks up as a TechArticle about that game — the same shape
+///     as the PUMBILITY calculator's.
+/// </summary>
+public sealed record ScoreCalculatorHeadModel(string MixName);
 
 /// <summary>
 ///     The mix-diff page's structured-data payload. It is a tabulation, so it marks up as a
@@ -72,6 +80,9 @@ public sealed class StaticHeadResolver
 
         if (path.StartsWithSegments(PumbilityCalculatorMixes.Root, out var calculatorRest))
             return ResolvePumbilityCalculator(calculatorRest, currentMix);
+
+        if (path.StartsWithSegments(ScoreCalculatorMixes.Root, out var scoreRest))
+            return ResolvePhoenixCalculator(scoreRest, currentMix);
 
         if (path.StartsWithSegments("/MixChanges", out var pair))
             return await ResolveMixChanges(pair, currentMix, cancellationToken);
@@ -242,6 +253,44 @@ public sealed class StaticHeadResolver
         return new StaticHeadModel(title, description, null,
             $"https://piuscores.arroweclip.se{PumbilityCalculatorMixes.PathFor(mix)}",
             Calculator: new PumbilityCalculatorHeadModel(name));
+    }
+
+    /// <summary>
+    ///     The Phoenix score page's head (docs/design/phoenix-score-calculator.md D1/§4): one page
+    ///     per Phoenix-scored mix, self-canonical; the bare route — the pre-rebuild URL — serves
+    ///     the viewer's mix and canonicalises to it. The description carries each mix's headline
+    ///     letter facts, so a snippet answers what a searcher typed. Pure — the cutoffs are enum
+    ///     constants.
+    /// </summary>
+    private StaticHeadModel? ResolvePhoenixCalculator(PathString rest, MixEnum currentMix)
+    {
+        var segments = rest.Value?.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries)
+                       ?? Array.Empty<string>();
+        MixEnum mix;
+        if (segments.Length == 0)
+        {
+            mix = ScoreCalculatorMixes.All.Contains(currentMix) ? currentMix : ScoreCalculatorMixes.All[0];
+        }
+        else if (segments.Length == 1 && ChartSlugs.TryParseMixSlug(segments[0], out mix) &&
+                 ScoreCalculatorMixes.All.Contains(mix))
+        {
+            // The slug named a mix scored by the Phoenix formula.
+        }
+        else
+        {
+            return null;
+        }
+
+        var name = mix.GetName();
+        var title = _localizer["Phoenix Score Calculator — {0}", name];
+        var description = mix == MixEnum.Phoenix2
+            ? _localizer[
+                "The Pump It Up Phoenix 2 score formula and letter grades: judgement-weighted accuracy out of 1,000,000, floors A 800k · A+ 900k · AA 920k · AA+ 940k, what each judgement costs, and what real scores look like at every level."].Value
+            : _localizer[
+                "The Pump It Up Phoenix score formula and letter grades: judgement-weighted accuracy out of 1,000,000, floors A 750k · A+ 825k · AA 900k · AA+ 925k, what each judgement costs, and what real scores look like at every level."].Value;
+        return new StaticHeadModel(title, description, null,
+            $"https://piuscores.arroweclip.se{ScoreCalculatorMixes.PathFor(mix)}",
+            ScoreCalculator: new ScoreCalculatorHeadModel(name));
     }
 
     /// <summary>
