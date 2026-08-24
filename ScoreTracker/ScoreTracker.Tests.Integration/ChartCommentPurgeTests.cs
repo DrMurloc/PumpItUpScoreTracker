@@ -77,6 +77,33 @@ public sealed class ChartCommentPurgeTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task RenderingsDieWithThePurgeAndTheTouchedIdsComeBack()
+    {
+        var renderings = new EFCommentRenderingRepository(_fixture.DbContextFactory);
+        var root = Comment.Post(Chart, _leaver, CommentAudience.Public, "the drill at 2:01", Now);
+        await Comments.Save(root);
+        var reply = Comment.Reply(root, _bystander, "agreed", Now);
+        await Comments.Save(reply);
+        var lonely = Comment.Post(Chart, _leaver, CommentAudience.Public, "nobody answered", Now);
+        await Comments.Save(lonely);
+        await renderings.StoreTranslation(root.Id, "en",
+            new Dictionary<string, string> { ["es-ES"] = "el drill" }, "sonnet", Now);
+        await renderings.StoreTranslation(reply.Id, "en",
+            new Dictionary<string, string> { ["es-ES"] = "de acuerdo" }, "sonnet", Now);
+
+        var touched = await Purge.DeleteAllForUser(_leaver);
+
+        // Both the tombstoned root and the deleted leaf are reported, so the consumer can tell
+        // the pipeline to forget them; the bystander's reply is nobody's to report.
+        Assert.Equal(new[] { lonely.Id, root.Id }, touched.OrderBy(id => id == root.Id ? 1 : 0).ToArray());
+        await using var database = await _fixture.DbContextFactory.CreateDbContextAsync();
+        // A machine rendering of purged words is still the purged words.
+        Assert.False(await database.Set<CommentRenderingEntity>().AnyAsync(r => r.CommentId == root.Id));
+        // The bystander's own rendering is untouched — the decoy half of the assertion.
+        Assert.True(await database.Set<CommentRenderingEntity>().AnyAsync(r => r.CommentId == reply.Id));
+    }
+
+    [Fact]
     public async Task EverythingElseGoesOutright()
     {
         var lonely = Comment.Post(Chart, _leaver, CommentAudience.Public, "nobody answered this", Now);
