@@ -246,13 +246,38 @@
     {
         var start = _checked.Select((c, i) => (c,i)).First(c => c.c).i;
         var end = _checked.Select((c, i) => (c,i)).Last(c => c.c).i;
+        var added = 0;
+        var skipped = 0;
         for (var i = start; i <= end; i++)
         {
             var record = _importedScores[i];
-            _session?.Add(_chartsById[record.ChartId], record.Score!.Value, record.Plate ?? PhoenixPlate.RoughGame, record.IsBroken);
+            var chart = _chartsById[record.ChartId];
+            // Add throws on a chart the session cannot take — a repeat, or a session already at
+            // MaxTime — and an unguarded throw here kills the circuit. A range that spans two
+            // outings, or a return to a saved session, hits both routinely, so a rejected row is
+            // skipped rather than fatal (the same rule 11.4 sets for the rebuilt Submit page).
+            if (!(_session?.CanAdd(chart) ?? false))
+            {
+                skipped++;
+                continue;
+            }
+
+            _session.Add(chart, record.Score!.Value, record.Plate ?? PhoenixPlate.RoughGame, record.IsBroken);
+            added++;
         }
         _showImportDialog = false;
-        Snackbar.Add("Session Imported Successfully!");
+        if (added == 0)
+        {
+            Snackbar.Add(L["None of those plays could be added — they repeat charts already in the session, or it is already full."], Severity.Warning);
+        }
+        else if (skipped > 0)
+        {
+            Snackbar.Add(L["Added {0} charts, skipped {1} the session could not take.", added, skipped], Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Session Imported Successfully!");
+        }
     }
     private async Task ImportSession()
     {
@@ -272,7 +297,14 @@
                 .ToArray();
             if (!_importedScores.Any())
             {
-                Snackbar.Add(L["No recent plays found in your score journal. Run Import Scores first, then come back."], Severity.Warning);
+                // An empty journal window and a journal full of plays that score nothing on THIS
+                // board need different advice: re-running Import Scores fixes the first and can
+                // never fix the second (importing a Doubles night against the Singles board is
+                // the common case).
+                Snackbar.Add(results.Any()
+                    ? L["None of your recent plays score on this board. Check you are on the right chart type."]
+                    : L["No recent plays found in your score journal. Run Import Scores first, then come back."],
+                    Severity.Warning);
             }
             else
             {
