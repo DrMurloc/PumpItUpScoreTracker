@@ -27,6 +27,7 @@
    differ from the page title only by case, and GenerateResource dedupes resx keys
    case-insensitively — the loser silently renders English in every other locale. *@
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Href="/Admin/Comments">@L["Reported comments"]</MudButton>
+<MudButton Color="Color.Warning" Variant="Variant.Outlined" Href="/Admin/Translations">@L["Translations"]</MudButton>
 @* Scoped to one session per player on purpose: a rebuild computes against today's state, and
    the further back it reaches the less that resembles the state it is claiming to restore. *@
 <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="RebuildLatestSessions"

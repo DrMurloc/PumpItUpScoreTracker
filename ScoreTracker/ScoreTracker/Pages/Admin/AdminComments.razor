@@ -111,6 +111,18 @@ else
         gap: 8px;
         flex-wrap: wrap;
     }
+
+    .acr-saw-label {
+        font-size: .7rem;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--mud-palette-text-secondary);
+        margin-bottom: 2px;
+    }
+
+    .acr-saw {
+        border-left-color: var(--mud-palette-info);
+    }
 </style>
 
 @inject IMediator Mediator
@@ -161,6 +173,16 @@ else
         <div class="acr-quoted">
             <CommentTextView Body="row.Body"></CommentTextView>
         </div>
+        @if (row.ReporterSawBody != null)
+        {
+            @* Translation launders the thing being detected: the original and what the reporter
+               saw, side by side, or an admin reading one language cannot judge a report filed
+               against another. *@
+            <div class="acr-saw-label">@L["What the reporter saw ({0})", row.ReporterSawLocale ?? string.Empty]</div>
+            <div class="acr-quoted acr-saw" data-testid="@($"saw-{row.ReportId}")">
+                <CommentTextView Body="row.ReporterSawBody"></CommentTextView>
+            </div>
+        }
         <div class="acr-actions">
             <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" Disabled="_working"
                        data-testid="@($"remove-{row.ReportId}")"
