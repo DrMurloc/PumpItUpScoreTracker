@@ -1,7 +1,7 @@
 @page "/Tournament/Stamina/{TournamentId:guid}/Record"
 @rendermode RenderModes.Interactive
 @using ScoreTracker.Domain.SecondaryPorts
-@using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.ScoreLedger.Contracts.Queries
 @using MediatR
 @using ScoreTracker.EventCompetition.Contracts.Queries
 @using ScoreTracker.EventCompetition.Contracts.Commands
@@ -12,7 +12,6 @@
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.SharedKernel.ValueTypes
-@using System.Security.Authentication
 @using ScoreTracker.Web.Components
 
 <PageTitle>Submit Tournament Session</PageTitle>
@@ -58,20 +57,16 @@
         </MudItem>
         <MudItem xs="12">
         </MudItem>
-        <MudItem xs="12" sm="5" md="3">
-            <MudTextField T="string" @bind-Value="_username" InputType="InputType.Email" Label=@L["Username"] Disabled="_isImporting"></MudTextField>
-        </MudItem>
-        <MudItem xs="12" sm="5" md="3">
-            <MudTextField T="string" @bind-Value="_password" InputType="InputType.Password" Label=@L["Password"] Disabled="_isImporting"></MudTextField>
-        </MudItem>
-        <MudItem xs="12" sm="2">
+        <MudItem xs="12" sm="4" md="3">
             @if (_isImporting)
             {
                 <MudProgressCircular Indeterminate="true" Color="Color.Primary"></MudProgressCircular>
             }
             else
             {
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ImportSession">@L["Import"]</MudButton>
+                @* Since Slice 3 the import reads the score journal — no credentials on this
+                   page; freshness comes from running Import Scores first. *@
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ImportSession">@L["Import from your recent plays"]</MudButton>
             }
         </MudItem>
     </MudGrid>
@@ -172,20 +167,6 @@
     <MudDialog @bind-Visible="_showImportDialog">
         <DialogContent>
             <MudGrid>
-                @if (_notMapped.Any())
-                {
-                    <MudItem xs="12">
-                        <MudText Color="Color.Warning">
-                            The following charts could not be automatically mapped from your import and will need to be manually added:
-                        </MudText>
-                    </MudItem>
-                    @foreach (var misMatch in _notMapped)
-                    {
-                        <MudItem xs="12">
-                            @misMatch
-                        </MudItem>
-                    }
-                }
                 <MudItem xs="12">
                     <MudText Color="Color.Info">
                         Please check your FIRST and LAST chart in the session:
@@ -196,14 +177,18 @@
                 {
                     var loc = i;
                     var score = _importedScores[loc];
+                    var chart = _chartsById[score.ChartId];
                     <MudItem xs="2">
                         <MudCheckBox @bind-Value="_checked[loc]" Disabled="!_checked[loc] && _checked.Count(c=>c)>=2"></MudCheckBox>
                     </MudItem>
-                    <MudItem xs="5">
-                        @score.Chart.Song.Name @score.Chart.Type.GetShortHand()@score.Chart.Level
+                    <MudItem xs="4">
+                        @chart.Song.Name @chart.Type.GetShortHand()@chart.Level
                     </MudItem>
-                    <MudItem xs="5">
+                    <MudItem xs="3">
                         @score.Score @(score.Plate?.GetShorthand())
+                    </MudItem>
+                    <MudItem xs="3">
+                        @score.OccurredAt.ToString("MM-dd HH:mm")
                     </MudItem>
                 }
             </MudGrid>
@@ -220,6 +205,7 @@
 @inject ITournamentRepository TournamentRepository;
 @inject NavigationManager NavManager;
 @inject ISnackbar Snackbar;
+@inject IDateTimeOffsetAccessor Clock;
 
 @code
 {
@@ -248,15 +234,13 @@
 
     private TournamentSession.Entry? _editingEntry;
     private bool _showEditDialog = false;
-    private OfficialRecordedScore[] _importedScores = Array.Empty<OfficialRecordedScore>();
-    private IEnumerable<string> _notMapped = Array.Empty<string>();
+    private ScoreJournalEntry[] _importedScores = Array.Empty<ScoreJournalEntry>();
+    private IReadOnlyDictionary<Guid, Chart> _chartsById = new Dictionary<Guid, Chart>();
     private bool[] _checked = Array.Empty<bool>();
     private bool _editBroken = false;
     private PhoenixScore _editScore = 0;
     private PhoenixPlate _editPlate = PhoenixPlate.MarvelousGame;
     private bool _isImporting = false;
-    private string _username = string.Empty;
-    private string _password = string.Empty;
 
     private void AddImports()
     {
@@ -265,7 +249,7 @@
         for (var i = start; i <= end; i++)
         {
             var record = _importedScores[i];
-            _session?.Add(record.Chart, record.Score, record.Plate ?? PhoenixPlate.RoughGame, record.IsBroken);
+            _session?.Add(_chartsById[record.ChartId], record.Score!.Value, record.Plate ?? PhoenixPlate.RoughGame, record.IsBroken);
         }
         _showImportDialog = false;
         Snackbar.Add("Session Imported Successfully!");
@@ -275,15 +259,26 @@
         _isImporting = true;
         try
         {
-            var results = await Mediator.Send(new GetOfficialRecentScoresQuery(_username, _password));
-            _importedScores = results.results.Where(s=>_configuration.Scoring.GetScore(s.Chart,s.Score,s.Plate ?? PhoenixPlate.RoughGame,s.IsBroken)>0).ToArray();
-            _notMapped = results.nonMapped.ToArray();
-            _checked = _importedScores.Select(r => false).ToArray();
-            _showImportDialog = true;
-        }
-        catch (InvalidCredentialException)
-        {
-            Snackbar.Add("It appears your username are password are incorrect, check them and try again", Severity.Error);
+            // Newest first from the journal; reversed so the dialog reads top-to-bottom in play
+            // order, which is what picking a FIRST and LAST chart assumes. Stage breaks carry no
+            // chart score to add, and worthless-for-this-board charts are filtered the same as
+            // manual entry.
+            var results = await Mediator.Send(new GetPlayerJournalQuery(_session!.UsersId, _session.Mix,
+                Since: Clock.Now.AddDays(-7), Limit: 300));
+            _importedScores = results
+                .Where(s => !s.IsStageBroken && s.Score != null && _chartsById.ContainsKey(s.ChartId))
+                .Where(s => _configuration.Scoring.GetScore(_chartsById[s.ChartId], s.Score!.Value, s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken) > 0)
+                .Reverse()
+                .ToArray();
+            if (!_importedScores.Any())
+            {
+                Snackbar.Add(L["No recent plays found in your score journal. Run Import Scores first, then come back."], Severity.Warning);
+            }
+            else
+            {
+                _checked = _importedScores.Select(r => false).ToArray();
+                _showImportDialog = true;
+            }
         }
         catch (Exception)
         {
@@ -376,6 +371,7 @@
         // The board pins the mix (Slice 2 — the mix picker left with it; Phoenix 2 gets its
         // own boards in Slice 5), and the chart pool follows it.
         _allCharts = await Mediator.Send(new GetChartsQuery(_session.Mix));
+        _chartsById = _allCharts.ToDictionary(c => c.Id);
     }
     protected override async Task OnInitializedAsync()
     {
