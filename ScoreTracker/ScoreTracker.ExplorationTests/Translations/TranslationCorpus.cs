@@ -282,6 +282,25 @@ internal static class TranslationCorpus
             "It's destroying me like Dement s21. It feels awkward",
             "en",
             "s21 is Singles 21 in lowercase shorthand, and Dement is a song title that reads like an English word.",
-            ["s21"], ["Dement"])
+            ["s21"], ["Dement"]),
+
+        // The link-marker pair (2026-08-24). The production pipeline lifts URLs out before the
+        // model sees the text, leaving markers like ⟦1⟧ the prompts describe as links — so these
+        // two are the corpus as production would actually submit it. Mid-sentence on purpose:
+        // grammar has to wrap the marker (a Korean particle would attach to it, Spanish wants an
+        // article), which is exactly where a marker could get absorbed, doubled, or dropped.
+        // Synthetic where everything above is collected — production texts with markers cannot
+        // exist before the feature ships, and the shape under test is the marker, not the prose.
+        new CorpusComment("marker-korean",
+            "⟦1⟧ 이 영상 2:01 부분 보면 발 바꾸는 타이밍 나와요. ⟦2⟧ 채보도 참고하세요",
+            "ko",
+            "Two markers, one leading a sentence where Korean wants a particle on it. Both must ride through the pivot and every rendering untouched.",
+            ["⟦1⟧", "⟦2⟧", "2:01"], []),
+
+        new CorpusComment("marker-spanish",
+            "miren el run en ⟦1⟧ antes de intentarlo, casi nadie lo pasa a la primera",
+            "es",
+            "One marker mid-sentence where Spanish reaches for an article. The rendering keeps the marker bare — never el ⟦1⟧ becoming a mangled token — and invents no URL.",
+            ["⟦1⟧"], [])
     };
 }
