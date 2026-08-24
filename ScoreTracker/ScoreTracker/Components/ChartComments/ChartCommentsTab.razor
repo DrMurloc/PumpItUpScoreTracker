@@ -6,8 +6,11 @@
 @using ScoreTracker.Communities.Contracts.Queries
 @using ScoreTracker.Domain.Exceptions
 @using ScoreTracker.Domain.SecondaryPorts
+@using System.Globalization
 @using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.Contracts
 @inject IMediator Mediator
+@inject IUiSettingsAccessor UiSettings
 @inject ICurrentUserAccessor CurrentUser
 @inject ISnackbar Snackbar
 
@@ -46,15 +49,35 @@
 else
 {
     @* No sort control on Notes: with no votes there is only one order. *@
-    @if (!IsNotes && _page.TotalRoots > 1)
+    @if (!IsNotes && (_page.TotalRoots > 1 || ReadInLocales.Count > 0))
     {
         <div class="cmt-subbar">
-            <span>@L["Sort"]</span>
-            <MudSelect T="CommentSort" Value="_sort" ValueChanged="SelectSort" Dense="true" Margin="Margin.Dense"
-                       Variant="Variant.Outlined" Class="cmt-sort" data-testid="cmt-sort">
-                <MudSelectItem Value="CommentSort.Top">@L["Top"]</MudSelectItem>
-                <MudSelectItem Value="CommentSort.Newest">@L["Newest"]</MudSelectItem>
-            </MudSelect>
+            @if (_page.TotalRoots > 1)
+            {
+                <span>@L["Sort"]</span>
+                <MudSelect T="CommentSort" Value="_sort" ValueChanged="SelectSort" Dense="true" Margin="Margin.Dense"
+                           Variant="Variant.Outlined" Class="cmt-sort" data-testid="cmt-sort">
+                    <MudSelectItem Value="CommentSort.Top">@L["Top"]</MudSelectItem>
+                    <MudSelectItem Value="CommentSort.Newest">@L["Newest"]</MudSelectItem>
+                </MudSelect>
+            }
+            @if (ReadInLocales.Count > 0)
+            {
+                @* The sticky pick, owner-worded: choosing a localization is remembered and
+                   becomes this reader's default wherever a rendering exists; choosing Original
+                   clears it. It replaces the language-mapping step only — a comment in the
+                   reader's own language stays the original whatever is picked here. *@
+                <span class="cmt-subbar-right">@L["Read in"]</span>
+                <MudSelect T="string" Value="@(_preferredLocale ?? string.Empty)" ValueChanged="SelectReadIn"
+                           Dense="true" Margin="Margin.Dense" Variant="Variant.Outlined" Class="cmt-sort"
+                           data-testid="cmt-read-in">
+                    <MudSelectItem Value="@string.Empty">@L["Original"]</MudSelectItem>
+                    @foreach (var locale in ReadInLocales)
+                    {
+                        <MudSelectItem Value="@locale">@RenderingLocaleName(locale)</MudSelectItem>
+                    }
+                </MudSelect>
+            }
         </div>
     }
 
@@ -293,6 +316,30 @@ else
         font-size: .82rem;
     }
 
+    .cmt-badge {
+        font-size: .62rem;
+        letter-spacing: .04em;
+        padding: 1px 7px;
+        border-radius: 999px;
+        border: 1px solid var(--mud-palette-lines-default);
+        color: var(--mud-palette-text-secondary);
+        white-space: nowrap;
+    }
+
+    .cmt-badge-tr {
+        border-color: var(--mud-palette-info);
+        color: var(--mud-palette-info);
+    }
+
+    .cmt-badge-q {
+        border-color: var(--mud-palette-warning);
+        color: var(--mud-palette-warning);
+    }
+
+    .cmt-subbar-right {
+        margin-left: auto;
+    }
+
     .cmt-meta {
         font-size: .7rem;
         color: var(--mud-palette-text-secondary);
@@ -485,7 +532,49 @@ else
 
     private string? _pendingLink;
 
+    /// <summary>The sticky Read-in pick. Empty-or-missing means default behavior.</summary>
+    private const string ReadInSettingKey = "Comments__ReadIn";
+
+    private string? _preferredLocale;
+    private bool _readInLoaded;
+
     private bool IsNotes => _audience.IsPrivate;
+
+    /// <summary>
+    ///     The picker's vocabulary: every rendering the page actually holds. Empty threads and
+    ///     all-own-language threads offer no picker, which is most of them.
+    /// </summary>
+    private IReadOnlyList<string> ReadInLocales => _page.Roots
+        .SelectMany(root => root.Replies.Prepend(root))
+        .Where(comment => comment.Translation != null)
+        .SelectMany(comment => comment.Translation!.AvailableLocales)
+        .Distinct()
+        .OrderBy(locale => locale, StringComparer.Ordinal)
+        .ToArray();
+
+    private async Task SelectReadIn(string value)
+    {
+        var picked = string.IsNullOrEmpty(value) ? null : value;
+        if (picked == _preferredLocale) return;
+
+        _preferredLocale = picked;
+        // Choosing the original clears the memory — back to default behavior; choosing a
+        // localization is remembered sitewide (owner-worded, 2026-08-24).
+        await UiSettings.SetSetting(ReadInSettingKey, picked ?? string.Empty);
+        await Reload();
+    }
+
+    private static string RenderingLocaleName(string locale)
+    {
+        try
+        {
+            return CultureInfo.GetCultureInfo(locale).NativeName;
+        }
+        catch (CultureNotFoundException)
+        {
+            return locale;
+        }
+    }
 
     private void ShowInterstitial(string? url)
     {
@@ -541,6 +630,16 @@ else
             if (FocusCommentId != null) _take = FocusTake;
         }
 
+        if (!_readInLoaded)
+        {
+            _readInLoaded = true;
+            if (CurrentUser.IsLoggedIn)
+            {
+                var stored = await UiSettings.GetSetting(ReadInSettingKey);
+                _preferredLocale = string.IsNullOrWhiteSpace(stored) ? null : stored;
+            }
+        }
+
         if (_scopes.Count == 0 && CurrentUser.IsLoggedIn)
         {
             _scopes = await Mediator.Send(new GetMyCommentScopesQuery());
@@ -575,7 +674,10 @@ else
     {
         _loading = true;
         _consent = await Mediator.Send(new GetCommentConsentQuery(_audience));
-        _page = await Mediator.Send(new GetChartCommentsQuery(ChartId, _audience, _sort, _take));
+        // The reader's language is the request's culture — the vertical judges by language and
+        // never sees a region's difference; the sticky pick rides beside it.
+        _page = await Mediator.Send(new GetChartCommentsQuery(ChartId, _audience, _sort, _take,
+            CultureInfo.CurrentUICulture.Name, _preferredLocale));
         _loading = false;
     }
 
@@ -635,12 +737,13 @@ else
     ///     Reporting reloads nothing — the thread looks exactly the same afterwards, which is the
     ///     point: nothing about a report is advertised, including that one happened.
     /// </summary>
-    private async Task SubmitReport((CommentRecord Comment, CommentReportReason Reason) request)
+    private async Task SubmitReport((CommentRecord Comment, CommentReportReason Reason, string? ViewedLocale) request)
     {
         _reporting = null;
         try
         {
-            await Mediator.Send(new ReportCommentCommand(request.Comment.Id, request.Reason));
+            await Mediator.Send(new ReportCommentCommand(request.Comment.Id, request.Reason,
+                request.ViewedLocale));
         }
         catch (CommentNotAllowedException exception)
         {
