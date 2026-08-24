@@ -465,7 +465,12 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     ("prune-webhook-deliveries",         r => r.PublishPruneWebhookDeliveries(),          "0 8 * * *"),  // 08:00 UTC — 7-day bodies, 14-day activity log
     // Refills every account's deep-scan balance on the 1st. One UPDATE across the User table; an
     // unused allowance does not roll over.
-    ("reset-deep-scans",                 r => r.PublishResetDeepScans(),                 "0 0 1 * *")
+    ("reset-deep-scans",                 r => r.PublishResetDeepScans(),                 "0 0 1 * *"),
+    // The translation pair: Submit builds tonight's batches under the ceiling; Collect polls
+    // hourly because a batch usually lands within the hour and always within a day. Both are
+    // near no-ops while the pipeline is parked (no ClaudeApi key) or the queue is empty.
+    ("submit-translation-batches",       r => r.PublishSubmitTranslationBatches(),        "0 9 * * *"),  // 09:00 UTC — after the tier-list block, cheap either way
+    ("collect-translation-batches",      r => r.PublishCollectTranslationBatches(),       "30 * * * *")
 };
 if (builder.Configuration["PreventRecurringJobs"] == "true")
 {
