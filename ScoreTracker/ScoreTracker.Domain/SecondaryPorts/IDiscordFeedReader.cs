@@ -23,5 +23,6 @@ namespace ScoreTracker.Domain.SecondaryPorts
         public const string WeeklyCharts = "WeeklyCharts";
         public const string DailyStep = "DailyStep";
         public const string OfficialLeaderboards = "OfficialLeaderboards";
+        public const string MarchOfMurlocs = "MarchOfMurlocs";
     }
 }

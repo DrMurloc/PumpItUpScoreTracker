@@ -8,6 +8,7 @@ namespace ScoreTracker.Communities.Contracts
     {
         WeeklyCharts,
         DailyStep,
-        OfficialLeaderboards
+        OfficialLeaderboards,
+        MarchOfMurlocs
     }
 }
