@@ -9,6 +9,12 @@
 >
 > Mock (iteration 1, owner-approved):
 > <https://claude.ai/code/artifact/ee31f0e2-0b0b-440b-a07a-44fe58df90e1>
+>
+> **Revised 2026-08-25 — the Session Spotlight pass** (§7, decisions D41–D49): highlights become
+> jacket cards, plays carry judgement strips opening a shared Score Breakdown Dialog, the peer
+> sections retire in favour of the chart details dialog's boards, and the repeated-play highlight
+> bug is fixed. Mock (round 3, owner-locked):
+> <https://claude.ai/code/artifact/d8c512fa-d348-4912-915e-f6ab9c3e5d42>
 
 The page stops being a list of equal cards. **The most recent session renders big**; everything
 older collapses to a board-skinned table with a date, three counts and a **View** button that
@@ -66,6 +72,15 @@ positions.
 | D39 | **The page listens for the event; it never polls and never guesses that capture has finished** (owner, 2026-08-08: *"whatever that second event firing is, that's the one we want"*). `ScoreHighlightsCapturedEvent` is published when capture completes, and `ScoreHighlightsCapturedUiBridge` — a **public** bus consumer in Web, so the host's assembly scan finds it — forwards it to the player's UI topic. Same shape as the randomizer's draw view. Delivery is best-effort by design: a player who was not on the page never receives it and simply reads the finished article on arrival. |
 | D39a | **Why polling could not have worked, kept because the shape of the failure is instructive.** Scores are held as a batch for **two minutes past the LATEST of them** (`ScoreBatchPolicy.HoldWindow` — every score pushes the deadline out again), so capture does not begin until well after an import stops writing. A restart inside that window erases the batch outright; the derived work is rebuilt from the journal at the next process start ([import-restart-recovery.md](import-restart-recovery.md)). Four timers were tried and each failed differently: clearing on the first row (mid-pipeline), on a stable row count (between batches), gating the watch on the card (never ran for the page most likely to need it), and a two-minute window that expired at the exact instant the batch fired. Every one was a guess at another component's schedule. |
 | D40 | **⚠ A `HighlightsCapturedAt` stamp on `ScoreSession` is still worth having**, though no longer to drive the card. It would let the page tell *failed* from *unremarkable* — identical today, even though the capture saga swallows each step's exceptions — and would give a page that missed the event something to read on arrival. The test would be `HighlightsCapturedAt >= LastActivityAt`; anything less is per-batch and says nothing about an import as a whole. |
+| D41 | **Highlights render as jacket cards** (owner, 2026-08-25). Flagged charts only, **one card per chart** (a pass and its later upscore merge — flags OR'd, richest detail, latest score), rarity ring + score colour from the same percentile that colours rows, standing line per D27/D30, badges on the art corner. **No filler cards**: a session with no flagged scores keeps the compact hardest-six rows. Titles stay above the cards — D2's order is intact. |
+| D42 | **The Rivals / Community Peers sections retire** (owner, 2026-08-25: leaning into the details dialog "might make sense" → confirmed). `ChartLeaderboardScopes` already pins the viewer with the `weekly-lb-me` treatment across World · Region · Community · Rivals · Peers, so the hero's sections were a weaker duplicate one scroll earlier. `RivalPeersSection` and `CommunityPeersSection` are deleted, not ported; Communities' `GetCommunityPeerScoresQuery` + `CommunityPeerScore` + handler go with their only consumer. |
+| D43 | **Every play with observed judgements carries the judgement strip** — Perfect/Great/Good/Bad/Miss counts + max combo as coloured text in the `--judg-*` vocabulary, on All-plays rows **and** on highlight cards. Rows without observed counts (manual, CSV, pre-scrape imports) say nothing. **The strip is the tap target** for the Score Breakdown Dialog — no separate icon. |
+| D44 | **The Score Breakdown Dialog carries the calculator's whole answer** (owner, 2026-08-25: *"'what gave you points' and 'what lost you points' are VERY different questions"*): the **gain bar**, the **loss bar**, and the next-letter walk, for one recorded play. One shared ES module (`score-breakdown.js`, extracted from `phoenix-calculator.js`) renders both surfaces, so they cannot drift. Stage breaks never open it — a partial run has no story against 1,000,000, the calculator's own MyPlays rule — finished fails do. The footer deep-links the calculator with the counts prefilled. |
+| D45 | **A highlight pins to the journal row that earned it** — the fix for the repeated-play bug. Capture stores one highlight row per (session, chart) and the data was always right; the page joined by chart id, so every attempt wore the pass's medal. The rule: a chart's highlight rows (ordered by `OccurredAt`) pin positionally, aligned at the end, onto its `NewPass`/`Upscore` journal rows (same order); overflow merges onto the last; breaks and repeats carry no flags, no detail, no standing line. Render-side only — no stored row changes. |
+| D46 | **A Perfect Game most of the cohort shares renders in plain ink.** `TieInclusivePercentile` returns 1.0 on ties, which handed the brightest treatment on the page to easy charts everyone at your level PGs — the flag was suppressed but the colour stayed. The mute is render-side (reads the captured `PeerPgCount`/`PeerCount`), so historical rows heal without a capture change. The standing line still prints "PG · x of y peers have it" — that is the honest fact. |
+| D47 | **⬆ retires on this page** (owner, 2026-08-25). The competitive readout (`22.8 (+0.2)`, D31) says it with a number. The flag stays in the model and on the Discord card; rows from batches before the baseline capture began (2026-08-08) simply show no mark. |
+| D48 | **A PUMBILITY gain on a card wears the established chip** — `PumbilityDelta` inside `tier-chart-card-corner` + `pmb-corner-gain` (the Play page's projected-gain chip) — on the score line, aligned right. Rows keep their crown-adjacent gain badge. |
+| D49 | **Attempt threading**: adjacent same-chart rows in All plays are joined by a dotted rail; the "Attempt N" caption renders only once the chart reaches **5+ plays in the session**. To keep threads adjacent, All plays orders level-desc → chart → time-desc. The journal stays a flat neutral log (D6) — the rail annotates, it never groups or hides. |
 
 ### Deliberately not decided here
 
@@ -460,3 +475,65 @@ first. `Classify` and `RebuildLatestSessionsConsumer` always did; `UndoScoreSess
 not, and wrote players' Phoenix 1 scores in as their Phoenix 2 records. Nothing self-corrected,
 because acquisition may only *raise* a record — so the wrong, higher number stuck and every later
 import of the real score journalled as not-best and rendered as "Played" (fixed 2026-08-08).
+
+---
+
+## 7. The Session Spotlight revision (2026-08-25)
+
+Decisions D41–D49. One workshop, three rounds, all questions locked; the round-3 mock is the
+visual spec. What §§1–6 say remains true except where a D41+ decision supersedes it — notably the
+Community Peers sections (D7–D9, D19 described the *section*; the underlying reads and rules live
+on in the details dialog's board scopes, which is where D17–D18 always pointed).
+
+### 7.1 The bug this pass fixes
+
+Playing a chart five times and passing on the fifth credited **all five** journal rows with the
+pass's highlights — the 🌐 official-board badge, 🎯 attempts, even the standing line, on stage
+breaks. Root cause: `SessionBreakdownBuilder.BuildOne` grouped `ScoreHighlight` rows **by chart
+id** and stamped the merged flags onto every journal row of that chart. The capture-side data was
+always correct (one row per session × chart). D45 is the pinning rule; it also stops an early
+lower pass wearing the colour of the night's later upscore, and stops one chart eating several
+Highlights slots.
+
+### 7.2 Scope, by vertical and layer
+
+| Vertical / layer | Change |
+|---|---|
+| **ScoreLedger / Contracts** | `ScoreEventRecord` += `JudgementCounts? Judgements = null`. The type already exists and is Contracts-visible (`BestAttemptPolicy` takes it). |
+| **ScoreLedger / Application** | `SessionFeedHandler.Classify` already holds `row.Judgements` (it surfaces `NoteCount` today) — it now passes the whole object through. |
+| **ScoreLedger / Domain + Infrastructure** | **Nothing.** `EFScoreJournalRepository` already materializes `JudgementCounts` (incl. `MaxCombo`) onto every `ScoreJournalEntry` read. No migration. |
+| **Communities** | Deletion only: `GetCommunityPeerScoresQuery`, `CommunityPeerScore`, and the `CommunitySaga` handler go with their only consumer (D42). |
+| **Rivals, PlayerProgress, everything else** | **Nothing.** Capture, flags, milestones untouched; the fix and the colour mute are render-side. |
+| **Web** | Everything else: the builder's pinning join, `SessionHighlightCards`, `JudgementStrip`, `ScoreBreakdownDialog`, `score-breakdown.js` extracted from `phoenix-calculator.js`, the two peer sections deleted, l10n ×9. |
+
+The api/v2 surface is unaffected: `PlayersController` projects `SessionGroup` into its own
+`SessionDto`, so the contract widening never reaches a pinned wire shape.
+
+### 7.3 The shared breakdown module
+
+`phoenix-calculator.js` keeps its live-typing behaviour; the **bars + next-letter-walk renderer**
+moves into `score-breakdown.js`, which the calculator imports and the dialog calls once on open
+via JS interop, fed by the same engine-emitted constants. One implementation, two surfaces,
+pixel-identical. The calculator additionally learns to prefill from query parameters — the
+dialog's "Open in the Score Calculator" link target.
+
+Known, accepted: the calculator has a one-point-high floors quirk on some inputs. The dialog
+computes with the same engine, so the two surfaces agree with each other; the header always shows
+the play's **recorded** score, and the floors fix is its own follow-up.
+
+### 7.4 Commit order (owner call: docs first, i18n last)
+
+Each commit fast-suite green; integration + E2E run locally once with the last commit, before the
+PR opens.
+
+| # | Commit |
+|---|---|
+| C1 | This document + the UX-GUIDELINES `--judg-*` note |
+| C2 | ScoreLedger: `ScoreEventRecord.Judgements` passthrough |
+| C3 | The D45 pinning fix in `SessionBreakdownBuilder`, with unit tests |
+| C4 | Extract `score-breakdown.js`; calculator behaviour unchanged; query-param prefill |
+| C5 | `ScoreBreakdownDialog` + `JudgementStrip`, render tests |
+| C6 | Rows: strip as tap target, ⬆ retired (D47), PG mute (D46), no standing on breaks, thread rail + captions (D49) |
+| C7 | `SessionHighlightCards` + gain chip (D41/D48); peer sections, their tests, and the Communities query deleted together (D42) |
+| C8 | E2E `PlayerSessionsTests` rework |
+| C9 | i18n — every new key into all locales in one pass, alphabetical insertion, en-ZW in the Murloc alphabet |
