@@ -302,6 +302,7 @@
     private readonly DialogOptions _options = new()
         { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.False };
     private Guid _loadedChartId = Guid.Empty;
+    private MixEnum? _loadedMix;
     private string? _videoUrl;
     private ChartVideoInformation? _video;
     private Chart? _videoPartner;
@@ -490,7 +491,9 @@
             _drilled = null;
         }
 
-        if (ViewChart!.Id == _loadedChartId) return;
+        // The mix is part of the guard: the partner's caption label comes from the selected
+        // mix's catalog, so the same chart reopened under another mix must reload it.
+        if (ViewChart!.Id == _loadedChartId && Mix == _loadedMix) return;
         await LoadChart(ViewChart.Id);
     }
 
@@ -501,6 +504,7 @@
     private async Task LoadChart(Guid chartId)
     {
         _loadedChartId = chartId;
+        _loadedMix = Mix;
         _video = (await Mediator.Send(new GetChartVideosQuery(new[] { chartId }))).FirstOrDefault();
         _videoUrl = _video?.VideoUrl.ToString();
         // The caption names the other half with the SELECTED mix's level, so the partner comes

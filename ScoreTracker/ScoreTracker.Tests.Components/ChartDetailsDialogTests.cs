@@ -178,6 +178,30 @@ public sealed class ChartDetailsDialogTests : TestContext
     }
 
     [Fact]
+    public void ReopeningTheSameChartUnderAnotherMixReloadsThePartner()
+    {
+        // The partner's caption label carries the selected mix's level, so the id-only reload
+        // guard would show mix A's partner under mix B (the randomizer surfaces pass a
+        // per-chart mix).
+        var chart = SetupPairedChart(partnerInMix: true);
+        var partnerMixes = new List<MixEnum>();
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .Callback((IRequest<IEnumerable<Chart>> q, CancellationToken _) =>
+                partnerMixes.Add(((GetChartsQuery)q).Mix))
+            .ReturnsAsync(Array.Empty<Chart>());
+        var cut = RenderDialog(chart);
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".video-side-caption")));
+        var dialog = cut.FindComponent<ChartDetailsDialog>();
+
+        dialog.SetParametersAndRender(p => p.Add(c => c.Visible, false));
+        dialog.SetParametersAndRender(p => p
+            .Add(c => c.Visible, true)
+            .Add(c => c.Mix, MixEnum.Phoenix2));
+
+        cut.WaitForAssertion(() => Assert.Contains(MixEnum.Phoenix2, partnerMixes));
+    }
+
+    [Fact]
     public void AChartWithNoVideoRendersTheRestOfTheDialog()
     {
         var cut = RenderDialog(SetupChart(null), ChartDetailsDialog.DetailsTab.Stats);

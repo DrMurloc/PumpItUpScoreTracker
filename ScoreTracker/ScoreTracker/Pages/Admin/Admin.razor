@@ -306,6 +306,9 @@
         }
         _isSaving = true;
         await _charts.SetChartVideo(_selectedChart.Id, url, channel);
+        // The video read caches the whole table for a fortnight; without this the fix an
+        // admin just made stays invisible until expiry or a restart.
+        _charts.ClearCache();
         _isSaving = false;
         Snackbar.Add(L["Chart saved"].Value, Severity.Success);
     }
