@@ -1,0 +1,680 @@
+@page "/MarchOfMurlocs/Planner"
+@rendermode RenderModes.Interactive
+@using System.Text
+@using System.Text.Json
+@using MediatR
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Components.MoM
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ScoreTracker.Web.Services.MoM
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@using Task = System.Threading.Tasks.Task
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+@inject ChartCatalogCache ChartCatalog
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+@* The Planner (march-of-murlocs.md §11.5): the Season's future tense. Pick a chart type
+   (D15 — it never plans across both), and the page prices your whole record book under the
+   live board's frozen configuration. The set is a SELECTION: the page opens on Everything
+   with an empty set, Suggest is an offer, every number recomputes from what is ticked, and
+   a manual tick takes the set off autopilot so the rest slider never rewrites a hand-built
+   set. Rest per chart is the whole control; the plan says plainly it is a ceiling, and the
+   conversion rate against your best session is what stamina costs. The CSV is the point —
+   it walks to a machine, client-side, BOM included. Saved sets are named, plural, and live
+   in UiSettings keyed per board: no table, no purge entry (§9.7 avoided by construction). *@
+
+<PageTitle>March of Murlocs</PageTitle>
+
+<div class="mom-page mom-planner">
+    <MoMFrame Active="MoMFrame.MoMTab.Planner" />
+
+    @if (_boards.Count == 0)
+    {
+        <div class="mom-empty-board">
+            <div class="mom-big">@L["No season is running."]</div>
+            <p>@L["The Planner prices your record book under the live season's rules — it opens with the next season."]</p>
+        </div>
+    }
+    else
+    {
+        <div class="mom-plan-head">
+            <div class="mom-typegroup" role="group" aria-label="@L["Chart type"]">
+                @foreach (var board in _boards)
+                {
+                    var target = board;
+                    <a role="button" tabindex="0" aria-current="@(board.BoardId == _board?.BoardId ? "true" : null)"
+                       @onclick="() => SelectBoard(target)" @onclick:preventDefault>@TypeName(board.ChartType)</a>
+                }
+            </div>
+            <div class="mom-plan-total num">@_setTotal.ToString("N0")<small>@L["projected points"]</small></div>
+        </div>
+
+        <div class="mom-plan-controls">
+            <label class="mom-rest num">
+                @L["Rest per chart"] <b>@(_minRestSeconds)s</b>
+                @* Committed on release, never per pixel — a live value on the wire fights the
+                   finger. It retunes a SUGGESTED set only (§11.5). *@
+                <input type="range" min="10" max="300" step="5" value="@_minRestSeconds" @onchange="RestChanged" />
+            </label>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Suggest" Disabled="_solving">@(_suggested ? L["Rebuild the set"] : L["Suggest a set"])</MudButton>
+            <MudButton Variant="Variant.Outlined" Disabled="@(_set.Count == 0)" OnClick="ClearSet">@L["Clear"]</MudButton>
+            <MudMenu Dense="true">
+                <ActivatorContent>
+                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Bookmark">@L["Saved sets"]</MudButton>
+                </ActivatorContent>
+                <ChildContent>
+                    @if (_savedSets.Count == 0)
+                    {
+                        <MudMenuItem Disabled="true">@L["No saved sets yet. Build one and press Save."]</MudMenuItem>
+                    }
+                    @foreach (var saved in _savedSets)
+                    {
+                        var target = saved;
+                        <MudMenuItem OnClick="() => LoadSet(target)">@saved.Name</MudMenuItem>
+                    }
+                </ChildContent>
+            </MudMenu>
+            <MudButton Variant="Variant.Outlined" Disabled="@(_set.Count == 0)" OnClick="() => _saveOpen = true">@L["Save"]</MudButton>
+            <MudButton Variant="Variant.Outlined" Disabled="@(_set.Count == 0)" OnClick="DownloadCsv">@L["Download CSV"]</MudButton>
+        </div>
+
+        @if (_overWindow)
+        {
+            <div class="mom-imp-warn"><b>@L["This set does not fit."]</b> @L["Everything before the last chart is past the {0} window. Take something out.", MaxTime.ToString(@"h\:mm\:ss")]</div>
+        }
+
+        <div class="mom-plan-nums num">
+            @foreach (var number in PlanNumbers())
+            {
+                <div class="pn">
+                    <div class="k">@number.Label</div>
+                    <div class="v">@number.Value</div>
+                    @if (number.Delta != null)
+                    {
+                        <div class="d @number.DeltaClass">@number.Delta</div>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="mom-plan-versus num">
+            @if (_set.Count == 0)
+            {
+                @L["Nothing in your set yet — tick charts below, or press Suggest a set."]
+            }
+            else if (_actual != null)
+            {
+                @L["Your best {0} session banked {1} across {2} charts. This set is worth {3} on paper, at {4} of rest between charts.",
+                    _board!.Season.Name, _actual.TotalScore.ToString("N0"), _actual.ChartsPlayed,
+                    _setTotal.ToString("N0"), Mmss(RestPerGap)]
+                <span class="mom-conv">
+                    <span>@L["You converted"]</span>
+                    <span class="convbar"><i style="width:@(Math.Min(Conversion, 1) * 100)%"></i></span>
+                    <span class="convpct">@((Conversion * 100).ToString("F0"))%</span>
+                    <span class="muted">@L["of your record book last time — the rest is what stamina costs."]</span>
+                </span>
+            }
+            else
+            {
+                @L["This set is worth {0} on paper — a ceiling, since it assumes every chart played to your best. Your first session will tell you what stamina costs.", _setTotal.ToString("N0")]
+            }
+        </div>
+
+        <div class="mom-runbar">
+            <div class="mom-typegroup" role="group" aria-label="@L["Scope"]">
+                <a role="button" tabindex="0" aria-current="@(_scope == Scope.Everything ? "true" : null)" @onclick="() => _scope = Scope.Everything" @onclick:preventDefault>@L["Everything"]</a>
+                <a role="button" tabindex="0" aria-current="@(_scope == Scope.Set ? "true" : null)" @onclick="() => _scope = Scope.Set" @onclick:preventDefault>@L["My set"]</a>
+            </div>
+            <MudButtonGroup OverrideStyles="false">
+                <MudTooltip Text="@L["Comfortable"]">
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy" Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)" OnClick="() => SetDensity(UiDensity.Comfortable)" aria-label="@L["Comfortable"]"></MudIconButton>
+                </MudTooltip>
+                <MudTooltip Text="@L["Compact"]">
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView" Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)" OnClick="() => SetDensity(UiDensity.Compact)" aria-label="@L["Compact"]"></MudIconButton>
+                </MudTooltip>
+                <MudTooltip Text="@L["Table"]">
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows" Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)" OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton>
+                </MudTooltip>
+            </MudButtonGroup>
+            @if (_density != UiDensity.Table)
+            {
+                <MudMenu Dense="true">
+                    <ActivatorContent>
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Sort">@L["Sort by"] @CurrentSort.Label</MudButton>
+                    </ActivatorContent>
+                    <ChildContent>
+                        @foreach (var sort in Sorts)
+                        {
+                            <MudMenuItem OnClick="() => _sortKey = sort.Key">@(sort.Key == _sortKey ? "✓ " : "")@sort.Label</MudMenuItem>
+                        }
+                    </ChildContent>
+                </MudMenu>
+            }
+            <span class="mom-runnote">
+                @(_scope == Scope.Set
+                    ? L["{0} charts in your set.", _set.Count]
+                    : L["All {0} charts you hold a scoring record on.", _pool.Count]) @CurrentSort.Note
+            </span>
+        </div>
+
+        @if (_density == UiDensity.Table)
+        {
+            <div class="mom-tablewrap">
+                <table class="mom-runtable">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th><button type="button" @onclick="() => _sortKey = SortKey.Level">@L["Chart"]</button></th>
+                            <th>@L["Grade & score"]</th>
+                            <th class="t-r"><button type="button" @onclick="() => _sortKey = SortKey.Points">@L["Points"]</button></th>
+                            <th class="t-r col-pps"><button type="button" @onclick="() => _sortKey = SortKey.Pps">@L["PPS"]</button></th>
+                            <th class="t-r col-pps"><button type="button" @onclick="() => _sortKey = SortKey.Seconds">@L["Length"]</button></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in VisibleRows())
+                        {
+                            <tr class="@(InSet(row) ? "on" : null)" @onclick="() => TogglePick(row)">
+                                <td><input type="checkbox" checked="@InSet(row)" tabindex="-1" aria-label="@row.Chart.Song.Name" /></td>
+                                <td>
+                                    <span class="t-ident">
+                                        @if (SetOrdinal(row) is { } tableOrdinal)
+                                        {
+                                            <span class="mom-setord num">@tableOrdinal</span>
+                                        }
+                                        <SongImage Song="row.Chart.Song" Height="26"></SongImage>
+                                        <DifficultyBubble Chart="row.Chart" Height="18"></DifficultyBubble>
+                                        <span class="t-name">@row.Chart.Song.Name @(row.Chart.Id == _closerChartId && InSet(row) ? CloserChip : null)</span>
+                                    </span>
+                                </td>
+                                <td><ScoreBreakdown Score="row.Record.Score" Plate="row.Record.Plate" IsBroken="row.Record.IsBroken" Mix="_board!.Mix" ShowScore="true" OneLine="true" Height="16" Tooltip="false"></ScoreBreakdown></td>
+                                <td class="t-r num t-pts">@row.Points.ToString("N0")</td>
+                                <td class="t-r num col-pps">@row.Pps.ToString("F1")</td>
+                                <td class="t-r num col-pps muted">@Mmss(row.Seconds)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else if (_density == UiDensity.Compact)
+        {
+            <div class="mom-plan-stickers">
+                @foreach (var row in VisibleRows())
+                {
+                    <button type="button" class="mom-plan-sticker @(InSet(row) ? "on" : null)" aria-pressed="@InSet(row)"
+                            title="@($"{row.Chart.Song.Name} · {row.Points:N0} {L["pts"]} · {row.Record.Score?.ToString() ?? ""} · {Mmss(row.Seconds)}")"
+                            @onclick="() => TogglePick(row)">
+                        <span class="jacket" style="background-image:url('@row.Chart.Song.ImagePath')"></span>
+                        <span class="bubwrap"><DifficultyBubble Chart="row.Chart" Height="18"></DifficultyBubble></span>
+                        <span class="tick" aria-hidden="true">✓</span>
+                        <span class="corner-start tier-chart-card-corner pmb-corner-gain"><ScoreBreakdown Score="row.Record.Score" IsBroken="row.Record.IsBroken" Mix="_board!.Mix" OneLine="true" Height="12" Tooltip="false"></ScoreBreakdown></span>
+                        <span class="tier-chart-card-corner pmb-corner-gain corner">@CornerFor(row)</span>
+                    </button>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="mom-plan-cards">
+                @foreach (var row in VisibleRows())
+                {
+                    <div class="mom-plan-card @(InSet(row) ? "on" : null)">
+                        <div class="jacketwrap" role="button" tabindex="0" @onclick="() => OpenChart(row, false)" aria-label="@L["Open {0}", row.Chart.Song.Name]">
+                            <span class="jacket" style="background-image:url('@row.Chart.Song.ImagePath')"></span>
+                            <span class="bubwrap"><DifficultyBubble Chart="row.Chart" Height="22"></DifficultyBubble></span>
+                            <button type="button" class="mom-play" @onclick:stopPropagation @onclick="() => OpenChart(row, true)" aria-label="@L["Play video for {0}", row.Chart.Song.Name]">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+                            </button>
+                        </div>
+                        <div class="body">
+                            <div class="name" title="@row.Chart.Song.Name">@row.Chart.Song.Name @(row.Chart.Id == _closerChartId && InSet(row) ? CloserChip : null)</div>
+                            <div class="meta"><ScoreBreakdown Score="row.Record.Score" Plate="row.Record.Plate" IsBroken="row.Record.IsBroken" Mix="_board!.Mix" ShowScore="true" OneLine="true" Height="15" Tooltip="false"></ScoreBreakdown></div>
+                            <div class="meta num"><span class="pts">@row.Points.ToString("N0")</span><span class="sub">@L["pts"] · @row.Pps.ToString("F1") @L["pps"] · @Mmss(row.Seconds)</span></div>
+                            @* Picking lives in the body: the jacket is the video affordance,
+                               and the two gestures never fight over the same pixels (§11.5). *@
+                            <label class="pick" @onclick:stopPropagation>
+                                <input type="checkbox" checked="@InSet(row)" @onchange="() => TogglePick(row)" />
+                                <span>@(InSet(row) ? L["In your set"] : L["Add to set"])</span>
+                            </label>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <MudDialog @bind-Visible="_saveOpen">
+            <DialogContent>
+                <h3 class="mom-big">@L["Save this set"]</h3>
+                <MudTextField T="string" @bind-Value="_saveName" Label="@L["Name"]" Variant="Variant.Outlined" Margin="Margin.Dense"></MudTextField>
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="() => _saveOpen = false">@L["Cancel"]</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveSet">@L["Save"]</MudButton>
+            </DialogActions>
+        </MudDialog>
+
+        <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="@(_board?.Mix ?? MixEnum.Phoenix)" AutoPlay="_detailsAutoPlay"></ChartDetailsDialog>
+    }
+</div>
+
+@code {
+    private const string SetsKeyPrefix = "MoMPlannerSets__";
+    private const string DensitySettingKey = "Density__MoMPlanner";
+
+    private enum Scope
+    {
+        Everything,
+        Set
+    }
+
+    private enum SortKey
+    {
+        SetOrder,
+        Points,
+        Pps,
+        Level,
+        Seconds
+    }
+
+    private sealed record PoolRow(Chart Chart, RecordedPhoenixScore Record, int Points)
+    {
+        public double Seconds => Chart.Song.Duration.TotalSeconds;
+        public double Pps => Points / Math.Max(1, Seconds);
+    }
+
+    private sealed record SavedSet(string Name, IReadOnlyList<Guid> ChartIds, DateTimeOffset SavedAt);
+
+    private sealed record SortOption(SortKey Key, string Label, string Note);
+
+    private sealed record PlanNumber(string Label, string Value, string? Delta, string DeltaClass);
+
+    private IReadOnlyList<MoMBoardSummary> _boards = Array.Empty<MoMBoardSummary>();
+    private MoMBoardView? _board;
+    private MoMSeasonView? _season;
+    private TournamentConfiguration? _configuration;
+    private IReadOnlyList<PoolRow> _pool = Array.Empty<PoolRow>();
+    private readonly List<Guid> _set = new();
+    private Guid? _closerChartId;
+    private MoMBoardRow? _actual;
+    private bool _suggested;
+    private bool _solving;
+    private int _minRestSeconds = 35;
+    private Scope _scope = Scope.Everything;
+    private SortKey _sortKey = SortKey.SetOrder;
+    private UiDensity _density = UiDensity.Compact;
+    private List<SavedSet> _savedSets = new();
+    private bool _saveOpen;
+    private string _saveName = string.Empty;
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
+    private bool _detailsAutoPlay;
+
+    private TimeSpan MaxTime => _configuration?.MaxTime ?? TimeSpan.FromMinutes(105);
+
+    private int _setTotal;
+    private bool _overWindow;
+
+    private MarkupString CloserChip => new($"<span class=\"mom-closer\">{L["closing move"]}</span>");
+
+    private IReadOnlyList<SortOption> Sorts => new[]
+    {
+        new SortOption(SortKey.SetOrder, L["Set order"], L["As the set was solved — best value per second first, which is also a sensible play order while you are fresh."]),
+        new SortOption(SortKey.Pps, L["Points per second"], L["What each chart banks per second of song."]),
+        new SortOption(SortKey.Points, L["Points"], L["Biggest single hauls. Long songs win here, which is not the same as being efficient."]),
+        new SortOption(SortKey.Level, L["Difficulty"], L["Hardest first, by balanced level."]),
+        new SortOption(SortKey.Seconds, L["Length"], L["Shortest first."])
+    };
+
+    private SortOption CurrentSort => Sorts.First(s => s.Key == _sortKey);
+
+    private string TypeName(ChartType type)
+    {
+        return type == ChartType.Single ? L["Singles"] : L["Doubles"];
+    }
+
+    private static string Mmss(double seconds)
+    {
+        return $"{(int)(seconds / 60)}:{(int)seconds % 60:00}";
+    }
+
+    private double PlaySeconds => SetRows().Sum(r => r.Seconds);
+    private double RestLeft => Math.Max(0, MaxTime.TotalSeconds - PlaySeconds);
+    private double RestPerGap => _set.Count > 1 ? RestLeft / (_set.Count - 1) : RestLeft;
+    private double Conversion => _actual != null && _setTotal > 0 ? (double)_actual.TotalScore / _setTotal : 0;
+
+    private bool InSet(PoolRow row)
+    {
+        return _set.Contains(row.Chart.Id);
+    }
+
+    private int? SetOrdinal(PoolRow row)
+    {
+        var index = _set.IndexOf(row.Chart.Id);
+        return index < 0 ? null : index + 1;
+    }
+
+    private IReadOnlyList<PoolRow> SetRows()
+    {
+        var byId = _pool.ToDictionary(r => r.Chart.Id);
+        return _set.Where(byId.ContainsKey).Select(id => byId[id]).ToArray();
+    }
+
+    private string CornerFor(PoolRow row)
+    {
+        return _sortKey switch
+        {
+            SortKey.Pps => $"{row.Pps:F1}/s",
+            SortKey.Seconds => Mmss(row.Seconds),
+            _ => row.Points.ToString("N0")
+        };
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            Nav.NavigateTo("/Login");
+            return;
+        }
+
+        if (Enum.TryParse<UiDensity>(await UiSettings.GetSetting(DensitySettingKey), out var density))
+            _density = density;
+
+        _season = await Mediator.Send(new GetMoMSeasonQuery());
+        if (_season == null) return;
+        var viewerMix = await UiSettings.GetSelectedMix();
+        var boardMix = viewerMix == MixEnum.Phoenix2 ? MixEnum.Phoenix2 : MixEnum.Phoenix;
+        _boards = _season.Boards.Where(b => b.Mix == boardMix)
+            .OrderBy(b => b.ChartType == ChartType.Double ? 0 : 1)
+            .ToArray();
+        if (_boards.Count == 0 && boardMix == MixEnum.Phoenix2)
+            _boards = _season.Boards.Where(b => b.Mix == MixEnum.Phoenix)
+                .OrderBy(b => b.ChartType == ChartType.Double ? 0 : 1)
+                .ToArray();
+        if (_boards.Count > 0) await SelectBoard(_boards[0]);
+    }
+
+    private async Task SelectBoard(MoMBoardSummary board)
+    {
+        _solving = true;
+        try
+        {
+            _board = await Mediator.Send(new GetMoMBoardQuery(board.BoardId));
+            if (_board == null) return;
+            _configuration = await Mediator.Send(new GetTournamentQuery(board.BoardId));
+            var charts = await ChartCatalog.GetCharts(_board.Mix);
+            var records = await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _board.Mix));
+
+            // Everything you hold a record on that would pay on this board, priced under the
+            // frozen configuration — snapshot, tables and all (§11.5).
+            _pool = records
+                .Where(r => r is { Score: not null, Plate: not null })
+                .Where(r => charts.ContainsKey(r.ChartId))
+                .Select(r =>
+                {
+                    var chart = charts[r.ChartId];
+                    var points = (int)_configuration.Scoring.GetScore(chart, r.Score!.Value,
+                        r.Plate!.Value, r.IsBroken);
+                    return new PoolRow(chart, r, points);
+                })
+                .Where(r => r.Chart.Type == _board.ChartType && r.Points > 0)
+                .OrderByDescending(r => r.Pps)
+                .ToArray();
+
+            _actual = _board.Rows.Where(r => r.UserId == CurrentUser.User.Id)
+                .OrderBy(r => r.Place).FirstOrDefault();
+            _set.Clear();
+            _closerChartId = null;
+            _suggested = false;
+            Recompute();
+            await LoadSavedSets();
+        }
+        finally
+        {
+            _solving = false;
+        }
+    }
+
+    private async Task Suggest()
+    {
+        if (_board == null || _configuration == null) return;
+        _solving = true;
+        try
+        {
+            var session = await Mediator.Send(new AutoBuildSessionQuery(_configuration,
+                CurrentUser.User.Id, TimeSpan.FromSeconds(_minRestSeconds), _board.Mix));
+            _set.Clear();
+            foreach (var entry in session.Entries)
+                _set.Add(entry.Chart.Id);
+
+            // The closing move (§11.5): once nothing more fits the rest budget you may still
+            // START one more (§2.9), so the session closes on the biggest chart left.
+            _closerChartId = null;
+            var play = SetRows().Sum(r => r.Seconds);
+            if (play < MaxTime.TotalSeconds)
+            {
+                var taken = SetRows()
+                    .Select(r => (Name: r.Chart.Song.Name, r.Chart.Type, r.Chart.Level))
+                    .ToHashSet();
+                var closer = _pool
+                    .Where(r => !_set.Contains(r.Chart.Id))
+                    .Where(r => !taken.Contains((r.Chart.Song.Name, r.Chart.Type, r.Chart.Level)))
+                    .OrderByDescending(r => r.Points)
+                    .FirstOrDefault();
+                if (closer != null)
+                {
+                    _set.Add(closer.Chart.Id);
+                    _closerChartId = closer.Chart.Id;
+                }
+            }
+
+            _suggested = true;
+            Recompute();
+        }
+        finally
+        {
+            _solving = false;
+        }
+    }
+
+    private async Task RestChanged(ChangeEventArgs args)
+    {
+        if (!int.TryParse(args.Value?.ToString(), out var seconds)) return;
+        _minRestSeconds = Math.Clamp(seconds, 10, 300);
+        // The slider retunes a SUGGESTED set live and never a hand-built one — dragging must
+        // not discard the set someone just chose (§11.5).
+        if (_suggested) await Suggest();
+    }
+
+    private void TogglePick(PoolRow row)
+    {
+        if (_set.Contains(row.Chart.Id)) _set.Remove(row.Chart.Id);
+        else _set.Add(row.Chart.Id);
+        // A manual tick takes the set off autopilot.
+        _suggested = false;
+        Recompute();
+    }
+
+    private void ClearSet()
+    {
+        _set.Clear();
+        _closerChartId = null;
+        _suggested = false;
+        Recompute();
+    }
+
+    private void Recompute()
+    {
+        var rows = SetRows();
+        _setTotal = rows.Sum(r => r.Points);
+        // The same all-but-the-last rule as §2.9, run live on a hand-edited set.
+        var beforeLast = rows.Count == 0 ? 0 : rows.Sum(r => r.Seconds) - rows[^1].Seconds;
+        _overWindow = TimeSpan.FromSeconds(beforeLast) > MaxTime;
+    }
+
+    private IReadOnlyList<PlanNumber> PlanNumbers()
+    {
+        var rows = SetRows();
+        var difficulty = rows.Count == 0 ? 0 : rows.Average(r => BalancedLevel(r.Chart.Id, r.Chart));
+        var averageScore = rows.Count == 0 ? 0 : rows.Average(r => (int)r.Record.Score!.Value);
+        var grade = rows.Count == 0
+            ? "—"
+            : ((PhoenixScore)(int)averageScore).LetterGradeFor(_board!.Mix).GetName();
+        return new[]
+        {
+            Number(L["Charts"], rows.Count.ToString("N0"), rows.Count, _actual?.ChartsPlayed,
+                v => v.ToString("N0"), false),
+            Number(L["Avg difficulty"], difficulty.ToString("F2"), difficulty,
+                _actual?.AverageDifficulty, v => v.ToString("F2"), false),
+            new PlanNumber(L["Avg grade"], grade, null, "flat"),
+            Number(L["Downtime"], TimeSpan.FromSeconds(RestLeft).ToString(@"h\:mm\:ss"), RestLeft,
+                _actual?.RestTime.TotalSeconds, v => TimeSpan.FromSeconds(v).ToString(@"h\:mm\:ss"),
+                true)
+        };
+    }
+
+    private PlanNumber Number(string label, string shown, double mine, double? actual,
+        Func<double, string> fmt, bool lowerIsBetter)
+    {
+        if (actual == null || _set.Count == 0) return new PlanNumber(label, shown, null, "flat");
+        var delta = mine - actual.Value;
+        if (Math.Abs(delta) < 0.005)
+            return new PlanNumber(label, shown, L["same as your session"], "flat");
+        var good = lowerIsBetter ? delta < 0 : delta > 0;
+        return new PlanNumber(label, shown,
+            $"{(delta > 0 ? "+" : "−")}{fmt(Math.Abs(delta))} {L["vs your session"]}",
+            good ? "up" : "down");
+    }
+
+    private double BalancedLevel(Guid chartId, Chart chart)
+    {
+        return _configuration?.Scoring.ChartLevelSnapshot?.TryGetValue(chartId, out var balanced) == true
+            ? balanced
+            : (int)chart.Level + 0.5;
+    }
+
+    private IEnumerable<PoolRow> VisibleRows()
+    {
+        var rows = _scope == Scope.Set ? SetRows() : _pool;
+        return _sortKey switch
+        {
+            SortKey.Pps => rows.OrderByDescending(r => r.Pps),
+            SortKey.Points => rows.OrderByDescending(r => r.Points),
+            SortKey.Level => rows.OrderByDescending(r => BalancedLevel(r.Chart.Id, r.Chart))
+                .ThenByDescending(r => r.Points),
+            SortKey.Seconds => rows.OrderBy(r => r.Seconds),
+            _ => _scope == Scope.Set
+                ? rows
+                : rows.OrderBy(r => _set.IndexOf(r.Chart.Id) is var i && i < 0 ? int.MaxValue : i)
+                    .ThenByDescending(r => r.Pps)
+        };
+    }
+
+    private void OpenChart(PoolRow row, bool autoplay)
+    {
+        _detailsChart = row.Chart;
+        _detailsAutoPlay = autoplay;
+        _detailsOpen = true;
+    }
+
+    private async Task SetDensity(UiDensity density)
+    {
+        _density = density;
+        await UiSettings.SetSetting(DensitySettingKey, density.ToString());
+    }
+
+    private string SetsKey => $"{SetsKeyPrefix}{_board?.BoardId}";
+
+    private async Task LoadSavedSets()
+    {
+        _savedSets = new List<SavedSet>();
+        var stored = await UiSettings.GetSetting(SetsKey);
+        if (string.IsNullOrWhiteSpace(stored)) return;
+        try
+        {
+            _savedSets = JsonSerializer.Deserialize<List<SavedSet>>(stored) ?? new List<SavedSet>();
+        }
+        catch (JsonException)
+        {
+            // A malformed setting is not worth a crash — the menu just starts empty.
+        }
+    }
+
+    private void LoadSet(SavedSet saved)
+    {
+        _set.Clear();
+        _set.AddRange(saved.ChartIds.Where(id => _pool.Any(r => r.Chart.Id == id)));
+        _closerChartId = null;
+        _suggested = false;
+        _scope = Scope.Set;
+        Recompute();
+    }
+
+    private async Task SaveSet()
+    {
+        if (_set.Count == 0 || _board == null) return;
+        var name = string.IsNullOrWhiteSpace(_saveName) ? DefaultSetName() : _saveName.Trim();
+        _savedSets.RemoveAll(s => s.Name == name);
+        _savedSets.Add(new SavedSet(name, _set.ToArray(), DateTimeOffset.UtcNow));
+        await UiSettings.SetSetting(SetsKey, JsonSerializer.Serialize(_savedSets));
+        _saveOpen = false;
+        Snackbar.Add(L["Saved {0}.", name], Severity.Success);
+    }
+
+    private string DefaultSetName()
+    {
+        var rows = SetRows();
+        var top = rows.Count == 0 ? 0 : rows.Max(r => (int)r.Chart.Level);
+        return $"{TypeName(_board!.ChartType)} — {rows.Count} {L["charts"]}, {L["up to"]} {_board.ChartType.GetShortHand()}{top}";
+    }
+
+    private async Task DownloadCsv()
+    {
+        var rows = SetRows();
+        if (rows.Count == 0 || _board == null) return;
+        var builder = new StringBuilder();
+        builder.AppendLine(string.Join(",", "#", L["Song"], L["Difficulty"], L["Length"],
+            L["Your best"], L["Grade"], L["Projected points"], L["Points per second"]));
+        var ordinal = 0;
+        foreach (var row in rows)
+        {
+            ordinal++;
+            builder.AppendLine(string.Join(",", ordinal, Csv(row.Chart.Song.Name.ToString()),
+                $"{_board.ChartType.GetShortHand()}{(int)row.Chart.Level}", Mmss(row.Seconds),
+                (int)row.Record.Score!.Value,
+                row.Record.Score.Value.LetterGradeFor(_board.Mix).GetName(), row.Points,
+                row.Pps.ToString("F1")));
+        }
+
+        var slug = $"march-of-murlocs-{_board.Season.Name.Replace(' ', '-')}-{TypeName(_board.ChartType)}-set.csv"
+            .ToLowerInvariant();
+        await JSRuntime.InvokeVoidAsync("momDownloadCsv", slug, builder.ToString());
+    }
+
+    private static string Csv(string value)
+    {
+        return value.Contains(',') || value.Contains('"') || value.Contains('\n')
+            ? $"\"{value.Replace("\"", "\"\"")}\""
+            : value;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (_saveOpen && string.IsNullOrEmpty(_saveName) && _set.Count > 0)
+            _saveName = DefaultSetName();
+    }
+}

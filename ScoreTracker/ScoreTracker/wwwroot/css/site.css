@@ -18220,3 +18220,70 @@ i.sc-band-ice { background: var(--grade-sssplus); }
     .mom-erow .eact { grid-column: 1 / -1; justify-content: flex-end; }
     .mom-erow .egrade { display: none; }
 }
+
+/* ── the Planner (march-of-murlocs.md §11.5, mock 4). Selection reads as an OUTLINE, never
+   as dimming — an unpicked chart is not lesser information (owner, 2026-08-11). ── */
+.mom-plan-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 16px; }
+.mom-plan-total { margin-left: auto; font-family: var(--font-display); font-size: 38px; font-weight: 700; line-height: 1; text-align: right; }
+.mom-plan-total small { display: block; font-size: 11px; font-weight: 400; font-family: inherit; letter-spacing: .08em; text-transform: uppercase; color: var(--mom-muted); }
+
+.mom-plan-controls { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; margin-top: 14px; }
+.mom-rest { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--mom-muted); }
+.mom-rest b { color: var(--mix-ink); min-width: 38px; }
+.mom-rest input[type="range"] { width: 180px; accent-color: var(--mix-primary); }
+
+.mom-plan-nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 14px; }
+.mom-plan-nums .pn { background: var(--mix-surface); border: 1px solid var(--mom-line); border-radius: 8px; padding: 10px 13px; }
+.mom-plan-nums .k { font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--mom-muted); }
+.mom-plan-nums .v { font-family: var(--font-display); font-size: 23px; font-weight: 700; line-height: 1.1; margin-top: 2px; }
+.mom-plan-nums .d { font-size: 11.5px; margin-top: 2px; }
+.mom-plan-nums .d.up { color: var(--rarity-emerald); }
+.mom-plan-nums .d.down { color: var(--daily-rival); }
+.mom-plan-nums .d.flat { color: var(--mom-muted); }
+
+.mom-plan-versus { margin-top: 12px; font-size: 13px; color: var(--mom-muted); }
+.mom-conv { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-top: 7px; }
+.mom-conv .convbar { flex: 0 1 220px; height: 7px; border-radius: 4px; background: var(--mix-raised); overflow: hidden; }
+.mom-conv .convbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--mix-primary), var(--mix-accent)); }
+.mom-conv .convpct { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--mix-accent); }
+.mom-conv .muted { font-size: 12px; }
+
+.mom-setord { color: var(--mom-muted); font-size: 11.5px; min-width: 18px; text-align: right; }
+.mom-closer { font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--mix-accent); border: 1px solid color-mix(in srgb, var(--mix-accent) 50%, transparent); border-radius: 3px; padding: 0 4px; margin-left: 5px; white-space: nowrap; }
+
+.mom-plan-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.mom-plan-card { background: var(--mix-surface); border: 1.5px solid var(--mom-line); border-radius: 9px; overflow: hidden; display: flex; flex-direction: column; }
+.mom-plan-card.on { border-color: var(--mix-primary); }
+.mom-plan-card .jacketwrap { position: relative; aspect-ratio: 16 / 9; cursor: pointer; }
+.mom-plan-card .jacket, .mom-plan-sticker .jacket { position: absolute; inset: 0; background-size: cover; background-position: center; background-color: var(--mix-raised); }
+.mom-plan-card .bubwrap { position: absolute; top: 6px; left: 6px; }
+.mom-play { position: absolute; right: 6px; bottom: 6px; width: 30px; height: 30px; border-radius: 50%;
+    background: color-mix(in srgb, var(--mix-bg) 70%, transparent); color: var(--mix-ink); border: 1px solid color-mix(in srgb, var(--mix-ink) 30%, transparent);
+    display: grid; place-items: center; cursor: pointer; }
+.mom-play svg { width: 15px; height: 15px; fill: currentColor; }
+.mom-play:hover { border-color: var(--mix-primary); color: var(--mix-primary); }
+.mom-plan-card .body { padding: 8px 10px 9px; display: flex; flex-direction: column; gap: 4px; }
+.mom-plan-card .name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mom-plan-card .meta { display: flex; align-items: center; gap: 7px; }
+.mom-plan-card .pts { font-family: var(--font-display); font-size: 18px; font-weight: 700; }
+.mom-plan-card .sub { font-size: 11px; color: var(--mom-muted); }
+.mom-plan-card .pick { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--mom-muted); cursor: pointer; border-top: 1px dashed var(--mom-line); padding-top: 6px; margin-top: 2px; }
+.mom-plan-card.on .pick { color: var(--mix-primary); }
+
+.mom-plan-stickers { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 7px; }
+.mom-plan-sticker { position: relative; aspect-ratio: 1; border: 1.5px solid var(--mom-line); border-radius: 8px; overflow: hidden; cursor: pointer; background: var(--mix-surface); padding: 0; }
+.mom-plan-sticker.on { border-color: var(--mix-primary); box-shadow: 0 0 0 1px var(--mix-primary); }
+.mom-plan-sticker .bubwrap { position: absolute; top: 4px; left: 4px; }
+.mom-plan-sticker .tick { position: absolute; top: 4px; right: 4px; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--mix-primary); color: var(--mix-bg); font-size: 12px; line-height: 18px; text-align: center; display: none; }
+.mom-plan-sticker.on .tick { display: block; }
+.mom-plan-sticker .corner-start { position: absolute; left: 4px; bottom: 4px; }
+.mom-plan-sticker .corner { position: absolute; right: 4px; bottom: 4px; }
+
+.mom-runtable tbody tr.on td { background: color-mix(in srgb, var(--mix-primary) 9%, transparent); }
+.mom-runtable tbody tr.on td:first-child { box-shadow: inset 3px 0 0 var(--mix-primary); }
+
+@media (max-width: 699.98px) {
+    .mom-rest input[type="range"] { width: 130px; }
+    .mom-plan-cards { grid-template-columns: repeat(auto-fill, minmax(146px, 1fr)); }
+}
