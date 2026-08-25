@@ -13,6 +13,7 @@ using Moq;
 using Moq.Protected;
 using ScoreTracker.Data.Apis;
 using ScoreTracker.Data.Configuration;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.SharedKernel.Enums;
 using Xunit;
 
@@ -139,6 +140,53 @@ public sealed class PiuCenterApiTests
         Assert.Equal(tapRows, page!.TapRows);
         Assert.Equal(holdRows, page.HoldRows);
         Assert.Equal(holdTickSum, page.HoldTickSum);
+    }
+
+    /// <summary>
+    ///     The crux read (docs/design/chart-identity.md §4): the first segment reaching the
+    ///     chart's maximum modelled level, placed against the chart around it. Expected values
+    ///     were computed independently from the fixtures' Segments/Segment metadata pairs.
+    ///     Repentance peaks at 20.28 in its sixth segment — nine seconds, three quarters of the
+    ///     way in, a quarter-level over what the game prints.
+    /// </summary>
+    [Fact]
+    public async Task ChartPageReadsTheCruxSegmentAndPlacesItInTheChart()
+    {
+        var api = BuildApi(routes: ("Repentance_-_Abel_D20_ARCADE.json", Fixture("chart-page_Repentance_D20.json")));
+
+        var page = await api.GetChartPage("Repentance_-_Abel_D20_ARCADE", CancellationToken.None);
+
+        var crux = Assert.IsType<PiuCenterCrux>(page!.Crux);
+        Assert.Equal(20.28m, crux.Level);
+        Assert.Equal(0.28m, crux.Peakiness);
+        Assert.Equal(0.7308m, crux.Position);
+        Assert.Equal(9.125m, crux.Duration);
+        Assert.Equal(7.1m, crux.Enps);
+        Assert.Equal(new[] { "drill", "bracket_run", "bracket_drill" }, crux.Badges);
+    }
+
+    /// <summary>
+    ///     Peakiness is signed, and the negative half is identity too: Ugly Dee's hardest
+    ///     stretch sits half a level UNDER its printed 17, which is what an endurance chart
+    ///     looks like — no passage reaches the number on the folder.
+    /// </summary>
+    [Theory]
+    [InlineData("chart-page_Slam_S7.json", "Slam_-_Novasonic_S7_ARCADE", -0.08, 0.4073, "drill")]
+    [InlineData("chart-page_TribeAttacker_D10HD.json", "Tribe_Attacker_-_Hi-G_D10_HALFDOUBLE_ARCADE", 0.48, 0.5331,
+        "jump")]
+    [InlineData("chart-page_UglyDee_D17.json", "Ugly_Dee_-_Banya_Production_D17_ARCADE", -0.52, 0.7857,
+        "twist_over90")]
+    public async Task CruxPeakinessIsSignedAgainstThePrintedLevel(string fixture, string key,
+        double peakiness, double position, string topBadge)
+    {
+        var api = BuildApi(routes: ($"{key}.json", Fixture(fixture)));
+
+        var page = await api.GetChartPage(key, CancellationToken.None);
+
+        var crux = Assert.IsType<PiuCenterCrux>(page!.Crux);
+        Assert.Equal((decimal)peakiness, crux.Peakiness);
+        Assert.Equal((decimal)position, crux.Position);
+        Assert.Equal(topBadge, crux.Badges[0]);
     }
 
     [Fact]

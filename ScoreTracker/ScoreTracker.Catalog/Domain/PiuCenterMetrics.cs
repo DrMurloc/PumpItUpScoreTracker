@@ -28,4 +28,15 @@ internal static class PiuCenterMetrics
     public const string LastSegmentIsPeak = "last_segment_is_peak";
     public const string PracticeRankPrefix = "practice_rank:";
     public const string RarePrefix = "rare:";
+
+    // The chart at its hardest (docs/design/chart-identity.md §4). The crux is the FIRST
+    // segment reaching the chart's maximum modelled level; peakiness is that level against
+    // the level the game prints, so a positive value is a spike and a negative one is a
+    // chart whose difficulty is duration rather than any single passage.
+    public const string CruxLevel = "crux_level";
+    public const string CruxPeakiness = "crux_peakiness";
+    public const string CruxPosition = "crux_position";
+    public const string CruxDuration = "crux_duration";
+    public const string CruxEnps = "crux_enps";
+    public const string CruxBadgePrefix = "crux_badge:";
 }

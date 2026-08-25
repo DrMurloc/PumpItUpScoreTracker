@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using ScoreTracker.Domain.Records;
@@ -100,15 +101,28 @@ namespace ScoreTracker.Data.Apis
             IReadOnlyList<string> lastSegmentSkills = Array.Empty<string>();
             decimal lastSegmentLevel = 0;
             decimal maxSegmentLevel = 0;
+            // Crux candidate: the FIRST segment reaching the maximum level, so a chart whose
+            // closing section ties its own peak is credited to the earlier one (the peak is
+            // where the chart first gets that hard).
+            var cruxIndex = -1;
+            IReadOnlyList<string> cruxBadges = Array.Empty<string>();
+            decimal? cruxEnps = null;
             if (meta.TryGetProperty("Segment metadata", out var segments) &&
                 segments.ValueKind == JsonValueKind.Array)
                 foreach (var segment in segments.EnumerateArray())
                 {
-                    segmentCount++;
                     var badges = ReadStringArray(segment, "Skill badges");
                     lastSegmentSkills = badges;
                     lastSegmentLevel = ReadDecimal(segment, "level") ?? 0;
-                    if (lastSegmentLevel > maxSegmentLevel) maxSegmentLevel = lastSegmentLevel;
+                    if (segmentCount == 0 || lastSegmentLevel > maxSegmentLevel)
+                    {
+                        cruxIndex = segmentCount;
+                        cruxBadges = badges;
+                        cruxEnps = ReadDecimal(segment, "eNPS");
+                        maxSegmentLevel = lastSegmentLevel;
+                    }
+
+                    segmentCount++;
                     foreach (var badge in badges)
                         badgeCounts[badge] = badgeCounts.TryGetValue(badge, out var count) ? count + 1 : 1;
                     foreach (var rare in ReadStringArray(segment, "rare skills"))
@@ -128,7 +142,48 @@ namespace ScoreTracker.Data.Apis
                 meta.TryGetProperty("sord_chartlevel", out var sord) ? sord.GetString() : null,
                 tapRows,
                 holdRows,
-                holdTickSum);
+                holdTickSum,
+                ReadCrux(meta, cruxIndex, maxSegmentLevel, cruxEnps, cruxBadges));
+        }
+
+        /// <summary>
+        ///     Places the crux inside the chart: its position across the played span, how long it
+        ///     lasts, and how far its level runs over the level the game prints
+        ///     (docs/design/chart-identity.md §4). Returns null when the page carries no segments,
+        ///     or when its Segments and Segment metadata arrays disagree in length — that pairing
+        ///     is the whole basis of the reading, and a mismatch means we cannot say which span
+        ///     the crux occupies.
+        /// </summary>
+        private static PiuCenterCrux? ReadCrux(JsonElement meta, int cruxIndex, decimal cruxLevel,
+            decimal? cruxEnps, IReadOnlyList<string> cruxBadges)
+        {
+            if (cruxIndex < 0) return null;
+            if (!meta.TryGetProperty("Segments", out var spans) || spans.ValueKind != JsonValueKind.Array) return null;
+            var spanCount = spans.GetArrayLength();
+            if (cruxIndex >= spanCount) return null;
+
+            // [start, end, startNote, endNote] per segment, seconds for the first two.
+            var crux = spans[cruxIndex];
+            if (crux.ValueKind != JsonValueKind.Array || crux.GetArrayLength() < 2) return null;
+            var start = crux[0].GetDecimal();
+            var end = crux[1].GetDecimal();
+            var chartStart = spans[0][0].GetDecimal();
+            var chartEnd = spans[spanCount - 1][1].GetDecimal();
+            var span = chartEnd - chartStart;
+
+            return new PiuCenterCrux(
+                cruxLevel,
+                // METER is written as a string ("20"), and a page without one still has a
+                // readable crux — only the against-the-printed-level reading is unavailable.
+                meta.TryGetProperty("METER", out var meter) &&
+                decimal.TryParse(meter.ValueKind == JsonValueKind.String ? meter.GetString() : meter.ToString(),
+                    NumberStyles.Number, CultureInfo.InvariantCulture, out var printed)
+                    ? Math.Round(cruxLevel - printed, 4)
+                    : null,
+                span > 0 ? Math.Round((start - chartStart) / span, 4) : 0,
+                Math.Round(end - start, 4),
+                cruxEnps,
+                cruxBadges);
         }
 
         /// <summary>

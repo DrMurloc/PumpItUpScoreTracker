@@ -326,6 +326,22 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
         rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.LastSegmentIsPeak,
             page.LastSegmentIsPeak ? 1 : 0, null));
 
+        // The chart at its hardest (docs/design/chart-identity.md §4). Peakiness is the one
+        // piece that needs the printed level, so it banks only when the page carried one.
+        if (page.Crux is { } crux)
+        {
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.CruxLevel, crux.Level, null));
+            if (crux.Peakiness != null)
+                rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.CruxPeakiness, crux.Peakiness.Value, null));
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.CruxPosition, crux.Position, null));
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.CruxDuration, crux.Duration, null));
+            if (crux.Enps != null)
+                rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.CruxEnps, crux.Enps.Value, null));
+            for (var i = 0; i < crux.Badges.Count; i++)
+                rows.Add(new ChartSkillMetric(chartId,
+                    Truncate($"{PiuCenterMetrics.CruxBadgePrefix}{crux.Badges[i]}", 64), i + 1, null));
+        }
+
         foreach (var (label, count) in page.RareSkillCounts)
             rows.Add(new ChartSkillMetric(chartId, Truncate($"{PiuCenterMetrics.RarePrefix}{label}", 64), count,
                 null));
