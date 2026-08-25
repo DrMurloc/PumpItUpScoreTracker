@@ -7709,6 +7709,12 @@
   <data name="This chart has no {0} on record" xml:space="preserve">
     <value>Grglmrp murgl rgl mrp {0} lurg blubgrorp</value>
   </data>
+  <data name="This chart is on the left side of the video" xml:space="preserve">
+    <value>Grglmrp murgl lu ur a rolurg blgrlgro ub a grrrgl</value>
+  </data>
+  <data name="This chart is on the right side of the video" xml:space="preserve">
+    <value>Grglmrp murgl lu ur a rulurg blgrlgro ub a grrrgl</value>
+  </data>
   <data name="This does not send anything." xml:space="preserve">
     <value>Mo alla blorp.</value>
   </data>

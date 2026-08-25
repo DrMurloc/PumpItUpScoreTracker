@@ -1,0 +1,92 @@
+@using ScoreTracker.SharedKernel.Enums
+@namespace ScoreTracker.Web.Components
+
+@* The two-sided-video caption (docs/design/video-sides.md): one subtext row justified to the
+   video's edges, so each label sits under the half it names — arrows only, no side words.
+   The arrows point UP at the video half above (a sideways arrow read as "next chart" in the
+   field test). The opened chart's half carries the ink and the accent arrow; the partner
+   stays muted, and a partner absent from the selected mix leaves its half empty. The sides
+   come from stored data, so switching mixes relabels the levels but never swaps the arrows. *@
+<div class="video-side-caption">
+    <span class="video-side-sr">@L[Side == VideoSide.Left
+                                    ? "This chart is on the left side of the video"
+                                    : "This chart is on the right side of the video"]</span>
+    <span class="video-side-half" aria-hidden="true">
+        @if (Side == VideoSide.Left)
+        {
+            <span class="video-side-on"><span class="video-side-arrow">▲</span> @OwnLabel</span>
+        }
+        else if (PartnerLabel != null)
+        {
+            <span><span class="video-side-arrow">▲</span> @PartnerLabel</span>
+        }
+    </span>
+    <span class="video-side-half" aria-hidden="true">
+        @if (Side == VideoSide.Right)
+        {
+            <span class="video-side-on">@OwnLabel <span class="video-side-arrow">▲</span></span>
+        }
+        else if (PartnerLabel != null)
+        {
+            <span>@PartnerLabel <span class="video-side-arrow">▲</span></span>
+        }
+    </span>
+</div>
+<style>
+    .video-side-caption {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 6px 2px 0;
+        font-size: .78rem;
+        line-height: 1;
+        letter-spacing: .015em;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    /* Clip-pattern hiding: the sentence reads aloud while the visual row stays arrows-only. */
+    .video-side-sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .video-side-arrow {
+        font-size: .7rem;
+    }
+
+    .video-side-on {
+        color: var(--mud-palette-text-primary);
+        font-weight: 500;
+    }
+
+    .video-side-on .video-side-arrow {
+        color: var(--mix-accent);
+    }
+</style>
+
+@code {
+
+    /// <summary>Which half of the video the chart being viewed plays on.</summary>
+    [Parameter]
+    public VideoSide Side { get; set; }
+
+    /// <summary>The viewed chart's level token ("S22"), labelled in the selected mix's level.</summary>
+    [Parameter]
+    public string OwnLabel { get; set; } = string.Empty;
+
+    /// <summary>
+    ///     The other half's level token, or null when that chart isn't in the selected mix —
+    ///     the viewed chart's half then labels itself alone.
+    /// </summary>
+    [Parameter]
+    public string? PartnerLabel { get; set; }
+
+}

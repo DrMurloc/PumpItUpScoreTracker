@@ -128,6 +128,79 @@ public sealed class ChartDetailsDialogTests : TestContext
         cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("iframe.chart-details-video")));
     }
 
+    // --- The singles video side caption (docs/design/video-sides.md) ---
+
+    /// <summary>A Single 22 whose stored side is Right, paired with a Single 17 on the mix.</summary>
+    private Chart SetupPairedChart(bool partnerInMix)
+    {
+        var chart = ChartSlugsTests.BuildChart(song: "Uh-Heung",
+            type: SharedKernel.Enums.ChartType.Single, level: 22);
+        var partner = ChartSlugsTests.BuildChart(song: "Uh-Heung",
+            type: SharedKernel.Enums.ChartType.Single, level: 17);
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartVideosQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IEnumerable<ChartVideoInformation>)new[]
+            {
+                new ChartVideoInformation(chart.Id, new Uri("https://www.youtube.com/embed/abc"),
+                    Name.From("NEVSISTER"), VideoSide.Right, partner.Id)
+            });
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IEnumerable<Chart>)(partnerInMix ? new[] { partner } : Array.Empty<Chart>()));
+        return chart;
+    }
+
+    [Fact]
+    public void ASharedVideoCaptionsTheSidesWithTheViewedChartEmphasized()
+    {
+        var cut = RenderDialog(SetupPairedChart(partnerInMix: true));
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".video-side-caption")));
+        Assert.Contains("S22", cut.Find(".video-side-on").TextContent);
+        Assert.Contains("S17", cut.Find(".video-side-caption").TextContent);
+    }
+
+    [Fact]
+    public void ASoloVideoShowsNoSideCaption()
+    {
+        var cut = RenderDialog(SetupChart("https://www.youtube.com/embed/abc"));
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("iframe.chart-details-video")));
+        Assert.Empty(cut.FindAll(".video-side-caption"));
+    }
+
+    [Fact]
+    public void APartnerAbsentFromTheSelectedMixCaptionsTheViewedHalfAlone()
+    {
+        var cut = RenderDialog(SetupPairedChart(partnerInMix: false));
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".video-side-caption")));
+        Assert.Contains("S22", cut.Find(".video-side-on").TextContent);
+        Assert.DoesNotContain("S17", cut.Find(".video-side-caption").TextContent);
+    }
+
+    [Fact]
+    public void ReopeningTheSameChartUnderAnotherMixReloadsThePartner()
+    {
+        // The partner's caption label carries the selected mix's level, so the id-only reload
+        // guard would show mix A's partner under mix B (the randomizer surfaces pass a
+        // per-chart mix).
+        var chart = SetupPairedChart(partnerInMix: true);
+        var partnerMixes = new List<MixEnum>();
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .Callback((IRequest<IEnumerable<Chart>> q, CancellationToken _) =>
+                partnerMixes.Add(((GetChartsQuery)q).Mix))
+            .ReturnsAsync(Array.Empty<Chart>());
+        var cut = RenderDialog(chart);
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".video-side-caption")));
+        var dialog = cut.FindComponent<ChartDetailsDialog>();
+
+        dialog.SetParametersAndRender(p => p.Add(c => c.Visible, false));
+        dialog.SetParametersAndRender(p => p
+            .Add(c => c.Visible, true)
+            .Add(c => c.Mix, MixEnum.Phoenix2));
+
+        cut.WaitForAssertion(() => Assert.Contains(MixEnum.Phoenix2, partnerMixes));
+    }
+
     [Fact]
     public void AChartWithNoVideoRendersTheRestOfTheDialog()
     {

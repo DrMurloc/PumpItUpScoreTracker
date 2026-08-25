@@ -7709,6 +7709,12 @@
   <data name="This chart has no {0} on record" xml:space="preserve">
     <value>この譜面には{0}のデータがありません</value>
   </data>
+  <data name="This chart is on the left side of the video" xml:space="preserve">
+    <value>この譜面は動画の左側にあります</value>
+  </data>
+  <data name="This chart is on the right side of the video" xml:space="preserve">
+    <value>この譜面は動画の右側にあります</value>
+  </data>
   <data name="This does not send anything." xml:space="preserve">
     <value>これは何も送りません。</value>
   </data>
