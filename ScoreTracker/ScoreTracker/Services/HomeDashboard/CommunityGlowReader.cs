@@ -115,6 +115,24 @@ public sealed class CommunityGlowReader(IMediator mediator, ICurrentUserAccessor
         };
     }
 
+    /// <summary>
+    ///     The text a highlighted row repeats its relationship in — the fill is colour alone,
+    ///     so every board echoes it in title/aria-label (rivals.md §3.6). Returned as a
+    ///     localization key (keys are English UI text verbatim); the mapping lives here so no
+    ///     board re-learns the class names.
+    /// </summary>
+    public static string? RelationshipKey(string rowClass, string youClass)
+    {
+        if (rowClass == youClass && rowClass.Length > 0) return "You";
+        return rowClass switch
+        {
+            "is-both" => "Your rival, and in your communities",
+            "is-rival" => "Your rival",
+            "is-community" => "In your communities",
+            _ => null
+        };
+    }
+
     private IReadOnlySet<Guid>? _rivals;
     private IReadOnlySet<string>? _rivalTags;
 }
