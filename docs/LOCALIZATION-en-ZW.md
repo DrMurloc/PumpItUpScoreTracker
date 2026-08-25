@@ -387,3 +387,22 @@ for the five-peer floor.
 | five | blugro | `blub` + `gro`, following `blurg`. Same reason. |
 | expect | Blarggro | Coined rather than reusing `Murgblarg` (insights/activity), which already means something else. |
 | reach (a level) | murgro | What a player does to a level they are climbing toward. Distinct from `grubmarg` (clear), which is what they do to a bar. |
+
+## March of Murlocs (2026-08-25)
+
+Coined for the stamina ladder's own surfaces ([march-of-murlocs.md](design/march-of-murlocs.md)).
+`Orgab` (session) is the load-bearing one — D22 makes "session" the single word everywhere, so
+the locale needs one word for it too.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| session | orgab | The thing a player records, publishes, breaks down and plans. One word, everywhere (D22). |
+| stamina | gurgrol | `gurg` (hold) + `rol` — what holds you up for an hour forty-five. **Not** the English `Stamina`, which every other locale keeps as a loanword; here it is a letter-set violation. |
+| board (a MoM leaderboard) | mrglblarg / orgblarg | `Mrglblarg` is the established Board; `orgblarg` is "this board". |
+| season | grrgro | Recovered from `grrgro` (the nightly sweep) — a season is the stretch it covers. `Orggrrgro` is "this season". |
+| draft | grolgub | Reuses the established `grolgub` (row/band) — a draft is the row before it is posted. |
+| publish | grolub | The established word, already carrying "publishes". |
+| window (the 1h45) | gromurg | The span a session must start inside. |
+| set (the Planner's) | Blorp | The established `Blorp` (Set). |
+| ⚠ keyboard keys | ENTER, SHIFT | Uppercased so the alphabet ratchet reads them as acronyms. A Murloc still has to find the Enter key. |
+| ⚠ `https://youtu.be/` | (protected) | Added to the ratchet's proper-noun list — a URL is machine text in every locale, same standing as `piugame.com`. |

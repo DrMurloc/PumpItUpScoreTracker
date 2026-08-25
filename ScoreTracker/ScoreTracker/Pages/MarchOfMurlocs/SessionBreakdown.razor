@@ -80,11 +80,11 @@
         @if (_view.ChartsPlayed > 0)
         {
             <div class="mom-equation num">
-                <div class="eq-term"><span class="v">@_view.ChartsPlayed</span><span class="k">@L["charts"]</span></div>
+                <div class="eq-term"><span class="v">@_view.ChartsPlayed</span><span class="k">@L["Charts"]</span></div>
                 <span class="eq-op">×</span>
                 <div class="eq-term"><span class="v">@((_view.TotalScore / Math.Max(1, _view.ChartsPlayed)).ToString("N0"))</span><span class="k">@L["avg per chart"]</span></div>
                 <span class="eq-op">=</span>
-                <div class="eq-term"><span class="v" style="color:var(--mix-accent)">@_view.TotalScore.ToString("N0")</span><span class="k">@L["total"]</span></div>
+                <div class="eq-term"><span class="v" style="color:var(--mix-accent)">@_view.TotalScore.ToString("N0")</span><span class="k">@L["Total"]</span></div>
                 <p class="eq-note">@L["Volume and value are the only two things a session is. The four numbers below set each one."]</p>
             </div>
 
@@ -155,8 +155,8 @@
                                 <div class="lrow"><span class="lbl">@_compareView.Season.Name<small>@L["as it scored then"]</small></span><span class="amt">@_reprice.OriginalTotal.ToString("N0")</span><span class="chg"></span></div>
                                 <div class="lrow sub"><span class="lbl">@L["Charts re-rated by the community"]<small>@L["{0} of {1} charts re-rated", _reprice.ChartsReratedCount, _compareView.ChartsPlayed]</small></span><span class="amt"></span><span class="chg @DeltaClass(_reprice.ChartReratingDelta)">@Signed(_reprice.ChartReratingDelta)</span></div>
                                 <div class="lrow sub"><span class="lbl">@L["Scoring tables re-cut"]</span><span class="amt"></span><span class="chg @DeltaClass(_reprice.TableRecutDelta)">@Signed(_reprice.TableRecutDelta)</span></div>
-                                <div class="lrow"><span class="lbl">@L["The same session, scored as {0}", _view.Season.Name]</span><span class="amt">@_reprice.RepricedTotal.ToString("N0")</span><span class="chg @DeltaClass(_reprice.RepricedTotal - _reprice.OriginalTotal)">@Signed(_reprice.RepricedTotal - _reprice.OriginalTotal) @L["total"]</span></div>
-                                <div class="lrow total"><span class="lbl">@_view.Season.Name<small>@L["this session"]</small></span><span class="amt">@_view.TotalScore.ToString("N0")</span><span class="chg @DeltaClass(_view.TotalScore - _reprice.RepricedTotal)">@Signed(_view.TotalScore - _reprice.RepricedTotal) @L["you"]</span></div>
+                                <div class="lrow"><span class="lbl">@L["The same session, scored as {0}", _view.Season.Name]</span><span class="amt">@_reprice.RepricedTotal.ToString("N0")</span><span class="chg @DeltaClass(_reprice.RepricedTotal - _reprice.OriginalTotal)">@L["{0} total", Signed(_reprice.RepricedTotal - _reprice.OriginalTotal)]</span></div>
+                                <div class="lrow total"><span class="lbl">@_view.Season.Name<small>@L["this session"]</small></span><span class="amt">@_view.TotalScore.ToString("N0")</span><span class="chg @DeltaClass(_view.TotalScore - _reprice.RepricedTotal)">@L["{0} you", Signed(_view.TotalScore - _reprice.RepricedTotal)]</span></div>
                             </div>
                         }
 
@@ -180,7 +180,7 @@
                                     <div class="h2hrow num">
                                         <DifficultyBubble Chart="row.Chart" Height="20"></DifficultyBubble>
                                         <span class="nm" title="@row.Chart.Song.Name">@row.Chart.Song.Name</span>
-                                        <span class="sc @(row.MyScore > row.TheirScore ? "win" : null)"><ScoreBreakdown Score="row.MyScore" Mix="_view.Mix" OneLine="true" Height="15" Tooltip="false"></ScoreBreakdown><small>@L["you"] · @row.MyPoints.ToString("N0")</small></span>
+                                        <span class="sc @(row.MyScore > row.TheirScore ? "win" : null)"><ScoreBreakdown Score="row.MyScore" Mix="_view.Mix" OneLine="true" Height="15" Tooltip="false"></ScoreBreakdown><small>@L["you · {0}", row.MyPoints.ToString("N0")]</small></span>
                                         <span class="sc @(row.TheirScore > row.MyScore ? "win" : null)"><ScoreBreakdown Score="row.TheirScore" Mix="_view.Mix" OneLine="true" Height="15" Tooltip="false"></ScoreBreakdown><small>@_compareShortLabel · @row.TheirPoints.ToString("N0")</small></span>
                                         <span class="win-delta @DeltaClass(row.PointsDelta)">@Signed(row.PointsDelta)</span>
                                     </div>
@@ -279,7 +279,7 @@
             <h2 class="mom-sec">@L["Pace"]</h2>
             <div class="mom-tl">
                 <div class="tl-legend">
-                    <span><i style="background:var(--mix-primary)"></i>@L["Points per second"]</span>
+                    <span><i style="background:var(--mix-primary)"></i>@L["Points Per Second"]</span>
                     <span><i style="background:var(--mix-accent)"></i>@L["Session average"]</span>
                     <span class="muted">@L["Gaps are rest between charts"]</span>
                 </div>
@@ -375,7 +375,7 @@
     {
         new SortOption(SortKey.PlayOrder, L["Play order"], L["As played, first to last."]),
         new SortOption(SortKey.Points, L["Points"], L["Biggest single scores — the long songs win, which is not the same as being efficient."]),
-        new SortOption(SortKey.Pps, L["Points per second"], L["Points banked per second of song. Short cuts top this list."]),
+        new SortOption(SortKey.Pps, L["Points Per Second"], L["Points banked per second of song. Short cuts top this list."]),
         new SortOption(SortKey.Level, L["Difficulty"], L["Hardest first."]),
         new SortOption(SortKey.Score, L["Score"], L["Cleanest play first."])
     };
@@ -544,10 +544,10 @@
             parts.Add($"<b>{L[chartsDelta > 0 ? "{0} more charts" : "{0} fewer charts", Math.Abs(chartsDelta)]}</b>");
         var difficultyDelta = _view.AverageDifficulty - _compareView.AverageDifficulty;
         if (Math.Abs(difficultyDelta) >= 0.05)
-            parts.Add($"<b>{Math.Abs(difficultyDelta):F2} {L[difficultyDelta > 0 ? "harder" : "easier"]}</b> {L["on average"]}");
+            parts.Add($"<b>{L[difficultyDelta > 0 ? "{0} harder on average" : "{0} easier on average", $"{Math.Abs(difficultyDelta):F2}"]}</b>");
         var restDelta = _compareView.RestTime - _view.RestTime;
         if (Math.Abs(restDelta.TotalSeconds) >= 30)
-            parts.Add($"<b>{Mmss(Math.Abs(restDelta.TotalSeconds))} {L[restDelta > TimeSpan.Zero ? "less" : "more"]}</b> {L["downtime"]}");
+            parts.Add($"<b>{L[restDelta > TimeSpan.Zero ? "{0} less downtime" : "{0} more downtime", Mmss(Math.Abs(restDelta.TotalSeconds))]}</b>");
         var phrase = parts.Count == 0
             ? L["no meaningful difference"].Value
             : string.Join(", ", parts);
@@ -556,7 +556,7 @@
                              ? _reprice.RepricedTotal
                              : _compareView.TotalScore);
         _compareVerdict =
-            $"{L["Against {0}:", _compareShortLabel]} {phrase} — {L["worth"]} <b>{Signed(totalDelta)} {L["points"]}</b>.";
+            $"{L["Against {0}:", _compareShortLabel]} {phrase} — <b>{L["worth {0} points", Signed(totalDelta)]}</b>.";
     }
 
     private IReadOnlyList<LeverModel> Levers()
@@ -567,7 +567,7 @@
         var myAverageScore = _rows.Count == 0 ? 0 : _rows.Average(r => (int)r.Score);
         return new[]
         {
-            Lever(L["Charts played"], rows.Select(r => (double)r.ChartsPlayed).ToArray(),
+            Lever(L["Charts Played"], rows.Select(r => (double)r.ChartsPlayed).ToArray(),
                 _view.ChartsPlayed, v => ((int)v).ToString("N0"), null, false,
                 L["Most on this board"]),
             Lever(L["Avg difficulty"], rows.Select(r => r.AverageDifficulty).ToArray(),
@@ -577,7 +577,7 @@
                 _view.AverageGrade, GradeWord,
                 L["{0} average score", myAverageScore.ToString("N0")].Value, false,
                 L["Cleanest on this board"]),
-            Lever(L["Downtime"], rows.Select(r => r.RestTime.TotalSeconds).ToArray(),
+            Lever(L["downtime"], rows.Select(r => r.RestTime.TotalSeconds).ToArray(),
                 _view.RestTime.TotalSeconds, Mmss, null, true, L["Least on this board"])
         };
     }
@@ -613,12 +613,12 @@
         if (_view == null || _compareView == null) return Array.Empty<CompareCell>();
         return new[]
         {
-            Cell(L["Charts played"], _view.ChartsPlayed, _compareView.ChartsPlayed,
+            Cell(L["Charts Played"], _view.ChartsPlayed, _compareView.ChartsPlayed,
                 v => ((int)v).ToString("N0"), false),
             Cell(L["Avg difficulty"], _view.AverageDifficulty, _compareView.AverageDifficulty,
                 v => v.ToString("F2"), false),
             Cell(L["Avg grade"], _view.AverageGrade, _compareView.AverageGrade, GradeWord, false),
-            Cell(L["Downtime"], _view.RestTime.TotalSeconds, _compareView.RestTime.TotalSeconds,
+            Cell(L["downtime"], _view.RestTime.TotalSeconds, _compareView.RestTime.TotalSeconds,
                 Mmss, true)
         };
     }
@@ -663,13 +663,13 @@
 
     private string CardCaption(SessionRow row)
     {
-        var caption = $"{row.Points:N0} {L["pts"]} · {row.Pps:F1} {L["pps"]} · {Mmss(row.Seconds)}";
+        var caption = $"{row.Points:N0} {L["pts"]} · {row.Pps:F1} {L["PPS"]} · {Mmss(row.Seconds)}";
         return row.Bonus > 0 ? $"{caption} · +{row.Bonus}" : caption;
     }
 
     private string CompactTooltip(SessionRow row)
     {
-        return $"{row.Points:N0} {L["pts"]} · {(int)row.Score:N0} · {row.Pps:F1} {L["pps"]}";
+        return $"{row.Points:N0} {L["pts"]} · {(int)row.Score:N0} · {row.Pps:F1} {L["PPS"]}";
     }
 
     private void OpenChart(SessionRow row, bool autoplay)

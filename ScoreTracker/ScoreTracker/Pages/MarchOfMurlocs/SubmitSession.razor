@@ -51,7 +51,7 @@
                 <h1 class="mom-frame-title">@L["Record a session"]</h1>
                 <div class="mom-tagline">@L["Nothing is on the board until you publish. A published session is frozen — a correction is delete and resubmit."]</div>
             </div>
-            <div class="mom-total num" role="status">@_view.TotalScore.ToString("N0")<small>@L["points"] · @L["{0} charts", _entries.Count]</small></div>
+            <div class="mom-total num" role="status">@_view.TotalScore.ToString("N0")<small>@L["Points"] · @L["{0} charts", _entries.Count]</small></div>
         </div>
 
         <div class="mom-budget">
@@ -128,7 +128,7 @@
                                 @entry.Score.ToString("N0") · @(row == null ? "" : Mmss(row.Chart.Song.Duration.TotalSeconds))
                                 @if (entry.IsBroken)
                                 {
-                                    <span class="broken">· @L["broken"]</span>
+                                    <span class="broken">· @L["Broken"]</span>
                                 }
                                 @if (row is { Points: 0 })
                                 {
@@ -244,7 +244,7 @@
                                 <span class="nm">@play.Chart.Song.Name</span>
                                 @if (!play.Selectable)
                                 {
-                                    <span class="dead-note">@(play.Entry.Score == null ? L["stage break"] : L["not this board"])</span>
+                                    <span class="dead-note">@(play.Entry.Score == null ? L["Stage break"] : L["not this board"])</span>
                                 }
                                 <span class="sc num">@(play.Entry.Score?.ToString() ?? "—")</span>
                             </div>

@@ -91,11 +91,11 @@ internal sealed class MoMDiscordSaga : IConsumer<MoMSessionPublishedEvent>
         var grade = (PhoenixLetterGrade)Math.Clamp((int)Math.Floor(session.AverageGrade), 0,
             (int)PhoenixLetterGrade.SSSPlus);
         var stats = new RichBotText(string.Join(" · ",
-            $"**{session.ChartsPlayed}** {_localizer.Get(culture, "charts")}",
-            $"{_localizer.Get(culture, "avg level")} **{session.AverageDifficulty:F2}**",
+            _localizer.Get(culture, "{0} charts", $"**{session.ChartsPlayed}**"),
+            $"{_localizer.Get(culture, "avg lvl")} **{session.AverageDifficulty:F2}**",
             $"#DIFFICULTY|{session.ChartType.GetShortHand()}{session.LowestLevel}# → #DIFFICULTY|{session.ChartType.GetShortHand()}{session.HighestLevel}#",
             $"{_localizer.Get(culture, "downtime")} **{(int)session.RestTime.TotalMinutes}:{session.RestTime.Seconds:00}**",
-            $"{_localizer.Get(culture, "avg grade")} #LETTERGRADE|{grade}#"));
+            $"{_localizer.Get(culture, "Avg grade")} #LETTERGRADE|{grade}#"));
 
         // Ranked by points, not raw score — ranked by score this card would show the five
         // cleanest plays, which say nothing about the session (§11.7).

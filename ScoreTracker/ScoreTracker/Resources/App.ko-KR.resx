@@ -145,6 +145,9 @@
   <data name="#{0} of {1}" xml:space="preserve">
     <value>{1}명 중 #{0}</value>
   </data>
+  <data name="#{0} of {1} on this board" xml:space="preserve">
+    <value>이 보드에서 {1}명 중 #{0}</value>
+  </data>
   <data name="#{0} of {1} peers" xml:space="preserve">
     <value>동급 {1}명 중 #{0}</value>
   </data>
@@ -250,6 +253,9 @@
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -> 10%</value>
   </data>
+  <data name="1 hour 45 minutes. Bank as many points as you can." xml:space="preserve">
+    <value>1시간 45분. 최대한 많은 포인트를 모아보세요.</value>
+  </data>
   <data name="1 more peer above" xml:space="preserve">
     <value>위로 1명 더</value>
   </data>
@@ -267,6 +273,9 @@
   </data>
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>비공개 계정 1개가 동료이지만 표시되지 않습니다.</value>
+  </data>
+  <data name="1 session" xml:space="preserve">
+    <value>세션 1개</value>
   </data>
   <data name="1 title" xml:space="preserve">
     <value>타이틀 1개</value>
@@ -300,6 +309,9 @@
   </data>
   <data name="25% -> 50%" xml:space="preserve">
     <value>25% -> 50%</value>
+  </data>
+  <data name="2nd chart, same song" xml:space="preserve">
+    <value>같은 노래, 두 번째 채보</value>
   </data>
   <data name="30 days" xml:space="preserve">
     <value>30일</value>
@@ -367,6 +379,9 @@
   <data name="A deleted community" xml:space="preserve">
     <value>삭제된 커뮤니티</value>
   </data>
+  <data name="A deleted session is gone from the board for good — a correction is delete and resubmit." xml:space="preserve">
+    <value>삭제된 세션은 보드에서 영구히 사라집니다. 수정은 삭제 후 다시 제출하는 방식입니다.</value>
+  </data>
   <data name="a deleted user" xml:space="preserve">
     <value>삭제된 사용자</value>
   </data>
@@ -433,6 +448,9 @@
   <data name="A perfect plate on every chart in your pool would add {0} — {1} of it." xml:space="preserve">
     <value>풀의 모든 차트에서 퍼펙트 플레이트를 받으면 {0}이(가) 늘어납니다 — 전체의 {1}.</value>
   </data>
+  <data name="A play graded A or below scores zero on Phoenix. It still counts as one of your charts, blocks a repeat, and used your window." xml:space="preserve">
+    <value>Phoenix에서 A 이하 랭크의 플레이는 0점입니다. 그래도 채보 수에 포함되고, 같은 채보를 다시 할 수 없으며, 제한 시간은 이미 사용되었습니다.</value>
+  </data>
   <data name="A player connected" xml:space="preserve">
     <value>플레이어가 연결되었습니다</value>
   </data>
@@ -447,6 +465,12 @@
   </data>
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>문서가 완비된 공개 API가 커뮤니티 툴을 움직입니다 — 봇, 오버레이, 통계 사이트. 계정에서 토큰을 받아 우리와 같은 데이터 위에 만들어 보세요.</value>
+  </data>
+  <data name="A published session cannot be edited. If you get something wrong you delete it and record a new one." xml:space="preserve">
+    <value>게시된 세션은 수정할 수 없습니다. 잘못 입력했다면 삭제하고 새로 기록해야 합니다.</value>
+  </data>
+  <data name="a session window is {0}." xml:space="preserve">
+    <value>세션 제한 시간은 {0}입니다.</value>
   </data>
   <data name="A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0." xml:space="preserve">
     <value>싱글은 한 레벨 위로 책정됩니다: S17은 Base(18)로 계산됩니다. 10레벨 미만 채보의 가치는 0입니다.</value>
@@ -559,6 +583,9 @@
   <data name="Add to Favorites" xml:space="preserve">
     <value>좋아요</value>
   </data>
+  <data name="Add to set" xml:space="preserve">
+    <value>세트에 추가</value>
+  </data>
   <data name="Add to ToDo" xml:space="preserve">
     <value>목표 목록에 추가</value>
   </data>
@@ -573,6 +600,9 @@
   </data>
   <data name="Add {0} as a rival" xml:space="preserve">
     <value>{0} 을(를) 라이벌로 추가</value>
+  </data>
+  <data name="Add {0} charts" xml:space="preserve">
+    <value>채보 {0}개 추가</value>
   </data>
   <data name="Added" xml:space="preserve">
     <value>추가됨</value>
@@ -601,6 +631,12 @@
   <data name="Added {0} charts, skipped {1} the session could not take." xml:space="preserve">
     <value>{0}개 채보를 추가하고, 세션에 들어갈 수 없는 {1}개는 건너뛰었습니다.</value>
   </data>
+  <data name="Added {0} charts." xml:space="preserve">
+    <value>채보 {0}개를 추가했습니다.</value>
+  </data>
+  <data name="Adding this chart uses {0} of it." xml:space="preserve">
+    <value>이 채보를 추가하면 {0}를 사용합니다.</value>
+  </data>
   <data name="Additional Comments" xml:space="preserve">
     <value>추가 의견</value>
   </data>
@@ -624,6 +660,9 @@
   </data>
   <data name="Against {0} {1}." xml:space="preserve">
     <value>{0} {1} 기준.</value>
+  </data>
+  <data name="Against {0}:" xml:space="preserve">
+    <value>{0} 대비:</value>
   </data>
   <data name="Age" xml:space="preserve">
     <value>나이</value>
@@ -678,6 +717,9 @@
   </data>
   <data name="All {0} at {1} or better" xml:space="preserve">
     <value>{0} 모두 {1} 이상</value>
+  </data>
+  <data name="All {0} charts you hold a scoring record on." xml:space="preserve">
+    <value>점수 기록이 있는 채보 {0}개 전체입니다.</value>
   </data>
   <data name="All {0} passed" xml:space="preserve">
     <value>{0} 전곡 클리어</value>
@@ -844,6 +886,15 @@
   <data name="As" xml:space="preserve">
     <value>As</value>
   </data>
+  <data name="as it scored then" xml:space="preserve">
+    <value>당시 점수 기준</value>
+  </data>
+  <data name="As played, first to last." xml:space="preserve">
+    <value>플레이한 순서대로, 처음부터 끝까지.</value>
+  </data>
+  <data name="As the set was solved — best value per second first, which is also a sensible play order while you are fresh." xml:space="preserve">
+    <value>세트가 계산된 순서 — 초당 가치가 높은 것부터. 체력이 남아 있을 때 플레이하기에도 합리적인 순서입니다.</value>
+  </data>
   <data name="Ask on Discord" xml:space="preserve">
     <value>Discord에 문의</value>
   </data>
@@ -895,6 +946,9 @@
   <data name="Average" xml:space="preserve">
     <value>중급</value>
   </data>
+  <data name="Average balanced level — the season's frozen scoring difficulty, which is what actually priced each chart." xml:space="preserve">
+    <value>평균 밸런스 레벨 — 시즌에 고정된 점수 난이도로, 각 채보의 실제 가치를 정한 기준입니다.</value>
+  </data>
   <data name="Average Difficulty" xml:space="preserve">
     <value>평균 난이도</value>
   </data>
@@ -910,6 +964,18 @@
   <data name="Avg" xml:space="preserve">
     <value>평균</value>
   </data>
+  <data name="Avg difficulty" xml:space="preserve">
+    <value>평균 난이도</value>
+  </data>
+  <data name="Avg grade" xml:space="preserve">
+    <value>평균 랭크</value>
+  </data>
+  <data name="avg lvl" xml:space="preserve">
+    <value>평균 레벨</value>
+  </data>
+  <data name="avg per chart" xml:space="preserve">
+    <value>채보당 평균</value>
+  </data>
   <data name="Awaiting review" xml:space="preserve">
     <value>검토 대기 중</value>
   </data>
@@ -918,6 +984,9 @@
   </data>
   <data name="Back to back, from here" xml:space="preserve">
     <value>여기서부터 연속으로</value>
+  </data>
+  <data name="Back to the draft" xml:space="preserve">
+    <value>초안으로 돌아가기</value>
   </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>티어리스트로 돌아가기</value>
@@ -954,6 +1023,9 @@
   </data>
   <data name="Bads are cheap, then they are not" xml:space="preserve">
     <value>Bad는 싸다가, 싸지 않습니다</value>
+  </data>
+  <data name="balanced for this season" xml:space="preserve">
+    <value>이번 시즌 밸런스 기준</value>
   </data>
   <data name="Balanced Player" xml:space="preserve">
     <value>Balanced Player</value>
@@ -993,6 +1065,9 @@
   </data>
   <data name="Baseline" xml:space="preserve">
     <value>기준점</value>
+  </data>
+  <data name="Be the first. One session, one hour forty-five, as many points as you can bank." xml:space="preserve">
+    <value>첫 번째가 되어보세요. 세션 한 번, 1시간 45분, 모을 수 있는 만큼의 포인트.</value>
   </data>
   <data name="Because a coded copy of your password lives on this device, please make sure your Pump It Up password is one you use only here — not the one that also opens your email or your bank." xml:space="preserve">
     <value>이 기기에는 비밀번호의 암호화된 사본이 남으므로, Pump It Up 비밀번호는 이곳에서만 쓰는 것으로 하세요. 이메일이나 은행에도 쓰는 비밀번호는 사용하지 마세요.</value>
@@ -1066,6 +1141,9 @@
   <data name="Biggest board climbers" xml:space="preserve">
     <value>채보 보드 상승 순위</value>
   </data>
+  <data name="Biggest five" xml:space="preserve">
+    <value>최고 5개</value>
+  </data>
   <data name="Biggest gain of the session" xml:space="preserve">
     <value>세션 최대 상승</value>
   </data>
@@ -1077,6 +1155,12 @@
   </data>
   <data name="Biggest PUMBILITY gainer" xml:space="preserve">
     <value>PUMBILITY 최다 상승</value>
+  </data>
+  <data name="Biggest single hauls. Long songs win here, which is not the same as being efficient." xml:space="preserve">
+    <value>단일 획득 포인트가 큰 순서. 긴 노래가 유리하지만, 효율이 좋다는 뜻은 아닙니다.</value>
+  </data>
+  <data name="Biggest single scores — the long songs win, which is not the same as being efficient." xml:space="preserve">
+    <value>단일 포인트가 큰 순서 — 긴 노래가 유리하지만, 효율이 좋다는 뜻은 아닙니다.</value>
   </data>
   <data name="Bind Selected Chart" xml:space="preserve">
     <value>선택한 채보 연결</value>
@@ -1366,6 +1450,9 @@
   <data name="Chart view" xml:space="preserve">
     <value>그래프 보기</value>
   </data>
+  <data name="Chart → score → Enter. Shift+Enter files a play as broken. The plate is optional — it changes no Phoenix score." xml:space="preserve">
+    <value>채보 → 점수 → Enter. Shift+Enter는 브레이크 오프로 기록합니다. 플레이트는 선택 사항이며 Phoenix 점수에는 영향이 없습니다.</value>
+  </data>
   <data name="Charts" xml:space="preserve">
     <value>채보들</value>
   </data>
@@ -1387,11 +1474,17 @@
   <data name="Charts Played" xml:space="preserve">
     <value>플레이한 채보</value>
   </data>
+  <data name="Charts re-rated by the community" xml:space="preserve">
+    <value>커뮤니티가 재평가한 채보</value>
+  </data>
   <data name="Charts that moved" xml:space="preserve">
     <value>움직인 채보</value>
   </data>
   <data name="Charts toward your next title, plus skill titles one SSS away." xml:space="preserve">
     <value>다음 칭호를 위한 채보와 SSS까지 한 걸음 남은 스킬 칭호.</value>
+  </data>
+  <data name="Charts you both played" xml:space="preserve">
+    <value>둘 다 플레이한 채보</value>
   </data>
   <data name="ChartScoring" xml:space="preserve">
     <value>채보 점수</value>
@@ -1419,6 +1512,12 @@
   </data>
   <data name="Classic" xml:space="preserve">
     <value>클래식</value>
+  </data>
+  <data name="Cleanest on this board" xml:space="preserve">
+    <value>이 보드에서 가장 깔끔함</value>
+  </data>
+  <data name="Cleanest play first." xml:space="preserve">
+    <value>가장 깔끔한 플레이부터.</value>
   </data>
   <data name="Clear" xml:space="preserve">
     <value>지우기</value>
@@ -1479,6 +1578,9 @@
   </data>
   <data name="Closest · Singles" xml:space="preserve">
     <value>가장 가까움 · 싱글</value>
+  </data>
+  <data name="closing move" xml:space="preserve">
+    <value>마무리 곡</value>
   </data>
   <data name="Co-Op" xml:space="preserve">
     <value>코옵</value>
@@ -1650,6 +1752,9 @@
   </data>
   <data name="Comparing {0} charts" xml:space="preserve">
     <value>채보 {0}개 비교</value>
+  </data>
+  <data name="Comparison source" xml:space="preserve">
+    <value>비교 대상</value>
   </data>
   <data name="Compete" xml:space="preserve">
     <value>경쟁</value>
@@ -1960,8 +2065,14 @@
   <data name="Danger Zone" xml:space="preserve">
     <value>위험 구역</value>
   </data>
+  <data name="day left" xml:space="preserve">
+    <value>일 남음</value>
+  </data>
   <data name="Days Hours Left" xml:space="preserve">
     <value>{0}일 {1}시간</value>
+  </data>
+  <data name="days left" xml:space="preserve">
+    <value>일 남음</value>
   </data>
   <data name="days on the pad" xml:space="preserve">
     <value>일 플레이</value>
@@ -2037,6 +2148,9 @@
   </data>
   <data name="Delete this community and everything in it? This cannot be undone." xml:space="preserve">
     <value>이 커뮤니티와 모든 데이터를 삭제하시겠습니까? 되돌릴 수 없습니다.</value>
+  </data>
+  <data name="Delete this session" xml:space="preserve">
+    <value>이 세션 삭제</value>
   </data>
   <data name="Delete tool" xml:space="preserve">
     <value>도구 삭제</value>
@@ -2118,6 +2232,15 @@
   </data>
   <data name="Directory" xml:space="preserve">
     <value>디렉터리</value>
+  </data>
+  <data name="Discard" xml:space="preserve">
+    <value>버리기</value>
+  </data>
+  <data name="Discard this draft" xml:space="preserve">
+    <value>이 초안 버리기</value>
+  </data>
+  <data name="Discard this draft?" xml:space="preserve">
+    <value>이 초안을 버리시겠습니까?</value>
   </data>
   <data name="Disconnect" xml:space="preserve">
     <value>연결 해제</value>
@@ -2208,6 +2331,12 @@
   </data>
   <data name="Download Scores" xml:space="preserve">
     <value>점수 다운로드</value>
+  </data>
+  <data name="downtime" xml:space="preserve">
+    <value>휴식</value>
+  </data>
+  <data name="Draft" xml:space="preserve">
+    <value>초안</value>
   </data>
   <data name="Drain now" xml:space="preserve">
     <value>지금 처리</value>
@@ -2356,6 +2485,9 @@
   <data name="Every level, Singles and Doubles" xml:space="preserve">
     <value>모든 레벨, 싱글과 더블</value>
   </data>
+  <data name="Every March of Murlocs so far. Pick one to see its boards." xml:space="preserve">
+    <value>지금까지의 모든 March of Murlocs입니다. 하나를 선택하면 보드를 볼 수 있습니다.</value>
+  </data>
   <data name="Every miss wipes the gain multiplier to zero. It takes {0} perfects — or {1} greats — to build it back to the cap. Until then you are hitting notes for almost no life." xml:space="preserve">
     <value>Miss는 회복 배율을 0으로 만듭니다. 상한까지 되돌리려면 Perfect {0}개 또는 Great {1}개가 필요합니다. 그전까지는 라이프가 거의 오르지 않는 노트를 밟게 됩니다.</value>
   </data>
@@ -2389,6 +2521,9 @@
   <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
     <value>파일의 모든 행이 우선합니다. 지금 기록보다 나빠도 덮어씁니다.</value>
   </data>
+  <data name="Every season freezes its own chart balance and its own scoring tables, so the same session is worth different totals in different seasons. Re-pricing the old session — the same charts, the same scores — under this season separates what moved underneath you from what you earned. The two moves multiply, so they come to more together than apart." xml:space="preserve">
+    <value>시즌마다 채보 밸런스와 점수 테이블이 고정되므로, 같은 세션이라도 시즌에 따라 총점이 다릅니다. 예전 세션을 — 같은 채보, 같은 점수 그대로 — 이번 시즌 기준으로 다시 계산하면, 게임이 바뀐 부분과 실력이 는 부분을 구분할 수 있습니다. 두 변화는 곱해지므로 합계는 따로 볼 때보다 큽니다.</value>
+  </data>
   <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
     <value>스스로 병합된 것을 포함해 사라진 모든 태그입니다. 닉네임 변경을 더 이상 찾지 못하는 규칙은, 전체를 보지 않으면 그냥 조용한 주와 똑같아 보입니다.</value>
   </data>
@@ -2409,6 +2544,15 @@
   </data>
   <data name="Everyone within half a competitive level of you who has played these charts. Each score counts for less the more that player has improved since setting it." xml:space="preserve">
     <value>경쟁 레벨이 0.5 이내이면서 이 채보들을 플레이한 모든 사람입니다. 기록 이후 그 플레이어가 성장했을수록 해당 점수의 비중은 낮아집니다.</value>
+  </data>
+  <data name="Everything" xml:space="preserve">
+    <value>전체</value>
+  </data>
+  <data name="Everything before the last chart is past the {0} window. Take something out." xml:space="preserve">
+    <value>마지막 채보 이전의 합계가 이미 {0} 제한을 넘습니다. 하나를 빼주세요.</value>
+  </data>
+  <data name="Everything before the last play is already past the {0} window. Move an end in." xml:space="preserve">
+    <value>마지막 플레이 이전의 합계가 이미 {0} 제한을 넘습니다. 범위 끝을 안쪽으로 옮겨주세요.</value>
   </data>
   <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
     <value>아래는 모두 사이트의 실제 데이터입니다 — 스크린샷이 아니라 실제 프로덕트입니다.</value>
@@ -2569,6 +2713,9 @@
   <data name="Find a song — e.g. Iolite Sky" xml:space="preserve">
     <value>노래 찾기 — 예: Iolite Sky</value>
   </data>
+  <data name="Find your first chart above — or import the whole session from your recent plays." xml:space="preserve">
+    <value>위에서 첫 채보를 찾아보세요 — 또는 최근 플레이에서 세션 전체를 불러올 수 있습니다.</value>
+  </data>
   <data name="Find your next pass." xml:space="preserve">
     <value>다음 패스를 찾으세요.</value>
   </data>
@@ -2592,6 +2739,9 @@
   </data>
   <data name="First seen" xml:space="preserve">
     <value>처음 발견</value>
+  </data>
+  <data name="first to last" xml:space="preserve">
+    <value>처음부터 끝까지</value>
   </data>
   <data name="first week" xml:space="preserve">
     <value>첫 주</value>
@@ -2752,6 +2902,9 @@
   <data name="Gap" xml:space="preserve">
     <value>차이</value>
   </data>
+  <data name="Gaps are rest between charts" xml:space="preserve">
+    <value>빈 구간은 채보 사이의 휴식입니다</value>
+  </data>
   <data name="Generate one" xml:space="preserve">
     <value>만들어 주기</value>
   </data>
@@ -2817,6 +2970,9 @@
   </data>
   <data name="Grade" xml:space="preserve">
     <value>등급</value>
+  </data>
+  <data name="Grade &amp; score" xml:space="preserve">
+    <value>랭크 &amp; 점수</value>
   </data>
   <data name="Grade breakdown" xml:space="preserve">
     <value>등급 분포</value>
@@ -2896,8 +3052,20 @@
   <data name="Harder for you" xml:space="preserve">
     <value>나에게 더 어려움</value>
   </data>
+  <data name="Hardest first, by balanced level." xml:space="preserve">
+    <value>밸런스 레벨 기준으로 어려운 것부터.</value>
+  </data>
+  <data name="Hardest first." xml:space="preserve">
+    <value>어려운 것부터.</value>
+  </data>
+  <data name="Hardest on this board" xml:space="preserve">
+    <value>이 보드에서 가장 어려움</value>
+  </data>
   <data name="Has errors" xml:space="preserve">
     <value>오류 있음</value>
+  </data>
+  <data name="Has video" xml:space="preserve">
+    <value>동영상 있음</value>
   </data>
   <data name="Hate or discrimination" xml:space="preserve">
     <value>혐오 또는 차별</value>
@@ -3193,6 +3361,9 @@
   <data name="Import queued - watch the runs table" xml:space="preserve">
     <value>가져오기가 대기열에 등록되었습니다 - 실행 기록 표를 확인하세요</value>
   </data>
+  <data name="Import reads your recent plays from your score journal and picks out the session. If a session is missing, run Import Scores first and come back." xml:space="preserve">
+    <value>불러오기는 점수 저널의 최근 플레이에서 세션을 골라냅니다. 세션이 보이지 않으면 먼저 점수 불러오기를 실행한 뒤 다시 와주세요.</value>
+  </data>
   <data name="Import runs" xml:space="preserve">
     <value>가져오기 실행 기록</value>
   </data>
@@ -3271,11 +3442,17 @@
   <data name="In this folder" xml:space="preserve">
     <value>이 폴더에서</value>
   </data>
+  <data name="In your communities" xml:space="preserve">
+    <value>내 커뮤니티 소속</value>
+  </data>
   <data name="In your pool #{0}" xml:space="preserve">
     <value>내 풀 #{0}</value>
   </data>
   <data name="In your PUMBILITY top 50" xml:space="preserve">
     <value>PUMBILITY 상위 50 포함</value>
+  </data>
+  <data name="In your set" xml:space="preserve">
+    <value>세트에 포함됨</value>
   </data>
   <data name="In {0} the split is level {1} / score {2}; in {3} it is {4} / {5}. The pool’s average level climbs from {6} to {7} along the way and S or better from {8} to {9} of fifty: passing harder charts is the whole ladder for most players, and scoring is what the last stretch is made of." xml:space="preserve">
     <value>{0}에서 구성은 레벨 {1} / 점수 {2}이고, {3}에서는 {4} / {5}입니다. 그 사이 풀의 평균 레벨은 {6}에서 {7}로, 50개 중 S 이상은 {8}에서 {9}개로 오릅니다: 대부분의 유저에게 사다리는 더 어려운 채보를 클리어하는 것이고, 점수는 마지막 구간을 이루는 것입니다.</value>
@@ -3351,6 +3528,9 @@
   </data>
   <data name="It flags your tool for review — then post in the Discord and someone will look. There is no queue anybody watches." xml:space="preserve">
     <value>도구를 검토 대상으로 표시할 뿐입니다 — 그다음 디스코드에 글을 남기면 누군가 확인합니다. 지켜보는 대기열은 없습니다.</value>
+  </data>
+  <data name="It goes on the {0} board straight away, and it is recorded as played right now." xml:space="preserve">
+    <value>즉시 {0} 보드에 올라가며, 기록 시각은 지금으로 저장됩니다.</value>
   </data>
   <data name="It is not limited to reading scores, and I can't limit it. The key stays valid until piugame.com expires it." xml:space="preserve">
     <value>점수 읽기로 제한되지 않으며, 제가 제한할 수도 없습니다. 키는 piugame.com이 만료시킬 때까지 유효합니다.</value>
@@ -3514,6 +3694,9 @@
   <data name="Leading The Field" xml:space="preserve">
     <value>1위입니다</value>
   </data>
+  <data name="Least on this board" xml:space="preserve">
+    <value>이 보드에서 가장 적음</value>
+  </data>
   <data name="Least, level 15+" xml:space="preserve">
     <value>가장 적은 채보, 레벨 15+</value>
   </data>
@@ -3537,6 +3720,9 @@
   </data>
   <data name="Legacy grade" xml:space="preserve">
     <value>레거시 등급</value>
+  </data>
+  <data name="Length" xml:space="preserve">
+    <value>길이</value>
   </data>
   <data name="Let this file replace my records" xml:space="preserve">
     <value>이 파일로 기록을 덮어쓰기</value>
@@ -3787,6 +3973,15 @@
   <data name="Manual score edit" xml:space="preserve">
     <value>점수 직접 입력</value>
   </data>
+  <data name="March of Murlocs · {0} · {1}" xml:space="preserve">
+    <value>March of Murlocs · {0} · {1}</value>
+  </data>
+  <data name="March of Murlocs · {0} · {1} · #{2} of {3}" xml:space="preserve">
+    <value>March of Murlocs · {0} · {1} · {3}명 중 #{2}</value>
+  </data>
+  <data name="March of Murlocs — every session published on this mix" xml:space="preserve">
+    <value>March of Murlocs — 이 시리즈에 게시되는 모든 세션</value>
+  </data>
   <data name="Marked for review" xml:space="preserve">
     <value>검토 대기로 표시됨</value>
   </data>
@@ -4015,6 +4210,9 @@
   <data name="Most hold-tick heavy" xml:space="preserve">
     <value>홀드 틱이 가장 많은 채보</value>
   </data>
+  <data name="Most on this board" xml:space="preserve">
+    <value>이 보드에서 가장 많음</value>
+  </data>
   <data name="Most Recent" xml:space="preserve">
     <value>가장 최근</value>
   </data>
@@ -4084,6 +4282,9 @@
   <data name="My Misses" xml:space="preserve">
     <value>내 미스</value>
   </data>
+  <data name="My past seasons" xml:space="preserve">
+    <value>내 지난 시즌</value>
+  </data>
   <data name="My Perfects" xml:space="preserve">
     <value>내 퍼펙트</value>
   </data>
@@ -4122,6 +4323,9 @@
   </data>
   <data name="My Sessions" xml:space="preserve">
     <value>내 세션</value>
+  </data>
+  <data name="My set" xml:space="preserve">
+    <value>내 세트</value>
   </data>
   <data name="My Tools · {0}" xml:space="preserve">
     <value>내 도구 · {0}</value>
@@ -4306,6 +4510,9 @@
   <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
     <value>아직 조건에 맞는 활약이 없습니다. 한계를 밀어붙여 추천을 받아보세요!</value>
   </data>
+  <data name="no meaningful difference" xml:space="preserve">
+    <value>의미 있는 차이 없음</value>
+  </data>
   <data name="no misses" xml:space="preserve">
     <value>미스 없음</value>
   </data>
@@ -4351,6 +4558,9 @@
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>아직 랭킹이 없습니다 - 첫 주간 가져오기 후에 표시됩니다.</value>
   </data>
+  <data name="No recent plays found in your score journal — it only reaches back seven days. Run Import Scores first, then come back." xml:space="preserve">
+    <value>점수 저널에 최근 플레이가 없습니다 — 저널은 최근 7일까지만 조회됩니다. 먼저 점수 불러오기를 실행한 뒤 다시 와주세요.</value>
+  </data>
   <data name="No recent plays found in your score journal. Run Import Scores first, then come back." xml:space="preserve">
     <value>점수 저널에서 최근 플레이를 찾을 수 없습니다. 먼저 점수 가져오기를 실행한 다음 다시 돌아오세요.</value>
   </data>
@@ -4359,6 +4569,9 @@
   </data>
   <data name="No rivals yet" xml:space="preserve">
     <value>아직 라이벌이 없습니다</value>
+  </data>
+  <data name="No saved sets yet. Build one and press Save." xml:space="preserve">
+    <value>저장된 세트가 없습니다. 세트를 만들고 저장을 눌러주세요.</value>
   </data>
   <data name="No Score Yet" xml:space="preserve">
     <value>아직 점수 없음</value>
@@ -4387,11 +4600,20 @@
   <data name="No scores yet — Pumbility starts with your first import." xml:space="preserve">
     <value>아직 점수가 없습니다. 펌빌리티는 첫 가져오기부터 시작됩니다.</value>
   </data>
+  <data name="No season is running." xml:space="preserve">
+    <value>진행 중인 시즌이 없습니다.</value>
+  </data>
+  <data name="No seasons yet." xml:space="preserve">
+    <value>아직 시즌이 없습니다.</value>
+  </data>
   <data name="No sessions here" xml:space="preserve">
     <value>세션이 없습니다</value>
   </data>
   <data name="No sessions recorded yet." xml:space="preserve">
     <value>아직 기록된 세션이 없습니다.</value>
+  </data>
+  <data name="no sessions yet" xml:space="preserve">
+    <value>아직 세션 없음</value>
   </data>
   <data name="No significant matches — here's the closest we could find." xml:space="preserve">
     <value>뚜렷한 일치 항목이 없습니다 — 가장 비슷한 채보입니다.</value>
@@ -4447,6 +4669,9 @@
   <data name="Nobody climbed a chart board this week." xml:space="preserve">
     <value>이번 주에는 채보 보드에서 상승한 플레이어가 없습니다.</value>
   </data>
+  <data name="Nobody has played {0} yet this season." xml:space="preserve">
+    <value>이번 시즌에 아직 아무도 {0}을(를) 플레이하지 않았습니다.</value>
+  </data>
   <data name="Nobody here has played this yet." xml:space="preserve">
     <value>여기서는 아직 아무도 플레이하지 않았습니다.</value>
   </data>
@@ -4473,6 +4698,9 @@
   </data>
   <data name="None of those plays could be added — they repeat charts already in the session, or it is already full." xml:space="preserve">
     <value>해당 플레이는 추가할 수 없습니다. 이미 세션에 있는 채보와 겹치거나 세션이 이미 가득 찼습니다.</value>
+  </data>
+  <data name="None of your recent plays are {0} charts, so nothing here can go on this board." xml:space="preserve">
+    <value>최근 플레이 중 {0} 채보가 없어서 이 보드에 올릴 수 있는 것이 없습니다.</value>
   </data>
   <data name="None of your recent plays score on this board. Check you are on the right chart type." xml:space="preserve">
     <value>최근 플레이 중 이 보드에서 점수가 되는 것이 없습니다. 채보 종류가 맞는지 확인하세요.</value>
@@ -4576,6 +4804,9 @@
   <data name="Not Tagged" xml:space="preserve">
     <value>태그 없음</value>
   </data>
+  <data name="not this board" xml:space="preserve">
+    <value>이 보드 아님</value>
+  </data>
   <data name="Not verified — nothing is being sent" xml:space="preserve">
     <value>미확인 — 아무것도 전송되지 않습니다</value>
   </data>
@@ -4654,20 +4885,32 @@
   <data name="Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
     <value>요청해도 자동으로 전달되는 알림은 없습니다. PIU Scores 디스코드에 글을 남기면 누군가 확인합니다. 그동안에도 도구는 계속 작동합니다.</value>
   </data>
+  <data name="Nothing has been entered yet, so there is nothing to lose." xml:space="preserve">
+    <value>아직 입력된 것이 없으므로 잃을 것도 없습니다.</value>
+  </data>
   <data name="Nothing here yet." xml:space="preserve">
     <value>아직 아무것도 없습니다.</value>
   </data>
   <data name="Nothing here yet. Share what you know about this chart." xml:space="preserve">
     <value>아직 아무것도 없습니다. 이 채보에 대해 아는 것을 공유해 보세요.</value>
   </data>
+  <data name="Nothing in common — the two sessions picked entirely different sets." xml:space="preserve">
+    <value>공통 채보가 없습니다 — 두 세션이 완전히 다른 구성을 선택했습니다.</value>
+  </data>
   <data name="Nothing in your pool yet — every non-broken pass at level 10 or above takes a slot." xml:space="preserve">
     <value>아직 풀에 아무것도 없습니다 — 레벨 10 이상에서 스테이지 브레이크 없이 클리어한 기록은 모두 한 칸을 차지합니다.</value>
+  </data>
+  <data name="Nothing in your set yet — tick charts below, or press Suggest a set." xml:space="preserve">
+    <value>세트가 아직 비어 있습니다 — 아래에서 채보를 선택하거나 세트 제안을 눌러주세요.</value>
   </data>
   <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
     <value>아무것도 삭제되지 않습니다. 도구도, 활동 기록도, 전달 이력도 그대로 남으므로 무슨 일이 있었는지 확인할 수 있고 되돌릴 수도 있습니다.</value>
   </data>
   <data name="Nothing is delivered until you verify the URL." xml:space="preserve">
     <value>URL을 확인하기 전까지는 아무것도 전달되지 않습니다.</value>
+  </data>
+  <data name="Nothing is on the board until you publish. A published session is frozen — a correction is delete and resubmit." xml:space="preserve">
+    <value>게시하기 전까지는 보드에 올라가지 않습니다. 게시된 세션은 고정되며, 수정은 삭제 후 다시 제출하는 방식입니다.</value>
   </data>
   <data name="Nothing is shared with tools" xml:space="preserve">
     <value>도구와 공유된 것이 없습니다</value>
@@ -4749,6 +4992,12 @@
   </data>
   <data name="Of Note" xml:space="preserve">
     <value>주목할 만한</value>
+  </data>
+  <data name="of songs" xml:space="preserve">
+    <value>노래 시간</value>
+  </data>
+  <data name="of your record book last time — the rest is what stamina costs." xml:space="preserve">
+    <value>— 지난번 기록 대비 수치이며, 나머지가 스태미나의 대가입니다.</value>
   </data>
   <data name="of {0} in range" xml:space="preserve">
     <value>(범위 내 {0}명 중)</value>
@@ -5016,6 +5265,9 @@
   <data name="Overrated" xml:space="preserve">
     <value>과대평가</value>
   </data>
+  <data name="Pace" xml:space="preserve">
+    <value>페이스</value>
+  </data>
   <data name="Page not found" xml:space="preserve">
     <value>페이지를 찾을 수 없습니다</value>
   </data>
@@ -5093,6 +5345,9 @@
   </data>
   <data name="Password saved on this device" xml:space="preserve">
     <value>이 기기에 비밀번호를 저장했습니다</value>
+  </data>
+  <data name="Past seasons" xml:space="preserve">
+    <value>지난 시즌</value>
   </data>
   <data name="past {0}" xml:space="preserve">
     <value>{0} 너머</value>
@@ -5220,6 +5475,9 @@
   <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that is the CO-OP Rating, a separate number with its own titles and board. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
 	  <value>Phoenix 2도 CO-OP 채보에 값을 매깁니다 — Phoenix가 {1}로 매겼듯이 고정 베이스 {0}으로 — 하지만 그것은 코옵 레이팅이라는 별도의 숫자로, 자체 칭호와 보드가 있습니다. 두 시리즈 모두에서 PUMBILITY에는 아무것도 더하지 않습니다.</value>
   </data>
+  <data name="Phoenix 2 gets its own Doubles and Singles boards, on Phoenix 2's own rating system. They open once the scoring is settled — this season runs on Phoenix." xml:space="preserve">
+    <value>Phoenix 2는 자체 레이팅 시스템으로 더블과 싱글 보드를 따로 갖게 됩니다. 점수 방식이 확정되면 열립니다 — 이번 시즌은 Phoenix로 진행됩니다.</value>
+  </data>
   <data name="Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does." xml:space="preserve">
     <value>Phoenix 2는 Phoenix보다 약 {0}배 더 점수에 기댑니다.</value>
   </data>
@@ -5234,6 +5492,9 @@
   </data>
   <data name="Phoenix 2 runs an electric effect along the bar once the overflow is completely full — the one moment the game admits the hidden life is there." xml:space="preserve">
     <value>Phoenix 2에서는 오버플로우가 완전히 가득 차면 바를 따라 전기 효과가 흐릅니다. 게임이 숨겨진 라이프의 존재를 인정하는 유일한 순간입니다.</value>
+  </data>
+  <data name="Phoenix 2 scoring is still being tuned." xml:space="preserve">
+    <value>Phoenix 2 점수 방식은 아직 조정 중입니다.</value>
   </data>
   <data name="Phoenix 2 · same scores, repriced" xml:space="preserve">
     <value>Phoenix 2 · 같은 점수, 재산정</value>
@@ -5424,6 +5685,12 @@
   <data name="places" xml:space="preserve">
     <value>계단 상승</value>
   </data>
+  <data name="Plan a session" xml:space="preserve">
+    <value>세션 계획하기</value>
+  </data>
+  <data name="Planner" xml:space="preserve">
+    <value>플래너</value>
+  </data>
   <data name="Plate" xml:space="preserve">
     <value>플레이트</value>
   </data>
@@ -5466,6 +5733,9 @@
   <data name="Play Num" xml:space="preserve">
     <value>최소 {0}만큼 더 플레이해주세요</value>
   </data>
+  <data name="Play order" xml:space="preserve">
+    <value>플레이 순서</value>
+  </data>
   <data name="Play Session" xml:space="preserve">
     <value>플레이 세션</value>
   </data>
@@ -5475,11 +5745,17 @@
   <data name="Play today's Step to start your streak." xml:space="preserve">
     <value>오늘의 Daily Step을 플레이해 연속 기록을 시작하세요.</value>
   </data>
+  <data name="Play video for {0}" xml:space="preserve">
+    <value>{0} 동영상 재생</value>
+  </data>
   <data name="Played" xml:space="preserve">
     <value>플레이함</value>
   </data>
   <data name="Played Not Counting" xml:space="preserve">
     <value>플레이함, 미반영</value>
+  </data>
+  <data name="Played on a machine linked to your PIUGAME account?" xml:space="preserve">
+    <value>PIUGAME 계정과 연동된 기체에서 플레이하셨습니까?</value>
   </data>
   <data name="Played, not in your pool" xml:space="preserve">
     <value>플레이함, 풀 밖</value>
@@ -5541,6 +5817,9 @@
   <data name="Plays a level harder than its label" xml:space="preserve">
     <value>표기보다 한 레벨 어렵게 느껴짐</value>
   </data>
+  <data name="plays selected" xml:space="preserve">
+    <value>플레이 선택됨</value>
+  </data>
   <data name="Plays that carry judgement counts — imported from your recent plays. Stage breaks are excluded; finished fails are listed." xml:space="preserve">
     <value>판정 수가 기록된 플레이입니다. 최근 플레이에서 불러오며, 스테이지 브레이크는 제외되고 완주한 실패는 표시됩니다.</value>
   </data>
@@ -5556,8 +5835,17 @@
   <data name="Point your community's channel at the bot and placements, milestones, and session highlights land in your server the moment scores come in." xml:space="preserve">
     <value>커뮤니티 채널을 봇에 연결하면 스코어가 들어오는 순간 순위, 마일스톤, 세션 하이라이트가 서버로 전달됩니다.</value>
   </data>
+  <data name="Points" xml:space="preserve">
+    <value>포인트</value>
+  </data>
+  <data name="Points banked per second of song. Short cuts top this list." xml:space="preserve">
+    <value>노래 1초당 획득 포인트. 짧은 곡이 상위에 옵니다.</value>
+  </data>
   <data name="Points Per Second" xml:space="preserve">
     <value>초당 점수</value>
+  </data>
+  <data name="Points per second across the session, with rest gaps between charts." xml:space="preserve">
+    <value>세션 전체의 초당 포인트이며, 채보 사이의 빈 구간은 휴식입니다.</value>
   </data>
   <data name="Points Per Second Pre-Score" xml:space="preserve">
     <value>점수 환산 전 초당 포인트</value>
@@ -5606,6 +5894,9 @@
   </data>
   <data name="PP" xml:space="preserve">
     <value>PP</value>
+  </data>
+  <data name="PPS" xml:space="preserve">
+    <value>PPS</value>
   </data>
   <data name="PR" xml:space="preserve">
     <value>PR</value>
@@ -5682,6 +5973,9 @@
   <data name="Projected gains" xml:space="preserve">
     <value>예상 이득</value>
   </data>
+  <data name="Projected points" xml:space="preserve">
+    <value>예상 포인트</value>
+  </data>
   <data name="Projected Score" xml:space="preserve">
     <value>예상 점수</value>
   </data>
@@ -5709,6 +6003,9 @@
   <data name="Provisional — based on Phoenix data" xml:space="preserve">
     <value>잠정 — Phoenix 데이터 기반</value>
   </data>
+  <data name="pts" xml:space="preserve">
+    <value>pt</value>
+  </data>
   <data name="Public" xml:space="preserve">
     <value>공개</value>
   </data>
@@ -5729,6 +6026,15 @@
   </data>
   <data name="Public tool" xml:space="preserve">
     <value>공개 도구</value>
+  </data>
+  <data name="Publish" xml:space="preserve">
+    <value>게시</value>
+  </data>
+  <data name="Publish this session?" xml:space="preserve">
+    <value>이 세션을 게시하시겠습니까?</value>
+  </data>
+  <data name="Publishing makes your session public on the board, even if your profile is private. A video link is public as well." xml:space="preserve">
+    <value>게시하면 프로필이 비공개여도 세션이 보드에 공개됩니다. 동영상 링크도 함께 공개됩니다.</value>
   </data>
   <data name="pull up a chart's stats and similar charts, with links to its pages" xml:space="preserve">
     <value>채보의 통계와 유사 채보를 보여주고 페이지 링크도 안내합니다</value>
@@ -5968,6 +6274,9 @@
   <data name="Read the source" xml:space="preserve">
     <value>소스 읽기</value>
   </data>
+  <data name="Read {0} recent plays. The selection below is the block between your two longest breaks — click any play to move the nearest end." xml:space="preserve">
+    <value>최근 플레이 {0}개를 읽었습니다. 아래 선택 범위는 가장 긴 두 휴식 사이의 구간입니다 — 아무 플레이나 클릭하면 가까운 쪽 끝이 이동합니다.</value>
+  </data>
   <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
     <value>이를 읽으려면 세 곳에 나뉘어 보관된 세 가지가 동시에 필요합니다:</value>
   </data>
@@ -5991,6 +6300,9 @@
   </data>
   <data name="Rebuild Latest Sessions" xml:space="preserve">
     <value>최근 세션 재생성</value>
+  </data>
+  <data name="Rebuild the set" xml:space="preserve">
+    <value>세트 다시 만들기</value>
   </data>
   <data name="Rebuild weekly highlights" xml:space="preserve">
     <value>주간 하이라이트 재계산</value>
@@ -6031,6 +6343,9 @@
   <data name="Record a score by hand for any chart." xml:space="preserve">
     <value>아무 채보나 점수를 직접 입력해 기록하세요.</value>
   </data>
+  <data name="Record a session" xml:space="preserve">
+    <value>세션 기록하기</value>
+  </data>
   <data name="Record broken scores as your best" xml:space="preserve">
     <value>브레이크 오프 점수를 최고 기록으로 저장</value>
   </data>
@@ -6042,6 +6357,9 @@
   </data>
   <data name="Record to" xml:space="preserve">
     <value>기록 대상</value>
+  </data>
+  <data name="Record your first session →" xml:space="preserve">
+    <value>첫 세션 기록하기 →</value>
   </data>
   <data name="Recorded" xml:space="preserve">
     <value>기록됨</value>
@@ -6235,6 +6553,9 @@
   <data name="Response Secret" xml:space="preserve">
     <value>응답 비밀 값</value>
   </data>
+  <data name="Rest per chart" xml:space="preserve">
+    <value>채보당 휴식</value>
+  </data>
   <data name="Rest Time" xml:space="preserve">
     <value>휴식 시간</value>
   </data>
@@ -6343,6 +6664,9 @@
   <data name="Running" xml:space="preserve">
     <value>실행 중</value>
   </data>
+  <data name="running now" xml:space="preserve">
+    <value>진행 중</value>
+  </data>
   <data name="Runs" xml:space="preserve">
     <value>폭타</value>
   </data>
@@ -6354,6 +6678,12 @@
   </data>
   <data name="same" xml:space="preserve">
     <value>동일</value>
+  </data>
+  <data name="same as your session" xml:space="preserve">
+    <value>내 세션과 동일</value>
+  </data>
+  <data name="Same board only — Singles and Doubles are never compared." xml:space="preserve">
+    <value>같은 보드끼리만 — 싱글과 더블은 절대 비교하지 않습니다.</value>
   </data>
   <data name="Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts." xml:space="preserve">
     <value>같은 스킬, 두 가지 질문: 폴더 보기는 "여기서 플레이한 채보가 실제로 어떤가"를, 블렌드 보기는 "주변에서 기록한 모든 스코어 중 어떤 스킬이 강하고 약한가"를 묻습니다. 여기서는 괜찮아 보이는 스킬이 채보를 움직일 수도 있습니다.</value>
@@ -6373,6 +6703,9 @@
   <data name="Save Scores" xml:space="preserve">
     <value>점수 저장</value>
   </data>
+  <data name="Save this set" xml:space="preserve">
+    <value>이 세트 저장</value>
+  </data>
   <data name="Saved" xml:space="preserve">
     <value>저장했습니다</value>
   </data>
@@ -6385,14 +6718,26 @@
   <data name="Saved Password Incorrect" xml:space="preserve">
     <value>저장된 비밀번호가 올바르지 않은 것 같습니다. phoenix.piugame.com에 로그인할 수 없었습니다.</value>
   </data>
+  <data name="Saved sets" xml:space="preserve">
+    <value>저장된 세트</value>
+  </data>
+  <data name="Saved {0}." xml:space="preserve">
+    <value>{0}을(를) 저장했습니다.</value>
+  </data>
   <data name="Saved!" xml:space="preserve">
     <value>저장됨!</value>
+  </data>
+  <data name="Saving…" xml:space="preserve">
+    <value>저장 중…</value>
   </data>
   <data name="scale" xml:space="preserve">
     <value>기준</value>
   </data>
   <data name="Schema reference:" xml:space="preserve">
     <value>스키마 참조:</value>
+  </data>
+  <data name="Scope" xml:space="preserve">
+    <value>범위</value>
   </data>
   <data name="Score" xml:space="preserve">
     <value>점수</value>
@@ -6493,6 +6838,9 @@
   <data name="Scores you've added since this import stay exactly as they are." xml:space="preserve">
     <value>이 가져오기 이후에 추가한 점수는 그대로 남습니다.</value>
   </data>
+  <data name="scores zero" xml:space="preserve">
+    <value>0점</value>
+  </data>
   <data name="Scores, vs your level" xml:space="preserve">
     <value>점수 (동레벨 비교)</value>
   </data>
@@ -6504,6 +6852,9 @@
   </data>
   <data name="Scoring level **{0:0.0}** (listed {1})" xml:space="preserve">
     <value>스코어링 레벨 **{0:0.0}** (표기 {1})</value>
+  </data>
+  <data name="Scoring tables re-cut" xml:space="preserve">
+    <value>점수 테이블 개편</value>
   </data>
   <data name="Scroll left" xml:space="preserve">
     <value>왼쪽으로 스크롤</value>
@@ -6529,6 +6880,9 @@
   <data name="Search a chart" xml:space="preserve">
     <value>채보 검색</value>
   </data>
+  <data name="Search a song…" xml:space="preserve">
+    <value>노래 검색…</value>
+  </data>
   <data name="Search a title, chart, or step artist" xml:space="preserve">
     <value>칭호, 채보, 스텝 아티스트 검색</value>
   </data>
@@ -6549,6 +6903,9 @@
   </data>
   <data name="Searching for Molex connectors" xml:space="preserve">
     <value>몰렉스 커넥터 찾는 중</value>
+  </data>
+  <data name="Seasons" xml:space="preserve">
+    <value>시즌</value>
   </data>
   <data name="Second" xml:space="preserve">
     <value>두 번째</value>
@@ -6576,6 +6933,9 @@
   </data>
   <data name="See the Score breakdown" xml:space="preserve">
     <value>스코어 분석 보기</value>
+  </data>
+  <data name="See the session" xml:space="preserve">
+    <value>세션 보기</value>
   </data>
   <data name="See their boards" xml:space="preserve">
     <value>이 플레이어의 보드 보기</value>
@@ -6634,6 +6994,15 @@
   <data name="Session" xml:space="preserve">
     <value>세션</value>
   </data>
+  <data name="session #{0}" xml:space="preserve">
+    <value>세션 #{0}</value>
+  </data>
+  <data name="Session average" xml:space="preserve">
+    <value>세션 평균</value>
+  </data>
+  <data name="Session deleted." xml:space="preserve">
+    <value>세션이 삭제되었습니다.</value>
+  </data>
   <data name="Session Duration (Minutes)" xml:space="preserve">
     <value>세션 시간 (분)</value>
   </data>
@@ -6655,6 +7024,15 @@
   <data name="Session Score" xml:space="preserve">
     <value>세션 점수</value>
   </data>
+  <data name="Session to compare against" xml:space="preserve">
+    <value>비교할 세션</value>
+  </data>
+  <data name="Session video" xml:space="preserve">
+    <value>세션 동영상</value>
+  </data>
+  <data name="Session window" xml:space="preserve">
+    <value>세션 제한 시간</value>
+  </data>
   <data name="Sessions" xml:space="preserve">
     <value>세션</value>
   </data>
@@ -6672,6 +7050,9 @@
   </data>
   <data name="Set Charts" xml:space="preserve">
     <value>채보 설정</value>
+  </data>
+  <data name="Set order" xml:space="preserve">
+    <value>세트 순서</value>
   </data>
   <data name="Set up another tool" xml:space="preserve">
     <value>도구 하나 더 설정</value>
@@ -6744,6 +7125,9 @@
   </data>
   <data name="Short Cut" xml:space="preserve">
     <value>숏컷</value>
+  </data>
+  <data name="Shortest first." xml:space="preserve">
+    <value>짧은 것부터.</value>
   </data>
   <data name="Should I push levels or push scores?" xml:space="preserve">
     <value>레벨을 올려야 하나요, 점수를 올려야 하나요?</value>
@@ -7219,6 +7603,9 @@
   <data name="Submit Score" xml:space="preserve">
     <value>점수 제출</value>
   </data>
+  <data name="Suggest a set" xml:space="preserve">
+    <value>세트 제안</value>
+  </data>
   <data name="Suggested" xml:space="preserve">
     <value>추천</value>
   </data>
@@ -7465,6 +7852,9 @@
   <data name="The new board is being drawn." xml:space="preserve">
     <value>새 보드를 뽑는 중입니다.</value>
   </data>
+  <data name="The next March of Murlocs season opens at the start of the quarter." xml:space="preserve">
+    <value>다음 March of Murlocs 시즌은 분기가 시작될 때 열립니다.</value>
+  </data>
   <data name="the official leaderboards' weekly digest" xml:space="preserve">
     <value>공식 리더보드 주간 요약</value>
   </data>
@@ -7494,6 +7884,9 @@
   </data>
   <data name="The piugame.com session key is forwarded so you run your own import." xml:space="preserve">
     <value>piugame.com 세션 키가 전달되어 직접 임포트를 실행할 수 있습니다.</value>
+  </data>
+  <data name="The Planner prices your record book under the live season's rules — it opens with the next season." xml:space="preserve">
+    <value>플래너는 진행 중인 시즌의 규칙으로 기록을 계산합니다 — 다음 시즌이 시작되면 열립니다.</value>
   </data>
   <data name="The plate you walked away with never entered the number." xml:space="preserve">
     <value>받은 플레이트는 숫자에 들어간 적이 없습니다.</value>
@@ -7540,6 +7933,9 @@
   <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
     <value>같은 Perfect라도 콤보 전, 곡 시작 시점.</value>
   </data>
+  <data name="The same session, scored as {0}" xml:space="preserve">
+    <value>같은 세션을 {0} 기준으로 계산</value>
+  </data>
   <data name="The scores themselves arrive, 100 per delivery, with a next link when there are more." xml:space="preserve">
     <value>점수 자체가 전달당 100개씩 오고, 더 있으면 다음 링크가 함께 옵니다.</value>
   </data>
@@ -7548,6 +7944,9 @@
   </data>
   <data name="The server rule is &quot;Don't Be An Asshole&quot;, and it covers toolmakers too. I can remove a tool for any reason — including anything discriminatory, or aimed at excluding or antagonising any Pump It Up community members." xml:space="preserve">
     <value>서버 규칙은 "Don't Be An Asshole"이며, 도구 제작자에게도 적용됩니다. 저는 어떤 이유로든 도구를 삭제할 수 있습니다 — 차별적인 언행이나, Pump It Up 커뮤니티 구성원을 배제하거나 괴롭히려는 행동도 포함합니다.</value>
+  </data>
+  <data name="The session" xml:space="preserve">
+    <value>세션 내용</value>
   </data>
   <data name="The shared tier list for this folder, built from everyone's data." xml:space="preserve">
     <value>이 폴더의 공유 티어리스트로, 모두의 데이터로 만들어집니다.</value>
@@ -7561,11 +7960,17 @@
   <data name="The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture." xml:space="preserve">
     <value>티어리스트, 랭킹, 계산기는 열려 있습니다 — 내 스코어를 함께 보고 싶어지면 로그인하세요.</value>
   </data>
+  <data name="The video link needs to be a full URL, like https://youtu.be/..." xml:space="preserve">
+    <value>동영상 링크는 https://youtu.be/... 같은 전체 URL이어야 합니다.</value>
+  </data>
   <data name="The way Pass personalizes is being reworked, so this page waits for it rather than explaining the version being replaced." xml:space="preserve">
     <value>패스의 개인화 방식을 다시 만드는 중이라, 교체될 버전을 설명하는 대신 이 페이지는 기다립니다.</value>
   </data>
   <data name="the whole list" xml:space="preserve">
     <value>목록 전체</value>
+  </data>
+  <data name="The {0} charts you have entered go away and cannot be recovered. Nothing was ever on the board." xml:space="preserve">
+    <value>입력한 채보 {0}개가 사라지며 복구할 수 없습니다. 보드에는 아무것도 올라간 적이 없습니다.</value>
   </data>
   <data name="Their tools stop working immediately." xml:space="preserve">
     <value>그 사람의 도구는 즉시 동작을 멈춥니다.</value>
@@ -7599,6 +8004,9 @@
   </data>
   <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
     <value>이 공식들은 Team Infinitesimal이 NX2와 Prime에서 데이터마이닝한 것입니다. Phoenix나 Phoenix 2에서 재검증한 사람은 없으므로, 이 수치는 정확한 기체 값이 아니라 시스템의 형태로 받아들이세요.</value>
+  </data>
+  <data name="These plays span {0}" xml:space="preserve">
+    <value>이 플레이들의 전체 시간은 {0}입니다</value>
   </data>
   <data name="They ahead" xml:space="preserve">
     <value>상대 우세</value>
@@ -7635,6 +8043,9 @@
   </data>
   <data name="This also turns on sharing with community tools." xml:space="preserve">
     <value>커뮤니티 도구 공유도 함께 켜집니다.</value>
+  </data>
+  <data name="This board" xml:space="preserve">
+    <value>이 보드</value>
   </data>
   <data name="This can't be undone" xml:space="preserve">
     <value>되돌릴 수 없습니다</value>
@@ -7752,6 +8163,18 @@
   </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>이 리캡은 아직 계산되지 않았습니다. 나중에 다시 확인해 주세요.</value>
+  </data>
+  <data name="This season" xml:space="preserve">
+    <value>이번 시즌</value>
+  </data>
+  <data name="this session" xml:space="preserve">
+    <value>이 세션</value>
+  </data>
+  <data name="This set does not fit." xml:space="preserve">
+    <value>이 세트는 제한 시간에 들어가지 않습니다.</value>
+  </data>
+  <data name="This set is worth {0} on paper — a ceiling, since it assumes every chart played to your best. Your first session will tell you what stamina costs." xml:space="preserve">
+    <value>이 세트의 이론값은 {0}입니다 — 모든 채보를 최고 기록대로 플레이한다는 가정이므로 상한선입니다. 스태미나의 대가는 첫 세션이 알려줄 것입니다.</value>
   </data>
   <data name="This sign-in method belongs to another account, you can merge the two accounts" xml:space="preserve">
     <value>이 로그인 방법은 다른 계정에 속해 있습니다. 두 계정을 병합할 수 있습니다</value>
@@ -7900,6 +8323,9 @@
   <data name="Today's Step posts at midnight." xml:space="preserve">
     <value>오늘의 스텝은 자정에 공개됩니다.</value>
   </data>
+  <data name="Too long to import." xml:space="preserve">
+    <value>너무 길어서 불러올 수 없습니다.</value>
+  </data>
   <data name="Took" xml:space="preserve">
     <value>소요 시간</value>
   </data>
@@ -7986,6 +8412,9 @@
   </data>
   <data name="Total life" xml:space="preserve">
     <value>전체 라이프</value>
+  </data>
+  <data name="Total points" xml:space="preserve">
+    <value>총 포인트</value>
   </data>
   <data name="Total Rating" xml:space="preserve">
     <value>총 레이팅</value>
@@ -8338,6 +8767,9 @@
   <data name="Video URL" xml:space="preserve">
     <value>동영상 URL</value>
   </data>
+  <data name="Video URL (optional — it embeds on the session page)" xml:space="preserve">
+    <value>동영상 URL (선택 사항 — 세션 페이지에 표시됩니다)</value>
+  </data>
   <data name="View" xml:space="preserve">
     <value>보기</value>
   </data>
@@ -8368,11 +8800,17 @@
   <data name="Visit site" xml:space="preserve">
     <value>사이트 방문</value>
   </data>
+  <data name="Volume and value are the only two things a session is. The four numbers below set each one." xml:space="preserve">
+    <value>세션은 양과 가치, 두 가지로 이루어집니다. 아래 네 개의 숫자가 그것을 정합니다.</value>
+  </data>
   <data name="Vote Count" xml:space="preserve">
     <value>{0} 투표 회수</value>
   </data>
   <data name="vs" xml:space="preserve">
     <value>vs</value>
+  </data>
+  <data name="vs your session" xml:space="preserve">
+    <value>내 세션 대비</value>
   </data>
   <data name="vs {0}" xml:space="preserve">
     <value>{0} 대비</value>
@@ -8397,6 +8835,9 @@
   </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>발판 예열하는 중</value>
+  </data>
+  <data name="Watch this session" xml:space="preserve">
+    <value>이 세션 시청</value>
   </data>
   <data name="Watch yourself climb" xml:space="preserve">
     <value>성장하는 자신을 지켜보세요</value>
@@ -8490,6 +8931,12 @@
   </data>
   <data name="What can it do?" xml:space="preserve">
     <value>어떤 기능이 있나요?</value>
+  </data>
+  <data name="What changed underneath you" xml:space="preserve">
+    <value>발밑에서 바뀐 것</value>
+  </data>
+  <data name="What each chart banks per second of song." xml:space="preserve">
+    <value>각 채보가 노래 1초당 버는 포인트입니다.</value>
   </data>
   <data name="What each judgement costs" xml:space="preserve">
     <value>판정별 감점</value>
@@ -8605,6 +9052,9 @@
   <data name="Where the levels sit · singles" xml:space="preserve">
     <value>레벨 분포 · 싱글</value>
   </data>
+  <data name="Where the points came from" xml:space="preserve">
+    <value>포인트의 출처</value>
+  </data>
   <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
     <value>이 채보의 클리어가 어느 경쟁 레벨에 있는지 보여줍니다.</value>
   </data>
@@ -8674,6 +9124,9 @@
   <data name="Will be skipped" xml:space="preserve">
     <value>건너뜀 예정</value>
   </data>
+  <data name="window" xml:space="preserve">
+    <value>제한 시간</value>
+  </data>
   <data name="wins in range" xml:space="preserve">
     <value>범위 내 우승</value>
   </data>
@@ -8730,6 +9183,9 @@
   </data>
   <data name="Worth zero" xml:space="preserve">
     <value>가치 0</value>
+  </data>
+  <data name="worth {0} points" xml:space="preserve">
+    <value>{0} 포인트 차이</value>
   </data>
   <data name="Wouldn't You Like To Know" xml:space="preserve">
     <value>알고 싶지 않으세요</value>
@@ -8812,6 +9268,9 @@
   <data name="You can leave this page." xml:space="preserve">
     <value>이 페이지를 떠나도 됩니다.</value>
   </data>
+  <data name="You can record another session this season whenever you like." xml:space="preserve">
+    <value>이번 시즌에는 언제든 세션을 또 기록할 수 있습니다.</value>
+  </data>
   <data name="You can sign in to your account with any connected method" xml:space="preserve">
     <value>연결된 어떤 방법으로도 계정에 로그인할 수 있습니다</value>
   </data>
@@ -8823,6 +9282,9 @@
   </data>
   <data name="You connected directly" xml:space="preserve">
     <value>직접 연결함</value>
+  </data>
+  <data name="You converted" xml:space="preserve">
+    <value>전환율</value>
   </data>
   <data name="You don't have a saved preset called &quot;{0}&quot;." xml:space="preserve">
     <value>&quot;{0}&quot;(이)라는 저장된 프리셋이 없습니다.</value>
@@ -8838,6 +9300,9 @@
   </data>
   <data name="You have no PUMBILITY peers for this type yet — a pool of {0} charts lights them up." xml:space="preserve">
     <value>이 유형의 PUMBILITY 동료가 아직 없습니다. 차트 {0}개의 풀이 모이면 표시됩니다.</value>
+  </data>
+  <data name="You have not played this board this season." xml:space="preserve">
+    <value>이번 시즌에 이 보드를 플레이하지 않았습니다.</value>
   </data>
   <data name="You have {0} of {1} charts, so your peers are drawn from where you'd finish — {2} — if you hold your current average. This settles as your pool fills." xml:space="preserve">
     <value>보유한 차트가 {1}개 중 {0}개라, 지금 평균을 유지했을 때 도달할 지점—{2}—을 기준으로 동료를 고릅니다. 풀이 채워지면 안정됩니다.</value>
@@ -8860,6 +9325,9 @@
   <data name="You need the Manage Channels permission in this server to do that." xml:space="preserve">
     <value>이 작업에는 서버의 채널 관리 권한이 필요합니다.</value>
   </data>
+  <data name="you sat this one out" xml:space="preserve">
+    <value>참가하지 않음</value>
+  </data>
   <data name="you sit at {0}" xml:space="preserve">
     <value>나는 {0}</value>
   </data>
@@ -8875,14 +9343,23 @@
   <data name="You walked in a {0}. You&apos;re walking out a {1}." xml:space="preserve">
     <value>레벨 {0}에서 시작해 레벨 {1}로 떠납니다.</value>
   </data>
+  <data name="you were #{0} — {1}" xml:space="preserve">
+    <value>#{0} — {1}</value>
+  </data>
   <data name="You weren&apos;t climbing alone" xml:space="preserve">
     <value>혼자 오른 게 아니었다</value>
   </data>
   <data name="You will no longer be able to sign in with this method" xml:space="preserve">
     <value>이 방법으로는 더 이상 로그인할 수 없게 됩니다</value>
   </data>
+  <data name="you won it" xml:space="preserve">
+    <value>우승했습니다</value>
+  </data>
   <data name="you {0}" xml:space="preserve">
     <value>나 {0}</value>
+  </data>
+  <data name="you · {0}" xml:space="preserve">
+    <value>나 · {0}</value>
   </data>
   <data name="You'll come back here after signing in. Nothing is shared until you press Connect." xml:space="preserve">
     <value>로그인 후 이 페이지로 돌아옵니다. 연결을 누르기 전에는 아무것도 공유되지 않습니다.</value>
@@ -8947,6 +9424,12 @@
   <data name="Your best 4 scores per week of the month count." xml:space="preserve">
     <value>한 달 중 매주 상위 4개 점수가 반영됩니다.</value>
   </data>
+  <data name="your best of {0} sessions" xml:space="preserve">
+    <value>세션 {0}개 중 최고 기록</value>
+  </data>
+  <data name="Your best {0} session banked {1} across {2} charts. This set is worth {3} on paper, at {4} of rest between charts." xml:space="preserve">
+    <value>최고 {0} 세션은 채보 {2}개로 {1}을(를) 모았습니다. 이 세트의 이론값은 {3}이며, 채보당 휴식은 {4}입니다.</value>
+  </data>
   <data name="Your charts average" xml:space="preserve">
     <value>차트 평균</value>
   </data>
@@ -9010,8 +9493,17 @@
   <data name="Your list currently matches the community's on every rated chart." xml:space="preserve">
     <value>지금은 평가된 모든 채보에서 내 리스트가 커뮤니티와 일치합니다.</value>
   </data>
+  <data name="Your longest break inside it was {0}, before {1} at {2}. Import it anyway if that was part of the session." xml:space="preserve">
+    <value>이 구간에서 가장 긴 휴식은 {0}이며, {2}에 {1} 이전이었습니다. 세션의 일부였다면 그대로 불러와도 됩니다.</value>
+  </data>
   <data name="Your most recent session, in full" xml:space="preserve">
     <value>가장 최근 세션 전체</value>
+  </data>
+  <data name="your only session this season" xml:space="preserve">
+    <value>이번 시즌의 유일한 세션</value>
+  </data>
+  <data name="Your own sessions on this chart type and mix only — anything else is a different sport." xml:space="preserve">
+    <value>같은 채보 종류와 시리즈의 내 세션만 — 그 외는 다른 종목입니다.</value>
   </data>
   <data name="Your peers' pools have nothing in them yet." xml:space="preserve">
     <value>동료들의 풀에 아직 아무것도 없습니다.</value>
@@ -9094,6 +9586,12 @@
   <data name="Your repository is reachable." xml:space="preserve">
     <value>저장소에 접근할 수 있습니다.</value>
   </data>
+  <data name="Your rival" xml:space="preserve">
+    <value>내 라이벌</value>
+  </data>
+  <data name="Your rival, and in your communities" xml:space="preserve">
+    <value>내 라이벌이자 내 커뮤니티 소속</value>
+  </data>
   <data name="Your rivals" xml:space="preserve">
     <value>내 라이벌</value>
   </data>
@@ -9102,6 +9600,9 @@
   </data>
   <data name="Your Score" xml:space="preserve">
     <value>본인 점수</value>
+  </data>
+  <data name="Your score becomes public on the board even if your profile is private." xml:space="preserve">
+    <value>프로필이 비공개여도 점수는 보드에 공개됩니다.</value>
   </data>
   <data name="Your score spread per level, Singles against Doubles, the middle 50% shaded." xml:space="preserve">
     <value>레벨별 점수 분포, 싱글 대 더블, 가운데 50% 음영.</value>
@@ -9229,6 +9730,9 @@
   <data name="{0} against {1}." xml:space="preserve">
     <value>{0}, {1} 기준.</value>
   </data>
+  <data name="{0} alone cost you {1} points." xml:space="preserve">
+    <value>{0} 하나에서만 {1} 포인트 차이가 났습니다.</value>
+  </data>
   <data name="{0} and up" xml:space="preserve">
     <value>{0} 이상</value>
   </data>
@@ -9243,6 +9747,9 @@
   </data>
   <data name="{0} at {1}" xml:space="preserve">
     <value>{1} 등급의 {0}</value>
+  </data>
+  <data name="{0} average score" xml:space="preserve">
+    <value>평균 점수 {0}</value>
   </data>
   <data name="{0} beats it at any pass" xml:space="preserve">
     <value>{0}은 어떤 클리어로도 이깁니다</value>
@@ -9283,6 +9790,15 @@
   <data name="{0} charts added to songs that were already here" xml:space="preserve">
     <value>기존 노래에 추가된 채보 {0}개</value>
   </data>
+  <data name="{0} charts entered · {1} of the window unclaimed. Whatever you do not fill with songs is recorded as rest." xml:space="preserve">
+    <value>채보 {0}개 입력됨 · 제한 시간 {1} 남음. 노래로 채우지 않은 시간은 휴식으로 기록됩니다.</value>
+  </data>
+  <data name="{0} charts entered, and the window is exactly full. Nothing more can be started." xml:space="preserve">
+    <value>채보 {0}개 입력됨, 제한 시간이 정확히 찼습니다. 더 이상 시작할 수 없습니다.</value>
+  </data>
+  <data name="{0} charts entered. Your last chart ran {1} past the window, which is allowed — a song you started in time counts in full." xml:space="preserve">
+    <value>채보 {0}개 입력됨. 마지막 채보가 제한 시간을 {1} 넘겼지만 허용됩니다 — 제한 시간 안에 시작한 노래는 전부 인정됩니다.</value>
+  </data>
   <data name="{0} charts go back to their previous best" xml:space="preserve">
     <value>{0}개 채보가 이전 최고 기록으로 돌아갑니다</value>
   </data>
@@ -9294,6 +9810,9 @@
   </data>
   <data name="{0} charts have no note count recorded, so they aren't compared." xml:space="preserve">
     <value>{0}개 채보는 노트 수가 기록되어 있지 않아 비교하지 않았습니다.</value>
+  </data>
+  <data name="{0} charts in your set." xml:space="preserve">
+    <value>세트에 채보 {0}개.</value>
   </data>
   <data name="{0} charts match the community tier" xml:space="preserve">
     <value>{0}개 채보가 커뮤니티 티어와 일치</value>
@@ -9361,6 +9880,9 @@
   <data name="{0} easier for you — mostly {1}" xml:space="preserve">
     <value>{0}개가 나에게 더 쉬움 — 주로 {1}</value>
   </data>
+  <data name="{0} easier on average" xml:space="preserve">
+    <value>평균 {0} 쉬움</value>
+  </data>
   <data name="{0} exists, it has a key, and you are connected to it. Everything from here lives on the console." xml:space="preserve">
     <value>{0} 이(가) 만들어졌고, 키가 있으며, 본인이 연결되어 있습니다. 이후 작업은 콘솔에서 하시면 됩니다.</value>
   </data>
@@ -9369,6 +9891,9 @@
   </data>
   <data name="{0} fewer Bads" xml:space="preserve">
     <value>배드 {0}개 감소</value>
+  </data>
+  <data name="{0} fewer charts" xml:space="preserve">
+    <value>채보 {0}개 적음</value>
   </data>
   <data name="{0} fewer Goods" xml:space="preserve">
     <value>굿 {0}개 감소</value>
@@ -9397,6 +9922,9 @@
   <data name="{0} harder for you — mostly {1}" xml:space="preserve">
     <value>{0}개가 나에게 더 어려움 — 주로 {1}</value>
   </data>
+  <data name="{0} harder on average" xml:space="preserve">
+    <value>평균 {0} 어려움</value>
+  </data>
   <data name="{0} have no peer score" xml:space="preserve">
     <value>{0}개는 동급 점수 없음</value>
   </data>
@@ -9408,6 +9936,9 @@
   </data>
   <data name="{0} improved" xml:space="preserve">
     <value>{0}개 갱신</value>
+  </data>
+  <data name="{0} in common, worst first. You scored higher on {1} of them." xml:space="preserve">
+    <value>공통 채보 {0}개, 격차가 큰 순서. 그중 {1}개에서 더 높은 점수를 기록했습니다.</value>
   </data>
   <data name="{0} in your pool that no peer holds" xml:space="preserve">
     <value>내 풀에서 보유한 동료가 없는 채보 {0}개</value>
@@ -9423,6 +9954,9 @@
   </data>
   <data name="{0} left" xml:space="preserve">
     <value>{0}개 나감</value>
+  </data>
+  <data name="{0} less downtime" xml:space="preserve">
+    <value>휴식 {0} 적음</value>
   </data>
   <data name="{0} levels" xml:space="preserve">
     <value>{0}레벨</value>
@@ -9445,11 +9979,17 @@
   <data name="{0} mixes" xml:space="preserve">
     <value>시리즈 {0}개</value>
   </data>
+  <data name="{0} more charts" xml:space="preserve">
+    <value>채보 {0}개 많음</value>
+  </data>
   <data name="{0} more charts had entries" xml:space="preserve">
     <value>그 외 {0}개 채보에도 기록 있음</value>
   </data>
   <data name="{0} more Combo" xml:space="preserve">
     <value>콤보 {0} 추가</value>
+  </data>
+  <data name="{0} more downtime" xml:space="preserve">
+    <value>휴식 {0} 많음</value>
   </data>
   <data name="{0} more keep their profile private." xml:space="preserve">
     <value>{0}명이 프로필을 비공개로 설정했습니다.</value>
@@ -9519,6 +10059,9 @@
   </data>
   <data name="{0} of {1} charts moved." xml:space="preserve">
     <value>{1}개 채보 중 {0}개의 난이도가 바뀌었습니다.</value>
+  </data>
+  <data name="{0} of {1} charts re-rated" xml:space="preserve">
+    <value>채보 {1}개 중 {0}개 재평가됨</value>
   </data>
   <data name="{0} of {1} charts, averaging {2}" xml:space="preserve">
     <value>{1}개 채보 중 {0}개, 평균 {2}</value>
@@ -9634,6 +10177,9 @@
   <data name="{0} scores tracked · {1}% pass rate" xml:space="preserve">
     <value>기록된 점수 {0}개 · 클리어율 {1}%</value>
   </data>
+  <data name="{0} sessions" xml:space="preserve">
+    <value>세션 {0}개</value>
+  </data>
   <data name="{0} shared perfect games" xml:space="preserve">
     <value>퍼펙트 게임 {0}개 일치</value>
   </data>
@@ -9670,6 +10216,9 @@
   <data name="{0} tools reading now" xml:space="preserve">
     <value>{0}개 도구가 읽는 중</value>
   </data>
+  <data name="{0} total" xml:space="preserve">
+    <value>{0} 합계</value>
+  </data>
   <data name="{0} total · {1} charts" xml:space="preserve">
     <value>총 {0} · 차트 {1}개</value>
   </data>
@@ -9678,6 +10227,9 @@
   </data>
   <data name="{0} viewers watching" xml:space="preserve">
     <value>{0}명 시청 중</value>
+  </data>
+  <data name="{0} you" xml:space="preserve">
+    <value>{0} 실력</value>
   </data>
   <data name="{0} {1}% → **{2}%**" xml:space="preserve">
     <value>{0} {1}% → **{2}%**</value>
@@ -9721,11 +10273,17 @@
   <data name="{0}h {1}m" xml:space="preserve">
     <value>{0}h {1}m</value>
   </data>
+  <data name="{0}h {1}m gap" xml:space="preserve">
+    <value>{0}시간 {1}분 간격</value>
+  </data>
   <data name="{0}m" xml:space="preserve">
     <value>{0}m</value>
   </data>
   <data name="{0}m ago" xml:space="preserve">
     <value>{0}분 전</value>
+  </data>
+  <data name="{0}m gap" xml:space="preserve">
+    <value>{0}분 간격</value>
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>공식 순위표 ~#{0}</value>

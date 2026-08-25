@@ -51,7 +51,7 @@
     else
     {
         <div class="mom-plan-head">
-            <div class="mom-typegroup" role="group" aria-label="@L["Chart type"]">
+            <div class="mom-typegroup" role="group" aria-label="@L["Chart Type"]">
                 @foreach (var board in _boards)
                 {
                     var target = board;
@@ -59,7 +59,7 @@
                        @onclick="() => SelectBoard(target)" @onclick:preventDefault>@TypeName(board.ChartType)</a>
                 }
             </div>
-            <div class="mom-plan-total num">@_setTotal.ToString("N0")<small>@L["projected points"]</small></div>
+            <div class="mom-plan-total num">@_setTotal.ToString("N0")<small>@L["Projected points"]</small></div>
         </div>
 
         <div class="mom-plan-controls">
@@ -243,7 +243,7 @@
                         <div class="body">
                             <div class="name" title="@row.Chart.Song.Name">@row.Chart.Song.Name @(row.Chart.Id == _closerChartId && InSet(row) ? CloserChip : null)</div>
                             <div class="meta"><ScoreBreakdown Score="row.Record.Score" Plate="row.Record.Plate" IsBroken="row.Record.IsBroken" Mix="_board!.Mix" ShowScore="true" OneLine="true" Height="15" Tooltip="false"></ScoreBreakdown></div>
-                            <div class="meta num"><span class="pts">@row.Points.ToString("N0")</span><span class="sub">@L["pts"] · @row.Pps.ToString("F1") @L["pps"] · @Mmss(row.Seconds)</span></div>
+                            <div class="meta num"><span class="pts">@row.Points.ToString("N0")</span><span class="sub">@L["pts"] · @row.Pps.ToString("F1") @L["PPS"] · @Mmss(row.Seconds)</span></div>
                             @* Picking lives in the body: the jacket is the video affordance,
                                and the two gestures never fight over the same pixels (§11.5). *@
                             <label class="pick" @onclick:stopPropagation>
@@ -333,7 +333,7 @@
     private IReadOnlyList<SortOption> Sorts => new[]
     {
         new SortOption(SortKey.SetOrder, L["Set order"], L["As the set was solved — best value per second first, which is also a sensible play order while you are fresh."]),
-        new SortOption(SortKey.Pps, L["Points per second"], L["What each chart banks per second of song."]),
+        new SortOption(SortKey.Pps, L["Points Per Second"], L["What each chart banks per second of song."]),
         new SortOption(SortKey.Points, L["Points"], L["Biggest single hauls. Long songs win here, which is not the same as being efficient."]),
         new SortOption(SortKey.Level, L["Difficulty"], L["Hardest first, by balanced level."]),
         new SortOption(SortKey.Seconds, L["Length"], L["Shortest first."])
@@ -541,7 +541,7 @@
             Number(L["Avg difficulty"], difficulty.ToString("F2"), difficulty,
                 _actual?.AverageDifficulty, v => v.ToString("F2"), false),
             new PlanNumber(L["Avg grade"], grade, null, "flat"),
-            Number(L["Downtime"], TimeSpan.FromSeconds(RestLeft).ToString(@"h\:mm\:ss"), RestLeft,
+            Number(L["downtime"], TimeSpan.FromSeconds(RestLeft).ToString(@"h\:mm\:ss"), RestLeft,
                 _actual?.RestTime.TotalSeconds, v => TimeSpan.FromSeconds(v).ToString(@"h\:mm\:ss"),
                 true)
         };
@@ -639,7 +639,7 @@
     {
         var rows = SetRows();
         var top = rows.Count == 0 ? 0 : rows.Max(r => (int)r.Chart.Level);
-        return $"{TypeName(_board!.ChartType)} — {rows.Count} {L["charts"]}, {L["up to"]} {_board.ChartType.GetShortHand()}{top}";
+        return $"{TypeName(_board!.ChartType)} — {L["{0} charts", rows.Count]}, {L["up to"]} {_board.ChartType.GetShortHand()}{top}";
     }
 
     private async Task DownloadCsv()
@@ -648,7 +648,7 @@
         if (rows.Count == 0 || _board == null) return;
         var builder = new StringBuilder();
         builder.AppendLine(string.Join(",", "#", L["Song"], L["Difficulty"], L["Length"],
-            L["Your best"], L["Grade"], L["Projected points"], L["Points per second"]));
+            L["Your best"], L["Grade"], L["Projected points"], L["Points Per Second"]));
         var ordinal = 0;
         foreach (var row in rows)
         {
