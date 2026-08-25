@@ -21,7 +21,7 @@ else
 }
 
 @code {
-    [Parameter] [EditorRequired] public JudgementCounts Judgements { get; set; } = null!;
+    [Parameter] [EditorRequired] public JudgementCounts Judgements { get; set; }
 
     /// <summary>The card-corner size; rows and the dialog use the regular one.</summary>
     [Parameter] public bool Small { get; set; }

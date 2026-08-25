@@ -189,18 +189,23 @@
             var length = end - start + 1;
             for (var i = start; i <= end; i++)
             {
-                var thread = length < 2 ? null
-                    : i == start ? "sbd-thread sbd-thread-start"
-                    : i == end ? "sbd-thread sbd-thread-end"
-                    : "sbd-thread";
                 int? attempt = length >= AttemptCaptionFloor && i > start ? length - (i - start) : null;
-                plays[i] = new OrderedPlay(ordered[i], thread, attempt);
+                plays[i] = new OrderedPlay(ordered[i], RailFor(i, start, end), attempt);
             }
 
             start = end + 1;
         }
 
         return plays;
+    }
+
+    /// <summary>The rail's shape at one row of a run: half-height at the ends, absent alone.</summary>
+    private static string? RailFor(int index, int start, int end)
+    {
+        if (end == start) return null;
+        if (index == start) return "sbd-thread sbd-thread-start";
+        if (index == end) return "sbd-thread sbd-thread-end";
+        return "sbd-thread";
     }
 
     private void ShowAllPlays() => _visiblePlays = OrderedPlays.Count;

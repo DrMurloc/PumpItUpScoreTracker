@@ -19,6 +19,14 @@ export function createScoreBreakdown(constants, mix, lang) {
         return template.replace(/\{(\d+)\}/g, function (_, i) { return args[+i] === undefined ? '' : args[+i]; });
     }
 
+    // The labels are the caller's strings and land in innerHTML, so every one is escaped at
+    // the point of use — they are our own localized copy today, but a renderer that trusts
+    // its caller is one refactor away from not being able to.
+    function esc(text) {
+        return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
     // ---- the formula, mirrored from ScoreScreen (floor; combo term at half a percent).
     function score(p, gr, gd, bd, m, c) {
         var total = p + gr + gd + bd + m;
@@ -85,20 +93,20 @@ export function createScoreBreakdown(constants, mix, lang) {
             else if (pick > total - w.gr - w.gd - w.bd) { w.bd--; w.p++; w.c++; }
             else { w.m--; w.p++; w.c++; }
         }
-        var label = '<span class="sc-next-label">' + labels.label + ' · ' +
-            fmt(labels.points, n0(target.floor - s.score)) + '</span>';
+        var label = '<span class="sc-next-label">' + esc(labels.label) + ' · ' +
+            fmt(esc(labels.points), n0(target.floor - s.score)) + '</span>';
         if (guard >= 200000) { next.innerHTML = label; return; }
         var got = gradeFor(score(w.p, w.gr, w.gd, w.bd, w.m, w.c)).grade;
         var parts = [];
-        if (w.p > s.p) parts.push(fmt(labels.morePerfects, '<b>' + (w.p - s.p) + '</b>'));
-        if (s.m > w.m) parts.push(fmt(labels.fewerMisses, '<b>' + (s.m - w.m) + '</b>'));
-        if (s.bd > w.bd) parts.push(fmt(labels.fewerBads, '<b>' + (s.bd - w.bd) + '</b>'));
-        if (s.gd > w.gd) parts.push(fmt(labels.fewerGoods, '<b>' + (s.gd - w.gd) + '</b>'));
-        if (s.gr > w.gr) parts.push(fmt(labels.fewerGreats, '<b>' + (s.gr - w.gr) + '</b>'));
+        if (w.p > s.p) parts.push(fmt(esc(labels.morePerfects), '<b>' + (w.p - s.p) + '</b>'));
+        if (s.m > w.m) parts.push(fmt(esc(labels.fewerMisses), '<b>' + (s.m - w.m) + '</b>'));
+        if (s.bd > w.bd) parts.push(fmt(esc(labels.fewerBads), '<b>' + (s.bd - w.bd) + '</b>'));
+        if (s.gd > w.gd) parts.push(fmt(esc(labels.fewerGoods), '<b>' + (s.gd - w.gd) + '</b>'));
+        if (s.gr > w.gr) parts.push(fmt(esc(labels.fewerGreats), '<b>' + (s.gr - w.gr) + '</b>'));
         var comboGain = (s.m - w.m) + (s.bd - w.bd) + (s.gd - w.gd);
-        if (comboGain > 0) parts.push(fmt(labels.moreCombo, '<b>' + comboGain + '</b>'));
+        if (comboGain > 0) parts.push(fmt(esc(labels.moreCombo), '<b>' + comboGain + '</b>'));
         next.innerHTML = label +
-            fmt(labels.get, '<b>' + got + '</b>') + ' ' + parts.join(', ') + '!';
+            fmt(esc(labels.get), '<b>' + esc(got) + '</b>') + ' ' + parts.join(', ') + '!';
     }
 
     function segment(cls, left, width, tip) {
@@ -116,18 +124,18 @@ export function createScoreBreakdown(constants, mix, lang) {
         // [class, label, points, count] — the bar is sized by POINTS, and a bad pays half a
         // good per note, so the count rides every tooltip to keep the sliver legible.
         var gained = [
-            ['judg-perfect', labels.perfects, pts(s.p, 1), s.p],
-            ['judg-great', labels.greats, pts(s.gr, w.great), s.gr],
-            ['judg-good', labels.goods, pts(s.gd, w.good), s.gd],
-            ['judg-bad', labels.bads, pts(s.bd, w.bad), s.bd],
-            ['sc-seg-combo', labels.combo, w.combo * s.c / total * 1000000, s.c]
+            ['judg-perfect', esc(labels.perfects), pts(s.p, 1), s.p],
+            ['judg-great', esc(labels.greats), pts(s.gr, w.great), s.gr],
+            ['judg-good', esc(labels.goods), pts(s.gd, w.good), s.gd],
+            ['judg-bad', esc(labels.bads), pts(s.bd, w.bad), s.bd],
+            ['sc-seg-combo', esc(labels.combo), w.combo * s.c / total * 1000000, s.c]
         ];
         var lost = [
-            ['judg-great', labels.greats, pts(s.gr, 1 - w.great), s.gr],
-            ['judg-good', labels.goods, pts(s.gd, 1 - w.good), s.gd],
-            ['judg-bad', labels.bads, pts(s.bd, 1 - w.bad), s.bd],
-            ['judg-miss', labels.misses, pts(s.m, 1), s.m],
-            ['sc-seg-combo', labels.brokenCombo, w.combo * (total - s.c) / total * 1000000, total - s.c]
+            ['judg-great', esc(labels.greats), pts(s.gr, 1 - w.great), s.gr],
+            ['judg-good', esc(labels.goods), pts(s.gd, 1 - w.good), s.gd],
+            ['judg-bad', esc(labels.bads), pts(s.bd, 1 - w.bad), s.bd],
+            ['judg-miss', esc(labels.misses), pts(s.m, 1), s.m],
+            ['sc-seg-combo', esc(labels.brokenCombo), w.combo * (total - s.c) / total * 1000000, total - s.c]
         ];
         var lo = Math.min(Math.floor(s.score / 100000), 9) * 100000;
         var span = 1000000 - lo;
@@ -140,7 +148,7 @@ export function createScoreBreakdown(constants, mix, lang) {
                 var clipped = acc < lo;
                 segs1 += segment(g[0] + (clipped ? ' sc-clip' : ''), (a - lo) / span * 100, (b - a) / span * 100,
                     g[1] + ' ×' + n0(g[3]) + ' — +' + n0(g[2]) +
-                    (clipped ? ' (' + labels.clipped + ')' : ''));
+                    (clipped ? ' (' + esc(labels.clipped) + ')' : ''));
             }
             acc += g[2];
         });
@@ -152,7 +160,7 @@ export function createScoreBreakdown(constants, mix, lang) {
         }).join('');
         if (missing > 0)
             leg1 += '<span class="sc-it"><i class="sc-sw sc-sw-empty"></i>' +
-                labels.notEarned + ' <b>' + n0(missing) + '</b></span>';
+                esc(labels.notEarned) + ' <b>' + n0(missing) + '</b></span>';
 
         var totalLost = 0;
         lost.forEach(function (l) { totalLost += l[2]; });
@@ -172,14 +180,14 @@ export function createScoreBreakdown(constants, mix, lang) {
                     '" style="position:static;width:9px;height:9px;border-radius:50%"></i>' +
                     l[1] + ' <b>−' + n0(l[2]) + '</b></span>';
             }).join('')
-            : '<span class="sc-it">' + labels.nothingLost + '</span>';
+            : '<span class="sc-it">' + esc(labels.nothingLost) + '</span>';
 
         el.innerHTML =
-            '<div class="sc-bar"><h4>' + labels.gained +
+            '<div class="sc-bar"><h4>' + esc(labels.gained) +
             '<span class="sc-range">' + n0(lo) + ' → 1,000,000</span></h4>' +
             '<div class="sc-bartrack">' + segs1 + '</div>' +
             '<div class="sc-barlegend">' + leg1 + '</div></div>' +
-            '<div class="sc-bar"><h4>' + labels.lost +
+            '<div class="sc-bar"><h4>' + esc(labels.lost) +
             '<span class="sc-range">0 → ' + n0(totalLost) + '</span></h4>' +
             '<div class="sc-bartrack">' + segs2 + '</div>' +
             '<div class="sc-barlegend">' + leg2 + '</div></div>';

@@ -865,9 +865,9 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     public async Task Consume(ConsumeContext<UserUpdatedEvent> context)
     {
         if (context.Message.IsPublic)
-            await JoinSystemCommunity("World", context.Message.UserId, context.CancellationToken);
-        else if (await _communities.GetCommunityByName("World", context.CancellationToken) != null)
-            await _mediator.Send(new LeaveCommunityCommand("World", context.Message.UserId));
+            await JoinSystemCommunity(WorldCommunityName, context.Message.UserId, context.CancellationToken);
+        else if (await _communities.GetCommunityByName(WorldCommunityName, context.CancellationToken) != null)
+            await _mediator.Send(new LeaveCommunityCommand(WorldCommunityName, context.Message.UserId));
 
         if (context.Message.Country != null)
             await JoinSystemCommunity(context.Message.Country, context.Message.UserId, context.CancellationToken);

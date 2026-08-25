@@ -94,9 +94,9 @@ internal static class SessionBadges
         // instead — unless nobody does, where the place says the better thing.
         if (score.Row.Score == PerfectGame && score.OtherPeersWithPg is { } shared
                                            && score.PeerCountExcludingYou is { } peers)
-            return l["PG · {0} of {1} peers have it", shared, peers];
+            return l["PG · {0} of {1} peers have it", shared, peers].Value;
 
-        return score.PeerPlace is { } place ? l["#{0} of {1} peers", place, cohort] : null;
+        return score.PeerPlace is { } place ? l["#{0} of {1} peers", place, cohort].Value : null;
     }
 
     /// <summary>
