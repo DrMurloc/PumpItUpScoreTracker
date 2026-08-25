@@ -21,6 +21,8 @@ public sealed class CatalogModelContribution : IDbModelContribution
         modelBuilder.Entity<ChartSkillArchiveEntity>().ToTable("ChartSkillArchive");
         modelBuilder.Entity<ChartSkillMetricEntity>().ToTable("ChartSkillMetric")
             .HasKey(e => new { e.ChartId, e.Source, e.MetricName });
+        modelBuilder.Entity<ChartFolderBaselineEntity>().ToTable("ChartFolderBaseline")
+            .HasKey(e => new { e.MixId, e.ChartType, e.Level, e.Badge });
 
         modelBuilder.Entity<ChartVideoEntity>().ToTable("ChartVideo")
             .HasOne<ChartEntity>()

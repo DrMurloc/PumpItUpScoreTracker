@@ -28,6 +28,7 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
     IConsumer<ImportPiuCenterSnapshotCommand>
 {
     private readonly IExternalChartAliasRepository _aliases;
+    private readonly IChartFolderBaselineRepository _baselines;
     private readonly IChartRepository _charts;
     private readonly IDateTimeOffsetAccessor _clock;
     private readonly ILogger<PiuCenterCrawlSaga> _logger;
@@ -36,13 +37,14 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
 
     public PiuCenterCrawlSaga(IPiuCenterClient piuCenter, IExternalChartAliasRepository aliases,
         IChartSkillMetricRepository metrics, IChartRepository charts, IDateTimeOffsetAccessor clock,
-        ILogger<PiuCenterCrawlSaga> logger)
+        IChartFolderBaselineRepository baselines, ILogger<PiuCenterCrawlSaga> logger)
     {
         _piuCenter = piuCenter;
         _aliases = aliases;
         _metrics = metrics;
         _charts = charts;
         _clock = clock;
+        _baselines = baselines;
         _logger = logger;
     }
 
@@ -60,6 +62,7 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
 
         await FillMetricGaps(resolved, table, version, cancellationToken);
         await RegenerateSkillTags(resolved, phoenixCharts, cancellationToken);
+        await RebuildFolderBaselines(phoenixCharts, cancellationToken);
     }
 
     public async Task Consume(ConsumeContext<ImportPiuCenterSnapshotCommand> context)
@@ -116,6 +119,7 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
         _logger.LogInformation("piucenter snapshot import: banked metrics for {Banked}/{Total} resolved charts",
             banked, resolved.Length);
         await RegenerateSkillTags(resolved, phoenixCharts, cancellationToken);
+        await RebuildFolderBaselines(phoenixCharts, cancellationToken);
     }
 
     private static ExternalChartAlias[] ResolvedIn(IReadOnlyList<ExternalChartAlias> aliases,
@@ -212,6 +216,58 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
 
         _logger.LogInformation("piucenter crawl: banked metrics for {Fetched}/{Total} gap charts", fetched,
             gaps.Length);
+    }
+
+    /// <summary>
+    ///     Recomputes every folder's per-badge baselines from the banked metrics
+    ///     (docs/design/chart-identity.md §5). Runs at the end of an ingestion because that is
+    ///     the only thing that moves the inputs, and it recomputes whole rather than in place:
+    ///     a folder that changed shape has to lose its old rows.
+    ///     <para>
+    ///         Every mix is rebuilt, not just the crawled one. Metrics describe the steps and the
+    ///         steps do not change between mixes — but the LEVEL does, so the same chart is
+    ///         measured against different company in each catalog and each needs its own
+    ///         baseline (the same-chart-different-level trap that bites every cross-mix read).
+    ///     </para>
+    /// </summary>
+    private async Task RebuildFolderBaselines(IReadOnlyList<Chart> phoenixCharts,
+        CancellationToken cancellationToken)
+    {
+        var metricsByChart = await _metrics.GetMetricsByChart(PiuCenterMetrics.Source, cancellationToken);
+        if (metricsByChart.Count == 0)
+        {
+            _logger.LogInformation("piucenter: no banked metrics, folder baselines left alone");
+            return;
+        }
+
+        var profiles = metricsByChart.ToDictionary(kv => kv.Key, kv => ChartBadgeProfile.From(kv.Key, kv.Value));
+        // Every chart carrying metrics was matched against the Phoenix catalog, so that is
+        // where its type comes from; the flat ChartMix read then places it in every other
+        // mix that carries it.
+        var typeById = phoenixCharts.ToDictionary(c => c.Id, c => c.Type);
+
+        var folders = new Dictionary<(MixEnum Mix, ChartType Type, int Level), List<ChartBadgeProfile>>();
+        foreach (var (chartId, mix, level) in await _charts.GetChartMixLevels(cancellationToken))
+        {
+            if (!profiles.TryGetValue(chartId, out var profile)) continue;
+            if (!typeById.TryGetValue(chartId, out var type)) continue;
+            var key = (mix, type, level);
+            if (!folders.TryGetValue(key, out var members)) folders[key] = members = new List<ChartBadgeProfile>();
+            members.Add(profile);
+        }
+
+        var byMix = folders
+            .GroupBy(kv => kv.Key.Mix)
+            .ToDictionary(g => g.Key, g => g
+                .SelectMany(kv => FolderBaselineBuilder.Build(kv.Key.Mix, kv.Key.Type, kv.Key.Level, kv.Value))
+                .ToArray());
+
+        foreach (var (mix, baselines) in byMix)
+            await _baselines.ReplaceBaselines(mix, baselines, cancellationToken);
+
+        _logger.LogInformation(
+            "piucenter: rebuilt folder baselines — {Rows} rows across {Folders} folders in {Mixes} mixes",
+            byMix.Values.Sum(b => b.Length), folders.Count, byMix.Count);
     }
 
     private async Task RegenerateSkillTags(IReadOnlyList<ExternalChartAlias> resolved,

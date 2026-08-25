@@ -95,7 +95,8 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.ChartVideo` | YouTube video links per chart with uploader metadata; `Side` (Left/Right, null) marks which half of a two-sided singles video the chart plays on ([video-sides.md](design/video-sides.md)) |
 | `scores.ChartSkill` | Skill tags on charts with highlight flags — regenerated per piucenter crawl since the PiuCenter integration (hand tags archived) |
 | `scores.ChartSkillArchive` | One-time snapshot of the pre-crawler hand-maintained ChartSkill rows; never read by the app |
-| `scores.ChartSkillMetric` | Banked per-chart numeric step-analysis facts per external source ((ChartId, Source, MetricName) → decimal + optional grade): badge fractions, top-3 ranks, practice ranks, NPS/sustain/difficulty prediction |
+| `scores.ChartSkillMetric` | Banked per-chart numeric step-analysis facts per external source ((ChartId, Source, MetricName) → decimal + optional grade): badge fractions, top-3 ranks, practice ranks, NPS/sustain/difficulty prediction, and the crux row set (`crux_level`, `crux_peakiness`, `crux_position`, `crux_duration`, `crux_enps`, `crux_badge:*`) |
+| `scores.ChartFolderBaseline` | Per-folder badge context ((MixId, ChartType, Level, Badge) → core cutoff, qualified count, analyzed charts) — the folder-relative numbers every identity chip is read against. A computed cache, rebuilt whole per mix at the end of a piucenter ingestion ([chart-identity.md](design/chart-identity.md) §5) |
 | `scores.ExternalChartAlias` | Generic external-name map ((Source, ExternalKey) → nullable ChartId) with Auto/Manual/NotFound status + last-checked stamp; for piucenter the key doubles as the fetch URL, so this is also the crawl plan and negative cache |
 | `scores.SongNameLanguage` | Localized song names per culture |
 | `scores.SavedChart` | User bookmark lists of charts *(ownership split pending — currently shared)* |

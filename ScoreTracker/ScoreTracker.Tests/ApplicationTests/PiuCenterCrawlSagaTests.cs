@@ -24,14 +24,28 @@ public sealed class PiuCenterCrawlSagaTests
     private static readonly DateTimeOffset Now = new(2026, 7, 11, 12, 0, 0, TimeSpan.Zero);
 
     private readonly Mock<IExternalChartAliasRepository> _aliases = new();
+    private readonly Mock<IChartFolderBaselineRepository> _baselines = new();
     private readonly Mock<IChartRepository> _charts = new();
     private readonly Mock<IChartSkillMetricRepository> _metrics = new();
     private readonly Mock<IPiuCenterClient> _piuCenter = new();
 
+    /// <summary>
+    ///     Every ingestion path ends by rebuilding folder baselines, so its two reads answer
+    ///     empty for tests that are not about them — a test asserting on the alias pass should
+    ///     not have to know the baseline pass exists.
+    /// </summary>
+    public PiuCenterCrawlSagaTests()
+    {
+        _metrics.Setup(m => m.GetMetricsByChart(PiuCenterMetrics.Source, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillMetric>>());
+        _charts.Setup(c => c.GetChartMixLevels(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<(Guid, MixEnum, int)>());
+    }
+
     private PiuCenterCrawlSaga BuildSaga()
     {
         return new PiuCenterCrawlSaga(_piuCenter.Object, _aliases.Object, _metrics.Object, _charts.Object,
-            FakeDateTime.At(Now).Object, NullLogger<PiuCenterCrawlSaga>.Instance);
+            FakeDateTime.At(Now).Object, _baselines.Object, NullLogger<PiuCenterCrawlSaga>.Instance);
     }
 
     private Task Consume()
