@@ -80,8 +80,9 @@ the registration signal ([new-charts-json.md](new-charts-json.md)).
 ## The UI (settled: edge captions, arrows only — mock rev 3)
 
 One caption row justified to the video iframe's edges, between the video and the title row,
-~20px tall: `◀ S17` on the left edge, `S22 ▶` on the right. Each label sits under the half it
-describes; the arrow does the talking — **no "left"/"right" words** (owner cut them), **no
+~20px tall: `▲ S17` on the left edge, `S22 ▲` on the right. Each label sits under the half it
+describes and its arrow points **up at that half** — a sideways arrow field-tested as "go to
+the next chart" (owner, 2026-08-24) — with **no "left"/"right" words** (owner cut them), **no
 difficulty bubbles** (owner cut those first — subtext scale, minimal vertical cost). The
 opened chart's side carries the ink and the accent-colored arrow; the partner is muted.
 Level tokens are the chart shorthand (`Type.GetShortHand()` + the **selected mix's** level).
