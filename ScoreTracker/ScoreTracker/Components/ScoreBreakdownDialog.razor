@@ -33,8 +33,10 @@
                 </div>
                 <JudgementStrip Judgements="Judgements"></JudgementStrip>
                 @* The module writes into these; empty until the circuit fills them, which is
-                   also their honest no-JS state. *@
-                <div @ref="_bars" class="sbdlg-bars"></div>
+                   also their honest no-JS state. sc-bars is the calculator page's own container
+                   class — the grid gap between the two bars comes from it, so the surfaces
+                   space identically. *@
+                <div @ref="_bars" class="sc-bars sbdlg-bars"></div>
                 <div @ref="_next" class="sc-next sbdlg-next"></div>
             </div>
         }
