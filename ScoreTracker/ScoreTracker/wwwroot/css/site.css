@@ -17802,3 +17802,294 @@ i.sc-band-ice { background: var(--grade-sssplus); }
     font-size: 12.5px;
     font-variant-numeric: tabular-nums;
 }
+
+/* ── The judgement strip (JudgementStrip) ─────────────────────────────────────────────────
+   A play's counts in the game's own --judg-* vocabulary: the colour is the label, the count
+   is the value — the one score fact rendered as coloured text rather than art (UX guide,
+   session-breakdown.md D43). Rendered as a <button> when it opens the Score Breakdown
+   Dialog, a <span> when it is only a readout; both wear the same face, the button just says
+   so on hover and focus. */
+.judg-strip {
+    display: inline-flex;
+    /* Baseline, not center: the combo runs a size smaller, and box-centering left its
+       digits floating off the counts' shared baseline (owner, field test). */
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: .84rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.4;
+    padding: 1px 8px;
+    border-radius: 6px;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+    background: color-mix(in srgb, var(--mix-bg) 45%, transparent);
+    color: var(--mix-ink);
+}
+
+button.judg-strip {
+    cursor: pointer;
+}
+
+button.judg-strip:hover {
+    border-color: color-mix(in srgb, var(--mix-ink) 34%, transparent);
+}
+
+button.judg-strip:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: 1px;
+}
+
+.judg-strip-sm {
+    gap: 6px;
+    font-size: .76rem;
+    padding: 0 6px;
+}
+
+.judg-strip .judg-perfect { color: var(--judg-perfect); }
+.judg-strip .judg-great { color: var(--judg-great); }
+.judg-strip .judg-good { color: var(--judg-good); }
+.judg-strip .judg-bad { color: var(--judg-bad); }
+.judg-strip .judg-miss { color: var(--judg-miss); }
+
+.judg-strip-combo {
+    color: var(--mix-ink-muted);
+    font-size: .9em;
+}
+
+/* ── The Score Breakdown Dialog ───────────────────────────────────────────────────────────
+   The calculator's bars and walk (score-breakdown.js markup, sc-bar* classes above) inside
+   a dialog frame. Width capped here rather than via MaxWidth.Small — charts.scss globally
+   un-caps `.mud-dialog-width-sm`, the ChartDetailsDialog precedent. */
+.mud-dialog.score-breakdown-dialog {
+    max-width: 480px;
+}
+
+.mud-dialog.score-breakdown-dialog .mud-dialog-content {
+    max-height: min(70vh, 720px);
+    overflow-y: auto;
+}
+
+.sbdlg-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sbdlg-sub {
+    display: block;
+    color: var(--mix-ink-muted);
+    margin: 2px 0 8px;
+}
+
+.sbdlg-score {
+    margin: 4px 0 8px;
+}
+
+.sbdlg-next {
+    display: block;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+}
+
+/* ── The attempt thread (All plays, D49) ──────────────────────────────────────────────────
+   A dotted rail joining adjacent plays of one chart — annotation over the flat log, never a
+   grouping: every row stays a row. Threaded rows indent to make room; the rail half-heights
+   at a run's ends so it reads as joining rows, not as a column of its own. */
+.sbd-row.sbd-thread {
+    position: relative;
+    padding-left: 12px;
+}
+
+.sbd-thread::before {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 0;
+    bottom: 0;
+    border-left: 2px dotted color-mix(in srgb, var(--mix-primary) 45%, transparent);
+}
+
+.sbd-thread-start::before {
+    top: 50%;
+}
+
+.sbd-thread-end::before {
+    bottom: 50%;
+}
+
+.sbd-attempt {
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Highlight cards (SessionHighlightCards, D41) ─────────────────────────────────────────
+   The session's flagged scores as jacket cards, one per chart. The ring is the same rarity
+   band as the score's colour — same ramp, same shared-PG mute — and the glow classes keep
+   carrying the monotonic ordering the hues cannot. Below 700px the grid becomes a
+   scroll-snap strip so the jackets stay big instead of shrinking into columns. */
+.hl-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(236px, 1fr));
+    gap: 12px;
+}
+
+.hl-card {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--mix-surface-muted);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 8%, transparent);
+}
+
+.hl-card-emerald { border-color: color-mix(in srgb, var(--rarity-emerald) 45%, transparent); }
+.hl-card-gold {
+    border-color: color-mix(in srgb, var(--rarity-gold) 55%, transparent);
+    box-shadow: 0 0 14px -6px var(--rarity-gold);
+}
+.hl-card-sapphire {
+    border-color: color-mix(in srgb, var(--rarity-sapphire) 55%, transparent);
+    box-shadow: 0 0 14px -6px var(--rarity-sapphire);
+}
+.hl-card-prism {
+    border-color: color-mix(in srgb, var(--rarity-prism) 70%, transparent);
+    box-shadow: 0 0 18px -5px var(--rarity-prism);
+}
+
+/* The jacket, drawn the way the tier card draws it: a background-image div, which is also
+   the card's ONE navigation target — a whole-card target put the judgement strip a near-miss
+   away from opening chart details (owner, field test). */
+.hl-card-art {
+    position: relative;
+    aspect-ratio: 16 / 8.2;
+    background-color: var(--mix-bg);
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+}
+
+.hl-card-art:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: -2px;
+}
+
+/* The scrim keeps the body legible over any jacket; the body overlaps the art bottom. */
+.hl-card-art::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--mix-bg) 0%, transparent) 30%,
+        color-mix(in srgb, var(--mix-bg) 92%, transparent) 96%);
+}
+
+.hl-card-bubble {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 2;
+}
+
+.hl-card-badges {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 75%;
+}
+
+/* The row badge's face over album art: an opaque backdrop keeps it legible on any jacket. */
+.hl-card-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: .7rem;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--mix-bg) 72%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 20%, transparent);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.hl-card-body {
+    position: relative;
+    z-index: 2;
+    padding: 0 11px 10px;
+    margin-top: -34px;
+}
+
+.hl-card-song {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.06rem;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hl-card-scoreline {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+}
+
+.hl-card-scoreline .sbd-score,
+.hl-card-score {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+/* The established gain chip (D48) rides the score line, aligned right. */
+.hl-card-gain {
+    margin-left: auto;
+    border-radius: 4px;
+}
+
+.hl-card-foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+    flex-wrap: wrap;
+}
+
+.hl-card-standing {
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* The gained score, where the "Upscore" chip used to sit — the number says it better. */
+.hl-card-delta {
+    font-size: .74rem;
+    font-weight: 600;
+    color: var(--mud-palette-success);
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 700px) {
+    .hl-cards {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 6px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .hl-cards .hl-card {
+        flex: 0 0 216px;
+        scroll-snap-align: start;
+    }
+}

@@ -70,6 +70,13 @@ public sealed class PlayerSessionsTests : IAsyncLifetime
         await Expect(_page.Locator("[data-testid='session-ceremony']")).ToBeVisibleAsync(timeout);
         await Expect(_page.GetByText("8,100").First).ToBeVisibleAsync();
 
+        // The crowned chart renders as a highlight card (D41), and the peer sections are
+        // gone for good — the chart details dialog is the boards surface now (D42).
+        await Expect(_page.Locator("[data-testid='session-highlight-card']").First)
+            .ToBeVisibleAsync(timeout);
+        await Expect(_page.Locator("[data-testid='rival-peers']")).ToHaveCountAsync(0);
+        await Expect(_page.Locator("[data-testid='community-peers']")).ToHaveCountAsync(0);
+
         // Everything older is a row with a View button rather than a second card.
         await Expect(_page.Locator("[data-testid='session-history']")).ToBeVisibleAsync(timeout);
 

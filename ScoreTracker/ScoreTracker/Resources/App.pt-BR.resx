@@ -859,6 +859,9 @@
   <data name="at {0} or better" xml:space="preserve">
     <value>com {0} ou melhor</value>
   </data>
+  <data name="Attempt {0}" xml:space="preserve">
+    <value>Tentativa {0}</value>
+  </data>
   <data name="Attempt {0} of {1}" xml:space="preserve">
     <value>Tentativa {0} de {1}</value>
   </data>
@@ -4950,6 +4953,9 @@
   <data name="Open Community" xml:space="preserve">
     <value>Abrir comunidade</value>
   </data>
+  <data name="Open in the Score Calculator" xml:space="preserve">
+    <value>Abrir na calculadora de pontuação</value>
+  </data>
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>Abrir charts sugeridos</value>
   </data>
@@ -6573,6 +6579,9 @@
   </data>
   <data name="See their boards" xml:space="preserve">
     <value>Ver os quadros do jogador</value>
+  </data>
+  <data name="See where this score came from" xml:space="preserve">
+    <value>Veja de onde veio esta pontuação</value>
   </data>
   <data name="See where you stand" xml:space="preserve">
     <value>Veja onde você está</value>

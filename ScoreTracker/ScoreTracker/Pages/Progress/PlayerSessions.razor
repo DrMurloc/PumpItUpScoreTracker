@@ -1,6 +1,7 @@
 @using MediatR
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Identity.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Events
 @using ScoreTracker.ScoreLedger.Contracts
@@ -47,7 +48,8 @@
         }
 
         <div class="@(_busy ? "sbd-busy" : null)">
-            <SessionHero Breakdown="_model.Hero" OnOpenChart="OpenChart"></SessionHero>
+            <SessionHero Breakdown="_model.Hero" OnOpenChart="OpenChart"
+                         OnOpenBreakdown="OpenBreakdown"></SessionHero>
         </div>
 
         <div class="mt-4 @(_busy ? "sbd-busy" : null)">
@@ -69,6 +71,18 @@
                             Mix="_model.Hero.Group.Mix"
                             BoardScope="ChartLeaderboardScopes.LeaderboardScope.CompetitivePeers">
         </ChartDetailsDialog>
+
+        @* The play's own story — tapped in from a judgement strip. The identity comes off the
+           journal row (the site's play date, the row's own source), never off the session. *@
+        <ScoreBreakdownDialog @bind-Visible="_breakdownOpen" Chart="_breakdownScore?.Chart"
+                              Mix="_model.Hero.Group.Mix"
+                              Score="_breakdownScore?.Row.Score"
+                              Plate="PhoenixPlateHelperMethods.TryParse(_breakdownScore?.Row.Plate)"
+                              IsBroken="_breakdownScore?.Row.IsBroken ?? false"
+                              Judgements="_breakdownScore?.Row.Judgements"
+                              PlayedAt="_breakdownScore?.Row.OccurredAt"
+                              SourceLabel="@(_breakdownScore == null ? null : SourceLabel(_breakdownScore.Row.Source))">
+        </ScoreBreakdownDialog>
     }
 }
 
@@ -230,5 +244,29 @@
     {
         _detailsChart = chart;
         _detailsOpen = true;
+    }
+
+    private bool _breakdownOpen;
+    private SessionScore? _breakdownScore;
+
+    private void OpenBreakdown(SessionScore score)
+    {
+        _breakdownScore = score;
+        _breakdownOpen = true;
+    }
+
+    /// <summary>
+    ///     The row's own acquisition channel, in the hero header's words — a play's dialog can
+    ///     say "CSV Upload" inside a session the header calls an Official Import.
+    /// </summary>
+    private string SourceLabel(string source)
+    {
+        return source switch
+        {
+            "officialImport" => L["Official Import"],
+            "csv" => L["CSV Upload"],
+            "backfill" => L["Backfill"],
+            _ => L["Play Session"]
+        };
     }
 }

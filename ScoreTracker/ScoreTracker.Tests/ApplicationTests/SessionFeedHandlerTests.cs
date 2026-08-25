@@ -114,10 +114,14 @@ public sealed class SessionFeedHandlerTests
         Assert.True(row.IsBroken);
         Assert.Null(row.Score);
         Assert.Equal(362, row.JudgedNotes);
+        // The breakdown itself rides the row where observed — null on the other row means
+        // "not observed", never "all zeroes".
+        Assert.Equal(judgements, row.Judgements);
         Assert.Equal(ScoreEventClassification.Played, row.Classification);
         var pass = page.Groups.Single().Rows.Single(r => r.OccurredAt != Now);
         Assert.False(pass.IsStageBroken);
         Assert.Null(pass.JudgedNotes);
+        Assert.Null(pass.Judgements);
     }
 
     [Fact]

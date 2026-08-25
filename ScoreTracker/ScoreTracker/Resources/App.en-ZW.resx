@@ -865,6 +865,9 @@
   <data name="at {0} or better" xml:space="preserve">
     <value>og {0} ol mrrgl</value>
   </data>
+  <data name="Attempt {0}" xml:space="preserve">
+    <value>Blub {0}</value>
+  </data>
   <data name="Attempt {0} of {1}" xml:space="preserve">
     <value>Murgrglarg {0} gl {1}</value>
   </data>
@@ -4982,6 +4985,9 @@
   <data name="Open Community" xml:space="preserve">
     <value>Mrprgl Plglmurgblub</value>
   </data>
+  <data name="Open in the Score Calculator" xml:space="preserve">
+    <value>Mrprgl a Mrglrgl Grglmurgmorg</value>
+  </data>
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>Mrprgl Romorgrgl Murgl</value>
   </data>
@@ -6620,6 +6626,9 @@
   </data>
   <data name="See their boards" xml:space="preserve">
     <value>Blarg grglblarg grrglplgl</value>
+  </data>
+  <data name="See where this score came from" xml:space="preserve">
+    <value>Blarg mo mrglrgl glorb</value>
   </data>
   <data name="See where you stand" xml:space="preserve">
     <value>Blarg blarggrorp blub blgrlmrgl</value>

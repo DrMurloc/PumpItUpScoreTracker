@@ -1,4 +1,5 @@
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.ScoreLedger.Contracts;
 
@@ -24,6 +25,8 @@ public sealed record RecentSessionsPage(int TotalGroups, IReadOnlyList<RecentSes
     ///     One play on the page. A stage break carries <see cref="IsStageBroken" /> and no score;
     ///     <see cref="JudgedNotes" /> is how many notes the play judged, when the site's card had
     ///     a breakdown — the row divides it by the chart's note count to say how far the run got.
+    ///     <see cref="Judgements" /> is that breakdown itself, when the source carried one —
+    ///     null means "not observed", never "all zeroes".
     /// </summary>
     [ExcludeFromCodeCoverage]
     public sealed record ScoreEventRecord(
@@ -38,5 +41,6 @@ public sealed record RecentSessionsPage(int TotalGroups, IReadOnlyList<RecentSes
         int? PreviousBest,
         bool IsReclear = false,
         bool IsStageBroken = false,
-        int? JudgedNotes = null);
+        int? JudgedNotes = null,
+        JudgementCounts? Judgements = null);
 }

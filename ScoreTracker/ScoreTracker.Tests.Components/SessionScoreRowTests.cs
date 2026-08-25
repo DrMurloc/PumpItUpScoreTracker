@@ -106,15 +106,17 @@ public sealed class SessionScoreRowTests : ComponentTestBase
     }
 
     [Fact]
-    public void TheImproverArrowCarriesWhatTheScoreRatedAndHowFarOver()
+    public void TheImproverReadoutCarriesWhatTheScoreRatedAndHowFarOverAndTheArrowIsGone()
     {
         // A Single at level 21 scoring 985,000 rates 21 + (985000-965000)/17500 = 22.14, then
         // the Singles multiplier for 20+ takes it to 22.5. Against a baseline of 22.2 that is
-        // +0.3 — and both halves come from one stored number plus a pure function.
+        // +0.3 — and both halves come from one stored number plus a pure function. The ⬆ glyph
+        // retired with D47: the readout says the same fact as a number.
         var row = Render(Score(985000, new HighlightDetail(CompetitiveBaseline: 22.2),
             HighlightFlags.CompetitiveImprover));
 
         Assert.Contains("22.5 (+0.3)", row.Markup);
+        Assert.DoesNotContain("⬆", row.Markup);
     }
 
     [Fact]
@@ -128,13 +130,106 @@ public sealed class SessionScoreRowTests : ComponentTestBase
     }
 
     [Fact]
-    public void WithoutACapturedBaselineTheArrowStaysBare()
+    public void WithoutACapturedBaselineTheImproverShowsNothing()
     {
-        // Every session before this capture landed. The arrow still means what it always did.
+        // Pre-baseline rows used to render a bare ⬆; with the glyph retired (D47) the flag has
+        // no visible form here — it still rides the model and the Discord card.
         var row = Render(Score(985000, null, HighlightFlags.CompetitiveImprover));
 
-        Assert.Contains("⬆", row.Markup);
+        Assert.DoesNotContain("⬆", row.Markup);
         Assert.DoesNotContain("(+", row.Markup);
+    }
+
+    [Fact]
+    public async Task ObservedJudgementsRenderAsTheStripAndOpenTheBreakdown()
+    {
+        SessionScore? opened = null;
+        var score = Score(985000, null);
+        score = score with { Row = score.Row with { Judgements = new JudgementCounts(731, 74, 11, 4, 18, 214) } };
+        var row = RenderComponent<SessionScoreRow>(p => p
+            .Add(r => r.Score, score)
+            .Add(r => r.OnOpenBreakdown, s => opened = s));
+
+        Assert.Contains("731", row.Markup);
+        await row.Find("button.judg-strip").ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+        Assert.NotNull(opened);
+    }
+
+    [Fact]
+    public void APlayWithoutObservedJudgementsSaysNothingAboutThem()
+    {
+        var row = Render(Score(985000, null));
+
+        Assert.Empty(row.FindAll(".judg-strip"));
+    }
+
+    [Fact]
+    public void AStageBreaksStripIsAReadoutNotAWayIn()
+    {
+        // The counts are real and render; the breakdown is a story against 1,000,000 that a
+        // partial run does not have, so the strip has nowhere to go (D44).
+        var stageBreak = StageBreak(judgedNotes: 362, chartNoteCount: 1163);
+        stageBreak = stageBreak with
+        {
+            Row = stageBreak.Row with { Judgements = new JudgementCounts(300, 40, 9, 6, 7) }
+        };
+        var row = RenderComponent<SessionScoreRow>(p => p
+            .Add(r => r.Score, stageBreak)
+            .Add(r => r.OnOpenBreakdown, _ => { }));
+
+        Assert.NotEmpty(row.FindAll("span.judg-strip"));
+        Assert.Empty(row.FindAll("button.judg-strip"));
+    }
+
+    [Fact]
+    public void APerfectGameAlwaysGlowsEvenWhenTheWholeCohortSharesIt()
+    {
+        // D46 as reversed at the field test: 1,000,000 cannot be beaten, so the glow is the
+        // achievement's own rather than a rarity claim. The standing line keeps the honest
+        // shared-PG fact alongside it.
+        var row = Render(Score(PerfectGame, new HighlightDetail(PeerCount: 94, PeerBetterCount: 0,
+            PeerPgCount: 60, PeerPercentile: 1.0)));
+
+        Assert.Contains("rarity-glow-3", row.Markup);
+        Assert.Contains("59 of 93 peers have it", row.Markup);
+    }
+
+    [Fact]
+    public void APerfectGameBelowTheCaptureFloorStillGlows()
+    {
+        // Capture skips charts far under competitive, so a PG there carries no detail at all —
+        // under the percentile rule it glowed nothing, which read as a bug on the owner's own
+        // low-chart PGs.
+        var row = Render(Score(PerfectGame, null));
+
+        Assert.Contains("rarity-glow-3", row.Markup);
+    }
+
+    [Fact]
+    public void ABrokenRowNeverPrintsAStanding()
+    {
+        // Whatever detail reaches a broken row describes a score the run never achieved —
+        // pinning keeps detail off these rows, and the row itself agrees.
+        var broken = Score(400000, new HighlightDetail(PeerCount: 94, PeerBetterCount: 12,
+            PeerPercentile: 0.4));
+        broken = broken with { Row = broken.Row with { IsBroken = true, Classification = ScoreEventClassification.Break } };
+
+        var row = Render(broken);
+
+        Assert.DoesNotContain("peers", row.Markup);
+    }
+
+    [Fact]
+    public void TheAttemptCaptionRendersOnlyWhenSupplied()
+    {
+        var without = Render(Score(912000, null));
+        var with5 = RenderComponent<SessionScoreRow>(p => p
+            .Add(r => r.Score, Score(912000, null))
+            .Add(r => r.AttemptNumber, (int?)3));
+
+        Assert.Empty(without.FindAll("[data-testid=session-row-attempt]"));
+        Assert.Contains("Attempt 3", with5.Markup);
     }
 
     [Fact]
