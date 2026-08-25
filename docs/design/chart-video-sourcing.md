@@ -13,21 +13,27 @@ charts). Rulings dated 2026-08-25 unless noted.
 this program started — the legacy buckets were 100% bare. Missing counts, bucketed by the
 newest mix each chart appears in (post `singles-video-fix-2026-08-24.sql`):
 
-| Bucket (newest mix) | Charts missing | Distinct songs | Stage |
+| Bucket (newest mix) | Charts missing | Stage | Outcome (all delivered 2026-08-25) |
 |---|---|---|---|
-| XX / Phoenix / Phoenix 2 | 48 → **7** | — | **1 — script delivered 2026-08-25** |
-| Prime, Prime 2 | 844 | 153 | 2 — next |
-| Infinity | 1,531 (1,342 Infinity-only charts) | 273 | 3 |
-| Fiesta, Fiesta EX, Fiesta 2 | 344 | 81 | 4 |
-| NX–NXA, Zero, Exceed 1–2, Prex, Premiere | 68 | ~34 | 5 |
+| XX / Phoenix / Phoenix 2 | 48 | 1 | 41 filled → **7 left** (the DrMurloc-records list below) |
+| Prime, Prime 2 | 844 | 2 | 434 filled → 410 left |
+| Infinity | 1,531 (1,342 Infinity-only) | 3 | 1,197 filled → 334 left |
+| Fiesta, Fiesta EX, Fiesta 2 | 344 | 4 | 281 filled → 63 left |
+| NX–NXA, Zero, Exceed, Prex, Premiere | 70 | 5 | 36 filled → 34 left |
 
-Stage order is owner-approved: modern first, then Prime era, then Infinity, then Fiesta, then
-the deep end. Each stage ships as one data-only SQL script + report (see the process section);
-what still can't be filled after a stage is reviewed with the owner once the list exists.
-Realistic recovery estimate under the footage policy: 60–75% of the legacy gap.
+All five stage scripts live in `Downloads\*-video-backfill-2026-08-25.sql` with companion
+reports; they run **in stage order** on prod (pair-joins across stages depend on it), then one
+**/Admin → Clear Cache**. Chain total: **1,989 charts gain videos (catalog 66% → 90%), 331
+sides pairs.** What remains is per-stage remains lists (reviewed with the owner), the
+duplicate-name Song rows (below), and the flagged Pro-fallback rows in stage 3's data.
+Sim-watermark families to reject on sight: STEPF2 "HOME EVENT", STEPP1/STEPPXX/StepP1X,
+PUMPSANITY/XSANITY — polished sim renders imitate real captures (SofiaXY was caught this way).
 
-Stage 1's deliverables: `Downloads\modern-video-backfill-2026-08-25.sql` +
-`modern-video-backfill-report-2026-08-25.md` (41 fills, 7 sides pairs, 1 mislink repair).
+Standing catalog flag from the sweeps: five song names exist as **two Song rows each** —
+PICK ME (confirmed pathological: a 12-chart Prime 2-only orphan set beside the continuing
+row), Step, Adios, Further, Baroque Virus - FULL SONG -. All matched rows for these names are
+withheld from the scripts pending merge-vs-distinct adjudication; matchers must key on SongId,
+never name alone, once resolved.
 
 ## Footage policy (owner rulings)
 
