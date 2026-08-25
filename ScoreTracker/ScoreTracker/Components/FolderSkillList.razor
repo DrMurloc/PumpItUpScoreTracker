@@ -1,13 +1,14 @@
 @namespace ScoreTracker.Web.Components
 @using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.Models
-@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Services
 
-@* The personal skill distribution for one folder — your ability per skill on the
-   charts you've played here, weakest first. One component, two homes: the tier
-   page's Folder Stats drawer and the Personalized Breakdown page (styles live in
-   site.css with the other shared-component styles). *@
+@* Your ability per BADGE in one folder, weakest first — the granular vocabulary, because
+   "you are 16% on Twists" hides which twists (docs/design/chart-identity.md §7). One
+   component, two homes: the tier page's Folder Stats drawer and the Personalized Breakdown
+   page (styles live in site.css with the other shared-component styles). *@
 @if (_rows.Any())
 {
     <div class="tier-folder-skills">
@@ -18,8 +19,8 @@
         @foreach (var row in _rows)
         {
             var percent = (int)Math.Round(100 * row.Ability);
-            <div class="tier-folder-skill-row skillcat-@(row.Skill.GetPrimaryCategory().ToString().ToLowerInvariant())">
-                <span class="tier-folder-skill-label">@row.Skill.GetName()</span>
+            <div class="tier-folder-skill-row tier-folder-skill-row-badge @BadgeCategoryClasses.For(row.Family)">
+                <span class="tier-folder-skill-label">@L[row.Label]</span>
                 <span class="tier-folder-skill-track"><span class="tier-folder-skill-fill" style="width:@percent%"></span></span>
                 <span class="tier-folder-skill-value">@percent%</span>
                 <span class="tier-folder-skill-count">@row.Played/@row.Total</span>
@@ -31,9 +32,14 @@
 @code {
     [Parameter] public IEnumerable<Chart> Charts { get; set; } = Array.Empty<Chart>();
 
+    /// <summary>
+    ///     Every badge each chart carries and what its evidence weighs
+    ///     (<c>GetChartBadgePresenceQuery</c>) — not the capped display chips, which would
+    ///     silently drop the badges a card had no room for.
+    /// </summary>
     [Parameter]
-    public IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> SkillChips { get; set; } =
-        new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>();
+    public IReadOnlyDictionary<Guid, IReadOnlyList<ChartBadgePresenceRecord>> BadgePresence { get; set; } =
+        new Dictionary<Guid, IReadOnlyList<ChartBadgePresenceRecord>>();
 
     [Parameter]
     public IDictionary<Guid, RecordedPhoenixScore> Scores { get; set; } =
@@ -41,34 +47,33 @@
 
     [Parameter] public string? Title { get; set; }
 
-    private IReadOnlyList<(Skill Skill, double Ability, int Played, int Total)> _rows =
-        Array.Empty<(Skill, double, int, int)>();
+    private sealed record Row(string Badge, string Label, BadgeCategory? Family, double Ability, int Played, int Total);
+
+    private IReadOnlyList<Row> _rows = Array.Empty<Row>();
 
     protected override void OnParametersSet()
     {
-        _rows = FolderSkillScores().ToArray();
+        _rows = BuildRows().ToArray();
     }
 
     // Skill competence split into its two factors (owner workshop) —
-    // ABILITY = sum(coverage × score) / sum(coverage × 1,000,000) over PLAYED charts
+    // ABILITY = sum(weight × score) / sum(weight × 1,000,000) over PLAYED charts
     // ("how well does it go when you play them"), COMPLETION = played/total charts
-    // carrying the skill. Displayed separately; sorted by their product (the original
+    // carrying the badge. Displayed separately; sorted by their product (the original
     // amalgam), so both "bad at it" and "haven't touched it" float to the top.
-    // Score-determined, never pass-determined. Whole-chart qualities (null coverage)
-    // and pre-crawl fallback tags weigh 1.0. <2 charts is noise.
-    private IEnumerable<(Skill Skill, double Ability, int Played, int Total)> FolderSkillScores()
+    // Score-determined, never pass-determined. <2 charts is noise.
+    private IEnumerable<Row> BuildRows()
     {
         // Proficiency lives in the 900k-1M band (owner): 990,000 = 90%, anything at or
         // under 900,000 = 0%. Raw score/1M flattened every skill to ~95%.
         const double scoreFloor = 900_000;
         const double scoreRange = 100_000;
         return Charts
-            .SelectMany(c => (SkillChips.TryGetValue(c.Id, out var chips) && chips.Count > 0
-                    ? chips.Select(chip => (chip.Skill, Weight: (double?)chip.SegmentFraction ?? 1.0))
-                    : c.Skills.Select(s => (Skill: s, Weight: 1.0)))
-                .GroupBy(p => p.Skill).Select(g => g.First())
-                .Select(p => (p.Skill, p.Weight, Chart: c)))
-            .GroupBy(p => p.Skill)
+            .SelectMany(c => (BadgePresence.TryGetValue(c.Id, out var badges)
+                    ? badges
+                    : Array.Empty<ChartBadgePresenceRecord>())
+                .Select(b => (b.Badge, b.DisplayName, b.Family, Weight: (double)b.Weight, Chart: c)))
+            .GroupBy(p => p.Badge, StringComparer.OrdinalIgnoreCase)
             .Select(g =>
             {
                 var played = g
@@ -83,12 +88,12 @@
                 var coverageCompletion = g.Sum(p => p.Weight) == 0
                     ? 0
                     : played.Sum(p => p.Weight) / g.Sum(p => p.Weight);
-                return (Skill: g.Key, Ability: ability, Played: played.Length, Total: g.Count(),
-                    Sort: ability * coverageCompletion);
+                return (Row: new Row(g.Key, g.First().DisplayName, g.First().Family,
+                    ability, played.Length, g.Count()), Sort: ability * coverageCompletion);
             })
-            .Where(r => r.Total >= 2)
+            .Where(r => r.Row.Total >= 2)
             .OrderBy(r => r.Sort)
-            .ThenBy(r => r.Skill.GetName())
-            .Select(r => (r.Skill, r.Ability, r.Played, r.Total));
+            .ThenBy(r => r.Row.Label, StringComparer.OrdinalIgnoreCase)
+            .Select(r => r.Row);
     }
 }

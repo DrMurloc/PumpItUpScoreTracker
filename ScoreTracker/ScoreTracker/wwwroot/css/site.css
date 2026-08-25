@@ -2239,6 +2239,32 @@ html.sheet-open .more-sheet-scrim {
     opacity: .75;
 }
 
+/* Identity chip kinds (docs/design/chart-identity.md §3). The family tint still carries
+   WHAT the chip is; these carry what KIND of claim it makes, so the two read together
+   and neither is load-bearing alone (rule 8 — the printed name says it either way). */
+.chip-unique {
+    border-style: dashed;
+    font-weight: 600;
+}
+
+/* The spike is the one chip that is not a skill, so it is the one chip outside the family
+   palette: an amber warning hue, mix-invariant like the judgment colors. */
+.tier-chart-card-skill.chip-spike {
+    color: var(--spike-ink);
+    background: color-mix(in srgb, var(--spike) 14%, transparent);
+    border-color: color-mix(in srgb, var(--spike) 50%, transparent);
+}
+
+.chip-crux {
+    background: transparent;
+    border-width: 1.5px;
+}
+
+/* Piucenter's own picks, shown when nothing stood out — quieter than a claim we made. */
+.tier-chart-card-skill.chip-fallback {
+    opacity: .8;
+}
+
 .tier-table-skills .tier-chart-card-skill {
     margin-right: 3px;
 }
@@ -2263,6 +2289,13 @@ html.sheet-open .more-sheet-scrim {
     gap: 8px;
     font-size: .75rem;
     padding: 1px 0;
+}
+
+/* Badge names are longer than the rollup's one-word buckets ever were ("Cross-pad
+   Transitions" against "Tech"), so the label column widens to hold them rather than
+   ellipsing every second row (docs/design/chart-identity.md §7, Variant B). */
+.tier-folder-skill-row-badge {
+    grid-template-columns: 140px 1fr 38px 44px;
 }
 
 .tier-folder-skill-label {

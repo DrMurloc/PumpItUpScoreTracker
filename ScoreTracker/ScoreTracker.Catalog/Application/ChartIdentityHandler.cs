@@ -17,6 +17,7 @@ namespace ScoreTracker.Catalog.Application;
 /// </summary>
 internal sealed class ChartIdentityHandler
     : IRequestHandler<GetChartIdentityQuery, IReadOnlyDictionary<Guid, ChartIdentityRecord>>,
+        IRequestHandler<GetChartBadgePresenceQuery, IReadOnlyDictionary<Guid, IReadOnlyList<ChartBadgePresenceRecord>>>,
         IRequestHandler<GetArchivedSkillTagsQuery, IReadOnlyDictionary<Guid, IReadOnlyList<string>>>
 {
     private readonly IArchivedSkillTagRepository _archive;
@@ -57,6 +58,21 @@ internal sealed class ChartIdentityHandler
         }
 
         return result;
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<ChartBadgePresenceRecord>>> Handle(
+        GetChartBadgePresenceQuery request, CancellationToken cancellationToken)
+    {
+        var metrics = await _metrics.GetMetrics(request.ChartIds, PiuCenterMetrics.Source, cancellationToken);
+        return metrics.GroupBy(m => m.ChartId)
+            .Select(g => (g.Key, Profile: ChartBadgeProfile.From(g.Key, g.ToArray())))
+            .Select(x => (x.Key, Badges: (IReadOnlyList<ChartBadgePresenceRecord>)x.Profile.PresentBadges
+                .Select(b => new ChartBadgePresenceRecord(b, PiuCenterBadges.DisplayName(b),
+                    PiuCenterBadges.CategoryFor(b),
+                    ChartIdentityRules.IsWholeChartBadge(b) ? 1m : x.Profile.CoverageOf(b)))
+                .ToArray()))
+            .Where(x => x.Badges.Count > 0)
+            .ToDictionary(x => x.Key, x => x.Badges);
     }
 
     public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> Handle(GetArchivedSkillTagsQuery request,

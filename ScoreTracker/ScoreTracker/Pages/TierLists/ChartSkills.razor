@@ -75,7 +75,11 @@ else
                 <MudButton Variant="@(IsMyProgress ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping(CurrentUser.IsLoggedIn ? "Score" : "Scoring Level"))">@L["My Scores"]</MudButton>
                 @if (FolderHasSkills)
                 {
-                    <MudButton Variant="@(IsSkillView ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Skill"))">@L["Skill Breakdown"]</MudButton>
+                    <MudButton Variant="@(_groupBy == "Skill" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Skill"))">@L["Skill Breakdown"]</MudButton>
+                }
+                @if (FolderHasSpeed)
+                {
+                    <MudButton Variant="@(_groupBy == "Speed" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Speed"))">@L["Speed"]</MudButton>
                 }
             </MudButtonGroup>
             @* The same four views as one control under 500 — on a portrait phone even a
@@ -90,6 +94,10 @@ else
                 @if (FolderHasSkills)
                 {
                     <MudSelectItem T="string" Value="@("Skill")">@L["Skill Breakdown"]</MudSelectItem>
+                }
+                @if (FolderHasSpeed)
+                {
+                    <MudSelectItem T="string" Value="@("Speed")">@L["Speed"]</MudSelectItem>
                 }
             </MudSelect>
             <div class="tier-lens-wrap">
@@ -244,7 +252,7 @@ else
                Breakdown page via FolderSkillList. *@
             @if (CurrentUser.IsLoggedIn)
             {
-                <FolderSkillList Charts="_charts.Values" SkillChips="_skillChips" Scores="_scores"
+                <FolderSkillList Charts="_charts.Values" BadgePresence="_badgePresence" Scores="_scores"
                                  Title="@L["Your Skills in Folder"]"></FolderSkillList>
             }
             @if (_unpassedTodos.Any())
@@ -461,7 +469,7 @@ else
             {
                 continue;
             }
-            <TierSection Name="@group.Name" Color="@group.Color" Count="visible.Length" Stat="@GroupStat(visible)"
+            <TierSection Name="@group.Name" Color="@group.Color" Count="visible.Length" Stat="@GroupStat(visible, group)"
                          Collapsed="_collapsedTiers.Contains(group.Key)" CollapsedChanged="c => SetTierCollapsed(group.Key, c)">
                 @if (_density == UiDensity.Table)
                 {
@@ -981,31 +989,49 @@ else
     private IDictionary<Guid, XXLetterGrade> _legacyGrades = new Dictionary<Guid, XXLetterGrade>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
 
-    private IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> _skillChips =
-        new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>();
+    private IReadOnlyDictionary<Guid, ChartIdentityRecord> _identity =
+        new Dictionary<Guid, ChartIdentityRecord>();
 
-    // Card + table chips: dominance-ordered metrics when banked, mapped tags as the
-    // pre-crawl fallback. Metric text is preformatted here so the card stays dumb.
+    /// <summary>
+    ///     The retired hand tags, loaded only while the Chabala lens is showing — the one
+    ///     surface that still speaks his vocabulary (docs/design/nuke-old-skill-categories.md §7).
+    /// </summary>
+    private IReadOnlyDictionary<Guid, IReadOnlyList<string>> _archivedTags =
+        new Dictionary<Guid, IReadOnlyList<string>>();
+
+    /// <summary>Every badge each chart carries, with its evidence weight — the drawer's input.</summary>
+    private IReadOnlyDictionary<Guid, IReadOnlyList<ChartBadgePresenceRecord>> _badgePresence =
+        new Dictionary<Guid, IReadOnlyList<ChartBadgePresenceRecord>>();
+
+    /// <summary>
+    ///     The folder's Speed band per chart, from the stored Speed tier list. Empty until an
+    ///     ingestion has built it, which is what makes Group By Speed offer itself only when it
+    ///     can answer.
+    /// </summary>
+    private IReadOnlyDictionary<Guid, SongTierListEntry> _speedBands =
+        new Dictionary<Guid, SongTierListEntry>();
+
+    /// <summary>
+    ///     What a card wears. Every lens shows the chart's identity chips; the Chabala lens
+    ///     swaps in his archived tags, because on his list his words belong. They map to
+    ///     nothing and are deliberately uncoloured.
+    /// </summary>
     private IReadOnlyList<TierListChartCard.CardSkillChip>? SkillChipsFor(Chart chart)
     {
-        static string CategoryClass(Skill skill)
+        if (ChabalaLensActive)
         {
-            return $"skillcat-{skill.GetPrimaryCategory().ToString().ToLowerInvariant()}";
+            var archived = IdentityChips.ToArchivedChips(
+                _archivedTags.TryGetValue(chart.Id, out var tags) ? tags : null);
+            return archived.Count > 0 ? archived : null;
         }
 
-        if (_skillChips.TryGetValue(chart.Id, out var chips) && chips.Count > 0)
-            return chips.Select(c => new TierListChartCard.CardSkillChip(
-                    c.Skill.GetName(),
-                    CategoryClass(c.Skill),
-                    _settings.ShowSkillMetric && c.SegmentFraction != null
-                        ? $"{(int)Math.Round(c.SegmentFraction.Value * 100)}%"
-                        : null))
-                .ToArray();
-        if (!chart.Skills.Any()) return null;
-        return chart.Skills
-            .Select(s => new TierListChartCard.CardSkillChip(s.GetName(), CategoryClass(s), null))
-            .ToArray();
+        var chips = IdentityChips.ToCardChips(
+            _identity.TryGetValue(chart.Id, out var identity) ? identity : null,
+            _settings.ShowSkillMetric, L);
+        return chips.Count > 0 ? chips : null;
     }
+
+    private bool ChabalaLensActive => _tierListType == "Chabala" && ChabalaAvailable;
     private IDictionary<Guid, double> _scoringLevels = new Dictionary<Guid, double>();
     private IDictionary<Guid, Chart> _allCharts = new Dictionary<Guid, Chart>();
     private IReadOnlySet<Guid> _otherMixPasses = new HashSet<Guid>();
@@ -1044,7 +1070,10 @@ else
     }
     // Color is the on-screen CSS token reference; ShareHex is the same hue resolved to a
     // raw hex for the share-card renderer (which can't read CSS custom properties).
-    private sealed record TierGroup(string Key, string Name, string Color, string ShareHex, IReadOnlyList<SongTierListEntry> Entries);
+    // Stat is the section's own note — the Speed bands' real NPS range — printed before the
+    // cleared count so a folder-relative band name never reads as an absolute claim.
+    private sealed record TierGroup(string Key, string Name, string Color, string ShareHex,
+        IReadOnlyList<SongTierListEntry> Entries, string? Stat = null);
 
     private IEnumerable<TitleProgress> _titleProgress = Array.Empty<TitleProgress>();
     private FolderTitleTrackResult? _titleTrack;
@@ -1540,26 +1569,27 @@ else
     ///     in — the one view whose whole point is being a deliberate choice.
     /// </summary>
     private static readonly string[] ValidGroupings =
-        { "Difficulty", "Personalized", "Score", "Age", "Score Ranking", "Scoring Level", "Skill" };
+        { "Difficulty", "Personalized", "Score", "Age", "Score Ranking", "Scoring Level", "Skill", "Speed" };
 
-    private bool IsMyProgress => _groupBy is not "Difficulty" and not "Personalized" and not "Skill";
+    private bool IsMyProgress =>
+        _groupBy is not "Difficulty" and not "Personalized" and not "Skill" and not "Speed";
 
     /// <summary>Community and Personalized both section by the lens; they differ only in data.</summary>
     private bool IsTierView => _groupBy is "Difficulty" or "Personalized";
 
     private bool CanPersonalize => CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && !IsLegacy;
 
-    private bool IsSkillView => _groupBy == "Skill";
+    private bool IsSkillView => _groupBy is "Skill" or "Speed";
 
     /// <summary>
-    ///     Whether this folder has skills to break down, asked of the folder rather than of the
-    ///     mix. Skills are a property of the CHART — <c>ChartSkill</c> carries no mix column, and
-    ///     the catalog attaches the same rows whichever mix it loads — so a Phoenix 2 folder has
-    ///     had them all along and a mix-level flag was hiding data that was already there. It
-    ///     also retires the legacy special case: a mix with no tagged charts answers no on its
-    ///     own, without a rule saying so.
+    ///     Whether this folder has anything to break down, asked of the folder rather than of
+    ///     the mix: a folder with no banked step analysis answers no on its own, and no
+    ///     capability flag has to say so.
     /// </summary>
-    private bool FolderHasSkills => _charts.Values.Any(c => c.Skills.Any());
+    private bool FolderHasSkills => _identity.Count > 0;
+
+    /// <summary>Group By Speed offers itself only where the Speed list can answer.</summary>
+    private bool FolderHasSpeed => _speedBands.Count > 0;
 
     // When the grouping isn't the lens itself, each card/row carries its lens tier — word +
     // color, never color alone (rule 8; round-6 field test). Both tier views section BY the
@@ -1606,8 +1636,13 @@ else
 
     private int PassedCount => _charts.Keys.Count(Passed);
 
-    private string? GroupStat(IReadOnlyCollection<SongTierListEntry> visible) =>
-        CurrentUser.IsLoggedIn ? L["{0} / {1} cleared", visible.Count(e => Passed(e.ChartId)), visible.Count].ToString() : null;
+    private string? GroupStat(IReadOnlyCollection<SongTierListEntry> visible, TierGroup group)
+    {
+        var cleared = CurrentUser.IsLoggedIn
+            ? L["{0} / {1} cleared", visible.Count(e => Passed(e.ChartId)), visible.Count].ToString()
+            : null;
+        return string.Join(" · ", new[] { group.Stat, cleared }.Where(s => !string.IsNullOrEmpty(s)));
+    }
 
     // --- Toolbar interactions --------------------------------------------------------------
 
@@ -1845,10 +1880,29 @@ else
             .ToDictionary(c => c.Id);
         _folderScores = _scores.Where(kv => _charts.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
-        // Skill Breakdown answers to the folder, so its fallback has to run once the folder is
-        // known — the init guard runs before any chart is loaded and would strip a legitimate
-        // saved grouping. Also covers folder-hopping into one with nothing tagged.
-        if (IsSkillView && !FolderHasSkills)
+        // The folder's identity chips — read against THIS folder, which is why the mix goes
+        // with the ids. Empty until an ingestion has banked step analysis and baselines.
+        _identity = await Mediator.Send(new GetChartIdentityQuery(_charts.Keys.ToArray(), _currentMix),
+            cancellationToken);
+        // Per-badge presence for the Folder Stats drawer's ability rows: every badge a chart
+        // really carries, not the handful the cards had room for.
+        _badgePresence = await Mediator.Send(new GetChartBadgePresenceQuery(_charts.Keys.ToArray()),
+            cancellationToken);
+
+        _archivedTags = ChabalaLensActive
+            ? await Mediator.Send(new GetArchivedSkillTagsQuery(_charts.Keys.ToArray()), cancellationToken)
+            : new Dictionary<Guid, IReadOnlyList<string>>();
+        // The Speed list is stored per mix for every folder at once; this folder's slice is
+        // what Group By Speed sections on.
+        _speedBands = (await Mediator.Send(new GetTierListQuery("Speed", _currentMix), cancellationToken))
+            .Where(e => _charts.ContainsKey(e.ChartId))
+            .GroupBy(e => e.ChartId)
+            .ToDictionary(g => g.Key, g => g.First());
+
+        // Both breakdown views answer to the folder, so their fallback runs once the folder's
+        // data is known — the init guard runs before any chart is loaded and would strip a
+        // legitimate saved grouping. Also covers folder-hopping into one with nothing banked.
+        if ((_groupBy == "Skill" && !FolderHasSkills) || (_groupBy == "Speed" && !FolderHasSpeed))
         {
             _groupBy = "Difficulty";
         }
@@ -1877,10 +1931,6 @@ else
             _folderLevel = null;
             _folderGrades = Array.Empty<PhoenixLetterGrade>();
         }
-        // Dominance-ordered skills + segment coverage for the card chips and the
-        // table's Skills column; empty until the first piucenter crawl banks metrics.
-        _skillChips = await Mediator.Send(new GetChartSkillChipsQuery(_charts.Keys.ToArray()), cancellationToken);
-
         if (IsLegacy)
         {
             // Community lens only: entries were fetched whole-mix at init; the folder
@@ -2050,6 +2100,7 @@ else
             "Score Ranking" => GroupByScoreRanking(),
             "Scoring Level" => GroupByScoringLevel(),
             "Skill" => GroupBySkill(),
+            "Speed" => GroupBySpeed(),
             _ => GroupByTier()
         };
     }
@@ -2273,50 +2324,129 @@ else
     // --- By-Skill view (round 4: the radar charts' information, placed where it's
     // actionable — one section per skill, sorted weakest-first) ---------------------------
 
+    /// <summary>
+    ///     Group By Skill: the five badge families, weakest first
+    ///     (docs/design/chart-identity.md §7). Filing is chip-driven — a chart sits under the
+    ///     families of the chips it actually shows — so the section a chart is in and the chips
+    ///     on its card are the same statement. The spike files nowhere: it is a shape, not a
+    ///     skill.
+    /// </summary>
     private IReadOnlyList<TierGroup> GroupBySkill()
     {
         var entryByChart = _finalEntries.ToDictionary(e => e.ChartId);
-        var skillGroups = _charts.Values
-            .SelectMany(c => c.Skills.Select(s => (Skill: s, Chart: c)))
-            .GroupBy(p => p.Skill)
-            .Select(g =>
-            {
-                var entries = LensOrdered(g.Where(p => entryByChart.ContainsKey(p.Chart.Id))
-                        .Select(p => entryByChart[p.Chart.Id]))
-                    .ToArray();
-                var scored = entries
-                    .Where(e => _scores.TryGetValue(e.ChartId, out var s) && s is { Score: not null, IsBroken: false })
-                    .Select(e => (int)_scores[e.ChartId].Score!.Value)
-                    .ToArray();
-                var passRate = entries.Length == 0 ? 0.0 : (double)entries.Count(e => Passed(e.ChartId)) / entries.Length;
-                return (g.Key, Entries: entries, PassRate: passRate,
-                    Average: scored.Any() ? (int?)scored.Average() : null);
-            })
-            .Where(g => g.Entries.Length > 0)
+        var families = _charts.Values
+            .SelectMany(c => FamiliesOf(c.Id).Select(family => (Family: family, ChartId: c.Id)))
+            .GroupBy(p => p.Family)
+            .Select(g => BuildHeatGroup($"Skill:{g.Key}", FamilyName(g.Key),
+                g.Select(p => p.ChartId), entryByChart))
+            .Where(g => g.Entries.Count > 0)
             .OrderBy(g => CurrentUser.IsLoggedIn ? g.PassRate : 0)
             .ThenBy(g => g.Average ?? int.MaxValue)
-            .ThenBy(g => g.Key.GetName())
-            .Select(g =>
-            {
-                var heat = SkillHeatCategory(g.PassRate);
-                return new TierGroup($"Skill:{g.Key}", g.Key.GetName(),
-                    heat == null ? NeutralSectionColor : ThemeScales.DifficultyColor(heat.Value),
-                    heat == null ? MixThemes.PaletteFor(_currentMix).InkMuted : MixThemes.DifficultyHex(heat.Value),
-                    g.Entries);
-            })
+            .ThenBy(g => g.Group.Name)
+            .Select(g => g.Group)
             .ToList();
 
-        var untagged = _finalEntries
-            .Where(e => _charts.TryGetValue(e.ChartId, out var c) && !c.Skills.Any())
+        var unfiled = _finalEntries
+            .Where(e => !FamiliesOf(e.ChartId).Any())
             .OrderBy(e => e.Order)
             .ToArray();
-        if (untagged.Any())
-        {
-            skillGroups.Add(new TierGroup("Skill:None", L["Not Tagged"], NeutralSectionColor,
-                MixThemes.PaletteFor(_currentMix).InkMuted, untagged));
-        }
+        if (unfiled.Any())
+            families.Add(new TierGroup("Skill:None", L["Not Tagged"], NeutralSectionColor,
+                MixThemes.PaletteFor(_currentMix).InkMuted, unfiled));
 
-        return skillGroups;
+        return families;
+    }
+
+    /// <summary>
+    ///     Group By Speed: the folder banded against its own notes-per-second spread, slow to
+    ///     fast (docs/design/chart-identity.md §2). Ordered by the band rather than by pass
+    ///     rate — this is a map of the folder, and its heat is honestly not monotone: slow
+    ///     charts at high levels are hard for reasons that have nothing to do with speed.
+    /// </summary>
+    private IReadOnlyList<TierGroup> GroupBySpeed()
+    {
+        var entryByChart = _finalEntries.ToDictionary(e => e.ChartId);
+        var groups = _speedBands
+            .Where(kv => entryByChart.ContainsKey(kv.Key))
+            .GroupBy(kv => kv.Value.Category)
+            .OrderBy(g => g.Key)
+            .Select(g => BuildHeatGroup($"Speed:{g.Key}", SpeedBandName(g.Key), g.Select(kv => kv.Key),
+                entryByChart, NpsRange(g.Select(kv => kv.Value))).Group)
+            .ToList();
+
+        var unmeasured = _finalEntries.Where(e => !_speedBands.ContainsKey(e.ChartId))
+            .OrderBy(e => e.Order)
+            .ToArray();
+        if (unmeasured.Any())
+            groups.Add(new TierGroup("Speed:None", L["Speed not measured"], NeutralSectionColor,
+                MixThemes.PaletteFor(_currentMix).InkMuted, unmeasured));
+
+        return groups;
+    }
+
+    /// <summary>
+    ///     A section whose colour is how you do in it — shared by both groupings so the two
+    ///     read alike. Logged out there is no heat to show, and the section stays neutral.
+    /// </summary>
+    private (TierGroup Group, IReadOnlyList<SongTierListEntry> Entries, double PassRate, int? Average)
+        BuildHeatGroup(string key, string name, IEnumerable<Guid> chartIds,
+            IReadOnlyDictionary<Guid, SongTierListEntry> entryByChart, string? stat = null)
+    {
+        var entries = LensOrdered(chartIds.Distinct()
+                .Where(entryByChart.ContainsKey)
+                .Select(id => entryByChart[id]))
+            .ToArray();
+        var scored = entries
+            .Where(e => _scores.TryGetValue(e.ChartId, out var s) && s is { Score: not null, IsBroken: false })
+            .Select(e => (int)_scores[e.ChartId].Score!.Value)
+            .ToArray();
+        var passRate = entries.Length == 0 ? 0.0 : (double)entries.Count(e => Passed(e.ChartId)) / entries.Length;
+        var heat = SkillHeatCategory(passRate);
+        return (new TierGroup(key, name,
+            heat == null ? NeutralSectionColor : ThemeScales.DifficultyColor(heat.Value),
+            heat == null ? MixThemes.PaletteFor(_currentMix).InkMuted : MixThemes.DifficultyHex(heat.Value),
+            entries, stat), entries, passRate, scored.Any() ? (int?)scored.Average() : null);
+    }
+
+    /// <summary>The families a chart files under — the chips it shows, minus the shape-only spike.</summary>
+    private IEnumerable<BadgeCategory> FamiliesOf(Guid chartId)
+    {
+        if (!_identity.TryGetValue(chartId, out var identity)) return Array.Empty<BadgeCategory>();
+        return identity.Chips
+            .Where(c => c.Kind != IdentityChipKind.Spike && c.Family != null)
+            .Select(c => c.Family!.Value)
+            .Distinct();
+    }
+
+    private string FamilyName(BadgeCategory family) => L[family switch
+    {
+        BadgeCategory.Brackets => "Brackets",
+        BadgeCategory.Twists => "Twists",
+        BadgeCategory.StaminaAndRuns => "Stamina & Runs",
+        BadgeCategory.Tech => "Tech",
+        _ => "Doubles Tech"
+    }].Value;
+
+    /// <summary>
+    ///     Band names are folder-relative labels, and the range beside them is what makes that
+    ///     concrete — "Fast" alone invites reading it as an absolute.
+    /// </summary>
+    private string SpeedBandName(TierListCategory band) => L[band switch
+    {
+        TierListCategory.Overrated => "Very Slow",
+        TierListCategory.VeryEasy => "Slow",
+        TierListCategory.Medium => "Moderate",
+        TierListCategory.Hard => "Fast",
+        _ => "Very Fast"
+    }].Value;
+
+    /// <summary>The band's real NPS span, recovered from the Order the Speed list stored it in.</summary>
+    private string NpsRange(IEnumerable<SongTierListEntry> entries)
+    {
+        var values = entries.Select(e => e.Order / 100.0).OrderBy(v => v).ToArray();
+        return values.Length == 0
+            ? string.Empty
+            : L["{0}–{1} NPS", values[0].ToString("0.#"), values[^1].ToString("0.#")].Value;
     }
 
     private TierListCategory? SkillHeatCategory(double passRate)
