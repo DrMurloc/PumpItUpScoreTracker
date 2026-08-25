@@ -100,51 +100,18 @@
             ? EventCallback.Factory.Create(this, () => OnOpenBreakdown.InvokeAsync(Score))
             : default;
 
-    /// <summary>
-    ///     A Perfect Game most of the cohort shares renders in plain ink (D46): ties count as
-    ///     beaten in the stored percentile, so an easy chart everyone PGs read as the rarest
-    ///     thing on the page. The standing line still says who shares it — that is the honest
-    ///     fact — only the colour stands down.
-    /// </summary>
-    private bool SharedPgMute =>
-        Score.Row.Score == PerfectGame
-        && Score.Detail is { PeerPgCount: { } pg, PeerCount: { } cohort } && pg * 2 > cohort;
-
-    private string ScoreColor => Score.PeerPercentile == null || SharedPgMute
+    private string ScoreColor => Score.PeerPercentile == null || Score.SharedPgMute
         ? string.Empty
         : ThemeScales.RarityStyle(Score.PeerPercentile.Value);
 
-    private string GlowClass => Score.PeerPercentile == null || SharedPgMute
+    private string GlowClass => Score.PeerPercentile == null || Score.SharedPgMute
         ? string.Empty
         : ThemeScales.RarityClass(ThemeScales.BandFor(Score.PeerPercentile.Value));
 
-    /// <summary>
-    ///     Where you stand in the cohort the colour came from, as a place rather than a share —
-    ///     "#6 of 94" is the same fact as a percentile and reads like a leaderboard, which is
-    ///     what it is. Null when nothing measured this score: the row then says nothing about
-    ///     it, because a disclaimer there confuses more than it clarifies (owner call).
-    /// </summary>
-    private string? StandingText
-    {
-        get
-        {
-            // A broken run's standing would be the standing of a score it never achieved —
-            // highlight pinning already keeps detail off these rows, and this agrees.
-            if (Score.Row.IsBroken) return null;
-            if (Score.Detail?.PeerCount is not { } cohort || cohort == 0) return null;
+    /// <summary>Shared with the highlight card — one play, one set of marks (SessionBadges).</summary>
+    private string? StandingText => SessionBadges.Standing(Score, L);
 
-            // A Perfect Game cannot be beaten, only tied, so every PG row is "#1" and the place
-            // stops distinguishing anything. How many peers share it is the fact worth the line
-            // instead — unless nobody does, where the place says the better thing.
-            if (Score.Row.Score == PerfectGame && Score.OtherPeersWithPg is { } shared
-                                               && Score.PeerCountExcludingYou is { } peers)
-                return L["PG · {0} of {1} peers have it", shared, peers];
-
-            return Score.PeerPlace is { } place ? L["#{0} of {1} peers", place, cohort] : null;
-        }
-    }
-
-    private const int PerfectGame = 1_000_000;
+    private IEnumerable<SessionBadges.SessionBadge> Badges => SessionBadges.For(Score, L, includeGain: true);
 
     /// <summary>
     ///     "Stage break · 31% in" — the notes the card judged over the chart's note count — or the
@@ -155,85 +122,4 @@
         StageBreakProgress.PercentIn(Score.Row.JudgedNotes, Score.Chart?.NoteCount) is { } percent
             ? L["Stage break · {0}% in", percent]
             : L["Stage break"];
-
-    /// <summary>
-    ///     One item in the strip. Most are a glyph and an optional suffix; two are numbers that
-    ///     elaborate the glyph beside them and carry their own treatment.
-    /// </summary>
-    private sealed record RowBadge(string Text, string Tooltip, string Class = "sbd-badge");
-
-    private IEnumerable<RowBadge> Badges
-    {
-        get
-        {
-            var detail = Score.Detail;
-            if (Score.Flags.HasFlag(HighlightFlags.PumbilityTop50))
-                yield return new RowBadge(detail?.PumbilityRank is { } r ? $"👑 #{r}" : "👑",
-                    L["In your PUMBILITY top 50"].Value);
-            // Straight after the crown, because it answers what the crown does not: the crown
-            // says the chart sits in your pool, which it may have done all night. This says what
-            // tonight's play on it was worth.
-            if (detail?.PumbilityGain is { } gain && gain > 0)
-                yield return new RowBadge($"+{PumbilityFormat.Gain(gain)}", L["What this play added to your PUMBILITY"].Value,
-                    "sbd-gain");
-            // No ScoreQuality90 badge: it said "top 10% among comparable players", and the
-            // standing line beneath now says exactly where you placed among them. The flag
-            // itself is untouched — it still rides the Discord card and seeds hot streaks.
-            if (Score.Flags.HasFlag(HighlightFlags.FolderCompletion90))
-                yield return new RowBadge("📁", L["Nearly complete folder"].Value);
-            // No ⬆ glyph any more (D47): the readout beside it carried the same fact as a
-            // number, and two marks for one fact is one too many. The flag stays in the model
-            // — the Discord card still draws it — and a pre-baseline row simply shows nothing.
-            if (CompetitiveReadout is { } readout)
-                yield return new RowBadge(readout,
-                    L["What this score rates, against your level when the session reached it"].Value,
-                    "sbd-comp");
-            if (Score.Flags.HasFlag(HighlightFlags.FolderDebut))
-                yield return new RowBadge(detail?.FolderDebutOrdinal is { } o ? $"🆕 #{o}" : "🆕",
-                    L["One of your first passes in this folder"].Value);
-            if (Score.Flags.HasFlag(HighlightFlags.OfficialBoardPlacement) && detail?.OfficialPlace is { } place)
-                yield return new RowBadge($"🌐 ~#{place}", L["Estimated place on the official board"].Value);
-            // Only ever counted on the clear that ended them, which reads as a win.
-            if (detail?.AttemptsBeforeClear is { } attempts && attempts > 0)
-                yield return new RowBadge($"🎯 {attempts + 1}", L["Attempts before this clear"].Value);
-            if (Score.Row.IsReclear)
-                yield return new RowBadge("🔁", L["Passed in another mix"].Value);
-            // Gold, not green: the tail already carries a green delta over your previous Phoenix
-            // 2 score, and a second green number measuring a different baseline eight pixels away
-            // reads as the same fact twice. The words keep them apart, so "over P1" never
-            // abbreviates away.
-            if (Score.Phoenix1Gain is { } phoenix1)
-                yield return new RowBadge(L["+{0} over P1", phoenix1.ToString("N0")].Value,
-                    L["The first Phoenix 2 score to beat your Phoenix 1 best"].Value, "sbd-p1");
-        }
-    }
-
-    /// <summary>
-    ///     "23.6 (+0.4)" — what this score rates on the competitive scale, and how far that sat
-    ///     above the level the batch opened at. Both terms are needed and only one is stored:
-    ///     the score's own rating is a pure function of chart level and score, while the baseline
-    ///     is per-batch and had to be captured.
-    ///     <para>
-    ///         Under a twentieth of a level the difference is recomputation noise wearing a plus
-    ///         sign, so it says nothing rather than "+0.0".
-    ///     </para>
-    /// </summary>
-    private string? CompetitiveReadout
-    {
-        get
-        {
-            if (Score.Detail?.CompetitiveBaseline is not { } baseline) return null;
-            if (Score.Chart is not { } chart || Score.Row.Score is not { } score || Score.Row.IsBroken) return null;
-            // Co-op never has a competitive comparison — the levels are Singles and Doubles only.
-            if (chart.Type == ChartType.CoOp) return null;
-
-            var rated = ScoringConfiguration.CalculateFungScore(chart.Level, PhoenixScore.From(score), chart.Type);
-            var over = rated - baseline;
-            return over < MinimumCompetitiveGain
-                ? null
-                : $"{rated:N1} (+{over:N1})";
-        }
-    }
-
-    private const double MinimumCompetitiveGain = 0.05;
 }

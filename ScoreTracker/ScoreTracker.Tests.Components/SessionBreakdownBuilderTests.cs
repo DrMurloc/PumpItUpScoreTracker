@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 using MediatR;
 using Moq;
 using ScoreTracker.Catalog.Contracts.Queries;
-using ScoreTracker.Communities.Contracts;
-using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -30,7 +28,7 @@ public sealed class SessionBreakdownBuilderTests
     private static readonly DateTimeOffset Start = new(2026, 8, 1, 20, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public async Task AChartPlayedSeveralTimesInOneSessionBuildsOneBoard()
+    public async Task AChartPlayedSeveralTimesInOneSessionBuildsEveryRow()
     {
         // The shape a session with attempts always has: six losing plays and the clear that
         // ended them, all on one chart. Treating the row list as one-per-chart threw here.
@@ -41,57 +39,10 @@ public sealed class SessionBreakdownBuilderTests
             .Append(Row(chart.Id, Start.AddMinutes(45), 912400, false, ScoreEventClassification.NewPass))
             .ToArray();
 
-        var model = await Build(chart, rows, peers: new[] { Peer("MIDNIGHT", 20.9, 930000) });
+        var model = await Build(chart, rows);
 
         Assert.NotNull(model.Hero);
         Assert.Equal(7, model.Hero!.Scores.Count);
-        Assert.Single(model.Hero.PeerBoards);
-    }
-
-    /// <summary>
-    ///     Six clubmates against a board that shows five, so the cap actually bites. FAR holds
-    ///     the top score and sits nearly three levels off; everyone else is within reach.
-    /// </summary>
-    private static CommunityPeerScore[] SixClubmates()
-    {
-        return new[]
-        {
-            Peer("FAR", 19.8, 998000),
-            Peer("A", 22.5, 901000),
-            Peer("B", 22.7, 950000),
-            Peer("C", 22.4, 930000),
-            Peer("D", 22.8, 910000),
-            Peer("E", 22.3, 940000)
-        };
-    }
-
-    [Fact]
-    public async Task ClosenessPicksWhoAppearsAndScoreOrdersThem()
-    {
-        var chart = ChartAt(ChartType.Single, 21);
-        var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
-
-        var model = await Build(chart, rows, SixClubmates());
-
-        var board = Assert.Single(model.Hero!.PeerBoards);
-        // FAR is dropped for distance despite the best score; the rest read high to low.
-        Assert.Equal(new[] { "B", "E", "C", "D", "A" },
-            board.Peers.Select(p => p.Score.PlayerName.ToString()));
-    }
-
-    [Fact]
-    public async Task PeerPlacesAreRealStandingsAcrossTheWholeClub()
-    {
-        // FAR is #1 on the chart and is not shown, so the five that are keep places 2..6 rather
-        // than being renumbered from one. A place counting only the visible rows would be a
-        // different claim entirely.
-        var chart = ChartAt(ChartType.Single, 21);
-        var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
-
-        var model = await Build(chart, rows, SixClubmates());
-
-        var board = Assert.Single(model.Hero!.PeerBoards);
-        Assert.Equal(new[] { 2, 3, 4, 5, 6 }, board.Peers.Select(p => p.Place));
     }
 
     [Fact]
@@ -101,7 +52,7 @@ public sealed class SessionBreakdownBuilderTests
         // interaction used to look like a navigation.
         var chart = ChartAt(ChartType.Single, 21);
         var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
-        var (builder, model) = await BuildWith(chart, rows, Array.Empty<CommunityPeerScore>());
+        var (builder, model) = await BuildWith(chart, rows);
 
         var paged = await builder.Refilter(model, User, 2, 20, null, CancellationToken.None);
 
@@ -113,7 +64,7 @@ public sealed class SessionBreakdownBuilderTests
     {
         var chart = ChartAt(ChartType.Single, 21);
         var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
-        var (builder, model) = await BuildWith(chart, rows, Array.Empty<CommunityPeerScore>());
+        var (builder, model) = await BuildWith(chart, rows);
 
         var reselected = await builder.Reselect(model, User, Session, 1, 20, null, CancellationToken.None);
 
@@ -127,7 +78,7 @@ public sealed class SessionBreakdownBuilderTests
         var chart = ChartAt(ChartType.Single, 21);
         var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
 
-        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>(),
+        var model = await Build(chart, rows,
             captured: false, sessionEndedMinutesAgo: 0);
 
         Assert.True(model.Hero!.CapturePending);
@@ -141,7 +92,7 @@ public sealed class SessionBreakdownBuilderTests
         var chart = ChartAt(ChartType.Single, 21);
         var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
 
-        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>(),
+        var model = await Build(chart, rows,
             captured: false, sessionEndedMinutesAgo: 30);
 
         Assert.False(model.Hero!.CapturePending);
@@ -157,7 +108,7 @@ public sealed class SessionBreakdownBuilderTests
         var chart = ChartAt(ChartType.Single, 21);
         var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
 
-        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>(),
+        var model = await Build(chart, rows,
             captured: true, sessionEndedMinutesAgo: 0);
 
         Assert.False(model.Hero!.CapturePending);
@@ -173,7 +124,7 @@ public sealed class SessionBreakdownBuilderTests
         var chart = ChartAt(ChartType.Single, 21);
         var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
 
-        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>(), captured: false);
+        var model = await Build(chart, rows, captured: false);
 
         Assert.False(model.Hero!.CapturePending);
     }
@@ -184,7 +135,7 @@ public sealed class SessionBreakdownBuilderTests
         var chart = ChartAt(ChartType.Single, 21);
         var rows = new[] { Row(chart.Id, Start, 960000, false, ScoreEventClassification.NewPass) };
 
-        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>(), MixEnum.Phoenix2,
+        var model = await Build(chart, rows, MixEnum.Phoenix2,
             new[] { Phoenix1(chart.Id, 940000) });
 
         Assert.Equal(20000, model.Hero!.Scores.Single().Phoenix1Gain);
@@ -198,7 +149,7 @@ public sealed class SessionBreakdownBuilderTests
         var chart = ChartAt(ChartType.Single, 21);
         var rows = new[] { RowFrom(chart.Id, 975000, previousBest: 950000) };
 
-        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>(), MixEnum.Phoenix2,
+        var model = await Build(chart, rows, MixEnum.Phoenix2,
             new[] { Phoenix1(chart.Id, 940000) });
 
         Assert.Null(model.Hero!.Scores.Single().Phoenix1Gain);
@@ -210,7 +161,7 @@ public sealed class SessionBreakdownBuilderTests
         var chart = ChartAt(ChartType.Single, 21);
         var rows = new[] { Row(chart.Id, Start, 960000, false, ScoreEventClassification.NewPass) };
 
-        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>(), MixEnum.Phoenix,
+        var model = await Build(chart, rows, MixEnum.Phoenix,
             new[] { Phoenix1(chart.Id, 940000) });
 
         Assert.Null(model.Hero!.Scores.Single().Phoenix1Gain);
@@ -222,7 +173,7 @@ public sealed class SessionBreakdownBuilderTests
         var chart = ChartAt(ChartType.Single, 21);
         var rows = new[] { Row(chart.Id, Start, 960000, false, ScoreEventClassification.NewPass) };
 
-        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>(), MixEnum.Phoenix2,
+        var model = await Build(chart, rows, MixEnum.Phoenix2,
             new[] { Phoenix1(chart.Id, 940000, broken: true) });
 
         Assert.Null(model.Hero!.Scores.Single().Phoenix1Gain);
@@ -234,7 +185,7 @@ public sealed class SessionBreakdownBuilderTests
         var chart = ChartAt(ChartType.Single, 21);
         var rows = new[] { Row(chart.Id, Start, 940000, false, ScoreEventClassification.NewPass) };
 
-        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>(), MixEnum.Phoenix2,
+        var model = await Build(chart, rows, MixEnum.Phoenix2,
             new[] { Phoenix1(chart.Id, 940000) });
 
         Assert.Null(model.Hero!.Scores.Single().Phoenix1Gain);
@@ -252,7 +203,7 @@ public sealed class SessionBreakdownBuilderTests
             .Append(Row(chart.Id, Start.AddMinutes(45), 912400, false, ScoreEventClassification.NewPass))
             .ToArray();
 
-        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>());
+        var model = await Build(chart, rows);
 
         var flagged = Assert.Single(model.Hero!.Scores, s => s.IsFlagged);
         Assert.Equal(ScoreEventClassification.NewPass, flagged.Row.Classification);
@@ -279,7 +230,7 @@ public sealed class SessionBreakdownBuilderTests
                 21, 21.4, new HighlightDetail(PumbilityRank: 40))
         };
 
-        var model = await Build(chart, new[] { pass, upscore }, Array.Empty<CommunityPeerScore>(),
+        var model = await Build(chart, new[] { pass, upscore },
             highlights: highlights);
 
         var byTime = model.Hero!.Scores.OrderBy(s => s.Row.OccurredAt).ToArray();
@@ -304,7 +255,7 @@ public sealed class SessionBreakdownBuilderTests
                 21, 21.4, new HighlightDetail(PumbilityRank: 40, PeerPercentile: 0.9))
         };
 
-        var model = await Build(chart, new[] { upscore }, Array.Empty<CommunityPeerScore>(),
+        var model = await Build(chart, new[] { upscore },
             highlights: highlights);
 
         var row = model.Hero!.Scores.Single();
@@ -319,23 +270,23 @@ public sealed class SessionBreakdownBuilderTests
         var chart = ChartAt(ChartType.Single, 21);
         var rows = new[] { Row(chart.Id, Start, 400000, broken: true, ScoreEventClassification.Break) };
 
-        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>());
+        var model = await Build(chart, rows);
 
         Assert.DoesNotContain(model.Hero!.Scores, s => s.IsFlagged);
         Assert.All(model.Hero.Scores, s => Assert.Null(s.Detail));
     }
 
     private static async Task<SessionsPageModel> Build(Chart chart,
-        RecentSessionsPage.ScoreEventRecord[] rows, CommunityPeerScore[] peers,
+        RecentSessionsPage.ScoreEventRecord[] rows,
         MixEnum mix = MixEnum.Phoenix, UserPhoenixScore[]? phoenix1 = null,
         bool captured = true, int? sessionEndedMinutesAgo = null, ScoreHighlightRecord[]? highlights = null)
     {
-        return (await BuildWith(chart, rows, peers, mix, phoenix1, captured, sessionEndedMinutesAgo, highlights))
+        return (await BuildWith(chart, rows, mix, phoenix1, captured, sessionEndedMinutesAgo, highlights))
             .Model;
     }
 
     private static async Task<(SessionBreakdownBuilder Builder, SessionsPageModel Model)> BuildWith(Chart chart,
-        RecentSessionsPage.ScoreEventRecord[] rows, CommunityPeerScore[] peers,
+        RecentSessionsPage.ScoreEventRecord[] rows,
         MixEnum mix = MixEnum.Phoenix, UserPhoenixScore[]? phoenix1 = null,
         bool captured = true, int? sessionEndedMinutesAgo = null, ScoreHighlightRecord[]? highlights = null)
     {
@@ -373,20 +324,14 @@ public sealed class SessionBreakdownBuilderTests
         mediator.Setup(m => m.Send(It.IsAny<GetPlayerStatsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PlayerStatsRecord(User, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1,
                 22.6, 22.6, 23.4));
-        mediator.Setup(m => m.Send(It.IsAny<GetCommunityPeerScoresQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IReadOnlyDictionary<Guid, IReadOnlyList<CommunityPeerScore>>)
-                new Dictionary<Guid, IReadOnlyList<CommunityPeerScore>> { [chart.Id] = peers });
 
-        var readers = new Mock<IUserReader>();
-        readers.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<User>());
         var ledger = new Mock<IScoreReader>();
         ledger.Setup(s => s.GetPlayerScores(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(phoenix1 ?? Array.Empty<UserPhoenixScore>());
         var clock = new Mock<IDateTimeOffsetAccessor>();
         clock.SetupGet(c => c.Now).Returns(now);
-        var builder = new SessionBreakdownBuilder(mediator.Object, readers.Object, ledger.Object, clock.Object);
+        var builder = new SessionBreakdownBuilder(mediator.Object, ledger.Object, clock.Object);
         return (builder, await builder.Build(User, null, 1, 20, null, CancellationToken.None));
     }
 
@@ -423,9 +368,4 @@ public sealed class SessionBreakdownBuilderTests
             PhoenixPlate.FairGame, broken);
     }
 
-    private static CommunityPeerScore Peer(string name, double competitive, int score)
-    {
-        return new CommunityPeerScore(Guid.NewGuid(), Name.From(name), new[] { Name.From("Arrow Eclipse") },
-            competitive, PhoenixScore.From(score), PhoenixPlate.FairGame, false);
-    }
 }

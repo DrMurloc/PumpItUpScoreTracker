@@ -1,0 +1,163 @@
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Theming
+@namespace ScoreTracker.Web.Components
+
+@* The session's flagged scores as jacket cards — one per chart (D41): a pass and its later
+   upscore are one story, so their captures merge (flags OR'd, richest detail) onto the final
+   score. The rarity ring and score colour come from the same percentile that colours rows;
+   the PUMBILITY gain wears the established chip (PumbilityDelta in the tier-card corner
+   classes) on the score line (D48); the card itself opens chart details exactly as a row's
+   name does. Never padded: a session with nothing flagged never reaches this component. *@
+<div class="hl-cards" data-testid="session-highlight-cards">
+    @foreach (var card in Cards)
+    {
+        <div class="hl-card @RingClass(card)" data-testid="session-highlight-card" role="button" tabindex="0"
+             @onclick="() => OnOpenChart.InvokeAsync(card.Score.Chart)"
+             @onkeydown="e => CardKey(e, card)">
+            <div class="hl-card-art">
+                @if (card.Score.Chart is { } chart)
+                {
+                    <SongImage Song="chart.Song"></SongImage>
+                    <span class="hl-card-bubble"><DifficultyBubble Chart="chart" Small="true"></DifficultyBubble></span>
+                }
+                <span class="hl-card-badges">
+                    @foreach (var badge in SessionBadges.For(card.Score, L, includeGain: false))
+                    {
+                        <MudTooltip Text="@badge.Tooltip">
+                            <span tabindex="0" class="hl-card-badge">@badge.Text</span>
+                        </MudTooltip>
+                    }
+                </span>
+            </div>
+            <div class="hl-card-body">
+                <div class="hl-card-song">@card.Score.Chart?.Song.Name</div>
+                <div class="hl-card-scoreline">
+                    <span class="hl-card-score @GlowClass(card.Score)" style="@ScoreColor(card.Score)">
+                        <ScoreBreakdown Score="card.Score.Row.Score == null ? null : PhoenixScore.From(card.Score.Row.Score.Value)"
+                                        Mix="card.Score.Chart?.Mix ?? Mix" IsBroken="card.Score.Row.IsBroken"
+                                        Plate="PhoenixPlateHelperMethods.TryParse(card.Score.Row.Plate)"
+                                        ShowScore="true" OneLine="true"></ScoreBreakdown>
+                    </span>
+                    @if (card.Score.Detail?.PumbilityGain is { } gain && gain > 0)
+                    {
+                        @* The established gain chip, the Play page's own (D48). *@
+                        <span class="tier-chart-card-corner pmb-corner-gain hl-card-gain"
+                              title="@L["What this play added to your PUMBILITY"]">
+                            <PumbilityDelta Value="gain"></PumbilityDelta>
+                        </span>
+                    }
+                </div>
+                <div class="hl-card-foot">
+                    <ClassificationChip Classification="card.Score.Row.Classification"></ClassificationChip>
+                    @if (card.Score.Row.Judgements is { } judgements)
+                    {
+                        <JudgementStrip Judgements="judgements" Small="true" OnOpen="StripOpen(card.Score)">
+                        </JudgementStrip>
+                    }
+                    @if (SessionBadges.Standing(card.Score, L) is { } standing)
+                    {
+                        <span class="hl-card-standing">@standing</span>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public IReadOnlyList<SessionScore> Scores { get; set; } = Array.Empty<SessionScore>();
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+    [Parameter] public EventCallback<Chart> OnOpenChart { get; set; }
+    [Parameter] public EventCallback<SessionScore> OnOpenBreakdown { get; set; }
+
+    private sealed record Card(SessionScore Score);
+
+    private IReadOnlyList<Card> Cards = Array.Empty<Card>();
+
+    protected override void OnParametersSet()
+    {
+        // One card per chart: the newest flagged row carries the final score and judgements,
+        // the older capture's marks fold in — a pass's 🎯 belongs on the card even when a
+        // later upscore is the score it shows (D41). Order: hardest chart first, matching the
+        // section it replaced.
+        Cards = Scores
+            .Where(s => s.IsFlagged && !s.Row.IsBroken)
+            .GroupBy(s => s.Row.ChartId)
+            .Select(chart =>
+            {
+                var newestFirst = chart.OrderByDescending(s => s.Row.OccurredAt).ToArray();
+                var merged = newestFirst[0];
+                foreach (var older in newestFirst.Skip(1))
+                    merged = merged with
+                    {
+                        Flags = merged.Flags | older.Flags,
+                        Detail = MergeDetail(older.Detail, merged.Detail),
+                        Phoenix1Gain = merged.Phoenix1Gain ?? older.Phoenix1Gain
+                    };
+                return new Card(merged);
+            })
+            .OrderByDescending(c => (int?)c.Score.Chart?.Level ?? 0)
+            .ToArray();
+    }
+
+    /// <summary>
+    ///     Field-wise, newer wins: the card is one chart's whole night, so the pass's attempts
+    ///     count survives beside the upscore's percentile rather than losing to whichever
+    ///     capture was "richer". The one exception is the PUMBILITY gain, which SUMS — each
+    ///     batch's gain is what that batch added, and the chart's night added both.
+    /// </summary>
+    private static HighlightDetail? MergeDetail(HighlightDetail? older, HighlightDetail? newer)
+    {
+        if (older == null) return newer;
+        if (newer == null) return older;
+        return new HighlightDetail(
+            newer.PumbilityRank ?? older.PumbilityRank,
+            newer.FolderDebutOrdinal ?? older.FolderDebutOrdinal,
+            newer.PeerCount ?? older.PeerCount,
+            newer.PeerBetterCount ?? older.PeerBetterCount,
+            newer.PeerPgCount ?? older.PeerPgCount,
+            newer.SkillTitleName ?? older.SkillTitleName,
+            newer.SkillTitleScore ?? older.SkillTitleScore,
+            newer.SkillTitleThreshold ?? older.SkillTitleThreshold,
+            newer.PeerPercentile ?? older.PeerPercentile,
+            newer.AttemptsBeforeClear ?? older.AttemptsBeforeClear,
+            newer.OfficialPlace ?? older.OfficialPlace,
+            newer.OfficialBoardDepth ?? older.OfficialBoardDepth,
+            newer.OfficialAsOf ?? older.OfficialAsOf,
+            newer.CompetitiveBaseline ?? older.CompetitiveBaseline,
+            newer.PumbilityGain == null && older.PumbilityGain == null
+                ? null
+                : (newer.PumbilityGain ?? 0) + (older.PumbilityGain ?? 0));
+    }
+
+    /// <summary>The percentile band as the card's ring — same ramp, same mute, as the score colour.</summary>
+    private static string RingClass(Card card)
+    {
+        if (card.Score.PeerPercentile is not { } percentile || card.Score.SharedPgMute) return string.Empty;
+        return $"hl-card-{ThemeScales.BandFor(percentile).ToString().ToLowerInvariant()}";
+    }
+
+    private static string ScoreColor(SessionScore score) =>
+        score.PeerPercentile == null || score.SharedPgMute
+            ? string.Empty
+            : ThemeScales.RarityStyle(score.PeerPercentile.Value);
+
+    private static string GlowClass(SessionScore score) =>
+        score.PeerPercentile == null || score.SharedPgMute
+            ? string.Empty
+            : ThemeScales.RarityClass(ThemeScales.BandFor(score.PeerPercentile.Value));
+
+    private EventCallback StripOpen(SessionScore score) =>
+        OnOpenBreakdown.HasDelegate && score.Row.Score != null && !score.Row.IsStageBroken
+            ? EventCallback.Factory.Create(this, () => OnOpenBreakdown.InvokeAsync(score))
+            : default;
+
+    private Task CardKey(KeyboardEventArgs e, Card card)
+    {
+        return e.Key is "Enter" or " " ? OnOpenChart.InvokeAsync(card.Score.Chart) : Task.CompletedTask;
+    }
+}

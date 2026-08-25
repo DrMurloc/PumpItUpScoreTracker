@@ -4,7 +4,6 @@ using System.Linq;
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -49,9 +48,58 @@ public sealed class SessionHeroTests : ComponentTestBase
         Assert.NotEmpty(hero.FindAll("[data-testid='session-ceremony']"));
         Assert.NotEmpty(hero.FindAll("[data-testid='session-title-bars']"));
         Assert.NotEmpty(hero.FindAll("[data-testid='session-milestones']"));
-        Assert.NotEmpty(hero.FindAll("[data-testid='session-notable']"));
-        Assert.NotEmpty(hero.FindAll("[data-testid='community-peers']"));
+        // Flagged scores render as cards (D41); the boards live in chart details now (D42).
+        Assert.NotEmpty(hero.FindAll("[data-testid='session-highlights']"));
+        Assert.NotEmpty(hero.FindAll("[data-testid='session-highlight-card']"));
         Assert.NotEmpty(hero.FindAll("[data-testid='session-all-plays']"));
+    }
+
+    [Fact]
+    public void AnUnflaggedSessionKeepsTheCompactRowsAndNeverPadsWithCards()
+    {
+        // The pre-capture back catalogue: nothing flagged, so the hardest rows carry the
+        // section — a card with nothing to say would be manufactured ceremony (D41).
+        var breakdown = FullBreakdown();
+        breakdown = breakdown with
+        {
+            Scores = breakdown.Scores.Select(s => s with { Flags = HighlightFlags.None, Detail = null })
+                .ToArray()
+        };
+
+        var hero = RenderComponent<SessionHero>(p => p.Add(h => h.Breakdown, breakdown));
+
+        Assert.Empty(hero.FindAll("[data-testid='session-highlights']"));
+        Assert.NotEmpty(hero.FindAll("[data-testid='session-notable']"));
+    }
+
+    [Fact]
+    public void APassAndItsLaterUpscoreMergeIntoOneCard()
+    {
+        // One chart, two captures across two batches: the card shows the final score and
+        // carries both captures' marks — the pass's 🎯 belongs on it even though a later
+        // upscore is the score it shows (D41).
+        var chart = ChartAt(ChartType.Single, 22);
+        var pass = Row(chart.Id, Start, 905000, ScoreEventClassification.NewPass);
+        var upscore = Row(chart.Id, Start.AddHours(1), 931000, ScoreEventClassification.Upscore);
+        var breakdown = FullBreakdown() with
+        {
+            Charts = new Dictionary<Guid, Chart> { [chart.Id] = chart },
+            Scores = new[]
+            {
+                new SessionScore(pass, chart, HighlightFlags.FolderDebut,
+                    new HighlightDetail(AttemptsBeforeClear: 3)),
+                new SessionScore(upscore, chart, HighlightFlags.PumbilityTop50,
+                    new HighlightDetail(PumbilityRank: 40, PeerCount: 80, PeerBetterCount: 7,
+                        PeerPercentile: 0.9))
+            }
+        };
+
+        var hero = RenderComponent<SessionHero>(p => p.Add(h => h.Breakdown, breakdown));
+
+        var card = Assert.Single(hero.FindAll("[data-testid='session-highlight-card']"));
+        Assert.Contains("931,000", card.TextContent);
+        Assert.Contains("👑", card.TextContent);
+        Assert.Contains("🎯 4", card.TextContent);
     }
 
     /// <summary>
@@ -110,8 +158,8 @@ public sealed class SessionHeroTests : ComponentTestBase
 
         var hero = RenderComponent<SessionHero>(p => p.Add(h => h.Breakdown, withBreak));
 
-        var notable = hero.Find("[data-testid='session-notable']");
-        Assert.DoesNotContain("794,532", notable.InnerHtml);
+        var highlights = hero.Find("[data-testid='session-highlights']");
+        Assert.DoesNotContain("794,532", highlights.InnerHtml);
         // Still present in the neutral log, where the record lives.
         Assert.Contains("794,532", hero.Find("[data-testid='session-all-plays']").InnerHtml);
     }
@@ -182,9 +230,8 @@ public sealed class SessionHeroTests : ComponentTestBase
         var hero = RenderComponent<SessionHero>(p => p.Add(h => h.Breakdown, pending));
 
         Assert.NotEmpty(hero.FindAll("[data-testid='session-capture-pending']"));
+        Assert.Empty(hero.FindAll("[data-testid='session-highlights']"));
         Assert.Empty(hero.FindAll("[data-testid='session-notable']"));
-        Assert.Empty(hero.FindAll("[data-testid='community-peers']"));
-        Assert.Empty(hero.FindAll("[data-testid='community-peers-empty']"));
     }
 
     [Fact]
@@ -209,16 +256,13 @@ public sealed class SessionHeroTests : ComponentTestBase
         {
             Ceremony = new SessionCeremony(64612, null, null, null, null, null, null, 22.6, 23.4, null, null, null),
             TitleBars = Array.Empty<SessionTitleBarModel>(),
-            Milestones = Array.Empty<PlayerMilestoneRecord>(),
-            PeerBoards = Array.Empty<SessionPeerBoard>()
+            Milestones = Array.Empty<PlayerMilestoneRecord>()
         };
 
         var hero = RenderComponent<SessionHero>(p => p.Add(h => h.Breakdown, quiet));
 
         Assert.NotEmpty(hero.FindAll("[data-testid='session-ceremony']"));
         Assert.Empty(hero.FindAll("[data-testid='session-title-bars']"));
-        // The empty state names the action that fills it rather than rendering nothing.
-        Assert.NotEmpty(hero.FindAll("[data-testid='community-peers-empty']"));
     }
 
     /// <summary>
@@ -309,17 +353,7 @@ public sealed class SessionHeroTests : ComponentTestBase
                 new PlayerMilestoneRecord(MilestoneKind.TitleCompleted, Session, Start, null, null,
                     "Advanced Lv. 3", null)
             },
-            new[] { new SessionTitleBarModel("21", "Advanced Lv. 4", 0.61, 0.78, 3120, 4000) },
-            new[]
-            {
-                new SessionPeerBoard(single, new[]
-                {
-                    new SessionPeer(2, new CommunityPeerScore(Guid.NewGuid(), Name.From("MIDNIGHT"),
-                        new[] { Name.From("Arrow Eclipse") }, 22.4, PhoenixScore.From(930000),
-                        PhoenixPlate.TalentedGame, false))
-                })
-            },
-            new Dictionary<Guid, User>());
+            new[] { new SessionTitleBarModel("21", "Advanced Lv. 4", 0.61, 0.78, 3120, 4000) });
     }
 
     private static Chart ChartAt(ChartType type, int level)

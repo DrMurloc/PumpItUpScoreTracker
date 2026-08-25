@@ -62,8 +62,25 @@
         </div>
     }
 
-    @if (Notable.Count > 0)
+    @if (HasFlagged)
     {
+        @* Flagged scores render big — jacket cards, one per chart (D41). The boards that used
+           to follow this section live in the chart details dialog now, which already pins you
+           on every scope; a card click opens it exactly as a row's name does (D42). *@
+        <div class="sbd-section" data-testid="session-highlights">
+            <div class="sbd-section-head">
+                <span class="sbd-eyebrow">@L["Highlights"]</span>
+                <span class="sbd-section-note">@L["Coloured by your standing among players at your level"]</span>
+            </div>
+            <SessionHighlightCards Scores="Breakdown.Scores" Mix="Breakdown.Group.Mix"
+                                   OnOpenChart="OnOpenChart" OnOpenBreakdown="OnOpenBreakdown">
+            </SessionHighlightCards>
+        </div>
+    }
+    else if (Notable.Count > 0)
+    {
+        @* Nothing flagged — most of the pre-capture back catalogue. The compact rows carry the
+           hardest scores instead; cards with nothing to say would be manufactured ceremony. *@
         <div class="sbd-section" data-testid="session-notable">
             <div class="sbd-section-head">
                 <span class="sbd-eyebrow">@L["Scores that mattered"]</span>
@@ -76,10 +93,6 @@
             }
         </div>
     }
-
-    <RivalPeersSection Boards="Breakdown.PeerBoards" Peers="Breakdown.Peers" Mix="Breakdown.Group.Mix"
-                       OnOpenChart="OnOpenChart">
-    </RivalPeersSection>
     }
 
     <div class="sbd-section" data-testid="session-all-plays">
@@ -148,12 +161,16 @@
         // highest-level row can be a stage break. Breaks belong in All plays, as the neutral
         // log they are, and nowhere else.
         var eligible = ordered.Where(s => !s.Row.IsBroken).ToArray();
+        HasFlagged = eligible.Any(s => s.IsFlagged);
         Notable = eligible.Where(s => s.IsFlagged)
             .Concat(eligible.Where(s => !s.IsFlagged))
             .Take(NotableRows)
             .ToArray();
         _visiblePlays = InitialPlays;
     }
+
+    /// <summary>Cards for flagged sessions, the compact rows for everything else (D41).</summary>
+    private bool HasFlagged;
 
     /// <summary>
     ///     Runs of one chart get the rail; runs of five or more also get "Attempt N" captions

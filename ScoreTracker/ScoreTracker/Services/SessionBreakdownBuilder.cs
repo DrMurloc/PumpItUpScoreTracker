@@ -5,9 +5,6 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using MediatR;
 using ScoreTracker.Catalog.Contracts.Queries;
-using ScoreTracker.Communities.Contracts;
-using ScoreTracker.Communities.Contracts.Queries;
-using ScoreTracker.Domain.Models;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts;
@@ -20,27 +17,15 @@ namespace ScoreTracker.Web.Services;
 ///     <para>
 ///         This lives in Web rather than behind a single vertical query, and that is forced
 ///         rather than chosen: the pieces are spread across ScoreLedger (journal, sessions),
-///         PlayerProgress (highlights, milestones, stats), Communities (peers) and Catalog
-///         (charts), and no vertical can reference all four — PlayerProgress sits upstream of
-///         both ScoreLedger and Communities. Composition of already-published contracts is
-///         presentation work, which is what <c>Services/</c> is for; nothing here decides
-///         anything a vertical should own.
+///         PlayerProgress (highlights, milestones, stats) and Catalog (charts), and no
+///         vertical can reference all three — PlayerProgress sits upstream of ScoreLedger.
+///         Composition of already-published contracts is presentation work, which is what
+///         <c>Services/</c> is for; nothing here decides anything a vertical should own.
 ///     </para>
 /// </summary>
-public sealed class SessionBreakdownBuilder(IMediator mediator, IUserReader users, IScoreReader ledger,
+public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader ledger,
     IDateTimeOffsetAccessor clock)
 {
-    /// <summary>How many charts get a community-peer board. Every flagged chart qualifies (D9).</summary>
-    private const int MaxPeerBoards = 8;
-
-    /// <summary>
-    ///     Names per board. A big club puts dozens of people on a popular chart, and a list that
-    ///     long stops being a comparison and starts being a directory — the nearest few by
-    ///     competitive level are the ones the section is actually about. The full board is one
-    ///     tap away in the dialog.
-    /// </summary>
-    private const int MaxPeersPerBoard = 5;
-
     /// <summary>Jackets per card before the "+N" count takes over.</summary>
     private const int TopChartsPerCard = 3;
 
@@ -141,15 +126,11 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IUserReader user
             .ToArray();
 
         var stats = await mediator.Send(new GetPlayerStatsQuery(userId, group.Mix), cancellationToken);
-        var boards = await BuildPeerBoards(userId, group, scores, charts, stats, cancellationToken);
         var session = sessions.FirstOrDefault(s => s.Id == group.SessionId);
         return new SessionBreakdown(group, session, charts, scores,
             BuildCeremony(milestones, stats),
             milestones.Where(m => m.Kind != MilestoneKind.TitleProgress).ToArray(),
             BuildTitleBars(milestones),
-            boards,
-            (await users.GetUsers(boards.SelectMany(b => b.Peers).Select(p => p.Score.UserId).Distinct(),
-                cancellationToken)).ToDictionary(u => u.Id),
             CaptureWindowOpen(session),
             highlights.Length + milestones.Length);
     }
@@ -284,83 +265,6 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IUserReader user
             })
             .OrderByDescending(b => b.NewPercent)
             .ToArray();
-    }
-
-    private async Task<IReadOnlyList<SessionPeerBoard>> BuildPeerBoards(Guid userId,
-        RecentSessionsPage.SessionGroup group, IReadOnlyList<SessionScore> scores,
-        IReadOnlyDictionary<Guid, Chart> charts, PlayerStatsRecord stats,
-        CancellationToken cancellationToken)
-    {
-        // Flagged charts lead, then the section FILLS with the hardest remaining ones. Gating
-        // purely on flags left every session that predates capture with an empty board and a
-        // "no community peers yet" that was false — the peers were there, the flags were not.
-        // Peers are read live, so an old session gets today's clubmates, which is the only
-        // honest answer available and the one worth having.
-        //
-        // Distinct FIRST: `scores` is one entry per journal row, and a chart played several
-        // times has several — exactly what a session with attempts looks like.
-        var byChart = scores
-            .Where(s => s.Chart != null)
-            .GroupBy(s => s.Row.ChartId)
-            .Select(g => (ChartId: g.Key, Chart: g.First().Chart!, Flagged: g.Any(x => x.IsFlagged)))
-            .ToArray();
-        var wanted = byChart
-            .OrderByDescending(x => x.Flagged)
-            .ThenByDescending(x => (int)x.Chart.Level)
-            .Select(x => x.ChartId)
-            .Take(MaxPeerBoards)
-            .ToArray();
-        if (wanted.Length == 0) return Array.Empty<SessionPeerBoard>();
-
-        var peers = await mediator.Send(new GetCommunityPeerScoresQuery(userId, group.Mix, wanted),
-            cancellationToken);
-
-        return wanted
-            .Where(id => peers.ContainsKey(id) && charts.ContainsKey(id))
-            .Select(id => new SessionPeerBoard(charts[id], NearestFew(peers[id], charts[id], stats)))
-            .ToArray();
-    }
-
-    /// <summary>
-    ///     A leaderboard, trimmed to the people it is about. Places are Olympic and computed
-    ///     over the WHOLE club — so what you see is where a clubmate actually stands, not where
-    ///     they stand among the five that happened to be shown. That makes the places
-    ///     deliberately non-contiguous, which is the honest shape: closeness decides who
-    ///     appears, score decides the order, and competitive level is shown rather than
-    ///     encoded in the ordering.
-    /// </summary>
-    private static IReadOnlyList<SessionPeer> NearestFew(IReadOnlyList<CommunityPeerScore> peers, Chart chart,
-        PlayerStatsRecord stats)
-    {
-        var ranked = new List<SessionPeer>();
-        var place = 1;
-        foreach (var tie in peers.GroupBy(p => (int)p.Score).OrderByDescending(g => g.Key))
-        {
-            var tiePlace = place;
-            // Same tie rule as the leaderboard dialog: whoever got there first reads first.
-            foreach (var peer in tie.OrderBy(p => p.RecordedAt ?? DateTimeOffset.MaxValue))
-            {
-                ranked.Add(new SessionPeer(tiePlace, peer));
-                place++;
-            }
-        }
-
-        var mine = MyCompetitiveLevel(chart, stats);
-        return ranked
-            .OrderBy(p => Math.Abs(p.Score.CompetitiveLevel - mine))
-            .Take(MaxPeersPerBoard)
-            .OrderBy(p => p.Place)
-            .ToArray();
-    }
-
-    private static double MyCompetitiveLevel(Chart chart, PlayerStatsRecord stats)
-    {
-        return chart.Type switch
-        {
-            ChartType.Single => stats.SinglesCompetitiveLevel,
-            ChartType.Double => stats.DoublesCompetitiveLevel,
-            _ => stats.CompetitiveLevel
-        };
     }
 
     /// <summary>

@@ -1,10 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using ScoreTracker.SharedKernel.Models;
-using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.ScoreLedger.Contracts;
-using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Web.Services;
@@ -22,8 +20,6 @@ public sealed record SessionBreakdown(
     SessionCeremony Ceremony,
     IReadOnlyList<PlayerMilestoneRecord> Milestones,
     IReadOnlyList<SessionTitleBarModel> TitleBars,
-    IReadOnlyList<SessionPeerBoard> PeerBoards,
-    IReadOnlyDictionary<Guid, User> Peers,
     bool CaptureWindowOpen = false,
     int CapturedRows = 0)
 {
@@ -89,6 +85,16 @@ public sealed record SessionScore(
     ///     caller falls back to the place, which says it properly.
     /// </summary>
     public int? OtherPeersWithPg => Detail?.PeerPgCount is { } pg && pg > 1 ? pg - 1 : null;
+
+    /// <summary>
+    ///     A Perfect Game most of the cohort shares renders in plain ink (D46): ties count as
+    ///     beaten in the stored percentile, so an easy chart everyone PGs read as the rarest
+    ///     thing on the page. Every surface's colour honours this; the standing line still says
+    ///     who shares it, because that is the honest fact.
+    /// </summary>
+    public bool SharedPgMute =>
+        Row.Score == 1_000_000
+        && Detail is { PeerPgCount: { } pg, PeerCount: { } cohort } && pg * 2 > cohort;
 }
 
 /// <summary>The band above the fold: what moved, and how far.</summary>
@@ -139,18 +145,6 @@ public sealed record SessionTitleBarModel(
     double NewPercent,
     int Current,
     int Required);
-
-/// <summary>
-///     Your clubmates on one chart. It is a leaderboard — ordered by score, with real places
-///     over the whole club — but only the few nearest your competitive level are shown, so the
-///     places are deliberately non-contiguous. Closeness picks WHO appears; score orders them.
-/// </summary>
-[ExcludeFromCodeCoverage]
-public sealed record SessionPeerBoard(Chart Chart, IReadOnlyList<SessionPeer> Peers);
-
-/// <summary>One clubmate with the place they actually hold on that chart among your clubs.</summary>
-[ExcludeFromCodeCoverage]
-public sealed record SessionPeer(int Place, CommunityPeerScore Score);
 
 /// <summary>
 ///     One session as the grid shows it. <c>TopCharts</c> and the counts come from the journal,
