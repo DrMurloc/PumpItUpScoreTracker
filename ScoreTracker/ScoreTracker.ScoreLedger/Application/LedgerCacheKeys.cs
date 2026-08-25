@@ -33,4 +33,24 @@ internal static class LedgerCacheKeys
     }
 
     public static readonly TimeSpan LimboBoardTtl = TimeSpan.FromHours(24);
+
+    /// <summary>
+    ///     The score calculator's per-level census of personal bests. One grouped read over the
+    ///     whole record table; the section it feeds moves at the population's pace, so hours of
+    ///     staleness are invisible and nothing evicts it.
+    /// </summary>
+    public static string ScorePopulation(MixEnum mix)
+    {
+        return $"ScorePopulation__{mix}";
+    }
+
+    public static readonly TimeSpan ScorePopulationTtl = TimeSpan.FromHours(6);
+
+    /// <summary>The measured per-grade judgement spreads, on the same terms as the census.</summary>
+    public static string JudgementSpreads(MixEnum mix)
+    {
+        return $"JudgementSpreads__{mix}";
+    }
+
+    public static readonly TimeSpan JudgementSpreadsTtl = TimeSpan.FromHours(6);
 }

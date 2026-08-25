@@ -61,17 +61,38 @@ namespace ScoreTracker.Data.Apis
             if (!LooksLikeJson(json)) return null;
             using var document = JsonDocument.Parse(json);
 
-            // Root is [notes, holds, metadata]; the metadata object is the last element.
+            // Root is [taps, holds, metadata]: taps are [pad, time, limb], holds
+            // [pad, start, end, limb], and the metadata object is the last element.
             JsonElement meta = default;
             var found = false;
+            var noteArrays = new List<JsonElement>(2);
             foreach (var element in document.RootElement.EnumerateArray())
                 if (element.ValueKind == JsonValueKind.Object)
                 {
                     meta = element;
                     found = true;
                 }
+                else if (element.ValueKind == JsonValueKind.Array)
+                {
+                    noteArrays.Add(element);
+                }
 
             if (!found) return null;
+
+            // Rows, not arrows: the game judges once per row, so a jump is one judgement — and
+            // a rolling bracket, written one arrow per finely-offset row, is one per arrow.
+            var tapRows = CountDistinctStartTimes(noteArrays.Count > 0 ? noteArrays[0] : default);
+            var holdRows = CountDistinctStartTimes(noteArrays.Count > 1 ? noteArrays[1] : default);
+
+            // Their per-hold tick tally, summed. Pre-Phoenix hold data — banked for
+            // diagnostics only, never shown (design doc D13).
+            var holdTickSum = 0;
+            if (meta.TryGetProperty("Hold ticks", out var holdTicks) &&
+                holdTicks.ValueKind == JsonValueKind.Array)
+                foreach (var tick in holdTicks.EnumerateArray())
+                    if (tick.ValueKind == JsonValueKind.Array && tick.GetArrayLength() >= 3 &&
+                        tick[2].ValueKind == JsonValueKind.Number)
+                        holdTickSum += (int)tick[2].GetDecimal();
 
             var segmentCount = 0;
             var badgeCounts = new Dictionary<string, int>();
@@ -104,7 +125,27 @@ namespace ScoreTracker.Data.Apis
                 segmentCount > 0 && lastSegmentLevel >= maxSegmentLevel,
                 ReadDecimal(meta, "nps_summary"),
                 meta.TryGetProperty("notetype_bpm_summary", out var notetype) ? notetype.GetString() : null,
-                meta.TryGetProperty("sord_chartlevel", out var sord) ? sord.GetString() : null);
+                meta.TryGetProperty("sord_chartlevel", out var sord) ? sord.GetString() : null,
+                tapRows,
+                holdRows,
+                holdTickSum);
+        }
+
+        /// <summary>
+        ///     Distinct start times in a note array — element 1 of each entry, for taps and holds
+        ///     alike. Times compare as their exact decimal text, which is how the generator writes
+        ///     coincident notes; a jump's arrows share one time, a roll's arrows each carry their
+        ///     own.
+        /// </summary>
+        private static int CountDistinctStartTimes(JsonElement noteArray)
+        {
+            if (noteArray.ValueKind != JsonValueKind.Array) return 0;
+            var times = new HashSet<decimal>();
+            foreach (var note in noteArray.EnumerateArray())
+                if (note.ValueKind == JsonValueKind.Array && note.GetArrayLength() >= 2 &&
+                    note[1].ValueKind == JsonValueKind.Number)
+                    times.Add(note[1].GetDecimal());
+            return times.Count;
         }
 
         public static IReadOnlyList<PiuCenterPracticeEntry> ParsePracticeLists(string json)

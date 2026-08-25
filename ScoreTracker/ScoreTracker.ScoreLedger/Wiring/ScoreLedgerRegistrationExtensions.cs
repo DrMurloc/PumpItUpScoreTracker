@@ -28,6 +28,7 @@ public static class ScoreLedgerRegistrationExtensions
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddTransient<ILedgerStatsRepository, EFLedgerStatsRepository>();
         services.AddTransient<ILimboChartRepository, EFLimboChartRepository>();
+        services.AddTransient<IScorePopulationRepository, EFScorePopulationRepository>();
         // The Session Batcher: singleton so batch + session state survives across
         // handler instances (moved here from Web.Accessors — it has no ASP.NET
         // dependency and the Ledger owns the batching seam).

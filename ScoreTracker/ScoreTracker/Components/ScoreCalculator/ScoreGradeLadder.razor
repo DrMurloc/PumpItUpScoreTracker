@@ -1,0 +1,93 @@
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.ScoreCalculator
+@using ScoreTracker.Web.Services
+@namespace ScoreTracker.Web.Components
+
+@* This mix's letter table with the other mix's floor beside every rung — "Phoenix 2 grade
+   thresholds" is a question people search by name (design doc D1/§2.5). Plates read misses,
+   not score, and are the same on every mix. *@
+<section class="sc-sec">
+    <div class="sc-sec-head">
+        <h2 class="sc-h2">@L["Letter grades on {0}", Model.Mix.GetName()]</h2>
+        <span class="sc-sub">
+            @if (Model.Mix == MixEnum.Phoenix2)
+            {
+                @L["Phoenix 2 re-cut every letter below AAA. AAA and up are unchanged from Phoenix."]
+            }
+            else
+            {
+                @L["The original Phoenix table. AAA and up carried into Phoenix 2 unchanged."]
+            }
+        </span>
+    </div>
+    @if (Model.Mix == MixEnum.Phoenix2)
+    {
+        <div class="sc-moved">
+            @foreach (var grade in ScoreCalculatorModel.MovedGrades)
+            {
+                <span class="sc-pill"><LetterGradeIcon Grade="grade" />&nbsp;
+                    <s class="sc-num">@(((int)grade.GetMinimumScoreFor(MixEnum.Phoenix)).ToString("N0"))</s>
+                    → <span class="sc-num">@(((int)grade.GetMinimumScoreFor(MixEnum.Phoenix2)).ToString("N0"))</span></span>
+            }
+        </div>
+    }
+    else
+    {
+        <p class="sc-foot">@L["Phoenix 2 moved every letter below AAA —"] <a href="@ScoreCalculatorMixes.PathFor(MixEnum.Phoenix2)">@L["the Phoenix 2 page has its table"]</a>.</p>
+    }
+    <div class="sc-tablewrap">
+        <table class="sc-table">
+            <tr>
+                <th>@L["Grade"]</th>
+                <th>@L["floor"]</th>
+                <th>@L["up to"]</th>
+                <th class="sc-th-left">@L["vs {0}", Model.OtherMix.GetName()]</th>
+            </tr>
+            @foreach (var rung in Model.Ladder)
+            {
+                <tr data-sc-grade="@rung.Grade.GetName()">
+                    <td><LetterGradeIcon Grade="rung.Grade" /></td>
+                    <td class="sc-num">@rung.Floor.ToString("N0")</td>
+                    <td class="sc-num">@rung.Top.ToString("N0")</td>
+                    <td class="sc-td-left">
+                        @if (rung.OtherFloor == rung.Floor)
+                        {
+                            <span class="sc-muted">@L["same"]</span>
+                        }
+                        else
+                        {
+                            <span class="sc-num"><span class="sc-muted">@rung.OtherFloor.ToString("N0") →</span> @rung.Floor.ToString("N0")</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+    <h3 class="sc-h3">@L["Plates"]</h3>
+    <p class="sc-sub">@L["Plates read misses and worse, not score — the same rules on every mix."]</p>
+    <div class="sc-plates">
+        @foreach (var (plate, rule) in PlateRules)
+        {
+            <div class="sc-platerow">
+                <MudImage Src="@ShareCardImages.Plate(plate)" Height="24" ObjectFit="ObjectFit.ScaleDown" Alt="@plate.GetName()" />
+                <span>@plate.GetName()<br /><span class="sc-platerule">@rule</span></span>
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public ScoreCalculatorModel Model { get; set; } = default!;
+
+    private IEnumerable<(PhoenixPlate Plate, string Rule)> PlateRules => new[]
+    {
+        (PhoenixPlate.PerfectGame, L["perfects only"].Value),
+        (PhoenixPlate.UltimateGame, L["perfects + greats"].Value),
+        (PhoenixPlate.ExtremeGame, L["nothing below good"].Value),
+        (PhoenixPlate.SuperbGame, L["no misses"].Value),
+        (PhoenixPlate.MarvelousGame, L["5 misses or fewer"].Value),
+        (PhoenixPlate.TalentedGame, L["10 misses or fewer"].Value),
+        (PhoenixPlate.FairGame, L["20 misses or fewer"].Value),
+        (PhoenixPlate.RoughGame, L["more than 20 misses"].Value)
+    };
+}

@@ -33,7 +33,11 @@ public sealed class RenderModeDeclarationTests
         // The PUMBILITY formula page: the formula, constants and tables are real HTML; the
         // three interactions are a vanilla script, so it runs no circuit at all
         // (docs/design/pumbility-calculator.md D2).
-        "Tools/PumbilityCalculator.razor"
+        "Tools/PumbilityCalculator.razor",
+        // The Phoenix score page: formula, cutoffs and the measured sections are real HTML;
+        // the live calculator, dialog and toggles are a vanilla script
+        // (docs/design/phoenix-score-calculator.md D2).
+        "Tools/PhoenixCalculator.razor"
     };
 
     [Fact]

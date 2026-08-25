@@ -45,8 +45,10 @@
     </TitleContent>
     <DialogContent>
         <MudAlert Severity="Severity.Info" Class="mb-4">@L["Your username and password are sent directly to piugame.com and are never stored"]</MudAlert>
-        <MudTextField T="string" Label="@L["PIUGame.com Username"].Value" Disabled="_isConnectingPiuGame" @bind-Value="_piuGameUsername"></MudTextField>
-        <MudTextField T="string" InputType="InputType.Password" Label="@L["PIUGame.com Password"].Value" Disabled="_isConnectingPiuGame" @bind-Value="_piuGamePassword"></MudTextField>
+        <MudTextField T="string" Label="@L["PIUGame.com Username"].Value" Disabled="_isConnectingPiuGame" @bind-Value="_piuGameUsername"
+                      UserAttributes="@PasswordManagerHints.PiuGameUsername"></MudTextField>
+        <MudTextField T="string" InputType="InputType.Password" Label="@L["PIUGame.com Password"].Value" Disabled="_isConnectingPiuGame" @bind-Value="_piuGamePassword"
+                      UserAttributes="@PasswordManagerHints.PiuGamePassword"></MudTextField>
     </DialogContent>
     <DialogActions>
         <MudSpacer></MudSpacer>

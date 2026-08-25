@@ -10,6 +10,12 @@ namespace ScoreTracker.Translations.Contracts.Commands;
 ///         with a cost, not a read.
 ///     </para>
 ///     <para>
+///         ⚠ Workbench-only: its handler lives in <c>ScoreTracker.ExplorationTests</c>, inside
+///         the sweep's own container, because its dependency — the synchronous
+///         <c>ILanguageModelClient</c> — deliberately has no shipping implementation. Sending
+///         this through the app's mediator throws; the app translates through the batch pipeline.
+///     </para>
+///     <para>
 ///         <paramref name="PivotModelId" /> and <paramref name="FanOutModelId" /> are separate so
 ///         the two halves can run on different tiers — reading an arbitrary language and judging
 ///         its register is a harder job than rendering known English through a glossary, and the

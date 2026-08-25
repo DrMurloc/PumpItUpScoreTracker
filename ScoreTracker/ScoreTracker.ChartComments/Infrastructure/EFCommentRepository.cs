@@ -53,7 +53,8 @@ internal sealed class EFCommentRepository : ICommentRepository
             .ThenBy(r => r.Comment.CreatedAt)
             .Select(r => new CommentRow(r.Comment.Id, r.Comment.ChartId, r.Comment.UserId,
                 r.Comment.ParentCommentId, r.Comment.Text, r.Comment.CreatedAt, r.Comment.EditedAt,
-                r.Comment.DeletedAt, r.Comment.DeletedByUserId, r.Votes, r.ViewerVoted))
+                r.Comment.DeletedAt, r.Comment.DeletedByUserId, r.Votes, r.ViewerVoted,
+                r.Comment.SourceLanguage, r.Comment.TranslationQueuedAt))
             .ToArray();
     }
 
@@ -109,6 +110,7 @@ internal sealed class EFCommentRepository : ICommentRepository
         entity.UserId = comment.UserId;
         entity.Text = comment.Text;
         entity.SourceLanguage = comment.SourceLanguage;
+        entity.TranslationQueuedAt = comment.TranslationQueuedAt;
         entity.EditedAt = comment.EditedAt;
         entity.DeletedAt = comment.DeletedAt;
         entity.DeletedByUserId = comment.DeletedByUserId;
@@ -201,6 +203,6 @@ internal sealed class EFCommentRepository : ICommentRepository
 
         return Comment.FromStorage(new CommentState(entity.Id, entity.ChartId, entity.UserId, audience,
             entity.ParentCommentId, entity.Text, entity.CreatedAt, entity.EditedAt, entity.DeletedAt,
-            entity.DeletedByUserId, entity.SourceLanguage));
+            entity.DeletedByUserId, entity.SourceLanguage, entity.TranslationQueuedAt));
     }
 }

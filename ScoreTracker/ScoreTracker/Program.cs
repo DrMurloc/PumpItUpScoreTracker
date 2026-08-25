@@ -31,6 +31,7 @@ using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.Randomizer.Wiring;
 using ScoreTracker.Rivals.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
+using ScoreTracker.Translations.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Accessors;
@@ -83,11 +84,17 @@ builder.Services.AddCors(o =>
 builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSection("Discord"));
 builder.Services.Configure<DevAuthConfiguration>(builder.Configuration.GetSection("DevAuth"));
 builder.Services.Configure<ChartCommentsConfiguration>(builder.Configuration.GetSection("ChartComments"));
+// The Claude API credential for the translation batch client. Absent by default, and the
+// pipeline parks itself without it — configuration is what arms metered spend, never code.
+builder.Services.Configure<ScoreTracker.Data.Configuration.ClaudeApiConfiguration>(
+    builder.Configuration.GetSection("ClaudeApi"));
 builder.Services.Configure<ProdSyncConfiguration>(builder.Configuration.GetSection("ProdSync"));
 builder.Services.Configure<ScoreTracker.CommunityTools.Wiring.CommunityToolsConfiguration>(
     builder.Configuration.GetSection(
         ScoreTracker.CommunityTools.Wiring.CommunityToolsConfiguration.SectionName));
 builder.Services.Configure<PiuGameConfiguration>(builder.Configuration.GetSection("PiuGame"));
+builder.Services.Configure<ScoreTracker.Translations.Wiring.TranslationsConfiguration>(
+    builder.Configuration.GetSection("Translations"));
 builder.Services.Configure<PiuCenterConfiguration>(builder.Configuration.GetSection("PiuCenter"));
 builder.Services.Configure<GoogleConfiguration>(builder.Configuration.GetSection("Google"));
 var sqlConfig = builder.Configuration.GetSection("SQL").Get<SqlConfiguration>()!;
@@ -105,6 +112,7 @@ builder.Services.AddMassTransit(o =>
     o.AddWeeklyChallengeConsumers();
     o.AddCommunityToolsConsumers();
     o.AddChartCommentsConsumers();
+    o.AddTranslationsConsumers();
     o.AddEventCompetitionConsumers();
     o.AddCommunitiesConsumers();
     o.AddCatalogConsumers();
@@ -457,7 +465,12 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     ("prune-webhook-deliveries",         r => r.PublishPruneWebhookDeliveries(),          "0 8 * * *"),  // 08:00 UTC — 7-day bodies, 14-day activity log
     // Refills every account's deep-scan balance on the 1st. One UPDATE across the User table; an
     // unused allowance does not roll over.
-    ("reset-deep-scans",                 r => r.PublishResetDeepScans(),                 "0 0 1 * *")
+    ("reset-deep-scans",                 r => r.PublishResetDeepScans(),                 "0 0 1 * *"),
+    // The translation pair: Submit builds tonight's batches under the ceiling; Collect polls
+    // hourly because a batch usually lands within the hour and always within a day. Both are
+    // near no-ops while the pipeline is parked (no ClaudeApi key) or the queue is empty.
+    ("submit-translation-batches",       r => r.PublishSubmitTranslationBatches(),        "0 9 * * *"),  // 09:00 UTC — after the tier-list block, cheap either way
+    ("collect-translation-batches",      r => r.PublishCollectTranslationBatches(),       "30 * * * *")
 };
 if (builder.Configuration["PreventRecurringJobs"] == "true")
 {

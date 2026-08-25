@@ -302,6 +302,16 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
         if (prediction != null)
             rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.DifficultyPrediction, prediction.Value, null));
 
+        // A page whose note arrays parsed empty on both sides carries no shape worth
+        // banking -- and a zero tap count it did not earn would poison the hold-tick
+        // subtraction downstream. All-hold charts pass this gate on their hold rows.
+        if (page.TapRows > 0 || page.HoldRows > 0)
+        {
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.TapRows, page.TapRows, null));
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.HoldRows, page.HoldRows, null));
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.HoldTicks, page.HoldTickSum, null));
+        }
+
         for (var i = 0; i < page.SkillSummary.Count; i++)
             rows.Add(new ChartSkillMetric(chartId, $"{PiuCenterMetrics.Top3Prefix}{page.SkillSummary[i]}", i + 1,
                 null));

@@ -282,6 +282,26 @@ internal static class TranslationCorpus
             "It's destroying me like Dement s21. It feels awkward",
             "en",
             "s21 is Singles 21 in lowercase shorthand, and Dement is a song title that reads like an English word.",
-            ["s21"], ["Dement"])
+            ["s21"], ["Dement"]),
+
+        // The link pair (2026-08-24). Written with RAW URLs: the sweep lifts them to markers
+        // through production's own ExtractLinks before sending, substitutes the URLs back into
+        // each rendering, and judges it with production's LinkSetsMatch — so the paid run
+        // measures the real discard rate rather than a proxy. Links sit mid-sentence on purpose:
+        // Korean wants a particle glued to the preceding noun and Spanish reaches for an
+        // article, which is exactly where a marker gets absorbed into a word — and where the
+        // substituted URL would come back with Hangul fused onto it. Synthetic where everything
+        // above is collected: production texts with links cannot exist before the feature ships.
+        new CorpusComment("links-korean",
+            "이 영상 https://youtu.be/dQw4w9WgXcQ?t=121 2:01 부분 보면 발 바꾸는 타이밍 나와요. https://piucenter.com/chart/baroque-virus-s20 채보도 참고하세요",
+            "ko",
+            "Two links mid-sentence where Korean attaches particles. The gate is production's: substitute, then set equality on what would actually render as links.",
+            ["2:01"], []),
+
+        new CorpusComment("links-spanish",
+            "miren el run en https://youtu.be/dQw4w9WgXcQ antes de intentarlo, casi nadie lo pasa a la primera",
+            "es",
+            "One link mid-sentence where Spanish reaches for an article. The rendering must keep the marker free-standing or the substituted URL breaks.",
+            [], [])
     };
 }

@@ -104,6 +104,14 @@ Caveat: uploaded-image *URLs* are currently hardcoded to the production CDN host
   ```
 
   It is forwarded rather than set with `WithEnvironment` deliberately: environment variables are read *after* user-secrets, so hard-coding it in the AppHost would override the setting it is meant to be controlled by. In production it is an App Service application setting, `ChartComments__Enabled` (double underscore). The site admin sees comments either way — that is what makes the gated period useful rather than merely quiet. ⚠ It governs **reading as well as writing**, so turning it on publishes everything written while it was off; clear out test comments before flipping it in production.
+
+- `ClaudeApi:ApiKey` arms the comment-translation pipeline (**spends real money** — batched Sonnet 5, ~$0.016 per comment against a $30/month ceiling). Absent means parked: comments work, nothing queues a badge, nothing is spent — the intended default. It is the same user-secrets store the ExplorationTests workbench reads, so one command arms both:
+
+  ```
+  dotnet user-secrets set "ClaudeApi:ApiKey" "sk-ant-..." --project ScoreTracker/ScoreTracker.AppHost
+  ```
+
+  Locally the recurring jobs are parked (`PreventRecurringJobs`), so drive the pipeline from `/Admin/Translations` → **Drain now** (submits and collects; batches take minutes to an hour, press again later to collect) or trigger `submit-translation-batches` / `collect-translation-batches` in `/hangfire`.
 - Running the web project directly (`dotnet run` on `ScoreTracker.Web`, without the AppHost) is unsupported for local dev: you'd need to supply your own SQL connection string, apply migrations yourself, and you won't get the dev login. Use the AppHost.
 
 ## Running the tests

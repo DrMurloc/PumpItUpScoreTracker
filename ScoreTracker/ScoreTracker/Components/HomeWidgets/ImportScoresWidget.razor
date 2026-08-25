@@ -81,10 +81,12 @@ else
                 }
                 <div class="import-typed">
                     <div class="import-typed-fields">
-                        <MudTextField @bind-Value="_username" Label="PIUGame Username" Margin="Margin.Dense"
-                                      Variant="Variant.Outlined" Disabled="EditMode"/>
-                        <MudTextField @bind-Value="_password" InputType="InputType.Password" Label="PIUGame Password"
-                                      Margin="Margin.Dense" Variant="Variant.Outlined" Disabled="EditMode"/>
+                        <MudTextField @bind-Value="_username" Label="@L["PIUGame.com Username"].Value" Margin="Margin.Dense"
+                                      Variant="Variant.Outlined" Disabled="EditMode"
+                                      UserAttributes="@PasswordManagerHints.PiuGameUsername"/>
+                        <MudTextField @bind-Value="_password" InputType="InputType.Password" Label="@L["PIUGame.com Password"].Value"
+                                      Margin="Margin.Dense" Variant="Variant.Outlined" Disabled="EditMode"
+                                      UserAttributes="@PasswordManagerHints.PiuGamePassword"/>
                     </div>
                     <MudButton Class="import-typed-go" Variant="Variant.Filled" Color="Color.Primary"
                                title="@L["Import Scores"].Value"

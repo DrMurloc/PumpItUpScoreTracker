@@ -1,0 +1,77 @@
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.ScoreCalculator
+@namespace ScoreTracker.Web.Components
+
+@* What each judgement costs, priced by the engine itself (design doc §2.4): the server
+   renders the default chart size worked out; phoenix-calculator.js reprices on a chip
+   click from the same arithmetic. The budget table is greats-only by construction —
+   greats keep the combo running, so they isolate the accuracy term. *@
+<section class="sc-sec">
+    <div class="sc-sec-head">
+        <h2 class="sc-h2">@L["What each judgement costs"]</h2>
+        <span class="sc-sub">@L["Costs scale with the chart — every non-perfect divides by the note count. Pick a chart size:"]</span>
+    </div>
+    <div class="sc-chips" role="group" aria-label="@L["Note Count"]" data-sc-sizes>
+        @foreach (var size in ScoreCalculatorModel.CostChartSizes)
+        {
+            <button type="button" class="sc-chip" data-sc-size="@size"
+                    aria-pressed="@(size == ScoreCalculatorModel.DefaultCostChartSize ? "true" : "false")">
+                @L["{0} notes", size.ToString("N0")]
+            </button>
+        }
+    </div>
+    <div class="sc-costcards">
+        <div class="sc-costcard">
+            <span class="sc-cost-l"><i class="sc-dot judg-great"></i>@L["Great"]</span>
+            <span class="sc-cost-v" data-sc-cost="great">−@ScoreCalculatorModel.CostOfOneGreat(DefaultSize).ToString("N0")</span>
+            <span class="sc-cost-s">@L["combo keeps running"]</span>
+        </div>
+        <div class="sc-costcard">
+            <span class="sc-cost-l"><i class="sc-dot judg-good"></i>@L["Good"]</span>
+            <span class="sc-cost-v" data-sc-cost="good">−@ScoreCalculatorModel.CostOfOneGood(DefaultSize).ToString("N0")</span>
+            <span class="sc-cost-s">@L["holds the combo, doesn't extend it"]</span>
+        </div>
+        <div class="sc-costcard">
+            <span class="sc-cost-l"><i class="sc-dot judg-bad"></i>@L["Bad"]</span>
+            <span class="sc-cost-v" data-sc-cost="bad">−@ScoreCalculatorModel.CostOfOneBad(DefaultSize).ToString("N0")</span>
+            <span class="sc-cost-s">@L["and it breaks the combo"]</span>
+        </div>
+        <div class="sc-costcard">
+            <span class="sc-cost-l"><i class="sc-dot judg-miss"></i>@L["Miss"]</span>
+            <span class="sc-cost-v" data-sc-cost="miss">−@ScoreCalculatorModel.CostOfOneMissAtTheEdge(DefaultSize).ToString("N0")</span>
+            <span class="sc-cost-s" data-sc-cost="missmid"
+                  data-t="@L["up to −{0} mid-combo"]">@L["up to −{0} mid-combo", ScoreCalculatorModel.CostOfOneMissMidCombo(DefaultSize).ToString("N0")]</span>
+        </div>
+    </div>
+    <p class="sc-foot" data-sc-cost="missnote"
+       data-t="@L["A miss also halves whatever combo it splits — dead-centre on {0} notes it costs {1} points, not {2}. Edges are cheap; middles are not."]">
+        @L["A miss also halves whatever combo it splits — dead-centre on {0} notes it costs {1} points, not {2}. Edges are cheap; middles are not.",
+            DefaultSize.ToString("N0"),
+            ScoreCalculatorModel.CostOfOneMissMidCombo(DefaultSize).ToString("N0"),
+            ScoreCalculatorModel.CostOfOneMissAtTheEdge(DefaultSize).ToString("N0")]
+    </p>
+    <div class="sc-tablewrap">
+        <table class="sc-table" data-sc-budgets>
+            <tr>
+                <th>@L["Grade"]</th>
+                <th>@L["floor"]</th>
+                <th>@L["greats allowed"]</th>
+            </tr>
+            @foreach (var rung in Model.BudgetRungs)
+            {
+                <tr data-sc-grade="@rung.Grade.GetName()">
+                    <td><LetterGradeIcon Grade="rung.Grade" /></td>
+                    <td class="sc-num">@rung.Floor.ToString("N0")</td>
+                    <td class="sc-num" data-sc-budget="@rung.Grade.GetName()">@ScoreCalculatorModel.GreatsAllowedFor(rung.Grade, Model.Mix, DefaultSize).ToString("N0")</td>
+                </tr>
+            }
+        </table>
+    </div>
+    <p class="sc-foot">@L["Greats-only budgets — the most of that judgement a grade tolerates when everything else is perfect and the combo never breaks. Derived from the formula and this mix's cutoffs."]</p>
+</section>
+
+@code {
+    private static int DefaultSize => ScoreCalculatorModel.DefaultCostChartSize;
+
+    [Parameter, EditorRequired] public ScoreCalculatorModel Model { get; set; } = default!;
+}

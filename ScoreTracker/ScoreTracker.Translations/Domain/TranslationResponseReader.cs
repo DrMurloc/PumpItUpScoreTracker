@@ -40,10 +40,14 @@ internal static class TranslationResponseReader
     {
         using var document = Parse(json, "fan-out");
 
-        return Require(document.RootElement, "translations", "fan-out").EnumerateArray()
-            .ToDictionary(
-                t => Text(t, "locale", "fan-out translation"),
-                t => Text(t, "text", "fan-out translation"));
+        // Last wins on a repeated locale. The schema constrains the values but not the array's
+        // uniqueness, and one malformed-but-plausible response must not turn four good renderings
+        // into a failed text.
+        var translations = new Dictionary<string, string>();
+        foreach (var entry in Require(document.RootElement, "translations", "fan-out").EnumerateArray())
+            translations[Text(entry, "locale", "fan-out translation")] = Text(entry, "text", "fan-out translation");
+
+        return translations;
     }
 
     private static JsonDocument Parse(string json, string stage)

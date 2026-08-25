@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using ScoreTracker.ChartComments.Domain;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.ExplorationTests.Translations.Evaluation;
 using ScoreTracker.Translations.Contracts;
@@ -42,8 +43,10 @@ public sealed class TranslationSweepTests(ITestOutputHelper output)
         // MediatR 14's license accessor resolves a logger during Mediator construction, so a
         // container without logging fails before any handler is reached.
         services.AddLogging();
+        // The handler lives in THIS assembly now (the app must not be able to construct it),
+        // while the prompts it exercises stay internal to the vertical via InternalsVisibleTo.
         services.AddMediatR(o =>
-            o.RegisterServicesFromAssemblies(typeof(TranslateCommentCommand).Assembly));
+            o.RegisterServicesFromAssemblies(typeof(TranslateCommentHandler).Assembly));
         services.AddSingleton<ILanguageModelClient>(AnthropicLanguageModelClient.Create());
 
         return services.BuildServiceProvider().GetRequiredService<IMediator>();
@@ -108,7 +111,10 @@ public sealed class TranslationSweepTests(ITestOutputHelper output)
             await gate.WaitAsync();
             try
             {
-                var outcome = await mediator.Send(new TranslateCommentCommand(comment.Text, arm.ModelId));
+                // Production's own submission shape: links lift to markers before the model sees
+                // the text. A linkless comment passes through unchanged.
+                var marked = CommentText.ExtractLinks(comment.Text);
+                var outcome = await mediator.Send(new TranslateCommentCommand(marked.Text, arm.ModelId));
 
                 return new SweepResult(arm, comment, outcome, null);
             }
@@ -160,6 +166,26 @@ public sealed class TranslationSweepTests(ITestOutputHelper output)
                 $"failures {forArm.Count(r => r.Outcome == null)}  " +
                 $"entities {findings.Count(f => f.Survived)}/{findings.Length}  " +
                 $"language {forArm.Count(r => r.DetectedLanguageCorrectly)}/{forArm.Length}");
+
+            // Production's acceptance, verbatim: substitute the URLs back and demand set
+            // equality on what would actually render as links. This is the number the feature
+            // lives on — a rendering that fails here is silently discarded in production.
+            var gateChecks = forArm
+                .Where(r => r.Outcome != null)
+                .Select(r => (Result: r, Marked: CommentText.ExtractLinks(r.Comment.Text)))
+                .Where(x => x.Marked.Links.Count > 0)
+                .SelectMany(x => x.Result.Outcome!.Translations.Select(t => (
+                    x.Result.Comment.Id, Locale: t.Key,
+                    Passes: CommentText.LinkSetsMatch(x.Result.Comment.Text, x.Marked.Substitute(t.Value)))))
+                .ToArray();
+            if (gateChecks.Length > 0)
+            {
+                output.WriteLine(
+                    $"{arm.Name}: link gate {gateChecks.Count(c => c.Passes)}/{gateChecks.Length} " +
+                    "renderings survive substitute + set-equality");
+                foreach (var failed in gateChecks.Where(c => !c.Passes))
+                    output.WriteLine($"  DISCARDED in production: {failed.Id} {failed.Locale}");
+            }
         }
 
         output.WriteLine($"report: {path}");
