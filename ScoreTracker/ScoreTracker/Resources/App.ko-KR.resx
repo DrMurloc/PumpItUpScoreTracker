@@ -859,6 +859,9 @@
   <data name="at {0} or better" xml:space="preserve">
     <value>{0} 이상 기준</value>
   </data>
+  <data name="Attempt {0}" xml:space="preserve">
+    <value>시도 {0}</value>
+  </data>
   <data name="Attempt {0} of {1}" xml:space="preserve">
     <value>{1}회 중 {0}회</value>
   </data>
@@ -4950,6 +4953,9 @@
   <data name="Open Community" xml:space="preserve">
     <value>커뮤니티 열기</value>
   </data>
+  <data name="Open in the Score Calculator" xml:space="preserve">
+    <value>점수 계산기에서 열기</value>
+  </data>
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>추천 채보 열기</value>
   </data>
@@ -6573,6 +6579,9 @@
   </data>
   <data name="See their boards" xml:space="preserve">
     <value>이 플레이어의 보드 보기</value>
+  </data>
+  <data name="See where this score came from" xml:space="preserve">
+    <value>이 점수의 출처 보기</value>
   </data>
   <data name="See where you stand" xml:space="preserve">
     <value>내 위치를 확인하세요</value>

@@ -865,6 +865,9 @@
   <data name="at {0} or better" xml:space="preserve">
     <value>at {0} or better</value>
   </data>
+  <data name="Attempt {0}" xml:space="preserve">
+    <value>Attempt {0}</value>
+  </data>
   <data name="Attempt {0} of {1}" xml:space="preserve">
     <value>Attempt {0} of {1}</value>
   </data>
@@ -4982,6 +4985,9 @@
   <data name="Open Community" xml:space="preserve">
     <value>Open Community</value>
   </data>
+  <data name="Open in the Score Calculator" xml:space="preserve">
+    <value>Open in the Score Calculator</value>
+  </data>
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>Open Suggested Charts</value>
   </data>
@@ -6620,6 +6626,9 @@
   </data>
   <data name="See their boards" xml:space="preserve">
     <value>See their boards</value>
+  </data>
+  <data name="See where this score came from" xml:space="preserve">
+    <value>See where this score came from</value>
   </data>
   <data name="See where you stand" xml:space="preserve">
     <value>See where you stand</value>
