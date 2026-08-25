@@ -55,27 +55,38 @@ levels on the first modern mix carrying both charts (Phoenix 2 → Phoenix → X
 verification — the convention is the owner's stated ground truth. The 13 S+SP pairs stay
 `NULL` until the research pass sets them by hand.
 
-## The assigner rule (`VideoSideAssigner`, Catalog-internal, pure)
+## Sides are assigned once, at registration events — never recomputed (owner, 2026-08-24)
 
-Input: one song's charts with their video URLs. Output: a side per chart, or null.
+A side is durable data with exactly three writers, matching how videos actually get managed:
+new-chart registration assigns, bulk audits assert (SQL scripts with evidence, like the
+2026-08-24 one), and the admin set-video tool re-assigns **only what it touched**. Nothing
+sweeps a song re-deriving sides that were already decided — that is what keeps the
+hand-researched S+SP sides and the four known higher-left videos permanently correct.
 
-- Group by URL. A group is **pairable** only when it holds exactly two singles-family charts
-  (`Single` / `SinglePerformance`) of that one song.
-- S+S (or SP+SP) with distinct levels → lower Left, higher Right. Equal levels → left
-  untouched (never guess, never wipe).
-- S+SP → left untouched always: those sides are hand-researched, and a level guess must never
-  overwrite one.
-- Anything else (solo, doubles, co-op, 3+ charts) → null.
+**The registration event** (`EFChartRepository.ApplyVideoRegistration`, run by `CreateChart`
+and by `SetChartVideo` when the URL actually changed — a same-URL save is a channel fix, not
+an event):
 
-Cross-song sharing never reaches the assigner — it sees one song at a time — so a mislinked
-video's rows come out null and the UI stays silent about them until the fix script lands.
+- The edited chart's side clears (its video changed, so its old side is meaningless).
+- A same-song partner stranded on the old URL clears (that pair no longer exists).
+- If the new URL now holds exactly two singles-family charts (`Single`/`SinglePerformance`)
+  of the one song — the total-row count guards against cross-song mislinks — the pair gets
+  its one-time decision (`VideoSideAssigner.DecideSides`): same type with distinct levels →
+  lower Left, higher Right; a level tie or an S+SP mix decides **nothing** (S+SP sides only
+  ever come from watching the video). Levels compare on the first modern mix carrying both
+  charts (Phoenix 2 → Phoenix → XX, the migration backfill's rule), base levels as fallback —
+  never levels from two different mixes.
+- Everything else in the song is untouched, whatever its state.
 
-**Write-path registration**: `EFChartRepository.CreateChart` and `SetChartVideo` end by
-recomputing the affected song's sides through the assigner (clearing a stale partner side when
-a URL is edited away from a pair). Both admin flows (`/Admin/BulkAddCharts` and the chart admin
-panel) call the repository directly, so side registration needs zero call-site changes — and
-the bulk JSON contract is unchanged: two singles sharing a `youtubeHash` within one song is
-the registration signal ([new-charts-json.md](new-charts-json.md)).
+Consequences, deliberate: a mislinked video's rows come out sideless and the UI stays silent
+about them until an audit cleans them; nothing "self-heals" — a null side on a valid pair
+stays null until a registration event or an audit script touches it, because retroactive
+derivation is guessing.
+
+Both admin flows (`/Admin/BulkAddCharts` and the chart admin panel) call the repository
+directly, so side registration needs zero call-site changes — and the bulk JSON contract is
+unchanged: two singles sharing a `youtubeHash` within one song is the registration signal
+([new-charts-json.md](new-charts-json.md)).
 
 ## The UI (settled: edge captions, arrows only — mock rev 3)
 

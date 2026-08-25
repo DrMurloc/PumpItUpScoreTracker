@@ -216,10 +216,10 @@ public sealed class EFChartRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task RecomputePreservesHandResearchedSidesOnASinglePlusPerformancePair()
+    public async Task AnUnrelatedRegistrationNeverTouchesHandSetSides()
     {
-        // S+SP sides come from watching the video, not from levels — a later write to the same
-        // song must leave them exactly as set.
+        // S+SP sides come from watching the video, not from levels — sides are durable data,
+        // and a registration event elsewhere in the song must leave them exactly as set.
         await _seed.EnsurePhoenixMixAsync();
         var writer = BuildRepository();
         var songId = await CreateSongAsync(writer, "Come to Me");
@@ -239,7 +239,6 @@ public sealed class EFChartRepositoryTests : IAsyncLifetime
             await ctx.SaveChangesAsync();
         }
 
-        // Any same-song write triggers the recompute; the S+SP pair must come through untouched.
         await writer.CreateChart(MixEnum.Phoenix, songId, ChartType.Double, 20, "NEVSISTER",
             new Uri("https://www.youtube.com/embed/ggggggggggg"), "EXC");
 
@@ -249,6 +248,96 @@ public sealed class EFChartRepositoryTests : IAsyncLifetime
         Assert.Equal(VideoSide.Right, videos[single].Side);
         Assert.Equal(single, videos[performance].PartnerChartId);
         Assert.Equal(performance, videos[single].PartnerChartId);
+    }
+
+    [Fact]
+    public async Task HandFlippedSidesSurviveAnotherChartsVideoEdit()
+    {
+        // The four known videos that film the HIGHER level on the left are hand-flipped by the
+        // audit script. An admin edit anywhere else in the song must not re-derive them back
+        // to the convention — the regression this rewrite exists to prevent.
+        await _seed.EnsurePhoenixMixAsync();
+        var writer = BuildRepository();
+        var songId = await CreateSongAsync(writer, "Nihilism - Another Ver.-");
+        var shared = new Uri("https://www.youtube.com/embed/hhhhhhhhhhh");
+        var lower = await writer.CreateChart(MixEnum.Phoenix, songId, ChartType.Single, 18,
+            "NEVSISTER", shared, "NIMGO");
+        var higher = await writer.CreateChart(MixEnum.Phoenix, songId, ChartType.Single, 21,
+            "NEVSISTER", shared, "NIMGO");
+        var doubles = await writer.CreateChart(MixEnum.Phoenix, songId, ChartType.Double, 22,
+            "NEVSISTER", new Uri("https://www.youtube.com/embed/iiiiiiiiiii"), "NIMGO");
+
+        await using (var ctx = await _fixture.DbContextFactory.CreateDbContextAsync())
+        {
+            var rows = await ctx.Set<ScoreTracker.Catalog.Infrastructure.Entities.ChartVideoEntity>()
+                .Where(v => v.ChartId == lower || v.ChartId == higher)
+                .ToArrayAsync();
+            foreach (var row in rows)
+                row.Side = row.ChartId == lower ? "Right" : "Left";
+            await ctx.SaveChangesAsync();
+        }
+
+        await writer.SetChartVideo(doubles, new Uri("https://www.youtube.com/embed/jjjjjjjjjjj"),
+            "NEVSISTER");
+
+        var videos = (await BuildRepository().GetChartVideoInformation(new[] { lower, higher }))
+            .ToDictionary(v => v.ChartId);
+        Assert.Equal(VideoSide.Right, videos[lower].Side);
+        Assert.Equal(VideoSide.Left, videos[higher].Side);
+    }
+
+    [Fact]
+    public async Task ResavingTheSameUrlIsNotARegistrationEvent()
+    {
+        // A channel fix keeps the URL; the video didn't change, so hand-set sides stay — even
+        // on the chart being saved.
+        await _seed.EnsurePhoenixMixAsync();
+        var writer = BuildRepository();
+        var songId = await CreateSongAsync(writer, "The Little Prince");
+        var shared = new Uri("https://www.youtube.com/embed/kkkkkkkkkkk");
+        var lower = await writer.CreateChart(MixEnum.Phoenix, songId, ChartType.Single, 13,
+            "NEVSISTER", shared, "FEFEMZ");
+        var higher = await writer.CreateChart(MixEnum.Phoenix, songId, ChartType.Single, 16,
+            "NEVSISTER", shared, "FEFEMZ");
+
+        await using (var ctx = await _fixture.DbContextFactory.CreateDbContextAsync())
+        {
+            var rows = await ctx.Set<ScoreTracker.Catalog.Infrastructure.Entities.ChartVideoEntity>()
+                .Where(v => v.ChartId == lower || v.ChartId == higher)
+                .ToArrayAsync();
+            foreach (var row in rows)
+                row.Side = row.ChartId == lower ? "Right" : "Left";
+            await ctx.SaveChangesAsync();
+        }
+
+        await writer.SetChartVideo(higher, shared, "FIXED CHANNEL");
+
+        var videos = (await BuildRepository().GetChartVideoInformation(new[] { lower, higher }))
+            .ToDictionary(v => v.ChartId);
+        Assert.Equal(VideoSide.Right, videos[lower].Side);
+        Assert.Equal(VideoSide.Left, videos[higher].Side);
+    }
+
+    [Fact]
+    public async Task SetChartVideoJoiningASoloChartsVideoFormsThePair()
+    {
+        await _seed.EnsurePhoenixMixAsync();
+        var writer = BuildRepository();
+        var songId = await CreateSongAsync(writer, "Amphitryon");
+        var pairVideo = new Uri("https://www.youtube.com/embed/lllllllllll");
+        var lower = await writer.CreateChart(MixEnum.Phoenix, songId, ChartType.Single, 7,
+            "NEVSISTER", pairVideo, "EXC");
+        var higher = await writer.CreateChart(MixEnum.Phoenix, songId, ChartType.Single, 11,
+            "NEVSISTER", new Uri("https://www.youtube.com/embed/mmmmmmmmmmm"), "EXC");
+
+        await writer.SetChartVideo(higher, pairVideo, "NEVSISTER");
+
+        var videos = (await BuildRepository().GetChartVideoInformation(new[] { lower, higher }))
+            .ToDictionary(v => v.ChartId);
+        Assert.Equal(VideoSide.Left, videos[lower].Side);
+        Assert.Equal(VideoSide.Right, videos[higher].Side);
+        Assert.Equal(higher, videos[lower].PartnerChartId);
+        Assert.Equal(lower, videos[higher].PartnerChartId);
     }
 
     [Fact]
