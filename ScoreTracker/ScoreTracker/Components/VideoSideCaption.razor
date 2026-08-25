@@ -3,9 +3,10 @@
 
 @* The two-sided-video caption (docs/design/video-sides.md): one subtext row justified to the
    video's edges, so each label sits under the half it names — arrows only, no side words.
-   The opened chart's half carries the ink and the accent arrow; the partner stays muted, and
-   a partner absent from the selected mix leaves its half empty. The sides come from stored
-   data, so switching mixes relabels the levels but never swaps the arrows. *@
+   The arrows point UP at the video half above (a sideways arrow read as "next chart" in the
+   field test). The opened chart's half carries the ink and the accent arrow; the partner
+   stays muted, and a partner absent from the selected mix leaves its half empty. The sides
+   come from stored data, so switching mixes relabels the levels but never swaps the arrows. *@
 <div class="video-side-caption">
     <span class="video-side-sr">@L[Side == VideoSide.Left
                                     ? "This chart is on the left side of the video"
@@ -13,21 +14,21 @@
     <span class="video-side-half" aria-hidden="true">
         @if (Side == VideoSide.Left)
         {
-            <span class="video-side-on"><span class="video-side-arrow">◀</span> @OwnLabel</span>
+            <span class="video-side-on"><span class="video-side-arrow">▲</span> @OwnLabel</span>
         }
         else if (PartnerLabel != null)
         {
-            <span><span class="video-side-arrow">◀</span> @PartnerLabel</span>
+            <span><span class="video-side-arrow">▲</span> @PartnerLabel</span>
         }
     </span>
     <span class="video-side-half" aria-hidden="true">
         @if (Side == VideoSide.Right)
         {
-            <span class="video-side-on">@OwnLabel <span class="video-side-arrow">▶</span></span>
+            <span class="video-side-on">@OwnLabel <span class="video-side-arrow">▲</span></span>
         }
         else if (PartnerLabel != null)
         {
-            <span>@PartnerLabel <span class="video-side-arrow">▶</span></span>
+            <span>@PartnerLabel <span class="video-side-arrow">▲</span></span>
         }
     </span>
 </div>

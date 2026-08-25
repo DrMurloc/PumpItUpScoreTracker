@@ -50,7 +50,9 @@ public sealed class VideoSideCaptionTests : TestContext
         var cut = Render(VideoSide.Left, "S17", "S22");
 
         Assert.Contains("S17", cut.Find(".video-side-on").TextContent);
-        Assert.Contains("◀", cut.Find(".video-side-on").TextContent);
+        // The arrow points UP at the video half above, never sideways — a sideways arrow read
+        // as "next chart" in the field test.
+        Assert.Contains("▲", cut.Find(".video-side-on").TextContent);
     }
 
     [Fact]
