@@ -41,7 +41,6 @@ public sealed class UiColorTokenTests
         // of the site already uses) — entries removed, ratchet tightened.
         // ScoreRankings took its 7 literals (the percentile colour legend) with it when the
         // page was retired — entry removed, ratchet tightened.
-        ["Pages/Competition/StaminaTournament.razor"] = 2,
         ["Pages/Dev/Populate.razor"] = 4,
         // The Experiments playground took its 20 literals with it when the orphaned pages
         // were deleted (GameStats 12, ChartLetterDifficulties 8) — entries removed,

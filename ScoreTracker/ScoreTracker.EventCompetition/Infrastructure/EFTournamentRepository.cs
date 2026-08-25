@@ -19,18 +19,16 @@ namespace ScoreTracker.EventCompetition.Infrastructure
         IRequestHandler<GetMyTournamentsQuery, IEnumerable<TournamentRoleListing>>
     {
         private readonly IMemoryCache _memoryCache;
-        private readonly IChartRepository _charts;
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
         private readonly ICurrentUserAccessor _currentUser;
         private readonly IDateTimeOffsetAccessor _dateTime;
 
-        public EFTournamentRepository(IMemoryCache memoryCache, IChartRepository charts,
+        public EFTournamentRepository(IMemoryCache memoryCache,
             IDbContextFactory<ChartAttemptDbContext> factory, ICurrentUserAccessor currentUser,
             IDateTimeOffsetAccessor dateTime)
         {
             _factory = factory;
             _memoryCache = memoryCache;
-            _charts = charts;
             _currentUser = currentUser;
             _dateTime = dateTime;
         }
@@ -248,180 +246,12 @@ namespace ScoreTracker.EventCompetition.Infrastructure
             _memoryCache.Remove(TourneyIdCacheKey(tournament.Id));
         }
 
-        public async Task SaveSession(TournamentSession session, CancellationToken cancellationToken)
-        {
-            _memoryCache.Remove(TourneyCacheKey);
-            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-
-            // The submit flow edits "the" session — until Slice 4b's draft/publish lifecycle,
-            // that is the user's latest on the board (D16 allows many; this UI makes one).
-            var entity = await database.Set<MoMSessionEntity>()
-                .Where(s => s.BoardId == session.TournamentId && s.UserId == session.UsersId)
-                .OrderByDescending(s => s.CreatedAt)
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (!session.Entries.Any())
-            {
-                // Saving an emptied session is the delete (D17) — chart rows cascade.
-                if (entity != null)
-                {
-                    database.Set<MoMSessionEntity>().Remove(entity);
-                    await database.SaveChangesAsync(cancellationToken);
-                }
-
-                _memoryCache.Remove(CacheKey(session.TournamentId, session.UsersId));
-                return;
-            }
-
-            var board = await database.Set<MoMBoardEntity>()
-                .SingleAsync(b => b.Id == session.TournamentId, cancellationToken);
-            var mix = MixIds.ToEnum(board.MixId);
-            var snapshot = await database.Set<MoMChartLevelEntity>()
-                .Where(l => l.SeasonId == board.SeasonId && l.MixId == board.MixId)
-                .ToDictionaryAsync(l => l.ChartId, l => l.Level, cancellationToken);
-
-            var now = _dateTime.Now;
-            if (entity == null)
-            {
-                entity = new MoMSessionEntity
-                {
-                    Id = Guid.NewGuid(),
-                    BoardId = session.TournamentId,
-                    UserId = session.UsersId,
-                    CreatedAt = now,
-                    // Publish-on-save: this flow has no draft concept and today's board ranks
-                    // a session the moment it is saved. NULL starts meaning draft in 4b.
-                    PublishedAt = now
-                };
-                await database.Set<MoMSessionEntity>().AddAsync(entity, cancellationToken);
-            }
-
-            // Everything below PublishedAt is a derived cache of the chart rows (§6),
-            // recomputed wholesale on every save. Balanced level is the season snapshot's
-            // override where one exists, folder level + 0.5 where none does (§9.3).
-            entity.UpdatedAt = now;
-            entity.TotalScore = session.TotalScore;
-            entity.ChartsPlayed = session.Entries.Count;
-            entity.RestTime = session.CurrentRestTime.Ticks;
-            entity.AverageDifficulty = session.Entries.Average(e =>
-                snapshot.TryGetValue(e.Chart.Id, out var balanced) ? balanced : (int)e.Chart.Level + 0.5);
-            entity.AverageGrade = session.Entries.Average(e => (int)e.Score.LetterGradeFor(mix));
-            entity.LowestLevel = (byte)session.Entries.Min(e => (int)e.Chart.Level);
-            entity.HighestLevel = (byte)session.Entries.Max(e => (int)e.Chart.Level);
-            entity.VideoUrl = session.VideoUrl?.ToString();
-
-            var existingCharts = await database.Set<MoMSessionChartEntity>()
-                .Where(c => c.SessionId == entity.Id).ToArrayAsync(cancellationToken);
-            database.Set<MoMSessionChartEntity>().RemoveRange(existingCharts);
-            await database.Set<MoMSessionChartEntity>().AddRangeAsync(session.Entries.Select(
-                (e, ordinal) => new MoMSessionChartEntity
-                {
-                    SessionId = entity.Id,
-                    Ordinal = ordinal,
-                    ChartId = e.Chart.Id,
-                    Score = e.Score,
-                    Plate = e.Plate.ToString(),
-                    IsBroken = e.IsBroken,
-                    SessionScore = e.SessionScore,
-                    BonusPoints = e.BonusPoints
-                }), cancellationToken);
-
-            await database.SaveChangesAsync(cancellationToken);
-            _memoryCache.Remove(CacheKey(session.TournamentId, session.UsersId));
-        }
-
-        private string CacheKey(Guid tournamentId, Guid userId)
-        {
-            return $"{nameof(EFTournamentRepository)}__Tournament:{tournamentId}__User:{userId}";
-        }
-
-        public async Task<TournamentSession> GetSession(Guid tournamentId, Guid userId,
-            CancellationToken cancellationToken)
-        {
-            return await _memoryCache.GetOrCreateAsync(CacheKey(tournamentId, userId), async o =>
-            {
-                o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(1);
-
-                await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-                var tournamentConfig = await GetTournament(tournamentId, cancellationToken);
-                // The board pins the mix (set in BoardConfiguration), so the session follows it.
-                var mix = tournamentConfig.Scoring.Mix;
-                var entity = await database.Set<MoMSessionEntity>()
-                    .Where(s => s.BoardId == tournamentId && s.UserId == userId)
-                    .OrderByDescending(s => s.CreatedAt)
-                    .FirstOrDefaultAsync(cancellationToken);
-                if (entity == null) return new TournamentSession(userId, tournamentConfig, mix);
-
-                var chartRows = await database.Set<MoMSessionChartEntity>()
-                    .Where(c => c.SessionId == entity.Id)
-                    .OrderBy(c => c.Ordinal)
-                    .ToArrayAsync(cancellationToken);
-                var charts = (await _charts.GetCharts(mix,
-                    chartIds: chartRows.Select(c => c.ChartId).Distinct().ToArray(),
-                    cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
-
-                var session = new TournamentSession(userId, tournamentConfig, mix);
-                foreach (var row in chartRows)
-                    session.Add(charts[row.ChartId], row.Score, Enum.Parse<PhoenixPlate>(row.Plate), row.IsBroken);
-                session.VideoUrl = ParseUri(entity.VideoUrl);
-
-                return session;
-            });
-        }
-
-        public async Task<IEnumerable<LeaderboardRecord>> GetLeaderboardRecords(Guid tournamentId,
-            CancellationToken cancellationToken)
-        {
-            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var config = await GetTournament(tournamentId, cancellationToken);
-            var mix = config.Scoring.Mix;
-
-            // Boards rank published sessions, not players (D16); the earliest publication
-            // wins a tie (§1). Drafts are never on a board.
-            var sessions = await (from s in database.Set<MoMSessionEntity>()
-                    join u in database.User on s.UserId equals u.Id
-                    where s.BoardId == tournamentId && s.PublishedAt != null
-                    select new { Entity = s, u.Name })
-                .ToArrayAsync(cancellationToken);
-            if (!sessions.Any()) return Array.Empty<LeaderboardRecord>();
-
-            // One query for every session's chart rows and one catalog read for every chart —
-            // the old shape re-read the config and charts per player, an N+1 on each render.
-            var sessionIds = sessions.Select(x => x.Entity.Id).ToArray();
-            var chartRows = (await database.Set<MoMSessionChartEntity>()
-                    .Where(c => sessionIds.Contains(c.SessionId))
-                    .ToArrayAsync(cancellationToken))
-                .GroupBy(c => c.SessionId)
-                .ToDictionary(g => g.Key, g => g.OrderBy(c => c.Ordinal).ToArray());
-            var charts = (await _charts.GetCharts(mix,
-                    chartIds: chartRows.Values.SelectMany(rows => rows.Select(c => c.ChartId)).Distinct().ToArray(),
-                    cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
-
-            return sessions
-                .OrderByDescending(x => x.Entity.TotalScore)
-                .ThenBy(x => x.Entity.PublishedAt)
-                .Select((x, index) =>
-                {
-                    var session = new TournamentSession(x.Entity.UserId, config, mix);
-                    foreach (var row in chartRows[x.Entity.Id])
-                        session.Add(charts[row.ChartId], row.Score, Enum.Parse<PhoenixPlate>(row.Plate),
-                            row.IsBroken);
-
-                    return new LeaderboardRecord(index + 1, x.Entity.UserId, x.Name, x.Entity.TotalScore,
-                        TimeSpan.FromTicks(x.Entity.RestTime), x.Entity.AverageDifficulty, x.Entity.ChartsPlayed,
-                        ParseUri(x.Entity.VideoUrl))
-                    {
-                        Session = session
-                    };
-                }).ToArray();
-        }
-
         private string SnapshotCacheKey(Guid tournamentId)
         {
             return $"{nameof(EFTournamentRepository)}__{tournamentId}__LevelSnapshot";
         }
 
-        public async Task<IDictionary<Guid, double>?> GetScoringLevelSnapshot(Guid tournamentId,
+        private async Task<IDictionary<Guid, double>?> GetScoringLevelSnapshot(Guid tournamentId,
             CancellationToken cancellationToken)
         {
             return await _memoryCache.GetOrCreateAsync(SnapshotCacheKey(tournamentId), async o =>

@@ -135,33 +135,30 @@ public sealed class MoMLegacyCopyTests : IAsyncLifetime
             "SELECT COUNT(*) AS Value FROM scores.MoMBoard WHERE ScoringConfig = {0}", config));
 
         // The copy → read seam: the rows the script just produced must reconstruct through
-        // the live repository — plate strings parse, ordinals hold, the frozen config
-        // deserializes, and the stored total survives as the board's number.
-        var domainChartA = BuildChart(chartA, 20, ChartType.Double);
-        var domainChartB = BuildChart(chartB, 15, ChartType.Single);
-        var chartRepo = new Mock<IChartRepository>();
-        chartRepo.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, It.IsAny<IEnumerable<Guid>?>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { domainChartA, domainChartB });
-        var repository = new EFTournamentRepository(new MemoryCache(new MemoryCacheOptions()),
-            chartRepo.Object, _fixture.DbContextFactory, Mock.Of<ICurrentUserAccessor>(),
-            Mock.Of<IDateTimeOffsetAccessor>(d => d.Now == PairEnd));
+        // the live read path — plate strings parse, ordinals hold, the frozen config
+        // deserializes with its mix pinned, and the stored total survives as the board's
+        // number. Since the old pages retired, that path is EFMoMRepository (Slice 4).
+        var repository = new EFMoMRepository(_fixture.DbContextFactory,
+            new MemoryCache(new MemoryCacheOptions()));
 
-        var loaded = await repository.GetSession(doublesId, userId, CancellationToken.None);
-        Assert.Equal(2, loaded.Entries.Count);
-        Assert.Equal(chartA, loaded.Entries[0].Chart.Id);
-        Assert.Equal((PhoenixScore)990000, loaded.Entries[0].Score);
-        Assert.Equal(PhoenixPlate.SuperbGame, loaded.Entries[0].Plate);
-        Assert.Equal(chartB, loaded.Entries[1].Chart.Id);
-        Assert.True(loaded.Entries[1].IsBroken);
-        Assert.Equal("https://example.invalid/v", loaded.VideoUrl?.ToString());
+        var published = Assert.Single(await repository.GetPublishedSessions(new[] { doublesId },
+            CancellationToken.None));
+        Assert.Equal(userId, published.UserId);
+        Assert.Equal(2300, published.TotalScore);
+        Assert.Equal("https://example.invalid/v", published.VideoUrl);
 
-        var board = (await repository.GetLeaderboardRecords(doublesId, CancellationToken.None)).ToArray();
-        var placement = Assert.Single(board);
-        Assert.Equal(1, placement.Place);
-        Assert.Equal(userId, placement.UserId);
-        Assert.Equal(2300, placement.TotalScore);
-        Assert.Equal(2, placement.Session.Entries.Count);
+        var loadedCharts = await repository.GetSessionCharts(published.Id, CancellationToken.None);
+        Assert.Equal(2, loadedCharts.Count);
+        Assert.Equal(chartA, loadedCharts[0].ChartId);
+        Assert.Equal(990000, loadedCharts[0].Score);
+        Assert.Equal(PhoenixPlate.SuperbGame, Enum.Parse<PhoenixPlate>(loadedCharts[0].Plate));
+        Assert.Equal(chartB, loadedCharts[1].ChartId);
+        Assert.True(loadedCharts[1].IsBroken);
+
+        var frozen = await repository.GetBoardConfiguration(doublesId, true, CancellationToken.None);
+        Assert.NotNull(frozen);
+        Assert.Equal(TimeSpan.FromMinutes(105), frozen!.MaxTime);
+        Assert.Equal(MixEnum.Phoenix, frozen.Scoring.Mix);
 
         // The session: published at its season's end, rest time in ticks (13:43 = 823s),
         // total preserved, and the derived cache computed over the snapshot — balanced
