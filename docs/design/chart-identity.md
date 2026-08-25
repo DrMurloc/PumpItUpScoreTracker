@@ -143,9 +143,11 @@ peakiness (spike). Consumers:
 - The five family display names (Brackets, Twists, Stamina & Runs, Tech, Doubles Tech) and five
   band names become localization keys ×9 locales, alphabetical insertion, Murloc alphabet rules
   apply (`docs/LOCALIZATION-en-ZW.md`).
-- **Open (owner)**: the Folder Stats drawer ("Your Skills in Folder") — 5 family rows vs 30
-  badge rows vs expandable-family-rows. Mock shows both at true height. Default if forced:
-  family rows, same ability math, weights = qualified coverage (whole-chart picks weigh 1.0).
+- **The Folder Stats drawer ("Your Skills in Folder") ships Variant B — per-badge rows**
+  (owner, 2026-08-25): one ability row per badge with qualified presence in the folder
+  (≥2 charts), worst-first by ability × completion, same ability math as today with weights =
+  qualified coverage (whole-chart picks weigh 1.0), and the row label column widened
+  92px → 140px so badge names fit. Rows tint by the badge's family. No family-row variant.
 
 ## 8. Golden examples (acceptance)
 
