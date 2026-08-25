@@ -1,8 +1,9 @@
 # March of Murlocs Overhaul
 
-Status: **Slices 0, 1, R, 2 and 3 are shipped** — the tables are live under the old pages
-(PR #274) and MoM's import reads the score journal (§2.5, resolved 2026-08-24). The slice order
-was re-ordered after Slice 1 (§8); next is 4a, the read surfaces, which deletes the old pages. Explored 2026-08-09, workshopped
+Status: **Slices 0, 1, R, 2 and 3 are shipped; Slice 4 (a + b + c) ships as one PR** (owner,
+2026-08-25) — the read surfaces, the write surfaces and the Discord card land together, so the
+old pages and the real Submit swap in one deploy and no dark-submission window ever exists.
+Slice 5 holds for the scoring session (§8). Explored 2026-08-09, workshopped
 and mocked 2026-08-10/11.
 
 March of Murlocs is the site's quarterly stamina ladder: 1 hour 45 minutes to bank as many
@@ -551,6 +552,12 @@ re-ordered after Slice 1** (2026-08-11). What changed and why is under the table
 | **5 — Per-mix boards** *was Slice 3* | Four boards live, mix-correct grading and snapshots, PUMBILITY2+, `MixCapabilities` entry (D19), Phoenix 2 ungated. | 2, and the scoring session |
 | **separate session** | Phoenix 2 scoring min/max (≈6 rounds, owner estimate). | — |
 
+**Slice 4 ships as one PR** (owner, 2026-08-25). 4a alone would have deleted the interim record
+page weeks before 4b restored submission; bundling keeps the swap atomic. Commits inside the PR
+still land in slice order — docs → contracts/reads → reprice → Season → Breakdown → lifecycle →
+Submit → Planner → deletions/rename/redirects → Discord → l10n — so it reviews as the three
+slices in sequence and every intermediate commit builds green.
+
 **Why the back half moved.**
 
 - **Per-mix boards went last because nothing they fix is live.** All 62 MoM sessions ever recorded
@@ -714,11 +721,23 @@ Settled with the owner over three workshop rounds, 2026-08-09/10. Mocks build fr
 
 | Surface | Route | Leads with |
 |---|---|---|
-| **Season** | `/MarchOfMurlocs` | your best session and how many you have played, then the Doubles board, then Singles |
+| **Season** | `/MarchOfMurlocs` (+ dated URLs below) | your best session and how many you have played, then the Doubles board, then Singles |
 | **Past Seasons** | *a dialog, no route* | a season picker over whatever page you are on (§11.8) |
 | **Session Breakdown** | `/MarchOfMurlocs/Session/{id}` | one session's four numbers, its charts, its timeline |
 | **Submit** | `/MarchOfMurlocs/Session/{id}/Edit` | draft editing; publishing freezes the session |
 | **Planner** | `/MarchOfMurlocs/Planner` | a projected session in the same four numbers |
+
+**Season URLs are dated** (owner, 2026-08-25): a quarterly season lives at
+`/MarchOfMurlocs/{year}/{season}` (`/MarchOfMurlocs/2026/Summer`) and a board at
+`/MarchOfMurlocs/{year}/{season}/{chartType}` — real crawlable URLs in the tier lists' routing
+idiom, one per board, which is what the sitemap lists and previous/next season links walk. The
+season word ↔ quarter mapping is fixed (Winter/Spring/Summer/Fall = Q1–Q4) and the filtered
+unique index over `(Year, Quarter)` guarantees each URL names at most one season. The three
+off-grid legacy seasons have no year, so they take a hyphenated name segment instead
+(`/MarchOfMurlocs/Practice`); the `{year:int}` constraint keeps the two forms from colliding,
+and the set is closed — the cycle only mints quarterly seasons. Bare `/MarchOfMurlocs` always
+serves the live season's default board and canonicalizes to its dated URL — the
+`/PhoenixCalculator` idiom — so a crawled URL never moves when a season ends.
 
 The old pages are **retired, not ported** — `MarchOfMurlocs.razor` (a directory of eight
 tournaments with the live one buried among them), `StaminaTournament.razor`,
@@ -745,6 +764,8 @@ and explains itself on arrival.
 
 **One board at a time, with a Doubles / Singles button group** in the tier lists' own idiom —
 joined buttons, active filled, inactive outlined (owner, 2026-08-10). Doubles is the default.
+With the dated URLs the pair render as **links**, one per board URL — the tier-list idiom all
+the way down, and what lets the page stay static SSR with no circuit.
 Stacking both boards made the page a scroll; a group makes the pair legible without ever putting
 their numbers side by side, which D15 forbids anyway. The two standing cards double as the
 switcher, so the card that says you have not played Singles is also how you get to that board.
@@ -858,7 +879,7 @@ themselves:
   clean fail with no plate. Plates are worth 1.0 under PUMBILITY+ so they change no Phoenix 1
   score — they are captured because players want to see them, and because Phoenix 2 prices them
   (owner, 2026-08-11, reversing the earlier "hide it on Phoenix 1"). It stays optional, so the
-  three-key loop is unaffected, and **Shift+Enter files a run as broken** without reaching for it.
+  three-key loop is unaffected, and **Shift+Enter files a play as broken** without reaching for it.
 - The picker stays open with focus returned to the chart field, so entry is
   *chart → score → Enter*.
 
@@ -899,6 +920,13 @@ Three checks ride along, and D10 splits them exactly:
 Charts already in the draft are skipped on import rather than doubling up — the repeat ban (§1)
 applies to the import path as much as the picker.
 
+Three requirements carried out of the interim page's bug-check (2026-08-24): play times render
+**localized** (the journal serves the site's own UTC offset; the interim dialog printed it raw),
+a **single-play block is importable** (the splitter has no minimum — the interim page demanded a
+FIRST and LAST tick, so a one-chart session could never import), and the all-plays-filtered
+empty state says **why** (the wrong chart type's board, or plays older than the journal window)
+rather than pointing at Import Scores.
+
 **Without timestamps there is nothing to detect a gap with** — which is why the pre-Slice-3 page
 needed a hand-picked range. Journal plays always carry `OccurredAt` now; the degraded case left
 is a play the journal never observed, which is a missing import, not a missing stamp.
@@ -906,12 +934,12 @@ is a play the journal never observed, which is a missing import, not a missing s
 ### 11.5 Planner
 
 The Planner is the Season's *future* tense: pick a chart type — D15 means it cannot plan across
-both — and it solves a run from your record book, reported in the same four numbers, so what you
+both — and it solves a session from your record book, reported in the same four numbers, so what you
 are chasing and what you posted are described identically. `AutoBuildSessionHandler` is the engine
 and already exists: charts in descending points-per-second, taken while the average rest holds up.
 
 **Rest per chart is the only control, and it is the whole feature.** It is what actually decides
-how long a run can be, and the plan re-solves as it moves. On 김재현's real Doubles record book:
+how long a session can be, and the plan re-solves as it moves. On 김재현's real Doubles record book:
 
 | Rest per chart | Charts | Projected |
 |---|---|---|
@@ -921,7 +949,7 @@ how long a run can be, and the plan re-solves as it moves. On 김재현's real D
 | 120s | 29 | 51,161 |
 
 **The plan ends on a closing move**, flagged in the list: once nothing more fits the rest budget
-you may still *start* one more (§1), so the run closes on the biggest single chart left. That is
+you may still *start* one more (§1), so the session closes on the biggest single chart left. That is
 the rule turned into a suggestion.
 
 **Say plainly that it is a ceiling.** It assumes every chart played to your best, which nobody
@@ -977,7 +1005,7 @@ if plans ever had to be shared or queried across accounts.
 it means nothing to a player). The section is headed *"Where the points came from"*, which is the
 question it answers and close to how the owner described it unprompted.
 
-Total score is *how many charts × how hard × how well*, capped by time. So a run — planned or
+Total score is *how many charts × how hard × how well*, capped by time. So a session — planned or
 played — is described by four numbers, and a comparison is those four side by side:
 
 | Lever | What it answers |
@@ -989,11 +1017,11 @@ played — is described by four numbers, and a comparison is those four side by 
 
 **Average difficulty is the season's frozen balanced level** (§4 layer 4), not the chart's folder
 number (owner, 2026-08-11). The balanced level is what actually priced the chart, so it is what
-the run was worth playing; the folder number is a label. `UserTournamentSession.AverageDifficulty`
+the session was worth playing; the folder number is a label. `UserTournamentSession.AverageDifficulty`
 stores the nominal average today and has to change with the rest of §6.
 
 It reads roughly half a level above the folder average, because a chart with no override sits at
-`nominal + 0.5` — 김재현's Winter 2025 run is **24.22 balanced against 23.67 by folder**. Label it
+`nominal + 0.5` — 김재현's Winter 2025 session is **24.22 balanced against 23.67 by folder**. Label it
 so that gap does not read as a bug. It also moves the gaps between players: he and tieny are 0.15
 apart by folder and **0.04** apart balanced, and his own two seasons flip from *0.09 harder* to
 **0.41 easier**, which is the opposite conclusion.
@@ -1012,10 +1040,10 @@ another player on the same board. Never a season total, never a cross-type avera
 
 **A fourth `DiscordFeedKind`**, beside WeeklyCharts, DailyStep and OfficialLeaderboards — the same
 per-mix, community-independent subscription, reached the same way: `/piu feed mom mix:Phoenix`.
-A channel opts in once and gets every run on that mix. No per-community filtering; the event is not
+A channel opts in once and gets every session on that mix. No per-community filtering; the event is not
 popular enough to need it.
 
-**One card per published session** (D17 — a draft never fires one). Because a published run cannot
+**One card per published session** (D17 — a draft never fires one). Because a published session cannot
 be edited, no second card ever corrects a first.
 
 Composed as a **`RichBotMessage`** like every other card, so the Discord adapter owns the emoji swap
@@ -1027,14 +1055,13 @@ plain-text fallback:
   a number without a chart type says nothing (D15).
 - **Stats** — chart count, average balanced level, lowest → highest difficulty, downtime, average
   grade.
-- **Biggest five** — ranked by **points, not raw score**. Points are what the run is made of, and
-  the score rides each row anyway; ranked by score this run returns five 21s and 22s, which says
+- **Biggest five** — ranked by **points, not raw score**. Points are what the session is made of, and
+  the score rides each row anyway; ranked by score this session returns five 21s and 22s, which says
   nothing about it.
-- **Footer + link** — the mix line, and *See the run* to the Session Breakdown.
+- **Footer + link** — the mix line, and *See the session* to the Session Breakdown.
 
-Two things to settle when it is built: **placement (“1st of 11”) is an addition to the owner's
-field list** — a result card with no placement reads oddly, but it is one clause to cut. And a
-**deleted run leaves its card behind** with a link that 404s (§10), which is accepted.
+Placement (“1st of 11”) is **in** (owner, 2026-08-25) — the context line carries it. A
+**deleted session leaves its card behind** with a link that 404s (§10), which is accepted.
 
 MoM has never had any Discord presence, which is part of why §2.2 went unnoticed for 39 days.
 
@@ -1044,7 +1071,7 @@ MoM has never had any Discord presence, which is part of why §2.2 went unnotice
 cadence adds one a quarter, so this is a picker rather than a body of content — and a page would
 buy a route, an empty state and an SSR decision for a list of five rows.
 
-The dialog lists every season newest first: name, dates, and a line per board carrying the run
+The dialog lists every season newest first: name, dates, and a line per board carrying the session
 count, the winner and **how you did on it** — *you won it* / *you were 10th — 35,879* / *you sat
 this one out*. The live season sits at the top with a **running now** chip. Picking one opens that
 season's page.
