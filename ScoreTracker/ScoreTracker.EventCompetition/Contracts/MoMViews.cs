@@ -20,7 +20,10 @@ public sealed record MoMBoardSummary(Guid BoardId, MixEnum Mix, ChartType ChartT
 [ExcludeFromCodeCoverage]
 public sealed record MoMSeasonView(Guid Id, string Name, int? Year, int? Quarter,
     DateTimeOffset StartsAt, DateTimeOffset EndsAt, bool IsLive,
-    IReadOnlyList<MoMBoardSummary> Boards, MoMSeasonRef? Previous, MoMSeasonRef? Next);
+    IReadOnlyList<MoMBoardSummary> Boards, MoMSeasonRef? Previous, MoMSeasonRef? Next)
+{
+    public MoMSeasonRef Ref => new(Id, Name, Year, Quarter);
+}
 
 /// <summary>
 ///     One ranked row of a board. Boards rank sessions, not players (D16) — the same user
@@ -75,6 +78,15 @@ public sealed record MoMBoardStanding(Guid BoardId, MixEnum Mix, ChartType Chart
 [ExcludeFromCodeCoverage]
 public sealed record MoMSeasonListing(MoMSeasonRef Season, DateTimeOffset StartsAt,
     DateTimeOffset EndsAt, bool IsLive, IReadOnlyList<MoMBoardStanding> Boards);
+
+/// <summary>
+///     One entry of a draft as the editor holds it: the raw play, not its points — the
+///     save handler prices every entry under the board's frozen configuration. PlayedAt
+///     rides along from the journal import and is null for hand-typed entries.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record MoMDraftEntry(Guid ChartId, int Score, PhoenixPlate Plate, bool IsBroken,
+    DateTimeOffset? PlayedAt);
 
 /// <summary>
 ///     The D20 re-rating split: the same session — the same charts, the same scores —

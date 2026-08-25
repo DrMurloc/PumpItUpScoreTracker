@@ -1,16 +1,6 @@
 using MediatR;
-using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.EventCompetition.Contracts.Commands;
-
-/// <summary>
-///     One entry of a draft as the editor holds it: the raw play, not its points — the
-///     handler prices every entry under the board's frozen configuration on each save.
-///     PlayedAt rides along from the journal import and is null for hand-typed entries.
-/// </summary>
-[ExcludeFromCodeCoverage]
-public sealed record MoMDraftEntry(Guid ChartId, int Score, PhoenixPlate Plate, bool IsBroken,
-    DateTimeOffset? PlayedAt);
 
 /// <summary>
 ///     Creates or replaces the caller's draft on a board (SessionId null = create; one open

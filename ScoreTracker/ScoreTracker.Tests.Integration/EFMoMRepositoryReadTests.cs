@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.EventCompetition.Domain;
 using ScoreTracker.EventCompetition.Infrastructure;
 using ScoreTracker.EventCompetition.Infrastructure.Entities;
 using ScoreTracker.SharedKernel.Enums;
@@ -152,5 +153,70 @@ public sealed class EFMoMRepositoryReadTests : IAsyncLifetime
         Assert.Null(await repository.GetBoardConfiguration(Guid.NewGuid(), true,
             CancellationToken.None));
         Assert.Null(await repository.GetSession(Guid.NewGuid(), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task DraftsUpsertPublishAndDeleteWithChartRowsCascading()
+    {
+        var seeder = new TestDataSeeder(_fixture.DbContextFactory);
+        var userId = await seeder.SeedUserAsync();
+        var chartA = await seeder.SeedPhoenixChartAsync(20, "Double");
+
+        var seasonId = Guid.NewGuid();
+        var boardId = Guid.NewGuid();
+        await using (var ctx = await _fixture.DbContextFactory.CreateDbContextAsync())
+        {
+            ctx.Set<MoMSeasonEntity>().Add(new MoMSeasonEntity
+            {
+                Id = seasonId, Year = 2026, Quarter = 3, Name = "Summer 2026",
+                StartsAt = Start, EndsAt = End, CreatedAt = Start
+            });
+            ctx.Set<MoMBoardEntity>().Add(new MoMBoardEntity
+            {
+                Id = boardId, SeasonId = seasonId, MixId = MixIds.For(MixEnum.Phoenix),
+                ChartType = (byte)ChartType.Double, ScoringConfig = "{}"
+            });
+            await ctx.SaveChangesAsync();
+        }
+
+        var repository = new EFMoMRepository(_fixture.DbContextFactory,
+            new MemoryCache(new MemoryCacheOptions()));
+
+        // A Guid.Empty id asks storage to mint one; the draft then reads back by it.
+        var draft = new MoMSessionRecord(Guid.Empty, boardId, userId, null, 1000, 1,
+            TimeSpan.FromMinutes(90).Ticks, 20.5, 12, 20, 20, null);
+        var rows = new[]
+        {
+            new MoMSessionChartRecord(0, chartA, 990000, "SuperbGame", false, 1000, 0,
+                Start.AddDays(5))
+        };
+        var mintedId = await repository.UpsertSession(draft, rows, Start.AddDays(5),
+            CancellationToken.None);
+        Assert.NotEqual(Guid.Empty, mintedId);
+        Assert.Equal(mintedId, (await repository.GetDraft(boardId, userId,
+            CancellationToken.None))?.Id);
+
+        // A re-save wholly replaces the chart rows rather than appending.
+        var replacement = new[]
+        {
+            new MoMSessionChartRecord(0, chartA, 950000, "FairGame", true, 900, 0, null)
+        };
+        await repository.UpsertSession(draft with { Id = mintedId, TotalScore = 900 },
+            replacement, Start.AddDays(6), CancellationToken.None);
+        var stored = await repository.GetSessionCharts(mintedId, CancellationToken.None);
+        Assert.Equal(950000, Assert.Single(stored).Score);
+        Assert.Null(stored[0].PlayedAt);
+
+        // Publish stamps the clock: the session leaves the draft read and joins the board's.
+        await repository.PublishSession(mintedId, Start.AddDays(7), CancellationToken.None);
+        Assert.Null(await repository.GetDraft(boardId, userId, CancellationToken.None));
+        var published = Assert.Single(await repository.GetPublishedSessions(new[] { boardId },
+            CancellationToken.None));
+        Assert.Equal(Start.AddDays(7), published.PublishedAt);
+
+        // Delete removes the session and its chart rows cascade with it.
+        await repository.DeleteSession(mintedId, CancellationToken.None);
+        Assert.Null(await repository.GetSession(mintedId, CancellationToken.None));
+        Assert.Empty(await repository.GetSessionCharts(mintedId, CancellationToken.None));
     }
 }

@@ -96,7 +96,8 @@ namespace ScoreTracker.Domain.Models
             Entries.Remove(entry);
         }
 
-        public void Add(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
+        public void Add(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken,
+            DateTimeOffset? playedAt = null)
         {
             if (!CanAdd(chart))
             {
@@ -107,11 +108,16 @@ namespace ScoreTracker.Domain.Models
             var withBonus = _configuration.Scoring.GetScore(chart, score, plate, isBroken);
             Entries.Add(
                 new Entry(chart, score, plate, isBroken,
-                    (int)withBonus, (int)(withBonus - basePoints)));
+                    (int)withBonus, (int)(withBonus - basePoints), playedAt));
         }
 
+        /// <summary>
+        ///     PlayedAt is the play's real wall-clock time when the journal supplied it
+        ///     (march-of-murlocs.md §2.5) and null for a hand-typed entry — it never affects
+        ///     scoring, only the session's timeline.
+        /// </summary>
         public sealed record Entry(Chart Chart, PhoenixScore Score, PhoenixPlate Plate, bool IsBroken,
-            int SessionScore, int BonusPoints)
+            int SessionScore, int BonusPoints, DateTimeOffset? PlayedAt = null)
         {
         }
     }

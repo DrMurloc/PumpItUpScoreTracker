@@ -211,4 +211,73 @@ internal sealed class EFMoMRepository : IMoMRepository
             entity.TotalScore, entity.ChartsPlayed, entity.RestTime, entity.AverageDifficulty,
             entity.AverageGrade, entity.LowestLevel, entity.HighestLevel, entity.VideoUrl);
     }
+
+    public async Task<Guid> UpsertSession(MoMSessionRecord session,
+        IReadOnlyList<MoMSessionChartRecord> charts, DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var sessionId = session.Id == Guid.Empty ? Guid.NewGuid() : session.Id;
+        var entity = await database.Set<MoMSessionEntity>()
+            .FirstOrDefaultAsync(s => s.Id == sessionId, cancellationToken);
+        if (entity == null)
+        {
+            entity = new MoMSessionEntity { Id = sessionId, CreatedAt = now };
+            await database.Set<MoMSessionEntity>().AddAsync(entity, cancellationToken);
+        }
+
+        entity.BoardId = session.BoardId;
+        entity.UserId = session.UserId;
+        entity.PublishedAt = session.PublishedAt;
+        entity.TotalScore = session.TotalScore;
+        entity.ChartsPlayed = session.ChartsPlayed;
+        entity.RestTime = session.RestTimeTicks;
+        entity.AverageDifficulty = session.AverageDifficulty;
+        entity.AverageGrade = session.AverageGrade;
+        entity.LowestLevel = (byte)session.LowestLevel;
+        entity.HighestLevel = (byte)session.HighestLevel;
+        entity.VideoUrl = session.VideoUrl;
+        entity.UpdatedAt = now;
+
+        var existing = await database.Set<MoMSessionChartEntity>()
+            .Where(c => c.SessionId == sessionId).ToArrayAsync(cancellationToken);
+        database.Set<MoMSessionChartEntity>().RemoveRange(existing);
+        await database.Set<MoMSessionChartEntity>().AddRangeAsync(charts.Select(c =>
+            new MoMSessionChartEntity
+            {
+                SessionId = sessionId,
+                Ordinal = c.Ordinal,
+                ChartId = c.ChartId,
+                Score = c.Score,
+                Plate = c.Plate,
+                IsBroken = c.IsBroken,
+                SessionScore = c.SessionScore,
+                BonusPoints = c.BonusPoints,
+                PlayedAt = c.PlayedAt
+            }), cancellationToken);
+
+        await database.SaveChangesAsync(cancellationToken);
+        return sessionId;
+    }
+
+    public async Task PublishSession(Guid sessionId, DateTimeOffset publishedAt,
+        CancellationToken cancellationToken)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var entity = await database.Set<MoMSessionEntity>()
+            .SingleAsync(s => s.Id == sessionId, cancellationToken);
+        entity.PublishedAt = publishedAt;
+        entity.UpdatedAt = publishedAt;
+        await database.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteSession(Guid sessionId, CancellationToken cancellationToken)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var entity = await database.Set<MoMSessionEntity>()
+            .FirstOrDefaultAsync(s => s.Id == sessionId, cancellationToken);
+        if (entity == null) return;
+        database.Set<MoMSessionEntity>().Remove(entity);
+        await database.SaveChangesAsync(cancellationToken);
+    }
 }

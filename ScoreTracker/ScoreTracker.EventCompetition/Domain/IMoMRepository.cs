@@ -90,4 +90,20 @@ internal interface IMoMRepository
     /// </summary>
     Task<IReadOnlyDictionary<Guid, double>> GetSeasonSnapshot(Guid boardId,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     Inserts or wholly replaces a session and its chart rows — the caller computed the
+    ///     derived cache columns; storage never recomputes them (§6). now stamps
+    ///     CreatedAt/UpdatedAt; a Guid.Empty id asks storage to mint one, and the stored id
+    ///     is returned either way.
+    /// </summary>
+    Task<Guid> UpsertSession(MoMSessionRecord session, IReadOnlyList<MoMSessionChartRecord> charts,
+        DateTimeOffset now, CancellationToken cancellationToken);
+
+    /// <summary>Stamps PublishedAt — the recorded date and the tie-break clock (D18).</summary>
+    Task PublishSession(Guid sessionId, DateTimeOffset publishedAt,
+        CancellationToken cancellationToken);
+
+    /// <summary>Deletes a session; its chart rows cascade.</summary>
+    Task DeleteSession(Guid sessionId, CancellationToken cancellationToken);
 }
