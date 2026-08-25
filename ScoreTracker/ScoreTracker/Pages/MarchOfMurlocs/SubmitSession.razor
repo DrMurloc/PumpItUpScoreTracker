@@ -1,0 +1,670 @@
+@page "/MarchOfMurlocs/Session/{IdText}/Edit"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.EventCompetition.Contracts.Commands
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Components.MoM
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ScoreTracker.Web.Services.MoM
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject ChartCatalogCache ChartCatalog
+@inject IDateTimeOffsetAccessor Clock
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+@* Submit (march-of-murlocs.md §11.4): a draft IS a session (D17), so every add, edit,
+   reorder and import saves it — thirty hand-typed charts survive a stray navigation — and
+   its only exits are Discard and Publish. Entry is the three-key loop: chart → score →
+   Enter, Shift+Enter files the play broken; the 1h45 budget is a visible bar; and the
+   import reads the score journal, splits it at fifteen-minute gaps, and pre-selects the
+   longest block (no credentials — freshness is Import Scores' job, and the empty state
+   links there). Zero-point plays are ordinary entries: they count and they block a repeat
+   (§1 — the ladder's frozen rule). *@
+
+<PageTitle>March of Murlocs</PageTitle>
+
+@if (_view != null)
+{
+    <div class="mom-page mom-submit">
+        <div class="mom-crumbs">
+            <a href="@MoMRoutes.Root">March of Murlocs</a>
+            <span class="sep">/</span>
+            <a href="@MoMRoutes.SeasonPath(_view.Season)">@_view.Season.Name</a>
+            <span class="sep">/</span>
+            <span class="mom-typechip @(_view.ChartType == ChartType.Single ? "s" : "d")">@TypeName</span>
+            <span class="mom-draftchip">@L["Draft"]</span>
+            <span class="mom-savestate">@(_saving ? L["Saving…"] : L["Saved"])</span>
+        </div>
+
+        <div class="mom-submit-head">
+            <div>
+                <h1 class="mom-frame-title">@L["Record a session"]</h1>
+                <div class="mom-tagline">@L["Nothing is on the board until you publish. A published session is frozen — a correction is delete and resubmit."]</div>
+            </div>
+            <div class="mom-total num" role="status">@_view.TotalScore.ToString("N0")<small>@L["points"] · @L["{0} charts", _entries.Count]</small></div>
+        </div>
+
+        <div class="mom-budget">
+            <div class="mom-meter" role="img" aria-label="@L["Session window"]">
+                <i class="played" style="width:@BudgetPercent(PlayedSeconds)%"></i>
+                <i class="pending" style="width:@BudgetPercent(PendingSeconds)%"></i>
+            </div>
+            <div class="mom-budget-legend num">@BudgetLegend()</div>
+        </div>
+
+        <div class="mom-picker">
+            <MudAutocomplete T="Chart"
+                             @ref="_picker"
+                             Value="_selectedChart"
+                             ValueChanged="SelectChart"
+                             SearchFunc="SearchCharts"
+                             ToStringFunc="@(c => c == null ? string.Empty : $"{c.Song.Name}  ·  {c.DifficultyString}")"
+                             Label="@L["Chart"]"
+                             Placeholder="@L["Search a song…"]"
+                             Clearable="true"
+                             ResetValueOnEmptyText="true"
+                             Disabled="@(!WindowOpen)"
+                             MaxItems="40"
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense">
+                <ItemTemplate Context="chart">
+                    <span class="mom-pickrow">
+                        <DifficultyBubble Chart="chart" Height="18"></DifficultyBubble>
+                        <span class="nm">@chart.Song.Name</span>
+                        <span class="len num">@Mmss(chart.Song.Duration.TotalSeconds)</span>
+                    </span>
+                </ItemTemplate>
+            </MudAutocomplete>
+            <MudNumericField T="int?" @bind-Value="_score" Immediate="true" Min="0" Max="1000000"
+                             Label="@L["Score"]" HideSpinButtons="true" Variant="Variant.Outlined"
+                             Margin="Margin.Dense" Disabled="@(!WindowOpen)"
+                             OnKeyDown="ScoreKeyDown"></MudNumericField>
+            <MudSelect T="string" @bind-Value="_result" Label="@L["Result"]" Variant="Variant.Outlined"
+                       Margin="Margin.Dense" Disabled="@(!WindowOpen)">
+                <MudSelectItem T="string" Value="@("BROKEN")">@L["Broken"]</MudSelectItem>
+                @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+                {
+                    <MudSelectItem T="string" Value="@plate.ToString()">@plate.GetName()</MudSelectItem>
+                }
+            </MudSelect>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!CanCommit)"
+                       OnClick="CommitEntry">@L["Add"]</MudButton>
+        </div>
+        <div class="mom-picker-hint">@L["Chart → score → Enter. Shift+Enter files a play as broken. The plate is optional — it changes no Phoenix score."]</div>
+
+        @if (_entries.Count == 0)
+        {
+            <div class="mom-empty-board">
+                <div class="mom-big">@L["Nothing yet."]</div>
+                <p>@L["Find your first chart above — or import the whole session from your recent plays."]</p>
+            </div>
+        }
+        else
+        {
+            <div class="mom-erows">
+                @foreach (var (entry, index) in _entries.Select((e, i) => (e, i)).Reverse())
+                {
+                    var row = RowFor(entry);
+                    <div class="mom-erow @(row is { Points: 0 } ? "zero" : null)"
+                         title="@(row is { Points: 0 } ? L["A play graded A or below scores zero on Phoenix. It still counts as one of your charts, blocks a repeat, and used your window."] : null)">
+                        <span class="ord num">@(index + 1)</span>
+                        @if (row != null)
+                        {
+                            <DifficultyBubble Chart="row.Chart" Height="20"></DifficultyBubble>
+                        }
+                        <span class="ename">
+                            <span class="t">@(row?.Chart.Song.Name.ToString() ?? "?")</span>
+                            <span class="s num">
+                                @entry.Score.ToString("N0") · @(row == null ? "" : Mmss(row.Chart.Song.Duration.TotalSeconds))
+                                @if (entry.IsBroken)
+                                {
+                                    <span class="broken">· @L["broken"]</span>
+                                }
+                                @if (row is { Points: 0 })
+                                {
+                                    <span class="warn">· @L["scores zero"]</span>
+                                }
+                            </span>
+                        </span>
+                        <span class="egrade"><ScoreBreakdown Score="entry.Score" Plate="entry.Plate" IsBroken="entry.IsBroken" Mix="_view.Mix" OneLine="true" Height="16" Tooltip="false"></ScoreBreakdown></span>
+                        <span class="epts num">@(row?.Points.ToString("N0") ?? "…")</span>
+                        <span class="eact">
+                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ArrowUpward" Disabled="@(index == 0 || _saving)" OnClick="() => Move(index, -1)" aria-label="@L["Move earlier"]"></MudIconButton>
+                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ArrowDownward" Disabled="@(index == _entries.Count - 1 || _saving)" OnClick="() => Move(index, 1)" aria-label="@L["Move later"]"></MudIconButton>
+                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" Disabled="_saving" OnClick="() => Remove(index)" aria-label="@L["Remove"]"></MudIconButton>
+                        </span>
+                    </div>
+                }
+            </div>
+        }
+
+        <div class="mom-importrow">
+            <div>
+                <div class="t">@L["Played on a machine linked to your PIUGAME account?"]</div>
+                <div class="s">@L["Import reads your recent plays from your score journal and picks out the session. If a session is missing, run Import Scores first and come back."] <a href="/UploadPhoenixScores">@L["Import Scores"]</a></div>
+            </div>
+            @if (_importing)
+            {
+                <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"></MudProgressCircular>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="OpenImport">@L["Import from your recent plays"]</MudButton>
+            }
+        </div>
+
+        <div class="mom-videofield">
+            <MudTextField T="string" @bind-Value="_videoUrl" Label="@L["Video URL (optional — it embeds on the session page)"]"
+                          Variant="Variant.Outlined" Margin="Margin.Dense" OnBlur="SaveVideo"></MudTextField>
+        </div>
+
+        <div class="mom-footlinks">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(_entries.Count == 0 || _saving)"
+                       OnClick="() => _publishOpen = true">@L["Publish"]</MudButton>
+            <MudButton Variant="Variant.Outlined" Disabled="_saving" OnClick="() => _discardOpen = true">@L["Discard this draft"]</MudButton>
+        </div>
+        <p class="mom-publicnote">@L["Publishing makes your session public on the board, even if your profile is private. A video link is public as well."]</p>
+
+        <MudDialog @bind-Visible="_publishOpen">
+            <DialogContent>
+                <h3 class="mom-big">@L["Publish this session?"]</h3>
+                <p>@L["It goes on the {0} board straight away, and it is recorded as played right now.", TypeName]</p>
+                <ul class="mom-publist">
+                    <li>@L["A published session cannot be edited. If you get something wrong you delete it and record a new one."]</li>
+                    <li>@L["Your score becomes public on the board even if your profile is private."]</li>
+                    <li>@L["You can record another session this season whenever you like."]</li>
+                </ul>
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="() => _publishOpen = false">@L["Back to the draft"]</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Publish">@L["Publish"]</MudButton>
+            </DialogActions>
+        </MudDialog>
+
+        <MudDialog @bind-Visible="_discardOpen">
+            <DialogContent>
+                <h3 class="mom-big">@L["Discard this draft?"]</h3>
+                <p>
+                    @(_entries.Count > 0
+                        ? L["The {0} charts you have entered go away and cannot be recovered. Nothing was ever on the board.", _entries.Count]
+                        : L["Nothing has been entered yet, so there is nothing to lose."])
+                </p>
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="() => _discardOpen = false">@L["Keep it"]</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="Discard">@L["Discard"]</MudButton>
+            </DialogActions>
+        </MudDialog>
+
+        <MudDialog @bind-Visible="_importOpen" Options="ImportDialogOptions">
+            <DialogContent>
+                <h3 class="mom-big">@L["Import from your recent plays"]</h3>
+                @if (_importPlays.Count == 0)
+                {
+                    <p class="mom-imp-empty">
+                        @(_journalHadPlays
+                            ? L["None of your recent plays are {0} charts, so nothing here can go on this board.", TypeName]
+                            : L["No recent plays found in your score journal — it only reaches back seven days. Run Import Scores first, then come back."])
+                        <a href="/UploadPhoenixScores">@L["Import Scores"]</a>
+                    </p>
+                }
+                else
+                {
+                    <p class="mom-imp-sub num">@L["Read {0} recent plays. The selection below is the block between your two longest breaks — click any play to move the nearest end.", _importPlays.Count]</p>
+                    <div class="mom-imp-found num">
+                        <b>@SelectedImportCount</b> @L["plays selected"] ·
+                        <b>@Hms(SelectedSongSeconds)</b> @L["of songs"] ·
+                        <b>@Hms(SelectedSpanSeconds)</b> @L["first to last"]
+                    </div>
+                    <div class="mom-imp-list">
+                        @for (var i = 0; i < _importPlays.Count; i++)
+                        {
+                            var index = i;
+                            var play = _importPlays[index];
+                            var gap = MoMSessionImport.GapBefore(_importPlays, index);
+                            @if (gap != null && gap > MoMSessionImport.GapBreak)
+                            {
+                                <div class="mom-imp-gap num">@GapLabel(gap.Value)</div>
+                            }
+                            <div class="mom-imp-row @(InSelection(index) ? "in" : null) @(index == _importSelection.Start || index == _importSelection.End ? "edge" : null) @(play.Selectable ? null : "dead")"
+                                 role="button" tabindex="0"
+                                 @onclick="() => MoveImportEnd(index)">
+                                <span class="tm num">@play.Entry.OccurredAt.ToString("t")</span>
+                                <DifficultyBubble Chart="play.Chart" Height="18"></DifficultyBubble>
+                                <span class="nm">@play.Chart.Song.Name</span>
+                                @if (!play.Selectable)
+                                {
+                                    <span class="dead-note">@(play.Entry.Score == null ? L["stage break"] : L["not this board"])</span>
+                                }
+                                <span class="sc num">@(play.Entry.Score?.ToString() ?? "—")</span>
+                            </div>
+                        }
+                    </div>
+                    @if (ImportHardBlocked)
+                    {
+                        <div class="mom-imp-warn"><b>@L["Too long to import."]</b> @L["Everything before the last play is already past the {0} window. Move an end in.", _view.MaxTime.ToString(@"h\:mm\:ss")]</div>
+                    }
+                    else if (ImportSpanWarning is { } warning)
+                    {
+                        <div class="mom-imp-warn num">
+                            <b>@L["These plays span {0}", Hms(SelectedSpanSeconds)]</b> — @L["a session window is {0}.", _view.MaxTime.ToString(@"h\:mm\:ss")]
+                            @L["Your longest break inside it was {0}, before {1} at {2}. Import it anyway if that was part of the session.",
+                                Mmss(warning.Gap.TotalSeconds), warning.Before.Chart.Song.Name, warning.Before.Entry.OccurredAt.ToString("t")]
+                        </div>
+                    }
+                }
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="() => _importOpen = false">@L["Cancel"]</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           Disabled="@(ImportHardBlocked || SelectedImportCount == 0)"
+                           OnClick="AddImportedPlays">@L["Add {0} charts", SelectedImportCount]</MudButton>
+            </DialogActions>
+        </MudDialog>
+    </div>
+}
+
+@code {
+    [Parameter] public string IdText { get; set; } = string.Empty;
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "Board")]
+    public Guid? Board { get; set; }
+
+    private static readonly DialogOptions ImportDialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    private sealed record EntryRow(Chart Chart, int Points);
+
+    private MoMSessionView? _view;
+    private readonly List<MoMDraftEntry> _entries = new();
+    private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private MudAutocomplete<Chart>? _picker;
+    private Chart? _selectedChart;
+    private int? _score;
+    private string _result = string.Empty;
+    private string _videoUrl = string.Empty;
+    private bool _saving;
+    private bool _publishOpen;
+    private bool _discardOpen;
+    private bool _importOpen;
+    private bool _importing;
+    private bool _journalHadPlays;
+    private IReadOnlyList<MoMImportPlay> _importPlays = Array.Empty<MoMImportPlay>();
+    private (int Start, int End) _importSelection;
+
+    private string TypeName => _view!.ChartType == ChartType.Single ? L["Singles"] : L["Doubles"];
+
+    private double PlayedSeconds => _entries
+        .Sum(e => _charts.TryGetValue(e.ChartId, out var chart) ? chart.Song.Duration.TotalSeconds : 0);
+
+    private double PendingSeconds => _selectedChart == null || !WindowOpen
+        ? 0
+        : Math.Min(_selectedChart.Song.Duration.TotalSeconds,
+            Math.Max(0, _view!.MaxTime.TotalSeconds - PlayedSeconds));
+
+    // The window governs when a chart may START (§2.9): the candidate's own length never
+    // enters the test, and the closing chart may overhang.
+    private bool WindowOpen => _view != null && PlayedSeconds < _view.MaxTime.TotalSeconds;
+
+    private bool CanCommit => WindowOpen && _selectedChart != null && _score is >= 0 and <= 1000000 && !_saving;
+
+    private bool InSelection(int index)
+    {
+        return index >= _importSelection.Start && index <= _importSelection.End;
+    }
+
+    private int SelectedImportCount => SelectedPlays().Count(p => p.Selectable);
+
+    private double SelectedSongSeconds => SelectedPlays().Where(p => p.Selectable).Sum(p => p.Seconds);
+
+    private double SelectedSpanSeconds
+    {
+        get
+        {
+            var selected = SelectedPlays();
+            if (selected.Count == 0) return 0;
+            return (selected[^1].EndsAt - selected[0].Entry.OccurredAt).TotalSeconds;
+        }
+    }
+
+    private bool ImportHardBlocked => _view != null &&
+                                      MoMSessionImport.ExceedsWindow(SelectedPlays(), _view.MaxTime);
+
+    private (TimeSpan Gap, MoMImportPlay Before)? ImportSpanWarning =>
+        _view != null && SelectedSpanSeconds > _view.MaxTime.TotalSeconds
+            ? MoMSessionImport.LongestBreakInside(_importPlays, _importSelection)
+            : null;
+
+    private IReadOnlyList<MoMImportPlay> SelectedPlays()
+    {
+        if (_importPlays.Count == 0 || _importSelection.End < _importSelection.Start)
+            return Array.Empty<MoMImportPlay>();
+        return _importPlays.Skip(_importSelection.Start)
+            .Take(_importSelection.End - _importSelection.Start + 1).ToArray();
+    }
+
+    private static string Mmss(double seconds)
+    {
+        return $"{(int)(seconds / 60)}:{(int)seconds % 60:00}";
+    }
+
+    private static string Hms(double seconds)
+    {
+        return TimeSpan.FromSeconds(seconds).ToString(@"h\:mm\:ss");
+    }
+
+    private string GapLabel(TimeSpan gap)
+    {
+        var hours = (int)gap.TotalHours;
+        return hours > 0
+            ? L["{0}h {1}m gap", hours, gap.Minutes]
+            : L["{0}m gap", gap.Minutes];
+    }
+
+    private double BudgetPercent(double seconds)
+    {
+        return _view == null
+            ? 0
+            : Math.Clamp(seconds / _view.MaxTime.TotalSeconds * 100, 0, 100);
+    }
+
+    private string BudgetLegend()
+    {
+        if (_view == null) return string.Empty;
+        var over = PlayedSeconds - _view.MaxTime.TotalSeconds;
+        if (over > 0)
+            return L["{0} charts entered. Your last chart ran {1} past the window, which is allowed — a song you started in time counts in full.",
+                _entries.Count, Mmss(over)].Value;
+        if (!WindowOpen)
+            return L["{0} charts entered, and the window is exactly full. Nothing more can be started.", _entries.Count].Value;
+        var left = _view.MaxTime.TotalSeconds - PlayedSeconds;
+        var pending = PendingSeconds > 0
+            ? " " + L["Adding this chart uses {0} of it.", Mmss(PendingSeconds)].Value
+            : string.Empty;
+        return L["{0} charts entered · {1} of the window unclaimed. Whatever you do not fill with songs is recorded as rest.",
+            _entries.Count, Hms(left)].Value + pending;
+    }
+
+    private EntryRow? RowFor(MoMDraftEntry entry)
+    {
+        if (!_charts.TryGetValue(entry.ChartId, out var chart)) return null;
+        var priced = _view?.Charts.FirstOrDefault(c => c.ChartId == entry.ChartId &&
+                                                       c.Score == entry.Score &&
+                                                       c.IsBroken == entry.IsBroken);
+        return new EntryRow(chart, priced?.SessionScore ?? 0);
+    }
+
+    private Task<IEnumerable<Chart>> SearchCharts(string term, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(term)) return Task.FromResult(Enumerable.Empty<Chart>());
+        var wanted = term.Trim();
+        // Banked charts drop out entirely — the repeat ban keys on song + type + level (§1).
+        var taken = _entries
+            .Select(e => _charts.TryGetValue(e.ChartId, out var c) ? c : null)
+            .Where(c => c != null)
+            .Select(c => (Name: c!.Song.Name, c.Type, c.Level))
+            .ToHashSet();
+        return Task.FromResult(_charts.Values
+            .Where(c => c.Type == _view!.ChartType)
+            .Where(c => c.Song.Name.ToString().Contains(wanted, StringComparison.OrdinalIgnoreCase))
+            .Where(c => !taken.Contains((c.Song.Name, c.Type, c.Level)))
+            .OrderBy(c => c.Song.Name.ToString())
+            .ThenBy(c => (int)c.Level)
+            .AsEnumerable());
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            Nav.NavigateTo("/Login");
+            return;
+        }
+
+        if (string.Equals(IdText, "New", StringComparison.OrdinalIgnoreCase))
+        {
+            if (Board == null)
+            {
+                Nav.NavigateTo(MoMRoutes.Root);
+                return;
+            }
+
+            // One open draft per board (§10): land on it, else open one — then the URL is the
+            // draft's own, so a stray navigation comes straight back here.
+            var existing = await Mediator.Send(new GetMoMDraftQuery(Board.Value))
+                           ?? await Save(new SaveMoMSessionDraftCommand(Board.Value, null,
+                               Array.Empty<MoMDraftEntry>(), null));
+            if (existing != null)
+                Nav.NavigateTo(MoMRoutes.EditPath(existing.Id), replace: true);
+            return;
+        }
+
+        if (!Guid.TryParse(IdText, out var id))
+        {
+            Nav.NotFound();
+            return;
+        }
+
+        var view = await Mediator.Send(new GetMoMSessionQuery(id));
+        if (view == null)
+        {
+            Nav.NotFound();
+            return;
+        }
+
+        if (!view.IsDraft)
+        {
+            // Published sessions are frozen (D17): their page is the Breakdown.
+            Nav.NavigateTo(MoMRoutes.SessionPath(view.Id));
+            return;
+        }
+
+        Apply(view);
+        _charts = await ChartCatalog.GetCharts(view.Mix);
+    }
+
+    private void Apply(MoMSessionView view)
+    {
+        _view = view;
+        _entries.Clear();
+        _entries.AddRange(view.Charts.OrderBy(c => c.Ordinal)
+            .Select(c => new MoMDraftEntry(c.ChartId, c.Score, c.Plate, c.IsBroken, c.PlayedAt)));
+        _videoUrl = view.VideoUrl?.ToString() ?? string.Empty;
+    }
+
+    private async Task SelectChart(Chart? chart)
+    {
+        _selectedChart = chart;
+        if (chart != null && _picker != null) await _picker.BlurAsync();
+    }
+
+    private async Task ScoreKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key != "Enter") return;
+        // Shift+Enter files the play as broken without reaching for the dropdown (§11.4).
+        if (args.ShiftKey) _result = "BROKEN";
+        await CommitEntry();
+    }
+
+    private async Task CommitEntry()
+    {
+        if (!CanCommit || _view == null || _selectedChart == null) return;
+        var broken = _result == "BROKEN";
+        var plate = !broken && Enum.TryParse<PhoenixPlate>(_result, out var chosen)
+            ? chosen
+            : PhoenixPlate.RoughGame;
+        _entries.Add(new MoMDraftEntry(_selectedChart.Id, _score!.Value, plate, broken, null));
+        _selectedChart = null;
+        _score = null;
+        _result = string.Empty;
+        await SaveDraft();
+        if (_picker != null) await _picker.FocusAsync();
+    }
+
+    private async Task Move(int index, int delta)
+    {
+        var target = index + delta;
+        if (target < 0 || target >= _entries.Count) return;
+        (_entries[index], _entries[target]) = (_entries[target], _entries[index]);
+        await SaveDraft();
+    }
+
+    private async Task Remove(int index)
+    {
+        _entries.RemoveAt(index);
+        await SaveDraft();
+    }
+
+    private async Task SaveVideo()
+    {
+        if (_view == null) return;
+        if (!string.IsNullOrWhiteSpace(_videoUrl) &&
+            !Uri.TryCreate(_videoUrl, UriKind.Absolute, out _))
+        {
+            Snackbar.Add(L["The video link needs to be a full URL, like https://youtu.be/..."], Severity.Warning);
+            return;
+        }
+
+        await SaveDraft();
+    }
+
+    private async Task SaveDraft()
+    {
+        if (_view == null) return;
+        var video = Uri.TryCreate(_videoUrl, UriKind.Absolute, out var parsed) ? parsed : null;
+        var saved = await Save(new SaveMoMSessionDraftCommand(_view.BoardId, _view.Id,
+            _entries.ToArray(), video));
+        if (saved != null) Apply(saved);
+    }
+
+    private async Task<MoMSessionView?> Save(SaveMoMSessionDraftCommand command)
+    {
+        _saving = true;
+        try
+        {
+            return await Mediator.Send(command);
+        }
+        catch (MoMSessionRuleException exception)
+        {
+            Snackbar.Add(exception.Message, Severity.Warning);
+            return null;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task OpenImport()
+    {
+        if (_view == null) return;
+        _importing = true;
+        try
+        {
+            // Oldest first: the dialog reads top to bottom in play order. Stage breaks and
+            // wrong-type plays stay on screen — they shape the gaps — but never import.
+            var journal = await Mediator.Send(new GetPlayerJournalQuery(CurrentUser.User.Id,
+                _view.Mix, Since: Clock.Now.AddDays(-7), Limit: 300));
+            _journalHadPlays = journal.Count > 0;
+            var taken = _entries.Select(e => e.ChartId).ToHashSet();
+            _importPlays = journal
+                .Reverse()
+                .Where(entry => _charts.ContainsKey(entry.ChartId))
+                .Select(entry =>
+                {
+                    var chart = _charts[entry.ChartId];
+                    var selectable = chart.Type == _view.ChartType && entry.Score != null &&
+                                     !entry.IsStageBroken && !taken.Contains(entry.ChartId);
+                    return new MoMImportPlay(entry, chart, selectable);
+                })
+                .ToArray();
+            _importSelection = MoMSessionImport.BestBlock(_importPlays);
+            _importOpen = true;
+        }
+        finally
+        {
+            _importing = false;
+        }
+    }
+
+    private void MoveImportEnd(int index)
+    {
+        _importSelection = MoMSessionImport.MoveNearestEnd(_importSelection, index);
+    }
+
+    private async Task AddImportedPlays()
+    {
+        if (_view == null) return;
+        var added = 0;
+        var skipped = 0;
+        var taken = _entries
+            .Select(e => _charts.TryGetValue(e.ChartId, out var c) ? c : null)
+            .Where(c => c != null)
+            .Select(c => (Name: c!.Song.Name, c.Type, c.Level))
+            .ToHashSet();
+        var budget = _view.MaxTime.TotalSeconds;
+        var used = PlayedSeconds;
+        foreach (var play in SelectedPlays().Where(p => p.Selectable))
+        {
+            // The same rules as the picker: repeats skip (§1), and a chart may only START
+            // inside the window — charts already in the draft are skipped, not fatal (§11.4).
+            var key = (Name: play.Chart.Song.Name, play.Chart.Type, play.Chart.Level);
+            if (taken.Contains(key) || used >= budget)
+            {
+                skipped++;
+                continue;
+            }
+
+            _entries.Add(new MoMDraftEntry(play.Chart.Id, play.Entry.Score!.Value,
+                play.Entry.Plate ?? PhoenixPlate.RoughGame, play.Entry.IsBroken,
+                play.Entry.OccurredAt));
+            taken.Add(key);
+            used += play.Seconds;
+            added++;
+        }
+
+        _importOpen = false;
+        await SaveDraft();
+        if (added == 0)
+            Snackbar.Add(L["None of those plays could be added — they repeat charts already in the session, or it is already full."], Severity.Warning);
+        else if (skipped > 0)
+            Snackbar.Add(L["Added {0} charts, skipped {1} the session could not take.", added, skipped], Severity.Success);
+        else
+            Snackbar.Add(L["Added {0} charts.", added], Severity.Success);
+    }
+
+    private async Task Publish()
+    {
+        if (_view == null) return;
+        _publishOpen = false;
+        try
+        {
+            await Mediator.Send(new PublishMoMSessionCommand(_view.Id));
+        }
+        catch (MoMSessionRuleException exception)
+        {
+            Snackbar.Add(exception.Message, Severity.Warning);
+            return;
+        }
+
+        Nav.NavigateTo(MoMRoutes.SessionPath(_view.Id));
+    }
+
+    private async Task Discard()
+    {
+        if (_view == null) return;
+        _discardOpen = false;
+        await Mediator.Send(new DeleteMoMSessionCommand(_view.Id));
+        Nav.NavigateTo(MoMRoutes.SeasonPath(_view.Season));
+    }
+}
