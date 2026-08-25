@@ -41,7 +41,6 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     IRequestHandler<AddDiscordChannelToCommunityCommand>,
     IRequestHandler<RemoveDiscordChannelFromCommunityCommand>,
     IRequestHandler<GetPhoenixRecordsForCommunityQuery, IEnumerable<UserPhoenixScore>>,
-    IRequestHandler<GetCommunityPeerScoresQuery, IReadOnlyDictionary<Guid, IReadOnlyList<CommunityPeerScore>>>,
     IConsumer<ScoreHighlightsCapturedEvent>,
     IConsumer<NewTitlesAcquiredEvent>,
     IConsumer<UserUpdatedEvent>
@@ -866,9 +865,9 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     public async Task Consume(ConsumeContext<UserUpdatedEvent> context)
     {
         if (context.Message.IsPublic)
-            await JoinSystemCommunity("World", context.Message.UserId, context.CancellationToken);
-        else if (await _communities.GetCommunityByName("World", context.CancellationToken) != null)
-            await _mediator.Send(new LeaveCommunityCommand("World", context.Message.UserId));
+            await JoinSystemCommunity(WorldCommunityName, context.Message.UserId, context.CancellationToken);
+        else if (await _communities.GetCommunityByName(WorldCommunityName, context.CancellationToken) != null)
+            await _mediator.Send(new LeaveCommunityCommand(WorldCommunityName, context.Message.UserId));
 
         if (context.Message.Country != null)
             await JoinSystemCommunity(context.Message.Country, context.Message.UserId, context.CancellationToken);
@@ -992,75 +991,6 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
 
         return await _scores.GetPhoenixScores(request.Mix, community.MemberIds, request.ChartId,
             cancellationToken);
-    }
-
-    /// <summary>
-    ///     Clubmates' scores across a set of charts. Regional communities and World are excluded
-    ///     because every account joins them on creation — leaving them in would make "your peers"
-    ///     the whole site. World is the one that bites: it is a system community that carries
-    ///     IsRegional = 0, so the name check is load-bearing, not belt-and-braces.
-    /// </summary>
-    public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<CommunityPeerScore>>> Handle(
-        GetCommunityPeerScoresQuery request, CancellationToken cancellationToken)
-    {
-        var empty = (IReadOnlyDictionary<Guid, IReadOnlyList<CommunityPeerScore>>)
-            new Dictionary<Guid, IReadOnlyList<CommunityPeerScore>>();
-        if (request.ChartIds.Count == 0) return empty;
-
-        var mine = (await _communities.GetCommunities(request.UserId, cancellationToken))
-            .Where(c => !c.IsRegional && c.CommunityName != WorldCommunityName)
-            .ToArray();
-        if (mine.Length == 0) return empty;
-
-        // Who is in which — a player commonly shares two of your clubs, and the row names both.
-        var clubsByMember = new Dictionary<Guid, List<Name>>();
-        foreach (var overview in mine)
-        {
-            var community = await _communities.GetCommunityByName(overview.CommunityName, cancellationToken);
-            if (community == null) continue;
-            foreach (var memberId in community.MemberIds.Where(id => id != request.UserId))
-            {
-                if (!clubsByMember.TryGetValue(memberId, out var names))
-                    clubsByMember[memberId] = names = new List<Name>();
-                names.Add(overview.CommunityName);
-            }
-        }
-
-        if (clubsByMember.Count == 0) return empty;
-
-        var memberIds = clubsByMember.Keys.ToArray();
-        var scores = (await _scores.GetPlayerScores(request.Mix, memberIds, request.ChartIds, cancellationToken))
-            .ToArray();
-        if (scores.Length == 0) return empty;
-
-        var stats = (await _playerStats.GetStats(request.Mix, memberIds, cancellationToken))
-            .ToDictionary(s => s.UserId);
-        var charts = (await _charts.GetCharts(request.Mix, chartIds: request.ChartIds,
-                cancellationToken: cancellationToken))
-            .ToDictionary(c => c.Id);
-
-        // Competitive level is read for the chart's own type — a doubles clubmate sorted by
-        // their singles number would sit in the wrong place on a doubles board. Co-op has no
-        // per-type competitive level, so it falls back to the combined one.
-        double LevelFor(Guid userId, Guid chartId)
-        {
-            if (!stats.TryGetValue(userId, out var s)) return 0;
-            if (!charts.TryGetValue(chartId, out var chart)) return s.CompetitiveLevel;
-            return chart.Type switch
-            {
-                ChartType.Single => s.SinglesCompetitiveLevel,
-                ChartType.Double => s.DoublesCompetitiveLevel,
-                _ => s.CompetitiveLevel
-            };
-        }
-
-        return scores
-            .GroupBy(s => s.ChartId)
-            .ToDictionary(g => g.Key, g => (IReadOnlyList<CommunityPeerScore>)g
-                .Select(s => new CommunityPeerScore(s.UserId, s.UserName,
-                    clubsByMember.TryGetValue(s.UserId, out var names) ? names : Array.Empty<Name>(),
-                    LevelFor(s.UserId, s.ChartId), s.Score, s.Plate, s.IsBroken, s.RecordedAt))
-                .ToArray());
     }
 
     public async Task<IEnumerable<CommunityOverviewRecord>> Handle(GetPublicCommunitiesQuery request,

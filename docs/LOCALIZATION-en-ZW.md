@@ -309,6 +309,18 @@ row, the chart journey and the admin backfill.
 | Highest / Lowest | Mrrglmrrgl / Glubglub | The doubled root is the superlative, the owner's own repetition device: `mrrgl` (most/above) and `glub` (below). `Mrgl Mrrgl` is very high; `Mrrgl` alone is high. |
 | only | ub | Recovered from `#{0} of {1}` → `#{0} ub {1}` — the same particle carries "of" and "only". |
 
+## The video sides batch (2026-08-24)
+
+Coined for the chart-details side caption ([video-sides.md](design/video-sides.md)) — the two
+screen-reader sentences are the feature's only strings. `is`/`the` reuse the comment-translation
+batch's same-day recoveries (`lu`/`a`) rather than re-recovering their own — the legacy file
+also attests `urg`/`la` in older values, but one word per English word wins going forward.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| side (of a video) | blgrlgro | `blgrl` (split) + `gro` — one half of the split frame. |
+| right (direction) | rulurg | Pairs with the recovered `Rolurg` (the existing `Left` key). |
+
 ## The comment-translation batch (2026-08-24)
 
 Coined for the translated-comment display and `/Admin/Translations`. `Grorglrgl` (Original),

@@ -86,7 +86,7 @@ Complete example (two songs, three charts):
 | `type` | yes | `Single`, `Double`, or `CoOp` (case-insensitive). Performance charts are out of scope for this tool. |
 | `level` | yes | Integer `1`–`29`. For `CoOp` charts this is the **player count** (e.g. `2`–`5`), matching how co-op charts are stored everywhere else. |
 | `stepArtist` | yes | Step maker credit. |
-| `youtubeHash` | yes | The YouTube video id only (letters, digits, `-`, `_`) — **not** a URL. Embedded as `https://www.youtube.com/embed/{hash}`, same as the one-at-a-time admin flow. |
+| `youtubeHash` | yes | The YouTube video id only (letters, digits, `-`, `_`) — **not** a URL. Embedded as `https://www.youtube.com/embed/{hash}`, same as the one-at-a-time admin flow. Two singles charts of one song may share a hash (a two-sided video): sides register automatically on create, lower level = left ([video-sides.md](video-sides.md)) — no schema field for it. |
 | `channelName` | no | Defaults to `PUMP IT UP Official`. |
 
 Property names are case-insensitive; unknown properties are ignored; trailing commas and

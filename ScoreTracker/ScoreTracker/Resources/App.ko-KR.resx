@@ -859,6 +859,9 @@
   <data name="at {0} or better" xml:space="preserve">
     <value>{0} 이상 기준</value>
   </data>
+  <data name="Attempt {0}" xml:space="preserve">
+    <value>시도 {0}</value>
+  </data>
   <data name="Attempt {0} of {1}" xml:space="preserve">
     <value>{1}회 중 {0}회</value>
   </data>
@@ -4950,6 +4953,9 @@
   <data name="Open Community" xml:space="preserve">
     <value>커뮤니티 열기</value>
   </data>
+  <data name="Open in the Score Calculator" xml:space="preserve">
+    <value>점수 계산기에서 열기</value>
+  </data>
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>추천 채보 열기</value>
   </data>
@@ -6574,6 +6580,9 @@
   <data name="See their boards" xml:space="preserve">
     <value>이 플레이어의 보드 보기</value>
   </data>
+  <data name="See where this score came from" xml:space="preserve">
+    <value>이 점수의 출처 보기</value>
+  </data>
   <data name="See where you stand" xml:space="preserve">
     <value>내 위치를 확인하세요</value>
   </data>
@@ -7650,6 +7659,12 @@
   </data>
   <data name="This chart has no {0} on record" xml:space="preserve">
     <value>이 채보에는 {0} 데이터가 없습니다</value>
+  </data>
+  <data name="This chart is on the left side of the video" xml:space="preserve">
+    <value>이 채보는 영상의 왼쪽에 있습니다</value>
+  </data>
+  <data name="This chart is on the right side of the video" xml:space="preserve">
+    <value>이 채보는 영상의 오른쪽에 있습니다</value>
   </data>
   <data name="This does not send anything." xml:space="preserve">
     <value>이 버튼은 아무것도 보내지 않습니다.</value>

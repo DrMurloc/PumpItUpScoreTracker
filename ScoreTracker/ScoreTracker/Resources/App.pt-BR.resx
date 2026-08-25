@@ -859,6 +859,9 @@
   <data name="at {0} or better" xml:space="preserve">
     <value>com {0} ou melhor</value>
   </data>
+  <data name="Attempt {0}" xml:space="preserve">
+    <value>Tentativa {0}</value>
+  </data>
   <data name="Attempt {0} of {1}" xml:space="preserve">
     <value>Tentativa {0} de {1}</value>
   </data>
@@ -4950,6 +4953,9 @@
   <data name="Open Community" xml:space="preserve">
     <value>Abrir comunidade</value>
   </data>
+  <data name="Open in the Score Calculator" xml:space="preserve">
+    <value>Abrir na calculadora de pontuação</value>
+  </data>
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>Abrir charts sugeridos</value>
   </data>
@@ -6574,6 +6580,9 @@
   <data name="See their boards" xml:space="preserve">
     <value>Ver os quadros do jogador</value>
   </data>
+  <data name="See where this score came from" xml:space="preserve">
+    <value>Veja de onde veio esta pontuação</value>
+  </data>
   <data name="See where you stand" xml:space="preserve">
     <value>Veja onde você está</value>
   </data>
@@ -7650,6 +7659,12 @@
   </data>
   <data name="This chart has no {0} on record" xml:space="preserve">
     <value>Não há {0} registrado para este chart</value>
+  </data>
+  <data name="This chart is on the left side of the video" xml:space="preserve">
+    <value>Este chart está no lado esquerdo do vídeo</value>
+  </data>
+  <data name="This chart is on the right side of the video" xml:space="preserve">
+    <value>Este chart está no lado direito do vídeo</value>
   </data>
   <data name="This does not send anything." xml:space="preserve">
     <value>Isto não envia nada.</value>

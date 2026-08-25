@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.Catalog.Domain;
 using ScoreTracker.Catalog.Infrastructure.Entities;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.SharedKernel.Enums;
@@ -64,9 +65,26 @@ internal sealed class EFChartRepository : IChartRepository
             || chartVideos == null)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            chartVideos = await database.Set<ChartVideoEntity>()
-                .Select(c => new ChartVideoInformation(c.ChartId, new Uri(c.VideoUrl), c.ChannelName))
-                .ToDictionaryAsync(c => c.ChartId, cancellationToken);
+            var rows = await database.Set<ChartVideoEntity>()
+                .Select(v => new { v.ChartId, v.VideoUrl, v.ChannelName, v.Side })
+                .ToArrayAsync(cancellationToken);
+            // A stored side is the pair-validity marker: sides only ever exist on a URL held by
+            // exactly one same-song singles pair, so the partner is simply the URL's other row —
+            // no song or type joins needed at read time.
+            var chartsOnUrl = rows.GroupBy(r => r.VideoUrl, StringComparer.Ordinal)
+                .ToDictionary(g => g.Key, g => g.ToArray(), StringComparer.Ordinal);
+            chartVideos = rows.ToDictionary(r => r.ChartId, r =>
+            {
+                // TryParse, not Parse: a hand-typed value in SQL must mute its own caption,
+                // never take every video surface down with the whole-table cache rebuild.
+                var side = r.Side != null && Enum.TryParse<VideoSide>(r.Side, true, out var parsed)
+                    ? parsed
+                    : default(VideoSide?);
+                var partner = side != null && chartsOnUrl[r.VideoUrl].Length == 2
+                    ? chartsOnUrl[r.VideoUrl].Single(o => o.ChartId != r.ChartId).ChartId
+                    : default(Guid?);
+                return new ChartVideoInformation(r.ChartId, new Uri(r.VideoUrl), r.ChannelName, side, partner);
+            });
 
             // One key holds the whole table, so an empty read asserts "no chart anywhere has a
             // video" — true only of a database still being filled, and a fortnight's expiry
@@ -118,6 +136,7 @@ internal sealed class EFChartRepository : IChartRepository
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var entity = await database.Set<ChartVideoEntity>().FirstOrDefaultAsync(c => c.ChartId == id, cancellationToken);
+        var oldUrl = entity?.VideoUrl;
         if (entity == null)
         {
             await database.Set<ChartVideoEntity>().AddAsync(new ChartVideoEntity
@@ -134,6 +153,83 @@ internal sealed class EFChartRepository : IChartRepository
         }
 
         await database.SaveChangesAsync(cancellationToken);
+
+        // A save that keeps the URL (a channel fix) is not a registration event — the video
+        // didn't change, so whatever sides exist stay exactly as they are.
+        if (!string.Equals(oldUrl, videoUrl.ToString(), StringComparison.Ordinal))
+            await ApplyVideoRegistration(database, id, oldUrl, videoUrl.ToString(), cancellationToken);
+    }
+
+    /// <summary>
+    ///     Applies one video registration event's side effects, and only that event's
+    ///     (docs/design/video-sides.md): sides are durable data, so nothing here re-derives a
+    ///     side an earlier event or a hand audit stored. The edited chart's side clears (its
+    ///     video changed), a same-song partner stranded on the old URL clears (that pair no
+    ///     longer exists), and when the new URL now holds exactly one same-song singles pair,
+    ///     that pair gets its one-time assignment.
+    /// </summary>
+    private static async Task ApplyVideoRegistration(ChartAttemptDbContext database, Guid chartId,
+        string? oldUrl, string newUrl, CancellationToken cancellationToken)
+    {
+        var songId = await database.Chart.Where(c => c.Id == chartId).Select(c => (Guid?)c.SongId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (songId == null) return;
+
+        if (oldUrl != null)
+        {
+            var stranded = await (from v in database.Set<ChartVideoEntity>()
+                join c in database.Chart on v.ChartId equals c.Id
+                where v.VideoUrl == oldUrl && c.SongId == songId && v.ChartId != chartId && v.Side != null
+                select v).ToArrayAsync(cancellationToken);
+            foreach (var row in stranded) row.Side = null;
+        }
+
+        var groupRows = await (from v in database.Set<ChartVideoEntity>()
+            join c in database.Chart on v.ChartId equals c.Id
+            where v.VideoUrl == newUrl
+            select new { Video = v, c.SongId, c.Type, c.Level }).ToArrayAsync(cancellationToken);
+        var edited = groupRows.Single(r => r.Video.ChartId == chartId);
+        edited.Video.Side = null;
+
+        var songGroup = groupRows.Where(r => r.SongId == songId).ToArray();
+        var levels = await PairLevels(database,
+            songGroup.Select(r => (r.Video.ChartId, r.Level)).ToArray(), cancellationToken);
+        var sides = VideoSideAssigner.DecideSides(
+            songGroup.Select(r => new VideoChart(r.Video.ChartId, Enum.Parse<ChartType>(r.Type),
+                levels[r.Video.ChartId])).ToArray(),
+            groupRows.Length);
+        foreach (var row in songGroup)
+            if (sides.TryGetValue(row.Video.ChartId, out var side))
+                row.Video.Side = side.ToString();
+
+        await database.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    ///     The levels a forming pair is compared on: the first modern mix carrying BOTH charts
+    ///     — Phoenix 2, then Phoenix, then XX, the same rule the migration's backfill used —
+    ///     never levels from two different mixes. Base levels are the fallback for a pair no
+    ///     modern mix carries whole.
+    /// </summary>
+    private static async Task<IReadOnlyDictionary<Guid, int>> PairLevels(ChartAttemptDbContext database,
+        IReadOnlyCollection<(Guid ChartId, int BaseLevel)> charts, CancellationToken cancellationToken)
+    {
+        var result = charts.ToDictionary(c => c.ChartId, c => c.BaseLevel);
+        if (charts.Count != 2) return result;
+        var ids = charts.Select(c => c.ChartId).ToArray();
+        var mixLevels = await database.ChartMix
+            .Where(cm => ids.Contains(cm.ChartId))
+            .Select(cm => new { cm.ChartId, cm.MixId, cm.Level })
+            .ToArrayAsync(cancellationToken);
+        foreach (var mixId in new[] { MixIds.Phoenix2, MixIds.Phoenix, MixIds.XX })
+        {
+            var onMix = mixLevels.Where(m => m.MixId == mixId).ToArray();
+            if (onMix.Select(m => m.ChartId).Distinct().Count() != 2) continue;
+            foreach (var m in onMix) result[m.ChartId] = m.Level;
+            return result;
+        }
+
+        return result;
     }
 
     public async Task UpdateSong(Name songName, Bpm bpm, CancellationToken cancellationToken = default)
@@ -388,6 +484,7 @@ internal sealed class EFChartRepository : IChartRepository
         await database.ChartMix.AddAsync(newChartMix, cancellationToken);
         await database.Set<ChartVideoEntity>().AddAsync(newChartVideo, cancellationToken);
         await database.SaveChangesAsync(cancellationToken);
+        await ApplyVideoRegistration(database, newChart.Id, null, newChartVideo.VideoUrl, cancellationToken);
         return newChart.Id;
     }
 

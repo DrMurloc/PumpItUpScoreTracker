@@ -865,6 +865,9 @@
   <data name="at {0} or better" xml:space="preserve">
     <value>{0}以上で</value>
   </data>
+  <data name="Attempt {0}" xml:space="preserve">
+    <value>試行 {0}</value>
+  </data>
   <data name="Attempt {0} of {1}" xml:space="preserve">
     <value>{1} 回中 {0} 回目</value>
   </data>
@@ -4982,6 +4985,9 @@
   <data name="Open Community" xml:space="preserve">
     <value>コミュニティを開く</value>
   </data>
+  <data name="Open in the Score Calculator" xml:space="preserve">
+    <value>スコア計算機で開く</value>
+  </data>
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>おすすめ譜面を開く</value>
   </data>
@@ -6621,6 +6627,9 @@
   <data name="See their boards" xml:space="preserve">
     <value>このプレイヤーのボードを見る</value>
   </data>
+  <data name="See where this score came from" xml:space="preserve">
+    <value>このスコアの内訳を見る</value>
+  </data>
   <data name="See where you stand" xml:space="preserve">
     <value>自分の立ち位置を知ろう</value>
   </data>
@@ -7708,6 +7717,12 @@
   </data>
   <data name="This chart has no {0} on record" xml:space="preserve">
     <value>この譜面には{0}のデータがありません</value>
+  </data>
+  <data name="This chart is on the left side of the video" xml:space="preserve">
+    <value>この譜面は動画の左側にあります</value>
+  </data>
+  <data name="This chart is on the right side of the video" xml:space="preserve">
+    <value>この譜面は動画の右側にあります</value>
   </data>
   <data name="This does not send anything." xml:space="preserve">
     <value>これは何も送りません。</value>

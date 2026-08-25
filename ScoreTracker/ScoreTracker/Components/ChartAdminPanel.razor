@@ -108,6 +108,8 @@
         await Charts.UpdateChart(Chart.Id, _artist);
         await Charts.UpdateSong(Chart.Song.Name, Bpm.From(_minBpm, _maxBpm));
         if (!string.IsNullOrWhiteSpace(_video)) await Charts.SetChartVideo(Chart.Id, new Uri(_video), "NOT KNOWN");
+        // After the writes, so a concurrent read can't re-cache the state this save replaced.
+        Charts.ClearCache();
         Snackbar.Add("Updated Chart", Severity.Success);
         _isSaving = false;
     }

@@ -1,10 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using ScoreTracker.SharedKernel.Models;
-using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.ScoreLedger.Contracts;
-using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Web.Services;
@@ -22,8 +20,6 @@ public sealed record SessionBreakdown(
     SessionCeremony Ceremony,
     IReadOnlyList<PlayerMilestoneRecord> Milestones,
     IReadOnlyList<SessionTitleBarModel> TitleBars,
-    IReadOnlyList<SessionPeerBoard> PeerBoards,
-    IReadOnlyDictionary<Guid, User> Peers,
     bool CaptureWindowOpen = false,
     int CapturedRows = 0)
 {
@@ -89,6 +85,14 @@ public sealed record SessionScore(
     ///     caller falls back to the place, which says it properly.
     /// </summary>
     public int? OtherPeersWithPg => Detail?.PeerPgCount is { } pg && pg > 1 ? pg - 1 : null;
+
+    /// <summary>
+    ///     A Perfect Game always wears the prism glow, cohort or no cohort (D46 as reversed at
+    ///     the field test): 1,000,000 cannot be beaten, so the glow is the achievement's own,
+    ///     not a rarity claim — and a PG on a chart too low for capture to measure glowed
+    ///     nothing at all under the percentile rule, which read as a bug.
+    /// </summary>
+    public bool IsPerfectGame => Row.Score == 1_000_000 && !Row.IsBroken;
 }
 
 /// <summary>The band above the fold: what moved, and how far.</summary>
@@ -139,18 +143,6 @@ public sealed record SessionTitleBarModel(
     double NewPercent,
     int Current,
     int Required);
-
-/// <summary>
-///     Your clubmates on one chart. It is a leaderboard — ordered by score, with real places
-///     over the whole club — but only the few nearest your competitive level are shown, so the
-///     places are deliberately non-contiguous. Closeness picks WHO appears; score orders them.
-/// </summary>
-[ExcludeFromCodeCoverage]
-public sealed record SessionPeerBoard(Chart Chart, IReadOnlyList<SessionPeer> Peers);
-
-/// <summary>One clubmate with the place they actually hold on that chart among your clubs.</summary>
-[ExcludeFromCodeCoverage]
-public sealed record SessionPeer(int Place, CommunityPeerScore Score);
 
 /// <summary>
 ///     One session as the grid shows it. <c>TopCharts</c> and the counts come from the journal,
