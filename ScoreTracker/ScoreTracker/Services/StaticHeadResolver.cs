@@ -309,6 +309,25 @@ public sealed class StaticHeadResolver
     {
         var segments = rest.Value?.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries)
                        ?? Array.Empty<string>();
+        // The Session Breakdown is the Discord card's link target, so its unfurl carries the
+        // result; drafts answer null to an anonymous resolver and get no head. The editor and
+        // the Planner are circuit pages that own their own titles.
+        if (segments.Length == 2 && segments[0].Equals("Session", StringComparison.OrdinalIgnoreCase)
+                                 && Guid.TryParse(segments[1], out var sessionId))
+        {
+            var session = await _mediator.Send(new GetMoMSessionQuery(sessionId), cancellationToken);
+            if (session?.PublishedAt == null) return null;
+            var type = _localizer[session.ChartType == ChartType.Single ? "Singles" : "Doubles"];
+            return new StaticHeadModel(
+                $"{session.UserName} — {session.Season.Name} {type}",
+                _localizer[
+                    "A March of Murlocs session: {0} points over {1} charts, average balanced difficulty {2}, on the {3} {4} board.",
+                    session.TotalScore.ToString("N0"), session.ChartsPlayed,
+                    session.AverageDifficulty.ToString("F2"), session.Season.Name, type].Value,
+                null,
+                $"https://piuscores.arroweclip.se{MoM.MoMRoutes.SessionPath(session.Id)}");
+        }
+
         if (segments.Length > 0 &&
             (segments[0].Equals("Session", StringComparison.OrdinalIgnoreCase) ||
              segments[0].Equals("Planner", StringComparison.OrdinalIgnoreCase)))

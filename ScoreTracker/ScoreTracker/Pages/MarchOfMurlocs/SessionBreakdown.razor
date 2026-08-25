@@ -1,0 +1,770 @@
+@page "/MarchOfMurlocs/Session/{Id:guid}"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.EventCompetition.Contracts.Commands
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Components.MoM
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ScoreTracker.Web.Services.MoM
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+@inject ChartCatalogCache ChartCatalog
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+@* The Session Breakdown (march-of-murlocs.md §11.3): one session's four levers ranked
+   against its board, compare in two modes — same board, and your own past seasons with the
+   D20 re-rating split — the chart list in the three sanctioned densities, and the
+   points-per-second pace chart. Reachable from any board row; the Discord card's link
+   target. Everything is denominated in points, the currency of the page. *@
+
+<PageTitle>March of Murlocs</PageTitle>
+
+@if (_view != null)
+{
+    <div class="mom-page mom-breakdown">
+        <div class="mom-crumbs">
+            <a href="@MoMRoutes.Root">March of Murlocs</a>
+            <span class="sep">/</span>
+            <a href="@MoMRoutes.SeasonPath(_view.Season)">@_view.Season.Name</a>
+            <span class="sep">/</span>
+            <span class="mom-typechip @(_view.ChartType == ChartType.Single ? "s" : "d")">@TypeName</span>
+        </div>
+
+        <div class="mom-result">
+            @if (_view.Place is { } place)
+            {
+                <div class="mom-placebox"><span class="n num">@place</span><span class="o">@OrdinalSuffix(place)</span></div>
+            }
+            <div class="mom-whoami">
+                <div class="name">@_view.UserName</div>
+                <div class="meta num">
+                    @(_view.PublishedAt is { } published ? L["Recorded {0}", published.ToString("d MMMM yyyy")] : L["Draft"]) ·
+                    @L["{0} charts", _view.ChartsPlayed] · @_view.MaxTime.ToString(@"h\:mm\:ss") @L["window"]
+                </div>
+            </div>
+            <div class="mom-totalbox">
+                <div class="n num">@_view.TotalScore.ToString("N0")</div>
+                <div class="l">@L["Total points"]</div>
+            </div>
+        </div>
+
+        @if (_mine)
+        {
+            <div class="mom-ownactions">
+                @if (!_confirmingDelete)
+                {
+                    <button type="button" class="mom-btn ghost" @onclick="() => _confirmingDelete = true">@L["Delete this session"]</button>
+                }
+                else
+                {
+                    <span class="mom-confirm">
+                        @L["A deleted session is gone from the board for good — a correction is delete and resubmit."]
+                        <button type="button" class="mom-btn danger" @onclick="DeleteSession">@L["Delete"]</button>
+                        <button type="button" class="mom-btn ghost" @onclick="() => _confirmingDelete = false">@L["Keep it"]</button>
+                    </span>
+                }
+            </div>
+        }
+
+        @if (_view.ChartsPlayed > 0)
+        {
+            <div class="mom-equation num">
+                <div class="eq-term"><span class="v">@_view.ChartsPlayed</span><span class="k">@L["charts"]</span></div>
+                <span class="eq-op">×</span>
+                <div class="eq-term"><span class="v">@((_view.TotalScore / Math.Max(1, _view.ChartsPlayed)).ToString("N0"))</span><span class="k">@L["avg per chart"]</span></div>
+                <span class="eq-op">=</span>
+                <div class="eq-term"><span class="v" style="color:var(--mix-accent)">@_view.TotalScore.ToString("N0")</span><span class="k">@L["total"]</span></div>
+                <p class="eq-note">@L["Volume and value are the only two things a session is. The four numbers below set each one."]</p>
+            </div>
+
+            <h2 class="mom-sec">@L["Where the points came from"]</h2>
+            <div class="mom-levers">
+                @foreach (var lever in Levers())
+                {
+                    <div class="mom-lever @(lever.Rank == 1 ? "lead" : null)">
+                        <div class="k">@lever.Label</div>
+                        <div class="v num">@lever.Shown</div>
+                        @if (lever.Sub != null)
+                        {
+                            <div class="vsub num">@lever.Sub</div>
+                        }
+                        <div class="rank">@(lever.Rank == 1 ? lever.LeadWord : L["#{0} of {1} on this board", lever.Rank, lever.Count])</div>
+                        <div class="rail">
+                            <div class="track">
+                                <span class="med" style="left:calc(9px + (100% - 18px) * @lever.MedianFraction.ToString("F4", System.Globalization.CultureInfo.InvariantCulture))"></span>
+                                <span class="you" style="left:calc(9px + (100% - 18px) * @lever.Fraction.ToString("F4", System.Globalization.CultureInfo.InvariantCulture))"></span>
+                            </div>
+                            <div class="ends num"><span>@lever.Low</span><span>@lever.High</span></div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (_boardTargets.Count > 0 || _seasonTargets.Count > 0)
+            {
+                <h2 class="mom-sec">@L["Compare"]</h2>
+                <div class="mom-cmp">
+                    <div class="cmp-head">
+                        <div class="mom-typegroup" role="group" aria-label="@L["Comparison source"]">
+                            <a role="button" tabindex="0" aria-current="@(_compareMode == CompareMode.Board ? "true" : null)" @onclick="() => SetCompareMode(CompareMode.Board)" @onclick:preventDefault>@L["This board"]</a>
+                            <a role="button" tabindex="0" aria-current="@(_compareMode == CompareMode.Season ? "true" : null)" @onclick="() => SetCompareMode(CompareMode.Season)" @onclick:preventDefault>@L["My past seasons"]</a>
+                        </div>
+                        <select class="mom-select" aria-label="@L["Session to compare against"]" value="@_compareTarget" @onchange="OnCompareTargetChanged">
+                            @foreach (var option in _compareMode == CompareMode.Board ? _boardTargets : _seasonTargets)
+                            {
+                                <option value="@option.SessionId">@option.Label</option>
+                            }
+                        </select>
+                        <span class="cmp-scope">
+                            @(_compareMode == CompareMode.Board
+                                ? L["Same board only — Singles and Doubles are never compared."]
+                                : L["Your own sessions on this chart type and mix only — anything else is a different sport."])
+                        </span>
+                    </div>
+
+                    @if (_compareView != null)
+                    {
+                        <div class="cmp-grid num">
+                            @foreach (var cell in CompareCells())
+                            {
+                                <div class="cmp-cell">
+                                    <div class="k">@cell.Label</div>
+                                    <div class="cmp-row"><span class="who">@_view.UserName</span><span class="val">@cell.Mine</span><span class="delta @cell.DeltaClass">@cell.Delta</span></div>
+                                    <div class="cmp-row"><span class="who">@_compareView.UserName@(_compareMode == CompareMode.Season ? $" · {_compareView.Season.Name}" : "")</span><span class="val theirs">@cell.Theirs</span></div>
+                                </div>
+                            }
+                        </div>
+                        <div class="cmp-verdict num">@((MarkupString)_compareVerdict)</div>
+
+                        @if (_compareMode == CompareMode.Season && _reprice != null)
+                        {
+                            <div class="mom-ledger num">
+                                <h3>@L["What changed underneath you"]</h3>
+                                <p class="why">@L["Every season freezes its own chart balance and its own scoring tables, so the same session is worth different totals in different seasons. Re-pricing the old session — the same charts, the same scores — under this season separates what moved underneath you from what you earned. The two moves multiply, so they come to more together than apart."]</p>
+                                <div class="lrow"><span class="lbl">@_compareView.Season.Name<small>@L["as it scored then"]</small></span><span class="amt">@_reprice.OriginalTotal.ToString("N0")</span><span class="chg"></span></div>
+                                <div class="lrow sub"><span class="lbl">@L["Charts re-rated by the community"]<small>@L["{0} of {1} charts re-rated", _reprice.ChartsReratedCount, _compareView.ChartsPlayed]</small></span><span class="amt"></span><span class="chg @DeltaClass(_reprice.ChartReratingDelta)">@Signed(_reprice.ChartReratingDelta)</span></div>
+                                <div class="lrow sub"><span class="lbl">@L["Scoring tables re-cut"]</span><span class="amt"></span><span class="chg @DeltaClass(_reprice.TableRecutDelta)">@Signed(_reprice.TableRecutDelta)</span></div>
+                                <div class="lrow"><span class="lbl">@L["The same session, scored as {0}", _view.Season.Name]</span><span class="amt">@_reprice.RepricedTotal.ToString("N0")</span><span class="chg @DeltaClass(_reprice.RepricedTotal - _reprice.OriginalTotal)">@Signed(_reprice.RepricedTotal - _reprice.OriginalTotal) @L["total"]</span></div>
+                                <div class="lrow total"><span class="lbl">@_view.Season.Name<small>@L["this session"]</small></span><span class="amt">@_view.TotalScore.ToString("N0")</span><span class="chg @DeltaClass(_view.TotalScore - _reprice.RepricedTotal)">@Signed(_view.TotalScore - _reprice.RepricedTotal) @L["you"]</span></div>
+                            </div>
+                        }
+
+                        <div class="mom-h2h">
+                            <h3>@L["Charts you both played"]</h3>
+                            @if (_commonCharts.Count == 0)
+                            {
+                                <p class="lede">@L["Nothing in common — the two sessions picked entirely different sets."]</p>
+                            }
+                            else
+                            {
+                                <p class="lede num">
+                                    @L["{0} in common, worst first. You scored higher on {1} of them.", _commonCharts.Count, _commonCharts.Count(c => c.MyScore > c.TheirScore)]
+                                    @if (_commonCharts[0].PointsDelta < 0)
+                                    {
+                                        @L["{0} alone cost you {1} points.", _commonCharts[0].Chart.Song.Name, Math.Abs(_commonCharts[0].PointsDelta).ToString("N0")]
+                                    }
+                                </p>
+                                @foreach (var row in _commonCharts)
+                                {
+                                    <div class="h2hrow num">
+                                        <DifficultyBubble Chart="row.Chart" Height="20"></DifficultyBubble>
+                                        <span class="nm" title="@row.Chart.Song.Name">@row.Chart.Song.Name</span>
+                                        <span class="sc @(row.MyScore > row.TheirScore ? "win" : null)"><ScoreBreakdown Score="row.MyScore" Mix="_view.Mix" OneLine="true" Height="15" Tooltip="false"></ScoreBreakdown><small>@L["you"] · @row.MyPoints.ToString("N0")</small></span>
+                                        <span class="sc @(row.TheirScore > row.MyScore ? "win" : null)"><ScoreBreakdown Score="row.TheirScore" Mix="_view.Mix" OneLine="true" Height="15" Tooltip="false"></ScoreBreakdown><small>@_compareShortLabel · @row.TheirPoints.ToString("N0")</small></span>
+                                        <span class="win-delta @DeltaClass(row.PointsDelta)">@Signed(row.PointsDelta)</span>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            <h2 class="mom-sec">@L["The session"]</h2>
+            <div class="mom-runbar">
+                <MudButtonGroup OverrideStyles="false">
+                    <MudTooltip Text="@L["Comfortable"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy" Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)" OnClick="() => SetDensity(UiDensity.Comfortable)" aria-label="@L["Comfortable"]"></MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="@L["Compact"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView" Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)" OnClick="() => SetDensity(UiDensity.Compact)" aria-label="@L["Compact"]"></MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="@L["Table"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows" Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)" OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton>
+                    </MudTooltip>
+                </MudButtonGroup>
+                @if (_density != UiDensity.Table)
+                {
+                    <MudMenu Size="Size.Small" Dense="true">
+                        <ActivatorContent>
+                            <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Sort">@L["Sort by"] @CurrentSort.Label</MudButton>
+                        </ActivatorContent>
+                        <ChildContent>
+                            @foreach (var sort in Sorts)
+                            {
+                                <MudMenuItem OnClick="() => SetSort(sort.Key)">@(sort.Key == _sortKey ? "✓ " : "")@sort.Label</MudMenuItem>
+                            }
+                        </ChildContent>
+                    </MudMenu>
+                }
+                <span class="mom-runnote">@CurrentSort.Note</span>
+            </div>
+
+            @if (_density == UiDensity.Table)
+            {
+                <div class="mom-tablewrap">
+                    <table class="mom-runtable">
+                        <thead>
+                            <tr>
+                                <th><button type="button" @onclick="() => SetSort(SortKey.Level)">@L["Chart"]</button></th>
+                                <th><button type="button" @onclick="() => SetSort(SortKey.Score)">@L["Grade & score"]</button></th>
+                                <th class="t-r"><button type="button" @onclick="() => SetSort(SortKey.Points)">@L["Points"]</button></th>
+                                <th class="t-r col-pps"><button type="button" @onclick="() => SetSort(SortKey.Pps)">@L["PPS"]</button></th>
+                                <th class="t-r col-pps"><button type="button" @onclick="() => SetSort(SortKey.PlayOrder)">@L["Length"]</button></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in SortedRows())
+                            {
+                                <tr @onclick="() => OpenChart(row, false)">
+                                    <td>
+                                        <span class="t-ident">
+                                            <SongImage Song="row.Chart.Song" Height="26"></SongImage>
+                                            <DifficultyBubble Chart="row.Chart" Height="18"></DifficultyBubble>
+                                            <span class="t-name">@row.Chart.Song.Name@(row.Repeat ? " " : "")@(row.Repeat ? RepeatNote : null)</span>
+                                        </span>
+                                    </td>
+                                    <td><ScoreBreakdown Score="row.Score" Plate="row.Plate" IsBroken="row.IsBroken" Mix="_view.Mix" ShowScore="true" OneLine="true" Height="16" Tooltip="false"></ScoreBreakdown></td>
+                                    <td class="t-r num t-pts">@row.Points.ToString("N0")@(row.Bonus > 0 ? BonusNote(row.Bonus) : null)</td>
+                                    <td class="t-r num col-pps">@row.Pps.ToString("F1")</td>
+                                    <td class="t-r num col-pps muted">@Mmss(row.Seconds)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="@(_density == UiDensity.Compact ? "tier-card-grid tier-card-grid-compact" : "tier-card-grid")">
+                    @foreach (var row in SortedRows())
+                    {
+                        <TierListChartCard Chart="row.Chart"
+                                           Density="_density"
+                                           Score="@(new RecordedPhoenixScore(row.Chart.Id, row.Score, row.Plate, row.IsBroken, _view.PublishedAt ?? DateTimeOffset.MinValue))"
+                                           Passed="@(!row.IsBroken)"
+                                           ShowToDo="false"
+                                           ShowPlay="@(_density == UiDensity.Comfortable)"
+                                           CornerBadge="@CornerFor(row)"
+                                           CornerBadgeClass="pmb-corner-gain"
+                                           TierLabel="@(_density == UiDensity.Comfortable ? CardCaption(row) : null)"
+                                           TooltipNote="@CompactTooltip(row)"
+                                           OnOpen="id => OpenChartById(id, false)"
+                                           OnPlay="id => OpenChartById(id, true)"></TierListChartCard>
+                    }
+                </div>
+            }
+
+            <h2 class="mom-sec">@L["Pace"]</h2>
+            <div class="mom-tl">
+                <div class="tl-legend">
+                    <span><i style="background:var(--mix-primary)"></i>@L["Points per second"]</span>
+                    <span><i style="background:var(--mix-accent)"></i>@L["Session average"]</span>
+                    <span class="muted">@L["Gaps are rest between charts"]</span>
+                </div>
+                <div class="tl-scroll">
+                    <svg viewBox="0 0 1000 220" width="100%" height="220" role="img" aria-label="@L["Points per second across the session, with rest gaps between charts."]">
+                        @((MarkupString)TimelineSvg())
+                    </svg>
+                </div>
+            </div>
+
+            @if (_view.VideoUrl != null)
+            {
+                <h2 class="mom-sec">@L["Video"]</h2>
+                @if (YoutubeEmbed(_view.VideoUrl) is { } embed)
+                {
+                    <div class="mom-video"><iframe src="@embed" title="@L["Session video"]" allowfullscreen loading="lazy"></iframe></div>
+                }
+                else
+                {
+                    <a class="mom-btn ghost" href="@_view.VideoUrl" target="_blank" rel="noopener">@L["Watch this session"]</a>
+                }
+            }
+        }
+
+        <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_view.Mix" AutoPlay="_detailsAutoPlay"></ChartDetailsDialog>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private const string DensitySettingKey = "Density__MoMSession";
+
+    private enum CompareMode
+    {
+        Board,
+        Season
+    }
+
+    private enum SortKey
+    {
+        PlayOrder,
+        Points,
+        Pps,
+        Level,
+        Score
+    }
+
+    private sealed record SessionRow(int Ordinal, Chart Chart, PhoenixScore Score,
+        PhoenixPlate Plate, bool IsBroken, int Points, int Bonus, DateTimeOffset? PlayedAt,
+        bool Repeat)
+    {
+        public double Seconds => Chart.Song.Duration.TotalSeconds;
+        public double Pps => Points / Math.Max(1, Seconds);
+    }
+
+    private sealed record CompareTarget(Guid SessionId, string Label);
+
+    private sealed record CommonChart(Chart Chart, PhoenixScore MyScore, int MyPoints,
+        PhoenixScore TheirScore, int TheirPoints)
+    {
+        public int PointsDelta => MyPoints - TheirPoints;
+    }
+
+    private sealed record LeverModel(string Label, string Shown, string? Sub, int Rank, int Count,
+        string LeadWord, double Fraction, double MedianFraction, string Low, string High);
+
+    private sealed record SortOption(SortKey Key, string Label, string Note);
+
+    private MoMSessionView? _view;
+    private MoMBoardView? _board;
+    private IReadOnlyList<SessionRow> _rows = Array.Empty<SessionRow>();
+    private IReadOnlyList<CompareTarget> _boardTargets = Array.Empty<CompareTarget>();
+    private IReadOnlyList<CompareTarget> _seasonTargets = Array.Empty<CompareTarget>();
+    private CompareMode _compareMode = CompareMode.Board;
+    private Guid? _compareTarget;
+    private MoMSessionView? _compareView;
+    private MoMSessionReprice? _reprice;
+    private IReadOnlyList<CommonChart> _commonCharts = Array.Empty<CommonChart>();
+    private string _compareVerdict = string.Empty;
+    private string _compareShortLabel = string.Empty;
+    private UiDensity _density = UiDensity.Compact;
+    private SortKey _sortKey = SortKey.PlayOrder;
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
+    private bool _detailsAutoPlay;
+    private bool _mine;
+    private bool _confirmingDelete;
+
+    private string TypeName => _view!.ChartType == ChartType.Single ? L["Singles"] : L["Doubles"];
+
+    private IReadOnlyList<SortOption> Sorts => new[]
+    {
+        new SortOption(SortKey.PlayOrder, L["Play order"], L["As played, first to last."]),
+        new SortOption(SortKey.Points, L["Points"], L["Biggest single scores — the long songs win, which is not the same as being efficient."]),
+        new SortOption(SortKey.Pps, L["Points per second"], L["Points banked per second of song. Short cuts top this list."]),
+        new SortOption(SortKey.Level, L["Difficulty"], L["Hardest first."]),
+        new SortOption(SortKey.Score, L["Score"], L["Cleanest play first."])
+    };
+
+    private SortOption CurrentSort => Sorts.First(s => s.Key == _sortKey);
+
+    private MarkupString RepeatNote => new($"<span class=\"mom-repeat\">{L["2nd chart, same song"]}</span>");
+
+    private MarkupString BonusNote(int bonus)
+    {
+        return new MarkupString($"<span class=\"mom-bonus\"> +{bonus}</span>");
+    }
+
+    private static string OrdinalSuffix(int place)
+    {
+        return MoMFrame.Ordinal(place)[place.ToString().Length..];
+    }
+
+    private static string Mmss(double seconds)
+    {
+        return $"{(int)(seconds / 60)}:{(int)seconds % 60:00}";
+    }
+
+    private static string Signed(int value)
+    {
+        return (value > 0 ? "+" : "") + value.ToString("N0");
+    }
+
+    private static string DeltaClass(int value)
+    {
+        return value > 0 ? "up" : value < 0 ? "down" : "flat";
+    }
+
+    private static string? YoutubeEmbed(Uri url)
+    {
+        var host = url.Host.ToLowerInvariant();
+        if (host.Contains("youtu.be")) return $"https://www.youtube.com/embed{url.AbsolutePath}";
+        if (!host.Contains("youtube.com")) return null;
+        var query = System.Web.HttpUtility.ParseQueryString(url.Query);
+        var id = query["v"];
+        return id == null ? null : $"https://www.youtube.com/embed/{id}";
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _view = await Mediator.Send(new GetMoMSessionQuery(Id));
+        if (_view == null)
+        {
+            Nav.NotFound();
+            return;
+        }
+
+        _mine = CurrentUser.IsLoggedIn &&
+                (CurrentUser.User.Id == _view.UserId || CurrentUser.User.IsAdmin);
+        if (_view.IsDraft)
+        {
+            // A draft's page is its editor — the Breakdown renders records (D17).
+            Nav.NavigateTo(MoMRoutes.EditPath(_view.Id));
+            return;
+        }
+
+        if (Enum.TryParse<UiDensity>(await UiSettings.GetSetting(DensitySettingKey), out var density))
+            _density = density;
+
+        var charts = await ChartCatalog.GetCharts(_view.Mix);
+        var seen = new HashSet<Name>();
+        _rows = _view.Charts
+            .Where(c => charts.ContainsKey(c.ChartId))
+            .Select(c =>
+            {
+                var chart = charts[c.ChartId];
+                var repeat = !seen.Add(chart.Song.Name);
+                return new SessionRow(c.Ordinal + 1, chart, c.Score, c.Plate, c.IsBroken,
+                    c.SessionScore, c.BonusPoints, c.PlayedAt, repeat);
+            })
+            .ToArray();
+
+        _board = await Mediator.Send(new GetMoMBoardQuery(_view.BoardId));
+        _boardTargets = _board?.Rows
+            .Where(r => r.SessionId != _view.Id)
+            .Select(r => new CompareTarget(r.SessionId,
+                $"#{r.Place} — {r.UserName} ({r.TotalScore:N0})"))
+            .ToArray() ?? Array.Empty<CompareTarget>();
+
+        // Your own lineage: the same (mix, chart type) board in every other season (D15).
+        var seasons = await Mediator.Send(new GetMoMSeasonsQuery());
+        _seasonTargets = seasons
+            .Where(s => s.Season.Id != _view.Season.Id)
+            .SelectMany(s => s.Boards
+                .Where(b => b.Mix == _view.Mix && b.ChartType == _view.ChartType &&
+                            b.YourBestSessionId != null && b.YourBestSessionId != _view.Id)
+                .Select(b => new CompareTarget(b.YourBestSessionId!.Value,
+                    $"{s.Season.Name} ({b.YourScore:N0})")))
+            .ToArray();
+
+        _compareMode = CompareMode.Board;
+        _compareTarget = _boardTargets.FirstOrDefault()?.SessionId;
+        await LoadCompare();
+    }
+
+    private async Task SetCompareMode(CompareMode mode)
+    {
+        _compareMode = mode;
+        _compareTarget = (mode == CompareMode.Board ? _boardTargets : _seasonTargets)
+            .FirstOrDefault()?.SessionId;
+        await LoadCompare();
+    }
+
+    private async Task OnCompareTargetChanged(ChangeEventArgs args)
+    {
+        if (Guid.TryParse(args.Value?.ToString(), out var id))
+        {
+            _compareTarget = id;
+            await LoadCompare();
+        }
+    }
+
+    private async Task LoadCompare()
+    {
+        _compareView = null;
+        _reprice = null;
+        _commonCharts = Array.Empty<CommonChart>();
+        _compareVerdict = string.Empty;
+        if (_view == null || _compareTarget == null) return;
+
+        _compareView = await Mediator.Send(new GetMoMSessionQuery(_compareTarget.Value));
+        if (_compareView == null) return;
+        _compareShortLabel = _compareMode == CompareMode.Board
+            ? _compareView.UserName
+            : _compareView.Season.Name;
+
+        IReadOnlyDictionary<Guid, int>? theirRepricedPoints = null;
+        if (_compareMode == CompareMode.Season)
+        {
+            _reprice = await Mediator.Send(
+                new RepriceMoMSessionQuery(_compareView.Id, _view.BoardId));
+            theirRepricedPoints = _reprice?.RepricedChartPoints;
+        }
+
+        // The charts both sessions contain, worst gap first — a total says who won, this says
+        // where. Cross-season gaps price both sides under THIS season's configuration.
+        var mine = _rows.ToDictionary(r => r.Chart.Id);
+        _commonCharts = _compareView.Charts
+            .Where(c => mine.ContainsKey(c.ChartId))
+            .Select(c =>
+            {
+                var my = mine[c.ChartId];
+                var theirPoints = theirRepricedPoints?.TryGetValue(c.ChartId, out var repriced) == true
+                    ? repriced
+                    : c.SessionScore;
+                return new CommonChart(my.Chart, my.Score, my.Points, c.Score, theirPoints);
+            })
+            .OrderBy(c => c.PointsDelta)
+            .ToArray();
+
+        BuildVerdict();
+        StateHasChanged();
+    }
+
+    private void BuildVerdict()
+    {
+        if (_view == null || _compareView == null) return;
+        var parts = new List<string>();
+        var chartsDelta = _view.ChartsPlayed - _compareView.ChartsPlayed;
+        if (chartsDelta != 0)
+            parts.Add($"<b>{L[chartsDelta > 0 ? "{0} more charts" : "{0} fewer charts", Math.Abs(chartsDelta)]}</b>");
+        var difficultyDelta = _view.AverageDifficulty - _compareView.AverageDifficulty;
+        if (Math.Abs(difficultyDelta) >= 0.05)
+            parts.Add($"<b>{Math.Abs(difficultyDelta):F2} {L[difficultyDelta > 0 ? "harder" : "easier"]}</b> {L["on average"]}");
+        var restDelta = _compareView.RestTime - _view.RestTime;
+        if (Math.Abs(restDelta.TotalSeconds) >= 30)
+            parts.Add($"<b>{Mmss(Math.Abs(restDelta.TotalSeconds))} {L[restDelta > TimeSpan.Zero ? "less" : "more"]}</b> {L["downtime"]}");
+        var phrase = parts.Count == 0
+            ? L["no meaningful difference"].Value
+            : string.Join(", ", parts);
+        var totalDelta = _view.TotalScore -
+                         (_compareMode == CompareMode.Season && _reprice != null
+                             ? _reprice.RepricedTotal
+                             : _compareView.TotalScore);
+        _compareVerdict =
+            $"{L["Against {0}:", _compareShortLabel]} {phrase} — {L["worth"]} <b>{Signed(totalDelta)} {L["points"]}</b>.";
+    }
+
+    private IReadOnlyList<LeverModel> Levers()
+    {
+        if (_view == null || _board == null || _board.Rows.Count == 0)
+            return Array.Empty<LeverModel>();
+        var rows = _board.Rows;
+        var myAverageScore = _rows.Count == 0 ? 0 : _rows.Average(r => (int)r.Score);
+        return new[]
+        {
+            Lever(L["Charts played"], rows.Select(r => (double)r.ChartsPlayed).ToArray(),
+                _view.ChartsPlayed, v => ((int)v).ToString("N0"), null, false,
+                L["Most on this board"]),
+            Lever(L["Avg difficulty"], rows.Select(r => r.AverageDifficulty).ToArray(),
+                _view.AverageDifficulty, v => v.ToString("F2"),
+                L["balanced for this season"].Value, false, L["Hardest on this board"]),
+            Lever(L["Avg grade"], rows.Select(r => r.AverageGrade).ToArray(),
+                _view.AverageGrade, GradeWord,
+                L["{0} average score", myAverageScore.ToString("N0")].Value, false,
+                L["Cleanest on this board"]),
+            Lever(L["Downtime"], rows.Select(r => r.RestTime.TotalSeconds).ToArray(),
+                _view.RestTime.TotalSeconds, Mmss, null, true, L["Least on this board"])
+        };
+    }
+
+    private LeverModel Lever(string label, double[] values, double mine, Func<double, string> fmt,
+        string? sub, bool lowerIsBetter, string leadWord)
+    {
+        var low = values.Min();
+        var high = values.Max();
+        // Rank by counting strictly better values — never by finding my own row's value in
+        // the list, which drifts on floating averages.
+        var rank = 1 + values.Count(v => lowerIsBetter ? v < mine - 1e-9 : v > mine + 1e-9);
+        var fraction = high == low ? 0.5 : (mine - low) / (high - low);
+        var sortedValues = values.OrderBy(v => v).ToArray();
+        var median = sortedValues[sortedValues.Length / 2];
+        var medianFraction = high == low ? 0.5 : (median - low) / (high - low);
+        return new LeverModel(label, fmt(mine), sub, rank, values.Length, leadWord, fraction,
+            medianFraction, fmt(low), fmt(high));
+    }
+
+    private string GradeWord(double ordinal)
+    {
+        var grade = (PhoenixLetterGrade)Math.Clamp((int)Math.Floor(ordinal), 0,
+            (int)PhoenixLetterGrade.SSSPlus);
+        return grade.GetName();
+    }
+
+    private sealed record CompareCell(string Label, string Mine, string Theirs, string Delta,
+        string DeltaClass);
+
+    private IReadOnlyList<CompareCell> CompareCells()
+    {
+        if (_view == null || _compareView == null) return Array.Empty<CompareCell>();
+        return new[]
+        {
+            Cell(L["Charts played"], _view.ChartsPlayed, _compareView.ChartsPlayed,
+                v => ((int)v).ToString("N0"), false),
+            Cell(L["Avg difficulty"], _view.AverageDifficulty, _compareView.AverageDifficulty,
+                v => v.ToString("F2"), false),
+            Cell(L["Avg grade"], _view.AverageGrade, _compareView.AverageGrade, GradeWord, false),
+            Cell(L["Downtime"], _view.RestTime.TotalSeconds, _compareView.RestTime.TotalSeconds,
+                Mmss, true)
+        };
+    }
+
+    private static CompareCell Cell(string label, double mine, double theirs,
+        Func<double, string> fmt, bool lowerIsBetter)
+    {
+        var delta = mine - theirs;
+        var good = lowerIsBetter ? delta < 0 : delta > 0;
+        var cls = delta == 0 ? "flat" : good ? "up" : "down";
+        var shown = Math.Abs(delta) < 0.0001
+            ? "even"
+            : (delta > 0 ? "+" : "−") + fmt(Math.Abs(delta));
+        return new CompareCell(label, fmt(mine), fmt(theirs), shown, cls);
+    }
+
+    private IEnumerable<SessionRow> SortedRows()
+    {
+        return _sortKey switch
+        {
+            SortKey.Points => _rows.OrderByDescending(r => r.Points),
+            SortKey.Pps => _rows.OrderByDescending(r => r.Pps),
+            SortKey.Level => _rows.OrderByDescending(r => (int)r.Chart.Level)
+                .ThenByDescending(r => r.Points),
+            SortKey.Score => _rows.OrderByDescending(r => (int)r.Score),
+            _ => _rows.OrderBy(r => r.Ordinal)
+        };
+    }
+
+    private string CornerFor(SessionRow row)
+    {
+        // The MoM score is the printed value — the currency the page is denominated in. When
+        // the list is ranked by something the sticker does not print, that value rides along
+        // so Compact never sorts by an invisible number (D21).
+        return _sortKey switch
+        {
+            SortKey.Pps => $"{row.Points:N0} · {row.Pps:F1}/s",
+            SortKey.Score => $"{row.Points:N0} · {(int)row.Score / 1000}k",
+            _ => row.Points.ToString("N0")
+        };
+    }
+
+    private string CardCaption(SessionRow row)
+    {
+        var caption = $"{row.Points:N0} {L["pts"]} · {row.Pps:F1} {L["pps"]} · {Mmss(row.Seconds)}";
+        return row.Bonus > 0 ? $"{caption} · +{row.Bonus}" : caption;
+    }
+
+    private string CompactTooltip(SessionRow row)
+    {
+        return $"{row.Points:N0} {L["pts"]} · {(int)row.Score:N0} · {row.Pps:F1} {L["pps"]}";
+    }
+
+    private void OpenChart(SessionRow row, bool autoplay)
+    {
+        _detailsChart = row.Chart;
+        _detailsAutoPlay = autoplay;
+        _detailsOpen = true;
+    }
+
+    private void OpenChartById(Guid chartId, bool autoplay)
+    {
+        var row = _rows.FirstOrDefault(r => r.Chart.Id == chartId);
+        if (row != null) OpenChart(row, autoplay);
+    }
+
+    private async Task SetDensity(UiDensity density)
+    {
+        _density = density;
+        await UiSettings.SetSetting(DensitySettingKey, density.ToString());
+    }
+
+    private void SetSort(SortKey key)
+    {
+        _sortKey = key;
+    }
+
+    private async Task DeleteSession()
+    {
+        if (_view == null) return;
+        await Mediator.Send(new DeleteMoMSessionCommand(_view.Id));
+        Snackbar.Add(L["Session deleted."], Severity.Success);
+        Nav.NavigateTo(MoMRoutes.SeasonPath(_view.Season));
+    }
+
+    /// <summary>
+    ///     The pace chart: one bar per chart at its points-per-second, gaps between them the
+    ///     rest. When every play carries a real timestamp the bars sit at their real wall-clock
+    ///     positions; otherwise rest spreads evenly, and the note under the chart says derived.
+    /// </summary>
+    private string TimelineSvg()
+    {
+        if (_view == null || _rows.Count == 0) return string.Empty;
+        const int width = 1000, height = 220, padLeft = 42, padRight = 12, padTop = 12, padBottom = 26;
+        var ordered = _rows.OrderBy(r => r.Ordinal).ToArray();
+
+        var segments = new List<(double Start, double End, double Pps, SessionRow Row)>();
+        if (ordered.All(r => r.PlayedAt != null) && ordered.Length > 1)
+        {
+            var first = ordered.Min(r => r.PlayedAt!.Value);
+            foreach (var row in ordered)
+            {
+                var start = (row.PlayedAt!.Value - first).TotalSeconds;
+                segments.Add((start, start + row.Seconds, row.Pps, row));
+            }
+        }
+        else
+        {
+            var restEach = ordered.Length <= 1
+                ? 0
+                : _view.RestTime.TotalSeconds / (ordered.Length - 1);
+            double t = 0;
+            foreach (var row in ordered)
+            {
+                segments.Add((t, t + row.Seconds, row.Pps, row));
+                t += row.Seconds + restEach;
+            }
+        }
+
+        var total = Math.Max(1, segments.Max(s => s.End));
+        var maxY = Math.Max(5, Math.Ceiling(ordered.Max(r => r.Pps) / 5) * 5);
+        var average = ordered.Sum(r => (double)r.Points) / total;
+        double X(double v) => padLeft + v / total * (width - padLeft - padRight);
+        double Y(double v) => height - padBottom - v / maxY * (height - padTop - padBottom);
+        string F(double v) => v.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
+
+        var svg = new System.Text.StringBuilder();
+        for (var grid = 0d; grid <= maxY; grid += 5)
+        {
+            svg.Append($"<line x1='{padLeft}' y1='{F(Y(grid))}' x2='{width - padRight}' y2='{F(Y(grid))}' class='tl-grid'/>");
+            svg.Append($"<text x='{padLeft - 7}' y='{F(Y(grid) + 4)}' class='tl-axis' text-anchor='end'>{grid:0}</text>");
+        }
+
+        for (var minute = 0; minute * 60 <= total; minute += 15)
+            svg.Append($"<text x='{F(X(minute * 60))}' y='{height - 7}' class='tl-axis' text-anchor='middle'>{minute}m</text>");
+
+        svg.Append($"<line x1='{padLeft}' y1='{F(Y(average))}' x2='{width - padRight}' y2='{F(Y(average))}' class='tl-avg'/>");
+        foreach (var segment in segments)
+        {
+            var barWidth = Math.Max(X(segment.End) - X(segment.Start), 1.5);
+            var title = $"{segment.Row.Chart.Song.Name} · {segment.Row.Chart.DifficultyString} · {segment.Row.Pps:F1} pps";
+            svg.Append($"<rect x='{F(X(segment.Start))}' y='{F(Y(segment.Pps))}' width='{F(barWidth)}' height='{F(Y(0) - Y(segment.Pps))}' class='tl-bar'/>");
+            svg.Append($"<line x1='{F(X(segment.Start))}' y1='{F(Y(segment.Pps))}' x2='{F(X(segment.End))}' y2='{F(Y(segment.Pps))}' class='tl-top'><title>{System.Net.WebUtility.HtmlEncode(title)}</title></line>");
+        }
+
+        svg.Append($"<text x='{width - padRight}' y='{F(Y(average) - 6)}' class='tl-avg-label' text-anchor='end'>avg {average:F2} pps</text>");
+        return svg.ToString();
+    }
+}
