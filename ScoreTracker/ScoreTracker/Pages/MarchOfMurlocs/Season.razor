@@ -78,12 +78,21 @@
                     var showing = board.BoardId == _selected!.BoardId;
                     @if (standing.Best == null)
                     {
-                        <a class="mom-stand empty @(showing ? "showing" : null)" href="@MoMRoutes.BoardPath(_season.Ref, board.ChartType)" aria-current="@(showing ? "true" : null)">
+                        @* The card doubles as the board switcher (§11.2) — but on the board you
+                           are already looking at there is nothing to switch to, so it becomes the
+                           record affordance instead. The CTA only appears where it is the real
+                           destination: a card that says "record" and navigates to the board you
+                           are already on reads as a page that did nothing. *@
+                        var recordHere = showing && _season.IsLive;
+                        <a class="mom-stand empty @(showing ? "showing" : null)" href="@(recordHere ? RecordHref(board.BoardId) : MoMRoutes.BoardPath(_season.Ref, board.ChartType))" aria-current="@(showing ? "true" : null)">
                             <span class="mom-stand-main">
                                 <span class="mom-stand-type">@TypeName(board.ChartType)</span>
                                 @if (_season.IsLive)
                                 {
-                                    <span class="mom-stand-cta">@L["Record your first session →"]</span>
+                                    @if (recordHere)
+                                    {
+                                        <span class="mom-stand-cta">@L["Record your first session →"]</span>
+                                    }
                                     <span class="mom-stand-sub">@L["You have not played this board this season."]</span>
                                 }
                                 else
@@ -185,10 +194,6 @@
                 </div>
             }
 
-            <div class="mom-gated">
-                <div class="mom-big">@L["Phoenix 2 scoring is still being tuned."]</div>
-                <p>@L["Phoenix 2 gets its own Doubles and Singles boards, on Phoenix 2's own rating system. They open once the scoring is settled — this season runs on Phoenix."]</p>
-            </div>
         }
 
         <div class="mom-footlinks">

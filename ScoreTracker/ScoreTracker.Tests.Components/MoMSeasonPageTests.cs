@@ -102,10 +102,36 @@ public sealed class MoMSeasonPageTests : ComponentTestBase
         var entered = page.Find(".mom-stand.entered");
         Assert.Contains("50,000", entered.TextContent);
         Assert.Contains("your best of 2 sessions", entered.TextContent);
-        // The Singles card is the empty CTA, and doubles as the switch to that board.
+        // The Singles card is not the board being shown, so it stays the switcher — and it
+        // does not offer to record, because that is not where it goes.
         var empty = page.Find(".mom-stand.empty");
-        Assert.Contains("Record your first session", empty.TextContent);
         Assert.Contains("/MarchOfMurlocs/2026/Summer/Singles", empty.GetAttribute("href"));
+        Assert.DoesNotContain("Record your first session", empty.TextContent);
+    }
+
+    /// <summary>
+    ///     The card for the board you are already looking at is the record affordance, not the
+    ///     switcher: it used to carry "Record your first session →" over a link back to the
+    ///     board you were already on, so clicking the call to action reloaded the same page
+    ///     (owner field test, 2026-08-25).
+    /// </summary>
+    [Fact]
+    public void TheShowingEmptyCardRecordsRatherThanLinkingToTheBoardYouAreOn()
+    {
+        var me = Guid.NewGuid();
+        CurrentUser.Setup(c => c.IsLoggedIn).Returns(true);
+        CurrentUser.Setup(c => c.User).Returns(new User(me, Name.From("Me"), true, null,
+            new Uri("https://example.invalid/a.png"), null));
+        WithSeason(live: true);
+        WithBoardRows(DoublesBoard);
+        WithBoardRows(SinglesBoard);
+
+        var page = RenderComponent<Season>();
+
+        var showing = page.Find(".mom-stand.empty.showing");
+        Assert.Contains("Record your first session", showing.TextContent);
+        Assert.Contains($"/MarchOfMurlocs/Session/New/Edit?Board={DoublesBoard}",
+            showing.GetAttribute("href"));
     }
 
     [Fact]
@@ -119,6 +145,24 @@ public sealed class MoMSeasonPageTests : ComponentTestBase
         Assert.Contains("Phoenix 2 scoring is still being tuned.", page.Markup);
         Assert.Empty(page.FindAll(".mom-row"));
         Assert.Empty(page.FindAll(".mom-typegroup"));
+    }
+
+    /// <summary>
+    ///     The D12 gate belongs to Phoenix 2 alone. A second, unguarded copy of the explainer
+    ///     sat inside the Phoenix 1 branch, so every Phoenix 1 board printed "Phoenix 2 scoring
+    ///     is still being tuned" underneath its rows (owner field test, 2026-08-25).
+    /// </summary>
+    [Fact]
+    public void Phoenix1ViewerNeverSeesThePhoenix2Explainer()
+    {
+        WithSeason(live: true);
+        WithBoardRows(DoublesBoard, Row(1, Guid.NewGuid(), "Winner", 60000, Now.AddDays(-10)));
+        WithBoardRows(SinglesBoard);
+
+        var page = RenderComponent<Season>();
+
+        Assert.DoesNotContain("Phoenix 2", page.Markup);
+        Assert.Empty(page.FindAll(".mom-gated"));
     }
 
     [Fact]
