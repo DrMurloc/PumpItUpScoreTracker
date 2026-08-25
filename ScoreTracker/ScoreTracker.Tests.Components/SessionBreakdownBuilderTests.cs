@@ -240,18 +240,104 @@ public sealed class SessionBreakdownBuilderTests
         Assert.Null(model.Hero!.Scores.Single().Phoenix1Gain);
     }
 
+    [Fact]
+    public async Task AHighlightPinsToTheRowThatEarnedItNotToEveryAttempt()
+    {
+        // The repeated-play bug: four stage breaks before the clear each wore the pass's
+        // medals, because highlights joined by chart id (D45).
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = Enumerable.Range(0, 4)
+            .Select(i => Row(chart.Id, Start.AddMinutes(i * 7), 400000, broken: true,
+                ScoreEventClassification.Break))
+            .Append(Row(chart.Id, Start.AddMinutes(45), 912400, false, ScoreEventClassification.NewPass))
+            .ToArray();
+
+        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>());
+
+        var flagged = Assert.Single(model.Hero!.Scores, s => s.IsFlagged);
+        Assert.Equal(ScoreEventClassification.NewPass, flagged.Row.Classification);
+        Assert.All(model.Hero.Scores.Where(s => s.Row.IsBroken), s =>
+        {
+            Assert.Equal(HighlightFlags.None, s.Flags);
+            Assert.Null(s.Detail);
+        });
+    }
+
+    [Fact]
+    public async Task TwoCapturesForOneChartPinInOrderOntoItsRecordRows()
+    {
+        // A pass in one batch and an upscore in a later one are two captures; each belongs to
+        // its own row, not merged across both.
+        var chart = ChartAt(ChartType.Single, 21);
+        var pass = Row(chart.Id, Start, 905000, false, ScoreEventClassification.NewPass);
+        var upscore = RowFrom(chart.Id, 931000, previousBest: 905000) with { OccurredAt = Start.AddHours(1) };
+        var highlights = new[]
+        {
+            new ScoreHighlightRecord(chart.Id, Session, Start.AddMinutes(2), HighlightFlags.FolderDebut, 21,
+                21.0, new HighlightDetail(AttemptsBeforeClear: 3)),
+            new ScoreHighlightRecord(chart.Id, Session, Start.AddMinutes(62), HighlightFlags.PumbilityTop50,
+                21, 21.4, new HighlightDetail(PumbilityRank: 40))
+        };
+
+        var model = await Build(chart, new[] { pass, upscore }, Array.Empty<CommunityPeerScore>(),
+            highlights: highlights);
+
+        var byTime = model.Hero!.Scores.OrderBy(s => s.Row.OccurredAt).ToArray();
+        Assert.Equal(HighlightFlags.FolderDebut, byTime[0].Flags);
+        Assert.Equal(3, byTime[0].Detail!.AttemptsBeforeClear);
+        Assert.Equal(HighlightFlags.PumbilityTop50, byTime[1].Flags);
+        Assert.Equal(40, byTime[1].Detail!.PumbilityRank);
+    }
+
+    [Fact]
+    public async Task MoreCapturesThanRecordRowsMergeOntoTheLast()
+    {
+        // One batch's capture describes its final state, so when captures outnumber record
+        // rows the extras land on the newest row — never spread backwards onto attempts.
+        var chart = ChartAt(ChartType.Single, 21);
+        var upscore = RowFrom(chart.Id, 931000, previousBest: 905000);
+        var highlights = new[]
+        {
+            new ScoreHighlightRecord(chart.Id, Session, Start.AddMinutes(2), HighlightFlags.FolderDebut, 21,
+                21.0, new HighlightDetail(AttemptsBeforeClear: 3)),
+            new ScoreHighlightRecord(chart.Id, Session, Start.AddMinutes(4), HighlightFlags.PumbilityTop50,
+                21, 21.4, new HighlightDetail(PumbilityRank: 40, PeerPercentile: 0.9))
+        };
+
+        var model = await Build(chart, new[] { upscore }, Array.Empty<CommunityPeerScore>(),
+            highlights: highlights);
+
+        var row = model.Hero!.Scores.Single();
+        Assert.Equal(HighlightFlags.FolderDebut | HighlightFlags.PumbilityTop50, row.Flags);
+        Assert.Equal(40, row.Detail!.PumbilityRank);
+    }
+
+    [Fact]
+    public async Task ACaptureWhoseChartHasNoRecordRowShowsNowhere()
+    {
+        // Better no medal than a medal on a stage break — the one wrong place it used to go.
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[] { Row(chart.Id, Start, 400000, broken: true, ScoreEventClassification.Break) };
+
+        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>());
+
+        Assert.DoesNotContain(model.Hero!.Scores, s => s.IsFlagged);
+        Assert.All(model.Hero.Scores, s => Assert.Null(s.Detail));
+    }
+
     private static async Task<SessionsPageModel> Build(Chart chart,
         RecentSessionsPage.ScoreEventRecord[] rows, CommunityPeerScore[] peers,
         MixEnum mix = MixEnum.Phoenix, UserPhoenixScore[]? phoenix1 = null,
-        bool captured = true, int? sessionEndedMinutesAgo = null)
+        bool captured = true, int? sessionEndedMinutesAgo = null, ScoreHighlightRecord[]? highlights = null)
     {
-        return (await BuildWith(chart, rows, peers, mix, phoenix1, captured, sessionEndedMinutesAgo)).Model;
+        return (await BuildWith(chart, rows, peers, mix, phoenix1, captured, sessionEndedMinutesAgo, highlights))
+            .Model;
     }
 
     private static async Task<(SessionBreakdownBuilder Builder, SessionsPageModel Model)> BuildWith(Chart chart,
         RecentSessionsPage.ScoreEventRecord[] rows, CommunityPeerScore[] peers,
         MixEnum mix = MixEnum.Phoenix, UserPhoenixScore[]? phoenix1 = null,
-        bool captured = true, int? sessionEndedMinutesAgo = null)
+        bool captured = true, int? sessionEndedMinutesAgo = null, ScoreHighlightRecord[]? highlights = null)
     {
         var mediator = new Mock<IMediator>();
         var group = new RecentSessionsPage.SessionGroup(Session, null, mix, "officialImport",
@@ -275,13 +361,13 @@ public sealed class SessionBreakdownBuilderTests
         mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chart });
         mediator.Setup(m => m.Send(It.IsAny<GetScoreHighlightsForSessionsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(captured
+            .ReturnsAsync(highlights ?? (captured
                 ? new[]
                 {
                     new ScoreHighlightRecord(chart.Id, Session, Start, HighlightFlags.FolderDebut, 21, 21.0,
                         new HighlightDetail(PeerPercentile: 0.4, AttemptsBeforeClear: 6))
                 }
-                : Array.Empty<ScoreHighlightRecord>());
+                : Array.Empty<ScoreHighlightRecord>()));
         mediator.Setup(m => m.Send(It.IsAny<GetPlayerMilestonesForSessionsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<PlayerMilestoneRecord>());
         mediator.Setup(m => m.Send(It.IsAny<GetPlayerStatsQuery>(), It.IsAny<CancellationToken>()))

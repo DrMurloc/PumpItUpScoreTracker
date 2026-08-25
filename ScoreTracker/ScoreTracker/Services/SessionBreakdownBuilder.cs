@@ -133,22 +133,11 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IUserReader user
             : (await mediator.Send(new GetPlayerMilestonesForSessionsQuery(userId, new[] { group.SessionId.Value }),
                 cancellationToken)).ToArray();
 
-        // One highlight row per (session, chart) is the norm; a race can duplicate it, so keep
-        // the richest detail rather than whichever arrived first.
-        var byChart = highlights
-            .GroupBy(h => h.ChartId)
-            .ToDictionary(g => g.Key, g => (
-                Flags: g.Aggregate(HighlightFlags.None, (f, h) => f | h.Flags),
-                Detail: g.OrderByDescending(h => DetailFields(h.Detail)).First().Detail));
-
+        var pinned = PinHighlights(group.Rows, highlights);
         var phoenix1 = await Phoenix1Bests(userId, group.Mix, chartIds, cancellationToken);
         var scores = group.Rows
-            .Select(r =>
-            {
-                var captured = byChart.GetValueOrDefault(r.ChartId);
-                return new SessionScore(r, charts.GetValueOrDefault(r.ChartId), captured.Flags, captured.Detail,
-                    Phoenix1Gain(r, phoenix1));
-            })
+            .Select((r, index) => new SessionScore(r, charts.GetValueOrDefault(r.ChartId),
+                pinned[index].Flags, pinned[index].Detail, Phoenix1Gain(r, phoenix1)))
             .ToArray();
 
         var stats = await mediator.Send(new GetPlayerStatsQuery(userId, group.Mix), cancellationToken);
@@ -465,6 +454,53 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IUserReader user
                 var tag = g.Key.GetShortHand();
                 return low == high ? $"{tag}{low}" : $"{tag}{low}–{tag}{high}";
             }));
+    }
+
+    /// <summary>
+    ///     Pins each captured highlight to the journal row that earned it (D45). Capture writes
+    ///     one row per (session, chart) per batch, computed on the record change that batch
+    ///     carried — so a chart's captures (in time order) belong to its NewPass/Upscore rows
+    ///     (in time order), aligned at the end, because a batch that saw both the pass and an
+    ///     upscore captured once, on the final state. Every other row of the chart — breaks,
+    ///     repeats, observations — carries nothing: stamping the merged flags across the chart
+    ///     is how four stage breaks each wore the pass's official-board medal.
+    ///     <para>
+    ///         A capture whose chart has no record-changing row shows nowhere rather than on a
+    ///         break, and a race-duplicated capture can still land on one extra record row —
+    ///         never on an attempt, which is the failure that mattered.
+    ///     </para>
+    /// </summary>
+    private static (HighlightFlags Flags, HighlightDetail? Detail)[] PinHighlights(
+        IReadOnlyList<RecentSessionsPage.ScoreEventRecord> rows, IReadOnlyList<ScoreHighlightRecord> highlights)
+    {
+        var pinned = new (HighlightFlags Flags, HighlightDetail? Detail)[rows.Count];
+        foreach (var chart in highlights.GroupBy(h => h.ChartId))
+        {
+            var earners = rows
+                .Select((row, index) => (row, index))
+                .Where(x => x.row.ChartId == chart.Key
+                            && x.row.Classification is ScoreEventClassification.NewPass
+                                or ScoreEventClassification.Upscore)
+                .OrderBy(x => x.row.OccurredAt)
+                .ToArray();
+            if (earners.Length == 0) continue;
+
+            var captured = chart.OrderBy(h => h.OccurredAt).ToArray();
+            for (var i = 0; i < captured.Length; i++)
+            {
+                var at = earners[Math.Max(0, earners.Length - captured.Length + i)].index;
+                pinned[at] = (pinned[at].Flags | captured[i].Flags,
+                    RicherDetail(pinned[at].Detail, captured[i].Detail));
+            }
+        }
+
+        return pinned;
+    }
+
+    /// <summary>Ties go to the newer capture: it describes the later state of the chart.</summary>
+    private static HighlightDetail? RicherDetail(HighlightDetail? older, HighlightDetail? newer)
+    {
+        return DetailFields(newer) >= DetailFields(older) ? newer : older;
     }
 
     private static int DetailFields(HighlightDetail? detail)
