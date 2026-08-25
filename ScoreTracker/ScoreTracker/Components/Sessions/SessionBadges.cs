@@ -28,8 +28,12 @@ internal static class SessionBadges
     /// </summary>
     private const double MinimumCompetitiveGain = 0.05;
 
+    /// <summary>
+    ///     <paramref name="includePhoenix1" /> is the card's opt-out: there the "+N over P1"
+    ///     fact reads as foot text beside the standing, not as an art badge (field test).
+    /// </summary>
     internal static IEnumerable<SessionBadge> For(SessionScore score, IStringLocalizer<App> l,
-        bool includeGain)
+        bool includeGain, bool includePhoenix1 = true)
     {
         var detail = score.Detail;
         if (score.Flags.HasFlag(HighlightFlags.PumbilityTop50))
@@ -67,7 +71,7 @@ internal static class SessionBadges
         // 2 score, and a second green number measuring a different baseline eight pixels away
         // reads as the same fact twice. The words keep them apart, so "over P1" never
         // abbreviates away.
-        if (score.Phoenix1Gain is { } phoenix1)
+        if (includePhoenix1 && score.Phoenix1Gain is { } phoenix1)
             yield return new SessionBadge(l["+{0} over P1", phoenix1.ToString("N0")].Value,
                 l["The first Phoenix 2 score to beat your Phoenix 1 best"].Value, "sbd-p1");
     }

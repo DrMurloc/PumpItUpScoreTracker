@@ -80,7 +80,8 @@ public sealed class SessionHeroTests : ComponentTestBase
         // upscore is the score it shows (D41).
         var chart = ChartAt(ChartType.Single, 22);
         var pass = Row(chart.Id, Start, 905000, ScoreEventClassification.NewPass);
-        var upscore = Row(chart.Id, Start.AddHours(1), 931000, ScoreEventClassification.Upscore);
+        var upscore = Row(chart.Id, Start.AddHours(1), 931000, ScoreEventClassification.Upscore)
+            with { PreviousBest = 905000 };
         var breakdown = FullBreakdown() with
         {
             Charts = new Dictionary<Guid, Chart> { [chart.Id] = chart },
@@ -100,6 +101,25 @@ public sealed class SessionHeroTests : ComponentTestBase
         Assert.Contains("931,000", card.TextContent);
         Assert.Contains("👑", card.TextContent);
         Assert.Contains("🎯 4", card.TextContent);
+        // The gained score stands where the "Upscore" chip used to: number over label.
+        Assert.Contains("+26,000", card.TextContent);
+        Assert.DoesNotContain("Upscore", card.TextContent);
+    }
+
+    [Fact]
+    public async Task TheJacketIsTheCardsOnlyWayIntoChartDetails()
+    {
+        // A whole-card target made the judgement strip a near-miss away from a navigation —
+        // the jacket carries the click, the tier card's own affordance (field test).
+        Chart? opened = null;
+        var hero = RenderComponent<SessionHero>(p => p
+            .Add(h => h.Breakdown, FullBreakdown())
+            .Add(h => h.OnOpenChart, chart => opened = chart));
+
+        await hero.Find("[data-testid='session-highlight-jacket']")
+            .ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+        Assert.NotNull(opened);
     }
 
     /// <summary>

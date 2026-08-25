@@ -100,12 +100,14 @@
             ? EventCallback.Factory.Create(this, () => OnOpenBreakdown.InvokeAsync(Score))
             : default;
 
-    private string ScoreColor => Score.PeerPercentile == null || Score.SharedPgMute
-        ? string.Empty
+    // A Perfect Game is always prism (D46 reversed at the field test): the glow is the
+    // achievement's own, so a PG below the capture floor glows too instead of reading broken.
+    private string ScoreColor => Score.IsPerfectGame ? ThemeScales.RarityStyle(1.0)
+        : Score.PeerPercentile == null ? string.Empty
         : ThemeScales.RarityStyle(Score.PeerPercentile.Value);
 
-    private string GlowClass => Score.PeerPercentile == null || Score.SharedPgMute
-        ? string.Empty
+    private string GlowClass => Score.IsPerfectGame ? ThemeScales.RarityClass(RarityBand.Prism)
+        : Score.PeerPercentile == null ? string.Empty
         : ThemeScales.RarityClass(ThemeScales.BandFor(Score.PeerPercentile.Value));
 
     /// <summary>Shared with the highlight card — one play, one set of marks (SessionBadges).</summary>

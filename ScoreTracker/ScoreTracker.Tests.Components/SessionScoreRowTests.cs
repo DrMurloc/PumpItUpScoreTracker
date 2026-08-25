@@ -183,25 +183,27 @@ public sealed class SessionScoreRowTests : ComponentTestBase
     }
 
     [Fact]
-    public void APerfectGameMostOfTheCohortSharesRendersInPlainInk()
+    public void APerfectGameAlwaysGlowsEvenWhenTheWholeCohortSharesIt()
     {
-        // Ties count as beaten in the stored percentile, so an easy chart everyone PGs wore the
-        // brightest treatment on the page (D46). The standing line keeps the honest fact; only
-        // the colour stands down.
+        // D46 as reversed at the field test: 1,000,000 cannot be beaten, so the glow is the
+        // achievement's own rather than a rarity claim. The standing line keeps the honest
+        // shared-PG fact alongside it.
         var row = Render(Score(PerfectGame, new HighlightDetail(PeerCount: 94, PeerBetterCount: 0,
             PeerPgCount: 60, PeerPercentile: 1.0)));
 
-        Assert.DoesNotContain("rarity-glow", row.Markup);
+        Assert.Contains("rarity-glow-3", row.Markup);
         Assert.Contains("59 of 93 peers have it", row.Markup);
     }
 
     [Fact]
-    public void ARarelySharedPerfectGameKeepsItsColour()
+    public void APerfectGameBelowTheCaptureFloorStillGlows()
     {
-        var row = Render(Score(PerfectGame, new HighlightDetail(PeerCount: 94, PeerBetterCount: 0,
-            PeerPgCount: 4, PeerPercentile: 1.0)));
+        // Capture skips charts far under competitive, so a PG there carries no detail at all —
+        // under the percentile rule it glowed nothing, which read as a bug on the owner's own
+        // low-chart PGs.
+        var row = Render(Score(PerfectGame, null));
 
-        Assert.Contains("rarity-glow", row.Markup);
+        Assert.Contains("rarity-glow-3", row.Markup);
     }
 
     [Fact]

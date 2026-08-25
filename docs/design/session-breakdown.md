@@ -77,7 +77,7 @@ positions.
 | D43 | **Every play with observed judgements carries the judgement strip** — Perfect/Great/Good/Bad/Miss counts + max combo as coloured text in the `--judg-*` vocabulary, on All-plays rows **and** on highlight cards. Rows without observed counts (manual, CSV, pre-scrape imports) say nothing. **The strip is the tap target** for the Score Breakdown Dialog — no separate icon. |
 | D44 | **The Score Breakdown Dialog carries the calculator's whole answer** (owner, 2026-08-25: *"'what gave you points' and 'what lost you points' are VERY different questions"*): the **gain bar**, the **loss bar**, and the next-letter walk, for one recorded play. One shared ES module (`score-breakdown.js`, extracted from `phoenix-calculator.js`) renders both surfaces, so they cannot drift. Stage breaks never open it — a partial run has no story against 1,000,000, the calculator's own MyPlays rule — finished fails do. The footer deep-links the calculator with the counts prefilled. |
 | D45 | **A highlight pins to the journal row that earned it** — the fix for the repeated-play bug. Capture stores one highlight row per (session, chart) and the data was always right; the page joined by chart id, so every attempt wore the pass's medal. The rule: a chart's highlight rows (ordered by `OccurredAt`) pin positionally, aligned at the end, onto its `NewPass`/`Upscore` journal rows (same order); overflow merges onto the last; breaks and repeats carry no flags, no detail, no standing line. Render-side only — no stored row changes. |
-| D46 | **A Perfect Game most of the cohort shares renders in plain ink.** `TieInclusivePercentile` returns 1.0 on ties, which handed the brightest treatment on the page to easy charts everyone at your level PGs — the flag was suppressed but the colour stayed. The mute is render-side (reads the captured `PeerPgCount`/`PeerCount`), so historical rows heal without a capture change. The standing line still prints "PG · x of y peers have it" — that is the honest fact. |
+| D46 | **A Perfect Game always wears the prism glow** (reversed at the 2026-08-25 field test, before the shared-PG mute ever reached players). The mute answered the ties-at-1.0 offender by dimming shared PGs — and promptly made the owner's own PGs on low charts glow *nothing*, because below the capture floor there is no cohort at all. The ruling: 1,000,000 cannot be beaten, so the glow is the achievement's own, not a rarity claim — `SessionScore.IsPerfectGame` forces prism + glow-3 on rows and cards regardless of cohort. The standing line still prints "PG · x of y peers have it" where a cohort exists — that is still the honest fact. |
 | D47 | **⬆ retires on this page** (owner, 2026-08-25). The competitive readout (`22.8 (+0.2)`, D31) says it with a number. The flag stays in the model and on the Discord card; rows from batches before the baseline capture began (2026-08-08) simply show no mark. |
 | D48 | **A PUMBILITY gain on a card wears the established chip** — `PumbilityDelta` inside `tier-chart-card-corner` + `pmb-corner-gain` (the Play page's projected-gain chip) — on the score line, aligned right. Rows keep their crown-adjacent gain badge. |
 | D49 | **Attempt threading**: adjacent same-chart rows in All plays are joined by a dotted rail; the "Attempt N" caption renders only once the chart reaches **5+ plays in the session**. To keep threads adjacent, All plays orders level-desc → chart → time-desc. The journal stays a flat neutral log (D6) — the rail annotates, it never groups or hides. |
@@ -521,7 +521,21 @@ Known, accepted: the calculator has a one-point-high floors quirk on some inputs
 computes with the same engine, so the two surfaces agree with each other; the header always shows
 the play's **recorded** score, and the floors fix is its own follow-up.
 
-### 7.4 Commit order (owner call: docs first, i18n last)
+### 7.4 Field-test round 1 (2026-08-25, seven owner notes)
+
+1. **The jacket draws the tier-card way** — a `background-image` div, never `SongImage`
+   (which is a fixed-height `MudImage` and collapsed the art).
+2. **The jacket is the card's one navigation target.** A whole-card click put the judgement
+   strip a near-miss from opening chart details.
+3. The difficulty bubble overlays the jacket top-left, the site-wide treatment.
+4. The judgement strip aligns **baseline**, not center — the smaller combo floated.
+5. **The gained score replaces the "Upscore" chip** on cards, and a new pass carries no
+   label at all — the card is the ceremony.
+6. **"+N over P1" is card-foot text** in the standing line's grey, not an art badge (rows
+   keep the gold badge).
+7. **D46 reversed** — a PG always glows prism (see the amended D46 row).
+
+### 7.5 Commit order (owner call: docs first, i18n last)
 
 Each commit fast-suite green; integration + E2E run locally once with the last commit, before the
 PR opens.

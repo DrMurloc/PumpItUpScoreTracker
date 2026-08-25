@@ -87,14 +87,12 @@ public sealed record SessionScore(
     public int? OtherPeersWithPg => Detail?.PeerPgCount is { } pg && pg > 1 ? pg - 1 : null;
 
     /// <summary>
-    ///     A Perfect Game most of the cohort shares renders in plain ink (D46): ties count as
-    ///     beaten in the stored percentile, so an easy chart everyone PGs read as the rarest
-    ///     thing on the page. Every surface's colour honours this; the standing line still says
-    ///     who shares it, because that is the honest fact.
+    ///     A Perfect Game always wears the prism glow, cohort or no cohort (D46 as reversed at
+    ///     the field test): 1,000,000 cannot be beaten, so the glow is the achievement's own,
+    ///     not a rarity claim — and a PG on a chart too low for capture to measure glowed
+    ///     nothing at all under the percentile rule, which read as a bug.
     /// </summary>
-    public bool SharedPgMute =>
-        Row.Score == 1_000_000
-        && Detail is { PeerPgCount: { } pg, PeerCount: { } cohort } && pg * 2 > cohort;
+    public bool IsPerfectGame => Row.Score == 1_000_000 && !Row.IsBroken;
 }
 
 /// <summary>The band above the fold: what moved, and how far.</summary>

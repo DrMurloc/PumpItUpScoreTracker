@@ -17811,7 +17811,9 @@ i.sc-band-ice { background: var(--grade-sssplus); }
    so on hover and focus. */
 .judg-strip {
     display: inline-flex;
-    align-items: center;
+    /* Baseline, not center: the combo runs a size smaller, and box-centering left its
+       digits floating off the counts' shared baseline (owner, field test). */
+    align-items: baseline;
     gap: 8px;
     font-family: var(--font-display);
     font-weight: 600;
@@ -17944,12 +17946,6 @@ button.judg-strip:focus-visible {
     overflow: hidden;
     background: var(--mix-surface-muted);
     border: 1px solid color-mix(in srgb, var(--mix-ink) 8%, transparent);
-    cursor: pointer;
-}
-
-.hl-card:focus-visible {
-    outline: 2px solid var(--mix-primary);
-    outline-offset: 2px;
 }
 
 .hl-card-emerald { border-color: color-mix(in srgb, var(--rarity-emerald) 45%, transparent); }
@@ -17966,18 +17962,21 @@ button.judg-strip:focus-visible {
     box-shadow: 0 0 18px -5px var(--rarity-prism);
 }
 
+/* The jacket, drawn the way the tier card draws it: a background-image div, which is also
+   the card's ONE navigation target — a whole-card target put the judgement strip a near-miss
+   away from opening chart details (owner, field test). */
 .hl-card-art {
     position: relative;
     aspect-ratio: 16 / 8.2;
-    background: var(--mix-bg);
+    background-color: var(--mix-bg);
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
 }
 
-.hl-card-art img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+.hl-card-art:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: -2px;
 }
 
 /* The scrim keeps the body legible over any jacket; the body overlaps the art bottom. */
@@ -18073,6 +18072,14 @@ button.judg-strip:focus-visible {
 .hl-card-standing {
     font-size: .72rem;
     color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* The gained score, where the "Upscore" chip used to sit — the number says it better. */
+.hl-card-delta {
+    font-size: .74rem;
+    font-weight: 600;
+    color: var(--mud-palette-success);
     font-variant-numeric: tabular-nums;
 }
 
