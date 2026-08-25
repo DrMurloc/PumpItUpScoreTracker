@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
+using MediatR;
 using Moq;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Application.Handlers;
@@ -217,7 +218,8 @@ public sealed class TierListSagaTests
         Mock<IPlayerStatsReader>? playerStats = null,
         Mock<IChartScoreStatsRepository>? chartStats = null,
         Mock<IFolderCohortStatsRepository>? cohortStats = null,
-        Mock<ITitleRepository>? titles = null)
+        Mock<ITitleRepository>? titles = null,
+        Mock<IMediator>? mediator = null)
     {
         chartRatings ??= EmptyRatingsMock();
         charts ??= EmptyChartsMock();
@@ -231,7 +233,8 @@ public sealed class TierListSagaTests
         return new TierListSaga(chartRatings.Object, charts.Object, tierLists.Object, scores.Object,
             currentUser.Object, playerStats.Object, new Mock<IChartScoringLevelRepository>().Object,
             chartStats.Object, cohortStats.Object, titles.Object,
-            new Mock<IPumbilityPoolCompositionRepository>().Object, FakeDateTime.At(2026, 8, 16).Object);
+            new Mock<IPumbilityPoolCompositionRepository>().Object, FakeDateTime.At(2026, 8, 16).Object,
+            mediator?.Object ?? new Mock<IMediator>().Object);
     }
 
     private static Mock<IChartRepository> EmptyChartsMock()

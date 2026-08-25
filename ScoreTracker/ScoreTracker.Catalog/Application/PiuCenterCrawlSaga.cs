@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using ScoreTracker.Catalog.Contracts.Events;
 using ScoreTracker.Catalog.Contracts.Messages;
 using ScoreTracker.Catalog.Domain;
 using ScoreTracker.Data.Apis;
@@ -62,7 +63,7 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
 
         await FillMetricGaps(resolved, table, version, cancellationToken);
         await RegenerateSkillTags(resolved, phoenixCharts, cancellationToken);
-        await RebuildFolderBaselines(phoenixCharts, cancellationToken);
+        await RebuildFolderBaselines(phoenixCharts, context, cancellationToken);
     }
 
     public async Task Consume(ConsumeContext<ImportPiuCenterSnapshotCommand> context)
@@ -119,7 +120,7 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
         _logger.LogInformation("piucenter snapshot import: banked metrics for {Banked}/{Total} resolved charts",
             banked, resolved.Length);
         await RegenerateSkillTags(resolved, phoenixCharts, cancellationToken);
-        await RebuildFolderBaselines(phoenixCharts, cancellationToken);
+        await RebuildFolderBaselines(phoenixCharts, context, cancellationToken);
     }
 
     private static ExternalChartAlias[] ResolvedIn(IReadOnlyList<ExternalChartAlias> aliases,
@@ -231,7 +232,7 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
     ///     </para>
     /// </summary>
     private async Task RebuildFolderBaselines(IReadOnlyList<Chart> phoenixCharts,
-        CancellationToken cancellationToken)
+        IPublishEndpoint publisher, CancellationToken cancellationToken)
     {
         var metricsByChart = await _metrics.GetMetricsByChart(PiuCenterMetrics.Source, cancellationToken);
         if (metricsByChart.Count == 0)
@@ -268,6 +269,8 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
         _logger.LogInformation(
             "piucenter: rebuilt folder baselines — {Rows} rows across {Folders} folders in {Mixes} mixes",
             byMix.Values.Sum(b => b.Length), folders.Count, byMix.Count);
+
+        await publisher.Publish(new PiuCenterDataIngestedEvent(byMix.Keys.ToArray()), cancellationToken);
     }
 
     private async Task RegenerateSkillTags(IReadOnlyList<ExternalChartAlias> resolved,

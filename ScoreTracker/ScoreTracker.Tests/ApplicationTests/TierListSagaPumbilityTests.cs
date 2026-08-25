@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
+using MediatR;
 using Moq;
 using ScoreTracker.ChartIntelligence.Application;
 using ScoreTracker.ChartIntelligence.Contracts;
@@ -414,6 +415,7 @@ public sealed class TierListSagaPumbilityTests
             tierLists.Object, scoreReader.Object, new Mock<ICurrentUserAccessor>().Object,
             playerStats.Object, new Mock<IChartScoringLevelRepository>().Object,
             new Mock<IChartScoreStatsRepository>().Object, new Mock<IFolderCohortStatsRepository>().Object,
-            titles.Object, composition.Object, FakeDateTime.At(Recorded).Object);
+            titles.Object, composition.Object, FakeDateTime.At(Recorded).Object,
+            new Mock<IMediator>().Object);
     }
 }

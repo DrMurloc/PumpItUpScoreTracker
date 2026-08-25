@@ -45,5 +45,6 @@ public static class ChartIntelligenceRegistrationExtensions
         configurator.AddConsumer<ScoringDifficultySaga>();
         configurator.AddConsumer<AccountPurgeConsumer>();
         configurator.AddConsumer<ChartSimilaritySaga>();
+        configurator.AddConsumer<SpeedTierListTrigger>();
     }
 }

@@ -69,6 +69,14 @@
                data-testid="@($"rebuild-pumbility-tier-lists-{mix}")">@L["Rebuild {0} PUMBILITY tier lists", mix.GetName()]</MudButton>
 }
 
+@* Speed bands a folder against its own notes-per-second spread, so it only moves when the
+   banked step analysis does — an ingestion rebuilds it on its own, and this is the force. *@
+@foreach (var mix in RepriceableMixes)
+{
+    <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="@(() => RebuildSpeedTierList(mix))"
+               data-testid="@($"rebuild-speed-tier-list-{mix}")">@L["Rebuild {0} Speed tier list", mix.GetName()]</MudButton>
+}
+
 <MudCard>
     <MudCardHeader>@L["Credential security"]</MudCardHeader>
     <MudCardContent>
@@ -274,6 +282,13 @@
     {
         await Bus.Publish(new ProcessPumbilityTierListCommand(mix));
         Snackbar.Add(L["Rebuilding the {0} PUMBILITY tier lists. It takes a few minutes.", mix.GetName()].Value,
+            Severity.Success);
+    }
+
+    private async Task RebuildSpeedTierList(MixEnum mix)
+    {
+        await Bus.Publish(new ProcessSpeedTierListCommand(mix));
+        Snackbar.Add(L["Rebuilding the {0} Speed tier list. It takes a few minutes.", mix.GetName()].Value,
             Severity.Success);
     }
 
