@@ -13,7 +13,7 @@
    among players at the same competitive level, and the percentile always prints beside it —
    colour is never the only channel. A chart with no cohort (co-op, or far below competitive)
    renders in plain ink and says nothing about it. *@
-<div class="sbd-row" data-testid="session-score-row">
+<div class="sbd-row @ThreadClass" data-testid="session-score-row">
     @if (Score.Chart != null)
     {
         <SongImage Song="Score.Chart.Song" Small="true"></SongImage>
@@ -25,6 +25,10 @@
                    dialogue carries the board itself. *@
                 <MudLink Href="javascript:void(0)" data-testid="session-row-chart"
                          @onclick="() => OnOpenChart.InvokeAsync(Score.Chart)">@Score.Chart.Song.Name</MudLink>
+                @if (AttemptNumber is { } attempt)
+                {
+                    <span class="sbd-attempt" data-testid="session-row-attempt">@L["Attempt {0}", attempt]</span>
+                }
                 @foreach (var badge in Badges)
                 {
                     <MudTooltip Text="@badge.Tooltip">
@@ -47,6 +51,13 @@
                                         Plate="PhoenixPlateHelperMethods.TryParse(Score.Row.Plate)"
                                         ShowScore="true" OneLine="true"></ScoreBreakdown>
                     </span>
+                }
+                @if (Score.Row.Judgements is { } judgements)
+                {
+                    @* The result screen's own readout, and the way into the breakdown dialog when
+                       the play has a story to tell against 1,000,000 — a stage break does not,
+                       so its strip is a plain readout (D43/D44). *@
+                    <JudgementStrip Judgements="judgements" Small="true" OnOpen="StripOpen"></JudgementStrip>
                 }
                 @if (StandingText != null)
                 {
@@ -71,11 +82,39 @@
     [Parameter] [EditorRequired] public SessionScore Score { get; set; } = null!;
     [Parameter] public EventCallback<Chart> OnOpenChart { get; set; }
 
-    private string ScoreColor => Score.PeerPercentile == null
+    /// <summary>Raised with this row's play when its strip is tapped; the host owns the dialog.</summary>
+    [Parameter] public EventCallback<SessionScore> OnOpenBreakdown { get; set; }
+
+    /// <summary>"Attempt N", only supplied by the host once a chart hits five plays (D49).</summary>
+    [Parameter] public int? AttemptNumber { get; set; }
+
+    /// <summary>The dotted rail joining adjacent plays of one chart — the host computes runs.</summary>
+    [Parameter] public string? ThreadClass { get; set; }
+
+    /// <summary>
+    ///     A stage break has no story against 1,000,000, so its strip is a readout, not a way
+    ///     in — the same line the calculator's own plays list draws (D44).
+    /// </summary>
+    private EventCallback StripOpen =>
+        OnOpenBreakdown.HasDelegate && Score.Row.Score != null && !Score.Row.IsStageBroken
+            ? EventCallback.Factory.Create(this, () => OnOpenBreakdown.InvokeAsync(Score))
+            : default;
+
+    /// <summary>
+    ///     A Perfect Game most of the cohort shares renders in plain ink (D46): ties count as
+    ///     beaten in the stored percentile, so an easy chart everyone PGs read as the rarest
+    ///     thing on the page. The standing line still says who shares it — that is the honest
+    ///     fact — only the colour stands down.
+    /// </summary>
+    private bool SharedPgMute =>
+        Score.Row.Score == PerfectGame
+        && Score.Detail is { PeerPgCount: { } pg, PeerCount: { } cohort } && pg * 2 > cohort;
+
+    private string ScoreColor => Score.PeerPercentile == null || SharedPgMute
         ? string.Empty
         : ThemeScales.RarityStyle(Score.PeerPercentile.Value);
 
-    private string GlowClass => Score.PeerPercentile == null
+    private string GlowClass => Score.PeerPercentile == null || SharedPgMute
         ? string.Empty
         : ThemeScales.RarityClass(ThemeScales.BandFor(Score.PeerPercentile.Value));
 
@@ -89,6 +128,9 @@
     {
         get
         {
+            // A broken run's standing would be the standing of a score it never achieved —
+            // highlight pinning already keeps detail off these rows, and this agrees.
+            if (Score.Row.IsBroken) return null;
             if (Score.Detail?.PeerCount is not { } cohort || cohort == 0) return null;
 
             // A Perfect Game cannot be beaten, only tied, so every PG row is "#1" and the place
@@ -139,8 +181,9 @@
             // itself is untouched — it still rides the Discord card and seeds hot streaks.
             if (Score.Flags.HasFlag(HighlightFlags.FolderCompletion90))
                 yield return new RowBadge("📁", L["Nearly complete folder"].Value);
-            if (Score.Flags.HasFlag(HighlightFlags.CompetitiveImprover))
-                yield return new RowBadge("⬆", L["Raised your competitive level"].Value);
+            // No ⬆ glyph any more (D47): the readout beside it carried the same fact as a
+            // number, and two marks for one fact is one too many. The flag stays in the model
+            // — the Discord card still draws it — and a pre-baseline row simply shows nothing.
             if (CompetitiveReadout is { } readout)
                 yield return new RowBadge(readout,
                     L["What this score rates, against your level when the session reached it"].Value,

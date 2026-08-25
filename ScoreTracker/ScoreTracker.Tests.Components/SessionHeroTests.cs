@@ -117,6 +117,57 @@ public sealed class SessionHeroTests : ComponentTestBase
     }
 
     [Fact]
+    public void FivePlaysOfOneChartThreadAndCaptionTheirAttempts()
+    {
+        // The rail joins the run; captions start at five plays (D49) and skip the newest row —
+        // its badges tell the ending, and numbering it would caption the punchline.
+        var chart = ChartAt(ChartType.Double, 23);
+        var rows = Enumerable.Range(0, 5)
+            .Select(i => Row(chart.Id, Start.AddMinutes(i * 7), 900000 + i * 5000,
+                ScoreEventClassification.Upscore))
+            .ToArray();
+        var breakdown = FullBreakdown() with
+        {
+            Charts = new Dictionary<Guid, Chart> { [chart.Id] = chart },
+            Scores = rows.Select(r => new SessionScore(r, chart, HighlightFlags.None, null)).ToArray()
+        };
+
+        var hero = RenderComponent<SessionHero>(p => p.Add(h => h.Breakdown, breakdown));
+
+        Assert.Equal(5, hero.FindAll(".sbd-thread").Count);
+        Assert.Single(hero.FindAll(".sbd-thread-start"));
+        Assert.Single(hero.FindAll(".sbd-thread-end"));
+        // Four captions for five plays: attempts 1–4, the newest uncounted.
+        var captions = hero.FindAll("[data-testid='session-row-attempt']");
+        Assert.Equal(4, captions.Count);
+        Assert.Contains("Attempt 4", hero.Markup);
+        Assert.Contains("Attempt 1", hero.Markup);
+        Assert.DoesNotContain("Attempt 5", hero.Markup);
+    }
+
+    [Fact]
+    public void TwoPlaysOfOneChartThreadWithoutCaptions()
+    {
+        // The rail is cheap annotation; a number on a two-try chart is noise (D49).
+        var chart = ChartAt(ChartType.Single, 20);
+        var rows = new[]
+        {
+            Row(chart.Id, Start, 910000, ScoreEventClassification.NewPass),
+            Row(chart.Id, Start.AddMinutes(30), 931000, ScoreEventClassification.Upscore)
+        };
+        var breakdown = FullBreakdown() with
+        {
+            Charts = new Dictionary<Guid, Chart> { [chart.Id] = chart },
+            Scores = rows.Select(r => new SessionScore(r, chart, HighlightFlags.None, null)).ToArray()
+        };
+
+        var hero = RenderComponent<SessionHero>(p => p.Add(h => h.Breakdown, breakdown));
+
+        Assert.Equal(2, hero.FindAll(".sbd-thread").Count);
+        Assert.Empty(hero.FindAll("[data-testid='session-row-attempt']"));
+    }
+
+    [Fact]
     public void APendingCaptureStandsInForEverythingItWouldHaveFilled()
     {
         // Capture runs on the bus behind the import, so the page can beat it there. One card

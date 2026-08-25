@@ -17894,3 +17894,35 @@ button.judg-strip:focus-visible {
     padding-top: 10px;
     border-top: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
 }
+
+/* ── The attempt thread (All plays, D49) ──────────────────────────────────────────────────
+   A dotted rail joining adjacent plays of one chart — annotation over the flat log, never a
+   grouping: every row stays a row. Threaded rows indent to make room; the rail half-heights
+   at a run's ends so it reads as joining rows, not as a column of its own. */
+.sbd-row.sbd-thread {
+    position: relative;
+    padding-left: 12px;
+}
+
+.sbd-thread::before {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 0;
+    bottom: 0;
+    border-left: 2px dotted color-mix(in srgb, var(--mix-primary) 45%, transparent);
+}
+
+.sbd-thread-start::before {
+    top: 50%;
+}
+
+.sbd-thread-end::before {
+    bottom: 50%;
+}
+
+.sbd-attempt {
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}

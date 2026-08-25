@@ -71,7 +71,8 @@
             </div>
             @foreach (var score in Notable)
             {
-                <SessionScoreRow Score="score" OnOpenChart="OnOpenChart"></SessionScoreRow>
+                <SessionScoreRow Score="score" OnOpenChart="OnOpenChart"
+                                 OnOpenBreakdown="OnOpenBreakdown"></SessionScoreRow>
             }
         </div>
     }
@@ -87,16 +88,19 @@
             <span class="sbd-section-note">@Breakdown.Scores.Count</span>
         </div>
         @* The record, not a highlight: breaks appear here as ordinary rows and are never
-           counted anywhere else. *@
-        @foreach (var score in Ordered.Take(_visiblePlays))
+           counted anywhere else. Adjacent plays of one chart wear the dotted rail — an
+           annotation over the flat log, never a grouping (D49). *@
+        @foreach (var play in OrderedPlays.Take(_visiblePlays))
         {
-            <SessionScoreRow Score="score" OnOpenChart="OnOpenChart"></SessionScoreRow>
+            <SessionScoreRow Score="play.Score" OnOpenChart="OnOpenChart" OnOpenBreakdown="OnOpenBreakdown"
+                             ThreadClass="@play.ThreadClass" AttemptNumber="play.AttemptNumber">
+            </SessionScoreRow>
         }
-        @if (_visiblePlays < Ordered.Count)
+        @if (_visiblePlays < OrderedPlays.Count)
         {
             <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="ShowAllPlays"
                        data-testid="session-show-all-plays">
-                @L["Show all {0} plays", Ordered.Count]
+                @L["Show all {0} plays", OrderedPlays.Count]
             </MudButton>
         }
     </div>
@@ -115,24 +119,35 @@
 
     [Parameter] [EditorRequired] public SessionBreakdown Breakdown { get; set; } = null!;
     [Parameter] public EventCallback<Chart> OnOpenChart { get; set; }
+    [Parameter] public EventCallback<SessionScore> OnOpenBreakdown { get; set; }
+
+    /// <summary>One All-plays row with the thread annotations the hero computed for it.</summary>
+    private sealed record OrderedPlay(SessionScore Score, string? ThreadClass, int? AttemptNumber);
 
     private int _visiblePlays = InitialPlays;
     private IReadOnlyList<SessionScore> Notable = Array.Empty<SessionScore>();
-    private IReadOnlyList<SessionScore> Ordered = Array.Empty<SessionScore>();
+    private IReadOnlyList<OrderedPlay> OrderedPlays = Array.Empty<OrderedPlay>();
+
+    /// <summary>An "Attempt N" caption starts meaning something at this many plays (D49).</summary>
+    private const int AttemptCaptionFloor = 5;
 
     protected override void OnParametersSet()
     {
         // Cast to int BEFORE the coalesce: DifficultyLevel rejects 0, so a chart the page
         // could not resolve would throw out of here rather than sorting last.
-        Ordered = Breakdown.Scores
+        // Chart id between level and time: same-chart plays sit adjacent so the attempt
+        // thread can join them — the log stays complete, only the shuffle changes (D49).
+        var ordered = Breakdown.Scores
             .OrderByDescending(s => (int?)s.Chart?.Level ?? 0)
+            .ThenBy(s => s.Row.ChartId)
             .ThenByDescending(s => s.Row.OccurredAt)
             .ToArray();
+        OrderedPlays = Thread(ordered);
         // A break is never a score that mattered (D6). It used to reach this section as PADDING
         // — the list tops itself up with unflagged rows to fill six, and on a thin session the
         // highest-level row can be a stage break. Breaks belong in All plays, as the neutral
         // log they are, and nowhere else.
-        var eligible = Ordered.Where(s => !s.Row.IsBroken).ToArray();
+        var eligible = ordered.Where(s => !s.Row.IsBroken).ToArray();
         Notable = eligible.Where(s => s.IsFlagged)
             .Concat(eligible.Where(s => !s.IsFlagged))
             .Take(NotableRows)
@@ -140,7 +155,38 @@
         _visiblePlays = InitialPlays;
     }
 
-    private void ShowAllPlays() => _visiblePlays = Ordered.Count;
+    /// <summary>
+    ///     Runs of one chart get the rail; runs of five or more also get "Attempt N" captions
+    ///     on every row but the newest — the newest is the one whose badges tell the ending,
+    ///     and numbering it too would caption the punchline (D49). Attempts count from the
+    ///     oldest play, so "Attempt 2" is the second time the player stepped on.
+    /// </summary>
+    private static IReadOnlyList<OrderedPlay> Thread(IReadOnlyList<SessionScore> ordered)
+    {
+        var plays = new OrderedPlay[ordered.Count];
+        var start = 0;
+        while (start < ordered.Count)
+        {
+            var end = start;
+            while (end + 1 < ordered.Count && ordered[end + 1].Row.ChartId == ordered[start].Row.ChartId) end++;
+            var length = end - start + 1;
+            for (var i = start; i <= end; i++)
+            {
+                var thread = length < 2 ? null
+                    : i == start ? "sbd-thread sbd-thread-start"
+                    : i == end ? "sbd-thread sbd-thread-end"
+                    : "sbd-thread";
+                int? attempt = length >= AttemptCaptionFloor && i > start ? length - (i - start) : null;
+                plays[i] = new OrderedPlay(ordered[i], thread, attempt);
+            }
+
+            start = end + 1;
+        }
+
+        return plays;
+    }
+
+    private void ShowAllPlays() => _visiblePlays = OrderedPlays.Count;
 
     private string SourceLabel => Breakdown.Group.Source switch
     {
