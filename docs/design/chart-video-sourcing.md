@@ -116,6 +116,16 @@ Each stage is **pure data — no code changes**. The pipeline:
 3. **Verification**: every candidate id is confirmed via keyless oEmbed
    (`youtube.com/oembed` — authoritative title + channel), with `i.ytimg.com` thumbnails for
    footage-tier classification and duration-vs-`Song.Duration` for stream filtering.
+   - **Politeness rules (owner concern 2026-08-25 — don't trip YouTube's bot heuristics):**
+     prefer integration endpoints (oEmbed, `i.ytimg`, innertube) over HTML scraping; titles
+     index from walk payloads and only the videos actually being linked get oEmbed-verified
+     (a stage is a few thousand requests, not tens of thousands); one request at a time,
+     300–500ms apart, everything cached so nothing fetches twice; **hard-stop on the first
+     429 or interstitial and resume hours later** — never retry through errors. Everything
+     runs logged-out, so any soft flag is IP-scoped and temporary, never account-linked.
+     Optional zero-gray-area upgrade: a free YouTube Data API v3 key (`YouTubeApi:ApiKey`)
+     makes channel walks officially supported at ~1 quota unit per 50 videos — a full-roster
+     walk costs ~500 of the free 10,000/day quota; scripts should prefer it when configured.
 4. **Matching** per the identity rules above.
 5. **The script**, one per stage in `Downloads`: a single transaction, `SET XACT_ABORT ON`,
    idempotent guarded writes (skip charts that already carry a video; delete empty-URL
