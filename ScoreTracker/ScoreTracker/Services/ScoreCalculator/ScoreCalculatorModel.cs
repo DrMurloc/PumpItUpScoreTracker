@@ -271,6 +271,13 @@ public sealed class ScoreCalculatorModel
 
     // ── the constants the script reads (D2) ────────────────────────────────────
 
+    /// <summary>
+    ///     The same constants block, for the Score Breakdown Dialog's engine — one emission
+    ///     feeding both of score-breakdown.js's surfaces, so they cannot disagree (§7.3 of the
+    ///     session-breakdown design). Static because nothing in it varies per request.
+    /// </summary>
+    public static string EngineConstantsJson { get; } = BuildConstantsJson();
+
     private static string BuildConstantsJson()
     {
         return JsonSerializer.Serialize(new

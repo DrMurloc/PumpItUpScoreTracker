@@ -1,0 +1,46 @@
+@using ScoreTracker.SharedKernel.Models
+@namespace ScoreTracker.Web.Components
+
+@* A play's judgement counts in the game's own colour vocabulary (--judg-*): the colour is the
+   label and the count is the value, matching the result screen every player already reads —
+   the one score fact that renders as coloured text rather than art (UX guidelines). Null
+   counts never reach here: a row without an observed breakdown says nothing at all. *@
+@if (OnOpen.HasDelegate)
+{
+    @* A button, because it goes somewhere: the whole strip is the tap target for the Score
+       Breakdown Dialog — a per-row icon would spend 20px on every phone row (D43). *@
+    <button type="button" class="@Classes" data-testid="judgement-strip" title="@L["See where this score came from"]"
+            aria-label="@L["See where this score came from"]"
+            @onclick="OnOpen" @onclick:stopPropagation="true">
+        @Counts
+    </button>
+}
+else
+{
+    <span class="@Classes" data-testid="judgement-strip">@Counts</span>
+}
+
+@code {
+    [Parameter] [EditorRequired] public JudgementCounts Judgements { get; set; } = null!;
+
+    /// <summary>The card-corner size; rows and the dialog use the regular one.</summary>
+    [Parameter] public bool Small { get; set; }
+
+    /// <summary>When set, the strip is the affordance that opens the breakdown (D43).</summary>
+    [Parameter] public EventCallback OnOpen { get; set; }
+
+    private string Classes => Small ? "judg-strip judg-strip-sm" : "judg-strip";
+
+    private RenderFragment Counts => __builder =>
+    {
+        <span class="judg-perfect">@Judgements.Perfects.ToString("N0")</span>
+        <span class="judg-great">@Judgements.Greats.ToString("N0")</span>
+        <span class="judg-good">@Judgements.Goods.ToString("N0")</span>
+        <span class="judg-bad">@Judgements.Bads.ToString("N0")</span>
+        <span class="judg-miss">@Judgements.Misses.ToString("N0")</span>
+        @if (Judgements.MaxCombo is { } combo)
+        {
+            <span class="judg-strip-combo">×@combo.ToString("N0")</span>
+        }
+    };
+}

@@ -1,0 +1,170 @@
+@using System.Globalization
+@using System.Text.Json
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.ScoreCalculator
+@namespace ScoreTracker.Web.Components
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+@* One recorded play, told the way the Score Calculator tells a typed one: where the score
+   came from, where the loss went — different questions, deliberately both — and how close the
+   next letter was (D44). The bars and the walk are score-breakdown.js, the same module the
+   calculator page runs, fed by the same engine-emitted constants; this component owns only
+   the frame and the play's identity. Stage breaks never reach here — a partial run has no
+   story against 1,000,000 — the caller gates, and the null-score guard below agrees. *@
+<MudDialog Visible="Visible" VisibleChanged="VisibleChanged" Options="_options" Class="score-breakdown-dialog">
+    <DialogContent>
+        @if (Chart != null && Judgements != null && Score != null)
+        {
+            <div @ref="_content" class="sbdlg" data-testid="score-breakdown-dialog">
+                <div class="sbdlg-title">
+                    <DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble>
+                    <MudText Typo="Typo.h5">@Chart.Song.Name</MudText>
+                </div>
+                @if (SubLine != null)
+                {
+                    <MudText Typo="Typo.caption" Class="sbdlg-sub">@SubLine</MudText>
+                }
+                <div class="sbdlg-score">
+                    <ScoreBreakdown Score="PhoenixScore.From(Score.Value)" Mix="Mix" IsBroken="IsBroken"
+                                    Plate="Plate" ShowScore="true" OneLine="true"></ScoreBreakdown>
+                </div>
+                <JudgementStrip Judgements="Judgements"></JudgementStrip>
+                @* The module writes into these; empty until the circuit fills them, which is
+                   also their honest no-JS state. *@
+                <div @ref="_bars" class="sbdlg-bars"></div>
+                <div @ref="_next" class="sc-next sbdlg-next"></div>
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        @if (Chart != null && Judgements != null)
+        {
+            @* A real link into the calculator with this play's counts — typing over them there
+               works exactly as if they had been typed first (§7.3). *@
+            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Calculate"
+                       Href="@CalculatorLink">@L["Open in the Score Calculator"]</MudButton>
+        }
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close"
+                   OnClick="Close">@L["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    // MaxWidth.False on purpose — the ChartDetailsDialog precedent: charts.scss forces
+    // `.mud-dialog-width-sm { max-width: none !important }`, so the cap lives in site.css
+    // under this dialog's own class instead.
+    private readonly DialogOptions _options = new()
+        { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.False };
+
+    private ElementReference _content;
+    private ElementReference _bars;
+    private ElementReference _next;
+    private IJSObjectReference? _module;
+    private IJSObjectReference? _engine;
+    private string? _renderedKey;
+
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public Chart? Chart { get; set; }
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+    [Parameter] public int? Score { get; set; }
+    [Parameter] public PhoenixPlate? Plate { get; set; }
+    [Parameter] public bool IsBroken { get; set; }
+    [Parameter] public JudgementCounts? Judgements { get; set; }
+    [Parameter] public DateTimeOffset? PlayedAt { get; set; }
+
+    /// <summary>Already localized by the caller — the sessions page owns its source words.</summary>
+    [Parameter] public string? SourceLabel { get; set; }
+
+    private string? SubLine => (SourceLabel, PlayedAt) switch
+    {
+        ({ } source, { } at) => $"{source} · {at.ToLocalTime():g}",
+        ({ } source, null) => source,
+        (null, { } at) => at.ToLocalTime().ToString("g"),
+        _ => null
+    };
+
+    private string CalculatorLink => Judgements == null
+        ? ScoreCalculatorMixes.PathFor(Mix)
+        : $"{ScoreCalculatorMixes.PathFor(Mix)}?perfects={Judgements.Perfects}&greats={Judgements.Greats}" +
+          $"&goods={Judgements.Goods}&bads={Judgements.Bads}&misses={Judgements.Misses}" +
+          $"&combo={Judgements.MaxCombo ?? 0}";
+
+    protected override void OnParametersSet()
+    {
+        // Closing unmounts the content and its element references die with it, so the next
+        // opening must fill again even for the same play.
+        if (!Visible) _renderedKey = null;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!Visible || Chart == null || Judgements == null || Score == null) return;
+        var key = $"{Chart.Id}|{Mix}|{Score}|{Judgements}";
+        if (key == _renderedKey) return;
+        // Set before the awaits: filling re-renders through MudBlazor, and a second pass
+        // arriving mid-fill must not start a competing one.
+        _renderedKey = key;
+
+        _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/score-breakdown.js");
+        if (_module == null) return;
+        // The engine closes over a mix, and the hero can be reselected across mixes — so it
+        // rebuilds per fill rather than caching a stale one.
+        if (_engine != null) await _engine.DisposeAsync();
+        _engine = await _module.InvokeAsync<IJSObjectReference>("createScoreBreakdown",
+            JsonSerializer.Deserialize<JsonElement>(ScoreCalculatorModel.EngineConstantsJson),
+            Mix.ToString(), CultureInfo.CurrentCulture.Name);
+        if (_engine == null) return;
+
+        // The recorded score, not the engine's recomputation: the header and the bars must
+        // agree, and the engine can sit a point off on some floors (§7.3).
+        var play = new
+        {
+            p = Judgements.Perfects, gr = Judgements.Greats, gd = Judgements.Goods,
+            bd = Judgements.Bads, m = Judgements.Misses, c = Judgements.MaxCombo ?? 0,
+            score = Score.Value
+        };
+        await _engine.InvokeVoidAsync("renderBars", _bars, play, new
+        {
+            Perfects = L["Perfects"].Value, Greats = L["Greats"].Value, Goods = L["Goods"].Value,
+            Bads = L["Bads"].Value, Misses = L["Misses"].Value, Combo = L["Max combo"].Value,
+            BrokenCombo = L["Broken combo"].Value,
+            Gained = L["Where your score came from"].Value, Lost = L["Where your loss came from"].Value,
+            NotEarned = L["not earned"].Value,
+            NothingLost = L["nothing lost — a perfect 1,000,000"].Value,
+            Clipped = L["the bar starts mid-segment"].Value
+        });
+        await _engine.InvokeVoidAsync("renderNextLetter", _next, play, new
+        {
+            Label = L["How close were you to the next letter?"].Value,
+            Points = L["{0} points"].Value, Best = L["This is the best grade there is."].Value,
+            Get = L["Get a {0} with"].Value,
+            MorePerfects = L["{0} more Perfects"].Value, FewerMisses = L["{0} fewer Misses"].Value,
+            FewerBads = L["{0} fewer Bads"].Value, FewerGoods = L["{0} fewer Goods"].Value,
+            FewerGreats = L["{0} fewer Greats"].Value, MoreCombo = L["{0} more Combo"].Value
+        });
+        await _module.InvokeVoidAsync("attachBreakdownTips", _content);
+    }
+
+    private Task Close()
+    {
+        return VisibleChanged.InvokeAsync(false);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_engine != null) await _engine.DisposeAsync();
+            if (_module != null) await _module.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // The circuit is gone and took the module with it.
+        }
+    }
+}

@@ -17802,3 +17802,95 @@ i.sc-band-ice { background: var(--grade-sssplus); }
     font-size: 12.5px;
     font-variant-numeric: tabular-nums;
 }
+
+/* ── The judgement strip (JudgementStrip) ─────────────────────────────────────────────────
+   A play's counts in the game's own --judg-* vocabulary: the colour is the label, the count
+   is the value — the one score fact rendered as coloured text rather than art (UX guide,
+   session-breakdown.md D43). Rendered as a <button> when it opens the Score Breakdown
+   Dialog, a <span> when it is only a readout; both wear the same face, the button just says
+   so on hover and focus. */
+.judg-strip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: .84rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.4;
+    padding: 1px 8px;
+    border-radius: 6px;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+    background: color-mix(in srgb, var(--mix-bg) 45%, transparent);
+    color: var(--mix-ink);
+}
+
+button.judg-strip {
+    cursor: pointer;
+}
+
+button.judg-strip:hover {
+    border-color: color-mix(in srgb, var(--mix-ink) 34%, transparent);
+}
+
+button.judg-strip:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: 1px;
+}
+
+.judg-strip-sm {
+    gap: 6px;
+    font-size: .76rem;
+    padding: 0 6px;
+}
+
+.judg-strip .judg-perfect { color: var(--judg-perfect); }
+.judg-strip .judg-great { color: var(--judg-great); }
+.judg-strip .judg-good { color: var(--judg-good); }
+.judg-strip .judg-bad { color: var(--judg-bad); }
+.judg-strip .judg-miss { color: var(--judg-miss); }
+
+.judg-strip-combo {
+    color: var(--mix-ink-muted);
+    font-size: .9em;
+}
+
+/* ── The Score Breakdown Dialog ───────────────────────────────────────────────────────────
+   The calculator's bars and walk (score-breakdown.js markup, sc-bar* classes above) inside
+   a dialog frame. Width capped here rather than via MaxWidth.Small — charts.scss globally
+   un-caps `.mud-dialog-width-sm`, the ChartDetailsDialog precedent. */
+.mud-dialog.score-breakdown-dialog {
+    max-width: 480px;
+}
+
+.mud-dialog.score-breakdown-dialog .mud-dialog-content {
+    max-height: min(70vh, 720px);
+    overflow-y: auto;
+}
+
+.sbdlg-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sbdlg-sub {
+    display: block;
+    color: var(--mix-ink-muted);
+    margin: 2px 0 8px;
+}
+
+.sbdlg-score {
+    margin: 4px 0 8px;
+}
+
+.sbdlg-bars {
+    margin-top: 14px;
+}
+
+.sbdlg-next {
+    display: block;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+}
