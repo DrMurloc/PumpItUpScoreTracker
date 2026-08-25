@@ -181,7 +181,14 @@ public sealed class LocalizationKeyTests
             // The score formula's credits (the score calculator's Phoenix page): real people,
             // same standing as DrMurloc. MR_WEQ also needs listing because the underscore keeps
             // the acronym scrub from seeing a token boundary.
-            "MR_WEQ", "daryen"
+            "MR_WEQ", "daryen",
+            // The stamina ladder's own name — an event named FOR the Murlocs travels as
+            // written in their locale, same standing as BITE.
+            "March of Murlocs",
+            // A worked example of a video link, quoted so a player can match the shape they
+            // need to paste. A URL is machine text in every locale — same standing as
+            // piugame.com above, which is already listed.
+            "https://youtu.be/"
         ];
 
         var violations = new List<string>();

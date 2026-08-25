@@ -40,6 +40,7 @@ public static class EventCompetitionRegistrationExtensions
         configurator.AddConsumer<ContributionsDeletionConsumer>();
         configurator.AddConsumer<QualifiersSaga>();
         configurator.AddConsumer<MarchOfMurlocsHandler>();
+        configurator.AddConsumer<MoMDiscordSaga>();
         configurator.AddConsumer<AccountPurgeConsumer>();
     }
 }

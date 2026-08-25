@@ -170,13 +170,21 @@ public sealed class ShellMoreSheetTests : ComponentTestBase
     [Fact]
     public void HighlightedTournamentsJoinCompete()
     {
-        var stamina = new TournamentRecord(Guid.NewGuid(), Name.From("Storm 2026"), 12,
+        // A Stamina row is a MoM board, and the live season IS /MarchOfMurlocs now — the
+        // static link covers it, so no per-board link joins (march-of-murlocs.md §11.2).
+        var stamina = new TournamentRecord(Guid.NewGuid(), Name.From("Summer 2026 - Doubles"), 12,
             TournamentType.Stamina, "Online", IsHighlighted: true, LinkOverride: null,
+            StartDate: null, EndDate: null, IsMoM: true);
+        var qualifiers = new TournamentRecord(Guid.NewGuid(), Name.From("Storm 2026"), 12,
+            TournamentType.Match, "Online", IsHighlighted: true, LinkOverride: null,
             StartDate: null, EndDate: null, IsMoM: false);
 
-        var sheet = Render(Model(events: new[] { stamina }));
+        var sheet = Render(Model(events: new[] { stamina, qualifiers }));
 
-        Assert.Contains($"/Tournament/Stamina/{stamina.Id}", HrefsUnder(sheet, "Compete"));
+        var hrefs = HrefsUnder(sheet, "Compete");
+        Assert.Contains("/MarchOfMurlocs", hrefs);
+        Assert.Contains($"/Tournament/{qualifiers.Id}/Qualifiers", hrefs);
+        Assert.DoesNotContain(hrefs, href => href.Contains("/Tournament/Stamina/"));
     }
 
     /// <summary>

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Localization;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
+using ScoreTracker.EventCompetition.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.WeeklyChallenge.Contracts.Queries;
@@ -86,6 +87,9 @@ public sealed class StaticHeadResolver
 
         if (path.StartsWithSegments("/MixChanges", out var pair))
             return await ResolveMixChanges(pair, currentMix, cancellationToken);
+
+        if (path.StartsWithSegments("/MarchOfMurlocs", out var momRest))
+            return await ResolveMoM(momRest, cancellationToken);
 
         // /Charts/{mix}/{song}/{difficulty} — the canonical chart page. Historical triples
         // 301 to canonical before rendering, so a rendered page is always self-canonical.
@@ -291,6 +295,85 @@ public sealed class StaticHeadResolver
         return new StaticHeadModel(title, description, null,
             $"https://piuscores.arroweclip.se{ScoreCalculatorMixes.PathFor(mix)}",
             ScoreCalculator: new ScoreCalculatorHeadModel(name));
+    }
+
+    /// <summary>
+    ///     The March of Murlocs Season pages (march-of-murlocs.md §11.2): the season resolves
+    ///     from the dated or legacy-name segments exactly as the page resolves it, and every
+    ///     URL form canonicalizes to the season's Doubles board URL — the bare route included,
+    ///     so the crawled URL never moves when a season ends. Session/Planner segments are
+    ///     circuit pages that own their heads and answer null here.
+    /// </summary>
+    private async Task<StaticHeadModel?> ResolveMoM(PathString rest,
+        CancellationToken cancellationToken)
+    {
+        var segments = rest.Value?.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries)
+                       ?? Array.Empty<string>();
+        // The Session Breakdown is the Discord card's link target, so its unfurl carries the
+        // result; drafts answer null to an anonymous resolver and get no head. The editor and
+        // the Planner are circuit pages that own their own titles.
+        if (segments.Length == 2 && segments[0].Equals("Session", StringComparison.OrdinalIgnoreCase)
+                                 && Guid.TryParse(segments[1], out var sessionId))
+        {
+            var session = await _mediator.Send(new GetMoMSessionQuery(sessionId), cancellationToken);
+            if (session?.PublishedAt == null) return null;
+            var type = _localizer[session.ChartType == ChartType.Single ? "Singles" : "Doubles"];
+            return new StaticHeadModel(
+                $"{session.UserName} — {session.Season.Name} {type}",
+                _localizer[
+                    "A March of Murlocs session: {0} points over {1} charts, average balanced difficulty {2}, on the {3} {4} board.",
+                    session.TotalScore.ToString("N0"), session.ChartsPlayed,
+                    session.AverageDifficulty.ToString("F2"), session.Season.Name, type].Value,
+                null,
+                $"https://piuscores.arroweclip.se{MoM.MoMRoutes.SessionPath(session.Id)}");
+        }
+
+        if (segments.Length > 0 &&
+            (segments[0].Equals("Session", StringComparison.OrdinalIgnoreCase) ||
+             segments[0].Equals("Planner", StringComparison.OrdinalIgnoreCase)))
+            return null;
+
+        GetMoMSeasonQuery query;
+        switch (segments.Length)
+        {
+            case 0:
+                query = new GetMoMSeasonQuery();
+                break;
+            case 1:
+                query = new GetMoMSeasonQuery(LegacyName: segments[0]);
+                break;
+            case 2 or 3 when int.TryParse(segments[0], out var year) &&
+                             MoM.MoMRoutes.TryParseSeasonWord(segments[1], out var quarter):
+                query = new GetMoMSeasonQuery(year, quarter);
+                break;
+            case 2 or 3:
+                query = new GetMoMSeasonQuery(LegacyName: segments[0]);
+                break;
+            default:
+                return null;
+        }
+
+        var season = await _mediator.Send(query, cancellationToken);
+        if (season == null) return null;
+
+        var sessions = season.Boards.Sum(b => b.SessionCount);
+        var canonicalType = season.Boards
+            .Where(b => b.Mix == MixEnum.Phoenix)
+            .OrderBy(b => b.ChartType == ChartType.Double ? 0 : 1)
+            .Select(b => (ChartType?)b.ChartType)
+            .FirstOrDefault() ?? ChartType.Double;
+        var description = sessions == 1
+            ? _localizer[
+                "March of Murlocs {0}: the quarterly Pump It Up stamina ladder. 1 hour 45 minutes to bank as many points as you can, scored with PUMBILITY+. 1 session on the boards.",
+                season.Name].Value
+            : _localizer[
+                "March of Murlocs {0}: the quarterly Pump It Up stamina ladder. 1 hour 45 minutes to bank as many points as you can, scored with PUMBILITY+. {1} sessions on the boards.",
+                season.Name, sessions].Value;
+        return new StaticHeadModel(
+            _localizer["March of Murlocs — {0}", season.Name],
+            description,
+            null,
+            $"https://piuscores.arroweclip.se{MoM.MoMRoutes.BoardPath(season.Ref, canonicalType)}");
     }
 
     /// <summary>

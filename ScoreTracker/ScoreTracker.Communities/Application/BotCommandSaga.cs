@@ -713,6 +713,7 @@ namespace ScoreTracker.Communities.Application
                 case "weekly": kind = DiscordFeedKind.WeeklyCharts; return true;
                 case "daily": kind = DiscordFeedKind.DailyStep; return true;
                 case "official": kind = DiscordFeedKind.OfficialLeaderboards; return true;
+                case "mom": kind = DiscordFeedKind.MarchOfMurlocs; return true;
                 default: kind = default; return false;
             }
         }
@@ -728,6 +729,7 @@ namespace ScoreTracker.Communities.Application
             DiscordFeedKind.WeeklyCharts => "Weekly Charts",
             DiscordFeedKind.DailyStep => "Daily Step",
             DiscordFeedKind.OfficialLeaderboards => "Official Leaderboards",
+            DiscordFeedKind.MarchOfMurlocs => "March of Murlocs",
             _ => kind.ToString()
         };
 
@@ -736,6 +738,7 @@ namespace ScoreTracker.Communities.Application
             DiscordFeedKind.WeeklyCharts => "📅",
             DiscordFeedKind.DailyStep => "☀️",
             DiscordFeedKind.OfficialLeaderboards => "🌍",
+            DiscordFeedKind.MarchOfMurlocs => "⏱️",
             _ => "📣"
         };
 

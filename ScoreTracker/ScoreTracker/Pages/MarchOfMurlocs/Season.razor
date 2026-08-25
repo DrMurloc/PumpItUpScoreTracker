@@ -1,0 +1,388 @@
+@page "/MarchOfMurlocs"
+@page "/MarchOfMurlocs/{Year:int}/{SeasonWord}"
+@page "/MarchOfMurlocs/{Year:int}/{SeasonWord}/{TypeSlug}"
+@page "/MarchOfMurlocs/{LegacyName}"
+@page "/MarchOfMurlocs/{LegacyName}/{TypeSlug}"
+@using MediatR
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Components.MoM
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ScoreTracker.Web.Services.MoM
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@inject IMediator Mediator
+@inject IUiSettingsAccessor UiSettings
+@inject ICurrentUserAccessor CurrentUser
+@inject IDateTimeOffsetAccessor Clock
+@inject CommunityGlowReader Glow
+@inject NavigationManager Nav
+
+@* The Season page (docs/design/march-of-murlocs.md §11.2). Static SSR — no @rendermode —
+   so a season's boards are real crawlable HTML: the live season is the landing page, every
+   season has a dated URL, and the Doubles/Singles pair are links in the tier lists' idiom
+   rather than a circuit's button group. The one interactive piece, the Past Seasons dialog,
+   is a native <dialog> wired by mom.js. Which mix's boards you see follows the mix you are
+   on; Phoenix 2 has no boards until its scoring session, so it explains itself (D12). *@
+
+<div class="mom-page">
+    <MoMFrame Active="MoMFrame.MoMTab.Season" />
+
+    @if (_season == null)
+    {
+        <div class="mom-empty-board">
+            <div class="mom-big">@L["No season is running."]</div>
+            <p>@L["The next March of Murlocs season opens at the start of the quarter."]</p>
+        </div>
+    }
+    else
+    {
+        <div class="mom-season">
+            <div>
+                <div class="mom-season-name">@_season.Name</div>
+                <div class="mom-season-dates">@_season.StartsAt.ToString("d MMMM yyyy") – @_season.EndsAt.ToString("d MMMM yyyy")</div>
+            </div>
+            @if (_season.IsLive)
+            {
+                <div class="mom-countdown">
+                    <div class="n num">@_daysLeft</div>
+                    <div class="l">@(_daysLeft == 1 ? L["day left"] : L["days left"])</div>
+                </div>
+            }
+        </div>
+        @if (_season.IsLive)
+        {
+            <div class="mom-seasonbar"><i style="width:@(_elapsedPercent)%"></i></div>
+        }
+
+        @if (_phoenix2)
+        {
+            @* D12: the board explains itself rather than hiding. Phoenix 2 boards arrive
+               with the scoring session (Slice 5). *@
+            <div class="mom-gated">
+                <div class="mom-big">@L["Phoenix 2 scoring is still being tuned."]</div>
+                <p>@L["Phoenix 2 gets its own Doubles and Singles boards, on Phoenix 2's own rating system. They open once the scoring is settled — this season runs on Phoenix."]</p>
+            </div>
+        }
+        else if (_boards.Count > 0)
+        {
+            <div class="mom-standing">
+                @foreach (var board in _boards)
+                {
+                    var standing = _standings[board.BoardId];
+                    var showing = board.BoardId == _selected!.BoardId;
+                    @if (standing.Best == null)
+                    {
+                        @* The card doubles as the board switcher (§11.2) — but on the board you
+                           are already looking at there is nothing to switch to, so it becomes the
+                           record affordance instead. The CTA only appears where it is the real
+                           destination: a card that says "record" and navigates to the board you
+                           are already on reads as a page that did nothing. *@
+                        var recordHere = showing && _season.IsLive;
+                        <a class="mom-stand empty @(showing ? "showing" : null)" href="@(recordHere ? RecordHref(board.BoardId) : MoMRoutes.BoardPath(_season.Ref, board.ChartType))" aria-current="@(showing ? "true" : null)">
+                            <span class="mom-stand-main">
+                                <span class="mom-stand-type">@TypeName(board.ChartType)</span>
+                                @if (_season.IsLive)
+                                {
+                                    @if (recordHere)
+                                    {
+                                        <span class="mom-stand-cta">@L["Record your first session →"]</span>
+                                    }
+                                    <span class="mom-stand-sub">@L["You have not played this board this season."]</span>
+                                }
+                                else
+                                {
+                                    <span class="mom-stand-sub">@L["you sat this one out"]</span>
+                                }
+                            </span>
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="mom-stand entered @(showing ? "showing" : null)" href="@MoMRoutes.BoardPath(_season.Ref, board.ChartType)" aria-current="@(showing ? "true" : null)">
+                            <span class="mom-stand-place"><span class="n num">@standing.Best.Place</span><span class="o">@OrdinalSuffix(standing.Best.Place)</span></span>
+                            <span class="mom-stand-main">
+                                <span class="mom-stand-type">@TypeName(board.ChartType)</span>
+                                <span class="mom-stand-score num">@standing.Best.TotalScore.ToString("N0")</span>
+                                <span class="mom-stand-sub num">
+                                    @L["{0} charts", standing.Best.ChartsPlayed] · @Downtime(standing.Best.RestTime) @L["downtime"] ·
+                                    @(standing.Count > 1 ? L["your best of {0} sessions", standing.Count] : L["your only session this season"])
+                                </span>
+                            </span>
+                        </a>
+                    }
+                }
+            </div>
+
+            <div class="mom-boardbar">
+                <div class="mom-typegroup" role="group" aria-label="@L["Chart Type"]">
+                    @foreach (var board in _boards)
+                    {
+                        <a href="@MoMRoutes.BoardPath(_season.Ref, board.ChartType)" aria-current="@(board.BoardId == _selected!.BoardId ? "page" : null)">@TypeName(board.ChartType)</a>
+                    }
+                </div>
+                <span class="mom-boardcount num">
+                    @(_selected!.Rows.Count == 0 ? L["no sessions yet"] : _selected.Rows.Count == 1 ? L["1 session"] : L["{0} sessions", _selected.Rows.Count])
+                </span>
+                @if (CurrentUser.IsLoggedIn && (_rivals.Count > 0 || _clubmates.Count > 0 || _standings[_selected.BoardId].Count > 0))
+                {
+                    <div class="mom-legend">
+                        <span><i style="background:var(--daily-you)"></i>@L["You"]</span>
+                        <span><i style="background:var(--daily-rival)"></i>@L["Rival"]</span>
+                        <span><i style="background:var(--daily-community)"></i>@L["Your Communities"]</span>
+                    </div>
+                }
+            </div>
+
+            @if (_selected!.Rows.Count == 0)
+            {
+                <div class="mom-empty-board">
+                    <div class="mom-big">@L["Nobody has played {0} yet this season.", TypeName(_selected.ChartType)]</div>
+                    @if (_season.IsLive)
+                    {
+                        <p>@L["Be the first. One session, one hour forty-five, as many points as you can bank."]</p>
+                        <a class="mom-btn" href="@RecordHref(_selected.BoardId)">@L["Record a session"]</a>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="mom-rows">
+                    @foreach (var row in _selected.Rows)
+                    {
+                        var relationship = CommunityGlowReader.RowClass(row.UserId, _meId, _rivals, _clubmates, "mom-you");
+                        var sessionIndex = _sessionIndexes[row.SessionId];
+                        <a class="mom-row @PlaceClass(row.Place) @relationship" href="@MoMRoutes.SessionPath(row.SessionId)"
+                           title="@RowTitle(row.UserName, relationship)"
+                           aria-label="@RowLabel(row, relationship)">
+                            <span class="mom-rowplace num">@row.Place</span>
+                            <span class="mom-rowid">
+                                @if (row.ProfileImage != null)
+                                {
+                                    <img class="mom-avatar" src="@row.ProfileImage" alt="" loading="lazy" />
+                                }
+                                @if (LabelUser(row) is { } labelUser)
+                                {
+                                    <UserLabel User="labelUser" />
+                                }
+                                else
+                                {
+                                    <span class="user-label"><span class="user-label-name">@row.UserName</span></span>
+                                }
+                                @if (sessionIndex > 0)
+                                {
+                                    <span class="mom-runchip">@L["session #{0}", sessionIndex + 1]</span>
+                                }
+                            </span>
+                            <span class="mom-rowtail">
+                                <span class="mom-stat"><span class="v num">@row.ChartsPlayed</span><span class="k">@L["Charts"]</span></span>
+                                <span class="mom-stat diff" title="@L["Average balanced level — the season's frozen scoring difficulty, which is what actually priced each chart."]"><span class="v num">@row.AverageDifficulty.ToString("F2")</span><span class="k">@L["avg lvl"]</span></span>
+                                <span class="mom-stat"><span class="v num">@Downtime(row.RestTime)</span><span class="k">@L["downtime"]</span></span>
+                                <span class="mom-rowdate">@row.PublishedAt.ToString("d MMM")</span>
+                                <span class="mom-vid @(row.VideoUrl == null ? "none" : null)" title="@(row.VideoUrl == null ? null : L["Has video"])">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+                                </span>
+                                <span class="mom-rowtotal num">@row.TotalScore.ToString("N0")</span>
+                            </span>
+                        </a>
+                    }
+                </div>
+            }
+
+        }
+
+        <div class="mom-footlinks">
+            @if (_season.IsLive && !_phoenix2 && _selected != null)
+            {
+                <a class="mom-btn" href="@RecordHref(_selected.BoardId)">@L["Record a session"]</a>
+            }
+            <button type="button" class="mom-btn ghost" data-mom-seasons-open>@L["Past seasons"]</button>
+            <a class="mom-btn ghost" href="@MoMRoutes.PlannerPath">@L["Plan a session"]</a>
+        </div>
+
+        <nav class="mom-prevnext">
+            @if (_season.Previous != null)
+            {
+                <a href="@MoMRoutes.SeasonPath(_season.Previous)">← @_season.Previous.Name</a>
+            }
+            @if (_season.Next != null)
+            {
+                <a class="next" href="@MoMRoutes.SeasonPath(_season.Next)">@_season.Next.Name →</a>
+            }
+        </nav>
+    }
+</div>
+
+@code {
+    [Parameter] public int? Year { get; set; }
+    [Parameter] public string? SeasonWord { get; set; }
+    [Parameter] public string? LegacyName { get; set; }
+    [Parameter] public string? TypeSlug { get; set; }
+
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+
+    private MoMSeasonView? _season;
+    private IReadOnlyList<MoMBoardSummary> _boards = Array.Empty<MoMBoardSummary>();
+    private MoMBoardView? _selected;
+    private readonly Dictionary<Guid, (MoMBoardRow? Best, int Count)> _standings = new();
+    private readonly Dictionary<Guid, int> _sessionIndexes = new();
+    private IReadOnlySet<Guid> _rivals = new HashSet<Guid>();
+    private IReadOnlySet<Guid> _clubmates = new HashSet<Guid>();
+    private Guid? _meId;
+    private bool _phoenix2;
+    private int _daysLeft;
+    private int _elapsedPercent;
+
+    private string TypeName(ChartType type)
+    {
+        return type == ChartType.Single ? L["Singles"] : L["Doubles"];
+    }
+
+    private static string PlaceClass(int place)
+    {
+        return place <= 3 ? $"p{place}" : string.Empty;
+    }
+
+    private static string OrdinalSuffix(int place)
+    {
+        return MoMFrame.Ordinal(place)[place.ToString().Length..];
+    }
+
+    private static string Downtime(TimeSpan rest)
+    {
+        return $"{(int)rest.TotalMinutes}:{rest.Seconds:00}";
+    }
+
+    private string RecordHref(Guid boardId)
+    {
+        return CurrentUser.IsLoggedIn ? MoMRoutes.NewSessionPath(boardId) : "/Login";
+    }
+
+    private string RowTitle(string userName, string relationship)
+    {
+        var word = RelationshipWord(relationship);
+        return word == null ? userName : $"{userName} — {word}";
+    }
+
+    private string RowLabel(MoMBoardRow row, string relationship)
+    {
+        var label = $"{row.UserName}, #{row.Place}, {L["{0} points", row.TotalScore.ToString("N0")]}";
+        var word = RelationshipWord(relationship);
+        return word == null ? label : $"{label} — {word}";
+    }
+
+    private string? RelationshipWord(string relationship)
+    {
+        return CommunityGlowReader.RelationshipKey(relationship, "mom-you") is { } key
+            ? L[key].Value
+            : null;
+    }
+
+    private static User? LabelUser(MoMBoardRow row)
+    {
+        if (row.ProfileImage == null) return null;
+        return new User(row.UserId, Name.From(row.UserName), true, (Name?)null,
+            row.ProfileImage, row.Country == null ? (Name?)null : Name.From(row.Country));
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var cancellation = HttpContext?.RequestAborted ?? default;
+
+        GetMoMSeasonQuery query;
+        if (Year != null && SeasonWord != null)
+        {
+            if (!MoMRoutes.TryParseSeasonWord(SeasonWord, out var quarter))
+            {
+                Nav.NotFound();
+                return;
+            }
+
+            query = new GetMoMSeasonQuery(Year, quarter);
+        }
+        else if (LegacyName != null)
+        {
+            query = new GetMoMSeasonQuery(LegacyName: LegacyName);
+        }
+        else
+        {
+            query = new GetMoMSeasonQuery();
+        }
+
+        _season = await Mediator.Send(query, cancellation);
+        if (_season == null)
+        {
+            // A dated or named URL that resolves to nothing is a real 404; the bare route
+            // with an empty database renders its own empty state instead.
+            if (Year != null || LegacyName != null) Nav.NotFound();
+            return;
+        }
+
+        var now = Clock.Now;
+        _daysLeft = Math.Max(1, (int)Math.Ceiling((_season.EndsAt - now).TotalDays));
+        var total = (_season.EndsAt - _season.StartsAt).TotalDays;
+        _elapsedPercent = total <= 0
+            ? 0
+            : Math.Clamp((int)Math.Round((now - _season.StartsAt).TotalDays / total * 100), 0, 100);
+
+        // Which boards you see follows the mix you are on, like the weekly boards; XX has no
+        // MoM, so it reads Phoenix. Phoenix 2 has no boards until Slice 5 and explains itself.
+        var viewerMix = await UiSettings.GetSelectedMix();
+        _phoenix2 = viewerMix == MixEnum.Phoenix2;
+        var boardMix = _phoenix2 ? MixEnum.Phoenix2 : MixEnum.Phoenix;
+        _boards = _season.Boards.Where(b => b.Mix == boardMix)
+            .OrderBy(b => b.ChartType == ChartType.Double ? 0 : 1)
+            .ToArray();
+        if (_phoenix2 && _boards.Count == 0) return;
+
+        ChartType selectedType;
+        if (TypeSlug != null)
+        {
+            if (!MoMRoutes.TryParseTypeSlug(TypeSlug, out selectedType) ||
+                _boards.All(b => b.ChartType != selectedType))
+            {
+                Nav.NotFound();
+                return;
+            }
+        }
+        else
+        {
+            selectedType = _boards.Any(b => b.ChartType == ChartType.Double) || _boards.Count == 0
+                ? ChartType.Double
+                : _boards[0].ChartType;
+        }
+
+        _meId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null;
+        _standings.Clear();
+        foreach (var board in _boards)
+        {
+            var view = await Mediator.Send(new GetMoMBoardQuery(board.BoardId), cancellation);
+            if (view == null) continue;
+            var mine = _meId == null
+                ? Array.Empty<MoMBoardRow>()
+                : view.Rows.Where(r => r.UserId == _meId).ToArray();
+            _standings[board.BoardId] = (mine.OrderBy(r => r.Place).FirstOrDefault(), mine.Length);
+            if (board.ChartType == selectedType) _selected = view;
+        }
+
+        if (_selected != null)
+        {
+            // "session #2" chips: a player's rows are numbered by publication order (D16).
+            _sessionIndexes.Clear();
+            foreach (var group in _selected.Rows.GroupBy(r => r.UserId))
+            {
+                var ordered = group.OrderBy(r => r.PublishedAt).ToArray();
+                for (var i = 0; i < ordered.Length; i++)
+                    _sessionIndexes[ordered[i].SessionId] = ordered.Length > 1 ? i : 0;
+            }
+
+            _rivals = await Glow.GetMyRivalIds(boardMix);
+            _clubmates = await Glow.GetMyCommunityMemberIds();
+        }
+    }
+}

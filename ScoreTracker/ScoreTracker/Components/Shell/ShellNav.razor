@@ -65,14 +65,13 @@
             }
             @* Compete, not Tools (round 11): the randomizer runs micro-tournaments now. *@
             <ShellMenuItem Href="/ChartRandomizer" Icon="@Icons.Material.Filled.Casino">@L["Chart Randomizer"]</ShellMenuItem>
-            <ShellMenuItem Href="/Tournaments/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</ShellMenuItem>
-            @foreach (var tourney in Model.HighlightedEvents)
+            <ShellMenuItem Href="/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</ShellMenuItem>
+            @* MoM boards arrive highlighted as Stamina rows, but the live season IS the
+               /MarchOfMurlocs landing page now — a second per-board link would be the same
+               destination twice. *@
+            @foreach (var tourney in Model.HighlightedEvents.Where(t => t.Type != TournamentType.Stamina))
             {
-                @if (tourney.Type == TournamentType.Stamina)
-                {
-                    <ShellMenuItem Href=@($"/Tournament/Stamina/{tourney.Id}") Icon="@Icons.Material.Filled.Event">@tourney.Name</ShellMenuItem>
-                }
-                else if (tourney.LinkOverride != null)
+                @if (tourney.LinkOverride != null)
                 {
                     <ShellMenuItem Href="@tourney.LinkOverride.ToString()" External="true" Icon="@Icons.Material.Filled.Event">@tourney.Name</ShellMenuItem>
                 }

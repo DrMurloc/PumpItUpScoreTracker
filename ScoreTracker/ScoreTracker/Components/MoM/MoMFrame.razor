@@ -1,0 +1,112 @@
+@using MediatR
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.MoM
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components.MoM
+@inject IMediator Mediator
+
+@* The section chrome every MoM page wears: the title, the nav, and the Past Seasons dialog
+   (§11.8 — a picker, not a page; the crawlable artifact is each season's own dated URL, and
+   the season pages carry previous/next links so the archive stays reachable without a
+   route). The dialog is a native <dialog> wired by mom.js, so it works identically on the
+   static Season page and inside a circuit. *@
+
+<div class="mom-frame-head">
+    <div>
+        <h1 class="mom-frame-title">March of Murlocs</h1>
+        <div class="mom-tagline">@L["1 hour 45 minutes. Bank as many points as you can."]</div>
+    </div>
+    <nav class="mom-frame-nav">
+        <a href="@MoMRoutes.Root" aria-current="@(Active == MoMTab.Season ? "page" : null)">@L["This season"]</a>
+        <a href="@MoMRoutes.PlannerPath" aria-current="@(Active == MoMTab.Planner ? "page" : null)">@L["Planner"]</a>
+        <button type="button" data-mom-seasons-open>@L["Past seasons"]</button>
+        <a href="@MoMRoutes.RulesUrl" target="_blank" rel="noopener">@L["Rules"]</a>
+    </nav>
+</div>
+
+<dialog id="mom-seasons-dialog" aria-labelledby="mom-seasons-title" class="mom-dialog">
+    <div class="mom-dlg-head">
+        <h2 id="mom-seasons-title">@L["Seasons"]</h2>
+        <p>@L["Every March of Murlocs so far. Pick one to see its boards."]</p>
+    </div>
+    <div class="mom-dlg-body">
+        @if (_seasons.Count == 0)
+        {
+            <p class="mom-dlg-empty">@L["No seasons yet."]</p>
+        }
+        @foreach (var season in _seasons)
+        {
+            <a class="mom-srow @(season.IsLive ? "live" : null)" href="@MoMRoutes.SeasonPath(season.Season)">
+                <span class="mom-srow-top">
+                    <span class="mom-sname">@season.Season.Name</span>
+                    @if (season.IsLive)
+                    {
+                        <span class="mom-livechip">@L["running now"]</span>
+                    }
+                    <span class="mom-sdates">@season.StartsAt.ToString("d MMM yyyy") – @season.EndsAt.ToString("d MMM yyyy")</span>
+                </span>
+                <span class="mom-sboards">
+                    @foreach (var board in season.Boards.OrderBy(b => b.ChartType == ChartType.Double ? 0 : 1))
+                    {
+                        <span class="mom-sboard">
+                            <span class="mom-btype @(board.ChartType == ChartType.Single ? "s" : "d")">@(board.ChartType == ChartType.Single ? "S" : "D")</span>
+                            <span class="mom-bruns num">@(board.SessionCount == 1 ? L["1 session"] : L["{0} sessions", board.SessionCount])</span>
+                            @if (board.WinnerName != null)
+                            {
+                                <span class="mom-bwin"><span class="mom-crown" aria-hidden="true">♛</span> <b>@board.WinnerName</b> <span class="num">@board.WinnerScore?.ToString("N0")</span></span>
+                            }
+                            else
+                            {
+                                <span class="mom-bwin mom-bwin-none">@L["no sessions yet"]</span>
+                            }
+                            @if (board.YourPlace == 1)
+                            {
+                                <span class="mom-byou">@L["you won it"]</span>
+                            }
+                            else if (board.YourPlace != null)
+                            {
+                                <span class="mom-byou num">@L["you were #{0} — {1}", board.YourPlace.Value, board.YourScore?.ToString("N0") ?? ""]</span>
+                            }
+                            else if (board.SessionCount > 0)
+                            {
+                                <span class="mom-byou none">@L["you sat this one out"]</span>
+                            }
+                        </span>
+                    }
+                </span>
+            </a>
+        }
+    </div>
+    <div class="mom-dlg-actions">
+        <button type="button" class="mom-btn ghost" data-mom-seasons-close>@L["Close"]</button>
+    </div>
+</dialog>
+
+@code {
+    public enum MoMTab
+    {
+        None,
+        Season,
+        Planner
+    }
+
+    [Parameter] public MoMTab Active { get; set; } = MoMTab.None;
+
+    private IReadOnlyList<MoMSeasonListing> _seasons = Array.Empty<MoMSeasonListing>();
+
+    /// <summary>1st/2nd/3rd/4th…, matching the mock's ordinal treatment for placements.</summary>
+    public static string Ordinal(int place)
+    {
+        var suffix = place % 100 is 11 or 12 or 13
+            ? "th"
+            : (place % 10) switch { 1 => "st", 2 => "nd", 3 => "rd", _ => "th" };
+        return $"{place}{suffix}";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _seasons = await Mediator.Send(new GetMoMSeasonsQuery());
+    }
+}

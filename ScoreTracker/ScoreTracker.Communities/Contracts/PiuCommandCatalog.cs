@@ -171,6 +171,8 @@ namespace ScoreTracker.Communities.Contracts
                     new BotSubCommand("daily", "Daily Step — yesterday's board and today's chart",
                         new[] { RequiredMix, Language }, Ephemeral: true),
                     new BotSubCommand("official", "Official leaderboards — the weekly digest",
+                        new[] { RequiredMix, Language }, Ephemeral: true),
+                    new BotSubCommand("mom", "March of Murlocs — every session published on this mix",
                         new[] { RequiredMix, Language }, Ephemeral: true)
                 });
 
