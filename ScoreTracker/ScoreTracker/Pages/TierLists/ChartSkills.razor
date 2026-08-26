@@ -1017,26 +1017,14 @@ else
             return archived.Count > 0 ? archived : null;
         }
 
+        // No NPS chip on a card: the raw number means nothing at a glance (owner, 2026-08-26),
+        // so it lives on the chart page and dialog where there is room to explain it. Speed
+        // still reaches the card as a claim — the Very Fast / Very Slow chip — because a WORD
+        // is readable where a figure is not.
         var chips = IdentityChips.ToCardChips(
             _identity.TryGetValue(chart.Id, out var identity) ? identity : null,
             _settings.ShowSkillMetric, L);
-        // Speed leads, because it is the one fact about a chart that needs no comparison to be
-        // useful. It is left off the Speed grouping, where the section heading is already the
-        // band and its range — the card would be repeating its own heading back.
-        if (_groupBy != "Speed" && NpsChip(chart.Id) is { } nps) chips = chips.Prepend(nps).ToArray();
         return chips.Count > 0 ? chips : null;
-    }
-
-    /// <summary>
-    ///     The chart's measured notes per second, from the Speed list's stored Order — the same
-    ///     number the bands were cut from, so a card and its section can never disagree.
-    /// </summary>
-    private TierListChartCard.CardSkillChip? NpsChip(Guid chartId)
-    {
-        return _speedBands.TryGetValue(chartId, out var band)
-            ? new TierListChartCard.CardSkillChip(L["{0} NPS", (band.Order / 100.0).ToString("0.#")].Value,
-                "chip-nps", null)
-            : null;
     }
 
     private bool ChabalaLensActive => _tierListType == "Chabala" && ChabalaAvailable;

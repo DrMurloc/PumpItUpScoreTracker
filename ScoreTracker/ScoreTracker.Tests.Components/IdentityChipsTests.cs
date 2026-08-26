@@ -26,9 +26,10 @@ public sealed class IdentityChipsTests : ComponentTestBase
     }
 
     private static IdentityChipRecord Chip(IdentityChipKind kind, string badge, string display,
-        BadgeCategory? family = BadgeCategory.Brackets, decimal? detail = null)
+        BadgeCategory? family = BadgeCategory.Brackets, decimal? detail = null,
+        IdentityTier tier = IdentityTier.Identity, IReadOnlyList<IdentityChipBadge>? badges = null)
     {
-        return new IdentityChipRecord(kind, badge, display, family, detail);
+        return new IdentityChipRecord(kind, tier, badge, display, family, detail, badges);
     }
 
     [Fact]
@@ -38,14 +39,56 @@ public sealed class IdentityChipsTests : ComponentTestBase
             Chip(IdentityChipKind.Unique, "split", "Splits", BadgeCategory.DoublesTech, 0.4m),
             Chip(IdentityChipKind.Core, "bracket", "Brackets", BadgeCategory.Brackets, 0.5m),
             Chip(IdentityChipKind.Spike, string.Empty, string.Empty, null, 1.3m),
-            Chip(IdentityChipKind.Crux, "twist_90", "Twist 90", BadgeCategory.Twists)), false, Localizer);
+            Chip(IdentityChipKind.Width, "Half-Double", "Half-Double", null)), false, Localizer);
 
         Assert.Contains("chip-unique", chips[0].CategoryClass);
         Assert.Contains("badgecat-doublestech", chips[0].CategoryClass);
         // Core is the plain chip: family tint only, no kind marker.
         Assert.Equal("badgecat-brackets", chips[1].CategoryClass);
         Assert.Contains("chip-spike", chips[2].CategoryClass);
-        Assert.Contains("chip-crux", chips[3].CategoryClass);
+        // Shape claims sit outside the five families, like the spike.
+        Assert.Contains("chip-geometry", chips[3].CategoryClass);
+        Assert.DoesNotContain("badgecat-", chips[3].CategoryClass);
+    }
+
+    /// <summary>
+    ///     One window, so one chip: the owner's own line for BSPower was "Hardest 10s: Drills
+    ///     90 degree twists". Each badge keeps its family inside the shared chip, so merging the
+    ///     pair costs nothing a reader could have used.
+    /// </summary>
+    [Fact]
+    public void TheHardSectionChipCarriesItsLengthAndBothBadgesFamilies()
+    {
+        var chips = IdentityChips.ToCardChips(Identity(
+            Chip(IdentityChipKind.HardSection, string.Empty, string.Empty, null, 9.75m,
+                badges: new[]
+                {
+                    new IdentityChipBadge("drill", "Drills", BadgeCategory.StaminaAndRuns),
+                    new IdentityChipBadge("twist_90", "90° Twists", BadgeCategory.Twists)
+                })), false, Localizer);
+
+        var section = Assert.Single(chips);
+        Assert.Contains("10", section.Label);
+        Assert.Contains("chip-section", section.CategoryClass);
+        Assert.Equal(new[] { "Drills", "90° Twists" }, section.Parts!.Select(p => p.Label));
+        Assert.Contains("badgecat-staminaandruns", section.Parts![0].CategoryClass);
+        Assert.Contains("badgecat-twists", section.Parts![1].CategoryClass);
+    }
+
+    /// <summary>
+    ///     The tier reaches the card as a flag, because the card draws the two groups itself —
+    ///     one row labelled Identity, one labelled Features.
+    /// </summary>
+    [Fact]
+    public void TheTierTravelsToTheCardSoTheGroupsCanBeNamed()
+    {
+        var chips = IdentityChips.ToCardChips(Identity(
+            Chip(IdentityChipKind.Core, "bracket", "Brackets", BadgeCategory.Brackets, 0.5m),
+            Chip(IdentityChipKind.Core, "drill", "Drills", BadgeCategory.StaminaAndRuns, 0.4m,
+                IdentityTier.Feature)), false, Localizer);
+
+        Assert.True(chips[0].IsIdentity);
+        Assert.False(chips[1].IsIdentity);
     }
 
     /// <summary>
@@ -61,6 +104,9 @@ public sealed class IdentityChipsTests : ComponentTestBase
         var spike = Assert.Single(chips);
         Assert.DoesNotContain("badgecat-", spike.CategoryClass);
         Assert.Equal("+1.3", spike.Metric);
+        // Named in words: an arrow and a number said nothing to anyone not already told what
+        // it meant (owner, 2026-08-26).
+        Assert.Equal("Difficulty Spike", spike.Label);
     }
 
     /// <summary>

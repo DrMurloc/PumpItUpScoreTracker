@@ -256,6 +256,11 @@ public static class MixThemes
     // families: a spike is a chart's SHAPE, not one of its skills, and borrowing a family's
     // colour would file it as one. Mix-invariant like the judgment and lifebar groups — a
     // chart that leaps over its printed level does so in every theme.
+    // A chart's SHAPE — how much pad it uses, how far it turns you, how fast it runs — is
+    // not one of its skills, so the geometry claims sit outside the five families for the same
+    // reason the spike does. Mix-invariant: a half-double is a half-double in every theme.
+    private const string GeometryHex = "#26C6DA";
+
     private const string SpikeHex = "#FB8C00";
     private const string SpikeInkHex = "#FFB74D";
 
@@ -488,7 +493,8 @@ public static class MixThemes
         // is what makes it recognisable, so it never re-hues per theme.
         var badgeCategories = string.Join("\n", BadgeCategoryColors.Select(kv =>
             $"    --badgecat-{kv.Key.ToString().ToLowerInvariant()}: {kv.Value};"))
-                              + $"\n    --spike: {SpikeHex};\n    --spike-ink: {SpikeInkHex};";
+                              + $"\n    --spike: {SpikeHex};\n    --spike-ink: {SpikeInkHex};"
+                              + $"\n    --geometry-chip: {GeometryHex};";
         var brands = string.Join("\n", BrandColors.Select(kv =>
             $"    --brand-{kv.Key}: {kv.Value};"));
         // The difficulty-ball type vocabulary (red Single / green Double / gold Co-Op) as

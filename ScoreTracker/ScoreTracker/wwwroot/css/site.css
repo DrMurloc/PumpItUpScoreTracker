@@ -2344,38 +2344,99 @@ html.sheet-open .more-sheet-scrim {
     opacity: .75;
 }
 
+/* The two tiers, named in words above each row and drawn differently here
+   (docs/design/chart-identity.md §1). Both, deliberately: the fill says "this one matters"
+   at a glance, the label says WHICH tier it is, and a colour difference alone cannot carry
+   a distinction whose whole point is telling two kinds of claim apart. */
+.tier-chart-card-group {
+    display: grid;
+    grid-template-columns: 58px 1fr;
+    gap: 6px;
+    align-items: start;
+}
+
+.tier-chart-card-group-label {
+    font-size: .58rem;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    font-weight: 700;
+    color: var(--mud-palette-text-disabled);
+    padding-top: 3px;
+}
+
+.tier-chart-card-group:first-child .tier-chart-card-group-label {
+    color: color-mix(in srgb, var(--geometry-chip) 60%, var(--mix-ink));
+}
+
+/* An identity chip fills; a feature keeps the outline it always had. */
+.tier-chart-card-skill.chip-identity[class*="badgecat-"] {
+    color: #fff;
+    font-weight: 600;
+    background: color-mix(in srgb, var(--skill-chip) 42%, var(--mud-palette-surface));
+    border-color: color-mix(in srgb, var(--skill-chip) 80%, transparent);
+}
+
 /* Identity chip kinds (docs/design/chart-identity.md §3). The family tint still carries
    WHAT the chip is; these carry what KIND of claim it makes, so the two read together
    and neither is load-bearing alone (rule 8 — the printed name says it either way). */
 .chip-unique {
-    border-style: dashed;
     font-weight: 600;
+}
+
+/* How much pad a chart uses, and how far it turns you, are facts about the SHAPE of the
+   chart rather than one of its skills — so they sit outside the five families, for the same
+   reason the spike does. */
+.tier-chart-card-skill.chip-geometry {
+    color: color-mix(in srgb, var(--geometry-chip) 55%, var(--mix-ink));
+    background: color-mix(in srgb, var(--geometry-chip) 16%, transparent);
+    border-color: color-mix(in srgb, var(--geometry-chip) 45%, transparent);
+}
+
+.tier-chart-card-skill.chip-geometry.chip-identity {
+    color: #fff;
+    font-weight: 600;
+    background: color-mix(in srgb, var(--geometry-chip) 42%, var(--mud-palette-surface));
+    border-color: color-mix(in srgb, var(--geometry-chip) 80%, transparent);
+}
+
+/* The hard-section chip names a stretch and carries two badges at once, so its body stays
+   neutral and each badge keeps its own family inside it — merging the pair costs no
+   information that way. */
+.tier-chart-card-skill.chip-section {
+    background: color-mix(in srgb, var(--mix-ink) 5%, transparent);
+    border-color: var(--mud-palette-lines-default);
+}
+
+.tier-chart-card-skill.chip-section.chip-identity {
+    background: color-mix(in srgb, var(--mix-ink) 13%, var(--mud-palette-surface));
+    border-color: color-mix(in srgb, var(--mix-ink) 32%, transparent);
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+.tier-chart-card-skill .chip-part {
+    color: color-mix(in srgb, var(--skill-chip, var(--mix-ink)) 62%, var(--mix-ink));
+    font-weight: 600;
+}
+
+.tier-chart-card-skill.chip-identity .chip-part {
+    color: color-mix(in srgb, var(--skill-chip, var(--mix-ink)) 55%, #fff);
 }
 
 /* The spike is the one chip that is not a skill, so it is the one chip outside the family
    palette: an amber warning hue, mix-invariant like the judgment colors. */
+/* The spike is always an identity claim, so it always fills — there is no quiet version of
+   "this plays above its rating". */
 .tier-chart-card-skill.chip-spike {
-    color: var(--spike-ink);
-    background: color-mix(in srgb, var(--spike) 14%, transparent);
-    border-color: color-mix(in srgb, var(--spike) 50%, transparent);
-}
-
-.chip-crux {
-    background: transparent;
-    border-width: 1.5px;
+    color: #fff;
+    font-weight: 600;
+    background: color-mix(in srgb, var(--spike) 42%, var(--mud-palette-surface));
+    border-color: color-mix(in srgb, var(--spike) 80%, transparent);
 }
 
 /* Piucenter's own picks, shown when nothing stood out — quieter than a claim we made. */
 .tier-chart-card-skill.chip-fallback {
     opacity: .8;
-}
-
-/* Notes per second: a measurement, not a pattern, so it wears no family colour and reads as
-   the plain fact it is. Tabular figures because a column of cards is a column of numbers. */
-.tier-chart-card-skill.chip-nps {
-    font-variant-numeric: tabular-nums;
-    border-style: solid;
-    color: var(--mix-ink-muted);
 }
 
 .tier-table-skills .tier-chart-card-skill {
