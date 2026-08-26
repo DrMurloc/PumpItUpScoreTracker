@@ -12,6 +12,36 @@ namespace ScoreTracker.Catalog.Domain;
 /// </summary>
 internal static partial class PiuCenterKeyParser
 {
+    /// <summary>
+    ///     Keys we refuse to ingest, because the stepchart behind them is not the chart we would
+    ///     hang it on. Piucenter's corpus is simfiles, most of them pre-Phoenix, and a few songs
+    ///     shipped two charts under one name — XX-era branching paths where only one branch
+    ///     survives today.
+    ///     <para>
+    ///         Baroque Virus FULL D23 is the clearest: v1 reads run / run_without_twists /
+    ///         anchor_run, the chart that still exists, while v2 reads hold_footslide / twists /
+    ///         bracket — a path nobody can play. Song, type and level cannot tell them apart, so
+    ///         the losing keys are named here.
+    ///     </para>
+    ///     <para>
+    ///         Hardcoded on purpose (owner, 2026-08-26): it is a handful of charts in a corpus
+    ///         that is winding down, and any rule general enough to catch them would throw away
+    ///         good data elsewhere.
+    ///     </para>
+    /// </summary>
+    private static readonly IReadOnlySet<string> RejectedKeys =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Gargoyle_-_FULL_SONG_-_v2_-_Sanxion7_S21_FULLSONG",
+            "Baroque_Virus_-_FULL_SONG_-_v2_-_Zircon_D23_INFOBAR_2_FULLSONG"
+        };
+
+    /// <summary>Whether this external key names a stepchart we deliberately do not ingest.</summary>
+    public static bool IsRejected(string externalKey)
+    {
+        return RejectedKeys.Contains(externalKey);
+    }
+
     private static readonly Regex KeyPattern = new(
         @"^(?<body>.*)_(?<sl>[SD]\d+)(?:_INFOBAR(?:_[A-Z0-9]+)*)?_(?<suffix>(?:HALFDOUBLE_)?(?:ARCADE|REMIX|SHORTCUT|FULLSONG))$",
         RegexOptions.Compiled);

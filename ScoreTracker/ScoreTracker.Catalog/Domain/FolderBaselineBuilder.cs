@@ -59,6 +59,10 @@ internal static class FolderBaselineBuilder
             ChartIdentityRules.WideQuantile, ChartIdentityRules.PadShareFeatureQuantile);
         yield return GeometryRow(mix, type, level, PiuCenterMetrics.StanceSideOn, analyzed,
             ChartIdentityRules.WideQuantile, ChartIdentityRules.TwistHeavyQuantile);
+        // The diagonal share's low tail, which is the guard on the twistless claim: side-on
+        // alone calls a chart played entirely on 45-degree lines "twistless".
+        yield return GeometryRow(mix, type, level, PiuCenterMetrics.StanceDiagonal, analyzed,
+            ChartIdentityRules.TwistlessDiagonalQuantile, ChartIdentityRules.TwistHeavyQuantile);
         // A sustained PICK is cheap — Monolith carries one over ten seconds of tension. The
         // claim needs the folder to agree the chart is actually long.
         yield return GeometryRow(mix, type, level, PiuCenterMetrics.TimeUnderTension, analyzed,

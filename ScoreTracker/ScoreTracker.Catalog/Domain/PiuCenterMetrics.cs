@@ -51,4 +51,11 @@ internal static class PiuCenterMetrics
     public const string StanceSideOn = "stance_side_on";
     public const string StanceCrossed = "stance_crossed";
     public const string BracketRowShare = "bracket_row_share";
+
+    // Which mix's simfile the analysis was actually run against, as 1 or 0 for "Phoenix".
+    // Piucenter's corpus is stepcharts, and only 28.6% of it is Phoenix-era: the rest describes
+    // whatever that song looked like in XX, PRIME, FIESTA and so on. Usually identical, because
+    // most charts do not change between mixes — but not always, and without this there is no way
+    // to ask which chips are describing a chart nobody can play any more.
+    public const string PackIsPhoenix = "pack_is_phoenix";
 }

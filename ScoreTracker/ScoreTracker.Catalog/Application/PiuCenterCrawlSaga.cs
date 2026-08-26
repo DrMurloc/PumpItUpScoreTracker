@@ -126,6 +126,10 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
     {
         var listedKeys = table.Select(t => t.ExternalKey).ToHashSet(StringComparer.OrdinalIgnoreCase);
         return aliases
+            // A few keys name a stepchart that is not the chart we would hang it on — XX-era
+            // branching paths where only one branch survives. Dropped here rather than at match
+            // time, so a rejected key can never bank metrics over a good one.
+            .Where(a => !PiuCenterKeyParser.IsRejected(a.ExternalKey))
             .Where(a => a.ChartId != null && a.Status != ExternalAliasStatus.NotFound)
             .Where(a => listedKeys.Contains(a.ExternalKey))
             .GroupBy(a => a.ExternalKey, StringComparer.OrdinalIgnoreCase).Select(g => g.First())
@@ -369,6 +373,11 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
             rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.StanceCrossed, stance.Crossed, null));
             rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.BracketRowShare, stance.BracketRowShare, null));
         }
+
+        // Provenance, so a chip built from a pre-Phoenix stepchart can be found later.
+        if (page.Pack != null)
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.PackIsPhoenix,
+                page.Pack.Equals("PHOENIX", StringComparison.OrdinalIgnoreCase) ? 1 : 0, null));
 
         foreach (var (label, count) in page.RareSkillCounts)
             rows.Add(new ChartSkillMetric(chartId, Truncate($"{PiuCenterMetrics.RarePrefix}{label}", 64), count,

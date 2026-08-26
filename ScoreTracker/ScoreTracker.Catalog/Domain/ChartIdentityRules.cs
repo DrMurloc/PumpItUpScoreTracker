@@ -43,7 +43,15 @@ internal static class ChartIdentityRules
     ///     they are never asked to clear a percentile.
     /// </summary>
     private static readonly IReadOnlySet<string> WholeChartBadges =
-        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "bursty", "sustained" };
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "bursty", "sustained",
+            // Piucenter's two summary qualities, added 2026-08-26. They are chart-level only —
+            // their own pipeline bans run_without_twists from segment badges outright — so they
+            // carry no coverage anywhere, and asking them for one silently dropped them from
+            // 2,190 charts they had been picked for.
+            "twists", "run_without_twists"
+        };
 
     /// <summary>
     ///     Piucenter's bracket detection is a limb-assignment model, and it reads an ordinary
@@ -149,6 +157,16 @@ internal static class ChartIdentityRules
     /// </summary>
     public const double TwistlessMaximumCrossed = 0.02;
 
+    /// <summary>
+    ///     How much of a chart may be played on a diagonal before "twistless" is a lie. Side-on
+    ///     share alone is not enough: side-3 passages with a foot on the centre panel put the feet
+    ///     on a 45° line and register almost no side-on stance at all, so HEART RABBIT COASTER S21
+    ///     measured 4.4% side-on — and 85% diagonal — while being anything but twistless. A
+    ///     folder percentile rather than a fixed number, because the diagonal share's MEDIAN is
+    ///     uninformative (~78% at every level) while its low tail discriminates cleanly.
+    /// </summary>
+    public const double TwistlessDiagonalQuantile = 0.10;
+
     /// <summary>Where a folder's side-on share stops being ordinary and becomes the chart's point.</summary>
     public const double TwistHeavyQuantile = 0.90;
 
@@ -206,9 +224,18 @@ internal static class ChartIdentityRules
     /// </summary>
     public static bool IsPadGeographyBadge(string badge)
     {
-        return badge.Equals("mid4_doubles", StringComparison.OrdinalIgnoreCase)
-               || badge.Equals("mid6_doubles", StringComparison.OrdinalIgnoreCase);
+        return GeographyBadges.Contains(badge);
     }
+
+    /// <summary>
+    ///     Where the chart puts you, rather than what it asks you to do. side3_singles is the
+    ///     singles counterpart of the doubles mid-4/mid-6 pair — it says the chart confines you
+    ///     to one side of the pad, which is a position and not a technique, and it should not
+    ///     compete with jumps and jacks for the card (owner, 2026-08-26).
+    /// </summary>
+    private static readonly IReadOnlySet<string> GeographyBadges =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            { "mid4_doubles", "mid6_doubles", "side3_singles" };
 
     public static double TwistlessShare(bool isDoubles)
     {

@@ -156,7 +156,7 @@ else
         {
             <div class="tier-chart-card-extra">@Body</div>
         }
-        @if (Skills is { Count: > 0 })
+        @if (IdentityChipsOnly.Count > 0)
         {
             @* One row, no group headings (owner, 2026-08-26): a card has three chips of room and
                two words of scaffolding around them cost more than they explain. Identity still
@@ -179,9 +179,9 @@ else
                         }
                     </span>
                 }
-                @if (Skills.Count > MaxSkillChips)
+                @if (IdentityChipsOnly.Count > MaxSkillChips)
                 {
-                    <span class="tier-chart-card-skill tier-chart-card-skill-more">+@(Skills.Count - MaxSkillChips)</span>
+                    <span class="tier-chart-card-skill tier-chart-card-skill-more">+@(IdentityChipsOnly.Count - MaxSkillChips)</span>
                 }
             </div>
         }
@@ -266,12 +266,19 @@ else
     public sealed record CardSkillChipPart(string Label, string CategoryClass);
 
     /// <summary>
-    ///     The chips this card has room for, identity first so what survives the cut is what the
-    ///     chart most is. The engine already returns them in that order; sorting here would
-    ///     re-rank the claims within a tier and lose the order they were chosen in.
+    ///     What the chart IS, and nothing else. Features come off the card entirely (owner,
+    ///     2026-08-26) — a card has room for three chips and spending them on what a chart merely
+    ///     also has buys nothing a player deciding what to play can use. The chart page and its
+    ///     dialog carry the full set, named and grouped.
+    ///     <para>
+    ///         A chart with no identity therefore shows no chips at all, which is the honest
+    ///         answer rather than a gap: plenty of charts are just charts.
+    ///     </para>
     /// </summary>
-    private IEnumerable<CardSkillChip> VisibleSkills =>
-        (Skills ?? Array.Empty<CardSkillChip>()).Take(MaxSkillChips);
+    private IReadOnlyList<CardSkillChip> IdentityChipsOnly =>
+        (Skills ?? Array.Empty<CardSkillChip>()).Where(s => s.IsIdentity).ToArray();
+
+    private IEnumerable<CardSkillChip> VisibleSkills => IdentityChipsOnly.Take(MaxSkillChips);
 
     [Parameter] public int? AgeDays { get; set; }
 

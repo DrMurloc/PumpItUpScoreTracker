@@ -144,7 +144,8 @@ namespace ScoreTracker.Data.Apis
                 holdRows,
                 holdTickSum,
                 ReadCrux(meta, cruxIndex, maxSegmentLevel, cruxEnps, cruxBadges),
-                StanceAnalyzer.Analyze(ReadArrows(noteArrays)));
+                StanceAnalyzer.Analyze(ReadArrows(noteArrays)),
+                meta.TryGetProperty("pack", out var pack) ? pack.GetString() : null);
         }
 
         /// <summary>

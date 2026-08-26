@@ -102,25 +102,33 @@ public sealed class ChartIdentityBuilderTests
     }
 
     /// <summary>
-    ///     §3.1, Achluoias D24 and every chip the owner could not find on the pad. Piucenter's
-    ///     dominance ranking names a chart's top three badges however little of the chart they
-    ///     ride, so a pick under the bar establishes nothing at all — it does not even get to be
-    ///     a quiet feature.
+    ///     §3.1 and the union. A dominance pick under the bar establishes no COVERAGE claim —
+    ///     that is the Achluoias rule — but the pick itself is now carried as piucenter's own
+    ///     opinion (owner, 2026-08-26: "Union it"). The vetoes still apply to picks, which is what
+    ///     keeps a bracket pick off a chart that does not bracket.
     /// </summary>
     [Fact]
-    public void ADominanceOnlyPickWithThinCoverageNeverBecomesAChip()
+    public void ADominanceOnlyPickIsCarriedAsTheirOpinionButNeverAsOurMeasurement()
     {
-        var folder = new Folder().AddCharts(20, ("bracket", 0.45m), ("mid6_doubles", 0.5m));
+        var folder = new Folder().AddCharts(20, Geometry(), ("bracket", 0.45m), ("mid6_doubles", 0.5m));
+        var picks = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            { ["anchor_run"] = 1, ["drill"] = 2, ["bracket_drill"] = 3 };
         var achluoias = Folder.Profile(
             new[] { ("anchor_run", 0.375m), ("drill", 0.375m), ("bracket", 0.125m) },
-            new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
-                { ["anchor_run"] = 1, ["drill"] = 2, ["bracket_drill"] = 3 });
+            picks, geometry: Geometry());
+        var barelyBrackets = Folder.Profile(
+            new[] { ("anchor_run", 0.375m), ("drill", 0.375m), ("bracket", 0.125m) },
+            picks, geometry: Geometry(brackets: 0.004m));
 
         var chips = folder.ChipsFor(achluoias);
 
+        // Our own claims come from coverage, and 12.5% brackets is not one.
+        Assert.DoesNotContain(chips, c => c.Badge == "bracket");
         Assert.Contains("anchor_run", Badges(chips, IdentityChipKind.Unique));
-        Assert.Contains("drill", Badges(chips, IdentityChipKind.Unique));
-        Assert.DoesNotContain(chips, c => c.Badge is "bracket" or "bracket_drill");
+        // Their bracket_drill pick rides along, because this chart really does bracket.
+        Assert.Contains("bracket_drill", IdentityBadges(chips));
+        // On a chart that does not, the veto takes it straight back out.
+        Assert.DoesNotContain("bracket_drill", IdentityBadges(folder.ChipsFor(barelyBrackets)));
     }
 
     /// <summary>
@@ -338,14 +346,16 @@ public sealed class ChartIdentityBuilderTests
         // 95.8% middle-six is neither confined nor wide. Ordinary in every direction.
         var folder = new Folder().AddCharts(20, Geometry(mid6: 0.87m, sideOn: 0.28m),
             ("mid6_doubles", 0.5m), ("jack", 0.45m));
+        // No picks either: with the union a pick IS an identity claim, so "nothing" now means
+        // neither we nor piucenter found anything to say about the chart.
         var thatKitty = Folder.Profile(new[] { ("jack", 0.4286m) },
-            new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["jack"] = 1 },
             peakiness: 0.17m, geometry: Geometry(mid6: 0.958m, sideOn: 0.286m));
 
         var chips = folder.ChipsFor(thatKitty);
 
+        // Nothing at all, and that is the answer: with features off the card and no pick to
+        // carry, a chart that earns no claim says nothing rather than filling the space.
         Assert.Empty(chips.Where(c => c.Tier == IdentityTier.Identity));
-        Assert.NotEmpty(chips);
     }
 
     /// <summary>
@@ -366,21 +376,25 @@ public sealed class ChartIdentityBuilderTests
     }
 
     /// <summary>
-    ///     §8, Uranium D24 and Cygnus D23: thin coverage everywhere. Rather than invent a
-    ///     distinction, the chart says what piucenter said — muted, and in their order.
+    ///     §8, Uranium D24 and Cygnus D23: thin coverage everywhere. We claim nothing of our own,
+    ///     so what the chart says is exactly what piucenter said — carried as identity now rather
+    ///     than as a muted fallback, because a second opinion is still an opinion.
     /// </summary>
     [Fact]
-    public void AChartThatStandsOutNowhereFallsBackToPiucentersOwnPicks()
+    public void AChartThatStandsOutNowhereSaysWhatPiucenterSaid()
     {
-        var folder = new Folder().AddCharts(20, ("mid6_doubles", 0.6m), ("run", 0.5m));
+        var folder = new Folder().AddCharts(20, Geometry(), ("mid6_doubles", 0.6m), ("run", 0.5m));
         var uranium = Folder.Profile(new[] { ("mid6_doubles", 0.1m) },
             new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
-                { ["jack"] = 1, ["twist_far"] = 2, ["10-stair"] = 3 });
+                { ["jack"] = 1, ["twist_far"] = 2, ["10-stair"] = 3 },
+            geometry: Geometry());
 
         var chips = folder.ChipsFor(uranium);
 
-        Assert.Equal(new[] { "jack", "twist_far", "10-stair" }, Badges(chips, IdentityChipKind.Fallback));
-        Assert.All(chips, c => Assert.Equal(IdentityChipKind.Fallback, c.Kind));
+        // Their three, in their order. The geometry claims are a separate axis and may also
+        // fire — this asserts what the BADGES say, which is the part piucenter has an opinion on.
+        Assert.Equal(new[] { "jack", "twist_far", "10-stair" },
+            IdentityBadges(chips).Where(b => !WidthLabels.IsGeometryClaim(b)));
     }
 
     /// <summary>

@@ -87,6 +87,32 @@ internal static class ChartIdentityBuilder
 
         if (HardSection(profile, claimed, present) is { } hardSection) identity.Add(hardSection);
 
+        // 7 — UNION with piucenter's own picks (owner, 2026-08-26). Their chart_skill_summary is
+        // the same idea as ours computed on better inputs: a percentile of each technique against
+        // charts of the same type a level either side (piu-annotate, get_top_chart_skills). Where
+        // they name something we did not, that is a second opinion worth carrying rather than a
+        // contradiction — measured on Phoenix 2 D23, 77% of our claims are already theirs too, so
+        // the union adds under half a badge per chart.
+        // Their picks still admit nothing they should not: the bracket veto and the geography
+        // rule both apply, because those exist to overrule a measurement we do not trust.
+        foreach (var badge in profile.DominanceRank
+                     .OrderBy(kv => kv.Value)
+                     .Select(kv => kv.Key)
+                     .Where(b => !claimed.Contains(b))
+                     .Where(b => !ChartIdentityRules.IsPadGeographyBadge(b))
+                     .Where(b => !ChartIdentityRules.IsBracketFamily(b) || profile.BracketsAreCredible)
+                     // Sustained is the one pick with a measurement behind it that we trust more
+                     // than the pick. Theirs is the variance of the eNPS timeline, which says the
+                     // chart is EVEN, not that it is long — Monolith carries a sustained pick over
+                     // ten seconds of tension, which is nobody's idea of a grind.
+                     .Where(b => !b.Equals("sustained", StringComparison.OrdinalIgnoreCase)
+                                 || IsExtremeSustain(profile, folder)))
+        {
+            identity.Add(Chip(IdentityChipKind.Core, IdentityTier.Identity, badge, Coverage(profile, badge)));
+            claimed.Add(badge);
+            present.Remove(badge);
+        }
+
         // Everything else that cleared presence. Features are allowed to be ordinary — that was
         // only ever a problem while they shouted at the same volume as the claims above.
         var features = present
@@ -100,7 +126,8 @@ internal static class ChartIdentityBuilder
 
         var chips = identity.Concat(features).ToList();
 
-        // Nothing stood out anywhere. Rather than invent a distinction, say what piucenter said.
+        // Nothing stood out anywhere AND piucenter picked nothing either — only reachable for a
+        // chart whose analysis banked no summary at all.
         if (chips.Count == 0)
             chips.AddRange(profile.DominanceRank
                 .OrderBy(kv => kv.Value)
@@ -147,7 +174,8 @@ internal static class ChartIdentityBuilder
         var isDoubles = profile.GeometryOf(PiuCenterMetrics.PadShareMid6) != null;
 
         if (sideOn <= (decimal)ChartIdentityRules.TwistlessShare(isDoubles)
-            && crossed <= (decimal)ChartIdentityRules.TwistlessMaximumCrossed)
+            && crossed <= (decimal)ChartIdentityRules.TwistlessMaximumCrossed
+            && IsSquareToTheScreen(profile, folder))
             return Geometry(IdentityChipKind.Twist, WidthLabels.Twistless, sideOn);
 
         return folder.TryGetValue(PiuCenterMetrics.StanceSideOn, out var baseline)
@@ -155,6 +183,23 @@ internal static class ChartIdentityBuilder
                && sideOn >= baseline.DrenchedCutoff
             ? Geometry(IdentityChipKind.Twist, WidthLabels.TwistHeavy, sideOn)
             : null;
+    }
+
+    /// <summary>
+    ///     Whether the chart really leaves the body facing the screen. Side-on share alone does
+    ///     not answer it: a side-3 passage played with a foot on the centre panel puts the feet on
+    ///     a 45° line, which registers as no side-on stance at all — HEART RABBIT COASTER S21
+    ///     measures 4.4% side-on and 85% diagonal, and calling that twistless is the measure lying
+    ///     about the one thing it is for. Folder-relative because the diagonal share's median says
+    ///     nothing (~78% everywhere) while its low tail separates cleanly.
+    /// </summary>
+    private static bool IsSquareToTheScreen(ChartBadgeProfile profile,
+        IReadOnlyDictionary<string, ChartFolderBaseline> folder)
+    {
+        if (profile.GeometryOf(PiuCenterMetrics.StanceDiagonal) is not { } diagonal) return true;
+        return !folder.TryGetValue(PiuCenterMetrics.StanceDiagonal, out var baseline)
+               || baseline.CoreCutoff <= 0
+               || diagonal <= baseline.CoreCutoff;
     }
 
     /// <summary>
@@ -288,4 +333,11 @@ internal static class WidthLabels
     public const string TwistHeavy = "Twist-heavy";
     public const string VeryFast = "Very Fast";
     public const string VerySlow = "Very Slow";
+
+    /// <summary>Whether a chip key is one of these shape claims rather than a piucenter badge.</summary>
+    public static bool IsGeometryClaim(string badge)
+    {
+        return badge is QuarterDouble or HalfDouble or Wide or Twistless or TwistHeavy
+            or VeryFast or VerySlow;
+    }
 }
