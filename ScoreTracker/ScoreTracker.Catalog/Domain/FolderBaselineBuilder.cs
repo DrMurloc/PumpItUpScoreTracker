@@ -124,7 +124,12 @@ internal static class FolderBaselineBuilder
     /// </summary>
     private static decimal PresenceCutoff(decimal[] sortedCoverages, int presentCount)
     {
-        if (presentCount == 0) return decimal.MaxValue;
+        // Zero, not a big sentinel. Nothing in the folder carries the badge, so nothing can clear
+        // any bar — and IsPresent already refuses a zero coverage, which is what actually keeps
+        // these out. A sentinel here has to survive a decimal(9,4) column, and decimal.MaxValue
+        // does not: it threw OverflowException on the first real rebuild, from the whole-chart
+        // qualities, which are mentioned by their dominance pick and never carry a coverage.
+        if (presentCount == 0) return 0m;
         var allowed = ChartIdentityRules.AllowedShare((double)presentCount / sortedCoverages.Length);
         var passes = Math.Clamp((int)Math.Ceiling(allowed * sortedCoverages.Length), 1, presentCount);
         // Sorted ascending, so the pass-th value from the top is the bar with an at-or-above test.

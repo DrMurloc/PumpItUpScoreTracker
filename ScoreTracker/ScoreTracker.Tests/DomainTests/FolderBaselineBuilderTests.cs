@@ -103,6 +103,33 @@ public sealed class FolderBaselineBuilderTests
     }
 
     /// <summary>
+    ///     Every cutoff has to survive the decimal(9,4) column it is stored in. A sentinel meaning
+    ///     "unreachable" does not: decimal.MaxValue threw OverflowException on the first real
+    ///     rebuild, out of the whole-chart qualities — they are mentioned by their dominance pick
+    ///     and never carry a coverage, so their folder has nothing present in it at all.
+    /// </summary>
+    [Fact]
+    public void EveryCutoffFitsTheColumnItIsStoredIn()
+    {
+        var pickOnly = new ChartBadgeProfile(Guid.NewGuid(),
+            new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["sustained"] = 1 }, null,
+            Array.Empty<string>());
+        var charts = Enumerable.Range(0, 9).Select(_ => Chart(("run", 0.5m))).Append(pickOnly).ToArray();
+
+        const decimal columnMaximum = 99_999.9999m;
+        foreach (var baseline in Build(charts))
+        {
+            Assert.InRange(baseline.PresenceCutoff, 0m, columnMaximum);
+            Assert.InRange(baseline.CoreCutoff, -columnMaximum, columnMaximum);
+            Assert.InRange(baseline.DrenchedCutoff, -columnMaximum, columnMaximum);
+        }
+
+        // And a badge nothing carries is still not present on anything.
+        Assert.False(Build(charts).Single(b => b.Badge == "sustained").IsPresent(0m));
+    }
+
+    /// <summary>
     ///     The presence bar is a budget, not a number (docs/design/chart-identity.md §3.1).
     ///     Owner, 2026-08-26: "A d26 with a handful of brackets but overall just being a run
     ///     shouldn't even mention the thought of brackets. A S18 with brackets probably should at
