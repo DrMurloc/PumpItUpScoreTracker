@@ -78,9 +78,42 @@ Every rule below is expressed against the **folder baseline** (§5). Constants l
 
 ### 3.1 Presence — the only door
 
-A badge earns a chip only by clearing its own **qualifying bar**: `coverage ≥ QualifyingCoverage(badge)`
-(0.30 default; **jack .40, jump .50, run .40, twist_90 .40**). Whole-chart qualities (`bursty`,
-`sustained`) carry no coverage and are admitted by piucenter's dominance pick alone.
+A badge earns a chip only by clearing its **presence bar**, and that bar is **per technique, per
+folder, scaled to how common the technique is there** (owner, 2026-08-26: *"A d26 with a handful
+of brackets but overall just being a run shouldn't even mention the thought of brackets. A S18
+with brackets probably should at least feature them."*).
+
+The bar is a **budget**: a technique may be claimed by about `PresenceBudget ÷ prevalence` of its
+folder, capped at the prevalence itself, where prevalence is the share of the folder's charts
+carrying it **at all** (any nonzero coverage). `PresenceBudget = 0.10`. So the bar rises with how
+common the technique is, and collapses to "carries any at all" where it is rare.
+
+A fixed bar could not work, and the spread is why: brackets sit on **13.7% of Phoenix 2 S14 and
+79.4% of D26**. One number read those identically — at S14 it sat above the entire folder and not
+one chart could say it had brackets, while at D26 a run chart with a handful of them could.
+
+This also fixes the **exotic vocabulary**, which was structurally invisible: `hold_footslide`,
+`hold_footswitch`, `footswitch`, `hands` and `split` have folder MAXIMUMS below the old fixed bar,
+so **no chart in any folder could ever say it had one**. Hi Bi D22 showed neither of piucenter's
+own top two picks for exactly this reason. `hold_footswitch` and `hold_footslide` stay separate
+badges — technically different techniques, however interchangeably they get said aloud.
+
+The hand-tuned raised bars (`jack .40, jump .50, run .40, twist_90 .40`) are **deleted**, not
+kept. They were raised by hand because those four ride nearly every chart, and their prevalence —
+stable at 56–78% in every folder — now says so on its own. One mechanism, no lookup table.
+
+Two consequences that are load-bearing:
+
+- **Prevalence counts any nonzero coverage, never what clears the bar.** The bar is derived from
+  prevalence, so reading rarity back off the bar's own output is circular — it made doublesteps,
+  on 88% of some folders, read as rare.
+- **The claim margin (§3.2) applies only where the budget bound the bar.** Below √`PresenceBudget`
+  prevalence every carrier already clears it, so asking 1.25× of it asks for more than any chart
+  has — the same above-the-maximum failure the drenched rule had, moved into the margin. There,
+  carrying the technique at all *is* the claim.
+
+Whole-chart qualities (`bursty`, `sustained`) carry no coverage and are admitted by piucenter's
+dominance pick alone; they have no prevalence and never come through the rare rule.
 
 Two hard rules on top:
 
