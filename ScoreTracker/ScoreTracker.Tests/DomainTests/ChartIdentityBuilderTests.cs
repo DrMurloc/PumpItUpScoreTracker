@@ -58,12 +58,22 @@ public sealed class ChartIdentityBuilderTests
                 peakiness, cruxBadges ?? Array.Empty<string>(), cruxDuration, geometry);
         }
 
-        public IReadOnlyList<IdentityChipRecord> ChipsFor(ChartBadgeProfile subject, decimal? speedZ = null)
+        /// <summary>The folder's own outer Speed boundary, as the baseline builder computes it.</summary>
+        public decimal SpeedBound(IReadOnlyDictionary<string, decimal> probe, bool fast)
+        {
+            var subject = Profile(Array.Empty<(string, decimal)>(), geometry: probe);
+            var baseline = FolderBaselineBuilder.Build(MixEnum.Phoenix, ChartType.Double, 24,
+                    _charts.Append(subject).ToArray())
+                .Single(b => b.Badge == PiuCenterMetrics.Nps);
+            return fast ? baseline.DrenchedCutoff : baseline.CoreCutoff;
+        }
+
+        public IReadOnlyList<IdentityChipRecord> ChipsFor(ChartBadgeProfile subject)
         {
             var all = _charts.Append(subject).ToArray();
             var baselines = FolderBaselineBuilder.Build(MixEnum.Phoenix, ChartType.Double, 24, all)
                 .ToDictionary(b => b.Badge, b => b, StringComparer.OrdinalIgnoreCase);
-            return ChartIdentityBuilder.Build(subject, baselines, speedZ);
+            return ChartIdentityBuilder.Build(subject, baselines);
         }
     }
 
@@ -282,21 +292,37 @@ public sealed class ChartIdentityBuilderTests
     }
 
     /// <summary>
-    ///     §2. The outer bands have to keep meaning what they say, so this is not softened to
-    ///     catch near misses: A Site De La Rue D20 sits at z = 1.46 and gets no speed claim.
+    ///     §2. Speed claims a chart only in the outer bands, and the boundary is not softened to
+    ///     catch near misses — A Site De La Rue D20 sits at z = 1.46 and gets nothing. The test
+    ///     reads the folder's own computed boundary rather than a guessed number, so it stays
+    ///     true if the constant moves.
     /// </summary>
-    [Theory]
-    [InlineData(1.46, null)]
-    [InlineData(1.5, WidthLabels.VeryFast)]
-    [InlineData(-2.96, WidthLabels.VerySlow)]
-    public void SpeedOnlyClaimsAChartAtTheExtremes(double z, string? expected)
+    [Fact]
+    public void SpeedOnlyClaimsAChartAtTheExtremes()
     {
-        var folder = new Folder().AddCharts(20, Geometry(), ("run", 0.5m));
-        var chart = Folder.Profile(Array.Empty<(string, decimal)>(), geometry: Geometry());
+        var folder = new Folder();
+        for (var i = 0; i < 20; i++) folder.AddCharts(1, Speeds(9.5m + i * 0.1m), ("run", 0.5m));
 
-        var chips = folder.ChipsFor(chart, (decimal)z);
+        var fastBound = folder.SpeedBound(Speeds(11m), true);
+        Assert.Equal(WidthLabels.VeryFast, SpeedClaim(folder, fastBound + 0.2m));
+        Assert.Null(SpeedClaim(folder, fastBound - 0.2m));
 
-        Assert.Equal(expected, chips.FirstOrDefault(c => c.Kind == IdentityChipKind.Speed)?.Badge);
+        var slowBound = folder.SpeedBound(Speeds(11m), false);
+        Assert.Equal(WidthLabels.VerySlow, SpeedClaim(folder, slowBound - 0.2m));
+        Assert.Null(SpeedClaim(folder, slowBound + 0.2m));
+    }
+
+    private static string? SpeedClaim(Folder folder, decimal nps)
+    {
+        var chart = Folder.Profile(Array.Empty<(string, decimal)>(), geometry: Speeds(nps));
+        return folder.ChipsFor(chart).FirstOrDefault(c => c.Kind == IdentityChipKind.Speed)?.Badge;
+    }
+
+    private static IReadOnlyDictionary<string, decimal> Speeds(decimal nps)
+    {
+        var geometry = Geometry().ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.OrdinalIgnoreCase);
+        geometry[PiuCenterMetrics.Nps] = nps;
+        return geometry;
     }
 
     /// <summary>

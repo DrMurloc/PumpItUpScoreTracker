@@ -15,7 +15,7 @@ namespace ScoreTracker.Catalog.Domain;
 internal static class ChartIdentityBuilder
 {
     public static IReadOnlyList<IdentityChipRecord> Build(ChartBadgeProfile profile,
-        IReadOnlyDictionary<string, ChartFolderBaseline> folder, decimal? speedZ = null)
+        IReadOnlyDictionary<string, ChartFolderBaseline> folder)
     {
         // Presence is measured coverage clearing the badge's own bar, and nothing else. A
         // dominance pick under that bar used to be admitted "because their pick is a real signal
@@ -32,7 +32,7 @@ internal static class ChartIdentityBuilder
         // between a half-double that features twists and a twist chart that features mid-6.
         if (Width(profile, folder) is { } width) identity.Add(width);
         if (Twist(profile, folder) is { } twist) identity.Add(twist);
-        if (Speed(speedZ) is { } speed) identity.Add(speed);
+        if (Speed(profile, folder) is { } speed) identity.Add(speed);
 
         // 2 — what almost nothing else here has. Rarest first, because the rarer it is the more
         // it is the reason someone is looking at this chart.
@@ -162,10 +162,16 @@ internal static class ChartIdentityBuilder
     ///     and the outer bands have to keep meaning what they say — so this is the Speed list's
     ///     own boundary and nothing softer.
     /// </summary>
-    private static IdentityChipRecord? Speed(decimal? z)
+    private static IdentityChipRecord? Speed(ChartBadgeProfile profile,
+        IReadOnlyDictionary<string, ChartFolderBaseline> folder)
     {
-        if (z is not { } value || Math.Abs(value) < (decimal)ChartIdentityRules.SpeedIdentityZ) return null;
-        return Geometry(IdentityChipKind.Speed, value > 0 ? WidthLabels.VeryFast : WidthLabels.VerySlow, value);
+        if (profile.GeometryOf(PiuCenterMetrics.Nps) is not { } nps || nps <= 0) return null;
+        if (!folder.TryGetValue(PiuCenterMetrics.Nps, out var baseline) || baseline.DrenchedCutoff <= 0) return null;
+        if (nps >= baseline.DrenchedCutoff)
+            return Geometry(IdentityChipKind.Speed, WidthLabels.VeryFast, nps);
+        return nps <= baseline.CoreCutoff
+            ? Geometry(IdentityChipKind.Speed, WidthLabels.VerySlow, nps)
+            : null;
     }
 
     /// <summary>

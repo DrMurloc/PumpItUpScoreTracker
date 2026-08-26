@@ -61,6 +61,37 @@ internal static class FolderBaselineBuilder
         // claim needs the folder to agree the chart is actually long.
         yield return GeometryRow(mix, type, level, PiuCenterMetrics.TimeUnderTension, analyzed,
             ChartIdentityRules.WideQuantile, ChartIdentityRules.TwistHeavyQuantile);
+        yield return SpeedRow(mix, type, level, analyzed);
+    }
+
+    /// <summary>
+    ///     The folder's two outer Speed-band boundaries, so the chip engine can ask whether a
+    ///     chart is Very Fast without knowing anything about tier lists — Catalog cannot see
+    ///     ChartIntelligence, and this is the same arithmetic the Speed list runs.
+    ///     <para>
+    ///         The low cutoff is the Very Slow bound and the high one the Very Fast bound, which
+    ///         is why this row alone stores an absolute value in each slot rather than a
+    ///         percentile. Only the outer bands are stored: the middle three are measurements,
+    ///         not claims, and nothing asks about them.
+    ///     </para>
+    /// </summary>
+    private static ChartFolderBaseline SpeedRow(MixEnum mix, ChartType type, int level,
+        IReadOnlyCollection<ChartBadgeProfile> analyzed)
+    {
+        var speeds = analyzed.Select(p => p.GeometryOf(PiuCenterMetrics.Nps))
+            .Where(v => v is > 0)
+            .Select(v => v!.Value)
+            .ToArray();
+        if (speeds.Length < 2)
+            return new ChartFolderBaseline(mix, type, level, PiuCenterMetrics.Nps, 0m, 0m, speeds.Length,
+                analyzed.Count);
+
+        var mean = speeds.Average();
+        var variance = speeds.Sum(v => (v - mean) * (v - mean)) / (speeds.Length - 1);
+        var deviation = (decimal)Math.Sqrt((double)variance);
+        var reach = deviation * (decimal)ChartIdentityRules.SpeedIdentityZ;
+        return new ChartFolderBaseline(mix, type, level, PiuCenterMetrics.Nps,
+            mean - reach, mean + reach, speeds.Length, analyzed.Count);
     }
 
     private static ChartFolderBaseline GeometryRow(MixEnum mix, ChartType type, int level, string metric,
