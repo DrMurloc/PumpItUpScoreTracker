@@ -2124,11 +2124,18 @@ html.sheet-open .more-sheet-scrim {
    anything else inheriting the overlap merely by being first in the body.
    min-height is the reservation, and it matches the pull exactly — a card with neither a name
    nor a score shows clean art with its chips below, at the same height as its neighbours. */
+/* The head's LAST line straddles the jacket's bottom edge rather than sitting above it — the
+   session highlight card's treatment, where the score is half on the art and half on the card
+   and reads as belonging to both. Bottom-aligned content plus a min-height 12px taller than the
+   pull is what puts that line's centre on the edge; with a song name shown, the name rides
+   above it on the art and the score still straddles.
+   Sitting the score flush INSIDE the jacket instead (min-height == pull) leaves it floating on
+   the artwork with a hard rule under it, which is what this looked like on the first pass. */
 .tier-chart-card-head {
     position: relative;
     z-index: 2;
     margin-top: -30px;
-    min-height: 30px;
+    min-height: 42px;
     padding: 0 8px;
     min-width: 0;
     cursor: pointer;
@@ -2344,31 +2351,9 @@ html.sheet-open .more-sheet-scrim {
     opacity: .75;
 }
 
-/* The two tiers, named in words above each row and drawn differently here
-   (docs/design/chart-identity.md §1). Both, deliberately: the fill says "this one matters"
-   at a glance, the label says WHICH tier it is, and a colour difference alone cannot carry
-   a distinction whose whole point is telling two kinds of claim apart. */
-.tier-chart-card-group {
-    display: grid;
-    grid-template-columns: 58px 1fr;
-    gap: 6px;
-    align-items: start;
-}
-
-.tier-chart-card-group-label {
-    font-size: .58rem;
-    text-transform: uppercase;
-    letter-spacing: .09em;
-    font-weight: 700;
-    color: var(--mud-palette-text-disabled);
-    padding-top: 3px;
-}
-
-.tier-chart-card-group:first-child .tier-chart-card-group-label {
-    color: color-mix(in srgb, var(--geometry-chip) 60%, var(--mix-ink));
-}
-
-/* An identity chip fills; a feature keeps the outline it always had. */
+/* An identity chip fills; a feature keeps the outline it always had. On a card that is the
+   whole distinction — the named groups live on the chart page, where there is room for two
+   words of scaffolding (owner, 2026-08-26). */
 .tier-chart-card-skill.chip-identity[class*="badgecat-"] {
     color: #fff;
     font-weight: 600;

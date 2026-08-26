@@ -119,7 +119,7 @@
         <ChartEvidenceSection @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_chart.Mix" @key="_chart.Id"></ChartEvidenceSection>
     </section>
 
-    @if (_skillChips.Any() || _analysis != null)
+    @if (_skillChips.Any() || _analysis != null || _identityChips.Any())
     {
         <section class="chart-section">
             <div class="chart-section-head">
@@ -136,6 +136,9 @@
                     <MudText Typo="Typo.caption" Class="chart-section-sub"><VerdictSentence Facet="Crux"></VerdictSentence></MudText>
                 }
             </div>
+            @* What the chart IS, before what it is made of: the bars below are an even
+               description of the whole chart, and the claims above are what stands out in it. *@
+            <IdentityChipGroups Chips="_identityChips"></IdentityChipGroups>
             <SkillCoverageBars Chips="_skillChips"></SkillCoverageBars>
             @* Intensity reads as bars beside the skills because it is the same kind of
                fact — a share of the chart — and the two together are what "what is this
@@ -228,6 +231,8 @@
     private IReadOnlyList<Chart> _siblings = Array.Empty<Chart>();
     private IReadOnlyList<ChartBadgeChipRecord> _skillChips = Array.Empty<ChartBadgeChipRecord>();
     private ChartStepAnalysisRecord? _analysis;
+    private IReadOnlyList<TierListChartCard.CardSkillChip> _identityChips =
+        Array.Empty<TierListChartCard.CardSkillChip>();
 
     private ChartIntensityFacts? Intensity => _chart == null ? null : ChartIntensityFacts.For(_chart, _analysis);
 
@@ -308,5 +313,10 @@
             ? chips
             : Array.Empty<ChartBadgeChipRecord>();
         _analysis = await Mediator.Send(new GetChartStepAnalysisQuery(chart.Id));
+        // Every chip, uncapped — the card's three-chip cut is a card's problem, and a page that
+        // silently dropped a claim would be the one surface where the chart looks different.
+        var identity = await Mediator.Send(new GetChartIdentityQuery(new[] { chart.Id }, chartMix));
+        _identityChips = IdentityChips.ToCardChips(
+            identity.TryGetValue(chart.Id, out var record) ? record : null, true, L);
     }
 }
