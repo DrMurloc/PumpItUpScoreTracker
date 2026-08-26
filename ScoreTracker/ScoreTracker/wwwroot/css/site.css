@@ -2055,6 +2055,7 @@ html.sheet-open .more-sheet-scrim {
     background-size: cover;
     background-position: center;
     position: relative;
+    cursor: pointer;
 }
 
 /* The scrim the overlapping body sits on — the session highlight card's own treatment. It
