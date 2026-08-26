@@ -9,10 +9,8 @@ using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Catalog.Application;
 
-internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumerable<ChartSkillsRecord>>,
-    IRequestHandler<GetChartStepAnalysisQuery, ChartStepAnalysisRecord?>,
+internal sealed class SkillsSaga : IRequestHandler<GetChartStepAnalysisQuery, ChartStepAnalysisRecord?>,
     IRequestHandler<GetChartStepAnalysesQuery, IReadOnlyDictionary<Guid, ChartStepAnalysisRecord>>,
-    IRequestHandler<GetChartSkillChipsQuery, IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>>,
     IRequestHandler<GetChartBadgeChipsQuery, IReadOnlyDictionary<Guid, IReadOnlyList<ChartBadgeChipRecord>>>,
     IRequestHandler<GetChartBadgeCoverageQuery, IReadOnlyDictionary<Guid, IReadOnlyDictionary<string, double>>>,
     IRequestHandler<GetUnresolvedAliasesQuery, IReadOnlyList<UnresolvedAliasRecord>>,
@@ -60,53 +58,6 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumera
                 m => (double)m.Value));
     }
 
-    public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>> Handle(
-        GetChartSkillChipsQuery request, CancellationToken cancellationToken)
-    {
-        var metrics = await _metrics.GetMetrics(request.ChartIds, PiuCenterMetrics.Source, cancellationToken);
-        var result = new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>();
-        foreach (var group in metrics.GroupBy(m => m.ChartId))
-        {
-            // Best segment coverage per mapped skill (for display), the skills whose
-            // coverage cleared their per-skill bar (for membership), and dominance
-            // rank from the top-3 pick — the same policy the flip mapper applies.
-            var fractions = new Dictionary<Skill, decimal>();
-            var qualified = new HashSet<Skill>();
-            var topRank = new Dictionary<Skill, decimal>();
-            foreach (var metric in group)
-                if (metric.MetricName.StartsWith(PiuCenterMetrics.BadgeFractionPrefix, StringComparison.Ordinal))
-                {
-                    var theirs = metric.MetricName[PiuCenterMetrics.BadgeFractionPrefix.Length..];
-                    foreach (var skill in PiuCenterSkillMapper.MapTheirSkill(theirs))
-                    {
-                        if (!fractions.TryGetValue(skill, out var best) || metric.Value > best)
-                            fractions[skill] = metric.Value;
-                        if (metric.Value >= PiuCenterSkillMapper.ThresholdFor(theirs)) qualified.Add(skill);
-                    }
-                }
-                else if (metric.MetricName.StartsWith(PiuCenterMetrics.Top3Prefix, StringComparison.Ordinal))
-                {
-                    foreach (var skill in PiuCenterSkillMapper.MapTheirSkill(
-                                 metric.MetricName[PiuCenterMetrics.Top3Prefix.Length..]))
-                        if (!topRank.TryGetValue(skill, out var best) || metric.Value < best)
-                            topRank[skill] = metric.Value;
-                }
-
-            var chips = topRank
-                .OrderBy(kv => kv.Value)
-                .Select(kv => new ChartSkillChipRecord(kv.Key, true,
-                    fractions.TryGetValue(kv.Key, out var f) ? f : null))
-                .Concat(qualified
-                    .Where(s => !topRank.ContainsKey(s))
-                    .OrderByDescending(s => fractions[s])
-                    .Select(s => new ChartSkillChipRecord(s, false, fractions[s])))
-                .ToArray();
-            if (chips.Length > 0) result[group.Key] = chips;
-        }
-
-        return result;
-    }
-
     public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<ChartBadgeChipRecord>>> Handle(
         GetChartBadgeChipsQuery request, CancellationToken cancellationToken)
     {
@@ -125,7 +76,7 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumera
                 {
                     var badge = metric.MetricName[PiuCenterMetrics.BadgeFractionPrefix.Length..];
                     coverage[badge] = metric.Value;
-                    if (metric.Value >= PiuCenterSkillMapper.ThresholdFor(badge)) qualified.Add(badge);
+                    if (metric.Value >= ChartIdentityRules.QualifyingCoverage(badge)) qualified.Add(badge);
                 }
                 else if (metric.MetricName.StartsWith(PiuCenterMetrics.Top3Prefix, StringComparison.Ordinal))
                 {
@@ -201,11 +152,5 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumera
             Single(PiuCenterMetrics.CruxDuration) is { } duration
                 ? new ChartCruxRecord(cruxBadges, Single(PiuCenterMetrics.CruxPeakiness), position, duration)
                 : null);
-    }
-
-    public async Task<IEnumerable<ChartSkillsRecord>> Handle(GetChartSkillsQuery request,
-        CancellationToken cancellationToken)
-    {
-        return await _charts.GetChartSkills(cancellationToken);
     }
 }

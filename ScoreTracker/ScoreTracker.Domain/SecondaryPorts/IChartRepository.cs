@@ -53,8 +53,6 @@ public interface IChartRepository
     ///     whole reason /MixChanges can ask the question.
     /// </summary>
     Task UpdateNoteCount(MixEnum mix, Guid chartId, int noteCount, CancellationToken cancellationToken = default);
-    Task<IEnumerable<ChartSkillsRecord>> GetChartSkills(CancellationToken cancellationToken = default);
-    Task SaveChartSkills(ChartSkillsRecord record, CancellationToken cancellationToken = default);
 
     Task SetSongCultureName(Name englishSongName, Name cultureCode, Name songName,
         CancellationToken cancellationToken = default);

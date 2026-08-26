@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace ScoreTracker.Catalog.Domain;
@@ -31,6 +33,25 @@ internal static partial class PiuCenterKeyParser
             match.Groups["sl"].Value,
             match.Groups["suffix"].Value);
         return true;
+    }
+
+    /// <summary>
+    ///     Fold diacritics, drop everything but letters and digits — how a piucenter key's
+    ///     song and artist are compared against the catalog's. It lived on the deleted skill
+    ///     mapper, which never had anything to do with it; matching keys to charts is this
+    ///     file's job.
+    /// </summary>
+    public static string Normalize(string value)
+    {
+        var folded = value.Normalize(NormalizationForm.FormD);
+        var builder = new StringBuilder(folded.Length);
+        foreach (var ch in folded)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(ch) == UnicodeCategory.NonSpacingMark) continue;
+            if (char.IsLetterOrDigit(ch)) builder.Append(char.ToLowerInvariant(ch));
+        }
+
+        return builder.ToString();
     }
 }
 

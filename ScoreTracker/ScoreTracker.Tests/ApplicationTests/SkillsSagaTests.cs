@@ -30,17 +30,6 @@ public sealed class SkillsSagaTests
     }
 
     [Fact]
-    public async Task GetChartSkillsDelegatesToRepository()
-    {
-        var skills = new List<ChartSkillsRecord>();
-        _charts.Setup(c => c.GetChartSkills(It.IsAny<CancellationToken>())).ReturnsAsync(skills);
-
-        var result = await BuildSaga().Handle(new GetChartSkillsQuery(), CancellationToken.None);
-
-        Assert.Same(skills, result);
-    }
-
-    [Fact]
     public async Task StepAnalysisShapesBankedMetricsAndPrefersTheAliasKey()
     {
         var chartId = Guid.NewGuid();
@@ -75,34 +64,6 @@ public sealed class SkillsSagaTests
             CancellationToken.None);
 
         Assert.Null(analysis);
-    }
-
-    [Fact]
-    public async Task SkillChipsOrderTopThreeFirstThenBySegmentCoverage()
-    {
-        var chartId = Guid.NewGuid();
-        _metrics.Setup(m => m.GetMetrics(It.IsAny<IEnumerable<Guid>>(), "PiuCenter", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new ChartSkillMetric(chartId, "top3:drill", 1m, null),
-                new ChartSkillMetric(chartId, "badge_fraction:drill", 0.8m, null),
-                new ChartSkillMetric(chartId, "badge_fraction:twist_90", 0.6m, null),
-                new ChartSkillMetric(chartId, "badge_fraction:jump", 0.55m, null),
-                // Below its per-skill threshold — must not become a chip.
-                new ChartSkillMetric(chartId, "badge_fraction:jack", 0.1m, null)
-            });
-
-        var chips = await BuildSaga().Handle(new GetChartSkillChipsQuery(new[] { chartId }),
-            CancellationToken.None);
-
-        var chart = chips[chartId];
-        Assert.Equal(Skill.Drills, chart[0].Skill);
-        Assert.True(chart[0].Highlighted);
-        Assert.Equal(0.8m, chart[0].SegmentFraction);
-        Assert.Equal(Skill.Twists, chart[1].Skill);
-        Assert.False(chart[1].Highlighted);
-        Assert.Equal(Skill.Jumps, chart[2].Skill);
-        Assert.DoesNotContain(chart, c => c.Skill == Skill.Jacks);
     }
 
     [Fact]

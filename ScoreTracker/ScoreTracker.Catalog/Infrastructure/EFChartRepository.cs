@@ -277,59 +277,6 @@ internal sealed class EFChartRepository : IChartRepository
     }
 
 
-    private const string ChartSkillsCacheKey = $"{nameof(EFChartRepository)}_{nameof(GetChartSkills)}";
-
-    private sealed record ChartSkillJoin(Guid ChartId, string SkillName);
-
-    public async Task<IEnumerable<ChartSkillsRecord>> GetChartSkills(CancellationToken cancellationToken = default)
-    {
-        return await _cache.GetOrCreateAsync(ChartSkillsCacheKey, async o =>
-        {
-            o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(1);
-            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            return (await database.Set<ChartSkillEntity>().ToArrayAsync(cancellationToken))
-                .GroupBy(c => c.ChartId)
-                .Select(g => new ChartSkillsRecord(g.Key, g.Select(s => Enum.Parse<Skill>(s.SkillName)),
-                    g.Where(s => s.IsHighlighted).Select(s => Enum.Parse<Skill>(s.SkillName))))
-                .ToArray();
-        });
-    }
-
-    public async Task SaveChartSkills(ChartSkillsRecord record, CancellationToken cancellationToken = default)
-    {
-        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var skills = await database.Set<ChartSkillEntity>().Where(cs => cs.ChartId == record.ChartId)
-            .ToArrayAsync(cancellationToken);
-
-        var newEntities = record.ContainsSkills.Select(s => new ChartSkillEntity
-        {
-            ChartId = record.ChartId,
-            Id = Guid.NewGuid(),
-            IsHighlighted = false,
-            SkillName = s.ToString()
-        }).Concat(record.HighlightsSkill.Select(s => new ChartSkillEntity
-        {
-            ChartId = record.ChartId,
-            Id = Guid.NewGuid(),
-            IsHighlighted = true,
-            SkillName = s.ToString()
-        })).ToArray();
-
-        var toCreate = newEntities.Where(e =>
-            !skills.Any(s => s.SkillName == e.SkillName && s.IsHighlighted == e.IsHighlighted));
-
-        var toDelete = skills.Where(e =>
-            !newEntities.Any(s => s.SkillName == e.SkillName && s.IsHighlighted == e.IsHighlighted));
-        await database.Set<ChartSkillEntity>().AddRangeAsync(toCreate, cancellationToken);
-        database.Set<ChartSkillEntity>().RemoveRange(toDelete);
-        await database.SaveChangesAsync(cancellationToken);
-
-        var cache = await GetAllCharts(MixEnum.Phoenix, cancellationToken);
-        var chart = cache[record.ChartId];
-        cache[record.ChartId] = chart with { Skills = record.ContainsSkills.Distinct().ToHashSet() };
-        _cache.Remove(ChartSkillsCacheKey);
-    }
-
     public async Task SetSongCultureName(Name englishSongName, Name cultureCode, Name songName,
         CancellationToken cancellationToken = default)
     {
@@ -442,7 +389,6 @@ internal sealed class EFChartRepository : IChartRepository
             _cache.Remove(key);
         }
 
-        _cache.Remove(ChartSkillsCacheKey);
         _cache.Remove($"{nameof(EFChartRepository)}_{nameof(GetChartVideoInformation)}");
     }
 
@@ -544,9 +490,6 @@ internal sealed class EFChartRepository : IChartRepository
         {
             entry.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(14);
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var chartSkills = (await database.Set<ChartSkillEntity>().ToArrayAsync(cancellationToken)).GroupBy(cs => cs.ChartId)
-                .ToDictionary(g => g.Key, g => g.Select(s => Enum.Parse<Skill>(s.SkillName)).Distinct().ToHashSet());
-
             // OriginalMix maps through MixIds, not Enum.Parse(Mix.Name): legacy mix names
             // ("Prex 3", "OBG SE") are display strings, not enum identifiers.
             return await (from cm in database.ChartMix
@@ -562,11 +505,7 @@ internal sealed class EFChartRepository : IChartRepository
                         new HashSet<Skill>(),
                         LegacySlotHelperMethods.ToNullableLegacySlot(cm.LegacySlot),
                         c.PlayerCount))
-                .ToDictionaryAsync(c => c.Id,
-                    c => c with
-                    {
-                        Skills = chartSkills.TryGetValue(c.Id, out var skill) ? skill : new HashSet<Skill>()
-                    }, cancellationToken);
+                .ToDictionaryAsync(c => c.Id, cancellationToken);
         });
     }
 }

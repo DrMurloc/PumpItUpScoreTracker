@@ -19,9 +19,9 @@ namespace ScoreTracker.Catalog.Application;
 ///        the admin grid's queue); NotFound candidates whose key appeared flip to Auto.
 ///     2. Fetch per-chart analysis for resolved aliases missing the current data
 ///        release (the client throttles; a killed run resumes at the gap set).
-///     3. Regenerate every chart's Skill tags from the banked metrics — including
-///        clearing tags on charts piucenter has nothing for. The pre-crawler hand tags
-///        live on in scores.ChartSkillArchive only (owner-locked full replace).
+///     3. Rebuild every folder's per-badge baselines from the banked metrics, and announce
+///        the ingestion so anything derived from step analysis can recompute
+///        (docs/design/chart-identity.md §5).
 ///     The snapshot import runs the same pipeline from an uploaded zip of a data
 ///     release instead of HTTP — the zero-crawl bootstrap path.
 /// </summary>
@@ -62,7 +62,6 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
         var resolved = ResolvedIn(aliases, table);
 
         await FillMetricGaps(resolved, table, version, cancellationToken);
-        await RegenerateSkillTags(resolved, phoenixCharts, cancellationToken);
         await RebuildFolderBaselines(phoenixCharts, context, cancellationToken);
     }
 
@@ -119,7 +118,6 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
 
         _logger.LogInformation("piucenter snapshot import: banked metrics for {Banked}/{Total} resolved charts",
             banked, resolved.Length);
-        await RegenerateSkillTags(resolved, phoenixCharts, cancellationToken);
         await RebuildFolderBaselines(phoenixCharts, context, cancellationToken);
     }
 
@@ -273,75 +271,6 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
         await publisher.Publish(new PiuCenterDataIngestedEvent(byMix.Keys.ToArray()), cancellationToken);
     }
 
-    private async Task RegenerateSkillTags(IReadOnlyList<ExternalChartAlias> resolved,
-        IReadOnlyList<Chart> phoenixCharts, CancellationToken cancellationToken)
-    {
-        var chartById = phoenixCharts.ToDictionary(c => c.Id);
-        var metricsByChart =
-            (await _metrics.GetMetrics(resolved.Select(a => a.ChartId!.Value), PiuCenterMetrics.Source,
-                cancellationToken))
-            .GroupBy(m => m.ChartId)
-            .ToDictionary(g => g.Key, g => (IReadOnlyList<ChartSkillMetric>)g.ToArray());
-
-        // Fast/Slow cutoffs are folder-relative: NPS quartiles within (type, level).
-        var cutoffs = metricsByChart
-            .Where(kv => chartById.ContainsKey(kv.Key))
-            .Select(kv => (Chart: chartById[kv.Key],
-                Nps: kv.Value.FirstOrDefault(m => m.MetricName == PiuCenterMetrics.Nps)?.Value))
-            .Where(x => x.Nps != null)
-            .GroupBy(x => (x.Chart.Type, Level: (int)x.Chart.Level))
-            .ToDictionary(g => g.Key, g =>
-            {
-                var sorted = g.Select(x => x.Nps!.Value).OrderBy(v => v).ToArray();
-                return (Fast: Quantile(sorted, PiuCenterSkillMapper.FastNpsQuantile),
-                    Slow: Quantile(sorted, PiuCenterSkillMapper.SlowNpsQuantile));
-            });
-
-        var desired = new Dictionary<Guid, ChartSkillsRecord>();
-        foreach (var (chartId, chartMetrics) in metricsByChart)
-        {
-            (decimal Fast, decimal Slow)? folder = chartById.TryGetValue(chartId, out var chart) &&
-                                                   cutoffs.TryGetValue((chart.Type, (int)chart.Level), out var c)
-                ? c
-                : null;
-            desired[chartId] = PiuCenterSkillMapper.Map(chartId, chartMetrics, folder?.Fast, folder?.Slow);
-        }
-
-        // Charts with tags but no piucenter data lose them — the hand-tag purge.
-        var current = (await _charts.GetChartSkills(cancellationToken)).ToDictionary(r => r.ChartId);
-        foreach (var record in current.Values)
-            if (!desired.ContainsKey(record.ChartId) && chartById.ContainsKey(record.ChartId))
-                desired[record.ChartId] = new ChartSkillsRecord(record.ChartId, Array.Empty<Skill>(),
-                    Array.Empty<Skill>());
-
-        var changed = 0;
-        foreach (var record in desired.Values)
-        {
-            if (current.TryGetValue(record.ChartId, out var existing) && SameTags(existing, record)) continue;
-            await _charts.SaveChartSkills(record, cancellationToken);
-            changed++;
-        }
-
-        _logger.LogInformation("piucenter crawl: regenerated skill tags — {Changed} charts changed of {Total}",
-            changed, desired.Count);
-    }
-
-    private static bool SameTags(ChartSkillsRecord stored, ChartSkillsRecord desired)
-    {
-        // Stored records read ContainsSkills as ALL rows (highlighted included); desired
-        // records keep the two sets disjoint — union before comparing.
-        var storedAll = stored.ContainsSkills.ToHashSet();
-        var desiredAll = desired.ContainsSkills.Concat(desired.HighlightsSkill).ToHashSet();
-        return storedAll.SetEquals(desiredAll) &&
-               stored.HighlightsSkill.ToHashSet().SetEquals(desired.HighlightsSkill.ToHashSet());
-    }
-
-    private static decimal Quantile(decimal[] sortedValues, double quantile)
-    {
-        var index = (int)Math.Round(quantile * (sortedValues.Length - 1), MidpointRounding.AwayFromZero);
-        return sortedValues[Math.Clamp(index, 0, sortedValues.Length - 1)];
-    }
-
     private static List<ChartSkillMetric> BuildMetrics(Guid chartId, decimal version, PiuCenterChartPage page,
         PiuCenterChartListing? listing, IReadOnlyList<PiuCenterPracticeEntry>? practice, decimal? prediction)
     {
@@ -446,7 +375,7 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
                 _ => "ARCADE"
             };
             var key =
-                $"{PiuCenterSkillMapper.Normalize(chart.Song.Name)}|{PiuCenterSkillMapper.Normalize(chart.Song.Artist)}|{sord}|{(int)chart.Level}|{variant}";
+                $"{PiuCenterKeyParser.Normalize(chart.Song.Name)}|{PiuCenterKeyParser.Normalize(chart.Song.Artist)}|{sord}|{(int)chart.Level}|{variant}";
             // Ambiguous keys match nothing — better parked than misbound.
             index[key] = index.ContainsKey(key) ? null : chart.Id;
         }
@@ -465,7 +394,7 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
             ? listing.Variant["HALFDOUBLE_".Length..]
             : listing.Variant;
         var key =
-            $"{PiuCenterSkillMapper.Normalize(parts.SongPart)}|{PiuCenterSkillMapper.Normalize(parts.ArtistPart)}|{sord}|{listing.Level}|{variant}";
+            $"{PiuCenterKeyParser.Normalize(parts.SongPart)}|{PiuCenterKeyParser.Normalize(parts.ArtistPart)}|{sord}|{listing.Level}|{variant}";
         return matchIndex.GetValueOrDefault(key);
     }
 }
