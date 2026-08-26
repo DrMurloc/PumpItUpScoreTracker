@@ -5,7 +5,7 @@ namespace ScoreTracker.Catalog.Contracts.Queries;
 /// <summary>
 ///     Raw banked badge coverage per chart — piucenter's own badge name → the fraction of
 ///     the chart's segments carrying it — for analytics that need the measured profile
-///     rather than a display projection. <see cref="GetChartSkillChipsQuery" /> maps these
+///     rather than a display projection. The deleted rollup mapped these
 ///     onto the coarse Skill vocabulary by taking a max per mapped skill and gating each
 ///     badge on a threshold; that is right for chips and lossy for comparison, because
 ///     three kinds of bracket collapse into one number and a chart whose every twist badge

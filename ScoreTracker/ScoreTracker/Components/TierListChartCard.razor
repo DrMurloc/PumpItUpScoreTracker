@@ -219,7 +219,10 @@ else
     // Owner-locked (piucenter round 1): up to three chips, dominance-ordered, "+n" overflow.
     private const int MaxSkillChips = 3;
 
-    /// <summary>CategoryClass is a site.css skillcat-* class; Metric is preformatted or null.</summary>
+    /// <summary>
+    ///     CategoryClass carries the chip's badge family and its identity kind as site.css
+    ///     classes; Metric is preformatted or null.
+    /// </summary>
     public sealed record CardSkillChip(string Label, string CategoryClass, string? Metric);
 
     [Parameter] public int? AgeDays { get; set; }

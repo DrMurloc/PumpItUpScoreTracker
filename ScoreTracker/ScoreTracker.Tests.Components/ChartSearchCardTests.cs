@@ -38,7 +38,6 @@ public sealed class ChartSearchCardTests : ComponentTestBase
         Assert.Contains("Doublesteps", cut.Markup);
         Assert.Single(cut.FindAll(".badgecat-brackets"));
         Assert.Single(cut.FindAll(".badgecat-tech"));
-        Assert.Empty(cut.FindAll("[class*=skillcat-]"));
     }
 
     [Fact]

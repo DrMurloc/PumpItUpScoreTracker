@@ -98,7 +98,6 @@ public sealed class FolderSkillListTests : ComponentTestBase
 
         Assert.Single(cut.FindAll(".badgecat-doublestech"));
         Assert.Single(cut.FindAll(".tier-folder-skill-row-badge"));
-        Assert.Empty(cut.FindAll("[class*=skillcat-]"));
     }
 
     /// <summary>

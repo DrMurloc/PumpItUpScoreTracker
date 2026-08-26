@@ -135,7 +135,15 @@ N3 is additive, so N4–N7 can move one surface at a time and every commit stays
 - **Post-deploy presses**: Backfill User Tier Lists, Recalculate Ratings (PUMBILITY), and a
   chart-verdict rebuild. Tier order and Pumbility numbers will move — that is the intent.
 
-## 6. Shipped so far
+## 6. Shipped
+
+**Round 2 — DONE (2026-08-25).** The rollup is gone: `Skill`, `SkillCategory`, `Chart.Skills`,
+the 33→11 mapper, the queries and records that served it, the write path that regenerated tags,
+and the `--skillcat-*` tokens. `scores.ChartSkill` moved to the `archive` schema;
+`scores.ChartSkillArchive` stayed live as the Chabala lens's one read. What replaced it is
+specified in [chart-identity.md](chart-identity.md) and built alongside. `RetiredSkillRollupTests`
+is the ratchet that keeps it dead — it grew back once as a display vocabulary after being
+deleted as a data source, which is exactly what a ratchet is for.
 
 **Round 1 — the three chart surfaces (N1, N3, N4).** Scope reduced by the owner to what the
 chart list, the chart details page and the chart details dialog need to be accurate; the

@@ -48,8 +48,6 @@ public sealed class SkillCoverageBarsTests : ComponentTestBase
 
         Assert.Single(cut.FindAll(".badgecat-tech"));
         Assert.Single(cut.FindAll(".badgecat-doublestech"));
-        // The retired rollup's buckets must not come back through a side door.
-        Assert.Empty(cut.FindAll("[class*=skillcat-]"));
     }
 
     [Fact]
