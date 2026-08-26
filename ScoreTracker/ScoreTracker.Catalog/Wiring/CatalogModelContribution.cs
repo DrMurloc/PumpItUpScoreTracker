@@ -15,9 +15,10 @@ public sealed class CatalogModelContribution : IDbModelContribution
 {
     public void Contribute(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<ChartSkillEntity>().ToTable("ChartSkill");
         modelBuilder.Entity<SongNameLanguageEntity>().ToTable("SongNameLanguage");
         modelBuilder.Entity<ExternalChartAliasEntity>().ToTable("ExternalChartAlias");
+        // Still mapped, still read: the Chabala lens shows his archived hand tags, and it is
+        // the only surface that does (docs/design/nuke-old-skill-categories.md §7).
         modelBuilder.Entity<ChartSkillArchiveEntity>().ToTable("ChartSkillArchive");
         modelBuilder.Entity<ChartSkillMetricEntity>().ToTable("ChartSkillMetric")
             .HasKey(e => new { e.ChartId, e.Source, e.MetricName });
