@@ -1795,6 +1795,9 @@
   <data name="Copying existing highlights into the new feed store." xml:space="preserve">
     <value>기존 하이라이트를 새 피드 저장소로 복사하는 중입니다.</value>
   </data>
+  <data name="Core Identity" xml:space="preserve">
+    <value>보면 개성</value>
+  </data>
   <data name="Costs scale with the chart — every non-perfect divides by the note count. Pick a chart size:" xml:space="preserve">
     <value>감점은 채보에 비례합니다. 퍼펙트가 아닌 모든 판정은 노트 수로 나뉩니다. 채보 크기를 선택하세요:</value>
   </data>
@@ -2118,6 +2121,9 @@
   </data>
   <data name="Difficulty Range" xml:space="preserve">
     <value>난이도 범위</value>
+  </data>
+  <data name="Difficulty Spike" xml:space="preserve">
+    <value>난이도 급상승</value>
   </data>
   <data name="Directory" xml:space="preserve">
     <value>디렉터리</value>
@@ -2502,6 +2508,9 @@
   </data>
   <data name="Favorites" xml:space="preserve">
     <value>즐겨찾기</value>
+  </data>
+  <data name="Features" xml:space="preserve">
+    <value>특징</value>
   </data>
   <data name="Feedback Submitted, Thank You!" xml:space="preserve">
     <value>피드백 감사합니다!</value>
@@ -2901,6 +2910,9 @@
   </data>
   <data name="Harder for you" xml:space="preserve">
     <value>나에게 더 어려움</value>
+  </data>
+  <data name="Hardest {0}s:" xml:space="preserve">
+    <value>가장 어려운 {0}초:</value>
   </data>
   <data name="Has errors" xml:space="preserve">
     <value>오류 있음</value>
@@ -5862,6 +5874,9 @@
   <data name="Qualifiers Submission" xml:space="preserve">
     <value>{0} 예선과제 제출</value>
   </data>
+  <data name="Quarter Double" xml:space="preserve">
+    <value>쿼터 더블</value>
+  </data>
   <data name="Queued" xml:space="preserve">
     <value>대기열에 추가됨</value>
   </data>
@@ -8089,6 +8104,12 @@
   <data name="Twist 90" xml:space="preserve">
     <value>90도 틀기</value>
   </data>
+  <data name="Twist-heavy" xml:space="preserve">
+    <value>트위스트 많음</value>
+  </data>
+  <data name="Twistless" xml:space="preserve">
+    <value>트위스트 없음</value>
+  </data>
   <data name="Twists" xml:space="preserve">
     <value>틀기</value>
   </data>
@@ -8709,6 +8730,9 @@
   </data>
   <data name="Why Don't You Get Up and Dance, Man?" xml:space="preserve">
     <value>Why Don't You Get Up and Dance, Man?</value>
+  </data>
+  <data name="Wide" xml:space="preserve">
+    <value>전체 사용</value>
   </data>
   <data name="Widget schema" xml:space="preserve">
     <value>위젯 스키마</value>

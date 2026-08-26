@@ -167,7 +167,7 @@ else
             @foreach (var group in VisibleSkillGroups)
             {
                 <div class="tier-chart-card-group">
-                    <span class="tier-chart-card-group-label">@(group.IsIdentity ? L["Identity"] : L["Features"])</span>
+                    <span class="tier-chart-card-group-label">@(group.IsIdentity ? L["Core Identity"] : L["Features"])</span>
                     <div class="tier-chart-card-skills">
                         @foreach (var skill in group.Chips)
                         {

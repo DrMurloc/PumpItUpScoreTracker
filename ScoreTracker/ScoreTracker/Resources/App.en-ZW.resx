@@ -1807,6 +1807,9 @@
   <data name="Copying existing highlights into the new feed store." xml:space="preserve">
     <value>Grablmurg Murmmurmgro grgl gro Glorgmorg murgblub.</value>
   </data>
+  <data name="Core Identity" xml:space="preserve">
+    <value>Grulbo Marga</value>
+  </data>
   <data name="Costs scale with the chart — every non-perfect divides by the note count. Pick a chart size:" xml:space="preserve">
     <value>Gogl grogro plgl gro murgl — blub bo-plglgrgl gropla pa gro glub glorgmurp. Grab a murgl grombl:</value>
   </data>
@@ -2131,6 +2134,9 @@
   </data>
   <data name="Difficulty Range" xml:space="preserve">
 	  <value>Glorgmurpgrrgl Blubmrgl</value>
+  </data>
+  <data name="Difficulty Spike" xml:space="preserve">
+    <value>Rugalo Bramp</value>
   </data>
   <data name="Directory" xml:space="preserve">
     <value>Golba grog</value>
@@ -2518,6 +2524,9 @@
   </data>
   <data name="Favorites" xml:space="preserve">
     <value>Gromorg</value>
+  </data>
+  <data name="Features" xml:space="preserve">
+    <value>Blagurm</value>
   </data>
   <data name="Feedback Submitted, Thank You!" xml:space="preserve">
     <value>Grorpgromurg Arglromurg, Maglargl Blub!</value>
@@ -2918,6 +2927,9 @@
   </data>
   <data name="Harder for you" xml:space="preserve">
     <value>Mrrglmrgl ro blub</value>
+  </data>
+  <data name="Hardest {0}s:" xml:space="preserve">
+    <value>Murglag {0}:</value>
   </data>
   <data name="Has errors" xml:space="preserve">
     <value>Rgl maglgrorp</value>
@@ -5900,6 +5912,9 @@
   <data name="Qualifiers Submission" xml:space="preserve">
     <value>{0} Glmrglgro Murggrglmr</value>
   </data>
+  <data name="Quarter Double" xml:space="preserve">
+    <value>Grubla Ogra</value>
+  </data>
   <data name="Queued" xml:space="preserve">
     <value>Lurggrgl</value>
   </data>
@@ -8148,6 +8163,12 @@
   <data name="Twist 90" xml:space="preserve">
     <value>Blgrlgrgl 90</value>
   </data>
+  <data name="Twist-heavy" xml:space="preserve">
+    <value>Glorpa Murg</value>
+  </data>
+  <data name="Twistless" xml:space="preserve">
+    <value>Ulgo Glorpa</value>
+  </data>
   <data name="Twists" xml:space="preserve">
     <value>Maglblarg</value>
   </data>
@@ -8772,6 +8793,9 @@
   </data>
   <data name="Why Don't You Get Up and Dance, Man?" xml:space="preserve">
     <value>Ro Glorggrrgl Blub Blarg Morg ro Rglgrorp, Urg?</value>
+  </data>
+  <data name="Wide" xml:space="preserve">
+    <value>Blorga</value>
   </data>
   <data name="Widget schema" xml:space="preserve">
     <value>Murggrrgl plglglorg</value>

@@ -1795,6 +1795,9 @@
   <data name="Copying existing highlights into the new feed store." xml:space="preserve">
     <value>Copiando os destaques existentes para o novo repositório do feed.</value>
   </data>
+  <data name="Core Identity" xml:space="preserve">
+    <value>Identidade principal</value>
+  </data>
   <data name="Costs scale with the chart — every non-perfect divides by the note count. Pick a chart size:" xml:space="preserve">
     <value>Os custos escalam com o chart — cada não-perfect divide pelo número de notas. Escolha um tamanho de chart:</value>
   </data>
@@ -2118,6 +2121,9 @@
   </data>
   <data name="Difficulty Range" xml:space="preserve">
     <value>Intervalo de dificuldade</value>
+  </data>
+  <data name="Difficulty Spike" xml:space="preserve">
+    <value>Pico de dificuldade</value>
   </data>
   <data name="Directory" xml:space="preserve">
     <value>Diretório</value>
@@ -2502,6 +2508,9 @@
   </data>
   <data name="Favorites" xml:space="preserve">
     <value>Favoritos</value>
+  </data>
+  <data name="Features" xml:space="preserve">
+    <value>Características</value>
   </data>
   <data name="Feedback Submitted, Thank You!" xml:space="preserve">
     <value>Obrigado pelo feedback!</value>
@@ -2901,6 +2910,9 @@
   </data>
   <data name="Harder for you" xml:space="preserve">
     <value>Mais difícil para você</value>
+  </data>
+  <data name="Hardest {0}s:" xml:space="preserve">
+    <value>{0} s mais difíceis:</value>
   </data>
   <data name="Has errors" xml:space="preserve">
     <value>Contém erros</value>
@@ -5862,6 +5874,9 @@
   <data name="Qualifiers Submission" xml:space="preserve">
     <value>Envio dos qualifiers de {0}</value>
   </data>
+  <data name="Quarter Double" xml:space="preserve">
+    <value>Quarto duplo</value>
+  </data>
   <data name="Queued" xml:space="preserve">
     <value>Na fila</value>
   </data>
@@ -8089,6 +8104,12 @@
   <data name="Twist 90" xml:space="preserve">
     <value>Twists de 90°</value>
   </data>
+  <data name="Twist-heavy" xml:space="preserve">
+    <value>Muito torcido</value>
+  </data>
+  <data name="Twistless" xml:space="preserve">
+    <value>Sem torções</value>
+  </data>
   <data name="Twists" xml:space="preserve">
     <value>Twists</value>
   </data>
@@ -8709,6 +8730,9 @@
   </data>
   <data name="Why Don't You Get Up and Dance, Man?" xml:space="preserve">
     <value>Why Don't You Get Up and Dance, Man?</value>
+  </data>
+  <data name="Wide" xml:space="preserve">
+    <value>Amplo</value>
   </data>
   <data name="Widget schema" xml:space="preserve">
     <value>Esquema de widgets</value>
