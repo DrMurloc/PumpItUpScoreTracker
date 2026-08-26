@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Commands;
 using ScoreTracker.Catalog.Contracts.Queries;
@@ -134,12 +134,12 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumera
 
             var chips = topRank
                 .OrderBy(kv => kv.Value)
-                .Select(kv => new ChartBadgeChipRecord(kv.Key, PiuCenterBadges.DisplayName(kv.Key), PiuCenterBadges.CategoryFor(kv.Key), true,
+                .Select(kv => new ChartBadgeChipRecord(kv.Key, BadgeLabels.DisplayName(kv.Key), BadgeLabels.CategoryFor(kv.Key), true,
                     coverage.TryGetValue(kv.Key, out var f) ? f : null))
                 .Concat(qualified
                     .Where(b => !topRank.ContainsKey(b))
                     .OrderByDescending(b => coverage[b])
-                    .Select(b => new ChartBadgeChipRecord(b, PiuCenterBadges.DisplayName(b), PiuCenterBadges.CategoryFor(b), false, coverage[b])))
+                    .Select(b => new ChartBadgeChipRecord(b, BadgeLabels.DisplayName(b), BadgeLabels.CategoryFor(b), false, coverage[b])))
                 .ToArray();
             if (chips.Length > 0) result[group.Key] = chips;
         }
@@ -175,6 +175,12 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumera
             return metrics.FirstOrDefault(m => m.MetricName == name)?.Value;
         }
 
+        var cruxBadges = metrics
+            .Where(m => m.MetricName.StartsWith(PiuCenterMetrics.CruxBadgePrefix, StringComparison.Ordinal))
+            .OrderBy(m => m.Value)
+            .Select(m => m.MetricName[PiuCenterMetrics.CruxBadgePrefix.Length..])
+            .ToArray();
+
         return new ChartStepAnalysisRecord(
             metrics.Where(m => m.MetricName.StartsWith(PiuCenterMetrics.Top3Prefix, StringComparison.Ordinal))
                 .OrderBy(m => m.Value)
@@ -187,7 +193,14 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartSkillsQuery, IEnumera
             Single(PiuCenterMetrics.SustainTime),
             Single(PiuCenterMetrics.TimeUnderTension),
             Single(PiuCenterMetrics.DifficultyPrediction),
-            externalKey);
+            externalKey,
+            // A crux needs a position and a duration to be placeable at all; peakiness is the
+            // one part that can be missing, because it is the only part that needs a printed
+            // level to compare against.
+            Single(PiuCenterMetrics.CruxPosition) is { } position &&
+            Single(PiuCenterMetrics.CruxDuration) is { } duration
+                ? new ChartCruxRecord(cruxBadges, Single(PiuCenterMetrics.CruxPeakiness), position, duration)
+                : null);
     }
 
     public async Task<IEnumerable<ChartSkillsRecord>> Handle(GetChartSkillsQuery request,

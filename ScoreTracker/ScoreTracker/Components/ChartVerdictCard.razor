@@ -42,7 +42,8 @@
     public IReadOnlyList<ChartVerdictFacet>? Facets { get; set; }
 
     private IReadOnlyList<ChartVerdictFacet> Headlines => (Facets ?? Array.Empty<ChartVerdictFacet>())
-        .Where(f => f is PassVsScoreVerdict or LetterWallVerdict or YieldKneeVerdict or StyleFingerprintVerdict)
+        .Where(f => f is PassVsScoreVerdict or LetterWallVerdict or YieldKneeVerdict or StyleFingerprintVerdict
+            or CruxVerdict)
         .Take(2)
         .ToArray();
 

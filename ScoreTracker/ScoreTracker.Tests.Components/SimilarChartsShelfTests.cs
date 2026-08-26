@@ -113,7 +113,7 @@ public sealed class SimilarChartsShelfTests : TestContext
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
 
         Assert.Contains("Brackets50%", Chips(cut));
-        Assert.Contains("Anchor runs25%", Chips(cut));
+        Assert.Contains("Anchor Runs25%", Chips(cut));
         Assert.DoesNotContain("same skill profile", cut.Markup);
     }
 
@@ -140,7 +140,7 @@ public sealed class SimilarChartsShelfTests : TestContext
         var cut = RenderComponent<SimilarChartsShelf>(p => p.Add(s => s.ChartId, anchor));
 
         Assert.Contains("Brackets90%", Chips(cut));
-        Assert.Contains("Anchor runs80%", Chips(cut));
+        Assert.Contains("Anchor Runs80%", Chips(cut));
         Assert.Contains("Drills70%", Chips(cut));
         Assert.DoesNotContain("Jacks", cut.Markup);
     }
@@ -187,7 +187,7 @@ public sealed class SimilarChartsShelfTests : TestContext
         Assert.Contains("Brackets50%", Chips(cut));
         // The near-miss is behind its own disclosure, counted so the offer is honest.
         Assert.Contains("Didn't quite make the cut (1)", cut.Markup);
-        Assert.Contains("90° twists40%", Chips(cut));
+        Assert.Contains("Twist 9040%", Chips(cut));
     }
 
 

@@ -72,13 +72,9 @@ public sealed class ChartVerdictHandlerTests
         _playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<PlayerStatsRecord>());
-        _mediator.Setup(m => m.Send(It.IsAny<GetChartSkillChipsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>
-            {
-                [chartId] = new[] { new ChartSkillChipRecord(Skill.Stamina, true, 0.5m) }
-            });
         _mediator.Setup(m => m.Send(It.IsAny<GetChartStepAnalysisQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((ChartStepAnalysisRecord?)null);
+            .ReturnsAsync(new ChartStepAnalysisRecord(new[] { "sustained" },
+                new Dictionary<string, decimal> { ["sustained"] = 0.5m }, 11m, null, null, null, null));
     }
 
     [Fact]
@@ -98,7 +94,8 @@ public sealed class ChartVerdictHandlerTests
         Assert.Equal(new[] { 19, 20 }, history.Levels.Select(l => l.Level).ToArray());
 
         var fingerprint = facets.OfType<StyleFingerprintVerdict>().Single();
-        Assert.Equal(Skill.Stamina, fingerprint.TopSkills.Single().Skill);
+        Assert.Equal("sustained", fingerprint.TopBadges.Single().Badge);
+        Assert.Equal("Sustained", fingerprint.TopBadges.Single().DisplayName);
 
         // Three records on this chart, two clears.
         var population = facets.OfType<PopulationVerdict>().Single();

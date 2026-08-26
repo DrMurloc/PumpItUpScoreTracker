@@ -1,17 +1,21 @@
-using ScoreTracker.Catalog.Contracts;
-
-namespace ScoreTracker.Catalog.Domain;
+namespace ScoreTracker.Catalog.Contracts;
 
 /// <summary>
-///     English display names for the granular piucenter badge vocabulary — the one label
-///     table for every chart surface (the SRP facet and chips, the coverage bars on the
-///     chart page and its dialog). Unknown keys fall back to Title Case so new piucenter
-///     vocabulary degrades to something readable without a code change; the UI layer
-///     localizes. Colour families used to ride the rollup's category buckets and went with
-///     them (docs/design/nuke-old-skill-categories.md) — a badge chip is neutral and its
-///     printed name carries the meaning.
+///     English display names and families for the granular piucenter badge vocabulary — THE
+///     label table, published because five surfaces speak it: the SRP's chips and facet cloud,
+///     the coverage bars on the chart page and its dialog, the identity chips, the similar-
+///     charts shelf, and the verdict sentences. It was two tables that disagreed with each
+///     other ("Anchor runs" against "Anchor Runs", "90° twists" against "Twist 90") until they
+///     merged here (docs/design/nuke-old-skill-categories.md §2).
+///     <para>
+///         Unknown keys degrade to something readable rather than to a raw key, so new
+///         piucenter vocabulary needs no code change to be presentable. Values are English
+///         keys for <c>IStringLocalizer</c>: the pattern vocabulary renders English in every
+///         locale by long-standing ruling, and routing it through the localizer anyway leaves
+///         translating it a resx change rather than a code change.
+///     </para>
 /// </summary>
-internal static class PiuCenterBadges
+public static class BadgeLabels
 {
     private static readonly IReadOnlyDictionary<string, string> DisplayNames =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -51,11 +55,17 @@ internal static class PiuCenterBadges
             ["side3_singles"] = "Side-3 Singles"
         };
 
+    /// <summary>
+    ///     <c>yog_walk</c> → <c>Yog Walk</c>. Underscore is piucenter's key separator and
+    ///     becomes a space; a HYPHEN is punctuation the term itself owns — <c>cross-pad</c>,
+    ///     <c>co-op</c>, <c>5-stair</c> — so it survives rather than being split into two
+    ///     words the community does not use.
+    /// </summary>
     public static string DisplayName(string badgeKey)
     {
         if (DisplayNames.TryGetValue(badgeKey, out var known)) return known;
 
-        var words = badgeKey.Split('_', '-', ' ')
+        var words = badgeKey.Split('_', ' ')
             .Where(w => w.Length > 0)
             .Select(w => char.ToUpperInvariant(w[0]) + w[1..]);
         return string.Join(' ', words);

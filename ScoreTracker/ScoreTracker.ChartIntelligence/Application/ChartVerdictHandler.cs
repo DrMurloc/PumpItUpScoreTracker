@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
+using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
@@ -101,12 +102,19 @@ internal sealed class ChartVerdictHandler : IRequestHandler<GetChartVerdictQuery
         var medianClearScore = clearScores.Length == 0 ? (int?)null : clearScores[(clearScores.Length - 1) / 2];
         var clearPlates = clears.Where(r => r.Record.Plate != null).Select(r => r.Record.Plate!.Value).ToArray();
 
-        var skillWeights = (await _mediator.Send(new GetChartSkillChipsQuery(new[] { chartId }),
-                cancellationToken))
-            .TryGetValue(chartId, out var chips)
-            ? chips.GroupBy(c => c.Skill).ToDictionary(g => g.Key, g => g.Max(c => c.Weight))
-            : new Dictionary<Skill, double>();
         var analysis = await _mediator.Send(new GetChartStepAnalysisQuery(chartId), cancellationToken);
+        // Granular badges, measured — no rollup hop. The fingerprint sentence gets to say
+        // "Anchor Runs" where it used to say "Runs" and mean five different things.
+        var badgeWeights = (analysis?.BadgeFractions ?? new Dictionary<string, decimal>())
+            .ToDictionary(kv => kv.Key,
+                kv => new BadgeEvidence(kv.Key, BadgeLabels.DisplayName(kv.Key), (double)kv.Value),
+                StringComparer.OrdinalIgnoreCase);
+        var crux = analysis?.Crux is { } c
+            ? new CruxEvidence(
+                c.Badges.Select(b => new BadgeEvidence(b, BadgeLabels.DisplayName(b),
+                    analysis!.BadgeFractions.TryGetValue(b, out var coverage) ? (double)coverage : 0)).ToArray(),
+                (double?)c.Peakiness, (double)c.Position, (double)c.DurationSeconds)
+            : null;
         var durationSeconds = chart.Song.Duration.TotalSeconds;
         var tensionFraction = analysis?.TimeUnderTensionSeconds != null && durationSeconds > 0
             ? (double)analysis.TimeUnderTensionSeconds.Value / durationSeconds
@@ -117,8 +125,8 @@ internal sealed class ChartVerdictHandler : IRequestHandler<GetChartVerdictQuery
             : Array.Empty<MixLevel>();
 
         return new ChartVerdictInputs(passTier, scoreTier, letterPercentiles, averagesByLevel, passesByLevel,
-            clearPlates, medianClearScore, records.Length, clears.Length, skillWeights, tensionFraction,
-            mix, chart.OriginalMix, mixLevels);
+            clearPlates, medianClearScore, records.Length, clears.Length, badgeWeights, tensionFraction,
+            mix, chart.OriginalMix, mixLevels, crux);
     }
 
     private async Task<TierListCategory?> TierCategory(MixEnum mix, string tierListName, Guid chartId,

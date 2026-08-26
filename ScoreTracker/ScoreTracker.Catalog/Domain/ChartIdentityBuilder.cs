@@ -87,7 +87,7 @@ internal static class ChartIdentityBuilder
 
     private static IdentityChipRecord Chip(IdentityChipKind kind, string badge, decimal? detail)
     {
-        return new IdentityChipRecord(kind, badge, PiuCenterBadges.DisplayName(badge),
-            PiuCenterBadges.CategoryFor(badge), detail);
+        return new IdentityChipRecord(kind, badge, BadgeLabels.DisplayName(badge),
+            BadgeLabels.CategoryFor(badge), detail);
     }
 }

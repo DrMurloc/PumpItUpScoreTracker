@@ -20,11 +20,24 @@ internal sealed record ChartVerdictInputs(
     int? MedianClearScore,
     int ScoresTracked,
     int PassCount,
-    IReadOnlyDictionary<Skill, double> SkillWeights,
+    IReadOnlyDictionary<string, BadgeEvidence> BadgeWeights,
     double? TensionFraction,
     MixEnum CurrentMix,
     MixEnum DebutMix,
-    IReadOnlyList<MixLevel> MixLevels);
+    IReadOnlyList<MixLevel> MixLevels,
+    CruxEvidence? Crux = null);
+
+/// <summary>One badge's measured coverage, with the name a sentence would print.</summary>
+[ExcludeFromCodeCoverage]
+internal sealed record BadgeEvidence(string Badge, string DisplayName, double Coverage);
+
+/// <summary>The chart at its hardest, as the engine reads it (docs/design/chart-identity.md §4).</summary>
+[ExcludeFromCodeCoverage]
+internal sealed record CruxEvidence(
+    IReadOnlyList<BadgeEvidence> Badges,
+    double? Peakiness,
+    double Position,
+    double DurationSeconds);
 
 [ExcludeFromCodeCoverage]
 internal sealed record LevelAverage(int Level, double AverageScore);

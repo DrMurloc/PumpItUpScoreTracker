@@ -47,6 +47,13 @@ internal static class ChartVerdictService
     /// <summary>Time-under-tension share that flags a chart as sustained.</summary>
     internal const double SustainedTensionFraction = 0.6;
 
+    /// <summary>
+    ///     How far over its printed level a crux must run before it is worth a sentence. The
+    ///     same bar the identity chips draw a spike at, so the page and the verdict cannot
+    ///     disagree about whether a chart has one.
+    /// </summary>
+    internal const double CruxMinimumPeakiness = 0.7;
+
     public static IReadOnlyList<ChartVerdictFacet> ComputeFacets(ChartVerdictInputs inputs)
     {
         var facets = new List<ChartVerdictFacet>();
@@ -56,6 +63,9 @@ internal static class ChartVerdictService
         if (LetterWall(inputs) is { } wall) facets.Add(wall);
         if (YieldKnee(inputs) is { } knee) facets.Add(knee);
         if (StyleFingerprint(inputs) is { } style) facets.Add(style);
+        // The crux sits with the fingerprint: one says what the chart is made of, the other
+        // what its hardest stretch is made of, and they disagree on most charts.
+        if (Crux(inputs) is { } crux) facets.Add(crux);
         if (PassBand(inputs) is { } band) facets.Add(band);
         if (PlateResidual(inputs) is { } plates) facets.Add(plates);
         if (History(inputs) is { } history) facets.Add(history);
@@ -118,15 +128,30 @@ internal static class ChartVerdictService
 
     private static StyleFingerprintVerdict? StyleFingerprint(ChartVerdictInputs inputs)
     {
-        var top = inputs.SkillWeights
-            .Where(kv => kv.Value >= FingerprintMinimumCoverage)
-            .OrderByDescending(kv => kv.Value)
+        var top = inputs.BadgeWeights.Values
+            .Where(b => b.Coverage >= FingerprintMinimumCoverage)
+            .OrderByDescending(b => b.Coverage)
+            .ThenBy(b => b.Badge, StringComparer.OrdinalIgnoreCase)
             .Take(2)
-            .Select(kv => new SkillCoverageRecord(kv.Key, kv.Value))
+            .Select(b => new BadgeCoverageRecord(b.Badge, b.DisplayName, b.Coverage))
             .ToArray();
         if (top.Length == 0) return null;
         return new StyleFingerprintVerdict(top,
             inputs.TensionFraction is { } tension && tension >= SustainedTensionFraction);
+    }
+
+    /// <summary>
+    ///     What ends you, and where. Silent unless the crux runs clear of the printed level:
+    ///     a chart whose peak is its own average has no single stretch worth naming, and
+    ///     saying one anyway would put a crux on every chart on the site.
+    /// </summary>
+    private static CruxVerdict? Crux(ChartVerdictInputs inputs)
+    {
+        if (inputs.Crux is not { Peakiness: { } peakiness } crux) return null;
+        if (peakiness < CruxMinimumPeakiness || crux.Badges.Count == 0) return null;
+        return new CruxVerdict(
+            crux.Badges.Take(2).Select(b => new BadgeCoverageRecord(b.Badge, b.DisplayName, b.Coverage)).ToArray(),
+            peakiness, crux.Position, crux.DurationSeconds);
     }
 
     private static PassBandVerdict? PassBand(ChartVerdictInputs inputs)

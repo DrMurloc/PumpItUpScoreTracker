@@ -67,8 +67,8 @@ internal sealed class ChartIdentityHandler
         return metrics.GroupBy(m => m.ChartId)
             .Select(g => (g.Key, Profile: ChartBadgeProfile.From(g.Key, g.ToArray())))
             .Select(x => (x.Key, Badges: (IReadOnlyList<ChartBadgePresenceRecord>)x.Profile.PresentBadges
-                .Select(b => new ChartBadgePresenceRecord(b, PiuCenterBadges.DisplayName(b),
-                    PiuCenterBadges.CategoryFor(b),
+                .Select(b => new ChartBadgePresenceRecord(b, BadgeLabels.DisplayName(b),
+                    BadgeLabels.CategoryFor(b),
                     ChartIdentityRules.IsWholeChartBadge(b) ? 1m : x.Profile.CoverageOf(b)))
                 .ToArray()))
             .Where(x => x.Badges.Count > 0)

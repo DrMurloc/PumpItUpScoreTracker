@@ -66,6 +66,15 @@
         @* Bars extracted to SkillCoverageBars (chart-page overhaul): one concept,
            one component — the page renders the same bars at section scale. *@
         <SkillCoverageBars Chips="_skillChips"></SkillCoverageBars>
+        @* The bars describe the whole chart evenly, so the one thing they cannot show is
+           where it actually gets hard. The dialog says it in a line, exactly as the chart
+           page does (docs/design/chart-identity.md §4). *@
+        @if (_crux != null)
+        {
+            <MudText Typo="Typo.caption" Class="chart-details-crux">
+                <VerdictSentence Facet="_crux"></VerdictSentence>
+            </MudText>
+        }
     }
     <MudText Typo="Typo.overline">@L["Charts like this"]</MudText>
     <SimilarChartsCompactGrid ChartId="Chart.Id" Mix="Mix" Active="Active"
@@ -100,6 +109,12 @@
         display: inline-block;
         margin-top: 8px;
     }
+
+    .chart-details-crux {
+        display: block;
+        color: var(--mud-palette-text-secondary);
+        margin: 4px 0 2px;
+    }
 </style>
 
 @code {
@@ -133,6 +148,7 @@
     private string? _externalKey;
     private IReadOnlyList<(string Label, string Color)> _placements = Array.Empty<(string, string)>();
     private IReadOnlyList<ChartBadgeChipRecord> _skillChips = Array.Empty<ChartBadgeChipRecord>();
+    private CruxVerdict? _crux;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -144,6 +160,11 @@
         // Coverage bars: granular piucenter badges, dominance-ordered, from the banked metrics.
         _skillChips = (await Mediator.Send(new GetChartBadgeChipsQuery(new[] { Chart.Id })))
             .GetValueOrDefault(Chart.Id) ?? Array.Empty<ChartBadgeChipRecord>();
+        // The crux rides the verdict query, whose facets are cached per (chart, mix) — the
+        // page dispatches the same one, so this is a shared read rather than a second cost.
+        _crux = ((await Mediator.Send(new GetChartVerdictQuery(Chart.Id, Mix)))
+                ?? Array.Empty<ChartVerdictFacet>())
+            .OfType<CruxVerdict>().FirstOrDefault();
     }
 
     private async Task<IReadOnlyList<(string, string)>> LoadPlacements(Guid chartId)

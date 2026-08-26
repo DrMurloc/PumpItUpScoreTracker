@@ -137,7 +137,7 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
                 .Where(m => m.MetricName.StartsWith(PiuCenterMetrics.Top3Prefix, StringComparison.Ordinal))
                 .Select(m => m.MetricName[PiuCenterMetrics.Top3Prefix.Length..])
                 .OrderBy(k => k, StringComparer.Ordinal)
-                .Select(k => new ChartBadge(k, PiuCenterBadges.DisplayName(k), PiuCenterBadges.CategoryFor(k)))
+                .Select(k => new ChartBadge(k, BadgeLabels.DisplayName(k), BadgeLabels.CategoryFor(k)))
                 .ToArray();
             nps = metrics.FirstOrDefault(m => m.MetricName == PiuCenterMetrics.Nps)?.Value;
         }

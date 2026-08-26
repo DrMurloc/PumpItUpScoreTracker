@@ -20,11 +20,12 @@ public sealed class ChartVerdictServiceTests
         int? medianClearScore = null,
         int scoresTracked = 0,
         int passCount = 0,
-        IReadOnlyDictionary<Skill, double>? skills = null,
+        IReadOnlyDictionary<string, BadgeEvidence>? badges = null,
         double? tensionFraction = null,
         MixEnum currentMix = MixEnum.Phoenix,
         MixEnum debutMix = MixEnum.Phoenix,
-        IReadOnlyList<MixLevel>? mixLevels = null)
+        IReadOnlyList<MixLevel>? mixLevels = null,
+        CruxEvidence? crux = null)
     {
         // Averages and pass counts come from one population in production, so a level with
         // a score average has passers behind it unless a test says otherwise. Without this
@@ -34,8 +35,8 @@ public sealed class ChartVerdictServiceTests
             .ToArray();
         return new ChartVerdictInputs(passTier, scoreTier, letters, averages ?? Array.Empty<LevelAverage>(),
             passes, plates ?? Array.Empty<PhoenixPlate>(), medianClearScore,
-            scoresTracked, passCount, skills ?? new Dictionary<Skill, double>(), tensionFraction, currentMix,
-            debutMix, mixLevels ?? Array.Empty<MixLevel>());
+            scoresTracked, passCount, badges ?? new Dictionary<string, BadgeEvidence>(), tensionFraction,
+            currentMix, debutMix, mixLevels ?? Array.Empty<MixLevel>(), crux);
     }
 
     /// <summary>Comfortably over <see cref="ChartVerdictService.YieldKneeMinimumPassesPerLevel" />.</summary>
@@ -214,26 +215,84 @@ public sealed class ChartVerdictServiceTests
     public void StyleFingerprintTakesTheTopTwoQualifyingSkillsAndTheSustainedFlag()
     {
         var facets = ChartVerdictService.ComputeFacets(Inputs(
-            skills: new Dictionary<Skill, double>
+            badges: new Dictionary<string, BadgeEvidence>
             {
-                [Skill.Stamina] = 0.5,
-                [Skill.EndRun] = 0.3,
-                [Skill.VeryFast] = 0.1
+                ["sustained"] = new("sustained", "Sustained", 0.5),
+                ["anchor_run"] = new("anchor_run", "Anchor Runs", 0.3),
+                ["bursty"] = new("bursty", "Bursty", 0.1)
             },
             tensionFraction: 0.7));
 
         var fingerprint = facets.OfType<StyleFingerprintVerdict>().Single();
-        Assert.Equal(new[] { Skill.Stamina, Skill.EndRun }, fingerprint.TopSkills.Select(s => s.Skill).ToArray());
+        Assert.Equal(new[] { "sustained", "anchor_run" }, fingerprint.TopBadges.Select(b => b.Badge).ToArray());
+        Assert.Equal("Anchor Runs", fingerprint.TopBadges[1].DisplayName);
         Assert.True(fingerprint.IsSustained);
     }
 
     [Fact]
-    public void StyleFingerprintStaysSilentWhenNoSkillClearsTheCoverageBar()
+    public void StyleFingerprintStaysSilentWhenNoBadgeClearsTheCoverageBar()
     {
         var facets = ChartVerdictService.ComputeFacets(Inputs(
-            skills: new Dictionary<Skill, double> { [Skill.Stamina] = 0.2 }, tensionFraction: 0.9));
+            badges: new Dictionary<string, BadgeEvidence>
+                { ["sustained"] = new("sustained", "Sustained", 0.2) },
+            tensionFraction: 0.9));
 
         Assert.Empty(facets.OfType<StyleFingerprintVerdict>());
+    }
+
+    /// <summary>
+    ///     The crux speaks only when the chart's hardest stretch really clears the level it
+    ///     prints. Every chart has a hardest segment; almost none of them have a crux worth
+    ///     naming, and saying otherwise would put the sentence on the whole site.
+    /// </summary>
+    [Fact]
+    public void TheCruxSpeaksWhenItClearsThePrintedLevelAndPlacesItself()
+    {
+        var facets = ChartVerdictService.ComputeFacets(Inputs(
+            crux: new CruxEvidence(new[] { new BadgeEvidence("anchor_run", "Anchor Runs", 0.4) },
+                1.3, 0.82, 19)));
+
+        var crux = facets.OfType<CruxVerdict>().Single();
+        Assert.Equal("Anchor Runs", crux.Badges.Single().DisplayName);
+        Assert.Equal(CruxPlacement.Closing, crux.Placement);
+        Assert.Equal(19, crux.DurationSeconds);
+    }
+
+    [Theory]
+    // A peak level with its own average under it: an endurance chart, not a spike.
+    [InlineData(0.2)]
+    [InlineData(-1.0)]
+    public void ACruxThatDoesNotClearThePrintedLevelStaysSilent(double peakiness)
+    {
+        var facets = ChartVerdictService.ComputeFacets(Inputs(
+            crux: new CruxEvidence(new[] { new BadgeEvidence("run", "Runs", 0.5) }, peakiness, 0.8, 20)));
+
+        Assert.Empty(facets.OfType<CruxVerdict>());
+    }
+
+    /// <summary>
+    ///     A chart with no printed level to compare against has no peakiness, so there is
+    ///     nothing to claim — the facet declines rather than guessing at zero.
+    /// </summary>
+    [Fact]
+    public void ACruxWithNoMeasuredPeakinessStaysSilent()
+    {
+        var facets = ChartVerdictService.ComputeFacets(Inputs(
+            crux: new CruxEvidence(new[] { new BadgeEvidence("run", "Runs", 0.5) }, null, 0.8, 20)));
+
+        Assert.Empty(facets.OfType<CruxVerdict>());
+    }
+
+    [Theory]
+    [InlineData(0.1, CruxPlacement.Opening)]
+    [InlineData(0.5, CruxPlacement.Middle)]
+    [InlineData(0.9, CruxPlacement.Closing)]
+    public void ThePlacementQuantizesWhereTheCruxSits(double position, CruxPlacement expected)
+    {
+        var facets = ChartVerdictService.ComputeFacets(Inputs(
+            crux: new CruxEvidence(new[] { new BadgeEvidence("run", "Runs", 0.5) }, 1.1, position, 12)));
+
+        Assert.Equal(expected, facets.OfType<CruxVerdict>().Single().Placement);
     }
 
     [Fact]
@@ -282,15 +341,18 @@ public sealed class ChartVerdictServiceTests
             medianClearScore: 975_000,
             scoresTracked: 115,
             passCount: 71,
-            skills: new Dictionary<Skill, double> { [Skill.Stamina] = 0.5 },
+            badges: new Dictionary<string, BadgeEvidence>
+                { ["sustained"] = new("sustained", "Sustained", 0.5) },
             tensionFraction: 0.7,
+            crux: new CruxEvidence(new[] { new BadgeEvidence("anchor_run", "Anchor Runs", 0.4) }, 1.2, 0.8, 19),
             debutMix: MixEnum.XX,
             mixLevels: new[] { new MixLevel(MixEnum.XX, 19), new MixLevel(MixEnum.Phoenix, 20) }));
 
         Assert.Equal(new[]
         {
             typeof(PassVsScoreVerdict), typeof(LetterWallVerdict), typeof(YieldKneeVerdict),
-            typeof(StyleFingerprintVerdict), typeof(PassBandVerdict), typeof(PlateResidualVerdict),
+            typeof(StyleFingerprintVerdict), typeof(CruxVerdict), typeof(PassBandVerdict),
+            typeof(PlateResidualVerdict),
             typeof(HistoryVerdict), typeof(PopulationVerdict)
         }, facets.Select(f => f.GetType()).ToArray());
     }
