@@ -1918,6 +1918,9 @@
   <data name="Cross-pad Transitions" xml:space="preserve">
     <value>패드 이동</value>
   </data>
+  <data name="crux: {0}" xml:space="preserve">
+    <value>최난구간: {0}</value>
+  </data>
   <data name="CSV Upload" xml:space="preserve">
     <value>CSV 업로드</value>
   </data>
@@ -2184,6 +2187,9 @@
   </data>
   <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
     <value>더블 표입니다; 싱글은 AA 이하를 한 칸씩 낮게 읽습니다 (AA {0}, A+ {1} …). 전체 사다리는 아래에.</value>
+  </data>
+  <data name="Doubles Tech" xml:space="preserve">
+    <value>더블 테크</value>
   </data>
   <data name="Doubles: {0}/{1} charts" xml:space="preserve">
     <value>더블: {0}/{1}곡</value>
@@ -2493,6 +2499,9 @@
   </data>
   <data name="Far Twists" xml:space="preserve">
     <value>넓은 틀기</value>
+  </data>
+  <data name="Fast" xml:space="preserve">
+    <value>빠름</value>
   </data>
   <data name="Favorites" xml:space="preserve">
     <value>즐겨찾기</value>
@@ -3364,6 +3373,9 @@
   <data name="It moves, and that is the whole answer: score is {0} of the number in {1} and {2} in {3}. The pool’s average level runs {4} → {5} along the way, and S or better {6} → {7} of fifty." xml:space="preserve">
     <value>움직입니다, 그리고 그것이 답의 전부입니다: 점수는 {1}에서 숫자의 {0}, {3}에서 {2}입니다. 그 사이 풀의 평균 레벨은 {4} → {5}, 50개 중 S 이상은 {6} → {7}개입니다.</value>
   </data>
+  <data name="It opens with its hardest {0} seconds — {1}." xml:space="preserve">
+    <value>가장 어려운 {0}초로 시작합니다 — {1}.</value>
+  </data>
   <data name="It reads player scores" xml:space="preserve">
     <value>플레이어 점수를 읽습니다</value>
   </data>
@@ -3390,6 +3402,12 @@
   </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>읽을 수 있는 항목</value>
+  </data>
+  <data name="Its hardest {0} seconds are {1}, at the very end." xml:space="preserve">
+    <value>가장 어려운 {0}초는 {1}이며, 맨 끝에 있습니다.</value>
+  </data>
+  <data name="Its hardest {0} seconds are {1}, in the middle." xml:space="preserve">
+    <value>가장 어려운 {0}초는 {1}이며, 중반에 있습니다.</value>
   </data>
   <data name="Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access." xml:space="preserve">
     <value>키가 작동을 멈추고 웹훅 전송이 중단되며, 연결된 플레이어 {0}명이 접근 권한을 잃습니다.</value>
@@ -3870,6 +3888,9 @@
   </data>
   <data name="Metric" xml:space="preserve">
     <value>지표</value>
+  </data>
+  <data name="Mid Tempo" xml:space="preserve">
+    <value>중간 속도</value>
   </data>
   <data name="Mid-4 Doubles" xml:space="preserve">
     <value>중앙 4패널</value>
@@ -5998,11 +6019,17 @@
   <data name="Rebuild {0} PUMBILITY tier lists" xml:space="preserve">
     <value>{0} PUMBILITY 티어 리스트 재생성</value>
   </data>
+  <data name="Rebuild {0} Speed tier list" xml:space="preserve">
+    <value>{0} 속도 티어 리스트 재생성</value>
+  </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>모든 플레이어의 최근 세션을 재생성하는 중입니다.</value>
   </data>
   <data name="Rebuilding the {0} PUMBILITY tier lists. It takes a few minutes." xml:space="preserve">
     <value>{0} PUMBILITY 티어 리스트를 재생성하는 중입니다. 몇 분 걸립니다.</value>
+  </data>
+  <data name="Rebuilding the {0} Speed tier list. It takes a few minutes." xml:space="preserve">
+    <value>{0} 속도 티어 리스트를 재생성하는 중입니다. 몇 분 걸립니다.</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>몇 시간마다 다시 계산됩니다</value>
@@ -6985,6 +7012,9 @@
   <data name="Slim" xml:space="preserve">
     <value>희박</value>
   </data>
+  <data name="Slow" xml:space="preserve">
+    <value>느림</value>
+  </data>
   <data name="so scoring one chart at 20 is worth" xml:space="preserve">
     <value>그래서 20레벨에서 채보 하나의 점수는</value>
   </data>
@@ -7063,6 +7093,15 @@
   <data name="Special Snowflake" xml:space="preserve">
     <value>Special Snowflake</value>
   </data>
+  <data name="Speed" xml:space="preserve">
+    <value>속도</value>
+  </data>
+  <data name="Speed not measured" xml:space="preserve">
+    <value>속도 미측정</value>
+  </data>
+  <data name="Spike" xml:space="preserve">
+    <value>스파이크</value>
+  </data>
   <data name="Spikes" xml:space="preserve">
     <value>폭타 구간</value>
   </data>
@@ -7104,6 +7143,9 @@
   </data>
   <data name="Stale weight" xml:space="preserve">
     <value>낡은 가중치</value>
+  </data>
+  <data name="Stamina &amp; Runs" xml:space="preserve">
+    <value>체력 &amp; 폭타</value>
   </data>
   <data name="Stamina Session Builder" xml:space="preserve">
     <value>스태미나 세션 빌더</value>
@@ -7299,6 +7341,9 @@
   </data>
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>
+  </data>
+  <data name="Tech" xml:space="preserve">
+    <value>테크</value>
   </data>
   <data name="Test delivery" xml:space="preserve">
     <value>테스트 전송</value>
@@ -8299,6 +8344,9 @@
   <data name="Very easy to pass for its level" xml:space="preserve">
     <value>레벨 대비 클리어가 매우 쉬움</value>
   </data>
+  <data name="Very Fast" xml:space="preserve">
+    <value>아주 빠름</value>
+  </data>
   <data name="Very Good" xml:space="preserve">
     <value>매우 좋음</value>
   </data>
@@ -8322,6 +8370,9 @@
   </data>
   <data name="Very Popular" xml:space="preserve">
     <value>매우 인기</value>
+  </data>
+  <data name="Very Slow" xml:space="preserve">
+    <value>아주 느림</value>
   </data>
   <data name="Very split" xml:space="preserve">
     <value>크게 갈림</value>
@@ -9726,6 +9777,9 @@
   </data>
   <data name="{0}m ago" xml:space="preserve">
     <value>{0}분 전</value>
+  </data>
+  <data name="{0}–{1} NPS" xml:space="preserve">
+    <value>{0}–{1} NPS</value>
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>공식 순위표 ~#{0}</value>

@@ -1931,6 +1931,9 @@
   <data name="Cross-pad Transitions" xml:space="preserve">
     <value>Cross-pad Transitions</value>
   </data>
+  <data name="crux: {0}" xml:space="preserve">
+    <value>crux: {0}</value>
+  </data>
   <data name="CSV Upload" xml:space="preserve">
     <value>CSV Upload</value>
   </data>
@@ -2198,6 +2201,9 @@
   </data>
   <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
     <value>Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below.</value>
+  </data>
+  <data name="Doubles Tech" xml:space="preserve">
+    <value>Doubles Tech</value>
   </data>
   <data name="Doubles: {0}/{1} charts" xml:space="preserve">
     <value>Doubles: {0}/{1} charts</value>
@@ -2509,6 +2515,9 @@
   </data>
   <data name="Far Twists" xml:space="preserve">
     <value>Far Twists</value>
+  </data>
+  <data name="Fast" xml:space="preserve">
+    <value>Fast</value>
   </data>
   <data name="Favorites" xml:space="preserve">
     <value>Favorites</value>
@@ -3382,6 +3391,9 @@
   <data name="It moves, and that is the whole answer: score is {0} of the number in {1} and {2} in {3}. The pool’s average level runs {4} → {5} along the way, and S or better {6} → {7} of fifty." xml:space="preserve">
     <value>It moves, and that is the whole answer: score is {0} of the number in {1} and {2} in {3}. The pool’s average level runs {4} → {5} along the way, and S or better {6} → {7} of fifty.</value>
   </data>
+  <data name="It opens with its hardest {0} seconds — {1}." xml:space="preserve">
+    <value>It opens with its hardest {0} seconds — {1}.</value>
+  </data>
   <data name="It reads player scores" xml:space="preserve">
     <value>It reads player scores</value>
   </data>
@@ -3408,6 +3420,12 @@
   </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>It will be able to read</value>
+  </data>
+  <data name="Its hardest {0} seconds are {1}, at the very end." xml:space="preserve">
+    <value>Its hardest {0} seconds are {1}, at the very end.</value>
+  </data>
+  <data name="Its hardest {0} seconds are {1}, in the middle." xml:space="preserve">
+    <value>Its hardest {0} seconds are {1}, in the middle.</value>
   </data>
   <data name="Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access." xml:space="preserve">
     <value>Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access.</value>
@@ -3895,6 +3913,9 @@
   </data>
   <data name="Metric" xml:space="preserve">
     <value>Metric</value>
+  </data>
+  <data name="Mid Tempo" xml:space="preserve">
+    <value>Mid Tempo</value>
   </data>
   <data name="Mid-4 Doubles" xml:space="preserve">
     <value>Mid-4 Doubles</value>
@@ -6037,11 +6058,17 @@
   <data name="Rebuild {0} PUMBILITY tier lists" xml:space="preserve">
     <value>Rebuild {0} PUMBILITY tier lists</value>
   </data>
+  <data name="Rebuild {0} Speed tier list" xml:space="preserve">
+    <value>Rebuild {0} Speed tier list</value>
+  </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>Rebuilding the latest session for every player.</value>
   </data>
   <data name="Rebuilding the {0} PUMBILITY tier lists. It takes a few minutes." xml:space="preserve">
     <value>Rebuilding the {0} PUMBILITY tier lists. It takes a few minutes.</value>
+  </data>
+  <data name="Rebuilding the {0} Speed tier list. It takes a few minutes." xml:space="preserve">
+    <value>Rebuilding the {0} Speed tier list. It takes a few minutes.</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>Recalculated every few hours</value>
@@ -7038,6 +7065,9 @@
   <data name="Slim" xml:space="preserve">
     <value>Slim</value>
   </data>
+  <data name="Slow" xml:space="preserve">
+    <value>Slow</value>
+  </data>
   <data name="so scoring one chart at 20 is worth" xml:space="preserve">
     <value>so scoring one chart at 20 is worth</value>
   </data>
@@ -7117,6 +7147,15 @@
   <data name="Special Snowflake" xml:space="preserve">
     <value>Special Snowflake</value>
   </data>
+  <data name="Speed" xml:space="preserve">
+    <value>Speed</value>
+  </data>
+  <data name="Speed not measured" xml:space="preserve">
+    <value>Speed not measured</value>
+  </data>
+  <data name="Spike" xml:space="preserve">
+    <value>Spike</value>
+  </data>
   <data name="Spikes" xml:space="preserve">
     <value>Spikes</value>
   </data>
@@ -7160,6 +7199,9 @@
   </data>
   <data name="Stale weight" xml:space="preserve">
     <value>Stale weight</value>
+  </data>
+  <data name="Stamina &amp; Runs" xml:space="preserve">
+    <value>Stamina &amp; Runs</value>
   </data>
   <data name="Stamina Session Builder" xml:space="preserve">
 	  <value>Stamina Session Builder</value>
@@ -7357,6 +7399,9 @@
   </data>
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>
+  </data>
+  <data name="Tech" xml:space="preserve">
+    <value>Tech</value>
   </data>
   <data name="Test delivery" xml:space="preserve">
     <value>Test delivery</value>
@@ -8361,6 +8406,9 @@
   <data name="Very easy to pass for its level" xml:space="preserve">
     <value>Very easy to pass for its level</value>
   </data>
+  <data name="Very Fast" xml:space="preserve">
+    <value>Very Fast</value>
+  </data>
   <data name="Very Good" xml:space="preserve">
     <value>Very Good</value>
   </data>
@@ -8384,6 +8432,9 @@
   </data>
   <data name="Very Popular" xml:space="preserve">
     <value>Very Popular</value>
+  </data>
+  <data name="Very Slow" xml:space="preserve">
+    <value>Very Slow</value>
   </data>
   <data name="Very split" xml:space="preserve">
     <value>Very split</value>
@@ -9795,6 +9846,9 @@
   </data>
   <data name="{0}m ago" xml:space="preserve">
     <value>{0}m ago</value>
+  </data>
+  <data name="{0}–{1} NPS" xml:space="preserve">
+    <value>{0}–{1} NPS</value>
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>~#{0} on the official board</value>

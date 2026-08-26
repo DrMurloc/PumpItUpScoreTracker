@@ -1931,6 +1931,9 @@
   <data name="Cross-pad Transitions" xml:space="preserve">
     <value>Blargmurm-grorp Rglurgrglgro</value>
   </data>
+  <data name="crux: {0}" xml:space="preserve">
+    <value>grorpmurgl: {0}</value>
+  </data>
   <data name="CSV Upload" xml:space="preserve">
     <value>CSV Grglargl</value>
   </data>
@@ -2198,6 +2201,9 @@
   </data>
   <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
     <value>Groggl mrpblarg; a Mrglrlgl grumbo AA ur bloblo a grop bloblo (AA {0}, A+ {1} …). Plurb gropla bloblo.</value>
+  </data>
+  <data name="Doubles Tech" xml:space="preserve">
+    <value>Groggl Murgmol</value>
   </data>
   <data name="Doubles: {0}/{1} charts" xml:space="preserve">
     <value>Groggl: {0}/{1} murgl</value>
@@ -2509,6 +2515,9 @@
   </data>
   <data name="Far Twists" xml:space="preserve">
     <value>Blub Maglblarg</value>
+  </data>
+  <data name="Fast" xml:space="preserve">
+    <value>Prglurg</value>
   </data>
   <data name="Favorites" xml:space="preserve">
     <value>Gromorg</value>
@@ -3382,6 +3391,9 @@
   <data name="It moves, and that is the whole answer: score is {0} of the number in {1} and {2} in {3}. The pool’s average level runs {4} → {5} along the way, and S or better {6} → {7} of fifty." xml:space="preserve">
     <value>Mo mrgloru, ur plab lu a plurb blurgum: mrglrgl lu {0} ba a gramb lo {1} ur {2} lo {3}. A blubgro’a rorg grorpmurm grrglgrrgl {4} → {5} plglarg a plag, ur Ｓ ol mrrgl {6} → {7} ba murgro.</value>
   </data>
+  <data name="It opens with its hardest {0} seconds — {1}." xml:space="preserve">
+    <value>Gl mrprgl mrgl mrglmrgl {0} murgrog — {1}.</value>
+  </data>
   <data name="It reads player scores" xml:space="preserve">
     <value>Mo blurgl morp Mgrlgmrg</value>
   </data>
@@ -3408,6 +3420,12 @@
   </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>Murp blurgl</value>
+  </data>
+  <data name="Its hardest {0} seconds are {1}, at the very end." xml:space="preserve">
+    <value>Mrgl mrglmrgl {0} murgrog blub {1}, ro mrgl grorpmurm.</value>
+  </data>
+  <data name="Its hardest {0} seconds are {1}, in the middle." xml:space="preserve">
+    <value>Mrgl mrglmrgl {0} murgrog blub {1}, mrp murmol.</value>
   </data>
   <data name="Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access." xml:space="preserve">
     <value>Grumb alla golba, blurgl alla golba, opa {0} marogl bloop am olo.</value>
@@ -3895,6 +3913,9 @@
   </data>
   <data name="Metric" xml:space="preserve">
     <value>Murmgrorp</value>
+  </data>
+  <data name="Mid Tempo" xml:space="preserve">
+    <value>Murmol Murgrgl</value>
   </data>
   <data name="Mid-4 Doubles" xml:space="preserve">
     <value>Murm-4 Groggl</value>
@@ -6037,11 +6058,17 @@
   <data name="Rebuild {0} PUMBILITY tier lists" xml:space="preserve">
     <value>Blurgmurgl {0} PUMBILITY mrgl morgl</value>
   </data>
+  <data name="Rebuild {0} Speed tier list" xml:space="preserve">
+    <value>Blurgmurgl {0} Murgrgl mrgl morgl</value>
+  </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>Bagl orgab murlog al.</value>
   </data>
   <data name="Rebuilding the {0} PUMBILITY tier lists. It takes a few minutes." xml:space="preserve">
     <value>Blurgmurgl {0} PUMBILITY mrgl morgl. Mrgl blub argl mrogl.</value>
+  </data>
+  <data name="Rebuilding the {0} Speed tier list. It takes a few minutes." xml:space="preserve">
+    <value>Blurgmurgl {0} Murgrgl mrgl morgl. Mrgl blub argl mrogl.</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>Groglorgplglmorg murgglorg rgl blargmrp</value>
@@ -7038,6 +7065,9 @@
   <data name="Slim" xml:space="preserve">
     <value>Brgl</value>
   </data>
+  <data name="Slow" xml:space="preserve">
+    <value>Grolurg</value>
+  </data>
   <data name="so scoring one chart at 20 is worth" xml:space="preserve">
     <value>ro mrglrgl mrp murgl og 20 lu gromb</value>
   </data>
@@ -7117,6 +7147,15 @@
   <data name="Special Snowflake" xml:space="preserve">
     <value>Arglgrogrrgl Mrpgrrglro</value>
   </data>
+  <data name="Speed" xml:space="preserve">
+    <value>Murgrgl</value>
+  </data>
+  <data name="Speed not measured" xml:space="preserve">
+    <value>Murgrgl murm mrglrgl</value>
+  </data>
+  <data name="Spike" xml:space="preserve">
+    <value>Blargrgl</value>
+  </data>
   <data name="Spikes" xml:space="preserve">
     <value>Mrgl</value>
   </data>
@@ -7160,6 +7199,9 @@
   </data>
   <data name="Stale weight" xml:space="preserve">
     <value>Blugmrp murm</value>
+  </data>
+  <data name="Stamina &amp; Runs" xml:space="preserve">
+    <value>Blublurg &amp; Morgplgl</value>
   </data>
   <data name="Stamina Session Builder" xml:space="preserve">
 	  <value>Gromrgrgl Grrglgrrglgl Grglmrglmagl</value>
@@ -7357,6 +7399,9 @@
   </data>
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Rglmrgl Murgmrmrpmagl</value>
+  </data>
+  <data name="Tech" xml:space="preserve">
+    <value>Murgmol</value>
   </data>
   <data name="Test delivery" xml:space="preserve">
     <value>Blorp grumb</value>
@@ -8361,6 +8406,9 @@
   <data name="Very easy to pass for its level" xml:space="preserve">
     <value>Mrgl mrgl grgl maglplgl ro argl grorpmurm</value>
   </data>
+  <data name="Very Fast" xml:space="preserve">
+    <value>Mrgl Prglurg</value>
+  </data>
   <data name="Very Good" xml:space="preserve">
     <value>Mrgl Lurggrgl</value>
   </data>
@@ -8384,6 +8432,9 @@
   </data>
   <data name="Very Popular" xml:space="preserve">
     <value>Mrgl Grolurgmrp</value>
+  </data>
+  <data name="Very Slow" xml:space="preserve">
+    <value>Mrgl Grolurg</value>
   </data>
   <data name="Very split" xml:space="preserve">
     <value>Mrgl Blgrrrl</value>
@@ -9795,6 +9846,9 @@
   </data>
   <data name="{0}m ago" xml:space="preserve">
     <value>{0}m mrgla</value>
+  </data>
+  <data name="{0}–{1} NPS" xml:space="preserve">
+    <value>{0}–{1} NPS</value>
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>~#{0} orb pum</value>
