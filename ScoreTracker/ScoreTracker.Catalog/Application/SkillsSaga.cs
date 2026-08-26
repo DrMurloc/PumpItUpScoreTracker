@@ -151,6 +151,17 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartStepAnalysisQuery, Ch
             Single(PiuCenterMetrics.CruxPosition) is { } position &&
             Single(PiuCenterMetrics.CruxDuration) is { } duration
                 ? new ChartCruxRecord(cruxBadges, Single(PiuCenterMetrics.CruxPeakiness), position, duration)
+                : null,
+            // Geometry hangs on the stance measures rather than the pad shares: singles bank no
+            // pad share at all, and a chart that predates the geometry pass banks neither.
+            Single(PiuCenterMetrics.StanceSideOn) is { } sideOn
+                ? new ChartGeometryRecord(
+                    Single(PiuCenterMetrics.PadShareMid4),
+                    Single(PiuCenterMetrics.PadShareMid6),
+                    Single(PiuCenterMetrics.StanceDiagonal) ?? 0m,
+                    sideOn,
+                    Single(PiuCenterMetrics.StanceCrossed) ?? 0m,
+                    Single(PiuCenterMetrics.BracketRowShare) ?? 0m)
                 : null);
     }
 }

@@ -142,6 +142,10 @@
                chart made of" means. Grind and spikes rather than sustain and tension:
                sustain is a subset of tension, so showing both counts the grind twice. *@
             <IntensityBars Intensity="Intensity" Duration="_chart.Song.Duration"></IntensityBars>
+            @* The evidence behind the geometry chips. A reader who wants to know why a chart
+               calls itself Half-Double or Twist-heavy reads the measurement here instead of
+               taking the chip's word for it (docs/design/chart-identity.md §4b). *@
+            <GeometryBars Geometry="_analysis?.Geometry"></GeometryBars>
             <div class="chart-skill-foot">
                 <span>@L["Share of the chart each pattern and demand covers"]</span>
                 <span>@L["Step analysis data from PIU Center"]</span>

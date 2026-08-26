@@ -14,7 +14,28 @@ public sealed record ChartStepAnalysisRecord(
     decimal? TimeUnderTensionSeconds,
     decimal? DifficultyPrediction,
     string? ExternalKey,
-    ChartCruxRecord? Crux = null);
+    ChartCruxRecord? Crux = null,
+    ChartGeometryRecord? Geometry = null);
+
+/// <summary>
+///     Where the body goes (docs/design/chart-identity.md §4b), replayed from the arrows. Shares
+///     are 0–1; the pad shares are null on singles, where "all middle" is trivially true and
+///     would mean nothing.
+///     <para>
+///         <see cref="Diagonal" /> is here and on no chip anywhere: the median chart sits near
+///         78% at every level, because the pad's corners make a diagonal stance simply what
+///         walking in PIU looks like. It earns a drawer row beside the two shares that do
+///         discriminate, and nothing louder.
+///     </para>
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record ChartGeometryRecord(
+    decimal? PadShareMid4,
+    decimal? PadShareMid6,
+    decimal Diagonal,
+    decimal SideOn,
+    decimal Crossed,
+    decimal BracketRowShare);
 
 /// <summary>
 ///     The chart at its hardest (docs/design/chart-identity.md §4): what its peak stretch is

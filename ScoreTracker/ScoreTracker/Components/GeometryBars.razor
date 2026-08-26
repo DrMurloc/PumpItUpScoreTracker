@@ -1,0 +1,106 @@
+@using ScoreTracker.Catalog.Contracts
+@namespace ScoreTracker.Web.Components
+
+@* Where the body goes, as bars in the same shape as the skill and intensity ones
+   (docs/design/chart-identity.md §4b). This is the evidence behind the geometry chips: a
+   reader who wants to know why a chart calls itself Half-Double or Twist-heavy finds the
+   measurement here rather than being asked to take the word for it.
+
+   The diagonal share is printed and never chipped — the median chart sits near 78% at every
+   level, because the pad's corners make a diagonal stance what walking in PIU looks like. It
+   is here for scale: it tells you what the side-on number is being measured against.
+
+   Pad shares only render for doubles, where "how much of the pad" is a real question. A
+   singles chart is trivially all-middle and a row saying so would be noise. *@
+@if (Rows.Count > 0)
+{
+    <div class="chart-geometry-bars">
+        @foreach (var row in Rows)
+        {
+            <div class="chart-geometry-bar">
+                <span class="chart-geometry-bar-label">@L[row.Label]</span>
+                <span class="chart-geometry-bar-track">
+                    <span class="chart-geometry-bar-fill" style="width:@row.Percent%"></span>
+                </span>
+                <span class="chart-geometry-bar-value">@row.Value</span>
+            </div>
+        }
+    </div>
+}
+
+<style>
+    .chart-geometry-bars {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 4px 16px;
+        margin: 2px 0 8px;
+    }
+
+    .chart-geometry-bar {
+        display: grid;
+        grid-template-columns: 92px 1fr 76px;
+        align-items: center;
+        gap: 8px;
+        font-size: .75rem;
+    }
+
+    .chart-geometry-bar-label {
+        color: color-mix(in srgb, var(--geometry-chip) 60%, var(--mix-ink));
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .chart-geometry-bar-track {
+        height: 5px;
+        border-radius: 3px;
+        background: color-mix(in srgb, var(--geometry-chip) 14%, transparent);
+        overflow: hidden;
+    }
+
+    .chart-geometry-bar-fill {
+        display: block;
+        height: 100%;
+        border-radius: 3px;
+        background: var(--geometry-chip);
+    }
+
+    .chart-geometry-bar-value {
+        text-align: right;
+        color: var(--mix-ink-muted);
+        font-variant-numeric: tabular-nums;
+    }
+</style>
+
+@code {
+    [Parameter] public ChartGeometryRecord? Geometry { get; set; }
+
+    private sealed record Row(string Label, int Percent, string Value);
+
+    private IReadOnlyList<Row> Rows
+    {
+        get
+        {
+            if (Geometry == null) return Array.Empty<Row>();
+            var rows = new List<Row>(6);
+            if (Geometry.PadShareMid6 is { } mid6) rows.Add(Bar("Middle 6", mid6));
+            if (Geometry.PadShareMid4 is { } mid4) rows.Add(Bar("Middle 4", mid4));
+            rows.Add(Bar("Diagonal stance", Geometry.Diagonal));
+            rows.Add(Bar("Side-on stance", Geometry.SideOn));
+            rows.Add(Bar("Crossed over", Geometry.Crossed));
+            rows.Add(Bar("Brackets", Geometry.BracketRowShare));
+            return rows;
+        }
+    }
+
+    private static Row Bar(string label, decimal share)
+    {
+        var percent = (double)share * 100;
+        // One decimal under ten percent: bracket share lives down there, and the difference
+        // between 1.3% and 3% is the difference between a chart that brackets and one whose
+        // brackets are a model's guess — rounding both to "1%" and "3%" would still read, but
+        // "0%" for a chart with eleven real bracket rows would not.
+        return new Row(label, (int)Math.Clamp(Math.Round(percent), 0, 100),
+            percent < 10 ? $"{percent:0.#}%" : $"{Math.Round(percent)}%");
+    }
+}

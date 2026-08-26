@@ -1934,6 +1934,9 @@
   <data name="Cross-pad Transitions" xml:space="preserve">
     <value>Blargmurm-grorp Rglurgrglgro</value>
   </data>
+  <data name="Crossed over" xml:space="preserve">
+    <value>Uplor Marga</value>
+  </data>
   <data name="crux: {0}" xml:space="preserve">
     <value>grorpmurgl: {0}</value>
   </data>
@@ -2113,6 +2116,9 @@
   </data>
   <data name="Developers" xml:space="preserve">
     <value>Murpmurpgrogl</value>
+  </data>
+  <data name="Diagonal stance" xml:space="preserve">
+    <value>Glabo Ompa</value>
   </data>
   <data name="Didn't quite make the cut ({0})" xml:space="preserve">
     <value>Mrglblgrl grrglmrp glorggrorp mrp argl ({0})</value>
@@ -3931,6 +3937,12 @@
   </data>
   <data name="Mid-6 Doubles" xml:space="preserve">
     <value>Murm-6 Groggl</value>
+  </data>
+  <data name="Middle 4" xml:space="preserve">
+    <value>Marg 4</value>
+  </data>
+  <data name="Middle 6" xml:space="preserve">
+    <value>Marg 6</value>
   </data>
   <data name="middle 80% of charts" xml:space="preserve">
     <value>blugro 80% blarg murgl</value>
@@ -6937,6 +6949,9 @@
   </data>
   <data name="Side-3 Singles" xml:space="preserve">
     <value>Urgro-3 Mrglrlgl</value>
+  </data>
+  <data name="Side-on stance" xml:space="preserve">
+    <value>Olgar Ompa</value>
   </data>
   <data name="Sign in" xml:space="preserve">
     <value>Mrpmurp mrp</value>

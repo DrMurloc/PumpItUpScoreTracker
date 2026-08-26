@@ -1921,6 +1921,9 @@
   <data name="Cross-pad Transitions" xml:space="preserve">
     <value>Transiciones entre pads</value>
   </data>
+  <data name="Crossed over" xml:space="preserve">
+    <value>Cruzado</value>
+  </data>
   <data name="crux: {0}" xml:space="preserve">
     <value>punto duro: {0}</value>
   </data>
@@ -2100,6 +2103,9 @@
   </data>
   <data name="Developers" xml:space="preserve">
     <value>Desarrolladores</value>
+  </data>
+  <data name="Diagonal stance" xml:space="preserve">
+    <value>Postura diagonal</value>
   </data>
   <data name="Didn't quite make the cut ({0})" xml:space="preserve">
     <value>No llegaron por poco ({0})</value>
@@ -3906,6 +3912,12 @@
   </data>
   <data name="Mid-6 Doubles" xml:space="preserve">
     <value>Doubles centrales (6 paneles)</value>
+  </data>
+  <data name="Middle 4" xml:space="preserve">
+    <value>4 centrales</value>
+  </data>
+  <data name="Middle 6" xml:space="preserve">
+    <value>6 centrales</value>
   </data>
   <data name="middle 80% of charts" xml:space="preserve">
     <value>80% central de los charts</value>
@@ -6883,6 +6895,9 @@
   </data>
   <data name="Side-3 Singles" xml:space="preserve">
     <value>Singles laterales (3 paneles)</value>
+  </data>
+  <data name="Side-on stance" xml:space="preserve">
+    <value>Postura de lado</value>
   </data>
   <data name="Sign in" xml:space="preserve">
     <value>Iniciar sesión</value>

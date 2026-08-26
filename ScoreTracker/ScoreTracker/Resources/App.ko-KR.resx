@@ -1921,6 +1921,9 @@
   <data name="Cross-pad Transitions" xml:space="preserve">
     <value>패드 이동</value>
   </data>
+  <data name="Crossed over" xml:space="preserve">
+    <value>크로스오버</value>
+  </data>
   <data name="crux: {0}" xml:space="preserve">
     <value>최난구간: {0}</value>
   </data>
@@ -2100,6 +2103,9 @@
   </data>
   <data name="Developers" xml:space="preserve">
     <value>개발자</value>
+  </data>
+  <data name="Diagonal stance" xml:space="preserve">
+    <value>대각 자세</value>
   </data>
   <data name="Didn't quite make the cut ({0})" xml:space="preserve">
     <value>아쉽게 탈락한 채보 ({0})</value>
@@ -3905,6 +3911,12 @@
     <value>중앙 4패널</value>
   </data>
   <data name="Mid-6 Doubles" xml:space="preserve">
+    <value>중앙 6패널</value>
+  </data>
+  <data name="Middle 4" xml:space="preserve">
+    <value>중앙 4패널</value>
+  </data>
+  <data name="Middle 6" xml:space="preserve">
     <value>중앙 6패널</value>
   </data>
   <data name="middle 80% of charts" xml:space="preserve">
@@ -6885,6 +6897,9 @@
   </data>
   <data name="Side-3 Singles" xml:space="preserve">
     <value>사이드 3패널</value>
+  </data>
+  <data name="Side-on stance" xml:space="preserve">
+    <value>측면 자세</value>
   </data>
   <data name="Sign in" xml:space="preserve">
     <value>로그인</value>
