@@ -38,6 +38,12 @@ public static class IdentityChips
                 chip.Detail == null ? null : Signed(chip.Detail.Value)),
             IdentityChipKind.Crux => new TierListChartCard.CardSkillChip(
                 localizer["crux: {0}", Label(chip, localizer)].Value, ClassFor(chip), null),
+            // ✦ marks the rare one. A dashed border alone said "this chip is different" without
+            // saying how, which is no message at all (owner, 2026-08-26); the glyph is the
+            // legible half and the border is now just its texture.
+            IdentityChipKind.Unique => new TierListChartCard.CardSkillChip(
+                $"✦ {Label(chip, localizer)}", ClassFor(chip),
+                showCoverage && chip.Detail != null ? Percent(chip.Detail.Value) : null),
             _ => new TierListChartCard.CardSkillChip(Label(chip, localizer), ClassFor(chip),
                 showCoverage && chip.Detail != null ? Percent(chip.Detail.Value) : null)
         }).ToArray();

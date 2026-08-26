@@ -2048,11 +2048,37 @@ html.sheet-open .more-sheet-scrim {
     flex-direction: column;
 }
 
+/* Taller than it was, because the body now overlaps its bottom (see below): at the old 92px
+   the overlap left too little art to recognise a jacket by. */
 .tier-chart-card-jacket {
-    height: 92px;
+    height: 108px;
     background-size: cover;
     background-position: center;
     position: relative;
+}
+
+/* The scrim the overlapping body sits on — the session highlight card's own treatment. It
+   keeps the name and score legible over any jacket, dark or bright, without dimming the art
+   a reader is actually looking at: transparent through the top two thirds, near-solid only
+   where the text lands. */
+.tier-chart-card-jacket::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--mix-bg) 0%, transparent) 55%,
+        color-mix(in srgb, var(--mix-bg) 92%, transparent) 97%);
+}
+
+/* Everything that sits ON the jacket clears the scrim. Without this the gradient paints over
+   the bubble and the corner badge, which is most visible exactly where it matters — the
+   bottom corners, where the scrim is at its most opaque. */
+.tier-chart-card-bubble,
+.tier-chart-card-play,
+.tier-chart-card-corner,
+.tier-chart-card-lens-dot,
+.tier-chart-card-compact-grade {
+    z-index: 2;
 }
 
 .tier-chart-card-bubble {
@@ -2061,8 +2087,39 @@ html.sheet-open .more-sheet-scrim {
     left: 4px;
 }
 
+/* Desktop wants to be told the jacket is the way in. It was a cursor change and nothing else
+   (owner, 2026-08-26) — a cursor is invisible until you are already on the target, so it can
+   confirm an affordance but cannot advertise one. Hover-capable pointers only: on a touch
+   screen :hover sticks after a tap and the card would stay lit. */
+@media (hover: hover) {
+    .tier-chart-card-jacket {
+        transition: filter .12s ease;
+    }
+
+    .tier-chart-card-jacket:hover {
+        filter: brightness(1.12);
+    }
+
+    .tier-chart-card-jacket:hover::after {
+        background: linear-gradient(180deg, color-mix(in srgb, var(--mix-primary) 10%, transparent) 55%,
+            color-mix(in srgb, var(--mix-bg) 92%, transparent) 97%);
+    }
+}
+
+.tier-chart-card-jacket:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: -2px;
+}
+
+/* The body rides up onto the scrim, so the name and score read as part of the jacket rather
+   than as a caption under it — the session highlight card's layout (hl-card-body). The pull
+   is smaller than that card's 34px because this one's first line is a 1rem name, not a
+   1.06rem display face, and only the first two lines are meant to land on the art. */
 .tier-chart-card-body {
-    padding: 4px 8px;
+    position: relative;
+    z-index: 2;
+    margin-top: -30px;
+    padding: 0 8px 4px;
     min-width: 0;
     flex-grow: 1;
 }
@@ -2076,7 +2133,43 @@ html.sheet-open .more-sheet-scrim {
 .tier-chart-card-actions {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     padding: 0 4px 4px;
+}
+
+/* The card always stacks its grade over its plate, at every width. The player page's rows do
+   this only when they run short of horizontal room; a tier card is short of it by definition,
+   and the whole point here is the vertical space it gives back. Higher specificity than the
+   shared rules on purpose — it has to beat both the base and the media query. */
+.tier-chart-card-scoreline .sbd-score-stack {
+    display: inline-grid;
+    grid-auto-flow: row;
+    grid-template-columns: auto auto;
+    grid-template-rows: repeat(2, auto);
+    align-items: center;
+    column-gap: 5px;
+    row-gap: 0;
+    line-height: 1.05;
+}
+
+.tier-chart-card-scoreline .sbd-score-stack > img {
+    grid-column: 1;
+    height: 12px !important;
+}
+
+/* The score spans both icon rows and centres against the pair. 1 / -1 needs the explicit
+   two-row track above it: against implicit rows -1 resolves to line 1 and the number ends up
+   centred on the grade alone. A broken score has no plate, and the empty second track is
+   simply zero tall. */
+.tier-chart-card-scoreline .sbd-score-stack > p {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    align-self: center;
+    margin: 0;
+    padding-left: 0 !important;
+    font-size: .92rem;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
 }
 
 .tier-chart-card-compact {
@@ -2254,6 +2347,14 @@ html.sheet-open .more-sheet-scrim {
 /* Piucenter's own picks, shown when nothing stood out — quieter than a claim we made. */
 .tier-chart-card-skill.chip-fallback {
     opacity: .8;
+}
+
+/* Notes per second: a measurement, not a pattern, so it wears no family colour and reads as
+   the plain fact it is. Tabular figures because a column of cards is a column of numbers. */
+.tier-chart-card-skill.chip-nps {
+    font-variant-numeric: tabular-nums;
+    border-style: solid;
+    color: var(--mix-ink-muted);
 }
 
 .tier-table-skills .tier-chart-card-skill {

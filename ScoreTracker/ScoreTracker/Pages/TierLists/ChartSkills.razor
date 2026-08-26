@@ -73,10 +73,6 @@ else
                                OnClick="@(() => ChangeGrouping("Personalized"))">@L["Personalized"]</MudButton>
                 }
                 <MudButton Variant="@(IsMyProgress ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping(CurrentUser.IsLoggedIn ? "Score" : "Scoring Level"))">@L["My Scores"]</MudButton>
-                @if (FolderHasSkills)
-                {
-                    <MudButton Variant="@(_groupBy == "Skill" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Skill"))">@L["Skill Breakdown"]</MudButton>
-                }
                 @if (FolderHasSpeed)
                 {
                     <MudButton Variant="@(_groupBy == "Speed" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Speed"))">@L["Speed"]</MudButton>
@@ -91,10 +87,6 @@ else
                     <MudSelectItem T="string" Value="@("Personalized")" Disabled="_thinCohort != null">@L["Personalized"]</MudSelectItem>
                 }
                 <MudSelectItem T="string" Value="@("MyProgress")">@L["My Scores"]</MudSelectItem>
-                @if (FolderHasSkills)
-                {
-                    <MudSelectItem T="string" Value="@("Skill")">@L["Skill Breakdown"]</MudSelectItem>
-                }
                 @if (FolderHasSpeed)
                 {
                     <MudSelectItem T="string" Value="@("Speed")">@L["Speed"]</MudSelectItem>
@@ -1028,7 +1020,23 @@ else
         var chips = IdentityChips.ToCardChips(
             _identity.TryGetValue(chart.Id, out var identity) ? identity : null,
             _settings.ShowSkillMetric, L);
+        // Speed leads, because it is the one fact about a chart that needs no comparison to be
+        // useful. It is left off the Speed grouping, where the section heading is already the
+        // band and its range — the card would be repeating its own heading back.
+        if (_groupBy != "Speed" && NpsChip(chart.Id) is { } nps) chips = chips.Prepend(nps).ToArray();
         return chips.Count > 0 ? chips : null;
+    }
+
+    /// <summary>
+    ///     The chart's measured notes per second, from the Speed list's stored Order — the same
+    ///     number the bands were cut from, so a card and its section can never disagree.
+    /// </summary>
+    private TierListChartCard.CardSkillChip? NpsChip(Guid chartId)
+    {
+        return _speedBands.TryGetValue(chartId, out var band)
+            ? new TierListChartCard.CardSkillChip(L["{0} NPS", (band.Order / 100.0).ToString("0.#")].Value,
+                "chip-nps", null)
+            : null;
     }
 
     private bool ChabalaLensActive => _tierListType == "Chabala" && ChabalaAvailable;
@@ -1569,26 +1577,22 @@ else
     ///     in — the one view whose whole point is being a deliberate choice.
     /// </summary>
     private static readonly string[] ValidGroupings =
-        { "Difficulty", "Personalized", "Score", "Age", "Score Ranking", "Scoring Level", "Skill", "Speed" };
+        { "Difficulty", "Personalized", "Score", "Age", "Score Ranking", "Scoring Level", "Speed" };
 
-    private bool IsMyProgress =>
-        _groupBy is not "Difficulty" and not "Personalized" and not "Skill" and not "Speed";
+    private bool IsMyProgress => _groupBy is not "Difficulty" and not "Personalized" and not "Speed";
 
     /// <summary>Community and Personalized both section by the lens; they differ only in data.</summary>
     private bool IsTierView => _groupBy is "Difficulty" or "Personalized";
 
     private bool CanPersonalize => CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && !IsLegacy;
 
-    private bool IsSkillView => _groupBy is "Skill" or "Speed";
+    private bool IsSkillView => _groupBy == "Speed";
 
     /// <summary>
-    ///     Whether this folder has anything to break down, asked of the folder rather than of
-    ///     the mix: a folder with no banked step analysis answers no on its own, and no
-    ///     capability flag has to say so.
+    ///     Group By Speed offers itself only where the Speed list can answer — asked of the
+    ///     folder rather than of the mix, so a folder with nothing banked says no on its own
+    ///     and no capability flag has to say it for them.
     /// </summary>
-    private bool FolderHasSkills => _identity.Count > 0;
-
-    /// <summary>Group By Speed offers itself only where the Speed list can answer.</summary>
     private bool FolderHasSpeed => _speedBands.Count > 0;
 
     // When the grouping isn't the lens itself, each card/row carries its lens tier — word +
@@ -1894,15 +1898,22 @@ else
             : new Dictionary<Guid, IReadOnlyList<string>>();
         // The Speed list is stored per mix for every folder at once; this folder's slice is
         // what Group By Speed sections on.
-        _speedBands = (await Mediator.Send(new GetTierListQuery("Speed", _currentMix), cancellationToken))
-            .Where(e => _charts.ContainsKey(e.ChartId))
-            .GroupBy(e => e.ChartId)
-            .ToDictionary(g => g.Key, g => g.First());
+        // Read WITH the fallback flag and then refuse the fallback. A band is a chart's speed
+        // relative to the folder it was banded in, and a chart's folder changes between mixes —
+        // so Phoenix's bands standing in for an unbuilt Phoenix 2 list would be measuring
+        // against company the chart does not keep there. Better to offer no Speed view at all.
+        var speed = await Mediator.Send(new GetTierListWithFallbackQuery("Speed", _currentMix), cancellationToken);
+        _speedBands = speed.IsProvisionalFallback
+            ? new Dictionary<Guid, SongTierListEntry>()
+            : speed.Entries
+                .Where(e => _charts.ContainsKey(e.ChartId))
+                .GroupBy(e => e.ChartId)
+                .ToDictionary(g => g.Key, g => g.First());
 
-        // Both breakdown views answer to the folder, so their fallback runs once the folder's
-        // data is known — the init guard runs before any chart is loaded and would strip a
-        // legitimate saved grouping. Also covers folder-hopping into one with nothing banked.
-        if ((_groupBy == "Skill" && !FolderHasSkills) || (_groupBy == "Speed" && !FolderHasSpeed))
+        // Group By Speed answers to the folder, so its fallback runs once the folder's data is
+        // known — the init guard runs before any chart is loaded and would strip a legitimate
+        // saved grouping. Also covers folder-hopping into one with nothing banked.
+        if (_groupBy == "Speed" && !FolderHasSpeed)
         {
             _groupBy = "Difficulty";
         }
@@ -2099,7 +2110,6 @@ else
             "Age" => GroupByAge(),
             "Score Ranking" => GroupByScoreRanking(),
             "Scoring Level" => GroupByScoringLevel(),
-            "Skill" => GroupBySkill(),
             "Speed" => GroupBySpeed(),
             _ => GroupByTier()
         };
@@ -2166,20 +2176,21 @@ else
         _tierNames[category];
 
     /// <summary>
-    ///     What a card prints under its jacket. The PUMBILITY lens always shows how many of the
-    ///     cohort hold the chart — that count IS the lens, and a tier section heading cannot
-    ///     carry it — with the tier name in front only where the section is not already saying it.
+    ///     What a card prints under its jacket: the lens's word for it, where the section is
+    ///     not already saying it.
+    ///     <para>
+    ///         The peer count used to ride along on the PUMBILITY lens. It went (owner,
+    ///         2026-08-26): the tier name already says where the chart sits, and the raw count
+    ///         beside it was a second way of saying the same thing. A chart no peer pools says
+    ///         nothing at all rather than "Not in anyone's PUMBILITY · 0 peers" — an empty
+    ///         state dressed up as a reading is worse than an empty line.
+    ///     </para>
     /// </summary>
     private string? TierCardLabel(SongTierListEntry entry)
     {
-        if (_tierListType != "PUMBILITY")
-        {
-            return ShowLensAnnotation ? L[TierName(entry.Category)] : null;
-        }
-
-        var peers = _appearances.TryGetValue(entry.ChartId, out var count) ? count : 0;
-        var peerText = peers == 1 ? L["1 peer"] : L["{0} peers", peers];
-        return ShowLensAnnotation ? $"{L[TierName(entry.Category)]} · {peerText}" : peerText;
+        if (!ShowLensAnnotation) return null;
+        if (_tierListType == "PUMBILITY" && entry.Category == TierListCategory.Unrecorded) return null;
+        return L[TierName(entry.Category)];
     }
 
     /// <summary>The lens's ramp: rarity for PUMBILITY, difficulty for everything else.</summary>
@@ -2325,39 +2336,6 @@ else
     // actionable — one section per skill, sorted weakest-first) ---------------------------
 
     /// <summary>
-    ///     Group By Skill: the five badge families, weakest first
-    ///     (docs/design/chart-identity.md §7). Filing is chip-driven — a chart sits under the
-    ///     families of the chips it actually shows — so the section a chart is in and the chips
-    ///     on its card are the same statement. The spike files nowhere: it is a shape, not a
-    ///     skill.
-    /// </summary>
-    private IReadOnlyList<TierGroup> GroupBySkill()
-    {
-        var entryByChart = _finalEntries.ToDictionary(e => e.ChartId);
-        var families = _charts.Values
-            .SelectMany(c => FamiliesOf(c.Id).Select(family => (Family: family, ChartId: c.Id)))
-            .GroupBy(p => p.Family)
-            .Select(g => BuildHeatGroup($"Skill:{g.Key}", FamilyName(g.Key),
-                g.Select(p => p.ChartId), entryByChart))
-            .Where(g => g.Entries.Count > 0)
-            .OrderBy(g => CurrentUser.IsLoggedIn ? g.PassRate : 0)
-            .ThenBy(g => g.Average ?? int.MaxValue)
-            .ThenBy(g => g.Group.Name)
-            .Select(g => g.Group)
-            .ToList();
-
-        var unfiled = _finalEntries
-            .Where(e => !FamiliesOf(e.ChartId).Any())
-            .OrderBy(e => e.Order)
-            .ToArray();
-        if (unfiled.Any())
-            families.Add(new TierGroup("Skill:None", L["Not Tagged"], NeutralSectionColor,
-                MixThemes.PaletteFor(_currentMix).InkMuted, unfiled));
-
-        return families;
-    }
-
-    /// <summary>
     ///     Group By Speed: the folder banded against its own notes-per-second spread, slow to
     ///     fast (docs/design/chart-identity.md §2). Ordered by the band rather than by pass
     ///     rate — this is a map of the folder, and its heat is honestly not monotone: slow
@@ -2407,25 +2385,6 @@ else
             heat == null ? MixThemes.PaletteFor(_currentMix).InkMuted : MixThemes.DifficultyHex(heat.Value),
             entries, stat), entries, passRate, scored.Any() ? (int?)scored.Average() : null);
     }
-
-    /// <summary>The families a chart files under — the chips it shows, minus the shape-only spike.</summary>
-    private IEnumerable<BadgeCategory> FamiliesOf(Guid chartId)
-    {
-        if (!_identity.TryGetValue(chartId, out var identity)) return Array.Empty<BadgeCategory>();
-        return identity.Chips
-            .Where(c => c.Kind != IdentityChipKind.Spike && c.Family != null)
-            .Select(c => c.Family!.Value)
-            .Distinct();
-    }
-
-    private string FamilyName(BadgeCategory family) => L[family switch
-    {
-        BadgeCategory.Brackets => "Brackets",
-        BadgeCategory.Twists => "Twists",
-        BadgeCategory.StaminaAndRuns => "Stamina & Runs",
-        BadgeCategory.Tech => "Tech",
-        _ => "Doubles Tech"
-    }].Value;
 
     /// <summary>
     ///     Band names are folder-relative labels, and the range beside them is what makes that
@@ -2655,8 +2614,7 @@ else
         }
 
         // Guards: CoOp folders are 2-5 players; folders without Chabala data fall back to
-        // the default lens; retired ("Skill") or login-gated groupings fall back to the
-        // tier-list view.
+        // the default lens; retired or login-gated groupings fall back to the tier-list view.
         if (_chartType == ChartType.CoOp && _level is < 2 or > 5)
         {
             _level = 2;
@@ -2669,7 +2627,7 @@ else
         {
             _tierListType = "Pass";
         }
-        // "Skill" is deliberately not checked here: whether it is available depends on the
+        // "Speed" is deliberately not checked here: whether it is available depends on the
         // folder's charts, which are not loaded yet. Its fallback runs after the folder does.
         if (!ValidGroupings.Contains(_groupBy) || (!CurrentUser.IsLoggedIn && _groupBy is "Score" or "Age" or "Score Ranking")
             || (_groupBy == "Personalized" && !CanPersonalize))

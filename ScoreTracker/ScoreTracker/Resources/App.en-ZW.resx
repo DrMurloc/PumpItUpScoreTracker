@@ -2202,10 +2202,7 @@
   <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
     <value>Groggl mrpblarg; a Mrglrlgl grumbo AA ur bloblo a grop bloblo (AA {0}, A+ {1} …). Plurb gropla bloblo.</value>
   </data>
-  <data name="Doubles Tech" xml:space="preserve">
-    <value>Groggl Murgmol</value>
-  </data>
-  <data name="Doubles: {0}/{1} charts" xml:space="preserve">
+<data name="Doubles: {0}/{1} charts" xml:space="preserve">
     <value>Groggl: {0}/{1} murgl</value>
   </data>
   <data name="Doublesteps" xml:space="preserve">
@@ -7200,10 +7197,7 @@
   <data name="Stale weight" xml:space="preserve">
     <value>Blugmrp murm</value>
   </data>
-  <data name="Stamina &amp; Runs" xml:space="preserve">
-    <value>Blublurg &amp; Morgplgl</value>
-  </data>
-  <data name="Stamina Session Builder" xml:space="preserve">
+<data name="Stamina Session Builder" xml:space="preserve">
 	  <value>Gromrgrgl Grrglgrrglgl Grglmrglmagl</value>
   </data>
   <data name="Standings" xml:space="preserve">
@@ -7400,10 +7394,7 @@
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Rglmrgl Murgmrmrpmagl</value>
   </data>
-  <data name="Tech" xml:space="preserve">
-    <value>Murgmol</value>
-  </data>
-  <data name="Test delivery" xml:space="preserve">
+<data name="Test delivery" xml:space="preserve">
     <value>Blorp grumb</value>
   </data>
   <data name="Test Scores" xml:space="preserve">
@@ -9612,6 +9603,9 @@
   </data>
   <data name="{0} now {1}" xml:space="preserve">
     <value>{0} magl {1}</value>
+  </data>
+  <data name="{0} NPS" xml:space="preserve">
+    <value>{0} NPS</value>
   </data>
   <data name="{0} of all Phoenix titles collected" xml:space="preserve">
     <value>{0} mrgl rgl Phoenix mrgl grrglroblub</value>

@@ -2188,10 +2188,7 @@
   <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
     <value>더블 표입니다; 싱글은 AA 이하를 한 칸씩 낮게 읽습니다 (AA {0}, A+ {1} …). 전체 사다리는 아래에.</value>
   </data>
-  <data name="Doubles Tech" xml:space="preserve">
-    <value>더블 테크</value>
-  </data>
-  <data name="Doubles: {0}/{1} charts" xml:space="preserve">
+<data name="Doubles: {0}/{1} charts" xml:space="preserve">
     <value>더블: {0}/{1}곡</value>
   </data>
   <data name="Doublesteps" xml:space="preserve">
@@ -7144,10 +7141,7 @@
   <data name="Stale weight" xml:space="preserve">
     <value>낡은 가중치</value>
   </data>
-  <data name="Stamina &amp; Runs" xml:space="preserve">
-    <value>체력 &amp; 폭타</value>
-  </data>
-  <data name="Stamina Session Builder" xml:space="preserve">
+<data name="Stamina Session Builder" xml:space="preserve">
     <value>스태미나 세션 빌더</value>
   </data>
   <data name="Standings" xml:space="preserve">
@@ -7342,10 +7336,7 @@
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>
   </data>
-  <data name="Tech" xml:space="preserve">
-    <value>테크</value>
-  </data>
-  <data name="Test delivery" xml:space="preserve">
+<data name="Test delivery" xml:space="preserve">
     <value>테스트 전송</value>
   </data>
   <data name="Test Scores" xml:space="preserve">
@@ -9543,6 +9534,9 @@
   </data>
   <data name="{0} now {1}" xml:space="preserve">
     <value>{0} 이제 {1}</value>
+  </data>
+  <data name="{0} NPS" xml:space="preserve">
+    <value>{0} NPS</value>
   </data>
   <data name="{0} of all Phoenix titles collected" xml:space="preserve">
     <value>전체 피닉스 타이틀의 {0} 수집</value>

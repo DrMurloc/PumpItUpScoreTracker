@@ -2188,10 +2188,7 @@
   <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
     <value>Tabla de Doubles; un Single lee AA e inferiores un punto más bajo (AA {0}, A+ {1} …). Escalera completa abajo.</value>
   </data>
-  <data name="Doubles Tech" xml:space="preserve">
-    <value>Doubles Tech</value>
-  </data>
-  <data name="Doubles: {0}/{1} charts" xml:space="preserve">
+<data name="Doubles: {0}/{1} charts" xml:space="preserve">
     <value>Doubles: {0}/{1} charts</value>
   </data>
   <data name="Doublesteps" xml:space="preserve">
@@ -7142,10 +7139,7 @@
   <data name="Stale weight" xml:space="preserve">
     <value>Peso obsoleto</value>
   </data>
-  <data name="Stamina &amp; Runs" xml:space="preserve">
-    <value>Stamina &amp; Runs</value>
-  </data>
-  <data name="Stamina Session Builder" xml:space="preserve">
+<data name="Stamina Session Builder" xml:space="preserve">
     <value>Creador de sesiones de stamina</value>
   </data>
   <data name="Standings" xml:space="preserve">
@@ -7340,10 +7334,7 @@
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>
   </data>
-  <data name="Tech" xml:space="preserve">
-    <value>Tech</value>
-  </data>
-  <data name="Test delivery" xml:space="preserve">
+<data name="Test delivery" xml:space="preserve">
     <value>Envío de prueba</value>
   </data>
   <data name="Test Scores" xml:space="preserve">
@@ -9541,6 +9532,9 @@
   </data>
   <data name="{0} now {1}" xml:space="preserve">
     <value>{0} ahora {1}</value>
+  </data>
+  <data name="{0} NPS" xml:space="preserve">
+    <value>{0} NPS</value>
   </data>
   <data name="{0} of all Phoenix titles collected" xml:space="preserve">
     <value>{0} de todos los títulos de Phoenix conseguidos</value>

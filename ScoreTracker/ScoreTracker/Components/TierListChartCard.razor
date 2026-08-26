@@ -95,10 +95,18 @@ else
         @if (Score?.Score != null)
         {
             @* Own line always — short song names left the tooltip-wrapped name and the
-               score sharing a row (owner, piucenter round 3). *@
+               score sharing a row (owner, piucenter round 3).
+               Grade over plate in one column with the number beside them, the treatment the
+               player page's tables use: two 12px icons stack inside the height one 20px icon
+               needed, so the line costs the card a third of what it did. Tooltip="false" is
+               structural, not a preference — the stack lays out its direct children, and
+               MudTooltip's wrapper would hide them from the grid. *@
             <div class="tier-chart-card-scoreline">
-                <ScoreBreakdown Score="Score.Score.Value" IsBroken="Score.IsBroken" Mix="Chart.Mix" OneLine="true" ShowScore="true"
-                                Plate="Score.Plate" Ranking="Ranking"></ScoreBreakdown>
+                <span class="sbd-score-stack">
+                    <ScoreBreakdown Score="Score.Score.Value" IsBroken="Score.IsBroken" Mix="Chart.Mix" OneLine="true"
+                                    ShowScore="true" Tooltip="false" Height="12"
+                                    Plate="Score.Plate" Ranking="Ranking"></ScoreBreakdown>
+                </span>
             </div>
         }
         else if (LegacyGrade != null)
@@ -151,9 +159,12 @@ else
             </div>
         }
     </div>
-    <div class="tier-chart-card-actions">
-        @if (ShowToDo)
-        {
+    @* The info button went (owner, 2026-08-26): the jacket already opens details and now looks
+       like it does, so the icon was a second control for the one thing the card mostly is. To-Do
+       stays, because it is the one action the jacket does NOT do. *@
+    @if (ShowToDo)
+    {
+        <div class="tier-chart-card-actions">
             <MudTooltip Text="@(IsToDo ? L["Remove from ToDo List"] : L["Add to ToDo List"])">
                 <MudIconButton Size="Size.Small"
                                Icon="@(IsToDo ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
@@ -161,11 +172,8 @@ else
                                OnClick="() => OnToDo.InvokeAsync(Chart.Id)"
                                aria-label="@L["To Do"]"></MudIconButton>
             </MudTooltip>
-        }
-        <MudSpacer></MudSpacer>
-        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Info"
-                       OnClick="() => OnOpen.InvokeAsync(Chart.Id)" aria-label="@L["Details"]"></MudIconButton>
-    </div>
+        </div>
+    }
 </div>
 }
 
