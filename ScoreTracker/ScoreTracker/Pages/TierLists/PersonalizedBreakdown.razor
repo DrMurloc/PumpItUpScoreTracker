@@ -303,8 +303,6 @@ else
                                        flows inline instead of floating right. *@
                                     <div class="bd-source-strip">
                                         @SourceSegment(L["Community"], _breakdown.CommunityWeight, mover.CommunityCategory)
-                                        @SourceSegment(L["Players Like You"], _breakdown.SimilarPlayersWeight, mover.SimilarPlayersCategory)
-                                        @SourceSegment(L["Your skills"], _breakdown.SkillWeight, mover.SkillCategory)
                                         @SourceSegment(L["Players at your level"], _breakdown.ProjectionWeight, mover.ProjectionCategory)
                                         <span class="bd-src-final">= <span style="color:@ThemeScales.DifficultyColor(mover.PersonalizedCategory)">@L[TierNameFor(mover.PersonalizedCategory)]</span></span>
                                     </div>
@@ -1187,8 +1185,6 @@ else
     private int UnchangedCount => _breakdown == null
         ? 0
         : _breakdown.Charts.Count - MovedCount - _noDataCharts.Count;
-
-    // --- Skill profile ---------------------------------------------------------------------
 
     // --- Movers ------------------------------------------------------------------------
 

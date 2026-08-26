@@ -36,12 +36,10 @@ public sealed class PersonalizedBreakdownHandlerTests
 
         var result = await handler.Handle(Query("Score", Guid.NewGuid()), CancellationToken.None);
 
-        // The projection is the whole recipe: no community share, and neither of the two
-        // personal sources it replaced.
+        // The projection is the whole recipe: no community share. The two personal sources it
+        // replaced are gone from the contract entirely rather than reporting zero forever.
         Assert.Equal(1, result.ProjectionWeight);
         Assert.Equal(0, result.CommunityWeight);
-        Assert.Equal(0, result.SkillWeight);
-        Assert.Equal(0, result.SimilarPlayersWeight);
     }
 
     [Fact]
