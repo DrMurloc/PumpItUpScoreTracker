@@ -92,11 +92,9 @@ A fixed bar could not work, and the spread is why: brackets sit on **13.7% of Ph
 79.4% of D26**. One number read those identically — at S14 it sat above the entire folder and not
 one chart could say it had brackets, while at D26 a run chart with a handful of them could.
 
-This also fixes the **exotic vocabulary**, which was structurally invisible: `hold_footslide`,
-`hold_footswitch`, `footswitch`, `hands` and `split` have folder MAXIMUMS below the old fixed bar,
-so **no chart in any folder could ever say it had one**. Hi Bi D22 showed neither of piucenter's
-own top two picks for exactly this reason. `hold_footswitch` and `hold_footslide` stay separate
-badges — technically different techniques, however interchangeably they get said aloud.
+This also fixes the **exotic vocabulary**, which was structurally invisible. The rarest badges
+have folder MAXIMUMS below the old fixed bar, so **no chart in any folder could ever say it had
+one** — a chart could carry piucenter's own #1 and #2 picks and show neither.
 
 The hand-tuned raised bars (`jack .40, jump .50, run .40, twist_90 .40`) are **deleted**, not
 kept. They were raised by hand because those four ride nearly every chart, and their prevalence —

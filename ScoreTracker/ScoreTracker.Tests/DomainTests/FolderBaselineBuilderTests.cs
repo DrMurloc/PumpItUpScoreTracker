@@ -132,18 +132,18 @@ public sealed class FolderBaselineBuilderTests
     }
 
     /// <summary>
-    ///     The failure this replaced: hold footslides, footswitches, hands and splits have folder
-    ///     MAXIMUMS below the old fixed 0.30 bar, so no chart in any folder could ever say it had
-    ///     one. Hi Bi D22 carries piucenter's #1 and #2 picks and showed neither.
+    ///     The failure this replaced: the rarest techniques have folder MAXIMUMS below the old
+    ///     fixed 0.30 bar, so no chart in any folder could ever say it carried one — a chart could
+    ///     hold piucenter's own #1 and #2 picks and show neither.
     /// </summary>
     [Fact]
     public void ATechniqueWhoseFolderMaximumIsTinyIsStillClaimable()
     {
         var charts = Enumerable.Range(0, 19).Select(_ => Chart(("run", 0.5m)))
-            .Append(Chart(("run", 0.5m), ("hold_footslide", 0.167m)))
+            .Append(Chart(("run", 0.5m), ("split", 0.167m)))
             .ToArray();
 
-        var baseline = Build(charts).Single(b => b.Badge == "hold_footslide");
+        var baseline = Build(charts).Single(b => b.Badge == "split");
 
         Assert.True(baseline.IsPresent(0.167m));
         Assert.True(baseline.IsUniqueInFolder);

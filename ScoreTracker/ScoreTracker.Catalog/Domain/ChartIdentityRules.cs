@@ -181,8 +181,8 @@ internal static class ChartIdentityRules
     ///     What share of a folder may clear a badge's presence bar, given how many of its charts
     ///     carry the badge at all. Capped at the prevalence itself: a technique on 8% of a folder
     ///     cannot be claimed by 12% of it, so there the bar falls to "has any at all", which is
-    ///     the whole fix for the exotic vocabulary — hold footslides, footswitches, hands and
-    ///     splits have folder MAXIMUMS below the old fixed bar and were structurally invisible.
+    ///     the whole fix for the rarest techniques: their folder MAXIMUMS sit below the old fixed
+    ///     bar, so no chart anywhere could say it carried one.
     /// </summary>
     public static double AllowedShare(double prevalence)
     {

@@ -118,9 +118,8 @@ internal static class FolderBaselineBuilder
     ///     bar rises with how common it is here and falls when it is rare.
     ///     <para>
     ///         Where a badge is rarer than its own budget the bar collapses to "carries any at
-    ///         all", which is the point: hold footslides, footswitches, hands and splits have
-    ///         folder MAXIMUMS below the old fixed bar, so no chart in any folder could ever say
-    ///         it had them.
+    ///         all", which is the point: the rarest techniques have folder MAXIMUMS below the old
+    ///         fixed bar, so no chart in any folder could ever say it carried one.
     ///     </para>
     /// </summary>
     private static decimal PresenceCutoff(decimal[] sortedCoverages, int presentCount)
