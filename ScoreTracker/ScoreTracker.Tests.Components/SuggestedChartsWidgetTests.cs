@@ -78,7 +78,7 @@ public sealed class SuggestedChartsWidgetTests : ComponentTestBase
         new(Guid.NewGuid(), MixEnum.Phoenix,
             new Song(name, SongType.Arcade, new Uri("https://piu.test/art.png"),
                 TimeSpan.FromMinutes(2), "Artist", Bpm.From(140, 140)),
-            type, level, MixEnum.Phoenix, null, 1200, new HashSet<Skill>());
+            type, level, MixEnum.Phoenix, null, 1200);
 
     private void SetUpRecommendations(params ChartRecommendation[] recommendations)
     {

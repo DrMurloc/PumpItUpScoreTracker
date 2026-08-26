@@ -1068,6 +1068,6 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
 
         return new PiuGameUcsEntry(id,
             new Chart(new Guid(), MixEnum.Phoenix, song, entry.ChartType, entry.Level, MixEnum.Phoenix, entry.Uploader,
-                null, new HashSet<Skill>()), entry.Description);
+                null), entry.Description);
     }
 }

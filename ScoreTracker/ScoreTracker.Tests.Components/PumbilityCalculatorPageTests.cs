@@ -42,7 +42,7 @@ public sealed class PumbilityCalculatorPageTests : ComponentTestBase
         return new Chart(Guid.NewGuid(), MixEnum.Phoenix,
             new Song("Song", SongType.Arcade, new Uri("https://piu.test/art.png"), TimeSpan.FromMinutes(2), "Doin",
                 Bpm.From(180, 180)),
-            type, level, mix, null, 1000, new HashSet<Skill>());
+            type, level, mix, null, 1000);
     }
 
     private void Catalog(MixEnum mix, params Chart[] charts)

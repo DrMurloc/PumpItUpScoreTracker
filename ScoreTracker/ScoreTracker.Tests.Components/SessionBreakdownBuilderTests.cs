@@ -346,7 +346,7 @@ public sealed class SessionBreakdownBuilderTests
         var song = new Song("Seeded Song", SongType.Arcade, new Uri("https://example.invalid/a.png"),
             TimeSpan.FromMinutes(2), "Artist", null);
         return new Chart(Guid.NewGuid(), MixEnum.Phoenix, song, type, DifficultyLevel.From(level),
-            MixEnum.Phoenix, null, null, new HashSet<Skill>());
+            MixEnum.Phoenix, null, null);
     }
 
     private static RecentSessionsPage.ScoreEventRecord Row(Guid chartId, DateTimeOffset at, int score,

@@ -1,4 +1,4 @@
-﻿using MudBlazor;
+using MudBlazor;
 using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.SharedKernel.Enums;
@@ -483,11 +483,6 @@ public static class MixThemes
             // Emitted alongside the plates because ThemeScales.GradeColor bottoms out here.
             + $"\n    --grade-sub-a: {SubAGradeHex};"
             + "\n" + string.Join("\n", SlotColors.Select(kv => $"    --slot-{kv.Key}: {kv.Value};"));
-        // The five skill-category identity colors (Speed/Stamina/Twist/Bracket/Tech),
-        // promoted from the SharedKernel constants so markup can tint skill chips
-        // without color literals. Mix-invariant — category identity never re-hues.
-        var skillCategories = string.Join("\n", Enum.GetValues<SkillCategory>().Select(c =>
-            $"    --skillcat-{c.ToString().ToLowerInvariant()}: {c.GetColor()};"));
         // The owner's five badge families (2026-07-26) — the granular piucenter vocabulary's
         // identity colors, replacing the retired rollup buckets. Mix-invariant: a family's hue
         // is what makes it recognisable, so it never re-hues per theme.
@@ -543,7 +538,6 @@ public static class MixThemes
     --rarity-prism: {p.Rarity.Prism};
 {difficulty}
 {plates}
-{skillCategories}
 {badgeCategories}
 {brands}
 {chartTypes}

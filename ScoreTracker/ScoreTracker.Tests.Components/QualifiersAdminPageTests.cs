@@ -53,7 +53,7 @@ public sealed class QualifiersAdminPageTests : ComponentTestBase
         var song = new Song(name, SongType.Arcade, new Uri($"https://piu.test/{name}.png"),
             TimeSpan.FromMinutes(2), "Artist", null);
         return new Chart(Guid.NewGuid(), MixEnum.Phoenix, song, ChartType.Double, DifficultyLevel.From(level),
-            MixEnum.Phoenix, null, null, new HashSet<Skill>());
+            MixEnum.Phoenix, null, null);
     }
 
     private static QualifiersConfiguration Config(IEnumerable<Chart> charts) =>

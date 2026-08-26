@@ -26,8 +26,7 @@ internal static class ApiTestData
         DifficultyLevel.From(20),
         MixEnum.Phoenix,
         Name.From("ANDAMIRO"),
-        731,
-        new HashSet<Skill>());
+        731);
 
     public static Chart Chart2 { get; } = new(
         ChartId2,
@@ -39,8 +38,7 @@ internal static class ApiTestData
         DifficultyLevel.From(22),
         MixEnum.Phoenix,
         null,
-        845,
-        new HashSet<Skill>());
+        845);
 
     public static User PublicUser { get; } = new(
         PublicUserId, Name.From("VisiblePlayer"), true, Name.From("VISIBL"),

@@ -121,8 +121,7 @@ internal sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                         new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration,
                             s.Artist ?? "Unknown",
                             Bpm.From(s.MinBpm, s.MaxBpm)),
-                        Enum.Parse<ChartType>(c.Type), c.Level, MixEnum.XX, c.StepArtist, null,
-                        new HashSet<Skill>()),
+                        Enum.Parse<ChartType>(c.Type), c.Level, MixEnum.XX, c.StepArtist, null),
                     ba == null ? null : Attempt(ba.LetterGrade, ba.IsBroken, ba.Score, ba.RecordedDate)))
             .ToArray();
         return result;
@@ -148,8 +147,7 @@ internal sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                         new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration,
                             s.Artist ?? "Unknown",
                             Bpm.From(s.MinBpm, s.MaxBpm)),
-                        Enum.Parse<ChartType>(c.Type), c.Level, mix, c.StepArtist, null,
-                        new HashSet<Skill>()),
+                        Enum.Parse<ChartType>(c.Type), c.Level, mix, c.StepArtist, null),
                     ba == null ? null : Attempt(ba.LetterGrade, ba.IsBroken, ba.Score, ba.RecordedDate)))
             .ToArrayAsync(cancellationToken);
     }

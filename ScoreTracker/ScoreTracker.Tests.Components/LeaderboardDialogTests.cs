@@ -25,7 +25,7 @@ public sealed class LeaderboardDialogTests : ComponentTestBase
     private readonly Chart _chart = new(Guid.NewGuid(), MixEnum.Phoenix,
         new Song("District 1", SongType.Arcade, new Uri("https://piu.test/art.png"),
             TimeSpan.FromMinutes(2), "Bang", Bpm.From(160, 160)),
-        ChartType.Single, 20, MixEnum.Phoenix, null, 900, new HashSet<Skill>());
+        ChartType.Single, 20, MixEnum.Phoenix, null, 900);
 
     public LeaderboardDialogTests()
     {

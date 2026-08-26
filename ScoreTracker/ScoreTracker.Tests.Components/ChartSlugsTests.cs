@@ -17,7 +17,7 @@ public sealed class ChartSlugsTests
         return new Chart(id ?? Guid.NewGuid(), MixEnum.XX,
             new Song(Name.From(song), SongType.FullSong, new Uri("https://example.invalid/x.png"),
                 TimeSpan.FromMinutes(2), Name.From("msgoon"), null),
-            type, level, mix, null, null, new HashSet<Skill>(), slot);
+            type, level, mix, null, null, slot);
     }
 
     [Theory]

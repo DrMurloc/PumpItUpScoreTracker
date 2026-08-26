@@ -24,7 +24,7 @@ public sealed class ByLevelDataSourceTests
 
     private static Chart Chart(Guid id, ChartType type, int level, MixEnum mix, int? playerCount = null) =>
         new(id, mix, new Song("Song", SongType.Arcade, new Uri("https://x/y.png"), TimeSpan.FromMinutes(2), "Artist",
-            null), type, level, mix, null, null, new HashSet<Skill>(), null, playerCount);
+            null), type, level, mix, null, null, null, playerCount);
 
     private static readonly IDateTimeOffsetAccessor Clock =
         Mock.Of<IDateTimeOffsetAccessor>(c => c.Now == new DateTimeOffset(2026, 7, 13, 0, 0, 0, TimeSpan.Zero));

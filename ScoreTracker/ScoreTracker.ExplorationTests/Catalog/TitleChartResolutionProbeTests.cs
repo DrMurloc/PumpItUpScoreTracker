@@ -115,7 +115,7 @@ public sealed class TitleChartResolutionProbeTests
             .Select(r => new Chart(r.Id, mix,
                 new Song(Name.From(r.SongName), SongType.Arcade, placeholderImage, TimeSpan.Zero,
                     Name.From("Probe"), null),
-                Enum.Parse<ChartType>(r.Type), r.Level, mix, null, null, new HashSet<Skill>()))
+                Enum.Parse<ChartType>(r.Type), r.Level, mix, null, null))
             .ToArray();
     }
 

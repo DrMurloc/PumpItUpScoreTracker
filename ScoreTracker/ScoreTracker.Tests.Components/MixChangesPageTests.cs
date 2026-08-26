@@ -51,7 +51,7 @@ public sealed class MixChangesPageTests : ComponentTestBase
         return new Chart(id, MixEnum.Phoenix,
             new Song(song, SongType.Arcade, new Uri("https://piu.test/art.png"),
                 TimeSpan.FromMinutes(2), "Doin", Bpm.From(180, 180)),
-            type, level, mix, null, 1000, new HashSet<Skill>());
+            type, level, mix, null, 1000);
     }
 
     private void Catalog(MixEnum mix, params Chart[] charts)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -57,7 +57,7 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         new(Guid.NewGuid(), MixEnum.Phoenix2,
             new Song(name, SongType.Arcade, new Uri("https://piu.test/art.png"),
                 TimeSpan.FromMinutes(2), "Doin", Bpm.From(195, 195)),
-            type, level, MixEnum.Phoenix2, null, 1200, new HashSet<Skill>());
+            type, level, MixEnum.Phoenix2, null, 1200);
 
     private static OfficialPlayerRecord Player(int id = 1, string name = "VOLTEDGE", bool linked = false) =>
         new(id, name, null, linked ? Guid.NewGuid() : null);

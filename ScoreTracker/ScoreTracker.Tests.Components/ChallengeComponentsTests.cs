@@ -37,7 +37,7 @@ public sealed class ChallengeComponentsTests : ComponentTestBase
         new(Guid.NewGuid(), MixEnum.Phoenix,
             new Song(name, SongType.Arcade, new Uri("https://piu.test/art.png"),
                 TimeSpan.FromMinutes(2), "Artist", Bpm.From(160, 160)),
-            type, level, MixEnum.Phoenix, null, 900, new HashSet<Skill>());
+            type, level, MixEnum.Phoenix, null, 900);
 
     private static User MakeUser(string name = "HYNIX") =>
         new(Guid.NewGuid(), Name.From(name), true, null, new Uri("https://piu.test/a.png"), Name.From("KR"));

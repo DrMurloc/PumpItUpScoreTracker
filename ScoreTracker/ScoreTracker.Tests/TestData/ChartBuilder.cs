@@ -23,7 +23,6 @@ internal sealed class ChartBuilder
     private DifficultyLevel _level = DifficultyLevel.From(15);
     private Name? _stepArtist;
     private int? _noteCount;
-    private IReadOnlySet<Skill> _skills = new HashSet<Skill>();
     private LegacySlot? _slot;
     private int? _playerCountOverride;
 
@@ -39,12 +38,11 @@ internal sealed class ChartBuilder
     public ChartBuilder WithOriginalMix(MixEnum mix) { _originalMix = mix; return this; }
     public ChartBuilder WithStepArtist(string stepArtist) { _stepArtist = Name.From(stepArtist); return this; }
     public ChartBuilder WithNoteCount(int noteCount) { _noteCount = noteCount; return this; }
-    public ChartBuilder WithSkills(IReadOnlySet<Skill> skills) { _skills = skills; return this; }
     public ChartBuilder WithSlot(LegacySlot slot) { _slot = slot; return this; }
     public ChartBuilder WithPlayerCount(int playerCount) { _playerCountOverride = playerCount; return this; }
 
     public Chart Build() => new(_id, _originalMix, _song, _type, _level, _mix,
-        _stepArtist, _noteCount, _skills, _slot, _playerCountOverride);
+        _stepArtist, _noteCount, _slot, _playerCountOverride);
 
     public static implicit operator Chart(ChartBuilder b) => b.Build();
 }

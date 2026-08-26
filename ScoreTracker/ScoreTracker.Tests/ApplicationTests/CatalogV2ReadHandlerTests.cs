@@ -23,7 +23,7 @@ public sealed class CatalogV2ReadHandlerTests
     private static Chart ChartFor(Song song, ChartType type = ChartType.Single, int level = 17)
     {
         return new Chart(Guid.NewGuid(), MixEnum.Phoenix, song, type, DifficultyLevel.From(level),
-            MixEnum.Phoenix, null, 500, new HashSet<Skill>());
+            MixEnum.Phoenix, null, 500);
     }
 
     private static Song SongFor(string name, decimal? bpm = null)

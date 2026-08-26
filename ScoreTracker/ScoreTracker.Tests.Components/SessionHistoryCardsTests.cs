@@ -82,6 +82,6 @@ public sealed class SessionHistoryCardsTests : ComponentTestBase
         var song = new Song("Seeded Song", SongType.Arcade, new Uri("https://example.invalid/a.png"),
             TimeSpan.FromMinutes(2), "Artist", null);
         return new Chart(Guid.NewGuid(), MixEnum.Phoenix, song, ChartType.Single,
-            DifficultyLevel.From(level), MixEnum.Phoenix, null, null, new HashSet<Skill>());
+            DifficultyLevel.From(level), MixEnum.Phoenix, null, null);
     }
 }

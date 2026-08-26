@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -763,7 +763,7 @@ public sealed partial class PumbilityProjectionSagaTests
             chart = new Chart(Guid.NewGuid(), MixEnum.Phoenix,
                 new Song($"Song {_charts.Count}", SongType.Arcade, new Uri("https://piu.test/i.png"),
                     TimeSpan.FromMinutes(2), "Artist", 180),
-                type, level, MixEnum.Phoenix, null, null, new HashSet<Skill>());
+                type, level, MixEnum.Phoenix, null, null);
             _charts.Add(chart);
             _scoringLevels[chart.Id] = scoringLevel ?? level;
             return this;

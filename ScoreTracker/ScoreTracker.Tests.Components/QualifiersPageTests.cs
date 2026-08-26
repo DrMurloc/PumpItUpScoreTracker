@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -37,7 +37,7 @@ public sealed class QualifiersPageTests : ComponentTestBase
         var song = new Song(name, SongType.Arcade, new Uri($"https://piu.test/{name}.png"),
             TimeSpan.FromMinutes(2), "Artist", null);
         return new Chart(Guid.NewGuid(), MixEnum.Phoenix, song, type, DifficultyLevel.From(level),
-            MixEnum.Phoenix, null, null, new HashSet<Skill>());
+            MixEnum.Phoenix, null, null);
     }
 
     // Defaults to a rating-based scoring type. "Score" scoring means the rating IS the score,

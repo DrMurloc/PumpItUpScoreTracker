@@ -61,7 +61,7 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
             var chart = new Chart(Guid.NewGuid(), MixEnum.Phoenix,
                 new Song(Name.From($"Song {type}{level}-{i}"), SongType.Arcade,
                     new Uri("https://piu.test/s.png"), TimeSpan.FromMinutes(2), Name.From("Artist"), null),
-                type, DifficultyLevel.From(level), MixEnum.Phoenix, null, null, new HashSet<Skill>());
+                type, DifficultyLevel.From(level), MixEnum.Phoenix, null, null);
             _charts.Add(chart);
             if (i < scores.Length)
                 _scores.Add(new RecordedPhoenixScore(chart.Id, PhoenixScore.From(scores[i]),

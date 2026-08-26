@@ -21,7 +21,7 @@ public sealed class DrawCardTileTests : ComponentTestBase
         var song = new Song("Nxde", SongType.Arcade, new Uri("https://example.invalid/nxde.png"),
             TimeSpan.FromMinutes(2), "Artist", null);
         return new Chart(Guid.NewGuid(), MixEnum.Phoenix, song, ChartType.Single, DifficultyLevel.From(17),
-            MixEnum.Phoenix, null, null, new HashSet<Skill>());
+            MixEnum.Phoenix, null, null);
     }
 
     private IRenderedComponent<DrawCardTile> Render(DrawCardState state = DrawCardState.None,

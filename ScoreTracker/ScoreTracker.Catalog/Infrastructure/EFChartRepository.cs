@@ -502,7 +502,6 @@ internal sealed class EFChartRepository : IChartRepository
                             Bpm.From(s.MinBpm, s.MaxBpm)),
                         Enum.Parse<ChartType>(c.Type),
                         cm.Level, mix, c.StepArtist, cm.NoteCount,
-                        new HashSet<Skill>(),
                         LegacySlotHelperMethods.ToNullableLegacySlot(cm.LegacySlot),
                         c.PlayerCount))
                 .ToDictionaryAsync(c => c.Id, cancellationToken);

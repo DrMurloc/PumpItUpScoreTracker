@@ -24,7 +24,7 @@ public sealed class FolderSkillListTests : ComponentTestBase
         return new Chart(id, MixEnum.Phoenix,
             new Song(Name.From("Song"), SongType.Arcade, new Uri("https://piuscores.arroweclip.se/img.png"),
                 TimeSpan.FromMinutes(2), "Artist", null),
-            ChartType.Double, DifficultyLevel.From(24), MixEnum.Phoenix, null, 900, new HashSet<Skill>());
+            ChartType.Double, DifficultyLevel.From(24), MixEnum.Phoenix, null, 900);
     }
 
     private static ChartBadgePresenceRecord Badge(string badge, string display, BadgeCategory family,

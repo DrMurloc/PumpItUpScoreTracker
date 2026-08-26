@@ -52,8 +52,7 @@ public sealed class TierListChartCardTests : ComponentTestBase
             new Song(Name.From("Sarabande"), SongType.Arcade,
                 new Uri("https://piuimages.arroweclip.se/probe.png"), TimeSpan.Zero,
                 Name.From("Probe"), null),
-            ChartType.Double, DifficultyLevel.From(18), MixEnum.Phoenix, null, null,
-            new HashSet<Skill>());
+            ChartType.Double, DifficultyLevel.From(18), MixEnum.Phoenix, null, null);
 
         return RenderComponent<TierListChartCard>(p => p
             .Add(x => x.Chart, chart)

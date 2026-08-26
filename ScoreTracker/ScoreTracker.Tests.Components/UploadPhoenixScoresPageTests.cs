@@ -90,7 +90,7 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
         new(Guid.NewGuid(), MixEnum.Phoenix,
             new Song("District 1", SongType.Arcade, new Uri("https://piu.test/art.png"),
                 TimeSpan.FromMinutes(2), "Doin", Bpm.From(195, 195)),
-            ChartType.Single, 20, MixEnum.Phoenix, null, 1200, new HashSet<Skill>());
+            ChartType.Single, 20, MixEnum.Phoenix, null, 1200);
 
     private void StoreCredential() =>
         _clientStore.Setup(s => s.Read(It.IsAny<CancellationToken>()))

@@ -2211,25 +2211,16 @@ html.sheet-open .more-sheet-scrim {
     white-space: nowrap;
 }
 
-/* Category-tinted chips (piucenter variant B): identity hue per skill category via
-   the --skillcat-* tokens; the printed name carries the meaning (rule 8). */
-.skillcat-speed { --skill-chip: var(--skillcat-speed); }
-.skillcat-stamina { --skill-chip: var(--skillcat-stamina); }
-.skillcat-twist { --skill-chip: var(--skillcat-twist); }
-.skillcat-bracket { --skill-chip: var(--skillcat-bracket); }
-.skillcat-tech { --skill-chip: var(--skillcat-tech); }
-
 /* The owner's five badge families (docs/design/nuke-old-skill-categories.md §2): the granular
-   piucenter vocabulary's identity colors, feeding the same --skill-chip variable the chip and
-   bar rules already read, so a badge chip tints exactly like the rollup chips used to. */
+   piucenter vocabulary's identity colors, feeding the --skill-chip variable the chip and bar
+   rules read. They replaced the rollup's arbitrary buckets, whose tokens went with it. */
 .badgecat-brackets { --skill-chip: var(--badgecat-brackets); }
 .badgecat-twists { --skill-chip: var(--badgecat-twists); }
 .badgecat-staminaandruns { --skill-chip: var(--badgecat-staminaandruns); }
 .badgecat-tech { --skill-chip: var(--badgecat-tech); }
 .badgecat-doublestech { --skill-chip: var(--badgecat-doublestech); }
 
-.tier-chart-card-skill[class*="badgecat-"],
-.tier-chart-card-skill[class*="skillcat-"] {
+.tier-chart-card-skill[class*="badgecat-"] {
     color: color-mix(in srgb, var(--skill-chip) 55%, var(--mix-ink));
     background: color-mix(in srgb, var(--skill-chip) 16%, transparent);
     border-color: color-mix(in srgb, var(--skill-chip) 45%, transparent);

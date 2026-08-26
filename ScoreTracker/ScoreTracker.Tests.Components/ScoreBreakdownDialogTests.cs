@@ -21,7 +21,7 @@ public sealed class ScoreBreakdownDialogTests : ComponentTestBase
     private readonly Chart _chart = new(Guid.NewGuid(), MixEnum.Phoenix2,
         new Song("Sarabande", SongType.Arcade, new Uri("https://piu.test/art.png"),
             TimeSpan.FromMinutes(2), "MAX", Bpm.From(180, 180)),
-        ChartType.Double, 23, MixEnum.Phoenix2, null, 900, new HashSet<Skill>());
+        ChartType.Double, 23, MixEnum.Phoenix2, null, 900);
 
     public ScoreBreakdownDialogTests()
     {

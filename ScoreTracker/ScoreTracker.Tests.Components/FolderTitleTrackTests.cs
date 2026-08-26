@@ -18,7 +18,7 @@ public sealed class FolderTitleTrackTests
         new(Guid.NewGuid(), MixEnum.Phoenix2,
             new Song("song", SongType.Arcade, new Uri("https://piu.test/a.png"),
                 TimeSpan.FromMinutes(2), "artist", Bpm.From(140, 140)),
-            type, level, MixEnum.Phoenix2, null, 1000, new HashSet<Skill>());
+            type, level, MixEnum.Phoenix2, null, 1000);
 
     private static RecordedPhoenixScore Score(Guid chartId, int value, PhoenixPlate plate) =>
         new(chartId, value, plate, false, DateTimeOffset.UtcNow);
