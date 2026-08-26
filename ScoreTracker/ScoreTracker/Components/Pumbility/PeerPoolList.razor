@@ -168,6 +168,7 @@ else
                                                TierLabel="@(Density == UiDensity.Comfortable ? CaptionFor(row) : null)"
                                                TierColor="@(row.Entry != null ? ThemeScales.PumbilityColor(row.Entry.Tier) : ThemeScales.PumbilityColor(TierListCategory.Unrecorded))"
                                                TooltipNote="@CompactNote(row)"
+                                               Skills="@SkillsFor(row)"
                                                Body="@CardBody(row)"
                                                OnToDo="OnToDo"
                                                OnOpen="OpenById"
@@ -200,6 +201,14 @@ else
     ///     (D44). Nothing is read twice: the frame already loaded it.
     /// </summary>
     [Parameter] public PumbilityPageRecord? PoolRecord { get; set; }
+
+    /// <summary>
+    ///     What each chart IS (docs/design/chart-identity.md §6), keyed by chart. Handed down
+    ///     rather than read here: this component is presentational, and the section above it
+    ///     already loads once for all three lenses.
+    /// </summary>
+    [Parameter] public IReadOnlyDictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>> Skills { get; set; } =
+        new Dictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>>();
 
     [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix2;
 
@@ -249,6 +258,11 @@ else
     ///     the Your top 50 lens — the pool's own score and value win there, since the pool is what
     ///     the lens is about.
     /// </summary>
+    private IReadOnlyList<TierListChartCard.CardSkillChip>? SkillsFor(Row row)
+    {
+        return Skills.TryGetValue(row.Chart.Id, out var chips) && chips.Count > 0 ? chips : null;
+    }
+
     private sealed record Row(Chart Chart, PeerPoolEntry? Entry, PumbilityTarget? Target, PeerAloneEntry? Alone,
         PoolEntry? Slot = null)
     {
