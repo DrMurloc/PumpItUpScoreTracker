@@ -2390,11 +2390,17 @@ else
     ///     Band names are folder-relative labels, and the range beside them is what makes that
     ///     concrete — "Fast" alone invites reading it as an absolute.
     /// </summary>
+    /// <remarks>
+    ///     The middle band is keyed "Mid Tempo" rather than the obvious "Moderate": that key is
+    ///     already the comment-moderation button, so the band would have rendered 관리 ("manage")
+    ///     in Korean and its equivalent elsewhere. English is the key text, which is why nothing
+    ///     looked wrong here.
+    /// </remarks>
     private string SpeedBandName(TierListCategory band) => L[band switch
     {
         TierListCategory.Overrated => "Very Slow",
         TierListCategory.VeryEasy => "Slow",
-        TierListCategory.Medium => "Moderate",
+        TierListCategory.Medium => "Mid Tempo",
         TierListCategory.Hard => "Fast",
         _ => "Very Fast"
     }].Value;
