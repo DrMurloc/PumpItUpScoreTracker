@@ -273,8 +273,14 @@ piucenter tagged `run_without_twists`.
 
 ## 5. Folder baselines (materialized)
 
-Per (mix, type, level, badge): **p75 coverage cutoff**, **p90 coverage** (the drenched bar), and
-**qualified prevalence** (count of folder charts clearing the qualifying bar). Plus per (mix,
+**A folder's percentiles are read from levels L−1, L and L+1** of the same mix and type — the
+cutoffs still belong to L, only the population widens (owner, 2026-08-26). Charts do not respect
+level boundaries: a technique that is ordinary at 21 is ordinary at 20 and 22, and one level is a
+thin sample to read a percentile off — thinner still at either end of the scale. Piucenter reached
+the same shape independently (`piu-annotate`, `get_top_chart_skills`) with a two-level window.
+
+Per (mix, type, level, badge): **p75 coverage cutoff**, **p90 coverage** (the drenched bar), the
+**presence bar** (§3.1), and **prevalence** (count of peer charts carrying the badge at all). Plus per (mix,
 type, level) geometry rows: mid-4/mid-6 note-share **p75** and mid-6 **p10**, and side-on
 **p90**. Owned by Catalog (internal entity + repository, registered in
 `CatalogModelContribution`); rebuilt at the end of every snapshot import / crawl — the same sweep

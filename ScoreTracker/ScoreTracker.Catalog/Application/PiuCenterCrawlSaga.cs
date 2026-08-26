@@ -255,10 +255,17 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
             members.Add(profile);
         }
 
+        // A folder is judged against its NEIGHBOURS, not only itself: levels L-1, L and L+1 of
+        // the same type and mix. Charts do not respect level boundaries — a technique that is
+        // ordinary at 21 is ordinary at 20 and 22 — and a single level is a thin sample to read
+        // a percentile off, thinner still in the sparse folders at either end of the scale.
+        // Piucenter reached the same shape independently (piu-annotate, get_top_chart_skills)
+        // with a two-level window; the owner asked for symmetric.
         var byMix = folders
             .GroupBy(kv => kv.Key.Mix)
             .ToDictionary(g => g.Key, g => g
-                .SelectMany(kv => FolderBaselineBuilder.Build(kv.Key.Mix, kv.Key.Type, kv.Key.Level, kv.Value))
+                .SelectMany(kv => FolderBaselineBuilder.Build(kv.Key.Mix, kv.Key.Type, kv.Key.Level,
+                    PeersOf(folders, kv.Key)))
                 .ToArray());
 
         foreach (var (mix, baselines) in byMix)
@@ -269,6 +276,22 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
             byMix.Values.Sum(b => b.Length), folders.Count, byMix.Count);
 
         await publisher.Publish(new PiuCenterDataIngestedEvent(byMix.Keys.ToArray()), cancellationToken);
+    }
+
+    /// <summary>
+    ///     The charts a folder's percentiles are measured against: its own level and the two
+    ///     either side, same mix and type. The folder's cutoffs still belong to ITS level — only
+    ///     the population they are read from widens.
+    /// </summary>
+    private static IReadOnlyCollection<ChartBadgeProfile> PeersOf(
+        IReadOnlyDictionary<(MixEnum Mix, ChartType Type, int Level), List<ChartBadgeProfile>> folders,
+        (MixEnum Mix, ChartType Type, int Level) key)
+    {
+        var peers = new List<ChartBadgeProfile>();
+        for (var level = key.Level - 1; level <= key.Level + 1; level++)
+            if (folders.TryGetValue((key.Mix, key.Type, level), out var members))
+                peers.AddRange(members);
+        return peers;
     }
 
     private static List<ChartSkillMetric> BuildMetrics(Guid chartId, decimal version, PiuCenterChartPage page,
