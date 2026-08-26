@@ -88,7 +88,8 @@ public sealed class ChartIdentityBuilderTests
     }
 
     private static IReadOnlyDictionary<string, decimal> Geometry(decimal mid6 = 0.92m, decimal sideOn = 0.22m,
-        decimal crossed = 0.05m, decimal brackets = 0.06m, decimal mid4 = 0.70m, decimal tension = 30m)
+        decimal crossed = 0.05m, decimal brackets = 0.06m, decimal mid4 = 0.70m, decimal tension = 30m,
+        decimal repeated = 0.20m, decimal longestRun = 0m, decimal span = 100m)
     {
         return new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
         {
@@ -97,8 +98,58 @@ public sealed class ChartIdentityBuilderTests
             [PiuCenterMetrics.StanceSideOn] = sideOn,
             [PiuCenterMetrics.StanceCrossed] = crossed,
             [PiuCenterMetrics.BracketRowShare] = brackets,
-            [PiuCenterMetrics.TimeUnderTension] = tension
+            [PiuCenterMetrics.TimeUnderTension] = tension,
+            [PiuCenterMetrics.RepeatedPanelShare] = repeated,
+            [PiuCenterMetrics.SustainTime] = longestRun,
+            [PiuCenterMetrics.ChartSpan] = span
         };
+    }
+
+    /// <summary>
+    ///     §3.6. Piucenter defines a footswitch as a repeated single panel where the PREDICTED
+    ///     limbs differ, so a footswitch and a jack are the same note pattern and only an ML guess
+    ///     separates them. The pattern has to exist before a reading of it can: Baroque Virus FULL
+    ///     S21 was called a hold-footslide chart on three repeated-panel rows in 2,327, while
+    ///     Headless Chicken S21 (15.8%) and Hi-Bi D21 (16.8%) are the real ones.
+    /// </summary>
+    [Fact]
+    public void ALimbPredictedBadgeNeedsTheNotePatternItIsMadeOf()
+    {
+        var folder = new Folder().AddCharts(20, Geometry(), ("run", 0.5m));
+        var picks = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["footswitch"] = 1 };
+        var headless = Folder.Profile(new[] { ("footswitch", 0.4545m) }, picks,
+            geometry: Geometry(repeated: 0.158m));
+        var phantom = Folder.Profile(new[] { ("footswitch", 0.4545m) }, picks,
+            geometry: Geometry(repeated: 0.017m));
+
+        Assert.Contains("footswitch", IdentityBadges(folder.ChipsFor(headless)));
+        // Same coverage, same pick — and no repeated panels to have switched feet on.
+        Assert.DoesNotContain("footswitch", IdentityBadges(folder.ChipsFor(phantom)));
+        Assert.DoesNotContain(folder.ChipsFor(phantom), c => c.Badge == "footswitch");
+    }
+
+    /// <summary>
+    ///     §3.8. Their "Sustain time" is max(length) over the eNPS ranges of interest — the chart's
+    ///     LONGEST single run, not a total — so it can be named as one. Absolute rather than
+    ///     folder-relative (owner): a fifty-second run is a fifty-second run whoever it stands
+    ///     next to.
+    /// </summary>
+    [Theory]
+    [InlineData(46.5, true)]
+    [InlineData(22.5, true)]
+    [InlineData(14.3, false)]
+    [InlineData(11.2, false)]
+    public void TheLongestRunIsAClaimWhenItIsMostOfTheChart(double sharePercent, bool expected)
+    {
+        var folder = new Folder().AddCharts(20, Geometry(), ("run", 0.5m));
+        var chart = Folder.Profile(Array.Empty<(string, decimal)>(),
+            geometry: Geometry(longestRun: (decimal)sharePercent, span: 100m));
+
+        var chips = folder.ChipsFor(chart);
+        var run = chips.SingleOrDefault(c => c.Kind == IdentityChipKind.LongestRun);
+
+        Assert.Equal(expected, run != null);
+        if (expected) Assert.Equal((decimal)sharePercent, run!.Detail);
     }
 
     /// <summary>

@@ -69,7 +69,7 @@ public sealed class PiuCenterCrawlSagaTests
             .ReturnsAsync(new Dictionary<string, decimal>());
         _piuCenter.Setup(p => p.GetChartPage(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(page);
-        _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
+        _charts.Setup(c => c.GetCharts(MixEnum.Phoenix2, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(charts.ToArray());
         _aliases.Setup(a => a.GetAliases(PiuCenterMetrics.Source, It.IsAny<CancellationToken>()))
             .ReturnsAsync(aliases.ToArray());
@@ -200,7 +200,7 @@ public sealed class PiuCenterCrawlSagaTests
         var chart = new ChartBuilder().WithSongName("Slam").WithArtist("Novasonic").WithLevel(7).Build();
         var key = "Slam_-_Novasonic_S7_ARCADE";
         var storage = new List<ChartSkillMetric>();
-        _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
+        _charts.Setup(c => c.GetCharts(MixEnum.Phoenix2, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chart });
         _aliases.Setup(a => a.GetAliases(PiuCenterMetrics.Source, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<ExternalChartAlias>());

@@ -145,7 +145,27 @@ namespace ScoreTracker.Data.Apis
                 holdTickSum,
                 ReadCrux(meta, cruxIndex, maxSegmentLevel, cruxEnps, cruxBadges),
                 StanceAnalyzer.Analyze(ReadArrows(noteArrays)),
-                meta.TryGetProperty("pack", out var pack) ? pack.GetString() : null);
+                meta.TryGetProperty("pack", out var pack) ? pack.GetString() : null,
+                ReadChartSpan(meta));
+        }
+
+        /// <summary>
+        ///     The played span, first segment start to last segment end. Their own "Sustain time"
+        ///     is the longest single run in seconds, and seconds alone cannot say whether a run is
+        ///     the chart or an incident in it — a fifty-second run is most of a short chart and a
+        ///     quarter of Baroque Virus.
+        /// </summary>
+        private static decimal ReadChartSpan(JsonElement meta)
+        {
+            if (!meta.TryGetProperty("Segments", out var spans) || spans.ValueKind != JsonValueKind.Array)
+                return 0;
+            var count = spans.GetArrayLength();
+            if (count == 0) return 0;
+            var first = spans[0];
+            var last = spans[count - 1];
+            if (first.ValueKind != JsonValueKind.Array || first.GetArrayLength() < 2) return 0;
+            if (last.ValueKind != JsonValueKind.Array || last.GetArrayLength() < 2) return 0;
+            return Math.Round(last[1].GetDecimal() - first[0].GetDecimal(), 4);
         }
 
         /// <summary>

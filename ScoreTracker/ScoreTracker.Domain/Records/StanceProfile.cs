@@ -27,5 +27,6 @@ namespace ScoreTracker.Domain.Records
         decimal Diagonal,
         decimal SideOn,
         decimal Crossed,
-        decimal BracketRowShare);
+        decimal BracketRowShare,
+        decimal RepeatedPanelShare);
 }

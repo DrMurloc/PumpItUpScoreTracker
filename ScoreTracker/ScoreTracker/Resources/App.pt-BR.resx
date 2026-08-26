@@ -3736,6 +3736,9 @@
   <data name="Logout" xml:space="preserve">
     <value>Fazer logout</value>
   </data>
+  <data name="Longest run: {0}s" xml:space="preserve">
+    <value>Sequência mais longa: {0} s</value>
+  </data>
   <data name="Look back" xml:space="preserve">
     <value>Período</value>
   </data>

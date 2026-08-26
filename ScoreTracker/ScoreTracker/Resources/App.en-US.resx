@@ -3758,6 +3758,9 @@
   <data name="Logout" xml:space="preserve">
     <value>Logout</value>
   </data>
+  <data name="Longest run: {0}s" xml:space="preserve">
+    <value>Longest run: {0}s</value>
+  </data>
   <data name="Look back" xml:space="preserve">
     <value>Look back</value>
   </data>

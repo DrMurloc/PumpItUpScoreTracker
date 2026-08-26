@@ -57,6 +57,12 @@ public static class IdentityChips
                         localizer[b.DisplayName].Value, BadgeCategoryClasses.For(b.Family)))
                     .ToArray());
 
+            // Their longest unbroken run, named in seconds because that is the thing a player
+            // feels — "Longest run: 22s" says more than any share of the chart could.
+            case IdentityChipKind.LongestRun:
+                return new TierListChartCard.CardSkillChip(
+                    localizer["Longest run: {0}s", Seconds(chip.Detail)].Value, "chip-geometry", null, identity);
+
             // The shape of the body — its own hue, outside the five families, for the same
             // reason the spike is: how much pad a chart uses is not one of its skills.
             case IdentityChipKind.Width:

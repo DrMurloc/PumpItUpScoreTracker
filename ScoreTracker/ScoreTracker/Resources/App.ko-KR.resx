@@ -3736,6 +3736,9 @@
   <data name="Logout" xml:space="preserve">
     <value>로그아웃</value>
   </data>
+  <data name="Longest run: {0}s" xml:space="preserve">
+    <value>최장 런: {0}초</value>
+  </data>
   <data name="Look back" xml:space="preserve">
     <value>조회 기간</value>
   </data>

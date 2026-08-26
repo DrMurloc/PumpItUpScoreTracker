@@ -18,6 +18,8 @@ internal static class PiuCenterMetrics
     public const string TapRows = "tap_rows";
     public const string HoldRows = "hold_rows";
     public const string HoldTicks = "hold_ticks";
+    // Their "Sustain time" is max(len(range)) over the eNPS ranges of interest — the chart's
+    // LONGEST unbroken run, not a total. TimeUnderTension is the sum of all of them.
     public const string SustainTime = "sustain_time";
     public const string TimeUnderTension = "time_under_tension";
     public const string DifficultyPrediction = "difficulty_prediction";
@@ -51,6 +53,13 @@ internal static class PiuCenterMetrics
     public const string StanceSideOn = "stance_side_on";
     public const string StanceCrossed = "stance_crossed";
     public const string BracketRowShare = "bracket_row_share";
+
+    // How much of the chart is the same single panel twice in a row — the physical precondition
+    // for a footswitch, measured from the arrows rather than inferred from a limb guess.
+    public const string RepeatedPanelShare = "repeated_panel_share";
+
+    // First segment start to last segment end, in seconds — what the longest run is a share of.
+    public const string ChartSpan = "chart_span";
 
     // Which mix's simfile the analysis was actually run against, as 1 or 0 for "Phoenix".
     // Piucenter's corpus is stepcharts, and only 28.6% of it is Phoenix-era: the rest describes

@@ -62,6 +62,8 @@ public static class StanceAnalyzer
         var mid6 = 0;
         var rows = 0;
         var bracketRows = 0;
+        var repeatedRows = 0;
+        IReadOnlyList<int>? previousRow = null;
         var stances = 0;
         var diagonal = 0;
         var sideOn = 0;
@@ -92,6 +94,16 @@ public static class StanceAnalyzer
                 else right = spot;
             }
 
+            // Piucenter's footswitch is "a repeated single panel where the PREDICTED limbs
+            // differ", so a footswitch and a jack are the same note pattern and only the limb
+            // model separates them. This counts the pattern itself, which owes the model
+            // nothing: a chart with no repeated single panels cannot contain a footswitch,
+            // however confidently the annotation says otherwise.
+            var panelsThisRow = row.Select(a => a.Panel).Distinct().OrderBy(p => p).ToArray();
+            if (previousRow is { Count: 1 } && panelsThisRow.Length == 1 && previousRow[0] == panelsThisRow[0])
+                repeatedRows++;
+            previousRow = panelsThisRow;
+
             if (bracketed) bracketRows++;
             if (left is not { } l || right is not { } r) continue;
             if (Math.Abs(l.X - r.X) < 1e-9 && Math.Abs(l.Y - r.Y) < 1e-9) continue;
@@ -112,7 +124,8 @@ public static class StanceAnalyzer
             Share(diagonal, stances),
             Share(sideOn, stances),
             Share(crossed, stances),
-            Share(bracketRows, rows));
+            Share(bracketRows, rows),
+            Share(repeatedRows, rows));
     }
 
     private static bool IsLeft(string limb)

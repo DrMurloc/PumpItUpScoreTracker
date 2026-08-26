@@ -68,6 +68,44 @@ internal static class ChartIdentityRules
             "bracket", "bracket_run", "bracket_drill", "bracket_jump", "bracket_twist", "staggered_bracket"
         };
 
+    /// <summary>
+    ///     Badges that exist only in the limb model's opinion. Piucenter defines a footswitch as
+    ///     "a repeated single panel where the PREDICTED limbs differ" — so a footswitch and a jack
+    ///     are the SAME note pattern, and only an ML guess separates them. Hold-footswitch is a
+    ///     limb annotation code outright, and hold-footslide is built entirely from which foot is
+    ///     reading which arrow.
+    ///     <para>
+    ///         Their own pipeline knows this failure mode: models.py excludes doublestep from rare
+    ///         skills for predicted charts because it is "a common error for predicted limb
+    ///         annotations, especially on chart sections with holds and taps". These three never
+    ///         got the same guard, and it shows — Baroque Virus FULL S21 was called a
+    ///         hold-footslide chart on three repeated-panel rows in 2,327.
+    ///     </para>
+    /// </summary>
+    private static readonly IReadOnlySet<string> LimbPredictedBadges =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            { "footswitch", "hold_footswitch", "hold_footslide" };
+
+    /// <summary>
+    ///     How much of a chart has to be the same single panel twice in a row before a
+    ///     limb-predicted badge is believed — the physical precondition, measured off the arrows,
+    ///     which owes the limb model nothing. Nothing sits between the phantoms and the real ones:
+    ///     Baroque Virus FULL S21 0.13%, Gothique Resonance S21 1.71% and Cleaner S21 2.18% are
+    ///     all charts the owner could find no footswitch in, while Headless Chicken S21 (15.84%)
+    ///     and Hi-Bi D21 (16.80%, and hand-annotated) are the real ones.
+    /// </summary>
+    public const double MinimumRepeatedPanelShare = 0.05;
+
+    /// <summary>
+    ///     How much of a chart its longest unbroken run has to cover before the run IS the chart.
+    ///     Deliberately absolute and not folder-relative (owner, 2026-08-26): a fifty-second run
+    ///     is a fifty-second run whoever it is standing next to. The corpus median longest run is
+    ///     13.5% of a chart, so this is its 75th percentile — Cleaner SHORT CUT S21 (46.5%),
+    ///     Gothique Resonance S21 (22.5%) and Baroque Virus FULL S21 (20.8%) are run charts;
+    ///     Headless Chicken S21 (11.2%) and Gargoyle FULL S21 (14.3%) are not.
+    /// </summary>
+    public const double LongestRunShare = 0.22;
+
     /// <summary>Where a badge's coverage has to land in its folder to read as core.</summary>
     public const double CoreQuantile = 0.75;
 
@@ -215,6 +253,12 @@ internal static class ChartIdentityRules
     public static bool IsBracketFamily(string badge)
     {
         return BracketFamilyBadges.Contains(badge);
+    }
+
+    /// <summary>Whether this badge exists only in the limb model's opinion.</summary>
+    public static bool IsLimbPredicted(string badge)
+    {
+        return LimbPredictedBadges.Contains(badge);
     }
 
     /// <summary>

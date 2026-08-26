@@ -23,6 +23,10 @@ internal static class ChartIdentityBuilder
         // clause, and it crowded out real coverage through the cap besides.
         var present = profile.PresentBadges(folder)
             .Where(b => !ChartIdentityRules.IsBracketFamily(b) || profile.BracketsAreCredible)
+            // A footswitch is a repeated single panel that the LIMB MODEL read as alternating
+            // feet, so the pattern has to exist before the reading of it can. Three charts the
+            // owner could find no footswitch in were carrying one on 0.1–2.2% repeated panels.
+            .Where(b => !ChartIdentityRules.IsLimbPredicted(b) || profile.LimbReadsAreCredible)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var identity = new List<IdentityChipRecord>();
@@ -33,6 +37,7 @@ internal static class ChartIdentityBuilder
         if (Width(profile, folder) is { } width) identity.Add(width);
         if (Twist(profile, folder) is { } twist) identity.Add(twist);
         if (Speed(profile, folder) is { } speed) identity.Add(speed);
+        if (LongestRun(profile) is { } run) identity.Add(run);
 
         // 2 — what almost nothing else here has. Rarest first, because the rarer it is the more
         // it is the reason someone is looking at this chart.
@@ -101,6 +106,7 @@ internal static class ChartIdentityBuilder
                      .Where(b => !claimed.Contains(b))
                      .Where(b => !ChartIdentityRules.IsPadGeographyBadge(b))
                      .Where(b => !ChartIdentityRules.IsBracketFamily(b) || profile.BracketsAreCredible)
+                     .Where(b => !ChartIdentityRules.IsLimbPredicted(b) || profile.LimbReadsAreCredible)
                      // Sustained is the one pick with a measurement behind it that we trust more
                      // than the pick. Theirs is the variance of the eNPS timeline, which says the
                      // chart is EVEN, not that it is long — Monolith carries a sustained pick over
@@ -207,6 +213,26 @@ internal static class ChartIdentityBuilder
     ///     and the outer bands have to keep meaning what they say — so this is the Speed list's
     ///     own boundary and nothing softer.
     /// </summary>
+    /// <summary>
+    ///     The longest unbroken run, when it is most of the chart. Piucenter's "Sustain time" is
+    ///     max(length) over their eNPS ranges of interest — the LONGEST single run rather than a
+    ///     total, which is why it can be named as one.
+    ///     <para>
+    ///         Absolute, not folder-relative (owner, 2026-08-26). The corpus median longest run
+    ///         covers 13.5% of its chart, so the bar is the 75th percentile, and it reads in
+    ///         SECONDS because that is the thing a player feels.
+    ///     </para>
+    /// </summary>
+    private static IdentityChipRecord? LongestRun(ChartBadgeProfile profile)
+    {
+        if (profile.GeometryOf(PiuCenterMetrics.SustainTime) is not { } seconds || seconds <= 0) return null;
+        if (profile.GeometryOf(PiuCenterMetrics.ChartSpan) is not { } span || span <= 0) return null;
+        return seconds / span >= (decimal)ChartIdentityRules.LongestRunShare
+            ? new IdentityChipRecord(IdentityChipKind.LongestRun, IdentityTier.Identity,
+                WidthLabels.LongestRun, WidthLabels.LongestRun, null, seconds)
+            : null;
+    }
+
     private static IdentityChipRecord? Speed(ChartBadgeProfile profile,
         IReadOnlyDictionary<string, ChartFolderBaseline> folder)
     {
@@ -333,6 +359,9 @@ internal static class WidthLabels
     public const string TwistHeavy = "Twist-heavy";
     public const string VeryFast = "Very Fast";
     public const string VerySlow = "Very Slow";
+
+    /// <summary>Not a shape claim, but keyed the same way: a label the UI localizes, not a badge.</summary>
+    public const string LongestRun = "Longest run";
 
     /// <summary>Whether a chip key is one of these shape claims rather than a piucenter badge.</summary>
     public static bool IsGeometryClaim(string badge)

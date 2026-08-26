@@ -23,8 +23,12 @@ Two tiers, and the distinction is the whole feature (owner, 2026-08-26): *"a hal
 features bracket twists is a very different thing than a bracket twist chart that features
 mid-6 patterns"*.
 
-- **Identity** — what the chart *is*. Rendered filled, first, under a printed `Identity` label.
-- **Features** — what the chart *also has*. Rendered as today's quiet outline, under `Features`.
+- **Identity** — what the chart *is*. The only thing a card shows.
+- **Features** — what the chart *also has*. Chart page and dialog only, under a printed label.
+
+**Cards show identity and nothing else** (owner, 2026-08-26). A card has room for three chips, and
+spending them on what a chart merely also has buys nothing a player deciding what to play can use.
+A chart with no identity therefore shows no chips at all.
 
 **Identity is uncapped** (owner: *"Core identity should not be limited… if you got a deep twisty
 half double with sustained bracket runs and anchor shuffles, I want that shit called out"*), and
@@ -112,6 +116,19 @@ Two consequences that are load-bearing:
 
 Whole-chart qualities (`bursty`, `sustained`) carry no coverage and are admitted by piucenter's
 dominance pick alone; they have no prevalence and never come through the rare rule.
+
+**The union with piucenter's own picks** (owner, 2026-08-26). Their `chart_skill_summary` is the
+same idea as ours computed on better inputs — a percentile of each technique against charts of the
+same type a level either side (`piu-annotate`, `get_top_chart_skills`) — so where they name
+something we did not, that is a second opinion worth carrying rather than a contradiction.
+Measured on Phoenix 2 D23: **58% of our claims are exactly theirs**, another 19% are the same claim
+at finer granularity (we say `twist_close`, they say `twists`), and 23% are genuinely new. The
+union adds under half a badge per chart.
+
+Their picks are still subject to every veto, because a veto exists to overrule a measurement we do
+not trust: the bracket-row-share gate (§3.4), the geography rule (§3.5), and the sustain gate —
+their `sustained` is the variance of the eNPS timeline, which says a chart is EVEN rather than
+long, so a pick over ten seconds of tension is still refused.
 
 Two hard rules on top:
 

@@ -61,6 +61,13 @@ public enum IdentityChipKind
     /// <summary>Only ever the outer bands — a chart in the middle of its folder has no speed claim.</summary>
     Speed,
 
+    /// <summary>
+    ///     The chart's longest unbroken run, when the run is most of the chart. Absolute rather
+    ///     than folder-relative: a fifty-second run is a fifty-second run whoever it stands next
+    ///     to. Detail carries the seconds.
+    /// </summary>
+    LongestRun,
+
     /// <summary>A real presence that almost nothing else in this folder has.</summary>
     Unique,
 

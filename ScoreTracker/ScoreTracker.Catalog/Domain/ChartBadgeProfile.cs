@@ -25,10 +25,18 @@ internal sealed record ChartBadgeProfile(
     }
 
     /// <summary>
+    ///     Whether the chart contains the pattern a footswitch is made of. Same shape as
+    ///     <see cref="BracketsAreCredible" /> and for the same reason: overrule a badge built on a
+    ///     guess with a measurement that is not. A chart with no banked geometry keeps the benefit
+    ///     of the doubt — the veto exists to refute a bad reading, not to silence unmeasured ones.
+    /// </summary>
+    public bool LimbReadsAreCredible =>
+        GeometryOf(PiuCenterMetrics.RepeatedPanelShare) is not { } share ||
+        share >= (decimal)ChartIdentityRules.MinimumRepeatedPanelShare;
+
+    /// <summary>
     ///     Whether the chart brackets enough for piucenter's bracket badges to be believed
-    ///     (docs/design/chart-identity.md §3.4). A chart with no geometry banked is given the
-    ///     benefit of the doubt: the veto exists to overrule a bad measurement, not to silence
-    ///     every chart we have not measured yet.
+    ///     (docs/design/chart-identity.md §3.4).
     /// </summary>
     public bool BracketsAreCredible =>
         GeometryOf(PiuCenterMetrics.BracketRowShare) is not { } share ||
@@ -95,6 +103,7 @@ internal sealed record ChartBadgeProfile(
     {
         PiuCenterMetrics.PadShareMid4, PiuCenterMetrics.PadShareMid6, PiuCenterMetrics.StanceDiagonal,
         PiuCenterMetrics.StanceSideOn, PiuCenterMetrics.StanceCrossed, PiuCenterMetrics.BracketRowShare,
+        PiuCenterMetrics.RepeatedPanelShare, PiuCenterMetrics.SustainTime,
         // Not geometry, but read the same way: a folder-relative number the chip engine compares
         // against a percentile rather than a fixed threshold.
         PiuCenterMetrics.TimeUnderTension

@@ -3757,6 +3757,9 @@
   <data name="Logout" xml:space="preserve">
     <value>Déconnexion</value>
   </data>
+  <data name="Longest run: {0}s" xml:space="preserve">
+    <value>Plus longue série : {0} s</value>
+  </data>
   <data name="Look back" xml:space="preserve">
     <value>Période</value>
   </data>
