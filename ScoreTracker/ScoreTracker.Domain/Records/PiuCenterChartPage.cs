@@ -30,7 +30,8 @@ namespace ScoreTracker.Domain.Records
         int TapRows = 0,
         int HoldRows = 0,
         int HoldTickSum = 0,
-        PiuCenterCrux? Crux = null);
+        PiuCenterCrux? Crux = null,
+        StanceProfile? Stance = null);
 
     /// <summary>
     ///     The chart at its hardest: the FIRST segment reaching the page's maximum modelled

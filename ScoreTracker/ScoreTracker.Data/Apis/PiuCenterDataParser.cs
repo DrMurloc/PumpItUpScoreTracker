@@ -143,7 +143,39 @@ namespace ScoreTracker.Data.Apis
                 tapRows,
                 holdRows,
                 holdTickSum,
-                ReadCrux(meta, cruxIndex, maxSegmentLevel, cruxEnps, cruxBadges));
+                ReadCrux(meta, cruxIndex, maxSegmentLevel, cruxEnps, cruxBadges),
+                StanceAnalyzer.Analyze(ReadArrows(noteArrays)));
+        }
+
+        /// <summary>
+        ///     Every arrow with the foot piucenter assigns it, taps and hold heads alike
+        ///     (docs/design/chart-identity.md §4b). A hold counts once, where it starts: holding
+        ///     the centre for ten seconds is one commitment to that panel, not ten seconds of
+        ///     evidence about where the player stands.
+        /// </summary>
+        private static IReadOnlyList<StepArrow> ReadArrows(IReadOnlyList<JsonElement> noteArrays)
+        {
+            var arrows = new List<StepArrow>();
+            for (var i = 0; i < noteArrays.Count && i < 2; i++)
+            {
+                if (noteArrays[i].ValueKind != JsonValueKind.Array) continue;
+                foreach (var note in noteArrays[i].EnumerateArray())
+                {
+                    if (note.ValueKind != JsonValueKind.Array) continue;
+                    var length = note.GetArrayLength();
+                    // Taps are [panel, time, limb]; holds are [panel, start, end, limb], so the
+                    // foot is always the last element and the start time always the second.
+                    if (length < 3 || note[0].ValueKind != JsonValueKind.Number ||
+                        note[1].ValueKind != JsonValueKind.Number) continue;
+                    var limb = note[length - 1].ValueKind == JsonValueKind.String
+                        ? note[length - 1].GetString()
+                        : null;
+                    if (string.IsNullOrEmpty(limb)) continue;
+                    arrows.Add(new StepArrow((int)note[0].GetDecimal(), note[1].GetDecimal(), limb));
+                }
+            }
+
+            return arrows;
         }
 
         /// <summary>

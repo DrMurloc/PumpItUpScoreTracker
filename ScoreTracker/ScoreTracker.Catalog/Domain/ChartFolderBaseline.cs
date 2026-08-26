@@ -17,6 +17,13 @@ namespace ScoreTracker.Catalog.Domain;
 ///     stored as the value at that rank — a chart reads as core when its coverage is strictly
 ///     ABOVE it, which is what puts the chart past that share of its folder.
 /// </param>
+/// <param name="DrenchedCutoff">
+///     The folder's <see cref="ChartIdentityRules.DrenchedQuantile" /> coverage — the bar for
+///     the chart being made OF this badge rather than merely having it. A percentile rather than
+///     a multiple of <paramref name="CoreCutoff" />, because a multiple is not guaranteed to
+///     exist: twice the 75th percentile sat above the folder's own maximum for 108 of 345
+///     badge/folder pairs, so a third of the vocabulary could never be claimed at all.
+/// </param>
 /// <param name="QualifiedCount">
 ///     How many of the folder's analyzed charts really carry the badge
 ///     (<see cref="ChartIdentityRules.QualifyingCoverage" />). Against
@@ -32,6 +39,7 @@ internal sealed record ChartFolderBaseline(
     int Level,
     string Badge,
     decimal CoreCutoff,
+    decimal DrenchedCutoff,
     int QualifiedCount,
     int AnalyzedCharts)
 {
@@ -45,5 +53,19 @@ internal sealed record ChartFolderBaseline(
     public bool IsCore(decimal coverage)
     {
         return coverage >= ChartIdentityRules.CoreCoverageFloor && coverage > CoreCutoff;
+    }
+
+    /// <summary>
+    ///     Whether the chart is made of this badge. Both halves are load-bearing: the percentile
+    ///     says it stands out here, and the margin over the badge's own bar says it stands out
+    ///     for a reason other than the badge being rare in this folder. Without the second,
+    ///     That Kitty's three scattered jack segments claim a D22 whose jack percentile is low
+    ///     precisely BECAUSE almost nothing there jacks.
+    /// </summary>
+    public bool IsDrenched(decimal coverage, string badge)
+    {
+        return coverage >= ChartIdentityRules.CoreCoverageFloor
+               && coverage >= DrenchedCutoff
+               && coverage >= ChartIdentityRules.ClaimCoverage(badge);
     }
 }

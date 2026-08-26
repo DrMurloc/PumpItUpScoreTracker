@@ -11,8 +11,29 @@ internal sealed record ChartBadgeProfile(
     IReadOnlyDictionary<string, decimal> Coverage,
     IReadOnlyDictionary<string, int> DominanceRank,
     decimal? CruxPeakiness,
-    IReadOnlyList<string> CruxBadges)
+    IReadOnlyList<string> CruxBadges,
+    decimal? CruxDuration = null,
+    IReadOnlyDictionary<string, decimal>? Geometry = null)
 {
+    /// <summary>
+    ///     A measured stance or pad share, or null where the chart predates the geometry pass —
+    ///     which is not the same as zero and must never be read as one.
+    /// </summary>
+    public decimal? GeometryOf(string metric)
+    {
+        return Geometry != null && Geometry.TryGetValue(metric, out var value) ? value : null;
+    }
+
+    /// <summary>
+    ///     Whether the chart brackets enough for piucenter's bracket badges to be believed
+    ///     (docs/design/chart-identity.md §3.4). A chart with no geometry banked is given the
+    ///     benefit of the doubt: the veto exists to overrule a bad measurement, not to silence
+    ///     every chart we have not measured yet.
+    /// </summary>
+    public bool BracketsAreCredible =>
+        GeometryOf(PiuCenterMetrics.BracketRowShare) is not { } share ||
+        share >= (decimal)ChartIdentityRules.MinimumBracketRowShare;
+
     /// <summary>
     ///     Badges the chart really carries: measured coverage past the badge's own bar, plus
     ///     the whole-chart qualities, which have no coverage to measure and so are admitted by
@@ -45,7 +66,9 @@ internal sealed record ChartBadgeProfile(
         var coverage = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
         var dominance = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         var cruxRanks = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var geometry = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
         decimal? peakiness = null;
+        decimal? duration = null;
 
         foreach (var metric in metrics)
             if (metric.MetricName.StartsWith(PiuCenterMetrics.BadgeFractionPrefix, StringComparison.Ordinal))
@@ -55,8 +78,19 @@ internal sealed record ChartBadgeProfile(
             else if (metric.MetricName.StartsWith(PiuCenterMetrics.CruxBadgePrefix, StringComparison.Ordinal))
                 cruxRanks[metric.MetricName[PiuCenterMetrics.CruxBadgePrefix.Length..]] = (int)metric.Value;
             else if (metric.MetricName == PiuCenterMetrics.CruxPeakiness) peakiness = metric.Value;
+            else if (metric.MetricName == PiuCenterMetrics.CruxDuration) duration = metric.Value;
+            else if (GeometryMetrics.Contains(metric.MetricName)) geometry[metric.MetricName] = metric.Value;
 
         return new ChartBadgeProfile(chartId, coverage, dominance, peakiness,
-            cruxRanks.OrderBy(kv => kv.Value).Select(kv => kv.Key).ToArray());
+            cruxRanks.OrderBy(kv => kv.Value).Select(kv => kv.Key).ToArray(), duration, geometry);
     }
+
+    private static readonly IReadOnlySet<string> GeometryMetrics = new HashSet<string>(StringComparer.Ordinal)
+    {
+        PiuCenterMetrics.PadShareMid4, PiuCenterMetrics.PadShareMid6, PiuCenterMetrics.StanceDiagonal,
+        PiuCenterMetrics.StanceSideOn, PiuCenterMetrics.StanceCrossed, PiuCenterMetrics.BracketRowShare,
+        // Not geometry, but read the same way: a folder-relative number the chip engine compares
+        // against a percentile rather than a fixed threshold.
+        PiuCenterMetrics.TimeUnderTension
+    };
 }

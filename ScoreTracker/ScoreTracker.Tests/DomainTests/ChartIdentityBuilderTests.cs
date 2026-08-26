@@ -10,8 +10,8 @@ namespace ScoreTracker.Tests.DomainTests;
 
 /// <summary>
 ///     The chip rules, and the golden examples from docs/design/chart-identity.md §8 — the ones
-///     the owner validated by eye against real folders. These are the acceptance bar: an
-///     implementation that stops reproducing them is wrong, not differently tuned.
+///     the owner validated against real folders, chart by chart. These are the acceptance bar:
+///     an implementation that stops reproducing them is wrong, not differently tuned.
 /// </summary>
 public sealed class ChartIdentityBuilderTests
 {
@@ -29,22 +29,41 @@ public sealed class ChartIdentityBuilderTests
             return this;
         }
 
+        /// <summary>
+        ///     A folder of twenty identical charts makes every percentile the same number, so
+        ///     p10 and p90 collide and every geometry claim fires at once. Real folders spread;
+        ///     this fans the values out so a subject sitting mid-range claims nothing.
+        /// </summary>
+        public Folder AddCharts(int count, IReadOnlyDictionary<string, decimal> geometry,
+            params (string Badge, decimal Coverage)[] coverage)
+        {
+            for (var i = 0; i < count; i++)
+            {
+                var spread = (decimal)i / (count * 5);
+                _charts.Add(Profile(coverage, geometry: geometry.ToDictionary(
+                    kv => kv.Key, kv => kv.Value + spread * kv.Value, StringComparer.OrdinalIgnoreCase)));
+            }
+
+            return this;
+        }
+
         public static ChartBadgeProfile Profile((string Badge, decimal Coverage)[] coverage,
             IReadOnlyDictionary<string, int>? dominance = null, decimal? peakiness = null,
-            IReadOnlyList<string>? cruxBadges = null)
+            IReadOnlyList<string>? cruxBadges = null, decimal? cruxDuration = null,
+            IReadOnlyDictionary<string, decimal>? geometry = null)
         {
             return new ChartBadgeProfile(Guid.NewGuid(),
                 coverage.ToDictionary(c => c.Badge, c => c.Coverage, StringComparer.OrdinalIgnoreCase),
                 dominance ?? new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase),
-                peakiness, cruxBadges ?? Array.Empty<string>());
+                peakiness, cruxBadges ?? Array.Empty<string>(), cruxDuration, geometry);
         }
 
-        public IReadOnlyList<IdentityChipRecord> ChipsFor(ChartBadgeProfile subject)
+        public IReadOnlyList<IdentityChipRecord> ChipsFor(ChartBadgeProfile subject, decimal? speedZ = null)
         {
             var all = _charts.Append(subject).ToArray();
             var baselines = FolderBaselineBuilder.Build(MixEnum.Phoenix, ChartType.Double, 24, all)
                 .ToDictionary(b => b.Badge, b => b, StringComparer.OrdinalIgnoreCase);
-            return ChartIdentityBuilder.Build(subject, baselines);
+            return ChartIdentityBuilder.Build(subject, baselines, speedZ);
         }
     }
 
@@ -53,13 +72,33 @@ public sealed class ChartIdentityBuilderTests
         return chips.Where(c => c.Kind == kind).Select(c => c.Badge);
     }
 
+    private static IEnumerable<string> IdentityBadges(IReadOnlyList<IdentityChipRecord> chips)
+    {
+        return chips.Where(c => c.Tier == IdentityTier.Identity).Select(c => c.Badge);
+    }
+
+    private static IReadOnlyDictionary<string, decimal> Geometry(decimal mid6 = 0.92m, decimal sideOn = 0.22m,
+        decimal crossed = 0.05m, decimal brackets = 0.06m, decimal mid4 = 0.70m, decimal tension = 30m)
+    {
+        return new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
+        {
+            [PiuCenterMetrics.PadShareMid6] = mid6,
+            [PiuCenterMetrics.PadShareMid4] = mid4,
+            [PiuCenterMetrics.StanceSideOn] = sideOn,
+            [PiuCenterMetrics.StanceCrossed] = crossed,
+            [PiuCenterMetrics.BracketRowShare] = brackets,
+            [PiuCenterMetrics.TimeUnderTension] = tension
+        };
+    }
+
     /// <summary>
-    ///     §8, Achluoias D24: a run chart whose #3 dominance pick is bracket_drill on 12.5%
-    ///     measured brackets. The pick renders nowhere near a Brackets claim — this is the rule
-    ///     the owner caught by spotting the chart in a Fast Brackets section.
+    ///     §3.1, Achluoias D24 and every chip the owner could not find on the pad. Piucenter's
+    ///     dominance ranking names a chart's top three badges however little of the chart they
+    ///     ride, so a pick under the bar establishes nothing at all — it does not even get to be
+    ///     a quiet feature.
     /// </summary>
     [Fact]
-    public void ADominanceOnlyPickWithThinCoverageNeverBecomesPresence()
+    public void ADominanceOnlyPickWithThinCoverageNeverBecomesAChip()
     {
         var folder = new Folder().AddCharts(20, ("bracket", 0.45m), ("mid6_doubles", 0.5m));
         var achluoias = Folder.Profile(
@@ -74,39 +113,245 @@ public sealed class ChartIdentityBuilderTests
         Assert.DoesNotContain(chips, c => c.Badge is "bracket" or "bracket_drill");
     }
 
-    /// <summary>§8, Scorpion King D23: a spike big enough to name, made of something new.</summary>
+    /// <summary>
+    ///     §3.2, That Kitty D22: three scattered jack segments clearing jack's .40 bar by .029.
+    ///     Because jacks are rare in that folder, clearing the bar at all used to promote it to
+    ///     the loudest chip on the card — which is how "it does have some jacks but they're not
+    ///     really part of its identity" ended up rendered as the chart's headline.
+    /// </summary>
     [Fact]
-    public void ASpikeShowsItsCruxWhenTheCruxSaysSomethingTheOtherChipsDidNot()
+    public void ClearingABadgesBarByAHairIsNotAClaimOnTheChart()
     {
-        var folder = new Folder().AddCharts(20, ("run", 0.5m));
-        var scorpionKing = Folder.Profile(
-            new[] { ("bracket", 0.4m), ("doublestep", 0.35m) },
-            new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["bracket"] = 1, ["bursty"] = 2 },
-            1.5m, new[] { "bracket_jump", "bracket" });
+        var folder = new Folder().AddCharts(20, ("mid6_doubles", 0.5m));
+        var thatKitty = Folder.Profile(new[] { ("jack", 0.4286m), ("mid6_doubles", 0.7143m) });
 
-        var chips = folder.ChipsFor(scorpionKing);
+        var chips = folder.ChipsFor(thatKitty);
 
-        var spike = Assert.Single(chips.Where(c => c.Kind == IdentityChipKind.Spike));
-        Assert.Equal(1.5m, spike.Detail);
-        Assert.Empty(spike.Badge);
-        // bracket_jump is new; bracket already rode a chip above, so it is not repeated.
-        Assert.Equal(new[] { "bracket_jump" }, Badges(chips, IdentityChipKind.Crux));
+        Assert.DoesNotContain("jack", IdentityBadges(chips));
+        var jack = Assert.Single(chips.Where(c => c.Badge == "jack"));
+        Assert.Equal(IdentityTier.Feature, jack.Tier);
     }
 
     /// <summary>
-    ///     §8, 8 6 FULL SONG D23: peakiness of −1.0. No passage reaches the printed level —
-    ///     the difficulty is the eighty-second grind, and claiming a spike would be a lie.
+    ///     §3.2, Nakakapagpabagabag D20 — the bug the owner caught by naming four charts that
+    ///     are "entirely double steps" and highlighting none of them. Drenched was twice the
+    ///     folder's 75th percentile, and twice a p75 routinely sits ABOVE the folder's own
+    ///     maximum: here the folder tops out at .714 and the old rule demanded .727, so the
+    ///     chart holding the folder record still failed. A percentile always exists.
     /// </summary>
     [Fact]
-    public void AChartWhoseHardestStretchUndershootsItsPrintedLevelGetsNoSpike()
+    public void TheChartWithTheMostOfABadgeInItsFolderClaimsIt()
     {
-        var folder = new Folder().AddCharts(20, ("run", 0.5m));
-        var grind = Folder.Profile(new[] { ("doublestep", 0.5m), ("mid4_doubles", 0.45m) },
-            peakiness: -1.0m, cruxBadges: new[] { "mid4_doubles" });
+        // A folder whose doublestep coverages top out at exactly the subject's own value.
+        var folder = new Folder()
+            .AddCharts(14, ("doublestep", 0.30m))
+            .AddCharts(5, ("doublestep", 0.50m));
+        var nakaka = Folder.Profile(new[] { ("doublestep", 0.7143m) });
 
-        var chips = folder.ChipsFor(grind);
+        var chips = folder.ChipsFor(nakaka);
 
-        Assert.DoesNotContain(chips, c => c.Kind is IdentityChipKind.Spike or IdentityChipKind.Crux);
+        Assert.Contains("doublestep", IdentityBadges(chips));
+    }
+
+    /// <summary>
+    ///     The other half of the drenched rule. A folder's 90th percentile for a rare badge is
+    ///     low precisely BECAUSE almost nothing there carries it, so the percentile alone would
+    ///     hand That Kitty's jacks back the claim the margin rule just took away. Rarity must
+    ///     not lower the bar.
+    /// </summary>
+    [Fact]
+    public void RarityInTheFolderDoesNotLowerTheBarForClaimingAChart()
+    {
+        // Only two of twenty-one charts jack at all, so the p90 lands under the .40 bar.
+        var folder = new Folder().AddCharts(18, ("mid6_doubles", 0.5m)).AddCharts(2, ("jack", 0.42m));
+        var thatKitty = Folder.Profile(new[] { ("jack", 0.4286m) });
+
+        var chips = folder.ChipsFor(thatKitty);
+
+        Assert.DoesNotContain("jack", IdentityBadges(chips));
+    }
+
+    /// <summary>
+    ///     §3.4, Heliosphere D20: eleven bracket rows in 845. Piucenter's bracket detection is a
+    ///     limb-assignment model that reads ordinary jumps as brackets, and it clustered five of
+    ///     them in the final section — which is why the chart wore a bracket-jump badge nobody
+    ///     watching it could find. The veto reaches the hard-section chip too, which is the only
+    ///     door that badge had left.
+    /// </summary>
+    [Fact]
+    public void BracketBadgesAreVetoedOnAChartThatBarelyBrackets()
+    {
+        var folder = new Folder().AddCharts(20, Geometry(), ("run", 0.5m));
+        var heliosphere = Folder.Profile(new[] { ("bracket_jump", 0.45m), ("drill", 0.4444m) },
+            peakiness: 1.02m, cruxBadges: new[] { "run", "bracket_jump", "drill" }, cruxDuration: 14.4m,
+            geometry: Geometry(brackets: 0.013m));
+
+        var chips = folder.ChipsFor(heliosphere);
+
+        Assert.DoesNotContain(chips, c => c.Badge == "bracket_jump");
+        var section = Assert.Single(chips.Where(c => c.Kind == IdentityChipKind.HardSection));
+        Assert.DoesNotContain(section.Badges!, b => b.Badge == "bracket_jump");
+        // drill claimed the chart above (nothing else in the folder drills), and a badge
+        // already claimed is not news again in the hard-section chip.
+        Assert.Contains("drill", IdentityBadges(chips));
+        Assert.Equal(new[] { "run" }, section.Badges!.Select(b => b.Badge));
+    }
+
+    /// <summary>
+    ///     §3.3. One window, so one chip: a second would print the same duration again. The
+    ///     owner's line for BSPower was "Hardest 10s: Drills 90 degree twists", which is this.
+    /// </summary>
+    [Fact]
+    public void TheHardestStretchIsOneChipCarryingItsLengthAndItsBadges()
+    {
+        var folder = new Folder().AddCharts(20, Geometry(), ("run", 0.5m));
+        var bsPower = Folder.Profile(Array.Empty<(string, decimal)>(),
+            peakiness: 0.62m, cruxBadges: new[] { "drill", "twist_90", "mid4_doubles" }, cruxDuration: 9.75m,
+            geometry: Geometry());
+
+        var chips = folder.ChipsFor(bsPower);
+
+        var section = Assert.Single(chips.Where(c => c.Kind == IdentityChipKind.HardSection));
+        Assert.Equal(9.75m, section.Detail);
+        // Pad geography is the width chip's business — left in, Burn Out's crux would
+        // resurrect the mid-4 chip the owner rejected on that chart.
+        Assert.Equal(new[] { "drill", "twist_90" }, section.Badges!.Select(b => b.Badge));
+        Assert.Equal(IdentityTier.Identity, section.Tier);
+    }
+
+    /// <summary>
+    ///     §3.3. Three gates, because elevation and composition are different questions.
+    ///     Calibrated on the owner's own reports: That Kitty at .17 stays silent, New Rose at
+    ///     .29 speaks as a feature, BSPower at .62 headlines, and only .7 earns the spike.
+    /// </summary>
+    [Theory]
+    [InlineData(0.17, false, null)]
+    [InlineData(0.29, false, IdentityTier.Feature)]
+    [InlineData(0.62, false, IdentityTier.Identity)]
+    [InlineData(0.80, true, IdentityTier.Identity)]
+    public void AHardStretchIsNamedLongBeforeItIsCalledASpike(double peakiness, bool expectSpike,
+        IdentityTier? expectedTier)
+    {
+        var folder = new Folder().AddCharts(20, Geometry(), ("run", 0.5m));
+        var chart = Folder.Profile(Array.Empty<(string, decimal)>(),
+            peakiness: (decimal)peakiness, cruxBadges: new[] { "run" }, cruxDuration: 15m,
+            geometry: Geometry());
+
+        var chips = folder.ChipsFor(chart);
+
+        Assert.Equal(expectSpike, chips.Any(c => c.Kind == IdentityChipKind.Spike));
+        var section = chips.SingleOrDefault(c => c.Kind == IdentityChipKind.HardSection);
+        Assert.Equal(expectedTier, section?.Tier);
+    }
+
+    /// <summary>
+    ///     §3.2. A chart is charted WITHIN the middle six or it is not, so this end of the width
+    ///     axis is absolute rather than folder-relative. Hymn of Golden Glory SC D20 measures
+    ///     99.48% — it steps outside twice, and twice is not never.
+    /// </summary>
+    [Theory]
+    [InlineData(1.0, true)]
+    [InlineData(0.9948, false)]
+    public void HalfDoubleMeansTheChartNeverLeavesTheMiddleSix(double mid6, bool expected)
+    {
+        var folder = new Folder().AddCharts(20, Geometry(), ("run", 0.5m));
+        var chart = Folder.Profile(Array.Empty<(string, decimal)>(),
+            geometry: Geometry(mid6: (decimal)mid6, mid4: 0.79m));
+
+        var chips = folder.ChipsFor(chart);
+
+        Assert.Equal(expected, chips.Any(c => c.Badge == WidthLabels.HalfDouble));
+    }
+
+    /// <summary>
+    ///     §4b, Vook D20: 8.8% side-on stances, of which 7.8% are crossovers. A chart that
+    ///     barely rotates but crosses your feet hard the few times it moves is not twistless,
+    ///     and calling it that would be the measure lying about its one job.
+    /// </summary>
+    [Fact]
+    public void AChartThatCrossesHardIsNotTwistlessNoMatterHowRarelyItTurns()
+    {
+        var folder = new Folder().AddCharts(20, Geometry(), ("run", 0.5m));
+        var vook = Folder.Profile(Array.Empty<(string, decimal)>(),
+            geometry: Geometry(sideOn: 0.088m, crossed: 0.078m));
+        var jupin = Folder.Profile(Array.Empty<(string, decimal)>(),
+            geometry: Geometry(sideOn: 0.0m, crossed: 0.0m));
+
+        Assert.DoesNotContain(WidthLabels.Twistless, folder.ChipsFor(vook).Select(c => c.Badge));
+        Assert.Contains(WidthLabels.Twistless, folder.ChipsFor(jupin).Select(c => c.Badge));
+    }
+
+    /// <summary>
+    ///     §2. The outer bands have to keep meaning what they say, so this is not softened to
+    ///     catch near misses: A Site De La Rue D20 sits at z = 1.46 and gets no speed claim.
+    /// </summary>
+    [Theory]
+    [InlineData(1.46, null)]
+    [InlineData(1.5, WidthLabels.VeryFast)]
+    [InlineData(-2.96, WidthLabels.VerySlow)]
+    public void SpeedOnlyClaimsAChartAtTheExtremes(double z, string? expected)
+    {
+        var folder = new Folder().AddCharts(20, Geometry(), ("run", 0.5m));
+        var chart = Folder.Profile(Array.Empty<(string, decimal)>(), geometry: Geometry());
+
+        var chips = folder.ChipsFor(chart, (decimal)z);
+
+        Assert.Equal(expected, chips.FirstOrDefault(c => c.Kind == IdentityChipKind.Speed)?.Badge);
+    }
+
+    /// <summary>
+    ///     §3.2. A sustained pick is cheap — Monolith D23 carries one over ten seconds of
+    ///     tension, which is nobody's idea of a grind. The claim needs the folder to agree the
+    ///     chart is actually long.
+    /// </summary>
+    [Fact]
+    public void SustainedNeedsTheFolderToAgreeTheChartIsLong()
+    {
+        var folder = new Folder().AddCharts(20, Geometry(tension: 30m), ("run", 0.5m));
+        var pick = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["sustained"] = 1 };
+        var monolith = Folder.Profile(Array.Empty<(string, decimal)>(), pick, geometry: Geometry(tension: 10m));
+        var gargoyle = Folder.Profile(Array.Empty<(string, decimal)>(), pick, geometry: Geometry(tension: 141m));
+
+        Assert.DoesNotContain("sustained", IdentityBadges(folder.ChipsFor(monolith)));
+        Assert.Contains("sustained", IdentityBadges(folder.ChipsFor(gargoyle)));
+    }
+
+    /// <summary>
+    ///     §1, and the owner's own words: "if a chart is like… just a chart, it's fine for it to
+    ///     be nothing." A build that invents a claim for That Kitty is wrong.
+    /// </summary>
+    [Fact]
+    public void AChartThatEarnsNothingClaimsNothing()
+    {
+        // The real D22 numbers: its 28.6% side-on sits under the folder's p90 of 32.3%, and its
+        // 95.8% middle-six is neither confined nor wide. Ordinary in every direction.
+        var folder = new Folder().AddCharts(20, Geometry(mid6: 0.87m, sideOn: 0.28m),
+            ("mid6_doubles", 0.5m), ("jack", 0.45m));
+        var thatKitty = Folder.Profile(new[] { ("jack", 0.4286m) },
+            new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["jack"] = 1 },
+            peakiness: 0.17m, geometry: Geometry(mid6: 0.958m, sideOn: 0.286m));
+
+        var chips = folder.ChipsFor(thatKitty);
+
+        Assert.Empty(chips.Where(c => c.Tier == IdentityTier.Identity));
+        Assert.NotEmpty(chips);
+    }
+
+    /// <summary>
+    ///     §3.2. Claims stack rather than laddering — DUEL SC D23 is a half-double AND
+    ///     twist-heavy, and naming only the first describes a different chart.
+    /// </summary>
+    [Fact]
+    public void GeometryClaimsStackWhenAChartEarnsBoth()
+    {
+        var folder = new Folder().AddCharts(20, Geometry(sideOn: 0.20m), ("run", 0.5m));
+        var duel = Folder.Profile(Array.Empty<(string, decimal)>(),
+            geometry: Geometry(mid6: 1.0m, sideOn: 0.539m, crossed: 0.305m));
+
+        var badges = folder.ChipsFor(duel).Select(c => c.Badge).ToArray();
+
+        Assert.Contains(WidthLabels.HalfDouble, badges);
+        Assert.Contains(WidthLabels.TwistHeavy, badges);
     }
 
     /// <summary>
@@ -135,31 +380,13 @@ public sealed class ChartIdentityBuilderTests
     [Fact]
     public void TheFirstChartInAFolderToCarryABadgeAtAllIsMarkedUnique()
     {
-        var folder = new Folder().AddCharts(30, ("jack", 0.5m), ("doublestep", 0.4m));
-        var oddOneOut = Folder.Profile(new[] { ("bracket", 0.4m), ("jack", 0.5m) });
+        var folder = new Folder().AddCharts(30, Geometry(), ("jack", 0.5m), ("doublestep", 0.4m));
+        var oddOneOut = Folder.Profile(new[] { ("bracket", 0.4m), ("jack", 0.5m) }, geometry: Geometry());
 
         var chips = folder.ChipsFor(oddOneOut);
 
         Assert.Equal(new[] { "bracket" }, Badges(chips, IdentityChipKind.Unique));
         Assert.DoesNotContain("jack", Badges(chips, IdentityChipKind.Unique));
-    }
-
-    [Fact]
-    public void ChipsAreCappedSoACardStaysReadable()
-    {
-        var folder = new Folder().AddCharts(20, ("run", 0.1m));
-        var everything = Folder.Profile(new[]
-            {
-                ("bracket", 0.9m), ("twist_90", 0.9m), ("drill", 0.9m), ("jack", 0.9m), ("split", 0.9m),
-                ("yog_walk", 0.9m), ("hands", 0.9m)
-            },
-            peakiness: 1.2m, cruxBadges: new[] { "10-stair", "mid4_doubles", "co-op_pad_transition" });
-
-        var chips = folder.ChipsFor(everything);
-
-        Assert.Equal(ChartIdentityRules.MaxUniqueChips, Badges(chips, IdentityChipKind.Unique).Count());
-        Assert.Equal(ChartIdentityRules.MaxCoreChips, Badges(chips, IdentityChipKind.Core).Count());
-        Assert.Equal(ChartIdentityRules.MaxCruxChips, Badges(chips, IdentityChipKind.Crux).Count());
     }
 
     /// <summary>
@@ -169,27 +396,15 @@ public sealed class ChartIdentityBuilderTests
     [Fact]
     public void WholeChartQualitiesRenderWithoutACoverageNumber()
     {
-        var folder = new Folder().AddCharts(20, ("run", 0.5m));
+        var folder = new Folder().AddCharts(20, Geometry(tension: 20m), ("run", 0.5m));
         var sustained = Folder.Profile(new[] { ("run", 0.8m) },
-            new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["sustained"] = 1 });
+            new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["sustained"] = 1 },
+            geometry: Geometry(tension: 141m));
 
         var chips = folder.ChipsFor(sustained);
 
-        var sustainedChip = Assert.Single(chips.Where(c => c.Badge == "sustained"));
-        Assert.Null(sustainedChip.Detail);
-        Assert.Equal(0.8m, chips.Single(c => c.Badge == "run").Detail);
-    }
-
-    [Fact]
-    public void EveryChipCarriesItsBadgeFamilyExceptTheSpike()
-    {
-        var folder = new Folder().AddCharts(20, ("run", 0.5m));
-        var chart = Folder.Profile(new[] { ("bracket", 0.6m) }, peakiness: 1.0m, cruxBadges: new[] { "twist_90" });
-
-        var chips = folder.ChipsFor(chart);
-
-        Assert.Equal(BadgeCategory.Brackets, chips.Single(c => c.Badge == "bracket").Family);
-        Assert.Equal(BadgeCategory.Twists, chips.Single(c => c.Badge == "twist_90").Family);
-        Assert.Null(chips.Single(c => c.Kind == IdentityChipKind.Spike).Family);
+        var chip = Assert.Single(chips.Where(c => c.Badge == "sustained"));
+        Assert.Null(chip.Detail);
+        Assert.NotNull(chips.Single(c => c.Badge == "run").Detail);
     }
 }

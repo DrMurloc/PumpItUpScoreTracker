@@ -12,7 +12,7 @@ namespace ScoreTracker.Web.Services;
 ///     <para>
 ///         Badge names stay English in every locale — the long-standing ruling for the pattern
 ///         vocabulary — but still travel through the localizer so translating them later is a
-///         resx change rather than a code change. The kind labels around them ("Spike") are
+///         resx change rather than a code change. The words around them ("Hardest {0}s") are
 ///         real UI copy and localize normally.
 ///     </para>
 /// </summary>
@@ -29,24 +29,55 @@ public static class IdentityChips
         if (identity == null || identity.Chips.Count == 0)
             return Array.Empty<TierListChartCard.CardSkillChip>();
 
-        return identity.Chips.Select(chip => chip.Kind switch
+        return identity.Chips.Select(chip => ToChip(chip, showCoverage, localizer)).ToArray();
+    }
+
+    private static TierListChartCard.CardSkillChip ToChip(IdentityChipRecord chip, bool showCoverage,
+        IStringLocalizer localizer)
+    {
+        var identity = chip.Tier == IdentityTier.Identity;
+        switch (chip.Kind)
         {
-            // The spike is a shape, not a skill: no badge, no family colour, and the number
-            // IS the chip rather than an annotation on one.
-            IdentityChipKind.Spike => new TierListChartCard.CardSkillChip(
-                localizer["Spike"].Value, "chip-spike",
-                chip.Detail == null ? null : Signed(chip.Detail.Value)),
-            IdentityChipKind.Crux => new TierListChartCard.CardSkillChip(
-                localizer["crux: {0}", Label(chip, localizer)].Value, ClassFor(chip), null),
+            // The spike is a shape, not a skill: no badge, no family colour. Named in full
+            // rather than as an arrow and a number, which said nothing to anyone who had not
+            // been told what it meant (owner, 2026-08-26).
+            case IdentityChipKind.Spike:
+                return new TierListChartCard.CardSkillChip(
+                    localizer["Difficulty Spike"].Value, "chip-spike",
+                    chip.Detail == null ? null : Signed(chip.Detail.Value), identity);
+
+            // One chip, both badges: it is one window, so a second chip would print the same
+            // duration twice. The body carries no family colour because it names a STRETCH
+            // rather than a skill — each badge inside keeps its own.
+            case IdentityChipKind.HardSection:
+                return new TierListChartCard.CardSkillChip(
+                    localizer["Hardest {0}s:", Seconds(chip.Detail)].Value, "chip-section", null, identity,
+                    (chip.Badges ?? Array.Empty<IdentityChipBadge>())
+                    .Select(b => new TierListChartCard.CardSkillChipPart(
+                        localizer[b.DisplayName].Value, BadgeCategoryClasses.For(b.Family)))
+                    .ToArray());
+
+            // The shape of the body — its own hue, outside the five families, for the same
+            // reason the spike is: how much pad a chart uses is not one of its skills.
+            case IdentityChipKind.Width:
+            case IdentityChipKind.Twist:
+            case IdentityChipKind.Speed:
+                return new TierListChartCard.CardSkillChip(
+                    localizer[chip.DisplayName].Value, "chip-geometry", null, identity);
+
             // ✦ marks the rare one. A dashed border alone said "this chip is different" without
-            // saying how, which is no message at all (owner, 2026-08-26); the glyph is the
-            // legible half and the border is now just its texture.
-            IdentityChipKind.Unique => new TierListChartCard.CardSkillChip(
-                $"✦ {Label(chip, localizer)}", ClassFor(chip),
-                showCoverage && chip.Detail != null ? Percent(chip.Detail.Value) : null),
-            _ => new TierListChartCard.CardSkillChip(Label(chip, localizer), ClassFor(chip),
-                showCoverage && chip.Detail != null ? Percent(chip.Detail.Value) : null)
-        }).ToArray();
+            // saying how, which is no message at all; the glyph carries it now and the border is
+            // ordinary again (owner, 2026-08-26).
+            case IdentityChipKind.Unique:
+                return new TierListChartCard.CardSkillChip(
+                    $"✦ {localizer[chip.DisplayName].Value}", ClassFor(chip),
+                    showCoverage && chip.Detail != null ? Percent(chip.Detail.Value) : null, identity);
+
+            default:
+                return new TierListChartCard.CardSkillChip(
+                    localizer[chip.DisplayName].Value, ClassFor(chip),
+                    showCoverage && chip.Detail != null ? Percent(chip.Detail.Value) : null, identity);
+        }
     }
 
     /// <summary>
@@ -62,18 +93,12 @@ public static class IdentityChips
             : tags.Select(tag => new TierListChartCard.CardSkillChip(tag, string.Empty, null)).ToArray();
     }
 
-    private static string Label(IdentityChipRecord chip, IStringLocalizer localizer)
-    {
-        return localizer[chip.DisplayName].Value;
-    }
-
     private static string ClassFor(IdentityChipRecord chip)
     {
         var family = BadgeCategoryClasses.For(chip.Family);
         var kind = chip.Kind switch
         {
             IdentityChipKind.Unique => "chip-unique",
-            IdentityChipKind.Crux => "chip-crux",
             IdentityChipKind.Fallback => "chip-fallback",
             _ => string.Empty
         };
@@ -83,6 +108,16 @@ public static class IdentityChips
     private static string Percent(decimal coverage)
     {
         return $"{(int)Math.Round(coverage * 100)}%";
+    }
+
+    /// <summary>
+    ///     The stretch's length, whole seconds. The precision is spurious past that — it is a
+    ///     segment boundary, not a stopwatch — and the number's job is to separate a six-second
+    ///     stumble from a twenty-three-second ordeal.
+    /// </summary>
+    private static int Seconds(decimal? duration)
+    {
+        return duration == null ? 0 : (int)Math.Round(duration.Value);
     }
 
     /// <summary>Peakiness reads as a signed level offset — the sign is the whole message.</summary>

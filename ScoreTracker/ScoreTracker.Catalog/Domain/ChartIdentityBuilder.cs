@@ -5,73 +5,242 @@ namespace ScoreTracker.Catalog.Domain;
 /// <summary>
 ///     Picks a chart's chips against its folder (docs/design/chart-identity.md §3). Pure: the
 ///     chart's banked profile plus the folder's baselines in, display-ordered chips out.
+///     <para>
+///         Claims STACK. This is not a ladder where the first match wins — a chart can be a
+///         half-double AND twist-heavy AND drenched in close twists, and saying only the first
+///         of those describes a different chart than the one in front of you. Identity is
+///         uncapped for the same reason, and a chart that earns nothing gets nothing.
+///     </para>
 /// </summary>
 internal static class ChartIdentityBuilder
 {
     public static IReadOnlyList<IdentityChipRecord> Build(ChartBadgeProfile profile,
-        IReadOnlyDictionary<string, ChartFolderBaseline> folder)
+        IReadOnlyDictionary<string, ChartFolderBaseline> folder, decimal? speedZ = null)
     {
-        var present = profile.PresentBadges.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        // Presence is measured coverage clearing the badge's own bar, and nothing else. A
+        // dominance pick under that bar used to be admitted "because their pick is a real signal
+        // about emphasis"; every chip the owner could not find on the pad came in through that
+        // clause, and it crowded out real coverage through the cap besides.
+        var present = profile.PresentBadges
+            .Where(b => !ChartIdentityRules.IsBracketFamily(b) || profile.BracketsAreCredible)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        // 1 — what almost nothing else here has. Rarest first, because the rarer it is the more
+        var identity = new List<IdentityChipRecord>();
+        var claimed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // 1 — the shape of the body, which outranks anything about steps: it is the difference
+        // between a half-double that features twists and a twist chart that features mid-6.
+        if (Width(profile, folder) is { } width) identity.Add(width);
+        if (Twist(profile, folder) is { } twist) identity.Add(twist);
+        if (Speed(speedZ) is { } speed) identity.Add(speed);
+
+        // 2 — what almost nothing else here has. Rarest first, because the rarer it is the more
         // it is the reason someone is looking at this chart.
-        var unique = present
-            .Where(b => folder.TryGetValue(b, out var baseline) && baseline.IsUniqueInFolder)
-            .OrderBy(b => folder[b].QualifiedCount)
-            .ThenBy(b => b, StringComparer.OrdinalIgnoreCase)
-            .Take(ChartIdentityRules.MaxUniqueChips)
-            .ToArray();
-
-        // 2 — what the chart is made of, judged against the folder rather than in absolutes.
-        // A dominance pick is a candidate even when its coverage sits under the presence bar,
-        // because their pick is a real signal about emphasis; it still has to clear the
-        // folder's cutoff and the floor to be shown.
-        var core = present.Concat(profile.DominanceRank.Keys)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Where(b => !unique.Contains(b, StringComparer.OrdinalIgnoreCase))
-            .Where(b => ChartIdentityRules.IsWholeChartBadge(b)
-                ? present.Contains(b)
-                : folder.TryGetValue(b, out var baseline) && baseline.IsCore(profile.CoverageOf(b)))
-            // Their pick leads, then whichever badge stands furthest above its folder. Margin
-            // over the cutoff is the comparable measure across badges — raw coverage is not,
-            // since a folder full of mid-6 and a folder with one split are different scales.
-            .OrderBy(b => profile.DominanceRank.ContainsKey(b) ? 0 : 1)
-            .ThenByDescending(b => Margin(profile, folder, b))
-            .ThenBy(b => b, StringComparer.OrdinalIgnoreCase)
-            .Take(ChartIdentityRules.MaxCoreChips)
-            .ToArray();
-
-        var chips = new List<IdentityChipRecord>();
-        chips.AddRange(unique.Select(b => Chip(IdentityChipKind.Unique, b, CoverageDetail(profile, b))));
-        chips.AddRange(core.Select(b => Chip(IdentityChipKind.Core, b, CoverageDetail(profile, b))));
-
-        // 3 and 4 — the shape of the chart, and what that shape is made of. The crux badges
-        // only earn a chip when the spike fired AND they say something the chips above did
-        // not; a spike made of the same thing the chart is made of is not news.
-        if (profile.CruxPeakiness is { } peakiness && peakiness >= ChartIdentityRules.SpikePeakiness)
+        foreach (var badge in present
+                     // Whole-chart qualities never come through here. They carry no coverage, so
+                     // "rare in this folder" collapses to "only this chart was picked for it",
+                     // which is true of any pick and claims nothing: it is how Monolith's
+                     // sustained pick — over ten seconds of tension — was calling itself the
+                     // chart's identity. They have their own test below.
+                     .Where(b => !ChartIdentityRules.IsWholeChartBadge(b))
+                     .Where(b => folder.TryGetValue(b, out var baseline) && baseline.IsUniqueInFolder
+                         && ClearsClaimBar(profile, b))
+                     .OrderBy(b => folder[b].QualifiedCount)
+                     .ThenBy(b => b, StringComparer.OrdinalIgnoreCase)
+                     .Take(ChartIdentityRules.MaxUniqueChips))
         {
-            chips.Add(new IdentityChipRecord(IdentityChipKind.Spike, string.Empty, string.Empty, null, peakiness));
-            var shown = unique.Concat(core).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            chips.AddRange(profile.CruxBadges
-                .Where(b => !shown.Contains(b))
-                .Take(ChartIdentityRules.MaxCruxChips)
-                .Select(b => Chip(IdentityChipKind.Crux, b, null)));
+            identity.Add(Chip(IdentityChipKind.Unique, IdentityTier.Identity, badge, Coverage(profile, badge)));
+            claimed.Add(badge);
         }
 
-        // 5 — nothing stood out. Rather than invent a distinction, say what piucenter said.
+        // 3 — what the chart is MADE of. Against the folder's p90 rather than a multiple of its
+        // p75: twice the p75 sat above the folder's own maximum for 108 of 345 badge/folder
+        // pairs, so a third of the vocabulary could never be claimed by anything at all.
+        foreach (var badge in present
+                     .Where(b => !claimed.Contains(b) && !ChartIdentityRules.IsPadGeographyBadge(b)
+                                 && !ChartIdentityRules.IsWholeChartBadge(b))
+                     .Where(b => folder.TryGetValue(b, out var baseline)
+                                 && baseline.IsDrenched(profile.CoverageOf(b), b))
+                     .OrderByDescending(b => Margin(profile, folder, b))
+                     .ThenBy(b => b, StringComparer.OrdinalIgnoreCase))
+        {
+            identity.Add(Chip(IdentityChipKind.Core, IdentityTier.Identity, badge, Coverage(profile, badge)));
+            claimed.Add(badge);
+        }
+
+        // 4 — the chart is longer than it is hard. The pick alone is not enough: Monolith carries
+        // a sustained pick over ten seconds of tension, which is nobody's idea of a grind.
+        if (present.Contains("sustained") && IsExtremeSustain(profile, folder))
+        {
+            identity.Add(Chip(IdentityChipKind.Core, IdentityTier.Identity, "sustained", null));
+            claimed.Add("sustained");
+        }
+
+        // 5 and 6 — the hardest stretch, described two ways. Spike is an ELEVATION claim (this
+        // plays above its rating); the hard-section chip is a COMPOSITION claim (whatever the
+        // hard part is, it is runs). Most charts are flat, have no spike, and still have a
+        // hardest part — which is exactly the chart whose coda was invisible before.
+        var peakiness = profile.CruxPeakiness;
+        if (peakiness >= ChartIdentityRules.SpikePeakiness)
+            identity.Add(new IdentityChipRecord(IdentityChipKind.Spike, IdentityTier.Identity,
+                string.Empty, string.Empty, null, peakiness));
+
+        if (HardSection(profile, claimed, present) is { } hardSection) identity.Add(hardSection);
+
+        // Everything else that cleared presence. Features are allowed to be ordinary — that was
+        // only ever a problem while they shouted at the same volume as the claims above.
+        var features = present
+            .Where(b => !claimed.Contains(b))
+            .OrderByDescending(b => Margin(profile, folder, b))
+            .ThenBy(b => b, StringComparer.OrdinalIgnoreCase)
+            .Select(b => Chip(IdentityChipKind.Core, IdentityTier.Feature, b, Coverage(profile, b)))
+            .ToList();
+
+        features.AddRange(PadGeographyFeatures(profile, folder));
+
+        var chips = identity.Concat(features).ToList();
+
+        // Nothing stood out anywhere. Rather than invent a distinction, say what piucenter said.
         if (chips.Count == 0)
             chips.AddRange(profile.DominanceRank
                 .OrderBy(kv => kv.Value)
                 .Take(ChartIdentityRules.MaxFallbackChips)
-                .Select(kv => Chip(IdentityChipKind.Fallback, kv.Key, null)));
+                .Select(kv => Chip(IdentityChipKind.Fallback, IdentityTier.Feature, kv.Key, null)));
 
         return chips;
     }
 
     /// <summary>
+    ///     How much of the pad the chart uses. The confined end is an absolute — a chart is
+    ///     charted WITHIN a region or it is not, and Hymn of Golden Glory SC's 99.48% means it
+    ///     steps outside twice, which is not never. The wide end is folder-relative because
+    ///     every doubles chart is middle-heavy and "wide" only means anything here.
+    /// </summary>
+    private static IdentityChipRecord? Width(ChartBadgeProfile profile,
+        IReadOnlyDictionary<string, ChartFolderBaseline> folder)
+    {
+        var mid4 = profile.GeometryOf(PiuCenterMetrics.PadShareMid4);
+        var mid6 = profile.GeometryOf(PiuCenterMetrics.PadShareMid6);
+        if (mid6 == null) return null;
+
+        if (mid4 >= (decimal)ChartIdentityRules.WidthConfinedShare)
+            return Geometry(IdentityChipKind.Width, WidthLabels.QuarterDouble, mid4.Value);
+        if (mid6 >= (decimal)ChartIdentityRules.WidthConfinedShare)
+            return Geometry(IdentityChipKind.Width, WidthLabels.HalfDouble, mid6.Value);
+
+        return folder.TryGetValue(PiuCenterMetrics.PadShareMid6, out var baseline)
+               && baseline.AnalyzedCharts > 0 && mid6 <= baseline.CoreCutoff
+            ? Geometry(IdentityChipKind.Width, WidthLabels.Wide, mid6.Value)
+            : null;
+    }
+
+    /// <summary>
+    ///     How far the chart turns you. The crossed guard is not decoration: a chart can be quiet
+    ///     on side-on stances and still cross your feet hard the few times it moves, and calling
+    ///     that twistless would be the measure lying about its one job.
+    /// </summary>
+    private static IdentityChipRecord? Twist(ChartBadgeProfile profile,
+        IReadOnlyDictionary<string, ChartFolderBaseline> folder)
+    {
+        if (profile.GeometryOf(PiuCenterMetrics.StanceSideOn) is not { } sideOn) return null;
+        var crossed = profile.GeometryOf(PiuCenterMetrics.StanceCrossed) ?? 0m;
+        var isDoubles = profile.GeometryOf(PiuCenterMetrics.PadShareMid6) != null;
+
+        if (sideOn <= (decimal)ChartIdentityRules.TwistlessShare(isDoubles)
+            && crossed <= (decimal)ChartIdentityRules.TwistlessMaximumCrossed)
+            return Geometry(IdentityChipKind.Twist, WidthLabels.Twistless, sideOn);
+
+        return folder.TryGetValue(PiuCenterMetrics.StanceSideOn, out var baseline)
+               && baseline.AnalyzedCharts > 0 && baseline.DrenchedCutoff > 0
+               && sideOn >= baseline.DrenchedCutoff
+            ? Geometry(IdentityChipKind.Twist, WidthLabels.TwistHeavy, sideOn)
+            : null;
+    }
+
+    /// <summary>
+    ///     Speed only claims a chart at the extremes. "Mid Tempo" is a measurement, not a claim,
+    ///     and the outer bands have to keep meaning what they say — so this is the Speed list's
+    ///     own boundary and nothing softer.
+    /// </summary>
+    private static IdentityChipRecord? Speed(decimal? z)
+    {
+        if (z is not { } value || Math.Abs(value) < (decimal)ChartIdentityRules.SpeedIdentityZ) return null;
+        return Geometry(IdentityChipKind.Speed, value > 0 ? WidthLabels.VeryFast : WidthLabels.VerySlow, value);
+    }
+
+    /// <summary>
+    ///     One chip for the hardest stretch, carrying its length and up to two badges. Never two
+    ///     chips: it is one window, so a second would print the same duration again.
+    /// </summary>
+    private static IdentityChipRecord? HardSection(ChartBadgeProfile profile, ISet<string> claimed,
+        ISet<string> present)
+    {
+        if (profile.CruxPeakiness is not { } peakiness
+            || peakiness < ChartIdentityRules.HardSectionFeaturePeakiness) return null;
+
+        var badges = profile.CruxBadges
+            // Pad geography is the width chip's business. Left in, Burn Out's crux — which ranks
+            // mid-4 second — resurrects exactly the chip the owner rejected on that chart.
+            .Where(b => !ChartIdentityRules.IsPadGeographyBadge(b))
+            .Where(b => !ChartIdentityRules.IsBracketFamily(b) || profile.BracketsAreCredible)
+            // A badge already claimed above is not news again down here.
+            .Where(b => !claimed.Contains(b))
+            .Take(ChartIdentityRules.MaxHardSectionBadges)
+            .Select(b => new IdentityChipBadge(b, BadgeLabels.DisplayName(b), BadgeLabels.CategoryFor(b)))
+            .ToArray();
+        if (badges.Length == 0) return null;
+
+        foreach (var badge in badges) present.Remove(badge.Badge);
+
+        return new IdentityChipRecord(IdentityChipKind.HardSection,
+            peakiness >= ChartIdentityRules.HardSectionIdentityPeakiness
+                ? IdentityTier.Identity
+                : IdentityTier.Feature,
+            string.Empty, string.Empty, null, profile.CruxDuration, badges);
+    }
+
+    /// <summary>
+    ///     Where the chart stands, as a feature and never a claim — width owns the claim. Gated
+    ///     on measured note share rather than segment coverage, which is what finally squares
+    ///     the owner's verdicts: Burn Out's segment-derived "71% mid-4" is 68% by actual notes
+    ///     against a folder p75 of 72%, so the chip he could not find on the pad is gone, while
+    ///     the two he endorsed are comfortably over their own folders' bars.
+    /// </summary>
+    private static IEnumerable<IdentityChipRecord> PadGeographyFeatures(ChartBadgeProfile profile,
+        IReadOnlyDictionary<string, ChartFolderBaseline> folder)
+    {
+        foreach (var (metric, badge) in new[]
+                 {
+                     (PiuCenterMetrics.PadShareMid6, "mid6_doubles"),
+                     (PiuCenterMetrics.PadShareMid4, "mid4_doubles")
+                 })
+        {
+            if (profile.GeometryOf(metric) is not { } share) continue;
+            if (!folder.TryGetValue(metric, out var baseline) || baseline.DrenchedCutoff <= 0) continue;
+            if (share < baseline.DrenchedCutoff) continue;
+            yield return Chip(IdentityChipKind.Core, IdentityTier.Feature, badge, share);
+        }
+    }
+
+    private static bool IsExtremeSustain(ChartBadgeProfile profile,
+        IReadOnlyDictionary<string, ChartFolderBaseline> folder)
+    {
+        return profile.GeometryOf(PiuCenterMetrics.TimeUnderTension) is { } tension
+               && folder.TryGetValue(PiuCenterMetrics.TimeUnderTension, out var baseline)
+               && baseline.DrenchedCutoff > 0
+               && tension >= baseline.DrenchedCutoff;
+    }
+
+    private static bool ClearsClaimBar(ChartBadgeProfile profile, string badge)
+    {
+        return ChartIdentityRules.IsWholeChartBadge(badge)
+               || profile.CoverageOf(badge) >= ChartIdentityRules.ClaimCoverage(badge);
+    }
+
+    /// <summary>
     ///     How far a badge's coverage stands above what the folder asks of it. Whole-chart
-    ///     qualities have no coverage, so they sort last among their group rather than
-    ///     borrowing a number they do not have.
+    ///     qualities have no coverage, so they sort last among their group rather than borrowing
+    ///     a number they do not have.
     /// </summary>
     private static decimal Margin(ChartBadgeProfile profile,
         IReadOnlyDictionary<string, ChartFolderBaseline> folder, string badge)
@@ -80,14 +249,35 @@ internal static class ChartIdentityBuilder
         return profile.CoverageOf(badge) - (folder.TryGetValue(badge, out var baseline) ? baseline.CoreCutoff : 0m);
     }
 
-    private static decimal? CoverageDetail(ChartBadgeProfile profile, string badge)
+    private static decimal? Coverage(ChartBadgeProfile profile, string badge)
     {
         return ChartIdentityRules.IsWholeChartBadge(badge) ? null : profile.CoverageOf(badge);
     }
 
-    private static IdentityChipRecord Chip(IdentityChipKind kind, string badge, decimal? detail)
+    private static IdentityChipRecord Chip(IdentityChipKind kind, IdentityTier tier, string badge, decimal? detail)
     {
-        return new IdentityChipRecord(kind, badge, BadgeLabels.DisplayName(badge),
+        return new IdentityChipRecord(kind, tier, badge, BadgeLabels.DisplayName(badge),
             BadgeLabels.CategoryFor(badge), detail);
     }
+
+    private static IdentityChipRecord Geometry(IdentityChipKind kind, string label, decimal detail)
+    {
+        return new IdentityChipRecord(kind, IdentityTier.Identity, label, label, null, detail);
+    }
+}
+
+/// <summary>
+///     The geometry claims' badge keys. They are not piucenter badges and belong to no family —
+///     a chart's shape is not one of its skills, the same reason the spike wears no family
+///     colour — but they travel as chips, so they need stable keys the UI can localize.
+/// </summary>
+internal static class WidthLabels
+{
+    public const string QuarterDouble = "Quarter Double";
+    public const string HalfDouble = "Half-Double";
+    public const string Wide = "Wide";
+    public const string Twistless = "Twistless";
+    public const string TwistHeavy = "Twist-heavy";
+    public const string VeryFast = "Very Fast";
+    public const string VerySlow = "Very Slow";
 }

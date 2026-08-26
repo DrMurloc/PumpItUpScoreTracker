@@ -39,4 +39,16 @@ internal static class PiuCenterMetrics
     public const string CruxDuration = "crux_duration";
     public const string CruxEnps = "crux_enps";
     public const string CruxBadgePrefix = "crux_badge:";
+
+    // Where the body goes (docs/design/chart-identity.md §4b), replayed from the arrows rather
+    // than read off a badge. These are the only measures in the corpus that can say whether a
+    // doubles chart ever leaves the middle, or how far a chart turns you — the badge vocabulary
+    // has no word for either. BracketRowShare is also the veto on piucenter's bracket badges,
+    // which are a limb-assignment guess and read ordinary jumps as brackets.
+    public const string PadShareMid4 = "pad_share_mid4";
+    public const string PadShareMid6 = "pad_share_mid6";
+    public const string StanceDiagonal = "stance_diagonal";
+    public const string StanceSideOn = "stance_side_on";
+    public const string StanceCrossed = "stance_crossed";
+    public const string BracketRowShare = "bracket_row_share";
 }

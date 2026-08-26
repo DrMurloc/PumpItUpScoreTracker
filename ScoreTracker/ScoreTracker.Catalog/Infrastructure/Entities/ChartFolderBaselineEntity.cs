@@ -15,6 +15,7 @@ namespace ScoreTracker.Catalog.Infrastructure.Entities
         public int Level { get; set; }
         [Required] [MaxLength(64)] public string Badge { get; set; } = string.Empty;
         [Precision(9, 4)] public decimal CoreCutoff { get; set; }
+        [Precision(9, 4)] public decimal DrenchedCutoff { get; set; }
         public int QualifiedCount { get; set; }
         public int AnalyzedCharts { get; set; }
     }

@@ -330,6 +330,23 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
                     Truncate($"{PiuCenterMetrics.CruxBadgePrefix}{crux.Badges[i]}", 64), i + 1, null));
         }
 
+        // Where the body goes (docs/design/chart-identity.md §4b). Pad shares only mean anything
+        // on doubles — a singles chart is trivially "all middle" and a width claim about one
+        // would be noise — but the stance and bracket shares read the same on either.
+        if (page.Stance is { } stance)
+        {
+            if (stance.IsDoubles)
+            {
+                rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.PadShareMid4, stance.PadShareMid4, null));
+                rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.PadShareMid6, stance.PadShareMid6, null));
+            }
+
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.StanceDiagonal, stance.Diagonal, null));
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.StanceSideOn, stance.SideOn, null));
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.StanceCrossed, stance.Crossed, null));
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.BracketRowShare, stance.BracketRowShare, null));
+        }
+
         foreach (var (label, count) in page.RareSkillCounts)
             rows.Add(new ChartSkillMetric(chartId, Truncate($"{PiuCenterMetrics.RarePrefix}{label}", 64), count,
                 null));
