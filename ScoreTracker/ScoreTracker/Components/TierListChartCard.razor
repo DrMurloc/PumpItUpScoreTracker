@@ -85,7 +85,18 @@ else
             <div class="tier-chart-card-compact-grade tier-chart-card-corner @CornerBadgeClass">@CornerBadge</div>
         }
     </div>
-    <div class="tier-chart-card-body">
+    @* The strip that rides up onto the jacket, and the ONLY things allowed on it: what the
+       chart is called and how you did on it. It reserves its height whether or not it has
+       either, so a folder of cards stays aligned — and so that nothing else inherits the
+       overlap by being first. It did: with song names switched off, the chip row and a lone
+       tier word were landing on the album art, which says nothing at all over a picture
+       (field test, 2026-08-26).
+       Clickable for the same reason the jacket is, and for the 30px of jacket it covers —
+       removing the info button left the art as the only way in, and a strip that swallowed
+       clicks would have made a dead zone of its bottom edge. Deliberately NOT a button and
+       not a tab stop: the jacket beside it already announces and operates this exact action,
+       so a second one would be an unoperable duplicate in the reading order. *@
+    <div class="tier-chart-card-head" @onclick="() => OnOpen.InvokeAsync(Chart.Id)">
         @if (ShowName)
         {
             <MudTooltip Text="@Chart.Song.Name.ToString()" ShowOnFocus="true">
@@ -118,6 +129,8 @@ else
                 <LetterGradeIcon LegacyGrade="LegacyGrade" IsBroken="Score?.IsBroken ?? false" Height="20"></LetterGradeIcon>
             </div>
         }
+    </div>
+    <div class="tier-chart-card-body">
         @if (TierLabel != null)
         {
             <MudText Typo="Typo.caption" Class="tier-chart-card-tier" Style="@($"color:{TierColor}")">@TierLabel</MudText>

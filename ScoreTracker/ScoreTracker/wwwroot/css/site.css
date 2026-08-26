@@ -2096,11 +2096,17 @@ html.sheet-open .more-sheet-scrim {
         transition: filter .12s ease;
     }
 
-    .tier-chart-card-jacket:hover {
+    /* The head sits over the jacket's bottom 30px and takes the pointer there, so hovering the
+       name or the score would otherwise leave the art it is printed on unlit — the one part of
+       the jacket a reader is most likely to be pointing at. It opens the same chart, so it
+       lights the same way. */
+    .tier-chart-card-jacket:hover,
+    .tier-chart-card:has(.tier-chart-card-head:hover) .tier-chart-card-jacket {
         filter: brightness(1.12);
     }
 
-    .tier-chart-card-jacket:hover::after {
+    .tier-chart-card-jacket:hover::after,
+    .tier-chart-card:has(.tier-chart-card-head:hover) .tier-chart-card-jacket::after {
         background: linear-gradient(180deg, color-mix(in srgb, var(--mix-primary) 10%, transparent) 55%,
             color-mix(in srgb, var(--mix-bg) 92%, transparent) 97%);
     }
@@ -2111,15 +2117,29 @@ html.sheet-open .more-sheet-scrim {
     outline-offset: -2px;
 }
 
-/* The body rides up onto the scrim, so the name and score read as part of the jacket rather
-   than as a caption under it — the session highlight card's layout (hl-card-body). The pull
-   is smaller than that card's 34px because this one's first line is a 1rem name, not a
-   1.06rem display face, and only the first two lines are meant to land on the art. */
-.tier-chart-card-body {
+/* The head rides up onto the scrim, so the name and score read as part of the jacket rather
+   than as a caption under it — the session highlight card's layout (hl-card-body). ONLY the
+   head does: it reserves its height empty, which keeps a folder's cards aligned and stops
+   anything else inheriting the overlap merely by being first in the body.
+   min-height is the reservation, and it matches the pull exactly — a card with neither a name
+   nor a score shows clean art with its chips below, at the same height as its neighbours. */
+.tier-chart-card-head {
     position: relative;
     z-index: 2;
     margin-top: -30px;
-    padding: 0 8px 4px;
+    min-height: 30px;
+    padding: 0 8px;
+    min-width: 0;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+/* Deliberately unpulled, and shared with the randomizer's draw tile — which has no head and
+   should sit below its jacket exactly as it always has. */
+.tier-chart-card-body {
+    padding: 4px 8px;
     min-width: 0;
     flex-grow: 1;
 }
