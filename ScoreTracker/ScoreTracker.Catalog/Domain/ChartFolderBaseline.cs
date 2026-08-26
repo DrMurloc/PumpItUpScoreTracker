@@ -24,10 +24,17 @@ namespace ScoreTracker.Catalog.Domain;
 ///     exist: twice the 75th percentile sat above the folder's own maximum for 108 of 345
 ///     badge/folder pairs, so a third of the vocabulary could never be claimed at all.
 /// </param>
-/// <param name="QualifiedCount">
-///     How many of the folder's analyzed charts really carry the badge
-///     (<see cref="ChartIdentityRules.QualifyingCoverage" />). Against
-///     <paramref name="AnalyzedCharts" /> this is the prevalence the ✦ rule reads.
+/// <param name="PresenceCutoff">
+///     The coverage a chart needs before the badge counts as being on it at all, set so that
+///     about <see cref="ChartIdentityRules.AllowedShare" /> of the folder can clear it. Rare
+///     techniques therefore have a low bar and pervasive ones a high one, which is the same
+///     rule saying two opposite things about brackets at S14 and at D26.
+/// </param>
+/// <param name="PresentCount">
+///     How many of the folder's analyzed charts carry the badge AT ALL — any nonzero coverage,
+///     not the count clearing the bar. This is the honest prevalence: the bar is derived from
+///     it, so reading rarity back off the bar's own output would be circular, and it made
+///     doublesteps — on 88% of some folders — read as rare.
 /// </param>
 /// <param name="AnalyzedCharts">
 ///     Charts in the folder that have banked step analysis — the honest denominator. Counting
@@ -40,11 +47,40 @@ internal sealed record ChartFolderBaseline(
     string Badge,
     decimal CoreCutoff,
     decimal DrenchedCutoff,
-    int QualifiedCount,
+    decimal PresenceCutoff,
+    int PresentCount,
     int AnalyzedCharts)
 {
+    /// <summary>What share of the folder carries this badge at all.</summary>
+    public double Prevalence => AnalyzedCharts > 0 ? (double)PresentCount / AnalyzedCharts : 0;
+
     public bool IsUniqueInFolder => AnalyzedCharts > 0 &&
-                                    (double)QualifiedCount / AnalyzedCharts <= ChartIdentityRules.UniquePrevalence;
+                                    Prevalence > 0 &&
+                                    Prevalence <= ChartIdentityRules.UniquePrevalence;
+
+    /// <summary>Whether the chart carries the badge at all, by this folder's standard for it.</summary>
+    public bool IsPresent(decimal coverage)
+    {
+        return coverage > 0 && coverage >= PresenceCutoff;
+    }
+
+    /// <summary>
+    ///     The bar to CLAIM the chart rather than merely be on it.
+    ///     <para>
+    ///         The margin only applies where the presence bar is a real discriminator — that is,
+    ///         where the budget bound it rather than the badge's own rarity. Below
+    ///         √<see cref="ChartIdentityRules.PresenceBudget" /> prevalence every chart carrying
+    ///         the badge already clears the bar, so the bar sits at the folder's own values and
+    ///         asking for 1.25× of it asks for more than any chart has: the same
+    ///         above-the-maximum failure the drenched rule had, moved into the margin. There,
+    ///         carrying the technique at all IS the claim, which is the point of a technique
+    ///         almost nothing else has.
+    ///     </para>
+    /// </summary>
+    public decimal ClaimCoverage =>
+        Prevalence <= Math.Sqrt(ChartIdentityRules.PresenceBudget)
+            ? PresenceCutoff
+            : PresenceCutoff * ChartIdentityRules.ClaimMarginMultiple;
 
     /// <summary>
     ///     Whether a coverage stands out in this folder. Whole-chart badges never pass here —
@@ -62,10 +98,10 @@ internal sealed record ChartFolderBaseline(
     ///     That Kitty's three scattered jack segments claim a D22 whose jack percentile is low
     ///     precisely BECAUSE almost nothing there jacks.
     /// </summary>
-    public bool IsDrenched(decimal coverage, string badge)
+    public bool IsDrenched(decimal coverage)
     {
         return coverage >= ChartIdentityRules.CoreCoverageFloor
                && coverage >= DrenchedCutoff
-               && coverage >= ChartIdentityRules.ClaimCoverage(badge);
+               && coverage >= ClaimCoverage;
     }
 }

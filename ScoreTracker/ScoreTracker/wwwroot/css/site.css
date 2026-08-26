@@ -2323,6 +2323,9 @@ html.sheet-open .more-sheet-scrim {
     padding-bottom: 4px;
 }
 
+/* max-width is the guard, not tidiness: a chip is nowrap so a long one used to run straight
+   out past the card's edge and get clipped by the jacket's overflow — "Hardest 19s: Bracket
+   Runs, Bracket D" and then nothing (field test, 2026-08-26). */
 .tier-chart-card-skill {
     border: 1px solid var(--mud-palette-lines-default);
     border-radius: 8px;
@@ -2330,6 +2333,16 @@ html.sheet-open .more-sheet-scrim {
     font-size: .65rem;
     color: var(--mud-palette-text-secondary);
     white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* The one chip that names two things wraps instead of truncating. Cutting it mid-badge loses
+   the whole second claim, where two lines lose nothing. */
+.tier-chart-card-skill.chip-section {
+    white-space: normal;
+    overflow: visible;
 }
 
 /* The owner's five badge families (docs/design/nuke-old-skill-categories.md §2): the granular

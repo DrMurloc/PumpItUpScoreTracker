@@ -37,7 +37,7 @@ public sealed class FolderBaselineBuilderTests
         Assert.True(baselines["split"].IsUniqueInFolder);
         Assert.False(baselines["mid6_doubles"].IsUniqueInFolder);
         Assert.Equal(10, baselines["split"].AnalyzedCharts);
-        Assert.Equal(1, baselines["split"].QualifiedCount);
+        Assert.Equal(1, baselines["split"].PresentCount);
     }
 
     /// <summary>
@@ -85,7 +85,7 @@ public sealed class FolderBaselineBuilderTests
     ///     they still get a prevalence, which is what the ✦ rule reads.
     /// </summary>
     [Fact]
-    public void WholeChartBadgesCountTowardPrevalenceThroughTheirPick()
+    public void WholeChartBadgesCarryNoPrevalenceBecauseTheyCarryNoCoverage()
     {
         var sustained = new ChartBadgeProfile(Guid.NewGuid(),
             new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase),
@@ -95,7 +95,57 @@ public sealed class FolderBaselineBuilderTests
 
         var baseline = Build(charts).Single(b => b.Badge == "sustained");
 
-        Assert.Equal(1, baseline.QualifiedCount);
+        // No coverage anywhere means no prevalence to read, and the rare rule must not fire on
+        // "only this chart was picked for it" — which is true of any pick and claims nothing.
+        // Whole-chart qualities answer to their own test in the engine instead.
+        Assert.Equal(0, baseline.PresentCount);
+        Assert.False(baseline.IsUniqueInFolder);
+    }
+
+    /// <summary>
+    ///     The presence bar is a budget, not a number (docs/design/chart-identity.md §3.1).
+    ///     Owner, 2026-08-26: "A d26 with a handful of brackets but overall just being a run
+    ///     shouldn't even mention the thought of brackets. A S18 with brackets probably should at
+    ///     least feature them." Measured in Phoenix 2, brackets sit on 13.7% of S14 and 79.4% of
+    ///     D26, so one fixed bar cannot be right for both — at S14 it sat above the entire folder
+    ///     and not one chart could say it had brackets.
+    /// </summary>
+    [Fact]
+    public void ACommonTechniqueIsHarderToClaimThanARareOne()
+    {
+        // Twenty charts. Brackets are everywhere at a middling share; splits are on two.
+        var common = Enumerable.Range(0, 18)
+            .Select(i => Chart(("bracket", 0.20m + i * 0.01m)))
+            .Append(Chart(("bracket", 0.60m), ("split", 0.15m)))
+            .Append(Chart(("bracket", 0.55m), ("split", 0.12m)))
+            .ToArray();
+
+        var baselines = Build(common).ToDictionary(b => b.Badge);
+
+        // Brackets are on every chart, so only the dominant few may claim them.
+        Assert.True(baselines["bracket"].PresenceCutoff > 0.30m);
+        Assert.False(baselines["bracket"].IsPresent(0.28m));
+        // Splits are on two of twenty, so carrying any at all is the whole story — and the bar
+        // has to fall BELOW the old fixed one, or the exotic vocabulary stays invisible.
+        Assert.True(baselines["split"].PresenceCutoff <= 0.12m);
+        Assert.True(baselines["split"].IsPresent(0.12m));
+    }
+
+    /// <summary>
+    ///     The failure this replaced: hold footslides, footswitches, hands and splits have folder
+    ///     MAXIMUMS below the old fixed 0.30 bar, so no chart in any folder could ever say it had
+    ///     one. Hi Bi D22 carries piucenter's #1 and #2 picks and showed neither.
+    /// </summary>
+    [Fact]
+    public void ATechniqueWhoseFolderMaximumIsTinyIsStillClaimable()
+    {
+        var charts = Enumerable.Range(0, 19).Select(_ => Chart(("run", 0.5m)))
+            .Append(Chart(("run", 0.5m), ("hold_footslide", 0.167m)))
+            .ToArray();
+
+        var baseline = Build(charts).Single(b => b.Badge == "hold_footslide");
+
+        Assert.True(baseline.IsPresent(0.167m));
         Assert.True(baseline.IsUniqueInFolder);
     }
 }

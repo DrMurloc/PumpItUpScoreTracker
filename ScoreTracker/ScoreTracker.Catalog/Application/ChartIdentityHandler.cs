@@ -64,15 +64,25 @@ internal sealed class ChartIdentityHandler
         GetChartBadgePresenceQuery request, CancellationToken cancellationToken)
     {
         var metrics = await _metrics.GetMetrics(request.ChartIds, PiuCenterMetrics.Source, cancellationToken);
-        return metrics.GroupBy(m => m.ChartId)
-            .Select(g => (g.Key, Profile: ChartBadgeProfile.From(g.Key, g.ToArray())))
-            .Select(x => (x.Key, Badges: (IReadOnlyList<ChartBadgePresenceRecord>)x.Profile.PresentBadges
+        // Presence is folder-relative now, so this walks folders the same way identity does.
+        var charts = (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
+            .ToDictionary(c => c.Id);
+        var result = new Dictionary<Guid, IReadOnlyList<ChartBadgePresenceRecord>>();
+        foreach (var group in metrics.GroupBy(m => m.ChartId))
+        {
+            if (!charts.TryGetValue(group.Key, out var chart)) continue;
+            var folder = await _baselines.GetFolderBaselines(request.Mix, chart.Type, (int)chart.Level,
+                cancellationToken);
+            var profile = ChartBadgeProfile.From(group.Key, group.ToArray());
+            var badges = profile.PresentBadges(folder)
                 .Select(b => new ChartBadgePresenceRecord(b, BadgeLabels.DisplayName(b),
                     BadgeLabels.CategoryFor(b),
-                    ChartIdentityRules.IsWholeChartBadge(b) ? 1m : x.Profile.CoverageOf(b)))
-                .ToArray()))
-            .Where(x => x.Badges.Count > 0)
-            .ToDictionary(x => x.Key, x => x.Badges);
+                    ChartIdentityRules.IsWholeChartBadge(b) ? 1m : profile.CoverageOf(b)))
+                .ToArray();
+            if (badges.Length > 0) result[group.Key] = badges;
+        }
+
+        return result;
     }
 
     public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> Handle(GetArchivedSkillTagsQuery request,

@@ -124,25 +124,6 @@ public sealed class ChartIdentityBuilderTests
     }
 
     /// <summary>
-    ///     §3.2, That Kitty D22: three scattered jack segments clearing jack's .40 bar by .029.
-    ///     Because jacks are rare in that folder, clearing the bar at all used to promote it to
-    ///     the loudest chip on the card — which is how "it does have some jacks but they're not
-    ///     really part of its identity" ended up rendered as the chart's headline.
-    /// </summary>
-    [Fact]
-    public void ClearingABadgesBarByAHairIsNotAClaimOnTheChart()
-    {
-        var folder = new Folder().AddCharts(20, ("mid6_doubles", 0.5m));
-        var thatKitty = Folder.Profile(new[] { ("jack", 0.4286m), ("mid6_doubles", 0.7143m) });
-
-        var chips = folder.ChipsFor(thatKitty);
-
-        Assert.DoesNotContain("jack", IdentityBadges(chips));
-        var jack = Assert.Single(chips.Where(c => c.Badge == "jack"));
-        Assert.Equal(IdentityTier.Feature, jack.Tier);
-    }
-
-    /// <summary>
     ///     §3.2, Nakakapagpabagabag D20 — the bug the owner caught by naming four charts that
     ///     are "entirely double steps" and highlighting none of them. Drenched was twice the
     ///     folder's 75th percentile, and twice a p75 routinely sits ABOVE the folder's own
@@ -164,16 +145,20 @@ public sealed class ChartIdentityBuilderTests
     }
 
     /// <summary>
-    ///     The other half of the drenched rule. A folder's 90th percentile for a rare badge is
-    ///     low precisely BECAUSE almost nothing there carries it, so the percentile alone would
-    ///     hand That Kitty's jacks back the claim the margin rule just took away. Rarity must
-    ///     not lower the bar.
+    ///     §3.2, That Kitty D22 again, now under the folder-relative bar. Jacks are on 59% of
+    ///     that folder, so the budget makes them expensive to claim — a chart needs to be one of
+    ///     the few that really jack, and three scattered jack segments is not that. The earlier
+    ///     version of this test used a folder where jacks were rare, which is not the folder That
+    ///     Kitty is actually in.
     /// </summary>
     [Fact]
-    public void RarityInTheFolderDoesNotLowerTheBarForClaimingAChart()
+    public void ACommonTechniqueTakesMoreThanAFewSegmentsToClaim()
     {
-        // Only two of twenty-one charts jack at all, so the p90 lands under the .40 bar.
-        var folder = new Folder().AddCharts(18, ("mid6_doubles", 0.5m)).AddCharts(2, ("jack", 0.42m));
+        var folder = new Folder()
+            .AddCharts(1, ("jack", 0.50m)).AddCharts(1, ("jack", 0.48m))
+            .AddCharts(1, ("jack", 0.46m)).AddCharts(1, ("jack", 0.44m))
+            .AddCharts(9, ("jack", 0.15m))
+            .AddCharts(8, ("mid6_doubles", 0.5m));
         var thatKitty = Folder.Profile(new[] { ("jack", 0.4286m) });
 
         var chips = folder.ChipsFor(thatKitty);

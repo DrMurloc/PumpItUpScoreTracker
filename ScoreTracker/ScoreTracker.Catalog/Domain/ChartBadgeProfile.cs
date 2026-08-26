@@ -40,21 +40,27 @@ internal sealed record ChartBadgeProfile(
     ///     piucenter's pick alone. A dominance pick under the bar is deliberately NOT presence
     ///     (docs/design/chart-identity.md §3).
     /// </summary>
-    public IEnumerable<string> PresentBadges =>
-        Coverage.Where(kv => kv.Value >= ChartIdentityRules.QualifyingCoverage(kv.Key)).Select(kv => kv.Key)
+    public IEnumerable<string> PresentBadges(IReadOnlyDictionary<string, ChartFolderBaseline> folder)
+    {
+        return Coverage.Where(kv => HasQualifiedPresence(kv.Key, folder)).Select(kv => kv.Key)
             .Concat(DominanceRank.Keys.Where(ChartIdentityRules.IsWholeChartBadge))
             .Distinct(StringComparer.OrdinalIgnoreCase);
+    }
 
     public decimal CoverageOf(string badge)
     {
         return Coverage.TryGetValue(badge, out var value) ? value : 0m;
     }
 
-    public bool HasQualifiedPresence(string badge)
+    public bool HasQualifiedPresence(string badge, IReadOnlyDictionary<string, ChartFolderBaseline> folder)
     {
-        return ChartIdentityRules.IsWholeChartBadge(badge)
-            ? DominanceRank.ContainsKey(badge)
-            : CoverageOf(badge) >= ChartIdentityRules.QualifyingCoverage(badge);
+        if (ChartIdentityRules.IsWholeChartBadge(badge)) return DominanceRank.ContainsKey(badge);
+        var coverage = CoverageOf(badge);
+        // A folder we have never swept falls back to the old fixed bar. Only reachable before a
+        // baseline exists; every real answer is the folder's own.
+        return folder.TryGetValue(badge, out var baseline)
+            ? baseline.IsPresent(coverage)
+            : coverage >= ChartIdentityRules.FallbackQualifyingCoverage;
     }
 
     /// <summary>Every badge the chart mentions at all — the folder's vocabulary comes from these.</summary>

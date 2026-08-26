@@ -44,7 +44,8 @@ internal sealed class EFChartFolderBaselineRepository : IChartFolderBaselineRepo
                 Badge = b.Badge,
                 CoreCutoff = b.CoreCutoff,
                 DrenchedCutoff = b.DrenchedCutoff,
-                QualifiedCount = b.QualifiedCount,
+                PresenceCutoff = b.PresenceCutoff,
+                PresentCount = b.PresentCount,
                 AnalyzedCharts = b.AnalyzedCharts
             }), cancellationToken);
         await database.SaveChangesAsync(cancellationToken);
@@ -74,7 +75,7 @@ internal sealed class EFChartFolderBaselineRepository : IChartFolderBaselineRepo
                 .ToArrayAsync(cancellationToken);
             return (IReadOnlyDictionary<(ChartType, int), IReadOnlyDictionary<string, ChartFolderBaseline>>)rows
                 .Select(e => new ChartFolderBaseline(mix, Enum.Parse<ChartType>(e.ChartType), e.Level, e.Badge,
-                    e.CoreCutoff, e.DrenchedCutoff, e.QualifiedCount, e.AnalyzedCharts))
+                    e.CoreCutoff, e.DrenchedCutoff, e.PresenceCutoff, e.PresentCount, e.AnalyzedCharts))
                 .GroupBy(b => (b.Type, b.Level))
                 .ToDictionary(g => g.Key, g => (IReadOnlyDictionary<string, ChartFolderBaseline>)g
                     .ToDictionary(b => b.Badge, b => b, StringComparer.OrdinalIgnoreCase));

@@ -76,7 +76,11 @@ internal sealed class SkillsSaga : IRequestHandler<GetChartStepAnalysisQuery, Ch
                 {
                     var badge = metric.MetricName[PiuCenterMetrics.BadgeFractionPrefix.Length..];
                     coverage[badge] = metric.Value;
-                    if (metric.Value >= ChartIdentityRules.QualifyingCoverage(badge)) qualified.Add(badge);
+                    // The fixed bar, deliberately: these chips feed the chart page's coverage
+                    // BARS, which are an even description of the whole chart rather than a claim
+                    // about it, and this query is mix-agnostic so there is no folder to be
+                    // relative to. Identity's folder-relative bar lives in the chip engine.
+                    if (metric.Value >= ChartIdentityRules.FallbackQualifyingCoverage) qualified.Add(badge);
                 }
                 else if (metric.MetricName.StartsWith(PiuCenterMetrics.Top3Prefix, StringComparison.Ordinal))
                 {

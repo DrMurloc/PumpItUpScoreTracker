@@ -8,28 +8,33 @@ namespace ScoreTracker.Catalog.Domain;
 internal static class ChartIdentityRules
 {
     /// <summary>
-    ///     What it takes for a badge to count as really being on a chart. Piucenter's
-    ///     dominance summary is a ranking, not a measurement: it names a chart's top three
-    ///     badges however little of the chart they ride. Presence is measured coverage
-    ///     clearing this bar, so a chart with a #3 pick it barely carries is not that kind
-    ///     of chart — the rule Achluoias D24 earned, where a bracket_drill pick over 12.5%
-    ///     measured brackets had been filing a run chart under Brackets.
+    ///     How much of a folder one technique may claim, before rarity is taken into account.
+    ///     The bar for a badge is set so roughly <c>PresenceBudget ÷ prevalence</c> of the
+    ///     folder can clear it — the rarer a technique is here, the less of it a chart needs
+    ///     before having it is worth saying, and the more common it is, the more dominant a
+    ///     chart has to be before it may claim it at all.
+    ///     <para>
+    ///         This replaces a fixed 0.30 bar with a hand-tuned table of raised values, and it
+    ///         replaces them because a fixed bar reads two very different facts identically.
+    ///         Brackets sit on 13.7% of Phoenix 2 S14 and 79.4% of D26: at S14 the bar was above
+    ///         the whole folder and not one chart could say it had brackets, while at D26 a run
+    ///         chart with a handful of them could. Owner, 2026-08-26: "A d26 with a handful of
+    ///         brackets but overall just being a run shouldn't even mention the thought of
+    ///         brackets. A S18 with brackets probably should at least feature them."
+    ///     </para>
+    ///     <para>
+    ///         The old raised bars fall out of this rather than being configured: jack, jump,
+    ///         run and twist_90 were raised by hand because they ride nearly every chart, and
+    ///         their prevalence — stable at 56–78% in every folder — now says so on its own.
+    ///     </para>
     /// </summary>
-    private const decimal DefaultQualifyingCoverage = 0.30m;
+    public const double PresenceBudget = 0.10;
 
     /// <summary>
-    ///     Badges that ride nearly every chart need a higher bar, or one of them swallows a
-    ///     third of a folder on coverage alone. Calibrated 2026-07-11 against the full 050726
-    ///     corpus; carried over from the deleted skill mapper, which is where they were born.
+    ///     The bar for a chart in a folder we have no baseline for. Only reachable before a
+    ///     folder has been swept; a real answer always comes from the baseline.
     /// </summary>
-    private static readonly IReadOnlyDictionary<string, decimal> RaisedQualifyingCoverage =
-        new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["jack"] = 0.40m,
-            ["jump"] = 0.50m,
-            ["run"] = 0.40m,
-            ["twist_90"] = 0.40m
-        };
+    public const decimal FallbackQualifyingCoverage = 0.30m;
 
     /// <summary>
     ///     Badges that describe the whole chart rather than a stretch of it. They are never
@@ -172,15 +177,16 @@ internal static class ChartIdentityRules
 
     public const int MaxFallbackChips = 3;
 
-    public static decimal QualifyingCoverage(string badge)
+    /// <summary>
+    ///     What share of a folder may clear a badge's presence bar, given how many of its charts
+    ///     carry the badge at all. Capped at the prevalence itself: a technique on 8% of a folder
+    ///     cannot be claimed by 12% of it, so there the bar falls to "has any at all", which is
+    ///     the whole fix for the exotic vocabulary — hold footslides, footswitches, hands and
+    ///     splits have folder MAXIMUMS below the old fixed bar and were structurally invisible.
+    /// </summary>
+    public static double AllowedShare(double prevalence)
     {
-        return RaisedQualifyingCoverage.TryGetValue(badge, out var raised) ? raised : DefaultQualifyingCoverage;
-    }
-
-    /// <summary>The bar a badge must clear to claim the chart, rather than merely be present on it.</summary>
-    public static decimal ClaimCoverage(string badge)
-    {
-        return QualifyingCoverage(badge) * ClaimMarginMultiple;
+        return prevalence <= 0 ? 0 : Math.Min(prevalence, PresenceBudget / prevalence);
     }
 
     public static bool IsWholeChartBadge(string badge)

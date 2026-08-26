@@ -21,7 +21,7 @@ internal static class ChartIdentityBuilder
         // dominance pick under that bar used to be admitted "because their pick is a real signal
         // about emphasis"; every chip the owner could not find on the pad came in through that
         // clause, and it crowded out real coverage through the cap besides.
-        var present = profile.PresentBadges
+        var present = profile.PresentBadges(folder)
             .Where(b => !ChartIdentityRules.IsBracketFamily(b) || profile.BracketsAreCredible)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
@@ -44,8 +44,8 @@ internal static class ChartIdentityBuilder
                      // chart's identity. They have their own test below.
                      .Where(b => !ChartIdentityRules.IsWholeChartBadge(b))
                      .Where(b => folder.TryGetValue(b, out var baseline) && baseline.IsUniqueInFolder
-                         && ClearsClaimBar(profile, b))
-                     .OrderBy(b => folder[b].QualifiedCount)
+                         && ClearsClaimBar(profile, folder, b))
+                     .OrderBy(b => folder[b].PresentCount)
                      .ThenBy(b => b, StringComparer.OrdinalIgnoreCase)
                      .Take(ChartIdentityRules.MaxUniqueChips))
         {
@@ -60,7 +60,7 @@ internal static class ChartIdentityBuilder
                      .Where(b => !claimed.Contains(b) && !ChartIdentityRules.IsPadGeographyBadge(b)
                                  && !ChartIdentityRules.IsWholeChartBadge(b))
                      .Where(b => folder.TryGetValue(b, out var baseline)
-                                 && baseline.IsDrenched(profile.CoverageOf(b), b))
+                                 && baseline.IsDrenched(profile.CoverageOf(b)))
                      .OrderByDescending(b => Margin(profile, folder, b))
                      .ThenBy(b => b, StringComparer.OrdinalIgnoreCase))
         {
@@ -237,10 +237,12 @@ internal static class ChartIdentityBuilder
                && tension >= baseline.DrenchedCutoff;
     }
 
-    private static bool ClearsClaimBar(ChartBadgeProfile profile, string badge)
+    private static bool ClearsClaimBar(ChartBadgeProfile profile,
+        IReadOnlyDictionary<string, ChartFolderBaseline> folder, string badge)
     {
         return ChartIdentityRules.IsWholeChartBadge(badge)
-               || profile.CoverageOf(badge) >= ChartIdentityRules.ClaimCoverage(badge);
+               || (folder.TryGetValue(badge, out var baseline)
+                   && profile.CoverageOf(badge) >= baseline.ClaimCoverage);
     }
 
     /// <summary>

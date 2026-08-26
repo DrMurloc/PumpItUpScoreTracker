@@ -1878,7 +1878,7 @@ else
             cancellationToken);
         // Per-badge presence for the Folder Stats drawer's ability rows: every badge a chart
         // really carries, not the handful the cards had room for.
-        _badgePresence = await Mediator.Send(new GetChartBadgePresenceQuery(_charts.Keys.ToArray()),
+        _badgePresence = await Mediator.Send(new GetChartBadgePresenceQuery(_charts.Keys.ToArray(), _currentMix),
             cancellationToken);
 
         _archivedTags = ChabalaLensActive

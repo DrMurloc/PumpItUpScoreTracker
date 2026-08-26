@@ -22,10 +22,12 @@ internal static class FolderBaselineBuilder
                 // A chart that never mentions the badge contributes a zero: it is part of the
                 // folder the badge is being judged against, not an absence to be skipped.
                 var coverages = analyzed.Select(p => p.CoverageOf(badge)).OrderBy(v => v).ToArray();
+                var present = coverages.Count(v => v > 0);
                 return new ChartFolderBaseline(mix, type, level, badge,
                     CutoffAt(coverages, ChartIdentityRules.CoreQuantile),
                     CutoffAt(coverages, ChartIdentityRules.DrenchedQuantile),
-                    analyzed.Count(p => p.HasQualifiedPresence(badge)),
+                    PresenceCutoff(coverages, present),
+                    present,
                     analyzed.Count);
             })
             .ToList();
@@ -83,15 +85,15 @@ internal static class FolderBaselineBuilder
             .Select(v => v!.Value)
             .ToArray();
         if (speeds.Length < 2)
-            return new ChartFolderBaseline(mix, type, level, PiuCenterMetrics.Nps, 0m, 0m, speeds.Length,
-                analyzed.Count);
+            return new ChartFolderBaseline(mix, type, level, PiuCenterMetrics.Nps, 0m, 0m, 0m,
+                speeds.Length, analyzed.Count);
 
         var mean = speeds.Average();
         var variance = speeds.Sum(v => (v - mean) * (v - mean)) / (speeds.Length - 1);
         var deviation = (decimal)Math.Sqrt((double)variance);
         var reach = deviation * (decimal)ChartIdentityRules.SpeedIdentityZ;
         return new ChartFolderBaseline(mix, type, level, PiuCenterMetrics.Nps,
-            mean - reach, mean + reach, speeds.Length, analyzed.Count);
+            mean - reach, mean + reach, 0m, speeds.Length, analyzed.Count);
     }
 
     private static ChartFolderBaseline GeometryRow(MixEnum mix, ChartType type, int level, string metric,
@@ -102,10 +104,32 @@ internal static class FolderBaselineBuilder
             .Select(v => v!.Value)
             .OrderBy(v => v)
             .ToArray();
+        // Geometry rows carry no presence bar: nothing asks whether a chart "has" a pad share.
         return new ChartFolderBaseline(mix, type, level, metric,
             measured.Length == 0 ? 0m : CutoffAt(measured, lowQuantile),
             measured.Length == 0 ? 0m : CutoffAt(measured, highQuantile),
-            measured.Length, analyzed.Count);
+            0m, measured.Length, analyzed.Count);
+    }
+
+    /// <summary>
+    ///     The coverage a chart needs before this folder counts the badge as being on it. Set by
+    ///     budget rather than by a fixed number: a technique gets to claim about
+    ///     <see cref="ChartIdentityRules.PresenceBudget" /> of a folder's worth of charts, so the
+    ///     bar rises with how common it is here and falls when it is rare.
+    ///     <para>
+    ///         Where a badge is rarer than its own budget the bar collapses to "carries any at
+    ///         all", which is the point: hold footslides, footswitches, hands and splits have
+    ///         folder MAXIMUMS below the old fixed bar, so no chart in any folder could ever say
+    ///         it had them.
+    ///     </para>
+    /// </summary>
+    private static decimal PresenceCutoff(decimal[] sortedCoverages, int presentCount)
+    {
+        if (presentCount == 0) return decimal.MaxValue;
+        var allowed = ChartIdentityRules.AllowedShare((double)presentCount / sortedCoverages.Length);
+        var passes = Math.Clamp((int)Math.Ceiling(allowed * sortedCoverages.Length), 1, presentCount);
+        // Sorted ascending, so the pass-th value from the top is the bar with an at-or-above test.
+        return sortedCoverages[sortedCoverages.Length - passes];
     }
 
     /// <summary>
