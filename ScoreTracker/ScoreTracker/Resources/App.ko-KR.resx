@@ -1795,8 +1795,8 @@
   <data name="Copying existing highlights into the new feed store." xml:space="preserve">
     <value>기존 하이라이트를 새 피드 저장소로 복사하는 중입니다.</value>
   </data>
-  <data name="Core Identity" xml:space="preserve">
-    <value>보면 개성</value>
+  <data name="Core Skills" xml:space="preserve">
+    <value>핵심 스킬</value>
   </data>
   <data name="Costs scale with the chart — every non-perfect divides by the note count. Pick a chart size:" xml:space="preserve">
     <value>감점은 채보에 비례합니다. 퍼펙트가 아닌 모든 판정은 노트 수로 나뉩니다. 채보 크기를 선택하세요:</value>
@@ -8619,6 +8619,9 @@
   </data>
   <data name="What should they change?" xml:space="preserve">
     <value>무엇을 바꿔야 하나요?</value>
+  </data>
+  <data name="What stands out about this chart against its folder" xml:space="preserve">
+    <value>이 채보가 같은 폴더에서 두드러지는 점</value>
   </data>
   <data name="What the chart is worth in your pool right now" xml:space="preserve">
     <value>지금 내 풀에서 이 채보의 값</value>

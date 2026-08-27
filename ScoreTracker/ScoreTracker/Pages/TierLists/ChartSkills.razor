@@ -1890,7 +1890,7 @@ else
         // relative to the folder it was banded in, and a chart's folder changes between mixes —
         // so Phoenix's bands standing in for an unbuilt Phoenix 2 list would be measuring
         // against company the chart does not keep there. Better to offer no Speed view at all.
-        var speed = await Mediator.Send(new GetTierListWithFallbackQuery("Speed", _currentMix), cancellationToken);
+        var speed = await Mediator.Send(new GetTierListWithFallbackQuery(SpeedBandLabels.ListName, _currentMix), cancellationToken);
         _speedBands = speed.IsProvisionalFallback
             ? new Dictionary<Guid, SongTierListEntry>()
             : speed.Entries
@@ -2346,8 +2346,8 @@ else
                     entryByChart, NpsRange(g.Select(kv => kv.Value))).Group
                 with
                 {
-                    Color = ThemeScales.SpeedColor(SpeedBandIndex(g.Key)),
-                    ShareHex = MixThemes.SpeedBandHex(SpeedBandIndex(g.Key))
+                    Color = ThemeScales.SpeedColor(SpeedBandLabels.IndexOf(g.Key)),
+                    ShareHex = MixThemes.SpeedBandHex(SpeedBandLabels.IndexOf(g.Key))
                 })
             .ToList();
 
@@ -2395,28 +2395,7 @@ else
     ///     in Korean and its equivalent elsewhere. English is the key text, which is why nothing
     ///     looked wrong here.
     /// </remarks>
-    private string SpeedBandName(TierListCategory band) => L[band switch
-    {
-        TierListCategory.Overrated => "Very Slow",
-        TierListCategory.VeryEasy => "Slow",
-        TierListCategory.Medium => "Mid Tempo",
-        TierListCategory.Hard => "Fast",
-        _ => "Very Fast"
-    }].Value;
-
-    /// <summary>
-    ///     The band's rung on the speed ramp, 0 (slowest) to 4. SpeedBands borrows tier-list
-    ///     categories for their ORDER only, so this is where that borrowing is undone — reading
-    ///     the category as a difficulty here is what would put the ramps back in contact.
-    /// </summary>
-    private static int SpeedBandIndex(TierListCategory band) => band switch
-    {
-        TierListCategory.Overrated => 0,
-        TierListCategory.VeryEasy => 1,
-        TierListCategory.Medium => 2,
-        TierListCategory.Hard => 3,
-        _ => 4
-    };
+    private string SpeedBandName(TierListCategory band) => L[SpeedBandLabels.KeyOf(band)].Value;
 
     /// <summary>The band's real NPS span, recovered from the Order the Speed list stored it in.</summary>
     private string NpsRange(IEnumerable<SongTierListEntry> entries)

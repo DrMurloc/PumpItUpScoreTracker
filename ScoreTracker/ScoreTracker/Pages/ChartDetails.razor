@@ -119,38 +119,21 @@
         <ChartEvidenceSection @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_chart.Mix" @key="_chart.Id"></ChartEvidenceSection>
     </section>
 
-    @if (_skillChips.Any() || _analysis != null || _identityChips.Any())
+    @* Chips and nothing else (owner, 2026-08-26). Everything that stood here beside them was a
+       percentage, and a percentage is only readable against the folder the reader cannot see from
+       this page — which is the comparison the chips have already done. The two sentences went with
+       them: the crux line IS the "Hardest Ns" chip in longer words, and "Dominated by…" picked its
+       two badges by a different rule than the chips do, so it could contradict the row underneath
+       it on the same screen. *@
+    @if (_identityChips.Any())
     {
         <section class="chart-section">
             <div class="chart-section-head">
                 <MudText Typo="Typo.h5">@L["Skill fingerprint"]</MudText>
-                @if (Fingerprint != null)
-                {
-                    <MudText Typo="Typo.caption" Class="chart-section-sub"><VerdictSentence Facet="Fingerprint"></VerdictSentence></MudText>
-                }
-                @* What ends you, where, and how far over the level it runs — the one fact the
-                   coverage bars below cannot show, because they describe the whole chart
-                   evenly (docs/design/chart-identity.md §4). *@
-                @if (Crux != null)
-                {
-                    <MudText Typo="Typo.caption" Class="chart-section-sub"><VerdictSentence Facet="Crux"></VerdictSentence></MudText>
-                }
             </div>
-            @* What the chart IS, before what it is made of: the bars below are an even
-               description of the whole chart, and the claims above are what stands out in it. *@
             <IdentityChipGroups Chips="_identityChips"></IdentityChipGroups>
-            <SkillCoverageBars Chips="_skillChips"></SkillCoverageBars>
-            @* Intensity reads as bars beside the skills because it is the same kind of
-               fact — a share of the chart — and the two together are what "what is this
-               chart made of" means. Grind and spikes rather than sustain and tension:
-               sustain is a subset of tension, so showing both counts the grind twice. *@
-            <IntensityBars Intensity="Intensity" Duration="_chart.Song.Duration"></IntensityBars>
-            @* The evidence behind the geometry chips. A reader who wants to know why a chart
-               calls itself Half-Double or Twist-heavy reads the measurement here instead of
-               taking the chip's word for it (docs/design/chart-identity.md §4b). *@
-            <GeometryBars Geometry="_analysis?.Geometry"></GeometryBars>
             <div class="chart-skill-foot">
-                <span>@L["Share of the chart each pattern and demand covers"]</span>
+                <span>@L["What stands out about this chart against its folder"]</span>
                 <span>@L["Step analysis data from PIU Center"]</span>
             </div>
         </section>
@@ -229,17 +212,13 @@
     private Chart? _chart;
     private IReadOnlyList<ChartVerdictFacet> _facets = Array.Empty<ChartVerdictFacet>();
     private IReadOnlyList<Chart> _siblings = Array.Empty<Chart>();
-    private IReadOnlyList<ChartBadgeChipRecord> _skillChips = Array.Empty<ChartBadgeChipRecord>();
     private ChartStepAnalysisRecord? _analysis;
     private IReadOnlyList<TierListChartCard.CardSkillChip> _identityChips =
         Array.Empty<TierListChartCard.CardSkillChip>();
 
-    private ChartIntensityFacts? Intensity => _chart == null ? null : ChartIntensityFacts.For(_chart, _analysis);
 
     private PopulationVerdict? Population => _facets.OfType<PopulationVerdict>().FirstOrDefault();
     private HistoryVerdict? History => _facets.OfType<HistoryVerdict>().FirstOrDefault();
-    private StyleFingerprintVerdict? Fingerprint => _facets.OfType<StyleFingerprintVerdict>().FirstOrDefault();
-    private CruxVerdict? Crux => _facets.OfType<CruxVerdict>().FirstOrDefault();
 
     // Bpm.ToString prints Min twice on ranges (pre-existing) — format locally.
     private string BpmDisplay => _chart?.Song.Bpm is not { } bpm ? "" :
@@ -308,15 +287,26 @@
             .OrderBy(c => c.Type)
             .ThenBy(c => (int)c.Level)
             .ToArray();
-        _skillChips = (await Mediator.Send(new GetChartBadgeChipsQuery(new[] { chart.Id })))
-            .TryGetValue(chart.Id, out var chips)
-            ? chips
-            : Array.Empty<ChartBadgeChipRecord>();
         _analysis = await Mediator.Send(new GetChartStepAnalysisQuery(chart.Id));
         // Every chip, uncapped — the card's three-chip cut is a card's problem, and a page that
         // silently dropped a claim would be the one surface where the chart looks different.
         var identity = await Mediator.Send(new GetChartIdentityQuery(new[] { chart.Id }, chartMix));
-        _identityChips = IdentityChips.ToCardChips(
-            identity.TryGetValue(chart.Id, out var record) ? record : null, true, L);
+        _identityChips = IdentityChips.WithSpeedBand(
+            IdentityChips.ToCardChips(identity.TryGetValue(chart.Id, out var record) ? record : null, false, L),
+            await SpeedBand(chart.Id, chartMix), L);
+    }
+
+    /// <summary>
+    ///     Which of the five speed bands the chart landed in, or null where the folder has none.
+    ///     Read WITH the fallback flag and then refused: a band is a chart's speed relative to the
+    ///     folder it was banded in, and a chart's folder changes between mixes — Phoenix's bands
+    ///     standing in for an unbuilt Phoenix 2 list would be measuring against company the chart
+    ///     does not keep there.
+    /// </summary>
+    private async Task<TierListCategory?> SpeedBand(Guid chartId, MixEnum mix)
+    {
+        var speed = await Mediator.Send(new GetTierListWithFallbackQuery(SpeedBandLabels.ListName, mix));
+        if (speed.IsProvisionalFallback) return null;
+        return speed.Entries.FirstOrDefault(e => e.ChartId == chartId)?.Category;
     }
 }

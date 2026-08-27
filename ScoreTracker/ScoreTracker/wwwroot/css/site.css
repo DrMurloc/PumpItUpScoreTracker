@@ -2377,28 +2377,14 @@ html.sheet-open .more-sheet-scrim {
     font-weight: 600;
 }
 
-/* How far a chart turns you is a fact about the SHAPE of the chart rather than one of its
-   skills — so it sits outside the five families, for the same reason the spike does. Width
-   and Longest run used to live here too and moved to the families they were describing all
-   along: Doubles Tech and Stamina & Runs (owner, 2026-08-26). */
-.tier-chart-card-skill.chip-geometry {
-    color: color-mix(in srgb, var(--geometry-chip) 55%, var(--mix-ink));
-    background: color-mix(in srgb, var(--geometry-chip) 16%, transparent);
-    border-color: color-mix(in srgb, var(--geometry-chip) 45%, transparent);
-}
-
-.tier-chart-card-skill.chip-geometry.chip-identity {
-    color: #fff;
-    font-weight: 600;
-    background: color-mix(in srgb, var(--geometry-chip) 42%, var(--mud-palette-surface));
-    border-color: color-mix(in srgb, var(--geometry-chip) 80%, transparent);
-}
-
 /* The two speed claims wear the ends of the Speed list's own ramp, so a chip and the folder
    section it came from cannot disagree about what "Very Fast" looks like. The ramp is cool-to-
    hot and deliberately NOT the difficulty ramp: a slow chart at a high level is not an easy
    one (docs/design/chart-identity.md §2). */
 .tier-chart-card-skill.chip-speed-slow { --skill-chip: var(--speed-1); }
+/* Only the detail surfaces ever print the middle band: a card has room for a claim, not for a
+   measurement that says the chart is ordinary. */
+.tier-chart-card-skill.chip-speed-mid { --skill-chip: var(--speed-3); }
 .tier-chart-card-skill.chip-speed-fast { --skill-chip: var(--speed-5); }
 
 .tier-chart-card-skill[class*="chip-speed-"] {

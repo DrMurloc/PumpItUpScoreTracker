@@ -39,16 +39,28 @@ public sealed class IdentityChipsTests : ComponentTestBase
             Chip(IdentityChipKind.Unique, "split", "Splits", BadgeCategory.DoublesTech, 0.4m),
             Chip(IdentityChipKind.Core, "bracket", "Brackets", BadgeCategory.Brackets, 0.5m),
             Chip(IdentityChipKind.Spike, string.Empty, string.Empty, null, 1.3m),
-            Chip(IdentityChipKind.Width, "Half-Double", "Half-Double", null)), false, Localizer);
+            Chip(IdentityChipKind.Width, IdentityClaimKeys.HalfDouble, "Half-Double", null),
+            Chip(IdentityChipKind.LongestRun, IdentityClaimKeys.LongestRun, "Longest run", null, 29m),
+            Chip(IdentityChipKind.Twist, IdentityClaimKeys.TwistHeavy, "Twist-heavy", null),
+            Chip(IdentityChipKind.Twist, IdentityClaimKeys.Twistless, "Twistless", null),
+            Chip(IdentityChipKind.Speed, IdentityClaimKeys.VeryFast, "Very Fast", null),
+            Chip(IdentityChipKind.Speed, IdentityClaimKeys.VerySlow, "Very Slow", null)), false, Localizer);
 
         Assert.Contains("chip-unique", chips[0].CategoryClass);
         Assert.Contains("badgecat-doublestech", chips[0].CategoryClass);
         // Core is the plain chip: family tint only, no kind marker.
         Assert.Equal("badgecat-brackets", chips[1].CategoryClass);
         Assert.Contains("chip-spike", chips[2].CategoryClass);
-        // Shape claims sit outside the five families, like the spike.
-        Assert.Contains("chip-geometry", chips[3].CategoryClass);
-        Assert.DoesNotContain("badgecat-", chips[3].CategoryClass);
+        // Every measured claim wears the family it belongs to rather than a hue that only said
+        // "we computed this one" (owner, 2026-08-26). Width only ever fires on doubles; a longest
+        // run is stamina; a chart that never turns you is a running chart; and the two speed
+        // claims take the ends of the Speed list's own ramp.
+        Assert.Equal("badgecat-doublestech", chips[3].CategoryClass);
+        Assert.Equal("badgecat-staminaandruns", chips[4].CategoryClass);
+        Assert.Equal("badgecat-twists", chips[5].CategoryClass);
+        Assert.Equal("badgecat-staminaandruns", chips[6].CategoryClass);
+        Assert.Equal("chip-speed-fast", chips[7].CategoryClass);
+        Assert.Equal("chip-speed-slow", chips[8].CategoryClass);
     }
 
     /// <summary>

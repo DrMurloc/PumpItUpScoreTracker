@@ -3,13 +3,13 @@
 @namespace ScoreTracker.Web.Components
 
 @* The two tiers, named (docs/design/chart-identity.md §1). This is the surface that gets to
-   spell it out: a card has three chips of room and two words of scaffolding cost more there
-   than they explain, but here the distinction is the point — a half-double that features
-   bracket twists is a different chart from a bracket-twist chart that features mid-6, and a
-   reader deciding what to practise needs to know which one they are looking at.
+   spell it out: a card shows the claims bare, but here the distinction is the point — a
+   half-double that features bracket twists is a different chart from a bracket-twist chart that
+   features mid-6, and a reader deciding what to practise needs to know which one they are
+   looking at.
 
-   A chart with no core identity shows no Core Identity row at all. That is a real answer, not
-   a gap: plenty of charts are just charts. *@
+   A chart with no core identity shows no Core Skills row at all. That is a real answer, not a
+   gap: plenty of charts are just charts. *@
 @if (Groups.Any())
 {
     <div class="chart-identity-groups">
@@ -17,7 +17,7 @@
         {
             <div class="chart-identity-group @(group.IsIdentity ? "chart-identity-group-identity" : null)">
                 <span class="chart-identity-group-label">
-                    @(group.IsIdentity ? L["Core Identity"] : L["Features"])
+                    @(group.IsIdentity ? L["Core Skills"] : L["Features"])
                 </span>
                 <div class="chart-identity-chips">
                     @foreach (var chip in group.Chips)

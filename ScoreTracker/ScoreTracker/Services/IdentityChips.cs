@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Localization;
 using ScoreTracker.Catalog.Contracts;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Components;
 
 namespace ScoreTracker.Web.Services;
@@ -83,11 +84,17 @@ public static class IdentityChips
                     chip.Badge == IdentityClaimKeys.VeryFast ? "chip-speed-fast" : "chip-speed-slow",
                     null, identity);
 
-            // The shape of the body — its own hue, outside the five families, for the same
-            // reason the spike is: how far a chart turns you is not one of its skills.
+            // How far the chart turns you, in the vocabulary of what it turns into (owner,
+            // 2026-08-26). Twist-heavy is a Twists claim and takes that family; Twistless takes
+            // Stamina & Runs, because a chart that never turns you is a running chart — the
+            // absence of twists is not a fact about twists, it is what is there instead.
             case IdentityChipKind.Twist:
                 return new TierListChartCard.CardSkillChip(
-                    localizer[chip.DisplayName].Value, "chip-geometry", null, identity);
+                    localizer[chip.DisplayName].Value,
+                    BadgeCategoryClasses.For(chip.Badge == IdentityClaimKeys.TwistHeavy
+                        ? BadgeCategory.Twists
+                        : BadgeCategory.StaminaAndRuns),
+                    null, identity);
 
             // ✦ marks the rare one. A dashed border alone said "this chip is different" without
             // saying how, which is no message at all; the glyph carries it now and the border is
@@ -102,6 +109,37 @@ public static class IdentityChips
                     localizer[chip.DisplayName].Value, ClassFor(chip),
                     showCoverage && chip.Detail != null ? Percent(chip.Detail.Value) : null, identity);
         }
+    }
+
+    /// <summary>
+    ///     The chart's speed band as a chip, for the detail surfaces — which, unlike a card, have
+    ///     room for a measurement and not only a claim. It REPLACES the engine's own Speed chip
+    ///     rather than joining it: both say how fast the chart is for its folder, and the band
+    ///     says it in five steps instead of two, so showing both would print the coarser answer
+    ///     twice. Filed under Features unless it is one of the outer bands, which is the same
+    ///     line the engine draws — the middle three are measurements, not claims.
+    /// </summary>
+    public static IReadOnlyList<TierListChartCard.CardSkillChip> WithSpeedBand(
+        IReadOnlyList<TierListChartCard.CardSkillChip> chips, TierListCategory? band,
+        IStringLocalizer localizer)
+    {
+        if (band == null) return chips;
+        var claim = SpeedBandLabels.IsClaim(band.Value);
+        var chip = new TierListChartCard.CardSkillChip(
+            localizer[SpeedBandLabels.KeyOf(band.Value)].Value,
+            SpeedBandLabels.IndexOf(band.Value) == 0 ? "chip-speed-slow" :
+            SpeedBandLabels.IndexOf(band.Value) == 4 ? "chip-speed-fast" : "chip-speed-mid",
+            null, claim);
+        var rest = chips.Where(c => !IsSpeedChip(c)).ToList();
+        // Ahead of the badge claims, like the engine's own: how fast a chart is frames everything
+        // read after it, the same way the width claim does.
+        rest.Insert(claim ? 0 : rest.Count, chip);
+        return rest;
+    }
+
+    private static bool IsSpeedChip(TierListChartCard.CardSkillChip chip)
+    {
+        return chip.CategoryClass.StartsWith("chip-speed-", StringComparison.Ordinal);
     }
 
     /// <summary>

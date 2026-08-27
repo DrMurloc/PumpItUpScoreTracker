@@ -1807,8 +1807,8 @@
   <data name="Copying existing highlights into the new feed store." xml:space="preserve">
     <value>既存のハイライトを新しいフィードストアにコピーしています。</value>
   </data>
-  <data name="Core Identity" xml:space="preserve">
-    <value>譜面の個性</value>
+  <data name="Core Skills" xml:space="preserve">
+    <value>主要スキル</value>
   </data>
   <data name="Costs scale with the chart — every non-perfect divides by the note count. Pick a chart size:" xml:space="preserve">
     <value>減点は譜面に比例します。Perfect以外はすべてノーツ数で割られます。譜面のサイズを選んでください：</value>
@@ -8682,6 +8682,9 @@
   </data>
   <data name="What should they change?" xml:space="preserve">
     <value>何を直すべきですか?</value>
+  </data>
+  <data name="What stands out about this chart against its folder" xml:space="preserve">
+    <value>この譜面がフォルダの中で際立っている点</value>
   </data>
   <data name="What the chart is worth in your pool right now" xml:space="preserve">
     <value>現在あなたのプールでのこの譜面の値</value>

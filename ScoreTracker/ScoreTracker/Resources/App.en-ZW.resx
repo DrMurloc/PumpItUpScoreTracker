@@ -1807,8 +1807,8 @@
   <data name="Copying existing highlights into the new feed store." xml:space="preserve">
     <value>Grablmurg Murmmurmgro grgl gro Glorgmorg murgblub.</value>
   </data>
-  <data name="Core Identity" xml:space="preserve">
-    <value>Grulbo Marga</value>
+  <data name="Core Skills" xml:space="preserve">
+    <value>Grulbo Blarglurg</value>
   </data>
   <data name="Costs scale with the chart — every non-perfect divides by the note count. Pick a chart size:" xml:space="preserve">
     <value>Gogl grogro plgl gro murgl — blub bo-plglgrgl gropla pa gro glub glorgmurp. Grab a murgl grombl:</value>
@@ -8682,6 +8682,9 @@
   </data>
   <data name="What should they change?" xml:space="preserve">
     <value>Amba golba?</value>
+  </data>
+  <data name="What stands out about this chart against its folder" xml:space="preserve">
+    <value>Blargmurg mrp murgl blubmurp mrgl grrgllurg</value>
   </data>
   <data name="What the chart is worth in your pool right now" xml:space="preserve">
     <value>Mrgl Murgl grumb argl morp blubgro mrgl</value>

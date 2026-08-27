@@ -26,6 +26,17 @@ mid-6 patterns"*.
 - **Identity** — what the chart *is*. The only thing a card shows.
 - **Features** — what the chart *also has*. Chart page and dialog only, under a printed label.
 
+**The detail surfaces are chips and nothing else** (owner, 2026-08-26). The chart page's Skill
+fingerprint section and the chart dialog carried percentage bars — badge coverage, grind/spikes,
+pad and stance shares — and every one of them went. A percentage only reads against the folder the
+reader cannot see from either surface, which is the comparison the chips have already done; the
+owner's verdict on the two that survived longest was *"idk what grind and side-on even are"*. Two
+sentences went with the bars: the crux line is the "Hardest Ns" chip in longer words, and
+"Dominated by…" picked its two badges by a different rule than the chips do, so it could contradict
+the row directly beneath it. Both surfaces also print the chart's **speed band** — all five, not
+just the outer two, since they have room for a measurement where a card does not; it replaces the
+engine's own Speed chip rather than joining it, and files under Features unless it is an outer band.
+
 **Cards show identity and nothing else** (owner, 2026-08-26): spending a card's room on what a
 chart merely also has buys nothing a player deciding what to play can use. A chart with no identity
 therefore shows no chips at all.
@@ -41,13 +52,18 @@ half double with sustained bracket runs and anchor shuffles, I want that shit ca
 **a chart may earn none** (*"if a chart is like… just a chart, it's fine for it to be nothing"*).
 Claims stack; they are not a ladder where the first match wins.
 
-**A claim wears the family it belongs to** (owner, 2026-08-26). Three of them started on the
-geometry hue because they are measured rather than named by piucenter, which described where the
-number came from instead of what it says. **Longest run** is a Stamina & Runs claim and wears its
-red; the three **width** claims only ever fire on a doubles chart and wear Doubles Tech green;
-**Speed** wears the ends of the Speed list's own ramp (§2), so a chip and the folder section it
-came from cannot disagree. Only **Twist-heavy / Twistless** keep the geometry hue — how far a chart
-turns you is a shape we measured, not a badge anyone named.
+**A claim wears the family it belongs to** (owner, 2026-08-26). Every measured claim started on
+one shared "geometry" hue, which described where the number came from rather than what it says:
+
+| Claim | Family | Why |
+|---|---|---|
+| Longest run | Stamina & Runs | A chart's longest run *is* a stamina claim. |
+| Quarter Double · Half-Double · Wide | Doubles Tech | Width only ever fires on a doubles chart. |
+| Twist-heavy | Twists | It is a twists claim. |
+| Twistless | Stamina & Runs | A chart that never turns you is a running chart — the absence of twists is not a fact about twists, it is what is there instead. |
+| Very Slow · Mid Tempo · Very Fast | the Speed ramp (§2) | So a chip and the folder section it came from cannot disagree. |
+
+Nothing wears the geometry hue any more; the token survives only as the Core Skills label's tint.
 
 Four axes were investigated. Three survive:
 

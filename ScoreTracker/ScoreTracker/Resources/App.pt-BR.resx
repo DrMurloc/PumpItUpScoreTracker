@@ -1795,8 +1795,8 @@
   <data name="Copying existing highlights into the new feed store." xml:space="preserve">
     <value>Copiando os destaques existentes para o novo repositório do feed.</value>
   </data>
-  <data name="Core Identity" xml:space="preserve">
-    <value>Identidade principal</value>
+  <data name="Core Skills" xml:space="preserve">
+    <value>Habilidades principais</value>
   </data>
   <data name="Costs scale with the chart — every non-perfect divides by the note count. Pick a chart size:" xml:space="preserve">
     <value>Os custos escalam com o chart — cada não-perfect divide pelo número de notas. Escolha um tamanho de chart:</value>
@@ -8619,6 +8619,9 @@
   </data>
   <data name="What should they change?" xml:space="preserve">
     <value>O que deveriam mudar?</value>
+  </data>
+  <data name="What stands out about this chart against its folder" xml:space="preserve">
+    <value>O que destaca este chart dentro do seu folder</value>
   </data>
   <data name="What the chart is worth in your pool right now" xml:space="preserve">
     <value>Quanto o chart vale no seu conjunto agora</value>
