@@ -58,8 +58,8 @@ public sealed class ChartDetailsDialogTests : TestContext
         Services.AddScoped<ChartScoringLevels>();
         _mediator.Setup(m => m.Send(It.IsAny<GetTierListWithFallbackQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TierListResult(Array.Empty<SongTierListEntry>(), false));
-        _mediator.Setup(m => m.Send(It.IsAny<GetChartBadgeChipsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartBadgeChipRecord>>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartIdentityQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, ChartIdentityRecord>());
         // The dialog hosts the shared leaderboard now, which resolves the user reader to put
         // names and avatars on its rows.
         Services.AddSingleton(Mock.Of<IUserReader>());
@@ -264,7 +264,7 @@ public sealed class ChartDetailsDialogTests : TestContext
 
     /// <summary>
     ///     The point of the tabs. A panel nobody selected must not fetch: the stats panel's
-    ///     badge chips are the cheapest thing to assert on, because the meta grid renders from
+    ///     identity chips are the cheapest thing to assert on, because the meta grid renders from
     ///     the Chart itself and would be present either way.
     /// </summary>
     [Fact]
@@ -272,7 +272,7 @@ public sealed class ChartDetailsDialogTests : TestContext
     {
         RenderDialog(SetupChart(null));
 
-        _mediator.Verify(m => m.Send(It.IsAny<GetChartBadgeChipsQuery>(), It.IsAny<CancellationToken>()),
+        _mediator.Verify(m => m.Send(It.IsAny<GetChartIdentityQuery>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -288,7 +288,7 @@ public sealed class ChartDetailsDialogTests : TestContext
         cut.WaitForAssertion(() =>
         {
             Assert.Equal("true", cut.Find("[data-testid='cdt-tab-Stats']").GetAttribute("aria-selected"));
-            _mediator.Verify(m => m.Send(It.IsAny<GetChartBadgeChipsQuery>(), It.IsAny<CancellationToken>()),
+            _mediator.Verify(m => m.Send(It.IsAny<GetChartIdentityQuery>(), It.IsAny<CancellationToken>()),
                 Times.Once);
         });
     }
