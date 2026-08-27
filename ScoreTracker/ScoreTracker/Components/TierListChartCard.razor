@@ -158,13 +158,14 @@ else
         }
         @if (IdentityChipsOnly.Count > 0)
         {
-            @* One row, no group headings (owner, 2026-08-26): a card has three chips of room and
-               two words of scaffolding around them cost more than they explain. Identity still
-               leads and still fills, so the tiers read apart at a glance and the truncation keeps
-               the loudest claims; the named groups live on the chart page and dialog, where there
-               is room to say which is which. *@
+            @* One row, no group headings and no cap (owner, 2026-08-26): two words of scaffolding
+               around three chips cost more than they explained, and a "+2" told a player there was
+               something else without telling them what. Every chip here is now a claim the chart
+               earned against its own folder, so there is nothing left worth hiding behind a count;
+               the named groups live on the chart page and dialog, where there is room to say which
+               is which. *@
             <div class="tier-chart-card-skills">
-                @foreach (var skill in VisibleSkills)
+                @foreach (var skill in IdentityChipsOnly)
                 {
                     <span class="tier-chart-card-skill @skill.CategoryClass @(skill.IsIdentity ? "chip-identity" : null)">
                         @skill.Label@(skill.Metric == null ? null : $" {skill.Metric}")@if (skill.Parts is { Count: > 0 })
@@ -178,10 +179,6 @@ else
                             }
                         }
                     </span>
-                }
-                @if (IdentityChipsOnly.Count > MaxSkillChips)
-                {
-                    <span class="tier-chart-card-skill tier-chart-card-skill-more">+@(IdentityChipsOnly.Count - MaxSkillChips)</span>
                 }
             </div>
         }
@@ -251,9 +248,6 @@ else
 
     [Parameter] public IReadOnlyList<CardSkillChip>? Skills { get; set; }
 
-    // Owner-locked (piucenter round 1): up to three chips, dominance-ordered, "+n" overflow.
-    private const int MaxSkillChips = 3;
-
     /// <summary>
     ///     CategoryClass carries the chip's badge family and its identity kind as site.css
     ///     classes; Metric is preformatted or null. <see cref="Parts" /> is set only for a chip
@@ -266,10 +260,11 @@ else
     public sealed record CardSkillChipPart(string Label, string CategoryClass);
 
     /// <summary>
-    ///     What the chart IS, and nothing else. Features come off the card entirely (owner,
-    ///     2026-08-26) — a card has room for three chips and spending them on what a chart merely
-    ///     also has buys nothing a player deciding what to play can use. The chart page and its
-    ///     dialog carry the full set, named and grouped.
+    ///     What the chart IS, and nothing else — all of it, uncapped. Features come off the card
+    ///     entirely (owner, 2026-08-26): what a chart merely also has buys nothing a player
+    ///     deciding what to play can use, and once they are gone the identity claims that remain
+    ///     are few enough to print in full. The chart page and its dialog carry the full set,
+    ///     named and grouped.
     ///     <para>
     ///         A chart with no identity therefore shows no chips at all, which is the honest
     ///         answer rather than a gap: plenty of charts are just charts.
@@ -277,8 +272,6 @@ else
     /// </summary>
     private IReadOnlyList<CardSkillChip> IdentityChipsOnly =>
         (Skills ?? Array.Empty<CardSkillChip>()).Where(s => s.IsIdentity).ToArray();
-
-    private IEnumerable<CardSkillChip> VisibleSkills => IdentityChipsOnly.Take(MaxSkillChips);
 
     [Parameter] public int? AgeDays { get; set; }
 

@@ -155,18 +155,39 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
         var known = (await _aliases.GetAliases(PiuCenterMetrics.Source, cancellationToken))
             .ToDictionary(a => a.ExternalKey, StringComparer.OrdinalIgnoreCase);
         var matchIndex = BuildMatchIndex(catalogCharts);
+        // One chart, one key. Rejected keys are deliberately NOT counted as claiming their
+        // chart: refusing to ingest a key while it still reserves the chart would leave the
+        // surviving key of the pair unable to bind, which is how Gargoyle FULL SONG S21 sat on
+        // metrics from before the rejection with no way to replace them.
         var alreadyResolved = known.Values
             .Where(a => a.ChartId != null && a.Status != ExternalAliasStatus.NotFound)
+            .Where(a => !PiuCenterKeyParser.IsRejected(a.ExternalKey))
             .Select(a => a.ChartId!.Value)
             .ToHashSet();
 
         var updates = new List<ExternalChartAlias>();
         foreach (var listing in table)
+        {
+            // Never bind a key we refuse to ingest: it would take the chart's one slot and
+            // ResolvedIn would then drop it, banking nothing through either key.
+            if (PiuCenterKeyParser.IsRejected(listing.ExternalKey)) continue;
+
             if (known.TryGetValue(listing.ExternalKey, out var existing))
             {
                 // A NotFound candidate key that now exists upstream: the chart got analyzed.
                 if (existing.Status == ExternalAliasStatus.NotFound)
                     updates.Add(existing with { Status = ExternalAliasStatus.Auto, LastCheckedAt = now });
+                // A parked key gets another go every run. Whether a key matches depends on the
+                // matcher AND on the catalog, and both move — so a row that failed once was
+                // failing forever, and re-uploading the snapshot could not fix any of it: the
+                // Phoenix 2 catalog flip should have rebound 176 of these and rebound none,
+                // because nothing ever asked them again (field test, 2026-08-26).
+                // Manual rows are exempt: an admin's binding — including a deliberate
+                // non-binding — is not the auto-matcher's to overwrite.
+                else if (existing.ChartId == null && existing.Status == ExternalAliasStatus.Auto
+                                                  && TryMatch(matchIndex, listing) is { } rematched
+                                                  && alreadyResolved.Add(rematched))
+                    updates.Add(existing with { ChartId = rematched, LastCheckedAt = now });
             }
             else
             {
@@ -177,6 +198,7 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
                     _logger.LogInformation("piucenter key {Key} has no auto-match — parked for admin resolution",
                         listing.ExternalKey);
             }
+        }
 
         if (updates.Count > 0)
         {
@@ -420,6 +442,10 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
     private static Dictionary<string, Guid?> BuildMatchIndex(IReadOnlyList<Chart> catalogCharts)
     {
         var index = new Dictionary<string, Guid?>();
+        // The same charts keyed on a bare artist name, merged in only where nothing exact claims
+        // the key. Kept a separate pass on purpose: an exact artist must always win, so a relaxed
+        // key can rescue a lookup that finds nothing and can never repoint one that resolves.
+        var relaxed = new Dictionary<string, Guid?>();
         foreach (var chart in catalogCharts)
         {
             // ChartType.HalfDouble (#138) is a retired legacy-era chart type and never
@@ -439,11 +465,21 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
                 SongType.FullSong => "FULLSONG",
                 _ => "ARCADE"
             };
-            var key =
-                $"{PiuCenterKeyParser.Normalize(chart.Song.Name)}|{PiuCenterKeyParser.Normalize(chart.Song.Artist)}|{sord}|{(int)chart.Level}|{variant}";
+            var song = PiuCenterKeyParser.Normalize(chart.Song.Name);
+            var artist = chart.Song.Artist.ToString();
+            var key = $"{song}|{PiuCenterKeyParser.Normalize(artist)}|{sord}|{(int)chart.Level}|{variant}";
             // Ambiguous keys match nothing — better parked than misbound.
             index[key] = index.ContainsKey(key) ? null : chart.Id;
+
+            var bare = PiuCenterKeyParser.StripTrailingParenthetical(artist);
+            if (bare.Length == 0 || bare.Length == artist.Length) continue;
+            var relaxedKey = $"{song}|{PiuCenterKeyParser.Normalize(bare)}|{sord}|{(int)chart.Level}|{variant}";
+            relaxed[relaxedKey] = relaxed.ContainsKey(relaxedKey) ? null : chart.Id;
         }
+
+        foreach (var (key, id) in relaxed)
+            if (!index.ContainsKey(key))
+                index[key] = id;
 
         return index;
     }

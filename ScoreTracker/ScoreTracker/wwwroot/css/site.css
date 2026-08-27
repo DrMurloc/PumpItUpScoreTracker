@@ -2360,10 +2360,6 @@ html.sheet-open .more-sheet-scrim {
     border-color: color-mix(in srgb, var(--skill-chip) 45%, transparent);
 }
 
-.tier-chart-card-skill-more {
-    opacity: .75;
-}
-
 /* An identity chip fills; a feature keeps the outline it always had. On a card that is the
    whole distinction — the named groups live on the chart page, where there is room for two
    words of scaffolding (owner, 2026-08-26). */

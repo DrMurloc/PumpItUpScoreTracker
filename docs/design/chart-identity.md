@@ -26,9 +26,15 @@ mid-6 patterns"*.
 - **Identity** — what the chart *is*. The only thing a card shows.
 - **Features** — what the chart *also has*. Chart page and dialog only, under a printed label.
 
-**Cards show identity and nothing else** (owner, 2026-08-26). A card has room for three chips, and
-spending them on what a chart merely also has buys nothing a player deciding what to play can use.
-A chart with no identity therefore shows no chips at all.
+**Cards show identity and nothing else** (owner, 2026-08-26): spending a card's room on what a
+chart merely also has buys nothing a player deciding what to play can use. A chart with no identity
+therefore shows no chips at all.
+
+**The card prints every identity chip — no cap, no "+2"** (owner, 2026-08-26: *"we should just show
+all chips at this point… they're MOSTLY all meaningful now"*). The three-chip cap was there when
+features shared the row and the chips were not all earned; once features came off and every
+remaining chip is a claim measured against the chart's own folder, a count told the player there
+was something else without telling them what. The row wraps.
 
 **Identity is uncapped** (owner: *"Core identity should not be limited… if you got a deep twisty
 half double with sustained bracket runs and anchor shuffles, I want that shit called out"*), and
@@ -196,6 +202,44 @@ Difficulty Spike out of the family palette.
   chip's job. Without this, Burn Out's crux (which ranks mid-4 #2) resurrects the exact chip the
   owner rejected.
 
+### 3.3b Phantom skills from limb prediction
+
+**`footswitch`, `hold_footswitch` and `hold_footslide` require the chart's measured
+repeated-panel share to reach 5%.** Piucenter defines a footswitch as *a repeated single panel
+where the **predicted** limbs differ* (`piu_annotate/segment/skills.py`), so a footswitch and a
+jack are the **same note pattern** and only an ML guess separates them. `hold_footswitch` is a limb
+annotation code outright; `hold_footslide` is built entirely from which foot reads which arrow.
+
+Their own pipeline knows this failure mode and guards only one badge with it: `models.py` excludes
+`doublestep` from rare skills on predicted charts because it is *"a common error for predicted limb
+annotations, especially on chart sections with holds and taps"*. These three never got the guard.
+
+The precondition is measurable from the arrows and owes the limb model nothing, and it separates
+cleanly with nothing in between:
+
+| chart | repeated-panel rows | share | verdict |
+|---|---|---|---|
+| Hi-Bi D21 | 123 / 732 | **16.80%** | real (and hand-annotated) |
+| Headless Chicken S21 | 93 / 587 | **15.84%** | real |
+| Cleaner S21 | 15 / 688 | 2.18% | phantom |
+| Gothique Resonance S21 | 12 / 703 | 1.71% | phantom |
+| Baroque Virus FULL S21 | 3 / 2,327 | 0.13% | phantom |
+
+Their `Manual limb annotation` flag is **not** the guard: only 698 of 4,414 charts carry it, and
+Headless Chicken S21 is not one of them.
+
+### 3.8 Longest run
+
+**`sustain_time` is the chart's longest single run**, not a total — their pipeline computes it as
+`max(range_len(r) for r in eNPS ranges of interest)`, where `time_under_tension` is the `sum`. It
+renders as **`Longest run: 22s`**, in seconds, because seconds are what a player feels.
+
+The claim is **absolute, not folder-relative** (owner, 2026-08-26): a fifty-second run is a
+fifty-second run whoever it stands next to. The bar is **22% of the chart's played span**, the
+corpus 75th percentile — the median longest run covers 13.5%. Cleaner SHORT CUT S21 (46.5%),
+Gothique Resonance S21 (22.5%) and Baroque Virus FULL S21 (20.8%) are run charts; Gargoyle FULL S21
+(14.3%) and Headless Chicken S21 (11.2%) are not.
+
 ### 3.4 The bracket veto
 
 **Bracket-family badges** (`bracket`, `bracket_run`, `bracket_drill`, `bracket_jump`,
@@ -288,6 +332,35 @@ by chart — D17 3.6%, D20 44.9%, D21 33.9%, D25 13.7% — four identities from 
 separated. And Gargoyle FULL SONG's two files split 3.8% / 12.1%, the 3.8% being the one
 piucenter tagged `run_without_twists`.
 
+## 4c. Key matching, and why an upload can look like a no-op
+
+A metric only exists for a chart we bound its piucenter key to. Keys match on a composite of
+`Normalize(song) | Normalize(artist) | singles|doubles | level | ARCADE|REMIX|SHORTCUT|FULLSONG`,
+where `Normalize` folds diacritics and keeps only letters and digits. Four rules govern it, three
+of them learned from failures that all presented the same way — a re-upload that changed nothing:
+
+- **A parked alias is retried every run.** Whether a key matches depends on the matcher *and* on
+  the catalog, and both move. Nothing retried, so a key that failed once failed forever: the
+  Phoenix 2 catalog flip should have rebound 176 aliases and rebound none, because the rows
+  already existed and only brand-new keys were ever matched. **Manual** rows are exempt — an
+  admin's binding, including a deliberate non-binding, is not the auto-matcher's to overwrite.
+- **A rejected key neither binds nor reserves.** One chart takes one key, so refusing to ingest a
+  key while it still held the chart's slot left the surviving key of the pair unable to bind at
+  all — Gargoyle FULL SONG S21 kept metrics from before its v2 key was rejected, with no route to
+  replace them.
+- **The `_v1` / `_v2` variant marker is stripped from the song half.** Piucenter appends it when
+  two stepcharts share a song, type and level; left alone it normalizes *into* the song name and
+  matches nothing. Four keys in the corpus carry one, and no catalog song ends in a `vN` token.
+- **A bare artist is a fallback key, never a rewrite.** We store the localized name beside the
+  Latin one and piucenter carries Latin only, and normalization cannot bridge it — Hangul and CJK
+  characters *are* letters, so they survive the fold and `IVE (아이브)` never meets `IVE`. The
+  stripped form is merged into the match index only where nothing exact claims that key, so it
+  can rescue a dead lookup and can never repoint a live one.
+
+What normalization **cannot** fix is a romanized artist: `打打だいず Vs. Tanchiky Vs. からめる` and
+`D-D-Dice Vs. Tanchiky Vs. Karameru` share no characters. Those need the generator to emit the
+native `ARTIST` string, or a per-song alias.
+
 ## 5. Folder baselines (materialized)
 
 **A folder's percentiles are read from levels L−1, L and L+1** of the same mix and type — the
@@ -363,9 +436,12 @@ be nothing"*, and a build that invents a claim for them is wrong.
 
 ## 9. Runbook (one-time, post-deploy)
 
-1. Deploy.
-2. /Admin/PiuCenter → upload `piucenter-snapshot-050726.zip`. The re-import banks the `crux_*`
-   **and geometry** metrics and rebuilds folder baselines. Chips are empty until it runs.
+1. Deploy. **Order matters**: the import binds aliases with whatever matcher is running, and a
+   key it fails to bind is now retried next run rather than parked forever (§4c) — but only from
+   a build that has the retry.
+2. /Admin/PiuCenter → upload the snapshot. The import banks the `crux_*` **and geometry** metrics
+   — including `nps` and `chart_span`, which Speed and Longest run read — rebinds every parked
+   alias, and rebuilds folder baselines. Chips are empty until it runs.
 3. Press "Rebuild Speed tier lists" once per mix that has metrics.
 4. No other presses. Verdict/meta caches roll daily at 13:00 UTC; blend caches within 6h.
 

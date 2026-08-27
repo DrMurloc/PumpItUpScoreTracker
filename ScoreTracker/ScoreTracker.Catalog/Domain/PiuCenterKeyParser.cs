@@ -58,11 +58,51 @@ internal static partial class PiuCenterKeyParser
         var body = match.Groups["body"].Value;
         var separator = body.LastIndexOf("_-_", StringComparison.Ordinal);
         parts = new PiuCenterKeyParts(
-            separator < 0 ? body : body[..separator],
+            StripVariantMarker(separator < 0 ? body : body[..separator]),
             separator < 0 ? string.Empty : body[(separator + 3)..],
             match.Groups["sl"].Value,
             match.Groups["suffix"].Value);
         return true;
+    }
+
+    /// <summary>
+    ///     Drop the "_v1" / "_v2" marker piucenter appends when two stepcharts share a song, type
+    ///     and level. It sits inside the SONG half of the key, so left alone it normalizes into
+    ///     the song name and the key matches nothing at all — which is how Gargoyle FULL SONG S21
+    ///     came to keep pre-rejection metrics forever: we refuse its v2 key by name and its v1 key
+    ///     could never resolve (field test, 2026-08-26).
+    ///     <para>
+    ///         Safe against real titles because it requires the underscore-delimited token to be
+    ///         exactly "v" and digits: no song in the catalog ends in one, and the whole corpus
+    ///         carries four such keys — the two pairs named in <see cref="RejectedKeys" />.
+    ///     </para>
+    /// </summary>
+    private static string StripVariantMarker(string songPart)
+    {
+        var marker = VariantMarkerPattern().Match(songPart);
+        return marker.Success ? songPart[..marker.Index] : songPart;
+    }
+
+    [GeneratedRegex(@"_v\d+$", RegexOptions.IgnoreCase)]
+    private static partial Regex VariantMarkerPattern();
+
+    /// <summary>
+    ///     An artist name with a trailing parenthetical removed — "IVE (아이브)" to "IVE". We store
+    ///     the localized name alongside the Latin one and piucenter carries Latin only, and
+    ///     <see cref="Normalize" /> cannot bridge them: Hangul and CJK characters ARE letters, so
+    ///     they survive the fold and the two sides never meet.
+    ///     <para>
+    ///         Only ever a FALLBACK key — see the crawl saga's match index. An exact artist always
+    ///         wins, so this can rescue a lookup that finds nothing and can never repoint one that
+    ///         already resolves.
+    ///     </para>
+    /// </summary>
+    public static string StripTrailingParenthetical(string artist)
+    {
+        var open = artist.LastIndexOf('(');
+        return open > 0 && artist.EndsWith(")", StringComparison.Ordinal)
+            ? artist[..open].TrimEnd()
+            : artist;
     }
 
     /// <summary>

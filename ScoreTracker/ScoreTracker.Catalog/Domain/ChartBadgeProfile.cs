@@ -104,8 +104,11 @@ internal sealed record ChartBadgeProfile(
         PiuCenterMetrics.PadShareMid4, PiuCenterMetrics.PadShareMid6, PiuCenterMetrics.StanceDiagonal,
         PiuCenterMetrics.StanceSideOn, PiuCenterMetrics.StanceCrossed, PiuCenterMetrics.BracketRowShare,
         PiuCenterMetrics.RepeatedPanelShare, PiuCenterMetrics.SustainTime,
-        // Not geometry, but read the same way: a folder-relative number the chip engine compares
-        // against a percentile rather than a fixed threshold.
-        PiuCenterMetrics.TimeUnderTension
+        // Not geometry, but read the same way: scalars the chip engine compares against a
+        // percentile or a share rather than a fixed threshold. This bag is the ONLY route a
+        // metric has into the engine, so a claim reading one that is missing here does not
+        // misfire — it never fires at all, and says nothing about why. Speed and Longest run
+        // both shipped inert for exactly that reason (field test, 2026-08-26).
+        PiuCenterMetrics.TimeUnderTension, PiuCenterMetrics.Nps, PiuCenterMetrics.ChartSpan
     };
 }

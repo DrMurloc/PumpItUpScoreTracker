@@ -134,6 +134,115 @@ public sealed class PiuCenterCrawlSagaTests
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    /// <summary>
+    ///     A parked key gets another go every run. Nothing did this, so every alias that failed
+    ///     its first match was failing forever and a re-upload could not repair any of it —
+    ///     including the 176 the Phoenix 2 catalog flip should have rebound (field test,
+    ///     2026-08-26).
+    /// </summary>
+    [Fact]
+    public async Task AParkedAliasIsRetriedAgainstTheCatalogOnEveryRun()
+    {
+        var chart = new ChartBuilder().WithSongName("Bad Apple!!").WithArtist("Masayoshi Minoshima")
+            .WithLevel(17).Build();
+        var key = "Bad_Apple!!_-_Masayoshi_Minoshima_S17_ARCADE";
+        SetupDefaults(new[] { chart }, new[] { Listing(key, level: 17) },
+            new[] { new ExternalChartAlias(key, null, ExternalAliasStatus.Auto, Now.AddMonths(-2)) });
+
+        await Consume();
+
+        _aliases.Verify(a => a.SaveAliases(PiuCenterMetrics.Source, It.Is<IEnumerable<ExternalChartAlias>>(list =>
+                list.Single().ExternalKey == key && list.Single().ChartId == chart.Id &&
+                list.Single().LastCheckedAt == Now),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     An admin's row is not the auto-matcher's to touch — including a deliberate decision
+    ///     that a key maps to nothing.
+    /// </summary>
+    [Fact]
+    public async Task AManuallyParkedAliasIsLeftAlone()
+    {
+        var chart = new ChartBuilder().WithSongName("Bad Apple!!").WithArtist("Masayoshi Minoshima")
+            .WithLevel(17).Build();
+        var key = "Bad_Apple!!_-_Masayoshi_Minoshima_S17_ARCADE";
+        SetupDefaults(new[] { chart }, new[] { Listing(key, level: 17) },
+            new[] { new ExternalChartAlias(key, null, ExternalAliasStatus.Manual, Now.AddMonths(-2)) });
+
+        await Consume();
+
+        _aliases.Verify(a => a.SaveAliases(It.IsAny<string>(), It.IsAny<IEnumerable<ExternalChartAlias>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    ///     The two halves of the rejection, together. A key we refuse to ingest must not bind, and
+    ///     must not hold the chart's one slot either — Gargoyle FULL SONG S21 sat on metrics from
+    ///     before its v2 key was rejected, because the v1 key that replaces it could never claim a
+    ///     chart the rejected key had already reserved.
+    /// </summary>
+    [Fact]
+    public async Task ARejectedKeyNeitherBindsNorBlocksTheChartItNamed()
+    {
+        var chart = new ChartBuilder().WithSongName("Gargoyle - FULL SONG -").WithArtist("Sanxion7")
+            .WithSongType(SongType.FullSong).WithLevel(21).Build();
+        const string rejected = "Gargoyle_-_FULL_SONG_-_v2_-_Sanxion7_S21_FULLSONG";
+        const string survivor = "Gargoyle_-_FULL_SONG_-_v1_-_Sanxion7_S21_INFOBAR_TITLE_FULLSONG";
+        SetupDefaults(new[] { chart },
+            new[]
+            {
+                Listing(rejected, level: 21, variant: "FULLSONG"),
+                Listing(survivor, level: 21, variant: "FULLSONG")
+            },
+            new[] { new ExternalChartAlias(rejected, chart.Id, ExternalAliasStatus.Auto, Now.AddMonths(-2)) });
+
+        await Consume();
+
+        _aliases.Verify(a => a.SaveAliases(PiuCenterMetrics.Source, It.Is<IEnumerable<ExternalChartAlias>>(list =>
+                list.Single().ExternalKey == survivor && list.Single().ChartId == chart.Id),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     We store the localized artist alongside the Latin one and piucenter carries Latin only.
+    ///     Normalization cannot bridge that on its own: Hangul characters ARE letters, so they
+    ///     survive the fold and "IVE (아이브)" never meets "IVE".
+    /// </summary>
+    [Fact]
+    public async Task AnArtistsLocalizedParentheticalDoesNotBlockTheMatch()
+    {
+        var chart = new ChartBuilder().WithSongName("BANG BANG").WithArtist("IVE (아이브)").WithLevel(15).Build();
+        var key = "BANG_BANG_-_IVE_S15_ARCADE";
+        SetupDefaults(new[] { chart }, new[] { Listing(key) }, Array.Empty<ExternalChartAlias>());
+
+        await Consume();
+
+        _aliases.Verify(a => a.SaveAliases(PiuCenterMetrics.Source, It.Is<IEnumerable<ExternalChartAlias>>(list =>
+            list.Single().ExternalKey == key && list.Single().ChartId == chart.Id),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     The relaxed artist is a FALLBACK, never a rewrite: where an exact artist claims the
+    ///     key, a stripped one must not be able to take it.
+    /// </summary>
+    [Fact]
+    public async Task AnExactArtistBeatsTheStrippedFallback()
+    {
+        var exact = new ChartBuilder().WithSongName("Cover Me").WithArtist("AKB48").WithLevel(15).Build();
+        var qualified = new ChartBuilder().WithSongName("Cover Me").WithArtist("AKB48 (Cover)").WithLevel(15)
+            .Build();
+        var key = "Cover_Me_-_AKB48_S15_ARCADE";
+        SetupDefaults(new[] { qualified, exact }, new[] { Listing(key) }, Array.Empty<ExternalChartAlias>());
+
+        await Consume();
+
+        _aliases.Verify(a => a.SaveAliases(PiuCenterMetrics.Source, It.Is<IEnumerable<ExternalChartAlias>>(list =>
+            list.Single().ExternalKey == key && list.Single().ChartId == exact.Id),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task NotFoundCandidateFlipsToAutoWhenItsKeyAppearsUpstream()
     {
