@@ -137,7 +137,13 @@ public static class IdentityChips
         return rest;
     }
 
-    private static bool IsSpeedChip(TierListChartCard.CardSkillChip chip)
+    /// <summary>
+    ///     Whether a chip is the speed claim. Public because a surface that already SAYS how fast
+    ///     the chart is drops it: on the tier list grouped by Speed, the section heading and the
+    ///     chip are the same word, and a claim that repeats its own heading is the one chip on the
+    ///     card carrying no information (owner, 2026-08-26).
+    /// </summary>
+    public static bool IsSpeedChip(TierListChartCard.CardSkillChip chip)
     {
         return chip.CategoryClass.StartsWith("chip-speed-", StringComparison.Ordinal);
     }

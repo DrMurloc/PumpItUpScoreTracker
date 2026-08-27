@@ -1024,6 +1024,10 @@ else
         var chips = IdentityChips.ToCardChips(
             _identity.TryGetValue(chart.Id, out var identity) ? identity : null,
             _settings.ShowSkillMetric, L);
+        // Except when the page is grouped BY speed, where the section heading over the card
+        // already says it — a chip that repeats its own heading spends the card's loudest slot
+        // on the one thing the reader cannot fail to know.
+        if (_groupBy == "Speed") chips = chips.Where(c => !IdentityChips.IsSpeedChip(c)).ToArray();
         return chips.Count > 0 ? chips : null;
     }
 

@@ -26,8 +26,11 @@ mid-6 patterns"*.
 - **Identity** — what the chart *is*. The only thing a card shows.
 - **Features** — what the chart *also has*. Chart page and dialog only, under a printed label.
 
-**The detail surfaces are chips and nothing else** (owner, 2026-08-26). The chart page's Skill
-fingerprint section and the chart dialog carried percentage bars — badge coverage, grind/spikes,
+**The detail surfaces are chips and nothing else** (owner, 2026-08-26). On the chart page the
+chips live in the **hero verdict block**, not in a section further down — that block is what a
+reader looks at to find out what they are about to play, and it was answering with one sentence
+built from a different rule than the chips use. The separate Skill fingerprint section is gone.
+The old section and the chart dialog both carried percentage bars — badge coverage, grind/spikes,
 pad and stance shares — and every one of them went. A percentage only reads against the folder the
 reader cannot see from either surface, which is the comparison the chips have already done; the
 owner's verdict on the two that survived longest was *"idk what grind and side-on even are"*. Two
@@ -36,6 +39,11 @@ sentences went with the bars: the crux line is the "Hardest Ns" chip in longer w
 the row directly beneath it. Both surfaces also print the chart's **speed band** — all five, not
 just the outer two, since they have room for a measurement where a card does not; it replaces the
 engine's own Speed chip rather than joining it, and files under Features unless it is an outer band.
+
+**A surface that already says how fast a chart is drops the speed chip.** On the tier list grouped
+by Speed, the section heading over the card and the chip inside it are the same word, and a claim
+that repeats its own heading spends the card's loudest slot on the one thing the reader cannot fail
+to know (owner, 2026-08-26).
 
 **Cards show identity and nothing else** (owner, 2026-08-26): spending a card's room on what a
 chart merely also has buys nothing a player deciding what to play can use. A chart with no identity

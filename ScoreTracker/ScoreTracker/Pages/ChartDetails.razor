@@ -105,7 +105,7 @@
                     </div>
                 }
             </div>
-            <ChartVerdictCard Facets="_facets"></ChartVerdictCard>
+            <ChartVerdictCard Facets="_facets" Identity="_identityChips"></ChartVerdictCard>
             <div class="chart-hero-actions">
                 <MudLink Href="@PiuCenterUrl" Target="_blank" Typo="Typo.caption">@L["View full chart on PIU Center"]</MudLink>
             </div>
@@ -118,26 +118,6 @@
         </div>
         <ChartEvidenceSection @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_chart.Mix" @key="_chart.Id"></ChartEvidenceSection>
     </section>
-
-    @* Chips and nothing else (owner, 2026-08-26). Everything that stood here beside them was a
-       percentage, and a percentage is only readable against the folder the reader cannot see from
-       this page — which is the comparison the chips have already done. The two sentences went with
-       them: the crux line IS the "Hardest Ns" chip in longer words, and "Dominated by…" picked its
-       two badges by a different rule than the chips do, so it could contradict the row underneath
-       it on the same screen. *@
-    @if (_identityChips.Any())
-    {
-        <section class="chart-section">
-            <div class="chart-section-head">
-                <MudText Typo="Typo.h5">@L["Skill fingerprint"]</MudText>
-            </div>
-            <IdentityChipGroups Chips="_identityChips"></IdentityChipGroups>
-            <div class="chart-skill-foot">
-                <span>@L["What stands out about this chart against its folder"]</span>
-                <span>@L["Step analysis data from PIU Center"]</span>
-            </div>
-        </section>
-    }
 
     @if (History != null)
     {

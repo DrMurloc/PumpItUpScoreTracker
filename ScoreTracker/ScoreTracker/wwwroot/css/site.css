@@ -5153,6 +5153,13 @@ html.sheet-open .more-sheet-scrim {
     margin-top: 11px;
 }
 
+/* The identity chips sit between the verdict sentences and the tier chips, and take the same
+   gap the tier chips do — the component's own margin is tuned for a dialog, where it is the
+   whole block rather than the middle of one. */
+.chart-verdict .chart-identity-groups {
+    margin: 11px 0 0;
+}
+
 .chart-verdict-chip {
     border: 1px solid;
     border-radius: 99px;
@@ -5323,17 +5330,6 @@ html.sheet-open .more-sheet-scrim {
 
 .chart-evidence-empty {
     grid-column: 1 / -1;
-    color: var(--mix-ink-muted);
-}
-
-.chart-skill-foot {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 8px;
-    font-size: .78rem;
     color: var(--mix-ink-muted);
 }
 
