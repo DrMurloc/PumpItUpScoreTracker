@@ -8,6 +8,11 @@ namespace ScoreTracker.Web.Services;
 ///     its ORDER only — nothing about a band is a difficulty judgement — so this is the one place
 ///     that borrowing is undone, and the tier lists, the chart page and the chart dialog all read
 ///     it here rather than each deciding for themselves what Medium means on the Speed list.
+///     <para>
+///         The CHIP does not come from here — the identity engine reads the same five bands off
+///         the folder's cached nps baseline, so no surface reads a whole tier list to answer the
+///         question for one chart (docs/design/chart-identity.md §2).
+///     </para>
 /// </summary>
 public static class SpeedBandLabels
 {
@@ -46,15 +51,5 @@ public static class SpeedBandLabels
             TierListCategory.Hard => "Fast",
             _ => "Very Fast"
         };
-    }
-
-    /// <summary>
-    ///     Whether the band is one the identity engine would have claimed on its own. Only the
-    ///     outer two are claims; the middle three are measurements, which is why a card shows
-    ///     nothing for them and the detail surfaces file them under Features.
-    /// </summary>
-    public static bool IsClaim(TierListCategory band)
-    {
-        return IndexOf(band) is 0 or 4;
     }
 }

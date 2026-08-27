@@ -36,6 +36,9 @@ internal static class ChartIdentityBuilder
         // between a half-double that features twists and a twist chart that features mid-6.
         if (Width(profile, folder) is { } width) identity.Add(width);
         if (Twist(profile, folder) is { } twist) identity.Add(twist);
+        // Speed is the one of these that can come back a FEATURE — the middle three bands are
+        // measurements rather than claims. It still leads the list, because the tier on the
+        // record is what sorts it into a group; a card, which shows identity only, drops it.
         if (Speed(profile, folder) is { } speed) identity.Add(speed);
         if (LongestRun(profile) is { } run) identity.Add(run);
 
@@ -209,11 +212,6 @@ internal static class ChartIdentityBuilder
     }
 
     /// <summary>
-    ///     Speed only claims a chart at the extremes. "Mid Tempo" is a measurement, not a claim,
-    ///     and the outer bands have to keep meaning what they say — so this is the Speed list's
-    ///     own boundary and nothing softer.
-    /// </summary>
-    /// <summary>
     ///     The longest unbroken run, when it is most of the chart. Piucenter's "Sustain time" is
     ///     max(length) over their eNPS ranges of interest — the LONGEST single run rather than a
     ///     total, which is why it can be named as one.
@@ -233,16 +231,43 @@ internal static class ChartIdentityBuilder
             : null;
     }
 
+    /// <summary>
+    ///     Which of the five speed bands the chart landed in, cut at ±0.5σ and ±1.5σ of its
+    ///     folder's notes-per-second spread — the same arithmetic the Speed tier list runs.
+    ///     <para>
+    ///         Only the outer two are IDENTITY. "Mid Tempo" is a measurement, not a claim, so it
+    ///         reaches the chart page and the dialog as a feature and never reaches a card at all;
+    ///         the outer bands have to keep meaning what they say, which is why this is the Speed
+    ///         list's own boundary and nothing softer.
+    ///     </para>
+    ///     <para>
+    ///         The baseline stores μ−1.5σ and μ+1.5σ, and μ and σ fall straight back out of the
+    ///         pair — so every band is readable from a row that is already in memory. Both detail
+    ///         surfaces used to read the whole Speed tier list to answer this for ONE chart,
+    ///         uncached, once per request (prod, 2026-08-27). It also means the band no longer
+    ///         depends on that list having been rebuilt.
+    ///     </para>
+    /// </summary>
     private static IdentityChipRecord? Speed(ChartBadgeProfile profile,
         IReadOnlyDictionary<string, ChartFolderBaseline> folder)
     {
         if (profile.GeometryOf(PiuCenterMetrics.Nps) is not { } nps || nps <= 0) return null;
         if (!folder.TryGetValue(PiuCenterMetrics.Nps, out var baseline) || baseline.DrenchedCutoff <= 0) return null;
-        if (nps >= baseline.DrenchedCutoff)
-            return Geometry(IdentityChipKind.Speed, IdentityClaimKeys.VeryFast, nps);
-        return nps <= baseline.CoreCutoff
-            ? Geometry(IdentityChipKind.Speed, IdentityClaimKeys.VerySlow, nps)
-            : null;
+
+        var mean = (baseline.CoreCutoff + baseline.DrenchedCutoff) / 2m;
+        var deviation = (baseline.DrenchedCutoff - baseline.CoreCutoff) / 3m;
+        if (deviation <= 0) return null;
+
+        var z = (nps - mean) / deviation;
+        var (key, tier) = z switch
+        {
+            < -1.5m => (IdentityClaimKeys.VerySlow, IdentityTier.Identity),
+            < -0.5m => (IdentityClaimKeys.Slow, IdentityTier.Feature),
+            <= 0.5m => (IdentityClaimKeys.MidTempo, IdentityTier.Feature),
+            <= 1.5m => (IdentityClaimKeys.Fast, IdentityTier.Feature),
+            _ => (IdentityClaimKeys.VeryFast, IdentityTier.Identity)
+        };
+        return new IdentityChipRecord(IdentityChipKind.Speed, tier, key, key, null, nps);
     }
 
     /// <summary>

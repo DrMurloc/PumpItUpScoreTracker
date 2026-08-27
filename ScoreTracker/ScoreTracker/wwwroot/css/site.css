@@ -2377,15 +2377,16 @@ html.sheet-open .more-sheet-scrim {
     font-weight: 600;
 }
 
-/* The two speed claims wear the ends of the Speed list's own ramp, so a chip and the folder
-   section it came from cannot disagree about what "Very Fast" looks like. The ramp is cool-to-
-   hot and deliberately NOT the difficulty ramp: a slow chart at a high level is not an easy
-   one (docs/design/chart-identity.md §2). */
-.tier-chart-card-skill.chip-speed-slow { --skill-chip: var(--speed-1); }
-/* Only the detail surfaces ever print the middle band: a card has room for a claim, not for a
-   measurement that says the chart is ordinary. */
-.tier-chart-card-skill.chip-speed-mid { --skill-chip: var(--speed-3); }
-.tier-chart-card-skill.chip-speed-fast { --skill-chip: var(--speed-5); }
+/* The speed claims wear the Speed list's own ramp, so a chip and the folder section it came
+   from cannot disagree about what "Very Fast" looks like. The ramp is cool-to-hot and
+   deliberately NOT the difficulty ramp: a slow chart at a high level is not an easy one
+   (docs/design/chart-identity.md §2). One class per rung; only rungs 1 and 5 ever reach a card,
+   because the middle three are measurements rather than claims and a card shows identity only. */
+.tier-chart-card-skill.chip-speed-1 { --skill-chip: var(--speed-1); }
+.tier-chart-card-skill.chip-speed-2 { --skill-chip: var(--speed-2); }
+.tier-chart-card-skill.chip-speed-3 { --skill-chip: var(--speed-3); }
+.tier-chart-card-skill.chip-speed-4 { --skill-chip: var(--speed-4); }
+.tier-chart-card-skill.chip-speed-5 { --skill-chip: var(--speed-5); }
 
 .tier-chart-card-skill[class*="chip-speed-"] {
     color: color-mix(in srgb, var(--skill-chip) 55%, var(--mix-ink));

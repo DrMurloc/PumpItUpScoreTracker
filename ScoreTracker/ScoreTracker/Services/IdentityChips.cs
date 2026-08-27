@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Localization;
 using ScoreTracker.Catalog.Contracts;
-using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Components;
 
 namespace ScoreTracker.Web.Services;
@@ -75,13 +74,12 @@ public static class IdentityChips
                     localizer[chip.DisplayName].Value,
                     BadgeCategoryClasses.For(BadgeCategory.DoublesTech), null, identity);
 
-            // Its own five-stop ramp, cool to hot, matching the Speed list's section headers so
-            // the chip and the folder it came from cannot disagree. Only the outer bands ever
-            // reach a chip, so only the outer stops are used.
+            // Its own five-stop ramp, cool to hot, matching the Speed tier list's section headers
+            // so a chip and that folder cannot look like different readings of the same number.
             case IdentityChipKind.Speed:
                 return new TierListChartCard.CardSkillChip(
                     localizer[chip.DisplayName].Value,
-                    chip.Badge == IdentityClaimKeys.VeryFast ? "chip-speed-fast" : "chip-speed-slow",
+                    $"chip-speed-{(IdentityClaimKeys.SpeedBandIndex(chip.Badge) ?? 2) + 1}",
                     null, identity);
 
             // How far the chart turns you, in the vocabulary of what it turns into (owner,
@@ -112,36 +110,10 @@ public static class IdentityChips
     }
 
     /// <summary>
-    ///     The chart's speed band as a chip, for the detail surfaces — which, unlike a card, have
-    ///     room for a measurement and not only a claim. It REPLACES the engine's own Speed chip
-    ///     rather than joining it: both say how fast the chart is for its folder, and the band
-    ///     says it in five steps instead of two, so showing both would print the coarser answer
-    ///     twice. Filed under Features unless it is one of the outer bands, which is the same
-    ///     line the engine draws — the middle three are measurements, not claims.
-    /// </summary>
-    public static IReadOnlyList<TierListChartCard.CardSkillChip> WithSpeedBand(
-        IReadOnlyList<TierListChartCard.CardSkillChip> chips, TierListCategory? band,
-        IStringLocalizer localizer)
-    {
-        if (band == null) return chips;
-        var claim = SpeedBandLabels.IsClaim(band.Value);
-        var chip = new TierListChartCard.CardSkillChip(
-            localizer[SpeedBandLabels.KeyOf(band.Value)].Value,
-            SpeedBandLabels.IndexOf(band.Value) == 0 ? "chip-speed-slow" :
-            SpeedBandLabels.IndexOf(band.Value) == 4 ? "chip-speed-fast" : "chip-speed-mid",
-            null, claim);
-        var rest = chips.Where(c => !IsSpeedChip(c)).ToList();
-        // Ahead of the badge claims, like the engine's own: how fast a chart is frames everything
-        // read after it, the same way the width claim does.
-        rest.Insert(claim ? 0 : rest.Count, chip);
-        return rest;
-    }
-
-    /// <summary>
-    ///     Whether a chip is the speed claim. Public because a surface that already SAYS how fast
-    ///     the chart is drops it: on the tier list grouped by Speed, the section heading and the
-    ///     chip are the same word, and a claim that repeats its own heading is the one chip on the
-    ///     card carrying no information (owner, 2026-08-26).
+    ///     Whether a chip is the speed claim. A surface that already SAYS how fast the chart is
+    ///     drops it: on the tier list grouped by Speed, the section heading over the card and the
+    ///     chip inside it are the same word, and a claim that repeats its own heading spends the
+    ///     card's loudest slot on the one thing the reader cannot fail to know (owner, 2026-08-26).
     /// </summary>
     public static bool IsSpeedChip(TierListChartCard.CardSkillChip chip)
     {

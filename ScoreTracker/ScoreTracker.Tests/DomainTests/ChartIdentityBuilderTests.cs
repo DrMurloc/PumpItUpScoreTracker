@@ -336,9 +336,9 @@ public sealed class ChartIdentityBuilderTests
     }
 
     /// <summary>
-    ///     §2. Speed claims a chart only in the outer bands, and the boundary is not softened to
-    ///     catch near misses — A Site De La Rue D20 sits at z = 1.46 and gets nothing. The test
-    ///     reads the folder's own computed boundary rather than a guessed number, so it stays
+    ///     §2. Speed CLAIMS a chart only in the outer bands, and the boundary is not softened to
+    ///     catch near misses — A Site De La Rue D20 sits at z = 1.46 and is not Very Fast. The
+    ///     test reads the folder's own computed boundary rather than a guessed number, so it stays
     ///     true if the constant moves.
     /// </summary>
     [Fact]
@@ -348,18 +348,44 @@ public sealed class ChartIdentityBuilderTests
         for (var i = 0; i < 20; i++) folder.AddCharts(1, Speeds(9.5m + i * 0.1m), ("run", 0.5m));
 
         var fastBound = folder.SpeedBound(Speeds(11m), true);
-        Assert.Equal(IdentityClaimKeys.VeryFast, SpeedClaim(folder, fastBound + 0.2m));
-        Assert.Null(SpeedClaim(folder, fastBound - 0.2m));
+        Assert.Equal((IdentityClaimKeys.VeryFast, IdentityTier.Identity), SpeedClaim(folder, fastBound + 0.2m));
+        Assert.NotEqual(IdentityTier.Identity, SpeedClaim(folder, fastBound - 0.2m).Tier);
 
         var slowBound = folder.SpeedBound(Speeds(11m), false);
-        Assert.Equal(IdentityClaimKeys.VerySlow, SpeedClaim(folder, slowBound - 0.2m));
-        Assert.Null(SpeedClaim(folder, slowBound + 0.2m));
+        Assert.Equal((IdentityClaimKeys.VerySlow, IdentityTier.Identity), SpeedClaim(folder, slowBound - 0.2m));
+        Assert.NotEqual(IdentityTier.Identity, SpeedClaim(folder, slowBound + 0.2m).Tier);
     }
 
-    private static string? SpeedClaim(Folder folder, decimal nps)
+    /// <summary>
+    ///     Every chart still gets a band — the detail surfaces print which of the five it landed
+    ///     in, and they read it off the folder baseline rather than the Speed tier list, which
+    ///     used to cost a whole uncached list read per request (prod, 2026-08-27). The middle
+    ///     three are FEATURES, which is what keeps "Mid Tempo" off a card.
+    /// </summary>
+    [Fact]
+    public void EveryChartLandsInOneOfTheFiveSpeedBands()
+    {
+        var folder = new Folder();
+        for (var i = 0; i < 20; i++) folder.AddCharts(1, Speeds(9.5m + i * 0.1m), ("run", 0.5m));
+
+        // The baseline stores mu +/- 1.5 sigma, so the half-sigma cuts are a third of that reach.
+        var fastBound = folder.SpeedBound(Speeds(11m), true);
+        var slowBound = folder.SpeedBound(Speeds(11m), false);
+        var mean = (fastBound + slowBound) / 2m;
+        var deviation = (fastBound - slowBound) / 3m;
+
+        Assert.Equal((IdentityClaimKeys.VerySlow, IdentityTier.Identity), SpeedClaim(folder, slowBound - 0.2m));
+        Assert.Equal((IdentityClaimKeys.Slow, IdentityTier.Feature), SpeedClaim(folder, mean - deviation));
+        Assert.Equal((IdentityClaimKeys.MidTempo, IdentityTier.Feature), SpeedClaim(folder, mean));
+        Assert.Equal((IdentityClaimKeys.Fast, IdentityTier.Feature), SpeedClaim(folder, mean + deviation));
+        Assert.Equal((IdentityClaimKeys.VeryFast, IdentityTier.Identity), SpeedClaim(folder, fastBound + 0.2m));
+    }
+
+    private static (string? Badge, IdentityTier Tier) SpeedClaim(Folder folder, decimal nps)
     {
         var chart = Folder.Profile(Array.Empty<(string, decimal)>(), geometry: Speeds(nps));
-        return folder.ChipsFor(chart).FirstOrDefault(c => c.Kind == IdentityChipKind.Speed)?.Badge;
+        var chip = folder.ChipsFor(chart).FirstOrDefault(c => c.Kind == IdentityChipKind.Speed);
+        return (chip?.Badge, chip?.Tier ?? IdentityTier.Feature);
     }
 
     private static IReadOnlyDictionary<string, decimal> Speeds(decimal nps)

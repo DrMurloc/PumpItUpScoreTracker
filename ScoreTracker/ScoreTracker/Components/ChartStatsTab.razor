@@ -151,22 +151,7 @@
         // landed in — the identity query is cached per (chart, mix), so the page dispatching the
         // same one makes this a shared read rather than a second cost.
         var identity = await Mediator.Send(new GetChartIdentityQuery(new[] { Chart.Id }, Mix));
-        _identityChips = IdentityChips.WithSpeedBand(
-            IdentityChips.ToCardChips(identity.GetValueOrDefault(Chart.Id), false, L),
-            await SpeedBand(Chart.Id), L);
-    }
-
-    /// <summary>
-    ///     Which of the five speed bands the chart landed in, or null where the folder has none.
-    ///     The fallback is read and then refused: a band is a chart's speed relative to the folder
-    ///     it was banded in, and a chart's folder changes between mixes.
-    /// </summary>
-    private async Task<TierListCategory?> SpeedBand(Guid chartId)
-    {
-        var speed = await Mediator.Send(new GetTierListWithFallbackQuery(SpeedBandLabels.ListName, Mix));
-        return speed.IsProvisionalFallback
-            ? null
-            : speed.Entries.FirstOrDefault(e => e.ChartId == chartId)?.Category;
+        _identityChips = IdentityChips.ToCardChips(identity.GetValueOrDefault(Chart.Id), false, L);
     }
 
     private async Task<IReadOnlyList<(string, string)>> LoadPlacements(Guid chartId)
