@@ -101,7 +101,7 @@ public sealed class ChartsPageTests : ComponentTestBase
         var chart = new Chart(Guid.NewGuid(), mix,
             new Song(song, SongType.Arcade, new Uri("https://piu.test/art.png"),
                 TimeSpan.FromSeconds(125), "BanYa", Bpm.From(160, 160)),
-            ChartType.Double, level, mix, "SUNNY", 700, new HashSet<Skill>());
+            ChartType.Double, level, mix, "SUNNY", 700);
         return new ChartSearchResult(chart, mix,
             badges ?? Array.Empty<ChartBadge>(), 11.2m,
             passDifficulty, null, communityVote, 21.4, null, 40, 2, my);

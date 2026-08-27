@@ -23,6 +23,45 @@ namespace ScoreTracker.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ChartFolderBaselineEntity", b =>
+                {
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ChartType")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Badge")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<int>("AnalyzedCharts")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("CoreCutoff")
+                        .HasPrecision(9, 4)
+                        .HasColumnType("decimal(9,4)");
+
+                    b.Property<decimal>("DrenchedCutoff")
+                        .HasPrecision(9, 4)
+                        .HasColumnType("decimal(9,4)");
+
+                    b.Property<decimal>("PresenceCutoff")
+                        .HasPrecision(9, 4)
+                        .HasColumnType("decimal(9,4)");
+
+                    b.Property<int>("PresentCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("MixId", "ChartType", "Level", "Badge");
+
+                    b.ToTable("ChartFolderBaseline", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ChartSkillArchiveEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -46,32 +85,6 @@ namespace ScoreTracker.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ChartSkillArchive", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ChartSkillEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsHighlighted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SkillName")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChartId");
-
-                    b.HasIndex("SkillName");
-
-                    b.ToTable("ChartSkill", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ChartSkillMetricEntity", b =>

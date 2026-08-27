@@ -29,5 +29,34 @@ namespace ScoreTracker.Domain.Records
         string? SordChartLevel,
         int TapRows = 0,
         int HoldRows = 0,
-        int HoldTickSum = 0);
+        int HoldTickSum = 0,
+        PiuCenterCrux? Crux = null,
+        StanceProfile? Stance = null,
+        string? Pack = null,
+        decimal ChartSpanSeconds = 0);
+
+    /// <summary>
+    ///     The chart at its hardest: the FIRST segment reaching the page's maximum modelled
+    ///     level, described relative to the chart around it
+    ///     (docs/design/chart-identity.md §4).
+    ///     <para>
+    ///         <paramref name="Peakiness" /> is the crux level against the level the game prints
+    ///         — positive is a spike, negative is a chart whose difficulty is duration rather
+    ///         than any one passage. It is null when the page carries no readable METER, which
+    ///         is the only piece here that depends on one.
+    ///     </para>
+    ///     <para>
+    ///         Their per-segment level is a model measured against that printed level: good for
+    ///         banding, not for arithmetic. <paramref name="Enps" /> is likewise theirs, and must
+    ///         not be compared against the page's own peak-ish nps summary as a ratio.
+    ///     </para>
+    /// </summary>
+    [ExcludeFromCodeCoverage]
+    public sealed record PiuCenterCrux(
+        decimal Level,
+        decimal? Peakiness,
+        decimal Position,
+        decimal Duration,
+        decimal? Enps,
+        IReadOnlyList<string> Badges);
 }

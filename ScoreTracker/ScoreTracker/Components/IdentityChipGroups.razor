@@ -1,0 +1,102 @@
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.Web.Services
+@namespace ScoreTracker.Web.Components
+
+@* The two tiers, named (docs/design/chart-identity.md §1). This is the surface that gets to
+   spell it out: a card shows the claims bare, but here the distinction is the point — a
+   half-double that features bracket twists is a different chart from a bracket-twist chart that
+   features mid-6, and a reader deciding what to practise needs to know which one they are
+   looking at.
+
+   A chart with no core identity shows no Core Skills row at all. That is a real answer, not a
+   gap: plenty of charts are just charts. *@
+@if (Groups.Any())
+{
+    <div class="chart-identity-groups">
+        @foreach (var group in Groups)
+        {
+            <div class="chart-identity-group @(group.IsIdentity ? "chart-identity-group-identity" : null)">
+                <span class="chart-identity-group-label">
+                    @(group.IsIdentity ? L["Core Skills"] : L["Features"])
+                </span>
+                <div class="chart-identity-chips">
+                    @foreach (var chip in group.Chips)
+                    {
+                        <span class="tier-chart-card-skill @chip.CategoryClass @(chip.IsIdentity ? "chip-identity" : null)">
+                            @chip.Label@(chip.Metric == null ? null : $" {chip.Metric}")@if (chip.Parts is { Count: > 0 })
+                            {
+                                <text>&#32;</text>
+                                @for (var i = 0; i < chip.Parts.Count; i++)
+                                {
+                                    @(i > 0 ? ", " : null)<span class="chip-part @chip.Parts[i].CategoryClass">@chip.Parts[i].Label</span>
+                                }
+                            }
+                        </span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<style>
+    .chart-identity-groups {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin: 4px 0 10px;
+    }
+
+    .chart-identity-group {
+        display: grid;
+        grid-template-columns: 96px 1fr;
+        gap: 10px;
+        align-items: start;
+    }
+
+    .chart-identity-group-label {
+        font-size: .62rem;
+        text-transform: uppercase;
+        letter-spacing: .09em;
+        font-weight: 700;
+        color: var(--mud-palette-text-disabled);
+        padding-top: 4px;
+    }
+
+    .chart-identity-group-identity .chart-identity-group-label {
+        color: color-mix(in srgb, var(--geometry-chip) 60%, var(--mix-ink));
+    }
+
+    .chart-identity-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        align-items: center;
+    }
+
+    @@media (max-width: 600px) {
+        .chart-identity-group {
+            grid-template-columns: 1fr;
+            gap: 2px;
+        }
+    }
+</style>
+
+@code {
+    /// <summary>Every chip, in engine order — never the card's capped list, which drops claims.</summary>
+    [Parameter] public IReadOnlyList<TierListChartCard.CardSkillChip>? Chips { get; set; }
+
+    private sealed record Group(bool IsIdentity, IReadOnlyList<TierListChartCard.CardSkillChip> Chips);
+
+    private IEnumerable<Group> Groups
+    {
+        get
+        {
+            if (Chips == null) yield break;
+            var identity = Chips.Where(c => c.IsIdentity).ToArray();
+            var features = Chips.Where(c => !c.IsIdentity).ToArray();
+            if (identity.Length > 0) yield return new Group(true, identity);
+            if (features.Length > 0) yield return new Group(false, features);
+        }
+    }
+}

@@ -2048,11 +2048,38 @@ html.sheet-open .more-sheet-scrim {
     flex-direction: column;
 }
 
+/* Taller than it was, because the body now overlaps its bottom (see below): at the old 92px
+   the overlap left too little art to recognise a jacket by. */
 .tier-chart-card-jacket {
-    height: 92px;
+    height: 108px;
     background-size: cover;
     background-position: center;
     position: relative;
+    cursor: pointer;
+}
+
+/* The scrim the overlapping body sits on — the session highlight card's own treatment. It
+   keeps the name and score legible over any jacket, dark or bright, without dimming the art
+   a reader is actually looking at: transparent through the top two thirds, near-solid only
+   where the text lands. */
+.tier-chart-card-jacket::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--mix-bg) 0%, transparent) 55%,
+        color-mix(in srgb, var(--mix-bg) 92%, transparent) 97%);
+}
+
+/* Everything that sits ON the jacket clears the scrim. Without this the gradient paints over
+   the bubble and the corner badge, which is most visible exactly where it matters — the
+   bottom corners, where the scrim is at its most opaque. */
+.tier-chart-card-bubble,
+.tier-chart-card-play,
+.tier-chart-card-corner,
+.tier-chart-card-lens-dot,
+.tier-chart-card-compact-grade {
+    z-index: 2;
 }
 
 .tier-chart-card-bubble {
@@ -2061,6 +2088,64 @@ html.sheet-open .more-sheet-scrim {
     left: 4px;
 }
 
+/* Desktop wants to be told the jacket is the way in. It was a cursor change and nothing else
+   (owner, 2026-08-26) — a cursor is invisible until you are already on the target, so it can
+   confirm an affordance but cannot advertise one. Hover-capable pointers only: on a touch
+   screen :hover sticks after a tap and the card would stay lit. */
+@media (hover: hover) {
+    .tier-chart-card-jacket {
+        transition: filter .12s ease;
+    }
+
+    /* The head sits over the jacket's bottom 30px and takes the pointer there, so hovering the
+       name or the score would otherwise leave the art it is printed on unlit — the one part of
+       the jacket a reader is most likely to be pointing at. It opens the same chart, so it
+       lights the same way. */
+    .tier-chart-card-jacket:hover,
+    .tier-chart-card:has(.tier-chart-card-head:hover) .tier-chart-card-jacket {
+        filter: brightness(1.12);
+    }
+
+    .tier-chart-card-jacket:hover::after,
+    .tier-chart-card:has(.tier-chart-card-head:hover) .tier-chart-card-jacket::after {
+        background: linear-gradient(180deg, color-mix(in srgb, var(--mix-primary) 10%, transparent) 55%,
+            color-mix(in srgb, var(--mix-bg) 92%, transparent) 97%);
+    }
+}
+
+.tier-chart-card-jacket:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: -2px;
+}
+
+/* The head rides up onto the scrim, so the name and score read as part of the jacket rather
+   than as a caption under it — the session highlight card's layout (hl-card-body). ONLY the
+   head does: it reserves its height empty, which keeps a folder's cards aligned and stops
+   anything else inheriting the overlap merely by being first in the body.
+   min-height is the reservation, and it matches the pull exactly — a card with neither a name
+   nor a score shows clean art with its chips below, at the same height as its neighbours. */
+/* The head's LAST line straddles the jacket's bottom edge rather than sitting above it — the
+   session highlight card's treatment, where the score is half on the art and half on the card
+   and reads as belonging to both. Bottom-aligned content plus a min-height 12px taller than the
+   pull is what puts that line's centre on the edge; with a song name shown, the name rides
+   above it on the art and the score still straddles.
+   Sitting the score flush INSIDE the jacket instead (min-height == pull) leaves it floating on
+   the artwork with a hard rule under it, which is what this looked like on the first pass. */
+.tier-chart-card-head {
+    position: relative;
+    z-index: 2;
+    margin-top: -30px;
+    min-height: 42px;
+    padding: 0 8px;
+    min-width: 0;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+/* Deliberately unpulled, and shared with the randomizer's draw tile — which has no head and
+   should sit below its jacket exactly as it always has. */
 .tier-chart-card-body {
     padding: 4px 8px;
     min-width: 0;
@@ -2076,7 +2161,43 @@ html.sheet-open .more-sheet-scrim {
 .tier-chart-card-actions {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     padding: 0 4px 4px;
+}
+
+/* The card always stacks its grade over its plate, at every width. The player page's rows do
+   this only when they run short of horizontal room; a tier card is short of it by definition,
+   and the whole point here is the vertical space it gives back. Higher specificity than the
+   shared rules on purpose — it has to beat both the base and the media query. */
+.tier-chart-card-scoreline .sbd-score-stack {
+    display: inline-grid;
+    grid-auto-flow: row;
+    grid-template-columns: auto auto;
+    grid-template-rows: repeat(2, auto);
+    align-items: center;
+    column-gap: 5px;
+    row-gap: 0;
+    line-height: 1.05;
+}
+
+.tier-chart-card-scoreline .sbd-score-stack > img {
+    grid-column: 1;
+    height: 12px !important;
+}
+
+/* The score spans both icon rows and centres against the pair. 1 / -1 needs the explicit
+   two-row track above it: against implicit rows -1 resolves to line 1 and the number ends up
+   centred on the grade alone. A broken score has no plate, and the empty second track is
+   simply zero tall. */
+.tier-chart-card-scoreline .sbd-score-stack > p {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    align-self: center;
+    margin: 0;
+    padding-left: 0 !important;
+    font-size: .92rem;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
 }
 
 .tier-chart-card-compact {
@@ -2202,6 +2323,9 @@ html.sheet-open .more-sheet-scrim {
     padding-bottom: 4px;
 }
 
+/* max-width is the guard, not tidiness: a chip is nowrap so a long one used to run straight
+   out past the card's edge and get clipped by the jacket's overflow — "Hardest 19s: Bracket
+   Runs, Bracket D" and then nothing (field test, 2026-08-26). */
 .tier-chart-card-skill {
     border: 1px solid var(--mud-palette-lines-default);
     border-radius: 8px;
@@ -2209,34 +2333,111 @@ html.sheet-open .more-sheet-scrim {
     font-size: .65rem;
     color: var(--mud-palette-text-secondary);
     white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* Category-tinted chips (piucenter variant B): identity hue per skill category via
-   the --skillcat-* tokens; the printed name carries the meaning (rule 8). */
-.skillcat-speed { --skill-chip: var(--skillcat-speed); }
-.skillcat-stamina { --skill-chip: var(--skillcat-stamina); }
-.skillcat-twist { --skill-chip: var(--skillcat-twist); }
-.skillcat-bracket { --skill-chip: var(--skillcat-bracket); }
-.skillcat-tech { --skill-chip: var(--skillcat-tech); }
+/* The one chip that names two things wraps instead of truncating. Cutting it mid-badge loses
+   the whole second claim, where two lines lose nothing. */
+.tier-chart-card-skill.chip-section {
+    white-space: normal;
+    overflow: visible;
+}
 
 /* The owner's five badge families (docs/design/nuke-old-skill-categories.md §2): the granular
-   piucenter vocabulary's identity colors, feeding the same --skill-chip variable the chip and
-   bar rules already read, so a badge chip tints exactly like the rollup chips used to. */
+   piucenter vocabulary's identity colors, feeding the --skill-chip variable the chip and bar
+   rules read. They replaced the rollup's arbitrary buckets, whose tokens went with it. */
 .badgecat-brackets { --skill-chip: var(--badgecat-brackets); }
 .badgecat-twists { --skill-chip: var(--badgecat-twists); }
 .badgecat-staminaandruns { --skill-chip: var(--badgecat-staminaandruns); }
 .badgecat-tech { --skill-chip: var(--badgecat-tech); }
 .badgecat-doublestech { --skill-chip: var(--badgecat-doublestech); }
 
-.tier-chart-card-skill[class*="badgecat-"],
-.tier-chart-card-skill[class*="skillcat-"] {
+.tier-chart-card-skill[class*="badgecat-"] {
     color: color-mix(in srgb, var(--skill-chip) 55%, var(--mix-ink));
     background: color-mix(in srgb, var(--skill-chip) 16%, transparent);
     border-color: color-mix(in srgb, var(--skill-chip) 45%, transparent);
 }
 
-.tier-chart-card-skill-more {
-    opacity: .75;
+/* An identity chip fills; a feature keeps the outline it always had. On a card that is the
+   whole distinction — the named groups live on the chart page, where there is room for two
+   words of scaffolding (owner, 2026-08-26). */
+.tier-chart-card-skill.chip-identity[class*="badgecat-"] {
+    color: #fff;
+    font-weight: 600;
+    background: color-mix(in srgb, var(--skill-chip) 42%, var(--mud-palette-surface));
+    border-color: color-mix(in srgb, var(--skill-chip) 80%, transparent);
+}
+
+/* Identity chip kinds (docs/design/chart-identity.md §3). The family tint still carries
+   WHAT the chip is; these carry what KIND of claim it makes, so the two read together
+   and neither is load-bearing alone (rule 8 — the printed name says it either way). */
+.chip-unique {
+    font-weight: 600;
+}
+
+/* The two speed claims wear the ends of the Speed list's own ramp, so a chip and the folder
+   section it came from cannot disagree about what "Very Fast" looks like. The ramp is cool-to-
+   hot and deliberately NOT the difficulty ramp: a slow chart at a high level is not an easy
+   one (docs/design/chart-identity.md §2). */
+.tier-chart-card-skill.chip-speed-slow { --skill-chip: var(--speed-1); }
+/* Only the detail surfaces ever print the middle band: a card has room for a claim, not for a
+   measurement that says the chart is ordinary. */
+.tier-chart-card-skill.chip-speed-mid { --skill-chip: var(--speed-3); }
+.tier-chart-card-skill.chip-speed-fast { --skill-chip: var(--speed-5); }
+
+.tier-chart-card-skill[class*="chip-speed-"] {
+    color: color-mix(in srgb, var(--skill-chip) 55%, var(--mix-ink));
+    background: color-mix(in srgb, var(--skill-chip) 16%, transparent);
+    border-color: color-mix(in srgb, var(--skill-chip) 45%, transparent);
+}
+
+.tier-chart-card-skill.chip-identity[class*="chip-speed-"] {
+    color: #fff;
+    font-weight: 600;
+    background: color-mix(in srgb, var(--skill-chip) 42%, var(--mud-palette-surface));
+    border-color: color-mix(in srgb, var(--skill-chip) 80%, transparent);
+}
+
+/* The hard-section chip names a stretch and carries two badges at once, so its body stays
+   neutral and each badge keeps its own family inside it — merging the pair costs no
+   information that way. */
+.tier-chart-card-skill.chip-section {
+    background: color-mix(in srgb, var(--mix-ink) 5%, transparent);
+    border-color: var(--mud-palette-lines-default);
+}
+
+.tier-chart-card-skill.chip-section.chip-identity {
+    background: color-mix(in srgb, var(--mix-ink) 13%, var(--mud-palette-surface));
+    border-color: color-mix(in srgb, var(--mix-ink) 32%, transparent);
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+.tier-chart-card-skill .chip-part {
+    color: color-mix(in srgb, var(--skill-chip, var(--mix-ink)) 62%, var(--mix-ink));
+    font-weight: 600;
+}
+
+.tier-chart-card-skill.chip-identity .chip-part {
+    color: color-mix(in srgb, var(--skill-chip, var(--mix-ink)) 55%, #fff);
+}
+
+/* The spike is the one chip that is not a skill, so it is the one chip outside the family
+   palette: an amber warning hue, mix-invariant like the judgment colors. */
+/* The spike is always an identity claim, so it always fills — there is no quiet version of
+   "this plays above its rating". */
+.tier-chart-card-skill.chip-spike {
+    color: #fff;
+    font-weight: 600;
+    background: color-mix(in srgb, var(--spike) 42%, var(--mud-palette-surface));
+    border-color: color-mix(in srgb, var(--spike) 80%, transparent);
+}
+
+/* Piucenter's own picks, shown when nothing stood out — quieter than a claim we made. */
+.tier-chart-card-skill.chip-fallback {
+    opacity: .8;
 }
 
 .tier-table-skills .tier-chart-card-skill {
@@ -2263,6 +2464,13 @@ html.sheet-open .more-sheet-scrim {
     gap: 8px;
     font-size: .75rem;
     padding: 1px 0;
+}
+
+/* Badge names are longer than the rollup's one-word buckets ever were ("Cross-pad
+   Transitions" against "Tech"), so the label column widens to hold them rather than
+   ellipsing every second row (docs/design/chart-identity.md §7, Variant B). */
+.tier-folder-skill-row-badge {
+    grid-template-columns: 140px 1fr 38px 44px;
 }
 
 .tier-folder-skill-label {
@@ -4945,6 +5153,13 @@ html.sheet-open .more-sheet-scrim {
     margin-top: 11px;
 }
 
+/* The identity chips sit between the verdict sentences and the tier chips, and take the same
+   gap the tier chips do — the component's own margin is tuned for a dialog, where it is the
+   whole block rather than the middle of one. */
+.chart-verdict .chart-identity-groups {
+    margin: 11px 0 0;
+}
+
 .chart-verdict-chip {
     border: 1px solid;
     border-radius: 99px;
@@ -5115,17 +5330,6 @@ html.sheet-open .more-sheet-scrim {
 
 .chart-evidence-empty {
     grid-column: 1 / -1;
-    color: var(--mix-ink-muted);
-}
-
-.chart-skill-foot {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 8px;
-    font-size: .78rem;
     color: var(--mix-ink-muted);
 }
 

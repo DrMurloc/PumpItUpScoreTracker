@@ -191,12 +191,10 @@ public sealed class PersonalizedBreakdownPageTests : ComponentTestBase
                         // Two charts disagree with the community, and the last has no projection
                         // at all — the shape that made the old predicate print a negative.
                         movers && i < 2 ? TierListCategory.Hard : TierListCategory.Medium,
-                        TierListCategory.Unrecorded, TierListCategory.Unrecorded,
                         TierListCategory.Medium,
                         movers && i == 3 ? null : p.First.Projected))
                     .ToArray(),
-                Array.Empty<BreakdownSkillRecord>(), false, 0, 0, 0, 0,
-                0, 0, 0, 1, projectedCount ?? Folder.Length, Folder.Length, 148, 18.4, 0.5, 0.7, false, peers));
+                0, 1, projectedCount ?? Folder.Length, Folder.Length, 148, 18.4, 0.5, 0.7, false, peers));
 
         this.RenderInteractive();
         // The lens is [SupplyParameterFromQuery], so it arrives through the URL rather than as a
@@ -219,7 +217,6 @@ public sealed class PersonalizedBreakdownPageTests : ComponentTestBase
         return new Chart(Guid.NewGuid(), MixEnum.Phoenix,
             new Song(name, SongType.Arcade, new Uri("https://piu.test/art.png"),
                 TimeSpan.FromSeconds(125), "BanYa", Bpm.From(160, 160)),
-            ScoreTracker.SharedKernel.Enums.ChartType.Double, 18, MixEnum.Phoenix, "SUNNY", 700,
-            new HashSet<Skill>());
+            ScoreTracker.SharedKernel.Enums.ChartType.Double, 18, MixEnum.Phoenix, "SUNNY", 700);
     }
 }

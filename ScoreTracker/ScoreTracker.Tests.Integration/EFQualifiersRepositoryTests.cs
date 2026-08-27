@@ -31,7 +31,7 @@ public sealed class EFQualifiersRepositoryTests : IAsyncLifetime
         var song = new Song($"song_{chartId:N}", SongType.Arcade,
             new Uri("https://example.invalid/song.png"), TimeSpan.FromMinutes(2), "Artist", null);
         return new Chart(chartId, mix, song, ChartType.Single, DifficultyLevel.From(20), mix,
-            null, null, new HashSet<Skill>());
+            null, null);
     }
 
     private async Task InsertConfigurationRow(Guid tournamentId, Guid mixId, Guid chartId)

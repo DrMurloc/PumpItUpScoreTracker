@@ -24,14 +24,28 @@ public sealed class PiuCenterCrawlSagaTests
     private static readonly DateTimeOffset Now = new(2026, 7, 11, 12, 0, 0, TimeSpan.Zero);
 
     private readonly Mock<IExternalChartAliasRepository> _aliases = new();
+    private readonly Mock<IChartFolderBaselineRepository> _baselines = new();
     private readonly Mock<IChartRepository> _charts = new();
     private readonly Mock<IChartSkillMetricRepository> _metrics = new();
     private readonly Mock<IPiuCenterClient> _piuCenter = new();
 
+    /// <summary>
+    ///     Every ingestion path ends by rebuilding folder baselines, so its two reads answer
+    ///     empty for tests that are not about them — a test asserting on the alias pass should
+    ///     not have to know the baseline pass exists.
+    /// </summary>
+    public PiuCenterCrawlSagaTests()
+    {
+        _metrics.Setup(m => m.GetMetricsByChart(PiuCenterMetrics.Source, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillMetric>>());
+        _charts.Setup(c => c.GetChartMixLevels(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<(Guid, MixEnum, int)>());
+    }
+
     private PiuCenterCrawlSaga BuildSaga()
     {
         return new PiuCenterCrawlSaga(_piuCenter.Object, _aliases.Object, _metrics.Object, _charts.Object,
-            FakeDateTime.At(Now).Object, NullLogger<PiuCenterCrawlSaga>.Instance);
+            FakeDateTime.At(Now).Object, _baselines.Object, NullLogger<PiuCenterCrawlSaga>.Instance);
     }
 
     private Task Consume()
@@ -55,10 +69,8 @@ public sealed class PiuCenterCrawlSagaTests
             .ReturnsAsync(new Dictionary<string, decimal>());
         _piuCenter.Setup(p => p.GetChartPage(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(page);
-        _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
+        _charts.Setup(c => c.GetCharts(MixEnum.Phoenix2, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(charts.ToArray());
-        _charts.Setup(c => c.GetChartSkills(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<ChartSkillsRecord>());
         _aliases.Setup(a => a.GetAliases(PiuCenterMetrics.Source, It.IsAny<CancellationToken>()))
             .ReturnsAsync(aliases.ToArray());
         _metrics.Setup(m => m.GetMetrics(It.IsAny<IEnumerable<Guid>>(), PiuCenterMetrics.Source,
@@ -122,6 +134,115 @@ public sealed class PiuCenterCrawlSagaTests
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    /// <summary>
+    ///     A parked key gets another go every run. Nothing did this, so every alias that failed
+    ///     its first match was failing forever and a re-upload could not repair any of it —
+    ///     including the 176 the Phoenix 2 catalog flip should have rebound (field test,
+    ///     2026-08-26).
+    /// </summary>
+    [Fact]
+    public async Task AParkedAliasIsRetriedAgainstTheCatalogOnEveryRun()
+    {
+        var chart = new ChartBuilder().WithSongName("Bad Apple!!").WithArtist("Masayoshi Minoshima")
+            .WithLevel(17).Build();
+        var key = "Bad_Apple!!_-_Masayoshi_Minoshima_S17_ARCADE";
+        SetupDefaults(new[] { chart }, new[] { Listing(key, level: 17) },
+            new[] { new ExternalChartAlias(key, null, ExternalAliasStatus.Auto, Now.AddMonths(-2)) });
+
+        await Consume();
+
+        _aliases.Verify(a => a.SaveAliases(PiuCenterMetrics.Source, It.Is<IEnumerable<ExternalChartAlias>>(list =>
+                list.Single().ExternalKey == key && list.Single().ChartId == chart.Id &&
+                list.Single().LastCheckedAt == Now),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     An admin's row is not the auto-matcher's to touch — including a deliberate decision
+    ///     that a key maps to nothing.
+    /// </summary>
+    [Fact]
+    public async Task AManuallyParkedAliasIsLeftAlone()
+    {
+        var chart = new ChartBuilder().WithSongName("Bad Apple!!").WithArtist("Masayoshi Minoshima")
+            .WithLevel(17).Build();
+        var key = "Bad_Apple!!_-_Masayoshi_Minoshima_S17_ARCADE";
+        SetupDefaults(new[] { chart }, new[] { Listing(key, level: 17) },
+            new[] { new ExternalChartAlias(key, null, ExternalAliasStatus.Manual, Now.AddMonths(-2)) });
+
+        await Consume();
+
+        _aliases.Verify(a => a.SaveAliases(It.IsAny<string>(), It.IsAny<IEnumerable<ExternalChartAlias>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    ///     The two halves of the rejection, together. A key we refuse to ingest must not bind, and
+    ///     must not hold the chart's one slot either — Gargoyle FULL SONG S21 sat on metrics from
+    ///     before its v2 key was rejected, because the v1 key that replaces it could never claim a
+    ///     chart the rejected key had already reserved.
+    /// </summary>
+    [Fact]
+    public async Task ARejectedKeyNeitherBindsNorBlocksTheChartItNamed()
+    {
+        var chart = new ChartBuilder().WithSongName("Gargoyle - FULL SONG -").WithArtist("Sanxion7")
+            .WithSongType(SongType.FullSong).WithLevel(21).Build();
+        const string rejected = "Gargoyle_-_FULL_SONG_-_v2_-_Sanxion7_S21_FULLSONG";
+        const string survivor = "Gargoyle_-_FULL_SONG_-_v1_-_Sanxion7_S21_INFOBAR_TITLE_FULLSONG";
+        SetupDefaults(new[] { chart },
+            new[]
+            {
+                Listing(rejected, level: 21, variant: "FULLSONG"),
+                Listing(survivor, level: 21, variant: "FULLSONG")
+            },
+            new[] { new ExternalChartAlias(rejected, chart.Id, ExternalAliasStatus.Auto, Now.AddMonths(-2)) });
+
+        await Consume();
+
+        _aliases.Verify(a => a.SaveAliases(PiuCenterMetrics.Source, It.Is<IEnumerable<ExternalChartAlias>>(list =>
+                list.Single().ExternalKey == survivor && list.Single().ChartId == chart.Id),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     We store the localized artist alongside the Latin one and piucenter carries Latin only.
+    ///     Normalization cannot bridge that on its own: Hangul characters ARE letters, so they
+    ///     survive the fold and "IVE (아이브)" never meets "IVE".
+    /// </summary>
+    [Fact]
+    public async Task AnArtistsLocalizedParentheticalDoesNotBlockTheMatch()
+    {
+        var chart = new ChartBuilder().WithSongName("BANG BANG").WithArtist("IVE (아이브)").WithLevel(15).Build();
+        var key = "BANG_BANG_-_IVE_S15_ARCADE";
+        SetupDefaults(new[] { chart }, new[] { Listing(key) }, Array.Empty<ExternalChartAlias>());
+
+        await Consume();
+
+        _aliases.Verify(a => a.SaveAliases(PiuCenterMetrics.Source, It.Is<IEnumerable<ExternalChartAlias>>(list =>
+            list.Single().ExternalKey == key && list.Single().ChartId == chart.Id),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     The relaxed artist is a FALLBACK, never a rewrite: where an exact artist claims the
+    ///     key, a stripped one must not be able to take it.
+    /// </summary>
+    [Fact]
+    public async Task AnExactArtistBeatsTheStrippedFallback()
+    {
+        var exact = new ChartBuilder().WithSongName("Cover Me").WithArtist("AKB48").WithLevel(15).Build();
+        var qualified = new ChartBuilder().WithSongName("Cover Me").WithArtist("AKB48 (Cover)").WithLevel(15)
+            .Build();
+        var key = "Cover_Me_-_AKB48_S15_ARCADE";
+        SetupDefaults(new[] { qualified, exact }, new[] { Listing(key) }, Array.Empty<ExternalChartAlias>());
+
+        await Consume();
+
+        _aliases.Verify(a => a.SaveAliases(PiuCenterMetrics.Source, It.Is<IEnumerable<ExternalChartAlias>>(list =>
+            list.Single().ExternalKey == key && list.Single().ChartId == exact.Id),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task NotFoundCandidateFlipsToAutoWhenItsKeyAppearsUpstream()
     {
@@ -183,15 +304,13 @@ public sealed class PiuCenterCrawlSagaTests
     public async Task SnapshotImportBanksMetricsAndFlipsFromTheZipWithoutAnyHttp()
     {
         // The zero-crawl bootstrap: a zipped data release runs the same pipeline —
-        // alias reconcile, metric banking (stamped with the zip's version so the
-        // weekly crawl stays a no-op), skill flip — with the client never touched.
+        // alias reconcile, metric banking (stamped with the zip's version so the weekly
+        // crawl stays a no-op), baseline rebuild — with the client never touched.
         var chart = new ChartBuilder().WithSongName("Slam").WithArtist("Novasonic").WithLevel(7).Build();
         var key = "Slam_-_Novasonic_S7_ARCADE";
         var storage = new List<ChartSkillMetric>();
-        _charts.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
+        _charts.Setup(c => c.GetCharts(MixEnum.Phoenix2, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chart });
-        _charts.Setup(c => c.GetChartSkills(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<ChartSkillsRecord>());
         _aliases.Setup(a => a.GetAliases(PiuCenterMetrics.Source, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<ExternalChartAlias>());
         _metrics.Setup(m => m.ReplaceChartMetrics(chart.Id, PiuCenterMetrics.Source,
@@ -224,16 +343,12 @@ public sealed class PiuCenterCrawlSagaTests
         context.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
         await BuildSaga().Consume(context.Object);
 
-        // Auto-matched from the zip's table, banked with the zip's version, flipped.
+        // Auto-matched from the zip's table and banked with the zip's version.
         _aliases.Verify(a => a.SaveAliases(PiuCenterMetrics.Source, It.Is<IEnumerable<ExternalChartAlias>>(list =>
                 list.Single().ExternalKey == key && list.Single().ChartId == chart.Id),
             It.IsAny<CancellationToken>()), Times.Once);
         Assert.Contains(storage, r => r.MetricName == PiuCenterMetrics.DataVersion && r.Value == 50726m);
         Assert.Contains(storage, r => r.MetricName == "badge_fraction:twist_90" && r.Value == 1m);
-        _charts.Verify(c => c.SaveChartSkills(It.Is<ChartSkillsRecord>(r =>
-                r.ChartId == chart.Id && r.HighlightsSkill.Contains(Skill.Drills) &&
-                r.ContainsSkills.Contains(Skill.Twists)),
-            It.IsAny<CancellationToken>()), Times.Once);
         _piuCenter.VerifyNoOtherCalls();
     }
 
@@ -251,47 +366,5 @@ public sealed class PiuCenterCrawlSagaTests
         }
 
         return memory.ToArray();
-    }
-
-    [Fact]
-    public async Task RegenerationClearsTagsOnChartsPiuCenterHasNothingFor()
-    {
-        // The hand-tag purge: a chart with stored tags but no banked metrics gets an
-        // empty record written (its rows only survive in ChartSkillArchive).
-        var chart = new ChartBuilder().Build();
-        SetupDefaults(new[] { chart }, Array.Empty<PiuCenterChartListing>(), Array.Empty<ExternalChartAlias>());
-        _charts.Setup(c => c.GetChartSkills(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new ChartSkillsRecord(chart.Id, new[] { Skill.Gimmicks, Skill.Twists }, new[] { Skill.Gimmicks })
-            });
-
-        await Consume();
-
-        _charts.Verify(c => c.SaveChartSkills(It.Is<ChartSkillsRecord>(r =>
-                r.ChartId == chart.Id && !r.ContainsSkills.Any() && !r.HighlightsSkill.Any()),
-            It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task RegenerationWritesMappedTagsFromBankedMetrics()
-    {
-        var chart = new ChartBuilder().Build();
-        var key = "Slam_-_Novasonic_S7_ARCADE";
-        SetupDefaults(new[] { chart }, new[] { Listing(key, level: 7) },
-            new[] { new ExternalChartAlias(key, chart.Id, ExternalAliasStatus.Auto, Now) },
-            new[]
-            {
-                new ChartSkillMetric(chart.Id, PiuCenterMetrics.DataVersion, 50726m, null),
-                new ChartSkillMetric(chart.Id, "top3:drill", 1m, null),
-                new ChartSkillMetric(chart.Id, "badge_fraction:twist_90", 0.6m, null)
-            });
-
-        await Consume();
-
-        _charts.Verify(c => c.SaveChartSkills(It.Is<ChartSkillsRecord>(r =>
-                r.ChartId == chart.Id && r.HighlightsSkill.Contains(Skill.Drills) &&
-                r.ContainsSkills.Contains(Skill.Twists)),
-            It.IsAny<CancellationToken>()), Times.Once);
     }
 }

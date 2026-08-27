@@ -16,15 +16,6 @@ namespace ScoreTracker.SharedKernel.Enums;
 /// </summary>
 public static class MixCapabilities
 {
-    /// <summary>
-    ///     Skill tags are Phoenix-1-only until piucenter data covers later mixes — the flag
-    ///     flips per mix when their export does, no code change downstream.
-    /// </summary>
-    public static bool HasSkillData(this MixEnum mix)
-    {
-        return mix == MixEnum.Phoenix;
-    }
-
     /// <summary>PUMBILITY prices a 1,000,000-scale score; no older mix has one.</summary>
     public static bool HasPumbility(this MixEnum mix)
     {

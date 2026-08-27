@@ -325,7 +325,7 @@ public sealed class PeerPoolListTests : ComponentTestBase
         {
             var chart = new Chart(Guid.NewGuid(), MixEnum.Phoenix2,
                 new Song(name, SongType.Arcade, new Uri("https://piu.test/i.png"), TimeSpan.FromMinutes(2), "Artist", 180),
-                ChartType.Single, 21, MixEnum.Phoenix2, null, null, new HashSet<Skill>());
+                ChartType.Single, 21, MixEnum.Phoenix2, null, null);
             Charts[chart.Id] = chart;
             _ids[name] = chart.Id;
             return chart;

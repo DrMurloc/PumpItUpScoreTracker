@@ -51,7 +51,7 @@ public sealed class ChartRecordPanelTests : ComponentTestBase
     private static Chart MakeChart(MixEnum mix) => new(ChartId, mix,
         new Song("Bad Apple!! feat. Nomico", SongType.Arcade, new Uri("https://piu.test/art.png"),
             TimeSpan.FromSeconds(100), "Alstroemeria Records", Bpm.From(140, 140)),
-        ChartType.Single, 5, mix, "ANDAMIRO", 400, new HashSet<Skill>());
+        ChartType.Single, 5, mix, "ANDAMIRO", 400);
 
     private IRenderedComponent<ChartRecordPanel> RenderPanel(MixEnum mix) =>
         RenderComponent<ChartRecordPanel>(p => p

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -477,6 +477,6 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
         var song = new Song("Seeded Song", SongType.Arcade, new Uri("https://example.invalid/a.png"),
             TimeSpan.FromMinutes(2), "Artist", null);
         return new Chart(Guid.NewGuid(), MixEnum.Phoenix, song, ScoreTracker.SharedKernel.Enums.ChartType.Single, DifficultyLevel.From(21),
-            MixEnum.Phoenix, null, null, new HashSet<Skill>());
+            MixEnum.Phoenix, null, null);
     }
 }

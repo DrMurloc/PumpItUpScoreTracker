@@ -3,6 +3,7 @@ using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Domain;
 using MassTransit;
 using MediatR;
+using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
@@ -20,6 +21,7 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     IConsumer<ProcessScoresTiersListCommand>,
     IConsumer<ProcessPassTierListCommand>,
     IConsumer<ProcessPumbilityTierListCommand>,
+    IConsumer<ProcessSpeedTierListCommand>,
     IRequestHandler<GetMyRelativeTierListQuery, IEnumerable<SongTierListEntry>>,
     IRequestHandler<GetFolderCohortStatsQuery, FolderCohortSummaryRecord?>
 {
@@ -35,14 +37,16 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     private readonly ITitleRepository _titles;
     private readonly IPumbilityPoolCompositionRepository _composition;
     private readonly IDateTimeOffsetAccessor _clock;
+    private readonly IMediator _mediator;
 
     public TierListSaga(IChartDifficultyRatingRepository chartRatings, IChartRepository chartRepository,
         ITierListRepository tierLists, IScoreReader scores,
         ICurrentUserAccessor currentUser, IPlayerStatsReader playerStats,
         IChartScoringLevelRepository scoringLevels, IChartScoreStatsRepository chartStats,
         IFolderCohortStatsRepository cohortStats, ITitleRepository titles,
-        IPumbilityPoolCompositionRepository composition, IDateTimeOffsetAccessor clock)
+        IPumbilityPoolCompositionRepository composition, IDateTimeOffsetAccessor clock, IMediator mediator)
     {
+        _mediator = mediator;
         _composition = composition;
         _clock = clock;
         _cohortStats = cohortStats;
@@ -205,6 +209,33 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
                 if (passBuckets.Any())
                     await _cohortStats.SaveFolder(mix, chartType, level, passBuckets, context.CancellationToken);
             }
+    }
+
+    /// <summary>
+    ///     The Speed tier list (docs/design/chart-identity.md §2): every folder's charts banded
+    ///     against their own folder's notes-per-second spread. The measurement comes from the
+    ///     banked step analysis through Catalog's published contract — this vertical never
+    ///     reads another's tables — and a chart piucenter has nothing for simply is not banded.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ProcessSpeedTierListCommand> context)
+    {
+        var mix = context.Message.Mix;
+        var cancellationToken = context.CancellationToken;
+        var charts = (await _chartRepository.GetCharts(mix, cancellationToken: cancellationToken)).ToArray();
+        if (charts.Length == 0) return;
+
+        var analyses = await _mediator.Send(new GetChartStepAnalysesQuery(charts.Select(c => c.Id).ToArray()),
+            cancellationToken);
+
+        var entries = charts
+            .Where(c => analyses.TryGetValue(c.Id, out var analysis) && analysis.Nps != null)
+            .GroupBy(c => (c.Type, Level: (int)c.Level))
+            .SelectMany(folder => SpeedBands.Band(folder
+                .Select(c => (c.Id, analyses[c.Id].Nps!.Value))
+                .ToArray()))
+            .ToArray();
+
+        if (entries.Length > 0) await _tierLists.SaveEntries(mix, entries, cancellationToken);
     }
 
     public async Task<FolderCohortSummaryRecord?> Handle(GetFolderCohortStatsQuery request,

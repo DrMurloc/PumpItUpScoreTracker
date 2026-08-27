@@ -6,6 +6,7 @@
 @using ScoreTracker.SharedKernel.Models
 @using Microsoft.JSInterop
 @using ScoreTracker.Application.Queries
+@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.Models.Titles.Phoenix2
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.Services.Contracts
@@ -132,7 +133,7 @@
             </span>
         </div>
         <PeerPoolLegend Density="_density" HasCarried="HasCarried && _projectPhoenix1 && _groupBy == PeerGrouping.ProjectedGains"></PeerPoolLegend>
-        <PeerPoolList @ref="_list" Page="_peers" Charts="Charts" Gains="Gains" Mix="Page.Mix" Density="_density" PoolRecord="Page"
+        <PeerPoolList @ref="_list" Page="_peers" Charts="Charts" Gains="Gains" Mix="Page.Mix" Density="_density" PoolRecord="Page" Skills="_skills"
                       GroupBy="_groupBy" GainsOnly="_gainsOnly"
                       ShowToDo="true" ToDos="ToDos" OnToDo="OnToDo" OnOpen="OnOpen" OnPlay="OnPlay"
                       Collapsed="_collapsed" CollapsedChanged="SetCollapsed"></PeerPoolList>
@@ -206,6 +207,18 @@
 
     private PeerPoolList? _list;
     private bool _building;
+
+    /// <summary>
+    ///     What each chart IS, in the card vocabulary (docs/design/chart-identity.md §6). Always
+    ///     shown here, with no switch to hide it (owner, 2026-08-26): this list exists to decide
+    ///     what to play next, and what a chart is made of is exactly what that decision needs.
+    ///     <para>
+    ///         Read once for the whole page rather than per section — the sections are three
+    ///         lenses over one set of charts, and the query walks folder baselines.
+    ///     </para>
+    /// </summary>
+    private IReadOnlyDictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>> _skills =
+        new Dictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>>();
 
     /// <summary>The Phoenix 1 switch only exists for a player whose Phoenix 1 record would change the list (D36).</summary>
     private bool HasCarried => Page.Targets.Any(t => t.Source == TargetSource.Phoenix1);
@@ -287,12 +300,26 @@
         _peers = null;
         _peerOnlyGains = null;
         _peers = await Mediator.Send(new GetPumbilityPeersPageQuery(CurrentUser.User.Id, Page.Mix, Pool));
+        await ReadIdentity();
         if (!_projectPhoenix1) await ReadPeerOnlyGains();
         if (_rivals == null)
         {
             _rivals = await Glow.GetMyRivalIds(Page.Mix);
             _clubmates = await Glow.GetMyCommunityMemberIds();
         }
+    }
+
+    /// <summary>
+    ///     Coverage percentages stay off: the number means nothing without the folder around it,
+    ///     which is what the chip selection already accounts for. The chart page prints them.
+    /// </summary>
+    private async Task ReadIdentity()
+    {
+        var chartIds = Charts.Keys.ToArray();
+        if (chartIds.Length == 0) return;
+        var identity = await Mediator.Send(new GetChartIdentityQuery(chartIds, Page.Mix));
+        _skills = identity.ToDictionary(kv => kv.Key,
+            kv => IdentityChips.ToCardChips(kv.Value, false, L));
     }
 
     private async Task ReadSettings()

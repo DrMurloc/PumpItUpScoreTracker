@@ -211,7 +211,7 @@ public sealed class MoMLegacyCopyTests : IAsyncLifetime
         var song = new Song($"song_{chartId:N}", SongType.Arcade,
             new Uri("https://example.invalid/song.png"), TimeSpan.FromMinutes(2), "Artist", null);
         return new Chart(chartId, MixEnum.Phoenix, song, type, DifficultyLevel.From(level),
-            MixEnum.Phoenix, null, null, new HashSet<Skill>());
+            MixEnum.Phoenix, null, null);
     }
 
     private async Task SeedTournament(Guid id, string name, string configuration,

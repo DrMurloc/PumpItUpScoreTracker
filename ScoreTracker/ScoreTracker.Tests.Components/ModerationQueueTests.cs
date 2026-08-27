@@ -46,7 +46,7 @@ public sealed class ModerationQueueTests : TestContext
         MixEnum.Phoenix,
         new Song(Name.From("Baroque Virus"), SongType.Arcade, new Uri("https://example.com/bv.png"),
             TimeSpan.FromSeconds(90), Name.From("Artist"), null),
-        ChartType.Single, DifficultyLevel.From(20), MixEnum.Phoenix, null, null, new HashSet<Skill>());
+        ChartType.Single, DifficultyLevel.From(20), MixEnum.Phoenix, null, null);
 
     private static readonly User Admin = new(Guid.Parse("E38954C4-B1B1-418A-93F6-C4B25C98B713"),
         Name.From("DrMurloc"), true, null, new Uri("https://example.com/d.png"), Name.From("US"));

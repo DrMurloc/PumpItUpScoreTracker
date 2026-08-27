@@ -40,7 +40,7 @@ public sealed class PhoenixCalculatorPageTests : ComponentTestBase
         return new Chart(Guid.NewGuid(), MixEnum.Phoenix,
             new Song("Song", SongType.Arcade, new Uri("https://piu.test/art.png"), TimeSpan.FromMinutes(2), "Doin",
                 Bpm.From(180, 180)),
-            type, level, mix, null, noteCount, new HashSet<Skill>());
+            type, level, mix, null, noteCount);
     }
 
     private void Setup(MixEnum mix,

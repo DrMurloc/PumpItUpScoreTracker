@@ -1806,6 +1806,9 @@
   <data name="Copying existing highlights into the new feed store." xml:space="preserve">
     <value>Copie des temps forts existants vers le nouveau stockage du flux.</value>
   </data>
+  <data name="Core Skills" xml:space="preserve">
+    <value>Compétences principales</value>
+  </data>
   <data name="Costs scale with the chart — every non-perfect divides by the note count. Pick a chart size:" xml:space="preserve">
     <value>Les coûts varient avec le chart — chaque non-perfect est divisé par le nombre de notes. Choisissez une taille de chart :</value>
   </data>
@@ -1929,6 +1932,12 @@
   </data>
   <data name="Cross-pad Transitions" xml:space="preserve">
     <value>Transitions entre pads</value>
+  </data>
+  <data name="Crossed over" xml:space="preserve">
+    <value>Croisé</value>
+  </data>
+  <data name="crux: {0}" xml:space="preserve">
+    <value>passage clé : {0}</value>
   </data>
   <data name="CSV Upload" xml:space="preserve">
     <value>Import CSV</value>
@@ -2107,6 +2116,9 @@
   <data name="Developers" xml:space="preserve">
     <value>Développeurs</value>
   </data>
+  <data name="Diagonal stance" xml:space="preserve">
+    <value>Position diagonale</value>
+  </data>
   <data name="Didn't quite make the cut ({0})" xml:space="preserve">
     <value>Pas tout à fait retenus ({0})</value>
   </data>
@@ -2127,6 +2139,9 @@
   </data>
   <data name="Difficulty Range" xml:space="preserve">
     <value>Plage de difficulté</value>
+  </data>
+  <data name="Difficulty Spike" xml:space="preserve">
+    <value>Pic de difficulté</value>
   </data>
   <data name="Directory" xml:space="preserve">
     <value>Annuaire</value>
@@ -2198,7 +2213,7 @@
   <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
     <value>Table des Doubles ; un Single lit AA et en dessous un cran plus bas (AA {0}, A+ {1} …). Échelle complète ci-dessous.</value>
   </data>
-  <data name="Doubles: {0}/{1} charts" xml:space="preserve">
+<data name="Doubles: {0}/{1} charts" xml:space="preserve">
     <value>Doubles : {0}/{1} charts</value>
   </data>
   <data name="Doublesteps" xml:space="preserve">
@@ -2509,8 +2524,14 @@
   <data name="Far Twists" xml:space="preserve">
     <value>Twists écartés</value>
   </data>
+  <data name="Fast" xml:space="preserve">
+    <value>Rapide</value>
+  </data>
   <data name="Favorites" xml:space="preserve">
     <value>Favoris</value>
+  </data>
+  <data name="Features" xml:space="preserve">
+    <value>Caractéristiques</value>
   </data>
   <data name="Feedback Submitted, Thank You!" xml:space="preserve">
     <value>Merci pour votre retour !</value>
@@ -2911,6 +2932,9 @@
   </data>
   <data name="Harder for you" xml:space="preserve">
     <value>Plus difficile pour vous</value>
+  </data>
+  <data name="Hardest {0}s:" xml:space="preserve">
+    <value>{0} s les plus durs :</value>
   </data>
   <data name="Has errors" xml:space="preserve">
     <value>Contient des erreurs</value>
@@ -3381,6 +3405,9 @@
   <data name="It moves, and that is the whole answer: score is {0} of the number in {1} and {2} in {3}. The pool’s average level runs {4} → {5} along the way, and S or better {6} → {7} of fifty." xml:space="preserve">
     <value>Ça bouge, et c'est toute la réponse : le score fait {0} du nombre en {1} et {2} en {3}. Le niveau moyen du pool va de {4} → {5} en chemin, et S ou mieux de {6} → {7} sur cinquante.</value>
   </data>
+  <data name="It opens with its hardest {0} seconds — {1}." xml:space="preserve">
+    <value>Il ouvre sur ses {0} secondes les plus dures — {1}.</value>
+  </data>
   <data name="It reads player scores" xml:space="preserve">
     <value>Il lit les scores des joueurs</value>
   </data>
@@ -3407,6 +3434,12 @@
   </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>Il pourra lire</value>
+  </data>
+  <data name="Its hardest {0} seconds are {1}, at the very end." xml:space="preserve">
+    <value>Ses {0} secondes les plus dures sont {1}, tout à la fin.</value>
+  </data>
+  <data name="Its hardest {0} seconds are {1}, in the middle." xml:space="preserve">
+    <value>Ses {0} secondes les plus dures sont {1}, au milieu.</value>
   </data>
   <data name="Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access." xml:space="preserve">
     <value>Ses clés cessent de fonctionner, ses webhooks cessent de se déclencher et les {0} joueurs connectés perdent l'accès.</value>
@@ -3724,6 +3757,9 @@
   <data name="Logout" xml:space="preserve">
     <value>Déconnexion</value>
   </data>
+  <data name="Longest run: {0}s" xml:space="preserve">
+    <value>Plus longue série : {0} s</value>
+  </data>
   <data name="Look back" xml:space="preserve">
     <value>Période</value>
   </data>
@@ -3895,11 +3931,20 @@
   <data name="Metric" xml:space="preserve">
     <value>Métrique</value>
   </data>
+  <data name="Mid Tempo" xml:space="preserve">
+    <value>Tempo moyen</value>
+  </data>
   <data name="Mid-4 Doubles" xml:space="preserve">
     <value>Doubles centraux (4 flèches)</value>
   </data>
   <data name="Mid-6 Doubles" xml:space="preserve">
     <value>Doubles centraux (6 flèches)</value>
+  </data>
+  <data name="Middle 4" xml:space="preserve">
+    <value>4 centrales</value>
+  </data>
+  <data name="Middle 6" xml:space="preserve">
+    <value>6 centrales</value>
   </data>
   <data name="middle 80% of charts" xml:space="preserve">
     <value>80 % central des charts</value>
@@ -5881,6 +5926,9 @@
   <data name="Qualifiers Submission" xml:space="preserve">
     <value>{0} envois pour qualifications</value>
   </data>
+  <data name="Quarter Double" xml:space="preserve">
+    <value>Quart double</value>
+  </data>
   <data name="Queued" xml:space="preserve">
     <value>En file d'attente</value>
   </data>
@@ -6036,11 +6084,17 @@
   <data name="Rebuild {0} PUMBILITY tier lists" xml:space="preserve">
     <value>Reconstruire les classements PUMBILITY de {0}</value>
   </data>
+  <data name="Rebuild {0} Speed tier list" xml:space="preserve">
+    <value>Reconstruire le classement Vitesse de {0}</value>
+  </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>Reconstruction de la dernière session de chaque joueur.</value>
   </data>
   <data name="Rebuilding the {0} PUMBILITY tier lists. It takes a few minutes." xml:space="preserve">
     <value>Reconstruction des classements PUMBILITY de {0}. Cela prend quelques minutes.</value>
+  </data>
+  <data name="Rebuilding the {0} Speed tier list. It takes a few minutes." xml:space="preserve">
+    <value>Reconstruction du classement Vitesse de {0}. Cela prend quelques minutes.</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>Recalculé plusieurs fois par jour</value>
@@ -6898,6 +6952,9 @@
   <data name="Side-3 Singles" xml:space="preserve">
     <value>Singles latéraux (3 flèches)</value>
   </data>
+  <data name="Side-on stance" xml:space="preserve">
+    <value>Position de côté</value>
+  </data>
   <data name="Sign in" xml:space="preserve">
     <value>Se connecter</value>
   </data>
@@ -7037,6 +7094,9 @@
   <data name="Slim" xml:space="preserve">
     <value>Mince</value>
   </data>
+  <data name="Slow" xml:space="preserve">
+    <value>Lent</value>
+  </data>
   <data name="so scoring one chart at 20 is worth" xml:space="preserve">
     <value>donc scorer un chart à 20 vaut</value>
   </data>
@@ -7116,6 +7176,15 @@
   <data name="Special Snowflake" xml:space="preserve">
     <value>Special Snowflake</value>
   </data>
+  <data name="Speed" xml:space="preserve">
+    <value>Vitesse</value>
+  </data>
+  <data name="Speed not measured" xml:space="preserve">
+    <value>Vitesse non mesurée</value>
+  </data>
+  <data name="Spike" xml:space="preserve">
+    <value>Pic</value>
+  </data>
   <data name="Spikes" xml:space="preserve">
     <value>Rafales</value>
   </data>
@@ -7160,7 +7229,7 @@
   <data name="Stale weight" xml:space="preserve">
     <value>Poids obsolète</value>
   </data>
-  <data name="Stamina Session Builder" xml:space="preserve">
+<data name="Stamina Session Builder" xml:space="preserve">
     <value>Constructeur de session Stamina</value>
   </data>
   <data name="Standings" xml:space="preserve">
@@ -7357,7 +7426,7 @@
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>
   </data>
-  <data name="Test delivery" xml:space="preserve">
+<data name="Test delivery" xml:space="preserve">
     <value>Envoi de test</value>
   </data>
   <data name="Test Scores" xml:space="preserve">
@@ -8111,6 +8180,12 @@
   <data name="Twist 90" xml:space="preserve">
     <value>Twists 90°</value>
   </data>
+  <data name="Twist-heavy" xml:space="preserve">
+    <value>Très torsadé</value>
+  </data>
+  <data name="Twistless" xml:space="preserve">
+    <value>Sans torsion</value>
+  </data>
   <data name="Twists" xml:space="preserve">
     <value>Twists</value>
   </data>
@@ -8360,6 +8435,9 @@
   <data name="Very easy to pass for its level" xml:space="preserve">
     <value>Très facile à passer pour son niveau</value>
   </data>
+  <data name="Very Fast" xml:space="preserve">
+    <value>Très Rapide</value>
+  </data>
   <data name="Very Good" xml:space="preserve">
     <value>Très bon</value>
   </data>
@@ -8383,6 +8461,9 @@
   </data>
   <data name="Very Popular" xml:space="preserve">
     <value>Très populaire</value>
+  </data>
+  <data name="Very Slow" xml:space="preserve">
+    <value>Très Lent</value>
   </data>
   <data name="Very split" xml:space="preserve">
     <value>Très partagé</value>
@@ -8729,6 +8810,9 @@
   </data>
   <data name="Why Don't You Get Up and Dance, Man?" xml:space="preserve">
     <value>Why Don't You Get Up and Dance, Man?</value>
+  </data>
+  <data name="Wide" xml:space="preserve">
+    <value>Large</value>
   </data>
   <data name="Widget schema" xml:space="preserve">
     <value>Schéma des widgets</value>
@@ -9561,6 +9645,9 @@
   <data name="{0} now {1}" xml:space="preserve">
     <value>{0} désormais {1}</value>
   </data>
+  <data name="{0} NPS" xml:space="preserve">
+    <value>{0} NPS</value>
+  </data>
   <data name="{0} of all Phoenix titles collected" xml:space="preserve">
     <value>{0} de tous les titres Phoenix</value>
   </data>
@@ -9794,6 +9881,9 @@
   </data>
   <data name="{0}m ago" xml:space="preserve">
     <value>il y a {0} min</value>
+  </data>
+  <data name="{0}–{1} NPS" xml:space="preserve">
+    <value>{0}–{1} NPS</value>
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>~#{0} au classement officiel</value>

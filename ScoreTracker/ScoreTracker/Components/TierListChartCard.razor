@@ -85,7 +85,18 @@ else
             <div class="tier-chart-card-compact-grade tier-chart-card-corner @CornerBadgeClass">@CornerBadge</div>
         }
     </div>
-    <div class="tier-chart-card-body">
+    @* The strip that rides up onto the jacket, and the ONLY things allowed on it: what the
+       chart is called and how you did on it. It reserves its height whether or not it has
+       either, so a folder of cards stays aligned — and so that nothing else inherits the
+       overlap by being first. It did: with song names switched off, the chip row and a lone
+       tier word were landing on the album art, which says nothing at all over a picture
+       (field test, 2026-08-26).
+       Clickable for the same reason the jacket is, and for the 30px of jacket it covers —
+       removing the info button left the art as the only way in, and a strip that swallowed
+       clicks would have made a dead zone of its bottom edge. Deliberately NOT a button and
+       not a tab stop: the jacket beside it already announces and operates this exact action,
+       so a second one would be an unoperable duplicate in the reading order. *@
+    <div class="tier-chart-card-head" @onclick="() => OnOpen.InvokeAsync(Chart.Id)">
         @if (ShowName)
         {
             <MudTooltip Text="@Chart.Song.Name.ToString()" ShowOnFocus="true">
@@ -95,10 +106,18 @@ else
         @if (Score?.Score != null)
         {
             @* Own line always — short song names left the tooltip-wrapped name and the
-               score sharing a row (owner, piucenter round 3). *@
+               score sharing a row (owner, piucenter round 3).
+               Grade over plate in one column with the number beside them, the treatment the
+               player page's tables use: two 12px icons stack inside the height one 20px icon
+               needed, so the line costs the card a third of what it did. Tooltip="false" is
+               structural, not a preference — the stack lays out its direct children, and
+               MudTooltip's wrapper would hide them from the grid. *@
             <div class="tier-chart-card-scoreline">
-                <ScoreBreakdown Score="Score.Score.Value" IsBroken="Score.IsBroken" Mix="Chart.Mix" OneLine="true" ShowScore="true"
-                                Plate="Score.Plate" Ranking="Ranking"></ScoreBreakdown>
+                <span class="sbd-score-stack">
+                    <ScoreBreakdown Score="Score.Score.Value" IsBroken="Score.IsBroken" Mix="Chart.Mix" OneLine="true"
+                                    ShowScore="true" Tooltip="false" Height="12"
+                                    Plate="Score.Plate" Ranking="Ranking"></ScoreBreakdown>
+                </span>
             </div>
         }
         else if (LegacyGrade != null)
@@ -110,6 +129,8 @@ else
                 <LetterGradeIcon LegacyGrade="LegacyGrade" IsBroken="Score?.IsBroken ?? false" Height="20"></LetterGradeIcon>
             </div>
         }
+    </div>
+    <div class="tier-chart-card-body">
         @if (TierLabel != null)
         {
             <MudText Typo="Typo.caption" Class="tier-chart-card-tier" Style="@($"color:{TierColor}")">@TierLabel</MudText>
@@ -135,25 +156,39 @@ else
         {
             <div class="tier-chart-card-extra">@Body</div>
         }
-        @if (Skills is { Count: > 0 })
+        @if (IdentityChipsOnly.Count > 0)
         {
-            @* Top skills by dominance, category-tinted (variant B) — the name is always
-               printed, so the hue never carries the meaning alone (rule 8). *@
+            @* One row, no group headings and no cap (owner, 2026-08-26): two words of scaffolding
+               around three chips cost more than they explained, and a "+2" told a player there was
+               something else without telling them what. Every chip here is now a claim the chart
+               earned against its own folder, so there is nothing left worth hiding behind a count;
+               the named groups live on the chart page and dialog, where there is room to say which
+               is which. *@
             <div class="tier-chart-card-skills">
-                @foreach (var skill in Skills.Take(MaxSkillChips))
+                @foreach (var skill in IdentityChipsOnly)
                 {
-                    <span class="tier-chart-card-skill @skill.CategoryClass">@skill.Label@(skill.Metric == null ? null : $" {skill.Metric}")</span>
-                }
-                @if (Skills.Count > MaxSkillChips)
-                {
-                    <span class="tier-chart-card-skill tier-chart-card-skill-more">+@(Skills.Count - MaxSkillChips)</span>
+                    <span class="tier-chart-card-skill @skill.CategoryClass @(skill.IsIdentity ? "chip-identity" : null)">
+                        @skill.Label@(skill.Metric == null ? null : $" {skill.Metric}")@if (skill.Parts is { Count: > 0 })
+                        {
+                            @* Each badge keeps its own family inside the shared chip, so merging
+                               the hard-section pair costs no information. *@
+                            <text>&#32;</text>
+                            @for (var i = 0; i < skill.Parts.Count; i++)
+                            {
+                                @(i > 0 ? ", " : null)<span class="chip-part @skill.Parts[i].CategoryClass">@skill.Parts[i].Label</span>
+                            }
+                        }
+                    </span>
                 }
             </div>
         }
     </div>
-    <div class="tier-chart-card-actions">
-        @if (ShowToDo)
-        {
+    @* The info button went (owner, 2026-08-26): the jacket already opens details and now looks
+       like it does, so the icon was a second control for the one thing the card mostly is. To-Do
+       stays, because it is the one action the jacket does NOT do. *@
+    @if (ShowToDo)
+    {
+        <div class="tier-chart-card-actions">
             <MudTooltip Text="@(IsToDo ? L["Remove from ToDo List"] : L["Add to ToDo List"])">
                 <MudIconButton Size="Size.Small"
                                Icon="@(IsToDo ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
@@ -161,11 +196,8 @@ else
                                OnClick="() => OnToDo.InvokeAsync(Chart.Id)"
                                aria-label="@L["To Do"]"></MudIconButton>
             </MudTooltip>
-        }
-        <MudSpacer></MudSpacer>
-        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Info"
-                       OnClick="() => OnOpen.InvokeAsync(Chart.Id)" aria-label="@L["Details"]"></MudIconButton>
-    </div>
+        </div>
+    }
 </div>
 }
 
@@ -216,11 +248,30 @@ else
 
     [Parameter] public IReadOnlyList<CardSkillChip>? Skills { get; set; }
 
-    // Owner-locked (piucenter round 1): up to three chips, dominance-ordered, "+n" overflow.
-    private const int MaxSkillChips = 3;
+    /// <summary>
+    ///     CategoryClass carries the chip's badge family and its identity kind as site.css
+    ///     classes; Metric is preformatted or null. <see cref="Parts" /> is set only for a chip
+    ///     that names several badges at once — the hard-section chip — so each can keep its own
+    ///     family colour inside the one chip.
+    /// </summary>
+    public sealed record CardSkillChip(string Label, string CategoryClass, string? Metric,
+        bool IsIdentity = false, IReadOnlyList<CardSkillChipPart>? Parts = null);
 
-    /// <summary>CategoryClass is a site.css skillcat-* class; Metric is preformatted or null.</summary>
-    public sealed record CardSkillChip(string Label, string CategoryClass, string? Metric);
+    public sealed record CardSkillChipPart(string Label, string CategoryClass);
+
+    /// <summary>
+    ///     What the chart IS, and nothing else — all of it, uncapped. Features come off the card
+    ///     entirely (owner, 2026-08-26): what a chart merely also has buys nothing a player
+    ///     deciding what to play can use, and once they are gone the identity claims that remain
+    ///     are few enough to print in full. The chart page and its dialog carry the full set,
+    ///     named and grouped.
+    ///     <para>
+    ///         A chart with no identity therefore shows no chips at all, which is the honest
+    ///         answer rather than a gap: plenty of charts are just charts.
+    ///     </para>
+    /// </summary>
+    private IReadOnlyList<CardSkillChip> IdentityChipsOnly =>
+        (Skills ?? Array.Empty<CardSkillChip>()).Where(s => s.IsIdentity).ToArray();
 
     [Parameter] public int? AgeDays { get; set; }
 

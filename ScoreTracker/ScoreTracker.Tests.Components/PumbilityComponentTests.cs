@@ -196,7 +196,7 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         new(Guid.NewGuid(), MixEnum.Phoenix,
             new Song($"Song {Guid.NewGuid():N}"[..12], SongType.Arcade,
                 new Uri("https://piu.test/i.png"), TimeSpan.FromMinutes(2), "Artist", 180),
-            type, level, MixEnum.Phoenix, null, null, new HashSet<Skill>());
+            type, level, MixEnum.Phoenix, null, null);
 
     private static PageFixture Page(int poolSize, int waiting = 0, int targets = 0) =>
         new(poolSize, waiting, targets);

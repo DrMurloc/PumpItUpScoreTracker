@@ -105,7 +105,7 @@
                     </div>
                 }
             </div>
-            <ChartVerdictCard Facets="_facets"></ChartVerdictCard>
+            <ChartVerdictCard Facets="_facets" Identity="_identityChips"></ChartVerdictCard>
             <div class="chart-hero-actions">
                 <MudLink Href="@PiuCenterUrl" Target="_blank" Typo="Typo.caption">@L["View full chart on PIU Center"]</MudLink>
             </div>
@@ -118,29 +118,6 @@
         </div>
         <ChartEvidenceSection @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_chart.Mix" @key="_chart.Id"></ChartEvidenceSection>
     </section>
-
-    @if (_skillChips.Any() || _analysis != null)
-    {
-        <section class="chart-section">
-            <div class="chart-section-head">
-                <MudText Typo="Typo.h5">@L["Skill fingerprint"]</MudText>
-                @if (Fingerprint != null)
-                {
-                    <MudText Typo="Typo.caption" Class="chart-section-sub"><VerdictSentence Facet="Fingerprint"></VerdictSentence></MudText>
-                }
-            </div>
-            <SkillCoverageBars Chips="_skillChips"></SkillCoverageBars>
-            @* Intensity reads as bars beside the skills because it is the same kind of
-               fact — a share of the chart — and the two together are what "what is this
-               chart made of" means. Grind and spikes rather than sustain and tension:
-               sustain is a subset of tension, so showing both counts the grind twice. *@
-            <IntensityBars Intensity="Intensity" Duration="_chart.Song.Duration"></IntensityBars>
-            <div class="chart-skill-foot">
-                <span>@L["Share of the chart each pattern and demand covers"]</span>
-                <span>@L["Step analysis data from PIU Center"]</span>
-            </div>
-        </section>
-    }
 
     @if (History != null)
     {
@@ -215,14 +192,13 @@
     private Chart? _chart;
     private IReadOnlyList<ChartVerdictFacet> _facets = Array.Empty<ChartVerdictFacet>();
     private IReadOnlyList<Chart> _siblings = Array.Empty<Chart>();
-    private IReadOnlyList<ChartBadgeChipRecord> _skillChips = Array.Empty<ChartBadgeChipRecord>();
     private ChartStepAnalysisRecord? _analysis;
+    private IReadOnlyList<TierListChartCard.CardSkillChip> _identityChips =
+        Array.Empty<TierListChartCard.CardSkillChip>();
 
-    private ChartIntensityFacts? Intensity => _chart == null ? null : ChartIntensityFacts.For(_chart, _analysis);
 
     private PopulationVerdict? Population => _facets.OfType<PopulationVerdict>().FirstOrDefault();
     private HistoryVerdict? History => _facets.OfType<HistoryVerdict>().FirstOrDefault();
-    private StyleFingerprintVerdict? Fingerprint => _facets.OfType<StyleFingerprintVerdict>().FirstOrDefault();
 
     // Bpm.ToString prints Min twice on ranges (pre-existing) — format locally.
     private string BpmDisplay => _chart?.Song.Bpm is not { } bpm ? "" :
@@ -291,10 +267,26 @@
             .OrderBy(c => c.Type)
             .ThenBy(c => (int)c.Level)
             .ToArray();
-        _skillChips = (await Mediator.Send(new GetChartBadgeChipsQuery(new[] { chart.Id })))
-            .TryGetValue(chart.Id, out var chips)
-            ? chips
-            : Array.Empty<ChartBadgeChipRecord>();
         _analysis = await Mediator.Send(new GetChartStepAnalysisQuery(chart.Id));
+        // Every chip, uncapped — the card's three-chip cut is a card's problem, and a page that
+        // silently dropped a claim would be the one surface where the chart looks different.
+        var identity = await Mediator.Send(new GetChartIdentityQuery(new[] { chart.Id }, chartMix));
+        _identityChips = IdentityChips.WithSpeedBand(
+            IdentityChips.ToCardChips(identity.TryGetValue(chart.Id, out var record) ? record : null, false, L),
+            await SpeedBand(chart.Id, chartMix), L);
+    }
+
+    /// <summary>
+    ///     Which of the five speed bands the chart landed in, or null where the folder has none.
+    ///     Read WITH the fallback flag and then refused: a band is a chart's speed relative to the
+    ///     folder it was banded in, and a chart's folder changes between mixes — Phoenix's bands
+    ///     standing in for an unbuilt Phoenix 2 list would be measuring against company the chart
+    ///     does not keep there.
+    /// </summary>
+    private async Task<TierListCategory?> SpeedBand(Guid chartId, MixEnum mix)
+    {
+        var speed = await Mediator.Send(new GetTierListWithFallbackQuery(SpeedBandLabels.ListName, mix));
+        if (speed.IsProvisionalFallback) return null;
+        return speed.Entries.FirstOrDefault(e => e.ChartId == chartId)?.Category;
     }
 }

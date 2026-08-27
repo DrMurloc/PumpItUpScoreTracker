@@ -1807,6 +1807,9 @@
   <data name="Copying existing highlights into the new feed store." xml:space="preserve">
     <value>既存のハイライトを新しいフィードストアにコピーしています。</value>
   </data>
+  <data name="Core Skills" xml:space="preserve">
+    <value>主要スキル</value>
+  </data>
   <data name="Costs scale with the chart — every non-perfect divides by the note count. Pick a chart size:" xml:space="preserve">
     <value>減点は譜面に比例します。Perfect以外はすべてノーツ数で割られます。譜面のサイズを選んでください：</value>
   </data>
@@ -1930,6 +1933,12 @@
   </data>
   <data name="Cross-pad Transitions" xml:space="preserve">
     <value>パッド間移動</value>
+  </data>
+  <data name="Crossed over" xml:space="preserve">
+    <value>クロスオーバー</value>
+  </data>
+  <data name="crux: {0}" xml:space="preserve">
+    <value>難所: {0}</value>
   </data>
   <data name="CSV Upload" xml:space="preserve">
     <value>CSVアップロード</value>
@@ -2108,6 +2117,9 @@
   <data name="Developers" xml:space="preserve">
     <value>開発者</value>
   </data>
+  <data name="Diagonal stance" xml:space="preserve">
+    <value>斜めの体勢</value>
+  </data>
   <data name="Didn't quite make the cut ({0})" xml:space="preserve">
     <value>あと一歩だった譜面（{0}）</value>
   </data>
@@ -2128,6 +2140,9 @@
   </data>
   <data name="Difficulty Range" xml:space="preserve">
 	  <value>難度範囲</value>
+  </data>
+  <data name="Difficulty Spike" xml:space="preserve">
+    <value>難易度スパイク</value>
   </data>
   <data name="Directory" xml:space="preserve">
     <value>ディレクトリ</value>
@@ -2199,7 +2214,7 @@
   <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
     <value>Doublesの表です。SinglesはAA以下が一段低くなります（AA {0}、A+ {1} …）。全段は下に。</value>
   </data>
-  <data name="Doubles: {0}/{1} charts" xml:space="preserve">
+<data name="Doubles: {0}/{1} charts" xml:space="preserve">
     <value>Doubles: {0}/{1} 譜面</value>
   </data>
   <data name="Doublesteps" xml:space="preserve">
@@ -2510,8 +2525,14 @@
   <data name="Far Twists" xml:space="preserve">
     <value>遠距離捻り</value>
   </data>
+  <data name="Fast" xml:space="preserve">
+    <value>速い</value>
+  </data>
   <data name="Favorites" xml:space="preserve">
     <value>気に入れ</value>
+  </data>
+  <data name="Features" xml:space="preserve">
+    <value>特徴</value>
   </data>
   <data name="Feedback Submitted, Thank You!" xml:space="preserve">
     <value>フィードバックありがとうございます！</value>
@@ -2912,6 +2933,9 @@
   </data>
   <data name="Harder for you" xml:space="preserve">
     <value>あなたには難しい</value>
+  </data>
+  <data name="Hardest {0}s:" xml:space="preserve">
+    <value>最難関の{0}秒:</value>
   </data>
   <data name="Has errors" xml:space="preserve">
     <value>エラーあり</value>
@@ -3382,6 +3406,9 @@
   <data name="It moves, and that is the whole answer: score is {0} of the number in {1} and {2} in {3}. The pool’s average level runs {4} → {5} along the way, and S or better {6} → {7} of fifty." xml:space="preserve">
     <value>動きます、それが答えの全てです。スコアは{1}で数字の{0}、{3}で{2}です。その間にプールの平均レベルは{4} → {5}、50譜面中S以上は{6} → {7}譜面です。</value>
   </data>
+  <data name="It opens with its hardest {0} seconds — {1}." xml:space="preserve">
+    <value>最も難しい{0}秒で始まります——{1}。</value>
+  </data>
   <data name="It reads player scores" xml:space="preserve">
     <value>プレイヤーのスコアを読む</value>
   </data>
@@ -3408,6 +3435,12 @@
   </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>読み取れる情報</value>
+  </data>
+  <data name="Its hardest {0} seconds are {1}, at the very end." xml:space="preserve">
+    <value>最も難しい{0}秒は{1}で、終盤にあります。</value>
+  </data>
+  <data name="Its hardest {0} seconds are {1}, in the middle." xml:space="preserve">
+    <value>最も難しい{0}秒は{1}で、中盤にあります。</value>
   </data>
   <data name="Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access." xml:space="preserve">
     <value>キーは無効になり、Webhook の送信も止まり、接続している {0} 人のプレイヤーがアクセスを失います。</value>
@@ -3725,6 +3758,9 @@
   <data name="Logout" xml:space="preserve">
     <value>ログアウト</value>
   </data>
+  <data name="Longest run: {0}s" xml:space="preserve">
+    <value>最長ラン: {0}秒</value>
+  </data>
   <data name="Look back" xml:space="preserve">
     <value>対象期間</value>
   </data>
@@ -3896,11 +3932,20 @@
   <data name="Metric" xml:space="preserve">
     <value>指標</value>
   </data>
+  <data name="Mid Tempo" xml:space="preserve">
+    <value>中速</value>
+  </data>
   <data name="Mid-4 Doubles" xml:space="preserve">
     <value>中央4パネル</value>
   </data>
   <data name="Mid-6 Doubles" xml:space="preserve">
     <value>中央6パネル</value>
+  </data>
+  <data name="Middle 4" xml:space="preserve">
+    <value>中央4枚</value>
+  </data>
+  <data name="Middle 6" xml:space="preserve">
+    <value>中央6枚</value>
   </data>
   <data name="middle 80% of charts" xml:space="preserve">
     <value>中央80%の譜面</value>
@@ -5882,6 +5927,9 @@
   <data name="Qualifiers Submission" xml:space="preserve">
     <value>{0}資格の登録</value>
   </data>
+  <data name="Quarter Double" xml:space="preserve">
+    <value>クォーターダブル</value>
+  </data>
   <data name="Queued" xml:space="preserve">
     <value>キューに追加しました</value>
   </data>
@@ -6037,11 +6085,17 @@
   <data name="Rebuild {0} PUMBILITY tier lists" xml:space="preserve">
     <value>{0} の PUMBILITY 難易度表を再構築</value>
   </data>
+  <data name="Rebuild {0} Speed tier list" xml:space="preserve">
+    <value>{0} の速度難易度表を再構築</value>
+  </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>全プレイヤーの最新セッションを再構築しています。</value>
   </data>
   <data name="Rebuilding the {0} PUMBILITY tier lists. It takes a few minutes." xml:space="preserve">
     <value>{0} の PUMBILITY 難易度表を再構築しています。数分かかります。</value>
+  </data>
+  <data name="Rebuilding the {0} Speed tier list. It takes a few minutes." xml:space="preserve">
+    <value>{0} の速度難易度表を再構築しています。数分かかります。</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>数時間ごとに再計算されます</value>
@@ -6899,6 +6953,9 @@
   <data name="Side-3 Singles" xml:space="preserve">
     <value>サイド3パネル</value>
   </data>
+  <data name="Side-on stance" xml:space="preserve">
+    <value>横向きの体勢</value>
+  </data>
   <data name="Sign in" xml:space="preserve">
     <value>ログイン</value>
   </data>
@@ -7038,6 +7095,9 @@
   <data name="Slim" xml:space="preserve">
     <value>わずか</value>
   </data>
+  <data name="Slow" xml:space="preserve">
+    <value>遅い</value>
+  </data>
   <data name="so scoring one chart at 20 is worth" xml:space="preserve">
     <value>だからレベル20で1譜面をスコアすることの価値は</value>
   </data>
@@ -7117,6 +7177,15 @@
   <data name="Special Snowflake" xml:space="preserve">
     <value>Special Snowflake</value>
   </data>
+  <data name="Speed" xml:space="preserve">
+    <value>速度</value>
+  </data>
+  <data name="Speed not measured" xml:space="preserve">
+    <value>速度未計測</value>
+  </data>
+  <data name="Spike" xml:space="preserve">
+    <value>スパイク</value>
+  </data>
   <data name="Spikes" xml:space="preserve">
     <value>連打区間</value>
   </data>
@@ -7161,7 +7230,7 @@
   <data name="Stale weight" xml:space="preserve">
     <value>劣化した重み</value>
   </data>
-  <data name="Stamina Session Builder" xml:space="preserve">
+<data name="Stamina Session Builder" xml:space="preserve">
 	  <value>スタミナセッション構築</value>
   </data>
   <data name="Standings" xml:space="preserve">
@@ -7358,7 +7427,7 @@
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>
   </data>
-  <data name="Test delivery" xml:space="preserve">
+<data name="Test delivery" xml:space="preserve">
     <value>テスト送信</value>
   </data>
   <data name="Test Scores" xml:space="preserve">
@@ -8112,6 +8181,12 @@
   <data name="Twist 90" xml:space="preserve">
     <value>90度捻り</value>
   </data>
+  <data name="Twist-heavy" xml:space="preserve">
+    <value>ひねり多め</value>
+  </data>
+  <data name="Twistless" xml:space="preserve">
+    <value>ひねりなし</value>
+  </data>
   <data name="Twists" xml:space="preserve">
     <value>捻り</value>
   </data>
@@ -8361,6 +8436,9 @@
   <data name="Very easy to pass for its level" xml:space="preserve">
     <value>レベルの割にクリアがとても簡単</value>
   </data>
+  <data name="Very Fast" xml:space="preserve">
+    <value>とても速い</value>
+  </data>
   <data name="Very Good" xml:space="preserve">
     <value>とても良い</value>
   </data>
@@ -8384,6 +8462,9 @@
   </data>
   <data name="Very Popular" xml:space="preserve">
     <value>大人気</value>
+  </data>
+  <data name="Very Slow" xml:space="preserve">
+    <value>とても遅い</value>
   </data>
   <data name="Very split" xml:space="preserve">
     <value>大きく割れる</value>
@@ -8730,6 +8811,9 @@
   </data>
   <data name="Why Don't You Get Up and Dance, Man?" xml:space="preserve">
     <value>Why Don't You Get Up and Dance, Man?</value>
+  </data>
+  <data name="Wide" xml:space="preserve">
+    <value>全体使用</value>
   </data>
   <data name="Widget schema" xml:space="preserve">
     <value>ウィジェットスキーマ</value>
@@ -9562,6 +9646,9 @@
   <data name="{0} now {1}" xml:space="preserve">
     <value>{0} が {1} に</value>
   </data>
+  <data name="{0} NPS" xml:space="preserve">
+    <value>{0} NPS</value>
+  </data>
   <data name="{0} of all Phoenix titles collected" xml:space="preserve">
     <value>全フェニックス称号の{0}を収集</value>
   </data>
@@ -9795,6 +9882,9 @@
   </data>
   <data name="{0}m ago" xml:space="preserve">
     <value>{0}分前</value>
+  </data>
+  <data name="{0}–{1} NPS" xml:space="preserve">
+    <value>{0}–{1} NPS</value>
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>公式ランキングで ~#{0}</value>

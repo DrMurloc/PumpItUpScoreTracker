@@ -73,7 +73,7 @@ public sealed class SearchChartsHandlerTests
         return new Chart(id, originalMix ?? mix,
             new Song(song, songType, new Uri("https://images.example/" + id + ".png"),
                 TimeSpan.FromSeconds(seconds ?? 125), artist, Bpm.From(bpm, bpm)),
-            type, level, mix, null, noteCount, new HashSet<Skill>(), slot);
+            type, level, mix, null, noteCount, slot);
     }
 
     [Fact]

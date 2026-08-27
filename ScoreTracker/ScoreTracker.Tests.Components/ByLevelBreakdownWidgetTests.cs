@@ -20,7 +20,7 @@ public sealed class ByLevelBreakdownWidgetTests : ComponentTestBase
 {
     private static Chart Chart(Guid id, ChartType type, int level) =>
         new(id, MixEnum.Phoenix2, new Song("Song", SongType.Arcade, new Uri("https://x/y.png"),
-            TimeSpan.FromMinutes(2), "Artist", null), type, level, MixEnum.Phoenix2, null, null, new HashSet<Skill>());
+            TimeSpan.FromMinutes(2), "Artist", null), type, level, MixEnum.Phoenix2, null, null);
 
     private void SetupServices(IEnumerable<Chart> charts, IEnumerable<RecordedPhoenixScore> records)
     {

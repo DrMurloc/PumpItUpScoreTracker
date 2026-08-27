@@ -78,32 +78,17 @@ internal sealed class PersonalizedBreakdownHandler
                     .Category,
                 TierListBlendBuilder.Combine("Final", c.Id, computation.Sources, computation.Modifiers)
                     .Category,
-                TierListCategory.Unrecorded,
-                TierListCategory.Unrecorded,
                 CategoryFor(computation.Projection?.Entries, c.Id),
                 computation.Projection != null && computation.Projection.Scores.TryGetValue(c.Id, out var projected)
                     ? projected
                     : null))
             .ToArray();
 
-        // The skill and similar-players sources went with Personalized Pass. Their fields
-        // stay on the contract, reporting empty, until the breakdown page's own pass removes
-        // them — see docs/design/pumbility-tier-list.md §10.
-        var skills = Array.Empty<BreakdownSkillRecord>();
-
         return new PersonalizedTierListBreakdown(
             charts,
-            skills,
-            false,
-            0,
-            0,
-            0,
-            0,
             // How much of YOUR list is community, which is 0 on Score — not the weight of the
             // community column, which is computed separately and exists only to diff against.
             TierListBlendBuilder.CommunityWeightIn(computation.Modifiers),
-            0,
-            0,
             computation.Modifiers.GetValueOrDefault("Projection"),
             computation.Projection?.ProjectedChartCount ?? 0,
             computation.Projection?.FolderChartCount ?? computation.FolderCharts.Count,

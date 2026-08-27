@@ -55,5 +55,5 @@ public sealed class ShareCardImagesTests
         new(Guid.NewGuid(), mix,
             new Song(Name.From("Song"), SongType.Arcade, new Uri("https://piu.test/i.png"), TimeSpan.FromMinutes(2),
                 Name.From("Artist"), 180),
-            type, DifficultyLevel.From(level), mix, null, null, new HashSet<Skill>(), slot, players);
+            type, DifficultyLevel.From(level), mix, null, null, slot, players);
 }

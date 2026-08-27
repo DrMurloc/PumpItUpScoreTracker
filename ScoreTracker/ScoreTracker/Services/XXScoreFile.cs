@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
@@ -388,7 +388,7 @@ public sealed class XXScoreFile
                     new Chart(Guid.Empty, MixEnum.XX,
                         new Song(name, SongType.Arcade, new Uri("/", UriKind.Relative), TimeSpan.Zero, "Unknown", null),
                         chartType,
-                        level, MixEnum.XX, null, null, new HashSet<Skill>()),
+                        level, MixEnum.XX, null, null),
                     string.IsNullOrWhiteSpace(record.LetterGrade)
                         ? null
                         : new XXChartAttempt(Enum.Parse<XXLetterGrade>(record.LetterGrade, true), isBroken, score,

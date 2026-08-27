@@ -53,7 +53,7 @@ public sealed class RivalHighlightsFeedTests : ComponentTestBase
         return new Chart(Guid.NewGuid(), MixEnum.Phoenix2,
             new Song(name, SongType.Arcade, new Uri("https://piu.test/art.png"),
                 TimeSpan.FromMinutes(2), "Artist", Bpm.From(140, 140)),
-            ChartType.Double, 24, MixEnum.Phoenix2, null, 1200, new HashSet<Skill>());
+            ChartType.Double, 24, MixEnum.Phoenix2, null, 1200);
     }
 
     [Fact]

@@ -76,7 +76,7 @@ internal sealed class SearchVocabularyHandler :
             .Where(m => m.MetricName.StartsWith(PiuCenterMetrics.Top3Prefix, StringComparison.Ordinal))
             .Select(m => m.MetricName[PiuCenterMetrics.Top3Prefix.Length..])
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Select(k => new ChartBadge(k, PiuCenterBadges.DisplayName(k), PiuCenterBadges.CategoryFor(k)))
+            .Select(k => new ChartBadge(k, BadgeLabels.DisplayName(k), BadgeLabels.CategoryFor(k)))
             // Grouped by family, then by name inside it, so the cloud reads as five colour
             // blocks — an unfamiliar badge is placed by the company it keeps. Uncategorised
             // (a badge piucenter added that the table has not learned) sorts last.

@@ -21,7 +21,7 @@ Cross-vertical communication happens two ways, and only two ways:
 
 **Never SQL joins onto another vertical's tables.** A vertical's tables are private storage, not an integration surface. This is what keeps a vertical extractable: its data model can change shape without a ripple, because nothing else touches it below the contract line.
 
-The verticals: **ScoreLedger** (the system of record for scores), **PlayerProgress** (ratings, titles, history), **ChartIntelligence** (tier lists, difficulty analytics), **Catalog** (game content reads, videos, skills), **Randomizer** (chart draw generation, randomizer settings, tournament draws), **OfficialMirror** (the anti-corruption layer against the official PiuGame site), **WeeklyChallenge**, **EventCompetition** (tournaments), **Communities**, **CommunityTools** (registered partner tools, player sharing, API keys, webhook delivery),
+The verticals: **ScoreLedger** (the system of record for scores), **PlayerProgress** (ratings, titles, history), **ChartIntelligence** (tier lists, difficulty analytics), **Catalog** (game content reads, videos, chart identity — the piucenter badge vocabulary, folder baselines and the chips built on them), **Randomizer** (chart draw generation, randomizer settings, tournament draws), **OfficialMirror** (the anti-corruption layer against the official PiuGame site), **WeeklyChallenge**, **EventCompetition** (tournaments), **Communities**, **CommunityTools** (registered partner tools, player sharing, API keys, webhook delivery),
 **ChartComments** (comments and personal notes on a chart, their votes, and the plain-text parser
 that autolinks a URL and decides whether its host is trusted), **Rivals** (the rival graph — a directed edge onto a site player or a board tag, plus the blocks and invite codes that gate it; see [rivals.md](design/rivals.md)), **Identity** (accounts, logins, tokens), and **HomePage** (dashboard layout persistence — pages and widget instances; the widget *render components* live in Web's registry, see [docs/design/HomePageWidgets/README.md](design/HomePageWidgets/README.md)).
 
@@ -83,7 +83,7 @@ ScoreTracker.sln
 │   │                                  append-only ScoreEventJournal, IScoreReader
 │   ├── ScoreTracker.PlayerProgress    ratings, titles, player history, recommendations
 │   ├── ScoreTracker.ChartIntelligence tier lists, scoring/letter difficulties, votes
-│   ├── ScoreTracker.Catalog           chart/song reads, videos, skills
+│   ├── ScoreTracker.Catalog           chart/song reads, videos, chart identity
 │   ├── ScoreTracker.Randomizer        chart draw generation + randomizer settings
 │   ├── ScoreTracker.OfficialMirror    PiuGame ACL: scraping, leaderboard mirror,
 │   │                                  supplemented reading, score import saga

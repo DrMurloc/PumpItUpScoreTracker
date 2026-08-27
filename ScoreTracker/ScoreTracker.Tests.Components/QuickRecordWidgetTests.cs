@@ -68,13 +68,13 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
         new(Guid.NewGuid(), MixEnum.Phoenix,
             new Song("Bad Apple!! feat. Nomico", SongType.Arcade, new Uri("https://piu.test/art.png"),
                 TimeSpan.FromMinutes(2), "Nomico", Bpm.From(140, 140)),
-            ChartType.Double, 22, MixEnum.Phoenix, null, 1200, new HashSet<Skill>());
+            ChartType.Double, 22, MixEnum.Phoenix, null, 1200);
 
     private static Chart MakeXxChart() =>
         new(Guid.NewGuid(), MixEnum.XX,
             new Song("Chimera", SongType.Arcade, new Uri("https://piu.test/xx.png"),
                 TimeSpan.FromMinutes(2), "SHK", Bpm.From(200, 200)),
-            ChartType.Single, 18, MixEnum.XX, null, 800, new HashSet<Skill>());
+            ChartType.Single, 18, MixEnum.XX, null, 800);
 
     private IRenderedComponent<QuickRecordWidget> Render(bool editMode = false, string configJson = "{}")
     {

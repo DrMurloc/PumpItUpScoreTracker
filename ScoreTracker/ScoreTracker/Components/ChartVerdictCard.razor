@@ -3,10 +3,14 @@
 @using ScoreTracker.Web.Services.Theming
 @namespace ScoreTracker.Web.Components
 
-@* The hero's centerpiece (mock R2): the top verdict sentence, a supporting line, and the
-   tier chips. The graphs below are evidence for these sentences, never the other way
-   around. Facets arrive salience-ordered from GetChartVerdictQuery. *@
-@if (Facets != null && Facets.Count > 0)
+@* The hero's centerpiece (mock R2): the verdict sentences, what the chart IS, and the tier
+   chips. The graphs below are evidence for these, never the other way around. Facets arrive
+   salience-ordered from GetChartVerdictQuery.
+
+   The identity chips live HERE (owner, 2026-08-26) rather than in a section further down the
+   page: this block is what a reader looks at to find out what they are about to play, and it
+   was answering with one sentence built from a different rule than the chips use. *@
+@if (Facets is { Count: > 0 } || Identity is { Count: > 0 })
 {
     <div class="chart-verdict">
         @if (Headlines.Count > 0)
@@ -17,6 +21,7 @@
         {
             <div class="chart-verdict-sub"><VerdictSentence Facet="Headlines[1]"></VerdictSentence></div>
         }
+        <IdentityChipGroups Chips="Identity"></IdentityChipGroups>
         <div class="chart-verdict-chips">
             @if (PassVsScore != null)
             {
@@ -41,8 +46,19 @@
     [Parameter]
     public IReadOnlyList<ChartVerdictFacet>? Facets { get; set; }
 
+    /// <summary>Every chip the chart earned against its folder, in engine order. Never a capped list.</summary>
+    [Parameter]
+    public IReadOnlyList<TierListChartCard.CardSkillChip>? Identity { get; set; }
+
+    /// <summary>
+    ///     The sentences the chips do not already say. Style fingerprint and crux are both gone:
+    ///     the fingerprint picked its two badges by a different rule than the chips do, so it
+    ///     could contradict the row printed directly beneath it, and the crux line IS the
+    ///     "Hardest Ns" chip in longer words. What is left is about difficulty, which no chip
+    ///     claims.
+    /// </summary>
     private IReadOnlyList<ChartVerdictFacet> Headlines => (Facets ?? Array.Empty<ChartVerdictFacet>())
-        .Where(f => f is PassVsScoreVerdict or LetterWallVerdict or YieldKneeVerdict or StyleFingerprintVerdict)
+        .Where(f => f is PassVsScoreVerdict or LetterWallVerdict or YieldKneeVerdict)
         .Take(2)
         .ToArray();
 

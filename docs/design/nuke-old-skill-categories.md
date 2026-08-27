@@ -135,10 +135,62 @@ N3 is additive, so N4–N7 can move one surface at a time and every commit stays
 - **Post-deploy presses**: Backfill User Tier Lists, Recalculate Ratings (PUMBILITY), and a
   chart-verdict rebuild. Tier order and Pumbility numbers will move — that is the intent.
 
-## 6. Shipped so far
+## 6. Shipped
+
+**Round 2 — DONE (2026-08-25).** The rollup is gone: `Skill`, `SkillCategory`, `Chart.Skills`,
+the 33→11 mapper, the queries and records that served it, the write path that regenerated tags,
+and the `--skillcat-*` tokens. `scores.ChartSkill` moved to the `archive` schema;
+`scores.ChartSkillArchive` stayed live as the Chabala lens's one read. What replaced it is
+specified in [chart-identity.md](chart-identity.md) and built alongside. `RetiredSkillRollupTests`
+is the ratchet that keeps it dead — it grew back once as a display vocabulary after being
+deleted as a data source, which is exactly what a ratchet is for.
 
 **Round 1 — the three chart surfaces (N1, N3, N4).** Scope reduced by the owner to what the
 chart list, the chart details page and the chart details dialog need to be accurate; the
 scoring paths (N5, N6) and the deletions (N8, N9) are deliberately still pending, so the
 `Skill` enum, `GetChartSkillChipsQuery` and the `ChartSkill` table all remain in place and
 the tier lists, Personalized Breakdown and Pumbility keep reading them unchanged.
+
+## 7. As decided 2026-08-25 — the plan that supersedes §4's tail
+
+Owner ruling: finish the nuke ("The 11 skills… I want them gone"), with corrections to the
+original plan and a replacement identity system specified in
+[chart-identity.md](chart-identity.md). Where this section contradicts §3/§4/§5 above, this
+section wins.
+
+**Moot since the plan was written** — do not build N5/N6:
+- The tier-list blend has **no skill source** (went with Personalized Pass; Score personalizes
+  through the peer projection alone) and the PUMBILITY projection dropped its skill nudge
+  (measured 0.071 correlation, PeerEstimator doc). §5's recalibration risk no longer exists.
+- `PersonalizedTierListBreakdown` still carries the dead fields (`BreakdownSkillRecord`,
+  `SkillSourceActive`, `SkillWeight`, `SimilarPlayersWeight`, …) hardwired empty — delete them
+  and the page's never-rendering markup (absorbs pumbility-tier-list.md §10's deferred pass).
+
+**Corrections to the deletion steps:**
+- **Tables are never dropped** (owner standard, postdates this doc): the N2/N9 `DropTable`s
+  become `ALTER SCHEMA TRANSFER` for `scores.ChartSkill` → `archive`.
+- **`scores.ChartSkillArchive` stays LIVE in `scores`** — owner: "unarchive it for that" — it is
+  the read behind the Chabala lens (below). deletions-wave-1's note that it rides N2 into
+  `archive` is void.
+- **The Chabala lens keeps the 11, and only it**: while `Ranked by: Chabala` is active, cards
+  swap their identity chips for the archived hand tags (a published Catalog query over
+  `ChartSkillArchive`), rendered as **neutral grey chips** — tinting them would map the 11 onto
+  the families, which is the association the ruling bans. Post-flip charts show no chips there.
+  The archive is never written again. Every other lens shows identity chips.
+- **Fast / Slow / EndRun die with the mapper** (owner-confirmed): they were derived tags with no
+  badge counterpart. The Speed grouping carries the axis now.
+- **The verdict re-key** (§3's `VerdictSentence` row) is implemented by reading the identity
+  engine's crux facet, not by a mechanical enum→string swap — see chart-identity.md §6.
+- **resx orphan keys are left in place** (deletions-wave-2 §2 policy — their own pass, never a
+  rider). Several enum-name keys are shared with badge display names; retirement needs
+  call-site checks.
+- `MixCapabilities.HasSkillData` has zero callers — delete.
+- Deletion order caveat: remove the **port members** (`IChartRepository.GetChartSkills` /
+  `SaveChartSkills`) before their EF implementations — reflection DI hides an impl-first
+  mistake until runtime.
+
+**What replaces the rollup** — built in the same effort, specified in
+[chart-identity.md](chart-identity.md): the Speed tier list, the four-kind folder-relative
+chip system with its crux metrics and folder baselines, chip-driven family filing for
+Group By Skill, and the chart page/dialog adoption. That doc's §8 golden examples are the
+acceptance bar for the whole system.

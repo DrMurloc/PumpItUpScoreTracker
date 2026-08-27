@@ -1795,6 +1795,9 @@
   <data name="Copying existing highlights into the new feed store." xml:space="preserve">
     <value>기존 하이라이트를 새 피드 저장소로 복사하는 중입니다.</value>
   </data>
+  <data name="Core Skills" xml:space="preserve">
+    <value>핵심 스킬</value>
+  </data>
   <data name="Costs scale with the chart — every non-perfect divides by the note count. Pick a chart size:" xml:space="preserve">
     <value>감점은 채보에 비례합니다. 퍼펙트가 아닌 모든 판정은 노트 수로 나뉩니다. 채보 크기를 선택하세요:</value>
   </data>
@@ -1917,6 +1920,12 @@
   </data>
   <data name="Cross-pad Transitions" xml:space="preserve">
     <value>패드 이동</value>
+  </data>
+  <data name="Crossed over" xml:space="preserve">
+    <value>크로스오버</value>
+  </data>
+  <data name="crux: {0}" xml:space="preserve">
+    <value>최난구간: {0}</value>
   </data>
   <data name="CSV Upload" xml:space="preserve">
     <value>CSV 업로드</value>
@@ -2095,6 +2104,9 @@
   <data name="Developers" xml:space="preserve">
     <value>개발자</value>
   </data>
+  <data name="Diagonal stance" xml:space="preserve">
+    <value>대각 자세</value>
+  </data>
   <data name="Didn't quite make the cut ({0})" xml:space="preserve">
     <value>아쉽게 탈락한 채보 ({0})</value>
   </data>
@@ -2115,6 +2127,9 @@
   </data>
   <data name="Difficulty Range" xml:space="preserve">
     <value>난이도 범위</value>
+  </data>
+  <data name="Difficulty Spike" xml:space="preserve">
+    <value>난이도 급상승</value>
   </data>
   <data name="Directory" xml:space="preserve">
     <value>디렉터리</value>
@@ -2185,7 +2200,7 @@
   <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
     <value>더블 표입니다; 싱글은 AA 이하를 한 칸씩 낮게 읽습니다 (AA {0}, A+ {1} …). 전체 사다리는 아래에.</value>
   </data>
-  <data name="Doubles: {0}/{1} charts" xml:space="preserve">
+<data name="Doubles: {0}/{1} charts" xml:space="preserve">
     <value>더블: {0}/{1}곡</value>
   </data>
   <data name="Doublesteps" xml:space="preserve">
@@ -2494,8 +2509,14 @@
   <data name="Far Twists" xml:space="preserve">
     <value>넓은 틀기</value>
   </data>
+  <data name="Fast" xml:space="preserve">
+    <value>빠름</value>
+  </data>
   <data name="Favorites" xml:space="preserve">
     <value>즐겨찾기</value>
+  </data>
+  <data name="Features" xml:space="preserve">
+    <value>특징</value>
   </data>
   <data name="Feedback Submitted, Thank You!" xml:space="preserve">
     <value>피드백 감사합니다!</value>
@@ -2895,6 +2916,9 @@
   </data>
   <data name="Harder for you" xml:space="preserve">
     <value>나에게 더 어려움</value>
+  </data>
+  <data name="Hardest {0}s:" xml:space="preserve">
+    <value>가장 어려운 {0}초:</value>
   </data>
   <data name="Has errors" xml:space="preserve">
     <value>오류 있음</value>
@@ -3364,6 +3388,9 @@
   <data name="It moves, and that is the whole answer: score is {0} of the number in {1} and {2} in {3}. The pool’s average level runs {4} → {5} along the way, and S or better {6} → {7} of fifty." xml:space="preserve">
     <value>움직입니다, 그리고 그것이 답의 전부입니다: 점수는 {1}에서 숫자의 {0}, {3}에서 {2}입니다. 그 사이 풀의 평균 레벨은 {4} → {5}, 50개 중 S 이상은 {6} → {7}개입니다.</value>
   </data>
+  <data name="It opens with its hardest {0} seconds — {1}." xml:space="preserve">
+    <value>가장 어려운 {0}초로 시작합니다 — {1}.</value>
+  </data>
   <data name="It reads player scores" xml:space="preserve">
     <value>플레이어 점수를 읽습니다</value>
   </data>
@@ -3390,6 +3417,12 @@
   </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>읽을 수 있는 항목</value>
+  </data>
+  <data name="Its hardest {0} seconds are {1}, at the very end." xml:space="preserve">
+    <value>가장 어려운 {0}초는 {1}이며, 맨 끝에 있습니다.</value>
+  </data>
+  <data name="Its hardest {0} seconds are {1}, in the middle." xml:space="preserve">
+    <value>가장 어려운 {0}초는 {1}이며, 중반에 있습니다.</value>
   </data>
   <data name="Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access." xml:space="preserve">
     <value>키가 작동을 멈추고 웹훅 전송이 중단되며, 연결된 플레이어 {0}명이 접근 권한을 잃습니다.</value>
@@ -3703,6 +3736,9 @@
   <data name="Logout" xml:space="preserve">
     <value>로그아웃</value>
   </data>
+  <data name="Longest run: {0}s" xml:space="preserve">
+    <value>최장 런: {0}초</value>
+  </data>
   <data name="Look back" xml:space="preserve">
     <value>조회 기간</value>
   </data>
@@ -3871,10 +3907,19 @@
   <data name="Metric" xml:space="preserve">
     <value>지표</value>
   </data>
+  <data name="Mid Tempo" xml:space="preserve">
+    <value>중간 속도</value>
+  </data>
   <data name="Mid-4 Doubles" xml:space="preserve">
     <value>중앙 4패널</value>
   </data>
   <data name="Mid-6 Doubles" xml:space="preserve">
+    <value>중앙 6패널</value>
+  </data>
+  <data name="Middle 4" xml:space="preserve">
+    <value>중앙 4패널</value>
+  </data>
+  <data name="Middle 6" xml:space="preserve">
     <value>중앙 6패널</value>
   </data>
   <data name="middle 80% of charts" xml:space="preserve">
@@ -5844,6 +5889,9 @@
   <data name="Qualifiers Submission" xml:space="preserve">
     <value>{0} 예선과제 제출</value>
   </data>
+  <data name="Quarter Double" xml:space="preserve">
+    <value>쿼터 더블</value>
+  </data>
   <data name="Queued" xml:space="preserve">
     <value>대기열에 추가됨</value>
   </data>
@@ -5998,11 +6046,17 @@
   <data name="Rebuild {0} PUMBILITY tier lists" xml:space="preserve">
     <value>{0} PUMBILITY 티어 리스트 재생성</value>
   </data>
+  <data name="Rebuild {0} Speed tier list" xml:space="preserve">
+    <value>{0} 속도 티어 리스트 재생성</value>
+  </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>모든 플레이어의 최근 세션을 재생성하는 중입니다.</value>
   </data>
   <data name="Rebuilding the {0} PUMBILITY tier lists. It takes a few minutes." xml:space="preserve">
     <value>{0} PUMBILITY 티어 리스트를 재생성하는 중입니다. 몇 분 걸립니다.</value>
+  </data>
+  <data name="Rebuilding the {0} Speed tier list. It takes a few minutes." xml:space="preserve">
+    <value>{0} 속도 티어 리스트를 재생성하는 중입니다. 몇 분 걸립니다.</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>몇 시간마다 다시 계산됩니다</value>
@@ -6847,6 +6901,9 @@
   <data name="Side-3 Singles" xml:space="preserve">
     <value>사이드 3패널</value>
   </data>
+  <data name="Side-on stance" xml:space="preserve">
+    <value>측면 자세</value>
+  </data>
   <data name="Sign in" xml:space="preserve">
     <value>로그인</value>
   </data>
@@ -6985,6 +7042,9 @@
   <data name="Slim" xml:space="preserve">
     <value>희박</value>
   </data>
+  <data name="Slow" xml:space="preserve">
+    <value>느림</value>
+  </data>
   <data name="so scoring one chart at 20 is worth" xml:space="preserve">
     <value>그래서 20레벨에서 채보 하나의 점수는</value>
   </data>
@@ -7063,6 +7123,15 @@
   <data name="Special Snowflake" xml:space="preserve">
     <value>Special Snowflake</value>
   </data>
+  <data name="Speed" xml:space="preserve">
+    <value>속도</value>
+  </data>
+  <data name="Speed not measured" xml:space="preserve">
+    <value>속도 미측정</value>
+  </data>
+  <data name="Spike" xml:space="preserve">
+    <value>스파이크</value>
+  </data>
   <data name="Spikes" xml:space="preserve">
     <value>폭타 구간</value>
   </data>
@@ -7105,7 +7174,7 @@
   <data name="Stale weight" xml:space="preserve">
     <value>낡은 가중치</value>
   </data>
-  <data name="Stamina Session Builder" xml:space="preserve">
+<data name="Stamina Session Builder" xml:space="preserve">
     <value>스태미나 세션 빌더</value>
   </data>
   <data name="Standings" xml:space="preserve">
@@ -7300,7 +7369,7 @@
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>
   </data>
-  <data name="Test delivery" xml:space="preserve">
+<data name="Test delivery" xml:space="preserve">
     <value>테스트 전송</value>
   </data>
   <data name="Test Scores" xml:space="preserve">
@@ -8053,6 +8122,12 @@
   <data name="Twist 90" xml:space="preserve">
     <value>90도 틀기</value>
   </data>
+  <data name="Twist-heavy" xml:space="preserve">
+    <value>트위스트 많음</value>
+  </data>
+  <data name="Twistless" xml:space="preserve">
+    <value>트위스트 없음</value>
+  </data>
   <data name="Twists" xml:space="preserve">
     <value>틀기</value>
   </data>
@@ -8299,6 +8374,9 @@
   <data name="Very easy to pass for its level" xml:space="preserve">
     <value>레벨 대비 클리어가 매우 쉬움</value>
   </data>
+  <data name="Very Fast" xml:space="preserve">
+    <value>아주 빠름</value>
+  </data>
   <data name="Very Good" xml:space="preserve">
     <value>매우 좋음</value>
   </data>
@@ -8322,6 +8400,9 @@
   </data>
   <data name="Very Popular" xml:space="preserve">
     <value>매우 인기</value>
+  </data>
+  <data name="Very Slow" xml:space="preserve">
+    <value>아주 느림</value>
   </data>
   <data name="Very split" xml:space="preserve">
     <value>크게 갈림</value>
@@ -8667,6 +8748,9 @@
   </data>
   <data name="Why Don't You Get Up and Dance, Man?" xml:space="preserve">
     <value>Why Don't You Get Up and Dance, Man?</value>
+  </data>
+  <data name="Wide" xml:space="preserve">
+    <value>전체 사용</value>
   </data>
   <data name="Widget schema" xml:space="preserve">
     <value>위젯 스키마</value>
@@ -9493,6 +9577,9 @@
   <data name="{0} now {1}" xml:space="preserve">
     <value>{0} 이제 {1}</value>
   </data>
+  <data name="{0} NPS" xml:space="preserve">
+    <value>{0} NPS</value>
+  </data>
   <data name="{0} of all Phoenix titles collected" xml:space="preserve">
     <value>전체 피닉스 타이틀의 {0} 수집</value>
   </data>
@@ -9726,6 +9813,9 @@
   </data>
   <data name="{0}m ago" xml:space="preserve">
     <value>{0}분 전</value>
+  </data>
+  <data name="{0}–{1} NPS" xml:space="preserve">
+    <value>{0}–{1} NPS</value>
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>공식 순위표 ~#{0}</value>

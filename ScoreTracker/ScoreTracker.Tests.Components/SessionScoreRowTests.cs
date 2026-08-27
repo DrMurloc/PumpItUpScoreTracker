@@ -291,7 +291,7 @@ public sealed class SessionScoreRowTests : ComponentTestBase
         var song = new Song("Arcana Force", SongType.Arcade, new Uri("https://example.invalid/a.png"),
             TimeSpan.FromMinutes(2), "Artist", null);
         var chart = new Chart(Guid.NewGuid(), MixEnum.Phoenix2, song, ChartType.Double,
-            DifficultyLevel.From(20), MixEnum.Phoenix2, null, chartNoteCount, new HashSet<Skill>());
+            DifficultyLevel.From(20), MixEnum.Phoenix2, null, chartNoteCount);
         var row = new RecentSessionsPage.ScoreEventRecord(chart.Id, Start, null, null, true,
             "officialImport", Session, ScoreEventClassification.Played, null, false, true, judgedNotes);
         return new SessionScore(row, chart, HighlightFlags.None, null);
@@ -303,7 +303,7 @@ public sealed class SessionScoreRowTests : ComponentTestBase
         var song = new Song("Seeded Song", SongType.Arcade, new Uri("https://example.invalid/a.png"),
             TimeSpan.FromMinutes(2), "Artist", null);
         var chart = new Chart(Guid.NewGuid(), MixEnum.Phoenix2, song, ChartType.Single,
-            DifficultyLevel.From(21), MixEnum.Phoenix2, null, null, new HashSet<Skill>());
+            DifficultyLevel.From(21), MixEnum.Phoenix2, null, null);
         var row = new RecentSessionsPage.ScoreEventRecord(chart.Id, Start, score, "Fair Game", false,
             "officialImport", Session, ScoreEventClassification.Upscore, score - 4000);
         return new SessionScore(row, chart, flags, detail);

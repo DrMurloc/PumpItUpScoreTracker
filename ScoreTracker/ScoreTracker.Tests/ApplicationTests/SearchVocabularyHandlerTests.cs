@@ -44,8 +44,7 @@ public sealed class SearchVocabularyHandlerTests
         return new Chart(Guid.NewGuid(), mix,
             new Song(song, SongType.Arcade, new Uri("https://piu.test/a.png"), TimeSpan.FromMinutes(2),
                 artist, Bpm.From(150, 150)),
-            ChartType.Double, 19, mix, stepArtist == null ? (Name?)null : Name.From(stepArtist), null,
-            new HashSet<Skill>());
+            ChartType.Double, 19, mix, stepArtist == null ? (Name?)null : Name.From(stepArtist), null);
     }
 
     [Fact]

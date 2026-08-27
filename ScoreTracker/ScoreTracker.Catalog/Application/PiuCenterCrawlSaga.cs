@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using ScoreTracker.Catalog.Contracts.Events;
 using ScoreTracker.Catalog.Contracts.Messages;
 using ScoreTracker.Catalog.Domain;
 using ScoreTracker.Data.Apis;
@@ -18,16 +19,26 @@ namespace ScoreTracker.Catalog.Application;
 ///        the admin grid's queue); NotFound candidates whose key appeared flip to Auto.
 ///     2. Fetch per-chart analysis for resolved aliases missing the current data
 ///        release (the client throttles; a killed run resumes at the gap set).
-///     3. Regenerate every chart's Skill tags from the banked metrics — including
-///        clearing tags on charts piucenter has nothing for. The pre-crawler hand tags
-///        live on in scores.ChartSkillArchive only (owner-locked full replace).
+///     3. Rebuild every folder's per-badge baselines from the banked metrics, and announce
+///        the ingestion so anything derived from step analysis can recompute
+///        (docs/design/chart-identity.md §5).
 ///     The snapshot import runs the same pipeline from an uploaded zip of a data
 ///     release instead of HTTP — the zero-crawl bootstrap path.
 /// </summary>
 internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
     IConsumer<ImportPiuCenterSnapshotCommand>
 {
+    /// <summary>
+    ///     The catalog every piucenter key is matched against. It has to be the CURRENT mix,
+    ///     because the match key carries the chart's level and a level moves between mixes: read
+    ///     against Phoenix, a Phoenix 2 data release mismatches every chart whose level shifted
+    ///     and misses every Phoenix 2 song outright — which is why a P2 snapshot appeared to
+    ///     upload and bank nothing.
+    /// </summary>
+    private const MixEnum MatchCatalog = MixEnum.Phoenix2;
+
     private readonly IExternalChartAliasRepository _aliases;
+    private readonly IChartFolderBaselineRepository _baselines;
     private readonly IChartRepository _charts;
     private readonly IDateTimeOffsetAccessor _clock;
     private readonly ILogger<PiuCenterCrawlSaga> _logger;
@@ -36,13 +47,14 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
 
     public PiuCenterCrawlSaga(IPiuCenterClient piuCenter, IExternalChartAliasRepository aliases,
         IChartSkillMetricRepository metrics, IChartRepository charts, IDateTimeOffsetAccessor clock,
-        ILogger<PiuCenterCrawlSaga> logger)
+        IChartFolderBaselineRepository baselines, ILogger<PiuCenterCrawlSaga> logger)
     {
         _piuCenter = piuCenter;
         _aliases = aliases;
         _metrics = metrics;
         _charts = charts;
         _clock = clock;
+        _baselines = baselines;
         _logger = logger;
     }
 
@@ -52,14 +64,14 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
         var now = _clock.Now;
         var version = decimal.Parse(await _piuCenter.GetDataVersion(cancellationToken));
         var table = await _piuCenter.GetChartTable(cancellationToken);
-        var phoenixCharts = (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
+        var catalogCharts = (await _charts.GetCharts(MatchCatalog, cancellationToken: cancellationToken))
             .ToArray();
 
-        var aliases = await ReconcileAliases(table, phoenixCharts, now, cancellationToken);
+        var aliases = await ReconcileAliases(table, catalogCharts, now, cancellationToken);
         var resolved = ResolvedIn(aliases, table);
 
         await FillMetricGaps(resolved, table, version, cancellationToken);
-        await RegenerateSkillTags(resolved, phoenixCharts, cancellationToken);
+        await RebuildFolderBaselines(catalogCharts, context, cancellationToken);
     }
 
     public async Task Consume(ConsumeContext<ImportPiuCenterSnapshotCommand> context)
@@ -92,9 +104,9 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
 
         _logger.LogInformation("piucenter snapshot import: release {Version}, {Count} listed charts",
             version, table.Count);
-        var phoenixCharts = (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
+        var catalogCharts = (await _charts.GetCharts(MatchCatalog, cancellationToken: cancellationToken))
             .ToArray();
-        var aliases = await ReconcileAliases(table, phoenixCharts, now, cancellationToken);
+        var aliases = await ReconcileAliases(table, catalogCharts, now, cancellationToken);
         var resolved = ResolvedIn(aliases, table);
 
         var banked = 0;
@@ -115,7 +127,7 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
 
         _logger.LogInformation("piucenter snapshot import: banked metrics for {Banked}/{Total} resolved charts",
             banked, resolved.Length);
-        await RegenerateSkillTags(resolved, phoenixCharts, cancellationToken);
+        await RebuildFolderBaselines(catalogCharts, context, cancellationToken);
     }
 
     private static ExternalChartAlias[] ResolvedIn(IReadOnlyList<ExternalChartAlias> aliases,
@@ -123,6 +135,10 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
     {
         var listedKeys = table.Select(t => t.ExternalKey).ToHashSet(StringComparer.OrdinalIgnoreCase);
         return aliases
+            // A few keys name a stepchart that is not the chart we would hang it on — XX-era
+            // branching paths where only one branch survives. Dropped here rather than at match
+            // time, so a rejected key can never bank metrics over a good one.
+            .Where(a => !PiuCenterKeyParser.IsRejected(a.ExternalKey))
             .Where(a => a.ChartId != null && a.Status != ExternalAliasStatus.NotFound)
             .Where(a => listedKeys.Contains(a.ExternalKey))
             .GroupBy(a => a.ExternalKey, StringComparer.OrdinalIgnoreCase).Select(g => g.First())
@@ -130,7 +146,7 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
     }
 
     private async Task<IReadOnlyList<ExternalChartAlias>> ReconcileAliases(
-        IReadOnlyList<PiuCenterChartListing> table, IReadOnlyList<Chart> phoenixCharts, DateTimeOffset now,
+        IReadOnlyList<PiuCenterChartListing> table, IReadOnlyList<Chart> catalogCharts, DateTimeOffset now,
         CancellationToken cancellationToken)
     {
         // Ordinal-ignore-case throughout the alias path: the SQL unique index compares
@@ -138,19 +154,40 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
         // ("..._s19_ARCADE" vs "..._S19_ARCADE") that must not read as new keys.
         var known = (await _aliases.GetAliases(PiuCenterMetrics.Source, cancellationToken))
             .ToDictionary(a => a.ExternalKey, StringComparer.OrdinalIgnoreCase);
-        var matchIndex = BuildMatchIndex(phoenixCharts);
+        var matchIndex = BuildMatchIndex(catalogCharts);
+        // One chart, one key. Rejected keys are deliberately NOT counted as claiming their
+        // chart: refusing to ingest a key while it still reserves the chart would leave the
+        // surviving key of the pair unable to bind, which is how Gargoyle FULL SONG S21 sat on
+        // metrics from before the rejection with no way to replace them.
         var alreadyResolved = known.Values
             .Where(a => a.ChartId != null && a.Status != ExternalAliasStatus.NotFound)
+            .Where(a => !PiuCenterKeyParser.IsRejected(a.ExternalKey))
             .Select(a => a.ChartId!.Value)
             .ToHashSet();
 
         var updates = new List<ExternalChartAlias>();
         foreach (var listing in table)
+        {
+            // Never bind a key we refuse to ingest: it would take the chart's one slot and
+            // ResolvedIn would then drop it, banking nothing through either key.
+            if (PiuCenterKeyParser.IsRejected(listing.ExternalKey)) continue;
+
             if (known.TryGetValue(listing.ExternalKey, out var existing))
             {
                 // A NotFound candidate key that now exists upstream: the chart got analyzed.
                 if (existing.Status == ExternalAliasStatus.NotFound)
                     updates.Add(existing with { Status = ExternalAliasStatus.Auto, LastCheckedAt = now });
+                // A parked key gets another go every run. Whether a key matches depends on the
+                // matcher AND on the catalog, and both move — so a row that failed once was
+                // failing forever, and re-uploading the snapshot could not fix any of it: the
+                // Phoenix 2 catalog flip should have rebound 176 of these and rebound none,
+                // because nothing ever asked them again (field test, 2026-08-26).
+                // Manual rows are exempt: an admin's binding — including a deliberate
+                // non-binding — is not the auto-matcher's to overwrite.
+                else if (existing.ChartId == null && existing.Status == ExternalAliasStatus.Auto
+                                                  && TryMatch(matchIndex, listing) is { } rematched
+                                                  && alreadyResolved.Add(rematched))
+                    updates.Add(existing with { ChartId = rematched, LastCheckedAt = now });
             }
             else
             {
@@ -161,6 +198,7 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
                     _logger.LogInformation("piucenter key {Key} has no auto-match — parked for admin resolution",
                         listing.ExternalKey);
             }
+        }
 
         if (updates.Count > 0)
         {
@@ -214,73 +252,81 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
             gaps.Length);
     }
 
-    private async Task RegenerateSkillTags(IReadOnlyList<ExternalChartAlias> resolved,
-        IReadOnlyList<Chart> phoenixCharts, CancellationToken cancellationToken)
+    /// <summary>
+    ///     Recomputes every folder's per-badge baselines from the banked metrics
+    ///     (docs/design/chart-identity.md §5). Runs at the end of an ingestion because that is
+    ///     the only thing that moves the inputs, and it recomputes whole rather than in place:
+    ///     a folder that changed shape has to lose its old rows.
+    ///     <para>
+    ///         Every mix is rebuilt, not just the crawled one. Metrics describe the steps and the
+    ///         steps do not change between mixes — but the LEVEL does, so the same chart is
+    ///         measured against different company in each catalog and each needs its own
+    ///         baseline (the same-chart-different-level trap that bites every cross-mix read).
+    ///     </para>
+    /// </summary>
+    private async Task RebuildFolderBaselines(IReadOnlyList<Chart> catalogCharts,
+        IPublishEndpoint publisher, CancellationToken cancellationToken)
     {
-        var chartById = phoenixCharts.ToDictionary(c => c.Id);
-        var metricsByChart =
-            (await _metrics.GetMetrics(resolved.Select(a => a.ChartId!.Value), PiuCenterMetrics.Source,
-                cancellationToken))
-            .GroupBy(m => m.ChartId)
-            .ToDictionary(g => g.Key, g => (IReadOnlyList<ChartSkillMetric>)g.ToArray());
-
-        // Fast/Slow cutoffs are folder-relative: NPS quartiles within (type, level).
-        var cutoffs = metricsByChart
-            .Where(kv => chartById.ContainsKey(kv.Key))
-            .Select(kv => (Chart: chartById[kv.Key],
-                Nps: kv.Value.FirstOrDefault(m => m.MetricName == PiuCenterMetrics.Nps)?.Value))
-            .Where(x => x.Nps != null)
-            .GroupBy(x => (x.Chart.Type, Level: (int)x.Chart.Level))
-            .ToDictionary(g => g.Key, g =>
-            {
-                var sorted = g.Select(x => x.Nps!.Value).OrderBy(v => v).ToArray();
-                return (Fast: Quantile(sorted, PiuCenterSkillMapper.FastNpsQuantile),
-                    Slow: Quantile(sorted, PiuCenterSkillMapper.SlowNpsQuantile));
-            });
-
-        var desired = new Dictionary<Guid, ChartSkillsRecord>();
-        foreach (var (chartId, chartMetrics) in metricsByChart)
+        var metricsByChart = await _metrics.GetMetricsByChart(PiuCenterMetrics.Source, cancellationToken);
+        if (metricsByChart.Count == 0)
         {
-            (decimal Fast, decimal Slow)? folder = chartById.TryGetValue(chartId, out var chart) &&
-                                                   cutoffs.TryGetValue((chart.Type, (int)chart.Level), out var c)
-                ? c
-                : null;
-            desired[chartId] = PiuCenterSkillMapper.Map(chartId, chartMetrics, folder?.Fast, folder?.Slow);
+            _logger.LogInformation("piucenter: no banked metrics, folder baselines left alone");
+            return;
         }
 
-        // Charts with tags but no piucenter data lose them — the hand-tag purge.
-        var current = (await _charts.GetChartSkills(cancellationToken)).ToDictionary(r => r.ChartId);
-        foreach (var record in current.Values)
-            if (!desired.ContainsKey(record.ChartId) && chartById.ContainsKey(record.ChartId))
-                desired[record.ChartId] = new ChartSkillsRecord(record.ChartId, Array.Empty<Skill>(),
-                    Array.Empty<Skill>());
+        var profiles = metricsByChart.ToDictionary(kv => kv.Key, kv => ChartBadgeProfile.From(kv.Key, kv.Value));
+        // Every chart carrying metrics was matched against the Phoenix catalog, so that is
+        // where its type comes from; the flat ChartMix read then places it in every other
+        // mix that carries it.
+        var typeById = catalogCharts.ToDictionary(c => c.Id, c => c.Type);
 
-        var changed = 0;
-        foreach (var record in desired.Values)
+        var folders = new Dictionary<(MixEnum Mix, ChartType Type, int Level), List<ChartBadgeProfile>>();
+        foreach (var (chartId, mix, level) in await _charts.GetChartMixLevels(cancellationToken))
         {
-            if (current.TryGetValue(record.ChartId, out var existing) && SameTags(existing, record)) continue;
-            await _charts.SaveChartSkills(record, cancellationToken);
-            changed++;
+            if (!profiles.TryGetValue(chartId, out var profile)) continue;
+            if (!typeById.TryGetValue(chartId, out var type)) continue;
+            var key = (mix, type, level);
+            if (!folders.TryGetValue(key, out var members)) folders[key] = members = new List<ChartBadgeProfile>();
+            members.Add(profile);
         }
 
-        _logger.LogInformation("piucenter crawl: regenerated skill tags — {Changed} charts changed of {Total}",
-            changed, desired.Count);
+        // A folder is judged against its NEIGHBOURS, not only itself: levels L-1, L and L+1 of
+        // the same type and mix. Charts do not respect level boundaries — a technique that is
+        // ordinary at 21 is ordinary at 20 and 22 — and a single level is a thin sample to read
+        // a percentile off, thinner still in the sparse folders at either end of the scale.
+        // Piucenter reached the same shape independently (piu-annotate, get_top_chart_skills)
+        // with a two-level window; the owner asked for symmetric.
+        var byMix = folders
+            .GroupBy(kv => kv.Key.Mix)
+            .ToDictionary(g => g.Key, g => g
+                .SelectMany(kv => FolderBaselineBuilder.Build(kv.Key.Mix, kv.Key.Type, kv.Key.Level,
+                    PeersOf(folders, kv.Key)))
+                .ToArray());
+
+        foreach (var (mix, baselines) in byMix)
+            await _baselines.ReplaceBaselines(mix, baselines, cancellationToken);
+
+        _logger.LogInformation(
+            "piucenter: rebuilt folder baselines — {Rows} rows across {Folders} folders in {Mixes} mixes",
+            byMix.Values.Sum(b => b.Length), folders.Count, byMix.Count);
+
+        await publisher.Publish(new PiuCenterDataIngestedEvent(byMix.Keys.ToArray()), cancellationToken);
     }
 
-    private static bool SameTags(ChartSkillsRecord stored, ChartSkillsRecord desired)
+    /// <summary>
+    ///     The charts a folder's percentiles are measured against: its own level and the two
+    ///     either side, same mix and type. The folder's cutoffs still belong to ITS level — only
+    ///     the population they are read from widens.
+    /// </summary>
+    private static IReadOnlyCollection<ChartBadgeProfile> PeersOf(
+        IReadOnlyDictionary<(MixEnum Mix, ChartType Type, int Level), List<ChartBadgeProfile>> folders,
+        (MixEnum Mix, ChartType Type, int Level) key)
     {
-        // Stored records read ContainsSkills as ALL rows (highlighted included); desired
-        // records keep the two sets disjoint — union before comparing.
-        var storedAll = stored.ContainsSkills.ToHashSet();
-        var desiredAll = desired.ContainsSkills.Concat(desired.HighlightsSkill).ToHashSet();
-        return storedAll.SetEquals(desiredAll) &&
-               stored.HighlightsSkill.ToHashSet().SetEquals(desired.HighlightsSkill.ToHashSet());
-    }
-
-    private static decimal Quantile(decimal[] sortedValues, double quantile)
-    {
-        var index = (int)Math.Round(quantile * (sortedValues.Length - 1), MidpointRounding.AwayFromZero);
-        return sortedValues[Math.Clamp(index, 0, sortedValues.Length - 1)];
+        var peers = new List<ChartBadgeProfile>();
+        for (var level = key.Level - 1; level <= key.Level + 1; level++)
+            if (folders.TryGetValue((key.Mix, key.Type, level), out var members))
+                peers.AddRange(members);
+        return peers;
     }
 
     private static List<ChartSkillMetric> BuildMetrics(Guid chartId, decimal version, PiuCenterChartPage page,
@@ -326,6 +372,51 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
         rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.LastSegmentIsPeak,
             page.LastSegmentIsPeak ? 1 : 0, null));
 
+        // The chart at its hardest (docs/design/chart-identity.md §4). Peakiness is the one
+        // piece that needs the printed level, so it banks only when the page carried one.
+        if (page.Crux is { } crux)
+        {
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.CruxLevel, crux.Level, null));
+            if (crux.Peakiness != null)
+                rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.CruxPeakiness, crux.Peakiness.Value, null));
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.CruxPosition, crux.Position, null));
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.CruxDuration, crux.Duration, null));
+            if (crux.Enps != null)
+                rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.CruxEnps, crux.Enps.Value, null));
+            for (var i = 0; i < crux.Badges.Count; i++)
+                rows.Add(new ChartSkillMetric(chartId,
+                    Truncate($"{PiuCenterMetrics.CruxBadgePrefix}{crux.Badges[i]}", 64), i + 1, null));
+        }
+
+        // Where the body goes (docs/design/chart-identity.md §4b). Pad shares only mean anything
+        // on doubles — a singles chart is trivially "all middle" and a width claim about one
+        // would be noise — but the stance and bracket shares read the same on either.
+        if (page.Stance is { } stance)
+        {
+            if (stance.IsDoubles)
+            {
+                rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.PadShareMid4, stance.PadShareMid4, null));
+                rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.PadShareMid6, stance.PadShareMid6, null));
+            }
+
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.StanceDiagonal, stance.Diagonal, null));
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.StanceSideOn, stance.SideOn, null));
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.StanceCrossed, stance.Crossed, null));
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.BracketRowShare, stance.BracketRowShare, null));
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.RepeatedPanelShare,
+                stance.RepeatedPanelShare, null));
+        }
+
+        if (page.ChartSpanSeconds > 0)
+        {
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.ChartSpan, page.ChartSpanSeconds, null));
+        }
+
+        // Provenance, so a chip built from a pre-Phoenix stepchart can be found later.
+        if (page.Pack != null)
+            rows.Add(new ChartSkillMetric(chartId, PiuCenterMetrics.PackIsPhoenix,
+                page.Pack.Equals("PHOENIX", StringComparison.OrdinalIgnoreCase) ? 1 : 0, null));
+
         foreach (var (label, count) in page.RareSkillCounts)
             rows.Add(new ChartSkillMetric(chartId, Truncate($"{PiuCenterMetrics.RarePrefix}{label}", 64), count,
                 null));
@@ -348,10 +439,14 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
 
     // --- alias auto-matching (tier-1 of the seeding pass, for future upstream keys) ---
 
-    private static Dictionary<string, Guid?> BuildMatchIndex(IReadOnlyList<Chart> phoenixCharts)
+    private static Dictionary<string, Guid?> BuildMatchIndex(IReadOnlyList<Chart> catalogCharts)
     {
         var index = new Dictionary<string, Guid?>();
-        foreach (var chart in phoenixCharts)
+        // The same charts keyed on a bare artist name, merged in only where nothing exact claims
+        // the key. Kept a separate pass on purpose: an exact artist must always win, so a relaxed
+        // key can rescue a lookup that finds nothing and can never repoint one that resolves.
+        var relaxed = new Dictionary<string, Guid?>();
+        foreach (var chart in catalogCharts)
         {
             // ChartType.HalfDouble (#138) is a retired legacy-era chart type and never
             // appears in the Phoenix set this index is built from — piucenter's
@@ -370,11 +465,21 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
                 SongType.FullSong => "FULLSONG",
                 _ => "ARCADE"
             };
-            var key =
-                $"{PiuCenterSkillMapper.Normalize(chart.Song.Name)}|{PiuCenterSkillMapper.Normalize(chart.Song.Artist)}|{sord}|{(int)chart.Level}|{variant}";
+            var song = PiuCenterKeyParser.Normalize(chart.Song.Name);
+            var artist = chart.Song.Artist.ToString();
+            var key = $"{song}|{PiuCenterKeyParser.Normalize(artist)}|{sord}|{(int)chart.Level}|{variant}";
             // Ambiguous keys match nothing — better parked than misbound.
             index[key] = index.ContainsKey(key) ? null : chart.Id;
+
+            var bare = PiuCenterKeyParser.StripTrailingParenthetical(artist);
+            if (bare.Length == 0 || bare.Length == artist.Length) continue;
+            var relaxedKey = $"{song}|{PiuCenterKeyParser.Normalize(bare)}|{sord}|{(int)chart.Level}|{variant}";
+            relaxed[relaxedKey] = relaxed.ContainsKey(relaxedKey) ? null : chart.Id;
         }
+
+        foreach (var (key, id) in relaxed)
+            if (!index.ContainsKey(key))
+                index[key] = id;
 
         return index;
     }
@@ -390,7 +495,7 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
             ? listing.Variant["HALFDOUBLE_".Length..]
             : listing.Variant;
         var key =
-            $"{PiuCenterSkillMapper.Normalize(parts.SongPart)}|{PiuCenterSkillMapper.Normalize(parts.ArtistPart)}|{sord}|{listing.Level}|{variant}";
+            $"{PiuCenterKeyParser.Normalize(parts.SongPart)}|{PiuCenterKeyParser.Normalize(parts.ArtistPart)}|{sord}|{listing.Level}|{variant}";
         return matchIndex.GetValueOrDefault(key);
     }
 }

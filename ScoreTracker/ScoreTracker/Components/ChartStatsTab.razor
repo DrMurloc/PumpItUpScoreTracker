@@ -1,7 +1,9 @@
 @namespace ScoreTracker.Web.Components
 @using MediatR
 @using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.Web.Services
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Services.Theming
 @inject IMediator Mediator
@@ -56,17 +58,14 @@
             }
         </div>
     }
-    @* Badge coverage bars — granular piucenter badges, dominance-first (their top-3
-       pick, then coverage). A pre-crawl chart shows nothing here rather than falling
-       back to the rollup tags: an arbitrary "Technical" is worse than silence
-       (docs/design/nuke-old-skill-categories.md). *@
-    @if (_skillChips.Any())
-    {
-        <MudText Typo="Typo.overline">@L["Skills"]</MudText>
-        @* Bars extracted to SkillCoverageBars (chart-page overhaul): one concept,
-           one component — the page renders the same bars at section scale. *@
-        <SkillCoverageBars Chips="_skillChips"></SkillCoverageBars>
-    }
+    @* The same chips the chart page and the tier-list cards show, at dialog scale — one concept,
+       one component, so a chart cannot look like a different chart depending on where you opened
+       it. Coverage bars used to stand here; a percentage only reads against the folder the reader
+       cannot see from a dialog, which is the comparison the chips have already done (owner,
+       2026-08-26). The crux line went with them: it is the "Hardest Ns" chip in longer words.
+       A pre-crawl chart shows nothing rather than falling back to the rollup tags — an arbitrary
+       "Technical" is worse than silence (docs/design/nuke-old-skill-categories.md). *@
+    <IdentityChipGroups Chips="_identityChips"></IdentityChipGroups>
     <MudText Typo="Typo.overline">@L["Charts like this"]</MudText>
     <SimilarChartsCompactGrid ChartId="Chart.Id" Mix="Mix" Active="Active"
                               OnChartSelected="OnSimilarChartSelected"></SimilarChartsCompactGrid>
@@ -100,6 +99,12 @@
         display: inline-block;
         margin-top: 8px;
     }
+
+    .chart-details-crux {
+        display: block;
+        color: var(--mud-palette-text-secondary);
+        margin: 4px 0 2px;
+    }
 </style>
 
 @code {
@@ -132,7 +137,8 @@
     private Guid _loadedChartId = Guid.Empty;
     private string? _externalKey;
     private IReadOnlyList<(string Label, string Color)> _placements = Array.Empty<(string, string)>();
-    private IReadOnlyList<ChartBadgeChipRecord> _skillChips = Array.Empty<ChartBadgeChipRecord>();
+    private IReadOnlyList<TierListChartCard.CardSkillChip> _identityChips =
+        Array.Empty<TierListChartCard.CardSkillChip>();
 
     protected override async Task OnParametersSetAsync()
     {
@@ -141,9 +147,26 @@
         _placements = await LoadPlacements(Chart.Id);
         // The alias table's key beats the guessed one (crawler project hardening).
         _externalKey = (await Mediator.Send(new GetChartStepAnalysisQuery(Chart.Id)))?.ExternalKey;
-        // Coverage bars: granular piucenter badges, dominance-ordered, from the banked metrics.
-        _skillChips = (await Mediator.Send(new GetChartBadgeChipsQuery(new[] { Chart.Id })))
-            .GetValueOrDefault(Chart.Id) ?? Array.Empty<ChartBadgeChipRecord>();
+        // Every chip the chart earned against its folder, plus which of the five speed bands it
+        // landed in — the identity query is cached per (chart, mix), so the page dispatching the
+        // same one makes this a shared read rather than a second cost.
+        var identity = await Mediator.Send(new GetChartIdentityQuery(new[] { Chart.Id }, Mix));
+        _identityChips = IdentityChips.WithSpeedBand(
+            IdentityChips.ToCardChips(identity.GetValueOrDefault(Chart.Id), false, L),
+            await SpeedBand(Chart.Id), L);
+    }
+
+    /// <summary>
+    ///     Which of the five speed bands the chart landed in, or null where the folder has none.
+    ///     The fallback is read and then refused: a band is a chart's speed relative to the folder
+    ///     it was banded in, and a chart's folder changes between mixes.
+    /// </summary>
+    private async Task<TierListCategory?> SpeedBand(Guid chartId)
+    {
+        var speed = await Mediator.Send(new GetTierListWithFallbackQuery(SpeedBandLabels.ListName, Mix));
+        return speed.IsProvisionalFallback
+            ? null
+            : speed.Entries.FirstOrDefault(e => e.ChartId == chartId)?.Category;
     }
 
     private async Task<IReadOnlyList<(string, string)>> LoadPlacements(Guid chartId)

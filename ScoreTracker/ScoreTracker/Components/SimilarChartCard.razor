@@ -1,3 +1,4 @@
+@using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.ChartIntelligence.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
@@ -122,7 +123,7 @@
         Record.SharedBadges
             .Where(b => b.Coverage >= MinimumReasonCoverage)
             .Take(MaximumReasons)
-            .Select(b => (L[SimilarityBadgeLabels.For(b.Badge)].ToString(),
+            .Select(b => (L[BadgeLabels.DisplayName(b.Badge)].ToString(),
                 $"{(int)Math.Round(b.Coverage * 100)}%"))
             .ToArray();
 

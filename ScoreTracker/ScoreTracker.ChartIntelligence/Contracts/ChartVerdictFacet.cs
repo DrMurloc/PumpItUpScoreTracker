@@ -42,14 +42,43 @@ public sealed record LetterWallVerdict(ParagonLevel WallGrade, double Percentile
 [ExcludeFromCodeCoverage]
 public sealed record PlateResidualVerdict(int StepsVsExpected) : ChartVerdictFacet;
 
-/// <summary>Dominant mapped skills (coverage ≥ 25%) plus the sustained-tension flag.</summary>
+/// <summary>
+///     The badges the chart is most made of, plus the sustained-tension flag. Granular
+///     piucenter vocabulary — "Anchor Runs", not the retired rollup's "Runs", because the
+///     rollup buried five kinds of twist in one word and this sentence exists to be specific.
+/// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record StyleFingerprintVerdict(
-    IReadOnlyList<SkillCoverageRecord> TopSkills,
+    IReadOnlyList<BadgeCoverageRecord> TopBadges,
     bool IsSustained) : ChartVerdictFacet;
 
 [ExcludeFromCodeCoverage]
-public sealed record SkillCoverageRecord(Skill Skill, double Coverage);
+public sealed record BadgeCoverageRecord(string Badge, string DisplayName, double Coverage);
+
+/// <summary>
+///     What the chart's hardest stretch is made of and where it sits
+///     (docs/design/chart-identity.md §4). Speaks only when the crux runs meaningfully over
+///     the printed level — a chart whose peak is its own average has no crux worth naming.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record CruxVerdict(
+    IReadOnlyList<BadgeCoverageRecord> Badges,
+    double Peakiness,
+    double Position,
+    double DurationSeconds) : ChartVerdictFacet
+{
+    /// <summary>Where the crux lands, quantized — the engine ships facts, Web says the words.</summary>
+    public CruxPlacement Placement => Position >= 0.66 ? CruxPlacement.Closing
+        : Position >= 0.33 ? CruxPlacement.Middle
+        : CruxPlacement.Opening;
+}
+
+public enum CruxPlacement
+{
+    Opening,
+    Middle,
+    Closing
+}
 
 /// <summary>Debut mix and the chart's level in every mix that carries it, era order.</summary>
 [ExcludeFromCodeCoverage]

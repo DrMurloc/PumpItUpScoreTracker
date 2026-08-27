@@ -95,7 +95,7 @@ public sealed class EFTournamentRepositoryTests : IAsyncLifetime
         var song = new Song($"song_{chartId:N}", SongType.Arcade,
             new Uri("https://example.invalid/song.png"), TimeSpan.FromMinutes(2), "Artist", null);
         return new Chart(chartId, mix, song, type, DifficultyLevel.From(level), mix,
-            null, null, new HashSet<Skill>());
+            null, null);
     }
 
     private static Mock<IChartRepository> ChartRepoReturning(MixEnum mix, params Chart[] charts)

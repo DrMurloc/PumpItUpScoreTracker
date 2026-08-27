@@ -93,9 +93,9 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | Table | Purpose |
 |---|---|
 | `scores.ChartVideo` | YouTube video links per chart with uploader metadata; `Side` (Left/Right, null) marks which half of a two-sided singles video the chart plays on ([video-sides.md](design/video-sides.md)) |
-| `scores.ChartSkill` | Skill tags on charts with highlight flags — regenerated per piucenter crawl since the PiuCenter integration (hand tags archived) |
-| `scores.ChartSkillArchive` | One-time snapshot of the pre-crawler hand-maintained ChartSkill rows; never read by the app |
-| `scores.ChartSkillMetric` | Banked per-chart numeric step-analysis facts per external source ((ChartId, Source, MetricName) → decimal + optional grade): badge fractions, top-3 ranks, practice ranks, NPS/sustain/difficulty prediction |
+| `scores.ChartSkillArchive` | One-time snapshot of the pre-crawler hand-maintained ChartSkill rows. Read by exactly one surface: the Chabala tier list, which shows his own retired vocabulary on his own list ([nuke-old-skill-categories.md](design/nuke-old-skill-categories.md) §7). Never written again |
+| `scores.ChartSkillMetric` | Banked per-chart numeric step-analysis facts per external source ((ChartId, Source, MetricName) → decimal + optional grade): badge fractions, top-3 ranks, practice ranks, NPS/sustain/difficulty prediction, and the crux row set (`crux_level`, `crux_peakiness`, `crux_position`, `crux_duration`, `crux_enps`, `crux_badge:*`) |
+| `scores.ChartFolderBaseline` | Per-folder badge context ((MixId, ChartType, Level, Badge) → core cutoff, qualified count, analyzed charts) — the folder-relative numbers every identity chip is read against. A computed cache, rebuilt whole per mix at the end of a piucenter ingestion ([chart-identity.md](design/chart-identity.md) §5) |
 | `scores.ExternalChartAlias` | Generic external-name map ((Source, ExternalKey) → nullable ChartId) with Auto/Manual/NotFound status + last-checked stamp; for piucenter the key doubles as the fetch URL, so this is also the crawl plan and negative cache |
 | `scores.SongNameLanguage` | Localized song names per culture |
 | `scores.SavedChart` | User bookmark lists of charts *(ownership split pending — currently shared)* |
@@ -231,6 +231,7 @@ owned it.
 | `archive.OfficialUserAvatar` | 2026-07-28 | Avatar cache, absorbed by `OfficialPlayer` |
 | `archive.OfficialLeaderboardImportState` | 2026-07-28 | Last-import timestamp, absorbed by the snapshot seal |
 | `archive.UserTierListEntry` | 2026-08-13 | Materialized per-user relative tier lists, read only by the similar-players source of personalized Pass. **Transferred empty** — the rows were derived from scores, and a million user-keyed rows outside the purge path would strand personal data ([pumbility-tier-list.md](design/pumbility-tier-list.md)) |
+| `archive.ChartSkill` | 2026-08-25 | Per-chart tags of the retired eleven-skill rollup, as the last piucenter crawl left them. Replaced by the granular badges and the identity chips built on them ([chart-identity.md](design/chart-identity.md)) |
 
 The UCS tables (`scores.UcsChart_archived` and its two siblings) predate the `archive` schema and
 keep their suffix-in-place form.

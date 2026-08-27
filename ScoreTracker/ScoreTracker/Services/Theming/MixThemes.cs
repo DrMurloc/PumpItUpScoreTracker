@@ -1,4 +1,4 @@
-﻿using MudBlazor;
+using MudBlazor;
 using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.SharedKernel.Enums;
@@ -252,6 +252,18 @@ public static class MixThemes
             [BadgeCategory.DoublesTech] = "#388E3C"
         };
 
+    // The spike chip's hue (docs/design/chart-identity.md §3). Deliberately outside the five
+    // families: a spike is a chart's SHAPE, not one of its skills, and borrowing a family's
+    // colour would file it as one. Mix-invariant like the judgment and lifebar groups — a
+    // chart that leaps over its printed level does so in every theme.
+    // A chart's SHAPE — how much pad it uses, how far it turns you, how fast it runs — is
+    // not one of its skills, so the geometry claims sit outside the five families for the same
+    // reason the spike does. Mix-invariant: a half-double is a half-double in every theme.
+    private const string GeometryHex = "#26C6DA";
+
+    private const string SpikeHex = "#FB8C00";
+    private const string SpikeInkHex = "#FFB74D";
+
     // Legacy slot colors: the classic song-wheel language of the pre-Exceed eras
     // (Crazy red, Freestyle green, Nightmare purple…). Deliberately NOT the difficulty
     // ramp — old-scale numbers don't translate to modern levels, and the distinct
@@ -398,6 +410,18 @@ public static class MixThemes
 
     private const string LifeOverflowHex = "#7FB3D5";
 
+    // How fast a chart is for its folder (docs/design/chart-identity.md §2), slowest first.
+    // The lifebar rainbow's own hues walked backwards: cool where a chart is slow, hot where it
+    // is fast. It is NOT the difficulty ramp and must never be drawn from it — a slow chart at a
+    // high level is not an easy one, and the folder's pass rates routinely say the opposite,
+    // which is exactly what a green-to-red reading would assert. Five stops for the five bands.
+    // Mix-invariant, like the judgment and lifebar groups.
+    private static readonly string[] SpeedBandColors =
+        { "#B36BFF", "#3FA9F5", "#4FE33F", "#FF9A3C", "#FF4D4D" };
+
+    /// <summary>Raw hex for a speed band, slowest (0) to fastest (4). For render targets that cannot read tokens.</summary>
+    public static string SpeedBandHex(int band) => SpeedBandColors[Math.Clamp(band, 0, SpeedBandColors.Length - 1)];
+
     /// <summary>Raw hex for a judgment — for ApexCharts, which can't read CSS custom properties.</summary>
     public static string JudgmentHex(Judgment judgment) => JudgmentColors[judgment];
 
@@ -476,16 +500,13 @@ public static class MixThemes
             // Emitted alongside the plates because ThemeScales.GradeColor bottoms out here.
             + $"\n    --grade-sub-a: {SubAGradeHex};"
             + "\n" + string.Join("\n", SlotColors.Select(kv => $"    --slot-{kv.Key}: {kv.Value};"));
-        // The five skill-category identity colors (Speed/Stamina/Twist/Bracket/Tech),
-        // promoted from the SharedKernel constants so markup can tint skill chips
-        // without color literals. Mix-invariant — category identity never re-hues.
-        var skillCategories = string.Join("\n", Enum.GetValues<SkillCategory>().Select(c =>
-            $"    --skillcat-{c.ToString().ToLowerInvariant()}: {c.GetColor()};"));
         // The owner's five badge families (2026-07-26) — the granular piucenter vocabulary's
         // identity colors, replacing the retired rollup buckets. Mix-invariant: a family's hue
         // is what makes it recognisable, so it never re-hues per theme.
         var badgeCategories = string.Join("\n", BadgeCategoryColors.Select(kv =>
-            $"    --badgecat-{kv.Key.ToString().ToLowerInvariant()}: {kv.Value};"));
+            $"    --badgecat-{kv.Key.ToString().ToLowerInvariant()}: {kv.Value};"))
+                              + $"\n    --spike: {SpikeHex};\n    --spike-ink: {SpikeInkHex};"
+                              + $"\n    --geometry-chip: {GeometryHex};";
         var brands = string.Join("\n", BrandColors.Select(kv =>
             $"    --brand-{kv.Key}: {kv.Value};"));
         // The difficulty-ball type vocabulary (red Single / green Double / gold Co-Op) as
@@ -513,6 +534,7 @@ public static class MixThemes
                    $"    --life-danger: {JudgmentColors[Judgment.Miss]};";
         var variability = string.Join("\n", VariabilityColors.Select(kv =>
             $"    --vary-{VariabilityIndex(kv.Key)}: {kv.Value};"));
+        var speed = string.Join("\n", SpeedBandColors.Select((hex, i) => $"    --speed-{i + 1}: {hex};"));
         return $@":root {{
     --mix-bg: {p.Background};
     --mix-surface: {p.Surface};
@@ -535,7 +557,6 @@ public static class MixThemes
     --rarity-prism: {p.Rarity.Prism};
 {difficulty}
 {plates}
-{skillCategories}
 {badgeCategories}
 {brands}
 {chartTypes}
@@ -543,6 +564,7 @@ public static class MixThemes
 {judgments}
 {life}
 {variability}
+{speed}
 }}";
     }
 

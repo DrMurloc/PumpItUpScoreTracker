@@ -6,7 +6,7 @@ using Xunit;
 
 namespace ScoreTracker.Tests.DomainTests;
 
-public sealed class PiuCenterBadgesTests
+public sealed class BadgeLabelsTests
 {
     [Theory]
     [InlineData("staggered_bracket", "Staggered Brackets")]
@@ -18,13 +18,24 @@ public sealed class PiuCenterBadgesTests
     [InlineData("co-op_pad_transition", "Co-op Pad Transitions")]
     public void KnownBadgesRenderTheirCuratedDisplayNames(string key, string expected)
     {
-        Assert.Equal(expected, PiuCenterBadges.DisplayName(key));
+        Assert.Equal(expected, BadgeLabels.DisplayName(key));
     }
 
     [Fact]
     public void UnknownBadgesFallBackToTitleCaseSoNewVocabularyStaysReadable()
     {
-        Assert.Equal("Quad Anchor Stomp", PiuCenterBadges.DisplayName("quad_anchor-stomp"));
+        Assert.Equal("Quad Anchor Stomp", BadgeLabels.DisplayName("quad_anchor_stomp"));
+    }
+
+    /// <summary>
+    ///     A hyphen is punctuation the term owns, not a separator: the real vocabulary is full
+    ///     of cross-pad, co-op and 5-stair, and splitting those into two words invents terms
+    ///     nobody uses.
+    /// </summary>
+    [Fact]
+    public void AnUnknownBadgesHyphenSurvivesTheHumanizing()
+    {
+        Assert.Equal("Cross-pad Shuffle", BadgeLabels.DisplayName("cross-pad_shuffle"));
     }
 
     [Fact]
@@ -32,8 +43,8 @@ public sealed class PiuCenterBadgesTests
     {
         // The owner's five families are meant to cover the whole vocabulary. A badge with a
         // display name but no family renders untinted, which reads as a bug rather than a gap.
-        var orphans = PiuCenterBadges.KnownBadges
-            .Where(b => PiuCenterBadges.CategoryFor(b) == null)
+        var orphans = BadgeLabels.KnownBadges
+            .Where(b => BadgeLabels.CategoryFor(b) == null)
             .ToArray();
 
         Assert.Empty(orphans);
@@ -51,7 +62,7 @@ public sealed class PiuCenterBadgesTests
     [InlineData("bracket_twist", BadgeCategory.Brackets)]
     public void TheOwnerSpecifiedFamiliesAreWhatTheySaidTheyAre(string badge, BadgeCategory expected)
     {
-        Assert.Equal(expected, PiuCenterBadges.CategoryFor(badge));
+        Assert.Equal(expected, BadgeLabels.CategoryFor(badge));
     }
 
     [Fact]
@@ -59,7 +70,7 @@ public sealed class PiuCenterBadgesTests
     {
         // The rollup mapped these to nothing at all, so they could never be displayed. They
         // are ordinary badges here (docs/design/nuke-old-skill-categories.md §1).
-        Assert.Equal("Doublesteps", PiuCenterBadges.DisplayName("doublestep"));
-        Assert.Equal("Side-3 Singles", PiuCenterBadges.DisplayName("side3_singles"));
+        Assert.Equal("Doublesteps", BadgeLabels.DisplayName("doublestep"));
+        Assert.Equal("Side-3 Singles", BadgeLabels.DisplayName("side3_singles"));
     }
 }

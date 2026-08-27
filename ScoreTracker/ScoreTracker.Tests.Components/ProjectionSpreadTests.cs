@@ -410,7 +410,6 @@ public sealed class ProjectionSpreadTests : ComponentTestBase
         return new Chart(Guid.NewGuid(), MixEnum.Phoenix,
             new Song(name, SongType.Arcade, new Uri("https://piu.test/art.png"),
                 TimeSpan.FromSeconds(125), "BanYa", Bpm.From(160, 160)),
-            ScoreTracker.SharedKernel.Enums.ChartType.Double, 18, MixEnum.Phoenix, "SUNNY", 700,
-            new HashSet<Skill>());
+            ScoreTracker.SharedKernel.Enums.ChartType.Double, 18, MixEnum.Phoenix, "SUNNY", 700);
     }
 }

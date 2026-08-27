@@ -89,7 +89,7 @@ public sealed class WeeklyWidgetTests : ComponentTestBase
         new(Guid.NewGuid(), MixEnum.Phoenix,
             new Song(name, SongType.Arcade, new Uri("https://piu.test/art.png"),
                 TimeSpan.FromMinutes(2), "Artist", Bpm.From(140, 140)),
-            ChartType.Single, level, MixEnum.Phoenix, null, 1200, new HashSet<Skill>());
+            ChartType.Single, level, MixEnum.Phoenix, null, 1200);
 
     private WeeklyTournamentEntry Entry(Guid chartId, Guid userId) =>
         new(userId, chartId, 950000, PhoenixPlate.SuperbGame, false, null, 20.0);
