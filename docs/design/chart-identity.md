@@ -41,6 +41,14 @@ half double with sustained bracket runs and anchor shuffles, I want that shit ca
 **a chart may earn none** (*"if a chart is like… just a chart, it's fine for it to be nothing"*).
 Claims stack; they are not a ladder where the first match wins.
 
+**A claim wears the family it belongs to** (owner, 2026-08-26). Three of them started on the
+geometry hue because they are measured rather than named by piucenter, which described where the
+number came from instead of what it says. **Longest run** is a Stamina & Runs claim and wears its
+red; the three **width** claims only ever fire on a doubles chart and wear Doubles Tech green;
+**Speed** wears the ends of the Speed list's own ramp (§2), so a chip and the folder section it
+came from cannot disagree. Only **Twist-heavy / Twistless** keep the geometry hue — how far a chart
+turns you is a shape we measured, not a badge anyone named.
+
 Four axes were investigated. Three survive:
 
 | Axis | Verdict |
@@ -80,6 +88,13 @@ z = 1.46 and deliberately does not qualify.
 **There is no NPS chip.** The raw number is meaningless at a glance (owner: *"NPS is a
 meaningless number to most people. Good on chart details, not for quick info"*), so the
 comfortable card carries no NPS chip at all; the number lives on the chart page and dialog.
+
+**Its own ramp, cool to hot** — `--speed-1` … `--speed-5`, read through `ThemeScales.SpeedColor`.
+Deliberately not the difficulty ramp: a slow chart at a high level is not an easy one, and the
+folder's pass rates routinely say the opposite, which is exactly what a green-to-red reading would
+assert. The Speed grouping's section headers wear it instead of the pass-rate heat every other
+grouping wears — heat made the whole list one shade of red, because a hard folder is hard at every
+tempo, so the colour said nothing about speed while looking exactly like it did (owner, 2026-08-26).
 
 ## 3. Identity and features
 

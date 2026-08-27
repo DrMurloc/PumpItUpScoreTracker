@@ -58,16 +58,34 @@ public static class IdentityChips
                     .ToArray());
 
             // Their longest unbroken run, named in seconds because that is the thing a player
-            // feels — "Longest run: 22s" says more than any share of the chart could.
+            // feels — "Longest run: 22s" says more than any share of the chart could. Wears the
+            // Stamina & Runs family rather than the geometry hue (owner, 2026-08-26): a chart's
+            // longest run IS a stamina claim, and colouring it apart said it was something else.
             case IdentityChipKind.LongestRun:
                 return new TierListChartCard.CardSkillChip(
-                    localizer["Longest run: {0}s", Seconds(chip.Detail)].Value, "chip-geometry", null, identity);
+                    localizer["Longest run: {0}s", Seconds(chip.Detail)].Value,
+                    BadgeCategoryClasses.For(BadgeCategory.StaminaAndRuns), null, identity);
+
+            // How much pad the chart uses. Doubles Tech green, for the same reason Longest run
+            // is red: a width claim only ever fires on a doubles chart, and where you stand on
+            // the pad is what that family is about (owner, 2026-08-26).
+            case IdentityChipKind.Width:
+                return new TierListChartCard.CardSkillChip(
+                    localizer[chip.DisplayName].Value,
+                    BadgeCategoryClasses.For(BadgeCategory.DoublesTech), null, identity);
+
+            // Its own five-stop ramp, cool to hot, matching the Speed list's section headers so
+            // the chip and the folder it came from cannot disagree. Only the outer bands ever
+            // reach a chip, so only the outer stops are used.
+            case IdentityChipKind.Speed:
+                return new TierListChartCard.CardSkillChip(
+                    localizer[chip.DisplayName].Value,
+                    chip.Badge == IdentityClaimKeys.VeryFast ? "chip-speed-fast" : "chip-speed-slow",
+                    null, identity);
 
             // The shape of the body — its own hue, outside the five families, for the same
-            // reason the spike is: how much pad a chart uses is not one of its skills.
-            case IdentityChipKind.Width:
+            // reason the spike is: how far a chart turns you is not one of its skills.
             case IdentityChipKind.Twist:
-            case IdentityChipKind.Speed:
                 return new TierListChartCard.CardSkillChip(
                     localizer[chip.DisplayName].Value, "chip-geometry", null, identity);
 

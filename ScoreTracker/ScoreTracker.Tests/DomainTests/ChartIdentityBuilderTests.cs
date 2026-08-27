@@ -314,7 +314,7 @@ public sealed class ChartIdentityBuilderTests
 
         var chips = folder.ChipsFor(chart);
 
-        Assert.Equal(expected, chips.Any(c => c.Badge == WidthLabels.HalfDouble));
+        Assert.Equal(expected, chips.Any(c => c.Badge == IdentityClaimKeys.HalfDouble));
     }
 
     /// <summary>
@@ -331,8 +331,8 @@ public sealed class ChartIdentityBuilderTests
         var jupin = Folder.Profile(Array.Empty<(string, decimal)>(),
             geometry: Geometry(sideOn: 0.0m, crossed: 0.0m));
 
-        Assert.DoesNotContain(WidthLabels.Twistless, folder.ChipsFor(vook).Select(c => c.Badge));
-        Assert.Contains(WidthLabels.Twistless, folder.ChipsFor(jupin).Select(c => c.Badge));
+        Assert.DoesNotContain(IdentityClaimKeys.Twistless, folder.ChipsFor(vook).Select(c => c.Badge));
+        Assert.Contains(IdentityClaimKeys.Twistless, folder.ChipsFor(jupin).Select(c => c.Badge));
     }
 
     /// <summary>
@@ -348,11 +348,11 @@ public sealed class ChartIdentityBuilderTests
         for (var i = 0; i < 20; i++) folder.AddCharts(1, Speeds(9.5m + i * 0.1m), ("run", 0.5m));
 
         var fastBound = folder.SpeedBound(Speeds(11m), true);
-        Assert.Equal(WidthLabels.VeryFast, SpeedClaim(folder, fastBound + 0.2m));
+        Assert.Equal(IdentityClaimKeys.VeryFast, SpeedClaim(folder, fastBound + 0.2m));
         Assert.Null(SpeedClaim(folder, fastBound - 0.2m));
 
         var slowBound = folder.SpeedBound(Speeds(11m), false);
-        Assert.Equal(WidthLabels.VerySlow, SpeedClaim(folder, slowBound - 0.2m));
+        Assert.Equal(IdentityClaimKeys.VerySlow, SpeedClaim(folder, slowBound - 0.2m));
         Assert.Null(SpeedClaim(folder, slowBound + 0.2m));
     }
 
@@ -422,8 +422,8 @@ public sealed class ChartIdentityBuilderTests
 
         var badges = folder.ChipsFor(duel).Select(c => c.Badge).ToArray();
 
-        Assert.Contains(WidthLabels.HalfDouble, badges);
-        Assert.Contains(WidthLabels.TwistHeavy, badges);
+        Assert.Contains(IdentityClaimKeys.HalfDouble, badges);
+        Assert.Contains(IdentityClaimKeys.TwistHeavy, badges);
     }
 
     /// <summary>
@@ -445,7 +445,7 @@ public sealed class ChartIdentityBuilderTests
         // Their three, in their order. The geometry claims are a separate axis and may also
         // fire — this asserts what the BADGES say, which is the part piucenter has an opinion on.
         Assert.Equal(new[] { "jack", "twist_far", "10-stair" },
-            IdentityBadges(chips).Where(b => !WidthLabels.IsGeometryClaim(b)));
+            IdentityBadges(chips).Where(b => !IdentityClaimKeys.IsGeometryClaim(b)));
     }
 
     /// <summary>

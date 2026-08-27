@@ -157,13 +157,13 @@ internal static class ChartIdentityBuilder
         if (mid6 == null) return null;
 
         if (mid4 >= (decimal)ChartIdentityRules.WidthConfinedShare)
-            return Geometry(IdentityChipKind.Width, WidthLabels.QuarterDouble, mid4.Value);
+            return Geometry(IdentityChipKind.Width, IdentityClaimKeys.QuarterDouble, mid4.Value);
         if (mid6 >= (decimal)ChartIdentityRules.WidthConfinedShare)
-            return Geometry(IdentityChipKind.Width, WidthLabels.HalfDouble, mid6.Value);
+            return Geometry(IdentityChipKind.Width, IdentityClaimKeys.HalfDouble, mid6.Value);
 
         return folder.TryGetValue(PiuCenterMetrics.PadShareMid6, out var baseline)
                && baseline.AnalyzedCharts > 0 && mid6 <= baseline.CoreCutoff
-            ? Geometry(IdentityChipKind.Width, WidthLabels.Wide, mid6.Value)
+            ? Geometry(IdentityChipKind.Width, IdentityClaimKeys.Wide, mid6.Value)
             : null;
     }
 
@@ -182,12 +182,12 @@ internal static class ChartIdentityBuilder
         if (sideOn <= (decimal)ChartIdentityRules.TwistlessShare(isDoubles)
             && crossed <= (decimal)ChartIdentityRules.TwistlessMaximumCrossed
             && IsSquareToTheScreen(profile, folder))
-            return Geometry(IdentityChipKind.Twist, WidthLabels.Twistless, sideOn);
+            return Geometry(IdentityChipKind.Twist, IdentityClaimKeys.Twistless, sideOn);
 
         return folder.TryGetValue(PiuCenterMetrics.StanceSideOn, out var baseline)
                && baseline.AnalyzedCharts > 0 && baseline.DrenchedCutoff > 0
                && sideOn >= baseline.DrenchedCutoff
-            ? Geometry(IdentityChipKind.Twist, WidthLabels.TwistHeavy, sideOn)
+            ? Geometry(IdentityChipKind.Twist, IdentityClaimKeys.TwistHeavy, sideOn)
             : null;
     }
 
@@ -229,7 +229,7 @@ internal static class ChartIdentityBuilder
         if (profile.GeometryOf(PiuCenterMetrics.ChartSpan) is not { } span || span <= 0) return null;
         return seconds / span >= (decimal)ChartIdentityRules.LongestRunShare
             ? new IdentityChipRecord(IdentityChipKind.LongestRun, IdentityTier.Identity,
-                WidthLabels.LongestRun, WidthLabels.LongestRun, null, seconds)
+                IdentityClaimKeys.LongestRun, IdentityClaimKeys.LongestRun, null, seconds)
             : null;
     }
 
@@ -239,9 +239,9 @@ internal static class ChartIdentityBuilder
         if (profile.GeometryOf(PiuCenterMetrics.Nps) is not { } nps || nps <= 0) return null;
         if (!folder.TryGetValue(PiuCenterMetrics.Nps, out var baseline) || baseline.DrenchedCutoff <= 0) return null;
         if (nps >= baseline.DrenchedCutoff)
-            return Geometry(IdentityChipKind.Speed, WidthLabels.VeryFast, nps);
+            return Geometry(IdentityChipKind.Speed, IdentityClaimKeys.VeryFast, nps);
         return nps <= baseline.CoreCutoff
-            ? Geometry(IdentityChipKind.Speed, WidthLabels.VerySlow, nps)
+            ? Geometry(IdentityChipKind.Speed, IdentityClaimKeys.VerySlow, nps)
             : null;
     }
 
@@ -342,31 +342,5 @@ internal static class ChartIdentityBuilder
     private static IdentityChipRecord Geometry(IdentityChipKind kind, string label, decimal detail)
     {
         return new IdentityChipRecord(kind, IdentityTier.Identity, label, label, null, detail);
-    }
-}
-
-/// <summary>
-///     The geometry claims' badge keys. They are not piucenter badges and belong to no family —
-///     a chart's shape is not one of its skills, the same reason the spike wears no family
-///     colour — but they travel as chips, so they need stable keys the UI can localize.
-/// </summary>
-internal static class WidthLabels
-{
-    public const string QuarterDouble = "Quarter Double";
-    public const string HalfDouble = "Half-Double";
-    public const string Wide = "Wide";
-    public const string Twistless = "Twistless";
-    public const string TwistHeavy = "Twist-heavy";
-    public const string VeryFast = "Very Fast";
-    public const string VerySlow = "Very Slow";
-
-    /// <summary>Not a shape claim, but keyed the same way: a label the UI localizes, not a badge.</summary>
-    public const string LongestRun = "Longest run";
-
-    /// <summary>Whether a chip key is one of these shape claims rather than a piucenter badge.</summary>
-    public static bool IsGeometryClaim(string badge)
-    {
-        return badge is QuarterDouble or HalfDouble or Wide or Twistless or TwistHeavy
-            or VeryFast or VerySlow;
     }
 }

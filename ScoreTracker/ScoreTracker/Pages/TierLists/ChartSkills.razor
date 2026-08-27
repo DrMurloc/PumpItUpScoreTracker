@@ -2328,6 +2328,12 @@ else
     ///     fast (docs/design/chart-identity.md §2). Ordered by the band rather than by pass
     ///     rate — this is a map of the folder, and its heat is honestly not monotone: slow
     ///     charts at high levels are hard for reasons that have nothing to do with speed.
+    ///     <para>
+    ///         Its sections wear the SPEED ramp rather than the pass-rate heat every other
+    ///         grouping wears (owner, 2026-08-26). Heat made the whole list one shade of red —
+    ///         a hard folder is hard at every tempo, so the colour said nothing about speed
+    ///         while looking exactly like it did. Cool to hot, matching the chips.
+    ///     </para>
     /// </summary>
     private IReadOnlyList<TierGroup> GroupBySpeed()
     {
@@ -2337,7 +2343,12 @@ else
             .GroupBy(kv => kv.Value.Category)
             .OrderBy(g => g.Key)
             .Select(g => BuildHeatGroup($"Speed:{g.Key}", SpeedBandName(g.Key), g.Select(kv => kv.Key),
-                entryByChart, NpsRange(g.Select(kv => kv.Value))).Group)
+                    entryByChart, NpsRange(g.Select(kv => kv.Value))).Group
+                with
+                {
+                    Color = ThemeScales.SpeedColor(SpeedBandIndex(g.Key)),
+                    ShareHex = MixThemes.SpeedBandHex(SpeedBandIndex(g.Key))
+                })
             .ToList();
 
         var unmeasured = _finalEntries.Where(e => !_speedBands.ContainsKey(e.ChartId))
@@ -2392,6 +2403,20 @@ else
         TierListCategory.Hard => "Fast",
         _ => "Very Fast"
     }].Value;
+
+    /// <summary>
+    ///     The band's rung on the speed ramp, 0 (slowest) to 4. SpeedBands borrows tier-list
+    ///     categories for their ORDER only, so this is where that borrowing is undone — reading
+    ///     the category as a difficulty here is what would put the ramps back in contact.
+    /// </summary>
+    private static int SpeedBandIndex(TierListCategory band) => band switch
+    {
+        TierListCategory.Overrated => 0,
+        TierListCategory.VeryEasy => 1,
+        TierListCategory.Medium => 2,
+        TierListCategory.Hard => 3,
+        _ => 4
+    };
 
     /// <summary>The band's real NPS span, recovered from the Order the Speed list stored it in.</summary>
     private string NpsRange(IEnumerable<SongTierListEntry> entries)

@@ -410,6 +410,18 @@ public static class MixThemes
 
     private const string LifeOverflowHex = "#7FB3D5";
 
+    // How fast a chart is for its folder (docs/design/chart-identity.md §2), slowest first.
+    // The lifebar rainbow's own hues walked backwards: cool where a chart is slow, hot where it
+    // is fast. It is NOT the difficulty ramp and must never be drawn from it — a slow chart at a
+    // high level is not an easy one, and the folder's pass rates routinely say the opposite,
+    // which is exactly what a green-to-red reading would assert. Five stops for the five bands.
+    // Mix-invariant, like the judgment and lifebar groups.
+    private static readonly string[] SpeedBandColors =
+        { "#B36BFF", "#3FA9F5", "#4FE33F", "#FF9A3C", "#FF4D4D" };
+
+    /// <summary>Raw hex for a speed band, slowest (0) to fastest (4). For render targets that cannot read tokens.</summary>
+    public static string SpeedBandHex(int band) => SpeedBandColors[Math.Clamp(band, 0, SpeedBandColors.Length - 1)];
+
     /// <summary>Raw hex for a judgment — for ApexCharts, which can't read CSS custom properties.</summary>
     public static string JudgmentHex(Judgment judgment) => JudgmentColors[judgment];
 
@@ -522,6 +534,7 @@ public static class MixThemes
                    $"    --life-danger: {JudgmentColors[Judgment.Miss]};";
         var variability = string.Join("\n", VariabilityColors.Select(kv =>
             $"    --vary-{VariabilityIndex(kv.Key)}: {kv.Value};"));
+        var speed = string.Join("\n", SpeedBandColors.Select((hex, i) => $"    --speed-{i + 1}: {hex};"));
         return $@":root {{
     --mix-bg: {p.Background};
     --mix-surface: {p.Surface};
@@ -551,6 +564,7 @@ public static class MixThemes
 {judgments}
 {life}
 {variability}
+{speed}
 }}";
     }
 
