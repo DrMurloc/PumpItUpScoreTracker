@@ -18,8 +18,31 @@ public static class IdentityClaimKeys
     public const string Wide = "Wide";
     public const string Twistless = "Twistless";
     public const string TwistHeavy = "Twist-heavy";
-    public const string VeryFast = "Very Fast";
+    // The five speed bands, slowest first. All five are claim keys because the chart page and
+    // the dialog print the band a chart actually landed in; only the outer two are IDENTITY,
+    // which is what keeps "Mid Tempo" off a card. "Mid Tempo" and not the obvious "Moderate":
+    // that key is already the comment-moderation button, so the band rendered 관리 ("manage") in
+    // Korean and its equivalent elsewhere, and English being the key text is why nothing looked
+    // wrong in English.
     public const string VerySlow = "Very Slow";
+    public const string Slow = "Slow";
+    public const string MidTempo = "Mid Tempo";
+    public const string Fast = "Fast";
+    public const string VeryFast = "Very Fast";
+
+    /// <summary>The band's rung, 0 (slowest) to 4, or null if the key is not a speed band.</summary>
+    public static int? SpeedBandIndex(string badge)
+    {
+        return badge switch
+        {
+            VerySlow => 0,
+            Slow => 1,
+            MidTempo => 2,
+            Fast => 3,
+            VeryFast => 4,
+            _ => null
+        };
+    }
 
     /// <summary>Not a shape claim, but keyed the same way: a label the UI localizes, not a badge.</summary>
     public const string LongestRun = "Longest run";

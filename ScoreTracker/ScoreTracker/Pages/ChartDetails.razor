@@ -271,22 +271,7 @@
         // Every chip, uncapped — the card's three-chip cut is a card's problem, and a page that
         // silently dropped a claim would be the one surface where the chart looks different.
         var identity = await Mediator.Send(new GetChartIdentityQuery(new[] { chart.Id }, chartMix));
-        _identityChips = IdentityChips.WithSpeedBand(
-            IdentityChips.ToCardChips(identity.TryGetValue(chart.Id, out var record) ? record : null, false, L),
-            await SpeedBand(chart.Id, chartMix), L);
-    }
-
-    /// <summary>
-    ///     Which of the five speed bands the chart landed in, or null where the folder has none.
-    ///     Read WITH the fallback flag and then refused: a band is a chart's speed relative to the
-    ///     folder it was banded in, and a chart's folder changes between mixes — Phoenix's bands
-    ///     standing in for an unbuilt Phoenix 2 list would be measuring against company the chart
-    ///     does not keep there.
-    /// </summary>
-    private async Task<TierListCategory?> SpeedBand(Guid chartId, MixEnum mix)
-    {
-        var speed = await Mediator.Send(new GetTierListWithFallbackQuery(SpeedBandLabels.ListName, mix));
-        if (speed.IsProvisionalFallback) return null;
-        return speed.Entries.FirstOrDefault(e => e.ChartId == chartId)?.Category;
+        _identityChips = IdentityChips.ToCardChips(
+            identity.TryGetValue(chart.Id, out var record) ? record : null, false, L);
     }
 }

@@ -113,6 +113,18 @@ z = 1.46 and deliberately does not qualify.
 meaningless number to most people. Good on chart details, not for quick info"*), so the
 comfortable card carries no NPS chip at all; the number lives on the chart page and dialog.
 
+**The chip's band is read off the folder's cached nps baseline, never off the Speed tier list**
+(prod, 2026-08-27). The baseline stores μ−1.5σ and μ+1.5σ, and μ and σ fall straight back out of
+the pair, so all five cuts are readable from a row already in memory. The chart page and the chart
+dialog each used to read the whole Speed list — uncached, once per request, on a page with no
+output caching — to answer this for one chart.
+
+Measured against the stored Phoenix 2 Speed list over 4,377 charts: **81.5% land in the same band,
+99.9% within one**, and 5 charts differ by more than one. The gap is the population — the baseline
+spans the L−1/L/L+1 peer window (§5) while the tier list bands inside the single folder and folds
+thin tails. The two never appear together: the tier list drops the speed chip when it is grouped by
+Speed, precisely because a chip must not restate its own section heading.
+
 **Its own ramp, cool to hot** — `--speed-1` … `--speed-5`, read through `ThemeScales.SpeedColor`.
 Deliberately not the difficulty ramp: a slow chart at a high level is not an easy one, and the
 folder's pass rates routinely say the opposite, which is exactly what a green-to-red reading would

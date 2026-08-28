@@ -96,6 +96,28 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
         Assert.Equal(chartB, popularity[0].ChartId);
     }
 
+    /// <summary>
+    ///     What lands in the cache has to be a MATERIALIZED list, not a lazy projection over the
+    ///     rows. It was the latter, so the query was cached and the work was not: every caller
+    ///     re-walked every row and re-ran Enum.Parse on each match — under a page with no output
+    ///     caching, once per request (prod, 2026-08-27). A behavioural test cannot see the
+    ///     difference, which is why this asserts on the shape of what comes back.
+    /// </summary>
+    [Fact]
+    public async Task GetAllEntriesCachesAMaterializedListRatherThanALazyProjection()
+    {
+        await BuildRepository().SaveEntry(MixEnum.Phoenix,
+            new SongTierListEntry("PassCount", Guid.NewGuid(), TierListCategory.Easy, 1), CancellationToken.None);
+
+        var reader = BuildRepository();
+        var first = await reader.GetAllEntries(MixEnum.Phoenix, "PassCount", CancellationToken.None);
+        var second = await reader.GetAllEntries(MixEnum.Phoenix, "PassCount", CancellationToken.None);
+
+        // A Select iterator is neither, and enumerating one re-does the projection every time.
+        Assert.IsAssignableFrom<IReadOnlyCollection<SongTierListEntry>>(first);
+        Assert.Same(first, second);
+    }
+
     [Fact]
     public async Task SaveEntriesBulkHandlesMixedInsertsAndUpdatesInOnePass()
     {

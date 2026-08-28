@@ -79,6 +79,25 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure
         }
 
 
+        /// <summary>
+        ///     One tier list, cached for a day. Both halves of that sentence used to be untrue in
+        ///     ways that only showed under load (prod, 2026-08-27):
+        ///     <list type="bullet">
+        ///         <item>
+        ///             The list-name filter sat AFTER <c>ToArrayAsync</c>, so every read pulled
+        ///             every tier list in the mix — 25,637 rows for Phoenix, 19,309 for Phoenix 2 —
+        ///             to answer a question about one of them.
+        ///         </item>
+        ///         <item>
+        ///             What went into the cache was a lazy <c>Where().Select()</c> over those rows,
+        ///             not a list. The query was cached; the WORK was not. Every caller re-walked
+        ///             every row, re-ran <c>Enum.Parse</c> on each match and allocated a fresh
+        ///             record for it — on a page with no output caching, once per request.
+        ///         </item>
+        ///     </list>
+        ///     Both are one-line fixes and neither is optional: this read sits under the tier-list
+        ///     page, the PUMBILITY projection, the chart page and the /Charts search.
+        /// </summary>
         public async Task<IEnumerable<SongTierListEntry>> GetAllEntries(MixEnum mix, Name tierListName,
             CancellationToken cancellationToken)
         {
@@ -89,10 +108,11 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure
                 var nameString = tierListName.ToString();
                 var mixId = MixIds.For(mix);
                 return (await database.Set<TierListEntryEntity>()
-                        .Where(e => e.MixId == mixId).ToArrayAsync(cancellationToken))
-                    .Where(e => e.TierListName == nameString).Select(e =>
-                        new SongTierListEntry(e.TierListName,
-                            e.ChartId, Enum.Parse<TierListCategory>(e.Category), e.Order));
+                        .Where(e => e.MixId == mixId && e.TierListName == nameString)
+                        .ToArrayAsync(cancellationToken))
+                    .Select(e => new SongTierListEntry(e.TierListName,
+                        e.ChartId, Enum.Parse<TierListCategory>(e.Category), e.Order))
+                    .ToArray();
             });
         }
 
