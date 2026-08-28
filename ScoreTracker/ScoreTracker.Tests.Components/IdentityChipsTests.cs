@@ -59,8 +59,10 @@ public sealed class IdentityChipsTests : ComponentTestBase
         Assert.Equal("badgecat-staminaandruns", chips[4].CategoryClass);
         Assert.Equal("badgecat-twists", chips[5].CategoryClass);
         Assert.Equal("badgecat-staminaandruns", chips[6].CategoryClass);
-        Assert.Equal("chip-speed-fast", chips[7].CategoryClass);
-        Assert.Equal("chip-speed-slow", chips[8].CategoryClass);
+        // One class per rung of the five-band ramp, so the chip and the Speed list's section
+        // headers read as the same scale.
+        Assert.Equal("chip-speed-5", chips[7].CategoryClass);
+        Assert.Equal("chip-speed-1", chips[8].CategoryClass);
     }
 
     /// <summary>
