@@ -32,8 +32,15 @@ public static class StageBreakCauseSolver
     {
         if (level == null) return StageBreakCause.Unattributed;
 
-        var maxLife = new LifebarSimulator(level.Value).MaxLife;
-        if (LifeRemaining(perfects, greats, bads, misses, level.Value) <= maxLife * SurvivingFraction)
+        var margin = new LifebarSimulator(level.Value).MaxLife * SurvivingFraction;
+        // Two screens, cheapest first. The heal-first walk is the FRIENDLIEST ordering — if
+        // even that one dies, the row is refuted without touching the search. What survives it
+        // still faces the adversarial minimum, because an ordering that spaces the damage
+        // through the heal stream keeps the multiplier crushed and suppresses nearly all the
+        // healing — which is not a curiosity, it is what a struggling run actually looks like.
+        if (LifeRemaining(perfects, greats, bads, misses, level.Value) <= margin)
+            return StageBreakCause.Unattributed;
+        if (MinimalEndingLife(perfects + greats, bads, misses, level.Value) <= margin)
             return StageBreakCause.Unattributed;
 
         return new StageBreakCause(true,
@@ -42,10 +49,11 @@ public static class StageBreakCauseSolver
     }
 
     /// <summary>
-    ///     The least life this run could have ended on. Every perfect and great heals first —
-    ///     the bar caps, so a run with hundreds of them reaches full whatever the order — and
-    ///     then the damage lands in whichever miss/bad interleaving hurts most. Misses scale with
-    ///     the bar and bads are flat, so that ordering matters and is searched rather than assumed.
+    ///     The friendliest ordering: every perfect and great heals first, then the damage lands
+    ///     in whichever miss/bad interleaving hurts most. An upper bound on how well the run
+    ///     could have ended — used only as the cheap first screen, because the ordering that
+    ///     matters for the PROOF is the cruellest one, and that is
+    ///     <see cref="MinimalEndingLife" />'s job.
     /// </summary>
     private static int LifeRemaining(int perfects, int greats, int bads, int misses, DifficultyLevel level)
     {
@@ -64,6 +72,111 @@ public static class StageBreakCauseSolver
         }
 
         return lowest;
+    }
+
+    /// <summary>
+    ///     The least life ANY ordering of these judgements can end on. This is the half of the
+    ///     gate that makes the flag a proof: <see cref="LifeRemaining" /> asks how well the run
+    ///     could have gone, this asks how badly — and only a run whose WORST ordering still
+    ///     ends above the margin provably did not die.
+    ///     <para>
+    ///         A Pareto search over (life, multiplier) after (heals, misses, bads) events, both
+    ///         axes minimised — lower life and a lower multiplier are each worse for survival,
+    ///         so a state dominated on both can never produce the minimum and is dropped.
+    ///         Layers advance one heal at a time; within a layer, damage expands from the
+    ///         neighbouring cells. Two deliberate conservatisms keep the answer a lower bound:
+    ///         every heal is applied as a GREAT (the weaker heal on the slower ramp — swapping
+    ///         a great for a perfect lowers life and multiplier at that step, and every
+    ///         transition is monotone in both, so the substituted trajectory sits under the
+    ///         real one for any ordering), and orderings that empty the bar mid-run clamp at
+    ///         zero and continue (invalid as evidence — the run would have ended there — so
+    ///         counting them only errs toward refusing to claim). A flag that survives THIS is
+    ///         the certainty the journal column promises (D29).
+    ///     </para>
+    /// </summary>
+    private static int MinimalEndingLife(int heals, int bads, int misses, DifficultyLevel level)
+    {
+        var cap = new LifebarSimulator(level).MaxLife;
+        var layer = NextLayer(null, misses, bads, cap);
+        for (var h = 0; h < heals; h++)
+        {
+            var next = NextLayer(layer, misses, bads, cap);
+            // Every state saturated: the remaining heals are no-ops and the answer is settled.
+            if (LayersEqual(next, layer)) break;
+
+            layer = next;
+        }
+
+        return layer[misses, bads].Min(s => s.Life);
+    }
+
+    /// <summary>
+    ///     One heal layer: each cell heals the previous layer's same cell (or seeds at the
+    ///     start), then damage expands from the cells one miss or one bad behind it. Cells are
+    ///     filled in ascending damage order, so the neighbours a cell reads are already built.
+    /// </summary>
+    private static List<(int Life, double Mult)>[,] NextLayer(List<(int Life, double Mult)>[,]? previous,
+        int misses, int bads, int cap)
+    {
+        var layer = new List<(int Life, double Mult)>[misses + 1, bads + 1];
+        for (var m = 0; m <= misses; m++)
+        for (var b = 0; b <= bads; b++)
+        {
+            var states = new List<(int Life, double Mult)>();
+            if (previous == null)
+            {
+                if (m == 0 && b == 0) states.Add((500, 0.1));
+            }
+            else
+            {
+                foreach (var (life, mult) in previous[m, b])
+                    states.Add((Math.Min(life + (int)(10 * mult), cap),
+                        Math.Min(mult + 0.016, LifebarSimulator.MaxLifeMultiplier)));
+            }
+
+            if (m > 0)
+                foreach (var (life, mult) in layer[m - 1, b])
+                    states.Add((
+                        Math.Max(life + (int)(-500 * (life > 1000 ? 1000 : life) / 2000.0 - 20.0), 0),
+                        Math.Max(mult - 0.7, 0.0)));
+            if (b > 0)
+                foreach (var (life, mult) in layer[m, b - 1])
+                    states.Add((Math.Max(life - 50, 0), Math.Max(mult - 0.35, 0.0)));
+
+            layer[m, b] = Pareto(states);
+        }
+
+        return layer;
+    }
+
+    /// <summary>Keeps only states no other state beats on BOTH axes.</summary>
+    private static List<(int Life, double Mult)> Pareto(List<(int Life, double Mult)> states)
+    {
+        states.Sort((a, b) => a.Life != b.Life ? a.Life.CompareTo(b.Life) : a.Mult.CompareTo(b.Mult));
+        var frontier = new List<(int Life, double Mult)>();
+        var bestMult = double.MaxValue;
+        foreach (var state in states)
+            if (state.Mult < bestMult - 1e-12)
+            {
+                frontier.Add(state);
+                bestMult = state.Mult;
+            }
+
+        return frontier;
+    }
+
+    private static bool LayersEqual(List<(int Life, double Mult)>[,] a, List<(int Life, double Mult)>[,] b)
+    {
+        for (var m = 0; m < a.GetLength(0); m++)
+        for (var i = 0; i < a.GetLength(1); i++)
+        {
+            if (a[m, i].Count != b[m, i].Count) return false;
+            for (var s = 0; s < a[m, i].Count; s++)
+                if (a[m, i][s] != b[m, i][s])
+                    return false;
+        }
+
+        return true;
     }
 
     /// <summary>

@@ -127,6 +127,31 @@ public sealed class StageBreakCauseSolverTests
     }
 
     [Fact]
+    public void AShortRunWhoseDamageCanHideAmongTheHealsIsLeftAlone()
+    {
+        // 60 perfects, 4 bads, 3 misses at level 15. Heal-first leaves 131 — comfortably alive —
+        // but an ordering that spaces the damage through the heals keeps the multiplier crushed,
+        // the perfects heal one point each, and the bar reaches zero on the 63rd of 67 notes. A
+        // run with exactly these judgements can absolutely be a life bar death, so no claim.
+        var cause = StageBreakCauseSolver.Solve(60, 0, 0, 4, 3, 67, 15, MixEnum.Phoenix2);
+
+        Assert.False(cause.IsNonLifebarBreak);
+        Assert.False(cause.IsNamed);
+    }
+
+    [Fact]
+    public void SixMissesOnAShortRunCanStillBeALifebarDeath()
+    {
+        // 115 perfects and 6 misses at level 24: exactly the Marvelous Game threshold, and the
+        // ship gate flagged it wearing MG and SSS+. The cruellest ordering ends on 60 life of a
+        // 2,728 bar — under the margin — so neither badge was ever provable.
+        var cause = StageBreakCauseSolver.Solve(115, 0, 0, 0, 6, 1000, 24, MixEnum.Phoenix2);
+
+        Assert.False(cause.IsNonLifebarBreak);
+        Assert.False(cause.IsNamed);
+    }
+
+    [Fact]
     public void ARunSurvivingOnASliverOfBarIsTreatedAsALifebarDeath()
     {
         // Sixteen misses at level 26 ends on 16 life of 3,028. The arithmetic heals first and
