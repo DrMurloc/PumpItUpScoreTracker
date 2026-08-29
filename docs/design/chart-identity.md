@@ -498,17 +498,17 @@ Computed against real Phoenix 2 metrics and real folder baselines. The build mus
 
 | Chart | Identity | Features |
 |---|---|---|
-| DUEL SC D23 | Half-Double · Twist-heavy · ✦Over-90 Twists · Close Twists | 90° Twists |
+| DUEL SC D23 | Half-Double · Twist-heavy · Hold-heavy · ✦Over-90 Twists · Close Twists | 90° Twists |
 | Jupin SC D20 | Half-Double · Twistless · Drills | Bursty · Hardest 15s: Runs, Anchor Runs |
 | Mr. Larpus S22 | Twist-heavy · ✦5-Stairs · ✦90° Twists · Over-90 Twists | — |
 | Doppelganger S22 | Twistless · Difficulty Spike +0.7 · Hardest 22s: Runs, Bracket Runs | Jumps · Drills · Doublesteps · Bracket Jumps |
-| Hymn of Golden Glory SC D20 | Very Slow · Twist-heavy · ✦Far Twists · Over-90 Twists · Close Twists | Cross-pad Transitions · Mid-6 Doubles |
+| Hymn of Golden Glory SC D20 | Very Slow · Twist-heavy · Hold-heavy · ✦Far Twists · Over-90 Twists · Close Twists | Cross-pad Transitions · Mid-6 Doubles |
 | Windmill D23 | ✦Staggered Brackets · ✦Bracket Runs · 90° Twists | Anchor Runs |
-| Nakakapagpabagabag D20 | Very Slow · Sustained · Doublesteps · Difficulty Spike +1.2 · Hardest 6s: Jumps, Brackets | 90° Twists |
+| Nakakapagpabagabag D20 | Very Slow · Hold-heavy · Sustained · Doublesteps · Difficulty Spike +1.2 · Hardest 6s: Jumps, Brackets | 90° Twists |
 | STAGER D20 | Very Slow · ✦Jacks · Doublesteps | Jumps |
-| Gargoyle FULL SONG S21 | Sustained | — |
+| Gargoyle FULL SONG S21 | Few Holds · Sustained | — |
 | Burn Out D23 | Difficulty Spike +0.8 · Hardest 15s: Runs, Close Twists | Doublesteps |
-| Monolith D23 | ✦Over-90 Twists · ✦Bracket Twists · Close Twists · Difficulty Spike +1.4 · Hardest 21s: Yog Walks, Runs | Sustained |
+| Monolith D23 | Hold-heavy · ✦Over-90 Twists · ✦Bracket Twists · Close Twists · Difficulty Spike +1.4 · Hardest 21s: Yog Walks, Runs | Sustained |
 | A Site De La Rue D20 | Runs · Difficulty Spike +1.2 · Hardest 6s: Drills, 90° Twists | Anchor Runs |
 | BSPower Explosion D20 | Hardest 10s: Drills, 90° Twists | — (bracket jumps vetoed) |
 | Heliosphere D20 | Difficulty Spike +1.0 · Hardest 14s: Runs, Drills | Bursty (bracket jumps vetoed) |
@@ -521,6 +521,14 @@ be nothing"*, and a build that invents a claim for them is wrong. That Kitty D22
 it pinned the over-claiming rules its jacks exposed — and gained `Hold-heavy` when hold share
 arrived (owner, 2026-08-29: 354 steps inside 1,087 notes, 0.674 against a folder p90 of 0.610):
 a new true measurement is not those bugs returning. Its rules stay pinned by the other two rows.
+
+The 2026-08-29 hold chips in this table were verified against the real banked Phoenix 2 data
+with the engine's own L±1 folder windows and the trust check applied: six rows gained a chip
+(DUEL SC, Hymn SC, Monolith, Nakakapagpabagabag and That Kitty wear `Hold-heavy`; Gargoyle FULL
+SONG wears `Few Holds` at 0.250 against an S21 p10 of 0.328), 4NT (0.556) and New Rose (0.446)
+sit mid-folder and correctly stay quiet, and Burn Out misses the D23 bar by 0.007 — measured,
+not rounded into a chip. Mr. Larpus S22 is the table's one vetoed file (its implied total
+disagrees past 1.5×), which changes nothing here: its share sits mid-folder anyway.
 
 ## 9. Runbook (one-time, post-deploy)
 
