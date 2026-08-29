@@ -69,6 +69,8 @@ one shared "geometry" hue, which described where the number came from rather tha
 | Quarter Double · Half-Double · Wide | Doubles Tech | Width only ever fires on a doubles chart. |
 | Twist-heavy | Twists | It is a twists claim. |
 | Twistless | Stamina & Runs | A chart that never turns you is a running chart — the absence of twists is not a fact about twists, it is what is there instead. |
+| Hold-heavy | Tech | A chart built on holds plays as technique — reading, weight, timing under tension — not as footspeed (owner, 2026-08-29). |
+| Few Holds | Stamina & Runs | Every judgement is a step your feet make; the absence of holds is a stamina fact, by the same reasoning as Twistless. |
 | Very Slow · Mid Tempo · Very Fast | the Speed ramp (§2) | So a chip and the folder section it came from cannot disagree. |
 
 Nothing wears the geometry hue any more; the token survives only as the Core Skills label's tint.
@@ -195,11 +197,12 @@ A chart earns each of these independently; all that fire are shown, in this disp
 | 1 | **Width** | mid-4 note-share ≥ 99.5% → `Quarter Double`; else mid-6 note-share ≥ 99.5% → `Half-Double`; else mid-6 ≤ folder p10 → `Wide`. Doubles only | geometry hue |
 | 2 | **Twist extreme** | side-on share ≥ folder p90 → `Twist-heavy`; or side-on ≤ **5%** (singles) / **10%** (doubles) **and** crossed ≤ **2%** → `Twistless` | geometry hue |
 | 3 | **Speed extreme** | `|z| ≥ 1.5` → `Very Fast` / `Very Slow` (§2) | geometry hue |
-| 4 | **✦ Rare** | present, **coverage ≥ 1.25 × the qualifying bar**, and ≤ **12%** of the folder qualifies for that badge. Rarest first | family tint + ✦ |
-| 5 | **Drenched** | present, **coverage ≥ the folder's p90 for that badge**, and ≥ 1.25 × the qualifying bar | family tint |
-| 6 | **Difficulty Spike** | crux peakiness ≥ **+0.7** | amber, `Difficulty Spike +1.2` |
-| 7 | **Hardest _X_s** | crux peakiness ≥ **+0.5** — the crux badges, as **one merged chip** | neutral body, per-badge family text |
-| 8 | **Sustained** | the `sustained` dominance pick **and** `time_under_tension` ≥ folder p90 | family tint |
+| 4 | **Hold extreme** | hold share ≥ folder p90 **and** the file passes the hold trust check → `Hold-heavy`; hold share ≤ folder p10, where p10 > 0 → `Few Holds` (§3.9) | Tech / Stamina & Runs |
+| 5 | **✦ Rare** | present, **coverage ≥ 1.25 × the qualifying bar**, and ≤ **12%** of the folder qualifies for that badge. Rarest first | family tint + ✦ |
+| 6 | **Drenched** | present, **coverage ≥ the folder's p90 for that badge**, and ≥ 1.25 × the qualifying bar | family tint |
+| 7 | **Difficulty Spike** | crux peakiness ≥ **+0.7** | amber, `Difficulty Spike +1.2` |
+| 8 | **Hardest _X_s** | crux peakiness ≥ **+0.5** — the crux badges, as **one merged chip** | neutral body, per-badge family text |
+| 9 | **Sustained** | the `sustained` dominance pick **and** `time_under_tension` ≥ folder p90 | family tint |
 
 Everything else that cleared presence is a **feature**. Features are allowed to be common —
 that was only ever a problem because common chips shouted at identity volume.
@@ -278,6 +281,47 @@ fifty-second run whoever it stands next to. The bar is **22% of the chart's play
 corpus 75th percentile — the median longest run covers 13.5%. Cleaner SHORT CUT S21 (46.5%),
 Gothique Resonance S21 (22.5%) and Baroque Virus FULL S21 (20.8%) are run charts; Gargoyle FULL S21
 (14.3%) and Headless Chicken S21 (11.2%) are not.
+
+### 3.9 Hold share
+
+Owner-approved 2026-08-29. What fraction of a chart's judgements are held rather than stepped —
+the axis that separates Jupin D23 (927 steps in 1,142 notes) from Solve My Hurt D23 (429 steps
+in 1,378) at the same level. The full precision audit behind these rules is
+[stepfile-precision.md](stepfile-precision.md).
+
+**The measure**: `hold share = (NoteCount − tap_rows) ÷ NoteCount`, where `NoteCount` is the
+game's own judged total and `tap_rows` the banked step count. It is computed **where the chart
+meets a mix's catalog** — never banked, because `NoteCount` is per-mix and Phoenix 2's keeps
+refilling from play. Phoenix 2 nulls fall back to Phoenix 1's count (the calculator's rule); a
+chart whose taps exceed its judged total (4 corpus-wide) yields nothing. The derivation never
+reads the file's own hold data, which is era-authored and unreliable.
+
+**The claims** — both Identity tier, judged against the folder's `hold_share` baseline row:
+
+- **`Hold-heavy`** — hold share ≥ folder **p90**, and the file passes the trust check below.
+  Wears **Tech** (owner: a hold chart plays as technique, not footspeed).
+- **`Few Holds`** — hold share ≤ folder **p10**, only where the folder's p10 is **above zero**.
+  Wears **Stamina & Runs**. The p10 > 0 floor is load-bearing: below S10 most of a folder has no
+  holds at all, its p10 is zero, and an unfloored low claim fires on a third of S01–S03.
+
+**No numbers, anywhere** (owner, 2026-08-29): the chips carry the word only, on every surface —
+"not until I have HIGH confidence in those numbers". No steps-of-notes line, no percentage.
+
+**The trust check** (high claim only): the derivation borrows the file's step count, and a file
+that is not the shipped chart always errs by *inflating* the inferred holds — missing steps read
+as holds. The check asks the file to confirm its own story: if the inferred hold ticks exceed
+**1.5×** the tick total the file itself contains, the two numbers cannot both be true, the file
+is not this chart, and `Hold-heavy` stays silent. Destination SHORT CUT D20 infers 525 holds
+from a file that contains 123 — vetoed; Iolite Sky D20 infers 844 against a file carrying 848 —
+keeps. Flags 5.1% of the corpus, over half of it SHORT CUTs, and removes 76 of 457 would-be
+high claims. `Few Holds` needs no check — this failure mode cannot point that direction. A
+vetoed chart heals with no code change when its file is fixed and re-annotated: the check reads
+the banked metrics, so the next snapshot upload un-gates it.
+
+**Why it is a new axis**: NPS is hold-blind by construction (p95 of effective downpresses —
+taps and hold starts only, ticks nowhere in it), so speed and hold share are structurally
+independent; of 457 high-hold charts only 73 are also Very Slow. And the badge vocabulary has
+no hold word at all — the only two candidates are limb-prediction phantoms already vetoed.
 
 ### 3.4 The bracket veto
 
@@ -410,8 +454,10 @@ the same shape independently (`piu-annotate`, `get_top_chart_skills`) with a two
 
 Per (mix, type, level, badge): **p75 coverage cutoff**, **p90 coverage** (the drenched bar), the
 **presence bar** (§3.1), and **prevalence** (count of peer charts carrying the badge at all). Plus per (mix,
-type, level) geometry rows: mid-4/mid-6 note-share **p75** and mid-6 **p10**, and side-on
-**p90**. Owned by Catalog (internal entity + repository, registered in
+type, level) geometry rows: mid-4/mid-6 note-share **p75** and mid-6 **p10**, side-on
+**p90**, and the **`hold_share` row** (p10 low / p90 high — §3.9), whose input is the one
+per-mix number in the sweep: the baseline read carries each chart's judged note count per mix,
+Phoenix 2 falling back to Phoenix 1. Owned by Catalog (internal entity + repository, registered in
 `CatalogModelContribution`); rebuilt at the end of every snapshot import / crawl — the same sweep
 that triggers the Speed rebuild. Chips for any chart on any surface (SRP included, where a page
 mixes folders) are computed against **that chart's own folder** baseline.
@@ -422,7 +468,7 @@ Catalog contract: `GetChartIdentityQuery(chartIds, mix)` →
 `ChartIdentityRecord(ChartId, IReadOnlyList<IdentityChipRecord>)`,
 `IdentityChipRecord(Kind, Tier, Badge, DisplayName, BadgeCategory? Family, decimal? Detail,
 IReadOnlyList<IdentityChipBadge> Badges)` where `Tier ∈ {Identity, Feature}`, `Kind ∈ {Width,
-Twist, Speed, Rare, Drenched, Spike, HardSection, Sustained, Plain}`, `Detail` carries coverage,
+Twist, Speed, Holds, Rare, Drenched, Spike, HardSection, Sustained, Plain}`, `Detail` carries coverage,
 peakiness or seconds, and `Badges` is populated only for the merged hard-section chip. Consumers:
 
 - **/TierLists** card + table chips (replaces `GetChartSkillChipsQuery`).
@@ -466,12 +512,15 @@ Computed against real Phoenix 2 metrics and real folder baselines. The build mus
 | A Site De La Rue D20 | Runs · Difficulty Spike +1.2 · Hardest 6s: Drills, 90° Twists | Anchor Runs |
 | BSPower Explosion D20 | Hardest 10s: Drills, 90° Twists | — (bracket jumps vetoed) |
 | Heliosphere D20 | Difficulty Spike +1.0 · Hardest 14s: Runs, Drills | Bursty (bracket jumps vetoed) |
-| **That Kitty D22** | **none** | Jacks · Mid-6 Doubles |
+| That Kitty D22 | Hold-heavy | Jacks · Mid-6 Doubles |
 | **New Rose D23** | **none** | Mid-6 Doubles · Doublesteps · Hardest 23s: Runs, Anchor Runs |
 | **4NT D20** | **none** | Mid-4 Doubles · Doublesteps · Hardest 24s: Close Twists, Over-90 Twists (brackets vetoed) |
 
-The three "none" rows are as load-bearing as the rest: they are the owner's *"it's fine for it to
-be nothing"*, and a build that invents a claim for them is wrong.
+The two "none" rows are as load-bearing as the rest: they are the owner's *"it's fine for it to
+be nothing"*, and a build that invents a claim for them is wrong. That Kitty D22 was the third —
+it pinned the over-claiming rules its jacks exposed — and gained `Hold-heavy` when hold share
+arrived (owner, 2026-08-29: 354 steps inside 1,087 notes, 0.674 against a folder p90 of 0.610):
+a new true measurement is not those bugs returning. Its rules stay pinned by the other two rows.
 
 ## 9. Runbook (one-time, post-deploy)
 
@@ -483,6 +532,10 @@ be nothing"*, and a build that invents a claim for them is wrong.
    alias, and rebuilds folder baselines. Chips are empty until it runs.
 3. Press "Rebuild Speed tier lists" once per mix that has metrics.
 4. No other presses. Verdict/meta caches roll daily at 13:00 UTC; blend caches within 6h.
+
+The hold-share claims (§3.9, added 2026-08-29) piggyback on the same lever: their `hold_share`
+baseline rows exist only after a baseline rebuild, so a deploy that adds them needs **one
+snapshot re-upload** (or the next crawl completion) before hold chips appear.
 
 ## 10. Out of scope, recorded so nobody re-litigates
 
@@ -497,3 +550,6 @@ be nothing"*, and a build that invents a claim for them is wrong.
   the p90 fix removed the case that motivated it.
 - api/v2 — untouched. `ChartSkillProfile` already speaks raw badges; the Speed list stays
   unpublished like Popularity/Chabala.
+- Hold numbers on any surface — rejected 2026-08-29 ("not until I have HIGH confidence in those
+  numbers"); the hold chips are word-only everywhere.
+- A hold-share drawer row or Show-Skill-Metric read-out — same ruling, same date.
