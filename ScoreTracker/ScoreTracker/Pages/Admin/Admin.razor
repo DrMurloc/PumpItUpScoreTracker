@@ -49,6 +49,12 @@
    re-press. *@
 <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="BackfillMaxCombos"
            data-testid="backfill-max-combos">@L["Backfill max combos"]</MudButton>
+@* Re-solves what ended every judged stage break — the life bar, or a Stage Pass command, and
+   which one — from the play's counts, the catalog's note count and level, and the mix's grade
+   floors. Every judged stage break, not only the unclassified ones, so a corrected note count
+   or a sharper rule catches up on the next press. Announces nothing. Safe to re-press. *@
+<MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="BackfillStageBreakCauses"
+           data-testid="backfill-stage-break-causes">@L["Backfill stage break causes"]</MudButton>
 @* The exit path for a scoring-formula change. Every PUMBILITY figure a player can see is
    computed from raw scores at read time and is already correct on deploy; what a formula
    change leaves stale is the STORED ratings and per-chart values, which otherwise refresh
@@ -265,6 +271,13 @@
     {
         await Bus.Publish(new BackfillMaxCombosCommand());
         Snackbar.Add(L["Re-solving max combos from every judged score. Nothing is announced."].Value,
+            Severity.Success);
+    }
+
+    private async Task BackfillStageBreakCauses()
+    {
+        await Bus.Publish(new BackfillStageBreakCausesCommand());
+        Snackbar.Add(L["Re-solving what ended every judged stage break. Nothing is announced."].Value,
             Severity.Success);
     }
 
