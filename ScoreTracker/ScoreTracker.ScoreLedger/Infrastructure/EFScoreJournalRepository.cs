@@ -79,7 +79,15 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             var key = (mixId, entry.ChartId, entry.OccurredAt);
             if (known.TryGetValue(key, out var existing))
             {
-                if (existing.Perfects == null && entry.Judgements != null) SetJudgements(existing, entry.Judgements);
+                // A best-list card gives us a stage break with no breakdown; the recently-played
+                // card in the same import fills it in. The cause is solved from that breakdown,
+                // so it lands with it or not at all.
+                if (existing.Perfects == null && entry.Judgements != null)
+                {
+                    SetJudgements(existing, entry.Judgements);
+                    SetCause(existing, entry.Cause);
+                }
+
                 continue;
             }
 
@@ -116,6 +124,18 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
         entity.MaxCombo = judgements?.MaxCombo;
     }
 
+    /// <summary>
+    ///     Names are stored rather than ordinals, matching Plate and LetterGrade beside them: the
+    ///     column is readable in an ad-hoc query, and a reordered enum cannot silently repoint
+    ///     existing rows at a different plate.
+    /// </summary>
+    private static void SetCause(ScoreEventJournalEntity entity, StageBreakCause cause)
+    {
+        entity.IsNonLifebarBreak = cause.IsNonLifebarBreak;
+        entity.PassPlate = cause.PassPlate?.GetName();
+        entity.PassGrade = cause.PassGrade?.GetName();
+    }
+
     private static ScoreEventJournalEntity Entity(ScoreJournalEntry entry, Guid mixId, bool isBest)
     {
         var entity = new ScoreEventJournalEntity
@@ -141,6 +161,7 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             SessionId = entry.SessionId
         };
         SetJudgements(entity, entry.Judgements);
+        SetCause(entity, entry.Cause);
         return entity;
     }
 

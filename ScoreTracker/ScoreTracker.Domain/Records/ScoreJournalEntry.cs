@@ -32,7 +32,11 @@ public sealed record ScoreJournalEntry(
     // A play the stage interrupted -- the song ended before its last note. Always broken, never
     // best, never scored (the running number the site prints for one is not a chart score), and
     // journaled all the same: it is what "attempts before this clear" counts.
-    bool IsStageBroken = false)
+    bool IsStageBroken = false,
+    // What interrupted it, as far as the judgement counts can say. Default is "no claim", which
+    // is the right answer for every entry that is not a stage break and for every stage break we
+    // cannot classify (docs/design/pass-command-detection.md).
+    StageBreakCause Cause = default)
 {
     public const string ManualSource = "manual";
     public const string OfficialImportSource = "officialImport";

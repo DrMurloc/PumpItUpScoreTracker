@@ -63,6 +63,13 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         if (!BestAttemptPolicy.CanBeRecord(request.IsStageBroken))
         {
             if (request.RecordedAt is { } playedAt)
+            {
+                // The catalog read the scored path does later, done here instead: the solver
+                // sizes the life bar from the chart's level and reads its note count, and this
+                // branch returns before that read happens.
+                var breakFacts = request.Judgements == null
+                    ? default
+                    : await NoteCountWatch.FactsFor(charts, request.Mix, request.ChartId, cancellationToken);
                 await journal.AppendObservations(new[]
                 {
                     // The combo is re-solved rather than carried: it is a function of the score,
@@ -70,8 +77,10 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
                     // stored against a play that cannot support one.
                     new ScoreJournalEntry(playedAt, request.Source, user.User.Id, request.ChartId, null, null, true,
                         request.Mix, sessionId, PhoenixComboSolver.WithMaxCombo(request.Judgements, null, null),
-                        false, IsStageBroken: true)
+                        false, IsStageBroken: true,
+                        Cause: NoteCountWatch.CauseFor(true, request.Judgements, breakFacts, request.Mix))
                 }, cancellationToken);
+            }
             return;
         }
 
