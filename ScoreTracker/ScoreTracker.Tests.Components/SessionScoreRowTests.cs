@@ -317,6 +317,17 @@ public sealed class SessionScoreRowTests : ComponentTestBase
     }
 
     [Fact]
+    public void AnUnnamedBreakOnSinglePerformanceBlamesTheOtherPadToo()
+    {
+        // SP is one pad, like a Single — the other pad can hold another player whose Pass
+        // command ends this run.
+        var row = Render(StageBreak(judgedNotes: 200, chartNoteCount: 800, isNonLifebarBreak: true,
+            chartType: ChartType.SinglePerformance));
+
+        Assert.Contains("likely a Pass command on the other pad", row.Markup);
+    }
+
+    [Fact]
     public void AnUnnamedBreakOnDoublesAdmitsItDoesNotKnow()
     {
         // Both pads are the player's own, so the other-pad explanation is off the table.

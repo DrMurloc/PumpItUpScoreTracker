@@ -144,7 +144,7 @@
                 return percent is { } named ? L["{0}% in", named] : string.Empty;
 
             if (Score.Row.IsNonLifebarBreak)
-                return Score.Chart?.Type == ChartType.Single
+                return Score.Chart?.Type is ChartType.Single or ChartType.SinglePerformance
                     ? L["Stage break · likely a Pass command on the other pad"]
                     : L["Stage break · couldn't determine what caused stage break"];
 
