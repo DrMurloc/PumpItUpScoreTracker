@@ -1,0 +1,45 @@
+@using ScoreTracker.SharedKernel.Enums
+@namespace ScoreTracker.Web.Components
+@inject IStringLocalizer<App> L
+
+@* A Stage Pass command, drawn as the art the game's own command window uses. The badge is the
+   sentence: it says both that the run was ended by a command and which target ended it, which
+   is why the row it sits on prints no phrase beside it
+   (docs/design/pass-command-detection.md D33, mock option C).
+
+   The plate and the grade are independent — a run can put both out of reach on the same
+   judgement — so this renders whichever it was given, and both when it was given both. *@
+@if (Plate != null)
+{
+    <MudTooltip Text="@Label(Plate.Value.GetShorthand())">
+        <MudImage tabindex="0" Src="@PlateImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"
+                  Alt="@Label(Plate.Value.GetShorthand())" Class="pass-command"></MudImage>
+    </MudTooltip>
+}
+@if (Grade != null)
+{
+    <MudTooltip Text="@Label(Grade.Value.GetName())">
+        <MudImage tabindex="0" Src="@GradeImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"
+                  Alt="@Label(Grade.Value.GetName())" Class="pass-command"></MudImage>
+    </MudTooltip>
+}
+
+@code {
+    // The game's own command-window art, mirrored from piugame. File names are the game's, so
+    // "SSS+" keeps its plus — it serves correctly raw and percent-encoded alike.
+    private const string Root = "https://piuimages.arroweclip.se/commands";
+
+    /// <summary>The plate the run put out of reach, when one judgement did it.</summary>
+    [Parameter] public PhoenixPlate? Plate { get; set; }
+
+    /// <summary>The letter grade the run put out of reach, when the ceiling just fell under it.</summary>
+    [Parameter] public PhoenixLetterGrade? Grade { get; set; }
+
+    [Parameter] public int Height { get; set; } = 22;
+
+    private string PlateImage => $"{Root}/Pass_Plate_{Plate!.Value.GetShorthand()}.png";
+
+    private string GradeImage => $"{Root}/Pass_Grade_{Grade!.Value.GetName()}.png";
+
+    private string Label(string target) => L["Pass {0} ended this stage", target];
+}
