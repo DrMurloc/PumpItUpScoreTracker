@@ -51,21 +51,18 @@ public sealed record ScoreScreen(StepCount Perfects, StepCount Greats, StepCount
 
     public double? EstimatedSteps => Calories == null ? null : Calories / CaloriesPerStep;
 
+    // Strictest first, so the first rule the run satisfies is the plate it earned. The table
+    // lives beside the enum because the stage-break solver reads the same rule from the other
+    // side — which plate a run broke — and two copies of a cutoff drift.
     public PhoenixPlate PlateText
     {
         get
         {
-            if (Greats == 0 && Goods == 0 && Bads == 0 && Misses == 0) return PhoenixPlate.PerfectGame;
-            if (Goods == 0 && Bads == 0 && Misses == 0) return PhoenixPlate.UltimateGame;
-            if (Bads == 0 && Misses == 0) return PhoenixPlate.ExtremeGame;
-            return (int)Misses switch
-            {
-                0 => PhoenixPlate.SuperbGame,
-                <= 5 => PhoenixPlate.MarvelousGame,
-                <= 10 => PhoenixPlate.TalentedGame,
-                <= 20 => PhoenixPlate.FairGame,
-                _ => PhoenixPlate.RoughGame
-            };
+            foreach (var tolerance in PhoenixPlateHelperMethods.Tolerances)
+                if (tolerance.Tolerates(Greats, Goods, Bads, Misses))
+                    return tolerance.Plate;
+
+            return PhoenixPlate.RoughGame;
         }
     }
 

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -936,6 +936,9 @@
   </data>
   <data name="Backfill max combos" xml:space="preserve">
     <value>최대 콤보 백필</value>
+  </data>
+  <data name="Backfill stage break causes" xml:space="preserve">
+    <value>스테이지 브레이크 원인 백필</value>
   </data>
   <data name="Bad" xml:space="preserve">
     <value>BAD</value>
@@ -5100,6 +5103,9 @@
   <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
     <value>이 폴더에서 {0}개를 {1} 이상으로</value>
   </data>
+  <data name="Pass {0} ended this stage" xml:space="preserve">
+    <value>Pass {0} 때문에 이 플레이가 종료되었습니다</value>
+  </data>
   <data name="Passed" xml:space="preserve">
     <value>클리어</value>
   </data>
@@ -5991,6 +5997,9 @@
   </data>
   <data name="Re-solving max combos from every judged score. Nothing is announced." xml:space="preserve">
     <value>판정이 기록된 모든 점수에서 최대 콤보를 다시 계산합니다. 아무것도 알리지 않습니다.</value>
+  </data>
+  <data name="Re-solving what ended every judged stage break. Nothing is announced." xml:space="preserve">
+    <value>판정이 기록된 모든 스테이지 브레이크의 원인을 다시 계산합니다. 아무것도 알리지 않습니다.</value>
   </data>
   <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
     <value>채보 변경 — {0}노트, 이전에는 {1}.</value>
@@ -7161,6 +7170,12 @@
   </data>
   <data name="Stage Break Modifier" xml:space="preserve">
     <value>스테이지 실패 배율</value>
+  </data>
+  <data name="Stage break · couldn't determine what caused stage break" xml:space="preserve">
+    <value>스테이지 브레이크 · 원인을 확인할 수 없습니다</value>
+  </data>
+  <data name="Stage break · likely a Pass command on the other pad" xml:space="preserve">
+    <value>스테이지 브레이크 · 반대편 발판의 Pass 커맨드일 가능성</value>
   </data>
   <data name="Stage break · {0}% in" xml:space="preserve">
     <value>스테이지 브레이크 · {0}% 지점</value>
@@ -9783,6 +9798,9 @@
   </data>
   <data name="{0}% complete" xml:space="preserve">
     <value>{0}% 완료</value>
+  </data>
+  <data name="{0}% in" xml:space="preserve">
+    <value>{0}% 지점</value>
   </data>
   <data name="{0}% of the bar" xml:space="preserve">
     <value>바의 {0}%</value>

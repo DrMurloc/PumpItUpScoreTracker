@@ -57,6 +57,32 @@ internal sealed class ScoreEventJournalEntity
     public bool IsStageBroken { get; set; }
 
     /// <summary>
+    ///     The life bar provably could not have emptied on this run, so one of Phoenix 2's Stage
+    ///     Pass commands ended it. Defaults to FALSE in the CLR and the column: a row we have not
+    ///     classified must never read as a positive claim, and the great majority of stage breaks
+    ///     really are the bar running out (docs/design/pass-command-detection.md D29).
+    /// </summary>
+    [Required]
+    public bool IsNonLifebarBreak { get; set; }
+
+    /// <summary>
+    ///     The plate the run's last judgement put out of reach, by the plate's full name, or NULL
+    ///     when no plate broke by exactly one judgement. Independent of <see cref="PassGrade" /> —
+    ///     either, both or neither may be set on a non-lifebar break, and both empty is a real
+    ///     answer rather than a gap (D31, D32).
+    /// </summary>
+    [MaxLength(16)]
+    public string? PassPlate { get; set; }
+
+    /// <summary>
+    ///     The letter grade the run's last judgement put out of reach, or NULL. Derived from the
+    ///     best score still attainable at the break, so it moves with the chart's note count and
+    ///     the mix's own floors (D33).
+    /// </summary>
+    [MaxLength(8)]
+    public string? PassGrade { get; set; }
+
+    /// <summary>
     ///     Whether this play became the player's record when it was written. False for the
     ///     plays the official site's recently-played list reports that never beat a best.
     ///     Defaults to TRUE, in both the CLR and the column: every row written before the

@@ -282,6 +282,81 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task AStageBreaksJudgementsNeverFillAnUnjudgedBestAtTheSameKey()
+    {
+        // The Phoenix 2 first-play stamp again, from the other side: an unjudged passing best
+        // and a judged stage break can share a key while being two different plays. The fill
+        // must not cross that line — otherwise the pass ends up wearing the break's partial
+        // counts and its cause.
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+
+        await repo.Append(Entry(userId, chart, Now, 955291, mix: MixEnum.Phoenix2), CancellationToken.None);
+        await repo.AppendObservations(
+            new[]
+            {
+                StageBreak(userId, chart, Now, new JudgementCounts(806, 1, 0, 0, 4)) with
+                {
+                    Cause = new StageBreakCause(true, null, PhoenixLetterGrade.SSSPlus)
+                }
+            }, CancellationToken.None);
+
+        var row = Assert.Single(await repo.GetChartHistories(userId, new[] { chart }, CancellationToken.None));
+        Assert.False(row.IsStageBroken);
+        Assert.Null(row.Judgements);
+        Assert.False(row.Cause.IsNonLifebarBreak);
+        Assert.Null(row.Cause.PassGrade);
+    }
+
+    [Fact]
+    public async Task TheCauseRoundTripsWithTheJudgementsOnTheFillIn()
+    {
+        // The legitimate fill — best-list stage break first, judged twin later — carries the
+        // cause in with the breakdown it was solved from.
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+
+        await repo.AppendObservations(new[] { StageBreak(userId, chart, Now, null) }, CancellationToken.None);
+        await repo.AppendObservations(
+            new[]
+            {
+                StageBreak(userId, chart, Now, new JudgementCounts(806, 1, 0, 0, 4)) with
+                {
+                    Cause = new StageBreakCause(true, null, PhoenixLetterGrade.SSSPlus)
+                }
+            }, CancellationToken.None);
+
+        var row = Assert.Single(await repo.GetChartHistories(userId, new[] { chart }, CancellationToken.None));
+        Assert.True(row.IsStageBroken);
+        Assert.True(row.Cause.IsNonLifebarBreak);
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, row.Cause.PassGrade);
+    }
+
+    [Fact]
+    public async Task JudgedStageBreaksReadsOnlyStageBreaks()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+
+        await repo.AppendObservations(new[]
+        {
+            Observation(userId, chart, Now.AddMinutes(-1), 910000) with
+            {
+                Judgements = new JudgementCounts(900, 40, 5, 2, 3)
+            },
+            StageBreak(userId, chart, Now, new JudgementCounts(806, 1, 0, 0, 4))
+        }, CancellationToken.None);
+
+        var rows = await repo.GetJudgedStageBreaks(userId, MixEnum.Phoenix2, CancellationToken.None);
+
+        var row = Assert.Single(rows);
+        Assert.True(row.IsStageBroken);
+    }
+
+    [Fact]
     public async Task TheComboRoundTripsWithTheBreakdownOnBothWritePaths()
     {
         var userId = await _seed.SeedUserAsync();
