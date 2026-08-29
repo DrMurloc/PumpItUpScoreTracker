@@ -335,6 +335,28 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task JudgedStageBreaksReadsOnlyStageBreaks()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+
+        await repo.AppendObservations(new[]
+        {
+            Observation(userId, chart, Now.AddMinutes(-1), 910000) with
+            {
+                Judgements = new JudgementCounts(900, 40, 5, 2, 3)
+            },
+            StageBreak(userId, chart, Now, new JudgementCounts(806, 1, 0, 0, 4))
+        }, CancellationToken.None);
+
+        var rows = await repo.GetJudgedStageBreaks(userId, MixEnum.Phoenix2, CancellationToken.None);
+
+        var row = Assert.Single(rows);
+        Assert.True(row.IsStageBroken);
+    }
+
+    [Fact]
     public async Task TheComboRoundTripsWithTheBreakdownOnBothWritePaths()
     {
         var userId = await _seed.SeedUserAsync();

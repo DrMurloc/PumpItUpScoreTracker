@@ -412,6 +412,18 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
         await database.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ScoreJournalEntry>> GetJudgedStageBreaks(Guid userId, MixEnum mix,
+        CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return (await database.Set<ScoreEventJournalEntity>()
+                .Where(e => e.UserId == userId && e.MixId == mixId && e.Perfects != null && e.IsStageBroken)
+                .ToArrayAsync(cancellationToken))
+            .Select(Map)
+            .ToArray();
+    }
+
     public async Task SetStageBreakCauses(Guid userId, MixEnum mix,
         IReadOnlyList<(Guid ChartId, DateTimeOffset OccurredAt, StageBreakCause Cause)> causes,
         CancellationToken cancellationToken)

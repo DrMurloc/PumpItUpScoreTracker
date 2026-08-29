@@ -62,11 +62,13 @@ public sealed class BackfillStageBreakCausesConsumerTests
     }
 
     [Fact]
-    public async Task AJudgedPlayThatFinishedIsNeverTouched()
+    public async Task APlayerWithJudgedRowsButNoStageBreaksWritesNothing()
     {
+        // The read is stage breaks only — the repository filters in SQL, so a player whose
+        // judged rows are all passes and finished fails costs one empty query and no write.
         var ctx = new ConsumerContext();
         ctx.GivenChart(MixEnum.Phoenix2, Chart, 1000, 21);
-        ctx.GivenFinishedPlay(MixEnum.Phoenix2, Alice, new JudgementCounts(990, 6, 0, 0, 4));
+        ctx.GivenPlayerWithNoStageBreaks(MixEnum.Phoenix2, Alice);
 
         await ctx.Consumer.Consume(Context());
 
@@ -105,7 +107,7 @@ public sealed class BackfillStageBreakCausesConsumerTests
         {
             Journal.Setup(j => j.GetUsersWithJudgedEntries(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<Guid>());
-            Journal.Setup(j => j.GetJudgedEntries(It.IsAny<Guid>(), It.IsAny<MixEnum>(),
+            Journal.Setup(j => j.GetJudgedStageBreaks(It.IsAny<Guid>(), It.IsAny<MixEnum>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<ScoreJournalEntry>());
             Consumer = new BackfillStageBreakCausesConsumer(Journal.Object, Charts.Object,
@@ -121,24 +123,20 @@ public sealed class BackfillStageBreakCausesConsumerTests
 
         public void GivenStageBreak(MixEnum mix, Guid userId, JudgementCounts judgements)
         {
-            GivenEntry(mix, userId, judgements, true);
-        }
-
-        public void GivenFinishedPlay(MixEnum mix, Guid userId, JudgementCounts judgements)
-        {
-            GivenEntry(mix, userId, judgements, false);
-        }
-
-        private void GivenEntry(MixEnum mix, Guid userId, JudgementCounts judgements, bool isStageBroken)
-        {
             Journal.Setup(j => j.GetUsersWithJudgedEntries(mix, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new[] { userId });
-            Journal.Setup(j => j.GetJudgedEntries(userId, mix, It.IsAny<CancellationToken>()))
+            Journal.Setup(j => j.GetJudgedStageBreaks(userId, mix, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new[]
                 {
                     new ScoreJournalEntry(At, ScoreJournalEntry.OfficialImportSource, userId, Chart,
-                        null, null, true, mix, null, judgements, false, IsStageBroken: isStageBroken)
+                        null, null, true, mix, null, judgements, false, IsStageBroken: true)
                 });
+        }
+
+        public void GivenPlayerWithNoStageBreaks(MixEnum mix, Guid userId)
+        {
+            Journal.Setup(j => j.GetUsersWithJudgedEntries(mix, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new[] { userId });
         }
     }
 }

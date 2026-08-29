@@ -109,6 +109,14 @@ internal interface IScoreJournalRepository
         CancellationToken cancellationToken);
 
     /// <summary>
+    ///     One player's judged stage breaks in one mix — the cause backfill's rows. Its own read
+    ///     because stage breaks are two orders of magnitude rarer than judged rows: the filter
+    ///     belongs in SQL, not on a hydrated pass list.
+    /// </summary>
+    Task<IReadOnlyList<ScoreJournalEntry>> GetJudgedStageBreaks(Guid userId, MixEnum mix,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     ///     Writes re-solved combos onto one player's rows in one mix, keyed by the play key's
     ///     chart and time. The one sanctioned in-place write besides raising IsBest: the combo is a
     ///     function of the row's other columns and the catalog, not history.

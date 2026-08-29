@@ -50,10 +50,8 @@ internal sealed class BackfillStageBreakCausesConsumer(IScoreJournalRepository j
     private async Task<(int Rows, int Named)> BackfillUser(MixEnum mix, Guid userId,
         CancellationToken cancellationToken)
     {
-        var stageBreaks = (await journal.GetJudgedEntries(userId, mix, cancellationToken))
-            .Where(e => e.IsStageBroken)
-            .ToArray();
-        if (stageBreaks.Length == 0) return (0, 0);
+        var stageBreaks = await journal.GetJudgedStageBreaks(userId, mix, cancellationToken);
+        if (stageBreaks.Count == 0) return (0, 0);
 
         // One catalog read per chart the player broke on. A player fails the same chart several
         // times in a row far more often than not, so this is well under one read per row.
