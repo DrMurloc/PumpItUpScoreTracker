@@ -200,6 +200,22 @@ public sealed class RecordObservedPlaysHandlerTests
     }
 
     [Fact]
+    public async Task ACoOpStageBreakIsNeverClassified()
+    {
+        // A co-op chart's Level is the player count, so the life bar the solver would size from
+        // it is fabricated. Judgements that would flag on any other chart make no claim here.
+        var ctx = new HandlerContext();
+        ctx.GivenCoOpChart(ChartId, 1000, playerCount: 2);
+
+        await ctx.Handler.Handle(Command(new RecordObservedPlaysCommand.ObservedPlay(ChartId, null, null, false,
+            PlayedAt, new JudgementCounts(806, 1, 0, 0, 4), IsStageBroken: true)), CancellationToken.None);
+
+        var entry = Assert.Single(ctx.Written);
+        Assert.False(entry.Cause.IsNonLifebarBreak);
+        Assert.False(entry.Cause.IsNamed);
+    }
+
+    [Fact]
     public async Task AFinishedPlayNeverCarriesAStageBreakCause()
     {
         var ctx = new HandlerContext();
@@ -243,6 +259,13 @@ public sealed class RecordObservedPlaysHandlerTests
             Charts.Setup(c => c.GetChart(MixEnum.Phoenix2, chartId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ChartBuilder().WithId(chartId).WithNoteCount(noteCount)
                     .WithLevel(level).Build());
+        }
+
+        public void GivenCoOpChart(Guid chartId, int noteCount, int playerCount)
+        {
+            Charts.Setup(c => c.GetChart(MixEnum.Phoenix2, chartId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ChartBuilder().WithId(chartId).WithNoteCount(noteCount)
+                    .WithType(ChartType.CoOp).WithLevel(playerCount).Build());
         }
     }
 }

@@ -28,7 +28,7 @@ internal static class NoteCountWatch
         try
         {
             var chart = await charts.GetChart(mix, chartId, cancellationToken);
-            return chart == null ? default : new ChartFacts(chart.NoteCount, chart.Level);
+            return chart == null ? default : new ChartFacts(chart.NoteCount, chart.Level, chart.Type);
         }
         catch (KeyNotFoundException)
         {
@@ -51,7 +51,11 @@ internal static class NoteCountWatch
     public static StageBreakCause CauseFor(bool isStageBroken, JudgementCounts? judgements, ChartFacts facts,
         MixEnum mix)
     {
-        if (!isStageBroken || judgements == null) return StageBreakCause.Unattributed;
+        // Co-op is never classified: its Level column is the PLAYER COUNT, so the life bar the
+        // solver would size from it is fabricated (level 2 -> a 1,012 bar), and nothing is known
+        // about how a co-op stage's life actually works. Never guess.
+        if (!isStageBroken || judgements == null || facts.Type == ChartType.CoOp)
+            return StageBreakCause.Unattributed;
 
         return StageBreakCauseSolver.Solve(judgements.Perfects, judgements.Greats, judgements.Goods,
             judgements.Bads, judgements.Misses, facts.NoteCount, facts.Level, mix);
@@ -77,4 +81,4 @@ internal static class NoteCountWatch
 ///     Both null means the chart is not in this mix's catalog and nothing derived from it can
 ///     be claimed.
 /// </summary>
-internal readonly record struct ChartFacts(int? NoteCount, DifficultyLevel? Level);
+internal readonly record struct ChartFacts(int? NoteCount, DifficultyLevel? Level, ChartType? Type = null);
