@@ -114,17 +114,20 @@ public static class StageBreakCauseSolver
 
     /// <summary>
     ///     The best score this run could still have finished on. Max combo is never observed on a
-    ///     stage break, so it is bounded rather than estimated: the longest run available is
-    ///     either everything before the break or every note after it, and a run with no combo
-    ///     breaker at all can still full-combo. A point estimate cannot work here — the combo
-    ///     component is 0.5% of the score, which is exactly one top-end grade band (D33, §5).
+    ///     stage break, so it is bounded rather than estimated: a point estimate cannot work here —
+    ///     the combo component is 0.5% of the score, which is exactly one top-end grade band
+    ///     (D33, §5). Only bads and misses break a combo; a good HOLDS it without advancing it.
+    ///     So a run whose only blemishes are goods can still combo every other note, and a run
+    ///     carrying a bad or miss is bounded by its longest breaker-free stretch — everything
+    ///     before the break (goods transparent) or every note after it.
     /// </summary>
     private static double ReachableCeiling(int perfects, int greats, int goods, int bads, int misses,
         int judged, int noteCount)
     {
         var remaining = noteCount - judged;
-        var comboBreakers = goods + bads + misses;
-        var combo = comboBreakers == 0 ? noteCount : Math.Max(perfects + greats, remaining);
+        var combo = bads + misses == 0
+            ? perfects + greats + remaining
+            : Math.Max(perfects + greats, remaining);
 
         return 1_000_000.0 *
                (0.995 * (perfects + 0.6 * greats + 0.2 * goods + 0.1 * bads + remaining)

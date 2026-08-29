@@ -150,13 +150,27 @@ public sealed class StageBreakCauseSolverTests
     [Fact]
     public void EachMixReadsItsOwnGradeFloors()
     {
-        // A ceiling of 919,492. Phoenix 2 puts AA at 920,000, so it just went out of reach;
-        // Phoenix puts AA at 900,000, already cleared, and its next floor up is 5,500 away.
-        // Goods drive the ceiling down here because they cost score and no life at all.
-        var onPhoenix = StageBreakCauseSolver.Solve(500, 0, 98, 0, 0, 1000, 21, MixEnum.Phoenix);
-        var onPhoenix2 = StageBreakCauseSolver.Solve(500, 0, 98, 0, 0, 1000, 21, MixEnum.Phoenix2);
+        // A ceiling of 919,900: goods drive it down because they cost score and no life at all,
+        // and with no bad or miss the combo runs straight through them. Phoenix 2 puts AA at
+        // 920,000, so it just went out of reach; Phoenix puts AA at 900,000, already cleared,
+        // and its next floor up is 5,100 away.
+        var onPhoenix = StageBreakCauseSolver.Solve(500, 0, 100, 0, 0, 1000, 21, MixEnum.Phoenix);
+        var onPhoenix2 = StageBreakCauseSolver.Solve(500, 0, 100, 0, 0, 1000, 21, MixEnum.Phoenix2);
 
         Assert.Equal(PhoenixLetterGrade.AA, onPhoenix2.PassGrade);
         Assert.Null(onPhoenix.PassGrade);
+    }
+
+    [Fact]
+    public void AGoodHoldsTheComboSoAGoodsOnlyBreakNamesNoGradeItCouldStillReach()
+    {
+        // 500 perfects / 98 goods on 1,000 notes: treating the goods as combo breakers put the
+        // ceiling at 919,492 and named Pass AA — but the combo runs through goods, the true
+        // ceiling is 921,502, and AA was still reachable. A real Pass AA would not have ended
+        // this run, so nothing may be named.
+        var cause = StageBreakCauseSolver.Solve(500, 0, 98, 0, 0, 1000, 21, MixEnum.Phoenix2);
+
+        Assert.True(cause.IsNonLifebarBreak);
+        Assert.Null(cause.PassGrade);
     }
 }
