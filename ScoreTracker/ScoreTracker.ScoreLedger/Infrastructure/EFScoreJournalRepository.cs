@@ -81,8 +81,13 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             {
                 // A best-list card gives us a stage break with no breakdown; the recently-played
                 // card in the same import fills it in. The cause is solved from that breakdown,
-                // so it lands with it or not at all.
-                if (existing.Perfects == null && entry.Judgements != null)
+                // so it lands with it or not at all. Only onto the SAME KIND of play: a Phoenix 2
+                // best card is stamped at the chart's first attempt and keeps that stamp, so a
+                // judged stage break can share a key with an unjudged passing best — two
+                // different plays — and filling across that line would stamp a pass with a stage
+                // break's partial counts and cause.
+                if (existing.Perfects == null && entry.Judgements != null
+                    && existing.IsStageBroken == entry.IsStageBroken)
                 {
                     SetJudgements(existing, entry.Judgements);
                     SetCause(existing, entry.Cause);
