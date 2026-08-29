@@ -3,6 +3,7 @@ using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Catalog.Domain;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Catalog.Application;
 
@@ -47,13 +48,24 @@ internal sealed class ChartIdentityHandler
         // between mixes, and it is what the baselines are keyed by.
         var charts = (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);
+        // Phoenix 2's judged counts are still refilling from play, so a null borrows Phoenix
+        // 1's (§3.9) — the same fallback the baseline sweep uses, which is what keeps a chart
+        // judged against cutoffs built from the number it carries itself.
+        var fallbackCounts =
+            request.Mix == MixEnum.Phoenix2 && charts.Values.Any(c => c.NoteCount == null)
+                ? (await _charts.GetCharts(MixEnum.Phoenix, cancellationToken: cancellationToken))
+                .Where(c => c.NoteCount != null)
+                .ToDictionary(c => c.Id, c => c.NoteCount)
+                : new Dictionary<Guid, int?>();
 
         foreach (var group in metrics.GroupBy(m => m.ChartId))
         {
             if (!charts.TryGetValue(group.Key, out var chart)) continue;
             var folder = await _baselines.GetFolderBaselines(request.Mix, chart.Type, (int)chart.Level,
                 cancellationToken);
-            var chips = ChartIdentityBuilder.Build(ChartBadgeProfile.From(group.Key, group.ToArray()), folder);
+            var profile = ChartBadgeProfile.From(group.Key, group.ToArray())
+                .WithNoteCount(chart.NoteCount ?? fallbackCounts.GetValueOrDefault(group.Key));
+            var chips = ChartIdentityBuilder.Build(profile, folder);
             if (chips.Count > 0) result[group.Key] = new ChartIdentityRecord(group.Key, chips);
         }
 
