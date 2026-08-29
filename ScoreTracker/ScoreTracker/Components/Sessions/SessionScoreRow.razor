@@ -39,8 +39,14 @@
             <div class="sbd-row-line">
                 @if (Score.Row.IsStageBroken)
                 {
-                    @* The stage broke: no grade, no plate, no chart score. The phrase says so, and how
-                       far the run got when the card carried a breakdown and the chart a note count. *@
+                    @* The stage broke: no grade, no plate, no chart score. Where we know a Stage Pass
+                       command ended it, the command's own art is the sentence and the phrase gives way
+                       to it; where we do not, the phrase says what we know and no more. Either way the
+                       line stays how far the run got (docs/design/pass-command-detection.md D33-D34). *@
+                    @if (PassPlate != null || PassGrade != null)
+                    {
+                        <PassCommandBadge Plate="PassPlate" Grade="PassGrade"></PassCommandBadge>
+                    }
                     <span class="sbd-stagebreak" data-testid="session-row-stage-break">@StageBreakText</span>
                 }
                 else
@@ -115,13 +121,34 @@
 
     private IEnumerable<SessionBadges.SessionBadge> Badges => SessionBadges.For(Score, L, includeGain: true);
 
+    private PhoenixPlate? PassPlate => PhoenixPlateHelperMethods.TryParse(Score.Row.PassPlate);
+
+    private PhoenixLetterGrade? PassGrade => PhoenixLetterGradeHelperMethods.TryParse(Score.Row.PassGrade);
+
     /// <summary>
-    ///     "Stage break · 31% in" — the notes the card judged over the chart's note count — or the
-    ///     bare phrase when either side is unknown (a best-list stage break carries no breakdown;
-    ///     a chart nobody has passed carries no count).
+    ///     What the line says beside the badge, or instead of one. A named command needs no phrase
+    ///     — its art already said the run was cut short — so the line keeps only how far it got.
+    ///     An unnamed non-lifebar break says what it can: on Singles the other pad is the common
+    ///     explanation, since a Pass command applies to both sides of the cabinet and someone
+    ///     else's side can end your run; on Doubles and CO-OP both pads are the player's own, so
+    ///     that explanation is off the table and the row admits it. Everything else is the
+    ///     original phrase, and the bare version of it when either side is unknown (a best-list
+    ///     stage break carries no breakdown; a chart nobody has passed carries no count).
     /// </summary>
-    private string StageBreakText =>
-        StageBreakProgress.PercentIn(Score.Row.JudgedNotes, Score.Chart?.NoteCount) is { } percent
-            ? L["Stage break · {0}% in", percent]
-            : L["Stage break"];
+    private string StageBreakText
+    {
+        get
+        {
+            var percent = StageBreakProgress.PercentIn(Score.Row.JudgedNotes, Score.Chart?.NoteCount);
+            if (PassPlate != null || PassGrade != null)
+                return percent is { } named ? L["{0}% in", named] : string.Empty;
+
+            if (Score.Row.IsNonLifebarBreak)
+                return Score.Chart?.Type == ChartType.Single
+                    ? L["Stage break · likely a Pass command on the other pad"]
+                    : L["Stage break · couldn't determine what caused stage break"];
+
+            return percent is { } plain ? L["Stage break · {0}% in", plain] : L["Stage break"];
+        }
+    }
 }

@@ -281,19 +281,77 @@ public sealed class SessionScoreRowTests : ComponentTestBase
         Assert.DoesNotContain("% in", noCount.Markup);
     }
 
+    [Fact]
+    public void ANamedPassCommandReplacesThePhraseWithItsOwnArt()
+    {
+        // The badge already says the run was cut short and by what, so the words go and the line
+        // keeps only how far it got.
+        var row = Render(StageBreak(judgedNotes: 811, chartNoteCount: 1000, isNonLifebarBreak: true,
+            passGrade: "SSS+"));
+
+        Assert.Contains("commands/Pass_Grade_SSS+.png", row.Markup);
+        Assert.Contains("81% in", row.Markup);
+        Assert.DoesNotContain("Stage break", row.Markup);
+    }
+
+    [Fact]
+    public void ARunThatPutBothAPlateAndAGradeOutOfReachWearsBoth()
+    {
+        var row = Render(StageBreak(judgedNotes: 887, chartNoteCount: 1000, isNonLifebarBreak: true,
+            passPlate: "Ultimate Game", passGrade: "SSS+"));
+
+        Assert.Contains("commands/Pass_Plate_UG.png", row.Markup);
+        Assert.Contains("commands/Pass_Grade_SSS+.png", row.Markup);
+    }
+
+    [Fact]
+    public void AnUnnamedBreakOnSinglesBlamesTheOtherPad()
+    {
+        // A Pass command applies to both sides of the cabinet and cannot be set per side, so
+        // somebody else's target ending your run is the common explanation here.
+        var row = Render(StageBreak(judgedNotes: 7, chartNoteCount: 1092, isNonLifebarBreak: true,
+            chartType: ChartType.Single));
+
+        Assert.Contains("likely a Pass command on the other pad", row.Markup);
+        Assert.DoesNotContain("commands/Pass_", row.Markup);
+    }
+
+    [Fact]
+    public void AnUnnamedBreakOnDoublesAdmitsItDoesNotKnow()
+    {
+        // Both pads are the player's own, so the other-pad explanation is off the table.
+        var row = Render(StageBreak(judgedNotes: 1081, chartNoteCount: 1234, isNonLifebarBreak: true,
+            chartType: ChartType.Double));
+
+        Assert.Contains("couldn't determine what caused stage break", row.Markup);
+    }
+
+    [Fact]
+    public void ABreakTheLifebarExplainsKeepsTheOriginalPhrase()
+    {
+        var row = Render(StageBreak(judgedNotes: 520, chartNoteCount: 1100));
+
+        Assert.Contains("Stage break · 47% in", row.Markup);
+        Assert.DoesNotContain("commands/Pass_", row.Markup);
+        Assert.DoesNotContain("other pad", row.Markup);
+    }
+
     private IRenderedComponent<SessionScoreRow> Render(SessionScore score)
     {
         return RenderComponent<SessionScoreRow>(p => p.Add(r => r.Score, score));
     }
 
-    private static SessionScore StageBreak(int? judgedNotes, int? chartNoteCount)
+    private static SessionScore StageBreak(int? judgedNotes, int? chartNoteCount,
+        bool isNonLifebarBreak = false, string? passPlate = null, string? passGrade = null,
+        ChartType chartType = ChartType.Double)
     {
         var song = new Song("Arcana Force", SongType.Arcade, new Uri("https://example.invalid/a.png"),
             TimeSpan.FromMinutes(2), "Artist", null);
-        var chart = new Chart(Guid.NewGuid(), MixEnum.Phoenix2, song, ChartType.Double,
+        var chart = new Chart(Guid.NewGuid(), MixEnum.Phoenix2, song, chartType,
             DifficultyLevel.From(20), MixEnum.Phoenix2, null, chartNoteCount);
         var row = new RecentSessionsPage.ScoreEventRecord(chart.Id, Start, null, null, true,
-            "officialImport", Session, ScoreEventClassification.Played, null, false, true, judgedNotes);
+            "officialImport", Session, ScoreEventClassification.Played, null, false, true, judgedNotes,
+            null, isNonLifebarBreak, passPlate, passGrade);
         return new SessionScore(row, chart, HighlightFlags.None, null);
     }
 
