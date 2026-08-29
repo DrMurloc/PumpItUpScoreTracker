@@ -1,5 +1,6 @@
 using ScoreTracker.Domain.Records;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.ScoreLedger.Domain;
 
@@ -114,6 +115,16 @@ internal interface IScoreJournalRepository
     /// </summary>
     Task SetMaxCombos(Guid userId, MixEnum mix,
         IReadOnlyList<(Guid ChartId, DateTimeOffset OccurredAt, int? MaxCombo)> combos,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     Writes re-solved stage-break causes onto one player's rows in one mix, keyed by the
+    ///     play key's chart and time. Derived like the combo beside it — a function of the row's
+    ///     judgements, the catalog and the mix's grade floors — so it is re-derived wholesale
+    ///     whenever any of those improve (docs/design/pass-command-detection.md).
+    /// </summary>
+    Task SetStageBreakCauses(Guid userId, MixEnum mix,
+        IReadOnlyList<(Guid ChartId, DateTimeOffset OccurredAt, StageBreakCause Cause)> causes,
         CancellationToken cancellationToken);
 }
 

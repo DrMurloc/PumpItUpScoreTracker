@@ -407,6 +407,25 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
         await database.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task SetStageBreakCauses(Guid userId, MixEnum mix,
+        IReadOnlyList<(Guid ChartId, DateTimeOffset OccurredAt, StageBreakCause Cause)> causes,
+        CancellationToken cancellationToken)
+    {
+        if (causes.Count == 0) return;
+
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var rows = await database.Set<ScoreEventJournalEntity>()
+            .Where(e => e.UserId == userId && e.MixId == mixId && e.Perfects != null && e.IsStageBroken)
+            .ToArrayAsync(cancellationToken);
+        var byKey = rows.ToDictionary(r => (r.ChartId, r.OccurredAt));
+        foreach (var (chartId, occurredAt, cause) in causes)
+            if (byKey.TryGetValue((chartId, occurredAt), out var row))
+                SetCause(row, cause);
+
+        await database.SaveChangesAsync(cancellationToken);
+    }
+
     private static ScoreJournalEntry Map(ScoreEventJournalEntity e)
     {
         var mix = MixIds.ToEnum(e.MixId);
