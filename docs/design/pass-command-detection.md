@@ -52,22 +52,28 @@ in, which side of the cabinet the player was on, or the command itself.
 
 ### D29 — the life bar gate comes first, and it is a gate
 
-`start 500` → heal through every perfect and great, capped at the level's full bar
-(`MaxLife = 1000 + 3·level²`, 3700 above level 30) → subtract every bad and miss in the most lethal
-order. **If life still remains, the bar cannot have emptied and a Pass command ended the stage.**
+Two screens, cheapest first, starting from 500 life on the level's bar
+(`MaxLife = 1000 + 3·level²`, 3700 above level 30). The bar drains only on bads and misses — goods
+do nothing, which is the same mechanism that makes a passing F possible at all
+([`LifebarSimulator.ApplyJudgment`](../../ScoreTracker/ScoreTracker.SharedKernel/Models/LifebarSimulator.cs));
+greats and perfects heal.
 
-The bar drains only on bads and misses — goods do nothing, which is the same mechanism that makes a
-passing F possible at all ([`LifebarSimulator.ApplyJudgment`](../../ScoreTracker/ScoreTracker.SharedKernel/Models/LifebarSimulator.cs)).
-Greats and perfects heal.
+1. **The friendliest ordering**: heal through every perfect and great, then land the damage in its
+   most lethal interleaving. If even this dies, the row is refuted outright.
+2. **The cruellest ordering**: a Pareto search for the least life ANY ordering of the judgements
+   can end on. This is what makes the flag a proof — the friendliest ordering alone is not, because
+   a miss subtracts 0.7 from the heal multiplier, so an ordering that spaces the damage through the
+   heal stream keeps the multiplier crushed and a perfect heals one point instead of ten. That is
+   what a struggling run actually looks like, and review measured 24 of an earlier gate's 348 flags
+   carrying a valid ordering that dies. Two deliberate conservatisms keep the searched minimum a
+   lower bound: every heal is applied as a great (the weaker heal on the slower ramp; every
+   transition is monotone in life and multiplier, so the substituted trajectory sits under the real
+   one for any ordering), and orderings that empty the bar mid-run clamp and continue — invalid as
+   evidence, so counting them only errs toward refusing to claim.
 
-Two things make this correct rather than merely plausible:
-
-- **The run must survive to its last judged note.** An ordering that empties the bar at note 7 is
-  not consistent with a card reporting 898 judged notes. That constraint forces the adversary to
-  spend the perfects it would rather waste, and with hundreds of them the bar reaches the cap
-  regardless — so the killing burst runs from a full bar.
-- **Empirically the bar does not die early.** 2,791 finished-and-*passed* runs in the journal carry
-  exactly 3 misses; 1,989 carry 6.
+**Only a run whose worst ordering still ends above the margin is flagged.** Empirically the bar
+does not die early on real passes — 2,791 finished-and-*passed* runs in the journal carry exactly
+3 misses; 1,989 carry 6 — which is why the margin (D30) rather than zero is the boundary.
 
 ### D30 — a 5% life margin, because the calculation is generous
 
@@ -94,13 +100,17 @@ Best score still reachable = every remaining note perfect, best possible max com
 sits below a grade floor by less than one note's worth of score, that grade just became unattainable
 and is a candidate.
 
-Combo is bounded, not known: `max(perfects + greats, notes remaining)`. Why it is bounded
-rather than estimated is §5.
+Combo is bounded, not known — why it is bounded rather than estimated is §5 — and the bound
+respects that **only bads and misses break a combo; a good holds it without advancing it**. A run
+whose only blemishes are goods can therefore still combo every other note
+(`perfects + greats + remaining`); a run carrying a bad or miss is bounded by its longest
+breaker-free stretch, `max(perfects + greats, notes remaining)`, with goods transparent inside it.
 
 ### D34 — an unattributed break still says what it is
 
 The gate's answer is *"the life bar did not do this"*, which is worth saying on its own. The row
-reads `Stage break · likely a Pass command on the other pad` on Singles and
+reads `Stage break · likely a Pass command on the other pad` on Singles and Single Performance —
+one pad either way, the other free for the player whose command ends your run — and
 `Stage break · couldn't determine what caused stage break` on Doubles and CO-OP. The split is real:
 on Doubles and CO-OP one player holds both pads, so there is no other side to blame.
 
@@ -113,21 +123,29 @@ no Pavane row at that timestamp because he was off-pad, and both replayed it 2.5
 
 **We do not try to detect co-play in code.** A future target, not this one.
 
+### D35 — co-op is never classified
+
+A co-op chart's `Level` column is the **player count**, so the life bar the solver would size from
+it is fabricated — level 2 makes a 1,012 bar — and nothing is known about how a co-op stage's life
+actually works. All 48 judged co-op stage breaks in production happened to fall the safe side of
+that fabricated bar; the skip makes the mistake impossible instead of lucky. Never guess.
+
 ## 4. What it finds
 
 Over the 2,593 judged stage breaks, at the 5% margin:
 
 | | rows |
 |---|---|
-| Life bar could feasibly have emptied — untouched | 2,245 |
-| **Non-Lifebar break** | **348** |
-| — Pass Plate named | 156 |
-| — Pass Grade named | 141 |
-| — both named | 41 |
-| — neither | 92 |
+| Life bar could have emptied under some ordering — untouched | 2,269 |
+| **Non-Lifebar break** | **324** |
+| — Pass Plate named | 152 |
+| — Pass Grade named | 123 |
+| — both named | 37 |
+| — neither | 86 |
 
-Named plates: `PG 82 · MG 24 · TG 22 · SG 20 · UG 16 · EG 15`. Named grades: `SSS 93 · SSS+ 63 ·
-SS+ 8 · SS 5 · A+ 5 · S+ 3 · AAA 1 · S 1`. 69 distinct players.
+Named plates: `PG 82 · SG 20 · UG 16 · MG 16 · EG 15 · TG 3`. Named grades: `SSS 62 · SSS+ 54 ·
+SS+ 3 · SS 2 · S+ 1 · S 1`. 33 distinct players. (An earlier revision of this table paired the
+5% margin with histograms measured at 0% — these are all one measurement of the shipped pipeline.)
 
 **Every Non-Lifebar break is Phoenix 2. None of the 569 judged Phoenix 1 breaks qualify.** Noise
 would have spread across both mixes in proportion; a Phoenix-2-only feature producing a
@@ -157,13 +175,23 @@ Recorded because each looked right and cost real time.
 - **Session repetition as evidence** (treating a repeated near-floor break in one session as
   confirmation). Only ever existed to rescue rows the broken gate could not prove; the corrected
   gate proves them outright. Do not build it.
+- **The friendliest ordering as the whole gate** (heal everything first, then damage). Flagged 24
+  rows whose judgements admit a valid dying ordering — 15 of them badged — because spacing damage
+  through the heal stream suppresses nearly all the healing. Caught in review; the adversarial
+  minimum in D29 is the repair, and every owner-confirmed ground-truth row survives it.
+- **Goods as combo breakers** in the reachable ceiling. A good holds the combo, so on a goods-only
+  break the old bound understated the ceiling by up to a grade band and could name a grade that was
+  still reachable. Caught in review; on today's data the repair adds two legitimate names and
+  removes none.
 - **Closest-plate-by-miss-count** as a fallback label. On the owner's own five Pass SSS+ runs it
   produces `MG, MG, MG, SG, SG` — confidently wrong five times, and inconsistent within one session
   on one chart. Grade must resolve first, and the plate test stays exact.
 
-## 6. The 92 we cannot explain
+## 6. The 86 we cannot explain
 
-Non-Lifebar, no plate broken by one, no grade within a note. Ruled out as causes:
+Non-Lifebar, no plate broken by one, no grade within a note. (92 before the adversarial gate
+reclaimed six; the analysis below was measured on those 92 and its conclusions are unchanged.)
+Ruled out as causes:
 
 - **Bad note counts** — 0 mismatches across all 88 testable charts (the catalog equals what finished
   plays sum to; Gargoyle - FULL SONG - S21 = 3,333 confirmed by 108 plays).
@@ -230,6 +258,10 @@ Docs first, i18n last, one PR.
 
 Between 9 and 11 the new strings render as their English key text; that is the cost of i18n-last,
 not a regression.
+
+A review pass (2026-08-29, same PR) followed: the adversarial gate, the goods-transparent combo,
+the same-kind fill guard, the co-op skip, the breaks-only backfill read, the Single Performance
+copy, and a resx key whose apostrophe didn't match its call site.
 
 ## 10. Not in this pass
 
