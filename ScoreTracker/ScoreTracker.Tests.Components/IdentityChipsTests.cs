@@ -44,7 +44,9 @@ public sealed class IdentityChipsTests : ComponentTestBase
             Chip(IdentityChipKind.Twist, IdentityClaimKeys.TwistHeavy, "Twist-heavy", null),
             Chip(IdentityChipKind.Twist, IdentityClaimKeys.Twistless, "Twistless", null),
             Chip(IdentityChipKind.Speed, IdentityClaimKeys.VeryFast, "Very Fast", null),
-            Chip(IdentityChipKind.Speed, IdentityClaimKeys.VerySlow, "Very Slow", null)), false, Localizer);
+            Chip(IdentityChipKind.Speed, IdentityClaimKeys.VerySlow, "Very Slow", null),
+            Chip(IdentityChipKind.Holds, IdentityClaimKeys.HoldHeavy, "Hold-heavy", null, 0.674m),
+            Chip(IdentityChipKind.Holds, IdentityClaimKeys.FewHolds, "Few Holds", null, 0.106m)), false, Localizer);
 
         Assert.Contains("chip-unique", chips[0].CategoryClass);
         Assert.Contains("badgecat-doublestech", chips[0].CategoryClass);
@@ -61,6 +63,26 @@ public sealed class IdentityChipsTests : ComponentTestBase
         Assert.Equal("badgecat-staminaandruns", chips[6].CategoryClass);
         Assert.Equal("chip-speed-fast", chips[7].CategoryClass);
         Assert.Equal("chip-speed-slow", chips[8].CategoryClass);
+        // Opposite families for opposite facts about the same measure (owner, 2026-08-29): a
+        // hold chart plays as technique, and a chart whose every judgement is a step is a
+        // stamina fact by the same reasoning as Twistless.
+        Assert.Equal("badgecat-tech", chips[9].CategoryClass);
+        Assert.Equal("badgecat-staminaandruns", chips[10].CategoryClass);
+    }
+
+    /// <summary>
+    ///     The word only, never a number (owner, 2026-08-29: "I don't want numbers until I have
+    ///     HIGH confidence in those numbers") — not even behind the Show Skill Metric switch
+    ///     that prints every badge coverage.
+    /// </summary>
+    [Fact]
+    public void AHoldChipNeverPrintsItsShareEvenWhenNumbersAreOn()
+    {
+        var chips = IdentityChips.ToCardChips(
+            Identity(Chip(IdentityChipKind.Holds, IdentityClaimKeys.HoldHeavy, "Hold-heavy", null, 0.674m)),
+            true, Localizer);
+
+        Assert.Null(Assert.Single(chips).Metric);
     }
 
     /// <summary>

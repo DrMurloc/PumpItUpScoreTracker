@@ -96,6 +96,19 @@ public static class IdentityChips
                         : BadgeCategory.StaminaAndRuns),
                     null, identity);
 
+            // Made of holds, or of nothing but steps. Opposite families for opposite facts
+            // about the same measure (owner, 2026-08-29): a hold chart plays as technique —
+            // reading, weight, timing under tension — while a chart whose every judgement is a
+            // step is a stamina fact, by the same reasoning that files Twistless there. The
+            // word only, never a number: the counts have not earned one yet.
+            case IdentityChipKind.Holds:
+                return new TierListChartCard.CardSkillChip(
+                    localizer[chip.DisplayName].Value,
+                    BadgeCategoryClasses.For(chip.Badge == IdentityClaimKeys.HoldHeavy
+                        ? BadgeCategory.Tech
+                        : BadgeCategory.StaminaAndRuns),
+                    null, identity);
+
             // ✦ marks the rare one. A dashed border alone said "this chip is different" without
             // saying how, which is no message at all; the glyph carries it now and the border is
             // ordinary again (owner, 2026-08-26).
