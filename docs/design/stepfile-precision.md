@@ -79,7 +79,7 @@ What each derived quantity actually depends on, and its measured trust level:
 
 | Quantity | Reads from the file | Verdict |
 |---|---|---|
-| **Tap rows** (step count) | taps only | Strong. Provably exact on the 49.6% exact-total charts; hard-impossible (taps > judged total) on only **3** charts corpus-wide. Untrustworthy only on the ~57 no-hold re-steps and an unseparable slice of the under-ticked 293. |
+| **Tap rows** (step count) | taps only | Strong. Provably exact on the 49.6% exact-total charts; hard-impossible (taps > judged total) on only **3** charts in the Phoenix 1 corpus (one more against Phoenix 2's counts). Untrustworthy only on the ~57 no-hold re-steps and an unseparable slice of the under-ticked 293. |
 | **Derived hold ticks / hold share** (`NoteCount − tap_rows`) | taps only | Strong, and **immune to tick-side errors** — on Conflict D26, the worst file in the corpus, it derives 402 ticks (25.1% hold share), perfectly plausible. Exposed only where taps are wrong; guard below. |
 | **File tick sums / per-chart hold profiles** | authored ticks | **Do not use as per-chart truth.** Up to ~15× off; 18.9% of the corpus is > 5% wrong. Aggregate statistics only (the calculator's ruling stands). |
 | **NPS / eNPS timeline** (p95 of per-second effective downpresses) | tap + hold-start timing | Strong. Hold-tick-blind by construction (`piu_annotate/formats/nps.py` — downpress = `1`/`2` only, dedup guards on hold spam). Wrong only where the steps themselves differ. |

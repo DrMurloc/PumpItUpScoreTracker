@@ -293,7 +293,8 @@ in 1,378) at the same level. The full precision audit behind these rules is
 game's own judged total and `tap_rows` the banked step count. It is computed **where the chart
 meets a mix's catalog** — never banked, because `NoteCount` is per-mix and Phoenix 2's keeps
 refilling from play. Phoenix 2 nulls fall back to Phoenix 1's count (the calculator's rule); a
-chart whose taps exceed its judged total (4 corpus-wide) yields nothing. The derivation never
+chart whose taps exceed its judged total (3 on Phoenix 1, one more on Phoenix 2) yields
+nothing. The derivation never
 reads the file's own hold data, which is era-authored and unreliable.
 
 **The claims** — both Identity tier, judged against the folder's `hold_share` baseline row:

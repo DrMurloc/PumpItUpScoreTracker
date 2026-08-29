@@ -274,6 +274,10 @@ internal sealed class EFChartRepository : IChartRepository
         var cache = await GetAllCharts(mix, cancellationToken);
         if (cache.TryGetValue(chartId, out var chart))
             cache[chartId] = chart with { Id = chartId, NoteCount = noteCount };
+        // The flat mix-levels read carries this count too (the baseline sweep prices hold
+        // shares off it), and a patched catalog beside a stale flat read would let the two
+        // disagree for up to fourteen days. The read is one cheap ChartMix scan — evict it.
+        _cache.Remove(MixLevelsCacheKey);
     }
 
 
@@ -390,6 +394,7 @@ internal sealed class EFChartRepository : IChartRepository
         }
 
         _cache.Remove($"{nameof(EFChartRepository)}_{nameof(GetChartVideoInformation)}");
+        _cache.Remove(MixLevelsCacheKey);
     }
 
     public async Task<Guid> CreateChart(MixEnum mix, Guid songId, ChartType type, DifficultyLevel level,
@@ -465,7 +470,7 @@ internal sealed class EFChartRepository : IChartRepository
     public async Task<IReadOnlyList<(Guid ChartId, MixEnum Mix, int Level, int? NoteCount)>> GetChartMixLevels(
         CancellationToken cancellationToken = default)
     {
-        return (await _cache.GetOrCreateAsync($"{nameof(EFChartRepository)}__ChartMixLevels", async entry =>
+        return (await _cache.GetOrCreateAsync(MixLevelsCacheKey, async entry =>
         {
             entry.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(14);
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
@@ -482,6 +487,8 @@ internal sealed class EFChartRepository : IChartRepository
     {
         return $"{nameof(EFChartRepository)}_{nameof(GetAllCharts)}_Mix:{mixId}";
     }
+
+    private const string MixLevelsCacheKey = $"{nameof(EFChartRepository)}__ChartMixLevels";
 
     private async Task<IDictionary<Guid, Chart>> GetAllCharts(MixEnum mix, CancellationToken cancellationToken)
     {
