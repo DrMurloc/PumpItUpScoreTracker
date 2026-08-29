@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -936,6 +936,9 @@
   </data>
   <data name="Backfill max combos" xml:space="preserve">
     <value>Rellenar combos máximos</value>
+  </data>
+  <data name="Backfill stage break causes" xml:space="preserve">
+    <value>Rellenar causas de stage break</value>
   </data>
   <data name="Bad" xml:space="preserve">
     <value>Bad</value>
@@ -5100,6 +5103,9 @@
   <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
     <value>Pasa {0} charts en este folder con {1} o mejor</value>
   </data>
+  <data name="Pass {0} ended this stage" xml:space="preserve">
+    <value>Pass {0} terminó este intento</value>
+  </data>
   <data name="Passed" xml:space="preserve">
     <value>Pasado</value>
   </data>
@@ -5989,6 +5995,9 @@
   </data>
   <data name="Re-solving max combos from every judged score. Nothing is announced." xml:space="preserve">
     <value>Recalculando los combos máximos de cada score con juicios. No se anuncia nada.</value>
+  </data>
+  <data name="Re-solving what ended every judged stage break. Nothing is announced." xml:space="preserve">
+    <value>Recalculando qué terminó cada stage break con juicios. No se anuncia nada.</value>
   </data>
   <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
     <value>Repisado: {0} notas, antes {1}.</value>
@@ -7159,6 +7168,12 @@
   </data>
   <data name="Stage Break Modifier" xml:space="preserve">
     <value>Modificador por Stage Break</value>
+  </data>
+  <data name="Stage break · couldn’t determine what caused stage break" xml:space="preserve">
+    <value>Stage break · no se pudo determinar la causa</value>
+  </data>
+  <data name="Stage break · likely a Pass command on the other pad" xml:space="preserve">
+    <value>Stage break · probablemente un comando Pass en la otra plataforma</value>
   </data>
   <data name="Stage break · {0}% in" xml:space="preserve">
     <value>Stage break · al {0}%</value>
@@ -9781,6 +9796,9 @@
   </data>
   <data name="{0}% complete" xml:space="preserve">
     <value>{0}% completado</value>
+  </data>
+  <data name="{0}% in" xml:space="preserve">
+    <value>al {0}%</value>
   </data>
   <data name="{0}% of the bar" xml:space="preserve">
     <value>{0} % de la barra</value>

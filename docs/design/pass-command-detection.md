@@ -94,7 +94,8 @@ Best score still reachable = every remaining note perfect, best possible max com
 sits below a grade floor by less than one note's worth of score, that grade just became unattainable
 and is a candidate.
 
-Combo is bounded, not known: `max(perfects + greats, notes remaining)`. This matters — see D35.
+Combo is bounded, not known: `max(perfects + greats, notes remaining)`. Why it is bounded
+rather than estimated is §5.
 
 ### D34 — an unattributed break still says what it is
 
@@ -225,7 +226,7 @@ Docs first, i18n last, one PR.
 8. `feat(web)` — `PassCommandBadge`
 9. `feat(web)` — the session row renders it
 10. `feat(admin)` — the backfill button
-11. `i18n` — three keys across ten locales
+11. `i18n` — six keys across nine locales
 
 Between 9 and 11 the new strings render as their English key text; that is the cost of i18n-last,
 not a regression.

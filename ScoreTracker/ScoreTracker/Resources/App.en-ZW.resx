@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -943,6 +943,9 @@
   </data>
   <data name="Backfill max combos" xml:space="preserve">
     <value>Mrglrglmrp gro grogrgl</value>
+  </data>
+  <data name="Backfill stage break causes" xml:space="preserve">
+    <value>Mrglrglmrp mrpmurg arglglorg grorpmur</value>
   </data>
   <data name="Bad" xml:space="preserve">
     <value>Blab</value>
@@ -5132,6 +5135,9 @@
   <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
     <value>Maglplgl {0} murgl mrp grglmrp grrgllurg glgrgl {1} argl morgmrp</value>
   </data>
+  <data name="Pass {0} ended this stage" xml:space="preserve">
+    <value>Mrpglub {0} arglglorg mrpmurg</value>
+  </data>
   <data name="Passed" xml:space="preserve">
 	  <value>Rglplgl</value>
   </data>
@@ -6030,6 +6036,9 @@
   </data>
   <data name="Re-solving max combos from every judged score. Nothing is announced." xml:space="preserve">
     <value>Mrgrglmurm gro grogrgl blarg mrgmurg blgrlmurgro mrglrgl. Morgl mrp blgrlargl.</value>
+  </data>
+  <data name="Re-solving what ended every judged stage break. Nothing is announced." xml:space="preserve">
+    <value>Mrgrglmurm mrgmurg blgrlmurgro mrpmurg arglglorg. Morgl mrp blgrlargl.</value>
   </data>
   <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
     <value>Gl-plglmorgplgl — {0} roblub, ro {1}.</value>
@@ -7216,6 +7225,12 @@
   </data>
   <data name="Stage Break Modifier" xml:space="preserve">
 	  <value>Mrpmurg Arglglorg Blgrlblargblarg</value>
+  </data>
+  <data name="Stage break · couldn’t determine what caused stage break" xml:space="preserve">
+    <value>Mrpmurg arglglorg · bo grorplurgmo mrpmurg arglglorg</value>
+  </data>
+  <data name="Stage break · likely a Pass command on the other pad" xml:space="preserve">
+    <value>Mrpmurg arglglorg · glorgmur mrpglub ur blargmo rorg</value>
   </data>
   <data name="Stage break · {0}% in" xml:space="preserve">
     <value>Mrpmurg arglglorg · {0}% gropmur</value>
@@ -9852,6 +9867,9 @@
   </data>
   <data name="{0}% complete" xml:space="preserve">
     <value>{0}% roarglgrorp</value>
+  </data>
+  <data name="{0}% in" xml:space="preserve">
+    <value>{0}% gropmur</value>
   </data>
   <data name="{0}% of the bar" xml:space="preserve">
     <value>{0}% mrgl mrp mr</value>
