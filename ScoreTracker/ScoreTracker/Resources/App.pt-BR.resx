@@ -7171,7 +7171,7 @@
   <data name="Stage Break Modifier" xml:space="preserve">
     <value>Modificador de quebra de estágio</value>
   </data>
-  <data name="Stage break · couldn’t determine what caused stage break" xml:space="preserve">
+  <data name="Stage break · couldn't determine what caused stage break" xml:space="preserve">
     <value>Stage break · não foi possível determinar a causa</value>
   </data>
   <data name="Stage break · likely a Pass command on the other pad" xml:space="preserve">

@@ -7171,7 +7171,7 @@
   <data name="Stage Break Modifier" xml:space="preserve">
     <value>스테이지 실패 배율</value>
   </data>
-  <data name="Stage break · couldn’t determine what caused stage break" xml:space="preserve">
+  <data name="Stage break · couldn't determine what caused stage break" xml:space="preserve">
     <value>스테이지 브레이크 · 원인을 확인할 수 없습니다</value>
   </data>
   <data name="Stage break · likely a Pass command on the other pad" xml:space="preserve">

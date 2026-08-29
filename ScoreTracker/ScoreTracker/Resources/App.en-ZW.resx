@@ -7226,7 +7226,7 @@
   <data name="Stage Break Modifier" xml:space="preserve">
 	  <value>Mrpmurg Arglglorg Blgrlblargblarg</value>
   </data>
-  <data name="Stage break · couldn’t determine what caused stage break" xml:space="preserve">
+  <data name="Stage break · couldn't determine what caused stage break" xml:space="preserve">
     <value>Mrpmurg arglglorg · bo grorplurgmo mrpmurg arglglorg</value>
   </data>
   <data name="Stage break · likely a Pass command on the other pad" xml:space="preserve">
