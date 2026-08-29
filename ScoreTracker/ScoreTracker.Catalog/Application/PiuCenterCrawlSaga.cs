@@ -280,14 +280,25 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
         // mix that carries it.
         var typeById = catalogCharts.ToDictionary(c => c.Id, c => c.Type);
 
+        var mixLevels = await _charts.GetChartMixLevels(cancellationToken);
+        // Phoenix 2's judged counts are still refilling from play, so a null there borrows
+        // Phoenix 1's — the calculator's own fallback, and only for that pair: the count is
+        // what the GAME judges, and those two catalogs judge the same steppings.
+        var phoenixCounts = mixLevels
+            .Where(r => r.Mix == MixEnum.Phoenix && r.NoteCount != null)
+            .ToDictionary(r => r.ChartId, r => r.NoteCount);
+
         var folders = new Dictionary<(MixEnum Mix, ChartType Type, int Level), List<ChartBadgeProfile>>();
-        foreach (var (chartId, mix, level) in await _charts.GetChartMixLevels(cancellationToken))
+        foreach (var (chartId, mix, level, noteCount) in mixLevels)
         {
             if (!profiles.TryGetValue(chartId, out var profile)) continue;
             if (!typeById.TryGetValue(chartId, out var type)) continue;
             var key = (mix, type, level);
             if (!folders.TryGetValue(key, out var members)) folders[key] = members = new List<ChartBadgeProfile>();
-            members.Add(profile);
+            // The hold share is the one per-mix number in the sweep: the same chart is a
+            // different fraction of holds in each catalog, because the judged count moves.
+            members.Add(profile.WithNoteCount(noteCount ??
+                (mix == MixEnum.Phoenix2 ? phoenixCounts.GetValueOrDefault(chartId) : null)));
         }
 
         // A folder is judged against its NEIGHBOURS, not only itself: levels L-1, L and L+1 of

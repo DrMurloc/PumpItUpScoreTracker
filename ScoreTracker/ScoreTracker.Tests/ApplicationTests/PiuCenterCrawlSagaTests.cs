@@ -39,7 +39,7 @@ public sealed class PiuCenterCrawlSagaTests
         _metrics.Setup(m => m.GetMetricsByChart(PiuCenterMetrics.Source, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillMetric>>());
         _charts.Setup(c => c.GetChartMixLevels(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<(Guid, MixEnum, int)>());
+            .ReturnsAsync(Array.Empty<(Guid, MixEnum, int, int?)>());
     }
 
     private PiuCenterCrawlSaga BuildSaga()
@@ -76,6 +76,45 @@ public sealed class PiuCenterCrawlSagaTests
         _metrics.Setup(m => m.GetMetrics(It.IsAny<IEnumerable<Guid>>(), PiuCenterMetrics.Source,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((existingMetrics ?? Array.Empty<ChartSkillMetric>()).ToArray());
+    }
+
+    /// <summary>
+    ///     §3.9. The hold share is the one per-mix number in the baseline sweep — the same chart
+    ///     is a different fraction of holds in each catalog, because the judged count moves —
+    ///     and a Phoenix 2 catalog whose count has not refilled from play yet borrows Phoenix
+    ///     1's, the calculator's own fallback. Both mixes' folders must end up carrying a
+    ///     measured hold_share row.
+    /// </summary>
+    [Fact]
+    public async Task TheBaselineSweepDerivesHoldSharePerMixWithThePhoenixFallback()
+    {
+        var chartId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithId(chartId).WithType(ChartType.Double).WithLevel(20).Build();
+        SetupDefaults(new[] { chart }, Array.Empty<PiuCenterChartListing>(),
+            Array.Empty<ExternalChartAlias>());
+        _metrics.Setup(m => m.GetMetricsByChart(PiuCenterMetrics.Source, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillMetric>>
+            {
+                [chartId] = new[]
+                {
+                    new ChartSkillMetric(chartId, PiuCenterMetrics.TapRows, 156m, null),
+                    new ChartSkillMetric(chartId, PiuCenterMetrics.HoldTicks, 848m, null)
+                }
+            });
+        _charts.Setup(c => c.GetChartMixLevels(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                (chartId, MixEnum.Phoenix, 20, (int?)1000),
+                (chartId, MixEnum.Phoenix2, 20, (int?)null)
+            });
+
+        await Consume();
+
+        foreach (var mix in new[] { MixEnum.Phoenix, MixEnum.Phoenix2 })
+            _baselines.Verify(b => b.ReplaceBaselines(mix, It.Is<IReadOnlyList<ChartFolderBaseline>>(rows =>
+                    rows.Any(r => r.Badge == PiuCenterMetrics.HoldShare && r.PresentCount == 1 &&
+                                  r.DrenchedCutoff == 0.844m)),
+                It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private static PiuCenterChartListing Listing(string key, ChartType type = ChartType.Single, int level = 15,

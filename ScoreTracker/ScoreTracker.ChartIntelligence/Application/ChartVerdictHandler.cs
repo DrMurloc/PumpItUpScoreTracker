@@ -152,7 +152,7 @@ internal sealed class ChartVerdictHandler : IRequestHandler<GetChartVerdictQuery
             var map = new Dictionary<Guid, List<MixLevel>>();
             // One flat ChartMix read, not a sweep of all ~30 full catalogs — the History
             // facet only needs (chart, mix, level), and the catalog sweep took 9-15 seconds.
-            foreach (var (chartId, mix, level) in await _charts.GetChartMixLevels(cancellationToken))
+            foreach (var (chartId, mix, level, _) in await _charts.GetChartMixLevels(cancellationToken))
             {
                 if (!map.TryGetValue(chartId, out var levels)) map[chartId] = levels = new List<MixLevel>();
                 levels.Add(new MixLevel(mix, level));
