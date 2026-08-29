@@ -420,7 +420,9 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             e.IsBroken, mix, e.SessionId, JudgementsOf(e), e.IsBest,
             isLegacy && e.Score != null ? (XXScore?)e.Score.Value : null,
             Enum.TryParse<XXLetterGrade>(e.LetterGrade, out var grade) ? grade : null,
-            e.IsStageBroken);
+            e.IsStageBroken,
+            new StageBreakCause(e.IsNonLifebarBreak, PhoenixPlateHelperMethods.TryParse(e.PassPlate),
+                PhoenixLetterGradeHelperMethods.TryParse(e.PassGrade)));
     }
 
     internal static JudgementCounts? JudgementsOf(ScoreEventJournalEntity e)
