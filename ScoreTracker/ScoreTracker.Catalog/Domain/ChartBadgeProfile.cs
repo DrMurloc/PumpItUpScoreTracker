@@ -16,12 +16,53 @@ internal sealed record ChartBadgeProfile(
     IReadOnlyDictionary<string, decimal>? Geometry = null)
 {
     /// <summary>
+    ///     Whether the file's own hold list can account for the holds the note count implies.
+    ///     Set by <see cref="WithNoteCount" />; true until then, because the veto exists to
+    ///     refute a specific bad reading, not to silence charts nobody has measured.
+    /// </summary>
+    public bool HoldsAreCredible { get; init; } = true;
+
+    /// <summary>
     ///     A measured stance or pad share, or null where the chart predates the geometry pass —
     ///     which is not the same as zero and must never be read as one.
     /// </summary>
     public decimal? GeometryOf(string metric)
     {
         return Geometry != null && Geometry.TryGetValue(metric, out var value) ? value : null;
+    }
+
+    /// <summary>
+    ///     Derives the chart's hold share where the profile meets a mix's judged note count —
+    ///     the one per-mix input in the engine, which is why it arrives here instead of through
+    ///     <see cref="From" />: the same profile is measured against a different count in each
+    ///     catalog that carries the chart. The share is every judgement that is not a banked tap
+    ///     row, over the total; the file's own hold data is never read as truth, only asked
+    ///     whether it could produce that many holds at all (docs/design/chart-identity.md §3.9).
+    ///     <para>
+    ///         Unchanged when the count or the banked step count is missing, or when the taps
+    ///         alone exceed the judged total — an arithmetically impossible file says nothing
+    ///         about holds rather than something extreme.
+    ///     </para>
+    /// </summary>
+    public ChartBadgeProfile WithNoteCount(int? noteCount)
+    {
+        if (noteCount is not > 0) return this;
+        if (GeometryOf(PiuCenterMetrics.TapRows) is not { } taps) return this;
+        var derived = noteCount.Value - taps;
+        if (derived < 0) return this;
+
+        var geometry = Geometry == null
+            ? new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
+            : new Dictionary<string, decimal>(Geometry, StringComparer.OrdinalIgnoreCase);
+        geometry[PiuCenterMetrics.HoldShare] = derived / noteCount.Value;
+
+        var fileTicks = GeometryOf(PiuCenterMetrics.HoldTicks);
+        return this with
+        {
+            Geometry = geometry,
+            HoldsAreCredible = fileTicks == null ||
+                               derived <= fileTicks.Value * ChartIdentityRules.HoldTrustMultiple
+        };
     }
 
     /// <summary>
@@ -109,6 +150,10 @@ internal sealed record ChartBadgeProfile(
         // metric has into the engine, so a claim reading one that is missing here does not
         // misfire — it never fires at all, and says nothing about why. Speed and Longest run
         // both shipped inert for exactly that reason (field test, 2026-08-26).
-        PiuCenterMetrics.TimeUnderTension, PiuCenterMetrics.Nps, PiuCenterMetrics.ChartSpan
+        PiuCenterMetrics.TimeUnderTension, PiuCenterMetrics.Nps, PiuCenterMetrics.ChartSpan,
+        // The two halves of the hold derivation (§3.9): the banked step count the share is
+        // computed FROM, and the file's own tick total the trust check compares AGAINST. The
+        // share itself is never banked — WithNoteCount writes it under its reserved name.
+        PiuCenterMetrics.TapRows, PiuCenterMetrics.HoldTicks
     };
 }

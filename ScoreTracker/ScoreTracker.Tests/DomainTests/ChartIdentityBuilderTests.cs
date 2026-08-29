@@ -387,8 +387,103 @@ public sealed class ChartIdentityBuilderTests
     }
 
     /// <summary>
+    ///     §3.9. Hold share claims a chart only at the folder's outer deciles — the middle is a
+    ///     measurement, not a claim, exactly like the Speed bands.
+    /// </summary>
+    [Fact]
+    public void HoldShareClaimsAChartOnlyAtTheOuterDeciles()
+    {
+        var folder = new Folder();
+        for (var i = 0; i < 20; i++) folder.AddCharts(1, Holds(0.30m + i * 0.01m), ("run", 0.5m));
+
+        Assert.Equal(IdentityClaimKeys.HoldHeavy, HoldClaim(folder, 0.70m));
+        Assert.Equal(IdentityClaimKeys.FewHolds, HoldClaim(folder, 0.10m));
+        Assert.Null(HoldClaim(folder, 0.40m));
+    }
+
+    /// <summary>
+    ///     §3.9. Below S10 most of a folder has no holds at all, so its p10 IS zero — an
+    ///     unfloored low claim fires on a third of S01–S03. The absence of holds only says
+    ///     something where holds are what is normal.
+    /// </summary>
+    [Fact]
+    public void FewHoldsSaysNothingWhereHoldsAreNotTheNorm()
+    {
+        var folder = new Folder();
+        for (var i = 0; i < 18; i++) folder.AddCharts(1, Holds(0m), ("run", 0.5m));
+        folder.AddCharts(1, Holds(0.40m), ("run", 0.5m));
+        folder.AddCharts(1, Holds(0.45m), ("run", 0.5m));
+
+        Assert.Null(HoldClaim(folder, 0m));
+    }
+
+    /// <summary>
+    ///     §3.9. The inference borrows the file's step count, and a file that is not the shipped
+    ///     chart always errs by inflating the holds — so a high share from a disbelieved file is
+    ///     SILENCE, not a fall-through: a chart at the top of its folder is not "few holds"
+    ///     either way. Destination SHORT CUT D20 is the calibration case.
+    /// </summary>
+    [Fact]
+    public void AHighHoldClaimNeedsAFileThatCanAccountForIt()
+    {
+        var folder = new Folder();
+        for (var i = 0; i < 20; i++) folder.AddCharts(1, Holds(0.30m + i * 0.01m), ("run", 0.5m));
+        var destination = Folder.Profile(Array.Empty<(string, decimal)>(), geometry: Holds(0.65m))
+            with { HoldsAreCredible = false };
+
+        Assert.DoesNotContain(folder.ChipsFor(destination), c => c.Kind == IdentityChipKind.Holds);
+    }
+
+    private static string? HoldClaim(Folder folder, decimal share)
+    {
+        var chart = Folder.Profile(Array.Empty<(string, decimal)>(), geometry: Holds(share));
+        return folder.ChipsFor(chart).FirstOrDefault(c => c.Kind == IdentityChipKind.Holds)?.Badge;
+    }
+
+    private static IReadOnlyDictionary<string, decimal> Holds(decimal share)
+    {
+        var geometry = Geometry().ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.OrdinalIgnoreCase);
+        geometry[PiuCenterMetrics.HoldShare] = share;
+        return geometry;
+    }
+
+    /// <summary>
+    ///     §8, revised 2026-08-29. That Kitty D22 was the third "earns nothing" golden row — it
+    ///     pinned the over-claiming rules its jacks exposed — and it gained Hold-heavy when the
+    ///     hold axis arrived: 354 banked steps inside 1,087 judged notes is 0.674 against a
+    ///     folder p90 of 0.610, and a new true measurement is not those bugs returning. The
+    ///     jacks stay exactly as refused as they were.
+    /// </summary>
+    [Fact]
+    public void ThatKittyClaimsHoldHeavyOnceTheNoteCountArrives()
+    {
+        var folder = new Folder();
+        for (var i = 0; i < 20; i++)
+        {
+            var geometry = Geometry(mid6: 0.87m, sideOn: 0.28m + i * 0.003m)
+                .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.OrdinalIgnoreCase);
+            geometry[PiuCenterMetrics.HoldShare] = 0.35m + i * 0.013m;
+            folder.AddCharts(1, geometry, ("mid6_doubles", 0.5m), ("jack", 0.45m));
+        }
+
+        var kittyGeometry = Geometry(mid6: 0.958m, sideOn: 0.286m)
+            .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.OrdinalIgnoreCase);
+        kittyGeometry[PiuCenterMetrics.TapRows] = 354m;
+        kittyGeometry[PiuCenterMetrics.HoldTicks] = 740m;
+        var thatKitty = Folder.Profile(new[] { ("jack", 0.4286m) },
+                peakiness: 0.17m, geometry: kittyGeometry)
+            .WithNoteCount(1087);
+
+        var chips = folder.ChipsFor(thatKitty);
+
+        Assert.Equal(new[] { IdentityClaimKeys.HoldHeavy }, IdentityBadges(chips).ToArray());
+    }
+
+    /// <summary>
     ///     §1, and the owner's own words: "if a chart is like… just a chart, it's fine for it to
-    ///     be nothing." A build that invents a claim for That Kitty is wrong.
+    ///     be nothing." A build that invents a claim for That Kitty is wrong. (Since 2026-08-29
+    ///     the real D22 earns Hold-heavy from its note count — the fact above — so this chart
+    ///     models it as it stood WITHOUT hold data: every other axis still has to stay silent.)
     /// </summary>
     [Fact]
     public void AChartThatEarnsNothingClaimsNothing()

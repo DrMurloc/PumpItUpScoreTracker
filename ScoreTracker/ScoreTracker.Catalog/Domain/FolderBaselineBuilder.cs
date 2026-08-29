@@ -67,6 +67,12 @@ internal static class FolderBaselineBuilder
         // claim needs the folder to agree the chart is actually long.
         yield return GeometryRow(mix, type, level, PiuCenterMetrics.TimeUnderTension, analyzed,
             ChartIdentityRules.WideQuantile, ChartIdentityRules.TwistHeavyQuantile);
+        // What fraction of each chart is held rather than stepped — derived per mix and injected
+        // by WithNoteCount rather than banked, so the folder is only as covered as its judged
+        // note counts are. The low slot is the Few Holds bound and the high slot Hold-heavy's
+        // (docs/design/chart-identity.md §3.9).
+        yield return GeometryRow(mix, type, level, PiuCenterMetrics.HoldShare, analyzed,
+            ChartIdentityRules.FewHoldsQuantile, ChartIdentityRules.HoldHeavyQuantile);
         yield return SpeedRow(mix, type, level, analyzed);
     }
 
