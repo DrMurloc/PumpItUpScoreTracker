@@ -268,6 +268,9 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>1 compte privé est un pair mais n'est pas affiché.</value>
   </data>
+  <data name="1 run ended here" xml:space="preserve">
+	  <value>1 essai s'est terminé ici</value>
+  </data>
   <data name="1 title" xml:space="preserve">
     <value>1 titre</value>
   </data>
@@ -837,6 +840,12 @@
   <data name="Arrived" xml:space="preserve">
     <value>Arrivés</value>
   </data>
+  <data name="Arrow coloring" xml:space="preserve">
+	  <value>Couleur des flèches</value>
+  </data>
+  <data name="Arrows" xml:space="preserve">
+	  <value>Flèches</value>
+  </data>
   <data name="arrows stepped" xml:space="preserve">
     <value>flèches jouées</value>
   </data>
@@ -1280,6 +1289,9 @@
   </data>
   <data name="Category" xml:space="preserve">
     <value>Catégorie</value>
+  </data>
+  <data name="Center" xml:space="preserve">
+	  <value>Centre</value>
   </data>
   <data name="Change Card" xml:space="preserve">
     <value>Changer de carte</value>
@@ -1939,6 +1951,9 @@
   <data name="Crossed over" xml:space="preserve">
     <value>Croisé</value>
   </data>
+  <data name="Crux" xml:space="preserve">
+	  <value>Passage critique</value>
+  </data>
   <data name="crux: {0}" xml:space="preserve">
     <value>passage clé : {0}</value>
   </data>
@@ -1989,6 +2004,9 @@
   </data>
   <data name="days on the pad" xml:space="preserve">
     <value>jours sur le pad</value>
+  </data>
+  <data name="Death spike" xml:space="preserve">
+	  <value>Pic de morts</value>
   </data>
   <data name="Debug" xml:space="preserve">
     <value>Débogage</value>
@@ -2327,6 +2345,9 @@
   <data name="Effective Level" xml:space="preserve">
     <value>Niveau effectif</value>
   </data>
+  <data name="Eighths" xml:space="preserve">
+	  <value>Croches</value>
+  </data>
   <data name="End Date" xml:space="preserve">
     <value>Date de fin</value>
   </data>
@@ -2545,6 +2566,9 @@
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>Feeds — enregistrez un salon une fois, le bot s'occupe du reste</value>
   </data>
+  <data name="Feet" xml:space="preserve">
+	  <value>Pieds</value>
+  </data>
   <data name="Few Holds" xml:space="preserve">
     <value>Peu de holds</value>
   </data>
@@ -2617,6 +2641,9 @@
   </data>
   <data name="Finding the beat" xml:space="preserve">
     <value>Recherche du tempo</value>
+  </data>
+  <data name="Finer" xml:space="preserve">
+	  <value>Plus fines</value>
   </data>
   <data name="Finish later" xml:space="preserve">
     <value>Terminer plus tard</value>
@@ -3591,6 +3618,9 @@
   <data name="Left" xml:space="preserve">
     <value>Partis</value>
   </data>
+  <data name="Left foot" xml:space="preserve">
+	  <value>Pied gauche</value>
+  </data>
   <data name="Legacy Difficulty" xml:space="preserve">
     <value>Difficulté legacy</value>
   </data>
@@ -3663,6 +3693,12 @@
   </data>
   <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
     <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
+  </data>
+  <data name="Life bar" xml:space="preserve">
+	  <value>Barre de vie</value>
+  </data>
+  <data name="Life bar deaths" xml:space="preserve">
+	  <value>Morts à la barre de vie</value>
   </data>
   <data name="Life Calculator" xml:space="preserve">
     <value>Calculateur de vie</value>
@@ -3780,6 +3816,9 @@
   </data>
   <data name="Low tick share is what makes a low score reachable: hold everything, good every tap, and a chart under the dashed line can pass with an F. On a typical level 18 that floor is a D — about 591,000." xml:space="preserve">
     <value>Une part faible de ticks est ce qui rend un score bas atteignable : tenez tous les holds, faites good sur chaque tap, et un chart sous la ligne pointillée peut passer avec un F. Sur un niveau 18 typique, ce plancher est un D — environ 591 000.</value>
+  </data>
+  <data name="Lower" xml:space="preserve">
+	  <value>Inférieures</value>
   </data>
   <data name="Lowest" xml:space="preserve">
     <value>Minimal</value>
@@ -4668,6 +4707,9 @@
   <data name="Not yet played" xml:space="preserve">
     <value>Pas encore joué</value>
   </data>
+  <data name="Notable run" xml:space="preserve">
+	  <value>Passage notable</value>
+  </data>
   <data name="Note (optional)" xml:space="preserve">
     <value>Note (facultatif)</value>
   </data>
@@ -5121,6 +5163,9 @@
   </data>
   <data name="Pass Breakdown" xml:space="preserve">
     <value>Répartition des pass</value>
+  </data>
+  <data name="Pass cluster" xml:space="preserve">
+	  <value>Groupe de Pass</value>
   </data>
   <data name="Pass Difficulty" xml:space="preserve">
     <value>Difficulté par passes</value>
@@ -5798,6 +5843,9 @@
   <data name="Promote to Admin" xml:space="preserve">
     <value>Promouvoir admin</value>
   </data>
+  <data name="Proven non-lifebar — possibly a command from the other pad." xml:space="preserve">
+	  <value>Prouvé hors barre de vie — peut-être une commande de l'autre pad.</value>
+  </data>
   <data name="Provisional — based on Phoenix data" xml:space="preserve">
     <value>Provisoire — basé sur les données de Phoenix</value>
   </data>
@@ -5941,6 +5989,9 @@
   <data name="Quarter Double" xml:space="preserve">
     <value>Quart double</value>
   </data>
+  <data name="Quarters" xml:space="preserve">
+	  <value>Noires</value>
+  </data>
   <data name="Queued" xml:space="preserve">
     <value>En file d'attente</value>
   </data>
@@ -6038,6 +6089,9 @@
   </data>
   <data name="Re-rated" xml:space="preserve">
     <value>Reclassés</value>
+  </data>
+  <data name="Re-running step-chart enrichment from the archived corpus." xml:space="preserve">
+	  <value>Relance de l'analyse des partitions depuis le corpus archivé.</value>
   </data>
   <data name="Re-solving max combos from every judged score. Nothing is announced." xml:space="preserve">
     <value>Recalcul des combos max à partir de chaque score avec jugements. Rien n'est annoncé.</value>
@@ -6315,6 +6369,9 @@
   <data name="repriced here" xml:space="preserve">
     <value>réévalué ici</value>
   </data>
+  <data name="Reprocess step files" xml:space="preserve">
+	  <value>Retraiter les fichiers de pas</value>
+  </data>
   <data name="Request Header" xml:space="preserve">
     <value>En-tête de requête</value>
   </data>
@@ -6390,6 +6447,9 @@
   </data>
   <data name="Revoked" xml:space="preserve">
     <value>Révoquée</value>
+  </data>
+  <data name="Right foot" xml:space="preserve">
+	  <value>Pied droit</value>
   </data>
   <data name="Rival" xml:space="preserve">
     <value>Rival</value>
@@ -7069,6 +7129,9 @@
   <data name="Site Theme" xml:space="preserve">
     <value>Thème du site</value>
   </data>
+  <data name="Sixteenths" xml:space="preserve">
+	  <value>Doubles croches</value>
+  </data>
   <data name="Size" xml:space="preserve">
     <value>Taille</value>
   </data>
@@ -7317,8 +7380,14 @@
   <data name="Step artists and the PIU devs are community too." xml:space="preserve">
     <value>Les step artists et les développeurs de PIU font aussi partie de la communauté.</value>
   </data>
+  <data name="Step chart" xml:space="preserve">
+	  <value>Partition des pas</value>
+  </data>
   <data name="Step on" xml:space="preserve">
     <value>En piste</value>
+  </data>
+  <data name="Steps" xml:space="preserve">
+	  <value>Pas</value>
   </data>
   <data name="steps by {0}" xml:space="preserve">
     <value>steps de {0}</value>
@@ -7993,6 +8062,15 @@
   <data name="Ties break by total raw score." xml:space="preserve">
     <value>Les égalités sont départagées au score brut total.</value>
   </data>
+  <data name="Time runs downward — arrows colored by panel, feet, or timing." xml:space="preserve">
+	  <value>Le temps défile vers le bas — flèches colorées par panneau, pied ou subdivision.</value>
+  </data>
+  <data name="Timing" xml:space="preserve">
+	  <value>Subdivision</value>
+  </data>
+  <data name="Timing colors need a step file that aligned to beats." xml:space="preserve">
+	  <value>Les couleurs de subdivision demandent un fichier de pas aligné sur les temps.</value>
+  </data>
   <data name="Title" xml:space="preserve">
     <value>Titre</value>
   </data>
@@ -8198,6 +8276,9 @@
   <data name="Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us." xml:space="preserve">
     <value>Activer ceci revient à écrire votre mot de passe sur un post-it que vous gardez dans votre poche — sauf que la note est dans un code que personne ne peut lire d'un simple coup d'œil, pas même nous.</value>
   </data>
+  <data name="Twelfths" xml:space="preserve">
+	  <value>Triolets</value>
+  </data>
   <data name="Twist 90" xml:space="preserve">
     <value>Twists 90°</value>
   </data>
@@ -8392,6 +8473,9 @@
   </data>
   <data name="Uploading" xml:space="preserve">
     <value>Envoi en cours</value>
+  </data>
+  <data name="Upper" xml:space="preserve">
+	  <value>Supérieures</value>
   </data>
   <data name="Upscore" xml:space="preserve">
     <value>Upscore</value>
@@ -8760,6 +8844,9 @@
   <data name="Where PUMBILITY comes from on {0} — the average pool" xml:space="preserve">
     <value>D'où vient le PUMBILITY sur {0} — le pool moyen</value>
   </data>
+  <data name="Where runs end isn't shown — this step file disagrees with the game's judged note count." xml:space="preserve">
+	  <value>L'endroit où les essais s'arrêtent n'est pas affiché — ce fichier de pas ne correspond pas au nombre de notes jugé par le jeu.</value>
+  </data>
   <data name="Where the levels sit" xml:space="preserve">
     <value>Où se situent les niveaux</value>
   </data>
@@ -8822,6 +8909,9 @@
   </data>
   <data name="Who your peers are" xml:space="preserve">
     <value>Qui sont tes pairs</value>
+  </data>
+  <data name="whole chart" xml:space="preserve">
+	  <value>toute la partition</value>
   </data>
   <data name="Why" xml:space="preserve">
     <value>Pourquoi</value>
@@ -9269,6 +9359,9 @@
   </data>
   <data name="Your rivals" xml:space="preserve">
     <value>Vos rivaux</value>
+  </data>
+  <data name="Your runs" xml:space="preserve">
+	  <value>Vos essais</value>
   </data>
   <data name="Your saved randomizer settings" xml:space="preserve">
     <value>Vos réglages enregistrés du randomizer</value>
@@ -9794,6 +9887,9 @@
   </data>
   <data name="{0} rivals" xml:space="preserve">
     <value>{0} rivaux</value>
+  </data>
+  <data name="{0} runs ended here" xml:space="preserve">
+	  <value>{0} essais se sont terminés ici</value>
   </data>
   <data name="{0} scores" xml:space="preserve">
     <value>{0} scores</value>

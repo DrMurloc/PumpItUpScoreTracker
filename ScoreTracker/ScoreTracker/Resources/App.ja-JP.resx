@@ -268,6 +268,9 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>非公開アカウント 1 件はピアですが表示されません。</value>
   </data>
+  <data name="1 run ended here" xml:space="preserve">
+	  <value>ここで1回のプレイが終了</value>
+  </data>
   <data name="1 title" xml:space="preserve">
     <value>タイトル 1 件</value>
   </data>
@@ -837,6 +840,12 @@
   <data name="Arrived" xml:space="preserve">
     <value>追加</value>
   </data>
+  <data name="Arrow coloring" xml:space="preserve">
+	  <value>矢印の配色</value>
+  </data>
+  <data name="Arrows" xml:space="preserve">
+	  <value>矢印</value>
+  </data>
   <data name="arrows stepped" xml:space="preserve">
     <value>踏んだ矢印</value>
   </data>
@@ -1280,6 +1289,9 @@
   </data>
   <data name="Category" xml:space="preserve">
 	  <value>カテゴリー</value>
+  </data>
+  <data name="Center" xml:space="preserve">
+	  <value>中央</value>
   </data>
   <data name="Change Card" xml:space="preserve">
     <value>カードを変更</value>
@@ -1940,6 +1952,9 @@
   <data name="Crossed over" xml:space="preserve">
     <value>クロスオーバー</value>
   </data>
+  <data name="Crux" xml:space="preserve">
+	  <value>最難所</value>
+  </data>
   <data name="crux: {0}" xml:space="preserve">
     <value>難所: {0}</value>
   </data>
@@ -1990,6 +2005,9 @@
   </data>
   <data name="days on the pad" xml:space="preserve">
     <value>日プレイ</value>
+  </data>
+  <data name="Death spike" xml:space="preserve">
+	  <value>失敗多発</value>
   </data>
   <data name="Debug" xml:space="preserve">
     <value>デバッグ</value>
@@ -2328,6 +2346,9 @@
   <data name="Effective Level" xml:space="preserve">
 	  <value>実効レベル</value>
   </data>
+  <data name="Eighths" xml:space="preserve">
+	  <value>8分</value>
+  </data>
   <data name="End Date" xml:space="preserve">
 	  <value>終了日</value>
   </data>
@@ -2546,6 +2567,9 @@
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>フィード — チャンネルを一度登録すれば、ボットが投稿し続けます</value>
   </data>
+  <data name="Feet" xml:space="preserve">
+	  <value>足</value>
+  </data>
   <data name="Few Holds" xml:space="preserve">
     <value>ホールド少なめ</value>
   </data>
@@ -2618,6 +2642,9 @@
   </data>
   <data name="Finding the beat" xml:space="preserve">
     <value>リズムを探しています</value>
+  </data>
+  <data name="Finer" xml:space="preserve">
+	  <value>その他</value>
   </data>
   <data name="Finish later" xml:space="preserve">
     <value>あとで仕上げる</value>
@@ -3592,6 +3619,9 @@
   <data name="Left" xml:space="preserve">
     <value>削除</value>
   </data>
+  <data name="Left foot" xml:space="preserve">
+	  <value>左足</value>
+  </data>
   <data name="Legacy Difficulty" xml:space="preserve">
     <value>レガシー難度</value>
   </data>
@@ -3664,6 +3694,12 @@
   </data>
   <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
     <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
+  </data>
+  <data name="Life bar" xml:space="preserve">
+	  <value>ライフバー</value>
+  </data>
+  <data name="Life bar deaths" xml:space="preserve">
+	  <value>ライフ切れ</value>
   </data>
   <data name="Life Calculator" xml:space="preserve">
     <value>体力計算機</value>
@@ -3781,6 +3817,9 @@
   </data>
   <data name="Low tick share is what makes a low score reachable: hold everything, good every tap, and a chart under the dashed line can pass with an F. On a typical level 18 that floor is a D — about 591,000." xml:space="preserve">
     <value>ティック割合が低いほど低スコアに届きます。ホールドをすべて押さえてタップをすべてGoodにすれば、点線より下の譜面はFでクリアできます。典型的なレベル18ではその下限はDで、約591,000点です。</value>
+  </data>
+  <data name="Lower" xml:space="preserve">
+	  <value>下段</value>
   </data>
   <data name="Lowest" xml:space="preserve">
     <value>最下位</value>
@@ -4669,6 +4708,9 @@
   <data name="Not yet played" xml:space="preserve">
     <value>未プレイ</value>
   </data>
+  <data name="Notable run" xml:space="preserve">
+	  <value>注目区間</value>
+  </data>
   <data name="Note (optional)" xml:space="preserve">
     <value>メモ (任意)</value>
   </data>
@@ -5122,6 +5164,9 @@
   </data>
   <data name="Pass Breakdown" xml:space="preserve">
     <value>クリア内訳</value>
+  </data>
+  <data name="Pass cluster" xml:space="preserve">
+	  <value>Pass集中</value>
   </data>
   <data name="Pass Difficulty" xml:space="preserve">
     <value>パス難易度</value>
@@ -5799,6 +5844,9 @@
   <data name="Promote to Admin" xml:space="preserve">
     <value>管理者に昇格</value>
   </data>
+  <data name="Proven non-lifebar — possibly a command from the other pad." xml:space="preserve">
+	  <value>ライフバーではないことが確定 — 反対側のパッドのコマンドの可能性があります。</value>
+  </data>
   <data name="Provisional — based on Phoenix data" xml:space="preserve">
     <value>暫定（Phoenixのデータに基づく）</value>
   </data>
@@ -5942,6 +5990,9 @@
   <data name="Quarter Double" xml:space="preserve">
     <value>クォーターダブル</value>
   </data>
+  <data name="Quarters" xml:space="preserve">
+	  <value>4分</value>
+  </data>
   <data name="Queued" xml:space="preserve">
     <value>キューに追加しました</value>
   </data>
@@ -6039,6 +6090,9 @@
   </data>
   <data name="Re-rated" xml:space="preserve">
     <value>難度変更</value>
+  </data>
+  <data name="Re-running step-chart enrichment from the archived corpus." xml:space="preserve">
+	  <value>保存済みコーパスから譜面の分析を再実行します。</value>
   </data>
   <data name="Re-solving max combos from every judged score. Nothing is announced." xml:space="preserve">
     <value>判定が記録されたすべてのスコアから最大コンボを再計算します。通知は行いません。</value>
@@ -6316,6 +6370,9 @@
   <data name="repriced here" xml:space="preserve">
     <value>こちらの基準で再算定</value>
   </data>
+  <data name="Reprocess step files" xml:space="preserve">
+	  <value>譜面ファイルを再処理</value>
+  </data>
   <data name="Request Header" xml:space="preserve">
     <value>リクエストヘッダー</value>
   </data>
@@ -6391,6 +6448,9 @@
   </data>
   <data name="Revoked" xml:space="preserve">
     <value>取り消し済み</value>
+  </data>
+  <data name="Right foot" xml:space="preserve">
+	  <value>右足</value>
   </data>
   <data name="Rival" xml:space="preserve">
     <value>ライバル</value>
@@ -7070,6 +7130,9 @@
   <data name="Site Theme" xml:space="preserve">
     <value>サイトテーマ</value>
   </data>
+  <data name="Sixteenths" xml:space="preserve">
+	  <value>16分</value>
+  </data>
   <data name="Size" xml:space="preserve">
     <value>サイズ</value>
   </data>
@@ -7318,8 +7381,14 @@
   <data name="Step artists and the PIU devs are community too." xml:space="preserve">
     <value>ステップアーティストも PIU の開発者もコミュニティの一員です。</value>
   </data>
+  <data name="Step chart" xml:space="preserve">
+	  <value>譜面</value>
+  </data>
   <data name="Step on" xml:space="preserve">
     <value>スクロール</value>
+  </data>
+  <data name="Steps" xml:space="preserve">
+	  <value>譜面</value>
   </data>
   <data name="steps by {0}" xml:space="preserve">
     <value>ステップ：{0}</value>
@@ -7994,6 +8063,15 @@
   <data name="Ties break by total raw score." xml:space="preserve">
     <value>同点は素点の合計で決まります。</value>
   </data>
+  <data name="Time runs downward — arrows colored by panel, feet, or timing." xml:space="preserve">
+	  <value>時間は下へ流れます — 矢印の色はパネル・足・リズムで切り替え。</value>
+  </data>
+  <data name="Timing" xml:space="preserve">
+	  <value>リズム</value>
+  </data>
+  <data name="Timing colors need a step file that aligned to beats." xml:space="preserve">
+	  <value>リズム配色には拍に整列した譜面ファイルが必要です。</value>
+  </data>
   <data name="Title" xml:space="preserve">
 	  <value>タイトル</value>
   </data>
@@ -8199,6 +8277,9 @@
   <data name="Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us." xml:space="preserve">
     <value>これを有効にするのは、自分のポケットに入れた付箋にパスワードを書くようなものです。ただし、そのメモは誰も — 私たちでさえ — 見ただけでは読めない暗号で書かれています。</value>
   </data>
+  <data name="Twelfths" xml:space="preserve">
+	  <value>12分</value>
+  </data>
   <data name="Twist 90" xml:space="preserve">
     <value>90度捻り</value>
   </data>
@@ -8393,6 +8474,9 @@
   <comment>アップロードの人</comment></data>
   <data name="Uploading" xml:space="preserve">
     <value>アップロード中</value>
+  </data>
+  <data name="Upper" xml:space="preserve">
+	  <value>上段</value>
   </data>
   <data name="Upscore" xml:space="preserve">
     <value>スコア更新</value>
@@ -8761,6 +8845,9 @@
   <data name="Where PUMBILITY comes from on {0} — the average pool" xml:space="preserve">
     <value>{0}でPUMBILITYはどこから来るか — 平均プール</value>
   </data>
+  <data name="Where runs end isn't shown — this step file disagrees with the game's judged note count." xml:space="preserve">
+	  <value>プレイが終わった位置は表示されません — この譜面ファイルはゲームの判定ノーツ数と一致していません。</value>
+  </data>
   <data name="Where the levels sit" xml:space="preserve">
     <value>レベルの分布</value>
   </data>
@@ -8823,6 +8910,9 @@
   </data>
   <data name="Who your peers are" xml:space="preserve">
     <value>あなたのピア</value>
+  </data>
+  <data name="whole chart" xml:space="preserve">
+	  <value>全体</value>
   </data>
   <data name="Why" xml:space="preserve">
     <value>理由</value>
@@ -9270,6 +9360,9 @@
   </data>
   <data name="Your rivals" xml:space="preserve">
     <value>あなたのライバル</value>
+  </data>
+  <data name="Your runs" xml:space="preserve">
+	  <value>あなたのプレイ</value>
   </data>
   <data name="Your saved randomizer settings" xml:space="preserve">
     <value>保存済みのランダマイザー設定</value>
@@ -9795,6 +9888,9 @@
   </data>
   <data name="{0} rivals" xml:space="preserve">
     <value>ライバル {0} 人</value>
+  </data>
+  <data name="{0} runs ended here" xml:space="preserve">
+	  <value>ここで{0}回のプレイが終了</value>
   </data>
   <data name="{0} scores" xml:space="preserve">
     <value>{0}スコア</value>

@@ -268,6 +268,9 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>1 private account is a peer but is not shown.</value>
   </data>
+  <data name="1 run ended here" xml:space="preserve">
+	  <value>1 run ended here</value>
+  </data>
   <data name="1 title" xml:space="preserve">
     <value>1 title</value>
   </data>
@@ -837,6 +840,12 @@
   <data name="Arrived" xml:space="preserve">
     <value>Arrived</value>
   </data>
+  <data name="Arrow coloring" xml:space="preserve">
+	  <value>Arrow coloring</value>
+  </data>
+  <data name="Arrows" xml:space="preserve">
+	  <value>Arrows</value>
+  </data>
   <data name="arrows stepped" xml:space="preserve">
     <value>arrows stepped</value>
   </data>
@@ -1280,6 +1289,9 @@
   </data>
   <data name="Category" xml:space="preserve">
 	  <value>Category</value>
+  </data>
+  <data name="Center" xml:space="preserve">
+	  <value>Center</value>
   </data>
   <data name="Change Card" xml:space="preserve">
     <value>Change Card</value>
@@ -1940,6 +1952,9 @@
   <data name="Crossed over" xml:space="preserve">
     <value>Crossed over</value>
   </data>
+  <data name="Crux" xml:space="preserve">
+	  <value>Crux</value>
+  </data>
   <data name="crux: {0}" xml:space="preserve">
     <value>crux: {0}</value>
   </data>
@@ -1990,6 +2005,9 @@
   </data>
   <data name="days on the pad" xml:space="preserve">
     <value>days on the pad</value>
+  </data>
+  <data name="Death spike" xml:space="preserve">
+	  <value>Death spike</value>
   </data>
   <data name="Debug" xml:space="preserve">
     <value>Debug</value>
@@ -2328,6 +2346,9 @@
   <data name="Effective Level" xml:space="preserve">
 	  <value>Effective Level</value>
   </data>
+  <data name="Eighths" xml:space="preserve">
+	  <value>Eighths</value>
+  </data>
   <data name="End Date" xml:space="preserve">
 	  <value>End Date</value>
   </data>
@@ -2546,6 +2567,9 @@
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>Feeds — register a channel once, the bot keeps it fed</value>
   </data>
+  <data name="Feet" xml:space="preserve">
+	  <value>Feet</value>
+  </data>
   <data name="Few Holds" xml:space="preserve">
     <value>Few Holds</value>
   </data>
@@ -2618,6 +2642,9 @@
   </data>
   <data name="Finding the beat" xml:space="preserve">
     <value>Finding the beat</value>
+  </data>
+  <data name="Finer" xml:space="preserve">
+	  <value>Finer</value>
   </data>
   <data name="Finish later" xml:space="preserve">
     <value>Finish later</value>
@@ -3592,6 +3619,9 @@
   <data name="Left" xml:space="preserve">
     <value>Left</value>
   </data>
+  <data name="Left foot" xml:space="preserve">
+	  <value>Left foot</value>
+  </data>
   <data name="Legacy Difficulty" xml:space="preserve">
     <value>Legacy Difficulty</value>
   </data>
@@ -3664,6 +3694,12 @@
   </data>
   <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
     <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
+  </data>
+  <data name="Life bar" xml:space="preserve">
+	  <value>Life bar</value>
+  </data>
+  <data name="Life bar deaths" xml:space="preserve">
+	  <value>Life bar deaths</value>
   </data>
   <data name="Life Calculator" xml:space="preserve">
     <value>Life Calculator</value>
@@ -3781,6 +3817,9 @@
   </data>
   <data name="Low tick share is what makes a low score reachable: hold everything, good every tap, and a chart under the dashed line can pass with an F. On a typical level 18 that floor is a D — about 591,000." xml:space="preserve">
     <value>Low tick share is what makes a low score reachable: hold everything, good every tap, and a chart under the dashed line can pass with an F. On a typical level 18 that floor is a D — about 591,000.</value>
+  </data>
+  <data name="Lower" xml:space="preserve">
+	  <value>Lower</value>
   </data>
   <data name="Lowest" xml:space="preserve">
     <value>Lowest</value>
@@ -4669,6 +4708,9 @@
   <data name="Not yet played" xml:space="preserve">
     <value>Not yet played</value>
   </data>
+  <data name="Notable run" xml:space="preserve">
+	  <value>Notable run</value>
+  </data>
   <data name="Note (optional)" xml:space="preserve">
     <value>Note (optional)</value>
   </data>
@@ -5122,6 +5164,9 @@
   </data>
   <data name="Pass Breakdown" xml:space="preserve">
     <value>Pass Breakdown</value>
+  </data>
+  <data name="Pass cluster" xml:space="preserve">
+	  <value>Pass cluster</value>
   </data>
   <data name="Pass Difficulty" xml:space="preserve">
     <value>Pass Difficulty</value>
@@ -5799,6 +5844,9 @@
   <data name="Promote to Admin" xml:space="preserve">
     <value>Promote to Admin</value>
   </data>
+  <data name="Proven non-lifebar — possibly a command from the other pad." xml:space="preserve">
+	  <value>Proven non-lifebar — possibly a command from the other pad.</value>
+  </data>
   <data name="Provisional — based on Phoenix data" xml:space="preserve">
     <value>Provisional — based on Phoenix data</value>
   </data>
@@ -5942,6 +5990,9 @@
   <data name="Quarter Double" xml:space="preserve">
     <value>Quarter Double</value>
   </data>
+  <data name="Quarters" xml:space="preserve">
+	  <value>Quarters</value>
+  </data>
   <data name="Queued" xml:space="preserve">
     <value>Queued</value>
   </data>
@@ -6039,6 +6090,9 @@
   </data>
   <data name="Re-rated" xml:space="preserve">
     <value>Re-rated</value>
+  </data>
+  <data name="Re-running step-chart enrichment from the archived corpus." xml:space="preserve">
+	  <value>Re-running step-chart enrichment from the archived corpus.</value>
   </data>
   <data name="Re-solving max combos from every judged score. Nothing is announced." xml:space="preserve">
     <value>Re-solving max combos from every judged score. Nothing is announced.</value>
@@ -6316,6 +6370,9 @@
   <data name="repriced here" xml:space="preserve">
     <value>repriced here</value>
   </data>
+  <data name="Reprocess step files" xml:space="preserve">
+	  <value>Reprocess step files</value>
+  </data>
   <data name="Request Header" xml:space="preserve">
     <value>Request Header</value>
   </data>
@@ -6391,6 +6448,9 @@
   </data>
   <data name="Revoked" xml:space="preserve">
     <value>Revoked</value>
+  </data>
+  <data name="Right foot" xml:space="preserve">
+	  <value>Right foot</value>
   </data>
   <data name="Rival" xml:space="preserve">
     <value>Rival</value>
@@ -7070,6 +7130,9 @@
   <data name="Site Theme" xml:space="preserve">
     <value>Site Theme</value>
   </data>
+  <data name="Sixteenths" xml:space="preserve">
+	  <value>Sixteenths</value>
+  </data>
   <data name="Size" xml:space="preserve">
     <value>Size</value>
   </data>
@@ -7318,8 +7381,14 @@
   <data name="Step artists and the PIU devs are community too." xml:space="preserve">
     <value>Step artists and the PIU devs are community too.</value>
   </data>
+  <data name="Step chart" xml:space="preserve">
+	  <value>Step chart</value>
+  </data>
   <data name="Step on" xml:space="preserve">
     <value>Step on</value>
+  </data>
+  <data name="Steps" xml:space="preserve">
+	  <value>Steps</value>
   </data>
   <data name="steps by {0}" xml:space="preserve">
     <value>steps by {0}</value>
@@ -7994,6 +8063,15 @@
   <data name="Ties break by total raw score." xml:space="preserve">
     <value>Ties break by total raw score.</value>
   </data>
+  <data name="Time runs downward — arrows colored by panel, feet, or timing." xml:space="preserve">
+	  <value>Time runs downward — arrows colored by panel, feet, or timing.</value>
+  </data>
+  <data name="Timing" xml:space="preserve">
+	  <value>Timing</value>
+  </data>
+  <data name="Timing colors need a step file that aligned to beats." xml:space="preserve">
+	  <value>Timing colors need a step file that aligned to beats.</value>
+  </data>
   <data name="Title" xml:space="preserve">
 	  <value>Title</value>
   </data>
@@ -8199,6 +8277,9 @@
   <data name="Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us." xml:space="preserve">
     <value>Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us.</value>
   </data>
+  <data name="Twelfths" xml:space="preserve">
+	  <value>Twelfths</value>
+  </data>
   <data name="Twist 90" xml:space="preserve">
     <value>Twist 90</value>
   </data>
@@ -8393,6 +8474,9 @@
   </data>
   <data name="Uploading" xml:space="preserve">
     <value>Uploading</value>
+  </data>
+  <data name="Upper" xml:space="preserve">
+	  <value>Upper</value>
   </data>
   <data name="Upscore" xml:space="preserve">
     <value>Upscore</value>
@@ -8761,6 +8845,9 @@
   <data name="Where PUMBILITY comes from on {0} — the average pool" xml:space="preserve">
     <value>Where PUMBILITY comes from on {0} — the average pool</value>
   </data>
+  <data name="Where runs end isn't shown — this step file disagrees with the game's judged note count." xml:space="preserve">
+	  <value>Where runs end isn't shown — this step file disagrees with the game's judged note count.</value>
+  </data>
   <data name="Where the levels sit" xml:space="preserve">
     <value>Where the levels sit</value>
   </data>
@@ -8823,6 +8910,9 @@
   </data>
   <data name="Who your peers are" xml:space="preserve">
     <value>Who your peers are</value>
+  </data>
+  <data name="whole chart" xml:space="preserve">
+	  <value>whole chart</value>
   </data>
   <data name="Why" xml:space="preserve">
     <value>Why</value>
@@ -9270,6 +9360,9 @@
   </data>
   <data name="Your rivals" xml:space="preserve">
     <value>Your rivals</value>
+  </data>
+  <data name="Your runs" xml:space="preserve">
+	  <value>Your runs</value>
   </data>
   <data name="Your saved randomizer settings" xml:space="preserve">
     <value>Your saved randomizer settings</value>
@@ -9795,6 +9888,9 @@
   </data>
   <data name="{0} rivals" xml:space="preserve">
     <value>{0} rivals</value>
+  </data>
+  <data name="{0} runs ended here" xml:space="preserve">
+	  <value>{0} runs ended here</value>
   </data>
   <data name="{0} scores" xml:space="preserve">
     <value>{0} scores</value>
