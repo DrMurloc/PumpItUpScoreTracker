@@ -268,9 +268,6 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>1 account privato è un pari ma non viene mostrato.</value>
   </data>
-  <data name="1 run ended here" xml:space="preserve">
-	  <value>1 tentativo è finito qui</value>
-  </data>
   <data name="1 title" xml:space="preserve">
     <value>1 titolo</value>
   </data>
@@ -3695,11 +3692,8 @@
   <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
     <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
   </data>
-  <data name="Life bar" xml:space="preserve">
-	  <value>Barra della vita</value>
-  </data>
-  <data name="Life bar deaths" xml:space="preserve">
-	  <value>Morti per barra della vita</value>
+  <data name="Life Bar Break" xml:space="preserve">
+	  <value>Break barra della vita</value>
   </data>
   <data name="Life Calculator" xml:space="preserve">
     <value>Calcolatore di vita</value>
@@ -5843,9 +5837,6 @@
   </data>
   <data name="Promote to Admin" xml:space="preserve">
     <value>Promuovi ad admin</value>
-  </data>
-  <data name="Proven non-lifebar — possibly a command from the other pad." xml:space="preserve">
-	  <value>Provato non dalla barra della vita — forse un comando dell'altro pad.</value>
   </data>
   <data name="Provisional — based on Phoenix data" xml:space="preserve">
     <value>Provvisorio — basato sui dati di Phoenix</value>
@@ -8376,6 +8367,9 @@
   <data name="Unknown" xml:space="preserve">
     <value>Sconosciuto</value>
   </data>
+  <data name="Unknown Break" xml:space="preserve">
+	  <value>Break sconosciuto</value>
+  </data>
   <data name="Unknown chart" xml:space="preserve">
     <value>Chart sconosciuto</value>
   </data>
@@ -9888,9 +9882,6 @@
   </data>
   <data name="{0} rivals" xml:space="preserve">
     <value>{0} rivali</value>
-  </data>
-  <data name="{0} runs ended here" xml:space="preserve">
-	  <value>{0} tentativi sono finiti qui</value>
   </data>
   <data name="{0} scores" xml:space="preserve">
     <value>{0} punteggi</value>

@@ -152,4 +152,5 @@ internal sealed record JournalSessionRows(
     IReadOnlyList<ScoreJournalEntry> Rows);
 
 /// <summary>A judged stage break as the rail read returns it — vertical-internal, user attached.</summary>
-internal sealed record ChartStageBreakRow(Guid UserId, JudgementCounts Judgements, bool IsNonLifebarBreak);
+internal sealed record ChartStageBreakRow(Guid UserId, JudgementCounts Judgements, bool IsNonLifebarBreak,
+    string? PassPlate = null, string? PassGrade = null);

@@ -38,7 +38,8 @@ public sealed class GetChartStageBreaksHandlerTests
     public async Task RowsComeBackAnonymizedWithTheViewersOwnFlagged()
     {
         SetupRows(
-            new ChartStageBreakRow(Viewer, new JudgementCounts(700, 2, 0, 0, 1), true),
+            new ChartStageBreakRow(Viewer, new JudgementCounts(700, 2, 0, 0, 1), true,
+                "PerfectGame", "SSS+"),
             new ChartStageBreakRow(Stranger, new JudgementCounts(100, 0, 0, 5, 20), false));
 
         var rows = (await Build().Handle(new GetChartStageBreaksQuery(ChartId, MixEnum.Phoenix2, Viewer),
@@ -48,6 +49,9 @@ public sealed class GetChartStageBreaksHandlerTests
         Assert.Equal(703, rows[0].Judged);
         Assert.True(rows[0].IsNonLifebarBreak);
         Assert.True(rows[0].IsViewer);
+        Assert.Equal("PerfectGame", rows[0].PassPlate);
+        Assert.Equal("SSS+", rows[0].PassGrade);
+        Assert.Null(rows[1].PassPlate);
         Assert.Equal(125, rows[1].Judged);
         Assert.False(rows[1].IsViewer);
     }

@@ -90,20 +90,36 @@ public class StepChartController : Controller
             .ToArray();
 
         var life = new List<decimal>();
-        var pass = new List<decimal>();
+        var pass = new List<(decimal Time, string? Plate, string? Grade)>();
         var yours = new List<decimal>();
         foreach (var row in breaks)
         {
             var time = BreakPositionSolver.Place(row.Judged, events, record.NoteCount.Value);
             if (time == null) continue;
-            (row.IsNonLifebarBreak ? pass : life).Add(time.Value);
+            if (row.IsNonLifebarBreak) pass.Add((time.Value, row.PassPlate, row.PassGrade));
+            else life.Add(time.Value);
             if (row.IsViewer) yours.Add(time.Value);
         }
 
+        // A pass pin carries the game's own command art where the solver named targets — the
+        // badge is the sentence, exactly the session page's choice (pass-command-detection D33;
+        // wordiness ruling 2026-08-30). Codes are the art file stems PassCommandBadge uses.
         var pins = BreakPositionSolver.Cluster(life, ClusterEpsilonSeconds)
-            .Select(c => new { t = c.Time, n = c.Count, from = c.From, to = c.To, cause = "life" })
-            .Concat(BreakPositionSolver.Cluster(pass, ClusterEpsilonSeconds)
-                .Select(c => new { t = c.Time, n = c.Count, from = c.From, to = c.To, cause = "pass" }))
+            .Select(c => new
+            {
+                t = c.Time, n = c.Count, from = c.From, to = c.To, cause = "life",
+                cmds = Array.Empty<string>()
+            })
+            .Concat(BreakPositionSolver.Cluster(pass.Select(p => p.Time), ClusterEpsilonSeconds)
+                .Select(c => new
+                {
+                    t = c.Time, n = c.Count, from = c.From, to = c.To, cause = "pass",
+                    cmds = pass.Where(p => p.Time >= c.From && p.Time <= c.To)
+                        .SelectMany(p => CommandArt(p.Plate, p.Grade))
+                        .Distinct()
+                        .Take(3)
+                        .ToArray()
+                }))
             .OrderBy(p => p.t)
             .ToArray();
 
@@ -115,6 +131,19 @@ public class StepChartController : Controller
             yours = yours.OrderBy(t => t).ToArray(),
             pins
         });
+    }
+
+    /// <summary>
+    ///     The command-window art stems for a break's named targets, both when both were named
+    ///     (D31). Stored as full names; the art files are keyed the way the badge keys them —
+    ///     plate shorthand, grade name.
+    /// </summary>
+    private static IEnumerable<string> CommandArt(string? plate, string? grade)
+    {
+        var parsedPlate = PhoenixPlateHelperMethods.TryParse(plate);
+        if (parsedPlate != null) yield return $"Pass_Plate_{parsedPlate.Value.GetShorthand()}";
+        var parsedGrade = PhoenixLetterGradeHelperMethods.TryParse(grade);
+        if (parsedGrade != null) yield return $"Pass_Grade_{parsedGrade.Value.GetName()}";
     }
 
     private static object Empty()

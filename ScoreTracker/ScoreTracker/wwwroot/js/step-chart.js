@@ -293,6 +293,7 @@ async function loadBreaks(view, chartId, mix) {
     view.pinMarks = breaks.pins.map(function (pin) {
         return {
             t: pin.t, n: pin.n, from: pin.from, to: pin.to, cause: pin.cause,
+            cmds: pin.cmds || [],
             x: pin.cause === 'pass' ? passX : lifeX,
             color: pin.cause === 'pass' ? view.colors.pass : view.colors.life
         };
@@ -544,7 +545,7 @@ function renderLegend(view) {
 
     if (view.breaks && view.breaks.total > 0) {
         legendEntry(host, view.colors.life,
-            (view.strings.lifeDeaths || 'Life bar deaths') + ' \u00b7 ' + view.breaks.life);
+            (view.strings.lifeBreak || 'Life Bar Break') + ' \u00b7 ' + view.breaks.life);
         if (view.breaks.pass > 0)
             legendEntry(host, view.colors.pass,
                 (view.strings.stagePass || 'Stage Pass') + ' \u00b7 ' + view.breaks.pass);
@@ -579,19 +580,23 @@ function bindPinTips(view) {
         }
 
         if (!hit) { tip.hidden = true; return; }
+        // Terse on purpose (owner, 2026-08-30): the badge art IS the sentence for a named
+        // Pass, and everything else is three words plus a count.
         var range = hit.n > 1 ? fmt(hit.from) + '\u2013' + fmt(hit.to) : fmt(hit.t);
-        var runs = hit.n === 1
-            ? (view.strings.oneRunEnded || '1 run ended here')
-            : (view.strings.runsEnded || '{0} runs ended here').replace('{0}', hit.n);
-        var cause = hit.cause === 'pass'
-            ? (view.strings.stagePass || 'Stage Pass')
-            : (view.strings.lifeBar || 'Life bar');
-        var hedge = hit.cause === 'pass' && view.panels === 5
-            ? '<div class="stepchart-tip-hedge">' + escapeHtml(view.strings.passHedge ||
-                'Proven non-lifebar \u2014 possibly a command from the other pad.') + '</div>'
-            : '';
-        tip.innerHTML = '<div class="stepchart-tip-time">' + range + '</div><b>' + escapeHtml(runs) +
-            '</b><div>' + escapeHtml(cause) + '</div>' + hedge;
+        var count = hit.n > 1 ? ' \u00d7' + hit.n : '';
+        var body;
+        if (hit.cause === 'pass' && hit.cmds.length) {
+            body = hit.cmds.map(function (cmd) {
+                return '<img class="stepchart-tip-cmd" alt="' + escapeHtml(cmd) +
+                    '" src="https://piuimages.arroweclip.se/commands/' + encodeURI(cmd) + '.png">';
+            }).join('') + escapeHtml(count);
+        } else if (hit.cause === 'pass') {
+            body = '<b>' + escapeHtml((view.strings.unknownBreak || 'Unknown Break') + count) + '</b>';
+        } else {
+            body = '<b>' + escapeHtml((view.strings.lifeBreak || 'Life Bar Break') + count) + '</b>';
+        }
+
+        tip.innerHTML = '<div class="stepchart-tip-time">' + range + '</div>' + body;
         tip.hidden = false;
         tip.style.left = Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 12) + 'px';
         tip.style.top = (e.clientY + 14) + 'px';

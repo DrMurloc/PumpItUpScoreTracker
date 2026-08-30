@@ -268,9 +268,6 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>1 private account is a peer but is not shown.</value>
   </data>
-  <data name="1 run ended here" xml:space="preserve">
-	  <value>1 run ended here</value>
-  </data>
   <data name="1 title" xml:space="preserve">
     <value>1 title</value>
   </data>
@@ -3695,11 +3692,8 @@
   <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
     <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
   </data>
-  <data name="Life bar" xml:space="preserve">
-	  <value>Life bar</value>
-  </data>
-  <data name="Life bar deaths" xml:space="preserve">
-	  <value>Life bar deaths</value>
+  <data name="Life Bar Break" xml:space="preserve">
+	  <value>Life Bar Break</value>
   </data>
   <data name="Life Calculator" xml:space="preserve">
     <value>Life Calculator</value>
@@ -5843,9 +5837,6 @@
   </data>
   <data name="Promote to Admin" xml:space="preserve">
     <value>Promote to Admin</value>
-  </data>
-  <data name="Proven non-lifebar — possibly a command from the other pad." xml:space="preserve">
-	  <value>Proven non-lifebar — possibly a command from the other pad.</value>
   </data>
   <data name="Provisional — based on Phoenix data" xml:space="preserve">
     <value>Provisional — based on Phoenix data</value>
@@ -8376,6 +8367,9 @@
   <data name="Unknown" xml:space="preserve">
 	  <value>Unknown</value>
   </data>
+  <data name="Unknown Break" xml:space="preserve">
+	  <value>Unknown Break</value>
+  </data>
   <data name="Unknown chart" xml:space="preserve">
     <value>Unknown chart</value>
   </data>
@@ -9888,9 +9882,6 @@
   </data>
   <data name="{0} rivals" xml:space="preserve">
     <value>{0} rivals</value>
-  </data>
-  <data name="{0} runs ended here" xml:space="preserve">
-	  <value>{0} runs ended here</value>
   </data>
   <data name="{0} scores" xml:space="preserve">
     <value>{0} scores</value>

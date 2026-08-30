@@ -296,14 +296,15 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             .Where(j => j.ChartId == chartId && j.MixId == mixId && j.IsStageBroken && j.Perfects != null)
             .Select(j => new
             {
-                j.UserId, j.Perfects, j.Greats, j.Goods, j.Bads, j.Misses, j.IsNonLifebarBreak
+                j.UserId, j.Perfects, j.Greats, j.Goods, j.Bads, j.Misses, j.IsNonLifebarBreak,
+                j.PassPlate, j.PassGrade
             })
             .ToArrayAsync(cancellationToken);
         return rows
             .Select(r => new ChartStageBreakRow(r.UserId,
                 new JudgementCounts(r.Perfects!.Value, r.Greats ?? 0, r.Goods ?? 0, r.Bads ?? 0,
                     r.Misses ?? 0),
-                r.IsNonLifebarBreak))
+                r.IsNonLifebarBreak, r.PassPlate, r.PassGrade))
             .ToArray();
     }
 

@@ -268,9 +268,6 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>1 cuenta privada es par pero no se muestra.</value>
   </data>
-  <data name="1 run ended here" xml:space="preserve">
-	  <value>1 intento terminó aquí</value>
-  </data>
   <data name="1 title" xml:space="preserve">
     <value>1 título</value>
   </data>
@@ -3676,11 +3673,8 @@
   <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
     <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
   </data>
-  <data name="Life bar" xml:space="preserve">
-	  <value>Barra de vida</value>
-  </data>
-  <data name="Life bar deaths" xml:space="preserve">
-	  <value>Muertes por barra de vida</value>
+  <data name="Life Bar Break" xml:space="preserve">
+	  <value>Corte por barra de vida</value>
   </data>
   <data name="Life Calculator" xml:space="preserve">
     <value>Calculadora de vida</value>
@@ -5807,9 +5801,6 @@
   </data>
   <data name="Promote to Admin" xml:space="preserve">
     <value>Promover a admin</value>
-  </data>
-  <data name="Proven non-lifebar — possibly a command from the other pad." xml:space="preserve">
-	  <value>No fue la barra de vida — puede ser un comando del otro pad.</value>
   </data>
   <data name="Provisional — based on Phoenix data" xml:space="preserve">
     <value>Provisional — basado en datos de Phoenix</value>
@@ -8317,6 +8308,9 @@
   <data name="Unknown" xml:space="preserve">
     <value>Desconocido</value>
   </data>
+  <data name="Unknown Break" xml:space="preserve">
+	  <value>Corte desconocido</value>
+  </data>
   <data name="Unknown chart" xml:space="preserve">
     <value>Chart desconocido</value>
   </data>
@@ -9819,9 +9813,6 @@
   </data>
   <data name="{0} rivals" xml:space="preserve">
     <value>{0} rivales</value>
-  </data>
-  <data name="{0} runs ended here" xml:space="preserve">
-	  <value>{0} intentos terminaron aquí</value>
   </data>
   <data name="{0} scores" xml:space="preserve">
     <value>{0} puntajes</value>

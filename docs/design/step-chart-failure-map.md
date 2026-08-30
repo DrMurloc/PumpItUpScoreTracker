@@ -34,9 +34,13 @@ All owner-settled across the 2026-08-29/30 workshop.
 
 - **D1 — Pins, not a smoothed heat map.** A pin per failure spot, ×N when stacked. Honest at
   N=2 and N=300; the data grows ~250 judged breaks/day, so density arrives on its own.
-- **D2 — Two causes, hedged.** Violet is only ever `IsNonLifebarBreak = true` — the proven
-  claim. Everything else is the life-bar series. The pin tooltip carries the D34 other-pad
-  hedge on Singles; Phoenix 1 has no violet series at all (every proven Pass is Phoenix 2).
+- **D2 — Two causes, terse** (amended 2026-08-30 in field test). Violet is only ever
+  `IsNonLifebarBreak = true` — the proven claim; everything else is the life-bar series, and
+  Phoenix 1 has no violet series at all. The pin tooltip is three words or the game's own
+  command art: red pins read "Life Bar Break", violet pins show the named Pass plate/grade
+  badges (the badge is the sentence — pass-command-detection D33's choice), and an unnamed
+  violet pin reads "Unknown Break". The original D34 other-pad hedge sentence was dropped
+  from this surface for wordiness, on the owner's ruling.
 - **D3 — Private players are included.** The rail is an anonymous aggregate — counts at
   positions, no identities — like the hero's pass-rate fact, unlike the limbo board's named
   rows. The viewer flag marks only the viewer's own rows, to themselves.

@@ -18504,3 +18504,10 @@ button.judg-strip:focus-visible {
     opacity: .45;
     cursor: default;
 }
+
+.stepchart-tip-cmd {
+    height: 20px;
+    display: inline-block;
+    vertical-align: middle;
+    margin: 2px 4px 2px 0;
+}

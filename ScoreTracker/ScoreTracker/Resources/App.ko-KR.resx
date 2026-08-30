@@ -268,9 +268,6 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>비공개 계정 1개가 동료이지만 표시되지 않습니다.</value>
   </data>
-  <data name="1 run ended here" xml:space="preserve">
-	  <value>여기서 플레이 1회 종료</value>
-  </data>
   <data name="1 title" xml:space="preserve">
     <value>타이틀 1개</value>
   </data>
@@ -3676,11 +3673,8 @@
   <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
     <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
   </data>
-  <data name="Life bar" xml:space="preserve">
-	  <value>라이프 바</value>
-  </data>
-  <data name="Life bar deaths" xml:space="preserve">
-	  <value>라이프 소진 사망</value>
+  <data name="Life Bar Break" xml:space="preserve">
+	  <value>라이프 바 브레이크</value>
   </data>
   <data name="Life Calculator" xml:space="preserve">
     <value>라이프 계산기</value>
@@ -5807,9 +5801,6 @@
   </data>
   <data name="Promote to Admin" xml:space="preserve">
     <value>관리자로 승급</value>
-  </data>
-  <data name="Proven non-lifebar — possibly a command from the other pad." xml:space="preserve">
-	  <value>라이프 바가 아님이 확인됨 — 반대쪽 패드의 커맨드일 수 있습니다.</value>
   </data>
   <data name="Provisional — based on Phoenix data" xml:space="preserve">
     <value>잠정 — Phoenix 데이터 기반</value>
@@ -8317,6 +8308,9 @@
   <data name="Unknown" xml:space="preserve">
     <value>알 수 없음</value>
   </data>
+  <data name="Unknown Break" xml:space="preserve">
+	  <value>알 수 없는 브레이크</value>
+  </data>
   <data name="Unknown chart" xml:space="preserve">
     <value>알 수 없는 차트</value>
   </data>
@@ -9819,9 +9813,6 @@
   </data>
   <data name="{0} rivals" xml:space="preserve">
     <value>라이벌 {0} 명</value>
-  </data>
-  <data name="{0} runs ended here" xml:space="preserve">
-	  <value>여기서 플레이 {0}회 종료</value>
   </data>
   <data name="{0} scores" xml:space="preserve">
     <value>점수 {0}개</value>

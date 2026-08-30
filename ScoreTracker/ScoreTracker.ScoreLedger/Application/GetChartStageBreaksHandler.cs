@@ -30,7 +30,7 @@ internal sealed class GetChartStageBreaksHandler(
 
         return (rows ?? Array.Empty<ChartStageBreakRow>())
             .Select(r => new ChartStageBreakRecord(r.Judgements.NoteCount, r.IsNonLifebarBreak,
-                request.ViewerId != null && r.UserId == request.ViewerId))
+                request.ViewerId != null && r.UserId == request.ViewerId, r.PassPlate, r.PassGrade))
             .ToArray();
     }
 }

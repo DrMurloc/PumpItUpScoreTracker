@@ -268,9 +268,6 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>非公開アカウント 1 件はピアですが表示されません。</value>
   </data>
-  <data name="1 run ended here" xml:space="preserve">
-	  <value>ここで1回のプレイが終了</value>
-  </data>
   <data name="1 title" xml:space="preserve">
     <value>タイトル 1 件</value>
   </data>
@@ -3695,11 +3692,8 @@
   <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
     <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
   </data>
-  <data name="Life bar" xml:space="preserve">
-	  <value>ライフバー</value>
-  </data>
-  <data name="Life bar deaths" xml:space="preserve">
-	  <value>ライフ切れ</value>
+  <data name="Life Bar Break" xml:space="preserve">
+	  <value>ライフバーブレイク</value>
   </data>
   <data name="Life Calculator" xml:space="preserve">
     <value>体力計算機</value>
@@ -5843,9 +5837,6 @@
   </data>
   <data name="Promote to Admin" xml:space="preserve">
     <value>管理者に昇格</value>
-  </data>
-  <data name="Proven non-lifebar — possibly a command from the other pad." xml:space="preserve">
-	  <value>ライフバーではないことが確定 — 反対側のパッドのコマンドの可能性があります。</value>
   </data>
   <data name="Provisional — based on Phoenix data" xml:space="preserve">
     <value>暫定（Phoenixのデータに基づく）</value>
@@ -8376,6 +8367,9 @@
   <data name="Unknown" xml:space="preserve">
 	  <value>不明</value>
   </data>
+  <data name="Unknown Break" xml:space="preserve">
+	  <value>不明なブレイク</value>
+  </data>
   <data name="Unknown chart" xml:space="preserve">
     <value>不明なチャート</value>
   </data>
@@ -9888,9 +9882,6 @@
   </data>
   <data name="{0} rivals" xml:space="preserve">
     <value>ライバル {0} 人</value>
-  </data>
-  <data name="{0} runs ended here" xml:space="preserve">
-	  <value>ここで{0}回のプレイが終了</value>
   </data>
   <data name="{0} scores" xml:space="preserve">
     <value>{0}スコア</value>

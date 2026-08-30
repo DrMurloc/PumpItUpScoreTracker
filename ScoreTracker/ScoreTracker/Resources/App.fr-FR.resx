@@ -268,9 +268,6 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>1 compte privé est un pair mais n'est pas affiché.</value>
   </data>
-  <data name="1 run ended here" xml:space="preserve">
-	  <value>1 essai s'est terminé ici</value>
-  </data>
   <data name="1 title" xml:space="preserve">
     <value>1 titre</value>
   </data>
@@ -3694,11 +3691,8 @@
   <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
     <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
   </data>
-  <data name="Life bar" xml:space="preserve">
-	  <value>Barre de vie</value>
-  </data>
-  <data name="Life bar deaths" xml:space="preserve">
-	  <value>Morts à la barre de vie</value>
+  <data name="Life Bar Break" xml:space="preserve">
+	  <value>Break barre de vie</value>
   </data>
   <data name="Life Calculator" xml:space="preserve">
     <value>Calculateur de vie</value>
@@ -5842,9 +5836,6 @@
   </data>
   <data name="Promote to Admin" xml:space="preserve">
     <value>Promouvoir admin</value>
-  </data>
-  <data name="Proven non-lifebar — possibly a command from the other pad." xml:space="preserve">
-	  <value>Prouvé hors barre de vie — peut-être une commande de l'autre pad.</value>
   </data>
   <data name="Provisional — based on Phoenix data" xml:space="preserve">
     <value>Provisoire — basé sur les données de Phoenix</value>
@@ -8375,6 +8366,9 @@
   <data name="Unknown" xml:space="preserve">
     <value>Inconnu</value>
   </data>
+  <data name="Unknown Break" xml:space="preserve">
+	  <value>Break inconnu</value>
+  </data>
   <data name="Unknown chart" xml:space="preserve">
     <value>Chart inconnu</value>
   </data>
@@ -9887,9 +9881,6 @@
   </data>
   <data name="{0} rivals" xml:space="preserve">
     <value>{0} rivaux</value>
-  </data>
-  <data name="{0} runs ended here" xml:space="preserve">
-	  <value>{0} essais se sont terminés ici</value>
   </data>
   <data name="{0} scores" xml:space="preserve">
     <value>{0} scores</value>
