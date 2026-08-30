@@ -80,9 +80,10 @@ public class StepChartController : Controller
             return Json(Empty());
 
         var viewerId = _currentUser.IsLoggedIn ? _currentUser.User.Id : (Guid?)null;
-        var breaks = (await _mediator.Send(new GetChartStageBreaksQuery(chartId, parsedMix, viewerId),
-            cancellationToken)).ToArray();
-        if (breaks.Length == 0) return Json(Empty());
+        var result = await _mediator.Send(new GetChartStageBreaksQuery(chartId, parsedMix, viewerId),
+            cancellationToken);
+        var breaks = result.Breaks;
+        if (breaks.Count == 0 && result.Unplaced == 0) return Json(Empty());
 
         var events = record.Rows.Select(r => r.Time)
             .Concat(record.TickTimes)
@@ -128,6 +129,7 @@ public class StepChartController : Controller
             total = life.Count + pass.Count,
             life = life.Count,
             pass = pass.Count,
+            unplaced = result.Unplaced,
             yours = yours.OrderBy(t => t).ToArray(),
             pins
         });
@@ -150,7 +152,8 @@ public class StepChartController : Controller
     {
         return new
         {
-            total = 0, life = 0, pass = 0, yours = Array.Empty<decimal>(), pins = Array.Empty<object>()
+            total = 0, life = 0, pass = 0, unplaced = 0, yours = Array.Empty<decimal>(),
+            pins = Array.Empty<object>()
         };
     }
 }

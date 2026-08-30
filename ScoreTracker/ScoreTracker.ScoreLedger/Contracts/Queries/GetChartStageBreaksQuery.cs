@@ -15,4 +15,4 @@ namespace ScoreTracker.ScoreLedger.Contracts.Queries;
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record GetChartStageBreaksQuery(Guid ChartId, MixEnum Mix, Guid? ViewerId = null)
-    : IQuery<IEnumerable<ChartStageBreakRecord>>;
+    : IQuery<ChartStageBreaksRecord>;

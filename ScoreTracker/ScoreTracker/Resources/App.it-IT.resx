@@ -8395,6 +8395,9 @@
     <value>Hai {0} chart di livello {1} contrassegnati come Da fare che non hai passato.</value>
     <comment>I.E You have 19 level 24 charts marked To Do you haven't passed</comment>
   </data>
+  <data name="Unplaced" xml:space="preserve">
+	  <value>Non collocati</value>
+  </data>
   <data name="Unplayed" xml:space="preserve">
     <value>Non giocato</value>
   </data>

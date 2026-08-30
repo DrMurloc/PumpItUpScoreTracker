@@ -10,3 +10,11 @@ namespace ScoreTracker.ScoreLedger.Contracts;
 [ExcludeFromCodeCoverage]
 public sealed record ChartStageBreakRecord(int Judged, bool IsNonLifebarBreak, bool IsViewer,
     string? PassPlate = null, string? PassGrade = null);
+
+/// <summary>
+///     The rail's answer whole: the placeable breaks, plus how many of the chart's imported
+///     breaks carry no judgement counts and can never be placed — the excluded share, admitted
+///     to by number.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record ChartStageBreaksRecord(IReadOnlyList<ChartStageBreakRecord> Breaks, int Unplaced);

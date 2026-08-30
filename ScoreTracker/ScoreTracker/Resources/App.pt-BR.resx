@@ -8335,6 +8335,9 @@
   <data name="Unpassed ToDos" xml:space="preserve">
     <value>Você tem {0} charts de nível {1} marcados como "Pendente" que ainda não passou.</value>
   </data>
+  <data name="Unplaced" xml:space="preserve">
+	  <value>Sem posição</value>
+  </data>
   <data name="Unplayed" xml:space="preserve">
     <value>Não jogado</value>
   </data>

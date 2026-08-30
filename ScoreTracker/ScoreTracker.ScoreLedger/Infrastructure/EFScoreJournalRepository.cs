@@ -284,11 +284,17 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             .ToArray();
     }
 
-    public async Task<IReadOnlyList<ChartStageBreakRow>> GetChartStageBreaks(MixEnum mix, Guid chartId,
+    public async Task<ChartStageBreaksRead> GetChartStageBreaks(MixEnum mix, Guid chartId,
         CancellationToken cancellationToken)
     {
         var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // Breaks with no judgement counts can never be placed on the timeline; the rail admits
+        // to them by number instead of pretending the placed set is the whole story. Same
+        // filtered index — Perfects rides its includes.
+        var unplaced = await database.Set<ScoreEventJournalEntity>()
+            .CountAsync(j => j.ChartId == chartId && j.MixId == mixId && j.IsStageBroken &&
+                             j.Perfects == null, cancellationToken);
         // Served off the filtered stage-break index end to end — chart, mix, breaks-only, the
         // judgement columns riding as includes. No user join: the rail is anonymous, and its one
         // caller flags the viewer's own rows by id without ever surfacing anyone else's.
@@ -300,12 +306,12 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
                 j.PassPlate, j.PassGrade
             })
             .ToArrayAsync(cancellationToken);
-        return rows
+        return new ChartStageBreaksRead(rows
             .Select(r => new ChartStageBreakRow(r.UserId,
                 new JudgementCounts(r.Perfects!.Value, r.Greats ?? 0, r.Goods ?? 0, r.Bads ?? 0,
                     r.Misses ?? 0),
                 r.IsNonLifebarBreak, r.PassPlate, r.PassGrade))
-            .ToArray();
+            .ToArray(), unplaced);
     }
 
     public async Task<IReadOnlyList<UserPhoenixScore>> GetLowestPassingPlays(MixEnum mix, Guid chartId,

@@ -8335,6 +8335,9 @@
   <data name="Unpassed ToDos" xml:space="preserve">
     <value>{0}레벨 {1}채보에 '목표'로 표시된 것 중 아직 브레이크 오프가 있습니다.</value>
   </data>
+  <data name="Unplaced" xml:space="preserve">
+	  <value>위치 미상</value>
+  </data>
   <data name="Unplayed" xml:space="preserve">
     <value>미플레이</value>
   </data>

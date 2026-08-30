@@ -31,7 +31,7 @@ public sealed class GetChartStageBreaksHandlerTests
     private void SetupRows(params ChartStageBreakRow[] rows)
     {
         _journal.Setup(j => j.GetChartStageBreaks(MixEnum.Phoenix2, ChartId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(rows);
+            .ReturnsAsync(new ChartStageBreaksRead(rows, 3));
     }
 
     [Fact]
@@ -42,10 +42,12 @@ public sealed class GetChartStageBreaksHandlerTests
                 "PerfectGame", "SSS+"),
             new ChartStageBreakRow(Stranger, new JudgementCounts(100, 0, 0, 5, 20), false));
 
-        var rows = (await Build().Handle(new GetChartStageBreaksQuery(ChartId, MixEnum.Phoenix2, Viewer),
-            CancellationToken.None)).ToArray();
+        var result = await Build().Handle(new GetChartStageBreaksQuery(ChartId, MixEnum.Phoenix2, Viewer),
+            CancellationToken.None);
+        var rows = result.Breaks;
 
-        Assert.Equal(2, rows.Length);
+        Assert.Equal(3, result.Unplaced);
+        Assert.Equal(2, rows.Count);
         Assert.Equal(703, rows[0].Judged);
         Assert.True(rows[0].IsNonLifebarBreak);
         Assert.True(rows[0].IsViewer);
@@ -63,9 +65,9 @@ public sealed class GetChartStageBreaksHandlerTests
         var handler = Build();
 
         var asStranger = (await handler.Handle(new GetChartStageBreaksQuery(ChartId, MixEnum.Phoenix2),
-            CancellationToken.None)).Single();
+            CancellationToken.None)).Breaks.Single();
         var asViewer = (await handler.Handle(new GetChartStageBreaksQuery(ChartId, MixEnum.Phoenix2, Viewer),
-            CancellationToken.None)).Single();
+            CancellationToken.None)).Breaks.Single();
 
         Assert.False(asStranger.IsViewer);
         Assert.True(asViewer.IsViewer);
@@ -78,7 +80,7 @@ public sealed class GetChartStageBreaksHandlerTests
     {
         SetupRows();
 
-        Assert.Empty(await Build().Handle(new GetChartStageBreaksQuery(ChartId, MixEnum.Phoenix2),
-            CancellationToken.None));
+        Assert.Empty((await Build().Handle(new GetChartStageBreaksQuery(ChartId, MixEnum.Phoenix2),
+            CancellationToken.None)).Breaks);
     }
 }

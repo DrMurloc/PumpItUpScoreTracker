@@ -8395,6 +8395,9 @@
     <value>You have {0} level {1} charts marked To Do that you haven't passed.</value>
     <comment>I.E You have 19 level 24 charts marked To Do you haven't passed</comment>
   </data>
+  <data name="Unplaced" xml:space="preserve">
+	  <value>Unplaced</value>
+  </data>
   <data name="Unplayed" xml:space="preserve">
     <value>Unplayed</value>
   </data>

@@ -8394,6 +8394,9 @@
     <value>Vous avez {0} charts de niveau {1} dans votre ToDo list que vous n'avez pas Pass.</value>
     <comment>par exemple, voius avez 19 charts de niveau 24 dans votre ToDo list que vous n'avez pas Pass</comment>
   </data>
+  <data name="Unplaced" xml:space="preserve">
+	  <value>Non placés</value>
+  </data>
   <data name="Unplayed" xml:space="preserve">
     <value>Non joué</value>
   </data>

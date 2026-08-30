@@ -15,12 +15,12 @@ namespace ScoreTracker.ScoreLedger.Application;
 internal sealed class GetChartStageBreaksHandler(
     IScoreJournalRepository journal,
     IMemoryCache cache)
-    : IRequestHandler<GetChartStageBreaksQuery, IEnumerable<ChartStageBreakRecord>>
+    : IRequestHandler<GetChartStageBreaksQuery, ChartStageBreaksRecord>
 {
-    public async Task<IEnumerable<ChartStageBreakRecord>> Handle(GetChartStageBreaksQuery request,
+    public async Task<ChartStageBreaksRecord> Handle(GetChartStageBreaksQuery request,
         CancellationToken cancellationToken)
     {
-        var rows = await cache.GetOrCreateAsync(
+        var read = await cache.GetOrCreateAsync(
             LedgerCacheKeys.StageBreaks(request.Mix, request.ChartId),
             entry =>
             {
@@ -28,9 +28,11 @@ internal sealed class GetChartStageBreaksHandler(
                 return journal.GetChartStageBreaks(request.Mix, request.ChartId, cancellationToken);
             });
 
-        return (rows ?? Array.Empty<ChartStageBreakRow>())
+        return new ChartStageBreaksRecord(
+            (read?.Rows ?? Array.Empty<ChartStageBreakRow>())
             .Select(r => new ChartStageBreakRecord(r.Judgements.NoteCount, r.IsNonLifebarBreak,
                 request.ViewerId != null && r.UserId == request.ViewerId, r.PassPlate, r.PassGrade))
-            .ToArray();
+            .ToArray(),
+            read?.Unplaced ?? 0);
     }
 }

@@ -626,8 +626,10 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
             }
         }, CancellationToken.None);
 
-        var rows = await repo.GetChartStageBreaks(MixEnum.Phoenix2, chartId, CancellationToken.None);
+        var read = await repo.GetChartStageBreaks(MixEnum.Phoenix2, chartId, CancellationToken.None);
+        var rows = read.Rows;
 
+        Assert.Equal(1, read.Unplaced);
         Assert.Equal(2, rows.Count);
         var passRow = Assert.Single(rows, r => r.IsNonLifebarBreak);
         Assert.Equal(userA, passRow.UserId);

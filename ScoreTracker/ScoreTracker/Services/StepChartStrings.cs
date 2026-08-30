@@ -28,6 +28,7 @@ public static class StepChartStrings
             ["unknownBreak"] = localizer["Unknown Break"],
             ["stagePass"] = localizer["Stage Pass"],
             ["yourRuns"] = localizer["Your runs"],
+            ["unplaced"] = localizer["Unplaced"],
             ["leftFoot"] = localizer["Left foot"],
             ["rightFoot"] = localizer["Right foot"],
             ["quarters"] = localizer["Quarters"],

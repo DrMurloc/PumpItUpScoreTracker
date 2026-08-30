@@ -8395,6 +8395,9 @@
     <value>やることリストの中のレベル{1}で譜面まだ{0}曲が残してる（クリアしてない）</value>
     
   <comment>例：レベル２４の中でまだ９譜面が残してる</comment></data>
+  <data name="Unplaced" xml:space="preserve">
+	  <value>位置不明</value>
+  </data>
   <data name="Unplayed" xml:space="preserve">
     <value>未プレイ</value>
   </data>

@@ -281,7 +281,7 @@ function drawRail(view, ctx, y0, y1) {
 
 async function loadBreaks(view, chartId, mix) {
     var breaks = await fetchJson('/Charts/StepChart/' + chartId + '/Breaks?mix=' + encodeURIComponent(mix));
-    if (!breaks || breaks.total === 0) return;
+    if (!breaks || (breaks.total === 0 && !breaks.unplaced)) return;
 
     view.colors.life = view.token('--life-danger');
     view.colors.pass = view.token('--step-pass');
@@ -543,15 +543,21 @@ function renderLegend(view) {
         legendEntry(host, view.colors.center, view.strings.center || 'Center');
     }
 
-    if (view.breaks && view.breaks.total > 0) {
-        legendEntry(host, view.colors.life,
-            (view.strings.lifeBreak || 'Life Bar Break') + ' \u00b7 ' + view.breaks.life);
+    if (view.breaks && (view.breaks.total > 0 || view.breaks.unplaced > 0)) {
+        if (view.breaks.life > 0)
+            legendEntry(host, view.colors.life,
+                (view.strings.lifeBreak || 'Life Bar Break') + ' \u00b7 ' + view.breaks.life);
         if (view.breaks.pass > 0)
             legendEntry(host, view.colors.pass,
                 (view.strings.stagePass || 'Stage Pass') + ' \u00b7 ' + view.breaks.pass);
         if (view.breaks.yours.length > 0)
             legendEntry(host, view.colors.you,
                 (view.strings.yourRuns || 'Your runs') + ' \u00b7 ' + view.breaks.yours.length);
+        // Breaks imported without judgement counts can never be placed — the rail admits to
+        // them instead of letting the placed set read as the whole story (owner, 2026-08-30).
+        if (view.breaks.unplaced > 0)
+            legendEntry(host, view.colors.inkMuted,
+                (view.strings.unplaced || 'Unplaced') + ' \u00b7 ' + view.breaks.unplaced);
     }
 }
 

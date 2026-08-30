@@ -8335,6 +8335,9 @@
   <data name="Unpassed ToDos" xml:space="preserve">
     <value>Tiene {0} charts de nivel {1} marcados como Cosas que hacer que no ha pasado.</value>
   </data>
+  <data name="Unplaced" xml:space="preserve">
+	  <value>Sin ubicar</value>
+  </data>
   <data name="Unplayed" xml:space="preserve">
     <value>Sin jugar</value>
   </data>
