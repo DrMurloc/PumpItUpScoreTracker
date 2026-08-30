@@ -391,7 +391,7 @@ else
         {
             <MudTooltip Text="@L["Download"]">
                 <MudIconButton Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary" Variant="Variant.Outlined"
-                               OnClick="DownloadImage" Disabled="_isLoading" aria-label="@L["Download"]"></MudIconButton>
+                               OnClick="() => _downloadOpen = true" Disabled="_isLoading" aria-label="@L["Download"]"></MudIconButton>
             </MudTooltip>
         }
     </div>
@@ -704,6 +704,10 @@ else
                         IsToDo="_detailsChart != null && _todos.Contains(_detailsChart.Id)"
                         ScoreAgeDays="@(_detailsChart != null && _scores.TryGetValue(_detailsChart.Id, out var detailsAge) ? (int)(_now - detailsAge.RecordedDate).TotalDays : null)"
                         OnToDo="ToggleToDo" OnScoreRecorded="RefreshScores"></ChartDetailsDialog>
+    <ShareCardSettingsDialog @bind-Visible="_downloadOpen" SignedIn="CurrentUser.IsLoggedIn"
+                             PhoenixScoring="!IsLegacy" OffersPumbility="PumbilityAvailable && !IsLegacy"
+                             SampleBuilder="BuildSampleCard" OnDownload="DownloadImage"
+                             FileName="@DownloadFileName"></ShareCardSettingsDialog>
     </div>
 }
 <style>
@@ -1383,11 +1387,6 @@ else
     public string DifficultyBubblePath(ChartType chartType, DifficultyLevel level) =>
         ShareCardImages.DifficultyBubble(_currentMix, chartType, level);
 
-    private string LetterGradeImage(PhoenixLetterGrade letterGrade, bool isBroken) =>
-        ShareCardImages.LetterGrade(letterGrade, isBroken);
-
-    private string PlateImage(PhoenixPlate plate) => ShareCardImages.Plate(plate);
-
     private string LensDisplayName(string lens) => lens switch
     {
         "Pass" => L["Pass Difficulty"],
@@ -1396,71 +1395,149 @@ else
         _ => lens
     };
 
-    private async Task DownloadImage()
+    private bool _downloadOpen;
+
+    private string DownloadFileName => $"TierList_{_currentMix}_{_chartType}{_level}_{_now:yyyy-MM-dd}.png";
+
+    // The share-only reads, fetched when a toggle first asks for them (the page's own
+    // backfill shape) and dropped on every folder change — membership and gains are
+    // per-mix, per-type answers.
+    private IReadOnlySet<Guid>? _top50TypeIds;
+    private IReadOnlySet<Guid>? _top50CombinedIds;
+    private PumbilityProjection? _shareGains;
+
+    private async Task EnsureShareData(ShareCardOptions options)
+    {
+        if (!CurrentUser.IsLoggedIn || IsLegacy) return;
+        if (options.BoundaryOtherMixes && !_otherMixPassesLoaded)
+        {
+            _otherMixPasses = await Mediator.Send(new GetCrossMixPassesQuery(_currentMix));
+            _otherMixPassesLoaded = true;
+        }
+
+        if (_chartType == ChartType.CoOp) return;
+        if (options.BoundaryTop50 && _top50TypeIds == null)
+        {
+            _top50TypeIds = (await Mediator.Send(
+                    new GetTop50ForPlayerQuery(CurrentUser.User.Id, _chartType, 50, _currentMix)))
+                .Select(s => s.ChartId).ToHashSet();
+            _top50CombinedIds = (await Mediator.Send(
+                    new GetTop50ForPlayerQuery(CurrentUser.User.Id, null, 50, _currentMix)))
+                .Select(s => s.ChartId).ToHashSet();
+        }
+
+        if (options.Pumbility && options.ExpectedGains && _shareGains == null)
+            _shareGains = await Mediator.Send(
+                new ProjectPumbilityGainsQuery(CurrentUser.User.Id, _currentMix, _chartType));
+    }
+
+    private ShareCardComposer.TileFacts FactsFor(SongTierListEntry entry, ShareCardOptions options)
+    {
+        var chart = _charts[entry.ChartId];
+        var score = _scores.TryGetValue(chart.Id, out var s) ? s : null;
+        double? gain = _shareGains != null && _shareGains.ProjectedGains.TryGetValue(chart.Id, out var g)
+            ? g
+            : null;
+        PhoenixScore? expected = _shareGains != null && _shareGains.ExpectedScores.TryGetValue(chart.Id, out var e)
+            ? e
+            : null;
+        var current = options.Pumbility && !options.ExpectedGains
+            ? ShareCardComposer.CurrentPumbility(chart, score?.Score, score?.Plate, score?.IsBroken ?? false,
+                _currentMix)
+            : null;
+        return new ShareCardComposer.TileFacts(chart, score?.Score, score?.Plate,
+            Passed: score is { IsBroken: false },
+            Broken: score is { IsBroken: true },
+            IsToDo: _todos.Contains(chart.Id),
+            PassedInOtherMix: _otherMixPasses.Contains(chart.Id),
+            InTop50Type: _top50TypeIds?.Contains(chart.Id) ?? false,
+            InTop50Combined: _top50CombinedIds?.Contains(chart.Id) ?? false,
+            gain, expected, current,
+            options.Skills ? SkillChipsFor(chart) : null,
+            // One folder feeds this list, so its bubble rides the header, not the tiles
+            // (design doc §5).
+            BubbleUrl: null);
+    }
+
+    private TierListShareCard BuildCard(IReadOnlyList<TierListShareCard.Row> rows, ShareCardOptions options)
+    {
+        var palette = MixThemes.PaletteFor(_currentMix);
+        var title = _chartType == ChartType.CoOp
+            ? $"{L["CoOp"]} ×{_level}"
+            : $"{L[_chartType == ChartType.Single ? "Singles" : "Doubles"]} {_level}";
+        var stamp = PersonalizedActive
+            ? L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name].ToString()
+            : L["Community"].ToString();
+        var linkUrl = $"https://piuscores.arroweclip.se/TierLists/{_chartType}/{_level}";
+        // The mix rides the card itself: with 31 selectable mixes, a shared
+        // "Singles 18" screenshot is meaningless without it. GetName, not
+        // ToString — "The Perfect Collection", never "PerfectCollection".
+        return new TierListShareCard(
+            title,
+            $"{LensDisplayName(_tierListType)} · {_currentMix.GetName()} · {_now:yyyy-MM-dd}",
+            stamp,
+            palette.Primary,
+            palette.Background,
+            palette.Surface,
+            palette.Ink,
+            palette.InkMuted,
+            linkUrl,
+            DifficultyBubblePath(_chartType, _level),
+            rows,
+            // Anonymous downloads carry no personal state, so a legend would be
+            // explaining borders that are not in the picture.
+            CurrentUser.IsLoggedIn
+                ? ShareCardComposer.Legend(options, _currentMix, palette, key => L[key].Value)
+                : null);
+    }
+
+    /// <summary>
+    ///     The dialog's example: the first non-empty section's first six tiles, composed under
+    ///     the same options the download will use — the renderer ingests every jacket it is
+    ///     handed, so the sample stays small (design doc §6) and the full folder is only paid
+    ///     for by Download itself.
+    /// </summary>
+    private async Task<TierListShareCard?> BuildSampleCard(ShareCardOptions options)
+    {
+        await EnsureShareData(options);
+        var sample = _groups
+            .Select(g => (Group: g,
+                Entries: g.Entries.Where(ShouldChartShow).Where(e => _charts.ContainsKey(e.ChartId))
+                    .Take(6).ToArray()))
+            .FirstOrDefault(g => g.Entries.Any());
+        if (sample.Group == null) return null;
+        var palette = MixThemes.PaletteFor(_currentMix);
+        var rows = new[]
+        {
+            new TierListShareCard.Row(sample.Group.Name, sample.Group.ShareHex, sample.Entries
+                .Select(e => ShareCardComposer.Compose(FactsFor(e, options), options, _currentMix, palette))
+                .ToArray())
+        };
+        return BuildCard(rows, options);
+    }
+
+    private async Task DownloadImage(ShareCardOptions options)
     {
         _isBuildingImage = true;
         try
         {
+            await EnsureShareData(options);
             var palette = MixThemes.PaletteFor(_currentMix);
             var rows = _groups
                 .Select(g => (Group: g,
                     Entries: g.Entries.Where(ShouldChartShow).Where(e => _charts.ContainsKey(e.ChartId)).ToArray()))
                 .Where(g => g.Entries.Any())
                 .Select(g => new TierListShareCard.Row(g.Group.Name, g.Group.ShareHex, g.Entries
-                    .Select(e =>
-                    {
-                        var chart = _charts[e.ChartId];
-                        var score = _scores.TryGetValue(chart.Id, out var s) ? s : null;
-                        // The Compact card's own border language (field test round four): solid
-                        // for a pass, dotted for a broken run, dashed for a To-Do — the picture
-                        // says what the grid said.
-                        var passed = score is { IsBroken: false };
-                        var broken = score is { IsBroken: true };
-                        var todo = _todos.Contains(chart.Id);
-                        return new TierListShareCard.Tile(
-                            chart.Song.ImagePath.ToString(),
-                            score?.Score != null
-                                ? LetterGradeImage(score.Score.Value.LetterGradeFor(_currentMix), score.IsBroken)
-                                : null,
-                            score?.Plate != null ? PlateImage(score.Plate.Value) : null,
-                            passed ? MixPalette.Success :
-                            broken ? palette.InkMuted :
-                            todo ? MixPalette.Info : null,
-                            Outline: passed ? TileOutline.Solid :
-                            broken ? TileOutline.Dotted :
-                            todo ? TileOutline.Dashed : TileOutline.Dot);
-                    })
+                    .Select(e => ShareCardComposer.Compose(FactsFor(e, options), options, _currentMix, palette))
                     .ToArray()))
                 .ToArray();
-            var title = _chartType == ChartType.CoOp
-                ? $"{L["CoOp"]} ×{_level}"
-                : $"{L[_chartType == ChartType.Single ? "Singles" : "Doubles"]} {_level}";
-            var stamp = PersonalizedActive
-                ? L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name].ToString()
-                : L["Community"].ToString();
-            var linkUrl = $"https://piuscores.arroweclip.se/TierLists/{_chartType}/{_level}";
-            // The mix rides the card itself: with 31 selectable mixes, a shared
-            // "Singles 18" screenshot is meaningless without it. GetName, not
-            // ToString — "The Perfect Collection", never "PerfectCollection".
-            var card = new TierListShareCard(
-                title,
-                $"{LensDisplayName(_tierListType)} · {_currentMix.GetName()} · {_now:yyyy-MM-dd}",
-                stamp,
-                palette.Primary,
-                palette.Background,
-                palette.Surface,
-                palette.Ink,
-                palette.InkMuted,
-                linkUrl,
-                DifficultyBubblePath(_chartType, _level),
-                rows);
+            var card = BuildCard(rows, options);
 
             var bytes = await Mediator.Send(new GetTierListShareCardQuery(card));
             using var stream = new MemoryStream(bytes);
             using var streamRef = new DotNetStreamReference(stream);
             var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
-            await module.InvokeVoidAsync("downloadFileFromStream",
-                $"TierList_{_currentMix}_{_chartType}{_level}_{_now:yyyy-MM-dd}.png", streamRef);
+            await module.InvokeVoidAsync("downloadFileFromStream", DownloadFileName, streamRef);
         }
         finally
         {
@@ -1838,6 +1915,11 @@ else
     private async Task LoadFolder(CancellationToken cancellationToken)
     {
         _isLoading = true;
+        // The share-only reads are per-folder answers; a folder (or mix) change makes them
+        // stale, and the next dialog open re-fetches what its toggles actually need.
+        _top50TypeIds = null;
+        _top50CombinedIds = null;
+        _shareGains = null;
         StateHasChanged();
 
         // The PUMBILITY lens only answers for a band of folders around the peer group, and the
