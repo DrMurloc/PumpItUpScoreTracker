@@ -418,17 +418,18 @@ async function loadBreaks(view, chartId, mix) {
             cause: 'fin', cmds: [], x: lifeX, color: view.colors.inkMuted
         });
 
-    // Death marks cross the whole map as lines in their cause's color, thicker where runs
-    // stack; the viewer's own runs overlay in gold (owner, 2026-08-31).
+    // Death marks are TICKS on the map's right edge in their cause's color, thicker where
+    // runs stack — full-width lines drowned the section bands (owner, 2026-08-31). The
+    // viewer's own runs notch in gold at the very edge.
     view.drawMinimapPins = function (ctx, yOf, W) {
         view.pinMarks.forEach(function (pin) {
             ctx.fillStyle = pin.color;
-            ctx.fillRect(2, yOf(pin.t) + (pin.dy ? 2 : 0) - 1, W - 4,
+            ctx.fillRect(W - 12, yOf(pin.t) + (pin.dy ? 2 : 0) - 1, 10,
                 Math.max(2, Math.min(1 + pin.n, 5)));
         });
         ctx.fillStyle = view.colors.you;
         view.breaks.yours.forEach(function (t) {
-            ctx.fillRect(Math.round(W * 0.3), yOf(t), W - Math.round(W * 0.3) - 2, 2);
+            ctx.fillRect(W - 5, yOf(t), 4, 2);
         });
     };
 
