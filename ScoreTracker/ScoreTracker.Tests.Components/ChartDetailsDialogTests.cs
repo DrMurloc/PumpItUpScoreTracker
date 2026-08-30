@@ -447,6 +447,8 @@ public sealed class ChartDetailsDialogTests : TestContext
         var shell = cut.Find("[data-stepchart]");
         Assert.Equal("1", shell.GetAttribute("data-compact"));
         Assert.Equal("StepsOnly", shell.GetAttribute("data-visibility"));
-        Assert.Empty(cut.FindAll(".stepchart-minicol"));
+        // The dialog carries the whole-chart minimap too (owner, 2026-08-31) — it rides the
+        // dead space right of the rail at compact sizes.
+        Assert.Single(cut.FindAll(".stepchart-minicol"));
     }
 }

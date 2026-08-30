@@ -73,7 +73,7 @@ export async function mount(root) {
     } catch (e) { /* private mode */ }
 
     drawStrip(view);
-    initMinimap(view, compact);
+    initMinimap(view);
     buildChips(view);
     renderLegend(view);
     initModes(view);
@@ -418,11 +418,17 @@ async function loadBreaks(view, chartId, mix) {
             cause: 'fin', cmds: [], x: lifeX, color: view.colors.inkMuted
         });
 
-    view.drawMinimapPins = function (ctx, yOf) {
+    // Death marks cross the whole map as lines in their cause's color, thicker where runs
+    // stack; the viewer's own runs overlay in gold (owner, 2026-08-31).
+    view.drawMinimapPins = function (ctx, yOf, W) {
         view.pinMarks.forEach(function (pin) {
             ctx.fillStyle = pin.color;
-            ctx.fillRect(48 + (pin.cause === 'pass' ? 20 : 0), yOf(pin.t) - 1,
-                Math.max(3, Math.min(pin.n * 4, 18)), 3);
+            ctx.fillRect(2, yOf(pin.t) + (pin.dy ? 2 : 0) - 1, W - 4,
+                Math.max(2, Math.min(1 + pin.n, 5)));
+        });
+        ctx.fillStyle = view.colors.you;
+        view.breaks.yours.forEach(function (t) {
+            ctx.fillRect(Math.round(W * 0.3), yOf(t), W - Math.round(W * 0.3) - 2, 2);
         });
     };
 
@@ -556,14 +562,13 @@ function roundRect(ctx, x, y, w, h, r) {
     if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h);
 }
 
-function initMinimap(view, compact) {
+// The whole-chart map, on both hosts — the dialog rides it in the dead space right of the
+// rail at compact sizes (owner, 2026-08-31). CSS owns the dimensions; the canvas reads them.
+function initMinimap(view) {
     var canvas = view.root.querySelector('[data-stepchart-minimap]');
-    if (!canvas || compact) {
-        if (canvas && canvas.parentElement) canvas.parentElement.hidden = true;
-        return;
-    }
+    if (!canvas) return;
 
-    var W = 92, H = 600;
+    var W = canvas.clientWidth || 92, H = canvas.clientHeight || 600;
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = W * dpr;
     canvas.height = H * dpr;
@@ -578,10 +583,23 @@ function initMinimap(view, compact) {
 
     view.repaintMinimap = function () {
         ctx.clearRect(0, 0, W, H);
-        ctx.fillStyle = 'rgba(255,255,255,.14)';
+        // The notable sections band the full width first, so the chart's shape reads before
+        // any scrolling: the snapshot's ranges faint, the densest passage stronger.
+        var crux = cruxOf(view);
+        ctx.fillStyle = view.colors.accent;
+        view.ranges.forEach(function (range) {
+            ctx.globalAlpha = 0.16;
+            ctx.fillRect(0, yOf(range.s), W, Math.max(2, yOf(range.e) - yOf(range.s)));
+        });
+        if (crux) {
+            ctx.globalAlpha = 0.28;
+            ctx.fillRect(0, yOf(crux.s), W, Math.max(2, yOf(crux.e) - yOf(crux.s)));
+        }
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = 'rgba(255,255,255,.16)';
         for (var second = 0; second < seconds; second++) {
-            var w = (density[second] / maxDensity) * 36;
-            if (w > 0) ctx.fillRect(6, yOf(second), w, Math.max(1, (H - 8) / view.duration));
+            var w = (density[second] / maxDensity) * (W * 0.5);
+            if (w > 0) ctx.fillRect(4, yOf(second), w, Math.max(1, (H - 8) / view.duration));
         }
         if (view.drawMinimapPins) view.drawMinimapPins(ctx, yOf, W, H);
         ctx.strokeStyle = view.colors.accent;
@@ -622,8 +640,13 @@ function buildChips(view) {
     if (!host) return;
     host.innerHTML = '';
 
+    // The densest passage is named by its number — "Crux" meant nothing to players (owner,
+    // 2026-08-31), and the hero already speaks NPS one screen up.
     var crux = cruxOf(view);
-    if (crux) addChip(view, host, 'struct', view.strings.crux || 'Crux', crux.s);
+    if (crux) {
+        var nps = Math.round((crux.enps || 0) * 10) / 10;
+        addChip(view, host, 'struct', (view.strings.nps || '{0} NPS').replace('{0}', nps), crux.s);
+    }
     view.ranges.slice(0, 2).forEach(function (range) {
         if (crux && Math.abs(range.s - crux.s) < 3) return;
         addChip(view, host, 'struct', view.strings.range || 'Notable run', range.s);

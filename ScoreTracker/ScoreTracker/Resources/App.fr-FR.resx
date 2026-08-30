@@ -1954,9 +1954,6 @@
   <data name="Crossed over" xml:space="preserve">
     <value>Croisé</value>
   </data>
-  <data name="Crux" xml:space="preserve">
-	  <value>Passage critique</value>
-  </data>
   <data name="crux: {0}" xml:space="preserve">
     <value>passage clé : {0}</value>
   </data>

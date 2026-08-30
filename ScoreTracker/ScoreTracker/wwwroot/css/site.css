@@ -18323,8 +18323,13 @@ button.judg-strip:focus-visible {
 
 .stepchart-compact .stepchart-scroll {
     height: 380px;
-    max-width: 100%;
-    margin: 0 auto;
+    max-width: calc(100% - 96px);
+}
+
+/* The dialog's minimap rides the dead space right of the rail — same map, compact sizes. */
+.stepchart-compact .stepchart-minimap {
+    width: 76px;
+    height: 380px;
 }
 
 .stepchart-scroll canvas {

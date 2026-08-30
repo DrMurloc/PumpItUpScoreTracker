@@ -1942,9 +1942,6 @@
   <data name="Crossed over" xml:space="preserve">
     <value>Cruzado</value>
   </data>
-  <data name="Crux" xml:space="preserve">
-	  <value>Punto crítico</value>
-  </data>
   <data name="crux: {0}" xml:space="preserve">
     <value>punto duro: {0}</value>
   </data>

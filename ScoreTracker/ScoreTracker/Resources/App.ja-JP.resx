@@ -1955,9 +1955,6 @@
   <data name="Crossed over" xml:space="preserve">
     <value>クロスオーバー</value>
   </data>
-  <data name="Crux" xml:space="preserve">
-	  <value>最難所</value>
-  </data>
   <data name="crux: {0}" xml:space="preserve">
     <value>難所: {0}</value>
   </data>

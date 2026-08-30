@@ -7,10 +7,11 @@
 @inject IStringLocalizer<App> L
 
 @* The dialog's Steps tab (docs/design/step-chart-failure-map.md D14): the same shell the
-   chart page renders, compact — no minimap, tighter scales — mounted by the same
-   step-chart.js the moment the tab first becomes active, so a dialog that never shows the
-   tab never fetches a timeline. The module reads everything from the data attributes and
-   the strings block; this component owns no chart data at all. *@
+   chart page renders, compact — tighter scales, and the whole-chart minimap sized to the
+   compact strip (the dialog had dead space right of the rail; owner, 2026-08-31) — mounted
+   by the same step-chart.js the moment the tab first becomes active, so a dialog that never
+   shows the tab never fetches a timeline. The module reads everything from the data
+   attributes and the strings block; this component owns no chart data at all. *@
 <div class="stepchart-compact" data-stepchart data-chart-id="@Chart.Id" data-mix="@Mix"
      data-visibility="@Visibility" data-compact="1" data-level="@((int)Chart.Level)" @ref="_root" @key="Chart.Id">
     <script type="application/json" data-stepchart-strings>@StepChartStrings.For(L)</script>
@@ -31,6 +32,10 @@
     <div class="stepchart-chips" data-stepchart-chips></div>
     <div class="stepchart-viewer">
         <div class="stepchart-scroll" data-stepchart-scroll tabindex="0" aria-label="@L["Step chart"]"></div>
+        <div class="stepchart-minicol">
+            <canvas class="stepchart-minimap" data-stepchart-minimap></canvas>
+            <div class="stepchart-minicap">@L["whole chart"]</div>
+        </div>
     </div>
     <div class="stepchart-legend" data-stepchart-legend></div>
 </div>

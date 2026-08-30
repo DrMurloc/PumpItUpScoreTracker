@@ -17,7 +17,9 @@ public static class StepChartStrings
     {
         return new MarkupString(JsonSerializer.Serialize(new Dictionary<string, string>
         {
-            ["crux"] = localizer["Crux"],
+            // The densest passage is named by what it measures — "Crux" meant nothing to
+            // players (owner, 2026-08-31), and the site already speaks NPS on the chart hero.
+            ["nps"] = localizer["{0} NPS"],
             ["range"] = localizer["Notable run"],
             ["upper"] = localizer["Upper"],
             ["lower"] = localizer["Lower"],

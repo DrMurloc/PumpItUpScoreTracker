@@ -1942,9 +1942,6 @@
   <data name="Crossed over" xml:space="preserve">
     <value>크로스오버</value>
   </data>
-  <data name="Crux" xml:space="preserve">
-	  <value>최난 구간</value>
-  </data>
   <data name="crux: {0}" xml:space="preserve">
     <value>최난구간: {0}</value>
   </data>
