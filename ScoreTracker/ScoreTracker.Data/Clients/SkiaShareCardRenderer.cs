@@ -28,22 +28,40 @@ public sealed class SkiaShareCardRenderer : IShareCardRenderer
     private const int QrSize = 64;
     private const int LegendRowHeight = 24;
 
+    /// <summary>
+    ///     How many images fetch at once — for the pre-load and the page-driven prefetch both.
+    ///     Bounded (design doc §8): an unbounded WhenAll over sixty jackets was a burst the
+    ///     image host and this process's memory ramp both felt.
+    /// </summary>
+    private const int FetchBatchSize = 8;
+
     private static readonly HttpClient Http = new();
     private static readonly ConcurrentDictionary<string, SKBitmap?> ImageCache = new();
+
+    public async Task PrefetchImages(IReadOnlyList<string> urls, CancellationToken cancellationToken = default)
+    {
+        foreach (var batch in urls.Distinct().Chunk(FetchBatchSize))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await Task.WhenAll(batch.Select(u => LoadImage(u, cancellationToken)));
+        }
+    }
 
     public async Task<byte[]> RenderTierListCard(TierListShareCard card,
         CancellationToken cancellationToken = default)
     {
         // A folder is ~60 tiles; fetching each jacket/grade/plate sequentially made a
-        // cold render take ~10s. All the URLs are independent, so fetch them together —
-        // one pre-load pass de-duped by URL, then the per-tile lookups hit the cache.
+        // cold render take ~10s. All the URLs are independent, so fetch them in bounded
+        // batches — one pre-load pass de-duped by URL, then the per-tile lookups hit the
+        // cache. A page that already prefetched pays nothing here.
         var allUrls = card.Rows.SelectMany(r => r.Tiles)
             .SelectMany(t => new[] { t.JacketUrl, t.GradeUrl, t.PlateUrl, t.BubbleUrl, t.ExpectedGradeUrl })
             .Append(card.BubbleUrl)
             .Where(u => u != null)
             .Select(u => u!)
-            .Distinct();
-        await Task.WhenAll(allUrls.Select(u => LoadImage(u, cancellationToken)));
+            .Distinct()
+            .ToArray();
+        await PrefetchImages(allUrls, cancellationToken);
 
         var bubble = card.BubbleUrl == null ? null : await LoadImage(card.BubbleUrl, cancellationToken);
         var tiles = new Dictionary<TierListShareCard.Tile,

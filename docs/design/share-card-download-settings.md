@@ -88,3 +88,22 @@ where the full list gets paid for.
 
 Signed-out visitors get only the impersonal options (song names, skills); the personal toggles
 and boundaries need scores to mean anything.
+
+## 8. Download progress (round 6)
+
+The slow phase of a cold download is the renderer pulling every jacket into memory, and a
+MediatR query cannot report mid-flight — so the **page drives the slow phase itself**: it
+collects the composed card's distinct art URLs and warms the renderer's cache in **batches of
+eight** (`PrefetchShareCardArtCommand` → `IShareCardRenderer.PrefetchImages`), ticking a
+determinate bar per batch — "Fetching chart art — 34 of 61", real counts, never an invented
+percentage — then sends the render, which is a short indeterminate "Rendering…" tail against a
+warm cache. The renderer's own pre-load uses the same bounded batches, so nothing fans out
+unbounded anymore.
+
+While a download runs, **every control in the dialog disables** the moment the first batch is
+sent. The Close action becomes **Cancel** — pressing it cancels the loop and returns the dialog
+to its editable state — and **closing the dialog any other way (backdrop, escape) cancels too**.
+Cancellation keeps whatever already landed in the cache: warming is harmless and makes the next
+try faster. A warm cache flashes the bar to 100%.
+
+The preview keeps its plain spinner — six tiles do not earn a bar.

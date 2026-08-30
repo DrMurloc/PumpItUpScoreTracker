@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;
+using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.Records;
@@ -12,6 +13,18 @@ namespace ScoreTracker.Tests.ApplicationTests;
 
 public sealed class RenderShareCardHandlerTests
 {
+    [Fact]
+    public async Task PrefetchWarmsThePortWithTheRequestedBatch()
+    {
+        var urls = new[] { "https://example.test/a.png", "https://example.test/b.png" };
+        var renderer = new Mock<IShareCardRenderer>();
+        var handler = new RenderShareCardHandler(renderer.Object);
+
+        await handler.Handle(new PrefetchShareCardArtCommand(urls), CancellationToken.None);
+
+        renderer.Verify(r => r.PrefetchImages(urls, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task RendersTheRequestedCardThroughThePort()
     {
