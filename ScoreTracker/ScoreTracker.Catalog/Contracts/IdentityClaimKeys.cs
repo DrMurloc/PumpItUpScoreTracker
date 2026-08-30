@@ -21,6 +21,16 @@ public static class IdentityClaimKeys
     public const string VeryFast = "Very Fast";
     public const string VerySlow = "Very Slow";
 
+    /// <summary>
+    ///     The hold-share pair (docs/design/chart-identity.md §3.9). Keyed like the shape claims
+    ///     because the reader has to tell them apart to paint them: Hold-heavy wears Tech and
+    ///     Few Holds wears Stamina &amp; Runs (owner, 2026-08-29) — opposite families for
+    ///     opposite facts about the same measure.
+    /// </summary>
+    public const string HoldHeavy = "Hold-heavy";
+
+    public const string FewHolds = "Few Holds";
+
     /// <summary>Not a shape claim, but keyed the same way: a label the UI localizes, not a badge.</summary>
     public const string LongestRun = "Longest run";
 
@@ -28,6 +38,6 @@ public static class IdentityClaimKeys
     public static bool IsGeometryClaim(string badge)
     {
         return badge is QuarterDouble or HalfDouble or Wide or Twistless or TwistHeavy
-            or VeryFast or VerySlow;
+            or VeryFast or VerySlow or HoldHeavy or FewHolds;
     }
 }

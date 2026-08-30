@@ -26,9 +26,8 @@ public sealed class ChartBadgeProfileTests
         {
             [PiuCenterMetrics.Source] = "the source's name, not a measurement",
             [PiuCenterMetrics.DataVersion] = "provenance — which crawl banked the row",
-            [PiuCenterMetrics.TapRows] = "the score calculator's hold-tick decomposition",
             [PiuCenterMetrics.HoldRows] = "the score calculator's hold-tick decomposition",
-            [PiuCenterMetrics.HoldTicks] = "their pre-Phoenix tick sum: diagnostics only",
+            [PiuCenterMetrics.HoldShare] = "never banked — WithNoteCount derives and writes it",
             [PiuCenterMetrics.DifficultyPrediction] = "their level guess; the tier lists own ours",
             [PiuCenterMetrics.CruxLevel] = "peakiness is this against the printed level",
             [PiuCenterMetrics.CruxPosition] = "where the crux sits, which no chip says",
@@ -91,5 +90,67 @@ public sealed class ChartBadgeProfileTests
         Assert.Equal(9.5m, profile.GeometryOf(PiuCenterMetrics.Nps));
         Assert.Equal(120m, profile.GeometryOf(PiuCenterMetrics.ChartSpan));
         Assert.Equal(40m, profile.GeometryOf(PiuCenterMetrics.SustainTime));
+    }
+
+    /// <summary>
+    ///     §3.9. The share is every judgement that is not a banked tap row, over the mix's
+    ///     judged total — Iolite Sky D20's 156 steps inside 1,000 notes. The file's own tick
+    ///     list (848) comfortably accounts for the 844 inferred, so the reading is believed.
+    /// </summary>
+    [Fact]
+    public void TheNoteCountDerivesTheHoldShareFromTheBankedStepCount()
+    {
+        var chartId = Guid.NewGuid();
+        var profile = ChartBadgeProfile.From(chartId, new[]
+        {
+            new ChartSkillMetric(chartId, PiuCenterMetrics.TapRows, 156m, null),
+            new ChartSkillMetric(chartId, PiuCenterMetrics.HoldTicks, 848m, null)
+        }).WithNoteCount(1000);
+
+        Assert.Equal(0.844m, profile.GeometryOf(PiuCenterMetrics.HoldShare));
+        Assert.True(profile.HoldsAreCredible);
+    }
+
+    /// <summary>
+    ///     §3.9. Destination SHORT CUT D20: 278 banked taps against a judged 803 infers 525
+    ///     holds, from a file whose own hold list totals 123 ticks. The two numbers cannot both
+    ///     be true, so the file is not the shipped chart and the high claim must stay silent —
+    ///     a wrong file always errs by INFLATING the holds, because its missing steps read as
+    ///     ticks.
+    /// </summary>
+    [Fact]
+    public void AFileThatCannotAccountForTheInferredHoldsIsNotBelieved()
+    {
+        var chartId = Guid.NewGuid();
+        var profile = ChartBadgeProfile.From(chartId, new[]
+        {
+            new ChartSkillMetric(chartId, PiuCenterMetrics.TapRows, 278m, null),
+            new ChartSkillMetric(chartId, PiuCenterMetrics.HoldTicks, 123m, null)
+        }).WithNoteCount(803);
+
+        Assert.False(profile.HoldsAreCredible);
+        Assert.NotNull(profile.GeometryOf(PiuCenterMetrics.HoldShare));
+    }
+
+    /// <summary>
+    ///     §3.9. God Mode S4's file carries more taps than the game judges notes — an
+    ///     arithmetically impossible file says NOTHING about holds, rather than something
+    ///     extreme. And with no note count at all, the profile is untouched.
+    /// </summary>
+    [Fact]
+    public void AnImpossibleOrAbsentNoteCountSaysNothingAboutHolds()
+    {
+        var chartId = Guid.NewGuid();
+        var profile = ChartBadgeProfile.From(chartId, new[]
+        {
+            new ChartSkillMetric(chartId, PiuCenterMetrics.TapRows, 210m, null),
+            new ChartSkillMetric(chartId, PiuCenterMetrics.HoldTicks, 0m, null)
+        });
+
+        var impossible = profile.WithNoteCount(208);
+        Assert.Null(impossible.GeometryOf(PiuCenterMetrics.HoldShare));
+        Assert.True(impossible.HoldsAreCredible);
+
+        Assert.Same(profile, profile.WithNoteCount(null));
     }
 }

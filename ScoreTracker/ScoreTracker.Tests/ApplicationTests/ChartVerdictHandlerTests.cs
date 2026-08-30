@@ -48,7 +48,7 @@ public sealed class ChartVerdictHandlerTests
             .ReturnsAsync(phoenixChart);
         // History reads the flat mix-level map: this chart was D19 in XX, D20 in Phoenix.
         _charts.Setup(c => c.GetChartMixLevels(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { (chartId, MixEnum.XX, 19), (chartId, MixEnum.Phoenix, 20) });
+            .ReturnsAsync(new[] { (chartId, MixEnum.XX, 19, (int?)null), (chartId, MixEnum.Phoenix, 20, (int?)null) });
         _charts.Setup(c => c.GetChartLetterGradeDifficulties(It.IsAny<IEnumerable<Guid>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<ChartLetterGradeDifficulty>());

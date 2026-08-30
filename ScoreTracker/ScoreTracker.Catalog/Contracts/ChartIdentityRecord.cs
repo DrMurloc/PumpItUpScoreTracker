@@ -62,6 +62,13 @@ public enum IdentityChipKind
     Speed,
 
     /// <summary>
+    ///     The chart is made of holds, or of nothing but steps — the outer deciles of the
+    ///     folder's hold share, derived from the mix's own judged note count. Two words for it
+    ///     and no number: Hold-heavy or Few Holds, never a percentage.
+    /// </summary>
+    Holds,
+
+    /// <summary>
     ///     The chart's longest unbroken run, when the run is most of the chart. Absolute rather
     ///     than folder-relative: a fifty-second run is a fifty-second run whoever it stands next
     ///     to. Detail carries the seconds.

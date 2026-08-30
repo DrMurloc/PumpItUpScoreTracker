@@ -2546,6 +2546,9 @@
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>フィード — チャンネルを一度登録すれば、ボットが投稿し続けます</value>
   </data>
+  <data name="Few Holds" xml:space="preserve">
+    <value>ホールド少なめ</value>
+  </data>
   <data name="Fewer than 5 peers scored it" xml:space="preserve">
     <value>スコアを出したピアが 5 人未満</value>
   </data>
@@ -3029,6 +3032,9 @@
   </data>
   <data name="Hold ticks are perfects for as long as the hold is held — and from level 15 up they are about half of every chart's judgements. Hold density is one of the levers a chart is tuned with; and some charts simply are hold songs." xml:space="preserve">
     <value>ホールドのティックは押している間ずっとPerfectで、レベル15以上では譜面の判定の半分ほどを占めます。ホールドの密度は譜面のスコア難度を調整するレバーのひとつで、そもそもホールドが持ち味の曲もあります。</value>
+  </data>
+  <data name="Hold-heavy" xml:space="preserve">
+    <value>ホールド多め</value>
   </data>
   <data name="Hold-tick data hasn't been computed for this mix yet — it fills from the chart analysis crawl." xml:space="preserve">
     <value>このバージョンのホールドティックのデータはまだ計算されていません。譜面解析のクロールで埋まります。</value>

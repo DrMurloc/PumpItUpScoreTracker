@@ -2530,6 +2530,9 @@
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>피드 — 채널을 한 번 등록하면 봇이 계속 소식을 전합니다</value>
   </data>
+  <data name="Few Holds" xml:space="preserve">
+    <value>홀드 적음</value>
+  </data>
   <data name="Fewer than 5 peers scored it" xml:space="preserve">
     <value>점수를 낸 동료가 5명 미만</value>
   </data>
@@ -3012,6 +3015,9 @@
   </data>
   <data name="Hold ticks are perfects for as long as the hold is held — and from level 15 up they are about half of every chart's judgements. Hold density is one of the levers a chart is tuned with; and some charts simply are hold songs." xml:space="preserve">
     <value>홀드 틱은 누르는 동안 계속 퍼펙트로 판정되며, 레벨 15부터는 채보 판정의 절반 정도를 차지합니다. 홀드 밀도는 채보의 점수 난이도를 조율하는 수단 중 하나이고, 어떤 채보는 그냥 홀드가 정체성인 곡이기도 합니다.</value>
+  </data>
+  <data name="Hold-heavy" xml:space="preserve">
+    <value>홀드 많음</value>
   </data>
   <data name="Hold-tick data hasn't been computed for this mix yet — it fills from the chart analysis crawl." xml:space="preserve">
     <value>이 시리즈의 홀드 틱 데이터는 아직 계산되지 않았습니다. 채보 분석 크롤을 통해 채워집니다.</value>

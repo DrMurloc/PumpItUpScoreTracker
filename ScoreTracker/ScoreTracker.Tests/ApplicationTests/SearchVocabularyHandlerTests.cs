@@ -25,7 +25,7 @@ public sealed class SearchVocabularyHandlerTests
     public SearchVocabularyHandlerTests()
     {
         _charts.Setup(c => c.GetChartMixLevels(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<(Guid, MixEnum, int)>());
+            .ReturnsAsync(Array.Empty<(Guid, MixEnum, int, int?)>());
         _metrics.Setup(m => m.GetMetricsByChart(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillMetric>>());
         _scoringLevels.Setup(s => s.GetScoringLevels(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))

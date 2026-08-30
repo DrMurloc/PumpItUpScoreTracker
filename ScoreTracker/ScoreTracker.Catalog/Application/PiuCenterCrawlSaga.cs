@@ -109,24 +109,26 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
         var aliases = await ReconcileAliases(table, catalogCharts, now, cancellationToken);
         var resolved = ResolvedIn(aliases, table);
 
-        var banked = 0;
+        // Accumulated and written as ONE ingestion (owner, 2026-08-30): banking per chart
+        // evicted the whole-source metric cache ~4,500 times, and every live read between two
+        // writes re-hydrated the full table just to have the next write throw it away — the
+        // upload was taking prod down for its own duration.
+        var banked = new Dictionary<Guid, IReadOnlyList<ChartSkillMetric>>();
         foreach (var alias in resolved)
         {
             var body = ReadEntry($"{alias.ExternalKey}.json");
             if (body == null) continue;
             var page = PiuCenterDataParser.ParseChartPage(alias.ExternalKey, body);
             if (page == null) continue;
-            var rows = BuildMetrics(alias.ChartId!.Value, version, page,
+            banked[alias.ChartId!.Value] = BuildMetrics(alias.ChartId.Value, version, page,
                 listingByKey.GetValueOrDefault(alias.ExternalKey),
                 practiceByKey.GetValueOrDefault(alias.ExternalKey),
                 predictions.TryGetValue(alias.ExternalKey, out var prediction) ? prediction : null);
-            await _metrics.ReplaceChartMetrics(alias.ChartId.Value, PiuCenterMetrics.Source, rows,
-                cancellationToken);
-            banked++;
         }
 
+        await _metrics.ReplaceChartMetrics(PiuCenterMetrics.Source, banked, cancellationToken);
         _logger.LogInformation("piucenter snapshot import: banked metrics for {Banked}/{Total} resolved charts",
-            banked, resolved.Length);
+            banked.Count, resolved.Length);
         await RebuildFolderBaselines(catalogCharts, context, cancellationToken);
     }
 
@@ -230,7 +232,10 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
             .ToDictionary(g => g.Key, g => g.ToArray());
         var predictions = await _piuCenter.GetDifficultyPredictions(cancellationToken);
 
-        var fetched = 0;
+        // Same one-write rule as the snapshot import (owner, 2026-08-30): the fetches are the
+        // slow part and the rows are small, so the crawl holds them and banks once — one
+        // eviction at the end instead of one per fetched page.
+        var fetched = new Dictionary<Guid, IReadOnlyList<ChartSkillMetric>>();
         foreach (var alias in gaps)
         {
             var page = await _piuCenter.GetChartPage(alias.ExternalKey, cancellationToken);
@@ -240,15 +245,14 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
                 continue;
             }
 
-            var rows = BuildMetrics(alias.ChartId!.Value, version, page,
+            fetched[alias.ChartId!.Value] = BuildMetrics(alias.ChartId.Value, version, page,
                 listingByKey.GetValueOrDefault(alias.ExternalKey),
                 practiceByKey.GetValueOrDefault(alias.ExternalKey),
                 predictions.TryGetValue(alias.ExternalKey, out var prediction) ? prediction : null);
-            await _metrics.ReplaceChartMetrics(alias.ChartId.Value, PiuCenterMetrics.Source, rows, cancellationToken);
-            fetched++;
         }
 
-        _logger.LogInformation("piucenter crawl: banked metrics for {Fetched}/{Total} gap charts", fetched,
+        await _metrics.ReplaceChartMetrics(PiuCenterMetrics.Source, fetched, cancellationToken);
+        _logger.LogInformation("piucenter crawl: banked metrics for {Fetched}/{Total} gap charts", fetched.Count,
             gaps.Length);
     }
 
@@ -280,14 +284,25 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
         // mix that carries it.
         var typeById = catalogCharts.ToDictionary(c => c.Id, c => c.Type);
 
+        var mixLevels = await _charts.GetChartMixLevels(cancellationToken);
+        // Phoenix 2's judged counts are still refilling from play, so a null there borrows
+        // Phoenix 1's — the calculator's own fallback, and only for that pair: the count is
+        // what the GAME judges, and those two catalogs judge the same steppings.
+        var phoenixCounts = mixLevels
+            .Where(r => r.Mix == MixEnum.Phoenix && r.NoteCount != null)
+            .ToDictionary(r => r.ChartId, r => r.NoteCount);
+
         var folders = new Dictionary<(MixEnum Mix, ChartType Type, int Level), List<ChartBadgeProfile>>();
-        foreach (var (chartId, mix, level) in await _charts.GetChartMixLevels(cancellationToken))
+        foreach (var (chartId, mix, level, noteCount) in mixLevels)
         {
             if (!profiles.TryGetValue(chartId, out var profile)) continue;
             if (!typeById.TryGetValue(chartId, out var type)) continue;
             var key = (mix, type, level);
             if (!folders.TryGetValue(key, out var members)) folders[key] = members = new List<ChartBadgeProfile>();
-            members.Add(profile);
+            // The hold share is the one per-mix number in the sweep: the same chart is a
+            // different fraction of holds in each catalog, because the judged count moves.
+            members.Add(profile.WithNoteCount(noteCount ??
+                (mix == MixEnum.Phoenix2 ? phoenixCounts.GetValueOrDefault(chartId) : null)));
         }
 
         // A folder is judged against its NEIGHBOURS, not only itself: levels L-1, L and L+1 of

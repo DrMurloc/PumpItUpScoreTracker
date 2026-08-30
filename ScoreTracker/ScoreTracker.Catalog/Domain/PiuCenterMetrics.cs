@@ -61,6 +61,12 @@ internal static class PiuCenterMetrics
     // First segment start to last segment end, in seconds — what the longest run is a share of.
     public const string ChartSpan = "chart_span";
 
+    // DERIVED, never banked: what fraction of the chart's judgements are held rather than
+    // stepped, computed where a profile meets a mix's judged note count (the count is per-mix,
+    // so the value cannot live in this table). Reserved here so the folder-baseline row and the
+    // chip that reads it share one name (docs/design/chart-identity.md §3.9).
+    public const string HoldShare = "hold_share";
+
     // Which mix's simfile the analysis was actually run against, as 1 or 0 for "Phoenix".
     // Piucenter's corpus is stepcharts, and only 28.6% of it is Phoenix-era: the rest describes
     // whatever that song looked like in XX, PRIME, FIESTA and so on. Usually identical, because

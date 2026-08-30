@@ -39,7 +39,7 @@ public sealed class PiuCenterCrawlSagaTests
         _metrics.Setup(m => m.GetMetricsByChart(PiuCenterMetrics.Source, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillMetric>>());
         _charts.Setup(c => c.GetChartMixLevels(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<(Guid, MixEnum, int)>());
+            .ReturnsAsync(Array.Empty<(Guid, MixEnum, int, int?)>());
     }
 
     private PiuCenterCrawlSaga BuildSaga()
@@ -76,6 +76,45 @@ public sealed class PiuCenterCrawlSagaTests
         _metrics.Setup(m => m.GetMetrics(It.IsAny<IEnumerable<Guid>>(), PiuCenterMetrics.Source,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((existingMetrics ?? Array.Empty<ChartSkillMetric>()).ToArray());
+    }
+
+    /// <summary>
+    ///     §3.9. The hold share is the one per-mix number in the baseline sweep — the same chart
+    ///     is a different fraction of holds in each catalog, because the judged count moves —
+    ///     and a Phoenix 2 catalog whose count has not refilled from play yet borrows Phoenix
+    ///     1's, the calculator's own fallback. Both mixes' folders must end up carrying a
+    ///     measured hold_share row.
+    /// </summary>
+    [Fact]
+    public async Task TheBaselineSweepDerivesHoldSharePerMixWithThePhoenixFallback()
+    {
+        var chartId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithId(chartId).WithType(ChartType.Double).WithLevel(20).Build();
+        SetupDefaults(new[] { chart }, Array.Empty<PiuCenterChartListing>(),
+            Array.Empty<ExternalChartAlias>());
+        _metrics.Setup(m => m.GetMetricsByChart(PiuCenterMetrics.Source, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillMetric>>
+            {
+                [chartId] = new[]
+                {
+                    new ChartSkillMetric(chartId, PiuCenterMetrics.TapRows, 156m, null),
+                    new ChartSkillMetric(chartId, PiuCenterMetrics.HoldTicks, 848m, null)
+                }
+            });
+        _charts.Setup(c => c.GetChartMixLevels(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                (chartId, MixEnum.Phoenix, 20, (int?)1000),
+                (chartId, MixEnum.Phoenix2, 20, (int?)null)
+            });
+
+        await Consume();
+
+        foreach (var mix in new[] { MixEnum.Phoenix, MixEnum.Phoenix2 })
+            _baselines.Verify(b => b.ReplaceBaselines(mix, It.Is<IReadOnlyList<ChartFolderBaseline>>(rows =>
+                    rows.Any(r => r.Badge == PiuCenterMetrics.HoldShare && r.PresentCount == 1 &&
+                                  r.DrenchedCutoff == 0.844m)),
+                It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private static PiuCenterChartListing Listing(string key, ChartType type = ChartType.Single, int level = 15,
@@ -274,15 +313,54 @@ public sealed class PiuCenterCrawlSagaTests
 
         await Consume();
 
-        _metrics.Verify(m => m.ReplaceChartMetrics(chart.Id, PiuCenterMetrics.Source,
-            It.Is<IEnumerable<ChartSkillMetric>>(rows =>
-                rows.Any(r => r.MetricName == PiuCenterMetrics.DataVersion && r.Value == 50726m) &&
-                rows.Any(r => r.MetricName == "top3:bracket_drill" && r.Value == 1m) &&
-                rows.Any(r => r.MetricName == "badge_fraction:twist_90" && r.Value == 0.5m) &&
-                rows.Any(r => r.MetricName == "last_segment_badge:run") &&
-                rows.Any(r => r.MetricName == PiuCenterMetrics.TapRows && r.Value == 577m) &&
-                rows.Any(r => r.MetricName == PiuCenterMetrics.HoldRows && r.Value == 70m) &&
-                rows.Any(r => r.MetricName == PiuCenterMetrics.HoldTicks && r.Value == 481m)),
+        _metrics.Verify(m => m.ReplaceChartMetrics(PiuCenterMetrics.Source,
+            It.Is<IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillMetric>>>(byChart =>
+                byChart[chart.Id].Any(r => r.MetricName == PiuCenterMetrics.DataVersion && r.Value == 50726m) &&
+                byChart[chart.Id].Any(r => r.MetricName == "top3:bracket_drill" && r.Value == 1m) &&
+                byChart[chart.Id].Any(r => r.MetricName == "badge_fraction:twist_90" && r.Value == 0.5m) &&
+                byChart[chart.Id].Any(r => r.MetricName == "last_segment_badge:run") &&
+                byChart[chart.Id].Any(r => r.MetricName == PiuCenterMetrics.TapRows && r.Value == 577m) &&
+                byChart[chart.Id].Any(r => r.MetricName == PiuCenterMetrics.HoldRows && r.Value == 70m) &&
+                byChart[chart.Id].Any(r => r.MetricName == PiuCenterMetrics.HoldTicks && r.Value == 481m)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     The one-write rule (owner, 2026-08-30). Banking per chart evicted the whole-source
+    ///     metric cache once per chart — ~4,500 times per snapshot upload — and every live read
+    ///     between two writes re-hydrated the full table just to have the next write throw it
+    ///     away. However many pages a crawl fetches, the metrics land as ONE replace.
+    /// </summary>
+    [Fact]
+    public async Task ACrawlBanksEveryFetchedChartInOneWrite()
+    {
+        var first = new ChartBuilder().WithSongName("Repentance").WithLevel(20).Build();
+        var second = new ChartBuilder().WithSongName("Achluoias").WithLevel(24).Build();
+        var page = new PiuCenterChartPage("x", new[] { "run" }, 8,
+            new Dictionary<string, int> { ["run"] = 4 },
+            new Dictionary<string, int>(),
+            new[] { "run" }, true, 12.0m, "12th notes @ 240 bpm", "D20",
+            TapRows: 577, HoldRows: 70, HoldTickSum: 481);
+        SetupDefaults(new[] { first, second },
+            new[]
+            {
+                Listing("Repentance_-_Abel_D20_ARCADE", ChartType.Single, 20),
+                Listing("Achluoias_-_Abel_D24_ARCADE", ChartType.Single, 24)
+            },
+            new[]
+            {
+                new ExternalChartAlias("Repentance_-_Abel_D20_ARCADE", first.Id, ExternalAliasStatus.Auto, Now),
+                new ExternalChartAlias("Achluoias_-_Abel_D24_ARCADE", second.Id, ExternalAliasStatus.Auto, Now)
+            }, page: page);
+
+        await Consume();
+
+        _metrics.Verify(m => m.ReplaceChartMetrics(PiuCenterMetrics.Source,
+            It.Is<IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillMetric>>>(byChart =>
+                byChart.Count == 2 && byChart.ContainsKey(first.Id) && byChart.ContainsKey(second.Id)),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _metrics.Verify(m => m.ReplaceChartMetrics(It.IsAny<string>(),
+            It.IsAny<IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillMetric>>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -313,10 +391,12 @@ public sealed class PiuCenterCrawlSagaTests
             .ReturnsAsync(new[] { chart });
         _aliases.Setup(a => a.GetAliases(PiuCenterMetrics.Source, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<ExternalChartAlias>());
-        _metrics.Setup(m => m.ReplaceChartMetrics(chart.Id, PiuCenterMetrics.Source,
-                It.IsAny<IEnumerable<ChartSkillMetric>>(), It.IsAny<CancellationToken>()))
-            .Callback((Guid _, string _, IEnumerable<ChartSkillMetric> rows, CancellationToken _) =>
-                storage.AddRange(rows))
+        _metrics.Setup(m => m.ReplaceChartMetrics(PiuCenterMetrics.Source,
+                It.IsAny<IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillMetric>>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback((string _, IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillMetric>> byChart,
+                    CancellationToken _) =>
+                storage.AddRange(byChart.SelectMany(kv => kv.Value)))
             .Returns(Task.CompletedTask);
         _metrics.Setup(m => m.GetMetrics(It.IsAny<IEnumerable<Guid>>(), PiuCenterMetrics.Source,
                 It.IsAny<CancellationToken>()))

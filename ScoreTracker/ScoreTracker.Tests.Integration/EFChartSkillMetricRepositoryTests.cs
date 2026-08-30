@@ -43,6 +43,44 @@ public sealed class EFChartSkillMetricRepositoryTests : IAsyncLifetime
     private static ChartSkillMetric Metric(Guid chartId, string name, decimal value) =>
         new(chartId, name, value, null);
 
+    /// <summary>
+    ///     The ingestion write (owner, 2026-08-30): many charts land as one replace with one
+    ///     eviction at the end. It must fully replace each listed chart's rows, leave every
+    ///     unlisted chart and other source alone, and be visible to the next read — the exact
+    ///     contract the snapshot upload now depends on instead of ~4,500 per-chart writes.
+    /// </summary>
+    [Fact]
+    public async Task ABatchReplaceSwapsEveryListedChartAndOnlyThose()
+    {
+        var first = await _seed.SeedChartAsync();
+        var second = await _seed.SeedChartAsync();
+        var untouched = await _seed.SeedChartAsync();
+        var repository = BuildRepository();
+        await repository.ReplaceChartMetrics(first, Source,
+            new[] { Metric(first, "nps", 1.0m), Metric(first, "badge_fraction:jack", 0.4m) },
+            CancellationToken.None);
+        await repository.ReplaceChartMetrics(untouched, Source,
+            new[] { Metric(untouched, "nps", 5.5m) }, CancellationToken.None);
+        await repository.ReplaceChartMetrics(untouched, OtherSource,
+            new[] { Metric(untouched, "nps", 99m) }, CancellationToken.None);
+
+        await repository.ReplaceChartMetrics(Source,
+            new Dictionary<Guid, IReadOnlyList<ChartSkillMetric>>
+            {
+                [first] = new[] { Metric(first, "nps", 2.0m) },
+                [second] = new[] { Metric(second, "nps", 3.0m) }
+            }, CancellationToken.None);
+
+        var bySource = await repository.GetMetricsByChart(Source, CancellationToken.None);
+        // First's old rows are gone whole — the replace is a swap, not a merge.
+        Assert.Equal(2.0m, Assert.Single(bySource[first]).Value);
+        Assert.Equal(3.0m, Assert.Single(bySource[second]).Value);
+        Assert.Equal(5.5m, Assert.Single(bySource[untouched]).Value);
+        Assert.Equal(99m,
+            (await repository.GetMetrics(new[] { untouched }, OtherSource, CancellationToken.None))
+            .Single().Value);
+    }
+
     [Fact]
     public async Task GetMetricsReturnsOnlyTheChartsAskedFor()
     {

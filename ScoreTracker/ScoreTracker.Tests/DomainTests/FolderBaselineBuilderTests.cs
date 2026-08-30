@@ -74,6 +74,29 @@ public sealed class FolderBaselineBuilderTests
         Assert.True(run.IsCore(0.6m));
     }
 
+    /// <summary>
+    ///     §3.9. The hold-share row stores the Few Holds bound in the low slot and Hold-heavy's
+    ///     in the high one, over exactly the charts that derived a share — a folder is only as
+    ///     covered as its judged note counts are.
+    /// </summary>
+    [Fact]
+    public void TheHoldShareRowStoresTheFolderOuterDeciles()
+    {
+        var charts = Enumerable.Range(1, 10)
+            .Select(i => Chart(("run", 0.5m)) with
+            {
+                Geometry = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
+                    { [PiuCenterMetrics.HoldShare] = 0.1m * i }
+            })
+            .ToArray();
+
+        var row = Build(charts).Single(b => b.Badge == PiuCenterMetrics.HoldShare);
+
+        Assert.Equal(0.1m, row.CoreCutoff);
+        Assert.Equal(0.9m, row.DrenchedCutoff);
+        Assert.Equal(10, row.PresentCount);
+    }
+
     [Fact]
     public void AnEmptyFolderProducesNoBaselines()
     {

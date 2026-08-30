@@ -2546,6 +2546,9 @@
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>Glorgmorg — grorpplglblub gro glmurmblarg mrmurm, mrp murg mrpmr gl gro</value>
   </data>
+  <data name="Few Holds" xml:space="preserve">
+    <value>Mgl Gurg</value>
+  </data>
   <data name="Fewer than 5 peers scored it" xml:space="preserve">
     <value>Murgl grogrgl 5 maglmurp mrglrgl</value>
   </data>
@@ -3029,6 +3032,9 @@
   </data>
   <data name="Hold ticks are perfects for as long as the hold is held — and from level 15 up they are about half of every chart's judgements. Hold density is one of the levers a chart is tuned with; and some charts simply are hold songs." xml:space="preserve">
     <value>Gurg prgl gro plglgrglurg ba gro grogro gro gurg gurggro — ro blarg grorpmurm 15 gro grglblarg gro ro blugro blarg blub murgl murmgrgl. Gurg gromurg gro mrp blarg gro graplub a murgl murmgro plgl; ro glub murgl groblo gro gurg mrgl.</value>
+  </data>
+  <data name="Hold-heavy" xml:space="preserve">
+    <value>Gurg Murg</value>
   </data>
   <data name="Hold-tick data hasn't been computed for this mix yet — it fills from the chart analysis crawl." xml:space="preserve">
     <value>Gurg-prgl gru bo grombgro ba ur mrg larg — ur mrglmr blarg gro murgl grulbgro grrgro.</value>

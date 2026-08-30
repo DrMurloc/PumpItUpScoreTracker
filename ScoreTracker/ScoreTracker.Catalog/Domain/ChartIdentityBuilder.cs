@@ -37,6 +37,7 @@ internal static class ChartIdentityBuilder
         if (Width(profile, folder) is { } width) identity.Add(width);
         if (Twist(profile, folder) is { } twist) identity.Add(twist);
         if (Speed(profile, folder) is { } speed) identity.Add(speed);
+        if (Holds(profile, folder) is { } holds) identity.Add(holds);
         if (LongestRun(profile) is { } run) identity.Add(run);
 
         // 2 — what almost nothing else here has. Rarest first, because the rarer it is the more
@@ -230,6 +231,36 @@ internal static class ChartIdentityBuilder
         return seconds / span >= (decimal)ChartIdentityRules.LongestRunShare
             ? new IdentityChipRecord(IdentityChipKind.LongestRun, IdentityTier.Identity,
                 IdentityClaimKeys.LongestRun, IdentityClaimKeys.LongestRun, null, seconds)
+            : null;
+    }
+
+    /// <summary>
+    ///     Whether the chart is made of holds — or of nothing but the steps
+    ///     (docs/design/chart-identity.md §3.9). The share arrives derived from the mix's own
+    ///     judged note count, so this never reads the file's hold data as truth; the credibility
+    ///     veto is the one place the file is consulted, and only to ask whether it could produce
+    ///     that many holds at all. A vetoed high claim is silence, not a fall-through — a chart
+    ///     whose share sits at the top of its folder is not "few holds" either way.
+    /// </summary>
+    private static IdentityChipRecord? Holds(ChartBadgeProfile profile,
+        IReadOnlyDictionary<string, ChartFolderBaseline> folder)
+    {
+        if (profile.GeometryOf(PiuCenterMetrics.HoldShare) is not { } share) return null;
+        // The size floor, not just a non-empty check: a thin window's extremes wear these
+        // chips by rank alone (owner, 2026-08-30 — "no hold identity for those folders").
+        if (!folder.TryGetValue(PiuCenterMetrics.HoldShare, out var baseline)
+            || baseline.PresentCount < ChartIdentityRules.MinimumHoldFolderSize) return null;
+
+        if (baseline.DrenchedCutoff > 0 && share >= baseline.DrenchedCutoff)
+            return profile.HoldsAreCredible
+                ? Geometry(IdentityChipKind.Holds, IdentityClaimKeys.HoldHeavy, share)
+                : null;
+
+        // The p10 > 0 floor: where most of a folder has no holds at all, the low tail IS the
+        // folder — an unfloored claim fires on a third of S01–S03 — and the absence of holds
+        // only says something where holds are what is normal.
+        return baseline.CoreCutoff > 0 && share <= baseline.CoreCutoff
+            ? Geometry(IdentityChipKind.Holds, IdentityClaimKeys.FewHolds, share)
             : null;
     }
 

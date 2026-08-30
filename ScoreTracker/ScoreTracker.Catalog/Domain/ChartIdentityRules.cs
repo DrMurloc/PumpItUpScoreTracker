@@ -225,6 +225,46 @@ internal static class ChartIdentityRules
     /// </summary>
     public const double SpeedIdentityZ = 1.5;
 
+    /// <summary>
+    ///     Where a chart's hold share has to land in its folder before holds are what it IS —
+    ///     or the absence of them is (docs/design/chart-identity.md §3.9). Folder-relative like
+    ///     the twist claims: from level 14 up the median chart is roughly half holds, so an
+    ///     absolute bar would read a normal chart as remarkable at one level and miss a
+    ///     remarkable one at the next.
+    /// </summary>
+    public const double HoldHeavyQuantile = 0.90;
+
+    /// <summary>
+    ///     The low tail. Only meaningful where the folder's p10 is above zero — below S10 most
+    ///     of a folder has no holds at all, so its p10 IS zero and an unfloored claim fires on a
+    ///     third of the folder. The claim site enforces that floor.
+    /// </summary>
+    public const double FewHoldsQuantile = 0.10;
+
+    /// <summary>
+    ///     How many measured peers a window needs before the hold claims may be judged at all
+    ///     (owner, 2026-08-30). In a thin L±1 window the p90 cutoff IS the top value or two, so
+    ///     the window's max-share chart always wears Hold-heavy and its min-share chart Few
+    ///     Holds — a claim earned by rank, not by being remarkable. Every counted chart carries
+    ///     a hold share, which is why this metric is the first dense enough to need the floor;
+    ///     it covers exactly D28, S26 and D4 today, and any boss folder that appears later
+    ///     (D29) the day it exists. Deliberately hold-only: the sparser quantile claims stay on
+    ///     the engine's shipped semantics.
+    /// </summary>
+    public const int MinimumHoldFolderSize = 15;
+
+    /// <summary>
+    ///     How far the inferred hold ticks may run past the tick total the chart's own file
+    ///     contains before the file is disbelieved outright. The inference borrows the file's
+    ///     step count, and a file that is not the shipped chart always errs by INFLATING the
+    ///     holds — its missing steps read as ticks — so when the inference needs half again more
+    ///     holds than the file can produce, the two numbers cannot both be true and the
+    ///     Hold-heavy claim stays silent. Destination SHORT CUT D20 infers 525 against a file
+    ///     carrying 123 (vetoed); Iolite Sky D20 infers 844 against 848 (keeps). The low claim
+    ///     needs no guard: this failure mode cannot point that direction.
+    /// </summary>
+    public const decimal HoldTrustMultiple = 1.5m;
+
     public const int MaxUniqueChips = 2;
     public const int MaxCoreChips = 3;
 

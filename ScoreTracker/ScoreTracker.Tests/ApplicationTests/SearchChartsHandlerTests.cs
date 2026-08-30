@@ -35,7 +35,7 @@ public sealed class SearchChartsHandlerTests
         _charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
         _charts.Setup(c => c.GetChartMixLevels(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<(Guid, MixEnum, int)>());
+            .ReturnsAsync(Array.Empty<(Guid, MixEnum, int, int?)>());
         _metrics.Setup(m => m.GetMetricsByChart(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillMetric>>());
         _tierLists.Setup(t => t.GetAllEntries(It.IsAny<MixEnum>(), It.IsAny<Name>(), It.IsAny<CancellationToken>()))

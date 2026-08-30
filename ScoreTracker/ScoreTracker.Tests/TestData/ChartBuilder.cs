@@ -37,7 +37,7 @@ internal sealed class ChartBuilder
     public ChartBuilder WithMix(MixEnum mix) { _mix = mix; return this; }
     public ChartBuilder WithOriginalMix(MixEnum mix) { _originalMix = mix; return this; }
     public ChartBuilder WithStepArtist(string stepArtist) { _stepArtist = Name.From(stepArtist); return this; }
-    public ChartBuilder WithNoteCount(int noteCount) { _noteCount = noteCount; return this; }
+    public ChartBuilder WithNoteCount(int? noteCount) { _noteCount = noteCount; return this; }
     public ChartBuilder WithSlot(LegacySlot slot) { _slot = slot; return this; }
     public ChartBuilder WithPlayerCount(int playerCount) { _playerCountOverride = playerCount; return this; }
 
