@@ -476,6 +476,24 @@ public static class MixThemes
     /// <summary>Muted grey for unpassed / not-cleared / below-threshold segments (the broken-grade grey).</summary>
     public static string UnpassedHex => UnpassedGradeHex;
 
+    // The step-chart strip's mix-invariant hues (docs/design/step-chart-failure-map.md D12).
+    // Panel colors follow the classic noteskin: upper diagonals red, lower blue, center
+    // yellow. Quantization follows the DDR/ITG convention players already read (4th red,
+    // 8th blue, 12th purple, 16th yellow); feet are a teal/pink pair chosen to collide with
+    // neither the panels nor the rail's red/violet.
+    private const string StepPanelUpperHex = "#FF4D5E";
+    private const string StepPanelLowerHex = "#3FA9FF";
+    private const string StepPanelCenterHex = "#FFD23F";
+    private const string StepFootLeftHex = "#40C9B5";
+    private const string StepFootRightHex = "#FF7BAC";
+    private const string StepQuant4Hex = "#FF5252";
+    private const string StepQuant8Hex = "#4D8DFF";
+    private const string StepQuant12Hex = "#B14DFF";
+    private const string StepQuant16Hex = "#FFD23F";
+    private const string StepQuantOtherHex = "#34D399";
+    private const string StepPassPinHex = "#B18CFF";
+    private const string StepYouHex = "#FFD166";
+
     // Qualitative series palette for chart lines that carry no semantic-ramp meaning
     // (By-Level Breakdown distribution stats and completion thresholds). ApexCharts needs
     // literals; these are CVD-spaced and distinct on the dark canvas. Mix-invariant.
@@ -535,6 +553,24 @@ public static class MixThemes
         var variability = string.Join("\n", VariabilityColors.Select(kv =>
             $"    --vary-{VariabilityIndex(kv.Key)}: {kv.Value};"));
         var speed = string.Join("\n", SpeedBandColors.Select((hex, i) => $"    --speed-{i + 1}: {hex};"));
+        // The step-chart strip's vocabulary (docs/design/step-chart-failure-map.md D12).
+        // Mix-invariant like the judgement colors: an up-left arrow is red in every theme, a
+        // left foot is teal in every theme. Three groups, three exclusive coloring modes —
+        // panels (the classic skin's upper-red/lower-blue/center-yellow), feet, and DDR-style
+        // quantization — plus the failure rail's two marks (the life pin reuses --life-danger).
+        var stepChart =
+            $"    --panel-upper: {StepPanelUpperHex};\n" +
+            $"    --panel-lower: {StepPanelLowerHex};\n" +
+            $"    --panel-center: {StepPanelCenterHex};\n" +
+            $"    --foot-l: {StepFootLeftHex};\n" +
+            $"    --foot-r: {StepFootRightHex};\n" +
+            $"    --quant-4: {StepQuant4Hex};\n" +
+            $"    --quant-8: {StepQuant8Hex};\n" +
+            $"    --quant-12: {StepQuant12Hex};\n" +
+            $"    --quant-16: {StepQuant16Hex};\n" +
+            $"    --quant-other: {StepQuantOtherHex};\n" +
+            $"    --step-pass: {StepPassPinHex};\n" +
+            $"    --step-you: {StepYouHex};";
         return $@":root {{
     --mix-bg: {p.Background};
     --mix-surface: {p.Surface};
@@ -565,6 +601,7 @@ public static class MixThemes
 {life}
 {variability}
 {speed}
+{stepChart}
 }}";
     }
 
