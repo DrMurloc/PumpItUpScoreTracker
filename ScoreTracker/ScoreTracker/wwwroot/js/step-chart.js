@@ -490,12 +490,13 @@ function initModes(view) {
     if (view.mode !== 'arrow') apply();
 }
 
-// Sprite-matched geometry (owner, 2026-08-30, from cabinet footage): the arrow's own edges
-// are the flat ones. A corner arrow is the cabinet shape — a solid head whose 90° tip IS the
-// tile corner and whose outer edges lie flush on the tile, then a chevron band and the
-// back-corner piece behind it, every cut's apex pointing at the tip — so a quad reads as one
-// flat row of four. The center panel is the cabinet's octagon. Lane = panel % 5 in pad order
-// DL UL C UR DR; the canonical arrow points down-right and flips into place by sign.
+// The cabinet's arrow sprite (owner, 2026-08-30): a ">>>" glyph rotated onto the diagonal —
+// a triangular head whose 90° tip is the cell corner and whose two LEGS lie flat on the cell
+// edges (those legs are the "flat sides"), a chevron notch in its back, and two tapering
+// chevron ribs behind it with background between the pieces. Rotating ">>>" by 45° makes
+// every leg and rib arm axis-aligned, which is exactly why a quad of them reads as one flat
+// row. The center panel is the cabinet's octagon. Lane = panel % 5 in pad order DL UL C UR
+// DR; the canonical arrow points down-right and flips into place by sign.
 var CORNER_SIGNS = { 0: [-1, 1], 1: [-1, -1], 3: [1, -1], 4: [1, 1] };
 
 function drawArrow(ctx, x, y, size, panel, color) {
@@ -523,41 +524,26 @@ function drawArrow(ctx, x, y, size, panel, color) {
         ctx.stroke();
     } else {
         ctx.scale(CORNER_SIGNS[lane][0], CORNER_SIGNS[lane][1]);
-        // The chevron cuts are nested squares anchored at the BACK corner; c is the square's
-        // side as a fraction of the tile, so each piece's ends land flush on the tile edges.
-        var q = function (c) { return -h + c * 2 * h; };
-        var piece = function (path) {
+        // Tip coordinates, as fractions of the cell side: a runs from the tip back along one
+        // leg, b along the other. min(a,b) walks the chevron cuts, a+b walks the hypotenuses.
+        var u = h * 2;
+        var P = function (a, b) { return [h - a * u, h - b * u]; };
+        var poly = function (pts) {
             ctx.beginPath();
-            path();
+            pts.forEach(function (p, i) { i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); });
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
         };
-        var d = q(0.60);
-        piece(function () {
-            ctx.moveTo(h, -h);
-            ctx.lineTo(h, h);
-            ctx.lineTo(-h, h);
-            ctx.lineTo(-h, d);
-            ctx.lineTo(d, d);
-            ctx.lineTo(d, -h);
-        });
-        var b0 = q(0.30), b1 = q(0.52);
-        piece(function () {
-            ctx.moveTo(b1, -h);
-            ctx.lineTo(b1, b1);
-            ctx.lineTo(-h, b1);
-            ctx.lineTo(-h, b0);
-            ctx.lineTo(b0, b0);
-            ctx.lineTo(b0, -h);
-        });
-        var a = q(0.22);
-        piece(function () {
-            ctx.moveTo(-h, -h);
-            ctx.lineTo(a, -h);
-            ctx.lineTo(a, a);
-            ctx.lineTo(-h, a);
-        });
+        // Head: legs 0.78 of the side flat on the cell edges, pointy barbs, notched back.
+        var l = 0.78, c = 0.20;
+        poly([P(0, 0), P(l, 0), P(l - c, c), P(c, c), P(c, l - c), P(0, l)]);
+        // Ribs: chevron bands between min-cuts r0..r1, ends cut on the hypotenuse a+b = L.
+        var rib = function (r0, r1, L) {
+            poly([P(r0, r0), P(L - r0, r0), P(L - r1, r1), P(r1, r1), P(r1, L - r1), P(r0, L - r0)]);
+        };
+        rib(0.28, 0.42, 0.94);
+        rib(0.50, 0.64, 1.30);
     }
     ctx.restore();
 }
