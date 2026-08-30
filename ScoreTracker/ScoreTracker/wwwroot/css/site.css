@@ -18444,3 +18444,30 @@ button.judg-strip:focus-visible {
         max-width: 100%;
     }
 }
+
+/* The rail's hover tooltip: fixed beside the cursor, ink on the deepest surface. */
+.stepchart-tip {
+    position: fixed;
+    z-index: 3000;
+    pointer-events: none;
+    background: var(--mix-bg);
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 8px;
+    padding: 8px 11px;
+    font-size: .8rem;
+    color: var(--mix-ink);
+    max-width: 260px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, .5);
+}
+
+.stepchart-tip-time {
+    color: var(--mix-ink-muted);
+    font-size: .72rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.stepchart-tip-hedge {
+    color: var(--mix-ink-muted);
+    font-size: .76rem;
+    margin-top: 3px;
+}

@@ -76,6 +76,8 @@ export async function mount(root) {
         if (caveat) caveat.hidden = false;
     }
 
+    if (root.getAttribute('data-visibility') === 'Full') await loadBreaks(view, chartId, mix);
+
     // Land on the crux rather than the silent intro — the reader came to see the chart's teeth.
     var crux = cruxOf(view);
     if (crux) box.scrollTop = Math.max(0, yOf(crux.s) - 90);
@@ -201,6 +203,94 @@ function drawTile(view, ctx, y0, y1) {
                 rowColorFor(view, row, p));
         }
     });
+
+    drawRail(view, ctx, y0, y1);
+}
+
+// The failure rail (design doc D1/D2): a thin axis beside the strip, life-bar pins in the
+// near column and proven-Pass pins in the far one, multiplied heads where runs stack, and
+// the viewer's own runs as gold open diamonds on the axis itself.
+function drawRail(view, ctx, y0, y1) {
+    if (!view.breaks) return;
+    ctx.strokeStyle = 'rgba(255,255,255,.12)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(view.railX + 0.5, y0);
+    ctx.lineTo(view.railX + 0.5, y1);
+    ctx.stroke();
+
+    view.pinMarks.forEach(function (pin) {
+        var y = view.yOf(pin.t);
+        if (y < y0 - 24 || y > y1 + 24) return;
+        var big = pin.n > 1;
+        var r = big ? 9.5 : 5;
+        ctx.strokeStyle = pin.color;
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(view.railX, y + 0.5);
+        ctx.lineTo(pin.x - r, y + 0.5);
+        ctx.stroke();
+        ctx.fillStyle = pin.color;
+        ctx.beginPath();
+        ctx.arc(view.railX, y, 2.6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(pin.x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+        if (big) {
+            ctx.fillStyle = 'rgba(10,10,14,.92)';
+            ctx.font = '700 10px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('\u00d7' + pin.n, pin.x, y + 0.5);
+        }
+    });
+
+    ctx.strokeStyle = view.colors.you;
+    ctx.lineWidth = 2;
+    view.breaks.yours.forEach(function (t) {
+        var y = view.yOf(t);
+        if (y < y0 - 12 || y > y1 + 12) return;
+        ctx.save();
+        ctx.translate(view.railX, y);
+        ctx.rotate(Math.PI / 4);
+        ctx.strokeRect(-4.5, -4.5, 9, 9);
+        ctx.restore();
+    });
+}
+
+async function loadBreaks(view, chartId, mix) {
+    var breaks = await fetchJson('/Charts/StepChart/' + chartId + '/Breaks?mix=' + encodeURIComponent(mix));
+    if (!breaks || breaks.total === 0) return;
+
+    view.colors.life = view.token('--life-danger');
+    view.colors.pass = view.token('--step-pass');
+    view.colors.you = view.token('--step-you');
+    view.breaks = breaks;
+
+    var lifeX = view.railX + (view.scale.railW >= 96 ? 24 : 18);
+    var passX = view.railX + (view.scale.railW >= 96 ? 56 : 44);
+    view.pinMarks = breaks.pins.map(function (pin) {
+        return {
+            t: pin.t, n: pin.n, from: pin.from, to: pin.to, cause: pin.cause,
+            x: pin.cause === 'pass' ? passX : lifeX,
+            color: pin.cause === 'pass' ? view.colors.pass : view.colors.life
+        };
+    });
+
+    view.drawMinimapPins = function (ctx, yOf) {
+        view.pinMarks.forEach(function (pin) {
+            ctx.fillStyle = pin.color;
+            ctx.fillRect(48 + (pin.cause === 'pass' ? 20 : 0), yOf(pin.t) - 1,
+                Math.max(3, Math.min(pin.n * 4, 18)), 3);
+        });
+    };
+
+    drawStrip(view);
+    if (view.repaintMinimap) view.repaintMinimap();
+    buildChips(view);
+    renderLegend(view);
+    bindPinTips(view);
 }
 
 // Mode-aware colors; Feet and Timing arrive with the mode toggle and read the same seams.
@@ -326,6 +416,20 @@ function buildChips(view) {
         if (crux && Math.abs(range.s - crux.s) < 3) return;
         addChip(view, host, 'struct', view.strings.range || 'Notable run', range.s);
     });
+
+    // Structure first, then the two biggest death clusters by count (design doc D17).
+    if (view.pinMarks) {
+        view.pinMarks.slice().sort(function (a, b) { return b.n - a.n; })
+            .filter(function (pin) { return pin.n >= 3; })
+            .slice(0, 2)
+            .forEach(function (pin) {
+                addChip(view, host, pin.cause === 'pass' ? 'pass' : 'life',
+                    pin.cause === 'pass'
+                        ? (view.strings.passCluster || 'Pass cluster')
+                        : (view.strings.deathSpike || 'Death spike'),
+                    pin.t, pin.n);
+            });
+    }
 }
 
 function addChip(view, host, kind, label, t, count) {
@@ -355,6 +459,62 @@ function renderLegend(view) {
     legendEntry(host, view.colors.upper, view.strings.upper || 'Upper');
     legendEntry(host, view.colors.lower, view.strings.lower || 'Lower');
     legendEntry(host, view.colors.center, view.strings.center || 'Center');
+
+    if (view.breaks && view.breaks.total > 0) {
+        legendEntry(host, view.colors.life,
+            (view.strings.lifeDeaths || 'Life bar deaths') + ' \u00b7 ' + view.breaks.life);
+        if (view.breaks.pass > 0)
+            legendEntry(host, view.colors.pass,
+                (view.strings.stagePass || 'Stage Pass') + ' \u00b7 ' + view.breaks.pass);
+        if (view.breaks.yours.length > 0)
+            legendEntry(host, view.colors.you,
+                (view.strings.yourRuns || 'Your runs') + ' \u00b7 ' + view.breaks.yours.length);
+    }
+}
+
+// Hovering a pin explains it: the span, the count, the cause — and on Singles pads the D34
+// hedge, because a proven non-lifebar break may be the other pad's command.
+function bindPinTips(view) {
+    if (view.tipBound) return;
+    view.tipBound = true;
+    var tip = document.createElement('div');
+    tip.className = 'stepchart-tip';
+    tip.hidden = true;
+    document.body.appendChild(tip);
+
+    view.box.addEventListener('mousemove', function (e) {
+        if (!view.pinMarks) { tip.hidden = true; return; }
+        var rect = view.box.getBoundingClientRect();
+        var x = e.clientX - rect.left + view.box.scrollLeft;
+        var y = e.clientY - rect.top + view.box.scrollTop;
+        var hit = null;
+        for (var i = 0; i < view.pinMarks.length; i++) {
+            var pin = view.pinMarks[i];
+            var r = (pin.n > 1 ? 9.5 : 5) + 5;
+            var dx = x - pin.x;
+            var dy = y - view.yOf(pin.t);
+            if (dx * dx + dy * dy <= r * r) { hit = pin; break; }
+        }
+
+        if (!hit) { tip.hidden = true; return; }
+        var range = hit.n > 1 ? fmt(hit.from) + '\u2013' + fmt(hit.to) : fmt(hit.t);
+        var runs = hit.n === 1
+            ? (view.strings.oneRunEnded || '1 run ended here')
+            : (view.strings.runsEnded || '{0} runs ended here').replace('{0}', hit.n);
+        var cause = hit.cause === 'pass'
+            ? (view.strings.stagePass || 'Stage Pass')
+            : (view.strings.lifeBar || 'Life bar');
+        var hedge = hit.cause === 'pass' && view.panels === 5
+            ? '<div class="stepchart-tip-hedge">' + escapeHtml(view.strings.passHedge ||
+                'Proven non-lifebar \u2014 possibly a command from the other pad.') + '</div>'
+            : '';
+        tip.innerHTML = '<div class="stepchart-tip-time">' + range + '</div><b>' + escapeHtml(runs) +
+            '</b><div>' + escapeHtml(cause) + '</div>' + hedge;
+        tip.hidden = false;
+        tip.style.left = Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 12) + 'px';
+        tip.style.top = (e.clientY + 14) + 'px';
+    });
+    view.box.addEventListener('mouseleave', function () { tip.hidden = true; });
 }
 
 function legendEntry(host, color, label) {
