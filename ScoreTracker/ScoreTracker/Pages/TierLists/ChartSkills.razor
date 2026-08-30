@@ -1406,12 +1406,12 @@ else
     private IReadOnlySet<Guid>? _top50CombinedIds;
     private PumbilityProjection? _shareGains;
 
-    private async Task EnsureShareData(ShareCardOptions options)
+    private async Task EnsureShareData(ShareCardOptions options, CancellationToken cancellationToken = default)
     {
         if (!CurrentUser.IsLoggedIn || IsLegacy) return;
         if (options.BoundaryOtherMixes && !_otherMixPassesLoaded)
         {
-            _otherMixPasses = await Mediator.Send(new GetCrossMixPassesQuery(_currentMix));
+            _otherMixPasses = await Mediator.Send(new GetCrossMixPassesQuery(_currentMix), cancellationToken);
             _otherMixPassesLoaded = true;
         }
 
@@ -1419,16 +1419,16 @@ else
         if (options.BoundaryTop50 && _top50TypeIds == null)
         {
             _top50TypeIds = (await Mediator.Send(
-                    new GetTop50ForPlayerQuery(CurrentUser.User.Id, _chartType, 50, _currentMix)))
+                    new GetTop50ForPlayerQuery(CurrentUser.User.Id, _chartType, 50, _currentMix), cancellationToken))
                 .Select(s => s.ChartId).ToHashSet();
             _top50CombinedIds = (await Mediator.Send(
-                    new GetTop50ForPlayerQuery(CurrentUser.User.Id, null, 50, _currentMix)))
+                    new GetTop50ForPlayerQuery(CurrentUser.User.Id, null, 50, _currentMix), cancellationToken))
                 .Select(s => s.ChartId).ToHashSet();
         }
 
         if (options.Pumbility && options.ExpectedGains && _shareGains == null)
             _shareGains = await Mediator.Send(
-                new ProjectPumbilityGainsQuery(CurrentUser.User.Id, _currentMix, _chartType));
+                new ProjectPumbilityGainsQuery(CurrentUser.User.Id, _currentMix, _chartType), cancellationToken);
     }
 
     private ShareCardComposer.TileFacts FactsFor(SongTierListEntry entry, ShareCardOptions options)
@@ -1516,12 +1516,13 @@ else
         return BuildCard(rows, options);
     }
 
-    private async Task DownloadImage(ShareCardOptions options)
+    private async Task DownloadImage(ShareCardDownloadRequest request)
     {
         _isBuildingImage = true;
         try
         {
-            await EnsureShareData(options);
+            var options = request.Options;
+            await EnsureShareData(options, request.Token);
             var palette = MixThemes.PaletteFor(_currentMix);
             var rows = _groups
                 .Select(g => (Group: g,
@@ -1533,11 +1534,29 @@ else
                 .ToArray();
             var card = BuildCard(rows, options);
 
-            var bytes = await Mediator.Send(new GetTierListShareCardQuery(card));
+            // The slow phase, driven from here so the dialog's bar counts real images
+            // (design doc §8): warm the card's art in batches, then render against the
+            // warm cache. The token is the dialog's Cancel — and any close of it.
+            var urls = ShareCardArt.CollectUrls(card);
+            var done = 0;
+            request.Progress(new ShareCardFetchProgress(0, urls.Count, false));
+            foreach (var batch in urls.Chunk(ShareCardArt.FetchBatch))
+            {
+                await Mediator.Send(new PrefetchShareCardArtCommand(batch), request.Token);
+                done += batch.Length;
+                request.Progress(new ShareCardFetchProgress(done, urls.Count, false));
+            }
+
+            request.Progress(new ShareCardFetchProgress(urls.Count, urls.Count, true));
+            var bytes = await Mediator.Send(new GetTierListShareCardQuery(card), request.Token);
             using var stream = new MemoryStream(bytes);
             using var streamRef = new DotNetStreamReference(stream);
             var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
             await module.InvokeVoidAsync("downloadFileFromStream", DownloadFileName, streamRef);
+        }
+        catch (OperationCanceledException)
+        {
+            // The dialog's Cancel (or its close) stopped the download; nothing to deliver.
         }
         finally
         {

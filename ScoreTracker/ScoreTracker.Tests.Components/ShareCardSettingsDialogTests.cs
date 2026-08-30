@@ -51,7 +51,7 @@ public sealed class ShareCardSettingsDialogTests : ComponentTestBase
 
     private IRenderedFragment RenderDialog(bool signedIn = true, bool offersPumbility = true,
         Func<ShareCardOptions, Task<TierListShareCard?>>? sampleBuilder = null,
-        EventCallback<ShareCardOptions>? onDownload = null, string? stored = null)
+        EventCallback<ShareCardDownloadRequest>? onDownload = null, string? stored = null)
     {
         if (stored != null)
             _uiSettings.Setup(u => u.GetSetting(ShareCardOptions.SettingKey, It.IsAny<CancellationToken>(),
@@ -197,15 +197,83 @@ public sealed class ShareCardSettingsDialogTests : ComponentTestBase
     [Fact]
     public async Task DownloadHandsTheHostTheOptionsTheExampleShowed()
     {
-        ShareCardOptions? downloaded = null;
+        ShareCardDownloadRequest? request = null;
         var cut = RenderDialog(stored: "v1,SongNames,LetterGrades,BoundaryPass",
-            onDownload: EventCallback.Factory.Create<ShareCardOptions>(this, o => downloaded = o));
+            onDownload: EventCallback.Factory.Create<ShareCardDownloadRequest>(this, r => request = r));
         cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=sharecard-download]")));
 
         await cut.Find("[data-testid=sharecard-download]").ClickAsync(new MouseEventArgs());
 
-        Assert.NotNull(downloaded);
-        Assert.True(downloaded!.SongNames);
-        Assert.False(downloaded.Plates);
+        Assert.NotNull(request);
+        Assert.True(request!.Options.SongNames);
+        Assert.False(request.Options.Plates);
+        Assert.False(request.Token.IsCancellationRequested);
+    }
+
+    /// <summary>A host stub that holds the download open until its token fires, like the real loop would.</summary>
+    private (IRenderedFragment Cut, Func<ShareCardDownloadRequest?> Request, Func<Task> Finished) RenderMidDownload()
+    {
+        ShareCardDownloadRequest? captured = null;
+        var gate = new TaskCompletionSource();
+        var cut = RenderDialog(onDownload: EventCallback.Factory.Create<ShareCardDownloadRequest>(this,
+            async r =>
+            {
+                captured = r;
+                r.Progress(new ShareCardFetchProgress(8, 61, false));
+                using var registration = r.Token.Register(() => gate.TrySetResult());
+                await gate.Task;
+            }));
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=sharecard-download]")));
+        var clickTask = cut.Find("[data-testid=sharecard-download]").ClickAsync(new MouseEventArgs());
+        return (cut, () => captured, () => clickTask);
+    }
+
+    [Fact]
+    public async Task EverythingDisablesTheMomentTheDownloadStarts()
+    {
+        var (cut, _, finished) = RenderMidDownload();
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Contains("Fetching chart art — 8 of 61", cut.Find("[data-testid=sc-progress]").TextContent);
+            Assert.True(cut.Find("input[data-testid=sc-opt-names]").HasAttribute("disabled"));
+            Assert.True(cut.Find("input[data-testid=sc-opt-scores]").HasAttribute("disabled"));
+            Assert.True(cut.Find("input[data-testid=sc-opt-btop50]").HasAttribute("disabled"));
+            Assert.True(cut.Find("[data-testid=sharecard-download]").HasAttribute("disabled"));
+            Assert.Equal("Cancel", cut.Find("[data-testid=sharecard-cancel]").TextContent.Trim());
+        });
+
+        await cut.Find("[data-testid=sharecard-cancel]").ClickAsync(new MouseEventArgs());
+        await finished();
+    }
+
+    [Fact]
+    public async Task CancelStopsTheLoopAndReturnsTheDialogEditable()
+    {
+        var (cut, request, finished) = RenderMidDownload();
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=sc-progress]")));
+
+        await cut.Find("[data-testid=sharecard-cancel]").ClickAsync(new MouseEventArgs());
+        await finished();
+
+        Assert.True(request()!.Token.IsCancellationRequested);
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Empty(cut.FindAll("[data-testid=sc-progress]"));
+            Assert.False(cut.Find("input[data-testid=sc-opt-names]").HasAttribute("disabled"));
+            Assert.Equal("Close", cut.Find("[data-testid=sharecard-cancel]").TextContent.Trim());
+        });
+    }
+
+    [Fact]
+    public async Task ClosingTheDialogCancelsTheDownload()
+    {
+        var (cut, request, finished) = RenderMidDownload();
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=sc-progress]")));
+
+        await cut.Find(".mud-overlay").ClickAsync(new MouseEventArgs());
+        await finished();
+
+        Assert.True(request()!.Token.IsCancellationRequested);
     }
 }

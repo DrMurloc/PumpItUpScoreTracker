@@ -5,6 +5,7 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using Microsoft.JSInterop
+@using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.Models.Titles.Phoenix2
@@ -356,16 +357,17 @@
     private readonly Dictionary<ChartType, IReadOnlySet<Guid>> _top50ByType = new();
     private IReadOnlySet<Guid>? _top50Combined;
 
-    private async Task EnsureShareData(ShareCardOptions options, IReadOnlyList<PeerPoolList.ShareSection> sections)
+    private async Task EnsureShareData(ShareCardOptions options, IReadOnlyList<PeerPoolList.ShareSection> sections,
+        CancellationToken cancellationToken = default)
     {
         if (!options.BoundaryTop50) return;
         _top50Combined ??= (await Mediator.Send(
-                new GetTop50ForPlayerQuery(CurrentUser.User.Id, null, 50, Page.Mix)))
+                new GetTop50ForPlayerQuery(CurrentUser.User.Id, null, 50, Page.Mix), cancellationToken))
             .Select(s => s.ChartId).ToHashSet();
         foreach (var type in sections.SelectMany(s => s.Tiles).Select(t => t.Chart.Type).Distinct())
             if (!_top50ByType.ContainsKey(type))
                 _top50ByType[type] = (await Mediator.Send(
-                        new GetTop50ForPlayerQuery(CurrentUser.User.Id, type, 50, Page.Mix)))
+                        new GetTop50ForPlayerQuery(CurrentUser.User.Id, type, 50, Page.Mix), cancellationToken))
                     .Select(s => s.ChartId).ToHashSet();
     }
 
@@ -433,27 +435,46 @@
     ///     step. Sections and their colours come off the rendered list, so the image says what
     ///     the screen says.
     /// </summary>
-    private async Task Download(ShareCardOptions options)
+    private async Task Download(ShareCardDownloadRequest request)
     {
         if (_list == null) return;
         _building = true;
         try
         {
+            var options = request.Options;
             var sections = _list.ShareSections();
-            await EnsureShareData(options, sections);
+            await EnsureShareData(options, sections, request.Token);
             var palette = MixThemes.PaletteFor(Page.Mix);
             var rows = sections
                 .Where(s => s.Tiles.Count > 0)
                 .Select(s => ComposeRow(s, s.Tiles, options, palette))
                 .ToArray();
             if (rows.Length == 0) return;
-
             var card = BuildTargetsCard(rows, options);
-            var bytes = await Mediator.Send(new GetTierListShareCardQuery(card));
+
+            // The slow phase, driven from here so the dialog's bar counts real images
+            // (design doc §8): warm the card's art in batches, then render against the
+            // warm cache. The token is the dialog's Cancel — and any close of it.
+            var urls = ShareCardArt.CollectUrls(card);
+            var done = 0;
+            request.Progress(new ShareCardFetchProgress(0, urls.Count, false));
+            foreach (var batch in urls.Chunk(ShareCardArt.FetchBatch))
+            {
+                await Mediator.Send(new PrefetchShareCardArtCommand(batch), request.Token);
+                done += batch.Length;
+                request.Progress(new ShareCardFetchProgress(done, urls.Count, false));
+            }
+
+            request.Progress(new ShareCardFetchProgress(urls.Count, urls.Count, true));
+            var bytes = await Mediator.Send(new GetTierListShareCardQuery(card), request.Token);
             using var stream = new MemoryStream(bytes);
             using var streamRef = new DotNetStreamReference(stream);
             var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
             await module.InvokeVoidAsync("downloadFileFromStream", DownloadFileName, streamRef);
+        }
+        catch (OperationCanceledException)
+        {
+            // The dialog's Cancel (or its close) stopped the download; nothing to deliver.
         }
         finally
         {
