@@ -880,6 +880,9 @@
   <data name="Attempts before this clear" xml:space="preserve">
     <value>Tentativi prima di superarlo</value>
   </data>
+  <data name="Auto" xml:space="preserve">
+	  <value>Auto</value>
+  </data>
   <data name="Auto Submit Change Failed" xml:space="preserve">
     <value>Non è stato modificato. Riprova tra poco.</value>
   </data>
@@ -6677,6 +6680,9 @@
   </data>
   <data name="Scroll right" xml:space="preserve">
     <value>Scorri a destra</value>
+  </data>
+  <data name="Scroll speed" xml:space="preserve">
+	  <value>Velocità di scorrimento</value>
   </data>
   <data name="Scrolling and links still work. Buttons don't." xml:space="preserve">
     <value>Scorrimento e link funzionano ancora. I pulsanti no.</value>

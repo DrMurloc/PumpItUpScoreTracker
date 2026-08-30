@@ -880,6 +880,9 @@
   <data name="Attempts before this clear" xml:space="preserve">
     <value>クリアまでの試行回数</value>
   </data>
+  <data name="Auto" xml:space="preserve">
+	  <value>自動</value>
+  </data>
   <data name="Auto Submit Change Failed" xml:space="preserve">
     <value>変更できませんでした。少し待ってからもう一度お試しください。</value>
   </data>
@@ -6677,6 +6680,9 @@
   </data>
   <data name="Scroll right" xml:space="preserve">
     <value>右へスクロール</value>
+  </data>
+  <data name="Scroll speed" xml:space="preserve">
+	  <value>スクロール速度</value>
   </data>
   <data name="Scrolling and links still work. Buttons don't." xml:space="preserve">
     <value>スクロールとリンクは使えます。ボタンは使えません。</value>

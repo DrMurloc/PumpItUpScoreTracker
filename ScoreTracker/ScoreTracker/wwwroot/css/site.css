@@ -18511,3 +18511,54 @@ button.judg-strip:focus-visible {
     vertical-align: middle;
     margin: 2px 4px 2px 0;
 }
+
+/* Modes + AV share one toolbar row; the AV stepper mirrors the segmented control. */
+.stepchart-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin: 0 0 12px;
+}
+
+.stepchart-toolbar .stepchart-modes {
+    margin: 0;
+}
+
+.stepchart-av {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 9px;
+    overflow: hidden;
+}
+
+.stepchart-av button {
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--mix-ink-muted);
+    background: transparent;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.stepchart-av button[aria-pressed="true"] {
+    background: var(--mix-surface);
+    color: var(--mix-ink);
+}
+
+.stepchart-av-value {
+    font-size: .8rem;
+    color: var(--mix-ink);
+    padding: 0 4px;
+    min-width: 56px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    border-left: 1px solid rgba(255, 255, 255, .12);
+    border-right: 1px solid rgba(255, 255, 255, .12);
+    align-self: stretch;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}

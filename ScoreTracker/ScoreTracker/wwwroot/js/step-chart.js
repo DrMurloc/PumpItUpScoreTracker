@@ -62,11 +62,17 @@ export async function mount(root) {
     root.stepChartView = view;
     applyScale(view);
 
+    try {
+        var savedAv = parseInt(window.localStorage.getItem('stepchart-av') || '', 10);
+        if (savedAv >= 200 && savedAv <= 900) { view.userAv = savedAv; applyScale(view); }
+    } catch (e) { /* private mode */ }
+
     drawStrip(view);
     initMinimap(view, compact);
     buildChips(view);
     renderLegend(view);
     initModes(view);
+    initAv(view);
 
     if (root.getAttribute('data-visibility') === 'StepsOnly') {
         var caveat = root.querySelector('[data-stepchart-caveat]');
@@ -98,6 +104,50 @@ function applyScale(view) {
     view.height = Math.ceil(view.duration * view.scale.pps) + 24;
     view.yOf = function (t) { return 12 + t * view.scale.pps; };
     view.box.firstChild.style.width = view.width + 'px';
+}
+
+// The AV stepper (owner side-note, 2026-08-30): players have "their AV", so the ramp is only
+// the default. The choice is global (localStorage), stepped by 50 within 200-900, and Auto
+// returns to the level ramp. Changing it relays the whole strip out — placeholders resize,
+// live tiles repaint, the minimap viewport follows; pins and chips hold times, so they land
+// themselves.
+function initAv(view) {
+    var host = view.root.querySelector('[data-stepchart-av-value]');
+    var buttons = Array.prototype.slice.call(view.root.querySelectorAll('[data-stepchart-av]'));
+    if (!host || buttons.length === 0) return;
+
+    function show() {
+        host.textContent = 'AV ' + Math.round(view.av);
+        buttons.forEach(function (button) {
+            if (button.getAttribute('data-stepchart-av') === 'auto')
+                button.setAttribute('aria-pressed', view.userAv ? 'false' : 'true');
+        });
+    }
+
+    function relayout() {
+        var anchor = view.box.scrollTop / Math.max(1, view.height);
+        applyScale(view);
+        drawStrip(view);
+        view.box.scrollTop = anchor * view.height;
+        if (view.repaintMinimap) view.repaintMinimap();
+        show();
+    }
+
+    buttons.forEach(function (button) {
+        var step = button.getAttribute('data-stepchart-av');
+        button.addEventListener('click', function () {
+            if (step === 'auto') view.userAv = null;
+            else view.userAv = Math.max(200, Math.min(900,
+                (view.userAv || Math.round(view.av)) + parseInt(step, 10)));
+            try {
+                if (view.userAv) window.localStorage.setItem('stepchart-av', String(view.userAv));
+                else window.localStorage.removeItem('stepchart-av');
+            } catch (e) { /* fine */ }
+            relayout();
+        });
+    });
+
+    show();
 }
 
 // The owner's AV ramp, linear between the anchor levels — players run ~300 AV on a 1, ~450 by

@@ -880,6 +880,9 @@
   <data name="Attempts before this clear" xml:space="preserve">
     <value>Blub arg palo</value>
   </data>
+  <data name="Auto" xml:space="preserve">
+	  <value>Arglgl</value>
+  </data>
   <data name="Auto Submit Change Failed" xml:space="preserve">
     <value>Blub morgl. Murgla gapa mrgl.</value>
   </data>
@@ -6677,6 +6680,9 @@
   </data>
   <data name="Scroll right" xml:space="preserve">
     <value>Rglmurg rogro</value>
+  </data>
+  <data name="Scroll speed" xml:space="preserve">
+	  <value>Grogro Mrpro</value>
   </data>
   <data name="Scrolling and links still work. Buttons don't." xml:space="preserve">
     <value>Glrmurgro arg plglrgl larg murmgl. Prglglubarg bo.</value>

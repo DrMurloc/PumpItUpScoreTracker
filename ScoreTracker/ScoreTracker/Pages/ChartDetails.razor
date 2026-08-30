@@ -134,10 +134,18 @@
                  data-visibility="@_stepChart.Visibility" data-level="@((int)_chart.Level)">
                 <script type="application/json" data-stepchart-strings>@StepChartStrings.For(L)</script>
                 <div class="stepchart-caveat" data-stepchart-caveat hidden>@L["Where runs end isn't shown — this step file disagrees with the game's judged note count."]</div>
-                <div class="stepchart-modes" role="group" aria-label="@L["Arrow coloring"]">
-                    <button type="button" data-stepchart-mode="arrow" aria-pressed="true">@L["Arrows"]</button>
-                    <button type="button" data-stepchart-mode="foot" aria-pressed="false">@L["Feet"]</button>
-                    <button type="button" data-stepchart-mode="quant" aria-pressed="false">@L["Timing"]</button>
+                <div class="stepchart-toolbar">
+                    <div class="stepchart-modes" role="group" aria-label="@L["Arrow coloring"]">
+                        <button type="button" data-stepchart-mode="arrow" aria-pressed="true">@L["Arrows"]</button>
+                        <button type="button" data-stepchart-mode="foot" aria-pressed="false">@L["Feet"]</button>
+                        <button type="button" data-stepchart-mode="quant" aria-pressed="false">@L["Timing"]</button>
+                    </div>
+                    <div class="stepchart-av" role="group" aria-label="@L["Scroll speed"]">
+                        <button type="button" data-stepchart-av="-50">&minus;</button>
+                        <span class="stepchart-av-value" data-stepchart-av-value>AV</span>
+                        <button type="button" data-stepchart-av="50">+</button>
+                        <button type="button" data-stepchart-av="auto" aria-pressed="true">@L["Auto"]</button>
+                    </div>
                 </div>
                 <div class="stepchart-chips" data-stepchart-chips></div>
                 <div class="stepchart-viewer">
