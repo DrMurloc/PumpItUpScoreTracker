@@ -35,7 +35,7 @@ internal static class StepChartReprocessor
             kv => StepChartEnricher.Judge(kv.Value, payload.TapRows, holdRowCount, payload.TickSum));
 
         return new EnrichedStepChart(payload.Panels, aligned, rows, holds, tickTimes,
-            payload.Segments.Select(s => new SnapshotSegment(s.S, s.E, s.N)).ToArray(),
+            payload.Segments.Select(s => new SnapshotSegment(s.S, s.E, s.N, s.B, s.L)).ToArray(),
             payload.Ranges.Select(r => new SnapshotRange(r.S, r.E)).ToArray(),
             verdicts, payload.TapRows, payload.TickSum,
             payload.Ssc, payload.StepsType, payload.Meter);

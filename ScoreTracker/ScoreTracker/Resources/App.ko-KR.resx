@@ -1993,9 +1993,6 @@
   <data name="days on the pad" xml:space="preserve">
     <value>일 플레이</value>
   </data>
-  <data name="Death spike" xml:space="preserve">
-	  <value>사망 구간</value>
-  </data>
   <data name="Debug" xml:space="preserve">
     <value>디버그</value>
   </data>
@@ -2151,6 +2148,9 @@
   </data>
   <data name="Difficulty Spike" xml:space="preserve">
     <value>난이도 급상승</value>
+  </data>
+  <data name="Difficulty Spike: {0}" xml:space="preserve">
+	  <value>난이도 스파이크: {0}</value>
   </data>
   <data name="Directory" xml:space="preserve">
     <value>디렉터리</value>
@@ -5129,9 +5129,6 @@
   </data>
   <data name="Pass Breakdown" xml:space="preserve">
     <value>클리어 구성</value>
-  </data>
-  <data name="Pass cluster" xml:space="preserve">
-	  <value>Pass 구간</value>
   </data>
   <data name="Pass Difficulty" xml:space="preserve">
     <value>패스 난이도</value>

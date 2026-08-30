@@ -45,7 +45,9 @@ public class StepChartController : Controller
         var record = await _mediator.Send(new GetChartStepChartQuery(chartId, parsedMix), cancellationToken);
         if (record == null) return NotFound();
 
-        var etag = $"\"sc-{record.Vintage}-{chartId:N}-{parsedMix}\"";
+        // sc2: the shape-version rides the ETag because a re-upload keeps the vintage — without
+        // the bump, every browser would 304 its cached pre-section-label JSON for an hour.
+        var etag = $"\"sc2-{record.Vintage}-{chartId:N}-{parsedMix}\"";
         Response.Headers.CacheControl = "public, max-age=3600, must-revalidate";
         Response.Headers.ETag = etag;
         if (Request.Headers.IfNoneMatch.Contains(etag)) return StatusCode(StatusCodes.Status304NotModified);
@@ -58,11 +60,19 @@ public class StepChartController : Controller
             visibility = record.Visibility.ToString(),
             noteCount = record.NoteCount,
             implied = record.ImpliedTotal,
+            meter = record.Meter,
             // Rows as arrays — a boss chart carries thousands and the keys would be most of
             // the wire: [time, panelMask, leftFootMask, quant, beat|null].
             rows = record.Rows.Select(r => new object?[] { r.Time, r.PanelMask, r.LeftFootMask, r.Quant, r.Beat }),
             holds = record.Holds.Select(h => new object[] { h.Panel, h.Start, h.End, h.IsLeftFoot ? 1 : 0 }),
-            segments = record.Segments.Select(s => new object?[] { s.Start, s.End, s.Enps }),
+            // [start, end, enps|null, level|null, badge display names] — badges ship as the
+            // hero's display forms (BadgeLabels; English in every locale by standing ruling),
+            // so the cached-public JSON never varies by locale and the module needs no table.
+            segments = record.Segments.Select(s => new object?[]
+            {
+                s.Start, s.End, s.Enps, s.Level,
+                (s.Badges ?? Array.Empty<string>()).Select(BadgeLabels.DisplayName)
+            }),
             ranges = record.RangesOfInterest.Select(r => new object[] { r.Start, r.End })
         });
     }

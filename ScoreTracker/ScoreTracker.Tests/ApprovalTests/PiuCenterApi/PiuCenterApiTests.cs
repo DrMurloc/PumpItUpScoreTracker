@@ -267,6 +267,15 @@ public sealed class PiuCenterApiTests
         Assert.Equal(20, steps.Meter);
         Assert.NotEmpty(steps.Segments);
         Assert.All(steps.Taps, t => Assert.True(t.Limb is "l" or "r"));
+
+        // Per-segment annotations ride out raw (section-labeling round, 2026-08-31): the
+        // model's level for the passage alone and its skill badges, straight off the
+        // fixture's own "Segment metadata".
+        Assert.Equal(8, steps.Segments.Count);
+        Assert.Equal(15.65m, steps.Segments[0].Level);
+        Assert.Equal(new[] { "drill", "twist_90", "mid6_doubles" }, steps.Segments[0].Badges);
+        Assert.Equal(20.28m, steps.Segments.Max(s => s.Level));
+        Assert.Equal(new[] { "drill", "bracket_run", "bracket_drill" }, steps.Segments[5].Badges);
     }
 
     [Fact]

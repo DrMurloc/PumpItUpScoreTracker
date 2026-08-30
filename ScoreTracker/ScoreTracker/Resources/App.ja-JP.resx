@@ -2006,9 +2006,6 @@
   <data name="days on the pad" xml:space="preserve">
     <value>日プレイ</value>
   </data>
-  <data name="Death spike" xml:space="preserve">
-	  <value>失敗多発</value>
-  </data>
   <data name="Debug" xml:space="preserve">
     <value>デバッグ</value>
   </data>
@@ -2164,6 +2161,9 @@
   </data>
   <data name="Difficulty Spike" xml:space="preserve">
     <value>難易度スパイク</value>
+  </data>
+  <data name="Difficulty Spike: {0}" xml:space="preserve">
+	  <value>難易度スパイク: {0}</value>
   </data>
   <data name="Directory" xml:space="preserve">
     <value>ディレクトリ</value>
@@ -5161,9 +5161,6 @@
   </data>
   <data name="Pass Breakdown" xml:space="preserve">
     <value>クリア内訳</value>
-  </data>
-  <data name="Pass cluster" xml:space="preserve">
-	  <value>Pass集中</value>
   </data>
   <data name="Pass Difficulty" xml:space="preserve">
     <value>パス難易度</value>

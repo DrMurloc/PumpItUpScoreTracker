@@ -2006,9 +2006,6 @@
   <data name="days on the pad" xml:space="preserve">
     <value>grrglmrgl lurg mrp grorp</value>
   </data>
-  <data name="Death spike" xml:space="preserve">
-	  <value>Morglub Prglurg</value>
-  </data>
   <data name="Debug" xml:space="preserve">
     <value>Murgblub</value>
   </data>
@@ -2164,6 +2161,9 @@
   </data>
   <data name="Difficulty Spike" xml:space="preserve">
     <value>Rugalo Bramp</value>
+  </data>
+  <data name="Difficulty Spike: {0}" xml:space="preserve">
+	  <value>Grubbo Blarg: {0}</value>
   </data>
   <data name="Directory" xml:space="preserve">
     <value>Golba grog</value>
@@ -5161,9 +5161,6 @@
   </data>
   <data name="Pass Breakdown" xml:space="preserve">
     <value>Maglplgl Maglgrogrrgl</value>
-  </data>
-  <data name="Pass cluster" xml:space="preserve">
-	  <value>Maglplgl Glubgrogl</value>
   </data>
   <data name="Pass Difficulty" xml:space="preserve">
     <value>Maglplgl Glorgmurpgrrgl</value>

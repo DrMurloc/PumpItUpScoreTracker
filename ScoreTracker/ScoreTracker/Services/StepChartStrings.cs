@@ -21,11 +21,10 @@ public static class StepChartStrings
             // players (owner, 2026-08-31), and the site already speaks NPS on the chart hero.
             ["nps"] = localizer["{0} NPS"],
             ["range"] = localizer["Notable run"],
+            ["spike"] = localizer["Difficulty Spike: {0}"],
             ["upper"] = localizer["Upper"],
             ["lower"] = localizer["Lower"],
             ["center"] = localizer["Center"],
-            ["deathSpike"] = localizer["Death spike"],
-            ["passCluster"] = localizer["Pass cluster"],
             ["lifeBreak"] = localizer["Life Bar Break"],
             ["passG"] = localizer["Pass G"],
             ["walkOff"] = localizer["Walk off"],

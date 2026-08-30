@@ -20,7 +20,8 @@ public sealed record ChartStepChartRecord(
     IReadOnlyList<StepChartHoldRecord> Holds,
     IReadOnlyList<decimal> TickTimes,
     IReadOnlyList<StepChartSegmentRecord> Segments,
-    IReadOnlyList<StepChartRangeRecord> RangesOfInterest);
+    IReadOnlyList<StepChartRangeRecord> RangesOfInterest,
+    int? Meter = null);
 
 /// <summary>A judgement row: its second, every panel struck, the left foot's panels, and — when
 /// beats aligned — the beat and its quantization (4/8/12/16/…, 0 = off-grid).</summary>
@@ -30,8 +31,16 @@ public sealed record StepChartRowRecord(decimal Time, int PanelMask, int LeftFoo
 [ExcludeFromCodeCoverage]
 public sealed record StepChartHoldRecord(int Panel, decimal Start, decimal End, bool IsLeftFoot);
 
+/// <summary>A segment with piucenter's per-passage annotations: raw badge keys (display via
+/// <see cref="BadgeLabels.DisplayName" />) and the model's level for the passage alone. Both
+/// null on payloads banked before the section-labeling round (2026-08-31).</summary>
 [ExcludeFromCodeCoverage]
-public sealed record StepChartSegmentRecord(decimal Start, decimal End, decimal? Enps);
+public sealed record StepChartSegmentRecord(
+    decimal Start,
+    decimal End,
+    decimal? Enps,
+    IReadOnlyList<string>? Badges = null,
+    decimal? Level = null);
 
 [ExcludeFromCodeCoverage]
 public sealed record StepChartRangeRecord(decimal Start, decimal End);

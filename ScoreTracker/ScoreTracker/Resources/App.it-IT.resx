@@ -2006,9 +2006,6 @@
   <data name="days on the pad" xml:space="preserve">
     <value>giorni sulla pedana</value>
   </data>
-  <data name="Death spike" xml:space="preserve">
-	  <value>Picco di morti</value>
-  </data>
   <data name="Debug" xml:space="preserve">
     <value>Debug</value>
   </data>
@@ -2164,6 +2161,9 @@
   </data>
   <data name="Difficulty Spike" xml:space="preserve">
     <value>Picco di difficoltà</value>
+  </data>
+  <data name="Difficulty Spike: {0}" xml:space="preserve">
+	  <value>Picco di difficoltà: {0}</value>
   </data>
   <data name="Directory" xml:space="preserve">
     <value>Directory</value>
@@ -5161,9 +5161,6 @@
   </data>
   <data name="Pass Breakdown" xml:space="preserve">
     <value>Ripartizione clear</value>
-  </data>
-  <data name="Pass cluster" xml:space="preserve">
-	  <value>Gruppo di Pass</value>
   </data>
   <data name="Pass Difficulty" xml:space="preserve">
     <value>Difficoltà per pass</value>

@@ -18394,12 +18394,15 @@ button.judg-strip:focus-visible {
     background: var(--mix-primary);
 }
 
-.stepchart-chip-life i {
+.stepchart-chip-spike i {
     background: var(--life-danger);
 }
 
-.stepchart-chip-pass i {
-    background: var(--step-pass);
+/* Lit while the viewport sits inside the chip's section — the chips double as a "you are
+   here" for the strip. */
+.stepchart-chip-active {
+    border-color: var(--mix-primary);
+    background: var(--mix-surface-muted);
 }
 
 .stepchart-chip small {

@@ -24,8 +24,18 @@ namespace ScoreTracker.Domain.Records
     [ExcludeFromCodeCoverage]
     public sealed record PiuCenterTickSpan(decimal Start, decimal End, int Count);
 
+    /// <summary>
+    ///     A segment with piucenter's own per-passage annotations: the skill badges the section
+    ///     wears (the chart-identity vocabulary) and the model's predicted difficulty level for
+    ///     the passage alone — the pair that lets a chip say what a notable section IS.
+    /// </summary>
     [ExcludeFromCodeCoverage]
-    public sealed record PiuCenterSegmentSpan(decimal Start, decimal End, decimal? Enps);
+    public sealed record PiuCenterSegmentSpan(
+        decimal Start,
+        decimal End,
+        decimal? Enps,
+        IReadOnlyList<string>? Badges = null,
+        decimal? Level = null);
 
     [ExcludeFromCodeCoverage]
     public sealed record PiuCenterRangeSpan(decimal Start, decimal End);

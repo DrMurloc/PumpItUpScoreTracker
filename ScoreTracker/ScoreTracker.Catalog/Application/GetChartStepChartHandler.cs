@@ -33,7 +33,8 @@ internal sealed class GetChartStepChartHandler(IChartStepChartRepository stepCha
             payload.Rows.Select(r => new StepChartRowRecord(r.T, r.M, r.L, r.Q, r.B)).ToArray(),
             payload.Holds.Select(h => new StepChartHoldRecord(h.P, h.S, h.E, h.L)).ToArray(),
             payload.Ticks,
-            payload.Segments.Select(s => new StepChartSegmentRecord(s.S, s.E, s.N)).ToArray(),
-            payload.Ranges.Select(r => new StepChartRangeRecord(r.S, r.E)).ToArray());
+            payload.Segments.Select(s => new StepChartSegmentRecord(s.S, s.E, s.N, s.B, s.L)).ToArray(),
+            payload.Ranges.Select(r => new StepChartRangeRecord(r.S, r.E)).ToArray(),
+            payload.Meter);
     }
 }

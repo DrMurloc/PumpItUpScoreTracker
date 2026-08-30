@@ -165,7 +165,7 @@ internal sealed class StepChartIngest
             steps.Taps.Select(t => new SnapshotArrow(t.Panel, t.Time, t.Limb)).ToArray(),
             steps.Holds.Select(h => new SnapshotHold(h.Panel, h.Start, h.End, h.Limb)).ToArray(),
             steps.TickSpans.Select(t => new SnapshotTickSpan(t.Start, t.End, t.Count)).ToArray(),
-            steps.Segments.Select(s => new SnapshotSegment(s.Start, s.End, s.Enps)).ToArray(),
+            steps.Segments.Select(s => new SnapshotSegment(s.Start, s.End, s.Enps, s.Badges, s.Level)).ToArray(),
             steps.RangesOfInterest.Select(r => new SnapshotRange(r.Start, r.End)).ToArray(),
             relativeSsc, steps.StepsType, steps.Meter);
     }

@@ -42,7 +42,11 @@ export async function mount(root) {
     // rows: [time, panelMask, leftMask, quant, beat|null]
     var rows = payload.rows.map(function (r) { return { t: r[0], m: r[1], l: r[2], q: r[3], b: r[4] }; });
     var holds = payload.holds.map(function (h) { return { p: h[0], s: h[1], e: h[2], left: h[3] === 1 }; });
-    var segments = payload.segments.map(function (s) { return { s: s[0], e: s[1], enps: s[2] }; });
+    // segments: [start, end, enps|null, level|null, badge display names] — level and badges
+    // null on payloads banked before the section-labeling round.
+    var segments = payload.segments.map(function (s) {
+        return { s: s[0], e: s[1], enps: s[2], lvl: s[3] != null ? s[3] : null, badges: s[4] || [] };
+    });
     var ranges = payload.ranges.map(function (r) { return { s: r[0], e: r[1] }; });
     var panels = payload.panels;
     var lastNote = Math.max(
@@ -61,6 +65,7 @@ export async function mount(root) {
     var view = {
         root: root, box: box, rows: rows, holds: holds, segments: segments, ranges: ranges,
         panels: panels, duration: duration, lastNote: lastNote, level: level, compact: compact,
+        meter: payload.meter != null ? payload.meter : null,
         strings: strings, payload: payload, colors: COL,
         isPhoenix2: isPhoenix2, mode: 'arrow', token: token
     };
@@ -84,11 +89,18 @@ export async function mount(root) {
         if (caveat) caveat.hidden = false;
     }
 
+    var chipPending = null;
+    box.addEventListener('scroll', function () {
+        if (chipPending) return;
+        chipPending = requestAnimationFrame(function () { chipPending = null; highlightChips(view); });
+    });
+
     if (root.getAttribute('data-visibility') === 'Full') await loadBreaks(view, chartId, mix);
 
-    // Land on the crux rather than the silent intro — the reader came to see the chart's teeth.
-    var crux = cruxOf(view);
-    if (crux) box.scrollTop = Math.max(0, view.yOf(crux.s) - 90);
+    // Land on the spike rather than the silent intro — the reader came to see the chart's teeth.
+    var spike = notableOf(view).spike;
+    if (spike) box.scrollTop = Math.max(0, view.yOf(spike.s) - 90);
+    highlightChips(view);
 }
 
 // Layout from the effective AV. Geometry mirrors the cabinet, measured off gameplay footage
@@ -435,7 +447,6 @@ async function loadBreaks(view, chartId, mix) {
 
     drawStrip(view);
     if (view.repaintMinimap) view.repaintMinimap();
-    buildChips(view);
     renderLegend(view);
     bindPinTips(view);
 }
@@ -585,16 +596,18 @@ function initMinimap(view) {
     view.repaintMinimap = function () {
         ctx.clearRect(0, 0, W, H);
         // The notable sections band the full width first, so the chart's shape reads before
-        // any scrolling: the snapshot's ranges faint, the densest passage stronger.
-        var crux = cruxOf(view);
+        // any scrolling — the same set the chips name, the spike stronger. Legacy payloads
+        // (no levels) band their ranges of interest instead.
+        var notable = notableOf(view);
         ctx.fillStyle = view.colors.accent;
-        view.ranges.forEach(function (range) {
-            ctx.globalAlpha = 0.16;
-            ctx.fillRect(0, yOf(range.s), W, Math.max(2, yOf(range.e) - yOf(range.s)));
+        (notable.legacy ? view.ranges : notable.sections).forEach(function (section) {
+            ctx.globalAlpha = section === notable.spike ? 0.28 : 0.16;
+            ctx.fillRect(0, yOf(section.s), W, Math.max(2, yOf(section.e) - yOf(section.s)));
         });
-        if (crux) {
+        if (notable.legacy && notable.spike) {
             ctx.globalAlpha = 0.28;
-            ctx.fillRect(0, yOf(crux.s), W, Math.max(2, yOf(crux.e) - yOf(crux.s)));
+            ctx.fillRect(0, yOf(notable.spike.s), W,
+                Math.max(2, yOf(notable.spike.e) - yOf(notable.spike.s)));
         }
         ctx.globalAlpha = 1;
         ctx.fillStyle = 'rgba(255,255,255,.16)';
@@ -627,47 +640,86 @@ function motion() {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
 }
 
-function cruxOf(view) {
-    var crux = null;
+// The notable sections (owner rulings 2026-08-31): piucenter rates every segment's difficulty
+// alone; a section is notable when its level is within 1.5 of min(chart's own peak, listed
+// level) — "either, whichever is lower": a chart that is easy for its label marks its own top
+// band, a chart that is hard for its label also marks everything at the label. The peak
+// section is the Difficulty Spike. One chip per qualifying segment, never merged — adjacent
+// notable segments are different characters (a bracket wall, then the run). Payloads banked
+// before this round carry no levels and fall back to the old shape: the densest segment by
+// eNPS plus the snapshot's ranges of interest.
+var NotableWindow = 1.5;
+
+function notableOf(view) {
+    var peak = null;
     view.segments.forEach(function (segment) {
-        if (segment.enps == null) return;
-        if (!crux || segment.enps > crux.enps) crux = segment;
+        if (segment.lvl == null) return;
+        if (peak == null || segment.lvl > peak) peak = segment.lvl;
     });
-    return crux;
+
+    if (peak == null) {
+        var crux = null;
+        view.segments.forEach(function (segment) {
+            if (segment.enps == null) return;
+            if (!crux || segment.enps > crux.enps) crux = segment;
+        });
+        return { legacy: true, spike: crux, sections: crux ? [crux] : [] };
+    }
+
+    var threshold = Math.min(peak, view.meter != null ? view.meter : peak) - NotableWindow;
+    var sections = view.segments.filter(function (segment) {
+        return segment.lvl != null && segment.lvl >= threshold;
+    });
+    var spike = null;
+    sections.forEach(function (segment) {
+        if (!spike && segment.lvl === peak) spike = segment;
+    });
+    return { legacy: false, spike: spike, sections: sections };
 }
 
+// One chip per notable section, wearing the section's top skill and its density — "Drills
+// 12.4 NPS", the peak as "Difficulty Spike: Close Twists 8.7 NPS" (owner rulings 2026-08-31).
+// Death clusters no longer chip — the whole-chart map's ticks carry them now.
 function buildChips(view) {
     var host = view.root.querySelector('[data-stepchart-chips]');
     if (!host) return;
     host.innerHTML = '';
+    view.chipSpans = [];
 
-    // The densest passage is named by its number — "Crux" meant nothing to players (owner,
-    // 2026-08-31), and the hero already speaks NPS one screen up.
-    var crux = cruxOf(view);
-    if (crux) {
-        var nps = Math.round((crux.enps || 0) * 10) / 10;
-        addChip(view, host, 'struct', (view.strings.nps || '{0} NPS').replace('{0}', nps), crux.s);
-    }
-    view.ranges.slice(0, 2).forEach(function (range) {
-        if (crux && Math.abs(range.s - crux.s) < 3) return;
-        addChip(view, host, 'struct', view.strings.range || 'Notable run', range.s);
+    var notable = notableOf(view);
+    notable.sections.forEach(function (section) {
+        var parts = [];
+        if (section.badges && section.badges.length) parts.push(section.badges[0]);
+        if (section.enps != null)
+            parts.push((view.strings.nps || '{0} NPS')
+                .replace('{0}', Math.round(section.enps * 10) / 10));
+        var inner = parts.join(' ') || (view.strings.range || 'Notable run');
+        var label = section === notable.spike
+            ? (view.strings.spike || 'Difficulty Spike: {0}').replace('{0}', inner)
+            : inner;
+        var chip = addChip(view, host, section === notable.spike ? 'spike' : 'struct', label, section.s);
+        view.chipSpans.push({ el: chip, s: section.s, e: section.e });
     });
 
-    // Structure first, then the two biggest death clusters by count (design doc D17).
-    if (view.pinMarks) {
-        view.pinMarks.slice().sort(function (a, b) { return b.n - a.n; })
-            .filter(function (pin) { return pin.n >= 3 && pin.cause !== 'fin'; })
-            .slice(0, 2)
-            .forEach(function (pin) {
-                addChip(view, host, pin.cause,
-                    pin.cause === 'pass'
-                        ? (view.strings.passCluster || 'Pass cluster')
-                        : pin.cause === 'walk'
-                            ? (view.strings.walkOff || 'Walk off')
-                            : (view.strings.deathSpike || 'Death spike'),
-                    pin.t, pin.n);
-            });
-    }
+    if (notable.legacy)
+        view.ranges.slice(0, 2).forEach(function (range) {
+            if (notable.spike && Math.abs(range.s - notable.spike.s) < 3) return;
+            var chip = addChip(view, host, 'struct', view.strings.range || 'Notable run', range.s);
+            view.chipSpans.push({ el: chip, s: range.s, e: range.e });
+        });
+
+    highlightChips(view);
+}
+
+// A chip lights while the viewport is inside its section — the chips double as a "you are
+// here" for the strip (owner, 2026-08-31).
+function highlightChips(view) {
+    if (!view.chipSpans) return;
+    var top = (view.box.scrollTop - 12) / view.scale.pps;
+    var bottom = (view.box.scrollTop + view.box.clientHeight - 12) / view.scale.pps;
+    view.chipSpans.forEach(function (span) {
+        span.el.classList.toggle('stepchart-chip-active', span.s < bottom && span.e > top);
+    });
 }
 
 function addChip(view, host, kind, label, t, count) {

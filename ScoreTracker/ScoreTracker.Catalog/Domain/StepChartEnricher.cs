@@ -194,7 +194,12 @@ internal sealed record SnapshotHold(int Panel, decimal Start, decimal End, strin
 
 internal sealed record SnapshotTickSpan(decimal Start, decimal End, int Count);
 
-internal sealed record SnapshotSegment(decimal Start, decimal End, decimal? Enps);
+internal sealed record SnapshotSegment(
+    decimal Start,
+    decimal End,
+    decimal? Enps,
+    IReadOnlyList<string>? Badges = null,
+    decimal? Level = null);
 
 internal sealed record SnapshotRange(decimal Start, decimal End);
 

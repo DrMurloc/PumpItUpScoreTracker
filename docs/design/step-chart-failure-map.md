@@ -120,8 +120,22 @@ All owner-settled across the 2026-08-29/30 workshop.
   commands. The classification is first-class on the stored cause
   (`StageBreakCauseSolver.WalkOffMissFloor`, its own journal column, re-derived by the cause
   backfill; pass-command-detection D36) — the sessions page speaks it too.
-- **D17 — Quick links cap at six**: crux, up to two of the snapshot's "eNPS ranges of
-  interest", and the top death clusters by count. Structure first, then spikes.
+- **D17 — Quick links are the notable sections** (owner rulings 2026-08-31, superseding the
+  original crux/ranges/death-cluster cap): piucenter rates every segment's difficulty alone
+  and names its skills ("Segment metadata" — badges + level, parsed since payload v2). A
+  section is **notable** when its level is within **1.5** of `min(chart's own peak segment,
+  listed level)` — "either, whichever is lower": a chart that is easy for its label marks its
+  own top band (Digitalis D24, peak 22.7 under a 24), one that is hard for its label also
+  marks everything at the label (Rush-More D23's 22.03 bracket wall under a 23.45 peak). One
+  chip per qualifying segment, never merged — adjacent notable segments are different
+  characters — labeled `{top badge} {eNPS} NPS` in the hero's badge vocabulary
+  (`BadgeLabels`), the peak section prefixed **"Difficulty Spike:"**. Chips light while the
+  viewport overlaps their section, and the whole-chart map bands the same set (spike
+  stronger). Death clusters no longer chip — the map's edge ticks carry them. Corpus-wide
+  (4,574 charts): median 2 chips, p90 5, never zero. Payloads banked before v2 carry no
+  levels and fall back to the densest-segment chip plus the snapshot's ranges of interest;
+  the labels arrive with the next combined-zip upload, not with Reprocess — the archived
+  blobs predate the fields.
 
 ## 3. Data model
 

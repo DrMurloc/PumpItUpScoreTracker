@@ -215,10 +215,14 @@ namespace ScoreTracker.Data.Apis
                 {
                     if (span.ValueKind == JsonValueKind.Array && span.GetArrayLength() >= 2 &&
                         span[0].ValueKind == JsonValueKind.Number && span[1].ValueKind == JsonValueKind.Number)
+                    {
+                        var withMeta = haveMetadata && index < segmentMetadata.GetArrayLength();
                         segments.Add(new PiuCenterSegmentSpan(span[0].GetDecimal(), span[1].GetDecimal(),
-                            haveMetadata && index < segmentMetadata.GetArrayLength()
-                                ? ReadDecimal(segmentMetadata[index], "eNPS")
-                                : null));
+                            withMeta ? ReadDecimal(segmentMetadata[index], "eNPS") : null,
+                            withMeta ? ReadStringArray(segmentMetadata[index], "Skill badges") : null,
+                            withMeta ? ReadDecimal(segmentMetadata[index], "level") : null));
+                    }
+
                     index++;
                 }
             }

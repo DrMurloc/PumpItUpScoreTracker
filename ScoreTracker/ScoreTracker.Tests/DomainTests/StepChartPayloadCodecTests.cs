@@ -20,7 +20,7 @@ public class StepChartPayloadCodecTests
         return new EnrichedStepChart(5, true, rows,
             new[] { new SnapshotHold(2, 3m, 4.5m, "l") },
             new[] { 3.1m, 3.6m },
-            new[] { new SnapshotSegment(0m, 10m, 4.2m) },
+            new[] { new SnapshotSegment(0m, 10m, 4.2m, new[] { "drill", "run" }, 19.92m) },
             new[] { new SnapshotRange(5m, 8m) },
             new Dictionary<MixEnum, StepChartVerdict>
             {
@@ -50,8 +50,40 @@ public class StepChartPayloadCodecTests
         Assert.Equal(2, hold.P);
         Assert.True(hold.L);
         Assert.Equal(new[] { 3.1m, 3.6m }, decoded.Ticks);
-        Assert.Equal(4.2m, Assert.Single(decoded.Segments).N);
+        var segment = Assert.Single(decoded.Segments);
+        Assert.Equal(4.2m, segment.N);
+        Assert.Equal(new[] { "drill", "run" }, segment.B);
+        Assert.Equal(19.92m, segment.L);
         Assert.Equal(5m, Assert.Single(decoded.Ranges).S);
+    }
+
+    [Fact]
+    public void AVersionOnePayloadDecodesWithUnlabeledSegments()
+    {
+        // Rows banked before the section-labeling round carry no badge or level fields; they
+        // must read back as "unlabeled", never as an error — the whole bank predates v2 until
+        // the owner's next combined-zip upload.
+        var v1 = """
+                 {"V":1,"Panels":5,"Aligned":false,"TapRows":1,"TickSum":0,
+                  "Rows":[{"T":1.0,"M":1,"L":0,"Q":0,"B":null}],"Holds":[],"Ticks":[],
+                  "Segments":[{"S":0,"E":10,"N":4.2}],"Ranges":[],
+                  "Verdicts":{"Phoenix":{"V":1,"N":10,"I":10}}}
+                 """;
+        using var buffer = new System.IO.MemoryStream();
+        using (var gzip = new System.IO.Compression.GZipStream(buffer,
+                   System.IO.Compression.CompressionLevel.Fastest, true))
+        {
+            var bytes = System.Text.Encoding.UTF8.GetBytes(v1);
+            gzip.Write(bytes, 0, bytes.Length);
+        }
+
+        var decoded = StepChartPayloadCodec.Decode(buffer.ToArray());
+
+        Assert.NotNull(decoded);
+        var segment = Assert.Single(decoded!.Segments);
+        Assert.Equal(4.2m, segment.N);
+        Assert.Null(segment.B);
+        Assert.Null(segment.L);
     }
 
     [Fact]

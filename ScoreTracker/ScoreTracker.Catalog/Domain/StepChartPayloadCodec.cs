@@ -12,7 +12,10 @@ namespace ScoreTracker.Catalog.Domain;
 /// </summary>
 internal static class StepChartPayloadCodec
 {
-    private const int Version = 1;
+    // 2: segments carry piucenter's per-passage skill badges and model level (owner,
+    // 2026-08-31). Decode never checks the stamp — v1 rows read back with null badge/level
+    // fields, which the section-labeling chips treat as "unlabeled", never as an error.
+    private const int Version = 2;
 
     private static readonly JsonSerializerOptions Options = new()
     {
@@ -30,7 +33,8 @@ internal static class StepChartPayloadCodec
             chart.Rows.Select(r => new PayloadRow(r.Time, r.PanelMask, r.LeftMask, r.Quant, r.Beat)).ToArray(),
             chart.Holds.Select(h => new PayloadHold(h.Panel, h.Start, h.End, h.Limb == "l")).ToArray(),
             chart.TickTimes,
-            chart.Segments.Select(s => new PayloadSegment(s.Start, s.End, s.Enps)).ToArray(),
+            chart.Segments.Select(s => new PayloadSegment(s.Start, s.End, s.Enps,
+                s.Badges is { Count: > 0 } ? s.Badges : null, s.Level)).ToArray(),
             chart.RangesOfInterest.Select(r => new PayloadRange(r.Start, r.End)).ToArray(),
             chart.Verdicts.ToDictionary(
                 kv => kv.Key.ToString(),
@@ -91,7 +95,12 @@ internal sealed record PayloadRow(decimal T, int M, int L, int Q, decimal? B);
 
 internal sealed record PayloadHold(int P, decimal S, decimal E, bool L);
 
-internal sealed record PayloadSegment(decimal S, decimal E, decimal? N);
+internal sealed record PayloadSegment(
+    decimal S,
+    decimal E,
+    decimal? N,
+    IReadOnlyList<string>? B = null,
+    decimal? L = null);
 
 internal sealed record PayloadRange(decimal S, decimal E);
 

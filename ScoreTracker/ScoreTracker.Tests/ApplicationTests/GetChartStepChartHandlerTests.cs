@@ -34,11 +34,11 @@ public sealed class GetChartStepChartHandlerTests
         var enriched = new EnrichedStepChart(5, true, rows,
             new[] { new SnapshotHold(2, 1m, 2m, "l") },
             new[] { 1.5m },
-            new[] { new SnapshotSegment(0m, 3m, 5.5m) },
+            new[] { new SnapshotSegment(0m, 3m, 5.5m, new[] { "bracket_run" }, 21.4m) },
             new[] { new SnapshotRange(1m, 2m) },
             verdicts.ToDictionary(v => v.Mix,
                 v => new StepChartVerdict(v.Visibility, 100, 99)),
-            1, 1);
+            1, 1, Meter: 22);
         _stepCharts.Setup(s => s.Get(ChartId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new BankedStepChart("82626", Now, StepChartPayloadCodec.Encode(enriched)));
     }
@@ -64,7 +64,11 @@ public sealed class GetChartStepChartHandlerTests
         Assert.Equal(1m, row.Beat);
         Assert.True(Assert.Single(record.Holds).IsLeftFoot);
         Assert.Equal(1.5m, Assert.Single(record.TickTimes));
-        Assert.Equal(5.5m, Assert.Single(record.Segments).Enps);
+        var segment = Assert.Single(record.Segments);
+        Assert.Equal(5.5m, segment.Enps);
+        Assert.Equal(new[] { "bracket_run" }, segment.Badges);
+        Assert.Equal(21.4m, segment.Level);
+        Assert.Equal(22, record.Meter);
     }
 
     [Fact]

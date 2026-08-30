@@ -2005,9 +2005,6 @@
   <data name="days on the pad" xml:space="preserve">
     <value>jours sur le pad</value>
   </data>
-  <data name="Death spike" xml:space="preserve">
-	  <value>Pic de morts</value>
-  </data>
   <data name="Debug" xml:space="preserve">
     <value>Débogage</value>
   </data>
@@ -2163,6 +2160,9 @@
   </data>
   <data name="Difficulty Spike" xml:space="preserve">
     <value>Pic de difficulté</value>
+  </data>
+  <data name="Difficulty Spike: {0}" xml:space="preserve">
+	  <value>Pic de difficulté : {0}</value>
   </data>
   <data name="Directory" xml:space="preserve">
     <value>Annuaire</value>
@@ -5160,9 +5160,6 @@
   </data>
   <data name="Pass Breakdown" xml:space="preserve">
     <value>Répartition des pass</value>
-  </data>
-  <data name="Pass cluster" xml:space="preserve">
-	  <value>Groupe de Pass</value>
   </data>
   <data name="Pass Difficulty" xml:space="preserve">
     <value>Difficulté par passes</value>
