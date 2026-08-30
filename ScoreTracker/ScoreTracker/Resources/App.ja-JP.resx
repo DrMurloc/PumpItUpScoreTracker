@@ -250,6 +250,9 @@
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -> 10%</value>
   </data>
+  <data name="1 broken run made it to the end" xml:space="preserve">
+	  <value>1回の失敗プレイが最後まで完走</value>
+  </data>
   <data name="1 more peer above" xml:space="preserve">
     <value>上に 1 人</value>
   </data>
@@ -9537,6 +9540,9 @@
   </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
+  </data>
+  <data name="{0} broken runs made it to the end" xml:space="preserve">
+	  <value>{0}回の失敗プレイが最後まで完走</value>
   </data>
   <data name="{0} can make tools again." xml:space="preserve">
     <value>{0} はまたツールを作れます。</value>

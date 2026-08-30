@@ -296,6 +296,12 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
         var unplaced = await database.Set<ScoreEventJournalEntity>()
             .CountAsync(j => j.ChartId == chartId && j.MixId == mixId && j.IsStageBroken &&
                              j.Perfects == null, cancellationToken);
+        // Broken runs that FINISHED the chart — the x_ finished fails. They have no position on
+        // the rail (they saw the whole song); the strip's end-cap admits to them by number.
+        // Served by the limbo (ChartId, MixId) covering index, which includes IsBroken.
+        var finishedFails = await database.Set<ScoreEventJournalEntity>()
+            .CountAsync(j => j.ChartId == chartId && j.MixId == mixId && j.IsBroken &&
+                             !j.IsStageBroken, cancellationToken);
         // Served off the filtered stage-break index end to end — chart, mix, breaks-only, the
         // judgement columns riding as includes. No user join: the rail is anonymous, and its one
         // caller flags the viewer's own rows by id without ever surfacing anyone else's.
@@ -312,7 +318,7 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
                 new JudgementCounts(r.Perfects!.Value, r.Greats ?? 0, r.Goods ?? 0, r.Bads ?? 0,
                     r.Misses ?? 0),
                 r.IsNonLifebarBreak, r.PassPlate, r.PassGrade, r.IsWalkOff))
-            .ToArray(), unplaced);
+            .ToArray(), unplaced, finishedFails);
     }
 
     public async Task<IReadOnlyList<UserPhoenixScore>> GetLowestPassingPlays(MixEnum mix, Guid chartId,

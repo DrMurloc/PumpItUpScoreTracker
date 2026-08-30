@@ -318,6 +318,24 @@ function drawTile(view, ctx, y0, y1) {
     });
 
     drawRail(view, ctx, y0, y1);
+    drawEndCap(view, ctx, y0, y1);
+}
+
+// Past the last note, the strip admits what the rail cannot show: broken runs that FINISHED
+// the whole chart have no position to pin, so the end-cap counts them (owner, 2026-08-30).
+function drawEndCap(view, ctx, y0, y1) {
+    if (!view.breaks || !view.breaks.finished) return;
+    var y = view.yOf(view.duration - 0.8);
+    if (y < y0 - 20 || y > y1 + 20) return;
+    var text = view.breaks.finished === 1
+        ? (view.strings.finishedOne || '1 broken run made it to the end')
+        : (view.strings.finishedMany || '{0} broken runs made it to the end')
+            .replace('{0}', view.breaks.finished);
+    ctx.fillStyle = view.colors.inkMuted;
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, view.scale.gutter + (view.width - view.scale.gutter) / 2, y);
 }
 
 // The failure rail (design doc D1/D2): a thin axis beside the strip, life-bar pins in the
@@ -374,7 +392,7 @@ function drawRail(view, ctx, y0, y1) {
 
 async function loadBreaks(view, chartId, mix) {
     var breaks = await fetchJson('/Charts/StepChart/' + chartId + '/Breaks?mix=' + encodeURIComponent(mix));
-    if (!breaks || (breaks.total === 0 && !breaks.unplaced)) return;
+    if (!breaks || (breaks.total === 0 && !breaks.unplaced && !breaks.finished)) return;
 
     view.colors.life = view.token('--life-danger');
     view.colors.walk = view.token('--step-walkoff');

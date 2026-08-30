@@ -32,6 +32,8 @@ public static class StepChartStrings
             ["yourRuns"] = localizer["Your runs"],
             ["unplaced"] = localizer["Unplaced"],
             ["scrollSpeed"] = localizer["Scroll speed"],
+            ["finishedOne"] = localizer["1 broken run made it to the end"],
+            ["finishedMany"] = localizer["{0} broken runs made it to the end"],
             ["leftFoot"] = localizer["Left foot"],
             ["rightFoot"] = localizer["Right foot"],
             ["quarters"] = localizer["Quarters"],

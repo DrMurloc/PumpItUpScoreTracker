@@ -86,7 +86,7 @@ public class StepChartController : Controller
         var result = await _mediator.Send(new GetChartStageBreaksQuery(chartId, parsedMix, viewerId),
             cancellationToken);
         var breaks = result.Breaks;
-        if (breaks.Count == 0 && result.Unplaced == 0) return Json(Empty());
+        if (breaks.Count == 0 && result.Unplaced == 0 && result.FinishedFails == 0) return Json(Empty());
 
         var events = record.Rows.Select(r => r.Time)
             .Concat(record.TickTimes)
@@ -149,6 +149,7 @@ public class StepChartController : Controller
             walk = walk.Count,
             pass = pass.Count,
             unplaced = result.Unplaced,
+            finished = result.FinishedFails,
             yours = yours.OrderBy(t => t).ToArray(),
             pins
         });
@@ -171,8 +172,8 @@ public class StepChartController : Controller
     {
         return new
         {
-            total = 0, life = 0, walk = 0, pass = 0, unplaced = 0, yours = Array.Empty<decimal>(),
-            pins = Array.Empty<object>()
+            total = 0, life = 0, walk = 0, pass = 0, unplaced = 0, finished = 0,
+            yours = Array.Empty<decimal>(), pins = Array.Empty<object>()
         };
     }
 }

@@ -623,6 +623,11 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
             {
                 IsStageBroken = true, IsBest = false,
                 Judgements = new JudgementCounts(60, 0, 0, 0, 0)
+            },
+            // A broken run that FINISHED the chart — no rail position, counted by the end-cap.
+            Entry(userA, chartId, Now.AddMinutes(6), 400000, isBroken: true, mix: MixEnum.Phoenix2) with
+            {
+                IsBest = false, Judgements = new JudgementCounts(700, 50, 30, 20, 100)
             }
         }, CancellationToken.None);
 
@@ -630,6 +635,7 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
         var rows = read.Rows;
 
         Assert.Equal(1, read.Unplaced);
+        Assert.Equal(1, read.FinishedFails);
         Assert.Equal(2, rows.Count);
         var passRow = Assert.Single(rows, r => r.IsNonLifebarBreak);
         Assert.Equal(userA, passRow.UserId);

@@ -161,4 +161,5 @@ internal sealed record ChartStageBreakRow(Guid UserId, JudgementCounts Judgement
 ///     judgements at all and can never be placed — the honest denominator the owner asked the
 ///     surface to admit to (step-chart-failure-map.md, 2026-08-30 field test).
 /// </summary>
-internal sealed record ChartStageBreaksRead(IReadOnlyList<ChartStageBreakRow> Rows, int Unplaced);
+internal sealed record ChartStageBreaksRead(IReadOnlyList<ChartStageBreakRow> Rows, int Unplaced,
+    int FinishedFails = 0);

@@ -17,4 +17,5 @@ public sealed record ChartStageBreakRecord(int Judged, bool IsNonLifebarBreak, b
 ///     to by number.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record ChartStageBreaksRecord(IReadOnlyList<ChartStageBreakRecord> Breaks, int Unplaced);
+public sealed record ChartStageBreaksRecord(IReadOnlyList<ChartStageBreakRecord> Breaks, int Unplaced,
+    int FinishedFails = 0);

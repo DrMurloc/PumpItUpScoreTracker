@@ -34,6 +34,7 @@ internal sealed class GetChartStageBreaksHandler(
                 request.ViewerId != null && r.UserId == request.ViewerId, r.PassPlate, r.PassGrade,
                 r.Judgements.Misses, r.IsWalkOff))
             .ToArray(),
-            read?.Unplaced ?? 0);
+            read?.Unplaced ?? 0,
+            read?.FinishedFails ?? 0);
     }
 }

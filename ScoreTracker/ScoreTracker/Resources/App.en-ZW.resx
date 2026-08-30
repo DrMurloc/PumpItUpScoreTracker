@@ -250,6 +250,9 @@
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -&gt; 10%</value>
   </data>
+  <data name="1 broken run made it to the end" xml:space="preserve">
+	  <value>1 morgl gro glorggl ur murgl</value>
+  </data>
   <data name="1 more peer above" xml:space="preserve">
     <value>1 maglmurp mrrgl</value>
   </data>
@@ -9537,6 +9540,9 @@
   </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
+  </data>
+  <data name="{0} broken runs made it to the end" xml:space="preserve">
+	  <value>{0} morgl grogl glorggl ur murgl</value>
   </data>
   <data name="{0} can make tools again." xml:space="preserve">
     <value>{0} murp murgblub rorgl blomurp.</value>
