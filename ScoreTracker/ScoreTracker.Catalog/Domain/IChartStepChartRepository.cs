@@ -10,6 +10,9 @@ internal interface IChartStepChartRepository
     Task Replace(IReadOnlyDictionary<Guid, BankedStepChart> banked, CancellationToken cancellationToken = default);
 
     Task<BankedStepChart?> Get(Guid chartId, CancellationToken cancellationToken = default);
+
+    /// <summary>Every chart holding a banked timeline — the reprocess sweep's work list.</summary>
+    Task<IReadOnlyList<Guid>> GetBankedChartIds(CancellationToken cancellationToken = default);
 }
 
 /// <summary>The stored row: codec bytes plus the vintage they were enriched from.</summary>

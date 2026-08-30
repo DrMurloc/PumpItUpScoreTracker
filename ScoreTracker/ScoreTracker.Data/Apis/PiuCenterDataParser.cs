@@ -150,6 +150,103 @@ namespace ScoreTracker.Data.Apis
         }
 
         /// <summary>
+        ///     The same chart page read raw (docs/design/step-chart-failure-map.md D4): every
+        ///     arrow, hold, authored tick tally and segment span, where <see cref="ParseChartPage" />
+        ///     keeps only aggregates. A separate method rather than a flag so the aggregate path's
+        ///     shape — and every caller banking metrics off it — cannot drift while the step-chart
+        ///     ingest evolves.
+        /// </summary>
+        public static PiuCenterChartSteps? ParseChartPageSteps(string json)
+        {
+            if (!LooksLikeJson(json)) return null;
+            using var document = JsonDocument.Parse(json);
+
+            JsonElement meta = default;
+            var found = false;
+            var noteArrays = new List<JsonElement>(2);
+            foreach (var element in document.RootElement.EnumerateArray())
+                if (element.ValueKind == JsonValueKind.Object)
+                {
+                    meta = element;
+                    found = true;
+                }
+                else if (element.ValueKind == JsonValueKind.Array)
+                {
+                    noteArrays.Add(element);
+                }
+
+            if (!found) return null;
+
+            var taps = new List<StepArrow>();
+            if (noteArrays.Count > 0 && noteArrays[0].ValueKind == JsonValueKind.Array)
+                foreach (var note in noteArrays[0].EnumerateArray())
+                    if (note.ValueKind == JsonValueKind.Array && note.GetArrayLength() >= 3 &&
+                        note[0].ValueKind == JsonValueKind.Number && note[1].ValueKind == JsonValueKind.Number &&
+                        note[2].ValueKind == JsonValueKind.String)
+                        taps.Add(new StepArrow((int)note[0].GetDecimal(), note[1].GetDecimal(),
+                            note[2].GetString() ?? string.Empty));
+
+            var holds = new List<PiuCenterStepHold>();
+            if (noteArrays.Count > 1 && noteArrays[1].ValueKind == JsonValueKind.Array)
+                foreach (var note in noteArrays[1].EnumerateArray())
+                    if (note.ValueKind == JsonValueKind.Array && note.GetArrayLength() >= 4 &&
+                        note[0].ValueKind == JsonValueKind.Number && note[1].ValueKind == JsonValueKind.Number &&
+                        note[2].ValueKind == JsonValueKind.Number && note[3].ValueKind == JsonValueKind.String)
+                        holds.Add(new PiuCenterStepHold((int)note[0].GetDecimal(), note[1].GetDecimal(),
+                            note[2].GetDecimal(), note[3].GetString() ?? string.Empty));
+
+            var tickSpans = new List<PiuCenterTickSpan>();
+            if (meta.TryGetProperty("Hold ticks", out var holdTicks) &&
+                holdTicks.ValueKind == JsonValueKind.Array)
+                foreach (var tick in holdTicks.EnumerateArray())
+                    if (tick.ValueKind == JsonValueKind.Array && tick.GetArrayLength() >= 3 &&
+                        tick[0].ValueKind == JsonValueKind.Number && tick[1].ValueKind == JsonValueKind.Number &&
+                        tick[2].ValueKind == JsonValueKind.Number)
+                        tickSpans.Add(new PiuCenterTickSpan(tick[0].GetDecimal(), tick[1].GetDecimal(),
+                            (int)tick[2].GetDecimal()));
+
+            var segments = new List<PiuCenterSegmentSpan>();
+            if (meta.TryGetProperty("Segments", out var spans) && spans.ValueKind == JsonValueKind.Array)
+            {
+                var haveMetadata = meta.TryGetProperty("Segment metadata", out var segmentMetadata) &&
+                                   segmentMetadata.ValueKind == JsonValueKind.Array;
+                var index = 0;
+                foreach (var span in spans.EnumerateArray())
+                {
+                    if (span.ValueKind == JsonValueKind.Array && span.GetArrayLength() >= 2 &&
+                        span[0].ValueKind == JsonValueKind.Number && span[1].ValueKind == JsonValueKind.Number)
+                        segments.Add(new PiuCenterSegmentSpan(span[0].GetDecimal(), span[1].GetDecimal(),
+                            haveMetadata && index < segmentMetadata.GetArrayLength()
+                                ? ReadDecimal(segmentMetadata[index], "eNPS")
+                                : null));
+                    index++;
+                }
+            }
+
+            var ranges = new List<PiuCenterRangeSpan>();
+            if (meta.TryGetProperty("eNPS ranges of interest", out var interest) &&
+                interest.ValueKind == JsonValueKind.Array)
+                foreach (var range in interest.EnumerateArray())
+                    if (range.ValueKind == JsonValueKind.Array && range.GetArrayLength() >= 2 &&
+                        range[0].ValueKind == JsonValueKind.Number && range[1].ValueKind == JsonValueKind.Number)
+                        ranges.Add(new PiuCenterRangeSpan(range[0].GetDecimal(), range[1].GetDecimal()));
+
+            return new PiuCenterChartSteps(
+                taps, holds, tickSpans, segments, ranges,
+                meta.TryGetProperty("ssc_file", out var ssc) && ssc.ValueKind == JsonValueKind.String
+                    ? ssc.GetString()
+                    : null,
+                meta.TryGetProperty("STEPSTYPE", out var steps) && steps.ValueKind == JsonValueKind.String
+                    ? steps.GetString()
+                    : null,
+                meta.TryGetProperty("METER", out var meter) &&
+                int.TryParse(meter.ValueKind == JsonValueKind.String ? meter.GetString() : meter.ToString(),
+                    NumberStyles.Integer, CultureInfo.InvariantCulture, out var printed)
+                    ? printed
+                    : null);
+        }
+
+        /// <summary>
         ///     The played span, first segment start to last segment end. Their own "Sustain time"
         ///     is the longest single run in seconds, and seconds alone cannot say whether a run is
         ///     the chart or an incident in it — a fifty-second run is most of a short chart and a

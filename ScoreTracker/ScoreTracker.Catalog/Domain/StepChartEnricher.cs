@@ -48,12 +48,7 @@ internal static class StepChartEnricher
             : 10;
 
         var aligned = ssc is { HasTimeline: true } && Aligns(rows, ssc.Rows);
-        if (aligned)
-            for (var i = 0; i < rows.Count; i++)
-            {
-                rows[i].Beat = ssc!.Rows[i].Beat;
-                rows[i].Quant = QuantOf(ssc.Rows[i].Beat);
-            }
+        if (aligned) AttachBeats(rows, ssc!.Rows);
 
         var snapshotTickSum = snapshot.TickSpans.Sum(s => s.Count);
         var tickTimes = aligned && ssc!.Ticks.Count == snapshotTickSum
@@ -67,7 +62,8 @@ internal static class StepChartEnricher
             kv => Judge(kv.Value, tapRowCount, holdRowCount, snapshotTickSum));
 
         return new EnrichedStepChart(panels, aligned, rows, snapshot.Holds, tickTimes,
-            snapshot.Segments, snapshot.RangesOfInterest, verdicts, tapRowCount, snapshotTickSum);
+            snapshot.Segments, snapshot.RangesOfInterest, verdicts, tapRowCount, snapshotTickSum,
+            snapshot.SscFilePath, snapshot.StepsType, snapshot.Meter);
     }
 
     /// <summary>
@@ -75,7 +71,7 @@ internal static class StepChartEnricher
     ///     one home (D8). No judged total to compare against is StepsOnly, not Excluded: absence
     ///     of evidence indicts nothing, it just cannot license pins.
     /// </summary>
-    private static StepChartVerdict Judge(int? noteCount, int tapRows, int holdRows, int tickSum)
+    internal static StepChartVerdict Judge(int? noteCount, int tapRows, int holdRows, int tickSum)
     {
         var implied = tapRows + tickSum;
         if (noteCount is not > 0) return new StepChartVerdict(StepChartVisibility.StepsOnly, noteCount, implied);
@@ -127,7 +123,17 @@ internal static class StepChartEnricher
             .ToList();
     }
 
-    private static bool Aligns(IReadOnlyList<EnrichedRow> snapshotRows, IReadOnlyList<StepRow> sscRows)
+    /// <summary>Aligned rows adopt the ssc's beats and the quantization they imply.</summary>
+    internal static void AttachBeats(IReadOnlyList<EnrichedRow> rows, IReadOnlyList<StepRow> sscRows)
+    {
+        for (var i = 0; i < rows.Count; i++)
+        {
+            rows[i].Beat = sscRows[i].Beat;
+            rows[i].Quant = QuantOf(sscRows[i].Beat);
+        }
+    }
+
+    internal static bool Aligns(IReadOnlyList<EnrichedRow> snapshotRows, IReadOnlyList<StepRow> sscRows)
     {
         if (snapshotRows.Count != sscRows.Count || snapshotRows.Count == 0) return false;
         for (var i = 0; i < snapshotRows.Count; i++)
@@ -137,7 +143,7 @@ internal static class StepChartEnricher
     }
 
     /// <summary>4ths through 48ths off the beat's denominator; 0 = off every modeled grid.</summary>
-    private static int QuantOf(decimal beat)
+    internal static int QuantOf(decimal beat)
     {
         Span<int> divisors = stackalloc int[] { 1, 2, 3, 4, 6, 8, 12 };
         foreach (var divisor in divisors)
@@ -204,7 +210,10 @@ internal sealed record EnrichedStepChart(
     IReadOnlyList<SnapshotRange> RangesOfInterest,
     IReadOnlyDictionary<MixEnum, StepChartVerdict> Verdicts,
     int TapRowCount,
-    int TickSum);
+    int TickSum,
+    string? SscFile = null,
+    string? StepsType = null,
+    int? Meter = null);
 
 internal sealed class EnrichedRow
 {

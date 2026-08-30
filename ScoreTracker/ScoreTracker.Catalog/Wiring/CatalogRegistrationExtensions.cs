@@ -25,6 +25,7 @@ public static class CatalogRegistrationExtensions
         services.AddTransient<IChartFolderBaselineRepository, EFChartFolderBaselineRepository>();
         services.AddTransient<IArchivedSkillTagRepository, EFArchivedSkillTagRepository>();
         services.AddTransient<IChartStepChartRepository, EFChartStepChartRepository>();
+        services.AddTransient<StepChartIngest>();
         services.AddSingleton<IDbModelContribution, CatalogModelContribution>();
         return services;
     }
@@ -38,5 +39,6 @@ public static class CatalogRegistrationExtensions
     public static void AddCatalogConsumers(this IRegistrationConfigurator configurator)
     {
         configurator.AddConsumer<PiuCenterCrawlSaga>();
+        configurator.AddConsumer<StepChartReprocessConsumer>();
     }
 }

@@ -34,7 +34,10 @@ internal static class StepChartPayloadCodec
             chart.RangesOfInterest.Select(r => new PayloadRange(r.Start, r.End)).ToArray(),
             chart.Verdicts.ToDictionary(
                 kv => kv.Key.ToString(),
-                kv => new PayloadVerdict((int)kv.Value.Visibility, kv.Value.NoteCount, kv.Value.ImpliedTotal)));
+                kv => new PayloadVerdict((int)kv.Value.Visibility, kv.Value.NoteCount, kv.Value.ImpliedTotal)),
+            chart.SscFile,
+            chart.StepsType,
+            chart.Meter);
 
         using var buffer = new MemoryStream();
         using (var gzip = new GZipStream(buffer, CompressionLevel.Optimal, true))
@@ -79,7 +82,10 @@ internal sealed record StepChartPayload(
     IReadOnlyList<decimal> Ticks,
     IReadOnlyList<PayloadSegment> Segments,
     IReadOnlyList<PayloadRange> Ranges,
-    IReadOnlyDictionary<string, PayloadVerdict> Verdicts);
+    IReadOnlyDictionary<string, PayloadVerdict> Verdicts,
+    string? Ssc = null,
+    string? StepsType = null,
+    int? Meter = null);
 
 internal sealed record PayloadRow(decimal T, int M, int L, int Q, decimal? B);
 

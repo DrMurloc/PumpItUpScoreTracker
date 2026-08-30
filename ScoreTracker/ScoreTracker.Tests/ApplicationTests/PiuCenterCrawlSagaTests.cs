@@ -42,10 +42,15 @@ public sealed class PiuCenterCrawlSagaTests
             .ReturnsAsync(Array.Empty<(Guid, MixEnum, int, int?)>());
     }
 
+    private readonly Mock<IChartStepChartRepository> _stepCharts = new();
+    private readonly Mock<IStepFileStore> _stepStore = new();
+
     private PiuCenterCrawlSaga BuildSaga()
     {
+        var ingest = new StepChartIngest(_stepCharts.Object, _stepStore.Object, _charts.Object,
+            FakeDateTime.At(Now).Object, NullLogger<StepChartIngest>.Instance);
         return new PiuCenterCrawlSaga(_piuCenter.Object, _aliases.Object, _metrics.Object, _charts.Object,
-            FakeDateTime.At(Now).Object, _baselines.Object, NullLogger<PiuCenterCrawlSaga>.Instance);
+            FakeDateTime.At(Now).Object, _baselines.Object, ingest, NullLogger<PiuCenterCrawlSaga>.Instance);
     }
 
     private Task Consume()

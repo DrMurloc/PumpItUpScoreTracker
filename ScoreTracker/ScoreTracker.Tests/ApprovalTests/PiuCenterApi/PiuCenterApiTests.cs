@@ -245,4 +245,33 @@ public sealed class PiuCenterApiTests
         Assert.Contains(requests, u => u.AbsolutePath.Contains("/_build/assets/data-"));
         Assert.Contains(requests, u => u.AbsolutePath.Contains("/chart-jsons/050726/page-content/chart-table.json"));
     }
+
+    /// <summary>
+    ///     The raw read behind the step-chart ingest (step-chart-failure-map.md D4), pinned to
+    ///     the same fixtures as the aggregate counts above: Repentance's 627 tap arrows sit on
+    ///     577 rows, its 70 holds carry an authored tick sum of 481, and the generator recorded
+    ///     which .ssc it read.
+    /// </summary>
+    [Fact]
+    public void ChartPageStepsReadTheRawArrays()
+    {
+        var steps = PiuCenterDataParser.ParseChartPageSteps(Fixture("chart-page_Repentance_D20.json"));
+
+        Assert.NotNull(steps);
+        Assert.Equal(627, steps!.Taps.Count);
+        Assert.Equal(577, steps.Taps.Select(t => t.Time).Distinct().Count());
+        Assert.Equal(70, steps.Holds.Select(h => h.Start).Distinct().Count());
+        Assert.Equal(481, steps.TickSpans.Sum(t => t.Count));
+        Assert.NotNull(steps.SscFile);
+        Assert.Equal("pump-double", steps.StepsType);
+        Assert.Equal(20, steps.Meter);
+        Assert.NotEmpty(steps.Segments);
+        Assert.All(steps.Taps, t => Assert.True(t.Limb is "l" or "r"));
+    }
+
+    [Fact]
+    public void ChartPageStepsRefuseNonJson()
+    {
+        Assert.Null(PiuCenterDataParser.ParseChartPageSteps("<html>the SPA shell</html>"));
+    }
 }

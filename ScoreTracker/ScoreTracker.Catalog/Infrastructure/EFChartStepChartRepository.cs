@@ -61,6 +61,14 @@ internal sealed class EFChartStepChartRepository : IChartStepChartRepository
         }
     }
 
+    public async Task<IReadOnlyList<Guid>> GetBankedChartIds(CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.Set<ChartStepChartEntity>()
+            .Select(e => e.ChartId)
+            .ToArrayAsync(cancellationToken);
+    }
+
     public async Task<BankedStepChart?> Get(Guid chartId, CancellationToken cancellationToken = default)
     {
         return await _cache.GetOrCreateAsync(CacheKey(chartId), async entry =>
