@@ -8590,6 +8590,9 @@
   <data name="Walk off" xml:space="preserve">
 	  <value>Abandono</value>
   </data>
+  <data name="Walk off · {0}% in" xml:space="preserve">
+	  <value>Abandono · al {0}%</value>
+  </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>Calentando la plataforma</value>
   </data>

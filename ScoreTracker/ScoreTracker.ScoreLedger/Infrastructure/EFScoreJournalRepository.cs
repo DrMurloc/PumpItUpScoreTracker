@@ -137,6 +137,7 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
     private static void SetCause(ScoreEventJournalEntity entity, StageBreakCause cause)
     {
         entity.IsNonLifebarBreak = cause.IsNonLifebarBreak;
+        entity.IsWalkOff = cause.IsWalkOff;
         entity.PassPlate = cause.PassPlate?.GetName();
         entity.PassGrade = cause.PassGrade?.GetName();
     }
@@ -303,14 +304,14 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             .Select(j => new
             {
                 j.UserId, j.Perfects, j.Greats, j.Goods, j.Bads, j.Misses, j.IsNonLifebarBreak,
-                j.PassPlate, j.PassGrade
+                j.IsWalkOff, j.PassPlate, j.PassGrade
             })
             .ToArrayAsync(cancellationToken);
         return new ChartStageBreaksRead(rows
             .Select(r => new ChartStageBreakRow(r.UserId,
                 new JudgementCounts(r.Perfects!.Value, r.Greats ?? 0, r.Goods ?? 0, r.Bads ?? 0,
                     r.Misses ?? 0),
-                r.IsNonLifebarBreak, r.PassPlate, r.PassGrade))
+                r.IsNonLifebarBreak, r.PassPlate, r.PassGrade, r.IsWalkOff))
             .ToArray(), unplaced);
     }
 
@@ -488,7 +489,7 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             Enum.TryParse<XXLetterGrade>(e.LetterGrade, out var grade) ? grade : null,
             e.IsStageBroken,
             new StageBreakCause(e.IsNonLifebarBreak, PhoenixPlateHelperMethods.TryParse(e.PassPlate),
-                PhoenixLetterGradeHelperMethods.TryParse(e.PassGrade)));
+                PhoenixLetterGradeHelperMethods.TryParse(e.PassGrade), e.IsWalkOff));
     }
 
     internal static JudgementCounts? JudgementsOf(ScoreEventJournalEntity e)

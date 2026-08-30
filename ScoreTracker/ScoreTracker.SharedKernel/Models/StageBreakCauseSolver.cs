@@ -24,12 +24,28 @@ public static class StageBreakCauseSolver
     private const PhoenixLetterGrade LowestPassGrade = PhoenixLetterGrade.A;
 
     /// <summary>
+    ///     The AFK guard's wall, measured against production (D36): Premium ends a stage on the
+    ///     51st consecutive miss, and the journal shows the wall exactly — one bar-side break
+    ///     each at 49 and 50 misses, then 19 at 51 and 26 at 52, a valley of 8 rows across
+    ///     40–49 between 1,310 genuine deaths below and 382 walk-offs above (22% of Phoenix 2's
+    ///     bar-side breaks; Phoenix 1 carries the same second hump at 23%). Corroborated by
+    ///     shape: rows past the wall average FEWER bads and goods than deaths below it despite
+    ///     tenfold the misses — nobody grazes notes from off the pad.
+    /// </summary>
+    public const int WalkOffMissFloor = 51;
+
+    /// <summary>
     ///     A null note count, a null level or an unjudged play all mean the same thing: not enough
     ///     to tell, so no claim. Never guess — an absent badge is silent, a wrong one is not.
     /// </summary>
     public static StageBreakCause Solve(int perfects, int greats, int goods, int bads, int misses,
         int? noteCount, DifficultyLevel? level, MixEnum mix)
     {
+        // The walk-off check needs only the miss count, so it answers even where the level or
+        // note count cannot — and it goes first: a run wearing the guard's tail has nothing
+        // left for the bar or grade arithmetic to say about the player.
+        if (misses >= WalkOffMissFloor) return StageBreakCause.WalkedOff;
+
         if (level == null) return StageBreakCause.Unattributed;
 
         var margin = new LifebarSimulator(level.Value).MaxLife * SurvivingFraction;

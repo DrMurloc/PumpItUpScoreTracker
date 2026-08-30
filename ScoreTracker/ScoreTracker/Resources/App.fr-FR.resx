@@ -8651,6 +8651,9 @@
   <data name="Walk off" xml:space="preserve">
 	  <value>Abandon</value>
   </data>
+  <data name="Walk off · {0}% in" xml:space="preserve">
+	  <value>Abandon · à {0}%</value>
+  </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>Chauffage du pad</value>
   </data>

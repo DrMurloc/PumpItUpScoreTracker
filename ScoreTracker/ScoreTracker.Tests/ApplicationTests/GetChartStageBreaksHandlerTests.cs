@@ -40,7 +40,8 @@ public sealed class GetChartStageBreaksHandlerTests
         SetupRows(
             new ChartStageBreakRow(Viewer, new JudgementCounts(700, 2, 0, 0, 1), true,
                 "PerfectGame", "SSS+"),
-            new ChartStageBreakRow(Stranger, new JudgementCounts(100, 0, 0, 5, 20), false));
+            new ChartStageBreakRow(Stranger, new JudgementCounts(100, 0, 0, 5, 20), false,
+                IsWalkOff: true));
 
         var result = await Build().Handle(new GetChartStageBreaksQuery(ChartId, MixEnum.Phoenix2, Viewer),
             CancellationToken.None);
@@ -58,6 +59,8 @@ public sealed class GetChartStageBreaksHandlerTests
         Assert.False(rows[1].IsViewer);
         Assert.Equal(1, rows[0].Misses);
         Assert.Equal(20, rows[1].Misses);
+        Assert.False(rows[0].IsWalkOff);
+        Assert.True(rows[1].IsWalkOff);
     }
 
     [Fact]

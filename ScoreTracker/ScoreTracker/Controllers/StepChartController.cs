@@ -29,15 +29,8 @@ public class StepChartController : Controller
     /// <summary>Positions are estimates; runs ending this close are one pin (D1).</summary>
     private const decimal ClusterEpsilonSeconds = 1.5m;
 
-    /// <summary>
-    ///     The walk-off wall, measured (owner + data, 2026-08-30): Premium's AFK guard ends a
-    ///     stage on the 51st consecutive miss, and the journal shows it — one bar-side break
-    ///     each at 49 and 50 misses, then 19 at 51 and 26 at 52, a valley at 40–49 (8 rows in
-    ///     1,700) between the death hump and the guard's hump. Fewer bads and goods above the
-    ///     wall than below it corroborates: nobody grazes notes from off the pad
-    ///     (step-chart-failure-map.md D18).
-    /// </summary>
-    private const int WalkOffMissFloor = 51;
+    // Walk-offs are first-class on the stored cause now (StageBreakCauseSolver.WalkOffMissFloor,
+    // pass-command-detection D36); this endpoint only reads the flag and un-walks the pin.
 
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
@@ -109,8 +102,10 @@ public class StepChartController : Controller
             // A walk-off's judgement count includes the guard's miss tail; the pin belongs at
             // the GIVE-UP point, not where the corpse stopped — subtract the guaranteed
             // consecutive tail before placing (D18).
-            var walkedOff = !row.IsNonLifebarBreak && row.Misses >= WalkOffMissFloor;
-            var judged = walkedOff ? Math.Max(1, row.Judged - WalkOffMissFloor) : row.Judged;
+            var walkedOff = row.IsWalkOff;
+            var judged = walkedOff
+                ? Math.Max(1, row.Judged - StageBreakCauseSolver.WalkOffMissFloor)
+                : row.Judged;
             var time = BreakPositionSolver.Place(judged, events, record.NoteCount.Value);
             if (time == null) continue;
             if (row.IsNonLifebarBreak) pass.Add((time.Value, row.PassPlate, row.PassGrade));

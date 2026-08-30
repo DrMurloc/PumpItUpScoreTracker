@@ -32,7 +32,7 @@ internal sealed class GetChartStageBreaksHandler(
             (read?.Rows ?? Array.Empty<ChartStageBreakRow>())
             .Select(r => new ChartStageBreakRecord(r.Judgements.NoteCount, r.IsNonLifebarBreak,
                 request.ViewerId != null && r.UserId == request.ViewerId, r.PassPlate, r.PassGrade,
-                r.Judgements.Misses))
+                r.Judgements.Misses, r.IsWalkOff))
             .ToArray(),
             read?.Unplaced ?? 0);
     }

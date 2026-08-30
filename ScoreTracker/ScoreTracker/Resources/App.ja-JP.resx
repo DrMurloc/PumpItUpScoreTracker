@@ -8652,6 +8652,9 @@
   <data name="Walk off" xml:space="preserve">
 	  <value>リタイア</value>
   </data>
+  <data name="Walk off · {0}% in" xml:space="preserve">
+	  <value>リタイア · {0}%地点</value>
+  </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>パッドを温めています</value>
   </data>

@@ -8590,6 +8590,9 @@
   <data name="Walk off" xml:space="preserve">
 	  <value>포기</value>
   </data>
+  <data name="Walk off · {0}% in" xml:space="preserve">
+	  <value>포기 · {0}% 지점</value>
+  </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>발판 예열하는 중</value>
   </data>

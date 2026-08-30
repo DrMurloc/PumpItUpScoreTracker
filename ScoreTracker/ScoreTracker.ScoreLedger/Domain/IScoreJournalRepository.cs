@@ -153,7 +153,7 @@ internal sealed record JournalSessionRows(
 
 /// <summary>A judged stage break as the rail read returns it — vertical-internal, user attached.</summary>
 internal sealed record ChartStageBreakRow(Guid UserId, JudgementCounts Judgements, bool IsNonLifebarBreak,
-    string? PassPlate = null, string? PassGrade = null);
+    string? PassPlate = null, string? PassGrade = null, bool IsWalkOff = false);
 // Judgements carries Misses; nothing extra to add — the record above already travels whole.
 
 /// <summary>

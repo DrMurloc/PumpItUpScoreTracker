@@ -115,7 +115,9 @@ All owner-settled across the 2026-08-29/30 workshop.
   "Pass G" on Phoenix 2, where Premium's bar cannot end a song without it, and "Life Bar
   Break" on Phoenix 1), **"Walk off"** for rows at or past the wall — placed at the GIVE-UP
   point (judged minus the 51-miss tail), not where the corpse stopped — and the proven Pass
-  commands. The threshold lives in the endpoint as a named constant citing this measurement.
+  commands. The classification is first-class on the stored cause
+  (`StageBreakCauseSolver.WalkOffMissFloor`, its own journal column, re-derived by the cause
+  backfill; pass-command-detection D36) — the sessions page speaks it too.
 - **D17 — Quick links cap at six**: crux, up to two of the snapshot's "eNPS ranges of
   interest", and the top death clusters by count. Structure first, then spikes.
 

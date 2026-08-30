@@ -116,7 +116,8 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
             row.SessionId, classification,
             classification == ScoreEventClassification.Upscore ? priorBest : null,
             isReclear, row.IsStageBroken, row.Judgements?.NoteCount, row.Judgements,
-            row.Cause.IsNonLifebarBreak, row.Cause.PassPlate?.GetName(), row.Cause.PassGrade?.GetName());
+            row.Cause.IsNonLifebarBreak, row.Cause.PassPlate?.GetName(), row.Cause.PassGrade?.GetName(),
+            row.Cause.IsWalkOff);
     }
 
     private static ScoreEventClassification ClassifyRow(ScoreJournalEntry row, bool priorPassed, int? priorBest,
