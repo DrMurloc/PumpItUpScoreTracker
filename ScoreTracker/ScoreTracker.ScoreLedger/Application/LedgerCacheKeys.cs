@@ -53,4 +53,16 @@ internal static class LedgerCacheKeys
     }
 
     public static readonly TimeSpan JudgementSpreadsTtl = TimeSpan.FromHours(6);
+
+    /// <summary>
+    ///     One chart's judged stage breaks — the failure rail. Imports append all day, so this
+    ///     runs on a short TTL rather than eviction: a death showing up five minutes late is
+    ///     invisible, a journal-write hook in every import path is not.
+    /// </summary>
+    public static string StageBreaks(MixEnum mix, Guid chartId)
+    {
+        return $"StageBreaks__{mix}__{chartId}";
+    }
+
+    public static readonly TimeSpan StageBreaksTtl = TimeSpan.FromMinutes(5);
 }

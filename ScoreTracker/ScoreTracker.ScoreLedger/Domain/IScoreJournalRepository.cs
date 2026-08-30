@@ -117,6 +117,15 @@ internal interface IScoreJournalRepository
         CancellationToken cancellationToken);
 
     /// <summary>
+    ///     Every judged stage break on one chart in one mix, across every player — the failure
+    ///     rail's read (docs/design/step-chart-failure-map.md). Served off the filtered
+    ///     stage-break index; the caller anonymizes, this row still carries the user for the
+    ///     viewer's-own flag.
+    /// </summary>
+    Task<IReadOnlyList<ChartStageBreakRow>> GetChartStageBreaks(MixEnum mix, Guid chartId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     ///     Writes re-solved combos onto one player's rows in one mix, keyed by the play key's
     ///     chart and time. The one sanctioned in-place write besides raising IsBest: the combo is a
     ///     function of the row's other columns and the catalog, not history.
@@ -141,3 +150,6 @@ internal sealed record JournalSessionRows(
     DateOnly? Day,
     MixEnum Mix,
     IReadOnlyList<ScoreJournalEntry> Rows);
+
+/// <summary>A judged stage break as the rail read returns it — vertical-internal, user attached.</summary>
+internal sealed record ChartStageBreakRow(Guid UserId, JudgementCounts Judgements, bool IsNonLifebarBreak);

@@ -284,6 +284,29 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             .ToArray();
     }
 
+    public async Task<IReadOnlyList<ChartStageBreakRow>> GetChartStageBreaks(MixEnum mix, Guid chartId,
+        CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // Served off the filtered stage-break index end to end — chart, mix, breaks-only, the
+        // judgement columns riding as includes. No user join: the rail is anonymous, and its one
+        // caller flags the viewer's own rows by id without ever surfacing anyone else's.
+        var rows = await database.Set<ScoreEventJournalEntity>()
+            .Where(j => j.ChartId == chartId && j.MixId == mixId && j.IsStageBroken && j.Perfects != null)
+            .Select(j => new
+            {
+                j.UserId, j.Perfects, j.Greats, j.Goods, j.Bads, j.Misses, j.IsNonLifebarBreak
+            })
+            .ToArrayAsync(cancellationToken);
+        return rows
+            .Select(r => new ChartStageBreakRow(r.UserId,
+                new JudgementCounts(r.Perfects!.Value, r.Greats ?? 0, r.Goods ?? 0, r.Bads ?? 0,
+                    r.Misses ?? 0),
+                r.IsNonLifebarBreak))
+            .ToArray();
+    }
+
     public async Task<IReadOnlyList<UserPhoenixScore>> GetLowestPassingPlays(MixEnum mix, Guid chartId,
         int limit, CancellationToken cancellationToken)
     {

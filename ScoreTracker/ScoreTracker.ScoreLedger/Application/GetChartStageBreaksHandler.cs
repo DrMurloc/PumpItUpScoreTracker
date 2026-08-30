@@ -1,0 +1,36 @@
+using MediatR;
+using Microsoft.Extensions.Caching.Memory;
+using ScoreTracker.ScoreLedger.Contracts;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
+using ScoreTracker.ScoreLedger.Domain;
+
+namespace ScoreTracker.ScoreLedger.Application;
+
+/// <summary>
+///     The failure rail's rows for one chart (docs/design/step-chart-failure-map.md D2/D3).
+///     The anonymous read caches per (mix, chart) — imports append all day and nothing needs
+///     to see a death the minute it lands — while the viewer's-own flag is computed per
+///     request, so the cache never carries a viewer's perspective.
+/// </summary>
+internal sealed class GetChartStageBreaksHandler(
+    IScoreJournalRepository journal,
+    IMemoryCache cache)
+    : IRequestHandler<GetChartStageBreaksQuery, IEnumerable<ChartStageBreakRecord>>
+{
+    public async Task<IEnumerable<ChartStageBreakRecord>> Handle(GetChartStageBreaksQuery request,
+        CancellationToken cancellationToken)
+    {
+        var rows = await cache.GetOrCreateAsync(
+            LedgerCacheKeys.StageBreaks(request.Mix, request.ChartId),
+            entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = LedgerCacheKeys.StageBreaksTtl;
+                return journal.GetChartStageBreaks(request.Mix, request.ChartId, cancellationToken);
+            });
+
+        return (rows ?? Array.Empty<ChartStageBreakRow>())
+            .Select(r => new ChartStageBreakRecord(r.Judgements.NoteCount, r.IsNonLifebarBreak,
+                request.ViewerId != null && r.UserId == request.ViewerId))
+            .ToArray();
+    }
+}

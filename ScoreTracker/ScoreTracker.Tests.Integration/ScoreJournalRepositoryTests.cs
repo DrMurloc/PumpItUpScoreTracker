@@ -582,6 +582,60 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
         Assert.Equal(960000, (int)Assert.Single(capped).Score!.Value);
     }
 
+    [Fact]
+    public async Task ChartStageBreaksComeBackAcrossPlayersJudgedOnlyRightMixOnly()
+    {
+        var userA = await _seed.SeedUserAsync();
+        var userB = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedChartAsync();
+        var otherChart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        // Two judged breaks on the chart (one of them a proven Pass), one break with no
+        // judgements, one finished play, one judged break on another chart, and one judged
+        // break on the same chart in the other mix — only the first two may come back.
+        await repo.AppendObservations(new[]
+        {
+            Entry(userA, chartId, Now, 0, isBroken: true, mix: MixEnum.Phoenix2) with
+            {
+                IsStageBroken = true, IsBest = false,
+                Judgements = new JudgementCounts(700, 2, 0, 0, 1),
+                Cause = new StageBreakCause(true, null, null)
+            },
+            Entry(userB, chartId, Now.AddMinutes(1), 0, isBroken: true, mix: MixEnum.Phoenix2) with
+            {
+                IsStageBroken = true, IsBest = false,
+                Judgements = new JudgementCounts(100, 0, 0, 5, 20)
+            },
+            Entry(userB, chartId, Now.AddMinutes(2), 0, isBroken: true, mix: MixEnum.Phoenix2) with
+            {
+                IsStageBroken = true, IsBest = false
+            },
+            Entry(userB, chartId, Now.AddMinutes(3), 950000, mix: MixEnum.Phoenix2) with
+            {
+                IsBest = false, Judgements = new JudgementCounts(800, 0, 0, 0, 0)
+            },
+            Entry(userB, otherChart, Now.AddMinutes(4), 0, isBroken: true, mix: MixEnum.Phoenix2) with
+            {
+                IsStageBroken = true, IsBest = false,
+                Judgements = new JudgementCounts(50, 0, 0, 0, 0)
+            },
+            Entry(userB, chartId, Now.AddMinutes(5), 0, isBroken: true) with
+            {
+                IsStageBroken = true, IsBest = false,
+                Judgements = new JudgementCounts(60, 0, 0, 0, 0)
+            }
+        }, CancellationToken.None);
+
+        var rows = await repo.GetChartStageBreaks(MixEnum.Phoenix2, chartId, CancellationToken.None);
+
+        Assert.Equal(2, rows.Count);
+        var passRow = Assert.Single(rows, r => r.IsNonLifebarBreak);
+        Assert.Equal(userA, passRow.UserId);
+        Assert.Equal(703, passRow.Judgements.NoteCount);
+        var lifeRow = Assert.Single(rows, r => !r.IsNonLifebarBreak);
+        Assert.Equal(125, lifeRow.Judgements.NoteCount);
+    }
+
     private static ScoreJournalEntry Entry(Guid userId, Guid chartId, DateTimeOffset at, int score,
         Guid? sessionId = null, MixEnum mix = MixEnum.Phoenix, bool isBroken = false)
     {
