@@ -87,8 +87,13 @@ public sealed class RecurringJobRunner
             _bus.Publish(new RecalculateChartLetterDifficultiesCommand(MixEnum.Phoenix)),
             _bus.Publish(new RecalculateChartLetterDifficultiesCommand(MixEnum.Phoenix2)));
 
+    // Was the per-mix note's one deliberate holdout while the similarity inputs — the piucenter
+    // crawl — described Phoenix charts only; the self-run Phoenix 2 snapshot (banked 2026-08-26)
+    // ended that, and the consumer builds each mix's pool from that mix's own catalog.
     public Task PublishRecalculateChartSimilarity() =>
-        _bus.Publish(new RecalculateChartSimilarityCommand());
+        Task.WhenAll(
+            _bus.Publish(new RecalculateChartSimilarityCommand(MixEnum.Phoenix)),
+            _bus.Publish(new RecalculateChartSimilarityCommand(MixEnum.Phoenix2)));
 
     public Task PublishStartLeaderboardImport() =>
         _bus.Publish(new StartLeaderboardImportCommand());
