@@ -29,6 +29,16 @@ public class StepChartController : Controller
     /// <summary>Positions are estimates; runs ending this close are one pin (D1).</summary>
     private const decimal ClusterEpsilonSeconds = 1.5m;
 
+    /// <summary>
+    ///     The walk-off wall, measured (owner + data, 2026-08-30): Premium's AFK guard ends a
+    ///     stage on the 51st consecutive miss, and the journal shows it — one bar-side break
+    ///     each at 49 and 50 misses, then 19 at 51 and 26 at 52, a valley at 40–49 (8 rows in
+    ///     1,700) between the death hump and the guard's hump. Fewer bads and goods above the
+    ///     wall than below it corroborates: nobody grazes notes from off the pad
+    ///     (step-chart-failure-map.md D18).
+    /// </summary>
+    private const int WalkOffMissFloor = 51;
+
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
 
@@ -91,13 +101,20 @@ public class StepChartController : Controller
             .ToArray();
 
         var life = new List<decimal>();
+        var walk = new List<decimal>();
         var pass = new List<(decimal Time, string? Plate, string? Grade)>();
         var yours = new List<decimal>();
         foreach (var row in breaks)
         {
-            var time = BreakPositionSolver.Place(row.Judged, events, record.NoteCount.Value);
+            // A walk-off's judgement count includes the guard's miss tail; the pin belongs at
+            // the GIVE-UP point, not where the corpse stopped — subtract the guaranteed
+            // consecutive tail before placing (D18).
+            var walkedOff = !row.IsNonLifebarBreak && row.Misses >= WalkOffMissFloor;
+            var judged = walkedOff ? Math.Max(1, row.Judged - WalkOffMissFloor) : row.Judged;
+            var time = BreakPositionSolver.Place(judged, events, record.NoteCount.Value);
             if (time == null) continue;
             if (row.IsNonLifebarBreak) pass.Add((time.Value, row.PassPlate, row.PassGrade));
+            else if (walkedOff) walk.Add(time.Value);
             else life.Add(time.Value);
             if (row.IsViewer) yours.Add(time.Value);
         }
@@ -111,6 +128,12 @@ public class StepChartController : Controller
                 t = c.Time, n = c.Count, from = c.From, to = c.To, cause = "life",
                 cmds = Array.Empty<string>()
             })
+            .Concat(BreakPositionSolver.Cluster(walk, ClusterEpsilonSeconds)
+                .Select(c => new
+                {
+                    t = c.Time, n = c.Count, from = c.From, to = c.To, cause = "walk",
+                    cmds = Array.Empty<string>()
+                }))
             .Concat(BreakPositionSolver.Cluster(pass.Select(p => p.Time), ClusterEpsilonSeconds)
                 .Select(c => new
                 {
@@ -126,8 +149,9 @@ public class StepChartController : Controller
 
         return Json(new
         {
-            total = life.Count + pass.Count,
+            total = life.Count + walk.Count + pass.Count,
             life = life.Count,
+            walk = walk.Count,
             pass = pass.Count,
             unplaced = result.Unplaced,
             yours = yours.OrderBy(t => t).ToArray(),
@@ -152,7 +176,7 @@ public class StepChartController : Controller
     {
         return new
         {
-            total = 0, life = 0, pass = 0, unplaced = 0, yours = Array.Empty<decimal>(),
+            total = 0, life = 0, walk = 0, pass = 0, unplaced = 0, yours = Array.Empty<decimal>(),
             pins = Array.Empty<object>()
         };
     }

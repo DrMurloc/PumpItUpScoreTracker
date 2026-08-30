@@ -195,6 +195,9 @@ public static class ThemeScales
     /// <summary>The failure rail's proven-Pass pin. The life pin is <see cref="LifeDanger" />.</summary>
     public static string StepPassPin => "var(--step-pass)";
 
+    /// <summary>The walk-off pin — the AFK guard's 51-miss wall, not a death (D18).</summary>
+    public static string StepWalkOff => "var(--step-walkoff)";
+
     /// <summary>The viewer's own broken runs on the rail.</summary>
     public static string StepYou => "var(--step-you)";
 

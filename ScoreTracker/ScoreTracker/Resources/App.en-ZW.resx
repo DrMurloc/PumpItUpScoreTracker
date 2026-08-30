@@ -5168,6 +5168,9 @@
   <data name="Pass Difficulty" xml:space="preserve">
     <value>Maglplgl Glorgmurpgrrgl</value>
   </data>
+  <data name="Pass G" xml:space="preserve">
+	  <value>Maglplgl Ｇ</value>
+  </data>
   <data name="Pass Pusher" xml:space="preserve">
     <value>Maglplgl Mrgrgl</value>
   </data>
@@ -8645,6 +8648,9 @@
   </data>
   <data name="Waiting room" xml:space="preserve">
     <value>Blargmo Gurg</value>
+  </data>
+  <data name="Walk off" xml:space="preserve">
+	  <value>Marggro Ro</value>
   </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>Bramogl uppa</value>

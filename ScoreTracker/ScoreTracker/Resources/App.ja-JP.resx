@@ -5168,6 +5168,9 @@
   <data name="Pass Difficulty" xml:space="preserve">
     <value>パス難易度</value>
   </data>
+  <data name="Pass G" xml:space="preserve">
+	  <value>Pass G</value>
+  </data>
   <data name="Pass Pusher" xml:space="preserve">
     <value>Pass Pusher</value>
   </data>
@@ -8645,6 +8648,9 @@
   </data>
   <data name="Waiting room" xml:space="preserve">
     <value>待機中</value>
+  </data>
+  <data name="Walk off" xml:space="preserve">
+	  <value>リタイア</value>
   </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>パッドを温めています</value>

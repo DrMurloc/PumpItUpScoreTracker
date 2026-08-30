@@ -492,6 +492,7 @@ public static class MixThemes
     private const string StepQuant16Hex = "#FFD23F";
     private const string StepQuantOtherHex = "#34D399";
     private const string StepPassPinHex = "#B18CFF";
+    private const string StepWalkOffHex = "#E8A33D";
     private const string StepYouHex = "#FFD166";
 
     // Qualitative series palette for chart lines that carry no semantic-ramp meaning
@@ -570,6 +571,7 @@ public static class MixThemes
             $"    --quant-16: {StepQuant16Hex};\n" +
             $"    --quant-other: {StepQuantOtherHex};\n" +
             $"    --step-pass: {StepPassPinHex};\n" +
+            $"    --step-walkoff: {StepWalkOffHex};\n" +
             $"    --step-you: {StepYouHex};";
         return $@":root {{
     --mix-bg: {p.Background};

@@ -5168,6 +5168,9 @@
   <data name="Pass Difficulty" xml:space="preserve">
     <value>Pass Difficulty</value>
   </data>
+  <data name="Pass G" xml:space="preserve">
+	  <value>Pass G</value>
+  </data>
   <data name="Pass Pusher" xml:space="preserve">
     <value>Pass Pusher</value>
   </data>
@@ -8645,6 +8648,9 @@
   </data>
   <data name="Waiting room" xml:space="preserve">
     <value>Waiting room</value>
+  </data>
+  <data name="Walk off" xml:space="preserve">
+	  <value>Walk off</value>
   </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>Warming up the pad</value>

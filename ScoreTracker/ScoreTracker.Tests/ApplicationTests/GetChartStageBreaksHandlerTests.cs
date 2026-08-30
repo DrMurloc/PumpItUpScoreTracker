@@ -56,6 +56,8 @@ public sealed class GetChartStageBreaksHandlerTests
         Assert.Null(rows[1].PassPlate);
         Assert.Equal(125, rows[1].Judged);
         Assert.False(rows[1].IsViewer);
+        Assert.Equal(1, rows[0].Misses);
+        Assert.Equal(20, rows[1].Misses);
     }
 
     [Fact]

@@ -5136,6 +5136,9 @@
   <data name="Pass Difficulty" xml:space="preserve">
     <value>패스 난이도</value>
   </data>
+  <data name="Pass G" xml:space="preserve">
+	  <value>Pass G</value>
+  </data>
   <data name="Pass Pusher" xml:space="preserve">
     <value>Pass Pusher</value>
   </data>
@@ -8583,6 +8586,9 @@
   </data>
   <data name="Waiting room" xml:space="preserve">
     <value>대기실</value>
+  </data>
+  <data name="Walk off" xml:space="preserve">
+	  <value>포기</value>
   </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>발판 예열하는 중</value>

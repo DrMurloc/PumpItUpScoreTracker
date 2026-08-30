@@ -25,6 +25,8 @@ public static class StepChartStrings
             ["deathSpike"] = localizer["Death spike"],
             ["passCluster"] = localizer["Pass cluster"],
             ["lifeBreak"] = localizer["Life Bar Break"],
+            ["passG"] = localizer["Pass G"],
+            ["walkOff"] = localizer["Walk off"],
             ["unknownBreak"] = localizer["Unknown Break"],
             ["stagePass"] = localizer["Stage Pass"],
             ["yourRuns"] = localizer["Your runs"],

@@ -9,7 +9,7 @@ namespace ScoreTracker.ScoreLedger.Contracts;
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record ChartStageBreakRecord(int Judged, bool IsNonLifebarBreak, bool IsViewer,
-    string? PassPlate = null, string? PassGrade = null);
+    string? PassPlate = null, string? PassGrade = null, int Misses = 0);
 
 /// <summary>
 ///     The rail's answer whole: the placeable breaks, plus how many of the chart's imported

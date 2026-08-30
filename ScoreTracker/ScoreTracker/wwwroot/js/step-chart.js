@@ -14,6 +14,7 @@ export async function mount(root) {
 
     var chartId = root.getAttribute('data-chart-id');
     var mix = root.getAttribute('data-mix');
+    var isPhoenix2 = mix === 'Phoenix2';
     var compact = root.getAttribute('data-compact') === '1';
     if (!chartId || !mix) return;
 
@@ -57,7 +58,7 @@ export async function mount(root) {
         root: root, box: box, rows: rows, holds: holds, segments: segments, ranges: ranges,
         panels: panels, duration: duration, level: level, compact: compact,
         strings: strings, payload: payload, colors: COL,
-        mode: 'arrow', token: token
+        isPhoenix2: isPhoenix2, mode: 'arrow', token: token
     };
     root.stepChartView = view;
     applyScale(view);
@@ -376,6 +377,7 @@ async function loadBreaks(view, chartId, mix) {
     if (!breaks || (breaks.total === 0 && !breaks.unplaced)) return;
 
     view.colors.life = view.token('--life-danger');
+    view.colors.walk = view.token('--step-walkoff');
     view.colors.pass = view.token('--step-pass');
     view.colors.you = view.token('--step-you');
     view.breaks = breaks;
@@ -386,8 +388,12 @@ async function loadBreaks(view, chartId, mix) {
         return {
             t: pin.t, n: pin.n, from: pin.from, to: pin.to, cause: pin.cause,
             cmds: pin.cmds || [],
+            // Walk-offs share the bar column — they are what the bar column used to overclaim —
+            // and wear their own hue.
             x: pin.cause === 'pass' ? passX : lifeX,
-            color: pin.cause === 'pass' ? view.colors.pass : view.colors.life
+            color: pin.cause === 'pass' ? view.colors.pass
+                : pin.cause === 'walk' ? view.colors.walk
+                    : view.colors.life
         };
     });
 
@@ -587,10 +593,12 @@ function buildChips(view) {
             .filter(function (pin) { return pin.n >= 3; })
             .slice(0, 2)
             .forEach(function (pin) {
-                addChip(view, host, pin.cause === 'pass' ? 'pass' : 'life',
+                addChip(view, host, pin.cause,
                     pin.cause === 'pass'
                         ? (view.strings.passCluster || 'Pass cluster')
-                        : (view.strings.deathSpike || 'Death spike'),
+                        : pin.cause === 'walk'
+                            ? (view.strings.walkOff || 'Walk off')
+                            : (view.strings.deathSpike || 'Death spike'),
                     pin.t, pin.n);
             });
     }
@@ -638,7 +646,11 @@ function renderLegend(view) {
     if (view.breaks && (view.breaks.total > 0 || view.breaks.unplaced > 0)) {
         if (view.breaks.life > 0)
             legendEntry(host, view.colors.life,
-                (view.strings.lifeBreak || 'Life Bar Break') + ' \u00b7 ' + view.breaks.life);
+                (view.isPhoenix2 ? (view.strings.passG || 'Pass G')
+                    : (view.strings.lifeBreak || 'Life Bar Break')) + ' \u00b7 ' + view.breaks.life);
+        if (view.breaks.walk > 0)
+            legendEntry(host, view.colors.walk,
+                (view.strings.walkOff || 'Walk off') + ' \u00b7 ' + view.breaks.walk);
         if (view.breaks.pass > 0)
             legendEntry(host, view.colors.pass,
                 (view.strings.stagePass || 'Stage Pass') + ' \u00b7 ' + view.breaks.pass);
@@ -690,8 +702,16 @@ function bindPinTips(view) {
             }).join('') + escapeHtml(count);
         } else if (hit.cause === 'pass') {
             body = '<b>' + escapeHtml((view.strings.unknownBreak || 'Unknown Break') + count) + '</b>';
+        } else if (hit.cause === 'walk') {
+            body = '<b>' + escapeHtml((view.strings.walkOff || 'Walk off') + count) + '</b>';
         } else {
-            body = '<b>' + escapeHtml((view.strings.lifeBreak || 'Life Bar Break') + count) + '</b>';
+            // On Phoenix 2 the bar cannot end a Premium song without Pass G, so the bar-death
+            // label IS the command's name there (owner, 2026-08-30); Phoenix 1 has no commands
+            // and keeps the plain phrase.
+            var lifeLabel = view.isPhoenix2
+                ? (view.strings.passG || 'Pass G')
+                : (view.strings.lifeBreak || 'Life Bar Break');
+            body = '<b>' + escapeHtml(lifeLabel + count) + '</b>';
         }
 
         tip.innerHTML = '<div class="stepchart-tip-time">' + range + '</div>' + body;

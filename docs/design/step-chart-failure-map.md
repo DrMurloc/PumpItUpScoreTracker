@@ -104,6 +104,18 @@ All owner-settled across the 2026-08-29/30 workshop.
 - **D16 — Co-op charts get no section.** Their causes are never classified
   (pass-command-detection D35), their `Level` is a player count, and the corpus barely covers
   them. Skip outright rather than render a maybe.
+- **D18 — The walk-off wall sits at 51 misses, measured** (2026-08-30). Premium continues
+  play at 0 gauge, so a bar-side stage break is either Pass G ending the song or the AFK
+  guard ending it on the 51st consecutive miss — and the journal shows the wall exactly:
+  one bar-side break each at 49 and 50 misses, then 19 at 51 and 26 at 52, with a valley of
+  8 rows across 40–49 against 1,310 genuine deaths below and 382 walk-offs above (22% of
+  Phoenix 2's bar-side breaks; Phoenix 1 shows the same second hump at 23%). Corroboration:
+  walk-offs carry FEWER bads and goods than real deaths despite tenfold the misses — nobody
+  grazes notes from off the pad. So the rail speaks three causes: bar deaths (labelled
+  "Pass G" on Phoenix 2, where Premium's bar cannot end a song without it, and "Life Bar
+  Break" on Phoenix 1), **"Walk off"** for rows at or past the wall — placed at the GIVE-UP
+  point (judged minus the 51-miss tail), not where the corpse stopped — and the proven Pass
+  commands. The threshold lives in the endpoint as a named constant citing this measurement.
 - **D17 — Quick links cap at six**: crux, up to two of the snapshot's "eNPS ranges of
   interest", and the top death clusters by count. Structure first, then spikes.
 
