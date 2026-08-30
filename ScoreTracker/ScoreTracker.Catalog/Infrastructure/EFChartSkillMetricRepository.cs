@@ -14,10 +14,12 @@ namespace ScoreTracker.Catalog.Infrastructure;
 ///     similar-charts filters count against the whole pool (47.5k rows for Doubles alone) on every
 ///     adjustment. Cached whole and sliced in memory, because every caller wants a different subset
 ///     of the same unchanging set.
-///     **Eviction is exact rather than timed.** <see cref="ReplaceChartMetrics" /> is the only way
-///     these rows change, so it drops the source's entry and the next read rebuilds. A crawl writes
-///     per chart and therefore evicts per chart — harmless, because the rebuild happens on the next
-///     read and a crawl does not read.
+///     **Eviction is exact rather than timed** — a replace drops the source's entry and the next
+///     read rebuilds. An ingestion must write through the batch overload, which evicts ONCE at
+///     the end: the per-chart method evicts on every call, and a snapshot upload made ~4,500 of
+///     them while live traffic — and the saga itself, which reads mid-run now — re-hydrated the
+///     full table between every pair of writes (owner, 2026-08-30: "we basically take down prod
+///     whenever we do a piucenter upload").
 /// </summary>
 internal sealed class EFChartSkillMetricRepository : IChartSkillMetricRepository
 {
@@ -53,6 +55,36 @@ internal sealed class EFChartSkillMetricRepository : IChartSkillMetricRepository
         }), cancellationToken);
         await database.SaveChangesAsync(cancellationToken);
         _cache.Remove(CacheKey(source));
+    }
+
+    public async Task ReplaceChartMetrics(string source,
+        IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillMetric>> metricsByChart,
+        CancellationToken cancellationToken = default)
+    {
+        // Chunked so the change tracker never holds an entire snapshot's ~180k rows, with a
+        // fresh context per chunk; the one eviction waits for the last chunk, so a reader
+        // during the write sees the old world whole rather than a half-replaced one.
+        foreach (var chunk in metricsByChart.Chunk(500))
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var chartIds = chunk.Select(kv => kv.Key).ToArray();
+            var existing = await database.Set<ChartSkillMetricEntity>()
+                .Where(e => e.Source == source && chartIds.Contains(e.ChartId))
+                .ToArrayAsync(cancellationToken);
+            database.Set<ChartSkillMetricEntity>().RemoveRange(existing);
+            await database.Set<ChartSkillMetricEntity>().AddRangeAsync(chunk
+                .SelectMany(kv => kv.Value.Select(m => new ChartSkillMetricEntity
+                {
+                    ChartId = kv.Key,
+                    Source = source,
+                    MetricName = m.MetricName,
+                    Value = m.Value,
+                    Grade = m.Grade
+                })), cancellationToken);
+            await database.SaveChangesAsync(cancellationToken);
+        }
+
+        if (metricsByChart.Count > 0) _cache.Remove(CacheKey(source));
     }
 
     public async Task<IReadOnlyList<ChartSkillMetric>> GetMetrics(IEnumerable<Guid> chartIds, string source,
