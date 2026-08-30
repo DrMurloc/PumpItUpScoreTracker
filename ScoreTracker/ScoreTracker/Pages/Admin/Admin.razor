@@ -55,6 +55,12 @@
    or a sharper rule catches up on the next press. Announces nothing. Safe to re-press. *@
 <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="BackfillStageBreakCauses"
            data-testid="backfill-stage-break-causes">@L["Backfill stage break causes"]</MudButton>
+@* Re-runs the ssc-dependent half of step-chart enrichment from the newest ARCHIVED corpus —
+   repaired step files and refilled note counts take effect without an upload
+   (docs/design/step-chart-failure-map.md D7). A no-op with a log line when no blob store is
+   configured or nothing is archived. Safe to re-press. *@
+<MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="ReprocessStepFiles"
+           data-testid="reprocess-step-files">@L["Reprocess step files"]</MudButton>
 @* The exit path for a scoring-formula change. Every PUMBILITY figure a player can see is
    computed from raw scores at read time and is already correct on deploy; what a formula
    change leaves stale is the STORED ratings and per-chart values, which otherwise refresh
@@ -278,6 +284,13 @@
     {
         await Bus.Publish(new BackfillStageBreakCausesCommand());
         Snackbar.Add(L["Re-solving what ended every judged stage break. Nothing is announced."].Value,
+            Severity.Success);
+    }
+
+    private async Task ReprocessStepFiles()
+    {
+        await Bus.Publish(new ScoreTracker.Catalog.Contracts.Messages.ReprocessStepFilesCommand());
+        Snackbar.Add(L["Re-running step-chart enrichment from the archived corpus."].Value,
             Severity.Success);
     }
 
