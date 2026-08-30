@@ -111,8 +111,11 @@ pre-Phoenix, and the XX → Phoenix re-balance moved hold counts broadly (their 
 reproduce the game on 89% of PHOENIX-pack charts but only 47–74% of older packs, usually
 overcounting — Phoenix trimmed holds). Tap steps are ~98% stable across re-balances, so the
 decomposition is **our judged total − their tap rows**, per mix, with sanity gates: implied
-ticks below zero, or a no-hold simfile whose total exceeds its taps, mark a re-stepped chart
-and drop it from the aggregate. The crawler banks `tap_rows`, `hold_rows` and `hold_ticks`
+ticks below zero, or inferred ticks past 1.5× the tick total the simfile itself contains — the
+same trust check the identity chips run ([chart-identity.md](chart-identity.md) §3.9), which
+subsumes the original no-hold-file gate — mark a re-stepped chart and drop it from the
+aggregate (owner, 2026-08-30: before this the veto's own calibration case could headline the
+drenched list while its chart page refused it the chip). The crawler banks `tap_rows`, `hold_rows` and `hold_ticks`
 (their tick sum, kept for diagnostics, never displayed) as three more `ChartSkillMetric` rows
 from the per-chart JSON it already fetches; the snapshot import banks them identically.
 

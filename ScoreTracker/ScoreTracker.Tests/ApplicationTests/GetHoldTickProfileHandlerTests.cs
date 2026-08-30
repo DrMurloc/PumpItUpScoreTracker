@@ -33,7 +33,12 @@ public sealed class GetHoldTickProfileHandlerTests
             .ReturnsAsync(charts);
     }
 
-    private void SetupMetrics(params (Guid ChartId, int TapRows, int HoldRows)[] rows)
+    /// <summary>
+    ///     The crawl banks the note-shape trio together, so the fixture speaks it too — the
+    ///     trust check reads the file's tick total, and a fixture without one would test the
+    ///     benefit-of-the-doubt path that no measured chart can reach.
+    /// </summary>
+    private void SetupMetrics(params (Guid ChartId, int TapRows, int HoldRows, int HoldTicks)[] rows)
     {
         _metrics.Setup(m => m.GetMetricsByChart(PiuCenterMetrics.Source, It.IsAny<CancellationToken>()))
             .ReturnsAsync(rows.ToDictionary(
@@ -41,7 +46,8 @@ public sealed class GetHoldTickProfileHandlerTests
                 r => (IReadOnlyList<ChartSkillMetric>)new[]
                 {
                     new ChartSkillMetric(r.ChartId, PiuCenterMetrics.TapRows, r.TapRows, null),
-                    new ChartSkillMetric(r.ChartId, PiuCenterMetrics.HoldRows, r.HoldRows, null)
+                    new ChartSkillMetric(r.ChartId, PiuCenterMetrics.HoldRows, r.HoldRows, null),
+                    new ChartSkillMetric(r.ChartId, PiuCenterMetrics.HoldTicks, r.HoldTicks, null)
                 }));
     }
 
@@ -54,7 +60,7 @@ public sealed class GetHoldTickProfileHandlerTests
             .Select(i => new ChartBuilder().WithLevel(18).WithNoteCount(1000).Build())
             .ToArray();
         SetupCharts(MixEnum.Phoenix, charts);
-        SetupMetrics(charts.Select((c, i) => (c.Id, 1000 - i * 100, 10)).ToArray());
+        SetupMetrics(charts.Select((c, i) => (c.Id, 1000 - i * 100, 10, i * 100)).ToArray());
 
         var profile = await BuildHandler().Handle(new GetHoldTickProfileQuery(MixEnum.Phoenix),
             CancellationToken.None);
@@ -74,11 +80,13 @@ public sealed class GetHoldTickProfileHandlerTests
     {
         // One chart with more taps than judgements (negative ticks) and one whose simfile has
         // no holds yet a total its taps cannot explain — both re-steps, neither measurable.
+        // The second now falls to the trust check: zero file ticks cannot account for any
+        // inferred hold, the ratio-infinite end of the same veto the identity chips run.
         var negative = new ChartBuilder().WithLevel(16).WithNoteCount(500).Build();
         var noHoldOverrun = new ChartBuilder().WithLevel(16).WithNoteCount(830).Build();
         var clean = new ChartBuilder().WithLevel(16).WithNoteCount(1000).Build();
         SetupCharts(MixEnum.Phoenix, negative, noHoldOverrun, clean);
-        SetupMetrics((negative.Id, 600, 40), (noHoldOverrun.Id, 442, 0), (clean.Id, 600, 50));
+        SetupMetrics((negative.Id, 600, 40, 200), (noHoldOverrun.Id, 442, 0, 0), (clean.Id, 600, 50, 400));
 
         var profile = await BuildHandler().Handle(new GetHoldTickProfileQuery(MixEnum.Phoenix),
             CancellationToken.None);
@@ -96,7 +104,7 @@ public sealed class GetHoldTickProfileHandlerTests
         var phoenixTwin = chart with { NoteCount = 900 };
         SetupCharts(MixEnum.Phoenix2, chart);
         SetupCharts(MixEnum.Phoenix, phoenixTwin);
-        SetupMetrics((chart.Id, 450, 30));
+        SetupMetrics((chart.Id, 450, 30, 450));
 
         var profile = await BuildHandler().Handle(new GetHoldTickProfileQuery(MixEnum.Phoenix2),
             CancellationToken.None);
@@ -120,7 +128,7 @@ public sealed class GetHoldTickProfileHandlerTests
         Assert.Equal(0, (await handler.Handle(new GetHoldTickProfileQuery(MixEnum.Phoenix),
             CancellationToken.None)).ChartsMeasured);
 
-        SetupMetrics((chart.Id, 600, 50));
+        SetupMetrics((chart.Id, 600, 50, 400));
         var afterUpload = await handler.Handle(new GetHoldTickProfileQuery(MixEnum.Phoenix),
             CancellationToken.None);
         Assert.Equal(1, afterUpload.ChartsMeasured);
@@ -129,6 +137,28 @@ public sealed class GetHoldTickProfileHandlerTests
         await handler.Handle(new GetHoldTickProfileQuery(MixEnum.Phoenix), CancellationToken.None);
         _metrics.Verify(m => m.GetMetricsByChart(PiuCenterMetrics.Source, It.IsAny<CancellationToken>()),
             Times.Exactly(2));
+    }
+
+    /// <summary>
+    ///     Destination SHORT CUT D20, the identity veto's own calibration case: a holdy file
+    ///     that still cannot account for the ticks the note count implies (525 inferred, 123 in
+    ///     the file). Before the calculator shared the veto it could headline the drenched list
+    ///     while its chart page refused it the chip (owner, 2026-08-30).
+    /// </summary>
+    [Fact]
+    public async Task AFileThatCannotAccountForItsInferredTicksIsGatedOut()
+    {
+        var destination = new ChartBuilder().WithLevel(20).WithNoteCount(803).Build();
+        var iolite = new ChartBuilder().WithLevel(20).WithNoteCount(1000).Build();
+        SetupCharts(MixEnum.Phoenix, destination, iolite);
+        SetupMetrics((destination.Id, 278, 30, 123), (iolite.Id, 156, 290, 848));
+
+        var profile = await BuildHandler().Handle(new GetHoldTickProfileQuery(MixEnum.Phoenix),
+            CancellationToken.None);
+
+        var measured = Assert.Single(profile.MostTicks);
+        Assert.Equal(iolite.Id, measured.ChartId);
+        Assert.Equal(1, profile.ChartsMeasured);
     }
 
     [Fact]

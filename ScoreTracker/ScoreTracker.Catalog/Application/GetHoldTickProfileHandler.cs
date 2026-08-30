@@ -11,10 +11,13 @@ namespace ScoreTracker.Catalog.Application;
 /// <summary>
 ///     Derives the hold-tick picture (docs/design/phoenix-score-calculator.md D13): a chart's
 ///     ticks are its judged note count minus its banked simfile tap rows. The simfiles'
-///     *holds* are pre-Phoenix and never read — taps are the half that survives re-balances.
-///     Two gates drop charts the subtraction cannot be trusted on: implied ticks below zero,
-///     and a simfile with no holds whose total still exceeds its taps — both mean the chart
-///     was re-stepped out from under the simfile.
+///     *holds* are pre-Phoenix and never read as truth — taps are the half that survives
+///     re-balances. Two gates drop charts the subtraction cannot be trusted on: implied ticks
+///     below zero, and the same 1.5× trust check the identity chips run
+///     (docs/design/chart-identity.md §3.9) — a file that cannot account for the ticks we
+///     infer was re-stepped out from under the simfile, and before this check the veto's own
+///     calibration case could headline the drenched list while its chart page refused it the
+///     chip (owner, 2026-08-30).
 /// </summary>
 internal sealed class GetHoldTickProfileHandler(
     IMediator mediator,
@@ -66,11 +69,14 @@ internal sealed class GetHoldTickProfileHandler(
             if (!banked.TryGetValue(chart.Id, out var chartMetrics)) continue;
             var tapRows = MetricValue(chartMetrics, PiuCenterMetrics.TapRows);
             if (tapRows == null) continue;
-            var holdRows = MetricValue(chartMetrics, PiuCenterMetrics.HoldRows) ?? 0;
+            var fileTicks = MetricValue(chartMetrics, PiuCenterMetrics.HoldTicks);
 
             var ticks = noteCount.Value - tapRows.Value;
             if (ticks < 0) continue;
-            if (holdRows == 0 && ticks > 0) continue;
+            // Subsumes the old no-hold-file gate: a file with zero ticks cannot account for
+            // any inferred hold, and a Destination SHORT CUT D20 — 525 inferred against a file
+            // carrying 123 — cannot account for its inflation either.
+            if (fileTicks != null && ticks > fileTicks.Value * ChartIdentityRules.HoldTrustMultiple) continue;
 
             measured.Add(new HoldTickChartStat(chart.Id, chart.Song.Name.ToString(), chart.Type,
                 (int)chart.Level, noteCount.Value, ticks, (double)ticks / noteCount.Value));
