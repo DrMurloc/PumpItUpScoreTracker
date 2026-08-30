@@ -2554,6 +2554,9 @@
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>피드 — 채널을 한 번 등록하면 봇이 계속 소식을 전합니다</value>
   </data>
+  <data name="Fetching chart art — {0} of {1}" xml:space="preserve">
+    <value>차트 아트 가져오는 중 — {0} / {1}</value>
+  </data>
   <data name="Few Holds" xml:space="preserve">
     <value>홀드 적음</value>
   </data>
@@ -6288,6 +6291,9 @@
   </data>
   <data name="Rename" xml:space="preserve">
     <value>이름 변경</value>
+  </data>
+  <data name="Rendering…" xml:space="preserve">
+    <value>렌더링 중…</value>
   </data>
   <data name="Reordering…" xml:space="preserve">
     <value>정렬 중…</value>

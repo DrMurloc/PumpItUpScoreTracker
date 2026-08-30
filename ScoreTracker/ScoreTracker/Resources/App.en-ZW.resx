@@ -2570,6 +2570,9 @@
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>Glorgmorg — grorpplglblub gro glmurmblarg mrmurm, mrp murg mrpmr gl gro</value>
   </data>
+  <data name="Fetching chart art — {0} of {1}" xml:space="preserve">
+    <value>Grubgro murgl blomurg — {0} ub {1}</value>
+  </data>
   <data name="Few Holds" xml:space="preserve">
     <value>Mgl Gurg</value>
   </data>
@@ -6330,6 +6333,9 @@
   </data>
   <data name="Rename" xml:space="preserve">
     <value>Glorggrgl</value>
+  </data>
+  <data name="Rendering…" xml:space="preserve">
+    <value>Bromurm…</value>
   </data>
   <data name="Reordering…" xml:space="preserve">
     <value>Mrpplglmrp…</value>

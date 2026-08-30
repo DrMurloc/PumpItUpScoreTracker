@@ -2570,6 +2570,9 @@
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>フィード — チャンネルを一度登録すれば、ボットが投稿し続けます</value>
   </data>
+  <data name="Fetching chart art — {0} of {1}" xml:space="preserve">
+    <value>譜面アートを取得中 — {0} / {1}</value>
+  </data>
   <data name="Few Holds" xml:space="preserve">
     <value>ホールド少なめ</value>
   </data>
@@ -6330,6 +6333,9 @@
   </data>
   <data name="Rename" xml:space="preserve">
     <value>名前を変更</value>
+  </data>
+  <data name="Rendering…" xml:space="preserve">
+    <value>レンダリング中…</value>
   </data>
   <data name="Reordering…" xml:space="preserve">
     <value>並び替え中…</value>

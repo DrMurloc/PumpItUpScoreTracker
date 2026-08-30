@@ -2569,6 +2569,9 @@
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>Feeds — enregistrez un salon une fois, le bot s'occupe du reste</value>
   </data>
+  <data name="Fetching chart art — {0} of {1}" xml:space="preserve">
+    <value>Récupération des visuels — {0} sur {1}</value>
+  </data>
   <data name="Few Holds" xml:space="preserve">
     <value>Peu de holds</value>
   </data>
@@ -6329,6 +6332,9 @@
   </data>
   <data name="Rename" xml:space="preserve">
     <value>Renommer</value>
+  </data>
+  <data name="Rendering…" xml:space="preserve">
+    <value>Rendu…</value>
   </data>
   <data name="Reordering…" xml:space="preserve">
     <value>Tri en cours…</value>

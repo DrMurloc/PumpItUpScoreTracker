@@ -217,6 +217,9 @@ everywhere. `Roglub` (gain) and `Murp` (plate) come from the tables above.
 | overrides | Grombul | |
 | every | Olga | |
 | mode(s) | Morggl | `Morg` (type) + `gl`. |
+| fetching | Grubgro | Distinct from `Grubmarg` (find). |
+| rendering | Bromurm | |
+| of | Ub | Recovered from the existing `#{0} ub {1}`; tabulated so the next batch reuses it. |
 
 ### The PUMBILITY calculator batch (2026-08-16)
 
