@@ -45,36 +45,22 @@ export async function mount(root) {
         rows.length ? rows[rows.length - 1].t : 0,
         holds.reduce(function (max, h) { return Math.max(max, h.e); }, 0)) + 2;
 
-    // Spacing tracks how the chart is actually read (owner, 2026-08-30): players run ~300 AV
-    // on a 1, ~450 by 10, ~600 by 16, capping ~700 at 23+. AV is pixels-per-second up to a
-    // constant, so the strip scrolls at the level's reading speed — a 24's sixteenths spread
-    // out instead of soup, a 3's quarters stop floating in space. Level beats NPS here
-    // because AV is chosen per level, and an averaged NPS lies about marathon charts.
     var level = parseInt(root.getAttribute('data-level') || '0', 10);
-    var av = assistVelocity(level);
-    var scale = compact
-        ? { pps: av * 110 / 600, colW: 30, gutter: 44, railW: 78, arrow: 19 }
-        : { pps: av / 3, colW: panels === 10 ? 40 : 46, gutter: 52, railW: 96, arrow: panels === 10 ? 25 : 27 };
-    var stripW = scale.colW * panels;
-    var railX = scale.gutter + stripW + 14;
-    var width = railX + scale.railW;
-    var height = Math.ceil(duration * scale.pps) + 24;
-    var yOf = function (t) { return 12 + t * scale.pps; };
 
     var box = root.querySelector('[data-stepchart-scroll]');
     if (!box) return;
     box.innerHTML = '';
     var inner = document.createElement('div');
-    inner.style.width = width + 'px';
     box.appendChild(inner);
 
     var view = {
         root: root, box: box, rows: rows, holds: holds, segments: segments, ranges: ranges,
-        panels: panels, duration: duration, scale: scale, stripW: stripW, railX: railX,
-        width: width, height: height, yOf: yOf, strings: strings, payload: payload, colors: COL,
+        panels: panels, duration: duration, level: level, compact: compact,
+        strings: strings, payload: payload, colors: COL,
         mode: 'arrow', token: token
     };
     root.stepChartView = view;
+    applyScale(view);
 
     drawStrip(view);
     initMinimap(view, compact);
@@ -94,7 +80,30 @@ export async function mount(root) {
     if (crux) box.scrollTop = Math.max(0, yOf(crux.s) - 90);
 }
 
-// The owner's AV ramp, linear between the anchor levels.
+// Layout from the effective AV. Geometry mirrors the cabinet, measured off gameplay footage
+// (Repentance D26, BPM 240 at AV650): columns touch — the arrow IS the column, two pixels of
+// air — and pixel velocity is 0.85 x AV, which puts a chart's dense subdivision right around
+// one arrow-height apart at the level's usual AV. Spacing/sizing is pattern recognition
+// (owner, 2026-08-30), so the strip reads like the game, not like a diagram of it.
+function applyScale(view) {
+    var av = view.userAv || assistVelocity(view.level);
+    view.av = av;
+    view.scale = view.compact
+        ? { pps: av * 0.47, colW: 30, gutter: 44, railW: 78, arrow: 28 }
+        : { pps: av * 0.85, colW: view.panels === 10 ? 40 : 46, gutter: 52, railW: 96,
+            arrow: (view.panels === 10 ? 40 : 46) - 2 };
+    view.stripW = view.scale.colW * view.panels;
+    view.railX = view.scale.gutter + view.stripW + 14;
+    view.width = view.railX + view.scale.railW;
+    view.height = Math.ceil(view.duration * view.scale.pps) + 24;
+    view.yOf = function (t) { return 12 + t * view.scale.pps; };
+    view.box.firstChild.style.width = view.width + 'px';
+}
+
+// The owner's AV ramp, linear between the anchor levels — players run ~300 AV on a 1, ~450 by
+// 10, ~600 by 16, capping ~700 at 23+. Level beats NPS: AV is chosen per level, and an
+// averaged NPS lies about marathon charts. (Field-corroborated: the reference footage's
+// results screen badges AV650 on a D26.)
 function assistVelocity(level) {
     if (!level || level <= 1) return 300;
     if (level <= 10) return 300 + (level - 1) * (150 / 9);
@@ -131,25 +140,55 @@ function fmt(t) {
     return m + ':' + (s < 10 ? '0' : '') + s;
 }
 
+// Tiles are virtual: fixed-height placeholders carry the scroll geometry, and a canvas is
+// painted into a placeholder only while it sits within ~1500px of the viewport (and freed
+// again when it leaves). At game density a FULL SONG is ~340k px of strip — eager canvases
+// at that height are gigabytes of bitmap; a handful of live tiles is a few dozen MB.
 function drawStrip(view) {
     var inner = view.box.firstChild;
     inner.innerHTML = '';
+    if (view.tileObserver) view.tileObserver.disconnect();
     var TILE = 3000;
     var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
 
+    var byPlaceholder = new Map();
     for (var k = 0; k * TILE < view.height; k++) {
         var tileH = Math.min(TILE, view.height - k * TILE);
+        var placeholder = document.createElement('div');
+        placeholder.style.height = tileH + 'px';
+        inner.appendChild(placeholder);
+        byPlaceholder.set(placeholder, { top: k * TILE, h: tileH, drawn: false, el: placeholder });
+    }
+
+    function paint(tile) {
+        if (tile.drawn) return;
+        tile.drawn = true;
         var canvas = document.createElement('canvas');
         canvas.width = Math.round(view.width * dpr);
-        canvas.height = Math.round(tileH * dpr);
+        canvas.height = Math.round(tile.h * dpr);
         canvas.style.width = view.width + 'px';
-        canvas.style.height = tileH + 'px';
-        inner.appendChild(canvas);
+        canvas.style.height = tile.h + 'px';
+        tile.el.appendChild(canvas);
         var ctx = canvas.getContext('2d');
         ctx.scale(dpr, dpr);
-        ctx.translate(0, -k * TILE);
-        drawTile(view, ctx, k * TILE, k * TILE + tileH);
+        ctx.translate(0, -tile.top);
+        drawTile(view, ctx, tile.top, tile.top + tile.h);
     }
+
+    function free(tile) {
+        if (!tile.drawn) return;
+        tile.drawn = false;
+        tile.el.innerHTML = '';
+    }
+
+    view.tileObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            var tile = byPlaceholder.get(entry.target);
+            if (!tile) return;
+            if (entry.isIntersecting) paint(tile); else free(tile);
+        });
+    }, { root: view.box, rootMargin: '1500px 0px' });
+    byPlaceholder.forEach(function (tile) { view.tileObserver.observe(tile.el); });
 }
 
 function drawTile(view, ctx, y0, y1) {
@@ -159,14 +198,17 @@ function drawTile(view, ctx, y0, y1) {
 
     ctx.fillStyle = 'rgba(255,255,255,.03)';
     ctx.fillRect(s.gutter, y0, view.stripW, y1 - y0);
+    // No per-column hairlines — the cabinet has none, and at touching-column geometry they
+    // read as grid clutter. The pad keeps its edges, doubles keeps its center split.
     ctx.lineWidth = 1;
-    for (var c = 0; c <= view.panels; c++) {
-        ctx.strokeStyle = view.panels === 10 && c === 5 ? 'rgba(255,255,255,.16)' : 'rgba(255,255,255,.06)';
+    [0, view.panels === 10 ? 5 : -1, view.panels].forEach(function (c) {
+        if (c < 0) return;
+        ctx.strokeStyle = c === 5 ? 'rgba(255,255,255,.16)' : 'rgba(255,255,255,.10)';
         ctx.beginPath();
         ctx.moveTo(s.gutter + c * s.colW + 0.5, y0);
         ctx.lineTo(s.gutter + c * s.colW + 0.5, y1);
         ctx.stroke();
-    }
+    });
 
     ctx.font = '10px monospace';
     ctx.textBaseline = 'middle';
@@ -205,7 +247,7 @@ function drawTile(view, ctx, y0, y1) {
         var color = holdColorFor(view, hold);
         ctx.fillStyle = color;
         ctx.globalAlpha = 0.26;
-        var bw = s.arrow * 0.62;
+        var bw = s.arrow * 0.55;
         roundRect(ctx, x - bw / 2, hy0, bw, Math.max(hy1 - hy0, 1), bw / 2);
         ctx.fill();
         ctx.globalAlpha = 1;
