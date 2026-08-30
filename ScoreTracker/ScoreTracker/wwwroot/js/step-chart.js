@@ -352,7 +352,9 @@ function initModes(view) {
         });
     });
 
-    apply();
+    // The server ships the markup already pressed on Arrows; repainting the whole strip is
+    // only owed when a remembered mode actually differs.
+    if (view.mode !== 'arrow') apply();
 }
 
 // Correct outward directions (workshop round 2): canvas rotation is clockwise from "up", so
