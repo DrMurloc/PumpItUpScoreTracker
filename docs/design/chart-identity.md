@@ -305,6 +305,15 @@ reads the file's own hold data, which is era-authored and unreliable.
   Wears **Stamina & Runs**. The p10 > 0 floor is load-bearing: below S10 most of a folder has no
   holds at all, its p10 is zero, and an unfloored low claim fires on a third of S01–S03.
 
+Both claims also require the window to hold **at least 15 measured peers** (owner, 2026-08-30:
+*"no hold identity for those folders"*). In a thin L±1 window the p90 cutoff *is* the top value
+or two, so the window's extremes wear the chips by rank rather than by being remarkable — of
+D28's eleven boss charts, the holdiest two and the least would all have claimed something. The
+floor covers exactly D28, S26 and D4 today, and any boss folder that appears later (D29) the day
+it exists. Deliberately hold-only: hold share is the first metric dense enough (every counted
+chart carries one) for the guaranteed-extremes effect to fully materialize, and the sparser
+quantile claims stay on the engine's shipped semantics.
+
 **No numbers, anywhere** (owner, 2026-08-29): the chips carry the word only, on every surface —
 "not until I have HIGH confidence in those numbers". No steps-of-notes line, no percentage.
 

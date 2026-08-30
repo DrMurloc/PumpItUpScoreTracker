@@ -246,8 +246,10 @@ internal static class ChartIdentityBuilder
         IReadOnlyDictionary<string, ChartFolderBaseline> folder)
     {
         if (profile.GeometryOf(PiuCenterMetrics.HoldShare) is not { } share) return null;
+        // The size floor, not just a non-empty check: a thin window's extremes wear these
+        // chips by rank alone (owner, 2026-08-30 — "no hold identity for those folders").
         if (!folder.TryGetValue(PiuCenterMetrics.HoldShare, out var baseline)
-            || baseline.PresentCount == 0) return null;
+            || baseline.PresentCount < ChartIdentityRules.MinimumHoldFolderSize) return null;
 
         if (baseline.DrenchedCutoff > 0 && share >= baseline.DrenchedCutoff)
             return profile.HoldsAreCredible

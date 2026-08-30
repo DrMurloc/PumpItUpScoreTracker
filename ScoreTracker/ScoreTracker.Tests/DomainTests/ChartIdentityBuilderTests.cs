@@ -418,6 +418,26 @@ public sealed class ChartIdentityBuilderTests
     }
 
     /// <summary>
+    ///     §3.9. In a thin window the p90 cutoff IS the top value or two, so the extremes wear
+    ///     these chips by rank alone — of D28's eleven boss charts, the holdiest two and the
+    ///     least would all have claimed something. Below fifteen measured peers the hold claims
+    ///     say nothing in either direction (owner, 2026-08-30), and the floor covers any boss
+    ///     folder that appears later the day it exists.
+    /// </summary>
+    [Fact]
+    public void HoldClaimsNeedFifteenMeasuredPeers()
+    {
+        var thin = new Folder();
+        for (var i = 0; i < 13; i++) thin.AddCharts(1, Holds(0.30m + i * 0.01m), ("run", 0.5m));
+        Assert.Null(HoldClaim(thin, 0.70m));
+        Assert.Null(HoldClaim(thin, 0.10m));
+
+        var enough = new Folder();
+        for (var i = 0; i < 14; i++) enough.AddCharts(1, Holds(0.30m + i * 0.01m), ("run", 0.5m));
+        Assert.Equal(IdentityClaimKeys.HoldHeavy, HoldClaim(enough, 0.70m));
+    }
+
+    /// <summary>
     ///     §3.9. The inference borrows the file's step count, and a file that is not the shipped
     ///     chart always errs by inflating the holds — so a high share from a disbelieved file is
     ///     SILENCE, not a fall-through: a chart at the top of its folder is not "few holds"

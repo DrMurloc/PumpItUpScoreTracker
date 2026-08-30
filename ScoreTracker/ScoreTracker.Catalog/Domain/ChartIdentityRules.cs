@@ -242,6 +242,18 @@ internal static class ChartIdentityRules
     public const double FewHoldsQuantile = 0.10;
 
     /// <summary>
+    ///     How many measured peers a window needs before the hold claims may be judged at all
+    ///     (owner, 2026-08-30). In a thin L±1 window the p90 cutoff IS the top value or two, so
+    ///     the window's max-share chart always wears Hold-heavy and its min-share chart Few
+    ///     Holds — a claim earned by rank, not by being remarkable. Every counted chart carries
+    ///     a hold share, which is why this metric is the first dense enough to need the floor;
+    ///     it covers exactly D28, S26 and D4 today, and any boss folder that appears later
+    ///     (D29) the day it exists. Deliberately hold-only: the sparser quantile claims stay on
+    ///     the engine's shipped semantics.
+    /// </summary>
+    public const int MinimumHoldFolderSize = 15;
+
+    /// <summary>
     ///     How far the inferred hold ticks may run past the tick total the chart's own file
     ///     contains before the file is disbelieved outright. The inference borrows the file's
     ///     step count, and a file that is not the shipped chart always errs by INFLATING the
