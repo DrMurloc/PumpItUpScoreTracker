@@ -1,0 +1,388 @@
+@using MediatR
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@namespace ScoreTracker.Web.Components
+@implements IDisposable
+@inject IUiSettingsAccessor UiSettings
+@inject IMediator Mediator
+
+@* The download settings dialog (docs/design/share-card-download-settings.md): Download opens
+   it every time, the example IS the renderer fed a few live tiles, and the choices persist
+   under one shared UiSetting so both surfaces speak one picture language. *@
+<MudDialog Visible="Visible" VisibleChanged="OnVisibleChanged" Options="new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true }">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L["Download image"]</MudText>
+    </TitleContent>
+    <DialogContent>
+        <div class="scdl">
+            <div class="scdl-cols">
+                <div>
+                    <MudText Typo="Typo.overline">@L["Chart cards"]</MudText>
+                    <div class="scdl-switches">
+                        <MudSwitch T="bool" Color="Color.Primary" Value="_options.SongNames"
+                                   ValueChanged="v => Set(_options with { SongNames = v })"
+                                   Label="@L["Song names"]" data-testid="sc-opt-names"></MudSwitch>
+                        @if (SignedIn && PhoenixScoring)
+                        {
+                            <MudSwitch T="bool" Color="Color.Primary" Value="_options.LetterGrades"
+                                       ValueChanged="v => Set(_options with { LetterGrades = v })"
+                                       Label="@L["Letter grades"]" data-testid="sc-opt-grades"></MudSwitch>
+                            <MudSwitch T="bool" Color="Color.Primary" Value="_options.Plates"
+                                       ValueChanged="v => Set(_options with { Plates = v })"
+                                       Label="@L["Plates"]" data-testid="sc-opt-plates"></MudSwitch>
+                            <MudSwitch T="bool" Color="Color.Primary" Value="_options.Scores"
+                                       ValueChanged="v => Set(_options with { Scores = v })"
+                                       Label="@L["Scores"]" data-testid="sc-opt-scores"></MudSwitch>
+                            @if (_options.Scores)
+                            {
+                                <div class="scdl-sub">
+                                    <MudSwitch T="bool" Color="Color.Primary" Value="_options.IncludeBrokenScores"
+                                               ValueChanged="v => Set(_options with { IncludeBrokenScores = v })"
+                                               Label="@L["Include broken runs"]" data-testid="sc-opt-broken"></MudSwitch>
+                                </div>
+                            }
+                            @if (OffersPumbility)
+                            {
+                                <MudSwitch T="bool" Color="Color.Primary" Value="_options.Pumbility"
+                                           ValueChanged="v => Set(_options with { Pumbility = v })"
+                                           Label="PUMBILITY" data-testid="sc-opt-pumbility"></MudSwitch>
+                                @if (_options.Pumbility)
+                                {
+                                    <div class="scdl-sub">
+                                        <MudSwitch T="bool" Color="Color.Primary" Value="_options.ExpectedGains"
+                                                   ValueChanged="v => Set(_options with { ExpectedGains = v })"
+                                                   Label="@L["Expected gains"]" data-testid="sc-opt-expected"></MudSwitch>
+                                        <MudText Typo="Typo.caption" Class="scdl-hint">
+                                            @(_options.ExpectedGains
+                                                ? L["The gain chip, with the grade you'd be expected to get beside it."]
+                                                : L["Your chart's current value, bottom right."])
+                                        </MudText>
+                                    </div>
+                                }
+                            }
+                        }
+                        <MudSwitch T="bool" Color="Color.Primary" Value="_options.Skills"
+                                   ValueChanged="v => Set(_options with { Skills = v })"
+                                   Label="@L["Skills"]" data-testid="sc-opt-skills"></MudSwitch>
+                    </div>
+                </div>
+                @if (SignedIn)
+                {
+                    <div>
+                        <MudText Typo="Typo.overline">@L["Boundaries"]</MudText>
+                        <div class="scdl-switches">
+                            <div class="scdl-row">
+                                <MudSwitch T="bool" Color="Color.Primary" Value="_options.BoundaryTodo"
+                                           ValueChanged="v => Set(_options with { BoundaryTodo = v })"
+                                           Label="@L["To Do"]" data-testid="sc-opt-btodo"></MudSwitch>
+                                <span class="scdl-swatch scdl-sw-todo" title="@L["Overrides every other boundary"]"></span>
+                            </div>
+                            <div class="scdl-row">
+                                <MudSwitch T="bool" Color="Color.Primary" Value="_options.BoundaryPass"
+                                           ValueChanged="SetPass"
+                                           Label="@L["Pass"]" data-testid="sc-opt-bpass"></MudSwitch>
+                                <span class="scdl-swatch scdl-sw-pass"></span>
+                            </div>
+                            @if (PhoenixScoring)
+                            {
+                                <div class="scdl-sub">
+                                    <div class="scdl-row">
+                                        <MudSwitch T="bool" Color="Color.Primary" Value="_options.ColorByLetterGrade"
+                                                   ValueChanged="SetColorByGrade" Disabled="!_options.BoundaryPass"
+                                                   Label="@L["Color by letter grade"]" data-testid="sc-opt-colorgrade"></MudSwitch>
+                                        <span class="scdl-note">@L["PG glows"]</span>
+                                    </div>
+                                    <div class="scdl-row">
+                                        <MudSwitch T="bool" Color="Color.Primary" Value="_options.ColorByPlate"
+                                                   ValueChanged="SetColorByPlate" Disabled="!_options.BoundaryPass"
+                                                   Label="@L["Color by plate"]" data-testid="sc-opt-colorplate"></MudSwitch>
+                                        <span class="scdl-note">@L["PG glows"]</span>
+                                    </div>
+                                </div>
+                            }
+                            <div class="scdl-row">
+                                <MudSwitch T="bool" Color="Color.Primary" Value="_options.BoundaryOtherMixes"
+                                           ValueChanged="v => Set(_options with { BoundaryOtherMixes = v })"
+                                           Label="@L["Passed in other mixes"]" data-testid="sc-opt-bother"></MudSwitch>
+                                <span class="scdl-swatch scdl-sw-other"></span>
+                            </div>
+                            <div class="scdl-row">
+                                <MudSwitch T="bool" Color="Color.Primary" Value="_options.BoundaryBroken"
+                                           ValueChanged="v => Set(_options with { BoundaryBroken = v })"
+                                           Label="@L["Broken with score"]" data-testid="sc-opt-bbroken"></MudSwitch>
+                                <span class="scdl-swatch scdl-sw-broken"></span>
+                            </div>
+                            @if (OffersPumbility)
+                            {
+                                <div class="scdl-row">
+                                    <MudSwitch T="bool" Color="Color.Primary" Value="_options.BoundaryTop50"
+                                               ValueChanged="SetTop50"
+                                               Label="@L["Top 50 PUMBILITY"]" data-testid="sc-opt-btop50"></MudSwitch>
+                                    <span class="scdl-swatches">
+                                        <span class="scdl-swatch scdl-sw-t50t"></span>
+                                        <span class="scdl-swatch scdl-sw-t50c"></span>
+                                    </span>
+                                </div>
+                                <MudText Typo="Typo.caption" Class="scdl-hint">
+                                    @L["Top 50: dotted — this chart's type · solid — combined. Not combinable with the color modes."]
+                                </MudText>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            @if (SampleBuilder != null)
+            {
+                <div class="scdl-preview">
+                    <MudText Typo="Typo.overline">@L["Example — how it will come out"]</MudText>
+                    @if (_previewSrc == null)
+                    {
+                        <div class="scdl-preview-wait">
+                            <MudProgressCircular Indeterminate="true" Size="Size.Small"></MudProgressCircular>
+                        </div>
+                    }
+                    else
+                    {
+                        <img class="scdl-preview-img @(_previewStale ? "scdl-preview-stale" : null)"
+                             src="@_previewSrc" alt="@L["Example — how it will come out"]" data-testid="sc-preview"/>
+                    }
+                </div>
+            }
+            <MudText Typo="Typo.caption" Class="scdl-file">@FileName · @L["Remembered for next time"]</MudText>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="() => OnVisibleChanged(false)">@L["Close"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"
+                   Disabled="_downloading" OnClick="Download" data-testid="sharecard-download">
+            @L["Download"]
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .scdl {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .scdl-cols {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px 26px;
+    }
+
+    @@media (max-width: 599.98px) {
+        .scdl-cols {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .scdl-switches {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .scdl-sub {
+        padding-left: 22px;
+        border-left: 2px solid var(--mud-palette-lines-default);
+        margin-left: 8px;
+    }
+
+    .scdl-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .scdl-row .mud-switch {
+        flex: 1 1 auto;
+    }
+
+    .scdl-swatches {
+        display: inline-flex;
+        gap: 4px;
+    }
+
+    .scdl-swatch {
+        width: 15px;
+        height: 15px;
+        border-radius: 4px;
+        flex: none;
+    }
+
+    .scdl-sw-pass { border: 2px solid var(--mud-palette-success); }
+    .scdl-sw-todo { border: 2px dashed var(--mud-palette-info); }
+    .scdl-sw-other { border: 2px dashed var(--mud-palette-success); }
+    .scdl-sw-broken { border: 2px dotted var(--mix-ink-muted); }
+    .scdl-sw-t50t { border: 2px dotted var(--rarity-gold); }
+    .scdl-sw-t50c { border: 2px solid var(--rarity-gold); }
+
+    .scdl-note {
+        font-size: .7rem;
+        color: var(--mud-palette-text-secondary);
+        white-space: nowrap;
+    }
+
+    .scdl-hint {
+        color: var(--mud-palette-text-secondary);
+        display: block;
+        margin: -2px 0 4px;
+    }
+
+    .scdl-preview-img {
+        max-width: 100%;
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 6px;
+        transition: opacity .15s;
+    }
+
+    .scdl-preview-stale {
+        opacity: .45;
+    }
+
+    .scdl-preview-wait {
+        display: flex;
+        justify-content: center;
+        padding: 20px 0;
+    }
+
+    .scdl-file {
+        color: var(--mud-palette-text-secondary);
+    }
+</style>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public bool SignedIn { get; set; }
+
+    /// <summary>Phoenix-scored mixes offer grades, plates, scores and the color modes; legacy offers none of them.</summary>
+    [Parameter] public bool PhoenixScoring { get; set; } = true;
+
+    /// <summary>Whether this list's mix and type have PUMBILITY at all — co-op folders and legacy mixes do not.</summary>
+    [Parameter] public bool OffersPumbility { get; set; } = true;
+
+    /// <summary>
+    ///     The host's sample: a card of at most six live tiles composed under the given options
+    ///     (design doc §6). Null renders no example — an empty list has nothing to show.
+    /// </summary>
+    [Parameter] public Func<ShareCardOptions, Task<TierListShareCard?>>? SampleBuilder { get; set; }
+
+    /// <summary>The real download, run by the host with the same options the example showed.</summary>
+    [Parameter] public EventCallback<ShareCardOptions> OnDownload { get; set; }
+
+    [Parameter] public string FileName { get; set; } = string.Empty;
+
+    private ShareCardOptions _options = ShareCardOptions.Default;
+    private bool _loaded;
+    private bool _downloading;
+    private string? _previewSrc;
+    private bool _previewStale;
+    private CancellationTokenSource? _previewCts;
+
+    /// <summary>The options as last persisted — what the host should download with.</summary>
+    public ShareCardOptions Options => _options;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Visible || _loaded) return;
+        _loaded = true;
+        _options = ShareCardOptions.Parse(await UiSettings.GetSetting(ShareCardOptions.SettingKey));
+        await RefreshPreview(immediate: true);
+    }
+
+    private async Task OnVisibleChanged(bool visible)
+    {
+        await VisibleChanged.InvokeAsync(visible);
+    }
+
+    private async Task Set(ShareCardOptions options)
+    {
+        _options = options;
+        await UiSettings.SetSetting(ShareCardOptions.SettingKey, _options.Serialize());
+        await RefreshPreview(immediate: false);
+    }
+
+    // The exclusive trio (design doc §3): last pressed wins, and the color modes only mean
+    // anything while Pass draws — turning Pass off turns them off rather than leaving two
+    // switches lit that do nothing.
+    private Task SetPass(bool on)
+    {
+        return Set(on
+            ? _options with { BoundaryPass = true }
+            : _options with { BoundaryPass = false, ColorByLetterGrade = false, ColorByPlate = false });
+    }
+
+    private Task SetColorByGrade(bool on)
+    {
+        return Set(on
+            ? _options with { ColorByLetterGrade = true, ColorByPlate = false, BoundaryTop50 = false }
+            : _options with { ColorByLetterGrade = false });
+    }
+
+    private Task SetColorByPlate(bool on)
+    {
+        return Set(on
+            ? _options with { ColorByPlate = true, ColorByLetterGrade = false, BoundaryTop50 = false }
+            : _options with { ColorByPlate = false });
+    }
+
+    private Task SetTop50(bool on)
+    {
+        return Set(on
+            ? _options with { BoundaryTop50 = true, ColorByLetterGrade = false, ColorByPlate = false }
+            : _options with { BoundaryTop50 = false });
+    }
+
+    /// <summary>
+    ///     The example, rendered by the real renderer through the real query — it can never
+    ///     drift from the PNG. Debounced behind a short delay so a flurry of toggles costs one
+    ///     render; the stale image dims rather than vanishing, so the dialog never jumps.
+    /// </summary>
+    private async Task RefreshPreview(bool immediate)
+    {
+        if (SampleBuilder == null) return;
+        _previewCts?.Cancel();
+        _previewCts = new CancellationTokenSource();
+        var token = _previewCts.Token;
+        _previewStale = _previewSrc != null;
+        try
+        {
+            if (!immediate) await Task.Delay(300, token);
+            var sample = await SampleBuilder(_options);
+            if (sample == null || token.IsCancellationRequested) return;
+            var bytes = await Mediator.Send(new GetTierListShareCardQuery(sample), token);
+            if (token.IsCancellationRequested) return;
+            _previewSrc = $"data:image/png;base64,{Convert.ToBase64String(bytes)}";
+            _previewStale = false;
+            StateHasChanged();
+        }
+        catch (OperationCanceledException)
+        {
+            // A newer toggle superseded this render.
+        }
+    }
+
+    private async Task Download()
+    {
+        _downloading = true;
+        try
+        {
+            await OnDownload.InvokeAsync(_options);
+        }
+        finally
+        {
+            _downloading = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        _previewCts?.Cancel();
+        _previewCts?.Dispose();
+    }
+}
