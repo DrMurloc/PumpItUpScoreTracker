@@ -132,7 +132,7 @@
             </div>
             <div data-stepchart data-chart-id="@_chart.Id" data-mix="@_chart.Mix"
                  data-visibility="@_stepChart.Visibility">
-                <script type="application/json" data-stepchart-strings>@StepChartStrings()</script>
+                <script type="application/json" data-stepchart-strings>@StepChartStrings.For(L)</script>
                 <div class="stepchart-caveat" data-stepchart-caveat hidden>@L["Where runs end isn't shown — this step file disagrees with the game's judged note count."]</div>
                 <div class="stepchart-modes" role="group" aria-label="@L["Arrow coloring"]">
                     <button type="button" data-stepchart-mode="arrow" aria-pressed="true">@L["Arrows"]</button>
@@ -237,40 +237,6 @@
     // Bpm.ToString prints Min twice on ranges (pre-existing) — format locally.
     private string BpmDisplay => _chart?.Song.Bpm is not { } bpm ? "" :
         bpm.Min == bpm.Max ? bpm.Min.ToString("0.##") : $"{bpm.Min:0.##}–{bpm.Max:0.##}";
-
-    /// <summary>
-    ///     The renderer's localized labels, shipped as a JSON block so the module never guesses
-    ///     at copy. Keys resolve through L like everything else; before the i18n pass lands they
-    ///     render their English key text, which is the convention's fallback by design.
-    /// </summary>
-    private MarkupString StepChartStrings()
-    {
-        return new MarkupString(System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, string>
-        {
-            ["crux"] = L["Crux"],
-            ["range"] = L["Notable run"],
-            ["upper"] = L["Upper"],
-            ["lower"] = L["Lower"],
-            ["center"] = L["Center"],
-            ["deathSpike"] = L["Death spike"],
-            ["passCluster"] = L["Pass cluster"],
-            ["lifeDeaths"] = L["Life bar deaths"],
-            ["lifeBar"] = L["Life bar"],
-            ["stagePass"] = L["Stage Pass"],
-            ["yourRuns"] = L["Your runs"],
-            ["oneRunEnded"] = L["1 run ended here"],
-            ["runsEnded"] = L["{0} runs ended here"],
-            ["passHedge"] = L["Proven non-lifebar — possibly a command from the other pad."],
-            ["leftFoot"] = L["Left foot"],
-            ["rightFoot"] = L["Right foot"],
-            ["quarters"] = L["Quarters"],
-            ["eighths"] = L["Eighths"],
-            ["twelfths"] = L["Twelfths"],
-            ["sixteenths"] = L["Sixteenths"],
-            ["finer"] = L["Finer"],
-            ["timingUnavailable"] = L["Timing colors need a step file that aligned to beats."]
-        }));
-    }
 
     private string PiuCenterUrl => _analysis?.ExternalKey == null
         ? "https://www.piucenter.com"

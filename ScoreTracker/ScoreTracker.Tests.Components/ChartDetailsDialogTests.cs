@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using Bunit;
 using MediatR;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Moq;
@@ -400,5 +402,51 @@ public sealed class ChartDetailsDialogTests : TestContext
 
         cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-similar-empty")));
         Assert.Empty(cut.FindAll("[data-testid='chart-similar-tile']"));
+    }
+
+    private void SetupStepChart(StepChartVisibility visibility = StepChartVisibility.Full)
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartStepChartQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChartStepChartRecord("82626", 5, true, visibility, 100, 99,
+                Array.Empty<StepChartRowRecord>(), Array.Empty<StepChartHoldRecord>(),
+                Array.Empty<decimal>(), Array.Empty<StepChartSegmentRecord>(),
+                Array.Empty<StepChartRangeRecord>()));
+    }
+
+    /// <summary>
+    ///     The Steps tab exists exactly where the chart page's section does: when the mix's
+    ///     verdict banked a timeline (step-chart-failure-map.md D14). The default mediator
+    ///     answers null, so every other test in this file doubles as the absent case.
+    /// </summary>
+    [Fact]
+    public void StepsTabAppearsOnlyWhenATimelineIsBanked()
+    {
+        SetupStepChart();
+        var cut = RenderDialog(SetupChart(null));
+
+        var tab = cut.Find("[data-testid=cdt-tab-Steps]");
+        Assert.Equal("Steps", tab.TextContent.Trim());
+    }
+
+    [Fact]
+    public void NoTimelineMeansNoStepsTab()
+    {
+        var cut = RenderDialog(SetupChart(null));
+
+        Assert.Empty(cut.FindAll("[data-testid=cdt-tab-Steps]"));
+    }
+
+    [Fact]
+    public async Task ActivatingStepsMountsTheCompactShell()
+    {
+        SetupStepChart(StepChartVisibility.StepsOnly);
+        var cut = RenderDialog(SetupChart(null));
+
+        await cut.Find("[data-testid=cdt-tab-Steps]").ClickAsync(new MouseEventArgs());
+
+        var shell = cut.Find("[data-stepchart]");
+        Assert.Equal("1", shell.GetAttribute("data-compact"));
+        Assert.Equal("StepsOnly", shell.GetAttribute("data-visibility"));
+        Assert.Empty(cut.FindAll(".stepchart-minicol"));
     }
 }
