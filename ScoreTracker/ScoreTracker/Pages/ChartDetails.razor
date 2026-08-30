@@ -131,7 +131,7 @@
                 <MudText Typo="Typo.caption" Class="chart-section-sub">@L["Time runs downward — arrows colored by panel, feet, or timing."]</MudText>
             </div>
             <div data-stepchart data-chart-id="@_chart.Id" data-mix="@_chart.Mix"
-                 data-visibility="@_stepChart.Visibility">
+                 data-visibility="@_stepChart.Visibility" data-level="@((int)_chart.Level)">
                 <script type="application/json" data-stepchart-strings>@StepChartStrings.For(L)</script>
                 <div class="stepchart-caveat" data-stepchart-caveat hidden>@L["Where runs end isn't shown — this step file disagrees with the game's judged note count."]</div>
                 <div class="stepchart-modes" role="group" aria-label="@L["Arrow coloring"]">

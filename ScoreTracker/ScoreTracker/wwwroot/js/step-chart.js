@@ -45,9 +45,16 @@ export async function mount(root) {
         rows.length ? rows[rows.length - 1].t : 0,
         holds.reduce(function (max, h) { return Math.max(max, h.e); }, 0)) + 2;
 
+    // Spacing tracks how the chart is actually read (owner, 2026-08-30): players run ~300 AV
+    // on a 1, ~450 by 10, ~600 by 16, capping ~700 at 23+. AV is pixels-per-second up to a
+    // constant, so the strip scrolls at the level's reading speed — a 24's sixteenths spread
+    // out instead of soup, a 3's quarters stop floating in space. Level beats NPS here
+    // because AV is chosen per level, and an averaged NPS lies about marathon charts.
+    var level = parseInt(root.getAttribute('data-level') || '0', 10);
+    var av = assistVelocity(level);
     var scale = compact
-        ? { pps: 110, colW: 30, gutter: 44, railW: 78, arrow: 19 }
-        : { pps: 200, colW: panels === 10 ? 40 : 46, gutter: 52, railW: 96, arrow: panels === 10 ? 25 : 27 };
+        ? { pps: av * 110 / 600, colW: 30, gutter: 44, railW: 78, arrow: 19 }
+        : { pps: av / 3, colW: panels === 10 ? 40 : 46, gutter: 52, railW: 96, arrow: panels === 10 ? 25 : 27 };
     var stripW = scale.colW * panels;
     var railX = scale.gutter + stripW + 14;
     var width = railX + scale.railW;
@@ -85,6 +92,15 @@ export async function mount(root) {
     // Land on the crux rather than the silent intro — the reader came to see the chart's teeth.
     var crux = cruxOf(view);
     if (crux) box.scrollTop = Math.max(0, yOf(crux.s) - 90);
+}
+
+// The owner's AV ramp, linear between the anchor levels.
+function assistVelocity(level) {
+    if (!level || level <= 1) return 300;
+    if (level <= 10) return 300 + (level - 1) * (150 / 9);
+    if (level <= 16) return 450 + (level - 10) * (150 / 6);
+    if (level <= 23) return 600 + (level - 16) * (100 / 7);
+    return 700;
 }
 
 function readStrings(root) {

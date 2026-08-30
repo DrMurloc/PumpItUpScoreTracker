@@ -12,7 +12,7 @@
    tab never fetches a timeline. The module reads everything from the data attributes and
    the strings block; this component owns no chart data at all. *@
 <div class="stepchart-compact" data-stepchart data-chart-id="@Chart.Id" data-mix="@Mix"
-     data-visibility="@Visibility" data-compact="1" @ref="_root" @key="Chart.Id">
+     data-visibility="@Visibility" data-compact="1" data-level="@((int)Chart.Level)" @ref="_root" @key="Chart.Id">
     <script type="application/json" data-stepchart-strings>@StepChartStrings.For(L)</script>
     <div class="stepchart-caveat" data-stepchart-caveat hidden>@L["Where runs end isn't shown — this step file disagrees with the game's judged note count."]</div>
     <div class="stepchart-modes" role="group" aria-label="@L["Arrow coloring"]">
