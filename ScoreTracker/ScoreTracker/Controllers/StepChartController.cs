@@ -26,9 +26,6 @@ namespace ScoreTracker.Web.Controllers;
 /// </summary>
 public class StepChartController : Controller
 {
-    /// <summary>Positions are estimates; runs ending this close are one pin (D1).</summary>
-    private const decimal ClusterEpsilonSeconds = 1.5m;
-
     // Walk-offs are first-class on the stored cause now (StageBreakCauseSolver.WalkOffMissFloor,
     // pass-command-detection D36); this endpoint only reads the flag and un-walks the pin.
 
@@ -117,19 +114,19 @@ public class StepChartController : Controller
         // A pass pin carries the game's own command art where the solver named targets — the
         // badge is the sentence, exactly the session page's choice (pass-command-detection D33;
         // wordiness ruling 2026-08-30). Codes are the art file stems PassCommandBadge uses.
-        var pins = BreakPositionSolver.Cluster(life, ClusterEpsilonSeconds)
+        var pins = BreakPositionSolver.Cluster(life)
             .Select(c => new
             {
                 t = c.Time, n = c.Count, from = c.From, to = c.To, cause = "life",
                 cmds = Array.Empty<string>()
             })
-            .Concat(BreakPositionSolver.Cluster(walk, ClusterEpsilonSeconds)
+            .Concat(BreakPositionSolver.Cluster(walk)
                 .Select(c => new
                 {
                     t = c.Time, n = c.Count, from = c.From, to = c.To, cause = "walk",
                     cmds = Array.Empty<string>()
                 }))
-            .Concat(BreakPositionSolver.Cluster(pass.Select(p => p.Time), ClusterEpsilonSeconds)
+            .Concat(BreakPositionSolver.Cluster(pass.Select(p => p.Time))
                 .Select(c => new
                 {
                     t = c.Time, n = c.Count, from = c.From, to = c.To, cause = "pass",

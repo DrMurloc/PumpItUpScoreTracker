@@ -24,8 +24,10 @@ red, lower blue, center yellow), **Feet** (the snapshot's per-note limb predicti
 **The failure rail** places a pin at every position where an imported run ended. A death at
 judgement count J happened at the J-th judgement event of the chart — tap rows and hold ticks
 both judge — so the pin's time is `events[J]` after the gate's rescale (D9). Life-bar pins hang
-in the near column, proven non-lifebar (Stage Pass) pins in the far column; stacked deaths
-cluster within ~1.5 s into one pin carrying ×N. The signed-in viewer's own broken runs mark
+in the near column, proven non-lifebar (Stage Pass) pins in the far column; deaths stack into
+one ×N pin only when they placed on the **same judgement event** (owner, 2026-08-31 — the
+original ~1.5 s chain-merge smeared distinct spikes together; a second is a long time in a
+rhythm game, so the note grid is the grouping). The signed-in viewer's own broken runs mark
 the rail in gold.
 
 ## 2. Decisions

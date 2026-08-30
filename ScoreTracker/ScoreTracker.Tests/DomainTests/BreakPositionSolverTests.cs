@@ -60,38 +60,38 @@ public class BreakPositionSolverTests
     }
 
     [Fact]
-    public void ClustersRunsEndingTogetherIntoOnePin()
+    public void StacksRunsThatDiedOnTheSameNoteIntoOnePin()
     {
-        // The Altale shape: three Pass runs a judgement apart, one loner far away.
-        var pins = BreakPositionSolver.Cluster(new[] { 71.2m, 71.2m, 71.3m, 16.3m }, 1.5m);
+        // Three runs placed on the same judgement event share the pin; the loner keeps its own.
+        var pins = BreakPositionSolver.Cluster(new[] { 71.2m, 71.2m, 71.2m, 16.3m });
 
         Assert.Equal(2, pins.Count);
         Assert.Equal(1, pins[0].Count);
         Assert.Equal(16.3m, pins[0].Time);
         Assert.Equal(3, pins[1].Count);
         Assert.Equal(71.2m, pins[1].From);
-        Assert.Equal(71.3m, pins[1].To);
+        Assert.Equal(71.2m, pins[1].To);
     }
 
     [Fact]
-    public void ChainsClustersThroughStepwiseNeighbours()
+    public void NeighbouringNotesNeverShareAPin()
     {
-        // Each neighbour sits inside epsilon of the last even though the ends do not:
-        // the pin is the whole chain, the way a smeared spike reads on the strip.
-        var pins = BreakPositionSolver.Cluster(new[] { 10m, 11m, 12m, 13m }, 1.0m);
+        // A second is a long time in a rhythm game (owner, 2026-08-31): deaths on adjacent
+        // notes are distinct spikes, never one smear — the note grid is the grouping.
+        var pins = BreakPositionSolver.Cluster(new[] { 10m, 11m, 12m, 13m });
 
-        var pin = Assert.Single(pins);
-        Assert.Equal(4, pin.Count);
-        Assert.Equal(11.5m, pin.Time);
+        Assert.Equal(4, pins.Count);
+        Assert.All(pins, pin => Assert.Equal(1, pin.Count));
     }
 
     [Fact]
-    public void KeepsPinsApartAcrossAGapAndOrdersThemByTime()
+    public void OrdersPinsByTime()
     {
-        var pins = BreakPositionSolver.Cluster(new[] { 50m, 20m, 20.4m, 90m }, 1.5m);
+        var pins = BreakPositionSolver.Cluster(new[] { 50m, 20m, 20m, 90m });
 
         Assert.Equal(3, pins.Count);
-        Assert.Equal(20.2m, pins[0].Time);
+        Assert.Equal(20m, pins[0].Time);
+        Assert.Equal(2, pins[0].Count);
         Assert.Equal(50m, pins[1].Time);
         Assert.Equal(90m, pins[2].Time);
     }
@@ -99,6 +99,6 @@ public class BreakPositionSolverTests
     [Fact]
     public void AnEmptySetOfDeathsIsAnEmptyRail()
     {
-        Assert.Empty(BreakPositionSolver.Cluster(Array.Empty<decimal>(), 1.5m));
+        Assert.Empty(BreakPositionSolver.Cluster(Array.Empty<decimal>()));
     }
 }

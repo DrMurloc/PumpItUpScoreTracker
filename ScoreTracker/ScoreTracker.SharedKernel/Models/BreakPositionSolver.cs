@@ -33,27 +33,19 @@ public static class BreakPositionSolver
     }
 
     /// <summary>
-    ///     Groups placed deaths into pins: positions within <paramref name="epsilon" /> of the
-    ///     running cluster's edge collapse into one pin carrying the count, because a position is
-    ///     an estimate and three runs ending a judgement apart are one story, not three
-    ///     (docs/design/step-chart-failure-map.md D1). Returned in time order.
+    ///     Groups placed deaths into pins BY NOTE: runs stack into one ×N pin only when they
+    ///     placed on the same judgement event (docs/design/step-chart-failure-map.md D1, owner
+    ///     amendment 2026-08-31). A time window is the wrong instrument here — the original
+    ///     1.5 s chain-merge smeared distinct spikes into one smudge, and a second is a long
+    ///     time in a rhythm game; the note grid itself absorbs the placement estimate, because
+    ///     nearby judged counts rescale onto the same event. Returned in time order.
     /// </summary>
-    public static IReadOnlyList<BreakPinCluster> Cluster(IEnumerable<decimal> times, decimal epsilon)
+    public static IReadOnlyList<BreakPinCluster> Cluster(IEnumerable<decimal> times)
     {
-        var sorted = times.OrderBy(t => t).ToArray();
-        var clusters = new List<BreakPinCluster>();
-        var start = 0;
-        for (var i = 1; i <= sorted.Length; i++)
-        {
-            if (i < sorted.Length && sorted[i] - sorted[i - 1] <= epsilon) continue;
-            var count = i - start;
-            var sum = 0m;
-            for (var j = start; j < i; j++) sum += sorted[j];
-            clusters.Add(new BreakPinCluster(sum / count, count, sorted[start], sorted[i - 1]));
-            start = i;
-        }
-
-        return clusters;
+        return times.GroupBy(t => t)
+            .OrderBy(g => g.Key)
+            .Select(g => new BreakPinCluster(g.Key, g.Count(), g.Key, g.Key))
+            .ToArray();
     }
 }
 
