@@ -281,12 +281,23 @@ else
         string WrapperClass, TierListCategory? Tier = null);
 
     /// <summary>
-    ///     One tile of a downloadable card: the jacket, what you did on it, the corner value the
-    ///     Compact tile prints, and the border it wears — the same three answers the rendered card
-    ///     gives, read off the same row, so the picture cannot drift from the page.
+    ///     One tile of a downloadable card, as facts rather than presentation: what the row knows,
+    ///     read off the row itself, so the picture cannot drift from the page. How the facts are
+    ///     drawn is the share-card composer's call under the download settings
+    ///     (docs/design/share-card-download-settings.md).
     /// </summary>
-    public sealed record ShareTile(Chart Chart, PhoenixScore? Score, PhoenixPlate? Plate, string? CornerLabel,
-        TileOutline Outline);
+    /// <param name="Score">
+    ///     Your best, including a broken one — the composer's broken gating needs the number,
+    ///     where the page's own Row deliberately hides a broken best behind null.
+    /// </param>
+    /// <param name="Gain">What the chart would add, only when it pays — the page's own rule.</param>
+    /// <param name="Expected">The target list's projected score, whose grade rides the gain chip.</param>
+    /// <param name="PoolValue">
+    ///     What the chart is worth in your pool, where the frame already computed it — the exact
+    ///     number the pool lens prints, so the chip and the page cannot disagree.
+    /// </param>
+    public sealed record ShareTile(Chart Chart, PhoenixScore? Score, PhoenixPlate? Plate, bool Broken,
+        bool IsToDo, bool Carried, double? Gain, PhoenixScore? Expected, double? PoolValue);
 
     /// <summary>
     ///     One section of a downloadable card: its printed name, the ramp category it took its
@@ -301,28 +312,21 @@ else
     /// </summary>
     public IReadOnlyList<ShareSection> ShareSections() =>
         _sections.Select(s => new ShareSection(s.Name, s.Tier,
-            s.Rows.Select(r => new ShareTile(r.Chart, r.MyScore, r.MyPlate, ShareCorner(r), ShareOutline(r))).ToArray()))
+            s.Rows.Select(r => new ShareTile(r.Chart,
+                r.MyScore ?? (RowBroken(r) ? r.Target!.Current : null),
+                r.MyPlate,
+                RowBroken(r),
+                ToDos.Contains(r.Chart.Id),
+                r.Carried,
+                r.Pays ? r.Gain : null,
+                r.Target?.Projected,
+                r.Slot?.Value)).ToArray()))
             .ToArray();
 
-    // The corner the Compact tile prints, in the Compact tile's own order of precedence: the
-    // pool lens prints what the chart is worth, everything else prints the gain when it pays.
-    private string? ShareCorner(Row row) =>
-        IsPoolLens ? row.Slot?.Value.ToString("N2") : row.Pays ? $"+{PumbilityFormat.Gain(row.Gain)}" : null;
-
-    // The border, same precedence as RowClass: passed, then To-Do, then carried.
-    private TileOutline ShareOutline(Row row) =>
-        row.MyScore != null ? TileOutline.Solid :
-        ToDos.Contains(row.Chart.Id) ? TileOutline.Dashed :
-        row.Carried ? TileOutline.Dashed : TileOutline.Dot;
-
-    private string? ShareOutlineHex(Row row) =>
-        row.MyScore != null || row.Carried ? MixPalette.Success : ToDos.Contains(row.Chart.Id) ? MixPalette.Info : null;
-
-    /// <summary>The border colour that goes with <see cref="ShareOutline" />, for the page's card.</summary>
-    public string? ShareOutlineHexFor(Guid chartId) =>
-        _sections.SelectMany(s => s.Rows).FirstOrDefault(r => r.Chart.Id == chartId) is { } row
-            ? ShareOutlineHex(row)
-            : null;
+    // A row's broken best: the page's Row hides it behind a null MyScore, but the picture's
+    // broken boundary and muted score need the fact and the number back.
+    private static bool RowBroken(Row row) =>
+        row.MyScore == null && row.Target is { Current: not null, CurrentIsBroken: true };
 
     private HashSet<string> _collapsed = new();
     private bool _collapsedInitialised;

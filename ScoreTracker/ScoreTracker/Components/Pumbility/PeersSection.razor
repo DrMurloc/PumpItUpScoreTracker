@@ -110,7 +110,7 @@
                 {
                     <MudTooltip Text="@L["Download"]">
                         <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary"
-                                       OnClick="Download" aria-label="@L["Download"]" data-testid="peers-download"></MudIconButton>
+                                       OnClick="() => _downloadOpen = true" aria-label="@L["Download"]" data-testid="peers-download"></MudIconButton>
                     </MudTooltip>
                 }
                 <MudButtonGroup OverrideStyles="false">
@@ -155,6 +155,10 @@
                     Rivals="_rivals" Clubmates="_clubmates"></PeerRoster>
     </section>
 }
+
+<ShareCardSettingsDialog @bind-Visible="_downloadOpen" SignedIn="true"
+                         SampleBuilder="BuildSampleCard" OnDownload="Download"
+                         FileName="@DownloadFileName"></ShareCardSettingsDialog>
 
 @code {
     /// <summary>The frame's page record — the totals, the bar, and the target list this block prices its gains from.</summary>
@@ -299,6 +303,9 @@
         _loadedPool = Pool;
         _peers = null;
         _peerOnlyGains = null;
+        // Pool-scoped share reads go stale with the pool; the next dialog open re-fetches.
+        _top50ByType.Clear();
+        _top50Combined = null;
         _peers = await Mediator.Send(new GetPumbilityPeersPageQuery(CurrentUser.User.Id, Page.Mix, Pool));
         await ReadIdentity();
         if (!_projectPhoenix1) await ReadPeerOnlyGains();
@@ -340,55 +347,113 @@
             kv => new PumbilityTarget(kv.Key, projection.ExpectedScores[kv.Key], kv.Value, null, false, null));
     }
 
+    private bool _downloadOpen;
+
+    private string DownloadFileName => $"PumbilityTargets_{Page.Mix}_{_groupBy}_{Clock.Now:yyyy-MM-dd}.png";
+
+    // The top-50 membership reads, fetched when the gold boundary first asks and dropped on a
+    // pool change — the answer is per mix and per type.
+    private readonly Dictionary<ChartType, IReadOnlySet<Guid>> _top50ByType = new();
+    private IReadOnlySet<Guid>? _top50Combined;
+
+    private async Task EnsureShareData(ShareCardOptions options, IReadOnlyList<PeerPoolList.ShareSection> sections)
+    {
+        if (!options.BoundaryTop50) return;
+        _top50Combined ??= (await Mediator.Send(
+                new GetTop50ForPlayerQuery(CurrentUser.User.Id, null, 50, Page.Mix)))
+            .Select(s => s.ChartId).ToHashSet();
+        foreach (var type in sections.SelectMany(s => s.Tiles).Select(t => t.Chart.Type).Distinct())
+            if (!_top50ByType.ContainsKey(type))
+                _top50ByType[type] = (await Mediator.Send(
+                        new GetTop50ForPlayerQuery(CurrentUser.User.Id, type, 50, Page.Mix)))
+                    .Select(s => s.ChartId).ToHashSet();
+    }
+
+    private ShareCardComposer.TileFacts FactsFor(PeerPoolList.ShareTile tile, ShareCardOptions options)
+    {
+        // The pool's own value wins where the frame already computed it; anything else prices
+        // through the same formula the pool page uses, so the chip never disagrees with it.
+        var current = options.Pumbility && !options.ExpectedGains
+            ? tile.PoolValue ?? ShareCardComposer.CurrentPumbility(tile.Chart, tile.Score, tile.Plate,
+                tile.Broken, Page.Mix)
+            : null;
+        return new ShareCardComposer.TileFacts(tile.Chart, tile.Score, tile.Plate,
+            Passed: tile.Score != null && !tile.Broken,
+            Broken: tile.Broken,
+            IsToDo: tile.IsToDo,
+            PassedInOtherMix: tile.Carried,
+            InTop50Type: _top50ByType.TryGetValue(tile.Chart.Type, out var typed) && typed.Contains(tile.Chart.Id),
+            InTop50Combined: _top50Combined?.Contains(tile.Chart.Id) ?? false,
+            tile.Gain, tile.Expected, current,
+            options.Skills && _skills.TryGetValue(tile.Chart.Id, out var chips) ? chips : null,
+            // Every difficulty at once: without the bubble on the tile the picture cannot say
+            // what any of it is (owner, field test round six; design doc §5).
+            ShareCardImages.DifficultyBubble(tile.Chart));
+    }
+
+    private TierListShareCard BuildTargetsCard(IReadOnlyList<TierListShareCard.Row> rows, ShareCardOptions options)
+    {
+        var palette = MixThemes.PaletteFor(Page.Mix);
+        return new TierListShareCard(
+            L["PUMBILITY Targets"],
+            $"{GroupingName} · {(Page.Mix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix")} · {Clock.Now:yyyy-MM-dd}",
+            L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name].ToString(),
+            palette.Primary, palette.Background, palette.Surface, palette.Ink, palette.InkMuted,
+            "https://piuscores.arroweclip.se/Pumbility",
+            null,
+            rows,
+            ShareCardComposer.Legend(options, Page.Mix, palette, key => L[key].Value));
+    }
+
+    private TierListShareCard.Row ComposeRow(PeerPoolList.ShareSection section,
+        IReadOnlyList<PeerPoolList.ShareTile> tiles, ShareCardOptions options, MixPalette palette)
+    {
+        return new TierListShareCard.Row(section.Name,
+            section.Tier is { } tier ? MixThemes.PumbilityHex(Page.Mix, tier) : palette.Primary,
+            tiles.Select(t => ShareCardComposer.Compose(FactsFor(t, options), options, Page.Mix, palette))
+                .ToArray());
+    }
+
+    /// <summary>The dialog's example: the first non-empty section's first six tiles (design doc §6).</summary>
+    private async Task<TierListShareCard?> BuildSampleCard(ShareCardOptions options)
+    {
+        if (_list == null) return null;
+        var sections = _list.ShareSections();
+        var sample = sections.FirstOrDefault(s => s.Tiles.Count > 0);
+        if (sample == null) return null;
+        await EnsureShareData(options, sections);
+        var palette = MixThemes.PaletteFor(Page.Mix);
+        return BuildTargetsCard(new[] { ComposeRow(sample, sample.Tiles.Take(6).ToArray(), options, palette) },
+            options);
+    }
+
     /// <summary>
-    ///     The list as a PNG, through the tier list's own share-card query and renderer — the same
-    ///     model, so nothing here is a second layout to keep in step. Sections and their colours
-    ///     come off the rendered list, so the image says what the screen says.
+    ///     The list as a PNG, through the tier list's own share-card query, renderer and composer
+    ///     — the same model and the same settings, so nothing here is a second layout to keep in
+    ///     step. Sections and their colours come off the rendered list, so the image says what
+    ///     the screen says.
     /// </summary>
-    private async Task Download()
+    private async Task Download(ShareCardOptions options)
     {
         if (_list == null) return;
         _building = true;
         try
         {
+            var sections = _list.ShareSections();
+            await EnsureShareData(options, sections);
             var palette = MixThemes.PaletteFor(Page.Mix);
-            var rows = _list.ShareSections()
+            var rows = sections
                 .Where(s => s.Tiles.Count > 0)
-                .Select(s => new TierListShareCard.Row(s.Name,
-                    s.Tier is { } tier ? MixThemes.PumbilityHex(Page.Mix, tier) : palette.Primary,
-                    s.Tiles.Select(t => new TierListShareCard.Tile(
-                        t.Chart.Song.ImagePath.ToString(),
-                        t.Score is { } score ? ShareCardImages.LetterGrade(score.LetterGradeFor(Page.Mix), false) : null,
-                        // Compact prints the corner value where the plate would sit, so the card
-                        // does too: a tile carrying a number does not also carry plate art.
-                        t.CornerLabel == null && t.Plate is { } plate ? ShareCardImages.Plate(plate) : null,
-                        _list.ShareOutlineHexFor(t.Chart.Id),
-                        t.CornerLabel,
-                        palette.Primary,
-                        t.Outline,
-                        // A tier list is one difficulty, so its card says so once in the header.
-                        // This list is every difficulty at once: without the bubble on the tile
-                        // the picture cannot say what any of it is (owner, field test round six).
-                        ShareCardImages.DifficultyBubble(t.Chart))).ToArray()))
+                .Select(s => ComposeRow(s, s.Tiles, options, palette))
                 .ToArray();
             if (rows.Length == 0) return;
 
-            var now = Clock.Now;
-            var card = new TierListShareCard(
-                L["PUMBILITY Targets"],
-                $"{GroupingName} · {(Page.Mix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix")} · {now:yyyy-MM-dd}",
-                L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name].ToString(),
-                palette.Primary, palette.Background, palette.Surface, palette.Ink, palette.InkMuted,
-                "https://piuscores.arroweclip.se/Pumbility",
-                null,
-                rows);
-
+            var card = BuildTargetsCard(rows, options);
             var bytes = await Mediator.Send(new GetTierListShareCardQuery(card));
             using var stream = new MemoryStream(bytes);
             using var streamRef = new DotNetStreamReference(stream);
             var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
-            await module.InvokeVoidAsync("downloadFileFromStream",
-                $"PumbilityTargets_{Page.Mix}_{_groupBy}_{now:yyyy-MM-dd}.png", streamRef);
+            await module.InvokeVoidAsync("downloadFileFromStream", DownloadFileName, streamRef);
         }
         finally
         {
