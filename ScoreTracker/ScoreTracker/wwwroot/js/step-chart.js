@@ -20,7 +20,10 @@ export async function mount(root) {
 
     var strings = readStrings(root);
     var payload = await fetchJson('/Charts/StepChart/' + chartId + '?mix=' + encodeURIComponent(mix));
-    if (!payload || !payload.rows || payload.rows.length === 0) {
+    // An all-hold chart is rows: [] with a real holds list — it still draws (bank sweep
+    // 2026-08-31 found three). Only a chart with nothing at all hides its section.
+    if (!payload || !payload.rows ||
+        (payload.rows.length === 0 && (!payload.holds || payload.holds.length === 0))) {
         var section = root.closest('section') || root;
         section.hidden = true;
         return;
