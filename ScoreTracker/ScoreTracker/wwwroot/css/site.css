@@ -18297,3 +18297,150 @@ button.judg-strip:focus-visible {
         scroll-snap-align: start;
     }
 }
+
+/* ===== Step chart & failure map (docs/design/step-chart-failure-map.md) ===== */
+/* The strip viewer: content-width scroll box beside a sticky whole-chart minimap. The rail
+   (pins) lives inside the canvas; everything here is layout, every color a token. */
+.stepchart-viewer {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.stepchart-scroll {
+    position: relative;
+    height: 600px;
+    overflow: auto;
+    width: max-content;
+    max-width: calc(100% - 106px);
+    flex: none;
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-radius: 10px;
+    background: var(--mix-surface-muted);
+    scrollbar-width: thin;
+}
+
+.stepchart-compact .stepchart-scroll {
+    height: 380px;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.stepchart-scroll canvas {
+    display: block;
+}
+
+.stepchart-minicol {
+    position: sticky;
+    top: 14px;
+}
+
+.stepchart-minimap {
+    display: block;
+    width: 92px;
+    height: 600px;
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-radius: 10px;
+    background: var(--mix-surface-muted);
+    cursor: pointer;
+}
+
+.stepchart-minicap {
+    color: var(--mix-ink-muted);
+    font-size: .72rem;
+    text-align: center;
+    margin-top: 6px;
+}
+
+.stepchart-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 14px;
+}
+
+.stepchart-chip {
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--mix-ink);
+    background: var(--mix-surface);
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 999px;
+    padding: 7px 12px 7px 9px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.stepchart-chip:hover {
+    border-color: var(--mix-ink-muted);
+}
+
+.stepchart-chip i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--mix-ink-muted);
+}
+
+.stepchart-chip-struct i {
+    background: var(--mix-primary);
+}
+
+.stepchart-chip-life i {
+    background: var(--life-danger);
+}
+
+.stepchart-chip-pass i {
+    background: var(--step-pass);
+}
+
+.stepchart-chip small {
+    color: var(--mix-ink-muted);
+    font-size: .72rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.stepchart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin-top: 12px;
+    color: var(--mix-ink-muted);
+    font-size: .8rem;
+}
+
+.stepchart-legend-entry {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stepchart-legend-entry i {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+.stepchart-caveat {
+    border-left: 3px solid var(--mix-primary);
+    background: var(--mix-surface);
+    border-radius: 0 8px 8px 0;
+    padding: 8px 12px;
+    color: var(--mix-ink-muted);
+    font-size: .84rem;
+    margin: 0 0 12px;
+}
+
+@media (max-width: 760px) {
+    .stepchart-minicol {
+        display: none;
+    }
+
+    .stepchart-scroll {
+        max-width: 100%;
+    }
+}
