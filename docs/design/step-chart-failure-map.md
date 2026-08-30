@@ -90,8 +90,10 @@ All owner-settled across the 2026-08-29/30 workshop.
   `api/*` — UI-support, no partner contract, no wire-shape test.
 - **D14 — Dialog gets a fifth tab ("Steps"),** compact scale, no minimap, lazy-loaded on first
   activation. The page stays the whole record; "More info" lands on the section anchor.
-- **D15 — Mode preference sticks per player** (`StepChart__ColorMode` UiSetting). Fixed zoom
-  in v1 (page 200 px/s, dialog 110); a zoom control waits for field feedback.
+- **D15 — Mode preference sticks per browser** (localStorage), not per account: the page is
+  static SSR and ruling 6 asked for the lightest thing that behaves well — a settings write
+  from a circuit-less page buys an endpoint for a convenience. Fixed zoom in v1 (page
+  200 px/s, dialog 110); a zoom control waits for field feedback.
 - **D16 — Co-op charts get no section.** Their causes are never classified
   (pass-command-detection D35), their `Level` is a player count, and the corpus barely covers
   them. Skip outright rather than render a maybe.

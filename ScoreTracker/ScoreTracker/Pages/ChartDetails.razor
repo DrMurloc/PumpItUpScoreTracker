@@ -134,6 +134,11 @@
                  data-visibility="@_stepChart.Visibility">
                 <script type="application/json" data-stepchart-strings>@StepChartStrings()</script>
                 <div class="stepchart-caveat" data-stepchart-caveat hidden>@L["Where runs end isn't shown — this step file disagrees with the game's judged note count."]</div>
+                <div class="stepchart-modes" role="group" aria-label="@L["Arrow coloring"]">
+                    <button type="button" data-stepchart-mode="arrow" aria-pressed="true">@L["Arrows"]</button>
+                    <button type="button" data-stepchart-mode="foot" aria-pressed="false">@L["Feet"]</button>
+                    <button type="button" data-stepchart-mode="quant" aria-pressed="false">@L["Timing"]</button>
+                </div>
                 <div class="stepchart-chips" data-stepchart-chips></div>
                 <div class="stepchart-viewer">
                     <div class="stepchart-scroll" data-stepchart-scroll tabindex="0" aria-label="@L["Step chart"]"></div>
@@ -255,7 +260,15 @@
             ["yourRuns"] = L["Your runs"],
             ["oneRunEnded"] = L["1 run ended here"],
             ["runsEnded"] = L["{0} runs ended here"],
-            ["passHedge"] = L["Proven non-lifebar — possibly a command from the other pad."]
+            ["passHedge"] = L["Proven non-lifebar — possibly a command from the other pad."],
+            ["leftFoot"] = L["Left foot"],
+            ["rightFoot"] = L["Right foot"],
+            ["quarters"] = L["Quarters"],
+            ["eighths"] = L["Eighths"],
+            ["twelfths"] = L["Twelfths"],
+            ["sixteenths"] = L["Sixteenths"],
+            ["finer"] = L["Finer"],
+            ["timingUnavailable"] = L["Timing colors need a step file that aligned to beats."]
         }));
     }
 

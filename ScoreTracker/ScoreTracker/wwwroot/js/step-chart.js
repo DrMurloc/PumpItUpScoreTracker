@@ -29,6 +29,9 @@ export async function mount(root) {
     var token = function (name) { return css.getPropertyValue(name).trim() || '#888'; };
     var COL = {
         upper: token('--panel-upper'), lower: token('--panel-lower'), center: token('--panel-center'),
+        footL: token('--foot-l'), footR: token('--foot-r'),
+        quant: { 4: token('--quant-4'), 8: token('--quant-8'), 12: token('--quant-12'), 16: token('--quant-16') },
+        quantOther: token('--quant-other'),
         ink: token('--mix-ink'), inkMuted: token('--mix-ink-muted'), accent: token('--mix-primary')
     };
 
@@ -70,6 +73,7 @@ export async function mount(root) {
     initMinimap(view, compact);
     buildChips(view);
     renderLegend(view);
+    initModes(view);
 
     if (root.getAttribute('data-visibility') === 'StepsOnly') {
         var caveat = root.querySelector('[data-stepchart-caveat]');
@@ -293,13 +297,62 @@ async function loadBreaks(view, chartId, mix) {
     bindPinTips(view);
 }
 
-// Mode-aware colors; Feet and Timing arrive with the mode toggle and read the same seams.
+// The three coloring modes (design doc D12), one seam. Arrows reads the panel; Feet reads
+// the snapshot's limb masks; Timing reads the quantization the .ssc alignment attached.
 function rowColorFor(view, row, panel) {
+    if (view.mode === 'foot')
+        return (row.l & (1 << panel)) ? view.colors.footL : view.colors.footR;
+    if (view.mode === 'quant')
+        return view.colors.quant[row.q] || view.colors.quantOther;
     return noteColor(view, row, panel);
 }
 
 function holdColorFor(view, hold) {
+    if (view.mode === 'foot') return hold.left ? view.colors.footL : view.colors.footR;
+    // Hold heads carry no quantization of their own — in Timing mode they read as "other".
+    if (view.mode === 'quant') return view.colors.quantOther;
     return holdColor(view, hold);
+}
+
+// The toggle: three buttons the server rendered, localStorage for stickiness (per ruling 6:
+// the lightest thing that behaves well — a static page writes no per-user settings), and
+// Timing disabled outright on charts whose beats never aligned (D6).
+function initModes(view) {
+    var buttons = Array.prototype.slice.call(view.root.querySelectorAll('[data-stepchart-mode]'));
+    if (buttons.length === 0) return;
+
+    var timingAvailable = !!view.payload.aligned;
+    var saved = null;
+    try { saved = window.localStorage.getItem('stepchart-mode'); } catch (e) { /* private mode */ }
+    if (saved === 'foot' || (saved === 'quant' && timingAvailable)) view.mode = saved;
+
+    function apply() {
+        buttons.forEach(function (button) {
+            button.setAttribute('aria-pressed',
+                button.getAttribute('data-stepchart-mode') === view.mode ? 'true' : 'false');
+        });
+        drawStrip(view);
+        renderLegend(view);
+    }
+
+    buttons.forEach(function (button) {
+        var mode = button.getAttribute('data-stepchart-mode');
+        if (mode === 'quant' && !timingAvailable) {
+            button.disabled = true;
+            button.title = view.strings.timingUnavailable ||
+                'Timing colors need a step file that aligned to beats.';
+            return;
+        }
+
+        button.addEventListener('click', function () {
+            if (view.mode === mode) return;
+            view.mode = mode;
+            try { window.localStorage.setItem('stepchart-mode', mode); } catch (e) { /* fine */ }
+            apply();
+        });
+    });
+
+    apply();
 }
 
 // Correct outward directions (workshop round 2): canvas rotation is clockwise from "up", so
@@ -456,9 +509,20 @@ function renderLegend(view) {
     var host = view.root.querySelector('[data-stepchart-legend]');
     if (!host) return;
     host.innerHTML = '';
-    legendEntry(host, view.colors.upper, view.strings.upper || 'Upper');
-    legendEntry(host, view.colors.lower, view.strings.lower || 'Lower');
-    legendEntry(host, view.colors.center, view.strings.center || 'Center');
+    if (view.mode === 'foot') {
+        legendEntry(host, view.colors.footL, view.strings.leftFoot || 'Left foot');
+        legendEntry(host, view.colors.footR, view.strings.rightFoot || 'Right foot');
+    } else if (view.mode === 'quant') {
+        legendEntry(host, view.colors.quant[4], view.strings.quarters || 'Quarters');
+        legendEntry(host, view.colors.quant[8], view.strings.eighths || 'Eighths');
+        legendEntry(host, view.colors.quant[12], view.strings.twelfths || 'Twelfths');
+        legendEntry(host, view.colors.quant[16], view.strings.sixteenths || 'Sixteenths');
+        legendEntry(host, view.colors.quantOther, view.strings.finer || 'Finer');
+    } else {
+        legendEntry(host, view.colors.upper, view.strings.upper || 'Upper');
+        legendEntry(host, view.colors.lower, view.strings.lower || 'Lower');
+        legendEntry(host, view.colors.center, view.strings.center || 'Center');
+    }
 
     if (view.breaks && view.breaks.total > 0) {
         legendEntry(host, view.colors.life,

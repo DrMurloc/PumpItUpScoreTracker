@@ -18471,3 +18471,36 @@ button.judg-strip:focus-visible {
     font-size: .76rem;
     margin-top: 3px;
 }
+
+/* The coloring-mode toggle: a segmented control, pressed state on the surface token. */
+.stepchart-modes {
+    display: inline-flex;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 9px;
+    overflow: hidden;
+    margin: 0 0 12px;
+}
+
+.stepchart-modes button {
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--mix-ink-muted);
+    background: transparent;
+    border: none;
+    padding: 8px 14px;
+    cursor: pointer;
+}
+
+.stepchart-modes button + button {
+    border-left: 1px solid rgba(255, 255, 255, .12);
+}
+
+.stepchart-modes button[aria-pressed="true"] {
+    background: var(--mix-surface);
+    color: var(--mix-ink);
+}
+
+.stepchart-modes button:disabled {
+    opacity: .45;
+    cursor: default;
+}
