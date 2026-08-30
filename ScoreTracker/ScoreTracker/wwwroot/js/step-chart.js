@@ -84,7 +84,7 @@ export async function mount(root) {
 
     // Land on the crux rather than the silent intro — the reader came to see the chart's teeth.
     var crux = cruxOf(view);
-    if (crux) box.scrollTop = Math.max(0, yOf(crux.s) - 90);
+    if (crux) box.scrollTop = Math.max(0, view.yOf(crux.s) - 90);
 }
 
 // Layout from the effective AV. Geometry mirrors the cabinet, measured off gameplay footage
@@ -476,34 +476,50 @@ function initModes(view) {
 // UL=-45°, UR=+45°, DR=+135°, DL=-135°. Lane = panel % 5 in pad order DL UL C UR DR.
 var ANGLES = { 0: -135, 1: -45, 3: 45, 4: 135 };
 
+// Every note is a square TILE with flat top/bottom/sides — the cabinet's sprites are square,
+// and rotated silhouettes made a quad read as a staggered rolling bracket instead of a flat
+// jump row (owner, 2026-08-30). The directional glyph draws inside the tile.
 function drawArrow(ctx, x, y, size, panel, color) {
     var lane = panel % 5;
     ctx.save();
     ctx.translate(x, y);
+
+    var half = size * 0.5;
     ctx.fillStyle = color;
+    ctx.globalAlpha = 0.22;
+    roundRect(ctx, -half, -half, size, size, size * 0.12);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, -half + 0.75, -half + 0.75, size - 1.5, size - 1.5, size * 0.12);
+    ctx.stroke();
+
     if (lane === 2) {
         ctx.rotate(Math.PI / 4);
-        var r = size * 0.4;
-        roundRect(ctx, -r, -r, r * 2, r * 2, size * 0.16);
+        var r = size * 0.30;
+        ctx.fillStyle = color;
+        roundRect(ctx, -r, -r, r * 2, r * 2, size * 0.10);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,.4)';
-        ctx.lineWidth = 1.3;
+        ctx.strokeStyle = 'rgba(255,255,255,.45)';
+        ctx.lineWidth = 1.2;
         ctx.stroke();
     } else {
         ctx.rotate(ANGLES[lane] * Math.PI / 180);
-        var half = size * 0.5;
+        var g = size * 0.36;
+        ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.moveTo(0, -half);
-        ctx.lineTo(half * 0.85, half * 0.15);
-        ctx.lineTo(half * 0.33, half * 0.15);
-        ctx.lineTo(half * 0.33, half);
-        ctx.lineTo(-half * 0.33, half);
-        ctx.lineTo(-half * 0.33, half * 0.15);
-        ctx.lineTo(-half * 0.85, half * 0.15);
+        ctx.moveTo(0, -g);
+        ctx.lineTo(g * 0.85, g * 0.15);
+        ctx.lineTo(g * 0.33, g * 0.15);
+        ctx.lineTo(g * 0.33, g);
+        ctx.lineTo(-g * 0.33, g);
+        ctx.lineTo(-g * 0.33, g * 0.15);
+        ctx.lineTo(-g * 0.85, g * 0.15);
         ctx.closePath();
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,.4)';
-        ctx.lineWidth = 1.3;
+        ctx.strokeStyle = 'rgba(255,255,255,.45)';
+        ctx.lineWidth = 1.2;
         ctx.stroke();
     }
     ctx.restore();
