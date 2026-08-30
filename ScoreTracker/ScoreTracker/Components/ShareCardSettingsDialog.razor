@@ -23,7 +23,7 @@
                     <div class="scdl-switches">
                         <MudSwitch T="bool" Color="Color.Primary" Value="_options.SongNames"
                                    ValueChanged="v => Set(_options with { SongNames = v })"
-                                   Label="@L["Song names"]" data-testid="sc-opt-names"></MudSwitch>
+                                   Label="@L["Song Names"]" data-testid="sc-opt-names"></MudSwitch>
                         @if (SignedIn && PhoenixScoring)
                         {
                             <MudSwitch T="bool" Color="Color.Primary" Value="_options.LetterGrades"

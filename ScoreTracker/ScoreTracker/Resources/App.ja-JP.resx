@@ -1130,6 +1130,9 @@
   <data name="Both are needed before anyone else can use your tool." xml:space="preserve">
     <value>ほかの人があなたのツールを使うには、どちらも必要です。</value>
   </data>
+  <data name="Boundaries" xml:space="preserve">
+    <value>枠線</value>
+  </data>
   <data name="BP" xml:space="preserve">
     <value>BP</value>
   </data>
@@ -1178,6 +1181,9 @@
   </data>
   <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
     <value>ブロークンは0点です — クリアして初めて加算されます。</value>
+  </data>
+  <data name="Broken with score" xml:space="preserve">
+    <value>スコア付きBreak Off</value>
   </data>
   <data name="Browse Communities" xml:space="preserve">
     <value>コミュニティを見る</value>
@@ -1325,6 +1331,9 @@
   </data>
   <data name="chart boards" xml:space="preserve">
     <value>譜面ボード</value>
+  </data>
+  <data name="Chart cards" xml:space="preserve">
+    <value>譜面カード</value>
   </data>
   <data name="Chart columns" xml:space="preserve">
     <value>譜面の列</value>
@@ -1523,6 +1532,12 @@
   </data>
   <data name="Coldest Charts" xml:space="preserve">
     <value>人気ワースト譜面</value>
+  </data>
+  <data name="Color by letter grade" xml:space="preserve">
+    <value>ランクで色分け</value>
+  </data>
+  <data name="Color by plate" xml:space="preserve">
+    <value>プレートで色分け</value>
   </data>
   <data name="colour = worth a 900,000 on a low level → a high one; the diagonal bands are the equal-value lines" xml:space="preserve">
     <value>色 = 低いレベル → 高いレベルの900,000相当。斜めの帯が等価値の線です</value>
@@ -2238,6 +2253,9 @@
   <data name="Download Failures" xml:space="preserve">
     <value>ダウンロード失敗</value>
   </data>
+  <data name="Download image" xml:space="preserve">
+    <value>画像をダウンロード</value>
+  </data>
   <data name="Download Scores" xml:space="preserve">
     <value>スコアダウンロード</value>
   </data>
@@ -2465,6 +2483,9 @@
   <data name="Example Set Builder" xml:space="preserve">
 	  <value>サンプルセット構築</value>
   </data>
+  <data name="Example — how it will come out" xml:space="preserve">
+    <value>例 — 出来上がりのイメージ</value>
+  </data>
   <data name="Exceed &amp; NX" xml:space="preserve">
     <value>Exceed &amp; NX</value>
   </data>
@@ -2476,6 +2497,9 @@
   </data>
   <data name="Expanding soon" xml:space="preserve">
     <value>まもなく拡張</value>
+  </data>
+  <data name="Expected gains" xml:space="preserve">
+    <value>予想ゲイン</value>
   </data>
   <data name="Expired" xml:space="preserve">
     <value>期限切れ</value>
@@ -3333,6 +3357,9 @@
   <data name="Include an unplayed segment" xml:space="preserve">
     <value>未プレイのセグメントを含める</value>
   </data>
+  <data name="Include broken runs" xml:space="preserve">
+    <value>Break Offのスコアを含める</value>
+  </data>
   <data name="Include my own wins" xml:space="preserve">
     <value>自分の記録も含める</value>
   </data>
@@ -3606,6 +3633,9 @@
   </data>
   <data name="Letter Grade Template" xml:space="preserve">
 	  <value>ランクテンプレート</value>
+  </data>
+  <data name="Letter grades" xml:space="preserve">
+    <value>ランク</value>
   </data>
   <data name="Letter grades on this board" xml:space="preserve">
     <value>このボードのレターグレード</value>
@@ -5102,6 +5132,9 @@
   <data name="Overrated" xml:space="preserve">
     <value>過大評価</value>
   </data>
+  <data name="Overrides every other boundary" xml:space="preserve">
+    <value>他のすべての枠線より優先</value>
+  </data>
   <data name="Page not found" xml:space="preserve">
     <value>ページが見つかりません</value>
   </data>
@@ -5144,6 +5177,12 @@
   <data name="Pass {0} ended this stage" xml:space="preserve">
     <value>Pass {0} でこのプレイが終了しました</value>
   </data>
+  <data name="Pass — colored by letter grade · PG glows" xml:space="preserve">
+    <value>クリア — ランクで色分け · PGは光る</value>
+  </data>
+  <data name="Pass — colored by plate · PG glows" xml:space="preserve">
+    <value>クリア — プレートで色分け · PGは光る</value>
+  </data>
   <data name="Passed" xml:space="preserve">
 	  <value>クリア数</value>
   </data>
@@ -5153,8 +5192,8 @@
   <data name="Passed a D28." xml:space="preserve">
     <value>D28をクリア。</value>
   </data>
-  <data name="Passed in another mix" xml:space="preserve">
-    <value>別バージョンでパス済み</value>
+  <data name="Passed in other mixes" xml:space="preserve">
+    <value>他のバージョンでパス済み</value>
   </data>
   <data name="passed {0:N0} charts" xml:space="preserve">
     <value>{0:N0} 譜面をパス</value>
@@ -5294,6 +5333,9 @@
   </data>
   <data name="PG count" xml:space="preserve">
     <value>PG数</value>
+  </data>
+  <data name="PG glows" xml:space="preserve">
+    <value>PGは光る</value>
   </data>
   <data name="PG · {0} of {1} peers have it" xml:space="preserve">
     <value>PG・同レベル帯 {1} 人中 {0} 人が達成</value>
@@ -6229,6 +6271,9 @@
   <data name="Remember my password on this device" xml:space="preserve">
     <value>このデバイスにパスワードを記憶する</value>
   </data>
+  <data name="Remembered for next time" xml:space="preserve">
+    <value>次回も記憶されます</value>
+  </data>
   <data name="Remix" xml:space="preserve">
     <value>リミックス</value>
   </data>
@@ -6899,8 +6944,8 @@
   <data name="Show original" xml:space="preserve">
     <value>原文を表示</value>
   </data>
-  <data name="Show Passed in Another Mix" xml:space="preserve">
-    <value>別バージョンでパス済みを表示</value>
+  <data name="Show Passed in Other Mixes" xml:space="preserve">
+    <value>他のバージョンでパス済みを表示</value>
   </data>
   <data name="Show per type" xml:space="preserve">
     <value>Show per type</value>
@@ -7580,6 +7625,9 @@
   <data name="The formula" xml:space="preserve">
     <value>式</value>
   </data>
+  <data name="The gain chip, with the grade you'd be expected to get beside it." xml:space="preserve">
+    <value>ゲインのチップと、その隣に予想されるランクを表示します。</value>
+  </data>
   <data name="The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}." xml:space="preserve">
     <value>ランクの幅は確かに縮みました。無難なクリアの上のSSS+はPhoenixで+{0}、ここでは+{1}です。でもそれはレベルの価値と並べて初めて意味を持ち、レベルの方がもっと縮みました — Phoenixのベースは二次式（20で+{2}）、Phoenix 2は固定5ずつ（+{3}）増えます。裏返せば、Phoenixで1レベル上のクリアに追いつくには手持ちの譜面で900,000を{4}まで上げる必要があり、Phoenix 2では同じ1レベルを{5}で追いつけます。</value>
   </data>
@@ -8083,6 +8131,18 @@
   </data>
   <data name="Top 50" xml:space="preserve">
     <value>トップ50</value>
+  </data>
+  <data name="Top 50 PUMBILITY" xml:space="preserve">
+    <value>Top 50 PUMBILITY</value>
+  </data>
+  <data name="Top 50 — combined" xml:space="preserve">
+    <value>Top 50 — 統合</value>
+  </data>
+  <data name="Top 50 — this chart's type" xml:space="preserve">
+    <value>Top 50 — この譜面のタイプ</value>
+  </data>
+  <data name="Top 50: dotted — this chart's type · solid — combined. Not combinable with the color modes." xml:space="preserve">
+    <value>Top 50：点線 — この譜面のタイプ · 実線 — 統合。色分けモードとは併用できません。</value>
   </data>
   <data name="Top 8% · Sapphire" xml:space="preserve">
     <value>上位 8% · サファイア</value>
@@ -9120,6 +9180,9 @@
   </data>
   <data name="Your best 4 scores per week of the month count." xml:space="preserve">
     <value>月内の各週で上位4件のスコアが対象です。</value>
+  </data>
+  <data name="Your chart's current value, bottom right." xml:space="preserve">
+    <value>この譜面の現在の値を右下に表示します。</value>
   </data>
   <data name="Your charts average" xml:space="preserve">
     <value>譜面の平均</value>

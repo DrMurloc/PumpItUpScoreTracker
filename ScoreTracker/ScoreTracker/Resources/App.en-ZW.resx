@@ -1130,6 +1130,9 @@
   <data name="Both are needed before anyone else can use your tool." xml:space="preserve">
     <value>Blomurp murp murgloo blarg alla morp murp murgm rorgl.</value>
   </data>
+  <data name="Boundaries" xml:space="preserve">
+    <value>Bramglorg</value>
+  </data>
   <data name="BP" xml:space="preserve">
     <value>BP</value>
   </data>
@@ -1178,6 +1181,9 @@
   </data>
   <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
     <value>Morgl mrpplgl mrglrgl 0 — maglplgl gl grgl mrglrgl gl.</value>
+  </data>
+  <data name="Broken with score" xml:space="preserve">
+    <value>Morgl mag mrglrgl</value>
   </data>
   <data name="Browse Communities" xml:space="preserve">
     <value>Murpmurp Grglrglplglblub</value>
@@ -1325,6 +1331,9 @@
   </data>
   <data name="chart boards" xml:space="preserve">
     <value>murgl grrglplgl</value>
+  </data>
+  <data name="Chart cards" xml:space="preserve">
+    <value>Murgl Gurbl</value>
   </data>
   <data name="Chart columns" xml:space="preserve">
     <value>Murgl rglgrglurg</value>
@@ -1523,6 +1532,12 @@
   </data>
   <data name="Coldest Charts" xml:space="preserve">
     <value>Rglmrglblub Murgl</value>
+  </data>
+  <data name="Color by letter grade" xml:space="preserve">
+    <value>Grolor bu mrlurg rorgl</value>
+  </data>
+  <data name="Color by plate" xml:space="preserve">
+    <value>Grolor bu murp</value>
   </data>
   <data name="colour = worth a 900,000 on a low level → a high one; the diagonal bands are the equal-value lines" xml:space="preserve">
     <value>glorb = gromb a 900,000 ap a blo grorpmurm → a gro mrp; a plag grolgub lu a plom-grumb plag</value>
@@ -2238,6 +2253,9 @@
   <data name="Download Failures" xml:space="preserve">
     <value>Murlg Rglgrglmr</value>
   </data>
+  <data name="Download image" xml:space="preserve">
+    <value>Murlg Blomurg</value>
+  </data>
   <data name="Download Scores" xml:space="preserve">
     <value>Murlg Mgrlgmrg</value>
   </data>
@@ -2465,6 +2483,9 @@
   <data name="Example Set Builder" xml:space="preserve">
 	  <value>Morgmorggro Gro Grglmrglmagl</value>
   </data>
+  <data name="Example — how it will come out" xml:space="preserve">
+    <value>Bromgl — gug urg mul grom oup</value>
+  </data>
   <data name="Exceed &amp; NX" xml:space="preserve">
     <value>Mrpgrgl &amp; NX</value>
   </data>
@@ -2476,6 +2497,9 @@
   </data>
   <data name="Expanding soon" xml:space="preserve">
     <value>Grglmrgrorp blarggrorp</value>
+  </data>
+  <data name="Expected gains" xml:space="preserve">
+    <value>Progl Roglubrgl</value>
   </data>
   <data name="Expired" xml:space="preserve">
     <value>Murgloo blorm</value>
@@ -3333,6 +3357,9 @@
   <data name="Include an unplayed segment" xml:space="preserve">
     <value>Romurmmrp blgrl lurgarglmurg rogromrgl</value>
   </data>
+  <data name="Include broken runs" xml:space="preserve">
+    <value>Grabmrp Morgl Blubgro</value>
+  </data>
   <data name="Include my own wins" xml:space="preserve">
     <value>Romurmmrp blgrl grrgl blgrlblarg</value>
   </data>
@@ -3606,6 +3633,9 @@
   </data>
   <data name="Letter Grade Template" xml:space="preserve">
 	  <value>Mrlurg Rorgl Glglorgblub</value>
+  </data>
+  <data name="Letter grades" xml:space="preserve">
+    <value>Mrlurg Rorglrgl</value>
   </data>
   <data name="Letter grades on this board" xml:space="preserve">
     <value>Mrlurg urglurg lurg grglmrp mrglblarg</value>
@@ -5102,6 +5132,9 @@
   <data name="Overrated" xml:space="preserve">
     <value>Morgmrglgl</value>
   </data>
+  <data name="Overrides every other boundary" xml:space="preserve">
+    <value>Grombul olga ugmorg bramglorg</value>
+  </data>
   <data name="Page not found" xml:space="preserve">
     <value>Urggrgl murm arglurg</value>
   </data>
@@ -5144,6 +5177,12 @@
   <data name="Pass {0} ended this stage" xml:space="preserve">
     <value>Mrpglub {0} arglglorg mrpmurg</value>
   </data>
+  <data name="Pass — colored by letter grade · PG glows" xml:space="preserve">
+    <value>Maglplgl — grolorgro bu mrlurg rorgl · PG roglurg</value>
+  </data>
+  <data name="Pass — colored by plate · PG glows" xml:space="preserve">
+    <value>Maglplgl — grolorgro bu murp · PG roglurg</value>
+  </data>
   <data name="Passed" xml:space="preserve">
 	  <value>Rglplgl</value>
   </data>
@@ -5153,8 +5192,8 @@
   <data name="Passed a D28." xml:space="preserve">
     <value>Rglplgl gro D28.</value>
   </data>
-  <data name="Passed in another mix" xml:space="preserve">
-    <value>Rglplgl mrp rglmrpmorg mrg</value>
+  <data name="Passed in other mixes" xml:space="preserve">
+    <value>Rglplgl mrp ugmorg mrgrgl</value>
   </data>
   <data name="passed {0:N0} charts" xml:space="preserve">
     <value>rglplgl {0:N0} murgl</value>
@@ -5294,6 +5333,9 @@
   </data>
   <data name="PG count" xml:space="preserve">
     <value>PG glorgmurp</value>
+  </data>
+  <data name="PG glows" xml:space="preserve">
+    <value>PG roglurg</value>
   </data>
   <data name="PG · {0} of {1} peers have it" xml:space="preserve">
     <value>PG · {0} mrgl {1} maglmurp mrglro gl</value>
@@ -6229,6 +6271,9 @@
   <data name="Remember my password on this device" xml:space="preserve">
     <value>Roblgrlargl blgrl glorgmrpmurm lurg grglmrp grglgrgl</value>
   </data>
+  <data name="Remembered for next time" xml:space="preserve">
+    <value>Mromblgr ba marg grum</value>
+  </data>
   <data name="Remix" xml:space="preserve">
     <value>Murgplgl</value>
   </data>
@@ -6899,8 +6944,8 @@
   <data name="Show original" xml:space="preserve">
     <value>Romorg grorglrgl</value>
   </data>
-  <data name="Show Passed in Another Mix" xml:space="preserve">
-    <value>Romorg Rglplgl mrp Rglmrpmorg Mrg</value>
+  <data name="Show Passed in Other Mixes" xml:space="preserve">
+    <value>Romorg Rglplgl mrp Ugmorg Mrgrgl</value>
   </data>
   <data name="Show per type" xml:space="preserve">
     <value>Romorg morg morg</value>
@@ -7580,6 +7625,9 @@
   <data name="The formula" xml:space="preserve">
     <value>A blargmurm</value>
   </data>
+  <data name="The gain chip, with the grade you'd be expected to get beside it." xml:space="preserve">
+    <value>Ma roglub glomp, mag ma rorgl mu bru progl ro grab bogl urg.</value>
+  </data>
   <data name="The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}." xml:space="preserve">
     <value>A rorgl grulm gab mglo: a SSS+ grogro a moplgl maglplgl lu gromb +{0} ap Phoenix ur lu +{1} plub. Bum plab mrpo murgmurprorgl gab urg a grorpmurm lu gromb, ur a grorpmurm mglo mrrglmrgl — Phoenix’murgl gogl lu grulubgrulub (+{2} og 20), Phoenix 2’a grogro bu a plom 5 (+{3}). Murg a olb plag gro: ap Phoenix, maglplgl mrp grorpmurm grogro grab a 900,000 ro {4} ro plom ap a murgl urgm gulp gab; ap Phoenix 2 a plom grorpmurm grop lu plom bu {5}.</value>
   </data>
@@ -8083,6 +8131,18 @@
   </data>
   <data name="Top 50" xml:space="preserve">
     <value>Blarg 50</value>
+  </data>
+  <data name="Top 50 PUMBILITY" xml:space="preserve">
+    <value>Ropgl 50 PUMBILITY</value>
+  </data>
+  <data name="Top 50 — combined" xml:space="preserve">
+    <value>Ropgl 50 — grombrol</value>
+  </data>
+  <data name="Top 50 — this chart's type" xml:space="preserve">
+    <value>Ropgl 50 — mogl murgl morg</value>
+  </data>
+  <data name="Top 50: dotted — this chart's type · solid — combined. Not combinable with the color modes." xml:space="preserve">
+    <value>Ropgl 50: pogrol — mogl murgl morg · brolg — grombrol. Bo grombrolgl mag ma grolor morggl.</value>
   </data>
   <data name="Top 8% · Sapphire" xml:space="preserve">
     <value>Blarg 8% · Rglmorglurg</value>
@@ -9120,6 +9180,9 @@
   </data>
   <data name="Your best 4 scores per week of the month count." xml:space="preserve">
     <value>Gromurp mrpblarg 4 mgrlgmrg morg plglmorg mrgl mrp blublurg glorgmurp.</value>
+  </data>
+  <data name="Your chart's current value, bottom right." xml:space="preserve">
+    <value>Mur murgl gruglo grulb, moglurg raglo.</value>
   </data>
   <data name="Your charts average" xml:space="preserve">
     <value>Urgl murgl rorg</value>

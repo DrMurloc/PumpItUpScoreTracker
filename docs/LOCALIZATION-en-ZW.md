@@ -186,6 +186,38 @@ than dropped. Kept deliberately short, since the length rule tracks the English.
 | enough | blurg | Coined 2026-08-07. |
 | fifty | murgro | Coined 2026-08-07 for *Fifty charts, {0} plate.* — the numeral spelled out, where `mrp` ("one") is the pronoun. Digits stay digits; only a spelled-out English numeral needs this. |
 
+### The download settings batch (2026-08-30)
+
+Coined for the share-card download settings dialog
+([share-card-download-settings.md](design/share-card-download-settings.md)) and reusable
+everywhere. `Roglub` (gain) and `Murp` (plate) come from the tables above.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| image | Blomurg | |
+| card(s) | Gurbl | The chart card, not a playing card. |
+| chip | Glomp | |
+| boundary / border | Bramglorg | Plural unmarked, like Tool/Tools. |
+| color | Grolor | `colored` → `Grolorgro`. |
+| glows | Roglurg | |
+| dotted | Pogrol | |
+| solid | Brolg | |
+| combined | Grombrol | `combinable` → `Grombrolgl`. |
+| other | Ugmorg | |
+| expected | Progl | |
+| top | Ropgl | As in `Ropgl 50`. |
+| current | Gruglo | |
+| value | Grulb | |
+| with | Mag | |
+| by | Bu | Distinct from `ba` (for) and `bu` is never "be" — that is `bru`. |
+| include | Grabmrp | `grab` + `mrp`. |
+| run(s) | Blubgro | The play attempt, alongside the es glossary's `intento`. |
+| example | Bromgl | |
+| remembered | Mromblgr | |
+| overrides | Grombul | |
+| every | Olga | |
+| mode(s) | Morggl | `Morg` (type) + `gl`. |
+
 ### The PUMBILITY calculator batch (2026-08-16)
 
 Coined for `/PumbilityCalculator/{mix}` ([pumbility-calculator.md](design/pumbility-calculator.md)) and

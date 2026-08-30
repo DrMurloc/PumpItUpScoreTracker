@@ -1123,6 +1123,9 @@
   <data name="Both are needed before anyone else can use your tool." xml:space="preserve">
     <value>Os dois são necessários antes que outra pessoa possa usar a sua ferramenta.</value>
   </data>
+  <data name="Boundaries" xml:space="preserve">
+    <value>Bordas</value>
+  </data>
   <data name="BP" xml:space="preserve">
     <value>BP</value>
   </data>
@@ -1170,6 +1173,9 @@
   </data>
   <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
     <value>Jogadas quebradas valem 0 — passe para pontuar.</value>
+  </data>
+  <data name="Broken with score" xml:space="preserve">
+    <value>Quebrada com pontuação</value>
   </data>
   <data name="Browse Communities" xml:space="preserve">
     <value>Explorar comunidades</value>
@@ -1317,6 +1323,9 @@
   </data>
   <data name="chart boards" xml:space="preserve">
     <value>placares de charts</value>
+  </data>
+  <data name="Chart cards" xml:space="preserve">
+    <value>Cartões de charts</value>
   </data>
   <data name="Chart columns" xml:space="preserve">
     <value>Colunas do chart</value>
@@ -1512,6 +1521,12 @@
   </data>
   <data name="Coldest Charts" xml:space="preserve">
     <value>Charts menos populares</value>
+  </data>
+  <data name="Color by letter grade" xml:space="preserve">
+    <value>Cor por letra de nota</value>
+  </data>
+  <data name="Color by plate" xml:space="preserve">
+    <value>Cor por plate</value>
   </data>
   <data name="colour = worth a 900,000 on a low level → a high one; the diagonal bands are the equal-value lines" xml:space="preserve">
     <value>cor = vale um 900.000 num nível baixo → num alto; as faixas diagonais são as linhas de valor igual</value>
@@ -2224,6 +2239,9 @@
   <data name="Download Failures" xml:space="preserve">
     <value>Falhas de download</value>
   </data>
+  <data name="Download image" xml:space="preserve">
+    <value>Baixar imagem</value>
+  </data>
   <data name="Download Scores" xml:space="preserve">
     <value>Baixar pontuações</value>
   </data>
@@ -2449,6 +2467,9 @@
   <data name="Example Set Builder" xml:space="preserve">
     <value>Construtor de conjunto de exemplo</value>
   </data>
+  <data name="Example — how it will come out" xml:space="preserve">
+    <value>Exemplo — como vai sair</value>
+  </data>
   <data name="Exceed &amp; NX" xml:space="preserve">
     <value>Exceed e NX</value>
   </data>
@@ -2460,6 +2481,9 @@
   </data>
   <data name="Expanding soon" xml:space="preserve">
     <value>Expansão em breve</value>
+  </data>
+  <data name="Expected gains" xml:space="preserve">
+    <value>Ganhos esperados</value>
   </data>
   <data name="Expired" xml:space="preserve">
     <value>Expirada</value>
@@ -3316,6 +3340,9 @@
   <data name="Include an unplayed segment" xml:space="preserve">
     <value>Incluir um segmento não jogado</value>
   </data>
+  <data name="Include broken runs" xml:space="preserve">
+    <value>Incluir tentativas quebradas</value>
+  </data>
   <data name="Include my own wins" xml:space="preserve">
     <value>Incluir minhas próprias conquistas</value>
   </data>
@@ -3588,6 +3615,9 @@
   </data>
   <data name="Letter Grade Template" xml:space="preserve">
     <value>Modelo de letra de nota</value>
+  </data>
+  <data name="Letter grades" xml:space="preserve">
+    <value>Letras de nota</value>
   </data>
   <data name="Letter grades on this board" xml:space="preserve">
     <value>Letras neste placar</value>
@@ -5070,6 +5100,9 @@
   <data name="Overrated" xml:space="preserve">
     <value>Superestimado</value>
   </data>
+  <data name="Overrides every other boundary" xml:space="preserve">
+    <value>Substitui todas as outras bordas</value>
+  </data>
   <data name="Page not found" xml:space="preserve">
     <value>Página não encontrada</value>
   </data>
@@ -5112,6 +5145,12 @@
   <data name="Pass {0} ended this stage" xml:space="preserve">
     <value>Pass {0} encerrou esta tentativa</value>
   </data>
+  <data name="Pass — colored by letter grade · PG glows" xml:space="preserve">
+    <value>Pass — colorido por letra de nota · PG brilha</value>
+  </data>
+  <data name="Pass — colored by plate · PG glows" xml:space="preserve">
+    <value>Pass — colorido por plate · PG brilha</value>
+  </data>
   <data name="Passed" xml:space="preserve">
     <value>Com pass</value>
   </data>
@@ -5121,8 +5160,8 @@
   <data name="Passed a D28." xml:space="preserve">
     <value>Passou um D28.</value>
   </data>
-  <data name="Passed in another mix" xml:space="preserve">
-    <value>Passado em outra versão</value>
+  <data name="Passed in other mixes" xml:space="preserve">
+    <value>Passado em outras versões</value>
   </data>
   <data name="passed {0:N0} charts" xml:space="preserve">
     <value>passou {0:N0} charts</value>
@@ -5261,6 +5300,9 @@
   </data>
   <data name="PG count" xml:space="preserve">
     <value>Número de PG</value>
+  </data>
+  <data name="PG glows" xml:space="preserve">
+    <value>PG brilha</value>
   </data>
   <data name="PG · {0} of {1} peers have it" xml:space="preserve">
     <value>PG · {0} de {1} pares têm</value>
@@ -6187,6 +6229,9 @@
   <data name="Remember my password on this device" xml:space="preserve">
     <value>Lembrar minha senha neste dispositivo</value>
   </data>
+  <data name="Remembered for next time" xml:space="preserve">
+    <value>Lembrado para a próxima vez</value>
+  </data>
   <data name="Remix" xml:space="preserve">
     <value>Remix</value>
   </data>
@@ -6850,8 +6895,8 @@
   <data name="Show original" xml:space="preserve">
     <value>Ver original</value>
   </data>
-  <data name="Show Passed in Another Mix" xml:space="preserve">
-    <value>Mostrar passados em outra versão</value>
+  <data name="Show Passed in Other Mixes" xml:space="preserve">
+    <value>Mostrar passados em outras versões</value>
   </data>
   <data name="Show per type" xml:space="preserve">
     <value>Show per type</value>
@@ -7522,6 +7567,9 @@
   <data name="The formula" xml:space="preserve">
     <value>A fórmula</value>
   </data>
+  <data name="The gain chip, with the grade you'd be expected to get beside it." xml:space="preserve">
+    <value>O chip de ganho, com a nota esperada ao lado.</value>
+  </data>
   <data name="The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}." xml:space="preserve">
     <value>A distância de grau encolheu, sim: um SSS+ sobre um pass limpo valia +{0} no Phoenix e vale +{1} aqui. Mas isso só importa diante do que vale um nível, e o nível encolheu mais — a base do Phoenix é quadrática (+{2} no 20), a do Phoenix 2 cresce 5 fixos (+{3}). Dito ao contrário: no Phoenix, igualar um pass um nível acima exigia levar um 900.000 a {4} no chart que você já tinha; no Phoenix 2 o mesmo degrau de nível se iguala com {5}.</value>
   </data>
@@ -8025,6 +8073,18 @@
   </data>
   <data name="Top 50" xml:space="preserve">
     <value>Top 50</value>
+  </data>
+  <data name="Top 50 PUMBILITY" xml:space="preserve">
+    <value>Top 50 PUMBILITY</value>
+  </data>
+  <data name="Top 50 — combined" xml:space="preserve">
+    <value>Top 50 — combinado</value>
+  </data>
+  <data name="Top 50 — this chart's type" xml:space="preserve">
+    <value>Top 50 — o tipo deste chart</value>
+  </data>
+  <data name="Top 50: dotted — this chart's type · solid — combined. Not combinable with the color modes." xml:space="preserve">
+    <value>Top 50: pontilhado — o tipo deste chart · sólido — combinado. Não combinável com os modos de cor.</value>
   </data>
   <data name="Top 8% · Sapphire" xml:space="preserve">
     <value>Top 8% · Safira</value>
@@ -9051,6 +9111,9 @@
   </data>
   <data name="Your best 4 scores per week of the month count." xml:space="preserve">
     <value>Contam suas 4 melhores pontuações por semana do mês.</value>
+  </data>
+  <data name="Your chart's current value, bottom right." xml:space="preserve">
+    <value>O valor atual do seu chart, embaixo à direita.</value>
   </data>
   <data name="Your charts average" xml:space="preserve">
     <value>Média dos seus gráficos</value>

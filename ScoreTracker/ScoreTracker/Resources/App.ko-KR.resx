@@ -1123,6 +1123,9 @@
   <data name="Both are needed before anyone else can use your tool." xml:space="preserve">
     <value>다른 사람이 도구를 쓰려면 둘 다 필요합니다.</value>
   </data>
+  <data name="Boundaries" xml:space="preserve">
+    <value>테두리</value>
+  </data>
   <data name="BP" xml:space="preserve">
     <value>BP</value>
   </data>
@@ -1170,6 +1173,9 @@
   </data>
   <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
     <value>브로큰 플레이는 0점입니다 — 클리어해야 점수가 인정됩니다.</value>
+  </data>
+  <data name="Broken with score" xml:space="preserve">
+    <value>점수 있는 브레이크 오프</value>
   </data>
   <data name="Browse Communities" xml:space="preserve">
     <value>커뮤니티 둘러보기</value>
@@ -1317,6 +1323,9 @@
   </data>
   <data name="chart boards" xml:space="preserve">
     <value>채보 보드</value>
+  </data>
+  <data name="Chart cards" xml:space="preserve">
+    <value>차트 카드</value>
   </data>
   <data name="Chart columns" xml:space="preserve">
     <value>채보 열</value>
@@ -1512,6 +1521,12 @@
   </data>
   <data name="Coldest Charts" xml:space="preserve">
     <value>최저 인기 채보</value>
+  </data>
+  <data name="Color by letter grade" xml:space="preserve">
+    <value>랭크별 색상</value>
+  </data>
+  <data name="Color by plate" xml:space="preserve">
+    <value>플레이트별 색상</value>
   </data>
   <data name="colour = worth a 900,000 on a low level → a high one; the diagonal bands are the equal-value lines" xml:space="preserve">
     <value>색 = 낮은 레벨 → 높은 레벨의 900,000어치; 대각선 띠가 같은 가치의 선입니다</value>
@@ -2224,6 +2239,9 @@
   <data name="Download Failures" xml:space="preserve">
     <value>다운로드 실패</value>
   </data>
+  <data name="Download image" xml:space="preserve">
+    <value>이미지 다운로드</value>
+  </data>
   <data name="Download Scores" xml:space="preserve">
     <value>점수 다운로드</value>
   </data>
@@ -2449,6 +2467,9 @@
   <data name="Example Set Builder" xml:space="preserve">
     <value>예시 세트 빌더</value>
   </data>
+  <data name="Example — how it will come out" xml:space="preserve">
+    <value>예시 — 이렇게 나옵니다</value>
+  </data>
   <data name="Exceed &amp; NX" xml:space="preserve">
     <value>Exceed &amp; NX</value>
   </data>
@@ -2460,6 +2481,9 @@
   </data>
   <data name="Expanding soon" xml:space="preserve">
     <value>곧 확장</value>
+  </data>
+  <data name="Expected gains" xml:space="preserve">
+    <value>예상 획득량</value>
   </data>
   <data name="Expired" xml:space="preserve">
     <value>만료됨</value>
@@ -3316,6 +3340,9 @@
   <data name="Include an unplayed segment" xml:space="preserve">
     <value>미플레이 구간 포함</value>
   </data>
+  <data name="Include broken runs" xml:space="preserve">
+    <value>브레이크 오프 점수 포함</value>
+  </data>
   <data name="Include my own wins" xml:space="preserve">
     <value>내 성과도 포함</value>
   </data>
@@ -3588,6 +3615,9 @@
   </data>
   <data name="Letter Grade Template" xml:space="preserve">
     <value>랭크 템플릿</value>
+  </data>
+  <data name="Letter grades" xml:space="preserve">
+    <value>랭크</value>
   </data>
   <data name="Letter grades on this board" xml:space="preserve">
     <value>이 보드의 레터 등급</value>
@@ -5070,6 +5100,9 @@
   <data name="Overrated" xml:space="preserve">
     <value>과대평가</value>
   </data>
+  <data name="Overrides every other boundary" xml:space="preserve">
+    <value>다른 모든 테두리보다 우선</value>
+  </data>
   <data name="Page not found" xml:space="preserve">
     <value>페이지를 찾을 수 없습니다</value>
   </data>
@@ -5112,6 +5145,12 @@
   <data name="Pass {0} ended this stage" xml:space="preserve">
     <value>Pass {0} 때문에 이 플레이가 종료되었습니다</value>
   </data>
+  <data name="Pass — colored by letter grade · PG glows" xml:space="preserve">
+    <value>클리어 — 랭크별 색상 · PG는 빛납니다</value>
+  </data>
+  <data name="Pass — colored by plate · PG glows" xml:space="preserve">
+    <value>클리어 — 플레이트별 색상 · PG는 빛납니다</value>
+  </data>
   <data name="Passed" xml:space="preserve">
     <value>클리어</value>
   </data>
@@ -5121,7 +5160,7 @@
   <data name="Passed a D28." xml:space="preserve">
     <value>D28 클리어.</value>
   </data>
-  <data name="Passed in another mix" xml:space="preserve">
+  <data name="Passed in other mixes" xml:space="preserve">
     <value>다른 시리즈에서 패스함</value>
   </data>
   <data name="passed {0:N0} charts" xml:space="preserve">
@@ -5261,6 +5300,9 @@
   </data>
   <data name="PG count" xml:space="preserve">
     <value>PG 수</value>
+  </data>
+  <data name="PG glows" xml:space="preserve">
+    <value>PG는 빛납니다</value>
   </data>
   <data name="PG · {0} of {1} peers have it" xml:space="preserve">
     <value>PG · 동급 {1}명 중 {0}명 보유</value>
@@ -6187,6 +6229,9 @@
   <data name="Remember my password on this device" xml:space="preserve">
     <value>이 기기에 비밀번호 기억하기</value>
   </data>
+  <data name="Remembered for next time" xml:space="preserve">
+    <value>다음에도 기억됩니다</value>
+  </data>
   <data name="Remix" xml:space="preserve">
     <value>리믹스</value>
   </data>
@@ -6850,7 +6895,7 @@
   <data name="Show original" xml:space="preserve">
     <value>원문 보기</value>
   </data>
-  <data name="Show Passed in Another Mix" xml:space="preserve">
+  <data name="Show Passed in Other Mixes" xml:space="preserve">
     <value>다른 시리즈에서 패스함 표시</value>
   </data>
   <data name="Show per type" xml:space="preserve">
@@ -7522,6 +7567,9 @@
   <data name="The formula" xml:space="preserve">
     <value>공식</value>
   </data>
+  <data name="The gain chip, with the grade you'd be expected to get beside it." xml:space="preserve">
+    <value>획득량 칩과 함께 예상 랭크를 옆에 표시합니다.</value>
+  </data>
   <data name="The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}." xml:space="preserve">
     <value>등급의 폭은 분명 줄었습니다: 무난한 클리어 위의 SSS+는 Phoenix에서 +{0}였고 여기서는 +{1}입니다. 하지만 그것은 레벨의 가치와 견줘야만 의미가 있고, 레벨이 더 많이 줄었습니다 — Phoenix의 베이스는 2차 함수(20에서 +{2}), Phoenix 2는 고정 5씩(+{3}) 늘어납니다. 뒤집어 말하면: Phoenix에서 한 레벨 위를 클리어하는 것과 같아지려면 이미 가진 채보에서 900,000을 {4}까지 올려야 했고, Phoenix 2에서는 같은 한 레벨을 {5}이면 따라잡습니다.</value>
   </data>
@@ -8025,6 +8073,18 @@
   </data>
   <data name="Top 50" xml:space="preserve">
     <value>상위 50</value>
+  </data>
+  <data name="Top 50 PUMBILITY" xml:space="preserve">
+    <value>Top 50 PUMBILITY</value>
+  </data>
+  <data name="Top 50 — combined" xml:space="preserve">
+    <value>Top 50 — 통합</value>
+  </data>
+  <data name="Top 50 — this chart's type" xml:space="preserve">
+    <value>Top 50 — 이 차트의 타입</value>
+  </data>
+  <data name="Top 50: dotted — this chart's type · solid — combined. Not combinable with the color modes." xml:space="preserve">
+    <value>Top 50: 점선 — 이 차트의 타입 · 실선 — 통합. 색상 모드와 함께 사용할 수 없습니다.</value>
   </data>
   <data name="Top 8% · Sapphire" xml:space="preserve">
     <value>상위 8% · 사파이어</value>
@@ -9051,6 +9111,9 @@
   </data>
   <data name="Your best 4 scores per week of the month count." xml:space="preserve">
     <value>한 달 중 매주 상위 4개 점수가 반영됩니다.</value>
+  </data>
+  <data name="Your chart's current value, bottom right." xml:space="preserve">
+    <value>이 차트의 현재 값을 오른쪽 아래에 표시합니다.</value>
   </data>
   <data name="Your charts average" xml:space="preserve">
     <value>차트 평균</value>
