@@ -183,9 +183,11 @@ public sealed class StepChartIngestTests
     [Theory]
     [InlineData("C:/Users/x/repos/PIU-Simfiles/16 - PHOENIX\\A\\S.ssc", "16 - PHOENIX/A/S.ssc")]
     [InlineData("/mnt/data/PIU-Simfiles/02 - S.E.~EXTRA/B/T.ssc", "02 - S.E.~EXTRA/B/T.ssc")]
+    // The canonical corpus home (PiuScoresStepfiles/simfiles) — the marker serves both roots.
+    [InlineData("C:/Users/x/repos/PiuScoresStepfiles/simfiles/17 - PHOENIX 2/C/U.ssc", "17 - PHOENIX 2/C/U.ssc")]
     [InlineData("C:/elsewhere/steps/S.ssc", null)]
     [InlineData(null, null)]
-    public void TheGeneratorsPathCutsDownToTheCheckoutRelativeOne(string? sscFile, string? expected)
+    public void TheGeneratorsPathCutsDownToTheCorpusRelativeOne(string? sscFile, string? expected)
     {
         Assert.Equal(expected, StepChartIngest.RelativeSscPath(sscFile));
     }

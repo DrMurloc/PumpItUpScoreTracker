@@ -18,7 +18,15 @@ namespace ScoreTracker.Catalog.Application;
 internal sealed class StepChartIngest
 {
     private const string StepFilesPrefix = "stepfiles/";
-    private const string CheckoutRootMarker = "PIU-Simfiles";
+
+    /// <summary>
+    ///     The corpus-root marker inside the generator's <c>ssc_file</c> paths. "simfiles/"
+    ///     rather than "PIU-Simfiles/": the canonical corpus moved to
+    ///     PiuScoresStepfiles/<c>simfiles/</c> (its README is the loop's spec), and the old
+    ///     checkout's "PIU-Simfiles/" still ends in the same marker — one split serves every
+    ///     vintage ever generated.
+    /// </summary>
+    private const string CorpusRootMarker = "simfiles/";
 
     private readonly IChartRepository _charts;
     private readonly IDateTimeOffsetAccessor _clock;
@@ -111,17 +119,18 @@ internal sealed class StepChartIngest
     }
 
     /// <summary>
-    ///     The generator's absolute path cut down to the checkout-relative one the zip mirrors:
-    ///     ".../PIU-Simfiles/16 - PHOENIX\18230 - Altale\Altale.ssc" →
+    ///     The generator's absolute path cut down to the corpus-relative one the zip mirrors:
+    ///     ".../PIU-Simfiles/16 - PHOENIX\18230 - Altale\Altale.ssc" and
+    ///     ".../PiuScoresStepfiles/simfiles/16 - PHOENIX/18230 - Altale/Altale.ssc" both become
     ///     "16 - PHOENIX/18230 - Altale/Altale.ssc".
     /// </summary>
     internal static string? RelativeSscPath(string? sscFile)
     {
         if (string.IsNullOrWhiteSpace(sscFile)) return null;
         var normalized = sscFile.Replace('\\', '/');
-        var marker = normalized.LastIndexOf(CheckoutRootMarker + "/", StringComparison.OrdinalIgnoreCase);
+        var marker = normalized.LastIndexOf(CorpusRootMarker, StringComparison.OrdinalIgnoreCase);
         if (marker < 0) return null;
-        var relative = normalized[(marker + CheckoutRootMarker.Length + 1)..].Trim('/');
+        var relative = normalized[(marker + CorpusRootMarker.Length)..].Trim('/');
         return relative.Length == 0 ? null : relative;
     }
 

@@ -45,9 +45,12 @@ All owner-settled across the 2026-08-29/30 workshop.
   tempo map and authored `TICKCOUNTS` — which is Timing mode, measure lines, and exact tick
   placement. Enrichment happens at ingest; runtime reads ONE banked payload.
 - **D5 — One combined upload.** The .ssc sources ride inside the piucenter snapshot zip under
-  `stepfiles/` (mirroring the Rayden checkout's tree). There is no route where an .ssc skips
-  the annotate flow, so there is no second upload. ~23 MB snapshot + ~45 MB compressed .ssc
-  fits the existing 128 MB upload buffer.
+  `stepfiles/` (mirroring the canonical corpus tree — `PiuScoresStepfiles/simfiles/`, whose
+  README is the repair loop's spec; the old `PIU-Simfiles/` checkout shares the same
+  `simfiles/` path marker, so every vintage's `ssc_file` paths resolve). There is no route
+  where an .ssc skips the annotate flow, so there is no second upload. ~23 MB snapshot +
+  compressed .ssc fits the existing 128 MB upload buffer. `piu-annotate/package_snapshot.py`
+  embeds the tree.
 - **D6 — Alignment is the correctness tripwire.** piu-annotate computed the snapshot's tap
   times FROM these .ssc files, and each chart's metadata names its `ssc_file`. Same vintage ⇒
   our C# beat→time must reproduce the snapshot's times. Where it does, per-note beats bank and
