@@ -42,9 +42,10 @@ export async function mount(root) {
     var segments = payload.segments.map(function (s) { return { s: s[0], e: s[1], enps: s[2] }; });
     var ranges = payload.ranges.map(function (r) { return { s: r[0], e: r[1] }; });
     var panels = payload.panels;
-    var duration = Math.max(
+    var lastNote = Math.max(
         rows.length ? rows[rows.length - 1].t : 0,
-        holds.reduce(function (max, h) { return Math.max(max, h.e); }, 0)) + 2;
+        holds.reduce(function (max, h) { return Math.max(max, h.e); }, 0));
+    var duration = lastNote + 2;
 
     var level = parseInt(root.getAttribute('data-level') || '0', 10);
 
@@ -56,7 +57,7 @@ export async function mount(root) {
 
     var view = {
         root: root, box: box, rows: rows, holds: holds, segments: segments, ranges: ranges,
-        panels: panels, duration: duration, level: level, compact: compact,
+        panels: panels, duration: duration, lastNote: lastNote, level: level, compact: compact,
         strings: strings, payload: payload, colors: COL,
         isPhoenix2: isPhoenix2, mode: 'arrow', token: token
     };
@@ -318,24 +319,13 @@ function drawTile(view, ctx, y0, y1) {
     });
 
     drawRail(view, ctx, y0, y1);
-    drawEndCap(view, ctx, y0, y1);
 }
 
-// Past the last note, the strip admits what the rail cannot show: broken runs that FINISHED
-// the whole chart have no position to pin, so the end-cap counts them (owner, 2026-08-30).
-function drawEndCap(view, ctx, y0, y1) {
-    if (!view.breaks || !view.breaks.finished) return;
-    var y = view.yOf(view.duration - 0.8);
-    if (y < y0 - 20 || y > y1 + 20) return;
-    var text = view.breaks.finished === 1
+function finishedText(view, n) {
+    return n === 1
         ? (view.strings.finishedOne || '1 broken run made it to the end')
         : (view.strings.finishedMany || '{0} broken runs made it to the end')
-            .replace('{0}', view.breaks.finished);
-    ctx.fillStyle = view.colors.inkMuted;
-    ctx.font = '11px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(text, view.scale.gutter + (view.width - view.scale.gutter) / 2, y);
+            .replace('{0}', n);
 }
 
 // The failure rail (design doc D1/D2): a thin axis beside the strip, life-bar pins in the
@@ -351,7 +341,7 @@ function drawRail(view, ctx, y0, y1) {
     ctx.stroke();
 
     view.pinMarks.forEach(function (pin) {
-        var y = view.yOf(pin.t);
+        var y = view.yOf(pin.t) + (pin.dy || 0);
         if (y < y0 - 24 || y > y1 + 24) return;
         var big = pin.n > 1;
         var r = big ? 9.5 : 5;
@@ -414,6 +404,16 @@ async function loadBreaks(view, chartId, mix) {
                     : view.colors.life
         };
     });
+
+    // Broken runs that FINISHED get their own pin just past the last note (owner, 2026-08-30):
+    // they have no break point to mark, and the earlier bottom-of-the-strip caption sat past
+    // seconds of empty outro nobody scrolls to. The offset is pixels, not time, so it hugs the
+    // last note at any AV.
+    if (breaks.finished > 0)
+        view.pinMarks.push({
+            t: view.lastNote, dy: 16, n: breaks.finished, from: view.lastNote, to: view.lastNote,
+            cause: 'fin', cmds: [], x: lifeX, color: view.colors.inkMuted
+        });
 
     view.drawMinimapPins = function (ctx, yOf) {
         view.pinMarks.forEach(function (pin) {
@@ -490,55 +490,74 @@ function initModes(view) {
     if (view.mode !== 'arrow') apply();
 }
 
-// Correct outward directions (workshop round 2): canvas rotation is clockwise from "up", so
-// UL=-45°, UR=+45°, DR=+135°, DL=-135°. Lane = panel % 5 in pad order DL UL C UR DR.
-var ANGLES = { 0: -135, 1: -45, 3: 45, 4: 135 };
+// Sprite-matched geometry (owner, 2026-08-30, from cabinet footage): the arrow's own edges
+// are the flat ones. A corner arrow is the cabinet shape — a solid head whose 90° tip IS the
+// tile corner and whose outer edges lie flush on the tile, then a chevron band and the
+// back-corner piece behind it, every cut's apex pointing at the tip — so a quad reads as one
+// flat row of four. The center panel is the cabinet's octagon. Lane = panel % 5 in pad order
+// DL UL C UR DR; the canonical arrow points down-right and flips into place by sign.
+var CORNER_SIGNS = { 0: [-1, 1], 1: [-1, -1], 3: [1, -1], 4: [1, 1] };
 
-// Every note is a square TILE with flat top/bottom/sides — the cabinet's sprites are square,
-// and rotated silhouettes made a quad read as a staggered rolling bracket instead of a flat
-// jump row (owner, 2026-08-30). The directional glyph draws inside the tile.
 function drawArrow(ctx, x, y, size, panel, color) {
     var lane = panel % 5;
     ctx.save();
     ctx.translate(x, y);
-
-    var half = size * 0.5;
     ctx.fillStyle = color;
-    ctx.globalAlpha = 0.22;
-    roundRect(ctx, -half, -half, size, size, size * 0.12);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
-    roundRect(ctx, -half + 0.75, -half + 0.75, size - 1.5, size - 1.5, size * 0.12);
-    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.55)';
+    ctx.lineWidth = 1.3;
+    var h = size * 0.5 - 0.75;
 
     if (lane === 2) {
-        ctx.rotate(Math.PI / 4);
-        var r = size * 0.30;
-        ctx.fillStyle = color;
-        roundRect(ctx, -r, -r, r * 2, r * 2, size * 0.10);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,.45)';
-        ctx.lineWidth = 1.2;
-        ctx.stroke();
-    } else {
-        ctx.rotate(ANGLES[lane] * Math.PI / 180);
-        var g = size * 0.36;
-        ctx.fillStyle = color;
+        var k = size * 0.29;
         ctx.beginPath();
-        ctx.moveTo(0, -g);
-        ctx.lineTo(g * 0.85, g * 0.15);
-        ctx.lineTo(g * 0.33, g * 0.15);
-        ctx.lineTo(g * 0.33, g);
-        ctx.lineTo(-g * 0.33, g);
-        ctx.lineTo(-g * 0.33, g * 0.15);
-        ctx.lineTo(-g * 0.85, g * 0.15);
+        ctx.moveTo(-h + k, -h);
+        ctx.lineTo(h - k, -h);
+        ctx.lineTo(h, -h + k);
+        ctx.lineTo(h, h - k);
+        ctx.lineTo(h - k, h);
+        ctx.lineTo(-h + k, h);
+        ctx.lineTo(-h, h - k);
+        ctx.lineTo(-h, -h + k);
         ctx.closePath();
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,.45)';
-        ctx.lineWidth = 1.2;
         ctx.stroke();
+    } else {
+        ctx.scale(CORNER_SIGNS[lane][0], CORNER_SIGNS[lane][1]);
+        // The chevron cuts are nested squares anchored at the BACK corner; c is the square's
+        // side as a fraction of the tile, so each piece's ends land flush on the tile edges.
+        var q = function (c) { return -h + c * 2 * h; };
+        var piece = function (path) {
+            ctx.beginPath();
+            path();
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        };
+        var d = q(0.60);
+        piece(function () {
+            ctx.moveTo(h, -h);
+            ctx.lineTo(h, h);
+            ctx.lineTo(-h, h);
+            ctx.lineTo(-h, d);
+            ctx.lineTo(d, d);
+            ctx.lineTo(d, -h);
+        });
+        var b0 = q(0.30), b1 = q(0.52);
+        piece(function () {
+            ctx.moveTo(b1, -h);
+            ctx.lineTo(b1, b1);
+            ctx.lineTo(-h, b1);
+            ctx.lineTo(-h, b0);
+            ctx.lineTo(b0, b0);
+            ctx.lineTo(b0, -h);
+        });
+        var a = q(0.22);
+        piece(function () {
+            ctx.moveTo(-h, -h);
+            ctx.lineTo(a, -h);
+            ctx.lineTo(a, a);
+            ctx.lineTo(-h, a);
+        });
     }
     ctx.restore();
 }
@@ -624,7 +643,7 @@ function buildChips(view) {
     // Structure first, then the two biggest death clusters by count (design doc D17).
     if (view.pinMarks) {
         view.pinMarks.slice().sort(function (a, b) { return b.n - a.n; })
-            .filter(function (pin) { return pin.n >= 3; })
+            .filter(function (pin) { return pin.n >= 3 && pin.cause !== 'fin'; })
             .slice(0, 2)
             .forEach(function (pin) {
                 addChip(view, host, pin.cause,
@@ -719,17 +738,19 @@ function bindPinTips(view) {
             var pin = view.pinMarks[i];
             var r = (pin.n > 1 ? 9.5 : 5) + 5;
             var dx = x - pin.x;
-            var dy = y - view.yOf(pin.t);
+            var dy = y - view.yOf(pin.t) - (pin.dy || 0);
             if (dx * dx + dy * dy <= r * r) { hit = pin; break; }
         }
 
         if (!hit) { tip.hidden = true; return; }
         // Terse on purpose (owner, 2026-08-30): the badge art IS the sentence for a named
         // Pass, and everything else is three words plus a count.
-        var range = hit.n > 1 ? fmt(hit.from) + '\u2013' + fmt(hit.to) : fmt(hit.t);
+        var range = hit.n > 1 && hit.from !== hit.to ? fmt(hit.from) + '\u2013' + fmt(hit.to) : fmt(hit.t);
         var count = hit.n > 1 ? ' \u00d7' + hit.n : '';
         var body;
-        if (hit.cause === 'pass' && hit.cmds.length) {
+        if (hit.cause === 'fin') {
+            body = '<b>' + escapeHtml(finishedText(view, hit.n)) + '</b>';
+        } else if (hit.cause === 'pass' && hit.cmds.length) {
             body = hit.cmds.map(function (cmd) {
                 return '<img class="stepchart-tip-cmd" alt="' + escapeHtml(cmd) +
                     '" src="https://piuimages.arroweclip.se/commands/' + encodeURI(cmd) + '.png">';
