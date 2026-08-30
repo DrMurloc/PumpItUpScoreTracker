@@ -1,5 +1,6 @@
 using ScoreTracker.Domain.Records;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.ScoreLedger.Domain;
 
@@ -108,12 +109,30 @@ internal interface IScoreJournalRepository
         CancellationToken cancellationToken);
 
     /// <summary>
+    ///     One player's judged stage breaks in one mix — the cause backfill's rows. Its own read
+    ///     because stage breaks are two orders of magnitude rarer than judged rows: the filter
+    ///     belongs in SQL, not on a hydrated pass list.
+    /// </summary>
+    Task<IReadOnlyList<ScoreJournalEntry>> GetJudgedStageBreaks(Guid userId, MixEnum mix,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     ///     Writes re-solved combos onto one player's rows in one mix, keyed by the play key's
     ///     chart and time. The one sanctioned in-place write besides raising IsBest: the combo is a
     ///     function of the row's other columns and the catalog, not history.
     /// </summary>
     Task SetMaxCombos(Guid userId, MixEnum mix,
         IReadOnlyList<(Guid ChartId, DateTimeOffset OccurredAt, int? MaxCombo)> combos,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     Writes re-solved stage-break causes onto one player's rows in one mix, keyed by the
+    ///     play key's chart and time. Derived like the combo beside it — a function of the row's
+    ///     judgements, the catalog and the mix's grade floors — so it is re-derived wholesale
+    ///     whenever any of those improve (docs/design/pass-command-detection.md).
+    /// </summary>
+    Task SetStageBreakCauses(Guid userId, MixEnum mix,
+        IReadOnlyList<(Guid ChartId, DateTimeOffset OccurredAt, StageBreakCause Cause)> causes,
         CancellationToken cancellationToken);
 }
 

@@ -42,5 +42,11 @@ public sealed record RecentSessionsPage(int TotalGroups, IReadOnlyList<RecentSes
         bool IsReclear = false,
         bool IsStageBroken = false,
         int? JudgedNotes = null,
-        JudgementCounts? Judgements = null);
+        JudgementCounts? Judgements = null,
+        // Why the stage broke, when the judgement counts could say. IsNonLifebarBreak alone means
+        // a Stage Pass command ended the run and we could not name its target
+        // (docs/design/pass-command-detection.md D34).
+        bool IsNonLifebarBreak = false,
+        string? PassPlate = null,
+        string? PassGrade = null);
 }

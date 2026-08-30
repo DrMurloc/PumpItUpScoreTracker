@@ -29,20 +29,21 @@ internal sealed class RecordObservedPlaysHandler(IScoreJournalRepository journal
             .ToArray();
         if (plays.Length == 0) return;
 
-        // One catalog read per chart, for the combo and the tripwire. Charts appear many times
-        // in a window (the same song replayed all evening) so this is well under one per row.
-        var noteCounts = new Dictionary<Guid, int?>();
+        // One catalog read per chart, for the combo, the tripwire and the stage-break solver.
+        // Charts appear many times in a window (the same song replayed all evening) so this is
+        // well under one per row.
+        var facts = new Dictionary<Guid, ChartFacts>();
         foreach (var chartId in plays.Where(p => p.Judgements != null).Select(p => p.ChartId).Distinct())
-            noteCounts[chartId] = await NoteCountWatch.NoteCountFor(charts, request.Mix, chartId, cancellationToken);
+            facts[chartId] = await NoteCountWatch.FactsFor(charts, request.Mix, chartId, cancellationToken);
 
         // One line per chart, not per play: a window holds several runs of the same song, and a
         // drifted catalog would otherwise repeat itself inside a single import.
         var warned = new HashSet<Guid>();
         var entries = plays.Select(p =>
             {
-                var noteCount = noteCounts.GetValueOrDefault(p.ChartId);
+                var chart = facts.GetValueOrDefault(p.ChartId);
                 if (warned.Add(p.ChartId))
-                    NoteCountWatch.WarnOnDisagreement(logger, request.Mix, p.ChartId, p.Judgements, noteCount,
+                    NoteCountWatch.WarnOnDisagreement(logger, request.Mix, p.ChartId, p.Judgements, chart.NoteCount,
                         p.IsBroken, p.IsStageBroken);
                 // A stage break is broken by definition and never scored: the running number the
                 // site prints for one is not a chart score, and the plate is null on any break.
@@ -50,8 +51,9 @@ internal sealed class RecordObservedPlaysHandler(IScoreJournalRepository journal
                 var score = p.IsStageBroken ? null : p.Score;
                 return new ScoreJournalEntry(p.PlayedAt, request.Source, request.UserId, p.ChartId,
                     score, BestAttemptPolicy.PlateFor(isBroken, p.Plate), isBroken, request.Mix,
-                    request.SessionId, PhoenixComboSolver.WithMaxCombo(p.Judgements, score, noteCount), false,
-                    IsStageBroken: p.IsStageBroken);
+                    request.SessionId, PhoenixComboSolver.WithMaxCombo(p.Judgements, score, chart.NoteCount), false,
+                    IsStageBroken: p.IsStageBroken,
+                    Cause: NoteCountWatch.CauseFor(p.IsStageBroken, p.Judgements, chart, request.Mix));
             })
             .ToArray();
 

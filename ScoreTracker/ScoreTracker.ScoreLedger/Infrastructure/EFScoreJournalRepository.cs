@@ -79,7 +79,20 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             var key = (mixId, entry.ChartId, entry.OccurredAt);
             if (known.TryGetValue(key, out var existing))
             {
-                if (existing.Perfects == null && entry.Judgements != null) SetJudgements(existing, entry.Judgements);
+                // A best-list card gives us a stage break with no breakdown; the recently-played
+                // card in the same import fills it in. The cause is solved from that breakdown,
+                // so it lands with it or not at all. Only onto the SAME KIND of play: a Phoenix 2
+                // best card is stamped at the chart's first attempt and keeps that stamp, so a
+                // judged stage break can share a key with an unjudged passing best — two
+                // different plays — and filling across that line would stamp a pass with a stage
+                // break's partial counts and cause.
+                if (existing.Perfects == null && entry.Judgements != null
+                    && existing.IsStageBroken == entry.IsStageBroken)
+                {
+                    SetJudgements(existing, entry.Judgements);
+                    SetCause(existing, entry.Cause);
+                }
+
                 continue;
             }
 
@@ -116,6 +129,18 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
         entity.MaxCombo = judgements?.MaxCombo;
     }
 
+    /// <summary>
+    ///     Names are stored rather than ordinals, matching Plate and LetterGrade beside them: the
+    ///     column is readable in an ad-hoc query, and a reordered enum cannot silently repoint
+    ///     existing rows at a different plate.
+    /// </summary>
+    private static void SetCause(ScoreEventJournalEntity entity, StageBreakCause cause)
+    {
+        entity.IsNonLifebarBreak = cause.IsNonLifebarBreak;
+        entity.PassPlate = cause.PassPlate?.GetName();
+        entity.PassGrade = cause.PassGrade?.GetName();
+    }
+
     private static ScoreEventJournalEntity Entity(ScoreJournalEntry entry, Guid mixId, bool isBest)
     {
         var entity = new ScoreEventJournalEntity
@@ -141,6 +166,7 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             SessionId = entry.SessionId
         };
         SetJudgements(entity, entry.Judgements);
+        SetCause(entity, entry.Cause);
         return entity;
     }
 
@@ -386,6 +412,37 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
         await database.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ScoreJournalEntry>> GetJudgedStageBreaks(Guid userId, MixEnum mix,
+        CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return (await database.Set<ScoreEventJournalEntity>()
+                .Where(e => e.UserId == userId && e.MixId == mixId && e.Perfects != null && e.IsStageBroken)
+                .ToArrayAsync(cancellationToken))
+            .Select(Map)
+            .ToArray();
+    }
+
+    public async Task SetStageBreakCauses(Guid userId, MixEnum mix,
+        IReadOnlyList<(Guid ChartId, DateTimeOffset OccurredAt, StageBreakCause Cause)> causes,
+        CancellationToken cancellationToken)
+    {
+        if (causes.Count == 0) return;
+
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var rows = await database.Set<ScoreEventJournalEntity>()
+            .Where(e => e.UserId == userId && e.MixId == mixId && e.Perfects != null && e.IsStageBroken)
+            .ToArrayAsync(cancellationToken);
+        var byKey = rows.ToDictionary(r => (r.ChartId, r.OccurredAt));
+        foreach (var (chartId, occurredAt, cause) in causes)
+            if (byKey.TryGetValue((chartId, occurredAt), out var row))
+                SetCause(row, cause);
+
+        await database.SaveChangesAsync(cancellationToken);
+    }
+
     private static ScoreJournalEntry Map(ScoreEventJournalEntity e)
     {
         var mix = MixIds.ToEnum(e.MixId);
@@ -399,7 +456,9 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             e.IsBroken, mix, e.SessionId, JudgementsOf(e), e.IsBest,
             isLegacy && e.Score != null ? (XXScore?)e.Score.Value : null,
             Enum.TryParse<XXLetterGrade>(e.LetterGrade, out var grade) ? grade : null,
-            e.IsStageBroken);
+            e.IsStageBroken,
+            new StageBreakCause(e.IsNonLifebarBreak, PhoenixPlateHelperMethods.TryParse(e.PassPlate),
+                PhoenixLetterGradeHelperMethods.TryParse(e.PassGrade)));
     }
 
     internal static JudgementCounts? JudgementsOf(ScoreEventJournalEntity e)

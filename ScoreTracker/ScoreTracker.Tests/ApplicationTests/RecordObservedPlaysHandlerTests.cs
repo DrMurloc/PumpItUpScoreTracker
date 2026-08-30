@@ -168,6 +168,68 @@ public sealed class RecordObservedPlaysHandlerTests
             Guid.NewGuid(), plays);
     }
 
+    [Fact]
+    public async Task AStageBreakTheLifebarCannotExplainCarriesItsPassCommand()
+    {
+        // Iolite Sky D21, the owner's own Pass SSS+ run: 806 perfects, one great, four misses,
+        // 81% of the way in. The bar was never close to empty.
+        var ctx = new HandlerContext();
+        ctx.GivenChart(ChartId, 1000, 21);
+
+        await ctx.Handler.Handle(Command(new RecordObservedPlaysCommand.ObservedPlay(ChartId, null, null, false,
+            PlayedAt, new JudgementCounts(806, 1, 0, 0, 4), IsStageBroken: true)), CancellationToken.None);
+
+        var entry = Assert.Single(ctx.Written);
+        Assert.True(entry.Cause.IsNonLifebarBreak);
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, entry.Cause.PassGrade);
+    }
+
+    [Fact]
+    public async Task AStageBreakTheLifebarExplainsMakesNoClaim()
+    {
+        var ctx = new HandlerContext();
+        ctx.GivenChart(ChartId, 1100, 21);
+
+        await ctx.Handler.Handle(Command(new RecordObservedPlaysCommand.ObservedPlay(ChartId, null, null, false,
+            PlayedAt, new JudgementCounts(451, 5, 2, 1, 61), IsStageBroken: true)), CancellationToken.None);
+
+        var entry = Assert.Single(ctx.Written);
+        Assert.False(entry.Cause.IsNonLifebarBreak);
+        Assert.Null(entry.Cause.PassPlate);
+        Assert.Null(entry.Cause.PassGrade);
+    }
+
+    [Fact]
+    public async Task ACoOpStageBreakIsNeverClassified()
+    {
+        // A co-op chart's Level is the player count, so the life bar the solver would size from
+        // it is fabricated. Judgements that would flag on any other chart make no claim here.
+        var ctx = new HandlerContext();
+        ctx.GivenCoOpChart(ChartId, 1000, playerCount: 2);
+
+        await ctx.Handler.Handle(Command(new RecordObservedPlaysCommand.ObservedPlay(ChartId, null, null, false,
+            PlayedAt, new JudgementCounts(806, 1, 0, 0, 4), IsStageBroken: true)), CancellationToken.None);
+
+        var entry = Assert.Single(ctx.Written);
+        Assert.False(entry.Cause.IsNonLifebarBreak);
+        Assert.False(entry.Cause.IsNamed);
+    }
+
+    [Fact]
+    public async Task AFinishedPlayNeverCarriesAStageBreakCause()
+    {
+        var ctx = new HandlerContext();
+        ctx.GivenChart(ChartId, 1000, 21);
+
+        await ctx.Handler.Handle(Command(new RecordObservedPlaysCommand.ObservedPlay(ChartId,
+            PhoenixScore.From(994_000), PhoenixPlate.MarvelousGame, false,
+            PlayedAt, new JudgementCounts(990, 6, 0, 0, 4))), CancellationToken.None);
+
+        var entry = Assert.Single(ctx.Written);
+        Assert.False(entry.Cause.IsNonLifebarBreak);
+        Assert.False(entry.Cause.IsNamed);
+    }
+
     private sealed class HandlerContext
     {
         public Mock<IScoreJournalRepository> Journal { get; } = new();
@@ -189,8 +251,21 @@ public sealed class RecordObservedPlaysHandlerTests
 
         public void GivenNoteCount(Guid chartId, int noteCount)
         {
+            GivenChart(chartId, noteCount, 21);
+        }
+
+        public void GivenChart(Guid chartId, int noteCount, int level)
+        {
             Charts.Setup(c => c.GetChart(MixEnum.Phoenix2, chartId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new ChartBuilder().WithId(chartId).WithNoteCount(noteCount).Build());
+                .ReturnsAsync(new ChartBuilder().WithId(chartId).WithNoteCount(noteCount)
+                    .WithLevel(level).Build());
+        }
+
+        public void GivenCoOpChart(Guid chartId, int noteCount, int playerCount)
+        {
+            Charts.Setup(c => c.GetChart(MixEnum.Phoenix2, chartId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ChartBuilder().WithId(chartId).WithNoteCount(noteCount)
+                    .WithType(ChartType.CoOp).WithLevel(playerCount).Build());
         }
     }
 }

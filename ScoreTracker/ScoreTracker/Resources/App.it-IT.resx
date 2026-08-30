@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!--
     Microsoft ResX Schema
@@ -943,6 +943,9 @@
   </data>
   <data name="Backfill max combos" xml:space="preserve">
     <value>Ripopola i combo massimi</value>
+  </data>
+  <data name="Backfill stage break causes" xml:space="preserve">
+    <value>Ripopola le cause degli Stage Break</value>
   </data>
   <data name="Bad" xml:space="preserve">
     <value>Bad</value>
@@ -5138,6 +5141,9 @@
   <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
     <value>Supera {0} chart in questa cartella con {1} o meglio</value>
   </data>
+  <data name="Pass {0} ended this stage" xml:space="preserve">
+    <value>Pass {0} ha interrotto questo tentativo</value>
+  </data>
   <data name="Passed" xml:space="preserve">
     <value>Passed</value>
   </data>
@@ -6036,6 +6042,9 @@
   </data>
   <data name="Re-solving max combos from every judged score. Nothing is announced." xml:space="preserve">
     <value>Ricalcolo dei combo massimi da ogni score con i judgment. Non viene annunciato nulla.</value>
+  </data>
+  <data name="Re-solving what ended every judged stage break. Nothing is announced." xml:space="preserve">
+    <value>Ricalcolo di cosa ha interrotto ogni Stage Break con i judgment. Non viene annunciato nulla.</value>
   </data>
   <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
     <value>Ripassato — {0} note, prima {1}.</value>
@@ -7222,6 +7231,12 @@
   </data>
   <data name="Stage Break Modifier" xml:space="preserve">
     <value>Modificatore Stage Break</value>
+  </data>
+  <data name="Stage break · couldn't determine what caused stage break" xml:space="preserve">
+    <value>Stage Break · causa non determinabile</value>
+  </data>
+  <data name="Stage break · likely a Pass command on the other pad" xml:space="preserve">
+    <value>Stage Break · probabilmente un comando Pass sull’altra pedana</value>
   </data>
   <data name="Stage break · {0}% in" xml:space="preserve">
     <value>Stage Break · al {0}%</value>
@@ -9858,6 +9873,9 @@
   </data>
   <data name="{0}% complete" xml:space="preserve">
     <value>{0}% completato</value>
+  </data>
+  <data name="{0}% in" xml:space="preserve">
+    <value>al {0}%</value>
   </data>
   <data name="{0}% of the bar" xml:space="preserve">
     <value>{0}% della barra</value>

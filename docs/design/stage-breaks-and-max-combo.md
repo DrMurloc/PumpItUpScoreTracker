@@ -8,7 +8,8 @@ of every personal best no matter what the import opt-in says, journals it, and p
 combo beside the five judgement counts on the record and the journal.
 
 Companion spec: [score-truth-model.md](score-truth-model.md) — this extends its model, so the
-decisions here continue its numbering (D10 onward) and its D1/D7 are refined in §2. Measurements
+decisions here continue its numbering (D10 onward) and its D1/D7 are refined in §2. Answering
+*what* interrupted the stage is a separate pass: [pass-command-detection.md](pass-command-detection.md) (D29 onward). Measurements
 were taken against the prod-synced local database on 2026-08-17; the card-shape evidence in §3
 came from a read-only walk of the owner's own my_page on both sites the same day
 (`ExplorationTests/LiveSite/StageBreakCardShapeReconTests`), and the date semantics in §6's D18
