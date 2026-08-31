@@ -145,8 +145,12 @@ All owner-settled across the 2026-08-29/30 workshop.
   Horang Pungryuga S21's nine 10.7 rows/s marathon runs go wordless while its 16 rows/s
   bracket-drill flourish marks Very Fast, and Solve My Hurt S21's 15.6 rows/s drills chip
   "Drills · Very Fast" where section eNPS saw nothing. Chips light while the viewport overlaps their section, are deliberately dense
-  (three-plus must not push the strip below the fold), and the whole-chart map bands the
-  same set (spike stronger). The strip opens at the TOP — landing mid-chart disorients.
+  (three-plus must not push the strip below the fold), and the whole-chart map's density bars
+  THEMSELVES carry relative difficulty (owner, 2026-08-30 — accent band overlays did not
+  read): **red** = the Difficulty Spike, **yellow** = the other level-notable sections,
+  **green** = below the bar but within 3 levels of it, bare ink = filler; hues are the
+  difficulty ramp's ends and middle (`--diff-underrated`/`--diff-medium`/`--diff-overrated`).
+  A pace-promoted section chips without wearing difficulty color it did not earn. The strip opens at the TOP — landing mid-chart disorients.
   Death clusters no longer chip — the map's edge ticks carry them. Corpus-wide (4,574
   charts): median 2 chips, p90 5. Payloads banked before v2 carry no annotations and show
   NO section chips — an empty row beats a generic placeholder (owner ruling; the old

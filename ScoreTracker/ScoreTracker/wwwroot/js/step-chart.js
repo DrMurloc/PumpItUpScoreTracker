@@ -595,22 +595,39 @@ function initMinimap(view) {
     view.rows.forEach(function (row) { density[Math.min(seconds - 1, Math.floor(row.t))]++; });
     var maxDensity = Math.max.apply(null, density.concat([1]));
 
+    // The density bars THEMSELVES carry relative difficulty (owner, 2026-08-30 — the band
+    // overlays didn't read): red = the Difficulty Spike, yellow = the other notable
+    // sections, green = below the bar but within 3 levels of it, bare ink = filler. The
+    // hues are the difficulty ramp's own ends and middle.
+    var notable = notableOf(view);
+    var tierOf = new Array(seconds).fill(null);
+    if (notable.threshold != null) {
+        var tiers = {
+            red: view.token('--diff-underrated'),
+            yellow: view.token('--diff-medium'),
+            green: view.token('--diff-overrated')
+        };
+        view.segments.forEach(function (segment) {
+            var color = segment === notable.spike ? tiers.red
+                : segment.lvl == null ? null
+                    : segment.lvl >= notable.threshold ? tiers.yellow
+                        : segment.lvl >= notable.threshold - 3 ? tiers.green : null;
+            if (!color) return;
+            var last = Math.min(seconds, Math.ceil(segment.e));
+            for (var sec = Math.max(0, Math.floor(segment.s)); sec < last; sec++) tierOf[sec] = color;
+        });
+    }
+
     view.repaintMinimap = function () {
         ctx.clearRect(0, 0, W, H);
-        // The notable sections band the full width first, so the chart's shape reads before
-        // any scrolling — the same set the chips name, the spike stronger.
-        var notable = notableOf(view);
-        ctx.fillStyle = view.colors.accent;
-        notable.sections.forEach(function (section) {
-            ctx.globalAlpha = section === notable.spike ? 0.28 : 0.16;
-            ctx.fillRect(0, yOf(section.s), W, Math.max(2, yOf(section.e) - yOf(section.s)));
-        });
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = 'rgba(255,255,255,.16)';
         for (var second = 0; second < seconds; second++) {
             var w = (density[second] / maxDensity) * (W * 0.5);
-            if (w > 0) ctx.fillRect(4, yOf(second), w, Math.max(1, (H - 8) / view.duration));
+            if (w <= 0) continue;
+            ctx.fillStyle = tierOf[second] || 'rgba(255,255,255,.16)';
+            ctx.globalAlpha = tierOf[second] ? 0.9 : 1;
+            ctx.fillRect(4, yOf(second), w, Math.max(1, (H - 8) / view.duration));
         }
+        ctx.globalAlpha = 1;
         if (view.drawMinimapPins) view.drawMinimapPins(ctx, yOf, W, H);
         ctx.strokeStyle = view.colors.accent;
         ctx.lineWidth = 1.5;
@@ -669,7 +686,7 @@ function notableOf(view) {
     sections.forEach(function (segment) {
         if (!spike && segment.lvl === peak) spike = segment;
     });
-    return { spike: spike, sections: sections };
+    return { spike: spike, sections: sections, threshold: threshold };
 }
 
 // A section's label is its top skill and its folder-relative pace word — never a number, and
