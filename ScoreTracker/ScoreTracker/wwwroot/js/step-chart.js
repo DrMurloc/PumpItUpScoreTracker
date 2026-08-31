@@ -100,8 +100,12 @@ export async function mount(root) {
         if (savedAv >= 200 && savedAv <= 900) { view.userAv = savedAv; applyScale(view); }
     } catch (e) { /* private mode */ }
 
+    // The width is re-measured on window resizes, on any viewer-box shift the window never
+    // hears about (ResizeObserver), and on two settle checks after mount — a phone can lay
+    // the page out wide for a beat while fonts and islands land, and a measurement taken in
+    // that beat overhangs the real width forever (field-hit at 360px, 2026-08-30).
     var resizePending = null;
-    window.addEventListener('resize', function () {
+    function remeasure() {
         if (resizePending) return;
         resizePending = requestAnimationFrame(function () {
             resizePending = null;
@@ -110,7 +114,15 @@ export async function mount(root) {
             view.availWidth = avail;
             relayoutStrip(view);
         });
-    });
+    }
+
+    window.addEventListener('resize', remeasure);
+    if (window.ResizeObserver) {
+        var viewerEl = root.querySelector('.stepchart-viewer');
+        if (viewerEl) new ResizeObserver(remeasure).observe(viewerEl);
+    }
+    setTimeout(remeasure, 300);
+    setTimeout(remeasure, 1200);
 
     drawStrip(view);
     initMinimap(view);
@@ -178,8 +190,13 @@ function applyScale(view) {
     view.box.firstChild.style.width = view.width + 'px';
 }
 
-// Anchor-preserving full relayout — AV changes and host resizes share it.
+// Anchor-preserving full relayout — AV changes and host resizes share it. Always re-measures
+// first, so every relayout self-corrects a stale width.
 function relayoutStrip(view) {
+    if (view.measureAvail) {
+        var avail = view.measureAvail();
+        if (avail != null) view.availWidth = avail;
+    }
     var anchor = view.box.scrollTop / Math.max(1, view.height);
     applyScale(view);
     drawStrip(view);
