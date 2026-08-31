@@ -95,8 +95,13 @@ All owner-settled across the 2026-08-29/30 workshop.
   Canvas tiles stay under browser height limits; hueless of literals — every color reads a
   token. The strip NEVER scrolls horizontally (owner, 2026-08-30 — a deal breaker on
   mobile): when the host is narrower than the natural geometry, columns, gutter, rail and
-  pixel velocity all scale down uniformly, and narrow screens thin the whole-chart map to
-  44px instead of hiding it. Timing mode is withdrawn until its own session — the banked
+  pixel velocity all scale down uniformly, and on narrow screens the chrome gives way
+  first: the whole-chart map thins to 40px with a tightened gap, death pins move into the
+  time gutter (one shared column, told apart by color), timestamps turn sideways, and the
+  right rail's width returns to the arrows — only then does uniform scaling begin. The strip
+  also opens one second before the FIRST note rather than at zero (long silent intros read
+  as broken; the clock stays real), and the width measure subtracts the scroll box's own
+  scrollbar lane (scrollbar-gutter: stable) so not even a few pixels scroll sideways. Timing mode is withdrawn until its own session — the banked
   beats are untouched. The Phoenix 2 bar-death series wears the game's own Pass G command
   art (`Pass_Plate_G.png`, the mirror already holds it) in legend and tooltip alike.
 - **D13 — Two endpoints, two cache lives.** The step payload changes only at ingest (ETag on

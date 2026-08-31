@@ -18317,6 +18317,9 @@ button.judg-strip:focus-visible {
     position: relative;
     height: 600px;
     overflow: auto;
+    /* Reserve the vertical scrollbar's lane up front — measuring width before the bar
+       arrives left a few pixels of horizontal scroll (owner, 2026-08-30). */
+    scrollbar-gutter: stable;
     width: max-content;
     max-width: calc(100% - 106px);
     flex: none;
@@ -18444,15 +18447,19 @@ button.judg-strip:focus-visible {
 }
 
 @media (max-width: 760px) {
-    /* Narrow screens SQUISH rather than scroll (owner, 2026-08-30): the map thins out and
-       the module scales the strip to the width that remains - horizontal scrolling on mobile
-       is a deal breaker. */
+    /* Narrow screens SQUISH rather than scroll (owner, 2026-08-30): the map thins out, the
+       gap tightens, and the module scales the strip to the width that remains - horizontal
+       scrolling on mobile is a deal breaker. */
+    .stepchart-viewer {
+        gap: 8px;
+    }
+
     .stepchart-minimap {
-        width: 44px;
+        width: 40px;
     }
 
     .stepchart-scroll {
-        max-width: calc(100% - 58px);
+        max-width: calc(100% - 50px);
     }
 }
 

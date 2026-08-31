@@ -55,6 +55,12 @@ export async function mount(root) {
     var lastNote = Math.max(
         rows.length ? rows[rows.length - 1].t : 0,
         holds.reduce(function (max, h) { return Math.max(max, h.e); }, 0));
+    // The strip starts one second before the FIRST note, not at zero — a long silent intro
+    // reads as broken (owner, 2026-08-30). Timestamps stay the chart's real clock.
+    var firstNote = Math.min(
+        rows.length ? rows[0].t : lastNote,
+        holds.reduce(function (min, h) { return Math.min(min, h.s); }, lastNote));
+    var t0 = Math.max(0, firstNote - 1);
     var duration = lastNote + 2;
 
     var level = parseInt(root.getAttribute('data-level') || '0', 10);
@@ -67,7 +73,8 @@ export async function mount(root) {
 
     var view = {
         root: root, box: box, rows: rows, holds: holds, segments: segments, ranges: ranges,
-        panels: panels, duration: duration, lastNote: lastNote, level: level, compact: compact,
+        panels: panels, duration: duration, lastNote: lastNote, t0: t0, span: duration - t0,
+        level: level, compact: compact,
         meter: payload.meter != null ? payload.meter : null,
         strings: strings, payload: payload, colors: COL,
         isPhoenix2: isPhoenix2, mode: 'arrow', token: token
@@ -78,8 +85,12 @@ export async function mount(root) {
         if (!viewer) return null;
         var minicol = root.querySelector('.stepchart-minicol');
         var w = viewer.clientWidth;
-        if (minicol && minicol.offsetWidth > 0) w -= minicol.offsetWidth + 14;
-        return Math.max(140, w);
+        if (minicol && minicol.offsetWidth > 0)
+            w -= minicol.offsetWidth + (parseFloat(getComputedStyle(viewer).columnGap) || 14);
+        // The scroll box's own chrome — borders plus the scrollbar lane scrollbar-gutter
+        // reserves — comes out of what the strip may use, or the last few pixels scroll.
+        w -= box.offsetWidth - box.clientWidth;
+        return Math.max(140, Math.floor(w));
     };
     view.availWidth = view.measureAvail();
     applyScale(view);
@@ -137,26 +148,33 @@ function applyScale(view) {
     var base = view.compact
         ? { pps: av * 0.47, colW: 30, gutter: 44, railW: 78 }
         : { pps: av * 0.85, colW: view.panels === 10 ? 40 : 46, gutter: 52, railW: 96 };
-    // The strip never scrolls horizontally (owner, 2026-08-30 — a deal breaker on mobile):
-    // when the host is narrower than the natural geometry, EVERYTHING scales down uniformly
-    // — columns, gutter, rail, and the pixel velocity with them, so arrows keep their
-    // proportions and the whole thing reads like the same strip further away.
-    var natural = base.gutter + base.colW * view.panels + 14 + base.railW;
-    var fit = Math.min(1, (view.availWidth || natural) / natural);
+    // The strip never scrolls horizontally (owner, 2026-08-30 — a deal breaker on mobile).
+    // Two stages of giving way: first the CHROME collapses — pins move into the time gutter,
+    // timestamps turn sideways, the right rail's width returns to the arrows — and only if
+    // the strip still doesn't fit does everything scale down uniformly (columns, gutter and
+    // pixel velocity together, so arrows keep their proportions).
+    var avail = view.availWidth || Infinity;
+    var full = base.gutter + base.colW * view.panels + 14 + base.railW;
+    view.narrow = avail < full;
+    var gutter = view.narrow ? 26 : base.gutter;
+    var railW = view.narrow ? 0 : base.railW;
+    var pad = view.narrow ? 6 : 14;
+    var natural = gutter + base.colW * view.panels + pad + railW;
+    var fit = Math.min(1, avail / natural);
     view.scale = {
         pps: base.pps * fit,
         colW: base.colW * fit,
-        gutter: base.gutter * fit,
-        railW: base.railW * fit,
-        gap: 14 * fit,
+        gutter: gutter * fit,
+        railW: railW * fit,
+        gap: pad * fit,
         arrow: Math.max(8, base.colW * fit - 2),
         font: fit < 1 ? Math.max(7, Math.round(10 * fit)) : 10
     };
     view.stripW = view.scale.colW * view.panels;
     view.railX = view.scale.gutter + view.stripW + view.scale.gap;
-    view.width = view.railX + view.scale.railW;
-    view.height = Math.ceil(view.duration * view.scale.pps) + 24;
-    view.yOf = function (t) { return 12 + t * view.scale.pps; };
+    view.width = Math.floor(view.railX + view.scale.railW);
+    view.height = Math.ceil(view.span * view.scale.pps) + 24;
+    view.yOf = function (t) { return 12 + (t - view.t0) * view.scale.pps; };
     view.box.firstChild.style.width = view.width + 'px';
 }
 
@@ -303,8 +321,8 @@ function drawStrip(view) {
 
 function drawTile(view, ctx, y0, y1) {
     var s = view.scale;
-    var tMin = Math.max(0, (y0 - 60) / s.pps);
-    var tMax = (y1 + 60) / s.pps;
+    var tMin = view.t0 + (y0 - 60) / s.pps;
+    var tMax = view.t0 + (y1 + 60) / s.pps;
 
     ctx.fillStyle = 'rgba(255,255,255,.03)';
     ctx.fillRect(s.gutter, y0, view.stripW, y1 - y0);
@@ -320,19 +338,30 @@ function drawTile(view, ctx, y0, y1) {
         ctx.stroke();
     });
 
-    ctx.font = '10px monospace';
+    ctx.font = s.font + 'px monospace';
     ctx.textBaseline = 'middle';
-    for (var t = 0; t <= view.duration; t += 5) {
+    for (var t = Math.ceil(view.t0 / 5) * 5; t <= view.duration; t += 5) {
         var ry = view.yOf(t);
-        if (ry < y0 - 20 || ry > y1 + 20) continue;
+        if (ry < y0 - 30 || ry > y1 + 30) continue;
         ctx.strokeStyle = 'rgba(255,255,255,.06)';
         ctx.beginPath();
         ctx.moveTo(s.gutter - 4, ry + 0.5);
         ctx.lineTo(view.width - 4, ry + 0.5);
         ctx.stroke();
         ctx.fillStyle = view.colors.inkMuted;
-        ctx.textAlign = 'right';
-        ctx.fillText(fmt(t), s.gutter - 8, ry);
+        if (view.narrow) {
+            // Sideways in the slim gutter (owner, 2026-08-30) — upright labels would hang
+            // off screen exactly where space is tightest.
+            ctx.save();
+            ctx.translate(s.gutter * 0.3, ry);
+            ctx.rotate(-Math.PI / 2);
+            ctx.textAlign = 'center';
+            ctx.fillText(fmt(t), 0, 0);
+            ctx.restore();
+        } else {
+            ctx.textAlign = 'right';
+            ctx.fillText(fmt(t), s.gutter - 8, ry);
+        }
     }
 
     view.segments.forEach(function (segment) {
@@ -386,52 +415,69 @@ function finishedText(view, n) {
             .replace('{0}', n);
 }
 
-// The failure rail (design doc D1/D2): a thin axis beside the strip, life-bar pins in the
-// near column and proven-Pass pins in the far one, multiplied heads where runs stack, and
-// the viewer's own runs as gold open diamonds on the axis itself.
+// Where a pin's head sits \u2014 computed at draw time so resizes and the narrow layout can move
+// it. Wide: life-bar pins in the near column, proven-Pass pins in the far one. Narrow: every
+// series shares the time gutter (owner, 2026-08-30 \u2014 the rail's width goes back to the
+// arrows), told apart by color alone.
+function pinX(view, pin) {
+    if (view.narrow) return Math.max(9, view.scale.gutter * 0.72);
+    return pin.cause === 'pass'
+        ? view.railX + (view.scale.railW >= 90 ? 56 : 44)
+        : view.railX + (view.scale.railW >= 90 ? 24 : 18);
+}
+
+// The failure rail (design doc D1/D2): a thin axis beside the strip, multiplied heads where
+// runs stack, and the viewer's own runs as gold open diamonds on the axis itself.
 function drawRail(view, ctx, y0, y1) {
     if (!view.breaks) return;
-    ctx.strokeStyle = 'rgba(255,255,255,.12)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(view.railX + 0.5, y0);
-    ctx.lineTo(view.railX + 0.5, y1);
-    ctx.stroke();
+    if (!view.narrow) {
+        ctx.strokeStyle = 'rgba(255,255,255,.12)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(view.railX + 0.5, y0);
+        ctx.lineTo(view.railX + 0.5, y1);
+        ctx.stroke();
+    }
 
     view.pinMarks.forEach(function (pin) {
         var y = view.yOf(pin.t) + (pin.dy || 0);
         if (y < y0 - 24 || y > y1 + 24) return;
         var big = pin.n > 1;
         var r = big ? 9.5 : 5;
-        ctx.strokeStyle = pin.color;
-        ctx.lineWidth = 1.6;
-        ctx.beginPath();
-        ctx.moveTo(view.railX, y + 0.5);
-        ctx.lineTo(pin.x - r, y + 0.5);
-        ctx.stroke();
+        var px = pinX(view, pin);
+        if (!view.narrow) {
+            ctx.strokeStyle = pin.color;
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            ctx.moveTo(view.railX, y + 0.5);
+            ctx.lineTo(px - r, y + 0.5);
+            ctx.stroke();
+            ctx.fillStyle = pin.color;
+            ctx.beginPath();
+            ctx.arc(view.railX, y, 2.6, 0, Math.PI * 2);
+            ctx.fill();
+        }
         ctx.fillStyle = pin.color;
         ctx.beginPath();
-        ctx.arc(view.railX, y, 2.6, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(pin.x, y, r, 0, Math.PI * 2);
+        ctx.arc(px, y, r, 0, Math.PI * 2);
         ctx.fill();
         if (big) {
             ctx.fillStyle = 'rgba(10,10,14,.92)';
             ctx.font = '700 10px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('\u00d7' + pin.n, pin.x, y + 0.5);
+            ctx.fillText('\u00d7' + pin.n, px, y + 0.5);
         }
     });
 
     ctx.strokeStyle = view.colors.you;
     ctx.lineWidth = 2;
+    var yourX = view.narrow ? Math.max(9, view.scale.gutter * 0.72) : view.railX;
     view.breaks.yours.forEach(function (t) {
         var y = view.yOf(t);
         if (y < y0 - 12 || y > y1 + 12) return;
         ctx.save();
-        ctx.translate(view.railX, y);
+        ctx.translate(yourX, y);
         ctx.rotate(Math.PI / 4);
         ctx.strokeRect(-4.5, -4.5, 9, 9);
         ctx.restore();
@@ -448,15 +494,13 @@ async function loadBreaks(view, chartId, mix) {
     view.colors.you = view.token('--step-you');
     view.breaks = breaks;
 
-    var lifeX = view.railX + (view.scale.railW >= 96 ? 24 : 18);
-    var passX = view.railX + (view.scale.railW >= 96 ? 56 : 44);
     view.pinMarks = breaks.pins.map(function (pin) {
         return {
             t: pin.t, n: pin.n, from: pin.from, to: pin.to, cause: pin.cause,
             cmds: pin.cmds || [],
             // Walk-offs share the bar column — they are what the bar column used to overclaim —
-            // and wear their own hue.
-            x: pin.cause === 'pass' ? passX : lifeX,
+            // and wear their own hue. X positions are pinX's at draw time, never stored: the
+            // narrow layout and resizes move them.
             color: pin.cause === 'pass' ? view.colors.pass
                 : pin.cause === 'walk' ? view.colors.walk
                     : view.colors.life
@@ -470,7 +514,7 @@ async function loadBreaks(view, chartId, mix) {
     if (breaks.finished > 0)
         view.pinMarks.push({
             t: view.lastNote, dy: 16, n: breaks.finished, from: view.lastNote, to: view.lastNote,
-            cause: 'fin', cmds: [], x: lifeX, color: view.colors.inkMuted
+            cause: 'fin', cmds: [], color: view.colors.inkMuted
         });
 
     // Death marks are TICKS on the map's right edge in their cause's color, thicker where
@@ -620,11 +664,13 @@ function initMinimap(view) {
     canvas.height = H * dpr;
     var ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
-    var yOf = function (t) { return (t / view.duration) * (H - 8) + 4; };
+    var yOf = function (t) { return ((t - view.t0) / view.span) * (H - 8) + 4; };
 
-    var seconds = Math.max(1, Math.ceil(view.duration));
+    var seconds = Math.max(1, Math.ceil(view.span));
     var density = new Array(seconds).fill(0);
-    view.rows.forEach(function (row) { density[Math.min(seconds - 1, Math.floor(row.t))]++; });
+    view.rows.forEach(function (row) {
+        density[Math.max(0, Math.min(seconds - 1, Math.floor(row.t - view.t0)))]++;
+    });
     var maxDensity = Math.max.apply(null, density.concat([1]));
 
     // The density bars THEMSELVES carry relative difficulty (owner, 2026-08-30 — the band
@@ -645,8 +691,9 @@ function initMinimap(view) {
                     : segment.lvl >= notable.threshold ? tiers.yellow
                         : segment.lvl >= notable.threshold - 3 ? tiers.green : null;
             if (!color) return;
-            var last = Math.min(seconds, Math.ceil(segment.e));
-            for (var sec = Math.max(0, Math.floor(segment.s)); sec < last; sec++) tierOf[sec] = color;
+            var last = Math.min(seconds, Math.ceil(segment.e - view.t0));
+            for (var sec = Math.max(0, Math.floor(segment.s - view.t0)); sec < last; sec++)
+                tierOf[sec] = color;
         });
     }
 
@@ -657,7 +704,7 @@ function initMinimap(view) {
             if (w <= 0) continue;
             ctx.fillStyle = tierOf[second] || 'rgba(255,255,255,.16)';
             ctx.globalAlpha = tierOf[second] ? 0.9 : 1;
-            ctx.fillRect(4, yOf(second), w, Math.max(1, (H - 8) / view.duration));
+            ctx.fillRect(4, yOf(view.t0 + second), w, Math.max(1, (H - 8) / view.span));
         }
         ctx.globalAlpha = 1;
         if (view.drawMinimapPins) view.drawMinimapPins(ctx, yOf, W, H);
@@ -761,8 +808,8 @@ function buildChips(view) {
 // here" for the strip (owner, 2026-08-31).
 function highlightChips(view) {
     if (!view.chipSpans) return;
-    var top = (view.box.scrollTop - 12) / view.scale.pps;
-    var bottom = (view.box.scrollTop + view.box.clientHeight - 12) / view.scale.pps;
+    var top = view.t0 + (view.box.scrollTop - 12) / view.scale.pps;
+    var bottom = view.t0 + (view.box.scrollTop + view.box.clientHeight - 12) / view.scale.pps;
     view.chipSpans.forEach(function (span) {
         span.el.classList.toggle('stepchart-chip-active', span.s < bottom && span.e > top);
     });
@@ -856,7 +903,7 @@ function bindPinTips(view) {
         for (var i = 0; i < view.pinMarks.length; i++) {
             var pin = view.pinMarks[i];
             var r = (pin.n > 1 ? 9.5 : 5) + 5;
-            var dx = x - pin.x;
+            var dx = x - pinX(view, pin);
             var dy = y - view.yOf(pin.t) - (pin.dy || 0);
             if (dx * dx + dy * dy <= r * r) { hit = pin; break; }
         }
