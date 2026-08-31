@@ -2346,9 +2346,6 @@
   <data name="Effective Level" xml:space="preserve">
 	  <value>実効レベル</value>
   </data>
-  <data name="Eighths" xml:space="preserve">
-	  <value>8分</value>
-  </data>
   <data name="End Date" xml:space="preserve">
 	  <value>終了日</value>
   </data>
@@ -2642,9 +2639,6 @@
   </data>
   <data name="Finding the beat" xml:space="preserve">
     <value>リズムを探しています</value>
-  </data>
-  <data name="Finer" xml:space="preserve">
-	  <value>その他</value>
   </data>
   <data name="Finish later" xml:space="preserve">
     <value>あとで仕上げる</value>
@@ -5981,9 +5975,6 @@
   <data name="Quarter Double" xml:space="preserve">
     <value>クォーターダブル</value>
   </data>
-  <data name="Quarters" xml:space="preserve">
-	  <value>4分</value>
-  </data>
   <data name="Queued" xml:space="preserve">
     <value>キューに追加しました</value>
   </data>
@@ -7124,9 +7115,6 @@
   <data name="Site Theme" xml:space="preserve">
     <value>サイトテーマ</value>
   </data>
-  <data name="Sixteenths" xml:space="preserve">
-	  <value>16分</value>
-  </data>
   <data name="Size" xml:space="preserve">
     <value>サイズ</value>
   </data>
@@ -8060,12 +8048,6 @@
   <data name="Time runs downward — arrows colored by panel, feet, or timing." xml:space="preserve">
 	  <value>時間は下へ流れます — 矢印の色はパネル・足・リズムで切り替え。</value>
   </data>
-  <data name="Timing" xml:space="preserve">
-	  <value>リズム</value>
-  </data>
-  <data name="Timing colors need a step file that aligned to beats." xml:space="preserve">
-	  <value>リズム配色には拍に整列した譜面ファイルが必要です。</value>
-  </data>
   <data name="Title" xml:space="preserve">
 	  <value>タイトル</value>
   </data>
@@ -8270,9 +8252,6 @@
   </data>
   <data name="Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us." xml:space="preserve">
     <value>これを有効にするのは、自分のポケットに入れた付箋にパスワードを書くようなものです。ただし、そのメモは誰も — 私たちでさえ — 見ただけでは読めない暗号で書かれています。</value>
-  </data>
-  <data name="Twelfths" xml:space="preserve">
-	  <value>12分</value>
   </data>
   <data name="Twist 90" xml:space="preserve">
     <value>90度捻り</value>
@@ -8916,9 +8895,6 @@
   </data>
   <data name="Who your peers are" xml:space="preserve">
     <value>あなたのピア</value>
-  </data>
-  <data name="whole chart" xml:space="preserve">
-	  <value>全体</value>
   </data>
   <data name="Why" xml:space="preserve">
     <value>理由</value>

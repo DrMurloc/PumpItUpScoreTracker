@@ -2346,9 +2346,6 @@
   <data name="Effective Level" xml:space="preserve">
 	  <value>Glorgrglmr Grorpmurm</value>
   </data>
-  <data name="Eighths" xml:space="preserve">
-	  <value>Glorgurgro</value>
-  </data>
   <data name="End Date" xml:space="preserve">
 	  <value>Gl Morgmrp</value>
   </data>
@@ -2642,9 +2639,6 @@
   </data>
   <data name="Finding the beat" xml:space="preserve">
     <value>Rugbam olo</value>
-  </data>
-  <data name="Finer" xml:space="preserve">
-	  <value>Glarggl</value>
   </data>
   <data name="Finish later" xml:space="preserve">
     <value>Golba pragl</value>
@@ -5981,9 +5975,6 @@
   <data name="Quarter Double" xml:space="preserve">
     <value>Grubla Ogra</value>
   </data>
-  <data name="Quarters" xml:space="preserve">
-	  <value>Blubgroro</value>
-  </data>
   <data name="Queued" xml:space="preserve">
     <value>Lurggrgl</value>
   </data>
@@ -7124,9 +7115,6 @@
   <data name="Site Theme" xml:space="preserve">
     <value>Plglmorg Grrglmrgl</value>
   </data>
-  <data name="Sixteenths" xml:space="preserve">
-	  <value>Marggurgro</value>
-  </data>
   <data name="Size" xml:space="preserve">
     <value>Blgrlmrp</value>
   </data>
@@ -8060,12 +8048,6 @@
   <data name="Time runs downward — arrows colored by panel, feet, or timing." xml:space="preserve">
 	  <value>Mogro grogl lurggrogl — prglgl gromorgro ur murpgl, glubro, ro murgrog.</value>
   </data>
-  <data name="Timing" xml:space="preserve">
-	  <value>Murgrog</value>
-  </data>
-  <data name="Timing colors need a step file that aligned to beats." xml:space="preserve">
-	  <value>Murgrog gromorgro glub murplgl grrgl ur mrglgrogl.</value>
-  </data>
   <data name="Title" xml:space="preserve">
 	  <value>Mrgl</value>
   </data>
@@ -8270,9 +8252,6 @@
   </data>
   <data name="Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us." xml:space="preserve">
     <value>Mrglurgargl grglmrp lurg urg plglro maglmaglmr gromurp glorgmrpmurm lurg gro murmgrorp grogrgl blub murgro mrp gromurp grrgl murgglorg — grrglro mrp grogrgl urg mrp gro mrglrgl urggro grorp mrblgrl murm murmblgrlmrp mr gl, murm mrpplgl blarg.</value>
-  </data>
-  <data name="Twelfths" xml:space="preserve">
-	  <value>Brglurgro</value>
   </data>
   <data name="Twist 90" xml:space="preserve">
     <value>Blgrlgrgl 90</value>
@@ -8916,9 +8895,6 @@
   </data>
   <data name="Who your peers are" xml:space="preserve">
     <value>Morg morp maglmurp</value>
-  </data>
-  <data name="whole chart" xml:space="preserve">
-	  <value>glorggl murgl</value>
   </data>
   <data name="Why" xml:space="preserve">
     <value>Murgloo</value>

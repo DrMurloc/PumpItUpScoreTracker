@@ -2345,9 +2345,6 @@
   <data name="Effective Level" xml:space="preserve">
     <value>Niveau effectif</value>
   </data>
-  <data name="Eighths" xml:space="preserve">
-	  <value>Croches</value>
-  </data>
   <data name="End Date" xml:space="preserve">
     <value>Date de fin</value>
   </data>
@@ -2641,9 +2638,6 @@
   </data>
   <data name="Finding the beat" xml:space="preserve">
     <value>Recherche du tempo</value>
-  </data>
-  <data name="Finer" xml:space="preserve">
-	  <value>Plus fines</value>
   </data>
   <data name="Finish later" xml:space="preserve">
     <value>Terminer plus tard</value>
@@ -5980,9 +5974,6 @@
   <data name="Quarter Double" xml:space="preserve">
     <value>Quart double</value>
   </data>
-  <data name="Quarters" xml:space="preserve">
-	  <value>Noires</value>
-  </data>
   <data name="Queued" xml:space="preserve">
     <value>En file d'attente</value>
   </data>
@@ -7123,9 +7114,6 @@
   <data name="Site Theme" xml:space="preserve">
     <value>Thème du site</value>
   </data>
-  <data name="Sixteenths" xml:space="preserve">
-	  <value>Doubles croches</value>
-  </data>
   <data name="Size" xml:space="preserve">
     <value>Taille</value>
   </data>
@@ -8059,12 +8047,6 @@
   <data name="Time runs downward — arrows colored by panel, feet, or timing." xml:space="preserve">
 	  <value>Le temps défile vers le bas — flèches colorées par panneau, pied ou subdivision.</value>
   </data>
-  <data name="Timing" xml:space="preserve">
-	  <value>Subdivision</value>
-  </data>
-  <data name="Timing colors need a step file that aligned to beats." xml:space="preserve">
-	  <value>Les couleurs de subdivision demandent un fichier de pas aligné sur les temps.</value>
-  </data>
   <data name="Title" xml:space="preserve">
     <value>Titre</value>
   </data>
@@ -8269,9 +8251,6 @@
   </data>
   <data name="Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us." xml:space="preserve">
     <value>Activer ceci revient à écrire votre mot de passe sur un post-it que vous gardez dans votre poche — sauf que la note est dans un code que personne ne peut lire d'un simple coup d'œil, pas même nous.</value>
-  </data>
-  <data name="Twelfths" xml:space="preserve">
-	  <value>Triolets</value>
   </data>
   <data name="Twist 90" xml:space="preserve">
     <value>Twists 90°</value>
@@ -8915,9 +8894,6 @@
   </data>
   <data name="Who your peers are" xml:space="preserve">
     <value>Qui sont tes pairs</value>
-  </data>
-  <data name="whole chart" xml:space="preserve">
-	  <value>toute la partition</value>
   </data>
   <data name="Why" xml:space="preserve">
     <value>Pourquoi</value>

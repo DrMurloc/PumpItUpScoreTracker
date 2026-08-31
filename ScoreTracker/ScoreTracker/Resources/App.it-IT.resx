@@ -2346,9 +2346,6 @@
   <data name="Effective Level" xml:space="preserve">
     <value>Livello effettivo</value>
   </data>
-  <data name="Eighths" xml:space="preserve">
-	  <value>Crome</value>
-  </data>
   <data name="End Date" xml:space="preserve">
     <value>Data di fine</value>
   </data>
@@ -2642,9 +2639,6 @@
   </data>
   <data name="Finding the beat" xml:space="preserve">
     <value>Ricerca del ritmo</value>
-  </data>
-  <data name="Finer" xml:space="preserve">
-	  <value>Più fini</value>
   </data>
   <data name="Finish later" xml:space="preserve">
     <value>Finisci dopo</value>
@@ -5981,9 +5975,6 @@
   <data name="Quarter Double" xml:space="preserve">
     <value>Quarto doppio</value>
   </data>
-  <data name="Quarters" xml:space="preserve">
-	  <value>Semiminime</value>
-  </data>
   <data name="Queued" xml:space="preserve">
     <value>In coda</value>
   </data>
@@ -7124,9 +7115,6 @@
   <data name="Site Theme" xml:space="preserve">
     <value>Tema del sito</value>
   </data>
-  <data name="Sixteenths" xml:space="preserve">
-	  <value>Semicrome</value>
-  </data>
   <data name="Size" xml:space="preserve">
     <value>Dimensione</value>
   </data>
@@ -8060,12 +8048,6 @@
   <data name="Time runs downward — arrows colored by panel, feet, or timing." xml:space="preserve">
 	  <value>Il tempo scorre verso il basso — frecce colorate per pannello, piede o suddivisione.</value>
   </data>
-  <data name="Timing" xml:space="preserve">
-	  <value>Suddivisione</value>
-  </data>
-  <data name="Timing colors need a step file that aligned to beats." xml:space="preserve">
-	  <value>I colori della suddivisione richiedono un file dei passi allineato ai beat.</value>
-  </data>
   <data name="Title" xml:space="preserve">
     <value>Titolo</value>
   </data>
@@ -8270,9 +8252,6 @@
   </data>
   <data name="Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us." xml:space="preserve">
     <value>Attivarlo è come scrivere la tua password su un foglietto che tieni in tasca, solo che il foglietto è in un codice che nessuno può leggere a colpo d'occhio, nemmeno noi.</value>
-  </data>
-  <data name="Twelfths" xml:space="preserve">
-	  <value>Terzine</value>
   </data>
   <data name="Twist 90" xml:space="preserve">
     <value>Twists a 90°</value>
@@ -8916,9 +8895,6 @@
   </data>
   <data name="Who your peers are" xml:space="preserve">
     <value>Chi sono i tuoi pari</value>
-  </data>
-  <data name="whole chart" xml:space="preserve">
-	  <value>tutta la sequenza</value>
   </data>
   <data name="Why" xml:space="preserve">
     <value>Perché</value>

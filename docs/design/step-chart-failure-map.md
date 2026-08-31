@@ -93,7 +93,12 @@ All owner-settled across the 2026-08-29/30 workshop.
   minimap and chips from two fetches. The static chart page loads it like the calculator
   modules (App.razor, content-hashed); the dialog's Steps tab imports it lazily and mounts.
   Canvas tiles stay under browser height limits; hueless of literals — every color reads a
-  token.
+  token. The strip NEVER scrolls horizontally (owner, 2026-08-30 — a deal breaker on
+  mobile): when the host is narrower than the natural geometry, columns, gutter, rail and
+  pixel velocity all scale down uniformly, and narrow screens thin the whole-chart map to
+  44px instead of hiding it. Timing mode is withdrawn until its own session — the banked
+  beats are untouched. The Phoenix 2 bar-death series wears the game's own Pass G command
+  art (`Pass_Plate_G.png`, the mirror already holds it) in legend and tooltip alike.
 - **D13 — Two endpoints, two cache lives.** The step payload changes only at ingest (ETag on
   vintage, long cache); the pins change with every import (short cache). Deliberately outside
   `api/*` — UI-support, no partner contract, no wire-shape test.

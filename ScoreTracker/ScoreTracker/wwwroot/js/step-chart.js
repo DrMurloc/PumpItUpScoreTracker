@@ -73,12 +73,33 @@ export async function mount(root) {
         isPhoenix2: isPhoenix2, mode: 'arrow', token: token
     };
     root.stepChartView = view;
+    view.measureAvail = function () {
+        var viewer = root.querySelector('.stepchart-viewer');
+        if (!viewer) return null;
+        var minicol = root.querySelector('.stepchart-minicol');
+        var w = viewer.clientWidth;
+        if (minicol && minicol.offsetWidth > 0) w -= minicol.offsetWidth + 14;
+        return Math.max(140, w);
+    };
+    view.availWidth = view.measureAvail();
     applyScale(view);
 
     try {
         var savedAv = parseInt(window.localStorage.getItem('stepchart-av') || '', 10);
         if (savedAv >= 200 && savedAv <= 900) { view.userAv = savedAv; applyScale(view); }
     } catch (e) { /* private mode */ }
+
+    var resizePending = null;
+    window.addEventListener('resize', function () {
+        if (resizePending) return;
+        resizePending = requestAnimationFrame(function () {
+            resizePending = null;
+            var avail = view.measureAvail();
+            if (avail == null || Math.abs(avail - (view.availWidth || 0)) < 2) return;
+            view.availWidth = avail;
+            relayoutStrip(view);
+        });
+    });
 
     drawStrip(view);
     initMinimap(view);
@@ -113,16 +134,40 @@ export async function mount(root) {
 function applyScale(view) {
     var av = view.userAv || assistVelocity(view.level);
     view.av = av;
-    view.scale = view.compact
-        ? { pps: av * 0.47, colW: 30, gutter: 44, railW: 78, arrow: 28 }
-        : { pps: av * 0.85, colW: view.panels === 10 ? 40 : 46, gutter: 52, railW: 96,
-            arrow: (view.panels === 10 ? 40 : 46) - 2 };
+    var base = view.compact
+        ? { pps: av * 0.47, colW: 30, gutter: 44, railW: 78 }
+        : { pps: av * 0.85, colW: view.panels === 10 ? 40 : 46, gutter: 52, railW: 96 };
+    // The strip never scrolls horizontally (owner, 2026-08-30 — a deal breaker on mobile):
+    // when the host is narrower than the natural geometry, EVERYTHING scales down uniformly
+    // — columns, gutter, rail, and the pixel velocity with them, so arrows keep their
+    // proportions and the whole thing reads like the same strip further away.
+    var natural = base.gutter + base.colW * view.panels + 14 + base.railW;
+    var fit = Math.min(1, (view.availWidth || natural) / natural);
+    view.scale = {
+        pps: base.pps * fit,
+        colW: base.colW * fit,
+        gutter: base.gutter * fit,
+        railW: base.railW * fit,
+        gap: 14 * fit,
+        arrow: Math.max(8, base.colW * fit - 2),
+        font: fit < 1 ? Math.max(7, Math.round(10 * fit)) : 10
+    };
     view.stripW = view.scale.colW * view.panels;
-    view.railX = view.scale.gutter + view.stripW + 14;
+    view.railX = view.scale.gutter + view.stripW + view.scale.gap;
     view.width = view.railX + view.scale.railW;
     view.height = Math.ceil(view.duration * view.scale.pps) + 24;
     view.yOf = function (t) { return 12 + t * view.scale.pps; };
     view.box.firstChild.style.width = view.width + 'px';
+}
+
+// Anchor-preserving full relayout — AV changes and host resizes share it.
+function relayoutStrip(view) {
+    var anchor = view.box.scrollTop / Math.max(1, view.height);
+    applyScale(view);
+    drawStrip(view);
+    view.box.scrollTop = anchor * view.height;
+    if (view.repaintMinimap) view.repaintMinimap();
+    highlightChips(view);
 }
 
 // The AV stepper (owner side-note, 2026-08-30): players have "their AV", so the ramp is only
@@ -144,11 +189,7 @@ function initAv(view) {
     }
 
     function relayout() {
-        var anchor = view.box.scrollTop / Math.max(1, view.height);
-        applyScale(view);
-        drawStrip(view);
-        view.box.scrollTop = anchor * view.height;
-        if (view.repaintMinimap) view.repaintMinimap();
+        relayoutStrip(view);
         show();
     }
 
@@ -453,20 +494,16 @@ async function loadBreaks(view, chartId, mix) {
     bindPinTips(view);
 }
 
-// The three coloring modes (design doc D12), one seam. Arrows reads the panel; Feet reads
-// the snapshot's limb masks; Timing reads the quantization the .ssc alignment attached.
+// The coloring modes (design doc D12), one seam. Arrows reads the panel; Feet reads the
+// snapshot's limb masks. (Timing is withdrawn until its own session — the beats still bank.)
 function rowColorFor(view, row, panel) {
     if (view.mode === 'foot')
         return (row.l & (1 << panel)) ? view.colors.footL : view.colors.footR;
-    if (view.mode === 'quant')
-        return view.colors.quant[row.q] || view.colors.quantOther;
     return noteColor(view, row, panel);
 }
 
 function holdColorFor(view, hold) {
     if (view.mode === 'foot') return hold.left ? view.colors.footL : view.colors.footR;
-    // Hold heads carry no quantization of their own — in Timing mode they read as "other".
-    if (view.mode === 'quant') return view.colors.quantOther;
     return holdColor(view, hold);
 }
 
@@ -477,10 +514,12 @@ function initModes(view) {
     var buttons = Array.prototype.slice.call(view.root.querySelectorAll('[data-stepchart-mode]'));
     if (buttons.length === 0) return;
 
-    var timingAvailable = !!view.payload.aligned;
+    // Timing mode is withdrawn for now (owner, 2026-08-30 — "isn't working at all; circle
+    // back another session"): no button, and a remembered 'quant' falls back to Arrows. The
+    // banked beats and quantization are untouched, so bringing it back is markup + a seam.
     var saved = null;
     try { saved = window.localStorage.getItem('stepchart-mode'); } catch (e) { /* private mode */ }
-    if (saved === 'foot' || (saved === 'quant' && timingAvailable)) view.mode = saved;
+    if (saved === 'foot') view.mode = saved;
 
     function apply() {
         buttons.forEach(function (button) {
@@ -493,13 +532,6 @@ function initModes(view) {
 
     buttons.forEach(function (button) {
         var mode = button.getAttribute('data-stepchart-mode');
-        if (mode === 'quant' && !timingAvailable) {
-            button.disabled = true;
-            button.title = view.strings.timingUnavailable ||
-                'Timing colors need a step file that aligned to beats.';
-            return;
-        }
-
         button.addEventListener('click', function () {
             if (view.mode === mode) return;
             view.mode = mode;
@@ -763,12 +795,6 @@ function renderLegend(view) {
     if (view.mode === 'foot') {
         legendEntry(host, view.colors.footL, view.strings.leftFoot || 'Left foot');
         legendEntry(host, view.colors.footR, view.strings.rightFoot || 'Right foot');
-    } else if (view.mode === 'quant') {
-        legendEntry(host, view.colors.quant[4], view.strings.quarters || 'Quarters');
-        legendEntry(host, view.colors.quant[8], view.strings.eighths || 'Eighths');
-        legendEntry(host, view.colors.quant[12], view.strings.twelfths || 'Twelfths');
-        legendEntry(host, view.colors.quant[16], view.strings.sixteenths || 'Sixteenths');
-        legendEntry(host, view.colors.quantOther, view.strings.finer || 'Finer');
     } else {
         legendEntry(host, view.colors.upper, view.strings.upper || 'Upper');
         legendEntry(host, view.colors.lower, view.strings.lower || 'Lower');
@@ -776,10 +802,21 @@ function renderLegend(view) {
     }
 
     if (view.breaks && (view.breaks.total > 0 || view.breaks.unplaced > 0)) {
-        if (view.breaks.life > 0)
-            legendEntry(host, view.colors.life,
-                (view.isPhoenix2 ? (view.strings.passG || 'Pass G')
-                    : (view.strings.lifeBreak || 'Life Bar Break')) + ' \u00b7 ' + view.breaks.life);
+        // On Phoenix 2 the bar-death series wears the game's own Pass G command art \u2014 the
+        // badge is the sentence, never spelled out (owner, 2026-08-30).
+        if (view.breaks.life > 0) {
+            if (view.isPhoenix2) {
+                var lifeSpan = legendEntry(host, view.colors.life, ' \u00b7 ' + view.breaks.life);
+                var passImg = document.createElement('img');
+                passImg.className = 'stepchart-legend-cmd';
+                passImg.src = CommandArtRoot + 'Pass_Plate_G.png';
+                passImg.alt = view.strings.passG || 'Pass G';
+                lifeSpan.insertBefore(passImg, lifeSpan.lastChild);
+            } else {
+                legendEntry(host, view.colors.life,
+                    (view.strings.lifeBreak || 'Life Bar Break') + ' \u00b7 ' + view.breaks.life);
+            }
+        }
         if (view.breaks.walk > 0)
             legendEntry(host, view.colors.walk,
                 (view.strings.walkOff || 'Walk off') + ' \u00b7 ' + view.breaks.walk);
@@ -796,6 +833,9 @@ function renderLegend(view) {
                 (view.strings.unplaced || 'Unplaced') + ' \u00b7 ' + view.breaks.unplaced);
     }
 }
+
+// The game's own command-window art, mirrored — the same root PassCommandBadge uses.
+var CommandArtRoot = 'https://piuimages.arroweclip.se/commands/';
 
 // Hovering a pin explains it: the span, the count, the cause — and on Singles pads the D34
 // hedge, because a proven non-lifebar break may be the other pad's command.
@@ -832,20 +872,20 @@ function bindPinTips(view) {
         } else if (hit.cause === 'pass' && hit.cmds.length) {
             body = hit.cmds.map(function (cmd) {
                 return '<img class="stepchart-tip-cmd" alt="' + escapeHtml(cmd) +
-                    '" src="https://piuimages.arroweclip.se/commands/' + encodeURI(cmd) + '.png">';
+                    '" src="' + CommandArtRoot + encodeURI(cmd) + '.png">';
             }).join('') + escapeHtml(count);
         } else if (hit.cause === 'pass') {
             body = '<b>' + escapeHtml((view.strings.unknownBreak || 'Unknown Break') + count) + '</b>';
         } else if (hit.cause === 'walk') {
             body = '<b>' + escapeHtml((view.strings.walkOff || 'Walk off') + count) + '</b>';
+        } else if (view.isPhoenix2) {
+            // On Phoenix 2 the bar cannot end a Premium song without Pass G, and the game
+            // has art for it — the badge is the sentence, never spelled out (owner,
+            // 2026-08-30). Phoenix 1 has no commands and keeps the plain phrase.
+            body = '<img class="stepchart-tip-cmd" alt="' + escapeHtml(view.strings.passG || 'Pass G') +
+                '" src="' + CommandArtRoot + 'Pass_Plate_G.png">' + escapeHtml(count);
         } else {
-            // On Phoenix 2 the bar cannot end a Premium song without Pass G, so the bar-death
-            // label IS the command's name there (owner, 2026-08-30); Phoenix 1 has no commands
-            // and keeps the plain phrase.
-            var lifeLabel = view.isPhoenix2
-                ? (view.strings.passG || 'Pass G')
-                : (view.strings.lifeBreak || 'Life Bar Break');
-            body = '<b>' + escapeHtml(lifeLabel + count) + '</b>';
+            body = '<b>' + escapeHtml((view.strings.lifeBreak || 'Life Bar Break') + count) + '</b>';
         }
 
         tip.innerHTML = '<div class="stepchart-tip-time">' + range + '</div>' + body;

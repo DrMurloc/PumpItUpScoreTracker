@@ -18305,6 +18305,11 @@ button.judg-strip:focus-visible {
     display: flex;
     gap: 14px;
     align-items: flex-start;
+    /* Left-aligned on the page (owner, 2026-08-30); the dialog stays centered. */
+    justify-content: flex-start;
+}
+
+.stepchart-compact .stepchart-viewer {
     justify-content: center;
 }
 
@@ -18349,13 +18354,6 @@ button.judg-strip:focus-visible {
     border-radius: 10px;
     background: var(--mix-surface-muted);
     cursor: pointer;
-}
-
-.stepchart-minicap {
-    color: var(--mix-ink-muted);
-    font-size: .72rem;
-    text-align: center;
-    margin-top: 6px;
 }
 
 /* Dense on purpose: more than three chips must not push the strip below the fold
@@ -18446,12 +18444,15 @@ button.judg-strip:focus-visible {
 }
 
 @media (max-width: 760px) {
-    .stepchart-minicol {
-        display: none;
+    /* Narrow screens SQUISH rather than scroll (owner, 2026-08-30): the map thins out and
+       the module scales the strip to the width that remains - horizontal scrolling on mobile
+       is a deal breaker. */
+    .stepchart-minimap {
+        width: 44px;
     }
 
     .stepchart-scroll {
-        max-width: 100%;
+        max-width: calc(100% - 58px);
     }
 }
 
@@ -18571,4 +18572,9 @@ button.judg-strip:focus-visible {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+}
+
+.stepchart-legend-cmd {
+    height: 16px;
+    vertical-align: middle;
 }

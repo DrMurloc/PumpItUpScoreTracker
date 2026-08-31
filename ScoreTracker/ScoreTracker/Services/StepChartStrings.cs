@@ -38,13 +38,7 @@ public static class StepChartStrings
             ["finishedOne"] = localizer["1 broken run made it to the end"],
             ["finishedMany"] = localizer["{0} broken runs made it to the end"],
             ["leftFoot"] = localizer["Left foot"],
-            ["rightFoot"] = localizer["Right foot"],
-            ["quarters"] = localizer["Quarters"],
-            ["eighths"] = localizer["Eighths"],
-            ["twelfths"] = localizer["Twelfths"],
-            ["sixteenths"] = localizer["Sixteenths"],
-            ["finer"] = localizer["Finer"],
-            ["timingUnavailable"] = localizer["Timing colors need a step file that aligned to beats."]
+            ["rightFoot"] = localizer["Right foot"]
         }));
     }
 }

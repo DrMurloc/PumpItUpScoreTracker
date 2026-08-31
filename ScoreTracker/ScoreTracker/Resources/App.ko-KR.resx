@@ -2332,9 +2332,6 @@
   <data name="Effective Level" xml:space="preserve">
     <value>유효 레벨</value>
   </data>
-  <data name="Eighths" xml:space="preserve">
-	  <value>8분</value>
-  </data>
   <data name="End Date" xml:space="preserve">
     <value>종료일</value>
   </data>
@@ -2625,9 +2622,6 @@
   </data>
   <data name="Finding the beat" xml:space="preserve">
     <value>박자 찾는 중</value>
-  </data>
-  <data name="Finer" xml:space="preserve">
-	  <value>기타</value>
   </data>
   <data name="Finish later" xml:space="preserve">
     <value>나중에 마무리</value>
@@ -5943,9 +5937,6 @@
   <data name="Quarter Double" xml:space="preserve">
     <value>쿼터 더블</value>
   </data>
-  <data name="Quarters" xml:space="preserve">
-	  <value>4분</value>
-  </data>
   <data name="Queued" xml:space="preserve">
     <value>대기열에 추가됨</value>
   </data>
@@ -7072,9 +7063,6 @@
   <data name="Site Theme" xml:space="preserve">
     <value>사이트 테마</value>
   </data>
-  <data name="Sixteenths" xml:space="preserve">
-	  <value>16분</value>
-  </data>
   <data name="Size" xml:space="preserve">
     <value>크기</value>
   </data>
@@ -8002,12 +7990,6 @@
   <data name="Time runs downward — arrows colored by panel, feet, or timing." xml:space="preserve">
 	  <value>시간은 아래로 흐릅니다 — 화살표 색은 패널·발·박자 기준으로 전환됩니다.</value>
   </data>
-  <data name="Timing" xml:space="preserve">
-	  <value>박자</value>
-  </data>
-  <data name="Timing colors need a step file that aligned to beats." xml:space="preserve">
-	  <value>박자 색상은 박자에 정렬된 채보 파일이 필요합니다.</value>
-  </data>
   <data name="Title" xml:space="preserve">
     <value>제목</value>
   </data>
@@ -8211,9 +8193,6 @@
   </data>
   <data name="Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us." xml:space="preserve">
     <value>이 기능을 켜는 것은 자기 주머니에 넣어 두는 메모지에 비밀번호를 적어 두는 것과 같습니다. 다만 그 메모는 누구도 — 심지어 우리조차도 — 보기만 해서는 읽을 수 없는 암호로 적혀 있습니다.</value>
-  </data>
-  <data name="Twelfths" xml:space="preserve">
-	  <value>12분</value>
   </data>
   <data name="Twist 90" xml:space="preserve">
     <value>90도 틀기</value>
@@ -8853,9 +8832,6 @@
   </data>
   <data name="Who your peers are" xml:space="preserve">
     <value>나의 동료들</value>
-  </data>
-  <data name="whole chart" xml:space="preserve">
-	  <value>전체 채보</value>
   </data>
   <data name="Why" xml:space="preserve">
     <value>이유</value>

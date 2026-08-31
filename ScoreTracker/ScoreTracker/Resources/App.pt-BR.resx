@@ -2332,9 +2332,6 @@
   <data name="Effective Level" xml:space="preserve">
     <value>Nível efetivo</value>
   </data>
-  <data name="Eighths" xml:space="preserve">
-	  <value>Colcheias</value>
-  </data>
   <data name="End Date" xml:space="preserve">
     <value>Data de término</value>
   </data>
@@ -2625,9 +2622,6 @@
   </data>
   <data name="Finding the beat" xml:space="preserve">
     <value>Procurando o ritmo</value>
-  </data>
-  <data name="Finer" xml:space="preserve">
-	  <value>Mais finas</value>
   </data>
   <data name="Finish later" xml:space="preserve">
     <value>Terminar depois</value>
@@ -5943,9 +5937,6 @@
   <data name="Quarter Double" xml:space="preserve">
     <value>Quarto duplo</value>
   </data>
-  <data name="Quarters" xml:space="preserve">
-	  <value>Semínimas</value>
-  </data>
   <data name="Queued" xml:space="preserve">
     <value>Na fila</value>
   </data>
@@ -7072,9 +7063,6 @@
   <data name="Site Theme" xml:space="preserve">
     <value>Tema do site</value>
   </data>
-  <data name="Sixteenths" xml:space="preserve">
-	  <value>Semicolcheias</value>
-  </data>
   <data name="Size" xml:space="preserve">
     <value>Tamanho</value>
   </data>
@@ -8002,12 +7990,6 @@
   <data name="Time runs downward — arrows colored by panel, feet, or timing." xml:space="preserve">
 	  <value>O tempo corre para baixo — setas coloridas por painel, pé ou subdivisão.</value>
   </data>
-  <data name="Timing" xml:space="preserve">
-	  <value>Subdivisão</value>
-  </data>
-  <data name="Timing colors need a step file that aligned to beats." xml:space="preserve">
-	  <value>As cores de subdivisão exigem um arquivo de passos alinhado à batida.</value>
-  </data>
   <data name="Title" xml:space="preserve">
     <value>Título</value>
   </data>
@@ -8211,9 +8193,6 @@
   </data>
   <data name="Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us." xml:space="preserve">
     <value>Ativar isto é como escrever sua senha num bilhete adesivo que você guarda no próprio bolso — só que o bilhete está num código que ninguém consegue ler só de olhar, nem nós.</value>
-  </data>
-  <data name="Twelfths" xml:space="preserve">
-	  <value>Tercinas</value>
   </data>
   <data name="Twist 90" xml:space="preserve">
     <value>Twists de 90°</value>
@@ -8853,9 +8832,6 @@
   </data>
   <data name="Who your peers are" xml:space="preserve">
     <value>Quem são seus pares</value>
-  </data>
-  <data name="whole chart" xml:space="preserve">
-	  <value>sequência inteira</value>
   </data>
   <data name="Why" xml:space="preserve">
     <value>Por quê</value>

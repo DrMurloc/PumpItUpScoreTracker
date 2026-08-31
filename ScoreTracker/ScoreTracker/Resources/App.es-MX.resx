@@ -2332,9 +2332,6 @@
   <data name="Effective Level" xml:space="preserve">
     <value>Nivel efectivo</value>
   </data>
-  <data name="Eighths" xml:space="preserve">
-	  <value>Corcheas</value>
-  </data>
   <data name="End Date" xml:space="preserve">
     <value>Fecha de finalización</value>
   </data>
@@ -2625,9 +2622,6 @@
   </data>
   <data name="Finding the beat" xml:space="preserve">
     <value>Buscando el ritmo</value>
-  </data>
-  <data name="Finer" xml:space="preserve">
-	  <value>Más finas</value>
   </data>
   <data name="Finish later" xml:space="preserve">
     <value>Terminar luego</value>
@@ -5943,9 +5937,6 @@
   <data name="Quarter Double" xml:space="preserve">
     <value>Cuarto doble</value>
   </data>
-  <data name="Quarters" xml:space="preserve">
-	  <value>Negras</value>
-  </data>
   <data name="Queued" xml:space="preserve">
     <value>En cola</value>
   </data>
@@ -7072,9 +7063,6 @@
   <data name="Site Theme" xml:space="preserve">
     <value>Tema del sitio</value>
   </data>
-  <data name="Sixteenths" xml:space="preserve">
-	  <value>Semicorcheas</value>
-  </data>
   <data name="Size" xml:space="preserve">
     <value>Tamaño</value>
   </data>
@@ -8002,12 +7990,6 @@
   <data name="Time runs downward — arrows colored by panel, feet, or timing." xml:space="preserve">
 	  <value>El tiempo corre hacia abajo — flechas coloreadas por panel, pie o subdivisión.</value>
   </data>
-  <data name="Timing" xml:space="preserve">
-	  <value>Subdivisión</value>
-  </data>
-  <data name="Timing colors need a step file that aligned to beats." xml:space="preserve">
-	  <value>Los colores de subdivisión necesitan un archivo de pasos alineado al compás.</value>
-  </data>
   <data name="Title" xml:space="preserve">
     <value>Título</value>
   </data>
@@ -8211,9 +8193,6 @@
   </data>
   <data name="Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us." xml:space="preserve">
     <value>Activar esto es como escribir tu contraseña en una nota adhesiva que llevas en tu propio bolsillo, salvo que la nota está en un código que nadie puede leer a simple vista, ni siquiera nosotros.</value>
-  </data>
-  <data name="Twelfths" xml:space="preserve">
-	  <value>Tresillos</value>
   </data>
   <data name="Twist 90" xml:space="preserve">
     <value>Twists de 90°</value>
@@ -8853,9 +8832,6 @@
   </data>
   <data name="Who your peers are" xml:space="preserve">
     <value>Quiénes son tus pares</value>
-  </data>
-  <data name="whole chart" xml:space="preserve">
-	  <value>toda la secuencia</value>
   </data>
   <data name="Why" xml:space="preserve">
     <value>Por qué</value>
