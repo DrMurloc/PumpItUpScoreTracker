@@ -305,7 +305,15 @@ The widget home page ([design doc](design/HomePageWidgets/README.md)) adds a voc
   described by the capability schema, pinned by `Tests.Api` goldens. Changing a config record's shape
   or a `TypeId` is breaking-change review.
 - **Widgets reload only when their identity inputs change** (instance id, config, effective mix) —
-  edit-mode mutations elsewhere on the board must not refetch every widget.
+  edit-mode mutations elsewhere on the board must not refetch every widget. Auto-refresh is two
+  opt-in signals per descriptor (owner, 2026-08-30): score-reading widgets bump when the viewer's
+  **import finishes saving**, the few whose data is the post-batch analysis bump when the
+  **recalculated stats land** (`RefreshOnScoreImport` / `RefreshOnStatsUpdate`); the host coalesces
+  event bursts and holds any bump that arrives mid-edit until Done.
+- **A reload never collapses a rendered widget.** The spinner is for the first load only; after
+  that, refreshes keep the current content on screen dimmed (`dash-refreshable`/`dash-stale`) and
+  swap in place. On the auto-height mobile column a spinner swap shrinks the page under a
+  mid-scroll finger and kills the gesture — the "can't scroll the widgets" bug.
 - Chart series colors resolve through literal-hex accessors on `MixThemes` (ApexCharts can't read CSS
   vars), all mirroring `DifficultyHex`: **chart type** = `ChartTypeHex` (red Single / green Double / gold
   Co-Op, the ball vocabulary — the By-Level Breakdown distribution lines encode S/D by this color, the
@@ -326,6 +334,9 @@ The widget home page ([design doc](design/HomePageWidgets/README.md)) adds a voc
 - **Quiet scrolling**: widget inner scrollers use `dash-scroll` — no scrollbar at rest, a thin themed
   thumb on hover, and edge fades as the "there's more" affordance (scroll-aware where the browser
   supports scroll-driven animations, static bottom fade elsewhere). Touch keeps native overlays.
+  **On the phone column the fade is off entirely**: cells grow to content there, so no list can
+  overflow and the fade could only lie — a permanently ghosted last row that invites swipes nothing
+  answers.
 - **Graphs start from `ApexChartTheming.BaseOptions` + its `WrapperClass`** on the container: frozen
   canvas, display face, palette fore color, whisper-grid, dark theme, themed tooltips. Charts layer
   their specifics (strokes, fills, axes) on top — never rebuild the base by hand.
