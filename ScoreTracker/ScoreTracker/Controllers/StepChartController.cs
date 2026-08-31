@@ -67,13 +67,15 @@ public class StepChartController : Controller
             // the wire: [time, panelMask, leftFootMask, quant, beat|null].
             rows = record.Rows.Select(r => new object?[] { r.Time, r.PanelMask, r.LeftFootMask, r.Quant, r.Beat }),
             holds = record.Holds.Select(h => new object[] { h.Panel, h.Start, h.End, h.IsLeftFoot ? 1 : 0 }),
-            // [start, end, enps|null, level|null, badge display names] — badges ship as the
-            // hero's display forms (BadgeLabels; English in every locale by standing ruling),
-            // so the cached-public JSON never varies by locale and the module needs no table.
+            // [start, end, enps|null, level|null, badge display names, pace code|null] —
+            // badges ship as the hero's display forms (BadgeLabels; English in every locale by
+            // standing ruling), so the cached-public JSON never varies by locale and the
+            // module needs no table; the pace code localizes client-side off the strings block.
             segments = record.Segments.Select(s => new object?[]
             {
                 s.Start, s.End, s.Enps, s.Level,
-                (s.Badges ?? Array.Empty<string>()).Select(BadgeLabels.DisplayName)
+                (s.Badges ?? Array.Empty<string>()).Select(BadgeLabels.DisplayName),
+                s.Pace
             }),
             ranges = record.RangesOfInterest.Select(r => new object[] { r.Start, r.End })
         });

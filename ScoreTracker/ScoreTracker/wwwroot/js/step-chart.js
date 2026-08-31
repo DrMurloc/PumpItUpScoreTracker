@@ -42,10 +42,13 @@ export async function mount(root) {
     // rows: [time, panelMask, leftMask, quant, beat|null]
     var rows = payload.rows.map(function (r) { return { t: r[0], m: r[1], l: r[2], q: r[3], b: r[4] }; });
     var holds = payload.holds.map(function (h) { return { p: h[0], s: h[1], e: h[2], left: h[3] === 1 }; });
-    // segments: [start, end, enps|null, level|null, badge display names] — level and badges
-    // null on payloads banked before the section-labeling round.
+    // segments: [start, end, enps|null, level|null, badge display names, pace code|null] —
+    // annotations null on payloads banked before the section-labeling rounds.
     var segments = payload.segments.map(function (s) {
-        return { s: s[0], e: s[1], enps: s[2], lvl: s[3] != null ? s[3] : null, badges: s[4] || [] };
+        return {
+            s: s[0], e: s[1], enps: s[2], lvl: s[3] != null ? s[3] : null,
+            badges: s[4] || [], pace: s[5] || null
+        };
     });
     var ranges = payload.ranges.map(function (r) { return { s: r[0], e: r[1] }; });
     var panels = payload.panels;
@@ -97,9 +100,8 @@ export async function mount(root) {
 
     if (root.getAttribute('data-visibility') === 'Full') await loadBreaks(view, chartId, mix);
 
-    // Land on the spike rather than the silent intro — the reader came to see the chart's teeth.
-    var spike = notableOf(view).spike;
-    if (spike) box.scrollTop = Math.max(0, view.yOf(spike.s) - 90);
+    // The strip opens at the TOP — landing mid-chart is disorienting (owner, 2026-08-30);
+    // the chips and the map are the fast ways down.
     highlightChips(view);
 }
 
@@ -596,19 +598,13 @@ function initMinimap(view) {
     view.repaintMinimap = function () {
         ctx.clearRect(0, 0, W, H);
         // The notable sections band the full width first, so the chart's shape reads before
-        // any scrolling — the same set the chips name, the spike stronger. Legacy payloads
-        // (no levels) band their ranges of interest instead.
+        // any scrolling — the same set the chips name, the spike stronger.
         var notable = notableOf(view);
         ctx.fillStyle = view.colors.accent;
-        (notable.legacy ? view.ranges : notable.sections).forEach(function (section) {
+        notable.sections.forEach(function (section) {
             ctx.globalAlpha = section === notable.spike ? 0.28 : 0.16;
             ctx.fillRect(0, yOf(section.s), W, Math.max(2, yOf(section.e) - yOf(section.s)));
         });
-        if (notable.legacy && notable.spike) {
-            ctx.globalAlpha = 0.28;
-            ctx.fillRect(0, yOf(notable.spike.s), W,
-                Math.max(2, yOf(notable.spike.e) - yOf(notable.spike.s)));
-        }
         ctx.globalAlpha = 1;
         ctx.fillStyle = 'rgba(255,255,255,.16)';
         for (var second = 0; second < seconds; second++) {
@@ -657,14 +653,9 @@ function notableOf(view) {
         if (peak == null || segment.lvl > peak) peak = segment.lvl;
     });
 
-    if (peak == null) {
-        var crux = null;
-        view.segments.forEach(function (segment) {
-            if (segment.enps == null) return;
-            if (!crux || segment.enps > crux.enps) crux = segment;
-        });
-        return { legacy: true, spike: crux, sections: crux ? [crux] : [] };
-    }
+    // No levels (a payload banked before the labeling rounds): nothing is notable. Better an
+    // empty chip row than generic placeholders (owner, 2026-08-30).
+    if (peak == null) return { spike: null, sections: [] };
 
     var threshold = Math.min(peak, view.meter != null ? view.meter : peak) - NotableWindow;
     var sections = view.segments.filter(function (segment) {
@@ -674,7 +665,18 @@ function notableOf(view) {
     sections.forEach(function (segment) {
         if (!spike && segment.lvl === peak) spike = segment;
     });
-    return { legacy: false, spike: spike, sections: sections };
+    return { spike: spike, sections: sections };
+}
+
+// A section's label is its top skill and its folder-relative pace word — never a number, and
+// never a generic placeholder (owner, 2026-08-30). Empty when the section has neither.
+function sectionLabel(view, section) {
+    var parts = [];
+    if (section.badges && section.badges.length) parts.push(section.badges[0]);
+    var pace = { vf: view.strings.veryFast || 'Very Fast', f: view.strings.fast || 'Fast',
+        s: view.strings.slow || 'Slow', vs: view.strings.verySlow || 'Very Slow' }[section.pace];
+    if (pace) parts.push(pace);
+    return parts.join(' · ');
 }
 
 // One chip per notable section, wearing the section's top skill and its density — "Drills
@@ -688,25 +690,16 @@ function buildChips(view) {
 
     var notable = notableOf(view);
     notable.sections.forEach(function (section) {
-        var parts = [];
-        if (section.badges && section.badges.length) parts.push(section.badges[0]);
-        if (section.enps != null)
-            parts.push((view.strings.nps || '{0} NPS')
-                .replace('{0}', Math.round(section.enps * 10) / 10));
-        var inner = parts.join(' ') || (view.strings.range || 'Notable run');
+        var inner = sectionLabel(view, section);
         var label = section === notable.spike
-            ? (view.strings.spike || 'Difficulty Spike: {0}').replace('{0}', inner)
+            ? (inner
+                ? (view.strings.spike || 'Difficulty Spike: {0}').replace('{0}', inner)
+                : (view.strings.spike || 'Difficulty Spike: {0}').replace('{0}', '').replace(/[:：]\s*$/, ''))
             : inner;
+        if (!label) return;
         var chip = addChip(view, host, section === notable.spike ? 'spike' : 'struct', label, section.s);
         view.chipSpans.push({ el: chip, s: section.s, e: section.e });
     });
-
-    if (notable.legacy)
-        view.ranges.slice(0, 2).forEach(function (range) {
-            if (notable.spike && Math.abs(range.s - notable.spike.s) < 3) return;
-            var chip = addChip(view, host, 'struct', view.strings.range || 'Notable run', range.s);
-            view.chipSpans.push({ el: chip, s: range.s, e: range.e });
-        });
 
     highlightChips(view);
 }

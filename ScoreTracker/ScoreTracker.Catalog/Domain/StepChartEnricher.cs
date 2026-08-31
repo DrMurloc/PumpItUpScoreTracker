@@ -199,7 +199,8 @@ internal sealed record SnapshotSegment(
     decimal End,
     decimal? Enps,
     IReadOnlyList<string>? Badges = null,
-    decimal? Level = null);
+    decimal? Level = null,
+    string? Pace = null);
 
 internal sealed record SnapshotRange(decimal Start, decimal End);
 

@@ -34,7 +34,7 @@ public sealed class GetChartStepChartHandlerTests
         var enriched = new EnrichedStepChart(5, true, rows,
             new[] { new SnapshotHold(2, 1m, 2m, "l") },
             new[] { 1.5m },
-            new[] { new SnapshotSegment(0m, 3m, 5.5m, new[] { "bracket_run" }, 21.4m) },
+            new[] { new SnapshotSegment(0m, 3m, 5.5m, new[] { "bracket_run" }, 21.4m, "f") },
             new[] { new SnapshotRange(1m, 2m) },
             verdicts.ToDictionary(v => v.Mix,
                 v => new StepChartVerdict(v.Visibility, 100, 99)),
@@ -71,6 +71,7 @@ public sealed class GetChartStepChartHandlerTests
         Assert.Equal(5.5m, segment.Enps);
         Assert.Equal(new[] { "bracket_run" }, segment.Badges);
         Assert.Equal(21.4m, segment.Level);
+        Assert.Equal("f", segment.Pace);
         Assert.Equal(22, record.Meter);
     }
 

@@ -73,7 +73,7 @@ internal sealed class StepChartReprocessConsumer : IConsumer<ReprocessStepFilesC
             counts[MixEnum.Phoenix2] ??= counts[MixEnum.Phoenix];
 
         var documents = new Dictionary<string, StepFileDocument?>(StringComparer.OrdinalIgnoreCase);
-        var banked = new Dictionary<Guid, BankedStepChart>();
+        var refreshedByChart = new Dictionary<Guid, EnrichedStepChart>();
         var aligned = 0;
         var now = _clock.Now;
         foreach (var chartId in chartIds)
@@ -104,8 +104,14 @@ internal sealed class StepChartReprocessConsumer : IConsumer<ReprocessStepFilesC
                     ? counts
                     : new Dictionary<MixEnum, int?> { [MixEnum.Phoenix] = null, [MixEnum.Phoenix2] = null });
             if (refreshed.BeatsAligned) aligned++;
-            banked[chartId] = new BankedStepChart(vintage, now, StepChartPayloadCodec.Encode(refreshed));
+            refreshedByChart[chartId] = refreshed;
         }
+
+        // Pace re-stamps here too — the reprocess walks the whole bank, so the folder
+        // distributions are complete without an upload.
+        var banked = SegmentPaceClassifier.Stamp(refreshedByChart).ToDictionary(
+            kv => kv.Key,
+            kv => new BankedStepChart(vintage, now, StepChartPayloadCodec.Encode(kv.Value)));
 
         await _steps.Replace(banked, cancellationToken);
         _logger.LogInformation(

@@ -60,7 +60,7 @@ internal sealed class StepChartIngest
             .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
         var documents = new Dictionary<string, StepFileDocument?>(StringComparer.OrdinalIgnoreCase);
 
-        var banked = new Dictionary<Guid, BankedStepChart>();
+        var enrichedByChart = new Dictionary<Guid, EnrichedStepChart>();
         var aligned = 0;
         var withSsc = 0;
         var now = _clock.Now;
@@ -77,8 +77,13 @@ internal sealed class StepChartIngest
                     ? counts
                     : new Dictionary<MixEnum, int?> { [MixEnum.Phoenix] = null, [MixEnum.Phoenix2] = null });
             if (enriched.BeatsAligned) aligned++;
-            banked[chartId] = new BankedStepChart(vintage, now, StepChartPayloadCodec.Encode(enriched));
+            enrichedByChart[chartId] = enriched;
         }
+
+        // Pace is a folder-relative fact, so it stamps in a whole-corpus post-pass.
+        var banked = SegmentPaceClassifier.Stamp(enrichedByChart).ToDictionary(
+            kv => kv.Key,
+            kv => new BankedStepChart(vintage, now, StepChartPayloadCodec.Encode(kv.Value)));
 
         await _steps.Replace(banked, cancellationToken);
         _logger.LogInformation(

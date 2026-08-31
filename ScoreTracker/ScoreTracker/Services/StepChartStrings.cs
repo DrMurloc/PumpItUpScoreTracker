@@ -17,11 +17,13 @@ public static class StepChartStrings
     {
         return new MarkupString(JsonSerializer.Serialize(new Dictionary<string, string>
         {
-            // The densest passage is named by what it measures — "Crux" meant nothing to
-            // players (owner, 2026-08-31), and the site already speaks NPS on the chart hero.
-            ["nps"] = localizer["{0} NPS"],
-            ["range"] = localizer["Notable run"],
             ["spike"] = localizer["Difficulty Spike: {0}"],
+            // Folder-relative pace words (owner, 2026-08-30 — "NPS doesn't mean anything"):
+            // the codes come off the wire, the words off the same keys the Speed family uses.
+            ["veryFast"] = localizer["Very Fast"],
+            ["fast"] = localizer["Fast"],
+            ["slow"] = localizer["Slow"],
+            ["verySlow"] = localizer["Very Slow"],
             ["upper"] = localizer["Upper"],
             ["lower"] = localizer["Lower"],
             ["center"] = localizer["Center"],

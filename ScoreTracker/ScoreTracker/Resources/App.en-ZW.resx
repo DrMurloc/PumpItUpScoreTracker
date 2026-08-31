@@ -4705,9 +4705,6 @@
   <data name="Not yet played" xml:space="preserve">
     <value>Blub morp mrogl</value>
   </data>
-  <data name="Notable run" xml:space="preserve">
-	  <value>Morgurgro Gro</value>
-  </data>
   <data name="Note (optional)" xml:space="preserve">
     <value>Blurgl (opa)</value>
   </data>

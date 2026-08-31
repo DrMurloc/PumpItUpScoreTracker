@@ -20,7 +20,7 @@ public class StepChartPayloadCodecTests
         return new EnrichedStepChart(5, true, rows,
             new[] { new SnapshotHold(2, 3m, 4.5m, "l") },
             new[] { 3.1m, 3.6m },
-            new[] { new SnapshotSegment(0m, 10m, 4.2m, new[] { "drill", "run" }, 19.92m) },
+            new[] { new SnapshotSegment(0m, 10m, 4.2m, new[] { "drill", "run" }, 19.92m, "vf") },
             new[] { new SnapshotRange(5m, 8m) },
             new Dictionary<MixEnum, StepChartVerdict>
             {
@@ -54,6 +54,7 @@ public class StepChartPayloadCodecTests
         Assert.Equal(4.2m, segment.N);
         Assert.Equal(new[] { "drill", "run" }, segment.B);
         Assert.Equal(19.92m, segment.L);
+        Assert.Equal("vf", segment.P);
         Assert.Equal(5m, Assert.Single(decoded.Ranges).S);
     }
 

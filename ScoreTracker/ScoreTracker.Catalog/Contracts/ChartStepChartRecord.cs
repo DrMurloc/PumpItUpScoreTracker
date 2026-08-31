@@ -32,16 +32,18 @@ public sealed record StepChartRowRecord(decimal Time, int PanelMask, int LeftFoo
 [ExcludeFromCodeCoverage]
 public sealed record StepChartHoldRecord(int Panel, decimal Start, decimal End, bool IsLeftFoot);
 
-/// <summary>A segment with piucenter's per-passage annotations: raw badge keys (display via
-/// <see cref="BadgeLabels.DisplayName" />) and the model's level for the passage alone. Both
-/// null on payloads banked before the section-labeling round (2026-08-31).</summary>
+/// <summary>A segment with piucenter's per-passage annotations — raw badge keys (display via
+/// <see cref="BadgeLabels.DisplayName" />) and the model's level for the passage alone — plus
+/// the ingest's folder-relative pace class ("vf"/"f"/"s"/"vs", the middle half null). All
+/// null on payloads banked before the section-labeling rounds (2026-08-30).</summary>
 [ExcludeFromCodeCoverage]
 public sealed record StepChartSegmentRecord(
     decimal Start,
     decimal End,
     decimal? Enps,
     IReadOnlyList<string>? Badges = null,
-    decimal? Level = null);
+    decimal? Level = null,
+    string? Pace = null);
 
 [ExcludeFromCodeCoverage]
 public sealed record StepChartRangeRecord(decimal Start, decimal End);

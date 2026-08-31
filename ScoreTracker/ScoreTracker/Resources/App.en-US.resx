@@ -4705,9 +4705,6 @@
   <data name="Not yet played" xml:space="preserve">
     <value>Not yet played</value>
   </data>
-  <data name="Notable run" xml:space="preserve">
-	  <value>Notable run</value>
-  </data>
   <data name="Note (optional)" xml:space="preserve">
     <value>Note (optional)</value>
   </data>

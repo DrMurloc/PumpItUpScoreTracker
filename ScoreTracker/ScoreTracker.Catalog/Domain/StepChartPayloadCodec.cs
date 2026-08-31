@@ -34,7 +34,7 @@ internal static class StepChartPayloadCodec
             chart.Holds.Select(h => new PayloadHold(h.Panel, h.Start, h.End, h.Limb == "l")).ToArray(),
             chart.TickTimes,
             chart.Segments.Select(s => new PayloadSegment(s.Start, s.End, s.Enps,
-                s.Badges is { Count: > 0 } ? s.Badges : null, s.Level)).ToArray(),
+                s.Badges is { Count: > 0 } ? s.Badges : null, s.Level, s.Pace)).ToArray(),
             chart.RangesOfInterest.Select(r => new PayloadRange(r.Start, r.End)).ToArray(),
             chart.Verdicts.ToDictionary(
                 kv => kv.Key.ToString(),
@@ -100,7 +100,8 @@ internal sealed record PayloadSegment(
     decimal E,
     decimal? N,
     IReadOnlyList<string>? B = null,
-    decimal? L = null);
+    decimal? L = null,
+    string? P = null);
 
 internal sealed record PayloadRange(decimal S, decimal E);
 

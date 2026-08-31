@@ -407,7 +407,8 @@ public sealed class ChartDetailsDialogTests : TestContext
     private void SetupStepChart(StepChartVisibility visibility = StepChartVisibility.Full)
     {
         _mediator.Setup(m => m.Send(It.IsAny<GetChartStepChartQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ChartStepChartRecord("82626", 5, true, visibility, 100, 99,
+            .ReturnsAsync(new ChartStepChartRecord("82626", DateTimeOffset.UnixEpoch, 5, true,
+                visibility, 100, 99,
                 Array.Empty<StepChartRowRecord>(), Array.Empty<StepChartHoldRecord>(),
                 Array.Empty<decimal>(), Array.Empty<StepChartSegmentRecord>(),
                 Array.Empty<StepChartRangeRecord>()));

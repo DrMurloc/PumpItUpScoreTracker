@@ -128,14 +128,21 @@ All owner-settled across the 2026-08-29/30 workshop.
   own top band (Digitalis D24, peak 22.7 under a 24), one that is hard for its label also
   marks everything at the label (Rush-More D23's 22.03 bracket wall under a 23.45 peak). One
   chip per qualifying segment, never merged — adjacent notable segments are different
-  characters — labeled `{top badge} {eNPS} NPS` in the hero's badge vocabulary
-  (`BadgeLabels`), the peak section prefixed **"Difficulty Spike:"**. Chips light while the
-  viewport overlaps their section, and the whole-chart map bands the same set (spike
-  stronger). Death clusters no longer chip — the map's edge ticks carry them. Corpus-wide
-  (4,574 charts): median 2 chips, p90 5, never zero. Payloads banked before v2 carry no
-  levels and fall back to the densest-segment chip plus the snapshot's ranges of interest;
-  the labels arrive with the next combined-zip upload, not with Reprocess — the archived
-  blobs predate the fields.
+  characters — labeled `{top badge} · {pace}` in the hero's badge vocabulary
+  (`BadgeLabels`), the peak section prefixed **"Difficulty Spike:"**. Pace is
+  folder-relative, never a number (owner: "NPS doesn't mean anything"): a segment's eNPS
+  above its (meter, steps type) folder's P90 says **Very Fast**, above P75 **Fast**, below
+  P10 **Very Slow**, below P25 **Slow**, and the middle half says nothing
+  (`SegmentPaceClassifier`, stamped as a whole-corpus post-pass by BOTH banking paths — so a
+  Reprocess press re-stamps pace without an upload; folders under 12 segments stamp
+  nothing). Chips light while the viewport overlaps their section, are deliberately dense
+  (three-plus must not push the strip below the fold), and the whole-chart map bands the
+  same set (spike stronger). The strip opens at the TOP — landing mid-chart disorients.
+  Death clusters no longer chip — the map's edge ticks carry them. Corpus-wide (4,574
+  charts): median 2 chips, p90 5. Payloads banked before v2 carry no annotations and show
+  NO section chips — an empty row beats a generic placeholder (owner ruling; the old
+  "Notable run"/eNPS-crux fallbacks are gone). Badges and levels still require the
+  combined-zip upload path at least once — the archived blobs predate those fields.
 
 ## 3. Data model
 

@@ -18358,21 +18358,23 @@ button.judg-strip:focus-visible {
     margin-top: 6px;
 }
 
+/* Dense on purpose: more than three chips must not push the strip below the fold
+   (owner, 2026-08-30). */
 .stepchart-chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin: 0 0 14px;
+    gap: 5px;
+    margin: 0 0 10px;
 }
 
 .stepchart-chip {
-    font-size: .8rem;
+    font-size: .72rem;
     font-weight: 500;
     color: var(--mix-ink);
     background: var(--mix-surface);
     border: 1px solid rgba(255, 255, 255, .12);
     border-radius: 999px;
-    padding: 7px 12px 7px 9px;
+    padding: 3px 9px 3px 7px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -18384,8 +18386,8 @@ button.judg-strip:focus-visible {
 }
 
 .stepchart-chip i {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: var(--mix-ink-muted);
 }

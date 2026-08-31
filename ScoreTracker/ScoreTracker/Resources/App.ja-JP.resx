@@ -4705,9 +4705,6 @@
   <data name="Not yet played" xml:space="preserve">
     <value>未プレイ</value>
   </data>
-  <data name="Notable run" xml:space="preserve">
-	  <value>注目区間</value>
-  </data>
   <data name="Note (optional)" xml:space="preserve">
     <value>メモ (任意)</value>
   </data>
