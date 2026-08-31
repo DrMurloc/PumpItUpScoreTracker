@@ -9,47 +9,86 @@ namespace ScoreTracker.Tests.DomainTests;
 
 public class SegmentPaceClassifierTests
 {
-    private static EnrichedStepChart Chart(int? meter, string? stepsType, params decimal?[] enps)
+    /// <summary>Segments of uniform row cadence: one per rate, ten seconds each, back to back.</summary>
+    private static EnrichedStepChart Chart(int? meter, string? stepsType, params decimal[] ratesPerSecond)
     {
-        return new EnrichedStepChart(5, false, Array.Empty<EnrichedRow>(),
-            Array.Empty<SnapshotHold>(), Array.Empty<decimal>(),
-            enps.Select((value, i) => new SnapshotSegment(i * 10, i * 10 + 10, value)).ToArray(),
-            Array.Empty<SnapshotRange>(),
-            new Dictionary<MixEnum, StepChartVerdict>(), 0, 0,
+        var rows = new List<EnrichedRow>();
+        var segments = new List<SnapshotSegment>();
+        decimal start = 0;
+        foreach (var rate in ratesPerSecond)
+        {
+            var end = start + 10;
+            if (rate > 0)
+                for (var t = start; t < end; t += 1 / rate)
+                    rows.Add(new EnrichedRow(t));
+            segments.Add(new SnapshotSegment(start, end, null));
+            start = end;
+        }
+
+        return new EnrichedStepChart(5, false, rows, Array.Empty<SnapshotHold>(),
+            Array.Empty<decimal>(), segments, Array.Empty<SnapshotRange>(),
+            new Dictionary<MixEnum, StepChartVerdict>(), rows.Count, 0,
             StepsType: stepsType, Meter: meter);
     }
 
     [Fact]
-    public void StampsPaceAgainstTheFoldersOwnDistribution()
+    public void StampsPaceByBurstRateAgainstTheFoldersOwnDistribution()
     {
-        // One folder, twenty segments with eNPS 1..20: P10=2, P25=5, P75=15, P90=18
-        // (nearest rank). Strictly above P90 is Very Fast, above P75 Fast, strictly below
-        // P10 Very Slow, below P25 Slow — the middle half says nothing.
+        // One folder, twelve uniform segments whose rates all have exact decimal row gaps
+        // (so the burst computes the rate exactly): sorted [1,2,4,5,8,10,16,20,25,32,40,50]
+        // puts the nearest-rank cutoffs at P10=2, P25=4, P75=25, P90=40. Strictly above P90
+        // is Very Fast, above P75 Fast, strictly below P10 Very Slow, below P25 Slow — a
+        // value ON a cutoff stays wordless.
         var charts = new Dictionary<Guid, EnrichedStepChart>
         {
-            [Guid.NewGuid()] = Chart(20, "pump-single", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
-            [Guid.NewGuid()] = Chart(20, "pump-single", 11, 12, 13, 14, 15, 16, 17, 18, 19, 20)
+            [Guid.NewGuid()] = Chart(20, "pump-single", 1, 2, 4, 5, 8, 10),
+            [Guid.NewGuid()] = Chart(20, "pump-single", 16, 20, 25, 32, 40, 50)
         };
 
-        var stamped = SegmentPaceClassifier.Stamp(charts).Values
-            .SelectMany(c => c.Segments)
-            .ToDictionary(s => s.Enps!.Value, s => s.Pace);
+        var stamped = SegmentPaceClassifier.Stamp(charts);
+        var slowChart = stamped.Values.Single(c => c.Rows.Count < 400);
+        var fastChart = stamped.Values.Single(c => c.Rows.Count >= 400);
 
-        Assert.Equal(SegmentPaceClassifier.VeryFast, stamped[20]);
-        Assert.Equal(SegmentPaceClassifier.VeryFast, stamped[19]);
-        Assert.Equal(SegmentPaceClassifier.Fast, stamped[18]);
-        Assert.Equal(SegmentPaceClassifier.Fast, stamped[16]);
-        Assert.Null(stamped[15]);
-        Assert.Null(stamped[5]);
-        Assert.Equal(SegmentPaceClassifier.Slow, stamped[4]);
-        Assert.Equal(SegmentPaceClassifier.Slow, stamped[2]);
-        Assert.Equal(SegmentPaceClassifier.VerySlow, stamped[1]);
+        Assert.Equal(SegmentPaceClassifier.VerySlow, slowChart.Segments[0].Pace);
+        Assert.Equal(SegmentPaceClassifier.Slow, slowChart.Segments[1].Pace);
+        Assert.Null(slowChart.Segments[2].Pace);
+        Assert.Null(fastChart.Segments[2].Pace);
+        Assert.Equal(SegmentPaceClassifier.Fast, fastChart.Segments[3].Pace);
+        Assert.Equal(SegmentPaceClassifier.Fast, fastChart.Segments[4].Pace);
+        Assert.Equal(SegmentPaceClassifier.VeryFast, fastChart.Segments[5].Pace);
+    }
+
+    [Fact]
+    public void AShortBurstOutranksALongUnbrokenRun()
+    {
+        // The field case (Horang's runs vs Solve My Hurt's drills): a segment holding one
+        // eight-row 16 rows/s drill in ten otherwise-empty seconds must outrank uniform
+        // 10.7 rows/s marathon segments — throughput said the opposite.
+        var marathon = Chart(21, "pump-single",
+            10.7m, 10.7m, 10.7m, 10.7m, 10.7m, 10.7m, 10.7m, 10.7m, 10.7m, 10.7m, 10.7m);
+
+        var burstRows = Enumerable.Range(0, 8).Select(i => new EnrichedRow(100 + i * 0.0625m)).ToList();
+        var burstChart = new EnrichedStepChart(5, false, burstRows, Array.Empty<SnapshotHold>(),
+            Array.Empty<decimal>(), new[] { new SnapshotSegment(100, 110, null) },
+            Array.Empty<SnapshotRange>(), new Dictionary<MixEnum, StepChartVerdict>(), 8, 0,
+            StepsType: "pump-single", Meter: 21);
+
+        var stamped = SegmentPaceClassifier.Stamp(new Dictionary<Guid, EnrichedStepChart>
+        {
+            [Guid.NewGuid()] = marathon,
+            [Guid.NewGuid()] = burstChart
+        });
+
+        var drills = stamped.Values.Single(c => c.Segments.Count == 1);
+        var runs = stamped.Values.Single(c => c.Segments.Count > 1);
+        Assert.Equal(SegmentPaceClassifier.VeryFast, drills.Segments[0].Pace);
+        Assert.All(runs.Segments, s => Assert.NotEqual(SegmentPaceClassifier.VeryFast, s.Pace));
     }
 
     [Fact]
     public void FoldersJudgeIndependently()
     {
-        // 8 eNPS is the fastest thing in the slow folder and the slowest in the fast one.
+        // 8 rows/s is the fastest thing in the slow folder and the slowest in the fast one.
         var slowFolder = Guid.NewGuid();
         var fastFolder = Guid.NewGuid();
         var charts = new Dictionary<Guid, EnrichedStepChart>
@@ -92,17 +131,18 @@ public class SegmentPaceClassifierTests
     }
 
     [Fact]
-    public void SegmentsWithoutEnpsStayUnstamped()
+    public void BurstMeasuresWindowsAndSparseSpansHonestly()
     {
-        var id = Guid.NewGuid();
-        var charts = new Dictionary<Guid, EnrichedStepChart>
-        {
-            [id] = Chart(20, "pump-single", 1, 2, 3, 4, 5, 6, null, 7, 8, 9, 10, 11, 30)
-        };
+        // Eight rows at 16/s: a full window, (8-1)/0.4375s = 16. Three rows over two
+        // seconds: too short for a window, whole-span rate (3-1)/2s = 1. One row: nothing.
+        var burst8 = Enumerable.Range(0, 8).Select(i => i * 0.0625m).ToArray();
+        Assert.Equal(16m, SegmentPaceClassifier.Burst(burst8, 0, 10));
 
-        var stamped = SegmentPaceClassifier.Stamp(charts);
+        Assert.Equal(1m, SegmentPaceClassifier.Burst(new[] { 0m, 1m, 2m }, 0, 10));
+        Assert.Null(SegmentPaceClassifier.Burst(new[] { 5m }, 0, 10));
+        Assert.Null(SegmentPaceClassifier.Burst(Array.Empty<decimal>(), 0, 10));
 
-        Assert.Null(stamped[id].Segments[6].Pace);
-        Assert.Equal(SegmentPaceClassifier.VeryFast, stamped[id].Segments[^1].Pace);
+        // Rows outside the segment span never count.
+        Assert.Null(SegmentPaceClassifier.Burst(new[] { 20m, 21m }, 0, 10));
     }
 }

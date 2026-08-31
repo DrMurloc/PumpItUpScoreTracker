@@ -130,12 +130,17 @@ All owner-settled across the 2026-08-29/30 workshop.
   chip per qualifying segment, never merged — adjacent notable segments are different
   characters — labeled `{top badge} · {pace}` in the hero's badge vocabulary
   (`BadgeLabels`), the peak section prefixed **"Difficulty Spike:"**. Pace is
-  folder-relative, never a number (owner: "NPS doesn't mean anything"): a segment's eNPS
-  above its (meter, steps type) folder's P90 says **Very Fast**, above P75 **Fast**, below
-  P10 **Very Slow**, below P25 **Slow**, and the middle half says nothing
-  (`SegmentPaceClassifier`, stamped as a whole-corpus post-pass by BOTH banking paths — so a
-  Reprocess press re-stamps pace without an upload; folders under 12 segments stamp
-  nothing). Chips light while the viewport overlaps their section, are deliberately dense
+  folder-relative FOOT SPEED, never a number (owner, twice: "NPS doesn't mean anything",
+  then "long runs with no holds mark Fast while real drills don't" — eNPS rewards
+  continuity, not quick feet): the measure is the segment's **burst rate**, the fastest 8
+  consecutive judgement rows anywhere in it in rows/second. Above the (meter, steps type)
+  folder's P90 says **Very Fast**, above P75 **Fast**, below P10 **Very Slow**, below P25
+  **Slow**, and the middle half says nothing (`SegmentPaceClassifier`, stamped as a
+  whole-corpus post-pass by BOTH banking paths — so a Reprocess press re-stamps pace
+  without an upload; folders under 12 measured segments stamp nothing). Field-validated:
+  Horang Pungryuga S21's nine 10.7 rows/s marathon runs go wordless while its 16 rows/s
+  bracket-drill flourish marks Very Fast, and Solve My Hurt S21's 15.6 rows/s drills chip
+  "Drills · Very Fast" where section eNPS saw nothing. Chips light while the viewport overlaps their section, are deliberately dense
   (three-plus must not push the strip below the fold), and the whole-chart map bands the
   same set (spike stronger). The strip opens at the TOP — landing mid-chart disorients.
   Death clusters no longer chip — the map's edge ticks carry them. Corpus-wide (4,574
