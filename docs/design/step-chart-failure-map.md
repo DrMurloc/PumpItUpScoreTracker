@@ -137,7 +137,11 @@ All owner-settled across the 2026-08-29/30 workshop.
   folder's P90 says **Very Fast**, above P75 **Fast**, below P10 **Very Slow**, below P25
   **Slow**, and the middle half says nothing (`SegmentPaceClassifier`, stamped as a
   whole-corpus post-pass by BOTH banking paths — so a Reprocess press re-stamps pace
-  without an upload; folders under 12 measured segments stamp nothing). Field-validated:
+  without an upload; folders under 12 measured segments stamp nothing). A **Very Fast** section is notable regardless of its level — the folder's
+  fastest footwork can rate below the level bar (Solve My Hurt S21's signature drill section
+  is a 16.57 under a 21) and it is exactly what a player wants marked; 89% of charts gain
+  nothing from the promotion, one extra chip at p90. Fast alone does not promote.
+  Field-validated:
   Horang Pungryuga S21's nine 10.7 rows/s marathon runs go wordless while its 16 rows/s
   bracket-drill flourish marks Very Fast, and Solve My Hurt S21's 15.6 rows/s drills chip
   "Drills · Very Fast" where section eNPS saw nothing. Chips light while the viewport overlaps their section, are deliberately dense
