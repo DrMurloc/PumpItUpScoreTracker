@@ -3124,15 +3124,6 @@ html.sheet-open .more-sheet-scrim {
     .dash-cols-2, .dash-cols-3, .dash-cols-4 { grid-column: span 1; }
 
     .dash-rows-2, .dash-rows-3 { grid-row: span 1; }
-
-    /* Cells grow to content here, so no dash-scroll list can ever overflow — the scroll
-       fade would only ever lie, permanently ghosting each list's last row into a
-       "scroll me" that scrolls nothing (the scroll(self) timeline that clears it needs
-       overflow to activate). The drawer keeps its fade: it genuinely scrolls. */
-    .dash-scroll {
-        mask-image: none;
-        animation: none;
-    }
 }
 
 /* Edit mode: toolbar, edit chrome, add-drawer. */
@@ -4305,15 +4296,6 @@ html.sheet-open .more-sheet-scrim {
     height: 26px;
 }
 
-@media (max-width: 599.98px) {
-    /* Mobile cells auto-grow — let the page scroll instead of clipping rows. */
-    .dash-targets {
-        overflow-y: visible;
-        mask-image: none;
-        animation: none;
-    }
-}
-
 .dash-endzone {
     box-shadow: inset 0 -3px 0 0 var(--mix-primary);
     border-radius: 10px;
@@ -4910,6 +4892,23 @@ html.sheet-open .more-sheet-scrim {
             --dash-fade-top: 24px;
             --dash-fade-bottom: 0px;
         }
+    }
+}
+
+/* Phone column: cells auto-grow to their content, so no widget list overflows — which is
+   also why the scroll(self) timeline above never advances there. Left alone, the mask
+   would park at its initial value and permanently ghost every list's last row into a
+   "scroll me" that scrolls nothing.
+
+   This block sits AFTER the two rules it overrides on purpose. Every selector involved is
+   (0,1,0), and neither a media query nor @supports adds specificity, so source order is
+   the only thing that can decide — the same suppression written above them is inert. That
+   is not hypothetical: it shipped that way twice, once here and once as a .dash-targets
+   rule that spent its whole life dead. If this ever moves, it stops working silently. */
+@media (max-width: 599.98px) {
+    .dash-scroll {
+        mask-image: none;
+        animation: none;
     }
 }
 

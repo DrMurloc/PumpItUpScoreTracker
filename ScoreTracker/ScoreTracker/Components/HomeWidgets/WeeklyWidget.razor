@@ -81,10 +81,13 @@ else
         </div>
     </div>
 
-    <LeaderboardDialog @bind-Visible="_showLeaderboard" Chart="_leaderboardChart" Entries="_entries"
-                       CommunityUserIds="_communityIds" RivalUserIds="_rivalIds"/>
     }
     </div>
+
+    @* Outside the dash-refreshable wrapper: its dim is an opacity, which fades a dialog and
+       its scrim along with the body and traps their z-index in this cell's stacking context. *@
+    <LeaderboardDialog @bind-Visible="_showLeaderboard" Chart="_leaderboardChart" Entries="_entries"
+                       CommunityUserIds="_communityIds" RivalUserIds="_rivalIds"/>
 }
 
 @inject IMediator Mediator
@@ -144,7 +147,6 @@ else
         var filtered = await Filter(charts, known, config, _mix);
 
         var entries = (await Mediator.Send(new GetWeeklyChartEntriesQuery(Mix: _mix))).ToArray();
-        _entries = entries;
         var totals = entries.GroupBy(e => e.ChartId).ToDictionary(g => g.Key, g => g.Count());
         var mine = entries.Where(e => e.UserId == userId).Select(e => e.ChartId).ToHashSet();
         var placements = mine.Any()
@@ -154,6 +156,9 @@ else
 
         // Canonical Phoenix 1 board order, shared with the weekly page via WeeklyBoardOrder:
         // level descending, singles before doubles within a level, co-ops last (2-player last).
+        // Fields land together, after the last await (§2.3), so no render can catch this
+        // board's entries beside the previous board's rows.
+        _entries = entries;
         _rows = filtered
             .Select(c => new BoardRow(c,
                 placements.TryGetValue(c.Id, out var place) ? place : null,

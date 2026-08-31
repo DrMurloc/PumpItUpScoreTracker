@@ -142,9 +142,14 @@ else
             </div>
         }
     </div>
+    }
+    </div>
 
     @* The WSIP veto flow, widget-shaped: reason + notes + hide, straight into the same
-       per-category feedback store the engine already honors. *@
+       per-category feedback store the engine already honors. Deliberately OUTSIDE the
+       dash-refreshable wrapper: opacity applies to a whole subtree as a group, so a dialog
+       inside it fades with the reload — scrim and all — and the wrapper's stacking context
+       would scope the dialog's z-index to this cell, letting later grid cells paint over it. *@
     <MudDialog @bind-Visible="_showVeto">
         <TitleContent>
             <MudText Typo="Typo.h6">@L["Not a good suggestion?"]</MudText>
@@ -177,8 +182,6 @@ else
                        OnClick="SubmitVeto">@L["Submit"]</MudButton>
         </DialogActions>
     </MudDialog>
-    }
-    </div>
 }
 
 @inject IMediator Mediator
@@ -269,14 +272,17 @@ else
         // it — so the personalized reading of the Pass lens asks for that list (how many
         // players at your level hold each chart); Score personalizes through the projection as
         // before. One query per (type, level) folder in the results.
-        _lensTiers.Clear();
+        // Collected locally and published after the last folder query (§2.3) — clearing up
+        // front blanks every visible row's tier for the length of one query per folder.
+        var lensTiers = new Dictionary<Guid, TierListCategory>();
+        var tiersArePumbility = false;
         if (config.DifficultyLens != SuggestedDifficultyLens.None
             && categories.Contains(RecommendationCategory.FillScores))
         {
             var lens = config.DifficultyLens == SuggestedDifficultyLens.PassDifficulty
                 ? config.PersonalizedLens ? "PUMBILITY" : "Pass"
                 : "Score";
-            _tiersArePumbility = lens == "PUMBILITY";
+            tiersArePumbility = lens == "PUMBILITY";
             var fillCharts = recommendations
                 .Where(r => (string)r.Category == RecommendationCategories.FillScores
                             && charts.ContainsKey(r.ChartId))
@@ -286,9 +292,11 @@ else
                 var tierList = await Mediator.Send(new GetBlendedTierListQuery(folder.Key.Type,
                     folder.Key.Level, lens, config.PersonalizedLens, Mix: _mix));
                 foreach (var entry in tierList.Entries.Where(e => e.Category != TierListCategory.Unrecorded))
-                    _lensTiers[entry.ChartId] = entry.Category;
+                    lensTiers[entry.ChartId] = entry.Category;
             }
         }
+
+        PublishTiers(lensTiers, tiersArePumbility);
 
         // Category → section, in the goal's bundle order. The pushing-title category has
         // no fixed name (it's the title's own name), so it matches "everything else".
@@ -338,15 +346,17 @@ else
         // All of one load's recommendations share a seed source; any row tells us.
         UpdateFallbackPill(known.Any(r => r.SeedIsFallback));
 
-        _lensTiers.Clear();
-        _tiersArePumbility = true;
+        var lensTiers = new Dictionary<Guid, TierListCategory>();
         foreach (var folder in known.Select(r => charts[r.ChartId]).GroupBy(c => (c.Type, c.Level)))
         {
             var tierList = await Mediator.Send(new GetBlendedTierListQuery(folder.Key.Type,
                 folder.Key.Level, "PUMBILITY", Personalized: true, Mix: _mix));
             foreach (var entry in tierList.Entries.Where(e => e.Category != TierListCategory.Unrecorded))
-                _lensTiers[entry.ChartId] = entry.Category;
+                lensTiers[entry.ChartId] = entry.Category;
         }
+
+        // Before the rows are built — BuildHotStreakRow reads these — but after every query.
+        PublishTiers(lensTiers, true);
 
         _sections = new List<SuggestionSection>();
         if (groupBySeed)
@@ -507,6 +517,18 @@ else
     }
 
     private readonly Dictionary<Guid, TierListCategory> _lensTiers = new();
+
+    /// <summary>
+    ///     Swaps in a completed tier set. Both loads collect into a local across their
+    ///     per-folder queries and publish here, so the rows on screen never lose their tier
+    ///     column mid-reload (§2.3).
+    /// </summary>
+    private void PublishTiers(Dictionary<Guid, TierListCategory> tiers, bool arePumbility)
+    {
+        _lensTiers.Clear();
+        foreach (var (chartId, category) in tiers) _lensTiers[chartId] = category;
+        _tiersArePumbility = arePumbility;
+    }
 
     private SuggestionRow BuildRow(RecommendationCategory category, Chart chart, RecordedPhoenixScore? score,
         string stampedDetail)

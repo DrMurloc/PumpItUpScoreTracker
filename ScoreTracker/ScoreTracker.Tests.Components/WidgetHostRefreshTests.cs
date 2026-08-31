@@ -1,13 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Bunit;
 using MediatR;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Contracts;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Domain.Events;
@@ -38,40 +41,50 @@ namespace ScoreTracker.Tests.Components;
 /// </summary>
 public sealed class WidgetHostRefreshTests : ComponentTestBase
 {
-    private readonly Mock<IMediator> _mediator = new();
     private readonly FakeUiHub _hub = new();
     private readonly Guid _me = Guid.NewGuid();
+    private readonly TimeSpan _realDebounce = WidgetHost.RefreshDebounce;
 
     public WidgetHostRefreshTests()
     {
-        // Only this class publishes hub events, so the shortened window leaks nowhere; the
-        // real 2s would just slow these facts down.
+        // Shortened so these facts don't each wait two seconds; restored in Dispose because
+        // it is assembly-wide state and xUnit runs other classes in parallel with this one.
         WidgetHost.RefreshDebounce = TimeSpan.FromMilliseconds(40);
 
         CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
         CurrentUser.SetupGet(c => c.User)
             .Returns(new User(_me, "Me", true, null, new Uri("https://piu.test/me.png"), null));
 
+        // Setups go on the base's mediator, never a replacement registration: re-registering
+        // would shadow the base's own stubs (the scoring-level cache DifficultyBubble reads).
         // Enough for the hosted widgets (Account Stats 1x1, Weekly 1x1) to render quietly —
         // these facts assert on queries sent, not on widget markup.
-        _mediator.Setup(m => m.Send(It.IsAny<GetPlayerStatsQuery>(), It.IsAny<CancellationToken>()))
+        Mediator.Setup(m => m.Send(It.IsAny<GetPlayerStatsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Stats());
-        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
+        Mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
-        _mediator.Setup(m => m.Send(It.IsAny<GetMyRivalsQuery>(), It.IsAny<CancellationToken>()))
+        Mediator.Setup(m => m.Send(It.IsAny<GetMyRivalsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<RivalSubject>());
-        _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyChartsQuery>(), It.IsAny<CancellationToken>()))
+        Mediator.Setup(m => m.Send(It.IsAny<GetWeeklyChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<WeeklyTournamentChart>());
-        _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyChartEntriesQuery>(), It.IsAny<CancellationToken>()))
+        Mediator.Setup(m => m.Send(It.IsAny<GetWeeklyChartEntriesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<WeeklyTournamentEntry>());
-        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+        Mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
-        Services.AddSingleton(_mediator.Object);
         Services.AddSingleton<IUiNotificationHub>(_hub);
         Services.AddSingleton(Mock.Of<IUserRepository>());
+        // Suggested Charts dates its rows; every registration has to land here, because the
+        // first render freezes the provider.
+        Services.AddSingleton(Mock.Of<IDateTimeOffsetAccessor>());
         Services.AddScoped<CommunityGlowReader>();
         Services.AddScoped<ChartCatalogCache>();
         this.RenderInteractive();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        WidgetHost.RefreshDebounce = _realDebounce;
+        base.Dispose(disposing);
     }
 
     private IRenderedComponent<WidgetHost> RenderHost(string typeId, bool editMode = false)
@@ -129,20 +142,20 @@ public sealed class WidgetHostRefreshTests : ComponentTestBase
     public async Task ABurstOfStatsEventsCoalescesIntoOneReload()
     {
         var cut = RenderHost("pumbility");
-        cut.WaitForAssertion(() => _mediator.Verify(
+        cut.WaitForAssertion(() => Mediator.Verify(
             m => m.Send(It.IsAny<GetPlayerStatsQuery>(), It.IsAny<CancellationToken>()), Times.Once));
 
         await PublishStats();
         await PublishStats();
         await PublishStats();
 
-        cut.WaitForAssertion(() => _mediator.Verify(
+        cut.WaitForAssertion(() => Mediator.Verify(
                 m => m.Send(It.IsAny<GetPlayerStatsQuery>(), It.IsAny<CancellationToken>()),
                 Times.Exactly(2)),
             TimeSpan.FromSeconds(2));
         // Nothing further trickles in after the window closes.
         await Task.Delay(200);
-        _mediator.Verify(m => m.Send(It.IsAny<GetPlayerStatsQuery>(), It.IsAny<CancellationToken>()),
+        Mediator.Verify(m => m.Send(It.IsAny<GetPlayerStatsQuery>(), It.IsAny<CancellationToken>()),
             Times.Exactly(2));
     }
 
@@ -150,16 +163,16 @@ public sealed class WidgetHostRefreshTests : ComponentTestBase
     public async Task ProgressTicksDoNotReloadOnlyTheTerminalStatusDoes()
     {
         var cut = RenderHost("weekly-challenge");
-        cut.WaitForAssertion(() => _mediator.Verify(
+        cut.WaitForAssertion(() => Mediator.Verify(
             m => m.Send(It.IsAny<GetWeeklyChartsQuery>(), It.IsAny<CancellationToken>()), Times.Once));
 
         await PublishImportStatus("Saving 12 of 300");
         await Task.Delay(200);
-        _mediator.Verify(m => m.Send(It.IsAny<GetWeeklyChartsQuery>(), It.IsAny<CancellationToken>()),
+        Mediator.Verify(m => m.Send(It.IsAny<GetWeeklyChartsQuery>(), It.IsAny<CancellationToken>()),
             Times.Once);
 
         await PublishImportStatus("Charts finished saving");
-        cut.WaitForAssertion(() => _mediator.Verify(
+        cut.WaitForAssertion(() => Mediator.Verify(
                 m => m.Send(It.IsAny<GetWeeklyChartsQuery>(), It.IsAny<CancellationToken>()),
                 Times.Exactly(2)),
             TimeSpan.FromSeconds(2));
@@ -169,24 +182,59 @@ public sealed class WidgetHostRefreshTests : ComponentTestBase
     public async Task ARefreshLandingMidEditWaitsForDone()
     {
         var cut = RenderHost("pumbility", editMode: true);
-        cut.WaitForAssertion(() => _mediator.Verify(
+        cut.WaitForAssertion(() => Mediator.Verify(
             m => m.Send(It.IsAny<GetPlayerStatsQuery>(), It.IsAny<CancellationToken>()), Times.Once));
 
         await PublishStats();
         await Task.Delay(200);
-        // §2.3: nothing reloads the grid while it is being rearranged.
-        _mediator.Verify(m => m.Send(It.IsAny<GetPlayerStatsQuery>(), It.IsAny<CancellationToken>()),
+        // Â§2.3: nothing reloads the grid while it is being rearranged.
+        Mediator.Verify(m => m.Send(It.IsAny<GetPlayerStatsQuery>(), It.IsAny<CancellationToken>()),
             Times.Once);
 
         cut.SetParametersAndRender(p => p.Add(h => h.EditMode, false));
 
-        cut.WaitForAssertion(() => _mediator.Verify(
+        cut.WaitForAssertion(() => Mediator.Verify(
                 m => m.Send(It.IsAny<GetPlayerStatsQuery>(), It.IsAny<CancellationToken>()),
                 Times.Exactly(2)),
             TimeSpan.FromSeconds(2));
     }
 
-    /// <summary>Records subscriptions and hands published messages straight to them.</summary>
+    [Fact]
+    public async Task AManualRefreshStandsDownAQueuedOneInsteadOfBeingReRolledByIt()
+    {
+        // Shuffle inside the debounce window used to be thrown away seconds later: the queued
+        // reload still fired and re-rolled the picks the player had just asked for. A wide
+        // window here so the click lands mid-flight rather than racing the timer.
+        WidgetHost.RefreshDebounce = TimeSpan.FromSeconds(1);
+        Mediator.Setup(m => m.Send(It.IsAny<GetRecommendedChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChartRecommendation>());
+        Mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
+        var cut = RenderHost("suggested-charts");
+        cut.WaitForAssertion(() => Mediator.Verify(
+            m => m.Send(It.IsAny<GetRecommendedChartsQuery>(), It.IsAny<CancellationToken>()), Times.Once));
+
+        var shuffle = cut.Find(".dash-head-action button");
+        await PublishStats();
+        await shuffle.ClickAsync(new MouseEventArgs());
+
+        // The shuffle reloaded once. Past the window, the auto-refresh it superseded must not
+        // add a second and throw the fresh picks away.
+        cut.WaitForAssertion(() => Mediator.Verify(
+                m => m.Send(It.IsAny<GetRecommendedChartsQuery>(), It.IsAny<CancellationToken>()),
+                Times.Exactly(2)),
+            TimeSpan.FromSeconds(2));
+        await Task.Delay(1400);
+        Mediator.Verify(m => m.Send(It.IsAny<GetRecommendedChartsQuery>(), It.IsAny<CancellationToken>()),
+            Times.Exactly(2));
+    }
+
+    /// <summary>
+    ///     Records subscriptions and hands published messages straight to them. The real hub is
+    ///     not used here because these facts assert on WHICH signal a widget subscribed to,
+    ///     which only a recording double can answer — but delivery matches it, exceptions
+    ///     swallowed included, so nothing here passes on semantics production lacks.
+    /// </summary>
     private sealed class FakeUiHub : IUiNotificationHub
     {
         private readonly List<Entry> _subscriptions = new();
@@ -204,7 +252,15 @@ public sealed class WidgetHostRefreshTests : ComponentTestBase
         {
             foreach (var entry in _subscriptions.ToArray())
                 if (entry.Topic == topic && entry.MessageType == typeof(T))
-                    await ((Func<T, Task>)entry.Handler)(message);
+                    try
+                    {
+                        await ((Func<T, Task>)entry.Handler)(message);
+                    }
+                    catch
+                    {
+                        // Same best-effort delivery as UiNotificationHub: a torn-down circuit
+                        // must not sink the publish.
+                    }
         }
 
         internal sealed record Entry(string Topic, Type MessageType, object Handler);

@@ -140,8 +140,16 @@
     private IDisposable? _importSubscription;
     private IDisposable? _statsSubscription;
     private bool _subscribed;
-    private CancellationTokenSource? _pendingRefresh;
     private bool _refreshDeferred;
+    private bool _disposed;
+
+    /// <summary>
+    ///     Which queued reload is still the current one. A pending debounce carries the
+    ///     generation it was queued at and stands down if anything has superseded it — another
+    ///     event, a manual refresh, or disposal. Every read and write happens on the renderer's
+    ///     dispatcher, so a plain int is sufficient and there is nothing to dispose.
+    /// </summary>
+    private int _refreshGeneration;
 
     /// <summary>
     ///     Refresh events arrive in clusters (per-mix recalcs; import-terminal then stats), and
@@ -189,6 +197,10 @@
 
     private void Refresh()
     {
+        // Any queued auto-reload is now moot: this IS the reload. Without standing them down,
+        // a shuffle pressed inside the debounce window is silently re-rolled seconds later and
+        // the picks the player just asked for are thrown away.
+        _refreshGeneration++;
         _refreshToken++;
         // Self-triggered change: OnParametersSet won't re-run, rebuild by hand.
         _parameters = BuildParameters();
@@ -211,45 +223,39 @@
             _statsSubscription = UiHub.Subscribe<PlayerStatsUpdatedEvent>(topic, OnPlayerStats);
     }
 
+    // The hub invokes handlers on the publisher's thread, so both of these hop to the
+    // dispatcher before touching anything: the queue is a check-then-assign, and two events
+    // arriving together off two threads could otherwise each install a live timer — defeating
+    // the coalescing in exactly the burst case it exists for. The hub swallows handler
+    // exceptions, so a torn-down circuit here is already harmless.
     private Task OnImportStatus(ImportStatusUpdatedEvent e)
     {
         // Only the terminal status — the per-chart progress ticks would thrash the reload.
         if (e.Status != "Charts finished saving") return Task.CompletedTask;
-        QueueRefresh();
-        return Task.CompletedTask;
+        return InvokeAsync(QueueRefresh);
     }
 
     private Task OnPlayerStats(PlayerStatsUpdatedEvent e)
     {
-        QueueRefresh();
-        return Task.CompletedTask;
+        return InvokeAsync(QueueRefresh);
     }
 
-    // Coalesce: restarting the delay folds every event inside the window into one reload.
+    // Coalesce: each event supersedes the last, so a burst folds into one reload.
     private void QueueRefresh()
     {
-        _pendingRefresh?.Cancel();
-        var cts = new CancellationTokenSource();
-        _pendingRefresh = cts;
-        _ = DebouncedRefresh(cts);
+        if (_disposed) return;
+        _ = DebouncedRefresh(++_refreshGeneration);
     }
 
-    private async Task DebouncedRefresh(CancellationTokenSource cts)
+    private async Task DebouncedRefresh(int generation)
     {
-        try
-        {
-            await Task.Delay(RefreshDebounce, cts.Token);
-        }
-        catch (TaskCanceledException)
-        {
-            return; // Superseded by a newer event, or the host was disposed.
-        }
-
+        await Task.Delay(RefreshDebounce);
         try
         {
             await InvokeAsync(() =>
             {
-                if (cts.IsCancellationRequested) return;
+                // Superseded while we waited — by a newer event, a manual refresh, or disposal.
+                if (_disposed || generation != _refreshGeneration) return;
                 if (EditMode)
                 {
                     _refreshDeferred = true;
@@ -273,9 +279,13 @@
 
     public void Dispose()
     {
-        _pendingRefresh?.Cancel();
+        // Unsubscribe BEFORE standing the queue down: the other order leaves a window where a
+        // late event queues a reload that nothing will ever supersede, which then wakes up
+        // pointing at a torn-down renderer.
         _importSubscription?.Dispose();
         _statsSubscription?.Dispose();
+        _disposed = true;
+        _refreshGeneration++;
     }
 
     private IDictionary<string, object> BuildParameters()

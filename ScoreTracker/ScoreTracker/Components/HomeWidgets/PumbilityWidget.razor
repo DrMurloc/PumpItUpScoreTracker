@@ -177,13 +177,17 @@ else
             _dimension = config.MatchDimension;
 
             var userId = CurrentUser.User.Id;
-            _stats = await Mediator.Send(new GetPlayerStatsQuery(userId, _mix));
+            var stats = await Mediator.Send(new GetPlayerStatsQuery(userId, _mix));
 
-            // LoadMatches assigns _matches once, at its end — no pre-clear, so a reload
-            // keeps the current list on screen (dimmed) instead of flashing it empty.
-            if (_showMatches && _stats != null) await LoadMatches(userId);
-            else _matches = new List<MatchRow>();
+            var myLevel = 0d;
+            var matches = new List<MatchRow>();
+            if (_showMatches && stats != null) (myLevel, matches) = await LoadMatches(userId, stats);
 
+            // All three land together, after the last await (§2.3): a new total above the
+            // previous mix's neighbours is a worse read than a moment of dimmed old numbers.
+            _stats = stats;
+            _myLevel = myLevel;
+            _matches = matches;
             _loaded = true;
             _hasContent = true;
         }
@@ -191,35 +195,32 @@ else
         UpdateHeaderSlot(WidgetConfigJson.Read<PumbilityConfig>(Widget.ConfigJson).Mix);
     }
 
-    private async Task LoadMatches(Guid userId)
+    private async Task<(double MyLevel, List<MatchRow> Matches)> LoadMatches(Guid userId,
+        PlayerStatsRecord stats)
     {
-        _myLevel = _dimension switch
+        var myLevel = _dimension switch
         {
-            ChartType.Single => _stats!.SinglesCompetitiveLevel,
-            ChartType.Double => _stats!.DoublesCompetitiveLevel,
-            _ => _stats!.CompetitiveLevel
+            ChartType.Single => stats.SinglesCompetitiveLevel,
+            ChartType.Double => stats.DoublesCompetitiveLevel,
+            _ => stats.CompetitiveLevel
         };
-        if (_myLevel <= 0)
-        {
-            _matches = new List<MatchRow>();
-            return;
-        }
+        if (myLevel <= 0) return (myLevel, new List<MatchRow>());
 
         // The cohort (in-range, nearest first) comes ranked from SQL; eligibility is applied
         // here where the community set and privacy flags live: public players, plus anyone
         // from your non-region communities (who also get the green glow), closest 25.
         var neighbors = await Mediator.Send(
-            new GetCompetitiveNeighborsQuery(_mix, _dimension, _myLevel, Range, CandidateFetch));
+            new GetCompetitiveNeighborsQuery(_mix, _dimension, myLevel, Range, CandidateFetch));
         var community = await CommunityGlow.GetMyCommunityMemberIds();
         var users = (await Users.GetUsers(neighbors.Select(n => n.UserId).Where(id => id != userId)))
             .ToDictionary(u => u.Id);
 
-        _matches = neighbors
+        return (myLevel, neighbors
             .Where(n => n.UserId != userId && users.ContainsKey(n.UserId))
             .Where(n => users[n.UserId].IsPublic || community.Contains(n.UserId))
             .Take(MatchCount)
             .Select(n => new MatchRow(users[n.UserId], n.CompetitiveLevel, community.Contains(n.UserId)))
-            .ToList();
+            .ToList());
     }
 
     private void UpdateHeaderSlot(MixEnum? pinned)

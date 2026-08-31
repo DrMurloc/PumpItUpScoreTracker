@@ -336,7 +336,10 @@ The widget home page ([design doc](design/HomePageWidgets/README.md)) adds a voc
   supports scroll-driven animations, static bottom fade elsewhere). Touch keeps native overlays.
   **On the phone column the fade is off entirely**: cells grow to content there, so no list can
   overflow and the fade could only lie — a permanently ghosted last row that invites swipes nothing
-  answers.
+  answers. That suppression must sit **after** the base `.dash-scroll` rule in `site.css`: every
+  selector involved is a single class, and neither a media query nor `@supports` adds specificity,
+  so source order is the only tiebreak. Written above them it is inert, which is how the fade
+  survived two separate attempts to remove it.
 - **Graphs start from `ApexChartTheming.BaseOptions` + its `WrapperClass`** on the container: frozen
   canvas, display face, palette fore color, whisper-grid, dark theme, themed tooltips. Charts layer
   their specifics (strokes, fills, axes) on top — never rebuild the base by hand.
