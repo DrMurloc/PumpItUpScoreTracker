@@ -699,12 +699,15 @@ function initMinimap(view) {
 
     view.repaintMinimap = function () {
         ctx.clearRect(0, 0, W, H);
+        // Bars run almost to the death-tick zone — the gap between the tallest spike and the
+        // ticks is expendable (owner, 2026-08-30); a near-touch is not a problem.
+        var barMax = Math.max(12, W - 16);
         for (var second = 0; second < seconds; second++) {
-            var w = (density[second] / maxDensity) * (W * 0.5);
+            var w = (density[second] / maxDensity) * barMax;
             if (w <= 0) continue;
             ctx.fillStyle = tierOf[second] || 'rgba(255,255,255,.16)';
             ctx.globalAlpha = tierOf[second] ? 0.9 : 1;
-            ctx.fillRect(4, yOf(view.t0 + second), w, Math.max(1, (H - 8) / view.span));
+            ctx.fillRect(2, yOf(view.t0 + second), w, Math.max(1, (H - 8) / view.span));
         }
         ctx.globalAlpha = 1;
         if (view.drawMinimapPins) view.drawMinimapPins(ctx, yOf, W, H);
