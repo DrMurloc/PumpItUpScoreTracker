@@ -45,9 +45,11 @@ public class StepChartController : Controller
         var record = await _mediator.Send(new GetChartStepChartQuery(chartId, parsedMix), cancellationToken);
         if (record == null) return NotFound();
 
-        // sc2: the shape-version rides the ETag because a re-upload keeps the vintage — without
-        // the bump, every browser would 304 its cached pre-section-label JSON for an hour.
-        var etag = $"\"sc2-{record.Vintage}-{chartId:N}-{parsedMix}\"";
+        // The ETag is the BANK WRITE, not the vintage: a re-upload keeps its vintage, so a
+        // vintage-keyed tag would 304 stale payloads for an hour after every re-ingest — the
+        // exact window between a deploy and the owner's combined-zip upload (field-hit
+        // 2026-08-30). The sc2 prefix marks the wire shape.
+        var etag = $"\"sc2-{record.Vintage}-{record.BankedAt.UtcTicks}-{chartId:N}-{parsedMix}\"";
         Response.Headers.CacheControl = "public, max-age=3600, must-revalidate";
         Response.Headers.ETag = etag;
         if (Request.Headers.IfNoneMatch.Contains(etag)) return StatusCode(StatusCodes.Status304NotModified);

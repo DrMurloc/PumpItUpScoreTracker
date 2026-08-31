@@ -54,6 +54,9 @@ public sealed class GetChartStepChartHandlerTests
 
         Assert.NotNull(record);
         Assert.Equal("82626", record!.Vintage);
+        // The bank write rides out so the payload ETag changes on every re-ingest, not just
+        // on a new vintage — a re-upload keeps its vintage.
+        Assert.Equal(Now, record.BankedAt);
         Assert.Equal(StepChartVisibility.StepsOnly, record.Visibility);
         Assert.Equal(100, record.NoteCount);
         Assert.Equal(99, record.ImpliedTotal);

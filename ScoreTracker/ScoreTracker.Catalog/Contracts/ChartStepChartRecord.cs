@@ -11,6 +11,7 @@ namespace ScoreTracker.Catalog.Contracts;
 [ExcludeFromCodeCoverage]
 public sealed record ChartStepChartRecord(
     string Vintage,
+    DateTimeOffset BankedAt,
     int Panels,
     bool BeatsAligned,
     StepChartVisibility Visibility,

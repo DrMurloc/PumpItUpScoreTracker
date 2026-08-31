@@ -25,6 +25,7 @@ internal sealed class GetChartStepChartHandler(IChartStepChartRepository stepCha
 
         return new ChartStepChartRecord(
             banked.Vintage,
+            banked.UpdatedAt,
             payload.Panels,
             payload.Aligned,
             verdict.Visibility,
