@@ -20,14 +20,19 @@
    Rows are the dash-targets vocabulary; multi-category goals get section captions
    inside the scroll. Shuffle re-runs the query so the engine re-rolls its picks. *@
 
-@if (!_loaded)
+@if (!_hasContent)
 {
     <div class="dash-widget-message">
         <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
     </div>
 }
-else if (!_sections.Any(s => s.Rows.Any()))
+else
 {
+    @* Reloads (shuffle, auto-refresh, config/mix changes) keep the current list on
+       screen, dimmed, and swap in place — never back through the spinner (§2.3). *@
+    <div class="dash-refreshable @(_loaded ? "" : "dash-stale")">
+    @if (!_sections.Any(s => s.Rows.Any()))
+    {
     <div class="dash-widget-message">
         <div>
             @if (_isHotStreak)
@@ -172,6 +177,8 @@ else
                        OnClick="SubmitVeto">@L["Submit"]</MudButton>
         </DialogActions>
     </MudDialog>
+    }
+    </div>
 }
 
 @inject IMediator Mediator
@@ -209,6 +216,7 @@ else
         string? CaptionDetail = null);
 
     private bool _loaded;
+    private bool _hasContent;
     private string? _loadedFor;
     private MixEnum _mix = MixEnum.Phoenix;
     private bool _useStrips;
@@ -220,6 +228,7 @@ else
         if (signature == _loadedFor) return;
         _loadedFor = signature;
         await LoadAsync();
+        _hasContent = true;
     }
 
     private async Task LoadAsync()

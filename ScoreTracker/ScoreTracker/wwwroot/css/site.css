@@ -2773,6 +2773,22 @@ html.sheet-open .more-sheet-scrim {
     color: var(--mix-ink-muted);
 }
 
+/* Stale-while-revalidate: once a widget has rendered, a reload dims the current content
+   in place instead of collapsing to a spinner — on the auto-height mobile column a
+   spinner swap shrinks the page under a mid-scroll finger and kills the gesture. The
+   wrapper mirrors .dash-widget-body's flex chain so widget roots keep stretching. */
+.dash-refreshable {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    transition: opacity .2s ease;
+}
+
+.dash-stale {
+    opacity: .6;
+}
+
 /* Import Scores widget (§4): a credential form has to live in a 1x1 body, so the fields and
    button pack into a tight flex column that scrolls rather than clipping the action off. */
 .import-widget-body {
@@ -3108,6 +3124,15 @@ html.sheet-open .more-sheet-scrim {
     .dash-cols-2, .dash-cols-3, .dash-cols-4 { grid-column: span 1; }
 
     .dash-rows-2, .dash-rows-3 { grid-row: span 1; }
+
+    /* Cells grow to content here, so no dash-scroll list can ever overflow — the scroll
+       fade would only ever lie, permanently ghosting each list's last row into a
+       "scroll me" that scrolls nothing (the scroll(self) timeline that clears it needs
+       overflow to activate). The drawer keeps its fade: it genuinely scrolls. */
+    .dash-scroll {
+        mask-image: none;
+        animation: none;
+    }
 }
 
 /* Edit mode: toolbar, edit chrome, add-drawer. */

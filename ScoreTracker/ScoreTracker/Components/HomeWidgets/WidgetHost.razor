@@ -139,7 +139,17 @@
     // Auto-refresh subscriptions (opt-in per descriptor); held for the host's lifetime.
     private IDisposable? _importSubscription;
     private IDisposable? _statsSubscription;
-    private bool _subscribedForImport;
+    private bool _subscribed;
+    private CancellationTokenSource? _pendingRefresh;
+    private bool _refreshDeferred;
+
+    /// <summary>
+    ///     Refresh events arrive in clusters (per-mix recalcs; import-terminal then stats), and
+    ///     every bump tears through a reload — one reload per cluster is enough. Two seconds is
+    ///     a judgment call, not a tuned constant: long enough to swallow a cluster, short enough
+    ///     that the refresh still reads as immediate. Settable for tests only.
+    /// </summary>
+    internal static TimeSpan RefreshDebounce { get; set; } = TimeSpan.FromSeconds(2);
 
     // Header slot (§2.3): opt-in title-bar real estate a widget can push a fragment into.
     private WidgetHeaderSlot _headerSlot = null!;
@@ -165,8 +175,16 @@
     protected override void OnParametersSet()
     {
         _descriptor = WidgetRegistry.TryGet(Widget.WidgetType);
+        // A refresh that landed mid-arrange waited (§2.3: nothing reloads the grid while it
+        // is being rearranged); leaving edit mode is when it cashes in.
+        if (!EditMode && _refreshDeferred)
+        {
+            _refreshDeferred = false;
+            _refreshToken++;
+        }
+
         _parameters = BuildParameters();
-        EnsureImportRefreshSubscription();
+        EnsureRefreshSubscriptions();
     }
 
     private void Refresh()
@@ -176,29 +194,75 @@
         _parameters = BuildParameters();
     }
 
-    // Owner "fire on both": a personal-score widget reloads after the viewer's import lands —
-    // once when the scores finish saving, and again when the derived rating settles — so
-    // score-based and rating-based widgets are each current. Routed by user topic, so only this
-    // viewer's import triggers it.
-    private void EnsureImportRefreshSubscription()
+    // Two auto-refresh signals, each opt-in per descriptor (owner, 2026-08-30): a widget that
+    // reads the scores themselves reloads the moment the import finishes saving; the few whose
+    // data IS the post-batch analysis (stored ratings, level history, projection-fed gains)
+    // reload when that lands instead. Routed by user topic, so only this viewer's import
+    // triggers it.
+    private void EnsureRefreshSubscriptions()
     {
-        if (_subscribedForImport || _descriptor?.RefreshOnScoreImport != true || !CurrentUser.IsLoggedIn) return;
-        _subscribedForImport = true;
+        if (_subscribed || _descriptor == null || !CurrentUser.IsLoggedIn) return;
+        if (!_descriptor.RefreshOnScoreImport && !_descriptor.RefreshOnStatsUpdate) return;
+        _subscribed = true;
         var topic = UiTopics.User(CurrentUser.User.Id);
-        _importSubscription = UiHub.Subscribe<ImportStatusUpdatedEvent>(topic, OnImportStatus);
-        _statsSubscription = UiHub.Subscribe<PlayerStatsUpdatedEvent>(topic, OnPlayerStats);
+        if (_descriptor.RefreshOnScoreImport)
+            _importSubscription = UiHub.Subscribe<ImportStatusUpdatedEvent>(topic, OnImportStatus);
+        if (_descriptor.RefreshOnStatsUpdate)
+            _statsSubscription = UiHub.Subscribe<PlayerStatsUpdatedEvent>(topic, OnPlayerStats);
     }
 
     private Task OnImportStatus(ImportStatusUpdatedEvent e)
     {
         // Only the terminal status — the per-chart progress ticks would thrash the reload.
         if (e.Status != "Charts finished saving") return Task.CompletedTask;
-        return InvokeAsync(BumpRefresh);
+        QueueRefresh();
+        return Task.CompletedTask;
     }
 
     private Task OnPlayerStats(PlayerStatsUpdatedEvent e)
     {
-        return InvokeAsync(BumpRefresh);
+        QueueRefresh();
+        return Task.CompletedTask;
+    }
+
+    // Coalesce: restarting the delay folds every event inside the window into one reload.
+    private void QueueRefresh()
+    {
+        _pendingRefresh?.Cancel();
+        var cts = new CancellationTokenSource();
+        _pendingRefresh = cts;
+        _ = DebouncedRefresh(cts);
+    }
+
+    private async Task DebouncedRefresh(CancellationTokenSource cts)
+    {
+        try
+        {
+            await Task.Delay(RefreshDebounce, cts.Token);
+        }
+        catch (TaskCanceledException)
+        {
+            return; // Superseded by a newer event, or the host was disposed.
+        }
+
+        try
+        {
+            await InvokeAsync(() =>
+            {
+                if (cts.IsCancellationRequested) return;
+                if (EditMode)
+                {
+                    _refreshDeferred = true;
+                    return;
+                }
+
+                BumpRefresh();
+            });
+        }
+        catch (ObjectDisposedException)
+        {
+            // Raced the circuit's teardown — nothing left to refresh.
+        }
     }
 
     private void BumpRefresh()
@@ -209,6 +273,7 @@
 
     public void Dispose()
     {
+        _pendingRefresh?.Cancel();
         _importSubscription?.Dispose();
         _statsSubscription?.Dispose();
     }

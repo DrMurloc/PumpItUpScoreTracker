@@ -18,14 +18,17 @@
    you sit past it. Your row glows blue, anyone from your communities glows green. Record and the full
    dialog ride the host's title-bar slot to keep the body all leaderboard. *@
 
-@if (!_loaded)
+@if (!_hasContent)
 {
     <div class="dash-widget-message">
         <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
     </div>
 }
-else if (_chart == null)
+else
 {
+    <div class="dash-refreshable @(_loaded ? "" : "dash-stale")">
+    @if (_chart == null)
+    {
     <div class="dash-widget-message">
         <MudText Typo="Typo.body2">@L["Today's Step posts at midnight."]</MudText>
     </div>
@@ -129,6 +132,8 @@ else
     <LeaderboardDialog @bind-Visible="_showLeaderboard" Chart="_chart" Entries="_dialogEntries"
                        Ascending="_isLimbo" OfficialUserIds="_officialUserIds"
                        CommunityUserIds="_communityIds" RivalUserIds="_rivalIds"/>
+    }
+    </div>
 }
 
 @inject IMediator Mediator
@@ -164,6 +169,7 @@ else
             "dash-lb-you", "dash-lb-community");
 
     private bool _loaded;
+    private bool _hasContent;
     private bool _tall;
     private string? _loadedFor;
     private Chart? _chart;
@@ -246,19 +252,30 @@ else
             _rivalIds = await CommunityGlow.GetMyRivalIds(_mix);
 
             var board = await Mediator.Send(new GetDailyStepQuery(_mix));
-            _chart = null;
-            _rows = new List<Row>();
-            _myRow = null;
-            _dialogEntries = Array.Empty<WeeklyTournamentEntry>();
+            // Resolve into a local first: clearing the fields up front would blank the current
+            // board across the awaits below, and a reload renders the current content (dimmed).
+            Chart? chart = null;
             if (board != null)
             {
                 _isLimbo = board.IsLimbo;
                 var charts = await ChartCatalog.GetCharts(_mix);
-                _chart = charts.TryGetValue(board.ChartId, out var chart) ? chart : null;
-                if (_chart != null) await ReloadBoardData();
+                chart = charts.GetValueOrDefault(board.ChartId);
+            }
+
+            _chart = chart;
+            if (chart != null)
+            {
+                await ReloadBoardData();
+            }
+            else
+            {
+                _rows = new List<Row>();
+                _myRow = null;
+                _dialogEntries = Array.Empty<WeeklyTournamentEntry>();
             }
 
             _loaded = true;
+            _hasContent = true;
         }
 
         // Every param set (not only on reload) so an EditMode toggle re-evaluates the header slot.

@@ -14,14 +14,19 @@
    mixes dashed and dimmed (CVD-independent channel). Phoenix 2 lines start from the
    floor on purpose; the re-grind is the story. No Combined series (owner). *@
 
-@if (!_loaded)
+@if (!_hasContent)
 {
     <div class="dash-widget-message">
         <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
     </div>
 }
-else if (!_series.Any())
+else
 {
+    @* Reloads keep the current graph mounted (the @key only changes when a load
+       completes) and dim it until the new one swaps in — no spinner round trip. *@
+    <div class="dash-refreshable @(_loaded ? "" : "dash-stale")">
+    @if (!_series.Any())
+    {
     <div class="dash-widget-message">
         <div>
             <MudText Typo="Typo.body2">@L["Your level history starts tracking with your next import."]</MudText>
@@ -46,6 +51,8 @@ else
                                  OrderBy="e => e.X"/>
             }
         </ApexChart>
+    </div>
+    }
     </div>
 }
 
@@ -85,6 +92,7 @@ else
         IReadOnlyList<PlayerRatingRecord> Points, Func<PlayerRatingRecord, double> YSelector);
 
     private bool _loaded;
+    private bool _hasContent;
     private bool _useArea;
     private string _renderKey = string.Empty;
     private string? _loadedFor;
@@ -114,7 +122,9 @@ else
             ? DateTimeOffset.Now.AddMonths(-config.RangeMonths)
             : DateTimeOffset.MinValue;
 
-        _series = new List<LevelSeries>();
+        // Locals until the load completes: renders can interleave with the per-mix awaits,
+        // and a reload keeps showing the CURRENT graph (dimmed) until the swap is whole.
+        var series = new List<LevelSeries>();
         var dashes = new List<double>();
         var annotations = new List<AnnotationsYAxis>();
         foreach (var mix in mixes)
@@ -135,7 +145,7 @@ else
                 var inRange = valid.Where(h => h.Date >= cutoff).ToArray();
                 if (inRange.Length >= 2)
                 {
-                    _series.Add(new LevelSeries($"{typeLabel} · {mix}", color, dashed, inRange, level));
+                    series.Add(new LevelSeries($"{typeLabel} · {mix}", color, dashed, inRange, level));
                     dashes.Add(dashed ? 5 : 0);
                 }
                 else if (valid.Any())
@@ -159,24 +169,29 @@ else
 
         // Single-era boards get the gradient-area treatment (the "PIU Scores" look);
         // mixed-era keeps clean lines so the dashed history stays legible.
-        _useArea = _series.All(s => !s.Dashed);
+        var useArea = series.All(s => !s.Dashed);
 
         // Shared canvas (ApexChartTheming) + this chart's specifics on top.
-        _options = ApexChartTheming.BaseOptions<PlayerRatingRecord>(palette);
-        _options.Stroke = new Stroke { Curve = Curve.Smooth, DashArray = dashes, Width = 3 };
-        _options.Fill = _useArea
+        var options = ApexChartTheming.BaseOptions<PlayerRatingRecord>(palette);
+        options.Stroke = new Stroke { Curve = Curve.Smooth, DashArray = dashes, Width = 3 };
+        options.Fill = useArea
             ? new Fill
             {
                 Type = new List<FillType> { FillType.Gradient },
                 Gradient = new FillGradient { ShadeIntensity = 0, OpacityFrom = 0.20, OpacityTo = 0.0 }
             }
             : null;
-        _options.Yaxis = new List<YAxis> { new() { DecimalsInFloat = 2 } };
+        options.Yaxis = new List<YAxis> { new() { DecimalsInFloat = 2 } };
         // Unconditional: an empty yaxis list draws nothing, same as null — and the list is
         // filled inside AddType, which static flow analysis can't see through the closure.
-        _options.Annotations = new Annotations { Yaxis = annotations };
+        options.Annotations = new Annotations { Yaxis = annotations };
+
+        _series = series;
+        _useArea = useArea;
+        _options = options;
         _renderKey = signature;
         _loaded = true;
+        _hasContent = true;
     }
 
 }

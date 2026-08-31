@@ -16,14 +16,17 @@
    Pumbility Push goal. 1x2 and taller add your closest competitive matches; a pinned mix
    that differs from the current one shows as a pill in the title (via the header slot). *@
 
-@if (!_loaded)
+@if (!_hasContent)
 {
     <div class="dash-widget-message">
         <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
     </div>
 }
-else if (_stats == null || (_stats.SkillRating <= 0 && _stats.ClearCount == 0))
+else
 {
+    <div class="dash-refreshable @(_loaded ? "" : "dash-stale")">
+    @if (_stats == null || (_stats.SkillRating <= 0 && _stats.ClearCount == 0))
+    {
     <div class="dash-widget-message">
         <div>
             <MudText Typo="Typo.body2">@L["No scores yet — Pumbility starts with your first import."]</MudText>
@@ -105,6 +108,8 @@ else
             </div>
         }
     </div>
+    }
+    </div>
 }
 
 @inject IMediator Mediator
@@ -137,6 +142,7 @@ else
     private sealed record MatchRow(User User, double Level, bool IsCommunity);
 
     private bool _loaded;
+    private bool _hasContent;
     private bool _showMatches;
     private string? _loadedFor;
     private MixEnum _mix;
@@ -173,10 +179,13 @@ else
             var userId = CurrentUser.User.Id;
             _stats = await Mediator.Send(new GetPlayerStatsQuery(userId, _mix));
 
-            _matches = new List<MatchRow>();
+            // LoadMatches assigns _matches once, at its end — no pre-clear, so a reload
+            // keeps the current list on screen (dimmed) instead of flashing it empty.
             if (_showMatches && _stats != null) await LoadMatches(userId);
+            else _matches = new List<MatchRow>();
 
             _loaded = true;
+            _hasContent = true;
         }
 
         UpdateHeaderSlot(WidgetConfigJson.Read<PumbilityConfig>(Widget.ConfigJson).Mix);
@@ -190,7 +199,11 @@ else
             ChartType.Double => _stats!.DoublesCompetitiveLevel,
             _ => _stats!.CompetitiveLevel
         };
-        if (_myLevel <= 0) return;
+        if (_myLevel <= 0)
+        {
+            _matches = new List<MatchRow>();
+            return;
+        }
 
         // The cohort (in-range, nearest first) comes ranked from SQL; eligibility is applied
         // here where the community set and privacy flags live: public players, plus anyone

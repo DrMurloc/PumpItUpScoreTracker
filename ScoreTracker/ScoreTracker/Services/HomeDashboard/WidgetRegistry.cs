@@ -27,7 +27,9 @@ public static class WidgetRegistry
             typeof(CompetitiveLevelWidget),
             typeof(CompetitiveLevelConfigPanel),
             typeof(CompetitiveLevelConfig),
-            RefreshOnScoreImport: true),
+            // History rows are written by the post-batch analysis, not the import itself —
+            // an import-time reload would refetch before the new point exists.
+            RefreshOnStatsUpdate: true),
         // TypeId stays "pumbility" (public export vocabulary, never renamed) though the
         // widget is now Account Stats. 1x2+ adds the closest-competitive-matches list.
         new("pumbility",
@@ -41,7 +43,9 @@ public static class WidgetRegistry
             typeof(PumbilityWidget),
             typeof(PumbilityConfigPanel),
             typeof(PumbilityConfig),
-            RefreshOnScoreImport: true),
+            // Everything here is the stored PlayerStats record — it only changes when the
+            // post-batch analysis lands, so that is the refresh signal.
+            RefreshOnStatsUpdate: true),
         new("weekly-challenge",
             "Weekly Charts",
             "This week's board and your placements.",
@@ -189,7 +193,10 @@ public static class WidgetRegistry
             // inherits that sampling on Phoenix 2.
             ShowRefresh: json =>
                 WidgetConfigJson.Read<SuggestedChartsConfig>(json).Goal != SuggestedGoal.HotStreak,
-            RefreshOnScoreImport: true),
+            // The straddler: most goals read the scores (import-time), but Pumbility Push
+            // gains ride the projections the post-batch analysis feeds — so both signals.
+            RefreshOnScoreImport: true,
+            RefreshOnStatsUpdate: true),
         new("by-level-breakdown",
             "By-Level Breakdown",
             "One configurable graph of your scores, grades, plates, or clears by level.",
