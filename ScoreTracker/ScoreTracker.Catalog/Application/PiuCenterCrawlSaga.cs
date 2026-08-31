@@ -44,10 +44,12 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
     private readonly ILogger<PiuCenterCrawlSaga> _logger;
     private readonly IChartSkillMetricRepository _metrics;
     private readonly IPiuCenterClient _piuCenter;
+    private readonly StepChartIngest _stepCharts;
 
     public PiuCenterCrawlSaga(IPiuCenterClient piuCenter, IExternalChartAliasRepository aliases,
         IChartSkillMetricRepository metrics, IChartRepository charts, IDateTimeOffsetAccessor clock,
-        IChartFolderBaselineRepository baselines, ILogger<PiuCenterCrawlSaga> logger)
+        IChartFolderBaselineRepository baselines, StepChartIngest stepCharts,
+        ILogger<PiuCenterCrawlSaga> logger)
     {
         _piuCenter = piuCenter;
         _aliases = aliases;
@@ -55,6 +57,7 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
         _charts = charts;
         _clock = clock;
         _baselines = baselines;
+        _stepCharts = stepCharts;
         _logger = logger;
     }
 
@@ -114,6 +117,7 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
         // writes re-hydrated the full table just to have the next write throw it away — the
         // upload was taking prod down for its own duration.
         var banked = new Dictionary<Guid, IReadOnlyList<ChartSkillMetric>>();
+        var stepsByChart = new Dictionary<Guid, PiuCenterChartSteps>();
         foreach (var alias in resolved)
         {
             var body = ReadEntry($"{alias.ExternalKey}.json");
@@ -124,11 +128,17 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
                 listingByKey.GetValueOrDefault(alias.ExternalKey),
                 practiceByKey.GetValueOrDefault(alias.ExternalKey),
                 predictions.TryGetValue(alias.ExternalKey, out var prediction) ? prediction : null);
+            // The same body read raw for the step-chart half — one entry decompression, two reads.
+            var steps = PiuCenterDataParser.ParseChartPageSteps(body);
+            if (steps != null && (steps.Taps.Count > 0 || steps.Holds.Count > 0))
+                stepsByChart[alias.ChartId.Value] = steps;
         }
 
         await _metrics.ReplaceChartMetrics(PiuCenterMetrics.Source, banked, cancellationToken);
         _logger.LogInformation("piucenter snapshot import: banked metrics for {Banked}/{Total} resolved charts",
             banked.Count, resolved.Length);
+        await _stepCharts.Bank(archive, version.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            stepsByChart, cancellationToken);
         await RebuildFolderBaselines(catalogCharts, context, cancellationToken);
     }
 

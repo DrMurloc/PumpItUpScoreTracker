@@ -115,6 +115,29 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("ChartSkillMetric", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ChartStepChartEntity", b =>
+                {
+                    b.Property<Guid>("ChartId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("Payload")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Vintage")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.HasKey("ChartId");
+
+                    b.ToTable("ChartStepChart", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ChartVideoEntity", b =>
                 {
                     b.Property<Guid>("ChartId")
@@ -3762,6 +3785,9 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<bool>("IsStageBroken")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsWalkOff")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LetterGrade")
                         .HasMaxLength(4)
                         .HasColumnType("nvarchar(4)");
@@ -3811,17 +3837,23 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("SessionId")
                         .HasFilter("[SessionId] IS NOT NULL");
 
-                    b.HasIndex("ChartId", "MixId")
-                        .HasAnnotation("SqlServer:Online", true);
-
-                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("ChartId", "MixId"), new[] { "UserId", "Score", "IsBroken", "OccurredAt" });
-
                     b.HasIndex("UserId", "ChartId", "OccurredAt");
 
                     b.HasIndex("UserId", "MixId", "OccurredAt");
 
                     b.HasIndex("UserId", "MixId", "ChartId", "OccurredAt")
                         .IsUnique();
+
+                    b.HasIndex(new[] { "ChartId", "MixId" }, "IX_ScoreEventJournal_ChartId_MixId")
+                        .HasAnnotation("SqlServer:Online", true);
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex(new[] { "ChartId", "MixId" }, "IX_ScoreEventJournal_ChartId_MixId"), new[] { "UserId", "Score", "IsBroken", "OccurredAt" });
+
+                    b.HasIndex(new[] { "ChartId", "MixId" }, "IX_ScoreEventJournal_ChartId_MixId_StageBreaks")
+                        .HasFilter("[IsStageBroken] = 1")
+                        .HasAnnotation("SqlServer:Online", true);
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex(new[] { "ChartId", "MixId" }, "IX_ScoreEventJournal_ChartId_MixId_StageBreaks"), new[] { "UserId", "Perfects", "Greats", "Goods", "Bads", "Misses", "IsNonLifebarBreak" });
 
                     b.ToTable("ScoreEventJournal", "scores");
                 });

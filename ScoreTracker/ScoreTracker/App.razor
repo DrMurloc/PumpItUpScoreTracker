@@ -243,6 +243,9 @@
    Score Breakdown Dialog also loads, so the two surfaces run one implementation. The import
    map above rewrites the specifier to the content-hashed asset. *@
 <script type="module" src="@Assets["js/phoenix-calculator.js"]"></script>
+@* A module for the same reason: the dialog's Steps tab imports { mount } from it lazily,
+   while on the chart page it self-mounts every [data-stepchart] at load. *@
+<script type="module" src="@Assets["js/step-chart.js"]"></script>
 <script src="@Assets["js/challenge-board.js"]"></script>
 @* Ctrl+Alt+R cycles the reconnect overlay through its states; Ctrl+Alt+X clears it. The
    paused/resume-failed states can't be provoked on demand, so this is how they get seen. *@

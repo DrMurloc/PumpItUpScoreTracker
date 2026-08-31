@@ -250,6 +250,9 @@
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -> 10%</value>
   </data>
+  <data name="1 broken run made it to the end" xml:space="preserve">
+	  <value>1回の失敗プレイが最後まで完走</value>
+  </data>
   <data name="1 more peer above" xml:space="preserve">
     <value>上に 1 人</value>
   </data>
@@ -837,6 +840,12 @@
   <data name="Arrived" xml:space="preserve">
     <value>追加</value>
   </data>
+  <data name="Arrow coloring" xml:space="preserve">
+	  <value>矢印の配色</value>
+  </data>
+  <data name="Arrows" xml:space="preserve">
+	  <value>矢印</value>
+  </data>
   <data name="arrows stepped" xml:space="preserve">
     <value>踏んだ矢印</value>
   </data>
@@ -873,6 +882,9 @@
   </data>
   <data name="Attempts before this clear" xml:space="preserve">
     <value>クリアまでの試行回数</value>
+  </data>
+  <data name="Auto" xml:space="preserve">
+	  <value>自動</value>
   </data>
   <data name="Auto Submit Change Failed" xml:space="preserve">
     <value>変更できませんでした。少し待ってからもう一度お試しください。</value>
@@ -1280,6 +1292,9 @@
   </data>
   <data name="Category" xml:space="preserve">
 	  <value>カテゴリー</value>
+  </data>
+  <data name="Center" xml:space="preserve">
+	  <value>中央</value>
   </data>
   <data name="Change Card" xml:space="preserve">
     <value>カードを変更</value>
@@ -2147,6 +2162,9 @@
   <data name="Difficulty Spike" xml:space="preserve">
     <value>難易度スパイク</value>
   </data>
+  <data name="Difficulty Spike: {0}" xml:space="preserve">
+	  <value>難易度スパイク: {0}</value>
+  </data>
   <data name="Directory" xml:space="preserve">
     <value>ディレクトリ</value>
   </data>
@@ -2545,6 +2563,9 @@
   </data>
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>フィード — チャンネルを一度登録すれば、ボットが投稿し続けます</value>
+  </data>
+  <data name="Feet" xml:space="preserve">
+	  <value>足</value>
   </data>
   <data name="Few Holds" xml:space="preserve">
     <value>ホールド少なめ</value>
@@ -3592,6 +3613,9 @@
   <data name="Left" xml:space="preserve">
     <value>削除</value>
   </data>
+  <data name="Left foot" xml:space="preserve">
+	  <value>左足</value>
+  </data>
   <data name="Legacy Difficulty" xml:space="preserve">
     <value>レガシー難度</value>
   </data>
@@ -3664,6 +3688,9 @@
   </data>
   <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
     <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
+  </data>
+  <data name="Life Bar Break" xml:space="preserve">
+	  <value>ライフバーブレイク</value>
   </data>
   <data name="Life Calculator" xml:space="preserve">
     <value>体力計算機</value>
@@ -3781,6 +3808,9 @@
   </data>
   <data name="Low tick share is what makes a low score reachable: hold everything, good every tap, and a chart under the dashed line can pass with an F. On a typical level 18 that floor is a D — about 591,000." xml:space="preserve">
     <value>ティック割合が低いほど低スコアに届きます。ホールドをすべて押さえてタップをすべてGoodにすれば、点線より下の譜面はFでクリアできます。典型的なレベル18ではその下限はDで、約591,000点です。</value>
+  </data>
+  <data name="Lower" xml:space="preserve">
+	  <value>下段</value>
   </data>
   <data name="Lowest" xml:space="preserve">
     <value>最下位</value>
@@ -5126,6 +5156,9 @@
   <data name="Pass Difficulty" xml:space="preserve">
     <value>パス難易度</value>
   </data>
+  <data name="Pass G" xml:space="preserve">
+	  <value>Pass G</value>
+  </data>
   <data name="Pass Pusher" xml:space="preserve">
     <value>Pass Pusher</value>
   </data>
@@ -6040,6 +6073,9 @@
   <data name="Re-rated" xml:space="preserve">
     <value>難度変更</value>
   </data>
+  <data name="Re-running step-chart enrichment from the archived corpus." xml:space="preserve">
+	  <value>保存済みコーパスから譜面の分析を再実行します。</value>
+  </data>
   <data name="Re-solving max combos from every judged score. Nothing is announced." xml:space="preserve">
     <value>判定が記録されたすべてのスコアから最大コンボを再計算します。通知は行いません。</value>
   </data>
@@ -6316,6 +6352,9 @@
   <data name="repriced here" xml:space="preserve">
     <value>こちらの基準で再算定</value>
   </data>
+  <data name="Reprocess step files" xml:space="preserve">
+	  <value>譜面ファイルを再処理</value>
+  </data>
   <data name="Request Header" xml:space="preserve">
     <value>リクエストヘッダー</value>
   </data>
@@ -6391,6 +6430,9 @@
   </data>
   <data name="Revoked" xml:space="preserve">
     <value>取り消し済み</value>
+  </data>
+  <data name="Right foot" xml:space="preserve">
+	  <value>右足</value>
   </data>
   <data name="Rival" xml:space="preserve">
     <value>ライバル</value>
@@ -6626,6 +6668,9 @@
   </data>
   <data name="Scroll right" xml:space="preserve">
     <value>右へスクロール</value>
+  </data>
+  <data name="Scroll speed" xml:space="preserve">
+	  <value>スクロール速度</value>
   </data>
   <data name="Scrolling and links still work. Buttons don't." xml:space="preserve">
     <value>スクロールとリンクは使えます。ボタンは使えません。</value>
@@ -7318,8 +7363,14 @@
   <data name="Step artists and the PIU devs are community too." xml:space="preserve">
     <value>ステップアーティストも PIU の開発者もコミュニティの一員です。</value>
   </data>
+  <data name="Step chart" xml:space="preserve">
+	  <value>譜面</value>
+  </data>
   <data name="Step on" xml:space="preserve">
     <value>スクロール</value>
+  </data>
+  <data name="Steps" xml:space="preserve">
+	  <value>譜面</value>
   </data>
   <data name="steps by {0}" xml:space="preserve">
     <value>ステップ：{0}</value>
@@ -7994,6 +8045,9 @@
   <data name="Ties break by total raw score." xml:space="preserve">
     <value>同点は素点の合計で決まります。</value>
   </data>
+  <data name="Time runs downward — arrows colored by panel, feet, or timing." xml:space="preserve">
+	  <value>時間は下へ流れます — 矢印の色はパネル・足・リズムで切り替え。</value>
+  </data>
   <data name="Title" xml:space="preserve">
 	  <value>タイトル</value>
   </data>
@@ -8295,6 +8349,9 @@
   <data name="Unknown" xml:space="preserve">
 	  <value>不明</value>
   </data>
+  <data name="Unknown Break" xml:space="preserve">
+	  <value>不明なブレイク</value>
+  </data>
   <data name="Unknown chart" xml:space="preserve">
     <value>不明なチャート</value>
   </data>
@@ -8320,6 +8377,9 @@
     <value>やることリストの中のレベル{1}で譜面まだ{0}曲が残してる（クリアしてない）</value>
     
   <comment>例：レベル２４の中でまだ９譜面が残してる</comment></data>
+  <data name="Unplaced" xml:space="preserve">
+	  <value>位置不明</value>
+  </data>
   <data name="Unplayed" xml:space="preserve">
     <value>未プレイ</value>
   </data>
@@ -8393,6 +8453,9 @@
   <comment>アップロードの人</comment></data>
   <data name="Uploading" xml:space="preserve">
     <value>アップロード中</value>
+  </data>
+  <data name="Upper" xml:space="preserve">
+	  <value>上段</value>
   </data>
   <data name="Upscore" xml:space="preserve">
     <value>スコア更新</value>
@@ -8558,6 +8621,12 @@
   </data>
   <data name="Waiting room" xml:space="preserve">
     <value>待機中</value>
+  </data>
+  <data name="Walk off" xml:space="preserve">
+	  <value>リタイア</value>
+  </data>
+  <data name="Walk off · {0}% in" xml:space="preserve">
+	  <value>リタイア · {0}%地点</value>
   </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>パッドを温めています</value>
@@ -8760,6 +8829,9 @@
   </data>
   <data name="Where PUMBILITY comes from on {0} — the average pool" xml:space="preserve">
     <value>{0}でPUMBILITYはどこから来るか — 平均プール</value>
+  </data>
+  <data name="Where runs end isn't shown — this step file disagrees with the game's judged note count." xml:space="preserve">
+	  <value>プレイが終わった位置は表示されません — この譜面ファイルはゲームの判定ノーツ数と一致していません。</value>
   </data>
   <data name="Where the levels sit" xml:space="preserve">
     <value>レベルの分布</value>
@@ -9271,6 +9343,9 @@
   <data name="Your rivals" xml:space="preserve">
     <value>あなたのライバル</value>
   </data>
+  <data name="Your runs" xml:space="preserve">
+	  <value>あなたのプレイ</value>
+  </data>
   <data name="Your saved randomizer settings" xml:space="preserve">
     <value>保存済みのランダマイザー設定</value>
   </data>
@@ -9432,6 +9507,9 @@
   </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
+  </data>
+  <data name="{0} broken runs made it to the end" xml:space="preserve">
+	  <value>{0}回の失敗プレイが最後まで完走</value>
   </data>
   <data name="{0} can make tools again." xml:space="preserve">
     <value>{0} はまたツールを作れます。</value>

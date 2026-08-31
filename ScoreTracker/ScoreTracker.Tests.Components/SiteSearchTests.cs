@@ -145,12 +145,18 @@ public sealed class SiteSearchTests : ComponentTestBase
 
         await cut.InvokeAsync(() => autocomplete.ValueChanged.InvokeAsync(hits.First(h => h.Player?.UserId == RoxyId)));
         Assert.EndsWith($"/Player/{RoxyId}", nav.Uri);
+        Assert.True(nav.History.Last().Options.ForceLoad);
 
         await cut.InvokeAsync(() => autocomplete.ValueChanged.InvokeAsync(hits.First(h => h.Board != null)));
         Assert.EndsWith("/OfficialLeaderboards/Players?player=ROXY%234471", nav.Uri);
+        Assert.True(nav.History.Last().Options.ForceLoad);
 
+        // Full loads, not enhanced navigation: a circuit's NavigateTo ignores the body's
+        // data-enhance-nav="false", and an enhanced landing on a static SSR chart page patches
+        // the DOM without re-running module scripts — the step chart arrives unmountable.
         await cut.InvokeAsync(() => autocomplete.ValueChanged.InvokeAsync(hits.First(h => h.Chart != null)));
         Assert.Contains("/Charts/", nav.Uri);
+        Assert.True(nav.History.Last().Options.ForceLoad);
 
         // A label row is not a destination.
         var before = nav.Uri;

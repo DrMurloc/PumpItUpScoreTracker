@@ -119,6 +119,45 @@
         <ChartEvidenceSection @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_chart.Mix" @key="_chart.Id"></ChartEvidenceSection>
     </section>
 
+    @if (_stepChart != null)
+    {
+        @* The step chart & failure map (docs/design/step-chart-failure-map.md). The section
+           renders only when the mix's verdict allows one (Excluded and never-banked answer
+           null); everything inside the shell is drawn by step-chart.js from the two JSON
+           endpoints, so the static page ships markup and strings and no data. *@
+        <section class="chart-section" id="step-chart">
+            <div class="chart-section-head">
+                <MudText Typo="Typo.h5">@L["Step chart"]</MudText>
+                <MudText Typo="Typo.caption" Class="chart-section-sub">@L["Time runs downward — arrows colored by panel, feet, or timing."]</MudText>
+            </div>
+            <div data-stepchart data-chart-id="@_chart.Id" data-mix="@_chart.Mix"
+                 data-visibility="@_stepChart.Visibility" data-level="@((int)_chart.Level)">
+                <script type="application/json" data-stepchart-strings>@StepChartStrings.For(L)</script>
+                <div class="stepchart-caveat" data-stepchart-caveat hidden>@L["Where runs end isn't shown — this step file disagrees with the game's judged note count."]</div>
+                <div class="stepchart-toolbar">
+                    <div class="stepchart-modes" role="group" aria-label="@L["Arrow coloring"]">
+                        <button type="button" data-stepchart-mode="arrow" aria-pressed="true">@L["Arrows"]</button>
+                        <button type="button" data-stepchart-mode="foot" aria-pressed="false">@L["Feet"]</button>
+                    </div>
+                    <div class="stepchart-av" role="group" aria-label="@L["Scroll speed"]">
+                        <button type="button" data-stepchart-av="-50">&minus;</button>
+                        <span class="stepchart-av-value" data-stepchart-av-value>AV</span>
+                        <button type="button" data-stepchart-av="50">+</button>
+                        <button type="button" data-stepchart-av="auto" aria-pressed="true">@L["Auto"]</button>
+                    </div>
+                </div>
+                <div class="stepchart-chips" data-stepchart-chips></div>
+                <div class="stepchart-viewer">
+                    <div class="stepchart-scroll" data-stepchart-scroll tabindex="0" aria-label="@L["Step chart"]"></div>
+                    <div class="stepchart-minicol">
+                        <canvas class="stepchart-minimap" data-stepchart-minimap></canvas>
+                    </div>
+                </div>
+                <div class="stepchart-legend" data-stepchart-legend></div>
+            </div>
+        </section>
+    }
+
     @if (History != null)
     {
         <section class="chart-section">
@@ -193,6 +232,7 @@
     private IReadOnlyList<ChartVerdictFacet> _facets = Array.Empty<ChartVerdictFacet>();
     private IReadOnlyList<Chart> _siblings = Array.Empty<Chart>();
     private ChartStepAnalysisRecord? _analysis;
+    private ChartStepChartRecord? _stepChart;
     private IReadOnlyList<TierListChartCard.CardSkillChip> _identityChips =
         Array.Empty<TierListChartCard.CardSkillChip>();
 
@@ -268,6 +308,7 @@
             .ThenBy(c => (int)c.Level)
             .ToArray();
         _analysis = await Mediator.Send(new GetChartStepAnalysisQuery(chart.Id));
+        _stepChart = await Mediator.Send(new GetChartStepChartQuery(chart.Id, chartMix));
         // Every chip, uncapped — the card's three-chip cut is a card's problem, and a page that
         // silently dropped a claim would be the one surface where the chart looks different.
         var identity = await Mediator.Send(new GetChartIdentityQuery(new[] { chart.Id }, chartMix));

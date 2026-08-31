@@ -66,6 +66,15 @@ internal sealed class ScoreEventJournalEntity
     public bool IsNonLifebarBreak { get; set; }
 
     /// <summary>
+    ///     The AFK guard ended this stage break — the row carries the guard's 51-consecutive-miss
+    ///     tail (pass-command-detection D36). Defaults to FALSE like its siblings: an
+    ///     unclassified row must never read as a positive claim, and the backfill re-derives it
+    ///     wholesale.
+    /// </summary>
+    [Required]
+    public bool IsWalkOff { get; set; }
+
+    /// <summary>
     ///     The plate the run's last judgement put out of reach, by the plate's full name, or NULL
     ///     when no plate broke by exactly one judgement. Independent of <see cref="PassGrade" /> —
     ///     either, both or neither may be set on a non-lifebar break, and both empty is a real

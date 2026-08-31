@@ -1,0 +1,21 @@
+namespace ScoreTracker.ScoreLedger.Contracts;
+
+/// <summary>
+///     One imported run that ended mid-chart: the judgements it produced (its position on the
+///     timeline), whether the life bar provably could not have ended it (the Stage Pass
+///     series), whether it belongs to the viewer who asked, and — where the solver could name
+///     them — the plate and grade the run's last judgement put out of reach, as stored
+///     (full names; docs/design/pass-command-detection.md D31/D32).
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record ChartStageBreakRecord(int Judged, bool IsNonLifebarBreak, bool IsViewer,
+    string? PassPlate = null, string? PassGrade = null, int Misses = 0, bool IsWalkOff = false);
+
+/// <summary>
+///     The rail's answer whole: the placeable breaks, plus how many of the chart's imported
+///     breaks carry no judgement counts and can never be placed — the excluded share, admitted
+///     to by number.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record ChartStageBreaksRecord(IReadOnlyList<ChartStageBreakRecord> Breaks, int Unplaced,
+    int FinishedFails = 0);

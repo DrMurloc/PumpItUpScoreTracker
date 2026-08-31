@@ -250,6 +250,9 @@
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -> 10%</value>
   </data>
+  <data name="1 broken run made it to the end" xml:space="preserve">
+	  <value>실패한 플레이 1회가 끝까지 완주</value>
+  </data>
   <data name="1 more peer above" xml:space="preserve">
     <value>위로 1명 더</value>
   </data>
@@ -832,6 +835,12 @@
   <data name="Arrived" xml:space="preserve">
     <value>추가됨</value>
   </data>
+  <data name="Arrow coloring" xml:space="preserve">
+	  <value>화살표 색상</value>
+  </data>
+  <data name="Arrows" xml:space="preserve">
+	  <value>화살표</value>
+  </data>
   <data name="arrows stepped" xml:space="preserve">
     <value>밟은 화살표</value>
   </data>
@@ -867,6 +876,9 @@
   </data>
   <data name="Attempts before this clear" xml:space="preserve">
     <value>클리어까지의 시도 횟수</value>
+  </data>
+  <data name="Auto" xml:space="preserve">
+	  <value>자동</value>
   </data>
   <data name="Auto Submit Change Failed" xml:space="preserve">
     <value>변경되지 않았습니다. 잠시 후 다시 시도하세요.</value>
@@ -1272,6 +1284,9 @@
   </data>
   <data name="Category" xml:space="preserve">
     <value>카테고리</value>
+  </data>
+  <data name="Center" xml:space="preserve">
+	  <value>중앙</value>
   </data>
   <data name="Change Card" xml:space="preserve">
     <value>카드 변경</value>
@@ -2134,6 +2149,9 @@
   <data name="Difficulty Spike" xml:space="preserve">
     <value>난이도 급상승</value>
   </data>
+  <data name="Difficulty Spike: {0}" xml:space="preserve">
+	  <value>난이도 스파이크: {0}</value>
+  </data>
   <data name="Directory" xml:space="preserve">
     <value>디렉터리</value>
   </data>
@@ -2529,6 +2547,9 @@
   </data>
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>피드 — 채널을 한 번 등록하면 봇이 계속 소식을 전합니다</value>
+  </data>
+  <data name="Feet" xml:space="preserve">
+	  <value>발</value>
   </data>
   <data name="Few Holds" xml:space="preserve">
     <value>홀드 적음</value>
@@ -3574,6 +3595,9 @@
   <data name="Left" xml:space="preserve">
     <value>삭제됨</value>
   </data>
+  <data name="Left foot" xml:space="preserve">
+	  <value>왼발</value>
+  </data>
   <data name="Legacy Difficulty" xml:space="preserve">
     <value>레거시 난이도</value>
   </data>
@@ -3645,6 +3669,9 @@
   </data>
   <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
     <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
+  </data>
+  <data name="Life Bar Break" xml:space="preserve">
+	  <value>라이프 바 브레이크</value>
   </data>
   <data name="Life Calculator" xml:space="preserve">
     <value>라이프 계산기</value>
@@ -3759,6 +3786,9 @@
   </data>
   <data name="Low tick share is what makes a low score reachable: hold everything, good every tap, and a chart under the dashed line can pass with an F. On a typical level 18 that floor is a D — about 591,000." xml:space="preserve">
     <value>틱 비율이 낮아야 낮은 점수가 가능합니다. 홀드를 전부 누르고 모든 탭을 굿으로 처리하면, 점선 아래의 채보는 F로도 클리어할 수 있습니다. 일반적인 레벨 18에서는 그 하한이 D로, 약 591,000점입니다.</value>
+  </data>
+  <data name="Lower" xml:space="preserve">
+	  <value>아래쪽</value>
   </data>
   <data name="Lowest" xml:space="preserve">
     <value>최하</value>
@@ -5094,6 +5124,9 @@
   <data name="Pass Difficulty" xml:space="preserve">
     <value>패스 난이도</value>
   </data>
+  <data name="Pass G" xml:space="preserve">
+	  <value>Pass G</value>
+  </data>
   <data name="Pass Pusher" xml:space="preserve">
     <value>Pass Pusher</value>
   </data>
@@ -6001,6 +6034,9 @@
   <data name="Re-rated" xml:space="preserve">
     <value>난이도 변경</value>
   </data>
+  <data name="Re-running step-chart enrichment from the archived corpus." xml:space="preserve">
+	  <value>보관된 코퍼스에서 채보 분석을 다시 실행합니다.</value>
+  </data>
   <data name="Re-solving max combos from every judged score. Nothing is announced." xml:space="preserve">
     <value>판정이 기록된 모든 점수에서 최대 콤보를 다시 계산합니다. 아무것도 알리지 않습니다.</value>
   </data>
@@ -6274,6 +6310,9 @@
   <data name="repriced here" xml:space="preserve">
     <value>여기 기준으로 재산정</value>
   </data>
+  <data name="Reprocess step files" xml:space="preserve">
+	  <value>채보 파일 재처리</value>
+  </data>
   <data name="Request Header" xml:space="preserve">
     <value>요청 헤더</value>
   </data>
@@ -6348,6 +6387,9 @@
   </data>
   <data name="Revoked" xml:space="preserve">
     <value>취소됨</value>
+  </data>
+  <data name="Right foot" xml:space="preserve">
+	  <value>오른발</value>
   </data>
   <data name="Rival" xml:space="preserve">
     <value>라이벌</value>
@@ -6579,6 +6621,9 @@
   </data>
   <data name="Scroll right" xml:space="preserve">
     <value>오른쪽으로 스크롤</value>
+  </data>
+  <data name="Scroll speed" xml:space="preserve">
+	  <value>스크롤 속도</value>
   </data>
   <data name="Scrolling and links still work. Buttons don't." xml:space="preserve">
     <value>스크롤과 링크는 그대로 작동합니다. 버튼은 안 됩니다.</value>
@@ -7261,8 +7306,14 @@
   <data name="Step artists and the PIU devs are community too." xml:space="preserve">
     <value>스텝 아티스트와 PIU 개발자도 커뮤니티입니다.</value>
   </data>
+  <data name="Step chart" xml:space="preserve">
+	  <value>채보</value>
+  </data>
   <data name="Step on" xml:space="preserve">
     <value>스크롤</value>
+  </data>
+  <data name="Steps" xml:space="preserve">
+	  <value>채보</value>
   </data>
   <data name="steps by {0}" xml:space="preserve">
     <value>스텝: {0}</value>
@@ -7936,6 +7987,9 @@
   <data name="Ties break by total raw score." xml:space="preserve">
     <value>동점은 총 원점수로 가립니다.</value>
   </data>
+  <data name="Time runs downward — arrows colored by panel, feet, or timing." xml:space="preserve">
+	  <value>시간은 아래로 흐릅니다 — 화살표 색은 패널·발·박자 기준으로 전환됩니다.</value>
+  </data>
   <data name="Title" xml:space="preserve">
     <value>제목</value>
   </data>
@@ -8236,6 +8290,9 @@
   <data name="Unknown" xml:space="preserve">
     <value>알 수 없음</value>
   </data>
+  <data name="Unknown Break" xml:space="preserve">
+	  <value>알 수 없는 브레이크</value>
+  </data>
   <data name="Unknown chart" xml:space="preserve">
     <value>알 수 없는 차트</value>
   </data>
@@ -8259,6 +8316,9 @@
   </data>
   <data name="Unpassed ToDos" xml:space="preserve">
     <value>{0}레벨 {1}채보에 '목표'로 표시된 것 중 아직 브레이크 오프가 있습니다.</value>
+  </data>
+  <data name="Unplaced" xml:space="preserve">
+	  <value>위치 미상</value>
   </data>
   <data name="Unplayed" xml:space="preserve">
     <value>미플레이</value>
@@ -8331,6 +8391,9 @@
   </data>
   <data name="Uploading" xml:space="preserve">
     <value>업로드 중</value>
+  </data>
+  <data name="Upper" xml:space="preserve">
+	  <value>위쪽</value>
   </data>
   <data name="Upscore" xml:space="preserve">
     <value>점수 갱신</value>
@@ -8496,6 +8559,12 @@
   </data>
   <data name="Waiting room" xml:space="preserve">
     <value>대기실</value>
+  </data>
+  <data name="Walk off" xml:space="preserve">
+	  <value>포기</value>
+  </data>
+  <data name="Walk off · {0}% in" xml:space="preserve">
+	  <value>포기 · {0}% 지점</value>
   </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>발판 예열하는 중</value>
@@ -8697,6 +8766,9 @@
   </data>
   <data name="Where PUMBILITY comes from on {0} — the average pool" xml:space="preserve">
     <value>{0}에서 PUMBILITY가 어디서 오는가 — 평균 풀</value>
+  </data>
+  <data name="Where runs end isn't shown — this step file disagrees with the game's judged note count." xml:space="preserve">
+	  <value>플레이가 끝난 위치는 표시되지 않습니다 — 이 채보 파일은 게임이 판정한 노트 수와 일치하지 않습니다.</value>
   </data>
   <data name="Where the levels sit" xml:space="preserve">
     <value>레벨 분포</value>
@@ -9202,6 +9274,9 @@
   <data name="Your rivals" xml:space="preserve">
     <value>내 라이벌</value>
   </data>
+  <data name="Your runs" xml:space="preserve">
+	  <value>내 플레이</value>
+  </data>
   <data name="Your saved randomizer settings" xml:space="preserve">
     <value>저장된 랜덤 설정</value>
   </data>
@@ -9363,6 +9438,9 @@
   </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
+  </data>
+  <data name="{0} broken runs made it to the end" xml:space="preserve">
+	  <value>실패한 플레이 {0}회가 끝까지 완주</value>
   </data>
   <data name="{0} can make tools again." xml:space="preserve">
     <value>{0}은(는) 다시 도구를 만들 수 있습니다.</value>

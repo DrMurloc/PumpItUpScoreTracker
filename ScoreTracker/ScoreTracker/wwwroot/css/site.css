@@ -18297,3 +18297,291 @@ button.judg-strip:focus-visible {
         scroll-snap-align: start;
     }
 }
+
+/* ===== Step chart & failure map (docs/design/step-chart-failure-map.md) ===== */
+/* The strip viewer: content-width scroll box beside a sticky whole-chart minimap. The rail
+   (pins) lives inside the canvas; everything here is layout, every color a token. */
+.stepchart-viewer {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    /* Left-aligned on the page (owner, 2026-08-30); the dialog stays centered. */
+    justify-content: flex-start;
+}
+
+.stepchart-compact .stepchart-viewer {
+    justify-content: center;
+}
+
+.stepchart-scroll {
+    position: relative;
+    height: 600px;
+    overflow: auto;
+    /* Reserve the vertical scrollbar's lane up front — measuring width before the bar
+       arrives left a few pixels of horizontal scroll (owner, 2026-08-30). */
+    scrollbar-gutter: stable;
+    width: max-content;
+    max-width: calc(100% - 106px);
+    flex: none;
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-radius: 10px;
+    background: var(--mix-surface-muted);
+    scrollbar-width: thin;
+}
+
+.stepchart-compact .stepchart-scroll {
+    height: 380px;
+    max-width: calc(100% - 96px);
+}
+
+/* The dialog's minimap rides the dead space right of the rail — same map, compact sizes. */
+.stepchart-compact .stepchart-minimap {
+    width: 76px;
+    height: 380px;
+}
+
+.stepchart-scroll canvas {
+    display: block;
+}
+
+.stepchart-minicol {
+    position: sticky;
+    top: 14px;
+}
+
+.stepchart-minimap {
+    display: block;
+    width: 92px;
+    height: 600px;
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-radius: 10px;
+    background: var(--mix-surface-muted);
+    cursor: pointer;
+}
+
+/* Dense on purpose: more than three chips must not push the strip below the fold
+   (owner, 2026-08-30). */
+.stepchart-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 0 0 10px;
+}
+
+.stepchart-chip {
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--mix-ink);
+    background: var(--mix-surface);
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 999px;
+    padding: 3px 9px 3px 7px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.stepchart-chip:hover {
+    border-color: var(--mix-ink-muted);
+}
+
+.stepchart-chip i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--mix-ink-muted);
+}
+
+.stepchart-chip-struct i {
+    background: var(--mix-primary);
+}
+
+.stepchart-chip-spike i {
+    background: var(--life-danger);
+}
+
+/* Lit while the viewport sits inside the chip's section — the chips double as a "you are
+   here" for the strip. */
+.stepchart-chip-active {
+    border-color: var(--mix-primary);
+    background: var(--mix-surface-muted);
+}
+
+.stepchart-chip small {
+    color: var(--mix-ink-muted);
+    font-size: .72rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.stepchart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin-top: 12px;
+    color: var(--mix-ink-muted);
+    font-size: .8rem;
+}
+
+.stepchart-legend-entry {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stepchart-legend-entry i {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+.stepchart-caveat {
+    border-left: 3px solid var(--mix-primary);
+    background: var(--mix-surface);
+    border-radius: 0 8px 8px 0;
+    padding: 8px 12px;
+    color: var(--mix-ink-muted);
+    font-size: .84rem;
+    margin: 0 0 12px;
+}
+
+@media (max-width: 760px) {
+    /* Narrow screens SQUISH rather than scroll (owner, 2026-08-30): the map thins out, the
+       gap tightens, and the module scales the strip to the width that remains - horizontal
+       scrolling on mobile is a deal breaker. */
+    .stepchart-viewer {
+        gap: 8px;
+    }
+
+    .stepchart-minimap {
+        width: 40px;
+    }
+
+    .stepchart-scroll {
+        max-width: calc(100% - 50px);
+    }
+}
+
+/* The rail's hover tooltip: fixed beside the cursor, ink on the deepest surface. */
+.stepchart-tip {
+    position: fixed;
+    z-index: 3000;
+    pointer-events: none;
+    background: var(--mix-bg);
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 8px;
+    padding: 8px 11px;
+    font-size: .8rem;
+    color: var(--mix-ink);
+    max-width: 260px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, .5);
+}
+
+.stepchart-tip-time {
+    color: var(--mix-ink-muted);
+    font-size: .72rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.stepchart-tip-hedge {
+    color: var(--mix-ink-muted);
+    font-size: .76rem;
+    margin-top: 3px;
+}
+
+/* The coloring-mode toggle: a segmented control, pressed state on the surface token. */
+.stepchart-modes {
+    display: inline-flex;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 9px;
+    overflow: hidden;
+    margin: 0 0 12px;
+}
+
+.stepchart-modes button {
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--mix-ink-muted);
+    background: transparent;
+    border: none;
+    padding: 8px 14px;
+    cursor: pointer;
+}
+
+.stepchart-modes button + button {
+    border-left: 1px solid rgba(255, 255, 255, .12);
+}
+
+.stepchart-modes button[aria-pressed="true"] {
+    background: var(--mix-surface);
+    color: var(--mix-ink);
+}
+
+.stepchart-modes button:disabled {
+    opacity: .45;
+    cursor: default;
+}
+
+.stepchart-tip-cmd {
+    height: 20px;
+    display: inline-block;
+    vertical-align: middle;
+    margin: 2px 4px 2px 0;
+}
+
+/* Modes + AV share one toolbar row; the AV stepper mirrors the segmented control. */
+.stepchart-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin: 0 0 12px;
+}
+
+.stepchart-toolbar .stepchart-modes {
+    margin: 0;
+}
+
+.stepchart-av {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 9px;
+    overflow: hidden;
+}
+
+.stepchart-av button {
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--mix-ink-muted);
+    background: transparent;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.stepchart-av button[aria-pressed="true"] {
+    background: var(--mix-surface);
+    color: var(--mix-ink);
+}
+
+.stepchart-av-value {
+    font-size: .8rem;
+    color: var(--mix-ink);
+    padding: 0 4px;
+    min-width: 56px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    border-left: 1px solid rgba(255, 255, 255, .12);
+    border-right: 1px solid rgba(255, 255, 255, .12);
+    align-self: stretch;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stepchart-legend-cmd {
+    height: 16px;
+    vertical-align: middle;
+}

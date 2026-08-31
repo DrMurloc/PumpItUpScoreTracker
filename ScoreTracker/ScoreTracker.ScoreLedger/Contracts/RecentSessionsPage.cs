@@ -48,5 +48,7 @@ public sealed record RecentSessionsPage(int TotalGroups, IReadOnlyList<RecentSes
         // (docs/design/pass-command-detection.md D34).
         bool IsNonLifebarBreak = false,
         string? PassPlate = null,
-        string? PassGrade = null);
+        string? PassGrade = null,
+        // The AFK guard ended it — a give-up wearing the 51-miss tail, not a death (D36).
+        bool IsWalkOff = false);
 }

@@ -250,6 +250,9 @@
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -&gt; 10%</value>
   </data>
+  <data name="1 broken run made it to the end" xml:space="preserve">
+	  <value>1 morgl gro glorggl ur murgl</value>
+  </data>
   <data name="1 more peer above" xml:space="preserve">
     <value>1 maglmurp mrrgl</value>
   </data>
@@ -837,6 +840,12 @@
   <data name="Arrived" xml:space="preserve">
     <value>Gromurgargl</value>
   </data>
+  <data name="Arrow coloring" xml:space="preserve">
+	  <value>Prglgl Gromorgro</value>
+  </data>
+  <data name="Arrows" xml:space="preserve">
+	  <value>Prglgl</value>
+  </data>
   <data name="arrows stepped" xml:space="preserve">
     <value>arglplgl plglmorgplgl</value>
   </data>
@@ -873,6 +882,9 @@
   </data>
   <data name="Attempts before this clear" xml:space="preserve">
     <value>Blub arg palo</value>
+  </data>
+  <data name="Auto" xml:space="preserve">
+	  <value>Arglgl</value>
   </data>
   <data name="Auto Submit Change Failed" xml:space="preserve">
     <value>Blub morgl. Murgla gapa mrgl.</value>
@@ -1280,6 +1292,9 @@
   </data>
   <data name="Category" xml:space="preserve">
 	  <value>Murmgrglgrgl</value>
+  </data>
+  <data name="Center" xml:space="preserve">
+	  <value>Murmgro</value>
   </data>
   <data name="Change Card" xml:space="preserve">
     <value>Blgrlblub Mrpmorg</value>
@@ -2147,6 +2162,9 @@
   <data name="Difficulty Spike" xml:space="preserve">
     <value>Rugalo Bramp</value>
   </data>
+  <data name="Difficulty Spike: {0}" xml:space="preserve">
+	  <value>Grubbo Blarg: {0}</value>
+  </data>
   <data name="Directory" xml:space="preserve">
     <value>Golba grog</value>
   </data>
@@ -2545,6 +2563,9 @@
   </data>
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>Glorgmorg — grorpplglblub gro glmurmblarg mrmurm, mrp murg mrpmr gl gro</value>
+  </data>
+  <data name="Feet" xml:space="preserve">
+	  <value>Glubro</value>
   </data>
   <data name="Few Holds" xml:space="preserve">
     <value>Mgl Gurg</value>
@@ -3592,6 +3613,9 @@
   <data name="Left" xml:space="preserve">
     <value>Rolurg</value>
   </data>
+  <data name="Left foot" xml:space="preserve">
+	  <value>Margglub Glubro</value>
+  </data>
   <data name="Legacy Difficulty" xml:space="preserve">
     <value>Rogrrgl Glorgmurpgrrgl</value>
   </data>
@@ -3664,6 +3688,9 @@
   </data>
   <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
     <value>glorgrgl += mrpmurp(grorpgrrgl magl glmurmargl) · lurggrrglargl grorpgrrgl 12 · mrpargl grorpgrrgl 10</value>
+  </data>
+  <data name="Life Bar Break" xml:space="preserve">
+	  <value>Mrglub Gurg Morgl</value>
   </data>
   <data name="Life Calculator" xml:space="preserve">
     <value>Glorgrgl Grglmurgmorg</value>
@@ -3781,6 +3808,9 @@
   </data>
   <data name="Low tick share is what makes a low score reachable: hold everything, good every tap, and a chart under the dashed line can pass with an F. On a typical level 18 that floor is a D — about 591,000." xml:space="preserve">
     <value>Mgl prgl grulgro gro blarg grogl a mgl mrglrgl grabgro: gurg blubgro, lurggrgl blub prub, ro a murgl blogro gro glarg blarg lurggro plgl a Ｆ. Ur a groblub grorpmurm 18 ur blogl gro a Ｄ — ro 591,000.</value>
+  </data>
+  <data name="Lower" xml:space="preserve">
+	  <value>Lurgro</value>
   </data>
   <data name="Lowest" xml:space="preserve">
     <value>Glubglub</value>
@@ -5126,6 +5156,9 @@
   <data name="Pass Difficulty" xml:space="preserve">
     <value>Maglplgl Glorgmurpgrrgl</value>
   </data>
+  <data name="Pass G" xml:space="preserve">
+	  <value>Maglplgl Ｇ</value>
+  </data>
   <data name="Pass Pusher" xml:space="preserve">
     <value>Maglplgl Mrgrgl</value>
   </data>
@@ -6040,6 +6073,9 @@
   <data name="Re-rated" xml:space="preserve">
     <value>Gl-maglmr</value>
   </data>
+  <data name="Re-running step-chart enrichment from the archived corpus." xml:space="preserve">
+	  <value>Mrglrlgrlgl murgl mrglgrogl ur groggro.</value>
+  </data>
   <data name="Re-solving max combos from every judged score. Nothing is announced." xml:space="preserve">
     <value>Mrgrglmurm gro grogrgl blarg mrgmurg blgrlmurgro mrglrgl. Morgl mrp blgrlargl.</value>
   </data>
@@ -6316,6 +6352,9 @@
   <data name="repriced here" xml:space="preserve">
     <value>murgroblub ap</value>
   </data>
+  <data name="Reprocess step files" xml:space="preserve">
+	  <value>Mrglrlgrlgl Murplgl Glubgl</value>
+  </data>
   <data name="Request Header" xml:space="preserve">
     <value>Murgm Grumba</value>
   </data>
@@ -6391,6 +6430,9 @@
   </data>
   <data name="Revoked" xml:space="preserve">
     <value>Murgloo</value>
+  </data>
+  <data name="Right foot" xml:space="preserve">
+	  <value>Rorgro Glubro</value>
   </data>
   <data name="Rival" xml:space="preserve">
     <value>Murgmorp</value>
@@ -6626,6 +6668,9 @@
   </data>
   <data name="Scroll right" xml:space="preserve">
     <value>Rglmurg rogro</value>
+  </data>
+  <data name="Scroll speed" xml:space="preserve">
+	  <value>Grogro Mrpro</value>
   </data>
   <data name="Scrolling and links still work. Buttons don't." xml:space="preserve">
     <value>Glrmurgro arg plglrgl larg murmgl. Prglglubarg bo.</value>
@@ -7318,8 +7363,14 @@
   <data name="Step artists and the PIU devs are community too." xml:space="preserve">
     <value>Murglmorp blub PIU murgmorp mrgl plglmurgblub mrgla.</value>
   </data>
+  <data name="Step chart" xml:space="preserve">
+	  <value>Murplgl Murgl</value>
+  </data>
   <data name="Step on" xml:space="preserve">
     <value>Glorgmagl lurg</value>
+  </data>
+  <data name="Steps" xml:space="preserve">
+	  <value>Murplgl</value>
   </data>
   <data name="steps by {0}" xml:space="preserve">
     <value>plglmrgl murm {0}</value>
@@ -7994,6 +8045,9 @@
   <data name="Ties break by total raw score." xml:space="preserve">
     <value>Grrglgro arglglorg murm urgargl magl mrglrgl.</value>
   </data>
+  <data name="Time runs downward — arrows colored by panel, feet, or timing." xml:space="preserve">
+	  <value>Mogro grogl lurggrogl — prglgl gromorgro ur murpgl, glubro, ro murgrog.</value>
+  </data>
   <data name="Title" xml:space="preserve">
 	  <value>Mrgl</value>
   </data>
@@ -8295,6 +8349,9 @@
   <data name="Unknown" xml:space="preserve">
 	  <value>Glorgarglro</value>
   </data>
+  <data name="Unknown Break" xml:space="preserve">
+	  <value>Urgrogl Morgl</value>
+  </data>
   <data name="Unknown chart" xml:space="preserve">
     <value>Glorgarglro murgl</value>
   </data>
@@ -8319,6 +8376,9 @@
   <data name="Unpassed ToDos" xml:space="preserve">
     <value>Blub mrglro {0} grorpmurm {1} murgl murpurg Grgl Urg blubgrrgl blub blubmurm rglplgl.</value>
     <comment>I.E You have 19 level 24 charts marked To Do you haven't passed</comment>
+  </data>
+  <data name="Unplaced" xml:space="preserve">
+	  <value>Urgplglgl</value>
   </data>
   <data name="Unplayed" xml:space="preserve">
     <value>Lurgarglmurg</value>
@@ -8393,6 +8453,9 @@
   </data>
   <data name="Uploading" xml:space="preserve">
     <value>Glorgmrblarg</value>
+  </data>
+  <data name="Upper" xml:space="preserve">
+	  <value>Urgro</value>
   </data>
   <data name="Upscore" xml:space="preserve">
     <value>Blargmurpmurm</value>
@@ -8558,6 +8621,12 @@
   </data>
   <data name="Waiting room" xml:space="preserve">
     <value>Blargmo Gurg</value>
+  </data>
+  <data name="Walk off" xml:space="preserve">
+	  <value>Marggro Ro</value>
+  </data>
+  <data name="Walk off · {0}% in" xml:space="preserve">
+	  <value>Marggro Ro · {0}% gropmur</value>
   </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>Bramogl uppa</value>
@@ -8760,6 +8829,9 @@
   </data>
   <data name="Where PUMBILITY comes from on {0} — the average pool" xml:space="preserve">
     <value>Plom PUMBILITY grab blarg ap {0} — a rorg blubgro</value>
+  </data>
+  <data name="Where runs end isn't shown — this step file disagrees with the game's judged note count." xml:space="preserve">
+	  <value>Urgro grogl urg mrgl glub — murplgl grrgl morgl ur murgl mrglgrogl.</value>
   </data>
   <data name="Where the levels sit" xml:space="preserve">
     <value>Morggrrgl grorpmurm</value>
@@ -9271,6 +9343,9 @@
   <data name="Your rivals" xml:space="preserve">
     <value>Murgmorp blub</value>
   </data>
+  <data name="Your runs" xml:space="preserve">
+	  <value>Murgro Grogl</value>
+  </data>
   <data name="Your saved randomizer settings" xml:space="preserve">
     <value>Gromurp murpmurm rmrgmrml rogrrglgrrgl</value>
   </data>
@@ -9432,6 +9507,9 @@
   </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
+  </data>
+  <data name="{0} broken runs made it to the end" xml:space="preserve">
+	  <value>{0} morgl grogl glorggl ur murgl</value>
   </data>
   <data name="{0} can make tools again." xml:space="preserve">
     <value>{0} murp murgblub rorgl blomurp.</value>
