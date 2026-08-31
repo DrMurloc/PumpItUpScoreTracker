@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Bunit;
 using MediatR;
 using Microsoft.AspNetCore.Components;
@@ -283,5 +284,60 @@ public sealed class SuggestedChartsWidgetTests : ComponentTestBase
         Assert.Contains("Treat very old scores as unplayed", cut.Markup);
         Assert.Contains("Group by seed chart", cut.Markup);
         Assert.DoesNotContain("Around my level", cut.Markup);
+    }
+
+    [Fact]
+    public void FirstLoadShowsTheSpinnerBecauseThereIsNothingToKeep()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetRecommendedChartsQuery>(), It.IsAny<CancellationToken>()))
+            .Returns(new TaskCompletionSource<IEnumerable<ChartRecommendation>>().Task);
+
+        var cut = RenderComponent<SuggestedChartsWidget>(p => p
+            .Add(w => w.Widget, WidgetRecord())
+            .Add(w => w.EffectiveMix, MixEnum.Phoenix));
+
+        Assert.NotEmpty(cut.FindAll(".mud-progress-circular"));
+        Assert.Empty(cut.FindAll(".dash-refreshable"));
+    }
+
+    [Fact]
+    public void RefreshKeepsTheCurrentListDimmedInsteadOfTheSpinner()
+    {
+        // The stale-while-revalidate contract (§2.3): a reload renders what is already on
+        // screen, dimmed, and swaps in place — the spinner never returns after first load.
+        // On the auto-height mobile column the old spinner swap collapsed the page under a
+        // mid-scroll finger, which is the bug this pins shut.
+        SetUpRecommendations(HotStreakRec(_easyMatch.Id));
+        var cut = RenderComponent<SuggestedChartsWidget>(p => p
+            .Add(w => w.Widget, WidgetRecord())
+            .Add(w => w.EffectiveMix, MixEnum.Phoenix));
+        cut.WaitForAssertion(() => Assert.Contains("Achluoias", cut.Markup));
+
+        var pending = new TaskCompletionSource<IEnumerable<ChartRecommendation>>();
+        _mediator.Setup(m => m.Send(It.IsAny<GetRecommendedChartsQuery>(), It.IsAny<CancellationToken>()))
+            .Returns(pending.Task);
+        cut.SetParametersAndRender(p => p.Add(w => w.RefreshToken, 1));
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.NotEmpty(cut.FindAll(".dash-stale"));
+            Assert.Contains("Achluoias", cut.Markup);
+            Assert.Empty(cut.FindAll(".mud-progress-circular"));
+        });
+
+        pending.SetResult(new[] { HotStreakRec(_hardMatch.Id) });
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Contains("Uh-Heung", cut.Markup);
+            Assert.DoesNotContain("Achluoias", cut.Markup);
+            Assert.Empty(cut.FindAll(".dash-stale"));
+        });
+    }
+
+    private static HomePageWidgetRecord WidgetRecord()
+    {
+        return new HomePageWidgetRecord(Guid.NewGuid(), "suggested-charts", null, 0, "1x2",
+            WidgetConfigJson.Write(new SuggestedChartsConfig { Goal = SuggestedGoal.HotStreak }), 1);
     }
 }

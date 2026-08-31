@@ -83,9 +83,14 @@ public sealed record WidgetDescriptor(
     // stays with the content. TitleKey is the button's localized tooltip.
     string? RefreshIcon = null,
     string? RefreshTitleKey = null,
-    // When true, the host auto-bumps RefreshToken after the viewer's score import lands, so
-    // personal-score widgets reflect the new scores/rating without a manual refresh.
+    // When true, the host auto-bumps RefreshToken the moment the viewer's score import
+    // finishes saving — for widgets that read the scores themselves (owner, 2026-08-30:
+    // refresh rides the IMPORT; the post-batch analysis is a separate, later signal).
     bool RefreshOnScoreImport = false,
+    // When true, the host auto-bumps RefreshToken when the viewer's recalculated stats
+    // land (~2 minutes after the batch settles) — only for the few widgets whose data IS
+    // that analysis: stored ratings, competitive-level history, projection-fed gains.
+    bool RefreshOnStatsUpdate = false,
     // Optional config-aware visibility for the refresh action: some goals of a type are
     // deterministic, and a shuffle that re-rolls into the identical list is a lie. Null =
     // always shown when RefreshIcon is set.

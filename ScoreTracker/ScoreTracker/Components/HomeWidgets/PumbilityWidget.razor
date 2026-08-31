@@ -16,14 +16,17 @@
    Pumbility Push goal. 1x2 and taller add your closest competitive matches; a pinned mix
    that differs from the current one shows as a pill in the title (via the header slot). *@
 
-@if (!_loaded)
+@if (!_hasContent)
 {
     <div class="dash-widget-message">
         <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
     </div>
 }
-else if (_stats == null || (_stats.SkillRating <= 0 && _stats.ClearCount == 0))
+else
 {
+    <div class="dash-refreshable @(_loaded ? "" : "dash-stale")">
+    @if (_stats == null || (_stats.SkillRating <= 0 && _stats.ClearCount == 0))
+    {
     <div class="dash-widget-message">
         <div>
             <MudText Typo="Typo.body2">@L["No scores yet — Pumbility starts with your first import."]</MudText>
@@ -105,6 +108,8 @@ else
             </div>
         }
     </div>
+    }
+    </div>
 }
 
 @inject IMediator Mediator
@@ -137,6 +142,7 @@ else
     private sealed record MatchRow(User User, double Level, bool IsCommunity);
 
     private bool _loaded;
+    private bool _hasContent;
     private bool _showMatches;
     private string? _loadedFor;
     private MixEnum _mix;
@@ -171,42 +177,50 @@ else
             _dimension = config.MatchDimension;
 
             var userId = CurrentUser.User.Id;
-            _stats = await Mediator.Send(new GetPlayerStatsQuery(userId, _mix));
+            var stats = await Mediator.Send(new GetPlayerStatsQuery(userId, _mix));
 
-            _matches = new List<MatchRow>();
-            if (_showMatches && _stats != null) await LoadMatches(userId);
+            var myLevel = 0d;
+            var matches = new List<MatchRow>();
+            if (_showMatches && stats != null) (myLevel, matches) = await LoadMatches(userId, stats);
 
+            // All three land together, after the last await (§2.3): a new total above the
+            // previous mix's neighbours is a worse read than a moment of dimmed old numbers.
+            _stats = stats;
+            _myLevel = myLevel;
+            _matches = matches;
             _loaded = true;
+            _hasContent = true;
         }
 
         UpdateHeaderSlot(WidgetConfigJson.Read<PumbilityConfig>(Widget.ConfigJson).Mix);
     }
 
-    private async Task LoadMatches(Guid userId)
+    private async Task<(double MyLevel, List<MatchRow> Matches)> LoadMatches(Guid userId,
+        PlayerStatsRecord stats)
     {
-        _myLevel = _dimension switch
+        var myLevel = _dimension switch
         {
-            ChartType.Single => _stats!.SinglesCompetitiveLevel,
-            ChartType.Double => _stats!.DoublesCompetitiveLevel,
-            _ => _stats!.CompetitiveLevel
+            ChartType.Single => stats.SinglesCompetitiveLevel,
+            ChartType.Double => stats.DoublesCompetitiveLevel,
+            _ => stats.CompetitiveLevel
         };
-        if (_myLevel <= 0) return;
+        if (myLevel <= 0) return (myLevel, new List<MatchRow>());
 
         // The cohort (in-range, nearest first) comes ranked from SQL; eligibility is applied
         // here where the community set and privacy flags live: public players, plus anyone
         // from your non-region communities (who also get the green glow), closest 25.
         var neighbors = await Mediator.Send(
-            new GetCompetitiveNeighborsQuery(_mix, _dimension, _myLevel, Range, CandidateFetch));
+            new GetCompetitiveNeighborsQuery(_mix, _dimension, myLevel, Range, CandidateFetch));
         var community = await CommunityGlow.GetMyCommunityMemberIds();
         var users = (await Users.GetUsers(neighbors.Select(n => n.UserId).Where(id => id != userId)))
             .ToDictionary(u => u.Id);
 
-        _matches = neighbors
+        return (myLevel, neighbors
             .Where(n => n.UserId != userId && users.ContainsKey(n.UserId))
             .Where(n => users[n.UserId].IsPublic || community.Contains(n.UserId))
             .Take(MatchCount)
             .Select(n => new MatchRow(users[n.UserId], n.CompetitiveLevel, community.Contains(n.UserId)))
-            .ToList();
+            .ToList());
     }
 
     private void UpdateHeaderSlot(MixEnum? pinned)

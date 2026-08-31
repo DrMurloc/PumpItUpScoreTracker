@@ -2773,6 +2773,22 @@ html.sheet-open .more-sheet-scrim {
     color: var(--mix-ink-muted);
 }
 
+/* Stale-while-revalidate: once a widget has rendered, a reload dims the current content
+   in place instead of collapsing to a spinner — on the auto-height mobile column a
+   spinner swap shrinks the page under a mid-scroll finger and kills the gesture. The
+   wrapper mirrors .dash-widget-body's flex chain so widget roots keep stretching. */
+.dash-refreshable {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    transition: opacity .2s ease;
+}
+
+.dash-stale {
+    opacity: .6;
+}
+
 /* Import Scores widget (§4): a credential form has to live in a 1x1 body, so the fields and
    button pack into a tight flex column that scrolls rather than clipping the action off. */
 .import-widget-body {
@@ -4280,15 +4296,6 @@ html.sheet-open .more-sheet-scrim {
     height: 26px;
 }
 
-@media (max-width: 599.98px) {
-    /* Mobile cells auto-grow — let the page scroll instead of clipping rows. */
-    .dash-targets {
-        overflow-y: visible;
-        mask-image: none;
-        animation: none;
-    }
-}
-
 .dash-endzone {
     box-shadow: inset 0 -3px 0 0 var(--mix-primary);
     border-radius: 10px;
@@ -4885,6 +4892,23 @@ html.sheet-open .more-sheet-scrim {
             --dash-fade-top: 24px;
             --dash-fade-bottom: 0px;
         }
+    }
+}
+
+/* Phone column: cells auto-grow to their content, so no widget list overflows — which is
+   also why the scroll(self) timeline above never advances there. Left alone, the mask
+   would park at its initial value and permanently ghost every list's last row into a
+   "scroll me" that scrolls nothing.
+
+   This block sits AFTER the two rules it overrides on purpose. Every selector involved is
+   (0,1,0), and neither a media query nor @supports adds specificity, so source order is
+   the only thing that can decide — the same suppression written above them is inert. That
+   is not hypothetical: it shipped that way twice, once here and once as a .dash-targets
+   rule that spent its whole life dead. If this ever moves, it stops working silently. */
+@media (max-width: 599.98px) {
+    .dash-scroll {
+        mask-image: none;
+        animation: none;
     }
 }
 
