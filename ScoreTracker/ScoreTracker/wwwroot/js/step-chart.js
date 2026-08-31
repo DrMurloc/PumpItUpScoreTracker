@@ -658,8 +658,12 @@ function notableOf(view) {
     if (peak == null) return { spike: null, sections: [] };
 
     var threshold = Math.min(peak, view.meter != null ? view.meter : peak) - NotableWindow;
+    // Very Fast promotes: the folder's fastest footwork is notable even when the model rates
+    // the passage below the level bar (owner, 2026-08-30 — Solve My Hurt's 16.57-level drill
+    // section is the chart's signature). Corpus cost: 89% of charts gain nothing, p90 one
+    // extra chip.
     var sections = view.segments.filter(function (segment) {
-        return segment.lvl != null && segment.lvl >= threshold;
+        return (segment.lvl != null && segment.lvl >= threshold) || segment.pace === 'vf';
     });
     var spike = null;
     sections.forEach(function (segment) {
