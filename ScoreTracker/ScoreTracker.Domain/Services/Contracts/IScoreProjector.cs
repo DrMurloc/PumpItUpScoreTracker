@@ -55,6 +55,14 @@ public readonly record struct ProjectionTarget(Guid ChartId, int Level);
 ///     from an estimate would be describing something that did not happen. Rides out on
 ///     <see cref="PeerGroup.PlacedByEstimate" />.
 /// </param>
+/// <param name="Quantiles">
+///     The rungs to read the peers at — every one comes back per chart on
+///     <see cref="ScoreProjection.Ladders" />, and the first is what <see cref="ScoreProjection.Scores" />
+///     prints. Null or empty is the one default rung, <see cref="PeerEstimator.DefaultQuantile" />,
+///     which is what every surface reads unless it lets the player choose (D50, D51). A caller that
+///     caches the run asks for every rung it might later be asked for, so a change of rung is a
+///     lookup and never a second sweep.
+/// </param>
 public sealed record ScoreProjectionRequest(
     MixEnum Mix,
     ChartType ChartType,
@@ -64,7 +72,16 @@ public sealed record ScoreProjectionRequest(
     IReadOnlyDictionary<Guid, Chart>? Charts = null,
     bool RelaxFloorWhenEmpty = false,
     double? ProjectedTotal = null,
-    bool ProjectedTotalIsEstimate = false);
+    bool ProjectedTotalIsEstimate = false,
+    IReadOnlyCollection<double>? Quantiles = null)
+{
+    /// <summary>The rungs actually read: what was asked for, or the default alone.</summary>
+    public IReadOnlyCollection<double> Rungs =>
+        Quantiles is { Count: > 0 } ? Quantiles : new[] { PeerEstimator.DefaultQuantile };
+
+    /// <summary>The rung <see cref="ScoreProjection.Scores" /> is read at — the first one asked for.</summary>
+    public double PrimaryQuantile => Rungs.First();
+}
 
 /// <summary>How a peer group was drawn — the two definitions the site has.</summary>
 public enum PeerGroupKind
@@ -206,6 +223,36 @@ public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWid
 public sealed record PeerSpread(PhoenixScore Quartile1, PhoenixScore Quartile3, int PeerCount);
 
 /// <summary>
+///     The peers' scores on one chart read at several quantiles — the same voices, the same
+///     growth weights, the same arithmetic at every rung — and how many peers voted. A caller
+///     asks for the rungs it will read (<see cref="ScoreProjectionRequest.Quantiles" />) and gets
+///     exactly those; <see cref="At" /> answers a requested rung exactly and interpolates
+///     between the two nearest for anything else, so a rung nobody asked for is never invented
+///     from nothing. This is what a surface that lets the player choose a rung caches (D51).
+/// </summary>
+public sealed record PeerLadder(IReadOnlyDictionary<double, PhoenixScore> Rungs, int PeerCount)
+{
+    /// <summary>The score at a rung: exact where the rung was asked for, linear between its neighbours otherwise.</summary>
+    public PhoenixScore At(double quantile)
+    {
+        if (Rungs.TryGetValue(quantile, out var exact)) return exact;
+        var ordered = Rungs.OrderBy(kv => kv.Key).ToArray();
+        if (quantile <= ordered[0].Key) return ordered[0].Value;
+        if (quantile >= ordered[^1].Key) return ordered[^1].Value;
+        for (var i = 1; i < ordered.Length; i++)
+        {
+            if (quantile > ordered[i].Key) continue;
+            var (lowQuantile, low) = ordered[i - 1];
+            var (highQuantile, high) = ordered[i];
+            var t = (quantile - lowQuantile) / (highQuantile - lowQuantile);
+            return PhoenixScore.From((int)Math.Round((int)low + t * ((int)high - (int)low)));
+        }
+
+        return ordered[^1].Value;
+    }
+}
+
+/// <summary>
 ///     One chart as the peers' pools and scores see it (docs/design/pumbility-overhaul.md §3.10).
 /// </summary>
 /// <param name="Holders">Peers holding the chart in their top-50 pool of the type.</param>
@@ -232,6 +279,19 @@ public sealed record PeerPoolChart(int Holders, int Points, int Scored, PhoenixS
     public double? PercentileOf(int score)
     {
         return Scores.Count == 0 ? null : Scores.Count(s => s < score) / (double)Scores.Count;
+    }
+
+    /// <summary>
+    ///     What a player is projected to score here at a rung — the peers' scores at that quantile,
+    ///     every voice at full weight, with the estimator's own arithmetic and its five-scorer
+    ///     floor (D24): null means no opinion. Read on demand from the voices rather than stored
+    ///     per rung, so a page that lets the player choose the rung (D51) asks and is answered.
+    /// </summary>
+    public PhoenixScore? ProjectedAt(double quantile)
+    {
+        var estimate = PeerEstimator.Estimate(Scores.Select(score => new PeerScore(score, 0, 0)).ToArray(), 0,
+            quantile, PeerEstimator.Phoenix2MinimumPeers);
+        return estimate == null ? null : PhoenixScore.From(estimate.Value);
     }
 }
 
@@ -286,6 +346,12 @@ public sealed record PeerPoolSummary(
 ///     (<see cref="ScoreProjectionRequest.Charts" />); null otherwise, which means "not asked",
 ///     never "nobody holds anything".
 /// </param>
+/// <param name="Ladders">
+///     Per chart in <paramref name="Scores" />, the peers read at every rung the request asked
+///     for (<see cref="ScoreProjectionRequest.Quantiles" />) — same voices, same weights, same
+///     arithmetic — so a caller that caches the run can answer any of those rungs later without
+///     reading a peer again. <paramref name="Scores" /> is the first rung of each.
+/// </param>
 public sealed record ScoreProjection(
     IReadOnlyDictionary<Guid, PhoenixScore> Scores,
     int PeerCount,
@@ -293,7 +359,8 @@ public sealed record ScoreProjection(
     double MeanFreshness,
     PeerGroup? Group = null,
     IReadOnlyDictionary<Guid, PeerSpread>? Spreads = null,
-    PeerPoolSummary? PeerPools = null)
+    PeerPoolSummary? PeerPools = null,
+    IReadOnlyDictionary<Guid, PeerLadder>? Ladders = null)
 {
     /// <summary>No opinion, for the runs that stop before a peer group exists.</summary>
     public static ScoreProjection None(double competitiveLevel = 0, PeerGroup? group = null)

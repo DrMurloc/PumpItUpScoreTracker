@@ -23,24 +23,37 @@ using Xunit.Abstractions;
 namespace ScoreTracker.ExplorationTests.Pumbility;
 
 /// <summary>
-///     The PUMBILITY projection's measurement harness (docs/design/pumbility-overhaul.md §4.8, §9).
+///     The PUMBILITY projection's measurement harness (docs/design/pumbility-overhaul.md §4.8, §4.10, §9).
 ///     <para>
-///         Two probes against a populated database and one pin that needs none:
+///         Probes against a populated database and one pin that needs none:
 ///     </para>
 ///     <list type="bullet">
 ///         <item>
-///             <b>The Phoenix 2 launch backtest.</b> Every Phoenix 2 player, every chart they hold
-///             a Phoenix 2 score on, the shipping projector run for them exactly as the page runs
-///             it — their own scores never enter their own peer group — and the truth is the score
-///             they actually hold. Reported as bias, MAE, how often an SS call was right, and how
-///             much of the record the estimator answered at all. Self-selected (players choose
-///             what they play), which favours an estimator; the number to watch is not "is it
-///             centred" but "where is it not".
+///             <b>The Phoenix 2 backtest.</b> Every Phoenix 2 player, every chart they hold a
+///             Phoenix 2 score on, the shipping projector run for them exactly as the page runs it —
+///             their own scores never enter their own peer group — read at the peers' 25th, 50th and
+///             75th percentile, and the truth is the score they actually hold. Reported as bias, MAE,
+///             coverage (the share of actual scores at or above the estimate), the never-overstated
+///             rate, how often an SS call was right, and how much of the record was answered at all.
+///             Self-selected (players choose what they play), which favours every rung alike.
 ///         </item>
 ///         <item>
-///             <b>One player's list</b>, with the peers behind each row — the reproduction that
-///             found the 2026-08-13 inflation, kept so the next "this feels high" can be answered
-///             the same afternoon.
+///             <b>The top of the list.</b> Per player-type, the answered charts ranked by projected
+///             PUMBILITY value — the page's own order — and the top ten read against the rest, each
+///             rung ranking its own list. Sorting by an estimate selects the charts where it ran high,
+///             so this is where a rung's honesty is decided (§4.10, D50).
+///         </item>
+///         <item>
+///             <b>A per-player quantile</b>, split-half: where a player's own scores sit among their
+///             peers, fitted on half their charts and scored on the other half against the fixed rungs.
+///         </item>
+///         <item>
+///             <b>A sampled Phoenix 1 backtest</b>, same shape, in the page's own ±2 window.
+///         </item>
+///         <item>
+///             <b>One player's list</b>, with the peers behind each row — the reproduction that found
+///             the 2026-08-13 inflation, kept so the next "this feels high" can be answered the same
+///             afternoon.
 ///         </item>
 ///         <item>
 ///             <b>The pin.</b> <see cref="PeerEstimator" /> and this file's own arithmetic agree on
@@ -49,8 +62,10 @@ namespace ScoreTracker.ExplorationTests.Pumbility;
 ///         </item>
 ///     </list>
 ///     <para>
-///         Configure <c>CatalogProbe:ConnectionString</c> (the shared AppHost user-secrets store),
-///         optionally <c>PumbilityProbe:UserId</c> for the list, then
+///         Configure <c>CatalogProbe:ConnectionString</c> (the shared AppHost user-secrets store) or
+///         the <c>SCORETRACKER_CATALOG_CONNECTION</c> variable, optionally <c>PumbilityProbe:UserId</c>
+///         / <c>SCORETRACKER_PUMBILITY_PROBE_USER</c> for the list and <c>SCORETRACKER_PROBE_SAMPLE</c>
+///         for the Phoenix 1 sample size, then
 ///         <c>dotnet test ScoreTracker/ScoreTracker.ExplorationTests/ScoreTracker.ExplorationTests.csproj --filter "FullyQualifiedName~PumbilityProjection"</c>.
 ///         Read-only.
 ///     </para>
@@ -59,6 +74,10 @@ namespace ScoreTracker.ExplorationTests.Pumbility;
 public sealed class PumbilityProjectionBacktestTests
 {
     private const int MinimumLevelForBacktest = 15;
+
+    /// <summary>The three rungs the page offers (D51), read off one sweep.</summary>
+    private static readonly double[] Rungs = { PeerEstimator.LowerQuartile, PeerEstimator.Median, PeerEstimator.UpperQuartile };
+
     private readonly ITestOutputHelper _output;
 
     public PumbilityProjectionBacktestTests(ITestOutputHelper output)
@@ -71,19 +90,21 @@ public sealed class PumbilityProjectionBacktestTests
     [Fact]
     public void The_estimator_and_the_harness_agree_on_fixed_inputs()
     {
-        // Phoenix 2: unweighted median, five-peer floor.
+        // Phoenix 2: unweighted, five-peer floor — the median rung and the default rung.
         var five = new[] { 940_000, 985_000, 962_000, 990_000, 975_000 };
         Assert.Equal(Harness.Median(five),
             PeerEstimator.Estimate(five.Select(s => new PeerScore(s, 0, 0)).ToArray(), 0,
-                PeerEstimator.Phoenix2Quantile, PeerEstimator.Phoenix2MinimumPeers));
+                PeerEstimator.Median, PeerEstimator.Phoenix2MinimumPeers));
         var six = five.Append(999_000).ToArray();
         Assert.Equal(Harness.Median(six),
             PeerEstimator.Estimate(six.Select(s => new PeerScore(s, 0, 0)).ToArray(), 0,
-                PeerEstimator.Phoenix2Quantile, PeerEstimator.Phoenix2MinimumPeers));
+                PeerEstimator.Median, PeerEstimator.Phoenix2MinimumPeers));
         Assert.Null(PeerEstimator.Estimate(five.Take(4).Select(s => new PeerScore(s, 0, 0)).ToArray(), 0,
-            PeerEstimator.Phoenix2Quantile, PeerEstimator.Phoenix2MinimumPeers));
+            PeerEstimator.Median, PeerEstimator.Phoenix2MinimumPeers));
+        Assert.Equal((int)Math.Round(Harness.Percentile(five.OrderBy(s => s).Select(s => (double)s).ToArray(), PeerEstimator.DefaultQuantile)),
+            PeerEstimator.Estimate(five.Select(s => new PeerScore(s, 0, 0)).ToArray(), 0));
 
-        // Phoenix 1: growth-weighted 65th percentile, midpoint convention.
+        // Phoenix 1: growth-weighted, midpoint convention, at the default rung and on the ladder.
         var peers = new[]
         {
             new PeerScore(900_000, 22.0, 19.0), new PeerScore(950_000, 22.0, 22.0),
@@ -91,10 +112,14 @@ public sealed class PumbilityProjectionBacktestTests
             new PeerScore(985_000, 22.0, 22.0), new PeerScore(990_000, 22.0, 20.0)
         };
         var weighted = peers.Select(p => ((double)p.Score, Math.Exp(-p.Growth))).ToArray();
-        Assert.Equal((int)Math.Round(Harness.WeightedQuantile(weighted, 0.65)), PeerEstimator.Estimate(peers));
+        Assert.Equal((int)Math.Round(Harness.WeightedQuantile(weighted, PeerEstimator.DefaultQuantile)),
+            PeerEstimator.Estimate(peers));
+        var ladder = PeerEstimator.Ladder(peers, Rungs)!;
+        foreach (var rung in Rungs)
+            Assert.Equal((int)Math.Round(Harness.WeightedQuantile(weighted, rung)), (int)ladder.At(rung));
     }
 
-    // ------------------------------------------------------------------ the backtest
+    // ------------------------------------------------------------------ the Phoenix 2 backtest
 
     [CatalogProbeFact]
     public async Task Phoenix2_launch_backtest_against_every_players_actual_scores()
@@ -134,17 +159,17 @@ public sealed class PumbilityProjectionBacktestTests
                 universe += held.Length;
 
                 // The catalog rides along so the peers' voices per chart come back with the estimate
-                // (PeerPools) — the personal-quantile experiment below needs where each actual score
-                // sat among the peers, not just the three quantiles.
+                // (PeerPools) — the personal-quantile experiment needs where each actual score sat
+                // among the peers, not just the rungs.
                 var projection = await projector.Project(new ScoreProjectionRequest(MixEnum.Phoenix2, chartType,
                     player, held.Select(s => new ProjectionTarget(s.ChartId, (int)charts[s.ChartId].Level)).ToArray(),
-                    PeerEstimator.CompetitiveWindow, charts), CancellationToken.None);
+                    PeerEstimator.CompetitiveWindow, charts, Quantiles: Rungs), CancellationToken.None);
                 if (projection.Group is { IsLit: true }) lit[chartType]++;
 
                 foreach (var s in held)
-                    if (projection.Scores.TryGetValue(s.ChartId, out var estimate))
-                        pairs.Add(Pair.Of(player, chartType, s.ChartId, (int)estimate, (int)s.Score!.Value,
-                            !phoenix1.Contains(s.ChartId), projection.Spreads,
+                    if (projection.Ladders != null && projection.Ladders.TryGetValue(s.ChartId, out var ladder))
+                        pairs.Add(Pair.Of(player, chartType, s.ChartId, ladder, (int)s.Score!.Value,
+                            !phoenix1.Contains(s.ChartId),
                             projection.PeerPools?.Charts.GetValueOrDefault(s.ChartId)?.Scores));
             }
         }
@@ -162,116 +187,15 @@ public sealed class PumbilityProjectionBacktestTests
         Assert.True(true, "a measurement, not a guarantee — read the output");
     }
 
-    /// <summary>
-    ///     What a player actually sees is the top of a list sorted by projected gain, and sorting by
-    ///     an estimate selects for the charts where that estimate ran high — an estimator that is
-    ///     centered over everything still hands you a biased top ten. Per player-type, rank the
-    ///     answered charts by their projected PUMBILITY value at a quantile (the bar is one number
-    ///     within a player, so this is the page's own order) and read the top ten at that same
-    ///     quantile, against the rest of the list. Each quantile ranks its own list, because the
-    ///     page would.
-    /// </summary>
-    private void TopOfList(IReadOnlyCollection<Pair> pairs, IReadOnlyDictionary<Guid, Chart> charts, MixEnum mix)
-    {
-        const int listTop = 10;
-        const int minimumList = 20;
-        var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
-        double Value(Pair p, int score)
-        {
-            var phoenix = PhoenixScore.From(score);
-            return scoring.GetScore(charts[p.ChartId], phoenix, ScoringConfiguration.ExpectedPlateForScore(phoenix), false);
-        }
-
-        var shipping = mix == MixEnum.Phoenix2 ? "p50" : "p65";
-        var reads = new (string Label, Func<Pair, int?> At)[]
-        {
-            (shipping, p => p.Estimate), ("p25", p => p.Q1), ("p75", p => p.Q3)
-        };
-        var lists = 0;
-        foreach (var (label, at) in reads)
-        {
-            var top = new List<Pair>();
-            var rest = new List<Pair>();
-            foreach (var group in pairs.Where(p => at(p) != null).GroupBy(p => (p.Player, p.ChartType)))
-            {
-                var ordered = group.OrderByDescending(p => Value(p, at(p)!.Value)).ToArray();
-                if (ordered.Length < minimumList) continue;
-                top.AddRange(ordered.Take(listTop));
-                rest.AddRange(ordered.Skip(listTop));
-            }
-
-            if (label == shipping) lists = top.Count / listTop;
-            if (top.Count == 0) continue;
-            Row($"top {listTop} of the list · {label}", top, p => at(p)!.Value, mix);
-            Row($"the rest of the list · {label}", rest, p => at(p)!.Value, mix);
-        }
-
-        _output.WriteLine($"  (lists: {lists} player-types with >= {minimumList} answered charts; each quantile ranks its own list)");
-    }
-
-    /// <summary>
-    ///     Could the quantile be the player's own rather than one number for everyone? Split-half:
-    ///     each player-type's answered charts are ordered by id, the odd half fits "where do my
-    ///     scores sit among my peers" (the median of the actual score's percentile among the peers'
-    ///     voices on each chart), and the even half is scored at that quantile — against p50 and p25
-    ///     on the very same pairs. A shrunk variant halves the distance from the median, the usual
-    ///     hedge for a personal estimate fitted on a handful of charts. §4.5 measured a per-player
-    ///     OFFSET on Phoenix 1 as +9.1% worse — self-selection — so this asks the same question of
-    ///     a per-player QUANTILE on Phoenix 2 before anyone proposes shipping one.
-    /// </summary>
-    private void PersonalQuantile(IReadOnlyCollection<Pair> pairs, MixEnum mix)
-    {
-        const int minimumFit = 6;
-        var fitted = new List<double>();
-        var consistency = new List<double>();
-        var eval = new List<(Pair Pair, double Q, double Shrunk)>();
-        foreach (var group in pairs.Where(p => p.Percentile != null).GroupBy(p => (p.Player, p.ChartType)))
-        {
-            var ordered = group.OrderBy(p => p.ChartId).ToArray();
-            var fit = ordered.Where((_, i) => i % 2 == 1).Select(p => p.Percentile!.Value).OrderBy(x => x).ToArray();
-            var hold = ordered.Where((_, i) => i % 2 == 0).ToArray();
-            if (fit.Length < minimumFit || hold.Length == 0) continue;
-            var q = Math.Clamp(Harness.Percentile(fit, 0.5), 0.05, 0.95);
-            fitted.Add(q);
-            consistency.Add(Harness.Percentile(fit, 0.75) - Harness.Percentile(fit, 0.25));
-            foreach (var p in hold) eval.Add((p, q, 0.5 + 0.5 * (q - 0.5)));
-        }
-
-        if (fitted.Count == 0)
-        {
-            _output.WriteLine("personal quantile: too few pairs per player to fit");
-            return;
-        }
-
-        var qs = fitted.OrderBy(x => x).ToArray();
-        _output.WriteLine(
-            $"personal quantile, fit half ({fitted.Count} player-types with >= {minimumFit} charts): " +
-            $"p10 {Harness.Percentile(qs, 0.10):F2} p25 {Harness.Percentile(qs, 0.25):F2} p50 {Harness.Percentile(qs, 0.50):F2} " +
-            $"p75 {Harness.Percentile(qs, 0.75):F2} p90 {Harness.Percentile(qs, 0.90):F2}; " +
-            $"within-player IQR of the percentile, median {Harness.Percentile(consistency.OrderBy(x => x).ToArray(), 0.5):F2} " +
-            $"(0 = every chart sits at the same place among the peers, 0.5 = anywhere)");
-
-        var held = eval.Select(e => e.Pair).ToList();
-        int At(Pair p, double q) => PeerEstimator.Estimate(p.Voices!.Select(v => new PeerScore(v, 0, 0)).ToArray(), 0, q)!.Value;
-        var personal = eval.ToDictionary(e => (e.Pair.Player, e.Pair.ChartType, e.Pair.ChartId), e => At(e.Pair, e.Q));
-        var shrunk = eval.ToDictionary(e => (e.Pair.Player, e.Pair.ChartType, e.Pair.ChartId), e => At(e.Pair, e.Shrunk));
-        Row("held-out half · p50", held, p => p.Estimate, mix);
-        Row("held-out half · p25", held, p => p.Q1!.Value, mix);
-        Row("held-out half · personal q", held, p => personal[(p.Player, p.ChartType, p.ChartId)], mix);
-        Row("held-out half · half-shrunk q", held, p => shrunk[(p.Player, p.ChartType, p.ChartId)], mix);
-    }
-
     // ------------------------------------------------------------------ the Phoenix 1 sample
 
     /// <summary>
     ///     The same shape on Phoenix 1, over a deterministic sample of players (every k-th account
     ///     with Phoenix stats, ordered by id; <c>SCORETRACKER_PROBE_SAMPLE</c> sets the target count,
-    ///     default 60) because a Phoenix 1 band is hundreds of players and every one of the 1,500
-    ///     accounts would take hours. Targets are the page's own window — the player's charts within
-    ///     two levels of their competitive level — so the peer read stays the size the page pays for.
-    ///     Truth is the player's current best, which on Phoenix 1 is the eventual best the shipping
-    ///     p65 was fitted on; the quartile rows say what a lower or higher read would have claimed
-    ///     against that same truth.
+    ///     default 60) because a Phoenix 1 band is hundreds of players and every one of the accounts
+    ///     would take hours. Targets are the page's own window — the player's charts within two
+    ///     levels of their competitive level — so the peer read stays the size the page pays for.
+    ///     Truth is the player's current best.
     /// </summary>
     [CatalogProbeFact]
     public async Task Phoenix1_sampled_backtest_against_actual_scores()
@@ -317,12 +241,11 @@ public sealed class PumbilityProjectionBacktestTests
 
                 var projection = await projector.Project(new ScoreProjectionRequest(MixEnum.Phoenix, chartType,
                     player, held.Select(s => new ProjectionTarget(s.ChartId, (int)charts[s.ChartId].Level)).ToArray(),
-                    PeerEstimator.CompetitiveWindow), CancellationToken.None);
+                    PeerEstimator.CompetitiveWindow, Quantiles: Rungs), CancellationToken.None);
 
                 foreach (var s in held)
-                    if (projection.Scores.TryGetValue(s.ChartId, out var estimate))
-                        pairs.Add(Pair.Of(player, chartType, s.ChartId, (int)estimate, (int)s.Score!.Value, false,
-                            projection.Spreads));
+                    if (projection.Ladders != null && projection.Ladders.TryGetValue(s.ChartId, out var ladder))
+                        pairs.Add(Pair.Of(player, chartType, s.ChartId, ladder, (int)s.Score!.Value, false, null));
             }
 
             if (counted) sampled++;
@@ -364,7 +287,7 @@ public sealed class PumbilityProjectionBacktestTests
                     _output.WriteLine($"  {type}: {group.Kind}, centre {group.Center}, size {group.Size}, pool {group.PoolCount}/{group.PoolSize}, lit {group.IsLit}");
 
             // The page's own bar, rebuilt the way PumbilityProjectionSaga.BuildPool does, so a gain
-            // re-priced at another quantile is measured against the same number the page uses.
+            // re-priced at another rung is measured against the same number the page uses.
             var top = (await mediator.Send(new GetTop50ForPlayerQuery(userId, pool, 100, MixEnum.Phoenix2),
                     CancellationToken.None))
                 .Where(s => s.Score != null && charts.ContainsKey(s.ChartId))
@@ -400,7 +323,7 @@ public sealed class PumbilityProjectionBacktestTests
             _output.WriteLine($"  bar {baseline:F2}; listed rows {projection.ProjectedGains.Count} (capped at 100 by the saga); " +
                               $"paying at p25 {paying["p25"]} / p50 {paying["p50"]} / p75 {paying["p75"]}; " +
                               $"SS+ calls at p25 {ssCalls["p25"]} / p50 {ssCalls["p50"]} / p75 {ssCalls["p75"]}");
-            _output.WriteLine($"  {"chart",-34} {"lvl",-4} {"p25",-16} {"p50",-16} {"p75",-16} {"gain@25",8} {"gain@50",8} {"gain@75",8} peers");
+            _output.WriteLine($"  {"chart",-34} {"lvl",-4} {"p25",-16} {"shipping",-16} {"p75",-16} {"gain@25",8} {"gain@50",8} {"gain@75",8} peers");
             var rows = projection.ProjectedGains.OrderByDescending(kv => kv.Value).Take(40);
             foreach (var (chartId, gain) in rows)
             {
@@ -420,6 +343,106 @@ public sealed class PumbilityProjectionBacktestTests
         Assert.True(true, "a reproduction, not a guarantee — read the output");
     }
 
+    // ------------------------------------------------------------------ the reads
+
+    /// <summary>
+    ///     What a player actually sees is the top of a list sorted by projected gain, and sorting by
+    ///     an estimate selects for the charts where that estimate ran high — an estimator that is
+    ///     centered over everything still hands you a biased top ten. Per player-type, rank the
+    ///     answered charts by their projected PUMBILITY value at a rung (the bar is one number
+    ///     within a player, so this is the page's own order) and read the top ten at that same rung,
+    ///     against the rest of the list. Each rung ranks its own list, because the page would.
+    /// </summary>
+    private void TopOfList(IReadOnlyCollection<Pair> pairs, IReadOnlyDictionary<Guid, Chart> charts, MixEnum mix)
+    {
+        const int listTop = 10;
+        const int minimumList = 20;
+        var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
+        double Value(Pair p, int score)
+        {
+            var phoenix = PhoenixScore.From(score);
+            return scoring.GetScore(charts[p.ChartId], phoenix, ScoringConfiguration.ExpectedPlateForScore(phoenix), false);
+        }
+
+        var lists = 0;
+        foreach (var (label, at) in Reads)
+        {
+            var top = new List<Pair>();
+            var rest = new List<Pair>();
+            foreach (var group in pairs.GroupBy(p => (p.Player, p.ChartType)))
+            {
+                var ordered = group.OrderByDescending(p => Value(p, at(p))).ToArray();
+                if (ordered.Length < minimumList) continue;
+                top.AddRange(ordered.Take(listTop));
+                rest.AddRange(ordered.Skip(listTop));
+            }
+
+            lists = top.Count / listTop;
+            if (top.Count == 0) continue;
+            Row($"top {listTop} of the list · {label}", top, at, mix);
+            Row($"the rest of the list · {label}", rest, at, mix);
+        }
+
+        _output.WriteLine($"  (lists: {lists} player-types with >= {minimumList} answered charts; each rung ranks its own list)");
+    }
+
+    /// <summary>
+    ///     Could the rung be the player's own rather than one number for everyone? Split-half: each
+    ///     player-type's answered charts are ordered by id, the odd half fits "where do my scores sit
+    ///     among my peers" (the median of the actual score's percentile among the peers' voices on
+    ///     each chart), and the even half is scored at that quantile — against the fixed rungs on the
+    ///     very same pairs. A shrunk variant halves the distance from the median, the usual hedge for
+    ///     a personal estimate fitted on a handful of charts. Measured 7% better than the median and
+    ///     declined as a product (D51): the knob answers "how am I playing today", not "where do I
+    ///     stand".
+    /// </summary>
+    private void PersonalQuantile(IReadOnlyCollection<Pair> pairs, MixEnum mix)
+    {
+        const int minimumFit = 6;
+        var fitted = new List<double>();
+        var consistency = new List<double>();
+        var eval = new List<(Pair Pair, double Q, double Shrunk)>();
+        foreach (var group in pairs.Where(p => p.Percentile != null).GroupBy(p => (p.Player, p.ChartType)))
+        {
+            var ordered = group.OrderBy(p => p.ChartId).ToArray();
+            var fit = ordered.Where((_, i) => i % 2 == 1).Select(p => p.Percentile!.Value).OrderBy(x => x).ToArray();
+            var hold = ordered.Where((_, i) => i % 2 == 0).ToArray();
+            if (fit.Length < minimumFit || hold.Length == 0) continue;
+            var q = Math.Clamp(Harness.Percentile(fit, 0.5), 0.05, 0.95);
+            fitted.Add(q);
+            consistency.Add(Harness.Percentile(fit, 0.75) - Harness.Percentile(fit, 0.25));
+            foreach (var p in hold) eval.Add((p, q, 0.5 + 0.5 * (q - 0.5)));
+        }
+
+        if (fitted.Count == 0)
+        {
+            _output.WriteLine("personal quantile: too few pairs per player to fit");
+            return;
+        }
+
+        var qs = fitted.OrderBy(x => x).ToArray();
+        _output.WriteLine(
+            $"personal quantile, fit half ({fitted.Count} player-types with >= {minimumFit} charts): " +
+            $"p10 {Harness.Percentile(qs, 0.10):F2} p25 {Harness.Percentile(qs, 0.25):F2} p50 {Harness.Percentile(qs, 0.50):F2} " +
+            $"p75 {Harness.Percentile(qs, 0.75):F2} p90 {Harness.Percentile(qs, 0.90):F2}; " +
+            $"within-player IQR of the percentile, median {Harness.Percentile(consistency.OrderBy(x => x).ToArray(), 0.5):F2} " +
+            $"(0 = every chart sits at the same place among the peers, 0.5 = anywhere)");
+
+        var held = eval.Select(e => e.Pair).ToList();
+        int At(Pair p, double q) => PeerEstimator.Estimate(p.Voices!.Select(v => new PeerScore(v, 0, 0)).ToArray(), 0, q)!.Value;
+        var personal = eval.ToDictionary(e => (e.Pair.Player, e.Pair.ChartType, e.Pair.ChartId), e => At(e.Pair, e.Q));
+        var shrunk = eval.ToDictionary(e => (e.Pair.Player, e.Pair.ChartType, e.Pair.ChartId), e => At(e.Pair, e.Shrunk));
+        foreach (var (label, at) in Reads) Row($"held-out half · {label}", held, at, mix);
+        Row("held-out half · personal q", held, p => personal[(p.Player, p.ChartType, p.ChartId)], mix);
+        Row("held-out half · half-shrunk q", held, p => shrunk[(p.Player, p.ChartType, p.ChartId)], mix);
+    }
+
+    /// <summary>The three rungs as reads, the default first and marked as what ships.</summary>
+    private static readonly (string Label, Func<Pair, int> At)[] Reads =
+    {
+        ("p25 (default)", p => p.P25), ("p50", p => p.P50), ("p75", p => p.P75)
+    };
+
     // ------------------------------------------------------------------ plumbing
 
     private static Guid? ProbeUserId =>
@@ -430,12 +453,10 @@ public sealed class PumbilityProjectionBacktestTests
                 : null;
 
     /// <summary>
-    ///     One block per label: the shipping estimate's row (p50 on Phoenix 2, p65 on Phoenix 1),
-    ///     then the same pairs read at the peers' first and third quartiles — what "a good day" and
-    ///     "the top of my game" would have claimed against the same truth. Coverage is the share of
-    ///     actual scores at or above the estimate: a calibrated p25 should sit near 75%, a p50 near
-    ///     50%. "grade ≤" is how often the estimate's letter grade was no higher than the actual one
-    ///     — the never-overstated rate.
+    ///     One block per label: the same pairs read at each rung. Coverage is the share of actual
+    ///     scores at or above the estimate: a calibrated p25 should sit near 75%, a p50 near 50%.
+    ///     "grade ≤" is how often the estimate's letter grade was no higher than the actual one —
+    ///     the never-overstated rate.
     /// </summary>
     private void Report(string label, IReadOnlyCollection<Pair> pairs, MixEnum mix)
     {
@@ -445,12 +466,7 @@ public sealed class PumbilityProjectionBacktestTests
             return;
         }
 
-        var shipping = mix == MixEnum.Phoenix2 ? "p50" : "p65";
-        Row($"{label} · {shipping}", pairs, p => p.Estimate, mix);
-        var withSpread = pairs.Where(p => p.Q1 != null).ToArray();
-        if (withSpread.Length == 0) return;
-        Row($"{label} · p25", withSpread, p => p.Q1!.Value, mix);
-        Row($"{label} · p75", withSpread, p => p.Q3!.Value, mix);
+        foreach (var (rung, at) in Reads) Row($"{label} · {rung}", pairs, at, mix);
     }
 
     private void Row(string label, IReadOnlyCollection<Pair> pairs, Func<Pair, int> estimate, MixEnum mix)
@@ -464,7 +480,7 @@ public sealed class PumbilityProjectionBacktestTests
         var gradeNotOver = pairs.Count(p =>
             PhoenixScore.From(estimate(p)).LetterGradeFor(mix) <= PhoenixScore.From(p.Actual).LetterGradeFor(mix));
         _output.WriteLine(
-            $"{label,-34} pairs {pairs.Count,5} | bias mean {diffs.Average(),+7:F0} median {Harness.Percentile(diffs, 0.5),+7:F0} " +
+            $"{label,-40} pairs {pairs.Count,5} | bias mean {diffs.Average(),+7:F0} median {Harness.Percentile(diffs, 0.5),+7:F0} " +
             $"| MAE {diffs.Average(Math.Abs),6:F0} | coverage {100.0 * covered / pairs.Count,5:F1}% " +
             $"| grade = {100.0 * gradeExact / pairs.Count,4:F1}%  grade ≤ {100.0 * gradeNotOver / pairs.Count,4:F1}% " +
             $"| says SS+ {ssCalls.Length,4} ({100.0 * ssCalls.Length / pairs.Count,4:F1}%), right {100.0 * ssRight / Math.Max(1, ssCalls.Length),4:F1}% " +
@@ -505,19 +521,17 @@ public sealed class PumbilityProjectionBacktestTests
     }
 
     /// <summary>
-    ///     One estimate against one truth, with the peers' quartiles beside it so the same pairs can
-    ///     be re-read at p25 and p75 without a second sweep — the quartiles ride out of the projector
-    ///     over the same voices and weights as the estimate.
+    ///     One truth against the three rungs read off the same ladder — the same voices and weights
+    ///     the shipping estimate uses — with the voices themselves where the run carried them.
     /// </summary>
-    private sealed record Pair(Guid Player, ChartType ChartType, Guid ChartId, int Estimate, int Actual, bool Debut,
-        int? Q1, int? Q3, IReadOnlyList<int>? Voices)
+    private sealed record Pair(Guid Player, ChartType ChartType, Guid ChartId, int P25, int P50, int P75, int Actual,
+        bool Debut, IReadOnlyList<int>? Voices)
     {
-        public static Pair Of(Guid player, ChartType chartType, Guid chartId, int estimate, int actual, bool debut,
-            IReadOnlyDictionary<Guid, PeerSpread>? spreads, IReadOnlyList<int>? voices = null)
+        public static Pair Of(Guid player, ChartType chartType, Guid chartId, PeerLadder ladder, int actual, bool debut,
+            IReadOnlyList<int>? voices)
         {
-            var spread = spreads?.GetValueOrDefault(chartId);
-            return new Pair(player, chartType, chartId, estimate, actual, debut,
-                spread == null ? null : (int)spread.Quartile1, spread == null ? null : (int)spread.Quartile3, voices);
+            return new Pair(player, chartType, chartId, (int)ladder.At(PeerEstimator.LowerQuartile),
+                (int)ladder.At(PeerEstimator.Median), (int)ladder.At(PeerEstimator.UpperQuartile), actual, debut, voices);
         }
 
         /// <summary>Where the actual score sat among the peers' voices, midpoint rank on 0..1; null without voices.</summary>

@@ -107,7 +107,7 @@ public sealed class ScoreProjectorTests
     }
 
     [Fact]
-    public async Task FewerThanFivePeersOnAChartIsNoOpinionAndFiveIsTheMedian()
+    public async Task FewerThanFivePeersOnAChartIsNoOpinionAndFiveIsAnEstimate()
     {
         var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
         var peers = Enumerable.Range(0, 5).Select(_ => ctx.WithPeer(poolSize: 50)).ToArray();
@@ -119,9 +119,33 @@ public sealed class ScoreProjectorTests
         var result = await ctx.Project(ChartType.Single, ChartA, ChartB);
 
         Assert.DoesNotContain(ChartA, result.Scores.Keys);
-        Assert.Equal(975_000, (int)result.Scores[ChartB]);
+        // The default read is the first quartile (D50): three-quarters of the way from 940k to
+        // 962k on five equal voices. The median rides the ladder for a caller that asks for it.
+        Assert.Equal(956_500, (int)result.Scores[ChartB]);
         Assert.Equal(5, result.PeerCount);
         Assert.Equal(1.0, result.MeanFreshness);
+    }
+
+    [Fact]
+    public async Task TheLadderCarriesEveryRungTheCallerAskedForAndScoresIsTheFirst()
+    {
+        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var peers = Enumerable.Range(0, 5).Select(_ => ctx.WithPeer(poolSize: 50)).ToArray();
+        var scores = new[] { 940_000, 962_000, 975_000, 985_000, 990_000 };
+        for (var i = 0; i < 5; i++) ctx.WithScore(peers[i], ChartA, scores[i]);
+
+        var result = await ctx.ProjectAt(ChartType.Single, new[] { 0.5, 0.25, 0.75 }, ChartA);
+
+        var ladder = result.Ladders![ChartA];
+        Assert.Equal(975_000, (int)result.Scores[ChartA]);
+        Assert.Equal(956_500, (int)ladder.At(0.25));
+        Assert.Equal(975_000, (int)ladder.At(0.5));
+        Assert.Equal(986_250, (int)ladder.At(0.75));
+        Assert.Equal(5, ladder.PeerCount);
+        // Not asked for, so read the default alone: one rung, and Scores is it.
+        var bare = await ctx.Project(ChartType.Single, ChartA);
+        Assert.Single(bare.Ladders![ChartA].Rungs);
+        Assert.Equal((int)bare.Scores[ChartA], (int)bare.Ladders[ChartA].At(PeerEstimator.DefaultQuantile));
     }
 
     [Fact]
@@ -137,7 +161,7 @@ public sealed class ScoreProjectorTests
         var result = await ctx.Project(ChartType.Single, ChartA);
 
         var spread = result.Spreads![ChartA];
-        Assert.Equal(975_000, (int)result.Scores[ChartA]);
+        Assert.Equal(956_500, (int)result.Scores[ChartA]);
         // Midpoint positions of five equal voices are 0.1, 0.3, 0.5, 0.7, 0.9: q25 interpolates
         // three-quarters of the way from 940k to 962k, q75 a quarter of the way from 985k to 990k.
         Assert.Equal(956_500, (int)spread.Quartile1);
@@ -172,7 +196,8 @@ public sealed class ScoreProjectorTests
 
         var relaxed = await ctx.ProjectRelaxed(ChartType.Single, ChartA);
 
-        Assert.Equal(970_000, (int)relaxed.Scores[ChartA]);
+        // Two equal voices sit at 0.25 and 0.75, so the default read is the lower one exactly.
+        Assert.Equal(960_000, (int)relaxed.Scores[ChartA]);
         Assert.Equal(2, relaxed.Spreads![ChartA].PeerCount);
         Assert.True(relaxed.Group!.AnsweredBelowFloor);
     }
@@ -617,6 +642,14 @@ public sealed class ScoreProjectorTests
         {
             return Projector.Project(new ScoreProjectionRequest(mix, type, Viewer,
                 charts.Select(c => new ProjectionTarget(c, 22)).ToArray(), window, catalog), CancellationToken.None);
+        }
+
+        /// <summary>A caller that lets the player choose a rung: the same request naming the rungs it will read (D51).</summary>
+        public Task<ScoreProjection> ProjectAt(ChartType type, double[] quantiles, params Guid[] charts)
+        {
+            return Projector.Project(new ScoreProjectionRequest(MixEnum.Phoenix2, type, Viewer,
+                    charts.Select(c => new ProjectionTarget(c, 22)).ToArray(), 1.0, Quantiles: quantiles),
+                CancellationToken.None);
         }
 
         /// <summary>The PUMBILITY caller's run: the same request asking for the thin-band fallback (D47).</summary>

@@ -117,6 +117,10 @@ public sealed class PumbilityPeerPoolsTests
         Assert.Equal(956_500, (int)entry.Quartile1!.Value);
         Assert.Equal(986_250, (int)entry.Quartile3!.Value);
         Assert.False(summary.Pools[peers[4]].Contains(chart.Id));
+        // A rung read on demand is the same arithmetic over the same voices (D51, D52).
+        Assert.Equal(975_000, (int)entry.ProjectedAt(PeerEstimator.Median)!.Value);
+        Assert.Equal(956_500, (int)entry.ProjectedAt(PeerEstimator.DefaultQuantile)!.Value);
+        Assert.Equal(986_250, (int)entry.ProjectedAt(PeerEstimator.UpperQuartile)!.Value);
 
         // Four scorers: held, so it appears — but no median.
         var four = PumbilityPeerPools.Build(records.Where(r => r.UserId != peers[4]).ToArray(),
@@ -124,6 +128,7 @@ public sealed class PumbilityPeerPoolsTests
         Assert.Equal(4, four.Charts[chart.Id].Scored);
         Assert.Null(four.Charts[chart.Id].Median);
         Assert.Null(four.Charts[chart.Id].Quartile1);
+        Assert.Null(four.Charts[chart.Id].ProjectedAt(PeerEstimator.Median));
     }
 
     [Fact]

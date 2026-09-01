@@ -88,7 +88,7 @@ public static class PumbilityPeerPools
             if (held == 0 && voices.Count < MinimumScored) continue;
 
             var scored = voices.Select(s => new PeerScore(s, 0, 0)).ToArray();
-            var median = PeerEstimator.Estimate(scored, 0, PeerEstimator.Phoenix2Quantile, MinimumScored);
+            var median = PeerEstimator.Estimate(scored, 0, PeerEstimator.Median, MinimumScored);
             var q1 = median == null ? null : PeerEstimator.Estimate(scored, 0, PeerEstimator.LowerQuartile, MinimumScored);
             var q3 = median == null ? null : PeerEstimator.Estimate(scored, 0, PeerEstimator.UpperQuartile, MinimumScored);
             voices.Sort();

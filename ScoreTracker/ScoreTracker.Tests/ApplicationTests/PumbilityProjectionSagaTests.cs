@@ -100,7 +100,9 @@ public sealed partial class PumbilityProjectionSagaTests
             CancellationToken.None);
 
         Assert.Contains(far.Id, result.ExpectedScores.Keys);
-        Assert.Equal(902_000, (int)result.ExpectedScores[far.Id]);
+        // The default read is the first quartile (D50): on five voices at 900k..904k it sits
+        // three-quarters of the way from the first to the second.
+        Assert.Equal(900_750, (int)result.ExpectedScores[far.Id]);
         ctx.Mediator.Verify(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
@@ -406,8 +408,10 @@ public sealed partial class PumbilityProjectionSagaTests
     }
 
     [Fact]
-    public async Task APhoenix2ProjectionIsTheMedianOfFiveOrMorePumbilityPeers()
+    public async Task APhoenix2ProjectionIsTheFirstQuartileOfFiveOrMorePumbilityPeers()
     {
+        // D50: the default read is the peers' first quartile — on five equal voices, three-quarters
+        // of the way from 940k to 962k — not their median.
         var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_500)
             .WithChart(out var chart, ChartType.Single, 20);
         foreach (var score in new[] { 940_000, 985_000, 962_000, 990_000, 975_000 })
@@ -416,7 +420,7 @@ public sealed partial class PumbilityProjectionSagaTests
         var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
             CancellationToken.None);
 
-        Assert.Equal(975_000, (int)result.ExpectedScores[chart.Id]);
+        Assert.Equal(956_500, (int)result.ExpectedScores[chart.Id]);
     }
 
     [Fact]
