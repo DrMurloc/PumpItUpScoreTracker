@@ -2355,6 +2355,12 @@
   <data name="Energy" xml:space="preserve">
     <value>Glorgur</value>
   </data>
+  <data name="Energy: Good" xml:space="preserve">
+    <value>Lurggrgl</value>
+  </data>
+  <data name="Energy: Great" xml:space="preserve">
+    <value>Grarg</value>
+  </data>
   <data name="Enter a play above and its grade's row lights up." xml:space="preserve">
     <value>Marg a lurg groblo ro ur rorgl grolgub mrglgro.</value>
   </data>
@@ -2874,9 +2880,6 @@
   <data name="Good count" xml:space="preserve">
     <value>Lurggrgl glorgmurp</value>
   </data>
-  <data name="Good energy" xml:space="preserve">
-    <value>Lurggrgl glorgur</value>
-  </data>
   <data name="Goods" xml:space="preserve">
     <value>Lurggrglrgl</value>
   </data>
@@ -2912,9 +2915,6 @@
   </data>
   <data name="Great count" xml:space="preserve">
     <value>Mrpargl glorgmurp</value>
-  </data>
-  <data name="Great energy" xml:space="preserve">
-    <value>Grarg glorgur</value>
   </data>
   <data name="Greats" xml:space="preserve">
 	  <value>Blarggl</value>

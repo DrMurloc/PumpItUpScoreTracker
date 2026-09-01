@@ -2341,6 +2341,12 @@
   <data name="Energy" xml:space="preserve">
     <value>컨디션</value>
   </data>
+  <data name="Energy: Good" xml:space="preserve">
+    <value>좋음</value>
+  </data>
+  <data name="Energy: Great" xml:space="preserve">
+    <value>아주 좋음</value>
+  </data>
   <data name="Enter a play above and its grade's row lights up." xml:space="preserve">
     <value>위에서 플레이를 입력하면 해당 랭크의 행이 강조됩니다.</value>
   </data>
@@ -2857,9 +2863,6 @@
   <data name="Good count" xml:space="preserve">
     <value>굿 수</value>
   </data>
-  <data name="Good energy" xml:space="preserve">
-    <value>좋은 컨디션</value>
-  </data>
   <data name="Goods" xml:space="preserve">
     <value>굿</value>
   </data>
@@ -2895,9 +2898,6 @@
   </data>
   <data name="Great count" xml:space="preserve">
     <value>그레이트 수</value>
-  </data>
-  <data name="Great energy" xml:space="preserve">
-    <value>아주 좋은 컨디션</value>
   </data>
   <data name="Greats" xml:space="preserve">
     <value>그레이트</value>

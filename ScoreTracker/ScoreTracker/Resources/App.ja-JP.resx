@@ -2355,6 +2355,12 @@
   <data name="Energy" xml:space="preserve">
     <value>調子</value>
   </data>
+  <data name="Energy: Good" xml:space="preserve">
+    <value>好調</value>
+  </data>
+  <data name="Energy: Great" xml:space="preserve">
+    <value>とても好調</value>
+  </data>
   <data name="Enter a play above and its grade's row lights up." xml:space="preserve">
     <value>上でプレイを入力すると、そのランクの行がハイライトされます。</value>
   </data>
@@ -2874,9 +2880,6 @@
   <data name="Good count" xml:space="preserve">
     <value>Good 数</value>
   </data>
-  <data name="Good energy" xml:space="preserve">
-    <value>好調</value>
-  </data>
   <data name="Goods" xml:space="preserve">
     <value>Good数</value>
   </data>
@@ -2912,9 +2915,6 @@
   </data>
   <data name="Great count" xml:space="preserve">
     <value>Great 数</value>
-  </data>
-  <data name="Great energy" xml:space="preserve">
-    <value>とても好調</value>
   </data>
   <data name="Greats" xml:space="preserve">
 	  <value>Great数</value>

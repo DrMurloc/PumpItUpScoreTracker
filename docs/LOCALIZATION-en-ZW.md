@@ -393,7 +393,9 @@ for the five-peer floor.
 Coined for the `/Pumbility` Energy chip (docs/design/pumbility-overhaul.md D51) and its three
 options. Reused, not re-coined: `gam` (how), `blub` (you), `lurg` (play), `grorplurg` (today),
 `mrglrgo` (projected), `mrglrgl` (score), `roglub` (gain), `morp` (your), `maglmurp` (peers),
-`grorpmurm` (level), `murgro` (reach), `blgrl` (my), `mrrgl` (top), `lurggrgl` (good), `grarg` (great).
+`grorpmurm` (level), `murgro` (reach), `blgrl` (my), `mrrgl` (top), `lurggrgl` (good), `grarg` (great). The two
+option keys are `Energy: Good` and `Energy: Great` — the English copy is the bare word, the key carries the register
+because `Good`/`Great` are the judgement names' keys — and their Murloc values are the established `Lurggrgl` and `Grarg`.
 
 | English | en-ZW | Notes |
 |---|---|---|

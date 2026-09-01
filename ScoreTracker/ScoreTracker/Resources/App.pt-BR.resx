@@ -2341,6 +2341,12 @@
   <data name="Energy" xml:space="preserve">
     <value>Energia</value>
   </data>
+  <data name="Energy: Good" xml:space="preserve">
+    <value>Boa</value>
+  </data>
+  <data name="Energy: Great" xml:space="preserve">
+    <value>Ótima</value>
+  </data>
   <data name="Enter a play above and its grade's row lights up." xml:space="preserve">
     <value>Insira uma jogada acima e a linha da letra dela acende.</value>
   </data>
@@ -2857,9 +2863,6 @@
   <data name="Good count" xml:space="preserve">
     <value>Quantidade de Goods</value>
   </data>
-  <data name="Good energy" xml:space="preserve">
-    <value>Boa energia</value>
-  </data>
   <data name="Goods" xml:space="preserve">
     <value>Goods</value>
   </data>
@@ -2895,9 +2898,6 @@
   </data>
   <data name="Great count" xml:space="preserve">
     <value>Quantidade de Greats</value>
-  </data>
-  <data name="Great energy" xml:space="preserve">
-    <value>Ótima energia</value>
   </data>
   <data name="Greats" xml:space="preserve">
     <value>Greats</value>
