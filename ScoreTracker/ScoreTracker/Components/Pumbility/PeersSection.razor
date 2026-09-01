@@ -35,12 +35,13 @@
    never disagree about a number. With the Phoenix 1 switch off the peer-only projection stands
    in, read once and kept.
 
-   The Energy chip on the block head (D51) is the page's one read of the projection — Good, Great
-   or Top of my game — and it belongs to the frame the way the pool does: the chip raises the pick,
-   the frame remembers it and reloads, and the new energy arrives back here as a parameter with a
-   record already priced at it, so the peers' rows are read again at the same rung.
+   The Energy select (D51) is the page's one read of the projection — Good, Great or Top of my game
+   — and it belongs to the frame the way the pool does: the select raises the pick, the frame
+   remembers it and reloads, and the new energy arrives back here as a parameter with a record
+   already priced at it, so the peers' rows are read again at the same rung. It sits in the
+   control row between Grouped by and the grouping's own switch (owner, field test of the build).
 
-   The controls: Grouped by — Prevalence, Projected gains, Your top 50 (D44) — then, left-aligned
+   The controls: Grouped by — Prevalence, Projected gains, Your top 50 (D44) — then Energy, then, left-aligned
    beside it, the one switch that means something under that grouping — Project Phoenix 1 scores
    under Projected gains and only when the record holds carried rows; Only projected PUMBILITY
    gains under Prevalence; nothing under Your top 50 — then the density trio at the far end, right
@@ -48,7 +49,6 @@
 <section class="pmb-block" data-testid="peers-section">
     <div class="pmb-block-head">
         <h2 class="pmb-block-title">@L["PUMBILITY Targets"]</h2>
-        <EnergyChip Value="Energy" ValueChanged="OnEnergyChanged"></EnergyChip>
     </div>
     <div class="pmb-peers-head">
         <p class="pmb-block-lede">@Lede</p>
@@ -91,6 +91,18 @@
                 <MudSelectItem T="PeerGrouping" Value="PeerGrouping.Prevalence">@L["Prevalence"]</MudSelectItem>
                 <MudSelectItem T="PeerGrouping" Value="PeerGrouping.ProjectedGains">@L["Projected gains"]</MudSelectItem>
                 <MudSelectItem T="PeerGrouping" Value="PeerGrouping.YourTop50">@L["Your top 50"]</MudSelectItem>
+            </MudSelect>
+            @* Energy (D51): how you're playing today, as the rung of your peers every projected score
+               and gain on the page reads. The select explains itself on hover and each option says
+               what its percentile means. *@
+            <MudSelect T="Energy" Class="pmb-peers-controls-select" Label="@L["Energy"]" Dense="true"
+                       Value="Energy" ValueChanged="OnEnergyChanged" data-testid="peers-energy"
+                       title="@L["How you're playing today. Every projected score and gain on this page reads your peers at this level."]">
+                @foreach (var option in EnergyLabels.Options)
+                {
+                    var o = option;
+                    <MudSelectItem T="Energy" Value="o" title="@L[EnergyLabels.Hint(o)]" data-testid="@($"peers-energy-{o}")">@L[EnergyLabels.Label(o)]</MudSelectItem>
+                }
             </MudSelect>
             <span class="pmb-peers-controls-switches">
                 @if (_groupBy == PeerGrouping.ProjectedGains && HasCarried)
@@ -174,7 +186,7 @@
     /// <summary>The rung the frame priced the record at (D51); the peers' rows are read at the same one.</summary>
     [Parameter] public Energy Energy { get; set; } = Energy.Good;
 
-    /// <summary>The chip's pick, for the frame to remember and reload on.</summary>
+    /// <summary>The select's pick, for the frame to remember and reload on.</summary>
     [Parameter] public EventCallback<Energy> OnEnergyChanged { get; set; }
 
     [Parameter] public ISet<Guid> ToDos { get; set; } = new HashSet<Guid>();
@@ -392,7 +404,7 @@
                 L["PUMBILITY Targets"],
                 // The energy travels on the picture: a Good card and a Great card show different
                 // grades on the same charts, and a reader has to be able to tell which this was.
-                $"{GroupingName} · {L[EnergyChip.Label(Energy)]} · {(Page.Mix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix")} · {now:yyyy-MM-dd}",
+                $"{GroupingName} · {L["Energy"]}: {L[EnergyLabels.Label(Energy)]} · {(Page.Mix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix")} · {now:yyyy-MM-dd}",
                 L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name].ToString(),
                 palette.Primary, palette.Background, palette.Surface, palette.Ink, palette.InkMuted,
                 "https://piuscores.arroweclip.se/Pumbility",
