@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Moq;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
+using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using Xunit;
@@ -45,6 +46,9 @@ public sealed partial class PumbilityProjectionSagaTests
         // The staple is every peer's #1 but the last's — the rare S22 outprices it there.
         Assert.Equal(50 * 5 + 49, stapleEntry.Points);
         Assert.Equal(977_500, (int)stapleEntry.Median!.Value);
+        // The row's grade is the peers at the page's energy (D51, D52): Good is the first quartile,
+        // which on six equal voices at 965k..990k lands exactly on the second.
+        Assert.Equal(970_000, (int)stapleEntry.Projected!.Value);
         Assert.NotNull(stapleEntry.Variability);
         Assert.Equal(960_000, (int)stapleEntry.MyScore!.Value);
         Assert.Equal(0, stapleEntry.MyPercentile);
@@ -54,6 +58,7 @@ public sealed partial class PumbilityProjectionSagaTests
         Assert.Equal(1, rareEntry.Holders);
         Assert.Equal(50, rareEntry.Points);
         Assert.Null(rareEntry.Median); // one scorer
+        Assert.Null(rareEntry.Projected);
         Assert.Null(rareEntry.MyScore);
         // The tier enum runs best first, so the staple's tier sorts before the rare chart's.
         Assert.True((int)stapleEntry.Tier < (int)rareEntry.Tier);
@@ -66,6 +71,29 @@ public sealed partial class PumbilityProjectionSagaTests
         var compare = page.Compare[ChartType.Single];
         Assert.Equal(2, compare.MyLevels.Values.Sum());
         Assert.Equal(1, compare.PeerShareByLevel.Values.Sum(), 6);
+    }
+
+    [Fact]
+    public async Task ThePeersPageReadsTheProjectedGradeAtTheEnergyAskedForOffOneSweep()
+    {
+        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_609.59)
+            .WithChart(out var staple, ChartType.Single, 21);
+        foreach (var score in new[] { 990_000, 985_000, 980_000, 975_000, 970_000, 965_000 })
+            ctx.WithPumbilityPeer(staple, score);
+
+        var good = await ctx.Saga.Handle(new GetPumbilityPeersPageQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Single),
+            CancellationToken.None);
+        var great = await ctx.Saga.Handle(new GetPumbilityPeersPageQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Single,
+            Energy.Great), CancellationToken.None);
+        var top = await ctx.Saga.Handle(new GetPumbilityPeersPageQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Single,
+            Energy.TopOfMyGame), CancellationToken.None);
+
+        Assert.Equal(970_000, (int)good.Entries.Single().Projected!.Value);
+        Assert.Equal(977_500, (int)great.Entries.Single().Projected!.Value);
+        Assert.Equal(985_000, (int)top.Entries.Single().Projected!.Value);
+        // Three energies, one sweep: the band was drawn once.
+        ctx.Stats.Verify(s => s.GetPlayersByPumbilityRange(MixEnum.Phoenix2, It.IsAny<double>(), It.IsAny<double>(),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

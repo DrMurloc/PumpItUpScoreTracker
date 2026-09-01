@@ -279,7 +279,13 @@ public sealed class PumbilityProjectionBacktestTests
         var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
         foreach (var pool in new ChartType?[] { null, ChartType.Single, ChartType.Double })
         {
+            // The page's three energies off the one cached sweep (D51): Good is the list the page
+            // opens on; Great and Top of my game re-read the same rows.
             var projection = await mediator.Send(new ProjectPumbilityGainsQuery(userId, MixEnum.Phoenix2, pool),
+                CancellationToken.None);
+            var great = await mediator.Send(new ProjectPumbilityGainsQuery(userId, MixEnum.Phoenix2, pool, Energy.Great),
+                CancellationToken.None);
+            var best = await mediator.Send(new ProjectPumbilityGainsQuery(userId, MixEnum.Phoenix2, pool, Energy.TopOfMyGame),
                 CancellationToken.None);
             _output.WriteLine($"=== {userId} · pool {pool?.ToString() ?? "All"} ===");
             if (projection.Peers != null)
@@ -303,40 +309,21 @@ public sealed class PumbilityProjectionBacktestTests
                 return value - floor;
             }
 
-            var paying = new Dictionary<string, int> { ["p25"] = 0, ["p50"] = 0, ["p75"] = 0 };
-            var ssCalls = new Dictionary<string, int> { ["p25"] = 0, ["p50"] = 0, ["p75"] = 0 };
-            foreach (var (chartId, _) in projection.ProjectedGains)
-            {
-                var spread = projection.Spreads?.GetValueOrDefault(chartId);
-                if (spread == null) continue;
-                foreach (var (label, score) in new[]
-                         {
-                             ("p25", (int)spread.Quartile1), ("p50", (int)projection.ExpectedScores[chartId]),
-                             ("p75", (int)spread.Quartile3)
-                         })
-                {
-                    if (GainAt(chartId, score) > 0) paying[label]++;
-                    if (score >= 980_000) ssCalls[label]++;
-                }
-            }
-
-            _output.WriteLine($"  bar {baseline:F2}; listed rows {projection.ProjectedGains.Count} (capped at 100 by the saga); " +
-                              $"paying at p25 {paying["p25"]} / p50 {paying["p50"]} / p75 {paying["p75"]}; " +
-                              $"SS+ calls at p25 {ssCalls["p25"]} / p50 {ssCalls["p50"]} / p75 {ssCalls["p75"]}");
-            _output.WriteLine($"  {"chart",-34} {"lvl",-4} {"p25",-16} {"shipping",-16} {"p75",-16} {"gain@25",8} {"gain@50",8} {"gain@75",8} peers");
+            _output.WriteLine($"  bar {baseline:F2}; listed rows Good {projection.ProjectedGains.Count} / Great {great.ProjectedGains.Count} / Top {best.ProjectedGains.Count} (each capped at 100 by the saga); " +
+                              $"SS+ calls Good {projection.ExpectedScores.Values.Count(v => (int)v >= 980_000)} / Great {great.ExpectedScores.Values.Count(v => (int)v >= 980_000)} / Top {best.ExpectedScores.Values.Count(v => (int)v >= 980_000)}");
+            _output.WriteLine($"  {"chart",-34} {"lvl",-4} {"Good",-16} {"Great",-16} {"Top of my game",-16} {"gain",8} {"gain",8} {"gain",8}");
             var rows = projection.ProjectedGains.OrderByDescending(kv => kv.Value).Take(40);
             foreach (var (chartId, gain) in rows)
             {
                 var chart = charts[chartId];
-                var score = (int)projection.ExpectedScores[chartId];
-                var spread = projection.Spreads?.GetValueOrDefault(chartId);
-                string Cell(int s) => $"{s,7} {PhoenixScore.From(s).LetterGradeFor(MixEnum.Phoenix2),-8}";
-                string GainCell(int s) => GainAt(chartId, s) is var g && g > 0 ? $"+{g,6:F1}" : $"{"—",7}";
+                string Cell(PumbilityProjection p) => p.ExpectedScores.TryGetValue(chartId, out var v)
+                    ? $"{(int)v,7} {v.LetterGradeFor(MixEnum.Phoenix2),-8}"
+                    : "".PadRight(16);
+                string GainCell(PumbilityProjection p) => p.ExpectedScores.TryGetValue(chartId, out var v) && GainAt(chartId, (int)v) is var g && g > 0
+                    ? $"+{g,6:F1}"
+                    : $"{"—",7}";
                 _output.WriteLine($"  {chart.Song.Name,-34} {chart.Type.ToString()[0]}{(int)chart.Level,-3} " +
-                                  $"{(spread == null ? "".PadRight(16) : Cell((int)spread.Quartile1))} {Cell(score)} " +
-                                  $"{(spread == null ? "".PadRight(16) : Cell((int)spread.Quartile3))} " +
-                                  $"{(spread == null ? "".PadRight(8) : GainCell((int)spread.Quartile1))} +{gain,6:F1} " +
-                                  $"{(spread == null ? "".PadRight(8) : GainCell((int)spread.Quartile3))} {spread?.PeerCount}");
+                                  $"{Cell(projection)} {Cell(great)} {Cell(best)} {GainCell(projection)} {GainCell(great)} {GainCell(best)}");
             }
         }
 

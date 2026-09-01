@@ -63,6 +63,10 @@ public sealed record PumbilityPeersPageRecord(
 /// <param name="MyScore">The viewer's own non-broken score, or null when they have none.</param>
 /// <param name="MyPlate">The plate on that score, when it carries one.</param>
 /// <param name="MyPercentile">The share of scorers the viewer's score beats, on 0..1; null without a score or scorers.</param>
+/// <param name="Projected">
+///     What the viewer is projected to score here — the peers' scores at the energy the page was
+///     read at (D51, D52) — or null under five scorers (D24). The grade a row prints.
+/// </param>
 [ExcludeFromCodeCoverage]
 public sealed record PeerPoolEntry(
     Guid ChartId,
@@ -80,7 +84,8 @@ public sealed record PeerPoolEntry(
     int? MyPoolRank,
     PhoenixScore? MyScore,
     PhoenixPlate? MyPlate,
-    double? MyPercentile)
+    double? MyPercentile,
+    PhoenixScore? Projected = null)
 {
     /// <summary>The chart's share of its electorate's points, on 0..1 — comparable across types (D37).</summary>
     public double Share => PeerCount == 0 ? 0 : Points / (PeerCount * (double)PoolVote);

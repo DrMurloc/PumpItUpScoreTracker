@@ -82,7 +82,7 @@ namespace ScoreTracker.PlayerProgress.Application
             var barChart = full ? pool[^1].ChartId : (Guid?)null;
 
             var projection = await _mediator.Send(
-                new ProjectPumbilityGainsQuery(request.UserId, mix, request.Pool), cancellationToken);
+                new ProjectPumbilityGainsQuery(request.UserId, mix, request.Pool, request.Energy), cancellationToken);
             var mine = (await _scores.GetBestScores(mix, request.UserId, cancellationToken))
                 .Where(s => s.Score != null)
                 .ToDictionary(s => s.ChartId);

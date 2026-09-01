@@ -126,6 +126,23 @@ public sealed class PumbilityPageSagaTests
     }
 
     [Fact]
+    public async Task TheEnergyIsHandedToTheProjectionAndDefaultsToGood()
+    {
+        // D51: the page's chip travels with the read; a caller that says nothing gets Good, the
+        // rung everything off the page reads (D50).
+        var ctx = new PageContext().WithPool(50, ChartType.Single, 20);
+
+        await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2, null, Energy.TopOfMyGame),
+            CancellationToken.None);
+        await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2), CancellationToken.None);
+
+        ctx.Mediator.Verify(m => m.Send(It.Is<ProjectPumbilityGainsQuery>(q => q.Energy == Energy.TopOfMyGame),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Mediator.Verify(m => m.Send(It.Is<ProjectPumbilityGainsQuery>(q => q.Energy == Energy.Good),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task InPhoenix2YourOwnPhoenix1ScoresBecomeTargets()
     {
         // The point of the feature: charts from your Phoenix 1 pool you have not scored here

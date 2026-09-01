@@ -15,6 +15,7 @@ using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -105,6 +106,33 @@ public sealed partial class PumbilityProjectionSagaTests
         Assert.Equal(900_750, (int)result.ExpectedScores[far.Id]);
         ctx.Mediator.Verify(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    [Fact]
+    public async Task AnEnergyReadsAnotherRungOffTheSameSweep()
+    {
+        // D51: the sweep holds every rung the chip can ask for, so Good, Great and Top of my game
+        // are three prices of one read — the band is drawn once, and the estimate moves from the
+        // first quartile to the median to the third.
+        var ctx = new ProjectionContext(20).WithPhoenix2Pool(50, 17_500)
+            .WithChart(out var chart, ChartType.Single, 22);
+        foreach (var score in new[] { 940_000, 962_000, 975_000, 985_000, 990_000 })
+            ctx.WithPumbilityPeer(chart, phoenix2Score: score);
+
+        var good = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+        var great = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2, null, Energy.Great),
+            CancellationToken.None);
+        var top = await ctx.Saga.Handle(
+            new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2, null, Energy.TopOfMyGame), CancellationToken.None);
+
+        Assert.Equal(956_500, (int)good.ExpectedScores[chart.Id]);
+        Assert.Equal(975_000, (int)great.ExpectedScores[chart.Id]);
+        Assert.Equal(986_250, (int)top.ExpectedScores[chart.Id]);
+        Assert.True(good.ProjectedGains[chart.Id] < great.ProjectedGains[chart.Id]);
+        Assert.True(great.ProjectedGains[chart.Id] < top.ProjectedGains[chart.Id]);
+        ctx.Stats.Verify(s => s.GetPlayersByPumbilityRange(MixEnum.Phoenix2, It.IsAny<double>(), It.IsAny<double>(),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

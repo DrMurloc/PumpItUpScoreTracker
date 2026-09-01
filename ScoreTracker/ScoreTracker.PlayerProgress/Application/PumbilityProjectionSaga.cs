@@ -70,10 +70,11 @@ namespace ScoreTracker.PlayerProgress.Application
             CancellationToken cancellationToken)
         {
             // Two halves with nothing in common. The estimates are the peer sweep — sized by
-            // the player population, the same for all three pools, and unchanged by anything
-            // the viewer does, since a player's own scores never enter their own peer group. The
-            // pricing is arithmetic over their top hundred, and moves the moment they play.
-            // So one is held for a day and the other is redone on every visit.
+            // the player population, the same for all three pools and all three energies, and
+            // unchanged by anything the viewer does, since a player's own scores never enter
+            // their own peer group. The pricing is arithmetic over their top hundred at the
+            // energy asked for, and moves the moment they play or change the chip. So one is
+            // held for a day and the other is redone on every visit.
             var sweep = await _cache.GetOrAdd(request.UserId, request.Mix,
                 () => Estimate(request.UserId, request.Mix));
             return await Price(sweep, request, cancellationToken);
@@ -89,7 +90,8 @@ namespace ScoreTracker.PlayerProgress.Application
         public async Task<PumbilityPeersPageRecord> Handle(GetPumbilityPeersPageQuery request,
             CancellationToken cancellationToken)
         {
-            var (userId, mix, pool) = request;
+            var (userId, mix, pool, energy) = request;
+            var quantile = energy.Quantile();
 
             var sweep = await _cache.GetOrAdd(userId, mix, () => Estimate(userId, mix));
             var types = pool is { } only ? new[] { only } : new[] { ChartType.Single, ChartType.Double };
@@ -143,7 +145,9 @@ namespace ScoreTracker.PlayerProgress.Application
                         variability.TryGetValue(chartId, out var level) ? level : null,
                         myRank.TryGetValue(chartId, out var rank) ? rank : null,
                         myScore, record?.Plate,
-                        myScore is { } s ? chart.PercentileOf((int)s) : null));
+                        myScore is { } s ? chart.PercentileOf((int)s) : null,
+                        // The grade the row prints: the peers at the page's energy (D51, D52).
+                        chart.ProjectedAt(quantile)));
                 }
 
                 foreach (var (chartId, rating) in myPool)
@@ -273,7 +277,7 @@ namespace ScoreTracker.PlayerProgress.Application
                 ? new Dictionary<Guid, double>()
                 : await _mediator.Send(new GetChartScoringLevelsQuery(mix), CancellationToken.None);
 
-            var expectedScore = new Dictionary<Guid, PhoenixScore>();
+            var ladders = new Dictionary<Guid, PeerLadder>();
             var spreads = new Dictionary<Guid, PeerSpread>();
             var peers = new Dictionary<ChartType, PeerGroup>();
             var pools = new Dictionary<ChartType, PeerPoolSummary>();
@@ -281,15 +285,16 @@ namespace ScoreTracker.PlayerProgress.Application
                 finish?.Total, finish?.IsEstimate ?? false);
 
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
-                await ProjectType(chartType, userId, scope, expectedScore, spreads, peers, pools, CancellationToken.None);
+                await ProjectType(chartType, userId, scope, ladders, spreads, peers, pools, CancellationToken.None);
 
-            return new ProjectionSweep(expectedScore, peers, spreads, pools);
+            return new ProjectionSweep(ladders, peers, spreads, pools);
         }
 
         /// <summary>
-        ///     What those estimates are worth to this player, in this pool, right now. Cheap —
-        ///     their own top hundred and one tier-list read — and never cached, because the bar
-        ///     it measures against moves every time they play.
+        ///     What those estimates are worth to this player, in this pool, at this energy, right
+        ///     now. Cheap — a lookup on the cached ladders, their own top hundred and one
+        ///     tier-list read — and never cached, because the bar it measures against moves every
+        ///     time they play and the rung moves with the chip (D51).
         /// </summary>
         private async Task<PumbilityProjection> Price(ProjectionSweep sweep,
             ProjectPumbilityGainsQuery request, CancellationToken cancellationToken)
@@ -303,12 +308,14 @@ namespace ScoreTracker.PlayerProgress.Application
             // of either type can displace, matching how the game aggregates.
             var pool = await BuildPool(request.ChartType, request.UserId, mix, charts, scoring, cancellationToken);
 
-            // The pool scopes the LIST, where the estimates are deliberately type-blind.
+            // The pool scopes the LIST, where the estimates are deliberately type-blind; the
+            // energy picks the rung every estimate is read at, off the ladders the sweep holds.
+            var quantile = request.Energy.Quantile();
             var expectedScore = request.ChartType is { } only
-                ? sweep.ExpectedScores.Where(kv => charts.TryGetValue(kv.Key, out var c) && c.Type == only)
-                    .ToDictionary(kv => kv.Key, kv => kv.Value)
-                : sweep.ExpectedScores.Where(kv => charts.ContainsKey(kv.Key))
-                    .ToDictionary(kv => kv.Key, kv => kv.Value);
+                ? sweep.Ladders.Where(kv => charts.TryGetValue(kv.Key, out var c) && c.Type == only)
+                    .ToDictionary(kv => kv.Key, kv => kv.Value.At(quantile))
+                : sweep.Ladders.Where(kv => charts.ContainsKey(kv.Key))
+                    .ToDictionary(kv => kv.Key, kv => kv.Value.At(quantile));
 
             var chartDifficulty = (await _mediator.Send(new GetTierListQuery("Pass Count", mix), cancellationToken))
                 .ToDictionary(s => s.ChartId, e => e.Category);
@@ -410,7 +417,7 @@ namespace ScoreTracker.PlayerProgress.Application
             double? FinishedTotal, bool FinishIsEstimate);
 
         private async Task ProjectType(ChartType chartType, Guid userId, ProjectionScope scope,
-            IDictionary<Guid, PhoenixScore> into, IDictionary<Guid, PeerSpread> spreads,
+            IDictionary<Guid, PeerLadder> into, IDictionary<Guid, PeerSpread> spreads,
             IDictionary<ChartType, PeerGroup> peers, IDictionary<ChartType, PeerPoolSummary> pools,
             CancellationToken cancellationToken)
         {
@@ -450,13 +457,17 @@ namespace ScoreTracker.PlayerProgress.Application
             // the home widget do with this is suggest charts to play, and one peer's score is a
             // worse suggestion than five but a better one than an empty board. The tier list's
             // own call deliberately does not ask.
+            //
+            // Every rung the chip can ask for is read now (D51), so the sweep is cached once and
+            // a change of energy is priced off it rather than swept again.
             var projected = await _projector.Project(
                 new ScoreProjectionRequest(mix, chartType, userId, scoped, PeerEstimator.CompetitiveWindow, charts,
                     RelaxFloorWhenEmpty: true, ProjectedTotal: finishedTotal,
-                    ProjectedTotalIsEstimate: finishIsEstimate),
+                    ProjectedTotalIsEstimate: finishIsEstimate, Quantiles: EnergyRungs.All),
                 cancellationToken);
 
-            foreach (var (chartId, score) in projected.Scores) into[chartId] = score;
+            if (projected.Ladders != null)
+                foreach (var (chartId, ladder) in projected.Ladders) into[chartId] = ladder;
             if (projected.Spreads != null)
                 foreach (var (chartId, spread) in projected.Spreads) spreads[chartId] = spread;
             if (projected.Group is { } group) peers[chartType] = group;
