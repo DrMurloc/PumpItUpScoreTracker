@@ -46,7 +46,7 @@ else
                                 <th>@L["Song Name"]</th>
                                 <th>@L["Chart"]</th>
                                 <th title="@L["How many of your PUMBILITY peers hold it in their top 50"]">@L["Peers"]</th>
-                                <th>@L["Peers' median"]</th>
+                                <th>@L["Projected"]</th>
                                 <th>@L["Variability"]</th>
                                 <th class="pmb-r" title="@L["What it would add to your PUMBILITY, measured against your bar as it stands"]">@L["Gain"]</th>
                                 <th>@L["My Score"]</th>
@@ -79,10 +79,10 @@ else
                                     <td>@row.Chart.DifficultyString</td>
                                     <td title="@WeightedSum(row)">@HoldText(row)</td>
                                     <td>
-                                        @if (row.Entry?.Median is { } median)
+                                        @if (ProjectedOf(row) is { } projected)
                                         {
-                                            <LetterGradeIcon Grade="median.LetterGradeFor(Mix)" Height="18"></LetterGradeIcon>
-                                            <span class="pmb-num pmb-score-text">@(((int)median).ToString("N0"))</span>
+                                            <LetterGradeIcon Grade="projected.LetterGradeFor(Mix)" Height="18"></LetterGradeIcon>
+                                            <span class="pmb-num pmb-score-text">@(((int)projected).ToString("N0"))</span>
                                         }
                                         else
                                         {
@@ -461,6 +461,13 @@ else
     private RecordedPhoenixScore? ScoreOf(Row row) =>
         row.MyScore is { } score ? new RecordedPhoenixScore(row.Chart.Id, score, row.MyPlate, false, DateTimeOffset.MinValue) : null;
 
+    /// <summary>
+    ///     The grade a row prints (D52): a carried row's own Phoenix 1 score repriced, otherwise the
+    ///     peers at the page's Energy — the entry's read, or the target's where the entry has none.
+    /// </summary>
+    private PhoenixScore? ProjectedOf(Row row) =>
+        row.Carried && row.Target is { } carried ? carried.Projected : row.Entry?.Projected ?? row.Target?.Projected;
+
     /// <summary>"17 of 23 peers" — the count that prints; the weighted sum rides its tooltip (D33).</summary>
     private string HoldText(Row row) =>
         row.Entry is { } e ? L["{0} of {1} peers", e.Holders, e.PeerCount] : row.Alone != null ? L["No peer holds it"] : L["{0} of {1} peers", 0, PeersOf(row.Chart.Type)];
@@ -501,8 +508,8 @@ else
             parts.Add(TierCaption(row));
             parts.Add(HoldText(row));
             parts.Add(WeightedSum(row));
-            if (e.Median is { } median)
-                parts.Add($"{L["Peers"]} {median.LetterGradeFor(Mix).GetName()}" + (e.Variability is { } v ? $" · {L[VariabilityMeter.Word(v)]}" : string.Empty));
+            if (ProjectedOf(row) is { } projected)
+                parts.Add($"{L["Projected"]} {projected.LetterGradeFor(Mix).GetName()}" + (e.Variability is { } v ? $" · {L[VariabilityMeter.Word(v)]}" : string.Empty));
         }
         else if (row.Alone != null || row.Slot != null)
         {
@@ -544,11 +551,11 @@ else
         builder.CloseComponent();
     };
 
-    // The grade a paying tile lands on, in Compact's other corner: your peers' median for a peer
-    // row, your own Phoenix 1 grade for a carried one — the target list's own rule.
+    // The grade a paying tile lands on, in Compact's other corner: your peers at the page's Energy
+    // for a peer row, your own Phoenix 1 grade for a carried one — the target list's own rule.
     private RenderFragment ProjectedGrade(Row row) => builder =>
     {
-        var grade = row.Carried && row.Target is { } t ? t.Projected : row.Entry?.Median ?? row.Target?.Projected;
+        var grade = ProjectedOf(row);
         if (grade == null) return;
         builder.OpenComponent<LetterGradeIcon>(0);
         builder.AddComponentParameter(1, nameof(LetterGradeIcon.Grade), grade.Value.LetterGradeFor(Mix));
@@ -590,12 +597,12 @@ else
             builder.AddAttribute(seq++, "class", "pmb-peers-line");
             builder.OpenElement(seq++, "span");
             builder.AddAttribute(seq++, "class", "pmb-peers-line-label");
-            builder.AddContent(seq++, L["Peers"]);
+            builder.AddContent(seq++, L["Projected"]);
             builder.CloseElement();
-            if (entry.Median is { } median)
+            if (ProjectedOf(row) is { } projected)
             {
                 builder.OpenComponent<LetterGradeIcon>(seq++);
-                builder.AddComponentParameter(seq++, nameof(LetterGradeIcon.Grade), median.LetterGradeFor(Mix));
+                builder.AddComponentParameter(seq++, nameof(LetterGradeIcon.Grade), projected.LetterGradeFor(Mix));
                 builder.AddComponentParameter(seq++, nameof(LetterGradeIcon.Height), 18);
                 builder.CloseComponent();
                 if (entry.Variability is { } level)

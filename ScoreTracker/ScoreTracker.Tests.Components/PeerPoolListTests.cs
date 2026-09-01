@@ -168,7 +168,8 @@ public sealed class PeerPoolListTests : ComponentTestBase
 
         var headers = cut.FindAll("thead th").Select(h => h.TextContent.Trim()).ToArray();
         Assert.Contains("Peers", headers);
-        Assert.Contains("Peers' median", headers);
+        Assert.Contains("Projected", headers);
+        Assert.DoesNotContain("Peers' median", headers);
         Assert.Contains("Variability", headers);
         Assert.Contains("Gain", headers);
         Assert.Contains("Better Than", headers);
@@ -280,7 +281,7 @@ public sealed class PeerPoolListTests : ComponentTestBase
             var chart = NewChart(name);
             _entries.Add(new PeerPoolEntry(chart.Id, ChartType.Single, holders, 23, points, tier, _entries.Count,
                 holders, median, median, median, variability, myRank, mine, mine == null ? null : PhoenixPlate.MarvelousGame,
-                percentile));
+                percentile, median));
             if (gain is { } g)
                 _gains[chart.Id] = new PumbilityTarget(chart.Id, projected ?? 980_000, g, mine, false, null);
             return this;

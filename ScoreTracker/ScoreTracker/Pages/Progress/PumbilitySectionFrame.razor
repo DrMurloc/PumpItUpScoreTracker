@@ -66,7 +66,7 @@ else
 
 @if (_page != null)
 {
-    @Body(new SectionContext(_page, _charts, _currentMix, _pool))
+    @Body(new SectionContext(_page, _charts, _currentMix, _pool, _energy, ChangeEnergy))
 }
 else if (_mixKnown)
 {
@@ -76,9 +76,13 @@ else if (_mixKnown)
 }
 
 @code {
-    /// <summary>Everything a page in this section renders from, resolved once by the frame.</summary>
+    /// <summary>
+    ///     Everything a page in this section renders from, resolved once by the frame — including the
+    ///     Energy the record was priced at (D51) and the way to change it, which reloads the record
+    ///     the way a pool change does.
+    /// </summary>
     public sealed record SectionContext(PumbilityPageRecord Page, IReadOnlyDictionary<Guid, Chart> Charts,
-        MixEnum Mix, ChartType? Pool);
+        MixEnum Mix, ChartType? Pool, Energy Energy, Func<Energy, Task> ChangeEnergy);
 
     /// <summary>
     ///     Which pool the whole section is scoped to. A setting rather than circuit state
@@ -86,6 +90,14 @@ else if (_mixKnown)
     ///     the in-circuit selector never did.
     /// </summary>
     public const string PoolSettingKey = "Pumbility__Pool";
+
+    /// <summary>
+    ///     How the player says they are playing today (D51): the rung of their peers every projected
+    ///     score and gain on the Play page reads. A setting for the same reason the pool is — the
+    ///     chip lives on a page whose tabs are real navigations — and per player, because it is a
+    ///     statement about the player, not about a page. Good when unset.
+    /// </summary>
+    public const string EnergySettingKey = "Pumbility__Energy";
 
     private const string Phoenix1Key = "phoenix1";
 
@@ -112,6 +124,7 @@ else if (_mixKnown)
     private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private IReadOnlyList<PumbilityHero.PoolOption> _pools = Array.Empty<PumbilityHero.PoolOption>();
     private ChartType? _pool;
+    private Energy _energy = Energy.Good;
 
     private string MixName => _currentMix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix";
 
@@ -151,6 +164,8 @@ else if (_mixKnown)
             stored is ChartType.Single or ChartType.Double)
             _pool = stored;
 
+        if (Enum.TryParse<Energy>(await UiSettings.GetSetting(EnergySettingKey), out var energy)) _energy = energy;
+
         _charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToDictionary(c => c.Id);
         _mixKnown = true;
         StateHasChanged();
@@ -160,7 +175,7 @@ else if (_mixKnown)
 
     private async Task Load()
     {
-        _page = await Mediator.Send(new GetPumbilityPageQuery(CurrentUser.User.Id, _currentMix, _pool));
+        _page = await Mediator.Send(new GetPumbilityPageQuery(CurrentUser.User.Id, _currentMix, _pool, _energy));
 
         // All three totals come back on the record. Filling the selector used to mean running
         // the whole read twice more from here, for two pools the page was not looking at.
@@ -179,6 +194,19 @@ else if (_mixKnown)
         if (_pool == pool) return;
         _pool = pool;
         await UiSettings.SetSetting(PoolSettingKey, pool?.ToString() ?? string.Empty);
+        await Load();
+    }
+
+    /// <summary>
+    ///     The Energy chip's pick (D51): remembered, then the record re-priced at it. The targets
+    ///     come off the cached sweep, so this costs the two reads a pool change already does and no
+    ///     second sweep.
+    /// </summary>
+    private async Task ChangeEnergy(Energy energy)
+    {
+        if (_energy == energy) return;
+        _energy = energy;
+        await UiSettings.SetSetting(EnergySettingKey, energy.ToString());
         await Load();
     }
 }

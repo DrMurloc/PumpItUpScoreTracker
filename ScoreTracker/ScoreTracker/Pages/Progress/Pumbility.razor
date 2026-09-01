@@ -18,7 +18,7 @@
 
 <PumbilitySectionFrame Active="play">
     <Body Context="ctx">
-        <PeersSection Page="ctx.Page" Charts="ctx.Charts" Pool="ctx.Pool"
+        <PeersSection Page="ctx.Page" Charts="ctx.Charts" Pool="ctx.Pool" Energy="ctx.Energy" OnEnergyChanged="ctx.ChangeEnergy"
                       ToDos="_todos" OnToDo="ToggleToDo" OnOpen="ShowChartDetails" OnPlay="PlayChart"></PeersSection>
 
         @* AutoPlay is bound rather than fixed: the card's play button and its jacket open the

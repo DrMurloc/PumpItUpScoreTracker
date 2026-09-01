@@ -14020,6 +14020,38 @@ span.ct-console-pick { cursor: default; }
     margin: 0;
 }
 
+/* The Energy chip (D51): the block head's right-hand slot, a pill whose label is the chosen
+   option — Good energy, Great energy, Top of my game — with the menu behind it. The chip is the
+   whole control, so nothing on the page restates the setting. */
+.pmb-energy-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    line-height: 1;
+    padding: 5px 9px 5px 11px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
+    color: var(--mix-ink);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.pmb-energy-chip b {
+    color: var(--mix-primary);
+    font-weight: 600;
+}
+
+.pmb-energy-car {
+    color: var(--mix-ink-muted);
+    font-size: 11px;
+}
+
+.pmb-energy:hover .pmb-energy-chip,
+.pmb-energy:focus-within .pmb-energy-chip {
+    border-color: var(--mix-primary);
+}
+
 .pmb-block-lede {
     font-size: 13.5px;
     color: var(--mix-ink-muted);
