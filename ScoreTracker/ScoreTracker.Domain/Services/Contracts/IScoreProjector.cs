@@ -214,15 +214,6 @@ public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWid
 }
 
 /// <summary>
-///     The middle half of the peers' scores on one chart — the first and third quartiles read
-///     with the same quantile the estimate is, over the same voices — and how many peers voted.
-///     A page prints it as two grades ("Peers IQR"), which says what the median cannot: whether
-///     the peers agree (AAA+ to AAA+) or the chart splits them (AA+ to SS+). Deliberately the
-///     interquartile range and not the min–max: the extremes are one player each.
-/// </summary>
-public sealed record PeerSpread(PhoenixScore Quartile1, PhoenixScore Quartile3, int PeerCount);
-
-/// <summary>
 ///     The peers' scores on one chart read at several quantiles — the same voices, the same
 ///     growth weights, the same arithmetic at every rung — and how many peers voted. A caller
 ///     asks for the rungs it will read (<see cref="ScoreProjectionRequest.Quantiles" />) and gets
@@ -262,18 +253,12 @@ public sealed record PeerLadder(IReadOnlyDictionary<double, PhoenixScore> Rungs,
 ///     keeps a strong peer from outvoting a weak one. Zero when nobody holds it.
 /// </param>
 /// <param name="Scored">Peers with a non-broken score on it, holders or not.</param>
-/// <param name="Median">
-///     The peers' median score, read exactly as the estimate is — the same voices, the same
-///     quantile arithmetic — and null under the five-peer floor. Null means no opinion.
-/// </param>
-/// <param name="Quartile1">The first quartile over the same voices, or null with the median.</param>
-/// <param name="Quartile3">The third quartile over the same voices, or null with the median.</param>
 /// <param name="Scores">
-///     Every scorer's score, ascending — the voices the median and quartiles were read from, kept
-///     so a page can place the viewer's own score among them without a second read.
+///     Every scorer's score, ascending — the voices a projected grade is read from
+///     (<see cref="ProjectedAt" />), kept so a page can read any rung and place the viewer's own
+///     score among them without a second read.
 /// </param>
-public sealed record PeerPoolChart(int Holders, int Points, int Scored, PhoenixScore? Median,
-    PhoenixScore? Quartile1, PhoenixScore? Quartile3, IReadOnlyList<int> Scores)
+public sealed record PeerPoolChart(int Holders, int Points, int Scored, IReadOnlyList<int> Scores)
 {
     /// <summary>The share of scorers strictly below <paramref name="score" />, on 0..1; null with no scorers.</summary>
     public double? PercentileOf(int score)
@@ -336,11 +321,6 @@ public sealed record PeerPoolSummary(
 ///     own evidence. Zero when nothing contributed. Always 1.0 on Phoenix 2, which weighs nothing.
 /// </param>
 /// <param name="Group">Who was asked, in a form a surface can name. Null only where nothing was.</param>
-/// <param name="Spreads">
-///     The peers' interquartile range per chart, for every chart in <paramref name="Scores" /> —
-///     same voices, same weights, same quantile arithmetic, so the two cannot disagree about
-///     which peers were heard.
-/// </param>
 /// <param name="PeerPools">
 ///     The peers' pools, on Phoenix 2 and only when the request carried the catalog
 ///     (<see cref="ScoreProjectionRequest.Charts" />); null otherwise, which means "not asked",
@@ -358,7 +338,6 @@ public sealed record ScoreProjection(
     double CompetitiveLevel,
     double MeanFreshness,
     PeerGroup? Group = null,
-    IReadOnlyDictionary<Guid, PeerSpread>? Spreads = null,
     PeerPoolSummary? PeerPools = null,
     IReadOnlyDictionary<Guid, PeerLadder>? Ladders = null)
 {

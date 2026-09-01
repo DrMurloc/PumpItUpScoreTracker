@@ -57,8 +57,6 @@ public sealed record PumbilityPeersPageRecord(
 /// <param name="Tier">Staple … Poor, banded per type over the weighted sums with the PUMBILITY lens's log rule.</param>
 /// <param name="Order">The banding's own order within the type, ascending — a stabiliser, not a rank.</param>
 /// <param name="Scored">Peers with a score on it, holders or not.</param>
-/// <param name="Median">The peers' median, or null under five scorers (D24).</param>
-/// <param name="Variability">How split the peers are, or null under five scorers (D35).</param>
 /// <param name="MyPoolRank">The chart's slot in the viewer's own pool of the type, or null when it holds no slot.</param>
 /// <param name="MyScore">The viewer's own non-broken score, or null when they have none.</param>
 /// <param name="MyPlate">The plate on that score, when it carries one.</param>
@@ -77,15 +75,11 @@ public sealed record PeerPoolEntry(
     TierListCategory Tier,
     int Order,
     int Scored,
-    PhoenixScore? Median,
-    PhoenixScore? Quartile1,
-    PhoenixScore? Quartile3,
-    PeerVariabilityLevel? Variability,
     int? MyPoolRank,
     PhoenixScore? MyScore,
     PhoenixPlate? MyPlate,
     double? MyPercentile,
-    PhoenixScore? Projected = null)
+    PhoenixScore? Projected)
 {
     /// <summary>The chart's share of its electorate's points, on 0..1 — comparable across types (D37).</summary>
     public double Share => PeerCount == 0 ? 0 : Points / (PeerCount * (double)PoolVote);

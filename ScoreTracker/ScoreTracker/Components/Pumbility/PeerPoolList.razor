@@ -47,7 +47,6 @@ else
                                 <th>@L["Chart"]</th>
                                 <th title="@L["How many of your PUMBILITY peers hold it in their top 50"]">@L["Peers"]</th>
                                 <th>@L["Projected"]</th>
-                                <th>@L["Variability"]</th>
                                 <th class="pmb-r" title="@L["What it would add to your PUMBILITY, measured against your bar as it stands"]">@L["Gain"]</th>
                                 <th>@L["My Score"]</th>
                                 @if (IsPoolLens)
@@ -83,16 +82,6 @@ else
                                         {
                                             <LetterGradeIcon Grade="projected.LetterGradeFor(Mix)" Height="18"></LetterGradeIcon>
                                             <span class="pmb-num pmb-score-text">@(((int)projected).ToString("N0"))</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="pmb-none">—</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        @if (row.Entry?.Variability is { } level)
-                                        {
-                                            <VariabilityMeter Level="level" Title="@FromPeers(row)"></VariabilityMeter>
                                         }
                                         else
                                         {
@@ -163,8 +152,6 @@ else
                                                CornerBadgeClass="pmb-corner-gain"
                                                CornerBadgeStart="@CornerBadgeStartFor(row)"
                                                CornerBadgeStartClass="pmb-corner-gain"
-                                               TopRightDotColor="@(Density == UiDensity.Compact && row.Entry?.Variability is { } v ? ThemeScales.VariabilityColor(v) : null)"
-                                               TopRightDotTitle="@(row.Entry?.Variability is { } w ? L[VariabilityMeter.Word(w)].ToString() : null)"
                                                TierLabel="@(Density == UiDensity.Comfortable ? CaptionFor(row) : null)"
                                                TierColor="@(row.Entry != null ? ThemeScales.PumbilityColor(row.Entry.Tier) : ThemeScales.PumbilityColor(TierListCategory.Unrecorded))"
                                                TooltipNote="@CompactNote(row)"
@@ -493,8 +480,6 @@ else
         return row.MyPoolRank is { } rank ? L["In your pool #{0}", rank] : row.MyScore != null ? L["Played, not in your pool"] : L["Not yet played"];
     }
 
-    private string FromPeers(Row row) => row.Entry is { } e ? L["From {0} peers", e.Scored] : string.Empty;
-
     private string CarriedTitle(Row row) =>
         row.Target is { } t ? L["Carried from Phoenix 1: your {0} there, repriced here", ((int)t.Projected).ToString("N0")] : string.Empty;
 
@@ -503,13 +488,13 @@ else
     private string CompactNote(Row row)
     {
         var parts = new List<string>();
-        if (row.Entry is { } e)
+        if (row.Entry != null)
         {
             parts.Add(TierCaption(row));
             parts.Add(HoldText(row));
             parts.Add(WeightedSum(row));
             if (ProjectedOf(row) is { } projected)
-                parts.Add($"{L["Projected"]} {projected.LetterGradeFor(Mix).GetName()}" + (e.Variability is { } v ? $" · {L[VariabilityMeter.Word(v)]}" : string.Empty));
+                parts.Add($"{L["Projected"]} {projected.LetterGradeFor(Mix).GetName()}");
         }
         else if (row.Alone != null || row.Slot != null)
         {
@@ -563,8 +548,8 @@ else
         builder.CloseComponent();
     };
 
-    // The card body, Comfortable only: what the peers do on it, a carried row's Phoenix 1 line,
-    // and where the chart sits for you.
+    // The card body, Comfortable only: the grade you are projected to land, a carried row's
+    // Phoenix 1 line, and where the chart sits for you.
     private RenderFragment CardBody(Row row) => builder =>
     {
         var seq = 0;
@@ -591,7 +576,7 @@ else
             builder.CloseElement();
         }
 
-        if (row.Entry is { } entry)
+        if (row.Entry != null)
         {
             builder.OpenElement(seq++, "div");
             builder.AddAttribute(seq++, "class", "pmb-peers-line");
@@ -605,17 +590,6 @@ else
                 builder.AddComponentParameter(seq++, nameof(LetterGradeIcon.Grade), projected.LetterGradeFor(Mix));
                 builder.AddComponentParameter(seq++, nameof(LetterGradeIcon.Height), 18);
                 builder.CloseComponent();
-                if (entry.Variability is { } level)
-                {
-                    builder.OpenElement(seq++, "span");
-                    builder.AddAttribute(seq++, "class", "pmb-dot");
-                    builder.AddContent(seq++, "·");
-                    builder.CloseElement();
-                    builder.OpenComponent<VariabilityMeter>(seq++);
-                    builder.AddComponentParameter(seq++, nameof(VariabilityMeter.Level), level);
-                    builder.AddComponentParameter(seq++, nameof(VariabilityMeter.Title), FromPeers(row));
-                    builder.CloseComponent();
-                }
             }
             else
             {

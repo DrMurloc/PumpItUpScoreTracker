@@ -131,9 +131,6 @@ namespace ScoreTracker.PlayerProgress.Application
                 var held = summary.Charts.Where(kv => kv.Value.Holders > 0).ToDictionary(kv => kv.Key, kv => kv.Value.Points);
                 var tiers = TierListProcessor.ProcessIntoLogScaledTierList(PrevalenceListName, held)
                     .ToDictionary(e => e.ChartId);
-                var variability = PeerVariability.Band(summary.Charts
-                    .Where(kv => kv.Value.Median != null)
-                    .Select(kv => (kv.Key, kv.Value.Quartile1!.Value, kv.Value.Quartile3!.Value)));
 
                 foreach (var (chartId, chart) in summary.Charts)
                 {
@@ -141,8 +138,7 @@ namespace ScoreTracker.PlayerProgress.Application
                     var tier = tiers[chartId];
                     var myScore = mine.TryGetValue(chartId, out var record) ? record.Score : null;
                     entries.Add(new PeerPoolEntry(chartId, type, chart.Holders, peerCount, chart.Points, tier.Category,
-                        tier.Order, chart.Scored, chart.Median, chart.Quartile1, chart.Quartile3,
-                        variability.TryGetValue(chartId, out var level) ? level : null,
+                        tier.Order, chart.Scored,
                         myRank.TryGetValue(chartId, out var rank) ? rank : null,
                         myScore, record?.Plate,
                         myScore is { } s ? chart.PercentileOf((int)s) : null,
@@ -278,16 +274,15 @@ namespace ScoreTracker.PlayerProgress.Application
                 : await _mediator.Send(new GetChartScoringLevelsQuery(mix), CancellationToken.None);
 
             var ladders = new Dictionary<Guid, PeerLadder>();
-            var spreads = new Dictionary<Guid, PeerSpread>();
             var peers = new Dictionary<ChartType, PeerGroup>();
             var pools = new Dictionary<ChartType, PeerPoolSummary>();
             var scope = new ProjectionScope(mix, charts, scoringLevels, scoring, floor,
                 finish?.Total, finish?.IsEstimate ?? false);
 
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
-                await ProjectType(chartType, userId, scope, ladders, spreads, peers, pools, CancellationToken.None);
+                await ProjectType(chartType, userId, scope, ladders, peers, pools, CancellationToken.None);
 
-            return new ProjectionSweep(ladders, peers, spreads, pools);
+            return new ProjectionSweep(ladders, peers, pools);
         }
 
         /// <summary>
@@ -357,8 +352,7 @@ namespace ScoreTracker.PlayerProgress.Application
                 expectedScore.Where(kv => ranked.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value),
                 ranked,
                 chartDifficulty,
-                sweep.Peers,
-                sweep.Spreads.Where(kv => ranked.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value));
+                sweep.Peers);
         }
 
         /// <summary>
@@ -417,7 +411,7 @@ namespace ScoreTracker.PlayerProgress.Application
             double? FinishedTotal, bool FinishIsEstimate);
 
         private async Task ProjectType(ChartType chartType, Guid userId, ProjectionScope scope,
-            IDictionary<Guid, PeerLadder> into, IDictionary<Guid, PeerSpread> spreads,
+            IDictionary<Guid, PeerLadder> into,
             IDictionary<ChartType, PeerGroup> peers, IDictionary<ChartType, PeerPoolSummary> pools,
             CancellationToken cancellationToken)
         {
@@ -468,8 +462,6 @@ namespace ScoreTracker.PlayerProgress.Application
 
             if (projected.Ladders != null)
                 foreach (var (chartId, ladder) in projected.Ladders) into[chartId] = ladder;
-            if (projected.Spreads != null)
-                foreach (var (chartId, spread) in projected.Spreads) spreads[chartId] = spread;
             if (projected.Group is { } group) peers[chartType] = group;
             if (projected.PeerPools is { } summary) pools[chartType] = summary;
         }

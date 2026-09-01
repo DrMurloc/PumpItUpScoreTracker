@@ -149,30 +149,7 @@ public sealed class ScoreProjectorTests
     }
 
     [Fact]
-    public async Task TheSpreadBracketsTheMedianWithTheSamePeers()
-    {
-        // The Peers IQR: first and third quartiles of the same five voices the median came from,
-        // read with the same midpoint-convention quantile, and how many peers voted.
-        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
-        var peers = Enumerable.Range(0, 5).Select(_ => ctx.WithPeer(poolSize: 50)).ToArray();
-        var scores = new[] { 940_000, 962_000, 975_000, 985_000, 990_000 };
-        for (var i = 0; i < 5; i++) ctx.WithScore(peers[i], ChartA, scores[i]);
-
-        var result = await ctx.Project(ChartType.Single, ChartA);
-
-        var spread = result.Spreads![ChartA];
-        Assert.Equal(956_500, (int)result.Scores[ChartA]);
-        // Midpoint positions of five equal voices are 0.1, 0.3, 0.5, 0.7, 0.9: q25 interpolates
-        // three-quarters of the way from 940k to 962k, q75 a quarter of the way from 985k to 990k.
-        Assert.Equal(956_500, (int)spread.Quartile1);
-        Assert.Equal(986_250, (int)spread.Quartile3);
-        Assert.Equal(5, spread.PeerCount);
-        Assert.True((int)spread.Quartile1 <= (int)result.Scores[ChartA]);
-        Assert.True((int)spread.Quartile3 >= (int)result.Scores[ChartA]);
-    }
-
-    [Fact]
-    public async Task AChartWithNoOpinionHasNoSpreadEither()
+    public async Task AChartWithNoOpinionHasNoLadderEither()
     {
         var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
         for (var i = 0; i < 4; i++) ctx.WithScore(ctx.WithPeer(poolSize: 50), ChartA, 970_000);
@@ -180,14 +157,14 @@ public sealed class ScoreProjectorTests
         var result = await ctx.Project(ChartType.Single, ChartA);
 
         Assert.DoesNotContain(ChartA, result.Scores.Keys);
-        Assert.DoesNotContain(ChartA, result.Spreads!.Keys);
+        Assert.DoesNotContain(ChartA, result.Ladders!.Keys);
     }
 
     [Fact]
     public async Task ABandTooThinForTheFloorAnswersOnWhatItHasWhenAskedTo()
     {
         // Two peers can never put five voices on a chart, so the floor takes the whole run to
-        // nothing rather than filtering it (D47). The spread still counts the real voices, so a
+        // nothing rather than filtering it (D47). The ladder still counts the real voices, so a
         // page can say how thin the evidence is.
         var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
         var peers = Enumerable.Range(0, 2).Select(_ => ctx.WithPeer(poolSize: 50)).ToArray();
@@ -198,7 +175,7 @@ public sealed class ScoreProjectorTests
 
         // Two equal voices sit at 0.25 and 0.75, so the default read is the lower one exactly.
         Assert.Equal(960_000, (int)relaxed.Scores[ChartA]);
-        Assert.Equal(2, relaxed.Spreads![ChartA].PeerCount);
+        Assert.Equal(2, relaxed.Ladders![ChartA].PeerCount);
         Assert.True(relaxed.Group!.AnsweredBelowFloor);
     }
 
@@ -402,9 +379,9 @@ public sealed class ScoreProjectorTests
         Assert.Equal(50, pools.Charts[ChartB].Points);
         Assert.Contains(ChartB, pools.Pools[other]);
         Assert.DoesNotContain(ChartB, pools.Pools[peer]);
-        // Two scorers: held, so present, and under the five-peer floor for a median.
+        // Two scorers: held, so present, and under the five-peer floor for a projected grade.
         Assert.Equal(2, pools.Charts[ChartA].Scored);
-        Assert.Null(pools.Charts[ChartA].Median);
+        Assert.Null(pools.Charts[ChartA].ProjectedAt(PeerEstimator.Median));
     }
 
     [Fact]
@@ -506,8 +483,8 @@ public sealed class ScoreProjectorTests
         var result = await ctx.Project(MixEnum.Phoenix, ChartType.Single, 1.0, ChartA);
 
         Assert.Equal(970_000, (int)result.Scores[ChartA]);
-        Assert.Equal(1, result.Spreads![ChartA].PeerCount);
-        Assert.Equal(970_000, (int)result.Spreads[ChartA].Quartile1);
+        Assert.Equal(1, result.Ladders![ChartA].PeerCount);
+        Assert.Equal(970_000, (int)result.Ladders[ChartA].At(PeerEstimator.DefaultQuantile));
         Assert.Equal(PeerGroupKind.CompetitiveBand, result.Group!.Kind);
         Assert.Equal(21.4, result.Group.Center);
         Assert.Equal(1.0, result.Group.HalfWidth);

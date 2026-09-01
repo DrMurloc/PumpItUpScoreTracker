@@ -452,26 +452,6 @@ public sealed partial class PumbilityProjectionSagaTests
     }
 
     [Fact]
-    public async Task ThePeersIqrRidesAlongWithTheMedianItBrackets()
-    {
-        // D30: the same five voices the median was read from, at the quartiles, plus how many
-        // there were — the page's "Peers IQR" and its "From N peers" tooltip.
-        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_500)
-            .WithChart(out var chart, ChartType.Single, 20);
-        foreach (var score in new[] { 940_000, 985_000, 962_000, 990_000, 975_000 })
-            ctx.WithPumbilityPeer(chart, phoenix2Score: score);
-
-        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
-            CancellationToken.None);
-
-        var spread = result.Spreads![chart.Id];
-        Assert.Equal(956_500, (int)spread.Quartile1);
-        Assert.Equal(986_250, (int)spread.Quartile3);
-        Assert.Equal(5, spread.PeerCount);
-        Assert.Equal(result.ProjectedGains.Keys.OrderBy(k => k), result.Spreads.Keys.OrderBy(k => k));
-    }
-
-    [Fact]
     public async Task FourPumbilityPeersAreNotAnOpinionWhileTheBandAnswersElsewhere()
     {
         // The floor still stands per chart. A band that answered anywhere is a band that could
@@ -513,9 +493,8 @@ public sealed partial class PumbilityProjectionSagaTests
             CancellationToken.None);
 
         Assert.Contains(chart.Id, result.ExpectedScores.Keys);
-        // The spread counts the voices that were actually heard, so the page can still say how
-        // thin the evidence is — four, under its own five-peer floor, which prints as a dash.
-        Assert.Equal(4, result.Spreads![chart.Id].PeerCount);
+        // The group says the run relaxed, which is what the page's thin-band note reads (D47).
+        Assert.True(result.Peers![ChartType.Single].AnsweredBelowFloor);
     }
 
     [Fact]

@@ -45,11 +45,9 @@ public sealed partial class PumbilityProjectionSagaTests
         Assert.Equal(6, stapleEntry.Scored);
         // The staple is every peer's #1 but the last's — the rare S22 outprices it there.
         Assert.Equal(50 * 5 + 49, stapleEntry.Points);
-        Assert.Equal(977_500, (int)stapleEntry.Median!.Value);
         // The row's grade is the peers at the page's energy (D51, D52): Good is the first quartile,
         // which on six equal voices at 965k..990k lands exactly on the second.
         Assert.Equal(970_000, (int)stapleEntry.Projected!.Value);
-        Assert.NotNull(stapleEntry.Variability);
         Assert.Equal(960_000, (int)stapleEntry.MyScore!.Value);
         Assert.Equal(0, stapleEntry.MyPercentile);
         Assert.Equal(1, stapleEntry.MyPoolRank); // the S21 outprices the S15 in the viewer's own pool
@@ -57,8 +55,7 @@ public sealed partial class PumbilityProjectionSagaTests
         var rareEntry = Assert.Single(page.Entries, e => e.ChartId == rare.Id);
         Assert.Equal(1, rareEntry.Holders);
         Assert.Equal(50, rareEntry.Points);
-        Assert.Null(rareEntry.Median); // one scorer
-        Assert.Null(rareEntry.Projected);
+        Assert.Null(rareEntry.Projected); // one scorer
         Assert.Null(rareEntry.MyScore);
         // The tier enum runs best first, so the staple's tier sorts before the rare chart's.
         Assert.True((int)stapleEntry.Tier < (int)rareEntry.Tier);

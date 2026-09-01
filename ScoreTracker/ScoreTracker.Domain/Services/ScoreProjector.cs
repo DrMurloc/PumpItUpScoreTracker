@@ -114,8 +114,8 @@ public sealed class ScoreProjector : IScoreProjector
         // a full timeline, so the ones who never played one of these charts were pure freight.
         var voices = peerScores.Select(s => s.UserId).Distinct().ToArray();
         if (voices.Length == 0)
-            return new ScoreProjection(new Dictionary<Guid, PhoenixScore>(), 0, myLevel, 0, group,
-                new Dictionary<Guid, PeerSpread>(), pools, new Dictionary<Guid, PeerLadder>());
+            return new ScoreProjection(new Dictionary<Guid, PhoenixScore>(), 0, myLevel, 0, group, pools,
+                new Dictionary<Guid, PeerLadder>());
 
         var levelNow = (await _stats.GetStats(mix, voices, cancellationToken))
             .ToDictionary(s => s.UserId, s => CompetitiveLevelFor(s, chartType));
@@ -124,7 +124,6 @@ public sealed class ScoreProjector : IScoreProjector
             .ToDictionary(g => g.Key, g => g.OrderBy(h => h.Date).ToArray());
 
         var projected = new Dictionary<Guid, PhoenixScore>();
-        var spreads = new Dictionary<Guid, PeerSpread>();
         var ladders = new Dictionary<Guid, PeerLadder>();
         // Counted from the scores that actually reached an estimate rather than from the sweep:
         // a peer with no stats row is dropped below, so the sweep's own distinct count would name
@@ -154,11 +153,10 @@ public sealed class ScoreProjector : IScoreProjector
             freshnessCount += scored.Length;
             projected[chart.Key] = ladder.At(request.PrimaryQuantile);
             ladders[chart.Key] = ladder;
-            spreads[chart.Key] = SpreadOf(scored, PeerEstimator.GrowthDecayLevels);
         }
 
         return new ScoreProjection(projected, contributors.Count, myLevel,
-            freshnessCount == 0 ? 0 : freshnessSum / freshnessCount, group, spreads, pools, ladders);
+            freshnessCount == 0 ? 0 : freshnessSum / freshnessCount, group, pools, ladders);
     }
 
     /// <summary>
@@ -255,7 +253,7 @@ public sealed class ScoreProjector : IScoreProjector
             .GroupBy(s => s.ChartId)
             .ToArray();
 
-        var (projected, spreads, ladders, contributors) = Estimate(heard, PeerEstimator.Phoenix2MinimumPeers, request);
+        var (projected, ladders, contributors) = Estimate(heard, PeerEstimator.Phoenix2MinimumPeers, request);
 
         // The floor asks for five peers ON A CHART, not five in the band, so at a band size of
         // five it is asking for unanimity and at three it can never be met at all. That is a
@@ -270,12 +268,12 @@ public sealed class ScoreProjector : IScoreProjector
         // the band's SIZE stays silent through it — which is the whole board it stays silent
         // about, since a relaxed run means every row rests on fewer than five peers.
         var relaxed = projected.Count == 0 && request.RelaxFloorWhenEmpty;
-        if (relaxed) (projected, spreads, ladders, contributors) = Estimate(heard, 1, request);
+        if (relaxed) (projected, ladders, contributors) = Estimate(heard, 1, request);
 
         return new ScoreProjection(projected, contributors.Count, myLevel, 1.0,
             // Only claimed when the second pass actually produced rows: a band nobody in it has
             // touched these charts at all answers empty either way, and has no evidence to warn about.
-            group with { AnsweredBelowFloor = relaxed && projected.Count > 0 }, spreads, pools, ladders);
+            group with { AnsweredBelowFloor = relaxed && projected.Count > 0 }, pools, ladders);
     }
 
     /// <summary>
@@ -283,12 +281,11 @@ public sealed class ScoreProjector : IScoreProjector
     ///     the request's rungs. A chart too few peers scored is absent rather than zero, which is
     ///     what <paramref name="minimumPeers" /> decides.
     /// </summary>
-    private static (Dictionary<Guid, PhoenixScore> Projected, Dictionary<Guid, PeerSpread> Spreads,
-        Dictionary<Guid, PeerLadder> Ladders, HashSet<Guid> Contributors) Estimate(
+    private static (Dictionary<Guid, PhoenixScore> Projected, Dictionary<Guid, PeerLadder> Ladders,
+        HashSet<Guid> Contributors) Estimate(
             IEnumerable<IGrouping<Guid, UserPhoenixScore>> heard, int minimumPeers, ScoreProjectionRequest request)
     {
         var projected = new Dictionary<Guid, PhoenixScore>();
-        var spreads = new Dictionary<Guid, PeerSpread>();
         var ladders = new Dictionary<Guid, PeerLadder>();
         var contributors = new HashSet<Guid>();
         foreach (var chart in heard)
@@ -302,23 +299,9 @@ public sealed class ScoreProjector : IScoreProjector
             foreach (var voice in voices) contributors.Add(voice.UserId);
             projected[chart.Key] = ladder.At(request.PrimaryQuantile);
             ladders[chart.Key] = ladder;
-            spreads[chart.Key] = SpreadOf(scored, 0);
         }
 
-        return (projected, spreads, ladders, contributors);
-    }
-
-    /// <summary>
-    ///     The peers' first and third quartiles on one chart, read exactly as the estimate is —
-    ///     same scores, same growth weights, same quantile arithmetic — so a page's "Peers IQR"
-    ///     brackets the very median it prints. Called only after the estimate exists, so the
-    ///     quartiles always do too.
-    /// </summary>
-    private static PeerSpread SpreadOf(IReadOnlyCollection<PeerScore> scored, double growthDecayLevels)
-    {
-        var lower = PeerEstimator.Estimate(scored, growthDecayLevels, PeerEstimator.LowerQuartile)!.Value;
-        var upper = PeerEstimator.Estimate(scored, growthDecayLevels, PeerEstimator.UpperQuartile)!.Value;
-        return new PeerSpread(lower, upper, scored.Count);
+        return (projected, ladders, contributors);
     }
 
     /// <summary>Distinct charts among a player's records of the type — their pool of it.</summary>

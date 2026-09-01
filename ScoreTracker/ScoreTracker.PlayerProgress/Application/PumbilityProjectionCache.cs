@@ -24,7 +24,6 @@ namespace ScoreTracker.PlayerProgress.Application
     internal sealed record ProjectionSweep(
         IReadOnlyDictionary<Guid, PeerLadder> Ladders,
         IReadOnlyDictionary<ChartType, PeerGroup> Peers,
-        IReadOnlyDictionary<Guid, PeerSpread> Spreads,
         IReadOnlyDictionary<ChartType, PeerPoolSummary> PeerPools);
 
     /// <summary>

@@ -68,27 +68,6 @@ public sealed class PeerPoolListTests : ComponentTestBase
     }
 
     [Fact]
-    public void TheVariabilityDotIsCompactOnlyAndTheWordAlwaysPrints()
-    {
-        var f = new Fixture()
-            .Held("Split", TierListCategory.Overrated, holders: 12, points: 500, mine: null,
-                median: 985_000, variability: PeerVariabilityLevel.Split);
-
-        var comfortable = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
-            .Add(x => x.Density, UiDensity.Comfortable));
-        Assert.Empty(comfortable.FindAll(".tier-chart-card-lens-dot"));
-        var meter = comfortable.Find("[data-testid=pmb-vary]");
-        Assert.Contains("Split", meter.TextContent);
-        Assert.Equal(4, meter.QuerySelectorAll(".pmb-vary-dots i.on").Length);
-
-        var compact = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
-            .Add(x => x.Density, UiDensity.Compact));
-        var dot = compact.Find(".tier-chart-card-lens-dot");
-        Assert.Contains("--vary-4", dot.GetAttribute("style"));
-        Assert.Equal("Split", dot.GetAttribute("title"));
-    }
-
-    [Fact]
     public void ProjectedGainsBandsThePayingChartsAndInterleavesCarriedRows()
     {
         var f = new Fixture()
@@ -161,7 +140,7 @@ public sealed class PeerPoolListTests : ComponentTestBase
     {
         var f = new Fixture()
             .Held("Row", TierListCategory.Overrated, holders: 17, points: 550, mine: 966_887, myRank: 20,
-                median: 985_000, variability: PeerVariabilityLevel.Mixed, gain: 10.2, projected: 985_000, percentile: 0.11);
+                median: 985_000, gain: 10.2, projected: 985_000, percentile: 0.11);
 
         var cut = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
             .Add(x => x.Gains, f.Gains).Add(x => x.Density, UiDensity.Table));
@@ -170,7 +149,6 @@ public sealed class PeerPoolListTests : ComponentTestBase
         Assert.Contains("Peers", headers);
         Assert.Contains("Projected", headers);
         Assert.DoesNotContain("Peers' median", headers);
-        Assert.Contains("Variability", headers);
         Assert.Contains("Gain", headers);
         Assert.Contains("Better Than", headers);
         Assert.Contains("Your pool", headers);
@@ -190,7 +168,7 @@ public sealed class PeerPoolListTests : ComponentTestBase
         // rides where one exists; a chart no peer holds says so.
         var f = new Fixture()
             .Held("Shared", TierListCategory.Easy, holders: 8, points: 200, mine: 966_887, myRank: 2,
-                median: 985_000, variability: PeerVariabilityLevel.Mixed, gain: 10.2, projected: 985_000)
+                median: 985_000, gain: 10.2, projected: 985_000)
             .Alone("Mine", myRank: 1, score: 990_000)
             .Held("Unplayed", TierListCategory.Overrated, holders: 17, points: 550, mine: null)
             .InPool("Mine", place: 1, value: 460).InPool("Shared", place: 2, value: 300);
@@ -275,13 +253,11 @@ public sealed class PeerPoolListTests : ComponentTestBase
         public Guid Id(string name) => _ids[name];
 
         public Fixture Held(string name, TierListCategory tier, int holders, int points, int? mine, int? myRank = null,
-            int? median = null, PeerVariabilityLevel? variability = null, double? gain = null, int? projected = null,
-            double? percentile = null)
+            int? median = null, double? gain = null, int? projected = null, double? percentile = null)
         {
             var chart = NewChart(name);
             _entries.Add(new PeerPoolEntry(chart.Id, ChartType.Single, holders, 23, points, tier, _entries.Count,
-                holders, median, median, median, variability, myRank, mine, mine == null ? null : PhoenixPlate.MarvelousGame,
-                percentile, median));
+                holders, myRank, mine, mine == null ? null : PhoenixPlate.MarvelousGame, percentile, median));
             if (gain is { } g)
                 _gains[chart.Id] = new PumbilityTarget(chart.Id, projected ?? 980_000, g, mine, false, null);
             return this;
