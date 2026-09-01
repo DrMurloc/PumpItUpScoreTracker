@@ -451,6 +451,12 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use.</value>
   </data>
+  <data name="A score only one in four of your peers beat." xml:space="preserve">
+    <value>A score only one in four of your peers beat.</value>
+  </data>
+  <data name="A score three in four of your peers reach." xml:space="preserve">
+    <value>A score three in four of your peers reach.</value>
+  </data>
   <data name="A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0." xml:space="preserve">
     <value>A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0.</value>
   </data>
@@ -1776,9 +1782,6 @@
   <data name="Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access." xml:space="preserve">
     <value>Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access.</value>
   </data>
-  <data name="Consistent" xml:space="preserve">
-    <value>Consistent</value>
-  </data>
   <data name="Content" xml:space="preserve">
     <value>Content</value>
   </data>
@@ -2349,6 +2352,9 @@
   <data name="End Date" xml:space="preserve">
 	  <value>End Date</value>
   </data>
+  <data name="Energy" xml:space="preserve">
+    <value>Energy</value>
+  </data>
   <data name="Enter a play above and its grade's row lights up." xml:space="preserve">
     <value>Enter a play above and its grade's row lights up.</value>
   </data>
@@ -2775,9 +2781,6 @@
   <data name="From {0}" xml:space="preserve">
     <value>From {0}</value>
   </data>
-  <data name="From {0} peers" xml:space="preserve">
-    <value>From {0} peers</value>
-  </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>From {0} scores</value>
   </data>
@@ -2871,6 +2874,9 @@
   <data name="Good count" xml:space="preserve">
     <value>Good count</value>
   </data>
+  <data name="Good energy" xml:space="preserve">
+    <value>Good energy</value>
+  </data>
   <data name="Goods" xml:space="preserve">
     <value>Goods</value>
   </data>
@@ -2906,6 +2912,9 @@
   </data>
   <data name="Great count" xml:space="preserve">
     <value>Great count</value>
+  </data>
+  <data name="Great energy" xml:space="preserve">
+    <value>Great energy</value>
   </data>
   <data name="Greats" xml:space="preserve">
 	  <value>Greats</value>
@@ -3137,6 +3146,9 @@
   </data>
   <data name="How This Is Scored" xml:space="preserve">
     <value>How this is scored</value>
+  </data>
+  <data name="How you're playing today. Every projected score and gain on this page reads your peers at this level." xml:space="preserve">
+    <value>How you're playing today. Every projected score and gain on this page reads your peers at this level.</value>
   </data>
   <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
     <value>I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again.</value>
@@ -4057,9 +4069,6 @@
   </data>
   <data name="Mix set to {0}" xml:space="preserve">
     <value>Mix set to {0}</value>
-  </data>
-  <data name="Mixed" xml:space="preserve">
-    <value>Mixed</value>
   </data>
   <data name="Mixes" xml:space="preserve">
     <value>Mixes</value>
@@ -5236,9 +5245,6 @@
   </data>
   <data name="Peers IQR" xml:space="preserve">
     <value>Peers IQR</value>
-  </data>
-  <data name="Peers' median" xml:space="preserve">
-    <value>Peers' median</value>
   </data>
   <data name="peers:" xml:space="preserve">
     <value>peers:</value>
@@ -7249,9 +7255,6 @@
   <data name="Spikes" xml:space="preserve">
     <value>Spikes</value>
   </data>
-  <data name="Split" xml:space="preserve">
-    <value>Split</value>
-  </data>
   <data name="Splits" xml:space="preserve">
     <value>Splits</value>
   </data>
@@ -7657,6 +7660,9 @@
   </data>
   <data name="The maker sees this on their tool page." xml:space="preserve">
     <value>The maker sees this on their tool page.</value>
+  </data>
+  <data name="The middle of your peers." xml:space="preserve">
+    <value>The middle of your peers.</value>
   </data>
   <data name="The multiplier" xml:space="preserve">
     <value>The multiplier</value>
@@ -8147,6 +8153,9 @@
   <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
     <value>Top co-op charts by estimated rating - plates inferred from score.</value>
   </data>
+  <data name="Top of my game" xml:space="preserve">
+    <value>Top of my game</value>
+  </data>
   <data name="Top scores" xml:space="preserve">
     <value>Top scores</value>
   </data>
@@ -8490,12 +8499,6 @@
   <data name="Vanished while still ranking" xml:space="preserve">
     <value>Vanished while still ranking</value>
   </data>
-  <data name="Variability" xml:space="preserve">
-    <value>Variability</value>
-  </data>
-  <data name="variability, consistent to split" xml:space="preserve">
-    <value>variability, consistent to split</value>
-  </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>Verified from official import</value>
   </data>
@@ -8510,9 +8513,6 @@
   </data>
   <data name="Verify the other account" xml:space="preserve">
     <value>Verify the other account</value>
-  </data>
-  <data name="Very consistent" xml:space="preserve">
-    <value>Very consistent</value>
   </data>
   <data name="Very Easy" xml:space="preserve">
     <value>Very Easy</value>
@@ -8549,9 +8549,6 @@
   </data>
   <data name="Very Slow" xml:space="preserve">
     <value>Very Slow</value>
-  </data>
-  <data name="Very split" xml:space="preserve">
-    <value>Very split</value>
   </data>
   <data name="Very Unpopular" xml:space="preserve">
     <value>Very Unpopular</value>

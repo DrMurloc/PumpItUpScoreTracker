@@ -387,3 +387,23 @@ for the five-peer floor.
 | five | blugro | `blub` + `gro`, following `blurg`. Same reason. |
 | expect | Blarggro | Coined rather than reusing `Murgblarg` (insights/activity), which already means something else. |
 | reach (a level) | murgro | What a player does to a level they are climbing toward. Distinct from `grubmarg` (clear), which is what they do to a bar. |
+
+## Energy (2026-09-01)
+
+Coined for the `/Pumbility` Energy chip (docs/design/pumbility-overhaul.md D51) and its three
+options. Reused, not re-coined: `gam` (how), `blub` (you), `lurg` (play), `grorplurg` (today),
+`mrglrgo` (projected), `mrglrgl` (score), `roglub` (gain), `morp` (your), `maglmurp` (peers),
+`grorpmurm` (level), `murgro` (reach), `blgrl` (my), `mrrgl` (top), `lurggrgl` (good), `grarg` (great).
+
+| English | en-ZW | Notes |
+|---|---|---|
+| energy | glorgur | `glorg` + `ur`. |
+| game (as in "top of my game") | grogmur | `grog` + `mur`. |
+| every | algro | The root of the established `algrog` (everything). |
+| this | grogl | |
+| page | plglur | |
+| reads (draws its numbers from) | rorgmo | |
+| three | grurg | Follows `blurg` (two) and `blugro` (five). |
+| four | glurg | Same. |
+| middle | mogrgl | On the established `mog` (mid-). |
+| beat (outscore) | grrgl | |

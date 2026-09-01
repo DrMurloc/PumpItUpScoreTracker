@@ -451,6 +451,12 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>Uma API pública com documentação completa move as ferramentas da comunidade — bots, overlays, sites de estatísticas. Pegue um token na sua conta e construa sobre os mesmos dados que usamos.</value>
   </data>
+  <data name="A score only one in four of your peers beat." xml:space="preserve">
+    <value>Uma pontuação que só um de cada quatro dos seus pares supera.</value>
+  </data>
+  <data name="A score three in four of your peers reach." xml:space="preserve">
+    <value>Uma pontuação que três de cada quatro dos seus pares alcançam.</value>
+  </data>
   <data name="A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0." xml:space="preserve">
     <value>Um Single é precificado um nível acima: um S17 paga Base(18). Abaixo do nível 10 um chart vale 0.</value>
   </data>
@@ -1765,9 +1771,6 @@
   <data name="Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access." xml:space="preserve">
     <value>Conectar uma ferramenta em que você confia funciona bem com um perfil privado — é uma conexão direta, não compartilhamento público. Seu perfil continua privado e nenhuma outra ferramenta ganha acesso.</value>
   </data>
-  <data name="Consistent" xml:space="preserve">
-    <value>Consistente</value>
-  </data>
   <data name="Content" xml:space="preserve">
     <value>Conteúdo</value>
   </data>
@@ -2335,6 +2338,9 @@
   <data name="End Date" xml:space="preserve">
     <value>Data de término</value>
   </data>
+  <data name="Energy" xml:space="preserve">
+    <value>Energia</value>
+  </data>
   <data name="Enter a play above and its grade's row lights up." xml:space="preserve">
     <value>Insira uma jogada acima e a linha da letra dela acende.</value>
   </data>
@@ -2758,9 +2764,6 @@
   <data name="From {0}" xml:space="preserve">
     <value>A partir de {0}</value>
   </data>
-  <data name="From {0} peers" xml:space="preserve">
-    <value>Com {0} pares</value>
-  </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>Com {0} pontuações</value>
   </data>
@@ -2854,6 +2857,9 @@
   <data name="Good count" xml:space="preserve">
     <value>Quantidade de Goods</value>
   </data>
+  <data name="Good energy" xml:space="preserve">
+    <value>Boa energia</value>
+  </data>
   <data name="Goods" xml:space="preserve">
     <value>Goods</value>
   </data>
@@ -2889,6 +2895,9 @@
   </data>
   <data name="Great count" xml:space="preserve">
     <value>Quantidade de Greats</value>
+  </data>
+  <data name="Great energy" xml:space="preserve">
+    <value>Ótima energia</value>
   </data>
   <data name="Greats" xml:space="preserve">
     <value>Greats</value>
@@ -3120,6 +3129,9 @@
   </data>
   <data name="How This Is Scored" xml:space="preserve">
     <value>Como isto é pontuado</value>
+  </data>
+  <data name="How you're playing today. Every projected score and gain on this page reads your peers at this level." xml:space="preserve">
+    <value>Como você está jogando hoje. Cada pontuação e ganho previstos nesta página são lidos dos seus pares neste nível.</value>
   </data>
   <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
     <value>Ainda não consigo publicar neste canal — conceda as permissões Ver canal e Enviar mensagens aqui e execute o comando novamente.</value>
@@ -4029,9 +4041,6 @@
   </data>
   <data name="Mix set to {0}" xml:space="preserve">
     <value>Versão alterada para {0}</value>
-  </data>
-  <data name="Mixed" xml:space="preserve">
-    <value>Misto</value>
   </data>
   <data name="Mixes" xml:space="preserve">
     <value>Versões</value>
@@ -5204,9 +5213,6 @@
   </data>
   <data name="Peers IQR" xml:space="preserve">
     <value>IQR dos pares</value>
-  </data>
-  <data name="Peers' median" xml:space="preserve">
-    <value>Mediana dos pares</value>
   </data>
   <data name="peers:" xml:space="preserve">
     <value>seu nível:</value>
@@ -7195,9 +7201,6 @@
   <data name="Spikes" xml:space="preserve">
     <value>Rajadas</value>
   </data>
-  <data name="Split" xml:space="preserve">
-    <value>Dividido</value>
-  </data>
   <data name="Splits" xml:space="preserve">
     <value>Splits</value>
   </data>
@@ -7599,6 +7602,9 @@
   </data>
   <data name="The maker sees this on their tool page." xml:space="preserve">
     <value>Quem a desenvolve vê isto na página da ferramenta.</value>
+  </data>
+  <data name="The middle of your peers." xml:space="preserve">
+    <value>O meio dos seus pares.</value>
   </data>
   <data name="The multiplier" xml:space="preserve">
     <value>O multiplicador</value>
@@ -8089,6 +8095,9 @@
   <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
     <value>Melhores charts de CO-OP por rating estimado - placas inferidas pela pontuação.</value>
   </data>
+  <data name="Top of my game" xml:space="preserve">
+    <value>No meu melhor</value>
+  </data>
   <data name="Top scores" xml:space="preserve">
     <value>Melhores pontuações</value>
   </data>
@@ -8428,12 +8437,6 @@
   <data name="Vanished while still ranking" xml:space="preserve">
     <value>Sumiram ainda estando classificadas</value>
   </data>
-  <data name="Variability" xml:space="preserve">
-    <value>Variabilidade</value>
-  </data>
-  <data name="variability, consistent to split" xml:space="preserve">
-    <value>variabilidade, de consistente a dividido</value>
-  </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>Verificado pela importação oficial</value>
   </data>
@@ -8448,9 +8451,6 @@
   </data>
   <data name="Verify the other account" xml:space="preserve">
     <value>Verifique a outra conta</value>
-  </data>
-  <data name="Very consistent" xml:space="preserve">
-    <value>Muito consistente</value>
   </data>
   <data name="Very Easy" xml:space="preserve">
     <value>Muito fácil</value>
@@ -8487,9 +8487,6 @@
   </data>
   <data name="Very Slow" xml:space="preserve">
     <value>Muito lento</value>
-  </data>
-  <data name="Very split" xml:space="preserve">
-    <value>Muito dividido</value>
   </data>
   <data name="Very Unpopular" xml:space="preserve">
     <value>Muito impopular</value>

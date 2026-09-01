@@ -451,6 +451,12 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>GRO mrglrgll API glgrgl mrglmr blargplgl lurgrgl plglmurgblub-grglgrrgl rorgl — arglmr, glorgblarggrrgl, lurglurg mrmagl. Glorgmagl gro murpblgrl romurg gromurp grgl ro glorgmurg lurg mrp blubmurm gromurm mrgl murg.</value>
   </data>
+  <data name="A score only one in four of your peers beat." xml:space="preserve">
+    <value>A mrglrgl ub mrp argl glurg ub morp maglmurp grrgl.</value>
+  </data>
+  <data name="A score three in four of your peers reach." xml:space="preserve">
+    <value>A mrglrgl grurg argl glurg ub morp maglmurp murgro.</value>
+  </data>
   <data name="A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0." xml:space="preserve">
     <value>A Mrglrlgl lu gogl mrp grorpmurm gro: a S17 gogl Gogl(18). Bloblo grorpmurm 10 a murgl lu gromb 0.</value>
   </data>
@@ -1776,9 +1782,6 @@
   <data name="Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access." xml:space="preserve">
     <value>Galm murmo Rorgl gromurp murgblub murpmurp blu murmo mrpgrogl — murgargl galm, bo Mrglrgll murgblub. Gromurp mrpgrogl murmo blorm murm bo Rorgl murp argla.</value>
   </data>
-  <data name="Consistent" xml:space="preserve">
-    <value>Grogmurm</value>
-  </data>
   <data name="Content" xml:space="preserve">
     <value>Grrglmorgblarg</value>
   </data>
@@ -2349,6 +2352,9 @@
   <data name="End Date" xml:space="preserve">
 	  <value>Gl Morgmrp</value>
   </data>
+  <data name="Energy" xml:space="preserve">
+    <value>Glorgur</value>
+  </data>
   <data name="Enter a play above and its grade's row lights up." xml:space="preserve">
     <value>Marg a lurg groblo ro ur rorgl grolgub mrglgro.</value>
   </data>
@@ -2775,9 +2781,6 @@
   <data name="From {0}" xml:space="preserve">
     <value>Romurg {0}</value>
   </data>
-  <data name="From {0} peers" xml:space="preserve">
-    <value>Romurg {0} maglmurp</value>
-  </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>Romurg {0} mgrlgmrg</value>
   </data>
@@ -2871,6 +2874,9 @@
   <data name="Good count" xml:space="preserve">
     <value>Lurggrgl glorgmurp</value>
   </data>
+  <data name="Good energy" xml:space="preserve">
+    <value>Lurggrgl glorgur</value>
+  </data>
   <data name="Goods" xml:space="preserve">
     <value>Lurggrglrgl</value>
   </data>
@@ -2906,6 +2912,9 @@
   </data>
   <data name="Great count" xml:space="preserve">
     <value>Mrpargl glorgmurp</value>
+  </data>
+  <data name="Great energy" xml:space="preserve">
+    <value>Grarg glorgur</value>
   </data>
   <data name="Greats" xml:space="preserve">
 	  <value>Blarggl</value>
@@ -3137,6 +3146,9 @@
   </data>
   <data name="How This Is Scored" xml:space="preserve">
     <value>Groga mrglrgl blurg</value>
+  </data>
+  <data name="How you're playing today. Every projected score and gain on this page reads your peers at this level." xml:space="preserve">
+    <value>Gam blub lurg grorplurg. Algro mrglrgo mrglrgl ap roglub ur grogl plglur rorgmo morp maglmurp og grogl grorpmurm.</value>
   </data>
   <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
     <value>GRRGL blargmr grogrgl mrp grglmrp glmurmblarg argl — blgrlgro argl mrp Murmblub Glmurmblarg ro Mrmr Murgroblarg urgmurpmrpmagl blubmorg, mrplurg plgl mrp plglgroargl morgro.</value>
@@ -4057,9 +4069,6 @@
   </data>
   <data name="Mix set to {0}" xml:space="preserve">
     <value>Mrg opalurg {0}</value>
-  </data>
-  <data name="Mixed" xml:space="preserve">
-    <value>Argmurg</value>
   </data>
   <data name="Mixes" xml:space="preserve">
     <value>Mrgrgl</value>
@@ -5236,9 +5245,6 @@
   </data>
   <data name="Peers IQR" xml:space="preserve">
     <value>Maglmurp IQR</value>
-  </data>
-  <data name="Peers' median" xml:space="preserve">
-    <value>Maglmurp lurggrgl</value>
   </data>
   <data name="peers:" xml:space="preserve">
     <value>morp:</value>
@@ -7249,9 +7255,6 @@
   <data name="Spikes" xml:space="preserve">
     <value>Mrgl</value>
   </data>
-  <data name="Split" xml:space="preserve">
-    <value>Blgrl</value>
-  </data>
   <data name="Splits" xml:space="preserve">
     <value>Mrargl</value>
   </data>
@@ -7657,6 +7660,9 @@
   </data>
   <data name="The maker sees this on their tool page." xml:space="preserve">
     <value>Blurgl mogla am bo groblu.</value>
+  </data>
+  <data name="The middle of your peers." xml:space="preserve">
+    <value>Mrgl mogrgl ub morp maglmurp.</value>
   </data>
   <data name="The multiplier" xml:space="preserve">
     <value>Mrp glmurmargl</value>
@@ -8147,6 +8153,9 @@
   <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
     <value>Blarg glorg-mr murgl murm murmmorgblub mrglrg - murp rglmrpgrorp romurg mrglrgl.</value>
   </data>
+  <data name="Top of my game" xml:space="preserve">
+    <value>Mrrgl ub blgrl grogmur</value>
+  </data>
   <data name="Top scores" xml:space="preserve">
     <value>Blarg mgrlgmrg</value>
   </data>
@@ -8490,12 +8499,6 @@
   <data name="Vanished while still ranking" xml:space="preserve">
     <value>Blurpa alu maglmrpplgl</value>
   </data>
-  <data name="Variability" xml:space="preserve">
-    <value>Blgrlmurm</value>
-  </data>
-  <data name="variability, consistent to split" xml:space="preserve">
-    <value>blgrlmurm, grogmurm ro blgrl</value>
-  </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>Murplurgmagl romurg urgmrmurg glorggl</value>
   </data>
@@ -8510,9 +8513,6 @@
   </data>
   <data name="Verify the other account" xml:space="preserve">
     <value>Murpmorg mrp mrpblgrl grgl</value>
-  </data>
-  <data name="Very consistent" xml:space="preserve">
-    <value>Mrgl Grrrogmurm</value>
   </data>
   <data name="Very Easy" xml:space="preserve">
     <value>Mrgl Mrgl</value>
@@ -8549,9 +8549,6 @@
   </data>
   <data name="Very Slow" xml:space="preserve">
     <value>Mrgl Grolurg</value>
-  </data>
-  <data name="Very split" xml:space="preserve">
-    <value>Mrgl Blgrrrl</value>
   </data>
   <data name="Very Unpopular" xml:space="preserve">
     <value>Mrgl Rglmrglgl</value>

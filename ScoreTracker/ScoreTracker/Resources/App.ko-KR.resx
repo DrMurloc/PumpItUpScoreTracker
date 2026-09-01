@@ -451,6 +451,12 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>문서가 완비된 공개 API가 커뮤니티 툴을 움직입니다 — 봇, 오버레이, 통계 사이트. 계정에서 토큰을 받아 우리와 같은 데이터 위에 만들어 보세요.</value>
   </data>
+  <data name="A score only one in four of your peers beat." xml:space="preserve">
+    <value>동료 4명 중 1명만 넘는 점수입니다.</value>
+  </data>
+  <data name="A score three in four of your peers reach." xml:space="preserve">
+    <value>동료 4명 중 3명이 도달하는 점수입니다.</value>
+  </data>
   <data name="A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0." xml:space="preserve">
     <value>싱글은 한 레벨 위로 책정됩니다: S17은 Base(18)로 계산됩니다. 10레벨 미만 채보의 가치는 0입니다.</value>
   </data>
@@ -1765,9 +1771,6 @@
   <data name="Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access." xml:space="preserve">
     <value>신뢰하는 도구 하나에 연결하는 것은 비공개 프로필에서도 문제없습니다 — 공개 공유가 아니라 직접 연결이기 때문입니다. 프로필은 비공개로 유지되며 다른 도구는 접근할 수 없습니다.</value>
   </data>
-  <data name="Consistent" xml:space="preserve">
-    <value>일관</value>
-  </data>
   <data name="Content" xml:space="preserve">
     <value>콘텐츠</value>
   </data>
@@ -2335,6 +2338,9 @@
   <data name="End Date" xml:space="preserve">
     <value>종료일</value>
   </data>
+  <data name="Energy" xml:space="preserve">
+    <value>컨디션</value>
+  </data>
   <data name="Enter a play above and its grade's row lights up." xml:space="preserve">
     <value>위에서 플레이를 입력하면 해당 랭크의 행이 강조됩니다.</value>
   </data>
@@ -2758,9 +2764,6 @@
   <data name="From {0}" xml:space="preserve">
     <value>{0}부터</value>
   </data>
-  <data name="From {0} peers" xml:space="preserve">
-    <value>동료 {0}명 기반</value>
-  </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>{0}개 스코어 기반</value>
   </data>
@@ -2854,6 +2857,9 @@
   <data name="Good count" xml:space="preserve">
     <value>굿 수</value>
   </data>
+  <data name="Good energy" xml:space="preserve">
+    <value>좋은 컨디션</value>
+  </data>
   <data name="Goods" xml:space="preserve">
     <value>굿</value>
   </data>
@@ -2889,6 +2895,9 @@
   </data>
   <data name="Great count" xml:space="preserve">
     <value>그레이트 수</value>
+  </data>
+  <data name="Great energy" xml:space="preserve">
+    <value>아주 좋은 컨디션</value>
   </data>
   <data name="Greats" xml:space="preserve">
     <value>그레이트</value>
@@ -3120,6 +3129,9 @@
   </data>
   <data name="How This Is Scored" xml:space="preserve">
     <value>점수 산정 방식</value>
+  </data>
+  <data name="How you're playing today. Every projected score and gain on this page reads your peers at this level." xml:space="preserve">
+    <value>오늘의 컨디션입니다. 이 페이지의 모든 예상 점수와 이득은 이 수준의 동료 기록을 기준으로 합니다.</value>
   </data>
   <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
     <value>아직 이 채널에 게시할 수 없습니다. 채널 보기와 메시지 보내기 권한을 부여한 뒤 명령어를 다시 실행해주세요.</value>
@@ -4029,9 +4041,6 @@
   </data>
   <data name="Mix set to {0}" xml:space="preserve">
     <value>시리즈를 {0}(으)로 설정했습니다</value>
-  </data>
-  <data name="Mixed" xml:space="preserve">
-    <value>혼재</value>
   </data>
   <data name="Mixes" xml:space="preserve">
     <value>시리즈</value>
@@ -5204,9 +5213,6 @@
   </data>
   <data name="Peers IQR" xml:space="preserve">
     <value>동료 IQR</value>
-  </data>
-  <data name="Peers' median" xml:space="preserve">
-    <value>동료 중앙값</value>
   </data>
   <data name="peers:" xml:space="preserve">
     <value>동급:</value>
@@ -7195,9 +7201,6 @@
   <data name="Spikes" xml:space="preserve">
     <value>폭타 구간</value>
   </data>
-  <data name="Split" xml:space="preserve">
-    <value>갈림</value>
-  </data>
   <data name="Splits" xml:space="preserve">
     <value>스플릿</value>
   </data>
@@ -7599,6 +7602,9 @@
   </data>
   <data name="The maker sees this on their tool page." xml:space="preserve">
     <value>제작자가 자신의 도구 페이지에서 이 내용을 봅니다.</value>
+  </data>
+  <data name="The middle of your peers." xml:space="preserve">
+    <value>동료들의 중간값입니다.</value>
   </data>
   <data name="The multiplier" xml:space="preserve">
     <value>배율</value>
@@ -8089,6 +8095,9 @@
   <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
     <value>추정 레이팅 기준 상위 CO-OP 채보 - 플레이트는 점수로 추정합니다.</value>
   </data>
+  <data name="Top of my game" xml:space="preserve">
+    <value>최상의 컨디션</value>
+  </data>
   <data name="Top scores" xml:space="preserve">
     <value>최고 점수</value>
   </data>
@@ -8428,12 +8437,6 @@
   <data name="Vanished while still ranking" xml:space="preserve">
     <value>랭킹에 남아야 하는데 사라짐</value>
   </data>
-  <data name="Variability" xml:space="preserve">
-    <value>변동성</value>
-  </data>
-  <data name="variability, consistent to split" xml:space="preserve">
-    <value>변동성, 일관에서 갈림까지</value>
-  </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>공식 가져오기로 확인됨</value>
   </data>
@@ -8448,9 +8451,6 @@
   </data>
   <data name="Verify the other account" xml:space="preserve">
     <value>상대 계정 확인</value>
-  </data>
-  <data name="Very consistent" xml:space="preserve">
-    <value>매우 일관</value>
   </data>
   <data name="Very Easy" xml:space="preserve">
     <value>아주 쉬움</value>
@@ -8487,9 +8487,6 @@
   </data>
   <data name="Very Slow" xml:space="preserve">
     <value>아주 느림</value>
-  </data>
-  <data name="Very split" xml:space="preserve">
-    <value>크게 갈림</value>
   </data>
   <data name="Very Unpopular" xml:space="preserve">
     <value>매우 비인기</value>

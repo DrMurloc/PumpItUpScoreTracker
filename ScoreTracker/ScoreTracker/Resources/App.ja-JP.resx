@@ -451,6 +451,12 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>ドキュメント完備の公開 API がコミュニティ製ツールを支えます — ボット、オーバーレイ、統計サイト。アカウントからトークンを取得して、私たちと同じデータの上に作ってください。</value>
   </data>
+  <data name="A score only one in four of your peers beat." xml:space="preserve">
+    <value>ピアの4人に1人しか上回らないスコアです。</value>
+  </data>
+  <data name="A score three in four of your peers reach." xml:space="preserve">
+    <value>ピアの4人に3人が到達するスコアです。</value>
+  </data>
   <data name="A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0." xml:space="preserve">
     <value>Singlesは1レベル上で計算されます。S17はBase(18)で払われます。レベル10未満の譜面の価値は0です。</value>
   </data>
@@ -1776,9 +1782,6 @@
   <data name="Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access." xml:space="preserve">
     <value>信頼できるツール1つに接続するのは非公開プロフィールでも問題ありません — 公開共有ではなく直接接続だからです。プロフィールは非公開のままで、ほかのツールがアクセスすることはありません。</value>
   </data>
-  <data name="Consistent" xml:space="preserve">
-    <value>安定</value>
-  </data>
   <data name="Content" xml:space="preserve">
     <value>コンテンツ</value>
   </data>
@@ -2349,6 +2352,9 @@
   <data name="End Date" xml:space="preserve">
 	  <value>終了日</value>
   </data>
+  <data name="Energy" xml:space="preserve">
+    <value>調子</value>
+  </data>
   <data name="Enter a play above and its grade's row lights up." xml:space="preserve">
     <value>上でプレイを入力すると、そのランクの行がハイライトされます。</value>
   </data>
@@ -2775,9 +2781,6 @@
   <data name="From {0}" xml:space="preserve">
     <value>{0}から</value>
   </data>
-  <data name="From {0} peers" xml:space="preserve">
-    <value>ピア {0}人から算出</value>
-  </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>{0} スコアから算出</value>
   </data>
@@ -2871,6 +2874,9 @@
   <data name="Good count" xml:space="preserve">
     <value>Good 数</value>
   </data>
+  <data name="Good energy" xml:space="preserve">
+    <value>好調</value>
+  </data>
   <data name="Goods" xml:space="preserve">
     <value>Good数</value>
   </data>
@@ -2906,6 +2912,9 @@
   </data>
   <data name="Great count" xml:space="preserve">
     <value>Great 数</value>
+  </data>
+  <data name="Great energy" xml:space="preserve">
+    <value>とても好調</value>
   </data>
   <data name="Greats" xml:space="preserve">
 	  <value>Great数</value>
@@ -3137,6 +3146,9 @@
   </data>
   <data name="How This Is Scored" xml:space="preserve">
     <value>採点方法</value>
+  </data>
+  <data name="How you're playing today. Every projected score and gain on this page reads your peers at this level." xml:space="preserve">
+    <value>今日の調子です。このページの予測スコアと増加はすべて、この水準のピアの記録に基づきます。</value>
   </data>
   <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
     <value>まだこのチャンネルに投稿できません。「チャンネルを見る」と「メッセージを送信」の権限を付与してから、もう一度コマンドを実行してください。</value>
@@ -4057,9 +4069,6 @@
   </data>
   <data name="Mix set to {0}" xml:space="preserve">
     <value>バージョンを {0} に設定しました</value>
-  </data>
-  <data name="Mixed" xml:space="preserve">
-    <value>まちまち</value>
   </data>
   <data name="Mixes" xml:space="preserve">
     <value>バージョン</value>
@@ -5236,9 +5245,6 @@
   </data>
   <data name="Peers IQR" xml:space="preserve">
     <value>ピアIQR</value>
-  </data>
-  <data name="Peers' median" xml:space="preserve">
-    <value>ピア中央値</value>
   </data>
   <data name="peers:" xml:space="preserve">
     <value>同水準:</value>
@@ -7249,9 +7255,6 @@
   <data name="Spikes" xml:space="preserve">
     <value>連打区間</value>
   </data>
-  <data name="Split" xml:space="preserve">
-    <value>割れる</value>
-  </data>
   <data name="Splits" xml:space="preserve">
     <value>スプリット</value>
   </data>
@@ -7657,6 +7660,9 @@
   </data>
   <data name="The maker sees this on their tool page." xml:space="preserve">
     <value>作者は自分のツールページでこれを見ます。</value>
+  </data>
+  <data name="The middle of your peers." xml:space="preserve">
+    <value>ピアの中央値です。</value>
   </data>
   <data name="The multiplier" xml:space="preserve">
     <value>倍率</value>
@@ -8147,6 +8153,9 @@
   <data name="Top co-op charts by estimated rating - plates inferred from score." xml:space="preserve">
     <value>推定レーティング順のCO-OP譜面トップ - プレートはスコアから推定します。</value>
   </data>
+  <data name="Top of my game" xml:space="preserve">
+    <value>絶好調</value>
+  </data>
   <data name="Top scores" xml:space="preserve">
     <value>トップスコア</value>
   </data>
@@ -8490,12 +8499,6 @@
   <data name="Vanished while still ranking" xml:space="preserve">
     <value>ランキングに残るはずが消えた</value>
   </data>
-  <data name="Variability" xml:space="preserve">
-    <value>ばらつき</value>
-  </data>
-  <data name="variability, consistent to split" xml:space="preserve">
-    <value>ばらつき、安定から割れるまで</value>
-  </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>公式インポートで確認済み</value>
   </data>
@@ -8510,9 +8513,6 @@
   </data>
   <data name="Verify the other account" xml:space="preserve">
     <value>相手アカウントの確認</value>
-  </data>
-  <data name="Very consistent" xml:space="preserve">
-    <value>非常に安定</value>
   </data>
   <data name="Very Easy" xml:space="preserve">
     <value>とても簡単</value>
@@ -8549,9 +8549,6 @@
   </data>
   <data name="Very Slow" xml:space="preserve">
     <value>とても遅い</value>
-  </data>
-  <data name="Very split" xml:space="preserve">
-    <value>大きく割れる</value>
   </data>
   <data name="Very Unpopular" xml:space="preserve">
     <value>かなり不人気</value>
