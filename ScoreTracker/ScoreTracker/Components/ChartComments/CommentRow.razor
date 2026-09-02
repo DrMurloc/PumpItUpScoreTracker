@@ -58,6 +58,22 @@
                     @Menu()
                 }
             </div>
+            @if (!IsReply && Comment.AnchorAt is { } second)
+            {
+                @* The second this comment points at (docs/design/step-chart-comments §3): a
+                   button where the host can land the strip on it, a plain chip where none can. *@
+                <div class="cmt-anchor">
+                    @if (OnAnchorClick.HasDelegate)
+                    {
+                        <button type="button" class="cmt-anchor-chip" data-testid="@($"anchor-{Comment.Id}")"
+                                @onclick="() => OnAnchorClick.InvokeAsync(second)"><i></i>@SecondLabel(second)</button>
+                    }
+                    else
+                    {
+                        <span class="cmt-anchor-chip cmt-anchor-chip-still" data-testid="@($"anchor-{Comment.Id}")"><i></i>@SecondLabel(second)</span>
+                    }
+                </div>
+            }
             <div class="cmt-body">
                 <CommentTextView Body="DisplayBody" OnUntrustedLink="OnUntrustedLink"></CommentTextView>
             </div>
@@ -203,6 +219,12 @@
     [Parameter] public EventCallback<CommentRecord> OnRemove { get; set; }
     [Parameter] public EventCallback<string?> OnUntrustedLink { get; set; }
 
+    /// <summary>
+    ///     A time chip was tapped: the host lands the step chart on that second. Unwired, the
+    ///     chip renders as a label — a host with no strip has nowhere to go.
+    /// </summary>
+    [Parameter] public EventCallback<decimal> OnAnchorClick { get; set; }
+
     private bool _showOriginal;
 
     private IReadOnlyList<CommentSpan> DisplayBody =>
@@ -236,6 +258,12 @@
     }
 
     private bool CanVote => CanInteract && !IsNote && !Comment.ViewerIsAuthor;
+
+    private static string SecondLabel(decimal second)
+    {
+        var whole = (int)Math.Floor(second);
+        return $"{whole / 60}:{whole % 60:00}";
+    }
 
     private bool CanReply => CanInteract && CanWrite && !IsNote && !IsReply;
 

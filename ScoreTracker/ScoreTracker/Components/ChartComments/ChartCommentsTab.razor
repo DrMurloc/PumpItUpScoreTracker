@@ -146,7 +146,7 @@ else
                         OnRemove="AskToRemove" OnConfirm="Confirmed" OnCancelConfirm="() => _confirming = null"
                         OnReport="StartReport" OnReportSubmit="SubmitReport"
                         OnCancelReport="() => _reporting = null"
-                        OnUntrustedLink="ShowInterstitial" @key="root.Id"></CommentRow>
+                        OnUntrustedLink="ShowInterstitial" OnAnchorClick="OnAnchorClick" @key="root.Id"></CommentRow>
         }
         @if (_replyingTo == root.Id)
         {
@@ -385,6 +385,43 @@ else
         color: var(--mud-palette-text-secondary);
     }
 
+    /* The second a comment points at — a section chip's chrome with a short bar for a dot. */
+    .cmt-anchor {
+        margin: 1px 0 6px;
+    }
+
+    .cmt-anchor-chip {
+        appearance: none;
+        font: inherit;
+        font-size: .72rem;
+        font-weight: 500;
+        color: var(--mud-palette-text-primary);
+        background: var(--mud-palette-surface);
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 999px;
+        padding: 2px 9px 2px 7px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .cmt-anchor-chip i {
+        width: 3px;
+        height: 11px;
+        border-radius: 2px;
+        background: var(--mud-palette-text-secondary);
+    }
+
+    .cmt-anchor-chip:hover {
+        border-color: var(--mud-palette-text-secondary);
+    }
+
+    .cmt-anchor-chip-still {
+        cursor: default;
+    }
+
     /* A 500-character comment can be one 300-character URL. Without this it decides the
        dialog's width and the whole thing scrolls sideways on a phone. */
     .cmt-body {
@@ -570,6 +607,12 @@ else
     ///     the tab would open on Public, where the focused comment is not.
     /// </summary>
     [Parameter] public CommentAudience? InitialAudience { get; set; }
+
+    /// <summary>
+    ///     A root's time chip was tapped (docs/design/step-chart-comments §3). The dialog wires
+    ///     this only when a Steps tab exists to land on; unwired, the chips are labels.
+    /// </summary>
+    [Parameter] public EventCallback<decimal> OnAnchorClick { get; set; }
 
     private string? _pendingLink;
 

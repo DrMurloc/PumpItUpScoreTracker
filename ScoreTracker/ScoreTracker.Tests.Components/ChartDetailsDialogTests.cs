@@ -522,4 +522,27 @@ public sealed class ChartDetailsDialogTests : TestContext
         Assert.Equal("true", cut.Find("[data-testid=cdt-tab-Comments]").GetAttribute("aria-selected"));
         Assert.Single(cut.FindAll($"#comment-{comment.Id}.cmt-focused"));
     }
+
+    [Fact]
+    public async Task ATimeChipInTheCommentsTabLandsOnTheStepsTab()
+    {
+        var comment = Anchored(33.45m);
+        CommentsOn(comment);
+        SetupStepChart();
+        var cut = RenderDialog(SetupChart(null), ChartDetailsDialog.DetailsTab.Comments);
+
+        await cut.Find($"[data-testid=anchor-{comment.Id}]").ClickAsync(new MouseEventArgs());
+
+        Assert.Equal("true", cut.Find("[data-testid=cdt-tab-Steps]").GetAttribute("aria-selected"));
+    }
+
+    [Fact]
+    public void WithoutABankedTimelineTheChipIsALabel()
+    {
+        var comment = Anchored(33.45m);
+        CommentsOn(comment);
+        var cut = RenderDialog(SetupChart(null), ChartDetailsDialog.DetailsTab.Comments);
+
+        Assert.Equal("span", cut.Find($"[data-testid=anchor-{comment.Id}]").TagName.ToLowerInvariant());
+    }
 }

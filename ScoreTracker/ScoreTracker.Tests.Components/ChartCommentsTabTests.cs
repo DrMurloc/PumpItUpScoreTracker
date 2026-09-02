@@ -549,4 +549,32 @@ public sealed class ChartCommentsTabTests : TestContext
             return Array.Empty<LocalizedString>();
         }
     }
+
+    // ----- the time chip (docs/design/step-chart-comments §3) ----------------------------------
+
+    [Fact]
+    public async Task ARootThatPointsAtASecondWearsTheChipAndTheChipAimsTheStrip()
+    {
+        Page(Comment("This quad is a bracket.") with { AnchorAt = 33.45m }, Comment("Great chart."));
+        decimal? aimed = null;
+        var page = RenderComponent<ChartCommentsTab>(p => p.Add(c => c.ChartId, Chart).Add(c => c.Active, true)
+            .Add(c => c.OnAnchorClick, EventCallback.Factory.Create<decimal>(this, second => aimed = second)));
+
+        var chip = Assert.Single(page.FindAll("[data-testid^='anchor-']"));
+        Assert.Equal("0:33", chip.TextContent.Trim());
+
+        await chip.ClickAsync(new MouseEventArgs());
+
+        Assert.Equal(33.45m, aimed);
+    }
+
+    [Fact]
+    public void WithoutAStripToAimTheChipIsALabel()
+    {
+        Page(Comment("This quad is a bracket.") with { AnchorAt = 33.45m });
+
+        var chip = Assert.Single(Render().FindAll("[data-testid^='anchor-']"));
+
+        Assert.Equal("span", chip.TagName.ToLowerInvariant());
+    }
 }

@@ -105,6 +105,7 @@
                                       AdminPreview="@(!Comments.Value.Enabled)"
                                       FocusCommentId="@(IsDrilled ? null : _stripFocus ?? FocusCommentId)"
                                       InitialAudience="@(IsDrilled ? null : _stripAudience ?? InitialCommentAudience)"
+                                      OnAnchorClick="@(_stepChart != null ? EventCallback.Factory.Create<decimal>(this, SelectSecondOnStrip) : default)"
                                       @key="(ViewChart.Id, nameof(ChartCommentsTab))"></ChartCommentsTab>
                 </div>
             }
@@ -587,6 +588,18 @@
         _stripFocus = target.CommentId;
         _stripAudience = target.Audience.Kind == CommentAudienceKind.Public ? null : target.Audience;
         await SelectTab(DetailsTab.Comments);
+    }
+
+    /// <summary>
+    ///     A time chip in the Comments tab: the strip lands on that second (step-chart-comments
+    ///     §3). Wired only while a Steps tab exists, so a chart with no banked timeline shows the
+    ///     chips as labels.
+    /// </summary>
+    private async Task SelectSecondOnStrip(decimal second)
+    {
+        if (_stepChart == null) return;
+        await SelectTab(DetailsTab.Steps);
+        if (_stepsTab != null) await _stepsTab.SelectSecond(second);
     }
 
     private Task Close()
