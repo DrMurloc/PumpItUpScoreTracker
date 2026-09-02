@@ -528,7 +528,8 @@ else
     // moderation-only and must land.
     private const int FocusTake = 500;
 
-    private bool _initialScopeApplied;
+    private CommentAudience? _appliedInitialAudience;
+    private Guid? _appliedFocus;
 
     private CommentPageRecord _page = new(Array.Empty<CommentRecord>(), 0, false);
     private IReadOnlyList<CommentScopeRecord> _scopes = Array.Empty<CommentScopeRecord>();
@@ -689,12 +690,21 @@ else
     protected override async Task OnParametersSetAsync()
     {
         if (!Active) return;
-        if (!_initialScopeApplied)
+        // The moderation queue and the strip's panel both arrive with a comment to stand on. A
+        // later arrival re-aims the tab rather than being ignored because an earlier one was
+        // applied — the same instance serves the dialog for as long as it is open.
+        if (InitialAudience is { } initial && initial != _appliedInitialAudience)
         {
-            _initialScopeApplied = true;
-            if (InitialAudience is { } initial) _audience = initial;
+            _appliedInitialAudience = initial;
+            _audience = initial;
+            _replyingTo = null;
+        }
+
+        if (FocusCommentId is { } focus && focus != _appliedFocus)
+        {
+            _appliedFocus = focus;
             // A focus target must be on the first page or the anchor marks nothing.
-            if (FocusCommentId != null) _take = FocusTake;
+            _take = FocusTake;
         }
 
         if (!_readInLoaded)

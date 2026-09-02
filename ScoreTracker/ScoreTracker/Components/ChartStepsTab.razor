@@ -1,7 +1,9 @@
 @namespace ScoreTracker.Web.Components
 @using Microsoft.JSInterop
+@using ScoreTracker.ChartComments.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components.ChartComments
 @using ScoreTracker.Web.Services
 @inject IJSRuntime JS
 @inject IStringLocalizer<App> L
@@ -34,6 +36,13 @@
         <div class="stepchart-minicol">
             <canvas class="stepchart-minimap" data-stepchart-minimap></canvas>
         </div>
+        @if (CommentsVisible)
+        {
+            @* The same sticky panel the chart page carries (step-chart-comments D4); Open
+               thread is the dialog's tab switch, so it raises to the host here. *@
+            <StepChartCommentPanel ChartId="Chart.Id" Mix="Mix" Active="Active" OnOpenThread="OnOpenThread"
+                                   @key="(Chart.Id, nameof(StepChartCommentPanel))"></StepChartCommentPanel>
+        }
     </div>
     <div class="stepchart-legend" data-stepchart-legend></div>
 </div>
@@ -48,8 +57,16 @@
     /// <summary>Visible AND selected — the mount fires on the first true, never before.</summary>
     [Parameter] public bool Active { get; set; }
 
+    /// <summary>The comment gate, decided by the dialog; off, the strip carries no panel.</summary>
+    [Parameter] public bool CommentsVisible { get; set; }
+
+    /// <summary>The panel's Open thread: the comment and the scope it lives in, for the host's tab switch.</summary>
+    [Parameter] public EventCallback<(Guid CommentId, CommentAudience Audience)> OnOpenThread { get; set; }
+
     private ElementReference _root;
+    private IJSObjectReference? _module;
     private bool _mounted;
+    private decimal? _pendingSecond;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -57,7 +74,28 @@
         _mounted = true;
         // The import map rewrites the specifier to the content-hashed asset; mount() guards
         // its own element, so a re-render after mounting is a no-op on the JS side too.
-        var module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/step-chart.js");
-        await module.InvokeVoidAsync("mount", _root);
+        _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/step-chart.js");
+        await _module.InvokeVoidAsync("mount", _root);
+        if (_pendingSecond is { } second)
+        {
+            _pendingSecond = null;
+            await _module.InvokeVoidAsync("selectSecond", _root, second);
+        }
+    }
+
+    /// <summary>
+    ///     Lands the strip on a second — a time chip in the Comments tab was tapped
+    ///     (step-chart-comments §3). Asked before the tab has ever been shown, it waits for the
+    ///     mount; the module itself waits for the strip's own fetch.
+    /// </summary>
+    public async Task SelectSecond(decimal second)
+    {
+        if (_module == null)
+        {
+            _pendingSecond = second;
+            return;
+        }
+
+        await _module.InvokeVoidAsync("selectSecond", _root, second);
     }
 }
