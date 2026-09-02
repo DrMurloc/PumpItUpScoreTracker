@@ -66,7 +66,7 @@ internal static class SessionBadges
         if (detail?.AttemptsBeforeClear is { } attempts && attempts > 0)
             yield return new SessionBadge($"🎯 {attempts + 1}", l["Attempts before this clear"].Value);
         if (score.Row.IsReclear)
-            yield return new SessionBadge("🔁", l["Passed in another mix"].Value);
+            yield return new SessionBadge("🔁", l["Passed in other mixes"].Value);
         // Gold, not green: the tail already carries a green delta over your previous Phoenix
         // 2 score, and a second green number measuring a different baseline eight pixels away
         // reads as the same fact twice. The words keep them apart, so "over P1" never

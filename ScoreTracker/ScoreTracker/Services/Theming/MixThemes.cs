@@ -402,6 +402,28 @@ public static class MixThemes
     /// <summary>Raw hex for a speed band, slowest (0) to fastest (4). For render targets that cannot read tokens.</summary>
     public static string SpeedBandHex(int band) => SpeedBandColors[Math.Clamp(band, 0, SpeedBandColors.Length - 1)];
 
+    /// <summary>
+    ///     Raw hex for a skill chip's hue, resolved off the site.css class the chip already
+    ///     carries — for the share card, which can't read CSS custom properties. Null for a
+    ///     class with no single hue (the neutral section chip), so the caller falls back to
+    ///     its muted ink rather than inventing a family.
+    /// </summary>
+    public static string? SkillClassHex(string categoryClass)
+    {
+        if (categoryClass.Contains("badgecat-brackets")) return BadgeCategoryColors[BadgeCategory.Brackets];
+        if (categoryClass.Contains("badgecat-twists")) return BadgeCategoryColors[BadgeCategory.Twists];
+        if (categoryClass.Contains("badgecat-staminaandruns"))
+            return BadgeCategoryColors[BadgeCategory.StaminaAndRuns];
+        if (categoryClass.Contains("badgecat-doublestech")) return BadgeCategoryColors[BadgeCategory.DoublesTech];
+        if (categoryClass.Contains("badgecat-tech")) return BadgeCategoryColors[BadgeCategory.Tech];
+        if (categoryClass.Contains("chip-speed-slow")) return SpeedBandHex(0);
+        if (categoryClass.Contains("chip-speed-mid")) return SpeedBandHex(2);
+        if (categoryClass.Contains("chip-speed-fast")) return SpeedBandHex(SpeedBandColors.Length - 1);
+        if (categoryClass.Contains("chip-spike")) return SpikeHex;
+        if (categoryClass.Contains("chip-geometry")) return GeometryHex;
+        return null;
+    }
+
     /// <summary>Raw hex for a judgment — for ApexCharts, which can't read CSS custom properties.</summary>
     public static string JudgmentHex(Judgment judgment) => JudgmentColors[judgment];
 

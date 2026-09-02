@@ -186,11 +186,16 @@ public sealed class TierListTests : IAsyncLifetime
         var timeout = new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 };
         await Expect(SectionNamed("Easy")).ToBeVisibleAsync(timeout);
 
-        // Download rides the content bar's tools cluster as an icon button; its
-        // accessible name is the aria-label.
+        // Download rides the content bar's tools cluster as an icon button; it opens the
+        // settings dialog (docs/design/share-card-download-settings.md), whose own Download
+        // button is what produces the file.
+        await _page.Locator(".tier-content-bar")
+            .GetByRole(AriaRole.Button, new LocatorGetByRoleOptions { Name = "Download" }).ClickAsync();
+        var settingsDialog = _page.Locator(".mud-dialog");
+        await Expect(settingsDialog).ToBeVisibleAsync(timeout);
+
         var download = await _page.RunAndWaitForDownloadAsync(
-            () => _page.Locator(".tier-content-bar")
-                .GetByRole(AriaRole.Button, new LocatorGetByRoleOptions { Name = "Download" }).ClickAsync(),
+            () => settingsDialog.GetByTestId("sharecard-download").ClickAsync(),
             new PageRunAndWaitForDownloadOptions { Timeout = 60_000 });
 
         // The mix is part of the filename now — a shared "Double 20" card is

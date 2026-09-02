@@ -669,6 +669,9 @@
   <data name="All plays" xml:space="preserve">
     <value>All plays</value>
   </data>
+  <data name="All pools" xml:space="preserve">
+    <value>All pools</value>
+  </data>
   <data name="All saved credentials have been cleared." xml:space="preserve">
     <value>All saved credentials have been cleared.</value>
   </data>
@@ -1151,6 +1154,9 @@
   <data name="Both are needed before anyone else can use your tool." xml:space="preserve">
     <value>Both are needed before anyone else can use your tool.</value>
   </data>
+  <data name="Boundaries" xml:space="preserve">
+    <value>Boundaries</value>
+  </data>
   <data name="BP" xml:space="preserve">
     <value>BP</value>
   </data>
@@ -1199,6 +1205,9 @@
   </data>
   <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
     <value>Broken plays score 0 — pass it to score it.</value>
+  </data>
+  <data name="Broken with score" xml:space="preserve">
+    <value>Broken with score</value>
   </data>
   <data name="Browse Communities" xml:space="preserve">
     <value>Browse Communities</value>
@@ -1349,6 +1358,9 @@
   </data>
   <data name="chart boards" xml:space="preserve">
     <value>chart boards</value>
+  </data>
+  <data name="Chart cards" xml:space="preserve">
+    <value>Chart cards</value>
   </data>
   <data name="Chart columns" xml:space="preserve">
     <value>Chart columns</value>
@@ -1547,6 +1559,12 @@
   </data>
   <data name="Coldest Charts" xml:space="preserve">
     <value>Coldest Charts</value>
+  </data>
+  <data name="Color by letter grade" xml:space="preserve">
+    <value>Color by letter grade</value>
+  </data>
+  <data name="Color by plate" xml:space="preserve">
+    <value>Color by plate</value>
   </data>
   <data name="colour = worth a 900,000 on a low level → a high one; the diagonal bands are the equal-value lines" xml:space="preserve">
     <value>colour = worth a 900,000 on a low level → a high one; the diagonal bands are the equal-value lines</value>
@@ -1964,6 +1982,9 @@
   <data name="Crossed over" xml:space="preserve">
     <value>Crossed over</value>
   </data>
+  <data name="Crowd sourced" xml:space="preserve">
+    <value>Crowd sourced</value>
+  </data>
   <data name="crux: {0}" xml:space="preserve">
     <value>crux: {0}</value>
   </data>
@@ -2247,6 +2268,9 @@
   <data name="Doubles competitive level" xml:space="preserve">
     <value>Doubles competitive level</value>
   </data>
+  <data name="Doubles pool" xml:space="preserve">
+    <value>Doubles pool</value>
+  </data>
   <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
     <value>Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below.</value>
   </data>
@@ -2270,6 +2294,9 @@
   </data>
   <data name="Download Failures" xml:space="preserve">
     <value>Download Failures</value>
+  </data>
+  <data name="Download image" xml:space="preserve">
+    <value>Download image</value>
   </data>
   <data name="Download Scores" xml:space="preserve">
     <value>Download Scores</value>
@@ -2504,8 +2531,14 @@
   <data name="Evidence already includes score age — older scores count for less." xml:space="preserve">
     <value>Evidence already includes score age — older scores count for less.</value>
   </data>
+  <data name="Example" xml:space="preserve">
+    <value>Example</value>
+  </data>
   <data name="Example Set Builder" xml:space="preserve">
 	  <value>Example Set Builder</value>
+  </data>
+  <data name="Example — how it will come out" xml:space="preserve">
+    <value>Example — how it will come out</value>
   </data>
   <data name="Exceed &amp; NX" xml:space="preserve">
     <value>Exceed &amp; NX</value>
@@ -2518,6 +2551,9 @@
   </data>
   <data name="Expanding soon" xml:space="preserve">
     <value>Expanding soon</value>
+  </data>
+  <data name="Expected gains" xml:space="preserve">
+    <value>Expected gains</value>
   </data>
   <data name="Expired" xml:space="preserve">
     <value>Expired</value>
@@ -2590,6 +2626,9 @@
   </data>
   <data name="Feet" xml:space="preserve">
 	  <value>Feet</value>
+  </data>
+  <data name="Fetching chart art — {0} of {1}" xml:space="preserve">
+    <value>Fetching chart art — {0} of {1}</value>
   </data>
   <data name="Few Holds" xml:space="preserve">
     <value>Few Holds</value>
@@ -3378,6 +3417,9 @@
   <data name="Include an unplayed segment" xml:space="preserve">
     <value>Include an unplayed segment</value>
   </data>
+  <data name="Include broken runs" xml:space="preserve">
+    <value>Include broken runs</value>
+  </data>
   <data name="Include my own wins" xml:space="preserve">
     <value>Include my own wins</value>
   </data>
@@ -3654,6 +3696,9 @@
   </data>
   <data name="Letter Grade Template" xml:space="preserve">
 	  <value>Letter Grade Template</value>
+  </data>
+  <data name="Letter grades" xml:space="preserve">
+    <value>Letter grades</value>
   </data>
   <data name="Letter grades on this board" xml:space="preserve">
     <value>Letter grades on this board</value>
@@ -5168,6 +5213,9 @@
   <data name="Overrated" xml:space="preserve">
     <value>Overrated</value>
   </data>
+  <data name="Overrides every other boundary" xml:space="preserve">
+    <value>Overrides every other boundary</value>
+  </data>
   <data name="Page not found" xml:space="preserve">
     <value>Page not found</value>
   </data>
@@ -5213,6 +5261,12 @@
   <data name="Pass {0} ended this stage" xml:space="preserve">
     <value>Pass {0} ended this stage</value>
   </data>
+  <data name="Pass — colored by letter grade · PG glows" xml:space="preserve">
+    <value>Pass — colored by letter grade · PG glows</value>
+  </data>
+  <data name="Pass — colored by plate · PG glows" xml:space="preserve">
+    <value>Pass — colored by plate · PG glows</value>
+  </data>
   <data name="Passed" xml:space="preserve">
 	  <value>Passed</value>
   </data>
@@ -5222,8 +5276,8 @@
   <data name="Passed a D28." xml:space="preserve">
     <value>Passed a D28.</value>
   </data>
-  <data name="Passed in another mix" xml:space="preserve">
-    <value>Passed in another mix</value>
+  <data name="Passed in other mixes" xml:space="preserve">
+    <value>Passed in other mixes</value>
   </data>
   <data name="passed {0:N0} charts" xml:space="preserve">
     <value>passed {0:N0} charts</value>
@@ -5364,11 +5418,17 @@
   <data name="PG count" xml:space="preserve">
     <value>PG count</value>
   </data>
+  <data name="PG glows" xml:space="preserve">
+    <value>PG glows</value>
+  </data>
   <data name="PG · {0} of {1} peers have it" xml:space="preserve">
     <value>PG · {0} of {1} peers have it</value>
   </data>
   <data name="Phoenix 1" xml:space="preserve">
     <value>Phoenix 1</value>
+  </data>
+  <data name="Phoenix 1 projected" xml:space="preserve">
+    <value>Phoenix 1 projected</value>
   </data>
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · your real top 50</value>
@@ -5932,6 +5992,9 @@
   <data name="PUMBILITY peers" xml:space="preserve">
     <value>PUMBILITY peers</value>
   </data>
+  <data name="PUMBILITY Pool" xml:space="preserve">
+    <value>PUMBILITY Pool</value>
+  </data>
   <data name="Pumbility Push" xml:space="preserve">
     <value>Pumbility Push</value>
   </data>
@@ -6310,6 +6373,9 @@
   <data name="Remember my password on this device" xml:space="preserve">
     <value>Remember my password on this device</value>
   </data>
+  <data name="Remembered for next time" xml:space="preserve">
+    <value>Remembered for next time</value>
+  </data>
   <data name="Remix" xml:space="preserve">
     <value>Remix</value>
   </data>
@@ -6366,6 +6432,9 @@
   </data>
   <data name="Rename" xml:space="preserve">
     <value>Rename</value>
+  </data>
+  <data name="Rendering…" xml:space="preserve">
+    <value>Rendering…</value>
   </data>
   <data name="Reordering…" xml:space="preserve">
     <value>Reordering…</value>
@@ -6989,8 +7058,8 @@
   <data name="Show original" xml:space="preserve">
     <value>Show original</value>
   </data>
-  <data name="Show Passed in Another Mix" xml:space="preserve">
-    <value>Show Passed in Another Mix</value>
+  <data name="Show Passed in Other Mixes" xml:space="preserve">
+    <value>Show Passed in Other Mixes</value>
   </data>
   <data name="Show per type" xml:space="preserve">
     <value>Show per type</value>
@@ -7147,6 +7216,9 @@
   </data>
   <data name="Singles or Doubles" xml:space="preserve">
     <value>Singles or Doubles</value>
+  </data>
+  <data name="Singles pool" xml:space="preserve">
+    <value>Singles pool</value>
   </data>
   <data name="Singles vs Doubles" xml:space="preserve">
 	  <value>Singles vs Doubles</value>
@@ -7676,6 +7748,9 @@
   <data name="The formula" xml:space="preserve">
     <value>The formula</value>
   </data>
+  <data name="The gain chip, with the grade you'd be expected to get beside it." xml:space="preserve">
+    <value>The gain chip, with the grade you'd be expected to get beside it.</value>
+  </data>
   <data name="The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}." xml:space="preserve">
     <value>The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}.</value>
   </data>
@@ -8185,6 +8260,18 @@
   </data>
   <data name="Top 50" xml:space="preserve">
     <value>Top 50</value>
+  </data>
+  <data name="Top 50 PUMBILITY" xml:space="preserve">
+    <value>Top 50 PUMBILITY</value>
+  </data>
+  <data name="Top 50 — combined" xml:space="preserve">
+    <value>Top 50 — combined</value>
+  </data>
+  <data name="Top 50 — this chart's type" xml:space="preserve">
+    <value>Top 50 — this chart's type</value>
+  </data>
+  <data name="Top 50: dotted — this chart's type · solid — combined. Not combinable with the color modes." xml:space="preserve">
+    <value>Top 50: dotted — this chart's type · solid — combined. Not combinable with the color modes.</value>
   </data>
   <data name="Top 8% · Sapphire" xml:space="preserve">
     <value>Top 8% · Sapphire</value>
@@ -9223,6 +9310,9 @@
   <data name="Your best 4 scores per week of the month count." xml:space="preserve">
     <value>Your best 4 scores per week of the month count.</value>
   </data>
+  <data name="Your chart's current value, bottom right." xml:space="preserve">
+    <value>Your chart's current value, bottom right.</value>
+  </data>
   <data name="Your charts average" xml:space="preserve">
     <value>Your charts average</value>
   </data>
@@ -10005,6 +10095,9 @@
   </data>
   <data name="{0}% to next title" xml:space="preserve">
     <value>{0}% to next title</value>
+  </data>
+  <data name="{0}'s Scores by {1}" xml:space="preserve">
+    <value>{0}'s Scores by {1}</value>
   </data>
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}: an SSS+ on {1} is worth a 900,000 on {2}</value>

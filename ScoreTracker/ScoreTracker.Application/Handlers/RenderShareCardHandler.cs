@@ -1,10 +1,12 @@
 using MediatR;
+using ScoreTracker.Application.Commands;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
 
 namespace ScoreTracker.Application.Handlers;
 
-public sealed class RenderShareCardHandler : IRequestHandler<GetTierListShareCardQuery, byte[]>
+public sealed class RenderShareCardHandler : IRequestHandler<GetTierListShareCardQuery, byte[]>,
+    IRequestHandler<PrefetchShareCardArtCommand>
 {
     private readonly IShareCardRenderer _renderer;
 
@@ -16,5 +18,10 @@ public sealed class RenderShareCardHandler : IRequestHandler<GetTierListShareCar
     public Task<byte[]> Handle(GetTierListShareCardQuery request, CancellationToken cancellationToken)
     {
         return _renderer.RenderTierListCard(request.Card, cancellationToken);
+    }
+
+    public Task Handle(PrefetchShareCardArtCommand request, CancellationToken cancellationToken)
+    {
+        return _renderer.PrefetchImages(request.Urls, cancellationToken);
     }
 }
