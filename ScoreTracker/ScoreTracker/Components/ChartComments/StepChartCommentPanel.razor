@@ -19,31 +19,50 @@
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
 
-@* The sticky panel at the bottom of the step chart's frame (docs/design/step-chart-comments
-   D4/D5): one component on the chart page, on a phone and in the dialog's Steps tab. It owns
-   the comments — the marks read, the composer, the vote, the scope — and hands the geometry
-   to step-chart.js: the module draws the marks, turns a double-click into a picked second,
-   and tells this component which comment sits nearest the viewport. It lives INSIDE the
-   strip's root on every host, which is how the module finds its strip.
+@* The comment surface of the step chart (docs/design/step-chart-comments D4/D13): two pieces,
+   one component, every host. The BAR sits in flow under the section chips — the gesture line
+   and the scope chip, always there whatever the panel is showing (D13). The PANEL lies over the
+   bottom of the frame, from the strip to the whole-chart map (D16); step-chart.js positions it
+   from the geometry it owns, draws the marks, turns a double-click into a picked second, and
+   tells this component which comment sits nearest the viewport. Both live inside the strip's
+   root, which is how the module finds its strip.
 
-   The reader's whole loop for one comment fits here: time chip, author, two lines that unfold,
-   the vote, the reply count, and Open thread — which is a tab switch in the dialog and the
-   details dialog on Comments from the page (D6). Double-click the strip and the same panel
-   becomes the composer for that second (D2). *@
+   The reader's whole loop for one comment fits in the panel: time chip, author, two lines that
+   unfold, the vote, the reply count, and Open thread — a tab switch in the dialog, the details
+   dialog on Comments from the page (D6). Double-click the strip and the same panel becomes the
+   composer for that second: the time chip, the scope chip (live), the ✕ (D14/D15). *@
 
+@if (CurrentUser.IsLoggedIn)
+{
+    <div class="sc-bar" data-testid="sc-bar">
+        <span class="sc-bar-note">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                <path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/>
+            </svg>
+            @* Both wordings render; CSS shows the one that matches the pointer, because the
+               server cannot know which hand is holding this. *@
+            <span class="sc-gesture-pointer">@L["Double-click a spot to leave a comment"]</span>
+            <span class="sc-gesture-touch">@L["Double-tap a spot to leave a comment"]</span>
+        </span>
+        @if (_scopes.Count > 1)
+        {
+            @ScopeChip("bar")
+        }
+    </div>
+}
 <div class="sc-panel" @ref="_root" data-testid="sc-panel">
     <LinkInterstitial Url="@_pendingLink" OnDismiss="() => _pendingLink = null"></LinkInterstitial>
     @if (_pick is { } pick)
     {
         <div class="sc-panel-head">
             <span class="sc-chip sc-chip-pick" data-testid="sc-pick"><i></i>@Second(pick)</span>
+            @if (CurrentUser.IsLoggedIn && _scopes.Count > 1)
+            {
+                @ScopeChip("compose")
+            }
+            @* The way out, in the corner the eye learned (D14). It replaces the foot's Cancel. *@
             <button type="button" class="sc-x" aria-label="@L["Cancel"]" data-testid="sc-pick-cancel"
                     @onclick="CancelPick">✕</button>
-            <span class="sc-spacer"></span>
-            @if (CurrentUser.IsLoggedIn && CanPostHere && !_consent.NeedsAnything)
-            {
-                <span class="sc-posting">@AudienceNote</span>
-            }
         </div>
         @if (!CurrentUser.IsLoggedIn)
         {
@@ -65,31 +84,16 @@
         }
         else
         {
-            <CommentComposer StartOpen="true" ShowAvatar="false"
-                             Placeholder="@L["Comment on {0}…", Second(pick)]"
-                             SubmitLabel="@L["Comment"]" TestId="sc-composer"
+            <CommentComposer StartOpen="true" ShowAvatar="false" ShowCancel="false"
+                             Placeholder="@(IsNotes ? L["Note on {0}…", Second(pick)] : L["Comment on {0}…", Second(pick)])"
+                             SubmitLabel="@(IsNotes ? L["Save note"] : L["Comment"])" TestId="sc-composer"
                              OnSubmit="Post" OnCancel="CancelPick"></CommentComposer>
         }
     }
     else if (Current is not { } current)
     {
-        @* The empty state teaches the gesture. Both wordings render; CSS shows the one that
-           matches the pointer, because the server cannot know which hand is holding this. *@
-        <div class="sc-empty" data-testid="sc-empty">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-                <path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/>
-                <path d="M8 5.5v3M6.5 7h3"/>
-            </svg>
-            @if (CurrentUser.IsLoggedIn)
-            {
-                <span class="sc-gesture-pointer">@L["No comments on this chart yet — double-click a spot on the chart to add one."]</span>
-                <span class="sc-gesture-touch">@L["No comments on this chart yet — double-tap a spot on the chart to add one."]</span>
-            }
-            else
-            {
-                <span>@L["Nothing here yet."]</span>
-            }
-        </div>
+        @* One line (D17): the gesture lives in the bar now. *@
+        <div class="sc-empty" data-testid="sc-empty">@L["Nothing here yet."]</div>
     }
     else
     {
@@ -112,29 +116,6 @@
                 <span class="sc-name">@current.AuthorName</span>
             }
             <span class="sc-meta sc-meta-head">@Ago(current.CreatedAt)</span>
-            <span class="sc-spacer"></span>
-            @if (_scopes.Count > 1)
-            {
-                @* Which comments the strip shows — the Sort / Read-in shape, not a rail: the
-                   panel has no room for chips and the scope changes rarely. *@
-                <MudMenu Dense="true" AriaLabel="@L["Comments"]">
-                    <ActivatorContent>
-                        <span class="sc-scope" data-testid="sc-scope">@ScopeLabel <span class="sc-car">▾</span></span>
-                    </ActivatorContent>
-                    <ChildContent>
-                        @foreach (var scope in _scopes)
-                        {
-                            var s = scope;
-                            <MudMenuItem data-testid="@($"sc-scope-{s.Label}")"
-                                         OnClick="() => SelectScope(s)">@(s.Audience == _audience ? "✓ " : "")@s.Label</MudMenuItem>
-                        }
-                    </ChildContent>
-                </MudMenu>
-            }
-            @* The accessible way in: picks the row nearest the viewport's middle. The title is
-               the hint for the gesture itself. *@
-            <button type="button" class="sc-step sc-add" title="@L["Double-click a spot on the chart to comment there"]"
-                    aria-label="@L["Comment on a spot"]" data-testid="sc-add" @onclick="PickAtCenter">+</button>
         </div>
         <div class="sc-body @(_expanded ? "sc-body-full" : null)" data-testid="sc-body"
              @onclick="() => _expanded = !_expanded">
@@ -166,14 +147,166 @@
 </div>
 
 <style>
-    /* Overlaid on the bottom of the strip's box: the strip scrolls under it, and the module
-       matches its width to the box and gives the strip that much extra runway. The tab's
-       .cmt-* styles are scoped to the tab, so everything the panel needs is here, on the
-       mix tokens the rest of the strip reads. */
-    .sc-panel {
+    /* The bar: in flow under the section chips, the gesture on the left, the scope on the right. */
+    .sc-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 10px;
+        min-height: 24px;
+    }
+
+    .sc-bar-note {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--mix-ink-muted);
+        font-size: .74rem;
+        min-width: 0;
+    }
+
+    .sc-bar-note svg {
+        width: 14px;
+        height: 14px;
+        flex: none;
+    }
+
+    .sc-gesture-touch {
+        display: none;
+    }
+
+    @@media (hover: none) {
+        .sc-gesture-pointer {
+            display: none;
+        }
+
+        .sc-gesture-touch {
+            display: inline;
+        }
+    }
+
+    /* The scope chip — a section chip's chrome with a glyph, and the menu it opens. No popover
+       provider is involved: the menu is markup under the chip, and a fixed transparent backdrop
+       closes it on a tap anywhere else. */
+    .sc-scope {
+        position: relative;
+        display: inline-block;
+    }
+
+    .sc-bar .sc-scope {
+        margin-left: auto;
+    }
+
+    .sc-scope-chip {
+        font: inherit;
+        font-size: .72rem;
+        font-weight: 500;
+        color: var(--mix-ink);
+        background: var(--mix-surface);
+        border: 1px solid rgba(255, 255, 255, .14);
+        border-radius: 999px;
+        padding: 2px 8px 2px 7px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        max-width: 100%;
+    }
+
+    .sc-scope-chip:hover {
+        border-color: var(--mix-ink-muted);
+    }
+
+    .sc-scope-chip svg {
+        width: 12px;
+        height: 12px;
+        flex: none;
+        color: var(--mix-ink-muted);
+    }
+
+    .sc-scope-chip-you svg {
+        color: var(--step-you);
+    }
+
+    .sc-scope-label {
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .sc-scope-chip .sc-car {
+        color: var(--mix-ink-muted);
+    }
+
+    .sc-scope-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 29;
+    }
+
+    .sc-scope-menu {
         position: absolute;
         left: 0;
-        bottom: 0;
+        top: calc(100% + 4px);
+        z-index: 30;
+        min-width: 170px;
+        background: var(--mix-bg);
+        border: 1px solid rgba(255, 255, 255, .14);
+        border-radius: 8px;
+        padding: 5px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, .55);
+    }
+
+    .sc-bar .sc-scope-menu {
+        left: auto;
+        right: 0;
+    }
+
+    .sc-scope-menu button {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        gap: 8px;
+        text-align: left;
+        font: inherit;
+        font-size: .8rem;
+        color: var(--mix-ink);
+        background: transparent;
+        border: none;
+        padding: 7px 9px;
+        border-radius: 6px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .sc-scope-menu button:hover {
+        background: var(--mix-surface-muted);
+    }
+
+    .sc-scope-menu button svg {
+        width: 12px;
+        height: 12px;
+        flex: none;
+        color: var(--mix-ink-muted);
+    }
+
+    .sc-scope-menu .sc-scope-on {
+        color: var(--mix-primary);
+    }
+
+    .sc-scope-menu button small {
+        color: var(--mix-ink-muted);
+        margin-left: auto;
+        padding-left: 10px;
+    }
+
+    /* The panel: positioned by the module over the frame's bottom edge, strip to map (D16), and
+       invisible until it has been placed. The tab's .cmt-* styles are scoped to the tab, so
+       everything the panel needs is here, on the mix tokens the rest of the strip reads. */
+    .sc-panel {
+        position: absolute;
+        visibility: hidden;
         z-index: 5;
         background: color-mix(in srgb, var(--mix-bg) 95%, transparent);
         border-top: 1px solid rgba(255, 255, 255, .16);
@@ -185,6 +318,10 @@
         container-type: inline-size;
     }
 
+    .sc-panel-placed {
+        visibility: visible;
+    }
+
     .sc-panel-head {
         display: flex;
         align-items: center;
@@ -192,7 +329,8 @@
         min-height: 24px;
     }
 
-    .sc-step {
+    .sc-step,
+    .sc-x {
         width: 22px;
         height: 22px;
         border-radius: 50%;
@@ -209,7 +347,8 @@
         padding: 0;
     }
 
-    .sc-step:hover:not(:disabled) {
+    .sc-step:hover:not(:disabled),
+    .sc-x:hover {
         color: var(--mix-ink);
         border-color: var(--mix-ink-muted);
     }
@@ -217,6 +356,12 @@
     .sc-step:disabled {
         opacity: .28;
         cursor: default;
+    }
+
+    /* The corner the ＋ used to hold (D14). */
+    .sc-x {
+        margin-left: auto;
+        font-size: 12px;
     }
 
     .sc-chip {
@@ -289,13 +434,6 @@
 
     .sc-spacer {
         flex: 1;
-    }
-
-    .sc-scope {
-        font-size: .72rem;
-        color: var(--mix-ink-muted);
-        cursor: pointer;
-        white-space: nowrap;
     }
 
     .sc-car {
@@ -376,51 +514,9 @@
     }
 
     .sc-empty {
-        display: flex;
-        align-items: center;
-        gap: 9px;
         color: var(--mix-ink-muted);
-        min-height: 44px;
+        min-height: 22px;
         line-height: 1.35;
-    }
-
-    .sc-empty svg {
-        width: 18px;
-        height: 18px;
-        flex: none;
-    }
-
-    .sc-gesture-touch {
-        display: none;
-    }
-
-    @@media (hover: none) {
-        .sc-gesture-pointer {
-            display: none;
-        }
-
-        .sc-gesture-touch {
-            display: inline;
-        }
-    }
-
-    .sc-x {
-        font: inherit;
-        font-size: 13px;
-        line-height: 1;
-        color: var(--mix-ink-muted);
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        padding: 2px 4px;
-    }
-
-    .sc-posting {
-        font-size: .72rem;
-        color: var(--mix-ink-muted);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
 
     .sc-signin {
@@ -476,8 +572,8 @@
         color: var(--mix-ink-muted);
     }
 
-    /* A narrow panel — the phone's strip is ~290px — gives the age up first. */
-    @@container (max-width: 330px) {
+    /* A narrow panel gives the age up first. */
+    @@container (max-width: 300px) {
         .sc-panel .sc-meta-head {
             display: none;
         }
@@ -504,6 +600,7 @@
     private Guid? _cur;
     private decimal? _pick;
     private bool _expanded;
+    private string? _scopeOpen;
     private string? _pendingLink;
     private Chart? _dialogChart;
     private bool _dialogOpen;
@@ -528,6 +625,8 @@
 
     private CommentRecord? Current => _cur is { } id ? _marks.FirstOrDefault(m => m.Id == id) : null;
 
+    private bool IsNotes => _audience.IsPrivate;
+
     /// <summary>The comments sharing the current one's second — one bubble on the strip, paged here.</summary>
     private IReadOnlyList<CommentRecord> Stack => Current is { } current
         ? _marks.Where(m => m.AnchorAt == current.AnchorAt && m.IsNote == current.IsNote).ToArray()
@@ -541,10 +640,6 @@
         _scopes.FirstOrDefault(s => s.Audience == _audience)?.Label.ToString() ?? L["Public"].Value;
 
     private bool CanPostHere => _scopes.FirstOrDefault(s => s.Audience == _audience)?.CanPost ?? true;
-
-    private string AudienceNote => _audience.IsPrivate
-        ? L["Only you can see this"]
-        : L["Posting to {0} as {1}", ScopeLabel, CurrentUser.User.Name.ToString()];
 
     private bool CanVote(CommentRecord comment)
     {
@@ -607,6 +702,57 @@
 
         return comment.Replies.Count > 0 ? $"{tally} · {RepliesText(comment)}" : tally;
     }
+
+    // ----- the scope chip, shared by the bar and the composer (D13/D15) -----------------------
+
+    /// <summary>
+    ///     A section chip's chrome with the scope's glyph, and the same list the tab's rail
+    ///     offers under it. Its own markup rather than a popover: the menu is a child of the
+    ///     chip, a fixed transparent backdrop closes it on a tap anywhere else, and no provider
+    ///     is involved — which is what lets it render identically inside a static page's island
+    ///     and inside the dialog.
+    /// </summary>
+    private RenderFragment ScopeChip(string place) =>
+        @<div class="sc-scope">
+            <button type="button" class="sc-scope-chip @(IsNotes ? "sc-scope-chip-you" : null)"
+                    data-testid="@($"sc-scope-{place}")" aria-haspopup="menu" aria-label="@L["Comments"]"
+                    aria-expanded="@((_scopeOpen == place).ToString().ToLowerInvariant())"
+                    @onclick="() => _scopeOpen = _scopeOpen == place ? null : place">
+                @ScopeGlyph(_audience)<span class="sc-scope-label">@ScopeLabel</span><span class="sc-car">▾</span>
+            </button>
+            @if (_scopeOpen == place)
+            {
+                <div class="sc-scope-backdrop" @onclick="() => _scopeOpen = null"></div>
+                <div class="sc-scope-menu" role="menu">
+                    @foreach (var scope in _scopes)
+                    {
+                        var s = scope;
+                        <button type="button" role="menuitem" class="@(s.Audience == _audience ? "sc-scope-on" : null)"
+                                data-testid="@($"sc-scope-item-{s.Label}")" @onclick="() => SelectScope(s)">
+                            @ScopeGlyph(s.Audience)<span>@s.Label</span>
+                            @if (s.Audience.IsPrivate)
+                            {
+                                <small>@L["Only you"]</small>
+                            }
+                        </button>
+                    }
+                </div>
+            }
+        </div>;
+
+    private RenderFragment ScopeGlyph(CommentAudience audience)
+    {
+        return audience.IsPrivate ? _lockGlyph : audience.Kind == CommentAudienceKind.Community ? _peopleGlyph : _personGlyph;
+    }
+
+    private readonly RenderFragment _personGlyph =
+        @<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="5.5" r="2.6"/><path d="M2.8 13.5c.7-2.6 2.6-3.9 5.2-3.9s4.5 1.3 5.2 3.9"/></svg>;
+
+    private readonly RenderFragment _peopleGlyph =
+        @<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="5.5" cy="5.5" r="2.2"/><circle cx="11" cy="6" r="1.8"/><path d="M1.8 13c.6-2.3 2-3.4 3.7-3.4S8.6 10.7 9.2 13M9.6 12.6c.4-1.6 1.3-2.4 2.6-2.4s2.2.8 2.6 2.4"/></svg>;
+
+    private readonly RenderFragment _lockGlyph =
+        @<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -689,6 +835,7 @@
     public Task OnPick(decimal second)
     {
         _pick = second;
+        _scopeOpen = null;
 
         return InvokeAsync(StateHasChanged);
     }
@@ -705,14 +852,10 @@
         if (_module != null) await _module.InvokeVoidAsync("selectMark", _root, _cur);
     }
 
-    private async Task PickAtCenter()
-    {
-        if (_module != null) await _module.InvokeVoidAsync("pickAtCenter", _root);
-    }
-
     private async Task CancelPick()
     {
         _pick = null;
+        _scopeOpen = null;
         if (_module != null) await _module.InvokeVoidAsync("clearPick", _root);
     }
 
@@ -762,14 +905,17 @@
         _consent = await Mediator.Send(new GetCommentConsentQuery(_audience));
     }
 
+    /// <summary>
+    ///     One setting for the bar and the composer (D15): the strip reloads for the new scope,
+    ///     and a pick in progress stays — switching while writing changes where the comment goes.
+    /// </summary>
     private async Task SelectScope(CommentScopeRecord scope)
     {
+        _scopeOpen = null;
         if (scope.Audience == _audience) return;
         _audience = scope.Audience;
         _cur = null;
-        _pick = null;
         _expanded = false;
-        if (_module != null) await _module.InvokeVoidAsync("clearPick", _root);
         await LoadMarks();
     }
 

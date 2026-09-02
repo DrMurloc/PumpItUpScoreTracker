@@ -150,20 +150,21 @@
                     </div>
                 </div>
                 <div class="stepchart-chips" data-stepchart-chips></div>
+                @if (CommentsVisible)
+                {
+                    @* The comment surface (docs/design/step-chart-comments D4/D13): an island in
+                       the static strip's markup — the record panel's precedent — gated exactly
+                       as the dialog's Comments tab. The bar renders here, under the chips; the
+                       module lays the panel over the frame below. Open thread opens the details
+                       dialog on Comments (D6). *@
+                    <StepChartCommentPanel @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_chart.Mix"
+                                           OpensDialog="true" @key="(_chart.Id, nameof(StepChartCommentPanel))"></StepChartCommentPanel>
+                }
                 <div class="stepchart-viewer">
                     <div class="stepchart-scroll" data-stepchart-scroll tabindex="0" aria-label="@L["Step chart"]"></div>
                     <div class="stepchart-minicol">
                         <canvas class="stepchart-minimap" data-stepchart-minimap></canvas>
                     </div>
-                    @if (CommentsVisible)
-                    {
-                        @* The sticky comment panel (docs/design/step-chart-comments D4): an
-                           island inside the static strip's frame — the record panel's precedent —
-                           gated exactly as the dialog's Comments tab. It binds to the module the
-                           page mounted; Open thread opens the details dialog on Comments (D6). *@
-                        <StepChartCommentPanel @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_chart.Mix"
-                                               OpensDialog="true" @key="(_chart.Id, nameof(StepChartCommentPanel))"></StepChartCommentPanel>
-                    }
                 </div>
                 <div class="stepchart-legend" data-stepchart-legend></div>
             </div>

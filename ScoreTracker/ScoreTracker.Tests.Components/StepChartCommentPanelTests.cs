@@ -19,11 +19,12 @@ using Xunit;
 namespace ScoreTracker.Tests.Components;
 
 /// <summary>
-///     The sticky panel at the bottom of the step chart (docs/design/step-chart-comments D4). The
-///     module's side of the seam is exercised on a browser harness; these pin what the panel
-///     renders for each state the module can put it in — browsing a comment, paging a stack,
-///     a note, the composer after a pick, and the signed-out reader — through the JSInvokable
-///     entry points the module calls, with no JS at all.
+///     The comment surface of the step chart (docs/design/step-chart-comments D4/D13): the bar
+///     under the chips and the sticky panel. The module's side of the seam is exercised on a
+///     browser harness; these pin what the component renders for each state the module can put
+///     it in — browsing a comment, paging a stack, a note, the composer after a pick, the scope
+///     chip, and the signed-out reader — through the JSInvokable entry points the module calls,
+///     with no JS at all.
 /// </summary>
 public sealed class StepChartCommentPanelTests : ComponentTestBase
 {
@@ -53,6 +54,14 @@ public sealed class StepChartCommentPanelTests : ComponentTestBase
             .ReturnsAsync(marks);
     }
 
+    /// <summary>Marks that depend on the scope asked for — Public has some, Notes has none.</summary>
+    private void MarksByScope(params CommentRecord[] publicMarks)
+    {
+        Mediator.Setup(m => m.Send(It.IsAny<GetChartCommentMarksQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((GetChartCommentMarksQuery query, CancellationToken _) =>
+                query.Audience.IsPrivate ? Array.Empty<CommentRecord>() : publicMarks);
+    }
+
     private static CommentRecord Mark(decimal second, string text, string author = "JUNO", int votes = 6,
         int replies = 0, bool note = false, bool isAuthor = false)
     {
@@ -78,23 +87,49 @@ public sealed class StepChartCommentPanelTests : ComponentTestBase
     }
 
     [Fact]
-    public void TheEmptyStateTeachesTheGesture()
+    public void TheBarTeachesTheGestureAndTheEmptyPanelIsOneLine()
     {
         var panel = Render();
 
-        var empty = panel.Find("[data-testid='sc-empty']");
-        Assert.Contains("double-click a spot", empty.TextContent);
-        Assert.Contains("double-tap a spot", empty.TextContent);
+        var bar = panel.Find("[data-testid='sc-bar']");
+        Assert.Contains("Double-click a spot to leave a comment", bar.TextContent);
+        Assert.Contains("Double-tap a spot to leave a comment", bar.TextContent);
+        Assert.Equal("Nothing here yet.", panel.Find("[data-testid='sc-empty']").TextContent.Trim());
+        // No ＋ anywhere: the gesture is the way in (D13).
+        Assert.Empty(panel.FindAll("[data-testid='sc-add']"));
     }
 
     [Fact]
-    public void ASignedOutReaderGetsTheQuietEmptyState()
+    public void ASignedOutReaderGetsNoBarAndTheQuietEmptyState()
     {
         CurrentUser.Setup(u => u.IsLoggedIn).Returns(false);
 
-        var empty = Render().Find("[data-testid='sc-empty']");
+        var panel = Render();
 
-        Assert.DoesNotContain("double-click", empty.TextContent);
+        Assert.Empty(panel.FindAll("[data-testid='sc-bar']"));
+        Assert.Equal("Nothing here yet.", panel.Find("[data-testid='sc-empty']").TextContent.Trim());
+    }
+
+    [Fact]
+    public async Task TheBarChipSwitchesTheScopeEvenWhenTheNewScopeIsEmpty()
+    {
+        MarksByScope(Mark(29m, "The drills start here.", "ERRLENA"));
+        var panel = Render();
+        Assert.Equal("0:29", panel.Find("[data-testid='sc-second']").TextContent.Trim());
+
+        await panel.Find("[data-testid='sc-scope-bar']").ClickAsync(new MouseEventArgs());
+        await panel.Find("[data-testid='sc-scope-item-Notes']").ClickAsync(new MouseEventArgs());
+
+        // Empty scope, and the way back is still there — the redline that started round 3.
+        Assert.Equal("Nothing here yet.", panel.Find("[data-testid='sc-empty']").TextContent.Trim());
+        var chip = panel.Find("[data-testid='sc-scope-bar']");
+        Assert.Contains("Notes", chip.TextContent);
+        Assert.Contains("sc-scope-chip-you", chip.ClassName);
+
+        await chip.ClickAsync(new MouseEventArgs());
+        await panel.Find("[data-testid='sc-scope-item-Public']").ClickAsync(new MouseEventArgs());
+
+        Assert.Equal("0:29", panel.Find("[data-testid='sc-second']").TextContent.Trim());
     }
 
     [Fact]
@@ -112,6 +147,8 @@ public sealed class StepChartCommentPanelTests : ComponentTestBase
         Assert.True(panel.Find("[data-testid='sc-prev']").HasAttribute("disabled"));
         Assert.False(panel.Find("[data-testid='sc-next']").HasAttribute("disabled"));
         Assert.Contains("Open in Comments", panel.Find("[data-testid='sc-thread']").TextContent);
+        // The browse head carries no scope menu of its own any more (D13).
+        Assert.Empty(panel.FindAll(".sc-panel [data-testid^='sc-scope']"));
     }
 
     [Fact]
@@ -132,7 +169,6 @@ public sealed class StepChartCommentPanelTests : ComponentTestBase
 
         Assert.Equal("2/2", panel.Find("[data-testid='sc-pager']").TextContent.Trim());
         Assert.Contains("SOOJIN", panel.Find(".sc-name").TextContent);
-        // The last comment on the chart: nothing further to step to.
         Assert.True(panel.Find("[data-testid='sc-next']").HasAttribute("disabled"));
     }
 
@@ -157,10 +193,16 @@ public sealed class StepChartCommentPanelTests : ComponentTestBase
 
         await panel.InvokeAsync(() => panel.Instance.OnPick(33.45m));
 
+        // The head is the time chip, the scope chip and the ✕ — and the ✕ is last (D14/D15).
+        var head = panel.Find(".sc-panel .sc-panel-head");
         Assert.Equal("0:33", panel.Find("[data-testid='sc-pick']").TextContent.Trim());
+        Assert.Contains("Public", panel.Find("[data-testid='sc-scope-compose']").TextContent);
+        Assert.Equal("sc-pick-cancel", head.LastElementChild!.GetAttribute("data-testid"));
         var line = panel.Find("[data-testid='sc-composer']");
         Assert.Equal("Comment on 0:33…", line.GetAttribute("placeholder"));
-        Assert.Contains("Posting to Public as ERRLENA", panel.Find(".sc-posting").TextContent);
+        // One way out: no Cancel in the foot, and no audience sentence anywhere.
+        Assert.DoesNotContain(panel.FindAll(".sc-panel button"), b => b.TextContent.Trim() == "Cancel");
+        Assert.DoesNotContain("Posting to", panel.Find(".sc-panel").TextContent);
 
         await line.InputAsync(new ChangeEventArgs { Value = "This quad is a bracket." });
         await panel.Find("[data-testid='sc-composer-submit']").ClickAsync(new MouseEventArgs());
@@ -168,8 +210,35 @@ public sealed class StepChartCommentPanelTests : ComponentTestBase
         Mediator.Verify(m => m.Send(It.Is<PostCommentCommand>(command =>
             command.ChartId == Chart && command.AnchorAt == 33.45m && command.Audience == CommentAudience.Public &&
             command.Text == "This quad is a bracket."), It.IsAny<CancellationToken>()), Times.Once);
-        // Posted: the composer is gone and the panel is back to browsing.
         Assert.Empty(panel.FindAll("[data-testid='sc-pick']"));
+    }
+
+    [Fact]
+    public async Task SwitchingTheScopeWhileWritingKeepsThePickAndRetargetsThePost()
+    {
+        Mediator.Setup(m => m.Send(It.IsAny<PostCommentCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Guid.NewGuid());
+        var panel = Render();
+        await panel.InvokeAsync(() => panel.Instance.OnPick(33.45m));
+
+        await panel.Find("[data-testid='sc-scope-compose']").ClickAsync(new MouseEventArgs());
+        await panel.Find("[data-testid='sc-scope-item-Notes']").ClickAsync(new MouseEventArgs());
+
+        // The pick survives the switch; the chip, the placeholder and the button now say note.
+        Assert.Equal("0:33", panel.Find("[data-testid='sc-pick']").TextContent.Trim());
+        Assert.Contains("sc-scope-chip-you", panel.Find("[data-testid='sc-scope-compose']").ClassName);
+        var line = panel.Find("[data-testid='sc-composer']");
+        Assert.Equal("Note on 0:33…", line.GetAttribute("placeholder"));
+        Assert.Equal("Save note", panel.Find("[data-testid='sc-composer-submit']").TextContent.Trim());
+        // The strip reloaded for the new scope — one setting for bar and composer.
+        Mediator.Verify(m => m.Send(It.Is<GetChartCommentMarksQuery>(q => q.Audience.IsPrivate),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+
+        await line.InputAsync(new ChangeEventArgs { Value = "Breathe before the hold." });
+        await panel.Find("[data-testid='sc-composer-submit']").ClickAsync(new MouseEventArgs());
+
+        Mediator.Verify(m => m.Send(It.Is<PostCommentCommand>(command =>
+            command.Audience.IsPrivate && command.AnchorAt == 33.45m), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -195,6 +264,7 @@ public sealed class StepChartCommentPanelTests : ComponentTestBase
 
         Assert.Contains("Sign in to comment on 0:33", panel.Find("[data-testid='sc-signin']").TextContent);
         Assert.Empty(panel.FindAll("[data-testid='sc-composer']"));
+        Assert.Empty(panel.FindAll("[data-testid='sc-scope-compose']"));
     }
 
     [Fact]
@@ -210,7 +280,6 @@ public sealed class StepChartCommentPanelTests : ComponentTestBase
 
         Assert.NotNull(opened);
         Assert.Equal(note.Id, opened!.Value.CommentId);
-        // A note lives in the Notes scope, so the host opens standing there.
         Assert.True(opened.Value.Audience.IsPrivate);
     }
 }

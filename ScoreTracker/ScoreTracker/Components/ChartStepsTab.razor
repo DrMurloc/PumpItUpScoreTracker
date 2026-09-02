@@ -31,18 +31,19 @@
         </div>
     </div>
     <div class="stepchart-chips" data-stepchart-chips></div>
+    @if (CommentsVisible)
+    {
+        @* The same comment surface the chart page carries (step-chart-comments D4/D13): the bar
+           under the chips, the panel laid over the frame; Open thread is the dialog's tab
+           switch, so it raises to the host here. *@
+        <StepChartCommentPanel ChartId="Chart.Id" Mix="Mix" Active="Active" OnOpenThread="OnOpenThread"
+                               @key="(Chart.Id, nameof(StepChartCommentPanel))"></StepChartCommentPanel>
+    }
     <div class="stepchart-viewer">
         <div class="stepchart-scroll" data-stepchart-scroll tabindex="0" aria-label="@L["Step chart"]"></div>
         <div class="stepchart-minicol">
             <canvas class="stepchart-minimap" data-stepchart-minimap></canvas>
         </div>
-        @if (CommentsVisible)
-        {
-            @* The same sticky panel the chart page carries (step-chart-comments D4); Open
-               thread is the dialog's tab switch, so it raises to the host here. *@
-            <StepChartCommentPanel ChartId="Chart.Id" Mix="Mix" Active="Active" OnOpenThread="OnOpenThread"
-                                   @key="(Chart.Id, nameof(StepChartCommentPanel))"></StepChartCommentPanel>
-        }
     </div>
     <div class="stepchart-legend" data-stepchart-legend></div>
 </div>
