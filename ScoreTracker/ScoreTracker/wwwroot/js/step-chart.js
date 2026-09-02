@@ -868,36 +868,30 @@ function renderLegend(view) {
         legendEntry(host, view.colors.center, view.strings.center || 'Center');
     }
 
-    if (view.breaks && (view.breaks.total > 0 || view.breaks.unplaced > 0)) {
+    // Labels, never counts (owner, 2026-09-01): "Life Bar Break \u00b7 22" was noise nobody read,
+    // and the count-only Unplaced entry went with it. An entry still appears only for a series
+    // the rail actually drew.
+    if (view.breaks && view.breaks.total > 0) {
         // On Phoenix 2 the bar-death series wears the game's own Pass G command art \u2014 the
         // badge is the sentence, never spelled out (owner, 2026-08-30).
         if (view.breaks.life > 0) {
             if (view.isPhoenix2) {
-                var lifeSpan = legendEntry(host, view.colors.life, ' \u00b7 ' + view.breaks.life);
+                var lifeSpan = legendEntry(host, view.colors.life, '');
                 var passImg = document.createElement('img');
                 passImg.className = 'stepchart-legend-cmd';
                 passImg.src = CommandArtRoot + 'Pass_Plate_G.png';
                 passImg.alt = view.strings.passG || 'Pass G';
-                lifeSpan.insertBefore(passImg, lifeSpan.lastChild);
+                lifeSpan.appendChild(passImg);
             } else {
-                legendEntry(host, view.colors.life,
-                    (view.strings.lifeBreak || 'Life Bar Break') + ' \u00b7 ' + view.breaks.life);
+                legendEntry(host, view.colors.life, view.strings.lifeBreak || 'Life Bar Break');
             }
         }
         if (view.breaks.walk > 0)
-            legendEntry(host, view.colors.walk,
-                (view.strings.walkOff || 'Walk off') + ' \u00b7 ' + view.breaks.walk);
+            legendEntry(host, view.colors.walk, view.strings.walkOff || 'Walk off');
         if (view.breaks.pass > 0)
-            legendEntry(host, view.colors.pass,
-                (view.strings.stagePass || 'Stage Pass') + ' \u00b7 ' + view.breaks.pass);
+            legendEntry(host, view.colors.pass, view.strings.stagePass || 'Stage Pass');
         if (view.breaks.yours.length > 0)
-            legendEntry(host, view.colors.you,
-                (view.strings.yourRuns || 'Your runs') + ' \u00b7 ' + view.breaks.yours.length);
-        // Breaks imported without judgement counts can never be placed — the rail admits to
-        // them instead of letting the placed set read as the whole story (owner, 2026-08-30).
-        if (view.breaks.unplaced > 0)
-            legendEntry(host, view.colors.inkMuted,
-                (view.strings.unplaced || 'Unplaced') + ' \u00b7 ' + view.breaks.unplaced);
+            legendEntry(host, view.colors.you, view.strings.yourRuns || 'Your runs');
     }
 }
 

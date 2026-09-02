@@ -33,7 +33,6 @@ public static class StepChartStrings
             ["unknownBreak"] = localizer["Unknown Break"],
             ["stagePass"] = localizer["Stage Pass"],
             ["yourRuns"] = localizer["Your runs"],
-            ["unplaced"] = localizer["Unplaced"],
             ["scrollSpeed"] = localizer["Scroll speed"],
             ["finishedOne"] = localizer["1 broken run made it to the end"],
             ["finishedMany"] = localizer["{0} broken runs made it to the end"],
