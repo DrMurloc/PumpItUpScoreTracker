@@ -398,9 +398,10 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
     }
 
     [Fact]
-    public async Task ThePumbilityPeersBoardIsTheWorldBoardCutToYourPeersPrivateOnesKept()
+    public async Task ThePumbilityPeersBoardIsTheWorldBoardCutToYourPeersPrivateOnesKeptAndYouOnIt()
     {
-        SignedIn();
+        var me = Guid.NewGuid();
+        SignedInAs(me);
         var peer = Guid.NewGuid();
         var hidden = Guid.NewGuid();
         var stranger = Guid.NewGuid();
@@ -409,8 +410,10 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
             {
                 ScoreFor(peer, 990_000, "PEER"),
                 new UserPhoenixScore(hidden, ChartId, Name.From("Anonymous"), PhoenixScore.From(985_000), PhoenixPlate.SuperbGame, false, false, When),
-                ScoreFor(stranger, 999_000, "STRANGER")
+                ScoreFor(stranger, 999_000, "STRANGER"),
+                ScoreFor(me, 970_000, "ME")
             });
+        // The peer read never names the viewer (D31) — the board puts them on it anyway.
         _mediator.Setup(m => m.Send(It.Is<GetPumbilityPeersQuery>(q => q.Mix == MixEnum.Phoenix2 && q.ChartType == ScoreTracker.SharedKernel.Enums.ChartType.Single),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { peer, hidden });
@@ -421,7 +424,7 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
         dialog.WaitForAssertion(() =>
         {
             var names = dialog.FindAll(".weekly-lb-user").Select(e => e.TextContent.Trim()).ToArray();
-            Assert.Equal(new[] { "PEER", "Anonymous" }, names);
+            Assert.Equal(new[] { "PEER", "Anonymous", "ME" }, names);
         });
         Assert.Contains("cld-chip-on", dialog.Find("[data-testid='cld-peers-pumbility']").ClassName);
         Assert.Contains("cld-chip-on", dialog.Find("[data-testid='cld-scope-CompetitivePeers']").ClassName);
@@ -447,10 +450,12 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
             dialog.Find("[data-testid='cld-empty']").TextContent);
     }
 
-    private void SignedIn()
+    private void SignedIn() => SignedInAs(Guid.NewGuid());
+
+    private void SignedInAs(Guid id)
     {
         CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
-        CurrentUser.SetupGet(c => c.User).Returns(new User(Guid.NewGuid(), Name.From("ME"), true, null,
+        CurrentUser.SetupGet(c => c.User).Returns(new User(id, Name.From("ME"), true, null,
             new Uri("https://example.invalid/me.png"), null));
     }
 
