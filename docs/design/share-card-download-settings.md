@@ -23,9 +23,9 @@ Decided across five workshop rounds (2026-08-30). This document is the spec of r
 | Option | Effect |
 |---|---|
 | Song names | A name band under the jacket. Grade/plate/score marks stay ON the jacket, above the name. |
-| Letter grades | The grade art. When plates are also on, grade and plate **stack vertically** as one unit, each sized to the score text's height. |
-| Plates | The plate art (stacks under the grade). |
-| Scores | The score as plain text, **bottom-left** of the jacket. Never percentile-colored. |
+| Letter grades | The grade art, in the corner chip's black box. Shares a row with the plate, **above the score**; without a score that row drops into the score's place. |
+| Plates | The plate art, boxed the same way, to the right of the grade — or in the grade's slot when the grade is off. |
+| Scores | The score as plain text in the same black box, **bottom-left** of the jacket. Never percentile-colored. |
 | ↳ Include broken runs | A broken best's score prints (muted). Off: broken tiles print no score. |
 | PUMBILITY | Bottom-right chip: the chart's current value for your score — computed with `ScoringConfiguration.PumbilityScoring(mix, false)` exactly as the pool page computes it, printed N2 (the pool corner's own format). Zero-value charts (broken, sub-10 P2, co-op in a no-co-op pool) show nothing. |
 | ↳ Expected gains | Switches the chip to the **expected gain** (`+` chip, gold) with a small expected-grade image beside it — the blend of your repriced Phoenix 1 scores and your peers' numbers (`ProjectPumbilityGainsQuery`). Shown only where there IS a gain. |

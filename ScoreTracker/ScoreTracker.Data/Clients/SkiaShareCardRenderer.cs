@@ -103,21 +103,33 @@ public sealed class SkiaShareCardRenderer : IShareCardRenderer
             x += 56 + Pad;
         }
 
-        canvas.DrawText(card.Title, x, y + 32, titlePaint);
-        canvas.DrawText(card.Subtitle, x, y + 58, subtitlePaint);
-
-        var stampWidth = stampPaint.MeasureText(card.Stamp) + 24;
-        var stampRect = SKRect.Create(Width - Pad - stampWidth, y + 8, stampWidth, 34);
-        using (var stampBorder = new SKPaint
-               {
-                   Style = SKPaintStyle.Stroke, StrokeWidth = 2, Color = SKColor.Parse(card.AccentHex),
-                   IsAntialias = true
-               })
+        // The stamp is optional (design doc §9): a card whose title already says whose it is
+        // prints none, and the title then takes the whole width.
+        var stampWidth = 0f;
+        if (!string.IsNullOrWhiteSpace(card.Stamp))
         {
-            canvas.DrawRoundRect(stampRect, 8, 8, stampBorder);
+            stampWidth = stampPaint.MeasureText(card.Stamp) + 24;
+            var stampRect = SKRect.Create(Width - Pad - stampWidth, y + 8, stampWidth, 34);
+            using (var stampBorder = new SKPaint
+                   {
+                       Style = SKPaintStyle.Stroke, StrokeWidth = 2, Color = SKColor.Parse(card.AccentHex),
+                       IsAntialias = true
+                   })
+            {
+                canvas.DrawRoundRect(stampRect, 8, 8, stampBorder);
+            }
+
+            canvas.DrawText(card.Stamp, stampRect.Left + 12, stampRect.MidY + 6, stampPaint);
         }
 
-        canvas.DrawText(card.Stamp, stampRect.Left + 12, stampRect.MidY + 6, stampPaint);
+        // The title says what the rows are, so it can run long in a wide locale: it shrinks
+        // toward 22px before it ellipsizes, and never runs under the stamp.
+        var titleRoom = Width - Pad - stampWidth - 12 - x;
+        var titleText = card.Title;
+        while (titlePaint.MeasureText(titleText) > titleRoom && titlePaint.TextSize > 22) titlePaint.TextSize -= 2;
+        if (titlePaint.MeasureText(titleText) > titleRoom) titleText = Ellipsize(titleText, titlePaint, titleRoom);
+        canvas.DrawText(titleText, x, y + 32, titlePaint);
+        canvas.DrawText(card.Subtitle, x, y + 58, subtitlePaint);
         y = HeaderHeight;
 
         // Tier rows: colored label, jacket tiles with their marks, bands and boundary.
@@ -277,43 +289,29 @@ public sealed class SkiaShareCardRenderer : IShareCardRenderer
     }
 
     /// <summary>
-    ///     The settings-era strip (design doc §2): the score sits leftmost as plain text, the
-    ///     grade and plate stack beside it at the score's own height, and the right edge belongs
-    ///     to the corner chip with the expected-grade art riding just inside it.
+    ///     The settings-era strip (design doc §2, field test): every mark wears the corner chip's
+    ///     black box. The score sits bottom-left; the grade and plate share the row above it,
+    ///     left to right, and drop into the score's place when there is no score — the plate
+    ///     taking the grade's slot when there is no grade. The right edge belongs to the corner
+    ///     chip with the expected-grade art riding just inside it.
     /// </summary>
     private static void DrawCompactMarks(SKCanvas canvas, TierListShareCard card, TierListShareCard.Tile tile,
         (SKBitmap? Jacket, SKBitmap? Grade, SKBitmap? Plate, SKBitmap? Bubble, SKBitmap? Expected) art,
         SKRect jacketRect)
     {
+        const int markArtHeight = 13;
         var left = jacketRect.Left + 4;
+        var bottom = jacketRect.Bottom - 4;
         if (tile.ScoreLabel != null)
         {
-            using var scorePaint = TextPaint(tile.ScoreMuted ? card.InkMutedHex : "#FFFFFF", 13, true);
-            using var shadow = TextPaint("#000000", 13, true);
-            canvas.DrawText(tile.ScoreLabel, left + 1, jacketRect.Bottom - 5, shadow);
-            canvas.DrawText(tile.ScoreLabel, left, jacketRect.Bottom - 6, scorePaint);
-            left += scorePaint.MeasureText(tile.ScoreLabel) + 5;
+            DrawBoxedText(canvas, tile.ScoreLabel, tile.ScoreMuted ? card.InkMutedHex : "#FFFFFF",
+                card.InkMutedHex, left, bottom);
+            bottom -= BoxHeight + 3;
         }
 
-        // The stack: grade over plate, each sized to the score text's height, one unit.
-        const int stackArtHeight = 14;
-        if (art.Grade != null && art.Plate != null)
-        {
-            canvas.DrawBitmap(art.Grade, ArtRect(art.Grade, left, jacketRect.Bottom - 5 - 2 * stackArtHeight - 2,
-                stackArtHeight));
-            canvas.DrawBitmap(art.Plate, ArtRect(art.Plate, left, jacketRect.Bottom - 5 - stackArtHeight,
-                stackArtHeight));
-        }
-        else if (art.Grade != null)
-        {
-            canvas.DrawBitmap(art.Grade, ArtRect(art.Grade, left, jacketRect.Bottom - 5 - stackArtHeight,
-                stackArtHeight));
-        }
-        else if (art.Plate != null)
-        {
-            canvas.DrawBitmap(art.Plate, ArtRect(art.Plate, left, jacketRect.Bottom - 5 - stackArtHeight,
-                stackArtHeight));
-        }
+        var x = left;
+        if (art.Grade != null) x = DrawBoxedArt(canvas, art.Grade, x, bottom, card.InkMutedHex, markArtHeight) + 3;
+        if (art.Plate != null) DrawBoxedArt(canvas, art.Plate, x, bottom, card.InkMutedHex, markArtHeight);
 
         var right = jacketRect.Right - 4;
         if (tile.CornerLabel != null)
@@ -443,7 +441,18 @@ public sealed class SkiaShareCardRenderer : IShareCardRenderer
     {
         using var text = TextPaint(hex, 13, true);
         var width = text.MeasureText(label) + 10;
-        var box = SKRect.Create(right - width, bottom - 19, width, 19);
+        var box = SKRect.Create(right - width, bottom - BoxHeight, width, BoxHeight);
+        DrawBox(canvas, box, hex);
+        canvas.DrawText(label, box.Left + 5, box.Bottom - 5, text);
+        return box.Left - 4;
+    }
+
+    /// <summary>The marks' box height — the corner chip's, so every mark on a jacket reads as one family.</summary>
+    private const int BoxHeight = 19;
+
+    /// <summary>The chip's plate: a near-black fill under a hairline border in the mark's own colour.</summary>
+    private static void DrawBox(SKCanvas canvas, SKRect box, string borderHex)
+    {
         using (var fill = new SKPaint { Style = SKPaintStyle.Fill, Color = new SKColor(0, 0, 0, 209), IsAntialias = true })
         {
             canvas.DrawRoundRect(new SKRoundRect(box, 4), fill);
@@ -451,14 +460,34 @@ public sealed class SkiaShareCardRenderer : IShareCardRenderer
 
         using (var border = new SKPaint
                {
-                   Style = SKPaintStyle.Stroke, StrokeWidth = 1, Color = SKColor.Parse(hex), IsAntialias = true
+                   Style = SKPaintStyle.Stroke, StrokeWidth = 1, Color = SKColor.Parse(borderHex), IsAntialias = true
                })
         {
             canvas.DrawRoundRect(new SKRoundRect(box, 4), border);
         }
+    }
 
+    /// <summary>A left-anchored text chip (the score); returns the x its right edge took.</summary>
+    private static float DrawBoxedText(SKCanvas canvas, string label, string textHex, string borderHex, float left,
+        float bottom)
+    {
+        using var text = TextPaint(textHex, 13, true);
+        var width = text.MeasureText(label) + 10;
+        var box = SKRect.Create(left, bottom - BoxHeight, width, BoxHeight);
+        DrawBox(canvas, box, borderHex);
         canvas.DrawText(label, box.Left + 5, box.Bottom - 5, text);
-        return box.Left - 4;
+        return box.Right;
+    }
+
+    /// <summary>A left-anchored art chip (a grade or a plate); returns the x its right edge took.</summary>
+    private static float DrawBoxedArt(SKCanvas canvas, SKBitmap art, float left, float bottom, string borderHex,
+        float artHeight)
+    {
+        var artRect = ArtRect(art, left + 4, bottom - BoxHeight + (BoxHeight - artHeight) / 2f, artHeight);
+        var box = SKRect.Create(left, bottom - BoxHeight, artRect.Width + 8, BoxHeight);
+        DrawBox(canvas, box, borderHex);
+        canvas.DrawBitmap(art, artRect);
+        return box.Right;
     }
 
     private static SKPathEffect? DashFor(TileOutline outline) => outline switch
