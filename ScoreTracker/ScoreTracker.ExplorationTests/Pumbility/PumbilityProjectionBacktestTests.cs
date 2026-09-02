@@ -620,6 +620,167 @@ public sealed class PumbilityProjectionBacktestTests
 
     private static string Grade(PhoenixScore score) => $"{(int)score:N0} {score.LetterGradeFor(MixEnum.Phoenix2)}";
 
+    // ------------------------------------------------------------------ per-type pool windows
+
+    /// <summary>
+    ///     The owner's proposal of 2026-09-01: draw peers not from the combined total's rung band but
+    ///     from the viewer's pool OF THE TYPE — players whose singles pool sits within ±X PUMBILITY of
+    ///     the viewer's singles pool for a singles chart, doubles for doubles — with the same full-pool
+    ///     gate on both sides and the same five-voice floor. The combined total is type-blind: a
+    ///     singles-carried player's doubles peers are doubles specialists. Measured at ±250, ±500 and
+    ///     ±1000 against the shipping band on the same charts, and for the probe user the group sizes
+    ///     and one chart's roster under the new rule (<c>SCORETRACKER_PROBE_CHART</c>).
+    /// </summary>
+    [CatalogProbeFact]
+    public async Task Phoenix2_pertype_pool_window_against_the_rung_band()
+    {
+        await using var services = BuildServices();
+        var projector = services.GetRequiredService<IScoreProjector>();
+        var statsRepository = services.GetRequiredService<IPlayerStatsRepository>();
+        var stats = services.GetRequiredService<IPlayerStatsReader>();
+        var scores = services.GetRequiredService<IScoreReader>();
+        var chartRepository = services.GetRequiredService<IChartRepository>();
+
+        var charts = (await chartRepository.GetCharts(MixEnum.Phoenix2, cancellationToken: CancellationToken.None))
+            .ToDictionary(c => c.Id);
+        var players = (await statsRepository.GetUserIdsWithStats(MixEnum.Phoenix2, CancellationToken.None)).ToArray();
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+        // Symmetric windows, and asymmetric ones that cut the top the way the rung-window probe found
+        // pays: PUMBILITY below the viewer's pool of the type, and above it.
+        var windows = new (string Label, double Below, double Above)[]
+        {
+            ("±250", 250, 250), ("±500", 500, 500), ("±1000", 1000, 1000),
+            ("-500..+250", 500, 250), ("-750..+250", 750, 250), ("-500..0", 500, 0), ("-750..+500", 750, 500)
+        };
+        var probeUser = ProbeUserId;
+        var filter = Environment.GetEnvironmentVariable("SCORETRACKER_PROBE_CHART") ?? "Tomb";
+
+        var shipping = new List<Pair>();
+        var byWindow = windows.ToDictionary(w => w.Label, _ => new List<Pair>());
+        var groupSizes = windows.ToDictionary(w => w.Label, _ => new List<int>());
+        var shippingSizes = new List<int>();
+
+        foreach (var type in new[] { ChartType.Single, ChartType.Double })
+        {
+            // Everyone's records of the type, once: each player's pool of the type is their fifty
+            // highest-priced non-broken records, exactly the rule the tier lists' writer applies.
+            var records = (await scores.GetPlayerScoresInLevelRange(MixEnum.Phoenix2, players, type,
+                    PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, CancellationToken.None))
+                .Where(r => !r.IsBroken && charts.ContainsKey(r.ChartId)).ToArray();
+            var byPlayer = records.GroupBy(r => r.UserId).ToDictionary(g => g.Key, g => g.ToArray());
+            var poolTotal = new Dictionary<Guid, double>();
+            foreach (var (player, mine) in byPlayer)
+            {
+                var priced = mine.Select(r => scoring.GetScore(charts[r.ChartId], r.Score, r.Plate ?? PhoenixPlate.RoughGame, false))
+                    .Where(v => v > 0).OrderByDescending(v => v).ToArray();
+                if (priced.Length >= PeerGroup.PumbilityPoolSize) poolTotal[player] = priced.Take(PeerGroup.PumbilityPoolSize).Sum();
+            }
+
+            var voicesByChart = records.Where(r => poolTotal.ContainsKey(r.UserId))
+                .GroupBy(r => r.ChartId).ToDictionary(g => g.Key, g => g.Select(r => (r.UserId, Score: (int)r.Score)).ToArray());
+
+            _output.WriteLine($"=== {type}: {byPlayer.Count} players with records, {poolTotal.Count} with a full pool of the type ===");
+
+            foreach (var viewer in players)
+            {
+                if (!poolTotal.TryGetValue(viewer, out var myPool)) continue;
+                var playerStats = await stats.GetStats(MixEnum.Phoenix2, viewer, CancellationToken.None);
+                var level = type == ChartType.Single ? playerStats.SinglesCompetitiveLevel : playerStats.DoublesCompetitiveLevel;
+                if (level < MinimumLevelForBacktest) continue;
+                if (!byPlayer.TryGetValue(viewer, out var held) || held.Length == 0) continue;
+
+                // The shipping read, exactly as the page runs it.
+                var projection = await projector.Project(new ScoreProjectionRequest(MixEnum.Phoenix2, type, viewer,
+                    held.Select(r => new ProjectionTarget(r.ChartId, (int)charts[r.ChartId].Level)).ToArray(),
+                    PeerEstimator.CompetitiveWindow, Quantiles: Rungs), CancellationToken.None);
+                if (projection.Group is { IsLit: true } g) shippingSizes.Add(g.Size);
+                if (projection.Ladders != null)
+                    foreach (var r in held)
+                        if (projection.Ladders.TryGetValue(r.ChartId, out var ladder))
+                            shipping.Add(Pair.Of(viewer, type, r.ChartId, ladder, (int)r.Score, false, null));
+
+                // The per-type pool windows, the viewer out.
+                foreach (var window in windows)
+                {
+                    var peers = poolTotal.Where(kv => kv.Key != viewer && kv.Value - myPool >= -window.Below && kv.Value - myPool <= window.Above)
+                        .Select(kv => kv.Key).ToHashSet();
+                    groupSizes[window.Label].Add(peers.Count);
+                    if (viewer == probeUser)
+                        _output.WriteLine($"  probe user {type} pool {myPool:F0}: {peers.Count} peers within {window.Label} (shipping band: {projection.Group?.Size})");
+                    foreach (var r in held)
+                    {
+                        if (!voicesByChart.TryGetValue(r.ChartId, out var all)) continue;
+                        var voices = all.Where(v => peers.Contains(v.UserId)).Select(v => ((double)v.Score, 1.0)).ToArray();
+                        if (voices.Length < PeerEstimator.Phoenix2MinimumPeers) continue;
+                        byWindow[window.Label].Add(new Pair(viewer, type, r.ChartId,
+                            (int)Math.Round(Harness.WeightedQuantile(voices, 0.25)),
+                            (int)Math.Round(Harness.WeightedQuantile(voices, 0.5)),
+                            (int)Math.Round(Harness.WeightedQuantile(voices, 0.75)), (int)r.Score, false, null));
+                    }
+                }
+            }
+
+            // The probe user's roster on the filtered song under ±500 of their pool of the type — played
+            // or not, since the voices are the point — with each voice's pool of the type beside theirs.
+            if (probeUser is { } me && poolTotal.TryGetValue(me, out var myTypePool))
+            {
+                var near = poolTotal.Where(kv => kv.Key != me && Math.Abs(kv.Value - myTypePool) <= 500).Select(kv => kv.Key).ToHashSet();
+                var nearStats = (await stats.GetStats(MixEnum.Phoenix2, near, CancellationToken.None)).ToDictionary(p => p.UserId);
+                foreach (var chart in charts.Values.Where(c => c.Type == type && c.Song.Name.ToString().Contains(filter, StringComparison.OrdinalIgnoreCase)).OrderBy(c => (int)c.Level))
+                {
+                    if (!voicesByChart.TryGetValue(chart.Id, out var all)) continue;
+                    var rows = all.Where(v => near.Contains(v.UserId)).OrderByDescending(v => v.Score).ToArray();
+                    if (rows.Length == 0) continue;
+                    var voices = rows.Select(v => ((double)v.Score, 1.0)).ToArray();
+                    var read = rows.Length >= PeerEstimator.Phoenix2MinimumPeers
+                        ? $"Good {Grade(PhoenixScore.From((int)Math.Round(Harness.WeightedQuantile(voices, 0.25))))} / Great {Grade(PhoenixScore.From((int)Math.Round(Harness.WeightedQuantile(voices, 0.5))))} / Top {Grade(PhoenixScore.From((int)Math.Round(Harness.WeightedQuantile(voices, 0.75))))}"
+                        : "under the five-voice floor";
+                    _output.WriteLine($"  --- {chart.Song.Name} {type.ToString()[0]}{(int)chart.Level} under ±500 of your {type} pool ({myTypePool:F0}): {rows.Length} voices; {read} ---");
+                    foreach (var v in rows)
+                    {
+                        var st = nearStats[v.UserId];
+                        var compLevel = type == ChartType.Single ? st.SinglesCompetitiveLevel : st.DoublesCompetitiveLevel;
+                        _output.WriteLine($"    {Grade(PhoenixScore.From(v.Score)),-18} {type} pool {poolTotal[v.UserId],9:F0} ({poolTotal[v.UserId] - myTypePool:+0;-0;0})  combined {st.SkillRating,9:F0}  comp {compLevel:F2}");
+                    }
+                }
+            }
+        }
+
+        _output.WriteLine($"shipping band: median group size {Harness.Percentile(shippingSizes.Select(x => (double)x).OrderBy(x => x).ToArray(), 0.5):F0} (p10 {Harness.Percentile(shippingSizes.Select(x => (double)x).OrderBy(x => x).ToArray(), 0.1):F0}, p90 {Harness.Percentile(shippingSizes.Select(x => (double)x).OrderBy(x => x).ToArray(), 0.9):F0})");
+        foreach (var window in windows)
+        {
+            var sizes = groupSizes[window.Label].Select(x => (double)x).OrderBy(x => x).ToArray();
+            _output.WriteLine($"{window.Label} of the type pool: median group size {Harness.Percentile(sizes, 0.5):F0} (p10 {Harness.Percentile(sizes, 0.1):F0}, p90 {Harness.Percentile(sizes, 0.9):F0}); " +
+                              $"viewers with under five peers: {groupSizes[window.Label].Count(x => x < PeerEstimator.Phoenix2MinimumPeers)} of {groupSizes[window.Label].Count}");
+        }
+
+        _output.WriteLine("--- shipping: ±3 rungs of the combined total ---");
+        Report("rung band", shipping, MixEnum.Phoenix2);
+        TopOfList(shipping, charts, MixEnum.Phoenix2);
+        foreach (var window in windows)
+        {
+            var pairs = byWindow[window.Label];
+            // Head to head on the charts both rules answer.
+            var both = pairs.Select(p => (p.Player, p.ChartType, p.ChartId)).ToHashSet();
+            var shared = shipping.Where(p => both.Contains((p.Player, p.ChartType, p.ChartId))).ToList();
+            _output.WriteLine($"--- {window.Label} of the pool of the type: answers {pairs.Count} pairs ({100.0 * pairs.Count / Math.Max(1, shipping.Count):F0}% of the band's {shipping.Count}); head to head on the {shared.Count} both answer ---");
+            Row($"    rung band · p25", shared, p => p.P25, MixEnum.Phoenix2);
+            Row($"    {window.Label} type pool · p25", pairs, p => p.P25, MixEnum.Phoenix2);
+            Row($"    rung band · p50", shared, p => p.P50, MixEnum.Phoenix2);
+            Row($"    {window.Label} type pool · p50", pairs, p => p.P50, MixEnum.Phoenix2);
+            var topBand = Top(shared, charts, p => p.P50, MixEnum.Phoenix2);
+            var topPool = Top(pairs, charts, p => p.P50, MixEnum.Phoenix2);
+            if (topBand.Count > 0) Row($"    rung band · top 10 · p50", topBand, p => p.P50, MixEnum.Phoenix2);
+            if (topPool.Count > 0) Row($"    {window.Label} type pool · top 10 · p50", topPool, p => p.P50, MixEnum.Phoenix2);
+            var topBand25 = Top(shared, charts, p => p.P25, MixEnum.Phoenix2);
+            var topPool25 = Top(pairs, charts, p => p.P25, MixEnum.Phoenix2);
+            if (topBand25.Count > 0) Row($"    rung band · top 10 · p25", topBand25, p => p.P25, MixEnum.Phoenix2);
+            if (topPool25.Count > 0) Row($"    {window.Label} type pool · top 10 · p25", topPool25, p => p.P25, MixEnum.Phoenix2);
+        }
+
+        Assert.True(true, "a measurement, not a guarantee — read the output");
+    }
+
     // ------------------------------------------------------------------ the reads
 
     /// <summary>
