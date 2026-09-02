@@ -1,0 +1,1148 @@
+<title>Step Chart Comments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* ============================================================
+   Two layers, deliberately different materials (same convention as
+   docs/design/chart-comments/mock.html):
+   - ANNOTATION layer: slate paper, mono eyebrows, theme-aware.
+   - APP layer: the real Phoenix palette, always dark — the site is
+     dark-only by design. Nothing in the annotation layer may look
+     like product UI.
+   ============================================================ */
+:root {
+  --paper: #EEF1F5;
+  --paper-2: #E2E7EE;
+  --edge: #C2CBD8;
+  --note: #2B3648;
+  --note-soft: #5D6B80;
+  --mark: #0B5FA5;
+  --warn-bg: #FDF0E3;
+  --warn-edge: #E2A86A;
+  --warn-ink: #7A4410;
+
+  /* App tokens — verbatim from Services/Theming/MixThemes.cs (Phoenix + the step-chart group) */
+  --mix-bg: #070B15;
+  --mix-surface: #161E2C;
+  --mix-surface-muted: #1E2A3D;
+  --mix-nav: #0D1626;
+  --mix-primary: #3FA9F5;
+  --mix-primary-contrast: #06101C;
+  --mix-secondary: #FF6B35;
+  --mix-accent: #FFD24A;
+  --mix-ink: #E9EFF7;
+  --mix-ink-muted: #93A3B8;
+  --mix-lines: rgba(255,255,255,.12);
+  --panel-upper: #FF4D5E;
+  --panel-lower: #3FA9FF;
+  --panel-center: #FFD23F;
+  --life-danger: #E8385A;
+  --step-walkoff: #E8A33D;
+  --step-you: #FFD166;
+
+  --sans: "Barlow", ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --app-sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --cond: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", var(--sans);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --paper:#10151D; --paper-2:#161D27; --edge:#28323F; --note:#DDE4EE; --note-soft:#8C9BB0; --mark:#6BB8F5;
+          --warn-bg:#2A2013; --warn-edge:#6B4A1C; --warn-ink:#F0C589; }
+}
+:root[data-theme="dark"] { --paper:#10151D; --paper-2:#161D27; --edge:#28323F; --note:#DDE4EE; --note-soft:#8C9BB0; --mark:#6BB8F5;
+          --warn-bg:#2A2013; --warn-edge:#6B4A1C; --warn-ink:#F0C589; }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--note); font-family: var(--sans); font-size: 15.5px; line-height: 1.55;
+       -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 40px 24px 110px; }
+
+/* ---------- annotation typography ---------- */
+h1 { font-family: var(--cond); font-size: clamp(34px, 5vw, 52px); font-weight: 700; letter-spacing: .005em; line-height: 1.02;
+     text-wrap: balance; margin: 0 0 8px; }
+h2 { font-family: var(--cond); font-size: 28px; font-weight: 700; margin: 0; text-wrap: balance; }
+h3 { font-size: 16px; font-weight: 700; margin: 0 0 6px; }
+p  { margin: 0 0 12px; max-width: 68ch; }
+a  { color: var(--mark); }
+code { font-family: var(--mono); font-size: .86em; background: var(--paper-2); border: 1px solid var(--edge); border-radius: 4px; padding: 1px 5px; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--note-soft); }
+.lede { font-size: 18px; color: var(--note-soft); max-width: 70ch; }
+.thesis { border: 1px solid var(--edge); border-left: 4px solid var(--mark); background: var(--paper-2); padding: 14px 18px;
+          border-radius: 0 8px 8px 0; margin: 22px 0 0; max-width: 78ch; }
+.thesis b { font-family: var(--cond); font-size: 19px; font-weight: 700; display: block; margin-bottom: 4px; }
+.redlines { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-top: 18px; }
+.redline { border: 1px solid var(--edge); border-radius: 8px; padding: 10px 12px; font-size: 13.5px; line-height: 1.4; }
+.redline b { display: block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mark); margin-bottom: 4px; }
+
+section { margin-top: 60px; }
+.sec-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; border-bottom: 2px solid var(--edge); padding-bottom: 10px; margin-bottom: 22px; }
+.sec-head .n { font-family: var(--mono); font-size: 12px; color: var(--note-soft); letter-spacing: .1em; }
+.sec-head .sub { color: var(--note-soft); font-size: 14px; }
+
+.cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 30px; align-items: start; }
+@media (min-width: 900px) { .cols.split { grid-template-columns: minmax(0,var(--w,420px)) minmax(0,1fr); } }
+.note ul, .note ol { margin: 0 0 12px; padding-left: 18px; }
+.note li { margin-bottom: 8px; max-width: 62ch; }
+.note li b { font-weight: 700; }
+.flag { background: var(--warn-bg); border-left: 3px solid var(--warn-edge); color: var(--warn-ink); padding: 10px 14px;
+        border-radius: 0 6px 6px 0; font-size: 14px; margin: 0 0 14px; max-width: 66ch; }
+.flag b { font-weight: 700; }
+table.spec { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+table.spec th, table.spec td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--edge); vertical-align: top; }
+table.spec th { font-family: var(--mono); font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--note-soft); border-bottom-width: 2px; }
+.scroller { overflow-x: auto; padding-bottom: 6px; }
+.frames { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
+.qs { counter-reset: q; padding-left: 0; list-style: none; max-width: 78ch; }
+.qs li { counter-increment: q; display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 8px; margin-bottom: 12px; }
+.qs li::before { content: counter(q); font-family: var(--cond); font-weight: 700; font-size: 22px; color: var(--mark); line-height: 1.1; }
+.qs li em { color: var(--note-soft); font-style: normal; }
+
+/* ---------- glyph legend (annotation layer, app-colored swatches) ---------- */
+.glyphs { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.glyph { border: 1px solid var(--edge); border-radius: 8px; padding: 10px 12px 10px 10px; display: grid; grid-template-columns: 58px minmax(0,1fr); gap: 10px; align-items: center; }
+.glyph canvas { display: block; width: 58px; height: 58px; background: var(--mix-surface-muted); border-radius: 6px; }
+.glyph b { display: block; font-size: 14px; }
+.glyph span { font-size: 12.5px; color: var(--note-soft); line-height: 1.35; display: block; }
+
+/* ---------- device frames ---------- */
+.frame { background: var(--mix-bg); border: 1px solid var(--edge); border-radius: 12px; padding: 16px; box-shadow: 0 14px 40px rgba(0,0,0,.22); }
+.frame .cap { font-family: var(--mono); font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--mix-ink-muted); margin-bottom: 12px; }
+.frame.page { min-width: 720px; }
+.phone { width: 390px; flex: none; padding: 14px 16px 22px; border-radius: 22px; }
+
+/* ============================================================
+   APP LAYER — mimics the running site
+   ============================================================ */
+.app { font-family: var(--app-sans); color: var(--mix-ink); font-size: 14px; line-height: 1.5; }
+.chart-section-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.chart-section-head h5 { margin: 0; font-size: 1.5rem; font-weight: 400; line-height: 1.334; letter-spacing: 0; }
+.chart-section-sub { color: var(--mix-ink-muted); font-size: .75rem; }
+
+/* the step-chart block, verbatim from site.css where it matters */
+.stepchart-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0 0 12px; }
+.stepchart-modes, .stepchart-av { display: inline-flex; align-items: center; border: 1px solid var(--mix-lines); border-radius: 9px; overflow: hidden; }
+.stepchart-modes button, .stepchart-av button { font: inherit; font-size: .8rem; font-weight: 500; color: var(--mix-ink-muted); background: transparent; border: none; padding: 8px 14px; cursor: pointer; }
+.stepchart-av button { padding: 8px 12px; }
+.stepchart-modes button + button { border-left: 1px solid var(--mix-lines); }
+.stepchart-modes button[aria-pressed="true"], .stepchart-av button[aria-pressed="true"] { background: var(--mix-surface); color: var(--mix-ink); }
+.stepchart-av-value { font-size: .8rem; color: var(--mix-ink); padding: 0 4px; min-width: 56px; text-align: center; font-variant-numeric: tabular-nums;
+  border-left: 1px solid var(--mix-lines); border-right: 1px solid var(--mix-lines); align-self: stretch; display: inline-flex; align-items: center; justify-content: center; }
+
+.stepchart-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 0 10px; }
+.stepchart-chip { font: inherit; font-size: .72rem; font-weight: 500; color: var(--mix-ink); background: var(--mix-surface); border: 1px solid var(--mix-lines); border-radius: 999px;
+  padding: 3px 9px 3px 7px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
+.stepchart-chip i { width: 6px; height: 6px; border-radius: 50%; background: var(--mix-ink-muted); }
+.stepchart-chip-struct i { background: var(--mix-primary); }
+.stepchart-chip-spike i { background: var(--life-danger); }
+.stepchart-chip-active { border-color: var(--mix-primary); background: var(--mix-surface-muted); }
+.stepchart-chip small { color: var(--mix-ink-muted); font-size: .72rem; font-variant-numeric: tabular-nums; }
+
+.stepchart-viewer { display: flex; gap: 14px; align-items: flex-start; justify-content: flex-start; position: relative; }
+.stepchart-compact .stepchart-viewer { justify-content: center; }
+.stepchart-scroll { position: relative; height: 600px; overflow: auto; scrollbar-gutter: stable; width: max-content; max-width: calc(100% - 106px); flex: none;
+  border: 1px solid rgba(255,255,255,.10); border-radius: 10px; background: var(--mix-surface-muted); scrollbar-width: thin;
+  /* NEW: manipulation keeps pan + pinch and removes double-tap zoom, so a double-tap can mean "comment here" */
+  touch-action: manipulation; }
+.stepchart-compact .stepchart-scroll { height: 380px; max-width: calc(100% - 96px); }
+.stepchart-scroll canvas { display: block; }
+.stepchart-scroll > div { position: relative; }
+.stepchart-minicol { position: sticky; top: 14px; }
+.stepchart-minimap { display: block; width: 92px; height: 600px; border: 1px solid rgba(255,255,255,.10); border-radius: 10px; background: var(--mix-surface-muted); cursor: pointer; }
+.stepchart-compact .stepchart-minimap { width: 76px; height: 380px; }
+.narrow .stepchart-viewer { gap: 8px; }
+.narrow .stepchart-minimap { width: 40px; }
+.narrow .stepchart-scroll { max-width: calc(100% - 50px); }
+.stepchart-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 12px; color: var(--mix-ink-muted); font-size: .8rem; align-items: center; }
+.stepchart-legend-entry { display: inline-flex; align-items: center; gap: 6px; }
+.stepchart-legend-entry i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+.stepchart-legend-entry i.bubble { width: 11px; height: 9px; border-radius: 3px 3px 3px 0; background: transparent; border: 1.5px solid var(--mix-ink); }
+.stepchart-legend-entry i.bubble.you { border-color: var(--step-you); }
+/* NEW: which comments the strip shows — a quiet text menu on the legend row, the Sort/Read-in shape */
+.sc-scope { margin-left: auto; color: var(--mix-ink-muted); font-size: .78rem; cursor: pointer; white-space: nowrap; }
+.sc-scope b { color: var(--mix-ink); font-weight: 600; }
+.cmt-car { font-size: .7em; }
+
+/* the hover hairline: DOM, not canvas — it moves with every mouse event */
+.sc-cursor { position: absolute; left: 0; right: 0; height: 0; border-top: 1px solid rgba(233,239,247,.4); pointer-events: none; display: none; }
+.sc-cursor span { position: absolute; top: -9px; font: 500 10px/18px var(--app-sans); color: var(--mix-ink); background: var(--mix-bg); border: 1px solid var(--mix-lines); border-radius: 999px; padding: 0 7px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* the rail's tooltip, verbatim shape */
+.stepchart-tip { position: fixed; z-index: 3000; pointer-events: none; background: var(--mix-bg); border: 1px solid rgba(255,255,255,.14); border-radius: 8px; padding: 8px 11px;
+  font-size: .8rem; color: var(--mix-ink); max-width: 260px; box-shadow: 0 6px 24px rgba(0,0,0,.5); font-family: var(--app-sans); }
+.stepchart-tip-time { color: var(--mix-ink-muted); font-size: .72rem; font-variant-numeric: tabular-nums; }
+.stepchart-tip .who { font-weight: 600; margin-top: 2px; }
+.stepchart-tip .who small { color: var(--mix-ink-muted); font-weight: 400; margin-left: 4px; }
+.stepchart-tip .ex { margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.stepchart-tip .ft { color: var(--mix-ink-muted); font-size: .72rem; margin-top: 4px; }
+
+/* ---------- THE PANEL: sticky at the bottom of the strip's frame, every host ---------- */
+.sc-panel { position: absolute; left: 0; bottom: 0; background: rgba(7,11,21,.95); border-top: 1px solid rgba(255,255,255,.16); border-radius: 0 0 10px 10px;
+  padding: 8px 10px 9px; font-size: .8rem; z-index: 5; box-shadow: 0 -8px 24px rgba(0,0,0,.35); }
+.sc-panel-head { display: flex; align-items: center; gap: 7px; min-height: 24px; }
+.sc-step { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--mix-lines); background: transparent; color: var(--mix-ink-muted); font: inherit; font-size: 13px; line-height: 1; cursor: pointer; display: grid; place-items: center; flex: none; padding: 0; }
+.sc-step:hover:not(:disabled) { color: var(--mix-ink); border-color: var(--mix-ink-muted); }
+.sc-step:disabled { opacity: .28; cursor: default; }
+.sc-step.add { margin-left: auto; color: var(--mix-ink-muted); }
+.sc-panel .cname { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.sc-panel .cmeta { white-space: nowrap; }
+.sc-panel.tight .cmeta { display: none; }
+.sc-panel .pager { font-size: .7rem; color: var(--mix-ink-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sc-panel .ex { margin-top: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; cursor: pointer; }
+.sc-panel .ex.full { display: block; }
+.sc-panel .pf { display: flex; align-items: center; gap: 4px; margin-top: 4px; color: var(--mix-ink-muted); font-size: .74rem; }
+.sc-panel .pf .act { font-size: .74rem; padding: 2px 6px; }
+.sc-panel .pf a { margin-left: auto; color: var(--mix-primary); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.sc-panel .empty { display: flex; align-items: center; gap: 9px; color: var(--mix-ink-muted); min-height: 44px; line-height: 1.35; }
+.sc-panel .empty svg { width: 18px; height: 18px; flex: none; }
+.sc-panel .cmt-line { font-size: .86rem; padding: 4px 0; margin-top: 4px; }
+.sc-panel .cmt-compose-foot { margin-top: 6px; }
+.sc-panel .kbd { font-family: var(--mono); font-size: .72rem; color: var(--mix-ink); background: var(--mix-surface-muted); border: 1px solid var(--mix-lines); border-radius: 4px; padding: 0 5px; }
+
+/* anchor chip — the one new piece of vocabulary. Same chrome as a section chip; the bar is the rail's tick in miniature. */
+.anchor-chip { font: inherit; font-size: .72rem; font-weight: 500; color: var(--mix-ink); background: var(--mix-surface); border: 1px solid var(--mix-lines); border-radius: 999px;
+  padding: 2px 9px 2px 7px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; white-space: nowrap; flex: none; }
+.anchor-chip i { width: 3px; height: 11px; border-radius: 2px; background: var(--mix-ink-muted); flex: none; }
+.anchor-chip.you i { background: var(--step-you); }
+.anchor-chip.pick { border-color: rgba(63,169,245,.6); background: rgba(63,169,245,.10); }
+.anchor-chip.pick i { background: var(--mix-primary); }
+.anchor-chip:hover { border-color: var(--mix-ink-muted); }
+.anchor-x { font: inherit; font-size: 13px; line-height: 1; color: var(--mix-ink-muted); background: transparent; border: none; cursor: pointer; padding: 2px 4px; }
+
+/* composer — the line, as shipped */
+.cmt-compose { display: grid; grid-template-columns: 28px minmax(0,1fr); gap: 10px; margin: 0 0 6px; }
+.cmt-line { width: 100%; font: inherit; font-size: .9rem; color: var(--mix-ink); background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,.22); padding: 6px 0; resize: none; outline: none; display: block; }
+.cmt-line:focus { border-bottom-color: var(--mix-primary); }
+.cmt-line::placeholder { color: var(--mix-ink-muted); }
+.cmt-compose-foot { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.cmt-posting-as { font-size: .74rem; color: var(--mix-ink-muted); }
+.mbtn { font: inherit; font-size: .78rem; font-weight: 500; text-transform: uppercase; letter-spacing: .02em; border-radius: 4px; padding: 5px 10px; border: none; cursor: pointer; background: transparent; color: var(--mix-ink); }
+.mbtn.filled { background: var(--mix-primary); color: var(--mix-primary-contrast); }
+.mbtn.filled:disabled { opacity: .38; cursor: default; }
+.sp { flex: 1; }
+
+/* comment rows — the shipped .cmt vocabulary (the dialog's Comments tab) */
+.clist { display: flex; flex-direction: column; }
+.cmt { display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 10px; padding: 11px 14px 10px; border-top: 1px solid var(--mix-lines); }
+.cmt.focused { background: rgba(63,169,245,.08); box-shadow: inset 3px 0 0 var(--mix-primary); }
+.cmt.reply { grid-template-columns: 26px minmax(0,1fr); padding-left: 50px; position: relative; background: rgba(255,255,255,.017); border-top: none; }
+.cmt.reply::before { content: ""; position: absolute; left: 30px; top: 0; bottom: 0; width: 2px; background: var(--mix-lines); border-radius: 1px; }
+.av { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(150deg,#43536B,#243044); display: grid; place-items: center; font-size: 13px; font-weight: 700; color: var(--mix-ink); flex: none; }
+.av.sm { width: 26px; height: 26px; font-size: 11px; }
+.av.xs { width: 22px; height: 22px; font-size: 10px; }
+.chead { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 4px; }
+.cname { font-weight: 650; font-size: 13px; }
+.cmeta { font-size: 11px; color: var(--mix-ink-muted); }
+.cbadge { font-size: 10px; letter-spacing: .04em; padding: 1.5px 7px; border-radius: 999px; border: 1px solid var(--mix-lines); color: var(--mix-ink-muted); background: var(--mix-surface-muted); }
+.cbadge.you { border-color: rgba(255,209,102,.45); color: var(--step-you); }
+.cbody { font-size: 13.5px; overflow-wrap: anywhere; }
+.cbody a { color: var(--mix-primary); text-decoration: underline; text-underline-offset: 2px; }
+.cfoot { display: flex; align-items: center; gap: 4px; margin-top: 6px; }
+.act { font: inherit; font-size: 11.5px; color: var(--mix-ink-muted); background: none; border: none; padding: 3px 7px; border-radius: 5px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.act:hover { background: var(--mix-surface-muted); color: var(--mix-ink); }
+.act.on { color: var(--mix-accent); }
+
+/* the dialog */
+.dlg { background: var(--mix-surface); border: 1px solid var(--mix-lines); border-radius: 8px; overflow: hidden; width: 572px; flex: none; }
+.title-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px 4px; }
+.song { font-family: var(--cond); font-size: 22px; font-weight: 700; letter-spacing: .01em; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bub { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; flex: none; font-weight: 800; font-size: 12px; color: #0B0F18; letter-spacing: -.02em;
+  background: linear-gradient(160deg, #FF8A4C, #E0442C); box-shadow: 0 0 0 2px rgba(255,255,255,.09) inset; }
+.icon-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--mix-lines); background: transparent; color: var(--mix-ink-muted); display: grid; place-items: center; font-size: 15px; flex: none; }
+.scoreline { display: flex; align-items: center; gap: 10px; padding: 4px 14px 12px; flex-wrap: wrap; }
+.score-v { font-family: var(--cond); font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--mix-accent); }
+.grade { width: 26px; height: 26px; border-radius: 5px; display: grid; place-items: center; font-weight: 800; font-size: 11px; background: linear-gradient(160deg,#FFE27A,#E8A41D); color: #2A1A00; }
+.muted { color: var(--mix-ink-muted); }
+.tiny { font-size: 11.5px; }
+.tabs { display: flex; gap: 2px; background: var(--mix-nav); border-top: 1px solid var(--mix-lines); border-bottom: 1px solid var(--mix-lines); padding: 0 6px; overflow-x: auto; scrollbar-width: none; }
+.tab { background: none; border: none; color: var(--mix-ink-muted); font: inherit; font-size: 12.5px; padding: 11px 12px 9px; border-bottom: 2px solid transparent; white-space: nowrap; }
+.tab.on { color: var(--mix-primary); border-bottom-color: var(--mix-primary); }
+.pad { padding: 12px 14px; }
+.cld-scopes { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
+.cld-chip { font: inherit; font-size: .74rem; padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.14); background: rgba(233,239,247,.04); color: var(--mix-ink-muted); cursor: pointer; white-space: nowrap; }
+.cld-chip-on { background: rgba(63,169,245,.16); border-color: rgba(63,169,245,.55); color: var(--mix-ink); font-weight: 600; }
+.cmt-subbar { display: flex; align-items: center; gap: 8px; font-size: .78rem; color: var(--mix-ink-muted); margin: 0 0 8px; }
+.cmt-subbar b { color: var(--mix-ink); font-weight: 600; }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">Workshop · chart page &amp; chart details dialog · round 2</div>
+  <h1>Comments that point at a spot in the chart</h1>
+  <p class="lede">Round 2, rebuilt around four redlines. A comment points at <em>one second</em> of the chart, the conversation lives in a sticky panel at the bottom of the strip on every host, and you start one by double-clicking (or double-tapping) the spot itself.</p>
+  <div class="thesis">
+    <b>An anchor is an attribute of a comment, not a new kind of comment.</b>
+    A comment gains one optional number — <code>AnchorAt</code>, chart seconds, the same clock the rail's pins use. Everything shipped keeps working unchanged: the audience rail, personal notes, votes, replies, moderation, translation, the 500-character plain-text body, the purge. The step chart is a <em>lens</em> over the comments that carry a time; the Comments tab shows every comment and marks the anchored ones with a chip that jumps to the strip.
+  </div>
+  <div class="redlines">
+    <div class="redline"><b>Redline 1 · scrollbar overlap</b>The marks lane on narrow layouts now sits 10 px clear of the strip's edge, out from under the phone's overlay scrollbar; the desktop column moved inboard too.</div>
+    <div class="redline"><b>Redline 2 · times only</b>Sections and ranges are gone: no stripes, no map drag, no anchor menu. The chip is the time. Two comments on the same second stack.</div>
+    <div class="redline"><b>Redline 3 · one panel, every host</b>The desktop column is gone. Page, phone and dialog all carry the same sticky panel at the bottom of the strip; <em>Open thread</em> goes to the Comments tab.</div>
+    <div class="redline"><b>Redline 4 · double-click to comment</b>No toolbar button, no two-step. Double-click or double-tap a spot and the panel becomes the composer for that second.</div>
+  </div>
+
+  <!-- ============================================================ -->
+  <section>
+    <div class="sec-head"><span class="n">§1</span><h2>The vocabulary</h2><span class="sub">four marks, one chip, one panel</span></div>
+    <div class="cols split" style="--w: 1fr">
+      <div class="glyphs" id="glyphs">
+        <div class="glyph"><canvas data-g="spot"></canvas><div><b>Spot</b><span>A bubble on the annotation rail at the comment's second, with a tick into the strip so the eye lands on the arrows it means.</span></div></div>
+        <div class="glyph"><canvas data-g="stack"></canvas><div><b>Stack ×N</b><span>Comments on the same second share a bubble with a count — the pin rule, reused. The panel pages through them.</span></div></div>
+        <div class="glyph"><canvas data-g="note"></canvas><div><b>Your note</b><span>Gold and hollow, like your runs on the rail. Only you see it, whatever scope you are reading.</span></div></div>
+        <div class="glyph"><canvas data-g="sel"></canvas><div><b>Selected</b><span>The bubble turns primary and a hairline crosses the strip at its second: "this row, this comment".</span></div></div>
+        <div class="glyph"><canvas data-g="compose"></canvas><div><b>Composing</b><span>After a double-click: a hollow + bubble and a primary hairline mark the second you are writing about, until you post or cancel.</span></div></div>
+        <div class="glyph"><canvas data-g="map"></canvas><div><b>On the map</b><span>Every comment is a dot on the whole-chart map's left edge, so the overview shows where the talk is — deaths keep the right edge.</span></div></div>
+      </div>
+      <div class="note">
+        <h3>The panel</h3>
+        <ul>
+          <li><b>It follows the strip.</b> It always shows the comment nearest to what you are looking at, with ‹ › to walk the chart's comments in order — each step scrolls the strip along. Tapping a mark does the same thing as walking to it.</li>
+          <li><b>It is the reader's whole loop for one comment</b>: time chip, author, two lines (tap to unfold), ▲ vote, reply count, and <em>Open thread ›</em>, which switches to the Comments tab with the comment focused.</li>
+          <li><b>It is also the composer.</b> Double-click the strip and the panel turns into the line, chip first: <code>0:38</code>, <em>Posting to Public as ERRLENA</em>, Cancel, Comment. The picked second stays marked on the strip while you type.</li>
+          <li><b>Empty state teaches the gesture:</b> "No comments on this chart yet — double-click a spot to add one." On charts that have comments, the ＋ in the panel's corner carries the same hint on hover and works as the accessible way in.</li>
+        </ul>
+        <p>The chip is the link everywhere else: on a comment row in the Comments tab it switches to Steps, scrolls the strip to the second and selects the mark.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section>
+    <div class="sec-head"><span class="n">§2</span><h2>The chart page, desktop</h2><span class="sub">live — scroll the strip, walk with ‹ ›, hover the rail, double-click an arrow row to write one</span></div>
+    <div class="scroller">
+      <div class="frame page app">
+        <div class="cap">/Charts/phoenix/solve-my-hurt/s21 · the Step chart section · synthetic steps, real geometry · the section is left-aligned on the real page too</div>
+        <div class="chart-section-head"><h5>Step chart</h5><span class="chart-section-sub">Time runs downward — arrows colored by panel, feet, or timing.</span></div>
+        <div data-strip="page" data-layout="page" data-open="30.5" data-thread="Open thread ›">
+          <div class="stepchart-toolbar">
+            <div class="stepchart-modes"><button type="button" aria-pressed="true">Arrows</button><button type="button" aria-pressed="false">Feet</button></div>
+            <div class="stepchart-av"><button type="button" data-av="-50">−</button><span class="stepchart-av-value" data-av-value>AV 671</span><button type="button" data-av="50">+</button><button type="button" data-av="auto" aria-pressed="true">Auto</button></div>
+          </div>
+          <div class="stepchart-chips" data-chips></div>
+          <div class="stepchart-viewer">
+            <div class="stepchart-scroll" data-scroll tabindex="0" aria-label="Step chart"></div>
+            <div class="stepchart-minicol"><canvas class="stepchart-minimap" data-minimap></canvas></div>
+          </div>
+          <div class="stepchart-legend" data-legend></div>
+        </div>
+      </div>
+    </div>
+    <div class="cols split" style="--w: 1fr; margin-top: 22px">
+      <div class="note">
+        <h3>Reading</h3>
+        <ul>
+          <li><b>The column is gone.</b> The panel at the bottom of the strip is the whole reading surface, on desktop exactly as on a phone — one component, three hosts.</li>
+          <li><b>Scroll, and it keeps up.</b> Whatever comment is nearest the middle of the viewport is the one in the panel; ‹ › jump to the previous and next and scroll the strip there. Hover a mark for the same card as a tooltip; click it to land on it.</li>
+          <li><b>Which comments?</b> The scope is a quiet text menu on the legend row — <em>Comments: Public ▾</em> — the Sort / Read-in shape. Your notes overlay whatever scope is chosen (open question 2).</li>
+          <li><b>Open thread ›</b> on the page opens the chart details dialog on its Comments tab, focused on that comment — the way <code>/WeeklyCharts</code> opens dialogs from a static page (open question 1).</li>
+        </ul>
+      </div>
+      <div class="note">
+        <h3>Writing</h3>
+        <ul>
+          <li><b>Double-click an arrow row.</b> The pick snaps to the nearest arrow row within a beat's reach (two people who double-click the same quad stack on the same second), otherwise the exact second. Hovering the strip still shows the hairline with the second, so you know where a double-click would land.</li>
+          <li>The panel becomes the composer with the chip already filled; ✕ on the chip or Cancel drops the pick. Post, and the new bubble appears on the rail with the panel on it.</li>
+          <li>No spot, no post: the composer only ever exists <em>for</em> a second — general comments keep their home in the Comments tab.</li>
+        </ul>
+        <div class="flag"><b>Try it here:</b> double-click any arrow row in the frame above, type, press Comment. The mock keeps it in memory.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section>
+    <div class="sec-head"><span class="n">§3</span><h2>The phone, 390 px</h2><span class="sub">reading, then writing</span></div>
+    <div class="scroller">
+      <div class="frames">
+        <div class="frame phone app">
+          <div class="cap">Reading · the ×2 at 0:33 was tapped</div>
+          <div class="chart-section-head"><h5 style="font-size:1.25rem">Step chart</h5></div>
+          <div data-strip="phone" data-layout="page" data-avail="310" data-open="33.45" data-touch="1" data-thread="Open thread ›" class="narrow">
+            <div class="stepchart-toolbar">
+              <div class="stepchart-modes"><button type="button" aria-pressed="true">Arrows</button><button type="button" aria-pressed="false">Feet</button></div>
+              <div class="stepchart-av"><button type="button">−</button><span class="stepchart-av-value">AV 671</span><button type="button">+</button><button type="button" aria-pressed="true">Auto</button></div>
+            </div>
+            <div class="stepchart-chips" data-chips></div>
+            <div class="stepchart-viewer">
+              <div class="stepchart-scroll" data-scroll tabindex="0" aria-label="Step chart"></div>
+              <div class="stepchart-minicol"><canvas class="stepchart-minimap" data-minimap></canvas></div>
+            </div>
+            <div class="stepchart-legend" data-legend></div>
+          </div>
+        </div>
+
+        <div class="frame phone app">
+          <div class="cap">Writing · a row at 0:38 was double-tapped</div>
+          <div class="chart-section-head"><h5 style="font-size:1.25rem">Step chart</h5></div>
+          <div data-strip="phone2" data-layout="page" data-avail="310" data-open="38.0" data-touch="1" data-compose="38.0" data-typed="Count the bursts out loud — eight and rest, eight and rest. The rest is where people panic" data-thread="Open thread ›" class="narrow">
+            <div class="stepchart-toolbar">
+              <div class="stepchart-modes"><button type="button" aria-pressed="true">Arrows</button><button type="button" aria-pressed="false">Feet</button></div>
+              <div class="stepchart-av"><button type="button">−</button><span class="stepchart-av-value">AV 671</span><button type="button">+</button><button type="button" aria-pressed="true">Auto</button></div>
+            </div>
+            <div class="stepchart-chips" data-chips></div>
+            <div class="stepchart-viewer">
+              <div class="stepchart-scroll" data-scroll tabindex="0" aria-label="Step chart"></div>
+              <div class="stepchart-minicol"><canvas class="stepchart-minimap" data-minimap></canvas></div>
+            </div>
+            <div class="stepchart-legend" data-legend></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="cols split" style="--w: 1fr; margin-top: 22px">
+      <div class="note">
+        <h3>Reading on a phone</h3>
+        <ul>
+          <li><b>Narrow layout, one addition:</b> the pins already moved into the time gutter and the rail's width went back to the arrows, so the marks get a slim lane past the strip's right edge — and now that lane stops 10 px short of the box edge, where the overlay scrollbar draws. Nothing sits under the thumb.</li>
+          <li><b>The same panel</b>, at the strip's width. Two lines of a comment fit; tap the text to unfold it, ‹ › to walk, <em>Open thread ›</em> for the rest.</li>
+          <li>Tap a mark and the strip centres it, so the panel shows it — one rule for tap, ‹ › and scroll alike.</li>
+        </ul>
+      </div>
+      <div class="note">
+        <h3>Writing on a phone</h3>
+        <ul>
+          <li><b>Double-tap the spot.</b> The strip's scroll box takes <code>touch-action: manipulation</code>, which keeps pan and pinch and removes double-tap zoom, so a double-tap can mean "comment here" without the browser zooming first.</li>
+          <li>The panel turns into the composer; the keyboard rises under it and the picked second stays marked above. The chip's ✕ backs out.</li>
+          <li>No toolbar button: the gesture is the affordance, the empty panel names it, and the ＋ in the panel corner is the accessible fallback.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section>
+    <div class="sec-head"><span class="n">§4</span><h2>The chart details dialog, 572 px</h2><span class="sub">the Steps tab reads, the Comments tab is the thread</span></div>
+    <div class="scroller">
+      <div class="frames">
+        <div class="dlg app">
+          <div class="title-row"><div class="bub">S21</div><div class="song">Solve My Hurt</div><div class="icon-btn">🔖</div></div>
+          <div class="scoreline"><span class="score-v">981,240</span><span class="grade">SS</span><span class="muted tiny">#41 of 612 · top 7%</span></div>
+          <div class="tabs"><button class="tab">Comments</button><button class="tab">Leaderboard</button><button class="tab">Chart Stats</button><button class="tab on">Steps</button><button class="tab">Score History</button></div>
+          <div class="pad">
+            <div data-strip="dialog" data-layout="compact" data-open="29.0" data-thread="Open in Comments ›" class="stepchart-compact">
+              <div class="stepchart-toolbar">
+                <div class="stepchart-modes"><button type="button" aria-pressed="true">Arrows</button><button type="button" aria-pressed="false">Feet</button></div>
+                <div class="stepchart-av"><button type="button">−</button><span class="stepchart-av-value">AV 671</span><button type="button">+</button><button type="button" aria-pressed="true">Auto</button></div>
+              </div>
+              <div class="stepchart-chips" data-chips></div>
+              <div class="stepchart-viewer">
+                <div class="stepchart-scroll" data-scroll tabindex="0" aria-label="Step chart"></div>
+                <div class="stepchart-minicol"><canvas class="stepchart-minimap" data-minimap></canvas></div>
+              </div>
+              <div class="stepchart-legend" data-legend></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dlg app">
+          <div class="title-row"><div class="bub">S21</div><div class="song">Solve My Hurt</div><div class="icon-btn">🔖</div></div>
+          <div class="scoreline"><span class="score-v">981,240</span><span class="grade">SS</span><span class="muted tiny">#41 of 612 · top 7%</span></div>
+          <div class="tabs"><button class="tab on">Comments</button><button class="tab">Leaderboard</button><button class="tab">Chart Stats</button><button class="tab">Steps</button><button class="tab">Score History</button></div>
+          <div class="pad" style="padding-bottom:0">
+            <div class="cld-scopes"><button class="cld-chip cld-chip-on">Public</button><button class="cld-chip">Notes</button><button class="cld-chip">Team Murloc</button></div>
+            <div class="cmt-subbar"><span>Sort: <b>Top</b> <span class="cmt-car">▾</span></span><span class="sp"></span><span>Read in: <b>Automatic</b> <span class="cmt-car">▾</span></span></div>
+            <div class="cmt-compose">
+              <div class="av sm">E</div>
+              <div><textarea class="cmt-line" rows="1" placeholder="Add a comment…"></textarea></div>
+            </div>
+          </div>
+          <div class="clist" data-cards-static="c6,c2,g1,c3" data-focus="c2"></div>
+        </div>
+      </div>
+    </div>
+    <div class="cols split" style="--w: 1fr; margin-top: 22px">
+      <div class="note">
+        <h3>Steps tab</h3>
+        <ul>
+          <li>Compact strip, compact rail: marks take a third column past the death pins, inboard of the edge. The panel is the same one, 380 px up the box.</li>
+          <li><b>Open in Comments ›</b> switches tabs with the comment focused — the <code>FocusCommentId</code> path the moderation queue already uses. Arriving from the strip lands you in the thread with your place kept.</li>
+          <li>Double-click works here as everywhere; the post lands in the Comments tab with its chip.</li>
+          <li>The legend gains <b>Comments · 7</b> and <b>Your notes · 1</b> (open question 4).</li>
+        </ul>
+      </div>
+      <div class="note">
+        <h3>Comments tab</h3>
+        <ul>
+          <li>Every comment, as today. An anchored one wears its time chip under the name; tapping the chip switches to Steps, scrolls the strip to the second and selects the mark. Unanchored comments look exactly as they do now.</li>
+          <li>The composer here stays the plain line — a comment about the whole chart. To write about a second, you go to the strip and double-click it; that is the only door, and it is the obvious one.</li>
+          <li>A reply inherits its root's second — a thread is about the spot. The author can move the second when editing; it is an edit like any other (revision row, "(edited)").</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section>
+    <div class="sec-head"><span class="n">§5</span><h2>What changes, what doesn't</h2></div>
+    <div class="scroller">
+    <table class="spec">
+      <tr><th>Thing</th><th>Now</th><th>With a time</th></tr>
+      <tr><td>The comment row</td><td>chart, audience, text, votes, replies, revisions, deletion, translation</td><td><b>+ optional <code>AnchorAt</code></b> in chart seconds. Cross-mix like the comment itself (one ChartId, the steps do not change); a Phoenix 2 re-step drifts a time the way it already drifts the words.</td></tr>
+      <tr><td>Placing</td><td>—</td><td>double-click / double-tap; the client snaps to the nearest arrow row within ~0.12 s so comments on the same quad stack, else the exact second</td></tr>
+      <tr><td>Personal notes</td><td>same row, Audience = Private, never translated/moderated/voted</td><td>can carry a time; render gold; overlay every scope on the strip (Q2)</td></tr>
+      <tr><td>Replies</td><td>inherit the root's audience</td><td>inherit the root's second too — no time of their own</td></tr>
+      <tr><td>Editing</td><td>revision row, (edited)</td><td>the second is part of the edit; moving it is a revision</td></tr>
+      <tr><td>Translation · moderation · reports · purge · archive</td><td>as shipped</td><td>untouched — the row is the same row and a number is not text</td></tr>
+      <tr><td>The strip module</td><td>two fetches: payload (long cache), pins (private, 5 min)</td><td><b>+ one:</b> the marks for the scope in view (private, brief, like pins). Draws bubbles, hairlines, map dots; hosts the panel's follow logic; raises "double-clicked 0:38" to its host</td></tr>
+      <tr><td>The chart page</td><td>static SSR section, no comments anywhere on the page</td><td>the panel is a <b>small island</b> inside the static strip's frame (the record panel and leaderboard are the precedent): it owns the composer and the vote; <em>Open thread</em> opens the details dialog on Comments, focused (Q1)</td></tr>
+      <tr><td>The dialog</td><td>Comments tab + Steps tab, both lazy</td><td>Steps tab draws marks + the panel; Comments tab draws chips; the two hand off through the tab switch and <code>FocusCommentId</code></td></tr>
+      <tr><td>Stepfile repairs</td><td>the corpus is being corrected chart by chart</td><td>a time rides the song's clock, not the file's rows — a fixed hold count moves nothing; an offset fix moves every mark by the same amount, which is the right outcome</td></tr>
+      <tr><td>Cost to the reader who never comments</td><td>—</td><td>one small fetch per strip; marks are quiet at rest (ink, not color); the panel takes ~90 px of the strip's frame and the strip scrolls under it</td></tr>
+    </table>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section>
+    <div class="sec-head"><span class="n">§6</span><h2>Open questions</h2><span class="sub">also listed in the chat message — this is the durable copy</span></div>
+    <ol class="qs">
+      <li><div><b>Where "Open thread" goes on the page.</b> The page has no comments today. Mocked: it opens the chart details dialog on the Comments tab, focused — the <code>/WeeklyCharts</code> pattern, zero new surfaces. The alternative is a Comments section on the page. <em>Recommendation: the dialog now; a page section is its own slice.</em></div></li>
+      <li><div><b>Your notes overlay every scope</b> on the strip, gold — or Notes stays a scope you switch to, as in the dialog today. <em>Recommendation: overlay; your runs already behave this way on the rail.</em></div></li>
+      <li><div><b>Hosts.</b> Both hosts in one slice, or the dialog first (it has the thread already) and the page second? <em>Recommendation: both — the panel is one component and the module is one file.</em></div></li>
+      <li><div><b>Legend counts</b> ("Comments · 7", "Your notes · 1") in the Steps tab. The Comments tab was denied a count badge because it cost a query at nineteen call sites; here the count rides a fetch the tab already makes. Fine, or keep the tab silent?</div></li>
+      <li><div><b>Snap to the nearest arrow row</b> on double-click (within ~0.12 s), so two comments about the same quad share a bubble — or take the exact second and let near-misses sit as separate bubbles? <em>Recommendation: snap.</em></div></li>
+    </ol>
+    <p class="note" style="color: var(--note-soft); max-width: 78ch">Settled by the redlines: times only, no sections or ranges; one sticky panel on every host; double-click / double-tap places; marks on the right, inboard of the scrollbar. The span cards' rail fact went with the spans.</p>
+  </section>
+</div>
+
+<script>
+(function () {
+  var T = {
+    upper: '#FF4D5E', lower: '#3FA9FF', center: '#FFD23F',
+    life: '#E8385A', walk: '#E8A33D', you: '#FFD166',
+    ink: '#E9EFF7', inkMuted: '#93A3B8', primary: '#3FA9F5', accent: '#FFD24A',
+    bg: '#070B15', surface: '#161E2C', surfaceMuted: '#1E2A3D',
+    tierR: '#8E24AA', tierY: '#FDD835', tierG: '#00ACC1'
+  };
+
+  // ---------------- synthetic chart: Solve My Hurt S21 (the layout is the point) ----------------
+  function seeded(seed) { var a = seed >>> 0; return function () { a += 0x6D2B79F5; var t = Math.imul(a ^ (a >>> 15), 1 | a); t ^= t + Math.imul(t ^ (t >>> 7), 61 | t); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  function buildChart() {
+    var rnd = seeded(21);
+    var B = 60 / 165, E = B / 2, S = B / 4;
+    var rows = [], holds = [];
+    var bit = function (p) { return 1 << p; };
+    var add = function (t, m) { rows.push({ t: Math.round(t * 1000) / 1000, m: m }); };
+    for (var t = 1.0; t < 12.0; t += E) if (rnd() < .32) add(t, bit(Math.floor(rnd() * 5)));
+    var twist = [0, 1, 2, 3, 4, 3, 2, 1, 0, 2, 4, 2], i = 0;
+    for (t = 12.0; t < 21.5; t += E) { add(t, bit(twist[i % twist.length])); i++; }
+    var pairs = [[0, 4], [1, 3], [0, 3], [1, 4]]; i = 0;
+    for (t = 21.5; t < 29.0; t += B) { var pr = pairs[i % 4]; add(t, bit(pr[0]) | bit(pr[1])); if (rnd() < .7) add(t + E, bit([2, 1, 3][i % 3])); i++; }
+    var dp = [[1, 3], [0, 4], [2, 1], [3, 2]], c = 0;
+    for (t = 29.0; t < 41.0; t += 12 * S) { var d = dp[c % 4]; for (var k = 0; k < 8; k++) { var tt = t + k * S; if (tt >= 41) break; add(tt, bit(d[k % 2])); } c++; }
+    i = 0;
+    for (t = 41.0; t < 52.0; t += E) { if (i % 4 === 0) { var br = [[1, 2], [2, 3], [0, 2], [2, 4]][(i / 4) % 4]; add(t, bit(br[0]) | bit(br[1])); } else add(t, bit(Math.floor(rnd() * 5))); i++; }
+    var path = [0, 1, 2, 3, 4, 3, 2, 1]; i = 0;
+    for (t = 52.0; t < 64.0; t += S) { if (i % 20 < 16) add(t, bit(path[i % 8])); i++; }
+    holds.push({ p: 2, s: 64.5, e: 68.0 }, { p: 1, s: 66.0, e: 67.5 }, { p: 4, s: 68.5, e: 70.0 }, { p: 0, s: 70.2, e: 72.8 }, { p: 3, s: 72.9, e: 75.8 }, { p: 1, s: 73.6, e: 75.8 });
+    for (t = 64.0; t < 75.8; t += E) {
+      if (rnd() < .38) {
+        var p = [0, 3, 4, 1][Math.floor(rnd() * 4)];
+        var busy = holds.some(function (h) { return h.p === p && t >= h.s - 0.2 && t <= h.e + 0.2; });
+        if (!busy) add(t, bit(p));
+      }
+    }
+    add(75.8, bit(2));
+    [33.45, 37.1, 45.6, 49.2].forEach(function (q) {
+      for (var j = rows.length - 1; j >= 0; j--) if (Math.abs(rows[j].t - q) < 0.06) rows.splice(j, 1);
+      add(q, bit(0) | bit(1) | bit(3) | bit(4));
+    });
+    rows.sort(function (a, b) { return a.t - b.t; });
+    var segments = [
+      { s: 1.0, e: 12.0, label: null, pace: null, tier: null },
+      { s: 12.0, e: 21.5, label: 'Twists', pace: 'Fast', tier: 'y' },
+      { s: 21.5, e: 29.0, label: 'Jumps', pace: null, tier: 'y' },
+      { s: 29.0, e: 41.0, label: 'Drills', pace: 'Very Fast', tier: 'r', spike: true },
+      { s: 41.0, e: 52.0, label: 'Brackets', pace: null, tier: 'y' },
+      { s: 52.0, e: 64.0, label: 'Runs', pace: 'Fast', tier: 'y' },
+      { s: 64.0, e: 75.8, label: 'Holds', pace: 'Slow', tier: 'g' }
+    ];
+    return { rows: rows, holds: holds, segments: segments, panels: 5, firstNote: 1.0, lastNote: 75.8 };
+  }
+  var CHART = buildChart();
+
+  var PINS = [
+    { t: 33.6, n: 1, cause: 'life' }, { t: 39.2, n: 3, cause: 'life' }, { t: 47.0, n: 1, cause: 'walk' },
+    { t: 58.0, n: 2, cause: 'life' }, { t: 73.4, n: 14, cause: 'life' }, { t: 74.9, n: 2, cause: 'life' }
+  ];
+  var YOURS = [39.2];
+  var FINISHED = 4;
+
+  var COMMENTS = [
+    { id: 'c1', t: 12.0, who: 'BEEPS', ini: 'B', ago: '3 weeks ago', votes: 3, replies: [],
+      text: 'Warm-up twists, easy to underrate. Set your AV before the drills, not during — at 650 the 12ths stop looking like 8ths.' },
+    { id: 'c2', t: 29.0, who: 'ERRLENA', ini: 'E', ago: '2 weeks ago', votes: 14,
+      replies: [{ who: 'KAMI', ini: 'K', ago: '12 days ago', text: 'Right-foot start fixed it for me too.' }, { who: 'SOOJIN', ini: 'S', ago: '9 days ago', text: 'Footwork clip: ', link: 'https://youtu.be/8dK2…' }],
+      text: 'The drills from here are 16ths at 165, not the 24ths they feel like. Start every burst on the right foot and you never cross over.' },
+    { id: 'c3', t: 33.45, who: 'JUNO', ini: 'J', ago: '9 days ago', votes: 6, replies: [],
+      text: 'This quad is a bracket, not a jump — heels on the corners, toes on the diagonals. Jumping it is what breaks the drill after it.' },
+    { id: 'c7', t: 33.45, who: 'SOOJIN', ini: 'S', ago: '6 days ago', votes: 2, replies: [],
+      text: 'Same quad: tall players bracket it straight on, shorter players heel-toe it. Either way, never jump it.' },
+    { id: 'c4', t: 52.0, who: 'ERRLENA', ini: 'E', ago: '2 weeks ago', votes: 9,
+      replies: [{ who: 'BEEPS', ini: 'B', ago: '8 days ago', text: 'The spin at 0:58 is exactly where I always broke. Thank you.' }],
+      text: 'Left foot leads every run from here. Enter on the right and you spin at 0:58.' },
+    { id: 'c5', t: 66.2, note: true, ago: 'yesterday', votes: 0, replies: [],
+      text: 'Breathe before the center hold. I let go early every single time.' },
+    { id: 'c6', t: 72.9, who: 'KAMI', ini: 'K', ago: '5 days ago', votes: 21, replies: [],
+      text: 'The ending holds tick fast from here. Do not release early — the last 5% of the score lives in these.' },
+    { id: 'g1', general: true, who: 'MINJI', ini: 'M', ago: '4 days ago', votes: 5, replies: [],
+      text: 'Best S21 in the folder for learning drills. Nothing in it is unfair, it just asks you to commit.' }
+  ];
+  var byId = {};
+  COMMENTS.forEach(function (c) { byId[c.id] = c; });
+
+  function fmt(t) { var m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + (s < 10 ? '0' : '') + s; }
+  function segName(s) { if (!s || !s.label) return null; return s.label + (s.pace ? ' · ' + s.pace : ''); }
+  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  function motion() { return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'; }
+  function assistVelocity(level) { if (level <= 16) return 600; if (level <= 23) return 600 + (level - 16) * (100 / 7); return 700; }
+  function appFont() { return getComputedStyle(document.body).getPropertyValue('--app-sans'); }
+
+  // ---------------- the arrow sprite, ported from step-chart.js ----------------
+  var CORNER_SIGNS = { 0: [-1, 1], 1: [-1, -1], 3: [1, -1], 4: [1, 1] };
+  function drawArrow(ctx, x, y, size, panel, color) {
+    var lane = panel % 5;
+    ctx.save(); ctx.translate(x, y);
+    ctx.fillStyle = color; ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1.3;
+    var h = size * 0.5 - 0.75;
+    if (lane === 2) {
+      var k = size * 0.29;
+      ctx.beginPath(); ctx.moveTo(-h + k, -h); ctx.lineTo(h - k, -h); ctx.lineTo(h, -h + k); ctx.lineTo(h, h - k); ctx.lineTo(h - k, h); ctx.lineTo(-h + k, h); ctx.lineTo(-h, h - k); ctx.lineTo(-h, -h + k); ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else {
+      ctx.scale(CORNER_SIGNS[lane][0], CORNER_SIGNS[lane][1]);
+      var u = h * 2;
+      var P = function (a, b) { return [h - a * u, h - b * u]; };
+      var poly = function (pts) { ctx.beginPath(); pts.forEach(function (p, i) { i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }); ctx.closePath(); ctx.fill(); ctx.stroke(); };
+      var l = 0.78, c = 0.20;
+      poly([P(0, 0), P(l, 0), P(l - c, c), P(c, c), P(c, l - c), P(0, l)]);
+      var rib = function (r0, r1, L) { poly([P(r0, r0), P(L - r0, r0), P(L - r1, r1), P(r1, r1), P(r1, L - r1), P(r0, L - r0)]); };
+      rib(0.28, 0.42, 0.94); rib(0.50, 0.64, 1.30);
+    }
+    ctx.restore();
+  }
+  function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); }
+  function noteColor(panel) { var lane = panel % 5; return lane === 2 ? T.center : (lane === 1 || lane === 3 ? T.upper : T.lower); }
+
+  // the comment bubble: a speech bubble, ink at rest, primary when selected, gold when yours
+  function drawBubble(ctx, x, y, opts) {
+    var w = opts.big ? 22 : 18, h = opts.big ? 16 : 14, r = 5;
+    ctx.save();
+    ctx.lineWidth = 1.5;
+    ctx.fillStyle = opts.fill; ctx.strokeStyle = opts.stroke;
+    roundRect(ctx, x - w / 2, y - h / 2, w, h, r); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - w / 2 + 4, y + h / 2 - 1); ctx.lineTo(x - w / 2 + 2, y + h / 2 + 5); ctx.lineTo(x - w / 2 + 9, y + h / 2 - 1); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x - w / 2 + 4, y + h / 2 - 0.2); ctx.lineTo(x - w / 2 + 2, y + h / 2 + 5); ctx.lineTo(x - w / 2 + 9, y + h / 2 - 0.2); ctx.stroke();
+    if (opts.label) {
+      ctx.fillStyle = opts.text; ctx.font = '700 9.5px ' + appFont(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(opts.label, x, y + 0.5);
+    } else {
+      ctx.strokeStyle = opts.text; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(x - 5, y - 2); ctx.lineTo(x + 5, y - 2); ctx.moveTo(x - 5, y + 2); ctx.lineTo(x + 2, y + 2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // ---------------- one strip host ----------------
+  function mount(root) {
+    var layout = root.getAttribute('data-layout');
+    var compact = layout === 'compact';
+    var touch = root.getAttribute('data-touch') === '1';
+    var box = root.querySelector('[data-scroll]');
+    var inner = document.createElement('div');
+    box.appendChild(inner);
+    var cursor = document.createElement('div'); cursor.className = 'sc-cursor'; cursor.innerHTML = '<span></span>';
+    inner.appendChild(cursor);
+
+    var view = {
+      root: root, box: box, inner: inner, compact: compact, touch: touch, level: 21,
+      rows: CHART.rows, holds: CHART.holds, segments: CHART.segments, panels: CHART.panels,
+      lastNote: CHART.lastNote, t0: Math.max(0, CHART.firstNote - 1), duration: CHART.lastNote + 2,
+      comments: COMMENTS.filter(function (c) { return !c.general; }).map(function (c) { return c; }),
+      cur: null, hover: null, pick: null, composing: false, pinned: false,
+      threadLabel: root.getAttribute('data-thread') || 'Open thread ›',
+      availWidth: parseInt(root.getAttribute('data-avail') || '0', 10) || null,
+      panelH: 96
+    };
+    view.span = view.duration - view.t0;
+    root.stripView = view;
+
+    function applyScale() {
+      var av = view.userAv || assistVelocity(view.level);
+      view.av = av;
+      var base = compact ? { pps: av * 0.47, colW: 30, gutter: 44, railW: 78 } : { pps: av * 0.85, colW: view.panels === 10 ? 40 : 46, gutter: 52, railW: 96 };
+      var avail = view.availWidth || Infinity;
+      var full = base.gutter + base.colW * view.panels + 14 + base.railW;
+      view.narrow = avail < full;
+      var gutter = view.narrow ? 26 : base.gutter, railW = view.narrow ? 0 : base.railW, pad = view.narrow ? 6 : 14;
+      // NEW: on narrow layouts the marks get a slim lane past the strip's edge — 18px for the
+      // bubble plus 10px of nothing, so the phone's overlay scrollbar never draws over a mark
+      var markLane = view.narrow ? 28 : 0;
+      var natural = gutter + base.colW * view.panels + pad + railW + markLane;
+      var fit = Math.min(1, avail / natural);
+      view.scale = { pps: base.pps * fit, colW: base.colW * fit, gutter: gutter * fit, railW: railW * fit, gap: pad * fit, arrow: Math.max(8, base.colW * fit - 2), font: fit < 1 ? Math.max(7, Math.round(10 * fit)) : 10, markLane: markLane * fit };
+      view.stripW = view.scale.colW * view.panels;
+      view.railX = view.scale.gutter + view.stripW + view.scale.gap;
+      view.width = Math.floor(view.railX + view.scale.railW + view.scale.markLane);
+      view.height = Math.ceil(view.span * view.scale.pps) + 24;
+      view.yOf = function (t) { return 12 + (t - view.t0) * view.scale.pps; };
+      view.tOf = function (y) { return view.t0 + (y - 12) / view.scale.pps; };
+      inner.style.width = view.width + 'px';
+      // the panel covers the bottom of the box, so the strip gets that much extra runway
+      inner.style.height = (view.height + view.panelH) + 'px';
+    }
+    // where a comment mark sits: a third column past the death pins on wide layouts, inboard
+    // of the edge; the slim lane on narrow ones
+    view.commentX = function () {
+      if (view.narrow) return view.railX + 9;
+      return view.railX + (view.scale.railW >= 90 ? 76 : 62);
+    };
+    view.pinX = function (pin) {
+      if (view.narrow) return Math.max(9, view.scale.gutter * 0.72);
+      return view.railX + (view.scale.railW >= 90 ? 20 : 16);
+    };
+
+    // ---- marks: one group per second, in chart order ----
+    function regroup() {
+      view.ordered = view.comments.slice().sort(function (a, b) { return a.t - b.t; });
+      var groups = {};
+      view.ordered.forEach(function (c) {
+        var key = c.t.toFixed(3) + (c.note ? ':n' : '');
+        (groups[key] = groups[key] || { t: c.t, note: !!c.note, items: [] }).items.push(c);
+      });
+      view.groups = Object.keys(groups).map(function (k) { return groups[k]; }).sort(function (a, b) { return a.t - b.t; });
+    }
+    regroup();
+    function current() { return view.cur == null ? null : view.ordered[view.cur]; }
+
+    // ---- tiles ----
+    var tiles = [];
+    function drawStrip() {
+      inner.querySelectorAll('.tile').forEach(function (n) { n.remove(); });
+      if (view.tileObserver) view.tileObserver.disconnect();
+      tiles = [];
+      var TILE = 3000, dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      var byEl = new Map();
+      for (var k = 0; k * TILE < view.height; k++) {
+        var h = Math.min(TILE, view.height - k * TILE);
+        var ph = document.createElement('div'); ph.className = 'tile';
+        ph.style.cssText = 'position:absolute;left:0;top:' + (k * TILE) + 'px;height:' + h + 'px;width:' + view.width + 'px';
+        inner.appendChild(ph);
+        var tile = { top: k * TILE, h: h, drawn: false, el: ph };
+        tiles.push(tile); byEl.set(ph, tile);
+      }
+      function paint(tile) {
+        if (tile.drawn) return; tile.drawn = true;
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.round(view.width * dpr); canvas.height = Math.round(tile.h * dpr);
+        canvas.style.width = view.width + 'px'; canvas.style.height = tile.h + 'px';
+        tile.el.appendChild(canvas);
+        var ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr); ctx.translate(0, -tile.top);
+        drawTile(ctx, tile.top, tile.top + tile.h);
+        tile.canvas = canvas;
+      }
+      function free(tile) { if (!tile.drawn) return; tile.drawn = false; tile.el.innerHTML = ''; tile.canvas = null; }
+      view.tileObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) { var t = byEl.get(e.target); if (!t) return; if (e.isIntersecting) paint(t); else free(t); });
+      }, { root: box, rootMargin: '1500px 0px' });
+      tiles.forEach(function (t) { view.tileObserver.observe(t.el); });
+      view.repaint = function () {
+        tiles.forEach(function (tile) {
+          if (!tile.drawn || !tile.canvas) return;
+          var ctx = tile.canvas.getContext('2d');
+          ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, tile.canvas.width, tile.canvas.height);
+          ctx.scale(dpr, dpr); ctx.translate(0, -tile.top);
+          drawTile(ctx, tile.top, tile.top + tile.h);
+        });
+      };
+    }
+
+    function drawTile(ctx, y0, y1) {
+      var s = view.scale;
+      var tMin = view.t0 + (y0 - 60) / s.pps, tMax = view.t0 + (y1 + 60) / s.pps;
+      ctx.fillStyle = 'rgba(255,255,255,.03)'; ctx.fillRect(s.gutter, y0, view.stripW, y1 - y0);
+
+      ctx.lineWidth = 1;
+      [0, view.panels].forEach(function (c) { ctx.strokeStyle = 'rgba(255,255,255,.10)'; ctx.beginPath(); ctx.moveTo(s.gutter + c * s.colW + 0.5, y0); ctx.lineTo(s.gutter + c * s.colW + 0.5, y1); ctx.stroke(); });
+
+      ctx.font = s.font + 'px monospace'; ctx.textBaseline = 'middle';
+      for (var t = Math.ceil(view.t0 / 5) * 5; t <= view.duration; t += 5) {
+        var ry = view.yOf(t); if (ry < y0 - 30 || ry > y1 + 30) continue;
+        ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.beginPath(); ctx.moveTo(s.gutter - 4, ry + 0.5); ctx.lineTo(view.width - 4, ry + 0.5); ctx.stroke();
+        ctx.fillStyle = T.inkMuted;
+        if (view.narrow) { ctx.save(); ctx.translate(s.gutter * 0.3, ry); ctx.rotate(-Math.PI / 2); ctx.textAlign = 'center'; ctx.fillText(fmt(t), 0, 0); ctx.restore(); }
+        else { ctx.textAlign = 'right'; ctx.fillText(fmt(t), s.gutter - 8, ry); }
+      }
+
+      view.segments.forEach(function (seg) {
+        var ry = view.yOf(seg.s); if (ry < y0 - 30 || ry > y1 + 30 || seg.s <= 0) return;
+        ctx.strokeStyle = T.primary; ctx.globalAlpha = 0.35; ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.moveTo(s.gutter, ry + 0.5); ctx.lineTo(s.gutter + view.stripW, ry + 0.5); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+      });
+
+      // the selected comment's second, and the second being written about, cross the strip
+      var sel = view.composing ? null : current();
+      if (sel) { var sy = view.yOf(sel.t); ctx.fillStyle = sel.note ? 'rgba(255,209,102,.5)' : 'rgba(63,169,245,.55)'; ctx.fillRect(s.gutter, sy - 0.5, view.stripW, 1); }
+      if (view.composing && view.pick != null) { var py = view.yOf(view.pick); ctx.fillStyle = T.primary; ctx.fillRect(s.gutter, py - 0.5, view.stripW, 1.5); }
+
+      view.holds.forEach(function (hold) {
+        if (hold.e < tMin || hold.s > tMax) return;
+        var x = s.gutter + hold.p * s.colW + s.colW / 2, hy0 = view.yOf(hold.s), hy1 = view.yOf(hold.e), color = noteColor(hold.p);
+        ctx.fillStyle = color; ctx.globalAlpha = 0.26; var bw = s.arrow * 0.55; roundRect(ctx, x - bw / 2, hy0, bw, Math.max(hy1 - hy0, 1), bw / 2); ctx.fill(); ctx.globalAlpha = 1;
+        ctx.beginPath(); ctx.arc(x, hy1, s.arrow * 0.2, 0, Math.PI * 2); ctx.fill();
+        drawArrow(ctx, x, hy0, s.arrow, hold.p, color);
+      });
+      view.rows.forEach(function (row) {
+        if (row.t < tMin || row.t > tMax) return;
+        for (var p = 0; p < view.panels; p++) if (row.m & (1 << p)) drawArrow(ctx, s.gutter + p * s.colW + s.colW / 2, view.yOf(row.t), s.arrow, p, noteColor(p));
+      });
+
+      drawRail(ctx, y0, y1);
+      drawMarks(ctx, y0, y1);
+    }
+
+    function drawRail(ctx, y0, y1) {
+      if (!view.narrow) { ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(view.railX + 0.5, y0); ctx.lineTo(view.railX + 0.5, y1); ctx.stroke(); }
+      var pins = PINS.map(function (p) { return { t: p.t, n: p.n, color: p.cause === 'walk' ? T.walk : T.life, dy: 0 }; });
+      pins.push({ t: view.lastNote, dy: 16, n: FINISHED, color: T.inkMuted });
+      pins.forEach(function (pin) {
+        var y = view.yOf(pin.t) + pin.dy; if (y < y0 - 24 || y > y1 + 24) return;
+        var big = pin.n > 1, r = big ? 9.5 : 5, px = view.pinX(pin);
+        if (!view.narrow) {
+          ctx.strokeStyle = pin.color; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(view.railX, y + 0.5); ctx.lineTo(px - r, y + 0.5); ctx.stroke();
+          ctx.fillStyle = pin.color; ctx.beginPath(); ctx.arc(view.railX, y, 2.6, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.fillStyle = pin.color; ctx.beginPath(); ctx.arc(px, y, r, 0, Math.PI * 2); ctx.fill();
+        if (big) { ctx.fillStyle = 'rgba(10,10,14,.92)'; ctx.font = '700 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('×' + pin.n, px, y + 0.5); }
+      });
+      ctx.strokeStyle = T.you; ctx.lineWidth = 2;
+      var yourX = view.narrow ? Math.max(9, view.scale.gutter * 0.72) : view.railX;
+      YOURS.forEach(function (t) { var y = view.yOf(t); if (y < y0 - 12 || y > y1 + 12) return; ctx.save(); ctx.translate(yourX, y); ctx.rotate(Math.PI / 4); ctx.strokeRect(-4.5, -4.5, 9, 9); ctx.restore(); });
+    }
+
+    function drawMarks(ctx, y0, y1) {
+      var cx = view.commentX();
+      var edge = view.scale.gutter + view.stripW;
+      var sel = view.composing ? null : current();
+      view.groups.forEach(function (g) {
+        var y = view.yOf(g.t);
+        if (y < y0 - 30 || y > y1 + 30) return;
+        var isSel = !!sel && g.items.indexOf(sel) >= 0;
+        var hov = g.items.some(function (c) { return c.id === view.hover; });
+        var stroke = g.note ? T.you : (isSel ? T.primary : (hov ? T.ink : 'rgba(233,239,247,.75)'));
+        var fill = g.note ? 'rgba(255,209,102,.10)' : (isSel ? T.primary : T.surfaceMuted);
+        var text = g.note ? T.you : (isSel ? T.bg : T.ink);
+        // the tick from the strip's edge to the bubble — the mark points at its arrows
+        ctx.fillStyle = g.note ? 'rgba(255,209,102,.55)' : (isSel ? T.primary : 'rgba(233,239,247,.35)');
+        ctx.fillRect(edge, y - 0.5, Math.max(0, cx - 9 - edge), 1);
+        drawBubble(ctx, cx, y, { big: g.items.length > 1, fill: fill, stroke: stroke, text: text, label: g.items.length > 1 ? '×' + g.items.length : null });
+      });
+      if (view.composing && view.pick != null) {
+        var py = view.yOf(view.pick);
+        if (py >= y0 - 30 && py <= y1 + 30) {
+          ctx.fillStyle = T.primary; ctx.fillRect(edge, py - 0.5, Math.max(0, cx - 9 - edge), 1.5);
+          drawBubble(ctx, cx, py, { big: false, fill: 'rgba(63,169,245,.15)', stroke: T.primary, text: T.primary, label: '+' });
+          if (!view.narrow) { ctx.fillStyle = T.primary; ctx.font = '600 ' + view.scale.font + 'px ' + appFont(); ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillText(fmt(view.pick), view.scale.gutter - 8, py - 8); }
+        }
+      }
+    }
+
+    // ---- hit testing ----
+    function hitAt(x, y) {
+      var cx = view.commentX();
+      for (var i = view.groups.length - 1; i >= 0; i--) {
+        var g = view.groups[i], gy = view.yOf(g.t), r = (g.items.length > 1 ? 13 : 11);
+        if (Math.abs(x - cx) <= r && Math.abs(y - gy) <= r) return g;
+      }
+      return null;
+    }
+    function boxPoint(e) { var rect = box.getBoundingClientRect(); return { x: e.clientX - rect.left + box.scrollLeft, y: e.clientY - rect.top + box.scrollTop }; }
+    // double-click placement snaps to the nearest arrow row within ~0.12 s (a beat's reach at
+    // any tempo the site sees), so two people who mean the same quad stack on the same second
+    function snap(t) {
+      var best = null;
+      view.rows.forEach(function (r) { var d = Math.abs(r.t - t); if (d <= 0.12 && (best == null || d < Math.abs(best - t))) best = r.t; });
+      return best != null ? best : Math.round(t * 20) / 20;
+    }
+
+    // ---- minimap ----
+    function initMinimap() {
+      var canvas = root.querySelector('[data-minimap]'); if (!canvas) return;
+      var W = canvas.clientWidth || 92, H = canvas.clientHeight || 600, dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = W * dpr; canvas.height = H * dpr;
+      var ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+      var yOf = function (t) { return ((t - view.t0) / view.span) * (H - 8) + 4; };
+      var seconds = Math.max(1, Math.ceil(view.span)), density = new Array(seconds).fill(0), tierOf = new Array(seconds).fill(null);
+      view.rows.forEach(function (r) { density[Math.max(0, Math.min(seconds - 1, Math.floor(r.t - view.t0)))]++; });
+      var maxD = Math.max.apply(null, density.concat([1]));
+      view.segments.forEach(function (seg) {
+        var color = seg.tier === 'r' ? T.tierR : seg.tier === 'y' ? T.tierY : seg.tier === 'g' ? T.tierG : null; if (!color) return;
+        for (var sec = Math.max(0, Math.floor(seg.s - view.t0)); sec < Math.min(seconds, Math.ceil(seg.e - view.t0)); sec++) tierOf[sec] = color;
+      });
+      view.repaintMinimap = function () {
+        ctx.clearRect(0, 0, W, H);
+        var barMax = Math.max(12, W - 16), left = W >= 60 ? 7 : 5;
+        for (var sec = 0; sec < seconds; sec++) { var w = (density[sec] / maxD) * (barMax - left + 2); if (w <= 0) continue; ctx.fillStyle = tierOf[sec] || 'rgba(255,255,255,.16)'; ctx.globalAlpha = tierOf[sec] ? .9 : 1; ctx.fillRect(left, yOf(view.t0 + sec), w, Math.max(1, (H - 8) / view.span)); }
+        ctx.globalAlpha = 1;
+        PINS.forEach(function (p) { ctx.fillStyle = p.cause === 'walk' ? T.walk : T.life; ctx.fillRect(W - 12, yOf(p.t) - 1, 10, Math.max(2, Math.min(1 + p.n, 5))); });
+        ctx.fillStyle = T.inkMuted; ctx.fillRect(W - 12, yOf(view.lastNote) + 1, 10, 2);
+        ctx.fillStyle = T.you; YOURS.forEach(function (t) { ctx.fillRect(W - 5, yOf(t), 4, 2); });
+        // comments: dots on the LEFT edge; the current one in primary, yours gold
+        var sel = view.composing ? null : current();
+        view.groups.forEach(function (g) {
+          var isSel = !!sel && g.items.indexOf(sel) >= 0;
+          ctx.fillStyle = g.note ? T.you : (isSel ? T.primary : 'rgba(233,239,247,.75)');
+          ctx.fillRect(0, yOf(g.t) - 1.5, isSel ? 5 : 4, 3);
+        });
+        if (view.composing && view.pick != null) { ctx.fillStyle = T.primary; ctx.fillRect(0, yOf(view.pick) - 1.5, 5, 3); }
+        ctx.strokeStyle = T.primary; ctx.lineWidth = 1.5;
+        var top = (box.scrollTop / view.height) * (H - 8) + 4, vh = (box.clientHeight / view.height) * (H - 8);
+        ctx.strokeRect(1.5, top, W - 3, vh);
+      };
+      var pending = null;
+      box.addEventListener('scroll', function () { if (pending) return; pending = requestAnimationFrame(function () { pending = null; view.repaintMinimap(); }); });
+      canvas.addEventListener('click', function (e) {
+        var rect = canvas.getBoundingClientRect(); var fraction = (e.clientY - rect.top - 4) / (rect.height - 8);
+        view.pinned = false;
+        box.scrollTo({ top: fraction * view.height - box.clientHeight / 2, behavior: motion() });
+      });
+      view.repaintMinimap();
+    }
+
+    // ---- chips ----
+    function buildChips() {
+      var host = root.querySelector('[data-chips]'); if (!host) return; host.innerHTML = '';
+      view.chipSpans = [];
+      view.segments.forEach(function (seg) {
+        if (!seg.label || seg.tier === 'g' || !seg.tier) return;
+        var chip = document.createElement('button'); chip.type = 'button';
+        chip.className = 'stepchart-chip stepchart-chip-' + (seg.spike ? 'spike' : 'struct');
+        var label = (seg.spike ? 'Difficulty Spike: ' : '') + segName(seg);
+        chip.innerHTML = '<i></i>' + esc(label) + ' <small>' + fmt(seg.s) + '</small>';
+        chip.addEventListener('click', function () { view.pinned = false; box.scrollTo({ top: Math.max(0, view.yOf(seg.s) - 110), behavior: motion() }); });
+        host.appendChild(chip);
+        view.chipSpans.push({ el: chip, s: seg.s, e: seg.e });
+      });
+    }
+    function viewportTimes() { var h = box.clientHeight - view.panelH; return { top: view.tOf(box.scrollTop), bottom: view.tOf(box.scrollTop + h), center: view.tOf(box.scrollTop + h / 2) }; }
+    function highlight() {
+      var v = viewportTimes();
+      (view.chipSpans || []).forEach(function (sp) { sp.el.classList.toggle('stepchart-chip-active', sp.s < v.bottom && sp.e > v.top); });
+    }
+
+    // ---- legend + scope menu ----
+    function renderLegend() {
+      var host = root.querySelector('[data-legend]'); if (!host) return; host.innerHTML = '';
+      var entry = function (color, label, cls) { var s = document.createElement('span'); s.className = 'stepchart-legend-entry'; var i = document.createElement('i'); if (cls) i.className = cls; else i.style.background = color; s.appendChild(i); s.appendChild(document.createTextNode(label)); host.appendChild(s); };
+      entry(T.upper, 'Upper'); entry(T.lower, 'Lower'); entry(T.center, 'Center');
+      entry(T.life, 'Life Bar Break · 22'); entry(T.walk, 'Walk off · 1'); entry(T.you, 'Your runs · 1');
+      entry(null, 'Comments · ' + view.comments.filter(function (c) { return !c.note; }).length, 'bubble'); entry(null, 'Your notes · 1', 'bubble you');
+      var scope = document.createElement('span'); scope.className = 'sc-scope'; scope.innerHTML = 'Comments: <b>Public</b> <span class="cmt-car">▾</span>';
+      host.appendChild(scope);
+    }
+
+    // ---- THE PANEL ----
+    var viewer = root.querySelector('.stepchart-viewer');
+    var panel = document.createElement('div'); panel.className = 'sc-panel';
+    viewer.appendChild(panel);
+    function sizePanel() {
+      if (box.clientWidth === 0) return; // hidden host — measure again when it shows
+      var w = box.clientWidth + 2; // the box's content plus its borders; the scrollbar lane stays clear
+      panel.style.width = w + 'px';
+      panel.classList.toggle('tight', w < 330);
+      view.panelH = panel.offsetHeight || 96;
+    }
+    if (window.ResizeObserver) new ResizeObserver(function () { sizePanel(); }).observe(box);
+    function gestureWord() { return view.touch ? 'Double-tap' : 'Double-click'; }
+    var addIcon = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/><path d="M8 5.5v3M6.5 7h3"/></svg>';
+
+    function renderPanel() {
+      if (view.composing) {
+        panel.innerHTML =
+          '<div class="sc-panel-head"><span class="anchor-chip pick"><i></i>' + fmt(view.pick) + '</span><button class="anchor-x" data-cancel title="Drop the spot">✕</button>' +
+          '<span class="sp"></span><span class="cmt-posting-as">Posting to <b>Public</b> as ERRLENA</span></div>' +
+          '<textarea class="cmt-line" rows="2" placeholder="Comment on ' + fmt(view.pick) + '…" data-line></textarea>' +
+          '<div class="cmt-compose-foot"><span class="sp"></span><button class="mbtn" data-cancel>Cancel</button><button class="mbtn filled" data-post disabled>Comment</button></div>';
+        var line = panel.querySelector('[data-line]'), post = panel.querySelector('[data-post]');
+        if (view.typed) { line.value = view.typed; post.disabled = false; view.typed = null; }
+        line.addEventListener('input', function () { post.disabled = !line.value.trim(); });
+        panel.querySelectorAll('[data-cancel]').forEach(function (b) { b.addEventListener('click', cancelCompose); });
+        post.addEventListener('click', function () {
+          var text = line.value.trim(); if (!text) return;
+          var c = { id: 'n' + Date.now(), t: view.pick, who: 'ERRLENA', ini: 'E', ago: 'just now', votes: 0, replies: [], text: text };
+          view.comments.push(c); regroup();
+          view.composing = false; view.pick = null;
+          view.cur = view.ordered.indexOf(c); view.pinned = true;
+          renderLegend(); view.repaint(); view.repaintMinimap(); renderPanel();
+        });
+        sizePanel();
+        if (!view.touch) line.focus({ preventScroll: true });
+        return;
+      }
+      var c = current();
+      if (!c) {
+        panel.innerHTML = '<div class="empty">' + addIcon + '<span>No comments on this chart yet — ' + gestureWord().toLowerCase() + ' a spot on the chart to add one.</span></div>';
+        sizePanel(); return;
+      }
+      var stack = view.ordered.filter(function (x) { return x.t === c.t && !!x.note === !!c.note; });
+      var k = stack.indexOf(c) + 1;
+      var who = c.note ? '<span class="cbadge you">Only you</span>' : '<span class="cname">' + esc(c.who) + '</span>';
+      var ft = c.note ? '<span>Only you</span>' : '<button class="act">▲ ' + c.votes + '</button><span>·</span><span>' + (c.replies.length === 0 ? 'No replies' : c.replies.length + (c.replies.length === 1 ? ' reply' : ' replies')) + '</span>';
+      panel.innerHTML =
+        '<div class="sc-panel-head">' +
+        '<button class="sc-step" data-prev title="Previous comment" ' + (view.cur === 0 ? 'disabled' : '') + '>‹</button>' +
+        '<button class="sc-step" data-next title="Next comment" ' + (view.cur === view.ordered.length - 1 ? 'disabled' : '') + '>›</button>' +
+        '<span class="anchor-chip ' + (c.note ? 'you' : '') + '"><i></i>' + fmt(c.t) + '</span>' +
+        (stack.length > 1 ? '<span class="pager">' + k + '/' + stack.length + '</span>' : '') +
+        who + '<span class="cmeta">' + esc(c.ago) + '</span>' +
+        '<button class="sc-step add" data-add title="' + gestureWord() + ' a spot on the chart to comment there">' + addIcon.replace('viewBox', 'style="width:13px;height:13px" viewBox') + '</button>' +
+        '</div>' +
+        '<div class="ex" data-ex>' + esc(c.text) + '</div>' +
+        '<div class="pf">' + ft + '<a href="#" data-thread>' + esc(view.threadLabel) + '</a></div>';
+      panel.querySelector('[data-prev]').addEventListener('click', function () { step(-1); });
+      panel.querySelector('[data-next]').addEventListener('click', function () { step(1); });
+      panel.querySelector('[data-ex]').addEventListener('click', function (e) { e.currentTarget.classList.toggle('full'); sizePanel(); });
+      panel.querySelector('[data-add]').addEventListener('click', function () { startCompose(snap(viewportTimes().center)); });
+      panel.querySelector('[data-thread]').addEventListener('click', function (e) { e.preventDefault(); });
+      sizePanel();
+    }
+    function step(d) {
+      var next = Math.max(0, Math.min(view.ordered.length - 1, (view.cur == null ? 0 : view.cur) + d));
+      view.cur = next; view.pinned = true;
+      var c = current();
+      box.scrollTo({ top: Math.max(0, view.yOf(c.t) - (box.clientHeight - view.panelH) / 2), behavior: motion() });
+      view.repaint(); view.repaintMinimap(); renderPanel();
+    }
+    function follow() {
+      if (view.composing || view.pinned || view.ordered.length === 0) return;
+      var center = viewportTimes().center, best = 0, bestD = Infinity;
+      view.ordered.forEach(function (c, i) { var d = Math.abs(c.t - center); if (d < bestD) { bestD = d; best = i; } });
+      if (best !== view.cur) { view.cur = best; view.repaint(); view.repaintMinimap(); renderPanel(); }
+    }
+    function startCompose(t) {
+      view.composing = true; view.pick = t;
+      view.repaint(); view.repaintMinimap(); renderPanel();
+    }
+    function cancelCompose() {
+      view.composing = false; view.pick = null; view.typed = null;
+      view.repaint(); view.repaintMinimap(); renderPanel();
+    }
+    view.selectGroup = function (g) {
+      view.cur = view.ordered.indexOf(g.items[0]); view.pinned = true;
+      box.scrollTo({ top: Math.max(0, view.yOf(g.t) - (box.clientHeight - view.panelH) / 2), behavior: motion() });
+      view.repaint(); view.repaintMinimap(); renderPanel();
+    };
+
+    // ---- tooltip (desktop) ----
+    var tip = null;
+    function ensureTip() { if (tip) return tip; tip = document.createElement('div'); tip.className = 'stepchart-tip'; tip.hidden = true; document.body.appendChild(tip); return tip; }
+    function tipHtml(g) {
+      var c = g.items[0];
+      var head = c.note ? '<span class="who">Your note<small>' + esc(c.ago) + '</small></span>' : '<span class="who">' + esc(c.who) + '<small>' + esc(c.ago) + '</small></span>';
+      var ft = c.note ? 'Only you' : ('▲ ' + c.votes + (c.replies.length ? ' · ' + c.replies.length + (c.replies.length === 1 ? ' reply' : ' replies') : ''));
+      if (g.items.length > 1) ft += ' · +' + (g.items.length - 1) + ' more';
+      return '<div class="stepchart-tip-time">' + fmt(c.t) + '</div>' + head + '<div class="ex">' + esc(c.text) + '</div><div class="ft">' + esc(ft) + '</div>';
+    }
+    box.addEventListener('mousemove', function (e) {
+      if (view.touch) return;
+      var p = boxPoint(e), g = hitAt(p.x, p.y);
+      var t = ensureTip();
+      var hovId = g ? g.items[0].id : null;
+      if (hovId !== view.hover) { view.hover = hovId; view.repaint(); }
+      var insideStrip = p.x >= view.scale.gutter && p.x <= view.scale.gutter + view.stripW && p.y < box.scrollTop + box.clientHeight - view.panelH;
+      if (!g && insideStrip && !view.composing) { cursor.style.display = 'block'; cursor.style.top = p.y + 'px'; cursor.firstChild.textContent = fmt(snap(view.tOf(p.y))); cursor.firstChild.style.left = (view.railX + 4) + 'px'; }
+      else cursor.style.display = 'none';
+      if (!g) { t.hidden = true; return; }
+      t.innerHTML = tipHtml(g); t.hidden = false;
+      t.style.left = Math.min(e.clientX + 14, window.innerWidth - t.offsetWidth - 12) + 'px'; t.style.top = (e.clientY + 14) + 'px';
+    });
+    box.addEventListener('mouseleave', function () { if (tip) tip.hidden = true; cursor.style.display = 'none'; if (view.hover) { view.hover = null; view.repaint(); } });
+    box.addEventListener('click', function (e) {
+      var p = boxPoint(e), g = hitAt(p.x, p.y);
+      if (g) view.selectGroup(g);
+    });
+    // the gesture: double-click on desktop, and a hand-rolled double-tap for touch (two taps
+    // within 320 ms and 24 px), because dblclick from touch is unreliable across browsers
+    box.addEventListener('dblclick', function (e) {
+      var p = boxPoint(e); if (hitAt(p.x, p.y)) return;
+      startCompose(snap(view.tOf(p.y)));
+    });
+    var lastTap = null;
+    box.addEventListener('pointerup', function (e) {
+      if (e.pointerType !== 'touch') return;
+      var now = Date.now(), p = boxPoint(e);
+      if (lastTap && now - lastTap.at < 320 && Math.abs(p.y - lastTap.y) < 24 && Math.abs(p.x - lastTap.x) < 24) { lastTap = null; if (!hitAt(p.x, p.y)) startCompose(snap(view.tOf(p.y))); return; }
+      lastTap = { at: now, x: p.x, y: p.y };
+    });
+    ['wheel', 'touchmove', 'keydown'].forEach(function (ev) { box.addEventListener(ev, function () { view.pinned = false; }, { passive: true }); });
+
+    // ---- AV stepper ----
+    root.querySelectorAll('[data-av]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var stepAv = b.getAttribute('data-av');
+        if (stepAv === 'auto') view.userAv = null; else view.userAv = Math.max(200, Math.min(900, (view.userAv || Math.round(view.av)) + parseInt(stepAv, 10)));
+        var anchor = box.scrollTop / Math.max(1, view.height);
+        applyScale(); drawStrip(); box.scrollTop = anchor * view.height; if (view.repaintMinimap) view.repaintMinimap(); highlight();
+        var val = root.querySelector('[data-av-value]'); if (val) val.textContent = 'AV ' + Math.round(view.av);
+        root.querySelectorAll('[data-av="auto"]').forEach(function (a) { a.setAttribute('aria-pressed', view.userAv ? 'false' : 'true'); });
+      });
+    });
+
+    applyScale();
+    drawStrip();
+    initMinimap();
+    buildChips();
+    renderLegend();
+    var pending = null;
+    box.addEventListener('scroll', function () { if (pending) return; pending = requestAnimationFrame(function () { pending = null; highlight(); follow(); }); });
+
+    var open = parseFloat(root.getAttribute('data-open') || '0');
+    if (open) box.scrollTop = Math.max(0, view.yOf(open) - (box.clientHeight - view.panelH) * 0.5);
+    var compose = root.getAttribute('data-compose');
+    if (compose) { view.typed = root.getAttribute('data-typed') || null; startCompose(parseFloat(compose)); }
+    else { follow(); if (view.cur == null) renderPanel(); }
+    sizePanel();
+    highlight();
+    view.follow = follow;
+    return view;
+  }
+
+  // ---------------- comment rows (the dialog's Comments tab) ----------------
+  function cardHtml(c, focused) {
+    var chip = c.general ? '' : '<button class="anchor-chip ' + (c.note ? 'you' : '') + '"><i></i>' + fmt(c.t) + '</button>';
+    var head = '<div class="chead"><span class="cname">' + esc(c.who) + '</span><span class="cmeta">' + esc(c.ago) + '</span></div>';
+    var foot = '<div class="cfoot"><button class="act">▲ ' + c.votes + '</button><button class="act">Reply</button><span class="sp"></span><span class="act">⋯</span></div>';
+    var rows = '<div class="cmt ' + (focused ? 'focused' : '') + '" data-id="' + c.id + '"><div class="av">' + esc(c.ini) + '</div>' +
+      '<div>' + head + (chip ? '<div style="margin:1px 0 6px">' + chip + '</div>' : '') + '<div class="cbody">' + esc(c.text) + '</div>' + foot + '</div></div>';
+    (c.replies || []).forEach(function (r) {
+      rows += '<div class="cmt reply"><div class="av sm">' + esc(r.ini) + '</div><div><div class="chead"><span class="cname">' + esc(r.who) + '</span><span class="cmeta">' + esc(r.ago) + '</span></div><div class="cbody">' + esc(r.text) + (r.link ? '<a href="#">' + esc(r.link) + '</a>' : '') + '</div><div class="cfoot"><button class="act">▲ 2</button><button class="act">Reply</button></div></div></div>';
+    });
+    return rows;
+  }
+
+  // ---------------- glyph legend ----------------
+  function drawGlyph(canvas) {
+    var kind = canvas.getAttribute('data-g'), dpr = 2;
+    canvas.width = 58 * dpr; canvas.height = 58 * dpr;
+    var ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+    ctx.fillStyle = 'rgba(255,255,255,.04)'; ctx.fillRect(0, 0, 58, 58);
+    var x = 34;
+    if (kind === 'spot') { ctx.fillStyle = 'rgba(233,239,247,.35)'; ctx.fillRect(4, 28.5, 21, 1); drawBubble(ctx, x, 29, { fill: T.surfaceMuted, stroke: 'rgba(233,239,247,.75)', text: T.ink }); }
+    if (kind === 'stack') { ctx.fillStyle = 'rgba(233,239,247,.35)'; ctx.fillRect(4, 28.5, 19, 1); drawBubble(ctx, x, 29, { big: true, fill: T.surfaceMuted, stroke: 'rgba(233,239,247,.75)', text: T.ink, label: '×2' }); }
+    if (kind === 'note') { ctx.fillStyle = 'rgba(255,209,102,.55)'; ctx.fillRect(4, 28.5, 21, 1); drawBubble(ctx, x, 29, { fill: 'rgba(255,209,102,.10)', stroke: T.you, text: T.you }); }
+    if (kind === 'sel') { ctx.fillStyle = 'rgba(63,169,245,.55)'; ctx.fillRect(0, 28.5, 25, 1); ctx.fillStyle = T.primary; ctx.fillRect(0, 28.5, 25, 1); drawBubble(ctx, x, 29, { fill: T.primary, stroke: T.primary, text: T.bg }); }
+    if (kind === 'compose') { ctx.fillStyle = T.primary; ctx.fillRect(0, 28.25, 25, 1.5); drawBubble(ctx, x, 29, { fill: 'rgba(63,169,245,.15)', stroke: T.primary, text: T.primary, label: '+' }); }
+    if (kind === 'map') {
+      for (var i = 0; i < 26; i++) { var w = 6 + 18 * Math.abs(Math.sin(i * 0.9)); ctx.fillStyle = i > 9 && i < 16 ? T.tierR : i > 4 && i < 20 ? T.tierY : 'rgba(255,255,255,.16)'; ctx.globalAlpha = i > 4 && i < 20 ? .9 : 1; ctx.fillRect(9, 3 + i * 2, w, 1.4); }
+      ctx.globalAlpha = 1; ctx.fillStyle = T.life; ctx.fillRect(46, 36, 10, 4); ctx.fillRect(46, 47, 10, 2); ctx.fillStyle = T.you; ctx.fillRect(53, 42, 4, 2);
+      ctx.fillStyle = 'rgba(233,239,247,.8)'; [12, 20, 31, 44].forEach(function (yy) { ctx.fillRect(0, yy, 4, 3); }); ctx.fillStyle = T.primary; ctx.fillRect(0, 26, 5, 3); ctx.fillStyle = T.you; ctx.fillRect(0, 38, 4, 3);
+    }
+  }
+  document.querySelectorAll('#glyphs canvas').forEach(drawGlyph);
+
+  // ---------------- mount everything ----------------
+  document.querySelectorAll('[data-strip]').forEach(function (el) { mount(el); });
+  document.querySelectorAll('[data-cards-static]').forEach(function (host) {
+    var ids = host.getAttribute('data-cards-static').split(','), focus = host.getAttribute('data-focus');
+    host.innerHTML = ids.map(function (id) { return cardHtml(byId[id], id === focus); }).join('');
+  });
+})();
+</script>
