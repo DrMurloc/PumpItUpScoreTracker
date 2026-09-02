@@ -250,4 +250,77 @@ public sealed class CommentTests
 
         Assert.Throws<CommentNotAllowedException>(() => comment.EnsureCanBeVotedOnBy(Stranger));
     }
+    // ----- the second a comment points at (docs/design/step-chart-comments D1, D3, D11) --------
+
+    [Fact]
+    public void ACommentMayPointAtASecondOfTheChart()
+    {
+        var comment = Comment.Post(Chart, Author, CommentAudience.Public, "This quad is a bracket.", Now, 33.45m);
+
+        Assert.Equal(33.45m, comment.AnchorAt);
+    }
+
+    [Fact]
+    public void ACommentAboutTheWholeChartPointsNowhere()
+    {
+        Assert.Null(Root().AnchorAt);
+    }
+
+    [Theory]
+    [InlineData(-0.5)]
+    [InlineData(3600.5)]
+    public void ASecondOffTheChartIsRefused(double second)
+    {
+        Assert.Throws<CommentNotAllowedException>(
+            () => Comment.Post(Chart, Author, CommentAudience.Public, "Nowhere.", Now, (decimal)second));
+    }
+
+    [Fact]
+    public void TheEndsOfTheHourAreOnTheChart()
+    {
+        Assert.Equal(0m, Comment.Post(Chart, Author, CommentAudience.Public, "Start.", Now, 0m).AnchorAt);
+        Assert.Equal(Comment.MaxAnchorSeconds,
+            Comment.Post(Chart, Author, CommentAudience.Public, "End.", Now, Comment.MaxAnchorSeconds).AnchorAt);
+    }
+
+    [Fact]
+    public void AReplyCarriesNoSecondOfItsOwn()
+    {
+        var root = Comment.Post(Chart, Author, CommentAudience.Public, "The drills start here.", Now, 29m);
+
+        var reply = Comment.Reply(root, Stranger, "Right foot first.", Now);
+
+        // A thread is about the spot its root named; the reply reads it from the root.
+        Assert.Null(reply.AnchorAt);
+        Assert.Equal(29m, root.AnchorAt);
+    }
+
+    [Fact]
+    public void AnEditKeepsTheSecond()
+    {
+        var comment = Comment.Post(Chart, Author, CommentAudience.Public, "16ths.", Now, 29m);
+
+        comment.Edit(Author, "16ths at 165.", Now.AddMinutes(1));
+
+        Assert.Equal(29m, comment.AnchorAt);
+    }
+
+    [Fact]
+    public void ANoteMayPointAtASecond()
+    {
+        var note = Comment.Post(Chart, Author, CommentAudience.Private, "Breathe before the hold.", Now, 66.2m);
+
+        Assert.Equal(66.2m, note.AnchorAt);
+    }
+
+    [Fact]
+    public void TheSecondSurvivesStorage()
+    {
+        var comment = Comment.Post(Chart, Author, CommentAudience.Public, "Bracket.", Now, 33.45m);
+
+        var rehydrated = Comment.FromStorage(new CommentState(comment.Id, Chart, Author, CommentAudience.Public,
+            null, comment.Text, Now, AnchorAt: comment.AnchorAt));
+
+        Assert.Equal(33.45m, rehydrated.AnchorAt);
+    }
 }

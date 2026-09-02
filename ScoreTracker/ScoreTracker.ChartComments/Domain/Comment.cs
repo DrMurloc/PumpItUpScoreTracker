@@ -28,6 +28,7 @@ internal sealed class Comment
         DeletedByUserId = state.DeletedByUserId;
         SourceLanguage = state.SourceLanguage;
         TranslationQueuedAt = state.TranslationQueuedAt;
+        AnchorAt = state.AnchorAt;
     }
 
     public Guid Id { get; }
@@ -65,17 +66,29 @@ internal sealed class Comment
     /// </summary>
     public DateTimeOffset? TranslationQueuedAt { get; private set; }
 
+    /// <summary>
+    ///     The second of the chart this comment points at, or null for a comment about the whole
+    ///     chart (docs/design/step-chart-comments D1). The failure rail's own clock, stored as the
+    ///     client sent it after snapping to the nearest arrow row — the snap is the client's,
+    ///     because the rows are the client's; this vertical never reads a step payload. A reply
+    ///     carries none and reads its root's; an edit keeps it.
+    /// </summary>
+    public decimal? AnchorAt { get; }
+
     public bool IsRoot => ParentCommentId == null;
     public bool IsDeleted => DeletedAt != null;
+
+    /// <summary>An hour. Nothing on the cabinet runs longer, and the strip is time-spaced.</summary>
+    public const decimal MaxAnchorSeconds = 3600m;
 
     /// <summary>True once a purge cleared the author; the row survives only to hold a thread open.</summary>
     public bool IsTombstoned => IsDeleted && UserId == Guid.Empty;
 
     public static Comment Post(Guid chartId, Guid userId, CommentAudience audience, string? text,
-        DateTimeOffset now)
+        DateTimeOffset now, decimal? anchorAt = null)
     {
         return new Comment(new CommentState(Guid.NewGuid(), chartId, RequireUser(userId), audience,
-            null, RequireText(text), now));
+            null, RequireText(text), now, AnchorAt: RequireAnchor(anchorAt)));
     }
 
     /// <summary>
@@ -202,6 +215,20 @@ internal sealed class Comment
     public bool LeavesStub(bool hasReplies)
     {
         return IsDeleted && IsRoot && hasReplies;
+    }
+
+    /// <summary>
+    ///     Zero to an hour. The chart's real length is a Catalog fact this vertical deliberately
+    ///     does not know — the bound refuses nonsense, not near-misses, and a second that fell just
+    ///     past the last note sits harmlessly at the strip's end.
+    /// </summary>
+    private static decimal? RequireAnchor(decimal? anchorAt)
+    {
+        if (anchorAt == null) return null;
+        if (anchorAt < 0 || anchorAt > MaxAnchorSeconds)
+            throw new CommentNotAllowedException("That spot isn't on the chart.");
+
+        return anchorAt;
     }
 
     private static string RequireText(string? text)
