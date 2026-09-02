@@ -323,8 +323,9 @@ All cross-vertical reads are published contracts/ports (`GetPastWeekly*`,
 
 ### Presentation (`ScoreTracker` Web)
 
-- **`BotHostedService`** slims to: start client → `WhenReady` →
-  `RegisterCommands(PiuCommandCatalog, …)` where the handler lambda opens a DI scope and
+- **`BotHostedService`** slims to: start client → `RegisterCommands(PiuCommandCatalog, …)`
+  (straight after Start since §10 — the adapter publishes the tree once the socket is up and
+  wires the handlers into every client it builds) where the handler lambda opens a DI scope and
   dispatches `HandleBotInteractionCommand` / `GetBotAutocompleteQuery`. All three inline
   command implementations move out; the file stops knowing what commands exist.
 - **Communities page**: an "Add the PIU Scores bot to your server" link

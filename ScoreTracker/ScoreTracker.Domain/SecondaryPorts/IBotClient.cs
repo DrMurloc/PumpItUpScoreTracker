@@ -35,13 +35,20 @@ namespace ScoreTracker.Domain.SecondaryPorts
         ///     registered commands) and wires the invocation and autocomplete handlers.
         ///     Reply visibility follows each subcommand's <see cref="BotSubCommand.Ephemeral" />
         ///     flag; the adapter defers accordingly, invokes <paramref name="onInteraction" />,
-        ///     and follows up with the returned card or text.
+        ///     and follows up with the returned card or text. May be called before the socket is
+        ///     up: the tree is published once it is, and the handlers follow every client
+        ///     instance the adapter builds, so they survive a gateway restart.
         /// </summary>
         public Task RegisterCommands(
             IReadOnlyList<BotCommandDefinition> commands,
             Func<BotInteraction, Task<BotReply>> onInteraction,
             Func<BotAutocompleteRequest, Task<IReadOnlyList<BotOptionChoice>>> onAutocomplete);
 
+        /// <summary>
+        ///     Runs <paramref name="execution" /> on the current client instance's Ready. Binds to
+        ///     that instance only, so it does not survive a restart. Kept for the exploration
+        ///     canaries; the app registers commands through <see cref="RegisterCommands" />.
+        /// </summary>
         public void WhenReady(Func<Task> execution);
     }
 }

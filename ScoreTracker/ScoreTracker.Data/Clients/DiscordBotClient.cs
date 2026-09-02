@@ -13,7 +13,10 @@ public sealed class DiscordBotClient : IBotClient
 {
     private readonly DiscordConfiguration _configuration;
     private readonly ILogger _logger;
+    private readonly SemaphoreSlim _publishLock = new(1, 1);
     private DiscordSocketClient? _client;
+    private CommandRegistration? _registration;
+    private bool _commandsPublished;
 
     public DiscordBotClient(ILogger<DiscordBotClient> logger, IOptions<DiscordConfiguration> options)
     {
@@ -25,21 +28,39 @@ public sealed class DiscordBotClient : IBotClient
     {
         if (_client != null) throw new Exception("Discord client was already started");
 
-        _client = new DiscordSocketClient(new DiscordSocketConfig
+        _client = CreateClient();
+        await _client.LoginAsync(TokenType.Bot, _configuration.BotToken);
+        await _client.StartAsync();
+    }
+
+    /// <summary>
+    ///     Every client instance gets the same wiring, the first one and any replacement, so
+    ///     the interaction handlers are subscribed exactly once per instance instead of once per
+    ///     Ready. Discord.Net raises Ready on every fresh IDENTIFY; subscribing there stacked a
+    ///     second handler on a mid-run re-identify and answered every command twice.
+    /// </summary>
+    private DiscordSocketClient CreateClient()
+    {
+        var client = new DiscordSocketClient(new DiscordSocketConfig
         {
             LogLevel = LogSeverity.Info
         });
 
         // Severity, source and exception all travel: the disconnect reason Discord.Net reports
         // as an exception-only entry is the whole diagnosis of a reconnect loop.
-        _client.Log += msg =>
+        client.Log += msg =>
         {
             _logger.Log(DiscordLogMapping.ToLogLevel(msg.Severity), msg.Exception,
                 "Discord.Net {Source}: {Message}", msg.Source, DiscordLogMapping.Text(msg));
             return Task.CompletedTask;
         };
-        await _client.LoginAsync(TokenType.Bot, _configuration.BotToken);
-        await _client.StartAsync();
+        client.SlashCommandExecuted += OnSlashCommand;
+        client.AutocompleteExecuted += OnAutocomplete;
+        // The tree is published once the socket is up. Either hook may be the one that finds
+        // the registration in place; the publish itself runs once per process.
+        client.Connected += () => PublishCommands(client);
+        client.Ready += () => PublishCommands(client);
+        return client;
     }
 
     public async Task Stop(CancellationToken cancellationToken = default)
@@ -49,6 +70,11 @@ public sealed class DiscordBotClient : IBotClient
         await _client.DisposeAsync();
     }
 
+    /// <summary>
+    ///     Binds to the current client instance's Ready only; a hook registered here does not
+    ///     survive a restart. The app registers its commands through
+    ///     <see cref="RegisterCommands" /> instead; this stays for the exploration canaries.
+    /// </summary>
     public void WhenReady(Func<Task> execution)
     {
         if (_client == null) throw new Exception("Client was not started");
@@ -75,73 +101,115 @@ public sealed class DiscordBotClient : IBotClient
         return permissions.ViewChannel && permissions.SendMessages;
     }
 
-    public async Task RegisterCommands(
+    public Task RegisterCommands(
         IReadOnlyList<BotCommandDefinition> commands,
         Func<BotInteraction, Task<BotReply>> onInteraction,
         Func<BotAutocompleteRequest, Task<IReadOnlyList<BotOptionChoice>>> onAutocomplete)
     {
         if (_client == null) throw new InvalidOperationException("Discord client was not started");
 
-        var definitions = commands.ToDictionary(c => c.Name, StringComparer.OrdinalIgnoreCase);
+        _registration = new CommandRegistration(commands,
+            commands.ToDictionary(c => c.Name, StringComparer.OrdinalIgnoreCase), onInteraction, onAutocomplete);
 
-        // Bulk overwrite replaces the whole global command set atomically — any commands
-        // registered by an earlier build (the pre-/piu top-level commands) are dropped.
-        await _client.BulkOverwriteGlobalApplicationCommandsAsync(
-            commands.Select(DiscordCommandTranslator.ToProperties).Cast<ApplicationCommandProperties>().ToArray());
-
-        _client.SlashCommandExecuted += async command =>
-        {
-            if (!definitions.TryGetValue(command.CommandName, out var definition)) return;
-            var (path, options) = DiscordCommandTranslator.ResolveInvocation(command);
-            var ephemeral = DiscordCommandTranslator.IsEphemeral(definition, path);
-            try
-            {
-                await command.DeferAsync(ephemeral);
-                var reply = await onInteraction(BuildInteraction(command, path, options));
-                await Followup(command, reply, ephemeral);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Error executing /{Command} {Path}", command.CommandName, string.Join(' ', path));
-                try
-                {
-                    await command.FollowupAsync("Something went wrong running that command.", ephemeral: ephemeral);
-                }
-                catch (Exception followupError)
-                {
-                    _logger.LogWarning(followupError, "Could not send the command error follow-up");
-                }
-            }
-        };
-
-        _client.AutocompleteExecuted += async interaction =>
-        {
-            if (!definitions.ContainsKey(interaction.Data.CommandName)) return;
-            try
-            {
-                var (path, options) = DiscordCommandTranslator.ResolveAutocomplete(interaction);
-                var focused = interaction.Data.Current;
-                var request = new BotAutocompleteRequest(path, focused.Name,
-                    focused.Value?.ToString() ?? string.Empty, options,
-                    interaction.User.Id, interaction.Channel.Id, (interaction.Channel as IGuildChannel)?.GuildId);
-                var choices = await onAutocomplete(request);
-                await interaction.RespondAsync(choices.Take(25)
-                    .Select(c => new AutocompleteResult(c.Name, c.Value)));
-            }
-            catch (Exception e)
-            {
-                _logger.LogWarning(e, "Autocomplete failed for /{Command}", interaction.Data.CommandName);
-                try
-                {
-                    await interaction.RespondAsync(Array.Empty<AutocompleteResult>());
-                }
-                catch (Exception respondError)
-                {
-                    _logger.LogWarning(respondError, "Could not send empty autocomplete response");
-                }
-            }
-        };
+        // Already connected (the canaries register after Ready): publish now. Otherwise the
+        // Connected and Ready hooks pick the registration up when the socket comes up.
+        return _client.ConnectionState == ConnectionState.Connected
+            ? PublishCommands(_client)
+            : Task.CompletedTask;
     }
+
+    // Bulk overwrite replaces the whole global command set atomically — any commands
+    // registered by an earlier build (the pre-/piu top-level commands) are dropped. Once per
+    // process: the tree is static per build and Discord rate-limits command writes, so a
+    // replacement client after a restart only needs its handlers, which CreateClient wired.
+    private async Task PublishCommands(DiscordSocketClient client)
+    {
+        var registration = _registration;
+        if (registration == null || _commandsPublished) return;
+
+        await _publishLock.WaitAsync();
+        try
+        {
+            if (_commandsPublished) return;
+            await client.BulkOverwriteGlobalApplicationCommandsAsync(registration.Commands
+                .Select(DiscordCommandTranslator.ToProperties).Cast<ApplicationCommandProperties>().ToArray());
+            _commandsPublished = true;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Could not publish the bot command tree; the next Ready retries");
+        }
+        finally
+        {
+            _publishLock.Release();
+        }
+    }
+
+    private async Task OnSlashCommand(SocketSlashCommand command)
+    {
+        var registration = _registration;
+        if (registration == null ||
+            !registration.Definitions.TryGetValue(command.CommandName, out var definition)) return;
+        var (path, options) = DiscordCommandTranslator.ResolveInvocation(command);
+        var ephemeral = DiscordCommandTranslator.IsEphemeral(definition, path);
+        try
+        {
+            await command.DeferAsync(ephemeral);
+            var reply = await registration.OnInteraction(BuildInteraction(command, path, options));
+            await Followup(command, reply, ephemeral);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error executing /{Command} {Path}", command.CommandName, string.Join(' ', path));
+            try
+            {
+                await command.FollowupAsync("Something went wrong running that command.", ephemeral: ephemeral);
+            }
+            catch (Exception followupError)
+            {
+                _logger.LogWarning(followupError, "Could not send the command error follow-up");
+            }
+        }
+    }
+
+    private async Task OnAutocomplete(SocketAutocompleteInteraction interaction)
+    {
+        var registration = _registration;
+        if (registration == null || !registration.Definitions.ContainsKey(interaction.Data.CommandName)) return;
+        try
+        {
+            var (path, options) = DiscordCommandTranslator.ResolveAutocomplete(interaction);
+            var focused = interaction.Data.Current;
+            var request = new BotAutocompleteRequest(path, focused.Name,
+                focused.Value?.ToString() ?? string.Empty, options,
+                interaction.User.Id, interaction.Channel.Id, (interaction.Channel as IGuildChannel)?.GuildId);
+            var choices = await registration.OnAutocomplete(request);
+            await interaction.RespondAsync(choices.Take(25)
+                .Select(c => new AutocompleteResult(c.Name, c.Value)));
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning(e, "Autocomplete failed for /{Command}", interaction.Data.CommandName);
+            try
+            {
+                await interaction.RespondAsync(Array.Empty<AutocompleteResult>());
+            }
+            catch (Exception respondError)
+            {
+                _logger.LogWarning(respondError, "Could not send empty autocomplete response");
+            }
+        }
+    }
+
+    /// <summary>
+    ///     The command tree plus the app's two dispatch callbacks, kept so every client
+    ///     instance can be wired from it.
+    /// </summary>
+    private sealed record CommandRegistration(
+        IReadOnlyList<BotCommandDefinition> Commands,
+        IReadOnlyDictionary<string, BotCommandDefinition> Definitions,
+        Func<BotInteraction, Task<BotReply>> OnInteraction,
+        Func<BotAutocompleteRequest, Task<IReadOnlyList<BotOptionChoice>>> OnAutocomplete);
 
     private static BotInteraction BuildInteraction(SocketSlashCommand command, IReadOnlyList<string> path,
         IReadOnlyDictionary<string, string> options)
