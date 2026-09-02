@@ -1400,7 +1400,33 @@ else
 
     private bool _downloadOpen;
 
-    private string DownloadFileName => $"TierList_{_currentMix}_{_chartType}{_level}_{_now:yyyy-MM-dd}.png";
+    /// <summary>What the rows are, as a key: the lens on a tier view, the grouping under My Scores, Speed on its own.</summary>
+    private ShareCardTitles.TierListView ShareView => IsTierView ? ShareCardTitles.TierListView.Tier :
+        IsSkillView ? ShareCardTitles.TierListView.Speed : ShareCardTitles.TierListView.MyScores;
+
+    private string ShareSubjectKey => ShareView switch
+    {
+        ShareCardTitles.TierListView.Tier => (PersonalizedActive ? "Personalized" : string.Empty) + _tierListType,
+        ShareCardTitles.TierListView.Speed => "Speed",
+        _ => "ScoresBy" + _groupBy
+    };
+
+    /// <summary>The lens as the picture names it — the personalized reading where the Shown Difficulty picker chose one.</summary>
+    private string ShareLensName => !IsTierView && _shownPersonalized && _tierListType is "Score" or "PUMBILITY"
+        ? L[$"Personalized {_tierListType}"]
+        : LensDisplayName(_tierListType);
+
+    private string ShareGroupingName => _groupBy switch
+    {
+        "Score" => L["Score"],
+        "Age" => L["Age"],
+        "Score Ranking" => L["Score Ranking"],
+        "Scoring Level" => L["Scoring level"],
+        _ => L[_groupBy]
+    };
+
+    private string DownloadFileName => ShareCardTitles.TierListFileName(_currentMix, _chartType, _level,
+        ShareSubjectKey, _now.ToString("yyyy-MM-dd"));
 
     // The share-only reads, fetched when a toggle first asks for them (the page's own
     // backfill shape) and dropped on every folder change — membership and gains are
@@ -1465,20 +1491,21 @@ else
     private TierListShareCard BuildCard(IReadOnlyList<TierListShareCard.Row> rows, ShareCardOptions options)
     {
         var palette = MixThemes.PaletteFor(_currentMix);
-        var title = _chartType == ChartType.CoOp
+        var folder = _chartType == ChartType.CoOp
             ? $"{L["CoOp"]} ×{_level}"
             : $"{L[_chartType == ChartType.Single ? "Singles" : "Doubles"]} {_level}";
-        var stamp = PersonalizedActive
-            ? L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name].ToString()
-            : L["Community"].ToString();
+        // The header rule (design doc §9): the title says what the rows are, the subtitle how
+        // to read them, the stamp whose reading it is. The mix rides the card itself: with 31
+        // selectable mixes, a shared "Singles 18" screenshot is meaningless without it. GetName,
+        // not ToString — "The Perfect Collection", never "PerfectCollection".
+        var header = ShareCardTitles.TierList(folder, ShareView, ShareLensName, PersonalizedActive,
+            CurrentUser.IsLoggedIn ? CurrentUser.User.GameTag ?? CurrentUser.User.Name : string.Empty,
+            ShareGroupingName, _currentMix.GetName(), _now.ToString("yyyy-MM-dd"), key => L[key].Value);
         var linkUrl = $"https://piuscores.arroweclip.se/TierLists/{_chartType}/{_level}";
-        // The mix rides the card itself: with 31 selectable mixes, a shared
-        // "Singles 18" screenshot is meaningless without it. GetName, not
-        // ToString — "The Perfect Collection", never "PerfectCollection".
         return new TierListShareCard(
-            title,
-            $"{LensDisplayName(_tierListType)} · {_currentMix.GetName()} · {_now:yyyy-MM-dd}",
-            stamp,
+            header.Title,
+            header.Subtitle,
+            header.Stamp ?? string.Empty,
             palette.Primary,
             palette.Background,
             palette.Surface,

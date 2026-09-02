@@ -107,3 +107,38 @@ Cancellation keeps whatever already landed in the cache: warming is harmless and
 try faster. A warm cache flashes the bar to 100%.
 
 The preview keeps its plain spinner — six tiles do not earn a bar.
+
+## 9. The header names the rows (round 7)
+
+Audit finding: the tier-list card put the **page's scope** in the title ("Singles 20") and the
+**lens** in the subtitle, but on five of seven views the lens is not what the rows are grouped
+by; the Targets card put the **page block's name** in the title and the real subject in the
+subtitle. One rule now, composed by `ShareCardTitles` for both surfaces:
+
+- **Title = what the rows are.** `{Folder} — {Lens}` on the tier views; `{Folder} — {Tag}'s Scores
+  by {Grouping}` under My Scores (the title owns whose scores they are); `{Folder} — Speed`.
+  Targets: `PUMBILITY Targets — {Grouping}`, and the pool lens honestly named
+  `PUMBILITY Pool — Top 50`.
+- **Subtitle = how to read them.** `{Mix} · {date}` on the tier views (the lens is already the
+  title). `Shown Difficulty: {lens} · {Mix} · {date}` under My Scores and Speed, where the lens
+  only orders within sections — the personalized reading when the Shown Difficulty picker chose
+  one. Targets: `Energy: {rung}`, then the pool scope on Phoenix 2 (All / Singles / Doubles
+  pool), then `Only projected PUMBILITY gains` and `Phoenix 1 projected` when those switches are
+  on, then mix and date. No "n of m charts" line (owner: no need).
+- **Stamp = whose reading it is** — `Crowd sourced` (never "Community", which names the
+  Community entity) or `Personalized for {tag}` on the tier views, `Personalized for {tag}` on
+  Targets, and **nothing** under My Scores and Speed, where the title already said.
+- **Filenames carry the subject** so two downloads of one folder never collide:
+  `TierList_{mix}_{type}{level}_{subject}_{date}.png` (`Pass`, `PersonalizedScore`,
+  `ScoresByAge`, `Speed`) and `PumbilityTargets_{mix}_{grouping}_{energy}_{pool}_{date}.png`.
+
+The renderer shrinks a long title toward 22px before ellipsizing and skips an empty stamp.
+
+## 10. The example is scripted (round 7)
+
+The dialog's example no longer shows the first six live tiles — that made seeing a download
+mean fishing across folders for a Perfect Game or a broken run. `ShareCardSample` dresses the
+list's first six jackets in a fixed set of states: a PG in the combined pool (the glow), a pass
+in the type pool with a gain, a broken run, a To Do, a pass carried from another mix, a bare
+chart. Every option in the dialog is visible in one picture, the section is labelled "Example",
+and no personal read runs for a preview. A legacy mix keeps the states and drops the numbers.

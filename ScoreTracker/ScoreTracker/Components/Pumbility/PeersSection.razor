@@ -429,7 +429,18 @@
 
     private bool _downloadOpen;
 
-    private string DownloadFileName => $"PumbilityTargets_{Shown.Mix}_{_groupBy}_{Clock.Now:yyyy-MM-dd}.png";
+    private string DownloadFileName => ShareCardTitles.TargetsFileName(Shown.Mix, _groupBy.ToString(),
+        Energy.ToString(), ShownPool?.ToString() ?? "All", Clock.Now.ToString("yyyy-MM-dd"));
+
+    /// <summary>Which pool the list is scoped to — said only on Phoenix 2, where pools are per type.</summary>
+    private string? SharePoolLabel => Shown.Mix != MixEnum.Phoenix2 ? null :
+        ShownPool switch
+        {
+            null => L["All pools"],
+            ChartType.Single => L["Singles pool"],
+            ChartType.Double => L["Doubles pool"],
+            var other => other.ToString()
+        };
 
     // The top-50 membership reads, fetched when the gold boundary first asks and dropped on a
     // pool change — the answer is per mix and per type.
@@ -475,12 +486,21 @@
     private TierListShareCard BuildTargetsCard(IReadOnlyList<TierListShareCard.Row> rows, ShareCardOptions options)
     {
         var palette = MixThemes.PaletteFor(Shown.Mix);
+        // The header rule (design doc §9): the grouping is what the rows are, so it rides the
+        // title; the energy, the pool scope and the switches that cut or project the list are
+        // how to read it, so they ride the subtitle — each only when it applies. The energy
+        // travels on the picture because a Good card and a Great card show different grades
+        // on the same charts, and a reader has to be able to tell which this was.
+        var header = ShareCardTitles.Targets(_groupBy == PeerGrouping.YourTop50, GroupingName,
+            L[EnergyLabels.Label(Energy)], SharePoolLabel,
+            gainsOnly: _groupBy == PeerGrouping.Prevalence && _gainsOnly,
+            phoenix1Projected: _groupBy == PeerGrouping.ProjectedGains && HasCarried && _projectPhoenix1,
+            Shown.Mix.GetName(), Clock.Now.ToString("yyyy-MM-dd"),
+            CurrentUser.User.GameTag ?? CurrentUser.User.Name, key => L[key].Value);
         return new TierListShareCard(
-            L["PUMBILITY Targets"],
-            // The energy travels on the picture: a Good card and a Great card show different
-            // grades on the same charts, and a reader has to be able to tell which this was.
-            $"{GroupingName} · {L["Energy"]}: {L[EnergyLabels.Label(Energy)]} · {(Shown.Mix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix")} · {Clock.Now:yyyy-MM-dd}",
-            L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name].ToString(),
+            header.Title,
+            header.Subtitle,
+            header.Stamp ?? string.Empty,
             palette.Primary, palette.Background, palette.Surface, palette.Ink, palette.InkMuted,
             "https://piuscores.arroweclip.se/Pumbility",
             null,
