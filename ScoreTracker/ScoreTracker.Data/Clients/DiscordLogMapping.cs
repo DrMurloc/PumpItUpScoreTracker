@@ -29,6 +29,9 @@ public static class DiscordLogMapping
     /// <summary>The line's text: the message when there is one, else the exception's.</summary>
     public static string Text(LogMessage message)
     {
-        return message.Message ?? message.Exception?.Message ?? string.Empty;
+        // An empty message is as blank as a null one; the exception's text is what the hook exists to keep.
+        return string.IsNullOrEmpty(message.Message)
+            ? message.Exception?.Message ?? string.Empty
+            : message.Message;
     }
 }

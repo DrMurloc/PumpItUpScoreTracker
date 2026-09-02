@@ -32,6 +32,15 @@ public sealed class DiscordLogMappingTests
     }
 
     [Fact]
+    public void AnEmptyMessageFallsBackToTheExceptionToo()
+    {
+        var entry = new LogMessage(LogSeverity.Warning, "Gateway", string.Empty,
+            new Exception("Server missed last heartbeat"));
+
+        Assert.Equal("Server missed last heartbeat", DiscordLogMapping.Text(entry));
+    }
+
+    [Fact]
     public void AMessageWinsOverItsException()
     {
         var entry = new LogMessage(LogSeverity.Error, "Gateway", "Heartbeat Errored", new Exception("boom"));
