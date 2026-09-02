@@ -271,6 +271,9 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>1 mrglrgll grgl mrgl maglmurp mo blgrlargl.</value>
   </data>
+  <data name="1 reply" xml:space="preserve">
+    <value>1 grublurp</value>
+  </data>
   <data name="1 title" xml:space="preserve">
     <value>1 mrgl</value>
   </data>
@@ -1581,6 +1584,12 @@
   <data name="Comment from a deleted user" xml:space="preserve">
     <value>Blurp opa grombro grgl</value>
   </data>
+  <data name="Comment on a spot" xml:space="preserve">
+    <value>Blurp ap a plglur</value>
+  </data>
+  <data name="Comment on {0}…" xml:space="preserve">
+    <value>Blurp ap {0}…</value>
+  </data>
   <data name="Comments" xml:space="preserve">
     <value>Blurpgl</value>
   </data>
@@ -2225,6 +2234,9 @@
   </data>
   <data name="Double Performance" xml:space="preserve">
     <value>Groggl Plglglorgmurgmrp</value>
+  </data>
+  <data name="Double-click a spot on the chart to comment there" xml:space="preserve">
+    <value>Grog-grog a plglur ap glo murgl ro blurp gro</value>
   </data>
   <data name="Doubles" xml:space="preserve">
     <value>Groggl</value>
@@ -4351,6 +4363,9 @@
   <data name="next best candidate {0}" xml:space="preserve">
     <value>gorulab grumblab {0}</value>
   </data>
+  <data name="Next comment" xml:space="preserve">
+    <value>Grorpglorg blurp</value>
+  </data>
   <data name="Next Folder" xml:space="preserve">
     <value>Grorpglorg Grrgllurg</value>
   </data>
@@ -4395,6 +4410,12 @@
   </data>
   <data name="No close matches yet." xml:space="preserve">
     <value>Mrp grorp morgmaglblgrl argl.</value>
+  </data>
+  <data name="No comments on this chart yet — double-click a spot on the chart to add one." xml:space="preserve">
+    <value>Bo blurpgl ap plgl murgl larg — grog-grog a plglur ap glo murgl ro marglub mrp.</value>
+  </data>
+  <data name="No comments on this chart yet — double-tap a spot on the chart to add one." xml:space="preserve">
+    <value>Bo blurpgl ap plgl murgl larg — blub-blub a plglur ap glo murgl ro marglub mrp.</value>
   </data>
   <data name="No community peers yet" xml:space="preserve">
     <value>Mo murlog blarg</value>
@@ -4470,6 +4491,9 @@
   </data>
   <data name="No Recorded Scores" xml:space="preserve">
 	  <value>Mrp Murmgrglurg Mgrlgmrg</value>
+  </data>
+  <data name="No replies" xml:space="preserve">
+    <value>Bo grublurpgl</value>
   </data>
   <data name="No rivals yet" xml:space="preserve">
     <value>Bo Murgmorp argl</value>
@@ -5069,11 +5093,17 @@
   <data name="Open Community" xml:space="preserve">
     <value>Mrprgl Plglmurgblub</value>
   </data>
+  <data name="Open in Comments" xml:space="preserve">
+    <value>Mrprgl ur Blurpgl</value>
+  </data>
   <data name="Open in the Score Calculator" xml:space="preserve">
     <value>Mrprgl a Mrglrgl Grglmurgmorg</value>
   </data>
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>Mrprgl Romorgrgl Murgl</value>
+  </data>
+  <data name="Open thread" xml:space="preserve">
+    <value>Mrprgl blurpgro</value>
   </data>
   <data name="Open Video" xml:space="preserve">
     <value>Mrprgl Grrrgl</value>
@@ -5747,6 +5777,9 @@
   </data>
   <data name="Prevalence" xml:space="preserve">
     <value>Murgroblarg</value>
+  </data>
+  <data name="Previous comment" xml:space="preserve">
+    <value>Grglmurpgrgl blurp</value>
   </data>
   <data name="Previous Folder" xml:space="preserve">
     <value>Grglmurpgrgl Grrgllurg</value>
@@ -7027,6 +7060,9 @@
   </data>
   <data name="Sign in to add them" xml:space="preserve">
     <value>Mrpmurp mrp grgl glorg gro</value>
+  </data>
+  <data name="Sign in to comment on {0}" xml:space="preserve">
+    <value>Mrpmurp mrp ro blurp ap {0}</value>
   </data>
   <data name="Sign in to continue" xml:space="preserve">
     <value>Mrglmurp blu murpo</value>
@@ -8377,9 +8413,6 @@
     <value>Blub mrglro {0} grorpmurm {1} murgl murpurg Grgl Urg blubgrrgl blub blubmurm rglplgl.</value>
     <comment>I.E You have 19 level 24 charts marked To Do you haven't passed</comment>
   </data>
-  <data name="Unplaced" xml:space="preserve">
-	  <value>Urgplglgl</value>
-  </data>
   <data name="Unplayed" xml:space="preserve">
     <value>Lurgarglmurg</value>
   </data>
@@ -9259,6 +9292,9 @@
   <data name="Your most recent session, in full" xml:space="preserve">
     <value>Bulo orgab, al</value>
   </data>
+  <data name="Your note" xml:space="preserve">
+    <value>Murgro roblub</value>
+  </data>
   <data name="Your peers' pools have nothing in them yet." xml:space="preserve">
     <value>Maglmurp blubgro mo mrgl blub.</value>
   </data>
@@ -9870,6 +9906,9 @@
   </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>{0} Pump It Up plglmurpmurm murgl grglmrp plglmorg, gro gromorg murgl glgrgl mrmrp murmblubgrrgl, ro mrp blubglplgl PUMBILITY mrglblarg.</value>
+  </data>
+  <data name="{0} replies" xml:space="preserve">
+    <value>{0} grublurpgl</value>
   </data>
   <data name="{0} rivals" xml:space="preserve">
     <value>{0} Murgmorp</value>

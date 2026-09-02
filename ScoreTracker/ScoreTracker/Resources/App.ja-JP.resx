@@ -271,6 +271,9 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>非公開アカウント 1 件はピアですが表示されません。</value>
   </data>
+  <data name="1 reply" xml:space="preserve">
+    <value>返信 1件</value>
+  </data>
   <data name="1 title" xml:space="preserve">
     <value>タイトル 1 件</value>
   </data>
@@ -1581,6 +1584,12 @@
   <data name="Comment from a deleted user" xml:space="preserve">
     <value>削除されたアカウントのコメント</value>
   </data>
+  <data name="Comment on a spot" xml:space="preserve">
+    <value>位置にコメントする</value>
+  </data>
+  <data name="Comment on {0}…" xml:space="preserve">
+    <value>{0} にコメント…</value>
+  </data>
   <data name="Comments" xml:space="preserve">
     <value>コメント</value>
   </data>
@@ -2225,6 +2234,9 @@
   </data>
   <data name="Double Performance" xml:space="preserve">
     <value>ダブルパフォーマンス</value>
+  </data>
+  <data name="Double-click a spot on the chart to comment there" xml:space="preserve">
+    <value>譜面の位置をダブルクリックすると、そこにコメントできます</value>
   </data>
   <data name="Doubles" xml:space="preserve">
     <value>Doubles</value>
@@ -4351,6 +4363,9 @@
   <data name="next best candidate {0}" xml:space="preserve">
     <value>次点の候補 {0}</value>
   </data>
+  <data name="Next comment" xml:space="preserve">
+    <value>次のコメント</value>
+  </data>
   <data name="Next Folder" xml:space="preserve">
     <value>次のフォルダー</value>
   </data>
@@ -4395,6 +4410,12 @@
   </data>
   <data name="No close matches yet." xml:space="preserve">
     <value>近いライバルはまだいません。</value>
+  </data>
+  <data name="No comments on this chart yet — double-click a spot on the chart to add one." xml:space="preserve">
+    <value>この譜面にはまだコメントがありません — 譜面の位置をダブルクリックして最初のコメントを追加しましょう。</value>
+  </data>
+  <data name="No comments on this chart yet — double-tap a spot on the chart to add one." xml:space="preserve">
+    <value>この譜面にはまだコメントがありません — 譜面の位置をダブルタップして最初のコメントを追加しましょう。</value>
   </data>
   <data name="No community peers yet" xml:space="preserve">
     <value>コミュニティの仲間はまだいません</value>
@@ -4470,6 +4491,9 @@
   </data>
   <data name="No Recorded Scores" xml:space="preserve">
 	  <value>スコア記録なし</value>
+  </data>
+  <data name="No replies" xml:space="preserve">
+    <value>返信なし</value>
   </data>
   <data name="No rivals yet" xml:space="preserve">
     <value>まだライバルがいません</value>
@@ -5069,11 +5093,17 @@
   <data name="Open Community" xml:space="preserve">
     <value>コミュニティを開く</value>
   </data>
+  <data name="Open in Comments" xml:space="preserve">
+    <value>コメントタブで開く</value>
+  </data>
   <data name="Open in the Score Calculator" xml:space="preserve">
     <value>スコア計算機で開く</value>
   </data>
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>おすすめ譜面を開く</value>
+  </data>
+  <data name="Open thread" xml:space="preserve">
+    <value>スレッドを開く</value>
   </data>
   <data name="Open Video" xml:space="preserve">
     <value>ビデオリンク開く</value>
@@ -5747,6 +5777,9 @@
   </data>
   <data name="Prevalence" xml:space="preserve">
     <value>普及度</value>
+  </data>
+  <data name="Previous comment" xml:space="preserve">
+    <value>前のコメント</value>
   </data>
   <data name="Previous Folder" xml:space="preserve">
     <value>前のフォルダー</value>
@@ -7027,6 +7060,9 @@
   </data>
   <data name="Sign in to add them" xml:space="preserve">
     <value>追加するにはサインインしてください</value>
+  </data>
+  <data name="Sign in to comment on {0}" xml:space="preserve">
+    <value>{0} にコメントするにはログインしてください</value>
   </data>
   <data name="Sign in to continue" xml:space="preserve">
     <value>続けるにはログイン</value>
@@ -8377,9 +8413,6 @@
     <value>やることリストの中のレベル{1}で譜面まだ{0}曲が残してる（クリアしてない）</value>
     
   <comment>例：レベル２４の中でまだ９譜面が残してる</comment></data>
-  <data name="Unplaced" xml:space="preserve">
-	  <value>位置不明</value>
-  </data>
   <data name="Unplayed" xml:space="preserve">
     <value>未プレイ</value>
   </data>
@@ -9259,6 +9292,9 @@
   <data name="Your most recent session, in full" xml:space="preserve">
     <value>最新のセッションのすべて</value>
   </data>
+  <data name="Your note" xml:space="preserve">
+    <value>自分のメモ</value>
+  </data>
   <data name="Your peers' pools have nothing in them yet." xml:space="preserve">
     <value>ピアのプールにはまだ何もありません。</value>
   </data>
@@ -9870,6 +9906,9 @@
   </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>今週の Pump It Up チャレンジ譜面{0}件、ライブ順位付きのデイリー譜面、そして月間 PUMBILITY ボード。</value>
+  </data>
+  <data name="{0} replies" xml:space="preserve">
+    <value>返信 {0}件</value>
   </data>
   <data name="{0} rivals" xml:space="preserve">
     <value>ライバル {0} 人</value>

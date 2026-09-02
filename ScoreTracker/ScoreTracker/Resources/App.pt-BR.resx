@@ -271,6 +271,9 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>1 conta privada é par mas não é exibida.</value>
   </data>
+  <data name="1 reply" xml:space="preserve">
+    <value>1 resposta</value>
+  </data>
   <data name="1 title" xml:space="preserve">
     <value>1 título</value>
   </data>
@@ -1570,6 +1573,12 @@
   <data name="Comment from a deleted user" xml:space="preserve">
     <value>Comentário de uma conta excluída</value>
   </data>
+  <data name="Comment on a spot" xml:space="preserve">
+    <value>Comentar em um ponto</value>
+  </data>
+  <data name="Comment on {0}…" xml:space="preserve">
+    <value>Comentar em {0}…</value>
+  </data>
   <data name="Comments" xml:space="preserve">
     <value>Comentários</value>
   </data>
@@ -2211,6 +2220,9 @@
   </data>
   <data name="Double Performance" xml:space="preserve">
     <value>Double Performance</value>
+  </data>
+  <data name="Double-click a spot on the chart to comment there" xml:space="preserve">
+    <value>Dê um clique duplo em um ponto da sequência para comentar ali</value>
   </data>
   <data name="Doubles" xml:space="preserve">
     <value>Doubles</value>
@@ -4321,6 +4333,9 @@
   <data name="next best candidate {0}" xml:space="preserve">
     <value>próximo candidato {0}</value>
   </data>
+  <data name="Next comment" xml:space="preserve">
+    <value>Próximo comentário</value>
+  </data>
   <data name="Next Folder" xml:space="preserve">
     <value>Próxima pasta</value>
   </data>
@@ -4365,6 +4380,12 @@
   </data>
   <data name="No close matches yet." xml:space="preserve">
     <value>Ainda não há rivais próximos.</value>
+  </data>
+  <data name="No comments on this chart yet — double-click a spot on the chart to add one." xml:space="preserve">
+    <value>Ainda não há comentários neste chart — dê um clique duplo em um ponto da sequência para adicionar um.</value>
+  </data>
+  <data name="No comments on this chart yet — double-tap a spot on the chart to add one." xml:space="preserve">
+    <value>Ainda não há comentários neste chart — toque duas vezes em um ponto da sequência para adicionar um.</value>
   </data>
   <data name="No community peers yet" xml:space="preserve">
     <value>Ainda não há colegas de comunidade</value>
@@ -4440,6 +4461,9 @@
   </data>
   <data name="No Recorded Scores" xml:space="preserve">
     <value>Sem pontuações registradas</value>
+  </data>
+  <data name="No replies" xml:space="preserve">
+    <value>Sem respostas</value>
   </data>
   <data name="No rivals yet" xml:space="preserve">
     <value>Ainda sem rivais</value>
@@ -5037,11 +5061,17 @@
   <data name="Open Community" xml:space="preserve">
     <value>Abrir comunidade</value>
   </data>
+  <data name="Open in Comments" xml:space="preserve">
+    <value>Abrir em Comentários</value>
+  </data>
   <data name="Open in the Score Calculator" xml:space="preserve">
     <value>Abrir na calculadora de pontuação</value>
   </data>
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>Abrir charts sugeridos</value>
+  </data>
+  <data name="Open thread" xml:space="preserve">
+    <value>Abrir a conversa</value>
   </data>
   <data name="Open Video" xml:space="preserve">
     <value>Abrir vídeo</value>
@@ -5711,6 +5741,9 @@
   </data>
   <data name="Prevalence" xml:space="preserve">
     <value>Prevalência</value>
+  </data>
+  <data name="Previous comment" xml:space="preserve">
+    <value>Comentário anterior</value>
   </data>
   <data name="Previous Folder" xml:space="preserve">
     <value>Pasta anterior</value>
@@ -6975,6 +7008,9 @@
   </data>
   <data name="Sign in to add them" xml:space="preserve">
     <value>Entre para adicionar</value>
+  </data>
+  <data name="Sign in to comment on {0}" xml:space="preserve">
+    <value>Entre para comentar em {0}</value>
   </data>
   <data name="Sign in to continue" xml:space="preserve">
     <value>Entre para continuar</value>
@@ -8317,9 +8353,6 @@
   <data name="Unpassed ToDos" xml:space="preserve">
     <value>Você tem {0} charts de nível {1} marcados como "Pendente" que ainda não passou.</value>
   </data>
-  <data name="Unplaced" xml:space="preserve">
-	  <value>Sem posição</value>
-  </data>
   <data name="Unplayed" xml:space="preserve">
     <value>Não jogado</value>
   </data>
@@ -9190,6 +9223,9 @@
   <data name="Your most recent session, in full" xml:space="preserve">
     <value>Sua sessão mais recente, completa</value>
   </data>
+  <data name="Your note" xml:space="preserve">
+    <value>Sua nota</value>
+  </data>
   <data name="Your peers' pools have nothing in them yet." xml:space="preserve">
     <value>Os conjuntos dos seus pares ainda não têm nada.</value>
   </data>
@@ -9801,6 +9837,9 @@
   </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>{0} charts de desafio do Pump It Up nesta semana, um chart diário com colocações ao vivo e o quadro mensal PUMBILITY.</value>
+  </data>
+  <data name="{0} replies" xml:space="preserve">
+    <value>{0} respostas</value>
   </data>
   <data name="{0} rivals" xml:space="preserve">
     <value>{0} rivais</value>
