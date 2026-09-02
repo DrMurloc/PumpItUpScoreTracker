@@ -21,7 +21,7 @@
 
 @* The comment surface of the step chart (docs/design/step-chart-comments D4/D13): two pieces,
    one component, every host. The BAR sits in flow under the section chips — the gesture line
-   and the scope chip, always there whatever the panel is showing (D13). The PANEL lies over the
+   and, when the chart has comments at all, the scope filter (D13/D18). The PANEL lies over the
    bottom of the frame, from the strip to the whole-chart map (D16); step-chart.js positions it
    from the geometry it owns, draws the marks, turns a double-click into a picked second, and
    tells this component which comment sits nearest the viewport. Both live inside the strip's
@@ -44,9 +44,11 @@
             <span class="sc-gesture-pointer">@L["Double-click a spot to leave a comment"]</span>
             <span class="sc-gesture-touch">@L["Double-tap a spot to leave a comment"]</span>
         </span>
-        @if (_scopes.Count > 1)
+        @if (FilterScopes.Count > 0)
         {
-            @ScopeChip("bar")
+            @* The filter (D18): only when the chart has comments at all, and listing only the
+               scopes that have some. *@
+            @ScopeChip("bar", FilterScopes)
         }
     </div>
 }
@@ -58,7 +60,9 @@
             <span class="sc-chip sc-chip-pick" data-testid="sc-pick"><i></i>@Second(pick)</span>
             @if (CurrentUser.IsLoggedIn && _scopes.Count > 1)
             {
-                @ScopeChip("compose")
+                @* Where the comment goes — every scope the reader can post to, since the first
+                   note has to be written somewhere (D18). *@
+                @ScopeChip("compose", _scopes)
             }
             @* The way out, in the corner the eye learned (D14). It replaces the foot's Cancel. *@
             <button type="button" class="sc-x" aria-label="@L["Cancel"]" data-testid="sc-pick-cancel"
@@ -267,8 +271,9 @@
         display: flex;
         width: 100%;
         align-items: center;
+        justify-content: center;
         gap: 8px;
-        text-align: left;
+        text-align: center;
         font: inherit;
         font-size: .8rem;
         color: var(--mix-ink);
@@ -293,12 +298,6 @@
 
     .sc-scope-menu .sc-scope-on {
         color: var(--mix-primary);
-    }
-
-    .sc-scope-menu button small {
-        color: var(--mix-ink-muted);
-        margin-left: auto;
-        padding-left: 10px;
     }
 
     /* The panel: positioned by the module over the frame's bottom edge, strip to map (D16), and
@@ -595,6 +594,7 @@
     private string? _preferredLocale;
     private IReadOnlyList<CommentRecord> _marks = Array.Empty<CommentRecord>();
     private IReadOnlyList<CommentScopeRecord> _scopes = Array.Empty<CommentScopeRecord>();
+    private IReadOnlyDictionary<CommentAudience, int> _counts = new Dictionary<CommentAudience, int>();
     private CommentAudience _audience = CommentAudience.Public;
     private CommentConsentRecord _consent = new(false, false);
     private Guid? _cur;
@@ -637,7 +637,24 @@
     private int StackIndex => Current is { } current ? Stack.ToList().FindIndex(m => m.Id == current.Id) + 1 : 0;
 
     private string ScopeLabel =>
-        _scopes.FirstOrDefault(s => s.Audience == _audience)?.Label.ToString() ?? L["Public"].Value;
+        _scopes.FirstOrDefault(s => s.Audience == _audience) is { } scope ? LabelFor(scope) : L["Public"].Value;
+
+    /// <summary>The site's names for its own two scopes, localized; a club is called what it is called.</summary>
+    private string LabelFor(CommentScopeRecord scope)
+    {
+        return scope.Audience.IsPrivate ? L["Personal Notes"].Value
+            : scope.Audience.IsPublic ? L["Public"].Value
+            : scope.Label.ToString();
+    }
+
+    /// <summary>The scopes the filter lists (D18): the reader's own, minus those with nothing on this chart.</summary>
+    private IReadOnlyList<CommentScopeRecord> FilterScopes =>
+        _scopes.Where(s => CountOf(s.Audience) > 0).ToArray();
+
+    private int CountOf(CommentAudience audience)
+    {
+        return _counts.TryGetValue(audience, out var count) ? count : 0;
+    }
 
     private bool CanPostHere => _scopes.FirstOrDefault(s => s.Audience == _audience)?.CanPost ?? true;
 
@@ -712,7 +729,7 @@
     ///     is involved — which is what lets it render identically inside a static page's island
     ///     and inside the dialog.
     /// </summary>
-    private RenderFragment ScopeChip(string place) =>
+    private RenderFragment ScopeChip(string place, IReadOnlyList<CommentScopeRecord> scopes) =>
         @<div class="sc-scope">
             <button type="button" class="sc-scope-chip @(IsNotes ? "sc-scope-chip-you" : null)"
                     data-testid="@($"sc-scope-{place}")" aria-haspopup="menu" aria-label="@L["Comments"]"
@@ -724,16 +741,12 @@
             {
                 <div class="sc-scope-backdrop" @onclick="() => _scopeOpen = null"></div>
                 <div class="sc-scope-menu" role="menu">
-                    @foreach (var scope in _scopes)
+                    @foreach (var scope in scopes)
                     {
                         var s = scope;
                         <button type="button" role="menuitem" class="@(s.Audience == _audience ? "sc-scope-on" : null)"
                                 data-testid="@($"sc-scope-item-{s.Label}")" @onclick="() => SelectScope(s)">
-                            @ScopeGlyph(s.Audience)<span>@s.Label</span>
-                            @if (s.Audience.IsPrivate)
-                            {
-                                <small>@L["Only you"]</small>
-                            }
+                            @ScopeGlyph(s.Audience)<span>@LabelFor(s)</span>
                         </button>
                     }
                 </div>
@@ -761,8 +774,23 @@
 
         var stored = await UiSettings.GetSetting(ReadInSettingKey);
         _preferredLocale = string.IsNullOrWhiteSpace(stored) ? null : stored;
-        if (CurrentUser.IsLoggedIn) _scopes = await Mediator.Send(new GetMyCommentScopesQuery());
+        if (CurrentUser.IsLoggedIn)
+        {
+            _scopes = await Mediator.Send(new GetMyCommentScopesQuery());
+            await LoadCounts();
+            // Open on the first scope that has something (D18) — Public when it does, since it
+            // heads the list; a chart with nothing anywhere stays on Public for the first post.
+            if (CountOf(_audience) == 0 && FilterScopes.Count > 0) _audience = FilterScopes[0].Audience;
+        }
         await LoadMarks();
+    }
+
+    /// <summary>What the filter renders from (D18); read again after a post, when a quiet scope may have woken.</summary>
+    private async Task LoadCounts()
+    {
+        var counts = await Mediator.Send(new GetChartCommentScopeCountsQuery(ChartId));
+        _counts = (counts ?? Array.Empty<CommentScopeCountRecord>())
+            .ToDictionary(count => count.Audience, count => count.AnchoredComments);
     }
 
     /// <summary>
@@ -876,6 +904,7 @@
 
         _pick = null;
         await LoadMarks();
+        await LoadCounts();
         _cur = id;
         if (_module != null)
         {

@@ -45,7 +45,15 @@ public sealed class StepChartCommentPanelTests : ComponentTestBase
             });
         Mediator.Setup(m => m.Send(It.IsAny<GetCommentConsentQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CommentConsentRecord(false, false));
+        Counts((CommentAudience.Public, 1), (CommentAudience.Private, 1));
         Marks();
+    }
+
+    /// <summary>What the filter renders from (D18): how many anchored comments each scope holds.</summary>
+    private void Counts(params (CommentAudience Audience, int Count)[] counts)
+    {
+        Mediator.Setup(m => m.Send(It.IsAny<GetChartCommentScopeCountsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(counts.Select(c => new CommentScopeCountRecord(c.Audience, c.Count)).ToArray());
     }
 
     private void Marks(params CommentRecord[] marks)
@@ -123,13 +131,62 @@ public sealed class StepChartCommentPanelTests : ComponentTestBase
         // Empty scope, and the way back is still there — the redline that started round 3.
         Assert.Equal("Nothing here yet.", panel.Find("[data-testid='sc-empty']").TextContent.Trim());
         var chip = panel.Find("[data-testid='sc-scope-bar']");
-        Assert.Contains("Notes", chip.TextContent);
+        Assert.Contains("Personal Notes", chip.TextContent);
         Assert.Contains("sc-scope-chip-you", chip.ClassName);
 
         await chip.ClickAsync(new MouseEventArgs());
         await panel.Find("[data-testid='sc-scope-item-Public']").ClickAsync(new MouseEventArgs());
 
         Assert.Equal("0:29", panel.Find("[data-testid='sc-second']").TextContent.Trim());
+    }
+
+    [Fact]
+    public async Task TheFilterListsOnlyTheScopesThatHaveCommentsAndTheComposerListsThemAll()
+    {
+        Counts((CommentAudience.Public, 1), (CommentAudience.Private, 0));
+        Marks(Mark(29m, "The drills start here."));
+        var panel = Render();
+
+        await panel.Find("[data-testid='sc-scope-bar']").ClickAsync(new MouseEventArgs());
+
+        // Reading: only the scopes with something on this chart, and nothing beside a name (D18).
+        var menu = panel.Find(".sc-bar .sc-scope-menu");
+        Assert.Single(menu.QuerySelectorAll("[role='menuitem']"));
+        Assert.NotEmpty(panel.FindAll("[data-testid='sc-scope-item-Public']"));
+        Assert.Empty(panel.FindAll("[data-testid='sc-scope-item-Notes']"));
+        Assert.DoesNotContain("Only you", menu.TextContent);
+
+        // Writing is a different question: the first note has to go somewhere.
+        await panel.InvokeAsync(() => panel.Instance.OnPick(33.45m));
+        await panel.Find("[data-testid='sc-scope-compose']").ClickAsync(new MouseEventArgs());
+
+        Assert.Equal("Personal Notes", panel.Find("[data-testid='sc-scope-item-Notes']").TextContent.Trim());
+    }
+
+    [Fact]
+    public void AChartWithNoCommentsAnywhereHasNoFilter()
+    {
+        Counts((CommentAudience.Public, 0), (CommentAudience.Private, 0));
+
+        var panel = Render();
+
+        Assert.NotEmpty(panel.FindAll("[data-testid='sc-bar']"));
+        Assert.Empty(panel.FindAll("[data-testid='sc-scope-bar']"));
+    }
+
+    [Fact]
+    public void WhenPublicIsQuietThePanelOpensOnTheFirstScopeThatHasSomething()
+    {
+        Counts((CommentAudience.Public, 0), (CommentAudience.Private, 1));
+        Mediator.Setup(m => m.Send(It.IsAny<GetChartCommentMarksQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((GetChartCommentMarksQuery query, CancellationToken _) => query.Audience.IsPrivate
+                ? new[] { Mark(66.2m, "Breathe before the hold.", note: true, isAuthor: true) }
+                : Array.Empty<CommentRecord>());
+
+        var panel = Render();
+
+        Assert.Contains("Personal Notes", panel.Find("[data-testid='sc-scope-bar']").TextContent);
+        Assert.Equal("1:06", panel.Find("[data-testid='sc-second']").TextContent.Trim());
     }
 
     [Fact]
