@@ -16,7 +16,7 @@ namespace ScoreTracker.Web.Services;
 /// </summary>
 public static class EnergyLabels
 {
-    /// <summary>The options in the order the select offers them: the safe read first, the default.</summary>
+    /// <summary>The options in the order the select offers them: the safe read, then Great — the default (D54) — then the top.</summary>
     public static readonly Energy[] Options = { Energy.Good, Energy.Great, Energy.TopOfMyGame };
 
     /// <summary>The option's label, as a localization key.</summary>

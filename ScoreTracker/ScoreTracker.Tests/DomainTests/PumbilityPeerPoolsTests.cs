@@ -116,7 +116,7 @@ public sealed class PumbilityPeerPoolsTests
         // Midpoint-convention quantiles over 940 / 962 / 975 / 985 / 990k — the estimator's own
         // arithmetic, read on demand at any rung (D51, D52).
         Assert.Equal(975_000, (int)entry.ProjectedAt(PeerEstimator.Median)!.Value);
-        Assert.Equal(956_500, (int)entry.ProjectedAt(PeerEstimator.DefaultQuantile)!.Value);
+        Assert.Equal(956_500, (int)entry.ProjectedAt(PeerEstimator.LowerQuartile)!.Value);
         Assert.Equal(986_250, (int)entry.ProjectedAt(PeerEstimator.UpperQuartile)!.Value);
 
         // Four scorers: held, so it appears — but no opinion at any rung.
@@ -124,7 +124,7 @@ public sealed class PumbilityPeerPoolsTests
             peers.Take(4).ToHashSet(), catalog, Scoring);
         Assert.Equal(4, four.Charts[chart.Id].Scored);
         Assert.Null(four.Charts[chart.Id].ProjectedAt(PeerEstimator.Median));
-        Assert.Null(four.Charts[chart.Id].ProjectedAt(PeerEstimator.DefaultQuantile));
+        Assert.Null(four.Charts[chart.Id].ProjectedAt(PeerEstimator.LowerQuartile));
     }
 
     [Fact]

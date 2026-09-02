@@ -187,7 +187,7 @@
     [Parameter] public ChartType? Pool { get; set; }
 
     /// <summary>The rung the frame priced the record at (D51); the peers' rows are read at the same one.</summary>
-    [Parameter] public Energy Energy { get; set; } = Energy.Good;
+    [Parameter] public Energy Energy { get; set; } = Energy.Great;
 
     /// <summary>The select's pick, for the frame to remember and reload on.</summary>
     [Parameter] public EventCallback<Energy> OnEnergyChanged { get; set; }
@@ -214,7 +214,7 @@
 
     private PumbilityPeersPageRecord? _peers;
     private ChartType? _loadedPool;
-    private Energy _loadedEnergy = Energy.Good;
+    private Energy _loadedEnergy = Energy.Great;
     private bool _loaded;
     private bool _settingsRead;
 

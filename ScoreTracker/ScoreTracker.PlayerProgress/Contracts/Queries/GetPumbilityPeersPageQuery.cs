@@ -14,5 +14,5 @@ namespace ScoreTracker.PlayerProgress.Contracts.Queries
     /// </summary>
     [ExcludeFromCodeCoverage]
     public sealed record GetPumbilityPeersPageQuery(Guid UserId, MixEnum Mix = MixEnum.Phoenix,
-        ChartType? Pool = null, Energy Energy = Energy.Good) : IQuery<PumbilityPeersPageRecord>;
+        ChartType? Pool = null, Energy Energy = Energy.Great) : IQuery<PumbilityPeersPageRecord>;
 }

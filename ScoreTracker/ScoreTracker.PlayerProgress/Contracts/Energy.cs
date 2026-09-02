@@ -5,7 +5,7 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 /// <summary>
 ///     How the player says they are playing today (docs/design/pumbility-overhaul.md D51): which
 ///     rung of their peers' scores every projected score and gain on the PUMBILITY page reads.
-///     Good is the default and the rung everything off that page reads (D50).
+///     Great is the default and the rung everything off that page reads (D54).
 /// </summary>
 public enum Energy
 {
@@ -33,9 +33,9 @@ public static class EnergyRungs
     {
         return energy switch
         {
-            Energy.Great => PeerEstimator.Median,
+            Energy.Good => PeerEstimator.LowerQuartile,
             Energy.TopOfMyGame => PeerEstimator.UpperQuartile,
-            _ => PeerEstimator.DefaultQuantile
+            _ => PeerEstimator.Median
         };
     }
 }

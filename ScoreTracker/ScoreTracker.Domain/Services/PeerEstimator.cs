@@ -48,25 +48,25 @@ public static class PeerEstimator
 
     /// <summary>
     ///     Which quantile of the peer distribution a projection reads by default, on both mixes:
-    ///     the first quartile (docs/design/pumbility-overhaul.md D50, §4.10). NOT the mean —
+    ///     the median (docs/design/pumbility-overhaul.md D54, §4.11) — Great on the PUMBILITY
+    ///     page's Energy select, and the rung every surface off that page reads. NOT the mean:
     ///     per-chart scores are left-skewed by a tail of barely-passed attempts and the mean sits
-    ///     in that tail — and not the median either, although the median is centred over every
-    ///     pair a backtest can score. What a player sees is the top of a list sorted by projected
-    ///     gain, and sorting by a noisy estimate selects the charts whose estimate ran high: at the
-    ///     median the top ten read +4,728 with their SS calls right half the time; at this rung
-    ///     they read modestly low and an SS they call lands three times in four. An overshoot a
-    ///     player cannot hit costs the whole list its credibility; an undershoot is invisible.
+    ///     in that tail.
     ///     <para>
-    ///         One constant for both mixes. Phoenix 1 read the 65th percentile until round seven —
-    ///         fitted in January 2026 on a one-year horizon — and measured +7,359 median against
-    ///         the frozen records of September; Phoenix 2 read the median (the retired D26).
-    ///         Surfaces that let the player choose ask for other rungs through
-    ///         <see cref="ScoreProjectionRequest.Quantiles" />; everything else reads this one.
+    ///         Round seven read the first quartile (D50): on the ±3-rung band the top of a
+    ///         gain-sorted list — selected for the charts whose estimate ran high — read +4,728 at
+    ///         the median with its SS calls right half the time. Round eight replaced the band with
+    ///         the window on the pool of the type (D53), under which the same top ten reads −1,611
+    ///         at the median, and the owner set Great as the default to field-test it. Phoenix 1
+    ///         read the 65th percentile until round seven — measured +7,359 against frozen records —
+    ///         and Phoenix 2 the median (the retired D26). Surfaces that let the player choose ask
+    ///         for other rungs through <see cref="ScoreProjectionRequest.Quantiles" />; everything
+    ///         else reads this one.
     ///     </para>
     /// </summary>
-    public const double DefaultQuantile = 0.25;
+    public const double DefaultQuantile = Median;
 
-    /// <summary>The median — the middle of the peers, and the rung a page's "Great" reads.</summary>
+    /// <summary>The median — the middle of the peers, the rung a page's "Great" reads, and the default (D54).</summary>
     public const double Median = 0.50;
 
     /// <summary>
@@ -134,7 +134,7 @@ public static class PeerEstimator
         return weighted.Length == 0 ? null : weighted;
     }
 
-    /// <summary>The quartiles — the same quantile arithmetic at 25 and 75; the lower one is also the default read.</summary>
+    /// <summary>The quartiles — the same quantile arithmetic at 25 and 75: Good and Top of my game on the page's select.</summary>
     public const double LowerQuartile = 0.25;
 
     public const double UpperQuartile = 0.75;

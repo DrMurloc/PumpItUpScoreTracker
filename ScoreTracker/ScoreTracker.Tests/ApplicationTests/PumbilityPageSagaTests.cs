@@ -102,10 +102,10 @@ public sealed class PumbilityPageSagaTests
     }
 
     [Fact]
-    public async Task TheEnergyIsHandedToTheProjectionAndDefaultsToGood()
+    public async Task TheEnergyIsHandedToTheProjectionAndDefaultsToGreat()
     {
-        // D51: the page's chip travels with the read; a caller that says nothing gets Good, the
-        // rung everything off the page reads (D50).
+        // D51: the page's select travels with the read; a caller that says nothing gets Great, the
+        // rung everything off the page reads (D54).
         var ctx = new PageContext().WithPool(50, ChartType.Single, 20);
 
         await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2, null, Energy.TopOfMyGame),
@@ -114,7 +114,7 @@ public sealed class PumbilityPageSagaTests
 
         ctx.Mediator.Verify(m => m.Send(It.Is<ProjectPumbilityGainsQuery>(q => q.Energy == Energy.TopOfMyGame),
             It.IsAny<CancellationToken>()), Times.Once);
-        ctx.Mediator.Verify(m => m.Send(It.Is<ProjectPumbilityGainsQuery>(q => q.Energy == Energy.Good),
+        ctx.Mediator.Verify(m => m.Send(It.Is<ProjectPumbilityGainsQuery>(q => q.Energy == Energy.Great),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

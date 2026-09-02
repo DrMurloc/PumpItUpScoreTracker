@@ -95,7 +95,7 @@ else if (_mixKnown)
     ///     How the player says they are playing today (D51): the rung of their peers every projected
     ///     score and gain on the Play page reads. A setting for the same reason the pool is — the
     ///     select lives on a page whose tabs are real navigations — and per player, because it is a
-    ///     statement about the player, not about a page. Good when unset.
+    ///     statement about the player, not about a page. Great when unset (D54).
     /// </summary>
     public const string EnergySettingKey = "Pumbility__Energy";
 
@@ -124,7 +124,7 @@ else if (_mixKnown)
     private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private IReadOnlyList<PumbilityHero.PoolOption> _pools = Array.Empty<PumbilityHero.PoolOption>();
     private ChartType? _pool;
-    private Energy _energy = Energy.Good;
+    private Energy _energy = Energy.Great;
 
     private string MixName => _currentMix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix";
 

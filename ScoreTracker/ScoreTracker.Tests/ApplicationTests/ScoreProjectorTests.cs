@@ -122,9 +122,9 @@ public sealed class ScoreProjectorTests
         var result = await ctx.Project(ChartType.Single, ChartA, ChartB);
 
         Assert.DoesNotContain(ChartA, result.Scores.Keys);
-        // The default read is the first quartile (D50): three-quarters of the way from 940k to
-        // 962k on five equal voices. The median rides the ladder for a caller that asks for it.
-        Assert.Equal(956_500, (int)result.Scores[ChartB]);
+        // The default read is the median (D54): the middle of five equal voices. The quartiles
+        // ride the ladder for a caller that asks for them.
+        Assert.Equal(975_000, (int)result.Scores[ChartB]);
         Assert.Equal(5, result.PeerCount);
         Assert.Equal(1.0, result.MeanFreshness);
     }
@@ -176,8 +176,8 @@ public sealed class ScoreProjectorTests
 
         var relaxed = await ctx.ProjectRelaxed(ChartType.Single, ChartA);
 
-        // Two equal voices sit at 0.25 and 0.75, so the default read is the lower one exactly.
-        Assert.Equal(960_000, (int)relaxed.Scores[ChartA]);
+        // Two equal voices sit at 0.25 and 0.75, so the median reads halfway between them.
+        Assert.Equal(970_000, (int)relaxed.Scores[ChartA]);
         Assert.Equal(2, relaxed.Ladders![ChartA].PeerCount);
         Assert.True(relaxed.Group!.AnsweredBelowFloor);
     }

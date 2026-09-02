@@ -29,8 +29,8 @@ public sealed class PeerEstimatorTests
     public void AQuantileSitsAboveTheMeanOnALeftSkewedGroup()
     {
         // The shape every real chart has: a cluster of good scores plus a tail of
-        // barely-passed attempts. A mean lands in the tail; the median lands in the cluster,
-        // and even the default first-quartile read clears the mean.
+        // barely-passed attempts. A mean lands in the tail; the median — the default read (D54) —
+        // lands in the cluster, well clear of the mean.
         var peers = new[]
         {
             Peer(600_000), Peer(720_000), Peer(910_000), Peer(945_000), Peer(960_000),
@@ -46,16 +46,18 @@ public sealed class PeerEstimatorTests
     }
 
     [Fact]
-    public void TheDefaultReadIsTheFirstQuartile()
+    public void TheDefaultReadIsTheMedian()
     {
-        // D50: one default on both mixes, and it is the lower quartile — the rung the top of a
-        // gain-sorted list stops overshooting at.
-        Assert.Equal(PeerEstimator.LowerQuartile, PeerEstimator.DefaultQuantile);
+        // D54: one default on both mixes, and it is the median — Great on the page's select; the
+        // quartiles are the other two rungs a caller can ask for.
+        Assert.Equal(PeerEstimator.Median, PeerEstimator.DefaultQuantile);
         var peers = new[] { Peer(940_000), Peer(962_000), Peer(975_000), Peer(985_000), Peer(990_000) };
 
-        // Midpoint positions of five equal voices are 0.1, 0.3, 0.5, 0.7, 0.9: the quartile
-        // interpolates three-quarters of the way from 940k to 962k.
-        Assert.Equal(956_500, PeerEstimator.Estimate(peers, growthDecayLevels: 0));
+        // Midpoint positions of five equal voices are 0.1, 0.3, 0.5, 0.7, 0.9: the median is the
+        // middle voice exactly, and the lower quartile interpolates three-quarters of the way from
+        // 940k to 962k.
+        Assert.Equal(975_000, PeerEstimator.Estimate(peers, growthDecayLevels: 0));
+        Assert.Equal(956_500, PeerEstimator.Estimate(peers, growthDecayLevels: 0, quantile: PeerEstimator.LowerQuartile));
         Assert.Equal(PeerEstimator.Estimate(peers, quantile: PeerEstimator.DefaultQuantile),
             PeerEstimator.Estimate(peers));
     }
