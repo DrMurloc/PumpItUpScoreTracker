@@ -498,3 +498,98 @@ Chart/song/player/title/skill names stay verbatim, matching the site.
 - Number/date formatting follows the target culture everywhere a value renders inside a
   localized template (the accessor swaps `CurrentCulture` for the lookup) or via the
   culture's month-day pattern for week tags.
+
+## 10. Gateway watchdog and log hook (incident 2026-09-01)
+
+**What happened.** At 00:43 UTC on 2026-09-01 the bot's gateway session dropped and Discord.Net
+spent until the owner's app restart at 14:38 UTC in a Connecting → Disconnecting → Disconnected
+loop, about once a minute. Every attempt was a websocket handshake to the *resume* host Discord
+had handed out at READY (`gateway-us-east-1a.discord.gg`), and every one came back HTTP 503. REST on
+`discord.com` was healthy the whole time, so score cards and feeds kept posting while `/piu`
+commands — which arrive over the gateway — silently died for fourteen hours. The restart fixed it
+only because a fresh client IDENTIFYs on `gateway.discord.gg` and is handed a new resume host.
+
+**Why Discord.Net never recovered.** READY stores `ApiClient.ResumeGatewayUrl`; the only code that
+clears it (and the session id) is receiving `GatewayOpCode.InvalidSession` on an open socket
+(`DiscordSocketClient.EventHandling.cs`). A 503 on the handshake never opens a socket, so that
+opcode can never arrive, and `ConnectionManager` retries the same dead host with a backoff capped
+at 60 s, forever — no attempt counter, no fallback to the generic gateway. 3.20.1 (latest at the
+time) carries the identical logic, so an upgrade alone does not fix it.
+
+**Why the logs said nothing.** `DiscordBotClient`'s `Log` hook forwarded only `msg.Message` at
+Information. Discord.Net reports the disconnect reason as an exception-only log entry, so every one
+of the ~830 failures landed in App Insights as a trace whose message was literally `[null]`. The 503
+was only recoverable because the websocket handshakes happen to be tracked as HTTP dependencies
+(`dependencies | where target has 'gateway'`).
+
+**Decisions (owner, 2026-09-01).** ① Watchdog: yes, Hangfire-driven. ② Fold in the Ready
+double-subscription fix (below). ③ No admin "Restart Discord Bot" button. ④ Log hook as scoped;
+no gateway-intents trim. ⑤ The two dead channel registrations the same telemetry surfaced are
+cleaned up by hand (script in the owner's Downloads), not by code.
+
+### Behaviour
+
+- **Watchdog.** Every two minutes Hangfire publishes `CheckDiscordGatewayCommand`. The consumer
+  reads `IBotClient.Status`; if the socket has been out of the Connected state continuously for
+  five minutes or more it logs a warning with the duration and calls `IBotClient.Restart`. A
+  restart that fails (Discord down) is logged at Error and swallowed — the next tick retries and
+  MassTransit never faults the message. `NotStarted` (no token: local dev, E2E) is a no-op.
+- **Restart.** Builds, logs in and starts a *new* `DiscordSocketClient` first, swaps it in
+  atomically, then stops and disposes the old one, under a semaphore so two ticks cannot
+  double-restart. Sends racing the swap still hold the old client and land in the existing
+  warning path; the client field is never null after the first start. The replacement client's
+  disconnected clock starts at the restart, so a replacement that also fails to connect is
+  replaced again five minutes later.
+- **Handlers subscribe once per client instance.** Before this change the hosted service
+  registered the command tree from `WhenReady`, and `RegisterCommands` subscribed the
+  slash-command and autocomplete handlers on every Ready. Discord.Net raises Ready on every fresh
+  IDENTIFY, so a mid-run re-identify (INVALID_SESSION) would have stacked a second handler and
+  answered every command twice. Now the hosted service calls `RegisterCommands` straight after
+  `Start`; the adapter stores the registration, subscribes the handlers when it builds a client
+  (first or replacement), and on Ready only performs the bulk overwrite — once per process, retried
+  on the next Ready if it failed. `WhenReady` stays for the exploration canaries; it binds to the
+  current client instance and does not survive a restart.
+- **Log hook.** Discord.Net severity maps onto the logger's levels (Critical → Critical,
+  Error → Error, Warning → Warning, Info → Information, Verbose → Debug, Debug → Trace); the line
+  reads `Discord.Net {Source}: {Message}` with the exception attached, and an exception-only entry
+  uses the exception's message as its text. Discord.Net's own filter stays at Info, so the volume
+  is unchanged — only the content is.
+
+| Constant | Value | Why |
+|---|---|---|
+| Restart after | 5 min disconnected | every healthy resume in the logs took about a second; the Aug 31 flap recovered in 30 s |
+| Check cadence | `*/2 * * * *` | worst case a dead gateway is replaced within 7 min; same shape as the two five-minute jobs |
+
+Both are picked, not tuned — there is nothing to observe them against until the next incident.
+
+### Layer scope
+
+| Layer | Project | Change |
+|---|---|---|
+| Domain | `ScoreTracker.Domain` | `IBotClient` gains `Status` and `Restart`; `Records/BotGatewayStatus.cs` (record + `BotGatewayState` enum: NotStarted / Connected / Disconnected) |
+| Infrastructure | `ScoreTracker.Data` | `DiscordBotClient` restructured around a swappable session (client + tracker); new pure helpers `GatewayStateTracker` (monotonic stopwatch, injectable timestamp for tests) and `DiscordLogMapping` |
+| Vertical | `ScoreTracker.Communities` | `Contracts/Messages/CheckDiscordGatewayCommand`, `Application/DiscordGatewayWatchdogSaga`, one `AddConsumer` line. Communities already owns every Discord composition path and takes the port, so no new references |
+| Presentation | `ScoreTracker` (Web) | `BotHostedService` registers after Start; `RecurringJobRunner.PublishCheckDiscordGateway`; one tuple in the Program.cs job list. No pages, no resx |
+| CompositionRoot | — | untouched: the singleton registration and the adapter's constructor are unchanged |
+| Tests | `ScoreTracker.Tests` | `DiscordGatewayWatchdogSagaTests`, `GatewayStateTrackerTests`, `DiscordLogMappingTests` in `ApplicationTests/` beside the other Data helper tests; a config-gated restart canary in `ExplorationTests/DiscordCanary/` |
+| Docs | `docs/` | this section; the `check-discord-gateway` row in SCHEDULED-JOBS.md |
+
+### Tests
+
+- Saga: connected never restarts; disconnected 2 min never; disconnected 5 min restarts once;
+  NotStarted never; a throwing restart is logged and swallowed.
+- Tracker: NotStarted until told otherwise; Connected then Disconnected reports the elapsed
+  duration; Connected again resets it.
+- Log mapping: every severity maps; an exception-only entry yields the exception's message.
+- Canary (`[DiscordCanaryFact]`): start the real bot, `Restart`, wait for Connected, post a line to
+  the lab channel and read it back. Run with the rest of the canary suite, per the standing rule.
+
+### Rollout
+
+No migration, no config. After deploy: `Started bot client` in App Insights and the new job in the
+Hangfire dashboard. During the next incident the signal is a Warning trace reading
+`restarting the bot client`, and the disconnect reasons themselves are now real exceptions.
+
+### Out of scope
+
+Admin restart button, intents trim, auto-pruning dead channel registrations, a Discord.Net upgrade.
