@@ -497,17 +497,32 @@
                 .ToArray());
     }
 
-    /// <summary>The dialog's example: the first non-empty section's first six tiles (design doc §6).</summary>
-    private async Task<TierListShareCard?> BuildSampleCard(ShareCardOptions options)
+    /// <summary>
+    ///     The dialog's example: the list's first six jackets wearing the scripted states
+    ///     (design doc §10) — stage props, so every option shows at once and no top-50 read
+    ///     runs for a preview.
+    /// </summary>
+    private Task<TierListShareCard?> BuildSampleCard(ShareCardOptions options)
     {
-        if (_list == null) return null;
-        var sections = _list.ShareSections();
-        var sample = sections.FirstOrDefault(s => s.Tiles.Count > 0);
-        if (sample == null) return null;
-        await EnsureShareData(options, sections);
+        if (_list == null) return Task.FromResult<TierListShareCard?>(null);
+        var charts = _list.ShareSections()
+            .SelectMany(s => s.Tiles)
+            .Select(t => t.Chart)
+            .DistinctBy(c => c.Id)
+            .Take(ShareCardSample.Size)
+            .ToArray();
+        if (charts.Length == 0) return Task.FromResult<TierListShareCard?>(null);
         var palette = MixThemes.PaletteFor(Shown.Mix);
-        return BuildTargetsCard(new[] { ComposeRow(sample, sample.Tiles.Take(6).ToArray(), options, palette) },
-            options);
+        var facts = ShareCardSample.Facts(charts, Shown.Mix,
+            c => options.Skills && _skills.TryGetValue(c.Id, out var chips) ? chips : null,
+            ShareCardImages.DifficultyBubble);
+        var rows = new[]
+        {
+            new TierListShareCard.Row(L["Example"], palette.Primary, facts
+                .Select(f => ShareCardComposer.Compose(f, options, Shown.Mix, palette))
+                .ToArray())
+        };
+        return Task.FromResult<TierListShareCard?>(BuildTargetsCard(rows, options));
     }
 
     /// <summary>

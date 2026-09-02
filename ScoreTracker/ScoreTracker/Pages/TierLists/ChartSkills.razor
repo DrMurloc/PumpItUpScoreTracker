@@ -1495,28 +1495,35 @@ else
     }
 
     /// <summary>
-    ///     The dialog's example: the first non-empty section's first six tiles, composed under
-    ///     the same options the download will use — the renderer ingests every jacket it is
-    ///     handed, so the sample stays small (design doc §6) and the full folder is only paid
-    ///     for by Download itself.
+    ///     The dialog's example: the folder's first six jackets wearing the scripted states
+    ///     (design doc §10), composed under the same options the download will use. Stage
+    ///     props rather than the player's record, so every option shows in the example at
+    ///     once — and no personal read runs for a preview. The renderer ingests every jacket
+    ///     it is handed, so the sample stays small (§6) and the full folder is only paid for
+    ///     by Download itself.
     /// </summary>
-    private async Task<TierListShareCard?> BuildSampleCard(ShareCardOptions options)
+    private Task<TierListShareCard?> BuildSampleCard(ShareCardOptions options)
     {
-        await EnsureShareData(options);
-        var sample = _groups
-            .Select(g => (Group: g,
-                Entries: g.Entries.Where(ShouldChartShow).Where(e => _charts.ContainsKey(e.ChartId))
-                    .Take(6).ToArray()))
-            .FirstOrDefault(g => g.Entries.Any());
-        if (sample.Group == null) return null;
+        var charts = _groups
+            .SelectMany(g => g.Entries.Where(ShouldChartShow))
+            .Select(e => e.ChartId)
+            .Where(_charts.ContainsKey)
+            .Distinct()
+            .Take(ShareCardSample.Size)
+            .Select(id => _charts[id])
+            .ToArray();
+        if (charts.Length == 0) return Task.FromResult<TierListShareCard?>(null);
         var palette = MixThemes.PaletteFor(_currentMix);
+        var facts = ShareCardSample.Facts(charts, _currentMix,
+            c => options.Skills ? SkillChipsFor(c) : null,
+            _ => null);
         var rows = new[]
         {
-            new TierListShareCard.Row(sample.Group.Name, sample.Group.ShareHex, sample.Entries
-                .Select(e => ShareCardComposer.Compose(FactsFor(e, options), options, _currentMix, palette))
+            new TierListShareCard.Row(L["Example"], palette.Primary, facts
+                .Select(f => ShareCardComposer.Compose(f, options, _currentMix, palette))
                 .ToArray())
         };
-        return BuildCard(rows, options);
+        return Task.FromResult<TierListShareCard?>(BuildCard(rows, options));
     }
 
     private async Task DownloadImage(ShareCardDownloadRequest request)
