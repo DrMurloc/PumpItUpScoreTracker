@@ -5295,6 +5295,9 @@
   <data name="Permissions" xml:space="preserve">
     <value>권한</value>
   </data>
+  <data name="Personal Notes" xml:space="preserve">
+    <value>개인 메모</value>
+  </data>
   <data name="Personalized" xml:space="preserve">
     <value>개인화</value>
   </data>

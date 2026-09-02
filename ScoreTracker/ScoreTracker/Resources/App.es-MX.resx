@@ -5295,6 +5295,9 @@
   <data name="Permissions" xml:space="preserve">
     <value>Permisos</value>
   </data>
+  <data name="Personal Notes" xml:space="preserve">
+    <value>Notas personales</value>
+  </data>
   <data name="Personalized" xml:space="preserve">
     <value>Personalizado</value>
   </data>
