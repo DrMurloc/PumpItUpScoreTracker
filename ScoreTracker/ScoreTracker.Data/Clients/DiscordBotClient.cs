@@ -12,11 +12,12 @@ namespace ScoreTracker.Data.Clients;
 public sealed class DiscordBotClient : IBotClient
 {
     private readonly DiscordConfiguration _configuration;
+    private readonly SemaphoreSlim _lifecycle = new(1, 1);
     private readonly ILogger _logger;
     private readonly SemaphoreSlim _publishLock = new(1, 1);
-    private DiscordSocketClient? _client;
-    private CommandRegistration? _registration;
     private bool _commandsPublished;
+    private CommandRegistration? _registration;
+    private GatewaySession? _session;
 
     public DiscordBotClient(ILogger<DiscordBotClient> logger, IOptions<DiscordConfiguration> options)
     {
@@ -24,13 +25,52 @@ public sealed class DiscordBotClient : IBotClient
         _configuration = options.Value;
     }
 
+    /// <summary>
+    ///     The live socket client. Callers snapshot it once, so a restart in the middle of a
+    ///     send cannot pull the client out from under it.
+    /// </summary>
+    private DiscordSocketClient Client =>
+        _session?.Client ?? throw new InvalidOperationException("Client was never started");
+
+    public BotGatewayStatus Status => _session?.State.Status ?? BotGatewayStatus.NotStarted;
+
     public async Task Start(CancellationToken cancellationToken = default)
     {
-        if (_client != null) throw new Exception("Discord client was already started");
+        if (_session != null) throw new Exception("Discord client was already started");
 
-        _client = CreateClient();
-        await _client.LoginAsync(TokenType.Bot, _configuration.BotToken);
-        await _client.StartAsync();
+        _session = await OpenSession();
+    }
+
+    /// <summary>
+    ///     Replaces the socket client with a fresh one, keeping the registered commands. The
+    ///     replacement is built, logged in and started before the swap, so the client is never
+    ///     null; the old one is stopped afterwards, and a send that started on it finishes
+    ///     there. Serialized, so two watchdog ticks cannot replace the client twice.
+    /// </summary>
+    public async Task Restart(CancellationToken cancellationToken = default)
+    {
+        if (_session == null) throw new InvalidOperationException("Client was never started");
+
+        await _lifecycle.WaitAsync(cancellationToken);
+        try
+        {
+            var replacement = await OpenSession();
+            var replaced = Interlocked.Exchange(ref _session, replacement);
+            if (replaced == null) return;
+            try
+            {
+                await replaced.Client.StopAsync();
+                await replaced.Client.DisposeAsync();
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, "The replaced Discord client did not stop cleanly");
+            }
+        }
+        finally
+        {
+            _lifecycle.Release();
+        }
     }
 
     /// <summary>
@@ -39,8 +79,9 @@ public sealed class DiscordBotClient : IBotClient
     ///     Ready. Discord.Net raises Ready on every fresh IDENTIFY; subscribing there stacked a
     ///     second handler on a mid-run re-identify and answered every command twice.
     /// </summary>
-    private DiscordSocketClient CreateClient()
+    private async Task<GatewaySession> OpenSession()
     {
+        var state = new GatewayStateTracker();
         var client = new DiscordSocketClient(new DiscordSocketConfig
         {
             LogLevel = LogSeverity.Info
@@ -58,16 +99,30 @@ public sealed class DiscordBotClient : IBotClient
         client.AutocompleteExecuted += OnAutocomplete;
         // The tree is published once the socket is up. Either hook may be the one that finds
         // the registration in place; the publish itself runs once per process.
-        client.Connected += () => PublishCommands(client);
+        client.Connected += () =>
+        {
+            state.Connected();
+            return PublishCommands(client);
+        };
+        client.Disconnected += _ =>
+        {
+            state.Disconnected();
+            return Task.CompletedTask;
+        };
         client.Ready += () => PublishCommands(client);
-        return client;
+
+        // Downtime counts from here: a client that never connects is as dead as one that dropped.
+        state.Starting();
+        await client.LoginAsync(TokenType.Bot, _configuration.BotToken);
+        await client.StartAsync();
+        return new GatewaySession(client, state);
     }
 
     public async Task Stop(CancellationToken cancellationToken = default)
     {
-        if (_client == null) throw new Exception("Client was never started");
-        await _client.StopAsync();
-        await _client.DisposeAsync();
+        var client = Client;
+        await client.StopAsync();
+        await client.DisposeAsync();
     }
 
     /// <summary>
@@ -77,13 +132,12 @@ public sealed class DiscordBotClient : IBotClient
     /// </summary>
     public void WhenReady(Func<Task> execution)
     {
-        if (_client == null) throw new Exception("Client was not started");
-        _client.Ready += execution;
+        Client.Ready += execution;
     }
 
     public void Dispose()
     {
-        _client?.Dispose();
+        _session?.Client.Dispose();
     }
 
     public async Task SendMessages(IEnumerable<string> messages, IEnumerable<ulong> channelIds,
@@ -94,8 +148,8 @@ public sealed class DiscordBotClient : IBotClient
 
     public async Task<bool> CanPostToChannel(ulong channelId, CancellationToken cancellationToken = default)
     {
-        if (_client == null) throw new InvalidOperationException("Client was never started");
-        if (await _client.GetChannelAsync(channelId) is not IGuildChannel channel) return false;
+        var client = Client;
+        if (await client.GetChannelAsync(channelId) is not IGuildChannel channel) return false;
         var botUser = await channel.Guild.GetCurrentUserAsync();
         var permissions = botUser.GetPermissions(channel);
         return permissions.ViewChannel && permissions.SendMessages;
@@ -106,22 +160,22 @@ public sealed class DiscordBotClient : IBotClient
         Func<BotInteraction, Task<BotReply>> onInteraction,
         Func<BotAutocompleteRequest, Task<IReadOnlyList<BotOptionChoice>>> onAutocomplete)
     {
-        if (_client == null) throw new InvalidOperationException("Discord client was not started");
+        var client = Client;
 
         _registration = new CommandRegistration(commands,
             commands.ToDictionary(c => c.Name, StringComparer.OrdinalIgnoreCase), onInteraction, onAutocomplete);
 
         // Already connected (the canaries register after Ready): publish now. Otherwise the
         // Connected and Ready hooks pick the registration up when the socket comes up.
-        return _client.ConnectionState == ConnectionState.Connected
-            ? PublishCommands(_client)
+        return client.ConnectionState == ConnectionState.Connected
+            ? PublishCommands(client)
             : Task.CompletedTask;
     }
 
     // Bulk overwrite replaces the whole global command set atomically — any commands
     // registered by an earlier build (the pre-/piu top-level commands) are dropped. Once per
     // process: the tree is static per build and Discord rate-limits command writes, so a
-    // replacement client after a restart only needs its handlers, which CreateClient wired.
+    // replacement client after a restart only needs its handlers, which OpenSession wired.
     private async Task PublishCommands(DiscordSocketClient client)
     {
         var registration = _registration;
@@ -210,6 +264,9 @@ public sealed class DiscordBotClient : IBotClient
         IReadOnlyDictionary<string, BotCommandDefinition> Definitions,
         Func<BotInteraction, Task<BotReply>> OnInteraction,
         Func<BotAutocompleteRequest, Task<IReadOnlyList<BotOptionChoice>>> OnAutocomplete);
+
+    /// <summary>One socket client and the tracker watching its gateway; swapped whole on a restart.</summary>
+    private sealed record GatewaySession(DiscordSocketClient Client, GatewayStateTracker State);
 
     private static BotInteraction BuildInteraction(SocketSlashCommand command, IReadOnlyList<string> path,
         IReadOnlyDictionary<string, string> options)
@@ -476,7 +533,7 @@ public sealed class DiscordBotClient : IBotClient
     public async Task SendRichMessages(IEnumerable<RichBotMessage> messages, IEnumerable<ulong> channelIds,
         CancellationToken cancellationToken = default)
     {
-        if (_client == null) throw new InvalidOperationException("Client was never started");
+        var client = Client;
         var rendered = messages
             .Select(m => DiscordRichMessageRenderer.Render(m, ReplaceEmojiTokens))
             .ToArray();
@@ -484,7 +541,7 @@ public sealed class DiscordBotClient : IBotClient
         foreach (var channelId in channelIds)
             try
             {
-                if (await _client.GetChannelAsync(channelId) is not IMessageChannel channel)
+                if (await client.GetChannelAsync(channelId) is not IMessageChannel channel)
                 {
                     _logger.LogWarning("Channel {ChannelId} was not found", channelId);
                     continue;
@@ -529,11 +586,11 @@ public sealed class DiscordBotClient : IBotClient
     {
         var replacedMessages = messageEntities.Select(ReplaceEmojiTokens).ToList();
 
-        if (_client == null) throw new InvalidOperationException("Client was never started");
+        var client = Client;
         foreach (var channelId in channelIds)
             try
             {
-                if (await _client.GetChannelAsync(channelId) is not IMessageChannel channel)
+                if (await client.GetChannelAsync(channelId) is not IMessageChannel channel)
                 {
                     _logger.LogWarning("Channel {ChannelId} was not found", channelId);
                     continue;

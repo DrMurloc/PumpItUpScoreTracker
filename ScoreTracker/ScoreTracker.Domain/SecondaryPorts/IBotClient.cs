@@ -7,6 +7,22 @@ namespace ScoreTracker.Domain.SecondaryPorts
         public Task Start(CancellationToken cancellationToken = default);
         public Task Stop(CancellationToken cancellationToken = default);
 
+        /// <summary>
+        ///     Where the gateway socket stands right now. Slash commands arrive over the gateway,
+        ///     so a socket that is not Connected means no command can reach the bot even while
+        ///     REST sends keep working (docs/design/discord-overhaul.md §10).
+        /// </summary>
+        public BotGatewayStatus Status { get; }
+
+        /// <summary>
+        ///     Discards the socket client and starts a fresh one, keeping the registered commands.
+        ///     A fresh client identifies on the generic gateway and is handed a new resume host,
+        ///     which is the way out of the reconnect loop Discord.Net enters when its pinned
+        ///     resume host stops answering. Throws if the client was never started; safe to call
+        ///     while sends are in flight (they finish on the client they started with).
+        /// </summary>
+        public Task Restart(CancellationToken cancellationToken = default);
+
         public Task SendMessage(string message, ulong channelId, CancellationToken cancellationToken = default)
         {
             return SendMessages(new[] { message }, new[] { channelId }, cancellationToken);
