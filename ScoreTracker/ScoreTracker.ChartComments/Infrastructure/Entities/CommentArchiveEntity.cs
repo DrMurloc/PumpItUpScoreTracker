@@ -47,4 +47,8 @@ internal sealed class CommentArchiveEntity
     public Guid? DeletedByUserId { get; set; }
 
     public DateTimeOffset ArchivedAt { get; set; }
+
+    /// <summary>Rides along so a revived club's comments keep their seconds.</summary>
+    [Precision(9, 3)]
+    public decimal? AnchorAt { get; set; }
 }

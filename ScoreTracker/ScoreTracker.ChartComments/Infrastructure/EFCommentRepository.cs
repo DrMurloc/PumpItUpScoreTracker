@@ -54,7 +54,7 @@ internal sealed class EFCommentRepository : ICommentRepository
             .Select(r => new CommentRow(r.Comment.Id, r.Comment.ChartId, r.Comment.UserId,
                 r.Comment.ParentCommentId, r.Comment.Text, r.Comment.CreatedAt, r.Comment.EditedAt,
                 r.Comment.DeletedAt, r.Comment.DeletedByUserId, r.Votes, r.ViewerVoted,
-                r.Comment.SourceLanguage, r.Comment.TranslationQueuedAt))
+                r.Comment.SourceLanguage, r.Comment.TranslationQueuedAt, r.Comment.AnchorAt))
             .ToArray();
     }
 
@@ -100,7 +100,9 @@ internal sealed class EFCommentRepository : ICommentRepository
                 Audience = comment.Audience.Kind.ToString(),
                 CommunityId = comment.Audience.CommunityId,
                 ParentCommentId = comment.ParentCommentId,
-                CreatedAt = comment.CreatedAt
+                CreatedAt = comment.CreatedAt,
+                // Set once, with the other immutables: the aggregate never moves a second.
+                AnchorAt = comment.AnchorAt
             };
             await database.Set<CommentEntity>().AddAsync(entity, cancellationToken);
         }
@@ -203,6 +205,6 @@ internal sealed class EFCommentRepository : ICommentRepository
 
         return Comment.FromStorage(new CommentState(entity.Id, entity.ChartId, entity.UserId, audience,
             entity.ParentCommentId, entity.Text, entity.CreatedAt, entity.EditedAt, entity.DeletedAt,
-            entity.DeletedByUserId, entity.SourceLanguage, entity.TranslationQueuedAt));
+            entity.DeletedByUserId, entity.SourceLanguage, entity.TranslationQueuedAt, entity.AnchorAt));
     }
 }

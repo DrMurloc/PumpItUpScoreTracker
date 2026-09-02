@@ -58,4 +58,5 @@ internal sealed record CommentRow(
     int Votes,
     bool ViewerVoted,
     string? SourceLanguage = null,
-    DateTimeOffset? TranslationQueuedAt = null);
+    DateTimeOffset? TranslationQueuedAt = null,
+    decimal? AnchorAt = null);
