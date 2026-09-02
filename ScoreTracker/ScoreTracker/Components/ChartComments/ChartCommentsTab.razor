@@ -565,8 +565,7 @@ else
     // moderation-only and must land.
     private const int FocusTake = 500;
 
-    private CommentAudience? _appliedInitialAudience;
-    private Guid? _appliedFocus;
+    private (int Request, CommentAudience? Audience, Guid? Focus)? _applied;
 
     private CommentPageRecord _page = new(Array.Empty<CommentRecord>(), 0, false);
     private IReadOnlyList<CommentScopeRecord> _scopes = Array.Empty<CommentScopeRecord>();
@@ -607,6 +606,14 @@ else
     ///     the tab would open on Public, where the focused comment is not.
     /// </summary>
     [Parameter] public CommentAudience? InitialAudience { get; set; }
+
+    /// <summary>
+    ///     Counts the host's handoffs. The strip's panel hands over a target each time Open
+    ///     thread is tapped, and the same comment or the same scope twice is still a new ask —
+    ///     the reader may have walked the rail elsewhere in between — so the tab re-aims when
+    ///     this changes, not only when the values do.
+    /// </summary>
+    [Parameter] public int FocusRequest { get; set; }
 
     /// <summary>
     ///     A root's time chip was tapped (docs/design/step-chart-comments §3). The dialog wires
@@ -735,19 +742,20 @@ else
         if (!Active) return;
         // The moderation queue and the strip's panel both arrive with a comment to stand on. A
         // later arrival re-aims the tab rather than being ignored because an earlier one was
-        // applied — the same instance serves the dialog for as long as it is open.
-        if (InitialAudience is { } initial && initial != _appliedInitialAudience)
+        // applied — the same instance serves the dialog for as long as it is open — and so
+        // does the same target asked for again, which is what the request number carries.
+        var handoff = (FocusRequest, InitialAudience, FocusCommentId);
+        if (handoff != _applied)
         {
-            _appliedInitialAudience = initial;
-            _audience = initial;
-            _replyingTo = null;
-        }
+            _applied = handoff;
+            if (InitialAudience is { } initial)
+            {
+                _audience = initial;
+                _replyingTo = null;
+            }
 
-        if (FocusCommentId is { } focus && focus != _appliedFocus)
-        {
-            _appliedFocus = focus;
             // A focus target must be on the first page or the anchor marks nothing.
-            _take = FocusTake;
+            if (FocusCommentId != null) _take = FocusTake;
         }
 
         if (!_readInLoaded)

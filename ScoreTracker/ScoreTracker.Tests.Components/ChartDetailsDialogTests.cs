@@ -524,6 +524,32 @@ public sealed class ChartDetailsDialogTests : TestContext
     }
 
     [Fact]
+    public async Task AStripHandoffDoesNotOutliveTheOpening()
+    {
+        var comment = Anchored(33.45m);
+        CommentsOn(comment);
+        SetupStepChart();
+        var cut = RenderDialog(SetupChart(null));
+        await cut.Find("[data-testid=cdt-tab-Steps]").ClickAsync(new MouseEventArgs());
+        await cut.Find("[data-testid=sc-thread]").ClickAsync(new MouseEventArgs());
+        cut.WaitForAssertion(() => _mediator.Verify(m => m.Send(It.Is<GetChartCommentsQuery>(q => q.TakeRoots == 500),
+            It.IsAny<CancellationToken>()), Times.Once));
+
+        // Close, reopen the same instance, walk to Comments: the grid's and the dashboard's path.
+        var dialog = cut.FindComponent<ChartDetailsDialog>();
+        dialog.SetParametersAndRender(p => p.Add(c => c.Visible, false));
+        dialog.SetParametersAndRender(p => p.Add(c => c.Visible, true));
+        await cut.Find("[data-testid=cdt-tab-Comments]").ClickAsync(new MouseEventArgs());
+
+        // An ordinary first page, nothing focused: the earlier handoff stayed in its opening.
+        cut.WaitForAssertion(() => _mediator.Verify(m => m.Send(It.Is<GetChartCommentsQuery>(q => q.TakeRoots < 500),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce));
+        _mediator.Verify(m => m.Send(It.Is<GetChartCommentsQuery>(q => q.TakeRoots == 500), It.IsAny<CancellationToken>()),
+            Times.Once);
+        Assert.Empty(cut.FindAll(".cmt-focused"));
+    }
+
+    [Fact]
     public async Task ATimeChipInTheCommentsTabLandsOnTheStepsTab()
     {
         var comment = Anchored(33.45m);

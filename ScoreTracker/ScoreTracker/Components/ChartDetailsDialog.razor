@@ -105,6 +105,7 @@
                                       AdminPreview="@(!Comments.Value.Enabled)"
                                       FocusCommentId="@(IsDrilled ? null : _stripFocus ?? FocusCommentId)"
                                       InitialAudience="@(IsDrilled ? null : _stripAudience ?? InitialCommentAudience)"
+                                      FocusRequest="_stripRequest"
                                       OnAnchorClick="@(_stepChart != null ? EventCallback.Factory.Create<decimal>(this, SelectSecondOnStrip) : default)"
                                       @key="(ViewChart.Id, nameof(ChartCommentsTab))"></ChartCommentsTab>
                 </div>
@@ -328,6 +329,7 @@
     private ChartStepsTab? _stepsTab;
     private Guid? _stripFocus;
     private CommentAudience? _stripAudience;
+    private int _stripRequest;
     private bool _wasVisible;
     private Guid _anchorId = Guid.Empty;
     private Chart? _drilled;
@@ -498,6 +500,7 @@
             // reason — reopening from a row starts at the chart that row names.
             _wasVisible = false;
             _drilled = null;
+            ClearStripHandoff();
             return;
         }
 
@@ -513,6 +516,7 @@
         {
             _anchorId = Chart.Id;
             _drilled = null;
+            ClearStripHandoff();
         }
 
         // The mix is part of the guard: the partner's caption label comes from the selected
@@ -586,8 +590,21 @@
     private async Task OpenThreadFromStrip((Guid CommentId, CommentAudience Audience) target)
     {
         _stripFocus = target.CommentId;
-        _stripAudience = target.Audience.Kind == CommentAudienceKind.Public ? null : target.Audience;
+        // Public rides along too: the tab may be standing in Notes or a club from earlier.
+        _stripAudience = target.Audience;
+        _stripRequest++;
         await SelectTab(DetailsTab.Comments);
+    }
+
+    /// <summary>
+    ///     A handoff is scoped to one opening of one chart: the dialog instance outlives both on
+    ///     the grid and the dashboard, and a stale target would open the next chart standing in
+    ///     the wrong scope with a focus-sized page.
+    /// </summary>
+    private void ClearStripHandoff()
+    {
+        _stripFocus = null;
+        _stripAudience = null;
     }
 
     /// <summary>
