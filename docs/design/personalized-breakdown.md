@@ -236,12 +236,13 @@ is computed where the peers already are and the PUMBILITY arithmetic cannot move
 ## Phoenix 2 reads PUMBILITY peers (2026-08-15)
 
 On Phoenix 2 the Score projection no longer matches by competitive level: its peers are the
-player's **PUMBILITY peers** — within ±3 rungs on the PUMBILITY level ladder, full 50-chart pool
-of the type on both sides, Phoenix 2 scores only, median, no growth weighting, hidden under five
-peers ([pumbility-overhaul.md §4.8](pumbility-overhaul.md)). The four figures survive with one
-swap: **players** is the peer count, **level band** becomes the **rung band** ("DIAMOND LV.1 –
-RED BERYL LV.2"), **coverage** is unchanged, and **stale weight** is not shown — nothing is
-discounted. `ScoreProjection` carries a `PeerGroup` naming which kind of band it is, so the page
+player's **PUMBILITY peers** — the players whose pool of the type sits within 500 below and 250 above
+the viewer's, full 50-chart pool of the type on both sides (D53, round eight; ±3 rungs on the combined
+total until then), Phoenix 2 scores only, the default rung, no growth weighting, hidden under five
+peers ([pumbility-overhaul.md §4.8, §4.11](pumbility-overhaul.md)). The four figures survive with one
+swap: **players** is the peer count, **level band** becomes the **pool window** ("17,110 – 17,860",
+with *your doubles pool is 17,610* under it, `N0` off the PUMBILITY pages), **coverage** is unchanged,
+and **stale weight** is not shown — nothing is discounted. `ScoreProjection` carries a `PeerGroup` naming which kind of band it is, so the page
 renders by kind rather than by mix. Phoenix 1 keeps the competitive band, `p65` and the growth
 discount, unchanged. A type without a full pool has no personalized Score source at all — the
 blend falls to the community lists exactly as it does for a thin peer group today.

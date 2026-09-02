@@ -136,54 +136,51 @@ Earendel tops it at 175 of 236.
 
 *"Peers", not "cohorts" — owner, 2026-08-15: "please stop calling 'peers' cohorts."*
 
-**Phoenix 2 (round three of the PUMBILITY overhaul, [pumbility-overhaul.md §4.8](pumbility-overhaul.md)):**
-your PUMBILITY peers are the players within **±3 rungs** of you on the PUMBILITY level ladder —
-`Phoenix2PumbilityLevel`, the hidden five-levels-per-gem ladder, so DIAMOND LV.4 reaches down to
-DIAMOND LV.1 and up to RED BERYL LV.2 — who hold a **full 50-chart pool of the chart type**. One
-rung, the total pool's (`PlayerStats.SkillRating`), serves both types; the full-pool rule is per
-type, and it applies to you as well: no full pool of the type, no peers for it. **This is the same
-definition the PUMBILITY page's projection draws its peers from** — the two surfaces answer "who is
-like me" identically, by ruling ("They need to be the same").
+**Phoenix 2 (round eight of the PUMBILITY overhaul, [pumbility-overhaul.md D53/D55](pumbility-overhaul.md)):**
+your PUMBILITY peers are the players whose pool of the chart type sits within **500 below and 250 above
+yours** — your singles pool for a singles folder, doubles for doubles — each holding a **full 50-chart
+pool of the type**, and you holding one too: no full pool of the type, no peers for it. **This is the
+projector's own definition and the lens reads it from the projector**, by ruling (*"tier list should move
+with this. we aren't keeping multiple pumbility peer groups across the site"*): `TierListBlendBuilder`
+projects the folder with the catalog and counts `ScoreProjection.PeerPools` — the same holders-per-chart
+the PUMBILITY page's Play list counts — banded with the same log-scaled processor the nightly writer
+uses. Nothing is stored for a Phoenix 2 viewer; the read is one player's window (median 22 players) and
+their records, held six hours with the rest of the blend.
 
 | Mix | Peer key | Lists | Members |
 |---|---|---|---|
 | Phoenix 1 | highest **difficulty** title level (`UserHighestTitle`), `L{n}` | ~19 | 85–211 through levels 16–25; 11 at L10, 6 at L27, 1 at L28 |
-| Phoenix 2 | the viewer's **PUMBILITY level rung**, `R{index}` | ≤ 37 per type | everyone within ±3 rungs with a full pool of the type — 20–35 players across GOLD → RED BERYL today |
+| Phoenix 2 | none stored — the community `*` list only; the personalized lens is the projector's read | 1 per type | pools within −500..+250 of yours, full pool of the type both sides — median 22 players (p10 7, p90 39) |
 
-Phoenix 1 has no PUMBILITY level ladder — its difficulty titles stand in. Not perfect, and
+Phoenix 1 has no per-type pool worth reading — its difficulty titles stand in. Not perfect, and
 deliberately not worth more: Phoenix 1 PUMBILITY has a few weeks of relevance left.
 
-- **It still materializes.** The key is the *viewer's* rung, and every viewer on rung *r* reads
-  the same list — one computed over the players in *r*±3. Member sets of neighbouring keys
-  overlap, which is fine: a list per key is what the nightly job writes, not a partition of
-  players. Thirty-seven keys per type per mix at most.
+- **Phoenix 2 does not materialize, and does not need to.** A window around the viewer's own pool is
+  per viewer and per type, which is exactly the shape the first version's Singles∪Combined union could
+  not store; the projector answers it at request time from one range read on `PlayerStats` and the
+  peers' records, the read the PUMBILITY page already pays for. The community view still reads the
+  nightly `*` list, so a signed-out visitor costs nothing new.
 - **You are never one of your own peers** (owner, 2026-08-17; [pumbility-overhaul.md D31](pumbility-overhaul.md)).
-  The stored list counts every member's pool, the reader's among them when they hold one, so the
-  reader takes their own back out at read time (`TierListBlendBuilder.ComputePumbility`): one from
-  the peer count, one from every chart their pool holds — the pool rebuilt from their records with
-  the writer's own rule, `PumbilityPeers.TopPool` — and the bands redrawn with the writer's own
-  processor. On Phoenix 1 the same subtraction applies when the reader holds a full pool of the type
-  (a short one was never counted among the title-level members). Nightly is the caveat: a pool that
-  filled since the last build was never counted in, and for that day the subtraction runs one deep.
-- **The old per-viewer-union worry is moot.** The first version keyed on the own-type title rung
-  because a Singles∪Combined union was per viewer and could not be materialized. Keying on the
-  viewer's rung has the same property the own-type key had — everyone at one rung shares one
-  list — without the type track's failure: a thin pool of one type dragged its holder into a band
-  of players who had barely played that type (71 of 92 ranked players sit below ADVANCED on the
-  [D] track today), and the doubles list blanked for nearly everyone.
+  On Phoenix 2 the projector draws the window with the viewer removed, so there is nothing to take back
+  out. On Phoenix 1 the stored list counts every member's pool, the reader's among them when they hold
+  one, so the reader takes their own back out at read time (`TierListBlendBuilder.ComputePumbility`):
+  one from the peer count, one from every chart their pool holds — the pool rebuilt from their records
+  with the writer's own rule, `PumbilityPeers.TopPool` — and the bands redrawn with the writer's own
+  processor. Nightly is the caveat there: a pool that filled since the last build was never counted in.
+- **History.** Round three keyed Phoenix 2 on the viewer's rung of the combined total (`R{index}`, a
+  list per rung counted over the players within ±3 rungs), which materialized because everyone on one
+  rung shared one list. It was type-blind — a singles-carried DIAMOND's doubles peers were doubles
+  specialists — and skewed upward at every rung, which is what round eight measured and replaced
+  ([pumbility-overhaul.md §4.11](pumbility-overhaul.md)). The type-track refinement deferred here for
+  three rounds is what D53 is: the pool of the type IS the type-aware definition, and it needed no
+  title track to exist.
 - Phoenix 1 needs no new read: `ITitleRepository.GetUserIdsOnHighestLevel` already exists and
-  `ProcessPassTierList` already calls it. Phoenix 2 reads `IPlayerStatsReader.GetStats` for the
-  rung and builds pools from scores as it always did.
-
-⚠️ **The type-track refinement stays deferred, not rejected.** Peers on the *own-type* title
-track (∩ the gem band) would fix the total ladder's type-blindness — a singles-carried DIAMOND
-player is a doubles peer to a doubles-carried one — but it needs real per-type pools on both
-sides. Revisit when the [D] track has volume; the gate is the same full-pool rule.
+  `ProcessPassTierList` already calls it. Phoenix 2's nightly pass reads no stats at all now.
 
 ## 6. Coverage, and what happens outside your band
 
-Personalized PUMBILITY only speaks for a **3–4 level band**, and the walls are absolute, not
-sloped. Measured on the first version's singles groups at ±250 PUMBILITY, charts with ≥3 peer appearances:
+Personalized PUMBILITY only speaks for a **3–4 level band** — the folders your peers' pools reach — and the walls are absolute, not
+sloped. (On Phoenix 2 since round eight the folder picker lists the levels the projector's peers' pools reach, the same walls read live.) Measured on the first version's singles groups at ±250 PUMBILITY, charts with ≥3 peer appearances:
 
 | folder | low ~15.0k (91 peers) | mid ~17.0k (236) | high ~18.5k (62) |
 |---|---|---|---|
@@ -253,6 +250,10 @@ and that is *wrong* here: the two mixes price charts under completely different 
 338 shared charts were rerated between them, so a P1 pool count is a wrong answer for a P2 folder
 rather than a stale one. On P2 the lens is absent until P2 pools exist.
 
+**Phoenix 2 stores only the community list (round eight, D55).** The personalized Phoenix 2 lens is the
+projector's read at request time (§5), so the nightly job writes the `*` key alone on that mix — roughly
+one row set per folder per type instead of up to thirty-eight. Phoenix 1 still writes its `L{n}` lists.
+
 ## 9. What this deletes
 
 - The **Skill** source — `ComputeSkillEvidence`, `ComputeSkillSource`, the ±3-folder pooling,
@@ -296,3 +297,9 @@ locally where `PreventRecurringJobs` parks the job on a yearly cron the dashboar
 **Importing scores does not rebuild the PUMBILITY tier lists**, and deliberately: it is a population-wide
 count, not a per-player derivation, so one import cannot meaningfully move it. Your own new
 scores show up in the lens on the next nightly run — or immediately, if you press the button.
+
+**Round eight leaves the Phoenix 2 rung rows behind.** The job no longer writes `R{index}` keys on Phoenix 2
+and nothing reads them, so the rows written before 2026-09-01 are harmless leftovers; the next nightly run
+does not remove them, because `SavePumbilityTierLists` replaces the keys it is handed and is handed only
+`*`. Delete them by hand if the table's size ever matters (the Phoenix 2 mix's rows whose `PeerKey` starts
+with `R`); nothing depends on it either way.
