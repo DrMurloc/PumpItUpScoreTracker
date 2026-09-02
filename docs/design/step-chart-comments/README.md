@@ -1,6 +1,6 @@
 # Step chart comments
 
-Status: **owner-workshopped 2026-09-01 (two rounds), settled; building.** A comment may point at
+Status: **owner-workshopped 2026-09-01 (two rounds) and built as PR #309; round 3 (2026-09-02) folds in the field-test redlines, D13–D17.** A comment may point at
 one second of the step chart. The strip draws a mark there, a sticky panel at the bottom of the
 strip reads and writes the comment on every host, and the Comments tab wears a time chip that
 jumps back to the strip.
@@ -9,7 +9,7 @@ Companion specs: [chart-comments/README.md](../chart-comments/README.md) — the
 this rides on (audiences, notes, votes, moderation, translation), whose rules are all unchanged
 here — and [step-chart-failure-map.md](../step-chart-failure-map.md), the strip itself, whose
 rail, minimap and layout rules this extends. **[mock.html](mock.html) is the UI reference** (round
-2): desktop page section, phone reading and writing, both dialog tabs, at true widths and on the
+3): desktop page section, phone reading and writing, both dialog tabs, at true widths and on the
 real Phoenix tokens.
 
 > **Part 2 of this document is scaffolding and gets deleted when the feature ships.** Part 1, the
@@ -81,6 +81,29 @@ All owner-ruled across the two rounds of 2026-09-01.
   against the chart's length crosses the vertical boundary: the aggregate's rule is zero to an
   hour, and ChartComments keeps knowing nothing about charts.
 
+Field-test redlines on PR #309 (owner, 2026-09-02):
+
+- **D13 — The gesture line and the scope chip live in a bar under the section chips.** The
+  panel's head had carried the scope menu and a ＋, and an empty scope has no head — which
+  trapped the reader in it. The bar is always there: a muted line naming the gesture on the
+  left ("Double-tap a spot to leave a comment", in the pointer's or the finger's words), a
+  dense chip on the right that opens the same scope list the tab's rail offers, with a ✓ on the
+  current one. The ＋ is gone: the gesture is the way in. Signed out, the bar does not render.
+- **D14 — The composer's ✕ is the panel's top-right corner**, where the ＋ used to be — the
+  spot the eye had learned. It replaces the foot's Cancel: one way out.
+- **D15 — The composer's head is the time chip, the scope chip and the ✕.** "Posting to
+  Public as ERRLENA" overflowed a phone's panel and is retired on this surface: the scope chip
+  says the scope, a signed-in reader knows who they are, and switching the chip while writing
+  changes where the comment goes — the bar's chip and the composer's are one setting, so the
+  strip follows too. Notes turns the chip gold, the placeholder into "Note on 0:33…" and the
+  button into Save note. The Comments tab keeps its sentence; it has the width.
+- **D16 — The panel spans the strip and the whole-chart map.** Strip-wide it read thin on every
+  screen. The module lays it over the frame's bottom edge from the strip box's left to the
+  map's right, on every host; the last of the map sits under it, and that is accepted.
+- **D17 — The empty panel is one line** — "Nothing here yet." — since the gesture moved to the
+  bar. The panel is no longer inside the viewer: the component renders the bar in flow under
+  the chips and the panel positioned against the strip's root, which the module lays out.
+
 ## 3. The vocabulary
 
 | Mark | Reads |
@@ -93,19 +116,16 @@ All owner-ruled across the two rounds of 2026-09-01.
 | **On the map** | Every comment is a dot on the whole-chart map's left edge; deaths keep the right edge. |
 | **Time chip** | `0:33`, on a comment row in the Comments tab and as the panel's title. Same chrome as a section chip, with a short bar where the section chip has a dot. |
 
-The panel, three states:
+The bar, under the section chips (D13): the gesture line on the left, the scope chip on the
+right. The panel, three states:
 
 - **Browse** — ‹ › steppers, the time chip, the stack pager (`1/2`) when there is one, author and
-  age, the ＋ in the corner, two lines of the body (tap to unfold), ▲ vote, reply count, *Open
-  thread ›*. The scope menu (*Comments: Public ▾*) sits in the head on wide panels and collapses to
-  an icon when the panel is narrow.
-- **Compose** — the time chip with ✕, *Posting to Public as ERRLENA*, the one-line composer that
-  grows, Cancel, Comment. The rules card and the consent flow render in place exactly as the tab's
-  do. Signed out: the panel is read-only and the compose gesture yields a *Sign in to comment on
-  0:33* line instead.
-- **Empty** — "No comments on this chart yet — double-click a spot on the chart to add one"
-  (double-tap on touch). On charts that have comments, the ＋ carries the same hint on hover and is
-  the accessible way in: it picks the row nearest the middle of the viewport.
+  age, two lines of the body (tap to unfold), ▲ vote, reply count, *Open thread ›*.
+- **Compose** — the time chip, the scope chip (live), the ✕ top-right (D14/D15); the one-line
+  composer that grows; the counter near the cap and Comment (Save note on Notes). The rules card
+  and the consent flow render in place exactly as the tab's do. Signed out: the panel is
+  read-only and the compose gesture yields a *Sign in to comment on 0:33* line instead.
+- **Empty** — "Nothing here yet." (D17).
 
 ## 4. Deliberately out of scope
 
@@ -143,8 +163,8 @@ surface are untouched.
 | **Application** (ChartComments) | The post handler passes the anchor through; the marks handler is a read that reuses the page handler's projection. Sagas, moderation, translation, purge, archive unchanged. |
 | **Infrastructure** (ChartComments + Data) | `AnchorAt decimal(9,3) NULL` on `CommentEntity` and on `CommentArchiveEntity` (a deleted club's comments keep their seconds); `CommentRow` carries it; the repository gains `GetAnchoredForChart`, which is the `Visible` gate plus `AnchorAt IS NOT NULL` plus the viewer's own notes. Migration `AddChartCommentAnchor`, scaffolded from Data with the CompositionRoot startup project. No new index: rows per chart are few and the `(ChartId, Audience, CommunityId)` index already serves. |
 | **Presentation — the module** (`wwwroot/js/step-chart.js`) | Draws marks (bubble, stack count, tick), the selected and composing hairlines, and map dots from a list the panel hands it. Double-click, and a hand-rolled double-tap for touch, snap to the nearest row and raise a pick. The follow rule (nearest to the viewport middle, rAF-throttled, held after a stepper or a tap until the next wheel/touchmove). The narrow marks lane. Interop surface: `bindPanel(panelElement, dotNetRef)` (finds the strip root by `closest('[data-stepchart]')`, waits for the mount), `setMarks`, `selectMark`, `setPick`, `clearPick`, `scrollToSecond`; events to .NET: `OnPick(t)`, `OnFollow(id)`, `OnSelect(id)`. Legend entries lose their counts (D9). No new tokens: marks read `--mix-ink`, `--mix-primary`, `--step-you`. |
-| **Presentation — the panel** | `StepChartCommentPanel` (Web `Components/ChartComments/`), one component for all hosts. Owns the data (dispatches the marks query), the three states, the scope menu, the composer (reusing `CommentComposer`, `CommentRulesCard`, `LinkInterstitial`, `CommentTextView`), the vote, and the interop binding. Gated exactly as the tab: `IsAdmin || ChartComments:Enabled`. A refused post shows the domain sentence in the snackbar. |
-| **Presentation — hosts** | Page: the panel is an island inside the static strip's `.stepchart-viewer` (the record panel's precedent), rendered only when the gate allows; *Open thread* opens `ChartDetailsDialog` with `InitialTab = Comments` and `FocusCommentId`. Dialog: the panel is a child of `ChartStepsTab`; *Open in Comments* raises to the dialog, which switches tabs and focuses. Comments tab: `CommentRow` renders the time chip on anchored roots; its click raises to the dialog, which switches to Steps and asks the tab to select the second once the module has mounted. |
+| **Presentation — the panel** | `StepChartCommentPanel` (Web `Components/ChartComments/`), one component for all hosts: the bar in flow under the chips (gesture line + scope chip, D13) and the panel the module positions over the frame (D16). Owns the data (dispatches the marks query), the three states, the scope (one setting for bar and composer, D15), the composer (reusing `CommentComposer` without its Cancel, `CommentRulesCard`, `LinkInterstitial`, `CommentTextView`), the vote, and the interop binding. Gated exactly as the tab: `IsAdmin || ChartComments:Enabled`. A refused post shows the domain sentence in the snackbar. |
+| **Presentation — hosts** | Page: the component is an island between the static strip's chips and its viewer (the record panel's precedent for an island in static markup), rendered only when the gate allows; *Open thread* opens `ChartDetailsDialog` with `InitialTab = Comments` and `FocusCommentId`. Dialog: the panel is a child of `ChartStepsTab`; *Open in Comments* raises to the dialog, which switches tabs and focuses. Comments tab: `CommentRow` renders the time chip on anchored roots; its click raises to the dialog, which switches to Steps and asks the tab to select the second once the module has mounted. |
 | **Docs** | This document, the schema rows, the ChartComments sentence in ARCHITECTURE, the chart-comments README's scope bullet. |
 
 ## 7. Ratchets that bite if forgotten
