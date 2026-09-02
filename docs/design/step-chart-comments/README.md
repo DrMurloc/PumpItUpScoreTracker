@@ -1,6 +1,6 @@
 # Step chart comments
 
-Status: **owner-workshopped 2026-09-01 (two rounds) and built as PR #309; round 3 (2026-09-02) folds in the field-test redlines, D13–D17.** A comment may point at
+Status: **owner-workshopped 2026-09-01 (two rounds) and built as PR #309; rounds 3 and 4 (2026-09-02) fold in the field-test redlines, D13–D18.** A comment may point at
 one second of the step chart. The strip draws a mark there, a sticky panel at the bottom of the
 strip reads and writes the comment on every host, and the Comments tab wears a time chip that
 jumps back to the strip.
@@ -103,6 +103,15 @@ Field-test redlines on PR #309 (owner, 2026-09-02):
 - **D17 — The empty panel is one line** — "Nothing here yet." — since the gesture moved to the
   bar. The panel is no longer inside the viewer: the component renders the bar in flow under
   the chips and the panel positioned against the strip's root, which the module lays out.
+- **D18 — The filter is only there when there is something to filter** (owner, second field
+  test). The bar's scope chip renders only when the chart has anchored comments in at least one
+  of the reader's scopes, and lists only the scopes that have some — no notes, no Personal Notes
+  entry. The panel opens on the first listed scope, so a chart with only your notes opens on
+  them. The composer's chip is a different question and keeps every scope the reader can post
+  to; the first note has to be written somewhere. The menu names its entries and nothing more:
+  the private scope reads **Personal Notes** here, centered like the rest, with no "Only you"
+  beside it. The count behind it is one grouped read (`GetChartCommentScopeCountsQuery`), taken
+  when the panel loads and again after a post, when a quiet scope may have woken.
 
 ## 3. The vocabulary
 
@@ -116,8 +125,8 @@ Field-test redlines on PR #309 (owner, 2026-09-02):
 | **On the map** | Every comment is a dot on the whole-chart map's left edge; deaths keep the right edge. |
 | **Time chip** | `0:33`, on a comment row in the Comments tab and as the panel's title. Same chrome as a section chip, with a short bar where the section chip has a dot. |
 
-The bar, under the section chips (D13): the gesture line on the left, the scope chip on the
-right. The panel, three states:
+The bar, under the section chips (D13): the gesture line on the left, the scope filter on the
+right when the chart has comments at all (D18). The panel, three states:
 
 - **Browse** — ‹ › steppers, the time chip, the stack pager (`1/2`) when there is one, author and
   age, two lines of the body (tap to unfold), ▲ vote, reply count, *Open thread ›*.
