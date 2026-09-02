@@ -16,6 +16,7 @@ namespace ScoreTracker.ExplorationTests.DiscordCanary;
 ///     BotCommandSaga / DiscordFeedSaga compose, so the lab channel doubles as a live
 ///     gallery of the real shapes. Manual runs only.
 /// </summary>
+[Collection(DiscordCanaryCollection.Name)]
 [ExcludeFromCodeCoverage]
 public sealed class PiuCardCanaryTests
 {

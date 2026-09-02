@@ -17,6 +17,7 @@ namespace ScoreTracker.ExplorationTests.DiscordCanary;
 ///     initial-import digest. Posts to the lab channel for visual review; the pipeline
 ///     work only starts once the owner signs off on this shape.
 /// </summary>
+[Collection(DiscordCanaryCollection.Name)]
 [ExcludeFromCodeCoverage]
 public sealed class SessionSnapshotPoCTests
 {

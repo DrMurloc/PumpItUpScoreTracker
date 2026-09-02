@@ -45,10 +45,12 @@ namespace ScoreTracker.Web.HostedServices
             await _botClient.Start(cancellationToken);
 
             // The registered tree carries description_localizations, so each viewer's
-            // Discord client shows the help text in its own language.
-            _botClient.WhenReady(async () =>
-                await _botClient.RegisterCommands(PiuCommandCatalog.Localized(_localizer), OnInteraction,
-                    OnAutocomplete));
+            // Discord client shows the help text in its own language. Registering right after
+            // Start, not from WhenReady, lets the adapter publish the tree once the socket is up
+            // and wire the handlers into every client it builds, so a replacement client after a
+            // gateway restart answers commands too (docs/design/discord-overhaul.md §10).
+            await _botClient.RegisterCommands(PiuCommandCatalog.Localized(_localizer), OnInteraction,
+                OnAutocomplete);
 
             _logger.LogInformation("Started bot client");
         }
