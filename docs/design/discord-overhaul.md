@@ -594,3 +594,27 @@ Hangfire dashboard. During the next incident the signal is a Warning trace readi
 ### Out of scope
 
 Admin restart button, intents trim, auto-pruning dead channel registrations, a Discord.Net upgrade.
+
+### As-built (2026-09-01)
+
+- **Publish hooks.** The command tree is published from both `Connected` and `Ready`, not Ready
+  alone: `RegisterCommands` may run before or after either fires (the hosted service calls it
+  straight after `Start`, the canaries after Ready), so both hooks try, and a once-per-process
+  flag behind a lock makes the extra attempts no-ops. A failed publish is logged and the next
+  hook retries.
+- **Downtime counts from `Start`.** The tracker enters Disconnected the moment a client is built,
+  so a first client that never connects is replaced after five minutes like a dropped one, and a
+  replacement that also fails to connect is replaced again five minutes after the swap.
+- **A repeat Disconnected keeps the original stamp.** Discord.Net raises `Disconnected` on every
+  cycle of its reconnect loop; only the first one after a Connected moves the clock.
+- **Sends never see a null client.** The adapter's client accessor is a snapshot that throws
+  "Client was never started" before the first `Start`; after a swap the old client is stopped
+  only once the replacement is in place.
+- **Canaries run serialized.** The five lab-channel classes share a non-parallel xUnit
+  collection: Discord admits one IDENTIFY per five seconds per bot, and five classes logging the
+  same bot in at once queued until the thirty-second Ready waits expired. Serialized, the suite
+  passes in about a minute and a quarter — 12 of 13 on 2026-09-01; the thirteenth,
+  `RealSessionShowcaseTests`, fails at SQL connect because its
+  `DiscordTest:ExampleConnectionString` user-secret still names an earlier Aspire container's
+  port (environmental, not this change).
+- Constants, layer scope and the test list landed as written above.
