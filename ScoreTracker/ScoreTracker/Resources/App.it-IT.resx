@@ -666,6 +666,9 @@
   <data name="All plays" xml:space="preserve">
     <value>Tutti i tentativi</value>
   </data>
+  <data name="All pools" xml:space="preserve">
+    <value>Tutti i pool</value>
+  </data>
   <data name="All saved credentials have been cleared." xml:space="preserve">
     <value>Tutte le credenziali salvate sono state cancellate.</value>
   </data>
@@ -1973,6 +1976,9 @@
   <data name="Crossed over" xml:space="preserve">
     <value>Incrociato</value>
   </data>
+  <data name="Crowd sourced" xml:space="preserve">
+    <value>Collaborativo</value>
+  </data>
   <data name="crux: {0}" xml:space="preserve">
     <value>punto chiave: {0}</value>
   </data>
@@ -2250,6 +2256,9 @@
   <data name="Doubles competitive level" xml:space="preserve">
     <value>Livello competitivo Doubles</value>
   </data>
+  <data name="Doubles pool" xml:space="preserve">
+    <value>Pool Doubles</value>
+  </data>
   <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
     <value>Tabella dei Doubles; un Single legge AA e inferiori una tacca più in basso (AA {0}, A+ {1} …). Scala completa sotto.</value>
   </data>
@@ -2509,6 +2518,9 @@
   </data>
   <data name="Evidence already includes score age — older scores count for less." xml:space="preserve">
     <value>I dati tengono già conto dell'età — i punteggi vecchi contano meno.</value>
+  </data>
+  <data name="Example" xml:space="preserve">
+    <value>Esempio</value>
   </data>
   <data name="Example Set Builder" xml:space="preserve">
     <value>Generatore di set di esempio</value>
@@ -5385,6 +5397,9 @@
   <data name="Phoenix 1" xml:space="preserve">
     <value>Phoenix 1</value>
   </data>
+  <data name="Phoenix 1 projected" xml:space="preserve">
+    <value>Phoenix 1 proiettato</value>
+  </data>
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · la tua vera top 50</value>
   </data>
@@ -5943,6 +5958,9 @@
   </data>
   <data name="PUMBILITY peers" xml:space="preserve">
     <value>Pari PUMBILITY</value>
+  </data>
+  <data name="PUMBILITY Pool" xml:space="preserve">
+    <value>Pool PUMBILITY</value>
   </data>
   <data name="Pumbility Push" xml:space="preserve">
     <value>Spinta al Pumbility</value>
@@ -7162,6 +7180,9 @@
   </data>
   <data name="Singles or Doubles" xml:space="preserve">
     <value>Singles o Doubles</value>
+  </data>
+  <data name="Singles pool" xml:space="preserve">
+    <value>Pool Singles</value>
   </data>
   <data name="Singles vs Doubles" xml:space="preserve">
     <value>Singles vs Doubles</value>
@@ -10035,6 +10056,9 @@
   </data>
   <data name="{0}% to next title" xml:space="preserve">
     <value>{0}% al prossimo titolo</value>
+  </data>
+  <data name="{0}'s Scores by {1}" xml:space="preserve">
+    <value>Punteggi di {0} per {1}</value>
   </data>
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}: un SSS+ su {1} vale un 900.000 su {2}</value>

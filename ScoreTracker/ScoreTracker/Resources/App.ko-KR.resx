@@ -664,6 +664,9 @@
   <data name="All plays" xml:space="preserve">
     <value>전체 플레이</value>
   </data>
+  <data name="All pools" xml:space="preserve">
+    <value>모든 풀</value>
+  </data>
   <data name="All saved credentials have been cleared." xml:space="preserve">
     <value>저장된 모든 자격 증명이 삭제되었습니다.</value>
   </data>
@@ -1960,6 +1963,9 @@
   <data name="Crossed over" xml:space="preserve">
     <value>크로스오버</value>
   </data>
+  <data name="Crowd sourced" xml:space="preserve">
+    <value>모두의 평가</value>
+  </data>
   <data name="crux: {0}" xml:space="preserve">
     <value>최난구간: {0}</value>
   </data>
@@ -2236,6 +2242,9 @@
   <data name="Doubles competitive level" xml:space="preserve">
     <value>더블 경쟁 레벨</value>
   </data>
+  <data name="Doubles pool" xml:space="preserve">
+    <value>더블 풀</value>
+  </data>
   <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
     <value>더블 표입니다; 싱글은 AA 이하를 한 칸씩 낮게 읽습니다 (AA {0}, A+ {1} …). 전체 사다리는 아래에.</value>
   </data>
@@ -2493,6 +2502,9 @@
   </data>
   <data name="Evidence already includes score age — older scores count for less." xml:space="preserve">
     <value>근거에는 이미 스코어의 나이가 반영되어 있습니다 — 오래된 스코어는 덜 반영됩니다.</value>
+  </data>
+  <data name="Example" xml:space="preserve">
+    <value>예시</value>
   </data>
   <data name="Example Set Builder" xml:space="preserve">
     <value>예시 세트 빌더</value>
@@ -5352,6 +5364,9 @@
   <data name="Phoenix 1" xml:space="preserve">
     <value>Phoenix 1</value>
   </data>
+  <data name="Phoenix 1 projected" xml:space="preserve">
+    <value>Phoenix 1 투영</value>
+  </data>
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · 실제 상위 50</value>
   </data>
@@ -5906,6 +5921,9 @@
   </data>
   <data name="PUMBILITY peers" xml:space="preserve">
     <value>PUMBILITY 동료</value>
+  </data>
+  <data name="PUMBILITY Pool" xml:space="preserve">
+    <value>PUMBILITY 풀</value>
   </data>
   <data name="Pumbility Push" xml:space="preserve">
     <value>Pumbility 올리기</value>
@@ -7110,6 +7128,9 @@
   </data>
   <data name="Singles or Doubles" xml:space="preserve">
     <value>싱글 또는 더블</value>
+  </data>
+  <data name="Singles pool" xml:space="preserve">
+    <value>싱글 풀</value>
   </data>
   <data name="Singles vs Doubles" xml:space="preserve">
     <value>싱글 vs 더블</value>
@@ -9966,6 +9987,9 @@
   </data>
   <data name="{0}% to next title" xml:space="preserve">
     <value>다음 타이틀까지 {0}%</value>
+  </data>
+  <data name="{0}'s Scores by {1}" xml:space="preserve">
+    <value>{0}님의 점수 ({1}별)</value>
   </data>
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}: {1}의 SSS+는 {2}의 900,000어치</value>

@@ -220,6 +220,10 @@ everywhere. `Roglub` (gain) and `Murp` (plate) come from the tables above.
 | fetching | Grubgro | Distinct from `Grubmarg` (find). |
 | rendering | Bromurm | |
 | of | Ub | Recovered from the existing `#{0} ub {1}`; tabulated so the next batch reuses it. |
+| crowd | Murlgrup | The share card's stamp: "Crowd sourced" = `Murlgrup grolba`. |
+| sourced | Grolba | |
+| all | Ulbog | Distinct from `Olga` (every). |
+| projected | Mrglrgo | Recovered from the existing `Projected gains` → `Mrglrgo roglub`; lowercase mid-sentence. |
 
 ### The PUMBILITY calculator batch (2026-08-16)
 
