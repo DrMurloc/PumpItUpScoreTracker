@@ -30,9 +30,12 @@ public sealed class DiscordBotClient : IBotClient
             LogLevel = LogSeverity.Info
         });
 
+        // Severity, source and exception all travel: the disconnect reason Discord.Net reports
+        // as an exception-only entry is the whole diagnosis of a reconnect loop.
         _client.Log += msg =>
         {
-            _logger.LogInformation(msg.Message);
+            _logger.Log(DiscordLogMapping.ToLogLevel(msg.Severity), msg.Exception,
+                "Discord.Net {Source}: {Message}", msg.Source, DiscordLogMapping.Text(msg));
             return Task.CompletedTask;
         };
         await _client.LoginAsync(TokenType.Bot, _configuration.BotToken);
