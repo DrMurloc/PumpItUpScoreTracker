@@ -133,7 +133,8 @@ right when the chart has comments at all (D18). The panel, three states:
 - **Compose** — the time chip, the scope chip (live), the ✕ top-right (D14/D15); the one-line
   composer that grows; the counter near the cap and Comment (Save note on Notes). The rules card
   and the consent flow render in place exactly as the tab's do. Signed out: the panel is
-  read-only and the compose gesture yields a *Sign in to comment on 0:33* line instead.
+  read-only and the compose gesture yields a *Sign in to comment on 0:33* line instead. Enter on
+  the focused strip is the keyboard's way in: it picks the row nearest the middle of the viewport.
 - **Empty** — "Nothing here yet." (D17).
 
 ## 4. Deliberately out of scope

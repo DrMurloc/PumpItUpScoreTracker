@@ -1385,6 +1385,13 @@ function initComments(view) {
         if (hitMark(view, p.x, p.y)) return;
         pickSecond(view, snapSecond(view, view.tOf(p.y)));
     });
+    // The keyboard's way in: Enter on the focused strip picks the row nearest the middle of
+    // the viewport. Without a bound panel pickSecond does nothing.
+    box.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' || e.target !== box) return;
+        e.preventDefault();
+        pickSecond(view, snapSecond(view, viewportCenter(view)));
+    });
     var lastTap = null;
     box.addEventListener('pointerup', function (e) {
         if (e.pointerType !== 'touch') return;
@@ -1474,13 +1481,6 @@ export async function selectSecond(panelElement, t) {
     view.pinned = true;
     centerOn(view, t);
     repaintAll(view);
-}
-
-// The accessible way in: the panel's own button picks the row nearest the viewport's middle.
-export async function pickAtCenter(panelElement) {
-    var view = await viewFor(panelElement);
-    if (!view) return;
-    pickSecond(view, snapSecond(view, viewportCenter(view)));
 }
 
 export async function clearPick(panelElement) {
