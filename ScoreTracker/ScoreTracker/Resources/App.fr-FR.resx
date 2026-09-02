@@ -1584,9 +1584,6 @@
   <data name="Comment from a deleted user" xml:space="preserve">
     <value>Commentaire d’un compte supprimé</value>
   </data>
-  <data name="Comment on a spot" xml:space="preserve">
-    <value>Commenter un point</value>
-  </data>
   <data name="Comment on {0}…" xml:space="preserve">
     <value>Commenter à {0}…</value>
   </data>
@@ -2234,8 +2231,11 @@
   <data name="Double Performance" xml:space="preserve">
     <value>Double Performance</value>
   </data>
-  <data name="Double-click a spot on the chart to comment there" xml:space="preserve">
-    <value>Double-cliquez sur un point de la partition pour commenter à cet endroit</value>
+  <data name="Double-click a spot to leave a comment" xml:space="preserve">
+    <value>Double-cliquez sur un point pour laisser un commentaire</value>
+  </data>
+  <data name="Double-tap a spot to leave a comment" xml:space="preserve">
+    <value>Touchez deux fois un point pour laisser un commentaire</value>
   </data>
   <data name="Doubles" xml:space="preserve">
     <value>Doubles</value>
@@ -4410,12 +4410,6 @@
   <data name="No close matches yet." xml:space="preserve">
     <value>Pas encore de rivaux proches.</value>
   </data>
-  <data name="No comments on this chart yet — double-click a spot on the chart to add one." xml:space="preserve">
-    <value>Aucun commentaire sur ce chart pour l’instant — double-cliquez sur un point de la partition pour en ajouter un.</value>
-  </data>
-  <data name="No comments on this chart yet — double-tap a spot on the chart to add one." xml:space="preserve">
-    <value>Aucun commentaire sur ce chart pour l’instant — touchez deux fois un point de la partition pour en ajouter un.</value>
-  </data>
   <data name="No community peers yet" xml:space="preserve">
     <value>Pas encore de membres de communauté</value>
   </data>
@@ -4734,6 +4728,9 @@
   </data>
   <data name="Note Counts" xml:space="preserve">
     <value>Nombres de notes</value>
+  </data>
+  <data name="Note on {0}…" xml:space="preserve">
+    <value>Note à {0}…</value>
   </data>
   <data name="Note — where did you share this?" xml:space="preserve">
     <value>Note — où avez-vous partagé ceci ?</value>

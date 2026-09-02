@@ -1584,9 +1584,6 @@
   <data name="Comment from a deleted user" xml:space="preserve">
     <value>Blurp opa grombro grgl</value>
   </data>
-  <data name="Comment on a spot" xml:space="preserve">
-    <value>Blurp ap a plglur</value>
-  </data>
   <data name="Comment on {0}…" xml:space="preserve">
     <value>Blurp ap {0}…</value>
   </data>
@@ -2235,8 +2232,11 @@
   <data name="Double Performance" xml:space="preserve">
     <value>Groggl Plglglorgmurgmrp</value>
   </data>
-  <data name="Double-click a spot on the chart to comment there" xml:space="preserve">
-    <value>Grog-grog a plglur ap glo murgl ro blurp gro</value>
+  <data name="Double-click a spot to leave a comment" xml:space="preserve">
+    <value>Grog-grog a plglur ro marglub a blurp</value>
+  </data>
+  <data name="Double-tap a spot to leave a comment" xml:space="preserve">
+    <value>Blub-blub a plglur ro marglub a blurp</value>
   </data>
   <data name="Doubles" xml:space="preserve">
     <value>Groggl</value>
@@ -4411,12 +4411,6 @@
   <data name="No close matches yet." xml:space="preserve">
     <value>Mrp grorp morgmaglblgrl argl.</value>
   </data>
-  <data name="No comments on this chart yet — double-click a spot on the chart to add one." xml:space="preserve">
-    <value>Bo blurpgl ap plgl murgl larg — grog-grog a plglur ap glo murgl ro marglub mrp.</value>
-  </data>
-  <data name="No comments on this chart yet — double-tap a spot on the chart to add one." xml:space="preserve">
-    <value>Bo blurpgl ap plgl murgl larg — blub-blub a plglur ap glo murgl ro marglub mrp.</value>
-  </data>
   <data name="No community peers yet" xml:space="preserve">
     <value>Mo murlog blarg</value>
   </data>
@@ -4735,6 +4729,9 @@
   </data>
   <data name="Note Counts" xml:space="preserve">
 	  <value>Grogrgl Mrargl</value>
+  </data>
+  <data name="Note on {0}…" xml:space="preserve">
+    <value>Roblub ap {0}…</value>
   </data>
   <data name="Note — where did you share this?" xml:space="preserve">
     <value>Blurgl — mo alla bloop?</value>

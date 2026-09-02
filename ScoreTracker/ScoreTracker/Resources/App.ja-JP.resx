@@ -1584,9 +1584,6 @@
   <data name="Comment from a deleted user" xml:space="preserve">
     <value>削除されたアカウントのコメント</value>
   </data>
-  <data name="Comment on a spot" xml:space="preserve">
-    <value>位置にコメントする</value>
-  </data>
   <data name="Comment on {0}…" xml:space="preserve">
     <value>{0} にコメント…</value>
   </data>
@@ -2235,8 +2232,11 @@
   <data name="Double Performance" xml:space="preserve">
     <value>ダブルパフォーマンス</value>
   </data>
-  <data name="Double-click a spot on the chart to comment there" xml:space="preserve">
-    <value>譜面の位置をダブルクリックすると、そこにコメントできます</value>
+  <data name="Double-click a spot to leave a comment" xml:space="preserve">
+    <value>位置をダブルクリックしてコメントを残せます</value>
+  </data>
+  <data name="Double-tap a spot to leave a comment" xml:space="preserve">
+    <value>位置をダブルタップしてコメントを残せます</value>
   </data>
   <data name="Doubles" xml:space="preserve">
     <value>Doubles</value>
@@ -4411,12 +4411,6 @@
   <data name="No close matches yet." xml:space="preserve">
     <value>近いライバルはまだいません。</value>
   </data>
-  <data name="No comments on this chart yet — double-click a spot on the chart to add one." xml:space="preserve">
-    <value>この譜面にはまだコメントがありません — 譜面の位置をダブルクリックして最初のコメントを追加しましょう。</value>
-  </data>
-  <data name="No comments on this chart yet — double-tap a spot on the chart to add one." xml:space="preserve">
-    <value>この譜面にはまだコメントがありません — 譜面の位置をダブルタップして最初のコメントを追加しましょう。</value>
-  </data>
   <data name="No community peers yet" xml:space="preserve">
     <value>コミュニティの仲間はまだいません</value>
   </data>
@@ -4735,6 +4729,9 @@
   </data>
   <data name="Note Counts" xml:space="preserve">
 	  <value>ノーツ数</value>
+  </data>
+  <data name="Note on {0}…" xml:space="preserve">
+    <value>{0} にメモ…</value>
   </data>
   <data name="Note — where did you share this?" xml:space="preserve">
     <value>メモ — どこで共有しましたか?</value>

@@ -1573,9 +1573,6 @@
   <data name="Comment from a deleted user" xml:space="preserve">
     <value>Comentario de una cuenta eliminada</value>
   </data>
-  <data name="Comment on a spot" xml:space="preserve">
-    <value>Comentar en un punto</value>
-  </data>
   <data name="Comment on {0}…" xml:space="preserve">
     <value>Comentar en {0}…</value>
   </data>
@@ -2221,8 +2218,11 @@
   <data name="Double Performance" xml:space="preserve">
     <value>Double Performance</value>
   </data>
-  <data name="Double-click a spot on the chart to comment there" xml:space="preserve">
-    <value>Haz doble clic en un punto de la secuencia para comentar ahí</value>
+  <data name="Double-click a spot to leave a comment" xml:space="preserve">
+    <value>Haz doble clic en un punto para dejar un comentario</value>
+  </data>
+  <data name="Double-tap a spot to leave a comment" xml:space="preserve">
+    <value>Toca dos veces un punto para dejar un comentario</value>
   </data>
   <data name="Doubles" xml:space="preserve">
     <value>Doubles</value>
@@ -4381,12 +4381,6 @@
   <data name="No close matches yet." xml:space="preserve">
     <value>Aún no hay rivales cercanos.</value>
   </data>
-  <data name="No comments on this chart yet — double-click a spot on the chart to add one." xml:space="preserve">
-    <value>Todavía no hay comentarios en este chart — haz doble clic en un punto de la secuencia para añadir uno.</value>
-  </data>
-  <data name="No comments on this chart yet — double-tap a spot on the chart to add one." xml:space="preserve">
-    <value>Todavía no hay comentarios en este chart — toca dos veces un punto de la secuencia para añadir uno.</value>
-  </data>
   <data name="No community peers yet" xml:space="preserve">
     <value>Aún no hay compañeros de comunidad</value>
   </data>
@@ -4704,6 +4698,9 @@
   </data>
   <data name="Note Counts" xml:space="preserve">
     <value>Recuentos de notas</value>
+  </data>
+  <data name="Note on {0}…" xml:space="preserve">
+    <value>Nota en {0}…</value>
   </data>
   <data name="Note — where did you share this?" xml:space="preserve">
     <value>Nota — ¿dónde compartiste esto?</value>
