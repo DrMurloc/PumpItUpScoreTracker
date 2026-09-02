@@ -18325,13 +18325,19 @@ button.judg-strip:focus-visible {
 /* ===== Step chart & failure map (docs/design/step-chart-failure-map.md) ===== */
 /* The strip viewer: content-width scroll box beside a sticky whole-chart minimap. The rail
    (pins) lives inside the canvas; everything here is layout, every color a token. */
+/* The strip's root positions the comment panel, which the module lays over the frame's bottom
+   edge from the strip to the map (step-chart-comments D16); the viewer is positioned too, so
+   the box's offsets read against it. */
+[data-stepchart] {
+    position: relative;
+}
+
 .stepchart-viewer {
     display: flex;
     gap: 14px;
     align-items: flex-start;
     /* Left-aligned on the page (owner, 2026-08-30); the dialog stays centered. */
     justify-content: flex-start;
-    /* The comment panel overlays the bottom of the strip's box (step-chart-comments D4). */
     position: relative;
 }
 

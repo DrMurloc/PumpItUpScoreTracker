@@ -225,7 +225,7 @@ function relayoutStrip(view) {
     var anchor = view.box.scrollTop / Math.max(1, view.height);
     applyScale(view);
     drawStrip(view);
-    applyRunway(view);
+    layoutPanel(view);
     view.box.scrollTop = anchor * view.height;
     if (view.repaintMinimap) view.repaintMinimap();
     highlightChips(view);
@@ -1245,11 +1245,31 @@ function panelHeight(view) {
     return view.panelEl ? view.panelEl.offsetHeight : 0;
 }
 
-// The panel covers the bottom of the box: it takes the box's width (the box is max-content
-// wide, which no sibling can read from CSS), the strip gets the panel's height as extra runway
-// at its end, and the viewport's middle is measured above the panel, not under it.
-function applyRunway(view) {
-    if (view.panelEl) view.panelEl.style.width = (view.box.clientWidth + 2) + 'px';
+// The panel lies over the frame's bottom edge, from the strip box's left to the whole-chart
+// map's right (step-chart-comments D16). It lives in flow beside the bar, under the chips, so
+// it is positioned against the strip's root — the geometry is this module's, and none of it
+// is readable from CSS (the box is max-content wide, the map is a sibling). The strip gets the
+// panel's height as extra runway at its end, and the viewport's middle is measured above the
+// panel, not under it. Until the first layout the panel stays invisible rather than flashing
+// wherever the flow put it.
+function layoutPanel(view) {
+    var panel = view.panelEl;
+    if (panel) {
+        var root = view.root;
+        var viewer = root.querySelector('.stepchart-viewer');
+        var minicol = root.querySelector('.stepchart-minicol');
+        var box = view.box;
+        if (viewer && box.offsetParent) {
+            var left = viewer.offsetLeft + box.offsetLeft;
+            var right = minicol && minicol.offsetWidth > 0
+                ? viewer.offsetLeft + minicol.offsetLeft + minicol.offsetWidth
+                : left + box.offsetWidth;
+            panel.style.left = left + 'px';
+            panel.style.width = (right - left) + 'px';
+            panel.style.bottom = (root.offsetHeight - (viewer.offsetTop + box.offsetTop + box.offsetHeight)) + 'px';
+            panel.classList.add('sc-panel-placed');
+        }
+    }
     var inner = view.box.firstChild;
     if (inner) inner.style.paddingBottom = panelHeight(view) + 'px';
 }
@@ -1398,7 +1418,14 @@ export async function bindPanel(panelElement, dotNetReference) {
     if (!view) return false;
     view.host = dotNetReference;
     view.panelEl = panelElement;
-    applyRunway(view);
+    layoutPanel(view);
+    // The frame moves under the panel — a wrapped legend, a resized window, the panel's own
+    // height changing between browsing and writing — so the layout follows both boxes.
+    if (window.ResizeObserver) {
+        view.panelObserver = new ResizeObserver(function () { layoutPanel(view); });
+        view.panelObserver.observe(view.root);
+        view.panelObserver.observe(panelElement);
+    }
     followStrip(view, true);
     return true;
 }
@@ -1406,6 +1433,7 @@ export async function bindPanel(panelElement, dotNetReference) {
 export async function unbindPanel(panelElement) {
     var view = await viewFor(panelElement);
     if (!view) return;
+    if (view.panelObserver) { view.panelObserver.disconnect(); view.panelObserver = null; }
     view.host = null;
     view.panelEl = null;
 }
@@ -1417,7 +1445,7 @@ export async function setMarks(panelElement, marks) {
     view.marks = marks || [];
     regroupMarks(view);
     if (view.cur != null && !groupOf(view, view.cur)) view.cur = null;
-    applyRunway(view);
+    layoutPanel(view);
     repaintAll(view);
     followStrip(view, true);
 }
@@ -1459,6 +1487,6 @@ export async function clearPick(panelElement) {
     var view = await viewFor(panelElement);
     if (!view) return;
     view.pick = null;
-    applyRunway(view);
+    layoutPanel(view);
     repaintAll(view);
 }
