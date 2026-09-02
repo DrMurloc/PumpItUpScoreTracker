@@ -25,6 +25,19 @@ public sealed record GetChartCommentsQuery(
     string? PreferredLocale = null) : IQuery<CommentPageRecord>;
 
 /// <summary>
+///     What the step chart draws and its panel reads (docs/design/step-chart-comments): the
+///     anchored, living roots of one scope <b>plus the reader's own anchored notes</b> (D7), in
+///     chart order, unpaged — the strip is a map, and a map with the far end cut off is a lie.
+///     Replies ride along for their count; bodies resolve for display exactly as the tab's do.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record GetChartCommentMarksQuery(
+    Guid ChartId,
+    CommentAudience Audience,
+    string? ReaderLocale = null,
+    string? PreferredLocale = null) : IQuery<IReadOnlyList<CommentRecord>>;
+
+/// <summary>
 ///     The scope rail: Public, Notes, then the reader's non-regional communities. Empty for a
 ///     signed-out reader, who may read public comments but has nowhere of their own to post.
 /// </summary>

@@ -724,6 +724,71 @@ public sealed class CommentSagaTests
         Assert.False(record.ViewerMayModerate);
     }
 
+    // ----- the marks the step chart draws (docs/design/step-chart-comments) --------------------
+
+    [Fact]
+    public async Task PostingWithASecondCarriesItToTheAggregate()
+    {
+        await Subject().Handle(
+            new PostCommentCommand(ChartId, CommentAudience.Public, "This quad is a bracket.", 33.45m),
+            CancellationToken.None);
+
+        _comments.Verify(c => c.Save(It.Is<Comment>(saved => saved.AnchorAt == 33.45m),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TheMarksCarryTheirSecondsAndANoteStaysANoteAmongPublicRows()
+    {
+        // Read as the site admin, so the shield question is live: it must land on the stranger's
+        // root and never on the reader's own note, whatever scope the note was listed in.
+        _currentUser.SetupGet(c => c.User).Returns(Admin);
+        var root = Anchored(Guid.NewGuid(), 29m);
+        SetupMarks(root, Row(Guid.NewGuid(), parent: root.Id), Anchored(Admin.Id, 66.2m, note: true));
+
+        var marks = await Subject().Handle(new GetChartCommentMarksQuery(ChartId, CommentAudience.Public),
+            CancellationToken.None);
+
+        Assert.Equal(2, marks.Count);
+        var comment = marks[0];
+        Assert.Equal(29m, comment.AnchorAt);
+        Assert.False(comment.IsNote);
+        Assert.True(comment.ViewerMayModerate);
+        Assert.Null(Assert.Single(comment.Replies).AnchorAt);
+        var note = marks[1];
+        Assert.Equal(66.2m, note.AnchorAt);
+        Assert.True(note.IsNote);
+        Assert.True(note.ViewerIsAuthor);
+        Assert.False(note.ViewerMayModerate);
+        Assert.Null(note.Translation);
+    }
+
+    [Fact]
+    public async Task ASignedOutReaderGetsNoMarksForTheNotesScopeAndTheRepositoryIsNeverAsked()
+    {
+        _currentUser.SetupGet(c => c.IsLoggedIn).Returns(false);
+
+        var marks = await Subject().Handle(new GetChartCommentMarksQuery(ChartId, CommentAudience.Private),
+            CancellationToken.None);
+
+        Assert.Empty(marks);
+        _comments.Verify(c => c.GetAnchoredForChart(It.IsAny<Guid>(), It.IsAny<CommentAudience>(),
+            It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private static CommentRow Anchored(Guid userId, decimal at, bool note = false)
+    {
+        return new CommentRow(Guid.NewGuid(), ChartId, userId, null, "some words", Now, null, null, null, 0,
+            false, AnchorAt: at, IsNote: note);
+    }
+
+    private void SetupMarks(params CommentRow[] rows)
+    {
+        _comments.Setup(c => c.GetAnchoredForChart(ChartId, It.IsAny<CommentAudience>(), It.IsAny<Guid>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(rows);
+    }
+
     private static CommentRow Row(Guid userId, Guid? parent = null, bool deleted = false)
     {
         return new CommentRow(Guid.NewGuid(), ChartId, userId, parent, "some words", Now, null,

@@ -51,10 +51,54 @@ internal sealed class EFCommentRepository : ICommentRepository
             .OrderBy(r => rank[r.Comment.ParentCommentId ?? r.Comment.Id])
             .ThenBy(r => r.Comment.ParentCommentId == null ? 0 : 1)
             .ThenBy(r => r.Comment.CreatedAt)
-            .Select(r => new CommentRow(r.Comment.Id, r.Comment.ChartId, r.Comment.UserId,
-                r.Comment.ParentCommentId, r.Comment.Text, r.Comment.CreatedAt, r.Comment.EditedAt,
-                r.Comment.DeletedAt, r.Comment.DeletedByUserId, r.Votes, r.ViewerVoted,
-                r.Comment.SourceLanguage, r.Comment.TranslationQueuedAt, r.Comment.AnchorAt))
+            .Select(r => ToRow(r.Comment, r.Votes, r.ViewerVoted))
+            .ToArray();
+    }
+
+    public async Task<IReadOnlyList<CommentRow>> GetAnchoredForChart(Guid chartId, CommentAudience audience,
+        Guid viewerId, CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+
+        // The scope's own living, anchored roots — through the same gate the page reads through.
+        var scoped = Visible(database, chartId, audience, viewerId)
+            .Where(c => c.ParentCommentId == null && c.AnchorAt != null && c.DeletedAt == null);
+        // The reader's own anchored notes overlay every scope (step-chart-comments D7), and only
+        // the reader's: the predicate is the viewer's id, and Guid.Empty matches nothing. On the
+        // Notes scope the gate already IS that predicate, so the union would only repeat it.
+        var privateKind = nameof(CommentAudienceKind.Private);
+        var roots = audience.IsPrivate
+            ? scoped
+            : scoped.Union(database.Set<CommentEntity>().AsNoTracking()
+                .Where(c => c.ChartId == chartId && c.Audience == privateKind
+                            && c.UserId == viewerId && viewerId != Guid.Empty
+                            && c.ParentCommentId == null && c.AnchorAt != null && c.DeletedAt == null));
+        var rootIds = await roots.Select(c => c.Id).ToArrayAsync(cancellationToken);
+
+        var rows = await database.Set<CommentEntity>().AsNoTracking()
+            .Where(c => rootIds.Contains(c.Id)
+                        || (c.ParentCommentId != null && rootIds.Contains(c.ParentCommentId.Value)))
+            .Select(c => new
+            {
+                Comment = c,
+                Votes = database.Set<CommentVoteEntity>().Count(v => v.CommentId == c.Id),
+                ViewerVoted = viewerId != Guid.Empty
+                              && database.Set<CommentVoteEntity>()
+                                  .Any(v => v.CommentId == c.Id && v.UserId == viewerId)
+            })
+            .ToArrayAsync(cancellationToken);
+
+        // Chart order: roots by their second, then by age, each root's replies right behind it
+        // oldest first — the strip is a map and the panel walks it top to bottom.
+        var rootOrder = rows.Where(r => r.Comment.ParentCommentId == null)
+            .ToDictionary(r => r.Comment.Id, r => (Second: r.Comment.AnchorAt ?? 0m, r.Comment.CreatedAt));
+
+        return rows
+            .OrderBy(r => rootOrder[r.Comment.ParentCommentId ?? r.Comment.Id].Second)
+            .ThenBy(r => rootOrder[r.Comment.ParentCommentId ?? r.Comment.Id].CreatedAt)
+            .ThenBy(r => r.Comment.ParentCommentId == null ? 0 : 1)
+            .ThenBy(r => r.Comment.CreatedAt)
+            .Select(r => ToRow(r.Comment, r.Votes, r.ViewerVoted))
             .ToArray();
     }
 
@@ -192,6 +236,14 @@ internal sealed class EFCommentRepository : ICommentRepository
             ? roots.OrderByDescending(c => c.CreatedAt)
             : roots.OrderByDescending(c => database.Set<CommentVoteEntity>().Count(v => v.CommentId == c.Id))
                 .ThenByDescending(c => c.CreatedAt);
+    }
+
+    private static CommentRow ToRow(CommentEntity entity, int votes, bool viewerVoted)
+    {
+        return new CommentRow(entity.Id, entity.ChartId, entity.UserId, entity.ParentCommentId, entity.Text,
+            entity.CreatedAt, entity.EditedAt, entity.DeletedAt, entity.DeletedByUserId, votes, viewerVoted,
+            entity.SourceLanguage, entity.TranslationQueuedAt, entity.AnchorAt,
+            entity.Audience == nameof(CommentAudienceKind.Private));
     }
 
     private static Comment Hydrate(CommentEntity entity)

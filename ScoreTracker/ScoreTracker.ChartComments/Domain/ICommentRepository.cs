@@ -21,6 +21,15 @@ internal interface ICommentRepository
     Task<IReadOnlyList<CommentRow>> GetForChart(Guid chartId, CommentAudience audience, Guid viewerId,
         CommentSort sort, int takeRoots, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     The rows the step chart marks: the audience's living roots that point at a second, with
+    ///     their replies, <b>plus the viewer's own anchored notes whatever the audience</b> — and
+    ///     never anybody else's (docs/design/step-chart-comments D7). The overlay lives here beside
+    ///     the audience gate for the gate's reason: a mocked handler cannot leak a note, only SQL can.
+    /// </summary>
+    Task<IReadOnlyList<CommentRow>> GetAnchoredForChart(Guid chartId, CommentAudience audience, Guid viewerId,
+        CancellationToken cancellationToken = default);
+
     /// <summary>How many roots exist beyond the ones returned, so the UI knows whether to offer more.</summary>
     Task<int> CountRoots(Guid chartId, CommentAudience audience, Guid viewerId,
         CancellationToken cancellationToken = default);
@@ -59,4 +68,6 @@ internal sealed record CommentRow(
     bool ViewerVoted,
     string? SourceLanguage = null,
     DateTimeOffset? TranslationQueuedAt = null,
-    decimal? AnchorAt = null);
+    decimal? AnchorAt = null,
+    /// <summary>A personal note. Set from the stored audience so a note listed among public rows still reads as one.</summary>
+    bool IsNote = false);

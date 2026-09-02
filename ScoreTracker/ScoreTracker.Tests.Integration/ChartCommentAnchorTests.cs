@@ -77,4 +77,42 @@ public sealed class ChartCommentAnchorTests : IAsyncLifetime
 
         Assert.Null((await Repository.GetById(comment.Id))!.AnchorAt);
     }
+
+    /// <summary>
+    ///     The decoy shape from ChartCommentAudienceTests, for the read the strip draws from: the
+    ///     scope's living anchored roots in chart order with the reader's own note overlaid, the
+    ///     reply behind its root — and not the decoy's note, the whole-chart comment, the other
+    ///     scope's rows, or the deleted one, for any reader including a signed-out one.
+    /// </summary>
+    [Fact]
+    public async Task TheMarksReadReturnsTheScopesAnchoredRootsPlusYourOwnNotesAndNobodyElses()
+    {
+        var decoy = Guid.NewGuid();
+        var stranger = Guid.NewGuid();
+        var club = Guid.Parse("aaaaaaaa-1111-1111-1111-11111111111a");
+        var atTwentyNine = Comment.Post(Chart, decoy, CommentAudience.Public, "decoy public at 29", Now, 29m);
+        await Repository.Save(atTwentyNine);
+        await Repository.Save(Comment.Reply(atTwentyNine, stranger, "right foot first", Now));
+        await Repository.Save(Comment.Post(Chart, decoy, CommentAudience.Public, "decoy public, whole chart", Now));
+        await Repository.Save(Comment.Post(Chart, decoy, CommentAudience.Private, "decoy note at 10", Now, 10m));
+        await Repository.Save(Comment.Post(Chart, decoy, CommentAudience.Community(club), "decoy club at 40", Now, 40m));
+        await Repository.Save(Comment.Post(Chart, stranger, CommentAudience.Private, "my note at 66", Now, 66.2m));
+        var deleted = Comment.Post(Chart, decoy, CommentAudience.Public, "deleted at 50", Now, 50m);
+        deleted.DeleteByAuthor(decoy, Now);
+        await Repository.Save(deleted);
+
+        var asStranger = await Repository.GetAnchoredForChart(Chart, CommentAudience.Public, stranger);
+        Assert.Equal(new[] { "decoy public at 29", "right foot first", "my note at 66" },
+            asStranger.Select(r => r.Text));
+        Assert.Equal(new[] { false, false, true }, asStranger.Select(r => r.IsNote));
+
+        var signedOut = await Repository.GetAnchoredForChart(Chart, CommentAudience.Public, Guid.Empty);
+        Assert.Equal(new[] { "decoy public at 29", "right foot first" }, signedOut.Select(r => r.Text));
+
+        var notes = await Repository.GetAnchoredForChart(Chart, CommentAudience.Private, stranger);
+        Assert.Equal("my note at 66", Assert.Single(notes).Text);
+
+        var inClub = await Repository.GetAnchoredForChart(Chart, CommentAudience.Community(club), stranger);
+        Assert.Equal(new[] { "decoy club at 40", "my note at 66" }, inClub.Select(r => r.Text));
+    }
 }
