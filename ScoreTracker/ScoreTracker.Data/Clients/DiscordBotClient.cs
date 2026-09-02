@@ -11,11 +11,18 @@ namespace ScoreTracker.Data.Clients;
 
 public sealed class DiscordBotClient : IBotClient
 {
+    /// <summary>
+    ///     How long a replaced client keeps its REST side after the swap. A feed fan-out to a few
+    ///     dozen channels takes tens of seconds under Discord's rate limits; two minutes lets one
+    ///     that straddled a restart finish on the client it started with. Picked, not tuned.
+    /// </summary>
+    private static readonly TimeSpan ReplacedClientGrace = TimeSpan.FromMinutes(2);
+
     private readonly DiscordConfiguration _configuration;
     private readonly SemaphoreSlim _lifecycle = new(1, 1);
     private readonly ILogger _logger;
     private readonly SemaphoreSlim _publishLock = new(1, 1);
-    private bool _commandsPublished;
+    private volatile bool _commandsPublished;
     private CommandRegistration? _registration;
     private GatewaySession? _session;
 
@@ -44,8 +51,9 @@ public sealed class DiscordBotClient : IBotClient
     /// <summary>
     ///     Replaces the socket client with a fresh one, keeping the registered commands. The
     ///     replacement is built, logged in and started before the swap, so the client is never
-    ///     null; the old one is stopped afterwards, and a send that started on it finishes
-    ///     there. Serialized, so two watchdog ticks cannot replace the client twice.
+    ///     null. The old one has its gateway stopped at once and its handlers unhooked, but keeps
+    ///     its REST side for <see cref="ReplacedClientGrace" />, so a send that started on it
+    ///     finishes there. Serialized, so two watchdog ticks cannot replace the client twice.
     /// </summary>
     public async Task Restart(CancellationToken cancellationToken = default)
     {
@@ -54,22 +62,50 @@ public sealed class DiscordBotClient : IBotClient
         await _lifecycle.WaitAsync(cancellationToken);
         try
         {
+            // A shutdown that lands here must not log a fresh client in on the way out the door.
+            cancellationToken.ThrowIfCancellationRequested();
             var replacement = await OpenSession();
             var replaced = Interlocked.Exchange(ref _session, replacement);
-            if (replaced == null) return;
-            try
-            {
-                await replaced.Client.StopAsync();
-                await replaced.Client.DisposeAsync();
-            }
-            catch (Exception e)
-            {
-                _logger.LogWarning(e, "The replaced Discord client did not stop cleanly");
-            }
+            if (replaced != null) await Retire(replaced.Client);
         }
         finally
         {
             _lifecycle.Release();
+        }
+    }
+
+    /// <summary>
+    ///     A retired client must never answer a command again: its handlers read the shared
+    ///     registration, so if its gateway came back before disposal every command would get two
+    ///     replies. Unhook first, stop the gateway, and dispose after the grace whether or not
+    ///     the stop was clean.
+    /// </summary>
+    private async Task Retire(DiscordSocketClient client)
+    {
+        client.SlashCommandExecuted -= OnSlashCommand;
+        client.AutocompleteExecuted -= OnAutocomplete;
+        try
+        {
+            await client.StopAsync();
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning(e, "The replaced Discord client did not stop cleanly");
+        }
+
+        _ = DisposeAfterGrace(client);
+    }
+
+    private async Task DisposeAfterGrace(DiscordSocketClient client)
+    {
+        try
+        {
+            await Task.Delay(ReplacedClientGrace);
+            await client.DisposeAsync();
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning(e, "The replaced Discord client did not dispose cleanly");
         }
     }
 
@@ -98,7 +134,8 @@ public sealed class DiscordBotClient : IBotClient
         client.SlashCommandExecuted += OnSlashCommand;
         client.AutocompleteExecuted += OnAutocomplete;
         // The tree is published once the socket is up. Either hook may be the one that finds
-        // the registration in place; the publish itself runs once per process.
+        // the registration in place; the publish itself runs once per process. Connected fires
+        // on a resume as well as a fresh identify, so a failed publish retries within hours.
         client.Connected += () =>
         {
             state.Connected();
@@ -113,16 +150,31 @@ public sealed class DiscordBotClient : IBotClient
 
         // Downtime counts from here: a client that never connects is as dead as one that dropped.
         state.Starting();
-        await client.LoginAsync(TokenType.Bot, _configuration.BotToken);
-        await client.StartAsync();
+        try
+        {
+            await client.LoginAsync(TokenType.Bot, _configuration.BotToken);
+            await client.StartAsync();
+        }
+        catch
+        {
+            // A half-built client owns a request queue with its own cleanup loop and nothing
+            // else references it, so an undisposed one lives for the rest of the process. Login
+            // fails whenever Discord's REST side is unwell, which is exactly when restarts run.
+            await client.DisposeAsync();
+            throw;
+        }
+
         return new GatewaySession(client, state);
     }
 
     public async Task Stop(CancellationToken cancellationToken = default)
     {
-        var client = Client;
-        await client.StopAsync();
-        await client.DisposeAsync();
+        // Taking the session out first puts Status back to NotStarted, so a watchdog tick that
+        // lands during shutdown finds nothing to rebuild.
+        var session = Interlocked.Exchange(ref _session, null) ??
+                      throw new InvalidOperationException("Client was never started");
+        await session.Client.StopAsync();
+        await session.Client.DisposeAsync();
     }
 
     /// <summary>
@@ -138,6 +190,8 @@ public sealed class DiscordBotClient : IBotClient
     public void Dispose()
     {
         _session?.Client.Dispose();
+        _lifecycle.Dispose();
+        _publishLock.Dispose();
     }
 
     public async Task SendMessages(IEnumerable<string> messages, IEnumerable<ulong> channelIds,
@@ -191,7 +245,7 @@ public sealed class DiscordBotClient : IBotClient
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Could not publish the bot command tree; the next Ready retries");
+            _logger.LogError(e, "Could not publish the bot command tree; the next gateway connect retries");
         }
         finally
         {

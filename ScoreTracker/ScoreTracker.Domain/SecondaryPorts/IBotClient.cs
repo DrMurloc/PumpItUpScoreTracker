@@ -18,8 +18,9 @@ namespace ScoreTracker.Domain.SecondaryPorts
         ///     Discards the socket client and starts a fresh one, keeping the registered commands.
         ///     A fresh client identifies on the generic gateway and is handed a new resume host,
         ///     which is the way out of the reconnect loop Discord.Net enters when its pinned
-        ///     resume host stops answering. Throws if the client was never started; safe to call
-        ///     while sends are in flight (they finish on the client they started with).
+        ///     resume host stops answering. Throws if the client was never started. Safe to call
+        ///     while sends are in flight: the replaced client keeps its REST side for a grace
+        ///     period after the swap, so a fan-out that started on it finishes there.
         /// </summary>
         public Task Restart(CancellationToken cancellationToken = default);
 

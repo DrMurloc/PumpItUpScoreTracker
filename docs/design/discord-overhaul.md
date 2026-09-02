@@ -618,3 +618,29 @@ Admin restart button, intents trim, auto-pruning dead channel registrations, a D
   `DiscordTest:ExampleConnectionString` user-secret still names an earlier Aspire container's
   port (environmental, not this change).
 - Constants, layer scope and the test list landed as written above.
+
+**Bug-check follow-ups (2026-09-02, another session's review of the branch):**
+
+- **A failed `Restart` no longer leaks a client.** `LoginAsync` is a REST call and fails whenever
+  Discord's REST side is unwell — exactly when restarts run — and a half-built
+  `DiscordSocketClient` owns a request-queue cleanup loop that keeps it alive for the life of the
+  process. The half-built client is disposed on the way out; the old session stays current and the
+  next tick retries. No backoff on that retry: it is one REST call every two minutes, and the sooner
+  Discord's recovery is noticed the better.
+- **The replaced client is retired, not dropped.** Its handlers are unhooked first (they read the
+  shared registration, so a zombie whose gateway came back would have answered every command a
+  second time), its gateway is stopped, and it is disposed two minutes later whether or not the
+  stop was clean. REST stays usable until disposal, so a fan-out that straddled the swap finishes
+  on the client it started with; the earlier as-built note that such sends "land in the warning
+  path" is superseded.
+- **`Stop` takes the session out**, so `Status` reads NotStarted during shutdown and a watchdog
+  tick that lands then finds nothing to rebuild; `Restart` checks its cancellation token after the
+  semaphore for the same reason.
+- **A failed command-tree publish retries on the next gateway connect**, not "the next Ready":
+  Connected fires on a resume as well as a fresh identify, and the logs show several a day. The
+  message says so now. No timer-driven retry was added.
+- The log text falls back to the exception for an empty message as well as a null one; the two
+  semaphores are disposed with the client; the once-per-process publish flag is volatile.
+- Two pre-branch issues the review noted — `OnAutocomplete` dereferencing `Channel.Id` for a DM
+  interaction, and a throw in `ResolveInvocation`/`IsEphemeral` leaving an interaction
+  undeferred — were left for a separate change; both predate the watchdog.
