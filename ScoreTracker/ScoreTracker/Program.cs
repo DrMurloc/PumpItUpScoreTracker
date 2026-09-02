@@ -462,6 +462,10 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     // titles, the session card — behind an import that reported success. Five minutes bounds how
     // long that can last; a sweep with nothing to find is two dictionary reads.
     ("flush-overdue-score-batches",      r => r.PublishFlushOverdueScoreBatches(),        "*/5 * * * *"),
+    // The bot's gateway watchdog. Discord.Net retries a dead resume host forever; every two
+    // minutes the consumer checks how long the socket has been down and replaces the client past
+    // five, so a dead gateway is answered within seven minutes instead of at the next app restart.
+    ("check-discord-gateway",            r => r.PublishCheckDiscordGateway(),             "*/2 * * * *"),
     ("prune-webhook-deliveries",         r => r.PublishPruneWebhookDeliveries(),          "0 8 * * *"),  // 08:00 UTC — 7-day bodies, 14-day activity log
     // Refills every account's deep-scan balance on the 1st. One UPDATE across the User table; an
     // unused allowance does not roll over.
