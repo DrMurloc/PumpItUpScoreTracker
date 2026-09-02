@@ -409,3 +409,21 @@ because `Good`/`Great` are the judgement names' keys — and their Murloc values
 | four | glurg | Same. |
 | middle | mogrgl | On the established `mog` (mid-). |
 | beat (outscore) | grrgl | |
+
+## The pool window (2026-09-01)
+
+Coined for round eight of the PUMBILITY overhaul (docs/design/pumbility-overhaul.md D53): the
+`/Pumbility` ledes, the Breakdown's stat block and the tier list's caption stop naming a band of
+three levels and name the window on the pool of the type instead — 500 below and 250 above yours.
+Reused, not re-coined: `blubgro` (pool), `maglmurp` (peers), `arglblgrl` (within), `glub` (below),
+`mrrgl` (above), `morg` (type), `gurg` (hold), `mrglmr` (full), `algro` (every → each), `murm`
+(band → window, as in `Grorpmurm murm`), `morp` (your, and yours), `ap` (and). The seven rung-band
+sentences are retired with their keys.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| whose | murpo | `murp` + `o`. |
+| sits (within a range) | mrogl | Straight from the syllable inventory; distinct from `morggrrgl` (stand). |
+| is | arg | The copula, for `your singles pool is {0}`. Not `ur` (on) or `og` (at). |
+| Pool window | Blubgro murm | The Breakdown's label; `murm` is the same word `Level band` uses. |
+| standard (the level you hold) | rorg | Reused from *average* — a Murloc does not split the two. |

@@ -5619,14 +5619,14 @@
   <data name="Players opening your site or your source from the directory, counted since the tool was listed." xml:space="preserve">
     <value>Jogadores que abrem o seu site ou o seu código pelo diretório, contados desde que a ferramenta foi listada.</value>
   </data>
+  <data name="Players whose pool of the type sits within {0} below and {1} above yours, each holding a full pool of it. You are never one of your own peers; the highlighted row is where you would sit." xml:space="preserve">
+    <value>Jogadores cujo conjunto do tipo fica entre {0} abaixo e {1} acima do seu, cada um com o conjunto cheio. Você nunca é seu próprio par; a linha destacada é onde você ficaria.</value>
+  </data>
   <data name="Players within one competitive level of you for the type. You are never one of your own peers; the highlighted row is where you would sit." xml:space="preserve">
     <value>Jogadores a ±1 nível competitivo de você nesse tipo. Você nunca é seu próprio par; a linha destacada é onde você ficaria.</value>
   </data>
   <data name="Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours." xml:space="preserve">
     <value>Jogadores a um nível competitivo do seu — os mais próximos contam mais, assim como os que avaliam as pastas parecido com você.</value>
-  </data>
-  <data name="Players within three PUMBILITY levels of you holding a full pool of the type. You are never one of your own peers; the highlighted row is where you would sit." xml:space="preserve">
-    <value>Jogadores a ±3 níveis de PUMBILITY de você com o conjunto do tipo cheio. Você nunca é seu próprio par; a linha destacada é onde você ficaria.</value>
   </data>
   <data name="Plays" xml:space="preserve">
     <value>Tentativas</value>
@@ -5666,6 +5666,12 @@
   </data>
   <data name="Pool" xml:space="preserve">
     <value>Conjunto</value>
+  </data>
+  <data name="Pool window" xml:space="preserve">
+    <value>Janela do conjunto</value>
+  </data>
+  <data name="pools within {0} below and {1} above yours, each a full pool of the type" xml:space="preserve">
+    <value>conjuntos entre {0} abaixo e {1} acima do seu, cada um cheio para o tipo</value>
   </data>
   <data name="Poor" xml:space="preserve">
     <value>Fraco</value>
@@ -5984,8 +5990,8 @@
   <data name="Ranked against {0} players on your difficulty title level" xml:space="preserve">
     <value>Classificado ante {0} jogadores no seu nível de título de dificuldade</value>
   </data>
-  <data name="Ranked against {0} PUMBILITY peers within 3 levels of you" xml:space="preserve">
-    <value>Classificado ante {0} pares de PUMBILITY a ±3 níveis de você</value>
+  <data name="Ranked against {0} PUMBILITY peers whose pool sits within {1} below and {2} above yours" xml:space="preserve">
+    <value>Classificado ante {0} pares de PUMBILITY cujo conjunto fica entre {1} abaixo e {2} acima do seu</value>
   </data>
   <data name="Ranked by" xml:space="preserve">
     <value>Classificado por</value>
@@ -8689,17 +8695,17 @@
   <data name="What players at your level score here" xml:space="preserve">
     <value>O que jogadores do seu nível pontuam aqui</value>
   </data>
+  <data name="What players whose pool of the type sits within {0} below and {1} above yours build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it." xml:space="preserve">
+    <value>Do que jogadores cujo conjunto do tipo fica entre {0} abaixo e {1} acima do seu constroem sua PUMBILITY, cortado aos charts que superariam sua marca — cada um avaliado contra a marca como está agora, e agrupado por quantos dos seus pares o têm.</value>
+  </data>
+  <data name="What players whose pool of the type sits within {0} below and {1} above yours build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand." xml:space="preserve">
+    <value>Do que jogadores cujo conjunto do tipo fica entre {0} abaixo e {1} acima do seu constroem sua PUMBILITY: cada chart que seus pares têm no top 50, ordenado por quão alto fica nos conjuntos deles, com como pontuam nele e onde você está.</value>
+  </data>
   <data name="What players within one competitive level of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it." xml:space="preserve">
     <value>Do que jogadores a ±1 nível competitivo de você constroem sua PUMBILITY, cortado aos charts que superariam sua marca — cada um avaliado contra a marca como está agora, e agrupado por quantos dos seus pares o têm.</value>
   </data>
   <data name="What players within one competitive level of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand." xml:space="preserve">
     <value>Do que jogadores a ±1 nível competitivo de você constroem sua PUMBILITY: cada chart que seus pares têm no top 50, ordenado por quão alto fica nos conjuntos deles, com como pontuam nele e onde você está.</value>
-  </data>
-  <data name="What players within three levels of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it." xml:space="preserve">
-    <value>Do que jogadores a ±3 níveis de você constroem sua PUMBILITY, cortado aos charts que superariam sua marca — cada um avaliado contra a marca como está agora, e agrupado por quantos dos seus pares o têm.</value>
-  </data>
-  <data name="What players within three levels of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand." xml:space="preserve">
-    <value>Do que jogadores a ±3 níveis de você constroem sua PUMBILITY: cada chart que seus pares têm no top 50, ordenado por quão alto fica nos conjuntos deles, com como pontuam nele e onde você está.</value>
   </data>
   <data name="What scoring buys, in levels" xml:space="preserve">
     <value>O que pontuar compra, em níveis</value>
@@ -8857,9 +8863,6 @@
   <data name="within 1 level" xml:space="preserve">
     <value>em ±1 nível</value>
   </data>
-  <data name="within 3 levels of you with a full pool" xml:space="preserve">
-    <value>a ±3 níveis de você e com o conjunto completo</value>
-  </data>
   <data name="Within days" xml:space="preserve">
     <value>Dias (máx.)</value>
   </data>
@@ -9013,8 +9016,8 @@
   <data name="You have no PUMBILITY peers for this type yet — a pool of {0} charts lights them up." xml:space="preserve">
     <value>Você ainda não tem pares de PUMBILITY para este tipo: um pool de {0} charts os revela.</value>
   </data>
-  <data name="You have {0} of {1} charts, so your peers are drawn from where you'd finish — {2} — if you hold your current average. This settles as your pool fills." xml:space="preserve">
-    <value>Você tem {0} de {1} charts, então seus pares são escolhidos a partir de onde você terminaria — {2} — se mantiver sua média atual. Isso se estabiliza conforme seu pool enche.</value>
+  <data name="You have {0} of {1} charts, so your peers are drawn from where your pool of the type would finish — {2} — if you hold your current standard. This settles as your pool fills." xml:space="preserve">
+    <value>Você tem {0} de {1} charts, então seus pares são escolhidos a partir de onde seu conjunto do tipo terminaria — {2} — se mantiver seu nível atual. Isso se estabiliza conforme seu conjunto enche.</value>
   </data>
   <data name="You have {0} scores in Phoenix 2. This is your Phoenix 1 record priced under Phoenix 2's rules — what your pool becomes if you re-clear everything to the same standard." xml:space="preserve">
     <value>Você tem {0} pontuações no Phoenix 2. Este é o seu histórico do Phoenix 1 avaliado pelas regras do Phoenix 2 — no que seu conjunto se transforma se você refizer tudo no mesmo padrão.</value>
@@ -9039,9 +9042,6 @@
   </data>
   <data name="You somehow ended up in a state between realities. Refresh the page to try again." xml:space="preserve">
     <value>Você de alguma forma acabou em um estado entre realidades. Atualize a página para tentar novamente.</value>
-  </data>
-  <data name="you stand on {0}" xml:space="preserve">
-    <value>você está em {0}</value>
   </data>
   <data name="You start every song at 500 life with the multiplier near zero — {0} straight misses kill you, at any level. Survive the opening and a {1} gives you {2}. Start runs strong." xml:space="preserve">
     <value>Você começa toda música com 500 de vida e o multiplicador perto de zero: {0} Miss seguidos te matam, em qualquer nível. Sobreviva à abertura e um {1} te dá {2}. Comece forte.</value>
@@ -9150,6 +9150,9 @@
   </data>
   <data name="Your Discord handle" xml:space="preserve">
     <value>Seu usuário no Discord</value>
+  </data>
+  <data name="your doubles pool is {0}" xml:space="preserve">
+    <value>seu conjunto de doubles é {0}</value>
   </data>
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>O seu endpoint responde a uma requisição de verificação com isto. Isso não é enviado a lugar nenhum — é por isso que responder com ele é prova, e por isso um DNS sequestrado não passa. Só um hash é guardado, então anote em algum lugar que você ache depois.</value>
@@ -9303,6 +9306,9 @@
   </data>
   <data name="Your session ended." xml:space="preserve">
     <value>Sua sessão foi encerrada.</value>
+  </data>
+  <data name="your singles pool is {0}" xml:space="preserve">
+    <value>seu conjunto de singles é {0}</value>
   </data>
   <data name="Your Skill Estimate" xml:space="preserve">
     <value>Sua estimativa de habilidades</value>

@@ -5655,14 +5655,14 @@
   <data name="Players opening your site or your source from the directory, counted since the tool was listed." xml:space="preserve">
     <value>Players opening your site or your source from the directory, counted since the tool was listed.</value>
   </data>
+  <data name="Players whose pool of the type sits within {0} below and {1} above yours, each holding a full pool of it. You are never one of your own peers; the highlighted row is where you would sit." xml:space="preserve">
+    <value>Players whose pool of the type sits within {0} below and {1} above yours, each holding a full pool of it. You are never one of your own peers; the highlighted row is where you would sit.</value>
+  </data>
   <data name="Players within one competitive level of you for the type. You are never one of your own peers; the highlighted row is where you would sit." xml:space="preserve">
     <value>Players within one competitive level of you for the type. You are never one of your own peers; the highlighted row is where you would sit.</value>
   </data>
   <data name="Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours." xml:space="preserve">
     <value>Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours.</value>
-  </data>
-  <data name="Players within three PUMBILITY levels of you holding a full pool of the type. You are never one of your own peers; the highlighted row is where you would sit." xml:space="preserve">
-    <value>Players within three PUMBILITY levels of you holding a full pool of the type. You are never one of your own peers; the highlighted row is where you would sit.</value>
   </data>
   <data name="Plays" xml:space="preserve">
     <value>Plays</value>
@@ -5702,6 +5702,12 @@
   </data>
   <data name="Pool" xml:space="preserve">
     <value>Pool</value>
+  </data>
+  <data name="Pool window" xml:space="preserve">
+    <value>Pool window</value>
+  </data>
+  <data name="pools within {0} below and {1} above yours, each a full pool of the type" xml:space="preserve">
+    <value>pools within {0} below and {1} above yours, each a full pool of the type</value>
   </data>
   <data name="Poor" xml:space="preserve">
     <value>Poor</value>
@@ -6022,8 +6028,8 @@
   <data name="Ranked against {0} players on your difficulty title level" xml:space="preserve">
     <value>Ranked against {0} players on your difficulty title level</value>
   </data>
-  <data name="Ranked against {0} PUMBILITY peers within 3 levels of you" xml:space="preserve">
-    <value>Ranked against {0} PUMBILITY peers within 3 levels of you</value>
+  <data name="Ranked against {0} PUMBILITY peers whose pool sits within {1} below and {2} above yours" xml:space="preserve">
+    <value>Ranked against {0} PUMBILITY peers whose pool sits within {1} below and {2} above yours</value>
   </data>
   <data name="Ranked by" xml:space="preserve">
     <value>Ranked by</value>
@@ -8752,17 +8758,17 @@
   <data name="What players at your level score here" xml:space="preserve">
     <value>What players at your level score here</value>
   </data>
+  <data name="What players whose pool of the type sits within {0} below and {1} above yours build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it." xml:space="preserve">
+    <value>What players whose pool of the type sits within {0} below and {1} above yours build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it.</value>
+  </data>
+  <data name="What players whose pool of the type sits within {0} below and {1} above yours build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand." xml:space="preserve">
+    <value>What players whose pool of the type sits within {0} below and {1} above yours build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand.</value>
+  </data>
   <data name="What players within one competitive level of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it." xml:space="preserve">
     <value>What players within one competitive level of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it.</value>
   </data>
   <data name="What players within one competitive level of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand." xml:space="preserve">
     <value>What players within one competitive level of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand.</value>
-  </data>
-  <data name="What players within three levels of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it." xml:space="preserve">
-    <value>What players within three levels of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it.</value>
-  </data>
-  <data name="What players within three levels of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand." xml:space="preserve">
-    <value>What players within three levels of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand.</value>
   </data>
   <data name="What scoring buys, in levels" xml:space="preserve">
     <value>What scoring buys, in levels</value>
@@ -8919,9 +8925,6 @@
   </data>
   <data name="within 1 level" xml:space="preserve">
     <value>within 1 level</value>
-  </data>
-  <data name="within 3 levels of you with a full pool" xml:space="preserve">
-    <value>within 3 levels of you with a full pool</value>
   </data>
   <data name="Within days" xml:space="preserve">
     <value>Within days</value>
@@ -9082,8 +9085,8 @@
   <data name="You have no PUMBILITY peers for this type yet — a pool of {0} charts lights them up." xml:space="preserve">
     <value>You have no PUMBILITY peers for this type yet — a pool of {0} charts lights them up.</value>
   </data>
-  <data name="You have {0} of {1} charts, so your peers are drawn from where you'd finish — {2} — if you hold your current average. This settles as your pool fills." xml:space="preserve">
-    <value>You have {0} of {1} charts, so your peers are drawn from where you'd finish — {2} — if you hold your current average. This settles as your pool fills.</value>
+  <data name="You have {0} of {1} charts, so your peers are drawn from where your pool of the type would finish — {2} — if you hold your current standard. This settles as your pool fills." xml:space="preserve">
+    <value>You have {0} of {1} charts, so your peers are drawn from where your pool of the type would finish — {2} — if you hold your current standard. This settles as your pool fills.</value>
   </data>
   <data name="You have {0} scores in Phoenix 2. This is your Phoenix 1 record priced under Phoenix 2's rules — what your pool becomes if you re-clear everything to the same standard." xml:space="preserve">
     <value>You have {0} scores in Phoenix 2. This is your Phoenix 1 record priced under Phoenix 2's rules — what your pool becomes if you re-clear everything to the same standard.</value>
@@ -9108,9 +9111,6 @@
   </data>
   <data name="You somehow ended up in a state between realities. Refresh the page to try again." xml:space="preserve">
 	  <value>You somehow ended up in a state between realities. Refresh the page to try again.</value>
-  </data>
-  <data name="you stand on {0}" xml:space="preserve">
-    <value>you stand on {0}</value>
   </data>
   <data name="You start every song at 500 life with the multiplier near zero — {0} straight misses kill you, at any level. Survive the opening and a {1} gives you {2}. Start runs strong." xml:space="preserve">
     <value>You start every song at 500 life with the multiplier near zero — {0} straight misses kill you, at any level. Survive the opening and a {1} gives you {2}. Start runs strong.</value>
@@ -9219,6 +9219,9 @@
   </data>
   <data name="Your Discord handle" xml:space="preserve">
     <value>Your Discord handle</value>
+  </data>
+  <data name="your doubles pool is {0}" xml:space="preserve">
+    <value>your doubles pool is {0}</value>
   </data>
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it.</value>
@@ -9372,6 +9375,9 @@
   </data>
   <data name="Your session ended." xml:space="preserve">
     <value>Your session ended.</value>
+  </data>
+  <data name="your singles pool is {0}" xml:space="preserve">
+    <value>your singles pool is {0}</value>
   </data>
   <data name="Your Skill Estimate" xml:space="preserve">
     <value>Your Skill Estimate</value>
