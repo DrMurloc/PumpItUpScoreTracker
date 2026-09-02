@@ -13,10 +13,18 @@ namespace ScoreTracker.SharedKernel.Models;
 public readonly record struct StageBreakCause(
     bool IsNonLifebarBreak,
     PhoenixPlate? PassPlate,
-    PhoenixLetterGrade? PassGrade)
+    PhoenixLetterGrade? PassGrade,
+    bool IsWalkOff = false)
 {
     /// <summary>The life bar could have emptied, or there was not enough to tell. No claim.</summary>
     public static readonly StageBreakCause Unattributed = new(false, null, null);
+
+    /// <summary>
+    ///     The AFK guard ended the stage, not the player's bar: the run carries the guard's
+    ///     51-consecutive-miss tail (D36). The bar DID empty on the way — this is deliberately
+    ///     not a non-lifebar claim — the point is that the death was a formality.
+    /// </summary>
+    public static readonly StageBreakCause WalkedOff = new(false, null, null, true);
 
     /// <summary>A command ended the run and we could name its target.</summary>
     public bool IsNamed => PassPlate != null || PassGrade != null;

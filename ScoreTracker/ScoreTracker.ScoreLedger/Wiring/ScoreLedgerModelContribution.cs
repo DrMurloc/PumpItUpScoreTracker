@@ -51,9 +51,22 @@ public sealed class ScoreLedgerModelContribution : IDbModelContribution
         // Source is deliberately not included — nothing filters on it (limbo-leaderboard D6)
         // and nvarchar(32) costs a third of the index for nothing. OccurredAt is, because the
         // board's tie order is by date. Built ONLINE: the bundle applies against the live table.
+        // Named in the HasIndex call, not via HasDatabaseName: the failure-rail index below
+        // shares these key columns, and two unnamed HasIndex calls on one column set collapse
+        // into ONE model index — scaffolding then DROPS this one to make room, which is how a
+        // migration nearly deleted the limbo board's covering index out from under it.
         modelBuilder.Entity<ScoreEventJournalEntity>()
-            .HasIndex(e => new { e.ChartId, e.MixId })
+            .HasIndex(e => new { e.ChartId, e.MixId }, "IX_ScoreEventJournal_ChartId_MixId")
             .IncludeProperties(e => new { e.UserId, e.Score, e.IsBroken, e.OccurredAt })
+            .IsCreatedOnline();
+        // The failure rail's read: one chart's judged stage breaks, every player
+        // (docs/design/step-chart-failure-map.md §3). Filtered to breaks so it holds a fraction
+        // of a percent of the journal. Built ONLINE like its neighbours.
+        modelBuilder.Entity<ScoreEventJournalEntity>()
+            .HasIndex(e => new { e.ChartId, e.MixId }, "IX_ScoreEventJournal_ChartId_MixId_StageBreaks")
+            .HasFilter("[IsStageBroken] = 1")
+            .IncludeProperties(e => new
+                { e.UserId, e.Perfects, e.Greats, e.Goods, e.Bads, e.Misses, e.IsNonLifebarBreak })
             .IsCreatedOnline();
 
         // Presence-only: the charts carrying a limbo leaderboard, inserted by hand

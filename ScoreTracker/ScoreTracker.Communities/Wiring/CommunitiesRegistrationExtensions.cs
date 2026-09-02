@@ -47,5 +47,8 @@ public static class CommunitiesRegistrationExtensions
         configurator.AddConsumer<CommunityHighlightIndexSaga>();
         configurator.AddConsumer<CommunityHighlightPurgeConsumer>();
         configurator.AddConsumer<PlayerHighlightBackfillConsumer>();
+        // Replaces the bot's socket client after five minutes without a gateway — the only way
+        // out of Discord.Net's dead-resume-host loop (docs/design/discord-overhaul.md §10).
+        configurator.AddConsumer<DiscordGatewayWatchdogSaga>();
     }
 }

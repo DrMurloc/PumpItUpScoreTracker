@@ -123,6 +123,24 @@ no Pavane row at that timestamp because he was off-pad, and both replayed it 2.5
 
 **We do not try to detect co-play in code.** A future target, not this one.
 
+### D36 — the walk-off wall sits at 51 misses (2026-08-30, follow-up to this doc)
+
+Premium continues play at 0 gauge (§1), so a bar-side stage break is either Pass G ending the
+song or the **AFK guard** ending it on the 51st consecutive miss — and the journal shows the
+wall exactly: one bar-side break each at 49 and 50 misses, then 19 at 51 and 26 at 52, with a
+valley of 8 rows across 40–49 between 1,310 genuine deaths below and 382 walk-offs above (22%
+of Phoenix 2's bar-side breaks; Phoenix 1 carries the same second hump at 23%, so the guard
+predates Phoenix 2). Corroboration by shape: walk-offs average fewer bads (4.7 vs 6.1) and
+goods (7.2 vs 10.5) than genuine deaths despite tenfold the misses — nobody grazes notes from
+off the pad.
+
+`StageBreakCauseSolver` therefore answers a fourth way: `misses ≥ 51` ⇒ **walked off**
+(`IsWalkOff`, its own journal column), checked before everything else because it needs only
+the miss count — it classifies even rows whose level or note count is unknown. It is
+deliberately NOT a non-lifebar claim: the bar did empty during the walk; the point is that
+the death was a formality. Surfaces quote the give-up point (judged minus the 51-miss tail).
+Co-op stays unclassified under D35. The backfill button re-derives the column wholesale.
+
 ### D35 — co-op is never classified
 
 A co-op chart's `Level` column is the **player count**, so the life bar the solver would size from

@@ -82,7 +82,7 @@ namespace ScoreTracker.PlayerProgress.Application
             var barChart = full ? pool[^1].ChartId : (Guid?)null;
 
             var projection = await _mediator.Send(
-                new ProjectPumbilityGainsQuery(request.UserId, mix, request.Pool), cancellationToken);
+                new ProjectPumbilityGainsQuery(request.UserId, mix, request.Pool, request.Energy), cancellationToken);
             var mine = (await _scores.GetBestScores(mix, request.UserId, cancellationToken))
                 .Where(s => s.Score != null)
                 .ToDictionary(s => s.ChartId);
@@ -95,11 +95,7 @@ namespace ScoreTracker.PlayerProgress.Application
                     mine.TryGetValue(kv.Key, out var held) ? held.Score : null,
                     mine.TryGetValue(kv.Key, out var broken) && broken.IsBroken,
                     projection.ChartDifficulty.TryGetValue(kv.Key, out var d) ? d : null,
-                    TargetSource.Peers,
-                    // The Peers IQR (D30): the peers' middle half, beside the median they voted.
-                    projection.Spreads != null && projection.Spreads.TryGetValue(kv.Key, out var spread)
-                        ? spread
-                        : null))
+                    TargetSource.Peers))
                 .ToDictionary(t => t.ChartId);
 
             // In Phoenix 2, a chart the player already cleared in Phoenix 1 does not need

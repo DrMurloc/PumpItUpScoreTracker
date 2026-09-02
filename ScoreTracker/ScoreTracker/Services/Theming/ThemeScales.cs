@@ -168,6 +168,40 @@ public static class ThemeScales
     public static string LifeDanger => "var(--life-danger)";
 
     /// <summary>
+    ///     The step-chart strip's panel token for a lane (lane = panel % 5): the classic skin's
+    ///     upper-red / lower-blue / center-yellow, mix-invariant
+    ///     (docs/design/step-chart-failure-map.md D12).
+    /// </summary>
+    public static string StepPanelColor(int panel) => (panel % 5) switch
+    {
+        2 => "var(--panel-center)",
+        1 or 3 => "var(--panel-upper)",
+        _ => "var(--panel-lower)"
+    };
+
+    /// <summary>Feet mode's pair — the snapshot's own limb prediction, teal left / pink right.</summary>
+    public static string FootColor(bool isLeft) => isLeft ? "var(--foot-l)" : "var(--foot-r)";
+
+    /// <summary>Timing mode's DDR-style quantization token; 0 / unmodeled grids read as "other".</summary>
+    public static string QuantColor(int quant) => quant switch
+    {
+        4 => "var(--quant-4)",
+        8 => "var(--quant-8)",
+        12 => "var(--quant-12)",
+        16 => "var(--quant-16)",
+        _ => "var(--quant-other)"
+    };
+
+    /// <summary>The failure rail's proven-Pass pin. The life pin is <see cref="LifeDanger" />.</summary>
+    public static string StepPassPin => "var(--step-pass)";
+
+    /// <summary>The walk-off pin — the AFK guard's 51-miss wall, not a death (D18).</summary>
+    public static string StepWalkOff => "var(--step-walkoff)";
+
+    /// <summary>The viewer's own broken runs on the rail.</summary>
+    public static string StepYou => "var(--step-you)";
+
+    /// <summary>
     ///     How fast a chart is FOR ITS FOLDER — five bands, slowest (0) to fastest (4)
     ///     (docs/design/chart-identity.md §2). Its own ramp, deliberately not the difficulty
     ///     one: a slow chart at a high level is not an easy one, and painting the Speed list
@@ -175,14 +209,6 @@ public static class ThemeScales
     ///     prints beside it (rule 8).
     /// </summary>
     public static string SpeedColor(int band) => $"var(--speed-{Math.Clamp(band, 0, 4) + 1})";
-
-    /// <summary>
-    ///     Variability token — how split a peer group is on a chart, five steps from very
-    ///     consistent to very split (docs/design/pumbility-overhaul.md D35). Mix-invariant. The word
-    ///     always prints beside it; the colour never carries the level alone.
-    /// </summary>
-    public static string VariabilityColor(PeerVariabilityLevel level) =>
-        $"var(--vary-{MixThemes.VariabilityIndex(level)})";
 
     /// <summary>
     /// Percentile coloring against a concrete population (community leaderboards).

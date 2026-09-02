@@ -141,7 +141,10 @@ qualifies. 92 of 121 sit at level 15+. Composition: 88 arcade · 32 SHORT CUT ·
 
 Use as an **exclusion set** for precision-sensitive work. The identity engine's existing guards
 already cover the chip surface (the 1.5× hold trust check, the bracket/footswitch vetoes); this
-list is for future analyses that would otherwise trust these files' steps.
+list is for future analyses that would otherwise trust these files' steps. The step-chart
+feature is the first such consumer: it computes these tiers at ingest, per mix, as its
+show/hide verdict — an excluded chart renders no step chart at all until a repaired file
+passes ([step-chart-failure-map.md](step-chart-failure-map.md) D8).
 
 | Tier | Chart | File taps + ticks | Judged | Err |
 |---|---|---|---|---|

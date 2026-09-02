@@ -18,14 +18,17 @@
    you sit past it. Your row glows blue, anyone from your communities glows green. Record and the full
    dialog ride the host's title-bar slot to keep the body all leaderboard. *@
 
-@if (!_loaded)
+@if (!_hasContent)
 {
     <div class="dash-widget-message">
         <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
     </div>
 }
-else if (_chart == null)
+else
 {
+    <div class="dash-refreshable @(_loaded ? "" : "dash-stale")">
+    @if (_chart == null)
+    {
     <div class="dash-widget-message">
         <MudText Typo="Typo.body2">@L["Today's Step posts at midnight."]</MudText>
     </div>
@@ -104,7 +107,15 @@ else
     {
         <div class="dash-daily-controls">@HeaderControls</div>
     }
+    }
+    </div>
 
+    @* Both dialogs live outside the dash-refreshable wrapper: its dim is an opacity, which
+       fades a dialog and its scrim with the body and traps their z-index in this cell's
+       stacking context. They keep their own null guard — the record dialog's title reads the
+       chart, which is exactly what the wrapper's branch used to guarantee. *@
+    @if (_chart != null)
+    {
     <MudDialog @bind-Visible="_recordOpen" Options="RecordDialogOptions">
         <TitleContent>
             <MudText Typo="Typo.h6">@L["Record"] — @_chart.Song.Name</MudText>
@@ -129,6 +140,7 @@ else
     <LeaderboardDialog @bind-Visible="_showLeaderboard" Chart="_chart" Entries="_dialogEntries"
                        Ascending="_isLimbo" OfficialUserIds="_officialUserIds"
                        CommunityUserIds="_communityIds" RivalUserIds="_rivalIds"/>
+    }
 }
 
 @inject IMediator Mediator
@@ -164,6 +176,7 @@ else
             "dash-lb-you", "dash-lb-community");
 
     private bool _loaded;
+    private bool _hasContent;
     private bool _tall;
     private string? _loadedFor;
     private Chart? _chart;
@@ -246,31 +259,44 @@ else
             _rivalIds = await CommunityGlow.GetMyRivalIds(_mix);
 
             var board = await Mediator.Send(new GetDailyStepQuery(_mix));
-            _chart = null;
-            _rows = new List<Row>();
-            _myRow = null;
-            _dialogEntries = Array.Empty<WeeklyTournamentEntry>();
+            // Resolve into a local first: clearing the fields up front would blank the current
+            // board across the awaits below, and a reload renders the current content (dimmed).
+            Chart? chart = null;
             if (board != null)
             {
                 _isLimbo = board.IsLimbo;
                 var charts = await ChartCatalog.GetCharts(_mix);
-                _chart = charts.TryGetValue(board.ChartId, out var chart) ? chart : null;
-                if (_chart != null) await ReloadBoardData();
+                chart = charts.GetValueOrDefault(board.ChartId);
+            }
+
+            if (chart != null)
+            {
+                await ReloadBoardData(chart);
+            }
+            else
+            {
+                _chart = null;
+                _rows = new List<Row>();
+                _myRow = null;
+                _dialogEntries = Array.Empty<WeeklyTournamentEntry>();
             }
 
             _loaded = true;
+            _hasContent = true;
         }
 
         // Every param set (not only on reload) so an EditMode toggle re-evaluates the header slot.
         UpdateHeaderSlot();
     }
 
-    private async Task ReloadBoardData()
+    // Takes the chart rather than reading the field, and publishes it with the board it
+    // belongs to: assigning _chart up front would leave today's chart sitting above
+    // yesterday's rows for the length of these two queries (§2.3).
+    private async Task ReloadBoardData(Chart chart)
     {
-        if (_chart == null) return;
         var me = CurrentUser.User.Id;
         var entries = (await Mediator.Send(new GetDailyStepEntriesQuery(_mix)))
-            .Where(e => e.ChartId == _chart.Id).ToArray();
+            .Where(e => e.ChartId == chart.Id).ToArray();
         var users = (await Users.GetUsers(entries.Select(e => e.UserId).Distinct().ToArray()))
             .ToDictionary(u => u.Id);
 
@@ -279,10 +305,12 @@ else
                 ? entries.Where(e => !e.IsBroken).OrderBy(e => (int)e.Score)
                 : entries.OrderBy(e => e.IsBroken).ThenByDescending(e => (int)e.Score))
             .ToArray();
-        _rows = ordered.Select((e, i) => new Row(i + 1, e, users.GetValueOrDefault(e.UserId),
+        var rows = ordered.Select((e, i) => new Row(i + 1, e, users.GetValueOrDefault(e.UserId),
             e.UserId == me, _communityIds.Contains(e.UserId), _rivalIds.Contains(e.UserId))).ToList();
-        _myRow = _rows.FirstOrDefault(r => r.IsYou);
 
+        _chart = chart;
+        _rows = rows;
+        _myRow = rows.FirstOrDefault(r => r.IsYou);
         _dialogEntries = ordered.Select(e => new WeeklyTournamentEntry(e.UserId, e.ChartId, e.Score, e.Plate,
             e.IsBroken, null, e.CompetitiveLevel)).ToArray();
         _officialUserIds = entries.Where(e => e.Source == ChallengeEntrySource.Official).Select(e => e.UserId).ToHashSet();
@@ -300,13 +328,13 @@ else
 
     private async Task SubmitRecord()
     {
-        if (_recordScore == null) return;
+        if (_recordScore == null || _chart == null) return;
         _submitting = true;
         try
         {
             await Mediator.Send(new RecordDailyStepScoreCommand(_recordScore.Value, _recordPlate, _mix));
             _recordOpen = false;
-            await ReloadBoardData();
+            await ReloadBoardData(_chart);
         }
         finally
         {

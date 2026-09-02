@@ -7,6 +7,23 @@ namespace ScoreTracker.Domain.SecondaryPorts
         public Task Start(CancellationToken cancellationToken = default);
         public Task Stop(CancellationToken cancellationToken = default);
 
+        /// <summary>
+        ///     Where the gateway socket stands right now. Slash commands arrive over the gateway,
+        ///     so a socket that is not Connected means no command can reach the bot even while
+        ///     REST sends keep working (docs/design/discord-overhaul.md §10).
+        /// </summary>
+        public BotGatewayStatus Status { get; }
+
+        /// <summary>
+        ///     Discards the socket client and starts a fresh one, keeping the registered commands.
+        ///     A fresh client identifies on the generic gateway and is handed a new resume host,
+        ///     which is the way out of the reconnect loop Discord.Net enters when its pinned
+        ///     resume host stops answering. Throws if the client was never started. Safe to call
+        ///     while sends are in flight: the replaced client keeps its REST side for a grace
+        ///     period after the swap, so a fan-out that started on it finishes there.
+        /// </summary>
+        public Task Restart(CancellationToken cancellationToken = default);
+
         public Task SendMessage(string message, ulong channelId, CancellationToken cancellationToken = default)
         {
             return SendMessages(new[] { message }, new[] { channelId }, cancellationToken);
@@ -35,13 +52,20 @@ namespace ScoreTracker.Domain.SecondaryPorts
         ///     registered commands) and wires the invocation and autocomplete handlers.
         ///     Reply visibility follows each subcommand's <see cref="BotSubCommand.Ephemeral" />
         ///     flag; the adapter defers accordingly, invokes <paramref name="onInteraction" />,
-        ///     and follows up with the returned card or text.
+        ///     and follows up with the returned card or text. May be called before the socket is
+        ///     up: the tree is published once it is, and the handlers follow every client
+        ///     instance the adapter builds, so they survive a gateway restart.
         /// </summary>
         public Task RegisterCommands(
             IReadOnlyList<BotCommandDefinition> commands,
             Func<BotInteraction, Task<BotReply>> onInteraction,
             Func<BotAutocompleteRequest, Task<IReadOnlyList<BotOptionChoice>>> onAutocomplete);
 
+        /// <summary>
+        ///     Runs <paramref name="execution" /> on the current client instance's Ready. Binds to
+        ///     that instance only, so it does not survive a restart. Kept for the exploration
+        ///     canaries; the app registers commands through <see cref="RegisterCommands" />.
+        /// </summary>
         public void WhenReady(Func<Task> execution);
     }
 }

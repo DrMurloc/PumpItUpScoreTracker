@@ -1,6 +1,7 @@
 using ScoreTracker.WeeklyChallenge.Contracts.Messages;
 using ScoreTracker.Catalog.Contracts.Messages;
 using ScoreTracker.CommunityTools.Contracts.Messages;
+using ScoreTracker.Communities.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using MassTransit;
 using ScoreTracker.EventCompetition.Contracts.Messages;
@@ -114,4 +115,9 @@ public sealed class RecurringJobRunner
     // audience index rows over them (docs/design/rivals.md D33).
     public Task PublishPurgePlayerHighlights() =>
         _bus.Publish(new PurgePlayerHighlightsCommand());
+
+    // Replaces the bot's socket client after five minutes without a gateway. Discord.Net
+    // otherwise retries a dead resume host forever (docs/design/discord-overhaul.md §10).
+    public Task PublishCheckDiscordGateway() =>
+        _bus.Publish(new CheckDiscordGatewayCommand());
 }

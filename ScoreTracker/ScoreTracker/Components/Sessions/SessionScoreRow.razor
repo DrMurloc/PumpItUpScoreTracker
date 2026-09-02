@@ -143,6 +143,18 @@
             if (PassPlate != null || PassGrade != null)
                 return percent is { } named ? L["{0}% in", named] : string.Empty;
 
+            // A walk-off's judged count wears the guard's miss tail; the percent quoted is the
+            // give-up point, tail subtracted — the same placement the failure rail uses (D36).
+            if (Score.Row.IsWalkOff)
+            {
+                var gaveUp = StageBreakProgress.PercentIn(
+                    Score.Row.JudgedNotes is { } judged
+                        ? Math.Max(1, judged - StageBreakCauseSolver.WalkOffMissFloor)
+                        : null,
+                    Score.Chart?.NoteCount);
+                return gaveUp is { } at ? L["Walk off · {0}% in", at] : L["Walk off"];
+            }
+
             if (Score.Row.IsNonLifebarBreak)
                 return Score.Chart?.Type is ChartType.Single or ChartType.SinglePerformance
                     ? L["Stage break · likely a Pass command on the other pad"]

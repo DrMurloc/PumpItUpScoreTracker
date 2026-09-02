@@ -30,8 +30,9 @@ namespace ScoreTracker.ExplorationTests.Pumbility;
 ///     scores 1 — a Borda count over the band), beside the plain holder count and the raw
 ///     value sum, plus the peers' score spread on each chart and where the viewer stands.
 ///     <para>
-///         Same peer definition as the projection (docs/design/pumbility-overhaul.md §4.8): ±3
-///         rungs on the total-pool ladder, full pool of the type both sides, viewer excluded.
+///         Same peer definition as the projection (docs/design/pumbility-overhaul.md §4.8, D53):
+///         pools of the type within 500 below and 250 above the viewer's, full pool of the type
+///         both sides, viewer excluded.
 ///         Configure <c>CatalogProbe:ConnectionString</c> or SCORETRACKER_CATALOG_CONNECTION;
 ///         SCORETRACKER_PUMBILITY_PROBE_USER picks the player. Read-only.
 ///     </para>
@@ -65,21 +66,20 @@ public sealed class PumbilityPeerPoolProbeTests
 
         var mine = await stats.GetStats(mix, userId, CancellationToken.None);
         var rung = Phoenix2PumbilityLevel.From(mine.SkillRating);
-        var (lowestIndex, highestIndex) = PeerGroup.PumbilityBand(rung.Index);
-        var lowest = Phoenix2PumbilityLevel.FromIndex(lowestIndex)!.Value;
-        var highest = Phoenix2PumbilityLevel.FromIndex(highestIndex)!.Value;
-        _output.WriteLine($"=== {userId} · total {mine.SkillRating:F2} · rung {rung.Index} ({rung.Gem} {rung.Level}) · band {lowestIndex}..{highestIndex} ===");
-
-        var candidates = (await stats.GetPlayersByPumbilityRange(mix, lowest.Threshold,
-                highest.NextThreshold ?? double.MaxValue, CancellationToken.None))
-            .ToHashSet();
-        candidates.Remove(userId);
-        _output.WriteLine($"band candidates (any pool state): {candidates.Count}");
+        _output.WriteLine($"=== {userId} · total {mine.SkillRating:F2} · rung {rung.Index} ({rung.Gem} {rung.Level}) · singles pool {mine.SinglesRating:F2} · doubles pool {mine.DoublesRating:F2} ===");
 
         foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
         {
             _output.WriteLine("");
             _output.WriteLine($"----- {chartType} -----");
+            // The window on the pool of the type (D53), the viewer out.
+            var myPoolTotal = chartType == ChartType.Single ? mine.SinglesRating : mine.DoublesRating;
+            var candidates = (await stats.GetPlayersByPoolOfType(mix, chartType,
+                    myPoolTotal - PeerGroup.PumbilityWindowBelow, myPoolTotal + PeerGroup.PumbilityWindowAbove,
+                    CancellationToken.None))
+                .ToHashSet();
+            candidates.Remove(userId);
+            _output.WriteLine($"window candidates (any pool state): {candidates.Count}");
             var records = (await scores.GetPlayerScoresInLevelRange(mix, candidates.Append(userId), chartType,
                     PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, CancellationToken.None))
                 .Where(s => charts.ContainsKey(s.ChartId))
@@ -257,7 +257,7 @@ public sealed class PumbilityPeerPoolProbeTests
                 {
                     viewer = new { userId, total = mine.SkillRating, rung = rung.Index, gem = rung.Gem?.ToString(), level = rung.Level,
                         singlesLevel = mine.SinglesCompetitiveLevel, doublesLevel = mine.DoublesCompetitiveLevel,
-                        band = new { lowest = lowestIndex, highest = highestIndex, lowestGem = lowest.Gem?.ToString(), lowestLevel = lowest.Level, highestGem = highest.Gem?.ToString(), highestLevel = highest.Level } },
+                        window = new { pool = myPoolTotal, lowest = myPoolTotal - PeerGroup.PumbilityWindowBelow, highest = myPoolTotal + PeerGroup.PumbilityWindowAbove } },
                     chartType = chartType.ToString(),
                     viewerLit,
                     viewerRecords = byPlayer.GetValueOrDefault(userId)?.Length ?? 0,

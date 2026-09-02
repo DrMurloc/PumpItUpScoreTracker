@@ -129,6 +129,18 @@
                                OnSimilarChartSelected="Drill"
                                @key="(ViewChart.Id, nameof(ChartStatsTab))"></ChartStatsTab>
             </div>
+            @* The step chart, compact (step-chart-failure-map.md D14): the tab renders only
+               when the mix's verdict banked a timeline, and the module inside mounts on first
+               activation — an unopened tab fetches nothing. *@
+            @if (_stepChart != null)
+            {
+                <div class="@PanelClass(DetailsTab.Steps)">
+                    <ChartStepsTab Chart="ViewChart" Mix="Mix"
+                                   Visibility="@_stepChart.Visibility.ToString()"
+                                   Active="IsLive(DetailsTab.Steps)"
+                                   @key="(ViewChart.Id, nameof(ChartStepsTab))"></ChartStepsTab>
+                </div>
+            }
             @* Round 4 (piucenter): "Your journey" renamed Score History and kept next to the
                recording inputs it feeds — past scores directly above the new one. The tab is
                the heading now, so the panel no longer prints one of its own. *@
@@ -285,6 +297,7 @@
         Comments,
         Leaderboard,
         Stats,
+        Steps,
         History
     }
 
@@ -305,6 +318,7 @@
     private MixEnum? _loadedMix;
     private string? _videoUrl;
     private ChartVideoInformation? _video;
+    private ChartStepChartRecord? _stepChart;
     private Chart? _videoPartner;
     private DetailsTab _tab = DetailsTab.Leaderboard;
     private DetailsTab? _remembered;
@@ -409,6 +423,9 @@
             if (CommentsVisible) tabs.Add(DetailsTab.Comments);
             tabs.Add(DetailsTab.Leaderboard);
             tabs.Add(DetailsTab.Stats);
+            // Steps exists exactly where the chart page's section does: the mix's verdict
+            // allowed one (docs/design/step-chart-failure-map.md D14).
+            if (_stepChart != null) tabs.Add(DetailsTab.Steps);
             // Score History is your journal plus your recording inputs. Signed out it is an empty
             // box with a heading, which is worse than one fewer tab.
             if (CurrentUser.IsLoggedIn) tabs.Add(DetailsTab.History);
@@ -438,6 +455,7 @@
         {
             DetailsTab.Comments => L["Comments"],
             DetailsTab.Stats => L["Chart Stats"],
+            DetailsTab.Steps => L["Steps"],
             DetailsTab.History => L["Score History"],
             _ => L["Leaderboard"]
         };
@@ -505,6 +523,9 @@
     {
         _loadedChartId = chartId;
         _loadedMix = Mix;
+        // Whether a Steps tab exists at all — the record is cheap (per-chart cache) and the
+        // tab's own module fetches the drawable data only when activated.
+        _stepChart = await Mediator.Send(new GetChartStepChartQuery(chartId, Mix));
         _video = (await Mediator.Send(new GetChartVideosQuery(new[] { chartId }))).FirstOrDefault();
         _videoUrl = _video?.VideoUrl.ToString();
         // The caption names the other half with the SELECTED mix's level, so the partner comes

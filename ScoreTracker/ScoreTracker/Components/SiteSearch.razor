@@ -187,12 +187,18 @@
     {
         if (hit == null || hit.IsHeader) return;
         _selected = null;
-        // nav.js closes the mobile sheet off the history push this causes — the sheet is chrome
-        // over the page you left, and no link click happens here to catch.
-        if (hit.Chart is { } chart) NavManager.NavigateTo(chart.CanonicalPath());
-        else if (hit.Player is { } player) NavManager.NavigateTo($"/Player/{player.UserId}");
+        // forceLoad on every pick: in-app navigation here is a full document load
+        // (docs/design/static-shell.md — enhanced navigation is deliberately parked, and
+        // data-enhance-nav="false" on <body> does not reach a circuit's NavigateTo). Without
+        // it, landing on a static SSR page patches the DOM with no script re-run — the chart
+        // page's step chart arrives with nobody to mount it, and whatever the previous page's
+        // modules drew can survive the merge pointing at the wrong chart. The full load also
+        // takes the mobile search sheet down with the old document.
+        if (hit.Chart is { } chart) NavManager.NavigateTo(chart.CanonicalPath(), true);
+        else if (hit.Player is { } player) NavManager.NavigateTo($"/Player/{player.UserId}", true);
         else if (hit.Board is { } board)
-            NavManager.NavigateTo($"/OfficialLeaderboards/Players?player={Uri.EscapeDataString(board.Username)}");
+            NavManager.NavigateTo($"/OfficialLeaderboards/Players?player={Uri.EscapeDataString(board.Username)}",
+                true);
     }
 
     // Why a row glows is the same ladder every board uses: green for a community you share, red for

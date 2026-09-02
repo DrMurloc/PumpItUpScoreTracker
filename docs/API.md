@@ -90,7 +90,7 @@ Mix-aware endpoints take an **optional `Mix` parameter** — a query parameter o
 
 ## NOT the partner surface
 
-- **UI-supporting controllers** — `login/*` (OAuth challenge/callback + the dev-only backdoor), `logout/*`, `culture/Set` (locale cookie), `sitemap.xml`, and `api/admin/*` (admin diagnostics). These serve the Blazor app, not API callers.
+- **UI-supporting controllers** — `login/*` (OAuth challenge/callback + the dev-only backdoor), `logout/*`, `culture/Set` (locale cookie), `sitemap.xml`, `api/admin/*` (admin diagnostics), and the step-chart JSON pair (`/Charts/StepChart/{chartId}` payload + `/Charts/StepChart/{chartId}/Breaks` pins — [step-chart-failure-map.md](design/step-chart-failure-map.md) D13). These serve the Blazor app, not API callers.
 
 ## Conventions
 

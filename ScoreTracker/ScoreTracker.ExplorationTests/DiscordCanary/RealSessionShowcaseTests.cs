@@ -43,6 +43,7 @@ namespace ScoreTracker.ExplorationTests.DiscordCanary;
 ///     in the database before anything is published, and the attachment is removed
 ///     afterwards.
 /// </summary>
+[Collection(DiscordCanaryCollection.Name)]
 [ExcludeFromCodeCoverage]
 public sealed class RealSessionShowcaseTests
 {

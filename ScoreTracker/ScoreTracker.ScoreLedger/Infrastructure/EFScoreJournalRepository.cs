@@ -137,6 +137,7 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
     private static void SetCause(ScoreEventJournalEntity entity, StageBreakCause cause)
     {
         entity.IsNonLifebarBreak = cause.IsNonLifebarBreak;
+        entity.IsWalkOff = cause.IsWalkOff;
         entity.PassPlate = cause.PassPlate?.GetName();
         entity.PassGrade = cause.PassGrade?.GetName();
     }
@@ -282,6 +283,42 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
                 .ToArrayAsync(cancellationToken))
             .Select(Map)
             .ToArray();
+    }
+
+    public async Task<ChartStageBreaksRead> GetChartStageBreaks(MixEnum mix, Guid chartId,
+        CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // Breaks with no judgement counts can never be placed on the timeline; the rail admits
+        // to them by number instead of pretending the placed set is the whole story. Same
+        // filtered index — Perfects rides its includes.
+        var unplaced = await database.Set<ScoreEventJournalEntity>()
+            .CountAsync(j => j.ChartId == chartId && j.MixId == mixId && j.IsStageBroken &&
+                             j.Perfects == null, cancellationToken);
+        // Broken runs that FINISHED the chart — the x_ finished fails. They have no position on
+        // the rail (they saw the whole song); the strip's end-cap admits to them by number.
+        // Served by the limbo (ChartId, MixId) covering index, which includes IsBroken.
+        var finishedFails = await database.Set<ScoreEventJournalEntity>()
+            .CountAsync(j => j.ChartId == chartId && j.MixId == mixId && j.IsBroken &&
+                             !j.IsStageBroken, cancellationToken);
+        // Served off the filtered stage-break index end to end — chart, mix, breaks-only, the
+        // judgement columns riding as includes. No user join: the rail is anonymous, and its one
+        // caller flags the viewer's own rows by id without ever surfacing anyone else's.
+        var rows = await database.Set<ScoreEventJournalEntity>()
+            .Where(j => j.ChartId == chartId && j.MixId == mixId && j.IsStageBroken && j.Perfects != null)
+            .Select(j => new
+            {
+                j.UserId, j.Perfects, j.Greats, j.Goods, j.Bads, j.Misses, j.IsNonLifebarBreak,
+                j.IsWalkOff, j.PassPlate, j.PassGrade
+            })
+            .ToArrayAsync(cancellationToken);
+        return new ChartStageBreaksRead(rows
+            .Select(r => new ChartStageBreakRow(r.UserId,
+                new JudgementCounts(r.Perfects!.Value, r.Greats ?? 0, r.Goods ?? 0, r.Bads ?? 0,
+                    r.Misses ?? 0),
+                r.IsNonLifebarBreak, r.PassPlate, r.PassGrade, r.IsWalkOff))
+            .ToArray(), unplaced, finishedFails);
     }
 
     public async Task<IReadOnlyList<UserPhoenixScore>> GetLowestPassingPlays(MixEnum mix, Guid chartId,
@@ -458,7 +495,7 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             Enum.TryParse<XXLetterGrade>(e.LetterGrade, out var grade) ? grade : null,
             e.IsStageBroken,
             new StageBreakCause(e.IsNonLifebarBreak, PhoenixPlateHelperMethods.TryParse(e.PassPlate),
-                PhoenixLetterGradeHelperMethods.TryParse(e.PassGrade)));
+                PhoenixLetterGradeHelperMethods.TryParse(e.PassGrade), e.IsWalkOff));
     }
 
     internal static JudgementCounts? JudgementsOf(ScoreEventJournalEntity e)

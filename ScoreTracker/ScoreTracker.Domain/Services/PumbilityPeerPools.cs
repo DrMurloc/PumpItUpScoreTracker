@@ -16,10 +16,10 @@ namespace ScoreTracker.Domain.Services;
 ///         rule the tier lists' nightly writer applies — and a chart's <b>prevalence</b> is a Borda
 ///         count over those pools: the chart at a peer's #1 scores 50, at #50 scores 1, summed over
 ///         the peers who hold it. Every peer casts the same 1,275 points, so a strong peer cannot
-///         outvote a weak one the way a raw value sum lets them. The score statistics are read
-///         over every peer who scored the chart, holders or not, with the estimator's own
-///         quantile arithmetic and its five-peer floor, so a page's median and the projection's
-///         estimate are the same number.
+///         outvote a weak one the way a raw value sum lets them. Every scorer's score rides each
+///         chart, holders or not, so a page can read a projected grade at any rung
+///         (<see cref="PeerPoolChart.ProjectedAt" />) with the estimator's own arithmetic and its
+///         five-peer floor, and the page's grade and the projection's estimate are the same number.
 ///     </para>
 /// </summary>
 public static class PumbilityPeerPools
@@ -28,7 +28,7 @@ public static class PumbilityPeerPools
     public const int PoolSize = PeerGroup.PumbilityPoolSize;
 
     /// <summary>
-    ///     Peers who must have scored a chart before its median means anything (D24). The same
+    ///     Peers who must have scored a chart before a projected grade for it means anything (D24). The same
     ///     number the projection's own floor starts at, but held here rather than relaxed with it:
     ///     where a band is too thin to meet the floor the projection answers on what it has (D47)
     ///     and this does not, so a row can carry a gain and still say "Fewer than 5 peers scored
@@ -87,16 +87,8 @@ public static class PumbilityPeerPools
             var held = holders.GetValueOrDefault(chartId);
             if (held == 0 && voices.Count < MinimumScored) continue;
 
-            var scored = voices.Select(s => new PeerScore(s, 0, 0)).ToArray();
-            var median = PeerEstimator.Estimate(scored, 0, PeerEstimator.Phoenix2Quantile, MinimumScored);
-            var q1 = median == null ? null : PeerEstimator.Estimate(scored, 0, PeerEstimator.LowerQuartile, MinimumScored);
-            var q3 = median == null ? null : PeerEstimator.Estimate(scored, 0, PeerEstimator.UpperQuartile, MinimumScored);
             voices.Sort();
-            summary[chartId] = new PeerPoolChart(held, points.GetValueOrDefault(chartId), voices.Count,
-                median == null ? null : PhoenixScore.From(median.Value),
-                q1 == null ? null : PhoenixScore.From(q1.Value),
-                q3 == null ? null : PhoenixScore.From(q3.Value),
-                voices);
+            summary[chartId] = new PeerPoolChart(held, points.GetValueOrDefault(chartId), voices.Count, voices);
         }
 
         return new PeerPoolSummary(peers, pools, summary);

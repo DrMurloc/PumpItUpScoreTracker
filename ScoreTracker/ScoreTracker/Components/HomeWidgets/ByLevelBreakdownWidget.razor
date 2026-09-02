@@ -13,14 +13,17 @@
    resolve through MixThemes (literals for ApexCharts); the pure math lives in
    ByLevelAggregator. *@
 
-@if (!_loaded)
+@if (!_hasContent)
 {
     <div class="dash-widget-message">
         <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
     </div>
 }
-else if (_kind == BreakdownChartKind.Empty)
+else
 {
+    <div class="dash-refreshable @(_loaded ? "" : "dash-stale")">
+    @if (_kind == BreakdownChartKind.Empty)
+    {
     <div class="dash-widget-message">
         <div>
             <MudText Typo="Typo.body2">@L["No scores in this range yet — record or import to see your breakdown."]</MudText>
@@ -54,6 +57,8 @@ else
                                  YValue="@(p => p.Y)"/>
             }
         </ApexChart>
+    </div>
+    }
     </div>
 }
 
@@ -90,6 +95,7 @@ else
     private sealed record RenderSeries(string Name, string Color, bool Dashed, string? Group, IReadOnlyList<Pt> Points);
 
     private bool _loaded;
+    private bool _hasContent;
     private string? _loadedFor;
     private string _renderKey = string.Empty;
     private BreakdownChartKind _kind = BreakdownChartKind.Empty;
@@ -110,6 +116,7 @@ else
             _series = new List<RenderSeries>();
             _bands = new();
             _loaded = true;
+            _hasContent = true;
             return;
         }
 
@@ -117,7 +124,9 @@ else
         var dataMix = config.Mix ?? EffectiveMix;
         var (records, scales) = await DataSource.Load(CurrentUser.User.Id, dataMix);
         var result = ByLevelAggregator.Aggregate(config, records, scales);
-        _kind = result.Kind;
+        // Local until the load completes — assigning it here would flip the empty/chart
+        // branch across the settings awaits while a reload is showing the current graph.
+        var kind = result.Kind;
 
         var themeMix = MixThemes.ResolveThemeMix(
             await UiSettings.GetSetting(MixThemes.OverrideSettingKey), await UiSettings.GetSelectedMix());
@@ -125,7 +134,7 @@ else
 
         _series = new List<RenderSeries>();
         _bands = new();
-        var isBars = _kind == BreakdownChartKind.StackedBars;
+        var isBars = kind == BreakdownChartKind.StackedBars;
         if (result.Kind != BreakdownChartKind.Empty)
         {
             foreach (var series in result.Series)
@@ -216,8 +225,10 @@ else
         _options.Yaxis = new List<YAxis> { yAxis };
         // Distribution (lines) leans on the hover tooltip; stacked bars keep the category legend.
         _options.Legend = new Legend { Show = isBars };
+        _kind = kind;
         _renderKey = signature;
         _loaded = true;
+        _hasContent = true;
     }
 
     private string TypeLabel(ChartType type) =>

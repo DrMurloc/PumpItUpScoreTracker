@@ -34,8 +34,8 @@ namespace ScoreTracker.PlayerProgress.Application
         ///     Phoenix 1: how far a chart's scoring level may sit from the player's competitive
         ///     level and still be worth projecting. Beyond this the estimate is arithmetically
         ///     fine and practically useless — nobody grinding 21s needs a number for a 26.
-        ///     Phoenix 2 has no window (D24): its peers are drawn on the PUMBILITY ladder, not on a
-        ///     level, and the five-peer floor is what keeps an unrealistic chart off the list.
+        ///     Phoenix 2 has no window (D24): its peers are drawn on the pool of the type, not on
+        ///     a level, and the five-peer floor is what keeps an unrealistic chart off the list.
         /// </summary>
         private const double ScoringLevelWindow = 2.0;
 
@@ -70,10 +70,11 @@ namespace ScoreTracker.PlayerProgress.Application
             CancellationToken cancellationToken)
         {
             // Two halves with nothing in common. The estimates are the peer sweep — sized by
-            // the player population, the same for all three pools, and unchanged by anything
-            // the viewer does, since a player's own scores never enter their own peer group. The
-            // pricing is arithmetic over their top hundred, and moves the moment they play.
-            // So one is held for a day and the other is redone on every visit.
+            // the player population, the same for all three pools and all three energies, and
+            // unchanged by anything the viewer does, since a player's own scores never enter
+            // their own peer group. The pricing is arithmetic over their top hundred at the
+            // energy asked for, and moves the moment they play or change the chip. So one is
+            // held for a day and the other is redone on every visit.
             var sweep = await _cache.GetOrAdd(request.UserId, request.Mix,
                 () => Estimate(request.UserId, request.Mix));
             return await Price(sweep, request, cancellationToken);
@@ -81,7 +82,7 @@ namespace ScoreTracker.PlayerProgress.Application
 
         /// <summary>
         ///     The Play page (docs/design/pumbility-overhaul.md §3.10): the peers' pools out of the
-        ///     cached sweep — the PUMBILITY band on Phoenix 2, the competitive band on Phoenix 1 (D43)
+        ///     cached sweep — PUMBILITY peers on Phoenix 2, the competitive band on Phoenix 1 (D43)
         ///     — tiered by prevalence per type, with the viewer's own pool and scores laid over them,
         ///     and the roster. A viewer with no lit type answers empty — the page prints the dark
         ///     chips from the group record either way.
@@ -89,7 +90,8 @@ namespace ScoreTracker.PlayerProgress.Application
         public async Task<PumbilityPeersPageRecord> Handle(GetPumbilityPeersPageQuery request,
             CancellationToken cancellationToken)
         {
-            var (userId, mix, pool) = request;
+            var (userId, mix, pool, energy) = request;
+            var quantile = energy.Quantile();
 
             var sweep = await _cache.GetOrAdd(userId, mix, () => Estimate(userId, mix));
             var types = pool is { } only ? new[] { only } : new[] { ChartType.Single, ChartType.Double };
@@ -129,9 +131,6 @@ namespace ScoreTracker.PlayerProgress.Application
                 var held = summary.Charts.Where(kv => kv.Value.Holders > 0).ToDictionary(kv => kv.Key, kv => kv.Value.Points);
                 var tiers = TierListProcessor.ProcessIntoLogScaledTierList(PrevalenceListName, held)
                     .ToDictionary(e => e.ChartId);
-                var variability = PeerVariability.Band(summary.Charts
-                    .Where(kv => kv.Value.Median != null)
-                    .Select(kv => (kv.Key, kv.Value.Quartile1!.Value, kv.Value.Quartile3!.Value)));
 
                 foreach (var (chartId, chart) in summary.Charts)
                 {
@@ -139,11 +138,12 @@ namespace ScoreTracker.PlayerProgress.Application
                     var tier = tiers[chartId];
                     var myScore = mine.TryGetValue(chartId, out var record) ? record.Score : null;
                     entries.Add(new PeerPoolEntry(chartId, type, chart.Holders, peerCount, chart.Points, tier.Category,
-                        tier.Order, chart.Scored, chart.Median, chart.Quartile1, chart.Quartile3,
-                        variability.TryGetValue(chartId, out var level) ? level : null,
+                        tier.Order, chart.Scored,
                         myRank.TryGetValue(chartId, out var rank) ? rank : null,
                         myScore, record?.Plate,
-                        myScore is { } s ? chart.PercentileOf((int)s) : null));
+                        myScore is { } s ? chart.PercentileOf((int)s) : null,
+                        // The grade the row prints: the peers at the page's energy (D51, D52).
+                        chart.ProjectedAt(quantile)));
                 }
 
                 foreach (var (chartId, rating) in myPool)
@@ -161,7 +161,7 @@ namespace ScoreTracker.PlayerProgress.Application
         }
 
         /// <summary>
-        ///     The current user's peers of a type, out of the cached sweep — the PUMBILITY band on
+        ///     The current user's peers of a type, out of the cached sweep — PUMBILITY peers on
         ///     Phoenix 2, the competitive band on Phoenix 1 (D43) — empty for a dark type or for
         ///     nobody signed in.
         /// </summary>
@@ -257,15 +257,19 @@ namespace ScoreTracker.PlayerProgress.Application
             // The most permissive bar any pool could set, because this set has to serve all
             // three. A merged top fifty is drawn from a superset of either single type's, so
             // it never sits below both — the lower of the two per-type bars is the floor.
-            var floor = Math.Min(
-                (await BuildPool(ChartType.Single, userId, mix, charts, scoring, CancellationToken.None)).Baseline,
-                (await BuildPool(ChartType.Double, userId, mix, charts, scoring, CancellationToken.None)).Baseline);
+            var singles = await BuildPool(ChartType.Single, userId, mix, charts, scoring, CancellationToken.None);
+            var doubles = await BuildPool(ChartType.Double, userId, mix, charts, scoring, CancellationToken.None);
+            var floor = Math.Min(singles.Baseline, doubles.Baseline);
 
-            // Phoenix 1 seats nobody on a rung ladder and discards this, so it does not pay for
-            // the read: a third GetTop50ForPlayerQuery per sweep for a value nothing looks at.
+            // Where each type's pool finishes (D48), off the same two reads: the peers of a type
+            // are drawn around the viewer's pool OF THAT TYPE (D53), so each type is placed by
+            // its own. Phoenix 1 seats nobody by a pool and reads none.
             var finish = mix == MixEnum.Phoenix2
-                ? FinishedTotal(await BuildPool(null, userId, mix, charts, scoring, CancellationToken.None))
-                : null;
+                ? new Dictionary<ChartType, (double Total, bool IsEstimate)?>
+                {
+                    [ChartType.Single] = FinishedTotal(singles), [ChartType.Double] = FinishedTotal(doubles)
+                }
+                : new Dictionary<ChartType, (double Total, bool IsEstimate)?>();
 
             // Phoenix 1 scopes its window on scoring levels; Phoenix 2 has no window and does
             // not read them.
@@ -273,23 +277,22 @@ namespace ScoreTracker.PlayerProgress.Application
                 ? new Dictionary<Guid, double>()
                 : await _mediator.Send(new GetChartScoringLevelsQuery(mix), CancellationToken.None);
 
-            var expectedScore = new Dictionary<Guid, PhoenixScore>();
-            var spreads = new Dictionary<Guid, PeerSpread>();
+            var ladders = new Dictionary<Guid, PeerLadder>();
             var peers = new Dictionary<ChartType, PeerGroup>();
             var pools = new Dictionary<ChartType, PeerPoolSummary>();
-            var scope = new ProjectionScope(mix, charts, scoringLevels, scoring, floor,
-                finish?.Total, finish?.IsEstimate ?? false);
+            var scope = new ProjectionScope(mix, charts, scoringLevels, scoring, floor, finish);
 
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
-                await ProjectType(chartType, userId, scope, expectedScore, spreads, peers, pools, CancellationToken.None);
+                await ProjectType(chartType, userId, scope, ladders, peers, pools, CancellationToken.None);
 
-            return new ProjectionSweep(expectedScore, peers, spreads, pools);
+            return new ProjectionSweep(ladders, peers, pools);
         }
 
         /// <summary>
-        ///     What those estimates are worth to this player, in this pool, right now. Cheap —
-        ///     their own top hundred and one tier-list read — and never cached, because the bar
-        ///     it measures against moves every time they play.
+        ///     What those estimates are worth to this player, in this pool, at this energy, right
+        ///     now. Cheap — a lookup on the cached ladders, their own top hundred and one
+        ///     tier-list read — and never cached, because the bar it measures against moves every
+        ///     time they play and the rung moves with the chip (D51).
         /// </summary>
         private async Task<PumbilityProjection> Price(ProjectionSweep sweep,
             ProjectPumbilityGainsQuery request, CancellationToken cancellationToken)
@@ -303,12 +306,14 @@ namespace ScoreTracker.PlayerProgress.Application
             // of either type can displace, matching how the game aggregates.
             var pool = await BuildPool(request.ChartType, request.UserId, mix, charts, scoring, cancellationToken);
 
-            // The pool scopes the LIST, where the estimates are deliberately type-blind.
+            // The pool scopes the LIST, where the estimates are deliberately type-blind; the
+            // energy picks the rung every estimate is read at, off the ladders the sweep holds.
+            var quantile = request.Energy.Quantile();
             var expectedScore = request.ChartType is { } only
-                ? sweep.ExpectedScores.Where(kv => charts.TryGetValue(kv.Key, out var c) && c.Type == only)
-                    .ToDictionary(kv => kv.Key, kv => kv.Value)
-                : sweep.ExpectedScores.Where(kv => charts.ContainsKey(kv.Key))
-                    .ToDictionary(kv => kv.Key, kv => kv.Value);
+                ? sweep.Ladders.Where(kv => charts.TryGetValue(kv.Key, out var c) && c.Type == only)
+                    .ToDictionary(kv => kv.Key, kv => kv.Value.At(quantile))
+                : sweep.Ladders.Where(kv => charts.ContainsKey(kv.Key))
+                    .ToDictionary(kv => kv.Key, kv => kv.Value.At(quantile));
 
             var chartDifficulty = (await _mediator.Send(new GetTierListQuery("Pass Count", mix), cancellationToken))
                 .ToDictionary(s => s.ChartId, e => e.Category);
@@ -350,21 +355,20 @@ namespace ScoreTracker.PlayerProgress.Application
                 expectedScore.Where(kv => ranked.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value),
                 ranked,
                 chartDifficulty,
-                sweep.Peers,
-                sweep.Spreads.Where(kv => ranked.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value));
+                sweep.Peers);
         }
 
         /// <summary>
-        ///     Where this player's PUMBILITY ends up if they keep the standard they are holding
-        ///     now, and whether that is a guess: their real total once the merged pool holds fifty,
-        ///     and everything they hold plus the empty slots priced at their weakest held chart
-        ///     while it does not (D48).
+        ///     Where this player's pool of one type ends up if they keep the standard they are
+        ///     holding now, and whether that is a guess: its real total once it holds fifty, and
+        ///     everything they hold plus the empty slots priced at their weakest held chart while
+        ///     it does not (D48).
         ///     <para>
-        ///         The merged pool, not a per-type one, because the rung ladder is read off the
-        ///         merged top fifty — the number the game's own badge is drawn from. Which also
-        ///         means a full merged pool is a SETTLED number even while the type being viewed
-        ///         holds twenty-odd charts, and the flag says so: that player was placed by a real
-        ///         total, and no surface may tell them their peers came from an estimate.
+        ///         The pool of the type, because that is the pool the peers are drawn around (D53):
+        ///         a full singles pool says nothing about where a twenty-chart doubles pool is
+        ///         heading, and the doubles peers have to be drawn around the doubles answer. A
+        ///         short pool of a type is therefore placed by an estimate whatever the other type
+        ///         holds, and the flag says so.
         ///     </para>
         ///     <para>
         ///         An answer is returned all the way down to a single chart, even though nothing
@@ -389,14 +393,14 @@ namespace ScoreTracker.PlayerProgress.Application
         ///         residual, not a term to tune — no calibration constant.
         ///     </para>
         /// </summary>
-        private static (double Total, bool IsEstimate)? FinishedTotal(PoolState merged)
+        private static (double Total, bool IsEstimate)? FinishedTotal(PoolState pool)
         {
-            var ranked = merged.Ratings.Values.OrderByDescending(v => v).ToArray();
+            var ranked = pool.Ratings.Values.OrderByDescending(v => v).ToArray();
             if (ranked.Length >= PumbilityPeerPools.PoolSize)
                 return (ranked.Take(PumbilityPeerPools.PoolSize).Sum(), false);
             // Nothing at all is not an estimate of anything, and answering zero would seat a
-            // player the stats know the rung of at the bottom of the ladder. Null hands the
-            // placement back to their standing total, which is what it was before.
+            // player the stats know the pool of at the bottom of the population. Null hands the
+            // placement back to their stats row, which is what it was before.
             if (ranked.Length == 0) return null;
             // Everything held counts for exactly what it is worth; only the empty slots are
             // guessed, and they are guessed at the standard the player is already holding at
@@ -404,17 +408,21 @@ namespace ScoreTracker.PlayerProgress.Application
             return (ranked.Sum() + (PumbilityPeerPools.PoolSize - ranked.Length) * ranked[^1], true);
         }
 
-        /// <summary>What a projection run reads: the same for every chart type in the run.</summary>
+        /// <summary>
+        ///     What a projection run reads: the same for every chart type in the run, except the
+        ///     finish, which is each type's own (D53).
+        /// </summary>
         private sealed record ProjectionScope(MixEnum Mix, IReadOnlyDictionary<Guid, Chart> Charts,
             IDictionary<Guid, double> ScoringLevels, ScoringConfiguration Scoring, double Baseline,
-            double? FinishedTotal, bool FinishIsEstimate);
+            IReadOnlyDictionary<ChartType, (double Total, bool IsEstimate)?> Finish);
 
         private async Task ProjectType(ChartType chartType, Guid userId, ProjectionScope scope,
-            IDictionary<Guid, PhoenixScore> into, IDictionary<Guid, PeerSpread> spreads,
+            IDictionary<Guid, PeerLadder> into,
             IDictionary<ChartType, PeerGroup> peers, IDictionary<ChartType, PeerPoolSummary> pools,
             CancellationToken cancellationToken)
         {
-            var (mix, charts, scoringLevels, scoring, baseline, finishedTotal, finishIsEstimate) = scope;
+            var (mix, charts, scoringLevels, scoring, baseline, finishByType) = scope;
+            var finish = finishByType.GetValueOrDefault(chartType);
 
             var candidates = charts.Values.Where(c => c.Type == chartType);
             if (mix != MixEnum.Phoenix2)
@@ -443,22 +451,25 @@ namespace ScoreTracker.PlayerProgress.Application
 
             // ±1.0 on Phoenix 1, measured optimal for predicting the score itself — this page
             // quotes the number, so its accuracy is what matters rather than the ranking.
-            // Phoenix 2 ignores the window; its peers are the PUMBILITY band. Both are handed the
-            // catalog, so the same read also yields what the peers' pools are made of (D43).
+            // Phoenix 2 ignores the window; its peers are drawn on the pool of the type (D53).
+            // Both are handed the catalog, so the same read also yields what the peers' pools are
+            // made of (D43).
             //
             // This is the caller that asks for the thin-band fallback (D47): what the page and
             // the home widget do with this is suggest charts to play, and one peer's score is a
             // worse suggestion than five but a better one than an empty board. The tier list's
             // own call deliberately does not ask.
+            //
+            // Every rung the chip can ask for is read now (D51), so the sweep is cached once and
+            // a change of energy is priced off it rather than swept again.
             var projected = await _projector.Project(
                 new ScoreProjectionRequest(mix, chartType, userId, scoped, PeerEstimator.CompetitiveWindow, charts,
-                    RelaxFloorWhenEmpty: true, ProjectedTotal: finishedTotal,
-                    ProjectedTotalIsEstimate: finishIsEstimate),
+                    RelaxFloorWhenEmpty: true, ProjectedTotal: finish?.Total,
+                    ProjectedTotalIsEstimate: finish?.IsEstimate ?? false, Quantiles: EnergyRungs.All),
                 cancellationToken);
 
-            foreach (var (chartId, score) in projected.Scores) into[chartId] = score;
-            if (projected.Spreads != null)
-                foreach (var (chartId, spread) in projected.Spreads) spreads[chartId] = spread;
+            if (projected.Ladders != null)
+                foreach (var (chartId, ladder) in projected.Ladders) into[chartId] = ladder;
             if (projected.Group is { } group) peers[chartType] = group;
             if (projected.PeerPools is { } summary) pools[chartType] = summary;
         }

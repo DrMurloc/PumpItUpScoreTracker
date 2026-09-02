@@ -15,14 +15,17 @@
    completion percent and a folder grade. Detail drops by size rather than re-laying out — 1x1 is
    one folder large, wider sizes stack rows, and the tier ticks appear once there is room for them. *@
 
-@if (!_loaded)
+@if (!_hasContent)
 {
     <div class="dash-widget-message">
         <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
     </div>
 }
-else if (_rows.Length == 0)
+else
 {
+    <div class="dash-refreshable @(_loaded ? "" : "dash-stale")">
+    @if (_rows.Length == 0)
+    {
     <div class="dash-widget-message">
         <MudText Typo="Typo.body2">@L["Pick the folders you're working on."]</MudText>
     </div>
@@ -71,6 +74,8 @@ else
             </div>
         }
     </div>
+    }
+    </div>
 }
 
 @code {
@@ -91,6 +96,7 @@ else
     private sealed record Row(FolderLevelRecord Level, IReadOnlyList<PhoenixLetterGrade> Grades);
 
     private bool _loaded;
+    private bool _hasContent;
     private bool _showTicks;
     private bool _showCounts;
     private string? _loadedFor;
@@ -123,6 +129,7 @@ else
         _hero = size is { Columns: 1, Rows: 1 } ? _rows.FirstOrDefault() : null;
         if (_hero != null) _rows = new[] { _hero };
         _loaded = true;
+        _hasContent = true;
     }
 
     // Live from the player's scores rather than the stored projection: the spectrum needs per-chart

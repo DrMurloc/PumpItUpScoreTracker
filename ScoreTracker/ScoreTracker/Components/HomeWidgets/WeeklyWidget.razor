@@ -19,14 +19,17 @@
    hand-rolled bands. Unplayed charts are content, not emptiness; the row trophy opens
    the per-chart leaderboard dialog. *@
 
-@if (!_loaded)
+@if (!_hasContent)
 {
     <div class="dash-widget-message">
         <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
     </div>
 }
-else if (!_rows.Any())
+else
 {
+    <div class="dash-refreshable @(_loaded ? "" : "dash-stale")">
+    @if (!_rows.Any())
+    {
     <div class="dash-widget-message">
         <MudText Typo="Typo.body2">@L["New board soon."]</MudText>
     </div>
@@ -78,6 +81,11 @@ else
         </div>
     </div>
 
+    }
+    </div>
+
+    @* Outside the dash-refreshable wrapper: its dim is an opacity, which fades a dialog and
+       its scrim along with the body and traps their z-index in this cell's stacking context. *@
     <LeaderboardDialog @bind-Visible="_showLeaderboard" Chart="_leaderboardChart" Entries="_entries"
                        CommunityUserIds="_communityIds" RivalUserIds="_rivalIds"/>
 }
@@ -100,6 +108,7 @@ else
     private sealed record BoardRow(Chart Chart, int? Place, int Total);
 
     private bool _loaded;
+    private bool _hasContent;
     private bool _wide;
     private string? _loadedFor;
     private List<BoardRow> _rows = new();
@@ -138,7 +147,6 @@ else
         var filtered = await Filter(charts, known, config, _mix);
 
         var entries = (await Mediator.Send(new GetWeeklyChartEntriesQuery(Mix: _mix))).ToArray();
-        _entries = entries;
         var totals = entries.GroupBy(e => e.ChartId).ToDictionary(g => g.Key, g => g.Count());
         var mine = entries.Where(e => e.UserId == userId).Select(e => e.ChartId).ToHashSet();
         var placements = mine.Any()
@@ -148,6 +156,9 @@ else
 
         // Canonical Phoenix 1 board order, shared with the weekly page via WeeklyBoardOrder:
         // level descending, singles before doubles within a level, co-ops last (2-player last).
+        // Fields land together, after the last await (§2.3), so no render can catch this
+        // board's entries beside the previous board's rows.
+        _entries = entries;
         _rows = filtered
             .Select(c => new BoardRow(c,
                 placements.TryGetValue(c.Id, out var place) ? place : null,
@@ -155,6 +166,7 @@ else
             .OrderBy(r => WeeklyBoardOrder.SortKey(r.Chart))
             .ToList();
         _loaded = true;
+        _hasContent = true;
     }
 
     private async Task<IReadOnlyList<Chart>> Filter(IReadOnlyDictionary<Guid, Chart> charts,

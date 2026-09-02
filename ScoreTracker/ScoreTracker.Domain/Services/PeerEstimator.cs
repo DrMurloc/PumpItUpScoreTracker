@@ -1,3 +1,6 @@
+using ScoreTracker.Domain.Services.Contracts;
+using ScoreTracker.SharedKernel.ValueTypes;
+
 namespace ScoreTracker.Domain.Services;
 
 /// <summary>
@@ -44,26 +47,27 @@ public static class PeerEstimator
     public const double GrowthDecayLevels = 1.0;
 
     /// <summary>
-    ///     Which quantile of the peer distribution to read off on Phoenix 1. NOT the mean:
-    ///     per-chart scores are left-skewed by a tail of barely-passed attempts, and the mean
-    ///     sits in that tail — measured, a mean carries −8,319 bias where this carries +180.
+    ///     Which quantile of the peer distribution a projection reads by default, on both mixes:
+    ///     the median (docs/design/pumbility-overhaul.md D54, §4.11) — Great on the PUMBILITY
+    ///     page's Energy select, and the rung every surface off that page reads. NOT the mean:
+    ///     per-chart scores are left-skewed by a tail of barely-passed attempts and the mean sits
+    ///     in that tail.
     ///     <para>
-    ///         ⚠ Fitted against a ONE-YEAR truth horizon and re-fittable by design. It is the
-    ///         same species of constant as the ×0.95 fudge it replaces, and it moves bias by
-    ///         ~5,000 points across its useful range. If a caller's claim changes from "what
-    ///         you would eventually score" toward "what you would score today", this drops.
+    ///         Round seven read the first quartile (D50): on the ±3-rung band the top of a
+    ///         gain-sorted list — selected for the charts whose estimate ran high — read +4,728 at
+    ///         the median with its SS calls right half the time. Round eight replaced the band with
+    ///         the window on the pool of the type (D53), under which the same top ten reads −1,611
+    ///         at the median, and the owner set Great as the default to field-test it. Phoenix 1
+    ///         read the 65th percentile until round seven — measured +7,359 against frozen records —
+    ///         and Phoenix 2 the median (the retired D26). Surfaces that let the player choose ask
+    ///         for other rungs through <see cref="ScoreProjectionRequest.Quantiles" />; everything
+    ///         else reads this one.
     ///     </para>
     /// </summary>
-    public const double Quantile = 0.65;
+    public const double DefaultQuantile = Median;
 
-    /// <summary>
-    ///     The Phoenix 2 quantile: the median. Measured rather than chosen (§4.8) — against
-    ///     every Phoenix 2 player's actual score, <see cref="Quantile" /> read +6,000 median
-    ///     on Phoenix 2 evidence, and the median read −44 under the PUMBILITY-peer rule. The
-    ///     two constants differ because the evidence does: Phoenix 1 lends eventual bests,
-    ///     Phoenix 2 lends the same weeks-old scores the estimate is compared against.
-    /// </summary>
-    public const double Phoenix2Quantile = 0.50;
+    /// <summary>The median — the middle of the peers, the rung a page's "Great" reads, and the default (D54).</summary>
+    public const double Median = 0.50;
 
     /// <summary>
     ///     How many peers Phoenix 2 requires before it holds an opinion on a chart (§4.8, D24).
@@ -92,7 +96,33 @@ public static class PeerEstimator
     ///     the failure mode the old estimator's silent gates produced.
     /// </summary>
     public static int? Estimate(IReadOnlyCollection<PeerScore> peers,
-        double growthDecayLevels = GrowthDecayLevels, double quantile = Quantile, int minimumPeers = 1)
+        double growthDecayLevels = GrowthDecayLevels, double quantile = DefaultQuantile, int minimumPeers = 1)
+    {
+        var weighted = Weigh(peers, growthDecayLevels, minimumPeers);
+        return weighted == null ? null : (int)Math.Round(WeightedQuantile(weighted, quantile));
+    }
+
+    /// <summary>
+    ///     Several quantiles of the same peers at once — the same voices, the same growth weights,
+    ///     the same arithmetic as <see cref="Estimate" /> at each rung — with the peer count, or
+    ///     null under the floor exactly where <see cref="Estimate" /> is. What a caller that lets
+    ///     the player choose a rung caches, so the choice is a lookup rather than a second sweep.
+    /// </summary>
+    public static PeerLadder? Ladder(IReadOnlyCollection<PeerScore> peers, IReadOnlyCollection<double> quantiles,
+        double growthDecayLevels = GrowthDecayLevels, int minimumPeers = 1)
+    {
+        var weighted = Weigh(peers, growthDecayLevels, minimumPeers);
+        if (weighted == null) return null;
+
+        var rungs = new Dictionary<double, PhoenixScore>();
+        foreach (var quantile in quantiles)
+            rungs[quantile] = PhoenixScore.From((int)Math.Round(WeightedQuantile(weighted, quantile)));
+        return new PeerLadder(rungs, peers.Count);
+    }
+
+    /// <summary>The voices in reading order with their weights, or null when there are too few to hold an opinion.</summary>
+    private static (double Value, double Weight)[]? Weigh(IReadOnlyCollection<PeerScore> peers,
+        double growthDecayLevels, int minimumPeers)
     {
         if (peers.Count < Math.Max(1, minimumPeers)) return null;
 
@@ -101,12 +131,10 @@ public static class PeerEstimator
             .Where(p => p.Weight > 0)
             .OrderBy(p => p.Value)
             .ToArray();
-        if (weighted.Length == 0) return null;
-
-        return (int)Math.Round(WeightedQuantile(weighted, quantile));
+        return weighted.Length == 0 ? null : weighted;
     }
 
-    /// <summary>The quartiles a "Peers IQR" reads — the same quantile arithmetic, at 25 and 75.</summary>
+    /// <summary>The quartiles — the same quantile arithmetic at 25 and 75: Good and Top of my game on the page's select.</summary>
     public const double LowerQuartile = 0.25;
 
     public const double UpperQuartile = 0.75;

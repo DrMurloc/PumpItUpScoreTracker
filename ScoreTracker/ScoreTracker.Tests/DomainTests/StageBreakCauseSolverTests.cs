@@ -198,4 +198,29 @@ public sealed class StageBreakCauseSolverTests
         Assert.True(cause.IsNonLifebarBreak);
         Assert.Null(cause.PassGrade);
     }
+
+    /// <summary>
+    ///     The AFK guard's wall (D36): at 51 misses the run wears the guard's tail and the
+    ///     answer is "walked off" before any bar or grade arithmetic runs — even where the
+    ///     level or note count is unknown, because the rule needs only the miss count.
+    /// </summary>
+    [Fact]
+    public void FiftyOneMissesIsAWalkOffEvenWithNothingElseKnown()
+    {
+        var cause = StageBreakCauseSolver.Solve(500, 10, 5, 3, 51, null, null, MixEnum.Phoenix2);
+
+        Assert.True(cause.IsWalkOff);
+        Assert.False(cause.IsNonLifebarBreak);
+        Assert.Null(cause.PassPlate);
+        Assert.Null(cause.PassGrade);
+    }
+
+    [Fact]
+    public void FiftyMissesStaysBelowTheWall()
+    {
+        var cause = StageBreakCauseSolver.Solve(500, 10, 5, 3, 50, null, null, MixEnum.Phoenix2);
+
+        Assert.False(cause.IsWalkOff);
+        Assert.Equal(StageBreakCause.Unattributed, cause);
+    }
 }

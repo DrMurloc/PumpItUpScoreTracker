@@ -6,21 +6,24 @@ using ScoreTracker.SharedKernel.ValueTypes;
 namespace ScoreTracker.PlayerProgress.Application
 {
     /// <summary>
-    ///     What one sweep produced: the estimate per chart, the peer group per chart type it was
-    ///     drawn from, and — on Phoenix 2 — what those peers' pools are made of. Held together
-    ///     because all of them are answers about the same population at the same moment: the page
-    ///     prints the group beside the estimates, and lists the pools under them
-    ///     (docs/design/pumbility-overhaul.md §3.10).
+    ///     What one sweep produced: the peers' ladder per chart — every rung the page can ask for
+    ///     (D51), read once over the same voices — the peer group per chart type it was drawn
+    ///     from, and what those peers' pools are made of. Held together because all of them are
+    ///     answers about the same population at the same moment: the page prints the group beside
+    ///     the estimates, and lists the pools under them (docs/design/pumbility-overhaul.md §3.10).
     /// </summary>
+    /// <param name="Ladders">
+    ///     Per chart, the peers read at each of <see cref="EnergyRungs.All" />. The estimate a
+    ///     request prints is a lookup on this at its energy, which is what makes a change of energy
+    ///     free: the sweep is the expensive half and it is rung-agnostic.
+    /// </param>
     /// <param name="PeerPools">
-    ///     Per lit chart type on Phoenix 2, the peers' pools from the same read the estimates
-    ///     came from. Empty on Phoenix 1 and for a dark type — absent means "no peers", never
-    ///     "nobody holds anything".
+    ///     Per lit chart type, the peers' pools from the same read the estimates came from. Empty
+    ///     for a dark type — absent means "no peers", never "nobody holds anything".
     /// </param>
     internal sealed record ProjectionSweep(
-        IReadOnlyDictionary<Guid, PhoenixScore> ExpectedScores,
+        IReadOnlyDictionary<Guid, PeerLadder> Ladders,
         IReadOnlyDictionary<ChartType, PeerGroup> Peers,
-        IReadOnlyDictionary<Guid, PeerSpread> Spreads,
         IReadOnlyDictionary<ChartType, PeerPoolSummary> PeerPools);
 
     /// <summary>
@@ -35,7 +38,9 @@ namespace ScoreTracker.PlayerProgress.Application
     ///     </para>
     ///     <para>
     ///         Pool-free by the same reasoning: which pool you are looking at changes the bar,
-    ///         never the estimate, so all three selector positions share one sweep.
+    ///         never the estimate, so all three selector positions share one sweep. Energy-free
+    ///         too: the sweep holds every rung the chip can ask for, so the three energies share
+    ///         it as well (D51).
     ///     </para>
     ///     <para>
     ///         Eviction is by the viewer's own score changes. Peers' scores moving does NOT

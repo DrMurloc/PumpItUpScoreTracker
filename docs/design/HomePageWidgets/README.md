@@ -88,9 +88,16 @@ Verticals contribute *data* (contract queries, precompute jobs); Web contributes
 components. A future vertical (Rivals) adds descriptors without touching shell code (D9).
 
 The descriptor has since grown optional config-aware hooks beyond this sketch: `DynamicNameKey`
-(instance titles follow config), `DrawerPresets`, the refresh action (`RefreshIcon`/`RefreshTitleKey`/
-`RefreshOnScoreImport`), and `ShowRefresh` (2026-08-14) — a predicate the host consults so a goal
+(instance titles follow config), `DrawerPresets`, the refresh action (`RefreshIcon`/`RefreshTitleKey`),
+and `ShowRefresh` (2026-08-14) — a predicate the host consults so a goal
 whose content is deterministic doesn't render a shuffle that re-rolls into the identical list.
+Auto-refresh is **two opt-in signals** (owner, 2026-08-30, replacing the earlier fire-on-both):
+`RefreshOnScoreImport` bumps the widget the moment the viewer's import finishes saving — for
+widgets that read the scores themselves — and `RefreshOnStatsUpdate` bumps when the recalculated
+stats land (~2 minutes after the batch settles) — only for the few whose data IS that analysis
+(Account Stats, the Competitive Level graph; Suggested Charts declares both because Pumbility Push
+gains ride the projections). The host coalesces event bursts into one reload (2s debounce) and
+holds a bump that arrives mid-edit until Done.
 The **config dialog** also cascades the page's effective mix as a named `CascadingValue`
 (`Name="EffectiveMix"`, `MixEnum?`) — panels whose display depends on what "follow current mix"
 resolves to opt in via `[CascadingParameter]`; a dictionary parameter can't do this, because
@@ -100,7 +107,13 @@ resolves to opt in via `[CascadingParameter]`; a dictionary parameter can't do t
 
 Every render component must provide:
 
-1. **Skeleton** at fixed footprint for its size preset (no layout shift on load).
+1. **Skeleton** at fixed footprint for its size preset (no layout shift on load) — **first load
+   only**. A reload (shuffle, auto-refresh, config/mix change) keeps the current content rendered,
+   dimmed via the shared `dash-refreshable`/`dash-stale` wrapper, and swaps in place when the new
+   data lands: on the auto-height mobile column, a spinner swap collapses the page under a
+   mid-scroll finger and kills the gesture (the 2026-08-30 "can't scroll the widgets" bug). Loads
+   therefore build into locals and assign fields after their last await, so an interleaved render
+   never shows a half-built or flashed-empty state.
 2. **Empty state** with a setup CTA (no scores → import link; no data yet → what will make it appear).
    A widget with no data is an onboarding surface, not a blank box.
 3. **Isolated errors** — each grid cell wraps its widget in `<ErrorBoundary>`; one vertical throwing

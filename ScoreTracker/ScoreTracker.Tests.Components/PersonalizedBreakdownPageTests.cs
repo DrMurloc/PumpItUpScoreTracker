@@ -122,16 +122,18 @@ public sealed class PersonalizedBreakdownPageTests : ComponentTestBase
     }
 
     [Fact]
-    public void OnPhoenix2TheStatsNameThePumbilityPeersAndTheirRungBand()
+    public void OnPhoenix2TheStatsNameThePumbilityPeersAndTheirPoolWindow()
     {
         // The projection was drawn from PUMBILITY peers (docs/design/personalized-breakdown.md):
-        // the group and its rung band replace the competitive figures, and nothing is discounted,
-        // so the stale-weight figure is not printed at all.
-        var cut = RenderPage(peers: PeerGroup.Pumbility(24, 23, 50));
+        // the group and the window on the pool of the type (D53) replace the competitive figures —
+        // whole numbers, this not being a PUMBILITY page — and nothing is discounted, so the
+        // stale-weight figure is not printed at all.
+        var cut = RenderPage(peers: PeerGroup.Pumbility(17_609.59, 23, 50));
 
         Assert.Contains("PUMBILITY peers", cut.Markup);
-        Assert.Contains("[P.B] DIAMOND LV.1 – [P.B] RED BERYL LV.2", cut.Markup);
-        Assert.Contains("you stand on [P.B] DIAMOND LV.4", cut.Markup);
+        Assert.Contains("pools within 500 below and 250 above yours", cut.Markup);
+        Assert.Contains("17,110 – 17,860", cut.Markup);
+        Assert.Contains("your doubles pool is 17,610", cut.Markup);
         Assert.DoesNotContain("you sit at", cut.Markup);
         Assert.DoesNotContain("Stale weight", cut.Markup);
     }
@@ -142,7 +144,7 @@ public sealed class PersonalizedBreakdownPageTests : ComponentTestBase
         // D28: the viewer holds 29 of the 50 doubles a pool takes, so there is no peer group for
         // them yet. The silence is theirs, and the page prints the same figure the PUMBILITY
         // page's chip does instead of claiming the peers scored nothing.
-        var cut = RenderPage(peers: PeerGroup.Pumbility(24, 0, 29), projectedCount: 0);
+        var cut = RenderPage(peers: PeerGroup.Pumbility(9_000, 0, 29), projectedCount: 0);
 
         Assert.Contains("Doubles: 29/50 charts", cut.Markup);
         Assert.Contains("Peer projections show once your doubles pool has 50 charts.", cut.Markup);

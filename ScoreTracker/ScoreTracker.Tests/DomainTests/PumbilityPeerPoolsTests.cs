@@ -95,7 +95,7 @@ public sealed class PumbilityPeerPoolsTests
     }
 
     [Fact]
-    public void TheMedianAndQuartilesNeedFiveScoresAndReadEveryScorerNotJustHolders()
+    public void AProjectedGradeNeedsFiveScoresAndReadsEveryScorerNotJustHolders()
     {
         var chart = Chart(22);
         var fillers = Enumerable.Range(0, 50).Select(_ => Chart(24)).ToArray();
@@ -112,18 +112,19 @@ public sealed class PumbilityPeerPoolsTests
         var entry = summary.Charts[chart.Id];
         Assert.Equal(4, entry.Holders);
         Assert.Equal(5, entry.Scored);
-        // Midpoint-convention quantiles over 940 / 962 / 975 / 985 / 990k — the estimator's own.
-        Assert.Equal(975_000, (int)entry.Median!.Value);
-        Assert.Equal(956_500, (int)entry.Quartile1!.Value);
-        Assert.Equal(986_250, (int)entry.Quartile3!.Value);
         Assert.False(summary.Pools[peers[4]].Contains(chart.Id));
+        // Midpoint-convention quantiles over 940 / 962 / 975 / 985 / 990k — the estimator's own
+        // arithmetic, read on demand at any rung (D51, D52).
+        Assert.Equal(975_000, (int)entry.ProjectedAt(PeerEstimator.Median)!.Value);
+        Assert.Equal(956_500, (int)entry.ProjectedAt(PeerEstimator.LowerQuartile)!.Value);
+        Assert.Equal(986_250, (int)entry.ProjectedAt(PeerEstimator.UpperQuartile)!.Value);
 
-        // Four scorers: held, so it appears — but no median.
+        // Four scorers: held, so it appears — but no opinion at any rung.
         var four = PumbilityPeerPools.Build(records.Where(r => r.UserId != peers[4]).ToArray(),
             peers.Take(4).ToHashSet(), catalog, Scoring);
         Assert.Equal(4, four.Charts[chart.Id].Scored);
-        Assert.Null(four.Charts[chart.Id].Median);
-        Assert.Null(four.Charts[chart.Id].Quartile1);
+        Assert.Null(four.Charts[chart.Id].ProjectedAt(PeerEstimator.Median));
+        Assert.Null(four.Charts[chart.Id].ProjectedAt(PeerEstimator.LowerQuartile));
     }
 
     [Fact]
@@ -139,7 +140,7 @@ public sealed class PumbilityPeerPoolsTests
         var five = PumbilityPeerPools.Build(records, peers.ToHashSet(), catalog, Scoring);
         Assert.Equal(0, five.Charts[low.Id].Holders);
         Assert.Equal(5, five.Charts[low.Id].Scored);
-        Assert.NotNull(five.Charts[low.Id].Median);
+        Assert.NotNull(five.Charts[low.Id].ProjectedAt(PeerEstimator.Median));
 
         var four = PumbilityPeerPools.Build(records.Take(4).ToArray(), peers.Take(4).ToHashSet(), catalog, Scoring);
         Assert.False(four.Charts.ContainsKey(low.Id));

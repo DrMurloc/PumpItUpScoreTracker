@@ -22,7 +22,7 @@ public sealed class PumbilityPeerLineTests : ComponentTestBase
         var cut = RenderComponent<PumbilityPeerLine>(p => p
             .Add(x => x.Peers, new Dictionary<ChartType, PeerGroup>
             {
-                [ChartType.Single] = PeerGroup.Pumbility(24, 23, 58)
+                [ChartType.Single] = PeerGroup.Pumbility(17_609.59, 23, 58)
             })
             .Add(x => x.Pool, ChartType.Single));
 
@@ -35,7 +35,7 @@ public sealed class PumbilityPeerLineTests : ComponentTestBase
         var cut = RenderComponent<PumbilityPeerLine>(p => p
             .Add(x => x.Peers, new Dictionary<ChartType, PeerGroup>
             {
-                [ChartType.Double] = PeerGroup.Pumbility(24, 16, 29)
+                [ChartType.Double] = PeerGroup.Pumbility(17_609.59, 16, 29)
             })
             .Add(x => x.Pool, ChartType.Double));
 
@@ -52,8 +52,8 @@ public sealed class PumbilityPeerLineTests : ComponentTestBase
         var cut = RenderComponent<PumbilityPeerLine>(p => p
             .Add(x => x.Peers, new Dictionary<ChartType, PeerGroup>
             {
-                [ChartType.Single] = PeerGroup.Pumbility(24, 0, 12),
-                [ChartType.Double] = PeerGroup.Pumbility(24, 16, 29)
+                [ChartType.Single] = PeerGroup.Pumbility(17_609.59, 0, 12),
+                [ChartType.Double] = PeerGroup.Pumbility(17_609.59, 16, 29)
             })
             .Add(x => x.Pool, (ChartType?)null));
 
@@ -85,7 +85,7 @@ public sealed class PumbilityPeerLineTests : ComponentTestBase
         var cut = RenderComponent<PumbilityPeerLine>(p => p
             .Add(x => x.Peers, new Dictionary<ChartType, PeerGroup>
             {
-                [ChartType.Single] = PeerGroup.Pumbility(24, 0, 12)
+                [ChartType.Single] = PeerGroup.Pumbility(17_609.59, 0, 12)
             })
             .Add(x => x.Pool, (ChartType?)null));
 

@@ -215,7 +215,7 @@ extend the existing `lifebar` (untranslated) / `Vida` split above.
 ## PUMBILITY peers (Phoenix 2 projection, 2026-08-16)
 
 The `/Pumbility` peer line and the tier lists' PUMBILITY lens name one group: players within ±3 rungs
-of you on the PUMBILITY level ladder holding a full 50-chart pool of the type.
+of you on the PUMBILITY level ladder holding a full 50-chart pool of the type — **until round eight (2026-09-01, [pumbility-overhaul.md D53](design/pumbility-overhaul.md)), when the group became the players whose pool of the type sits within 500 below and 250 above yours.** The rung-band sentences below are retired; the window sentences reuse the same terms for *pool* and *peers*.
 
 | English | pt-BR | Notes |
 |---|---|---|

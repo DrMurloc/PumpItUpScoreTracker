@@ -69,22 +69,19 @@ internal sealed class TierListBlendBuilder
 
     private readonly IChartRepository _charts;
     private readonly IMediator _mediator;
-    private readonly IPlayerStatsReader _playerStats;
     private readonly IScoreProjector _projector;
     private readonly IScoreReader _scores;
     private readonly ITierListRepository _tierLists;
     private readonly ITitleRepository _titles;
 
     public TierListBlendBuilder(IMediator mediator, IChartRepository charts, IScoreProjector projector,
-        ITierListRepository tierLists, ITitleRepository titles, IPlayerStatsReader playerStats,
-        IScoreReader scores)
+        ITierListRepository tierLists, ITitleRepository titles, IScoreReader scores)
     {
         _mediator = mediator;
         _charts = charts;
         _projector = projector;
         _tierLists = tierLists;
         _titles = titles;
-        _playerStats = playerStats;
         _scores = scores;
     }
 
@@ -134,7 +131,7 @@ internal sealed class TierListBlendBuilder
         PumbilityComputation? pumbility = null;
         if (modifiers.ContainsKey(PumbilitySource))
         {
-            pumbility = await ComputePumbility(chartType, level, mix, userId, cancellationToken);
+            pumbility = await ComputePumbility(chartType, level, mix, userId, folderCharts, cancellationToken);
             sources[PumbilitySource] = pumbility.Entries;
         }
 
@@ -183,13 +180,17 @@ internal sealed class TierListBlendBuilder
     }
 
     /// <summary>
-    ///     Reads the materialized PUMBILITY tier list for this folder, for everyone or for the
-    ///     viewer's own peer group. Nothing is computed here — the nightly job owns the counting,
-    ///     and a peer group with no rows for this folder simply votes on nothing.
+    ///     The PUMBILITY source for this folder: the community's stored list for everyone, the
+    ///     projector's peers' pools for a signed-in Phoenix 2 viewer (D55), and the stored
+    ///     title-level list for a signed-in Phoenix 1 viewer. A peer group whose pools reach
+    ///     nothing in this folder simply votes on nothing.
     /// </summary>
     private async Task<PumbilityComputation> ComputePumbility(ChartType chartType, DifficultyLevel level,
-        MixEnum mix, Guid? userId, CancellationToken cancellationToken)
+        MixEnum mix, Guid? userId, IReadOnlyCollection<Chart> folderCharts, CancellationToken cancellationToken)
     {
+        if (userId != null && mix == MixEnum.Phoenix2)
+            return await ProjectedPumbility(chartType, mix, userId.Value, folderCharts, cancellationToken);
+
         var (peerKey, ownPool) = userId == null
             ? (PumbilityPeers.Community, null)
             : await ResolveViewerPeersAndPool(chartType, mix, userId.Value, cancellationToken);
@@ -205,13 +206,13 @@ internal sealed class TierListBlendBuilder
                 folder.Entries.ToDictionary(e => e.ChartId, e => e.Appearances),
                 folder.PeerCount);
 
-        // A player is never one of their own peers (owner, 2026-08-17). The stored list is one per
-        // peer group and counts every member's pool — the viewer's among them when they hold one —
-        // so the viewer's own is taken back out here: one from the peer count, one from every chart
-        // their pool holds, and the bands redrawn over what is left with the processor the nightly
-        // job used. Nightly is the caveat: a pool that filled since the last build was never
-        // counted in, and for that day the subtraction runs one deep. If nothing is left the peer
-        // group votes on nothing here, exactly as the writer would have left it.
+        // A player is never one of their own peers (owner, 2026-08-17). The stored Phoenix 1 list is
+        // one per peer group and counts every member's pool — the viewer's among them when they
+        // hold one — so the viewer's own is taken back out here: one from the peer count, one from
+        // every chart their pool holds, and the bands redrawn over what is left with the processor
+        // the nightly job used. Nightly is the caveat: a pool that filled since the last build was
+        // never counted in, and for that day the subtraction runs one deep. If nothing is left the
+        // peer group votes on nothing here, exactly as the writer would have left it.
         var counts = folder.Entries.ToDictionary(e => e.ChartId,
             e => Math.Max(0, e.Appearances - (ownPool.Contains(e.ChartId) ? 1 : 0)));
         if (counts.Values.Sum() == 0)
@@ -226,10 +227,77 @@ internal sealed class TierListBlendBuilder
     }
 
     /// <summary>
-    ///     Which peer group the reader belongs to, resolved exactly as the nightly job resolves it —
-    ///     Phoenix 1 by the level of their highest difficulty title, Phoenix 2 by the PUMBILITY
-    ///     rung their pool clears. The two must agree or a player reads a list nobody built for
-    ///     them.
+    ///     Phoenix 2, signed in: the viewer's PUMBILITY peers as the projector draws them (D53) —
+    ///     the players whose pool of the type sits within the window around the viewer's own, each
+    ///     holding a full pool of it, the viewer out — and how many of their pools hold each of the
+    ///     folder's charts, banded with the writer's own processor. One definition across the site
+    ///     (D55): this is the same <see cref="PeerPoolSummary" /> the PUMBILITY page's Play list
+    ///     counts, so the lens and that page cannot disagree about who the peers are or what they
+    ///     hold. A viewer short of a full pool of the type has no peers for it (D28) and votes on
+    ///     nothing — the projector says so on the group, and the empty answer is cached briefly.
+    ///     No thin-band fallback and no short-pool finish are asked for: the list ranks charts
+    ///     against each other, and the community list is a better answer than a folder ranked on
+    ///     one pool.
+    /// </summary>
+    private async Task<PumbilityComputation> ProjectedPumbility(ChartType chartType, MixEnum mix, Guid userId,
+        IReadOnlyCollection<Chart> folderCharts, CancellationToken cancellationToken)
+    {
+        var catalog = (await _charts.GetCharts(mix, cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
+        var projection = await _projector.Project(new ScoreProjectionRequest(mix, chartType, userId,
+                folderCharts.Select(c => new ProjectionTarget(c.Id, (int)c.Level)).ToArray(),
+                ProjectionCompetitiveWindow, catalog),
+            cancellationToken);
+        if (projection.PeerPools is not { } pools)
+            return new PumbilityComputation(new Dictionary<Guid, SongTierListEntry>(),
+                new Dictionary<Guid, int>(), projection.Group?.Size ?? 0);
+
+        var counts = folderCharts.ToDictionary(c => c.Id,
+            c => pools.Charts.TryGetValue(c.Id, out var chart) ? chart.Holders : 0);
+        if (counts.Values.Sum() == 0)
+            return new PumbilityComputation(new Dictionary<Guid, SongTierListEntry>(), counts, pools.PeerIds.Count);
+
+        return new PumbilityComputation(
+            TierListProcessor.ProcessIntoLogScaledTierList(PumbilitySource, counts).ToDictionary(e => e.ChartId),
+            counts,
+            pools.PeerIds.Count);
+    }
+
+    /// <summary>
+    ///     Phoenix 2, signed in: the folders the viewer's PUMBILITY peers' pools reach — every
+    ///     level at which at least one peer holds a chart of the type in their top fifty, from the
+    ///     pool floor up. The same projector read as <see cref="ProjectedPumbility" />, over every
+    ///     chart of the type, so the picker offers exactly the folders the lens can answer for.
+    ///     Empty for a viewer without a full pool of the type.
+    /// </summary>
+    public async Task<IReadOnlyList<int>> ProjectedPumbilityFolders(ChartType chartType, MixEnum mix, Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var catalog = (await _charts.GetCharts(mix, cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
+        var ofType = catalog.Values
+            .Where(c => c.Type == chartType && (int)c.Level >= (int)PeerGroup.PumbilityPoolFloor)
+            .Select(c => new ProjectionTarget(c.Id, (int)c.Level))
+            .ToArray();
+        if (ofType.Length == 0) return Array.Empty<int>();
+
+        var projection = await _projector.Project(
+            new ScoreProjectionRequest(mix, chartType, userId, ofType, ProjectionCompetitiveWindow, catalog),
+            cancellationToken);
+        if (projection.PeerPools is not { } pools) return Array.Empty<int>();
+
+        return pools.Charts
+            .Where(kv => kv.Value.Holders > 0 && catalog.ContainsKey(kv.Key))
+            .Select(kv => (int)catalog[kv.Key].Level)
+            .Where(level => level >= (int)PeerGroup.PumbilityPoolFloor)
+            .Distinct()
+            .OrderBy(level => level)
+            .ToArray();
+    }
+
+    /// <summary>
+    ///     Phoenix 1: which stored peer group the reader belongs to, resolved exactly as the nightly
+    ///     job resolves it — the level of their highest difficulty title. The two must agree or a
+    ///     player reads a list nobody built for them. Phoenix 2 stores no personalized list
+    ///     (D55): ask <see cref="ProjectedPumbilityFolders" /> instead.
     /// </summary>
     public async Task<string?> ResolveViewerPeers(ChartType chartType, MixEnum mix, Guid userId,
         CancellationToken cancellationToken)
@@ -238,35 +306,25 @@ internal sealed class TierListBlendBuilder
     }
 
     /// <summary>
-    ///     The reader's peer key and their own pool of the type — the pool the writer counted for
-    ///     them, rebuilt from their records with the same rule (<see cref="PumbilityPeers.TopPool" />),
-    ///     or null when they hold no full one. On Phoenix 2 the key exists only when the pool does
-    ///     (D28): a reader short of it has no peers for the type — their total is low because they
-    ///     have played little of it, not because they are weak, and a rung read off that total would
-    ///     hand them the list of players genuinely at it. Phoenix 1 keys on the difficulty title
-    ///     regardless; a short pool there only means the reader was never counted among the members.
+    ///     The Phoenix 1 reader's peer key and their own pool of the type — the pool the writer
+    ///     counted for them, rebuilt from their records with the same rule
+    ///     (<see cref="PumbilityPeers.TopPool" />), or null when they hold no full one. Phoenix 1
+    ///     keys on the difficulty title regardless; a short pool only means the reader was never
+    ///     counted among the members. Phoenix 2 has no stored key and answers null.
     /// </summary>
     private async Task<(string? Key, IReadOnlySet<Guid>? Pool)> ResolveViewerPeersAndPool(ChartType chartType,
         MixEnum mix, Guid userId, CancellationToken cancellationToken)
     {
+        if (mix == MixEnum.Phoenix2) return (null, null);
         var pool = await ViewerPool(chartType, mix, userId, cancellationToken);
-        if (mix != MixEnum.Phoenix2)
-        {
-            var titleLevel = await _titles.GetCurrentTitleLevel(mix, userId, cancellationToken);
-            return (PumbilityPeers.ForDifficultyTitleLevel((int)titleLevel), pool);
-        }
-
-        if (pool == null) return (null, null);
-
-        // The key is the viewer's rung on the total pool — the same one whichever type they read.
-        var stats = await _playerStats.GetStats(mix, userId, cancellationToken);
-        return (PumbilityPeers.ForPhoenix2Total(stats.SkillRating), pool);
+        var titleLevel = await _titles.GetCurrentTitleLevel(mix, userId, cancellationToken);
+        return (PumbilityPeers.ForDifficultyTitleLevel((int)titleLevel), pool);
     }
 
     /// <summary>
-    ///     The reader's pool of the type, priced as the nightly job prices everyone's: their
-    ///     non-broken records of the type at every level, under the mix's own PUMBILITY formula.
-    ///     One player's records and the cached catalog, behind the six-hour blend cache.
+    ///     The Phoenix 1 reader's pool of the type, priced as the nightly job prices everyone's:
+    ///     their non-broken records of the type at every level, under the mix's own PUMBILITY
+    ///     formula. One player's records and the cached catalog, behind the six-hour blend cache.
     /// </summary>
     private async Task<IReadOnlySet<Guid>?> ViewerPool(ChartType chartType, MixEnum mix, Guid userId,
         CancellationToken cancellationToken)

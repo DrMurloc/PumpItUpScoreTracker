@@ -2773,6 +2773,22 @@ html.sheet-open .more-sheet-scrim {
     color: var(--mix-ink-muted);
 }
 
+/* Stale-while-revalidate: once a widget has rendered, a reload dims the current content
+   in place instead of collapsing to a spinner — on the auto-height mobile column a
+   spinner swap shrinks the page under a mid-scroll finger and kills the gesture. The
+   wrapper mirrors .dash-widget-body's flex chain so widget roots keep stretching. */
+.dash-refreshable {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    transition: opacity .2s ease;
+}
+
+.dash-stale {
+    opacity: .6;
+}
+
 /* Import Scores widget (§4): a credential form has to live in a 1x1 body, so the fields and
    button pack into a tight flex column that scrolls rather than clipping the action off. */
 .import-widget-body {
@@ -4280,15 +4296,6 @@ html.sheet-open .more-sheet-scrim {
     height: 26px;
 }
 
-@media (max-width: 599.98px) {
-    /* Mobile cells auto-grow — let the page scroll instead of clipping rows. */
-    .dash-targets {
-        overflow-y: visible;
-        mask-image: none;
-        animation: none;
-    }
-}
-
 .dash-endzone {
     box-shadow: inset 0 -3px 0 0 var(--mix-primary);
     border-radius: 10px;
@@ -4885,6 +4892,23 @@ html.sheet-open .more-sheet-scrim {
             --dash-fade-top: 24px;
             --dash-fade-bottom: 0px;
         }
+    }
+}
+
+/* Phone column: cells auto-grow to their content, so no widget list overflows — which is
+   also why the scroll(self) timeline above never advances there. Left alone, the mask
+   would park at its initial value and permanently ghost every list's last row into a
+   "scroll me" that scrolls nothing.
+
+   This block sits AFTER the two rules it overrides on purpose. Every selector involved is
+   (0,1,0), and neither a media query nor @supports adds specificity, so source order is
+   the only thing that can decide — the same suppression written above them is inert. That
+   is not hypothetical: it shipped that way twice, once here and once as a .dash-targets
+   rule that spent its whole life dead. If this ever moves, it stops working silently. */
+@media (max-width: 599.98px) {
+    .dash-scroll {
+        mask-image: none;
+        animation: none;
     }
 }
 
@@ -14204,44 +14228,6 @@ span.ct-console-pick { cursor: default; }
     align-items: center;
 }
 
-/* Variability: five dots and the word (D35). The dots take the level's own token; the word
-   always prints beside them, so the colour never carries the level alone. */
-.pmb-vary {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    white-space: nowrap;
-}
-
-.pmb-vary-dots {
-    display: inline-flex;
-    gap: 2px;
-}
-
-.pmb-vary-dots i {
-    display: block;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--mix-ink) 22%, transparent);
-}
-
-.pmb-vary-dots i.on {
-    background: var(--pmb-vary-color, var(--mix-ink-muted));
-}
-
-/* Compact's top-right dot — the only place the level is a mark rather than a word; the tile's
-   tooltip carries the word (D35). */
-.pmb-vary-dot {
-    position: absolute;
-    top: 3px;
-    right: 3px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, .45);
-}
-
 /* Under Projected gains the prevalence tier rides a top-edge stripe on a Compact tile, since
    the corner is the gain's and the top-right dot is the variability's. */
 .pmb-prevalence-stripe {
@@ -14406,15 +14392,6 @@ span.ct-console-pick { cursor: default; }
 .pmb-legend-corner {
     position: static;
     display: inline-block;
-}
-
-.pmb-legend-dot {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-right: 2px;
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, .45);
 }
 
 .pmb-legend-stripe {
@@ -15245,6 +15222,35 @@ span.ct-console-pick { cursor: default; }
 
 @media (prefers-reduced-motion: reduce) {
     .pmb-skeleton {
+        animation: none;
+    }
+}
+
+/* --- a re-read of the Play list (D56): the previous list stays on screen at its own height,
+       every card and every table cell blanked to a pulsing block, so the sections, the scroll
+       and the controls above hold still until the new record lands. Only the first paint shows
+       the patience card. --- */
+.pmb-list-reloading {
+    pointer-events: none;
+}
+
+.pmb-list-reloading .tier-chart-card,
+.pmb-list-reloading .pmb-table tbody td {
+    background: color-mix(in srgb, var(--mix-ink) 8%, transparent);
+    border-color: transparent;
+    border-radius: 6px;
+    box-shadow: none;
+    animation: pmb-pulse 1.4s ease-in-out infinite;
+}
+
+.pmb-list-reloading .tier-chart-card > *,
+.pmb-list-reloading .pmb-table tbody td > * {
+    visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pmb-list-reloading .tier-chart-card,
+    .pmb-list-reloading .pmb-table tbody td {
         animation: none;
     }
 }
@@ -18296,4 +18302,292 @@ button.judg-strip:focus-visible {
         flex: 0 0 216px;
         scroll-snap-align: start;
     }
+}
+
+/* ===== Step chart & failure map (docs/design/step-chart-failure-map.md) ===== */
+/* The strip viewer: content-width scroll box beside a sticky whole-chart minimap. The rail
+   (pins) lives inside the canvas; everything here is layout, every color a token. */
+.stepchart-viewer {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    /* Left-aligned on the page (owner, 2026-08-30); the dialog stays centered. */
+    justify-content: flex-start;
+}
+
+.stepchart-compact .stepchart-viewer {
+    justify-content: center;
+}
+
+.stepchart-scroll {
+    position: relative;
+    height: 600px;
+    overflow: auto;
+    /* Reserve the vertical scrollbar's lane up front — measuring width before the bar
+       arrives left a few pixels of horizontal scroll (owner, 2026-08-30). */
+    scrollbar-gutter: stable;
+    width: max-content;
+    max-width: calc(100% - 106px);
+    flex: none;
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-radius: 10px;
+    background: var(--mix-surface-muted);
+    scrollbar-width: thin;
+}
+
+.stepchart-compact .stepchart-scroll {
+    height: 380px;
+    max-width: calc(100% - 96px);
+}
+
+/* The dialog's minimap rides the dead space right of the rail — same map, compact sizes. */
+.stepchart-compact .stepchart-minimap {
+    width: 76px;
+    height: 380px;
+}
+
+.stepchart-scroll canvas {
+    display: block;
+}
+
+.stepchart-minicol {
+    position: sticky;
+    top: 14px;
+}
+
+.stepchart-minimap {
+    display: block;
+    width: 92px;
+    height: 600px;
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-radius: 10px;
+    background: var(--mix-surface-muted);
+    cursor: pointer;
+}
+
+/* Dense on purpose: more than three chips must not push the strip below the fold
+   (owner, 2026-08-30). */
+.stepchart-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 0 0 10px;
+}
+
+.stepchart-chip {
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--mix-ink);
+    background: var(--mix-surface);
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 999px;
+    padding: 3px 9px 3px 7px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.stepchart-chip:hover {
+    border-color: var(--mix-ink-muted);
+}
+
+.stepchart-chip i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--mix-ink-muted);
+}
+
+.stepchart-chip-struct i {
+    background: var(--mix-primary);
+}
+
+.stepchart-chip-spike i {
+    background: var(--life-danger);
+}
+
+/* Lit while the viewport sits inside the chip's section — the chips double as a "you are
+   here" for the strip. */
+.stepchart-chip-active {
+    border-color: var(--mix-primary);
+    background: var(--mix-surface-muted);
+}
+
+.stepchart-chip small {
+    color: var(--mix-ink-muted);
+    font-size: .72rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.stepchart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin-top: 12px;
+    color: var(--mix-ink-muted);
+    font-size: .8rem;
+}
+
+.stepchart-legend-entry {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stepchart-legend-entry i {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+.stepchart-caveat {
+    border-left: 3px solid var(--mix-primary);
+    background: var(--mix-surface);
+    border-radius: 0 8px 8px 0;
+    padding: 8px 12px;
+    color: var(--mix-ink-muted);
+    font-size: .84rem;
+    margin: 0 0 12px;
+}
+
+@media (max-width: 760px) {
+    /* Narrow screens SQUISH rather than scroll (owner, 2026-08-30): the map thins out, the
+       gap tightens, and the module scales the strip to the width that remains - horizontal
+       scrolling on mobile is a deal breaker. */
+    .stepchart-viewer {
+        gap: 8px;
+    }
+
+    .stepchart-minimap {
+        width: 40px;
+    }
+
+    .stepchart-scroll {
+        max-width: calc(100% - 50px);
+    }
+}
+
+/* The rail's hover tooltip: fixed beside the cursor, ink on the deepest surface. */
+.stepchart-tip {
+    position: fixed;
+    z-index: 3000;
+    pointer-events: none;
+    background: var(--mix-bg);
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 8px;
+    padding: 8px 11px;
+    font-size: .8rem;
+    color: var(--mix-ink);
+    max-width: 260px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, .5);
+}
+
+.stepchart-tip-time {
+    color: var(--mix-ink-muted);
+    font-size: .72rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.stepchart-tip-hedge {
+    color: var(--mix-ink-muted);
+    font-size: .76rem;
+    margin-top: 3px;
+}
+
+/* The coloring-mode toggle: a segmented control, pressed state on the surface token. */
+.stepchart-modes {
+    display: inline-flex;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 9px;
+    overflow: hidden;
+    margin: 0 0 12px;
+}
+
+.stepchart-modes button {
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--mix-ink-muted);
+    background: transparent;
+    border: none;
+    padding: 8px 14px;
+    cursor: pointer;
+}
+
+.stepchart-modes button + button {
+    border-left: 1px solid rgba(255, 255, 255, .12);
+}
+
+.stepchart-modes button[aria-pressed="true"] {
+    background: var(--mix-surface);
+    color: var(--mix-ink);
+}
+
+.stepchart-modes button:disabled {
+    opacity: .45;
+    cursor: default;
+}
+
+.stepchart-tip-cmd {
+    height: 20px;
+    display: inline-block;
+    vertical-align: middle;
+    margin: 2px 4px 2px 0;
+}
+
+/* Modes + AV share one toolbar row; the AV stepper mirrors the segmented control. */
+.stepchart-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin: 0 0 12px;
+}
+
+.stepchart-toolbar .stepchart-modes {
+    margin: 0;
+}
+
+.stepchart-av {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 9px;
+    overflow: hidden;
+}
+
+.stepchart-av button {
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--mix-ink-muted);
+    background: transparent;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.stepchart-av button[aria-pressed="true"] {
+    background: var(--mix-surface);
+    color: var(--mix-ink);
+}
+
+.stepchart-av-value {
+    font-size: .8rem;
+    color: var(--mix-ink);
+    padding: 0 4px;
+    min-width: 56px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    border-left: 1px solid rgba(255, 255, 255, .12);
+    border-right: 1px solid rgba(255, 255, 255, .12);
+    align-self: stretch;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stepchart-legend-cmd {
+    height: 16px;
+    vertical-align: middle;
 }

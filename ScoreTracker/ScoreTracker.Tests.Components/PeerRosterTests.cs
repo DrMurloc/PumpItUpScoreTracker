@@ -13,7 +13,7 @@ using Xunit;
 namespace ScoreTracker.Tests.Components;
 
 /// <summary>
-///     The peers' roster (docs/design/pumbility-overhaul.md D39) and the variability meter (D35).
+///     The peers' roster (docs/design/pumbility-overhaul.md D39).
 /// </summary>
 public sealed class PeerRosterTests : ComponentTestBase
 {
@@ -67,20 +67,6 @@ public sealed class PeerRosterTests : ComponentTestBase
 
         var without = RenderComponent<PeerRoster>(p => p.Add(x => x.Rows, new[] { both, singles }));
         Assert.DoesNotContain("Peer for", without.Find("thead").TextContent);
-    }
-
-    [Fact]
-    public void TheMeterLightsOneDotPerLevelAndAlwaysPrintsTheWord()
-    {
-        var cut = RenderComponent<VariabilityMeter>(p => p.Add(x => x.Level, PeerVariabilityLevel.VerySplit).Add(x => x.Title, "From 12 peers"));
-        Assert.Equal(5, cut.FindAll(".pmb-vary-dots i.on").Count);
-        Assert.Equal("Very split", cut.Find(".pmb-vary-word").TextContent);
-        Assert.Contains("--vary-5", cut.Find(".pmb-vary").GetAttribute("style"));
-        Assert.Equal("From 12 peers", cut.Find(".pmb-vary").GetAttribute("title"));
-
-        var calm = RenderComponent<VariabilityMeter>(p => p.Add(x => x.Level, PeerVariabilityLevel.VeryConsistent));
-        Assert.Single(calm.FindAll(".pmb-vary-dots i.on"));
-        Assert.Equal("Very consistent", calm.Find(".pmb-vary-word").TextContent);
     }
 
     [Fact]

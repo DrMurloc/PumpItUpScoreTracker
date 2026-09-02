@@ -18,11 +18,10 @@ internal sealed class PumbilityFoldersHandler
     private readonly ITierListRepository _tierLists;
 
     public PumbilityFoldersHandler(IMediator mediator, IChartRepository charts, IScoreProjector projector,
-        ITierListRepository tierLists, ITitleRepository titles, IPlayerStatsReader playerStats,
-        IScoreReader scores,
+        ITierListRepository tierLists, ITitleRepository titles, IScoreReader scores,
         ICurrentUserAccessor currentUser, IMemoryCache cache)
     {
-        _builder = new TierListBlendBuilder(mediator, charts, projector, tierLists, titles, playerStats, scores);
+        _builder = new TierListBlendBuilder(mediator, charts, projector, tierLists, titles, scores);
         _tierLists = tierLists;
         _currentUser = currentUser;
         _cache = cache;
@@ -46,11 +45,21 @@ internal sealed class PumbilityFoldersHandler
             // the lens cannot speak for.
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6);
             entry.SlidingExpiration = TimeSpan.FromHours(1);
-            // The peer group is per chart type on Phoenix 2, so both are asked and merged - a
-            // folder is offered when the reader's peer group for THAT type can speak for it.
+            // The peer group is per chart type, so both are asked and merged - a folder is offered
+            // when the reader's peer group for THAT type can speak for it. A signed-in Phoenix 2
+            // viewer's peers are the projector's (D55), so their folders are the levels those
+            // peers' pools reach; everyone else reads a stored list's folders.
             var folders = new List<PumbilityFolderRecord>();
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
             {
+                if (userId != null && request.Mix == MixEnum.Phoenix2)
+                {
+                    folders.AddRange(
+                        (await _builder.ProjectedPumbilityFolders(chartType, request.Mix, userId.Value, cancellationToken))
+                        .Select(level => new PumbilityFolderRecord(chartType, level)));
+                    continue;
+                }
+
                 var peerKey = userId == null
                     ? PumbilityPeers.Community
                     : await _builder.ResolveViewerPeers(chartType, request.Mix, userId.Value,
