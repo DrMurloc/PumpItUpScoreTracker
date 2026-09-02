@@ -30,6 +30,8 @@ internal sealed class CommentSaga :
     IRequestHandler<VoteOnCommentCommand>,
     IRequestHandler<AcceptCommentTermsCommand>,
     IRequestHandler<GetChartCommentsQuery, CommentPageRecord>,
+    IRequestHandler<GetChartCommentMarksQuery, IReadOnlyList<CommentRecord>>,
+    IRequestHandler<GetChartCommentScopeCountsQuery, IReadOnlyList<CommentScopeCountRecord>>,
     IRequestHandler<GetMyCommentScopesQuery, IReadOnlyList<CommentScopeRecord>>,
     IRequestHandler<GetCommentConsentQuery, CommentConsentRecord>,
     IRequestHandler<GetMyCommentTextQuery, string?>
@@ -85,7 +87,8 @@ internal sealed class CommentSaga :
         await EnsureMayWriteTo(request.Audience, author, cancellationToken);
         await EnsureMayPostTo(request.Audience, cancellationToken);
 
-        var comment = Comment.Post(request.ChartId, author, request.Audience, request.Text, _clock.Now);
+        var comment = Comment.Post(request.ChartId, author, request.Audience, request.Text, _clock.Now,
+            request.AnchorAt);
         if (!comment.Audience.IsPrivate) comment.StampTranslationQueued(_clock.Now);
         await _comments.Save(comment, cancellationToken);
         await QueueForTranslation(comment, cancellationToken);
@@ -208,13 +211,66 @@ internal sealed class CommentSaga :
         var totalRoots = await _comments.CountRoots(request.ChartId, request.Audience, viewer,
             cancellationToken);
 
-        var trust = new LinkTrust(await ToolHostAllowlist.Get(_cache, _mediator, cancellationToken));
+        var roots = await ProjectThreads(rows, request.Audience, request.ReaderLocale, request.PreferredLocale,
+            viewer, cancellationToken);
+
         // The queued badge promises a translation is coming, and with the pipeline parked (no
         // API key) that would be a promise nothing keeps — comments-on, translation-unarmed is a
         // legitimate long-lived state, not a misconfiguration to surface at readers.
+        return new CommentPageRecord(roots, totalRoots, totalRoots > request.TakeRoots,
+            !request.Audience.IsPrivate && _translationClient.IsConfigured);
+    }
+
+    /// <summary>
+    ///     The marks the step chart draws and its panel reads (docs/design/step-chart-comments):
+    ///     the scope's anchored roots with the reader's own anchored notes overlaid, in chart
+    ///     order, unpaged, projected exactly as the tab's page is.
+    /// </summary>
+    public async Task<IReadOnlyList<CommentRecord>> Handle(GetChartCommentMarksQuery request,
+        CancellationToken cancellationToken)
+    {
+        var viewer = ViewerId;
+        if (request.Audience.IsPrivate && viewer == Guid.Empty) return Array.Empty<CommentRecord>();
+
+        var rows = await _comments.GetAnchoredForChart(request.ChartId, request.Audience, viewer,
+            cancellationToken);
+
+        return await ProjectThreads(rows, request.Audience, request.ReaderLocale, request.PreferredLocale,
+            viewer, cancellationToken);
+    }
+
+    /// <summary>
+    ///     What decides whether the strip's scope filter renders and which scopes it lists
+    ///     (step-chart-comments D18): the reader's own scopes — the rail's list, or Public alone
+    ///     signed out — each with how many anchored roots it holds on this chart.
+    /// </summary>
+    public async Task<IReadOnlyList<CommentScopeCountRecord>> Handle(GetChartCommentScopeCountsQuery request,
+        CancellationToken cancellationToken)
+    {
+        var scopes = _currentUser.IsLoggedIn
+            ? await Handle(new GetMyCommentScopesQuery(), cancellationToken)
+            : new[] { new CommentScopeRecord(CommentAudience.Public, Name.From("Public")) };
+        var counts = await _comments.CountAnchoredForChart(request.ChartId, ViewerId,
+            scopes.Select(scope => scope.Audience).ToArray(), cancellationToken);
+
+        return scopes
+            .Select(scope => new CommentScopeCountRecord(scope.Audience,
+                counts.TryGetValue(scope.Audience, out var count) ? count : 0))
+            .ToArray();
+    }
+
+    /// <summary>
+    ///     Rows to threads: link trust, renderings, authors and the shield question resolved once
+    ///     for the batch, then every root projected with its living replies attached. Shared by
+    ///     the page and the marks read so the two can never disagree about what a comment looks like.
+    /// </summary>
+    private async Task<CommentRecord[]> ProjectThreads(IReadOnlyList<CommentRow> rows, CommentAudience audience,
+        string? readerLocale, string? preferredLocale, Guid viewer, CancellationToken cancellationToken)
+    {
+        var trust = new LinkTrust(await ToolHostAllowlist.Get(_cache, _mediator, cancellationToken));
         var translationArmed = _translationClient.IsConfigured;
         // Notes are never translated, so their read never touches the renderings table at all.
-        var renderings = request.Audience.IsPrivate
+        var renderings = audience.IsPrivate
             ? new Dictionary<Guid, CommentRenderingRow[]>()
             : (await _renderings.GetFor(rows.Select(r => r.Id).ToArray(), cancellationToken))
             .GroupBy(r => r.CommentId)
@@ -222,13 +278,13 @@ internal sealed class CommentSaga :
         var authors = (await _users.GetUsers(
                 rows.Select(r => r.UserId).Where(id => id != Guid.Empty).Distinct(), cancellationToken))
             .ToDictionary(u => u.Id);
-        var moderation = await ModerationContextFor(request.Audience, viewer, cancellationToken);
+        var moderation = await ModerationContextFor(audience, viewer, cancellationToken);
 
         var repliesByRoot = rows.Where(r => r.ParentCommentId != null)
             .GroupBy(r => r.ParentCommentId!.Value)
             .ToDictionary(g => g.Key, g => g.ToArray());
 
-        var roots = rows.Where(r => r.ParentCommentId == null)
+        return rows.Where(r => r.ParentCommentId == null)
             .Select(root =>
             {
                 // A deleted reply renders nothing at all — it is not holding anything open, so a
@@ -236,20 +292,17 @@ internal sealed class CommentSaga :
                 var replies = (repliesByRoot.TryGetValue(root.Id, out var found)
                         ? found.Where(reply => reply.DeletedAt == null)
                         : Enumerable.Empty<CommentRow>())
-                    .Select(reply => Project(reply, request, trust, authors, viewer,
-                        moderation, renderings, translationArmed, Array.Empty<CommentRecord>()))
+                    .Select(reply => Project(reply, audience, readerLocale, preferredLocale, trust, authors,
+                        viewer, moderation, renderings, translationArmed, Array.Empty<CommentRecord>()))
                     .ToArray();
 
-                return Project(root, request, trust, authors, viewer, moderation, renderings,
-                    translationArmed, replies);
+                return Project(root, audience, readerLocale, preferredLocale, trust, authors, viewer,
+                    moderation, renderings, translationArmed, replies);
             })
             // A deleted root leaves a stub ONLY while something living still hangs off it. Nobody
             // answered, or every answer is gone too, and the whole thread goes with it.
             .Where(record => record.Deletion == null || record.Replies.Count > 0)
             .ToArray();
-
-        return new CommentPageRecord(roots, totalRoots, totalRoots > request.TakeRoots,
-            !request.Audience.IsPrivate && translationArmed);
     }
 
     public async Task<IReadOnlyList<CommentScopeRecord>> Handle(GetMyCommentScopesQuery request,
@@ -324,18 +377,21 @@ internal sealed class CommentSaga :
 
     // ----- helpers -----------------------------------------------------------------------------
 
-    private CommentRecord Project(CommentRow row, GetChartCommentsQuery request, LinkTrust trust,
-        Dictionary<Guid, User> authors, Guid viewer, ModerationContext moderation,
-        Dictionary<Guid, CommentRenderingRow[]> renderings, bool translationArmed,
-        IReadOnlyList<CommentRecord> replies)
+    private CommentRecord Project(CommentRow row, CommentAudience audience, string? readerLocale,
+        string? preferredLocale, LinkTrust trust, Dictionary<Guid, User> authors, Guid viewer,
+        ModerationContext moderation, Dictionary<Guid, CommentRenderingRow[]> renderings,
+        bool translationArmed, IReadOnlyList<CommentRecord> replies)
     {
-        var audience = request.Audience;
+        // A note is a note wherever it is listed: the marks read overlays the reader's own notes
+        // onto a public scope (step-chart-comments D7), and nothing about a note changes because
+        // of the company it keeps — no translation, no shield, and the record says which it is.
+        var isNote = audience.IsPrivate || row.IsNote;
         var deletion = DeletionOf(row);
         var author = row.UserId != Guid.Empty && authors.TryGetValue(row.UserId, out var found) ? found : null;
-        var translation = deletion == null && !audience.IsPrivate
+        var translation = deletion == null && !isNote
             ? ResolveTranslation(row, trust,
                 renderings.TryGetValue(row.Id, out var mine) ? mine : Array.Empty<CommentRenderingRow>(),
-                request.ReaderLocale, request.PreferredLocale,
+                readerLocale, preferredLocale,
                 translationArmed && CommentTranslationPolicy.PromiseStands(row.TranslationQueuedAt, _clock.Now),
                 out var body)
             : null;
@@ -356,13 +412,16 @@ internal sealed class CommentSaga :
             // The shield is the permission, per comment: the site admin everywhere, the creator
             // over admins and members, an admin with the flag over members — and never on your
             // own row, where Edit and Delete already live. A note never carries one for anybody.
-            deletion == null && !audience.IsPrivate && viewer != Guid.Empty && viewer != row.UserId &&
+            deletion == null && !isNote && viewer != Guid.Empty && viewer != row.UserId &&
             moderation.MayModerateAuthor(row.UserId),
             row.CreatedAt,
             deletion == null ? row.EditedAt : null,
             deletion,
             replies,
-            translation);
+            translation,
+            // Only a root points at a second — a reply reads its root's (D11).
+            row.ParentCommentId == null ? row.AnchorAt : null,
+            isNote);
     }
 
     /// <summary>

@@ -28,7 +28,17 @@ public sealed record CommentRecord(
     CommentDeletion? Deletion,
     IReadOnlyList<CommentRecord> Replies,
     /// <summary>Null on a stub and on a personal note — neither is ever translated.</summary>
-    CommentTranslationRecord? Translation = null);
+    CommentTranslationRecord? Translation = null,
+    /// <summary>
+    ///     The second of the chart this points at (docs/design/step-chart-comments D1). Null for a
+    ///     comment about the whole chart, and on every reply — a reply reads its root's.
+    /// </summary>
+    decimal? AnchorAt = null,
+    /// <summary>
+    ///     True for the reader's own personal note. The marks read overlays those onto whatever
+    ///     scope the strip is showing, so a list can mix the two and the row has to say which.
+    /// </summary>
+    bool IsNote = false);
 
 /// <summary>
 ///     How <see cref="CommentRecord.Body" /> was resolved for this reader, and what else they may

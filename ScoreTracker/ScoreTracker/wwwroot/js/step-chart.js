@@ -12,11 +12,17 @@ export async function mount(root) {
     if (!root || root.dataset.scMounted) return;
     root.dataset.scMounted = '1';
 
+    // The comment panel binds through this promise (docs/design/step-chart-comments §6): it can
+    // render before the fetch below lands, and a mount that bails resolves null so the panel
+    // stands down instead of waiting on a strip that never came.
+    var ready;
+    root.stepChartReady = new Promise(function (resolve) { ready = resolve; });
+
     var chartId = root.getAttribute('data-chart-id');
     var mix = root.getAttribute('data-mix');
     var isPhoenix2 = mix === 'Phoenix2';
     var compact = root.getAttribute('data-compact') === '1';
-    if (!chartId || !mix) return;
+    if (!chartId || !mix) { ready(null); return; }
 
     var strings = readStrings(root);
     var payload = await fetchJson('/Charts/StepChart/' + chartId + '?mix=' + encodeURIComponent(mix));
@@ -26,6 +32,7 @@ export async function mount(root) {
         (payload.rows.length === 0 && (!payload.holds || payload.holds.length === 0))) {
         var section = root.closest('section') || root;
         section.hidden = true;
+        ready(null);
         return;
     }
 
@@ -36,7 +43,10 @@ export async function mount(root) {
         footL: token('--foot-l'), footR: token('--foot-r'),
         quant: { 4: token('--quant-4'), 8: token('--quant-8'), 12: token('--quant-12'), 16: token('--quant-16') },
         quantOther: token('--quant-other'),
-        ink: token('--mix-ink'), inkMuted: token('--mix-ink-muted'), accent: token('--mix-primary')
+        ink: token('--mix-ink'), inkMuted: token('--mix-ink-muted'), accent: token('--mix-primary'),
+        // The comment marks' three colors: ink at rest, primary selected, gold for your notes —
+        // the rail's own "yours" — on the muted surface (step-chart-comments §3).
+        you: token('--step-you'), surfaceMuted: token('--mix-surface-muted'), bg: token('--mix-bg')
     };
 
     // rows: [time, panelMask, leftMask, quant, beat|null]
@@ -77,7 +87,12 @@ export async function mount(root) {
         level: level, compact: compact,
         meter: payload.meter != null ? payload.meter : null,
         strings: strings, payload: payload, colors: COL,
-        isPhoenix2: isPhoenix2, mode: 'arrow', token: token
+        isPhoenix2: isPhoenix2, mode: 'arrow', token: token,
+        // Comment marks (step-chart-comments): what the panel handed over, grouped by second;
+        // the mark the panel is showing; the second being written about; whether the reader
+        // pinned the panel with a tap or a stepper; the panel's .NET side and its element.
+        marks: [], markGroups: [], cur: null, pick: null, transientAt: null, pinned: false,
+        host: null, panelEl: null, hoverGroup: null
     };
     root.stepChartView = view;
     view.measureAvail = function () {
@@ -130,6 +145,8 @@ export async function mount(root) {
     renderLegend(view);
     initModes(view);
     initAv(view);
+    bindPinTips(view);
+    initComments(view);
 
     if (root.getAttribute('data-visibility') === 'StepsOnly') {
         var caveat = root.querySelector('[data-stepchart-caveat]');
@@ -147,6 +164,7 @@ export async function mount(root) {
     // The strip opens at the TOP — landing mid-chart is disorienting (owner, 2026-08-30);
     // the chips and the map are the fast ways down.
     highlightChips(view);
+    ready(view);
 }
 
 // Layout from the effective AV. Geometry mirrors the cabinet, measured off gameplay footage
@@ -171,7 +189,13 @@ function applyScale(view) {
     var gutter = view.narrow ? 26 : base.gutter;
     var railW = view.narrow ? 0 : base.railW;
     var pad = view.narrow ? 6 : 14;
-    var natural = gutter + base.colW * view.panels + pad + railW;
+    // Comment marks sit on the rail on wide layouts. On narrow ones the rail's width went back
+    // to the arrows and the gutter is full of pins, so the marks take a slim lane past the
+    // strip's edge — 18px for the bubble plus 10px of nothing, because a phone's overlay
+    // scrollbar draws over the box's last pixels and nothing may sit under the thumb
+    // (owner, 2026-09-01; step-chart-comments D8).
+    var markLane = view.narrow ? 28 : 0;
+    var natural = gutter + base.colW * view.panels + pad + railW + markLane;
     var fit = Math.min(1, avail / natural);
     view.scale = {
         pps: base.pps * fit,
@@ -179,12 +203,13 @@ function applyScale(view) {
         gutter: gutter * fit,
         railW: railW * fit,
         gap: pad * fit,
+        markLane: markLane * fit,
         arrow: Math.max(8, base.colW * fit - 2),
         font: fit < 1 ? Math.max(7, Math.round(10 * fit)) : 10
     };
     view.stripW = view.scale.colW * view.panels;
     view.railX = view.scale.gutter + view.stripW + view.scale.gap;
-    view.width = Math.floor(view.railX + view.scale.railW);
+    view.width = Math.floor(view.railX + view.scale.railW + view.scale.markLane);
     view.height = Math.ceil(view.span * view.scale.pps) + 24;
     view.yOf = function (t) { return 12 + (t - view.t0) * view.scale.pps; };
     view.box.firstChild.style.width = view.width + 'px';
@@ -200,6 +225,7 @@ function relayoutStrip(view) {
     var anchor = view.box.scrollTop / Math.max(1, view.height);
     applyScale(view);
     drawStrip(view);
+    layoutPanel(view);
     view.box.scrollTop = anchor * view.height;
     if (view.repaintMinimap) view.repaintMinimap();
     highlightChips(view);
@@ -314,6 +340,7 @@ function drawStrip(view) {
         canvas.style.width = view.width + 'px';
         canvas.style.height = tile.h + 'px';
         tile.el.appendChild(canvas);
+        tile.canvas = canvas;
         var ctx = canvas.getContext('2d');
         ctx.scale(dpr, dpr);
         ctx.translate(0, -tile.top);
@@ -323,8 +350,24 @@ function drawStrip(view) {
     function free(tile) {
         if (!tile.drawn) return;
         tile.drawn = false;
+        tile.canvas = null;
         tile.el.innerHTML = '';
     }
+
+    // A cheap repaint of the live tiles: marks, the selection and the composing hairline change
+    // without the geometry moving, and rebuilding the placeholders for that would drop the
+    // reader's scroll position on the floor.
+    view.repaint = function () {
+        byPlaceholder.forEach(function (tile) {
+            if (!tile.drawn || !tile.canvas) return;
+            var ctx = tile.canvas.getContext('2d');
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, tile.canvas.width, tile.canvas.height);
+            ctx.scale(dpr, dpr);
+            ctx.translate(0, -tile.top);
+            drawTile(view, ctx, tile.top, tile.top + tile.h);
+        });
+    };
 
     view.tileObserver = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
@@ -395,6 +438,8 @@ function drawTile(view, ctx, y0, y1) {
         ctx.globalAlpha = 1;
     });
 
+    drawSecondLines(view, ctx, y0, y1);
+
     view.holds.forEach(function (hold) {
         if (hold.e < tMin || hold.s > tMax) return;
         var x = s.gutter + hold.p * s.colW + s.colW / 2;
@@ -423,6 +468,7 @@ function drawTile(view, ctx, y0, y1) {
     });
 
     drawRail(view, ctx, y0, y1);
+    drawMarks(view, ctx, y0, y1);
 }
 
 function finishedText(view, n) {
@@ -728,6 +774,7 @@ function initMinimap(view) {
         }
         ctx.globalAlpha = 1;
         if (view.drawMinimapPins) view.drawMinimapPins(ctx, yOf, W, H);
+        drawMinimapMarks(view, ctx, yOf);
         ctx.strokeStyle = view.colors.accent;
         ctx.lineWidth = 1.5;
         var top = (view.box.scrollTop / view.height) * (H - 8) + 4;
@@ -868,36 +915,30 @@ function renderLegend(view) {
         legendEntry(host, view.colors.center, view.strings.center || 'Center');
     }
 
-    if (view.breaks && (view.breaks.total > 0 || view.breaks.unplaced > 0)) {
+    // Labels, never counts (owner, 2026-09-01): "Life Bar Break \u00b7 22" was noise nobody read,
+    // and the count-only Unplaced entry went with it. An entry still appears only for a series
+    // the rail actually drew.
+    if (view.breaks && view.breaks.total > 0) {
         // On Phoenix 2 the bar-death series wears the game's own Pass G command art \u2014 the
         // badge is the sentence, never spelled out (owner, 2026-08-30).
         if (view.breaks.life > 0) {
             if (view.isPhoenix2) {
-                var lifeSpan = legendEntry(host, view.colors.life, ' \u00b7 ' + view.breaks.life);
+                var lifeSpan = legendEntry(host, view.colors.life, '');
                 var passImg = document.createElement('img');
                 passImg.className = 'stepchart-legend-cmd';
                 passImg.src = CommandArtRoot + 'Pass_Plate_G.png';
                 passImg.alt = view.strings.passG || 'Pass G';
-                lifeSpan.insertBefore(passImg, lifeSpan.lastChild);
+                lifeSpan.appendChild(passImg);
             } else {
-                legendEntry(host, view.colors.life,
-                    (view.strings.lifeBreak || 'Life Bar Break') + ' \u00b7 ' + view.breaks.life);
+                legendEntry(host, view.colors.life, view.strings.lifeBreak || 'Life Bar Break');
             }
         }
         if (view.breaks.walk > 0)
-            legendEntry(host, view.colors.walk,
-                (view.strings.walkOff || 'Walk off') + ' \u00b7 ' + view.breaks.walk);
+            legendEntry(host, view.colors.walk, view.strings.walkOff || 'Walk off');
         if (view.breaks.pass > 0)
-            legendEntry(host, view.colors.pass,
-                (view.strings.stagePass || 'Stage Pass') + ' \u00b7 ' + view.breaks.pass);
+            legendEntry(host, view.colors.pass, view.strings.stagePass || 'Stage Pass');
         if (view.breaks.yours.length > 0)
-            legendEntry(host, view.colors.you,
-                (view.strings.yourRuns || 'Your runs') + ' \u00b7 ' + view.breaks.yours.length);
-        // Breaks imported without judgement counts can never be placed — the rail admits to
-        // them instead of letting the placed set read as the whole story (owner, 2026-08-30).
-        if (view.breaks.unplaced > 0)
-            legendEntry(host, view.colors.inkMuted,
-                (view.strings.unplaced || 'Unplaced') + ' \u00b7 ' + view.breaks.unplaced);
+            legendEntry(host, view.colors.you, view.strings.yourRuns || 'Your runs');
     }
 }
 
@@ -915,12 +956,11 @@ function bindPinTips(view) {
     document.body.appendChild(tip);
 
     view.box.addEventListener('mousemove', function (e) {
-        if (!view.pinMarks) { tip.hidden = true; return; }
         var rect = view.box.getBoundingClientRect();
         var x = e.clientX - rect.left + view.box.scrollLeft;
         var y = e.clientY - rect.top + view.box.scrollTop;
         var hit = null;
-        for (var i = 0; i < view.pinMarks.length; i++) {
+        for (var i = 0; view.pinMarks && i < view.pinMarks.length; i++) {
             var pin = view.pinMarks[i];
             var r = (pin.n > 1 ? 9.5 : 5) + 5;
             var dx = x - pinX(view, pin);
@@ -928,7 +968,23 @@ function bindPinTips(view) {
             if (dx * dx + dy * dy <= r * r) { hit = pin; break; }
         }
 
-        if (!hit) { tip.hidden = true; return; }
+        if (!hit) {
+            // A comment mark reads as a card; an empty row shows the second a double-click
+            // would land on (step-chart-comments D2).
+            var group = hitMark(view, x, y);
+            hoverSecond(view, x, y, group == null);
+            if (group !== view.hoverGroup) { view.hoverGroup = group; view.repaint(); }
+            if (group) {
+                tip.innerHTML = markTipHtml(view, group);
+                tip.hidden = false;
+                tip.style.left = Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 12) + 'px';
+                tip.style.top = (e.clientY + 14) + 'px';
+                return;
+            }
+            tip.hidden = true;
+            return;
+        }
+        hoverSecond(view, x, y, false);
         // Terse on purpose (owner, 2026-08-30): the badge art IS the sentence for a named
         // Pass, and everything else is three words plus a count.
         var range = hit.n > 1 && hit.from !== hit.to ? fmt(hit.from) + '\u2013' + fmt(hit.to) : fmt(hit.t);
@@ -960,7 +1016,11 @@ function bindPinTips(view) {
         tip.style.left = Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 12) + 'px';
         tip.style.top = (e.clientY + 14) + 'px';
     });
-    view.box.addEventListener('mouseleave', function () { tip.hidden = true; });
+    view.box.addEventListener('mouseleave', function () {
+        tip.hidden = true;
+        hoverSecond(view, 0, 0, false);
+        if (view.hoverGroup) { view.hoverGroup = null; view.repaint(); }
+    });
 }
 
 function legendEntry(host, color, label) {
@@ -972,4 +1032,461 @@ function legendEntry(host, color, label) {
     span.appendChild(document.createTextNode(label));
     host.appendChild(span);
     return span;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Comment marks (docs/design/step-chart-comments). The panel — a Blazor component inside this
+// root — owns the comments; this module owns the geometry. It draws whatever marks the panel
+// hands it, turns a double-click on an arrow row into a picked second, keeps the panel on the
+// comment nearest the viewport, and tells the panel's .NET side what happened through the
+// reference it bound with. Nothing here knows what a comment says beyond the excerpt it shows.
+// ---------------------------------------------------------------------------------------------
+
+// Where a mark's bubble sits: a third column past the death pins on wide layouts, inboard of the
+// rail's edge; the slim lane past the strip on narrow ones (D8).
+function commentX(view) {
+    if (view.narrow) return view.railX + 9;
+    return view.railX + (view.scale.railW >= 90 ? 78 : 64);
+}
+
+// One bubble per second (a note and a comment on the same second stay apart — the note is
+// gold and only yours). Exact equality on purpose: a stack is what two clients snapped to the
+// same row, and anything looser smears distinct spots together (the pin rule, 2026-08-31).
+function regroupMarks(view) {
+    var groups = {};
+    (view.marks || []).forEach(function (mark) {
+        var t = Number(mark.t);
+        var key = t.toFixed(3) + (mark.note ? ':n' : '');
+        (groups[key] = groups[key] || { t: t, note: !!mark.note, items: [] }).items.push(mark);
+    });
+    view.markGroups = Object.keys(groups)
+        .map(function (key) { return groups[key]; })
+        .sort(function (a, b) { return a.t - b.t; });
+}
+
+function groupOf(view, id) {
+    if (id == null || !view.markGroups) return null;
+    for (var i = 0; i < view.markGroups.length; i++) {
+        if (view.markGroups[i].items.some(function (mark) { return mark.id === id; })) return view.markGroups[i];
+    }
+    return null;
+}
+
+function currentGroup(view) {
+    return groupOf(view, view.cur);
+}
+
+// The second a comment is about, drawn across the arrows themselves — the selected mark's, or
+// the one being written about, or a second the Comments tab pointed at whose mark is not in
+// the loaded scope.
+function drawSecondLines(view, ctx, y0, y1) {
+    var s = view.scale;
+    var line = function (t, color, width, alpha) {
+        var y = view.yOf(t);
+        if (y < y0 - 4 || y > y1 + 4) return;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = color;
+        ctx.fillRect(s.gutter, y - width / 2, view.stripW, width);
+        ctx.globalAlpha = 1;
+    };
+    if (view.pick != null) { line(view.pick, view.colors.accent, 1.5, 1); return; }
+    if (view.transientAt != null) line(view.transientAt, view.colors.accent, 1, 0.7);
+    var current = currentGroup(view);
+    if (current) line(current.t, current.note ? view.colors.you : view.colors.accent, 1, 0.6);
+}
+
+// The cabinet has no speech bubbles, so this one is plain: a rounded box with a tail, two ink
+// lines for "text" or a count for a stack, and a "+" while a second is being written about.
+function drawBubble(ctx, x, y, look) {
+    var w = look.big ? 22 : 18, h = look.big ? 16 : 14;
+    ctx.save();
+    ctx.lineWidth = 1.5;
+    ctx.fillStyle = look.fill;
+    ctx.strokeStyle = look.stroke;
+    roundRect(ctx, x - w / 2, y - h / 2, w, h, 5);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x - w / 2 + 4, y + h / 2 - 1);
+    ctx.lineTo(x - w / 2 + 2, y + h / 2 + 5);
+    ctx.lineTo(x - w / 2 + 9, y + h / 2 - 1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x - w / 2 + 4, y + h / 2 - 0.2);
+    ctx.lineTo(x - w / 2 + 2, y + h / 2 + 5);
+    ctx.lineTo(x - w / 2 + 9, y + h / 2 - 0.2);
+    ctx.stroke();
+    if (look.label) {
+        ctx.fillStyle = look.text;
+        ctx.font = '700 9.5px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(look.label, x, y + 0.5);
+    } else {
+        ctx.strokeStyle = look.text;
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(x - 5, y - 2);
+        ctx.lineTo(x + 5, y - 2);
+        ctx.moveTo(x - 5, y + 2);
+        ctx.lineTo(x + 2, y + 2);
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+
+function drawMarks(view, ctx, y0, y1) {
+    if (!view.markGroups || (view.markGroups.length === 0 && view.pick == null)) return;
+    var cx = commentX(view);
+    var edge = view.scale.gutter + view.stripW;
+    var current = view.pick == null ? currentGroup(view) : null;
+
+    view.markGroups.forEach(function (group) {
+        var y = view.yOf(group.t);
+        if (y < y0 - 30 || y > y1 + 30) return;
+        var selected = group === current;
+        var hovered = group === view.hoverGroup;
+        var stroke = group.note ? view.colors.you
+            : selected ? view.colors.accent
+                : hovered ? view.colors.ink : view.colors.inkMuted;
+        var fill = selected && !group.note ? view.colors.accent : view.colors.surfaceMuted;
+        var text = group.note ? view.colors.you : selected ? view.colors.bg : view.colors.ink;
+        // The tick from the strip's edge to the bubble — the mark points at its arrows.
+        ctx.globalAlpha = selected ? 0.9 : 0.45;
+        ctx.fillStyle = stroke;
+        ctx.fillRect(edge, y - 0.5, Math.max(0, cx - 9 - edge), 1);
+        ctx.globalAlpha = 1;
+        drawBubble(ctx, cx, y, {
+            big: group.items.length > 1, fill: fill, stroke: stroke, text: text,
+            label: group.items.length > 1 ? '\u00d7' + group.items.length : null
+        });
+    });
+
+    if (view.pick != null) {
+        var py = view.yOf(view.pick);
+        if (py >= y0 - 30 && py <= y1 + 30) {
+            ctx.fillStyle = view.colors.accent;
+            ctx.fillRect(edge, py - 0.75, Math.max(0, cx - 9 - edge), 1.5);
+            drawBubble(ctx, cx, py, {
+                big: false, fill: view.colors.surfaceMuted, stroke: view.colors.accent,
+                text: view.colors.accent, label: '+'
+            });
+            if (!view.narrow) {
+                ctx.fillStyle = view.colors.accent;
+                ctx.font = '600 ' + view.scale.font + 'px sans-serif';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(fmt(view.pick), view.scale.gutter - 8, py - 8);
+            }
+        }
+    }
+}
+
+// Every comment is a dot on the whole-chart map's left edge; deaths keep the right (D8).
+function drawMinimapMarks(view, ctx, yOf) {
+    if (!view.markGroups) return;
+    var current = view.pick == null ? currentGroup(view) : null;
+    view.markGroups.forEach(function (group) {
+        var selected = group === current;
+        ctx.globalAlpha = selected || group.note ? 1 : 0.7;
+        ctx.fillStyle = group.note ? view.colors.you : selected ? view.colors.accent : view.colors.ink;
+        ctx.fillRect(0, yOf(group.t) - 1.5, selected ? 5 : 4, 3);
+    });
+    ctx.globalAlpha = 1;
+    if (view.pick != null) {
+        ctx.fillStyle = view.colors.accent;
+        ctx.fillRect(0, yOf(view.pick) - 1.5, 5, 3);
+    }
+}
+
+function hitMark(view, x, y) {
+    if (!view.markGroups) return null;
+    var cx = commentX(view);
+    for (var i = view.markGroups.length - 1; i >= 0; i--) {
+        var group = view.markGroups[i];
+        var r = group.items.length > 1 ? 13 : 11;
+        if (Math.abs(x - cx) <= r && Math.abs(y - view.yOf(group.t)) <= r) return group;
+    }
+    return null;
+}
+
+// The hover tooltip for a mark: the second, who, two lines, the tally. Everything textual
+// arrived from the panel already localized; this only lays it out.
+function markTipHtml(view, group) {
+    var mark = group.items[0];
+    var foot = mark.tally || '';
+    if (group.items.length > 1) foot += (foot ? ' \u00b7 ' : '') + '+' + (group.items.length - 1);
+    return '<div class="stepchart-tip-time">' + fmt(group.t) + '</div>' +
+        '<div class="stepchart-tip-who">' + escapeHtml(mark.who || '') +
+        (mark.ago ? '<small>' + escapeHtml(mark.ago) + '</small>' : '') + '</div>' +
+        '<div class="stepchart-tip-excerpt">' + escapeHtml(mark.excerpt || '') + '</div>' +
+        (foot ? '<div class="stepchart-tip-foot">' + escapeHtml(foot) + '</div>' : '');
+}
+
+// A double-click lands on the nearest arrow row within a beat's reach (~0.12 s — a 16th at
+// 125 BPM), so two people who mean the same quad share a bubble; outside that reach it is the
+// exact second, to a twentieth (D3). Hold heads count as rows.
+function snapSecond(view, t) {
+    var best = null, bestDistance = 0.12;
+    for (var i = 0; i < view.rows.length; i++) {
+        var d = Math.abs(view.rows[i].t - t);
+        if (d <= bestDistance) { best = view.rows[i].t; bestDistance = d; }
+    }
+    for (var j = 0; j < view.holds.length; j++) {
+        var dh = Math.abs(view.holds[j].s - t);
+        if (dh <= bestDistance) { best = view.holds[j].s; bestDistance = dh; }
+    }
+    if (best != null) return best;
+    return Math.max(view.t0, Math.min(view.lastNote, Math.round(t * 20) / 20));
+}
+
+function panelHeight(view) {
+    return view.panelEl ? view.panelEl.offsetHeight : 0;
+}
+
+// The panel lies over the frame's bottom edge, from the strip box's left to the whole-chart
+// map's right (step-chart-comments D16). It lives in flow beside the bar, under the chips, so
+// it is positioned against the strip's root — the geometry is this module's, and none of it
+// is readable from CSS (the box is max-content wide, the map is a sibling). The strip gets the
+// panel's height as extra runway at its end, and the viewport's middle is measured above the
+// panel, not under it. Until the first layout the panel stays invisible rather than flashing
+// wherever the flow put it.
+function layoutPanel(view) {
+    var panel = view.panelEl;
+    if (panel) {
+        var root = view.root;
+        var viewer = root.querySelector('.stepchart-viewer');
+        var minicol = root.querySelector('.stepchart-minicol');
+        var box = view.box;
+        if (viewer && box.offsetParent) {
+            var left = viewer.offsetLeft + box.offsetLeft;
+            var right = minicol && minicol.offsetWidth > 0
+                ? viewer.offsetLeft + minicol.offsetLeft + minicol.offsetWidth
+                : left + box.offsetWidth;
+            panel.style.left = left + 'px';
+            panel.style.width = (right - left) + 'px';
+            panel.style.bottom = (root.offsetHeight - (viewer.offsetTop + box.offsetTop + box.offsetHeight)) + 'px';
+            panel.classList.add('sc-panel-placed');
+        }
+    }
+    var inner = view.box.firstChild;
+    if (inner) inner.style.paddingBottom = panelHeight(view) + 'px';
+}
+
+function viewportCenter(view) {
+    return view.tOf(view.box.scrollTop + (view.box.clientHeight - panelHeight(view)) / 2);
+}
+
+function centerOn(view, t) {
+    view.box.scrollTo({
+        top: Math.max(0, view.yOf(t) - (view.box.clientHeight - panelHeight(view)) / 2),
+        behavior: motion()
+    });
+}
+
+function repaintAll(view) {
+    if (view.repaint) view.repaint();
+    if (view.repaintMinimap) view.repaintMinimap();
+}
+
+// The follow rule (D5): the panel shows the comment nearest the middle of the viewport. Held
+// off while the reader is writing, and while they pinned the panel with a tap or a stepper —
+// until their next wheel or touch scroll, which is what "I moved on" looks like.
+function followStrip(view, force) {
+    if (!view.host || view.pick != null || (view.pinned && !force) || !view.markGroups.length) return;
+    var center = viewportCenter(view);
+    var best = null, bestDistance = Infinity;
+    view.markGroups.forEach(function (group) {
+        var d = Math.abs(group.t - center);
+        if (d < bestDistance) { bestDistance = d; best = group; }
+    });
+    if (!best || best.items.some(function (mark) { return mark.id === view.cur; })) return;
+    view.cur = best.items[0].id;
+    view.transientAt = null;
+    repaintAll(view);
+    view.host.invokeMethodAsync('OnFollow', view.cur);
+}
+
+function boxPoint(view, e) {
+    var rect = view.box.getBoundingClientRect();
+    return { x: e.clientX - rect.left + view.box.scrollLeft, y: e.clientY - rect.top + view.box.scrollTop };
+}
+
+function pickSecond(view, t) {
+    if (!view.host) return;
+    view.pick = t;
+    view.transientAt = null;
+    hoverSecond(view, 0, 0, false);
+    repaintAll(view);
+    view.host.invokeMethodAsync('OnPick', t);
+}
+
+function selectGroup(view, group, tell) {
+    view.cur = group.items[0].id;
+    view.pinned = true;
+    view.transientAt = null;
+    centerOn(view, group.t);
+    repaintAll(view);
+    if (tell && view.host) view.host.invokeMethodAsync('OnSelect', view.cur);
+}
+
+// The hairline under the mouse with the second a double-click would land on — only while a
+// panel is bound (nothing to write to otherwise) and nothing is being written.
+function hoverSecond(view, x, y, show) {
+    var inner = view.box.firstChild;
+    if (!inner) return;
+    var el = view.cursorEl;
+    if (!el || el.parentNode !== inner) {
+        el = document.createElement('div');
+        el.className = 'stepchart-second';
+        el.innerHTML = '<span></span>';
+        inner.style.position = 'relative';
+        inner.appendChild(el);
+        view.cursorEl = el;
+    }
+    var inside = show && view.host && view.pick == null
+        && x >= view.scale.gutter && x <= view.scale.gutter + view.stripW
+        && y < view.box.scrollTop + view.box.clientHeight - panelHeight(view);
+    if (!inside) { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    el.style.top = y + 'px';
+    el.firstChild.textContent = fmt(snapSecond(view, view.tOf(y)));
+    el.firstChild.style.left = Math.min(view.railX + 4, view.width - 44) + 'px';
+}
+
+// The gestures: a click on a mark selects it; a double-click on a row (or a double-tap — two
+// taps within 320 ms and 24 px, hand-rolled because dblclick from touch is unreliable and
+// the box's touch-action: manipulation has already removed the browser's own double-tap)
+// picks the second to write about (D2).
+function initComments(view) {
+    var box = view.box;
+    view.tOf = function (y) { return view.t0 + (y - 12) / view.scale.pps; };
+    regroupMarks(view);
+
+    box.addEventListener('scroll', function () {
+        if (view.followPending) return;
+        view.followPending = requestAnimationFrame(function () {
+            view.followPending = null;
+            followStrip(view, false);
+        });
+    });
+    ['wheel', 'touchmove', 'keydown'].forEach(function (name) {
+        box.addEventListener(name, function () { view.pinned = false; }, { passive: true });
+    });
+
+    box.addEventListener('click', function (e) {
+        var p = boxPoint(view, e);
+        var group = hitMark(view, p.x, p.y);
+        if (group) selectGroup(view, group, true);
+    });
+    box.addEventListener('dblclick', function (e) {
+        var p = boxPoint(view, e);
+        if (hitMark(view, p.x, p.y)) return;
+        pickSecond(view, snapSecond(view, view.tOf(p.y)));
+    });
+    // The keyboard's way in: Enter on the focused strip picks the row nearest the middle of
+    // the viewport. Without a bound panel pickSecond does nothing.
+    box.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' || e.target !== box) return;
+        e.preventDefault();
+        pickSecond(view, snapSecond(view, viewportCenter(view)));
+    });
+    var lastTap = null;
+    box.addEventListener('pointerup', function (e) {
+        if (e.pointerType !== 'touch') return;
+        var now = Date.now();
+        var p = boxPoint(view, e);
+        if (lastTap && now - lastTap.at < 320 && Math.abs(p.y - lastTap.y) < 24 && Math.abs(p.x - lastTap.x) < 24) {
+            lastTap = null;
+            if (!hitMark(view, p.x, p.y)) pickSecond(view, snapSecond(view, view.tOf(p.y)));
+            return;
+        }
+        lastTap = { at: now, x: p.x, y: p.y };
+    });
+}
+
+// ----- the panel's side of the seam (StepChartCommentPanel) -----
+
+// The panel lives inside the strip's root on every host, so it finds its strip by walking up.
+// The mount is asynchronous — it awaits the payload — and in the dialog the panel can render
+// before the tab has even asked for the mount, so this waits a little for the promise to exist.
+async function viewFor(panelElement) {
+    var root = panelElement && panelElement.closest ? panelElement.closest('[data-stepchart]') : null;
+    if (!root) return null;
+    for (var i = 0; i < 100 && !root.stepChartReady; i++) {
+        await new Promise(function (resolve) { setTimeout(resolve, 50); });
+    }
+    return root.stepChartReady ? await root.stepChartReady : null;
+}
+
+export async function bindPanel(panelElement, dotNetReference) {
+    var view = await viewFor(panelElement);
+    if (!view) return false;
+    view.host = dotNetReference;
+    view.panelEl = panelElement;
+    layoutPanel(view);
+    // The frame moves under the panel — a wrapped legend, a resized window, the panel's own
+    // height changing between browsing and writing — so the layout follows both boxes.
+    if (window.ResizeObserver) {
+        view.panelObserver = new ResizeObserver(function () { layoutPanel(view); });
+        view.panelObserver.observe(view.root);
+        view.panelObserver.observe(panelElement);
+    }
+    followStrip(view, true);
+    return true;
+}
+
+export async function unbindPanel(panelElement) {
+    var view = await viewFor(panelElement);
+    if (!view) return;
+    if (view.panelObserver) { view.panelObserver.disconnect(); view.panelObserver = null; }
+    view.host = null;
+    view.panelEl = null;
+}
+
+// marks: [{ id, t, note, who, ago, excerpt, tally }] — the panel's projection of its records.
+export async function setMarks(panelElement, marks) {
+    var view = await viewFor(panelElement);
+    if (!view) return;
+    view.marks = marks || [];
+    regroupMarks(view);
+    if (view.cur != null && !groupOf(view, view.cur)) view.cur = null;
+    layoutPanel(view);
+    repaintAll(view);
+    followStrip(view, true);
+}
+
+export async function selectMark(panelElement, id) {
+    var view = await viewFor(panelElement);
+    if (!view) return;
+    var group = groupOf(view, id);
+    if (!group) return;
+    view.cur = id;
+    view.pinned = true;
+    view.transientAt = null;
+    view.pick = null;
+    centerOn(view, group.t);
+    repaintAll(view);
+}
+
+// A second the Comments tab pointed at — its mark may not be in the loaded scope, so the strip
+// lands there and draws a hairline whether or not a bubble sits on it.
+export async function selectSecond(panelElement, t) {
+    var view = await viewFor(panelElement);
+    if (!view) return;
+    var group = view.markGroups.filter(function (g) { return Math.abs(g.t - t) < 0.0005; })[0];
+    if (group) { selectGroup(view, group, false); return; }
+    view.transientAt = t;
+    view.pinned = true;
+    centerOn(view, t);
+    repaintAll(view);
+}
+
+export async function clearPick(panelElement) {
+    var view = await viewFor(panelElement);
+    if (!view) return;
+    view.pick = null;
+    layoutPanel(view);
+    repaintAll(view);
 }

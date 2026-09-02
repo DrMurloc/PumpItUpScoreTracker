@@ -10,6 +10,9 @@
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
+@using Microsoft.Extensions.Options
+@using ScoreTracker.Web.Components.ChartComments
+@using ScoreTracker.Web.Configuration
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
 @* The chart drill-down (docs/design/chart-details-overhaul.md, mock R2): answer →
@@ -147,6 +150,16 @@
                     </div>
                 </div>
                 <div class="stepchart-chips" data-stepchart-chips></div>
+                @if (CommentsVisible)
+                {
+                    @* The comment surface (docs/design/step-chart-comments D4/D13): an island in
+                       the static strip's markup — the record panel's precedent — gated exactly
+                       as the dialog's Comments tab. The bar renders here, under the chips; the
+                       module lays the panel over the frame below. Open thread opens the details
+                       dialog on Comments (D6). *@
+                    <StepChartCommentPanel @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_chart.Mix"
+                                           OpensDialog="true" @key="(_chart.Id, nameof(StepChartCommentPanel))"></StepChartCommentPanel>
+                }
                 <div class="stepchart-viewer">
                     <div class="stepchart-scroll" data-stepchart-scroll tabindex="0" aria-label="@L["Step chart"]"></div>
                     <div class="stepchart-minicol">
@@ -207,6 +220,7 @@
 @inject IUiSettingsAccessor UiSettings
 @inject ChartUrlResolver UrlResolver
 @inject NavigationManager Nav
+@inject IOptions<ChartCommentsConfiguration> Comments
 @code {
     // The canonical vanity route. The GUID permalink and legacy /Record live in
     // ChartPermalinkController, which 301s them here; historical (mix, song, level) triples
@@ -236,6 +250,13 @@
     private IReadOnlyList<TierListChartCard.CardSkillChip> _identityChips =
         Array.Empty<TierListChartCard.CardSkillChip>();
 
+
+    /// <summary>
+    ///     The comment gate, the dialog's exactly: the launch flag, or the site admin. The panel
+    ///     renders for nobody else until the flag flips.
+    /// </summary>
+    private bool CommentsVisible => Comments.Value.Enabled ||
+                                    (CurrentUser.IsLoggedIn && CurrentUser.User.IsAdmin);
 
     private PopulationVerdict? Population => _facets.OfType<PopulationVerdict>().FirstOrDefault();
     private HistoryVerdict? History => _facets.OfType<HistoryVerdict>().FirstOrDefault();

@@ -1,0 +1,704 @@
+<title>Step Chart Comments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Two layers, deliberately different materials: ANNOTATION (slate paper, mono eyebrows,
+   theme-aware) and APP (the real Phoenix palette, always dark). */
+:root {
+  --paper: #EEF1F5; --paper-2: #E2E7EE; --edge: #C2CBD8; --note: #2B3648; --note-soft: #5D6B80; --mark: #0B5FA5;
+  --warn-bg: #FDF0E3; --warn-edge: #E2A86A; --warn-ink: #7A4410;
+  --mix-bg: #070B15; --mix-surface: #161E2C; --mix-surface-muted: #1E2A3D; --mix-nav: #0D1626; --mix-primary: #3FA9F5;
+  --mix-primary-contrast: #06101C; --mix-secondary: #FF6B35; --mix-accent: #FFD24A; --mix-ink: #E9EFF7; --mix-ink-muted: #93A3B8;
+  --mix-lines: rgba(255,255,255,.12);
+  --panel-upper: #FF4D5E; --panel-lower: #3FA9FF; --panel-center: #FFD23F; --life-danger: #E8385A; --step-walkoff: #E8A33D; --step-you: #FFD166;
+  --diff-underrated: #8E24AA; --diff-medium: #FDD835; --diff-overrated: #00ACC1;
+  --sans: "Barlow", ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --app-sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --cond: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", var(--sans);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --paper:#10151D; --paper-2:#161D27; --edge:#28323F; --note:#DDE4EE; --note-soft:#8C9BB0; --mark:#6BB8F5; --warn-bg:#2A2013; --warn-edge:#6B4A1C; --warn-ink:#F0C589; }
+}
+:root[data-theme="dark"] { --paper:#10151D; --paper-2:#161D27; --edge:#28323F; --note:#DDE4EE; --note-soft:#8C9BB0; --mark:#6BB8F5; --warn-bg:#2A2013; --warn-edge:#6B4A1C; --warn-ink:#F0C589; }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--note); font-family: var(--sans); font-size: 15.5px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 40px 24px 110px; }
+h1 { font-family: var(--cond); font-size: clamp(34px, 5vw, 52px); font-weight: 700; letter-spacing: .005em; line-height: 1.02; text-wrap: balance; margin: 0 0 8px; }
+h2 { font-family: var(--cond); font-size: 28px; font-weight: 700; margin: 0; text-wrap: balance; }
+h3 { font-size: 16px; font-weight: 700; margin: 0 0 6px; }
+p  { margin: 0 0 12px; max-width: 68ch; }
+code { font-family: var(--mono); font-size: .86em; background: var(--paper-2); border: 1px solid var(--edge); border-radius: 4px; padding: 1px 5px; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--note-soft); }
+.lede { font-size: 18px; color: var(--note-soft); max-width: 70ch; }
+.redlines { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; margin-top: 18px; }
+.redline { border: 1px solid var(--edge); border-radius: 8px; padding: 10px 12px; font-size: 13.5px; line-height: 1.4; }
+.redline b { display: block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mark); margin-bottom: 4px; }
+.redline.ask { border-color: var(--mark); border-width: 2px; }
+section { margin-top: 60px; }
+.sec-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; border-bottom: 2px solid var(--edge); padding-bottom: 10px; margin-bottom: 22px; }
+.sec-head .n { font-family: var(--mono); font-size: 12px; color: var(--note-soft); letter-spacing: .1em; }
+.sec-head .sub { color: var(--note-soft); font-size: 14px; }
+.cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 30px; align-items: start; }
+@media (min-width: 900px) { .cols.split { grid-template-columns: minmax(0,var(--w,420px)) minmax(0,1fr); } }
+.note ul { margin: 0 0 12px; padding-left: 18px; }
+.note li { margin-bottom: 8px; max-width: 62ch; }
+.flag { background: var(--warn-bg); border-left: 3px solid var(--warn-edge); color: var(--warn-ink); padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; margin: 0 0 14px; max-width: 66ch; }
+.scroller { overflow-x: auto; padding-bottom: 6px; }
+.frames { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
+.qs { counter-reset: q; padding-left: 0; list-style: none; max-width: 78ch; }
+.qs li { counter-increment: q; display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 8px; margin-bottom: 12px; }
+.qs li::before { content: counter(q); font-family: var(--cond); font-weight: 700; font-size: 22px; color: var(--mark); line-height: 1.1; }
+.qs li em { color: var(--note-soft); font-style: normal; }
+.frame { background: var(--mix-bg); border: 1px solid var(--edge); border-radius: 12px; padding: 16px; box-shadow: 0 14px 40px rgba(0,0,0,.22); }
+.frame .cap { font-family: var(--mono); font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--mix-ink-muted); margin-bottom: 12px; }
+.frame.page { min-width: 720px; }
+.phone { width: 390px; flex: none; padding: 14px 16px 22px; border-radius: 22px; }
+.swatches { display: flex; gap: 22px; flex-wrap: wrap; align-items: flex-start; }
+.swatch { background: var(--mix-bg); border: 1px solid var(--edge); border-radius: 12px; padding: 12px; }
+.swatch .cap { font-family: var(--mono); font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--mix-ink-muted); margin-bottom: 10px; }
+.swatch .sc-panel { position: static; width: auto; border-radius: 10px; border: 1px solid rgba(255,255,255,.16); }
+
+/* ============================ APP LAYER ============================ */
+.app { font-family: var(--app-sans); color: var(--mix-ink); font-size: 14px; line-height: 1.5; }
+.chart-section-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.chart-section-head h5 { margin: 0; font-size: 1.5rem; font-weight: 400; line-height: 1.334; }
+.chart-section-sub { color: var(--mix-ink-muted); font-size: .75rem; }
+.stepchart-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0 0 12px; }
+.stepchart-modes, .stepchart-av { display: inline-flex; align-items: center; border: 1px solid var(--mix-lines); border-radius: 9px; overflow: hidden; }
+.stepchart-modes button, .stepchart-av button { font: inherit; font-size: .8rem; font-weight: 500; color: var(--mix-ink-muted); background: transparent; border: none; padding: 8px 14px; cursor: pointer; }
+.stepchart-av button { padding: 8px 12px; }
+.stepchart-modes button + button { border-left: 1px solid var(--mix-lines); }
+.stepchart-modes button[aria-pressed="true"], .stepchart-av button[aria-pressed="true"] { background: var(--mix-surface); color: var(--mix-ink); }
+.stepchart-av-value { font-size: .8rem; color: var(--mix-ink); padding: 0 4px; min-width: 56px; text-align: center; font-variant-numeric: tabular-nums; border-left: 1px solid var(--mix-lines); border-right: 1px solid var(--mix-lines); align-self: stretch; display: inline-flex; align-items: center; justify-content: center; }
+.stepchart-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 0 8px; }
+.stepchart-chip { font: inherit; font-size: .72rem; font-weight: 500; color: var(--mix-ink); background: var(--mix-surface); border: 1px solid var(--mix-lines); border-radius: 999px; padding: 3px 9px 3px 7px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
+.stepchart-chip i { width: 6px; height: 6px; border-radius: 50%; background: var(--mix-ink-muted); }
+.stepchart-chip-struct i { background: var(--mix-primary); }
+.stepchart-chip-spike i { background: var(--life-danger); }
+.stepchart-chip-active { border-color: var(--mix-primary); background: var(--mix-surface-muted); }
+.stepchart-chip small { color: var(--mix-ink-muted); font-size: .72rem; font-variant-numeric: tabular-nums; }
+.stepchart-viewer { display: flex; gap: 14px; align-items: flex-start; justify-content: flex-start; position: relative; }
+.stepchart-compact .stepchart-viewer { justify-content: center; }
+.stepchart-scroll { position: relative; height: 600px; overflow: auto; scrollbar-gutter: stable; width: max-content; max-width: calc(100% - 106px); flex: none; border: 1px solid rgba(255,255,255,.10); border-radius: 10px; background: var(--mix-surface-muted); scrollbar-width: thin; touch-action: manipulation; }
+.stepchart-compact .stepchart-scroll { height: 380px; max-width: calc(100% - 96px); }
+.stepchart-scroll canvas { display: block; }
+.stepchart-scroll > div { position: relative; }
+.stepchart-minicol { position: sticky; top: 14px; }
+.stepchart-minimap { display: block; width: 92px; height: 600px; border: 1px solid rgba(255,255,255,.10); border-radius: 10px; background: var(--mix-surface-muted); cursor: pointer; }
+.stepchart-compact .stepchart-minimap { width: 76px; height: 380px; }
+.narrow .stepchart-viewer { gap: 8px; }
+.narrow .stepchart-minimap { width: 40px; }
+.narrow .stepchart-scroll { max-width: calc(100% - 50px); }
+.stepchart-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 12px; color: var(--mix-ink-muted); font-size: .8rem; align-items: center; }
+.stepchart-legend-entry { display: inline-flex; align-items: center; gap: 6px; }
+.stepchart-legend-entry i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+.stepchart-legend-entry i.bubble { width: 11px; height: 9px; border-radius: 3px 3px 3px 0; background: transparent; border: 1.5px solid var(--mix-ink); }
+.stepchart-legend-entry i.bubble.you { border-color: var(--step-you); }
+.sc-cursor { position: absolute; left: 0; right: 0; height: 0; border-top: 1px solid rgba(233,239,247,.4); pointer-events: none; display: none; }
+.sc-cursor span { position: absolute; top: -9px; font: 500 10px/18px var(--app-sans); color: var(--mix-ink); background: var(--mix-bg); border: 1px solid var(--mix-lines); border-radius: 999px; padding: 0 7px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.stepchart-tip { position: fixed; z-index: 3000; pointer-events: none; background: var(--mix-bg); border: 1px solid rgba(255,255,255,.14); border-radius: 8px; padding: 8px 11px; font-size: .8rem; color: var(--mix-ink); max-width: 260px; box-shadow: 0 6px 24px rgba(0,0,0,.5); font-family: var(--app-sans); }
+.stepchart-tip-time { color: var(--mix-ink-muted); font-size: .72rem; font-variant-numeric: tabular-nums; }
+.stepchart-tip .who { font-weight: 600; margin-top: 2px; }
+.stepchart-tip .who small { color: var(--mix-ink-muted); font-weight: 400; margin-left: 4px; }
+.stepchart-tip .ex { margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.stepchart-tip .ft { color: var(--mix-ink-muted); font-size: .72rem; margin-top: 4px; }
+
+/* ---- NEW (redline 2): the bar under the section chips — the gesture note and the scope chip ---- */
+.sc-bar { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; min-height: 24px; }
+.sc-bar-note { display: inline-flex; align-items: center; gap: 7px; color: var(--mix-ink-muted); font-size: .74rem; min-width: 0; }
+.sc-bar-note svg { width: 14px; height: 14px; flex: none; }
+.sc-gesture-touch { display: none; }
+.touch .sc-gesture-pointer { display: none; }
+.touch .sc-gesture-touch { display: inline; }
+.sc-scope { position: relative; display: inline-block; margin-left: auto; }
+.sc-scope summary { list-style: none; }
+.sc-scope summary::-webkit-details-marker { display: none; }
+.sc-scope-chip { font-size: .72rem; font-weight: 500; color: var(--mix-ink); background: var(--mix-surface); border: 1px solid var(--mix-lines); border-radius: 999px; padding: 2px 8px 2px 7px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.sc-scope-chip:hover { border-color: var(--mix-ink-muted); }
+.sc-scope-chip svg { width: 12px; height: 12px; color: var(--mix-ink-muted); }
+.sc-scope-chip.you svg { color: var(--step-you); }
+.sc-scope-chip .sc-car { font-size: .6em; color: var(--mix-ink-muted); }
+.sc-scope-menu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; min-width: 170px; background: var(--mix-bg); border: 1px solid rgba(255,255,255,.14); border-radius: 8px; padding: 5px; box-shadow: 0 10px 30px rgba(0,0,0,.55); }
+.sc-scope-menu button { display: flex; width: 100%; align-items: center; gap: 8px; text-align: left; font: inherit; font-size: .8rem; color: var(--mix-ink); background: transparent; border: none; padding: 7px 9px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+.sc-scope-menu button:hover { background: var(--mix-surface-muted); }
+.sc-scope-menu button.on { color: var(--mix-primary); }
+.sc-scope-menu button small { color: var(--mix-ink-muted); margin-left: auto; padding-left: 10px; }
+.sc-scope-menu .hint { font-size: .7rem; color: var(--mix-ink-muted); padding: 4px 9px 5px; border-top: 1px solid var(--mix-lines); margin-top: 3px; }
+.sc-scope.inline { margin-left: 0; }
+.sc-scope.inline .sc-scope-menu { left: 0; right: auto; }
+
+/* ---- THE PANEL: sticky at the bottom of the frame, spanning strip AND map (redline 5) ---- */
+.sc-panel { position: absolute; left: 0; bottom: 0; background: rgba(7,11,21,.95); border-top: 1px solid rgba(255,255,255,.16); border-radius: 0 0 10px 10px; padding: 8px 10px 9px; font-size: .8rem; z-index: 5; box-shadow: 0 -8px 24px rgba(0,0,0,.35); }
+.sc-panel-head { display: flex; align-items: center; gap: 7px; min-height: 24px; }
+.sc-step { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--mix-lines); background: transparent; color: var(--mix-ink-muted); font: inherit; font-size: 13px; line-height: 1; cursor: pointer; display: grid; place-items: center; flex: none; padding: 0; }
+.sc-step:hover:not(:disabled) { color: var(--mix-ink); border-color: var(--mix-ink-muted); }
+.sc-step:disabled { opacity: .28; cursor: default; }
+/* NEW (redline 3): the ✕ takes the corner the ＋ used to hold */
+.sc-x { margin-left: auto; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--mix-lines); background: transparent; color: var(--mix-ink-muted); font: inherit; font-size: 12px; line-height: 1; cursor: pointer; display: grid; place-items: center; flex: none; padding: 0; }
+.sc-x:hover { color: var(--mix-ink); border-color: var(--mix-ink-muted); }
+.sc-panel .cname { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.sc-panel .cmeta { white-space: nowrap; }
+.sc-panel .pager { font-size: .7rem; color: var(--mix-ink-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sc-panel .ex { margin-top: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; cursor: pointer; }
+.sc-panel .ex.full { display: block; }
+.sc-panel .pf { display: flex; align-items: center; gap: 4px; margin-top: 4px; color: var(--mix-ink-muted); font-size: .74rem; }
+.sc-panel .pf .act { font-size: .74rem; padding: 2px 6px; }
+.sc-panel .pf a { margin-left: auto; color: var(--mix-primary); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.sc-panel .empty { color: var(--mix-ink-muted); min-height: 22px; line-height: 1.35; display: flex; align-items: center; gap: 8px; }
+.sc-panel .cmt-line { font-size: .86rem; padding: 4px 0; margin-top: 6px; }
+.sc-panel .cmt-compose-foot { margin-top: 6px; }
+.anchor-chip { font: inherit; font-size: .72rem; font-weight: 500; color: var(--mix-ink); background: var(--mix-surface); border: 1px solid var(--mix-lines); border-radius: 999px; padding: 2px 9px 2px 7px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; white-space: nowrap; flex: none; }
+.anchor-chip i { width: 3px; height: 11px; border-radius: 2px; background: var(--mix-ink-muted); flex: none; }
+.anchor-chip.you i { background: var(--step-you); }
+.anchor-chip.pick { border-color: rgba(63,169,245,.6); background: rgba(63,169,245,.10); }
+.anchor-chip.pick i { background: var(--mix-primary); }
+.cmt-line { width: 100%; font: inherit; font-size: .9rem; color: var(--mix-ink); background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,.22); padding: 6px 0; resize: none; outline: none; display: block; }
+.cmt-line:focus { border-bottom-color: var(--mix-primary); }
+.cmt-line::placeholder { color: var(--mix-ink-muted); }
+.cmt-compose-foot { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.cmt-count { font-size: .7rem; color: var(--mix-ink-muted); font-variant-numeric: tabular-nums; }
+.mbtn { font: inherit; font-size: .78rem; font-weight: 500; text-transform: uppercase; letter-spacing: .02em; border-radius: 4px; padding: 5px 10px; border: none; cursor: pointer; background: transparent; color: var(--mix-ink); }
+.mbtn.filled { background: var(--mix-primary); color: var(--mix-primary-contrast); }
+.mbtn.filled:disabled { opacity: .38; cursor: default; }
+.sp { flex: 1; }
+.cbadge { font-size: 10px; letter-spacing: .04em; padding: 1.5px 7px; border-radius: 999px; border: 1px solid var(--mix-lines); color: var(--mix-ink-muted); background: var(--mix-surface-muted); white-space: nowrap; }
+.cbadge.you { border-color: rgba(255,209,102,.45); color: var(--step-you); }
+.act { font: inherit; font-size: 11.5px; color: var(--mix-ink-muted); background: none; border: none; padding: 3px 7px; border-radius: 5px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.act:hover { background: var(--mix-surface-muted); color: var(--mix-ink); }
+.act.on { color: var(--mix-accent); }
+.av { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(150deg,#43536B,#243044); display: grid; place-items: center; font-size: 13px; font-weight: 700; color: var(--mix-ink); flex: none; }
+.av.xs { width: 22px; height: 22px; font-size: 10px; }
+.cname { font-weight: 650; font-size: 13px; }
+.cmeta { font-size: 11px; color: var(--mix-ink-muted); }
+.dlg { background: var(--mix-surface); border: 1px solid var(--mix-lines); border-radius: 8px; overflow: hidden; width: 572px; flex: none; }
+.title-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px 4px; }
+.song { font-family: var(--cond); font-size: 22px; font-weight: 700; letter-spacing: .01em; flex: 1; }
+.bub { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; flex: none; font-weight: 800; font-size: 12px; color: #0B0F18; background: linear-gradient(160deg, #FF8A4C, #E0442C); }
+.icon-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--mix-lines); background: transparent; color: var(--mix-ink-muted); display: grid; place-items: center; font-size: 15px; flex: none; }
+.scoreline { display: flex; align-items: center; gap: 10px; padding: 4px 14px 12px; }
+.score-v { font-family: var(--cond); font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--mix-accent); }
+.grade { width: 26px; height: 26px; border-radius: 5px; display: grid; place-items: center; font-weight: 800; font-size: 11px; background: linear-gradient(160deg,#FFE27A,#E8A41D); color: #2A1A00; }
+.muted { color: var(--mix-ink-muted); }
+.tiny { font-size: 11.5px; }
+.tabs { display: flex; gap: 2px; background: var(--mix-nav); border-top: 1px solid var(--mix-lines); border-bottom: 1px solid var(--mix-lines); padding: 0 6px; overflow-x: auto; }
+.tab { background: none; border: none; color: var(--mix-ink-muted); font: inherit; font-size: 12.5px; padding: 11px 12px 9px; border-bottom: 2px solid transparent; white-space: nowrap; }
+.tab.on { color: var(--mix-primary); border-bottom-color: var(--mix-primary); }
+.pad { padding: 12px 14px; }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">Workshop · chart page &amp; chart details dialog · round 3 · field-test redlines</div>
+  <h1>Comments that point at a spot in the chart</h1>
+  <p class="lede">Round 3 answers the five field-test redlines on PR #309. Four are settled by what you said and are shown as they will be built; the composer (4) is the one that needed a drawing — it is in §2 at three widths and three scopes.</p>
+  <div class="redlines">
+    <div class="redline"><b>1 · stuck in an empty scope</b>The switcher lived in the panel's head, and an empty scope has no head. It moves out of the panel (see 2), so it is always there.</div>
+    <div class="redline"><b>2 · no ＋; note + chip above the chart</b>The ＋ is gone. A small muted line under the section chips names the gesture, and a dense chip beside it switches which comments the strip shows.</div>
+    <div class="redline"><b>3 · the ✕ where the ＋ was</b>Closing the composer is the top-right corner of the panel now, the spot the eye already learned.</div>
+    <div class="redline ask"><b>4 · the composer — the one to look at</b>"Posting to Public as ERRLENA" is gone. The head is the time chip, the scope chip (switch while writing), and the ✕. §2.</div>
+    <div class="redline"><b>5 · a wider panel</b>The panel spans the strip and the whole-chart map together, on every host.</div>
+  </div>
+
+  <!-- ============================================================ -->
+  <section>
+    <div class="sec-head"><span class="n">§1</span><h2>The chart page, desktop</h2><span class="sub">live — switch the scope chip to Notes (empty here) and back, double-click an arrow row, post</span></div>
+    <div class="scroller">
+      <div class="frame page app">
+        <div class="cap">/Charts/phoenix/solve-my-hurt/s21 · the Step chart section</div>
+        <div class="chart-section-head"><h5>Step chart</h5><span class="chart-section-sub">Time runs downward — arrows colored by panel, feet, or timing.</span></div>
+        <div data-strip="page" data-layout="page" data-open="30.5" data-thread="Open thread ›">
+          <div class="stepchart-toolbar">
+            <div class="stepchart-modes"><button type="button" aria-pressed="true">Arrows</button><button type="button" aria-pressed="false">Feet</button></div>
+            <div class="stepchart-av"><button type="button" data-av="-50">−</button><span class="stepchart-av-value" data-av-value>AV 671</span><button type="button" data-av="50">+</button><button type="button" data-av="auto" aria-pressed="true">Auto</button></div>
+          </div>
+          <div class="stepchart-chips" data-chips></div>
+          <div class="stepchart-viewer">
+            <div class="stepchart-scroll" data-scroll tabindex="0" aria-label="Step chart"></div>
+            <div class="stepchart-minicol"><canvas class="stepchart-minimap" data-minimap></canvas></div>
+          </div>
+          <div class="stepchart-legend" data-legend></div>
+        </div>
+      </div>
+    </div>
+    <div class="cols split" style="--w: 1fr; margin-top: 22px">
+      <div class="note">
+        <h3>What moved</h3>
+        <ul>
+          <li><b>The bar</b> sits between the section chips and the strip: the gesture line on the left, the scope chip on the right. The chip opens the same menu the tab's rail offers — Public, Notes, your communities — with a ✓ on the current one. Switching reloads the marks; the panel follows.</li>
+          <li><b>Notes is empty on this chart</b> on purpose: pick it, see the slim empty panel, and switch back. Nothing traps you (redline 1).</li>
+          <li><b>The panel</b> is strip + map wide (redline 5), so the browse head has room for the name and the age without the meta giving way. No ＋ (redline 2).</li>
+          <li><b>Double-click an arrow row</b> and the composer's head reads: time chip, scope chip, ✕ at the far right (redlines 3 and 4). The post goes to whatever the scope chip says at the moment you press Comment.</li>
+        </ul>
+      </div>
+      <div class="note">
+        <h3>What did not move</h3>
+        <ul>
+          <li>Marks, the rail, the stack rule, the follow rule, ‹ ›, the hover card, Open thread — all as shipped in PR #309.</li>
+          <li>Your notes still overlay every scope in gold; Notes as a scope shows only them.</li>
+          <li>Signed out, the bar shows no gesture line and the chip is a label reading Public; the panel browses read-only, and a double-click still lands on the sign-in line.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section>
+    <div class="sec-head"><span class="n">§2</span><h2>The composer</h2><span class="sub">redline 4 — three scopes, the narrowest width, nothing overflows</span></div>
+    <div class="swatches">
+      <div class="swatch app">
+        <div class="cap">Public · 338 px (the phone's strip + map)</div>
+        <div class="sc-panel" style="width:338px" data-static-compose="public"></div>
+      </div>
+      <div class="swatch app">
+        <div class="cap">Notes · 338 px · the chip wears gold and says only you</div>
+        <div class="sc-panel" style="width:338px" data-static-compose="notes"></div>
+      </div>
+      <div class="swatch app">
+        <div class="cap">Team Murloc · 338 px · a long club name ellipsizes</div>
+        <div class="sc-panel" style="width:338px" data-static-compose="club"></div>
+      </div>
+      <div class="swatch app">
+        <div class="cap">Public · 498 px (desktop) · near the cap the counter appears</div>
+        <div class="sc-panel" style="width:498px" data-static-compose="public-cap"></div>
+      </div>
+    </div>
+    <div class="cols split" style="--w: 1fr; margin-top: 22px">
+      <div class="note">
+        <h3>The head is three things</h3>
+        <ul>
+          <li><b>The time chip</b> — the second you double-clicked, primary, as before.</li>
+          <li><b>The scope chip</b> — the same chip as the bar's, live: open it and change where this comment goes while you write. It shows a person glyph for Public, a gold lock for Notes, a people glyph for a club; the label is the scope's name, ellipsized past ~120 px.</li>
+          <li><b>The ✕</b>, far right — backs out and drops the pick (redline 3). It replaces the foot's Cancel, so the foot is the counter (only near the cap) and Comment.</li>
+        </ul>
+        <p>"Posting to Public as ERRLENA" is retired on this surface. The scope chip says the scope; a signed-in reader knows who they are. The Comments tab keeps its sentence — it has the width.</p>
+      </div>
+      <div class="note">
+        <h3>Behaviour</h3>
+        <ul>
+          <li>Changing the scope in the composer changes the bar's chip too — they are one setting. The marks reload for the new scope; the pick stays.</li>
+          <li>Picking Notes turns the chip gold and the placeholder into <em>Note on 0:33…</em>; the post is a personal note at that second.</li>
+          <li>A scope you cannot post in (a mute, the lock) shows in the menu greyed with <em>can't post here</em>; picking it swaps the line for the tab's sentence, as today.</li>
+          <li>The rules card, when owed, renders in place of the line, as today.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section>
+    <div class="sec-head"><span class="n">§3</span><h2>The phone, 390 px</h2><span class="sub">reading, then writing — the panel is strip + map wide now</span></div>
+    <div class="scroller">
+      <div class="frames">
+        <div class="frame phone app touch">
+          <div class="cap">Reading · the ×2 at 0:33 was tapped</div>
+          <div class="chart-section-head"><h5 style="font-size:1.25rem">Step chart</h5></div>
+          <div data-strip="phone" data-layout="page" data-avail="310" data-open="33.45" data-touch="1" data-thread="Open thread ›" class="narrow">
+            <div class="stepchart-toolbar">
+              <div class="stepchart-modes"><button type="button" aria-pressed="true">Arrows</button><button type="button" aria-pressed="false">Feet</button></div>
+              <div class="stepchart-av"><button type="button">−</button><span class="stepchart-av-value">AV 671</span><button type="button">+</button><button type="button" aria-pressed="true">Auto</button></div>
+            </div>
+            <div class="stepchart-chips" data-chips></div>
+            <div class="stepchart-viewer">
+              <div class="stepchart-scroll" data-scroll tabindex="0" aria-label="Step chart"></div>
+              <div class="stepchart-minicol"><canvas class="stepchart-minimap" data-minimap></canvas></div>
+            </div>
+            <div class="stepchart-legend" data-legend></div>
+          </div>
+        </div>
+        <div class="frame phone app touch">
+          <div class="cap">Writing · a row at 0:38 was double-tapped</div>
+          <div class="chart-section-head"><h5 style="font-size:1.25rem">Step chart</h5></div>
+          <div data-strip="phone2" data-layout="page" data-avail="310" data-open="38.0" data-touch="1" data-compose="38.0" data-typed="Count the bursts out loud — eight and rest, eight and rest. The rest is where people panic" data-thread="Open thread ›" class="narrow">
+            <div class="stepchart-toolbar">
+              <div class="stepchart-modes"><button type="button" aria-pressed="true">Arrows</button><button type="button" aria-pressed="false">Feet</button></div>
+              <div class="stepchart-av"><button type="button">−</button><span class="stepchart-av-value">AV 671</span><button type="button">+</button><button type="button" aria-pressed="true">Auto</button></div>
+            </div>
+            <div class="stepchart-chips" data-chips></div>
+            <div class="stepchart-viewer">
+              <div class="stepchart-scroll" data-scroll tabindex="0" aria-label="Step chart"></div>
+              <div class="stepchart-minicol"><canvas class="stepchart-minimap" data-minimap></canvas></div>
+            </div>
+            <div class="stepchart-legend" data-legend></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section>
+    <div class="sec-head"><span class="n">§4</span><h2>The chart details dialog, 572 px</h2><span class="sub">the same bar, the same wide panel, in the compact host</span></div>
+    <div class="scroller">
+      <div class="frames">
+        <div class="dlg app">
+          <div class="title-row"><div class="bub">S21</div><div class="song">Solve My Hurt</div><div class="icon-btn">🔖</div></div>
+          <div class="scoreline"><span class="score-v">981,240</span><span class="grade">SS</span><span class="muted tiny">#41 of 612 · top 7%</span></div>
+          <div class="tabs"><button class="tab">Comments</button><button class="tab">Leaderboard</button><button class="tab">Chart Stats</button><button class="tab on">Steps</button><button class="tab">Score History</button></div>
+          <div class="pad">
+            <div data-strip="dialog" data-layout="compact" data-open="29.0" data-thread="Open in Comments ›" class="stepchart-compact">
+              <div class="stepchart-toolbar">
+                <div class="stepchart-modes"><button type="button" aria-pressed="true">Arrows</button><button type="button" aria-pressed="false">Feet</button></div>
+                <div class="stepchart-av"><button type="button">−</button><span class="stepchart-av-value">AV 671</span><button type="button">+</button><button type="button" aria-pressed="true">Auto</button></div>
+              </div>
+              <div class="stepchart-chips" data-chips></div>
+              <div class="stepchart-viewer">
+                <div class="stepchart-scroll" data-scroll tabindex="0" aria-label="Step chart"></div>
+                <div class="stepchart-minicol"><canvas class="stepchart-minimap" data-minimap></canvas></div>
+              </div>
+              <div class="stepchart-legend" data-legend></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section>
+    <div class="sec-head"><span class="n">§5</span><h2>What this changes in the code</h2></div>
+    <div class="cols split" style="--w: 1fr">
+      <div class="note">
+        <ul>
+          <li><b>The component renders two pieces:</b> the bar (in flow, under the chips) and the panel (positioned). One island on the page, placed after the chips; the module lays the panel out over the strip and the map from the geometry it already owns, so the panel no longer needs to live inside the viewer.</li>
+          <li><b>Scope</b> becomes one setting shared by the bar and the composer, kept per host like today; the panel head loses the menu and the ＋.</li>
+          <li><b>The composer</b> gets a variant without Cancel and the audience sentence, and a slot for the scope chip. The tab's composer is untouched.</li>
+        </ul>
+      </div>
+      <div class="note">
+        <ul>
+          <li><b>Panel width</b> = box left to map right, on every host, from the module's layout pass.</li>
+          <li><b>Empty state</b> shrinks to one line — "Nothing here yet." — since the gesture line lives in the bar now.</li>
+          <li>Three resx keys go (the ＋'s title, the two gesture sentences with "No comments on this chart yet —"), two arrive (the short gesture lines), one is reworded (<em>Note on {0}…</em>). Nine locales, same commit.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section>
+    <div class="sec-head"><span class="n">§6</span><h2>Questions</h2><span class="sub">also in the chat message</span></div>
+    <ol class="qs">
+      <li><div><b>The scope chip's label.</b> Mocked as the scope's name alone ("Public", "Notes", "Team Murloc") with a glyph. Should it carry a word — "Showing: Public" — on the bar, where it is a filter rather than a destination? <em>Recommendation: name alone; the glyph and the ▾ say what it is.</em></div></li>
+      <li><div><b>The composer's foot.</b> With the ✕ top-right, the foot is just Comment (and the counter near the cap). Keep a text Cancel there as well, or is one way out enough? <em>Recommendation: one way out.</em></div></li>
+    </ol>
+  </section>
+</div>
+
+<script>
+(function () {
+  var T = { upper: '#FF4D5E', lower: '#3FA9FF', center: '#FFD23F', life: '#E8385A', walk: '#E8A33D', you: '#FFD166',
+    ink: '#E9EFF7', inkMuted: '#93A3B8', primary: '#3FA9F5', accent: '#FFD24A', bg: '#070B15', surface: '#161E2C', surfaceMuted: '#1E2A3D',
+    tierR: '#8E24AA', tierY: '#FDD835', tierG: '#00ACC1' };
+
+  function seeded(seed) { var a = seed >>> 0; return function () { a += 0x6D2B79F5; var t = Math.imul(a ^ (a >>> 15), 1 | a); t ^= t + Math.imul(t ^ (t >>> 7), 61 | t); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  function buildChart() {
+    var rnd = seeded(21), B = 60 / 165, E = B / 2, S = B / 4, rows = [], holds = [];
+    var bit = function (p) { return 1 << p; };
+    var add = function (t, m) { rows.push({ t: Math.round(t * 1000) / 1000, m: m }); };
+    for (var t = 1.0; t < 12.0; t += E) if (rnd() < .32) add(t, bit(Math.floor(rnd() * 5)));
+    var twist = [0, 1, 2, 3, 4, 3, 2, 1, 0, 2, 4, 2], i = 0;
+    for (t = 12.0; t < 21.5; t += E) { add(t, bit(twist[i % twist.length])); i++; }
+    var pairs = [[0, 4], [1, 3], [0, 3], [1, 4]]; i = 0;
+    for (t = 21.5; t < 29.0; t += B) { var pr = pairs[i % 4]; add(t, bit(pr[0]) | bit(pr[1])); if (rnd() < .7) add(t + E, bit([2, 1, 3][i % 3])); i++; }
+    var dp = [[1, 3], [0, 4], [2, 1], [3, 2]], c = 0;
+    for (t = 29.0; t < 41.0; t += 12 * S) { var d = dp[c % 4]; for (var k = 0; k < 8; k++) { var tt = t + k * S; if (tt >= 41) break; add(tt, bit(d[k % 2])); } c++; }
+    i = 0;
+    for (t = 41.0; t < 52.0; t += E) { if (i % 4 === 0) { var br = [[1, 2], [2, 3], [0, 2], [2, 4]][(i / 4) % 4]; add(t, bit(br[0]) | bit(br[1])); } else add(t, bit(Math.floor(rnd() * 5))); i++; }
+    var path = [0, 1, 2, 3, 4, 3, 2, 1]; i = 0;
+    for (t = 52.0; t < 64.0; t += S) { if (i % 20 < 16) add(t, bit(path[i % 8])); i++; }
+    holds.push({ p: 2, s: 64.5, e: 68.0 }, { p: 1, s: 66.0, e: 67.5 }, { p: 4, s: 68.5, e: 70.0 }, { p: 0, s: 70.2, e: 72.8 }, { p: 3, s: 72.9, e: 75.8 }, { p: 1, s: 73.6, e: 75.8 });
+    for (t = 64.0; t < 75.8; t += E) { if (rnd() < .38) { var p = [0, 3, 4, 1][Math.floor(rnd() * 4)]; var busy = holds.some(function (h) { return h.p === p && t >= h.s - 0.2 && t <= h.e + 0.2; }); if (!busy) add(t, bit(p)); } }
+    add(75.8, bit(2));
+    [33.45, 37.1, 45.6, 49.2].forEach(function (q) { for (var j = rows.length - 1; j >= 0; j--) if (Math.abs(rows[j].t - q) < 0.06) rows.splice(j, 1); add(q, bit(0) | bit(1) | bit(3) | bit(4)); });
+    rows.sort(function (a, b) { return a.t - b.t; });
+    var segments = [
+      { s: 1.0, e: 12.0, label: null, pace: null, tier: null }, { s: 12.0, e: 21.5, label: 'Twists', pace: 'Fast', tier: 'y' },
+      { s: 21.5, e: 29.0, label: 'Jumps', pace: null, tier: 'y' }, { s: 29.0, e: 41.0, label: 'Drills', pace: 'Very Fast', tier: 'r', spike: true },
+      { s: 41.0, e: 52.0, label: 'Brackets', pace: null, tier: 'y' }, { s: 52.0, e: 64.0, label: 'Runs', pace: 'Fast', tier: 'y' },
+      { s: 64.0, e: 75.8, label: 'Holds', pace: 'Slow', tier: 'g' } ];
+    return { rows: rows, holds: holds, segments: segments, panels: 5, firstNote: 1.0, lastNote: 75.8 };
+  }
+  var CHART = buildChart();
+  var PINS = [{ t: 33.6, n: 1, cause: 'life' }, { t: 39.2, n: 3, cause: 'life' }, { t: 47.0, n: 1, cause: 'walk' }, { t: 58.0, n: 2, cause: 'life' }, { t: 73.4, n: 14, cause: 'life' }, { t: 74.9, n: 2, cause: 'life' }];
+  var YOURS = [39.2], FINISHED = 4;
+  var SCOPES = [{ id: 'public', label: 'Public', kind: 'public' }, { id: 'notes', label: 'Notes', kind: 'notes' }, { id: 'club', label: 'Team Murloc', kind: 'club' }];
+  var COMMENTS = [
+    { id: 'c1', t: 12.0, scope: 'public', who: 'BEEPS', ini: 'B', ago: '3 weeks ago', votes: 3, replies: 0, text: 'Warm-up twists, easy to underrate. Set your AV before the drills, not during — at 650 the 12ths stop looking like 8ths.' },
+    { id: 'c2', t: 29.0, scope: 'public', who: 'ERRLENA', ini: 'E', ago: '2 weeks ago', votes: 14, replies: 2, text: 'The drills from here are 16ths at 165, not the 24ths they feel like. Start every burst on the right foot and you never cross over.' },
+    { id: 'c3', t: 33.45, scope: 'public', who: 'JUNO', ini: 'J', ago: '9 days ago', votes: 6, replies: 0, text: 'This quad is a bracket, not a jump — heels on the corners, toes on the diagonals. Jumping it is what breaks the drill after it.' },
+    { id: 'c7', t: 33.45, scope: 'public', who: 'SOOJIN', ini: 'S', ago: '6 days ago', votes: 2, replies: 0, text: 'Same quad: tall players bracket it straight on, shorter players heel-toe it. Either way, never jump it.' },
+    { id: 'c4', t: 52.0, scope: 'public', who: 'ERRLENA', ini: 'E', ago: '2 weeks ago', votes: 9, replies: 1, text: 'Left foot leads every run from here. Enter on the right and you spin at 0:58.' },
+    { id: 'k1', t: 45.6, scope: 'club', who: 'MINJI', ini: 'M', ago: '4 days ago', votes: 5, replies: 0, text: 'Club: this quad is where our weekly board spread happens. Bracket it and the rest of the section is free.' },
+    { id: 'c6', t: 72.9, scope: 'public', who: 'KAMI', ini: 'K', ago: '5 days ago', votes: 21, replies: 0, text: 'The ending holds tick fast from here. Do not release early — the last 5% of the score lives in these.' }
+  ];
+  var byId = {}; COMMENTS.forEach(function (c) { byId[c.id] = c; });
+  function fmt(t) { var m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + (s < 10 ? '0' : '') + s; }
+  function segName(s) { if (!s || !s.label) return null; return s.label + (s.pace ? ' · ' + s.pace : ''); }
+  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  function motion() { return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'; }
+  function assistVelocity(level) { if (level <= 16) return 600; if (level <= 23) return 600 + (level - 16) * (100 / 7); return 700; }
+  var ICON = { bubble: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/></svg>',
+    person: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="5.5" r="2.6"/><path d="M2.8 13.5c.7-2.6 2.6-3.9 5.2-3.9s4.5 1.3 5.2 3.9"/></svg>',
+    people: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="5.5" cy="5.5" r="2.2"/><circle cx="11" cy="6" r="1.8"/><path d="M1.8 13c.6-2.3 2-3.4 3.7-3.4S8.6 10.7 9.2 13M9.6 12.6c.4-1.6 1.3-2.4 2.6-2.4s2.2.8 2.6 2.4"/></svg>',
+    lock: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>' };
+
+  // ---- sprite (ported) ----
+  var CORNER_SIGNS = { 0: [-1, 1], 1: [-1, -1], 3: [1, -1], 4: [1, 1] };
+  function drawArrow(ctx, x, y, size, panel, color) {
+    var lane = panel % 5; ctx.save(); ctx.translate(x, y); ctx.fillStyle = color; ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1.3;
+    var h = size * 0.5 - 0.75;
+    if (lane === 2) { var k = size * 0.29; ctx.beginPath(); ctx.moveTo(-h + k, -h); ctx.lineTo(h - k, -h); ctx.lineTo(h, -h + k); ctx.lineTo(h, h - k); ctx.lineTo(h - k, h); ctx.lineTo(-h + k, h); ctx.lineTo(-h, h - k); ctx.lineTo(-h, -h + k); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+    else { ctx.scale(CORNER_SIGNS[lane][0], CORNER_SIGNS[lane][1]); var u = h * 2; var P = function (a, b) { return [h - a * u, h - b * u]; };
+      var poly = function (pts) { ctx.beginPath(); pts.forEach(function (p, i) { i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }); ctx.closePath(); ctx.fill(); ctx.stroke(); };
+      var l = 0.78, c = 0.20; poly([P(0, 0), P(l, 0), P(l - c, c), P(c, c), P(c, l - c), P(0, l)]);
+      var rib = function (r0, r1, L) { poly([P(r0, r0), P(L - r0, r0), P(L - r1, r1), P(r1, r1), P(r1, L - r1), P(r0, L - r0)]); }; rib(0.28, 0.42, 0.94); rib(0.50, 0.64, 1.30); }
+    ctx.restore();
+  }
+  function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); }
+  function noteColor(panel) { var lane = panel % 5; return lane === 2 ? T.center : (lane === 1 || lane === 3 ? T.upper : T.lower); }
+  function drawBubble(ctx, x, y, o) {
+    var w = o.big ? 22 : 18, h = o.big ? 16 : 14; ctx.save(); ctx.lineWidth = 1.5; ctx.fillStyle = o.fill; ctx.strokeStyle = o.stroke;
+    roundRect(ctx, x - w / 2, y - h / 2, w, h, 5); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - w / 2 + 4, y + h / 2 - 1); ctx.lineTo(x - w / 2 + 2, y + h / 2 + 5); ctx.lineTo(x - w / 2 + 9, y + h / 2 - 1); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x - w / 2 + 4, y + h / 2 - 0.2); ctx.lineTo(x - w / 2 + 2, y + h / 2 + 5); ctx.lineTo(x - w / 2 + 9, y + h / 2 - 0.2); ctx.stroke();
+    if (o.label) { ctx.fillStyle = o.text; ctx.font = '700 9.5px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(o.label, x, y + 0.5); }
+    else { ctx.strokeStyle = o.text; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(x - 5, y - 2); ctx.lineTo(x + 5, y - 2); ctx.moveTo(x - 5, y + 2); ctx.lineTo(x + 2, y + 2); ctx.stroke(); }
+    ctx.restore();
+  }
+
+  // ---- scope chip (shared by the bar and the composer) ----
+  function scopeGlyph(scope) { return scope.kind === 'notes' ? ICON.lock : scope.kind === 'club' ? ICON.people : ICON.person; }
+  function scopeChipHtml(view, inline) {
+    var cur = SCOPES.filter(function (s) { return s.id === view.scope; })[0];
+    return '<details class="sc-scope' + (inline ? ' inline' : '') + '" data-scope-menu>' +
+      '<summary class="sc-scope-chip' + (cur.kind === 'notes' ? ' you' : '') + '">' + scopeGlyph(cur) + '<span class="sc-scope-label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis">' + esc(cur.label) + '</span><span class="sc-car">▾</span></summary>' +
+      '<div class="sc-scope-menu">' + SCOPES.map(function (s) {
+        return '<button type="button" data-scope="' + s.id + '" class="' + (s.id === view.scope ? 'on' : '') + '">' + scopeGlyph(s).replace('viewBox', 'style="width:12px;height:12px;color:' + (s.kind === 'notes' ? T.you : T.inkMuted) + '" viewBox') + esc(s.label) + (s.kind === 'notes' ? '<small>only you</small>' : '') + '</button>';
+      }).join('') + '<div class="hint">Which comments the strip shows — and where a new one goes.</div></div></details>';
+  }
+  function bindScopeMenus(view, host) {
+    host.querySelectorAll('[data-scope-menu] button[data-scope]').forEach(function (b) {
+      b.addEventListener('click', function () { setScope(view, b.getAttribute('data-scope')); });
+    });
+  }
+  function visibleComments(view) {
+    return COMMENTS.filter(function (c) { return view.scope === 'notes' ? !!c.note : (c.note || c.scope === view.scope); })
+      .concat(view.posted.filter(function (c) { return view.scope === 'notes' ? !!c.note : (c.note || c.scope === view.scope); }));
+  }
+  function setScope(view, id) {
+    view.scope = id;
+    view.comments = visibleComments(view);
+    regroup(view);
+    if (view.cur != null && !groupOf(view, view.cur)) view.cur = null;
+    renderBar(view); repaintAll(view); followStrip(view, true); renderPanel(view);
+  }
+
+  // ---- one strip host ----
+  function mount(root) {
+    var layout = root.getAttribute('data-layout'), compact = layout === 'compact', touch = root.getAttribute('data-touch') === '1';
+    var box = root.querySelector('[data-scroll]'); var inner = document.createElement('div'); box.appendChild(inner);
+    var cursor = document.createElement('div'); cursor.className = 'sc-cursor'; cursor.innerHTML = '<span></span>'; inner.appendChild(cursor);
+    var view = { root: root, box: box, inner: inner, compact: compact, touch: touch, level: 21, rows: CHART.rows, holds: CHART.holds, segments: CHART.segments, panels: CHART.panels,
+      lastNote: CHART.lastNote, t0: Math.max(0, CHART.firstNote - 1), duration: CHART.lastNote + 2, scope: 'public', posted: [],
+      cur: null, hover: null, pick: null, composing: false, pinned: false, threadLabel: root.getAttribute('data-thread') || 'Open thread ›',
+      availWidth: parseInt(root.getAttribute('data-avail') || '0', 10) || null, panelH: 96 };
+    view.span = view.duration - view.t0; view.comments = visibleComments(view); root.stripView = view;
+
+    function applyScale() {
+      var av = view.userAv || assistVelocity(view.level); view.av = av;
+      var base = compact ? { pps: av * 0.47, colW: 30, gutter: 44, railW: 78 } : { pps: av * 0.85, colW: view.panels === 10 ? 40 : 46, gutter: 52, railW: 96 };
+      var avail = view.availWidth || Infinity, full = base.gutter + base.colW * view.panels + 14 + base.railW; view.narrow = avail < full;
+      var gutter = view.narrow ? 26 : base.gutter, railW = view.narrow ? 0 : base.railW, pad = view.narrow ? 6 : 14, markLane = view.narrow ? 28 : 0;
+      var natural = gutter + base.colW * view.panels + pad + railW + markLane, fit = Math.min(1, avail / natural);
+      view.scale = { pps: base.pps * fit, colW: base.colW * fit, gutter: gutter * fit, railW: railW * fit, gap: pad * fit, arrow: Math.max(8, base.colW * fit - 2), font: fit < 1 ? Math.max(7, Math.round(10 * fit)) : 10, markLane: markLane * fit };
+      view.stripW = view.scale.colW * view.panels; view.railX = view.scale.gutter + view.stripW + view.scale.gap;
+      view.width = Math.floor(view.railX + view.scale.railW + view.scale.markLane); view.height = Math.ceil(view.span * view.scale.pps) + 24;
+      view.yOf = function (t) { return 12 + (t - view.t0) * view.scale.pps; }; view.tOf = function (y) { return view.t0 + (y - 12) / view.scale.pps; };
+      inner.style.width = view.width + 'px'; inner.style.height = (view.height + view.panelH) + 'px';
+    }
+    view.commentX = function () { return view.narrow ? view.railX + 9 : view.railX + (view.scale.railW >= 90 ? 78 : 64); };
+    view.pinX = function () { return view.narrow ? Math.max(9, view.scale.gutter * 0.72) : view.railX + (view.scale.railW >= 90 ? 20 : 16); };
+
+    var tiles = [];
+    function drawStrip() {
+      inner.querySelectorAll('.tile').forEach(function (n) { n.remove(); }); if (view.tileObserver) view.tileObserver.disconnect(); tiles = [];
+      var TILE = 3000, dpr = Math.min(window.devicePixelRatio || 1, 1.5), byEl = new Map();
+      for (var k = 0; k * TILE < view.height; k++) { var h = Math.min(TILE, view.height - k * TILE); var ph = document.createElement('div'); ph.className = 'tile'; ph.style.cssText = 'position:absolute;left:0;top:' + (k * TILE) + 'px;height:' + h + 'px;width:' + view.width + 'px'; inner.appendChild(ph); var tile = { top: k * TILE, h: h, drawn: false, el: ph }; tiles.push(tile); byEl.set(ph, tile); }
+      function paint(tile) { if (tile.drawn) return; tile.drawn = true; var canvas = document.createElement('canvas'); canvas.width = Math.round(view.width * dpr); canvas.height = Math.round(tile.h * dpr); canvas.style.width = view.width + 'px'; canvas.style.height = tile.h + 'px'; tile.el.appendChild(canvas); var ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr); ctx.translate(0, -tile.top); drawTile(ctx, tile.top, tile.top + tile.h); tile.canvas = canvas; }
+      function free(tile) { if (!tile.drawn) return; tile.drawn = false; tile.el.innerHTML = ''; tile.canvas = null; }
+      view.tileObserver = new IntersectionObserver(function (entries) { entries.forEach(function (e) { var t = byEl.get(e.target); if (!t) return; if (e.isIntersecting) paint(t); else free(t); }); }, { root: box, rootMargin: '1500px 0px' });
+      tiles.forEach(function (t) { view.tileObserver.observe(t.el); });
+      view.repaint = function () { tiles.forEach(function (tile) { if (!tile.drawn || !tile.canvas) return; var ctx = tile.canvas.getContext('2d'); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, tile.canvas.width, tile.canvas.height); ctx.scale(dpr, dpr); ctx.translate(0, -tile.top); drawTile(ctx, tile.top, tile.top + tile.h); }); };
+    }
+    function drawTile(ctx, y0, y1) {
+      var s = view.scale, tMin = view.t0 + (y0 - 60) / s.pps, tMax = view.t0 + (y1 + 60) / s.pps;
+      ctx.fillStyle = 'rgba(255,255,255,.03)'; ctx.fillRect(s.gutter, y0, view.stripW, y1 - y0);
+      ctx.lineWidth = 1; [0, view.panels].forEach(function (c) { ctx.strokeStyle = 'rgba(255,255,255,.10)'; ctx.beginPath(); ctx.moveTo(s.gutter + c * s.colW + 0.5, y0); ctx.lineTo(s.gutter + c * s.colW + 0.5, y1); ctx.stroke(); });
+      ctx.font = s.font + 'px monospace'; ctx.textBaseline = 'middle';
+      for (var t = Math.ceil(view.t0 / 5) * 5; t <= view.duration; t += 5) { var ry = view.yOf(t); if (ry < y0 - 30 || ry > y1 + 30) continue; ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.beginPath(); ctx.moveTo(s.gutter - 4, ry + 0.5); ctx.lineTo(view.width - 4, ry + 0.5); ctx.stroke(); ctx.fillStyle = T.inkMuted; if (view.narrow) { ctx.save(); ctx.translate(s.gutter * 0.3, ry); ctx.rotate(-Math.PI / 2); ctx.textAlign = 'center'; ctx.fillText(fmt(t), 0, 0); ctx.restore(); } else { ctx.textAlign = 'right'; ctx.fillText(fmt(t), s.gutter - 8, ry); } }
+      view.segments.forEach(function (seg) { var ry = view.yOf(seg.s); if (ry < y0 - 30 || ry > y1 + 30 || seg.s <= 0) return; ctx.strokeStyle = T.primary; ctx.globalAlpha = 0.35; ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.moveTo(s.gutter, ry + 0.5); ctx.lineTo(s.gutter + view.stripW, ry + 0.5); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; });
+      var sel = view.composing ? null : currentGroup(view);
+      if (sel) { var sy = view.yOf(sel.t); ctx.fillStyle = sel.note ? 'rgba(255,209,102,.5)' : 'rgba(63,169,245,.55)'; ctx.fillRect(s.gutter, sy - 0.5, view.stripW, 1); }
+      if (view.composing && view.pick != null) { var py = view.yOf(view.pick); ctx.fillStyle = T.primary; ctx.fillRect(s.gutter, py - 0.5, view.stripW, 1.5); }
+      view.holds.forEach(function (hold) { if (hold.e < tMin || hold.s > tMax) return; var x = s.gutter + hold.p * s.colW + s.colW / 2, hy0 = view.yOf(hold.s), hy1 = view.yOf(hold.e), color = noteColor(hold.p); ctx.fillStyle = color; ctx.globalAlpha = 0.26; var bw = s.arrow * 0.55; roundRect(ctx, x - bw / 2, hy0, bw, Math.max(hy1 - hy0, 1), bw / 2); ctx.fill(); ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(x, hy1, s.arrow * 0.2, 0, Math.PI * 2); ctx.fill(); drawArrow(ctx, x, hy0, s.arrow, hold.p, color); });
+      view.rows.forEach(function (row) { if (row.t < tMin || row.t > tMax) return; for (var p = 0; p < view.panels; p++) if (row.m & (1 << p)) drawArrow(ctx, s.gutter + p * s.colW + s.colW / 2, view.yOf(row.t), s.arrow, p, noteColor(p)); });
+      drawRail(ctx, y0, y1); drawMarks(ctx, y0, y1);
+    }
+    function drawRail(ctx, y0, y1) {
+      if (!view.narrow) { ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(view.railX + 0.5, y0); ctx.lineTo(view.railX + 0.5, y1); ctx.stroke(); }
+      var pins = PINS.map(function (p) { return { t: p.t, n: p.n, color: p.cause === 'walk' ? T.walk : T.life, dy: 0 }; }); pins.push({ t: view.lastNote, dy: 16, n: FINISHED, color: T.inkMuted });
+      pins.forEach(function (pin) { var y = view.yOf(pin.t) + pin.dy; if (y < y0 - 24 || y > y1 + 24) return; var big = pin.n > 1, r = big ? 9.5 : 5, px = view.pinX(pin);
+        if (!view.narrow) { ctx.strokeStyle = pin.color; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(view.railX, y + 0.5); ctx.lineTo(px - r, y + 0.5); ctx.stroke(); ctx.fillStyle = pin.color; ctx.beginPath(); ctx.arc(view.railX, y, 2.6, 0, Math.PI * 2); ctx.fill(); }
+        ctx.fillStyle = pin.color; ctx.beginPath(); ctx.arc(px, y, r, 0, Math.PI * 2); ctx.fill();
+        if (big) { ctx.fillStyle = 'rgba(10,10,14,.92)'; ctx.font = '700 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('×' + pin.n, px, y + 0.5); } });
+      ctx.strokeStyle = T.you; ctx.lineWidth = 2; var yourX = view.narrow ? Math.max(9, view.scale.gutter * 0.72) : view.railX;
+      YOURS.forEach(function (t) { var y = view.yOf(t); if (y < y0 - 12 || y > y1 + 12) return; ctx.save(); ctx.translate(yourX, y); ctx.rotate(Math.PI / 4); ctx.strokeRect(-4.5, -4.5, 9, 9); ctx.restore(); });
+    }
+    function drawMarks(ctx, y0, y1) {
+      var cx = view.commentX(), edge = view.scale.gutter + view.stripW, sel = view.composing ? null : currentGroup(view);
+      view.groups.forEach(function (g) { var y = view.yOf(g.t); if (y < y0 - 30 || y > y1 + 30) return; var isSel = !!sel && g === sel, hov = g.items.some(function (c) { return c.id === view.hover; });
+        var stroke = g.note ? T.you : (isSel ? T.primary : (hov ? T.ink : T.inkMuted)), fill = isSel && !g.note ? T.primary : T.surfaceMuted, text = g.note ? T.you : (isSel ? T.bg : T.ink);
+        ctx.fillStyle = stroke; ctx.globalAlpha = isSel ? .9 : .45; ctx.fillRect(edge, y - 0.5, Math.max(0, cx - 9 - edge), 1); ctx.globalAlpha = 1;
+        drawBubble(ctx, cx, y, { big: g.items.length > 1, fill: fill, stroke: stroke, text: text, label: g.items.length > 1 ? '×' + g.items.length : null }); });
+      if (view.composing && view.pick != null) { var py = view.yOf(view.pick); if (py >= y0 - 30 && py <= y1 + 30) { ctx.fillStyle = T.primary; ctx.fillRect(edge, py - 0.75, Math.max(0, cx - 9 - edge), 1.5); drawBubble(ctx, cx, py, { fill: T.surfaceMuted, stroke: T.primary, text: T.primary, label: '+' }); if (!view.narrow) { ctx.fillStyle = T.primary; ctx.font = '600 ' + view.scale.font + 'px sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillText(fmt(view.pick), view.scale.gutter - 8, py - 8); } } }
+    }
+    function hitAt(x, y) { var cx = view.commentX(); for (var i = view.groups.length - 1; i >= 0; i--) { var g = view.groups[i], r = g.items.length > 1 ? 13 : 11; if (Math.abs(x - cx) <= r && Math.abs(y - view.yOf(g.t)) <= r) return g; } return null; }
+    function boxPoint(e) { var rect = box.getBoundingClientRect(); return { x: e.clientX - rect.left + box.scrollLeft, y: e.clientY - rect.top + box.scrollTop }; }
+    function snap(t) { var best = null; view.rows.forEach(function (r) { var d = Math.abs(r.t - t); if (d <= 0.12 && (best == null || d < Math.abs(best - t))) best = r.t; }); return best != null ? best : Math.round(t * 20) / 20; }
+
+    function initMinimap() {
+      var canvas = root.querySelector('[data-minimap]'); if (!canvas) return;
+      var W = canvas.clientWidth || 92, H = canvas.clientHeight || 600, dpr = Math.min(window.devicePixelRatio || 1, 2); canvas.width = W * dpr; canvas.height = H * dpr;
+      var ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr); var yOf = function (t) { return ((t - view.t0) / view.span) * (H - 8) + 4; };
+      var seconds = Math.max(1, Math.ceil(view.span)), density = new Array(seconds).fill(0), tierOf = new Array(seconds).fill(null);
+      view.rows.forEach(function (r) { density[Math.max(0, Math.min(seconds - 1, Math.floor(r.t - view.t0)))]++; }); var maxD = Math.max.apply(null, density.concat([1]));
+      view.segments.forEach(function (seg) { var color = seg.tier === 'r' ? T.tierR : seg.tier === 'y' ? T.tierY : seg.tier === 'g' ? T.tierG : null; if (!color) return; for (var sec = Math.max(0, Math.floor(seg.s - view.t0)); sec < Math.min(seconds, Math.ceil(seg.e - view.t0)); sec++) tierOf[sec] = color; });
+      view.repaintMinimap = function () {
+        ctx.clearRect(0, 0, W, H); var barMax = Math.max(12, W - 16), left = W >= 60 ? 7 : 5;
+        for (var sec = 0; sec < seconds; sec++) { var w = (density[sec] / maxD) * (barMax - left + 2); if (w <= 0) continue; ctx.fillStyle = tierOf[sec] || 'rgba(255,255,255,.16)'; ctx.globalAlpha = tierOf[sec] ? .9 : 1; ctx.fillRect(left, yOf(view.t0 + sec), w, Math.max(1, (H - 8) / view.span)); }
+        ctx.globalAlpha = 1; PINS.forEach(function (p) { ctx.fillStyle = p.cause === 'walk' ? T.walk : T.life; ctx.fillRect(W - 12, yOf(p.t) - 1, 10, Math.max(2, Math.min(1 + p.n, 5))); });
+        ctx.fillStyle = T.inkMuted; ctx.fillRect(W - 12, yOf(view.lastNote) + 1, 10, 2); ctx.fillStyle = T.you; YOURS.forEach(function (t) { ctx.fillRect(W - 5, yOf(t), 4, 2); });
+        var sel = view.composing ? null : currentGroup(view);
+        view.groups.forEach(function (g) { var isSel = !!sel && g === sel; ctx.fillStyle = g.note ? T.you : (isSel ? T.primary : 'rgba(233,239,247,.75)'); ctx.fillRect(0, yOf(g.t) - 1.5, isSel ? 5 : 4, 3); });
+        if (view.composing && view.pick != null) { ctx.fillStyle = T.primary; ctx.fillRect(0, yOf(view.pick) - 1.5, 5, 3); }
+        ctx.strokeStyle = T.primary; ctx.lineWidth = 1.5; var top = (box.scrollTop / view.height) * (H - 8) + 4, vh = (box.clientHeight / view.height) * (H - 8); ctx.strokeRect(1.5, top, W - 3, vh);
+      };
+      var pending = null; box.addEventListener('scroll', function () { if (pending) return; pending = requestAnimationFrame(function () { pending = null; view.repaintMinimap(); }); });
+      canvas.addEventListener('click', function (e) { var rect = canvas.getBoundingClientRect(); var fraction = (e.clientY - rect.top - 4) / (rect.height - 8); view.pinned = false; box.scrollTo({ top: fraction * view.height - box.clientHeight / 2, behavior: motion() }); });
+      view.repaintMinimap();
+    }
+    function buildChips() {
+      var host = root.querySelector('[data-chips]'); if (!host) return; host.innerHTML = ''; view.chipSpans = [];
+      view.segments.forEach(function (seg) { if (!seg.label || seg.tier === 'g' || !seg.tier) return; var chip = document.createElement('button'); chip.type = 'button'; chip.className = 'stepchart-chip stepchart-chip-' + (seg.spike ? 'spike' : 'struct');
+        chip.innerHTML = '<i></i>' + esc((seg.spike ? 'Difficulty Spike: ' : '') + segName(seg)) + ' <small>' + fmt(seg.s) + '</small>';
+        chip.addEventListener('click', function () { view.pinned = false; box.scrollTo({ top: Math.max(0, view.yOf(seg.s) - 110), behavior: motion() }); }); host.appendChild(chip); view.chipSpans.push({ el: chip, s: seg.s, e: seg.e }); });
+    }
+    function viewportTimes() { var h = box.clientHeight - view.panelH; return { top: view.tOf(box.scrollTop), bottom: view.tOf(box.scrollTop + h), center: view.tOf(box.scrollTop + h / 2) }; }
+    function highlight() { var v = viewportTimes(); (view.chipSpans || []).forEach(function (sp) { sp.el.classList.toggle('stepchart-chip-active', sp.s < v.bottom && sp.e > v.top); }); }
+    function renderLegend() {
+      var host = root.querySelector('[data-legend]'); if (!host) return; host.innerHTML = '';
+      var entry = function (color, label, cls) { var s = document.createElement('span'); s.className = 'stepchart-legend-entry'; var i = document.createElement('i'); if (cls) i.className = cls; else i.style.background = color; s.appendChild(i); s.appendChild(document.createTextNode(label)); host.appendChild(s); };
+      entry(T.upper, 'Upper'); entry(T.lower, 'Lower'); entry(T.center, 'Center'); entry(T.life, 'Life Bar Break'); entry(T.walk, 'Walk off'); entry(T.you, 'Your runs'); entry(null, 'Comments', 'bubble'); entry(null, 'Your notes', 'bubble you');
+    }
+
+    // ---- THE BAR (redline 2) ----
+    var bar = document.createElement('div'); bar.className = 'sc-bar'; root.querySelector('.stepchart-viewer').before(bar);
+    view.renderBar = function () {
+      bar.innerHTML = '<span class="sc-bar-note">' + ICON.bubble + '<span class="sc-gesture-pointer">Double-click a spot to leave a comment</span><span class="sc-gesture-touch">Double-tap a spot to leave a comment</span></span>' + scopeChipHtml(view, false);
+      bindScopeMenus(view, bar);
+    };
+
+    // ---- THE PANEL (redlines 3, 4, 5) ----
+    var viewer = root.querySelector('.stepchart-viewer'); var panel = document.createElement('div'); panel.className = 'sc-panel'; viewer.appendChild(panel); view.panel = panel;
+    function sizePanel() { var minicol = root.querySelector('.stepchart-minicol'); var w = minicol ? (minicol.offsetLeft + minicol.offsetWidth - box.offsetLeft) : box.clientWidth + 2; panel.style.width = w + 'px'; view.panelH = panel.offsetHeight || 96; }
+    view.renderPanel = function () {
+      if (view.composing) {
+        var isNote = view.scope === 'notes';
+        panel.innerHTML = '<div class="sc-panel-head"><span class="anchor-chip pick"><i></i>' + fmt(view.pick) + '</span>' + scopeChipHtml(view, true) + '<button class="sc-x" data-cancel title="Close">✕</button></div>' +
+          '<textarea class="cmt-line" rows="2" placeholder="' + (isNote ? 'Note on ' : 'Comment on ') + fmt(view.pick) + '…" data-line></textarea>' +
+          '<div class="cmt-compose-foot"><span class="cmt-count" data-count hidden></span><span class="sp"></span><button class="mbtn filled" data-post disabled>' + (isNote ? 'Save note' : 'Comment') + '</button></div>';
+        bindScopeMenus(view, panel);
+        var line = panel.querySelector('[data-line]'), post = panel.querySelector('[data-post]'), count = panel.querySelector('[data-count]');
+        if (view.typed) { line.value = view.typed; post.disabled = false; view.typed = null; }
+        line.addEventListener('input', function () { post.disabled = !line.value.trim(); var left = 500 - line.value.length; count.hidden = left > 50; count.textContent = left + ' left'; });
+        panel.querySelector('[data-cancel]').addEventListener('click', function () { view.composing = false; view.pick = null; repaintAll(view); view.renderPanel(); });
+        post.addEventListener('click', function () { var text = line.value.trim(); if (!text) return;
+          var c = { id: 'n' + Date.now(), t: view.pick, scope: view.scope === 'notes' ? null : view.scope, note: view.scope === 'notes', who: 'ERRLENA', ini: 'E', ago: 'just now', votes: 0, replies: 0, text: text };
+          view.posted.push(c); view.comments = visibleComments(view); regroup(view); view.composing = false; view.pick = null; view.cur = c.id; view.pinned = true; repaintAll(view); view.renderPanel(); });
+        sizePanel(); if (!view.touch) line.focus({ preventScroll: true }); return;
+      }
+      var c = current(view);
+      if (!c) { panel.innerHTML = '<div class="empty">' + ICON.bubble.replace('viewBox', 'style="width:14px;height:14px;flex:none" viewBox') + '<span>Nothing here yet.</span></div>'; sizePanel(); return; }
+      var stack = view.ordered.filter(function (x) { return x.t === c.t && !!x.note === !!c.note; }), k = stack.indexOf(c) + 1, idx = view.ordered.indexOf(c);
+      var who = c.note ? '<span class="cbadge you">Only you</span>' : '<span class="cname">' + esc(c.who) + '</span>';
+      var ft = c.note ? '<span>Only you</span>' : '<button class="act">▲ ' + c.votes + '</button><span>·</span><span>' + (c.replies === 0 ? 'No replies' : c.replies + (c.replies === 1 ? ' reply' : ' replies')) + '</span>';
+      panel.innerHTML = '<div class="sc-panel-head"><button class="sc-step" data-prev ' + (idx === 0 ? 'disabled' : '') + '>‹</button><button class="sc-step" data-next ' + (idx === view.ordered.length - 1 ? 'disabled' : '') + '>›</button>' +
+        '<span class="anchor-chip ' + (c.note ? 'you' : '') + '"><i></i>' + fmt(c.t) + '</span>' + (stack.length > 1 ? '<span class="pager">' + k + '/' + stack.length + '</span>' : '') + who + '<span class="cmeta">' + esc(c.ago) + '</span></div>' +
+        '<div class="ex" data-ex>' + esc(c.text) + '</div><div class="pf">' + ft + '<a href="#">' + esc(view.threadLabel) + '</a></div>';
+      panel.querySelector('[data-prev]').addEventListener('click', function () { step(-1); }); panel.querySelector('[data-next]').addEventListener('click', function () { step(1); });
+      panel.querySelector('[data-ex]').addEventListener('click', function (e) { e.currentTarget.classList.toggle('full'); sizePanel(); });
+      panel.querySelector('.pf a').addEventListener('click', function (e) { e.preventDefault(); });
+      sizePanel();
+    };
+    function step(d) { var next = Math.max(0, Math.min(view.ordered.length - 1, (view.cur == null ? 0 : view.ordered.indexOf(current(view))) + d)); view.cur = view.ordered[next].id; view.pinned = true; centerOn(view, view.ordered[next].t); repaintAll(view); view.renderPanel(); }
+
+    // ---- gestures ----
+    var tip = null; function ensureTip() { if (tip) return tip; tip = document.createElement('div'); tip.className = 'stepchart-tip'; tip.hidden = true; document.body.appendChild(tip); return tip; }
+    box.addEventListener('mousemove', function (e) {
+      if (view.touch) return; var p = boxPoint(e), g = hitAt(p.x, p.y), t = ensureTip(); var hovId = g ? g.items[0].id : null; if (hovId !== view.hover) { view.hover = hovId; view.repaint(); }
+      var inside = p.x >= view.scale.gutter && p.x <= view.scale.gutter + view.stripW && p.y < box.scrollTop + box.clientHeight - view.panelH;
+      if (!g && inside && !view.composing) { cursor.style.display = 'block'; cursor.style.top = p.y + 'px'; cursor.firstChild.textContent = fmt(snap(view.tOf(p.y))); cursor.firstChild.style.left = (view.railX + 4) + 'px'; } else cursor.style.display = 'none';
+      if (!g) { t.hidden = true; return; }
+      var m = g.items[0]; t.innerHTML = '<div class="stepchart-tip-time">' + fmt(g.t) + '</div><span class="who">' + esc(m.note ? 'Your note' : m.who) + '<small>' + esc(m.ago) + '</small></span><div class="ex">' + esc(m.text) + '</div><div class="ft">' + (m.note ? 'Only you' : '▲ ' + m.votes) + (g.items.length > 1 ? ' · +' + (g.items.length - 1) : '') + '</div>';
+      t.hidden = false; t.style.left = Math.min(e.clientX + 14, window.innerWidth - t.offsetWidth - 12) + 'px'; t.style.top = (e.clientY + 14) + 'px';
+    });
+    box.addEventListener('mouseleave', function () { if (tip) tip.hidden = true; cursor.style.display = 'none'; if (view.hover) { view.hover = null; view.repaint(); } });
+    box.addEventListener('click', function (e) { var p = boxPoint(e), g = hitAt(p.x, p.y); if (g) { view.cur = g.items[0].id; view.pinned = true; centerOn(view, g.t); repaintAll(view); view.renderPanel(); } });
+    box.addEventListener('dblclick', function (e) { var p = boxPoint(e); if (hitAt(p.x, p.y)) return; startCompose(view, snap(view.tOf(p.y))); });
+    var lastTap = null; box.addEventListener('pointerup', function (e) { if (e.pointerType !== 'touch') return; var now = Date.now(), p = boxPoint(e); if (lastTap && now - lastTap.at < 320 && Math.abs(p.y - lastTap.y) < 24 && Math.abs(p.x - lastTap.x) < 24) { lastTap = null; if (!hitAt(p.x, p.y)) startCompose(view, snap(view.tOf(p.y))); return; } lastTap = { at: now, x: p.x, y: p.y }; });
+    ['wheel', 'touchmove', 'keydown'].forEach(function (ev) { box.addEventListener(ev, function () { view.pinned = false; }, { passive: true }); });
+    root.querySelectorAll('[data-av]').forEach(function (b) { b.addEventListener('click', function () { var s = b.getAttribute('data-av'); if (s === 'auto') view.userAv = null; else view.userAv = Math.max(200, Math.min(900, (view.userAv || Math.round(view.av)) + parseInt(s, 10))); var a = box.scrollTop / Math.max(1, view.height); applyScale(); drawStrip(); box.scrollTop = a * view.height; sizePanel(); if (view.repaintMinimap) view.repaintMinimap(); highlight(); var v = root.querySelector('[data-av-value]'); if (v) v.textContent = 'AV ' + Math.round(view.av); root.querySelectorAll('[data-av="auto"]').forEach(function (x) { x.setAttribute('aria-pressed', view.userAv ? 'false' : 'true'); }); }); });
+
+    applyScale(); regroup(view); drawStrip(); initMinimap(); buildChips(); renderLegend(); view.renderBar();
+    var pending = null; box.addEventListener('scroll', function () { if (pending) return; pending = requestAnimationFrame(function () { pending = null; highlight(); followStrip(view, false); }); });
+    var open = parseFloat(root.getAttribute('data-open') || '0'); if (open) box.scrollTop = Math.max(0, view.yOf(open) - (box.clientHeight - view.panelH) * 0.5);
+    var compose = root.getAttribute('data-compose');
+    if (compose) { view.typed = root.getAttribute('data-typed') || null; startCompose(view, parseFloat(compose)); } else { followStrip(view, true); view.renderPanel(); }
+    sizePanel(); highlight(); view.follow = function () { followStrip(view, true); };
+    return view;
+  }
+
+  function regroup(view) { view.ordered = view.comments.slice().sort(function (a, b) { return a.t - b.t; }); var groups = {}; view.ordered.forEach(function (c) { var key = c.t.toFixed(3) + (c.note ? ':n' : ''); (groups[key] = groups[key] || { t: c.t, note: !!c.note, items: [] }).items.push(c); }); view.groups = Object.keys(groups).map(function (k) { return groups[k]; }).sort(function (a, b) { return a.t - b.t; }); }
+  function groupOf(view, id) { for (var i = 0; i < view.groups.length; i++) if (view.groups[i].items.some(function (c) { return c.id === id; })) return view.groups[i]; return null; }
+  function currentGroup(view) { return groupOf(view, view.cur); }
+  function current(view) { if (view.cur == null) return null; return view.ordered.filter(function (c) { return c.id === view.cur; })[0] || null; }
+  function repaintAll(view) { if (view.repaint) view.repaint(); if (view.repaintMinimap) view.repaintMinimap(); }
+  function centerOn(view, t) { view.box.scrollTo({ top: Math.max(0, view.yOf(t) - (view.box.clientHeight - view.panelH) / 2), behavior: motion() }); }
+  function followStrip(view, force) {
+    if (view.composing || (view.pinned && !force) || !view.groups.length) { if (!view.groups.length && !view.composing) { view.cur = null; } return; }
+    var center = view.tOf(view.box.scrollTop + (view.box.clientHeight - view.panelH) / 2), best = null, bestD = Infinity;
+    view.groups.forEach(function (g) { var d = Math.abs(g.t - center); if (d < bestD) { bestD = d; best = g; } });
+    if (!best || best.items.some(function (c) { return c.id === view.cur; })) return;
+    view.cur = best.items[0].id; repaintAll(view); view.renderPanel();
+  }
+  function startCompose(view, t) { view.composing = true; view.pick = t; repaintAll(view); view.renderPanel(); }
+  function renderBar(view) { view.renderBar(); }
+  function renderPanel(view) { view.renderPanel(); }
+
+  document.querySelectorAll('[data-strip]').forEach(function (el) { mount(el); });
+
+  // ---- §2 static composer swatches (redline 4) ----
+  document.querySelectorAll('[data-static-compose]').forEach(function (panel) {
+    var kind = panel.getAttribute('data-static-compose'), scope = kind.indexOf('notes') === 0 ? 'notes' : kind.indexOf('club') === 0 ? 'club' : 'public';
+    var view = { scope: scope }; var isNote = scope === 'notes';
+    var text = kind === 'public-cap' ? 'This quad is a bracket, not a jump — heels on the corners, toes on the diagonals. Jumping it is what breaks the drill after it, and the drill after it is the whole reason this section rates a 22.7 while the chart rates a 21. Bracket, breathe, then drill.' : (isNote ? 'Breathe before the hold. I let go early every single time.' : 'Count the bursts out loud — eight and rest, eight and rest.');
+    panel.innerHTML = '<div class="sc-panel-head"><span class="anchor-chip pick"><i></i>0:33</span>' + scopeChipHtml(view, true) + '<button class="sc-x" title="Close">✕</button></div>' +
+      '<textarea class="cmt-line" rows="2">' + esc(text) + '</textarea>' +
+      '<div class="cmt-compose-foot"><span class="cmt-count"' + (kind === 'public-cap' ? '' : ' hidden') + '>' + (500 - text.length) + ' left</span><span class="sp"></span><button class="mbtn filled">' + (isNote ? 'Save note' : 'Comment') + '</button></div>';
+    if (kind === 'club') { var d = panel.querySelector('details'); d.setAttribute('open', ''); }
+    panel.querySelectorAll('[data-scope-menu] button[data-scope]').forEach(function (b) { b.addEventListener('click', function (e) { e.preventDefault(); }); });
+  });
+})();
+</script>

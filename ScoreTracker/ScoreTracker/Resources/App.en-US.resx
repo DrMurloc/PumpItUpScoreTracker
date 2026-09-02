@@ -271,6 +271,9 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>1 private account is a peer but is not shown.</value>
   </data>
+  <data name="1 reply" xml:space="preserve">
+    <value>1 reply</value>
+  </data>
   <data name="1 title" xml:space="preserve">
     <value>1 title</value>
   </data>
@@ -1587,6 +1590,9 @@
   <data name="Comment from a deleted user" xml:space="preserve">
     <value>Comment from a deleted user</value>
   </data>
+  <data name="Comment on {0}…" xml:space="preserve">
+    <value>Comment on {0}…</value>
+  </data>
   <data name="Comments" xml:space="preserve">
     <value>Comments</value>
   </data>
@@ -2228,6 +2234,12 @@
   </data>
   <data name="Double Performance" xml:space="preserve">
     <value>Double Performance</value>
+  </data>
+  <data name="Double-click a spot to leave a comment" xml:space="preserve">
+    <value>Double-click a spot to leave a comment</value>
+  </data>
+  <data name="Double-tap a spot to leave a comment" xml:space="preserve">
+    <value>Double-tap a spot to leave a comment</value>
   </data>
   <data name="Doubles" xml:space="preserve">
     <value>Doubles</value>
@@ -4360,6 +4372,9 @@
   <data name="next best candidate {0}" xml:space="preserve">
     <value>next best candidate {0}</value>
   </data>
+  <data name="Next comment" xml:space="preserve">
+    <value>Next comment</value>
+  </data>
   <data name="Next Folder" xml:space="preserve">
     <value>Next Folder</value>
   </data>
@@ -4479,6 +4494,9 @@
   </data>
   <data name="No Recorded Scores" xml:space="preserve">
 	  <value>No Recorded Scores</value>
+  </data>
+  <data name="No replies" xml:space="preserve">
+    <value>No replies</value>
   </data>
   <data name="No rivals yet" xml:space="preserve">
     <value>No rivals yet</value>
@@ -4720,6 +4738,9 @@
   </data>
   <data name="Note Counts" xml:space="preserve">
 	  <value>Note Counts</value>
+  </data>
+  <data name="Note on {0}…" xml:space="preserve">
+    <value>Note on {0}…</value>
   </data>
   <data name="Note — where did you share this?" xml:space="preserve">
     <value>Note — where did you share this?</value>
@@ -5078,11 +5099,17 @@
   <data name="Open Community" xml:space="preserve">
     <value>Open Community</value>
   </data>
+  <data name="Open in Comments" xml:space="preserve">
+    <value>Open in Comments</value>
+  </data>
   <data name="Open in the Score Calculator" xml:space="preserve">
     <value>Open in the Score Calculator</value>
   </data>
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>Open Suggested Charts</value>
+  </data>
+  <data name="Open thread" xml:space="preserve">
+    <value>Open thread</value>
   </data>
   <data name="Open Video" xml:space="preserve">
     <value>Open Video</value>
@@ -5306,6 +5333,9 @@
   </data>
   <data name="Permissions" xml:space="preserve">
 	  <value>Permissions</value>
+  </data>
+  <data name="Personal Notes" xml:space="preserve">
+    <value>Personal Notes</value>
   </data>
   <data name="Personalized" xml:space="preserve">
     <value>Personalized</value>
@@ -5759,6 +5789,9 @@
   </data>
   <data name="Prevalence" xml:space="preserve">
     <value>Prevalence</value>
+  </data>
+  <data name="Previous comment" xml:space="preserve">
+    <value>Previous comment</value>
   </data>
   <data name="Previous Folder" xml:space="preserve">
     <value>Previous Folder</value>
@@ -7039,6 +7072,9 @@
   </data>
   <data name="Sign in to add them" xml:space="preserve">
     <value>Sign in to add them</value>
+  </data>
+  <data name="Sign in to comment on {0}" xml:space="preserve">
+    <value>Sign in to comment on {0}</value>
   </data>
   <data name="Sign in to continue" xml:space="preserve">
     <value>Sign in to continue</value>
@@ -8392,9 +8428,6 @@
     <value>You have {0} level {1} charts marked To Do that you haven't passed.</value>
     <comment>I.E You have 19 level 24 charts marked To Do you haven't passed</comment>
   </data>
-  <data name="Unplaced" xml:space="preserve">
-	  <value>Unplaced</value>
-  </data>
   <data name="Unplayed" xml:space="preserve">
     <value>Unplayed</value>
   </data>
@@ -9259,6 +9292,9 @@
   <data name="Your most recent session, in full" xml:space="preserve">
     <value>Your most recent session, in full</value>
   </data>
+  <data name="Your note" xml:space="preserve">
+    <value>Your note</value>
+  </data>
   <data name="Your peers' pools have nothing in them yet." xml:space="preserve">
     <value>Your peers' pools have nothing in them yet.</value>
   </data>
@@ -9873,6 +9909,9 @@
   </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board.</value>
+  </data>
+  <data name="{0} replies" xml:space="preserve">
+    <value>{0} replies</value>
   </data>
   <data name="{0} rivals" xml:space="preserve">
     <value>{0} rivals</value>

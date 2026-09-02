@@ -37,7 +37,10 @@
                     <span class="cmt-posting-as">@AudienceNote</span>
                 }
                 <MudSpacer></MudSpacer>
-                <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="Cancel">@L["Cancel"]</MudButton>
+                @if (ShowCancel)
+                {
+                    <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="Cancel">@L["Cancel"]</MudButton>
+                }
                 <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
                            Disabled="@(!CanSubmit)" data-testid="@($"{TestId}-submit")"
                            OnClick="Submit">@SubmitLabel</MudButton>
@@ -75,6 +78,12 @@
 
     /// <summary>A reply composer sits at the reply rail, under the comment it answers.</summary>
     [Parameter] public bool Reply { get; set; }
+
+    /// <summary>
+    ///     Off where the host already offers a way out — the step chart's panel carries a ✕ in
+    ///     its corner (docs/design/step-chart-comments D14), and a second exit is one too many.
+    /// </summary>
+    [Parameter] public bool ShowCancel { get; set; } = true;
 
     [Parameter] public string TestId { get; set; } = "comment-composer";
 

@@ -1,0 +1,986 @@
+@namespace ScoreTracker.Web.Components.ChartComments
+@using System.Globalization
+@using MediatR
+@using Microsoft.JSInterop
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.ChartComments.Contracts
+@using ScoreTracker.ChartComments.Contracts.Commands
+@using ScoreTracker.ChartComments.Contracts.Queries
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Contracts
+@implements IAsyncDisposable
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+
+@* The comment surface of the step chart (docs/design/step-chart-comments D4/D13): two pieces,
+   one component, every host. The BAR sits in flow under the section chips — the gesture line
+   and, when the chart has comments at all, the scope filter (D13/D18). The PANEL lies over the
+   bottom of the frame, from the strip to the whole-chart map (D16); step-chart.js positions it
+   from the geometry it owns, draws the marks, turns a double-click into a picked second, and
+   tells this component which comment sits nearest the viewport. Both live inside the strip's
+   root, which is how the module finds its strip.
+
+   The reader's whole loop for one comment fits in the panel: time chip, author, two lines that
+   unfold, the vote, the reply count, and Open thread — a tab switch in the dialog, the details
+   dialog on Comments from the page (D6). Double-click the strip and the same panel becomes the
+   composer for that second: the time chip, the scope chip (live), the ✕ (D14/D15). *@
+
+@if (CurrentUser.IsLoggedIn)
+{
+    <div class="sc-bar" data-testid="sc-bar">
+        <span class="sc-bar-note">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                <path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/>
+            </svg>
+            @* Both wordings render; CSS shows the one that matches the pointer, because the
+               server cannot know which hand is holding this. *@
+            <span class="sc-gesture-pointer">@L["Double-click a spot to leave a comment"]</span>
+            <span class="sc-gesture-touch">@L["Double-tap a spot to leave a comment"]</span>
+        </span>
+        @if (FilterScopes.Count > 0)
+        {
+            @* The filter (D18): only when the chart has comments at all, and listing only the
+               scopes that have some. *@
+            @ScopeChip("bar", FilterScopes)
+        }
+    </div>
+}
+<div class="sc-panel" @ref="_root" data-testid="sc-panel">
+    <LinkInterstitial Url="@_pendingLink" OnDismiss="() => _pendingLink = null"></LinkInterstitial>
+    @if (_pick is { } pick)
+    {
+        <div class="sc-panel-head">
+            <span class="sc-chip sc-chip-pick" data-testid="sc-pick"><i></i>@Second(pick)</span>
+            @if (CurrentUser.IsLoggedIn && _scopes.Count > 1)
+            {
+                @* Where the comment goes — every scope the reader can post to, since the first
+                   note has to be written somewhere (D18). *@
+                @ScopeChip("compose", _scopes)
+            }
+            @* The way out, in the corner the eye learned (D14). It replaces the foot's Cancel. *@
+            <button type="button" class="sc-x" aria-label="@L["Cancel"]" data-testid="sc-pick-cancel"
+                    @onclick="CancelPick">✕</button>
+        </div>
+        @if (!CurrentUser.IsLoggedIn)
+        {
+            @* Read-only for a signed-out reader, like the tab — the gesture still lands, and
+               says what it would take. *@
+            <div class="sc-signin" data-testid="sc-signin">
+                <a href="/Login">@L["Sign in to comment on {0}", Second(pick)]</a>
+            </div>
+        }
+        else if (!CanPostHere)
+        {
+            <div class="sc-signin" data-testid="sc-cannot-post">@L["You can't post here right now."]</div>
+        }
+        else if (_consent.NeedsAnything)
+        {
+            <CommentRulesCard NeedsTerms="_consent.NeedsTerms"
+                              NeedsPublicIdentityConsent="_consent.NeedsPublicIdentityConsent"
+                              OnAccepted="AcceptTerms"></CommentRulesCard>
+        }
+        else
+        {
+            <CommentComposer StartOpen="true" ShowAvatar="false" ShowCancel="false"
+                             Placeholder="@(IsNotes ? L["Note on {0}…", Second(pick)] : L["Comment on {0}…", Second(pick)])"
+                             SubmitLabel="@(IsNotes ? L["Save note"] : L["Comment"])" TestId="sc-composer"
+                             OnSubmit="Post" OnCancel="CancelPick"></CommentComposer>
+        }
+    }
+    else if (Current is not { } current)
+    {
+        @* One line (D17): the gesture lives in the bar now. *@
+        <div class="sc-empty" data-testid="sc-empty">@L["Nothing here yet."]</div>
+    }
+    else
+    {
+        <div class="sc-panel-head">
+            <button type="button" class="sc-step" disabled="@(!CanStep(-1))" aria-label="@L["Previous comment"]"
+                    data-testid="sc-prev" @onclick="() => Step(-1)">‹</button>
+            <button type="button" class="sc-step" disabled="@(!CanStep(1))" aria-label="@L["Next comment"]"
+                    data-testid="sc-next" @onclick="() => Step(1)">›</button>
+            <span class="sc-chip @(current.IsNote ? "sc-chip-you" : null)" data-testid="sc-second"><i></i>@Second(current.AnchorAt ?? 0m)</span>
+            @if (StackSize > 1)
+            {
+                <span class="sc-pager" data-testid="sc-pager">@StackIndex/@StackSize</span>
+            }
+            @if (current.IsNote)
+            {
+                <span class="sc-badge" data-testid="sc-note">@L["Only you"]</span>
+            }
+            else
+            {
+                <span class="sc-name">@current.AuthorName</span>
+            }
+            <span class="sc-meta sc-meta-head">@Ago(current.CreatedAt)</span>
+        </div>
+        <div class="sc-body @(_expanded ? "sc-body-full" : null)" data-testid="sc-body"
+             @onclick="() => _expanded = !_expanded">
+            <CommentTextView Body="current.Body" OnUntrustedLink="url => _pendingLink = url"></CommentTextView>
+        </div>
+        <div class="sc-foot">
+            @if (!current.IsNote)
+            {
+                <button type="button" class="sc-act @(current.ViewerVoted ? "sc-act-on" : null)"
+                        disabled="@(!CanVote(current))" aria-label="@L["Helpful"]" data-testid="sc-vote"
+                        @onclick="() => Vote(current)">▲ @current.Votes</button>
+                <span class="sc-meta" data-testid="sc-replies">· @RepliesText(current)</span>
+            }
+            <span class="sc-spacer"></span>
+            <a href="#" class="sc-thread" data-testid="sc-thread" @onclick="() => OpenThread(current)"
+               @onclick:preventDefault="true">@(OpensDialog ? L["Open thread"] : L["Open in Comments"]) ›</a>
+        </div>
+    }
+    @if (OpensDialog && _dialogChart != null)
+    {
+        @* The page has no comments of its own, so Open thread opens the one shared details
+           dialog on its Comments tab, focused — the /WeeklyCharts pattern of a static page
+           opening dialogs, and zero new surfaces (D6). *@
+        <ChartDetailsDialog Chart="_dialogChart" Mix="Mix" Visible="_dialogOpen"
+                            VisibleChanged="open => _dialogOpen = open"
+                            InitialTab="ChartDetailsDialog.DetailsTab.Comments"
+                            FocusCommentId="_focusId" InitialCommentAudience="_focusAudience"></ChartDetailsDialog>
+    }
+</div>
+
+<style>
+    /* The bar: in flow under the section chips, the gesture on the left, the scope on the right. */
+    .sc-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 10px;
+        min-height: 24px;
+    }
+
+    .sc-bar-note {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--mix-ink-muted);
+        font-size: .74rem;
+        min-width: 0;
+    }
+
+    .sc-bar-note svg {
+        width: 14px;
+        height: 14px;
+        flex: none;
+    }
+
+    .sc-gesture-touch {
+        display: none;
+    }
+
+    @@media (hover: none) {
+        .sc-gesture-pointer {
+            display: none;
+        }
+
+        .sc-gesture-touch {
+            display: inline;
+        }
+    }
+
+    /* The scope chip — a section chip's chrome with a glyph, and the menu it opens. No popover
+       provider is involved: the menu is markup under the chip, and a fixed transparent backdrop
+       closes it on a tap anywhere else. */
+    .sc-scope {
+        position: relative;
+        display: inline-block;
+    }
+
+    .sc-bar .sc-scope {
+        margin-left: auto;
+    }
+
+    .sc-scope-chip {
+        font: inherit;
+        font-size: .72rem;
+        font-weight: 500;
+        color: var(--mix-ink);
+        background: var(--mix-surface);
+        border: 1px solid rgba(255, 255, 255, .14);
+        border-radius: 999px;
+        padding: 2px 8px 2px 7px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        max-width: 100%;
+    }
+
+    .sc-scope-chip:hover {
+        border-color: var(--mix-ink-muted);
+    }
+
+    .sc-scope-chip svg {
+        width: 12px;
+        height: 12px;
+        flex: none;
+        color: var(--mix-ink-muted);
+    }
+
+    .sc-scope-chip-you svg {
+        color: var(--step-you);
+    }
+
+    .sc-scope-label {
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .sc-scope-chip .sc-car {
+        color: var(--mix-ink-muted);
+    }
+
+    .sc-scope-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 29;
+    }
+
+    .sc-scope-menu {
+        position: absolute;
+        left: 0;
+        top: calc(100% + 4px);
+        z-index: 30;
+        min-width: 170px;
+        background: var(--mix-bg);
+        border: 1px solid rgba(255, 255, 255, .14);
+        border-radius: 8px;
+        padding: 5px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, .55);
+    }
+
+    .sc-bar .sc-scope-menu {
+        left: auto;
+        right: 0;
+    }
+
+    .sc-scope-menu button {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-align: center;
+        font: inherit;
+        font-size: .8rem;
+        color: var(--mix-ink);
+        background: transparent;
+        border: none;
+        padding: 7px 9px;
+        border-radius: 6px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .sc-scope-menu button:hover {
+        background: var(--mix-surface-muted);
+    }
+
+    .sc-scope-menu button svg {
+        width: 12px;
+        height: 12px;
+        flex: none;
+        color: var(--mix-ink-muted);
+    }
+
+    .sc-scope-menu .sc-scope-on {
+        color: var(--mix-primary);
+    }
+
+    /* The panel: positioned by the module over the frame's bottom edge, strip to map (D16), and
+       invisible until it has been placed. The tab's .cmt-* styles are scoped to the tab, so
+       everything the panel needs is here, on the mix tokens the rest of the strip reads. */
+    .sc-panel {
+        position: absolute;
+        visibility: hidden;
+        z-index: 5;
+        background: color-mix(in srgb, var(--mix-bg) 95%, transparent);
+        border-top: 1px solid rgba(255, 255, 255, .16);
+        border-radius: 0 0 10px 10px;
+        padding: 8px 10px 9px;
+        font-size: .8rem;
+        color: var(--mix-ink);
+        box-shadow: 0 -8px 24px rgba(0, 0, 0, .35);
+        container-type: inline-size;
+    }
+
+    .sc-panel-placed {
+        visibility: visible;
+    }
+
+    .sc-panel-head {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        min-height: 24px;
+    }
+
+    .sc-step,
+    .sc-x {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, .14);
+        background: transparent;
+        color: var(--mix-ink-muted);
+        font: inherit;
+        font-size: 13px;
+        line-height: 1;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        flex: none;
+        padding: 0;
+    }
+
+    .sc-step:hover:not(:disabled),
+    .sc-x:hover {
+        color: var(--mix-ink);
+        border-color: var(--mix-ink-muted);
+    }
+
+    .sc-step:disabled {
+        opacity: .28;
+        cursor: default;
+    }
+
+    /* The corner the ＋ used to hold (D14). */
+    .sc-x {
+        margin-left: auto;
+        font-size: 12px;
+    }
+
+    .sc-chip {
+        font-size: .72rem;
+        font-weight: 500;
+        color: var(--mix-ink);
+        background: var(--mix-surface);
+        border: 1px solid rgba(255, 255, 255, .14);
+        border-radius: 999px;
+        padding: 2px 9px 2px 7px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        flex: none;
+    }
+
+    .sc-chip i {
+        width: 3px;
+        height: 11px;
+        border-radius: 2px;
+        background: var(--mix-ink-muted);
+    }
+
+    .sc-chip-you i {
+        background: var(--step-you);
+    }
+
+    .sc-chip-pick {
+        border-color: color-mix(in srgb, var(--mix-primary) 60%, transparent);
+        background: color-mix(in srgb, var(--mix-primary) 10%, transparent);
+    }
+
+    .sc-chip-pick i {
+        background: var(--mix-primary);
+    }
+
+    .sc-pager {
+        font-size: .7rem;
+        color: var(--mix-ink-muted);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .sc-name {
+        font-weight: 600;
+        font-size: .8rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+    }
+
+    .sc-meta {
+        font-size: .7rem;
+        color: var(--mix-ink-muted);
+        white-space: nowrap;
+    }
+
+    .sc-badge {
+        font-size: .62rem;
+        letter-spacing: .04em;
+        padding: 1px 7px;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, var(--step-you) 45%, transparent);
+        color: var(--step-you);
+        white-space: nowrap;
+    }
+
+    .sc-spacer {
+        flex: 1;
+    }
+
+    .sc-car {
+        font-size: .6em;
+    }
+
+    /* Two lines at rest, the whole thing on a tap; a 300-character URL must wrap here too. */
+    .sc-body {
+        margin-top: 5px;
+        font-size: .82rem;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        overflow-wrap: anywhere;
+        cursor: pointer;
+    }
+
+    .sc-body-full {
+        display: block;
+    }
+
+    .sc-body .cmt-link {
+        color: var(--mix-primary);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+
+    .sc-body .cmt-link-untrusted {
+        color: var(--mix-secondary);
+    }
+
+    .sc-body .cmt-link-untrusted::after {
+        content: " ⚠";
+        font-size: .85em;
+    }
+
+    .sc-foot {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 4px;
+        font-size: .74rem;
+        color: var(--mix-ink-muted);
+    }
+
+    .sc-act {
+        appearance: none;
+        background: none;
+        border: none;
+        font: inherit;
+        font-size: .74rem;
+        color: var(--mix-ink-muted);
+        padding: 2px 6px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .sc-act:hover:not(:disabled) {
+        background: var(--mix-surface-muted);
+        color: var(--mix-ink);
+    }
+
+    .sc-act-on {
+        color: var(--mix-accent);
+    }
+
+    .sc-act:disabled {
+        cursor: default;
+    }
+
+    .sc-thread {
+        color: var(--mix-primary);
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .sc-empty {
+        color: var(--mix-ink-muted);
+        min-height: 22px;
+        line-height: 1.35;
+    }
+
+    .sc-signin {
+        padding: 8px 0 4px;
+        color: var(--mix-ink-muted);
+    }
+
+    .sc-signin a {
+        color: var(--mix-primary);
+    }
+
+    /* The composer is the tab's line, restyled onto the strip's tokens. */
+    .sc-panel .cmt-compose {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+        align-items: start;
+        padding: 2px 0 0;
+    }
+
+    .sc-panel .cmt-compose-main {
+        min-width: 0;
+    }
+
+    .sc-panel .cmt-line {
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid rgba(255, 255, 255, .22);
+        background: none;
+        color: var(--mix-ink);
+        font: inherit;
+        font-size: .85rem;
+        padding: 5px 2px;
+        resize: none;
+        outline: none;
+    }
+
+    .sc-panel .cmt-line-open {
+        border-bottom-width: 2px;
+        border-bottom-color: var(--mix-primary);
+    }
+
+    .sc-panel .cmt-compose-foot {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 6px;
+    }
+
+    .sc-panel .cmt-count,
+    .sc-panel .cmt-posting-as {
+        font-size: .7rem;
+        color: var(--mix-ink-muted);
+    }
+
+    /* A narrow panel gives the age up first. */
+    @@container (max-width: 300px) {
+        .sc-panel .sc-meta-head {
+            display: none;
+        }
+    }
+</style>
+
+@code {
+    /// <summary>The sticky Read-in pick the tab keeps; the panel reads it so both surfaces agree.</summary>
+    private const string ReadInSettingKey = "Comments__ReadIn";
+
+    /// <summary>What the module gets to show on hover; the panel is where the whole text lives.</summary>
+    private const int ExcerptLength = 140;
+
+    private ElementReference _root;
+    private IJSObjectReference? _module;
+    private DotNetObjectReference<StepChartCommentPanel>? _self;
+    private bool _bound;
+    private bool _loaded;
+    private string? _preferredLocale;
+    private IReadOnlyList<CommentRecord> _marks = Array.Empty<CommentRecord>();
+    private IReadOnlyList<CommentScopeRecord> _scopes = Array.Empty<CommentScopeRecord>();
+    private IReadOnlyDictionary<CommentAudience, int> _counts = new Dictionary<CommentAudience, int>();
+    private CommentAudience _audience = CommentAudience.Public;
+    private CommentConsentRecord _consent = new(false, false);
+    private Guid? _cur;
+    private decimal? _pick;
+    private bool _expanded;
+    private string? _scopeOpen;
+    private string? _pendingLink;
+    private Chart? _dialogChart;
+    private bool _dialogOpen;
+    private Guid? _focusId;
+    private CommentAudience? _focusAudience;
+
+    [Parameter] [EditorRequired] public Guid ChartId { get; set; }
+
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    /// <summary>False while this sits behind a tab nobody selected: no reads, no binding.</summary>
+    [Parameter] public bool Active { get; set; } = true;
+
+    /// <summary>
+    ///     Page mode: Open thread opens the chart details dialog on its Comments tab, focused.
+    ///     Off, the host owns the thread and <see cref="OnOpenThread" /> says which comment.
+    /// </summary>
+    [Parameter] public bool OpensDialog { get; set; }
+
+    /// <summary>Dialog mode: the comment to focus, and the scope it lives in.</summary>
+    [Parameter] public EventCallback<(Guid CommentId, CommentAudience Audience)> OnOpenThread { get; set; }
+
+    private CommentRecord? Current => _cur is { } id ? _marks.FirstOrDefault(m => m.Id == id) : null;
+
+    private bool IsNotes => _audience.IsPrivate;
+
+    /// <summary>The comments sharing the current one's second — one bubble on the strip, paged here.</summary>
+    private IReadOnlyList<CommentRecord> Stack => Current is { } current
+        ? _marks.Where(m => m.AnchorAt == current.AnchorAt && m.IsNote == current.IsNote).ToArray()
+        : Array.Empty<CommentRecord>();
+
+    private int StackSize => Stack.Count;
+
+    private int StackIndex => Current is { } current ? Stack.ToList().FindIndex(m => m.Id == current.Id) + 1 : 0;
+
+    private string ScopeLabel =>
+        _scopes.FirstOrDefault(s => s.Audience == _audience) is { } scope ? LabelFor(scope) : L["Public"].Value;
+
+    /// <summary>The site's names for its own two scopes, localized; a club is called what it is called.</summary>
+    private string LabelFor(CommentScopeRecord scope)
+    {
+        return scope.Audience.IsPrivate ? L["Personal Notes"].Value
+            : scope.Audience.IsPublic ? L["Public"].Value
+            : scope.Label.ToString();
+    }
+
+    /// <summary>The scopes the filter lists (D18): the reader's own, minus those with nothing on this chart.</summary>
+    private IReadOnlyList<CommentScopeRecord> FilterScopes =>
+        _scopes.Where(s => CountOf(s.Audience) > 0).ToArray();
+
+    private int CountOf(CommentAudience audience)
+    {
+        return _counts.TryGetValue(audience, out var count) ? count : 0;
+    }
+
+    private bool CanPostHere => _scopes.FirstOrDefault(s => s.Audience == _audience)?.CanPost ?? true;
+
+    private bool CanVote(CommentRecord comment)
+    {
+        return CurrentUser.IsLoggedIn && !comment.IsNote && !comment.ViewerIsAuthor;
+    }
+
+    private int IndexOf(Guid? id)
+    {
+        for (var i = 0; i < _marks.Count; i++) if (_marks[i].Id == id) return i;
+        return -1;
+    }
+
+    private bool CanStep(int direction)
+    {
+        var index = IndexOf(_cur);
+        return index >= 0 && index + direction >= 0 && index + direction < _marks.Count;
+    }
+
+    private string RepliesText(CommentRecord comment)
+    {
+        return comment.Replies.Count switch
+        {
+            0 => L["No replies"],
+            1 => L["1 reply"],
+            var n => L["{0} replies", n]
+        };
+    }
+
+    private static string Second(decimal second)
+    {
+        var whole = (int)Math.Floor(second);
+        return $"{whole / 60}:{whole % 60:00}";
+    }
+
+    // Relative, like the row: "3 days ago" is what a reader wants from a conversation.
+    private string Ago(DateTimeOffset at)
+    {
+        var elapsed = DateTimeOffset.UtcNow - at;
+        if (elapsed < TimeSpan.FromMinutes(1)) return L["just now"];
+        if (elapsed < TimeSpan.FromHours(1)) return L["{0}m ago", (int)elapsed.TotalMinutes];
+        if (elapsed < TimeSpan.FromDays(1)) return L["{0}h ago", (int)elapsed.TotalHours];
+        if (elapsed < TimeSpan.FromDays(30)) return L["{0}d ago", (int)elapsed.TotalDays];
+
+        return at.ToString("yyyy-MM-dd");
+    }
+
+    private static string Excerpt(CommentRecord comment)
+    {
+        var text = string.Concat(comment.Body
+            .Where(span => span.Kind != CommentSpanKind.LineBreak)
+            .Select(span => span.Text));
+
+        return text.Length <= ExcerptLength ? text : text[..ExcerptLength].TrimEnd() + "…";
+    }
+
+    private string Tally(CommentRecord comment)
+    {
+        if (comment.IsNote) return string.Empty;
+        var tally = $"▲ {comment.Votes}";
+
+        return comment.Replies.Count > 0 ? $"{tally} · {RepliesText(comment)}" : tally;
+    }
+
+    // ----- the scope chip, shared by the bar and the composer (D13/D15) -----------------------
+
+    /// <summary>
+    ///     A section chip's chrome with the scope's glyph, and the same list the tab's rail
+    ///     offers under it. Its own markup rather than a popover: the menu is a child of the
+    ///     chip, a fixed transparent backdrop closes it on a tap anywhere else, and no provider
+    ///     is involved — which is what lets it render identically inside a static page's island
+    ///     and inside the dialog.
+    /// </summary>
+    private RenderFragment ScopeChip(string place, IReadOnlyList<CommentScopeRecord> scopes) =>
+        @<div class="sc-scope">
+            <button type="button" class="sc-scope-chip @(IsNotes ? "sc-scope-chip-you" : null)"
+                    data-testid="@($"sc-scope-{place}")" aria-haspopup="menu" aria-label="@L["Comments"]"
+                    aria-expanded="@((_scopeOpen == place).ToString().ToLowerInvariant())"
+                    @onclick="() => _scopeOpen = _scopeOpen == place ? null : place">
+                @ScopeGlyph(_audience)<span class="sc-scope-label">@ScopeLabel</span><span class="sc-car">▾</span>
+            </button>
+            @if (_scopeOpen == place)
+            {
+                <div class="sc-scope-backdrop" @onclick="() => _scopeOpen = null"></div>
+                <div class="sc-scope-menu" role="menu">
+                    @foreach (var scope in scopes)
+                    {
+                        var s = scope;
+                        <button type="button" role="menuitem" class="@(s.Audience == _audience ? "sc-scope-on" : null)"
+                                data-testid="@($"sc-scope-item-{s.Label}")" @onclick="() => SelectScope(s)">
+                            @ScopeGlyph(s.Audience)<span>@LabelFor(s)</span>
+                        </button>
+                    }
+                </div>
+            }
+        </div>;
+
+    private RenderFragment ScopeGlyph(CommentAudience audience)
+    {
+        return audience.IsPrivate ? _lockGlyph : audience.Kind == CommentAudienceKind.Community ? _peopleGlyph : _personGlyph;
+    }
+
+    private readonly RenderFragment _personGlyph =
+        @<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="5.5" r="2.6"/><path d="M2.8 13.5c.7-2.6 2.6-3.9 5.2-3.9s4.5 1.3 5.2 3.9"/></svg>;
+
+    private readonly RenderFragment _peopleGlyph =
+        @<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="5.5" cy="5.5" r="2.2"/><circle cx="11" cy="6" r="1.8"/><path d="M1.8 13c.6-2.3 2-3.4 3.7-3.4S8.6 10.7 9.2 13M9.6 12.6c.4-1.6 1.3-2.4 2.6-2.4s2.2.8 2.6 2.4"/></svg>;
+
+    private readonly RenderFragment _lockGlyph =
+        @<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Active || _loaded) return;
+        _loaded = true;
+
+        var stored = await UiSettings.GetSetting(ReadInSettingKey);
+        _preferredLocale = string.IsNullOrWhiteSpace(stored) ? null : stored;
+        if (CurrentUser.IsLoggedIn)
+        {
+            _scopes = await Mediator.Send(new GetMyCommentScopesQuery());
+            await LoadCounts();
+            // Open on the first scope that has something (D18) — Public when it does, since it
+            // heads the list; a chart with nothing anywhere stays on Public for the first post.
+            if (CountOf(_audience) == 0 && FilterScopes.Count > 0) _audience = FilterScopes[0].Audience;
+        }
+        await LoadMarks();
+    }
+
+    /// <summary>What the filter renders from (D18); read again after a post, when a quiet scope may have woken.</summary>
+    private async Task LoadCounts()
+    {
+        var counts = await Mediator.Send(new GetChartCommentScopeCountsQuery(ChartId));
+        _counts = (counts ?? Array.Empty<CommentScopeCountRecord>())
+            .ToDictionary(count => count.Audience, count => count.AnchoredComments);
+    }
+
+    /// <summary>
+    ///     Binds to the strip once it is active. The module waits for the strip's own mount, so
+    ///     the order the two components render in does not matter; a strip that never mounts
+    ///     (no timeline) answers false and the panel stays a plain list of nothing.
+    /// </summary>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!Active || _bound) return;
+        _bound = true;
+        _self = DotNetObjectReference.Create(this);
+        _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/step-chart.js");
+        if (_module == null) return;
+        if (await _module.InvokeAsync<bool>("bindPanel", _root, _self)) await PushMarks();
+    }
+
+    private async Task LoadMarks()
+    {
+        _consent = await Mediator.Send(new GetCommentConsentQuery(_audience));
+        // The reader's language is the request's culture, the sticky pick rides beside it —
+        // exactly the tab's read, so a comment reads the same in both places.
+        _marks = await Mediator.Send(new GetChartCommentMarksQuery(ChartId, _audience,
+            CultureInfo.CurrentUICulture.Name, _preferredLocale));
+        if (_cur != null && IndexOf(_cur) < 0) _cur = null;
+        // Something to show before the strip has said which is nearest; the follow rule corrects it.
+        if (_cur == null && _marks.Count > 0) _cur = _marks[0].Id;
+        await PushMarks();
+    }
+
+    /// <summary>The module's projection: geometry plus what its hover card shows, already localized.</summary>
+    private async Task PushMarks()
+    {
+        if (_module == null || !_bound) return;
+        var marks = _marks.Select(m => new
+        {
+            id = m.Id,
+            t = m.AnchorAt ?? 0m,
+            note = m.IsNote,
+            who = m.IsNote ? L["Your note"].Value : m.AuthorName?.ToString() ?? string.Empty,
+            ago = Ago(m.CreatedAt),
+            excerpt = Excerpt(m),
+            tally = Tally(m)
+        }).ToArray();
+        await _module.InvokeVoidAsync("setMarks", _root, marks);
+    }
+
+    // ----- the module's side of the seam -------------------------------------------------------
+
+    /// <summary>The comment nearest the viewport changed (D5).</summary>
+    [JSInvokable]
+    public Task OnFollow(Guid commentId)
+    {
+        if (_cur == commentId || IndexOf(commentId) < 0) return Task.CompletedTask;
+        _cur = commentId;
+        _expanded = false;
+
+        return InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>A mark was tapped.</summary>
+    [JSInvokable]
+    public Task OnSelect(Guid commentId)
+    {
+        return OnFollow(commentId);
+    }
+
+    /// <summary>A second was double-clicked: the panel becomes the composer for it (D2).</summary>
+    [JSInvokable]
+    public Task OnPick(decimal second)
+    {
+        _pick = second;
+        _scopeOpen = null;
+
+        return InvokeAsync(StateHasChanged);
+    }
+
+    // ----- actions -----------------------------------------------------------------------------
+
+    private async Task Step(int direction)
+    {
+        var index = IndexOf(_cur);
+        var next = index + direction;
+        if (index < 0 || next < 0 || next >= _marks.Count) return;
+        _cur = _marks[next].Id;
+        _expanded = false;
+        if (_module != null) await _module.InvokeVoidAsync("selectMark", _root, _cur);
+    }
+
+    private async Task CancelPick()
+    {
+        _pick = null;
+        _scopeOpen = null;
+        if (_module != null) await _module.InvokeVoidAsync("clearPick", _root);
+    }
+
+    private async Task Post(string text)
+    {
+        if (_pick is not { } second) return;
+        Guid id;
+        try
+        {
+            id = await Mediator.Send(new PostCommentCommand(ChartId, _audience, text, second));
+        }
+        catch (CommentNotAllowedException exception)
+        {
+            // A domain refusal is written to be read by a player; the message is the message.
+            Snackbar.Add(exception.Message, Severity.Warning);
+            return;
+        }
+
+        _pick = null;
+        await LoadMarks();
+        await LoadCounts();
+        _cur = id;
+        if (_module != null)
+        {
+            await _module.InvokeVoidAsync("clearPick", _root);
+            await _module.InvokeVoidAsync("selectMark", _root, id);
+        }
+    }
+
+    private async Task Vote(CommentRecord comment)
+    {
+        try
+        {
+            await Mediator.Send(new VoteOnCommentCommand(comment.Id, !comment.ViewerVoted));
+        }
+        catch (CommentNotAllowedException exception)
+        {
+            Snackbar.Add(exception.Message, Severity.Warning);
+            return;
+        }
+
+        await LoadMarks();
+    }
+
+    private async Task AcceptTerms(bool consentedToPublicIdentity)
+    {
+        await Mediator.Send(new AcceptCommentTermsCommand(consentedToPublicIdentity));
+        _consent = await Mediator.Send(new GetCommentConsentQuery(_audience));
+    }
+
+    /// <summary>
+    ///     One setting for the bar and the composer (D15): the strip reloads for the new scope,
+    ///     and a pick in progress stays — switching while writing changes where the comment goes.
+    /// </summary>
+    private async Task SelectScope(CommentScopeRecord scope)
+    {
+        _scopeOpen = null;
+        if (scope.Audience == _audience) return;
+        _audience = scope.Audience;
+        _cur = null;
+        _expanded = false;
+        await LoadMarks();
+    }
+
+    private async Task OpenThread(CommentRecord comment)
+    {
+        // A note lives in the Notes scope; a community comment in its club; public needs nothing.
+        var audience = comment.IsNote ? CommentAudience.Private : _audience;
+        if (!OpensDialog)
+        {
+            await OnOpenThread.InvokeAsync((comment.Id, audience));
+            return;
+        }
+
+        _dialogChart ??= (await Mediator.Send(new GetChartsQuery(Mix, ChartIds: new[] { ChartId }))).FirstOrDefault();
+        if (_dialogChart == null) return;
+        _focusId = comment.Id;
+        _focusAudience = audience.Kind == CommentAudienceKind.Public ? null : audience;
+        _dialogOpen = true;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_module != null)
+            {
+                await _module.InvokeVoidAsync("unbindPanel", _root);
+                await _module.DisposeAsync();
+            }
+        }
+        catch (JSException)
+        {
+            // The circuit is gone, or the element already is; either way there is nothing left
+            // to unbind, and a throw from here would take the circuit with it.
+        }
+
+        _self?.Dispose();
+    }
+}

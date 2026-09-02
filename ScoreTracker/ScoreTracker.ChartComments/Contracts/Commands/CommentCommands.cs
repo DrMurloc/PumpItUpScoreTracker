@@ -6,8 +6,14 @@ namespace ScoreTracker.ChartComments.Contracts.Commands;
 ///     Posts a root comment or a personal note. A reply uses <see cref="ReplyToCommentCommand" />,
 ///     which takes no audience at all — that is the invariant, expressed in the contract.
 /// </summary>
+/// <remarks>
+///     <paramref name="AnchorAt" /> is the second of the chart the comment points at
+///     (docs/design/step-chart-comments D1), already snapped to the nearest arrow row by the
+///     client that has the rows. Null is a comment about the whole chart.
+/// </remarks>
 [ExcludeFromCodeCoverage]
-public sealed record PostCommentCommand(Guid ChartId, CommentAudience Audience, string Text)
+public sealed record PostCommentCommand(Guid ChartId, CommentAudience Audience, string Text,
+    decimal? AnchorAt = null)
     : IRequest<Guid>;
 
 /// <summary>

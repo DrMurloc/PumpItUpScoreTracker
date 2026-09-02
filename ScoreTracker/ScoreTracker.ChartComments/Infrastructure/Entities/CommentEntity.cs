@@ -58,4 +58,12 @@ internal sealed class CommentEntity
     ///     for this table is hand-written rather than convention-resolved.
     /// </summary>
     public Guid? DeletedByUserId { get; set; }
+
+    /// <summary>
+    ///     The second of the chart the comment points at, or null for a comment about the whole
+    ///     chart (docs/design/step-chart-comments D1). Null on every reply — a reply reads its
+    ///     root's. Three decimals: the step payload's row times carry milliseconds.
+    /// </summary>
+    [Precision(9, 3)]
+    public decimal? AnchorAt { get; set; }
 }

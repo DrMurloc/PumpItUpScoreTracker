@@ -47,7 +47,8 @@ internal sealed class EFCommentArchiveRepository : ICommentArchiveRepository
             EditedAt = c.EditedAt,
             DeletedAt = c.DeletedAt,
             DeletedByUserId = c.DeletedByUserId,
-            ArchivedAt = now
+            ArchivedAt = now,
+            AnchorAt = c.AnchorAt
         }));
         await database.SaveChangesAsync(cancellationToken);
 

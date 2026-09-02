@@ -273,6 +273,44 @@ public sealed class ChartCommentsTabTests : TestContext
     }
 
     [Fact]
+    public async Task APublicHandoffReAimsATabStandingInNotes()
+    {
+        var page = Render();
+        await page.Find("[data-testid='cmt-scope-Notes']").ClickAsync(new MouseEventArgs());
+        Assert.Contains("cld-chip-on", page.Find("[data-testid='cmt-scope-Notes']").ClassName);
+
+        // The strip's Open thread on a public mark, with the tab left standing in Notes.
+        page.SetParametersAndRender(p => p
+            .Add(c => c.InitialAudience, CommentAudience.Public)
+            .Add(c => c.FocusCommentId, Guid.NewGuid())
+            .Add(c => c.FocusRequest, 1));
+
+        page.WaitForAssertion(() =>
+            Assert.Contains("cld-chip-on", page.Find("[data-testid='cmt-scope-Public']").ClassName));
+    }
+
+    [Fact]
+    public async Task TheSameScopeHandedOverAgainReAimsTheTab()
+    {
+        var page = RenderComponent<ChartCommentsTab>(p => p
+            .Add(c => c.ChartId, Chart)
+            .Add(c => c.Active, true)
+            .Add(c => c.FocusCommentId, Guid.NewGuid())
+            .Add(c => c.InitialAudience, CommentAudience.Community(Club))
+            .Add(c => c.FocusRequest, 1));
+        page.WaitForAssertion(() =>
+            Assert.Contains("cld-chip-on", page.Find("[data-testid='cmt-scope-Murloc Lab']").ClassName));
+        await page.Find("[data-testid='cmt-scope-Public']").ClickAsync(new MouseEventArgs());
+        Assert.Contains("cld-chip-on", page.Find("[data-testid='cmt-scope-Public']").ClassName);
+
+        // Open thread on another comment in the same club: the same values, a new ask.
+        page.SetParametersAndRender(p => p.Add(c => c.FocusRequest, 2));
+
+        page.WaitForAssertion(() =>
+            Assert.Contains("cld-chip-on", page.Find("[data-testid='cmt-scope-Murloc Lab']").ClassName));
+    }
+
+    [Fact]
     public void TheSiteAdminHandedAForeignClubGetsAReadOnlyModeratorChip()
     {
         // /Admin/Comments opens the site admin into a club they may not belong to. The rail has
@@ -548,5 +586,33 @@ public sealed class ChartCommentsTabTests : TestContext
         {
             return Array.Empty<LocalizedString>();
         }
+    }
+
+    // ----- the time chip (docs/design/step-chart-comments §3) ----------------------------------
+
+    [Fact]
+    public async Task ARootThatPointsAtASecondWearsTheChipAndTheChipAimsTheStrip()
+    {
+        Page(Comment("This quad is a bracket.") with { AnchorAt = 33.45m }, Comment("Great chart."));
+        decimal? aimed = null;
+        var page = RenderComponent<ChartCommentsTab>(p => p.Add(c => c.ChartId, Chart).Add(c => c.Active, true)
+            .Add(c => c.OnAnchorClick, EventCallback.Factory.Create<decimal>(this, second => aimed = second)));
+
+        var chip = Assert.Single(page.FindAll("[data-testid^='anchor-']"));
+        Assert.Equal("0:33", chip.TextContent.Trim());
+
+        await chip.ClickAsync(new MouseEventArgs());
+
+        Assert.Equal(33.45m, aimed);
+    }
+
+    [Fact]
+    public void WithoutAStripToAimTheChipIsALabel()
+    {
+        Page(Comment("This quad is a bracket.") with { AnchorAt = 33.45m });
+
+        var chip = Assert.Single(Render().FindAll("[data-testid^='anchor-']"));
+
+        Assert.Equal("span", chip.TagName.ToLowerInvariant());
     }
 }

@@ -103,8 +103,10 @@
                        means one thing: this tab is here because of who is looking at it. *@
                     <ChartCommentsTab ChartId="ViewChart.Id" Active="IsLive(DetailsTab.Comments)"
                                       AdminPreview="@(!Comments.Value.Enabled)"
-                                      FocusCommentId="@(IsDrilled ? null : FocusCommentId)"
-                                      InitialAudience="@(IsDrilled ? null : InitialCommentAudience)"
+                                      FocusCommentId="@(IsDrilled ? null : _stripFocus ?? FocusCommentId)"
+                                      InitialAudience="@(IsDrilled ? null : _stripAudience ?? InitialCommentAudience)"
+                                      FocusRequest="_stripRequest"
+                                      OnAnchorClick="@(_stepChart != null ? EventCallback.Factory.Create<decimal>(this, SelectSecondOnStrip) : default)"
                                       @key="(ViewChart.Id, nameof(ChartCommentsTab))"></ChartCommentsTab>
                 </div>
             }
@@ -138,6 +140,8 @@
                     <ChartStepsTab Chart="ViewChart" Mix="Mix"
                                    Visibility="@_stepChart.Visibility.ToString()"
                                    Active="IsLive(DetailsTab.Steps)"
+                                   CommentsVisible="CommentsVisible" OnOpenThread="OpenThreadFromStrip"
+                                   @ref="_stepsTab"
                                    @key="(ViewChart.Id, nameof(ChartStepsTab))"></ChartStepsTab>
                 </div>
             }
@@ -322,6 +326,10 @@
     private Chart? _videoPartner;
     private DetailsTab _tab = DetailsTab.Leaderboard;
     private DetailsTab? _remembered;
+    private ChartStepsTab? _stepsTab;
+    private Guid? _stripFocus;
+    private CommentAudience? _stripAudience;
+    private int _stripRequest;
     private bool _wasVisible;
     private Guid _anchorId = Guid.Empty;
     private Chart? _drilled;
@@ -492,6 +500,7 @@
             // reason — reopening from a row starts at the chart that row names.
             _wasVisible = false;
             _drilled = null;
+            ClearStripHandoff();
             return;
         }
 
@@ -507,6 +516,7 @@
         {
             _anchorId = Chart.Id;
             _drilled = null;
+            ClearStripHandoff();
         }
 
         // The mix is part of the guard: the partner's caption label comes from the selected
@@ -570,6 +580,43 @@
 
         // A remembered History from a previous session is not a tab an anonymous visitor has.
         if (!AvailableTabs.Contains(_tab)) _tab = DetailsTab.Leaderboard;
+    }
+
+    /// <summary>
+    ///     Open thread from the strip's panel: the thread lives on the Comments tab, so the
+    ///     dialog switches there standing in the comment's scope, with it focused
+    ///     (docs/design/step-chart-comments D6) — the moderation queue's own path.
+    /// </summary>
+    private async Task OpenThreadFromStrip((Guid CommentId, CommentAudience Audience) target)
+    {
+        _stripFocus = target.CommentId;
+        // Public rides along too: the tab may be standing in Notes or a club from earlier.
+        _stripAudience = target.Audience;
+        _stripRequest++;
+        await SelectTab(DetailsTab.Comments);
+    }
+
+    /// <summary>
+    ///     A handoff is scoped to one opening of one chart: the dialog instance outlives both on
+    ///     the grid and the dashboard, and a stale target would open the next chart standing in
+    ///     the wrong scope with a focus-sized page.
+    /// </summary>
+    private void ClearStripHandoff()
+    {
+        _stripFocus = null;
+        _stripAudience = null;
+    }
+
+    /// <summary>
+    ///     A time chip in the Comments tab: the strip lands on that second (step-chart-comments
+    ///     §3). Wired only while a Steps tab exists, so a chart with no banked timeline shows the
+    ///     chips as labels.
+    /// </summary>
+    private async Task SelectSecondOnStrip(decimal second)
+    {
+        if (_stepChart == null) return;
+        await SelectTab(DetailsTab.Steps);
+        if (_stepsTab != null) await _stepsTab.SelectSecond(second);
     }
 
     private Task Close()

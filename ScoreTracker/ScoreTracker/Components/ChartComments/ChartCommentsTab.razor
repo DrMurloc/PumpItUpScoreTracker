@@ -146,7 +146,7 @@ else
                         OnRemove="AskToRemove" OnConfirm="Confirmed" OnCancelConfirm="() => _confirming = null"
                         OnReport="StartReport" OnReportSubmit="SubmitReport"
                         OnCancelReport="() => _reporting = null"
-                        OnUntrustedLink="ShowInterstitial" @key="root.Id"></CommentRow>
+                        OnUntrustedLink="ShowInterstitial" OnAnchorClick="OnAnchorClick" @key="root.Id"></CommentRow>
         }
         @if (_replyingTo == root.Id)
         {
@@ -385,6 +385,43 @@ else
         color: var(--mud-palette-text-secondary);
     }
 
+    /* The second a comment points at — a section chip's chrome with a short bar for a dot. */
+    .cmt-anchor {
+        margin: 1px 0 6px;
+    }
+
+    .cmt-anchor-chip {
+        appearance: none;
+        font: inherit;
+        font-size: .72rem;
+        font-weight: 500;
+        color: var(--mud-palette-text-primary);
+        background: var(--mud-palette-surface);
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 999px;
+        padding: 2px 9px 2px 7px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .cmt-anchor-chip i {
+        width: 3px;
+        height: 11px;
+        border-radius: 2px;
+        background: var(--mud-palette-text-secondary);
+    }
+
+    .cmt-anchor-chip:hover {
+        border-color: var(--mud-palette-text-secondary);
+    }
+
+    .cmt-anchor-chip-still {
+        cursor: default;
+    }
+
     /* A 500-character comment can be one 300-character URL. Without this it decides the
        dialog's width and the whole thing scrolls sideways on a phone. */
     .cmt-body {
@@ -528,7 +565,7 @@ else
     // moderation-only and must land.
     private const int FocusTake = 500;
 
-    private bool _initialScopeApplied;
+    private (int Request, CommentAudience? Audience, Guid? Focus)? _applied;
 
     private CommentPageRecord _page = new(Array.Empty<CommentRecord>(), 0, false);
     private IReadOnlyList<CommentScopeRecord> _scopes = Array.Empty<CommentScopeRecord>();
@@ -569,6 +606,20 @@ else
     ///     the tab would open on Public, where the focused comment is not.
     /// </summary>
     [Parameter] public CommentAudience? InitialAudience { get; set; }
+
+    /// <summary>
+    ///     Counts the host's handoffs. The strip's panel hands over a target each time Open
+    ///     thread is tapped, and the same comment or the same scope twice is still a new ask —
+    ///     the reader may have walked the rail elsewhere in between — so the tab re-aims when
+    ///     this changes, not only when the values do.
+    /// </summary>
+    [Parameter] public int FocusRequest { get; set; }
+
+    /// <summary>
+    ///     A root's time chip was tapped (docs/design/step-chart-comments §3). The dialog wires
+    ///     this only when a Steps tab exists to land on; unwired, the chips are labels.
+    /// </summary>
+    [Parameter] public EventCallback<decimal> OnAnchorClick { get; set; }
 
     private string? _pendingLink;
 
@@ -689,10 +740,20 @@ else
     protected override async Task OnParametersSetAsync()
     {
         if (!Active) return;
-        if (!_initialScopeApplied)
+        // The moderation queue and the strip's panel both arrive with a comment to stand on. A
+        // later arrival re-aims the tab rather than being ignored because an earlier one was
+        // applied — the same instance serves the dialog for as long as it is open — and so
+        // does the same target asked for again, which is what the request number carries.
+        var handoff = (FocusRequest, InitialAudience, FocusCommentId);
+        if (handoff != _applied)
         {
-            _initialScopeApplied = true;
-            if (InitialAudience is { } initial) _audience = initial;
+            _applied = handoff;
+            if (InitialAudience is { } initial)
+            {
+                _audience = initial;
+                _replyingTo = null;
+            }
+
             // A focus target must be on the first page or the anchor marks nothing.
             if (FocusCommentId != null) _take = FocusTake;
         }

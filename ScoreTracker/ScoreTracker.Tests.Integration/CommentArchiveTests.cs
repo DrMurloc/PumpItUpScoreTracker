@@ -46,7 +46,7 @@ public sealed class CommentArchiveTests : IAsyncLifetime
     {
         // The doomed club: a root with a reply, a vote, a revision, one resolved and one open
         // report, and a mute.
-        var root = Comment.Post(Chart, _author, CommentAudience.Community(DoomedClub), "the words", Now);
+        var root = Comment.Post(Chart, _author, CommentAudience.Community(DoomedClub), "the words", Now, 41.5m);
         await Comments.Save(root);
         var reply = Comment.Reply(root, _replier, "the answer", Now);
         await Comments.Save(reply);
@@ -86,6 +86,8 @@ public sealed class CommentArchiveTests : IAsyncLifetime
             Assert.Equal(Now.AddHours(1), row.ArchivedAt);
         });
         Assert.Contains(archived, row => row.Id == root.Id && row.Text == "the words");
+        // The second rides along: a revived club's comments keep their spots.
+        Assert.Contains(archived, row => row.Id == root.Id && row.AnchorAt == 41.5m);
         Assert.Contains(archived, row => row.Id == reply.Id && row.ParentCommentId == root.Id);
 
         // Everything that only meant something while the club lived is gone — including the

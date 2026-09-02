@@ -575,7 +575,9 @@ signed in.
 
 - **A notification system.** Owner, explicit. Accepted consequence: a reply three days later is a
   reply the asker never sees.
-- **Comments on the chart page** (`/Charts/{mix}/{song}/{difficulty}`). Dialog only for v1. The page
+- **Comments on the chart page** (`/Charts/{mix}/{song}/{difficulty}`). Dialog only for v1 — amended by the
+  [step-chart comments](../step-chart-comments/README.md) slice, whose sticky panel under the step chart is the
+  page's first comment surface (anchored comments only; *Open thread* opens this dialog). The page
   is static SSR and would need a second render path; public comments there would be strong
   crawlable content, so this is a likely follow-up rather than a rejection.
 - **Cross-chart comment history for moderators.** Owner: avoid the surveillance UX problem for now.

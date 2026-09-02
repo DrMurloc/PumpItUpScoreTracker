@@ -271,6 +271,9 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>1 compte privé est un pair mais n'est pas affiché.</value>
   </data>
+  <data name="1 reply" xml:space="preserve">
+    <value>1 réponse</value>
+  </data>
   <data name="1 title" xml:space="preserve">
     <value>1 titre</value>
   </data>
@@ -1587,6 +1590,9 @@
   <data name="Comment from a deleted user" xml:space="preserve">
     <value>Commentaire d’un compte supprimé</value>
   </data>
+  <data name="Comment on {0}…" xml:space="preserve">
+    <value>Commenter à {0}…</value>
+  </data>
   <data name="Comments" xml:space="preserve">
     <value>Commentaires</value>
   </data>
@@ -2227,6 +2233,12 @@
   </data>
   <data name="Double Performance" xml:space="preserve">
     <value>Double Performance</value>
+  </data>
+  <data name="Double-click a spot to leave a comment" xml:space="preserve">
+    <value>Double-cliquez sur un point pour laisser un commentaire</value>
+  </data>
+  <data name="Double-tap a spot to leave a comment" xml:space="preserve">
+    <value>Touchez deux fois un point pour laisser un commentaire</value>
   </data>
   <data name="Doubles" xml:space="preserve">
     <value>Doubles</value>
@@ -4359,6 +4371,9 @@
   <data name="next best candidate {0}" xml:space="preserve">
     <value>candidat suivant {0}</value>
   </data>
+  <data name="Next comment" xml:space="preserve">
+    <value>Commentaire suivant</value>
+  </data>
   <data name="Next Folder" xml:space="preserve">
     <value>Dossier suivant</value>
   </data>
@@ -4478,6 +4493,9 @@
   </data>
   <data name="No Recorded Scores" xml:space="preserve">
     <value>Aucun score enregistré</value>
+  </data>
+  <data name="No replies" xml:space="preserve">
+    <value>Aucune réponse</value>
   </data>
   <data name="No rivals yet" xml:space="preserve">
     <value>Pas encore de rivaux</value>
@@ -4719,6 +4737,9 @@
   </data>
   <data name="Note Counts" xml:space="preserve">
     <value>Nombres de notes</value>
+  </data>
+  <data name="Note on {0}…" xml:space="preserve">
+    <value>Note à {0}…</value>
   </data>
   <data name="Note — where did you share this?" xml:space="preserve">
     <value>Note — où avez-vous partagé ceci ?</value>
@@ -5077,11 +5098,17 @@
   <data name="Open Community" xml:space="preserve">
     <value>Ouvrir la communauté</value>
   </data>
+  <data name="Open in Comments" xml:space="preserve">
+    <value>Ouvrir dans Commentaires</value>
+  </data>
   <data name="Open in the Score Calculator" xml:space="preserve">
     <value>Ouvrir dans le calculateur de score</value>
   </data>
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>Ouvrir les charts suggérés</value>
+  </data>
+  <data name="Open thread" xml:space="preserve">
+    <value>Ouvrir le fil</value>
   </data>
   <data name="Open Video" xml:space="preserve">
     <value>Ouvrir Vidéo</value>
@@ -5305,6 +5332,9 @@
   </data>
   <data name="Permissions" xml:space="preserve">
     <value>Permissions</value>
+  </data>
+  <data name="Personal Notes" xml:space="preserve">
+    <value>Notes personnelles</value>
   </data>
   <data name="Personalized" xml:space="preserve">
     <value>Personnalisé</value>
@@ -5758,6 +5788,9 @@
   </data>
   <data name="Prevalence" xml:space="preserve">
     <value>Prévalence</value>
+  </data>
+  <data name="Previous comment" xml:space="preserve">
+    <value>Commentaire précédent</value>
   </data>
   <data name="Previous Folder" xml:space="preserve">
     <value>Dossier précédent</value>
@@ -7038,6 +7071,9 @@
   </data>
   <data name="Sign in to add them" xml:space="preserve">
     <value>Connectez-vous pour l'ajouter</value>
+  </data>
+  <data name="Sign in to comment on {0}" xml:space="preserve">
+    <value>Connectez-vous pour commenter à {0}</value>
   </data>
   <data name="Sign in to continue" xml:space="preserve">
     <value>Connectez-vous pour continuer</value>
@@ -8391,9 +8427,6 @@
     <value>Vous avez {0} charts de niveau {1} dans votre ToDo list que vous n'avez pas Pass.</value>
     <comment>par exemple, voius avez 19 charts de niveau 24 dans votre ToDo list que vous n'avez pas Pass</comment>
   </data>
-  <data name="Unplaced" xml:space="preserve">
-	  <value>Non placés</value>
-  </data>
   <data name="Unplayed" xml:space="preserve">
     <value>Non joué</value>
   </data>
@@ -9258,6 +9291,9 @@
   <data name="Your most recent session, in full" xml:space="preserve">
     <value>Ta session la plus récente, en détail</value>
   </data>
+  <data name="Your note" xml:space="preserve">
+    <value>Votre note</value>
+  </data>
   <data name="Your peers' pools have nothing in them yet." xml:space="preserve">
     <value>Les ensembles de tes pairs n'ont encore rien.</value>
   </data>
@@ -9872,6 +9908,9 @@
   </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>{0} charts défis Pump It Up cette semaine, un chart quotidien avec classements en direct, et le tableau mensuel PUMBILITY.</value>
+  </data>
+  <data name="{0} replies" xml:space="preserve">
+    <value>{0} réponses</value>
   </data>
   <data name="{0} rivals" xml:space="preserve">
     <value>{0} rivaux</value>

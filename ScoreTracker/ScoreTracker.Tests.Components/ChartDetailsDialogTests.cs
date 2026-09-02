@@ -8,11 +8,15 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
 using Moq;
 using MudBlazor;
 using MudBlazor.Services;
 using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartComments.Contracts;
+using ScoreTracker.ChartComments.Contracts.Queries;
+using ScoreTracker.Web.Configuration;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Models;
@@ -41,6 +45,12 @@ public sealed class ChartDetailsDialogTests : TestContext
     private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IAdminNotificationClient> _notifications = new();
     private readonly Mock<IUiSettingsAccessor> _uiSettings = new();
+
+    /// <summary>
+    ///     The comment launch gate, registered as a live instance so a test can flip it after
+    ///     the constructor has locked the service collection.
+    /// </summary>
+    private readonly ChartCommentsConfiguration _comments = new();
 
     public ChartDetailsDialogTests()
     {
@@ -86,6 +96,7 @@ public sealed class ChartDetailsDialogTests : TestContext
         localizer.Setup(l => l[It.IsAny<string>(), It.IsAny<object[]>()])
             .Returns((string key, object[] args) => new LocalizedString(key, string.Format(key, args)));
         Services.AddSingleton(localizer.Object);
+        Services.AddSingleton<IOptions<ChartCommentsConfiguration>>(Options.Create(_comments));
         // Last: it reads the renderer, locking the service collection. The dialog renders on
         // its interactive path (RendererInfo gates the nested bubble's tooltip).
         this.RenderInteractive();
@@ -451,5 +462,113 @@ public sealed class ChartDetailsDialogTests : TestContext
         // The dialog carries the whole-chart minimap too (owner, 2026-08-31) — it rides the
         // dead space right of the rail at compact sizes.
         Assert.Single(cut.FindAll(".stepchart-minicol"));
+    }
+
+    // ----- step-chart comments (docs/design/step-chart-comments D4/D6) --------------------------
+
+    /// <summary>Flips the launch gate and answers the reads the panel and the Comments tab issue.</summary>
+    private void CommentsOn(params CommentRecord[] anchored)
+    {
+        _comments.Enabled = true;
+        _mediator.Setup(m => m.Send(It.IsAny<GetCommentConsentQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CommentConsentRecord(false, false));
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartCommentMarksQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(anchored);
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartCommentsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CommentPageRecord(anchored, anchored.Length, false));
+    }
+
+    private static CommentRecord Anchored(decimal second)
+    {
+        return new CommentRecord(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Name.From("JUNO"), Name.From("KR"),
+            null, new[] { CommentSpan.OfText("This quad is a bracket.") }, 6, false, false, false,
+            DateTimeOffset.UtcNow, null, null, Array.Empty<CommentRecord>(), null, second);
+    }
+
+    [Fact]
+    public async Task TheStepsTabHostsTheCommentPanelWhenCommentsAreOn()
+    {
+        CommentsOn();
+        SetupStepChart();
+        var cut = RenderDialog(SetupChart(null));
+
+        await cut.Find("[data-testid=cdt-tab-Steps]").ClickAsync(new MouseEventArgs());
+
+        Assert.Single(cut.FindAll("[data-testid=sc-panel]"));
+    }
+
+    [Fact]
+    public async Task WithCommentsOffTheStepsTabCarriesNoPanel()
+    {
+        SetupStepChart();
+        var cut = RenderDialog(SetupChart(null));
+
+        await cut.Find("[data-testid=cdt-tab-Steps]").ClickAsync(new MouseEventArgs());
+
+        Assert.Empty(cut.FindAll("[data-testid=sc-panel]"));
+    }
+
+    [Fact]
+    public async Task OpenThreadFromTheStripLandsOnTheCommentsTabFocused()
+    {
+        var comment = Anchored(33.45m);
+        CommentsOn(comment);
+        SetupStepChart();
+        var cut = RenderDialog(SetupChart(null));
+        await cut.Find("[data-testid=cdt-tab-Steps]").ClickAsync(new MouseEventArgs());
+
+        await cut.Find("[data-testid=sc-thread]").ClickAsync(new MouseEventArgs());
+
+        Assert.Equal("true", cut.Find("[data-testid=cdt-tab-Comments]").GetAttribute("aria-selected"));
+        Assert.Single(cut.FindAll($"#comment-{comment.Id}.cmt-focused"));
+    }
+
+    [Fact]
+    public async Task AStripHandoffDoesNotOutliveTheOpening()
+    {
+        var comment = Anchored(33.45m);
+        CommentsOn(comment);
+        SetupStepChart();
+        var cut = RenderDialog(SetupChart(null));
+        await cut.Find("[data-testid=cdt-tab-Steps]").ClickAsync(new MouseEventArgs());
+        await cut.Find("[data-testid=sc-thread]").ClickAsync(new MouseEventArgs());
+        cut.WaitForAssertion(() => _mediator.Verify(m => m.Send(It.Is<GetChartCommentsQuery>(q => q.TakeRoots == 500),
+            It.IsAny<CancellationToken>()), Times.Once));
+
+        // Close, reopen the same instance, walk to Comments: the grid's and the dashboard's path.
+        var dialog = cut.FindComponent<ChartDetailsDialog>();
+        dialog.SetParametersAndRender(p => p.Add(c => c.Visible, false));
+        dialog.SetParametersAndRender(p => p.Add(c => c.Visible, true));
+        await cut.Find("[data-testid=cdt-tab-Comments]").ClickAsync(new MouseEventArgs());
+
+        // An ordinary first page, nothing focused: the earlier handoff stayed in its opening.
+        cut.WaitForAssertion(() => _mediator.Verify(m => m.Send(It.Is<GetChartCommentsQuery>(q => q.TakeRoots < 500),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce));
+        _mediator.Verify(m => m.Send(It.Is<GetChartCommentsQuery>(q => q.TakeRoots == 500), It.IsAny<CancellationToken>()),
+            Times.Once);
+        Assert.Empty(cut.FindAll(".cmt-focused"));
+    }
+
+    [Fact]
+    public async Task ATimeChipInTheCommentsTabLandsOnTheStepsTab()
+    {
+        var comment = Anchored(33.45m);
+        CommentsOn(comment);
+        SetupStepChart();
+        var cut = RenderDialog(SetupChart(null), ChartDetailsDialog.DetailsTab.Comments);
+
+        await cut.Find($"[data-testid=anchor-{comment.Id}]").ClickAsync(new MouseEventArgs());
+
+        Assert.Equal("true", cut.Find("[data-testid=cdt-tab-Steps]").GetAttribute("aria-selected"));
+    }
+
+    [Fact]
+    public void WithoutABankedTimelineTheChipIsALabel()
+    {
+        var comment = Anchored(33.45m);
+        CommentsOn(comment);
+        var cut = RenderDialog(SetupChart(null), ChartDetailsDialog.DetailsTab.Comments);
+
+        Assert.Equal("span", cut.Find($"[data-testid=anchor-{comment.Id}]").TagName.ToLowerInvariant());
     }
 }
