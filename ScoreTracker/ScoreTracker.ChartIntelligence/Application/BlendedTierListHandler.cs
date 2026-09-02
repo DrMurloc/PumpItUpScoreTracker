@@ -24,10 +24,9 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
 
     public BlendedTierListHandler(IMediator mediator, IChartRepository charts,
         ICurrentUserAccessor currentUser, IMemoryCache cache, IScoreProjector projector,
-        ITierListRepository tierLists, ITitleRepository titles, IPlayerStatsReader playerStats,
-        IScoreReader scores)
+        ITierListRepository tierLists, ITitleRepository titles, IScoreReader scores)
     {
-        _builder = new TierListBlendBuilder(mediator, charts, projector, tierLists, titles, playerStats, scores);
+        _builder = new TierListBlendBuilder(mediator, charts, projector, tierLists, titles, scores);
         _currentUser = currentUser;
         _cache = cache;
     }

@@ -15,6 +15,7 @@ using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -100,9 +101,37 @@ public sealed partial class PumbilityProjectionSagaTests
             CancellationToken.None);
 
         Assert.Contains(far.Id, result.ExpectedScores.Keys);
+        // The default read is the median (D54): the middle of five voices at 900k..904k.
         Assert.Equal(902_000, (int)result.ExpectedScores[far.Id]);
         ctx.Mediator.Verify(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    [Fact]
+    public async Task AnEnergyReadsAnotherRungOffTheSameSweep()
+    {
+        // D51: the sweep holds every rung the chip can ask for, so Good, Great and Top of my game
+        // are three prices of one read — the band is drawn once, and the estimate moves from the
+        // first quartile to the median to the third.
+        var ctx = new ProjectionContext(20).WithPhoenix2Pool(50, 17_500)
+            .WithChart(out var chart, ChartType.Single, 22);
+        foreach (var score in new[] { 940_000, 962_000, 975_000, 985_000, 990_000 })
+            ctx.WithPumbilityPeer(chart, phoenix2Score: score);
+
+        var good = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2, null, Energy.Good),
+            CancellationToken.None);
+        var great = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+        var top = await ctx.Saga.Handle(
+            new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2, null, Energy.TopOfMyGame), CancellationToken.None);
+
+        Assert.Equal(956_500, (int)good.ExpectedScores[chart.Id]);
+        Assert.Equal(975_000, (int)great.ExpectedScores[chart.Id]);
+        Assert.Equal(986_250, (int)top.ExpectedScores[chart.Id]);
+        Assert.True(good.ProjectedGains[chart.Id] < great.ProjectedGains[chart.Id]);
+        Assert.True(great.ProjectedGains[chart.Id] < top.ProjectedGains[chart.Id]);
+        ctx.Stats.Verify(s => s.GetPlayersByPoolOfType(MixEnum.Phoenix2, It.IsAny<ChartType>(), It.IsAny<double>(), It.IsAny<double>(),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -121,8 +150,9 @@ public sealed partial class PumbilityProjectionSagaTests
             CancellationToken.None);
 
         var singles = result.Peers![ChartType.Single];
-        Assert.Equal(PeerGroupKind.PumbilityBand, singles.Kind);
-        Assert.Equal(24, singles.Center); // 17,609.59 is DIAMOND LV.4
+        Assert.Equal(PeerGroupKind.PumbilityPeers, singles.Kind);
+        Assert.Equal(17_609.59, singles.Center); // the viewer's singles pool, off their stats row (D53)
+        Assert.False(singles.PlacedByEstimate);
         Assert.Equal(6, singles.Size);
         Assert.True(singles.IsLit);
         var doubles = result.Peers[ChartType.Double];
@@ -408,6 +438,8 @@ public sealed partial class PumbilityProjectionSagaTests
     [Fact]
     public async Task APhoenix2ProjectionIsTheMedianOfFiveOrMorePumbilityPeers()
     {
+        // D54: the default read is the peers' median — the middle of five equal voices — not their
+        // mean, which the tail of weak passes drags down.
         var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_500)
             .WithChart(out var chart, ChartType.Single, 20);
         foreach (var score in new[] { 940_000, 985_000, 962_000, 990_000, 975_000 })
@@ -417,26 +449,6 @@ public sealed partial class PumbilityProjectionSagaTests
             CancellationToken.None);
 
         Assert.Equal(975_000, (int)result.ExpectedScores[chart.Id]);
-    }
-
-    [Fact]
-    public async Task ThePeersIqrRidesAlongWithTheMedianItBrackets()
-    {
-        // D30: the same five voices the median was read from, at the quartiles, plus how many
-        // there were — the page's "Peers IQR" and its "From N peers" tooltip.
-        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_500)
-            .WithChart(out var chart, ChartType.Single, 20);
-        foreach (var score in new[] { 940_000, 985_000, 962_000, 990_000, 975_000 })
-            ctx.WithPumbilityPeer(chart, phoenix2Score: score);
-
-        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
-            CancellationToken.None);
-
-        var spread = result.Spreads![chart.Id];
-        Assert.Equal(956_500, (int)spread.Quartile1);
-        Assert.Equal(986_250, (int)spread.Quartile3);
-        Assert.Equal(5, spread.PeerCount);
-        Assert.Equal(result.ProjectedGains.Keys.OrderBy(k => k), result.Spreads.Keys.OrderBy(k => k));
     }
 
     [Fact]
@@ -481,9 +493,8 @@ public sealed partial class PumbilityProjectionSagaTests
             CancellationToken.None);
 
         Assert.Contains(chart.Id, result.ExpectedScores.Keys);
-        // The spread counts the voices that were actually heard, so the page can still say how
-        // thin the evidence is — four, under its own five-peer floor, which prints as a dash.
-        Assert.Equal(4, result.Spreads![chart.Id].PeerCount);
+        // The group says the run relaxed, which is what the page's thin-band note reads (D47).
+        Assert.True(result.Peers![ChartType.Single].AnsweredBelowFloor);
     }
 
     [Fact]
@@ -503,19 +514,18 @@ public sealed partial class PumbilityProjectionSagaTests
     }
 
     [Fact]
-    public async Task AShortMergedPoolIsPlacedByItsExtrapolatedFinishAndSaysSo()
+    public async Task AShortPoolIsPlacedByItsExtrapolatedFinishAndSaysSo()
     {
-        // Twenty-five charts: too few for a settled total, enough to extrapolate one. The pool's
-        // own sum would seat this player at the bottom of the ladder; filling the empty slots at
-        // the standard they already hold seats them where they are actually heading (D48). Every
-        // chart is priced the same here, so the twenty-five they hold and the twenty-five they do
-        // not come to fifty of one value.
+        // Twenty-five singles: too few for a settled pool, enough to extrapolate one. The pool's
+        // own sum would seat this player among the weakest; filling the empty slots at the standard
+        // they already hold draws their peers around where the pool is actually heading (D48, D53).
+        // Every chart is priced the same here, so the twenty-five they hold and the twenty-five
+        // they do not come to fifty of one value.
         var ctx = new ProjectionContext().WithPhoenix2Pool(25, 0)
             .WithPoolOf(25, 970_000, ChartType.Single, 20)
             .WithChart(out var chart, ChartType.Single, 20);
         for (var i = 0; i < 6; i++) ctx.WithPumbilityPeer(chart, phoenix2Score: 985_000);
-        var expected = Phoenix2PumbilityLevel.From(
-            ProjectionContext.PricedAt(ctx.ChartsInPool.First(), 970_000) * PeerGroup.PumbilityPoolSize).Index;
+        var expected = ProjectionContext.PricedAt(ctx.ChartsInPool.First(), 970_000) * PeerGroup.PumbilityPoolSize;
 
         var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
             CancellationToken.None);
@@ -523,7 +533,7 @@ public sealed partial class PumbilityProjectionSagaTests
         var group = result.Peers![ChartType.Single];
         Assert.True(group.IsLit);
         Assert.True(group.PlacedByEstimate);
-        Assert.Equal(expected, group.Center);
+        Assert.Equal(expected, group.Center, 6);
         Assert.Equal(PeerGroup.PumbilityProjectionGate, group.PoolSize);
         Assert.Equal(25, group.PoolCount);
         Assert.Contains(chart.Id, result.ExpectedScores.Keys);
@@ -547,40 +557,48 @@ public sealed partial class PumbilityProjectionSagaTests
         var strong = ProjectionContext.PricedAt(ctx.ChartsInPool[0], 995_000);
         var weak = ProjectionContext.PricedAt(ctx.ChartsInPool[20], 850_000);
         // Held: 20 strong + 5 weak. Empty: 25 more at the weak value, the pool's floor.
-        var expected = Phoenix2PumbilityLevel.From(20 * strong + 30 * weak).Index;
+        var expected = 20 * strong + 30 * weak;
         // The test is only worth anything if the old estimator would have answered differently.
-        Assert.NotEqual(expected, Phoenix2PumbilityLevel.From(strong * PeerGroup.PumbilityPoolSize).Index);
+        Assert.NotEqual(expected, strong * PeerGroup.PumbilityPoolSize);
 
         var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
             CancellationToken.None);
 
         var group = result.Peers![ChartType.Single];
         Assert.True(group.PlacedByEstimate);
-        Assert.Equal(expected, group.Center);
+        Assert.Equal(expected, group.Center, 6);
     }
 
     [Fact]
-    public async Task AFullMergedPoolIsASettledNumberEvenWhereOneTypeIsShort()
+    public async Task AShortPoolOfOneTypeIsPlacedByItsOwnFinishWhateverTheOtherTypeHolds()
     {
-        // The shape the note used to lie about: fifty singles and twenty-nine doubles. The doubles
-        // band lights up on the shorter gate, but the rung it is drawn around came off a real,
-        // finished total — so nothing here was projected and the page must not say it was.
-        // The singles pool sits at level 15 so the merged bar is comfortably below what a level-20
-        // doubles chart is worth — the doubles row has to clear it to reach ExpectedScores at all.
+        // Fifty singles and twenty-nine doubles. The doubles peers are drawn around the DOUBLES
+        // pool (D53), and twenty-nine charts is not a settled one: the doubles group lights on the
+        // shorter gate, placed by where the doubles pool would finish, and says so — the full
+        // singles pool has nothing to say about it. The singles pool sits at level 15 so the merged
+        // bar is comfortably below what a level-20 doubles chart is worth — the doubles row has to
+        // clear it to reach ExpectedScores at all.
         var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_609.59)
             .WithFullPoolAt(900_000, ChartType.Single, 15)
+            .WithPoolOf(29, 960_000, ChartType.Double, 18)
             .WithChart(out var dbl, ChartType.Double, 20);
         ctx.WithPhoenix2DoublesPool(29);
         for (var i = 0; i < 6; i++) ctx.WithPumbilityPeer(dbl, phoenix2Score: 985_000);
+        var held = ctx.ChartsInPool.First(c => c.Type == ChartType.Double && (int)c.Level == 18);
+        var expected = ProjectionContext.PricedAt(held, 960_000) * PeerGroup.PumbilityPoolSize;
 
         var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
             CancellationToken.None);
 
         var doubles = result.Peers![ChartType.Double];
         Assert.True(doubles.IsLit);
-        Assert.False(doubles.PlacedByEstimate);
+        Assert.True(doubles.PlacedByEstimate);
+        Assert.Equal(expected, doubles.Center, 6);
         Assert.Equal(29, doubles.PoolCount);
+        Assert.Equal(PeerGroup.PumbilityProjectionGate, doubles.PoolSize);
         Assert.Contains(dbl.Id, result.ExpectedScores.Keys);
+        // The singles group is placed by its settled pool and claims no estimate.
+        Assert.False(result.Peers[ChartType.Single].PlacedByEstimate);
     }
 
     [Fact]
@@ -650,7 +668,7 @@ public sealed partial class PumbilityProjectionSagaTests
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync((MixEnum mix, Guid _, CancellationToken _) =>
                     StatsFor(UserId, _singles, _doubles, mix == MixEnum.Phoenix2 ? _phoenix2Total : 0));
-            Stats.Setup(s => s.GetPlayersByPumbilityRange(MixEnum.Phoenix2, It.IsAny<double>(), It.IsAny<double>(),
+            Stats.Setup(s => s.GetPlayersByPoolOfType(MixEnum.Phoenix2, It.IsAny<ChartType>(), It.IsAny<double>(), It.IsAny<double>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => _pumbilityPeerPools.Keys.ToArray().AsEnumerable());
             Stats.Setup(s => s.GetStats(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
@@ -792,8 +810,9 @@ public sealed partial class PumbilityProjectionSagaTests
         }
 
         /// <summary>
-        ///     The viewer's Phoenix 2 standing: a total pool (which places them on the PUMBILITY
-        ///     ladder) and a pool of <paramref name="poolSize" /> charts of every type.
+        ///     The viewer's Phoenix 2 standing: a pool total, which the stats row reports for the
+        ///     merged pool and for each type's, and a pool of <paramref name="poolSize" /> charts
+        ///     of every type.
         /// </summary>
         public ProjectionContext WithPhoenix2Pool(int poolSize, double total)
         {
@@ -810,7 +829,7 @@ public sealed partial class PumbilityProjectionSagaTests
         }
 
         /// <summary>
-        ///     One PUMBILITY peer — inside the viewer's rung band with a full pool of every type —
+        ///     One PUMBILITY peer — inside the viewer's window with a full pool of every type —
         ///     holding a Phoenix 2 score and/or a Phoenix 1 score on <paramref name="chart" />.
         /// </summary>
         public ProjectionContext WithPumbilityPeer(Chart chart, int? phoenix2Score = null, int? phoenix1Score = null,
@@ -942,12 +961,17 @@ public sealed partial class PumbilityProjectionSagaTests
                 .OrderByDescending(v => v).Take(50).Min();
         }
 
+        /// <summary>
+        ///     A stats row: the competitive levels, and <paramref name="total" /> standing for the
+        ///     merged pool AND the pool of each type — the fixture declares one pool for every
+        ///     type (WithPhoenix2Pool), so the window a type's peers are drawn around is that (D53).
+        /// </summary>
         private static PlayerStatsRecord StatsFor(Guid userId, double singles, double doubles, double total = 0)
         {
             return new PlayerStatsRecord(userId, 0, 1, 0, 0, 0,
                 total, 0, 0,
-                0, 0, 0,
-                0, 0, 0,
+                total, 0, 0,
+                total, 0, 0,
                 (singles + doubles) / 2,
                 singles,
                 doubles);

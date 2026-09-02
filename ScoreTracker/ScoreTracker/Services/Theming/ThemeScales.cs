@@ -211,14 +211,6 @@ public static class ThemeScales
     public static string SpeedColor(int band) => $"var(--speed-{Math.Clamp(band, 0, 4) + 1})";
 
     /// <summary>
-    ///     Variability token — how split a peer group is on a chart, five steps from very
-    ///     consistent to very split (docs/design/pumbility-overhaul.md D35). Mix-invariant. The word
-    ///     always prints beside it; the colour never carries the level alone.
-    /// </summary>
-    public static string VariabilityColor(PeerVariabilityLevel level) =>
-        $"var(--vary-{MixThemes.VariabilityIndex(level)})";
-
-    /// <summary>
     /// Percentile coloring against a concrete population (community leaderboards).
     /// Zeroes are excluded from the curve — unrated players shouldn't drag it — and
     /// color as Common.

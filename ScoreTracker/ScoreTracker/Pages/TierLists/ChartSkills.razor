@@ -11,6 +11,7 @@
 @using ScoreTracker.ChartIntelligence.Contracts
 @using ScoreTracker.ChartIntelligence.Contracts.Queries
 @using ScoreTracker.Domain.Services
+@using ScoreTracker.Domain.Services.Contracts
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.SecondaryPorts
@@ -177,13 +178,15 @@ else
             }
             @* Same slot on every personalized lens; only the peer group differs. On Phoenix 2
                both lenses read PUMBILITY peers — the projection behind the Score lens draws them
-               too (D23) — while Phoenix 1 keeps the difficulty-title level on PUMBILITY and the
+               too (D23, D55): the players whose pool of the type sits within the window around
+               yours (D53) — while Phoenix 1 keeps the difficulty-title level on PUMBILITY and the
                competitive band on Score. *@
             @if (PersonalizedActive && _peerCount > 0)
             {
                 <span>
                     @(_currentMix == MixEnum.Phoenix2
-                        ? L["Ranked against {0} PUMBILITY peers within 3 levels of you", _peerCount]
+                        ? L["Ranked against {0} PUMBILITY peers whose pool sits within {1} below and {2} above yours", _peerCount,
+                            PeerGroup.PumbilityWindowBelow.ToString("N0"), PeerGroup.PumbilityWindowAbove.ToString("N0")]
                         : _tierListType == "PUMBILITY"
                             ? L["Ranked against {0} players on your difficulty title level", _peerCount]
                             : L["Ranked against {0} players of similar competitive level", _peerCount])

@@ -79,11 +79,11 @@ Round three, 2026-08-15. Phoenix 2 only; Phoenix 1's projection is untouched.
 | # | Ruling |
 |---|---|
 | D21 | **The Phoenix 2 projection is mix-independent.** *"Treat the projections as mix independent, then go off of pumbility level in phoenix 2 alone, NOT Phoenix 1."* Peers, evidence and levels come from Phoenix 2; the peer estimator performs no cross-mix read. §4.7's pooling of Phoenix 1 evidence is superseded for Phoenix 2 |
-| D22 | **PUMBILITY peers** — the players within **±3 rungs** of you on the Phoenix 2 PUMBILITY level ladder (`Phoenix2PumbilityLevel`, the hidden five-levels-per-gem ladder: DIAMOND LV.4 reaches down to DIAMOND LV.1 and up to RED BERYL LV.2), where **you and each peer hold a full 50-chart pool of the chart type**. *"This would formally introduce the idea of 'PUMBILITY Peers'."* One rung, the total pool's, serves both chart types; the full-pool rule is per type. Measured against every alternative in §4.8 |
+| D22 | **Superseded by D53 (round eight): peers are drawn on the pool of the type, within 500 below and 250 above yours.** ~~**PUMBILITY peers** — the players within **±3 rungs**~~ of you on the Phoenix 2 PUMBILITY level ladder (`Phoenix2PumbilityLevel`, the hidden five-levels-per-gem ladder: DIAMOND LV.4 reaches down to DIAMOND LV.1 and up to RED BERYL LV.2), where **you and each peer hold a full 50-chart pool of the chart type**. *"This would formally introduce the idea of 'PUMBILITY Peers'."* One rung, the total pool's, serves both chart types; the full-pool rule is per type. Measured against every alternative in §4.8 |
 | D23 | **The tier list's PUMBILITY lens uses the same definition.** *"They need to be the same."* And the word is **peers**: *"please stop calling 'peers' cohorts."* The lens's keys, columns and code rename accordingly ([pumbility-tier-list.md §5](pumbility-tier-list.md)) |
 | D24 | **A chart shows only when five or more peers have passed it.** No level window: *"That was already a bit flaky, I think the '5 or more peers have to have passed it' covers us on not showing unrealistic charts. This lets the occasional 'D23 that a level 18 player can actually pass if they spend a few minutes memorizing a single section' entry show."* The perfect-score-cannot-clear-your-bar filter (§6.5) stays — it is arithmetic, not a level |
 | D25 | **No competitive level on this page.** *"Competitive level isn't really the answer here. It is built for score alone, it doesn't view scores <950k as valid ... pass pushing is a valid competency."* The peer band replaces it in who is asked, the five-peer floor replaces it in which charts, and the growth weighting — a competitive-level delta — is dropped: *"drop it."* Measured: on Phoenix 2 the weighting discounted 58% of the evidence, because everyone's level climbed three rungs in the first month |
-| D26 | **The Phoenix 2 estimate is the median (p50), not p65.** Measured, not chosen: p65 was fitted on Phoenix 1 eventual bests; on Phoenix 2 evidence it reads +6k median, p50 reads +1.8k, and with the full-pool rule −44 (§4.8) |
+| D26 | **Superseded by D50 (round seven): one default, the 25th, on both mixes.** ~~**The Phoenix 2 estimate is the median (p50), not p65.**~~ Measured, not chosen: p65 was fitted on Phoenix 1 eventual bests; on Phoenix 2 evidence it reads +6k median, p50 reads +1.8k, and with the full-pool rule −44 (§4.8) |
 | D27 | **The peer count is shown**, per type, in one clause: *"a disclaimer on 'this is how many PUMBILITY Peers you have' somewhere."* This is a section line, not the per-row evidence caption D12 removed |
 | D28 | **A type without a full pool is dark.** *"Have peers/projections only light up/show once you're at 50 charts for that type."* Charurun plays no singles and sees no singles peers; a 29-double pool sees "29 of 50" |
 | D29 | **The carried Phoenix 1 rows are untouched.** *"The projections we have in phoenix 2 that are just 'your phoenix scores, mapped to Phoenix 2 pumbility' — those should remain exactly as is. We are only changing projections."* `CarryoverTargets`, `/Pumbility/Phoenix1`, the pool, the bar, the titles and the ask do not move |
@@ -92,7 +92,7 @@ Round four, 2026-08-17, after the owner's field test of round three.
 
 | # | Ruling |
 |---|---|
-| D30 | **A peer row carries a "Peers IQR"** — the peers' 25th and 75th percentile scores as two letter grades with a dash between them, beside the median. Owner: *"Can we do an estimated range? … If we do like 'Estimated P25 -> P75 letter grades'? It sort of helps visualize confidence levels a bit too. If like everyone in your pool is getting a SS, you'll probably get an SS. If P25 is A+ and P75 is SSS+, you know it's a specialized chart."* Named **IQR**, not "range": *"call it 'Peers IQR' so those who understand math nuance will know it's not a Min/Max range."* Grades only — no quartile numbers, no width figure — and *"at most a tooltip for 'From X peers'"*. **Compact is unchanged**: *"Only so much data we can fit there."* A carried Phoenix 1 row has no peers and prints a dash. This narrows D12: the numeric spread D12 removed stays removed; two grades that say whether the peers agree is the one per-row figure about the evidence that earned its place, because the field test read the median alone as a claim ("it's still giving me S22 SSs") when the peers behind it were split |
+| D30 | **Superseded by D52 (round seven).** ~~**A peer row carries a "Peers IQR"**~~ — the peers' 25th and 75th percentile scores as two letter grades with a dash between them, beside the median. Owner: *"Can we do an estimated range? … If we do like 'Estimated P25 -> P75 letter grades'? It sort of helps visualize confidence levels a bit too. If like everyone in your pool is getting a SS, you'll probably get an SS. If P25 is A+ and P75 is SSS+, you know it's a specialized chart."* Named **IQR**, not "range": *"call it 'Peers IQR' so those who understand math nuance will know it's not a Min/Max range."* Grades only — no quartile numbers, no width figure — and *"at most a tooltip for 'From X peers'"*. **Compact is unchanged**: *"Only so much data we can fit there."* A carried Phoenix 1 row has no peers and prints a dash. This narrows D12: the numeric spread D12 removed stays removed; two grades that say whether the peers agree is the one per-row figure about the evidence that earned its place, because the field test read the median alone as a claim ("it's still giving me S22 SSs") when the peers behind it were split |
 | D31 | **You are never one of your own peers** (owner, 2026-08-17). The projection has always drawn its band with the viewer removed; the tier lists' PUMBILITY lens now does the same at read time — the stored list is one per peer group and counts every member's pool, so the reader's own pool is taken back out (one from the peer count, one from every chart it holds, the bands redrawn), and both lenses' captions on Phoenix 2 name PUMBILITY peers. Nightly is the caveat: a pool that filled since the last build was never counted in, and for that day the subtraction runs one deep |
 
 Round five, 2026-08-18. Phoenix 2 only; Phoenix 1's Play page is untouched. The page these rulings
@@ -103,21 +103,28 @@ describe is §3.10; the measurements behind them are §4.9.
 | D32 | **Your PUMBILITY peers replace "What to play next" on Phoenix 2.** Owner: *"And yes, this replaces 'what to play next'."* `/Pumbility` on Phoenix 2 renders the peers page in the target list's place; the section stays three tabs; ~~Phoenix 1 keeps the target list of §3.3 exactly as it is~~ — **that half was never asked for and is reversed by D43**: Phoenix 1 gets the page too, and the target list is retired as a component. Measured first (§4.9): every peer-projected target is a chart at least one peer holds, so nothing the old list said is lost — what changes is the order it says it in, and where the carried Phoenix 1 rows sit |
 | D33 | **The grouping is called Prevalence** — *"Prevalence is good. I like that. Go with that."* — and it is a weighted count: a chart at #1 in a peer's pool scores 50, at #50 scores 1, summed over the peers (a Borda count; each peer casts an equal 1,275-point vote, so the band's strong tail cannot dominate the way a raw value sum would). **The hold count is what prints** — "17 of 23 peers" — and the weighted number rides a tooltip that says **"Weighted sum: 550"**: *"don't call it borda there."* Measured: the weighting barely reorders (top-50 overlap 39/50 against the plain count) and is not level-sorted inside a band |
 | D34 | **It is a tier list and follows the tier list page's pattern** — *"Follow the Tier List page's pattern for all of this (UI/UX wise too)."* Staple · Strong · Solid · Average · Modest · Slim · Poor by the PUMBILITY lens's own log-scaled banding on the rarity ramp; collapsible sections with **Slim and Poor folded** by default; Comfortable / Compact / Table via the standard trio, which sits **right above the list, right-aligned**; the To-Do bookmark and its dashed-blue ring exactly as the tier list wears them. **No song-name filter, no other filters, no applied-filters row, no sorting** (*"No, no sorting"*) |
-| D35 | **Variability, not IQR grades.** The Peers IQR (D30) survives as a data point but prints as a level: the peers' interquartile width in points, `log(1 + w/1000)`, banded ±0.5σ / ±1.5σ across the charts they play — five levels named **Very consistent · Consistent · Mixed · Split · Very split** (*"i like a"*), per chart type, only where five or more peers scored the chart. Measured: raw widths skew +1.10 and the bottom band never fires; on the log they skew −0.25 and all five assign (7/34/36/34/9 on the reporter's singles peers). The word always prints; **Compact carries a dot top-right and Comfortable does not** — *"Comfortable doesn't need the variability dot, only compact does"* |
+| D35 | **Superseded by D52 (round seven).** ~~**Variability, not IQR grades.**~~ The Peers IQR (D30) survives as a data point but prints as a level: the peers' interquartile width in points, `log(1 + w/1000)`, banded ±0.5σ / ±1.5σ across the charts they play — five levels named **Very consistent · Consistent · Mixed · Split · Very split** (*"i like a"*), per chart type, only where five or more peers scored the chart. Measured: raw widths skew +1.10 and the bottom band never fires; on the log they skew −0.25 and all five assign (7/34/36/34/9 on the reporter's singles peers). The word always prints; **Compact carries a dot top-right and Comfortable does not** — *"Comfortable doesn't need the variability dot, only compact does"* |
 | D36 | **Grouped by: Prevalence (default) · Projected gains.** Under Projected gains the list is only what pays, biggest first, in bands of PUMBILITY points, and carried Phoenix 1 rows interleave by gain exactly as the target list did — it *is* the old page. A **Project Phoenix 1 scores** switch appears there, and only there, and only *"when the player has phoenix 1 scores that would change the data"*: on (the default) is the carried-wins rule of D11/D29; off drops the carried rows and the peer projection shows through where one exists. Under Prevalence an **Only projected PUMBILITY gains** switch cuts the tiers to the charts that pay; the front page opens with it on |
 | D37 | **The pool selector's All is one merged list** — *"merge into one"* — tiers and order computed per chart type (different electorates: 23 singles peers, 7 doubles), the sections interleaving both, ordered within a tier by each chart's share of its own electorate, and every card saying "5 of 7 peers" so the electorate is visible. Not stacked lists |
 | D38 | **The jacket carries the gain and nothing else.** *"Switch out the X/Y peers for the green/blue outlined Projected PUMBILITY (if you're projected to have a gain)"*, then *"drop the X/Y peers number on the song jacket for both comfortable and compact."* The badge is the target list's own — mix-primary outline, `+18` — and the gain is the target list's own rule (D11/D29, carried wins, measured against the bar as it stands, D13), so the two pages can never disagree about a number. A chart that would not pay wears no corner at all; the hold count lives in the Comfortable body and the Compact tooltip. Compact's other bottom corner is the projected grade, as on the target list |
 | D39 | **The peers get a roster** — *"give them a dedicated table at the bottom"* — name, PUMBILITY level, PUMBILITY total (N2, it is a pool), **competitive levels too** (*"maybe competitive level too"*), which type they are a peer for under All, and how many of your fifty they also hold; sorted by total with your own row highlighted where you would sit. **Private accounts are counted as peers and not named**, with *"X private accounts not shown"* beneath |
-| D40 | **The chart leaderboard gets one Peers chip with a sub-row** — Competitive · PUMBILITY — *"for now"*; the sub-row appears only where both exist (Phoenix 2, the viewer's type lit), and the default when clicked cold is **Competitive** (*"do competitive for now"*). Hosts pass the sub-scope: a card on this page opens on PUMBILITY, a session score row on Competitive as before. Private peers stay on the board as Anonymous rows, exactly as Competitive Peers keeps them. This is the first surface presenting two of the [peer pools](peers-abstraction.md) as one control |
+| D40 | **The chart leaderboard gets one Peers chip with a sub-row** — Competitive · PUMBILITY — *"for now"*; the sub-row appears only where both exist (Phoenix 2, the viewer's type lit), and the default when clicked cold is **Competitive** (*"do competitive for now"*). Hosts pass the sub-scope: a card on this page opens on PUMBILITY, a session score row on Competitive as before. Private peers stay on the board as Anonymous rows, exactly as Competitive Peers keeps them. This is the first surface presenting two of the [peer pools](peers-abstraction.md) as one control **Your own row is on the PUMBILITY board** (owner, 2026-09-01: *"we should make sure you, yourself, show in the pumbility peers leaderboard. it's weird not having yourself on there, even if you're not technically your peer"*): the peer read leaves the viewer out (D31), the board adds their World row back, and the standing line counts them |
 | D41 | ~~**The compare strip and the Yours-alone section ship, on the mock's evidence, as cuttable.**~~ **Ruled in field test round two: the In-common and Yours-alone tiles are cut** (*"not useful"*) and the strip is the **level bars alone**, sitting beside the list's lede on a wide screen and dropping below it once the viewport is square or taller. `PeerCompare` lost the three counts with them — a number nobody can act on is not worth computing. The Yours-alone *section* in the list survives |
 | D46 | **The Your top 50 lens has its own tier vocabulary (field test round two).** Owner: *"Staple/Strong/etc. make no sense"* on your own fifty. Those bands are what a chart is worth to **you**, not how many players keep it, so they read as a magnitude: **Highest · Very High · High · Average · Low · Very Low · Lowest**. Average, Low and Very Low are the Score lens's own words, so the two ramps sound like one family; `PumbilityTierNames.PoolNameOf` is the second map beside `NameOf` |
 | D42 | **What is assumed until the field test says otherwise:** the front page lands on **Prevalence with the gains switch on** (confirmed in round six: *"Stay on Prevalence"*); the block title is ~~**"Your PUMBILITY peers"**~~ **"Your peers"** on both mixes since round six (D43) and does not change with the grouping; the gain-band sections are fixed point bands (+25 and up · +15 to +25 · +10 to +15 · +5 to +10 · +2 to +5 · under +2), the unit the bar and the ask are read in, rather than σ-banded |
 | D43 | **Phoenix 1 gets the page too, with the competitive band as its peers (round six).** Owner: *"has phoenix 1 not been getting the same exact treatment as 2? functionally it should be exactly the same for all the grouped by etc. right?"* `/Pumbility` renders the peers page on both mixes; `TargetList` is deleted, and what it ranked survives as the Projected gains lens (D38). A Phoenix 1 peer is the band the projection already draws from — players within one competitive level of you for the type (§4.7), the viewer out — which is also the cohort the leaderboard's Peers chip shows there, so the page, the chip and the gain agree about who "peers" are on both mixes. **No full-fifty gate on Phoenix 1**: the band is drawn from competitive level, which is real at any pool size, so a Phoenix 1 player is never dark (D28 stays Phoenix 2's) and a thin peer simply casts a shorter vote. The read widens from the targets' level band to the pool floor — level 10 is the formula's floor on both mixes, `BaseRating` is zero below it — roughly twice today's Phoenix 1 sweep, on the same 24-hour cache; a first visit already says it takes a moment. Stated, not hidden: Phoenix 1's gain is the discounted quantile of §4.1 and the card's "Peers' median" is the plain median of the same group, so the two can differ by a grade there — on Phoenix 2 they are one number (D26). The block is **Your peers** on both mixes and the lede names the cohort. **The roster is capped at fifty rows around you** with the counts above and below — a band is several hundred players, and the roster's question is "where do I sit", not "who is first" |
 | D44 | **Your top 50 is the third lens of the Play list (round six).** Owner: *"What if we merge in the 'Your top 50' as one of the options to group by."* Under it the list is the pool the frame is scoped to — the selected pool's fifty, by place — split at the bar into two sections, **Your top 50** and **The waiting room**, each card carrying its place, the chart's value, your grade and score, and the peers line beneath (how many hold it, their median, how split); the table is the old pool board with the peers' columns added. No switches under this lens. The pool board of §3.4 and its no-density board skin retire with it — the fifty wear the tier-list card like everything else on the page. Web-only: the frame's record joined with the peers record by chart id |
 | D45 | **The Pool page is the PUMBILITY Breakdown page.** Owner: *"keep a section for all of the 'Your Pool' data/distribution stuff and call it 'PUMBILITY Breakdown' instead of 'Your Pool', keeps it on its own dedicated page."* `/Pumbility/Breakdown` — your PUMBILITY titles, where your PUMBILITY comes from, the pool curve — with `/Pumbility/Pool` still resolving to it. The top 50 leaves it for the Play list (D44); the curve stays, because it is the bar's picture rather than the list's |
-| D47 | **A band too thin to meet the five-peer floor answers on what it has.** Owner: *"if someone has ZERO net results because of the 5+ peers rule, drop it. This will likely be important for super high and super low levels."* The floor (D24) asks for five peers **on a chart**, not five in the band, so at a band of five it demands unanimity and below three it can never be met — a cliff, not a filter, and it lands exactly where a band is thinnest. Where it leaves a run with **nothing at all**, the same records answer again with no floor; a band that produced anything is untouched. Opt-in per caller on `ScoreProjectionRequest`: the PUMBILITY page and the home widget ask, because they suggest charts and one peer's score beats an empty board, while the personalized tier list does not — it falls back to the community list, which is a better answer than a folder ranked on single scores. `PumbilityPeerPools.MinimumScored` deliberately does **not** relax with it, so a rescued row carries a gain beside "Fewer than 5 peers scored it" and a blank IQR — that pairing is the per-row disclaimer, already written and already localized. Measured on the 2026-08-20 snapshot: of 216 Phoenix 2 accounts, 121 saw an empty board; the two with a full pool and a thin band are the shape the Discord report came from, and this rescues one of them with 155 charts. Evidence depth across every rescued row: 71% rest on one peer, 24% on two. The lede note that explains it counts the peers who hold a full pool — the players actually lending scores, and the roster's own rows — so it names them that way rather than as the band. **The note fires on whether the fallback RAN, never on the band's size** (2026-08-21): a band too small to put five voices anywhere is only the obvious case, and a band of nine whose charts were each scored by two or three relaxes identically while a size test stays silent through the whole board. `PeerGroup.AnsweredBelowFloor` carries the projector's own answer out to the page, set only when the second pass actually produced rows — a band that scored none of these charts has an empty board and no thin evidence to warn about |
-| D48 | **Twenty charts is enough to project from, against your estimated finish.** Owner: *"what's the end results if we cause it to start projecting for you once you have 20 charts, based on your current projected title (assuming you maintain your current PUMBILITY average)."* The VIEWER's pool gate drops from fifty to twenty; a PEER's stays at fifty, because their pool is the evidence and half a pool is half a vote. The two halves are one decision and ship as one: a twenty-chart pool's own total is the sum of the charts it happens to hold, so seating a player by it puts a strong one at the bottom of the ladder among peers who tell them nothing — which is why supplying `ProjectedTotal` is what lowers the gate, and a caller with no answer to "where will they finish" keeps the full-fifty gate (the tier list's own call does). The estimate keeps every chart held at what it is worth and prices only the EMPTY slots, at the weakest chart in the pool — the standard the player is already holding at its bottom. **Backtested on the 2026-08-20 snapshot**, 111 full-pool accounts, and 84.7% of the true peer set falls inside the projected ±3 band. The estimator shipped on 2026-08-21 as the pool's top-twenty AVERAGE out to fifty, and averaging is upward-biased by construction — the mean of a descending list's head can only exceed the mean of the whole — and biased by the same amount however much the player holds, because an average over the top twenty discards slots 21 and up: +1.69% mean at every pool size, the exact rung 8 times in 111, up to four rungs high, and never low. Filling from the pool's floor instead lands the exact rung 39 times in 111 at a twenty-chart pool and 111 in 111 at forty-eight, converging as the pool fills rather than staying flat (within two rungs 110/111 at twenty). It still reads high — +0.89% at twenty, +0.01% at forty-eight — because the slots a player adds next are usually worth a little less than the one they hold last. That residual is **one-directional**, so the ±3 band is not symmetric around the truth: at a twenty-chart pool it reaches roughly [−2, +4]. Accepted as the cost of placing a short pool at all; owner call, no calibration constant. Coverage: of 118 dark Phoenix 2 accounts, 57 reach twenty charts in some type and 51 of those get a full board (median 111 charts clear the five-peer floor); 61 hold under twenty anywhere and no gate change reaches them. The projected rung is what does the work — placed by their standing total instead, 37 of 65 (account, type) pairs get fewer than five peers; placed by the finish, 63 of 65 clear it. **The bar stays 0 for a short pool**: a chart displaces nothing until the pool holds fifty, so a gain is the chart's whole value and the list ranks by what a chart is worth — `PoolCurve` already says exactly this. `PeerGroup.PoolSize` carries the gate the run was made under, so the dark chip counts to twenty on this page and to fifty on the Personalized Breakdown, and the chart leaderboard's empty PUMBILITY-peers state names the same constant. **A short pool of ONE TYPE is not a projection**: the rung is read off the MERGED pool, so a player with a full fifty and twenty-odd doubles is placed by a settled number even though the doubles band lights on the shorter gate — `ScoreProjectionRequest.ProjectedTotalIsEstimate` rides out on `PeerGroup.PlacedByEstimate`, and the note keys on that rather than on a pool count |
+| D47 | **A band too thin to meet the five-peer floor answers on what it has.** Owner: *"if someone has ZERO net results because of the 5+ peers rule, drop it. This will likely be important for super high and super low levels."* The floor (D24) asks for five peers **on a chart**, not five in the band, so at a band of five it demands unanimity and below three it can never be met — a cliff, not a filter, and it lands exactly where a band is thinnest. Where it leaves a run with **nothing at all**, the same records answer again with no floor; a band that produced anything is untouched. Opt-in per caller on `ScoreProjectionRequest`: the PUMBILITY page and the home widget ask, because they suggest charts and one peer's score beats an empty board, while the personalized tier list does not — it falls back to the community list, which is a better answer than a folder ranked on single scores. `PumbilityPeerPools.MinimumScored` deliberately does **not** relax with it, so a rescued row carries a gain beside "Fewer than 5 peers scored it" and a blank IQR — that pairing is the per-row disclaimer, already written and already localized. Measured on the 2026-08-20 snapshot: of 216 Phoenix 2 accounts, 121 saw an empty board; the two with a full pool and a thin band are the shape the Discord report came from, and this rescues one of them with 155 charts. Evidence depth across every rescued row: 71% rest on one peer, 24% on two. The lede note that explains it counts the peers who hold a full pool — the players actually lending scores, and the roster's own rows — so it names them that way rather than as the band. **The note fires on whether the fallback RAN, never on the band's size** (2026-08-21): a band too small to put five voices anywhere is only the obvious case, and a band of nine whose charts were each scored by two or three relaxes identically while a size test stays silent through the whole board. `PeerGroup.AnsweredBelowFloor` carries the projector's own answer out to the page, set only when the second pass actually produced rows — a band that scored none of these charts has an empty board and no thin evidence to warn about. Unchanged by D53: the floor and the fallback apply to the pool window exactly as they did to the band |
+| D48 | **Twenty charts is enough to project from, against your estimated finish.** Owner: *"what's the end results if we cause it to start projecting for you once you have 20 charts, based on your current projected title (assuming you maintain your current PUMBILITY average)."* The VIEWER's pool gate drops from fifty to twenty; a PEER's stays at fifty, because their pool is the evidence and half a pool is half a vote. The two halves are one decision and ship as one: a twenty-chart pool's own total is the sum of the charts it happens to hold, so seating a player by it puts a strong one at the bottom of the ladder among peers who tell them nothing — which is why supplying `ProjectedTotal` is what lowers the gate, and a caller with no answer to "where will they finish" keeps the full-fifty gate (the tier list's own call does). The estimate keeps every chart held at what it is worth and prices only the EMPTY slots, at the weakest chart in the pool — the standard the player is already holding at its bottom. **Backtested on the 2026-08-20 snapshot**, 111 full-pool accounts, and 84.7% of the true peer set falls inside the projected ±3 band. The estimator shipped on 2026-08-21 as the pool's top-twenty AVERAGE out to fifty, and averaging is upward-biased by construction — the mean of a descending list's head can only exceed the mean of the whole — and biased by the same amount however much the player holds, because an average over the top twenty discards slots 21 and up: +1.69% mean at every pool size, the exact rung 8 times in 111, up to four rungs high, and never low. Filling from the pool's floor instead lands the exact rung 39 times in 111 at a twenty-chart pool and 111 in 111 at forty-eight, converging as the pool fills rather than staying flat (within two rungs 110/111 at twenty). It still reads high — +0.89% at twenty, +0.01% at forty-eight — because the slots a player adds next are usually worth a little less than the one they hold last. That residual is **one-directional**, so the ±3 band is not symmetric around the truth: at a twenty-chart pool it reaches roughly [−2, +4]. Accepted as the cost of placing a short pool at all; owner call, no calibration constant. Coverage: of 118 dark Phoenix 2 accounts, 57 reach twenty charts in some type and 51 of those get a full board (median 111 charts clear the five-peer floor); 61 hold under twenty anywhere and no gate change reaches them. The projected rung is what does the work — placed by their standing total instead, 37 of 65 (account, type) pairs get fewer than five peers; placed by the finish, 63 of 65 clear it. **The bar stays 0 for a short pool**: a chart displaces nothing until the pool holds fifty, so a gain is the chart's whole value and the list ranks by what a chart is worth — `PoolCurve` already says exactly this. `PeerGroup.PoolSize` carries the gate the run was made under, so the dark chip counts to twenty on this page and to fifty on the Personalized Breakdown, and the chart leaderboard's empty PUMBILITY-peers state names the same constant. **A short pool of ONE TYPE is not a projection**: the rung is read off the MERGED pool, so a player with a full fifty and twenty-odd doubles is placed by a settled number even though the doubles band lights on the shorter gate — `ScoreProjectionRequest.ProjectedTotalIsEstimate` rides out on `PeerGroup.PlacedByEstimate`, and the note keys on that rather than on a pool count. **Under D53 the finish is the pool OF THE TYPE**: the peers are drawn around it, so the empty slots of that type's pool are filled at its weakest held chart, and a short pool of one type IS placed by an estimate now, whatever the merged pool holds — the merged-pool nuance above is history |
 | D49 | **The way out of the section is a link on the eyebrow, not a chip in the nav.** Owner: *"It's a link, not a button… more out of the way, it bloats up the actionable field and clutters mobile too much."* `How it works →` sits at the right of the `PHOENIX 2 · PUMBILITY` line in `--mix-primary`, so the one thing on the line that leaves the section is the one thing on it that is not muted; the nav row keeps its three tabs and its width. The row is `space-between` rather than `margin-left:auto`, so a long locale drops to the left of the next line instead of stranding itself against the far edge (D15). It points at the viewer's own mix and renders once the mix is known, so it never flips under the reader. The calculator carries the return trip, `Your PUMBILITY →`, on its own eyebrow beside the cross-mix links — signed in only, since the frame sends an anonymous visitor to `/` |
+| D50 | **Superseded by D54 (round eight): the median is the default again, on D53's peers.** ~~**The projection reads the 25th percentile by default, on both mixes (round seven, 2026-09-01).**~~ Owner: *"I think we should bump it down to 25th percentile for predicting scores as a default"* → *"lets try 25th, yeah"*. The median was centered over every pair a backtest can score and off by half a grade exactly where a player looks: the top ten of a gain-sorted list is selected for the charts whose estimate ran high, and at the median those rows read +4,728 with their SS calls right 53% of the time (§4.10). Owner: *"I don't think I've EVER come close to ANY of the medians recommended … EVERYONE talks about how it over-estimates. Even if it's hitting 50% of the time, it throwing an SS in your face when you feesibly won't be able to pull that SS off is going to feel infinitely worse than the 20 charts it got right."* Phoenix 1's 65th retires with it — measured +7,359 median against today's frozen records (§4.10) — so `PeerEstimator` carries one default and the two constants of D26 are gone. Every surface that is not the PUMBILITY page reads this default and nothing else |
+| D51 | **Energy — the PUMBILITY page's own read of the projection.** Owner: *"a drop down for 'How are you playing today?' … 'Good' (25th) 'Great' (50th) and 'Top of my Game' (75th)"*; the label word is **Energy** (*"'Today' doesn't read well, do 'Energy' or something"* → *"Energy feels good"*), a **dropdown, not a slider** (*"drop down for now"*). ~~Placed as a chip on the block head right of the *PUMBILITY Targets* title~~ — **on seeing the build the owner moved it into the control row, a select between Grouped by and the grouping's switch** (*"move that select down between the group by and the 'project phoenix1' toggle"*), **labelled Energy with the options Good, Great and Top of my game exactly as the approved mock had them.** The build had reworded the options to dodge the judgement keys `Good`/`Great`; ruling: *"Please do not change entire approved UX in mocks over a low level key collision problem"* — the resx keys carry the register (`Energy: Good`, `Energy: Great`), the copy does not. It re-reads **every projected score and gain on the PUMBILITY page** and nothing off it: *"all projected scores on the PUMBILITY page for now. default all the others to 25 percentile still though"*. Persisted per player as the `Pumbility__Energy` UiSetting, ~~Good~~ **Great** by default (D54). The projector hands back a ladder of the three rungs per chart over the same voices and weights, so a change of Energy is a lookup, never a second sweep, and the 24-hour cache stays keyed on player and mix. No summary line about the setting anywhere on the page — a *"Reading at Good · 25th percentile"* strip was mocked and cut as *"all noise"*. No Auto: a per-player quantile fitted from the viewer's own standing measured 7% better on held-out charts (§4.10) and was declined — *"no. no auto."* |
+| D52 | **Projected replaces the median, and the spread is gone (round seven).** The Table column is **Projected** — *"Just 'Projected' is fine"* — the peers' score at the viewer's Energy, and the Comfortable body line and Compact corner grade print the same value. The **Peers IQR (D30) and the Variability meter (D35) are retired**, with the dot, the word, the legend row and the `--vary-*` tokens: *"get rid of range bar and variability please"* — *"that was sort of trying to accomplish this and wasn't doing it well."* The Energy read IS the answer to "where in the range would I land"; a second visualisation of the same range beside it was noise. `PeerPoolChart` keeps every scorer's score and answers a quantile on demand, so nothing about the peers is lost — only the two columns that printed a shape of it |
+| D53 | **PUMBILITY peers are drawn on the pool of the type: players whose singles pool sits within 500 below and 250 above yours for a singles chart, doubles for doubles (round eight, 2026-09-01).** Owner: *"What happens if we remove combined pumbility as a factor and switch to only including peers in your singles or doubles pumbility range … +/- 500 of your doubles pumbility for measuring doubles"* → *"move to -500 and +250 singles/doubles, let's roll that out and see what people think."* The rung band on the combined total (D22) was type-blind — a singles-carried DIAMOND's doubles peers were doubles specialists — and skewed upward at every rung: the charts a player has not played are the ones players above them hold (§4.11: for viewers on rungs 16–20, 62% of every voice the band heard sat above the viewer, and the median of the scorers sat above the viewer on 73% of pairs). Measured on the same 11,480 pairs (§4.11): the −500..+250 window at the median answers 75% of the band's pairs, and on those the **top ten of a gain-sorted list read −1,611 against the band's +1,974**, coverage 57% against 43%, an SS+ it calls landing 76% of the time against 65%; the symmetric ±500 moved the same figures a fifth as far. Asymmetric because the skew is. The full-pool gate on both sides (D28), the five-voice floor (D24), the thin fallback (D47) and the short-pool finish (D48) all stand, the finish now being the pool OF THE TYPE. Groups are smaller — median 22 players against the band's 36 (p10 7, p90 39) — and one viewer in 185 drops under five peers. The window is a range read on the stats row's per-type top-fifty sum (`SinglesRating`/`DoublesRating`, stored unrounded since 2026-08-09), so nothing new is stored: `IPlayerStatsReader.GetPlayersByPoolOfType` replaces `GetPlayersByPumbilityRange`, and `PeerGroup` carries the pool and the two distances instead of a rung and a half-width |
+| D54 | **Great — the median — is the default read everywhere (round eight).** Owner: *"switch it to great as default. i'll run it and see how it feels."* … *"Default to great there and home page too for now too."* `PeerEstimator.DefaultQuantile` is the median again, so the tier list's projected scores and the home widget's pushes read it; Energy opens on Great, the setting still the player's. Supersedes D50, which chose the 25th against the rung band's overshoot at the top of the list — under D53's peers the top ten at the median reads −1.6k rather than +4.7k, so the reason for the lower rung went with the band. Field test, not a ruling on the arithmetic: *"i'll run it and see how it feels"* |
+| D55 | **One PUMBILITY peer group across the site (round eight).** Owner: *"tier list should move with this. we aren't keeping multiple pumbility peer groups across the site."* The tier list's PUMBILITY lens for a signed-in Phoenix 2 viewer reads the projector's peers' pools — `ScoreProjection.PeerPools`, the same holders-per-chart the Play page counts — banded per folder with the same log-scaled processor the nightly writer uses, and the folder picker lists the folders those pools reach. The nightly job stops writing Phoenix 2's per-rung `R{index}` lists and keeps the community `*` list; Phoenix 1's `L{n}` lists are untouched. D23 holds by construction: the lens no longer has a definition of its own to keep in step. The read-time viewer subtraction of D31 is moot on Phoenix 2 — the projector leaves the viewer out — and stays on Phoenix 1. Rows written under the old keys are harmless leftovers ([pumbility-tier-list.md §11](pumbility-tier-list.md)) |
+| D56 | **A re-read of the Play list holds its shape (round eight, field test).** Owner: *"do we really need the loading animation for switching energy or group-bys? it shifts the entire page, it feels pretty jarring. Versus just disabling inputs for the half second it takes … Possibly a good case for disabling inputs, but hiding the actual chart cards (so shows tier list skeleton while it loads the next one in)."* The patience card is for the **first paint** only. A change of Energy or pool keeps the ledes, the peer line, the control row and the legend where they are — the two selects, the switch, the density buttons and Download **disabled** for the moment the read takes — and keeps the previous list on screen under a pulse, every card and table cell blanked at its own size, so the page's height and the scroll position hold; everything flips once when the new record lands. The list renders from the record it was built with, one read behind the frame's, so the old peers are never laid against the new gains. **Grouped by is untouched**: it is a re-sort of what is already on screen and loads nothing (*"instant re sort is fine"*). The chart-identity chips are read once per page rather than on every energy change |
 
 ## 3. The section
 
@@ -468,9 +475,9 @@ and ended as the Play page (D32), because a filter for "only charts that pay" ov
 target list's peer half exactly (§4.9) — at which point two pages were one page with a switch.
 
 **What it is.** Titled **PUMBILITY Targets** (field test round two — "Your peers" named the evidence
-rather than what the page is for). Every chart your peers (D22, D43) hold in their top-50 pool of the
+rather than what the page is for). Every chart your peers (D53, D43) hold in their top-50 pool of the
 type, tiered by prevalence (D33, D34): how many hold it, weighted by how high. Each card says what the peers do on
-it — their median grade, how far apart they are (D35), how many hold it — and where you stand: your
+it — the grade you are projected to land at your Energy (D51, D52), ~~how far apart they are (D35)~~, how many hold it — and where you stand: your
 score and its percentile among them, whether it is in your pool and at what slot, or that you have
 never played it. Under it, who they are (D39). Above it, the chips line — **the dark state only** since field test round two, because a lit type's
 count is what the roster prints below (D27/D28) — and, beside the lede, the level bars saying where
@@ -485,6 +492,17 @@ tier list's own control, capped in width so the density trio stays beside it; th
 beside it (Only projected PUMBILITY gains under Prevalence; Project Phoenix 1 scores under Projected
 gains) are the page's only filters, and each shows only where it means something.
 
+**Energy (D51, round seven).** A select in the control row, between Grouped by and the grouping's own switch,
+labelled *Energy* and reading *Good* by default with *Great* and *Top of my game* behind it — the peers' 25th, 50th and
+75th percentile. It is the page's one read of the projection: every projected grade and every gain on the page, under
+every lens and density, moves with it, and the share card follows because it is drawn from the rendered list. It is a
+UiSetting like the pool and the grouping, so the frame reloads on a change the way it does for the pool selector; a
+change costs no sweep, because the sweep already holds the three rungs (§6.9), and the block holds its shape while it
+runs — controls disabled, the old list pulsing in place, one flip when the new record lands (D56). Nothing else on the site reads it (D50):
+the home widget's PUMBILITY pushes and the tier list's projected scores stay at the 25th. The select explains itself on
+hover and each option says what its percentile means — *a score three in four of your peers reach* / *the middle of your
+peers* / *a score only one in four of your peers beat*. No line on the page restates the setting.
+
 **Where the gain comes from (D38).** Not recomputed. `PumbilityPageRecord.Targets` is the target
 list's own merged, carried-wins, top-100 answer, and that is the badge; with the Phoenix 1 switch off
 the badge is `ProjectPumbilityGainsQuery`'s peer-only gain instead. Both already exist. Consequence:
@@ -497,10 +515,10 @@ are still what Projected gains is for, where §4.9 says why they are no edge cas
 
 **The card.** `TierListChartCard`, extended nowhere: jacket, bubble, the gain corner when it pays
 (D38), the projected grade in Compact's other corner, the body slot carrying the peers line
-(`LetterGradeIcon` for the median · the variability meter and its word · the count), the pool line,
+(`LetterGradeIcon` for the projected grade at your Energy · the count — ~~the variability meter and its word~~, D52), the pool line,
 and the tier list's border language with the tier list's precedence — passed, To-Do, carried. Compact
-prints no words: its tooltip carries the tier, the count, the weighted sum, the peers' median and
-variability, and your state; a top-right dot is the variability (D35). ~~and, under Projected gains, a
+prints no words: its tooltip carries the tier, the count, the weighted sum, the projected grade and
+your state; ~~a top-right dot is the variability (D35)~~ — retired with D52, the tile's top-right corner is empty. ~~and, under Projected gains, a
 top-edge stripe is the prevalence tier~~ — the stripe is **cut** (field test round one): the dot, the
 corner and the section already annotate one tile, and a fourth mark made the grid read as a chart. The
 legend under the trio names every mark the grid contains, as the target list's did.
@@ -523,8 +541,8 @@ the tier-list card is unchanged; the URL comes from `ShareCardImages`, which now
 spelling of it (flat art for SP/DP and the legacy sets, none where the page draws a legacy chip),
 so the card and the screen can never ask for different pictures.
 
-**Table** — Song · Chart · Peers (`17 of 23`, weighted sum in the title) · Peers' median · Variability
-· Gain · My Score · Your pool · the two actions.
+**Table** — Song · Chart · Peers (`17 of 23`, weighted sum in the title) · Projected (the grade and score at your
+Energy, D52) · Gain · My Score · Better Than · Your pool · the two actions. ~~Peers' median · Variability~~ (D52).
 
 **Roster (D39)** — `#` · Player · Level (gem + LV) · PUMBILITY · Singles · Doubles (competitive levels)
 · Peer for (All only) · Overlap with you (a bar and the count, of your fifty of that type). Your own
@@ -775,6 +793,10 @@ nothing, and it would make the older page's numbers drift as the newer mix fills
 
 ### 4.8 Phoenix 2 — PUMBILITY peers (round three, 2026-08-15)
 
+⚠ **Step 1 is superseded by D53 (§4.11, round eight):** the peers are the players whose pool of the type sits within
+500 below and 250 above the viewer's, not a rung band on the combined total. Steps 2–4, the floor and every
+measurement below stand as written.
+
 Owner report: the Phoenix 2 list recommended SS on charts he had not played, and no peer he could
 see held one. Reproduced exactly against the prod-synced database (BLAZOR S20 → 995,948, Rise Up
 D20 → 996,935), then every candidate rule was measured on the same backtest before one was picked.
@@ -894,6 +916,130 @@ a Carried section under Prevalence (§3.10) and why the Projected-gains grouping
 interleaved: it reproduces the shipping order row for row (OVERNIGHT FLOWER +26.9, QUATTUORUX +26.9,
 Cleaner, Cross Over, Aragami +24.9). Under All the same charts re-base against the merged bar (345.94)
 and read +18 / +18 / +16.
+
+### 4.10 Round seven — which percentile, measured where a player looks (2026-09-01)
+
+The owner asked for the 25th percentile as the default and a per-page choice of percentile. Before
+either was drawn, the shipping harness (`ScoreTracker.ExplorationTests/Pumbility/PumbilityProjectionBacktestTests`)
+was extended to read the same pairs at the peers' first and third quartiles — the projector already
+computed both for the Peers IQR — and to add coverage (the share of actual scores at or above the
+estimate), the never-overstated rate (the estimate's letter grade no higher than the actual one), a
+sampled Phoenix 1 backtest, the **top of the list**, and a split-half per-player quantile. Truth is the
+player's actual best on charts they have played, which favours every percentile alike: nobody plays
+the charts they are worst at.
+
+**Over every pair, Phoenix 2** (289 players, 11,480 pairs) and **Phoenix 1** (every eighth account,
+150 with a level ≥ 15 type, 32,423 pairs in the page's ±2 window):
+
+| read | P2 median bias | P2 coverage | P2 grade never overstated | P2 SS+ calls right | P1 median bias | P1 coverage | P1 SS+ calls right |
+|---|---|---|---|---|---|---|---|
+| 25th | −6,734 | 76% | 83% | 90% | −10,939 | 75% | 88% |
+| 50th | 0 | 50% | 62% | 81% | — | — | — |
+| 65th (P1 shipped) | — | — | — | — | **+7,359** | 30% | 53% |
+| 75th | +5,189 | 25% | 41% | 70% | +11,700 | 20% | 43% |
+
+So the median was centered over everything on Phoenix 2 — and the Phoenix 1 constant, fitted in
+January on a forward-looking test of levels 19–21, reads seven thousand high against today's frozen
+records, where the band a player is matched to is whoever kept grinding. "Centered over everything"
+is the wrong test, though, and the owner said so before the numbers did: *"I don't think I've EVER
+come close to ANY of the medians recommended."*
+
+**The top of the list.** What a player sees is the top of a list sorted by projected gain, and sorting
+by a noisy estimate selects the charts where it ran high — the winner's curse. Per player-type, the
+answered charts ranked by projected PUMBILITY value (the page's own order; the bar is one number
+within a player), the top ten read against the rest, each percentile ranking its own list:
+
+| Phoenix 2, 176 lists | median bias | coverage | grade overstated | SS+ calls on rows | those right |
+|---|---|---|---|---|---|
+| top 10 at the 50th | **+4,728** | 35% | 56% | 44% | **53%** |
+| the rest at the 50th | −298 | 53% | 35% | 71% | 84% |
+| top 10 at the 25th | −4,123 | 63% | 29% | 21% | 73% |
+| top 10 at the 75th | +14,214 | 13% | 81% | 70% | 35% |
+
+| Phoenix 1, 251 lists | median bias | coverage | grade overstated | SS+ calls on rows | those right |
+|---|---|---|---|---|---|
+| top 10 at the 65th | +4,693 | 36% | 49% | 18% | 62% |
+| the rest at the 65th | +7,676 | 30% | 56% | 16% | 52% |
+| top 10 at the 25th | −10,314 | 76% | 13% | 3% | 90% |
+
+At the median the top ten overshoots by half a grade and its SS calls are a coin flip; at the 25th it
+reads modestly low, overstates the grade on 29% of rows instead of 56%, and an SS it does call lands
+three times in four. The cost is asymmetric — an SS a player cannot hit poisons trust in the whole
+list, an undershoot is invisible — which is D50. On Phoenix 1 the whole list overshoots, not just the
+top, so one literal ladder on both mixes holds.
+
+**A per-player quantile, measured and declined.** Where a player's own scores sit among their peers
+(midpoint rank of the actual among the voices on each chart) spans the 24th to the 73rd percentile
+across players (p10–p90 of 183 player-types), and is noisy within one (median within-player IQR of the
+percentile 0.37, where 0.5 is "anywhere"). Fitted on the odd half of each player's charts and scored on
+the even half: personal quantile MAE 8,604 against the median's 9,277 (−7%), bias 0, grade-exact 33.3%
+vs 30.6%, SS+ calls right 83.6% vs 81.0%; a half-shrunk version 8,651. The first personalisation on
+this page to measure positive (§4.3's four were ≤ 0.3%; §4.5's per-player offset was +9.1% worse) —
+and declined as a product (*"no. no auto."*): the knob is the player's, and it answers *how am I
+playing today*, not *where do I stand*. Recorded so it is not re-derived.
+
+**The reporter's own list**, singles pool, bar 346.68, at the three rungs: 46 / 100 / 100 of the
+hundred listed rows still clear the bar; SS+ calls 9 / 38 / 77. His own Phoenix 2 form on the S22
+charts (961k–967k) sits at the peers' 25th. ⚠ Those figures are a 2026-09-01 snapshot of a live
+account — re-run the probe rather than quoting them.
+
+### 4.11 Round eight — who the peers are, measured on the same pairs (2026-09-01)
+
+The owner's report after round seven: the charts the page kept pushing were charts only players ABOVE
+him held — King's Tomb D24 was held by peers on higher rungs, every one of them scoring it well — and
+the question was whether that was his account or the population. Three questions, in turn, on the
+round-seven harness and the same 289 players / 11,480 pairs (`Phoenix2_scorers_level_offset_against_the_bias`,
+`Phoenix2_pertype_pool_window_against_the_rung_band`).
+
+**It is the population.** For every pair the band answers, the rung offset of every voice heard
+against the viewer's own rung, grouped by where the viewer stands:
+
+| viewer's rung | pairs | voices below / level / above the viewer | pairs whose scorers' median sits above / below | top 10 at the median, bias |
+|---|---|---|---|---|
+| 11–15 | 569 | 24% / 18% / **58%** | **62%** / 11% | +7,962 |
+| 16–20 | 2,132 | 25% / 13% / **62%** | **73%** / 10% | +9,142 |
+| 21–25 | 4,900 | 43% / 15% / 42% | 29% / 34% | +4,490 |
+| 26–30 | 3,653 | 52% / 16% / 31% | 15% / 57% | +1,578 |
+| 31–36 | 226 | 90% / 10% / 0% | 0% / 100% | −2,296 |
+
+The skew is structural, not personal: the charts a player has not played are the ones the players
+above them hold, so a symmetric band around the viewer hears the room above more than the room below,
+worst in the middle of the population where the rungs are thickest above. Only at the top of the
+ladder, where nobody stands above, does the median read low.
+
+**Asymmetric rung windows**, re-read off the same voices (strict: under five voices in the window the
+chart is not shown) — −2..+1 answered 77% of the band's pairs and cut the top ten's median-read bias to
+−665 (coverage 52%, SS+ calls right 70%); −3..+1 answered 85% at −1,728 (56%, 73%); rung weighting by
+`exp(−|offset|)` barely moved (+4,085 at the 75th, 0 at the median over every pair). Enough to show the
+direction, not chosen: the owner's next question was whether the combined total should be a factor at all.
+
+**Windows on the pool of the type.** Peers drawn on the viewer's pool OF THE TYPE — the stats row's
+per-type top-fifty sum — within a PUMBILITY distance of it, full pool of the type on both sides, the
+five-voice floor, the viewer out. Head to head against the shipping band on the pairs both answer:
+
+| window on the pool of the type | pairs answered | median group (p10–p90) | viewers under five peers | top 10 · median read: bias | coverage | SS+ calls right | all pairs · median: bias / coverage |
+|---|---|---|---|---|---|---|---|
+| ±3 rungs on the total (shipping) | 100% | 36 (17–61) | — | +1,974 to +4,728 | 35–43% | 53–65% | 0 / 50% |
+| ±250 | 58% | 16 (5–27) | 17 of 185 | +944 | 46% | 73% | 0 / 51% |
+| ±500 | 88% | 26 (10–51) | 0 | +2,664 | 41% | 63% | 0 / 50% |
+| ±1000 | 113% | 48 (20–88) | 0 | +8,802 | 28% | 43% | +168 / 49% |
+| **−500..+250** (D53) | 75% | 22 (7–39) | 1 of 185 | **−1,611** | **57%** | **76%** | −1,214 / 59% |
+| −750..+250 | 86% | 26 (10–51) | 1 of 185 | −3,024 | 61% | 78% | −2,572 / 65% |
+| −500..0 | — | 14 (5–27) | 17 of 185 | — | — | — | — |
+
+(The band's own top-ten figures differ per row because each is measured on the pairs that window also
+answers.) A symmetric window does not fix the skew — ±500 still overshoots the top ten by +2.7k, ±1000
+reads worse than the band — because a symmetric window reaches as far into the room above as below and
+the room above is fuller. Reaching further down than up is what moves it, and −500..+250 is where the
+top ten stops overshooting without the group thinning out: one viewer in 185 drops under five peers,
+against seventeen at ±250. The wider −750..+250 pushes the median read down another 1.4k for eleven
+more points of pairs answered; the owner chose the narrower one to roll out and *"see what people think"*.
+
+**The reporter's own case.** Singles pool 17,648, doubles 17,318: 37 singles peers and 22 doubles peers
+under −500..+250 against the band's 61 and 37. King's Tomb D24, the chart the round began on, has
+**two** voices among his doubles peers under ±500 — under the five-voice floor, so it is not shown —
+where the band read it off higher-rung specialists and pushed it. ⚠ Snapshot figures of a live account;
+re-run the probe rather than quoting them.
 
 ## 5. Phoenix 2 carryover — the Phoenix 1 page
 
@@ -1188,6 +1334,71 @@ its sizes), `PumbilityComponentTests` (the target-list cases deleted, the board 
 (2) Domain; (3) PlayerProgress; (4) the page on both mixes; (5) the Your top 50 lens; (6) the
 Breakdown page; (7) nine locales.
 
+### 6.9 Round seven — Energy
+
+**Still no new table, port, package, migration or job.** No API surface reads a projection.
+
+| Vertical / layer | Change |
+|---|---|
+| **Domain** | `PeerEstimator`: one `DefaultQuantile = 0.25` replaces `Quantile` (0.65) and `Phoenix2Quantile` (0.50); `Median`, `LowerQuartile`, `UpperQuartile` stay as named rungs. `ScoreProjectionRequest.Quantiles` — the rungs a caller wants, the default alone when omitted. `ScoreProjection.Ladders`: per chart a `PeerLadder` of those rungs plus the peer count, both branches over the same voices and weights the estimate uses; `Scores` stays as the first rung, so a caller that wants one number is untouched. `PeerPoolChart` loses `Median`/`Quartile1`/`Quartile3` and answers `ProjectedAt(quantile)` from the `Scores` it already carries, null under the five-scorer floor. `PeerSpread`, `ScoreProjection.Spreads` and `PeerVariability` are deleted |
+| **PlayerProgress** | `Contracts/Energy.cs`: the enum and its rung. `GetPumbilityPageQuery`, `GetPumbilityPeersPageQuery`, `ProjectPumbilityGainsQuery` gain `Energy Energy = Energy.Good`. `ProjectionSweep` caches ladders; `PumbilityProjectionSaga.Estimate` asks for the three rungs and `Price` reads the request's; the peers-page handler fills `PeerPoolEntry.Projected` from the pool chart and drops the variability banding. `PumbilityPageSaga` threads Energy. `PumbilityProjection.Spreads`, `PumbilityTarget.Spread`, `PeerPoolEntry.Median`/`Quartile1`/`Quartile3`/`Variability` go. `PumbilityProjectionCache` is untouched — same key, same lifetime, same size limit. `RecommendedChartsSaga` is untouched: the widget reads the default |
+| **ChartIntelligence** | No code change. `TierListBlendBuilder` and `ProjectedScoresHandler` inherit the 25th through `Scores` |
+| **Web** | `PumbilitySectionFrame` reads `Pumbility__Energy`, carries it in `SectionContext`, reloads on change like the pool. `PeersSection`: the Energy select in the control row (a `MudSelect` beside Grouped by; its copy in `Services/EnergyLabels`), Energy on both reads, a re-fetch on change; the variability row leaves `PeerPoolLegend`. `PeerPoolList`: the Table column is **Projected**, reading the entry's projected score with the target's as fallback; the Comfortable peers line and the Compact corner grade read the same; the Variability column, the meter, the top-right dot and the legend row go. `VariabilityMeter.razor` deleted; `TierListChartCard` loses its top-right dot parameters with their only consumer; `ThemeScales.VariabilityColor`, the `--vary-1..5` tokens and the `.pmb-vary*` rules come out |
+| **Localization** | New: `Energy`, `Energy: Good` and `Energy: Great` (keys only — the English copy is *Good* and *Great*; `Good` and `Great` are the judgement names' keys, reusing them would print judgement translations in Korean and Japanese, and a case variant is forbidden), `Top of my game`, the select's sentence and one per option. `Projected` is reused. Retired: `Variability`, the five level words, `variability, consistent to split`, `Peers' median`, `From {0} peers` |
+
+**Performance.** The cached payload does not grow: three rungs per chart replace the estimate plus two
+quartiles it held already. Database reads are unchanged. A change of Energy is one setting write and
+the two reads a pool change already costs, both served from the cached sweep.
+
+**Two things that stay true.** On Phoenix 1 the Projected column reads the band's plain voices while
+the gain reads them growth-weighted, so the two can still differ by a grade there (D43's caveat). And
+the home widget's pushes read the default whatever the chip says, so a player on Great can see a chart
+on the page the widget does not offer (D51).
+
+**Tests.** `PeerEstimatorTests` (the default; the rungs); `ScoreProjectorTests` (ladders on both
+branches, the default as `Scores`); `PumbilityPeerPoolsTests` (`ProjectedAt`); `PeerVariabilityTests`
+deleted; `PumbilityProjectionSagaTests` / `PumbilityProjectionSagaPeersTests` / `PumbilityPageSagaTests`
+(Energy pricing, the sweep shape, `Projected`); `Tests.Components`: `PeerPoolListTests` (the Projected
+column, no Variability), `PeersSectionTests` (the chip persists its setting), `PeerRosterTests` fixture.
+The harness gains the quartile rows, coverage, the Phoenix 1 sample, the top-of-list read and the
+split-half quantile (§4.10).
+
+**Build order** — docs first, i18n last, pushed per commit: (1) this section, D50–D52, §4.10;
+(2) the harness; (3) Domain; (4) PlayerProgress; (5) the chip and the column; (6) the removal of the
+median, the spread and the variability meter; (7) nine locales.
+
+### 6.10 Round eight — the pool of the type, Great, one peer group
+
+**Still no new table, package, migration or job.** One reader method replaces another on an existing port;
+the nightly job does less.
+
+| Vertical / layer | Change |
+|---|---|
+| **Domain** | `IPlayerStatsReader.GetPlayersByPoolOfType(mix, chartType, minimumPool, maximumPool)` — inclusive both ends, a range read on the per-type pool column — replaces `GetPlayersByPumbilityRange`. `PeerGroup`: `Kind` is `PumbilityPeers`, `Center` is the viewer's pool of the type (settled, or the D48 finish), `Below`/`Above` replace `HalfWidth` (500/250 on PUMBILITY peers, the window twice on a competitive band; `Lowest`/`Highest` derived); `PumbilityWindowBelow`/`PumbilityWindowAbove` replace `PumbilityRungWindow` and `PumbilityBand(rung)`. `ScoreProjector`'s Phoenix 2 branch draws candidates on the window around `SinglesRating`/`DoublesRating` (or the caller's finish), the viewer out; the pool gates, the floor, the fallback and the pools ride unchanged. `PeerEstimator.DefaultQuantile` is `Median` |
+| **PlayerProgress** | `PumbilityProjectionSaga.Estimate` computes the D48 finish per type from the per-type pools it already builds for the bar (one `GetTop50ForPlayerQuery` fewer per sweep — the merged read goes) and hands each type its own. `Energy.Great` is the default on the three queries; `EnergyRungs` unchanged. `EFPlayerStatsRepository` gains the range read on the per-type column |
+| **ChartIntelligence** | `TierListBlendBuilder.ComputePumbility` on Phoenix 2 for a signed-in viewer projects the folder with the catalog and counts `PeerPools` holders per folder chart, banded with `TierListProcessor.ProcessIntoLogScaledTierList` — no stored list, no viewer subtraction. `PumbilityFoldersHandler` lists a Phoenix 2 viewer's folders from the same pools (every level a peer's pool reaches). `TierListSaga.ResolvePeers` writes only `*` on Phoenix 2. `PumbilityPeers` loses `ForPhoenix2Rung`, `ForPhoenix2Total`, `Phoenix2Band`. Phoenix 1's title-level lists and the Score lens are untouched |
+| **Web** | `PersonalizedBreakdown`: the Phoenix 2 stat block prints the pool window and the viewer's pool of the type instead of the rung band. `PeersSection`: the three ledes and the short-pool note name the window; the Energy select opens on Great; `PumbilitySectionFrame` defaults to Great. `ChartSkills`' peer caption names the window. `ChartLeaderboardScopes` unchanged (it reads the sweep) |
+| **Localization** | Retired: the three rung-band ledes, `within 3 levels of you with a full pool`, `you stand on {0}`, `Ranked against {0} PUMBILITY peers within 3 levels of you`, the merged-pool short-pool note. New: the three window ledes, `pools within {0} below and {1} above yours, each a full pool of the type`, `Pool window`, `your singles pool is {0}` / `your doubles pool is {0}`, the window caption, the per-type short-pool note. `Level band` stays for Phoenix 1 |
+
+**Performance.** The candidate read is a two-column range on the stats table where it was a one-column
+range — same cost, a smaller group (median 22 against 36) and so a smaller records read. The Play page's
+sweep drops one top-fifty query. The tier list's PUMBILITY lens for a signed-in Phoenix 2 viewer becomes
+a projector run per folder inside the blend's six-hour cache, where it was a table read; the folder
+picker is one run per type, cached the same way. The nightly job writes up to 37 fewer row sets per
+folder per type on Phoenix 2.
+
+**Tests.** `ScoreProjectorTests`: the window edges per type, the viewer out, the finish placing a short
+pool, no ladder clip. `PumbilityProjectionSagaTests`: the finish per type, the group's centre as a pool
+total, a short pool of one type placed by its own finish. `TierListSagaPumbilityTests`: Phoenix 2 writes
+only the community key. `BlendedTierListHandlerTests`: the lens counts the projector's pools, the viewer
+out, dark without a full pool. `PeerEstimatorTests` and every default-read assertion move to the median.
+`Tests.Components`: the Breakdown's pool window, the peer-line fixtures. `Tests.Integration`: the inclusive
+per-type range read. The exploration probes compile against the new port.
+
+**Build order** — docs first, i18n last, pushed per commit: (1) this section, D53–D55, §4.11, the tier-list
+and breakdown docs, the schema and jobs rows; (2) the definition — Domain, PlayerProgress, ChartIntelligence,
+Web, tests; (3) Great as the default; (4) nine locales.
+
 ## 7. Responsive
 
 The class ladder in [UX-GUIDELINES.md §1](../UX-GUIDELINES.md), no new numbers:
@@ -1229,7 +1440,14 @@ under the number. The nav row underneath fills the air that costs at desktop wid
 
 ## 9. Open
 
-- **The page's truth horizon — answered for Phoenix 2, open for Phoenix 1.** Bias is strongly
+- **Round eight, awaiting the field test (D53, D54).** Whether −500..+250 on the pool of the type holds
+  (*"let's roll that out and see what people think"*) or the wider −750..+250 — another 1.4k lower at the
+  median for eleven more points of pairs answered (§4.11) — reads better; whether Great as the default
+  holds on the new peers (*"i'll run it and see how it feels"*); and whether the roster should print
+  the pool of the type beside the gem, now that the type's pool is what makes a peer a peer.
+- ~~**The page's truth horizon — answered for Phoenix 2, open for Phoenix 1.**~~ **Closed in round seven (D50, §4.10):**
+  one default, the 25th, on both mixes — chosen on the top of the list rather than on the mean of every pair, and
+  Phoenix 1's p65 measured +7k against today's records. The original note, kept for the reasoning: bias is strongly
   horizon-dependent (the old formula ran +207 at 30 days against −2,300 at a year), and §4.1's `p65`
   is fitted at **one year**. On Phoenix 2 the question was measured (§4.8): against players' actual
   Phoenix 2 scores the shipped `p65` was centered only by offsetting errors, and on Phoenix 2 evidence

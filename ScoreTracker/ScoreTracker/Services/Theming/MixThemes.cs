@@ -381,26 +381,6 @@ public static class MixThemes
             [Judgment.Miss] = "#E8385A"
         };
 
-    // Variability — how far apart a peer group's scores sit on one chart, in five steps from
-    // very consistent (cool) to very split (hot). Mix-invariant like the judgments: a scale of
-    // disagreement rather than of quality, so it borrows neither the rarity ramp nor the
-    // difficulty ramp (docs/design/pumbility-overhaul.md D35, UX-GUIDELINES).
-    private static readonly IReadOnlyDictionary<PeerVariabilityLevel, string> VariabilityColors =
-        new Dictionary<PeerVariabilityLevel, string>
-        {
-            [PeerVariabilityLevel.VeryConsistent] = "#2BC1D8",
-            [PeerVariabilityLevel.Consistent] = "#7FCFB0",
-            [PeerVariabilityLevel.Mixed] = "#9AB3A3",
-            [PeerVariabilityLevel.Split] = "#FFC433",
-            [PeerVariabilityLevel.VerySplit] = "#FF6B4A"
-        };
-
-    /// <summary>Raw hex for a variability level, for render targets that cannot read custom properties.</summary>
-    public static string VariabilityHex(PeerVariabilityLevel level) => VariabilityColors[level];
-
-    /// <summary>The token index a level wears: 1 (very consistent) … 5 (very split).</summary>
-    public static int VariabilityIndex(PeerVariabilityLevel level) => (int)level + 1;
-
     // The lifebar's own zones (docs/design/life-calculator-redesign.md). The seven stops are
     // the in-game rainbow, painted across the visible bar so a draining bar reveals its red
     // end — the danger read comes free. Overflow is a cool chrome that deliberately does not
@@ -551,8 +531,6 @@ public static class MixThemes
         var life = $"{lifeStops}\n{lifeRainbow}\n" +
                    $"    --life-overflow: {LifeOverflowHex};\n" +
                    $"    --life-danger: {JudgmentColors[Judgment.Miss]};";
-        var variability = string.Join("\n", VariabilityColors.Select(kv =>
-            $"    --vary-{VariabilityIndex(kv.Key)}: {kv.Value};"));
         var speed = string.Join("\n", SpeedBandColors.Select((hex, i) => $"    --speed-{i + 1}: {hex};"));
         // The step-chart strip's vocabulary (docs/design/step-chart-failure-map.md D12).
         // Mix-invariant like the judgement colors: an up-left arrow is red in every theme, a
@@ -601,7 +579,6 @@ public static class MixThemes
 {grades}
 {judgments}
 {life}
-{variability}
 {speed}
 {stepChart}
 }}";

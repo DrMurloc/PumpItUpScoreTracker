@@ -388,11 +388,15 @@ else
             {
                 // A cohort rather than a roster, exactly like Competitive Peers: private peers
                 // stay on the board as Anonymous rows, because dropping them would disagree
-                // with every count the PUMBILITY page prints for the same group.
+                // with every count the PUMBILITY page prints for the same group. You are on it
+                // too: never one of your own peers (D31), so the peer read leaves you out, but
+                // the board's question is where you sit among them, and a board without your
+                // own row cannot answer it (owner, 2026-09-01).
                 if (_chart == null) return Array.Empty<UserPhoenixScore>();
                 _pumbilityPeers ??= (await Mediator.Send(new GetPumbilityPeersQuery(_chart.Type, Mix))).ToHashSet();
                 _communityUserIds = _clubmates;
-                return _world.Where(s => _pumbilityPeers.Contains(s.UserId)).ToArray();
+                var me = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : (Guid?)null;
+                return _world.Where(s => _pumbilityPeers.Contains(s.UserId) || s.UserId == me).ToArray();
             }
             case LeaderboardScope.LowestPassing:
             {

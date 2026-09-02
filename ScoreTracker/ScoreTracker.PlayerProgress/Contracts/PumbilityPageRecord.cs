@@ -202,7 +202,7 @@ public sealed record AskExample(PhoenixLetterGrade Grade, DifficultyLevel Level,
 [ExcludeFromCodeCoverage]
 public sealed record PumbilityTarget(Guid ChartId, PhoenixScore Projected, double Gain,
     PhoenixScore? Current, bool CurrentIsBroken, TierListCategory? Difficulty,
-    TargetSource Source = TargetSource.Peers, PeerSpread? Spread = null);
+    TargetSource Source = TargetSource.Peers);
 
 /// <summary>
 ///     What a projected score is built on.

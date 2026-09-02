@@ -20,12 +20,13 @@ public interface IPlayerStatsReader
         double range, CancellationToken cancellationToken);
 
     /// <summary>
-    ///     Peer lookup on the PUMBILITY ladder: players whose total PUMBILITY pool sits at or above
-    ///     <paramref name="minimumTotal" /> and below <paramref name="maximumTotalExclusive" /> — a
-    ///     rung band expressed as the pool values its rungs start at (docs/design/pumbility-overhaul.md
-    ///     §4.8). Half-open on purpose: a rung's <c>NextThreshold</c> is where the next rung starts,
-    ///     and a pool exactly on it belongs above.
+    ///     Peer lookup on the pool of one chart type (docs/design/pumbility-overhaul.md D53): players
+    ///     whose PUMBILITY pool of <paramref name="chartType" /> — the stats row's per-type top-fifty
+    ///     sum, stored unrounded — sits at or above <paramref name="minimumPool" /> and at or below
+    ///     <paramref name="maximumPool" />. Inclusive both ends: the window is a distance from the
+    ///     viewer's own pool, not a ladder of rungs with a next start. Singles reads the singles
+    ///     pool, doubles the doubles pool; any other type reads the merged total.
     /// </summary>
-    Task<IEnumerable<Guid>> GetPlayersByPumbilityRange(MixEnum mix, double minimumTotal, double maximumTotalExclusive,
-        CancellationToken cancellationToken);
+    Task<IEnumerable<Guid>> GetPlayersByPoolOfType(MixEnum mix, ChartType chartType, double minimumPool,
+        double maximumPool, CancellationToken cancellationToken);
 }

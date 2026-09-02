@@ -6,9 +6,11 @@ namespace ScoreTracker.PlayerProgress.Contracts.Queries
     /// <summary>
     ///     The PUMBILITY page's single read. <paramref name="Pool" /> null is the merged
     ///     top-50; naming a type scopes total, bar, curve and targets to that pool, which is
-    ///     what Phoenix 2's Singles/Doubles selector switches.
+    ///     what Phoenix 2's Singles/Doubles selector switches. <paramref name="Energy" /> is the
+    ///     rung the targets are projected at (D51) — the page's select; every other caller leaves
+    ///     it at Great (D54).
     /// </summary>
     [ExcludeFromCodeCoverage]
     public sealed record GetPumbilityPageQuery(Guid UserId, MixEnum Mix = MixEnum.Phoenix,
-        ChartType? Pool = null) : IQuery<PumbilityPageRecord>;
+        ChartType? Pool = null, Energy Energy = Energy.Great) : IQuery<PumbilityPageRecord>;
 }

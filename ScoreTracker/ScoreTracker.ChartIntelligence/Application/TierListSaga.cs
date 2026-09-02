@@ -487,7 +487,7 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
 
                     // Counted over every member, the reader included when they are one: the list is
                     // one per peer group, and a player is never one of their own peers, so the
-                    // reader takes their own pool back out at read time (TierListBlendBuilder).
+                    // Phoenix 1 reader takes their own pool back out at read time (TierListBlendBuilder).
                     byPeerKey[peerKey] = new PumbilityTierListFolder(TierListProcessor
                         .ProcessIntoLogScaledTierList(PumbilityListName, counts)
                         .Select(e => new PumbilityTierListRecord(e.ChartId, counts[e.ChartId], e.Category, e.Order))
@@ -595,8 +595,10 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
 
     /// <summary>
     ///     The peer groups to count over, plus the community group that is every player at once.
-    ///     Phoenix 1 groups by the level of a player's highest difficulty title; Phoenix 2 by the
-    ///     viewer's PUMBILITY rung, each group being the band of three rungs either side of it.
+    ///     Phoenix 1 groups by the level of a player's highest difficulty title. Phoenix 2 writes
+    ///     the community group alone: its personalized lens is a window around the viewer's own
+    ///     pool of the type, per viewer, which the projector answers at request time
+    ///     (docs/design/pumbility-tier-list.md §5, D55) and nothing materializes.
     /// </summary>
     private async Task<IReadOnlyDictionary<string, IReadOnlySet<Guid>>> ResolvePeers(MixEnum mix,
         ChartType chartType, IReadOnlyDictionary<Guid, IReadOnlySet<Guid>> pools,
@@ -607,26 +609,7 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
             [PumbilityPeers.Community] = pools.Keys.ToHashSet()
         };
 
-        if (mix == MixEnum.Phoenix2)
-        {
-            // PUMBILITY peers (docs/design/pumbility-tier-list.md §5, the same definition the
-            // projection uses): a list per VIEWER rung, counted over every full-pool player within
-            // three rungs of it. The rung is the total pool's — the merged top fifty across both
-            // types, the number the game's badge is drawn from — read from stats rather than from
-            // the per-type pool this pass built, because that pool is only one type's half of it.
-            var rungOf = (await _playerStats.GetStats(mix, pools.Keys, cancellationToken))
-                .ToDictionary(s => s.UserId, s => Phoenix2PumbilityLevel.From(s.SkillRating).Index);
-            for (var rung = 0; rung <= Phoenix2PumbilityLevel.CapstoneIndex; rung++)
-            {
-                var (lowest, highest) = PumbilityPeers.Phoenix2Band(rung);
-                var members = pools.Keys
-                    .Where(id => rungOf.TryGetValue(id, out var r) && r >= lowest && r <= highest)
-                    .ToHashSet();
-                if (members.Count > 0) peerGroups[PumbilityPeers.ForPhoenix2Rung(rung)] = members;
-            }
-
-            return peerGroups;
-        }
+        if (mix == MixEnum.Phoenix2) return peerGroups;
 
         for (var level = (int)DifficultyLevel.Min; level <= (int)DifficultyLevel.Max; level++)
         {

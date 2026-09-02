@@ -26,21 +26,71 @@ public sealed class PeerEstimatorTests
     }
 
     [Fact]
-    public void TheEstimateSitsAboveTheMeanOnALeftSkewedGroup()
+    public void AQuantileSitsAboveTheMeanOnALeftSkewedGroup()
     {
         // The shape every real chart has: a cluster of good scores plus a tail of
-        // barely-passed attempts. A mean lands in the tail; p65 lands in the cluster.
+        // barely-passed attempts. A mean lands in the tail; the median — the default read (D54) —
+        // lands in the cluster, well clear of the mean.
         var peers = new[]
         {
             Peer(600_000), Peer(720_000), Peer(910_000), Peer(945_000), Peer(960_000),
             Peer(965_000), Peer(970_000), Peer(975_000), Peer(980_000), Peer(985_000)
         };
         var mean = peers.Average(p => p.Score);
-        var estimate = PeerEstimator.Estimate(peers)!.Value;
+        var median = PeerEstimator.Estimate(peers, quantile: PeerEstimator.Median)!.Value;
+        var byDefault = PeerEstimator.Estimate(peers)!.Value;
 
-        Assert.True(estimate > mean,
-            $"expected p65 ({estimate:N0}) above the mean ({mean:N0}) on a left-skewed group");
-        Assert.True(estimate >= 960_000, $"expected the estimate inside the cluster, got {estimate:N0}");
+        Assert.True(median >= 960_000, $"expected the median inside the cluster, got {median:N0}");
+        Assert.True(byDefault > mean,
+            $"expected the default read ({byDefault:N0}) above the mean ({mean:N0}) on a left-skewed group");
+    }
+
+    [Fact]
+    public void TheDefaultReadIsTheMedian()
+    {
+        // D54: one default on both mixes, and it is the median — Great on the page's select; the
+        // quartiles are the other two rungs a caller can ask for.
+        Assert.Equal(PeerEstimator.Median, PeerEstimator.DefaultQuantile);
+        var peers = new[] { Peer(940_000), Peer(962_000), Peer(975_000), Peer(985_000), Peer(990_000) };
+
+        // Midpoint positions of five equal voices are 0.1, 0.3, 0.5, 0.7, 0.9: the median is the
+        // middle voice exactly, and the lower quartile interpolates three-quarters of the way from
+        // 940k to 962k.
+        Assert.Equal(975_000, PeerEstimator.Estimate(peers, growthDecayLevels: 0));
+        Assert.Equal(956_500, PeerEstimator.Estimate(peers, growthDecayLevels: 0, quantile: PeerEstimator.LowerQuartile));
+        Assert.Equal(PeerEstimator.Estimate(peers, quantile: PeerEstimator.DefaultQuantile),
+            PeerEstimator.Estimate(peers));
+    }
+
+    [Fact]
+    public void ALadderReadsEveryRungOverTheSameVoicesAndInterpolatesBetweenThem()
+    {
+        var peers = new[] { Peer(940_000), Peer(962_000), Peer(975_000), Peer(985_000), Peer(990_000) };
+        var rungs = new[] { 0.25, 0.5, 0.75 };
+
+        var ladder = PeerEstimator.Ladder(peers, rungs, 0)!;
+
+        Assert.Equal(5, ladder.PeerCount);
+        Assert.Equal(956_500, (int)ladder.At(0.25));
+        Assert.Equal(975_000, (int)ladder.At(0.5));
+        Assert.Equal(986_250, (int)ladder.At(0.75));
+        foreach (var q in rungs)
+            Assert.Equal(PeerEstimator.Estimate(peers, 0, q), (int)ladder.At(q));
+        // A rung nobody asked for is read between its neighbours, never invented from the voices.
+        Assert.Equal(965_750, (int)ladder.At(0.375));
+        // Outside the asked-for range the ladder holds its end rather than extrapolating.
+        Assert.Equal(956_500, (int)ladder.At(0.05));
+        Assert.Equal(986_250, (int)ladder.At(0.95));
+    }
+
+    [Fact]
+    public void ALadderHoldsNoOpinionUnderTheFloorExactlyAsTheEstimateDoes()
+    {
+        var four = Enumerable.Range(0, 4).Select(i => Peer(970_000 + i * 1_000)).ToArray();
+
+        Assert.Null(PeerEstimator.Ladder(four, new[] { 0.5 }, 0, PeerEstimator.Phoenix2MinimumPeers));
+        Assert.Null(PeerEstimator.Ladder(Array.Empty<PeerScore>(), new[] { 0.5 }));
+        Assert.NotNull(PeerEstimator.Ladder(four, new[] { 0.5 }, 0));
     }
 
     [Fact]
@@ -160,7 +210,7 @@ public sealed class PeerEstimatorTests
         var peers = new[] { Peer(940_000), Peer(985_000), Peer(962_000), Peer(990_000), Peer(975_000) };
 
         Assert.Equal(975_000, PeerEstimator.Estimate(peers, growthDecayLevels: 0,
-            quantile: PeerEstimator.Phoenix2Quantile, minimumPeers: PeerEstimator.Phoenix2MinimumPeers));
+            quantile: PeerEstimator.Median, minimumPeers: PeerEstimator.Phoenix2MinimumPeers));
     }
 
     [Fact]

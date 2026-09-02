@@ -26,8 +26,9 @@
 @inject IDateTimeOffsetAccessor Clock
 
 @* The Play page's block (docs/design/pumbility-overhaul.md §3.10, D32, D43): what your peers
-   build their number from, grouped by prevalence or by projected gain, and who they are — the
-   PUMBILITY band on Phoenix 2, the competitive band on Phoenix 1, and the ledes say which. Held
+   build their number from, grouped by prevalence or by projected gain, and who they are —
+   PUMBILITY peers on Phoenix 2 (the window on the pool of the type, D53), the competitive band on
+   Phoenix 1, and the ledes say which. Held
    by a component rather than the page because the pool it is scoped to arrives
    from the section frame — a parameter, so a pool change re-fetches on its own — and because
    the page record the frame already loaded is where the gains come from (D38): the target
@@ -35,7 +36,21 @@
    never disagree about a number. With the Phoenix 1 switch off the peer-only projection stands
    in, read once and kept.
 
-   The controls: Grouped by — Prevalence, Projected gains, Your top 50 (D44) — then, left-aligned
+   The Energy select (D51) is the page's one read of the projection — Good, Great or Top of my game
+   — and it belongs to the frame the way the pool does: the select raises the pick, the frame
+   remembers it and reloads, and the new energy arrives back here as a parameter with a record
+   already priced at it, so the peers' rows are read again at the same rung. It sits in the
+   control row between Grouped by and the grouping's own switch (owner, field test of the build).
+
+   A re-read holds its shape (D56). Only the first paint shows the patience card; after that a
+   change of energy or pool keeps the previous list on screen under a pulse — its cards and rows
+   blanked, its height and sections intact — with the controls in place and disabled for the
+   moment the read takes, and everything flips once when the new record lands. Swapping the whole
+   block for the card moved the controls a reader had just used and jumped the page twice
+   (owner, field test round eight). Grouped by is a re-sort of what is already here and needs
+   none of this.
+
+   The controls: Grouped by — Prevalence, Projected gains, Your top 50 (D44) — then Energy, then, left-aligned
    beside it, the one switch that means something under that grouping — Project Phoenix 1 scores
    under Projected gains and only when the record holds carried rows; Only projected PUMBILITY
    gains under Prevalence; nothing under Your top 50 — then the density trio at the far end, right
@@ -51,11 +66,13 @@
             <PeerCompareStrip Page="_peers" Charts="Charts"></PeerCompareStrip>
         }
     </div>
-    @if (ShortPool is { } short_ && Phoenix2PumbilityLevel.FromIndex((int)short_.Center) is { Gem: { } gem })
+    @if (ShortPool is { } short_)
     {
+        @* The finish is the pool of the type (D48, D53), so it prints as a PUMBILITY total — two
+           decimals, this being a PUMBILITY page — rather than as a gem. *@
         <p class="pmb-block-note" data-testid="peers-short-pool-note">
-            @L["You have {0} of {1} charts, so your peers are drawn from where you'd finish — {2} — if you hold your current average. This settles as your pool fills.",
-                short_.PoolCount, PeerGroup.PumbilityPoolSize, gem.ToString()]
+            @L["You have {0} of {1} charts, so your peers are drawn from where your pool of the type would finish — {2} — if you hold your current standard. This settles as your pool fills.",
+                short_.PoolCount, PeerGroup.PumbilityPoolSize, short_.Center.ToString("N2")]
         </p>
     }
     @if (ThinBand is { } thin)
@@ -64,9 +81,9 @@
             @L["Players at your level with a full pool: {0}. Every row here is read off fewer than five scores, and will move as more peers fill their pools.", thin.Size]
         </p>
     }
-    @if (Page.Peers is { } peers)
+    @if (Shown.Peers is { } peers)
     {
-        <PumbilityPeerLine Peers="peers" Pool="Pool"></PumbilityPeerLine>
+        <PumbilityPeerLine Peers="peers" Pool="ShownPool"></PumbilityPeerLine>
     }
 
     @if (_peers == null)
@@ -75,27 +92,39 @@
     }
     else
     {
-        <div class="pmb-peers-controls" data-testid="peers-controls">
+        <div class="pmb-peers-controls" data-testid="peers-controls" data-reloading="@(_reloading ? "true" : "false")">
             @* Two groups, not four items with margins between them: the select and its switch are
                one element of the row and the actions are the other, so nothing can drift into the
                middle however the free space is distributed (owner, field test rounds three–five). *@
             <span class="pmb-peers-controls-start">
             <MudSelect T="PeerGrouping" Class="pmb-peers-controls-select" Label="@L["Grouped by"]" Dense="true"
-                       Value="_groupBy" ValueChanged="SetGrouping" data-testid="peers-groupby">
+                       Disabled="_reloading" Value="_groupBy" ValueChanged="SetGrouping" data-testid="peers-groupby">
                 <MudSelectItem T="PeerGrouping" Value="PeerGrouping.Prevalence">@L["Prevalence"]</MudSelectItem>
                 <MudSelectItem T="PeerGrouping" Value="PeerGrouping.ProjectedGains">@L["Projected gains"]</MudSelectItem>
                 <MudSelectItem T="PeerGrouping" Value="PeerGrouping.YourTop50">@L["Your top 50"]</MudSelectItem>
+            </MudSelect>
+            @* Energy (D51): how you're playing today, as the rung of your peers every projected score
+               and gain on the page reads. The select explains itself on hover and each option says
+               what its percentile means. *@
+            <MudSelect T="Energy" Class="pmb-peers-controls-select" Label="@L["Energy"]" Dense="true"
+                       Disabled="_reloading" Value="Energy" ValueChanged="OnEnergyChanged" data-testid="peers-energy"
+                       title="@L["How you're playing today. Every projected score and gain on this page reads your peers at this level."]">
+                @foreach (var option in EnergyLabels.Options)
+                {
+                    var o = option;
+                    <MudSelectItem T="Energy" Value="o" title="@L[EnergyLabels.Hint(o)]" data-testid="@($"peers-energy-{o}")">@L[EnergyLabels.Label(o)]</MudSelectItem>
+                }
             </MudSelect>
             <span class="pmb-peers-controls-switches">
                 @if (_groupBy == PeerGrouping.ProjectedGains && HasCarried)
                 {
                     <MudSwitch T="bool" Value="_projectPhoenix1" ValueChanged="SetProjectPhoenix1" Color="Color.Primary"
-                               Label="@L["Project Phoenix 1 scores"]" data-testid="peers-p1-switch"></MudSwitch>
+                               Disabled="_reloading" Label="@L["Project Phoenix 1 scores"]" data-testid="peers-p1-switch"></MudSwitch>
                 }
                 @if (_groupBy == PeerGrouping.Prevalence)
                 {
                     <MudSwitch T="bool" Value="_gainsOnly" ValueChanged="SetGainsOnly" Color="Color.Primary"
-                               Label="@L["Only projected PUMBILITY gains"]" data-testid="peers-gains-switch"></MudSwitch>
+                               Disabled="_reloading" Label="@L["Only projected PUMBILITY gains"]" data-testid="peers-gains-switch"></MudSwitch>
                 }
             </span>
             </span>
@@ -110,33 +139,38 @@
                 {
                     <MudTooltip Text="@L["Download"]">
                         <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary"
-                                       OnClick="Download" aria-label="@L["Download"]" data-testid="peers-download"></MudIconButton>
+                                       Disabled="_reloading" OnClick="Download" aria-label="@L["Download"]" data-testid="peers-download"></MudIconButton>
                     </MudTooltip>
                 }
                 <MudButtonGroup OverrideStyles="false">
                     <MudTooltip Text="@L["Comfortable"]">
                         <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy"
                                        Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)"
-                                       OnClick="() => SetDensity(UiDensity.Comfortable)" aria-label="@L["Comfortable"]"></MudIconButton>
+                                       Disabled="_reloading" OnClick="() => SetDensity(UiDensity.Comfortable)" aria-label="@L["Comfortable"]"></MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="@L["Compact"]">
                         <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView"
                                        Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)"
-                                       OnClick="() => SetDensity(UiDensity.Compact)" aria-label="@L["Compact"]"></MudIconButton>
+                                       Disabled="_reloading" OnClick="() => SetDensity(UiDensity.Compact)" aria-label="@L["Compact"]"></MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="@L["Table"]">
                         <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows"
                                        Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)"
-                                       OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton>
+                                       Disabled="_reloading" OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton>
                     </MudTooltip>
                 </MudButtonGroup>
             </span>
         </div>
-        <PeerPoolLegend Density="_density" HasCarried="HasCarried && _projectPhoenix1 && _groupBy == PeerGrouping.ProjectedGains"></PeerPoolLegend>
-        <PeerPoolList @ref="_list" Page="_peers" Charts="Charts" Gains="Gains" Mix="Page.Mix" Density="_density" PoolRecord="Page" Skills="_skills"
-                      GroupBy="_groupBy" GainsOnly="_gainsOnly"
-                      ShowToDo="true" ToDos="ToDos" OnToDo="OnToDo" OnOpen="OnOpen" OnPlay="OnPlay"
-                      Collapsed="_collapsed" CollapsedChanged="SetCollapsed"></PeerPoolList>
+        @* The list and its legend render from the record they were built with (Shown), never from
+           a page record that has moved on under them — so while a re-read runs the shape on
+           screen is exactly the previous shape, blanked by the pulse, and it flips once. *@
+        <div class="pmb-list@(_reloading ? " pmb-list-reloading" : "")" aria-busy="@(_reloading ? "true" : "false")" data-testid="peers-list">
+            <PeerPoolLegend Density="_density" HasCarried="HasCarried && _projectPhoenix1 && _groupBy == PeerGrouping.ProjectedGains"></PeerPoolLegend>
+            <PeerPoolList @ref="_list" Page="_peers" Charts="Charts" Gains="Gains" Mix="Shown.Mix" Density="_density" PoolRecord="Shown" Skills="_skills"
+                          GroupBy="_groupBy" GainsOnly="_gainsOnly"
+                          ShowToDo="true" ToDos="ToDos" OnToDo="OnToDo" OnOpen="OnOpen" OnPlay="OnPlay"
+                          Collapsed="_collapsed" CollapsedChanged="SetCollapsed"></PeerPoolList>
+        </div>
     }
 </section>
 
@@ -147,11 +181,11 @@
             <h2 class="pmb-block-title">@L["Who your peers are"]</h2>
         </div>
         <p class="pmb-block-lede">
-            @(IsPumbilityBand
-                ? L["Players within three PUMBILITY levels of you holding a full pool of the type. You are never one of your own peers; the highlighted row is where you would sit."]
+            @(HasPumbilityPeers
+                ? L["Players whose pool of the type sits within {0} below and {1} above yours, each holding a full pool of it. You are never one of your own peers; the highlighted row is where you would sit.", WindowBelow, WindowAbove]
                 : L["Players within one competitive level of you for the type. You are never one of your own peers; the highlighted row is where you would sit."])
         </p>
-        <PeerRoster Rows="_peers.Roster" You="_peers.You" PrivatePeers="_peers.PrivatePeers" ShowPeerFor="Pool == null"
+        <PeerRoster Rows="_peers.Roster" You="_peers.You" PrivatePeers="_peers.PrivatePeers" ShowPeerFor="ShownPool == null"
                     Rivals="_rivals" Clubmates="_clubmates"></PeerRoster>
     </section>
 }
@@ -164,6 +198,12 @@
         new Dictionary<Guid, Chart>();
 
     [Parameter] public ChartType? Pool { get; set; }
+
+    /// <summary>The rung the frame priced the record at (D51); the peers' rows are read at the same one.</summary>
+    [Parameter] public Energy Energy { get; set; } = Energy.Great;
+
+    /// <summary>The select's pick, for the frame to remember and reload on.</summary>
+    [Parameter] public EventCallback<Energy> OnEnergyChanged { get; set; }
 
     [Parameter] public ISet<Guid> ToDos { get; set; } = new HashSet<Guid>();
 
@@ -186,7 +226,23 @@
     public const string CollapsedSettingKey = "Pumbility__CollapsedTiers";
 
     private PumbilityPeersPageRecord? _peers;
+
+    /// <summary>
+    ///     The frame's record the list on screen was built from. It trails <see cref="Page" />
+    ///     by exactly one read: the frame hands a re-priced record down before the peers for it
+    ///     have arrived, and rendering the old peers against the new gains would move rows under
+    ///     the pulse. Both advance together when the read lands (D56).
+    /// </summary>
+    private PumbilityPageRecord? _shownPage;
+
+    /// <summary>The pool the list on screen was scoped to; trails <see cref="Pool" /> the same way.</summary>
+    private ChartType? _shownPool;
+
+    /// <summary>A re-read after the first paint: the controls disable and the list pulses in place.</summary>
+    private bool _reloading;
+
     private ChartType? _loadedPool;
+    private Energy _loadedEnergy = Energy.Great;
     private bool _loaded;
     private bool _settingsRead;
 
@@ -220,17 +276,28 @@
     private IReadOnlyDictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>> _skills =
         new Dictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>>();
 
+    /// <summary>The record everything below the ledes renders from — the frame's, one read behind during a re-read.</summary>
+    private PumbilityPageRecord Shown => _shownPage ?? Page;
+
+    /// <summary>The pool everything below the ledes is scoped to — the frame's, one read behind during a re-read.</summary>
+    private ChartType? ShownPool => _shownPage == null ? Pool : _shownPool;
+
     /// <summary>The Phoenix 1 switch only exists for a player whose Phoenix 1 record would change the list (D36).</summary>
-    private bool HasCarried => Page.Targets.Any(t => t.Source == TargetSource.Phoenix1);
+    private bool HasCarried => Shown.Targets.Any(t => t.Source == TargetSource.Phoenix1);
 
     /// <summary>The target list's own gains, or the peer-only projection with the Phoenix 1 switch off.</summary>
     private IReadOnlyDictionary<Guid, PumbilityTarget> Gains =>
         !_projectPhoenix1 && _peerOnlyGains != null
             ? _peerOnlyGains
-            : Page.Targets.GroupBy(t => t.ChartId).ToDictionary(g => g.Key, g => g.First());
+            : Shown.Targets.GroupBy(t => t.ChartId).ToDictionary(g => g.Key, g => g.First());
 
-    /// <summary>Who a peer is: the PUMBILITY band on Phoenix 2, the competitive band on Phoenix 1 (D43). The ledes say which.</summary>
-    private bool IsPumbilityBand => Page.Mix == MixEnum.Phoenix2;
+    /// <summary>Who a peer is: PUMBILITY peers on Phoenix 2 (D53), the competitive band on Phoenix 1 (D43). The ledes say which.</summary>
+    private bool HasPumbilityPeers => Page.Mix == MixEnum.Phoenix2;
+
+    /// <summary>The window's two reaches, whole, for the ledes that name it — a threshold, not a measurement.</summary>
+    private static string WindowBelow => PeerGroup.PumbilityWindowBelow.ToString("N0");
+
+    private static string WindowAbove => PeerGroup.PumbilityWindowAbove.ToString("N0");
 
     /// <summary>
     ///     A run that fell back below the five-peer floor (D47) has every row resting on fewer
@@ -255,21 +322,20 @@
         : null;
 
     /// <summary>
-    ///     A band the projection placed by an extrapolated finish rather than by the player's
-    ///     settled number (D48), so the note names the estimate it leaned on. The flag decides it,
-    ///     never the pool count: the rung is read off the MERGED pool, so a player with a full
-    ///     merged fifty and twenty-odd of the type being viewed was placed by a real total and must
-    ///     not be told otherwise. Same All rule as the thin-band note — every lit type has to
-    ///     qualify — and the largest count is the one printed.
+    ///     A group the projection placed by an extrapolated finish rather than by the player's
+    ///     settled pool of the type (D48, D53), so the note names the estimate it leaned on. The
+    ///     flag decides it, never the pool count — the projector knows which it did. Same All rule
+    ///     as the thin-band note — every lit type has to qualify — and the largest count is the one
+    ///     printed.
     /// </summary>
     private PeerGroup? ShortPool => Lit.Length > 0 && Lit.All(g => g.PlacedByEstimate)
         ? Lit.MaxBy(g => g.PoolCount)
         : null;
 
-    /// <summary>The PUMBILITY bands actually serving this view — one per lit type in the pool's scope.</summary>
-    private PeerGroup[] Lit => !IsPumbilityBand || Page.Peers is not { } groups
+    /// <summary>The PUMBILITY peer groups actually serving this view — one per lit type in the pool's scope.</summary>
+    private PeerGroup[] Lit => !HasPumbilityPeers || Shown.Peers is not { } groups
         ? Array.Empty<PeerGroup>()
-        : (Pool is { } one ? new[] { one } : new[] { ChartType.Single, ChartType.Double })
+        : (ShownPool is { } one ? new[] { one } : new[] { ChartType.Single, ChartType.Double })
         .Where(t => groups.TryGetValue(t, out var group) && group.IsLit && group.Size > 0)
         .Select(t => groups[t])
         .ToArray();
@@ -279,11 +345,11 @@
         : _groupBy == PeerGrouping.ProjectedGains
         ? L["Ranked by what each chart would add if you played it to the standard your peers set — priced against your bar as it stands now, so every row means what the first one does. Everything here clears your bar."]
         : _gainsOnly
-            ? IsPumbilityBand
-                ? L["What players within three levels of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it."]
+            ? HasPumbilityPeers
+                ? L["What players whose pool of the type sits within {0} below and {1} above yours build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it.", WindowBelow, WindowAbove]
                 : L["What players within one competitive level of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it."]
-            : IsPumbilityBand
-                ? L["What players within three levels of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand."]
+            : HasPumbilityPeers
+                ? L["What players whose pool of the type sits within {0} below and {1} above yours build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand.", WindowBelow, WindowAbove]
                 : L["What players within one competitive level of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand."];
 
     protected override async Task OnParametersSetAsync()
@@ -294,19 +360,31 @@
             await ReadSettings();
         }
 
-        if (_loaded && _loadedPool == Pool) return;
+        if (_loaded && _loadedPool == Pool && _loadedEnergy == Energy) return;
+        var first = !_loaded;
         _loaded = true;
         _loadedPool = Pool;
-        _peers = null;
-        _peerOnlyGains = null;
-        _peers = await Mediator.Send(new GetPumbilityPeersPageQuery(CurrentUser.User.Id, Page.Mix, Pool));
-        await ReadIdentity();
-        if (!_projectPhoenix1) await ReadPeerOnlyGains();
+        _loadedEnergy = Energy;
+
+        // The first paint has no shape to hold, so the card stands in for the block. Every read
+        // after it keeps what is on screen — the old peers against the old record — under the
+        // pulse, and swaps the lot at once when the new peers land (D56).
+        _reloading = !first;
+        var peers = await Mediator.Send(new GetPumbilityPeersPageQuery(CurrentUser.User.Id, Page.Mix, Pool, Energy));
+        // The chips are a property of the charts, not of the energy or the pool: one read per page.
+        if (_skills.Count == 0) await ReadIdentity();
+        var peerOnlyGains = _projectPhoenix1 ? null : await ReadPeerOnlyGains();
         if (_rivals == null)
         {
             _rivals = await Glow.GetMyRivalIds(Page.Mix);
             _clubmates = await Glow.GetMyCommunityMemberIds();
         }
+
+        _peers = peers;
+        _shownPage = Page;
+        _shownPool = Pool;
+        _peerOnlyGains = peerOnlyGains;
+        _reloading = false;
     }
 
     /// <summary>
@@ -333,10 +411,10 @@
             _collapsed = collapsed.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet();
     }
 
-    private async Task ReadPeerOnlyGains()
+    private async Task<IReadOnlyDictionary<Guid, PumbilityTarget>> ReadPeerOnlyGains()
     {
-        var projection = await Mediator.Send(new ProjectPumbilityGainsQuery(CurrentUser.User.Id, Page.Mix, Pool));
-        _peerOnlyGains = projection.ProjectedGains.ToDictionary(kv => kv.Key,
+        var projection = await Mediator.Send(new ProjectPumbilityGainsQuery(CurrentUser.User.Id, Page.Mix, Pool, Energy));
+        return projection.ProjectedGains.ToDictionary(kv => kv.Key,
             kv => new PumbilityTarget(kv.Key, projection.ExpectedScores[kv.Key], kv.Value, null, false, null));
     }
 
@@ -376,7 +454,9 @@
             var now = Clock.Now;
             var card = new TierListShareCard(
                 L["PUMBILITY Targets"],
-                $"{GroupingName} · {(Page.Mix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix")} · {now:yyyy-MM-dd}",
+                // The energy travels on the picture: a Good card and a Great card show different
+                // grades on the same charts, and a reader has to be able to tell which this was.
+                $"{GroupingName} · {L["Energy"]}: {L[EnergyLabels.Label(Energy)]} · {(Shown.Mix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix")} · {now:yyyy-MM-dd}",
                 L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name].ToString(),
                 palette.Primary, palette.Background, palette.Surface, palette.Ink, palette.InkMuted,
                 "https://piuscores.arroweclip.se/Pumbility",
@@ -419,7 +499,7 @@
     {
         _projectPhoenix1 = on;
         await UiSettings.SetSetting(ProjectPhoenix1SettingKey, on.ToString());
-        if (!on && _peerOnlyGains == null) await ReadPeerOnlyGains();
+        if (!on && _peerOnlyGains == null) _peerOnlyGains = await ReadPeerOnlyGains();
     }
 
     private async Task SetGainsOnly(bool on)

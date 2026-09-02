@@ -14228,44 +14228,6 @@ span.ct-console-pick { cursor: default; }
     align-items: center;
 }
 
-/* Variability: five dots and the word (D35). The dots take the level's own token; the word
-   always prints beside them, so the colour never carries the level alone. */
-.pmb-vary {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    white-space: nowrap;
-}
-
-.pmb-vary-dots {
-    display: inline-flex;
-    gap: 2px;
-}
-
-.pmb-vary-dots i {
-    display: block;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--mix-ink) 22%, transparent);
-}
-
-.pmb-vary-dots i.on {
-    background: var(--pmb-vary-color, var(--mix-ink-muted));
-}
-
-/* Compact's top-right dot — the only place the level is a mark rather than a word; the tile's
-   tooltip carries the word (D35). */
-.pmb-vary-dot {
-    position: absolute;
-    top: 3px;
-    right: 3px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, .45);
-}
-
 /* Under Projected gains the prevalence tier rides a top-edge stripe on a Compact tile, since
    the corner is the gain's and the top-right dot is the variability's. */
 .pmb-prevalence-stripe {
@@ -14430,15 +14392,6 @@ span.ct-console-pick { cursor: default; }
 .pmb-legend-corner {
     position: static;
     display: inline-block;
-}
-
-.pmb-legend-dot {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-right: 2px;
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, .45);
 }
 
 .pmb-legend-stripe {
@@ -15269,6 +15222,35 @@ span.ct-console-pick { cursor: default; }
 
 @media (prefers-reduced-motion: reduce) {
     .pmb-skeleton {
+        animation: none;
+    }
+}
+
+/* --- a re-read of the Play list (D56): the previous list stays on screen at its own height,
+       every card and every table cell blanked to a pulsing block, so the sections, the scroll
+       and the controls above hold still until the new record lands. Only the first paint shows
+       the patience card. --- */
+.pmb-list-reloading {
+    pointer-events: none;
+}
+
+.pmb-list-reloading .tier-chart-card,
+.pmb-list-reloading .pmb-table tbody td {
+    background: color-mix(in srgb, var(--mix-ink) 8%, transparent);
+    border-color: transparent;
+    border-radius: 6px;
+    box-shadow: none;
+    animation: pmb-pulse 1.4s ease-in-out infinite;
+}
+
+.pmb-list-reloading .tier-chart-card > *,
+.pmb-list-reloading .pmb-table tbody td > * {
+    visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pmb-list-reloading .tier-chart-card,
+    .pmb-list-reloading .pmb-table tbody td {
         animation: none;
     }
 }

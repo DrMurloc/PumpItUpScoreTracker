@@ -387,3 +387,43 @@ for the five-peer floor.
 | five | blugro | `blub` + `gro`, following `blurg`. Same reason. |
 | expect | Blarggro | Coined rather than reusing `Murgblarg` (insights/activity), which already means something else. |
 | reach (a level) | murgro | What a player does to a level they are climbing toward. Distinct from `grubmarg` (clear), which is what they do to a bar. |
+
+## Energy (2026-09-01)
+
+Coined for the `/Pumbility` Energy chip (docs/design/pumbility-overhaul.md D51) and its three
+options. Reused, not re-coined: `gam` (how), `blub` (you), `lurg` (play), `grorplurg` (today),
+`mrglrgo` (projected), `mrglrgl` (score), `roglub` (gain), `morp` (your), `maglmurp` (peers),
+`grorpmurm` (level), `murgro` (reach), `blgrl` (my), `mrrgl` (top), `lurggrgl` (good), `grarg` (great). The two
+option keys are `Energy: Good` and `Energy: Great` — the English copy is the bare word, the key carries the register
+because `Good`/`Great` are the judgement names' keys — and their Murloc values are the established `Lurggrgl` and `Grarg`.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| energy | glorgur | `glorg` + `ur`. |
+| game (as in "top of my game") | grogmur | `grog` + `mur`. |
+| every | algro | The root of the established `algrog` (everything). |
+| this | grogl | |
+| page | plglur | |
+| reads (draws its numbers from) | rorgmo | |
+| three | grurg | Follows `blurg` (two) and `blugro` (five). |
+| four | glurg | Same. |
+| middle | mogrgl | On the established `mog` (mid-). |
+| beat (outscore) | grrgl | |
+
+## The pool window (2026-09-01)
+
+Coined for round eight of the PUMBILITY overhaul (docs/design/pumbility-overhaul.md D53): the
+`/Pumbility` ledes, the Breakdown's stat block and the tier list's caption stop naming a band of
+three levels and name the window on the pool of the type instead — 500 below and 250 above yours.
+Reused, not re-coined: `blubgro` (pool), `maglmurp` (peers), `arglblgrl` (within), `glub` (below),
+`mrrgl` (above), `morg` (type), `gurg` (hold), `mrglmr` (full), `algro` (every → each), `murm`
+(band → window, as in `Grorpmurm murm`), `morp` (your, and yours), `ap` (and). The seven rung-band
+sentences are retired with their keys.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| whose | murpo | `murp` + `o`. |
+| sits (within a range) | mrogl | Straight from the syllable inventory; distinct from `morggrrgl` (stand). |
+| is | arg | The copula, for `your singles pool is {0}`. Not `ur` (on) or `og` (at). |
+| Pool window | Blubgro murm | The Breakdown's label; `murm` is the same word `Level band` uses. |
+| standard (the level you hold) | rorg | Reused from *average* — a Murloc does not split the two. |

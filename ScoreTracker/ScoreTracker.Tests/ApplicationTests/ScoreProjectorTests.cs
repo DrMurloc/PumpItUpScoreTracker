@@ -18,8 +18,9 @@ namespace ScoreTracker.Tests.ApplicationTests;
 
 /// <summary>
 ///     The projector's plumbing, mix by mix: who it asks for, what it reads, and what it refuses
-///     to read. Phoenix 2 draws PUMBILITY peers (docs/design/pumbility-overhaul.md §4.8) and
-///     never touches Phoenix 1; Phoenix 1 draws a competitive band and never touches Phoenix 2.
+///     to read. Phoenix 2 draws PUMBILITY peers — the window on the pool of the type
+///     (docs/design/pumbility-overhaul.md §4.8, §4.11, D53) — and never touches Phoenix 1; Phoenix 1
+///     draws a competitive band and never touches Phoenix 2.
 ///     Both fill the peers' pools when handed the catalog (§3.10, D43). The arithmetic itself is
 ///     PeerEstimatorTests' business.
 /// </summary>
@@ -32,38 +33,37 @@ public sealed class ScoreProjectorTests
     // ------------------------------------------------------------------ Phoenix 2
 
     [Fact]
-    public async Task Phoenix2PeersAreTheRungBandOnTheTotalPool()
+    public async Task Phoenix2PeersAreTheWindowOnThePoolOfTheType()
     {
-        // DIAMOND LV.4 (17,609.59) reaches down to DIAMOND LV.1 (17,000) and up to RED BERYL LV.2,
-        // whose next rung starts at 18,400 — the range asked of the stats reader, half-open.
-        var ctx = new Context(viewerTotal: 17_609.59, viewerPoolSize: 50);
+        // A singles pool of 17,600 reaches 500 down and 250 up (D53): the range asked of the stats
+        // reader, inclusive both ends, on the singles pool — never on the merged total.
+        var ctx = new Context(viewerPool: 17_600, viewerPoolSize: 50);
 
         await ctx.Project(ChartType.Single, ChartA);
 
-        ctx.Stats.Verify(s => s.GetPlayersByPumbilityRange(MixEnum.Phoenix2, 17_000, 18_400,
+        ctx.Stats.Verify(s => s.GetPlayersByPoolOfType(MixEnum.Phoenix2, ChartType.Single, 17_100, 17_850,
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task ThePeerBandIsOpenEndedAtTheCapstoneAndFlooredAtZero()
+    public async Task ADoublesChartDrawsItsPeersOnTheDoublesPool()
     {
-        var abyss = new Context(viewerTotal: 20_050, viewerPoolSize: 50);
-        await abyss.Project(ChartType.Single, ChartA);
-        // ALEXANDRITE LV.3 (index 33, 19,400) is three rungs under the capstone; nothing sits above it.
-        abyss.Stats.Verify(s => s.GetPlayersByPumbilityRange(MixEnum.Phoenix2, 19_400, double.MaxValue,
-            It.IsAny<CancellationToken>()), Times.Once);
+        // The two pools sit a thousand apart. The doubles chart asks for the doubles window and
+        // nothing of the singles one — the combined total was type-blind, and this is the fix.
+        var ctx = new Context(viewerPool: 17_600, viewerPoolSize: 50, viewerDoublesPool: 16_600);
 
-        var unranked = new Context(viewerTotal: 9_000, viewerPoolSize: 50);
-        await unranked.Project(ChartType.Single, ChartA);
-        // Index 0 minus three is still index 0; three above it is BRONZE LV.3, and BRONZE LV.4 starts at 11,500.
-        unranked.Stats.Verify(s => s.GetPlayersByPumbilityRange(MixEnum.Phoenix2, 0, 11_500,
+        await ctx.Project(ChartType.Double, ChartA);
+
+        ctx.Stats.Verify(s => s.GetPlayersByPoolOfType(MixEnum.Phoenix2, ChartType.Double, 16_100, 16_850,
             It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Stats.Verify(s => s.GetPlayersByPoolOfType(It.IsAny<MixEnum>(), ChartType.Single, It.IsAny<double>(),
+            It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task APeerNeedsAFullPoolOfTheTypeToCount()
     {
-        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var ctx = new Context(viewerPool: 17_500, viewerPoolSize: 50);
         var full = ctx.WithPeer(poolSize: 50);
         var thin = ctx.WithPeer(poolSize: 49);
         foreach (var peer in new[] { full, thin }) ctx.WithScore(peer, ChartA, 970_000);
@@ -72,18 +72,21 @@ public sealed class ScoreProjectorTests
 
         var result = await ctx.Project(ChartType.Single, ChartA);
 
-        // Six candidates in the band, five of them peers; the sixth's score never reached the estimate.
+        // Six candidates in the window, five of them peers; the sixth's score never reached the estimate.
         Assert.Equal(5, result.Group!.Size);
         Assert.Equal(5, result.PeerCount);
-        Assert.Equal(PeerGroupKind.PumbilityBand, result.Group.Kind);
-        Assert.Equal(23, result.Group.Center); // 17,500 is DIAMOND LV.3, badge index 23
-        Assert.Equal(3, result.Group.HalfWidth);
+        Assert.Equal(PeerGroupKind.PumbilityPeers, result.Group.Kind);
+        Assert.Equal(17_500, result.Group.Center); // the viewer's own pool of the type
+        Assert.Equal(PeerGroup.PumbilityWindowBelow, result.Group.Below);
+        Assert.Equal(PeerGroup.PumbilityWindowAbove, result.Group.Above);
+        Assert.Equal(17_000, result.Group.Lowest);
+        Assert.Equal(17_750, result.Group.Highest);
     }
 
     [Fact]
     public async Task TheViewerNeedsAFullPoolOfTheTypeOrTheTypeIsDark()
     {
-        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 29);
+        var ctx = new Context(viewerPool: 17_500, viewerPoolSize: 29);
         for (var i = 0; i < 6; i++) ctx.WithScore(ctx.WithPeer(poolSize: 50), ChartA, 970_000);
 
         var result = await ctx.Project(ChartType.Double, ChartA);
@@ -93,10 +96,10 @@ public sealed class ScoreProjectorTests
         Assert.False(result.Group!.IsLit);
         Assert.Equal(29, result.Group.PoolCount);
         Assert.Equal(50, result.Group.PoolSize);
-        // The band is not swept for a viewer it cannot yet serve: their own pool is read first and
+        // The window is not swept for a viewer it cannot yet serve: their own pool is read first and
         // alone, and a short one ends the run before anyone else's records are asked for.
         Assert.Equal(0, result.Group.Size);
-        ctx.Stats.Verify(s => s.GetPlayersByPumbilityRange(It.IsAny<MixEnum>(), It.IsAny<double>(),
+        ctx.Stats.Verify(s => s.GetPlayersByPoolOfType(It.IsAny<MixEnum>(), It.IsAny<ChartType>(), It.IsAny<double>(),
             It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Never);
         ctx.Scores.Verify(s => s.GetPlayerScoresInLevelRange(It.IsAny<MixEnum>(),
             It.Is<IEnumerable<Guid>>(ids => ids.Count() == 1 && ids.Single() == Viewer), It.IsAny<ChartType>(),
@@ -107,9 +110,9 @@ public sealed class ScoreProjectorTests
     }
 
     [Fact]
-    public async Task FewerThanFivePeersOnAChartIsNoOpinionAndFiveIsTheMedian()
+    public async Task FewerThanFivePeersOnAChartIsNoOpinionAndFiveIsAnEstimate()
     {
-        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var ctx = new Context(viewerPool: 17_500, viewerPoolSize: 50);
         var peers = Enumerable.Range(0, 5).Select(_ => ctx.WithPeer(poolSize: 50)).ToArray();
         // Four on chart A, five on chart B.
         foreach (var peer in peers.Take(4)) ctx.WithScore(peer, ChartA, 985_000);
@@ -119,61 +122,63 @@ public sealed class ScoreProjectorTests
         var result = await ctx.Project(ChartType.Single, ChartA, ChartB);
 
         Assert.DoesNotContain(ChartA, result.Scores.Keys);
+        // The default read is the median (D54): the middle of five equal voices. The quartiles
+        // ride the ladder for a caller that asks for them.
         Assert.Equal(975_000, (int)result.Scores[ChartB]);
         Assert.Equal(5, result.PeerCount);
         Assert.Equal(1.0, result.MeanFreshness);
     }
 
     [Fact]
-    public async Task TheSpreadBracketsTheMedianWithTheSamePeers()
+    public async Task TheLadderCarriesEveryRungTheCallerAskedForAndScoresIsTheFirst()
     {
-        // The Peers IQR: first and third quartiles of the same five voices the median came from,
-        // read with the same midpoint-convention quantile, and how many peers voted.
-        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var ctx = new Context(viewerPool: 17_500, viewerPoolSize: 50);
         var peers = Enumerable.Range(0, 5).Select(_ => ctx.WithPeer(poolSize: 50)).ToArray();
         var scores = new[] { 940_000, 962_000, 975_000, 985_000, 990_000 };
         for (var i = 0; i < 5; i++) ctx.WithScore(peers[i], ChartA, scores[i]);
 
-        var result = await ctx.Project(ChartType.Single, ChartA);
+        var result = await ctx.ProjectAt(ChartType.Single, new[] { 0.5, 0.25, 0.75 }, ChartA);
 
-        var spread = result.Spreads![ChartA];
+        var ladder = result.Ladders![ChartA];
         Assert.Equal(975_000, (int)result.Scores[ChartA]);
-        // Midpoint positions of five equal voices are 0.1, 0.3, 0.5, 0.7, 0.9: q25 interpolates
-        // three-quarters of the way from 940k to 962k, q75 a quarter of the way from 985k to 990k.
-        Assert.Equal(956_500, (int)spread.Quartile1);
-        Assert.Equal(986_250, (int)spread.Quartile3);
-        Assert.Equal(5, spread.PeerCount);
-        Assert.True((int)spread.Quartile1 <= (int)result.Scores[ChartA]);
-        Assert.True((int)spread.Quartile3 >= (int)result.Scores[ChartA]);
+        Assert.Equal(956_500, (int)ladder.At(0.25));
+        Assert.Equal(975_000, (int)ladder.At(0.5));
+        Assert.Equal(986_250, (int)ladder.At(0.75));
+        Assert.Equal(5, ladder.PeerCount);
+        // Not asked for, so read the default alone: one rung, and Scores is it.
+        var bare = await ctx.Project(ChartType.Single, ChartA);
+        Assert.Single(bare.Ladders![ChartA].Rungs);
+        Assert.Equal((int)bare.Scores[ChartA], (int)bare.Ladders[ChartA].At(PeerEstimator.DefaultQuantile));
     }
 
     [Fact]
-    public async Task AChartWithNoOpinionHasNoSpreadEither()
+    public async Task AChartWithNoOpinionHasNoLadderEither()
     {
-        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var ctx = new Context(viewerPool: 17_500, viewerPoolSize: 50);
         for (var i = 0; i < 4; i++) ctx.WithScore(ctx.WithPeer(poolSize: 50), ChartA, 970_000);
 
         var result = await ctx.Project(ChartType.Single, ChartA);
 
         Assert.DoesNotContain(ChartA, result.Scores.Keys);
-        Assert.DoesNotContain(ChartA, result.Spreads!.Keys);
+        Assert.DoesNotContain(ChartA, result.Ladders!.Keys);
     }
 
     [Fact]
     public async Task ABandTooThinForTheFloorAnswersOnWhatItHasWhenAskedTo()
     {
         // Two peers can never put five voices on a chart, so the floor takes the whole run to
-        // nothing rather than filtering it (D47). The spread still counts the real voices, so a
+        // nothing rather than filtering it (D47). The ladder still counts the real voices, so a
         // page can say how thin the evidence is.
-        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var ctx = new Context(viewerPool: 17_500, viewerPoolSize: 50);
         var peers = Enumerable.Range(0, 2).Select(_ => ctx.WithPeer(poolSize: 50)).ToArray();
         ctx.WithScore(peers[0], ChartA, 960_000);
         ctx.WithScore(peers[1], ChartA, 980_000);
 
         var relaxed = await ctx.ProjectRelaxed(ChartType.Single, ChartA);
 
+        // Two equal voices sit at 0.25 and 0.75, so the median reads halfway between them.
         Assert.Equal(970_000, (int)relaxed.Scores[ChartA]);
-        Assert.Equal(2, relaxed.Spreads![ChartA].PeerCount);
+        Assert.Equal(2, relaxed.Ladders![ChartA].PeerCount);
         Assert.True(relaxed.Group!.AnsweredBelowFloor);
     }
 
@@ -185,7 +190,7 @@ public sealed class ScoreProjectorTests
         // chart was scored by five of them, so the run relaxes exactly as a two-peer band does and
         // every row rests on fewer than five voices. A surface warning off Size would say nothing
         // here, about the whole board.
-        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var ctx = new Context(viewerPool: 17_500, viewerPoolSize: 50);
         var peers = Enumerable.Range(0, 9).Select(_ => ctx.WithPeer(poolSize: 50)).ToArray();
         foreach (var peer in peers.Take(4)) ctx.WithScore(peer, ChartA, 970_000);
         foreach (var peer in peers.Skip(4).Take(3)) ctx.WithScore(peer, ChartB, 980_000);
@@ -201,7 +206,7 @@ public sealed class ScoreProjectorTests
     [Fact]
     public async Task ARunTheFloorAnsweredIsNotMarkedBelowIt()
     {
-        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var ctx = new Context(viewerPool: 17_500, viewerPoolSize: 50);
         for (var i = 0; i < 5; i++) ctx.WithScore(ctx.WithPeer(poolSize: 50), ChartA, 970_000);
 
         var relaxed = await ctx.ProjectRelaxed(ChartType.Single, ChartA);
@@ -215,7 +220,7 @@ public sealed class ScoreProjectorTests
     {
         // The fallback ran and still found nothing, so there is no thin evidence to warn about —
         // only an empty board, which the page already reads as an empty board.
-        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var ctx = new Context(viewerPool: 17_500, viewerPoolSize: 50);
         for (var i = 0; i < 3; i++) ctx.WithPeer(poolSize: 50);
 
         var relaxed = await ctx.ProjectRelaxed(ChartType.Single, ChartA);
@@ -227,7 +232,7 @@ public sealed class ScoreProjectorTests
     [Fact]
     public async Task TheFloorStandsForACallerThatDidNotAskToRelaxIt()
     {
-        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var ctx = new Context(viewerPool: 17_500, viewerPoolSize: 50);
         var peers = Enumerable.Range(0, 2).Select(_ => ctx.WithPeer(poolSize: 50)).ToArray();
         foreach (var peer in peers) ctx.WithScore(peer, ChartA, 970_000);
 
@@ -241,17 +246,18 @@ public sealed class ScoreProjectorTests
     {
         // The viewer's own gate drops to twenty; a PEER's stays at fifty, because their pool is
         // the evidence. Both peers here hold a full one, so the band is real.
-        var ctx = new Context(viewerTotal: 4_000, viewerPoolSize: 20);
+        var ctx = new Context(viewerPool: 4_000, viewerPoolSize: 20);
         for (var i = 0; i < 5; i++) ctx.WithScore(ctx.WithPeer(poolSize: 50), ChartA, 975_000);
 
         var result = await ctx.ProjectFromFinish(ChartType.Single, 17_500, ChartA);
 
         Assert.Equal(975_000, (int)result.Scores[ChartA]);
-        // Placed by the finish, not by the twenty charts they happen to hold: 17,500 is DIAMOND
-        // LV.3, whose band reaches down to PLATINUM LV.5 (16,800) and up through RED BERYL LV.1,
-        // ending where LV.2 starts (18,200). Their own standing total of 4,000 is rung 0.
-        ctx.Stats.Verify(s => s.GetPlayersByPumbilityRange(MixEnum.Phoenix2, 16_800, 18_200,
+        // Placed by the finish, not by the twenty charts they happen to hold: the window is drawn
+        // around 17,500 — 17,000 to 17,750 — and their own standing pool of 4,000 never enters it.
+        ctx.Stats.Verify(s => s.GetPlayersByPoolOfType(MixEnum.Phoenix2, ChartType.Single, 17_000, 17_750,
             It.IsAny<CancellationToken>()), Times.Once);
+        Assert.True(result.Group!.PlacedByEstimate);
+        Assert.Equal(17_500, result.Group.Center);
     }
 
     [Fact]
@@ -259,7 +265,7 @@ public sealed class ScoreProjectorTests
     {
         // The tier list's own call supplies no finish, so a short pool stays dark rather than
         // being seated by the sum of the charts it happens to hold.
-        var ctx = new Context(viewerTotal: 4_000, viewerPoolSize: 20);
+        var ctx = new Context(viewerPool: 4_000, viewerPoolSize: 20);
         for (var i = 0; i < 5; i++) ctx.WithScore(ctx.WithPeer(poolSize: 50), ChartA, 975_000);
 
         var result = await ctx.Project(ChartType.Single, ChartA);
@@ -268,14 +274,14 @@ public sealed class ScoreProjectorTests
         Assert.False(result.Group!.IsLit);
         // The chip counts toward the gate the run was actually made under.
         Assert.Equal(50, result.Group.PoolSize);
-        ctx.Stats.Verify(s => s.GetPlayersByPumbilityRange(MixEnum.Phoenix2, It.IsAny<double>(),
+        ctx.Stats.Verify(s => s.GetPlayersByPoolOfType(MixEnum.Phoenix2, It.IsAny<ChartType>(), It.IsAny<double>(),
             It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task UnderTwentyChartsAFinishChangesNothingAndTheChipCountsToTwenty()
     {
-        var ctx = new Context(viewerTotal: 2_000, viewerPoolSize: 12);
+        var ctx = new Context(viewerPool: 2_000, viewerPoolSize: 12);
         for (var i = 0; i < 5; i++) ctx.WithScore(ctx.WithPeer(poolSize: 50), ChartA, 975_000);
 
         var result = await ctx.ProjectFromFinish(ChartType.Single, 17_500, ChartA);
@@ -292,7 +298,7 @@ public sealed class ScoreProjectorTests
         // The rescue is all-or-nothing for the run. One chart clearing the floor means the band
         // could answer, so the four-peer chart beside it stays "no opinion" exactly as it would
         // for anyone else — relaxing per chart would quietly lower the bar for a healthy band.
-        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var ctx = new Context(viewerPool: 17_500, viewerPoolSize: 50);
         var peers = Enumerable.Range(0, 5).Select(_ => ctx.WithPeer(poolSize: 50)).ToArray();
         foreach (var peer in peers) ctx.WithScore(peer, ChartB, 975_000);
         foreach (var peer in peers.Take(4)) ctx.WithScore(peer, ChartA, 985_000);
@@ -306,7 +312,7 @@ public sealed class ScoreProjectorTests
     [Fact]
     public async Task Phoenix2ReadsNothingFromPhoenix1AndWeighsNoGrowth()
     {
-        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var ctx = new Context(viewerPool: 17_500, viewerPoolSize: 50);
         for (var i = 0; i < 5; i++) ctx.WithScore(ctx.WithPeer(poolSize: 50), ChartA, 970_000 + i * 1_000);
 
         var result = await ctx.Project(ChartType.Single, ChartA);
@@ -326,7 +332,7 @@ public sealed class ScoreProjectorTests
     [Fact]
     public async Task TheViewersOwnScoresAreNeverEvidence()
     {
-        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var ctx = new Context(viewerPool: 17_500, viewerPoolSize: 50);
         // Five peers at 960k plus the viewer's own 1,000,000 on the same chart.
         for (var i = 0; i < 5; i++) ctx.WithScore(ctx.WithPeer(poolSize: 50), ChartA, 960_000);
         ctx.WithScore(Viewer, ChartA, 1_000_000);
@@ -342,7 +348,7 @@ public sealed class ScoreProjectorTests
         // Pool fullness is counted from the same read as the evidence — the viewer's own first,
         // then the band's — so both reads span the whole priced range (10..Max) whatever levels
         // the targets sit at, and neither is ever narrowed to the targets' band.
-        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var ctx = new Context(viewerPool: 17_500, viewerPoolSize: 50);
 
         await ctx.Project(ChartType.Single, ChartA);
 
@@ -359,7 +365,7 @@ public sealed class ScoreProjectorTests
     [Fact]
     public async Task ThePeersPoolsRideThePhoenix2RunWhenTheCatalogIsHandedIn()
     {
-        var ctx = new Context(viewerTotal: 17_609.59, viewerPoolSize: 50);
+        var ctx = new Context(viewerPool: 17_609.59, viewerPoolSize: 50);
         var peer = ctx.WithPeer(50);
         var other = ctx.WithPeer(50);
         ctx.WithScore(peer, ChartA, 985_000);
@@ -377,15 +383,15 @@ public sealed class ScoreProjectorTests
         Assert.Equal(50, pools.Charts[ChartB].Points);
         Assert.Contains(ChartB, pools.Pools[other]);
         Assert.DoesNotContain(ChartB, pools.Pools[peer]);
-        // Two scorers: held, so present, and under the five-peer floor for a median.
+        // Two scorers: held, so present, and under the five-peer floor for a projected grade.
         Assert.Equal(2, pools.Charts[ChartA].Scored);
-        Assert.Null(pools.Charts[ChartA].Median);
+        Assert.Null(pools.Charts[ChartA].ProjectedAt(PeerEstimator.Median));
     }
 
     [Fact]
     public async Task WithoutTheCatalogThePhoenix2RunReturnsNoPoolsAndStillEstimates()
     {
-        var ctx = new Context(viewerTotal: 17_609.59, viewerPoolSize: 50);
+        var ctx = new Context(viewerPool: 17_609.59, viewerPoolSize: 50);
         var peers = Enumerable.Range(0, 5).Select(_ => ctx.WithPeer(50)).ToArray();
         foreach (var peer in peers) ctx.WithScore(peer, ChartA, 980_000);
 
@@ -398,7 +404,7 @@ public sealed class ScoreProjectorTests
     [Fact]
     public async Task TheViewerIsNotInTheirOwnPeersPools()
     {
-        var ctx = new Context(viewerTotal: 17_609.59, viewerPoolSize: 50);
+        var ctx = new Context(viewerPool: 17_609.59, viewerPoolSize: 50);
         var peer = ctx.WithPeer(50);
         ctx.WithScore(peer, ChartA, 985_000);
         ctx.WithScore(Viewer, ChartA, 999_000);
@@ -415,7 +421,7 @@ public sealed class ScoreProjectorTests
     {
         // D43: the band is the peer group, nobody gated on a pool, and the pools are priced with
         // Phoenix 1 scoring — a SSS+ on a level 22 is Base(22) 880 × 1.5 = 1,320 there.
-        var ctx = new Context(viewerTotal: 0, viewerPoolSize: 0, phoenix1SinglesLevel: 21.4);
+        var ctx = new Context(viewerPool: 0, viewerPoolSize: 0, phoenix1SinglesLevel: 21.4);
         var peer = ctx.WithPhoenix1Peer(21.0);
         var thin = ctx.WithPhoenix1Peer(20.6);
         ctx.WithPhoenix1Score(peer, ChartA, 970_000);
@@ -440,7 +446,7 @@ public sealed class ScoreProjectorTests
     [Fact]
     public async Task Phoenix1ReadsToThePoolFloorOnlyWhenItIsBuildingPools()
     {
-        var ctx = new Context(viewerTotal: 0, viewerPoolSize: 0, phoenix1SinglesLevel: 21.4);
+        var ctx = new Context(viewerPool: 0, viewerPoolSize: 0, phoenix1SinglesLevel: 21.4);
         var peer = ctx.WithPhoenix1Peer(21.0);
         ctx.WithPhoenix1Score(peer, ChartA, 970_000);
 
@@ -458,7 +464,7 @@ public sealed class ScoreProjectorTests
     {
         // A band that scored none of the charts asked about has no estimate to give, but its
         // pools are real and the page prints them — the no-opinion early return keeps them.
-        var ctx = new Context(viewerTotal: 0, viewerPoolSize: 0, phoenix1SinglesLevel: 21.4);
+        var ctx = new Context(viewerPool: 0, viewerPoolSize: 0, phoenix1SinglesLevel: 21.4);
         var peer = ctx.WithPhoenix1Peer(21.0);
         ctx.WithPhoenix1Score(peer, ChartB, 990_000);
 
@@ -474,20 +480,21 @@ public sealed class ScoreProjectorTests
     [Fact]
     public async Task Phoenix1ReadsOnlyPhoenix1AndNamesItsCompetitiveBand()
     {
-        var ctx = new Context(viewerTotal: 0, viewerPoolSize: 0, phoenix1SinglesLevel: 21.4);
+        var ctx = new Context(viewerPool: 0, viewerPoolSize: 0, phoenix1SinglesLevel: 21.4);
         var peer = ctx.WithPhoenix1Peer(21.0);
         ctx.WithPhoenix1Score(peer, ChartA, 970_000);
 
         var result = await ctx.Project(MixEnum.Phoenix, ChartType.Single, 1.0, ChartA);
 
         Assert.Equal(970_000, (int)result.Scores[ChartA]);
-        Assert.Equal(1, result.Spreads![ChartA].PeerCount);
-        Assert.Equal(970_000, (int)result.Spreads[ChartA].Quartile1);
+        Assert.Equal(1, result.Ladders![ChartA].PeerCount);
+        Assert.Equal(970_000, (int)result.Ladders[ChartA].At(PeerEstimator.DefaultQuantile));
         Assert.Equal(PeerGroupKind.CompetitiveBand, result.Group!.Kind);
         Assert.Equal(21.4, result.Group.Center);
-        Assert.Equal(1.0, result.Group.HalfWidth);
+        Assert.Equal(1.0, result.Group.Below);
+        Assert.Equal(1.0, result.Group.Above);
         Assert.True(result.Group.IsLit);
-        ctx.Stats.Verify(s => s.GetPlayersByPumbilityRange(It.IsAny<MixEnum>(), It.IsAny<double>(),
+        ctx.Stats.Verify(s => s.GetPlayersByPoolOfType(It.IsAny<MixEnum>(), It.IsAny<ChartType>(), It.IsAny<double>(),
             It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Never);
         ctx.Scores.Verify(s => s.GetPlayerScoresInLevelRange(MixEnum.Phoenix2, It.IsAny<IEnumerable<Guid>>(),
             It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(),
@@ -499,7 +506,7 @@ public sealed class ScoreProjectorTests
     {
         // The launch fallback that read the other mix's level is gone (D21): a Phoenix 2 account
         // at the no-data floor stays at the floor.
-        var ctx = new Context(viewerTotal: 0, viewerPoolSize: 0, phoenix1SinglesLevel: 21.4);
+        var ctx = new Context(viewerPool: 0, viewerPoolSize: 0, phoenix1SinglesLevel: 21.4);
 
         var level = await ctx.Projector.CompetitiveLevel(MixEnum.Phoenix2, ChartType.Single, Viewer,
             CancellationToken.None);
@@ -516,27 +523,34 @@ public sealed class ScoreProjectorTests
         private readonly Dictionary<Guid, double> _phoenix1Levels = new();
         private readonly List<UserPhoenixScore> _phoenix2Scores = new();
         private readonly List<UserPhoenixScore> _phoenix1Scores = new();
-        private readonly double _viewerTotal;
+        private readonly double _viewerPool;
+        private readonly double _viewerDoublesPool;
         private readonly double _phoenix1SinglesLevel;
 
-        public Context(double viewerTotal, int viewerPoolSize, double phoenix1SinglesLevel = 1)
+        /// <param name="viewerPool">
+        ///     The viewer's Phoenix 2 pool of the type off their stats row — singles and doubles
+        ///     alike unless <paramref name="viewerDoublesPool" /> says otherwise (D53).
+        /// </param>
+        public Context(double viewerPool, int viewerPoolSize, double phoenix1SinglesLevel = 1,
+            double? viewerDoublesPool = null)
         {
-            _viewerTotal = viewerTotal;
+            _viewerPool = viewerPool;
+            _viewerDoublesPool = viewerDoublesPool ?? viewerPool;
             _phoenix1SinglesLevel = phoenix1SinglesLevel;
             _phoenix2PoolSizes[Viewer] = viewerPoolSize;
 
             Stats.Setup(s => s.GetStats(MixEnum.Phoenix2, Viewer, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(() => StatsFor(Viewer, _viewerTotal, 1));
+                .ReturnsAsync(() => StatsFor(Viewer, _viewerPool, _viewerDoublesPool, 1));
             Stats.Setup(s => s.GetStats(MixEnum.Phoenix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((MixEnum _, Guid id, CancellationToken _) =>
-                    StatsFor(id, 0, id == Viewer ? _phoenix1SinglesLevel : _phoenix1Levels.GetValueOrDefault(id, 1)));
+                    StatsFor(id, 0, 0, id == Viewer ? _phoenix1SinglesLevel : _phoenix1Levels.GetValueOrDefault(id, 1)));
             Stats.Setup(s => s.GetStats(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((MixEnum _, IEnumerable<Guid> ids, CancellationToken _) =>
-                    ids.Select(id => StatsFor(id, 0, _phoenix1Levels.GetValueOrDefault(id, 1))).ToArray().AsEnumerable());
-            Stats.Setup(s => s.GetPlayersByPumbilityRange(MixEnum.Phoenix2, It.IsAny<double>(), It.IsAny<double>(),
-                    It.IsAny<CancellationToken>()))
-                // Every peer this fixture creates sits inside the viewer's band; the band's edges
-                // are asserted on the call itself, not simulated here.
+                    ids.Select(id => StatsFor(id, 0, 0, _phoenix1Levels.GetValueOrDefault(id, 1))).ToArray().AsEnumerable());
+            Stats.Setup(s => s.GetPlayersByPoolOfType(MixEnum.Phoenix2, It.IsAny<ChartType>(), It.IsAny<double>(),
+                    It.IsAny<double>(), It.IsAny<CancellationToken>()))
+                // Every peer this fixture creates sits inside the viewer's window; the window's
+                // edges are asserted on the call itself, not simulated here.
                 .ReturnsAsync(() => _phoenix2PoolSizes.Keys.Where(id => id != Viewer).ToArray().AsEnumerable());
             Stats.Setup(s => s.GetPlayersByCompetitiveRange(MixEnum.Phoenix, It.IsAny<ChartType?>(),
                     It.IsAny<double>(), It.IsAny<double>(), It.IsAny<CancellationToken>()))
@@ -619,6 +633,14 @@ public sealed class ScoreProjectorTests
                 charts.Select(c => new ProjectionTarget(c, 22)).ToArray(), window, catalog), CancellationToken.None);
         }
 
+        /// <summary>A caller that lets the player choose a rung: the same request naming the rungs it will read (D51).</summary>
+        public Task<ScoreProjection> ProjectAt(ChartType type, double[] quantiles, params Guid[] charts)
+        {
+            return Projector.Project(new ScoreProjectionRequest(MixEnum.Phoenix2, type, Viewer,
+                    charts.Select(c => new ProjectionTarget(c, 22)).ToArray(), 1.0, Quantiles: quantiles),
+                CancellationToken.None);
+        }
+
         /// <summary>The PUMBILITY caller's run: the same request asking for the thin-band fallback (D47).</summary>
         public Task<ScoreProjection> ProjectRelaxed(ChartType type, params Guid[] charts)
         {
@@ -627,12 +649,12 @@ public sealed class ScoreProjectorTests
                 CancellationToken.None);
         }
 
-        /// <summary>The PUMBILITY caller's run for a short pool: placed and gated by a finish (D48).</summary>
+        /// <summary>The PUMBILITY caller's run for a short pool: placed and gated by an extrapolated finish (D48).</summary>
         public Task<ScoreProjection> ProjectFromFinish(ChartType type, double finishedTotal, params Guid[] charts)
         {
             return Projector.Project(new ScoreProjectionRequest(MixEnum.Phoenix2, type, Viewer,
                     charts.Select(c => new ProjectionTarget(c, 22)).ToArray(), 1.0, null,
-                    ProjectedTotal: finishedTotal),
+                    ProjectedTotal: finishedTotal, ProjectedTotalIsEstimate: true),
                 CancellationToken.None);
         }
 
@@ -667,10 +689,11 @@ public sealed class ScoreProjectorTests
             return new Guid(bytes);
         }
 
-        private static PlayerStatsRecord StatsFor(Guid id, double total, double singlesLevel)
+        /// <summary>A stats row carrying the two per-type pools (and their sum as the merged total) and one competitive level.</summary>
+        private static PlayerStatsRecord StatsFor(Guid id, double singlesPool, double doublesPool, double singlesLevel)
         {
-            return new PlayerStatsRecord(id, 0, 1, 0, 0, 0, total, 0, 0, 0, 0, 0, 0, 0, 0, singlesLevel, singlesLevel,
-                singlesLevel);
+            return new PlayerStatsRecord(id, 0, 1, 0, 0, 0, singlesPool + doublesPool, 0, 0, singlesPool, 0, 0,
+                doublesPool, 0, 0, singlesLevel, singlesLevel, singlesLevel);
         }
     }
 }
