@@ -442,6 +442,7 @@ public sealed class PumbilityProjectionBacktestTests
 
         var pairs = new List<Pair>();
         var voicesByPair = new Dictionary<(Guid, ChartType, Guid), (int Score, int Offset)[]>();
+        var viewerRung = new Dictionary<(Guid, ChartType), int>();
         foreach (var player in players)
         {
             var mine = (await scores.GetBestScores(MixEnum.Phoenix2, player, CancellationToken.None))
@@ -455,6 +456,7 @@ public sealed class PumbilityProjectionBacktestTests
                 if (level < MinimumLevelForBacktest) continue;
                 var held = mine.Where(s => charts[s.ChartId].Type == chartType && (int)charts[s.ChartId].Level >= 10).ToArray();
                 if (held.Length == 0) continue;
+                viewerRung[(player, chartType)] = myRung;
 
                 var projection = await projector.Project(new ScoreProjectionRequest(MixEnum.Phoenix2, chartType,
                     player, held.Select(s => new ProjectionTarget(s.ChartId, (int)charts[s.ChartId].Level)).ToArray(),
@@ -525,7 +527,92 @@ public sealed class PumbilityProjectionBacktestTests
         Report("rung-weighted", weighted, MixEnum.Phoenix2);
         TopOfList(weighted, charts, MixEnum.Phoenix2);
 
+        // ---- Is the skew everyone's or the top of the ladder's? The same pairs grouped by the
+        // viewer's own rung: who scores the charts they hold, and what the top ten reads.
+        _output.WriteLine("--- by the viewer's rung (shipping band, every voice equal) ---");
+        foreach (var (label, low, high) in new[]
+                 {
+                     ("viewer rungs 1-10", 1, 10), ("viewer rungs 11-15", 11, 15), ("viewer rungs 16-20", 16, 20),
+                     ("viewer rungs 21-25", 21, 25), ("viewer rungs 26-30", 26, 30), ("viewer rungs 31-36", 31, 36)
+                 })
+        {
+            var mine = pairs.Where(p => viewerRung[(p.Player, p.ChartType)] >= low && viewerRung[(p.Player, p.ChartType)] <= high).ToList();
+            if (mine.Count == 0) continue;
+            var heard = mine.SelectMany(p => voicesByPair[(p.Player, p.ChartType, p.ChartId)]).ToArray();
+            var playerTypes = mine.Select(p => (p.Player, p.ChartType)).Distinct().Count();
+            _output.WriteLine($"{label}: {playerTypes} player-types, {mine.Count} pairs; of every voice heard " +
+                              $"{100.0 * heard.Count(v => v.Offset < 0) / heard.Length:F0}% below / {100.0 * heard.Count(v => v.Offset == 0) / heard.Length:F0}% level / " +
+                              $"{100.0 * heard.Count(v => v.Offset > 0) / heard.Length:F0}% above the viewer; " +
+                              $"pairs whose scorers' median sits above the viewer: {100.0 * mine.Count(p => MedianOffset(p) > 0.5) / mine.Count:F0}%, below: {100.0 * mine.Count(p => MedianOffset(p) < -0.5) / mine.Count:F0}%");
+            foreach (var (rung, at) in Reads.Take(2))
+            {
+                Row($"  {label} · all · {rung}", mine, at, MixEnum.Phoenix2);
+                var top = Top(mine, charts, at, MixEnum.Phoenix2);
+                if (top.Count > 0) Row($"  {label} · top 10 · {rung}", top, at, MixEnum.Phoenix2);
+            }
+        }
+
+        // ---- Asymmetric peer windows, re-read off the same voices. Strict: under five voices in
+        // the window the chart is not shown. Fallback: the whole band answers instead, as D47 does.
+        _output.WriteLine("--- peer windows in rungs around the viewer, re-read off the same voices ---");
+        int Quantile((double, double)[] voicesAt, double q) => (int)Math.Round(Harness.WeightedQuantile(voicesAt, q));
+        foreach (var (label, low, high) in new[]
+                 {
+                     ("-3..+3 (ships)", -3, 3), ("-2..+1", -2, 1), ("-3..+1", -3, 1), ("-3..+2", -3, 2), ("-2..+2", -2, 2),
+                     ("-1..+1", -1, 1), ("-3..0", -3, 0)
+                 })
+        {
+            var strict = new List<Pair>();
+            var fallback = new List<Pair>();
+            foreach (var p in pairs)
+            {
+                var inside = voicesByPair[(p.Player, p.ChartType, p.ChartId)]
+                    .Where(x => x.Offset >= low && x.Offset <= high).Select(x => ((double)x.Score, 1.0)).ToArray();
+                if (inside.Length >= PeerEstimator.Phoenix2MinimumPeers)
+                {
+                    var re = p with { P25 = Quantile(inside, 0.25), P50 = Quantile(inside, 0.5), P75 = Quantile(inside, 0.75) };
+                    strict.Add(re);
+                    fallback.Add(re);
+                }
+                else
+                {
+                    fallback.Add(p);
+                }
+            }
+
+            _output.WriteLine($"[{label}] strict answers {100.0 * strict.Count / pairs.Count:F0}% of the pairs the band answers");
+            foreach (var (rung, at) in Reads.Take(2))
+            {
+                Row($"  {label} strict · all · {rung}", strict, at, MixEnum.Phoenix2);
+                var topStrict = Top(strict, charts, at, MixEnum.Phoenix2);
+                if (topStrict.Count > 0) Row($"  {label} strict · top 10 · {rung}", topStrict, at, MixEnum.Phoenix2);
+                var topFallback = Top(fallback, charts, at, MixEnum.Phoenix2);
+                if (topFallback.Count > 0) Row($"  {label} fallback · top 10 · {rung}", topFallback, at, MixEnum.Phoenix2);
+            }
+        }
+
         Assert.True(true, "a measurement, not a guarantee — read the output");
+    }
+
+    /// <summary>The top ten of each player-type's list at one read, for lists of twenty or more (the TopOfList rule).</summary>
+    private static List<Pair> Top(IReadOnlyCollection<Pair> pairs, IReadOnlyDictionary<Guid, Chart> charts, Func<Pair, int> at, MixEnum mix)
+    {
+        var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
+        double Value(Pair p)
+        {
+            var phoenix = PhoenixScore.From(at(p));
+            return scoring.GetScore(charts[p.ChartId], phoenix, ScoringConfiguration.ExpectedPlateForScore(phoenix), false);
+        }
+
+        var top = new List<Pair>();
+        foreach (var group in pairs.GroupBy(p => (p.Player, p.ChartType)))
+        {
+            var ordered = group.OrderByDescending(Value).ToArray();
+            if (ordered.Length < 20) continue;
+            top.AddRange(ordered.Take(10));
+        }
+
+        return top;
     }
 
     private static string Rung(Phoenix2PumbilityLevel rung) =>
