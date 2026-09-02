@@ -93,12 +93,16 @@ internal sealed class EFCommentRepository : ICommentRepository
         var rootOrder = rows.Where(r => r.Comment.ParentCommentId == null)
             .ToDictionary(r => r.Comment.Id, r => (Second: r.Comment.AnchorAt ?? 0m, r.Comment.CreatedAt));
 
+        // A reply whose root is not in the read sorts on its own stamps rather than throwing:
+        // nothing writes one today, and a public read is not the place to find out otherwise.
         return rows
-            .OrderBy(r => rootOrder[r.Comment.ParentCommentId ?? r.Comment.Id].Second)
-            .ThenBy(r => rootOrder[r.Comment.ParentCommentId ?? r.Comment.Id].CreatedAt)
-            .ThenBy(r => r.Comment.ParentCommentId == null ? 0 : 1)
-            .ThenBy(r => r.Comment.CreatedAt)
-            .Select(r => ToRow(r.Comment, r.Votes, r.ViewerVoted))
+            .Select(r => (Row: r, Root: rootOrder.GetValueOrDefault(r.Comment.ParentCommentId ?? r.Comment.Id,
+                (Second: r.Comment.AnchorAt ?? 0m, CreatedAt: r.Comment.CreatedAt))))
+            .OrderBy(x => x.Root.Second)
+            .ThenBy(x => x.Root.CreatedAt)
+            .ThenBy(x => x.Row.Comment.ParentCommentId == null ? 0 : 1)
+            .ThenBy(x => x.Row.Comment.CreatedAt)
+            .Select(x => ToRow(x.Row.Comment, x.Row.Votes, x.Row.ViewerVoted))
             .ToArray();
     }
 

@@ -975,9 +975,10 @@
                 await _module.DisposeAsync();
             }
         }
-        catch (JSDisconnectedException)
+        catch (JSException)
         {
-            // The circuit is gone; there is nothing left to unbind.
+            // The circuit is gone, or the element already is; either way there is nothing left
+            // to unbind, and a throw from here would take the circuit with it.
         }
 
         _self?.Dispose();
