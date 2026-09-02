@@ -31,6 +31,7 @@ internal sealed class CommentSaga :
     IRequestHandler<AcceptCommentTermsCommand>,
     IRequestHandler<GetChartCommentsQuery, CommentPageRecord>,
     IRequestHandler<GetChartCommentMarksQuery, IReadOnlyList<CommentRecord>>,
+    IRequestHandler<GetChartCommentScopeCountsQuery, IReadOnlyList<CommentScopeCountRecord>>,
     IRequestHandler<GetMyCommentScopesQuery, IReadOnlyList<CommentScopeRecord>>,
     IRequestHandler<GetCommentConsentQuery, CommentConsentRecord>,
     IRequestHandler<GetMyCommentTextQuery, string?>
@@ -236,6 +237,26 @@ internal sealed class CommentSaga :
 
         return await ProjectThreads(rows, request.Audience, request.ReaderLocale, request.PreferredLocale,
             viewer, cancellationToken);
+    }
+
+    /// <summary>
+    ///     What decides whether the strip's scope filter renders and which scopes it lists
+    ///     (step-chart-comments D18): the reader's own scopes — the rail's list, or Public alone
+    ///     signed out — each with how many anchored roots it holds on this chart.
+    /// </summary>
+    public async Task<IReadOnlyList<CommentScopeCountRecord>> Handle(GetChartCommentScopeCountsQuery request,
+        CancellationToken cancellationToken)
+    {
+        var scopes = _currentUser.IsLoggedIn
+            ? await Handle(new GetMyCommentScopesQuery(), cancellationToken)
+            : new[] { new CommentScopeRecord(CommentAudience.Public, Name.From("Public")) };
+        var counts = await _comments.CountAnchoredForChart(request.ChartId, ViewerId,
+            scopes.Select(scope => scope.Audience).ToArray(), cancellationToken);
+
+        return scopes
+            .Select(scope => new CommentScopeCountRecord(scope.Audience,
+                counts.TryGetValue(scope.Audience, out var count) ? count : 0))
+            .ToArray();
     }
 
     /// <summary>

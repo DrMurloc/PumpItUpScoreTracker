@@ -38,6 +38,17 @@ public sealed record GetChartCommentMarksQuery(
     string? PreferredLocale = null) : IQuery<IReadOnlyList<CommentRecord>>;
 
 /// <summary>
+///     How many anchored, living roots each of the reader's scopes holds on one chart — what
+///     decides whether the strip's scope filter renders at all, and which scopes it lists
+///     (docs/design/step-chart-comments D18). Signed out, the answer is Public alone.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record GetChartCommentScopeCountsQuery(Guid ChartId) : IQuery<IReadOnlyList<CommentScopeCountRecord>>;
+
+[ExcludeFromCodeCoverage]
+public sealed record CommentScopeCountRecord(CommentAudience Audience, int AnchoredComments);
+
+/// <summary>
 ///     The scope rail: Public, Notes, then the reader's non-regional communities. Empty for a
 ///     signed-out reader, who may read public comments but has nowhere of their own to post.
 /// </summary>

@@ -30,6 +30,14 @@ internal interface ICommentRepository
     Task<IReadOnlyList<CommentRow>> GetAnchoredForChart(Guid chartId, CommentAudience audience, Guid viewerId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     Anchored, living roots per audience on one chart, for the audiences asked about —
+    ///     the viewer's own notes only for the private one, never anybody else's. Audiences with
+    ///     nothing come back as zero, so a caller can list exactly the scopes that have something.
+    /// </summary>
+    Task<IReadOnlyDictionary<CommentAudience, int>> CountAnchoredForChart(Guid chartId, Guid viewerId,
+        IReadOnlyList<CommentAudience> audiences, CancellationToken cancellationToken = default);
+
     /// <summary>How many roots exist beyond the ones returned, so the UI knows whether to offer more.</summary>
     Task<int> CountRoots(Guid chartId, CommentAudience audience, Guid viewerId,
         CancellationToken cancellationToken = default);

@@ -115,4 +115,33 @@ public sealed class ChartCommentAnchorTests : IAsyncLifetime
         var inClub = await Repository.GetAnchoredForChart(Chart, CommentAudience.Community(club), stranger);
         Assert.Equal(new[] { "decoy club at 40", "my note at 66" }, inClub.Select(r => r.Text));
     }
+
+    [Fact]
+    public async Task TheScopeCountsSeeOnlyLivingAnchoredRootsAndOnlyYourOwnNotes()
+    {
+        var decoy = Guid.NewGuid();
+        var stranger = Guid.NewGuid();
+        var club = Guid.Parse("aaaaaaaa-2222-2222-2222-22222222222a");
+        var root = Comment.Post(Chart, decoy, CommentAudience.Public, "public at 29", Now, 29m);
+        await Repository.Save(root);
+        await Repository.Save(Comment.Reply(root, stranger, "a reply, not a root", Now));
+        await Repository.Save(Comment.Post(Chart, decoy, CommentAudience.Public, "whole chart", Now));
+        await Repository.Save(Comment.Post(Chart, decoy, CommentAudience.Private, "decoy note", Now, 10m));
+        await Repository.Save(Comment.Post(Chart, stranger, CommentAudience.Private, "my note", Now, 66.2m));
+        await Repository.Save(Comment.Post(Chart, decoy, CommentAudience.Community(club), "club at 40", Now, 40m));
+        var deleted = Comment.Post(Chart, decoy, CommentAudience.Public, "deleted", Now, 50m);
+        deleted.DeleteByAuthor(decoy, Now);
+        await Repository.Save(deleted);
+        var asked = new[] { CommentAudience.Public, CommentAudience.Private, CommentAudience.Community(club) };
+
+        var mine = await Repository.CountAnchoredForChart(Chart, stranger, asked);
+        var signedOut = await Repository.CountAnchoredForChart(Chart, Guid.Empty, asked);
+
+        Assert.Equal(1, mine[CommentAudience.Public]);
+        Assert.Equal(1, mine[CommentAudience.Private]);
+        Assert.Equal(1, mine[CommentAudience.Community(club)]);
+        Assert.Equal(1, signedOut[CommentAudience.Public]);
+        // Signed out there are no notes to count — not the decoy's, not anyone's.
+        Assert.Equal(0, signedOut[CommentAudience.Private]);
+    }
 }

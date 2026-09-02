@@ -776,6 +776,37 @@ public sealed class CommentSagaTests
             It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public async Task TheScopeCountsFollowTheReadersScopesAndZeroFillTheQuietOnes()
+    {
+        Communities(("Murloc Lab", ClubId, false));
+        _comments.Setup(c => c.CountAnchoredForChart(ChartId, _viewer.Id, It.IsAny<IReadOnlyList<CommentAudience>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<CommentAudience, int> { [CommentAudience.Public] = 2 });
+
+        var counts = await Subject().Handle(new GetChartCommentScopeCountsQuery(ChartId), CancellationToken.None);
+
+        Assert.Equal(new[] { (CommentAudience.Public, 2), (CommentAudience.Private, 0), (CommentAudience.Community(ClubId), 0) },
+            counts.Select(c => (c.Audience, c.AnchoredComments)));
+        _comments.Verify(c => c.CountAnchoredForChart(ChartId, _viewer.Id,
+            It.Is<IReadOnlyList<CommentAudience>>(audiences => audiences.Count == 3), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SignedOutTheScopeCountsAskAboutPublicAlone()
+    {
+        _currentUser.SetupGet(c => c.IsLoggedIn).Returns(false);
+        _comments.Setup(c => c.CountAnchoredForChart(ChartId, Guid.Empty, It.IsAny<IReadOnlyList<CommentAudience>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<CommentAudience, int> { [CommentAudience.Public] = 1 });
+
+        var counts = await Subject().Handle(new GetChartCommentScopeCountsQuery(ChartId), CancellationToken.None);
+
+        var only = Assert.Single(counts);
+        Assert.True(only.Audience.IsPublic);
+        Assert.Equal(1, only.AnchoredComments);
+    }
+
     private static CommentRow Anchored(Guid userId, decimal at, bool note = false)
     {
         return new CommentRow(Guid.NewGuid(), ChartId, userId, null, "some words", Now, null, null, null, 0,

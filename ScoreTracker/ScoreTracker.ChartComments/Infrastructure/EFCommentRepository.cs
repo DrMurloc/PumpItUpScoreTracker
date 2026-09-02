@@ -102,6 +102,47 @@ internal sealed class EFCommentRepository : ICommentRepository
             .ToArray();
     }
 
+    public async Task<IReadOnlyDictionary<CommentAudience, int>> CountAnchoredForChart(Guid chartId, Guid viewerId,
+        IReadOnlyList<CommentAudience> audiences, CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+
+        var wantPublic = audiences.Any(a => a.IsPublic);
+        // Guid.Empty never matches a note: a signed-out reader asking about the private scope
+        // counts nobody's.
+        var wantNotes = audiences.Any(a => a.IsPrivate) && viewerId != Guid.Empty;
+        var clubs = audiences
+            .Where(a => a.Kind == CommentAudienceKind.Community && a.CommunityId != null)
+            .Select(a => a.CommunityId!.Value)
+            .ToArray();
+        var publicKind = nameof(CommentAudienceKind.Public);
+        var privateKind = nameof(CommentAudienceKind.Private);
+        var communityKind = nameof(CommentAudienceKind.Community);
+
+        var rows = await database.Set<CommentEntity>().AsNoTracking()
+            .Where(c => c.ChartId == chartId && c.ParentCommentId == null && c.AnchorAt != null && c.DeletedAt == null)
+            .Where(c => (wantPublic && c.Audience == publicKind)
+                        || (wantNotes && c.Audience == privateKind && c.UserId == viewerId)
+                        || (c.Audience == communityKind && c.CommunityId != null && clubs.Contains(c.CommunityId.Value)))
+            .GroupBy(c => new { c.Audience, c.CommunityId })
+            .Select(g => new { g.Key.Audience, g.Key.CommunityId, Count = g.Count() })
+            .ToArrayAsync(cancellationToken);
+
+        var counts = audiences.Distinct().ToDictionary(a => a, _ => 0);
+        foreach (var row in rows)
+        {
+            var audience = row.Audience switch
+            {
+                nameof(CommentAudienceKind.Private) => CommentAudience.Private,
+                nameof(CommentAudienceKind.Community) => CommentAudience.Community(row.CommunityId!.Value),
+                _ => CommentAudience.Public
+            };
+            if (counts.ContainsKey(audience)) counts[audience] = row.Count;
+        }
+
+        return counts;
+    }
+
     public async Task<int> CountRoots(Guid chartId, CommentAudience audience, Guid viewerId,
         CancellationToken cancellationToken = default)
     {
