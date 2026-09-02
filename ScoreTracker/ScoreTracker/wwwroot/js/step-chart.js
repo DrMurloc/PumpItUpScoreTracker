@@ -1245,9 +1245,11 @@ function panelHeight(view) {
     return view.panelEl ? view.panelEl.offsetHeight : 0;
 }
 
-// The panel covers the bottom of the box, so the strip gets that much extra runway at its end
-// and the viewport's middle is measured above the panel, not under it.
+// The panel covers the bottom of the box: it takes the box's width (the box is max-content
+// wide, which no sibling can read from CSS), the strip gets the panel's height as extra runway
+// at its end, and the viewport's middle is measured above the panel, not under it.
 function applyRunway(view) {
+    if (view.panelEl) view.panelEl.style.width = (view.box.clientWidth + 2) + 'px';
     var inner = view.box.firstChild;
     if (inner) inner.style.paddingBottom = panelHeight(view) + 'px';
 }
