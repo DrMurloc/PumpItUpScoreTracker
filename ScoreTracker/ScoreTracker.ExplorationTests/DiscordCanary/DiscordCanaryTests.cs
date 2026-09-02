@@ -17,6 +17,7 @@ namespace ScoreTracker.ExplorationTests.DiscordCanary;
 ///     can't see. Messages are deliberately left in the channel: it doubles as a
 ///     human-glanceable gallery of what the cards looked like on every run.
 /// </summary>
+[Collection(DiscordCanaryCollection.Name)]
 [ExcludeFromCodeCoverage]
 public sealed class DiscordCanaryTests
 {
