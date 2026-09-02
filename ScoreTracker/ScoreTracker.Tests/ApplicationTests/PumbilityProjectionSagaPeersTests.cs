@@ -15,7 +15,8 @@ namespace ScoreTracker.Tests.ApplicationTests;
 /// <summary>
 ///     The Play page's read (docs/design/pumbility-overhaul.md §3.10) and the peer-ids read behind
 ///     the leaderboard chip, both off the same cached sweep the projection uses — Phoenix 2's
-///     PUMBILITY band and, since D43, Phoenix 1's competitive band.
+///     PUMBILITY peers (the window on the pool of the type, D53) and, since D43, Phoenix 1's
+///     competitive band.
 /// </summary>
 public sealed partial class PumbilityProjectionSagaTests
 {
@@ -89,7 +90,7 @@ public sealed partial class PumbilityProjectionSagaTests
         Assert.Equal(977_500, (int)great.Entries.Single().Projected!.Value);
         Assert.Equal(985_000, (int)top.Entries.Single().Projected!.Value);
         // Three energies, one sweep: the band was drawn once.
-        ctx.Stats.Verify(s => s.GetPlayersByPumbilityRange(MixEnum.Phoenix2, It.IsAny<double>(), It.IsAny<double>(),
+        ctx.Stats.Verify(s => s.GetPlayersByPoolOfType(MixEnum.Phoenix2, It.IsAny<ChartType>(), It.IsAny<double>(), It.IsAny<double>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -167,7 +168,7 @@ public sealed partial class PumbilityProjectionSagaTests
         Assert.Equal(1_234.5, row.Total);
         Assert.Equal(1, row.Overlap[ChartType.Single]);
         Assert.Null(page.You!.RungIndex);
-        ctx.Stats.Verify(s => s.GetPlayersByPumbilityRange(It.IsAny<MixEnum>(), It.IsAny<double>(), It.IsAny<double>(),
+        ctx.Stats.Verify(s => s.GetPlayersByPoolOfType(It.IsAny<MixEnum>(), It.IsAny<ChartType>(), It.IsAny<double>(), It.IsAny<double>(),
             It.IsAny<CancellationToken>()), Times.Never);
         ctx.Stats.Verify(s => s.GetPlayersByCompetitiveRange(MixEnum.Phoenix, ChartType.Single, It.IsAny<double>(),
             It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -189,7 +190,7 @@ public sealed partial class PumbilityProjectionSagaTests
         Assert.Empty(doubles); // the viewer's doubles pool is short: no doubles peers (D28)
         Assert.Contains(a, page.Roster.Select(r => r.User.Id));
         // One sweep served all three reads.
-        ctx.Stats.Verify(s => s.GetPlayersByPumbilityRange(MixEnum.Phoenix2, It.IsAny<double>(), It.IsAny<double>(),
+        ctx.Stats.Verify(s => s.GetPlayersByPoolOfType(MixEnum.Phoenix2, It.IsAny<ChartType>(), It.IsAny<double>(), It.IsAny<double>(),
             It.IsAny<CancellationToken>()), Times.Once); // the one sweep; the dark doubles type never reaches the band read
 
         // On Phoenix 1 the same question answers the competitive band — these peers are in both.

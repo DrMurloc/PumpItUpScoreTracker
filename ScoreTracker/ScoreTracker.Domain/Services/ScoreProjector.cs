@@ -1,5 +1,4 @@
-﻿using ScoreTracker.Domain.Models.Titles.Phoenix2;
-using ScoreTracker.Domain.Records;
+﻿using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Enums;
@@ -23,15 +22,16 @@ namespace ScoreTracker.Domain.Services;
 ///             it.
 ///         </item>
 ///         <item>
-///             <b>Phoenix 2</b> (§4.8): PUMBILITY peers — players within ±3 rungs of the viewer
-///             on the PUMBILITY level ladder who hold a full pool of the chart type, as the viewer
-///             must — their Phoenix 2 scores at full voice, and no opinion at all under five of
-///             them. Every number here is one the Phoenix 2 boards can confirm.
+///             <b>Phoenix 2</b> (§4.8, §4.11): PUMBILITY peers — players whose PUMBILITY pool of
+///             the chart type sits within 500 below and 250 above the viewer's, each holding a
+///             full pool of the type, as the viewer must (D53) — their Phoenix 2 scores at full
+///             voice, and no opinion at all under five of them. Every number here is one the
+///             Phoenix 2 boards can confirm.
 ///         </item>
 ///     </list>
 ///     <para>
-///         Both read the peers at the rungs the request asks for — the first quartile unless a
-///         caller says otherwise (D50) — and hand every rung back on the projection, so a caller
+///         Both read the peers at the rungs the request asks for — <see cref="PeerEstimator.DefaultQuantile" />
+///         unless a caller says otherwise — and hand every rung back on the projection, so a caller
 ///         that lets the player pick a rung (D51) never pays for the sweep twice.
 ///     </para>
 ///     <para>
@@ -202,32 +202,29 @@ public sealed class ScoreProjector : IScoreProjector
         var ownPool = PoolCount(await _scores.GetPlayerScoresInLevelRange(mix, new[] { userId }, chartType,
             PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, cancellationToken));
 
-        // The viewer's rung, from the total pool — the merged top fifty across both types, which
-        // is the number the game's own badge is drawn from. One rung serves both chart types. A
-        // caller that can say where this player will finish supplies it, and the run is placed and
-        // gated by that instead (D48): a twenty-chart pool's own total seats a strong player at the
-        // bottom of the ladder, among peers who would tell them nothing. Without one the band is
-        // not swept for a viewer it cannot yet serve (D28) — the page says how far they are rather
-        // than estimating.
+        // The viewer's pool OF THE TYPE is what their peers are drawn around (D53): the stats row
+        // holds each type's top fifty summed and unrounded, so a settled pool is read, not rebuilt.
+        // The merged total is type-blind — a singles-carried player's doubles peers would be
+        // doubles specialists — and a symmetric band on it heard the room above more than the room
+        // below at every rung (§4.11). A caller that can say where this player's pool will finish
+        // supplies that instead, and the run is placed and gated by it (D48): a twenty-chart
+        // pool's own sum seats a strong player among peers who would tell them nothing. Without one
+        // the window is not swept for a viewer it cannot yet serve (D28) — the page says how far
+        // they are rather than estimating.
         var gate = projectedTotal is null ? PeerGroup.PumbilityPoolSize : PeerGroup.PumbilityProjectionGate;
-        var rung = Phoenix2PumbilityLevel.From(projectedTotal ?? mine.SkillRating);
+        var center = projectedTotal ?? PoolOfType(mine, chartType);
         if (ownPool < gate)
-            return ScoreProjection.None(myLevel,
-                PeerGroup.Pumbility(rung.Index, 0, ownPool, gate, totalIsEstimate));
+            return ScoreProjection.None(myLevel, PeerGroup.Pumbility(center, 0, ownPool, gate, totalIsEstimate));
 
-        var (lowestIndex, highestIndex) = PeerGroup.PumbilityBand(rung.Index);
-        var lowest = Phoenix2PumbilityLevel.FromIndex(lowestIndex)!.Value;
-        var highest = Phoenix2PumbilityLevel.FromIndex(highestIndex)!.Value;
-
-        // Half-open on the top: a rung's NextThreshold is where the rung above starts. The
-        // capstone has nothing above it, so a band reaching it is open-ended. The viewer is never
-        // one of their own peers.
-        var candidates = (await _stats.GetPlayersByPumbilityRange(mix, lowest.Threshold,
-                highest.NextThreshold ?? double.MaxValue, cancellationToken))
+        // Further down than up, inclusive both ends: the players above a viewer are the ones
+        // holding the charts they have not played, so reaching as far up as down selects the
+        // charts whose estimate runs high (§4.11). The viewer is never one of their own peers.
+        var candidates = (await _stats.GetPlayersByPoolOfType(mix, chartType,
+                center - PeerGroup.PumbilityWindowBelow, center + PeerGroup.PumbilityWindowAbove, cancellationToken))
             .ToHashSet();
         candidates.Remove(userId);
 
-        // One read answers two questions: what everyone in the band scored on the charts asked
+        // One read answers two questions: what everyone in the window scored on the charts asked
         // about, and which of them hold a full pool of the type. A PEER's gate stays fifty
         // whatever the viewer's was: their pool is the evidence, and half a pool is half a vote.
         var records = (await _scores.GetPlayerScoresInLevelRange(mix, candidates, chartType,
@@ -238,7 +235,7 @@ public sealed class ScoreProjector : IScoreProjector
             .Where(g => PoolCount(g) >= PeerGroup.PumbilityPoolSize)
             .Select(g => g.Key)
             .ToHashSet();
-        var group = PeerGroup.Pumbility(rung.Index, peers.Count, ownPool, gate, totalIsEstimate);
+        var group = PeerGroup.Pumbility(center, peers.Count, ownPool, gate, totalIsEstimate);
         if (peers.Count == 0) return ScoreProjection.None(myLevel, group);
 
         // The peers' pools ride the same read when the caller brought the catalog to price it with
@@ -255,10 +252,10 @@ public sealed class ScoreProjector : IScoreProjector
 
         var (projected, ladders, contributors) = Estimate(heard, PeerEstimator.Phoenix2MinimumPeers, request);
 
-        // The floor asks for five peers ON A CHART, not five in the band, so at a band size of
+        // The floor asks for five peers ON A CHART, not five in the window, so at a group of
         // five it is asking for unanimity and at three it can never be met at all. That is a
-        // cliff rather than a filter: the thinnest bands — the bottom of the ladder and the top —
-        // go from a full board to nothing over one player. Where it leaves the run with literally
+        // cliff rather than a filter: the thinnest groups — the bottom of the population and the
+        // top — go from a full board to nothing over one player. Where it leaves the run with literally
         // nothing, the same records answer again with no floor: one peer's score is thin evidence
         // and the page says so, but it is evidence, and an empty board is not (D47).
         //
@@ -308,6 +305,20 @@ public sealed class ScoreProjector : IScoreProjector
     private static int PoolCount(IEnumerable<UserPhoenixScore> records)
     {
         return records.Select(s => s.ChartId).Distinct().Count();
+    }
+
+    /// <summary>
+    ///     A player's settled PUMBILITY pool of the type off their stats row — each type's top
+    ///     fifty summed, unrounded — or the merged total for a type that has no pool of its own.
+    /// </summary>
+    private static double PoolOfType(PlayerStatsRecord stats, ChartType chartType)
+    {
+        return chartType switch
+        {
+            ChartType.Single => stats.SinglesRating,
+            ChartType.Double => stats.DoublesRating,
+            _ => stats.SkillRating
+        };
     }
 
     private static double CompetitiveLevelFor(PlayerStatsRecord stats, ChartType chartType)

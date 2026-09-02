@@ -1,4 +1,3 @@
-using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -21,7 +20,7 @@ public readonly record struct ProjectionTarget(Guid ChartId, int Level);
 ///     window is measured optimal for accuracy, while a tier list wants ±0.5 because it only
 ///     ranks charts against each other and the rest of the site calls a competitive peer ±0.5. A
 ///     default here would let one of them drift onto the other's answer silently. Ignored on
-///     Phoenix 2, whose peers are drawn on the PUMBILITY ladder and not on a level at all.
+///     Phoenix 2, whose peers are drawn on the pool of the type and not on a level at all.
 /// </param>
 /// <param name="Charts">
 ///     The mix's catalog, keyed by chart id, for a caller that also wants the peers' pools
@@ -39,21 +38,21 @@ public readonly record struct ProjectionTarget(Guid ChartId, int Level);
 ///     what a full band produces — the second pass runs only from zero.
 /// </param>
 /// <param name="ProjectedTotal">
-///     Phoenix 2 only: the PUMBILITY total to place the viewer on the rung ladder by — their real
-///     one where their merged pool is full, and where they would finish at their current average
-///     where it is not (D48). Supplying it is also what lowers the pool gate from
+///     Phoenix 2 only: the PUMBILITY pool OF THE TYPE to draw the viewer's peers around — their
+///     settled pool where it holds fifty, and where they would finish at the standard they hold
+///     where it does not (D48, D53). Supplying it is also what lowers the pool gate from
 ///     <see cref="PeerGroup.PumbilityPoolSize" /> to <see cref="PeerGroup.PumbilityProjectionGate" />,
 ///     because the two go together: a short pool's own total is the sum of the charts it happens to
-///     hold, which would seat a strong player at the bottom of the ladder among peers who tell them
-///     nothing. A caller with no answer to "where will they finish" leaves this null and keeps the
-///     full-pool gate. Ignored on Phoenix 1, which seats nobody on a ladder.
+///     hold, which would seat a strong player at the bottom of the population among peers who tell
+///     them nothing. A caller with no answer to "where will they finish" leaves this null and keeps
+///     the full-pool gate, reading the settled pool off the stats row. Ignored on Phoenix 1, which
+///     seats nobody by a pool.
 /// </param>
 /// <param name="ProjectedTotalIsEstimate">
 ///     Whether <paramref name="ProjectedTotal" /> was extrapolated or is the player's settled
-///     number. Only the caller knows: a full MERGED pool yields a real total even while the type
-///     being viewed holds twenty-odd charts, and a surface that told that player their peers came
-///     from an estimate would be describing something that did not happen. Rides out on
-///     <see cref="PeerGroup.PlacedByEstimate" />.
+///     number. Only the caller knows, and the page says so when it was: a player placed by a
+///     finish is reading peers drawn around a guess, and the note that explains it keys on this.
+///     Rides out on <see cref="PeerGroup.PlacedByEstimate" />.
 /// </param>
 /// <param name="Quantiles">
 ///     The rungs to read the peers at — every one comes back per chart on
@@ -94,42 +93,50 @@ public enum PeerGroupKind
     CompetitiveBand,
 
     /// <summary>
-    ///     Phoenix 2: PUMBILITY peers — players within a rung band of the viewer on the
-    ///     PUMBILITY level ladder who hold a full pool of the chart type
-    ///     (docs/design/pumbility-overhaul.md §4.8, D22).
+    ///     Phoenix 2: PUMBILITY peers — players whose PUMBILITY pool of the chart type sits within
+    ///     <see cref="PeerGroup.PumbilityWindowBelow" /> below and <see cref="PeerGroup.PumbilityWindowAbove" />
+    ///     above the viewer's, each holding a full pool of the type
+    ///     (docs/design/pumbility-overhaul.md §4.11, D53).
     /// </summary>
-    PumbilityBand
+    PumbilityPeers
 }
 
 /// <summary>
 ///     Who an estimate was drawn from, named so a surface can say it without knowing the mix:
-///     the kind of band, where it is centred and how wide, how many players are in it, and —
-///     on Phoenix 2 — whether the viewer's own pool of the type is deep enough for the group to
-///     exist at all.
+///     the kind of group, where it is centred and how far it reaches either way, how many players
+///     are in it, and — on Phoenix 2 — whether the viewer's own pool of the type is deep enough
+///     for the group to exist at all.
 /// </summary>
 /// <param name="Center">
-///     A competitive level on a competitive band; a rung index (0–36) on a PUMBILITY band.
+///     A competitive level on a competitive band; the viewer's PUMBILITY pool of the chart type
+///     on PUMBILITY peers — settled, or the finish they were placed by (D48).
 /// </param>
-/// <param name="HalfWidth">Levels on a competitive band; rungs on a PUMBILITY band.</param>
+/// <param name="Below">
+///     How far under <paramref name="Center" /> the group reaches: the window on a competitive
+///     band, <see cref="PumbilityWindowBelow" /> PUMBILITY on PUMBILITY peers.
+/// </param>
+/// <param name="Above">
+///     How far over <paramref name="Center" /> the group reaches: the window again on a competitive
+///     band, <see cref="PumbilityWindowAbove" /> on PUMBILITY peers — narrower than below, because
+///     the players above a viewer are the ones holding the charts they have not played (§4.11).
+/// </param>
 /// <param name="Size">
 ///     Players in the group, the viewer excluded — a player is never one of their own peers. On
 ///     a competitive band this is the number whose scores actually reached an estimate — most of
 ///     a level band has played none of the charts asked about, so the honest figure is the one
-///     that voted. On a PUMBILITY band it is the group itself: every player meeting the
+///     that voted. On PUMBILITY peers it is the group itself: every player meeting the
 ///     definition, whether or not they played the charts asked about, because that group is a
 ///     thing the page names. Zero for a Phoenix 2 viewer whose own pool of the type is short: the
-///     band is not counted for a viewer it cannot yet serve, and the page prints the pool instead.
+///     window is not swept for a viewer it cannot yet serve, and the page prints the pool instead.
 /// </param>
 /// <param name="PoolCount">
 ///     The viewer's rated charts of the type, capped at <paramref name="PoolSize" />. Zero on a
 ///     competitive band, which has no such gate.
 /// </param>
-/// <param name="PoolSize">Fifty on a PUMBILITY band (D28); zero on a competitive band.</param>
+/// <param name="PoolSize">Fifty on PUMBILITY peers (D28); zero on a competitive band.</param>
 /// <param name="PlacedByEstimate">
 ///     Whether <paramref name="Center" /> came from an extrapolated finish rather than the viewer's
-///     settled total (D48). A short pool of ONE TYPE does not imply it: a player with a full merged
-///     pool and twenty-odd doubles is placed by a real number, and a surface must not tell them
-///     otherwise. False on a competitive band, which places nobody on a ladder.
+///     settled pool of the type (D48, D53). False on a competitive band, which places nobody by a pool.
 /// </param>
 /// <param name="AnsweredBelowFloor">
 ///     Whether this run fell back below the five-peer floor (D47) and produced rows from it —
@@ -139,11 +146,24 @@ public enum PeerGroupKind
 ///     relaxes exactly as a band of two does, and a warning keyed off size would miss it.
 ///     False when the strict floor answered, and on a competitive band, which has no floor.
 /// </param>
-public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWidth, int Size, int PoolCount,
-    int PoolSize, bool PlacedByEstimate = false, bool AnsweredBelowFloor = false)
+public sealed record PeerGroup(PeerGroupKind Kind, double Center, double Below, double Above, int Size,
+    int PoolCount, int PoolSize, bool PlacedByEstimate = false, bool AnsweredBelowFloor = false)
 {
-    /// <summary>The rung half-width of a Phoenix 2 peer group: DIAMOND LV.4 reaches DIAMOND LV.1 and RED BERYL LV.2.</summary>
-    public const int PumbilityRungWindow = 3;
+    /// <summary>
+    ///     How far below the viewer's pool of the type a Phoenix 2 peer's pool of that type may sit
+    ///     (D53). Measured with <see cref="PumbilityWindowAbove" /> against the retired ±3-rung band
+    ///     on the same 11,480 pairs (docs/design/pumbility-overhaul.md §4.11): the top ten of a
+    ///     gain-sorted list read at the median moved from +1,974 to −1,611, an SS+ it calls landing
+    ///     76% of the time instead of 65%, at a median group of 22 players against 36.
+    /// </summary>
+    public const double PumbilityWindowBelow = 500;
+
+    /// <summary>
+    ///     How far above. Half the reach below, because the skew the window corrects is
+    ///     one-directional: the charts a player has not played are the ones the players above them
+    ///     hold, so a group reaching as far up as down hears the room above more than the room below.
+    /// </summary>
+    public const double PumbilityWindowAbove = 250;
 
     /// <summary>The pool a Phoenix 2 viewer, and each of their peers, must hold of the chart type.</summary>
     public const int PumbilityPoolSize = 50;
@@ -153,12 +173,12 @@ public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWid
     ///     finish (D48). A peer still needs a full <see cref="PumbilityPoolSize" /> — their pool is
     ///     the evidence, and half a pool is half a vote — but the viewer only has to be placeable,
     ///     and twenty charts places them: backtested across 111 full-pool Phoenix 2 accounts, their
-    ///     top twenty with the remaining thirty slots filled at their weakest held chart lands on
-    ///     the exact rung 39 times, within two rungs 110 times, and within three 110 times. What
-    ///     is left is one-directional — the estimate reads high, never low — so the ±3 band is not
-    ///     symmetric around the truth: at a twenty-chart pool it reaches roughly [−2, +4] rather
-    ///     than [−3, +3]. That is the accepted cost of placing a short pool at all; a caller who
-    ///     cannot afford it supplies no finish and keeps the full-pool gate.
+    ///     top twenty with the remaining thirty slots filled at their weakest held chart landed on
+    ///     the exact rung of the then-current ladder 39 times and within two rungs 110 times. What
+    ///     is left is one-directional — the estimate reads high, never low (+0.89% at twenty
+    ///     charts, +0.01% at forty-eight) — so a window drawn around a finish sits a little high of
+    ///     the truth. That is the accepted cost of placing a short pool at all; a caller who cannot
+    ///     afford it supplies no finish and keeps the full-pool gate.
     /// </summary>
     public const int PumbilityProjectionGate = 20;
 
@@ -171,18 +191,11 @@ public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWid
     /// </summary>
     public static readonly DifficultyLevel PumbilityPoolFloor = DifficultyLevel.From(10);
 
-    /// <summary>
-    ///     The rung indices a Phoenix 2 peer band spans around <paramref name="rungIndex" />:
-    ///     <see cref="PumbilityRungWindow" /> either side, clipped to the ladder (nothing lies
-    ///     below index 0 or above the capstone). The one place the clip lives — the projector
-    ///     draws its peers with it, the tier-list builder keys its lists with it, and a page that
-    ///     names the band prints it.
-    /// </summary>
-    public static (int Lowest, int Highest) PumbilityBand(int rungIndex)
-    {
-        return (Math.Max(0, rungIndex - PumbilityRungWindow),
-            Math.Min(Phoenix2PumbilityLevel.CapstoneIndex, rungIndex + PumbilityRungWindow));
-    }
+    /// <summary>The bottom of the group: the lowest level or pool a peer may hold.</summary>
+    public double Lowest => Center - Below;
+
+    /// <summary>The top of the group: the highest level or pool a peer may hold.</summary>
+    public double Highest => Center + Above;
 
     /// <summary>
     ///     False only for a Phoenix 2 viewer whose pool of the type is short of the gate its run
@@ -193,23 +206,24 @@ public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWid
 
     public static PeerGroup Competitive(double level, double window, int size)
     {
-        return new PeerGroup(PeerGroupKind.CompetitiveBand, level, window, size, 0, 0);
+        return new PeerGroup(PeerGroupKind.CompetitiveBand, level, window, window, size, 0, 0);
     }
 
     /// <summary>
-    ///     A PUMBILITY band. <paramref name="poolSize" /> is the gate the run was made under, so a
+    ///     PUMBILITY peers around <paramref name="poolOfType" />, the viewer's pool of the chart
+    ///     type (D53). <paramref name="poolSize" /> is the gate the run was made under, so a
     ///     surface printing "N of M charts" names the number that would actually light this viewer
     ///     up — twenty where the caller supplied a projected finish, fifty otherwise (D48).
     /// </summary>
-    public static PeerGroup Pumbility(int rungIndex, int size, int poolCount,
+    public static PeerGroup Pumbility(double poolOfType, int size, int poolCount,
         int poolSize = PumbilityPoolSize, bool placedByEstimate = false)
     {
         // Counted against the FULL pool rather than the gate, so a lit-but-short viewer still
         // knows how many of the fifty they hold — which is what the note that explains their
         // projection has to say (D48). The cap only ever bites above fifty, where the viewer is
         // lit under either gate and no surface prints the count anyway.
-        return new PeerGroup(PeerGroupKind.PumbilityBand, rungIndex, PumbilityRungWindow, size,
-            Math.Min(poolCount, PumbilityPoolSize), poolSize, placedByEstimate);
+        return new PeerGroup(PeerGroupKind.PumbilityPeers, poolOfType, PumbilityWindowBelow, PumbilityWindowAbove,
+            size, Math.Min(poolCount, PumbilityPoolSize), poolSize, placedByEstimate);
     }
 }
 
@@ -287,7 +301,7 @@ public sealed record PeerPoolChart(int Holders, int Points, int Scored, IReadOnl
 ///     removed (D31), so a page listing "what players like me build their number from" and the
 ///     projection beside it cannot disagree about who those players are.
 /// </summary>
-/// <param name="PeerIds">The peers — every player in the band holding a full pool of the type.</param>
+/// <param name="PeerIds">The peers — every player in the window holding a full pool of the type.</param>
 /// <param name="Pools">Each peer's top-50 chart set, keyed by peer.</param>
 /// <param name="Charts">Every chart at least one peer holds, or at least five scored.</param>
 public sealed record PeerPoolSummary(
@@ -373,9 +387,10 @@ public interface IScoreProjector
     ///     The level this projection matches peers on, on Phoenix 1. Published because a caller
     ///     narrowing the charts it asks about has to narrow them around the same number the peers
     ///     are drawn around — two readings of "what level is this player" would let the scope and
-    ///     the peers disagree. Phoenix 2 draws its peers on the PUMBILITY ladder and its callers
+    ///     the peers disagree. Phoenix 2 draws its peers on the pool of the type and its callers
     ///     scope on nothing (D24), so they have no reason to ask; if one does, it gets the
-    ///     player's competitive level in that mix and nothing borrowed from another.
+    ///     player's competitive level in that mix and nothing borrowed from another. (Phoenix 2
+    ///     draws its peers on the pool of the type, D53.)
     ///     <para>
     ///         1 is the no-data floor: a player at 1 has no band to draw peers from, and
     ///         <see cref="Project" /> returns nothing for them on Phoenix 1.

@@ -378,7 +378,7 @@ public sealed class PumbilityProjectionBacktestTests
             var peerStats = (await stats.GetStats(MixEnum.Phoenix2, peers, CancellationToken.None)).ToDictionary(p => p.UserId);
             var voices = (await scores.GetPlayerScores(MixEnum.Phoenix2, peers, targets.Select(c => c.Id), CancellationToken.None))
                 .Where(v => !v.IsBroken).GroupBy(v => v.ChartId).ToDictionary(g => g.Key, g => g.ToArray());
-            _output.WriteLine($"=== {type}: {peers.Count} PUMBILITY peers, rungs {Rung(Phoenix2PumbilityLevel.FromIndex(PeerGroup.PumbilityBand(myRung.Index).Lowest)!.Value)}..{Rung(Phoenix2PumbilityLevel.FromIndex(PeerGroup.PumbilityBand(myRung.Index).Highest)!.Value)} ===");
+            _output.WriteLine($"=== {type}: {peers.Count} PUMBILITY peers, pools {projection.Group?.Lowest:F0}..{projection.Group?.Highest:F0} around your {type} pool {projection.Group?.Center:F0} (D53) ===");
             var bandRungs = peers.Select(p => Phoenix2PumbilityLevel.From(peerStats[p].SkillRating).Index - myRung.Index)
                 .GroupBy(o => o).OrderBy(g => g.Key).Select(g => $"{g.Key:+0;-0;0}:{g.Count()}");
             _output.WriteLine($"  the band by rung offset from you (offset:count): {string.Join("  ", bandRungs)}");

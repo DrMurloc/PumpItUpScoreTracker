@@ -26,8 +26,9 @@
 @inject IDateTimeOffsetAccessor Clock
 
 @* The Play page's block (docs/design/pumbility-overhaul.md §3.10, D32, D43): what your peers
-   build their number from, grouped by prevalence or by projected gain, and who they are — the
-   PUMBILITY band on Phoenix 2, the competitive band on Phoenix 1, and the ledes say which. Held
+   build their number from, grouped by prevalence or by projected gain, and who they are —
+   PUMBILITY peers on Phoenix 2 (the window on the pool of the type, D53), the competitive band on
+   Phoenix 1, and the ledes say which. Held
    by a component rather than the page because the pool it is scoped to arrives
    from the section frame — a parameter, so a pool change re-fetches on its own — and because
    the page record the frame already loaded is where the gains come from (D38): the target
@@ -57,11 +58,13 @@
             <PeerCompareStrip Page="_peers" Charts="Charts"></PeerCompareStrip>
         }
     </div>
-    @if (ShortPool is { } short_ && Phoenix2PumbilityLevel.FromIndex((int)short_.Center) is { Gem: { } gem })
+    @if (ShortPool is { } short_)
     {
+        @* The finish is the pool of the type (D48, D53), so it prints as a PUMBILITY total — two
+           decimals, this being a PUMBILITY page — rather than as a gem. *@
         <p class="pmb-block-note" data-testid="peers-short-pool-note">
-            @L["You have {0} of {1} charts, so your peers are drawn from where you'd finish — {2} — if you hold your current average. This settles as your pool fills.",
-                short_.PoolCount, PeerGroup.PumbilityPoolSize, gem.ToString()]
+            @L["You have {0} of {1} charts, so your peers are drawn from where your pool of the type would finish — {2} — if you hold your current standard. This settles as your pool fills.",
+                short_.PoolCount, PeerGroup.PumbilityPoolSize, short_.Center.ToString("N2")]
         </p>
     }
     @if (ThinBand is { } thin)
@@ -165,8 +168,8 @@
             <h2 class="pmb-block-title">@L["Who your peers are"]</h2>
         </div>
         <p class="pmb-block-lede">
-            @(IsPumbilityBand
-                ? L["Players within three PUMBILITY levels of you holding a full pool of the type. You are never one of your own peers; the highlighted row is where you would sit."]
+            @(HasPumbilityPeers
+                ? L["Players whose pool of the type sits within {0} below and {1} above yours, each holding a full pool of it. You are never one of your own peers; the highlighted row is where you would sit.", WindowBelow, WindowAbove]
                 : L["Players within one competitive level of you for the type. You are never one of your own peers; the highlighted row is where you would sit."])
         </p>
         <PeerRoster Rows="_peers.Roster" You="_peers.You" PrivatePeers="_peers.PrivatePeers" ShowPeerFor="Pool == null"
@@ -254,8 +257,13 @@
             ? _peerOnlyGains
             : Page.Targets.GroupBy(t => t.ChartId).ToDictionary(g => g.Key, g => g.First());
 
-    /// <summary>Who a peer is: the PUMBILITY band on Phoenix 2, the competitive band on Phoenix 1 (D43). The ledes say which.</summary>
-    private bool IsPumbilityBand => Page.Mix == MixEnum.Phoenix2;
+    /// <summary>Who a peer is: PUMBILITY peers on Phoenix 2 (D53), the competitive band on Phoenix 1 (D43). The ledes say which.</summary>
+    private bool HasPumbilityPeers => Page.Mix == MixEnum.Phoenix2;
+
+    /// <summary>The window's two reaches, whole, for the ledes that name it — a threshold, not a measurement.</summary>
+    private static string WindowBelow => PeerGroup.PumbilityWindowBelow.ToString("N0");
+
+    private static string WindowAbove => PeerGroup.PumbilityWindowAbove.ToString("N0");
 
     /// <summary>
     ///     A run that fell back below the five-peer floor (D47) has every row resting on fewer
@@ -280,19 +288,18 @@
         : null;
 
     /// <summary>
-    ///     A band the projection placed by an extrapolated finish rather than by the player's
-    ///     settled number (D48), so the note names the estimate it leaned on. The flag decides it,
-    ///     never the pool count: the rung is read off the MERGED pool, so a player with a full
-    ///     merged fifty and twenty-odd of the type being viewed was placed by a real total and must
-    ///     not be told otherwise. Same All rule as the thin-band note — every lit type has to
-    ///     qualify — and the largest count is the one printed.
+    ///     A group the projection placed by an extrapolated finish rather than by the player's
+    ///     settled pool of the type (D48, D53), so the note names the estimate it leaned on. The
+    ///     flag decides it, never the pool count — the projector knows which it did. Same All rule
+    ///     as the thin-band note — every lit type has to qualify — and the largest count is the one
+    ///     printed.
     /// </summary>
     private PeerGroup? ShortPool => Lit.Length > 0 && Lit.All(g => g.PlacedByEstimate)
         ? Lit.MaxBy(g => g.PoolCount)
         : null;
 
-    /// <summary>The PUMBILITY bands actually serving this view — one per lit type in the pool's scope.</summary>
-    private PeerGroup[] Lit => !IsPumbilityBand || Page.Peers is not { } groups
+    /// <summary>The PUMBILITY peer groups actually serving this view — one per lit type in the pool's scope.</summary>
+    private PeerGroup[] Lit => !HasPumbilityPeers || Page.Peers is not { } groups
         ? Array.Empty<PeerGroup>()
         : (Pool is { } one ? new[] { one } : new[] { ChartType.Single, ChartType.Double })
         .Where(t => groups.TryGetValue(t, out var group) && group.IsLit && group.Size > 0)
@@ -304,11 +311,11 @@
         : _groupBy == PeerGrouping.ProjectedGains
         ? L["Ranked by what each chart would add if you played it to the standard your peers set — priced against your bar as it stands now, so every row means what the first one does. Everything here clears your bar."]
         : _gainsOnly
-            ? IsPumbilityBand
-                ? L["What players within three levels of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it."]
+            ? HasPumbilityPeers
+                ? L["What players whose pool of the type sits within {0} below and {1} above yours build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it.", WindowBelow, WindowAbove]
                 : L["What players within one competitive level of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it."]
-            : IsPumbilityBand
-                ? L["What players within three levels of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand."]
+            : HasPumbilityPeers
+                ? L["What players whose pool of the type sits within {0} below and {1} above yours build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand.", WindowBelow, WindowAbove]
                 : L["What players within one competitive level of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand."];
 
     protected override async Task OnParametersSetAsync()

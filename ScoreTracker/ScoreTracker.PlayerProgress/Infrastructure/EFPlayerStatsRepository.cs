@@ -171,19 +171,22 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             return await query.Select(p => p.UserId).Distinct().ToArrayAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<Guid>> GetPlayersByPumbilityRange(MixEnum mix, double minimumTotal,
-            double maximumTotalExclusive, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Guid>> GetPlayersByPoolOfType(MixEnum mix, ChartType chartType,
+            double minimumPool, double maximumPool, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var mixId = MixIds.For(mix);
-            // SkillRating IS the total pool — the merged top fifty across both chart types, stored
-            // unrounded (docs/UX-GUIDELINES.md, the PUMBILITY precision rule), which is what the
-            // level ladder is read from.
-            return await database.Set<PlayerStatsEntity>()
-                .Where(p => p.MixId == mixId && p.SkillRating >= minimumTotal && p.SkillRating < maximumTotalExclusive)
-                .Select(p => p.UserId)
-                .Distinct()
-                .ToArrayAsync(cancellationToken);
+            // SinglesRating and DoublesRating ARE the per-type pools — each type's top fifty summed,
+            // stored unrounded (docs/UX-GUIDELINES.md, the PUMBILITY precision rule) — and
+            // SkillRating the merged one. The window is inclusive at both ends (D53).
+            var query = database.Set<PlayerStatsEntity>().Where(p => p.MixId == mixId);
+            query = chartType switch
+            {
+                ChartType.Single => query.Where(p => p.SinglesRating >= minimumPool && p.SinglesRating <= maximumPool),
+                ChartType.Double => query.Where(p => p.DoublesRating >= minimumPool && p.DoublesRating <= maximumPool),
+                _ => query.Where(p => p.SkillRating >= minimumPool && p.SkillRating <= maximumPool)
+            };
+            return await query.Select(p => p.UserId).Distinct().ToArrayAsync(cancellationToken);
         }
 
         public async Task<PlayerStatsRecord> Handle(GetPlayerStatsQuery request, CancellationToken cancellationToken)

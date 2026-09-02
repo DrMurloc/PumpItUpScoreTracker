@@ -191,12 +191,14 @@ public sealed class BlendedTierListHandlerTests
     }
 
     [Fact]
-    public async Task Phoenix2PumbilityLensReadsTheViewersRungBand()
+    public async Task Phoenix2PumbilityLensCountsTheProjectorsPeersPools()
     {
-        // PUMBILITY peers on Phoenix 2 (docs/design/pumbility-tier-list.md §5): a viewer whose
-        // total pool is 17,500 stands on DIAMOND LV.3 — badge index 23 — so the lens reads the
-        // list keyed on that rung, and only once the viewer holds a full pool of the type.
+        // D55: a signed-in Phoenix 2 viewer's lens is the projector's peers — the players whose pool
+        // of the type sits within 500 below and 250 above theirs (D53), a full pool of the type on
+        // both sides — and how many of their pools hold each folder chart. No stored list is read.
         var userId = Guid.NewGuid();
+        var holder = Guid.NewGuid();
+        var other = Guid.NewGuid();
         var chart = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
         var pool = FullPool(ChartType.Double);
         var charts = ChartsMock(pool.Append(chart));
@@ -206,62 +208,66 @@ public sealed class BlendedTierListHandlerTests
         scores.Setup(s => s.GetPlayerScoresInLevelRange(MixEnum.Phoenix2, It.IsAny<IEnumerable<Guid>>(),
                 ChartType.Double, It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(pool.Select(c => PeerScoreOn(userId, c, 950_000)).ToArray());
+            // Everyone holds the fifty level-15 doubles; the holder swaps one for the folder chart.
+            .ReturnsAsync((MixEnum _, IEnumerable<Guid> ids, ChartType _, DifficultyLevel _, DifficultyLevel _,
+                    CancellationToken _) => ids.SelectMany(id => (id == holder ? pool.Take(49).Append(chart) : pool)
+                    .Select(c => PeerScoreOn(id, c, 950_000))).ToArray());
         var playerStats = new Mock<IPlayerStatsReader>();
         playerStats.Setup(p => p.GetStats(MixEnum.Phoenix2, userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new PlayerStatsRecord(userId, 0, 1, 0, 0, 0, 17_500, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1));
-        var tierLists = new Mock<ITierListRepository>();
-        tierLists.Setup(c => c.GetPumbilityTierList(It.IsAny<MixEnum>(), It.IsAny<ChartType>(),
-                It.IsAny<DifficultyLevel>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new PumbilityTierListFolder(Array.Empty<PumbilityTierListRecord>(), 0));
-        var handler = BuildHandler(charts: charts, mediator: mediator, scores: scores,
-            playerStats: playerStats, tierLists: tierLists);
-
-        await handler.Handle(new GetBlendedTierListQuery(ChartType.Double, DifficultyLevel.From(17), "PUMBILITY",
-            true, userId, MixEnum.Phoenix2), CancellationToken.None);
-
-        tierLists.Verify(c => c.GetPumbilityTierList(MixEnum.Phoenix2, ChartType.Double, DifficultyLevel.From(17),
-            "R23", It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task TheViewerIsNeverOneOfTheirOwnPeers()
-    {
-        // The stored list is one per peer group and counts every member's pool — the viewer's among
-        // them. What the viewer reads has their own taken back out: one from the peer count, one
-        // from every chart their pool holds, and nothing from a chart it does not.
-        var userId = Guid.NewGuid();
-        var mine = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
-        var theirs = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
-        var pool = FullPool(ChartType.Double, 49).Append(mine).ToArray();
-        var charts = ChartsMock(pool.Append(theirs));
-        var mediator = new Mock<IMediator>();
-        SetupTierList(mediator, "Pass Count", Array.Empty<SongTierListEntry>());
-        var scores = new Mock<IScoreReader>();
-        scores.Setup(s => s.GetPlayerScoresInLevelRange(MixEnum.Phoenix2, It.IsAny<IEnumerable<Guid>>(),
-                ChartType.Double, It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(),
+            .ReturnsAsync(StatsWithPools(userId, singles: 0, doubles: 17_500));
+        playerStats.Setup(p => p.GetPlayersByPoolOfType(MixEnum.Phoenix2, ChartType.Double, 17_000, 17_750,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(pool.Select(c => PeerScoreOn(userId, c, 950_000)).ToArray());
-        var playerStats = new Mock<IPlayerStatsReader>();
-        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix2, userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new PlayerStatsRecord(userId, 0, 1, 0, 0, 0, 17_500, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1));
+            .ReturnsAsync(new[] { holder, other, userId });
         var tierLists = new Mock<ITierListRepository>();
-        tierLists.Setup(c => c.GetPumbilityTierList(MixEnum.Phoenix2, ChartType.Double, DifficultyLevel.From(17),
-                "R23", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new PumbilityTierListFolder(new[]
-            {
-                new PumbilityTierListRecord(mine.Id, 5, TierListCategory.Medium, 1),
-                new PumbilityTierListRecord(theirs.Id, 3, TierListCategory.Hard, 2)
-            }, 24));
         var handler = BuildHandler(charts: charts, mediator: mediator, scores: scores,
             playerStats: playerStats, tierLists: tierLists);
 
         var result = await handler.Handle(new GetBlendedTierListQuery(ChartType.Double, DifficultyLevel.From(17),
             "PUMBILITY", true, userId, MixEnum.Phoenix2), CancellationToken.None);
 
-        Assert.Equal(23, result.PeerCount);
-        Assert.Equal(4, result.Appearances![mine.Id]);
-        Assert.Equal(3, result.Appearances[theirs.Id]);
+        // Two peers — the viewer is inside their own window and is never their own peer — one of
+        // whom holds the folder chart.
+        Assert.Equal(2, result.PeerCount);
+        Assert.Equal(1, result.Appearances![chart.Id]);
+        tierLists.Verify(c => c.GetPumbilityTierList(It.IsAny<MixEnum>(), It.IsAny<ChartType>(),
+            It.IsAny<DifficultyLevel>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TheViewerIsNeverOneOfTheirOwnPeers()
+    {
+        // The window's read returns the viewer too — their own pool sits inside it by definition —
+        // and the projector leaves them out (D31): their own pool counts for nothing on the lens,
+        // and they are not among the peers the caption counts.
+        var userId = Guid.NewGuid();
+        var peer = Guid.NewGuid();
+        var mine = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var theirs = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var pool = FullPool(ChartType.Double, 49);
+        var charts = ChartsMock(pool.Append(mine).Append(theirs));
+        var mediator = new Mock<IMediator>();
+        SetupTierList(mediator, "Pass Count", Array.Empty<SongTierListEntry>());
+        var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetPlayerScoresInLevelRange(MixEnum.Phoenix2, It.IsAny<IEnumerable<Guid>>(),
+                ChartType.Double, It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MixEnum _, IEnumerable<Guid> ids, ChartType _, DifficultyLevel _, DifficultyLevel _,
+                    CancellationToken _) => ids.SelectMany(id => pool.Append(id == userId ? mine : theirs)
+                    .Select(c => PeerScoreOn(id, c, 950_000))).ToArray());
+        var playerStats = new Mock<IPlayerStatsReader>();
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix2, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(StatsWithPools(userId, singles: 0, doubles: 17_500));
+        playerStats.Setup(p => p.GetPlayersByPoolOfType(MixEnum.Phoenix2, ChartType.Double, 17_000, 17_750,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { userId, peer });
+        var handler = BuildHandler(charts: charts, mediator: mediator, scores: scores, playerStats: playerStats);
+
+        var result = await handler.Handle(new GetBlendedTierListQuery(ChartType.Double, DifficultyLevel.From(17),
+            "PUMBILITY", true, userId, MixEnum.Phoenix2), CancellationToken.None);
+
+        Assert.Equal(1, result.PeerCount);
+        Assert.Equal(0, result.Appearances![mine.Id]);
+        Assert.Equal(1, result.Appearances[theirs.Id]);
     }
 
     /// <summary>Priced doubles (or singles) at level 15 — fifty of them is a full pool of the type.</summary>
@@ -272,11 +278,18 @@ public sealed class BlendedTierListHandlerTests
             .ToArray();
     }
 
+    /// <summary>A Phoenix 2 stats row carrying the two per-type pools, their sum as the merged total.</summary>
+    private static PlayerStatsRecord StatsWithPools(Guid userId, double singles, double doubles)
+    {
+        return new PlayerStatsRecord(userId, 0, 1, 0, 0, 0, singles + doubles, 0, 0, singles, 0, 0, doubles, 0, 0,
+            1, 1, 1);
+    }
+
     [Fact]
     public async Task Phoenix2PumbilityLensIsSilentWithoutAFullPoolOfTheType()
     {
-        // Forty-nine doubles is not a doubles pool (D28): the viewer has no peers for the type and
-        // the lens reads no personalized list, whatever their total pool says.
+        // Forty-nine doubles is not a doubles pool (D28): the viewer has no peers for the type —
+        // the window is never even asked for — and the lens votes on nothing, whatever their pools say.
         var userId = Guid.NewGuid();
         var chart = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
         var charts = ChartsMock(new[] { chart });
@@ -290,16 +303,20 @@ public sealed class BlendedTierListHandlerTests
                 new ChartBuilder().WithLevel(15).WithType(ChartType.Double).Build(), 950_000)).ToArray());
         var playerStats = new Mock<IPlayerStatsReader>();
         playerStats.Setup(p => p.GetStats(MixEnum.Phoenix2, userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new PlayerStatsRecord(userId, 0, 1, 0, 0, 0, 18_500, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1));
+            .ReturnsAsync(StatsWithPools(userId, singles: 0, doubles: 18_500));
         var tierLists = new Mock<ITierListRepository>();
         var handler = BuildHandler(charts: charts, mediator: mediator, scores: scores,
             playerStats: playerStats, tierLists: tierLists);
 
-        await handler.Handle(new GetBlendedTierListQuery(ChartType.Double, DifficultyLevel.From(17), "PUMBILITY",
-            true, userId, MixEnum.Phoenix2), CancellationToken.None);
+        var result = await handler.Handle(new GetBlendedTierListQuery(ChartType.Double, DifficultyLevel.From(17),
+            "PUMBILITY", true, userId, MixEnum.Phoenix2), CancellationToken.None);
 
+        Assert.Equal(0, result.PeerCount);
+        Assert.All(result.Entries, e => Assert.Equal(TierListCategory.Unrecorded, e.Category));
+        playerStats.Verify(p => p.GetPlayersByPoolOfType(It.IsAny<MixEnum>(), It.IsAny<ChartType>(),
+            It.IsAny<double>(), It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Never);
         tierLists.Verify(c => c.GetPumbilityTierList(It.IsAny<MixEnum>(), It.IsAny<ChartType>(),
-            It.IsAny<DifficultyLevel>(), It.Is<string>(k => k != "*"), It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<DifficultyLevel>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private static UserPhoenixScore PeerScoreOn(Guid userId, Chart chart, int score)
@@ -379,6 +396,6 @@ public sealed class BlendedTierListHandlerTests
         return new BlendedTierListHandler(mediator.Object, charts.Object,
             new Mock<ICurrentUserAccessor>().Object, new MemoryCache(new MemoryCacheOptions()),
             new ScoreProjector(scores.Object, playerStats.Object, new Mock<IPlayerHistoryRepository>().Object),
-            tierLists.Object, new Mock<ITitleRepository>().Object, playerStats.Object, scores.Object);
+            tierLists.Object, new Mock<ITitleRepository>().Object, scores.Object);
     }
 }
