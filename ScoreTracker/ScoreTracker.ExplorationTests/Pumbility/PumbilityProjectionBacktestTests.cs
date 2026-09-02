@@ -6,6 +6,7 @@ using ScoreTracker.Catalog.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Configuration;
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
@@ -329,6 +330,208 @@ public sealed class PumbilityProjectionBacktestTests
 
         Assert.True(true, "a reproduction, not a guarantee — read the output");
     }
+
+    // ------------------------------------------------------------------ who the scorers are, by level
+
+    /// <summary>
+    ///     The owner's question of 2026-09-01: "there's some charts that only people ABOVE my level
+    ///     have … what's the level distribution look like on that group?" For the probe user, every
+    ///     chart on their list whose song matches <c>SCORETRACKER_PROBE_CHART</c> (default "King"):
+    ///     each PUMBILITY peer who scored it, with their rung, total and competitive level beside the
+    ///     viewer's, and the three rungs the page would read.
+    /// </summary>
+    [CatalogProbeFact]
+    public async Task One_charts_scorers_by_level()
+    {
+        await using var services = BuildServices();
+        var projector = services.GetRequiredService<IScoreProjector>();
+        var statsRepository = services.GetRequiredService<IPlayerStatsRepository>();
+        var stats = services.GetRequiredService<IPlayerStatsReader>();
+        var scores = services.GetRequiredService<IScoreReader>();
+        var chartRepository = services.GetRequiredService<IChartRepository>();
+
+        var userId = ProbeUserId ??
+                     (await statsRepository.GetUserIdsWithStats(MixEnum.Phoenix2, CancellationToken.None)).First();
+        var filter = Environment.GetEnvironmentVariable("SCORETRACKER_PROBE_CHART") ?? "King";
+        var charts = (await chartRepository.GetCharts(MixEnum.Phoenix2, cancellationToken: CancellationToken.None))
+            .ToDictionary(c => c.Id);
+        var wanted = charts.Values.Where(c => c.Song.Name.ToString().Contains(filter, StringComparison.OrdinalIgnoreCase)
+                                              && c.Type is ChartType.Single or ChartType.Double).ToArray();
+        var mine = await stats.GetStats(MixEnum.Phoenix2, userId, CancellationToken.None);
+        var myRung = Phoenix2PumbilityLevel.From(mine.SkillRating);
+        _output.WriteLine($"viewer {userId}: total {mine.SkillRating:F0} → rung {Rung(myRung)}; competitive S {mine.SinglesCompetitiveLevel:F2} / D {mine.DoublesCompetitiveLevel:F2}");
+
+        foreach (var type in new[] { ChartType.Single, ChartType.Double })
+        {
+            var targets = wanted.Where(c => c.Type == type).ToArray();
+            if (targets.Length == 0) continue;
+            var projection = await projector.Project(new ScoreProjectionRequest(MixEnum.Phoenix2, type, userId,
+                targets.Select(c => new ProjectionTarget(c.Id, (int)c.Level)).ToArray(), PeerEstimator.CompetitiveWindow,
+                charts, Quantiles: Rungs), CancellationToken.None);
+            if (projection.PeerPools == null)
+            {
+                _output.WriteLine($"{type}: dark — {projection.Group?.PoolCount}/{projection.Group?.PoolSize} charts");
+                continue;
+            }
+
+            var peers = projection.PeerPools.PeerIds;
+            var peerStats = (await stats.GetStats(MixEnum.Phoenix2, peers, CancellationToken.None)).ToDictionary(p => p.UserId);
+            var voices = (await scores.GetPlayerScores(MixEnum.Phoenix2, peers, targets.Select(c => c.Id), CancellationToken.None))
+                .Where(v => !v.IsBroken).GroupBy(v => v.ChartId).ToDictionary(g => g.Key, g => g.ToArray());
+            _output.WriteLine($"=== {type}: {peers.Count} PUMBILITY peers, rungs {Rung(Phoenix2PumbilityLevel.FromIndex(PeerGroup.PumbilityBand(myRung.Index).Lowest)!.Value)}..{Rung(Phoenix2PumbilityLevel.FromIndex(PeerGroup.PumbilityBand(myRung.Index).Highest)!.Value)} ===");
+            var bandRungs = peers.Select(p => Phoenix2PumbilityLevel.From(peerStats[p].SkillRating).Index - myRung.Index)
+                .GroupBy(o => o).OrderBy(g => g.Key).Select(g => $"{g.Key:+0;-0;0}:{g.Count()}");
+            _output.WriteLine($"  the band by rung offset from you (offset:count): {string.Join("  ", bandRungs)}");
+
+            foreach (var chart in targets.OrderBy(c => (int)c.Level))
+            {
+                _output.WriteLine($"--- {chart.Song.Name} {chart.Type.ToString()[0]}{(int)chart.Level} ---");
+                if (!voices.TryGetValue(chart.Id, out var rows) || rows.Length == 0)
+                {
+                    _output.WriteLine("  no peer has scored it");
+                    continue;
+                }
+
+                var ladder = projection.Ladders?.GetValueOrDefault(chart.Id);
+                _output.WriteLine(ladder == null
+                    ? $"  {rows.Length} scorer(s), under the five-peer floor: no projection"
+                    : $"  projection at Good {Grade(ladder.At(0.25))} / Great {Grade(ladder.At(0.5))} / Top {Grade(ladder.At(0.75))} from {ladder.PeerCount} peers");
+                var offsets = new List<int>();
+                foreach (var v in rows.OrderByDescending(v => (int)v.Score))
+                {
+                    var st = peerStats[v.UserId];
+                    var rung = Phoenix2PumbilityLevel.From(st.SkillRating);
+                    var offset = rung.Index - myRung.Index;
+                    offsets.Add(offset);
+                    var level = type == ChartType.Single ? st.SinglesCompetitiveLevel : st.DoublesCompetitiveLevel;
+                    var myLevel = type == ChartType.Single ? mine.SinglesCompetitiveLevel : mine.DoublesCompetitiveLevel;
+                    _output.WriteLine($"  {(v.IsPublic ? v.UserName.ToString() : "(private)"),-22} {Grade(v.Score),-18} total {st.SkillRating,9:F0}  rung {Rung(rung),-22} {offset,+3:+0;-0;0} vs you   comp {level,5:F2} ({level - myLevel:+0.00;-0.00})");
+                }
+
+                offsets.Sort();
+                _output.WriteLine($"  scorers vs your rung: {offsets.Count(o => o < 0)} below · {offsets.Count(o => o == 0)} level · {offsets.Count(o => o > 0)} above; median offset {Harness.Percentile(offsets.Select(o => (double)o).ToArray(), 0.5):+0.0;-0.0;0}");
+            }
+        }
+
+        Assert.True(true, "a reproduction, not a guarantee — read the output");
+    }
+
+    /// <summary>
+    ///     The population version of the same question. For every Phoenix 2 pair the backtest scores,
+    ///     the rung of each peer who voted, relative to the viewer's — then the pairs bucketed by the
+    ///     scorers' median offset and by the share of scorers above the viewer, each bucket read at
+    ///     the three rungs. If a chart that only the upper half of a band plays projects high, the
+    ///     bias climbs with the bucket. Two candidate rules are measured on the same pairs so the
+    ///     answer comes with its remedy priced: <b>nearby first</b> (the voices within one rung of the
+    ///     viewer when five or more, else the whole band) and <b>rung-weighted</b> (every voice at
+    ///     exp(−|offset|), the growth weighting's shape on distance instead of time).
+    /// </summary>
+    [CatalogProbeFact]
+    public async Task Phoenix2_scorers_level_offset_against_the_bias()
+    {
+        await using var services = BuildServices();
+        var projector = services.GetRequiredService<IScoreProjector>();
+        var statsRepository = services.GetRequiredService<IPlayerStatsRepository>();
+        var stats = services.GetRequiredService<IPlayerStatsReader>();
+        var scores = services.GetRequiredService<IScoreReader>();
+        var chartRepository = services.GetRequiredService<IChartRepository>();
+
+        var charts = (await chartRepository.GetCharts(MixEnum.Phoenix2, cancellationToken: CancellationToken.None))
+            .ToDictionary(c => c.Id);
+        var players = (await statsRepository.GetUserIdsWithStats(MixEnum.Phoenix2, CancellationToken.None)).ToArray();
+
+        var pairs = new List<Pair>();
+        var voicesByPair = new Dictionary<(Guid, ChartType, Guid), (int Score, int Offset)[]>();
+        foreach (var player in players)
+        {
+            var mine = (await scores.GetBestScores(MixEnum.Phoenix2, player, CancellationToken.None))
+                .Where(s => s is { Score: not null, IsBroken: false } && charts.ContainsKey(s.ChartId))
+                .ToArray();
+            var playerStats = await stats.GetStats(MixEnum.Phoenix2, player, CancellationToken.None);
+            var myRung = Phoenix2PumbilityLevel.From(playerStats.SkillRating).Index;
+            foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
+            {
+                var level = chartType == ChartType.Single ? playerStats.SinglesCompetitiveLevel : playerStats.DoublesCompetitiveLevel;
+                if (level < MinimumLevelForBacktest) continue;
+                var held = mine.Where(s => charts[s.ChartId].Type == chartType && (int)charts[s.ChartId].Level >= 10).ToArray();
+                if (held.Length == 0) continue;
+
+                var projection = await projector.Project(new ScoreProjectionRequest(MixEnum.Phoenix2, chartType,
+                    player, held.Select(s => new ProjectionTarget(s.ChartId, (int)charts[s.ChartId].Level)).ToArray(),
+                    PeerEstimator.CompetitiveWindow, charts, Quantiles: Rungs), CancellationToken.None);
+                if (projection.PeerPools == null || projection.Ladders == null || projection.Ladders.Count == 0) continue;
+
+                var peers = projection.PeerPools.PeerIds;
+                var peerRung = (await stats.GetStats(MixEnum.Phoenix2, peers, CancellationToken.None))
+                    .ToDictionary(p => p.UserId, p => Phoenix2PumbilityLevel.From(p.SkillRating).Index - myRung);
+                var voices = (await scores.GetPlayerScores(MixEnum.Phoenix2, peers,
+                        held.Where(s => projection.Ladders.ContainsKey(s.ChartId)).Select(s => s.ChartId), CancellationToken.None))
+                    .Where(v => !v.IsBroken && peerRung.ContainsKey(v.UserId))
+                    .GroupBy(v => v.ChartId)
+                    .ToDictionary(g => g.Key, g => g.Select(v => ((int)v.Score, peerRung[v.UserId])).ToArray());
+
+                foreach (var s in held)
+                    if (projection.Ladders.TryGetValue(s.ChartId, out var ladder) && voices.TryGetValue(s.ChartId, out var v))
+                    {
+                        pairs.Add(Pair.Of(player, chartType, s.ChartId, ladder, (int)s.Score!.Value, false, null));
+                        voicesByPair[(player, chartType, s.ChartId)] = v;
+                    }
+            }
+        }
+
+        _output.WriteLine($"pairs with their scorers' rungs: {pairs.Count}");
+        double MedianOffset(Pair p) => Harness.Percentile(voicesByPair[(p.Player, p.ChartType, p.ChartId)].Select(v => (double)v.Offset).OrderBy(x => x).ToArray(), 0.5);
+        double ShareAbove(Pair p) { var v = voicesByPair[(p.Player, p.ChartType, p.ChartId)]; return v.Count(x => x.Offset > 0) / (double)v.Length; }
+
+        _output.WriteLine("--- by the scorers' median rung offset from the viewer (shipping ladder) ---");
+        foreach (var (label, low, high) in new[] { ("median offset <= -2", double.NegativeInfinity, -1.5), ("median offset -1", -1.5, -0.5), ("median offset 0", -0.5, 0.5), ("median offset +1", 0.5, 1.5), ("median offset >= +2", 1.5, double.PositiveInfinity) })
+        {
+            var bucket = pairs.Where(p => MedianOffset(p) >= low && MedianOffset(p) < high).ToList();
+            if (bucket.Count > 0) Report(label, bucket, MixEnum.Phoenix2);
+        }
+
+        _output.WriteLine("--- by the share of scorers above the viewer's rung (shipping ladder) ---");
+        foreach (var (label, low, high) in new[] { ("0-25% above", 0.0, 0.25), ("25-50% above", 0.25, 0.5), ("50-75% above", 0.5, 0.75), ("75-100% above", 0.75, 1.01) })
+        {
+            var bucket = pairs.Where(p => ShareAbove(p) >= low && ShareAbove(p) < high).ToList();
+            if (bucket.Count > 0) Report(label, bucket, MixEnum.Phoenix2);
+        }
+
+        // Two candidate rules, re-read off the same voices.
+        Pair Reprice(Pair p, Func<(int Score, int Offset)[], (int Score, double Weight)[]> weigh)
+        {
+            var weighted = weigh(voicesByPair[(p.Player, p.ChartType, p.ChartId)])
+                .Where(w => w.Weight > 0).Select(w => ((double)w.Score, w.Weight)).ToArray();
+            if (weighted.Length == 0) return p;
+            int At(double q) => (int)Math.Round(Harness.WeightedQuantile(weighted, q));
+            return p with { P25 = At(0.25), P50 = At(0.5), P75 = At(0.75) };
+        }
+
+        var nearby = pairs.Select(p => Reprice(p, v =>
+        {
+            var near = v.Where(x => Math.Abs(x.Offset) <= 1).ToArray();
+            var use = near.Length >= PeerEstimator.Phoenix2MinimumPeers ? near : v;
+            return use.Select(x => (x.Score, 1.0)).ToArray();
+        })).ToList();
+        var weighted = pairs.Select(p => Reprice(p, v => v.Select(x => (x.Score, Math.Exp(-Math.Abs(x.Offset)))).ToArray())).ToList();
+
+        _output.WriteLine("--- shipping: the whole band, every voice equal ---");
+        Report("band", pairs, MixEnum.Phoenix2);
+        TopOfList(pairs, charts, MixEnum.Phoenix2);
+        _output.WriteLine("--- candidate: nearby first (within one rung when five or more, else the band) ---");
+        Report("nearby", nearby, MixEnum.Phoenix2);
+        TopOfList(nearby, charts, MixEnum.Phoenix2);
+        _output.WriteLine("--- candidate: rung-weighted, exp(-|offset|) ---");
+        Report("rung-weighted", weighted, MixEnum.Phoenix2);
+        TopOfList(weighted, charts, MixEnum.Phoenix2);
+
+        Assert.True(true, "a measurement, not a guarantee — read the output");
+    }
+
+    private static string Rung(Phoenix2PumbilityLevel rung) =>
+        rung.Gem is { } gem ? $"{gem} LV.{rung.Level} (#{rung.Index})" : $"unranked (#{rung.Index})";
+
+    private static string Grade(PhoenixScore score) => $"{(int)score:N0} {score.LetterGradeFor(MixEnum.Phoenix2)}";
 
     // ------------------------------------------------------------------ the reads
 
