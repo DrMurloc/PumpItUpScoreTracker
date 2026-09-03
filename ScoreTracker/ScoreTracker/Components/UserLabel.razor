@@ -26,11 +26,10 @@
    "…" for everyone who has one. *@
 @if (User != null)
 {
-    <span class="@LabelClass" style="@FlagStyle">
+    <span class="@LabelClass" style="@LabelStyle">
         @if (ShowAvatar)
         {
-            <img class="@AvatarClass" src="@User.ProfileImage" alt=""
-                 loading="lazy" style="@($"--label-avatar-size:{AvatarSize}px")"/>
+            <img class="@AvatarClass" src="@User.ProfileImage" alt="" loading="lazy"/>
         }
         @if (RendererInfo.IsInteractive)
         {
@@ -65,7 +64,20 @@
     private string _countryImage = string.Empty;
     private Name? _loadedCountry;
 
-    private string? FlagStyle => _countryImage.Length == 0 ? null : $"--label-flag:url('{_countryImage}')";
+    // Both custom properties ride the LABEL, never the avatar: the wash is drawn by the
+    // label's own pseudo-element and has to start where the avatar ends, so it needs to read
+    // the size — and a property set on the avatar would only inherit downward, past it.
+    private string? LabelStyle
+    {
+        get
+        {
+            var flag = _countryImage.Length == 0 ? null : $"--label-flag:url('{_countryImage}')";
+            var size = ShowAvatar ? $"--label-avatar-size:{AvatarSize}px" : null;
+            var parts = new[] { flag, size }.Where(p => p != null);
+            var style = string.Join(";", parts);
+            return style.Length == 0 ? null : style;
+        }
+    }
 
     private string LabelClass =>
         "user-label" + (_countryImage.Length == 0 ? "" : " has-flag") + (ShowAvatar ? " has-avatar" : "");

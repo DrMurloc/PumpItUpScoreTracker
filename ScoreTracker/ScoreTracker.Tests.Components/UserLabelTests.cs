@@ -116,8 +116,13 @@ public sealed class UserLabelTests : ComponentTestBase
         {
             var avatar = cut.Find(".user-label-avatar");
             Assert.Contains("square", avatar.ClassName);
-            Assert.Contains("--label-avatar-size:26px", avatar.GetAttribute("style"));
             Assert.Equal("https://piu.test/a.png", avatar.GetAttribute("src"));
+            // The size rides the LABEL, not the avatar: the wash offsets itself past the
+            // avatar and reads the size to do it, and a property on the avatar would only
+            // inherit downward.
+            var style = cut.Find(".user-label").GetAttribute("style");
+            Assert.Contains("--label-avatar-size:26px", style);
+            Assert.Contains("--label-flag:", style);
         });
     }
 }

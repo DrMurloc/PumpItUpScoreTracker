@@ -8195,8 +8195,13 @@ button.chart-card-art {
 }
 
 /* The avatar sat in the row's own grid track before the wash moved it in here, where the
-   gap between it and the name is the label's rather than the row's. */
-.user-label.has-avatar { gap: 7px; }
+   gap between it and the name is the label's rather than the row's. The wash starts where
+   the avatar ends: a face is already a picture, and a flag washed under one reads as a
+   printing error rather than as a country. 4px of the 7px gap is lead-in. */
+.user-label.has-avatar {
+    gap: 7px;
+    --label-wash-left: calc(var(--label-avatar-size, 20px) + 4px);
+}
 
 .user-label > :not(:last-child) { flex: 0 0 auto; }
 
@@ -8206,31 +8211,37 @@ button.chart-card-art {
     overflow: hidden;
 }
 
-/* The country wash. The flag paints behind the avatar and the name and is masked away
-   before the row's figures, so it reads as the player's own patch of colour and never as a
-   band across the row. isolation on the label is what keeps a z-index of -1 from sinking
-   past the row's background: the label is its own stacking context, so -1 means behind the
-   label's contents, not behind the board. The URL arrives as --label-flag on the element
-   because only the component knows it — the port is what resolves a country to an image. */
+/* The country wash. The flag paints behind the NAME — never under the avatar, which is a
+   picture already — and is masked away at its trailing edge so it reads as the player's own
+   patch of colour rather than a band across the row. isolation on the label is what keeps a
+   z-index of -1 from sinking past the row's background: the label is its own stacking
+   context, so -1 means behind the label's contents, not behind the board. The URL arrives as
+   --label-flag on the element because only the component knows it — the port is what
+   resolves a country to an image. */
 .user-label.has-flag::before {
     content: "";
     position: absolute;
-    inset: -3px -6px;
+    inset: -3px -6px -3px var(--label-wash-left, -6px);
     z-index: -1;
     border-radius: 6px;
     background-image: var(--label-flag);
     background-position: left center;
     background-size: cover;
     background-repeat: no-repeat;
-    opacity: .32;
-    -webkit-mask-image: linear-gradient(90deg, #000 0, #000 18%, transparent 94%);
-    mask-image: linear-gradient(90deg, #000 0, #000 18%, transparent 94%);
+    /* A third of a flag over a dark board is a smudge you have to be told about (owner, field
+       test 1: "definitely too transparent"). Half-plus is the level where a country reads at
+       a glance and the name still wins the contrast, which the shadow below guarantees. */
+    opacity: .55;
+    -webkit-mask-image: linear-gradient(90deg, #000 0, #000 72%, transparent 100%);
+    mask-image: linear-gradient(90deg, #000 0, #000 72%, transparent 100%);
     pointer-events: none;
 }
 
-/* A white-heavy flag (Japan, Korea) washes to a pale ground that a light name disappears
-   into — the shadow is what keeps the name readable over every flag rather than most. */
-.user-label.has-flag .user-label-name { text-shadow: 0 1px 2px rgba(0, 0, 0, .6); }
+/* A white-heavy flag (Japan, and Korea, which is the most common country on the site) washes
+   to a pale ground that a light name disappears into, and at better than half opacity that is
+   a real mid-grey rather than a tint — the shadow is what keeps the name readable over every
+   flag rather than most, so it is sized for the worst one. */
+.user-label.has-flag .user-label-name { text-shadow: 0 1px 3px rgba(0, 0, 0, .8); }
 
 .user-label-avatar {
     width: var(--label-avatar-size, 20px);
