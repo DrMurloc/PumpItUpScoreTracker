@@ -8212,8 +8212,8 @@ button.chart-card-art {
 }
 
 /* The country wash. The flag paints behind the NAME — never under the avatar, which is a
-   picture already — and is masked away at its trailing edge so it reads as the player's own
-   patch of colour rather than a band across the row. isolation on the label is what keeps a
+   picture already — at its own aspect, so it reads as the player's country rather than as a
+   band of colour across the row. isolation on the label is what keeps a
    z-index of -1 from sinking past the row's background: the label is its own stacking
    context, so -1 means behind the label's contents, not behind the board. The URL arrives as
    --label-flag on the element because only the component knows it — the port is what
@@ -8226,14 +8226,18 @@ button.chart-card-art {
     border-radius: 6px;
     background-image: var(--label-flag);
     background-position: left center;
-    background-size: cover;
+    /* contain, never cover: the box is as wide as the name and a flag is about 3:2, so cover
+       scales one until it fills and crops away everything but a blown-up horizontal slice —
+       Germany becomes a red bar, Japan a white one. A flag has to keep its own proportions to
+       read as that country at all (owner, field test 2: "we shouldn't stretch the flags, just
+       let them be their natural aspect ratio"), so it sits at the head of the name at whatever
+       size the row's height allows, and a long name simply has bare board after it. */
+    background-size: contain;
     background-repeat: no-repeat;
     /* A third of a flag over a dark board is a smudge you have to be told about (owner, field
        test 1: "definitely too transparent"). Half-plus is the level where a country reads at
        a glance and the name still wins the contrast, which the shadow below guarantees. */
     opacity: .55;
-    -webkit-mask-image: linear-gradient(90deg, #000 0, #000 72%, transparent 100%);
-    mask-image: linear-gradient(90deg, #000 0, #000 72%, transparent 100%);
     pointer-events: none;
 }
 
