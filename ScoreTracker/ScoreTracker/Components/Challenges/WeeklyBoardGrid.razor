@@ -77,18 +77,22 @@ else
                              data-inrange="@row.WasWithinRange.ToString().ToLowerInvariant()">
                             <span class="challenge-lb-place co">#@row.Place</span>
                             <span class="challenge-lb-place cr">@(row.InRangePlace is { } p ? $"#{p}" : "—")</span>
-                            <ChallengeAvatar Player="row.Player"></ChallengeAvatar>
+                            @* The label draws the avatar so the country wash covers both. Your
+                               own row says "You" instead of your name and a dead account has no
+                               label at all, so those two keep the standalone face. *@
                             <span class="who">
                                 @if (IsMine(row))
                                 {
+                                    <ChallengeAvatar Player="row.Player"></ChallengeAvatar>
                                     @L["You"]
                                 }
                                 else if (row.Player != null)
                                 {
-                                    <UserLabel User="row.Player"></UserLabel>
+                                    <UserLabel User="row.Player" ShowAvatar="true"></UserLabel>
                                 }
                                 else
                                 {
+                                    <ChallengeAvatar Player="null"></ChallengeAvatar>
                                     @("—")
                                 }
                             </span>

@@ -114,11 +114,11 @@
             <div class="olb-grid-row @(IsMe(entry.UserId) ? "olb-row-me" : "")">
                 <span><RankDelta Rank="entry.Place"/></span>
                 <span style="display:flex;align-items:center;gap:6px;min-width:0">
-                    <MudLink Style="cursor:pointer;display:flex;align-items:center;gap:8px;min-width:0" Underline="Underline.None"
+                    <MudLink Style="cursor:pointer;display:flex;align-items:center;min-width:0" Underline="Underline.None"
                              Href="@($"/Player/{entry.UserId}")">
-                        <MudImage Src="@entry.ProfileImage.ToString()" Height="26" ObjectFit="ObjectFit.ScaleDown"></MudImage>
                         <span class="olb-player-name" title="@((string)entry.PlayerName)">
-                            <UserLabel User="_users[entry.UserId]"></UserLabel>
+                            <UserLabel User="_users[entry.UserId]" ShowAvatar="true" AvatarSize="26"
+                                       SquareAvatar="true"></UserLabel>
                         </span>
                     </MudLink>
                     @if (entry.IsPublic && _currentMix == MixEnum.Phoenix)

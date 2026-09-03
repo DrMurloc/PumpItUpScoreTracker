@@ -4437,14 +4437,6 @@ html.sheet-open .more-sheet-scrim {
     min-width: 0;
 }
 
-.dash-acct-av {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    object-fit: cover;
-    flex: none;
-}
-
 .dash-acct-name {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -6371,9 +6363,10 @@ button.chart-card-art {
     text-overflow: ellipsis;
 }
 
+/* Same as .challenge-lb-row: the avatar moved into the name cell with the country wash. */
 .challenge-card-line {
     display: grid;
-    grid-template-columns: 26px 20px minmax(0, 1fr) auto;
+    grid-template-columns: 26px minmax(0, 1fr) auto;
     gap: 7px;
     align-items: center;
     font-size: 12.2px;
@@ -6736,9 +6729,11 @@ button.chart-card-art {
     gap: 3px;
 }
 
+/* The avatar lost its own track when UserLabel took it over: it now sits in the name cell so
+   the country wash can run under both. */
 .challenge-lb-row {
     display: grid;
-    grid-template-columns: 24px 20px minmax(0, 1fr) auto auto;
+    grid-template-columns: 24px minmax(0, 1fr) auto auto;
     align-items: center;
     gap: 8px;
     padding: 4px 7px;
@@ -7121,12 +7116,14 @@ button.chart-card-art {
     box-shadow: inset -3px 0 0 var(--daily-community);
 }
 
-/* UserLabel inside board rows: flag + name on one truncating line. */
+/* UserLabel inside board rows: avatar + name on one truncating line. The gap matches the
+   label's own, so a row that falls back to the standalone avatar ("You", a dead account)
+   spaces its face exactly like the rows around it. */
 .challenge-lb-name,
 .challenge-card-line .who {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 7px;
     min-width: 0;
     overflow: hidden;
 }
@@ -8182,9 +8179,9 @@ button.chart-card-art {
     overflow: hidden;
 }
 
-/* Every UserLabel, everywhere: flag then name, laid out so a bounded caller truncates
-   the NAME. max-width keeps the label inside its container instead of overflowing as one
-   atomic box — an overflowing atomic box is replaced wholesale by the container's
+/* Every UserLabel, everywhere: optional avatar then name, laid out so a bounded caller
+   truncates the NAME. max-width keeps the label inside its container instead of overflowing
+   as one atomic box — an overflowing atomic box is replaced wholesale by the container's
    ellipsis, which is how a flagged player used to render as a bare "…". */
 .user-label {
     display: inline-flex;
@@ -8193,7 +8190,13 @@ button.chart-card-art {
     vertical-align: middle;
     min-width: 0;
     max-width: 100%;
+    position: relative;
+    isolation: isolate;
 }
+
+/* The avatar sat in the row's own grid track before the wash moved it in here, where the
+   gap between it and the name is the label's rather than the row's. */
+.user-label.has-avatar { gap: 7px; }
 
 .user-label > :not(:last-child) { flex: 0 0 auto; }
 
@@ -8201,6 +8204,47 @@ button.chart-card-art {
     flex: 0 1 auto;
     min-width: 0;
     overflow: hidden;
+}
+
+/* The country wash. The flag paints behind the avatar and the name and is masked away
+   before the row's figures, so it reads as the player's own patch of colour and never as a
+   band across the row. isolation on the label is what keeps a z-index of -1 from sinking
+   past the row's background: the label is its own stacking context, so -1 means behind the
+   label's contents, not behind the board. The URL arrives as --label-flag on the element
+   because only the component knows it — the port is what resolves a country to an image. */
+.user-label.has-flag::before {
+    content: "";
+    position: absolute;
+    inset: -3px -6px;
+    z-index: -1;
+    border-radius: 6px;
+    background-image: var(--label-flag);
+    background-position: left center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    opacity: .32;
+    -webkit-mask-image: linear-gradient(90deg, #000 0, #000 18%, transparent 94%);
+    mask-image: linear-gradient(90deg, #000 0, #000 18%, transparent 94%);
+    pointer-events: none;
+}
+
+/* A white-heavy flag (Japan, Korea) washes to a pale ground that a light name disappears
+   into — the shadow is what keeps the name readable over every flag rather than most. */
+.user-label.has-flag .user-label-name { text-shadow: 0 1px 2px rgba(0, 0, 0, .6); }
+
+.user-label-avatar {
+    width: var(--label-avatar-size, 20px);
+    height: var(--label-avatar-size, 20px);
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* The community rankings' avatar is a square that keeps its own aspect, which is what
+   MudImage's ScaleDown did for it before the label owned it. */
+.user-label-avatar.square {
+    width: auto;
+    border-radius: 0;
+    object-fit: scale-down;
 }
 
 /* Inline-block, not block: this rule reaches every UserLabel on the site, and the

@@ -1,4 +1,4 @@
-using Bunit;
+﻿using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MudBlazor;
@@ -32,6 +32,15 @@ public sealed class ChallengeComponentsTests : ComponentTestBase
         // (SetRendererInfo builds the service provider, so every registration lands first.)
         this.RenderInteractive();
     }
+
+    /// <summary>
+    ///     Every player row wears a face, and which element draws it depends on whether the row
+    ///     can be named: UserLabel draws it for a named player so the country wash covers both,
+    ///     and ChallengeAvatar still draws it for "You" and for a row whose account is gone.
+    ///     The assertion is that the face is there, not which of the two put it there.
+    /// </summary>
+    private static string RowFaces(string row) =>
+        $"{row} img.user-label-avatar, {row} img.challenge-avatar";
 
     private static Chart MakeChart(string name = "District 1", ChartType type = ChartType.Single, int level = 20) =>
         new(Guid.NewGuid(), MixEnum.Phoenix,
@@ -109,7 +118,7 @@ public sealed class ChallengeComponentsTests : ComponentTestBase
         // Record ⊕ and the trophy (M15) as inert data-challenge controls, plus rows with avatars.
         Assert.Single(cut.FindAll("button.challenge-iconbtn.rec[data-challenge-record]"));
         Assert.Single(cut.FindAll("button.challenge-iconbtn.tro[data-challenge-board]"));
-        Assert.Single(cut.FindAll(".challenge-lb-row img.challenge-avatar"));
+        Assert.Single(cut.FindAll(RowFaces(".challenge-lb-row")));
     }
 
     // ---- MonthlyRailCard ----------------------------------------------------
@@ -154,7 +163,7 @@ public sealed class ChallengeComponentsTests : ComponentTestBase
             .Add(x => x.Boards, new[] { new MonthlyRailBoard(null, view) })
             .Add(x => x.UserId, me.Id));
 
-        Assert.Equal(2, cut.FindAll(".challenge-lb-row img.challenge-avatar").Count);
+        Assert.Equal(2, cut.FindAll(RowFaces(".challenge-lb-row")).Count);
         Assert.Contains("21.86", cut.Markup);
         Assert.Contains("3,137", cut.Markup);
         Assert.Single(cut.FindAll(".challenge-lb-row.mine"));
@@ -270,7 +279,7 @@ public sealed class ChallengeComponentsTests : ComponentTestBase
         Assert.Equal("#2", real.QuerySelector(".challenge-lb-place.co")!.TextContent.Trim());
         Assert.Equal("#1", real.QuerySelector(".challenge-lb-place.cr")!.TextContent.Trim());
         // Rows carry avatars now (M16 vocabulary on the cards too).
-        Assert.Equal(3, cut.FindAll(".challenge-card-line img.challenge-avatar").Count);
+        Assert.Equal(3, cut.FindAll(RowFaces(".challenge-card-line")).Count);
         // The footer wears the widget icon pair (M15) — board trophy for the anonymous view.
         Assert.Single(cut.FindAll(".challenge-card-foot .challenge-iconbtn.tro[data-challenge-board]"));
     }

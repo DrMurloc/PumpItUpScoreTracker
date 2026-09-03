@@ -56,8 +56,16 @@
                         <td class="challenge-mono-place" style="@ThemeScales.RarityStyle(Fraction(row.Place))">@row.Place</td>
                         <td>
                             <span class="challenge-mrow-who">
-                                <ChallengeAvatar Player="row.Player"></ChallengeAvatar>
-                                <UserLabel User="row.Player"></UserLabel>
+                                @* The label draws the avatar so the country wash covers both;
+                                   a row whose account is gone still gets the fallback face. *@
+                                @if (row.Player == null)
+                                {
+                                    <ChallengeAvatar Player="null"></ChallengeAvatar>
+                                }
+                                else
+                                {
+                                    <UserLabel User="row.Player" ShowAvatar="true"></UserLabel>
+                                }
                             </span>
                         </td>
                         <td>
