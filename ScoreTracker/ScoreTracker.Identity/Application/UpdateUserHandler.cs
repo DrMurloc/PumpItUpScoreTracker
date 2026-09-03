@@ -33,12 +33,18 @@ internal sealed class UpdateUserHandler : IRequestHandler<UpdateUserCommand>
         if ((existing?.IsContentLocked ?? false) && existing!.Name != request.newName)
             throw new ContentLockedException();
 
+        // Every field not in the request is carried across by hand, so anything added to User has
+        // to be added here too. SaveUser writes the whole row: a field missed here is not left
+        // alone, it is reset — which is how changing your country would silently unpin your
+        // avatar. Covered by UpdateUserHandlerTests rather than by remembering.
         var newUser = new User(user.Id, request.newName, request.newIsPublic, existing?.GameTag,
             existing?.ProfileImage ??
             new Uri("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png", UriKind.Absolute),
             request.newCountry,
             existing?.IsContentLocked ?? false,
-            existing?.ClaimsInvalidatedAt ?? default);
+            existing?.ClaimsInvalidatedAt ?? default,
+            existing?.ImportedProfileImage,
+            existing?.AvatarIsPinned ?? false);
         await _users.SaveUser(newUser, cancellationToken);
         await _bus.Publish(UserUpdatedEvent.From(newUser), cancellationToken);
     }

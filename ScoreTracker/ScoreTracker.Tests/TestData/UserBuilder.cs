@@ -13,6 +13,8 @@ internal sealed class UserBuilder
     private Name? _gameTag;
     private Uri _profileImage = new("https://example.invalid/avatar.png");
     private Name? _country;
+    private Uri? _importedProfileImage;
+    private bool _avatarIsPinned;
 
     public UserBuilder WithId(Guid id) { _id = id; return this; }
     public UserBuilder WithName(string name) { _name = Name.From(name); return this; }
@@ -21,8 +23,16 @@ internal sealed class UserBuilder
     public UserBuilder WithGameTag(string gameTag) { _gameTag = Name.From(gameTag); return this; }
     public UserBuilder WithProfileImage(Uri profileImage) { _profileImage = profileImage; return this; }
     public UserBuilder WithCountry(string country) { _country = Name.From(country); return this; }
+    public UserBuilder WithImportedProfileImage(Uri? imported) { _importedProfileImage = imported; return this; }
+    public UserBuilder WithPinnedAvatar(Uri pinned)
+    {
+        _profileImage = pinned;
+        _avatarIsPinned = true;
+        return this;
+    }
 
-    public User Build() => new(_id, _name, _isPublic, _gameTag, _profileImage, _country);
+    public User Build() => new(_id, _name, _isPublic, _gameTag, _profileImage, _country,
+        ImportedProfileImage: _importedProfileImage, AvatarIsPinned: _avatarIsPinned);
 
     public static implicit operator User(UserBuilder b) => b.Build();
 }

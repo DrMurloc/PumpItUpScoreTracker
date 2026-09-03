@@ -38,7 +38,9 @@ public sealed class EFUserRepository : IUserRepository, IUserReader
                 ProfileImage = user.ProfileImage.ToString(),
                 CountryName = user.Country,
                 IsContentLocked = user.IsContentLocked,
-                ClaimsInvalidatedAt = user.ClaimsInvalidatedAt
+                ClaimsInvalidatedAt = user.ClaimsInvalidatedAt,
+                ImportedProfileImage = user.ImportedProfileImage?.ToString(),
+                AvatarIsPinned = user.AvatarIsPinned
             }, cancellationToken);
         }
         else
@@ -50,6 +52,11 @@ public sealed class EFUserRepository : IUserRepository, IUserReader
             existingUser.ProfileImage = user.ProfileImage.ToString();
             existingUser.IsContentLocked = user.IsContentLocked;
             existingUser.ClaimsInvalidatedAt = user.ClaimsInvalidatedAt;
+            // Assigned unconditionally like every other column. A caller that means to keep the
+            // pin must carry it forward on the record it hands us; SaveUser is a whole-row write,
+            // not a patch, and quietly preserving these two would hide the bug rather than fix it.
+            existingUser.ImportedProfileImage = user.ImportedProfileImage?.ToString();
+            existingUser.AvatarIsPinned = user.AvatarIsPinned;
         }
 
         await database.SaveChangesAsync(cancellationToken);
@@ -166,7 +173,8 @@ public sealed class EFUserRepository : IUserRepository, IUserReader
         return await database.User.Where(u => u.Name.Contains(searchText))
             .OrderBy(u => u.Name)
             .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName,
-                u.IsContentLocked, u.ClaimsInvalidatedAt))
+                u.IsContentLocked, u.ClaimsInvalidatedAt,
+                u.ImportedProfileImage == null ? null : new Uri(u.ImportedProfileImage), u.AvatarIsPinned))
             .ToArrayAsync(cancellationToken);
     }
 
@@ -195,7 +203,8 @@ public sealed class EFUserRepository : IUserRepository, IUserReader
             .ThenBy(u => u.Name)
             .Take(take)
             .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName,
-                u.IsContentLocked, u.ClaimsInvalidatedAt))
+                u.IsContentLocked, u.ClaimsInvalidatedAt,
+                u.ImportedProfileImage == null ? null : new Uri(u.ImportedProfileImage), u.AvatarIsPinned))
             .ToArrayAsync(cancellationToken);
     }
 
@@ -224,7 +233,8 @@ public sealed class EFUserRepository : IUserRepository, IUserReader
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return await database.User.Where(u => u.GameTag == tag)
             .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName,
-                u.IsContentLocked, u.ClaimsInvalidatedAt))
+                u.IsContentLocked, u.ClaimsInvalidatedAt,
+                u.ImportedProfileImage == null ? null : new Uri(u.ImportedProfileImage), u.AvatarIsPinned))
             .ToArrayAsync(cancellationToken);
     }
 
@@ -234,7 +244,8 @@ public sealed class EFUserRepository : IUserRepository, IUserReader
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return await database.User.Where(u => u.Id == userId)
             .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName,
-                u.IsContentLocked, u.ClaimsInvalidatedAt))
+                u.IsContentLocked, u.ClaimsInvalidatedAt,
+                u.ImportedProfileImage == null ? null : new Uri(u.ImportedProfileImage), u.AvatarIsPinned))
             .SingleOrDefaultAsync(cancellationToken);
     }
 
@@ -244,7 +255,8 @@ public sealed class EFUserRepository : IUserRepository, IUserReader
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return await database.User.Where(u => userIds.Contains(u.Id))
             .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName,
-                u.IsContentLocked, u.ClaimsInvalidatedAt)
+                u.IsContentLocked, u.ClaimsInvalidatedAt,
+                u.ImportedProfileImage == null ? null : new Uri(u.ImportedProfileImage), u.AvatarIsPinned)
             ).ToArrayAsync(cancellationToken);
     }
 
@@ -257,7 +269,8 @@ public sealed class EFUserRepository : IUserRepository, IUserReader
                 where e.LoginProvider == loginProviderName
                       && e.ExternalId == externalId
                 select new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName,
-                    u.IsContentLocked, u.ClaimsInvalidatedAt))
+                    u.IsContentLocked, u.ClaimsInvalidatedAt,
+                u.ImportedProfileImage == null ? null : new Uri(u.ImportedProfileImage), u.AvatarIsPinned))
             .SingleOrDefaultAsync(cancellationToken);
     }
 

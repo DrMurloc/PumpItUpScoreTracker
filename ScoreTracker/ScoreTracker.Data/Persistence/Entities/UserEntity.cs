@@ -12,6 +12,18 @@ public sealed class UserEntity
     public string? GameTag { get; set; }
     [Required] public string ProfileImage { get; set; }
     public string? CountryName { get; set; }
+
+    /// <summary>
+    ///     What the last piugame import saw, kept whether or not it is the avatar being shown.
+    ///     Null until an import runs. Storing it separately is what makes "Back to Auto" instant
+    ///     rather than a wait for the next import (docs/design/avatar-selection.md §1).
+    /// </summary>
+    [MaxLength(400)]
+    public string? ImportedProfileImage { get; set; }
+
+    /// <summary>The player chose their avatar, so imports must not overwrite it.</summary>
+    [Required]
+    public bool AvatarIsPinned { get; set; }
     [Required] public bool IsContentLocked { get; set; }
     [Required] public DateTimeOffset ClaimsInvalidatedAt { get; set; }
 
