@@ -46,10 +46,11 @@
    A re-read holds its shape (D56). Only the first paint shows the patience card; after that a
    change of energy or pool keeps the previous list on screen under a pulse — its cards and rows
    blanked, its height and sections intact — with the controls in place and disabled for the
-   moment the read takes, and everything flips once when the new record lands. Swapping the whole
-   block for the card moved the controls a reader had just used and jumped the page twice
-   (owner, field test round eight). Grouped by is a re-sort of what is already here and needs
-   none of this.
+   moment the read takes, and everything flips once, when both halves are in: the peers read for
+   the new pool and energy, and the frame's record priced at the same, which arrives on a render
+   of its own and in no fixed order with the peers. Swapping the whole block for the card moved
+   the controls a reader had just used and jumped the page twice (owner, field test round eight).
+   Grouped by is a re-sort of what is already here and needs none of this.
 
    The controls: Grouped by — Prevalence, Projected gains, Your top 50 (D44) — then Energy, then, left-aligned
    beside it, the one switch that means something under that grouping — Project Phoenix 1 scores
@@ -357,6 +358,20 @@
                 ? L["What players whose pool of the type sits within {0} below and {1} above yours build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand.", WindowBelow, WindowAbove]
                 : L["What players within one competitive level of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand."];
 
+    /// <summary>
+    ///     The peers read for the pool and energy the frame last asked for, held back until the
+    ///     frame's record priced at the same arrives — the other half of a flip (D56).
+    /// </summary>
+    private PumbilityPeersPageRecord? _pendingPeers;
+
+    private IReadOnlyDictionary<Guid, PumbilityTarget>? _pendingPeerOnlyGains;
+
+    /// <summary>
+    ///     Whether the frame's record is the one for the pool and energy the peers were read at.
+    ///     The record says what it was priced at, so this never has to guess from a reference.
+    /// </summary>
+    private bool PageIsCurrent => Page.Pool_ == _loadedPool && Page.Energy == _loadedEnergy;
+
     protected override async Task OnParametersSetAsync()
     {
         if (!_settingsRead)
@@ -365,11 +380,21 @@
             await ReadSettings();
         }
 
-        if (_loaded && _loadedPool == Pool && _loadedEnergy == Energy) return;
+        if (_loaded && _loadedPool == Pool && _loadedEnergy == Energy)
+        {
+            // Nothing to read: the frame handed down a record. If it is the one the peers on
+            // hold were waiting for, this is the flip.
+            Flip();
+            return;
+        }
+
         var first = !_loaded;
         _loaded = true;
         _loadedPool = Pool;
         _loadedEnergy = Energy;
+        // A change supersedes peers still waiting for a record that is now never coming.
+        _pendingPeers = null;
+        _pendingPeerOnlyGains = null;
         // The share card's top-50 reads are dropped on every re-read, so a membership never
         // outlives the list it was read for; the next dialog open re-fetches.
         _top50ByType.Clear();
@@ -377,22 +402,46 @@
 
         // The first paint has no shape to hold, so the card stands in for the block. Every read
         // after it keeps what is on screen — the old peers against the old record — under the
-        // pulse, and swaps the lot at once when the new peers land (D56).
+        // pulse, and swaps the lot at once when both the new peers and the new record are in (D56).
         _reloading = !first;
-        var peers = await Mediator.Send(new GetPumbilityPeersPageQuery(CurrentUser.User.Id, Page.Mix, Pool, Energy));
+        var pool = Pool;
+        var energy = Energy;
+        var peers = await Mediator.Send(new GetPumbilityPeersPageQuery(CurrentUser.User.Id, Page.Mix, pool, energy));
         // The chips are a property of the charts, not of the energy or the pool: one read per page.
         if (_skills.Count == 0) await ReadIdentity();
-        var peerOnlyGains = _projectPhoenix1 ? null : await ReadPeerOnlyGains();
+        var peerOnlyGains = _projectPhoenix1 ? null : await ReadPeerOnlyGains(pool, energy);
         if (_rivals == null)
         {
             _rivals = await Glow.GetMyRivalIds(Page.Mix);
             _clubmates = await Glow.GetMyCommunityMemberIds();
         }
 
-        _peers = peers;
+        // A quicker second change superseded this read; its own read is in flight and will flip.
+        if (pool != _loadedPool || energy != _loadedEnergy) return;
+
+        _pendingPeers = peers;
+        _pendingPeerOnlyGains = peerOnlyGains;
+        Flip();
+    }
+
+    /// <summary>
+    ///     The one flip (D56): the list, its record and its pool advance together, and only once
+    ///     both halves are in hand — the peers read for the pool and energy the frame asked for,
+    ///     and the frame's record priced at the same. The frame renders twice on a change, first
+    ///     with the new pool or energy beside the record it still holds and again when the
+    ///     re-priced record lands, and the peers read is the lighter of the two, so either half
+    ///     can arrive first; whichever is second flips. Flipping on the peers alone captured the
+    ///     old record and then ignored the new one, because by then nothing it keyed on had changed.
+    /// </summary>
+    private void Flip()
+    {
+        if (_pendingPeers == null || !PageIsCurrent) return;
+        _peers = _pendingPeers;
+        _peerOnlyGains = _pendingPeerOnlyGains;
+        _pendingPeers = null;
+        _pendingPeerOnlyGains = null;
         _shownPage = Page;
-        _shownPool = Pool;
-        _peerOnlyGains = peerOnlyGains;
+        _shownPool = _loadedPool;
         _reloading = false;
     }
 
@@ -420,9 +469,9 @@
             _collapsed = collapsed.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet();
     }
 
-    private async Task<IReadOnlyDictionary<Guid, PumbilityTarget>> ReadPeerOnlyGains()
+    private async Task<IReadOnlyDictionary<Guid, PumbilityTarget>> ReadPeerOnlyGains(ChartType? pool, Energy energy)
     {
-        var projection = await Mediator.Send(new ProjectPumbilityGainsQuery(CurrentUser.User.Id, Page.Mix, Pool, Energy));
+        var projection = await Mediator.Send(new ProjectPumbilityGainsQuery(CurrentUser.User.Id, Page.Mix, pool, energy));
         return projection.ProjectedGains.ToDictionary(kv => kv.Key,
             kv => new PumbilityTarget(kv.Key, projection.ExpectedScores[kv.Key], kv.Value, null, false, null));
     }
@@ -430,7 +479,7 @@
     private bool _downloadOpen;
 
     private string DownloadFileName => ShareCardTitles.TargetsFileName(Shown.Mix, _groupBy.ToString(),
-        Energy.ToString(), ShownPool?.ToString() ?? "All", Clock.Now.ToString("yyyy-MM-dd"));
+        Shown.Energy.ToString(), ShownPool?.ToString() ?? "All", Clock.Now.ToString("yyyy-MM-dd"));
 
     /// <summary>Which pool the list is scoped to — said only on Phoenix 2, where pools are per type.</summary>
     private string? SharePoolLabel => Shown.Mix != MixEnum.Phoenix2 ? null :
@@ -621,7 +670,7 @@
     {
         _projectPhoenix1 = on;
         await UiSettings.SetSetting(ProjectPhoenix1SettingKey, on.ToString());
-        if (!on && _peerOnlyGains == null) _peerOnlyGains = await ReadPeerOnlyGains();
+        if (!on && _peerOnlyGains == null) _peerOnlyGains = await ReadPeerOnlyGains(_loadedPool, _loadedEnergy);
     }
 
     private async Task SetGainsOnly(bool on)

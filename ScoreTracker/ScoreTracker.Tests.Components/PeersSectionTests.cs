@@ -89,7 +89,7 @@ public sealed class PeersSectionTests : ComponentTestBase
 
         // The frame hands the new energy down with its re-priced record while the peers read for
         // it is still in flight.
-        cut.SetParametersAndRender(p => p.Add(x => x.Energy, Energy.TopOfMyGame).Add(x => x.Page, Page(bar: 320)));
+        cut.SetParametersAndRender(p => p.Add(x => x.Energy, Energy.TopOfMyGame).Add(x => x.Page, Page(bar: 320, energy: Energy.TopOfMyGame)));
 
         cut.WaitForAssertion(() =>
         {
@@ -128,13 +128,112 @@ public sealed class PeersSectionTests : ComponentTestBase
 
         var cut = Render(Energy.Great);
         cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=peers-controls]")));
-        cut.SetParametersAndRender(p => p.Add(x => x.Energy, Energy.Good));
+        cut.SetParametersAndRender(p => p.Add(x => x.Energy, Energy.Good).Add(x => x.Page, Page(energy: Energy.Good)));
         cut.WaitForAssertion(() =>
             Assert.Equal("false", cut.Find("[data-testid=peers-controls]").GetAttribute("data-reloading")));
 
         Mediator.Verify(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()),
             Times.Exactly(2));
         Mediator.Verify(m => m.Send(It.IsAny<GetChartIdentityQuery>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void APoolChangeWhosePeersLandBeforeTheFramesRecordStillFlipsToThatRecord()
+    {
+        // The frame re-renders twice on a pool change: once with the new pool beside the record
+        // it still holds, once more when the record for that pool lands. The peers read is the
+        // lighter of the two and lands in between. The block has to hold until the record
+        // arrives and then render the new peers against it — never the new peers against the
+        // old record, and never the old record for good.
+        var doubles = new Chart(Guid.NewGuid(), MixEnum.Phoenix2,
+            new Song("DoublesSong", SongType.Arcade, new Uri("https://piu.test/d.png"), TimeSpan.FromMinutes(2), "Artist", 180),
+            ChartType.Double, 22, MixEnum.Phoenix2, null, null);
+        var reads = 0;
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .Returns(() => Task.FromResult(++reads == 1 ? Peers() : DoublesPeers(doubles)));
+
+        var cut = RenderComponent<PeersSection>(p => p
+            .Add(x => x.Page, Page())
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [_chart.Id] = _chart, [doubles.Id] = doubles })
+            .Add(x => x.Energy, Energy.Great));
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=peers-controls]")));
+        Assert.Equal("Song", cut.Find(".tier-chart-card-name").TextContent);
+
+        // The frame's first render after the click: the new pool, the old record. The peers read
+        // for Doubles runs off it and lands at once.
+        cut.SetParametersAndRender(p => p.Add(x => x.Pool, ChartType.Double));
+        cut.WaitForAssertion(() => Assert.Equal(2, reads));
+
+        // The frame's second render: the record priced for the pool.
+        cut.SetParametersAndRender(p => p.Add(x => x.Page, DoublesPage(doubles)).Add(x => x.Pool, ChartType.Double));
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal("false", cut.Find("[data-testid=peers-controls]").GetAttribute("data-reloading"));
+            var names = cut.FindAll(".tier-chart-card-name");
+            Assert.Single(names);
+            Assert.Equal("DoublesSong", names[0].TextContent);
+        });
+    }
+
+    /// <summary>The frame's record for the Doubles pool: its own lit group and one target that pays.</summary>
+    private static PumbilityPageRecord DoublesPage(Chart doubles)
+    {
+        return new PumbilityPageRecord(MixEnum.Phoenix2, ChartType.Double, 9_000, 250, null, Array.Empty<PoolEntry>(),
+            Array.Empty<PoolEntry>(),
+            new[] { new PumbilityTarget(doubles.Id, PhoenixScore.From(970_000), 9.0, null, false, null) },
+            Peers: new Dictionary<ChartType, PeerGroup> { [ChartType.Double] = PeerGroup.Pumbility(9_000, 20, 50) });
+    }
+
+    /// <summary>The peers' record for the Doubles pool: the one chart every peer holds.</summary>
+    private static PumbilityPeersPageRecord DoublesPeers(Chart doubles)
+    {
+        return PumbilityPeersPageRecord.Empty(MixEnum.Phoenix2, ChartType.Double) with
+        {
+            Peers = new Dictionary<ChartType, PeerGroup> { [ChartType.Double] = PeerGroup.Pumbility(9_000, 20, 50) },
+            Entries = new[]
+            {
+                new PeerPoolEntry(doubles.Id, ChartType.Double, 12, 20, 400, TierListCategory.Overrated, 0, 12,
+                    null, null, null, null, PhoenixScore.From(970_000))
+            }
+        };
+    }
+
+    [Fact]
+    public void AQuickerSecondChangeSupersedesTheFirstReadsPeers()
+    {
+        // Singles, then Doubles before the Singles peers land. The Doubles record and peers flip
+        // the block; the Singles peers arriving afterwards must not replace them.
+        var doubles = new Chart(Guid.NewGuid(), MixEnum.Phoenix2,
+            new Song("DoublesSong", SongType.Arcade, new Uri("https://piu.test/d.png"), TimeSpan.FromMinutes(2), "Artist", 180),
+            ChartType.Double, 22, MixEnum.Phoenix2, null, null);
+        var singlesRead = new TaskCompletionSource<PumbilityPeersPageRecord>();
+        var doublesRead = new TaskCompletionSource<PumbilityPeersPageRecord>();
+        var reads = 0;
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .Returns(() => ++reads switch { 1 => Task.FromResult(Peers()), 2 => singlesRead.Task, _ => doublesRead.Task });
+
+        var cut = RenderComponent<PeersSection>(p => p
+            .Add(x => x.Page, Page())
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [_chart.Id] = _chart, [doubles.Id] = doubles })
+            .Add(x => x.Energy, Energy.Great));
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=peers-controls]")));
+
+        cut.SetParametersAndRender(p => p.Add(x => x.Pool, ChartType.Single));
+        cut.SetParametersAndRender(p => p.Add(x => x.Pool, ChartType.Double));
+        cut.WaitForAssertion(() => Assert.Equal(3, reads));
+        cut.SetParametersAndRender(p => p.Add(x => x.Page, DoublesPage(doubles)).Add(x => x.Pool, ChartType.Double));
+
+        doublesRead.SetResult(DoublesPeers(doubles));
+        cut.WaitForAssertion(() => Assert.Equal("DoublesSong", cut.Find(".tier-chart-card-name").TextContent));
+
+        var rendered = cut.RenderCount;
+        singlesRead.SetResult(Peers());
+        cut.WaitForState(() => cut.RenderCount > rendered);
+        Assert.Equal("false", cut.Find("[data-testid=peers-controls]").GetAttribute("data-reloading"));
+        var names = cut.FindAll(".tier-chart-card-name");
+        Assert.Single(names);
+        Assert.Equal("DoublesSong", names[0].TextContent);
     }
 
     private IRenderedComponent<PeersSection> Render(Energy energy)
@@ -146,12 +245,13 @@ public sealed class PeersSectionTests : ComponentTestBase
     }
 
     /// <summary>The frame's record: a lit singles group and one target that pays, so a card renders.</summary>
-    private PumbilityPageRecord Page(double bar = 300)
+    private PumbilityPageRecord Page(double bar = 300, Energy energy = Energy.Great)
     {
         return new PumbilityPageRecord(MixEnum.Phoenix2, null, 17_600, bar, null, Array.Empty<PoolEntry>(),
             Array.Empty<PoolEntry>(),
             new[] { new PumbilityTarget(_chart.Id, PhoenixScore.From(980_000), 12.3, null, false, null) },
-            Peers: new Dictionary<ChartType, PeerGroup> { [ChartType.Single] = PeerGroup.Pumbility(17_600, 20, 50) });
+            Peers: new Dictionary<ChartType, PeerGroup> { [ChartType.Single] = PeerGroup.Pumbility(17_600, 20, 50) },
+            Energy: energy);
     }
 
     /// <summary>The peers' record: the same lit group and the one chart every peer holds.</summary>

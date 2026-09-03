@@ -28,6 +28,11 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 ///     need it — the page always has one, and an empty pool decomposes to zeroes rather than to
 ///     nothing.
 /// </param>
+/// <param name="Energy">
+///     The rung the targets were projected at (D51) — what the record was priced at, beside
+///     <paramref name="Pool_" />, so a reader holding the frame's record can tell whether it is
+///     the one for the pool and energy it is looking at (D56).
+/// </param>
 [ExcludeFromCodeCoverage]
 public sealed record PumbilityPageRecord(
     MixEnum Mix,
@@ -41,7 +46,8 @@ public sealed record PumbilityPageRecord(
     PoolBreakdown? Breakdown = null,
     PoolTotals? Totals = null,
     IReadOnlyList<TitleRail>? Rails = null,
-    IReadOnlyDictionary<ChartType, PeerGroup>? Peers = null)
+    IReadOnlyDictionary<ChartType, PeerGroup>? Peers = null,
+    Energy Energy = Energy.Great)
 {
     /// <summary>Highest and lowest values in the pool — the curve's read-out.</summary>
     public double PoolTop => Pool.Count == 0 ? 0 : Pool[0].Value;

@@ -143,7 +143,10 @@ namespace ScoreTracker.PlayerProgress.Application
                 totals?.Rails ?? Array.Empty<TitleRail>(),
                 // Who the peer rows were drawn from, per type — the section's one line about
                 // its evidence (D27), and the dark state for a type without a pool (D28).
-                projection.Peers);
+                projection.Peers,
+                // The rung the targets were priced at, so the Play block can tell a record for its
+                // current pool and energy from the one the frame still held (D56).
+                request.Energy);
         }
 
         /// <summary>
