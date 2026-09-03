@@ -4,6 +4,7 @@ using ScoreTracker.Domain.Exceptions;
 
 namespace ScoreTracker.SharedKernel.ValueTypes;
 
+[JsonConverter(typeof(NameConverter))]
 public readonly struct Name : IComparable<Name>
 {
     private readonly string _name;
@@ -96,7 +97,7 @@ public readonly struct Name : IComparable<Name>
 
     public static readonly JsonConverter Converter = new NameConverter();
 
-    private class NameConverter : JsonConverter<Name>
+    public sealed class NameConverter : JsonConverter<Name>
     {
         public override Name Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

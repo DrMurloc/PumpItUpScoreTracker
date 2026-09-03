@@ -4,6 +4,7 @@ using ScoreTracker.Domain.Exceptions;
 
 namespace ScoreTracker.SharedKernel.ValueTypes
 {
+    [JsonConverter(typeof(RatingScoreConverter))]
     public readonly struct Rating : IComparable<Rating>
     {
         private readonly int _score;
@@ -120,7 +121,7 @@ namespace ScoreTracker.SharedKernel.ValueTypes
 
         public static JsonConverter Converter = new RatingScoreConverter();
 
-        private class RatingScoreConverter : JsonConverter<Rating>
+        public sealed class RatingScoreConverter : JsonConverter<Rating>
         {
             public override Rating Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {

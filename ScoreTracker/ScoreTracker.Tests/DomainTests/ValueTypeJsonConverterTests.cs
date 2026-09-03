@@ -1,4 +1,7 @@
+using System;
+using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using ScoreTracker.SharedKernel.ValueTypes;
 using Xunit;
 
@@ -95,5 +98,59 @@ public sealed class ValueTypeJsonConverterTests
         var options = OptionsFor(Rating.Converter);
         Assert.Throws<ScoreTracker.Domain.Exceptions.InvalidScoreException>(
             () => JsonSerializer.Deserialize<Rating>("-1", options));
+    }
+
+    // ---- The converter travels with the type ----
+
+    // Each of these wraps a private field and exposes no public member, so an options bag that
+    // has NOT been handed the converter writes {} and reads back default -- silently. The
+    // [JsonConverter] attribute on the type is what makes an un-configured serializer (MassTransit's,
+    // for one) round-trip the value; ArchitectureTests/BusMessageSerializationTests holds the line
+    // for the messages themselves.
+    [Theory]
+    [InlineData(typeof(Name))]
+    [InlineData(typeof(PhoenixScore))]
+    [InlineData(typeof(Rating))]
+    [InlineData(typeof(LevelBucket))]
+    [InlineData(typeof(RedactedString))]
+    public void OpaqueValueTypesDeclareTheirOwnConverter(Type valueType)
+    {
+        Assert.NotNull(valueType.GetCustomAttribute<JsonConverterAttribute>());
+    }
+
+    [Fact]
+    public void NameRoundTripsWithoutARegisteredConverter()
+    {
+        var json = JsonSerializer.Serialize(Name.From("Murloc Lab"));
+
+        Assert.Equal("\"Murloc Lab\"", json);
+        Assert.Equal("Murloc Lab", (string)JsonSerializer.Deserialize<Name>(json));
+    }
+
+    [Fact]
+    public void PhoenixScoreRoundTripsWithoutARegisteredConverter()
+    {
+        var json = JsonSerializer.Serialize((PhoenixScore)987654);
+
+        Assert.Equal("987654", json);
+        Assert.Equal(987654, (int)JsonSerializer.Deserialize<PhoenixScore>(json));
+    }
+
+    [Fact]
+    public void RatingRoundTripsWithoutARegisteredConverter()
+    {
+        var json = JsonSerializer.Serialize((Rating)1234);
+
+        Assert.Equal("1234", json);
+        Assert.Equal(1234, (int)JsonSerializer.Deserialize<Rating>(json));
+    }
+
+    [Fact]
+    public void LevelBucketRoundTripsWithoutARegisteredConverter()
+    {
+        var json = JsonSerializer.Serialize(LevelBucket.From("S20"));
+
+        Assert.Equal("\"S20\"", json);
+        Assert.Equal("S20", JsonSerializer.Deserialize<LevelBucket>(json).ToString());
     }
 }
