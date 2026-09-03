@@ -117,8 +117,8 @@
                     <MudLink Style="cursor:pointer;display:flex;align-items:center;min-width:0" Underline="Underline.None"
                              Href="@($"/Player/{entry.UserId}")">
                         <span class="olb-player-name" title="@((string)entry.PlayerName)">
-                            <UserLabel User="_users[entry.UserId]" ShowAvatar="true" AvatarSize="26"
-                                       SquareAvatar="true"></UserLabel>
+                            <UserLabel User="_users[entry.UserId]" ShowAvatar="true"
+                                       AvatarSize="26"></UserLabel>
                         </span>
                     </MudLink>
                     @if (entry.IsPublic && _currentMix == MixEnum.Phoenix)

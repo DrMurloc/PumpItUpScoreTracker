@@ -8247,19 +8247,14 @@ button.chart-card-art {
    flag rather than most, so it is sized for the worst one. */
 .user-label.has-flag .user-label-name { text-shadow: 0 1px 3px rgba(0, 0, 0, .8); }
 
+/* Every avatar on the site is a circle. The community rankings' was the one square left, from
+   the MudImage it used before the label owned it, and one board wearing a different face shape
+   read as a bug rather than as a variation. Only the size is still the caller's. */
 .user-label-avatar {
     width: var(--label-avatar-size, 20px);
     height: var(--label-avatar-size, 20px);
     border-radius: 50%;
     object-fit: cover;
-}
-
-/* The community rankings' avatar is a square that keeps its own aspect, which is what
-   MudImage's ScaleDown did for it before the label owned it. */
-.user-label-avatar.square {
-    width: auto;
-    border-radius: 0;
-    object-fit: scale-down;
 }
 
 /* Inline-block, not block: this rule reaches every UserLabel on the site, and the

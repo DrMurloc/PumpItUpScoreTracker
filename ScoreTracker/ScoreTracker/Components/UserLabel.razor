@@ -10,16 +10,16 @@
 @* MudTooltip renders a popover, which throws in static SSR (no provider in the static tree).
    A static render falls back to a title attribute and keeps the avatar, the wash and the
    name; in a circuit the tooltip comes back. *@
-@* The country is a faded underlay behind the avatar and the name, not an image in front of
-   them. A 15px flag plus its gap cost ~26px of the name's room, which on a phone is most of
+@* The country is a faded underlay behind the name, not an image in front of it. A 15px flag
+   plus its gap cost ~26px of the name's room, which on a phone is most of
    it: the community rankings' Player column resolves to ~96px there, so a flagged player
    printed four letters and an ellipsis. The flag rides --label-flag as a background and the
    name keeps every pixel. The country's NAME moves into the tooltip beside the game tag,
    which is where it was always readable anyway — a 15px picture of a flag is not a label. *@
 @* The avatar belongs to the label because the wash has to run under both, and a board that
    drew its own could not be washed without every caller re-deriving the same background.
-   Size and shape stay the caller's: the challenge boards run 20px circles, the widgets 24px,
-   and the community rankings a 26px square. *@
+   Every avatar on the site is a circle; only the size is the caller's, and it still varies
+   (20px on the challenge boards, 24 on the widgets, 26 on the community rankings). *@
 @* The label is a flex row that never outgrows its container, with the avatar pinned and the
    name the only part allowed to shrink. Left as loose inline content it truncates as one
    atomic box in any bounded row — the avatar takes the width and the name prints as a bare
@@ -29,7 +29,7 @@
     <span class="@LabelClass" style="@LabelStyle">
         @if (ShowAvatar)
         {
-            <img class="@AvatarClass" src="@User.ProfileImage" alt="" loading="lazy"/>
+            <img class="user-label-avatar" src="@User.ProfileImage" alt="" loading="lazy"/>
         }
         @if (RendererInfo.IsInteractive)
         {
@@ -57,10 +57,6 @@
     [Parameter]
     public int AvatarSize { get; set; } = 20;
 
-    /// <summary>The community rankings' avatar is a square; every other caller's is a circle.</summary>
-    [Parameter]
-    public bool SquareAvatar { get; set; }
-
     private string _countryImage = string.Empty;
     private Name? _loadedCountry;
 
@@ -81,8 +77,6 @@
 
     private string LabelClass =>
         "user-label" + (_countryImage.Length == 0 ? "" : " has-flag") + (ShowAvatar ? " has-avatar" : "");
-
-    private string AvatarClass => SquareAvatar ? "user-label-avatar square" : "user-label-avatar";
 
     // Game tag and country, joined. Either half can be missing: an account with no tag and no
     // country carries no tooltip at all, which is what it carried before the flag moved here.

@@ -96,9 +96,9 @@ public sealed class UserLabelTests : ComponentTestBase
     }
 
     /// <summary>
-    ///     The boards that drew their own avatar hand it to the label so the wash covers both.
-    ///     Size stays the caller's — the challenge boards run 20px, the widgets 24, the
-    ///     community rankings a 26px square.
+    ///     The boards that drew their own avatar hand it to the label. Shape is the component's
+    ///     and is always a circle; only the size is the caller's — the challenge boards run
+    ///     20px, the widgets 24, the community rankings 26.
     /// </summary>
     [Fact]
     public void TheAvatarIsOptionalAndWearsTheCallersSize()
@@ -109,13 +109,11 @@ public sealed class UserLabelTests : ComponentTestBase
 
         cut.SetParametersAndRender(p => p
             .Add(x => x.ShowAvatar, true)
-            .Add(x => x.AvatarSize, 26)
-            .Add(x => x.SquareAvatar, true));
+            .Add(x => x.AvatarSize, 26));
 
         cut.WaitForAssertion(() =>
         {
             var avatar = cut.Find(".user-label-avatar");
-            Assert.Contains("square", avatar.ClassName);
             Assert.Equal("https://piu.test/a.png", avatar.GetAttribute("src"));
             // The size rides the LABEL, not the avatar: the wash offsets itself past the
             // avatar and reads the size to do it, and a property on the avatar would only
