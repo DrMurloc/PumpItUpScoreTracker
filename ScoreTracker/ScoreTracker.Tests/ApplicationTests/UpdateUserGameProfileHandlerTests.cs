@@ -54,6 +54,50 @@ public sealed class UpdateUserGameProfileHandlerTests
     }
 
     /// <summary>
+    ///     The point of the whole feature: an import must not take back an avatar the player
+    ///     chose. Both stores stay on the pinned picture.
+    /// </summary>
+    [Fact]
+    public async Task AnImportLeavesAPinnedAvatarAlone()
+    {
+        var pinned = new Uri("https://piuimages.arroweclip.se/avatars/p2/pinned.png");
+        var existing = new UserBuilder().WithPinnedAvatar(pinned).Build();
+        var (handler, users, mediator) = Build(existing);
+
+        await handler.Handle(new UpdateUserGameProfileCommand(Name.From("NEWTAG"), ScrapedAvatar),
+            CancellationToken.None);
+
+        users.Verify(u => u.SaveUser(It.Is<User>(saved =>
+                saved.ProfileImage == pinned && saved.AvatarIsPinned),
+            It.IsAny<CancellationToken>()), Times.Once);
+        mediator.Verify(m => m.Send(It.Is<SaveUserUiSettingCommand>(c =>
+                c.NewValue == pinned.ToString()),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     While pinned, the import still records what it saw. Without this, Back to Auto would
+    ///     restore whatever was current when the player pinned, which goes stale the moment they
+    ///     change their avatar in the game — the exact wait the separate column exists to avoid.
+    /// </summary>
+    [Fact]
+    public async Task AnImportKeepsRecordingWhatItSawEvenWhilePinned()
+    {
+        var pinned = new Uri("https://piuimages.arroweclip.se/avatars/p2/pinned.png");
+        var existing = new UserBuilder().WithPinnedAvatar(pinned)
+            .WithImportedProfileImage(new Uri("https://piuimages.arroweclip.se/avatars/stale.png"))
+            .Build();
+        var (handler, users, _) = Build(existing);
+
+        await handler.Handle(new UpdateUserGameProfileCommand(Name.From("NEWTAG"), ScrapedAvatar),
+            CancellationToken.None);
+
+        users.Verify(u => u.SaveUser(It.Is<User>(saved =>
+                saved.ImportedProfileImage == ScrapedAvatar && saved.ProfileImage == pinned),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
     ///     The scraper misses the avatar often enough that persisting the miss was a real bug —
     ///     it wiped good avatars sporadically. A null means "keep what you have", in both stores.
     /// </summary>

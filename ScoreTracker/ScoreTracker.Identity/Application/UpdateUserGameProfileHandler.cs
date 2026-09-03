@@ -39,14 +39,32 @@ internal sealed class UpdateUserGameProfileHandler : IRequestHandler<UpdateUserG
     {
         var user = await _users.GetUser(_currentUser.User.Id, cancellationToken)
                    ?? throw new UserNotFoundException(_currentUser.User.Id);
-        await _users.SaveUser(
-            user with { GameTag = request.GameTag, ProfileImage = request.AvatarUrl ?? user.ProfileImage },
-            cancellationToken);
 
         // A scrape that yielded no recognizable avatar keeps the player's existing one —
         // persisting the miss is what used to break avatars sporadically.
+        //
+        // What the import saw is recorded EVEN WHILE PINNED. That is not bookkeeping for its own
+        // sake: it is what lets "Back to Auto" show the real piugame picture the instant it is
+        // pressed, instead of leaving the player on a stale avatar until their next import.
+        var imported = request.AvatarUrl ?? user.ImportedProfileImage;
+        var shown = user.AvatarIsPinned ? user.ProfileImage : request.AvatarUrl ?? user.ProfileImage;
+
+        await _users.SaveUser(
+            user with
+            {
+                GameTag = request.GameTag,
+                ProfileImage = shown,
+                ImportedProfileImage = imported
+            },
+            cancellationToken);
+
+        // Gated on the scrape, not on whether the avatar changed. An import that re-writes the
+        // same value is how an account whose UI setting is missing or stale gets repaired, and
+        // skipping the no-op write would leave such an account on the shell's default art
+        // forever. What it writes is the SHOWN avatar, so a pinned account's app bar agrees with
+        // the rest of the site rather than reverting to what the scraper found.
         if (request.AvatarUrl != null)
-            await _mediator.Send(new SaveUserUiSettingCommand("ProfileImage", request.AvatarUrl.ToString()),
+            await _mediator.Send(new SaveUserUiSettingCommand("ProfileImage", shown.ToString()),
                 cancellationToken);
     }
 }
