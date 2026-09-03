@@ -6,6 +6,7 @@ using ScoreTracker.Domain.Exceptions;
 
 namespace ScoreTracker.SharedKernel.ValueTypes;
 
+[JsonConverter(typeof(NameConverter))]
 public readonly struct LevelBucket : IComparable<LevelBucket>
 {
     private readonly string _name;
@@ -140,7 +141,7 @@ public readonly struct LevelBucket : IComparable<LevelBucket>
 
     public static readonly JsonConverter Converter = new NameConverter();
 
-    private class NameConverter : JsonConverter<LevelBucket>
+    public sealed class NameConverter : JsonConverter<LevelBucket>
     {
         public override LevelBucket Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

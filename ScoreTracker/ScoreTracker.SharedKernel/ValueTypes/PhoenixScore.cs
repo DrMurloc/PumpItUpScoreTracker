@@ -5,6 +5,7 @@ using ScoreTracker.Domain.Exceptions;
 
 namespace ScoreTracker.SharedKernel.ValueTypes;
 
+[JsonConverter(typeof(PhoenixScoreConverter))]
 public readonly struct PhoenixScore : IComparable<PhoenixScore>, IComparable<int>, IComparable
 {
     private readonly int _score;
@@ -147,7 +148,7 @@ public readonly struct PhoenixScore : IComparable<PhoenixScore>, IComparable<int
 
     public static JsonConverter Converter = new PhoenixScoreConverter();
 
-    private class PhoenixScoreConverter : JsonConverter<PhoenixScore>
+    public sealed class PhoenixScoreConverter : JsonConverter<PhoenixScore>
     {
         public override PhoenixScore Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
