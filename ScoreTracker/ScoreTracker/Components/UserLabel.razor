@@ -8,27 +8,28 @@
 @namespace ScoreTracker.Web.Components
 
 @* MudTooltip renders a popover, which throws in static SSR (no provider in the static tree).
-   The tooltips carry hover text only, so a static render drops them and keeps the flag and
-   name; in a circuit they come back. *@
-@* The label is a flex row that never outgrows its container, with the flag pinned and the
+   A static render falls back to a title attribute and keeps the avatar, the wash and the
+   name; in a circuit the tooltip comes back. *@
+@* The country is a faded underlay behind the name, not an image in front of it. A 15px flag
+   plus its gap cost ~26px of the name's room, which on a phone is most of
+   it: the community rankings' Player column resolves to ~96px there, so a flagged player
+   printed four letters and an ellipsis. The flag rides --label-flag as a background and the
+   name keeps every pixel. The country's NAME moves into the tooltip beside the game tag,
+   which is where it was always readable anyway — a 15px picture of a flag is not a label. *@
+@* The avatar belongs to the label because the wash has to run under both, and a board that
+   drew its own could not be washed without every caller re-deriving the same background.
+   Every avatar on the site is a circle; only the size is the caller's, and it still varies
+   (20px on the challenge boards, 24 on the widgets, 26 on the community rankings). *@
+@* The label is a flex row that never outgrows its container, with the avatar pinned and the
    name the only part allowed to shrink. Left as loose inline content it truncates as one
-   atomic box in any bounded row — the flag takes the width and the name prints as a bare
-   "…" for everyone with a country. *@
+   atomic box in any bounded row — the avatar takes the width and the name prints as a bare
+   "…" for everyone who has one. *@
 @if (User != null)
 {
-    <span class="user-label">
-        @if (!string.IsNullOrWhiteSpace(_countryImage) && User.Country != null)
+    <span class="@LabelClass" style="@LabelStyle">
+        @if (ShowAvatar)
         {
-            @if (RendererInfo.IsInteractive)
-            {
-                <MudTooltip Text="@User.Country.Value.ToString()">
-                    <MudImage Height="15" ObjectFit="ObjectFit.ScaleDown" Src="@_countryImage"></MudImage>
-                </MudTooltip>
-            }
-            else
-            {
-                <MudImage Height="15" ObjectFit="ObjectFit.ScaleDown" Src="@_countryImage"></MudImage>
-            }
+            <img class="user-label-avatar" src="@User.ProfileImage" alt="" loading="lazy"/>
         }
         @if (RendererInfo.IsInteractive)
         {
@@ -38,7 +39,7 @@
         }
         else
         {
-            <span class="user-label-name">@User.Name</span>
+            <span class="user-label-name" title="@(Tooltip.Length == 0 ? null : Tooltip)">@User.Name</span>
         }
     </span>
 }
@@ -48,21 +49,61 @@
     [Required]
     public User? User { get; set; }
 
+    /// <summary>Draw the player's avatar inside the label, so the country wash covers both.</summary>
+    [Parameter]
+    public bool ShowAvatar { get; set; }
+
+    /// <summary>Avatar edge in px. Deliberately per-caller — the boards are not one size yet.</summary>
+    [Parameter]
+    public int AvatarSize { get; set; } = 20;
+
     private string _countryImage = string.Empty;
     private Name? _loadedCountry;
 
-    private string Tooltip => User == null ? "" :
-        User.GameTag == null ? "" :
-            User.Name=="CLEARALL18SORQUIT" ? L["Wouldn't You Like To Know"].Value : User.GameTag.Value;
+    // Both custom properties ride the LABEL, never the avatar: the wash is drawn by the
+    // label's own pseudo-element and has to start where the avatar ends, so it needs to read
+    // the size — and a property set on the avatar would only inherit downward, past it.
+    private string? LabelStyle
+    {
+        get
+        {
+            var flag = _countryImage.Length == 0 ? null : $"--label-flag:url('{_countryImage}')";
+            var size = ShowAvatar ? $"--label-avatar-size:{AvatarSize}px" : null;
+            var parts = new[] { flag, size }.Where(p => p != null);
+            var style = string.Join(";", parts);
+            return style.Length == 0 ? null : style;
+        }
+    }
 
-    // Rendered in reused positions (board dialogs swap their row sets in place), so the flag
+    private string LabelClass =>
+        "user-label" + (_countryImage.Length == 0 ? "" : " has-flag") + (ShowAvatar ? " has-avatar" : "");
+
+    // Game tag and country, joined. Either half can be missing: an account with no tag and no
+    // country carries no tooltip at all, which is what it carried before the flag moved here.
+    private string Tooltip
+    {
+        get
+        {
+            if (User == null) return string.Empty;
+            var who = User.GameTag == null
+                ? null
+                : User.Name == "CLEARALL18SORQUIT"
+                    ? L["Wouldn't You Like To Know"].Value
+                    : User.GameTag.Value.ToString();
+            var parts = new[] { who, User.Country?.ToString() }
+                .Where(p => !string.IsNullOrWhiteSpace(p));
+            return string.Join(" · ", parts);
+        }
+    }
+
+    // Rendered in reused positions (board dialogs swap their row sets in place), so the wash
     // follows the CURRENT user: reload when the country changes, clear when it goes away.
     protected override async Task OnParametersSetAsync()
     {
         var country = User?.Country;
         if (Nullable.Equals(country, _loadedCountry)) return;
         _loadedCountry = country;
-        // The port is nullable — a country without a flag image just renders no flag.
+        // The port is nullable — a country without a flag image just renders no wash.
         _countryImage = country == null
             ? string.Empty
             : (await Users.GetCountryImage(country.Value))?.ToString() ?? string.Empty;

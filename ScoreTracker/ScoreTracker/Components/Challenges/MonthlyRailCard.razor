@@ -107,14 +107,16 @@
 
     private RenderFragment LbRow(MonthlyLeaderboardRow row, int total) =>@<div class="challenge-lb-row @RowClass(row)">
         <span class="challenge-lb-place" style="@ThemeScales.RarityStyle(Fraction(row.Place, total))">@row.Place</span>
-        <ChallengeAvatar Player="row.Player"></ChallengeAvatar>
+        @* The label draws the avatar so the country wash covers both; a row whose account is
+           gone has no label to draw it, so it keeps the fallback face. *@
         <span class="challenge-lb-name">
             @if (row.Player != null)
             {
-                <UserLabel User="row.Player"></UserLabel>
+                <UserLabel User="row.Player" ShowAvatar="true"></UserLabel>
             }
             else
             {
+                <ChallengeAvatar Player="null"></ChallengeAvatar>
                 @("—")
             }
         </span>

@@ -134,7 +134,7 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
     }
 
     [Fact]
-    public void RowsRenderTheAvatarAndTheFlagWhenTheUserResolves()
+    public void RowsRenderTheAvatarAndTheCountryWashWhenTheUserResolves()
     {
         // Every other fact here mocks zero users, so an empty map reads as correct and a
         // dropped assignment looks exactly like a board of players with no country set.
@@ -152,8 +152,12 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
 
         var dialog = RenderDialog();
 
-        dialog.WaitForAssertion(() => Assert.NotEmpty(dialog.FindAll(".sbd-avatar")));
-        Assert.NotEmpty(dialog.FindAll(".user-label"));
+        // A row the site can name is drawn entirely by the label — avatar inside it, so the
+        // country wash runs under both. The standalone .sbd-avatar is what an Official-scope
+        // row keeps, and this row is not one.
+        dialog.WaitForAssertion(() => Assert.NotEmpty(dialog.FindAll(".user-label img.user-label-avatar")));
+        Assert.NotEmpty(dialog.FindAll(".user-label.has-flag"));
+        Assert.Empty(dialog.FindAll(".sbd-avatar"));
     }
 
     [Fact]

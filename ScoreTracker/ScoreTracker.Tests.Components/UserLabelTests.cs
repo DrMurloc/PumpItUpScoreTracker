@@ -1,4 +1,5 @@
 using Bunit;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ScoreTracker.Domain.Models;
@@ -11,8 +12,8 @@ namespace ScoreTracker.Tests.Components;
 
 /// <summary>
 ///     UserLabel renders in reused positions — the board dialogs swap whole row sets in place
-///     when their type segment switches — so its flag must follow the CURRENT user, not the
-///     first one it ever saw. The monthly dialog's type switch crashed on exactly this.
+///     when their type segment switches — so its country wash must follow the CURRENT user,
+///     not the first one it ever saw. The monthly dialog's type switch crashed on exactly this.
 /// </summary>
 public sealed class UserLabelTests : ComponentTestBase
 {
@@ -24,37 +25,102 @@ public sealed class UserLabelTests : ComponentTestBase
             .ReturnsAsync((Name country, CancellationToken _) =>
                 new Uri($"https://piu.test/flags/{country.ToString().ToLowerInvariant()}.png"));
         Services.AddSingleton(_users.Object);
-        this.RenderInteractive();
     }
 
-    private static User MakeUser(string name, string? country) =>
-        new(Guid.NewGuid(), Name.From(name), true, null, new Uri("https://piu.test/a.png"),
-            country == null ? (Name?)null : Name.From(country));
+    private static User MakeUser(string name, string? country, string? gameTag = null) =>
+        new(Guid.NewGuid(), Name.From(name), true, gameTag == null ? (Name?)null : Name.From(gameTag),
+            new Uri("https://piu.test/a.png"), country == null ? (Name?)null : Name.From(country));
 
     [Fact]
-    public void ReparameterizingFromFlaggedToCountrylessUserDropsTheFlagAndDoesNotThrow()
+    public void ReparameterizingFromFlaggedToCountrylessUserDropsTheWashAndDoesNotThrow()
     {
+        this.RenderInteractive();
         var cut = RenderComponent<UserLabel>(p => p.Add(x => x.User, MakeUser("KR_PLAYER", "KR")));
-        cut.WaitForAssertion(() => Assert.Single(cut.FindAll("img")));
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".user-label.has-flag")));
 
         // The dialog swaps its rows in place: same component, new user, no country.
         cut.SetParametersAndRender(p => p.Add(x => x.User, MakeUser("NOFLAG", null)));
 
         cut.WaitForAssertion(() =>
         {
-            Assert.Empty(cut.FindAll("img"));
+            Assert.Empty(cut.FindAll(".user-label.has-flag"));
+            Assert.DoesNotContain("--label-flag", cut.Markup);
             Assert.Contains("NOFLAG", cut.Markup);
         });
     }
 
     [Fact]
-    public void ReparameterizingAcrossCountriesSwapsTheFlag()
+    public void ReparameterizingAcrossCountriesSwapsTheWash()
     {
+        this.RenderInteractive();
         var cut = RenderComponent<UserLabel>(p => p.Add(x => x.User, MakeUser("KR_PLAYER", "KR")));
-        cut.WaitForAssertion(() => Assert.Contains("flags/kr.png", cut.Markup));
+        cut.WaitForAssertion(() =>
+            Assert.Contains("--label-flag:url('https://piu.test/flags/kr.png')", cut.Markup));
 
         cut.SetParametersAndRender(p => p.Add(x => x.User, MakeUser("US_PLAYER", "US")));
 
-        cut.WaitForAssertion(() => Assert.Contains("flags/us.png", cut.Markup));
+        cut.WaitForAssertion(() =>
+            Assert.Contains("--label-flag:url('https://piu.test/flags/us.png')", cut.Markup));
+    }
+
+    /// <summary>
+    ///     The country used to be a 15px picture of a flag that cost the name ~26px of a phone's
+    ///     Player column. It is a background now, so the country's NAME has to be somewhere a
+    ///     reader can get at it: the tooltip it shares with the game tag.
+    /// </summary>
+    [Fact]
+    public void TheCountryRidesTheNameTooltipRatherThanAPictureOfAFlag()
+    {
+        // The static path is the one that spells the tooltip into the markup as a title; in a
+        // circuit the same string goes to MudTooltip, which renders it into a popover.
+        SetRendererInfo(new RendererInfo("Static", false));
+        var cut = RenderComponent<UserLabel>(p =>
+            p.Add(x => x.User, MakeUser("KR_PLAYER", "South Korea", "TRICKFEET#1208")));
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal("TRICKFEET#1208 · South Korea",
+                cut.Find(".user-label-name").GetAttribute("title"));
+            // No flag image anywhere: the country is paint, not a picture.
+            Assert.Empty(cut.FindAll("img"));
+        });
+    }
+
+    [Fact]
+    public void AnAccountWithNeitherTagNorCountryCarriesNoTooltipAtAll()
+    {
+        SetRendererInfo(new RendererInfo("Static", false));
+        var cut = RenderComponent<UserLabel>(p => p.Add(x => x.User, MakeUser("PLAIN", null)));
+
+        cut.WaitForAssertion(() => Assert.Null(cut.Find(".user-label-name").GetAttribute("title")));
+    }
+
+    /// <summary>
+    ///     The boards that drew their own avatar hand it to the label. Shape is the component's
+    ///     and is always a circle; only the size is the caller's — the challenge boards run
+    ///     20px, the widgets 24, the community rankings 26.
+    /// </summary>
+    [Fact]
+    public void TheAvatarIsOptionalAndWearsTheCallersSize()
+    {
+        this.RenderInteractive();
+        var cut = RenderComponent<UserLabel>(p => p.Add(x => x.User, MakeUser("KR_PLAYER", "KR")));
+        cut.WaitForAssertion(() => Assert.Empty(cut.FindAll(".user-label-avatar")));
+
+        cut.SetParametersAndRender(p => p
+            .Add(x => x.ShowAvatar, true)
+            .Add(x => x.AvatarSize, 26));
+
+        cut.WaitForAssertion(() =>
+        {
+            var avatar = cut.Find(".user-label-avatar");
+            Assert.Equal("https://piu.test/a.png", avatar.GetAttribute("src"));
+            // The size rides the LABEL, not the avatar: the wash offsets itself past the
+            // avatar and reads the size to do it, and a property on the avatar would only
+            // inherit downward.
+            var style = cut.Find(".user-label").GetAttribute("style");
+            Assert.Contains("--label-avatar-size:26px", style);
+            Assert.Contains("--label-flag:", style);
+        });
     }
 }

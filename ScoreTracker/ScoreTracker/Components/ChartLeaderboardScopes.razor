@@ -90,16 +90,24 @@ else
                 <span class="weekly-lb-place" style="@ThemeScales.RarityStyle(row.Percentile)">
                     #@row.Place
                 </span>
-                @if (AvatarFor(row) is { } avatarUrl)
+                @{
+                    // A row we can name is drawn by the label, avatar included, so the country
+                    // wash covers both. An Official-scope row is piugame's board tag beside
+                    // piugame's mirrored face — not a site account — and keeps its own avatar.
+                    User? labelled = null;
+                    if (ShowsSiteIdentity(row) && _users.TryGetValue(row.Score.UserId, out var resolved))
+                        labelled = resolved;
+                }
+                @if (labelled == null && AvatarFor(row) is { } avatarUrl)
                 {
                     <span class="sbd-avatar"><MudAvatar Size="Size.Small">
                         <MudImage Src="@avatarUrl" Alt=""></MudImage>
                     </MudAvatar></span>
                 }
                 <span class="weekly-lb-user">
-                    @if (ShowsSiteIdentity(row) && _users.TryGetValue(row.Score.UserId, out var labelled))
+                    @if (labelled != null)
                     {
-                        <UserLabel User="labelled"></UserLabel>
+                        <UserLabel User="labelled" ShowAvatar="true" AvatarSize="24"></UserLabel>
                     }
                     else
                     {
