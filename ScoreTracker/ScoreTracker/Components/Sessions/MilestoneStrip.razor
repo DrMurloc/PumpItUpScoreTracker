@@ -1,4 +1,5 @@
 ﻿@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.Domain.SecondaryPorts
 @namespace ScoreTracker.Web.Components
 @if (Milestone.Kind == MilestoneKind.PumbilityGain && LevelChange is { } change)
 {
@@ -38,7 +39,11 @@ else
         MilestoneKind.TitleCompleted => @L["Title"],
         MilestoneKind.WeeklyPlacement => @L["Weekly"],
         MilestoneKind.FolderProgress => @L["Folder"],
-        _ => @L["Folder Lamp"]
+        MilestoneKind.FolderPassLamp or MilestoneKind.FolderGradeLamp or MilestoneKind.FolderPlateLamp => @L["Folder Lamp"],
+        MilestoneKind.OfficialPumbilityRank => @L["Official board"],
+        // A kind with no chip of its own shows its name rather than borrowing a chip that means
+        // something else — the rank kind wore "Folder Lamp" for a month that way.
+        _ => Milestone.Kind.ToString()
     };
 
     private string Description => Milestone.Kind switch
@@ -59,6 +64,7 @@ else
         MilestoneKind.FolderPlateLamp => FolderFloor(),
         MilestoneKind.FolderProgress => FolderProgress(),
         MilestoneKind.WeeklyPlacement => $"#{Milestone.NewValue:0} — {Milestone.Title} {Milestone.Detail}",
+        MilestoneKind.OfficialPumbilityRank => OfficialRank(),
         _ => Milestone.Detail ?? string.Empty
     };
 
@@ -74,6 +80,23 @@ else
         return detail.GradeText == null
             ? $"{detail.Folder} — {detail.CompletionText}{lamp}"
             : L["{0} — {1} at {2}", detail.Folder, detail.CompletionText, detail.GradeText] + lamp;
+    }
+
+    // "PUMBILITY Doubles ~#40 → ~#12": the board, then the estimated place it moved to, with the
+    // tilde the estimate is owed (docs/design/session-breakdown.md D15a). A first placing has no
+    // old figure and reads "~#12" alone. Detail is the sweep's board name; the per-type boards
+    // print the type the way the Rankings hub does.
+    private string OfficialRank()
+    {
+        var board = Milestone.Detail switch
+        {
+            OfficialPumbilityBoardNames.Singles => $"PUMBILITY {L["Singles"]}",
+            OfficialPumbilityBoardNames.Doubles => $"PUMBILITY {L["Doubles"]}",
+            _ => "PUMBILITY"
+        };
+        return Milestone.OldValue is { } was
+            ? $"{board} ~#{was:0} → ~#{Milestone.NewValue:0}"
+            : $"{board} ~#{Milestone.NewValue:0}";
     }
 
     private string FolderFloor()

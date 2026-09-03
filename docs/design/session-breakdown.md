@@ -150,6 +150,10 @@ import. So:
   `Detail` = board name — Phoenix has one, Phoenix 2 has All/Singles/Doubles), which reaches the
   session snapshot card through `ScoreHighlightsCapturedEvent.Milestones` like every other
   milestone.
+- On the Sessions page the rank is a milestone strip of its own — chip *Official board*, text
+  `PUMBILITY Doubles ~#40 → ~#12`, or `~#12` alone for a first placing — beside the ceremony band's
+  combined figure. Until 2026-09-02 the strip had no case for the kind and it fell into the
+  "Folder Lamp" chip with only the board name for text.
 - The board slice still refreshes on `OfficialSnapshotSealedEvent`: a new snapshot moves everyone
   else, so estimates go stale in the other direction until they are recomputed.
 

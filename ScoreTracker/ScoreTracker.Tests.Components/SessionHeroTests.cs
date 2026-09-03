@@ -339,6 +339,35 @@ public sealed class SessionHeroTests : ComponentTestBase
         Assert.Contains("[P.B] RED BERYL", strips);
     }
 
+    /// <summary>
+    ///     An official-rank milestone is a strip of its own: the board, the estimated place it
+    ///     moved to, the tilde. It used to fall into the chip switch's default and wear "Folder
+    ///     Lamp" with only the board name for text.
+    /// </summary>
+    [Fact]
+    public void AnOfficialRankImprovementReadsAsABoardMoveNotALamp()
+    {
+        var breakdown = FullBreakdown();
+        breakdown = breakdown with
+        {
+            Group = breakdown.Group with { Mix = MixEnum.Phoenix2 },
+            Milestones = new[]
+            {
+                new PlayerMilestoneRecord(MilestoneKind.OfficialPumbilityRank, Session, Start, 40, 12,
+                    null, "PUMBILITY Doubles"),
+                new PlayerMilestoneRecord(MilestoneKind.OfficialPumbilityRank, Session, Start, null, 5400,
+                    null, "PUMBILITY")
+            }
+        };
+
+        var hero = RenderComponent<SessionHero>(p => p.Add(h => h.Breakdown, breakdown));
+
+        var strips = hero.FindAll("[data-testid='milestone-strip']").Select(s => s.TextContent).ToArray();
+        Assert.Contains(strips, s => s.Contains("Official board") && s.Contains("PUMBILITY Doubles ~#40 → ~#12"));
+        Assert.Contains(strips, s => s.Contains("Official board") && s.Contains("PUMBILITY ~#5400"));
+        Assert.DoesNotContain(strips, s => s.Contains("Folder Lamp"));
+    }
+
     private static SessionBreakdown FullBreakdown()
     {
         var single = ChartAt(ChartType.Single, 21);
