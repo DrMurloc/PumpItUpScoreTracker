@@ -15,12 +15,13 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.Chart` | A playable chart: song, type (Single/Double/CoOp/HalfDouble), level, step artist, debut mix (`OriginalMixId`), explicit `PlayerCount` (legacy Routine-era co-ops carry a real difficulty in Level, so player count is no longer derived from it) |
 | `scores.ChartMix` | Chart↔mix mapping with the level and note count for that mix, plus `LegacySlot` (pre-Exceed slot identity — "Crazy", "Another Nightmare" — part of chart identity in those eras; [legacy-mixes design](design/legacy-mixes.md)) |
 | `scores.Country` | Country list with flag image path |
+| `scores.Avatar` | The official avatar catalog: one row per distinct **picture** (182), grouped by `GroupId` into 170 avatars, with the mixes that render it as a `1 << (int)MixEnum` bitmask. Seeded by migration from the three official avatar pages and otherwise static — the dedupe behind it is a pixel comparison, not something to re-derive at request time. Names are deliberately **not** unique: the official pages ship `Electra` twice, plus `Hero`/`hero` and `Miya`/`MIYA` ([avatar-selection.md](design/avatar-selection.md)) |
 
 ## Identity & accounts (shared; logically the Identity vertical, physical extraction pending)
 
 | Table | Purpose |
 |---|---|
-| `scores.User` | User account: name, profile image, game tag, country, content-lock status, and `DeepScansRemaining` — the Score check's monthly full-walk balance, refilled by the `reset-deep-scans` job ([SCHEDULED-JOBS.md](SCHEDULED-JOBS.md)). A balance rather than a dated usage count, so granting someone extra is one UPDATE |
+| `scores.User` | User account: name, profile image, game tag, country, content-lock status, the manual-avatar pin (`AvatarIsPinned` + `ImportedProfileImage`, which keeps the last imported avatar so "Back to Auto" restores it without waiting for another import), and `DeepScansRemaining` — the Score check's monthly full-walk balance, refilled by the `reset-deep-scans` job ([SCHEDULED-JOBS.md](SCHEDULED-JOBS.md)). A balance rather than a dated usage count, so granting someone extra is one UPDATE |
 | `scores.ExternalLogin` | Sign-in method mappings to users, many-to-one (Discord/Google/Facebook OAuth ids; namespaced PiuGame aliases `mbid:*`/`card:*`) |
 | `scores.UserApiToken` | API tokens for the partner API, with usage tracking |
 | `scores.UserSettings` | Per-user UI settings key/value store |
