@@ -24,7 +24,20 @@ public sealed record AvatarRecord(
     IReadOnlyList<MixEnum> Mixes,
     IReadOnlyList<AvatarPictureRecord> Pictures);
 
-/// <param name="ImageUrl">The piuimages CDN url. This is the value a pin stores.</param>
+/// <summary>
+///     One picture, and every url it is served at.
+///     <para>
+///         The two are separate because each mix mirrors the same art under its own prefix, and a
+///         player wears whichever one their mix's importer wrote. Recognising "you already have
+///         this" therefore has to consider <paramref name="AllUrls" />, while a pin always stores
+///         <paramref name="ImageUrl" />.
+///     </para>
+/// </summary>
+/// <param name="ImageUrl">The canonical url, from the highest-priority mix that lists it. This is what a pin stores.</param>
 /// <param name="Mixes">The mixes that render this particular picture.</param>
+/// <param name="AllUrls">Every mirror path for this picture, including <paramref name="ImageUrl" />.</param>
 [ExcludeFromCodeCoverage]
-public sealed record AvatarPictureRecord(Uri ImageUrl, IReadOnlyList<MixEnum> Mixes);
+public sealed record AvatarPictureRecord(
+    Uri ImageUrl,
+    IReadOnlyList<MixEnum> Mixes,
+    IReadOnlyList<Uri> AllUrls);

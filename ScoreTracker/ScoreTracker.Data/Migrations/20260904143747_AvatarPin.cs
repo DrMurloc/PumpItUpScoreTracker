@@ -30,8 +30,15 @@ namespace ScoreTracker.Data.Migrations
             // until now nothing else could write it. Seeding the new column with it means "Back to
             // Auto" restores a real picture for everyone on day one, instead of only for players
             // who happen to import again after this deploys.
+            //
+            // The length guard is structural, not decorative: ProfileImage is nvarchar(max) and
+            // this column is nvarchar(400). Nothing in the data comes close today (the longest is
+            // 79 characters), but a silent truncation would write a url resolving to nothing and
+            // only surface the first time someone pressed "Back to Auto".
             migrationBuilder.Sql(@"
-UPDATE scores.[User] SET ImportedProfileImage = ProfileImage WHERE ImportedProfileImage IS NULL;
+UPDATE scores.[User]
+SET ImportedProfileImage = ProfileImage
+WHERE ImportedProfileImage IS NULL AND LEN(ProfileImage) <= 400;
 ");
         }
 

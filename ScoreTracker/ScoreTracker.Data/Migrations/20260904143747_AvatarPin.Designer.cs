@@ -12,8 +12,8 @@ using ScoreTracker.Data.Persistence;
 namespace ScoreTracker.Data.Migrations
 {
     [DbContext(typeof(ChartAttemptDbContext))]
-    [Migration("20260903224417_AvatarCatalog")]
-    partial class AvatarCatalog
+    [Migration("20260904143747_AvatarPin")]
+    partial class AvatarPin
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -49,6 +49,9 @@ namespace ScoreTracker.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("PictureId")
+                        .HasColumnType("int");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");
@@ -1780,6 +1783,9 @@ namespace ScoreTracker.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("AvatarIsPinned")
+                        .HasColumnType("bit");
+
                     b.Property<DateTimeOffset>("ClaimsInvalidatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -1791,6 +1797,10 @@ namespace ScoreTracker.Data.Migrations
 
                     b.Property<string>("GameTag")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImportedProfileImage")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
 
                     b.Property<bool>("IsContentLocked")
                         .HasColumnType("bit");

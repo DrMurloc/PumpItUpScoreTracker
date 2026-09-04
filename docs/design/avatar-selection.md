@@ -60,8 +60,11 @@ What the differences turned out to be:
 
 - **Phoenix draws a decorative frame that Phoenix 2 drops.** That is the entire difference for 63
   avatars; another 82 are byte-identical. The unframed Phoenix 2 art is what gets stored.
-- **XX is the same art at 160×120** for 75 of its 78 shared names. Only `Hero` and `Miya` are
-  genuinely different pictures there.
+- **XX is the same art at 160×120** for every one of its 79 shared names — none of them is a
+  distinct picture. An earlier draft here claimed `Hero` and `Miya` were exceptions; that came
+  from a measurement taken while the name keying still folded `Hero`/`hero` together, so it was
+  comparing the wrong pair. Re-measured against the cached art, XX's `Hero` (`158.png`) differs
+  from the Phoenix copy by 4.04 and `Miya` (`094.png`) by 3.07, both far under the threshold.
 - **12 avatars were really redrawn** for Phoenix 2: Jeanne, Azura, Lightning, Luana, Phantom
   Thief M & Detective P, Melt, AM Corporation Research Team, Paper Farmer, Downi, CIDER, Kumomo,
   Devit's Hope. Those keep both pictures; everything else keeps one.
@@ -75,7 +78,9 @@ rename out of a shared filename is wrong every time. **Every join in the catalog
 decoded pixels**, and the seed was produced that way.
 
 XX art therefore mirrors to its own `/avatars/xx/` prefix, exactly as Phoenix 2's does to
-`/avatars/p2/`, so no id can collide across eras.
+`/avatars/p2/`, so no id can collide across eras. All 83 XX files are mirrored even though only
+four avatars are XX-exclusive — the rest share a picture with Phoenix, and a picture keeps every
+url it is served at (§4).
 
 ### 3.2 Names are not unique, and that is fine
 
@@ -104,12 +109,34 @@ as songs, charts and videos.
 
 | Column | Notes |
 |---|---|
-| `Id` | Identity PK. One row per **picture**, so 182 rows. |
-| `GroupId` | Rows sharing one group are the same avatar's alternate pictures. 170 groups. |
+| `Id` | Identity PK. One row per **listed entry**, so 412 rows. |
+| `GroupId` | The avatar. 170 groups. |
+| `PictureId` | The distinct picture within it. 182 pictures; only 12 avatars own more than one. |
 | `Name` | The display name, site casing preserved. Not unique. |
-| `ImageUrl` | The piuimages CDN url for this picture. |
-| `Mixes` | Bitmask of `1 << (int)MixEnum` — XX = 1, Phoenix = 2, Phoenix 2 = 4. Which mixes render *this* picture; an avatar's availability is the union across its group. |
+| `ImageUrl` | The piuimages CDN url this mix serves the picture at. |
+| `Mixes` | The mix this row is the listing for, as `1 << (int)MixEnum` — XX = 1, Phoenix = 2, Phoenix 2 = 4. A single bit: a picture's mixes are the union across its rows, an avatar's the union across its pictures. |
 | `SortOrder` | Alphabetical by name, assigned at seed time. |
+
+### 4.1 Why every listing is stored, not just the pictures
+
+The catalog answers two questions, and only one of them is about pictures.
+
+*What can I pick?* is per picture — 182 of them, which is what the dedupe is for.
+
+*What am I already wearing?* is per **url**. Each mix mirrors the same picture under its own
+prefix, and a player wears whichever one their mix's importer wrote. The first cut of this table
+stored only the canonical url, which is the Phoenix 2 one for 165 of 182 pictures — and Phoenix
+is the importer most accounts use. Measured against the live user table, **1,065 of 1,368
+accounts wearing a non-default avatar matched nothing**: no "Now" badge anywhere in the grid, and
+the panel opening on the alphabetically-first avatar instead of theirs. Phoenix 2 importers
+matched perfectly, which is exactly why it looked fine in testing.
+
+Rewriting the prefix is not a fix. §3.1's collision is the reason: mapping `/avatars/4f6176….png`
+to `/avatars/p2/4f6176….png` turns **Azura** into **Electra**. The urls have to be stored.
+
+With all 412 listings present, 2,563 of 2,565 accounts resolve. The last two carry a doubled
+slash after the host, which the picker normalises along with the percent-encoded slash that 54
+older rows have — both render fine through the CDN, which is why nobody noticed them.
 
 Seeded by migration and otherwise static. There is no scheduled refresh: all three source pages
 need a login, and the dedupe is a pixel comparison that has no business running at request time.
@@ -123,7 +150,7 @@ The pin itself is two columns on `scores.User`:
 `ProfileImage` keeps its existing meaning: **the avatar to show**. That is deliberate — 193 files
 read it, and none of them change.
 
-### 4.1 The fragile seam
+### 4.2 The fragile seam
 
 `UpdateUserHandler` and `SetUserContentLockHandler` rebuild the whole `User` record by hand,
 carrying each field forward individually (`existing?.GameTag`, `existing?.ProfileImage`, …). Add

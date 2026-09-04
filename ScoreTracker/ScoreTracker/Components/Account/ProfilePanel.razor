@@ -25,11 +25,16 @@
    imports leave it alone (docs/design/avatar-selection.md). *@
 <div class="av-row">
     <div class="av-preview">
-        <img class="av-preview-big" src="@_avatar?.ImageUrl" alt=""/>
-        @* The same picture at the size the app bar shows it, because a 4:3 avatar cropped to a
-           circle loses its edges and that is worth seeing before you commit to it. *@
-        <img class="av-preview-small" src="@_avatar?.ImageUrl" alt=""
-             title="@L["How it looks in the top bar"]"/>
+        @* Guarded, not defaulted: the avatar loads in OnInitializedAsync, and an img with no src
+           paints a broken-image glyph for the first render. *@
+        @if (_avatar is not null)
+        {
+            <img class="av-preview-big" src="@_avatar.ImageUrl" alt=""/>
+            @* The same picture at the size the app bar shows it, because a 4:3 avatar cropped to
+               a circle loses its edges and that is worth seeing before you commit to it. *@
+            <img class="av-preview-small" src="@_avatar.ImageUrl" alt=""
+                 title="@L["How it looks in the top bar"]"/>
+        }
     </div>
     <div class="av-row-meta">
         <div class="av-cap">@L["Avatar"]</div>
@@ -262,6 +267,7 @@
 {
     private MyAvatarRecord? _avatar;
     private IReadOnlyList<AvatarRecord> _avatars = Array.Empty<AvatarRecord>();
+    private bool _avatarsLoaded;
     private bool _showAvatarPicker;
     private bool _isLoadingAvatars;
 
@@ -271,12 +277,15 @@
     /// </summary>
     private async Task OpenAvatarPicker()
     {
-        if (_avatars.Count == 0)
+        // Tracked by a flag rather than by Count: an empty result is still an answer, and
+        // re-asking on every open would query forever for the one case that returns nothing.
+        if (!_avatarsLoaded)
         {
             _isLoadingAvatars = true;
             try
             {
                 _avatars = await Mediator.Send(new GetAvatarCatalogQuery());
+                _avatarsLoaded = true;
             }
             finally
             {

@@ -80,7 +80,15 @@
             }
             @foreach (var avatar in _filtered)
             {
-                var picture = ReferenceEquals(avatar, _selected) ? avatar.Pictures[_variant] : avatar.Pictures[0];
+                @* The tile shows the picture that is actually in play for this avatar: the one
+                   being previewed if it is selected, the one you are wearing if you wear it,
+                   else the canonical. Always showing Pictures[0] badged a tile "Now" over art
+                   the player did not have. *@
+                var picture = ReferenceEquals(avatar, _selected)
+                    ? avatar.Pictures[_variant]
+                    : ReferenceEquals(avatar, _wornAvatar) && _wornPicture is not null
+                        ? _wornPicture
+                        : avatar.Pictures[0];
                 <button type="button" class="av-tile @(ReferenceEquals(avatar, _selected) ? "av-on" : "")"
                         title="@avatar.Name" @onclick="() => Select(avatar)">
                     @* Lazy: 170 tiles is several megabytes if they all load, and a
@@ -89,7 +97,7 @@
                     @* The badge reads "Now". Its KEY is not "Now" because a lowercase "now"
                        already exists for timestamps, and resx dedupes names case-insensitively —
                        so the key moves and the word stays. *@
-                    @if (avatar.Pictures.Any(p => p.ImageUrl == Current))
+                    @if (ReferenceEquals(avatar, _wornAvatar))
                     {
                         <span class="av-now">@L["Avatar In Use"]</span>
                     }
@@ -174,16 +182,73 @@
     private string _search = string.Empty;
     private bool _saving;
 
+    /// <summary>The avatar and picture <see cref="Current" /> resolves to, or null if it is not catalogued.</summary>
+    private AvatarRecord? _wornAvatar;
+
+    private AvatarPictureRecord? _wornPicture;
+    private Uri? _resolvedFor;
+
     protected override void OnParametersSet()
     {
-        if (ReferenceEquals(_all, Avatars)) return;
+        if (!ReferenceEquals(_all, Avatars))
+        {
+            _all = Avatars;
+            _filtered = _all;
+            _search = string.Empty;
+            _resolvedFor = null;
+        }
 
-        _all = Avatars;
-        _filtered = _all;
-        // Open on whatever they are wearing, so the panel is never empty and the grid's first
-        // click is a change rather than an orientation step.
-        _selected ??= _all.FirstOrDefault(a => a.Pictures.Any(p => p.ImageUrl == Current)) ?? _all.FirstOrDefault();
-        _variant = 0;
+        // Current changes on every pin and every "Back to Auto", and the parent keeps this
+        // instance alive across both — so the worn avatar is recomputed whenever it moves, not
+        // once per lifetime. Reopening otherwise showed the avatar you had just abandoned.
+        if (_resolvedFor != Current || _wornAvatar is null)
+        {
+            _resolvedFor = Current;
+            ResolveWorn();
+            // Open on whatever they are wearing, so the panel is never empty and the grid's
+            // first click is a change rather than an orientation step.
+            _selected = _wornAvatar ?? _all.FirstOrDefault();
+            // Preview the picture they actually wear, not the canonical one, so a Phoenix player
+            // opening the picker sees their own framed art rather than a copy of it.
+            _variant = _selected is null || _wornPicture is null
+                ? 0
+                : Math.Max(0, _selected.Pictures.ToList().IndexOf(_wornPicture));
+        }
+    }
+
+    private void ResolveWorn()
+    {
+        _wornAvatar = null;
+        _wornPicture = null;
+        if (Current is null) return;
+
+        var worn = NormalizeUrl(Current);
+        foreach (var avatar in _all)
+        foreach (var picture in avatar.Pictures)
+        {
+            if (!picture.AllUrls.Any(u => NormalizeUrl(u) == worn)) continue;
+
+            _wornAvatar = avatar;
+            _wornPicture = picture;
+            return;
+        }
+    }
+
+    /// <summary>
+    ///     Each mix mirrors the same picture under its own prefix, so matching has to consider
+    ///     every url a picture is served at rather than the canonical one — most accounts wear
+    ///     the Phoenix path.
+    ///     <para>
+    ///         Two malformed shapes also exist in the wild from older writes: a percent-encoded
+    ///         slash, and a doubled slash after the host. The CDN serves both, so they render
+    ///         correctly and were never noticed, but they match nothing verbatim.
+    ///     </para>
+    /// </summary>
+    private static string NormalizeUrl(Uri url)
+    {
+        var text = url.ToString().Replace("%2f", "/", StringComparison.OrdinalIgnoreCase);
+        var scheme = text.IndexOf("://", StringComparison.Ordinal);
+        return scheme < 0 ? text : text[..(scheme + 3)] + text[(scheme + 3)..].Replace("//", "/");
     }
 
     private void OnSearch(string? term)
@@ -203,8 +268,19 @@
     private async Task Use()
     {
         if (_selected is null) return;
+
         _saving = true;
-        await OnPicked.InvokeAsync(_selected.Pictures[_variant].ImageUrl);
+        try
+        {
+            await OnPicked.InvokeAsync(_selected.Pictures[_variant].ImageUrl);
+        }
+        finally
+        {
+            // The parent closes the dialog but never reloads the page — refreshLogin is a fetch,
+            // not a navigation — so this instance survives to be reopened. Leaving the latch set
+            // held "Use this avatar" dead for the rest of the session.
+            _saving = false;
+        }
     }
 
     private Task Close()

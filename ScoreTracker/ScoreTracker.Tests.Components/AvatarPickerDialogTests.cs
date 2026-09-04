@@ -18,6 +18,7 @@ namespace ScoreTracker.Tests.Components;
 public sealed class AvatarPickerDialogTests : ComponentTestBase
 {
     private static readonly Uri P2Teddy = new("https://piuimages.arroweclip.se/avatars/p2/teddy.png");
+    private static readonly Uri P1Teddy = new("https://piuimages.arroweclip.se/avatars/teddy-p1.png");
     private static readonly Uri P2Jeanne = new("https://piuimages.arroweclip.se/avatars/p2/jeanne.png");
     private static readonly Uri P1Jeanne = new("https://piuimages.arroweclip.se/avatars/jeanne.png");
     private static readonly Uri P2Azura = new("https://piuimages.arroweclip.se/avatars/p2/azura.png");
@@ -26,21 +27,30 @@ public sealed class AvatarPickerDialogTests : ComponentTestBase
     ///     Three avatars in catalog order. Jeanne is one of the twelve Phoenix 2 genuinely
     ///     redrew, so she carries two pictures; the other two carry one, which is the shape
     ///     158 of the 170 have.
+    ///     <para>
+    ///         TEDDY's single picture is served at BOTH mirror paths, which is the ordinary case
+    ///         — 145 avatars are the same art under two prefixes, and the Phoenix one is what
+    ///         most live accounts wear.
+    ///     </para>
     /// </summary>
     private static IReadOnlyList<AvatarRecord> Catalog()
     {
         return new[]
         {
             new AvatarRecord("Azura", new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
-                new[] { new AvatarPictureRecord(P2Azura, new[] { MixEnum.Phoenix2 }) }),
+                new[] { new AvatarPictureRecord(P2Azura, new[] { MixEnum.Phoenix2 }, new[] { P2Azura }) }),
             new AvatarRecord("Jeanne", new[] { MixEnum.XX, MixEnum.Phoenix, MixEnum.Phoenix2 },
                 new[]
                 {
-                    new AvatarPictureRecord(P2Jeanne, new[] { MixEnum.Phoenix2 }),
-                    new AvatarPictureRecord(P1Jeanne, new[] { MixEnum.XX, MixEnum.Phoenix })
+                    new AvatarPictureRecord(P2Jeanne, new[] { MixEnum.Phoenix2 }, new[] { P2Jeanne }),
+                    new AvatarPictureRecord(P1Jeanne, new[] { MixEnum.XX, MixEnum.Phoenix }, new[] { P1Jeanne })
                 }),
             new AvatarRecord("TEDDY", new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
-                new[] { new AvatarPictureRecord(P2Teddy, new[] { MixEnum.Phoenix2 }) })
+                new[]
+                {
+                    new AvatarPictureRecord(P2Teddy, new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+                        new[] { P2Teddy, P1Teddy })
+                })
         };
     }
 
@@ -51,7 +61,13 @@ public sealed class AvatarPickerDialogTests : ComponentTestBase
     /// </summary>
     private IRenderedFragment RenderDialog(Uri? current = null, Action<Uri>? onPicked = null)
     {
-        return Render(builder =>
+        return RenderDialog(out _, current, onPicked);
+    }
+
+    private IRenderedFragment RenderDialog(out IRenderedComponent<AvatarPickerDialog> dialog,
+        Uri? current = null, Action<Uri>? onPicked = null)
+    {
+        var fragment = Render(builder =>
         {
             builder.OpenComponent<MudDialogProvider>(0);
             builder.CloseComponent();
@@ -63,6 +79,8 @@ public sealed class AvatarPickerDialogTests : ComponentTestBase
                 EventCallback.Factory.Create<Uri>(this, u => onPicked?.Invoke(u)));
             builder.CloseComponent();
         });
+        dialog = fragment.FindComponent<AvatarPickerDialog>();
+        return fragment;
     }
 
     [Fact]
@@ -174,5 +192,82 @@ public sealed class AvatarPickerDialogTests : ComponentTestBase
         Assert.Equal(3, tags.Count);
         Assert.Single(cut.FindAll(".av-mixtag.av-off"));
         Assert.Contains(MixEnum.XX.GetName(), cut.Find(".av-mixtag.av-off").TextContent);
+    }
+
+    [Fact]
+    public void RecognisesTheMirrorPathTheOtherMixServesTheSamePictureAt()
+    {
+        // The catalog stores one canonical url per picture, but each mix mirrors that picture
+        // under its own prefix and a player wears whichever their importer wrote. Matching the
+        // canonical url alone left three quarters of live accounts unrecognised.
+        var cut = RenderDialog(current: P1Teddy);
+
+        Assert.Equal("TEDDY", cut.Find(".av-strip-name").TextContent.Trim());
+        Assert.Contains("Avatar In Use", cut.Find(".av-tile.av-on").TextContent);
+    }
+
+    [Theory]
+    [InlineData("https://piuimages.arroweclip.se/avatars%2fteddy-p1.png")]
+    [InlineData("https://piuimages.arroweclip.se//avatars/teddy-p1.png")]
+    public void RecognisesTheMalformedUrlsOlderWritesLeftBehind(string worn)
+    {
+        // A percent-encoded slash and a doubled slash both exist in production. The CDN serves
+        // them, so they render correctly and were never noticed — but they match nothing
+        // verbatim, and the player would see no badge at all.
+        var cut = RenderDialog(current: new Uri(worn));
+
+        Assert.Equal("TEDDY", cut.Find(".av-strip-name").TextContent.Trim());
+    }
+
+    [Fact]
+    public void AnUncataloguedAvatarSelectsNothingRatherThanBadgingTheWrongTile()
+    {
+        var cut = RenderDialog(current: new Uri("https://piuimages.arroweclip.se/avatars/unknown.png"));
+
+        Assert.Empty(cut.FindAll(".av-now"));
+        Assert.Equal("Azura", cut.Find(".av-strip-name").TextContent.Trim());
+    }
+
+    [Fact]
+    public async Task PickingTwiceInOneSessionWorks()
+    {
+        // The parent closes the dialog but never reloads the page, so this instance survives to
+        // be reopened. A saving latch that was never cleared held the button dead forever.
+        // Queries go through the fragment, never the component handle: a MudDialog renders its
+        // content into the provider, so the component's own subtree is empty.
+        var picks = new List<Uri>();
+        var cut = RenderDialog(out _, onPicked: picks.Add);
+
+        await cut.FindAll(".av-tile")[0].ClickAsync(new MouseEventArgs());
+        await cut.Find(".av-strip button.mud-button-filled").ClickAsync(new MouseEventArgs());
+        await cut.FindAll(".av-tile")[1].ClickAsync(new MouseEventArgs());
+        await cut.Find(".av-strip button.mud-button-filled").ClickAsync(new MouseEventArgs());
+
+        Assert.Equal(new[] { P2Azura, P2Jeanne }, picks);
+    }
+
+    [Fact]
+    public void ChangingWhatIsWornMovesTheSelection()
+    {
+        // Current is a live parameter the parent rewrites after every pin and every Back to Auto.
+        // Resolving it once per lifetime meant reopening showed the avatar just abandoned.
+        var cut = RenderDialog(out var dialog, current: P2Azura);
+        Assert.Equal("Azura", cut.Find(".av-strip-name").TextContent.Trim());
+
+        dialog.SetParametersAndRender(p => p.Add(x => x.Current, P2Teddy));
+
+        Assert.Equal("TEDDY", cut.Find(".av-strip-name").TextContent.Trim());
+        Assert.Contains("Avatar In Use", cut.Find(".av-tile.av-on").TextContent);
+    }
+
+    [Fact]
+    public void TheWornTileShowsTheArtYouAreWearingNotTheCanonicalCopy()
+    {
+        // Jeanne is one of the twelve with two genuinely different pictures. Badging the tile
+        // "Avatar In Use" while rendering the other picture claims art the player does not have.
+        var cut = RenderDialog(current: P1Jeanne);
+
+        var worn = cut.Find(".av-tile.av-on img");
+        Assert.Equal(P1Jeanne.ToString(), worn.GetAttribute("src"));
     }
 }
