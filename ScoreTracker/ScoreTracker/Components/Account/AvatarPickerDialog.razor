@@ -86,12 +86,12 @@
                     @* Lazy: 170 tiles is several megabytes if they all load, and a
                        search-and-pick touches a couple of dozen. *@
                     <img src="@picture.ImageUrl" alt="" loading="lazy"/>
-                    @* Not "Now": a lowercase "now" key already exists for timestamps, and two
-                       resx keys differing only by case silently drop one another in every
-                       non-English locale. *@
+                    @* The badge reads "Now". Its KEY is not "Now" because a lowercase "now"
+                       already exists for timestamps, and resx dedupes names case-insensitively —
+                       so the key moves and the word stays. *@
                     @if (avatar.Pictures.Any(p => p.ImageUrl == Current))
                     {
-                        <span class="av-now">@L["Wearing"]</span>
+                        <span class="av-now">@L["Avatar In Use"]</span>
                     }
                     @if (avatar.Pictures.Count > 1)
                     {

@@ -916,6 +916,9 @@
   <data name="Avatar" xml:space="preserve">
     <value>아바타</value>
   </data>
+  <data name="Avatar In Use" xml:space="preserve">
+    <value>현재</value>
+  </data>
   <data name="avatar match" xml:space="preserve">
     <value>아바타 일치</value>
   </data>
@@ -8748,9 +8751,6 @@
   </data>
   <data name="weaker" xml:space="preserve">
     <value>약함</value>
-  </data>
-  <data name="Wearing" xml:space="preserve">
-    <value>사용 중</value>
   </data>
   <data name="Webhook" xml:space="preserve">
     <value>웹훅</value>

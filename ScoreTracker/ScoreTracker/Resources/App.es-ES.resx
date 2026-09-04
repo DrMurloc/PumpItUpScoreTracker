@@ -916,6 +916,9 @@
   <data name="Avatar" xml:space="preserve">
     <value>Avatar</value>
   </data>
+  <data name="Avatar In Use" xml:space="preserve">
+    <value>Ahora</value>
+  </data>
   <data name="avatar match" xml:space="preserve">
     <value>avatar coincidente</value>
   </data>
@@ -8746,9 +8749,6 @@
   </data>
   <data name="weaker" xml:space="preserve">
     <value>más floja</value>
-  </data>
-  <data name="Wearing" xml:space="preserve">
-    <value>En uso</value>
   </data>
   <data name="Webhook" xml:space="preserve">
     <value>Webhook</value>

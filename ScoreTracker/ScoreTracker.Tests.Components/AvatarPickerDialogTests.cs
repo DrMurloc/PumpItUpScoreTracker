@@ -80,7 +80,7 @@ public sealed class AvatarPickerDialogTests : ComponentTestBase
         var cut = RenderDialog(current: P2Teddy);
 
         Assert.Equal("TEDDY", cut.Find(".av-strip-name").TextContent.Trim());
-        Assert.Contains("Wearing", cut.Find(".av-tile.av-on").TextContent);
+        Assert.Contains("Avatar In Use", cut.Find(".av-tile.av-on").TextContent);
     }
 
     [Fact]
