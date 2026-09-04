@@ -916,12 +916,21 @@
   <data name="Automatic" xml:space="preserve">
     <value>Blurgmorgl</value>
   </data>
+  <data name="Available in" xml:space="preserve">
+    <value>Blubmrgl Ro</value>
+  </data>
   <data name="Avatar" xml:space="preserve">
 	  <value>Blargblgrl</value>
 	  <comment>Avatar</comment>
   </data>
+  <data name="Avatar In Use" xml:space="preserve">
+    <value>Mrp</value>
+  </data>
   <data name="avatar match" xml:space="preserve">
     <value>blargblgrl romagl</value>
+  </data>
+  <data name="Avatar updated" xml:space="preserve">
+    <value>Blargblgrl Murglrgl</value>
   </data>
   <data name="Average" xml:space="preserve">
     <value>Rorg</value>
@@ -947,8 +956,14 @@
   <data name="Back" xml:space="preserve">
     <value>Arglblgrl</value>
   </data>
+  <data name="Back to Auto" xml:space="preserve">
+    <value>Mrgl ro Arglgl</value>
+  </data>
   <data name="Back to back, from here" xml:space="preserve">
     <value>Arglblgrl grgl arglblgrl, romurg blubmorg</value>
+  </data>
+  <data name="Back to the avatar from your last import" xml:space="preserve">
+    <value>Mrgl ro mo blargblgrl gro mrgl morg glorggl</value>
   </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>Arglblgrl grgl Mrpgrrgl Grog</value>
@@ -1314,6 +1329,9 @@
   <data name="Center" xml:space="preserve">
 	  <value>Murmgro</value>
   </data>
+  <data name="Change avatar" xml:space="preserve">
+    <value>Grglmurg Blargblgrl</value>
+  </data>
   <data name="Change Card" xml:space="preserve">
     <value>Blgrlblub Mrpmorg</value>
   </data>
@@ -1459,6 +1477,9 @@
   </data>
   <data name="Choose a new creator" xml:space="preserve">
     <value>Grula burg</value>
+  </data>
+  <data name="Choose an avatar" xml:space="preserve">
+    <value>Grogl mo blargblgrl</value>
   </data>
   <data name="Choose the account to merge with" xml:space="preserve">
     <value>Arglro mrp grgl grgl murmplgl glgrgl</value>
@@ -2763,6 +2784,9 @@
   <data name="Follows your competitive level as it moves." xml:space="preserve">
     <value>Plglurgurg gromurp arglrglmrmurm grorpmurm lurg gl rglmrp.</value>
   </data>
+  <data name="Follows your PIUGAME profile — every import picks up whatever it wears." xml:space="preserve">
+    <value>Mrglrgl mo PIUGAME grglmrg — murgl glorggl grabl ro mrglgro ro blarg.</value>
+  </data>
   <data name="Footswitches" xml:space="preserve">
     <value>Arglrglgrrglgro</value>
   </data>
@@ -3150,6 +3174,9 @@
   <data name="How is this personalized?" xml:space="preserve">
     <value>Gro urg grglmrp urgblargmurmmorg?</value>
   </data>
+  <data name="How it looks in the top bar" xml:space="preserve">
+    <value>Morp ro mrgl ro mo gurg rgl</value>
+  </data>
   <data name="How it works" xml:space="preserve">
     <value>Gro gl glgrorp</value>
   </data>
@@ -3368,6 +3395,9 @@
   </data>
   <data name="Importing with your PIUGAME login records scores automatically — manual entry is the fallback." xml:space="preserve">
     <value>Murggrrglmrgl glgrgl gromurp PIUGAME mrglmrp mrplglargl mgrlgmrg blubromaglgrrgl — murggrgl plglargl urg mrp mrlurgblarg.</value>
+  </data>
+  <data name="Imports refresh your scores and game tag but leave this avatar alone." xml:space="preserve">
+    <value>Glorggl murmgl mo grogl ur mrgl marg blub morgl mo blargblgrl mrgl.</value>
   </data>
   <data name="Impossible at level {0} — the overflow is thinner than one bad." xml:space="preserve">
     <value>Murpmurpglorg mr grorpmurm {0} — mrp magllurgmurg urg murpromorg grogrgl argl urg.</value>
@@ -4437,6 +4467,9 @@
   </data>
   <data name="No account needed to look around" xml:space="preserve">
     <value>Mrp grgl mrgro grgl glmurp blubmurm</value>
+  </data>
+  <data name="No avatar by that name." xml:space="preserve">
+    <value>Blub blargblgrl ro mo mrg.</value>
   </data>
   <data name="No big wins yet" xml:space="preserve">
     <value>Mrp grgl blgrlblarg argl</value>
@@ -5554,6 +5587,9 @@
   </data>
   <data name="Pick your widgets — projections, the weekly board, your daily step — and arrange your own dashboard. Your home page, your call." xml:space="preserve">
     <value>Rglgro gromurp mrpgrrglgrrgl — glorgglorgglplgl, mrp murmmr mrglblarg, gromurp gromorg glorgmagl — ro blargmrplurg gromurp grrgl groglrgl. Gromurp blargplgl urggrgl, gromurp romrgl.</value>
+  </data>
+  <data name="Pinned" xml:space="preserve">
+    <value>Blgrlmrgl</value>
   </data>
   <data name="Pinned range" xml:space="preserve">
     <value>Mrpmurm blubmrgl</value>
@@ -6812,6 +6848,9 @@
   </data>
   <data name="Search board tags…" xml:space="preserve">
     <value>Grrglgro mrglblarg blubgrrgl…</value>
+  </data>
+  <data name="Search by name" xml:space="preserve">
+    <value>Grrglgro ro mrg</value>
   </data>
   <data name="Search by song name in the bar above — every chart has its own page." xml:space="preserve">
     <value>Grrglgro murm mrgl mrg mrp mrp mr mrgllurg — murgglorg murgl rgl argl grrgl urggrgl.</value>
@@ -8409,6 +8448,9 @@
   <data name="Two can be active at once, so rotating one costs no downtime. No email goes out when one expires — this page is the whole warning." xml:space="preserve">
     <value>Blomurp murp murgloo blarg, murgloo murgm murmo bam grorp. Bam mrgloo grabla argla murgm murgloo — murgm pragl mo alla murgargl.</value>
   </data>
+  <data name="Two versions" xml:space="preserve">
+    <value>Grog Murglrgl</value>
+  </data>
   <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
     <value>Grrgl murpmagl mrgl mrp blubmurm blarglurg. Mrp rolurg argl glorgmorg mrp arglmagl mrgllurg; mrp rogro argl urg grglmrp grrgllurg lurg Grrgllurg Grorpmrgl urgblgrl gl.</value>
   </data>
@@ -8603,6 +8645,9 @@
   </data>
   <data name="Upscores" xml:space="preserve">
     <value>Blubarglgl</value>
+  </data>
+  <data name="Use this avatar" xml:space="preserve">
+    <value>Murp mo Blargblgrl</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Morgmrgl mrmrpplgl ro blgrlrglmr</value>
@@ -9622,6 +9667,9 @@
   <data name="{0} at {1}" xml:space="preserve">
     <value>{0} ap {1}</value>
   </data>
+  <data name="{0} avatars" xml:space="preserve">
+    <value>{0} blargblgrl</value>
+  </data>
   <data name="{0} beats it at any pass" xml:space="preserve">
     <value>{0} urgurg mo og plur maglplgl</value>
   </data>
@@ -9894,6 +9942,9 @@
   </data>
   <data name="{0} of your singles pool" xml:space="preserve">
     <value>{0} blarg morp mrglrlgl blubgro</value>
+  </data>
+  <data name="{0} of {1}" xml:space="preserve">
+    <value>{0} ro {1}</value>
   </data>
   <data name="{0} of {1} charts" xml:space="preserve">
     <value>{0} mrgl {1} murgl</value>

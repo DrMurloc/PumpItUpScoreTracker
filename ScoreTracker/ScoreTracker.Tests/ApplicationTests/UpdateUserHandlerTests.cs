@@ -21,6 +21,41 @@ namespace ScoreTracker.Tests.ApplicationTests;
 
 public sealed class UpdateUserHandlerTests
 {
+    /// <summary>
+    ///     SaveUser writes the whole row, and this handler rebuilds the record by hand from the
+    ///     request plus whatever it remembers to carry across. A field it forgets is not left
+    ///     alone, it is reset — so changing your country would quietly hand your avatar back to
+    ///     the importer. The bug is invisible on this page and only shows up on your next import.
+    /// </summary>
+    [Fact]
+    public async Task EditingTheProfileKeepsAPinnedAvatarAndWhatTheImporterLastSaw()
+    {
+        var pinned = new Uri("https://piuimages.arroweclip.se/avatars/p2/pinned.png");
+        var imported = new Uri("https://piuimages.arroweclip.se/avatars/p2/imported.png");
+        var existingUser = new UserBuilder()
+            .WithName("Original")
+            .WithCountry("US")
+            .WithPinnedAvatar(pinned)
+            .WithImportedProfileImage(imported)
+            .Build();
+        var users = new Mock<IUserRepository>();
+        users.Setup(u => u.GetUser(existingUser.Id, It.IsAny<CancellationToken>())).ReturnsAsync(existingUser);
+        var currentUser = new Mock<ICurrentUserAccessor>();
+        currentUser.SetupGet(c => c.User).Returns(existingUser);
+        var bus = new Mock<IBus>();
+
+        var handler = new UpdateUserHandler(users.Object, currentUser.Object, bus.Object);
+        await handler.Handle(new UpdateUserCommand(Name.From("Original"), true, Name.From("CA")),
+            CancellationToken.None);
+
+        users.Verify(u => u.SaveUser(It.Is<User>(saved =>
+                saved.AvatarIsPinned
+                && saved.ProfileImage == pinned
+                && saved.ImportedProfileImage == imported
+                && saved.Country == Name.From("CA")),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task SavesNewUserAndPublishesUpdatedEvent()
     {

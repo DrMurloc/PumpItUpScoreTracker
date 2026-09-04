@@ -50,8 +50,16 @@ public sealed class PiuGameConfiguration
     public int RetryBaseDelayMilliseconds { get; set; } = 1000;
 
     /// <summary>
-    ///     The official-site host for a mix. XX has no scrapeable site; anything unknown
-    ///     throws loudly rather than silently scraping the wrong mix's boards.
+    ///     The official-site host for a mix. Only the two Phoenix sites are mapped, because
+    ///     only they serve the pages this ACL scrapes — per-chart boards and personal bests.
+    ///     <para>
+    ///         XX is <b>not</b> unmapped for lack of a site: xx.piugame.com is alive and has its
+    ///         own total/single/double ranking boards plus an avatar shop (the manual-avatar
+    ///         catalog is seeded from it, see docs/design/avatar-selection.md). It has no
+    ///         per-chart leaderboard or my-best-score page, which is what this host lookup feeds,
+    ///         so pointing an importer at it would find nothing. Anything unknown throws loudly
+    ///         rather than silently scraping the wrong mix's boards.
+    ///     </para>
     /// </summary>
     public string BaseUrlFor(MixEnum mix)
     {

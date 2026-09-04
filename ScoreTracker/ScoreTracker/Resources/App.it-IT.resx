@@ -916,12 +916,21 @@
   <data name="Automatic" xml:space="preserve">
     <value>Automatico</value>
   </data>
+  <data name="Available in" xml:space="preserve">
+    <value>Disponibile in</value>
+  </data>
   <data name="Avatar" xml:space="preserve">
     <value>Avatar</value>
     <comment>Avatar</comment>
   </data>
+  <data name="Avatar In Use" xml:space="preserve">
+    <value>Attuale</value>
+  </data>
   <data name="avatar match" xml:space="preserve">
     <value>avatar corrispondente</value>
+  </data>
+  <data name="Avatar updated" xml:space="preserve">
+    <value>Avatar aggiornato</value>
   </data>
   <data name="Average" xml:space="preserve">
     <value>Media</value>
@@ -947,8 +956,14 @@
   <data name="Back" xml:space="preserve">
     <value>Indietro</value>
   </data>
+  <data name="Back to Auto" xml:space="preserve">
+    <value>Torna ad Automatico</value>
+  </data>
   <data name="Back to back, from here" xml:space="preserve">
     <value>Di fila, da qui</value>
+  </data>
+  <data name="Back to the avatar from your last import" xml:space="preserve">
+    <value>Torna all'avatar della tua ultima importazione</value>
   </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>Torna alla Tier List</value>
@@ -1314,6 +1329,9 @@
   <data name="Center" xml:space="preserve">
 	  <value>Centro</value>
   </data>
+  <data name="Change avatar" xml:space="preserve">
+    <value>Cambia avatar</value>
+  </data>
   <data name="Change Card" xml:space="preserve">
     <value>Cambia carta</value>
   </data>
@@ -1459,6 +1477,9 @@
   </data>
   <data name="Choose a new creator" xml:space="preserve">
     <value>Scegli un nuovo creatore</value>
+  </data>
+  <data name="Choose an avatar" xml:space="preserve">
+    <value>Scegli un avatar</value>
   </data>
   <data name="Choose the account to merge with" xml:space="preserve">
     <value>Scegli l'account da unire</value>
@@ -2763,6 +2784,9 @@
   <data name="Follows your competitive level as it moves." xml:space="preserve">
     <value>Segue il tuo livello competitivo nel tempo.</value>
   </data>
+  <data name="Follows your PIUGAME profile — every import picks up whatever it wears." xml:space="preserve">
+    <value>Segue il tuo profilo PIUGAME — ogni importazione prende quello che indossa.</value>
+  </data>
   <data name="Footswitches" xml:space="preserve">
     <value>Footswitches</value>
   </data>
@@ -3150,6 +3174,9 @@
   <data name="How is this personalized?" xml:space="preserve">
     <value>Come viene personalizzata?</value>
   </data>
+  <data name="How it looks in the top bar" xml:space="preserve">
+    <value>Come appare nella barra in alto</value>
+  </data>
   <data name="How it works" xml:space="preserve">
     <value>Come funziona</value>
   </data>
@@ -3368,6 +3395,9 @@
   </data>
   <data name="Importing with your PIUGAME login records scores automatically — manual entry is the fallback." xml:space="preserve">
     <value>Importando col tuo login PIUGAME i punteggi si registrano da soli — l'inserimento manuale è il ripiego.</value>
+  </data>
+  <data name="Imports refresh your scores and game tag but leave this avatar alone." xml:space="preserve">
+    <value>Le importazioni aggiornano i punteggi e il tag, ma non toccano questo avatar.</value>
   </data>
   <data name="Impossible at level {0} — the overflow is thinner than one bad." xml:space="preserve">
     <value>Impossibile al livello {0}: l'eccedenza è più sottile di un singolo Bad.</value>
@@ -4437,6 +4467,9 @@
   </data>
   <data name="No account needed to look around" xml:space="preserve">
     <value>Niente account per dare un'occhiata</value>
+  </data>
+  <data name="No avatar by that name." xml:space="preserve">
+    <value>Nessun avatar con quel nome.</value>
   </data>
   <data name="No big wins yet" xml:space="preserve">
     <value>Ancora nessuna grande vittoria</value>
@@ -5554,6 +5587,9 @@
   </data>
   <data name="Pick your widgets — projections, the weekly board, your daily step — and arrange your own dashboard. Your home page, your call." xml:space="preserve">
     <value>Scegli i tuoi widget — proiezioni, la classifica settimanale, il tuo passo del giorno — e componi la tua dashboard. La tua home page, decidi tu.</value>
+  </data>
+  <data name="Pinned" xml:space="preserve">
+    <value>Fissato</value>
   </data>
   <data name="Pinned range" xml:space="preserve">
     <value>Intervallo fisso</value>
@@ -6812,6 +6848,9 @@
   </data>
   <data name="Search board tags…" xml:space="preserve">
     <value>Cerca tag della classifica…</value>
+  </data>
+  <data name="Search by name" xml:space="preserve">
+    <value>Cerca per nome</value>
   </data>
   <data name="Search by song name in the bar above — every chart has its own page." xml:space="preserve">
     <value>Cerca per nome della canzone nella barra qui sopra — ogni chart ha la sua pagina.</value>
@@ -8409,6 +8448,9 @@
   <data name="Two can be active at once, so rotating one costs no downtime. No email goes out when one expires — this page is the whole warning." xml:space="preserve">
     <value>Due possono essere attive insieme, quindi ruotarne una non costa tempo di fermo. Nessuna email parte alla scadenza — questa pagina è tutto l'avviso.</value>
   </data>
+  <data name="Two versions" xml:space="preserve">
+    <value>Due versioni</value>
+  </data>
   <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
     <value>Due viste delle stesse abilità. Quella a sinistra alimenta la miscela sopra; quella a destra è questa cartella come la mostrano le statistiche della cartella.</value>
   </data>
@@ -8603,6 +8645,9 @@
   </data>
   <data name="Upscores" xml:space="preserve">
     <value>Upscores</value>
+  </data>
+  <data name="Use this avatar" xml:space="preserve">
+    <value>Usa questo avatar</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Usato principalmente per il debugging</value>
@@ -9622,6 +9667,9 @@
   <data name="{0} at {1}" xml:space="preserve">
     <value>{0} con {1}</value>
   </data>
+  <data name="{0} avatars" xml:space="preserve">
+    <value>{0} avatar</value>
+  </data>
   <data name="{0} beats it at any pass" xml:space="preserve">
     <value>{0} lo batte con qualsiasi pass</value>
   </data>
@@ -9894,6 +9942,9 @@
   </data>
   <data name="{0} of your singles pool" xml:space="preserve">
     <value>{0} del tuo insieme singles</value>
+  </data>
+  <data name="{0} of {1}" xml:space="preserve">
+    <value>{0} di {1}</value>
   </data>
   <data name="{0} of {1} charts" xml:space="preserve">
     <value>{0} di {1} chart</value>

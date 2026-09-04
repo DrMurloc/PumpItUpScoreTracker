@@ -40,8 +40,11 @@ internal sealed class SetUserContentLockHandler : IRequestHandler<SetUserContent
                   "A name must be provided when locking a user without a GameTag.")
             : existing.Name;
 
+        // Same whole-row rule as UpdateUserHandler: a field left off here is reset, not preserved.
+        // Content-locking an account is not a reason to take away the avatar they chose.
         var locked = new User(existing.Id, newName, existing.IsPublic, existing.GameTag, existing.ProfileImage,
-            existing.Country, request.IsLocked, _clock.Now);
+            existing.Country, request.IsLocked, _clock.Now,
+            existing.ImportedProfileImage, existing.AvatarIsPinned);
 
         await _users.SaveUser(locked, cancellationToken);
         await _bus.Publish(UserUpdatedEvent.From(locked), cancellationToken);

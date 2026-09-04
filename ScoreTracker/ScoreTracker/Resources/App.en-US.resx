@@ -916,12 +916,21 @@
   <data name="Automatic" xml:space="preserve">
     <value>Automatic</value>
   </data>
+  <data name="Available in" xml:space="preserve">
+    <value>Available in</value>
+  </data>
   <data name="Avatar" xml:space="preserve">
 	  <value>Avatar</value>
 	  <comment>Avatar</comment>
   </data>
+  <data name="Avatar In Use" xml:space="preserve">
+    <value>Now</value>
+  </data>
   <data name="avatar match" xml:space="preserve">
     <value>avatar match</value>
+  </data>
+  <data name="Avatar updated" xml:space="preserve">
+    <value>Avatar updated</value>
   </data>
   <data name="Average" xml:space="preserve">
     <value>Average</value>
@@ -947,8 +956,14 @@
   <data name="Back" xml:space="preserve">
     <value>Back</value>
   </data>
+  <data name="Back to Auto" xml:space="preserve">
+    <value>Back to Auto</value>
+  </data>
   <data name="Back to back, from here" xml:space="preserve">
     <value>Back to back, from here</value>
+  </data>
+  <data name="Back to the avatar from your last import" xml:space="preserve">
+    <value>Back to the avatar from your last import</value>
   </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>Back to Tier List</value>
@@ -1314,6 +1329,9 @@
   <data name="Center" xml:space="preserve">
 	  <value>Center</value>
   </data>
+  <data name="Change avatar" xml:space="preserve">
+    <value>Change avatar</value>
+  </data>
   <data name="Change Card" xml:space="preserve">
     <value>Change Card</value>
   </data>
@@ -1459,6 +1477,9 @@
   </data>
   <data name="Choose a new creator" xml:space="preserve">
     <value>Choose a new creator</value>
+  </data>
+  <data name="Choose an avatar" xml:space="preserve">
+    <value>Choose an avatar</value>
   </data>
   <data name="Choose the account to merge with" xml:space="preserve">
     <value>Choose the account to merge with</value>
@@ -2763,6 +2784,9 @@
   <data name="Follows your competitive level as it moves." xml:space="preserve">
     <value>Follows your competitive level as it moves.</value>
   </data>
+  <data name="Follows your PIUGAME profile — every import picks up whatever it wears." xml:space="preserve">
+    <value>Follows your PIUGAME profile — every import picks up whatever it wears.</value>
+  </data>
   <data name="Footswitches" xml:space="preserve">
     <value>Footswitches</value>
   </data>
@@ -3150,6 +3174,9 @@
   <data name="How is this personalized?" xml:space="preserve">
     <value>How is this personalized?</value>
   </data>
+  <data name="How it looks in the top bar" xml:space="preserve">
+    <value>How it looks in the top bar</value>
+  </data>
   <data name="How it works" xml:space="preserve">
     <value>How it works</value>
   </data>
@@ -3368,6 +3395,9 @@
   </data>
   <data name="Importing with your PIUGAME login records scores automatically — manual entry is the fallback." xml:space="preserve">
     <value>Importing with your PIUGAME login records scores automatically — manual entry is the fallback.</value>
+  </data>
+  <data name="Imports refresh your scores and game tag but leave this avatar alone." xml:space="preserve">
+    <value>Imports refresh your scores and game tag but leave this avatar alone.</value>
   </data>
   <data name="Impossible at level {0} — the overflow is thinner than one bad." xml:space="preserve">
     <value>Impossible at level {0} — the overflow is thinner than one bad.</value>
@@ -4437,6 +4467,9 @@
   </data>
   <data name="No account needed to look around" xml:space="preserve">
     <value>No account needed to look around</value>
+  </data>
+  <data name="No avatar by that name." xml:space="preserve">
+    <value>No avatar by that name.</value>
   </data>
   <data name="No big wins yet" xml:space="preserve">
     <value>No big wins yet</value>
@@ -5554,6 +5587,9 @@
   </data>
   <data name="Pick your widgets — projections, the weekly board, your daily step — and arrange your own dashboard. Your home page, your call." xml:space="preserve">
     <value>Pick your widgets — projections, the weekly board, your daily step — and arrange your own dashboard. Your home page, your call.</value>
+  </data>
+  <data name="Pinned" xml:space="preserve">
+    <value>Pinned</value>
   </data>
   <data name="Pinned range" xml:space="preserve">
     <value>Pinned range</value>
@@ -6812,6 +6848,9 @@
   </data>
   <data name="Search board tags…" xml:space="preserve">
     <value>Search board tags…</value>
+  </data>
+  <data name="Search by name" xml:space="preserve">
+    <value>Search by name</value>
   </data>
   <data name="Search by song name in the bar above — every chart has its own page." xml:space="preserve">
     <value>Search by song name in the bar above — every chart has its own page.</value>
@@ -8409,6 +8448,9 @@
   <data name="Two can be active at once, so rotating one costs no downtime. No email goes out when one expires — this page is the whole warning." xml:space="preserve">
     <value>Two can be active at once, so rotating one costs no downtime. No email goes out when one expires — this page is the whole warning.</value>
   </data>
+  <data name="Two versions" xml:space="preserve">
+    <value>Two versions</value>
+  </data>
   <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
     <value>Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it.</value>
   </data>
@@ -8603,6 +8645,9 @@
   </data>
   <data name="Upscores" xml:space="preserve">
     <value>Upscores</value>
+  </data>
+  <data name="Use this avatar" xml:space="preserve">
+    <value>Use this avatar</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Used primarily for debugging</value>
@@ -9622,6 +9667,9 @@
   <data name="{0} at {1}" xml:space="preserve">
     <value>{0} at {1}</value>
   </data>
+  <data name="{0} avatars" xml:space="preserve">
+    <value>{0} avatars</value>
+  </data>
   <data name="{0} beats it at any pass" xml:space="preserve">
     <value>{0} beats it at any pass</value>
   </data>
@@ -9894,6 +9942,9 @@
   </data>
   <data name="{0} of your singles pool" xml:space="preserve">
     <value>{0} of your singles pool</value>
+  </data>
+  <data name="{0} of {1}" xml:space="preserve">
+    <value>{0} of {1}</value>
   </data>
   <data name="{0} of {1} charts" xml:space="preserve">
     <value>{0} of {1} charts</value>

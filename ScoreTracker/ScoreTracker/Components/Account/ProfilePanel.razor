@@ -1,4 +1,6 @@
-﻿@using ScoreTracker.CommunityTools.Contracts.Commands
+﻿@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.CommunityTools.Contracts.Commands
 @using ScoreTracker.CommunityTools.Contracts.Queries
 @using System.Globalization
 @using System.Web
@@ -17,6 +19,55 @@
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Services.Theming
+
+@* The avatar leads the panel: it is the only field here you look at rather than read.
+   Auto follows the official profile on every import; pinned is the player's own choice and
+   imports leave it alone (docs/design/avatar-selection.md). *@
+<div class="av-row">
+    <div class="av-preview">
+        @* Guarded, not defaulted: the avatar loads in OnInitializedAsync, and an img with no src
+           paints a broken-image glyph for the first render. *@
+        @if (_avatar is not null)
+        {
+            <img class="av-preview-big" src="@_avatar.ImageUrl" alt=""/>
+            @* The same picture at the size the app bar shows it, because a 4:3 avatar cropped to
+               a circle loses its edges and that is worth seeing before you commit to it. *@
+            <img class="av-preview-small" src="@_avatar.ImageUrl" alt=""
+                 title="@L["How it looks in the top bar"]"/>
+        }
+    </div>
+    <div class="av-row-meta">
+        <div class="av-cap">@L["Avatar"]</div>
+        <div class="av-row-title">
+            @if (_avatar?.IsPinned == true)
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary">@L["Pinned"]</MudChip>
+            }
+            else
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@L["Auto"]</MudChip>
+            }
+        </div>
+        <MudText Typo="Typo.body2" Style="opacity:.75;">
+            @(_avatar?.IsPinned == true
+                ? L["Imports refresh your scores and game tag but leave this avatar alone."]
+                : L["Follows your PIUGAME profile — every import picks up whatever it wears."])
+        </MudText>
+    </div>
+    <div class="av-row-actions">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isLoadingAvatars"
+                   StartIcon="@Icons.Material.Filled.Face" OnClick="OpenAvatarPicker">@L["Change avatar"]</MudButton>
+        @if (_avatar?.IsPinned == true)
+        {
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="UnpinAvatar">@L["Back to Auto"]</MudButton>
+        }
+    </div>
+</div>
+
+<AvatarPickerDialog Avatars="_avatars" Current="_avatar?.ImageUrl"
+                    @bind-Visible="_showAvatarPicker" OnPicked="PinAvatar"></AvatarPickerDialog>
+
+<MudDivider Class="mb-6"></MudDivider>
 
 <MudGrid>
     <MudItem xs="12" sm="6">
@@ -188,6 +239,23 @@
     </DialogActions>
 </MudDialog>
 
+<style>
+    .av-row { display: grid; grid-template-columns: auto 1fr auto; gap: 1.25rem; align-items: center;
+        margin-bottom: 1.25rem; }
+    .av-preview { position: relative; }
+    .av-preview-big { width: 104px; height: 78px; border-radius: 12px; object-fit: cover; display: block;
+        box-shadow: 0 0 0 1px var(--mud-palette-lines-default); }
+    .av-preview-small { position: absolute; right: -10px; bottom: -10px; width: 36px; height: 36px;
+        border-radius: 50%; object-fit: cover; border: 2px solid var(--mud-palette-surface); }
+    .av-cap { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+    .av-row-title { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin: .15rem 0 .25rem; }
+    .av-row-actions { display: flex; flex-direction: column; gap: .4rem; align-items: stretch; }
+    @@media (max-width: 640px) {
+        .av-row { grid-template-columns: auto 1fr; }
+        .av-row-actions { grid-column: 1 / -1; flex-direction: row; }
+    }
+</style>
+
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
@@ -197,6 +265,64 @@
 @inject IUserRepository Users;
 @code
 {
+    private MyAvatarRecord? _avatar;
+    private IReadOnlyList<AvatarRecord> _avatars = Array.Empty<AvatarRecord>();
+    private bool _avatarsLoaded;
+    private bool _showAvatarPicker;
+    private bool _isLoadingAvatars;
+
+    /// <summary>
+    ///     The catalog is 182 rows and a few hundred KB of markup, so it is fetched on the first
+    ///     open rather than with the page. Cached in the handler, so a second open is free.
+    /// </summary>
+    private async Task OpenAvatarPicker()
+    {
+        // Tracked by a flag rather than by Count: an empty result is still an answer, and
+        // re-asking on every open would query forever for the one case that returns nothing.
+        if (!_avatarsLoaded)
+        {
+            _isLoadingAvatars = true;
+            try
+            {
+                _avatars = await Mediator.Send(new GetAvatarCatalogQuery());
+                _avatarsLoaded = true;
+            }
+            finally
+            {
+                _isLoadingAvatars = false;
+            }
+        }
+
+        _showAvatarPicker = true;
+    }
+
+    private async Task PinAvatar(Uri imageUrl)
+    {
+        await Mediator.Send(new PinAvatarCommand(imageUrl));
+        _showAvatarPicker = false;
+        await RefreshAvatarClaims(L["Avatar updated"]);
+    }
+
+    private async Task UnpinAvatar()
+    {
+        await Mediator.Send(new UnpinAvatarCommand());
+        await RefreshAvatarClaims(L["Back to the avatar from your last import"]);
+    }
+
+    /// <summary>
+    ///     The avatar rides the auth cookie's claims, so the same refresh dance the name and
+    ///     country fields do applies here — see UpdateUser for why javascript is involved. The
+    ///     shell's copy needs no such thing: it reads a UI setting, and writing one evicts the
+    ///     cached settings on its own.
+    /// </summary>
+    private async Task RefreshAvatarClaims(string message)
+    {
+        _avatar = await Mediator.Send(new GetMyAvatarQuery());
+        Snackbar.Add(message, Severity.Success);
+        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
+        await module.InvokeVoidAsync("refreshLogin");
+    }
+
     private string _id = string.Empty;
     private string _name = string.Empty;
     private bool _isPublic = false;
@@ -224,6 +350,7 @@
         _isPublic = CurrentUser.User.IsPublic;
         _isContentLocked = CurrentUser.User.IsContentLocked;
         _countries = (await Users.GetCountries()).OrderBy(c => c.Name);
+        _avatar = await Mediator.Send(new GetMyAvatarQuery());
         _pendingDeletion = await Mediator.Send(new GetPendingAccountDeletionQuery(CurrentUser.User.Id));
         _shareWithAllTools = await Mediator.Send(new GetShareWithAllToolsQuery());
         await RefreshToolCount();

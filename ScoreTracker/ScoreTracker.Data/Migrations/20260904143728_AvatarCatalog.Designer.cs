@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ScoreTracker.Data.Persistence;
 
@@ -11,9 +12,11 @@ using ScoreTracker.Data.Persistence;
 namespace ScoreTracker.Data.Migrations
 {
     [DbContext(typeof(ChartAttemptDbContext))]
-    partial class ChartAttemptDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260904143728_AvatarCatalog")]
+    partial class AvatarCatalog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1780,9 +1783,6 @@ namespace ScoreTracker.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("AvatarIsPinned")
-                        .HasColumnType("bit");
-
                     b.Property<DateTimeOffset>("ClaimsInvalidatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -1794,10 +1794,6 @@ namespace ScoreTracker.Data.Migrations
 
                     b.Property<string>("GameTag")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ImportedProfileImage")
-                        .HasMaxLength(400)
-                        .HasColumnType("nvarchar(400)");
 
                     b.Property<bool>("IsContentLocked")
                         .HasColumnType("bit");

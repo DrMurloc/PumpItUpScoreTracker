@@ -25,6 +25,7 @@ public static class CatalogRegistrationExtensions
         services.AddTransient<IChartFolderBaselineRepository, EFChartFolderBaselineRepository>();
         services.AddTransient<IArchivedSkillTagRepository, EFArchivedSkillTagRepository>();
         services.AddTransient<IChartStepChartRepository, EFChartStepChartRepository>();
+        services.AddTransient<IAvatarRepository, EFAvatarRepository>();
         services.AddTransient<StepChartIngest>();
         services.AddSingleton<IDbModelContribution, CatalogModelContribution>();
         return services;

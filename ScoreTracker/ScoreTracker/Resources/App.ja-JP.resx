@@ -916,12 +916,21 @@
   <data name="Automatic" xml:space="preserve">
     <value>自動</value>
   </data>
+  <data name="Available in" xml:space="preserve">
+    <value>収録バージョン</value>
+  </data>
   <data name="Avatar" xml:space="preserve">
 	  <value>アバター</value>
 	  
   <comment>自分のアイコン</comment></data>
+  <data name="Avatar In Use" xml:space="preserve">
+    <value>現在</value>
+  </data>
   <data name="avatar match" xml:space="preserve">
     <value>アバター一致</value>
+  </data>
+  <data name="Avatar updated" xml:space="preserve">
+    <value>アバターを変更しました</value>
   </data>
   <data name="Average" xml:space="preserve">
     <value>平均</value>
@@ -947,8 +956,14 @@
   <data name="Back" xml:space="preserve">
     <value>戻る</value>
   </data>
+  <data name="Back to Auto" xml:space="preserve">
+    <value>自動に戻す</value>
+  </data>
   <data name="Back to back, from here" xml:space="preserve">
     <value>ここから連続で</value>
+  </data>
+  <data name="Back to the avatar from your last import" xml:space="preserve">
+    <value>前回のインポートのアバターに戻しました</value>
   </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>ティアリストに戻る</value>
@@ -1314,6 +1329,9 @@
   <data name="Center" xml:space="preserve">
 	  <value>中央</value>
   </data>
+  <data name="Change avatar" xml:space="preserve">
+    <value>アバターを変更</value>
+  </data>
   <data name="Change Card" xml:space="preserve">
     <value>カードを変更</value>
   </data>
@@ -1459,6 +1477,9 @@
   </data>
   <data name="Choose a new creator" xml:space="preserve">
     <value>新しい作成者を選ぶ</value>
+  </data>
+  <data name="Choose an avatar" xml:space="preserve">
+    <value>アバターを選ぶ</value>
   </data>
   <data name="Choose the account to merge with" xml:space="preserve">
     <value>統合するアカウントを選択してください</value>
@@ -2763,6 +2784,9 @@
   <data name="Follows your competitive level as it moves." xml:space="preserve">
     <value>コンペティティブレベルの変化に追従します。</value>
   </data>
+  <data name="Follows your PIUGAME profile — every import picks up whatever it wears." xml:space="preserve">
+    <value>PIUGAMEのプロフィールに追従します — インポートのたびに、そこで使っているものを取り込みます。</value>
+  </data>
   <data name="Footswitches" xml:space="preserve">
     <value>フットスイッチ</value>
   </data>
@@ -3150,6 +3174,9 @@
   <data name="How is this personalized?" xml:space="preserve">
     <value>どうパーソナライズされている？</value>
   </data>
+  <data name="How it looks in the top bar" xml:space="preserve">
+    <value>上部バーでの見え方</value>
+  </data>
   <data name="How it works" xml:space="preserve">
     <value>仕組み</value>
   </data>
@@ -3368,6 +3395,9 @@
   </data>
   <data name="Importing with your PIUGAME login records scores automatically — manual entry is the fallback." xml:space="preserve">
     <value>PIUGAMEログインでインポートするとスコアは自動記録されます — 手動入力は代替手段です。</value>
+  </data>
+  <data name="Imports refresh your scores and game tag but leave this avatar alone." xml:space="preserve">
+    <value>インポートはスコアとゲームタグを更新しますが、このアバターには触れません。</value>
   </data>
   <data name="Impossible at level {0} — the overflow is thinner than one bad." xml:space="preserve">
     <value>レベル {0} では不可能 — オーバーフローが Bad 1回より薄いためです。</value>
@@ -4437,6 +4467,9 @@
   </data>
   <data name="No account needed to look around" xml:space="preserve">
     <value>見て回るのにアカウントは不要</value>
+  </data>
+  <data name="No avatar by that name." xml:space="preserve">
+    <value>その名前のアバターはありません。</value>
   </data>
   <data name="No big wins yet" xml:space="preserve">
     <value>まだ大きな記録はありません</value>
@@ -5554,6 +5587,9 @@
   </data>
   <data name="Pick your widgets — projections, the weekly board, your daily step — and arrange your own dashboard. Your home page, your call." xml:space="preserve">
     <value>ウィジェットを選んで — 予測、週間ボード、今日の一歩 — 自分のダッシュボードを組み立てよう。ホームページはあなたが決める。</value>
+  </data>
+  <data name="Pinned" xml:space="preserve">
+    <value>固定中</value>
   </data>
   <data name="Pinned range" xml:space="preserve">
     <value>固定範囲</value>
@@ -6812,6 +6848,9 @@
   </data>
   <data name="Search board tags…" xml:space="preserve">
     <value>ボードのタグを検索…</value>
+  </data>
+  <data name="Search by name" xml:space="preserve">
+    <value>名前で検索</value>
   </data>
   <data name="Search by song name in the bar above — every chart has its own page." xml:space="preserve">
     <value>上の検索バーで曲名を検索してください — 譜面ごとに専用ページがあります。</value>
@@ -8409,6 +8448,9 @@
   <data name="Two can be active at once, so rotating one costs no downtime. No email goes out when one expires — this page is the whole warning." xml:space="preserve">
     <value>同時に 2 つまで有効にできるので、入れ替えに停止時間はかかりません。期限切れのメール通知はありません — 警告はこのページだけです。</value>
   </data>
+  <data name="Two versions" xml:space="preserve">
+    <value>2種類</value>
+  </data>
   <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
     <value>同じスキルのふたつの表示。左は上のブレンドに使われ、右はフォルダー統計と同じこのフォルダの数値です。</value>
   </data>
@@ -8603,6 +8645,9 @@
   </data>
   <data name="Upscores" xml:space="preserve">
     <value>スコア更新</value>
+  </data>
+  <data name="Use this avatar" xml:space="preserve">
+    <value>このアバターを使う</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>デバッグ用</value>
@@ -9622,6 +9667,9 @@
   <data name="{0} at {1}" xml:space="preserve">
     <value>{1} の {0}</value>
   </data>
+  <data name="{0} avatars" xml:space="preserve">
+    <value>アバター{0}件</value>
+  </data>
   <data name="{0} beats it at any pass" xml:space="preserve">
     <value>{0}はどんなクリアでも上回ります</value>
   </data>
@@ -9894,6 +9942,9 @@
   </data>
   <data name="{0} of your singles pool" xml:space="preserve">
     <value>あなたの Singles プールのうち {0}</value>
+  </data>
+  <data name="{0} of {1}" xml:space="preserve">
+    <value>{1}件中{0}件</value>
   </data>
   <data name="{0} of {1} charts" xml:space="preserve">
     <value>{1} 譜面中 {0}</value>

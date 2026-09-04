@@ -166,14 +166,15 @@ namespace ScoreTracker.OfficialMirror.Application
                 _logger.LogWarning(e, "Session delivery threw during import for {UserId}", userId);
             }
 
-            // A scrape that yielded no recognizable avatar keeps the player's existing
-            // one — persisting the miss is what used to break avatars sporadically.
-            if (accountData.AvatarUrl != null)
-                await _mediator.Send(new SaveUserUiSettingCommand("ProfileImage", accountData.AvatarUrl.ToString()),
-                    cancellationToken);
             await _mediator.Send(new SaveUserUiSettingCommand("GameTag", accountData.AccountName), cancellationToken);
             // User writes go through Identity contracts — the Mirror never touches
             // IUserRepository (ADR-001: writes are owned by their vertical).
+            //
+            // The avatar is stored in two places, and BOTH of them are this command's job now:
+            // User.ProfileImage for the claims, and the ProfileImage UI setting for the shell's
+            // app-bar avatar. The Mirror used to write that setting itself, right here, which
+            // meant any rule about whose avatar wins had to be known in two verticals. It is not
+            // the Mirror's rule to know (docs/design/avatar-selection.md §2).
             await _mediator.Send(
                 new UpdateUserGameProfileCommand(accountData.AccountName, accountData.AvatarUrl),
                 cancellationToken);

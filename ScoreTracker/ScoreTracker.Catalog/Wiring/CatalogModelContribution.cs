@@ -15,6 +15,7 @@ public sealed class CatalogModelContribution : IDbModelContribution
 {
     public void Contribute(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<AvatarEntity>().ToTable("Avatar");
         modelBuilder.Entity<SongNameLanguageEntity>().ToTable("SongNameLanguage");
         modelBuilder.Entity<ExternalChartAliasEntity>().ToTable("ExternalChartAlias");
         // Still mapped, still read: the Chabala lens shows his archived hand tags, and it is

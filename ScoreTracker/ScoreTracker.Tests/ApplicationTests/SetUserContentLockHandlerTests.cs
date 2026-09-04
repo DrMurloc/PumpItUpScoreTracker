@@ -37,6 +37,34 @@ public sealed class SetUserContentLockHandlerTests
         return (new SetUserContentLockHandler(users.Object, currentUser.Object, clock.Object, bus.Object), users, bus);
     }
 
+    /// <summary>
+    ///     Same whole-row trap as UpdateUserHandler. Locking someone's content is a moderation
+    ///     action about their name; it is not a reason to silently return their chosen avatar to
+    ///     the importer.
+    /// </summary>
+    [Fact]
+    public async Task LockingContentKeepsAPinnedAvatar()
+    {
+        var pinned = new Uri("https://piuimages.arroweclip.se/avatars/p2/pinned.png");
+        var imported = new Uri("https://piuimages.arroweclip.se/avatars/p2/imported.png");
+        var existing = new UserBuilder()
+            .WithName("Original")
+            .WithGameTag("GAMETAG")
+            .WithPinnedAvatar(pinned)
+            .WithImportedProfileImage(imported)
+            .Build();
+        var (handler, users, _) = Build(new UserBuilder().WithId(AdminId));
+        users.Setup(u => u.GetUser(existing.Id, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
+
+        await handler.Handle(new SetUserContentLockCommand(existing.Id, true, null), CancellationToken.None);
+
+        users.Verify(u => u.SaveUser(It.Is<User>(saved =>
+                saved.AvatarIsPinned
+                && saved.ProfileImage == pinned
+                && saved.ImportedProfileImage == imported),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task ThrowsWhenActorIsNotAdmin()
     {
