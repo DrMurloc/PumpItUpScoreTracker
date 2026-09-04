@@ -8211,6 +8211,22 @@ button.chart-card-art {
     overflow: hidden;
 }
 
+/* The label reserves the room its own wash needs. An absolutely positioned pseudo-element
+   contributes nothing to its parent's width, and most boards wrap the label in a shrink-to-fit
+   `overflow: hidden` box (`.olb-player-name` is `inline-flex`, so it is exactly as wide as
+   avatar + name) — so a flag drawn wider than the name was clipped straight back to the name's
+   edge and every board rendered as though the flag were still name-sized. That is not a
+   caller's bug to fix: a component owns its own narrow-width behaviour (UX rule 3), so the
+   label states the width the wash occupies and the wrapper shrink-wraps around it.
+   The wash is (label height + 6px) tall at 11:7, and the label is as tall as the avatar or one
+   line of the name, whichever wins. This only ever binds on a name SHORTER than its flag —
+   a longer name is already wider than this and the min-width is inert — so it can never steal
+   room from a name that needed it. */
+.user-label.has-flag {
+    --label-wash-h: calc(max(var(--label-avatar-size, 0px), 1lh) + 6px);
+    min-width: calc(var(--label-wash-left, -6px) + var(--label-wash-h) * 11 / 7);
+}
+
 /* The country wash. The flag paints behind the NAME — never under the avatar, which is a
    picture already — at its own aspect, so it reads as the player's country rather than as a
    band of colour across the row. isolation on the label is what keeps a
