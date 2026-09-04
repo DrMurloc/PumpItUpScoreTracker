@@ -8211,6 +8211,22 @@ button.chart-card-art {
     overflow: hidden;
 }
 
+/* The label reserves the room its own wash needs. An absolutely positioned pseudo-element
+   contributes nothing to its parent's width, and most boards wrap the label in a shrink-to-fit
+   `overflow: hidden` box (`.olb-player-name` is `inline-flex`, so it is exactly as wide as
+   avatar + name) — so a flag drawn wider than the name was clipped straight back to the name's
+   edge and every board rendered as though the flag were still name-sized. That is not a
+   caller's bug to fix: a component owns its own narrow-width behaviour (UX rule 3), so the
+   label states the width the wash occupies and the wrapper shrink-wraps around it.
+   The wash is (label height + 6px) tall at 11:7, and the label is as tall as the avatar or one
+   line of the name, whichever wins. This only ever binds on a name SHORTER than its flag —
+   a longer name is already wider than this and the min-width is inert — so it can never steal
+   room from a name that needed it. */
+.user-label.has-flag {
+    --label-wash-h: calc(max(var(--label-avatar-size, 0px), 1lh) + 6px);
+    min-width: calc(var(--label-wash-left, -6px) + var(--label-wash-h) * 11 / 7);
+}
+
 /* The country wash. The flag paints behind the NAME — never under the avatar, which is a
    picture already — at its own aspect, so it reads as the player's country rather than as a
    band of colour across the row. isolation on the label is what keeps a
@@ -8221,17 +8237,29 @@ button.chart-card-art {
 .user-label.has-flag::before {
     content: "";
     position: absolute;
-    inset: -3px -6px -3px var(--label-wash-left, -6px);
+    top: -3px;
+    bottom: -3px;
+    left: var(--label-wash-left, -6px);
+    /* The box is the FLAG, not the name: the row gives it its height and the flag's own 11:7
+       gives it its width — every country PNG is 22x14 — so a two-letter name and a
+       twenty-letter one carry the same flag. Bounded by both edges instead, as it was, a short
+       name squeezed the box below the flag's full-height width and `contain` shrank the flag to
+       fit it: the country ended early and sat short of the row (owner, field test 4: "the
+       underlying flags for usernames are cutting off early if the name is short. we should have
+       flag be full width regardless of username length"). `right` stays auto — that is what
+       lets the width come from the ratio rather than from the name. A short name now carries a
+       flag wider than itself, which the bounded callers clip at their column edge. */
+    aspect-ratio: 11 / 7;
     z-index: -1;
     border-radius: 6px;
     background-image: var(--label-flag);
     background-position: left center;
-    /* contain, never cover: the box is as wide as the name and a flag is about 3:2, so cover
-       scales one until it fills and crops away everything but a blown-up horizontal slice —
-       Germany becomes a red bar, Japan a white one. A flag has to keep its own proportions to
-       read as that country at all (owner, field test 2: "we shouldn't stretch the flags, just
-       let them be their natural aspect ratio"), so it sits at the head of the name at whatever
-       size the row's height allows, and a long name simply has bare board after it. */
+    /* contain, never cover: a flag has to keep its own proportions to read as that country at
+       all (owner, field test 2: "we shouldn't stretch the flags, just let them be their natural
+       aspect ratio"), and cover scales one until it fills the box, cropping away everything but
+       a blown-up horizontal slice — Germany a red bar, Japan a white one. The box carries the
+       flag's ratio itself now, so contain fills it exactly; it stays contain so a country that
+       ever ships at another shape letterboxes rather than stretches. */
     background-size: contain;
     background-repeat: no-repeat;
     /* A third of a flag over a dark board is a smudge you have to be told about (owner, field
