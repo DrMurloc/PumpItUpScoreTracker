@@ -1,4 +1,4 @@
-@using ScoreTracker.Catalog.Contracts
+﻿@using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Services.Theming
 
@@ -86,9 +86,12 @@
                     @* Lazy: 170 tiles is several megabytes if they all load, and a
                        search-and-pick touches a couple of dozen. *@
                     <img src="@picture.ImageUrl" alt="" loading="lazy"/>
+                    @* Not "Now": a lowercase "now" key already exists for timestamps, and two
+                       resx keys differing only by case silently drop one another in every
+                       non-English locale. *@
                     @if (avatar.Pictures.Any(p => p.ImageUrl == Current))
                     {
-                        <span class="av-now">@L["Now"]</span>
+                        <span class="av-now">@L["Wearing"]</span>
                     }
                     @if (avatar.Pictures.Count > 1)
                     {
