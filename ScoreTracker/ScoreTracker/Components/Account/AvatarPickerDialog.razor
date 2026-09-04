@@ -1,0 +1,212 @@
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.Theming
+
+@* The avatar picker. One list of every avatar the official pages publish, deduped: the catalog
+   is one set of avatars in three skins, so a section per mix would show most of them three times
+   (docs/design/avatar-selection.md §6). Styles live in this component's own <style> block, which
+   is fine because the classes are unique to it — the trap is BORROWING classes from another
+   page's block, not carrying your own. *@
+
+<MudDialog @bind-Visible="Visible" Options="_options">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L["Choose an avatar"]</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_selected is not null)
+        {
+            <div class="av-strip">
+                <img class="av-strip-img" src="@_selected.Pictures[_variant].ImageUrl" alt=""/>
+                <div class="av-strip-meta">
+                    <div class="av-strip-name">@_selected.Name</div>
+
+                    @* Availability, not a control: which mixes list this avatar at all. Each chip
+                       takes its own mix's brand hue straight from that mix's palette, which is
+                       what a palette is for — var(--mix-*) could not do it, because only the mix
+                       you are currently in is ever emitted as tokens. *@
+                    <div class="av-avail">
+                        <span class="av-cap">@L["Available in"]</span>
+                        @foreach (var mix in MixThemes.ThemedMixes)
+                        {
+                            var has = _selected.Mixes.Contains(mix);
+                            <span class="av-mixtag @(has ? "" : "av-off")"
+                                  style="@(has ? $"color:{MixThemes.PaletteFor(mix).Primary};" : null)">
+                                @mix.GetName()
+                            </span>
+                        }
+                    </div>
+
+                    @* Only the twelve avatars Phoenix 2 genuinely redrew reach this. A frame or a
+                       resolution change is not a second version and never gets a chooser. *@
+                    @if (_selected.Pictures.Count > 1)
+                    {
+                        <div class="av-variants">
+                            <span class="av-cap">@L["Two versions"]</span>
+                            @for (var i = 0; i < _selected.Pictures.Count; i++)
+                            {
+                                var index = i;
+                                var picture = _selected.Pictures[i];
+                                <button type="button"
+                                        class="av-vbtn @(index == _variant ? "av-on" : "")"
+                                        title="@string.Join(" + ", picture.Mixes.Select(m => m.GetName()))"
+                                        @onclick="() => _variant = index">
+                                    <img src="@picture.ImageUrl" alt=""/>
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_saving"
+                           OnClick="Use">@L["Use this avatar"]</MudButton>
+            </div>
+        }
+
+        <div class="av-toolbar">
+            <MudTextField T="string" Value="_search" ValueChanged="OnSearch" Immediate="true"
+                          Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                          Placeholder="@L["Search by name"]"></MudTextField>
+            <span class="av-count">
+                @(string.IsNullOrWhiteSpace(_search)
+                    ? L["{0} avatars", _all.Count]
+                    : L["{0} of {1}", _filtered.Count, _all.Count])
+            </span>
+        </div>
+
+        <div class="av-grid">
+            @if (_filtered.Count == 0)
+            {
+                <div class="av-empty">@L["No avatar by that name."]</div>
+            }
+            @foreach (var avatar in _filtered)
+            {
+                var picture = ReferenceEquals(avatar, _selected) ? avatar.Pictures[_variant] : avatar.Pictures[0];
+                <button type="button" class="av-tile @(ReferenceEquals(avatar, _selected) ? "av-on" : "")"
+                        title="@avatar.Name" @onclick="() => Select(avatar)">
+                    @* Lazy: 170 tiles is several megabytes if they all load, and a
+                       search-and-pick touches a couple of dozen. *@
+                    <img src="@picture.ImageUrl" alt="" loading="lazy"/>
+                    @if (avatar.Pictures.Any(p => p.ImageUrl == Current))
+                    {
+                        <span class="av-now">@L["Now"]</span>
+                    }
+                    @if (avatar.Pictures.Count > 1)
+                    {
+                        <span class="av-two" title="@L["Two versions"]">2</span>
+                    }
+                    <span class="av-tname">@avatar.Name</span>
+                </button>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close">@L["Cancel"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .av-strip { display: grid; grid-template-columns: auto 1fr auto; gap: 1rem; align-items: center;
+        padding: .75rem; margin-bottom: .5rem; border-radius: 8px; background: var(--mud-palette-background-gray); }
+    .av-strip-img { width: 176px; height: 132px; border-radius: 8px; object-fit: cover; display: block; }
+    .av-strip-name { font-size: 1.4rem; font-weight: 600; line-height: 1.15; }
+    .av-cap { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+    .av-avail { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; margin-top: .35rem; }
+    .av-mixtag { font-size: .78rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+        padding: 0 .45rem; border-radius: 4px; border: 1px solid currentColor; line-height: 1.6; }
+    .av-mixtag.av-off { opacity: .3; border-style: dashed; }
+    .av-variants { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-top: .55rem; }
+    .av-vbtn { border: 1px solid var(--mud-palette-lines-default); background: none; border-radius: 6px;
+        padding: 3px; cursor: pointer; line-height: 0; }
+    .av-vbtn.av-on { border-color: var(--mud-palette-primary); }
+    .av-vbtn img { width: 52px; height: 39px; border-radius: 4px; object-fit: cover; display: block; }
+    .av-toolbar { display: flex; align-items: center; gap: 1rem; margin-bottom: .5rem; }
+    .av-toolbar > :first-child { flex: 1; }
+    .av-count { font-size: .8rem; opacity: .7; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .av-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: .6rem;
+        max-height: 46vh; overflow-y: auto; align-content: start; padding-right: .25rem; }
+    .av-empty { grid-column: 1 / -1; text-align: center; padding: 1.5rem 0; opacity: .7; }
+    .av-tile { position: relative; display: flex; flex-direction: column; gap: .3rem; text-align: left;
+        background: none; border: 0; padding: 0; cursor: pointer; border-radius: 8px; }
+    .av-tile img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; display: block;
+        box-shadow: 0 0 0 1px var(--mud-palette-lines-default); }
+    .av-tile.av-on img { box-shadow: 0 0 0 2px var(--mud-palette-primary); }
+    .av-tile:focus-visible { outline: 2px solid var(--mud-palette-secondary); outline-offset: 3px; }
+    .av-tname { font-size: .8rem; font-weight: 500; line-height: 1.15; overflow: hidden;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .av-now { position: absolute; top: 5px; left: 5px; font-size: .62rem; font-weight: 700;
+        letter-spacing: .06em; text-transform: uppercase; padding: 0 .35rem; border-radius: 4px;
+        background: var(--mud-palette-secondary); color: var(--mud-palette-secondary-text); }
+    .av-two { position: absolute; top: 5px; right: 5px; font-size: .66rem; font-weight: 700;
+        padding: 0 .3rem; border-radius: 4px; background: var(--mud-palette-surface);
+        border: 1px solid var(--mud-palette-lines-default); }
+    @@media (max-width: 640px) {
+        .av-strip { grid-template-columns: auto 1fr; }
+        .av-strip-img { width: 110px; height: 83px; }
+        .av-strip > .mud-button-root { grid-column: 1 / -1; }
+        .av-grid { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
+    }
+</style>
+
+@inject IStringLocalizer<App> L
+@code {
+
+    /// <summary>Every avatar in the catalog, already ordered.</summary>
+    [Parameter] [EditorRequired] public IReadOnlyList<AvatarRecord> Avatars { get; set; } = Array.Empty<AvatarRecord>();
+
+    /// <summary>The avatar being worn, so the grid can mark it.</summary>
+    [Parameter] public Uri? Current { get; set; }
+
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+
+    /// <summary>Raised with the chosen picture's url. The parent owns saving it.</summary>
+    [Parameter] public EventCallback<Uri> OnPicked { get; set; }
+
+    private readonly DialogOptions _options = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    private IReadOnlyList<AvatarRecord> _all = Array.Empty<AvatarRecord>();
+    private IReadOnlyList<AvatarRecord> _filtered = Array.Empty<AvatarRecord>();
+    private AvatarRecord? _selected;
+    private int _variant;
+    private string _search = string.Empty;
+    private bool _saving;
+
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(_all, Avatars)) return;
+
+        _all = Avatars;
+        _filtered = _all;
+        // Open on whatever they are wearing, so the panel is never empty and the grid's first
+        // click is a change rather than an orientation step.
+        _selected ??= _all.FirstOrDefault(a => a.Pictures.Any(p => p.ImageUrl == Current)) ?? _all.FirstOrDefault();
+        _variant = 0;
+    }
+
+    private void OnSearch(string? term)
+    {
+        _search = term ?? string.Empty;
+        _filtered = string.IsNullOrWhiteSpace(_search)
+            ? _all
+            : _all.Where(a => a.Name.Contains(_search, StringComparison.OrdinalIgnoreCase)).ToArray();
+    }
+
+    private void Select(AvatarRecord avatar)
+    {
+        _selected = avatar;
+        _variant = 0;
+    }
+
+    private async Task Use()
+    {
+        if (_selected is null) return;
+        _saving = true;
+        await OnPicked.InvokeAsync(_selected.Pictures[_variant].ImageUrl);
+    }
+
+    private Task Close()
+    {
+        return VisibleChanged.InvokeAsync(false);
+    }
+
+}
