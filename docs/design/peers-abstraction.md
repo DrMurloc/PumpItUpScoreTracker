@@ -41,7 +41,7 @@ Owner rulings from the 2026-09-05 workshop, in his words where quoted.
 | # | Decision |
 |---|---|
 | D1 | **A player picks their peers on `/Account`, in one dialog, and the choice is the union of what they tick**: Rivals · Competitive level · PUMBILITY peers · any of their communities (regions included, and World). *"Your final peers list is a union."* |
-| D2 | **One setting, sitewide** — not per mix, not per chart type. Each source resolves per mix and chart type at read time; a source that is empty on a mix (PUMBILITY peers on Phoenix 1) contributes nothing and the dialog greys it as *Phoenix 2 only*. |
+| D2 | **One setting, sitewide** — not per mix, not per chart type. Each source resolves per mix and chart type at read time; a source that is empty on a mix (PUMBILITY peers on Phoenix 1) contributes nothing and the tab greys it as *Phoenix 2 only*. |
 | D3 | **Display logic only.** *"Stuff like personalized tier lists or suggested charts still should use whatever peers they have since we calibrate those to peer group for accuracy. We are only affecting display logic, not calculative logic."* The projection cohorts (`ScoreProjector`), the personalized tier-list blends, the PUMBILITY page's own peer group and the Pumbility Push goal keep their calibrated pools. Only the **standing** that colors a score — and the surfaces that print it — follow the setting. |
 | D4 | **Hot Streak follows the selected peers.** Its "beat X% of peers" bar reads the same standing the colors do; it was the one calculative-looking consumer the owner moved to the display side. |
 | D5 | **Discord cards and community feeds are untouched**: they keep the ±0.5 competitive cohort captured at import. *"Discord notifications we'll solve in a future session."* `HighlightCaptureSaga`, `HighlightDetail` and `CommunitySaga.PeerCaption` do not change. |
@@ -59,7 +59,7 @@ Owner rulings from the 2026-09-05 workshop, in his words where quoted.
 | D17 | **The tier-card score is its own tap target.** The Comfortable card's head strip opens details; the score inside it opened details too, and its `ScoreBreakdown` rendered with the tooltip off (the stacked grade/plate layout needs bare children), so the standing was unreachable. The score now stops propagation and opens the popover; the jacket and the name keep opening details. Table density gets the popover on its Better Than cell. |
 | D18 | **The Account Stats widget lists your peers**, nearest competitive level first, capped at 25 as today, each row tagged with why they are a peer (RIVAL, community initials, ±0.5, PMB). Board-only rivals close the list with a BOARD tag and no level. *"Match players on"* keeps choosing which level the rows print and sort by; who is on the list comes from the setting. |
 | D19 | **Someone else's sessions page colors by the competitive default.** The peer choice is a personal preference and its rivals and communities are the owner's to see; a public player's page, viewed by anyone but them, reads the ±0.5 band with no setting. |
-| D20 | **Defaults for a player who never opens the dialog** reproduce today's page: Competitive level ticked alone, judgement spectrum, glow at Top 10%. |
+| D20 | **Defaults for a player who never opens the tab** reproduce today's page: Competitive level ticked alone, judgement spectrum, glow at Top 10%. |
 | D21 | **Boards rank passes first.** The chart boards ranked every recorded score, so a broken 990k sat above a passing 950k and a source line's `#2 of 5` disagreed with the six-row board it opened. Passes rank first; broken attempts follow, still drawn with the broken grade. |
 | D22 | **The implementation lives in Rivals**, not a new vertical — *"Rivals."* — under the same "until a Peers vertical exists" note as the visibility reader. |
 | D23 | **American spelling.** Color, colored, customize. Existing British keys are fixed only where this work already replaces them. |
@@ -74,6 +74,7 @@ Owner rulings from the 2026-09-05 workshop, in his words where quoted.
 | D32 | **A line's board is for the opening it was tapped in.** The dialog forgets the override on close, so reopening the same chart from a host that asked for World opens on World. |
 | D33 | **Peer rows are cached by the peer set**, the subject put back: two players in one band share one read; a rival added a minute ago is a new set and is read at once instead of counting as one who has not passed it for fifteen minutes; the roster's two bulk reads, which ran on every dashboard load, ride the same key. Sixteen bytes of SHA-256, because a colliding key would serve another set's rows without a word. |
 | D34 | **The clubmate edge is for clubs.** World and a country tag the roster row like any community (D18); the green edge means a club everywhere on the site, so a peer who shares only your country wears the tag and not the edge. |
+| D35 | **Field test (owner, 2026-09-05).** The settings are their own tab on `/Account` (`?tab=peers`), not a dialog behind a Profile card; a radio's text toggles it; the two glow inputs share one width; the preview stacks grade over plate beside the number as the tier card does; a popover line's board request opens the dialog on the Leaderboard tab whatever tab was remembered; and closing the popover by tapping outside stops at the popover instead of opening the card's details. |
 
 ## 3. What a peer pool is
 
@@ -115,8 +116,8 @@ own band, the tier-list blend its own — and this document does not touch them.
   Subject defaults to the viewer; a subject who is not the viewer gets `Default` (D19).
 - `GetMyPeerRosterQuery(mix, dimension, take)` — the widget's list (D18): the union, visibility
   through `IPlayerVisibilityReader`, levels through `IPlayerStatsReader.GetStats`, ghosts appended.
-- `GetPeerSourceCatalogQuery(mix)` — what the Account dialog lists: every source the viewer could
-  tick, with its member sets per chart type, so the dialog's "your peers right now" tally is the
+- `GetPeerSourceCatalogQuery(mix)` — what the Account tab lists: every source the viewer could
+  tick, with its member sets per chart type, so the tab's "your peers right now" tally is the
   same union the reader would compute.
 
 `PeerStandingCalculator` is the pure arithmetic (§4.1's rules), unit-tested on its own. Caching:
@@ -147,7 +148,7 @@ the split the old ranking saga used and the reason a fresh import recolors immed
   `PeerStandingPopover` on click, and stops the click there. `ScoreBreakdown` no longer takes a
   ranking. Hosts: the Sessions rows and highlight cards, the tier-list card and table, the chart
   details dialog, the chart page's *Your best*, the upload results table.
-- `PeersAndColorsDialog` on the Profile tab, with the summary card that opens it.
+- `PeersAndColorsPanel`, its own tab on `/Account` (`?tab=peers`, D35); the Profile tab's summary card and the dialog behind it went with the field test.
 - The Account Stats widget's roster (D18); the chart boards' passes-first order (D21).
 
 ## 5. What the player-page PR left behind, and what this one does with it

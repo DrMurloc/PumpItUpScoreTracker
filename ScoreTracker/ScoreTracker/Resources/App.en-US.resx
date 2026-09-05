@@ -466,9 +466,6 @@
   <data name="A score three in four of your peers reach." xml:space="preserve">
     <value>A score three in four of your peers reach.</value>
   </data>
-  <data name="a single hue" xml:space="preserve">
-    <value>a single hue</value>
-  </data>
   <data name="A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0." xml:space="preserve">
     <value>A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0.</value>
   </data>
@@ -1614,9 +1611,6 @@
   <data name="Color your scores by" xml:space="preserve">
     <value>Color your scores by</value>
   </data>
-  <data name="colored by nothing" xml:space="preserve">
-    <value>nothing</value>
-  </data>
   <data name="Colored by your standing among your peers" xml:space="preserve">
     <value>Colored by your standing among your peers</value>
   </data>
@@ -2068,9 +2062,6 @@
   </data>
   <data name="Custom Scoring Formula" xml:space="preserve">
 	  <value>Custom Scoring Formula</value>
-  </data>
-  <data name="Customize" xml:space="preserve">
-    <value>Customize</value>
   </data>
   <data name="Cycle all credential keys" xml:space="preserve">
     <value>Cycle all credential keys</value>
@@ -2985,9 +2976,6 @@
   <data name="Glow" xml:space="preserve">
     <value>Glow</value>
   </data>
-  <data name="Glow: off" xml:space="preserve">
-    <value>off</value>
-  </data>
   <data name="Glow: place" xml:space="preserve">
     <value>place</value>
   </data>
@@ -3801,9 +3789,6 @@
   </data>
   <data name="Letter grades on {0}" xml:space="preserve">
     <value>Letter grades on {0}</value>
-  </data>
-  <data name="letter-grade metals" xml:space="preserve">
-    <value>letter-grade metals</value>
   </data>
   <data name="Level" xml:space="preserve">
 	  <value>Level</value>
@@ -4771,9 +4756,6 @@
   <data name="Nobody rivals you yet" xml:space="preserve">
     <value>Nobody rivals you yet</value>
   </data>
-  <data name="nobody yet" xml:space="preserve">
-    <value>nobody yet</value>
-  </data>
   <data name="None" xml:space="preserve">
 	  <value>None</value>
   </data>
@@ -5171,18 +5153,6 @@
   <data name="On every chart" xml:space="preserve">
     <value>On every chart</value>
   </data>
-  <data name="on first place" xml:space="preserve">
-    <value>on first place</value>
-  </data>
-  <data name="on Perfect Games only" xml:space="preserve">
-    <value>on Perfect Games only</value>
-  </data>
-  <data name="on the top {0} places" xml:space="preserve">
-    <value>on the top {0} places</value>
-  </data>
-  <data name="on the top {0}%" xml:space="preserve">
-    <value>on the top {0}%</value>
-  </data>
   <data name="on this device only. Useless on its own." xml:space="preserve">
     <value>on this device only. Useless on its own.</value>
   </data>
@@ -5200,9 +5170,6 @@
   </data>
   <data name="One break every N notes" xml:space="preserve">
     <value>One break every N notes</value>
-  </data>
-  <data name="One community" xml:space="preserve">
-    <value>One community</value>
   </data>
   <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
     <value>One configurable graph of your scores, grades, plates, or clears by level.</value>
@@ -6957,9 +6924,6 @@
   <data name="Scores by competitive level" xml:space="preserve">
     <value>Scores by competitive level</value>
   </data>
-  <data name="Scores colored by {0}, glow {1}." xml:space="preserve">
-    <value>Scores colored by {0}, glow {1}.</value>
-  </data>
   <data name="Scores from before we started recording sessions can't be undone — we didn't capture when they arrived, only when they were played. You can still delete them." xml:space="preserve">
     <value>Scores from before we started recording sessions can't be undone — we didn't capture when they arrived, only when they were played. You can still delete them.</value>
   </data>
@@ -7895,9 +7859,6 @@
   <data name="That session was undone, so it no longer exists. Showing your most recent one instead." xml:space="preserve">
     <value>That session was undone, so it no longer exists. Showing your most recent one instead.</value>
   </data>
-  <data name="the actual letter grade" xml:space="preserve">
-    <value>the actual letter grade</value>
-  </data>
   <data name="The arc" xml:space="preserve">
     <value>The arc</value>
   </data>
@@ -7939,9 +7900,6 @@
   </data>
   <data name="The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs." xml:space="preserve">
     <value>The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs.</value>
-  </data>
-  <data name="the classic ladder" xml:space="preserve">
-    <value>the classic ladder</value>
   </data>
   <data name="The cliff, not a slope" xml:space="preserve">
     <value>The cliff, not a slope</value>
@@ -8009,9 +7967,6 @@
   <data name="The intro is the danger zone" xml:space="preserve">
     <value>The intro is the danger zone</value>
   </data>
-  <data name="the judgement spectrum" xml:space="preserve">
-    <value>the judgement spectrum</value>
-  </data>
   <data name="The key is how your code proves it is your tool." xml:space="preserve">
     <value>The key is how your code proves it is your tool.</value>
   </data>
@@ -8075,9 +8030,6 @@
   <data name="The plate, magnified — Rough Game to Perfect Game, priced on a {0}" xml:space="preserve">
     <value>The plate, magnified — Rough Game to Perfect Game, priced on a {0}</value>
   </data>
-  <data name="the podium" xml:space="preserve">
-    <value>the podium</value>
-  </data>
   <data name="the pools above average +{0} — about a {1}" xml:space="preserve">
     <value>the pools above average +{0} — about a {1}</value>
   </data>
@@ -8101,9 +8053,6 @@
   </data>
   <data name="The rainbow is expensive" xml:space="preserve">
     <value>The rainbow is expensive</value>
-  </data>
-  <data name="the result screen" xml:space="preserve">
-    <value>the result screen</value>
   </data>
   <data name="The roster is visible to everyone; management controls appear based on your role." xml:space="preserve">
     <value>The roster is visible to everyone; management controls appear based on your role.</value>
@@ -8392,9 +8341,6 @@
   </data>
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts.</value>
-  </data>
-  <data name="three steps" xml:space="preserve">
-    <value>three steps</value>
   </data>
   <data name="Thresholds — each becomes a line" xml:space="preserve">
     <value>Thresholds — each becomes a line</value>
@@ -9684,9 +9630,6 @@
   <data name="Your peers' pools have nothing in them yet." xml:space="preserve">
     <value>Your peers' pools have nothing in them yet.</value>
   </data>
-  <data name="Your peers: {0}." xml:space="preserve">
-    <value>Your peers: {0}.</value>
-  </data>
   <data name="Your personalized list moves {0} of {1} charts away from the community's." xml:space="preserve">
     <value>Your personalized list moves {0} of {1} charts away from the community's.</value>
   </data>
@@ -10019,9 +9962,6 @@
   </data>
   <data name="{0} columns" xml:space="preserve">
     <value>{0} columns</value>
-  </data>
-  <data name="{0} communities" xml:space="preserve">
-    <value>{0} communities</value>
   </data>
   <data name="{0} connected" xml:space="preserve">
     <value>{0} connected</value>

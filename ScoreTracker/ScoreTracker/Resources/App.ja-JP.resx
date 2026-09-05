@@ -466,9 +466,6 @@
   <data name="A score three in four of your peers reach." xml:space="preserve">
     <value>ピアの4人に3人が到達するスコアです。</value>
   </data>
-  <data name="a single hue" xml:space="preserve">
-    <value>単一の色相</value>
-  </data>
   <data name="A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0." xml:space="preserve">
     <value>Singlesは1レベル上で計算されます。S17はBase(18)で払われます。レベル10未満の譜面の価値は0です。</value>
   </data>
@@ -1614,9 +1611,6 @@
   <data name="Color your scores by" xml:space="preserve">
     <value>スコアの色付け基準</value>
   </data>
-  <data name="colored by nothing" xml:space="preserve">
-    <value>なし</value>
-  </data>
   <data name="Colored by your standing among your peers" xml:space="preserve">
     <value>ピアの中での順位で色分け</value>
   </data>
@@ -2068,9 +2062,6 @@
   </data>
   <data name="Custom Scoring Formula" xml:space="preserve">
 	  <value>カスタムスコア式</value>
-  </data>
-  <data name="Customize" xml:space="preserve">
-    <value>カスタマイズ</value>
   </data>
   <data name="Cycle all credential keys" xml:space="preserve">
     <value>すべての認証キーを再生成</value>
@@ -2985,9 +2976,6 @@
   <data name="Glow" xml:space="preserve">
     <value>発光</value>
   </data>
-  <data name="Glow: off" xml:space="preserve">
-    <value>オフ</value>
-  </data>
   <data name="Glow: place" xml:space="preserve">
     <value>位</value>
   </data>
@@ -3801,9 +3789,6 @@
   </data>
   <data name="Letter grades on {0}" xml:space="preserve">
     <value>{0}のランク</value>
-  </data>
-  <data name="letter-grade metals" xml:space="preserve">
-    <value>ランクのメタル</value>
   </data>
   <data name="Level" xml:space="preserve">
 	  <value>レベル</value>
@@ -4771,9 +4756,6 @@
   <data name="Nobody rivals you yet" xml:space="preserve">
     <value>まだ誰もあなたをライバルにしていません</value>
   </data>
-  <data name="nobody yet" xml:space="preserve">
-    <value>まだいません</value>
-  </data>
   <data name="None" xml:space="preserve">
 	  <value>なし</value>
   </data>
@@ -5171,18 +5153,6 @@
   <data name="On every chart" xml:space="preserve">
     <value>譜面ごと</value>
   </data>
-  <data name="on first place" xml:space="preserve">
-    <value>1位に</value>
-  </data>
-  <data name="on Perfect Games only" xml:space="preserve">
-    <value>パーフェクトゲームのみ</value>
-  </data>
-  <data name="on the top {0} places" xml:space="preserve">
-    <value>上位{0}位に</value>
-  </data>
-  <data name="on the top {0}%" xml:space="preserve">
-    <value>上位{0}%に</value>
-  </data>
   <data name="on this device only. Useless on its own." xml:space="preserve">
     <value>このデバイスのみ。それ単体では役に立ちません。</value>
   </data>
@@ -5200,9 +5170,6 @@
   </data>
   <data name="One break every N notes" xml:space="preserve">
     <value>Nノートごとに1回の失敗</value>
-  </data>
-  <data name="One community" xml:space="preserve">
-    <value>コミュニティ1つ</value>
   </data>
   <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
     <value>スコア・グレード・プレート・クリアをレベル別に表示する設定可能なグラフ。</value>
@@ -6957,9 +6924,6 @@
   <data name="Scores by competitive level" xml:space="preserve">
     <value>競技レベル別スコア</value>
   </data>
-  <data name="Scores colored by {0}, glow {1}." xml:space="preserve">
-    <value>スコアの色は{0}、発光は{1}。</value>
-  </data>
   <data name="Scores from before we started recording sessions can't be undone — we didn't capture when they arrived, only when they were played. You can still delete them." xml:space="preserve">
     <value>セッションの記録を始める前のスコアは取り消せません。届いた時刻ではなく、プレイした時刻しか残っていないためです。削除はできます。</value>
   </data>
@@ -7895,9 +7859,6 @@
   <data name="That session was undone, so it no longer exists. Showing your most recent one instead." xml:space="preserve">
     <value>そのセッションは取り消され、存在しません。最新のセッションを表示しています。</value>
   </data>
-  <data name="the actual letter grade" xml:space="preserve">
-    <value>実際のランク</value>
-  </data>
   <data name="The arc" xml:space="preserve">
     <value>あなたの軌跡</value>
   </data>
@@ -7939,9 +7900,6 @@
   </data>
   <data name="The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs." xml:space="preserve">
     <value>暗号文はブラウザに、ラップされた鍵はデータベースに、マスターキーは Key Vault にあります。復号には3つすべてが必要です。1つ、あるいは2つが流出しても何も得られません。パスワードがデータベースやログに書き込まれることは決してありません。</value>
-  </data>
-  <data name="the classic ladder" xml:space="preserve">
-    <value>クラシックのはしご</value>
   </data>
   <data name="The cliff, not a slope" xml:space="preserve">
     <value>坂ではなく崖</value>
@@ -8009,9 +7967,6 @@
   <data name="The intro is the danger zone" xml:space="preserve">
     <value>序盤が危険地帯</value>
   </data>
-  <data name="the judgement spectrum" xml:space="preserve">
-    <value>判定スペクトラム</value>
-  </data>
   <data name="The key is how your code proves it is your tool." xml:space="preserve">
     <value>キーは、あなたのコードがこのツールであることを示すためのものです。</value>
   </data>
@@ -8075,9 +8030,6 @@
   <data name="The plate, magnified — Rough Game to Perfect Game, priced on a {0}" xml:space="preserve">
     <value>プレートを拡大 — Rough GameからPerfect Gameまで、{0}での価値</value>
   </data>
-  <data name="the podium" xml:space="preserve">
-    <value>表彰台</value>
-  </data>
   <data name="the pools above average +{0} — about a {1}" xml:space="preserve">
     <value>上のプールは平均+{0} — およそ{1}</value>
   </data>
@@ -8101,9 +8053,6 @@
   </data>
   <data name="The rainbow is expensive" xml:space="preserve">
     <value>虹色は高くつく</value>
-  </data>
-  <data name="the result screen" xml:space="preserve">
-    <value>リザルト画面</value>
   </data>
   <data name="The roster is visible to everyone; management controls appear based on your role." xml:space="preserve">
     <value>メンバー一覧は全員に表示されます。管理機能は役割によって表示されます。</value>
@@ -8392,9 +8341,6 @@
   </data>
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>3年半のPumpを、ひとつのリキャップに。あなたの記録を見に行こう。いいところはスクショで。</value>
-  </data>
-  <data name="three steps" xml:space="preserve">
-    <value>3段階</value>
   </data>
   <data name="Thresholds — each becomes a line" xml:space="preserve">
     <value>しきい値 — それぞれが1本の線になります</value>
@@ -9684,9 +9630,6 @@
   <data name="Your peers' pools have nothing in them yet." xml:space="preserve">
     <value>ピアのプールにはまだ何もありません。</value>
   </data>
-  <data name="Your peers: {0}." xml:space="preserve">
-    <value>あなたのピア: {0}。</value>
-  </data>
   <data name="Your personalized list moves {0} of {1} charts away from the community's." xml:space="preserve">
     <value>あなたのパーソナライズされたリストは{1}譜面中{0}譜面をコミュニティから動かしています。</value>
   </data>
@@ -10019,9 +9962,6 @@
   </data>
   <data name="{0} columns" xml:space="preserve">
     <value>{0}列</value>
-  </data>
-  <data name="{0} communities" xml:space="preserve">
-    <value>コミュニティ{0}つ</value>
   </data>
   <data name="{0} connected" xml:space="preserve">
     <value>{0} 人が接続</value>

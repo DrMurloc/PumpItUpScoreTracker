@@ -1,6 +1,5 @@
 ﻿@using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.Catalog.Contracts.Queries
-@using ScoreTracker.Communities.Contracts.Queries
 @using ScoreTracker.CommunityTools.Contracts.Commands
 @using ScoreTracker.CommunityTools.Contracts.Queries
 @using System.Globalization
@@ -154,19 +153,6 @@
 </MudGrid>
 
 <MudDivider Class="my-6"></MudDivider>
-@* Who your scores are measured against and how that paints them (docs/design/peers-abstraction.md
-   D1). The card states the current choice in words; the dialog is the only place it changes. *@
-<div class="pcd-card" data-testid="peers-card">
-    <div>
-        <MudText Typo="Typo.h6">@L["Peers & score colors"]</MudText>
-        <MudText Typo="Typo.body2" Style="opacity:.75;" data-testid="peers-card-summary">@PeersSummary</MudText>
-    </div>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Groups"
-               OnClick="() => _showPeersDialog = true" data-testid="peers-customize">@L["Customize"]</MudButton>
-</div>
-<PeersAndColorsDialog @bind-Visible="_showPeersDialog" OnSaved="RefreshPeersSummary"></PeersAndColorsDialog>
-
-<MudDivider Class="my-6"></MudDivider>
 <MudText Typo="Typo.h6" Class="mb-2">@L["Your Data"]</MudText>
 <div class="d-flex flex-wrap gap-2">
     <MudButton StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Outlined" Color="Color.Primary" OnClick="DownloadScores">@L["Download Scores"]</MudButton>
@@ -278,7 +264,6 @@
 @inject IUiSettingsAccessor UiSettings;
 @inject IJSRuntime JSRuntime;
 @inject IUserRepository Users;
-@inject ScoreColorPreferences Preferences;
 @code
 {
     private MyAvatarRecord? _avatar;
@@ -352,60 +337,6 @@
     private PendingAccountDeletion? _pendingDeletion;
     private bool _shareWithAllTools;
     private int _connectedToolCount;
-    private bool _showPeersDialog;
-    private PeerSourceSelection _peerSources = PeerSourceSelection.Default;
-    private IReadOnlySet<Guid> _myCommunityIds = new HashSet<Guid>();
-    private ScoreColorSettings _scoreColors = ScoreColorSettings.Default;
-
-    private string PeersSummary
-    {
-        get
-        {
-            var parts = new List<string>();
-            if (_peerSources.Rivals) parts.Add(L["Rivals"]);
-            if (_peerSources.CompetitiveLevel) parts.Add(L["Competitive level (peers)"]);
-            if (_peerSources.Pumbility) parts.Add(L["PUMBILITY peers"]);
-            // Only the communities you are still in: a club you left keeps its id in the setting
-            // until the dialog's next Save, and is not a source meanwhile (D29).
-            var communities = _peerSources.CommunityIds.Count(_myCommunityIds.Contains);
-            if (communities == 1) parts.Add(L["One community"]);
-            else if (communities > 1) parts.Add(L["{0} communities", communities]);
-            var peers = parts.Count == 0 ? L["nobody yet"].Value : string.Join(" · ", parts);
-            return $"{L["Your peers: {0}.", peers]} {L["Scores colored by {0}, glow {1}.", SystemWord, GlowWord]}";
-        }
-    }
-
-    private string SystemWord => _scoreColors.System switch
-    {
-        ScoreColorSystem.JudgementSpectrum => L["the judgement spectrum"],
-        ScoreColorSystem.Classic => L["the classic ladder"],
-        ScoreColorSystem.GradeMetals => L["letter-grade metals"],
-        ScoreColorSystem.Podium => L["the podium"],
-        ScoreColorSystem.SingleHue => L["a single hue"],
-        ScoreColorSystem.ResultScreen => L["the result screen"],
-        ScoreColorSystem.ThreeSteps => L["three steps"],
-        ScoreColorSystem.ActualGrade => L["the actual letter grade"],
-        _ => L["colored by nothing"]
-    };
-
-    private string GlowWord => _scoreColors.Glow switch
-    {
-        GlowRule.PerfectGames => L["on Perfect Games only"],
-        GlowRule.TopPlaces => _scoreColors.GlowThreshold == 1
-            ? L["on first place"]
-            : L["on the top {0} places", _scoreColors.GlowThreshold],
-        GlowRule.TopPercent => L["on the top {0}%", _scoreColors.GlowThreshold],
-        _ => L["Glow: off"]
-    };
-
-    private async Task RefreshPeersSummary()
-    {
-        _peerSources = await Preferences.GetSources();
-        _scoreColors = await Preferences.GetColors();
-        _myCommunityIds = (await Mediator.Send(new GetMyCommunitiesQuery()) ?? Array.Empty<CommunityOverviewRecord>())
-            .Select(c => c.CommunityId).ToHashSet();
-    }
-
     protected override async Task OnInitializedAsync()
     {
         // Resolved, not raw: a row written before the es → es-ES split still reads "es", which
@@ -423,7 +354,6 @@
         _pendingDeletion = await Mediator.Send(new GetPendingAccountDeletionQuery(CurrentUser.User.Id));
         _shareWithAllTools = await Mediator.Send(new GetShareWithAllToolsQuery());
         await RefreshToolCount();
-        await RefreshPeersSummary();
     }
 
     /// <summary>

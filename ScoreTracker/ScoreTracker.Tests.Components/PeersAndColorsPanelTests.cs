@@ -22,11 +22,11 @@ using Xunit;
 namespace ScoreTracker.Tests.Components;
 
 /// <summary>
-///     The one place the peer settings change. Pinned: the catalog's sources render with their
+///     The one place the peer settings change — its own tab on /Account. Pinned: the catalog's sources render with their
 ///     counts, the tally is the union the reader would compute, PUMBILITY greys where it is empty,
 ///     and Save writes both settings under their keys.
 /// </summary>
-public sealed class PeersAndColorsDialogTests : ComponentTestBase
+public sealed class PeersAndColorsPanelTests : ComponentTestBase
 {
     private static readonly Guid Club = Guid.NewGuid();
     private static readonly Guid Region = Guid.NewGuid();
@@ -37,7 +37,7 @@ public sealed class PeersAndColorsDialogTests : ComponentTestBase
     private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IUiSettingsAccessor> _settings = new();
 
-    public PeersAndColorsDialogTests()
+    public PeersAndColorsPanelTests()
     {
         CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
         _settings.Setup(s => s.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(MixEnum.Phoenix);
@@ -65,14 +65,11 @@ public sealed class PeersAndColorsDialogTests : ComponentTestBase
         this.RenderInteractive();
     }
 
-    private IRenderedFragment RenderDialog()
+    private IRenderedFragment RenderPanel()
     {
         return Render(builder =>
         {
-            builder.OpenComponent<MudDialogProvider>(0);
-            builder.CloseComponent();
-            builder.OpenComponent<PeersAndColorsDialog>(1);
-            builder.AddAttribute(2, nameof(PeersAndColorsDialog.Visible), true);
+            builder.OpenComponent<PeersAndColorsPanel>(0);
             builder.CloseComponent();
         });
     }
@@ -80,7 +77,7 @@ public sealed class PeersAndColorsDialogTests : ComponentTestBase
     [Fact]
     public void ListsEverySourceWithItsCountAndGreysAnEmptyOne()
     {
-        var cut = RenderDialog();
+        var cut = RenderPanel();
 
         cut.WaitForAssertion(() =>
         {
@@ -96,7 +93,7 @@ public sealed class PeersAndColorsDialogTests : ComponentTestBase
     [Fact]
     public async Task TheTallyIsTheUnionOfWhatIsTicked()
     {
-        var cut = RenderDialog();
+        var cut = RenderPanel();
         cut.WaitForAssertion(() => Assert.NotNull(cut.Find("[data-testid='pcd-tally']")));
         // The default ticks the competitive band alone: three singles.
         Assert.Contains("3", cut.Find("[data-testid='pcd-tally']").TextContent);
@@ -110,7 +107,7 @@ public sealed class PeersAndColorsDialogTests : ComponentTestBase
     [Fact]
     public async Task SaveWritesBothSettingsUnderTheirKeys()
     {
-        var cut = RenderDialog();
+        var cut = RenderPanel();
         cut.WaitForAssertion(() => Assert.NotNull(cut.Find("[data-testid='pcd-tally']")));
         await cut.Find("[data-testid='pcd-source-Rivals'] input").ChangeAsync(new ChangeEventArgs { Value = true });
         // MudRadio registers a click, not a change, on its input.
@@ -134,7 +131,7 @@ public sealed class PeersAndColorsDialogTests : ComponentTestBase
         var gone = Guid.NewGuid();
         _settings.Setup(s => s.GetSetting(PeerSourceSelection.SettingKey, default, null))
             .ReturnsAsync(new PeerSourceSelection(false, false, false, new HashSet<Guid> { Club, gone }).Serialize());
-        var cut = RenderDialog();
+        var cut = RenderPanel();
         cut.WaitForAssertion(() => Assert.NotNull(cut.Find("[data-testid='pcd-tally']")));
 
         await cut.Find("[data-testid='pcd-save']").ClickAsync(new MouseEventArgs());
@@ -147,7 +144,7 @@ public sealed class PeersAndColorsDialogTests : ComponentTestBase
     [Fact]
     public void ThePreviewPaintsSevenSamplesWithTheDraft()
     {
-        var cut = RenderDialog();
+        var cut = RenderPanel();
 
         cut.WaitForAssertion(() =>
         {

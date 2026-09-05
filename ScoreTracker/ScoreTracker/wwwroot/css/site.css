@@ -18901,21 +18901,28 @@ a.peer-pop-row:hover {
     white-space: nowrap;
 }
 
-/* The Account card and dialog for peers & score colors (peers-abstraction.md D1, D14, D15). */
-.pcd-card {
-    border: 1px solid color-mix(in srgb, var(--mix-primary) 35%, transparent);
-    border-radius: 8px;
-    padding: 14px 16px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 8px 16px;
-    align-items: center;
+/* The Account tab for peers & score colors (peers-abstraction.md D1, D14, D15, D35). */
+.pcd-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
 }
 
-@media (max-width: 640px) {
-    .pcd-card {
-        grid-template-columns: 1fr;
-    }
+/* A radio's whole option is its label, so the text toggles it too (owner field test). */
+.pcd-radio {
+    display: block;
+}
+
+.pcd-radio .mud-radio {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    margin: 0;
+}
+
+.pcd-radio .mud-radio .mud-radio-content {
+    flex: 1;
+    min-width: 0;
 }
 
 .pcd-lede {
@@ -18982,6 +18989,7 @@ a.peer-pop-row:hover {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    align-self: flex-start;
 }
 
 .pcd-opt-help {
@@ -19050,8 +19058,10 @@ a.peer-pop-row:hover {
     display: inline-block;
 }
 
+/* Both glow inputs the same width: MudBlazor's input control grows to fill its row otherwise. */
 .pcd-num {
     width: 72px;
+    flex: 0 0 72px;
 }
 
 .pcd-preview {
@@ -19074,6 +19084,35 @@ a.peer-pop-row:hover {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* The preview's score: grade over plate in one column, the number beside them — the tier card's
+   scoreline and the player page's tables, at the same 12px icons. */
+.pcd-prow .sbd-score-stack {
+    display: inline-grid;
+    grid-auto-flow: row;
+    grid-template-columns: auto auto;
+    grid-template-rows: repeat(2, auto);
+    align-items: center;
+    column-gap: 5px;
+    row-gap: 0;
+    line-height: 1.05;
+}
+
+.pcd-prow .sbd-score-stack > img {
+    grid-column: 1;
+    height: 12px !important;
+}
+
+.pcd-prow .sbd-score-stack > p {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    align-self: center;
+    margin: 0;
+    padding-left: 0 !important;
+    font-size: .92rem;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
 }
 
 /* The Account Stats roster's "why they are a peer" tags (peers-abstraction.md D18). */

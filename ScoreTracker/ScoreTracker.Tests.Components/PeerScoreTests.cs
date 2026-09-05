@@ -104,6 +104,13 @@ public sealed class PeerScoreTests : ComponentTestBase
 
         Assert.Equal("true", cut.Find("[data-testid='peer-score']").GetAttribute("aria-expanded"));
         Assert.Equal(0, hostClicks);
+
+        // Closing by tapping outside stops at the popover too: the click-away layer sits inside
+        // the host's markup, and used to open the tier card's details on its way out.
+        await cut.Find(".peer-clickaway").ClickAsync(new MouseEventArgs());
+
+        Assert.Equal("false", cut.Find("[data-testid='peer-score']").GetAttribute("aria-expanded"));
+        Assert.Equal(0, hostClicks);
     }
 
     /// <summary>

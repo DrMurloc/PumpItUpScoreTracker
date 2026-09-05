@@ -15,182 +15,173 @@
 @inject ISnackbar Snackbar
 
 @* The one place the three peer settings live (docs/design/peers-abstraction.md D1, D14, D15):
-   who your peers are, which color system paints your scores, and what lights the glow. Every
-   change repaints the preview; nothing is written until Save. The tally under the sources is the
-   same union the standing reader will compute, because the catalog hands over the member sets. *@
-<MudDialog Visible="Visible" VisibleChanged="OnVisibleChanged" Options="new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true }">
-    <TitleContent>
-        <MudText Typo="Typo.h6">@L["Peers & score colors"]</MudText>
-        <MudText Typo="Typo.body2" Class="pcd-lede">@L["Who your scores are measured against on this site, and how that measurement paints them. Projections, personalized tier lists and Discord cards keep the peer groups they are calibrated on."]</MudText>
-    </TitleContent>
-    <DialogContent>
-        <div class="pcd" data-testid="peers-dialog">
-            <section class="pcd-section">
-                <MudText Typo="Typo.subtitle1" Class="pcd-title">@L["Who are your peers"]</MudText>
-                <MudText Typo="Typo.caption" Class="pcd-help">@L["Pick any of these. Your peers are everyone in the groups you tick, together. You are never one of your own peers."]</MudText>
-                @if (_catalog == null)
+   who your peers are, which color system paints your scores, and what lights the glow — its own
+   tab on /Account (D35), not a dialog. Every change repaints the preview; nothing is written until
+   Save, and leaving the tab discards the draft. The tally under the sources is the same union the
+   standing reader will compute, because the catalog hands over the member sets. *@
+<div class="pcd" data-testid="peers-panel">
+    <MudText Typo="Typo.body2" Class="pcd-lede">@L["Who your scores are measured against on this site, and how that measurement paints them. Projections, personalized tier lists and Discord cards keep the peer groups they are calibrated on."]</MudText>
+    <section class="pcd-section">
+        <MudText Typo="Typo.subtitle1" Class="pcd-title">@L["Who are your peers"]</MudText>
+        <MudText Typo="Typo.caption" Class="pcd-help">@L["Pick any of these. Your peers are everyone in the groups you tick, together. You are never one of your own peers."]</MudText>
+        @if (_catalog == null)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="my-2"></MudProgressLinear>
+        }
+        else
+        {
+            @foreach (var option in _catalog.Options.Where(o => o.Kind != PeerSourceKind.Community))
+            {
+                var source = option;
+                <label class="pcd-opt @(source.Available ? null : "pcd-opt-off")" data-testid="@($"pcd-source-{source.Kind}")">
+                    <MudCheckBox T="bool" Value="IsTicked(source)" ValueChanged="v => Tick(source, v)"
+                                 Disabled="!source.Available" Color="Color.Primary" Dense="true"></MudCheckBox>
+                    <span class="pcd-opt-body">
+                        <span class="pcd-opt-label">@SourceLabel(source.Kind)</span>
+                        <span class="pcd-opt-help">@SourceHelp(source.Kind)</span>
+                    </span>
+                    <span class="pcd-opt-count">@SourceCount(source)</span>
+                </label>
+            }
+            <div class="pcd-opt pcd-opt-head">
+                <span></span>
+                <span class="pcd-opt-body">
+                    <span class="pcd-opt-label">@L["Communities"]</span>
+                    <span class="pcd-opt-help">@L["Members of the communities you tick. Your country and World are communities too."]</span>
+                </span>
+            </div>
+            <div class="pcd-sub">
+                @foreach (var option in _catalog.Options.Where(o => o.Kind == PeerSourceKind.Community))
                 {
-                    <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="my-2"></MudProgressLinear>
+                    var community = option;
+                    <label class="pcd-opt" data-testid="pcd-community">
+                        <MudCheckBox T="bool" Value="IsTicked(community)" ValueChanged="v => Tick(community, v)"
+                                     Color="Color.Primary" Dense="true"></MudCheckBox>
+                        <span class="pcd-opt-body">
+                            <span class="pcd-opt-label">
+                                @community.Name
+                                @if (community.IsRegional)
+                                {
+                                    <span class="pcd-tag">@L["Region"]</span>
+                                }
+                            </span>
+                        </span>
+                        <span class="pcd-opt-count">@L["{0} members", community.SinglesMembers.Count]</span>
+                    </label>
                 }
-                else
+            </div>
+            <div class="pcd-tally" data-testid="pcd-tally">
+                <span>@L["Your peers right now"]</span>
+                <span><b>@SinglesUnion.ToString("N0")</b> @L["singles (peers tally)"]</span>
+                <span><b>@DoublesUnion.ToString("N0")</b> @L["doubles (peers tally)"]</span>
+                @if (!_sources.Any)
                 {
-                    @foreach (var option in _catalog.Options.Where(o => o.Kind != PeerSourceKind.Community))
-                    {
-                        var source = option;
-                        <label class="pcd-opt @(source.Available ? null : "pcd-opt-off")" data-testid="@($"pcd-source-{source.Kind}")">
-                            <MudCheckBox T="bool" Value="IsTicked(source)" ValueChanged="v => Tick(source, v)"
-                                         Disabled="!source.Available" Color="Color.Primary" Dense="true"></MudCheckBox>
-                            <span class="pcd-opt-body">
-                                <span class="pcd-opt-label">@SourceLabel(source.Kind)</span>
-                                <span class="pcd-opt-help">@SourceHelp(source.Kind)</span>
-                            </span>
-                            <span class="pcd-opt-count">@SourceCount(source)</span>
-                        </label>
-                    }
-                    <div class="pcd-opt pcd-opt-head">
-                        <span></span>
-                        <span class="pcd-opt-body">
-                            <span class="pcd-opt-label">@L["Communities"]</span>
-                            <span class="pcd-opt-help">@L["Members of the communities you tick. Your country and World are communities too."]</span>
-                        </span>
-                    </div>
-                    <div class="pcd-sub">
-                        @foreach (var option in _catalog.Options.Where(o => o.Kind == PeerSourceKind.Community))
-                        {
-                            var community = option;
-                            <label class="pcd-opt" data-testid="pcd-community">
-                                <MudCheckBox T="bool" Value="IsTicked(community)" ValueChanged="v => Tick(community, v)"
-                                             Color="Color.Primary" Dense="true"></MudCheckBox>
-                                <span class="pcd-opt-body">
-                                    <span class="pcd-opt-label">
-                                        @community.Name
-                                        @if (community.IsRegional)
-                                        {
-                                            <span class="pcd-tag">@L["Region"]</span>
-                                        }
-                                    </span>
-                                </span>
-                                <span class="pcd-opt-count">@L["{0} members", community.SinglesMembers.Count]</span>
-                            </label>
-                        }
-                    </div>
-                    <div class="pcd-tally" data-testid="pcd-tally">
-                        <span>@L["Your peers right now"]</span>
-                        <span><b>@SinglesUnion.ToString("N0")</b> @L["singles (peers tally)"]</span>
-                        <span><b>@DoublesUnion.ToString("N0")</b> @L["doubles (peers tally)"]</span>
-                        @if (!_sources.Any)
-                        {
-                            <span class="pcd-muted">— @L["nothing ticked, so scores render plain"]</span>
-                        }
-                    </div>
+                    <span class="pcd-muted">— @L["nothing ticked, so scores render plain"]</span>
                 }
-            </section>
+            </div>
+        }
+    </section>
 
-            <section class="pcd-section">
-                <MudText Typo="Typo.subtitle1" Class="pcd-title">@L["Color your scores by"]</MudText>
-                <MudText Typo="Typo.caption" Class="pcd-help">@L["The standing (\"#6 of 94 peers\") always prints beside the score, whatever you pick here."]</MudText>
-                <MudRadioGroup T="ScoreColorSystem" Value="_colors.System" ValueChanged="SetSystem">
-                    @foreach (var system in Systems)
-                    {
-                        var s = system;
-                        <div class="pcd-opt pcd-radio" data-testid="@($"pcd-system-{s}")">
-                            <MudRadio T="ScoreColorSystem" Value="s" Color="Color.Primary" Dense="true"></MudRadio>
-                            <span class="pcd-opt-body">
-                                <span class="pcd-opt-label">
-                                    @SystemLabel(s)
-                                    <span class="pcd-swatches" aria-hidden="true">
-                                        @foreach (var token in Swatches(s))
-                                        {
-                                            <span class="pcd-swatch" style="background:@token"></span>
-                                        }
-                                    </span>
-                                </span>
-                                <span class="pcd-opt-help">@SystemHelp(s)</span>
+    <section class="pcd-section">
+        <MudText Typo="Typo.subtitle1" Class="pcd-title">@L["Color your scores by"]</MudText>
+        <MudText Typo="Typo.caption" Class="pcd-help">@L["The standing (\"#6 of 94 peers\") always prints beside the score, whatever you pick here."]</MudText>
+        <MudRadioGroup T="ScoreColorSystem" Value="_colors.System" ValueChanged="SetSystem">
+            @foreach (var system in Systems)
+            {
+                var s = system;
+                <div class="pcd-opt pcd-radio" data-testid="@($"pcd-system-{s}")">
+                    <MudRadio T="ScoreColorSystem" Value="s" Color="Color.Primary" Dense="true">
+                    <span class="pcd-opt-body">
+                        <span class="pcd-opt-label">
+                            @SystemLabel(s)
+                            <span class="pcd-swatches" aria-hidden="true">
+                                @foreach (var token in Swatches(s))
+                                {
+                                    <span class="pcd-swatch" style="background:@token"></span>
+                                }
                             </span>
-                        </div>
-                    }
-                </MudRadioGroup>
-            </section>
-
-            <section class="pcd-section">
-                <MudText Typo="Typo.subtitle1" Class="pcd-title">@L["Glow"]</MudText>
-                <MudText Typo="Typo.caption" Class="pcd-help">@L["One rule, one glow. The color is the spectrum; the glow says a score crossed the line you set."]</MudText>
-                <MudRadioGroup T="GlowRule" Value="_colors.Glow" ValueChanged="SetGlow">
-                    <div class="pcd-opt pcd-radio" data-testid="pcd-glow-PerfectGames">
-                        <MudRadio T="GlowRule" Value="GlowRule.PerfectGames" Color="Color.Primary" Dense="true"></MudRadio>
-                        <span class="pcd-opt-body">
-                            <span class="pcd-opt-label">@L["Perfect Games only"]</span>
-                            <span class="pcd-opt-help">@L["A 1,000,000 glows; nothing else does."]</span>
                         </span>
-                    </div>
-                    <div class="pcd-opt pcd-radio" data-testid="pcd-glow-TopPlaces">
-                        <MudRadio T="GlowRule" Value="GlowRule.TopPlaces" Color="Color.Primary" Dense="true"></MudRadio>
-                        <span class="pcd-opt-body">
-                            <span class="pcd-opt-label pcd-opt-inline">
-                                @L["Glow: Top"]
-                                <MudNumericField T="int" Value="_places" ValueChanged="SetPlaces" Min="1" Max="50"
-                                                 Class="pcd-num" Variant="Variant.Outlined" Margin="Margin.Dense"
-                                                 HideSpinButtons="true" aria-label="@L["places"]"></MudNumericField>
-                                @(_places == 1 ? L["Glow: place"] : L["Glow: places"])
-                            </span>
-                            <span class="pcd-opt-help">@L["among your peers, by place — ties share a place."]</span>
-                        </span>
-                    </div>
-                    <div class="pcd-opt pcd-radio" data-testid="pcd-glow-TopPercent">
-                        <MudRadio T="GlowRule" Value="GlowRule.TopPercent" Color="Color.Primary" Dense="true"></MudRadio>
-                        <span class="pcd-opt-body">
-                            <span class="pcd-opt-label pcd-opt-inline">
-                                @L["Glow: Top"]
-                                <MudNumericField T="int" Value="_percent" ValueChanged="SetPercent" Min="1" Max="50"
-                                                 Class="pcd-num" Variant="Variant.Outlined" Margin="Margin.Dense"
-                                                 HideSpinButtons="true" aria-label="@L["percent"]"></MudNumericField>
-                                %
-                            </span>
-                            <span class="pcd-opt-help">@L["of your peers."]</span>
-                        </span>
-                    </div>
-                    <div class="pcd-opt pcd-radio" data-testid="pcd-glow-Off">
-                        <MudRadio T="GlowRule" Value="GlowRule.Off" Color="Color.Primary" Dense="true"></MudRadio>
-                        <span class="pcd-opt-body">
-                            <span class="pcd-opt-label">@L["Off"]</span>
-                            <span class="pcd-opt-help">@L["No glow anywhere, Perfect Games included."]</span>
-                        </span>
-                    </div>
-                </MudRadioGroup>
-            </section>
-
-            <section class="pcd-section">
-                <MudText Typo="Typo.subtitle1" Class="pcd-title">@L["Preview"]</MudText>
-                <div class="pcd-preview" data-testid="pcd-preview">
-                    @foreach (var sample in Samples)
-                    {
-                        <div class="pcd-prow">
-                            <DifficultyBubble Chart="sample.Chart" Small="true"></DifficultyBubble>
-                            <span class="pcd-prow-song">@sample.Chart.Song.Name</span>
-                            <PeerScore Score="sample.Score" Plate="sample.Plate" Mix="MixEnum.Phoenix" Standing="sample.Standing"
-                                       Interactive="false" ShowStanding="true" Settings="_colors" Height="16"></PeerScore>
-                        </div>
-                    }
+                        <span class="pcd-opt-help">@SystemHelp(s)</span>
+                    </span>
+                    </MudRadio>
                 </div>
-            </section>
+            }
+        </MudRadioGroup>
+    </section>
+
+    <section class="pcd-section">
+        <MudText Typo="Typo.subtitle1" Class="pcd-title">@L["Glow"]</MudText>
+        <MudText Typo="Typo.caption" Class="pcd-help">@L["One rule, one glow. The color is the spectrum; the glow says a score crossed the line you set."]</MudText>
+        <MudRadioGroup T="GlowRule" Value="_colors.Glow" ValueChanged="SetGlow">
+            <div class="pcd-opt pcd-radio" data-testid="pcd-glow-PerfectGames">
+                <MudRadio T="GlowRule" Value="GlowRule.PerfectGames" Color="Color.Primary" Dense="true">
+                <span class="pcd-opt-body">
+                    <span class="pcd-opt-label">@L["Perfect Games only"]</span>
+                    <span class="pcd-opt-help">@L["A 1,000,000 glows; nothing else does."]</span>
+                </span>
+                </MudRadio>
+            </div>
+            <div class="pcd-opt pcd-radio" data-testid="pcd-glow-TopPlaces">
+                <MudRadio T="GlowRule" Value="GlowRule.TopPlaces" Color="Color.Primary" Dense="true">
+                <span class="pcd-opt-body">
+                    <span class="pcd-opt-label pcd-opt-inline">
+                        @L["Glow: Top"]
+                        <MudNumericField T="int" Value="_places" ValueChanged="SetPlaces" Min="1" Max="50"
+                                         Class="pcd-num" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                         HideSpinButtons="true" aria-label="@L["places"]"></MudNumericField>
+                        @(_places == 1 ? L["Glow: place"] : L["Glow: places"])
+                    </span>
+                    <span class="pcd-opt-help">@L["among your peers, by place — ties share a place."]</span>
+                </span>
+                </MudRadio>
+            </div>
+            <div class="pcd-opt pcd-radio" data-testid="pcd-glow-TopPercent">
+                <MudRadio T="GlowRule" Value="GlowRule.TopPercent" Color="Color.Primary" Dense="true">
+                <span class="pcd-opt-body">
+                    <span class="pcd-opt-label pcd-opt-inline">
+                        @L["Glow: Top"]
+                        <MudNumericField T="int" Value="_percent" ValueChanged="SetPercent" Min="1" Max="50"
+                                         Class="pcd-num" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                         HideSpinButtons="true" aria-label="@L["percent"]"></MudNumericField>
+                        %
+                    </span>
+                    <span class="pcd-opt-help">@L["of your peers."]</span>
+                </span>
+                </MudRadio>
+            </div>
+            <div class="pcd-opt pcd-radio" data-testid="pcd-glow-Off">
+                <MudRadio T="GlowRule" Value="GlowRule.Off" Color="Color.Primary" Dense="true">
+                <span class="pcd-opt-body">
+                    <span class="pcd-opt-label">@L["Off"]</span>
+                    <span class="pcd-opt-help">@L["No glow anywhere, Perfect Games included."]</span>
+                </span>
+                </MudRadio>
+            </div>
+        </MudRadioGroup>
+    </section>
+
+    <section class="pcd-section">
+        <MudText Typo="Typo.subtitle1" Class="pcd-title">@L["Preview"]</MudText>
+        <div class="pcd-preview" data-testid="pcd-preview">
+            @foreach (var sample in Samples)
+            {
+                <div class="pcd-prow">
+                    <DifficultyBubble Chart="sample.Chart" Small="true"></DifficultyBubble>
+                    <span class="pcd-prow-song">@sample.Chart.Song.Name</span>
+                    <PeerScore Score="sample.Score" Plate="sample.Plate" Mix="MixEnum.Phoenix" Standing="sample.Standing"
+                               Interactive="false" ShowStanding="true" Settings="_colors" Height="12"
+                               Class="sbd-score-stack"></PeerScore>
+                </div>
+            }
         </div>
-    </DialogContent>
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text" OnClick="Cancel">@L["Cancel"]</MudButton>
+    </section>
+    <div class="pcd-actions">
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save" Disabled="_saving"
                    data-testid="pcd-save">@L["Save"]</MudButton>
-    </DialogActions>
-</MudDialog>
+    </div>
+</div>
 
 @code {
-    [Parameter] public bool Visible { get; set; }
-
-    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
-
-    /// <summary>Raised after a save, with what was saved, so the card behind the dialog can re-describe itself.</summary>
-    [Parameter] public EventCallback OnSaved { get; set; }
-
     private static readonly ScoreColorSystem[] Systems = Enum.GetValues<ScoreColorSystem>();
 
     private PeerSourceCatalog? _catalog;
@@ -199,15 +190,10 @@
     private int _places = 1;
     private int _percent = 10;
     private bool _saving;
-    private bool _wasVisible;
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
-        if (Visible == _wasVisible) return;
-        _wasVisible = Visible;
-        if (!Visible) return;
-
-        // A fresh draft every time the dialog opens: the last Cancel must not leak into this one.
+        // The draft is only ever what Save writes; leaving the tab discards it.
         _sources = await Preferences.GetSources();
         _colors = await Preferences.GetColors();
         _places = _colors.Glow == GlowRule.TopPlaces ? _colors.GlowThreshold : 1;
@@ -221,14 +207,6 @@
         _sources = _sources with { CommunityIds = _sources.CommunityIds.Where(offered.Contains).ToHashSet() };
     }
 
-    private async Task OnVisibleChanged(bool visible)
-    {
-        Visible = visible;
-        await VisibleChanged.InvokeAsync(visible);
-    }
-
-    private Task Cancel() => OnVisibleChanged(false);
-
     private async Task Save()
     {
         _saving = true;
@@ -236,8 +214,6 @@
         {
             await Preferences.Save(_colors, _sources);
             Snackbar.Add(L["Peers and score colors saved"], Severity.Success);
-            await OnSaved.InvokeAsync();
-            await OnVisibleChanged(false);
         }
         finally
         {

@@ -38,10 +38,12 @@
     }
 </span>
 @* Click-away layer, mounted only while open. A bare div rather than MudOverlay, which locks
-   document.body scrolling when it mounts and shifts the page by a scrollbar (ProjectionSpread). *@
+   document.body scrolling when it mounts and shifts the page by a scrollbar (ProjectionSpread).
+   The click stops here: the layer sits inside the host's markup, so without that a tap to close
+   the popover bubbled into the tier card's head and opened the details dialog (owner field test). *@
 @if (_open)
 {
-    <div class="peer-clickaway" @onclick="Close"></div>
+    <div class="peer-clickaway" @onclick="Close" @onclick:stopPropagation="true"></div>
 }
 
 @inject ScoreColorPreferences Preferences

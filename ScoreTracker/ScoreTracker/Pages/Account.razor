@@ -44,6 +44,9 @@
     <MudTabPanel Text="@L["API"]" Icon="@Icons.Material.Filled.Code">
         <ApiTokenPanel></ApiTokenPanel>
     </MudTabPanel>
+    <MudTabPanel Text="@L["Peers & score colors"]" Icon="@Icons.Material.Filled.Groups">
+        <PeersAndColorsPanel></PeersAndColorsPanel>
+    </MudTabPanel>
 </MudTabs>
 
 @inject NavigationManager NavManager
@@ -70,6 +73,7 @@
         {
             "signin" => 1,
             "api" => 2,
+            "peers" => 3,
             _ => 0
         };
 

@@ -106,6 +106,6 @@ public sealed class PeerStandingPopoverTests : ComponentTestBase
         var cut = Render(null, sourcesChosen: false);
 
         Assert.Contains("You have no peer groups selected.", cut.Markup);
-        Assert.Contains("href=\"/Account\"", cut.Markup);
+        Assert.Contains("href=\"/Account?tab=peers\"", cut.Markup);
     }
 }

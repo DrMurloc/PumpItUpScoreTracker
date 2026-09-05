@@ -466,9 +466,6 @@
   <data name="A score three in four of your peers reach." xml:space="preserve">
     <value>동료 4명 중 3명이 도달하는 점수입니다.</value>
   </data>
-  <data name="a single hue" xml:space="preserve">
-    <value>단일 색조</value>
-  </data>
   <data name="A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0." xml:space="preserve">
     <value>싱글은 한 레벨 위로 책정됩니다: S17은 Base(18)로 계산됩니다. 10레벨 미만 채보의 가치는 0입니다.</value>
   </data>
@@ -1603,9 +1600,6 @@
   <data name="Color your scores by" xml:space="preserve">
     <value>점수 색상 기준</value>
   </data>
-  <data name="colored by nothing" xml:space="preserve">
-    <value>없음</value>
-  </data>
   <data name="Colored by your standing among your peers" xml:space="preserve">
     <value>동료들 사이의 순위로 색상 표시</value>
   </data>
@@ -2055,9 +2049,6 @@
   </data>
   <data name="Custom Scoring Formula" xml:space="preserve">
     <value>사용자 지정 점수 공식</value>
-  </data>
-  <data name="Customize" xml:space="preserve">
-    <value>설정</value>
   </data>
   <data name="Cycle all credential keys" xml:space="preserve">
     <value>모든 자격 증명 키 교체</value>
@@ -2968,9 +2959,6 @@
   <data name="Glow" xml:space="preserve">
     <value>발광</value>
   </data>
-  <data name="Glow: off" xml:space="preserve">
-    <value>꺼짐</value>
-  </data>
   <data name="Glow: place" xml:space="preserve">
     <value>위</value>
   </data>
@@ -3783,9 +3771,6 @@
   </data>
   <data name="Letter grades on {0}" xml:space="preserve">
     <value>{0} 랭크</value>
-  </data>
-  <data name="letter-grade metals" xml:space="preserve">
-    <value>랭크 메탈</value>
   </data>
   <data name="Level" xml:space="preserve">
     <value>레벨</value>
@@ -4741,9 +4726,6 @@
   <data name="Nobody rivals you yet" xml:space="preserve">
     <value>아직 아무도 나를 라이벌로 등록하지 않았습니다</value>
   </data>
-  <data name="nobody yet" xml:space="preserve">
-    <value>아직 없음</value>
-  </data>
   <data name="None" xml:space="preserve">
     <value>없음</value>
   </data>
@@ -5140,18 +5122,6 @@
   <data name="On every chart" xml:space="preserve">
     <value>차트당</value>
   </data>
-  <data name="on first place" xml:space="preserve">
-    <value>1위에</value>
-  </data>
-  <data name="on Perfect Games only" xml:space="preserve">
-    <value>퍼펙트 게임에만</value>
-  </data>
-  <data name="on the top {0} places" xml:space="preserve">
-    <value>상위 {0}위에</value>
-  </data>
-  <data name="on the top {0}%" xml:space="preserve">
-    <value>상위 {0}%에</value>
-  </data>
   <data name="on this device only. Useless on its own." xml:space="preserve">
     <value>이 기기에만 있습니다. 그 자체로는 쓸모가 없습니다.</value>
   </data>
@@ -5169,9 +5139,6 @@
   </data>
   <data name="One break every N notes" xml:space="preserve">
     <value>N노트마다 브레이크 한 번</value>
-  </data>
-  <data name="One community" xml:space="preserve">
-    <value>커뮤니티 1개</value>
   </data>
   <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
     <value>점수, 등급, 플레이트 또는 클리어를 레벨별로 보여주는 구성 가능한 그래프.</value>
@@ -6910,9 +6877,6 @@
   <data name="Scores by competitive level" xml:space="preserve">
     <value>경쟁 레벨별 점수</value>
   </data>
-  <data name="Scores colored by {0}, glow {1}." xml:space="preserve">
-    <value>점수 색상은 {0}, 발광은 {1}.</value>
-  </data>
   <data name="Scores from before we started recording sessions can't be undone — we didn't capture when they arrived, only when they were played. You can still delete them." xml:space="preserve">
     <value>세션 기록을 시작하기 전의 점수는 되돌릴 수 없습니다. 도착 시각이 아니라 플레이 시각만 남아 있기 때문입니다. 삭제는 가능합니다.</value>
   </data>
@@ -7837,9 +7801,6 @@
   <data name="That session was undone, so it no longer exists. Showing your most recent one instead." xml:space="preserve">
     <value>해당 세션은 취소되어 더 이상 없습니다. 가장 최근 세션을 표시합니다.</value>
   </data>
-  <data name="the actual letter grade" xml:space="preserve">
-    <value>실제 랭크</value>
-  </data>
   <data name="The arc" xml:space="preserve">
     <value>성장 곡선</value>
   </data>
@@ -7881,9 +7842,6 @@
   </data>
   <data name="The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs." xml:space="preserve">
     <value>암호문은 브라우저에, 래핑된 키는 데이터베이스에, 마스터 키는 Key Vault에 있습니다. 복호화에는 세 가지 모두가 필요합니다 — 하나, 또는 둘이 유출되어도 아무것도 얻지 못합니다. 비밀번호는 데이터베이스나 로그에 절대 기록되지 않습니다.</value>
-  </data>
-  <data name="the classic ladder" xml:space="preserve">
-    <value>클래식 사다리</value>
   </data>
   <data name="The cliff, not a slope" xml:space="preserve">
     <value>경사가 아니라 절벽</value>
@@ -7951,9 +7909,6 @@
   <data name="The intro is the danger zone" xml:space="preserve">
     <value>도입부가 위험 구간</value>
   </data>
-  <data name="the judgement spectrum" xml:space="preserve">
-    <value>판정 스펙트럼</value>
-  </data>
   <data name="The key is how your code proves it is your tool." xml:space="preserve">
     <value>키는 여러분의 코드가 이 도구임을 증명하는 수단입니다.</value>
   </data>
@@ -8017,9 +7972,6 @@
   <data name="The plate, magnified — Rough Game to Perfect Game, priced on a {0}" xml:space="preserve">
     <value>플레이트를 확대해서 — Rough Game부터 Perfect Game까지, {0} 기준 가치</value>
   </data>
-  <data name="the podium" xml:space="preserve">
-    <value>포디움</value>
-  </data>
   <data name="the pools above average +{0} — about a {1}" xml:space="preserve">
     <value>위의 풀들은 평균 +{0} — 대략 {1}</value>
   </data>
@@ -8043,9 +7995,6 @@
   </data>
   <data name="The rainbow is expensive" xml:space="preserve">
     <value>레인보우는 비쌉니다</value>
-  </data>
-  <data name="the result screen" xml:space="preserve">
-    <value>결과 화면</value>
   </data>
   <data name="The roster is visible to everyone; management controls appear based on your role." xml:space="preserve">
     <value>멤버 목록은 모두에게 표시됩니다. 관리 기능은 역할에 따라 표시됩니다.</value>
@@ -8334,9 +8283,6 @@
   </data>
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>3년 반의 펌프를 하나의 리캡으로. 지금 확인하고 멋진 부분은 스크린샷으로 남기세요.</value>
-  </data>
-  <data name="three steps" xml:space="preserve">
-    <value>3단계</value>
   </data>
   <data name="Thresholds — each becomes a line" xml:space="preserve">
     <value>임계값 — 각각 하나의 선이 됩니다</value>
@@ -9616,9 +9562,6 @@
   <data name="Your peers' pools have nothing in them yet." xml:space="preserve">
     <value>동료들의 풀에 아직 아무것도 없습니다.</value>
   </data>
-  <data name="Your peers: {0}." xml:space="preserve">
-    <value>내 동료: {0}.</value>
-  </data>
   <data name="Your personalized list moves {0} of {1} charts away from the community's." xml:space="preserve">
     <value>내 개인화 리스트는 {1}개 채보 중 {0}개를 커뮤니티와 다르게 배치합니다.</value>
   </data>
@@ -9951,9 +9894,6 @@
   </data>
   <data name="{0} columns" xml:space="preserve">
     <value>열 {0}개</value>
-  </data>
-  <data name="{0} communities" xml:space="preserve">
-    <value>커뮤니티 {0}개</value>
   </data>
   <data name="{0} connected" xml:space="preserve">
     <value>{0}명 연결됨</value>
