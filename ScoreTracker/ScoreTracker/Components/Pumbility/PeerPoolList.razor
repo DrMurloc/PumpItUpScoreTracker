@@ -268,38 +268,13 @@ else
         string WrapperClass, TierListCategory? Tier = null);
 
     /// <summary>
-    ///     One tile of a downloadable card, as facts rather than presentation: what the row knows,
-    ///     read off the row itself, so the picture cannot drift from the page. How the facts are
-    ///     drawn is the share-card composer's call under the download settings
-    ///     (docs/design/share-card-download-settings.md).
-    /// </summary>
-    /// <param name="Score">
-    ///     Your best, including a broken one — the composer's broken gating needs the number,
-    ///     where the page's own Row deliberately hides a broken best behind null.
-    /// </param>
-    /// <param name="Gain">What the chart would add, only when it pays — the page's own rule.</param>
-    /// <param name="Expected">The target list's projected score, whose grade rides the gain chip.</param>
-    /// <param name="PoolValue">
-    ///     What the chart is worth in your pool, where the frame already computed it — the exact
-    ///     number the pool lens prints, so the chip and the page cannot disagree.
-    /// </param>
-    public sealed record ShareTile(Chart Chart, PhoenixScore? Score, PhoenixPlate? Plate, bool Broken,
-        bool IsToDo, bool Carried, double? Gain, PhoenixScore? Expected, double? PoolValue);
-
-    /// <summary>
-    ///     One section of a downloadable card: its printed name, the ramp category it took its
-    ///     colour from (null for a gain band, which is not on the ramp), and its tiles in order.
-    /// </summary>
-    public sealed record ShareSection(string Name, TierListCategory? Tier, IReadOnlyList<ShareTile> Tiles);
-
-    /// <summary>
     ///     What the list is showing, for the page's Download button — the same sections in the same
     ///     order, so the image cannot disagree with the screen it was taken from. Folded sections
     ///     are included: a fold is a reading convenience, not a filter.
     /// </summary>
-    public IReadOnlyList<ShareSection> ShareSections() =>
-        _sections.Select(s => new ShareSection(s.Name, s.Tier,
-            s.Rows.Select(r => new ShareTile(r.Chart,
+    public IReadOnlyList<PumbilityShareSection> ShareSections() =>
+        _sections.Select(s => new PumbilityShareSection(s.Name, s.Tier,
+            s.Rows.Select(r => new PumbilityShareTile(r.Chart,
                 r.MyScore ?? (RowBroken(r) ? r.Target!.Current : null),
                 r.MyPlate,
                 RowBroken(r),
