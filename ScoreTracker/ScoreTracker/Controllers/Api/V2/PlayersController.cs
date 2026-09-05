@@ -81,6 +81,45 @@ public sealed class PlayersController : ApiV2ControllerBase
         return NotFoundProblem("No player with that id is readable with this credential.");
     }
 
+    /// <summary>The most chart ids one scores request may name.</summary>
+    public const int MaxChartIds = 50;
+
+    /// <summary>
+    ///     A comma-separated chart-id list, or null when the parameter was not sent. Blank entries
+    ///     are ignored so a trailing comma is not an error; anything else that is not a GUID is,
+    ///     and so is a list longer than <see cref="MaxChartIds" /> — a caller who wants more than
+    ///     fifty charts wants the unfiltered read.
+    /// </summary>
+    private bool TryParseChartIds(string? value, out HashSet<Guid>? chartIds, out ObjectResult? failure)
+    {
+        chartIds = null;
+        failure = null;
+        if (value is null) return true;
+
+        var ids = new HashSet<Guid>();
+        foreach (var token in value.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (!Guid.TryParse(token, out var id))
+            {
+                failure = Problem("invalid-chart-id", "The chartIds parameter is not a list of chart ids.",
+                    detail: $"'{token}' is not a chart id. Send chart ids from /api/v2/charts, comma-separated.");
+                return false;
+            }
+
+            ids.Add(id);
+        }
+
+        if (ids.Count > MaxChartIds)
+        {
+            failure = Problem("too-many-chart-ids", "The chartIds parameter names too many charts.",
+                detail: $"At most {MaxChartIds} chart ids per request; for more, read without the filter.");
+            return false;
+        }
+
+        chartIds = ids;
+        return true;
+    }
+
     /// <summary>
     ///     Every player who has shared with the calling tool.
     ///     <para>
@@ -142,10 +181,22 @@ public sealed class PlayersController : ApiV2ControllerBase
     /// <summary>
     ///     Best attempts in one mix.
     /// </summary>
+    /// <param name="playerId">A player id from <c>/api/v2/players</c>, or <c>me</c> with a personal token.</param>
+    /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
+    /// <param name="minLevel">Only charts at or above this level.</param>
+    /// <param name="maxLevel">Only charts at or below this level.</param>
+    /// <param name="chartTypeValue">Only charts of this type: Single, Double, CoOp, SinglePerformance, DoublePerformance.</param>
+    /// <param name="isBroken">Only failed bests (true) or only passes (false).</param>
     /// <param name="recordedAfter">
     ///     Only records written after this instant. The incremental-sync parameter — with it a tool
     ///     stays current without webhooks and without re-reading a player's whole history.
     /// </param>
+    /// <param name="chartIdsValue">
+    ///     Only these charts: a comma-separated list of chart ids, at most 50. The point read for
+    ///     "what did this player get on this chart", without paging their whole record.
+    /// </param>
+    /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
+    /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet("{playerId}/scores")]
     public async Task<IActionResult> GetScores([FromRoute] string playerId,
         [FromQuery(Name = "mix")] string? mixValue = null,
@@ -154,6 +205,7 @@ public sealed class PlayersController : ApiV2ControllerBase
         [FromQuery(Name = "chartType")] string? chartTypeValue = null,
         [FromQuery(Name = "isBroken")] bool? isBroken = null,
         [FromQuery(Name = "recordedAfter")] DateTimeOffset? recordedAfter = null,
+        [FromQuery(Name = "chartIds")] string? chartIdsValue = null,
         [FromQuery(Name = "cursor")] string? cursor = null,
         [FromQuery(Name = "limit")] int? limit = null)
     {
@@ -172,8 +224,13 @@ public sealed class PlayersController : ApiV2ControllerBase
             chartType = parsed;
         }
 
+        if (!TryParseChartIds(chartIdsValue, out var chartIds, out var chartIdsFailure)) return chartIdsFailure!;
+
+        // The set rides the fingerprint in sorted form so the same charts in a different order
+        // still validate the cursor they were issued under.
         var fingerprint = ContinuationToken.FingerprintOf(userId, mix, minLevel, maxLevel, chartType,
-            isBroken, recordedAfter, pageSize);
+            isBroken, recordedAfter, pageSize,
+            chartIds is null ? null : string.Join(",", chartIds.OrderBy(id => id)));
         ContinuationToken? from = null;
         if (cursor is not null)
         {
@@ -188,6 +245,7 @@ public sealed class PlayersController : ApiV2ControllerBase
 
         var rows = (await _mediator.Send(new GetPhoenixRecordsQuery(userId, mix)))
             .Where(r => charts.ContainsKey(r.ChartId))
+            .Where(r => chartIds is null || chartIds.Contains(r.ChartId))
             .Where(r => recordedAfter is null || r.RecordedDate > recordedAfter.Value)
             .Where(r => isBroken is null || r.IsBroken == isBroken.Value)
             .Where(r => minLevel is null || (int)charts[r.ChartId].Level >= minLevel.Value)
