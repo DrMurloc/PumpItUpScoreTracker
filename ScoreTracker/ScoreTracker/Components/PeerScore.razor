@@ -129,6 +129,17 @@
 
     private void Close() => _open = false;
 
+    /// <summary>
+    ///     A host's own trigger opens the same popover — the Table density's Better Than cell,
+    ///     where the standing is printed a cell away from the score it explains (D17).
+    /// </summary>
+    public void Open()
+    {
+        if (!CanOpen || _open) return;
+        _open = true;
+        StateHasChanged();
+    }
+
     private void Key(KeyboardEventArgs e)
     {
         if (e.Key is "Enter" or " ") Toggle();

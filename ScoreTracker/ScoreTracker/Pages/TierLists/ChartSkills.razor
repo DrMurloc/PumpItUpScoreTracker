@@ -546,7 +546,8 @@ else
                                             {
                                                 <PeerScore Score="score.Score.Value" IsBroken="score.IsBroken" Mix="_currentMix" Plate="score.Plate"
                                                            Standing="_standings.TryGetValue(chart.Id, out var cellStanding) ? cellStanding : null"
-                                                           Chart="chart" ShowStanding="false" OnOpenBoard="OpenBoard"></PeerScore>
+                                                           Chart="chart" ShowStanding="false" OnOpenBoard="OpenBoard"
+                                                           @ref="_tableScores[chart.Id]"></PeerScore>
                                             }
                                             else if (_legacyGrades.TryGetValue(chart.Id, out var rowGrade))
                                             {
@@ -556,8 +557,12 @@ else
                                         <td>
                                             @if (score is { Score: { } rowValue, IsBroken: false } && _standings.TryGetValue(chart.Id, out var rowStanding) && rowStanding.HasCohort)
                                             {
-                                                @* The place in words — the same fact as the percentile, unreadable backwards. *@
-                                                <span class="tier-table-standing">@PeerStandingText.Standing(rowStanding, (int)rowValue == 1_000_000, L)</span>
+                                                @* The place in words — the same fact as the percentile, unreadable backwards.
+                                                   Tapping it opens the score's own popover (D17): the standing is the reason to look. *@
+                                                <span class="tier-table-standing peer-standing-open" role="button" tabindex="0"
+                                                      data-testid="tier-table-standing"
+                                                      @onclick="() => OpenTableStanding(chart.Id)"
+                                                      @onkeydown="e => KeyTableStanding(e, chart.Id)">@PeerStandingText.Standing(rowStanding, (int)rowValue == 1_000_000, L)</span>
                                             }
                                         </td>
                                         <td>
@@ -1684,6 +1689,23 @@ else
     private string _groupBy = "Difficulty";
     private int _level = 18;
     private IReadOnlyDictionary<Guid, PeerStanding> _standings = new Dictionary<Guid, PeerStanding>();
+
+    /// <summary>
+    ///     The Table density's score cells by chart, captured as they render: the Better Than cell
+    ///     opens its row's own popover through the one that rendered beside it (D17). A row that
+    ///     left the table left its cell with it, so a stale capture is never the one tapped.
+    /// </summary>
+    private readonly Dictionary<Guid, Web.Components.PeerScore> _tableScores = new();
+
+    private void OpenTableStanding(Guid chartId)
+    {
+        if (_tableScores.TryGetValue(chartId, out var cell)) cell.Open();
+    }
+
+    private void KeyTableStanding(KeyboardEventArgs e, Guid chartId)
+    {
+        if (e.Key is "Enter" or " ") OpenTableStanding(chartId);
+    }
     private string _tierListType = "Pass";
     // Legacy mixes render the Community Rating lens only (docs/design/legacy-mixes.md).
     private bool IsLegacy => _currentMix.UsesLegacyScoring();
@@ -2447,33 +2469,37 @@ else
     private static readonly string[] RankingBands =
     {
         "The Best", "90% -> 99.9%", "75% -> 90%", "50% -> 75%", "25% -> 50%", "10% -> 25%",
-        "0 -> 10%", "Last Place", "Not Recorded"
+        "0 -> 10%", "Last Place", "No peer has passed it", "Broken", "Not Recorded"
     };
 
     private IReadOnlyList<TierGroup> GroupByScoreRanking()
     {
         return LensOrdered(_finalEntries)
-            .GroupBy(e => _standings.TryGetValue(e.ChartId, out var s) && s.Percentile is { } r ?
-                (r <= 0.01 ?
-                    "Last Place" :
-                    r <= 0.10 ?
-                        "0 -> 10%" :
-                        r <= 0.25 ?
-                            "10% -> 25%" :
-                            r <= .5 ?
-                                "25% -> 50%" :
-                                r <= .75 ?
-                                    "50% -> 75%" :
-                                    r <= .9 ?
-                                        "75% -> 90%" :
-                                        r > .99 ?
-                                            "The Best" :
-                                        "90% -> 99.9%"
-                    )
-                : "Not Recorded")
+            .GroupBy(e => RankingBand(e.ChartId))
             .OrderBy(g => Array.IndexOf(RankingBands, g.Key))
             .Select(ToNeutralGroup)
             .ToArray();
+    }
+
+    /// <summary>
+    ///     "Not Recorded" is for a chart with no score. A pass none of your peers has passed is
+    ///     recorded and unmeasured, and a broken best is recorded too — each has its own shelf
+    ///     rather than a false label (peers-abstraction.md D26). A Rivals-only roster of three
+    ///     used to file most of a folder under "Not Recorded".
+    /// </summary>
+    private string RankingBand(Guid chartId)
+    {
+        if (!_scores.TryGetValue(chartId, out var score) || score.Score == null) return "Not Recorded";
+        if (score.IsBroken) return "Broken";
+        if (!_standings.TryGetValue(chartId, out var s) || s.Percentile is not { } r) return "No peer has passed it";
+        return r <= 0.01 ? "Last Place"
+            : r <= 0.10 ? "0 -> 10%"
+            : r <= 0.25 ? "10% -> 25%"
+            : r <= .5 ? "25% -> 50%"
+            : r <= .75 ? "50% -> 75%"
+            : r <= .9 ? "75% -> 90%"
+            : r > .99 ? "The Best"
+            : "90% -> 99.9%";
     }
 
     private IReadOnlyList<TierGroup> GroupByScoringLevel()

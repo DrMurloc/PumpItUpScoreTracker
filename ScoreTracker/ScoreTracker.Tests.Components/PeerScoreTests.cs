@@ -139,6 +139,19 @@ public sealed class PeerScoreTests : ComponentTestBase
             Assert.False(unmeasured.FindComponent<PeerStandingPopover>().Instance.SourcesChosen));
     }
 
+    /// <summary>The Table density's Better Than cell opens the score's popover through this (D17).</summary>
+    [Fact]
+    public async Task AHostCanOpenThePopoverFromItsOwnTrigger()
+    {
+        var cut = RenderWithPopovers(Standing(better: 5));
+        var score = cut.FindComponent<PeerScore>();
+
+        await score.InvokeAsync(() => score.Instance.Open());
+
+        cut.WaitForAssertion(() =>
+            Assert.Equal("true", cut.Find("[data-testid='peer-score']").GetAttribute("aria-expanded")));
+    }
+
     /// <summary>MudPopover renders its content through the provider, so the popover needs one in the tree — and one only, per test.</summary>
     private IRenderedFragment RenderWithPopovers(PeerStanding? standing)
     {
