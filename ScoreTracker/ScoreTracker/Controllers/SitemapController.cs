@@ -2,6 +2,7 @@ using System.Text;
 using System.Xml.Linq;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using ScoreTracker.EventCompetition.Contracts.Queries;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Services;
@@ -46,6 +47,13 @@ namespace ScoreTracker.Web.Controllers
             // The challenges hub — a fresh weekly chart set + a daily chart, now real HTML
             // (weekly-charts-overhaul.md §3.4). Absent before the static rebuild.
             pages.Add("https://piuscores.arroweclip.se/WeeklyCharts");
+            // March of Murlocs: the live season at its bare route, every past season at its own
+            // page — each a real crawlable board (march-of-murlocs.md §11.2, §11.8). Seasons are
+            // shared across mixes; Phoenix names the boards on them.
+            pages.Add("https://piuscores.arroweclip.se" + MoMText.SeasonRoute);
+            pages.AddRange((await _mediator.Send(new GetMoMSeasonsQuery(MixEnum.Phoenix), cancellationToken))
+                .Where(s => !s.Season.IsLive)
+                .Select(s => "https://piuscores.arroweclip.se" + MoMText.SeasonPath(s.Season.Id)));
             // Tier-lists overhaul C3: one canonical URL per Singles/Doubles folder that
             // actually has charts — each is an indexable community tier list.
             pages.AddRange(charts

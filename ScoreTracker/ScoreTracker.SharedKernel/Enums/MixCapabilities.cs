@@ -54,6 +54,16 @@ public static class MixCapabilities
     ///     calculator and the mix diff are deliberately absent: neither reads the selected mix,
     ///     so both stand on every mix.
     /// </summary>
+    /// <summary>
+    ///     March of Murlocs is a Phoenix-lineage event (docs/design/march-of-murlocs.md D19): it prices a
+    ///     1,000,000-scale score against a chart's level, which no legacy mix has. Phoenix 2 has the
+    ///     section too — its boards open after the scoring session, and the page says so (D12).
+    /// </summary>
+    public static bool HasMarchOfMurlocs(this MixEnum mix)
+    {
+        return !mix.UsesLegacyScoring();
+    }
+
     public static bool HasPhoenixCalculators(this MixEnum mix)
     {
         return !mix.UsesLegacyScoring();
