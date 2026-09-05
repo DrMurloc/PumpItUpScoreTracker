@@ -12,6 +12,7 @@ using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Exceptions;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Dtos.ApiV2;
@@ -208,6 +209,100 @@ public sealed class PlayersController : ApiV2ControllerBase
             : (ContinuationToken?)null;
 
         return Json(Page(rows, pageSize, userIds.Count, next));
+    }
+
+    /// <summary>
+    ///     PUMBILITY is a Phoenix-era number. A legacy mix answers 404 in the same voice as a tier
+    ///     list that a mix never published: "this does not exist here" is a different answer from
+    ///     "this is empty here", and a caller that cannot tell them apart waits for data that will
+    ///     never arrive.
+    /// </summary>
+    private ObjectResult NoPumbilityProblem(MixEnum mix)
+    {
+        return NotFoundProblem($"PUMBILITY is a Phoenix-era number; {mix} has no formula for it. " +
+                               "Ask for a Phoenix mix.");
+    }
+
+    /// <summary>
+    ///     PUMBILITY numbers for every readable player in one mix, highest PUMBILITY first — the
+    ///     same object <c>/api/v2/players/{playerId}/stats</c> returns, one per row, filtered like
+    ///     <c>/api/v2/players</c>. A readable player with no record in the mix is absent.
+    /// </summary>
+    /// <param name="mixValue">Required. A Phoenix mix from <c>/api/v2/mixes</c>; a legacy mix has no PUMBILITY and answers 404.</param>
+    /// <param name="community">Only members of this community, as on <c>/api/v2/players</c>.</param>
+    /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
+    /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetStats(
+        [FromQuery(Name = "mix")] string? mixValue = null,
+        [FromQuery(Name = "community")] string? community = null,
+        [FromQuery(Name = "cursor")] string? cursor = null,
+        [FromQuery(Name = "limit")] int? limit = null)
+    {
+        if (!TryReadRequest(mixValue, limit, out var mix, out var pageSize, out var mixFailure))
+            return mixFailure!;
+        if (mix.UsesLegacyScoring()) return NoPumbilityProblem(mix);
+
+        var (ids, communityKey, failure) = await ReadableWithin(community);
+        if (ids is null) return failure!;
+
+        var fingerprint = ContinuationToken.FingerprintOf(CredentialKey(_currentUser), mix, pageSize, communityKey);
+        var offset = 0;
+        if (cursor is not null)
+        {
+            if (!ContinuationToken.TryDecode(cursor, fingerprint, out var token)) return InvalidCursorProblem();
+            offset = token.Offset;
+        }
+
+        var rows = ids.Count == 0
+            ? Array.Empty<PlayerStatsRecord>()
+            : (await _mediator.Send(new GetPlayersStatsQuery(ids, mix)))
+            .OrderByDescending(s => s.SkillRating)
+            .ThenBy(s => s.UserId)
+            .ToArray();
+
+        var page = rows.Skip(offset).Take(pageSize).ToArray();
+        var identities = await PlayerIdentities.Resolve(_mediator, page.Select(s => s.UserId).ToArray());
+        var data = page
+            .Where(s => identities.ContainsKey(s.UserId))
+            .Select(s => new PlayerStatsDto(s.UserId, identities[s.UserId].Username, identities[s.UserId].GameTag, s))
+            .ToArray();
+
+        var next = offset + page.Length < rows.Length
+            ? ContinuationToken.FromOffset(offset + page.Length, fingerprint)
+            : (ContinuationToken?)null;
+
+        return Json(Page(data, pageSize, rows.Length, next));
+    }
+
+    /// <summary>
+    ///     One player's PUMBILITY numbers in one mix: the merged pool, the singles, doubles and
+    ///     co-op pools, the competitive levels, the highest level passed, the clear count, and where
+    ///     the site places them on piugame's official PUMBILITY ranking. What the site's PUMBILITY
+    ///     page shows.
+    /// </summary>
+    /// <param name="playerId">A player id from <c>/api/v2/players</c>, or <c>me</c> with a personal token.</param>
+    /// <param name="mixValue">Required. A Phoenix mix from <c>/api/v2/mixes</c>; a legacy mix has no PUMBILITY and answers 404.</param>
+    [HttpGet("{playerId}/stats")]
+    public async Task<IActionResult> GetPlayerStats([FromRoute] string playerId,
+        [FromQuery(Name = "mix")] string? mixValue = null)
+    {
+        var (resolved, failure) = await ResolvePlayer(playerId);
+        if (resolved is null) return failure!;
+        var userId = resolved.Value;
+        if (!V2MixParser.TryParse(mixValue, out var mix)) return MixRequiredProblem();
+        if (mix.UsesLegacyScoring()) return NoPumbilityProblem(mix);
+
+        // The bulk read rather than the single one: the single read answers a player with no row
+        // with a zeroed record, and a zero PUMBILITY is not the same fact as no record at all.
+        var stats = (await _mediator.Send(new GetPlayersStatsQuery(new[] { userId }, mix)))
+            .FirstOrDefault(s => s.UserId == userId);
+        if (stats is null) return NotFoundProblem("No record for that player in this mix.");
+
+        var identities = await PlayerIdentities.Resolve(_mediator, new[] { userId });
+        if (!identities.TryGetValue(userId, out var identity)) return Unreachable();
+
+        return Json(new PlayerStatsDto(userId, identity.Username, identity.GameTag, stats));
     }
 
     /// <summary>The player's profile, with their most recently observed in-game tag.</summary>

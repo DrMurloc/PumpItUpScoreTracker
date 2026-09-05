@@ -271,6 +271,85 @@ public sealed class SessionDto
     public int ScoreCount { get; set; }
 }
 
+/// <summary>
+///     A player's PUMBILITY numbers in one mix — what the site's PUMBILITY page shows. Pools and
+///     levels print with two decimals, the same presentation rounding the per-score
+///     <c>pumbility</c> already uses; nothing below this DTO rounds.
+/// </summary>
+public sealed class PlayerStatsDto
+{
+    public PlayerStatsDto(Guid userId, string username, string? gameTag, PlayerStatsRecord stats)
+    {
+        UserId = userId;
+        Username = username;
+        GameTag = gameTag;
+        Pumbility = Math.Round(stats.SkillRating, 2);
+        SinglesPumbility = Math.Round(stats.SinglesRating, 2);
+        DoublesPumbility = Math.Round(stats.DoublesRating, 2);
+        CoOpPumbility = Math.Round(stats.CoOpRating, 2);
+        CompetitiveLevel = Math.Round(stats.CompetitiveLevel, 2);
+        SinglesCompetitiveLevel = Math.Round(stats.SinglesCompetitiveLevel, 2);
+        DoublesCompetitiveLevel = Math.Round(stats.DoublesCompetitiveLevel, 2);
+        HighestLevel = stats.HighestLevel;
+        ClearCount = stats.ClearCount;
+        EstimatedPumbilityRank = stats.EstimatedPumbilityRank;
+        EstimatedSinglesPumbilityRank = stats.EstimatedSinglesPumbilityRank;
+        EstimatedDoublesPumbilityRank = stats.EstimatedDoublesPumbilityRank;
+        EstimatedRankAsOf = stats.PumbilityBoardAsOf;
+    }
+
+    /// <summary>The PIU Scores account. The same id <c>/api/v2/players</c> lists.</summary>
+    public Guid UserId { get; set; }
+
+    /// <summary>The player's PIU Scores username.</summary>
+    public string Username { get; set; }
+
+    /// <summary>The in-game tag, most recently observed; null when no import has linked one.</summary>
+    public string? GameTag { get; set; }
+
+    /// <summary>The player's PUMBILITY in this mix: the merged pool, the number the site's PUMBILITY page leads with.</summary>
+    public double Pumbility { get; set; }
+
+    /// <summary>The singles pool — the player's top fifty singles charts under the mix's formula.</summary>
+    public double SinglesPumbility { get; set; }
+
+    /// <summary>The doubles pool — the player's top fifty doubles charts under the mix's formula.</summary>
+    public double DoublesPumbility { get; set; }
+
+    /// <summary>The co-op pool.</summary>
+    public double CoOpPumbility { get; set; }
+
+    /// <summary>The level the player competes at, as the site estimates it from their scores.</summary>
+    public double CompetitiveLevel { get; set; }
+
+    /// <summary><see cref="CompetitiveLevel" /> over singles charts only.</summary>
+    public double SinglesCompetitiveLevel { get; set; }
+
+    /// <summary><see cref="CompetitiveLevel" /> over doubles charts only.</summary>
+    public double DoublesCompetitiveLevel { get; set; }
+
+    /// <summary>The highest chart level the player has passed in this mix.</summary>
+    public int HighestLevel { get; set; }
+
+    /// <summary>How many charts the player has passed in this mix.</summary>
+    public int ClearCount { get; set; }
+
+    /// <summary>
+    ///     Where the site places the player on piugame's official PUMBILITY ranking, which it
+    ///     downloads weekly. Null when the site has no estimate for them.
+    /// </summary>
+    public int? EstimatedPumbilityRank { get; set; }
+
+    /// <summary><see cref="EstimatedPumbilityRank" /> on the official singles ranking.</summary>
+    public int? EstimatedSinglesPumbilityRank { get; set; }
+
+    /// <summary><see cref="EstimatedPumbilityRank" /> on the official doubles ranking.</summary>
+    public int? EstimatedDoublesPumbilityRank { get; set; }
+
+    /// <summary>The weekly download of the official ranking the estimates were made against.</summary>
+    public DateTimeOffset? EstimatedRankAsOf { get; set; }
+}
+
 public sealed class WeeklyChartDto
 {
     public Guid ChartId { get; set; }
