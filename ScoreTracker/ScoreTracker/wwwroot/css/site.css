@@ -18908,9 +18908,18 @@ a.peer-pop-row:hover {
     margin-top: 12px;
 }
 
-/* A radio's whole option is its label, so the text toggles it too (owner field test). */
+/* A radio's whole option is its label, so the text toggles it too, and every option is its own
+   row: MudBlazor lays a radio group out as a wrapping row, which sat "Actual letter grade" beside
+   "three steps" (owner field test). */
+.pcd .mud-radio-group {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
 .pcd-radio {
     display: block;
+    width: 100%;
 }
 
 .pcd-radio .mud-radio {

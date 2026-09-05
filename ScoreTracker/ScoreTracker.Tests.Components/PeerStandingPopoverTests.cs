@@ -83,7 +83,6 @@ public sealed class PeerStandingPopoverTests : ComponentTestBase
         var cut = Render(Full());
 
         Assert.Empty(cut.FindAll("a[data-testid='peer-pop-source']"));
-        Assert.DoesNotContain("Each line opens that board.", cut.Markup);
     }
 
     [Fact]

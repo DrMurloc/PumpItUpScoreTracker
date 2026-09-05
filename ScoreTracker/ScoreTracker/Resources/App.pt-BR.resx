@@ -2383,9 +2383,6 @@
   <data name="Duration (seconds)" xml:space="preserve">
     <value>Duração (segundos)</value>
   </data>
-  <data name="Each line opens that board." xml:space="preserve">
-    <value>Cada linha abre esse placar.</value>
-  </data>
   <data name="Each row is a level. The bar starts at a 900,000 on that level — a clean pass — and climbs through the grades; the axis is" xml:space="preserve">
     <value>Cada linha é um nível. A barra começa em um 900.000 naquele nível — um pass limpo — e sobe pelos graus; o eixo é</value>
   </data>
