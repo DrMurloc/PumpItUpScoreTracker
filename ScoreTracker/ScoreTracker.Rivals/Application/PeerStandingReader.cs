@@ -194,7 +194,8 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
                 peers.Has(PeerSourceKind.Rivals, u.Id),
                 peers.CommunityNames(u.Id),
                 peers.Has(PeerSourceKind.CompetitiveLevel, u.Id),
-                peers.Has(PeerSourceKind.Pumbility, u.Id)))
+                peers.Has(PeerSourceKind.Pumbility, u.Id),
+                peers.IsClubmate(u.Id)))
             .OrderBy(r => Math.Abs(r.Level - myLevel))
             .ThenBy(r => r.User.Name.ToString())
             .Take(request.Take)
@@ -265,6 +266,10 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
 
         public bool Has(PeerSourceKind kind, Guid id) =>
             Sources.Any(s => s.Kind == kind && s.Members.Contains(id));
+
+        /// <summary>A member of one of your clubs — World and a country are communities, not clubs (D34).</summary>
+        public bool IsClubmate(Guid id) =>
+            Sources.Any(s => s.Kind == PeerSourceKind.Community && !s.IsRegional && !s.IsWorld && s.Members.Contains(id));
 
         public IReadOnlyList<string> CommunityNames(Guid id) =>
             Sources.Where(s => s.Kind == PeerSourceKind.Community && s.Members.Contains(id))

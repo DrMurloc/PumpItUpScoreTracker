@@ -208,7 +208,7 @@ else
 
     /// <summary>The shared row ladder: a rival's red edge, a clubmate's green, both when both.</summary>
     private static string RowClass(PeerListEntry row) =>
-        CommunityGlowReader.RowClass(false, row.IsRival, row.Communities.Count > 0, "dash-lb-you", "dash-lb-community");
+        CommunityGlowReader.RowClass(false, row.IsRival, row.IsClubmate, "dash-lb-you", "dash-lb-community");
 
     protected override async Task OnParametersSetAsync()
     {

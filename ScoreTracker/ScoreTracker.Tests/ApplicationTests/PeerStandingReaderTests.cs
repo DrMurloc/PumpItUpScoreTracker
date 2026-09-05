@@ -359,6 +359,49 @@ public sealed class PeerStandingReaderTests
         Assert.Empty(standings);
     }
 
+    /// <summary>
+    ///     World and your country are communities and tag the row; the clubmate edge is for a
+    ///     club, as everywhere on the site. A peer who shares only your country is no clubmate.
+    /// </summary>
+    [Fact]
+    public async Task TheRosterMarksClubmatesButNotCountrymen()
+    {
+        var clubmate = Guid.NewGuid();
+        var countryman = Guid.NewGuid();
+        var club = Guid.NewGuid();
+        var region = Guid.NewGuid();
+        _settings[PeerSourceSelection.SettingKey] = new PeerSourceSelection(false, false, false,
+            new HashSet<Guid> { club, region }).Serialize();
+        _communities.Setup(c => c.GetUserCommunities(Me, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new CommunityOverviewRecord("Club", CommunityPrivacyType.Private, 3, false, club),
+                new CommunityOverviewRecord("United States", CommunityPrivacyType.Public, 900, true, region)
+            });
+        _communities.Setup(c => c.GetMembers(It.Is<Name>(n => n.ToString() == "Club"), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Me, clubmate });
+        _communities.Setup(c => c.GetMembers(It.Is<Name>(n => n.ToString() == "United States"), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Me, clubmate, countryman });
+        _users.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new UserBuilder().WithId(clubmate).WithName("Clubmate").Build(),
+                new UserBuilder().WithId(countryman).WithName("Countryman").Build()
+            });
+        _visibility.Setup(v => v.GetAudience(Me, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PlayerAudience(Me, new Dictionary<Guid, IReadOnlyList<Name>>(), new HashSet<Guid>()));
+        _stats.Setup(s => s.GetStats(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Stats(clubmate, 21.2), Stats(countryman, 21.4) });
+
+        var roster = await Reader().Handle(new GetMyPeerRosterQuery(MixEnum.Phoenix, ChartType.Single, 25),
+            CancellationToken.None);
+
+        var byId = roster.Players.ToDictionary(p => p.User.Id);
+        Assert.True(byId[clubmate].IsClubmate);
+        Assert.False(byId[countryman].IsClubmate);
+        Assert.Equal(new[] { "United States" }, byId[countryman].Communities);
+    }
+
     [Fact]
     public async Task TheRosterSortsVisiblePeersNearestYourLevelAndCarriesGhostsSeparately()
     {

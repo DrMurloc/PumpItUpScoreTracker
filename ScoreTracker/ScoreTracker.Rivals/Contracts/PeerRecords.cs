@@ -5,7 +5,9 @@ namespace ScoreTracker.Rivals.Contracts;
 /// <summary>
 ///     One site player on your peers list (docs/design/peers-abstraction.md D18): who they are,
 ///     the competitive level the list is sorted on, and every reason they are a peer, so the
-///     widget can tag the row rather than guess.
+///     widget can tag the row rather than guess. <paramref name="Communities" /> names every
+///     community shared, World and your country included; <paramref name="IsClubmate" /> is true
+///     for a club only, because the clubmate edge means a club everywhere on the site (D34).
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record PeerListEntry(
@@ -14,7 +16,8 @@ public sealed record PeerListEntry(
     bool IsRival,
     IReadOnlyList<string> Communities,
     bool IsCompetitive,
-    bool IsPumbility);
+    bool IsPumbility,
+    bool IsClubmate);
 
 /// <summary>
 ///     Your peers, nearest competitive level first. Board-only rivals have no site level, so they

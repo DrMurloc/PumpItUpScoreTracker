@@ -78,9 +78,9 @@ public sealed class AccountStatsWidgetTests : ComponentTestBase
             .ReturnsAsync(new PeerList(new[]
                 {
                     new PeerListEntry(new User(_crewMate, "CrewMate", false, null, new Uri("https://piu.test/c.png"), null),
-                        21.33, false, new[] { "NorCal Pump" }, true, false),
+                        21.33, false, new[] { "NorCal Pump" }, true, false, true),
                     new PeerListEntry(new User(_publicRival, "PublicRival", true, null, new Uri("https://piu.test/p.png"), null),
-                        21.36, true, Array.Empty<string>(), true, true)
+                        21.36, true, Array.Empty<string>(), true, true, false)
                 },
                 new[]
                 {
@@ -126,6 +126,29 @@ public sealed class AccountStatsWidgetTests : ComponentTestBase
         var cut = Render("1x1");
 
         Assert.Empty(cut.FindAll(".pumbility-level-badge"));
+    }
+
+    /// <summary>
+    ///     World and your country are communities: they tag the row. The clubmate edge means a
+    ///     club everywhere on the site, so a peer who shares only your country wears the tag and
+    ///     not the edge.
+    /// </summary>
+    [Fact]
+    public void ACountrymanWearsTheTagButNotTheClubmateEdge()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyPeerRosterQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PeerList(new[]
+                {
+                    new PeerListEntry(new User(_crewMate, "Compatriot", true, null, new Uri("https://piu.test/c.png"), null),
+                        21.33, false, new[] { "United States" }, false, false, false)
+                },
+                Array.Empty<RivalSubject>(), Total: 1, MyLevel: 21.34));
+
+        var cut = Render("1x2");
+
+        var row = Assert.Single(cut.FindAll("[data-testid='acct-peer']"));
+        Assert.Contains("US", row.TextContent);
+        Assert.DoesNotContain("dash-lb-community", row.ClassName);
     }
 
     [Fact]
