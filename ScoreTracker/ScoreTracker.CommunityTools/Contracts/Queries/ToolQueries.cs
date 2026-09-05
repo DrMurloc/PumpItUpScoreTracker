@@ -49,6 +49,16 @@ public sealed record GetToolReadablePlayersQuery(Guid ToolId) : IQuery<IReadOnly
 [ExcludeFromCodeCoverage]
 public sealed record CanToolReadPlayerQuery(Guid ToolId, Guid UserId) : IQuery<bool>;
 
+/// <summary>
+///     The account that owns a tool, or null for no such tool. Ungated, unlike
+///     <see cref="GetToolQuery" />, which resolves the caller through the signed-in user — a
+///     request made with a tool key has none, and the key already proves the caller acts for the
+///     tool. The API uses it to answer "may this tool see that private community" with the maker's
+///     own membership.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record GetToolOwnerQuery(Guid ToolId) : IQuery<Guid?>;
+
 [ExcludeFromCodeCoverage]
 public sealed record GetToolActivityQuery(Guid ToolId, int Limit = 100)
     : IQuery<IReadOnlyList<ToolActivityRecord>>;
