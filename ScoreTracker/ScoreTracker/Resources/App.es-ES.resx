@@ -6126,9 +6126,6 @@
   <data name="PUMBILITY peers" xml:space="preserve">
     <value>Pares de PUMBILITY</value>
   </data>
-  <data name="PUMBILITY Pool" xml:space="preserve">
-    <value>Pool de PUMBILITY</value>
-  </data>
   <data name="Pumbility Push" xml:space="preserve">
     <value>Subida de Pumbility</value>
   </data>
@@ -7868,6 +7865,9 @@
   <data name="The extremes are real charts, not noise — the shortest and longest chart at each level." xml:space="preserve">
     <value>Los extremos son charts reales, no ruido — el chart más corto y el más largo de cada nivel.</value>
   </data>
+  <data name="The fifty charts your PUMBILITY is the sum of, grouped by what each is worth to you — its place, its value, and the score that earned it." xml:space="preserve">
+    <value>Los cincuenta charts que suman tu PUMBILITY, agrupados por lo que cada uno vale para ti: su posición, su valor y el score que lo consiguió.</value>
+  </data>
   <data name="The first Phoenix 2 score to beat your Phoenix 1 best" xml:space="preserve">
     <value>La primera puntuación de Phoenix 2 que supera tu mejor marca de Phoenix 1</value>
   </data>
@@ -9571,9 +9571,6 @@
   </data>
   <data name="Your pool" xml:space="preserve">
     <value>Tu conjunto</value>
-  </data>
-  <data name="Your pool by place, with what your peers do on each chart — how many hold it, their median and how split they are — and the waiting room below the bar." xml:space="preserve">
-    <value>Tu conjunto por puesto, con lo que hacen tus pares en cada chart — cuántos lo tienen, su mediana y qué tan repartidos están — y la sala de espera bajo el límite.</value>
   </data>
   <data name="Your pool holds {0} of 50. Until it's full, every chart you play counts whole — there's no bar to beat yet." xml:space="preserve">
     <value>Tu conjunto tiene {0} de 50. Hasta que se llene, cada gráfico que juegues cuenta entero: todavía no hay límite que superar.</value>
