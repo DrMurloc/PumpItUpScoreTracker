@@ -19,13 +19,25 @@ public sealed class OfficialPlayerDto
         PlayerId = record.PlayerId;
         GameTag = record.Username;
         AvatarUrl = record.AvatarUrl?.ToString();
+        IsSupplemented = record.IsSupplemented;
     }
 
     /// <summary>piugame's own player id, which is public on their boards.</summary>
     public int PlayerId { get; set; }
 
+    /// <summary>The in-game tag as piugame spells it, discriminator included.</summary>
     public string GameTag { get; set; }
+
+    /// <summary>The avatar piugame shows on its boards, when it has one.</summary>
     public string? AvatarUrl { get; set; }
+
+    /// <summary>
+    ///     True when this player is on the board only because PIU Scores knows their scores — a
+    ///     public PIU Scores account whose verified bests were folded in by
+    ///     <c>supplemented=true</c>. A property of the reading, not the person: always false in the
+    ///     official reading.
+    /// </summary>
+    public bool IsSupplemented { get; set; }
 }
 
 public sealed class OfficialRankingDto
@@ -64,6 +76,13 @@ public sealed class OfficialPlacementDto
     ///     payload has always carried one.
     /// </summary>
     public double ComputedRating { get; set; }
+
+    /// <summary>
+    ///     True when this placement is a verified PIU Scores best the official board does not list,
+    ///     appended below the board's official rows by <c>supplemented=true</c>. Always false in the
+    ///     official reading.
+    /// </summary>
+    public bool IsSupplemented { get; set; }
 }
 
 public sealed class OfficialHistoryPointDto
@@ -81,6 +100,7 @@ public sealed class OfficialPlayerProfileDto
         Player = new OfficialPlayerDto(record.Player);
         PlayerType = record.PlayerType?.ToString();
         Pumbility = record.Pumbility;
+        PumbilityIsSupplemented = record.PumbilityIsSupplemented;
         PumbilityRank = record.PumbilityRank;
         PumbilityRankDelta = record.PumbilityRankDelta;
         BoardsInTop = record.BoardsInTop;
@@ -94,13 +114,21 @@ public sealed class OfficialPlayerProfileDto
         Placements = record.Placements.Select(p => new OfficialPlacementDto
         {
             ChartId = p.ChartId, Place = p.Place, PlaceDelta = p.PlaceDelta,
-            Score = p.Score, ComputedRating = p.ComputedRating
+            Score = p.Score, ComputedRating = p.ComputedRating, IsSupplemented = p.IsSupplemented
         }).ToArray();
     }
 
     public OfficialPlayerDto Player { get; set; }
     public string? PlayerType { get; set; }
     public decimal? Pumbility { get; set; }
+
+    /// <summary>
+    ///     True when <see cref="Pumbility" /> is PIU Scores' computed number for a player piugame's
+    ///     ranking does not list, supplied by <c>supplemented=true</c>, rather than piugame's own.
+    ///     False in the official reading, and false when there is no PUMBILITY value at all.
+    /// </summary>
+    public bool PumbilityIsSupplemented { get; set; }
+
     public int? PumbilityRank { get; set; }
     public int? PumbilityRankDelta { get; set; }
     public int BoardsInTop { get; set; }

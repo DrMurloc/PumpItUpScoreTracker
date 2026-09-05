@@ -29,15 +29,25 @@ public sealed class OfficialController : ApiV2ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>The PUMBILITY ranking as piugame publishes it, or the PIU Scores Supplemented reading of it.</summary>
+    /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
     /// <param name="type">Board to read: All, Single, Double, CoOp. Defaults to All.</param>
+    /// <param name="supplemented">
+    ///     The PIU Scores Supplemented switch from the Official Leaderboards section. When true, public
+    ///     PIU Scores accounts' verified scores are folded into the ranking: official rows are never
+    ///     displaced, places are renumbered, and a row whose player is on the ranking only because
+    ///     PIU Scores knows their scores carries <c>player.isSupplemented</c>. Defaults to false, the
+    ///     ranking exactly as piugame publishes it.
+    /// </param>
     [HttpGet("rankings")]
     public async Task<IActionResult> GetRankings(
         [FromQuery(Name = "mix")] string? mixValue = null,
-        [FromQuery(Name = "type")] string type = "All")
+        [FromQuery(Name = "type")] string type = "All",
+        [FromQuery(Name = "supplemented")] bool supplemented = false)
     {
         if (!V2MixParser.TryParse(mixValue, out var mix)) return MixRequiredProblem();
 
-        var rankings = await _mediator.Send(new GetOfficialRankingsQuery(mix, type));
+        var rankings = await _mediator.Send(new GetOfficialRankingsQuery(mix, type, supplemented));
         return Json(new OfficialRankingsDto
         {
             SnapshotAt = rankings.SnapshotAt,
@@ -54,26 +64,49 @@ public sealed class OfficialController : ApiV2ControllerBase
         });
     }
 
+    /// <summary>
+    ///     One player's standing on the boards: tiles, week-by-week history and every placement. A
+    ///     tag piugame's boards do not list but PIU Scores knows answers with an empty profile in the
+    ///     official reading; ask for <c>supplemented=true</c> to see where that player actually stands.
+    /// </summary>
     /// <param name="gameTag">The in-game tag as piugame spells it, e.g. "MURLOC#1".</param>
+    /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
+    /// <param name="supplemented">
+    ///     The PIU Scores Supplemented switch. When true, the profile includes the player's verified
+    ///     PIU Scores bests below each board's official rows, marked <c>isSupplemented</c>, and
+    ///     <c>pumbilityIsSupplemented</c> says when the PUMBILITY value is PIU Scores' computed number
+    ///     rather than piugame's. A supplemented rank is only meaningful against
+    ///     <c>rankings?supplemented=true</c>. Defaults to false.
+    /// </param>
     [HttpGet("players/{gameTag}")]
     public async Task<IActionResult> GetPlayer([FromRoute] string gameTag,
-        [FromQuery(Name = "mix")] string? mixValue = null)
+        [FromQuery(Name = "mix")] string? mixValue = null,
+        [FromQuery(Name = "supplemented")] bool supplemented = false)
     {
         if (!V2MixParser.TryParse(mixValue, out var mix)) return MixRequiredProblem();
 
-        var profile = await _mediator.Send(new GetOfficialPlayerProfileQuery(mix, gameTag));
+        var profile = await _mediator.Send(new GetOfficialPlayerProfileQuery(mix, gameTag, supplemented));
         if (profile is null) return NotFoundProblem("No official player with that tag in this mix.");
 
         return Json(new OfficialPlayerProfileDto(profile));
     }
 
+    /// <summary>The chart's full mirrored board at the latest weekly snapshot.</summary>
+    /// <param name="chartId">A chart id from <c>/api/v2/charts</c>.</param>
+    /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
+    /// <param name="supplemented">
+    ///     The PIU Scores Supplemented switch. When true, verified PIU Scores bests of public accounts
+    ///     the board does not list are appended below the official rows, each marked
+    ///     <c>player.isSupplemented</c>. Defaults to false.
+    /// </param>
     [HttpGet("charts/{chartId:guid}/board")]
     public async Task<IActionResult> GetChartBoard([FromRoute] Guid chartId,
-        [FromQuery(Name = "mix")] string? mixValue = null)
+        [FromQuery(Name = "mix")] string? mixValue = null,
+        [FromQuery(Name = "supplemented")] bool supplemented = false)
     {
         if (!V2MixParser.TryParse(mixValue, out var mix)) return MixRequiredProblem();
 
-        var board = await _mediator.Send(new GetOfficialChartBoardQuery(mix, chartId));
+        var board = await _mediator.Send(new GetOfficialChartBoardQuery(mix, chartId, supplemented));
         if (board is null) return NotFoundProblem("No official board is mirrored for that chart.");
 
         return Json(new OfficialChartBoardDto
@@ -119,12 +152,20 @@ public sealed class OfficialController : ApiV2ControllerBase
         return Json(new WhatItTakesDto(await _mediator.Send(new GetWhatItTakesQuery(mix, type))));
     }
 
+    /// <summary>This week on the boards: the pulse, movers, gainers, debuts, climbers, world firsts and new #1s.</summary>
+    /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
+    /// <param name="supplemented">
+    ///     The PIU Scores Supplemented switch. When true, every week-over-week kind is recomputed over
+    ///     the supplemented boards; world firsts and new #1s stay official, as on the site. Defaults
+    ///     to false.
+    /// </param>
     [HttpGet("weekly-highlights")]
-    public async Task<IActionResult> GetWeeklyHighlights([FromQuery(Name = "mix")] string? mixValue = null)
+    public async Task<IActionResult> GetWeeklyHighlights([FromQuery(Name = "mix")] string? mixValue = null,
+        [FromQuery(Name = "supplemented")] bool supplemented = false)
     {
         if (!V2MixParser.TryParse(mixValue, out var mix)) return MixRequiredProblem();
 
-        var highlights = await _mediator.Send(new GetWeeklyHighlightsQuery(mix));
+        var highlights = await _mediator.Send(new GetWeeklyHighlightsQuery(mix, supplemented));
         if (highlights is null) return NotFoundProblem("No weekly snapshot has been sealed for this mix yet.");
 
         return Json(new WeeklyHighlightsDto(highlights));
