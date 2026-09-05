@@ -2570,9 +2570,6 @@
   <data name="Every tracked personal best on this mix, stacked by grade band per level. The typical best at almost every level is an S or better." xml:space="preserve">
     <value>このバージョンで追跡している自己ベストをレベルごとにランク帯で積み上げています。ほぼどのレベルでも、典型的な自己ベストはS以上です。</value>
   </data>
-  <data name="Everyone" xml:space="preserve">
-    <value>全員</value>
-  </data>
   <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
     <value>ほかの人のものです。管理できますが、作者には通知されません。</value>
   </data>
@@ -4121,8 +4118,8 @@
   <data name="Members" xml:space="preserve">
     <value>メンバー</value>
   </data>
-  <data name="Members of the communities you tick. Your country is a community too, and World is everyone on the site." xml:space="preserve">
-    <value>チェックしたコミュニティのメンバーです。あなたの国もコミュニティのひとつで、Worldはサイトの全員です。</value>
+  <data name="Members of the communities you tick. Your country and World are communities too." xml:space="preserve">
+    <value>チェックしたコミュニティのメンバーです。あなたの国とWorldもコミュニティです。</value>
   </data>
   <data name="Merge Accounts" xml:space="preserve">
     <value>アカウント統合</value>
@@ -4626,6 +4623,9 @@
   </data>
   <data name="No passes yet" xml:space="preserve">
     <value>まだクリアなし</value>
+  </data>
+  <data name="No peer has passed it" xml:space="preserve">
+    <value>ピアの中にクリアした人なし</value>
   </data>
   <data name="No peer holds it" xml:space="preserve">
     <value>持っているピアはいない</value>

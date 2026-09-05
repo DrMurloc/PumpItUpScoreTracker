@@ -2570,9 +2570,6 @@
   <data name="Every tracked personal best on this mix, stacked by grade band per level. The typical best at almost every level is an S or better." xml:space="preserve">
     <value>Blub grobgro morp gro mgrlgmrg ur ur mrg, groplo pa rorgl grolgub pa grorpmurm. Gro groblub gro og ro blub grorpmurm gro a Ｓ ol grombl.</value>
   </data>
-  <data name="Everyone" xml:space="preserve">
-    <value>Grolurgmorp</value>
-  </data>
   <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
     <value>Blurgl bloop am olo. Golba marogl, opa grumb alla pragl.</value>
   </data>
@@ -4121,8 +4118,8 @@
   <data name="Members" xml:space="preserve">
     <value>Mrglmurmro</value>
   </data>
-  <data name="Members of the communities you tick. Your country is a community too, and World is everyone on the site." xml:space="preserve">
-    <value>Urgurglorg ob ur grglrglplglblub murg grrglrorg. Morp glubmrpbrgl ur a plglmurgblub plgl, opa Grolurg ur grolurgmorp ap ur murgblub.</value>
+  <data name="Members of the communities you tick. Your country and World are communities too." xml:space="preserve">
+    <value>Urgurglorg ob ur grglrglplglblub murg grrglrorg. Morp glubmrpbrgl opa Grolurg ur grglrglplglblub plgl.</value>
   </data>
   <data name="Merge Accounts" xml:space="preserve">
     <value>Murmplgl Grglrgl</value>
@@ -4626,6 +4623,9 @@
   </data>
   <data name="No passes yet" xml:space="preserve">
     <value>Mo rglplgl larg</value>
+  </data>
+  <data name="No peer has passed it" xml:space="preserve">
+    <value>Mo maglmurp gl rglplgl mrp</value>
   </data>
   <data name="No peer holds it" xml:space="preserve">
     <value>Mo maglmurp mrgloru</value>

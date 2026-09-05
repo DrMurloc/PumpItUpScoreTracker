@@ -2554,9 +2554,6 @@
   <data name="Every tracked personal best on this mix, stacked by grade band per level. The typical best at almost every level is an S or better." xml:space="preserve">
     <value>Cada récord personal rastreado en esta versión, apilado por banda de letra por nivel. El récord típico en casi cada nivel es un S o mejor.</value>
   </data>
-  <data name="Everyone" xml:space="preserve">
-    <value>Todos</value>
-  </data>
   <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
     <value>Las de los demás. Puedes gestionarlas, y no se avisa a quien las hizo.</value>
   </data>
@@ -4096,8 +4093,8 @@
   <data name="Members" xml:space="preserve">
     <value>Miembros</value>
   </data>
-  <data name="Members of the communities you tick. Your country is a community too, and World is everyone on the site." xml:space="preserve">
-    <value>Miembros de las comunidades que marques. Tu país también es una comunidad, y World es todo el sitio.</value>
+  <data name="Members of the communities you tick. Your country and World are communities too." xml:space="preserve">
+    <value>Miembros de las comunidades que marques. Tu país y World también son comunidades.</value>
   </data>
   <data name="Merge Accounts" xml:space="preserve">
     <value>Fusionar cuentas</value>
@@ -4596,6 +4593,9 @@
   </data>
   <data name="No passes yet" xml:space="preserve">
     <value>Todavía sin pases</value>
+  </data>
+  <data name="No peer has passed it" xml:space="preserve">
+    <value>Ningún par lo ha pasado</value>
   </data>
   <data name="No peer holds it" xml:space="preserve">
     <value>Ningún par lo tiene</value>

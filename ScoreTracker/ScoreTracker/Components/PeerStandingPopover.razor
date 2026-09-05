@@ -111,7 +111,7 @@
         PeerSourceKind.Rivals => L["Rivals"],
         PeerSourceKind.CompetitiveLevel => L["Competitive level ±0.5"],
         PeerSourceKind.Pumbility => L["PUMBILITY peers"],
-        _ when source.IsWorld => $"{L["World"]} · {L["Everyone"]}",
+        // World is a community like any other (D30): its name, no "everyone".
         _ when source.IsRegional => $"{source.CommunityName} · {L["Region"]}",
         _ => source.CommunityName ?? L["Community"]
     };

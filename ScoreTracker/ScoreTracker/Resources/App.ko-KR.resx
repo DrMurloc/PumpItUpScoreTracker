@@ -2554,9 +2554,6 @@
   <data name="Every tracked personal best on this mix, stacked by grade band per level. The typical best at almost every level is an S or better." xml:space="preserve">
     <value>이 시리즈에서 추적된 모든 개인 최고 기록을 레벨별 랭크 구간으로 쌓아 보여줍니다. 거의 모든 레벨에서 일반적인 최고 기록은 S 이상입니다.</value>
   </data>
-  <data name="Everyone" xml:space="preserve">
-    <value>전체</value>
-  </data>
   <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
     <value>다른 사람들의 도구입니다. 관리할 수 있으며, 제작자에게는 알리지 않습니다.</value>
   </data>
@@ -4096,8 +4093,8 @@
   <data name="Members" xml:space="preserve">
     <value>멤버</value>
   </data>
-  <data name="Members of the communities you tick. Your country is a community too, and World is everyone on the site." xml:space="preserve">
-    <value>체크한 커뮤니티의 멤버입니다. 내 국가도 하나의 커뮤니티이며, World는 사이트의 모든 사람입니다.</value>
+  <data name="Members of the communities you tick. Your country and World are communities too." xml:space="preserve">
+    <value>체크한 커뮤니티의 멤버입니다. 내 국가와 World도 커뮤니티입니다.</value>
   </data>
   <data name="Merge Accounts" xml:space="preserve">
     <value>계정 병합</value>
@@ -4596,6 +4593,9 @@
   </data>
   <data name="No passes yet" xml:space="preserve">
     <value>아직 클리어 없음</value>
+  </data>
+  <data name="No peer has passed it" xml:space="preserve">
+    <value>동료 중 클리어한 사람 없음</value>
   </data>
   <data name="No peer holds it" xml:space="preserve">
     <value>보유한 동료 없음</value>

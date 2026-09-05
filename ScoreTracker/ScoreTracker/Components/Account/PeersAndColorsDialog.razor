@@ -51,7 +51,7 @@
                         <span></span>
                         <span class="pcd-opt-body">
                             <span class="pcd-opt-label">@L["Communities"]</span>
-                            <span class="pcd-opt-help">@L["Members of the communities you tick. Your country is a community too, and World is everyone on the site."]</span>
+                            <span class="pcd-opt-help">@L["Members of the communities you tick. Your country and World are communities too."]</span>
                         </span>
                     </div>
                     <div class="pcd-sub">
@@ -67,10 +67,6 @@
                                         @if (community.IsRegional)
                                         {
                                             <span class="pcd-tag">@L["Region"]</span>
-                                        }
-                                        else if (community.IsWorld)
-                                        {
-                                            <span class="pcd-tag">@L["Everyone"]</span>
                                         }
                                     </span>
                                 </span>

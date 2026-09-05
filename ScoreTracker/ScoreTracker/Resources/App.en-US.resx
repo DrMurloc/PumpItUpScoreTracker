@@ -2570,9 +2570,6 @@
   <data name="Every tracked personal best on this mix, stacked by grade band per level. The typical best at almost every level is an S or better." xml:space="preserve">
     <value>Every tracked personal best on this mix, stacked by grade band per level. The typical best at almost every level is an S or better.</value>
   </data>
-  <data name="Everyone" xml:space="preserve">
-    <value>Everyone</value>
-  </data>
   <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
     <value>Everyone else's. You can manage these, and the maker is not told.</value>
   </data>
@@ -4121,8 +4118,8 @@
   <data name="Members" xml:space="preserve">
     <value>Members</value>
   </data>
-  <data name="Members of the communities you tick. Your country is a community too, and World is everyone on the site." xml:space="preserve">
-    <value>Members of the communities you tick. Your country is a community too, and World is everyone on the site.</value>
+  <data name="Members of the communities you tick. Your country and World are communities too." xml:space="preserve">
+    <value>Members of the communities you tick. Your country and World are communities too.</value>
   </data>
   <data name="Merge Accounts" xml:space="preserve">
     <value>Merge Accounts</value>
@@ -4626,6 +4623,9 @@
   </data>
   <data name="No passes yet" xml:space="preserve">
     <value>No passes yet</value>
+  </data>
+  <data name="No peer has passed it" xml:space="preserve">
+    <value>No peer has passed it</value>
   </data>
   <data name="No peer holds it" xml:space="preserve">
     <value>No peer holds it</value>

@@ -46,7 +46,7 @@ Owner rulings from the 2026-09-05 workshop, in his words where quoted.
 | D4 | **Hot Streak follows the selected peers.** Its "beat X% of peers" bar reads the same standing the colors do; it was the one calculative-looking consumer the owner moved to the display side. |
 | D5 | **Discord cards and community feeds are untouched**: they keep the ±0.5 competitive cohort captured at import. *"Discord notifications we'll solve in a future session."* `HighlightCaptureSaga`, `HighlightDetail` and `CommunitySaga.PeerCaption` do not change. |
 | D6 | **The Sessions page colors live**, against the peers as they stand now, not the cohort captured at import. An old session recolors as your peers change; that is the correct reading of a preference. The captured percentile stays on the row for the Discord card and the ScoreQuality90 flag. |
-| D7 | **World is a community you can tick.** Every account belongs to it; ticked, your peers are everyone on the site with a passing score. Regions are your country's community, listed with a *Region* tag. |
+| D7 | **World is a community you can tick.** Its members are the public players (D30); ticked, your peers are every public player with a passing score. Regions are your country's community, listed with a *Region* tag. |
 | D8 | **Board-only rivals are rivals.** *"Those are, for all intents and purposes, rivals."* A ghost's standing comes from the weekly official board (`RivalScoreReader`), so a ghost counts only on the charts the mirror publishes and only when they placed; the popover marks those lines with the mirror's asterisk and as-of date. No opt-out checkbox: *"just always include them."* |
 | D9 | **Only passes enter the ladder.** *"We shouldn't use broken scores from peers for this, should all be passes."* A peer's broken attempt counts them among the ones who have not passed the chart — which the popover prints — never as a score to rank against. Both ledger reads the cohorts use already excluded broken attempts; the new `GetBrokenBests` read is what lets the popover count them. |
 | D10 | **You are never your own peer, but a place keeps you in the denominator.** The captured cohort's D27/D28/D30 rules ([session-breakdown.md](session-breakdown.md)) carry over unchanged: `#6 of 94 peers` where 94 = the 93 peers who passed it plus you; a Perfect Game prints how many peers share it; a chart no peer has passed renders in plain ink and says so only in the popover. |
@@ -64,6 +64,16 @@ Owner rulings from the 2026-09-05 workshop, in his words where quoted.
 | D22 | **The implementation lives in Rivals**, not a new vertical — *"Rivals."* — under the same "until a Peers vertical exists" note as the visibility reader. |
 | D23 | **American spelling.** Color, colored, customize. Existing British keys are fixed only where this work already replaces them. |
 | D24 | **The `ScoreQuality90` flag, `HighlightDetail.PeerPercentile` and everything captured at import stay as they are.** They are the Discord card's data and the history's truth; the live standing is a separate read. |
+| D25 | **A banned member is nobody's peer** (bug check, 2026-09-05). The member read the standing counts through leaves banned rows out, the way every other member read and the club's own board already did. |
+| D26 | **The tier list's Score Ranking grouping has its own shelves for a pass none of your peers has passed and for a broken best.** "Not Recorded" is for a chart with no score; a pass that nobody in a three-rival roster has passed is recorded and unmeasured, and used to be filed as if never played. |
+| D27 | **The popover's empty state is the standing's to declare.** A measured score — on another player's page it is measured against the competitive default whatever the viewer ticked — never says the viewer chose nothing; the setting decides only for a score nothing measured. |
+| D28 | **No peers is no bar.** Nothing ticked and a ticked source with nobody in it read the same for Hot Streak: nobody to beat is beating everybody. Nothing ticked used to drop every seed. |
+| D29 | **A community you left is not a source.** The dialog's draft keeps only what the catalog offers and Save writes the stale id out; the Account card counts only communities you are still in. The reader already ignored it. |
+| D30 | **World is a community like any other** — *"it shouldn't get special treatment though, it's just a community like any other. same with regions... we should only compare you against players in that community"* (owner, 2026-09-05). Its members are the public players: a player joins World on going public and leaves it on going private (`CommunitySaga`), so the reader counts exactly them and the World board shows exactly them. No "everyone" wording; the only World-specific code is the board it routes to. |
+| D31 | **A page scoped to another player opens their band** — *"we want to show that player's peer comparison, not yours."* The competitive query takes a subject, the sessions page names its player, and the board a peer line opens is the band that line counted. Logged out with no subject named, the Competitive chip is off rather than a board that reaches for a user who is not there. |
+| D32 | **A line's board is for the opening it was tapped in.** The dialog forgets the override on close, so reopening the same chart from a host that asked for World opens on World. |
+| D33 | **Peer rows are cached by the peer set**, the subject put back: two players in one band share one read; a rival added a minute ago is a new set and is read at once instead of counting as one who has not passed it for fifteen minutes; the roster's two bulk reads, which ran on every dashboard load, ride the same key. Sixteen bytes of SHA-256, because a colliding key would serve another set's rows without a word. |
+| D34 | **The clubmate edge is for clubs.** World and a country tag the roster row like any community (D18); the green edge means a club everywhere on the site, so a peer who shares only your country wears the tag and not the edge. |
 
 ## 3. What a peer pool is
 
@@ -111,9 +121,11 @@ own band, the tier-list blend its own — and this document does not touch them.
 
 `PeerStandingCalculator` is the pure arithmetic (§4.1's rules), unit-tested on its own. Caching:
 the competitive band per mix, type and half-level bucket for an hour (shared across viewers, the
-2026-07-10 lesson); community members per community for an hour; the peers' scores per viewer,
-mix, selection and chart for an hour. The subject's own bests are always read fresh, which is the
-split the old ranking saga used and the reason a fresh import recolors immediately.
+2026-07-10 lesson); community members per community for an hour; the peers' scores per mix, chart and **peer
+set** — the resolved players with the subject put back, so two players in one band share one read
+and a rival added a minute ago is a new set, read at once (D33) — for fifteen minutes, and the
+roster's two bulk reads by the same key. The subject's own bests are always read fresh, which is
+the split the old ranking saga used and the reason a fresh import recolors immediately.
 
 ### 4.3 PlayerProgress
 
