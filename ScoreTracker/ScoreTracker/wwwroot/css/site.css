@@ -12992,6 +12992,31 @@ button.chart-card-art {
     align-self: center;
 }
 
+/* The always-stacked variant (UX rule 3, owner 2026-09-05): the grid at EVERY width, not only
+   portrait. ScoreBreakdown Stacked="true" emits this wrapper itself, so a caller gets the pair
+   exactly as tall as the number wherever it prints a score — session rows, MoM boards and cards. */
+.sbd-score-stack.sbd-score-stack-fixed {
+    display: inline-grid;
+    grid-auto-flow: row;
+    grid-template-columns: auto auto;
+    grid-template-rows: repeat(2, auto);
+    align-items: center;
+    column-gap: 4px;
+    row-gap: 0;
+    line-height: 1.05;
+}
+.sbd-score-stack.sbd-score-stack-fixed > img {
+    grid-column: 1;
+    height: 11px !important;
+}
+.sbd-score-stack.sbd-score-stack-fixed > p {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    align-self: center;
+    margin: 0;
+    padding-left: 0 !important;
+}
+
 /* Portrait and square: grade above plate in one column, score beside them. Keyed on aspect
    rather than width because that is the axis that decides whether a row has horizontal room —
    a portrait tablet is wide in pixels and still short of it.

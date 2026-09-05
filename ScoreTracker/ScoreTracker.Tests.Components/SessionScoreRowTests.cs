@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Bunit;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -376,5 +377,18 @@ public sealed class SessionScoreRowTests : ComponentTestBase
         var row = new RecentSessionsPage.ScoreEventRecord(chart.Id, Start, score, "Fair Game", false,
             "officialImport", Session, ScoreEventClassification.Upscore, score - 4000);
         return new SessionScore(row, chart, flags, detail);
+    }
+    [Fact]
+    public void TheBubbleComesBeforeTheJacketAndTheScoreIsStacked()
+    {
+        // UX rule 3 (owner, 2026-09-05): bubble, then jacket, then the words; and a score is the
+        // stacked grade-and-plate so the song name keeps its width on a phone.
+        var row = Render(Score(972000, null));
+
+        var images = row.FindAll("img").Select(i => i.GetAttribute("src") ?? string.Empty).ToList();
+        var bubble = images.FindIndex(src => src.Contains("difficulty"));
+        var jacket = images.FindIndex(src => src.Contains("example.invalid/a.png"));
+        Assert.True(bubble >= 0 && jacket >= 0 && bubble < jacket, string.Join(" | ", images));
+        Assert.NotEmpty(row.FindAll(".sbd-score .sbd-score-stack.sbd-score-stack-fixed"));
     }
 }
