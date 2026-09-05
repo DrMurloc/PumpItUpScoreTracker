@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Memory;
+using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -95,8 +96,23 @@ namespace ScoreTracker.PlayerProgress.Application
         public Task<ProjectionSweep> GetOrAdd(Guid userId, MixEnum mix,
             Func<Task<ProjectionSweep>> compute)
         {
-            var key = Key(userId, mix);
-            if (_cache.TryGetValue(key, out Task<ProjectionSweep>? running) &&
+            return GetOrAddTask(Key(userId, mix), compute);
+        }
+
+        /// <summary>
+        ///     The peers' average merged fifty by type (D58), computed if nobody has, and held beside
+        ///     the sweep on the same terms — the same day, the same eviction — because it is a
+        ///     statement about the same peers at the same moment. Its own entry rather than a field
+        ///     on the sweep, so the pages that never ask for it never pay for its read.
+        /// </summary>
+        public Task<PoolTypeSplit?> GetOrAddSplit(Guid userId, MixEnum mix, Func<Task<PoolTypeSplit?>> compute)
+        {
+            return GetOrAddTask(SplitKey(userId, mix), compute);
+        }
+
+        private Task<T> GetOrAddTask<T>(string key, Func<Task<T>> compute)
+        {
+            if (_cache.TryGetValue(key, out Task<T>? running) &&
                 running != null)
                 return running;
 
@@ -127,7 +143,11 @@ namespace ScoreTracker.PlayerProgress.Application
         public void Evict(Guid userId, MixEnum? mix)
         {
             var mixes = mix is { } one ? new[] { one } : Enum.GetValues<MixEnum>();
-            foreach (var m in mixes) _cache.Remove(Key(userId, m));
+            foreach (var m in mixes)
+            {
+                _cache.Remove(Key(userId, m));
+                _cache.Remove(SplitKey(userId, m));
+            }
         }
 
         /// <summary>
@@ -135,8 +155,8 @@ namespace ScoreTracker.PlayerProgress.Application
         ///     would be handed to every later one for a day, and the only cure would be a
         ///     restart.
         /// </summary>
-        private async Task<ProjectionSweep> Run(string key,
-            Func<Task<ProjectionSweep>> compute)
+        private async Task<T> Run<T>(string key,
+            Func<Task<T>> compute)
         {
             try
             {
@@ -152,6 +172,11 @@ namespace ScoreTracker.PlayerProgress.Application
         private static string Key(Guid userId, MixEnum mix)
         {
             return $"pumbility:estimates:{userId}:{mix}";
+        }
+
+        private static string SplitKey(Guid userId, MixEnum mix)
+        {
+            return $"pumbility:split:{userId}:{mix}";
         }
     }
 }

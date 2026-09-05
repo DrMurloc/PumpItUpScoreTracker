@@ -26,7 +26,6 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 /// <param name="Roster">The public peers, strongest total first. Private peers are counted, never listed.</param>
 /// <param name="PrivatePeers">How many peers are private accounts, so the page can say they exist.</param>
 /// <param name="You">The viewer's own row in the roster's terms, for the page to place among the peers.</param>
-/// <param name="Compare">Per lit type, how the viewer's pool differs from what the peers hold (D41).</param>
 [ExcludeFromCodeCoverage]
 public sealed record PumbilityPeersPageRecord(
     MixEnum Mix,
@@ -36,15 +35,13 @@ public sealed record PumbilityPeersPageRecord(
     IReadOnlyList<PeerAloneEntry> YoursAlone,
     IReadOnlyList<PeerRosterEntry> Roster,
     int PrivatePeers,
-    PeerRosterEntry? You,
-    IReadOnlyDictionary<ChartType, PeerCompare> Compare)
+    PeerRosterEntry? You)
 {
     /// <summary>The empty answer: no peers, nothing held, nobody to list.</summary>
     public static PumbilityPeersPageRecord Empty(MixEnum mix, ChartType? pool)
     {
         return new PumbilityPeersPageRecord(mix, pool, new Dictionary<ChartType, PeerGroup>(),
-            Array.Empty<PeerPoolEntry>(), Array.Empty<PeerAloneEntry>(), Array.Empty<PeerRosterEntry>(), 0, null,
-            new Dictionary<ChartType, PeerCompare>());
+            Array.Empty<PeerPoolEntry>(), Array.Empty<PeerAloneEntry>(), Array.Empty<PeerRosterEntry>(), 0, null);
     }
 }
 
@@ -109,14 +106,3 @@ public sealed record PeerRosterEntry(
     IReadOnlySet<ChartType> PeerFor,
     IReadOnlyDictionary<ChartType, int> Overlap);
 
-/// <summary>
-///     Where the viewer's pool sits against the peers' by level (D41). The in-common, held-by-one
-///     and yours-alone counts were computed here too until the field test cut the tiles that
-///     printed them — a count nobody can act on is not worth a read.
-/// </summary>
-/// <param name="MyLevels">The viewer's pool charts per level.</param>
-/// <param name="PeerShareByLevel">The peers' prevalence points per level, as a share of the type's total.</param>
-[ExcludeFromCodeCoverage]
-public sealed record PeerCompare(
-    IReadOnlyDictionary<int, int> MyLevels,
-    IReadOnlyDictionary<int, double> PeerShareByLevel);

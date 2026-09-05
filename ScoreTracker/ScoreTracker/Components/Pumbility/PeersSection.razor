@@ -62,13 +62,7 @@
     <div class="pmb-block-head">
         <h2 class="pmb-block-title">@L["PUMBILITY Targets"]</h2>
     </div>
-    <div class="pmb-peers-head">
-        <p class="pmb-block-lede">@Lede</p>
-        @if (_peers != null)
-        {
-            <PeerCompareStrip Page="_peers" Charts="Charts"></PeerCompareStrip>
-        }
-    </div>
+    <p class="pmb-block-lede">@Lede</p>
     @if (ShortPool is { } short_)
     {
         @* The finish is the pool of the type (D48, D53), so it prints as a PUMBILITY total — two

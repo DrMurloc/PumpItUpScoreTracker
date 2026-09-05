@@ -5,23 +5,20 @@
 @namespace ScoreTracker.Web.Components
 
 @* Where your pool's levels sit against your peers' (docs/design/pumbility-overhaul.md D41), one
-   tile per lit type, beside the list's lede. The bars are you against peers in the you-and-peers
-   colours, each carrying its number in the title.
+   tile per lit type. The bars are you against peers in the you-and-peers colours, each carrying
+   its number in the title. Since round nine, part two (D58) the tiles live inside the Breakdown
+   page's card rather than beside the Play lede, and each is labelled by its type.
 
    The In-common and Yours-alone tiles that stood beside it are cut: neither said anything a player
    could act on (owner, field test round two). *@
-@if (Page.Compare.Count > 0)
+@if (Compare.Count > 0)
 {
     <div class="pmb-compare" data-testid="peers-compare">
-        @foreach (var (type, compare) in Page.Compare.OrderBy(kv => kv.Key))
+        @foreach (var (type, compare) in Compare.OrderBy(kv => kv.Key))
         {
             var levels = Levels(compare);
             <div class="pmb-compare-tile" data-testid="@($"peers-compare-levels-{type}")">
-                <div class="pmb-compare-label">
-                    @(Page.Compare.Count > 1
-                        ? type == ChartType.Single ? L["Where the levels sit · singles"] : L["Where the levels sit · doubles"]
-                        : L["Where the levels sit"])
-                </div>
+                <div class="pmb-compare-label">@(type == ChartType.Single ? L["Singles"] : L["Doubles"])</div>
                 <div class="pmb-levelbars">
                     <span>@L["You"]</span>
                     <span class="pmb-levelrow pmb-levelrow-you">
@@ -53,9 +50,9 @@
 }
 
 @code {
-    [Parameter] [EditorRequired] public PumbilityPeersPageRecord Page { get; set; } = null!;
-
-    [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+    /// <summary>Per lit type, the viewer's fifty per level against the peers' prevalence per level.</summary>
+    [Parameter] [EditorRequired] public IReadOnlyDictionary<ChartType, PeerCompare> Compare { get; set; } =
+        new Dictionary<ChartType, PeerCompare>();
 
     /// <summary>The levels either side of the strip covers, so the two rows share an axis.</summary>
     private static IReadOnlyList<int> Levels(PeerCompare compare)

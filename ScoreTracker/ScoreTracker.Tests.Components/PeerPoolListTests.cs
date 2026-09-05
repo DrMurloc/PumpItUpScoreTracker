@@ -204,7 +204,7 @@ public sealed class PeerPoolListTests : ComponentTestBase
         {
             return new PumbilityPeersPageRecord(MixEnum.Phoenix2, ChartType.Single,
                 new Dictionary<ChartType, PeerGroup> { [ChartType.Single] = PeerGroup.Pumbility(17_609.59, 23, 50) },
-                _entries, _alone, Array.Empty<PeerRosterEntry>(), 0, null, new Dictionary<ChartType, PeerCompare>());
+                _entries, _alone, Array.Empty<PeerRosterEntry>(), 0, null);
         }
 
         private Chart NewChart(string name)
