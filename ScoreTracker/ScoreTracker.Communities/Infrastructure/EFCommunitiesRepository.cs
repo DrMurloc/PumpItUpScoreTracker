@@ -320,10 +320,15 @@ namespace ScoreTracker.Communities.Infrastructure
             CancellationToken cancellationToken)
         {
             var nameString = communityName.ToString();
+            // A ban is a retained row with Role = Banned. Without this filter the one member read
+            // the peer standing counts through kept a banned player as everyone's peer while the
+            // club's own board, built from MemberIds, left them out (D25).
+            var banned = nameof(CommunityRole.Banned);
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             return await (from c in database.Set<CommunityEntity>()
                 where c.Name == nameString
                 join cm in database.Set<CommunityMembershipEntity>() on c.Id equals cm.CommunityId
+                where cm.Role != banned
                 select cm.UserId).ToArrayAsync(cancellationToken);
         }
 
