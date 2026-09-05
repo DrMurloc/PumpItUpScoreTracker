@@ -117,14 +117,15 @@ subtitle. One rule now, composed by `ShareCardTitles` for both surfaces:
 
 - **Title = what the rows are.** `{Folder} — {Lens}` on the tier views; `{Folder} — {Tag}'s Scores
   by {Grouping}` under My Scores (the title owns whose scores they are); `{Folder} — Speed`.
-  Targets: `PUMBILITY Targets — {Grouping}`, and the pool lens honestly named
-  `PUMBILITY Pool — Top 50`.
+  Targets: `PUMBILITY Targets — {Grouping}`; the Breakdown page's fifty: `PUMBILITY Breakdown —
+  Your top 50` (the lens's `PUMBILITY Pool — Top 50` retired with the lens, PUMBILITY doc D57).
 - **Subtitle = how to read them.** `{Mix} · {date}` on the tier views (the lens is already the
   title). `Shown Difficulty: {lens} · {Mix} · {date}` under My Scores and Speed, where the lens
   only orders within sections — the personalized reading when the Shown Difficulty picker chose
   one. Targets: `Energy: {rung}`, then the pool scope on Phoenix 2 (All / Singles / Doubles
   pool), then `Only projected PUMBILITY gains` and `Phoenix 1 projected` when those switches are
-  on, then mix and date. No "n of m charts" line (owner: no need).
+  on, then mix and date. The Breakdown page's card carries no Energy — nothing on that page reads
+  one — just the pool scope on Phoenix 2, then mix and date. No "n of m charts" line (owner: no need).
 - **Stamp = whose reading it is** — `Crowd sourced` (never "Community", which names the
   Community entity) or `Personalized for {tag}` on the tier views, `Personalized for {tag}` on
   Targets, and **nothing** under My Scores and Speed, where the title already said.
