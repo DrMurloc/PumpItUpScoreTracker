@@ -9,8 +9,8 @@ namespace ScoreTracker.Web.Services;
 ///     kind of count with the same rule and must read as one thing. The values are localization
 ///     keys; callers pass them through <c>L[…]</c>.
 ///     <para>
-///         <see cref="PoolNameOf" /> is the second vocabulary, for the Play page's Your top 50
-///         lens: those bands are what a chart is worth to <em>you</em>, not how many players keep
+///         <see cref="PoolNameOf" /> is the second vocabulary, for the Breakdown page's top 50
+///         (D57): those bands are what a chart is worth to <em>you</em>, not how many players keep
 ///         it, so they read as a magnitude — Highest down to Lowest — rather than as a share of a
 ///         crowd. Staple/Poor on your own fifty said the wrong thing entirely (owner, field test
 ///         round two). Average, Low and Very Low are the Score lens's own words, so the two ramps

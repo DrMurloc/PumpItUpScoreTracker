@@ -40,13 +40,11 @@ public static class ShareCardTitles
     }
 
     /// <param name="poolLabel">"Singles pool" / "All pools" on Phoenix 2, null where the mix has one pool.</param>
-    public static Header Targets(bool poolLens, string groupingName, string energyLabel, string? poolLabel,
+    public static Header Targets(string groupingName, string energyLabel, string? poolLabel,
         bool gainsOnly, bool phoenix1Projected, string mixName, string date, string playerTag,
         Func<string, string> localize)
     {
-        var title = poolLens
-            ? $"{localize("PUMBILITY Pool")} — {localize("Top 50")}"
-            : $"{localize("PUMBILITY Targets")} — {groupingName}";
+        var title = $"{localize("PUMBILITY Targets")} — {groupingName}";
         var clarifiers = new List<string> { $"{localize("Energy")}: {energyLabel}" };
         if (poolLabel != null) clarifiers.Add(poolLabel);
         if (gainsOnly) clarifiers.Add(localize("Only projected PUMBILITY gains"));
@@ -66,6 +64,29 @@ public static class ShareCardTitles
     public static string TargetsFileName(MixEnum mix, string grouping, string energy, string pool, string date)
     {
         return $"PumbilityTargets_{mix}_{Slug(grouping)}_{Slug(energy)}_{Slug(pool)}_{date}.png";
+    }
+
+    /// <summary>
+    ///     The Breakdown page's fifty (PUMBILITY doc D57, §3.11): the page and the block name what
+    ///     the rows are, and no Energy rides the subtitle because nothing on that page reads one —
+    ///     just the pool scope on Phoenix 2, then mix and date.
+    /// </summary>
+    /// <param name="poolLabel">"Singles pool" / "All pools" on Phoenix 2, null where the mix has one pool.</param>
+    public static Header Pool(string? poolLabel, string mixName, string date, string playerTag,
+        Func<string, string> localize)
+    {
+        var title = $"{localize("PUMBILITY Breakdown")} — {localize("Your top 50")}";
+        var clarifiers = new List<string>();
+        if (poolLabel != null) clarifiers.Add(poolLabel);
+        clarifiers.Add(mixName);
+        clarifiers.Add(date);
+        return new Header(title, string.Join(" · ", clarifiers),
+            string.Format(localize("Personalized for {0}"), playerTag));
+    }
+
+    public static string PoolFileName(MixEnum mix, string pool, string date)
+    {
+        return $"PumbilityTop50_{mix}_{Slug(pool)}_{date}.png";
     }
 
     /// <summary>Letters and digits only — a filename segment, never a sentence.</summary>

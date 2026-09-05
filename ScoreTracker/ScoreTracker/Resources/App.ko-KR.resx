@@ -6126,9 +6126,6 @@
   <data name="PUMBILITY peers" xml:space="preserve">
     <value>PUMBILITY 동료</value>
   </data>
-  <data name="PUMBILITY Pool" xml:space="preserve">
-    <value>PUMBILITY 풀</value>
-  </data>
   <data name="Pumbility Push" xml:space="preserve">
     <value>Pumbility 올리기</value>
   </data>
@@ -7870,6 +7867,9 @@
   <data name="The extremes are real charts, not noise — the shortest and longest chart at each level." xml:space="preserve">
     <value>극단값은 잡음이 아니라 실제 채보입니다. 각 레벨에서 가장 짧은 채보와 가장 긴 채보입니다.</value>
   </data>
+  <data name="The fifty charts your PUMBILITY is the sum of, grouped by what each is worth to you — its place, its value, and the score that earned it." xml:space="preserve">
+    <value>내 PUMBILITY를 이루는 50개 채보입니다. 각 채보가 내게 얼마나 가치 있는지로 묶었으며, 순위와 값, 그리고 그 값을 만든 점수를 함께 보여 줍니다.</value>
+  </data>
   <data name="The first Phoenix 2 score to beat your Phoenix 1 best" xml:space="preserve">
     <value>Phoenix 1 최고 기록을 처음으로 넘은 Phoenix 2 점수</value>
   </data>
@@ -9573,9 +9573,6 @@
   </data>
   <data name="Your pool" xml:space="preserve">
     <value>내 풀</value>
-  </data>
-  <data name="Your pool by place, with what your peers do on each chart — how many hold it, their median and how split they are — and the waiting room below the bar." xml:space="preserve">
-    <value>내 풀을 순위 순으로, 각 채보에 대한 동료들의 기록과 함께 — 몇 명이 보유하는지, 중앙값과 얼마나 갈리는지 — 그리고 기준선 아래의 대기실까지.</value>
   </data>
   <data name="Your pool holds {0} of 50. Until it's full, every chart you play counts whole — there's no bar to beat yet." xml:space="preserve">
     <value>풀은 50개 중 {0}개입니다. 다 차기 전까지는 플레이한 채보가 그대로 더해집니다 — 아직 넘어야 할 기준선이 없습니다.</value>

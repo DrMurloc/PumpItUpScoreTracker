@@ -9,7 +9,6 @@ namespace ScoreTracker.Web.Enums
     public enum PeerGrouping
     {
         Prevalence,
-        ProjectedGains,
-        YourTop50
+        ProjectedGains
     }
 }

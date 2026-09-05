@@ -6163,9 +6163,6 @@
   <data name="PUMBILITY peers" xml:space="preserve">
     <value>PUMBILITY maglmurp</value>
   </data>
-  <data name="PUMBILITY Pool" xml:space="preserve">
-    <value>PUMBILITY Blubgro</value>
-  </data>
   <data name="Pumbility Push" xml:space="preserve">
     <value>Pumbility Morggrgl</value>
   </data>
@@ -7928,6 +7925,9 @@
   <data name="The extremes are real charts, not noise — the shortest and longest chart at each level." xml:space="preserve">
     <value>Gro bralmogl gro urblarg murgl, bo grulb — gro mrrgl-marglgro ro mrrgl-grogro murgl og blub grorpmurm.</value>
   </data>
+  <data name="The fifty charts your PUMBILITY is the sum of, grouped by what each is worth to you — its place, its value, and the score that earned it." xml:space="preserve">
+    <value>Mrgl murgro murgl argl PUMBILITY gl mrgl blubro ma, grorgl ur mup morgl gl blarg ro argrl — glub morp, glub blarg, o mrgl mrglrgl mup roglub gl.</value>
+  </data>
   <data name="The first Phoenix 2 score to beat your Phoenix 1 best" xml:space="preserve">
     <value>Blarg murgloo Phoenix 2 glorgmurp mrgl blub Phoenix 1 magloo</value>
   </data>
@@ -9641,9 +9641,6 @@
   </data>
   <data name="Your pool" xml:space="preserve">
     <value>Morp Blubgro</value>
-  </data>
-  <data name="Your pool by place, with what your peers do on each chart — how many hold it, their median and how split they are — and the waiting room below the bar." xml:space="preserve">
-    <value>Morp blubgro murm blublurg, magl mrgl maglmurp mrgloru argl mrgl Murgl — mrgl mrgloru, blarg lurggrgl ap blgrlmurm — ap Blargmo Gurg glub Rgl.</value>
   </data>
   <data name="Your pool holds {0} of 50. Until it's full, every chart you play counts whole — there's no bar to beat yet." xml:space="preserve">
     <value>Morp Blubgro mrgl {0} blarg 50. Mrgl mrrgl, mrgl Murgl morp mrglrlgl mrgloru — mo Rgl blub.</value>

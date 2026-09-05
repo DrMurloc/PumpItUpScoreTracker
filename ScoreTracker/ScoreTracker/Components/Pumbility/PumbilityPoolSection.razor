@@ -1,0 +1,217 @@
+@using MediatR
+@using Microsoft.JSInterop
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+@inject IJSRuntime JSRuntime
+@inject IDateTimeOffsetAccessor Clock
+
+@* The Breakdown page's last block (docs/design/pumbility-overhaul.md §3.11, D57): your top 50.
+   The pool curve first, because it is the summary of the same fifty the list details; then
+   the control row — nothing on its left, there being no grouping to choose, and Download with
+   the density trio at its end, right above the list (D34); then the fifty as a tier list.
+
+   Held by a component rather than the page because the pool it is scoped to arrives from the
+   section frame — a parameter, so a pool change re-renders on its own — and because the density
+   and the folds are this page's own settings, per page like every list on the site. The frame
+   already loaded the pool, so the block's one read of its own is the identity chips for the
+   fifty, taken again only when the fifty change. *@
+<section class="pmb-block" data-testid="pool-section">
+    <div class="pmb-block-head">
+        <h2 class="pmb-block-title">@L["Your top 50"]</h2>
+    </div>
+    <p class="pmb-block-lede">
+        @L["The fifty charts your PUMBILITY is the sum of, grouped by what each is worth to you — its place, its value, and the score that earned it."]
+    </p>
+
+    <PoolCurve Page="Page" Charts="Charts"></PoolCurve>
+
+    @if (Page.Pool.Count > 0)
+    {
+        @* Two groups, as on the Play list: the empty left half is what keeps the actions at the
+           far end however the free space is distributed. *@
+        <div class="pmb-peers-controls" data-testid="pool-controls">
+            <span class="pmb-peers-controls-start"></span>
+            <span class="pmb-peers-controls-end">
+                @if (_building)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2"></MudProgressCircular>
+                }
+                else
+                {
+                    <MudTooltip Text="@L["Download"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary"
+                                       OnClick="() => _downloadOpen = true" aria-label="@L["Download"]" data-testid="pool-download"></MudIconButton>
+                    </MudTooltip>
+                }
+                <MudButtonGroup OverrideStyles="false">
+                    <MudTooltip Text="@L["Comfortable"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy"
+                                       Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)"
+                                       OnClick="() => SetDensity(UiDensity.Comfortable)" aria-label="@L["Comfortable"]"></MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="@L["Compact"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView"
+                                       Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)"
+                                       OnClick="() => SetDensity(UiDensity.Compact)" aria-label="@L["Compact"]"></MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="@L["Table"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows"
+                                       Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)"
+                                       OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton>
+                    </MudTooltip>
+                </MudButtonGroup>
+            </span>
+        </div>
+    }
+
+    <div class="pmb-list" data-testid="pool-list">
+        <PumbilityPoolList @ref="_list" Page="Page" Charts="Charts" Density="_density" Skills="_skills"
+                           ShowToDo="true" ToDos="ToDos" OnToDo="OnToDo" OnOpen="OnOpen" OnPlay="OnPlay"
+                           Collapsed="_collapsed" CollapsedChanged="SetCollapsed"></PumbilityPoolList>
+    </div>
+</section>
+
+<ShareCardSettingsDialog @bind-Visible="_downloadOpen" SignedIn="true"
+                         SampleBuilder="BuildSampleCard" OnDownload="Download"
+                         FileName="@DownloadFileName"></ShareCardSettingsDialog>
+
+@code {
+    /// <summary>The frame's record — the selected pool's fifty, and the pool it was scoped to.</summary>
+    [Parameter] [EditorRequired] public PumbilityPageRecord Page { get; set; } = null!;
+
+    [Parameter] [EditorRequired] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } =
+        new Dictionary<Guid, Chart>();
+
+    [Parameter] public ISet<Guid> ToDos { get; set; } = new HashSet<Guid>();
+
+    [Parameter] public EventCallback<Guid> OnToDo { get; set; }
+
+    [Parameter] public EventCallback<Chart> OnOpen { get; set; }
+
+    [Parameter] public EventCallback<Chart> OnPlay { get; set; }
+
+    /// <summary>Per page, like every list's (UX rule 5): this is the Breakdown page, not Play.</summary>
+    public const string DensitySettingKey = "Density__PumbilityBreakdown";
+
+    public const string CollapsedSettingKey = "PumbilityBreakdown__CollapsedTiers";
+
+    private const string ShareUrl = "https://piuscores.arroweclip.se/Pumbility/Breakdown";
+
+    private UiDensity _density = UiDensity.Comfortable;
+    private HashSet<string> _collapsed = new(PumbilityPoolList.DefaultCollapsed);
+
+    /// <summary>What each chart IS (docs/design/chart-identity.md §6), for the fifty on screen.</summary>
+    private IReadOnlyDictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>> _skills =
+        new Dictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>>();
+
+    /// <summary>The chart set the chips were read for, so a pool change re-reads and a re-render does not.</summary>
+    private HashSet<Guid> _skillsFor = new();
+
+    private PumbilityPoolList? _list;
+    private PumbilityShareCard _card = null!;
+    private bool _downloadOpen;
+    private bool _building;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _card = new PumbilityShareCard(Mediator, JSRuntime, CurrentUser.User.Id, key => L[key].Value);
+        if (Enum.TryParse<UiDensity>(await UiSettings.GetSetting(DensitySettingKey), out var density)) _density = density;
+        var collapsed = await UiSettings.GetSetting(CollapsedSettingKey);
+        if (!string.IsNullOrWhiteSpace(collapsed))
+            _collapsed = collapsed.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // The chips are a property of the charts: read for the fifty on screen, and again only
+        // when the frame hands down a different fifty.
+        var ids = Page.Pool.Select(e => e.ChartId).Where(Charts.ContainsKey).ToHashSet();
+        if (ids.SetEquals(_skillsFor)) return;
+        _skillsFor = ids;
+        if (ids.Count == 0)
+        {
+            _skills = new Dictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>>();
+            return;
+        }
+
+        var identity = await Mediator.Send(new GetChartIdentityQuery(ids.ToArray(), Page.Mix));
+        _skills = identity.ToDictionary(kv => kv.Key, kv => IdentityChips.ToCardChips(kv.Value, false, L));
+    }
+
+    private async Task SetDensity(UiDensity density)
+    {
+        _density = density;
+        await UiSettings.SetSetting(DensitySettingKey, density.ToString());
+    }
+
+    private async Task SetCollapsed(IReadOnlySet<string> collapsed)
+    {
+        _collapsed = collapsed.ToHashSet();
+        await UiSettings.SetSetting(CollapsedSettingKey, string.Join(",", _collapsed));
+    }
+
+    private string DownloadFileName =>
+        ShareCardTitles.PoolFileName(Page.Mix, Page.Pool_?.ToString() ?? "All", Clock.Now.ToString("yyyy-MM-dd"));
+
+    /// <summary>Which pool the fifty are — said only on Phoenix 2, where pools are per type.</summary>
+    private string? SharePoolLabel => Page.Mix != MixEnum.Phoenix2 ? null :
+        Page.Pool_ switch
+        {
+            null => L["All pools"],
+            ChartType.Single => L["Singles pool"],
+            ChartType.Double => L["Doubles pool"],
+            var other => other.ToString()
+        };
+
+    /// <summary>The page and the block name the rows; no Energy, because nothing on this page reads one (§3.11).</summary>
+    private ShareCardTitles.Header ShareHeader => ShareCardTitles.Pool(SharePoolLabel, Page.Mix.GetName(),
+        Clock.Now.ToString("yyyy-MM-dd"), CurrentUser.User.GameTag ?? CurrentUser.User.Name, key => L[key].Value);
+
+    private Task<TierListShareCard?> BuildSampleCard(ShareCardOptions options)
+    {
+        if (_list == null) return Task.FromResult<TierListShareCard?>(null);
+        var charts = _list.ShareSections()
+            .SelectMany(s => s.Tiles)
+            .Select(t => t.Chart)
+            .DistinctBy(c => c.Id)
+            .ToArray();
+        return Task.FromResult(_card.Sample(charts, options, Page.Mix, _skills, ShareHeader, ShareUrl));
+    }
+
+    /// <summary>
+    ///     The fifty as a PNG, through the build the Play list shares: the sections and their
+    ///     colours come off the rendered list, and every tile prices at the pool's own value, so
+    ///     the picture says what the page says.
+    /// </summary>
+    private async Task Download(ShareCardDownloadRequest request)
+    {
+        if (_list == null) return;
+        _building = true;
+        try
+        {
+            var rows = await _card.ComposeRows(_list.ShareSections(), request.Options, Page.Mix, _skills, request.Token);
+            if (rows.Count == 0) return;
+            await _card.Download(_card.Card(ShareHeader, ShareUrl, rows, request.Options, Page.Mix), request, DownloadFileName);
+        }
+        catch (OperationCanceledException)
+        {
+            // The dialog's Cancel (or its close) stopped the download; nothing to deliver.
+        }
+        finally
+        {
+            _building = false;
+        }
+    }
+}

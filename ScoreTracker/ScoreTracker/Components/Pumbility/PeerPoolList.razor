@@ -13,9 +13,8 @@
 
 @* What the viewer's peers build their number from, in the tier list's own shape
    (docs/design/pumbility-overhaul.md §3.10, D34): collapsible sections of TierListChartCard —
-   grouped by prevalence (Staple … Poor, D33), by projected gain in bands of points (D36), or as
-   the viewer's own top 50 by place, split at the bar, with the peers' data on every row (D44) —
-   in the three densities. The jacket carries the gain and nothing else, and only when the chart
+   grouped by prevalence (Staple … Poor, D33) or by projected gain in bands of points (D36) — in
+   the three densities. The viewer's own fifty are the Breakdown page's list (D57). The jacket carries the gain and nothing else, and only when the chart
    pays (D38); the peers' median and how split they are ride the card body, the count rides the
    caption; the border language and its precedence are the tier list's (passed, To-Do, carried).
 
@@ -39,25 +38,14 @@ else
                             <thead>
                             <tr>
                                 <th class="tier-table-jacket-cell"></th>
-                                @if (IsPoolLens)
-                                {
-                                    <th>#</th>
-                                }
                                 <th>@L["Song Name"]</th>
                                 <th>@L["Chart"]</th>
                                 <th title="@L["How many of your PUMBILITY peers hold it in their top 50"]">@L["Peers"]</th>
                                 <th>@L["Projected"]</th>
                                 <th class="pmb-r" title="@L["What it would add to your PUMBILITY, measured against your bar as it stands"]">@L["Gain"]</th>
                                 <th>@L["My Score"]</th>
-                                @if (IsPoolLens)
-                                {
-                                    <th class="pmb-r" title="@L["What the chart is worth in your pool right now"]">@L["Value"]</th>
-                                }
                                 <th>@L["Better Than"]</th>
-                                @if (!IsPoolLens)
-                                {
-                                    <th>@L["Your pool"]</th>
-                                }
+                                <th>@L["Your pool"]</th>
                                 <th></th>
                             </tr>
                             </thead>
@@ -70,10 +58,6 @@ else
                                              @onclick="() => OnOpen.InvokeAsync(row.Chart)"
                                              style="background-image:url('@row.Chart.Song.ImagePath')"></div>
                                     </td>
-                                    @if (IsPoolLens)
-                                    {
-                                        <td class="pmb-num pmb-muted">@row.Slot?.Place</td>
-                                    }
                                     <td>@row.Chart.Song.Name</td>
                                     <td>@row.Chart.DifficultyString</td>
                                     <td title="@WeightedSum(row)">@HoldText(row)</td>
@@ -104,20 +88,13 @@ else
                                             <ScoreBreakdown Score="mine" Mix="Mix" OneLine="true" ShowScore="true" Plate="row.MyPlate"></ScoreBreakdown>
                                         }
                                     </td>
-                                    @if (IsPoolLens)
-                                    {
-                                        <td class="pmb-r pmb-num pmb-val">@row.Slot?.Value.ToString("N2")</td>
-                                    }
                                     <td>
                                         @if (row.Entry?.MyPercentile is { } percentile)
                                         {
                                             <span style="@ThemeScales.RarityStyle(percentile)">@((100.0 * percentile).ToString("N0"))%</span>
                                         }
                                     </td>
-                                    @if (!IsPoolLens)
-                                    {
-                                        <td>@PoolText(row)</td>
-                                    }
+                                    <td>@PoolText(row)</td>
                                     <td>
                                         @if (ShowToDo)
                                         {
@@ -183,13 +160,6 @@ else
         new Dictionary<Guid, PumbilityTarget>();
 
     /// <summary>
-    ///     The frame's record — the selected pool's fifty and the waiting room beneath it — which
-    ///     the Your top 50 lens lists, by place, with the peers' entry joined to each by chart id
-    ///     (D44). Nothing is read twice: the frame already loaded it.
-    /// </summary>
-    [Parameter] public PumbilityPageRecord? PoolRecord { get; set; }
-
-    /// <summary>
     ///     What each chart IS (docs/design/chart-identity.md §6), keyed by chart. Handed down
     ///     rather than read here: this component is presentational, and the section above it
     ///     already loads once for all three lenses.
@@ -226,9 +196,6 @@ else
 
     public const string AloneKey = "Alone";
 
-    /// <summary>The list the pool lens bands under — a name for the processor, never rendered.</summary>
-    private const string PoolListName = "PumbilityPool";
-
     public static readonly IReadOnlySet<string> DefaultCollapsed = new HashSet<string>
     {
         TierListCategory.VeryHard.ToString(), TierListCategory.Underrated.ToString()
@@ -240,66 +207,36 @@ else
         (25, double.PositiveInfinity), (15, 25), (10, 15), (5, 10), (2, 5), (0, 2)
     };
 
-    /// <summary>
-    ///     One chart in the list. <paramref name="Slot" /> is its place in the frame's pool under
-    ///     the Your top 50 lens — the pool's own score and value win there, since the pool is what
-    ///     the lens is about.
-    /// </summary>
     private IReadOnlyList<TierListChartCard.CardSkillChip>? SkillsFor(Row row)
     {
         return Skills.TryGetValue(row.Chart.Id, out var chips) && chips.Count > 0 ? chips : null;
     }
 
-    private sealed record Row(Chart Chart, PeerPoolEntry? Entry, PumbilityTarget? Target, PeerAloneEntry? Alone,
-        PoolEntry? Slot = null)
+    /// <summary>One chart in the list: the peers' entry where one exists, the yours-alone entry where none does, and the target list's own answer for it.</summary>
+    private sealed record Row(Chart Chart, PeerPoolEntry? Entry, PumbilityTarget? Target, PeerAloneEntry? Alone)
     {
         public bool Pays => Target is { Gain: > 0 };
         public double Gain => Target?.Gain ?? 0;
         public bool Carried => Target?.Source == TargetSource.Phoenix1;
 
-        public PhoenixScore? MyScore => Slot?.Score ?? Entry?.MyScore ?? Alone?.Score ??
+        public PhoenixScore? MyScore => Entry?.MyScore ?? Alone?.Score ??
                                        (Target is { Current: not null, CurrentIsBroken: false } ? Target.Current : null);
 
-        public PhoenixPlate? MyPlate => Slot != null ? Slot.Plate : Entry?.MyPlate ?? Alone?.Plate;
-        public int? MyPoolRank => Slot?.Place ?? Entry?.MyPoolRank ?? Alone?.MyPoolRank;
+        public PhoenixPlate? MyPlate => Entry?.MyPlate ?? Alone?.Plate;
+        public int? MyPoolRank => Entry?.MyPoolRank ?? Alone?.MyPoolRank;
     }
 
     private sealed record Section(string Key, string Name, string Color, IReadOnlyList<Row> Rows, string? Stat,
         string WrapperClass, TierListCategory? Tier = null);
 
     /// <summary>
-    ///     One tile of a downloadable card, as facts rather than presentation: what the row knows,
-    ///     read off the row itself, so the picture cannot drift from the page. How the facts are
-    ///     drawn is the share-card composer's call under the download settings
-    ///     (docs/design/share-card-download-settings.md).
-    /// </summary>
-    /// <param name="Score">
-    ///     Your best, including a broken one — the composer's broken gating needs the number,
-    ///     where the page's own Row deliberately hides a broken best behind null.
-    /// </param>
-    /// <param name="Gain">What the chart would add, only when it pays — the page's own rule.</param>
-    /// <param name="Expected">The target list's projected score, whose grade rides the gain chip.</param>
-    /// <param name="PoolValue">
-    ///     What the chart is worth in your pool, where the frame already computed it — the exact
-    ///     number the pool lens prints, so the chip and the page cannot disagree.
-    /// </param>
-    public sealed record ShareTile(Chart Chart, PhoenixScore? Score, PhoenixPlate? Plate, bool Broken,
-        bool IsToDo, bool Carried, double? Gain, PhoenixScore? Expected, double? PoolValue);
-
-    /// <summary>
-    ///     One section of a downloadable card: its printed name, the ramp category it took its
-    ///     colour from (null for a gain band, which is not on the ramp), and its tiles in order.
-    /// </summary>
-    public sealed record ShareSection(string Name, TierListCategory? Tier, IReadOnlyList<ShareTile> Tiles);
-
-    /// <summary>
     ///     What the list is showing, for the page's Download button — the same sections in the same
     ///     order, so the image cannot disagree with the screen it was taken from. Folded sections
     ///     are included: a fold is a reading convenience, not a filter.
     /// </summary>
-    public IReadOnlyList<ShareSection> ShareSections() =>
-        _sections.Select(s => new ShareSection(s.Name, s.Tier,
-            s.Rows.Select(r => new ShareTile(r.Chart,
+    public IReadOnlyList<PumbilityShareSection> ShareSections() =>
+        _sections.Select(s => new PumbilityShareSection(s.Name, s.Tier,
+            s.Rows.Select(r => new PumbilityShareTile(r.Chart,
                 r.MyScore ?? (RowBroken(r) ? r.Target!.Current : null),
                 r.MyPlate,
                 RowBroken(r),
@@ -307,7 +244,7 @@ else
                 r.Carried,
                 r.Pays ? r.Gain : null,
                 r.Target?.Projected,
-                r.Slot?.Value)).ToArray()))
+                PoolValue: null)).ToArray()))
             .ToArray();
 
     // A row's broken best: the page's Row hides it behind a null MyScore, but the picture's
@@ -351,35 +288,6 @@ else
             .ToList();
 
         var sections = new List<Section>();
-        if (IsPoolLens)
-        {
-            // The frame's pool, banded by what each chart is worth to you the way every other list
-            // on the site bands — the shared processor's standard-deviation cuts, the page's own
-            // tier names and colours (D44, field test round one). The peers' entry rides each row
-            // where one exists, the yours-alone entry where none does, and the gain as everywhere.
-            if (PoolRecord == null) return sections;
-            var entries = held.ToDictionary(r => r.Chart.Id);
-            var alone = Page.YoursAlone.ToDictionary(a => a.ChartId);
-            var pool = PoolRecord.Pool.Where(s => Charts.ContainsKey(s.ChartId)).OrderBy(s => s.Place)
-                .Select(s => new Row(Charts[s.ChartId], entries.GetValueOrDefault(s.ChartId)?.Entry,
-                    Gains.GetValueOrDefault(s.ChartId), alone.GetValueOrDefault(s.ChartId), s))
-                .ToArray();
-            if (pool.Length == 0) return sections;
-
-            var banded = TierListProcessor
-                .ProcessIntoTierList(PoolListName, pool.ToDictionary(r => r.Chart.Id, r => r.Slot!.Value))
-                .ToDictionary(e => e.ChartId, e => e.Category);
-            foreach (var tier in PumbilityTierNames.Tiers)
-            {
-                var rows = pool.Where(r => banded[r.Chart.Id] == tier).ToArray();
-                if (rows.Length == 0) continue;
-                sections.Add(new Section(tier.ToString(), L[PumbilityTierNames.PoolNameOf(tier)],
-                    ThemeScales.PumbilityColor(tier), rows, null, "pmb-tier-section", tier));
-            }
-
-            return sections;
-        }
-
         if (GroupBy == PeerGrouping.ProjectedGains)
         {
             var paying = held.Where(r => r.Pays).Concat(carriedUnheld).OrderByDescending(r => r.Gain).ToList();
@@ -434,11 +342,7 @@ else
         return low == 0 ? L["Under +{0}", high] : L["+{0} to +{1}", low, high];
     }
 
-    private bool IsPoolLens => GroupBy == PeerGrouping.YourTop50;
-
-    private string EmptyText => IsPoolLens
-        ? L["Nothing in your pool yet — every non-broken pass at level 10 or above takes a slot."]
-        : GroupBy == PeerGrouping.ProjectedGains || GainsOnly
+    private string EmptyText => GroupBy == PeerGrouping.ProjectedGains || GainsOnly
             ? L["Nothing your peers hold would clear your bar right now — play a few more charts and check back."]
             : L["Your peers' pools have nothing in them yet."];
 
@@ -472,17 +376,13 @@ else
     /// <summary>The Comfortable caption under the score line: the count, with the tier in front where the section is not the tier.</summary>
     private string? CaptionFor(Row row)
     {
-        if (row.Entry == null) return row.Alone != null || row.Slot != null ? L["No peer holds it"] : null;
+        if (row.Entry == null) return row.Alone != null ? L["No peer holds it"] : null;
         return GroupBy == PeerGrouping.Prevalence ? HoldText(row) : $"{TierCaption(row)} · {HoldText(row)}";
     }
 
-    /// <summary>Where the chart sits for you; under the lens, its place and what it is worth there.</summary>
-    private string PoolText(Row row)
-    {
-        if (row.Slot is { } slot)
-            return L["In your pool #{0}", slot.Place] + $" · {slot.Value.ToString("N2")}";
-        return row.MyPoolRank is { } rank ? L["In your pool #{0}", rank] : row.MyScore != null ? L["Played, not in your pool"] : L["Not yet played"];
-    }
+    /// <summary>Where the chart sits for you.</summary>
+    private string PoolText(Row row) =>
+        row.MyPoolRank is { } rank ? L["In your pool #{0}", rank] : row.MyScore != null ? L["Played, not in your pool"] : L["Not yet played"];
 
     private string CarriedTitle(Row row) =>
         row.Target is { } t ? L["Carried from Phoenix 1: your {0} there, repriced here", ((int)t.Projected).ToString("N0")] : string.Empty;
@@ -500,7 +400,7 @@ else
             if (ProjectedOf(row) is { } projected)
                 parts.Add($"{L["Projected"]} {projected.LetterGradeFor(Mix).GetName()}");
         }
-        else if (row.Alone != null || row.Slot != null)
+        else if (row.Alone != null)
         {
             parts.Add(L["No peer holds it"]);
         }
@@ -510,35 +410,12 @@ else
         return string.Join(" · ", parts);
     }
 
-    /// <summary>
-    ///     The printed corner, bottom-right. Under the pool lens it is what the chart is worth in
-    ///     your pool — the lens's whole subject — and everywhere else the gain, when it pays.
-    /// </summary>
-    private string? CornerBadgeFor(Row row)
-    {
-        if (IsPoolLens && Density == UiDensity.Compact) return row.Slot?.Value.ToString("N2");
-        return row.Pays ? $"+{PumbilityFormat.Gain(row.Gain)}" : null;
-    }
+    /// <summary>The printed corner, bottom-right: the gain, when the chart pays (D38).</summary>
+    private string? CornerBadgeFor(Row row) => row.Pays ? $"+{PumbilityFormat.Gain(row.Gain)}" : null;
 
-    /// <summary>
-    ///     Compact's other corner, bottom-left: your own grade under the pool lens — where every
-    ///     chart is one you passed — and the grade a paying tile lands on everywhere else.
-    /// </summary>
-    private RenderFragment? CornerBadgeStartFor(Row row)
-    {
-        if (Density != UiDensity.Compact) return null;
-        if (IsPoolLens) return row.MyScore is { } mine ? Grade(mine) : null;
-        return row.Pays ? ProjectedGrade(row) : null;
-    }
-
-    // A pool row is never a broken one: a broken run prices at zero and can hold no slot.
-    private RenderFragment Grade(PhoenixScore score) => builder =>
-    {
-        builder.OpenComponent<LetterGradeIcon>(0);
-        builder.AddComponentParameter(1, nameof(LetterGradeIcon.Grade), score.LetterGradeFor(Mix));
-        builder.AddComponentParameter(2, nameof(LetterGradeIcon.Height), 14);
-        builder.CloseComponent();
-    };
+    /// <summary>Compact's other corner, bottom-left: the grade a paying tile lands on.</summary>
+    private RenderFragment? CornerBadgeStartFor(Row row) =>
+        Density == UiDensity.Compact && row.Pays ? ProjectedGrade(row) : null;
 
     // The grade a paying tile lands on, in Compact's other corner: your peers at the page's Energy
     // for a peer row, your own Phoenix 1 grade for a carried one — the target list's own rule.

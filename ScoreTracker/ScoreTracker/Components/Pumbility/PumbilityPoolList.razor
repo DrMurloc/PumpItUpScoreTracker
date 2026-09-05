@@ -1,0 +1,251 @@
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.Services
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Theming
+@namespace ScoreTracker.Web.Components
+
+@* The fifty as a tier list (docs/design/pumbility-overhaul.md §3.11, D57): the selected pool's
+   charts banded by what each is worth to you — the shared processor's standard-deviation cuts,
+   named as a magnitude, Highest down to Lowest (D46) — as collapsible sections of
+   TierListChartCard in the three densities. The value rides the jacket corner in both
+   densities, Compact's other corner is your grade, and the one body line is the chart's place.
+   Every card is a pass, so every card wears the pass border.
+
+   Nothing here is projected. No peers' data and no gain corner, because those are the Play
+   list's: this list is what you hold, that one is what you might (D57). The frame already
+   loaded the pool, so this reads nothing. *@
+@if (_sections.Count == 0)
+{
+    <p class="pmb-empty" data-testid="ppl-empty">@L["Nothing in your pool yet — every non-broken pass at level 10 or above takes a slot."]</p>
+}
+else
+{
+    @foreach (var section in _sections)
+    {
+        <div class="pmb-tier-section" data-testid="@($"ppl-section-{section.Key}")">
+            <TierSection Name="@section.Name" Color="@section.Color" Count="section.Rows.Count"
+                         Collapsed="_collapsed.Contains(section.Key)" CollapsedChanged="c => SetCollapsed(section.Key, c)">
+                @if (Density == UiDensity.Table)
+                {
+                    <div class="tier-table-wrap">
+                        <table class="tier-table pmb-table">
+                            <thead>
+                            <tr>
+                                <th class="tier-table-jacket-cell"></th>
+                                <th>#</th>
+                                <th>@L["Song Name"]</th>
+                                <th>@L["Chart"]</th>
+                                <th>@L["My Score"]</th>
+                                <th class="pmb-r" title="@L["What the chart is worth in your pool right now"]">@L["Value"]</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var row in section.Rows)
+                            {
+                                <tr class="pmb-row tier-row-pass">
+                                    <td class="tier-table-jacket-cell">
+                                        <div class="tier-table-jacket" role="button" tabindex="0"
+                                             @onclick="() => OnOpen.InvokeAsync(row.Chart)"
+                                             style="background-image:url('@row.Chart.Song.ImagePath')"></div>
+                                    </td>
+                                    <td class="pmb-num pmb-muted">@row.Entry.Place</td>
+                                    <td>@row.Chart.Song.Name</td>
+                                    <td>@row.Chart.DifficultyString</td>
+                                    <td>
+                                        <ScoreBreakdown Score="row.Entry.Score" IsBroken="row.Entry.IsBroken" Mix="Page.Mix" OneLine="true"
+                                                        ShowScore="true" Plate="row.Entry.Plate"></ScoreBreakdown>
+                                    </td>
+                                    <td class="pmb-r pmb-num pmb-val">@row.Entry.Value.ToString("N2")</td>
+                                    <td>
+                                        @if (ShowToDo)
+                                        {
+                                            <MudIconButton Size="Size.Small"
+                                                           Icon="@(ToDos.Contains(row.Chart.Id) ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
+                                                           Color="@(ToDos.Contains(row.Chart.Id) ? Color.Info : Color.Default)"
+                                                           OnClick="() => OnToDo.InvokeAsync(row.Chart.Id)" aria-label="@L["To Do"]"></MudIconButton>
+                                        }
+                                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Info"
+                                                       OnClick="() => OnOpen.InvokeAsync(row.Chart)" aria-label="@L["Details"]"></MudIconButton>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="@(Density == UiDensity.Compact ? "tier-card-grid tier-card-grid-compact" : "tier-card-grid")">
+                        @foreach (var row in section.Rows)
+                        {
+                            @* The value is the card's reason for existing here, so it takes the corner in
+                               both densities; the grade rides Compact's other corner, where the head that
+                               would have shown it is not drawn. *@
+                            <TierListChartCard Chart="row.Chart"
+                                               Density="Density"
+                                               Score="@ScoreOf(row)"
+                                               Passed="true"
+                                               IsToDo="ToDos.Contains(row.Chart.Id)"
+                                               ShowToDo="ShowToDo"
+                                               ShowPlay="@(Density == UiDensity.Comfortable)"
+                                               CornerBadge="@row.Entry.Value.ToString("N2")"
+                                               CornerBadgeClass="pmb-corner-gain"
+                                               CornerBadgeStart="@(Density == UiDensity.Compact ? Grade(row) : null)"
+                                               CornerBadgeStartClass="pmb-corner-gain"
+                                               TooltipNote="@TooltipNote(row)"
+                                               Skills="@SkillsFor(row)"
+                                               Body="@CardBody(row)"
+                                               OnToDo="OnToDo"
+                                               OnOpen="OpenById"
+                                               OnPlay="PlayById"></TierListChartCard>
+                        }
+                    </div>
+                }
+            </TierSection>
+        </div>
+    }
+}
+
+@code {
+    /// <summary>The frame's record: the selected pool's fifty, by place, with what each is worth.</summary>
+    [Parameter] [EditorRequired] public PumbilityPageRecord Page { get; set; } = null!;
+
+    [Parameter] [EditorRequired] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } =
+        new Dictionary<Guid, Chart>();
+
+    /// <summary>
+    ///     What each chart IS (docs/design/chart-identity.md §6), keyed by chart. Handed down
+    ///     rather than read here: this component is presentational, and the block above it reads
+    ///     once for the fifty.
+    /// </summary>
+    [Parameter] public IReadOnlyDictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>> Skills { get; set; } =
+        new Dictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>>();
+
+    [Parameter] public UiDensity Density { get; set; } = UiDensity.Comfortable;
+
+    [Parameter] public bool ShowToDo { get; set; }
+
+    [Parameter] public ISet<Guid> ToDos { get; set; } = new HashSet<Guid>();
+
+    [Parameter] public EventCallback<Guid> OnToDo { get; set; }
+
+    [Parameter] public EventCallback<Chart> OnOpen { get; set; }
+
+    [Parameter] public EventCallback<Chart> OnPlay { get; set; }
+
+    /// <summary>Section keys folded when the list first renders; nothing by default — the bar is at the bottom, and that is the part a reader came for.</summary>
+    [Parameter] public IReadOnlySet<string>? Collapsed { get; set; }
+
+    [Parameter] public EventCallback<IReadOnlySet<string>> CollapsedChanged { get; set; }
+
+    public static readonly IReadOnlySet<string> DefaultCollapsed = new HashSet<string>();
+
+    /// <summary>The list the pool bands under — a name for the processor, never rendered.</summary>
+    private const string PoolListName = "PumbilityPool";
+
+    private sealed record Row(Chart Chart, PoolEntry Entry);
+
+    private sealed record Section(string Key, string Name, string Color, IReadOnlyList<Row> Rows, TierListCategory Tier);
+
+    private HashSet<string> _collapsed = new();
+    private bool _collapsedInitialised;
+    private IReadOnlyList<Section> _sections = Array.Empty<Section>();
+
+    /// <summary>
+    ///     What the list is showing, for the block's Download button — the same sections in the
+    ///     same order, so the image cannot disagree with the screen it was taken from. Folded
+    ///     sections are included: a fold is a reading convenience, not a filter. Every tile
+    ///     carries the pool's own value, so the card's PUMBILITY chip prints exactly what the
+    ///     page does.
+    /// </summary>
+    public IReadOnlyList<PumbilityShareSection> ShareSections() =>
+        _sections.Select(s => new PumbilityShareSection(s.Name, s.Tier,
+            s.Rows.Select(r => new PumbilityShareTile(r.Chart, r.Entry.Score, r.Entry.Plate, r.Entry.IsBroken,
+                ToDos.Contains(r.Chart.Id), Carried: false, Gain: null, Expected: null, r.Entry.Value)).ToArray()))
+            .ToArray();
+
+    protected override void OnParametersSet()
+    {
+        if (!_collapsedInitialised)
+        {
+            _collapsed = new HashSet<string>(Collapsed ?? DefaultCollapsed);
+            _collapsedInitialised = true;
+        }
+
+        _sections = Build();
+    }
+
+    private async Task SetCollapsed(string key, bool collapsed)
+    {
+        if (collapsed) _collapsed.Add(key);
+        else _collapsed.Remove(key);
+        await CollapsedChanged.InvokeAsync(_collapsed);
+    }
+
+    private IReadOnlyList<Section> Build()
+    {
+        // The frame's pool, banded by what each chart is worth to you the way every other list on
+        // the site bands — the shared processor's standard-deviation cuts, the pool's own tier
+        // names and the rarity ramp's colours (D46).
+        var rows = Page.Pool.Where(e => Charts.ContainsKey(e.ChartId)).OrderBy(e => e.Place)
+            .Select(e => new Row(Charts[e.ChartId], e))
+            .ToArray();
+        if (rows.Length == 0) return Array.Empty<Section>();
+
+        var banded = TierListProcessor
+            .ProcessIntoTierList(PoolListName, rows.ToDictionary(r => r.Chart.Id, r => r.Entry.Value))
+            .ToDictionary(e => e.ChartId, e => e.Category);
+        var sections = new List<Section>();
+        foreach (var tier in PumbilityTierNames.Tiers)
+        {
+            var inTier = rows.Where(r => banded[r.Chart.Id] == tier).ToArray();
+            if (inTier.Length == 0) continue;
+            sections.Add(new Section(tier.ToString(), L[PumbilityTierNames.PoolNameOf(tier)],
+                ThemeScales.PumbilityColor(tier), inTier, tier));
+        }
+
+        return sections;
+    }
+
+    private Task OpenById(Guid chartId) => OnOpen.InvokeAsync(Charts[chartId]);
+
+    private Task PlayById(Guid chartId) => OnPlay.InvokeAsync(Charts[chartId]);
+
+    private IReadOnlyList<TierListChartCard.CardSkillChip>? SkillsFor(Row row) =>
+        Skills.TryGetValue(row.Chart.Id, out var chips) && chips.Count > 0 ? chips : null;
+
+    private static RecordedPhoenixScore ScoreOf(Row row) =>
+        new(row.Chart.Id, row.Entry.Score, row.Entry.Plate, row.Entry.IsBroken, row.Entry.RecordedDate);
+
+    private string PoolText(Row row) => L["In your pool #{0}", row.Entry.Place];
+
+    // Compact prints numbers and no words, so the tooltip carries them (rule 7): the place, the
+    // value and the score.
+    private string TooltipNote(Row row) =>
+        $"{PoolText(row)} · {row.Entry.Value.ToString("N2")} · {((int)row.Entry.Score).ToString("N0")}";
+
+    // Your grade in Compact's other corner. A pool row is never a broken one: a broken run
+    // prices at zero and can hold no slot.
+    private RenderFragment Grade(Row row) => builder =>
+    {
+        builder.OpenComponent<LetterGradeIcon>(0);
+        builder.AddComponentParameter(1, nameof(LetterGradeIcon.Grade), row.Entry.Score.LetterGradeFor(Page.Mix));
+        builder.AddComponentParameter(2, nameof(LetterGradeIcon.Height), 14);
+        builder.CloseComponent();
+    };
+
+    // The card body, Comfortable only: where the chart sits in your pool.
+    private RenderFragment CardBody(Row row) => builder =>
+    {
+        builder.OpenElement(0, "span");
+        builder.AddAttribute(1, "class", "pmb-pool-line");
+        builder.AddContent(2, PoolText(row));
+        builder.CloseElement();
+    };
+}
