@@ -22,9 +22,15 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 ///     </para>
 /// </summary>
 [EnableCors("API")]
-// What every v2 action answers with, declared once so Swagger shows it on all of them: JSON
-// bodies, a 401 for a missing or bad credential, and a 429 with Retry-After from the rate limiter.
-[Produces("application/json")]
+// What every v2 action answers with, declared once so Swagger shows it on all of them: a 401 for
+// a missing or bad credential, and a 429 with Retry-After from the rate limiter.
+//
+// ⚠ Never add [Produces("application/json")] here. It is not only Swagger metadata — it is a
+// result filter that rewrites every ObjectResult's content type before the formatter runs, and
+// every 400/404 below is an ObjectResult carrying application/problem+json. It shipped on this
+// class for one commit and turned every v2 error into plain application/json on the wire while
+// the docs kept promising a problem document. The JSON content type of a 200 is declared on each
+// action's ProducesResponseType instead, which carries no filter (V2ConventionTests pins both).
 [ProducesResponseType(StatusCodes.Status401Unauthorized)]
 [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
 public abstract class ApiV2ControllerBase : Controller

@@ -63,7 +63,7 @@ public sealed class TierListsController : ApiV2ControllerBase
     ///     meaning silently changes later.
     /// </remarks>
     [HttpGet("{listType}")]
-    [ProducesResponseType(typeof(CursorPageDto<TierListEntryV2Dto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CursorPageDto<TierListEntryV2Dto>), StatusCodes.Status200OK, "application/json")]
     [ProducesResponseType(StatusCodes.Status304NotModified)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status404NotFound)]

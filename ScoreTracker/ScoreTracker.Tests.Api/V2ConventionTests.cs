@@ -1,6 +1,8 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.Routing;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Controllers.Api.V2;
@@ -132,5 +134,48 @@ public sealed class V2ConventionTests
             .ToArray();
 
         Assert.Empty(offenders);
+    }
+
+    /// <summary>
+    ///     A v2 error is an <c>application/problem+json</c> document, and the one attribute that can
+    ///     silently take that away is <see cref="ProducesAttribute" />: besides being Swagger
+    ///     metadata it is a result filter that rewrites every ObjectResult's content type — which is
+    ///     what every <c>Problem()</c> response is. It shipped on the base class for one commit and
+    ///     turned every v2 400/404 into plain <c>application/json</c> on the wire while the docs kept
+    ///     promising a problem document; the direct-invocation tests could not see it because no
+    ///     filter runs there. So: no Produces filter anywhere on the v2 surface, and each action names
+    ///     the JSON content type on its own 200 declaration instead, which carries no filter.
+    /// </summary>
+    [Fact]
+    public void NoV2ControllerCarriesAProducesFilterAndEach200NamesJsonItself()
+    {
+        var controllers = typeof(ApiV2ControllerBase).Assembly.GetTypes()
+            .Where(t => typeof(ApiV2ControllerBase).IsAssignableFrom(t))
+            .ToArray();
+
+        var filters = controllers
+            .Where(t => t.GetCustomAttributes<ProducesAttribute>(inherit: true).Any())
+            .Select(t => t.Name)
+            .Concat(controllers.SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+                .Where(m => m.GetCustomAttributes<ProducesAttribute>().Any())
+                .Select(m => $"{m.DeclaringType!.Name}.{m.Name}"))
+            .ToArray();
+        Assert.Empty(filters);
+
+        var untyped = controllers.Where(t => !t.IsAbstract)
+            .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                .Where(m => m.GetCustomAttributes<HttpMethodAttribute>().Any()))
+            .Where(m => !m.GetCustomAttributes<ProducesResponseTypeAttribute>()
+                .Where(a => a.StatusCode == StatusCodes.Status200OK)
+                .Any(a =>
+                {
+                    var types = new MediaTypeCollection();
+                    ((IApiResponseMetadataProvider)a).SetContentTypes(types);
+                    return types.Contains("application/json");
+                }))
+            .Select(m => $"{m.DeclaringType!.Name}.{m.Name}")
+            .OrderBy(x => x)
+            .ToArray();
+        Assert.Empty(untyped);
     }
 }

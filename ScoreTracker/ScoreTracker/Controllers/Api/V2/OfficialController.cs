@@ -40,7 +40,7 @@ public sealed class OfficialController : ApiV2ControllerBase
     ///     ranking exactly as piugame publishes it.
     /// </param>
     [HttpGet("rankings")]
-    [ProducesResponseType(typeof(OfficialRankingsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(OfficialRankingsDto), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetRankings(
         [FromQuery(Name = "mix")] string? mixValue = null,
@@ -81,7 +81,7 @@ public sealed class OfficialController : ApiV2ControllerBase
     ///     <c>rankings?supplemented=true</c>. Defaults to false.
     /// </param>
     [HttpGet("players/{gameTag}")]
-    [ProducesResponseType(typeof(OfficialPlayerProfileDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(OfficialPlayerProfileDto), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetPlayer([FromRoute] string gameTag,
@@ -105,7 +105,7 @@ public sealed class OfficialController : ApiV2ControllerBase
     ///     <c>player.isSupplemented</c>. Defaults to false.
     /// </param>
     [HttpGet("charts/{chartId:guid}/board")]
-    [ProducesResponseType(typeof(OfficialChartBoardDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(OfficialChartBoardDto), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetChartBoard([FromRoute] Guid chartId,
@@ -131,7 +131,7 @@ public sealed class OfficialController : ApiV2ControllerBase
     /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
     /// <param name="trendSnapshots">How many past snapshots of place history to include, 1–52.</param>
     [HttpGet("popularity")]
-    [ProducesResponseType(typeof(CursorPageDto<OfficialPopularityDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CursorPageDto<OfficialPopularityDto>), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetPopularity(
         [FromQuery(Name = "mix")] string? mixValue = null,
@@ -157,7 +157,7 @@ public sealed class OfficialController : ApiV2ControllerBase
     /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
     /// <param name="type">Board to read: All, Single, Double, CoOp. Defaults to All.</param>
     [HttpGet("what-it-takes")]
-    [ProducesResponseType(typeof(WhatItTakesDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(WhatItTakesDto), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetWhatItTakes(
         [FromQuery(Name = "mix")] string? mixValue = null,
@@ -176,7 +176,7 @@ public sealed class OfficialController : ApiV2ControllerBase
     ///     to false.
     /// </param>
     [HttpGet("weekly-highlights")]
-    [ProducesResponseType(typeof(WeeklyHighlightsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(WeeklyHighlightsDto), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetWeeklyHighlights([FromQuery(Name = "mix")] string? mixValue = null,

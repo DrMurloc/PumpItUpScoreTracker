@@ -29,7 +29,7 @@ public sealed class WeeklyChartsController : ApiV2ControllerBase
     /// <summary>The charts on this week's board.</summary>
     /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>; each mix runs its own board.</param>
     [HttpGet]
-    [ProducesResponseType(typeof(CursorPageDto<WeeklyChartDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CursorPageDto<WeeklyChartDto>), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Get([FromQuery(Name = "mix")] string? mixValue = null)
     {
@@ -45,7 +45,7 @@ public sealed class WeeklyChartsController : ApiV2ControllerBase
     /// <summary>Every player's entry on the board.</summary>
     /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>; each mix runs its own board.</param>
     [HttpGet("scores")]
-    [ProducesResponseType(typeof(CursorPageDto<WeeklyChartScoreDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CursorPageDto<WeeklyChartScoreDto>), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetScores([FromQuery(Name = "mix")] string? mixValue = null)
     {

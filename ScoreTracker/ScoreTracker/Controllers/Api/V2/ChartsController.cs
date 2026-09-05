@@ -39,7 +39,7 @@ public sealed class ChartsController : ApiV2ControllerBase
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet]
-    [ProducesResponseType(typeof(CursorPageDto<ChartV2Dto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CursorPageDto<ChartV2Dto>), StatusCodes.Status200OK, "application/json")]
     [ProducesResponseType(StatusCodes.Status304NotModified)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Get(
@@ -99,7 +99,7 @@ public sealed class ChartsController : ApiV2ControllerBase
     /// <remarks>Mix-invariant — it describes the steps, so no <c>mix</c> parameter.</remarks>
     /// <param name="chartId">A chart id from <c>/api/v2/charts</c>.</param>
     [HttpGet("{chartId:guid}/skills")]
-    [ProducesResponseType(typeof(ChartSkillProfileDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ChartSkillProfileDto), StatusCodes.Status200OK, "application/json")]
     [ProducesResponseType(StatusCodes.Status304NotModified)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetChartSkills([FromRoute] Guid chartId)
@@ -132,7 +132,7 @@ public sealed class ChartsController : ApiV2ControllerBase
     // the endpoint description. XML doc reaches Swagger; a line comment does not, which is why the
     // rationale lives down here.
     [HttpGet("skills")]
-    [ProducesResponseType(typeof(CursorPageDto<ChartSkillProfileDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CursorPageDto<ChartSkillProfileDto>), StatusCodes.Status200OK, "application/json")]
     [ProducesResponseType(StatusCodes.Status304NotModified)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetSkills(
@@ -184,7 +184,7 @@ public sealed class ChartsController : ApiV2ControllerBase
     /// <param name="chartId">A chart id from <c>/api/v2/charts</c>.</param>
     /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
     [HttpGet("{chartId:guid}")]
-    [ProducesResponseType(typeof(ChartV2Dto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ChartV2Dto), StatusCodes.Status200OK, "application/json")]
     [ProducesResponseType(StatusCodes.Status304NotModified)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
@@ -223,7 +223,7 @@ public sealed class ChartsController : ApiV2ControllerBase
     // question and deliberately outside the ±1 the nightly job precalculates. See
     // docs/design/chart-similarity.md; a line comment keeps it out of the Swagger description.
     [HttpGet("{chartId:guid}/similar")]
-    [ProducesResponseType(typeof(SimilarChartsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SimilarChartsDto), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetSimilar([FromRoute] Guid chartId,
         [FromQuery(Name = "mix")] string? mixValue = null,
@@ -272,7 +272,7 @@ public sealed class ChartsController : ApiV2ControllerBase
     ///     <paramref name="count" /> when they exceed it.
     /// </param>
     [HttpGet("random")]
-    [ProducesResponseType(typeof(CursorPageDto<ChartV2Dto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CursorPageDto<ChartV2Dto>), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetRandom(
         [FromQuery(Name = "mix")] string? mixValue = null,

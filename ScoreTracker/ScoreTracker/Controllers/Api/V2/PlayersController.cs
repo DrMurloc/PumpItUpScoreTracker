@@ -175,7 +175,7 @@ public sealed class PlayersController : ApiV2ControllerBase
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet]
-    [ProducesResponseType(typeof(CursorPageDto<PlayerV2Dto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CursorPageDto<PlayerV2Dto>), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetPlayers(
@@ -236,7 +236,7 @@ public sealed class PlayersController : ApiV2ControllerBase
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet("stats")]
-    [ProducesResponseType(typeof(CursorPageDto<PlayerStatsDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CursorPageDto<PlayerStatsDto>), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetStats(
@@ -290,7 +290,7 @@ public sealed class PlayersController : ApiV2ControllerBase
     /// <param name="playerId">A player id from <c>/api/v2/players</c>, or <c>me</c> with a personal token.</param>
     /// <param name="mixValue">Required. A Phoenix mix from <c>/api/v2/mixes</c>; a legacy mix has no PUMBILITY and answers 404.</param>
     [HttpGet("{playerId}/stats")]
-    [ProducesResponseType(typeof(PlayerStatsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PlayerStatsDto), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetPlayerStats([FromRoute] string playerId,
@@ -317,7 +317,7 @@ public sealed class PlayersController : ApiV2ControllerBase
     /// <summary>The player's profile, with their most recently observed in-game tag.</summary>
     /// <param name="playerId">A player id from <c>/api/v2/players</c>, or <c>me</c> with a personal token.</param>
     [HttpGet("{playerId}")]
-    [ProducesResponseType(typeof(PlayerV2Dto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PlayerV2Dto), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetPlayer([FromRoute] string playerId)
@@ -352,7 +352,7 @@ public sealed class PlayersController : ApiV2ControllerBase
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet("{playerId}/scores")]
-    [ProducesResponseType(typeof(PlayerScorePageDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PlayerScorePageDto), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetScores([FromRoute] string playerId,
@@ -451,7 +451,7 @@ public sealed class PlayersController : ApiV2ControllerBase
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet("{playerId}/sessions")]
-    [ProducesResponseType(typeof(CursorPageDto<SessionDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CursorPageDto<SessionDto>), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetSessions([FromRoute] string playerId,
@@ -509,7 +509,7 @@ public sealed class PlayersController : ApiV2ControllerBase
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet("{playerId}/journal")]
-    [ProducesResponseType(typeof(CursorPageDto<JournalEntryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CursorPageDto<JournalEntryDto>), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetJournal([FromRoute] string playerId,

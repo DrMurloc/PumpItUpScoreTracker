@@ -42,7 +42,7 @@ public sealed class ChartScoresController : ApiV2ControllerBase
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet("{chartId:guid}/scores")]
-    [ProducesResponseType(typeof(ChartScorePageDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ChartScorePageDto), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetScores([FromRoute] Guid chartId,
