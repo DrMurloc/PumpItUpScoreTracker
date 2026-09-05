@@ -52,11 +52,12 @@
    the controls a reader had just used and jumped the page twice (owner, field test round eight).
    Grouped by is a re-sort of what is already here and needs none of this.
 
-   The controls: Grouped by — Prevalence, Projected gains, Your top 50 (D44) — then Energy, then, left-aligned
-   beside it, the one switch that means something under that grouping — Project Phoenix 1 scores
-   under Projected gains and only when the record holds carried rows; Only projected PUMBILITY
-   gains under Prevalence; nothing under Your top 50 — then the density trio at the far end, right
-   above the list (D34, D36). Every preference persists as a UiSetting. *@
+   The controls: Grouped by — Prevalence, Projected gains (D36; the Your top 50 lens left for the
+   Breakdown page in round nine, D57) — then Energy, then, left-aligned beside it, the one switch
+   that means something under that grouping — Project Phoenix 1 scores under Projected gains and
+   only when the record holds carried rows; Only projected PUMBILITY gains under Prevalence — then
+   the density trio at the far end, right above the list (D34). Every preference persists as a
+   UiSetting; a saved Your top 50 no longer parses and reads as Prevalence. *@
 <section class="pmb-block" data-testid="peers-section">
     <div class="pmb-block-head">
         <h2 class="pmb-block-title">@L["PUMBILITY Targets"]</h2>
@@ -103,7 +104,6 @@
                        Disabled="_reloading" Value="_groupBy" ValueChanged="SetGrouping" data-testid="peers-groupby">
                 <MudSelectItem T="PeerGrouping" Value="PeerGrouping.Prevalence">@L["Prevalence"]</MudSelectItem>
                 <MudSelectItem T="PeerGrouping" Value="PeerGrouping.ProjectedGains">@L["Projected gains"]</MudSelectItem>
-                <MudSelectItem T="PeerGrouping" Value="PeerGrouping.YourTop50">@L["Your top 50"]</MudSelectItem>
             </MudSelect>
             @* Energy (D51): how you're playing today, as the rung of your peers every projected score
                and gain on the page reads. The select explains itself on hover and each option says
@@ -168,7 +168,7 @@
            screen is exactly the previous shape, blanked by the pulse, and it flips once. *@
         <div class="pmb-list@(_reloading ? " pmb-list-reloading" : "")" aria-busy="@(_reloading ? "true" : "false")" data-testid="peers-list">
             <PeerPoolLegend Density="_density" HasCarried="HasCarried && _projectPhoenix1 && _groupBy == PeerGrouping.ProjectedGains"></PeerPoolLegend>
-            <PeerPoolList @ref="_list" Page="_peers" Charts="Charts" Gains="Gains" Mix="Shown.Mix" Density="_density" PoolRecord="Shown" Skills="_skills"
+            <PeerPoolList @ref="_list" Page="_peers" Charts="Charts" Gains="Gains" Mix="Shown.Mix" Density="_density" Skills="_skills"
                           GroupBy="_groupBy" GainsOnly="_gainsOnly"
                           ShowToDo="true" ToDos="ToDos" OnToDo="OnToDo" OnOpen="OnOpen" OnPlay="OnPlay"
                           Collapsed="_collapsed" CollapsedChanged="SetCollapsed"></PeerPoolList>
@@ -346,9 +346,7 @@
         .Select(t => groups[t])
         .ToArray();
 
-    private string Lede => _groupBy == PeerGrouping.YourTop50
-        ? L["Your pool by place, with what your peers do on each chart — how many hold it, their median and how split they are — and the waiting room below the bar."]
-        : _groupBy == PeerGrouping.ProjectedGains
+    private string Lede => _groupBy == PeerGrouping.ProjectedGains
         ? L["Ranked by what each chart would add if you played it to the standard your peers set — priced against your bar as it stands now, so every row means what the first one does. Everything here clears your bar."]
         : _gainsOnly
             ? HasPumbilityPeers
@@ -512,7 +510,7 @@
     ///     travels on the picture because a Good card and a Great card show different grades
     ///     on the same charts, and a reader has to be able to tell which this was.
     /// </summary>
-    private ShareCardTitles.Header ShareHeader => ShareCardTitles.Targets(_groupBy == PeerGrouping.YourTop50, GroupingName,
+    private ShareCardTitles.Header ShareHeader => ShareCardTitles.Targets(GroupingName,
         L[EnergyLabels.Label(Energy)], SharePoolLabel,
         gainsOnly: _groupBy == PeerGrouping.Prevalence && _gainsOnly,
         phoenix1Projected: _groupBy == PeerGrouping.ProjectedGains && HasCarried && _projectPhoenix1,
@@ -559,7 +557,6 @@
     private string GroupingName => _groupBy switch
     {
         PeerGrouping.ProjectedGains => L["Projected gains"],
-        PeerGrouping.YourTop50 => L["Your top 50"],
         _ => L["Prevalence"]
     };
 

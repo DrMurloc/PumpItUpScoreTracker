@@ -40,13 +40,11 @@ public static class ShareCardTitles
     }
 
     /// <param name="poolLabel">"Singles pool" / "All pools" on Phoenix 2, null where the mix has one pool.</param>
-    public static Header Targets(bool poolLens, string groupingName, string energyLabel, string? poolLabel,
+    public static Header Targets(string groupingName, string energyLabel, string? poolLabel,
         bool gainsOnly, bool phoenix1Projected, string mixName, string date, string playerTag,
         Func<string, string> localize)
     {
-        var title = poolLens
-            ? $"{localize("PUMBILITY Pool")} — {localize("Top 50")}"
-            : $"{localize("PUMBILITY Targets")} — {groupingName}";
+        var title = $"{localize("PUMBILITY Targets")} — {groupingName}";
         var clarifiers = new List<string> { $"{localize("Energy")}: {energyLabel}" };
         if (poolLabel != null) clarifiers.Add(poolLabel);
         if (gainsOnly) clarifiers.Add(localize("Only projected PUMBILITY gains"));

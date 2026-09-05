@@ -52,27 +52,17 @@ public sealed class ShareCardTitlesTests
     [Fact]
     public void TargetsPromoteTheGroupingAndPrintOnlyTheClarifiersThatApply()
     {
-        var prevalence = ShareCardTitles.Targets(false, "Prevalence", "Great", "Singles pool",
+        var prevalence = ShareCardTitles.Targets("Prevalence", "Great", "Singles pool",
             gainsOnly: true, phoenix1Projected: false, "Phoenix 2", "2026-09-02", "DrMurloc", L);
         Assert.Equal("PUMBILITY Targets — Prevalence", prevalence.Title);
         Assert.Equal("Energy: Great · Singles pool · Only projected PUMBILITY gains · Phoenix 2 · 2026-09-02",
             prevalence.Subtitle);
         Assert.Equal("Personalized for DrMurloc", prevalence.Stamp);
 
-        var gains = ShareCardTitles.Targets(false, "Projected gains", "Good", null,
+        var gains = ShareCardTitles.Targets("Projected gains", "Good", null,
             gainsOnly: false, phoenix1Projected: true, "Phoenix", "2026-09-02", "DrMurloc", L);
         Assert.Equal("PUMBILITY Targets — Projected gains", gains.Title);
         Assert.Equal("Energy: Good · Phoenix 1 projected · Phoenix · 2026-09-02", gains.Subtitle);
-    }
-
-    [Fact]
-    public void ThePoolLensIsThePoolNotATargetsList()
-    {
-        var pool = ShareCardTitles.Targets(true, "Your top 50", "Great", "Doubles pool",
-            gainsOnly: false, phoenix1Projected: false, "Phoenix 2", "2026-09-02", "DrMurloc", L);
-
-        Assert.Equal("PUMBILITY Pool — Top 50", pool.Title);
-        Assert.Equal("Energy: Great · Doubles pool · Phoenix 2 · 2026-09-02", pool.Subtitle);
     }
 
     [Fact]
