@@ -68,6 +68,8 @@ public sealed class PumbilityPeerPoolProbeTests
         var rung = Phoenix2PumbilityLevel.From(mine.SkillRating);
         _output.WriteLine($"=== {userId} · total {mine.SkillRating:F2} · rung {rung.Index} ({rung.Gem} {rung.Level}) · singles pool {mine.SinglesRating:F2} · doubles pool {mine.DoublesRating:F2} ===");
 
+        // The peers of either type, for the merged-fifty split exported after the loop.
+        var unionPeers = new HashSet<Guid>();
         foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
         {
             _output.WriteLine("");
@@ -103,6 +105,7 @@ public sealed class PumbilityPeerPoolProbeTests
 
             var viewerLit = pools.TryGetValue(userId, out var myPool);
             var peers = pools.Keys.Where(p => p != userId).ToHashSet();
+            unionPeers.UnionWith(peers);
             _output.WriteLine($"viewer pool: {(viewerLit ? "full" : $"{byPlayer.GetValueOrDefault(userId)?.Length ?? 0} records, dark")}; peers with a full pool: {peers.Count}");
             if (peers.Count == 0) continue;
 
@@ -369,6 +372,48 @@ public sealed class PumbilityPeerPoolProbeTests
                     .Where(c => count.GetValueOrDefault(c.ChartId) <= 1)
                     .Select(c => $"{Trim(charts[c.ChartId].Song.Name, 22)} {charts[c.ChartId].Type.ToString()[0]}{(int)charts[c.ChartId].Level} (#{myRank[c.ChartId]}, band #{consensusRankOf.GetValueOrDefault(c.ChartId, 0)})")));
             }
+        }
+
+        // The peers' average singles/doubles split of their MERGED fifty — what the Breakdown
+        // page's second composition bar draws (PUMBILITY doc, round nine part two). Each peer's
+        // records of both types, priced, merged, the top fifty taken and split by type; then the
+        // average over the peers who hold a full fifty. Mock export only, read-only like the rest.
+        if (unionPeers.Count > 0 && Environment.GetEnvironmentVariable("SCORETRACKER_PROBE_OUT") is { Length: > 0 } splitDir)
+        {
+            var byPeer = new Dictionary<Guid, List<(ChartType Type, double Rating)>>();
+            foreach (var type in new[] { ChartType.Single, ChartType.Double })
+            foreach (var r in await scores.GetPlayerScoresInLevelRange(mix, unionPeers, type,
+                         PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, CancellationToken.None))
+            {
+                if (!charts.TryGetValue(r.ChartId, out var chart)) continue;
+                var rating = scoring.GetScore(chart, r.Score, r.Plate ?? PhoenixPlate.RoughGame, r.IsBroken);
+                if (rating <= 0) continue;
+                if (!byPeer.TryGetValue(r.UserId, out var list)) byPeer[r.UserId] = list = new List<(ChartType, double)>();
+                list.Add((type, rating));
+            }
+
+            var splits = byPeer.Values
+                .Select(list => list.OrderByDescending(x => x.Rating).Take(PeerGroup.PumbilityPoolSize).ToArray())
+                .Where(top => top.Length == PeerGroup.PumbilityPoolSize)
+                .Select(top => new
+                {
+                    singlesCount = top.Count(x => x.Type == ChartType.Single),
+                    doublesCount = top.Count(x => x.Type == ChartType.Double),
+                    singlesValue = top.Where(x => x.Type == ChartType.Single).Sum(x => x.Rating),
+                    doublesValue = top.Where(x => x.Type == ChartType.Double).Sum(x => x.Rating)
+                })
+                .ToArray();
+            var split = new
+            {
+                peers = splits.Length,
+                singlesCount = splits.Length == 0 ? 0 : splits.Average(x => x.singlesCount),
+                doublesCount = splits.Length == 0 ? 0 : splits.Average(x => x.doublesCount),
+                singlesValue = splits.Length == 0 ? 0 : splits.Average(x => x.singlesValue),
+                doublesValue = splits.Length == 0 ? 0 : splits.Average(x => x.doublesValue)
+            };
+            var splitPath = Path.Combine(splitDir, "peers-split.json");
+            await File.WriteAllTextAsync(splitPath, System.Text.Json.JsonSerializer.Serialize(split));
+            _output.WriteLine($"peers' merged-fifty split over {split.peers} peers: singles {split.singlesValue:F2} ({split.singlesCount:F1}) · doubles {split.doublesValue:F2} ({split.doublesCount:F1}) → {splitPath}");
         }
 
         Assert.True(true, "a measurement, not a guarantee — read the output");
