@@ -554,6 +554,34 @@ public sealed class LeaderboardHubSagaTests
         Assert.False(official.PumbilityIsSupplemented);
     }
 
+    /// <summary>
+    ///     The co-op ranking is computed from co-op rows alone, so its mark is judged over co-op
+    ///     rows alone: a player with official singles rows and only supplemented co-op rows is on
+    ///     the co-op ranking because of PIU Scores, whatever their singles say.
+    /// </summary>
+    [Fact]
+    public async Task SupplementedCoOpRankingMarksAPlayerByTheirCoOpRowsOnly()
+    {
+        var f = Arrange(Run(2, Week2));
+        var coopA = Guid.NewGuid();
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, PlacementScope.IncludingSupplemented,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                CoOpChart(11, coopA, 1, 1_000_000),
+                // Official on a singles board, on the co-op board only because PIU Scores knows the score.
+                Chart(12, ChartA, 1, 999_000, level: 26, boardId: 500),
+                CoOpChart(12, coopA, 2, 994_999) with { IsSupplemented = true }
+            });
+
+        var result = await f.Saga.Handle(new GetOfficialRankingsQuery(MixEnum.Phoenix2, "CoOp", Supplemented: true),
+            CancellationToken.None);
+
+        Assert.Equal(2, result.Rankings.Count);
+        Assert.False(result.Rankings.Single(r => r.Player.Username == "PLAYER11").Player.IsSupplemented);
+        Assert.True(result.Rankings.Single(r => r.Player.Username == "PLAYER12").Player.IsSupplemented);
+    }
+
     [Fact]
     public async Task LinkedTagsByIdsAnswerOneTagPerAccountAndSkipTheUnlinked()
     {

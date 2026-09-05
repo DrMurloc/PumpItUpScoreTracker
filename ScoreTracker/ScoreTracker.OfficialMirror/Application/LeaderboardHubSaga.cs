@@ -266,7 +266,7 @@ internal sealed class LeaderboardHubSaga :
                 .Select(kv => BuildRanking(kv.Value,
                     previousRanks.TryGetValue(kv.Key, out var prev) ? prev : enteredFrom,
                     kv.Key, stats.ByPlayer[kv.Key].RatingFor(request.Type), stats, request.Type,
-                    stats.ByPlayer[kv.Key].IsSupplemented))
+                    stats.ByPlayer[kv.Key].IsSupplementedFor(request.Type)))
                 .ToArray();
         }
 
@@ -648,8 +648,18 @@ internal sealed class LeaderboardHubSaga :
 
     private sealed record PlayerSnapshotStats(int PlayerId, int BoardsInTop, double RatingAll,
         double RatingSingles, double RatingDoubles, double RatingCoOp, int BoardsCoOp, RecapPlayerType? PlayerType,
-        IReadOnlyDictionary<Guid, double> ChartRatings, bool IsSupplemented)
+        IReadOnlyDictionary<Guid, double> ChartRatings, bool IsSupplementedStandard, bool IsSupplementedCoOp)
     {
+        /// <summary>
+        ///     On the ranking of this type only because PIU Scores knows their scores. Per board,
+        ///     because a player can hold official singles rows and only supplemented co-op rows:
+        ///     on the co-op ranking they are there because of us, whatever their singles say.
+        /// </summary>
+        public bool IsSupplementedFor(string type)
+        {
+            return type == CoOpType ? IsSupplementedCoOp : IsSupplementedStandard;
+        }
+
         public decimal RatingFor(string type)
         {
             return (decimal)(type switch
@@ -762,9 +772,11 @@ internal sealed class LeaderboardHubSaga :
                 contributions.Concat(coop).Where(x => x.Detail.ChartId != null)
                     .GroupBy(x => x.Detail.ChartId!.Value)
                     .ToDictionary(g => g.Key, g => g.Max(x => x.Rating)),
-                // On the boards only because PIU Scores knows their scores: the same rule the
-                // profile applies, so a computed ranking (co-op) marks the same people it does.
-                contributions.Concat(coop).All(x => x.Detail.IsSupplemented));
+                // On a ranking only because PIU Scores knows their scores — judged over the rows
+                // that feed THAT ranking, the same rule the profile applies to its own rows. A
+                // player with no rows of a kind is not on that kind's ranking, so false there.
+                contributions.Length > 0 && contributions.All(x => x.Detail.IsSupplemented),
+                coop.Length > 0 && coop.All(x => x.Detail.IsSupplemented));
         }
 
         return new SnapshotStats(byPlayer, ratingBoards);
