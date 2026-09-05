@@ -3,7 +3,7 @@
 Status: **Slices 0, 1, R, 2 and 3 are shipped** — the tables are live under the old pages
 (PR #274) and MoM's import reads the score journal (§2.5, resolved 2026-08-24). The slice order
 was re-ordered after Slice 1 (§8); next is 4a, the read surfaces, which deletes the old pages. Explored 2026-08-09, workshopped
-and mocked 2026-08-10/11.
+and mocked 2026-08-10/11; mocks redrawn and re-decided 2026-09-05 (§11.9).
 
 March of Murlocs is the site's quarterly stamina ladder: 1 hour 45 minutes to bank as many
 points as you can, scored with PUMBILITY+. It has been running on autopilot since
@@ -26,19 +26,24 @@ mocks were built from. Slice 1 deliberately precedes the schema work so UI decis
 the tables, and it did: D16 alone deleted a uniqueness constraint from §6, D20 and D21 arrived from
 drawing the pages, and building them surfaced two live defects (§2.8, §2.9).
 
-**The six mocks are checked in** beside this doc at
-[`march-of-murlocs-mocks/`](march-of-murlocs-mocks/README.md) — standalone interactive HTML, no
-build step, every figure out of a production-synced database rather than imagined. Open them
-directly; the interactions are the point.
+**The mocks were redrawn on 2026-09-05** (seven surfaces — the six from August plus the My
+Sessions on-ramp) and live as Artifacts; the decisions they settled are in §11.9 and the build
+scope in §12. They are **not checked in**: each page embeds its own art (about 8 MB across the
+seven), and the previous checked-in set was removed — its landing mock had never rendered (an
+unterminated string in its script) and none of the six declared a charset. The build pipeline
+(templates, the shared skin that mirrors `site.css`, the SQL-pull → JSON scripts, the rest-chart
+analysis) sits in the owner's `Downloads\mom-mocks-v2-2026-09-05\`, README inside. Every figure
+in them is production-synced data.
 
-| | Surface | Mock | Also live at |
+| | Surface | Route | Mock |
 |---|---|---|---|
-| 1 | Season | [`1-season.html`](march-of-murlocs-mocks/1-season.html) | [artifact](https://claude.ai/code/artifact/1eee21b6-252c-46d0-bf82-78af5496f23f) |
-| 2 | Session Breakdown | [`2-session-breakdown.html`](march-of-murlocs-mocks/2-session-breakdown.html) | [artifact](https://claude.ai/code/artifact/55ff811f-b0c4-44d2-983c-91f20d425351) |
-| 3 | Submit | [`3-submit.html`](march-of-murlocs-mocks/3-submit.html) | [artifact](https://claude.ai/code/artifact/2bc91508-3bb6-4b1d-9f11-edcf083056b6) |
-| 4 | Planner | [`4-planner.html`](march-of-murlocs-mocks/4-planner.html) | [artifact](https://claude.ai/code/artifact/e62f1441-b673-4261-b96b-94b21319c8ca) |
-| 5 | Discord card | [`5-discord-card.html`](march-of-murlocs-mocks/5-discord-card.html) | [artifact](https://claude.ai/code/artifact/395daf21-13b8-4678-8183-557434bfd16a) |
-| 6 | Past seasons | [`6-past-seasons.html`](march-of-murlocs-mocks/6-past-seasons.html) | [artifact](https://claude.ai/code/artifact/f2f59b79-f76e-4d6d-a304-82a47568a6c6) |
+| 1 | Season | `/MarchOfMurlocs` | [artifact](https://claude.ai/code/artifact/b6d79211-5b45-41cd-9f8d-3f1e9b5e3c03) |
+| 2 | Session Breakdown | `/MarchOfMurlocs/Session/{id}` | [artifact](https://claude.ai/code/artifact/8baf7014-c37d-4f8b-bffc-cca62a227ea1) |
+| 3 | Submit | `/MarchOfMurlocs/Session/{id}/Edit` | [artifact](https://claude.ai/code/artifact/8211ff05-b654-4445-96ef-aa26d5aee0c2) |
+| 4 | Planner | `/MarchOfMurlocs/Planner` | [artifact](https://claude.ai/code/artifact/17d2ed81-eaef-451a-9c74-0ab5792ba3f2) |
+| 5 | Discord card | — | [artifact](https://claude.ai/code/artifact/58eb672e-a479-4845-80ac-4c3d36544b55) |
+| 6 | Past seasons | *a dialog, no route* | [artifact](https://claude.ai/code/artifact/360658de-b554-4e15-9de4-37c1bb6faba4) |
+| 7 | My Sessions on-ramp | `/Player/{id}/Sessions` | [artifact](https://claude.ai/code/artifact/b0b13385-89b9-412b-b135-16d9099122ec) |
 
 ---
 
@@ -1053,3 +1058,153 @@ Nothing is hidden by this. **The crawlable artifact is each season's own page**,
 lists directly. But the dialog gives a crawler no path *between* seasons, so the season page has to
 carry **previous / next season** links of its own — cheap, and it is what keeps the archive
 reachable without a route. If the list ever passes roughly twenty rows it earns the page then.
+
+### 11.9 The 2026-09-05 redraw — decisions
+
+All seven mocks were redrawn against the design language the site shipped in August (the PUMBILITY
+section frame, the Session Spotlight, the Official Leaderboards rows with the country wash, the
+stacked score) and reviewed over six rounds. **Nothing below changes a rule or a stored row** — the
+owner was explicit: UI/UX only. The rules of §1 and the schema of §6 stand.
+
+| # | Decision | Rationale |
+|---|---|---|
+| D23 | **Scores are the stacked grade-and-plate everywhere** (`.sbd-score-stack`: grade over plate at 11px, the number beside them spanning both rows), and **the difficulty bubble comes before the song image** in every row. | Owner, 2026-09-05: "everywhere we can … will make song names show a bit more on mobile"; "always put difficulty bubbles before song images (I think we get that wrong in a few places)". Both are sitewide vocabulary, not MoM's; `SessionScoreRow` puts the jacket first today, so 4a brings a small sitewide change. UX-GUIDELINES rule 3 gains both lines in the PR that ships them. |
+| D24 | **Words explain only what is not self-explanatory.** | Owner: "there's a lot of words." Ledes, hints and section notes are one clause or gone; what survives is the rules summary, the re-pricing ledger's multiply note, the import checks, and the Planner's warning when a rung cannot fill the window. |
+| D25 | **Download image is the site's share-card flow**: the shared `ShareCardSettingsDialog` (same remembered `ShareCard__Options`, same example preview, same filename line), the shared composer and `SkiaShareCardRenderer`, and the card is the **tier-list card with rows as twenty-minute sections of the session**. Session points take the corner chip where the tier-list card prints PUMBILITY. **To Do, Top 50 PUMBILITY and Passed in other mixes are hidden** on a session card. Offered right after publishing and on any published Breakdown. | Owner: "shouldn't download image use the same configuration/flow we do for all the other download images? we might be able to tier list it by 'when the chart landed in session' (break up into 20 minute sections)". Hidden options: owner, "hide them I guess". |
+| D26 | **Breakdown order: stats → the session (three densities, pace) → Compare.** | Owner: Compare "should sit beneath your session"; it had sat between "what are my session stats" and "what were my session songs". |
+| D27 | **The Planner prices each chart at an Energy** — the PUMBILITY page's own setting (Good · Great · Top of my game, `Pumbility__Energy`): Top of my game is your best on each chart (the ceiling), Great and Good the projector's rungs for your typical score at that level. **Default Good.** | Owner: "I play a lot at ~20s but can push up to 24s on good days … I shouldn't have my session off of 24s." Reuses the projector `PeersSection` already reads; no new pricing model. |
+| D28 | **Push caps the level a suggested set draws from, anchored on your last session's average folder level**: Steady = one level below it, Push = the average, All out = no cap. **Default Steady.** With no session, the anchor is the level you play most in recent sessions. Harder charts stay in the list, faded, still tickable. The page says plainly when a rung cannot fill 1:45 from the record book. | Owner: "for a stamina tournament, we should put Steady as a level lower than your session average. Push is your session average, all out just has no filter." |
+| D29 | **Rest charts get their own shelf**, and a rest chart passes **five tests against its own folder** (mix · type · level), from the step analysis in `ChartSkillMetric`: (1) steps per second (`tap_rows` ÷ seconds) in the bottom quarter; (2) hold share (chart-identity.md §3.9) in the top quarter; (3) no drills and no anchor runs (`badge_fraction:drill` = `badge_fraction:anchor_run` = 0); (4) hard twists (`badge_fraction:twist_over90` + `twist_far`) covering at most 0.50 of the chart; (5) crux density (`crux_enps`) no higher than the folder's 60th percentile. **"Clean" is AAA or better from the player.** The shelf lists only qualifying charts, each with a tick; **nothing is woven into the set** and no "almost" lines. | Owner's examples (8 6 FULL D23, Altale D23, Scorpion King D23, Ugly Dee D18, Hi Bi D21, Iolite Sky D20) share (1)–(3); NPS is *not* the tell (hold ticks inflate it — Altale sits at the D23 median NPS) and neither is twist share (Scorpion King is twisty). His rejections fixed (4) and (5): V3 D24 is hold-heavy but its hard twists cover 1.43 of the chart ("those twists are INTENSE"); 4NT D24's crux sits at the 73rd percentile of its folder where every accepted chart is at or below the 59th. On 김재현's book the rule yields Slam, Queencard, 8 6 FULL, Pop Sequence and Pneumono at AAA+ — the owner's own list. |
+| D30 | **A Finishers shelf**: the player's charts of three minutes or more, by points at the chosen energy, under one line — start one with seconds left, it counts in full. | Owner: "since you can start the last chart at 1 second left, long songs … are HUGE points." The solver's closing-chart pick (§11.5) is the same idea made explicit. |
+| D31 | **No autoplay and no play icon anywhere in MoM.** A jacket opens `ChartDetailsDialog` without `AutoPlay`. | Owner: "don't make any of the charts 'autoplay' in these pages." Supersedes the §11.3 sentence about the play button. |
+| D32 | **My Sessions gets a one-way on-ramp into MoM.** A quiet *Record as a March of Murlocs session* link sits under every session's title (there is always a season — they auto-cycle). A loud callout appears when the night holds a **window the length of a session (1:45) in which every play is one chart type and the rest inside it is under fifty minutes** — stage breaks ignored, finished-but-broken plays counting toward the type; the session's own start and end do not matter (a night can carry plays a skipped import left behind). Its button opens Submit with those charts filled in; the player still publishes. Once published, one gold chip carries the result and links to the MoM breakdown. **MoM never links back to My Sessions.** | Owner, three rounds: the rule as stated, then "the math is completely off" when the first cut fired on a nine-chart block, then "it should look for ranges of time in the session where the user had <50 minutes rest with specifically one type of chart. The actual session's start and end time doesn't matter." |
+| D33 | **The Season page opens on the board you have played** — Doubles when both or neither — and the two standing segments are the only board switcher. | Owner: "yeah that's fine." Your standing leads the page (rule 1). |
+| D34 | **No dashboard presence, no winner spotlight.** | Owner: "Nothing right now. Stick to the MoM pages"; "competition is against yourself, 'winners' are more secondary." |
+| D35 | **Past seasons is one row per board**: sessions, winner with avatar and points, your own result — no "won by"; on a phone your result drops to its own line. | Owner: the phone view "looks crazy bloated." |
+| D36 | **The Discord card keeps its placement line** ("1st of 11") and stays a message card; the image is the tier-list card — siblings, not twins. | Owner: "Sure." |
+| D37 | **The mocks are the artifacts in the header, not files in the repo.** | Owner: "if you know where they are and how to reference them, we're good." |
+
+### 11.10 What the mocks are built on
+
+Every figure is production-synced: the real Winter 2025 boards and avatars, 김재현's 39-chart
+session and his 150-chart Doubles record book (the August pull had left his full songs out — they
+joined at his session scores), his last ten sessions for the Energy and push anchors, DrMurloc's
+real 14 August night for the import dialog, and a public player's 35-chart Doubles night of 8
+August for the on-ramp. One staged row: tieny's second Doubles session, so a two-session player
+exists on a board (D16). Two honesty notes carried in the mocks themselves: the Energy pricing
+there uses the player's own recent quantiles per level where the site would read the projector,
+and the 14 August night is Phoenix 2 priced under Phoenix 1 because that is the board that exists.
+
+---
+
+## 12. Build scope
+
+The slices of §8 stand: **4a read surfaces → 4b write surfaces → 4c Discord**, then 5. This is what
+each costs in code, by layer. No new tables and no new migrations are expected in any of them:
+`MoMSession.PublishedAt IS NULL` is already the draft, `MoMSessionChart.PlayedAt` is already the
+landing pad for the import's timestamps, saved sets are a UiSettings JSON list (§11.5), and the
+share image reuses the tier-list renderer. **EventCompetition is the MoM vertical** (§9.8) and
+everything MoM-shaped lands there; the other verticals are read through their published contracts.
+
+### 12.1 Cross-vertical reads (published contracts and ports, no new joins)
+
+| Need | Source |
+|---|---|
+| The player's record book (bests) for the Planner | ScoreLedger `IScoreReader` |
+| The journal for the import dialog and the on-ramp | ScoreLedger `GetPlayerJournalQuery` (already what Slice 3 repointed onto) |
+| Energy pricing (Good / Great rungs) | PlayerProgress's projector — the `IScoreProjector` domain service the PUMBILITY page reads; Top of my game is the best attempt, no projector |
+| Rest-chart facts | **Catalog** (owner of chart identity and the folder baselines): a new contract `GetRestChartFactsQuery(mix, chartIds)` that computes the five tests inside Catalog against the folder and returns flags — the metrics live in `scores.ChartSkillMetric`, the folder quartiles are a small in-memory pass over ≤ 200 charts, and the rule never leaves the vertical |
+| Board tints (you · rival · community) and who may look | Rivals / Communities through the same path the weekly boards use, `IPlayerVisibilityReader` for the session page's visibility |
+| Names, avatars, countries on rows | Identity `IUserReader` (UserLabel already does this) |
+| Discord subscriptions and delivery | Communities `IDiscordFeedReader` + the Discord adapter in Data via `RichBotMessage` |
+
+### 12.2 Slice 4a — read surfaces
+
+- **Domain (EventCompetition, internal):** the four-lever read model (charts · balanced average ·
+  grade average · downtime) as a pure function over a session's chart rows; the season-comparison
+  re-pricing (§11.3, the §4 arithmetic run four times per chart over both stored configs); board
+  ranking (score order, sessions not players). Nothing in `ScoreTracker.Domain` changes.
+- **Application (EventCompetition/Application):** `GetMoMSeasonPageQuery` (live season, both
+  boards with rows and the viewer's standing per board), `GetMoMSessionQuery` (hero, four numbers
+  with board places, charts, pace), `CompareMoMSessionsQuery` (same-board and past-season modes),
+  `GetMoMSeasonsQuery` (the dialog), plus the 301 lookups from a legacy tournament Guid to its
+  board. All `IQuery<T>`, all in `Contracts/Queries/`.
+- **Infrastructure (EventCompetition/Infrastructure):** reads on `EFMoMRepository` for the
+  above — board rows with chart-count and rest, a session with its chart rows, the season list
+  with per-board winner and the viewer's placement. No schema change.
+- **Presentation (Web):** `Pages/Competition/MarchOfMurlocs/` — `MoMSectionFrame` (eyebrow, frame
+  nav chips, the Past-seasons dialog island), **`Season.razor` as static SSR** (§11.2; the
+  standing segments are links), `SessionBreakdown.razor` (circuit: densities, compare, the
+  Download image dialog), the Past-seasons dialog; components `MoMBoardRow` (`.olb-rank-card` +
+  `UserLabel` with the wash), `MoMFourNumbers` (with the one-mark-per-session strips),
+  `MoMChartList` (Comfortable = the highlight jacket card, Compact = the sticker, Table = the
+  board-skinned table), `MoMPaceChart` (inline SVG); the share card: a `MoMShareCardComposer` in
+  Web `Services/` feeding `TierListShareCard` rows by twenty-minute section into the existing
+  renderer, and `ShareCardSettingsDialog` gains a parameter to hide the three options (D25);
+  routes and 301s (`/Tournaments/MarchOfMurlocs` → `/MarchOfMurlocs`, `/Tournament/Stamina/{id}` →
+  the season with that board selected — board Guid = legacy Guid); `ShellNav` / `ShellMoreSheet`
+  link to `/MarchOfMurlocs`; the `MixCapabilities` entry (D19); **sitewide**: `ScoreBreakdown`
+  gains the stacked variant and `SessionScoreRow` moves the bubble before the jacket (D23), with
+  UX-GUIDELINES rule 3 updated in the same PR; localization keys in all nine locales, inserted
+  alphabetically; **deletions**: `MarchOfMurlocs.razor` and `StaminaTournament.razor` go now;
+  `RecordTournamentSession.razor` and `SessionBuilder.razor` stay reachable behind the new
+  page's *Record a session* and *Planner* links until 4b lands, so recording never has a gap.
+- **Tests:** unit tests for the lever math and the re-pricing split (`DomainTests`, real numbers
+  from §11.3); handler tests with mocked ports (`ApplicationTests`); bUnit for the row, the four
+  numbers, the chart list densities and the share composer's sections (`Tests.Components`);
+  `Tests.Api` untouched (no public API surface changes); one E2E fact: the season page renders a
+  board and a session breakdown opens from a row; the share-card composer's sectioning has a unit
+  test on 김재현's real timeline.
+
+### 12.3 Slice 4b — write surfaces
+
+- **Domain (EventCompetition, internal):** `MoMSessionDetector` — the D32 window scan as a pure
+  function over (start, duration, chart type, stage-broken) plays, shared by the import dialog's
+  block pre-selection and the My Sessions callout; the draft lifecycle rules (draft → published →
+  frozen, delete allowed; §1's window predicate already lives in `TournamentSession.CanAdd` after
+  Slice R); the Planner solver extends `AutoBuildSessionHandler`'s engine with the energy price,
+  the push cap and the closing-chart swap.
+- **Application:** commands `CreateMoMDraftCommand`, `AddMoMDraftChartCommand` /
+  `RemoveMoMDraftChartCommand` (the per-row `CanAdd` guard of the Slice 3 bug-check is the rule
+  here — skip, never throw), `ImportMoMDraftFromJournalCommand` (writes `PlayedAt` from the
+  journal's `OccurredAt`, skips charts already in the draft), `PublishMoMSessionCommand`
+  (freezes; sets `PublishedAt`; publishes `MoMSessionPublishedEvent` for 4c),
+  `DeleteMoMSessionCommand`, `DiscardMoMDraftCommand`; queries `GetMoMDraftQuery`,
+  `GetMoMImportCandidatesQuery` (journal → blocks split at fifteen-minute gaps, the three checks
+  of §11.4), `BuildMoMPlanQuery` (record book + Energy + push + rest facts + finishers → the
+  four numbers and the set), `DetectMoMSessionQuery` (My Sessions' callout), `SaveMoMSetCommand` /
+  `GetMoMSetsQuery` over UiSettings.
+- **Infrastructure:** `EFMoMRepository` writes for the lifecycle (draft rows, chart rows with
+  `PlayedAt`, publish, delete); the derived columns on `MoMSession` recomputed on every save (§6).
+  Catalog's `GetRestChartFactsQuery` handler (Catalog/Application + a read over
+  `ChartSkillMetric` in Catalog/Infrastructure). No schema change.
+- **Presentation:** `Submit.razor` (circuit; the budget bar, the three-key entry with the plate
+  selector and Shift+Enter, the import dialog with block selection and checks, the publish
+  dialog, the published state with Download image first; page dock on the phone),
+  `Planner.razor` (circuit; Energy select reusing `EnergyLabels`, push segments, rest slider,
+  Suggest a set, the Rest charts and Finishers shelves, three densities with outline selection,
+  saved sets, client-side CSV with a BOM); the My Sessions on-ramp in `SessionHero.razor` (quiet
+  link, callout, recorded chip); the `PasswordManagerHints` ratchet is untouched — there is no
+  credential field anywhere in MoM any more; **deletions**: `RecordTournamentSession.razor` and
+  `SessionBuilder.razor`, and the `GetRandomChartsQuery` note in Known divergences is unaffected.
+- **Tests:** the detector and the solver in `DomainTests` on the two real nights (the 8 August
+  night qualifies, the 14 August night does not) and on 김재현's book (Steady runs dry, Push fills);
+  handler tests for the lifecycle including the skip-not-throw guard; bUnit for the budget bar,
+  the entry row, the import dialog, the shelves and the on-ramp states; one E2E fact for the
+  whole submit flow (draft → import → publish → on the board) against the WireMock piugame stub
+  — the site's critical MoM journey.
+
+### 12.4 Slice 4c — Discord
+
+- **Application:** a fourth `DiscordFeedKind` and `/piu feed mom mix:` in the existing command
+  handling; `MoMSessionPublishedEvent` consumer in EventCompetition's saga composing the
+  `RichBotMessage` of §11.7 (header with placement, the four numbers, the biggest five by points,
+  the link to the breakdown). A draft never fires; a deleted session's card is left to 404 (§10).
+- **Infrastructure:** none new — the Discord adapter already renders `RichBotMessage`.
+- **Tests:** the composed message pinned in a handler test; the canary is run once in the
+  owner's lab channel before merge (see the run-canary standing rule).
+
+### 12.5 Out of scope, on purpose
+
+Phoenix 2 boards (Slice 5, admin-gated until the scoring session), any dashboard widget, any
+change to §1's rules or §6's tables, and weaving rest charts into a suggested set.
