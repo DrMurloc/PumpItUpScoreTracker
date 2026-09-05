@@ -7,6 +7,7 @@ using MediatR;
 using Moq;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Rivals.Contracts.Queries;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -43,6 +44,29 @@ public sealed class SessionBreakdownBuilderTests
 
         Assert.NotNull(model.Hero);
         Assert.Equal(7, model.Hero!.Scores.Count);
+    }
+
+    [Fact]
+    public async Task EachRowWearsTheLiveStandingOfItsOwnScore()
+    {
+        // The standing is read per (chart, score), so a chart played twice does not hand the
+        // earlier row the later score's place — and a break carries none at all.
+        var chart = ChartAt(ChartType.Single, 21);
+        var pass = Row(chart.Id, Start, 905000, false, ScoreEventClassification.NewPass);
+        var upscore = RowFrom(chart.Id, 931000, previousBest: 905000) with { OccurredAt = Start.AddHours(1) };
+        var broke = Row(chart.Id, Start.AddMinutes(30), 400000, true, ScoreEventClassification.Played);
+        var standings = new Dictionary<ScoreOnChart, PeerStanding>
+        {
+            [new ScoreOnChart(chart.Id, 905000)] = new(50, 40, 20, 0, 0, Array.Empty<PeerStandingSource>(), null),
+            [new ScoreOnChart(chart.Id, 931000)] = new(50, 40, 5, 0, 0, Array.Empty<PeerStandingSource>(), null)
+        };
+
+        var (_, model) = await BuildWith(chart, new[] { pass, broke, upscore }, standings: standings);
+
+        var byTime = model.Hero!.Scores.OrderBy(s => s.Row.OccurredAt).ToArray();
+        Assert.Equal(21, byTime[0].Standing!.Place);
+        Assert.Null(byTime[1].Standing);
+        Assert.Equal(6, byTime[2].Standing!.Place);
     }
 
     [Fact]
@@ -288,7 +312,8 @@ public sealed class SessionBreakdownBuilderTests
     private static async Task<(SessionBreakdownBuilder Builder, SessionsPageModel Model)> BuildWith(Chart chart,
         RecentSessionsPage.ScoreEventRecord[] rows,
         MixEnum mix = MixEnum.Phoenix, UserPhoenixScore[]? phoenix1 = null,
-        bool captured = true, int? sessionEndedMinutesAgo = null, ScoreHighlightRecord[]? highlights = null)
+        bool captured = true, int? sessionEndedMinutesAgo = null, ScoreHighlightRecord[]? highlights = null,
+        IReadOnlyDictionary<ScoreOnChart, PeerStanding>? standings = null)
     {
         var mediator = new Mock<IMediator>();
         var group = new RecentSessionsPage.SessionGroup(Session, null, mix, "officialImport",
@@ -321,6 +346,8 @@ public sealed class SessionBreakdownBuilderTests
                 : Array.Empty<ScoreHighlightRecord>()));
         mediator.Setup(m => m.Send(It.IsAny<GetPlayerMilestonesForSessionsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<PlayerMilestoneRecord>());
+        mediator.Setup(m => m.Send(It.IsAny<GetPeerStandingsForScoresQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(standings ?? new Dictionary<ScoreOnChart, PeerStanding>());
         mediator.Setup(m => m.Send(It.IsAny<GetPlayerStatsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PlayerStatsRecord(User, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1,
                 22.6, 22.6, 23.4));

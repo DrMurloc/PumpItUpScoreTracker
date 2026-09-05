@@ -274,6 +274,27 @@ public sealed class PeerStandingReaderTests
     }
 
     [Fact]
+    public async Task GivenScoresAreEachRankedOnTheirOwnAgainstTheSamePeers()
+    {
+        // A session's rows: the same chart at two scores gets two standings, read off one peer
+        // read, and neither is the subject's current best.
+        var a = Guid.NewGuid();
+        var b = Guid.NewGuid();
+        BandIs(a, b);
+        PeerScoresAre(Score(a, _single.Id, 960_000), Score(b, _single.Id, 940_000));
+
+        var standings = await Reader().GetStandingsForScores(Me, MixEnum.Phoenix, new[]
+        {
+            new ScoreOnChart(_single.Id, 930_000), new ScoreOnChart(_single.Id, 970_000)
+        });
+
+        Assert.Equal(3, standings[new ScoreOnChart(_single.Id, 930_000)].Place);
+        Assert.Equal(1, standings[new ScoreOnChart(_single.Id, 970_000)].Place);
+        _scores.Verify(s => s.GetBestScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task AChartYouHaveNotPassedHasNoStanding()
     {
         _scores.Setup(s => s.GetBestScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))

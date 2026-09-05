@@ -21,4 +21,16 @@ public interface IPeerStandingReader
     Task<IReadOnlyDictionary<Guid, PeerStanding>> GetStandings(Guid userId, MixEnum mix,
         IReadOnlyCollection<Guid> chartIds, PeerSourceSelection? selection = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     The standing of GIVEN scores rather than of the subject's bests — a session row's score as
+    ///     it was that night, measured against the peers as they stand now (D6). Keyed by the pair,
+    ///     because one chart can carry several scores in one session.
+    /// </summary>
+    Task<IReadOnlyDictionary<ScoreOnChart, PeerStanding>> GetStandingsForScores(Guid userId, MixEnum mix,
+        IReadOnlyCollection<ScoreOnChart> scores, PeerSourceSelection? selection = null,
+        CancellationToken cancellationToken = default);
 }
+
+/// <summary>One score on one chart — the key a standing is read for.</summary>
+public readonly record struct ScoreOnChart(Guid ChartId, int Score);

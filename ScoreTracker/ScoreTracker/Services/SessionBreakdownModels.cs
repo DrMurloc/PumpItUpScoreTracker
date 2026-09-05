@@ -54,43 +54,23 @@ public sealed record SessionScore(
     Chart? Chart,
     HighlightFlags Flags,
     HighlightDetail? Detail,
-    int? Phoenix1Gain = null)
+    int? Phoenix1Gain = null,
+    PeerStanding? Standing = null)
 {
     public bool IsFlagged => Flags != HighlightFlags.None;
 
     /// <summary>
-    ///     Null when no competitive cohort could measure this score — co-op, or more than five
-    ///     levels below the player's competitive level. The row then renders in plain ink and
-    ///     says nothing about it (D11).
+    ///     Where this row's score stands among the peers the player chose, measured live
+    ///     (docs/design/peers-abstraction.md D6) — null when nothing measured it: a broken run, no
+    ///     peers chosen, or a viewer who is not the owner and the competitive default found nobody.
+    ///     The captured <see cref="Detail" /> keeps its own percentile for the Discord card and the
+    ///     ScoreQuality90 flag; the page never reads that one for color any more.
     /// </summary>
-    public double? PeerPercentile => Detail?.PeerPercentile;
+    public double? PeerPercentile => Standing?.Percentile;
 
     /// <summary>
-    ///     Your place among the cohort, first being 1. Tie-inclusive, matching the percentile
-    ///     the colour comes from: everyone holding the same score shares the better place.
-    /// </summary>
-    public int? PeerPlace => Detail?.PeerBetterCount is { } better ? better + 1 : null;
-
-    /// <summary>
-    ///     The cohort minus you. Every count the row prints is about OTHER people at your level,
-    ///     but the stored one includes you — you are trivially within ±0.5 competitive of
-    ///     yourself. A place keeps the full cohort as its denominator, because a place is a
-    ///     position inside a population you belong to.
-    /// </summary>
-    public int? PeerCountExcludingYou => Detail?.PeerCount is { } count && count > 0 ? count - 1 : null;
-
-    /// <summary>
-    ///     Peers other than you holding the Perfect Game. Null when nothing measured it AND when
-    ///     nobody else holds it — "0 of 93 peers have it" is a clumsy way of saying first, so the
-    ///     caller falls back to the place, which says it properly.
-    /// </summary>
-    public int? OtherPeersWithPg => Detail?.PeerPgCount is { } pg && pg > 1 ? pg - 1 : null;
-
-    /// <summary>
-    ///     A Perfect Game always wears the prism glow, cohort or no cohort (D46 as reversed at
-    ///     the field test): 1,000,000 cannot be beaten, so the glow is the achievement's own,
-    ///     not a rarity claim — and a PG on a chart too low for capture to measure glowed
-    ///     nothing at all under the percentile rule, which read as a bug.
+    ///     A Perfect Game: 1,000,000 cannot be beaten. Whether it glows is the player's glow rule
+    ///     now (D15) — Off is off, Perfect Games only lights exactly these.
     /// </summary>
     public bool IsPerfectGame => Row.Score == 1_000_000 && !Row.IsBroken;
 }

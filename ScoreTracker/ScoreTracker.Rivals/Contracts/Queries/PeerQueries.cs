@@ -1,4 +1,5 @@
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Rivals.Contracts.Queries;
@@ -13,6 +14,14 @@ namespace ScoreTracker.Rivals.Contracts.Queries;
 [ExcludeFromCodeCoverage]
 public sealed record GetPeerStandingsQuery(MixEnum Mix, IReadOnlyCollection<Guid> ChartIds,
     Guid? SubjectUserId = null) : IQuery<IReadOnlyDictionary<Guid, PeerStanding>>;
+
+/// <summary>
+///     The standing of given scores — a session's rows as they were played — rather than of the
+///     subject's current bests. Same subject rules as <see cref="GetPeerStandingsQuery" />.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record GetPeerStandingsForScoresQuery(MixEnum Mix, IReadOnlyCollection<ScoreOnChart> Scores,
+    Guid? SubjectUserId = null) : IQuery<IReadOnlyDictionary<ScoreOnChart, PeerStanding>>;
 
 /// <summary>
 ///     The viewer's peers as a list (D18): nearest competitive level first on

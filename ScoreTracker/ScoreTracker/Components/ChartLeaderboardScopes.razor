@@ -210,6 +210,19 @@ else
     /// </summary>
     [Parameter] public LeaderboardScope InitialScope { get; set; } = LeaderboardScope.World;
 
+    /// <summary>
+    ///     Which club the Community scope opens on — a popover source line names the club it counted
+    ///     (peers-abstraction.md D12). Null keeps the first of yours, as before.
+    /// </summary>
+    [Parameter] public Name? InitialCommunity { get; set; }
+
+    /// <summary>
+    ///     What the last parameter set asked to open on. A host that keeps one board mounted and
+    ///     changes its mind — the details dialog, when a popover line asks for another scope on the
+    ///     same chart — re-applies without reloading the chart.
+    /// </summary>
+    private (LeaderboardScope Scope, Name? Community)? _appliedInitial;
+
     private sealed record Row(int Place, double Percentile, UserPhoenixScore Score, bool IsMe,
         bool IsCommunity, bool IsRival, bool IsOfficial);
 
@@ -252,12 +265,29 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!Active || _loadedFor == (ChartId, Mix)) return;
+        if (!Active) return;
+        if (_loadedFor == (ChartId, Mix))
+        {
+            if (_appliedInitial == (InitialScope, InitialCommunity) || _loading) return;
+            _appliedInitial = (InitialScope, InitialCommunity);
+            await ApplyInitialAsync();
+            return;
+        }
+
         _loadedFor = (ChartId, Mix);
+        _appliedInitial = (InitialScope, InitialCommunity);
         _scope = InitialScope;
         _officialBoard = null;
         _pumbilityPeers = null;
         await LoadChartAsync();
+    }
+
+    /// <summary>The host asked for another board on the chart already loaded: switch, do not reload.</summary>
+    private async Task ApplyInitialAsync()
+    {
+        if (InitialCommunity is { } community && _myCommunities.Contains(community)) _community = community;
+        _scope = IsAvailable(InitialScope) ? InitialScope : LeaderboardScope.World;
+        await BuildRowsAsync();
     }
 
     private async Task LoadChartAsync()
@@ -291,7 +321,9 @@ else
                 .Where(c => !c.IsRegional && c.CommunityName != WorldCommunity)
                 .Select(c => c.CommunityName).ToArray();
             _regionalCommunities = communities.Where(c => c.IsRegional).Select(c => c.CommunityName).ToHashSet();
-            _community = _myCommunities.FirstOrDefault();
+            _community = InitialCommunity is { } asked && _myCommunities.Contains(asked)
+                ? asked
+                : _myCommunities.FirstOrDefault();
 
             // Who to glow green on the scopes that mix clubmates in with everyone else.
             var clubmates = new HashSet<Guid>();

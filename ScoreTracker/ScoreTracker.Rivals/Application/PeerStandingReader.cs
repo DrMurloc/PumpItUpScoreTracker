@@ -29,6 +29,7 @@ namespace ScoreTracker.Rivals.Application;
 /// </summary>
 internal sealed class PeerStandingReader : IPeerStandingReader,
     IRequestHandler<GetPeerStandingsQuery, IReadOnlyDictionary<Guid, PeerStanding>>,
+    IRequestHandler<GetPeerStandingsForScoresQuery, IReadOnlyDictionary<ScoreOnChart, PeerStanding>>,
     IRequestHandler<GetMyPeerRosterQuery, PeerRoster>,
     IRequestHandler<GetPeerSourceCatalogQuery, PeerSourceCatalog>
 {
@@ -80,6 +81,16 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         return GetStandings(subject.Value, request.Mix, request.ChartIds, selection, cancellationToken);
     }
 
+    public Task<IReadOnlyDictionary<ScoreOnChart, PeerStanding>> Handle(GetPeerStandingsForScoresQuery request,
+        CancellationToken cancellationToken)
+    {
+        var viewer = _currentUser.IsLoggedIn ? _currentUser.User.Id : (Guid?)null;
+        var subject = request.SubjectUserId ?? viewer;
+        if (subject == null) return Task.FromResult(EmptyScores);
+        var selection = subject == viewer ? null : PeerSourceSelection.Default;
+        return GetStandingsForScores(subject.Value, request.Mix, request.Scores, selection, cancellationToken);
+    }
+
     public async Task<IReadOnlyDictionary<Guid, PeerStanding>> GetStandings(Guid userId, MixEnum mix,
         IReadOnlyCollection<Guid> chartIds, PeerSourceSelection? selection = null,
         CancellationToken cancellationToken = default)
@@ -89,30 +100,46 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         selection ??= await ReadSelection(userId, cancellationToken);
         if (!selection.Any) return Empty;
 
+        // The subject's own bests are always read fresh: an import recolors the page at once.
         var bests = (await _scores.GetBestScores(mix, userId, cancellationToken))
             .Where(b => b.Score != null && !b.IsBroken && chartIds.Contains(b.ChartId))
-            .ToDictionary(b => b.ChartId, b => (int)b.Score!.Value);
-        if (bests.Count == 0) return Empty;
+            .Select(b => new ScoreOnChart(b.ChartId, (int)b.Score!.Value))
+            .ToArray();
+        if (bests.Length == 0) return Empty;
 
-        var charts = (await _charts.GetCharts(mix, chartIds: bests.Keys, cancellationToken: cancellationToken))
+        var standings = await GetStandingsForScores(userId, mix, bests, selection, cancellationToken);
+        return standings.ToDictionary(kv => kv.Key.ChartId, kv => kv.Value);
+    }
+
+    public async Task<IReadOnlyDictionary<ScoreOnChart, PeerStanding>> GetStandingsForScores(Guid userId,
+        MixEnum mix, IReadOnlyCollection<ScoreOnChart> scores, PeerSourceSelection? selection = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (scores.Count == 0 || mix.UsesLegacyScoring()) return EmptyScores;
+        selection ??= await ReadSelection(userId, cancellationToken);
+        if (!selection.Any) return EmptyScores;
+
+        var chartIds = scores.Select(s => s.ChartId).Distinct().ToArray();
+        var charts = (await _charts.GetCharts(mix, chartIds: chartIds, cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);
-        var result = new Dictionary<Guid, PeerStanding>();
-        foreach (var byType in charts.Values.GroupBy(c => c.Type))
+        var result = new Dictionary<ScoreOnChart, PeerStanding>();
+        foreach (var byType in scores.Distinct().Where(s => charts.ContainsKey(s.ChartId))
+                     .GroupBy(s => charts[s.ChartId].Type))
         {
             var peers = await ResolvePeers(userId, mix, byType.Key, selection, cancellationToken);
             if (peers.Union.Count == 0)
             {
-                foreach (var chart in byType)
-                    result[chart.Id] = PeerStanding.NoCohort(0, 0, peers.Lines());
+                foreach (var score in byType)
+                    result[score] = PeerStanding.NoCohort(0, 0, peers.Lines());
                 continue;
             }
 
-            var rows = await ReadRows(userId, mix, selection, peers, byType.Select(c => c.Id).ToArray(),
-                cancellationToken);
-            foreach (var chart in byType)
+            var rows = await ReadRows(userId, mix, selection, peers,
+                byType.Select(s => s.ChartId).Distinct().ToArray(), cancellationToken);
+            foreach (var score in byType)
             {
-                var chartRows = rows.GetValueOrDefault(chart.Id) ?? ChartRows.None;
-                result[chart.Id] = PeerStandingCalculator.Compute(bests[chart.Id], chartRows.Passes,
+                var chartRows = rows.GetValueOrDefault(score.ChartId) ?? ChartRows.None;
+                result[score] = PeerStandingCalculator.Compute(score.Score, chartRows.Passes,
                     chartRows.Broken, peers.Sources, peers.Union, chartRows.OfficialAsOf);
             }
         }
@@ -200,6 +227,8 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
     // ---------------------------------------------------------------- resolution
 
     private static readonly IReadOnlyDictionary<Guid, PeerStanding> Empty = new Dictionary<Guid, PeerStanding>();
+    private static readonly IReadOnlyDictionary<ScoreOnChart, PeerStanding> EmptyScores =
+        new Dictionary<ScoreOnChart, PeerStanding>();
     private static readonly IReadOnlySet<Guid> NoIds = new HashSet<Guid>();
 
     private async Task<PeerSourceSelection> ReadSelection(Guid userId, CancellationToken cancellationToken)

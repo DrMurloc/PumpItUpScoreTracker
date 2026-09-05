@@ -84,19 +84,9 @@ internal static class SessionBadges
     /// </summary>
     internal static string? Standing(SessionScore score, IStringLocalizer<App> l)
     {
-        // A broken run's standing would be the standing of a score it never achieved —
-        // highlight pinning already keeps detail off these rows, and this agrees.
+        // A broken run's standing would be the standing of a score it never achieved.
         if (score.Row.IsBroken) return null;
-        if (score.Detail?.PeerCount is not { } cohort || cohort == 0) return null;
-
-        // A Perfect Game cannot be beaten, only tied, so every PG row is "#1" and the place
-        // stops distinguishing anything. How many peers share it is the fact worth the line
-        // instead — unless nobody does, where the place says the better thing.
-        if (score.Row.Score == PerfectGame && score.OtherPeersWithPg is { } shared
-                                           && score.PeerCountExcludingYou is { } peers)
-            return l["PG · {0} of {1} peers have it", shared, peers].Value;
-
-        return score.PeerPlace is { } place ? l["#{0} of {1} peers", place, cohort].Value : null;
+        return PeerStandingText.Standing(score.Standing, score.IsPerfectGame, l);
     }
 
     /// <summary>

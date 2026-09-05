@@ -26,6 +26,7 @@
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Rivals.Contracts.Queries
 @using ScoreTracker.Web.Services.Theming
 @using ScoreTracker.Application.Queries
 @using System.Text.Json
@@ -218,9 +219,9 @@ else
             <LampStrip Lamps="_lamps" Total="_charts.Count"></LampStrip>
             @* Round 7: cohort standing as labeled bars — fill + hue from the rarity ramp,
                with the percentage always printed beside it (rule 8). *@
-            @if (_competitivePlayerCount > 0 && _finalEntries.Any(e => _scoreRankings.ContainsKey(e.ChartId)))
+            @if (_competitivePlayerCount > 0 && _finalEntries.Any(e => HasStanding(e.ChartId)))
             {
-                var rating = _finalEntries.Where(e => _scoreRankings.ContainsKey(e.ChartId)).Average(e => _scoreRankings[e.ChartId].Ranking);
+                var rating = _finalEntries.Where(e => HasStanding(e.ChartId)).Average(e => _standings[e.ChartId].Percentile!.Value);
                 <div class="tier-cohort-bar">
                     <span class="tier-cohort-bar-label">@L["Score in Folder"]</span>
                     <span class="tier-cohort-bar-meter">
@@ -543,7 +544,9 @@ else
                                         <td>
                                             @if (score?.Score != null)
                                             {
-                                                <ScoreBreakdown Score="score.Score.Value" IsBroken="score.IsBroken" Mix="_currentMix" OneLine="true" ShowScore="true" Plate="score.Plate"></ScoreBreakdown>
+                                                <PeerScore Score="score.Score.Value" IsBroken="score.IsBroken" Mix="_currentMix" Plate="score.Plate"
+                                                           Standing="_standings.TryGetValue(chart.Id, out var cellStanding) ? cellStanding : null"
+                                                           Chart="chart" ShowStanding="false" OnOpenBoard="OpenBoard"></PeerScore>
                                             }
                                             else if (_legacyGrades.TryGetValue(chart.Id, out var rowGrade))
                                             {
@@ -551,9 +554,10 @@ else
                                             }
                                         </td>
                                         <td>
-                                            @if (_scoreRankings.TryGetValue(chart.Id, out var rowRank))
+                                            @if (score is { Score: { } rowValue, IsBroken: false } && _standings.TryGetValue(chart.Id, out var rowStanding) && rowStanding.HasCohort)
                                             {
-                                                <span style="@ThemeScales.RarityStyle(rowRank.Ranking)">@((100.0 * rowRank.Ranking).ToString("N1"))%</span>
+                                                @* The place in words — the same fact as the percentile, unreadable backwards. *@
+                                                <span class="tier-table-standing">@PeerStandingText.Standing(rowStanding, (int)rowValue == 1_000_000, L)</span>
                                             }
                                         </td>
                                         <td>
@@ -581,7 +585,8 @@ else
                             <TierListChartCard Chart="chart"
                                                Score="score"
                                                LegacyGrade="_legacyGrades.TryGetValue(chart.Id, out var legacyGrade) ? legacyGrade : null"
-                                               Ranking="_scoreRankings.TryGetValue(chart.Id, out var rank) ? rank : null"
+                                               Standing="_standings.TryGetValue(chart.Id, out var standing) ? standing : null"
+                                               OnOpenBoard="OpenBoard"
                                                Passed="score is { IsBroken: false }"
                                                IsToDo="_todos.Contains(chart.Id)"
                                                PassedInAnotherMix="IsOtherMixPass(chart.Id)"
@@ -703,7 +708,8 @@ else
     </MudLayout>
     <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"
                         Score="_detailsChart != null && _scores.TryGetValue(_detailsChart.Id, out var detailsScore) ? detailsScore : null"
-                        Ranking="_detailsChart != null && _scoreRankings.TryGetValue(_detailsChart.Id, out var detailsRank) ? detailsRank : null"
+                        Standing="_detailsChart != null && _standings.TryGetValue(_detailsChart.Id, out var detailsStanding) ? detailsStanding : null"
+                        BoardScope="_detailsBoardScope" BoardCommunity="_detailsBoardCommunity"
                         IsToDo="_detailsChart != null && _todos.Contains(_detailsChart.Id)"
                         ScoreAgeDays="@(_detailsChart != null && _scores.TryGetValue(_detailsChart.Id, out var detailsAge) ? (int)(_now - detailsAge.RecordedDate).TotalDays : null)"
                         OnToDo="ToggleToDo" OnScoreRecorded="RefreshScores"></ChartDetailsDialog>
@@ -1244,12 +1250,27 @@ else
     private bool _detailsOpen = false;
     private Chart? _detailsChart;
 
+    private ChartLeaderboardScopes.LeaderboardScope _detailsBoardScope = ChartLeaderboardScopes.LeaderboardScope.World;
+    private Name? _detailsBoardCommunity;
+
     private void OpenDetails(Guid chartId)
     {
         if (!_charts.TryGetValue(chartId, out var chart)) return;
+        _detailsBoardScope = ChartLeaderboardScopes.LeaderboardScope.World;
+        _detailsBoardCommunity = null;
         _detailsChart = chart;
         _detailsOpen = true;
     }
+
+    /// <summary>A card's popover asked for one source's board: details, opened on that scope (peers-abstraction.md D12).</summary>
+    private void OpenBoard(PeerBoardRequest request)
+    {
+        OpenDetails(request.ChartId);
+        _detailsBoardScope = request.Scope;
+        _detailsBoardCommunity = request.Community;
+    }
+
+    private bool HasStanding(Guid chartId) => _standings.TryGetValue(chartId, out var s) && s.HasCohort;
 
     /// <summary>
     ///     Re-reads the viewer's bests after the details dialog records one — from whichever
@@ -1662,7 +1683,7 @@ else
 
     private string _groupBy = "Difficulty";
     private int _level = 18;
-    private IDictionary<Guid, ScoreRankingRecord> _scoreRankings = new Dictionary<Guid, ScoreRankingRecord>();
+    private IReadOnlyDictionary<Guid, PeerStanding> _standings = new Dictionary<Guid, PeerStanding>();
     private string _tierListType = "Pass";
     // Legacy mixes render the Community Rating lens only (docs/design/legacy-mixes.md).
     private bool IsLegacy => _currentMix.UsesLegacyScoring();
@@ -2139,7 +2160,10 @@ else
         }
 
         // Personal phase — the overlay streams in after the population paint.
-        var rankingsTask = Mediator.Send(new GetPlayerScoreQualityQuery(_level, _chartType, _currentMix), cancellationToken);
+        // Where each score stands among the peers the viewer chose (peers-abstraction.md): the
+        // colors, the standing captions and the Score in Folder bar all read this one answer.
+        var standingsTask = Mediator.Send(new GetPeerStandingsQuery(_currentMix,
+            _finalEntries.Select(e => e.ChartId).ToArray()), cancellationToken);
         // Nobody's looking at the cross-mix outline when it's switched off, so don't pay
         // for it; SetShowOtherMixPasses backfills when it comes back on.
         var crossMixTask = _settings.ShowOtherMixPasses
@@ -2153,7 +2177,7 @@ else
             : Mediator.Send(new GetFolderCohortStatsQuery(_currentMix, _chartType, _level,
                 _chartType == ChartType.Single ? _singlesCompetitive : _doublesCompetitive, PassedCount),
                 cancellationToken);
-        _scoreRankings = await rankingsTask;
+        _standings = await standingsTask;
         _otherMixPasses = await crossMixTask;
         _otherMixPassesLoaded = _settings.ShowOtherMixPasses;
         _competitivePlayerCount = (await competitiveTask).Count();
@@ -2429,20 +2453,20 @@ else
     private IReadOnlyList<TierGroup> GroupByScoreRanking()
     {
         return LensOrdered(_finalEntries)
-            .GroupBy(e => _scoreRankings.TryGetValue(e.ChartId, out var r) ?
-                (r.Ranking <= 0.01 ?
+            .GroupBy(e => _standings.TryGetValue(e.ChartId, out var s) && s.Percentile is { } r ?
+                (r <= 0.01 ?
                     "Last Place" :
-                    r.Ranking <= 0.10 ?
+                    r <= 0.10 ?
                         "0 -> 10%" :
-                        r.Ranking <= 0.25 ?
+                        r <= 0.25 ?
                             "10% -> 25%" :
-                            r.Ranking <= .5 ?
+                            r <= .5 ?
                                 "25% -> 50%" :
-                                r.Ranking <= .75 ?
+                                r <= .75 ?
                                     "50% -> 75%" :
-                                    r.Ranking <= .9 ?
+                                    r <= .9 ?
                                         "75% -> 90%" :
-                                        r.Ranking > .99 ?
+                                        r > .99 ?
                                             "The Best" :
                                         "90% -> 99.9%"
                     )
