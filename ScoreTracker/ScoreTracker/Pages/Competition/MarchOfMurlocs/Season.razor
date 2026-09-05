@@ -1,0 +1,285 @@
+@page "/MarchOfMurlocs"
+@page "/MarchOfMurlocs/{SeasonId:guid}"
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Components.MoM
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Pages.Competition.MoM
+@* The March of Murlocs landing page (docs/design/march-of-murlocs.md §11.2): the live season IS
+   the page — your standing, then one board at a time with the two standing segments as the
+   switcher (D33), the rules, and the previous / next season links that keep the archive
+   crawlable without a seasons route (§11.8). Static SSR: no @rendermode (RenderModeDeclarationTests
+   lists it), every control a link or a native disclosure, the Past-seasons dialog the one island.
+   Which boards you see follows your mix, as the weekly boards do; Phoenix 2 has no boards until
+   the scoring session (D12) and the page says so rather than hiding. *@
+@if (_page == null)
+{
+    <div class="pmb-eyebrow"><span>@MixName · March of Murlocs</span></div>
+    <MudAlert Severity="Severity.Info">@L["The first season is being set up. Check back shortly."]</MudAlert>
+}
+else
+{
+    var board = _board;
+    var typeName = board == null ? string.Empty : TypeName(board.ChartType);
+    <div class="pmb-eyebrow">
+        <span>@MixName · March of Murlocs</span>
+        <a class="pmb-eyebrow-link" href="#rules">@L["How it works"] →</a>
+    </div>
+    <section class="mom-hero">
+        <div>
+            <h1 class="mom-title">@_page.Season.Name<small>@L["1 hour 45 minutes. Bank as many points as you can."]</small></h1>
+            <div class="mom-rail">
+                <div class="mom-rail-bar"><i style="width:@(_progressPercent)%"></i></div>
+                <div class="mom-rail-meta">
+                    <span>@MoMText.DateSpan(_page.Season.StartsAt, _page.Season.EndsAt)</span>
+                    <b>@RailNote</b>
+                </div>
+            </div>
+        </div>
+        @if (_mix == MixEnum.Phoenix2)
+        {
+            <div class="mom-standing empty" data-testid="mom-standing">
+                <span class="lead">@L["Phoenix 2 boards open once the scoring is settled."]</span>
+                <span class="sub">@L["This season runs on Phoenix."]</span>
+            </div>
+        }
+        else if (board?.Viewer is { } standing)
+        {
+            <div class="mom-standing" data-testid="mom-standing">
+                <span class="k">@L["Your standing"] · @typeName</span>
+                <span class="place">@MoMText.Ordinal(standing.Place, L) <span class="of">@L["of {0}", standing.Of]</span></span>
+                <span class="total">@standing.TotalScore.ToString("N0")</span>
+                <span class="sub">@L["{0} charts", standing.ChartsPlayed] · @L["{0} downtime", MoMText.MinutesSeconds(standing.Downtime)] · @(standing.SessionCount > 1 ? L["your best of {0} sessions", standing.SessionCount] : L["your only session this season"])</span>
+                <div class="cta">
+                    <MudButton Href="@MoMText.SessionPath(standing.SessionId)" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">@L["See this session"]</MudButton>
+                    @if (_page.Season.IsLive)
+                    {
+                        <MudButton Href="@MoMText.RecordPath(board.BoardId)" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit">@L["Record another"]</MudButton>
+                    }
+                </div>
+            </div>
+        }
+        else if (board != null)
+        {
+            <div class="mom-standing empty" data-testid="mom-standing">
+                <span class="k">@L["Your standing"] · @typeName</span>
+                <span class="lead">@(board.Rows.Count > 0 ? L["You haven't played {0} this season.", typeName] : L["Nobody has played {0} yet.", typeName])</span>
+                @if (_page.Season.IsLive)
+                {
+                    <div class="cta">
+                        <MudButton Href="@MoMText.RecordPath(board.BoardId)" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit">@L["Record a session"]</MudButton>
+                        <MudButton Href="@MoMText.PlannerRoute" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">@L["Plan a session"]</MudButton>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+    @if (_page.Boards.Count > 0)
+    {
+        <div class="pmb-poolsplit mom-poolsplit" role="group" aria-label="@L["Board"]">
+            @foreach (var b in _page.Boards)
+            {
+                <a class="pmb-poolsplit-seg" href="@SegmentHref(b)" aria-pressed="@(b == board ? "true" : "false")" data-testid="mom-board-segment">
+                    <span class="lbl">@TypeName(b.ChartType)</span>
+                    @if (b.Viewer is { } mine)
+                    {
+                        <strong>@mine.TotalScore.ToString("N0")</strong>
+                        <span class="sub">@MoMText.Ordinal(mine.Place, L) @L["of {0}", mine.Of]@(mine.SessionCount > 1 ? $" · {L["{0} sessions", mine.SessionCount]}" : string.Empty)</span>
+                    }
+                    else
+                    {
+                        <strong class="muted">—</strong>
+                        <span class="sub">@(b.Rows.Count > 0 ? L["not played yet · {0} on the board", b.Rows.Count] : L["nobody yet"])</span>
+                    }
+                </a>
+            }
+        </div>
+    }
+    <MoMSectionFrame Active="season" Mix="_mix" RecordBoardId="@(_page.Season.IsLive ? board?.BoardId : null)"/>
+    @if (_mix == MixEnum.Phoenix2 || board == null)
+    {
+        <div class="mom-notice" data-testid="mom-p2-notice">
+            <h4>@L["Phoenix 2 scoring is still being tuned."]</h4>
+            <p>@L["Phoenix 2 gets its own Doubles and Singles boards, on Phoenix 2's own rating system. They open once the scoring is settled — this season runs on Phoenix."]</p>
+        </div>
+    }
+    else
+    {
+        <section class="mom-board" data-testid="mom-board">
+            <div class="mom-board-head">
+                <span class="sbd-eyebrow">@L["{0} board", typeName]</span>
+                <span class="mom-board-count">@(board.Rows.Count > 0 ? L["{0} sessions", board.Rows.Count] : L["no sessions yet"])</span>
+                @if (_viewerId != null && board.Rows.Count > 0)
+                {
+                    <span class="mom-legend">
+                        <span><i class="you"></i>@L["You"]</span>
+                        <span><i class="rival"></i>@L["Rival"]</span>
+                        <span><i class="community"></i>@L["Your communities"]</span>
+                    </span>
+                }
+            </div>
+            @if (board.Rows.Count > 0)
+            {
+                <div class="mom-rows">
+                    @foreach (var row in board.Rows)
+                    {
+                        <MoMSessionRow Row="row" RelationshipClass="@RowClass(row)" RelationshipNote="@RowNote(row)"></MoMSessionRow>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="mom-empty-board">
+                    <h3>@L["Nobody has played {0} yet this season.", typeName]</h3>
+                    @if (_page.Season.IsLive)
+                    {
+                        <div class="cta">
+                            <MudButton Href="@MoMText.RecordPath(board.BoardId)" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit">@L["Record a session"]</MudButton>
+                            <MudButton Href="@MoMText.PlannerRoute" Variant="Variant.Outlined" Color="Color.Primary">@L["Plan a session"]</MudButton>
+                        </div>
+                    }
+                </div>
+            }
+        </section>
+    }
+    <details class="mom-rules" id="rules">
+        <summary>@L["How March of Murlocs works"]</summary>
+        <p>@L["One session is 1 hour 45 minutes; a chart only has to start inside it. Every chart scores PUMBILITY+: its balanced level, scaled by song length, times how well you played. Singles and Doubles are separate boards. No repeats — the same song at another level is a different chart. Play as many sessions as you like; the board ranks sessions. Ties go to the earlier session."] <a href="@MoMText.RulesUrl" target="_blank" rel="noopener">@L["Full rules"] →</a></p>
+    </details>
+    <div class="mom-foot">
+        @if (_page.Previous is { } previous)
+        {
+            <a href="@MoMText.SeasonPath(previous.Id)" data-testid="mom-previous-season">← @previous.Name</a>
+        }
+        else
+        {
+            <span></span>
+        }
+        @if (_page.Next is { } next)
+        {
+            <a href="@(next.IsLive ? MoMText.SeasonRoute : MoMText.SeasonPath(next.Id))" data-testid="mom-next-season">@next.Name →</a>
+        }
+        else
+        {
+            <span class="muted">@L["This is the current season"]</span>
+        }
+    </div>
+    @if (_page.Season.IsLive && board != null)
+    {
+        @* Phone-only, static: the page has no circuit for PageDock's island to render from. *@
+        <div class="mom-dock">
+            <MudButton Href="@MoMText.RecordPath(board.BoardId)" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" StartIcon="@Icons.Material.Filled.Edit">@L["Record a session"]</MudButton>
+        </div>
+    }
+}
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+@inject IDateTimeOffsetAccessor Clock
+@inject CommunityGlowReader CommunityGlow
+@code {
+    /// <summary>A past season by id; null is the live one. The live season's own id also resolves here.</summary>
+    [Parameter] public Guid? SeasonId { get; set; }
+
+    /// <summary>?board=Doubles|Singles — the segment the reader picked; absent, the board they have played (D33).</summary>
+    [SupplyParameterFromQuery] public string? Board { get; set; }
+
+    private MoMSeasonPage? _page;
+    private MoMBoardView? _board;
+    private MixEnum _mix = MixEnum.Phoenix;
+    private Guid? _viewerId;
+    private int _progressPercent;
+    private DateTimeOffset _now;
+    private IReadOnlySet<Guid> _rivals = new HashSet<Guid>();
+    private IReadOnlySet<Guid> _clubmates = new HashSet<Guid>();
+
+    private string MixName => _mix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix";
+
+    private string RailNote
+    {
+        get
+        {
+            if (_page == null) return string.Empty;
+            if (_page.Season.IsLive) return L["{0} days left", Math.Max(0, (int)Math.Ceiling((_page.Season.EndsAt - _now).TotalDays))];
+            return _page.Season.EndsAt <= _now ? L["Ended"] : L["Starts {0}", _page.Season.StartsAt.ToString("d MMM")];
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _now = Clock.Now;
+        _viewerId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null;
+        // March of Murlocs is a Phoenix-lineage event: it prices a 1,000,000-scale score against a
+        // chart's level, and no older mix has one of those. A legacy viewer sees Phoenix, as the
+        // PUMBILITY section does for them.
+        var selected = await UiSettings.GetSelectedMix();
+        _mix = selected is MixEnum.Phoenix or MixEnum.Phoenix2 ? selected : MixEnum.Phoenix;
+        _page = await Mediator.Send(new GetMoMSeasonPageQuery(_mix, SeasonId, _viewerId));
+        if (_page == null) return;
+        _board = PickBoard(_page.Boards);
+        var span = (_page.Season.EndsAt - _page.Season.StartsAt).TotalSeconds;
+        _progressPercent = span <= 0
+            ? 100
+            : (int)Math.Clamp(Math.Round((_now - _page.Season.StartsAt).TotalSeconds / span * 100), 0, 100);
+        if (_viewerId != null)
+        {
+            _clubmates = await CommunityGlow.GetMyCommunityMemberIds();
+            _rivals = await CommunityGlow.GetMyRivalIds(_mix);
+        }
+    }
+
+    /// <summary>
+    ///     The board in view: the one the query string names; otherwise the one you have played,
+    ///     Doubles when both or neither (D33) — Doubles first because that is where the event's
+    ///     history lives.
+    /// </summary>
+    private MoMBoardView? PickBoard(IReadOnlyList<MoMBoardView> boards)
+    {
+        if (boards.Count == 0) return null;
+        if (Enum.TryParse<ChartType>(Board, true, out var asked) && boards.FirstOrDefault(b => b.ChartType == asked) is { } named)
+            return named;
+        var doubles = boards.FirstOrDefault(b => b.ChartType == ChartType.Double);
+        var singles = boards.FirstOrDefault(b => b.ChartType == ChartType.Single);
+        if (doubles?.Viewer != null || singles?.Viewer == null) return doubles ?? boards[0];
+        return singles;
+    }
+
+    private string SegmentHref(MoMBoardView board)
+    {
+        var path = SeasonId is { } id && !_page!.Season.IsLive ? MoMText.SeasonPath(id) : MoMText.SeasonRoute;
+        return $"{path}?board={board.ChartType}";
+    }
+
+    private string TypeName(ChartType type)
+    {
+        return type switch
+        {
+            ChartType.Double => L["Doubles"],
+            ChartType.Single => L["Singles"],
+            _ => type.ToString()
+        };
+    }
+
+    // The sitewide utility set: one geometry, colour the only variable, precedence you → both →
+    // rival → community (rivals.md §3.6). The note repeats the fact in words for the title and
+    // the aria-label, because the fill is otherwise colour alone.
+    private string RowClass(MoMBoardRow row) =>
+        CommunityGlowReader.RowClass(row.UserId, _viewerId, _rivals, _clubmates, "olb-row-me");
+
+    private string RowNote(MoMBoardRow row)
+    {
+        if (row.UserId == _viewerId) return L["you"];
+        var rival = _rivals.Contains(row.UserId);
+        var clubmate = _clubmates.Contains(row.UserId);
+        if (rival && clubmate) return L["your rival, and in your communities"];
+        if (rival) return L["your rival"];
+        return clubmate ? L["in your communities"] : string.Empty;
+    }
+}

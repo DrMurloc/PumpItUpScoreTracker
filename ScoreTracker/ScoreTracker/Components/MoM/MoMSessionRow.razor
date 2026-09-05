@@ -1,0 +1,65 @@
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.Web.Services
+@namespace ScoreTracker.Web.Components.MoM
+@* One ranked session on a March of Murlocs board (docs/design/march-of-murlocs.md §11.2): the
+   Official Leaderboards row skin (.olb-rank-card, the golden standard for every board on the
+   site) with UserLabel's avatar and country wash, the sitewide relationship tints, and the
+   session's stored figures. The whole row is the link into the session — static HTML, no
+   circuit. Boards rank sessions, so a player's second session wears a chip that says so (D16). *@
+<a class="olb-rank-card mom-row @RelationshipClass" href="@MoMText.SessionPath(Row.SessionId)"
+   title="@Title" aria-label="@AriaLabel" data-testid="mom-board-row">
+    <span class="olb-rank-rankbox">
+        <span class="mom-place @PlaceClass">@Row.Place<small>@MoMText.OrdinalSuffix(Row.Place)</small></span>
+    </span>
+    <span class="mom-row-player">
+        @if (Row.Player != null)
+        {
+            <UserLabel User="Row.Player" ShowAvatar="true" AvatarSize="26"></UserLabel>
+        }
+        else
+        {
+            <span class="user-label"><span class="user-label-name">@L["Unknown player"]</span></span>
+        }
+    </span>
+    @if (Row.SessionNumber > 1)
+    {
+        <span class="mom-runchip">@L["{0} session", MoMText.Ordinal(Row.SessionNumber, L)]</span>
+    }
+    <span class="olb-rank-tail mom-row-tail">
+        <span class="mom-total">@Row.TotalScore.ToString("N0")</span>
+        <span class="mom-stat-line">
+            <span>@L["{0} charts", Row.ChartsPlayed]</span><span>·</span>
+            <span>@L["{0} lvl", Row.AverageBalancedLevel.ToString("F2")]</span><span>·</span>
+            <span>@L["{0} rest", MoMText.MinutesSeconds(Row.Downtime)]</span>
+        </span>
+        <span class="mom-stat mom-hide-phone"><b>@Row.ChartsPlayed</b><span>@L["charts"]</span></span>
+        <span class="mom-stat mom-hide-phone"
+              title="@L["Average balanced level — the season's frozen scoring difficulty, which is what priced each chart"]">
+            <b>@Row.AverageBalancedLevel.ToString("F2")</b><span>@L["avg lvl"]</span>
+        </span>
+        <span class="mom-stat mom-hide-phone" title="@L["Time not spent on a chart"]">
+            <b>@MoMText.MinutesSeconds(Row.Downtime)</b><span>@L["downtime"]</span>
+        </span>
+        <span class="mom-date mom-hide-mobile">@Row.PublishedAt.ToString("d MMM")</span>
+        <span class="mom-vid mom-hide-mobile @(Row.VideoUrl == null ? "none" : null)"
+              title="@(Row.VideoUrl == null ? L["No video"] : L["Watch this session"])">
+            <MudIcon Icon="@Icons.Material.Filled.Videocam" Size="Size.Small"></MudIcon>
+        </span>
+    </span>
+</a>
+@code {
+    [Parameter] [EditorRequired] public MoMBoardRow Row { get; set; } = null!;
+
+    /// <summary>olb-row-me · is-rival · is-community · is-both, or nothing — the sitewide utility set.</summary>
+    [Parameter] public string RelationshipClass { get; set; } = string.Empty;
+
+    /// <summary>The relationship in words, repeated in the title and the aria-label because the fill is otherwise colour alone.</summary>
+    [Parameter] public string RelationshipNote { get; set; } = string.Empty;
+
+    private string PlaceClass => Row.Place switch { 1 => "p1", 2 => "p2", 3 => "p3", _ => string.Empty };
+    private string PlayerName => Row.Player?.Name.ToString() ?? L["Unknown player"];
+    private string Note => RelationshipNote.Length == 0 ? string.Empty : $" — {RelationshipNote}";
+
+    private string Title => $"{PlayerName}{Note} — {L["{0} points, {1} charts", Row.TotalScore.ToString("N0"), Row.ChartsPlayed]}";
+    private string AriaLabel => $"{MoMText.Ordinal(Row.Place, L)}, {PlayerName}{Note}";
+}

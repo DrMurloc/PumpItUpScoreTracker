@@ -37,7 +37,11 @@ public sealed class RenderModeDeclarationTests
         // The Phoenix score page: formula, cutoffs and the measured sections are real HTML;
         // the live calculator, dialog and toggles are a vanilla script
         // (docs/design/phoenix-score-calculator.md D2).
-        "Tools/PhoenixCalculator.razor"
+        "Tools/PhoenixCalculator.razor",
+        // The March of Murlocs season page: the boards are real crawlable HTML and a past season
+        // never changes; the Past-seasons dialog is its one island
+        // (docs/design/march-of-murlocs.md §11.2).
+        "Competition/MarchOfMurlocs/Season.razor"
     };
 
     [Fact]
