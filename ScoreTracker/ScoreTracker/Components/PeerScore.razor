@@ -31,7 +31,7 @@
             @if (_open)
             {
                 <PeerStandingPopover Standing="Standing" IsPerfectGame="IsPerfectGame" ColorStyle="@Style.Style"
-                                     ChartId="ChartId" Chart="Chart" SourcesChosen="_sources.Any"
+                                     ChartId="ChartId" Chart="Chart" SourcesChosen="SourcesChosen"
                                      OnOpenBoard="OpenBoard"></PeerStandingPopover>
             }
         </MudPopover>
@@ -91,6 +91,14 @@
     private PeerSourceSelection _sources = PeerSourceSelection.Default;
 
     private const int PerfectGame = 1_000_000;
+
+    /// <summary>
+    ///     A standing exists only when a selection was in force — the subject's own, or the
+    ///     competitive default on someone else's page — so a measured score never tells a viewer
+    ///     who un-ticked everything that THEY chose nothing (D27). The setting alone decides only
+    ///     for a score nothing measured.
+    /// </summary>
+    private bool SourcesChosen => _sources.Any || Standing != null;
 
     protected override async Task OnInitializedAsync()
     {

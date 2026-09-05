@@ -106,6 +106,54 @@ public sealed class PeerScoreTests : ComponentTestBase
         Assert.Equal(0, hostClicks);
     }
 
+    /// <summary>
+    ///     Another player's sessions page paints their scores against the competitive default,
+    ///     whatever the viewer ticked. A viewer who un-ticked everything used to tap a colored,
+    ///     captioned score and read "you have no peer groups selected": the empty state is the
+    ///     standing's to declare, and the setting's only when nothing measured the score.
+    /// </summary>
+    [Fact]
+    public async Task AMeasuredScoreNeverSaysTheViewerChoseNothing()
+    {
+        _settings.Setup(s => s.GetSetting(PeerSourceSelection.SettingKey, default, null))
+            .ReturnsAsync(PeerSourceSelection.Nothing.Serialize());
+
+        var measured = RenderWithPopovers(Standing(better: 5));
+        await measured.Find("[data-testid='peer-score']").ClickAsync(new MouseEventArgs());
+
+        measured.WaitForAssertion(() =>
+            Assert.True(measured.FindComponent<PeerStandingPopover>().Instance.SourcesChosen));
+    }
+
+    /// <summary>The setting decides only for a score nothing measured: that one still says why it is plain.</summary>
+    [Fact]
+    public async Task AnUnmeasuredScoreWithNothingTickedSaysSo()
+    {
+        _settings.Setup(s => s.GetSetting(PeerSourceSelection.SettingKey, default, null))
+            .ReturnsAsync(PeerSourceSelection.Nothing.Serialize());
+
+        var unmeasured = RenderWithPopovers(null);
+        await unmeasured.Find("[data-testid='peer-score']").ClickAsync(new MouseEventArgs());
+
+        unmeasured.WaitForAssertion(() =>
+            Assert.False(unmeasured.FindComponent<PeerStandingPopover>().Instance.SourcesChosen));
+    }
+
+    /// <summary>MudPopover renders its content through the provider, so the popover needs one in the tree — and one only, per test.</summary>
+    private IRenderedFragment RenderWithPopovers(PeerStanding? standing)
+    {
+        return Render(builder =>
+        {
+            builder.OpenComponent<MudBlazor.MudPopoverProvider>(0);
+            builder.CloseComponent();
+            builder.OpenComponent<PeerScore>(1);
+            builder.AddAttribute(2, nameof(PeerScore.Score), PhoenixScore.From(972_000));
+            builder.AddAttribute(3, nameof(PeerScore.Chart), TestChart());
+            builder.AddAttribute(4, nameof(PeerScore.Standing), standing);
+            builder.CloseComponent();
+        });
+    }
+
     [Fact]
     public void TheSavedColorSystemIsWhatPaintsIt()
     {

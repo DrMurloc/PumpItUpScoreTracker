@@ -455,6 +455,32 @@ public sealed class RecommendedChartsSagaTests
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    /// <summary>
+    ///     Nothing ticked on /Account is no bar at all — the reading a ticked source with nobody
+    ///     in it already gets — rather than a bar every seed falls under, which handed the player
+    ///     the fallback pool for no reason.
+    /// </summary>
+    [Fact]
+    public async Task HotStreakWithNoPeersAtAllAppliesNoBar()
+    {
+        var seed = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var match = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        // The context's reader stub answers with an empty dictionary: the reader's answer for a
+        // player who un-ticked every source.
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(seed, match)
+            .WithHighlights(Improver(seed.Id, daysAgo: 2))
+            .WithSimilar(seed.Id, Edge(match.Id, 0.8));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: HotStreakOnly, HotStreak: new HotStreakOptions(PeerPercentile: 80)),
+            CancellationToken.None)).ToArray();
+
+        var rec = Assert.Single(result);
+        Assert.Equal(match.Id, rec.ChartId);
+        Assert.Null(rec.SeedPeerRanking);
+    }
+
     [Fact]
     public async Task HotStreakPushFloorDropsTargetsBelowThePoolsTwentyFifthPercentile()
     {

@@ -159,6 +159,10 @@ namespace ScoreTracker.PlayerProgress.Application
                         candidates.Select(c => c.ChartId).Distinct().ToArray(),
                         cancellationToken: cancellationToken)
                     : null;
+                // Nothing ticked on /Account answers with no standings at all. That is no bar,
+                // not a bar nobody clears: a ticked source with nobody in it already reads 1.0
+                // below, and the two ways of having no peers have to agree (D28).
+                if (standings is { Count: 0 }) standings = null;
                 var bar = options.PeerPercentile / 100.0;
                 return candidates
                     .Select(c => (c.ChartId, c.OccurredAt,
