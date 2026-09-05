@@ -466,3 +466,11 @@ sentences are retired with their keys.
 | is | arg | The copula, for `your singles pool is {0}`. Not `ur` (on) or `og` (at). |
 | Pool window | Blubgro murm | The Breakdown's label; `murm` is the same word `Level band` uses. |
 | standard (the level you hold) | rorg | Reused from *average* — a Murloc does not split the two. |
+
+## The title-progress pointer (2026-09-05)
+
+The Phoenix 2 tier list's folder-title track is retired (docs/design/pumbility-title-track.md) and
+its six sentences go with it. One line points at the PUMBILITY page instead. Reused, not re-coined:
+`Grrglgro` (search, standing in for *looking for*), `ba` (for), `mrgl` (title), `mrglrlgl`
+(progress), `Romorg` (see), `plglur` (page). `PUMBILITY` is protected, and *the* is dropped the
+way `See the Score breakdown` already drops it.
