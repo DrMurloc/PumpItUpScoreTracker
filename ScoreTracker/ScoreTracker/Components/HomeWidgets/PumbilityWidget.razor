@@ -120,7 +120,7 @@ else
                                     <span class="dash-acct-name">@ghost.DisplayName</span>
                                 </span>
                                 <span class="dash-acct-trail">
-                                    <span class="dash-acct-src"><span class="dash-acct-tag dash-acct-tag-rival" title="@L["Board only"]">@L["BOARD"]</span></span>
+                                    <span class="dash-acct-src"><span class="dash-acct-tag dash-acct-tag-rival" title="@L["Board only"]">@L["Tag: BOARD"]</span></span>
                                     <span class="dash-acct-lvl dash-muted">—</span>
                                 </span>
                             </div>
@@ -190,7 +190,7 @@ else
     /// </summary>
     private IEnumerable<Tag> Tags(PeerListEntry row)
     {
-        if (row.IsRival) yield return new Tag(L["RIVAL"], L["On your rivals roster"], "dash-acct-tag dash-acct-tag-rival");
+        if (row.IsRival) yield return new Tag(L["Tag: RIVAL"], L["On your rivals roster"], "dash-acct-tag dash-acct-tag-rival");
         foreach (var community in row.Communities)
             yield return new Tag(Initials(community), community, "dash-acct-tag dash-acct-tag-community");
         if (row.IsCompetitive) yield return new Tag("±0.5", L["Within half a competitive level of you"], "dash-acct-tag dash-acct-tag-competitive");

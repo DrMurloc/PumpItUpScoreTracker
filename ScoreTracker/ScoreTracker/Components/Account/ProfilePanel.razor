@@ -361,7 +361,7 @@
         {
             var parts = new List<string>();
             if (_peerSources.Rivals) parts.Add(L["Rivals"]);
-            if (_peerSources.CompetitiveLevel) parts.Add(L["Competitive level"]);
+            if (_peerSources.CompetitiveLevel) parts.Add(L["Competitive level (peers)"]);
             if (_peerSources.Pumbility) parts.Add(L["PUMBILITY peers"]);
             if (_peerSources.CommunityIds.Count == 1) parts.Add(L["One community"]);
             else if (_peerSources.CommunityIds.Count > 1) parts.Add(L["{0} communities", _peerSources.CommunityIds.Count]);
@@ -380,7 +380,7 @@
         ScoreColorSystem.ResultScreen => L["the result screen"],
         ScoreColorSystem.ThreeSteps => L["three steps"],
         ScoreColorSystem.ActualGrade => L["the actual letter grade"],
-        _ => L["nothing"]
+        _ => L["colored by nothing"]
     };
 
     private string GlowWord => _scoreColors.Glow switch
@@ -390,7 +390,7 @@
             ? L["on first place"]
             : L["on the top {0} places", _scoreColors.GlowThreshold],
         GlowRule.TopPercent => L["on the top {0}%", _scoreColors.GlowThreshold],
-        _ => L["off"]
+        _ => L["Glow: off"]
     };
 
     private async Task RefreshPeersSummary()
