@@ -27,6 +27,7 @@ public sealed class WeeklyChartsController : ApiV2ControllerBase
     }
 
     /// <summary>The charts on this week's board.</summary>
+    /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>; each mix runs its own board.</param>
     [HttpGet]
     [ProducesResponseType(typeof(CursorPageDto<WeeklyChartDto>), StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
@@ -42,6 +43,7 @@ public sealed class WeeklyChartsController : ApiV2ControllerBase
     }
 
     /// <summary>Every player's entry on the board.</summary>
+    /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>; each mix runs its own board.</param>
     [HttpGet("scores")]
     [ProducesResponseType(typeof(CursorPageDto<WeeklyChartScoreDto>), StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]

@@ -83,6 +83,7 @@ public sealed class OfficialRankingsDto
 /// <summary>One of a player's chart-board placements.</summary>
 public sealed class OfficialPlacementDto
 {
+    /// <summary>The chart, as <c>/api/v2/charts</c> ids it.</summary>
     public Guid ChartId { get; set; }
 
     /// <summary>The player's place on the chart's board this week.</summary>
@@ -215,6 +216,7 @@ public sealed class OfficialChartBoardDto
 /// <summary>Where a chart stands in piugame's play-count ranking.</summary>
 public sealed class OfficialPopularityDto
 {
+    /// <summary>The chart, as <c>/api/v2/charts</c> ids it.</summary>
     public Guid ChartId { get; set; }
 
     /// <summary>The chart's place in the popularity ranking this week — 1 is the most played.</summary>
@@ -532,6 +534,7 @@ public sealed class OfficialNewNumberOneDto
 {
     public OfficialPlayerDto Player { get; set; } = null!;
 
+    /// <summary>The chart whose board changed hands.</summary>
     public Guid ChartId { get; set; }
 
     /// <summary>The score that took first place.</summary>

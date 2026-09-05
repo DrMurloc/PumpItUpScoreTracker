@@ -160,6 +160,7 @@ public sealed class ChartV2Dto
 /// <summary>One chart's place on a tier list.</summary>
 public sealed class TierListEntryV2Dto
 {
+    /// <summary>The chart, as <c>/api/v2/charts</c> ids it.</summary>
     public Guid ChartId { get; set; }
 
     /// <summary>
@@ -195,6 +196,7 @@ public sealed class ChartSkillProfileDto
             .Select(r => new RarePatternDto { Name = r.Name, Count = r.Count }).ToArray();
     }
 
+    /// <summary>The chart, as <c>/api/v2/charts</c> ids it. The analysis is the same in every mix.</summary>
     public Guid ChartId { get; set; }
 
     /// <summary>Which release of PIU Center's analysis this row came from; null where it was not recorded.</summary>
@@ -257,6 +259,7 @@ public sealed class RarePatternDto
 /// <summary>A chart that plays like the one asked about, and why.</summary>
 public sealed class SimilarChartDto
 {
+    /// <summary>The chart, as <c>/api/v2/charts</c> ids it.</summary>
     public Guid ChartId { get; set; }
 
     /// <summary>Overall similarity, 0 to 1. Compare against the envelope's <c>matchFloor</c> to decide what counts as a match.</summary>

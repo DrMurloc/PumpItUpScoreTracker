@@ -212,6 +212,7 @@ public sealed class ChartScorePageDto
     /// <summary><c>phoenix</c> or <c>legacy</c>. Branch on this before reading <c>score</c>.</summary>
     public string ScoringModel { get; set; } = string.Empty;
 
+    /// <summary>The rows on this page: passes first, highest score first, then failed bests.</summary>
     public ChartScoreDto[] Data { get; set; } = Array.Empty<ChartScoreDto>();
 
     /// <summary>How many rows were asked for — not how many arrived, which is <c>data.length</c>.</summary>
@@ -412,12 +413,14 @@ public sealed class PlayerStatsDto
 /// <summary>One chart on this week's board.</summary>
 public sealed class WeeklyChartDto
 {
+    /// <summary>The chart, as <c>/api/v2/charts</c> ids it.</summary>
     public Guid ChartId { get; set; }
 }
 
 /// <summary>One player's score on one of this week's charts.</summary>
 public sealed class WeeklyChartScoreDto
 {
+    /// <summary>The chart, as <c>/api/v2/charts</c> ids it.</summary>
     public Guid ChartId { get; set; }
 
     /// <summary>The PIU Scores account.</summary>
