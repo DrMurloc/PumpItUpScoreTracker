@@ -592,7 +592,8 @@ sort now and the mislabelling went out with the column.
 to the site by name, which is the same standing `PIU Center` already had.
 
 ~20 new l10n keys across nine locales, inserted alphabetically, landing with the commit that
-introduces them. The `Pass rate` key stays — `StaminaTournament.razor` still uses it, and a
+introduces them. The `Pass rate` key stays — `StaminaTournament.razor` used it until the March of Murlocs
+Slice 4a retired that page (2026-09-05), and a
 call-site grep scoped to this page would wrongly call it dead.
 
 ### Open
