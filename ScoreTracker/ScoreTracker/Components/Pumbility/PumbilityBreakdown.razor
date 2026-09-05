@@ -1,6 +1,15 @@
-﻿@using System.Globalization
+@using System.Globalization
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Services
 @using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Components
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
 
 @* Where the number comes from: the charts, the scores on them, and the plates. The split is
    exact rather than modelled -- a pool entry is Base(level) x grade x plate and nothing else,
@@ -10,7 +19,15 @@
    as the hairline it is and is never widened to be seen -- that sliver is the whole point,
    because everyone gets hung up on the plate modifiers. And the plate gets its own magnified
    rail underneath instead, running the full span from the worst plate on all fifty to the
-   best, which is a scale it can be read on without exaggerating it anywhere. *@
+   best, which is a scale it can be read on without exaggerating it anywhere.
+
+   Since round nine, part two (D58) the card carries two more sections, you against your peers:
+   your real fifty split by chart type over your peers' average fifty -- the Phoenix 1 card's
+   bar twice, each segment reading what it is worth and how many charts it is, sized by value
+   like every stack here -- and where the levels sit, the tiles that stood beside the Play lede.
+   The split is a statement about the merged fifty, so it shows only for that scope; the peers'
+   half and the tiles arrive by one read, held by this component because the pool it is scoped
+   to comes from the section frame as a parameter. *@
 @if (Breakdown is { Total: > 0 })
 {
     <div class="pmb-wpc">
@@ -81,6 +98,47 @@
                 </p>
             }
         </div>
+
+        @* The merged fifty only: a singles or doubles pool is one type by definition, so the
+           question does not arise there. Your bar draws off the frame's record at once; the
+           peers' bar waits for the read and the row simply is not there until it lands. *@
+        @if (Page is { Pool_: null, Pool.Count: > 0 })
+        {
+            <div class="pmb-wpc-sub" data-testid="wpc-types">
+                <div class="pmb-wpc-sub-head">
+                    <strong>@L["Singles and doubles"]</strong>
+                    <span class="pmb-muted">@L["your real top 50 against your peers' average, by type"]</span>
+                </div>
+                <div class="pmb-splitrows">
+                    <span class="pmb-splitrow-lbl">@L["You"]</span>
+                    @SplitBar(Mine)
+                    @if (_compare?.Peers is { } peers)
+                    {
+                        <span class="pmb-splitrow-lbl">@L["Peers"]</span>
+                        @SplitBar(peers)
+                    }
+                </div>
+                <div class="pmb-curve-legend">
+                    <span><i class="pmb-swatch" style="background:var(--chart-doubles)"></i>@L["Doubles"]</span>
+                    <span><i class="pmb-swatch" style="background:var(--chart-singles)"></i>@L["Singles"]</span>
+                    @if (_compare?.Peers is { } averaged)
+                    {
+                        <span class="pmb-muted">@L["Peers: the average top 50 of the {0} players near your singles or doubles pool", averaged.Peers]</span>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (_compare is { Levels.Count: > 0 } compare)
+        {
+            <div class="pmb-wpc-sub" data-testid="wpc-levels">
+                <div class="pmb-wpc-sub-head">
+                    <strong>@L["Where the levels sit"]</strong>
+                    <span class="pmb-muted">@L["your fifty against what your peers hold, by level"]</span>
+                </div>
+                <PeerCompareStrip Compare="compare.Levels"></PeerCompareStrip>
+            </div>
+        }
     </div>
 }
 
@@ -88,6 +146,61 @@
     [Parameter] public PoolBreakdown? Breakdown { get; set; }
 
     [Parameter] public int PoolCount { get; set; }
+
+    /// <summary>
+    ///     The frame's record: which pool the card is scoped to, and the fifty the type split is
+    ///     drawn from. Null keeps the card to its three parts — a host with no comparison to make.
+    /// </summary>
+    [Parameter] public PumbilityPageRecord? Page { get; set; }
+
+    [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+
+    private PumbilityPoolCompareRecord? _compare;
+
+    /// <summary>The scope the comparison was read for; the frame hands down a new record on every pool change.</summary>
+    private (MixEnum Mix, ChartType? Pool)? _loaded;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Page == null) return;
+        var key = (Page.Mix, Page.Pool_);
+        if (_loaded == key) return;
+        _loaded = key;
+        _compare = null;
+        var record = await Mediator.Send(new GetPumbilityPoolCompareQuery(CurrentUser.User.Id, key.Mix, key.Pool_));
+        // A quicker second change superseded this read; its own read is in flight and will land.
+        if (_loaded == key) _compare = record;
+    }
+
+    /// <summary>
+    ///     Your real fifty split by type, through the same function the peers' average goes
+    ///     through, so the two bars share one arithmetic. The record's pool IS the merged fifty
+    ///     for this scope; the function only re-reads it in its own terms.
+    /// </summary>
+    private PoolTypeSplit Mine => PumbilityPoolSplit.Of(Page!.Pool
+        .Where(e => Charts.ContainsKey(e.ChartId))
+        .Select(e => new PricedRecord(Charts[e.ChartId].Type, e.Value)));
+
+    // The Phoenix 1 card's bar, doubles then singles, sized by value rather than by count — this
+    // card's rule — with each segment reading what it is worth and how many charts it is.
+    private RenderFragment SplitBar(PoolTypeSplit split) => @<div class="pmb-flip-bar">
+        @if (split.DoublesValue > 0)
+        {
+            <div class="pmb-flip-seg d" style="flex:@Flex(split.DoublesValue)" title="@L["Doubles"]">@Segment(split.DoublesValue, split.DoublesCount)</div>
+        }
+        @if (split.SinglesValue > 0)
+        {
+            <div class="pmb-flip-seg s" style="flex:@Flex(split.SinglesValue)" title="@L["Singles"]">@Segment(split.SinglesValue, split.SinglesCount)</div>
+        }
+    </div>;
+
+    private static string Flex(double value) =>
+        Math.Max(0, value).ToString("0.##", CultureInfo.InvariantCulture);
+
+    // A pool part prints two decimals on this page (the precision rule); an averaged count
+    // prints whole, since a fraction of a chart is not a thing a reader can picture.
+    private static string Segment(double value, double count) =>
+        $"{value.ToString("N2")} ({Math.Round(count).ToString("N0")})";
 
     // The stack is drawn true to scale, so a part worth nothing takes no width. Negative is
     // possible on the score part below the reference grade and draws as nothing rather than

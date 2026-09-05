@@ -13,9 +13,10 @@
 
 @* What the number is worth, what it is made of, and what it is: the title rails, where your
    PUMBILITY comes from, and your top 50 with the pool curve at its head
-   (docs/design/pumbility-overhaul.md D45, D57). The fifty came back here in round nine — this
-   page holds what you hold, Play holds what is projected — so nothing on them is a peers'
-   number. The old route still resolves — a second @page, not a redirect, because nothing
+   (docs/design/pumbility-overhaul.md D45, D57, D58). The fifty came back here in round nine —
+   this page holds what you hold, Play holds what is projected — so nothing on them is a peers'
+   number; the one comparison against your peers, by type and by level, sits inside the
+   breakdown band. The old route still resolves — a second @page, not a redirect, because nothing
    about the page is canonical to a crawler: it is signed-in only. *@
 
 <PumbilitySectionFrame Active="breakdown">
@@ -34,7 +35,8 @@
         }
 
         <section class="pmb-block">
-            <PumbilityBreakdown Breakdown="ctx.Page.Breakdown" PoolCount="ctx.Page.Pool.Count"></PumbilityBreakdown>
+            <PumbilityBreakdown Breakdown="ctx.Page.Breakdown" PoolCount="ctx.Page.Pool.Count"
+                                Page="ctx.Page" Charts="ctx.Charts"></PumbilityBreakdown>
         </section>
 
         <PumbilityPoolSection Page="ctx.Page" Charts="ctx.Charts"
