@@ -1,0 +1,43 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Contracts
+@inject IUiSettingsAccessor UiSettings
+
+@* The one line left where the Phoenix 2 folder-title track used to draw its bar: a pointer at the
+   PUMBILITY page, which is where titles are tracked now, and a × that hides it for good on this
+   account (owner, 2026-09-05 — copy and controls are the approved mock verbatim). The page decides
+   WHETHER the folder has title progress (FolderTitleTrack.HasTitleProgress, the same gate the bar
+   had); this component owns the dismissal, so the page never reads the flag. It renders nothing
+   until the flag has been read — a player who dismissed it must not see it flash on the way in. *@
+@if (Show && _read && !_dismissed)
+{
+    <div class="title-pointer" data-testid="title-pointer">
+        <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Small" Class="title-pointer-ic"></MudIcon>
+        <span>@L["Looking for title progress?"]</span>
+        <a class="title-pointer-link" href="/Pumbility/Breakdown">@L["See the PUMBILITY page"]</a>
+        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Class="title-pointer-x"
+                       OnClick="Dismiss" aria-label="@L["Dismiss"]" data-testid="title-pointer-dismiss"></MudIconButton>
+    </div>
+}
+
+@code {
+    /// <summary>Set once the player closes the pointer. Its presence is the whole "dismissed" test.</summary>
+    public const string DismissedKey = "TierLists__TitlePointerDismissed";
+
+    /// <summary>Whether the folder on screen has title progress for this player.</summary>
+    [Parameter] public bool Show { get; set; }
+
+    private bool _read;
+    private bool _dismissed;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _dismissed = await UiSettings.GetSetting(DismissedKey) is not null;
+        _read = true;
+    }
+
+    private async Task Dismiss()
+    {
+        _dismissed = true;
+        await UiSettings.SetSetting(DismissedKey, "true");
+    }
+}

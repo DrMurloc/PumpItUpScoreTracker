@@ -6794,177 +6794,46 @@ button.chart-card-art {
     display: none;
 }
 
-/* ── The Phoenix 2 folder-title track (docs/design/pumbility-title-track.md): the glowy bar
-   toward your next PUMBILITY title + one folder-aware caption, replacing the Phoenix 1 folder
-   bars. --mix-* so it wears the mix accent, not a fixed green. ── */
-.ptt {
-    display: grid;
-    gap: 10px;
-    margin: 0 0 14px;
-}
-
-/* No card behind the bar — it sits directly on the page (owner call). */
-.ptt-band {
-    padding: 2px 2px 4px;
-    display: grid;
-    gap: 9px;
-}
-
-.ptt-head {
+/* ── The title-progress pointer (Phoenix 2 tier lists): the one line left where the folder-title
+   track used to draw its bar — a pointer at the PUMBILITY page, where titles are tracked now, and
+   a × that hides it for good. Boxed the way the track's "behind your top 50" whisper was, so it
+   sits on the page as a row rather than as floating text (owner, 2026-09-05). --mix-* only. ── */
+.title-pointer {
     display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-/* The bar's top-left slot: the "from …" whisper, or the "serves" notifier on wider screens. */
-.ptt-lead {
-    display: flex;
-    align-items: flex-end;
-    min-width: 0;
-    min-height: 1em;
-}
-
-.ptt-from {
-    font-family: var(--font-display);
-    font-size: 13px;
-    letter-spacing: .02em;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    margin: 0 0 12px;
+    padding: 5px 6px 5px 14px;
+    min-height: 32px;
+    font-size: 13.5px;
     color: var(--mix-ink-muted);
-    min-height: 1em;
-}
-
-/* The compact "serves" notifier riding the top-left of the bar (wide screens only — see the
-   breakpoint by .ptt-serves). Mirrors the banner's accent tint at chip scale. */
-.ptt-serves-top {
-    display: none;
-    align-items: center;
-    gap: 6px;
-    max-width: 100%;
-    padding: 3px 9px;
-    border-radius: 8px;
-    font-family: var(--font-display);
-    font-size: 12px;
-    letter-spacing: .02em;
-    white-space: nowrap;
-    color: var(--mix-ink);
-    border: 1px solid color-mix(in srgb, var(--mix-accent) 38%, transparent);
-    background: color-mix(in srgb, var(--mix-accent) 12%, transparent);
-}
-
-.ptt-target {
-    text-align: right;
-    line-height: 1.02;
-}
-
-.ptt-k {
-    display: block;
-    font-family: var(--font-display);
-    text-transform: uppercase;
-    letter-spacing: .16em;
-    font-size: 9.5px;
-    color: var(--mix-primary);
-    font-weight: 600;
-    margin-bottom: 1px;
-}
-
-.ptt-t {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 20px;
-    letter-spacing: .02em;
-    color: var(--mix-ink);
-}
-
-/* The glowy bar. overflow:visible so the ring's shadow reads; the fill and dot both carry the
-   mix glow. */
-.ptt-bar {
-    position: relative;
-    height: 18px;
-    border-radius: 10px;
-    background: color-mix(in srgb, var(--mix-bg) 55%, #000);
-    border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
-    overflow: visible;
-}
-
-.ptt-fill {
-    position: absolute;
-    inset: 1px auto 1px 1px;
-    border-radius: 9px;
-    background: linear-gradient(90deg, color-mix(in srgb, var(--mix-primary) 68%, #000), var(--mix-primary));
-    box-shadow: 0 0 16px -3px var(--mix-primary);
-}
-
-.ptt-you {
-    position: absolute;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--mix-bg);
-    border: 2.5px solid var(--mix-primary);
-    box-shadow: 0 0 0 3px var(--mix-bg), 0 0 13px -1px var(--mix-primary);
-}
-
-/* The one caption where the Phoenix 1 percentage used to be. */
-.ptt-cap {
-    text-align: center;
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: 14.5px;
-    letter-spacing: .02em;
-    color: var(--mix-primary);
-}
-
-/* Grade-up is a bigger ask than volume, so it reads neutral rather than the encouraging accent. */
-.ptt-cap-grade {
-    color: var(--mix-ink);
-}
-
-/* The folder sits above your current title — you can push past it here. This is the phone
-   placement (a banner under the bar); above ~480 it moves up to the top-left .ptt-serves-top chip. */
-.ptt-serves {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    border-radius: 10px;
-    padding: 8px 13px;
-    font-size: 13px;
-    border: 1px solid color-mix(in srgb, var(--mix-accent) 40%, transparent);
-    background: color-mix(in srgb, var(--mix-accent) 12%, transparent);
-    color: var(--mix-ink);
-}
-
-@media (min-width: 481px) {
-    .ptt-serves-top { display: inline-flex; }
-    .ptt-serves { display: none; }
-}
-
-.ptt-serves-ic {
-    color: var(--mix-accent);
-    flex: none;
-    font-size: 13px;
-}
-
-/* The collapsed state: the folder is beneath your top 50, so the bar's gone — the serves whisper
-   is all that remains. */
-.ptt-behind {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 10px 14px;
-    font-family: var(--font-display);
-    font-size: 14px;
-    letter-spacing: .02em;
-    color: var(--mix-ink-muted);
-    background: color-mix(in srgb, var(--mix-surface) 55%, transparent);
     border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    background: color-mix(in srgb, var(--mix-surface) 55%, transparent);
     border-radius: 10px;
 }
 
-.ptt-behind-ic {
+.title-pointer-ic {
     flex: none;
-    font-size: 15px;
+    color: var(--mix-ink-muted);
+}
+
+.title-pointer-link {
+    color: var(--mix-primary);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: color-mix(in srgb, var(--mix-primary) 45%, transparent);
+}
+
+.title-pointer-link:hover {
+    text-decoration-color: var(--mix-primary);
+}
+
+/* The × rides the far end of the row — a box has a far end. */
+.title-pointer-x {
+    margin-left: auto;
+    color: var(--mix-ink-muted);
 }
 
 /* ── The tier-list segment row (M18): joined buttons, filled primary when active. ── */

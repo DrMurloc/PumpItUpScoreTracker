@@ -1055,9 +1055,6 @@
   <data name="Behind / ahead" xml:space="preserve">
     <value>Sotto / sopra</value>
   </data>
-  <data name="Behind your top 50 — serves {0}" xml:space="preserve">
-    <value>Sotto la tua top 50 — porta a {0}</value>
-  </data>
   <data name="below" xml:space="preserve">
     <value>sotto</value>
   </data>
@@ -3899,6 +3896,9 @@
   <data name="Look back" xml:space="preserve">
     <value>Periodo</value>
   </data>
+  <data name="Looking for title progress?" xml:space="preserve">
+    <value>Cerchi il progresso dei titoli?</value>
+  </data>
   <data name="Loss" xml:space="preserve">
     <value>Perdita</value>
   </data>
@@ -4455,9 +4455,6 @@
   </data>
   <data name="Next season" xml:space="preserve">
     <value>Prossima stagione</value>
-  </data>
-  <data name="Next title" xml:space="preserve">
-    <value>Prossimo titolo</value>
   </data>
   <data name="next to what a level is worth" xml:space="preserve">
     <value>accanto a quanto vale un livello</value>
@@ -5284,12 +5281,6 @@
   </data>
   <data name="Pass Refiner" xml:space="preserve">
     <value>Pass Refiner</value>
-  </data>
-  <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
-    <value>Supera {0} chart con {1} o meglio (solo {2} in questa cartella)</value>
-  </data>
-  <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
-    <value>Supera {0} chart in questa cartella con {1} o meglio</value>
   </data>
   <data name="Pass {0} ended this stage" xml:space="preserve">
     <value>Pass {0} ha interrotto questo tentativo</value>
@@ -6888,6 +6879,9 @@
   <data name="See the full board" xml:space="preserve">
     <value>Vedi la classifica completa</value>
   </data>
+  <data name="See the PUMBILITY page" xml:space="preserve">
+    <value>Vedi la pagina PUMBILITY</value>
+  </data>
   <data name="See the Score breakdown" xml:space="preserve">
     <value>Vedi l'analisi Punteggio</value>
   </data>
@@ -8029,9 +8023,6 @@
   </data>
   <data name="This does not send anything." xml:space="preserve">
     <value>Questo non invia niente.</value>
-  </data>
-  <data name="This folder serves {0}" xml:space="preserve">
-    <value>Questa cartella porta a {0}</value>
   </data>
   <data name="This gives {0} control of your PIUGame account." xml:space="preserve">
     <value>Questo dà a {0} il controllo del tuo account PIUGame.</value>
@@ -10176,9 +10167,6 @@
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>~#{0} nella classifica ufficiale</value>
-  </data>
-  <data name="~{0} more charts in this folder" xml:space="preserve">
-    <value>~{0} chart in più in questa cartella</value>
   </data>
   <data name="— optional" xml:space="preserve">
     <value>— facoltativo</value>
