@@ -76,6 +76,19 @@ public sealed class ShareCardTitlesTests
     }
 
     [Fact]
+    public void TheBreakdownPagesFiftyNameThePageAndTheBlockAndCarryNoEnergy()
+    {
+        // PUMBILITY doc D57, §3.11: nothing on that page reads an Energy, so none rides the card.
+        var pool = ShareCardTitles.Pool("Doubles pool", "Phoenix 2", "2026-09-05", "DrMurloc", L);
+        Assert.Equal("PUMBILITY Breakdown — Your top 50", pool.Title);
+        Assert.Equal("Doubles pool · Phoenix 2 · 2026-09-05", pool.Subtitle);
+        Assert.Equal("Personalized for DrMurloc", pool.Stamp);
+
+        var onePool = ShareCardTitles.Pool(null, "Phoenix", "2026-09-05", "DrMurloc", L);
+        Assert.Equal("Phoenix · 2026-09-05", onePool.Subtitle);
+    }
+
+    [Fact]
     public void FileNamesCarryTheSubjectSoDownloadsOfOneFolderNeverCollide()
     {
         Assert.Equal("TierList_Phoenix_Single20_Pass_2026-09-02.png",
@@ -85,5 +98,7 @@ public sealed class ShareCardTitlesTests
                 "2026-09-02"));
         Assert.Equal("PumbilityTargets_Phoenix2_Prevalence_Great_Single_2026-09-02.png",
             ShareCardTitles.TargetsFileName(MixEnum.Phoenix2, "Prevalence", "Great", "Single", "2026-09-02"));
+        Assert.Equal("PumbilityTop50_Phoenix2_Single_2026-09-05.png",
+            ShareCardTitles.PoolFileName(MixEnum.Phoenix2, "Single", "2026-09-05"));
     }
 }
