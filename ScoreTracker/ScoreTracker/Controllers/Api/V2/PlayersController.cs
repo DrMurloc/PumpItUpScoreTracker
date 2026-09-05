@@ -2,14 +2,18 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Dtos.ApiV2;
 using ScoreTracker.Web.Security;
 
@@ -116,25 +120,72 @@ public sealed class PlayersController : ApiV2ControllerBase
     }
 
     /// <summary>
+    ///     The readable set, narrowed to one community's members when a filter was sent.
+    ///     <para>
+    ///         The filter can only narrow: it intersects the players the credential may already
+    ///         read with the community's members as the viewer may see them. The viewer is the
+    ///         tool's maker for a tool key and the caller for a personal token, so a private
+    ///         community filters for its members and answers everyone else exactly as an unknown
+    ///         name does (docs/design/api-v2-round-2.md §4).
+    ///     </para>
+    /// </summary>
+    /// <returns>The ids, sorted; the normalized community name for the cursor fingerprint; or the failure.</returns>
+    private async Task<(IReadOnlyList<Guid>? Ids, string? CommunityKey, ObjectResult? Failure)> ReadableWithin(
+        string? community)
+    {
+        var readable = await ReadablePlayerIds(_mediator, _currentUser);
+        if (community is null) return (readable.OrderBy(id => id).ToArray(), null, null);
+
+        Name name;
+        try
+        {
+            name = Name.From(community);
+        }
+        catch (InvalidNameException)
+        {
+            return (null, null, Problem("invalid-community", "The community parameter is not a community name.",
+                detail: "Send the community's name as the site shows it — World, a country, or a community's own name."));
+        }
+
+        var toolId = User.ToolId();
+        var viewer = toolId is null
+            ? _currentUser.User.Id
+            : await _mediator.Send(new GetToolOwnerQuery(toolId.Value));
+        var members = await _mediator.Send(new GetCommunityMembersForViewerQuery(name, viewer));
+        if (members is null)
+            return (null, null, NotFoundProblem("No community by that name is readable with this credential."));
+
+        return (readable.Where(members.Contains).OrderBy(id => id).ToArray(), name.ToString().ToLowerInvariant(), null);
+    }
+
+    /// <summary>
     ///     Every player who has shared with the calling tool.
     ///     <para>
     ///         The endpoint the whole sharing model exists to serve: without it a tool has no way to
     ///         learn who consented. A personal token gets a one-row list of itself.
     ///     </para>
     /// </summary>
+    /// <param name="community">
+    ///     Only members of this community, by the name the site shows — <c>World</c>, a country, or
+    ///     a community's own name. Narrows the players you can already read; it never adds one. A
+    ///     private community filters only for its members (the tool's maker, or you), and otherwise
+    ///     answers 404 exactly as an unknown name does.
+    /// </param>
+    /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
+    /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet]
     public async Task<IActionResult> GetPlayers(
+        [FromQuery(Name = "community")] string? community = null,
         [FromQuery(Name = "cursor")] string? cursor = null,
         [FromQuery(Name = "limit")] int? limit = null)
     {
         var pageSize = Math.Clamp(limit ?? DefaultLimit, 1, MaxLimit);
-        var toolId = User.ToolId();
 
-        var userIds = toolId is null
-            ? new[] { _currentUser.User.Id }
-            : (await _mediator.Send(new GetToolReadablePlayersQuery(toolId.Value))).OrderBy(id => id).ToArray();
+        var (ids, communityKey, failure) = await ReadableWithin(community);
+        if (ids is null) return failure!;
+        var userIds = ids;
 
-        var fingerprint = ContinuationToken.FingerprintOf(toolId, pageSize);
+        var fingerprint = ContinuationToken.FingerprintOf(CredentialKey(_currentUser), pageSize, communityKey);
         var offset = 0;
         if (cursor is not null)
         {
@@ -152,11 +203,11 @@ public sealed class PlayersController : ApiV2ControllerBase
             rows.Add(new PlayerV2Dto(user, await ResolveGameTag(id)));
         }
 
-        var next = offset + page.Length < userIds.Length
+        var next = offset + page.Length < userIds.Count
             ? ContinuationToken.FromOffset(offset + page.Length, fingerprint)
             : (ContinuationToken?)null;
 
-        return Json(Page(rows, pageSize, userIds.Length, next));
+        return Json(Page(rows, pageSize, userIds.Count, next));
     }
 
     /// <summary>The player's profile, with their most recently observed in-game tag.</summary>
