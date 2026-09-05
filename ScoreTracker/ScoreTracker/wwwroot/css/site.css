@@ -6803,7 +6803,8 @@ button.chart-card-art {
     align-items: center;
     flex-wrap: wrap;
     gap: 4px 8px;
-    margin: 0 0 12px;
+    /* Room above the box: without the context line it sat flush under the toolbar (field test). */
+    margin: 10px 0 12px;
     padding: 5px 6px 5px 14px;
     min-height: 32px;
     font-size: 13.5px;
