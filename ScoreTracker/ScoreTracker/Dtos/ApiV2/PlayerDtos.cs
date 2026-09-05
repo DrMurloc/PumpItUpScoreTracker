@@ -115,6 +115,87 @@ public sealed class PlayerScoreDto
     }
 }
 
+/// <summary>
+///     One player's best on a chart, on a page that spans players: the per-player score row with
+///     the player's identity in front of it. The fields after <see cref="GameTag" /> are the
+///     per-player row's, byte for byte, so a tool parses one score shape.
+/// </summary>
+public sealed class ChartScoreDto
+{
+    public ChartScoreDto(Guid userId, string username, string? gameTag, PlayerScoreDto score)
+    {
+        UserId = userId;
+        Username = username;
+        GameTag = gameTag;
+        ChartId = score.ChartId;
+        RecordedAt = score.RecordedAt;
+        Source = score.Source;
+        Score = score.Score;
+        LetterGrade = score.LetterGrade;
+        Plate = score.Plate;
+        IsBroken = score.IsBroken;
+        Pumbility = score.Pumbility;
+        Judgments = score.Judgments;
+    }
+
+    /// <summary>The PIU Scores account. The same id <c>/api/v2/players</c> lists.</summary>
+    public Guid UserId { get; set; }
+
+    /// <summary>The player's PIU Scores username.</summary>
+    public string Username { get; set; }
+
+    /// <summary>The in-game tag, most recently observed; null when no import has linked one.</summary>
+    public string? GameTag { get; set; }
+
+    public Guid ChartId { get; set; }
+
+    /// <summary>When PIU Scores wrote the record — not when the play happened, which is not known.</summary>
+    public DateTimeOffset RecordedAt { get; set; }
+
+    /// <summary>Where the record came from: <c>officialImport</c>, <c>csv</c>, <c>manual</c>, or null for a record older than source capture.</summary>
+    public string? Source { get; set; }
+
+    /// <summary>On a legacy mix this is an era-scale number that does not compare to a Phoenix score. Check the envelope's <c>scoringModel</c>.</summary>
+    public int? Score { get; set; }
+
+    public string? LetterGrade { get; set; }
+
+    /// <summary>Null when <see cref="IsBroken" /> — the game awards no plate for a failed stage.</summary>
+    public string? Plate { get; set; }
+
+    public bool IsBroken { get; set; }
+
+    /// <summary>What this score is worth in PUMBILITY under the mix's formula; null on a legacy mix.</summary>
+    public double? Pumbility { get; set; }
+
+    /// <summary>Null when the source never carried judgments — a CSV or hand-entered score.</summary>
+    public JudgmentsDto? Judgments { get; set; }
+}
+
+/// <summary>
+///     Every readable player's best on one chart. Passes first, highest score first; failed bests
+///     follow. The scoring model rides the envelope because a page is always one mix, and
+///     <c>total</c> is present because the rows are already in memory.
+/// </summary>
+public sealed class ChartScorePageDto
+{
+    public string Mix { get; set; } = string.Empty;
+
+    /// <summary><c>phoenix</c> or <c>legacy</c>. Branch on this before reading <c>score</c>.</summary>
+    public string ScoringModel { get; set; } = string.Empty;
+
+    public ChartScoreDto[] Data { get; set; } = Array.Empty<ChartScoreDto>();
+
+    /// <summary>How many rows were asked for — not how many arrived, which is <c>data.length</c>.</summary>
+    public int Limit { get; set; }
+
+    /// <summary>How many readable players hold a record on this chart in this mix.</summary>
+    public int Total { get; set; }
+
+    /// <summary>Absolute URL of the next page, or null on the last one. Follow it rather than constructing it.</summary>
+    public string? Next { get; set; }
+}
+
 /// <summary>Scores in one mix. The scoring model rides the envelope because a page is always one mix.</summary>
 public sealed class PlayerScorePageDto
 {

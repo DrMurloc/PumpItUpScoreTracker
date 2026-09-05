@@ -36,11 +36,6 @@ public sealed class PlayersController : ApiV2ControllerBase
         _currentUser = currentUser;
     }
 
-    private static string ScoringModel(MixEnum mix)
-    {
-        return mix.UsesLegacyScoring() ? "legacy" : "phoenix";
-    }
-
     /// <summary>
     ///     Resolves the route's player id against the caller's credential.
     ///     <para>
@@ -277,7 +272,7 @@ public sealed class PlayersController : ApiV2ControllerBase
         return Json(new PlayerScorePageDto
         {
             Mix = mix.ToString(),
-            ScoringModel = ScoringModel(mix),
+            ScoringModel = ScoringModelOf(mix),
             Limit = pageSize,
             Data = page.Select(r => new PlayerScoreDto(r, mix,
                 scoring is null || r.Score is null
