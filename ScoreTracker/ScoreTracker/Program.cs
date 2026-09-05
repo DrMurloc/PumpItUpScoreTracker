@@ -311,6 +311,8 @@ builder.Services.AddScoped<BrokenScorePreference>();
 builder.Services.AddScoped<ScoreTracker.Web.Services.HomeDashboard.ChartCatalogCache>();
 builder.Services.AddScoped<ScoreTracker.Web.Services.HomeDashboard.ByLevelDataSource>();
 builder.Services.AddScoped<ScoreTracker.Web.Services.HomeDashboard.CommunityGlowReader>();
+// The viewer's peer and score-color settings, read once per circuit for every PeerScore on a page.
+builder.Services.AddScoped<ScoreTracker.Web.Services.Theming.ScoreColorPreferences>();
 builder.Services.AddCookiePolicy(opts =>
 {
     opts.CheckConsentNeeded = ctx => false;
