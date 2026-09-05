@@ -8,7 +8,7 @@ namespace ScoreTracker.Rivals.Contracts;
 ///     widget can tag the row rather than guess.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record PeerRosterEntry(
+public sealed record PeerListEntry(
     User User,
     double Level,
     bool IsRival,
@@ -21,8 +21,8 @@ public sealed record PeerRosterEntry(
 ///     ride separately and a surface appends them after the ranked rows.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record PeerRoster(
-    IReadOnlyList<PeerRosterEntry> Players,
+public sealed record PeerList(
+    IReadOnlyList<PeerListEntry> Players,
     IReadOnlyList<RivalSubject> BoardOnlyRivals,
     int Total,
     double MyLevel);

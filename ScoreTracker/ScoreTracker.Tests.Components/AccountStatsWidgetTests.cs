@@ -13,6 +13,8 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.HomePage.Contracts;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.Rivals.Contracts;
+using ScoreTracker.Rivals.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Components.HomeWidgets;
 using ScoreTracker.Web.Services.HomeDashboard;
@@ -68,27 +70,24 @@ public sealed class AccountStatsWidgetTests : ComponentTestBase
         }).FindComponent<PumbilityWidget>();
     }
 
-    private void SetUpMatches()
+    private void SetUpRoster()
     {
-        _mediator.Setup(m => m.Send(It.IsAny<GetCompetitiveNeighborsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new CompetitiveNeighborRecord(_crewMate, 21.33),
-                new CompetitiveNeighborRecord(_publicRival, 21.36),
-                new CompetitiveNeighborRecord(_secretOutsider, 21.35)
-            });
-        _users.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new User(_publicRival, "PublicRival", true, null, new Uri("https://piu.test/p.png"), null),
-                new User(_crewMate, "CrewMate", false, null, new Uri("https://piu.test/c.png"), null),
-                new User(_secretOutsider, "SecretPlayer", false, null, new Uri("https://piu.test/s.png"), null)
-            });
-        // CommunityGlowReader keeps non-regional, non-"World" crews and their members.
-        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { new CommunityOverviewRecord("Crew", CommunityPrivacyType.Public, 5, false, Guid.NewGuid()) });
-        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityMembersQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { _crewMate });
+        // The reader already applied visibility and sorted nearest first; the widget's job is to
+        // say why each row is a peer and to keep board-only rivals at the end.
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyPeerRosterQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PeerList(new[]
+                {
+                    new PeerListEntry(new User(_crewMate, "CrewMate", false, null, new Uri("https://piu.test/c.png"), null),
+                        21.33, false, new[] { "NorCal Pump" }, true, false),
+                    new PeerListEntry(new User(_publicRival, "PublicRival", true, null, new Uri("https://piu.test/p.png"), null),
+                        21.36, true, Array.Empty<string>(), true, true)
+                },
+                new[]
+                {
+                    new RivalSubject(Guid.NewGuid(), null, "PUMPKING#1", "PUMPKING#1", null, true,
+                        RivalCapabilities.OfficialStandings, DateTimeOffset.MinValue)
+                },
+                Total: 41, MyLevel: 21.34));
     }
 
     [Fact]
@@ -130,36 +129,40 @@ public sealed class AccountStatsWidgetTests : ComponentTestBase
     }
 
     [Fact]
-    public void OneByTwoShowsPublicAndCommunityMatchesButNotPrivateOutsiders()
+    public void OneByTwoListsYourPeersWithWhyTheyArePeersAndBoardOnlyRivalsLast()
     {
-        SetUpMatches();
+        SetUpRoster();
 
         var cut = Render("1x2");
 
         Assert.NotEmpty(cut.FindAll(".dash-acct-matches"));
-        Assert.Contains("PublicRival", cut.Markup);        // public → eligible
-        Assert.Contains("CrewMate", cut.Markup);           // private but shares a community → eligible
-        Assert.DoesNotContain("SecretPlayer", cut.Markup); // private, no shared community → hidden
-        // The community mate carries the green glow; the public rival does not.
-        Assert.Contains("dash-lb-community", cut.Markup);
+        Assert.Contains("Your peers · 41", cut.Markup);
+        var rows = cut.FindAll("[data-testid='acct-peer']");
+        Assert.Equal(2, rows.Count);
+        // The clubmate wears the green edge and the club's initials; the rival wears the red edge
+        // and every reason it is a peer.
+        Assert.Contains("dash-lb-community", rows[0].ClassName);
+        Assert.Contains("NP", rows[0].TextContent);
+        Assert.Contains("is-rival", rows[1].ClassName);
+        Assert.Contains("RIVAL", rows[1].TextContent);
+        Assert.Contains("PMB", rows[1].TextContent);
+        // The board-only rival closes the list with no level.
+        var ghost = Assert.Single(cut.FindAll("[data-testid='acct-peer-ghost']"));
+        Assert.Contains("PUMPKING#1", ghost.TextContent);
+        Assert.Contains("BOARD", ghost.TextContent);
     }
 
     [Fact]
-    public void CombinedDimensionMatchesOnTheCombinedCompetitiveLevelWithinRangeOne()
+    public void TheConfiguredDimensionIsWhatTheRosterIsSortedOn()
     {
-        _mediator.Setup(m => m.Send(It.IsAny<GetCompetitiveNeighborsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<CompetitiveNeighborRecord>());
-        _users.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<User>());
-        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyPeerRosterQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PeerList(Array.Empty<PeerListEntry>(), Array.Empty<RivalSubject>(), 0, 20.61));
 
         Render("1x2", "{\"matchDimension\":null}");
 
-        // Combined dimension → null ChartType, the combined competitive level, hard ±1.0 range.
+        // Combined dimension → null ChartType, the closest 25 as before.
         _mediator.Verify(m => m.Send(
-            It.Is<GetCompetitiveNeighborsQuery>(q =>
-                q.Dimension == null && q.MyLevel == 20.61 && q.Range == 1),
+            It.Is<GetMyPeerRosterQuery>(q => q.Dimension == null && q.Take == 25),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 }

@@ -30,7 +30,7 @@ namespace ScoreTracker.Rivals.Application;
 internal sealed class PeerStandingReader : IPeerStandingReader,
     IRequestHandler<GetPeerStandingsQuery, IReadOnlyDictionary<Guid, PeerStanding>>,
     IRequestHandler<GetPeerStandingsForScoresQuery, IReadOnlyDictionary<ScoreOnChart, PeerStanding>>,
-    IRequestHandler<GetMyPeerRosterQuery, PeerRoster>,
+    IRequestHandler<GetMyPeerRosterQuery, PeerList>,
     IRequestHandler<GetPeerSourceCatalogQuery, PeerSourceCatalog>
 {
     private const string WorldCommunity = "World";
@@ -147,15 +147,15 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         return result;
     }
 
-    public async Task<PeerRoster> Handle(GetMyPeerRosterQuery request, CancellationToken cancellationToken)
+    public async Task<PeerList> Handle(GetMyPeerRosterQuery request, CancellationToken cancellationToken)
     {
-        if (!_currentUser.IsLoggedIn) return new PeerRoster(Array.Empty<PeerRosterEntry>(),
+        if (!_currentUser.IsLoggedIn) return new PeerList(Array.Empty<PeerListEntry>(),
             Array.Empty<RivalSubject>(), 0, 0);
         var me = _currentUser.User.Id;
         var selection = await ReadSelection(me, cancellationToken);
         var myStats = await _stats.GetStats(request.Mix, me, cancellationToken);
         var myLevel = LevelOn(myStats, request.Dimension);
-        if (!selection.Any) return new PeerRoster(Array.Empty<PeerRosterEntry>(), Array.Empty<RivalSubject>(), 0, myLevel);
+        if (!selection.Any) return new PeerList(Array.Empty<PeerListEntry>(), Array.Empty<RivalSubject>(), 0, myLevel);
 
         // The list is sorted on one dimension, so its band is that dimension's; the combined level
         // has no PUMBILITY pool of its own, so Combined draws both types' peers.
@@ -173,7 +173,7 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
             .ToDictionary(s => s.UserId);
 
         var rows = visible
-            .Select(u => new PeerRosterEntry(u,
+            .Select(u => new PeerListEntry(u,
                 levels.TryGetValue(u.Id, out var s) ? LevelOn(s, request.Dimension) : 0,
                 peers.Has(PeerSourceKind.Rivals, u.Id),
                 peers.CommunityNames(u.Id),
@@ -183,7 +183,7 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
             .ThenBy(r => r.User.Name.ToString())
             .Take(request.Take)
             .ToArray();
-        return new PeerRoster(rows, peers.Ghosts, peers.Union.Count, myLevel);
+        return new PeerList(rows, peers.Ghosts, peers.Union.Count, myLevel);
     }
 
     public async Task<PeerSourceCatalog> Handle(GetPeerSourceCatalogQuery request,

@@ -19075,3 +19075,31 @@ a.peer-pop-row:hover {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+/* The Account Stats roster's "why they are a peer" tags (peers-abstraction.md D18). */
+.dash-acct-trail {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dash-acct-src {
+    display: inline-flex;
+    gap: 3px;
+}
+
+.dash-acct-tag {
+    font-size: .58rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--mix-ink) 8%, transparent);
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+}
+
+.dash-acct-tag-rival { color: var(--daily-rival, var(--mix-secondary)); }
+.dash-acct-tag-community { color: var(--daily-community); }
+.dash-acct-tag-competitive { color: var(--mix-primary); }
+.dash-acct-tag-pumbility { color: var(--mix-accent); }

@@ -29,7 +29,7 @@ public sealed record GetPeerStandingsForScoresQuery(MixEnum Mix, IReadOnlyCollec
 ///     visibility applied, board-only rivals carried separately.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record GetMyPeerRosterQuery(MixEnum Mix, ChartType? Dimension, int Take) : IQuery<PeerRoster>;
+public sealed record GetMyPeerRosterQuery(MixEnum Mix, ChartType? Dimension, int Take) : IQuery<PeerList>;
 
 /// <summary>Every source the viewer could tick, with the members each would contribute — for the Account dialog.</summary>
 [ExcludeFromCodeCoverage]
