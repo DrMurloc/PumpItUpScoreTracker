@@ -5442,6 +5442,9 @@
   <data name="peers:" xml:space="preserve">
     <value>seu nível:</value>
   </data>
+  <data name="Peers: the average top 50 of the {0} players near your singles or doubles pool" xml:space="preserve">
+    <value>Pares: o top 50 médio dos {0} jogadores próximos do seu pool de singles ou doubles</value>
+  </data>
   <data name="Peers: {0}% of their pool weight at {1}" xml:space="preserve">
     <value>Pares: {0}% do peso do conjunto deles em {1}</value>
   </data>
@@ -9103,12 +9106,6 @@
   <data name="Where the levels sit" xml:space="preserve">
     <value>Onde ficam os níveis</value>
   </data>
-  <data name="Where the levels sit · doubles" xml:space="preserve">
-    <value>Onde ficam os níveis · Doubles</value>
-  </data>
-  <data name="Where the levels sit · singles" xml:space="preserve">
-    <value>Onde ficam os níveis · Singles</value>
-  </data>
   <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
     <value>Onde ficam os passes deste chart, por nível competitivo.</value>
   </data>
@@ -9502,6 +9499,9 @@
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>O seu endpoint responde a uma requisição de verificação com isto. Isso não é enviado a lugar nenhum — é por isso que responder com ele é prova, e por isso um DNS sequestrado não passa. Só um hash é guardado, então anote em algum lugar que você ache depois.</value>
   </data>
+  <data name="your fifty against what your peers hold, by level" xml:space="preserve">
+    <value>seus cinquenta contra o que seus pares têm, por nível</value>
+  </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>Seu arquivo passava de 10MB, reduza-o e tente novamente.</value>
   </data>
@@ -9615,6 +9615,9 @@
   </data>
   <data name="Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them." xml:space="preserve">
     <value>Sua Pumbility, seus títulos, as lâmpadas de pasta e suas estatísticas são calculadas a partir disso: elas zeram sozinhas. Você não pode mantê-las.</value>
+  </data>
+  <data name="your real top 50 against your peers' average, by type" xml:space="preserve">
+    <value>seu top 50 real contra a média dos seus pares, por tipo</value>
   </data>
   <data name="Your Region" xml:space="preserve">
     <value>Sua região</value>

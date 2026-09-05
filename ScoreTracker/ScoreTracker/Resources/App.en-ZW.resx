@@ -5474,6 +5474,9 @@
   <data name="peers:" xml:space="preserve">
     <value>morp:</value>
   </data>
+  <data name="Peers: the average top 50 of the {0} players near your singles or doubles pool" xml:space="preserve">
+    <value>Maglmurp: mrgl rorg morp 50 mrglro mrgl {0} morp plgl argl mrglrlgl ol groggl blubgro</value>
+  </data>
   <data name="Peers: {0}% of their pool weight at {1}" xml:space="preserve">
     <value>Maglmurp: {0}% blarg grglblarg blubgro murm ur {1}</value>
   </data>
@@ -9166,12 +9169,6 @@
   <data name="Where the levels sit" xml:space="preserve">
     <value>Morggrrgl grorpmurm</value>
   </data>
-  <data name="Where the levels sit · doubles" xml:space="preserve">
-    <value>Morggrrgl grorpmurm · Groggl</value>
-  </data>
-  <data name="Where the levels sit · singles" xml:space="preserve">
-    <value>Morggrrgl grorpmurm · Mrglrlgl</value>
-  </data>
   <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
     <value>Blarggrorp grglmrp murgl grgllurg grorp, murm arglrglmrmurm grorpmurm.</value>
   </data>
@@ -9570,6 +9567,9 @@
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>Bloop am olo blurgl marogl la grumb. Alla blorp mo — opa mo golba pragl, opa DNS marogl alla bo. Golba am grumb, opa blorp la mo bloop.</value>
   </data>
+  <data name="your fifty against what your peers hold, by level" xml:space="preserve">
+    <value>argl murgro urgro mup argl maglmurp glub, gro grorpmurm</value>
+  </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>Gromurp mrblub ro blarggrorp grogrgl 10LURG, blgrlro murgmurp gl ro lurg morgro.</value>
   </data>
@@ -9683,6 +9683,9 @@
   </data>
   <data name="Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them." xml:space="preserve">
     <value>Pumbility, gorbalu, larpu — molu blurpa. Gorb prala.</value>
+  </data>
+  <data name="your real top 50 against your peers' average, by type" xml:space="preserve">
+    <value>argl marg morp 50 urgro argl maglmurp rorg, gro morg</value>
   </data>
   <data name="Your Region" xml:space="preserve">
     <value>Gromurp Rglargl</value>

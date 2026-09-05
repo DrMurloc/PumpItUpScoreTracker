@@ -5442,6 +5442,9 @@
   <data name="peers:" xml:space="preserve">
     <value>동급:</value>
   </data>
+  <data name="Peers: the average top 50 of the {0} players near your singles or doubles pool" xml:space="preserve">
+    <value>동료: 내 싱글 또는 더블 풀에 가까운 플레이어 {0}명의 평균 상위 50</value>
+  </data>
   <data name="Peers: {0}% of their pool weight at {1}" xml:space="preserve">
     <value>동료: 풀 비중의 {0}%가 레벨 {1}</value>
   </data>
@@ -9103,12 +9106,6 @@
   <data name="Where the levels sit" xml:space="preserve">
     <value>레벨 분포</value>
   </data>
-  <data name="Where the levels sit · doubles" xml:space="preserve">
-    <value>레벨 분포 · 더블</value>
-  </data>
-  <data name="Where the levels sit · singles" xml:space="preserve">
-    <value>레벨 분포 · 싱글</value>
-  </data>
   <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
     <value>이 채보의 클리어가 어느 경쟁 레벨에 있는지 보여줍니다.</value>
   </data>
@@ -9502,6 +9499,9 @@
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>확인 요청에 이 값으로 응답하면 됩니다. 이 값은 어디에도 전송되지 않습니다 — 그래서 이 값으로 응답하는 것이 증명이 되고, 탈취된 DNS로는 통과할 수 없습니다. 해시로만 보관되니 찾을 수 있는 곳에 적어 두세요.</value>
   </data>
+  <data name="your fifty against what your peers hold, by level" xml:space="preserve">
+    <value>내 50개 채보와 동료가 보유한 채보를 레벨별로</value>
+  </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>파일이 10MB를 초과했습니다. 크기를 줄여 다시 시도해 주세요.</value>
   </data>
@@ -9615,6 +9615,9 @@
   </data>
   <data name="Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them." xml:space="preserve">
     <value>Pumbility, 칭호, 폴더 램프, 플레이어 통계는 이 데이터에서 계산되므로 자동으로 초기화됩니다. 남길 수 없습니다.</value>
+  </data>
+  <data name="your real top 50 against your peers' average, by type" xml:space="preserve">
+    <value>내 실제 상위 50과 동료 평균을 종류별로</value>
   </data>
   <data name="Your Region" xml:space="preserve">
     <value>내 지역</value>
