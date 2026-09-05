@@ -1,0 +1,71 @@
+@using System.Globalization
+@using System.Net
+@using System.Text
+@using ScoreTracker.EventCompetition.Contracts
+@namespace ScoreTracker.Web.Components.MoM
+@* Points per second across the session (docs/design/march-of-murlocs.md §11.3): one inline SVG,
+   every colour a token via the .mom-pace classes. Each chart is a shaded span on the clock with a
+   dot at its mid-point; the dashed line is the session's average. Built as markup because Razor
+   reserves the <text> tag for itself, so SVG labels cannot be written inline. *@
+@((MarkupString)Svg)
+@code {
+    private const int Width = 720, Height = 170, Left = 34, Right = 10, Top = 12, Bottom = 26;
+
+    [Parameter] [EditorRequired] public IReadOnlyList<MoMTimedChart> Charts { get; set; } = Array.Empty<MoMTimedChart>();
+    [Parameter] [EditorRequired] public TimeSpan Window { get; set; }
+
+    private double MaxX => Charts.Count == 0
+        ? Window.TotalSeconds
+        : Math.Max(Window.TotalSeconds, Charts.Max(c => (c.StartsAt + c.Length).TotalSeconds));
+
+    private double MaxY => Charts.Count == 0 ? 1 : Math.Max(1e-6, Charts.Max(c => c.PointsPerSecond) * 1.12);
+
+    private double Average
+    {
+        get
+        {
+            var songSeconds = Charts.Sum(c => c.Length.TotalSeconds);
+            return songSeconds <= 0 ? 0 : Charts.Sum(c => c.Chart.SessionScore) / songSeconds;
+        }
+    }
+
+    private double X(double seconds) => Left + (Width - Left - Right) * seconds / MaxX;
+    private double Y(double value) => Top + (Height - Top - Bottom) * (1 - value / MaxY);
+    private static double Mid(MoMTimedChart c) => c.StartsAt.TotalSeconds + c.Length.TotalSeconds / 2;
+
+    // SVG attributes want a dot for the decimal point whatever the reader's culture.
+    private static string F(double value, string format = "0.##") => value.ToString(format, CultureInfo.InvariantCulture);
+
+    private string Svg
+    {
+        get
+        {
+            var s = new StringBuilder();
+            s.Append($"<svg class=\"mom-pace\" viewBox=\"0 0 {Width} {Height}\" role=\"img\" aria-label=\"{WebUtility.HtmlEncode(L["Points per second across the session"])}\" data-testid=\"mom-pace\">");
+            for (var g = 0; g <= 4; g++)
+            {
+                var yy = Top + (Height - Top - Bottom) * g / 4.0;
+                s.Append($"<line class=\"grid\" x1=\"{F(Left)}\" x2=\"{F(Width - Right)}\" y1=\"{F(yy)}\" y2=\"{F(yy)}\"/>");
+                s.Append($"<text class=\"lbl\" x=\"{F(Left - 6)}\" y=\"{F(yy + 3)}\" text-anchor=\"end\">{F(MaxY * (1 - g / 4.0), "0")}</text>");
+            }
+            for (var m = 0; m <= MaxX; m += 900)
+                s.Append($"<text class=\"lbl\" x=\"{F(X(m))}\" y=\"{F(Height - 8)}\" text-anchor=\"middle\">{m / 60}m</text>");
+            foreach (var c in Charts)
+            {
+                var x = X(c.StartsAt.TotalSeconds);
+                var w = Math.Max(1, X(c.StartsAt.TotalSeconds + c.Length.TotalSeconds) - x);
+                s.Append($"<rect class=\"rest\" x=\"{F(x)}\" y=\"{F(Top)}\" width=\"{F(w)}\" height=\"{F(Height - Top - Bottom)}\"/>");
+            }
+            s.Append($"<line class=\"avg\" x1=\"{F(Left)}\" x2=\"{F(X(MaxX))}\" y1=\"{F(Y(Average))}\" y2=\"{F(Y(Average))}\"/>");
+            s.Append($"<text class=\"lbl\" x=\"{F(Width - Right)}\" y=\"{F(Y(Average) - 4)}\" text-anchor=\"end\">{WebUtility.HtmlEncode(L["avg {0}", F(Average, "0.0")])}</text>");
+            s.Append($"<polyline class=\"line\" points=\"{string.Join(" ", Charts.Select(c => $"{F(X(Mid(c)))},{F(Y(c.PointsPerSecond))}"))}\"/>");
+            foreach (var c in Charts)
+            {
+                var title = WebUtility.HtmlEncode($"{c.Chart.Chart.Song.Name} · {L["{0} pts/s", F(c.PointsPerSecond, "0.0")]}");
+                s.Append($"<circle class=\"dot\" r=\"2.6\" cx=\"{F(X(Mid(c)))}\" cy=\"{F(Y(c.PointsPerSecond))}\"><title>{title}</title></circle>");
+            }
+            s.Append("</svg>");
+            return s.ToString();
+        }
+    }
+}

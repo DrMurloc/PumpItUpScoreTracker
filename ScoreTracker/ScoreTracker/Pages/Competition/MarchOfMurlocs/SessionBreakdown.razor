@@ -1,0 +1,179 @@
+@page "/MarchOfMurlocs/Session/{SessionId:guid}"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Components.MoM
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Pages.Competition.MoM
+@* One session in full (docs/design/march-of-murlocs.md §11.3, D26): the hero with the place and
+   the total, then where the points came from, then the session in three densities and its pace,
+   then Compare last. A circuit page — densities, sort and Compare are live — reachable from any
+   board row. A jacket opens the chart dialog and nothing plays (D31). *@
+<PageTitle>@Title</PageTitle>
+@if (!_loaded)
+{
+    <div class="pmb-eyebrow"><span>March of Murlocs</span></div>
+    <PatienceCard Explanation="@L["Reading the session and the board it sits on."]"></PatienceCard>
+}
+else if (_view == null)
+{
+    <div class="pmb-eyebrow"><span>March of Murlocs</span></div>
+    <MudAlert Severity="Severity.Info">@L["This session isn't here."] <a href="@MoMText.SeasonRoute">@L["Back to the season"]</a></MudAlert>
+}
+else
+{
+    var v = _view;
+    <div class="pmb-eyebrow mom-crumbs">
+        <span><a href="@MoMText.SeasonRoute">March of Murlocs</a> · <a href="@SeasonHref">@v.Season.Name</a> · <a href="@BoardHref">@TypeName</a></span>
+        <a class="pmb-eyebrow-link" href="@BoardHref">← @L["Board"]</a>
+    </div>
+    <MudPaper Elevation="3" Class="sbd-hero mom-session-hero" data-testid="mom-session-hero">
+        <div class="sbd-hero-head">
+            @if (v.IsDraft)
+            {
+                <span class="mom-chip mom-chip-draft">@L["Draft"]</span>
+            }
+            else
+            {
+                <span class="mom-hero-place" data-testid="mom-hero-place">@v.Place<small>@MoMText.OrdinalSuffix(v.Place)</small></span>
+            }
+            <div class="sbd-hero-who">
+                <span class="sbd-hero-title">
+                    @if (v.Player != null)
+                    {
+                        <UserLabel User="v.Player" ShowAvatar="true" AvatarSize="30"></UserLabel>
+                    }
+                </span>
+                <span class="sbd-hero-when">
+                    @((v.PublishedAt ?? DateTimeOffset.Now).ToString("d MMM yyyy")) · @L["{0} charts", v.Levers.ChartsPlayed]
+                    <span class="sbd-hero-tag">@TypeName · @MixName</span>
+                </span>
+            </div>
+            <div class="sbd-tally">
+                <div>
+                    <span class="mom-hero-total" data-testid="mom-hero-total">@v.TotalScore.ToString("N0")</span>
+                    <span class="sbd-tally-k">@L["points"]@(v.IsDraft ? string.Empty : $" · {MoMText.Ordinal(v.Place, L)} {L["of {0}", v.Of]}")</span>
+                </div>
+            </div>
+        </div>
+        <div class="mom-hero-actions">
+            <span class="mom-formula"><b>@v.Levers.ChartsPlayed</b> @L["charts"] <span>×</span> <b>@v.Levers.PointsPerChart.ToString("N0")</b> @L["per chart"] <span>=</span> <b>@v.TotalScore.ToString("N0")</b></span>
+            <span class="mom-tools">
+                @if (v.VideoUrl != null)
+                {
+                    <MudButton Href="@v.VideoUrl.ToString()" Target="_blank" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Videocam">@L["Watch"]</MudButton>
+                }
+            </span>
+        </div>
+        <div class="sbd-section">
+            <div class="sbd-section-head"><span class="sbd-eyebrow">@L["Where the points came from"]</span></div>
+            <MoMFourNumbers Levers="v.Levers" Places="v.Places" Board="v.BoardSessions" SessionId="v.SessionId" HighlightSessionId="_compareTarget"></MoMFourNumbers>
+        </div>
+        <div class="sbd-section">
+            <div class="sbd-section-head">
+                <span class="sbd-eyebrow">@L["The session"]</span>
+                <span class="sbd-section-note">@L["{0} of songs", MoMText.HoursMinutesSeconds(v.Levers.SongTime)]</span>
+                <span class="mom-tools">
+                    <MudSelect T="MoMChartList.ChartSort" Value="_sort" ValueChanged="SetSort" Dense="true" Margin="Margin.Dense" Variant="Variant.Outlined" Class="mom-sort" data-testid="mom-sort">
+                        <MudSelectItem T="MoMChartList.ChartSort" Value="MoMChartList.ChartSort.Order">@L["Play order"]</MudSelectItem>
+                        <MudSelectItem T="MoMChartList.ChartSort" Value="MoMChartList.ChartSort.Points">@L["Points"]</MudSelectItem>
+                        <MudSelectItem T="MoMChartList.ChartSort" Value="MoMChartList.ChartSort.PointsPerSecond">@L["Points per second"]</MudSelectItem>
+                        <MudSelectItem T="MoMChartList.ChartSort" Value="MoMChartList.ChartSort.Level">@L["Level"]</MudSelectItem>
+                        <MudSelectItem T="MoMChartList.ChartSort" Value="MoMChartList.ChartSort.Score">@L["Score"]</MudSelectItem>
+                    </MudSelect>
+                    <MudButtonGroup OverrideStyles="false">
+                        <MudTooltip Text="@L["Comfortable"]"><MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy" Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)" OnClick="() => SetDensity(UiDensity.Comfortable)" aria-label="@L["Comfortable"]"></MudIconButton></MudTooltip>
+                        <MudTooltip Text="@L["Compact"]"><MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView" Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)" OnClick="() => SetDensity(UiDensity.Compact)" aria-label="@L["Compact"]"></MudIconButton></MudTooltip>
+                        <MudTooltip Text="@L["Table"]"><MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows" Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)" OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton></MudTooltip>
+                    </MudButtonGroup>
+                </span>
+            </div>
+            <MoMChartList Charts="v.Charts" Density="_density" Sort="_sort" Mix="v.Mix" OnOpen="ShowChart" OnSort="SetSort"></MoMChartList>
+        </div>
+        <div class="sbd-section">
+            <div class="sbd-section-head">
+                <span class="sbd-eyebrow">@L["Pace"]</span>
+                <span class="sbd-section-note">@PaceNote</span>
+            </div>
+            <MoMPaceChart Charts="v.Charts" Window="v.Window"></MoMPaceChart>
+        </div>
+        <MoMCompareSection Session="v" IsOwn="_isOwn" OnTargetChanged="t => _compareTarget = t"></MoMCompareSection>
+    </MudPaper>
+    <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="v.Mix"></ChartDetailsDialog>
+}
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+@code {
+    private const string DensityKey = "Density__MoMSession";
+
+    [Parameter] public Guid SessionId { get; set; }
+
+    private bool _loaded;
+    private MoMSessionView? _view;
+    private bool _isOwn;
+    private UiDensity _density = UiDensity.Comfortable;
+    private MoMChartList.ChartSort _sort = MoMChartList.ChartSort.Order;
+    private Guid? _compareTarget;
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
+
+    private string TypeName => _view?.ChartType switch
+    {
+        ChartType.Double => L["Doubles"],
+        ChartType.Single => L["Singles"],
+        _ => _view?.ChartType.ToString() ?? string.Empty
+    };
+
+    private string MixName => _view?.Mix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix";
+
+    private string Title => _view == null
+        ? "March of Murlocs"
+        : $"{_view.Player?.Name.ToString() ?? L["Unknown player"]} · {_view.Season.Name} {TypeName} · March of Murlocs";
+
+    private string SeasonHref => _view!.Season.IsLive ? MoMText.SeasonRoute : MoMText.SeasonPath(_view.Season.Id);
+    private string BoardHref => $"{SeasonHref}?board={_view!.ChartType}";
+
+    // A hand-entered session carries no stamps, so its rest is spread evenly; the caption says so.
+    private string PaceNote => _view!.Charts.All(c => c.Chart.PlayedAt != null)
+        ? L["points per second · dashed = average"]
+        : L["points per second · dashed = average · rest is derived for hand-entered sessions"];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var viewerId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : (Guid?)null;
+        _view = await Mediator.Send(new GetMoMSessionQuery(SessionId, viewerId));
+        _isOwn = _view != null && viewerId == _view.UserId;
+        if (CurrentUser.IsLoggedIn &&
+            Enum.TryParse<UiDensity>(await UiSettings.GetSetting(DensityKey), out var density))
+            _density = density;
+        _loaded = true;
+    }
+
+    private async Task SetDensity(UiDensity density)
+    {
+        if (_density == density) return;
+        _density = density;
+        if (CurrentUser.IsLoggedIn) await UiSettings.SetSetting(DensityKey, density.ToString());
+    }
+
+    private void SetSort(MoMChartList.ChartSort sort)
+    {
+        _sort = sort;
+    }
+
+    private void ShowChart(Chart chart)
+    {
+        _detailsChart = chart;
+        _detailsOpen = true;
+    }
+}

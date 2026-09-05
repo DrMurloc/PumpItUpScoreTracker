@@ -1,0 +1,162 @@
+@using Microsoft.AspNetCore.Components.Web
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services
+@namespace ScoreTracker.Web.Components.MoM
+@* A session's charts in the three sanctioned densities (docs/design/march-of-murlocs.md D21):
+   Comfortable is the Session Spotlight's jacket card, Compact the tier list's sticker sheet with
+   the session points in the corner the tier card prints PUMBILITY in, Table the board-skinned
+   table on the pumbility table's width ladder. Every density opens the same chart dialog from the
+   jacket — no play button, no autoplay (D31). Scores are the stacked grade-and-plate, and the
+   bubble comes before the jacket (D23). *@
+@if (Density == UiDensity.Comfortable)
+{
+    <div class="hl-cards mom-cards" data-testid="mom-chart-cards">
+        @foreach (var t in Sorted)
+        {
+            var name = t.Chart.Chart.Song.Name.ToString();
+            <div class="hl-card mom-card" data-testid="mom-chart-card">
+                <div class="hl-card-art" role="button" tabindex="0" aria-label="@name"
+                     style="background-image:url('@t.Chart.Chart.Song.ImagePath')"
+                     @onclick="() => OnOpen.InvokeAsync(t.Chart.Chart)" @onkeydown="e => Key(e, t)">
+                    <span class="hl-card-bubble"><DifficultyBubble Chart="t.Chart.Chart" Small="true"></DifficultyBubble></span>
+                    @if (t.Chart.BonusPoints > 0)
+                    {
+                        <span class="hl-card-badges">
+                            <span class="hl-card-badge" title="@L["Balanced at {0}", t.Chart.BalancedLevel.ToString("F2")]">▲ @t.Chart.BalancedLevel.ToString("F1")</span>
+                        </span>
+                    }
+                </div>
+                <div class="hl-card-body">
+                    <div class="hl-card-song" title="@name">@name</div>
+                    <div class="hl-card-scoreline">
+                        <span class="hl-card-score mom-card-score">
+                            <ScoreBreakdown Score="t.Chart.Score" Plate="t.Chart.Plate" IsBroken="t.Chart.IsBroken" Mix="Mix"
+                                            ShowScore="true" Stacked="true"></ScoreBreakdown>
+                        </span>
+                        <span class="tier-chart-card-corner pmb-corner-gain hl-card-gain" title="@L["Session points"]">@L["{0} pts", t.Chart.SessionScore.ToString("N0")]</span>
+                    </div>
+                    <div class="hl-card-foot">
+                        <span class="hl-card-standing">@L["{0} pts/s", t.PointsPerSecond.ToString("0.0")] · @MoMText.MinutesSeconds(t.Length) · @L["at {0}", MoMText.MinutesSeconds(t.StartsAt)]</span>
+                        @if (t == Closing)
+                        {
+                            <span class="hl-card-standing">@L["closing chart"]</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else if (Density == UiDensity.Compact)
+{
+    <div class="mom-stickers" data-testid="mom-chart-stickers">
+        @foreach (var t in Sorted)
+        {
+            var name = t.Chart.Chart.Song.Name.ToString();
+            <div class="mom-sticker" role="button" tabindex="0" data-testid="mom-chart-sticker"
+                 title="@name · @(((int)t.Chart.Score).ToString("N0")) · @L["{0} pts", t.Chart.SessionScore.ToString("N0")]"
+                 @onclick="() => OnOpen.InvokeAsync(t.Chart.Chart)" @onkeydown="e => Key(e, t)">
+                <div class="mom-sticker-jacket" style="background-image:url('@t.Chart.Chart.Song.ImagePath')">
+                    <span class="mom-sticker-bubble"><DifficultyBubble Chart="t.Chart.Chart" Height="18"></DifficultyBubble></span>
+                    <span class="tier-chart-card-corner-start tier-chart-card-corner">
+                        <LetterGradeIcon Grade="t.Chart.Score.LetterGradeFor(Mix)" IsBroken="t.Chart.IsBroken" Height="14"></LetterGradeIcon>
+                    </span>
+                    @if (Second(t) is { } second)
+                    {
+                        @* A sort the sticker does not print joins as a second line, so Compact never sorts by a number nobody can see. *@
+                        <span class="mom-sticker-sub">@second</span>
+                    }
+                    <span class="tier-chart-card-corner pmb-corner-gain mom-sticker-pts">@t.Chart.SessionScore.ToString("N0")</span>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="tier-table-wrap">
+        <table class="tier-table mom-table" data-testid="mom-chart-table">
+            <thead>
+            <tr>
+                <th class="@Th(ChartSort.Order)" @onclick="() => OnSort.InvokeAsync(ChartSort.Order)">#</th>
+                <th>@L["Chart"]</th>
+                <th class="r @Th(ChartSort.Score)" @onclick="() => OnSort.InvokeAsync(ChartSort.Score)">@L["Score"]</th>
+                <th class="r @Th(ChartSort.Points)" @onclick="() => OnSort.InvokeAsync(ChartSort.Points)">@L["Points"]</th>
+                <th class="r w900 @Th(ChartSort.PointsPerSecond)" @onclick="() => OnSort.InvokeAsync(ChartSort.PointsPerSecond)">@L["Pts / s"]</th>
+                <th class="r w900">@L["Length"]</th>
+                <th class="r w900">@L["At"]</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var t in Sorted)
+            {
+                <tr class="mom-table-row" data-testid="mom-chart-row" @onclick="() => OnOpen.InvokeAsync(t.Chart.Chart)">
+                    <td class="num muted">@PlayOrder(t)</td>
+                    <td>
+                        <span class="mom-table-chart">
+                            <DifficultyBubble Chart="t.Chart.Chart" Small="true"></DifficultyBubble>
+                            <SongImage Song="t.Chart.Chart.Song" Small="true"></SongImage>
+                            <span class="w700 mom-table-name">@t.Chart.Chart.Song.Name</span>
+                        </span>
+                    </td>
+                    <td class="r">
+                        <ScoreBreakdown Score="t.Chart.Score" Plate="t.Chart.Plate" IsBroken="t.Chart.IsBroken" Mix="Mix"
+                                        ShowScore="true" Stacked="true"></ScoreBreakdown>
+                    </td>
+                    <td class="r"><b class="mom-table-pts">@t.Chart.SessionScore.ToString("N0")</b></td>
+                    <td class="r w900 num">@t.PointsPerSecond.ToString("0.0")</td>
+                    <td class="r w900 num muted">@MoMText.MinutesSeconds(t.Length)</td>
+                    <td class="r w900 num muted">@MoMText.MinutesSeconds(t.StartsAt)</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+@code {
+    public enum ChartSort
+    {
+        Order,
+        Points,
+        PointsPerSecond,
+        Level,
+        Score
+    }
+
+    [Parameter] [EditorRequired] public IReadOnlyList<MoMTimedChart> Charts { get; set; } = Array.Empty<MoMTimedChart>();
+    [Parameter] public UiDensity Density { get; set; } = UiDensity.Comfortable;
+    [Parameter] public ChartSort Sort { get; set; } = ChartSort.Order;
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+    [Parameter] public EventCallback<Chart> OnOpen { get; set; }
+    [Parameter] public EventCallback<ChartSort> OnSort { get; set; }
+
+    private IReadOnlyList<MoMTimedChart> Sorted => Sort switch
+    {
+        ChartSort.Points => Charts.OrderByDescending(c => c.Chart.SessionScore).ToArray(),
+        ChartSort.PointsPerSecond => Charts.OrderByDescending(c => c.PointsPerSecond).ToArray(),
+        ChartSort.Level => Charts.OrderByDescending(c => c.Chart.BalancedLevel).ThenByDescending(c => c.Chart.SessionScore).ToArray(),
+        ChartSort.Score => Charts.OrderByDescending(c => (int)c.Chart.Score).ToArray(),
+        _ => Charts
+    };
+
+    private MoMTimedChart? Closing => Charts.Count == 0 ? null : Charts.MaxBy(c => c.StartsAt);
+
+    private string? Second(MoMTimedChart t) => Sort switch
+    {
+        ChartSort.PointsPerSecond => L["{0}/s", t.PointsPerSecond.ToString("0.0")],
+        ChartSort.Score => ((int)t.Chart.Score).ToString("N0"),
+        ChartSort.Level => t.Chart.BalancedLevel.ToString("F2"),
+        _ => null
+    };
+
+    /// <summary>The chart's position in the session as played, whatever the table is sorted by.</summary>
+    private int PlayOrder(MoMTimedChart t) => Charts.TakeWhile(c => !ReferenceEquals(c, t)).Count() + 1;
+
+    private string Th(ChartSort sort) => Sort == sort ? "sorted" : string.Empty;
+
+    private Task Key(KeyboardEventArgs e, MoMTimedChart t) =>
+        e.Key is "Enter" or " " ? OnOpen.InvokeAsync(t.Chart.Chart) : Task.CompletedTask;
+}
