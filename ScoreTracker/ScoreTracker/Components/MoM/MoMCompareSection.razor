@@ -92,7 +92,7 @@
                 <div><span class="sub">@L["charts re-rated"]</span><span class="r d @Sign(split.ChartsReRated)">@Signed(split.ChartsReRated)</span><span></span></div>
                 <div><span class="sub">@L["scoring tables re-cut"]</span><span class="r d @Sign(split.TablesReCut)">@Signed(split.TablesReCut)</span><span></span></div>
                 <div><span>@L["priced as {0}", newer]</span><span class="r muted">@Signed(split.TotalShift)</span><span class="r">@split.RepricedTotal.ToString("N0")</span></div>
-                <div class="hi"><span><b>@newer</b> <span class="muted">— @(IsOwn ? L["you"] : L["them"])</span></span><span class="r d @Sign(newerTotal - split.RepricedTotal)">@Signed(newerTotal - split.RepricedTotal)</span><span class="r">@newerTotal.ToString("N0")</span></div>
+                <div class="hi"><span><b>@newer</b> <span class="muted">— @(IsOwn ? L["You"] : L["them"])</span></span><span class="r d @Sign(newerTotal - split.RepricedTotal)">@Signed(newerTotal - split.RepricedTotal)</span><span class="r">@newerTotal.ToString("N0")</span></div>
             </div>
             <p class="mom-ledger-note">@L["The middle lines multiply, so they add to less than the total."]</p>
         }

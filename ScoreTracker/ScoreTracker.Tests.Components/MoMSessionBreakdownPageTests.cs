@@ -26,6 +26,7 @@ public sealed class MoMSessionBreakdownPageTests : ComponentTestBase
     public MoMSessionBreakdownPageTests()
     {
         Services.AddSingleton(Mock.Of<IUserRepository>());
+        Services.AddSingleton(Mock.Of<IDateTimeOffsetAccessor>(d => d.Now == new DateTimeOffset(2025, 3, 1, 0, 0, 0, TimeSpan.Zero)));
         Mediator.Setup(m => m.Send(It.IsAny<GetMoMSessionQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((GetMoMSessionQuery q, CancellationToken _) => q.SessionId == _view.SessionId ? _view : null);
         Mediator.Setup(m => m.Send(It.IsAny<CompareMoMSessionsQuery>(), It.IsAny<CancellationToken>()))
@@ -44,7 +45,7 @@ public sealed class MoMSessionBreakdownPageTests : ComponentTestBase
 
         Assert.Equal("1st", cut.Find("[data-testid=mom-hero-place]").TextContent);
         Assert.Equal("6,388", cut.Find("[data-testid=mom-hero-total]").TextContent);
-        Assert.Contains("points · 1st of 3", cut.Find(".sbd-tally").TextContent);
+        Assert.Contains("Points · 1st of 3", cut.Find(".sbd-tally").TextContent);
         Assert.Contains("김재현", cut.Find(".sbd-hero-title").TextContent);
         Assert.Contains("Doubles · Phoenix", cut.Find(".sbd-hero-tag").TextContent);
         Assert.Contains("3 charts", cut.Find(".mom-formula").TextContent);
@@ -94,6 +95,6 @@ public sealed class MoMSessionBreakdownPageTests : ComponentTestBase
 
         Assert.Empty(cut.FindAll("[data-testid=mom-hero-place]"));
         Assert.Contains("Draft", cut.Find(".mom-chip-draft").TextContent);
-        Assert.Equal("points", cut.Find(".sbd-tally-k").TextContent.Trim());
+        Assert.Equal("Points", cut.Find(".sbd-tally-k").TextContent.Trim());
     }
 }

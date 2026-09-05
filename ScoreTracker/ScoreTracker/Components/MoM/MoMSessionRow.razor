@@ -32,13 +32,13 @@
             <span>@L["{0} lvl", Row.AverageBalancedLevel.ToString("F2")]</span><span>·</span>
             <span>@L["{0} rest", MoMText.MinutesSeconds(Row.Downtime)]</span>
         </span>
-        <span class="mom-stat mom-hide-phone"><b>@Row.ChartsPlayed</b><span>@L["charts"]</span></span>
+        <span class="mom-stat mom-hide-phone"><b>@Row.ChartsPlayed</b><span>@L["Charts"]</span></span>
         <span class="mom-stat mom-hide-phone"
               title="@L["Average balanced level — the season's frozen scoring difficulty, which is what priced each chart"]">
             <b>@Row.AverageBalancedLevel.ToString("F2")</b><span>@L["avg lvl"]</span>
         </span>
         <span class="mom-stat mom-hide-phone" title="@L["Time not spent on a chart"]">
-            <b>@MoMText.MinutesSeconds(Row.Downtime)</b><span>@L["downtime"]</span>
+            <b>@MoMText.MinutesSeconds(Row.Downtime)</b><span>@L["Downtime"]</span>
         </span>
         <span class="mom-date mom-hide-mobile">@Row.PublishedAt.ToString("d MMM")</span>
         <span class="mom-vid mom-hide-mobile @(Row.VideoUrl == null ? "none" : null)"

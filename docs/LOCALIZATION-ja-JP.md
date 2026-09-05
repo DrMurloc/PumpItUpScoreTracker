@@ -214,3 +214,22 @@ of you on the PUMBILITY level ladder holding a full 50-chart pool of the type �
 | Singles / Doubles (in these strings) | Singles / Doubles | Kept English, as the locale already does for the pool names. |
 | Peers IQR | ピアIQR | The `/Pumbility` targets' column: the peers' first and third quartiles as two grades. `IQR` stays as the acronym — the label exists to tell a reader who knows the term that it is not a min–max. |
 | From {0} peers | ピア {0}人から算出 | The column's tooltip; same shape as `From {0} scores` → `{0} スコアから算出`. |
+
+## March of Murlocs (2026-09-05)
+
+Terms fixed by the Slice 4a read surfaces ([march-of-murlocs.md](design/march-of-murlocs.md) §12.2):
+the Season page, the Session Breakdown, the seasons dialog and the share card. "Session" is the
+event's one word for a run (D22) and follows the existing Session / Sessions keys.
+
+| English | ja-JP |
+|---|---|
+| season | シーズン |
+| session | セッション |
+| board | ボード |
+| downtime | 休憩 |
+| balanced level | バランス調整後レベル (調整後 in tight spots) |
+| Draft | 下書き |
+| Planner | プランナー |
+| Past seasons | 過去のシーズン |
+| Doubles / Singles | Doubles / Singles (unchanged) |
+| 1st / 2nd / 3rd / 4th | {0}位 for every place |

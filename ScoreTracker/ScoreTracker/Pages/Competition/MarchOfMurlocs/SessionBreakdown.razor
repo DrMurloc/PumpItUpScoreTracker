@@ -65,12 +65,12 @@ else
             <div class="sbd-tally">
                 <div>
                     <span class="mom-hero-total" data-testid="mom-hero-total">@v.TotalScore.ToString("N0")</span>
-                    <span class="sbd-tally-k">@L["points"]@(v.IsDraft ? string.Empty : $" · {MoMText.Ordinal(v.Place, L)} {L["of {0}", v.Of]}")</span>
+                    <span class="sbd-tally-k">@L["Points"]@(v.IsDraft ? string.Empty : $" · {MoMText.Ordinal(v.Place, L)} {L["of {0}", v.Of]}")</span>
                 </div>
             </div>
         </div>
         <div class="mom-hero-actions">
-            <span class="mom-formula"><b>@v.Levers.ChartsPlayed</b> @L["charts"] <span>×</span> <b>@v.Levers.PointsPerChart.ToString("N0")</b> @L["per chart"] <span>=</span> <b>@v.TotalScore.ToString("N0")</b></span>
+            <span class="mom-formula"><b>@L["{0} charts", v.Levers.ChartsPlayed]</b> <span>×</span> <b>@L["{0} per chart", v.Levers.PointsPerChart.ToString("N0")]</b> <span>=</span> <b>@v.TotalScore.ToString("N0")</b></span>
             <span class="mom-tools">
                 @if (!v.IsDraft)
                 {
@@ -98,7 +98,7 @@ else
                     <MudSelect T="MoMChartList.ChartSort" Value="_sort" ValueChanged="SetSort" Dense="true" Margin="Margin.Dense" Variant="Variant.Outlined" Class="mom-sort" data-testid="mom-sort">
                         <MudSelectItem T="MoMChartList.ChartSort" Value="MoMChartList.ChartSort.Order">@L["Play order"]</MudSelectItem>
                         <MudSelectItem T="MoMChartList.ChartSort" Value="MoMChartList.ChartSort.Points">@L["Points"]</MudSelectItem>
-                        <MudSelectItem T="MoMChartList.ChartSort" Value="MoMChartList.ChartSort.PointsPerSecond">@L["Points per second"]</MudSelectItem>
+                        <MudSelectItem T="MoMChartList.ChartSort" Value="MoMChartList.ChartSort.PointsPerSecond">@L["Points Per Second"]</MudSelectItem>
                         <MudSelectItem T="MoMChartList.ChartSort" Value="MoMChartList.ChartSort.Level">@L["Level"]</MudSelectItem>
                         <MudSelectItem T="MoMChartList.ChartSort" Value="MoMChartList.ChartSort.Score">@L["Score"]</MudSelectItem>
                     </MudSelect>

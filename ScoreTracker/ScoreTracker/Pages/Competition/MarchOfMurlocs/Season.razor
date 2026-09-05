@@ -121,7 +121,7 @@ else
                     <span class="mom-legend">
                         <span><i class="you"></i>@L["You"]</span>
                         <span><i class="rival"></i>@L["Rival"]</span>
-                        <span><i class="community"></i>@L["Your communities"]</span>
+                        <span><i class="community"></i>@L["Your Communities"]</span>
                     </span>
                 }
             </div>
@@ -275,7 +275,7 @@ else
 
     private string RowNote(MoMBoardRow row)
     {
-        if (row.UserId == _viewerId) return L["you"];
+        if (row.UserId == _viewerId) return L["You"];
         var rival = _rivals.Contains(row.UserId);
         var clubmate = _clubmates.Contains(row.UserId);
         if (rival && clubmate) return L["your rival, and in your communities"];
