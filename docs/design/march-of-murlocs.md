@@ -800,13 +800,14 @@ new season's whole frozen config, and split what moved:
 
 ```
 March of Murlocs 2 · Aug 2024                          44,139
-    charts re-rated by the community                              +810
-    scoring tables re-cut                                       +2,449
-  the same session, scored as Winter 2025                  47,923   +3,784  total
-Winter 2025 · Feb 2025                                 59,319  +11,396  you
+    charts re-rated by the community                              +801
+    scoring tables re-cut                                       +2,447
+  the same session, scored as Winter 2025                  47,865   +3,726  total
+Winter 2025 · Feb 2025                                 59,319  +11,454  you
 ```
 
-Those are 김재현's real numbers, computed from both stored configs. **Two different things moved,
+Those are 김재현's real numbers, computed from both stored configs by the scoring engine itself (the
+4a build pinned them in `MoMRepricingTests`; the mock's JavaScript approximation had read +810 / +2,449 / 47,923). **Two different things moved,
 and only one of them is what anyone would have guessed:**
 
 - **10 of his 32 charts were re-rated**, all upward — Galaxy Collapse and Dignity each a full level.
@@ -815,7 +816,7 @@ and only one of them is what anyone would have guessed:**
   That is the Phoenix-1 anti-mash rewrite of §4 landing *between* the two seasons — and it is worth
   three times the chart re-ratings.
 
-Without the split he reads a +15,180 improvement, and 3,784 of it was the game moving under him.
+Without the split he reads a +15,180 improvement, and 3,726 of it was the game moving under him.
 
 Two implementation notes. The parts **multiply**, so they sum to less than the total — say so
 rather than printing three numbers that appear not to add up. And label the middle line as a
