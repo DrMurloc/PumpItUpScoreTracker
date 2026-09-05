@@ -26,7 +26,12 @@ internal sealed class ScoreQualitySaga : IRequestHandler<GetCompetitivePlayersQu
 
     public async Task<IEnumerable<Guid>> Handle(GetCompetitivePlayersQuery request, CancellationToken cancellationToken)
     {
-        var myStats = await _playerStats.GetStats(request.Mix, _user.User.Id, cancellationToken);
+        // Whose band: the subject a host names — another player's sessions page opens THEIR
+        // band, not the viewer's (D31) — else the viewer. Logged out with no subject there is no
+        // band to show, and no user to dereference.
+        var subject = request.Subject ?? (_user.IsLoggedIn ? _user.User.Id : (Guid?)null);
+        if (subject == null) return Array.Empty<Guid>();
+        var myStats = await _playerStats.GetStats(request.Mix, subject.Value, cancellationToken);
         var competitiveLevel = request.ChartType == ChartType.Single
             ? myStats.SinglesCompetitiveLevel
             : myStats.DoublesCompetitiveLevel;

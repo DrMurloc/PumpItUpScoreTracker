@@ -119,6 +119,7 @@
                                         Active="IsLive(DetailsTab.Leaderboard)"
                                         InitialScope="_boardOverride?.Scope ?? BoardScope"
                                         InitialCommunity="_boardOverride?.Community ?? BoardCommunity"
+                                        Subject="BoardSubjectInForce"
                                         @key="(ViewChart.Id, Mix)"></ChartLeaderboardScopes>
             </div>
             @* Keys carry each panel's identity alongside the chart id: Blazor's key lookup
@@ -363,14 +364,27 @@
     [Parameter] public Name? BoardCommunity { get; set; }
 
     /// <summary>
+    ///     Whose band the Competitive scope shows. A page scoped to another player — their
+    ///     sessions — names them, so the board a source line opens is the band that line counted
+    ///     (D31). Null is the viewer, which every host showing the viewer's own scores wants.
+    /// </summary>
+    [Parameter] public Guid? BoardSubject { get; set; }
+
+    /// <summary>
+    ///     A line inside this dialog is on the viewer's own record, so its board is the viewer's
+    ///     band whatever the host is scoped to.
+    /// </summary>
+    private Guid? BoardSubjectInForce => _boardOverride is { } line ? line.Subject : BoardSubject;
+
+    /// <summary>
     ///     A popover source line inside this dialog asked for that source's board: the Leaderboard
     ///     tab, on that scope. Scoped to one chart — the next chart opens on the host's scope.
     /// </summary>
-    private (ChartLeaderboardScopes.LeaderboardScope Scope, Name? Community, Guid ChartId)? _boardOverride;
+    private (ChartLeaderboardScopes.LeaderboardScope Scope, Name? Community, Guid ChartId, Guid? Subject)? _boardOverride;
 
     private async Task ShowBoard(PeerBoardRequest request)
     {
-        _boardOverride = (request.Scope, request.Community, request.ChartId);
+        _boardOverride = (request.Scope, request.Community, request.ChartId, request.Subject);
         await SelectTab(DetailsTab.Leaderboard);
     }
 
@@ -518,6 +532,9 @@
             // reason — reopening from a row starts at the chart that row names.
             _wasVisible = false;
             _drilled = null;
+            // A line's board is for the opening it was tapped in: the next opening of the same
+            // chart starts on the host's scope again (D32).
+            _boardOverride = null;
             ClearStripHandoff();
             return;
         }

@@ -217,11 +217,18 @@ else
     [Parameter] public Name? InitialCommunity { get; set; }
 
     /// <summary>
+    ///     Whose band the Competitive scope shows. A host that shows another player's scores names
+    ///     them, so the board a source line opens is the band that line counted (D31); null is
+    ///     the viewer, and logged out with no subject the scope has nobody to be the band of.
+    /// </summary>
+    [Parameter] public Guid? Subject { get; set; }
+
+    /// <summary>
     ///     What the last parameter set asked to open on. A host that keeps one board mounted and
     ///     changes its mind — the details dialog, when a popover line asks for another scope on the
     ///     same chart — re-applies without reloading the chart.
     /// </summary>
-    private (LeaderboardScope Scope, Name? Community)? _appliedInitial;
+    private (LeaderboardScope Scope, Name? Community, Guid? Subject)? _appliedInitial;
 
     private sealed record Row(int Place, double Percentile, UserPhoenixScore Score, bool IsMe,
         bool IsCommunity, bool IsRival, bool IsOfficial);
@@ -268,14 +275,14 @@ else
         if (!Active) return;
         if (_loadedFor == (ChartId, Mix))
         {
-            if (_appliedInitial == (InitialScope, InitialCommunity) || _loading) return;
-            _appliedInitial = (InitialScope, InitialCommunity);
+            if (_appliedInitial == (InitialScope, InitialCommunity, Subject) || _loading) return;
+            _appliedInitial = (InitialScope, InitialCommunity, Subject);
             await ApplyInitialAsync();
             return;
         }
 
         _loadedFor = (ChartId, Mix);
-        _appliedInitial = (InitialScope, InitialCommunity);
+        _appliedInitial = (InitialScope, InitialCommunity, Subject);
         _scope = InitialScope;
         _officialBoard = null;
         _pumbilityPeers = null;
@@ -425,7 +432,7 @@ else
             case LeaderboardScope.CompetitivePeers:
             {
                 if (_chart == null) return Array.Empty<UserPhoenixScore>();
-                var peers = (await Mediator.Send(new GetCompetitivePlayersQuery(_chart.Type, Mix))).ToHashSet();
+                var peers = (await Mediator.Send(new GetCompetitivePlayersQuery(_chart.Type, Mix, Subject))).ToHashSet();
                 _communityUserIds = _clubmates;
                 return _world.Where(s => peers.Contains(s.UserId)).ToArray();
             }
@@ -562,8 +569,11 @@ else
         // Only lit when you have somebody to compare against (D44).
         LeaderboardScope.Rivals => _rivals.Count > 0,
         // Competitive cohorts have no co-op side. The chip greys and says nothing further —
-        // a sentence about cohorts costs more confusion than it buys (owner call).
-        LeaderboardScope.CompetitivePeers => _chart is { Type: not ScoreTracker.SharedKernel.Enums.ChartType.CoOp },
+        // a sentence about cohorts costs more confusion than it buys (owner call). And a band
+        // is somebody's: logged out with no subject named, there is nobody to be within half
+        // a level of (the handler would otherwise reach for a user that is not there).
+        LeaderboardScope.CompetitivePeers => _chart is { Type: not ScoreTracker.SharedKernel.Enums.ChartType.CoOp }
+                                             && (CurrentUser.IsLoggedIn || Subject != null),
         // Phoenix 2, signed in, not co-op. Whether the viewer actually HAS peers of the type
         // is learned on selection, not on every chart view (see _pumbilityPeers) — a viewer
         // whose pool is short gets the empty state naming what lights it up.
