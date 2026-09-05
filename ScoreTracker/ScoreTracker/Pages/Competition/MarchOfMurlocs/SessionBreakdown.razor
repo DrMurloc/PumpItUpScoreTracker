@@ -11,6 +11,11 @@
 @using ScoreTracker.Web.Enums
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.Theming
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Records
+@using Microsoft.JSInterop
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Pages.Competition.MoM
 @* One session in full (docs/design/march-of-murlocs.md §11.3, D26): the hero with the place and
@@ -67,6 +72,13 @@ else
         <div class="mom-hero-actions">
             <span class="mom-formula"><b>@v.Levers.ChartsPlayed</b> @L["charts"] <span>×</span> <b>@v.Levers.PointsPerChart.ToString("N0")</b> @L["per chart"] <span>=</span> <b>@v.TotalScore.ToString("N0")</b></span>
             <span class="mom-tools">
+                @if (!v.IsDraft)
+                {
+                    @* The site's share-card flow (D25): the shared dialog, options and renderer; the rows are
+                       twenty-minute sections of the session. Offered on any published Breakdown. *@
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"
+                               OnClick="() => _downloadOpen = true" data-testid="mom-download">@L["Download image"]</MudButton>
+                }
                 @if (v.VideoUrl != null)
                 {
                     <MudButton Href="@v.VideoUrl.ToString()" Target="_blank" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
@@ -109,10 +121,15 @@ else
         <MoMCompareSection Session="v" IsOwn="_isOwn" OnTargetChanged="t => _compareTarget = t"></MoMCompareSection>
     </MudPaper>
     <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="v.Mix"></ChartDetailsDialog>
+    <ShareCardSettingsDialog @bind-Visible="_downloadOpen" SignedIn="CurrentUser.IsLoggedIn" PhoenixScoring="true"
+                             OffersPumbility="true" HideListBoundaries="true" CornerLabel="@L["Session points"]"
+                             SampleBuilder="BuildSampleCard" OnDownload="DownloadImage" FileName="@FileName"></ShareCardSettingsDialog>
 }
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
 @inject IUiSettingsAccessor UiSettings
+@inject IDateTimeOffsetAccessor Clock
+@inject IJSRuntime JSRuntime
 @code {
     private const string DensityKey = "Density__MoMSession";
 
@@ -126,6 +143,10 @@ else
     private Guid? _compareTarget;
     private bool _detailsOpen;
     private Chart? _detailsChart;
+    private bool _downloadOpen;
+
+    private string Date => (_view?.PublishedAt ?? Clock.Now).ToString("yyyy-MM-dd");
+    private string FileName => _view == null ? string.Empty : MoMShareCardComposer.FileName(_view, Date);
 
     private string TypeName => _view?.ChartType switch
     {
@@ -175,5 +196,46 @@ else
     {
         _detailsChart = chart;
         _detailsOpen = true;
+    }
+
+    private Task<TierListShareCard?> BuildSampleCard(ShareCardOptions options)
+    {
+        return Task.FromResult(_view == null
+            ? null
+            : MoMShareCardComposer.Sample(_view, options, MixThemes.PaletteFor(_view.Mix), Date, L));
+    }
+
+    /// <summary>
+    ///     The same pipeline every share card runs: compose, warm the art in batches so the dialog's
+    ///     bar counts real images, render against the warm cache, hand the PNG to the browser. The
+    ///     token is the dialog's Cancel — and any close of it.
+    /// </summary>
+    private async Task DownloadImage(ShareCardDownloadRequest request)
+    {
+        if (_view == null) return;
+        try
+        {
+            var card = MoMShareCardComposer.Compose(_view, request.Options, MixThemes.PaletteFor(_view.Mix), Date, L);
+            var urls = ShareCardArt.CollectUrls(card);
+            var done = 0;
+            request.Progress(new ShareCardFetchProgress(0, urls.Count, false));
+            foreach (var batch in urls.Chunk(ShareCardArt.FetchBatch))
+            {
+                await Mediator.Send(new PrefetchShareCardArtCommand(batch), request.Token);
+                done += batch.Length;
+                request.Progress(new ShareCardFetchProgress(done, urls.Count, false));
+            }
+
+            request.Progress(new ShareCardFetchProgress(urls.Count, urls.Count, true));
+            var bytes = await Mediator.Send(new GetTierListShareCardQuery(card), request.Token);
+            using var stream = new MemoryStream(bytes);
+            using var streamRef = new DotNetStreamReference(stream);
+            var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
+            await module.InvokeVoidAsync("downloadFileFromStream", FileName, streamRef);
+        }
+        catch (OperationCanceledException)
+        {
+            // The dialog's Cancel (or its close) stopped the download; nothing to deliver.
+        }
     }
 }
