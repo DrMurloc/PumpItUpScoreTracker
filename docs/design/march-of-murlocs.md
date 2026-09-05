@@ -2,7 +2,8 @@
 
 Status: **Slices 0, 1, R, 2 and 3 are shipped** — the tables are live under the old pages
 (PR #274) and MoM's import reads the score journal (§2.5, resolved 2026-08-24). The slice order
-was re-ordered after Slice 1 (§8); next is 4a, the read surfaces, which deletes the old pages. Explored 2026-08-09, workshopped
+was re-ordered after Slice 1 (§8); **4a, the read surfaces, is in progress** (build began 2026-09-05 against §12.2 — it
+deletes the old Season list and board pages). Explored 2026-08-09, workshopped
 and mocked 2026-08-10/11; mocks redrawn and re-decided 2026-09-05 (§11.9).
 
 March of Murlocs is the site's quarterly stamina ladder: 1 hour 45 minutes to bank as many
