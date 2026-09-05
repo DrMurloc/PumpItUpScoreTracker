@@ -19,6 +19,7 @@
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Services.Theming
+@using ScoreTracker.Domain.Models
 
 @* The avatar leads the panel: it is the only field here you look at rather than read.
    Auto follows the official profile on every import; pinned is the player's own choice and
@@ -152,6 +153,19 @@
 </MudGrid>
 
 <MudDivider Class="my-6"></MudDivider>
+@* Who your scores are measured against and how that paints them (docs/design/peers-abstraction.md
+   D1). The card states the current choice in words; the dialog is the only place it changes. *@
+<div class="pcd-card" data-testid="peers-card">
+    <div>
+        <MudText Typo="Typo.h6">@L["Peers & score colors"]</MudText>
+        <MudText Typo="Typo.body2" Style="opacity:.75;" data-testid="peers-card-summary">@PeersSummary</MudText>
+    </div>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Groups"
+               OnClick="() => _showPeersDialog = true" data-testid="peers-customize">@L["Customize"]</MudButton>
+</div>
+<PeersAndColorsDialog @bind-Visible="_showPeersDialog" OnSaved="RefreshPeersSummary"></PeersAndColorsDialog>
+
+<MudDivider Class="my-6"></MudDivider>
 <MudText Typo="Typo.h6" Class="mb-2">@L["Your Data"]</MudText>
 <div class="d-flex flex-wrap gap-2">
     <MudButton StartIcon="@Icons.Material.Filled.Download" Variant="Variant.Outlined" Color="Color.Primary" OnClick="DownloadScores">@L["Download Scores"]</MudButton>
@@ -263,6 +277,7 @@
 @inject IUiSettingsAccessor UiSettings;
 @inject IJSRuntime JSRuntime;
 @inject IUserRepository Users;
+@inject ScoreColorPreferences Preferences;
 @code
 {
     private MyAvatarRecord? _avatar;
@@ -336,6 +351,53 @@
     private PendingAccountDeletion? _pendingDeletion;
     private bool _shareWithAllTools;
     private int _connectedToolCount;
+    private bool _showPeersDialog;
+    private PeerSourceSelection _peerSources = PeerSourceSelection.Default;
+    private ScoreColorSettings _scoreColors = ScoreColorSettings.Default;
+
+    private string PeersSummary
+    {
+        get
+        {
+            var parts = new List<string>();
+            if (_peerSources.Rivals) parts.Add(L["Rivals"]);
+            if (_peerSources.CompetitiveLevel) parts.Add(L["Competitive level"]);
+            if (_peerSources.Pumbility) parts.Add(L["PUMBILITY peers"]);
+            if (_peerSources.CommunityIds.Count == 1) parts.Add(L["One community"]);
+            else if (_peerSources.CommunityIds.Count > 1) parts.Add(L["{0} communities", _peerSources.CommunityIds.Count]);
+            var peers = parts.Count == 0 ? L["nobody yet"].Value : string.Join(" · ", parts);
+            return $"{L["Your peers: {0}.", peers]} {L["Scores colored by {0}, glow {1}.", SystemWord, GlowWord]}";
+        }
+    }
+
+    private string SystemWord => _scoreColors.System switch
+    {
+        ScoreColorSystem.JudgementSpectrum => L["the judgement spectrum"],
+        ScoreColorSystem.Classic => L["the classic ladder"],
+        ScoreColorSystem.GradeMetals => L["letter-grade metals"],
+        ScoreColorSystem.Podium => L["the podium"],
+        ScoreColorSystem.SingleHue => L["a single hue"],
+        ScoreColorSystem.ResultScreen => L["the result screen"],
+        ScoreColorSystem.ThreeSteps => L["three steps"],
+        ScoreColorSystem.ActualGrade => L["the actual letter grade"],
+        _ => L["nothing"]
+    };
+
+    private string GlowWord => _scoreColors.Glow switch
+    {
+        GlowRule.PerfectGames => L["on Perfect Games only"],
+        GlowRule.TopPlaces => _scoreColors.GlowThreshold == 1
+            ? L["on first place"]
+            : L["on the top {0} places", _scoreColors.GlowThreshold],
+        GlowRule.TopPercent => L["on the top {0}%", _scoreColors.GlowThreshold],
+        _ => L["off"]
+    };
+
+    private async Task RefreshPeersSummary()
+    {
+        _peerSources = await Preferences.GetSources();
+        _scoreColors = await Preferences.GetColors();
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -354,6 +416,7 @@
         _pendingDeletion = await Mediator.Send(new GetPendingAccountDeletionQuery(CurrentUser.User.Id));
         _shareWithAllTools = await Mediator.Send(new GetShareWithAllToolsQuery());
         await RefreshToolCount();
+        await RefreshPeersSummary();
     }
 
     /// <summary>

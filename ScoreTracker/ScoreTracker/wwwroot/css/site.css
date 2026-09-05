@@ -18900,3 +18900,178 @@ a.peer-pop-row:hover {
     text-decoration: none;
     white-space: nowrap;
 }
+
+/* The Account card and dialog for peers & score colors (peers-abstraction.md D1, D14, D15). */
+.pcd-card {
+    border: 1px solid color-mix(in srgb, var(--mix-primary) 35%, transparent);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px 16px;
+    align-items: center;
+}
+
+@media (max-width: 640px) {
+    .pcd-card {
+        grid-template-columns: 1fr;
+    }
+}
+
+.pcd-lede {
+    opacity: .75;
+    max-width: 64ch;
+    margin-top: 2px;
+}
+
+.pcd {
+    display: grid;
+    gap: 20px;
+}
+
+.pcd-title {
+    font-weight: 500;
+}
+
+.pcd-help {
+    display: block;
+    color: var(--mix-ink-muted);
+    margin-bottom: 6px;
+    max-width: 64ch;
+}
+
+.pcd-opt {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 6px;
+    align-items: center;
+    padding: 2px 4px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.pcd-opt:hover {
+    background: color-mix(in srgb, var(--mix-ink) 4%, transparent);
+}
+
+.pcd-opt-off {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+.pcd-opt-head {
+    cursor: default;
+    padding-top: 8px;
+}
+
+.pcd-opt-head:hover {
+    background: none;
+}
+
+.pcd-opt-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.pcd-opt-label {
+    font-weight: 500;
+}
+
+.pcd-opt-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pcd-opt-help {
+    font-size: .78rem;
+    color: var(--mix-ink-muted);
+}
+
+.pcd-opt-count {
+    font-size: .78rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.pcd-sub {
+    margin-left: 32px;
+    border-left: 2px solid color-mix(in srgb, var(--mix-ink) 7%, transparent);
+    padding-left: 6px;
+}
+
+.pcd-tag {
+    font-size: .66rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--mix-ink-muted);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 6px;
+    font-weight: 500;
+}
+
+.pcd-tally {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--mix-primary) 8%, transparent);
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: .8rem;
+}
+
+.pcd-tally b {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    line-height: 1;
+    font-weight: 700;
+}
+
+.pcd-muted {
+    color: var(--mix-ink-muted);
+}
+
+.pcd-swatches {
+    display: inline-flex;
+    gap: 3px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.pcd-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+.pcd-num {
+    width: 72px;
+}
+
+.pcd-preview {
+    background: var(--mix-bg);
+    border-radius: 6px;
+    padding: 10px 12px;
+    display: grid;
+    gap: 6px;
+}
+
+.pcd-prow {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: center;
+    font-size: .8rem;
+}
+
+.pcd-prow-song {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

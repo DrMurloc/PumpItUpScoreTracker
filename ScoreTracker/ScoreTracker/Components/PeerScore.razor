@@ -70,6 +70,12 @@
     /// <summary>False renders the painted number alone — no popover, no tap target.</summary>
     [Parameter] public bool Interactive { get; set; } = true;
 
+    /// <summary>
+    ///     Paint with these instead of the viewer's saved settings — the Account dialog's preview,
+    ///     which has to show a choice before it is saved.
+    /// </summary>
+    [Parameter] public ScoreColorSettings? Settings { get; set; }
+
     [Parameter] public int Height { get; set; } = 20;
 
     [Parameter] public bool OneLine { get; set; } = true;
@@ -100,7 +106,7 @@
 
     private ScoreStyle Style => IsBroken || Score == null
         ? ScoreStyle.Plain
-        : ThemeScales.ScoreStyleFor(Standing, IsPerfectGame, Grade, _settings);
+        : ThemeScales.ScoreStyleFor(Standing, IsPerfectGame, Grade, Settings ?? _settings);
 
     private string? StandingText => IsBroken ? null : PeerStandingText.Standing(Standing, IsPerfectGame, L);
 
