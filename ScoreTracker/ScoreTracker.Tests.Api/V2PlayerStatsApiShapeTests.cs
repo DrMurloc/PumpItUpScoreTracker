@@ -196,6 +196,36 @@ public sealed class V2PlayerStatsApiShapeTests
     }
 
     /// <summary>
+    ///     The bulk is paged by a keyset on (PUMBILITY, player), not an offset: the ranking moves
+    ///     while a tool crawls it, and an offset over a moving list repeats or skips whoever crossed
+    ///     the page boundary. The cursor is bound to the filters it was issued under.
+    /// </summary>
+    [Fact]
+    public async Task TheBulkPagesByKeysetAndACursorFromAnotherCommunityIsRejected()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityMembersForViewerQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new HashSet<Guid> { ApiTestData.PublicUserId, ApiTestData.PrivateUserId, ThirdUserId });
+        SetupStats(Stats(ApiTestData.PublicUserId, 15000), Stats(ThirdUserId, 16000), Stats(ApiTestData.PrivateUserId, 17000));
+
+        var first = Assert.IsType<CursorPageDto<PlayerStatsDto>>(Assert.IsType<JsonResult>(
+            await Controller(ToolId).GetStats("Phoenix2", "Canada", limit: 2)).Value);
+        Assert.Equal(new[] { ApiTestData.PrivateUserId, ThirdUserId }, first.Data.Select(r => r.UserId).ToArray());
+        Assert.Equal(3, first.Total);
+        Assert.NotNull(first.Next);
+        var cursor = Uri.UnescapeDataString(first.Next!.Split("cursor=")[1]);
+
+        var second = Assert.IsType<CursorPageDto<PlayerStatsDto>>(Assert.IsType<JsonResult>(
+            await Controller(ToolId).GetStats("Phoenix2", "Canada", cursor, 2)).Value);
+        Assert.Equal(ApiTestData.PublicUserId, Assert.Single(second.Data).UserId);
+        Assert.Equal(3, second.Total);
+        Assert.Null(second.Next);
+
+        var elsewhere = await Controller(ToolId).GetStats("Phoenix2", "Chile", cursor, 2);
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(elsewhere).Value);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-cursor", problem.Type);
+    }
+
+    /// <summary>
     ///     <c>players/stats</c> lives beside <c>players/{playerId}</c>. Attribute routing prefers a
     ///     literal segment over a parameter, so the bulk read wins that URL — as long as the
     ///     template stays a literal. This pins the templates the precedence rests on.

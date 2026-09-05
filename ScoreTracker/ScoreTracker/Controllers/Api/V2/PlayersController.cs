@@ -1,4 +1,5 @@
-﻿using MediatR;
+using System.Globalization;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using ScoreTracker.Catalog.Contracts.Queries;
@@ -253,32 +254,48 @@ public sealed class PlayersController : ApiV2ControllerBase
         if (ids is null) return failure!;
 
         var fingerprint = ContinuationToken.FingerprintOf(CredentialKey(_currentUser), mix, pageSize, communityKey);
-        var offset = 0;
+        ContinuationToken? from = null;
         if (cursor is not null)
         {
             if (!ContinuationToken.TryDecode(cursor, fingerprint, out var token)) return InvalidCursorProblem();
-            offset = token.Offset;
+            from = token;
         }
 
-        var rows = ids.Count == 0
+        var all = ids.Count == 0
             ? Array.Empty<PlayerStatsRecord>()
             : (await _mediator.Send(new GetPlayersStatsQuery(ids, mix)))
             .OrderByDescending(s => s.SkillRating)
             .ThenBy(s => s.UserId)
             .ToArray();
 
-        var page = rows.Skip(offset).Take(pageSize).ToArray();
+        // A keyset on (PUMBILITY, player) rather than an offset, for the same reason the score
+        // page uses one: the ranking moves while a tool crawls it, and an offset over a moving
+        // list repeats or skips whoever crossed the page boundary. Both halves or neither, as on
+        // the score page — a cursor with one segment blanked must not decode as "the start".
+        if (from is not null && (from.Value.Key is null) != (from.Value.Id is null))
+            return InvalidCursorProblem();
+
+        var rows = all;
+        if (from?.Key is not null && from.Value.Id is not null
+                                  && double.TryParse(from.Value.Key, NumberStyles.Float, CultureInfo.InvariantCulture,
+                                      out var afterRating))
+            rows = all.Where(s => s.SkillRating < afterRating
+                                  || (s.SkillRating == afterRating && s.UserId.CompareTo(from.Value.Id.Value) > 0))
+                .ToArray();
+
+        var page = rows.Take(pageSize).ToArray();
         var identities = await PlayerIdentities.Resolve(_mediator, page.Select(s => s.UserId).ToArray());
         var data = page
             .Where(s => identities.ContainsKey(s.UserId))
             .Select(s => new PlayerStatsDto(s.UserId, identities[s.UserId].Username, identities[s.UserId].GameTag, s))
             .ToArray();
 
-        var next = offset + page.Length < rows.Length
-            ? ContinuationToken.FromOffset(offset + page.Length, fingerprint)
+        var next = rows.Length > page.Length
+            ? ContinuationToken.FromKeyset(page[^1].SkillRating.ToString("R", CultureInfo.InvariantCulture),
+                page[^1].UserId, fingerprint)
             : (ContinuationToken?)null;
 
-        return Json(Page(data, pageSize, rows.Length, next));
+        return Json(Page(data, pageSize, all.Length, next));
     }
 
     /// <summary>
