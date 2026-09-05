@@ -134,6 +134,34 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetBrokenBestsReturnsOnlyTheBrokenRowsOfTheRequestedPlayersAndCharts()
+    {
+        // The peer popover's "N broke" count: the rows the cohort reads refuse, and nothing else —
+        // not a pass, not a stranger's break, not a break on a chart nobody asked about.
+        var passer = await _seed.SeedUserAsync();
+        var breaker = await _seed.SeedUserAsync();
+        var stranger = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedPhoenixChartAsync(level: 20, type: "Double");
+        var otherChart = await _seed.SeedPhoenixChartAsync(level: 21, type: "Double");
+        var writer = BuildRepository();
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, passer, new RecordedPhoenixScore(chartId,
+            PhoenixScore.From(950000), PhoenixPlate.SuperbGame, false, RecordedAt));
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, breaker, new RecordedPhoenixScore(chartId,
+            PhoenixScore.From(400000), null, true, RecordedAt));
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, breaker, new RecordedPhoenixScore(otherChart,
+            PhoenixScore.From(400000), null, true, RecordedAt));
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, stranger, new RecordedPhoenixScore(chartId,
+            PhoenixScore.From(400000), null, true, RecordedAt));
+
+        var broken = (await BuildRepository().GetBrokenBests(MixEnum.Phoenix, new[] { passer, breaker },
+            new[] { chartId })).ToArray();
+
+        var row = Assert.Single(broken);
+        Assert.Equal(breaker, row.UserId);
+        Assert.Equal(chartId, row.ChartId);
+    }
+
+    [Fact]
     public async Task UpdateBestAttemptRoundTripsTheJudgementBreakdown()
     {
         var userId = await _seed.SeedUserAsync();

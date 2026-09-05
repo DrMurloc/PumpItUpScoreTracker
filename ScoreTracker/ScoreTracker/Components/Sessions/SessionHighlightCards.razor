@@ -6,6 +6,7 @@
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Theming
 @namespace ScoreTracker.Web.Components
+@inject ScoreColorPreferences Preferences
 
 @* The session's flagged scores as jacket cards — one per chart (D41): a pass and its later
    upscore are one story, so their captures merge (flags OR'd, richest detail) onto the final
@@ -42,12 +43,11 @@
             <div class="hl-card-body">
                 <div class="hl-card-song">@card.Score.Chart?.Song.Name</div>
                 <div class="hl-card-scoreline">
-                    <span class="hl-card-score @GlowClass(card.Score)" style="@ScoreColor(card.Score)">
-                        <ScoreBreakdown Score="card.Score.Row.Score == null ? null : PhoenixScore.From(card.Score.Row.Score.Value)"
-                                        Mix="card.Score.Chart?.Mix ?? Mix" IsBroken="card.Score.Row.IsBroken"
-                                        Plate="PhoenixPlateHelperMethods.TryParse(card.Score.Row.Plate)"
-                                        ShowScore="true" OneLine="true"></ScoreBreakdown>
-                    </span>
+                    <PeerScore Score="card.Score.Row.Score == null ? null : PhoenixScore.From(card.Score.Row.Score.Value)"
+                               Mix="card.Score.Chart?.Mix ?? Mix" IsBroken="card.Score.Row.IsBroken"
+                               Plate="PhoenixPlateHelperMethods.TryParse(card.Score.Row.Plate)"
+                               Standing="card.Score.Standing" Chart="card.Score.Chart" Class="hl-card-score"
+                               ShowStanding="false" OnOpenBoard="OnOpenBoard"></PeerScore>
                     @if (card.Score.Detail?.PumbilityGain is { } gain && gain > 0)
                     {
                         @* The established gain chip, the Play page's own (D48). *@
@@ -91,6 +91,15 @@
     [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
     [Parameter] public EventCallback<Chart> OnOpenChart { get; set; }
     [Parameter] public EventCallback<SessionScore> OnOpenBreakdown { get; set; }
+
+    [Parameter] public EventCallback<PeerBoardRequest> OnOpenBoard { get; set; }
+
+    private ScoreColorSettings _colors = ScoreColorSettings.Default;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _colors = await Preferences.GetColors();
+    }
 
     private sealed record Card(SessionScore Score);
 
@@ -152,23 +161,17 @@
                 : (newer.PumbilityGain ?? 0) + (older.PumbilityGain ?? 0));
     }
 
-    /// <summary>The percentile band as the card's ring — a Perfect Game is always prism (D46).</summary>
-    private static string RingClass(Card card)
+    /// <summary>
+    ///     The card's ring is the rarity band of the live standing — the judgement spectrum's own
+    ///     vocabulary, so it only draws under that system; every other system paints the score and
+    ///     leaves the card's edge alone rather than mixing two ladders on one card.
+    /// </summary>
+    private string RingClass(Card card)
     {
-        if (card.Score.IsPerfectGame) return "hl-card-prism";
+        if (_colors.System != ScoreColorSystem.JudgementSpectrum) return string.Empty;
         if (card.Score.PeerPercentile is not { } percentile) return string.Empty;
         return $"hl-card-{ThemeScales.BandFor(percentile).ToString().ToLowerInvariant()}";
     }
-
-    private static string ScoreColor(SessionScore score) =>
-        score.IsPerfectGame ? ThemeScales.RarityStyle(1.0)
-        : score.PeerPercentile == null ? string.Empty
-        : ThemeScales.RarityStyle(score.PeerPercentile.Value);
-
-    private static string GlowClass(SessionScore score) =>
-        score.IsPerfectGame ? ThemeScales.RarityClass(RarityBand.Prism)
-        : score.PeerPercentile == null ? string.Empty
-        : ThemeScales.RarityClass(ThemeScales.BandFor(score.PeerPercentile.Value));
 
     private EventCallback StripOpen(SessionScore score) =>
         OnOpenBreakdown.HasDelegate && score.Row.Score != null && !score.Row.IsStageBroken

@@ -18,6 +18,8 @@ starter trio); refactored Pumbility → Account Stats in PR #149.** Consumes the
 > Sizes are now **1×1 / 1×2 / 1×3**. TypeId stays `pumbility` (export vocabulary). The historical spec
 > below describes the original Pumbility widget.
 
+> **2026-09-05: the closest-competitive-matches list became *your peers*** ([peers-abstraction.md](../peers-abstraction.md) D18). At 1×2 and taller the list under the numbers is the union of peer sources the player ticked on `/Account`, read through Rivals' `GetMyPeerRosterQuery`: nearest competitive level first on the configured dimension, capped at 25, each row tagged with why they are a peer (RIVAL, the community's initials, ±0.5, PMB), red/green row edges as on every board, and board-only rivals closing the list with a BOARD tag and no level. Visibility is `IPlayerVisibilityReader`'s answer (public, or a shared user-created community, or a rival edge). `GetCompetitiveNeighborsQuery` retired with the old list; the **Match dimension** config keeps choosing which level the rows print and sort by.
+
 > **2026-08-14: the weekly ▲ delta left the widget** (owner: the Sessions page is where that delta
 > matters) — and with it the `GetPlayerHistoryQuery` fetch that existed only to compute it. In the
 > space it frees, on **Phoenix 2** the **PUMBILITY level gem** renders beside the glowy total:

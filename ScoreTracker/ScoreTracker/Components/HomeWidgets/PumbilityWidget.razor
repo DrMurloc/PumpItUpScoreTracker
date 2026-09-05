@@ -6,6 +6,9 @@
 @using ScoreTracker.HomePage.Contracts
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.Rivals.Contracts
+@using ScoreTracker.Rivals.Contracts.Queries
+@using ScoreTracker.Web.Services.Theming
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.HomeDashboard
@@ -13,8 +16,10 @@
 
 @* Account Stats (TypeId stays "pumbility"): the glowy total Pumbility + S/D pools stay —
    competitive level joins them, and the projected-target list left for Suggested Charts'
-   Pumbility Push goal. 1x2 and taller add your closest competitive matches; a pinned mix
-   that differs from the current one shows as a pill in the title (via the header slot). *@
+   Pumbility Push goal. 1x2 and taller add YOUR PEERS — the union the player ticked on /Account
+   (docs/design/peers-abstraction.md D18), nearest competitive level first, each row saying why
+   they are a peer, board-only rivals closing the list. A pinned mix that differs from the
+   current one shows as a pill in the title (via the header slot). *@
 
 @if (!_hasContent)
 {
@@ -76,34 +81,59 @@ else
 
         @if (_showMatches)
         {
-            <div class="dash-acct-matches">
+            <div class="dash-acct-matches" data-testid="acct-peers">
                 <div class="dash-acct-mhead">
-                    <span class="dash-acct-mlabel">@MatchesLabel</span>
+                    <span class="dash-acct-mlabel">@PeersLabel</span>
                     <span class="dash-acct-you">@L["You"] <b>@_myLevel.ToString("N2")</b></span>
                 </div>
-                @if (_matches.Any())
+                @if (_roster.Players.Count > 0 || _roster.BoardOnlyRivals.Count > 0)
                 {
                     <div class="dash-acct-mlist dash-scroll">
-                        @foreach (var (row, i) in _matches.Select((r, i) => (r, i)))
+                        @foreach (var (row, i) in _roster.Players.Select((r, i) => (r, i)))
                         {
                             var r = row;
-                            <div class="dash-lb-row @(r.IsCommunity ? "dash-lb-community" : "") @(EditMode ? "" : "dash-clickable")"
-                                 @onclick="() => OpenPlayer(r)">
+                            <div class="dash-lb-row @RowClass(r) @(EditMode ? "" : "dash-clickable")"
+                                 data-testid="acct-peer" @onclick="() => OpenPlayer(r.User.Id)">
                                 <span class="dash-lb-place">@(i + 1)</span>
                                 <span class="dash-lb-who dash-acct-who">
                                     <span class="dash-acct-name"><UserLabel User="r.User" ShowAvatar="true"
                                                                             AvatarSize="24"></UserLabel></span>
                                 </span>
                                 <span class="dash-acct-trail">
+                                    <span class="dash-acct-src">
+                                        @foreach (var tag in Tags(r))
+                                        {
+                                            <span class="@tag.Class" title="@tag.Title">@tag.Text</span>
+                                        }
+                                    </span>
                                     <span class="dash-acct-lvl">@r.Level.ToString("N2")</span>
+                                </span>
+                            </div>
+                        }
+                        @* Board-only rivals have no site level to sit on the ladder with, so they close
+                           the list rather than sort into it; their standings live on the official boards. *@
+                        @foreach (var ghost in _roster.BoardOnlyRivals)
+                        {
+                            <div class="dash-lb-row is-rival" data-testid="acct-peer-ghost">
+                                <span class="dash-lb-place">—</span>
+                                <span class="dash-lb-who dash-acct-who">
+                                    <span class="dash-acct-name">@ghost.DisplayName</span>
+                                </span>
+                                <span class="dash-acct-trail">
+                                    <span class="dash-acct-src"><span class="dash-acct-tag dash-acct-tag-rival" title="@L["Board only"]">@L["Tag: BOARD"]</span></span>
+                                    <span class="dash-acct-lvl dash-muted">—</span>
                                 </span>
                             </div>
                         }
                     </div>
                 }
+                else if (!_sourcesChosen)
+                {
+                    <div class="dash-acct-empty">@L["Choose who your peers are on your Account page."]</div>
+                }
                 else
                 {
-                    <div class="dash-acct-empty">@L["No close matches yet."]</div>
+                    <div class="dash-acct-empty">@L["No peers yet."]</div>
                 }
             </div>
         }
@@ -114,8 +144,7 @@ else
 
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
-@inject IUserRepository Users
-@inject CommunityGlowReader CommunityGlow
+@inject ScoreColorPreferences Preferences
 @inject NavigationManager Nav
 
 @code {
@@ -134,12 +163,10 @@ else
     /// here as a pill, keeping the body clear of a mix chip (owner, 2026-07-13).</summary>
     [CascadingParameter] private WidgetHeaderSlot? HeaderSlot { get; set; }
 
-    private const int Range = 1;         // hard ±1.0 competitive-level cap (owner)
     private const int MatchCount = 25;   // the closest N shown (owner)
-    private const int CandidateFetch = 200; // over-fetch, then keep the eligible closest 25
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
 
-    private sealed record MatchRow(User User, double Level, bool IsCommunity);
+    private sealed record Tag(string Text, string Title, string Class);
 
     private bool _loaded;
     private bool _hasContent;
@@ -149,15 +176,39 @@ else
     private ChartType? _dimension;
     private PlayerStatsRecord? _stats;
     private double _myLevel;
-    private List<MatchRow> _matches = new();
+    private PeerList _roster = new(Array.Empty<PeerListEntry>(), Array.Empty<RivalSubject>(), 0, 0);
+    private bool _sourcesChosen = true;
     private string? _headerSlotKey;
 
-    private string MatchesLabel => _dimension switch
+    private string PeersLabel => _roster.Total > 0
+        ? L["Your peers · {0}", _roster.Total.ToString("N0")]
+        : L["Your peers"];
+
+    /// <summary>
+    ///     Why this player is a peer, as the tags the row wears: RIVAL, the initials of each shared
+    ///     community, ±0.5 for the competitive band, PMB for a PUMBILITY peer.
+    /// </summary>
+    private IEnumerable<Tag> Tags(PeerListEntry row)
     {
-        ChartType.Single => L["Closest · Singles"],
-        ChartType.Double => L["Closest · Doubles"],
-        _ => L["Closest · Combined"]
-    };
+        if (row.IsRival) yield return new Tag(L["Tag: RIVAL"], L["On your rivals roster"], "dash-acct-tag dash-acct-tag-rival");
+        foreach (var community in row.Communities)
+            yield return new Tag(Initials(community), community, "dash-acct-tag dash-acct-tag-community");
+        if (row.IsCompetitive) yield return new Tag("±0.5", L["Within half a competitive level of you"], "dash-acct-tag dash-acct-tag-competitive");
+        if (row.IsPumbility) yield return new Tag("PMB", L["A PUMBILITY peer"], "dash-acct-tag dash-acct-tag-pumbility");
+    }
+
+    private static string Initials(string community)
+    {
+        var words = community.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (words.Length == 0) return string.Empty;
+        return words.Length == 1
+            ? community[..Math.Min(2, community.Length)].ToUpperInvariant()
+            : string.Concat(words.Take(3).Select(w => char.ToUpperInvariant(w[0])));
+    }
+
+    /// <summary>The shared row ladder: a rival's red edge, a clubmate's green, both when both.</summary>
+    private static string RowClass(PeerListEntry row) =>
+        CommunityGlowReader.RowClass(false, row.IsRival, row.IsClubmate, "dash-lb-you", "dash-lb-community");
 
     protected override async Task OnParametersSetAsync()
     {
@@ -179,48 +230,27 @@ else
             var userId = CurrentUser.User.Id;
             var stats = await Mediator.Send(new GetPlayerStatsQuery(userId, _mix));
 
-            var myLevel = 0d;
-            var matches = new List<MatchRow>();
-            if (_showMatches && stats != null) (myLevel, matches) = await LoadMatches(userId, stats);
+            var roster = _roster;
+            var sourcesChosen = true;
+            if (_showMatches && stats != null)
+            {
+                // The union the player ticked on /Account, nearest level first on the configured
+                // dimension, visibility already applied by the reader (peers-abstraction.md D18).
+                roster = await Mediator.Send(new GetMyPeerRosterQuery(_mix, _dimension, MatchCount));
+                sourcesChosen = (await Preferences.GetSources()).Any;
+            }
 
-            // All three land together, after the last await (§2.3): a new total above the
+            // All of it lands together, after the last await (§2.3): a new total above the
             // previous mix's neighbours is a worse read than a moment of dimmed old numbers.
             _stats = stats;
-            _myLevel = myLevel;
-            _matches = matches;
+            _myLevel = roster.MyLevel;
+            _roster = roster;
+            _sourcesChosen = sourcesChosen;
             _loaded = true;
             _hasContent = true;
         }
 
         UpdateHeaderSlot(WidgetConfigJson.Read<PumbilityConfig>(Widget.ConfigJson).Mix);
-    }
-
-    private async Task<(double MyLevel, List<MatchRow> Matches)> LoadMatches(Guid userId,
-        PlayerStatsRecord stats)
-    {
-        var myLevel = _dimension switch
-        {
-            ChartType.Single => stats.SinglesCompetitiveLevel,
-            ChartType.Double => stats.DoublesCompetitiveLevel,
-            _ => stats.CompetitiveLevel
-        };
-        if (myLevel <= 0) return (myLevel, new List<MatchRow>());
-
-        // The cohort (in-range, nearest first) comes ranked from SQL; eligibility is applied
-        // here where the community set and privacy flags live: public players, plus anyone
-        // from your non-region communities (who also get the green glow), closest 25.
-        var neighbors = await Mediator.Send(
-            new GetCompetitiveNeighborsQuery(_mix, _dimension, myLevel, Range, CandidateFetch));
-        var community = await CommunityGlow.GetMyCommunityMemberIds();
-        var users = (await Users.GetUsers(neighbors.Select(n => n.UserId).Where(id => id != userId)))
-            .ToDictionary(u => u.Id);
-
-        return (myLevel, neighbors
-            .Where(n => n.UserId != userId && users.ContainsKey(n.UserId))
-            .Where(n => users[n.UserId].IsPublic || community.Contains(n.UserId))
-            .Take(MatchCount)
-            .Select(n => new MatchRow(users[n.UserId], n.CompetitiveLevel, community.Contains(n.UserId)))
-            .ToList());
     }
 
     private void UpdateHeaderSlot(MixEnum? pinned)
@@ -236,10 +266,10 @@ else
 
     private RenderFragment MixPill(MixEnum mix) =>@<span class="dash-acct-mixpill">@mix.GetName()</span>;
 
-    private void OpenPlayer(MatchRow row)
+    private void OpenPlayer(Guid userId)
     {
         if (EditMode) return;
-        Nav.NavigateTo($"/Player/{row.User.Id}/Sessions");
+        Nav.NavigateTo($"/Player/{userId}/Sessions");
     }
 
 }

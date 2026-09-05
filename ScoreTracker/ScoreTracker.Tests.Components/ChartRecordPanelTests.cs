@@ -11,6 +11,7 @@ using Moq;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Rivals.Contracts.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
@@ -97,7 +98,7 @@ public sealed class ChartRecordPanelTests : ComponentTestBase
         var cut = RenderPanel(MixEnum.Prime2);
 
         cut.WaitForAssertion(() => Assert.Contains("No score yet", cut.Markup));
-        _mediator.Verify(m => m.Send(It.IsAny<GetChartScoreRankingsQuery>(), It.IsAny<CancellationToken>()),
+        _mediator.Verify(m => m.Send(It.IsAny<GetPeerStandingsQuery>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -140,8 +141,8 @@ public sealed class ChartRecordPanelTests : ComponentTestBase
             .ReturnsAsync(new[] { MakeChart(MixEnum.Phoenix) }.AsEnumerable());
         _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((RecordedPhoenixScore?)null);
-        _mediator.Setup(m => m.Send(It.IsAny<GetChartScoreRankingsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, ScoreRankingRecord>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetPeerStandingsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyDictionary<Guid, PeerStanding>)new Dictionary<Guid, PeerStanding>());
 
         var cut = RenderPanel(MixEnum.Phoenix);
         cut.WaitForAssertion(() => Assert.Contains("No score yet", cut.Markup));

@@ -5,6 +5,7 @@
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services
 
 @* The tier list's chart card. Border language is owner-locked (design doc §4): solid
    success = passed, dashed info-blue = To-Do, dashed success = passed in another mix;
@@ -107,12 +108,12 @@ else
                needed, so the line costs the card a third of what it did. Tooltip="false" is
                structural, not a preference — the stack lays out its direct children, and
                MudTooltip's wrapper would hide them from the grid. *@
+            @* The score is its own tap target (peers-abstraction.md D17): the head opens details,
+               the score opens the standing popover and stops there. *@
             <div class="tier-chart-card-scoreline">
-                <span class="sbd-score-stack">
-                    <ScoreBreakdown Score="Score.Score.Value" IsBroken="Score.IsBroken" Mix="Chart.Mix" OneLine="true"
-                                    ShowScore="true" Tooltip="false" Height="12"
-                                    Plate="Score.Plate" Ranking="Ranking"></ScoreBreakdown>
-                </span>
+                <PeerScore Score="Score.Score.Value" IsBroken="Score.IsBroken" Mix="Chart.Mix" Height="12"
+                           Plate="Score.Plate" Standing="Standing" Chart="Chart" Class="sbd-score-stack"
+                           ShowStanding="false" OnOpenBoard="OnOpenBoard"></PeerScore>
             </div>
         }
         else if (LegacyGrade != null)
@@ -129,6 +130,11 @@ else
         @if (TierLabel != null)
         {
             <MudText Typo="Typo.caption" Class="tier-chart-card-tier" Style="@($"color:{TierColor}")">@TierLabel</MudText>
+        }
+        @if (StandingText != null)
+        {
+            @* The standing in words, beside the color it explains (rule 8). *@
+            <MudText Typo="Typo.caption" Class="tier-chart-card-meta tier-chart-card-standing">@StandingText</MudText>
         }
         @if (StepArtist != null)
         {
@@ -208,7 +214,15 @@ else
     /// </summary>
     [Parameter] public XXLetterGrade? LegacyGrade { get; set; }
 
-    [Parameter] public ScoreRankingRecord? Ranking { get; set; }
+    /// <summary>Where the score stands among the viewer's peers; null paints it plain.</summary>
+    [Parameter] public PeerStanding? Standing { get; set; }
+
+    /// <summary>A popover source line asking for that source's board; the page opens details on it.</summary>
+    [Parameter] public EventCallback<PeerBoardRequest> OnOpenBoard { get; set; }
+
+    private string? StandingText => Score is { Score: { } value, IsBroken: false }
+        ? PeerStandingText.Standing(Standing, (int)value == 1_000_000, L)
+        : null;
 
     [Parameter] public bool Passed { get; set; }
 
@@ -329,7 +343,7 @@ else
     {
         get
         {
-            var suffix = string.Join(" — ", new[] { StateTitle, TierLabel, TooltipNote }.Where(p => p != null));
+            var suffix = string.Join(" — ", new[] { StateTitle, TierLabel, StandingText, TooltipNote }.Where(p => p != null));
             return suffix.Length == 0
                 ? $"{Chart.Song.Name} {Chart.DifficultyString}"
                 : $"{Chart.Song.Name} {Chart.DifficultyString} — {suffix}";

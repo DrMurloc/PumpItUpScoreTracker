@@ -18605,3 +18605,419 @@ button.judg-strip:focus-visible {
     height: 16px;
     vertical-align: middle;
 }
+
+/* ---------------------------------------------------------------------------------------------
+   Peer standing (docs/design/peers-abstraction.md §4.4). PeerScore is the one component that
+   paints a player's own score by their standing among the peers they chose; the standing text
+   rides beside it (rule 8) and both are the tap target for the popover. The popover is a tap
+   surface, never a hover one — a phone has no hover. */
+.peer-score-anchor {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+}
+
+.peer-score {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 3px;
+}
+
+.peer-score-open {
+    cursor: pointer;
+}
+
+.peer-score-open:hover,
+.peer-standing-open:hover {
+    background: color-mix(in srgb, var(--mix-ink) 6%, transparent);
+}
+
+.peer-score-open:focus-visible,
+.peer-standing-open:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: 1px;
+}
+
+/* The printed standing: the sessions row's .sbd-peerpct, now shared by every surface. */
+.peer-standing {
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    border-radius: 3px;
+    padding: 1px 4px;
+    border: 1px dashed transparent;
+}
+
+.peer-standing-open {
+    cursor: pointer;
+}
+
+.peer-standing-open:hover {
+    border-color: color-mix(in srgb, var(--mix-ink-muted) 40%, transparent);
+}
+
+/* Click-away layer, mounted only while a popover is open; below the popover (1200), above the
+   page. A bare div, not MudOverlay — that locks body scrolling and shifts the page (ProjectionSpread). */
+.peer-clickaway {
+    position: fixed;
+    inset: 0;
+    z-index: 1198;
+}
+
+.peer-pop-frame {
+    border-radius: 8px;
+}
+
+.peer-pop {
+    width: min(300px, calc(100vw - 24px));
+    padding: 12px 14px;
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: .8rem;
+    color: var(--mix-ink);
+    text-shadow: none;
+    cursor: default;
+}
+
+.peer-pop-head {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.peer-pop-sub {
+    color: var(--mix-ink-muted);
+    margin-top: 3px;
+}
+
+.peer-pop-rows {
+    margin: 10px 0 8px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 7%, transparent);
+    padding-top: 6px;
+    display: grid;
+    gap: 2px;
+}
+
+.peer-pop-row {
+    display: grid;
+    grid-template-columns: 18px 1fr auto 12px;
+    gap: 8px;
+    align-items: baseline;
+    padding: 3px 4px;
+    margin: 0 -4px;
+    border-radius: 4px;
+    color: inherit;
+    text-decoration: none;
+}
+
+div.peer-pop-row {
+    grid-template-columns: 18px 1fr auto;
+}
+
+a.peer-pop-row:hover {
+    background: color-mix(in srgb, var(--mix-ink) 6%, transparent);
+    text-decoration: none;
+}
+
+.peer-pop-row-off {
+    color: var(--mix-ink-muted);
+    opacity: .75;
+}
+
+.peer-pop-num {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.peer-pop-arrow {
+    color: var(--mix-primary);
+}
+
+.peer-pop-note {
+    display: block;
+    font-size: .7rem;
+    color: var(--mix-ink-muted);
+}
+
+.peer-pop-empty {
+    color: var(--mix-ink-muted);
+}
+
+.peer-pop-muted {
+    display: block;
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+}
+
+.peer-pop-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 7%, transparent);
+    padding-top: 8px;
+    margin-top: 8px;
+    color: var(--mix-ink-muted);
+    font-size: .72rem;
+}
+
+.peer-pop-foot a {
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+/* The Account tab for peers & score colors (peers-abstraction.md D1, D14, D15, D35). */
+.pcd-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+}
+
+/* A radio's whole option is its label, so the text toggles it too, and every option is its own
+   row: MudBlazor lays a radio group out as a wrapping row, which sat "Actual letter grade" beside
+   "three steps" (owner field test). */
+.pcd .mud-radio-group {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.pcd-radio {
+    display: block;
+    width: 100%;
+}
+
+.pcd-radio .mud-radio {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    margin: 0;
+}
+
+.pcd-radio .mud-radio .mud-radio-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.pcd-lede {
+    opacity: .75;
+    max-width: 64ch;
+    margin-top: 2px;
+}
+
+.pcd {
+    display: grid;
+    gap: 20px;
+}
+
+.pcd-title {
+    font-weight: 500;
+}
+
+.pcd-help {
+    display: block;
+    color: var(--mix-ink-muted);
+    margin-bottom: 6px;
+    max-width: 64ch;
+}
+
+.pcd-opt {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 6px;
+    align-items: center;
+    padding: 2px 4px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.pcd-opt:hover {
+    background: color-mix(in srgb, var(--mix-ink) 4%, transparent);
+}
+
+.pcd-opt-off {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+.pcd-opt-head {
+    cursor: default;
+    padding-top: 8px;
+}
+
+.pcd-opt-head:hover {
+    background: none;
+}
+
+.pcd-opt-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.pcd-opt-label {
+    font-weight: 500;
+}
+
+.pcd-opt-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+}
+
+.pcd-opt-help {
+    font-size: .78rem;
+    color: var(--mix-ink-muted);
+}
+
+.pcd-opt-count {
+    font-size: .78rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.pcd-sub {
+    margin-left: 32px;
+    border-left: 2px solid color-mix(in srgb, var(--mix-ink) 7%, transparent);
+    padding-left: 6px;
+}
+
+.pcd-tag {
+    font-size: .66rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--mix-ink-muted);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 6px;
+    font-weight: 500;
+}
+
+.pcd-tally {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--mix-primary) 8%, transparent);
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: .8rem;
+}
+
+.pcd-tally b {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    line-height: 1;
+    font-weight: 700;
+}
+
+.pcd-muted {
+    color: var(--mix-ink-muted);
+}
+
+.pcd-swatches {
+    display: inline-flex;
+    gap: 3px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.pcd-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+/* Both glow inputs the same width: MudBlazor's input control grows to fill its row otherwise. */
+.pcd-num {
+    width: 72px;
+    flex: 0 0 72px;
+}
+
+.pcd-preview {
+    background: var(--mix-bg);
+    border-radius: 6px;
+    padding: 10px 12px;
+    display: grid;
+    gap: 6px;
+}
+
+.pcd-prow {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: center;
+    font-size: .8rem;
+}
+
+.pcd-prow-song {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* The preview's score: grade over plate in one column, the number beside them — the tier card's
+   scoreline and the player page's tables, at the same 12px icons. */
+.pcd-prow .sbd-score-stack {
+    display: inline-grid;
+    grid-auto-flow: row;
+    grid-template-columns: auto auto;
+    grid-template-rows: repeat(2, auto);
+    align-items: center;
+    column-gap: 5px;
+    row-gap: 0;
+    line-height: 1.05;
+}
+
+.pcd-prow .sbd-score-stack > img {
+    grid-column: 1;
+    height: 12px !important;
+}
+
+.pcd-prow .sbd-score-stack > p {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    align-self: center;
+    margin: 0;
+    padding-left: 0 !important;
+    font-size: .92rem;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+}
+
+/* The Account Stats roster's "why they are a peer" tags (peers-abstraction.md D18). */
+.dash-acct-trail {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dash-acct-src {
+    display: inline-flex;
+    gap: 3px;
+}
+
+.dash-acct-tag {
+    font-size: .58rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--mix-ink) 8%, transparent);
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+}
+
+.dash-acct-tag-rival { color: var(--daily-rival, var(--mix-secondary)); }
+.dash-acct-tag-community { color: var(--daily-community); }
+.dash-acct-tag-competitive { color: var(--mix-primary); }
+.dash-acct-tag-pumbility { color: var(--mix-accent); }

@@ -9,10 +9,10 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Components
 
-@* One score, with whatever capture learned about it. The score's colour is its percentile
-   among players at the same competitive level, and the percentile always prints beside it —
-   colour is never the only channel. A chart with no cohort (co-op, or far below competitive)
-   renders in plain ink and says nothing about it. *@
+@* One score, with whatever capture learned about it. The score is a PeerScore: colored by
+   where it stands among the peers the player chose, measured live, with the standing printed
+   beside it (color is never the only channel) and the popover a tap away. A chart no peer has
+   passed renders in plain ink and the popover says why. *@
 <div class="sbd-row @ThreadClass" data-testid="session-score-row">
     @if (Score.Chart != null)
     {
@@ -51,12 +51,11 @@
                 }
                 else
                 {
-                    <span class="sbd-score @GlowClass" style="@ScoreColor">
-                        <ScoreBreakdown Score="Score.Row.Score == null ? null : PhoenixScore.From(Score.Row.Score.Value)"
-                                        Mix="Score.Chart.Mix" IsBroken="Score.Row.IsBroken"
-                                        Plate="PhoenixPlateHelperMethods.TryParse(Score.Row.Plate)"
-                                        ShowScore="true" OneLine="true"></ScoreBreakdown>
-                    </span>
+                    <PeerScore Score="Score.Row.Score == null ? null : PhoenixScore.From(Score.Row.Score.Value)"
+                               Mix="Score.Chart.Mix" IsBroken="Score.Row.IsBroken"
+                               Plate="PhoenixPlateHelperMethods.TryParse(Score.Row.Plate)"
+                               Standing="Score.Standing" Chart="Score.Chart" Class="sbd-score"
+                               ShowStanding="false" OnOpenBoard="OnOpenBoard"></PeerScore>
                 }
                 @if (Score.Row.Judgements is { } judgements)
                 {
@@ -67,7 +66,7 @@
                 }
                 @if (StandingText != null)
                 {
-                    <span class="sbd-peerpct">@StandingText</span>
+                    <span class="sbd-peerpct" data-testid="session-row-standing">@StandingText</span>
                 }
             </div>
         </div>
@@ -88,6 +87,9 @@
     [Parameter] [EditorRequired] public SessionScore Score { get; set; } = null!;
     [Parameter] public EventCallback<Chart> OnOpenChart { get; set; }
 
+    /// <summary>A popover source line asking for that source's board; the page opens the dialog on it.</summary>
+    [Parameter] public EventCallback<PeerBoardRequest> OnOpenBoard { get; set; }
+
     /// <summary>Raised with this row's play when its strip is tapped; the host owns the dialog.</summary>
     [Parameter] public EventCallback<SessionScore> OnOpenBreakdown { get; set; }
 
@@ -105,16 +107,6 @@
         OnOpenBreakdown.HasDelegate && Score.Row.Score != null && !Score.Row.IsStageBroken
             ? EventCallback.Factory.Create(this, () => OnOpenBreakdown.InvokeAsync(Score))
             : default;
-
-    // A Perfect Game is always prism (D46 reversed at the field test): the glow is the
-    // achievement's own, so a PG below the capture floor glows too instead of reading broken.
-    private string ScoreColor => Score.IsPerfectGame ? ThemeScales.RarityStyle(1.0)
-        : Score.PeerPercentile == null ? string.Empty
-        : ThemeScales.RarityStyle(Score.PeerPercentile.Value);
-
-    private string GlowClass => Score.IsPerfectGame ? ThemeScales.RarityClass(RarityBand.Prism)
-        : Score.PeerPercentile == null ? string.Empty
-        : ThemeScales.RarityClass(ThemeScales.BandFor(Score.PeerPercentile.Value));
 
     /// <summary>Shared with the highlight card — one play, one set of marks (SessionBadges).</summary>
     private string? StandingText => SessionBadges.Standing(Score, L);

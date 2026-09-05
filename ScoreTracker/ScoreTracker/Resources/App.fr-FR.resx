@@ -346,6 +346,9 @@
   <data name="900,000 → SSS+ is worth" xml:space="preserve">
     <value>900 000 → SSS+ vaut</value>
   </data>
+  <data name="A 1,000,000 glows; nothing else does." xml:space="preserve">
+    <value>Un 1 000 000 brille ; rien d'autre.</value>
+  </data>
   <data name="A bad is a flat −50 at any life; a miss is up to −270. But a bad still halves your multiplier, so back-to-back bads strangle recovery just as effectively." xml:space="preserve">
     <value>Un Bad, c'est −50 fixes quelle que soit la vie ; un Miss monte à −270. Mais un Bad divise quand même votre multiplicateur par deux, donc des Bads enchaînés étranglent la récupération tout aussi efficacement.</value>
   </data>
@@ -454,6 +457,9 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>Une API publique entièrement documentée alimente les outils de la communauté — bots, overlays, sites de stats. Récupérez un jeton depuis votre compte et construisez sur les mêmes données que nous.</value>
   </data>
+  <data name="A PUMBILITY peer" xml:space="preserve">
+    <value>Un pair PUMBILITY</value>
+  </data>
   <data name="A score only one in four of your peers beat." xml:space="preserve">
     <value>Un score que seul un de vos pairs sur quatre dépasse.</value>
   </data>
@@ -528,6 +534,9 @@
   </data>
   <data name="Activity log" xml:space="preserve">
     <value>Journal d'activité</value>
+  </data>
+  <data name="Actual letter grade" xml:space="preserve">
+    <value>Rang réel</value>
   </data>
   <data name="Add" xml:space="preserve">
 	  <value>Ajouter</value>
@@ -722,6 +731,9 @@
   </data>
   <data name="American" xml:space="preserve">
     <value>Américains</value>
+  </data>
+  <data name="among your peers, by place — ties share a place." xml:space="preserve">
+    <value>parmi tes pairs, par place — les ex æquo partagent une place.</value>
   </data>
   <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
     <value>Un compte avec le game tag {0} existe déjà, est-ce vous ?</value>
@@ -1063,6 +1075,9 @@
   </data>
   <data name="below level 10" xml:space="preserve">
     <value>sous le niveau 10</value>
+  </data>
+  <data name="Below the middle plain, above it gold, top 10 % ice. For readers who find six bands noisy." xml:space="preserve">
+    <value>Sous la médiane neutre, au-dessus or, les 10 % supérieurs glace. Pour qui trouve six bandes trop bruyantes.</value>
   </data>
   <data name="below the pass line" xml:space="preserve">
     <value>sous la ligne de pass</value>
@@ -1478,11 +1493,17 @@
   <data name="Choose an avatar" xml:space="preserve">
     <value>Choisissez un avatar</value>
   </data>
+  <data name="Choose peers" xml:space="preserve">
+    <value>Choisir des pairs</value>
+  </data>
   <data name="Choose the account to merge with" xml:space="preserve">
     <value>Choisissez le compte à fusionner</value>
   </data>
   <data name="Choose which account to keep" xml:space="preserve">
     <value>Choisissez le compte à conserver</value>
+  </data>
+  <data name="Choose who your peers are on your Account page." xml:space="preserve">
+    <value>Choisis tes pairs sur ta page Compte.</value>
   </data>
   <data name="Classic" xml:space="preserve">
     <value>Classiques</value>
@@ -1584,11 +1605,14 @@
   <data name="Color by plate" xml:space="preserve">
     <value>Couleur par plaque</value>
   </data>
+  <data name="Color your scores by" xml:space="preserve">
+    <value>Colorer tes scores selon</value>
+  </data>
+  <data name="Colored by your standing among your peers" xml:space="preserve">
+    <value>Coloré selon ton classement parmi tes pairs</value>
+  </data>
   <data name="colour = worth a 900,000 on a low level → a high one; the diagonal bands are the equal-value lines" xml:space="preserve">
     <value>couleur = vaut un 900 000 sur un niveau bas → un haut ; les bandes diagonales sont les lignes d'égale valeur</value>
-  </data>
-  <data name="Coloured by your standing among players at your level" xml:space="preserve">
-    <value>Coloré selon ton classement parmi les joueurs de ton niveau</value>
   </data>
   <data name="Combined" xml:space="preserve">
     <value>Combiné</value>
@@ -1743,8 +1767,14 @@
   <data name="Competitive Level" xml:space="preserve">
     <value>Niveau compétitif</value>
   </data>
+  <data name="Competitive level (peers)" xml:space="preserve">
+    <value>Niveau compétitif</value>
+  </data>
   <data name="Competitive Level over time for your selected mixes." xml:space="preserve">
     <value>Votre niveau compétitif au fil du temps pour les mix sélectionnés.</value>
+  </data>
+  <data name="Competitive level ±0.5" xml:space="preserve">
+    <value>Niveau compétitif ±0,5</value>
   </data>
   <data name="Competitive level, doubles" xml:space="preserve">
     <value>Niveau compétitif, Doubles</value>
@@ -2282,6 +2312,9 @@
   <data name="Doubles" xml:space="preserve">
     <value>Doubles</value>
   </data>
+  <data name="doubles (peers tally)" xml:space="preserve">
+    <value>doubles</value>
+  </data>
   <data name="Doubles competitive level" xml:space="preserve">
     <value>Niveau compétitif Doubles</value>
   </data>
@@ -2485,6 +2518,9 @@
   <data name="Every multiplier in the formula. One table serves both types." xml:space="preserve">
     <value>Chaque multiplicateur de la formule. Une seule table sert aux deux types.</value>
   </data>
+  <data name="Every peer has passed it" xml:space="preserve">
+    <value>Tous les pairs l'ont passé</value>
+  </data>
   <data name="every plate" xml:space="preserve">
     <value>chaque plaque</value>
   </data>
@@ -2520,6 +2556,9 @@
   </data>
   <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
     <value>Ceux des autres. Vous pouvez les gérer, et leur auteur n'en est pas informé.</value>
+  </data>
+  <data name="Everyone on your rivals roster, board-only rivals included — their standings come from the weekly official board, so they only count on the charts it publishes." xml:space="preserve">
+    <value>Tout ton roster de rivaux, rivaux « classement seulement » compris : leurs classements viennent du classement officiel hebdomadaire, ils ne comptent donc que sur les charts qu'il publie.</value>
   </data>
   <data name="Everyone who has gone public" xml:space="preserve">
     <value>Tous ceux qui sont passés en public</value>
@@ -2926,6 +2965,18 @@
   </data>
   <data name="Give a song name." xml:space="preserve">
     <value>Indiquez le nom d'une chanson.</value>
+  </data>
+  <data name="Glow" xml:space="preserve">
+    <value>Lueur</value>
+  </data>
+  <data name="Glow: place" xml:space="preserve">
+    <value>place</value>
+  </data>
+  <data name="Glow: places" xml:space="preserve">
+    <value>places</value>
+  </data>
+  <data name="Glow: Top" xml:space="preserve">
+    <value>Top</value>
   </data>
   <data name="Go public" xml:space="preserve">
     <value>Passer en public</value>
@@ -4024,6 +4075,9 @@
   <data name="Measured from {0} real plays with full judgement counts, scaled to 1,000 notes." xml:space="preserve">
     <value>Mesuré sur {0} vraies parties avec compteurs de jugements complets, ramené à 1 000 notes.</value>
   </data>
+  <data name="Medals for a place, not a share: plain ink off the podium, copper #3, silver #2, gold #1. Reads best with small groups like a rivals roster, where a percentile is coarse." xml:space="preserve">
+    <value>Des médailles pour une place, pas une part : encre neutre hors podium, cuivre #3, argent #2, or #1. Idéal pour les petits groupes comme un roster de rivaux, où un centile est grossier.</value>
+  </data>
   <data name="Median" xml:space="preserve">
     <value>Médiane</value>
   </data>
@@ -4044,6 +4098,9 @@
   </data>
   <data name="Members" xml:space="preserve">
     <value>Membres</value>
+  </data>
+  <data name="Members of the communities you tick. Your country and World are communities too." xml:space="preserve">
+    <value>Les membres des communautés cochées. Ton pays et World sont aussi des communautés.</value>
   </data>
   <data name="Merge Accounts" xml:space="preserve">
     <value>Fusionner les comptes</value>
@@ -4494,6 +4551,9 @@
   <data name="No close matches yet." xml:space="preserve">
     <value>Pas encore de rivaux proches.</value>
   </data>
+  <data name="No color" xml:space="preserve">
+    <value>Sans couleur</value>
+  </data>
   <data name="No community peers yet" xml:space="preserve">
     <value>Pas encore de membres de communauté</value>
   </data>
@@ -4505,6 +4565,9 @@
   </data>
   <data name="No entries yet." xml:space="preserve">
     <value>Aucune participation pour le moment.</value>
+  </data>
+  <data name="No glow anywhere, Perfect Games included." xml:space="preserve">
+    <value>Aucune lueur nulle part, Perfect Games compris.</value>
   </data>
   <data name="No imports yet." xml:space="preserve">
     <value>Aucun import pour l'instant.</value>
@@ -4535,6 +4598,12 @@
   </data>
   <data name="No note counts observed on this mix yet." xml:space="preserve">
     <value>Aucun nombre de notes observé sur ce Mix pour l'instant.</value>
+  </data>
+  <data name="No passes yet" xml:space="preserve">
+    <value>Aucun passage encore</value>
+  </data>
+  <data name="No peer has passed it" xml:space="preserve">
+    <value>Aucun pair ne l'a passé</value>
   </data>
   <data name="No peer holds it" xml:space="preserve">
     <value>Aucun pair ne l'a</value>
@@ -4689,8 +4758,14 @@
   <data name="None of those plays could be added — they repeat charts already in the session, or it is already full." xml:space="preserve">
     <value>Aucune de ces parties n’a pu être ajoutée : elles répètent des charts déjà dans la session, ou la session est déjà pleine.</value>
   </data>
+  <data name="None of your peers have passed this yet." xml:space="preserve">
+    <value>Aucun de tes pairs ne l'a encore passé.</value>
+  </data>
   <data name="None of your recent plays score on this board. Check you are on the right chart type." xml:space="preserve">
     <value>Aucune de vos parties récentes ne marque de points sur ce leaderboard. Vérifiez que vous êtes sur le bon type de chart.</value>
+  </data>
+  <data name="None of your {0} peers have passed this yet." xml:space="preserve">
+    <value>Aucun de tes {0} pairs ne l'a encore passé.</value>
   </data>
   <data name="Normalize to 100%" xml:space="preserve">
     <value>Normaliser à 100 %</value>
@@ -4909,6 +4984,9 @@
   <data name="Nothing selected — click a value." xml:space="preserve">
     <value>Rien de sélectionné — cliquez sur une valeur.</value>
   </data>
+  <data name="nothing ticked, so scores render plain" xml:space="preserve">
+    <value>rien n'est coché, les scores restent donc sans couleur</value>
+  </data>
   <data name="Nothing to compare yet" xml:space="preserve">
     <value>Rien à comparer pour l'instant</value>
   </data>
@@ -4968,6 +5046,9 @@
   </data>
   <data name="Of Note" xml:space="preserve">
     <value>À noter</value>
+  </data>
+  <data name="of your peers." xml:space="preserve">
+    <value>de tes pairs.</value>
   </data>
   <data name="of {0} in range" xml:space="preserve">
     <value>sur {0} dans ta tranche</value>
@@ -5071,6 +5152,9 @@
   <data name="On ToDo List" xml:space="preserve">
     <value>Dans la liste ToDo</value>
   </data>
+  <data name="On your rivals roster" xml:space="preserve">
+    <value>Dans ton roster de rivaux</value>
+  </data>
   <data name="On {0} this is {1}." xml:space="preserve">
     <value>Sur {0}, cela vaut {1}.</value>
   </data>
@@ -5083,6 +5167,9 @@
   <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
     <value>Un graphique configurable de vos scores, notes, plates ou pass par niveau.</value>
   </data>
+  <data name="One hue — the current mix's — from dark to bright. Ordered by lightness alone, so it reads the same for every kind of color vision." xml:space="preserve">
+    <value>Une seule teinte — celle du Mix actuel — du sombre au clair. Ordonnée par la luminosité seule, elle se lit pareil quelle que soit la vision des couleurs.</value>
+  </data>
   <data name="one level higher is worth" xml:space="preserve">
     <value>un niveau plus haut vaut</value>
   </data>
@@ -5091,6 +5178,9 @@
   </data>
   <data name="One miss from out" xml:space="preserve">
     <value>À un Miss de la sortie</value>
+  </data>
+  <data name="One more hasn't passed it" xml:space="preserve">
+    <value>Un de plus ne l'a pas passé</value>
   </data>
   <data name="One of your all-time best — you beat {0}% of Peers." xml:space="preserve">
     <value>L'un de vos meilleurs historiques — vous avez battu {0}% de vos pairs.</value>
@@ -5106,6 +5196,9 @@
   </data>
   <data name="one per level bucket" xml:space="preserve">
     <value>un par tranche de niveau</value>
+  </data>
+  <data name="One rule, one glow. The color is the spectrum; the glow says a score crossed the line you set." xml:space="preserve">
+    <value>Une règle, une lueur. La couleur est le spectre ; la lueur dit qu'un score a franchi la ligne que tu as fixée.</value>
   </data>
   <data name="One shared board, one week — everyone posts their best on the same charts." xml:space="preserve">
     <value>Un seul tableau partagé, une semaine — tout le monde poste son meilleur score sur les mêmes charts.</value>
@@ -5344,8 +5437,35 @@
   <data name="Peer projections show once your singles pool has {0} charts." xml:space="preserve">
     <value>Les projections des pairs s'affichent dès que votre ensemble Singles atteint {0} charts.</value>
   </data>
+  <data name="Peer standing · classic" xml:space="preserve">
+    <value>Classement entre pairs · classique</value>
+  </data>
+  <data name="Peer standing · judgement spectrum" xml:space="preserve">
+    <value>Classement entre pairs · spectre des jugements</value>
+  </data>
+  <data name="Peer standing · letter-grade metals" xml:space="preserve">
+    <value>Classement entre pairs · métaux des rangs</value>
+  </data>
+  <data name="Peer standing · podium" xml:space="preserve">
+    <value>Classement entre pairs · podium</value>
+  </data>
+  <data name="Peer standing · result screen" xml:space="preserve">
+    <value>Classement entre pairs · écran de résultat</value>
+  </data>
+  <data name="Peer standing · single hue" xml:space="preserve">
+    <value>Classement entre pairs · teinte unique</value>
+  </data>
+  <data name="Peer standing · three steps" xml:space="preserve">
+    <value>Classement entre pairs · trois paliers</value>
+  </data>
   <data name="Peers" xml:space="preserve">
     <value>Pairs</value>
+  </data>
+  <data name="Peers &amp; score colors" xml:space="preserve">
+    <value>Pairs et couleurs des scores</value>
+  </data>
+  <data name="Peers and score colors saved" xml:space="preserve">
+    <value>Pairs et couleurs des scores sauvegardés</value>
   </data>
   <data name="Peers IQR" xml:space="preserve">
     <value>IQR des pairs</value>
@@ -5369,6 +5489,9 @@
   <data name="Per-channel language" xml:space="preserve">
     <value>Langue par salon</value>
   </data>
+  <data name="percent" xml:space="preserve">
+    <value>pour cent</value>
+  </data>
   <data name="Percentile" xml:space="preserve">
     <value>Percentile</value>
   </data>
@@ -5389,6 +5512,9 @@
   </data>
   <data name="Perfect Games" xml:space="preserve">
     <value>Perfect Games</value>
+  </data>
+  <data name="Perfect Games only" xml:space="preserve">
+    <value>Perfect Games uniquement</value>
   </data>
   <data name="Perfect Score Modifier (Acts as a letter grade beyond SSS+)" xml:space="preserve">
     <value>Modificateur de score parfait (agit comme un rang au-delà de SSS+)</value>
@@ -5467,6 +5593,9 @@
   </data>
   <data name="Phoenix 2 moved every letter below AAA —" xml:space="preserve">
     <value>Phoenix 2 a déplacé chaque grade sous AAA —</value>
+  </data>
+  <data name="Phoenix 2 only" xml:space="preserve">
+    <value>Phoenix 2 uniquement</value>
   </data>
   <data name="Phoenix 2 prices a Singles chart one level up the base curve — an S22 is paid like a 23. Grinding the same charts you ground last mix is the wrong plan." xml:space="preserve">
     <value>Phoenix 2 valorise un chart Singles un niveau au-dessus sur la courbe de base — un S22 rapporte comme un 23. Refaire les mêmes charts que dans le Mix précédent est le mauvais plan.</value>
@@ -5562,6 +5691,9 @@
   </data>
   <data name="Pick a registration to remove from the list." xml:space="preserve">
     <value>Choisissez dans la liste une inscription à retirer.</value>
+  </data>
+  <data name="Pick any of these. Your peers are everyone in the groups you tick, together. You are never one of your own peers." xml:space="preserve">
+    <value>Coche ce que tu veux. Tes pairs sont tous les membres des groupes cochés, réunis. Tu n'es jamais l'un de tes propres pairs.</value>
   </data>
   <data name="Pick players you want to measure yourself against — from piuscores, or straight off the official boards. Their big wins land in your feed." xml:space="preserve">
     <value>Choisissez des joueurs auxquels vous mesurer — depuis piuscores ou directement dans les classements officiels. Leurs exploits arrivent dans votre flux.</value>
@@ -5671,6 +5803,9 @@
   <data name="places" xml:space="preserve">
     <value>places</value>
   </data>
+  <data name="Plain ink. Peers show only as the standing text." xml:space="preserve">
+    <value>Encre neutre. Les pairs n'apparaissent que dans le texte du classement.</value>
+  </data>
   <data name="Plate" xml:space="preserve">
     <value>Plaque</value>
     <comment>par exemple: MG, PG, UG</comment>
@@ -5771,8 +5906,14 @@
   <data name="Players opening your site or your source from the directory, counted since the tool was listed." xml:space="preserve">
     <value>Les joueurs qui ouvrent votre site ou votre code depuis l'annuaire, comptés depuis la mise en ligne de l'outil.</value>
   </data>
+  <data name="Players whose pool of the type sits within 500 below and 250 above yours. Phoenix 2 only; on Phoenix 1 this group is empty." xml:space="preserve">
+    <value>Les joueurs dont le pool du type se situe entre 500 en dessous et 250 au-dessus du tien. Phoenix 2 uniquement ; sur Phoenix 1 ce groupe est vide.</value>
+  </data>
   <data name="Players whose pool of the type sits within {0} below and {1} above yours, each holding a full pool of it. You are never one of your own peers; the highlighted row is where you would sit." xml:space="preserve">
     <value>Joueurs dont l'ensemble du type se situe entre {0} en dessous et {1} au-dessus du tien, chacun avec un ensemble complet. Tu n'es jamais ton propre pair ; la ligne surlignée est là où tu te placerais.</value>
+  </data>
+  <data name="Players within half a level of you, per chart type — today's definition." xml:space="preserve">
+    <value>Les joueurs à un demi-niveau de toi, par type de chart — la définition actuelle.</value>
   </data>
   <data name="Players within one competitive level of you for the type. You are never one of your own peers; the highlighted row is where you would sit." xml:space="preserve">
     <value>Joueurs à ±1 niveau compétitif de toi sur ce type. Tu n'es jamais ton propre pair ; la ligne surlignée est là où tu te placerais.</value>
@@ -5875,6 +6016,9 @@
   </data>
   <data name="Prevalence" xml:space="preserve">
     <value>Prévalence</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Aperçu</value>
   </data>
   <data name="Previous comment" xml:space="preserve">
     <value>Commentaire précédent</value>
@@ -6782,6 +6926,9 @@
   <data name="Scores recorded, last {0} days" xml:space="preserve">
     <value>Scores enregistrés sur les {0} derniers jours</value>
   </data>
+  <data name="Scores render plain until you choose some." xml:space="preserve">
+    <value>Les scores restent sans couleur tant que tu n'en choisis pas.</value>
+  </data>
   <data name="Scores that mattered" xml:space="preserve">
     <value>Résultats marquants</value>
   </data>
@@ -7234,6 +7381,9 @@
   <data name="Singles" xml:space="preserve">
     <value>Singles</value>
   </data>
+  <data name="singles (peers tally)" xml:space="preserve">
+    <value>singles</value>
+  </data>
   <data name="Singles + Doubles" xml:space="preserve">
     <value>Singles + Doubles</value>
   </data>
@@ -7636,6 +7786,12 @@
 	  <value>Tag</value>
 	  <comment>Tag</comment>
   </data>
+  <data name="Tag: BOARD" xml:space="preserve">
+    <value>CLASSEMENT</value>
+  </data>
+  <data name="Tag: RIVAL" xml:space="preserve">
+    <value>RIVAL</value>
+  </data>
   <data name="Tags on the current boards. Departed tags aren't listed." xml:space="preserve">
     <value>Tags des classements actuels. Les tags disparus ne sont pas listés.</value>
   </data>
@@ -7783,6 +7939,9 @@
   <data name="The gain chip, with the grade you'd be expected to get beside it." xml:space="preserve">
     <value>La puce de gain, avec le rang attendu à côté.</value>
   </data>
+  <data name="The game's own judgement colors, literally: Miss red at the bottom, then Bad violet, Good amber, Great green, Perfect ice at the top. The one ladder that starts red — opt-in only." xml:space="preserve">
+    <value>Les couleurs de jugement du jeu, littéralement : Miss rouge en bas, puis Bad violet, Good ambre, Great vert, Perfect glace en haut. La seule échelle qui commence en rouge — sur choix uniquement.</value>
+  </data>
   <data name="The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}." xml:space="preserve">
     <value>L'écart de grade a bien rétréci : un SSS+ au-dessus d'un pass propre valait +{0} sur Phoenix et vaut +{1} ici. Mais cela ne compte que face à ce que vaut un niveau, et le niveau a rétréci davantage — la base de Phoenix est quadratique (+{2} à 20), celle de Phoenix 2 croît de 5 fixes (+{3}). Dit autrement : sur Phoenix, égaler un pass un niveau plus haut demandait de porter un 900 000 à {4} sur le chart que vous aviez déjà ; sur Phoenix 2 le même pas de niveau s'égale avec {5}.</value>
   </data>
@@ -7824,6 +7983,9 @@
   </data>
   <data name="The official site doesn't publish a board for this chart." xml:space="preserve">
     <value>Le site officiel ne publie pas de classement pour ce chart.</value>
+  </data>
+  <data name="The old Raider.io-style ladder, hues retuned for the dark themes: grey → white → green → blue → purple → orange → pink, cut at 10 / 25 / 50 / 75 / 90 / 99 %." xml:space="preserve">
+    <value>L'ancienne échelle façon Raider.io, teintes réajustées pour les thèmes sombres : gris → blanc → vert → bleu → violet → orange → rose, coupée à 10 / 25 / 50 / 75 / 90 / 99 %.</value>
   </data>
   <data name="The ones worth framing" xml:space="preserve">
     <value>Ceux qui méritent un cadre</value>
@@ -7894,6 +8056,9 @@
   <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
     <value>Le même Perfect au début de la chanson, avant tout combo.</value>
   </data>
+  <data name="The score wears its own grade's metal. Peers show only as the standing text." xml:space="preserve">
+    <value>Le score porte le métal de son propre rang. Les pairs n'apparaissent que dans le texte du classement.</value>
+  </data>
   <data name="The scores themselves arrive, 100 per delivery, with a next link when there are more." xml:space="preserve">
     <value>Les scores eux-mêmes arrivent, 100 par livraison, avec un lien suivant s'il y en a davantage.</value>
   </data>
@@ -7905,6 +8070,9 @@
   </data>
   <data name="The shared tier list for this folder, built from everyone's data." xml:space="preserve">
     <value>La tier list partagée de ce dossier, construite avec les données de tous.</value>
+  </data>
+  <data name="The standing (&quot;#6 of 94 peers&quot;) always prints beside the score, whatever you pick here." xml:space="preserve">
+    <value>Le classement (« #6 sur 94 pairs ») s'affiche toujours à côté du score, quel que soit ton choix ici.</value>
   </data>
   <data name="The sum of your 50 best-rated charts." xml:space="preserve">
     <value>La somme de tes 50 charts les mieux notés.</value>
@@ -8937,6 +9105,9 @@
   <data name="What the reporter saw ({0})" xml:space="preserve">
     <value>Ce que le signaleur a vu ({0})</value>
   </data>
+  <data name="What the site uses today: grey → silver → green → gold → ice blue → prism, cut at 25 / 50 / 75 / 90 / 99 %." xml:space="preserve">
+    <value>Ce que le site utilise aujourd'hui : gris → argent → vert → or → bleu glace → prisme, coupé à 25 / 50 / 75 / 90 / 99 %.</value>
+  </data>
   <data name="What this play added to your PUMBILITY" xml:space="preserve">
     <value>Ce que cette partie a ajouté à votre PUMBILITY</value>
   </data>
@@ -9006,6 +9177,9 @@
   <data name="Where this record would land you" xml:space="preserve">
     <value>Où ce palmarès vous placerait</value>
   </data>
+  <data name="Where this score stands among your peers" xml:space="preserve">
+    <value>Où ce score se situe parmi tes pairs</value>
+  </data>
   <data name="Where you stand" xml:space="preserve">
     <value>Votre position</value>
   </data>
@@ -9039,6 +9213,9 @@
   <data name="Which registration to remove" xml:space="preserve">
     <value>Quelle inscription retirer</value>
   </data>
+  <data name="Who are your peers" xml:space="preserve">
+    <value>Qui sont tes pairs</value>
+  </data>
   <data name="Who can find it" xml:space="preserve">
     <value>Qui peut le trouver</value>
   </data>
@@ -9053,6 +9230,9 @@
   </data>
   <data name="Who your peers are" xml:space="preserve">
     <value>Qui sont tes pairs</value>
+  </data>
+  <data name="Who your scores are measured against on this site, and how that measurement paints them. Projections, personalized tier lists and Discord cards keep the peer groups they are calibrated on." xml:space="preserve">
+    <value>À qui tes scores sont comparés sur ce site, et comment cette comparaison les colore. Les projections, les tier lists personnalisées et les cartes Discord gardent les groupes de pairs sur lesquels elles sont calibrées.</value>
   </data>
   <data name="Why" xml:space="preserve">
     <value>Pourquoi</value>
@@ -9083,6 +9263,9 @@
   </data>
   <data name="Within days" xml:space="preserve">
     <value>Jours (max.)</value>
+  </data>
+  <data name="Within half a competitive level of you" xml:space="preserve">
+    <value>À un demi-niveau compétitif de toi</value>
   </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>Sans eux il fonctionne quand même — pour vous, sur vos propres scores.</value>
@@ -9144,10 +9327,6 @@
     <value>{0} plays</value>
     <comment>{0} = nombre de plays.</comment>
   </data>
-  <data name="X% of Y Comparable Players" xml:space="preserve">
-    <value>{0}% de {1} joueurs comparables</value>
-    <comment>{0} = pourcentage (par exemple "85.3"), {1} = nombre de joueurs comparables</comment>
-  </data>
   <data name="X/Y Uploaded. Z Remaining. W Failed to record" xml:space="preserve">
     <value>{0}/{1} Uploadés. {2} Restants. {3} Problèmes d'enregistrement</value>
     <comment>État de progression de la sauvegarde. {0}=nombre enregistrés, {1}=total, {2}=temps restant (m:ss), {3}=nombre d'échecs</comment>
@@ -9201,6 +9380,9 @@
   <data name="You are the Creator. Only you can transfer the community, delete it, change its privacy, set default admin permissions, and set the notification language." xml:space="preserve">
     <value>Vous êtes le créateur. Vous seul pouvez transférer la communauté, la supprimer, changer sa confidentialité, définir les permissions admin par défaut et la langue de notification.</value>
   </data>
+  <data name="You beat {0}%" xml:space="preserve">
+    <value>Tu bats {0}%</value>
+  </data>
   <data name="You beat {0}% of Peers on this." xml:space="preserve">
     <value>Vous avez battu {0}% de vos pairs sur ce chart.</value>
   </data>
@@ -9236,6 +9418,9 @@
   </data>
   <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
     <value>Certains charts n'ont pas pu être téléchargés. Vous pouvez télécharger un CSV des échecs pour faire des ajustements et réessayer.</value>
+  </data>
+  <data name="You have no peer groups selected." xml:space="preserve">
+    <value>Tu n'as sélectionné aucun groupe de pairs.</value>
   </data>
   <data name="You have no PUMBILITY peers for this type yet — a pool of {0} charts lights them up." xml:space="preserve">
     <value>Vous n'avez pas encore de pairs PUMBILITY pour ce type : un pool de {0} charts les fait apparaître.</value>
@@ -9420,6 +9605,15 @@
   <data name="Your note" xml:space="preserve">
     <value>Votre note</value>
   </data>
+  <data name="Your peers" xml:space="preserve">
+    <value>Tes pairs</value>
+  </data>
+  <data name="Your peers right now" xml:space="preserve">
+    <value>Tes pairs en ce moment</value>
+  </data>
+  <data name="Your peers · {0}" xml:space="preserve">
+    <value>Tes pairs · {0}</value>
+  </data>
   <data name="Your peers' pools have nothing in them yet." xml:space="preserve">
     <value>Les ensembles de tes pairs n'ont encore rien.</value>
   </data>
@@ -9555,6 +9749,9 @@
   <data name="Your standing" xml:space="preserve">
     <value>Votre classement</value>
   </data>
+  <data name="Your standing painted in the grades' own colors: below-A green, A copper, AAA silver, S gold, SSS ice, SSS+ at the top 1 %. The letter you see is still your real grade." xml:space="preserve">
+    <value>Ton classement peint aux couleurs des rangs eux-mêmes : vert sous A, A cuivre, AAA argent, S or, SSS glace, SSS+ pour le 1 % supérieur. La lettre affichée reste ton vrai rang.</value>
+  </data>
   <data name="Your step artists" xml:space="preserve">
     <value>Tes step artists</value>
   </data>
@@ -9674,6 +9871,9 @@
   </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
+  </data>
+  <data name="{0} broke" xml:space="preserve">
+    <value>{0} ont cassé</value>
   </data>
   <data name="{0} broken runs made it to the end" xml:space="preserve">
 	  <value>{0} essais échoués sont allés au bout</value>
@@ -9807,6 +10007,9 @@
   <data name="{0} folders at 90% or better" xml:space="preserve">
     <value>{0} folders à 90% ou plus</value>
   </data>
+  <data name="{0} from the official board*" xml:space="preserve">
+    <value>{0} du classement officiel*</value>
+  </data>
   <data name="{0} h ago" xml:space="preserve">
     <value>il y a {0} h</value>
   </data>
@@ -9821,6 +10024,9 @@
   </data>
   <data name="{0} have no projection — nobody near your level has scored them:" xml:space="preserve">
     <value>{0} n'ont pas de projection — personne de ton niveau ne les a joués :</value>
+  </data>
+  <data name="{0} haven't passed it" xml:space="preserve">
+    <value>{0} ne l'ont pas passé</value>
   </data>
   <data name="{0} hours, {1} minutes" xml:space="preserve">
     <value>{0} heures, {1} minutes</value>
@@ -9869,6 +10075,9 @@
   </data>
   <data name="{0} more Combo" xml:space="preserve">
     <value>{0} de Combo en plus</value>
+  </data>
+  <data name="{0} more haven't passed it" xml:space="preserve">
+    <value>{0} de plus ne l'ont pas passé</value>
   </data>
   <data name="{0} more keep their profile private." xml:space="preserve">
     <value>{0} autres gardent leur profil privé.</value>
@@ -9923,6 +10132,9 @@
   </data>
   <data name="{0} of every BanYa &amp; YAHPP chart passed" xml:space="preserve">
     <value>{0} des charts BanYa &amp; YAHPP passés</value>
+  </data>
+  <data name="{0} of them tried and broke." xml:space="preserve">
+    <value>{0} d'entre eux ont essayé et ont cassé.</value>
   </data>
   <data name="{0} of this song's charts were re-stepped." xml:space="preserve">
     <value>{0} charts de cette chanson ont été re-chorégraphiés.</value>
@@ -9999,6 +10211,9 @@
   <data name="{0} Players" xml:space="preserve">
     <value>{0} joueurs</value>
   </data>
+  <data name="{0} players (rivals)" xml:space="preserve">
+    <value>{0} joueurs</value>
+  </data>
   <data name="{0} players added · {1} scores, rolled up {2}" xml:space="preserve">
     <value>{0} joueurs ajoutés · {1} scores, compilé le {2}</value>
   </data>
@@ -10022,6 +10237,9 @@
   </data>
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>{0} joueurs · semaine du {1}</value>
+  </data>
+  <data name="{0} players · {1} board-only" xml:space="preserve">
+    <value>{0} joueurs · {1} classement seulement</value>
   </data>
   <data name="{0} points" xml:space="preserve">
     <value>{0} points</value>
@@ -10064,6 +10282,9 @@
   </data>
   <data name="{0} shared perfect games" xml:space="preserve">
     <value>{0} perfect games en commun</value>
+  </data>
+  <data name="{0} singles · {1} doubles" xml:space="preserve">
+    <value>{0} singles · {1} doubles</value>
   </data>
   <data name="{0} singles · {1} doubles passed" xml:space="preserve">
     <value>{0} singles · {1} doubles passés</value>

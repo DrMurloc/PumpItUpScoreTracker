@@ -75,15 +75,16 @@ public sealed class WidgetMixSupportTests : ComponentTestBase
 
     /// <summary>
     ///     The host stops before instantiating the widget rather than rendering it and letting
-    ///     it come up empty. Proven by what a real render costs: on a mix it supports, the
-    ///     Pumbility widget demands its own services and this bare context cannot supply them,
-    ///     so the render throws. On a mix it does not support, the same render succeeds —
-    ///     which is only possible if the component was never constructed.
+    ///     it come up empty. Proven by what a real render costs: on a mix it supports, the Daily
+    ///     Step widget demands its own services (the catalog cache, the glow reader) and this bare
+    ///     context cannot supply them, so the render throws. On a mix a widget does not support,
+    ///     the render succeeds — which is only possible if the component was never constructed.
+    ///     (Account Stats used to be the probe; its peers roster needs nothing this context lacks.)
     /// </summary>
     [Fact]
     public void AnUnsupportedWidgetIsNeverConstructed()
     {
-        Assert.Throws<InvalidOperationException>(() => RenderHost("pumbility", MixEnum.Phoenix));
+        Assert.Throws<InvalidOperationException>(() => RenderHost("daily-step", MixEnum.Phoenix));
 
         var cut = RenderHost("pumbility", MixEnum.Prime2);
 

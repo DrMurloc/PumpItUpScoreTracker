@@ -70,8 +70,8 @@
             @if (!IsDrilled && Score?.Score != null)
             {
                 <div class="chart-details-score">
-                    <ScoreBreakdown Score="Score.Score.Value" IsBroken="Score.IsBroken" Mix="Mix" OneLine="true" ShowScore="true"
-                                    Plate="Score.Plate" Ranking="Ranking"></ScoreBreakdown>
+                    <PeerScore Score="Score.Score.Value" IsBroken="Score.IsBroken" Mix="Mix" Plate="Score.Plate"
+                               Standing="Standing" Chart="Chart" OnOpenBoard="ShowBoard"></PeerScore>
                     @if (ScoreAgeDays != null)
                     {
                         <MudText Typo="Typo.caption" Class="chart-details-score-age">@L["Recorded {0} days ago", ScoreAgeDays]</MudText>
@@ -117,7 +117,9 @@
             <div class="@PanelClass(DetailsTab.Leaderboard)">
                 <ChartLeaderboardScopes ChartId="ViewChart.Id" Mix="Mix"
                                         Active="IsLive(DetailsTab.Leaderboard)"
-                                        InitialScope="BoardScope"
+                                        InitialScope="_boardOverride?.Scope ?? BoardScope"
+                                        InitialCommunity="_boardOverride?.Community ?? BoardCommunity"
+                                        Subject="BoardSubjectInForce"
                                         @key="(ViewChart.Id, Mix)"></ChartLeaderboardScopes>
             </div>
             @* Keys carry each panel's identity alongside the chart id: Blazor's key lookup
@@ -358,6 +360,34 @@
     [Parameter] public ChartLeaderboardScopes.LeaderboardScope BoardScope { get; set; } =
         ChartLeaderboardScopes.LeaderboardScope.World;
 
+    /// <summary>The club the Community scope opens on, when the host names one.</summary>
+    [Parameter] public Name? BoardCommunity { get; set; }
+
+    /// <summary>
+    ///     Whose band the Competitive scope shows. A page scoped to another player — their
+    ///     sessions — names them, so the board a source line opens is the band that line counted
+    ///     (D31). Null is the viewer, which every host showing the viewer's own scores wants.
+    /// </summary>
+    [Parameter] public Guid? BoardSubject { get; set; }
+
+    /// <summary>
+    ///     A line inside this dialog is on the viewer's own record, so its board is the viewer's
+    ///     band whatever the host is scoped to.
+    /// </summary>
+    private Guid? BoardSubjectInForce => _boardOverride is { } line ? line.Subject : BoardSubject;
+
+    /// <summary>
+    ///     A popover source line inside this dialog asked for that source's board: the Leaderboard
+    ///     tab, on that scope. Scoped to one chart — the next chart opens on the host's scope.
+    /// </summary>
+    private (ChartLeaderboardScopes.LeaderboardScope Scope, Name? Community, Guid ChartId, Guid? Subject)? _boardOverride;
+
+    private async Task ShowBoard(PeerBoardRequest request)
+    {
+        _boardOverride = (request.Scope, request.Community, request.ChartId, request.Subject);
+        await SelectTab(DetailsTab.Leaderboard);
+    }
+
     /// <summary>
     ///     Opt-in: start the video on open. Callers that reach this dialog through a play badge
     ///     set it, because the badge promised a video and a second click to get one reads as a
@@ -371,7 +401,8 @@
 
     [Parameter] public RecordedPhoenixScore? Score { get; set; }
 
-    [Parameter] public ScoreRankingRecord? Ranking { get; set; }
+    /// <summary>Where the host's score stands among the viewer's peers; null renders it plain.</summary>
+    [Parameter] public PeerStanding? Standing { get; set; }
 
     [Parameter] public bool IsToDo { get; set; }
 
@@ -492,6 +523,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        if (_boardOverride is { } held && held.ChartId != Chart?.Id) _boardOverride = null;
         if (!Visible)
         {
             // Resolved once per opening rather than on every parameter change: re-applying
@@ -500,6 +532,9 @@
             // reason — reopening from a row starts at the chart that row names.
             _wasVisible = false;
             _drilled = null;
+            // A line's board is for the opening it was tapped in: the next opening of the same
+            // chart starts on the host's scope again (D32).
+            _boardOverride = null;
             ClearStripHandoff();
             return;
         }

@@ -11,14 +11,18 @@ using Moq;
 using MudBlazor;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Contracts.Queries;
-using ScoreTracker.Domain.Models;
-using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts.Commands;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Components.Account;
 using ScoreTracker.Web.Services.Contracts;
 using Xunit;
+
+
+
+using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
+using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Tests.Components;
 

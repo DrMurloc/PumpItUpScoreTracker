@@ -2,6 +2,7 @@
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Identity.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Events
 @using ScoreTracker.ScoreLedger.Contracts
@@ -49,7 +50,7 @@
 
         <div class="@(_busy ? "sbd-busy" : null)">
             <SessionHero Breakdown="_model.Hero" OnOpenChart="OpenChart"
-                         OnOpenBreakdown="OpenBreakdown"></SessionHero>
+                         OnOpenBreakdown="OpenBreakdown" OnOpenBoard="OpenBoard"></SessionHero>
         </div>
 
         <div class="mt-4 @(_busy ? "sbd-busy" : null)">
@@ -64,12 +65,13 @@
         </MudText>
 
         @* The details dialogue carries the board now, so there is no dedicated leaderboard
-           dialog to open. It opens on Competitive Peers because that is the cohort the row's
-           score colour came from — opening there makes the colour auditable rather than
-           asserted (rivals.md, session-breakdown.md). *@
+           dialog to open. A row's name opens it on Competitive Peers, the default cohort; a
+           popover source line opens it on that source's own board, which is what makes a score's
+           color auditable rather than asserted (peers-abstraction.md D12). *@
         <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart"
                             Mix="_model.Hero.Group.Mix"
-                            BoardScope="ChartLeaderboardScopes.LeaderboardScope.CompetitivePeers">
+                            BoardScope="_boardScope" BoardCommunity="_boardCommunity" BoardSubject="UserIdParam"
+                            InitialTab="_boardTab">
         </ChartDetailsDialog>
 
         @* The play's own story — tapped in from a judgement strip. The identity comes off the
@@ -240,8 +242,26 @@
             CancellationToken.None));
     }
 
+    private ChartLeaderboardScopes.LeaderboardScope _boardScope = ChartLeaderboardScopes.LeaderboardScope.CompetitivePeers;
+    private Name? _boardCommunity;
+    /// <summary>Null lets the dialog open on the tab the player remembers; a board request forces Leaderboard.</summary>
+    private ChartDetailsDialog.DetailsTab? _boardTab;
+
     private void OpenChart(Chart chart)
     {
+        _boardScope = ChartLeaderboardScopes.LeaderboardScope.CompetitivePeers;
+        _boardCommunity = null;
+        _boardTab = null;
+        _detailsChart = chart;
+        _detailsOpen = true;
+    }
+
+    private void OpenBoard(PeerBoardRequest request)
+    {
+        if (_model.Hero == null || !_model.Hero.Charts.TryGetValue(request.ChartId, out var chart)) return;
+        _boardScope = request.Scope;
+        _boardCommunity = request.Community;
+        _boardTab = ChartDetailsDialog.DetailsTab.Leaderboard;
         _detailsChart = chart;
         _detailsOpen = true;
     }

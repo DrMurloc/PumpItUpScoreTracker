@@ -2,7 +2,7 @@
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
-@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.Rivals.Contracts.Queries
 @using ScoreTracker.ScoreLedger.Contracts.Commands
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
@@ -54,8 +54,9 @@
             else if (!_isLegacy && _best?.Score != null)
             {
                 <div class="chart-record-score">
-                    <ScoreBreakdown Score="_best.Score.Value" IsBroken="_best.IsBroken" Mix="Mix" OneLine="true"
-                                    ShowScore="true" Plate="_best.Plate" Ranking="_ranking"></ScoreBreakdown>
+                    @* No board callback: the chart page's own board sits further down this page. *@
+                    <PeerScore Score="_best.Score.Value" IsBroken="_best.IsBroken" Mix="Mix" Plate="_best.Plate"
+                               Standing="_standing" Chart="Chart"></PeerScore>
                 </div>
             }
             else
@@ -85,7 +86,7 @@
     private Chart? Chart { get; set; }
     private RecordedPhoenixScore? _best;
     private XXChartAttempt? _legacyBest;
-    private ScoreRankingRecord? _ranking;
+    private PeerStanding? _standing;
     private int? _ageDays;
     private IReadOnlyList<ScoreJournalEntry> _journey = Array.Empty<ScoreJournalEntry>();
     private bool _editing;
@@ -117,18 +118,18 @@
         {
             _legacyBest = (await Mediator.Send(new GetXXBestChartAttemptQuery(Chart.Id, Mix))).BestAttempt;
             _best = null;
-            // Score rankings are built from Phoenix scores, so there is no legacy percentile
-            // to quote — era scores are note-count dependent and do not compare across charts.
-            _ranking = null;
+            // Standings are built from Phoenix scores, so there is no legacy percentile to
+            // quote — era scores are note-count dependent and do not compare across charts.
+            _standing = null;
             _ageDays = _legacyBest == null ? null : (int)(Clock.Now - _legacyBest.RecordedOn).TotalDays;
             return;
         }
 
         _best = await Mediator.Send(new GetPhoenixRecordQuery(Chart.Id, Mix));
         _legacyBest = null;
-        _ranking = (await Mediator.Send(new GetChartScoreRankingsQuery(new[] { Chart.Id }, Mix)))
-            .TryGetValue(Chart.Id, out var ranking)
-            ? ranking
+        _standing = (await Mediator.Send(new GetPeerStandingsQuery(Mix, new[] { Chart.Id })))
+            .TryGetValue(Chart.Id, out var standing)
+            ? standing
             : null;
         _ageDays = _best == null ? null : (int)(Clock.Now - _best.RecordedDate).TotalDays;
     }
