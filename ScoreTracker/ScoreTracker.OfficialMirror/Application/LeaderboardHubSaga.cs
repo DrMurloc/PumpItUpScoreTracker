@@ -31,6 +31,7 @@ internal sealed class LeaderboardHubSaga :
     IRequestHandler<GetWhatItTakesQuery, WhatItTakesRecord>,
     IRequestHandler<GetOfficialChartBoardQuery, OfficialChartBoardRecord?>,
     IRequestHandler<GetLinkedOfficialPlayerTagQuery, string?>,
+    IRequestHandler<GetLinkedOfficialPlayerTagsQuery, IReadOnlyDictionary<Guid, string>>,
     IRequestHandler<GetOfficialChartPlacementsQuery, IReadOnlyDictionary<Guid, OfficialPlacementEstimate>>,
     IRequestHandler<GetOfficialPumbilityBoardQuery, OfficialPumbilityBoard?>,
     IRequestHandler<GetSupplementedSummaryQuery, SupplementedSummaryRecord>
@@ -497,6 +498,17 @@ internal sealed class LeaderboardHubSaga :
     public async Task<string?> Handle(GetLinkedOfficialPlayerTagQuery request, CancellationToken cancellationToken)
     {
         return (await _snapshots.GetPlayerByUserId(request.Mix, request.UserId, cancellationToken))?.Username;
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, string>> Handle(GetLinkedOfficialPlayerTagsQuery request,
+        CancellationToken cancellationToken)
+    {
+        // One tag per account: where an account still owns two mirror rows in a mix, the one the
+        // crawl saw most recently is the tag the player is using now.
+        return (await _snapshots.GetPlayersByUserIds(request.Mix, request.UserIds, cancellationToken))
+            .Where(p => p.UserId != null)
+            .GroupBy(p => p.UserId!.Value)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(p => p.LastSeenAt).First().Username);
     }
 
     public async Task<IReadOnlyList<OfficialPopularityRecord>> Handle(GetOfficialPopularityQuery request,

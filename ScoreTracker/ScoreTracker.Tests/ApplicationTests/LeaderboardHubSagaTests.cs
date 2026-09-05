@@ -553,4 +553,31 @@ public sealed class LeaderboardHubSagaTests
         Assert.Null(official!.Pumbility);
         Assert.False(official.PumbilityIsSupplemented);
     }
+
+    [Fact]
+    public async Task LinkedTagsByIdsAnswerOneTagPerAccountAndSkipTheUnlinked()
+    {
+        var f = Arrange(Run(2, Week2));
+        var linked = Guid.NewGuid();
+        var renamed = Guid.NewGuid();
+        var unlinked = Guid.NewGuid();
+        f.Snapshots.Setup(s => s.GetPlayersByUserIds(MixEnum.Phoenix2, It.IsAny<IReadOnlyCollection<Guid>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new PlayerDimension(11, "NIMBUS9", null, linked, Week2),
+                // Two rows for one account: the crawl saw the newer tag more recently.
+                new PlayerDimension(12, "OLDTAG#1", null, renamed, Week1),
+                new PlayerDimension(13, "NEWTAG#1", null, renamed, Week2)
+            });
+
+        var tags = await f.Saga.Handle(
+            new GetLinkedOfficialPlayerTagsQuery(MixEnum.Phoenix2, new[] { linked, renamed, unlinked }),
+            CancellationToken.None);
+
+        Assert.Equal(2, tags.Count);
+        Assert.Equal("NIMBUS9", tags[linked]);
+        Assert.Equal("NEWTAG#1", tags[renamed]);
+        Assert.False(tags.ContainsKey(unlinked));
+    }
 }
