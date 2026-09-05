@@ -368,6 +368,37 @@ public static class MixThemes
     private const string DoublesTypeHex = "#33A653";
     private const string CoOpTypeHex = "#D9A82E";
 
+    // The classic score ladder (docs/design/peers-abstraction.md D14): the retired Raider.io-style
+    // RankingColors ramp, hues retuned for the dark themes and its top two rungs put back in
+    // Raider.io's own order — orange for legendary, pink for the top 1%. Seven rungs, cut at
+    // 10 / 25 / 50 / 75 / 90 / 99 %. Mix-invariant like the judgement colors; a player who picks
+    // it wants the ladder they remember, not a per-theme reinterpretation of it.
+    private static readonly string[] ClassicRampColors =
+        { "#8B98A9", "#E9EFF7", "#4ADE80", "#4F9DFF", "#B47CFF", "#FF9A3C", "#FF5FA2" };
+
+    // The single-hue ladder: six lightness steps of each mix's primary, dark to bright, cut at
+    // 25 / 50 / 75 / 90 / 99 %. Ordered by lightness alone, so it reads the same for every kind
+    // of color vision — the accessibility answer among the score color systems. Per mix, and
+    // hand-tuned rather than computed: the bottom rung has to stay readable on the surface.
+    private static readonly IReadOnlyDictionary<MixEnum, string[]> HueRampColors =
+        new Dictionary<MixEnum, string[]>
+        {
+            [MixEnum.XX] = new[] { "#6E5573", "#9A6A9E", "#FF2FA0", "#FF6FBF", "#FFA8D8", "#FFE0F1" },
+            [MixEnum.Phoenix] = new[] { "#55677A", "#6C8CAE", "#3FA9F5", "#7CC4FF", "#B3DEFF", "#E6F5FF" },
+            [MixEnum.Phoenix2] = new[] { "#5D7A62", "#6FA274", "#4FE33F", "#8CEF80", "#C2F7BB", "#EAFFE6" }
+        };
+
+    /// <summary>Raw hex for a classic-ladder rung, lowest (0) to highest (6). For render targets that cannot read tokens.</summary>
+    public static string ClassicHex(int rung) =>
+        ClassicRampColors[Math.Clamp(rung, 0, ClassicRampColors.Length - 1)];
+
+    /// <summary>Raw hex for a single-hue rung in a mix, darkest (0) to brightest (5).</summary>
+    public static string HueHex(MixEnum mix, int rung)
+    {
+        var ramp = HueRampColors.TryGetValue(mix, out var found) ? found : HueRampColors[MixEnum.Phoenix];
+        return ramp[Math.Clamp(rung, 0, ramp.Length - 1)];
+    }
+
     // The game's own judgment vocabulary. Mix-invariant on purpose, exactly like the alert
     // colors: a MISS has to read as a miss whichever theme is on. Perfect takes the ice-blue
     // that anchors the elite end everywhere else on the site (SSS grades, PG plates).
@@ -554,6 +585,10 @@ public static class MixThemes
                    $"    --life-overflow: {LifeOverflowHex};\n" +
                    $"    --life-danger: {JudgmentColors[Judgment.Miss]};";
         var speed = string.Join("\n", SpeedBandColors.Select((hex, i) => $"    --speed-{i + 1}: {hex};"));
+        // The two score-color ladders only ThemeScales.ScoreStyle reads (peers-abstraction.md D14).
+        var hueRamp = HueRampColors.TryGetValue(mix, out var hue) ? hue : HueRampColors[MixEnum.Phoenix];
+        var scoreLadders = string.Join("\n", ClassicRampColors.Select((hex, i) => $"    --classic-{i + 1}: {hex};"))
+                           + "\n" + string.Join("\n", hueRamp.Select((hex, i) => $"    --hue-{i + 1}: {hex};"));
         // The step-chart strip's vocabulary (docs/design/step-chart-failure-map.md D12).
         // Mix-invariant like the judgement colors: an up-left arrow is red in every theme, a
         // left foot is teal in every theme. Three groups, three exclusive coloring modes —
@@ -602,6 +637,7 @@ public static class MixThemes
 {judgments}
 {life}
 {speed}
+{scoreLadders}
 {stepChart}
 }}";
     }
