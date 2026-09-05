@@ -450,8 +450,9 @@ public sealed class RecommendedChartsSagaTests
 
         var rec = Assert.Single(result);
         Assert.Null(rec.SeedPeerRanking);
-        ctx.Mediator.Verify(m => m.Send(It.IsAny<GetChartScoreRankingsQuery>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+        ctx.Peers.Verify(p => p.GetStandings(It.IsAny<Guid>(), It.IsAny<MixEnum>(),
+            It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<PeerSourceSelection?>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -676,6 +677,7 @@ public sealed class RecommendedChartsSagaTests
         public Mock<IChartListRepository> ChartList { get; } = new();
         public Mock<IRandomNumberGenerator> Random { get; } = new();
         public Mock<IScoreHighlightRepository> Highlights { get; } = new();
+        public Mock<IPeerStandingReader> Peers { get; } = new();
         public RecommendedChartsSaga Saga { get; }
 
         public RecommendedChartsContext(Guid? currentUserId = null)
@@ -712,12 +714,14 @@ public sealed class RecommendedChartsSagaTests
                 .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
             Mediator.Setup(m => m.Send(It.IsAny<GetSimilarChartsQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<ChartSimilarityRecord>());
-            Mediator.Setup(m => m.Send(It.IsAny<GetChartScoreRankingsQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Dictionary<Guid, ScoreRankingRecord>());
+            Peers.Setup(p => p.GetStandings(It.IsAny<Guid>(), It.IsAny<MixEnum>(),
+                    It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<PeerSourceSelection?>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Dictionary<Guid, PeerStanding>());
 
             Saga = new RecommendedChartsSaga(Mediator.Object, CurrentUser.Object, Users.Object, Stats.Object,
                 Scores.Object, Weekly.Object, ChartList.Object,
-                FakeDateTime.At(Now).Object, Random.Object, Highlights.Object);
+                FakeDateTime.At(Now).Object, Random.Object, Highlights.Object, Peers.Object);
         }
 
         public RecommendedChartsContext WithCharts(params Chart[] charts)
@@ -768,11 +772,16 @@ public sealed class RecommendedChartsSagaTests
             return this;
         }
 
+        /// <summary>A standing whose percentile is the given share: a hundred-strong cohort with the rest above you.</summary>
+        private static PeerStanding StandingAt(double ranking) =>
+            new(99, 99, (int)Math.Round((1 - ranking) * 100), 0, 0, Array.Empty<PeerStandingSource>(), null);
+
         public RecommendedChartsContext WithRankings(params (Guid ChartId, double Ranking)[] rankings)
         {
-            Mediator.Setup(m => m.Send(It.IsAny<GetChartScoreRankingsQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(rankings.ToDictionary(r => r.ChartId,
-                    r => new ScoreRankingRecord(r.Ranking, 25)));
+            Peers.Setup(p => p.GetStandings(It.IsAny<Guid>(), It.IsAny<MixEnum>(),
+                    It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<PeerSourceSelection?>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(rankings.ToDictionary(r => r.ChartId, r => StandingAt(r.Ranking)));
             return this;
         }
 
@@ -845,6 +854,6 @@ public sealed class RecommendedChartsSagaTests
         highlights ??= new Mock<IScoreHighlightRepository>();
         return new RecommendedChartsSaga(mediator.Object, currentUser.Object, users.Object, stats.Object,
             scores.Object, weeklyTournament.Object, chartList.Object, dateTime.Object,
-            random.Object, highlights.Object);
+            random.Object, highlights.Object, Mock.Of<IPeerStandingReader>());
     }
 }
