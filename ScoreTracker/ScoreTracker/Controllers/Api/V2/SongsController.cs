@@ -24,6 +24,9 @@ public sealed class SongsController : ApiV2ControllerBase
     /// <param name="cursor">Opaque. Follow the envelope's <c>next</c> rather than building one.</param>
     /// <param name="limit">Rows per page, 1–500.</param>
     [HttpGet]
+    [ProducesResponseType(typeof(CursorPageDto<SongV2Dto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Get(
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "cursor")] string? cursor = null,

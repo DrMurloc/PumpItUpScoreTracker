@@ -63,6 +63,10 @@ public sealed class TierListsController : ApiV2ControllerBase
     ///     meaning silently changes later.
     /// </remarks>
     [HttpGet("{listType}")]
+    [ProducesResponseType(typeof(CursorPageDto<TierListEntryV2Dto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Get([FromRoute] string listType,
         [FromQuery(Name = "mix")] string? mixValue = null)
     {

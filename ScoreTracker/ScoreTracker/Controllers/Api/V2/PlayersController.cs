@@ -175,6 +175,9 @@ public sealed class PlayersController : ApiV2ControllerBase
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet]
+    [ProducesResponseType(typeof(CursorPageDto<PlayerV2Dto>), StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetPlayers(
         [FromQuery(Name = "community")] string? community = null,
         [FromQuery(Name = "cursor")] string? cursor = null,
@@ -233,6 +236,9 @@ public sealed class PlayersController : ApiV2ControllerBase
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet("stats")]
+    [ProducesResponseType(typeof(CursorPageDto<PlayerStatsDto>), StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetStats(
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "community")] string? community = null,
@@ -284,6 +290,9 @@ public sealed class PlayersController : ApiV2ControllerBase
     /// <param name="playerId">A player id from <c>/api/v2/players</c>, or <c>me</c> with a personal token.</param>
     /// <param name="mixValue">Required. A Phoenix mix from <c>/api/v2/mixes</c>; a legacy mix has no PUMBILITY and answers 404.</param>
     [HttpGet("{playerId}/stats")]
+    [ProducesResponseType(typeof(PlayerStatsDto), StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetPlayerStats([FromRoute] string playerId,
         [FromQuery(Name = "mix")] string? mixValue = null)
     {
@@ -306,7 +315,11 @@ public sealed class PlayersController : ApiV2ControllerBase
     }
 
     /// <summary>The player's profile, with their most recently observed in-game tag.</summary>
+    /// <param name="playerId">A player id from <c>/api/v2/players</c>, or <c>me</c> with a personal token.</param>
     [HttpGet("{playerId}")]
+    [ProducesResponseType(typeof(PlayerV2Dto), StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetPlayer([FromRoute] string playerId)
     {
         var (resolved, failure) = await ResolvePlayer(playerId);
@@ -339,6 +352,9 @@ public sealed class PlayersController : ApiV2ControllerBase
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet("{playerId}/scores")]
+    [ProducesResponseType(typeof(PlayerScorePageDto), StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetScores([FromRoute] string playerId,
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "minLevel")] int? minLevel = null,
@@ -430,7 +446,14 @@ public sealed class PlayersController : ApiV2ControllerBase
     }
 
     /// <summary>Import and play sessions, newest first.</summary>
+    /// <param name="playerId">A player id from <c>/api/v2/players</c>, or <c>me</c> with a personal token.</param>
+    /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
+    /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
+    /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet("{playerId}/sessions")]
+    [ProducesResponseType(typeof(CursorPageDto<SessionDto>), StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetSessions([FromRoute] string playerId,
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "cursor")] string? cursor = null,
@@ -480,7 +503,15 @@ public sealed class PlayersController : ApiV2ControllerBase
     ///     Every play, not just the ones that became records — the per-attempt history, with judgment
     ///     counts where the source carried them.
     /// </summary>
+    /// <param name="playerId">A player id from <c>/api/v2/players</c>, or <c>me</c> with a personal token.</param>
+    /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
+    /// <param name="since">Only plays on or after this instant.</param>
+    /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
+    /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet("{playerId}/journal")]
+    [ProducesResponseType(typeof(CursorPageDto<JournalEntryDto>), StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetJournal([FromRoute] string playerId,
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "since")] DateTimeOffset? since = null,

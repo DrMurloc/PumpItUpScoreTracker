@@ -22,6 +22,11 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 ///     </para>
 /// </summary>
 [EnableCors("API")]
+// What every v2 action answers with, declared once so Swagger shows it on all of them: JSON
+// bodies, a 401 for a missing or bad credential, and a 429 with Retry-After from the rate limiter.
+[Produces("application/json")]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+[ProducesResponseType(StatusCodes.Status429TooManyRequests)]
 public abstract class ApiV2ControllerBase : Controller
 {
     public const string RoutePrefix = "api/v2";

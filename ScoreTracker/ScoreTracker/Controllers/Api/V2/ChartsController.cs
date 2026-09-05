@@ -36,6 +36,9 @@ public sealed class ChartsController : ApiV2ControllerBase
     /// <param name="level">Optional difficulty level filter.</param>
     /// <param name="typeValue">Optional chart type filter: Single, Double, CoOp, SinglePerformance, DoublePerformance.</param>
     [HttpGet]
+    [ProducesResponseType(typeof(CursorPageDto<ChartV2Dto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Get(
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "level")] int? level = null,
@@ -92,6 +95,9 @@ public sealed class ChartsController : ApiV2ControllerBase
     /// </summary>
     /// <remarks>Mix-invariant — it describes the steps, so no <c>mix</c> parameter.</remarks>
     [HttpGet("{chartId:guid}/skills")]
+    [ProducesResponseType(typeof(ChartSkillProfileDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetChartSkills([FromRoute] Guid chartId)
     {
         var profiles = await _mediator.Send(new GetChartSkillProfilesQuery(new[] { chartId }));
@@ -117,6 +123,9 @@ public sealed class ChartsController : ApiV2ControllerBase
     // the endpoint description. XML doc reaches Swagger; a line comment does not, which is why the
     // rationale lives down here.
     [HttpGet("skills")]
+    [ProducesResponseType(typeof(CursorPageDto<ChartSkillProfileDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetSkills(
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "level")] int? level = null,
@@ -164,6 +173,10 @@ public sealed class ChartsController : ApiV2ControllerBase
 
     /// <summary>One chart, as expressed in the requested mix.</summary>
     [HttpGet("{chartId:guid}")]
+    [ProducesResponseType(typeof(ChartV2Dto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetOne([FromRoute] Guid chartId,
         [FromQuery(Name = "mix")] string? mixValue = null)
     {
@@ -189,6 +202,8 @@ public sealed class ChartsController : ApiV2ControllerBase
     // question and deliberately outside the ±1 the nightly job precalculates. See
     // docs/design/chart-similarity.md; a line comment keeps it out of the Swagger description.
     [HttpGet("{chartId:guid}/similar")]
+    [ProducesResponseType(typeof(SimilarChartsDto), StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetSimilar([FromRoute] Guid chartId,
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "minLevel")] int? minLevel = null,
@@ -230,6 +245,8 @@ public sealed class ChartsController : ApiV2ControllerBase
     ///     <paramref name="count" /> when they exceed it.
     /// </param>
     [HttpGet("random")]
+    [ProducesResponseType(typeof(CursorPageDto<ChartV2Dto>), StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetRandom(
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "count")] int count = 5,

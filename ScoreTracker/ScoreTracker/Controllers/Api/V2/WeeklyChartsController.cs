@@ -28,6 +28,8 @@ public sealed class WeeklyChartsController : ApiV2ControllerBase
 
     /// <summary>The charts on this week's board.</summary>
     [HttpGet]
+    [ProducesResponseType(typeof(CursorPageDto<WeeklyChartDto>), StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Get([FromQuery(Name = "mix")] string? mixValue = null)
     {
         if (!V2MixParser.TryParse(mixValue, out var mix)) return MixRequiredProblem();
@@ -41,6 +43,8 @@ public sealed class WeeklyChartsController : ApiV2ControllerBase
 
     /// <summary>Every player's entry on the board.</summary>
     [HttpGet("scores")]
+    [ProducesResponseType(typeof(CursorPageDto<WeeklyChartScoreDto>), StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetScores([FromQuery(Name = "mix")] string? mixValue = null)
     {
         if (!V2MixParser.TryParse(mixValue, out var mix)) return MixRequiredProblem();
