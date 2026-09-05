@@ -469,6 +469,36 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
             .ReturnsAsync((IReadOnlySet<Guid>)new HashSet<Guid> { ChartId });
     }
 
+    [Fact]
+    public void APassRanksAboveABrokenAttemptWhateverTheScore()
+    {
+        // A broken 990k used to outrank a passing 950k on the World board, which disagreed by a
+        // row with the pass-only standing the popover prints for the same group (D21). The broken
+        // row stays on the board, drawn with the broken grade, after every pass.
+        var passer = Guid.NewGuid();
+        var breaker = Guid.NewGuid();
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsForCommunityQuery>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new UserPhoenixScore(breaker, ChartId, Name.From("BREAKER"), PhoenixScore.From(990_000), null, true,
+                    true, When),
+                ScoreFor(passer, 950_000, "PASSER")
+            });
+
+        var dialog = RenderDialog();
+
+        dialog.WaitForAssertion(() =>
+        {
+            var rows = dialog.FindAll(".weekly-lb-row");
+            Assert.Equal(2, rows.Count);
+            Assert.Contains("PASSER", rows[0].TextContent);
+            Assert.Contains("#1", rows[0].TextContent);
+            Assert.Contains("BREAKER", rows[1].TextContent);
+            Assert.Contains("#2", rows[1].TextContent);
+        });
+    }
+
     private static UserPhoenixScore ScoreFor(Guid userId, int score, string name) =>
         new(userId, Guid.NewGuid(), Name.From(name), PhoenixScore.From(score),
             PhoenixPlate.PerfectGame, false, true, When);

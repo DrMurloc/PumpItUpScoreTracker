@@ -387,13 +387,18 @@ else
         // Limbo runs the other way: #1 is the LOWEST pass. The percentile below is derived from
         // place rather than score, so it needs no arm of its own — the top of the rarity ramp
         // follows #1 in either direction, which on this board is the point and not a bug.
+        //
+        // Passes rank first, broken attempts after them, still drawn with the broken grade
+        // (docs/design/peers-abstraction.md D21): a broken 990k used to sit above a passing 950k,
+        // which disagreed by a row with the pass-only standing the popover prints for the same
+        // group. Limbo rows are passes by construction, so its ascending order is untouched.
         _rows = new List<Row>();
         var total = scores.Count;
         var place = 1;
-        var byScore = scores.GroupBy(s => (int)s.Score);
+        var byScore = scores.GroupBy(s => (s.IsBroken, Score: (int)s.Score));
         foreach (var tie in _scope == LeaderboardScope.LowestPassing
-                     ? byScore.OrderBy(g => g.Key)
-                     : byScore.OrderByDescending(g => g.Key))
+                     ? byScore.OrderBy(g => g.Key.IsBroken).ThenBy(g => g.Key.Score)
+                     : byScore.OrderBy(g => g.Key.IsBroken).ThenByDescending(g => g.Key.Score))
         {
             var tiePlace = place;
             foreach (var score in tie.OrderBy(s => s.RecordedAt ?? DateTimeOffset.MaxValue))
