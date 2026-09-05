@@ -322,4 +322,27 @@ public sealed class EFCommunitiesRepositoryTests : IAsyncLifetime
         Assert.True(retrieved.IsBanned(banned));
         Assert.Equal(CommunityRole.Creator, retrieved.RoleOf(owner));
     }
+
+    /// <summary>
+    ///     The peer standing reader counts a community's members through this read, so a ban has
+    ///     to leave it the way it leaves every other member read: the row stays (a ban is
+    ///     retained so the player cannot rejoin), the player does not.
+    /// </summary>
+    [Fact]
+    public async Task GetMembersLeavesOutTheBanned()
+    {
+        var owner = Guid.NewGuid();
+        var member = Guid.NewGuid();
+        var banned = Guid.NewGuid();
+        var community = new Community("Bouncer", owner, CommunityPrivacyType.Public,
+            new[] { owner, member, banned }, Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?>(), false);
+        community.Ban(owner, banned);
+        await BuildRepository().SaveCommunity(community, CancellationToken.None);
+
+        ICommunityReader reader = BuildRepository();
+        var members = (await reader.GetMembers("Bouncer", CancellationToken.None)).OrderBy(id => id).ToArray();
+
+        Assert.Equal(new[] { owner, member }.OrderBy(id => id), members);
+    }
 }

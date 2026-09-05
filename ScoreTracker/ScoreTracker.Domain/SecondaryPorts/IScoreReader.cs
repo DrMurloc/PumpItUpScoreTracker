@@ -47,6 +47,15 @@ public interface IScoreReader
         IEnumerable<Guid> chartIds, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Which of these players hold only a BROKEN best on which of these charts — the attempts the
+    ///     pass-only reads above leave out on purpose. The peer standing popover counts them among
+    ///     the peers who have not passed a chart, never as scores to rank against
+    ///     (docs/design/peers-abstraction.md D9, D13).
+    /// </summary>
+    Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetBrokenBests(MixEnum mix, IEnumerable<Guid> userIds,
+        IEnumerable<Guid> chartIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Named best attempts for a set of players across a mix's level range and chart type.
     ///     <para>
     ///         The chart-id overload above takes the same shape as a list of GUIDs, which for a

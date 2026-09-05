@@ -1,12 +1,14 @@
 using System.Diagnostics.CodeAnalysis;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using MediatR;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.Rivals.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 
@@ -120,9 +122,13 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
 
         var pinned = PinHighlights(group.Rows, highlights);
         var phoenix1 = await Phoenix1Bests(userId, group.Mix, chartIds, cancellationToken);
+        var standings = await Standings(userId, group, cancellationToken);
         var scores = group.Rows
             .Select((r, index) => new SessionScore(r, charts.GetValueOrDefault(r.ChartId),
-                pinned[index].Flags, pinned[index].Detail, Phoenix1Gain(r, phoenix1)))
+                pinned[index].Flags, pinned[index].Detail, Phoenix1Gain(r, phoenix1),
+                r.Score is { } score && !r.IsBroken
+                    ? standings.GetValueOrDefault(new ScoreOnChart(r.ChartId, score))
+                    : null))
             .ToArray();
 
         var stats = await mediator.Send(new GetPlayerStatsQuery(userId, group.Mix), cancellationToken);
@@ -133,6 +139,25 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
             BuildTitleBars(milestones),
             CaptureWindowOpen(session),
             highlights.Length + milestones.Length);
+    }
+
+    /// <summary>
+    ///     Where each row's score stands among the page subject's peers, measured live against
+    ///     the peers as they stand now (docs/design/peers-abstraction.md D6). The query decides
+    ///     whose peers: the subject's own choice when they are the viewer, the competitive default
+    ///     for anyone else (D19). One read for the whole hero; a chart played several times gets a
+    ///     standing per score, so an attempt never wears the pass's place.
+    /// </summary>
+    private async Task<IReadOnlyDictionary<ScoreOnChart, PeerStanding>> Standings(Guid userId,
+        RecentSessionsPage.SessionGroup group, CancellationToken cancellationToken)
+    {
+        var scores = group.Rows
+            .Where(r => r.Score != null && !r.IsBroken)
+            .Select(r => new ScoreOnChart(r.ChartId, r.Score!.Value))
+            .Distinct()
+            .ToArray();
+        if (scores.Length == 0) return new Dictionary<ScoreOnChart, PeerStanding>();
+        return await mediator.Send(new GetPeerStandingsForScoresQuery(group.Mix, scores, userId), cancellationToken);
     }
 
     /// <summary>

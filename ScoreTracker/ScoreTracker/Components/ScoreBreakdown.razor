@@ -1,8 +1,6 @@
 @using System.ComponentModel.DataAnnotations
 @using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.Domain.Records
 @using ScoreTracker.SharedKernel.ValueTypes
-@using ScoreTracker.Web.Services.Theming
 @using Align = MudBlazor.Align
 @namespace ScoreTracker.Web.Components
 @* MudTooltip renders a popover, which throws in static SSR (no provider in the static tree).
@@ -39,13 +37,13 @@ else
         }
         @if (ShowScore && Score != null && string.IsNullOrWhiteSpace(Text))
         {
-            <MudText tabindex="0" Align="Align.Center" Style=@(OneLine?$"{RankingColor}display:inline;padding-left:5px;vertical-align:top;":$"{RankingColor}vertical-align:top;")>
+            <MudText tabindex="0" Align="Align.Center" Style=@(OneLine?"display:inline;padding-left:5px;vertical-align:top;":"vertical-align:top;")>
                 @ScoreString
             </MudText>
         }
         @if (!string.IsNullOrWhiteSpace(Text) && !ShowTextAsTooltip)
         {
-            <MudText tabindex="0" Align="Align.Center" Style=@(OneLine?$"{RankingColor}display:inline;padding-left:5px;vertical-align:top;":$"{RankingColor}vertical-align:top;")>
+            <MudText tabindex="0" Align="Align.Center" Style=@(OneLine?"display:inline;padding-left:5px;vertical-align:top;":"vertical-align:top;")>
                 @Text
             </MudText>
         }
@@ -109,15 +107,8 @@ else
     [Parameter]
     public bool Stacked { get; set; } = false;
 
-    private string HoverText => ShowTextAsTooltip ? Text
-        : ShowScore && string.IsNullOrWhiteSpace(Text) ? RankingString
-        : ScoreString;
-    [Parameter]
-    public ScoreRankingRecord? Ranking { get; set; }
+    private string HoverText => ShowTextAsTooltip ? Text : ScoreString;
 
-    private string RankingColor => ThemeScales.RarityStyle(Ranking?.Ranking);
-
-    private string RankingString => Ranking == null ? "" : L["X% of Y Comparable Players", (Ranking.Ranking * 100.0).ToString("N1"), Ranking.PlayerCount].Value;
     // The grade image depends on the mix's score→grade table (Phoenix 2 re-cut sub-AAA),
     // so every consumer names the mix its score was earned in.
     [Parameter]

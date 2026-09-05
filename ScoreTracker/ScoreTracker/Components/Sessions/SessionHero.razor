@@ -70,10 +70,11 @@
         <div class="sbd-section" data-testid="session-highlights">
             <div class="sbd-section-head">
                 <span class="sbd-eyebrow">@L["Highlights"]</span>
-                <span class="sbd-section-note">@L["Coloured by your standing among players at your level"]</span>
+                <span class="sbd-section-note">@L["Colored by your standing among your peers"]</span>
             </div>
             <SessionHighlightCards Scores="Breakdown.Scores" Mix="Breakdown.Group.Mix"
-                                   OnOpenChart="OnOpenChart" OnOpenBreakdown="OnOpenBreakdown">
+                                   OnOpenChart="OnOpenChart" OnOpenBreakdown="OnOpenBreakdown"
+                                   OnOpenBoard="OnOpenBoard">
             </SessionHighlightCards>
         </div>
     }
@@ -84,12 +85,12 @@
         <div class="sbd-section" data-testid="session-notable">
             <div class="sbd-section-head">
                 <span class="sbd-eyebrow">@L["Scores that mattered"]</span>
-                <span class="sbd-section-note">@L["Coloured by your standing among players at your level"]</span>
+                <span class="sbd-section-note">@L["Colored by your standing among your peers"]</span>
             </div>
             @foreach (var score in Notable)
             {
                 <SessionScoreRow Score="score" OnOpenChart="OnOpenChart"
-                                 OnOpenBreakdown="OnOpenBreakdown"></SessionScoreRow>
+                                 OnOpenBreakdown="OnOpenBreakdown" OnOpenBoard="OnOpenBoard"></SessionScoreRow>
             }
         </div>
     }
@@ -106,6 +107,7 @@
         @foreach (var play in OrderedPlays.Take(_visiblePlays))
         {
             <SessionScoreRow Score="play.Score" OnOpenChart="OnOpenChart" OnOpenBreakdown="OnOpenBreakdown"
+                             OnOpenBoard="OnOpenBoard"
                              ThreadClass="@play.ThreadClass" AttemptNumber="play.AttemptNumber">
             </SessionScoreRow>
         }
@@ -133,6 +135,9 @@
     [Parameter] [EditorRequired] public SessionBreakdown Breakdown { get; set; } = null!;
     [Parameter] public EventCallback<Chart> OnOpenChart { get; set; }
     [Parameter] public EventCallback<SessionScore> OnOpenBreakdown { get; set; }
+
+    /// <summary>A popover source line asking for that source's board (peers-abstraction.md D12).</summary>
+    [Parameter] public EventCallback<PeerBoardRequest> OnOpenBoard { get; set; }
 
     /// <summary>One All-plays row with the thread annotations the hero computed for it.</summary>
     private sealed record OrderedPlay(SessionScore Score, string? ThreadClass, int? AttemptNumber);

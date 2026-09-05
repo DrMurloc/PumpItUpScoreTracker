@@ -14,6 +14,7 @@ using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Rivals.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
@@ -56,8 +57,8 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
             .ReturnsAsync(new Dictionary<Guid, double>());
         _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { MakeChart() });
-        _mediator.Setup(m => m.Send(It.IsAny<GetChartScoreRankingsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, ScoreRankingRecord>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetPeerStandingsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyDictionary<Guid, PeerStanding>)new Dictionary<Guid, PeerStanding>());
         // Empty, not absent: a player who has never imported gets no strip, which is the state
         // these tests are all about. The handler never returns null in production.
         _mediator.Setup(m => m.Send(It.IsAny<GetImportHistoryQuery>(), It.IsAny<CancellationToken>()))

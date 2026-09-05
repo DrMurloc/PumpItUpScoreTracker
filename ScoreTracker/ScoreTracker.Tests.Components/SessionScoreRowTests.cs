@@ -10,6 +10,7 @@ using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Services;
+using ScoreTracker.Web.Services.Theming;
 using Xunit;
 
 namespace ScoreTracker.Tests.Components;
@@ -31,8 +32,7 @@ public sealed class SessionScoreRowTests : ComponentTestBase
     {
         // Twelve peers scored higher, so you are thirteenth. The denominator keeps everyone,
         // yourself included: a place is a position inside a population you belong to.
-        var row = Render(Score(972000, new HighlightDetail(PeerCount: 94, PeerBetterCount: 12,
-            PeerPercentile: 0.87)));
+        var row = Render(Score(972000, null, standing: Standing(94, 12, 0)));
 
         Assert.Contains("#13 of 94 peers", row.Markup);
     }
@@ -40,8 +40,7 @@ public sealed class SessionScoreRowTests : ComponentTestBase
     [Fact]
     public void TheBestScoreInTheCohortIsFirstRatherThanATopZeroPercent()
     {
-        var row = Render(Score(998120, new HighlightDetail(PeerCount: 94, PeerBetterCount: 0,
-            PeerPercentile: 1.0)));
+        var row = Render(Score(998120, null, standing: Standing(94, 0, 0)));
 
         Assert.Contains("#1 of 94 peers", row.Markup);
         Assert.DoesNotContain("%", row.Markup);
@@ -52,8 +51,7 @@ public sealed class SessionScoreRowTests : ComponentTestBase
     {
         // Four hold the PG including you, out of a 94-strong cohort. Both numbers drop one:
         // "peers" is the other people at your level.
-        var row = Render(Score(PerfectGame, new HighlightDetail(PeerCount: 94, PeerBetterCount: 0,
-            PeerPgCount: 4, PeerPercentile: 1.0)));
+        var row = Render(Score(PerfectGame, null, standing: Standing(94, 0, 4)));
 
         Assert.Contains("3 of 93 peers have it", row.Markup);
     }
@@ -62,8 +60,7 @@ public sealed class SessionScoreRowTests : ComponentTestBase
     public void ALonePerfectGameFallsBackToThePlace()
     {
         // "0 of 93 peers have it" is a worse way of saying first, so the place says it instead.
-        var row = Render(Score(PerfectGame, new HighlightDetail(PeerCount: 94, PeerBetterCount: 0,
-            PeerPgCount: 1, PeerPercentile: 1.0)));
+        var row = Render(Score(PerfectGame, null, standing: Standing(94, 0, 1)));
 
         Assert.Contains("#1 of 94 peers", row.Markup);
         Assert.DoesNotContain("peers have it", row.Markup);
@@ -72,9 +69,11 @@ public sealed class SessionScoreRowTests : ComponentTestBase
     [Fact]
     public void AScoreWithNoCohortSaysNothingAboutStanding()
     {
+        // Plain ink and no standing line; the popover is where the absence gets explained.
         var row = Render(Score(876300, null));
 
-        Assert.DoesNotContain("peers", row.Markup);
+        Assert.Empty(row.FindAll("[data-testid='session-row-standing']"));
+        Assert.Equal(string.Empty, row.Find("[data-testid='peer-score']").GetAttribute("style") ?? string.Empty);
     }
 
     [Fact]
@@ -82,9 +81,7 @@ public sealed class SessionScoreRowTests : ComponentTestBase
     {
         // The flag still exists and still rides the Discord card; the glyph said "top 10% among
         // comparable players", which is what the standing line now states outright.
-        var row = Render(Score(972000, new HighlightDetail(PeerCount: 94, PeerBetterCount: 4,
-                PeerPercentile: 0.96),
-            HighlightFlags.ScoreQuality90));
+        var row = Render(Score(972000, null, HighlightFlags.ScoreQuality90, standing: Standing(94, 4, 0)));
 
         Assert.DoesNotContain("📊", row.Markup);
         Assert.Contains("#5 of 94 peers", row.Markup);
@@ -184,27 +181,24 @@ public sealed class SessionScoreRowTests : ComponentTestBase
     }
 
     [Fact]
-    public void APerfectGameAlwaysGlowsEvenWhenTheWholeCohortSharesIt()
+    public void APerfectGameGlowsUnderTheDefaultRuleEvenWhenTheWholeCohortSharesIt()
     {
-        // D46 as reversed at the field test: 1,000,000 cannot be beaten, so the glow is the
-        // achievement's own rather than a rarity claim. The standing line keeps the honest
-        // shared-PG fact alongside it.
-        var row = Render(Score(PerfectGame, new HighlightDetail(PeerCount: 94, PeerBetterCount: 0,
-            PeerPgCount: 60, PeerPercentile: 1.0)));
+        // The default glow rule is the top 10%, and a million is inside any top-N rule. The
+        // standing line keeps the honest shared-PG fact alongside it.
+        var row = Render(Score(PerfectGame, null, standing: Standing(94, 0, 60)));
 
-        Assert.Contains("rarity-glow-3", row.Markup);
+        Assert.Contains(ThemeScales.ScoreGlowClass, row.Markup);
         Assert.Contains("59 of 93 peers have it", row.Markup);
     }
 
     [Fact]
-    public void APerfectGameBelowTheCaptureFloorStillGlows()
+    public void APerfectGameNoPeerHasPassedStillGlows()
     {
-        // Capture skips charts far under competitive, so a PG there carries no detail at all —
-        // under the percentile rule it glowed nothing, which read as a bug on the owner's own
-        // low-chart PGs.
+        // No peer has passed the chart, so nothing measured the score — but a million is the
+        // ceiling, and the top-N rules light it whether or not anyone stood beside it.
         var row = Render(Score(PerfectGame, null));
 
-        Assert.Contains("rarity-glow-3", row.Markup);
+        Assert.Contains(ThemeScales.ScoreGlowClass, row.Markup);
     }
 
     [Fact]
@@ -212,8 +206,7 @@ public sealed class SessionScoreRowTests : ComponentTestBase
     {
         // Whatever detail reaches a broken row describes a score the run never achieved —
         // pinning keeps detail off these rows, and the row itself agrees.
-        var broken = Score(400000, new HighlightDetail(PeerCount: 94, PeerBetterCount: 12,
-            PeerPercentile: 0.4));
+        var broken = Score(400000, null, standing: Standing(94, 12, 0));
         broken = broken with { Row = broken.Row with { IsBroken = true, Classification = ScoreEventClassification.Break } };
 
         var row = Render(broken);
@@ -367,8 +360,16 @@ public sealed class SessionScoreRowTests : ComponentTestBase
         return new SessionScore(row, chart, HighlightFlags.None, null);
     }
 
+    /// <summary>
+    ///     A live standing the way the reader hands one over: <paramref name="count" /> is the
+    ///     cohort including you, so one fewer peer passed it; a Perfect Game count also included
+    ///     you in the captured shape these fixtures were written in.
+    /// </summary>
+    private static PeerStanding Standing(int count, int better, int pg = 0) =>
+        new(count - 1, count - 1, better, pg > 0 ? pg - 1 : 0, 0, Array.Empty<PeerStandingSource>(), null);
+
     private static SessionScore Score(int score, HighlightDetail? detail,
-        HighlightFlags flags = HighlightFlags.None)
+        HighlightFlags flags = HighlightFlags.None, PeerStanding? standing = null)
     {
         var song = new Song("Seeded Song", SongType.Arcade, new Uri("https://example.invalid/a.png"),
             TimeSpan.FromMinutes(2), "Artist", null);
@@ -376,7 +377,7 @@ public sealed class SessionScoreRowTests : ComponentTestBase
             DifficultyLevel.From(21), MixEnum.Phoenix2, null, null);
         var row = new RecentSessionsPage.ScoreEventRecord(chart.Id, Start, score, "Fair Game", false,
             "officialImport", Session, ScoreEventClassification.Upscore, score - 4000);
-        return new SessionScore(row, chart, flags, detail);
+        return new SessionScore(row, chart, flags, detail, Standing: standing);
     }
     [Fact]
     public void TheBubbleComesBeforeTheJacketAndTheScoreIsStacked()

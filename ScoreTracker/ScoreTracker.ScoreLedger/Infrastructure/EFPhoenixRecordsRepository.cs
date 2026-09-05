@@ -497,6 +497,25 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             .ToArrayAsync(cancellationToken);
     }
 
+    public async Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetBrokenBests(MixEnum mix,
+        IEnumerable<Guid> userIds, IEnumerable<Guid> chartIds, CancellationToken cancellationToken = default)
+    {
+        var userIdArray = userIds.Distinct().ToArray();
+        var chartIdArray = chartIds.Distinct().ToArray();
+        if (userIdArray.Length == 0 || chartIdArray.Length == 0) return Array.Empty<(Guid, Guid)>();
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // The mirror image of the cohort read above: only the rows it refuses. A best is one row
+        // per player and chart, so a broken row here means the player has never passed it.
+        return (await database.Set<PhoenixRecordEntity>()
+                .Where(pba => chartIdArray.Contains(pba.ChartId) && pba.MixId == mixId && pba.IsBroken &&
+                              userIdArray.Contains(pba.UserId))
+                .Select(pba => new { pba.UserId, pba.ChartId })
+                .ToArrayAsync(cancellationToken))
+            .Select(r => (r.UserId, r.ChartId))
+            .ToArray();
+    }
+
     public async Task<IEnumerable<UserPhoenixScore>> GetPlayerScoresInLevelRange(MixEnum mix,
         IEnumerable<Guid> userIds, ChartType chartType, DifficultyLevel minimumLevel,
         DifficultyLevel maximumLevel, CancellationToken cancellationToken = default)

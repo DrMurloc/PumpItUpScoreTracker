@@ -25,6 +25,9 @@ public static class RivalsRegistrationExtensions
         // The published visibility port (docs/design/peers-abstraction.md §1): Rivals hosts the
         // implementation because it can see both non-public bases; consumers bind to the port.
         services.AddTransient<IPlayerVisibilityReader, PlayerVisibilityReader>();
+        // The other peer-shaped Domain port (docs/design/peers-abstraction.md §4.2): where a score
+        // stands among the peers a player chose. PlayerProgress reads it for the Hot Streak bar.
+        services.AddTransient<IPeerStandingReader, PeerStandingReader>();
         services.AddTransient<RivalAdder>();
         services.AddTransient<RivalScoreReader>();
         services.AddSingleton<IDbModelContribution, RivalsModelContribution>();

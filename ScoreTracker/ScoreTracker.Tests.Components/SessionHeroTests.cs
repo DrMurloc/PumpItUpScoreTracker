@@ -91,7 +91,8 @@ public sealed class SessionHeroTests : ComponentTestBase
                     new HighlightDetail(AttemptsBeforeClear: 3)),
                 new SessionScore(upscore, chart, HighlightFlags.PumbilityTop50,
                     new HighlightDetail(PumbilityRank: 40, PeerCount: 80, PeerBetterCount: 7,
-                        PeerPercentile: 0.9))
+                        PeerPercentile: 0.9),
+                    Standing: new PeerStanding(79, 79, 7, 0, 0, Array.Empty<PeerStandingSource>(), null))
             }
         };
 
@@ -384,7 +385,9 @@ public sealed class SessionHeroTests : ComponentTestBase
             new SessionScore(rows[0], single, HighlightFlags.FolderDebut | HighlightFlags.OfficialBoardPlacement,
                 new HighlightDetail(FolderDebutOrdinal: 1, PeerCount: 74, PeerBetterCount: 12,
                     PeerPercentile: 0.84, AttemptsBeforeClear: 6, OfficialPlace: 42, OfficialBoardDepth: 100,
-                    OfficialAsOf: Start.AddDays(-6))),
+                    OfficialAsOf: Start.AddDays(-6)),
+                // The live standing the builder attaches: 73 peers passed it, 12 above you.
+                Standing: new PeerStanding(73, 73, 12, 0, 0, Array.Empty<PeerStandingSource>(), null)),
             // No detail at all: the co-op row is the one with nothing measuring it.
             new SessionScore(rows[1], coOp, HighlightFlags.None, null)
         };

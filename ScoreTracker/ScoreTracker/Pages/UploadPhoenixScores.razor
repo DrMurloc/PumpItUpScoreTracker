@@ -2,6 +2,7 @@
 @rendermode RenderModes.Interactive
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.Rivals.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Commands
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.ScoreLedger.Contracts.Commands
@@ -217,8 +218,9 @@
                                 <DifficultyBubble Chart="_charts[context.ChartId]"></DifficultyBubble>
                             </MudTd>
                             <MudTd>
-                                <ScoreBreakdown Score="context.Score" Plate="context.Plate" Mix="_currentMix" ShowScore="true" OneLine="true"
-                                                Ranking="_rankings.TryGetValue(context.ChartId, out var r) ? r : null"></ScoreBreakdown>
+                                <PeerScore Score="context.Score" Plate="context.Plate" Mix="_currentMix" IsBroken="context.IsBroken"
+                                           Standing="_standings.TryGetValue(context.ChartId, out var standing) ? standing : null"
+                                           Chart="_charts[context.ChartId]"></PeerScore>
                             </MudTd>
                         </RowTemplate>
                         <PagerContent>
@@ -778,10 +780,10 @@
         });
     }
 
-    private IDictionary<Guid, ScoreRankingRecord> _rankings = new Dictionary<Guid, ScoreRankingRecord>();
+    private IReadOnlyDictionary<Guid, PeerStanding> _standings = new Dictionary<Guid, PeerStanding>();
     private async Task GetRatings()
     {
-        _rankings = await Mediator.Send(new GetChartScoreRankingsQuery(_scores.Select(s => s.ChartId), _currentMix));
+        _standings = await Mediator.Send(new GetPeerStandingsQuery(_currentMix, _scores.Select(s => s.ChartId).ToArray()));
         StateHasChanged();
     }
     private void Cancel()

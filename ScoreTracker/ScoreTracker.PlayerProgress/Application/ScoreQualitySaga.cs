@@ -1,150 +1,43 @@
 using MediatR;
-using Microsoft.Extensions.Caching.Memory;
-using ScoreTracker.Catalog.Contracts.Queries;
-using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
-using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.PlayerProgress.Application;
 
-internal sealed class ScoreQualitySaga :
-    IRequestHandler<GetPlayerScoreQualityQuery, IDictionary<Guid, ScoreRankingRecord>>,
-    IRequestHandler<GetChartScoreRankingsQuery, IDictionary<Guid, ScoreRankingRecord>>,
-    IRequestHandler<GetCompetitivePlayersQuery, IEnumerable<Guid>>
+/// <summary>
+///     The current user's competitive band — the chart board's Competitive Peers scope and the tier
+///     list's "similar players" count. The per-score ranking queries that used to live here retired
+///     on 2026-09-05: a player's standing among their peers is the peer standing port's answer now
+///     (docs/design/peers-abstraction.md §4.3), and the cohort cache below serves the recap.
+/// </summary>
+internal sealed class ScoreQualitySaga : IRequestHandler<GetCompetitivePlayersQuery, IEnumerable<Guid>>
 {
-    private readonly IMemoryCache _cache;
-    private readonly IChartRepository _charts;
     private readonly CohortScoreProvider _cohorts;
     private readonly IPlayerStatsReader _playerStats;
     private readonly ICurrentUserAccessor _user;
-    private readonly IScoreReader _scores;
 
-    public ScoreQualitySaga(ICurrentUserAccessor user, IPlayerStatsReader playerStats, IMemoryCache cache,
-        IChartRepository charts, IScoreReader scores, CohortScoreProvider cohorts)
+    public ScoreQualitySaga(ICurrentUserAccessor user, IPlayerStatsReader playerStats, CohortScoreProvider cohorts)
     {
         _user = user;
         _playerStats = playerStats;
-        _cache = cache;
-        _charts = charts;
-        _scores = scores;
         _cohorts = cohorts;
-    }
-
-    public async Task<IDictionary<Guid, ScoreRankingRecord>> Handle(GetChartScoreRankingsQuery request,
-        CancellationToken cancellationToken)
-    {
-        var charts = await _charts.GetCharts(request.Mix, chartIds: request.ChartIds,
-            cancellationToken: cancellationToken);
-        var result = new Dictionary<Guid, ScoreRankingRecord>();
-        foreach (var chartGroup in charts.GroupBy(c => c.Type))
-        foreach (var kv in await GetRankings(request.Mix, chartGroup.Key,
-                     chartGroup.Select(c => c.Id).Distinct().ToHashSet(), cancellationToken))
-            result[kv.Key] = kv.Value;
-
-        return result;
-    }
-
-    public async Task<IDictionary<Guid, ScoreRankingRecord>> Handle(GetPlayerScoreQualityQuery request,
-        CancellationToken cancellationToken)
-    {
-        var playerScores = await GetPlayerScores(request.Mix, request.ChartType, request.Level, cancellationToken);
-        var charts = (await _charts.GetCharts(request.Mix, request.Level, request.ChartType,
-            cancellationToken: cancellationToken)).Select(c => c.Id).ToHashSet();
-        return (await _scores.GetBestScores(request.Mix, _user.User.Id, cancellationToken))
-            .Where(s => charts.Contains(s.ChartId))
-            .Where(s => s.Score != null)
-            .ToDictionary(c => c.ChartId,
-                c =>
-                {
-                    if (!playerScores.ContainsKey(c.ChartId))
-                        return new ScoreRankingRecord(1.0, 1);
-
-                    var index = playerScores[c.ChartId].Select((s, i) => (s, i))
-                        .FirstOrDefault(k => k.s > c.Score, (0, -1)).i;
-                    if (index == -1) return new ScoreRankingRecord(1.0, playerScores[c.ChartId].Length);
-                    if (index == 1)
-                        return
-                            new ScoreRankingRecord(0.0,
-                                playerScores[c.ChartId]
-                                    .Length); //We want 1st place to show as 100%, including you as better than yourself but last place to show as 0%
-                    return new ScoreRankingRecord(index / (double)playerScores[c.ChartId].Length,
-                        playerScores[c.ChartId].Length);
-                });
-    }
-
-    // The bucketing/caching itself lives in CohortScoreProvider (shared with the recap
-    // saga); this class only resolves "the current web user's bucket".
-    private async Task<double> GetCompetitiveLevelBucket(MixEnum mix, ChartType chartType,
-        CancellationToken cancellationToken)
-    {
-        var myStats = await _playerStats.GetStats(mix, _user.User.Id, cancellationToken);
-        var competitiveLevel = chartType == ChartType.Single
-            ? myStats.SinglesCompetitiveLevel
-            : myStats.DoublesCompetitiveLevel;
-        return CohortScoreProvider.Bucket(competitiveLevel);
-    }
-
-    private async Task<IEnumerable<Guid>> GetComparablePlayers(MixEnum mix, ChartType chartType,
-        CancellationToken cancellationToken)
-    {
-        var bucket = await GetCompetitiveLevelBucket(mix, chartType, cancellationToken);
-        return await _cohorts.GetComparablePlayers(mix, chartType, bucket, cancellationToken);
-    }
-
-    private async Task<IDictionary<Guid, PhoenixScore[]>> GetPlayerScores(MixEnum mix, ChartType chartType,
-        DifficultyLevel level, CancellationToken cancellationToken)
-    {
-        var bucket = await GetCompetitiveLevelBucket(mix, chartType, cancellationToken);
-        return await _cache.GetOrCreateAsync(
-            $"{nameof(ScoreQualitySaga)}__{nameof(GetPlayerHistoryQuery)}__{mix}__{bucket}__{level}__{chartType}",
-            async o =>
-            {
-                o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
-
-                var players = await GetComparablePlayers(mix, chartType, cancellationToken);
-                var scores = await _scores.GetPlayerScores(mix, players, chartType, level,
-                    cancellationToken);
-                return scores.Where(s => s.record.Score != null).GroupBy(c => c.record.ChartId)
-                    .ToDictionary(g => g.Key,
-                        g => g.OrderBy(s => s.record.Score).Select(s => s.record.Score!.Value).ToArray());
-            }) ?? throw new ArgumentNullException("Couldn't retrieve scores from cache for score quality");
-    }
-
-    private async Task<IDictionary<Guid, ScoreRankingRecord>> GetRankings(MixEnum mix, ChartType chartType,
-        ISet<Guid> chartIds,
-        CancellationToken cancellationToken)
-    {
-        var bucket = await GetCompetitiveLevelBucket(mix, chartType, cancellationToken);
-        var playerScores = await _cohorts.GetCohortScoresByChart(mix, chartType, bucket, chartIds,
-            cancellationToken);
-
-        return (await _scores.GetBestScores(mix, _user.User.Id, cancellationToken))
-            .Where(s => chartIds.Contains(s.ChartId))
-            .Where(s => s.Score != null)
-            .ToDictionary(c => c.ChartId,
-                c =>
-                {
-                    if (!playerScores.ContainsKey(c.ChartId))
-                        return new ScoreRankingRecord(1.0, 1);
-
-                    var index = playerScores[c.ChartId].Select((s, i) => (s, i))
-                        .FirstOrDefault(k => k.s > c.Score, (0, -1)).i;
-                    if (index == -1) return new ScoreRankingRecord(1.0, playerScores[c.ChartId].Length);
-                    if (index == 1)
-                        return
-                            new ScoreRankingRecord(0.0,
-                                playerScores[c.ChartId]
-                                    .Length); //We want 1st place to show as 100%, including you as better than yourself but last place to show as 0%
-                    return new ScoreRankingRecord(index / (double)playerScores[c.ChartId].Length,
-                        playerScores[c.ChartId].Length);
-                });
     }
 
     public async Task<IEnumerable<Guid>> Handle(GetCompetitivePlayersQuery request, CancellationToken cancellationToken)
     {
-        return await GetComparablePlayers(request.Mix, request.ChartType, cancellationToken);
+        // Whose band: the subject a host names — another player's sessions page opens THEIR
+        // band, not the viewer's (D31) — else the viewer. Logged out with no subject there is no
+        // band to show, and no user to dereference.
+        var subject = request.Subject ?? (_user.IsLoggedIn ? _user.User.Id : (Guid?)null);
+        if (subject == null) return Array.Empty<Guid>();
+        var myStats = await _playerStats.GetStats(request.Mix, subject.Value, cancellationToken);
+        var competitiveLevel = request.ChartType == ChartType.Single
+            ? myStats.SinglesCompetitiveLevel
+            : myStats.DoublesCompetitiveLevel;
+        // The bucketing/caching itself lives in CohortScoreProvider (shared with the recap saga);
+        // this class only resolves "the current web user's bucket".
+        return await _cohorts.GetComparablePlayers(request.Mix, request.ChartType,
+            CohortScoreProvider.Bucket(competitiveLevel), cancellationToken);
     }
 }

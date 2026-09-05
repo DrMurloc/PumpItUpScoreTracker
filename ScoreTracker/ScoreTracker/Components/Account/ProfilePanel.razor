@@ -19,6 +19,7 @@
 @using ScoreTracker.Web.Dtos
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Services.Theming
+@using ScoreTracker.Domain.Models
 
 @* The avatar leads the panel: it is the only field here you look at rather than read.
    Auto follows the official profile on every import; pinned is the player's own choice and
@@ -336,7 +337,6 @@
     private PendingAccountDeletion? _pendingDeletion;
     private bool _shareWithAllTools;
     private int _connectedToolCount;
-
     protected override async Task OnInitializedAsync()
     {
         // Resolved, not raw: a row written before the es → es-ES split still reads "es", which

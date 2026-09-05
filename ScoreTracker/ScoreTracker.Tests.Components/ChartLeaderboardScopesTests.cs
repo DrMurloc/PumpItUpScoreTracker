@@ -177,7 +177,10 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
     public void EveryBoardReadCarriesTheMixItWasGiven()
     {
         // Phoenix and Phoenix 2 share chart ids, so a board that drops the mix reads as a
-        // full, plausible leaderboard — of the wrong game.
+        // full, plausible leaderboard — of the wrong game. Signed in: a band is somebody's.
+        CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        CurrentUser.SetupGet(c => c.User).Returns(new User(Guid.NewGuid(), Name.From("ME"), true, null,
+            new Uri("https://piu.test/me.png"), null));
         var dialog = RenderDialog(MixEnum.Phoenix2, ChartLeaderboardScopes.LeaderboardScope.CompetitivePeers);
 
         dialog.WaitForAssertion(() => VerifyWorldBoardRead(MixEnum.Phoenix2));
@@ -226,6 +229,51 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
             builder.AddAttribute(5, nameof(ChartLeaderboardScopes.InitialScope), scope);
             builder.CloseComponent();
         });
+    }
+
+    /// <summary>
+    ///     Another player's sessions page opens THEIR band from a peer line: the host names the
+    ///     subject and the competitive read is theirs, signed in or not.
+    /// </summary>
+    [Fact]
+    public void TheCompetitiveBoardIsTheSubjectsBandWhenAHostNamesOne()
+    {
+        var subject = Guid.NewGuid();
+        var dialog = Render(builder =>
+        {
+            builder.OpenComponent<MudDialogProvider>(0);
+            builder.CloseComponent();
+            builder.OpenComponent<ChartLeaderboardScopes>(1);
+            builder.AddAttribute(2, nameof(ChartLeaderboardScopes.Active), true);
+            builder.AddAttribute(3, nameof(ChartLeaderboardScopes.ChartId), ChartId);
+            builder.AddAttribute(4, nameof(ChartLeaderboardScopes.Mix), MixEnum.Phoenix);
+            builder.AddAttribute(5, nameof(ChartLeaderboardScopes.InitialScope),
+                ChartLeaderboardScopes.LeaderboardScope.CompetitivePeers);
+            builder.AddAttribute(6, nameof(ChartLeaderboardScopes.Subject), subject);
+            builder.CloseComponent();
+        });
+
+        dialog.WaitForAssertion(() => _mediator.Verify(
+            m => m.Send(It.Is<GetCompetitivePlayersQuery>(q => q.Subject == subject), It.IsAny<CancellationToken>()),
+            Times.AtLeastOnce));
+        Assert.Contains("cld-chip-on", dialog.Find("[data-testid='cld-scope-CompetitivePeers']").ClassName);
+    }
+
+    /// <summary>
+    ///     Logged out with no subject named, the Competitive chip is off rather than a board that
+    ///     reaches for a user who is not there.
+    /// </summary>
+    [Fact]
+    public void LoggedOutWithNoSubjectTheCompetitiveChipIsOff()
+    {
+        var dialog = RenderDialog(MixEnum.Phoenix, ChartLeaderboardScopes.LeaderboardScope.CompetitivePeers);
+
+        dialog.WaitForAssertion(() => Assert.NotEmpty(dialog.FindAll("[data-testid='cld-scope-World']")));
+        var chip = dialog.Find("[data-testid='cld-scope-CompetitivePeers']");
+        Assert.True(chip.HasAttribute("disabled"));
+        Assert.Contains("cld-chip-on", dialog.Find("[data-testid='cld-scope-World']").ClassName);
+        _mediator.Verify(m => m.Send(It.IsAny<GetCompetitivePlayersQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     /// <summary>
@@ -467,6 +515,36 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
     {
         _mediator.Setup(m => m.Send(It.IsAny<GetLimboChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlySet<Guid>)new HashSet<Guid> { ChartId });
+    }
+
+    [Fact]
+    public void APassRanksAboveABrokenAttemptWhateverTheScore()
+    {
+        // A broken 990k used to outrank a passing 950k on the World board, which disagreed by a
+        // row with the pass-only standing the popover prints for the same group (D21). The broken
+        // row stays on the board, drawn with the broken grade, after every pass.
+        var passer = Guid.NewGuid();
+        var breaker = Guid.NewGuid();
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsForCommunityQuery>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new UserPhoenixScore(breaker, ChartId, Name.From("BREAKER"), PhoenixScore.From(990_000), null, true,
+                    true, When),
+                ScoreFor(passer, 950_000, "PASSER")
+            });
+
+        var dialog = RenderDialog();
+
+        dialog.WaitForAssertion(() =>
+        {
+            var rows = dialog.FindAll(".weekly-lb-row");
+            Assert.Equal(2, rows.Count);
+            Assert.Contains("PASSER", rows[0].TextContent);
+            Assert.Contains("#1", rows[0].TextContent);
+            Assert.Contains("BREAKER", rows[1].TextContent);
+            Assert.Contains("#2", rows[1].TextContent);
+        });
     }
 
     private static UserPhoenixScore ScoreFor(Guid userId, int score, string name) =>

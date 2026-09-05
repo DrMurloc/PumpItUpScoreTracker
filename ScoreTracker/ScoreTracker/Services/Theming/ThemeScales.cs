@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.SharedKernel.Enums;
 
@@ -210,6 +211,109 @@ public static class ThemeScales
     /// </summary>
     public static string SpeedColor(int band) => $"var(--speed-{Math.Clamp(band, 0, 4) + 1})";
 
+    /// <summary>The one glow a lit score wears (peers-abstraction.md D15): a threshold, not a spectrum.</summary>
+    public const string ScoreGlowClass = "rarity-glow-2";
+
+    /// <summary>
+    ///     How a player's OWN score is painted, from the peers they chose and the color system and
+    ///     glow rule they picked (docs/design/peers-abstraction.md D14–D16). The single place the
+    ///     nine systems' cutoffs and the glow rule live; every surface renders through
+    ///     <c>PeerScore</c>, which calls this. A system that reads the standing paints nothing when
+    ///     no peer has passed the chart — plain ink, the popover says why — while the two that do
+    ///     not (the actual grade, none) never look at it.
+    /// </summary>
+    public static ScoreStyle ScoreStyleFor(PeerStanding? standing, bool isPerfectGame, PhoenixLetterGrade? grade,
+        ScoreColorSettings settings)
+    {
+        var measured = standing is { HasCohort: true };
+        var percentile = measured ? standing!.Percentile!.Value : 0;
+        var token = settings.System switch
+        {
+            ScoreColorSystem.JudgementSpectrum => measured ? CssVar(BandFor(percentile)) : string.Empty,
+            ScoreColorSystem.Classic => measured ? ClassicToken(percentile) : string.Empty,
+            ScoreColorSystem.GradeMetals => measured ? GradeMetalToken(percentile) : string.Empty,
+            ScoreColorSystem.Podium => measured ? PodiumToken(standing!.Place) : string.Empty,
+            ScoreColorSystem.SingleHue => measured ? HueToken(percentile) : string.Empty,
+            ScoreColorSystem.ResultScreen => measured ? ResultScreenToken(percentile) : string.Empty,
+            ScoreColorSystem.ThreeSteps => measured ? ThreeStepToken(percentile) : string.Empty,
+            ScoreColorSystem.ActualGrade => grade is { } actual ? GradeColor(actual) : string.Empty,
+            _ => string.Empty
+        };
+
+        // A Perfect Game is the ceiling: it is inside any top-N rule whether or not a peer has
+        // passed the chart, and it is exactly what the Perfect Games rule names. Off is off.
+        var lit = settings.Glow switch
+        {
+            GlowRule.PerfectGames => isPerfectGame,
+            GlowRule.TopPlaces => isPerfectGame || (measured && standing!.Place <= settings.GlowThreshold),
+            GlowRule.TopPercent => isPerfectGame ||
+                                   (measured && percentile >= 1 - settings.GlowThreshold / 100.0),
+            _ => false
+        };
+
+        return new ScoreStyle(token.Length == 0 ? string.Empty : $"color:{token};",
+            lit ? ScoreGlowClass : string.Empty);
+    }
+
+    /// <summary>The classic ladder's seven rungs at 10 / 25 / 50 / 75 / 90 / 99 %.</summary>
+    private static string ClassicToken(double percentile) => percentile switch
+    {
+        < .10 => "var(--classic-1)",
+        < .25 => "var(--classic-2)",
+        < .50 => "var(--classic-3)",
+        < .75 => "var(--classic-4)",
+        < .90 => "var(--classic-5)",
+        < .99 => "var(--classic-6)",
+        _ => "var(--classic-7)"
+    };
+
+    /// <summary>The grades' own metals by standing: below-A green up to the SSS+ ice at the top 1%.</summary>
+    private static string GradeMetalToken(double percentile) => percentile switch
+    {
+        < .25 => "var(--grade-sub-a)",
+        < .50 => "var(--plate-fg)",
+        < .75 => "var(--plate-mg)",
+        < .90 => "var(--plate-eg)",
+        < .99 => "var(--plate-ug)",
+        _ => "var(--plate-pg)"
+    };
+
+    /// <summary>Medals for a place: gold, silver, copper, then plain ink.</summary>
+    private static string PodiumToken(int place) => place switch
+    {
+        1 => "var(--plate-sg)",
+        2 => "var(--plate-mg)",
+        3 => "var(--plate-fg)",
+        _ => string.Empty
+    };
+
+    private static string HueToken(double percentile) => percentile switch
+    {
+        < .25 => "var(--hue-1)",
+        < .50 => "var(--hue-2)",
+        < .75 => "var(--hue-3)",
+        < .90 => "var(--hue-4)",
+        < .99 => "var(--hue-5)",
+        _ => "var(--hue-6)"
+    };
+
+    /// <summary>The judgement colors, literally: the one ladder that starts red, so opt-in only.</summary>
+    private static string ResultScreenToken(double percentile) => percentile switch
+    {
+        < .25 => JudgmentColor(Judgment.Miss),
+        < .50 => JudgmentColor(Judgment.Bad),
+        < .75 => JudgmentColor(Judgment.Good),
+        < .90 => JudgmentColor(Judgment.Great),
+        _ => JudgmentColor(Judgment.Perfect)
+    };
+
+    private static string ThreeStepToken(double percentile) => percentile switch
+    {
+        < .50 => string.Empty,
+        < .90 => "var(--rarity-gold)",
+        _ => "var(--rarity-sapphire)"
+    };
+
     /// <summary>
     /// Percentile coloring against a concrete population (community leaderboards).
     /// Zeroes are excluded from the curve — unrated players shouldn't drag it — and
@@ -242,4 +346,10 @@ public static class ThemeScales
             return CssVar(BandFor(lower / (double)_sorted.Length));
         }
     }
+}
+
+/// <summary>What <see cref="ThemeScales.ScoreStyleFor" /> hands a surface: an inline color fragment (or none) and the glow class (or none).</summary>
+public readonly record struct ScoreStyle(string Style, string GlowClass)
+{
+    public static ScoreStyle Plain { get; } = new(string.Empty, string.Empty);
 }

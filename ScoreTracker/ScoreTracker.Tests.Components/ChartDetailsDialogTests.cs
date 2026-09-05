@@ -26,6 +26,7 @@ using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Web.Services.Theming;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Services;
@@ -64,6 +65,9 @@ public sealed class ChartDetailsDialogTests : TestContext
         _uiSettings.Setup(s => s.GetSetting(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<Guid?>()))
             .ReturnsAsync((string?)null);
         _currentUser.Setup(u => u.IsLoggedIn).Returns(false);
+        // The score in the title row is a PeerScore, which reads the viewer's peer and color
+        // settings through this; the loose settings stub makes it answer the defaults.
+        Services.AddScoped<ScoreColorPreferences>();
         // The bubble nested in the title row injects this and reads through it.
         _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, double>());
@@ -255,6 +259,51 @@ public sealed class ChartDetailsDialogTests : TestContext
             .Returns(new User(Guid.NewGuid(), "Me", true, null, new Uri("https://piu.test/me.png"), null));
         _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
+    }
+
+    /// <summary>
+    ///     A popover line inside the dialog switches the board for THAT opening. Closing and
+    ///     reopening the same chart from a host that asked for World opens on World again, not
+    ///     on the board the last line picked.
+    /// </summary>
+    [Fact]
+    public async Task ThePopoverLinesBoardDoesNotOutliveTheOpening()
+    {
+        SignIn();
+        var chart = SetupChart(null);
+        // The board greys the Competitive chip until it knows the chart is not co-op.
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { chart });
+        var standing = new PeerStanding(120, 93, 5, 0, 4,
+            new[] { new PeerStandingSource(PeerSourceKind.CompetitiveLevel, null, null, false, false, 120, 93, 5, 0) },
+            null);
+        var cut = Render(builder =>
+        {
+            builder.OpenComponent<MudDialogProvider>(0);
+            builder.CloseComponent();
+            builder.OpenComponent<MudPopoverProvider>(1);
+            builder.CloseComponent();
+            builder.OpenComponent<ChartDetailsDialog>(2);
+            builder.AddAttribute(3, nameof(ChartDetailsDialog.Chart), chart);
+            builder.AddAttribute(4, nameof(ChartDetailsDialog.Visible), true);
+            builder.AddAttribute(5, nameof(ChartDetailsDialog.Score),
+                new RecordedPhoenixScore(chart.Id, PhoenixScore.From(972_000), null, false, DateTimeOffset.UnixEpoch));
+            builder.AddAttribute(6, nameof(ChartDetailsDialog.Standing), standing);
+            builder.CloseComponent();
+        });
+        cut.WaitForAssertion(() => Assert.Contains("cld-chip-on", cut.Find("[data-testid='cld-scope-World']").ClassName));
+
+        await cut.Find("[data-testid='peer-score']").ClickAsync(new MouseEventArgs());
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid='peer-pop-source']")));
+        await cut.Find("[data-testid='peer-pop-source']").ClickAsync(new MouseEventArgs());
+        cut.WaitForAssertion(() =>
+            Assert.Contains("cld-chip-on", cut.Find("[data-testid='cld-scope-CompetitivePeers']").ClassName));
+
+        var dialog = cut.FindComponent<ChartDetailsDialog>();
+        dialog.SetParametersAndRender(p => p.Add(c => c.Visible, false));
+        dialog.SetParametersAndRender(p => p.Add(c => c.Visible, true));
+
+        cut.WaitForAssertion(() => Assert.Contains("cld-chip-on", cut.Find("[data-testid='cld-scope-World']").ClassName));
     }
 
     /// <summary>

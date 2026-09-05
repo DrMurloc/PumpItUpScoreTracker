@@ -1,0 +1,122 @@
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Services
+@namespace ScoreTracker.Web.Components
+
+@* What a score's standing is made of, source by source (docs/design/peers-abstraction.md D11–D13):
+   the headline in the score's own color, who has not passed the chart rather than who tops it,
+   then one line per source the player ticked — each opening that source's own board when the
+   host can — and the chart it is all about. Never a hover tooltip: a phone has no hover. *@
+<div class="peer-pop" data-testid="peer-standing-popover" role="dialog"
+     aria-label="@L["Where this score stands among your peers"]">
+    @if (!SourcesChosen)
+    {
+        <div class="peer-pop-empty">@L["You have no peer groups selected."]</div>
+        <div class="peer-pop-foot">
+            <span>@L["Scores render plain until you choose some."]</span>
+            <a href="/Account?tab=peers">@L["Choose peers"] ›</a>
+        </div>
+    }
+    else if (Standing is not { HasCohort: true })
+    {
+        <div class="peer-pop-empty">
+            @(Standing is { PeerCount: > 0 } counted
+                ? L["None of your {0} peers have passed this yet.", counted.PeerCount]
+                : L["None of your peers have passed this yet."])
+            @if (Standing is { Broke: > 0 } broke)
+            {
+                <span class="peer-pop-muted">@L["{0} of them tried and broke.", broke.Broke]</span>
+            }
+        </div>
+        @if (Standing is { Sources.Count: > 0 })
+        {
+            <div class="peer-pop-foot"><span>@string.Join(" · ", Standing.Sources.Select(s => $"{Glyph(s)} 0 / {s.Members}"))</span></div>
+        }
+    }
+    else
+    {
+        <div class="peer-pop-head" style="@ColorStyle" data-testid="peer-pop-head">
+            @PeerStandingText.Standing(Standing, IsPerfectGame, L)
+        </div>
+        <div class="peer-pop-sub">@PeerStandingText.Summary(Standing, L)</div>
+        <div class="peer-pop-rows">
+            @foreach (var source in Standing.Sources)
+            {
+                var line = source;
+                var off = line.Passed == 0;
+                var sub = SubLine(line);
+                @if (OnOpenBoard.HasDelegate)
+                {
+                    <a href="javascript:void(0)" class="peer-pop-row @(off ? "peer-pop-row-off" : null)"
+                       data-testid="peer-pop-source" @onclick="() => OnOpenBoard.InvokeAsync(PeerBoardRequest.For(ChartId, line))">
+                        <span class="peer-pop-glyph" aria-hidden="true">@Glyph(line)</span>
+                        <span class="peer-pop-label">@Label(line)@if (sub != null) { <span class="peer-pop-note">@sub</span> }</span>
+                        <span class="peer-pop-num">@(off ? L["No passes yet"] : L["#{0} of {1}", line.Place, line.Of])</span>
+                        <span class="peer-pop-arrow" aria-hidden="true">›</span>
+                    </a>
+                }
+                else
+                {
+                    <div class="peer-pop-row @(off ? "peer-pop-row-off" : null)" data-testid="peer-pop-source">
+                        <span class="peer-pop-glyph" aria-hidden="true">@Glyph(line)</span>
+                        <span class="peer-pop-label">@Label(line)@if (sub != null) { <span class="peer-pop-note">@sub</span> }</span>
+                        <span class="peer-pop-num">@(off ? L["No passes yet"] : L["#{0} of {1}", line.Place, line.Of])</span>
+                    </div>
+                }
+            }
+        </div>
+        <div class="peer-pop-foot">
+            <span>@ChartName</span>
+            @if (Standing.OfficialAsOf is { } asOf)
+            {
+                <span>@L["* Official board data, as of {0}.", asOf.ToString("d MMM")]</span>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public PeerStanding? Standing { get; set; }
+
+    [Parameter] public bool IsPerfectGame { get; set; }
+
+    /// <summary>The score's own inline color, so the headline wears what the score wears.</summary>
+    [Parameter] public string ColorStyle { get; set; } = string.Empty;
+
+    [Parameter] public Guid ChartId { get; set; }
+
+    [Parameter] public Chart? Chart { get; set; }
+
+    /// <summary>False when the viewer has un-ticked every source — the one case the popover has to explain itself.</summary>
+    [Parameter] public bool SourcesChosen { get; set; } = true;
+
+    [Parameter] public EventCallback<PeerBoardRequest> OnOpenBoard { get; set; }
+
+    private string ChartName => Chart == null ? string.Empty : $"{Chart.Song.Name} {Chart.DifficultyString}";
+
+    private static string Glyph(PeerStandingSource source) => source.Kind switch
+    {
+        PeerSourceKind.Rivals => "⚔",
+        PeerSourceKind.CompetitiveLevel => "📊",
+        PeerSourceKind.Pumbility => "💎",
+        _ => "👥"
+    };
+
+    private string Label(PeerStandingSource source) => source.Kind switch
+    {
+        PeerSourceKind.Rivals => L["Rivals"],
+        PeerSourceKind.CompetitiveLevel => L["Competitive level ±0.5"],
+        PeerSourceKind.Pumbility => L["PUMBILITY peers"],
+        // World is a community like any other (D30): its name, no "everyone".
+        _ when source.IsRegional => $"{source.CommunityName} · {L["Region"]}",
+        _ => source.CommunityName ?? L["Community"]
+    };
+
+    private string? SubLine(PeerStandingSource source)
+    {
+        var parts = new List<string>();
+        if (source.NotPassed > 0) parts.Add(L["{0} haven't passed it", source.NotPassed].Value);
+        if (source.FromOfficialBoard > 0) parts.Add(L["{0} from the official board*", source.FromOfficialBoard].Value);
+        return parts.Count == 0 ? null : string.Join(" · ", parts);
+    }
+}

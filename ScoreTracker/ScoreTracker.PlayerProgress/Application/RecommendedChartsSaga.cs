@@ -33,12 +33,15 @@ namespace ScoreTracker.PlayerProgress.Application
         private readonly IDateTimeOffsetAccessor _dateTime;
         private readonly IRandomNumberGenerator _random;
         private readonly IScoreHighlightRepository _highlights;
+        private readonly IPeerStandingReader _peers;
 
         public RecommendedChartsSaga(IMediator mediator, ICurrentUserAccessor currentUser, IFeedbackRepository feedback,
             IPlayerStatsReader stats, IScoreReader scores,
             IWeeklyTournamentRepository weeklyTournament, IChartListRepository chartList,
-            IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random, IScoreHighlightRepository highlights)
+            IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random, IScoreHighlightRepository highlights,
+            IPeerStandingReader peers)
         {
+            _peers = peers;
             _mediator = mediator;
             _currentUser = currentUser;
             _feedback = feedback;
@@ -147,17 +150,26 @@ namespace ScoreTracker.PlayerProgress.Application
             {
                 if (!candidates.Any())
                     return Array.Empty<(Guid, DateTimeOffset, double?)>();
-                var rankings = options.PeerPercentile > 0
-                    ? await _mediator.Send(new GetChartScoreRankingsQuery(
-                        candidates.Select(c => c.ChartId).ToArray(), mix), cancellationToken)
+                // The peers the player chose on /Account, not a fixed cohort: the bar is
+                // "you crushed this against your peers", and those are whoever the player says
+                // (docs/design/peers-abstraction.md D4). A chart none of them has passed keeps
+                // the old reading — nobody to beat is beating everybody.
+                var standings = options.PeerPercentile > 0
+                    ? await _peers.GetStandings(_currentUser.User.Id, mix,
+                        candidates.Select(c => c.ChartId).Distinct().ToArray(),
+                        cancellationToken: cancellationToken)
                     : null;
+                // Nothing ticked on /Account answers with no standings at all. That is no bar,
+                // not a bar nobody clears: a ticked source with nobody in it already reads 1.0
+                // below, and the two ways of having no peers have to agree (D28).
+                if (standings is { Count: 0 }) standings = null;
                 var bar = options.PeerPercentile / 100.0;
                 return candidates
                     .Select(c => (c.ChartId, c.OccurredAt,
-                        Ranking: rankings != null && rankings.TryGetValue(c.ChartId, out var r)
-                            ? r.Ranking
+                        Ranking: standings != null && standings.TryGetValue(c.ChartId, out var s)
+                            ? s.HasCohort ? s.Percentile : 1.0
                             : (double?)null))
-                    .Where(t => rankings == null || (t.Ranking != null && t.Ranking >= bar))
+                    .Where(t => standings == null || (t.Ranking != null && t.Ranking >= bar))
                     .OrderByDescending(t => t.OccurredAt)
                     .ThenByDescending(t => t.Ranking ?? 0)
                     .ToArray();

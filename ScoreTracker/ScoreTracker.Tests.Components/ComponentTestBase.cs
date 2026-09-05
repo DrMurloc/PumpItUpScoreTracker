@@ -10,6 +10,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Services;
 using ScoreTracker.Web.Services.Contracts;
+using ScoreTracker.Web.Services.Theming;
 
 namespace ScoreTracker.Tests.Components;
 
@@ -45,6 +46,9 @@ public abstract class ComponentTestBase : TestContext
         // The shared LeaderboardDialog reads the relevant-players setting; a loose stub keeps
         // every consumer renderable (tests that assert on the setting register their own).
         Services.AddSingleton(Mock.Of<IUiSettingsAccessor>());
+        // PeerScore reads the viewer's peer and color settings through this; the loose settings
+        // stub above makes it answer the defaults (competitive alone, the judgement spectrum).
+        Services.AddScoped<ScoreColorPreferences>();
 
         var localizer = new Mock<IStringLocalizer<App>>();
         localizer.Setup(l => l[It.IsAny<string>()])

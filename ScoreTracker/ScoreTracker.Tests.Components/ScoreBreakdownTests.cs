@@ -33,8 +33,9 @@ public sealed class ScoreBreakdownTests : ComponentTestBase
         Assert.Contains("letters/ss", images[0].GetAttribute("src"));
         Assert.Contains("plates/mg", images[1].GetAttribute("src"));
         Assert.Contains("984,346", stack.QuerySelector("p")!.TextContent);
-        // The number is printed, so the hover text is the ranking — none here, so no title at all.
-        Assert.Null(stack.GetAttribute("title"));
+        // The hover text is the score itself, as the tooltip path prints it (the peer standing
+        // that used to ride here moved to PeerScore).
+        Assert.Equal("984,346", stack.GetAttribute("title"));
         Assert.Empty(cut.FindAll(".mud-tooltip-root"));
 
         var iconsOnly = RenderComponent<ScoreBreakdown>(p => p

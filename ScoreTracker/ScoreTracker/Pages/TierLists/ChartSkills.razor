@@ -26,6 +26,7 @@
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Rivals.Contracts.Queries
 @using ScoreTracker.Web.Services.Theming
 @using ScoreTracker.Application.Queries
 @using System.Text.Json
@@ -218,9 +219,9 @@ else
             <LampStrip Lamps="_lamps" Total="_charts.Count"></LampStrip>
             @* Round 7: cohort standing as labeled bars — fill + hue from the rarity ramp,
                with the percentage always printed beside it (rule 8). *@
-            @if (_competitivePlayerCount > 0 && _finalEntries.Any(e => _scoreRankings.ContainsKey(e.ChartId)))
+            @if (_competitivePlayerCount > 0 && _finalEntries.Any(e => HasStanding(e.ChartId)))
             {
-                var rating = _finalEntries.Where(e => _scoreRankings.ContainsKey(e.ChartId)).Average(e => _scoreRankings[e.ChartId].Ranking);
+                var rating = _finalEntries.Where(e => HasStanding(e.ChartId)).Average(e => _standings[e.ChartId].Percentile!.Value);
                 <div class="tier-cohort-bar">
                     <span class="tier-cohort-bar-label">@L["Score in Folder"]</span>
                     <span class="tier-cohort-bar-meter">
@@ -272,8 +273,8 @@ else
                 </div>
                 @folderStatsCore
                 <BorderLegend ShowOtherMix="_settings.ShowOtherMixPasses"></BorderLegend>
-                @* Phoenix's difficulty-title bars. Phoenix 2 replaces these with the PUMBILITY
-                   title track above the tier sections, so they're skipped there. *@
+                @* Phoenix's difficulty-title bars. Phoenix 2 tracks titles on the PUMBILITY page
+                   and the tier list only points there, so they're skipped for it. *@
                 @if (!IsLegacy && _currentMix != MixEnum.Phoenix2)
                 {
                     <MudText Typo="Typo.overline">@L["Folder Levels"]</MudText>
@@ -309,13 +310,11 @@ else
            where it's actionable (round 4). Attribution per the round-3 agreement. *@
         <MudText Typo="Typo.caption" Class="tier-attribution">@L["Skill data: PIU Center — maintained by aesthete"]</MudText>
     }
-    @* Phoenix 2 folder-title track: the glowy bar toward your next PUMBILITY title + one
-       folder-aware line, above the fold, above the tier sections (not in Folder Stats). Phoenix
-       and legacy keep the difficulty-title bars in the drawer. *@
-    @if (_titleTrack != null)
-    {
-        <PumbilityTitleTrack Result="_titleTrack"></PumbilityTitleTrack>
-    }
+    @* Phoenix 2: where the folder-title track used to draw its bar, one line now points at the
+       PUMBILITY page, which is where titles are tracked (owner, 2026-09-05). Same slot and the
+       same gate the bar had, dismissable for good. Phoenix and legacy keep the difficulty-title
+       bars in the drawer. *@
+    <TitleProgressPointer Show="_hasTitleProgress"></TitleProgressPointer>
     @* Folder standing: one line and the bar, nothing else. No difficulty ball (you are already
        on this folder's page) and no chart counts — the segments, the tier ticks and the lamp
        flag carry the rest (docs/design/folder-level-progression.md §3.3). *@
@@ -543,7 +542,10 @@ else
                                         <td>
                                             @if (score?.Score != null)
                                             {
-                                                <ScoreBreakdown Score="score.Score.Value" IsBroken="score.IsBroken" Mix="_currentMix" OneLine="true" ShowScore="true" Plate="score.Plate"></ScoreBreakdown>
+                                                <PeerScore Score="score.Score.Value" IsBroken="score.IsBroken" Mix="_currentMix" Plate="score.Plate"
+                                                           Standing="_standings.TryGetValue(chart.Id, out var cellStanding) ? cellStanding : null"
+                                                           Chart="chart" ShowStanding="false" OnOpenBoard="OpenBoard"
+                                                           @ref="_tableScores[chart.Id]"></PeerScore>
                                             }
                                             else if (_legacyGrades.TryGetValue(chart.Id, out var rowGrade))
                                             {
@@ -551,9 +553,14 @@ else
                                             }
                                         </td>
                                         <td>
-                                            @if (_scoreRankings.TryGetValue(chart.Id, out var rowRank))
+                                            @if (score is { Score: { } rowValue, IsBroken: false } && _standings.TryGetValue(chart.Id, out var rowStanding) && rowStanding.HasCohort)
                                             {
-                                                <span style="@ThemeScales.RarityStyle(rowRank.Ranking)">@((100.0 * rowRank.Ranking).ToString("N1"))%</span>
+                                                @* The place in words — the same fact as the percentile, unreadable backwards.
+                                                   Tapping it opens the score's own popover (D17): the standing is the reason to look. *@
+                                                <span class="tier-table-standing peer-standing-open" role="button" tabindex="0"
+                                                      data-testid="tier-table-standing"
+                                                      @onclick="() => OpenTableStanding(chart.Id)"
+                                                      @onkeydown="e => KeyTableStanding(e, chart.Id)">@PeerStandingText.Standing(rowStanding, (int)rowValue == 1_000_000, L)</span>
                                             }
                                         </td>
                                         <td>
@@ -581,7 +588,8 @@ else
                             <TierListChartCard Chart="chart"
                                                Score="score"
                                                LegacyGrade="_legacyGrades.TryGetValue(chart.Id, out var legacyGrade) ? legacyGrade : null"
-                                               Ranking="_scoreRankings.TryGetValue(chart.Id, out var rank) ? rank : null"
+                                               Standing="_standings.TryGetValue(chart.Id, out var standing) ? standing : null"
+                                               OnOpenBoard="OpenBoard"
                                                Passed="score is { IsBroken: false }"
                                                IsToDo="_todos.Contains(chart.Id)"
                                                PassedInAnotherMix="IsOtherMixPass(chart.Id)"
@@ -703,7 +711,8 @@ else
     </MudLayout>
     <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"
                         Score="_detailsChart != null && _scores.TryGetValue(_detailsChart.Id, out var detailsScore) ? detailsScore : null"
-                        Ranking="_detailsChart != null && _scoreRankings.TryGetValue(_detailsChart.Id, out var detailsRank) ? detailsRank : null"
+                        Standing="_detailsChart != null && _standings.TryGetValue(_detailsChart.Id, out var detailsStanding) ? detailsStanding : null"
+                        BoardScope="_detailsBoardScope" BoardCommunity="_detailsBoardCommunity" InitialTab="_detailsTab"
                         IsToDo="_detailsChart != null && _todos.Contains(_detailsChart.Id)"
                         ScoreAgeDays="@(_detailsChart != null && _scores.TryGetValue(_detailsChart.Id, out var detailsAge) ? (int)(_now - detailsAge.RecordedDate).TotalDays : null)"
                         OnToDo="ToggleToDo" OnScoreRecorded="RefreshScores"></ChartDetailsDialog>
@@ -1083,7 +1092,7 @@ else
         IReadOnlyList<SongTierListEntry> Entries, string? Stat = null);
 
     private IEnumerable<TitleProgress> _titleProgress = Array.Empty<TitleProgress>();
-    private FolderTitleTrackResult? _titleTrack;
+    private bool _hasTitleProgress;
 
     // This folder's standing, computed from the scores the page already holds rather than read
     // back from the stored projection — the page's own score list is the freshest copy there is.
@@ -1244,12 +1253,34 @@ else
     private bool _detailsOpen = false;
     private Chart? _detailsChart;
 
+    private ChartLeaderboardScopes.LeaderboardScope _detailsBoardScope = ChartLeaderboardScopes.LeaderboardScope.World;
+    private Name? _detailsBoardCommunity;
+
     private void OpenDetails(Guid chartId)
     {
         if (!_charts.TryGetValue(chartId, out var chart)) return;
+        _detailsBoardScope = ChartLeaderboardScopes.LeaderboardScope.World;
+        _detailsBoardCommunity = null;
+        _detailsTab = null;
         _detailsChart = chart;
         _detailsOpen = true;
     }
+
+    /// <summary>A card's popover asked for one source's board: details, opened on that scope (peers-abstraction.md D12).</summary>
+    private void OpenBoard(PeerBoardRequest request)
+    {
+        OpenDetails(request.ChartId);
+        _detailsBoardScope = request.Scope;
+        _detailsBoardCommunity = request.Community;
+        // The line promised a board: the dialog opens on the Leaderboard tab whatever tab the
+        // player last left it on.
+        _detailsTab = ChartDetailsDialog.DetailsTab.Leaderboard;
+    }
+
+    /// <summary>Null lets the dialog open on the tab the player remembers; a board request forces Leaderboard.</summary>
+    private ChartDetailsDialog.DetailsTab? _detailsTab;
+
+    private bool HasStanding(Guid chartId) => _standings.TryGetValue(chartId, out var s) && s.HasCohort;
 
     /// <summary>
     ///     Re-reads the viewer's bests after the details dialog records one — from whichever
@@ -1662,7 +1693,24 @@ else
 
     private string _groupBy = "Difficulty";
     private int _level = 18;
-    private IDictionary<Guid, ScoreRankingRecord> _scoreRankings = new Dictionary<Guid, ScoreRankingRecord>();
+    private IReadOnlyDictionary<Guid, PeerStanding> _standings = new Dictionary<Guid, PeerStanding>();
+
+    /// <summary>
+    ///     The Table density's score cells by chart, captured as they render: the Better Than cell
+    ///     opens its row's own popover through the one that rendered beside it (D17). A row that
+    ///     left the table left its cell with it, so a stale capture is never the one tapped.
+    /// </summary>
+    private readonly Dictionary<Guid, Web.Components.PeerScore> _tableScores = new();
+
+    private void OpenTableStanding(Guid chartId)
+    {
+        if (_tableScores.TryGetValue(chartId, out var cell)) cell.Open();
+    }
+
+    private void KeyTableStanding(KeyboardEventArgs e, Guid chartId)
+    {
+        if (e.Key is "Enter" or " ") OpenTableStanding(chartId);
+    }
     private string _tierListType = "Pass";
     // Legacy mixes render the Community Rating lens only (docs/design/legacy-mixes.md).
     private bool IsLegacy => _currentMix.UsesLegacyScoring();
@@ -2048,13 +2096,13 @@ else
             _groupBy = "Difficulty";
         }
 
-        // Phoenix 2's folder-title track — recomputed for THIS folder on every change (the full
-        // load runs once, so it can't live there). Null for Phoenix/legacy and signed-out.
-        _titleTrack = CurrentUser.IsLoggedIn
-            ? FolderTitleTrack.Compute(_currentMix, _chartType, _level, _allCharts, _scores)
-            : null;
+        // Phoenix 2's title-progress pointer: its gate is recomputed for THIS folder on every
+        // change (the full load runs once, so it can't live there). Off for Phoenix/legacy and
+        // signed-out — exactly where the retired track's bar was off.
+        _hasTitleProgress = CurrentUser.IsLoggedIn
+                         && FolderTitleTrack.HasTitleProgress(_currentMix, _chartType, _level, _allCharts, _scores);
 
-        // Folder standing, recomputed per folder alongside the title track. Signed-out visitors
+        // Folder standing, recomputed per folder alongside the pointer's gate. Signed-out visitors
         // have no standing to show.
         if (CurrentUser.IsLoggedIn)
         {
@@ -2139,7 +2187,10 @@ else
         }
 
         // Personal phase — the overlay streams in after the population paint.
-        var rankingsTask = Mediator.Send(new GetPlayerScoreQualityQuery(_level, _chartType, _currentMix), cancellationToken);
+        // Where each score stands among the peers the viewer chose (peers-abstraction.md): the
+        // colors, the standing captions and the Score in Folder bar all read this one answer.
+        var standingsTask = Mediator.Send(new GetPeerStandingsQuery(_currentMix,
+            _finalEntries.Select(e => e.ChartId).ToArray()), cancellationToken);
         // Nobody's looking at the cross-mix outline when it's switched off, so don't pay
         // for it; SetShowOtherMixPasses backfills when it comes back on.
         var crossMixTask = _settings.ShowOtherMixPasses
@@ -2153,7 +2204,7 @@ else
             : Mediator.Send(new GetFolderCohortStatsQuery(_currentMix, _chartType, _level,
                 _chartType == ChartType.Single ? _singlesCompetitive : _doublesCompetitive, PassedCount),
                 cancellationToken);
-        _scoreRankings = await rankingsTask;
+        _standings = await standingsTask;
         _otherMixPasses = await crossMixTask;
         _otherMixPassesLoaded = _settings.ShowOtherMixPasses;
         _competitivePlayerCount = (await competitiveTask).Count();
@@ -2423,33 +2474,37 @@ else
     private static readonly string[] RankingBands =
     {
         "The Best", "90% -> 99.9%", "75% -> 90%", "50% -> 75%", "25% -> 50%", "10% -> 25%",
-        "0 -> 10%", "Last Place", "Not Recorded"
+        "0 -> 10%", "Last Place", "No peer has passed it", "Broken", "Not Recorded"
     };
 
     private IReadOnlyList<TierGroup> GroupByScoreRanking()
     {
         return LensOrdered(_finalEntries)
-            .GroupBy(e => _scoreRankings.TryGetValue(e.ChartId, out var r) ?
-                (r.Ranking <= 0.01 ?
-                    "Last Place" :
-                    r.Ranking <= 0.10 ?
-                        "0 -> 10%" :
-                        r.Ranking <= 0.25 ?
-                            "10% -> 25%" :
-                            r.Ranking <= .5 ?
-                                "25% -> 50%" :
-                                r.Ranking <= .75 ?
-                                    "50% -> 75%" :
-                                    r.Ranking <= .9 ?
-                                        "75% -> 90%" :
-                                        r.Ranking > .99 ?
-                                            "The Best" :
-                                        "90% -> 99.9%"
-                    )
-                : "Not Recorded")
+            .GroupBy(e => RankingBand(e.ChartId))
             .OrderBy(g => Array.IndexOf(RankingBands, g.Key))
             .Select(ToNeutralGroup)
             .ToArray();
+    }
+
+    /// <summary>
+    ///     "Not Recorded" is for a chart with no score. A pass none of your peers has passed is
+    ///     recorded and unmeasured, and a broken best is recorded too — each has its own shelf
+    ///     rather than a false label (peers-abstraction.md D26). A Rivals-only roster of three
+    ///     used to file most of a folder under "Not Recorded".
+    /// </summary>
+    private string RankingBand(Guid chartId)
+    {
+        if (!_scores.TryGetValue(chartId, out var score) || score.Score == null) return "Not Recorded";
+        if (score.IsBroken) return "Broken";
+        if (!_standings.TryGetValue(chartId, out var s) || s.Percentile is not { } r) return "No peer has passed it";
+        return r <= 0.01 ? "Last Place"
+            : r <= 0.10 ? "0 -> 10%"
+            : r <= 0.25 ? "10% -> 25%"
+            : r <= .5 ? "25% -> 50%"
+            : r <= .75 ? "50% -> 75%"
+            : r <= .9 ? "75% -> 90%"
+            : r > .99 ? "The Best"
+            : "90% -> 99.9%";
     }
 
     private IReadOnlyList<TierGroup> GroupByScoringLevel()

@@ -107,7 +107,8 @@ re-implement band cutoffs (UX-GUIDELINES §1). The percentage always prints besi
 ## Suggested level (Phoenix 2 only)
 
 The tier-list page's PUMBILITY track (`FolderTitleTrack`, [pumbility-title-track.md](pumbility-title-track.md))
-answers *"what does this folder do for me"* and needs your pool, floor and median to do it. The
+answered *"what does this folder do for me"* and needed your pool, floor and median to do it —
+since 2026-09-05 only its gate survives, behind a pointer at the PUMBILITY page. The
 drawer asks the opposite question — *"which folder is this title"* — which is a property of the
 title, so `SuggestedTitleLevel` is deliberately **impersonal**:
 

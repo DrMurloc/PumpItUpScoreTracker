@@ -1,0 +1,159 @@
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Theming
+@namespace ScoreTracker.Web.Components
+
+@* Your own score, colored by where it stands among the peers you chose — the ONE component for
+   that concept (docs/design/peers-abstraction.md §4.4). It wraps ScoreBreakdown, paints it through
+   ThemeScales.ScoreStyleFor, prints the standing beside it (rule 8: the color is never the only
+   channel), and opens the standing popover on tap. The tap stops here: a host whose surface also
+   opens something (the tier card's head, a row's name) never sees it. *@
+<span class="peer-score-anchor">
+    <span class="peer-score @Style.GlowClass @(CanOpen ? "peer-score-open" : null) @Class" style="@Style.Style"
+          role="@(CanOpen ? "button" : null)" tabindex="@(CanOpen ? "0" : null)"
+          aria-haspopup="@(CanOpen ? "dialog" : null)" aria-expanded="@(CanOpen ? _open.ToString().ToLowerInvariant() : null)"
+          aria-label="@(CanOpen ? L["Where this score stands among your peers"].Value : null)"
+          data-testid="peer-score" @onclick="Toggle" @onclick:stopPropagation="true" @onkeydown="Key">
+        <ScoreBreakdown Score="Score" IsBroken="IsBroken" Plate="Plate" Mix="Mix" ShowScore="true" OneLine="OneLine" Stacked="Stacked"
+                        Tooltip="false" Height="Height" InferPlate="InferPlate"></ScoreBreakdown>
+    </span>
+    @if (ShowStanding && StandingText != null)
+    {
+        <span class="peer-standing @(CanOpen ? "peer-standing-open" : null)" data-testid="peer-standing"
+              @onclick="Toggle" @onclick:stopPropagation="true">@StandingText</span>
+    }
+    @if (CanOpen)
+    {
+        <MudPopover Open="_open" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Class="peer-pop-frame">
+            @if (_open)
+            {
+                <PeerStandingPopover Standing="Standing" IsPerfectGame="IsPerfectGame" ColorStyle="@Style.Style"
+                                     ChartId="ChartId" Chart="Chart" SourcesChosen="SourcesChosen"
+                                     OnOpenBoard="OpenBoard"></PeerStandingPopover>
+            }
+        </MudPopover>
+    }
+</span>
+@* Click-away layer, mounted only while open. A bare div rather than MudOverlay, which locks
+   document.body scrolling when it mounts and shifts the page by a scrollbar (ProjectionSpread).
+   The click stops here: the layer sits inside the host's markup, so without that a tap to close
+   the popover bubbled into the tier card's head and opened the details dialog (owner field test). *@
+@if (_open)
+{
+    <div class="peer-clickaway" @onclick="Close" @onclick:stopPropagation="true"></div>
+}
+
+@inject ScoreColorPreferences Preferences
+@code {
+    [Parameter] public PhoenixScore? Score { get; set; }
+
+    [Parameter] public bool IsBroken { get; set; }
+
+    [Parameter] public PhoenixPlate? Plate { get; set; }
+
+    [Parameter] public bool InferPlate { get; set; } = true;
+
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    /// <summary>Null when nothing measured the score: the number renders plain and the popover says why.</summary>
+    [Parameter] public PeerStanding? Standing { get; set; }
+
+    /// <summary>The chart the score is on — the popover names it and the board requests carry its id.</summary>
+    [Parameter] public Chart? Chart { get; set; }
+
+    [Parameter] public Guid? ChartIdOverride { get; set; }
+
+    /// <summary>Print "#6 of 94 peers" beside the number. Off where the host prints it elsewhere.</summary>
+    [Parameter] public bool ShowStanding { get; set; } = true;
+
+    /// <summary>False renders the painted number alone — no popover, no tap target.</summary>
+    [Parameter] public bool Interactive { get; set; } = true;
+
+    /// <summary>
+    ///     Paint with these instead of the viewer's saved settings — the Account dialog's preview,
+    ///     which has to show a choice before it is saved.
+    /// </summary>
+    [Parameter] public ScoreColorSettings? Settings { get; set; }
+
+    [Parameter] public int Height { get; set; } = 20;
+
+    [Parameter] public bool OneLine { get; set; } = true;
+
+    /// <summary>Grade over plate with the number beside them (UX rule 3) — the stacked score, wherever a row prints one.</summary>
+    [Parameter] public bool Stacked { get; set; }
+
+    /// <summary>Extra classes on the score box itself — the tier card hands its grid class in here.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>A source line's request to see that board; the host opens the dialog on the scope.</summary>
+    [Parameter] public EventCallback<PeerBoardRequest> OnOpenBoard { get; set; }
+
+    private bool _open;
+    private ScoreColorSettings _settings = ScoreColorSettings.Default;
+    private PeerSourceSelection _sources = PeerSourceSelection.Default;
+
+    private const int PerfectGame = 1_000_000;
+
+    /// <summary>
+    ///     A standing exists only when a selection was in force — the subject's own, or the
+    ///     competitive default on someone else's page — so a measured score never tells a viewer
+    ///     who un-ticked everything that THEY chose nothing (D27). The setting alone decides only
+    ///     for a score nothing measured.
+    /// </summary>
+    private bool SourcesChosen => _sources.Any || Standing != null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _settings = await Preferences.GetColors();
+        _sources = await Preferences.GetSources();
+    }
+
+    private Guid ChartId => ChartIdOverride ?? Chart?.Id ?? Guid.Empty;
+
+    private bool IsPerfectGame => Score != null && (int)Score.Value == PerfectGame && !IsBroken;
+
+    private PhoenixLetterGrade? Grade => Score?.LetterGradeFor(Mix);
+
+    private ScoreStyle Style => IsBroken || Score == null
+        ? ScoreStyle.Plain
+        : ThemeScales.ScoreStyleFor(Standing, IsPerfectGame, Grade, Settings ?? _settings);
+
+    private string? StandingText => IsBroken ? null : PeerStandingText.Standing(Standing, IsPerfectGame, L);
+
+    /// <summary>A broken run has no standing to explain, and static SSR has no popover provider.</summary>
+    private bool CanOpen => Interactive && !IsBroken && Score != null && RendererInfo.IsInteractive;
+
+    private void Toggle()
+    {
+        if (!CanOpen) return;
+        _open = !_open;
+    }
+
+    private void Close() => _open = false;
+
+    /// <summary>
+    ///     A host's own trigger opens the same popover — the Table density's Better Than cell,
+    ///     where the standing is printed a cell away from the score it explains (D17).
+    /// </summary>
+    public void Open()
+    {
+        if (!CanOpen || _open) return;
+        _open = true;
+        StateHasChanged();
+    }
+
+    private void Key(KeyboardEventArgs e)
+    {
+        if (e.Key is "Enter" or " ") Toggle();
+        else if (e.Key == "Escape") Close();
+    }
+
+    private async Task OpenBoard(PeerBoardRequest request)
+    {
+        _open = false;
+        await OnOpenBoard.InvokeAsync(request);
+    }
+}
