@@ -218,6 +218,11 @@
         _percent = _colors.Glow == GlowRule.TopPercent ? _colors.GlowThreshold : 10;
         _catalog = null;
         _catalog = await Mediator.Send(new GetPeerSourceCatalogQuery(await UiSettings.GetSelectedMix()));
+        // A community you left, or were banned from, is still in the saved selection. The catalog
+        // is the truth of what you can tick, so the draft keeps only the ids it lists and Save
+        // writes the stale ones out (D29).
+        var offered = _catalog.Options.Where(o => o.CommunityId != null).Select(o => o.CommunityId!.Value).ToHashSet();
+        _sources = _sources with { CommunityIds = _sources.CommunityIds.Where(offered.Contains).ToHashSet() };
     }
 
     private async Task OnVisibleChanged(bool visible)

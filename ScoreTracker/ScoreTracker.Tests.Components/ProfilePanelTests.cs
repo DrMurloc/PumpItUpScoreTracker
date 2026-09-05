@@ -20,6 +20,10 @@ using ScoreTracker.Web.Components.Account;
 using ScoreTracker.Web.Services.Contracts;
 using Xunit;
 
+using ScoreTracker.Communities.Contracts.Queries;
+
+using ScoreTracker.SharedKernel.Enums;
+
 namespace ScoreTracker.Tests.Components;
 
 /// <summary>
@@ -149,5 +153,25 @@ public sealed class ProfilePanelTests : ComponentTestBase
         await ChooseAsync(panel, SupportedCultures.Automatic);
 
         Assert.False(NavigatedTo("/Culture/Set"));
+    }
+
+    /// <summary>
+    ///     The peers card counts the communities you are still in. A club you left keeps its id
+    ///     in the setting until the dialog's next Save and must not be counted meanwhile.
+    /// </summary>
+    [Fact]
+    public void ThePeersCardCountsOnlyCommunitiesYouAreStillIn()
+    {
+        var club = Guid.NewGuid();
+        var gone = Guid.NewGuid();
+        _uiSettings.Setup(u => u.GetSetting(PeerSourceSelection.SettingKey, It.IsAny<CancellationToken>(), null))
+            .ReturnsAsync(new PeerSourceSelection(false, false, false, new HashSet<Guid> { club, gone }).Serialize());
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new CommunityOverviewRecord("Club", CommunityPrivacyType.Private, 3, false, club) });
+
+        var panel = RenderWithStoredLanguage(null);
+
+        panel.WaitForAssertion(() =>
+            Assert.Contains("One community", panel.Find("[data-testid='peers-card-summary']").TextContent));
     }
 }

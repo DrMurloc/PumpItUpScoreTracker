@@ -1,5 +1,6 @@
 ﻿@using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Communities.Contracts.Queries
 @using ScoreTracker.CommunityTools.Contracts.Commands
 @using ScoreTracker.CommunityTools.Contracts.Queries
 @using System.Globalization
@@ -353,6 +354,7 @@
     private int _connectedToolCount;
     private bool _showPeersDialog;
     private PeerSourceSelection _peerSources = PeerSourceSelection.Default;
+    private IReadOnlySet<Guid> _myCommunityIds = new HashSet<Guid>();
     private ScoreColorSettings _scoreColors = ScoreColorSettings.Default;
 
     private string PeersSummary
@@ -363,8 +365,11 @@
             if (_peerSources.Rivals) parts.Add(L["Rivals"]);
             if (_peerSources.CompetitiveLevel) parts.Add(L["Competitive level (peers)"]);
             if (_peerSources.Pumbility) parts.Add(L["PUMBILITY peers"]);
-            if (_peerSources.CommunityIds.Count == 1) parts.Add(L["One community"]);
-            else if (_peerSources.CommunityIds.Count > 1) parts.Add(L["{0} communities", _peerSources.CommunityIds.Count]);
+            // Only the communities you are still in: a club you left keeps its id in the setting
+            // until the dialog's next Save, and is not a source meanwhile (D29).
+            var communities = _peerSources.CommunityIds.Count(_myCommunityIds.Contains);
+            if (communities == 1) parts.Add(L["One community"]);
+            else if (communities > 1) parts.Add(L["{0} communities", communities]);
             var peers = parts.Count == 0 ? L["nobody yet"].Value : string.Join(" · ", parts);
             return $"{L["Your peers: {0}.", peers]} {L["Scores colored by {0}, glow {1}.", SystemWord, GlowWord]}";
         }
@@ -397,6 +402,8 @@
     {
         _peerSources = await Preferences.GetSources();
         _scoreColors = await Preferences.GetColors();
+        _myCommunityIds = (await Mediator.Send(new GetMyCommunitiesQuery()) ?? Array.Empty<CommunityOverviewRecord>())
+            .Select(c => c.CommunityId).ToHashSet();
     }
 
     protected override async Task OnInitializedAsync()

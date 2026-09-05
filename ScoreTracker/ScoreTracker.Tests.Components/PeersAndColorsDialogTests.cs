@@ -124,6 +124,26 @@ public sealed class PeersAndColorsDialogTests : ComponentTestBase
             It.Is<string>(v => v.Contains("system=Podium")), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    ///     Leaving a club leaves its id in the setting. The draft keeps only what the catalog can
+    ///     offer, so the stale id neither ticks a phantom nor survives the next Save.
+    /// </summary>
+    [Fact]
+    public async Task ACommunityYouLeftIsDroppedFromTheDraftAndFromSave()
+    {
+        var gone = Guid.NewGuid();
+        _settings.Setup(s => s.GetSetting(PeerSourceSelection.SettingKey, default, null))
+            .ReturnsAsync(new PeerSourceSelection(false, false, false, new HashSet<Guid> { Club, gone }).Serialize());
+        var cut = RenderDialog();
+        cut.WaitForAssertion(() => Assert.NotNull(cut.Find("[data-testid='pcd-tally']")));
+
+        await cut.Find("[data-testid='pcd-save']").ClickAsync(new MouseEventArgs());
+
+        _settings.Verify(s => s.SetSetting(PeerSourceSelection.SettingKey,
+            It.Is<string>(v => PeerSourceSelection.Parse(v).CommunityIds.SetEquals(new[] { Club })),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public void ThePreviewPaintsSevenSamplesWithTheDraft()
     {
