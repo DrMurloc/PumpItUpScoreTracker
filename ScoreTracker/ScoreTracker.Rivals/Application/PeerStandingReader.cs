@@ -1,3 +1,6 @@
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Domain.Models;
@@ -23,8 +26,11 @@ namespace ScoreTracker.Rivals.Application;
 ///     <para>
 ///         Caching is where the 2026-07-10 incident lives: the competitive band is cached per mix,
 ///         type and half-level bucket so viewers share it; community members per community; and
-///         the peers' scores per viewer, selection and chart, so a folder revisited costs nothing.
-///         The subject's OWN bests are always read fresh — an import recolors the page at once.
+///         the peers' scores per chart by the peer SET — the resolved players, the subject put
+///         back — so two players in one band share one read, a rival added a minute ago changes
+///         the key and is read at once, and a folder revisited costs nothing (D33). The roster's
+///         two bulk reads ride the same key. The subject's OWN bests are always read fresh — an
+///         import recolors the page at once.
 ///     </para>
 /// </summary>
 internal sealed class PeerStandingReader : IPeerStandingReader,
@@ -134,11 +140,11 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
                 continue;
             }
 
-            var rows = await ReadRows(userId, mix, selection, peers,
+            var rows = await ReadRows(userId, mix, peers,
                 byType.Select(s => s.ChartId).Distinct().ToArray(), cancellationToken);
             foreach (var score in byType)
             {
-                var chartRows = rows.GetValueOrDefault(score.ChartId) ?? ChartRows.None;
+                var chartRows = (rows.GetValueOrDefault(score.ChartId) ?? ChartRows.None).Without(userId);
                 result[score] = PeerStandingCalculator.Compute(score.Score, chartRows.Passes,
                     chartRows.Broken, peers.Sources, peers.Union, chartRows.OfficialAsOf);
             }
@@ -161,16 +167,26 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         // has no PUMBILITY pool of its own, so Combined draws both types' peers.
         var peers = await ResolvePeers(me, request.Mix, request.Dimension, selection, cancellationToken,
             forRoster: true);
-        var siteIds = peers.Union.Where(id => !peers.GhostKeys.Contains(id)).ToArray();
-        var users = siteIds.Length == 0
-            ? new Dictionary<Guid, User>()
-            : (await _users.GetUsers(siteIds, cancellationToken)).ToDictionary(u => u.Id);
+        // The two bulk reads — every peer's account and stats — are the widget's whole cost and
+        // ran on every dashboard load. Read with the viewer put back and cached by the peer set
+        // for the scores' fifteen minutes: a band shares one read, a new rival changes the key.
+        var readIds = peers.Union.Append(me).Where(id => !peers.GhostKeys.Contains(id)).Distinct().ToArray();
+        var setKey = PeerSetKey(peers, me);
+        var users = await _cache.GetOrCreateAsync($"{nameof(PeerStandingReader)}__RosterUsers__{setKey}",
+            async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = ScoresTtl;
+                return (await _users.GetUsers(readIds, cancellationToken)).ToDictionary(u => u.Id);
+            }) ?? new Dictionary<Guid, User>();
         var audience = await _visibility.GetAudience(me, cancellationToken);
-        var visible = users.Values.Where(u => audience.Describe(u.Id, u.IsPublic).CanView).ToArray();
-        var levels = visible.Length == 0
-            ? new Dictionary<Guid, PlayerStatsRecord>()
-            : (await _stats.GetStats(request.Mix, visible.Select(u => u.Id), cancellationToken))
-            .ToDictionary(s => s.UserId);
+        var visible = users.Values.Where(u => u.Id != me && audience.Describe(u.Id, u.IsPublic).CanView).ToArray();
+        var levels = await _cache.GetOrCreateAsync(
+            $"{nameof(PeerStandingReader)}__RosterStats__{request.Mix}__{setKey}",
+            async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = ScoresTtl;
+                return (await _stats.GetStats(request.Mix, readIds, cancellationToken)).ToDictionary(s => s.UserId);
+            }) ?? new Dictionary<Guid, PlayerStatsRecord>();
 
         var rows = visible
             .Select(u => new PeerListEntry(u,
@@ -343,7 +359,8 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
     {
         var bucket = Bucket(LevelOn(stats, type));
         if (bucket <= 0) return NoIds;
-        var band = await _cache.GetOrCreateAsync($"{nameof(PeerStandingReader)}__Band__{mix}__{type}__{bucket}",
+        var band = await _cache.GetOrCreateAsync(
+            $"{nameof(PeerStandingReader)}__Band__{mix}__{type}__{bucket.ToString(CultureInfo.InvariantCulture)}",
             async entry =>
             {
                 entry.AbsoluteExpirationRelativeToNow = BandTtl;
@@ -381,27 +398,47 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
     {
         public static ChartRows None { get; } =
             new(Array.Empty<PeerStandingCalculator.PeerPass>(), new HashSet<Guid>(), null);
+
+        /// <summary>The rows are read with the subject put back so a band can share them; their own comes out here.</summary>
+        public ChartRows Without(Guid subject) =>
+            Passes.All(p => p.PlayerKey != subject) && !Broken.Contains(subject)
+                ? this
+                : new ChartRows(Passes.Where(p => p.PlayerKey != subject).ToArray(),
+                    Broken.Where(id => id != subject).ToHashSet(), OfficialAsOf);
     }
 
     /// <summary>
-    ///     Cached per viewer, mix, selection and chart, so the read only reaches the ledger for the
-    ///     charts a page has not seen lately — the shape that keeps a folder revisit free.
+    ///     The cache's identity: a digest of the peer set with the subject put back. Two players in
+    ///     one band resolve to the same set once each is put back; a rival added a minute ago is a
+    ///     different set. Sixteen bytes of SHA-256 rather than a hash code, because a collision
+    ///     here would serve another set's rows without a word.
+    /// </summary>
+    private static string PeerSetKey(ResolvedPeers peers, Guid subject)
+    {
+        var ids = peers.Union.Append(subject).Distinct().OrderBy(id => id).Select(id => id.ToString("N"));
+        return Convert.ToHexString(SHA256.HashData(Encoding.ASCII.GetBytes(string.Join(",", ids))), 0, 16);
+    }
+
+    /// <summary>
+    ///     Cached per mix, peer set and chart, so the read only reaches the ledger for the charts
+    ///     nobody with this peer set has seen lately — the shape that keeps a folder revisit free.
+    ///     The subject is read along with their peers so the rows are the SET's, not the viewer's:
+    ///     the compute takes their own row back out (<see cref="ChartRows.Without" />).
     /// </summary>
     private async Task<IReadOnlyDictionary<Guid, ChartRows>> ReadRows(Guid userId, MixEnum mix,
-        PeerSourceSelection selection, ResolvedPeers peers, IReadOnlyCollection<Guid> chartIds,
-        CancellationToken cancellationToken)
+        ResolvedPeers peers, IReadOnlyCollection<Guid> chartIds, CancellationToken cancellationToken)
     {
-        var selectionKey = selection.Serialize();
+        var setKey = PeerSetKey(peers, userId);
         var result = new Dictionary<Guid, ChartRows>();
         var missing = new List<Guid>();
         foreach (var chartId in chartIds)
-            if (_cache.TryGetValue(RowsKey(userId, mix, selectionKey, chartId), out ChartRows? cached) && cached != null)
+            if (_cache.TryGetValue(RowsKey(mix, setKey, chartId), out ChartRows? cached) && cached != null)
                 result[chartId] = cached;
             else
                 missing.Add(chartId);
         if (missing.Count == 0) return result;
 
-        var siteIds = peers.Union.Where(id => !peers.GhostKeys.Contains(id)).ToArray();
+        var siteIds = peers.Union.Append(userId).Where(id => !peers.GhostKeys.Contains(id)).Distinct().ToArray();
         var passes = new Dictionary<Guid, List<PeerStandingCalculator.PeerPass>>();
         var broken = new Dictionary<Guid, HashSet<Guid>>();
         if (siteIds.Length > 0)
@@ -429,7 +466,7 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
                 passes.TryGetValue(chartId, out var p) ? p : Array.Empty<PeerStandingCalculator.PeerPass>(),
                 broken.TryGetValue(chartId, out var b) ? b : new HashSet<Guid>(),
                 asOf);
-            _cache.Set(RowsKey(userId, mix, selectionKey, chartId), rows, ScoresTtl);
+            _cache.Set(RowsKey(mix, setKey, chartId), rows, ScoresTtl);
             result[chartId] = rows;
         }
 
@@ -449,6 +486,6 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         return set;
     }
 
-    private static string RowsKey(Guid userId, MixEnum mix, string selectionKey, Guid chartId) =>
-        $"{nameof(PeerStandingReader)}__Rows__{userId}__{mix}__{selectionKey}__{chartId}";
+    private static string RowsKey(MixEnum mix, string setKey, Guid chartId) =>
+        $"{nameof(PeerStandingReader)}__Rows__{mix}__{setKey}__{chartId}";
 }

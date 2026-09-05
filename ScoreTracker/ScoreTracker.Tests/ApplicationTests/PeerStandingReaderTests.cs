@@ -145,6 +145,59 @@ public sealed class PeerStandingReaderTests
             It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    /// <summary>
+    ///     The rows are cached by the peer SET with the subject put back, so two players in one
+    ///     band cost the ledger one read between them — and each still ranks against the others
+    ///     only, never against their own row.
+    /// </summary>
+    [Fact]
+    public async Task TwoPlayersInTheSameBandShareOneLedgerRead()
+    {
+        var a = Guid.NewGuid();
+        MyBestIs(_single.Id, 950_000);
+        BandIs(Me, Stranger, a);
+        PeerScoresAre(Score(Me, _single.Id, 950_000), Score(Stranger, _single.Id, 960_000), Score(a, _single.Id, 940_000));
+        var reader = Reader();
+
+        var mine = (await reader.GetStandings(Me, MixEnum.Phoenix, new[] { _single.Id }))[_single.Id];
+        var theirs = (await reader.GetStandings(Stranger, MixEnum.Phoenix, new[] { _single.Id }))[_single.Id];
+
+        _scores.Verify(s => s.GetPlayerScores(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
+            It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Equal((2, 2, 2), (mine.PeerCount, mine.Passed, mine.Place));
+        Assert.Equal((2, 2, 1), (theirs.PeerCount, theirs.Passed, theirs.Place));
+    }
+
+    /// <summary>
+    ///     A rival added a minute ago is a different peer set, so their pass is read at once rather
+    ///     than the old rows counting them as one who has not passed it.
+    /// </summary>
+    [Fact]
+    public async Task ANewRivalIsReadAtOnceRatherThanServedFromTheOldRows()
+    {
+        var first = Guid.NewGuid();
+        var second = Guid.NewGuid();
+        _settings[PeerSourceSelection.SettingKey] = new PeerSourceSelection(true, false, false, new HashSet<Guid>()).Serialize();
+        _users.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new UserBuilder().WithId(first).WithName("First").Build(), new UserBuilder().WithId(second).WithName("Second").Build() });
+        _rivals.Setup(r => r.GetRivalsOwnedBy(Me, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new RivalEdge(Guid.NewGuid(), Me, first, null, At) });
+        MyBestIs(_single.Id, 950_000);
+        PeerScoresAre(Score(first, _single.Id, 940_000));
+        var reader = Reader();
+        var before = (await reader.GetStandings(Me, MixEnum.Phoenix, new[] { _single.Id }))[_single.Id];
+
+        _rivals.Setup(r => r.GetRivalsOwnedBy(Me, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new RivalEdge(Guid.NewGuid(), Me, first, null, At), new RivalEdge(Guid.NewGuid(), Me, second, null, At) });
+        PeerScoresAre(Score(first, _single.Id, 940_000), Score(second, _single.Id, 990_000));
+        var after = (await reader.GetStandings(Me, MixEnum.Phoenix, new[] { _single.Id }))[_single.Id];
+
+        Assert.Equal((1, 1, 0), (before.PeerCount, before.Passed, before.NotPassed));
+        Assert.Equal((2, 2, 0), (after.PeerCount, after.Passed, after.NotPassed));
+        _scores.Verify(s => s.GetPlayerScores(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
+            It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
     [Fact]
     public async Task RivalsAndACommunityUnionWithOneLinePerSource()
     {
