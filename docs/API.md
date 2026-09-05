@@ -95,6 +95,7 @@ Mix-aware endpoints take an **optional `Mix` parameter** — a query parameter o
 ## Conventions
 
 - Controllers are thin: every action dispatches a MediatR query/command — no business logic lives in the controller layer.
+- Every v2 action declares its response shapes, so `/swagger` shows the JSON schema of a 200 and the problem document of each 400/404 rather than a bare status. A convention test (`ScoreTracker.Tests.Api`) fails when a new v2 action lacks a declared 200 shape.
 - CORS: partner endpoints allow cross-origin calls via the `API` policy.
 - Rate limits on v2: 600 requests a minute, for a tool key and a personal token alike, counted per credential. A `429` carries `Retry-After` — wait it out rather than retrying straight away. A full catalog pull (every chart, song and tier list across all 31 mixes) is roughly 500 requests, so it fits inside one window.
 - Building a PIU tool? You don't need to build your own importer — register the tool and let the webhooks push to you. See the Code section of your tool's console, then `#tool-makers` on [Discord](https://discord.gg/AvS5PxnvSN).

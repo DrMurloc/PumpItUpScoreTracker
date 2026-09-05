@@ -1,8 +1,13 @@
 # API v2 round 2 — the supplemented reading, scores by chart, community filter, player stats
 
-Status: **building** (2026-09-05). Three partner requests relayed by the owner on 2026-09-05, scoped
-and decided the same day. This document is the record of what was approved; the commits follow it
-and do not extend it. Anything not written here is not in scope
+Status: **built** (2026-09-05, S0–S14). Three partner requests relayed by the owner on 2026-09-05,
+scoped and decided the same day. This document is the record of what was approved; the commits
+follow it and do not extend it. Three things the build settled that the plan had not spelled out,
+each reported to the owner at the time rather than folded in silently: the profile's value flag is
+`pumbilityIsSupplemented` rather than `pumbilityIsOfficial` (§3.2 says why); a personal token's
+cursors are now fingerprinted to the person rather than to "no tool", so two personal tokens can
+never trade cursors; and the problem responses are declared through one small derived attribute so
+their content type cannot drift per action. Anything not written here is not in scope
 ([api-v2-community-tools.md §16](api-v2-community-tools.md) is the precedent for that rule, and
 the scope-creep audit of 2026-08-02 is the reason for it).
 
