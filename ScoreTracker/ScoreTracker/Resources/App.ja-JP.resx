@@ -1055,9 +1055,6 @@
   <data name="Behind / ahead" xml:space="preserve">
     <value>下回る / 上回る</value>
   </data>
-  <data name="Behind your top 50 — serves {0}" xml:space="preserve">
-    <value>トップ50未満 — {0}向け</value>
-  </data>
   <data name="below" xml:space="preserve">
     <value>下回る</value>
   </data>
@@ -3899,6 +3896,9 @@
   <data name="Look back" xml:space="preserve">
     <value>対象期間</value>
   </data>
+  <data name="Looking for title progress?" xml:space="preserve">
+    <value>称号の進捗をお探しですか？</value>
+  </data>
   <data name="Loss" xml:space="preserve">
     <value>減少</value>
   </data>
@@ -4455,9 +4455,6 @@
   </data>
   <data name="Next season" xml:space="preserve">
     <value>次のシーズン</value>
-  </data>
-  <data name="Next title" xml:space="preserve">
-    <value>次のタイトル</value>
   </data>
   <data name="next to what a level is worth" xml:space="preserve">
     <value>レベルの価値と並べて初めて意味を持ちます</value>
@@ -5284,12 +5281,6 @@
   </data>
   <data name="Pass Refiner" xml:space="preserve">
     <value>Pass Refiner</value>
-  </data>
-  <data name="Pass {0} charts at {1} or better (only {2} exist in this folder)" xml:space="preserve">
-    <value>{0}譜面を{1}以上で（このフォルダーには{2}譜面のみ）</value>
-  </data>
-  <data name="Pass {0} charts in this folder with {1} or better" xml:space="preserve">
-    <value>このフォルダーで{0}譜面を{1}以上で</value>
   </data>
   <data name="Pass {0} ended this stage" xml:space="preserve">
     <value>Pass {0} でこのプレイが終了しました</value>
@@ -6888,6 +6879,9 @@
   <data name="See the full board" xml:space="preserve">
     <value>ボード全体を見る</value>
   </data>
+  <data name="See the PUMBILITY page" xml:space="preserve">
+    <value>PUMBILITYページを見る</value>
+  </data>
   <data name="See the Score breakdown" xml:space="preserve">
     <value>スコアの内訳を見る</value>
   </data>
@@ -8029,9 +8023,6 @@
   </data>
   <data name="This does not send anything." xml:space="preserve">
     <value>これは何も送りません。</value>
-  </data>
-  <data name="This folder serves {0}" xml:space="preserve">
-    <value>このフォルダーは{0}向け</value>
   </data>
   <data name="This gives {0} control of your PIUGame account." xml:space="preserve">
     <value>これにより{0}があなたのPIUGameアカウントを操作できるようになります。</value>
@@ -10176,9 +10167,6 @@
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>公式ランキングで ~#{0}</value>
-  </data>
-  <data name="~{0} more charts in this folder" xml:space="preserve">
-    <value>このフォルダーであと約{0}譜面</value>
   </data>
   <data name="— optional" xml:space="preserve">
     <value>— 任意</value>

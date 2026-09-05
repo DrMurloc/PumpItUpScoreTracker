@@ -164,10 +164,11 @@ and E2E are untouched by design.
 
 ## 8. Level markers on the one-gem bars
 
-Four surfaces draw a bar fed by a PUMBILITY pool: the title rails on `/Pumbility/Pool`
+Three surfaces draw a bar fed by a PUMBILITY pool: the title rails on `/Pumbility/Pool`
 (`PumbilityTitleRails`, one per pool, held title → next title), the Titles drawer's "Your
-progress" bar, the session page's "Titles you're working on" bars (`SessionTitleBars`), and the
-title track on `/TierLists`. The level rungs render as tick marks on the bars whose geometry
+progress" bar, and the session page's "Titles you're working on" bars (`SessionTitleBars`); the
+tier list's title track was the fourth until 2026-09-05, when it gave way to a pointer at the
+PUMBILITY page. The level rungs render as tick marks on the bars whose geometry
 carries them — which turns out to be every **total-pool** bar, because of a fact worth stating
 precisely:
 

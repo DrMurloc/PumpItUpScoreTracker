@@ -371,8 +371,9 @@ ALEXANDRITE asks 380.00 │ your charts average 360.82 │ your bar 358.08 │ +
 reasoning that a player holds all three ladders at once — but the selector already re-ranks the
 total, the bar, the curve, the board and the targets, and a control that moves everything in the
 section except this one reads as broken. The other two ladders are one click away, and the totals on
-the selector itself say what they are worth. The rung bar is the device `PumbilityTitleTrack` already
-draws on the tier list, so the two surfaces stay legible as the same idea.
+the selector itself say what they are worth. The rung bar was the device `PumbilityTitleTrack` drew on
+the tier list too, until 2026-09-05, when the tier list gave it up for a pointer here: this section
+is the rung bar's one home now.
 
 **The ask names three charts, not one**, at SSS+, AAA and A — the shape the title drawer already
 settled ([PR #234](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/234)). Play quality moves the
@@ -425,8 +426,8 @@ it displaced nothing. Confirmed live on the owner's account: the bar was held by
 The rule is `Rank(s) > 0`, which subsumes all four — and, on Phoenix 2, a fifth: a **passing F**
 prices at zero there, so it is excluded by the same test. Nothing legitimate is caught: the worst
 grade multiplier that still pays is ×0.4 on Phoenix 1 and ×1.00 on Phoenix 2 (a Single's D), and
-`MinimumScore` is 0 in both PUMBILITY configs. `FolderTitleTrack.Compute` already builds its pool this way (`if (value <= 0) continue;`) —
-this makes the page agree with the tier list's folder track.
+`MinimumScore` is 0 in both PUMBILITY configs. `FolderTitleTrack.HasTitleProgress`, the tier list's pointer gate, builds its pool the same way —
+so the page and the tier list agree about what a pool is.
 
 ⚠ **It is two places, not one.** `ProjectPhoenix2CarryoverQuery` builds `repriced` and `phoenix1Pool`
 with no such filter at all, so an account with fewer than fifty counting Phoenix 1 charts gets a

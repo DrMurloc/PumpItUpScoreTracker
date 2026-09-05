@@ -263,7 +263,7 @@ Locked by a live canary (`Phoenix2PumbilityAggregationTests`) and a >50-chart un
 titles carry the old inflated two-pool total until the sweep recomputes them.
 
 > **What a formula change does and does not leave stale.** Every PUMBILITY figure a player can
-> see — the `/Pumbility` pages, the pool, the title track, `api/phoenixScores` — is computed
+> see — the `/Pumbility` pages, the pool, the tier list's title-progress gate, `api/phoenixScores` — is computed
 > from raw scores at read time, so it is correct the moment the release deploys. Only the
 > STORED aggregates go stale: `PlayerStats` ratings and the per-chart `PhoenixRecordStats`.
 > Those refresh when that player next imports and never otherwise, which is why the sweep

@@ -929,7 +929,7 @@ Phoenix-blue beside Phoenix-2-green is not expressible under `UiColorTokenTests`
   scoped wipe does that this does not (`WipeUserScoresHandler` clears both, because `TitleSaga`
   only ever writes a title and never clears one). It is unnecessary here rather than an oversight:
   every clear, grade, difficulty and co-op title already gates on `!attempt.IsBroken`, and the
-  PUMBILITY title track prices a break at exactly zero (`StageBreakModifier = 0.0` in
+  PUMBILITY pricing counts a break at exactly zero (`StageBreakModifier = 0.0` in
   `Phoenix2PumbilityScoring`). A row that contributes nothing to a title cannot lower one by
   leaving. The wipe needs the reset because it also removes passes.
 - **No personalized-tier-list rebuild.** `GetMyRelativeTierListQuery` filters on `Score != null`
