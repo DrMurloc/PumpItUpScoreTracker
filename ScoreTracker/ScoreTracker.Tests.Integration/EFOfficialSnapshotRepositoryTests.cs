@@ -561,5 +561,8 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
         Assert.Equal("bob", players.Single(p => p.UserId == bob).Username);
         Assert.Empty(await Snapshots().GetPlayersByUserIds(MixEnum.Phoenix2, Array.Empty<Guid>(),
             CancellationToken.None));
+        // The single read answers the same tag as the bulk one for the same account and mix.
+        Assert.Equal("alice", (await Snapshots().GetPlayerByUserId(MixEnum.Phoenix2, alice, CancellationToken.None))!.Username);
+        Assert.Null(await Snapshots().GetPlayerByUserId(MixEnum.Phoenix2, stranger, CancellationToken.None));
     }
 }
