@@ -32,10 +32,16 @@ public sealed class ChartsController : ApiV2ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>The chart catalog for one mix, with each chart's level and note count as that mix lists them.</summary>
     /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
     /// <param name="level">Optional difficulty level filter.</param>
     /// <param name="typeValue">Optional chart type filter: Single, Double, CoOp, SinglePerformance, DoublePerformance.</param>
+    /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
+    /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet]
+    [ProducesResponseType(typeof(CursorPageDto<ChartV2Dto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Get(
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "level")] int? level = null,
@@ -91,7 +97,11 @@ public sealed class ChartsController : ApiV2ControllerBase
     ///     per-skill coverage.
     /// </summary>
     /// <remarks>Mix-invariant — it describes the steps, so no <c>mix</c> parameter.</remarks>
+    /// <param name="chartId">A chart id from <c>/api/v2/charts</c>.</param>
     [HttpGet("{chartId:guid}/skills")]
+    [ProducesResponseType(typeof(ChartSkillProfileDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetChartSkills([FromRoute] Guid chartId)
     {
         var profiles = await _mediator.Send(new GetChartSkillProfilesQuery(new[] { chartId }));
@@ -112,11 +122,19 @@ public sealed class ChartsController : ApiV2ControllerBase
     ///     <c>mix</c> is required because the filters are per-mix. The analysis itself is
     ///     mix-invariant, so do not cache it per mix.
     /// </remarks>
+    /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
+    /// <param name="level">Optional difficulty level filter.</param>
+    /// <param name="typeValue">Optional chart type filter: Single, Double, CoOp, SinglePerformance, DoublePerformance.</param>
+    /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
+    /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     // Written out rather than a see cref: Swashbuckle renders a cref as its display name, and for a
     // method that is the whole signature — the reader would get System.Nullable{System.Int32} in
     // the endpoint description. XML doc reaches Swagger; a line comment does not, which is why the
     // rationale lives down here.
     [HttpGet("skills")]
+    [ProducesResponseType(typeof(CursorPageDto<ChartSkillProfileDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetSkills(
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "level")] int? level = null,
@@ -163,7 +181,13 @@ public sealed class ChartsController : ApiV2ControllerBase
     }
 
     /// <summary>One chart, as expressed in the requested mix.</summary>
+    /// <param name="chartId">A chart id from <c>/api/v2/charts</c>.</param>
+    /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
     [HttpGet("{chartId:guid}")]
+    [ProducesResponseType(typeof(ChartV2Dto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetOne([FromRoute] Guid chartId,
         [FromQuery(Name = "mix")] string? mixValue = null)
     {
@@ -183,12 +207,24 @@ public sealed class ChartsController : ApiV2ControllerBase
     ///     Rows below <c>matchFloor</c> are near-misses rather than absences — nothing is filtered
     ///     out by quality, so where the bar falls is yours to decide.
     /// </remarks>
+    /// <param name="chartId">The chart to compare against, from <c>/api/v2/charts</c>.</param>
+    /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
+    /// <param name="minLevel">Only compare charts at or above this level.</param>
+    /// <param name="maxLevel">Only compare charts at or below this level.</param>
+    /// <param name="minScoringLevel">Only compare charts whose scoring level is at or above this.</param>
+    /// <param name="maxScoringLevel">Only compare charts whose scoring level is at or below this.</param>
+    /// <param name="minBpm">Only compare charts whose song reaches at least this BPM.</param>
+    /// <param name="maxBpm">Only compare charts whose song stays at or below this BPM.</param>
+    /// <param name="minNps">Only compare charts with at least this many notes per second, as PIU Center measures it.</param>
+    /// <param name="maxNps">Only compare charts with at most this many notes per second, as PIU Center measures it.</param>
     // Filters narrow what the anchor is compared against and the scores are recomputed; they never
     // sieve a precalculated list, which would return nothing for any filter narrow enough to be
     // interesting. That also makes this the out-of-window path — what D23s play like a D18 is a real
     // question and deliberately outside the ±1 the nightly job precalculates. See
     // docs/design/chart-similarity.md; a line comment keeps it out of the Swagger description.
     [HttpGet("{chartId:guid}/similar")]
+    [ProducesResponseType(typeof(SimilarChartsDto), StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetSimilar([FromRoute] Guid chartId,
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "minLevel")] int? minLevel = null,
@@ -224,12 +260,20 @@ public sealed class ChartsController : ApiV2ControllerBase
     /// <summary>
     ///     A weighted random draw — the engine behind the site's randomizer.
     /// </summary>
+    /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
+    /// <param name="count">How many charts to draw. Defaults to 5.</param>
+    /// <param name="chartTypes">Which chart types may be drawn: Single, Double, CoOp. Repeat the parameter for more than one.</param>
+    /// <param name="songTypes">Which song cuts may be drawn: Arcade, ShortCut, FullSong, Remix. Repeat the parameter for more than one.</param>
+    /// <param name="minLevel">The lowest level to draw from.</param>
+    /// <param name="maxLevel">The highest level to draw from.</param>
     /// <param name="buckets">
     ///     Minimum pull counts. "Single:2" pulls at least 2 singles; "S19:8" at least 8 S19s;
     ///     "S21,S22,D23:4" at least 4 from that set of folders. Bucket minimums win over
     ///     <paramref name="count" /> when they exceed it.
     /// </param>
     [HttpGet("random")]
+    [ProducesResponseType(typeof(CursorPageDto<ChartV2Dto>), StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetRandom(
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "count")] int count = 5,

@@ -55,7 +55,8 @@ public sealed class V2OfficialApiShapeTests
                   "player": {
                     "playerId": 88213,
                     "gameTag": "MURLOC#1",
-                    "avatarUrl": "https://piuimages.example.com/avatar.png"
+                    "avatarUrl": "https://piuimages.example.com/avatar.png",
+                    "isSupplemented": false
                   },
                   "rating": 1043.25,
                   "boardsInTop": 54,
@@ -86,7 +87,8 @@ public sealed class V2OfficialApiShapeTests
                   "player": {
                     "playerId": 88213,
                     "gameTag": "MURLOC#1",
-                    "avatarUrl": "https://piuimages.example.com/avatar.png"
+                    "avatarUrl": "https://piuimages.example.com/avatar.png",
+                    "isSupplemented": false
                   },
                   "score": 998430
                 }
@@ -157,6 +159,91 @@ public sealed class V2OfficialApiShapeTests
         var dto = Assert.IsType<OfficialPlayerProfileDto>(Assert.IsType<JsonResult>(result).Value);
         Assert.Equal("MURLOC#1", dto.Player.GameTag);
         Assert.Equal(88213, dto.Player.PlayerId);
+    }
+
+    /// <summary>
+    ///     The supplemented profile of a player piugame's ranking does not list: the PUMBILITY is
+    ///     PIU Scores' computed number and says so on the value, the player mark says the tag is on
+    ///     the boards only because of PIU Scores, and each appended placement is marked on its own —
+    ///     so a maker can tell a real board row from a folded-in one at every level of the payload.
+    /// </summary>
+    [Fact]
+    public async Task SupplementedProfileMarksTheValueThePlayerAndEachPlacement()
+    {
+        var offBoard = new OfficialPlayerRecord(88213, "MURLOC#1",
+            new Uri("https://piuimages.example.com/avatar.png"), ApiTestData.PublicUserId, IsSupplemented: true);
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialPlayerProfileQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialPlayerProfileRecord(offBoard, null, 14320.50m, 1432, null, 1, 0, 301, 0,
+                Array.Empty<OfficialPlayerHistoryPoint>(),
+                new[] { new OfficialPlayerChartRecord(ApiTestData.ChartId1, 301, null, 951000, 812.5, true) },
+                PumbilityIsSupplemented: true));
+
+        var result = await _controller.GetPlayer("MURLOC#1", "Phoenix2", supplemented: true);
+
+        JsonApproval.AssertWireShape("""
+            {
+              "player": {
+                "playerId": 88213,
+                "gameTag": "MURLOC#1",
+                "avatarUrl": "https://piuimages.example.com/avatar.png",
+                "isSupplemented": true
+              },
+              "playerType": null,
+              "pumbility": 14320.50,
+              "pumbilityIsSupplemented": true,
+              "pumbilityRank": 1432,
+              "pumbilityRankDelta": null,
+              "boardsInTop": 1,
+              "numberOnes": 0,
+              "bestPlace": 301,
+              "topTens": 0,
+              "history": [],
+              "placements": [
+                {
+                  "chartId": "11111111-1111-1111-1111-111111111111",
+                  "place": 301,
+                  "placeDelta": null,
+                  "score": 951000,
+                  "computedRating": 812.5,
+                  "isSupplemented": true
+                }
+              ]
+            }
+            """, result);
+    }
+
+    /// <summary>
+    ///     The flag is opt-in and reaches exactly the four reads the site's switch reaches. The
+    ///     default is the boards as piugame publishes them — an integration written before the flag
+    ///     existed keeps getting byte-identical answers.
+    /// </summary>
+    [Fact]
+    public async Task TheDefaultReadingIsOfficialAndTheFlagReachesTheFourReadsTheSwitchCovers()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialRankingsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialRankingsRecord(null, true, Array.Empty<OfficialRankingRecord>()));
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialChartBoardQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialChartBoardRecord(ApiTestData.Date1, Array.Empty<OfficialChartBoardEntryRecord>()));
+
+        await _controller.GetRankings("Phoenix2");
+        await _controller.GetPlayer("MURLOC#1", "Phoenix2");
+        await _controller.GetChartBoard(ApiTestData.ChartId1, "Phoenix2");
+        await _controller.GetWeeklyHighlights("Phoenix2");
+
+        _mediator.Verify(m => m.Send(It.Is<GetOfficialRankingsQuery>(q => !q.Supplemented), It.IsAny<CancellationToken>()), Times.Once);
+        _mediator.Verify(m => m.Send(It.Is<GetOfficialPlayerProfileQuery>(q => !q.Supplemented), It.IsAny<CancellationToken>()), Times.Once);
+        _mediator.Verify(m => m.Send(It.Is<GetOfficialChartBoardQuery>(q => !q.Supplemented), It.IsAny<CancellationToken>()), Times.Once);
+        _mediator.Verify(m => m.Send(It.Is<GetWeeklyHighlightsQuery>(q => !q.Supplemented), It.IsAny<CancellationToken>()), Times.Once);
+
+        await _controller.GetRankings("Phoenix2", supplemented: true);
+        await _controller.GetPlayer("MURLOC#1", "Phoenix2", supplemented: true);
+        await _controller.GetChartBoard(ApiTestData.ChartId1, "Phoenix2", supplemented: true);
+        await _controller.GetWeeklyHighlights("Phoenix2", supplemented: true);
+
+        _mediator.Verify(m => m.Send(It.Is<GetOfficialRankingsQuery>(q => q.Supplemented), It.IsAny<CancellationToken>()), Times.Once);
+        _mediator.Verify(m => m.Send(It.Is<GetOfficialPlayerProfileQuery>(q => q.Supplemented), It.IsAny<CancellationToken>()), Times.Once);
+        _mediator.Verify(m => m.Send(It.Is<GetOfficialChartBoardQuery>(q => q.Supplemented), It.IsAny<CancellationToken>()), Times.Once);
+        _mediator.Verify(m => m.Send(It.Is<GetWeeklyHighlightsQuery>(q => q.Supplemented), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     /// <summary>

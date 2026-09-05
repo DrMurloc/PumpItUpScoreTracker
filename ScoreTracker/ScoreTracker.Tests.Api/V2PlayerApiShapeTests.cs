@@ -139,6 +139,48 @@ public sealed class V2PlayerApiShapeTests
         Assert.Equal(ApiTestData.Date2, Assert.Single(page.Data).RecordedAt);
     }
 
+    /// <summary>
+    ///     The point read: "what did this player get on these charts", without paging their whole
+    ///     record. A trailing comma is tolerated so a list built by joining is not an error.
+    /// </summary>
+    [Fact]
+    public async Task ChartIdsNarrowsToTheListedCharts()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { ApiTestData.Chart1, ApiTestData.Chart2 });
+        SetupScores(
+            new RecordedPhoenixScore(ApiTestData.ChartId1, PhoenixScore.From(900000), PhoenixPlate.FairGame,
+                false, ApiTestData.Date1),
+            new RecordedPhoenixScore(ApiTestData.ChartId2, PhoenixScore.From(978210), PhoenixPlate.MarvelousGame,
+                false, ApiTestData.Date2));
+
+        var result = await _controller.GetScores("me", "Phoenix", chartIdsValue: $"{ApiTestData.ChartId2},");
+
+        var page = Assert.IsType<PlayerScorePageDto>(Assert.IsType<JsonResult>(result).Value);
+        Assert.Equal(ApiTestData.ChartId2, Assert.Single(page.Data).ChartId);
+    }
+
+    [Fact]
+    public async Task AChartIdThatIsNotAGuidIs400()
+    {
+        var result = await _controller.GetScores("me", "Phoenix", chartIdsValue: $"{ApiTestData.ChartId1},not-a-chart");
+
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(result).Value);
+        Assert.Equal(StatusCodes.Status400BadRequest, problem.Status);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-chart-id", problem.Type);
+    }
+
+    [Fact]
+    public async Task MoreThanFiftyChartIdsIs400()
+    {
+        var ids = string.Join(",", Enumerable.Range(0, PlayersController.MaxChartIds + 1).Select(_ => Guid.NewGuid()));
+
+        var result = await _controller.GetScores("me", "Phoenix", chartIdsValue: ids);
+
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(result).Value);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/too-many-chart-ids", problem.Type);
+    }
+
     [Fact]
     public async Task AnotherPlayersIdIs404NotForbidden()
     {

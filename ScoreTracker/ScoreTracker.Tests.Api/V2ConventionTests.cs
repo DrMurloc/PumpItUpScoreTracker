@@ -1,3 +1,7 @@
+using System.Reflection;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Controllers.Api.V2;
 
@@ -106,5 +110,27 @@ public sealed class V2ConventionTests
             .Encode();
 
         Assert.Equal(encoded, Uri.EscapeDataString(encoded));
+    }
+
+    /// <summary>
+    ///     Every v2 action tells Swagger what a 200 looks like. Without the declaration the docs
+    ///     page shows a bare "200 Success" with no schema — which is what the whole v2 surface
+    ///     showed until 2026-09-05 — and a maker learns the shape by calling. Additive: a new
+    ///     action fails here until it declares its type.
+    /// </summary>
+    [Fact]
+    public void EveryV2ActionDeclaresItsSuccessShape()
+    {
+        var offenders = typeof(ApiV2ControllerBase).Assembly.GetTypes()
+            .Where(t => !t.IsAbstract && typeof(ApiV2ControllerBase).IsAssignableFrom(t))
+            .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                .Where(m => m.GetCustomAttributes<HttpMethodAttribute>().Any()))
+            .Where(m => !m.GetCustomAttributes<ProducesResponseTypeAttribute>()
+                .Any(a => a.StatusCode == StatusCodes.Status200OK && a.Type != typeof(void)))
+            .Select(m => $"{m.DeclaringType!.Name}.{m.Name}")
+            .OrderBy(x => x)
+            .ToArray();
+
+        Assert.Empty(offenders);
     }
 }

@@ -36,6 +36,7 @@ internal sealed class ToolManagementSaga :
     IRequestHandler<GetMyToolsQuery, IReadOnlyList<ToolRecord>>,
     IRequestHandler<GetAllToolsQuery, IReadOnlyList<ToolRecord>>,
     IRequestHandler<GetToolQuery, ToolRecord?>,
+    IRequestHandler<GetToolOwnerQuery, Guid?>,
     IRequestHandler<GetToolsAwaitingReviewQuery, IReadOnlyList<ToolRecord>>
 {
     private readonly IWebhookDeliveryClient _client;
@@ -291,6 +292,11 @@ internal sealed class ToolManagementSaga :
             return null;
 
         return await Project(tool, cancellationToken);
+    }
+
+    public async Task<Guid?> Handle(GetToolOwnerQuery request, CancellationToken cancellationToken)
+    {
+        return (await _tools.GetTool(request.ToolId, cancellationToken))?.OwnerUserId;
     }
 
     public async Task<IReadOnlyList<ToolRecord>> Handle(GetToolsAwaitingReviewQuery request,

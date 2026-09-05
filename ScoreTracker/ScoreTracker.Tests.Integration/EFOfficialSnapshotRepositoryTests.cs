@@ -541,4 +541,25 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
         Assert.Empty(await Snapshots().FilterNamesInSnapshot(snapshotId, Array.Empty<string>(),
             CancellationToken.None));
     }
+
+    [Fact]
+    public async Task PlayersByUserIdsReadTheLinkedRowsOfOneMixAndNothingElse()
+    {
+        var identity = Identity();
+        var alice = Guid.NewGuid();
+        var bob = Guid.NewGuid();
+        var stranger = Guid.NewGuid();
+        await identity.LinkPlayer(MixEnum.Phoenix2, "alice", alice, Week1, CancellationToken.None);
+        await identity.LinkPlayer(MixEnum.Phoenix2, "bob", bob, Week1, CancellationToken.None);
+        await identity.LinkPlayer(MixEnum.Phoenix, "alice-on-phoenix", alice, Week1, CancellationToken.None);
+
+        var players = await Snapshots().GetPlayersByUserIds(MixEnum.Phoenix2, new[] { alice, bob, stranger },
+            CancellationToken.None);
+
+        Assert.Equal(2, players.Count);
+        Assert.Equal("alice", players.Single(p => p.UserId == alice).Username);
+        Assert.Equal("bob", players.Single(p => p.UserId == bob).Username);
+        Assert.Empty(await Snapshots().GetPlayersByUserIds(MixEnum.Phoenix2, Array.Empty<Guid>(),
+            CancellationToken.None));
+    }
 }

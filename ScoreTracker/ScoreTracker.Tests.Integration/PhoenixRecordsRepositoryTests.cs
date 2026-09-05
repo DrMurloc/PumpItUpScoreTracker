@@ -405,4 +405,38 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
         Assert.Equal(990000, (int)phoenix2Scores[0].Score!.Value);
         Assert.Equal(PhoenixPlate.PerfectGame, phoenix2Scores[0].Plate);
     }
+
+    /// <summary>
+    ///     The per-chart read behind the cross-player API row carries the whole record — source
+    ///     and judgements included — for every account on the chart, in the mix asked for, and
+    ///     nothing from the chart next door.
+    /// </summary>
+    [Fact]
+    public async Task RecordedScoresForChartCarrySourceAndJudgementsForEveryPlayerOnIt()
+    {
+        var first = await _seed.SeedUserAsync();
+        var second = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedPhoenixChartAsync(20);
+        var other = await _seed.SeedPhoenixChartAsync(21);
+        var writer = BuildRepository();
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, first, new RecordedPhoenixScore(chart,
+            PhoenixScore.From(987654), PhoenixPlate.SuperbGame, false, RecordedAt, "officialImport",
+            new JudgementCounts(700, 20, 5, 1, 2, 640)));
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, second, new RecordedPhoenixScore(chart,
+            PhoenixScore.From(900000), PhoenixPlate.FairGame, false, RecordedAt, "manual"));
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, first, new RecordedPhoenixScore(other,
+            PhoenixScore.From(950000), PhoenixPlate.SuperbGame, false, RecordedAt, "officialImport"));
+
+        var rows = (await BuildRepository().GetRecordedScoresForChart(MixEnum.Phoenix, chart)).ToArray();
+
+        Assert.Equal(2, rows.Length);
+        var verified = rows.Single(r => r.UserId == first).Record;
+        Assert.Equal("officialImport", verified.Source);
+        Assert.Equal(700, verified.Judgements!.Perfects);
+        Assert.Equal(640, verified.Judgements.MaxCombo);
+        var typed = rows.Single(r => r.UserId == second).Record;
+        Assert.Equal("manual", typed.Source);
+        Assert.Null(typed.Judgements);
+        Assert.Empty(await BuildRepository().GetRecordedScoresForChart(MixEnum.Phoenix2, chart));
+    }
 }

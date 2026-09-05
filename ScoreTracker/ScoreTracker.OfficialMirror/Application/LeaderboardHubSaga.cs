@@ -31,6 +31,7 @@ internal sealed class LeaderboardHubSaga :
     IRequestHandler<GetWhatItTakesQuery, WhatItTakesRecord>,
     IRequestHandler<GetOfficialChartBoardQuery, OfficialChartBoardRecord?>,
     IRequestHandler<GetLinkedOfficialPlayerTagQuery, string?>,
+    IRequestHandler<GetLinkedOfficialPlayerTagsQuery, IReadOnlyDictionary<Guid, string>>,
     IRequestHandler<GetOfficialChartPlacementsQuery, IReadOnlyDictionary<Guid, OfficialPlacementEstimate>>,
     IRequestHandler<GetOfficialPumbilityBoardQuery, OfficialPumbilityBoard?>,
     IRequestHandler<GetSupplementedSummaryQuery, SupplementedSummaryRecord>
@@ -249,7 +250,7 @@ internal sealed class LeaderboardHubSaga :
                 .OrderBy(p => p.Place)
                 .Select(p => BuildRanking(p.Place,
                     previousPlaces.TryGetValue(p.PlayerId, out var prev) ? prev : enteredFrom,
-                    p.PlayerId, p.Score, stats, request.Type))
+                    p.PlayerId, p.Score, stats, request.Type, p.IsSupplemented))
                 .ToArray();
         }
         else
@@ -264,26 +265,30 @@ internal sealed class LeaderboardHubSaga :
                 .OrderBy(kv => kv.Value)
                 .Select(kv => BuildRanking(kv.Value,
                     previousRanks.TryGetValue(kv.Key, out var prev) ? prev : enteredFrom,
-                    kv.Key, stats.ByPlayer[kv.Key].RatingFor(request.Type), stats, request.Type))
+                    kv.Key, stats.ByPlayer[kv.Key].RatingFor(request.Type), stats, request.Type,
+                    stats.ByPlayer[kv.Key].IsSupplemented))
                 .ToArray();
         }
 
+        // The mark rides the placeholder player built from the row, so the dimension lookup must
+        // carry it across rather than start from the dimension's default. It used to start over,
+        // which is how every merged ranking row read as official and the Rankings rail never drew.
         var players = (await _snapshots.GetPlayersByIds(rankings.Select(r => r.Player.PlayerId).ToArray(),
                 cancellationToken))
             .ToDictionary(p => p.Id);
         return new OfficialRankingsRecord(latest.CompletedAt, pumbilityBoard != null, rankings
             .Select(r => players.TryGetValue(r.Player.PlayerId, out var player)
-                ? r with { Player = ToRecord(player) }
+                ? r with { Player = ToRecord(player, r.Player.IsSupplemented) }
                 : r)
             .ToArray());
     }
 
     private static OfficialRankingRecord BuildRanking(int rank, int? previousRank, int playerId, decimal rating,
-        SnapshotStats stats, string type)
+        SnapshotStats stats, string type, bool isSupplemented)
     {
         var playerStats = stats.ByPlayer.TryGetValue(playerId, out var s) ? s : null;
         return new OfficialRankingRecord(rank, previousRank,
-            new OfficialPlayerRecord(playerId, string.Empty, null, null), rating,
+            new OfficialPlayerRecord(playerId, string.Empty, null, null, isSupplemented), rating,
             playerStats?.BoardsFor(type) ?? 0, playerStats?.PlayerType);
     }
 
@@ -390,7 +395,8 @@ internal sealed class LeaderboardHubSaga :
             chartRows.Count(r => r.Place == 1),
             chartRows.Length == 0 ? 0 : chartRows.Min(r => r.Place),
             chartRows.Count(r => r.Place <= 10),
-            history, placements);
+            history, placements,
+            pumbilityRow?.IsSupplemented ?? false);
     }
 
     public async Task<IReadOnlyList<string>> Handle(GetOfficialPlayerNamesQuery request,
@@ -492,6 +498,17 @@ internal sealed class LeaderboardHubSaga :
     public async Task<string?> Handle(GetLinkedOfficialPlayerTagQuery request, CancellationToken cancellationToken)
     {
         return (await _snapshots.GetPlayerByUserId(request.Mix, request.UserId, cancellationToken))?.Username;
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, string>> Handle(GetLinkedOfficialPlayerTagsQuery request,
+        CancellationToken cancellationToken)
+    {
+        // One tag per account: where an account still owns two mirror rows in a mix, the one the
+        // crawl saw most recently is the tag the player is using now.
+        return (await _snapshots.GetPlayersByUserIds(request.Mix, request.UserIds, cancellationToken))
+            .Where(p => p.UserId != null)
+            .GroupBy(p => p.UserId!.Value)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(p => p.LastSeenAt).First().Username);
     }
 
     public async Task<IReadOnlyList<OfficialPopularityRecord>> Handle(GetOfficialPopularityQuery request,
@@ -631,7 +648,7 @@ internal sealed class LeaderboardHubSaga :
 
     private sealed record PlayerSnapshotStats(int PlayerId, int BoardsInTop, double RatingAll,
         double RatingSingles, double RatingDoubles, double RatingCoOp, int BoardsCoOp, RecapPlayerType? PlayerType,
-        IReadOnlyDictionary<Guid, double> ChartRatings)
+        IReadOnlyDictionary<Guid, double> ChartRatings, bool IsSupplemented)
     {
         public decimal RatingFor(string type)
         {
@@ -695,7 +712,7 @@ internal sealed class LeaderboardHubSaga :
             .GroupBy(d => d.BoardName)
             .ToDictionary(g => g.Key,
                 g => (IReadOnlyList<PlacementRow>)g
-                    .Select(d => new PlacementRow(d.LeaderboardId, d.PlayerId, d.Place, d.Score))
+                    .Select(d => new PlacementRow(d.LeaderboardId, d.PlayerId, d.Place, d.Score, d.IsSupplemented))
                     .OrderBy(p => p.Place).ToArray());
 
         var chartDetails = details.Where(d => d.LeaderboardType == LeaderboardTypes.Chart).ToArray();
@@ -744,7 +761,10 @@ internal sealed class LeaderboardHubSaga :
                 playerType,
                 contributions.Concat(coop).Where(x => x.Detail.ChartId != null)
                     .GroupBy(x => x.Detail.ChartId!.Value)
-                    .ToDictionary(g => g.Key, g => g.Max(x => x.Rating)));
+                    .ToDictionary(g => g.Key, g => g.Max(x => x.Rating)),
+                // On the boards only because PIU Scores knows their scores: the same rule the
+                // profile applies, so a computed ranking (co-op) marks the same people it does.
+                contributions.Concat(coop).All(x => x.Detail.IsSupplemented));
         }
 
         return new SnapshotStats(byPlayer, ratingBoards);

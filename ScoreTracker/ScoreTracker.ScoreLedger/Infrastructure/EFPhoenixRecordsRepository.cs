@@ -36,8 +36,14 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return await GetAllPlayerScores(mix, chartType, level, cancellationToken);
     }
 
-    async Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> IScoreReader.GetChartScores(
+    Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> IScoreReader.GetChartScores(
         MixEnum mix, Guid chartId, CancellationToken cancellationToken)
+    {
+        return GetRecordedScoresForChart(mix, chartId, cancellationToken);
+    }
+
+    public async Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> GetRecordedScoresForChart(
+        MixEnum mix, Guid chartId, CancellationToken cancellationToken = default)
     {
         var mixId = MixIds.For(mix);
         // One chart, straight off the ChartId index — no folder scan, no joins.
@@ -47,7 +53,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 .ToArrayAsync(cancellationToken))
             .Select(pb => (pb.UserId,
                 new RecordedPhoenixScore(pb.ChartId, pb.Score, PhoenixPlateHelperMethods.TryParse(pb.Plate),
-                    pb.IsBroken, pb.RecordedDate, Judgements: JudgementsOf(pb))));
+                    pb.IsBroken, pb.RecordedDate, pb.Source, JudgementsOf(pb))));
     }
 
     Task<IEnumerable<RecordedPhoenixScore>> IScoreReader.GetScores(MixEnum mix, IEnumerable<Guid> userIds,
