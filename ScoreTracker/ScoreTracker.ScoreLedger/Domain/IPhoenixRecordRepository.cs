@@ -31,6 +31,14 @@ internal interface IPhoenixRecordRepository
     Task<IEnumerable<UserPhoenixScore>> GetRecordedUserScores(MixEnum mix, Guid chartId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     Every player's full best on one chart — source and judgements included, unlike the
+    ///     named read above — straight off the chart index. The caller narrows to the players it
+    ///     may see; a several-hundred-GUID list is not something SQL Server should be asked to plan.
+    /// </summary>
+    Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> GetRecordedScoresForChart(MixEnum mix,
+        Guid chartId, CancellationToken cancellationToken = default);
+
     Task<IEnumerable<ChartScoreAggregate>> GetAllChartScoreAggregates(MixEnum mix,
         CancellationToken cancellationToken);
 
