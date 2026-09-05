@@ -105,4 +105,3 @@ public sealed record PeerRosterEntry(
     double DoublesLevel,
     IReadOnlySet<ChartType> PeerFor,
     IReadOnlyDictionary<ChartType, int> Overlap);
-
