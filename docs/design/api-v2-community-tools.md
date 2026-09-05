@@ -558,6 +558,16 @@ how long we hold other players' scores.
 scores therefore stores 15 KB, not 450 KB — the tail is pulled, never pushed. There is no such thing
 as a large delivery.
 
+**A local run never delivers off the machine** (2026-09-05). The Aspire AppHost sets
+`CommunityTools:AllowPublicWebhookTargets=false`, the mirror image of the loopback allowance it
+already grants, and the one client every outbound webhook POST goes through — deliveries, retries
+of rows a production copy arrived with, session hand-offs, endpoint verification — refuses any
+target outside loopback and the private ranges before a byte leaves. The delivery is recorded with
+reason `RefusedTarget` and abandoned rather than retried. Loopback still delivers, so a maker
+developing against their own machine is unaffected. The trigger was the startup import-recovery
+pass: a prod-synced local database held over four hundred sessions it would have replayed into the
+one tool with a live webhook, from a laptop.
+
 ---
 
 ## 7. Keys and rate limits

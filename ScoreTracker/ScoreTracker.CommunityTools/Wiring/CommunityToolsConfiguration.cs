@@ -15,4 +15,19 @@ public sealed class CommunityToolsConfiguration
     ///     </para>
     /// </summary>
     public bool AllowPrivateWebhookTargets { get; set; }
+
+    /// <summary>
+    ///     Whether a webhook may point at anything <b>outside</b> loopback and the private ranges.
+    ///     <para>
+    ///         True everywhere except the Aspire local run, which sets it false — the mirror image of
+    ///         <see cref="AllowPrivateWebhookTargets" />. A local database is a copy of production, and
+    ///         a copy of production holds real tools with real endpoints and real deliveries still
+    ///         queued: the startup import-recovery pass alone would replay hundreds of sessions into
+    ///         them from a developer's laptop. With this false, the one client every outbound webhook
+    ///         POST goes through refuses a public target before a byte leaves, and records the
+    ///         delivery as abandoned rather than retrying it. Loopback and private targets still
+    ///         deliver, which is what a maker running the site locally is there for.
+    ///     </para>
+    /// </summary>
+    public bool AllowPublicWebhookTargets { get; set; } = true;
 }

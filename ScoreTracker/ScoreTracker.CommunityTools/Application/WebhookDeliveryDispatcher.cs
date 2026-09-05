@@ -96,9 +96,12 @@ internal sealed class WebhookDeliveryDispatcher : IWebhookDeliveryDispatcher
         }
 
         var attempt = delivery.Attempt + 1;
+        // A refused target is abandoned on the spot rather than backed off: retrying cannot change
+        // where the address is, and a local run's copy of production would otherwise keep every
+        // inherited delivery cycling through the sweep.
         await _deliveries.RecordFailure(delivery.Id, attempt, outcome.Reason, outcome.StatusCode,
             outcome.RemoteBodySnippet, outcome.LatencyMs,
-            WebhookRetry.NextAttemptAfter(attempt, _dateTime.Now), cancellationToken);
+            outcome.Retryable ? WebhookRetry.NextAttemptAfter(attempt, _dateTime.Now) : null, cancellationToken);
         return false;
     }
 }

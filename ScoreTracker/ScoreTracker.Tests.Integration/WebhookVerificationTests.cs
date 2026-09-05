@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Domain;
 using ScoreTracker.CommunityTools.Infrastructure;
+using ScoreTracker.CommunityTools.Wiring;
 using ScoreTracker.Data.Clients;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Tests.Integration.Fixtures;
@@ -64,7 +65,7 @@ public sealed class WebhookVerificationTests : IAsyncLifetime, IDisposable
 
     private EFToolSecretReader Secrets => new(_fixture.DbContextFactory, _protector);
 
-    private WebhookDeliveryClient Client => new(new HttpClient());
+    private WebhookDeliveryClient Client => new(new HttpClient(), Options.Create(new CommunityToolsConfiguration()));
 
     private void EndpointAnswers(string body)
     {
