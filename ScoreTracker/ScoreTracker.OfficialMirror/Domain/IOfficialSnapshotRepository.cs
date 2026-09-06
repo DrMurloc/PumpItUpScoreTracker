@@ -129,6 +129,42 @@ internal interface IOfficialSnapshotRepository
         IReadOnlyCollection<int> playerIds, IReadOnlyCollection<Guid> chartIds, CancellationToken ct);
 
     /// <summary>
+    ///     A set of players' best published score per chart across EVERY sealed snapshot of the
+    ///     mix, bounded by chart type and level. Across snapshots rather than within one because a
+    ///     score that dropped off a crowding board is still a score they set: the best of what was
+    ///     ever published is the reading (docs/design/pumbility-overhaul.md D59). The level bound
+    ///     is what keeps a band's read to a band; unbounded this carries every level the boards
+    ///     reach. Served by IX_OfficialLeaderboardPlacement_PlayerId_SnapshotId.
+    /// </summary>
+    Task<IReadOnlyList<PlayerChartHistoryRow>> GetChartHistoryFor(MixEnum mix,
+        IReadOnlyCollection<int> playerIds, ChartType chartType, int minimumLevel, int maximumLevel,
+        PlacementScope scope, CancellationToken ct);
+
+    /// <summary>
+    ///     The same read bounded by CHARTS rather than by a level band, for a caller that already
+    ///     knows which charts it is asking about — a chart's peer board asks about the one chart in
+    ///     front of it and would otherwise pull a whole level range to throw most of it away.
+    /// </summary>
+    Task<IReadOnlyList<PlayerChartHistoryRow>> GetChartHistoryOn(MixEnum mix,
+        IReadOnlyCollection<int> playerIds, IReadOnlyCollection<Guid> chartIds, PlacementScope scope,
+        CancellationToken ct);
+
+    /// <summary>
+    ///     The same read for EVERYONE, every chart board, every type and level — the bulk form
+    ///     the in-memory board store is built from (docs/design/pumbility-overhaul.md §6.14).
+    ///     A caller that is going to be asked about arbitrary players and arbitrary charts is
+    ///     better off holding this once per sweep than asking a hundred times a page.
+    ///     <para>
+    ///         It is a repository method rather than a query the store writes itself because the
+    ///         placement table has exactly one reader: the scope belongs here, where a supplemented
+    ///         row cannot enter an official reading by an author forgetting a predicate
+    ///         (supplemented-leaderboards.md §7).
+    ///     </para>
+    /// </summary>
+    Task<IReadOnlyList<BoardChartHistoryRow>> GetEveryChartHistory(MixEnum mix, PlacementScope scope,
+        CancellationToken ct);
+
+    /// <summary>
     ///     Every player id with a placement in any of this mix's snapshots before the given
     ///     one — the all-history "seen" set that makes a debut a debut.
     /// </summary>

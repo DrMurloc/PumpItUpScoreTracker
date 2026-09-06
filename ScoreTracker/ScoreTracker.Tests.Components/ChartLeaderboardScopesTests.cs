@@ -53,7 +53,7 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
         _mediator.Setup(m => m.Send(It.IsAny<GetCompetitivePlayersQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Guid>());
         _mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<Guid>());
+            .ReturnsAsync(Array.Empty<PeerVoice>());
         // Every chart view asks whether it carries a limbo board. Unstubbed this hands back null
         // and the component dereferences it during load, which takes out every test in the file
         // rather than just the limbo ones.
@@ -468,7 +468,7 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
         // The peer read never names the viewer (D31) — the board puts them on it anyway.
         _mediator.Setup(m => m.Send(It.Is<GetPumbilityPeersQuery>(q => q.Mix == MixEnum.Phoenix2 && q.ChartType == ScoreTracker.SharedKernel.Enums.ChartType.Single),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { peer, hidden });
+            .ReturnsAsync(new[] { PeerVoice.Account(peer), PeerVoice.Account(hidden) });
 
         // A host that means the PUMBILITY board passes it as the initial scope — a peers-page card does.
         var dialog = RenderDialog(MixEnum.Phoenix2, ChartLeaderboardScopes.LeaderboardScope.PumbilityPeers);
@@ -488,6 +488,83 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
         await dialog.Find("[data-testid='cld-peers-pumbility']").ClickAsync(new MouseEventArgs());
         dialog.WaitForAssertion(() => Assert.Contains("cld-chip-on", dialog.Find("[data-testid='cld-peers-pumbility']").ClassName));
         _mediator.Verify(m => m.Send(It.IsAny<GetPumbilityPeersQuery>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     A peer the official board is the only record of has no account and no site score, so
+    ///     they are read off the mirror by tag and stand on the board beside everyone else, wearing
+    ///     its asterisk and its date (docs/design/pumbility-overhaul.md D59).
+    /// </summary>
+    [Fact]
+    public void ABoardPeerStandsOnThePumbilityBoardWithTheMirrorsMark()
+    {
+        var me = Guid.NewGuid();
+        SignedInAs(me);
+        var peer = Guid.NewGuid();
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsForCommunityQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { ScoreFor(peer, 990_000, "PEER"), ScoreFor(me, 970_000, "ME") });
+        _mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { PeerVoice.Account(peer), PeerVoice.FromBoard(11, "URUSA#9487") });
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialScoresForTagsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialTagScores(When,
+                new[] { new OfficialTagScore("URUSA#9487", ChartId, 3, 995_000) }));
+
+        var dialog = RenderDialog(MixEnum.Phoenix2, ChartLeaderboardScopes.LeaderboardScope.PumbilityPeers);
+
+        dialog.WaitForAssertion(() =>
+        {
+            var names = dialog.FindAll(".weekly-lb-user").Select(e => e.TextContent.Trim()).ToArray();
+            // The asterisk is the mirror's mark, the same one a ghost rival's row carries.
+            Assert.Equal(new[] { "URUSA#9487*", "PEER", "ME" }, names);
+        });
+        Assert.Contains("Official board data", dialog.Markup);
+    }
+
+    /// <summary>
+    ///     And they wear the face the mirror swept, like every other row on the board. The site
+    ///     rows around them all have a picture, so the one row without one reads as a placeholder
+    ///     rather than a person (owner, 2026-09-06) — and the mirror has had these all along.
+    /// </summary>
+    [Fact]
+    public void ABoardPeerWearsTheFaceTheMirrorSwept()
+    {
+        var me = Guid.NewGuid();
+        SignedInAs(me);
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsForCommunityQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { ScoreFor(me, 970_000, "ME") });
+        _mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { PeerVoice.FromBoard(11, "URUSA#9487") });
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialScoresForTagsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialTagScores(When,
+                new[]
+                {
+                    new OfficialTagScore("URUSA#9487", ChartId, 3, 995_000,
+                        new Uri("https://piuimages.test/urusa.png"))
+                }));
+
+        var dialog = RenderDialog(MixEnum.Phoenix2, ChartLeaderboardScopes.LeaderboardScope.PumbilityPeers);
+
+        dialog.WaitForAssertion(() =>
+            Assert.Contains("https://piuimages.test/urusa.png", dialog.Markup));
+    }
+
+    /// <summary>A board player the sweep saw no face for still gets one, so the row is not half-drawn.</summary>
+    [Fact]
+    public void ABoardPeerWithNoSweptFaceStillGetsOne()
+    {
+        var me = Guid.NewGuid();
+        SignedInAs(me);
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsForCommunityQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { ScoreFor(me, 970_000, "ME") });
+        _mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { PeerVoice.FromBoard(11, "URUSA#9487") });
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialScoresForTagsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialTagScores(When,
+                new[] { new OfficialTagScore("URUSA#9487", ChartId, 3, 995_000) }));
+
+        var dialog = RenderDialog(MixEnum.Phoenix2, ChartLeaderboardScopes.LeaderboardScope.PumbilityPeers);
+
+        dialog.WaitForAssertion(() => Assert.NotEmpty(dialog.FindAll(".sbd-avatar")));
     }
 
     [Fact]

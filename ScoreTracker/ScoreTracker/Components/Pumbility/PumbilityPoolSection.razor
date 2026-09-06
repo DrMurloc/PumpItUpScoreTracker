@@ -1,9 +1,11 @@
 @using MediatR
 @using Microsoft.JSInterop
 @using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.Rivals.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Enums
@@ -78,6 +80,7 @@
 
     <div class="pmb-list" data-testid="pool-list">
         <PumbilityPoolList @ref="_list" Page="Page" Charts="Charts" Density="_density" Skills="_skills"
+                           Standings="_standings" OnOpenBoard="OnOpenBoard"
                            ShowToDo="true" ToDos="ToDos" OnToDo="OnToDo" OnOpen="OnOpen" OnPlay="OnPlay"
                            Collapsed="_collapsed" CollapsedChanged="SetCollapsed"></PumbilityPoolList>
     </div>
@@ -102,6 +105,13 @@
 
     [Parameter] public EventCallback<Chart> OnPlay { get; set; }
 
+    /// <summary>
+    ///     A popover source line asking for that source’s board. Without it the popover still
+    ///     opens and still explains the colour, but its rows are inert — which is worse than
+    ///     plain text, because a row that looks like a link and does nothing reads as broken.
+    /// </summary>
+    [Parameter] public EventCallback<PeerBoardRequest> OnOpenBoard { get; set; }
+
     /// <summary>Per page, like every list's (UX rule 5): this is the Breakdown page, not Play.</summary>
     public const string DensitySettingKey = "Density__PumbilityBreakdown";
 
@@ -115,6 +125,13 @@
     /// <summary>What each chart IS (docs/design/chart-identity.md §6), for the fifty on screen.</summary>
     private IReadOnlyDictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>> _skills =
         new Dictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>>();
+
+    /// <summary>
+    ///     Where each of the fifty stands among the peers the viewer chose. Read here for the
+    ///     same reason the chips are: the list is presentational, and these fifty are all scores
+    ///     the viewer holds, so every one of them has a standing to show.
+    /// </summary>
+    private IReadOnlyDictionary<Guid, PeerStanding> _standings = new Dictionary<Guid, PeerStanding>();
 
     /// <summary>The chart set the chips were read for, so a pool change re-reads and a re-render does not.</summary>
     private HashSet<Guid> _skillsFor = new();
@@ -143,11 +160,16 @@
         if (ids.Count == 0)
         {
             _skills = new Dictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>>();
+            _standings = new Dictionary<Guid, PeerStanding>();
             return;
         }
 
-        var identity = await Mediator.Send(new GetChartIdentityQuery(ids.ToArray(), Page.Mix));
+        // Together, because they answer for the same fifty and neither depends on the other.
+        var identityTask = Mediator.Send(new GetChartIdentityQuery(ids.ToArray(), Page.Mix));
+        var standingsTask = Mediator.Send(new GetPeerStandingsQuery(Page.Mix, ids.ToArray()));
+        var identity = await identityTask;
         _skills = identity.ToDictionary(kv => kv.Key, kv => IdentityChips.ToCardChips(kv.Value, false, L));
+        _standings = await standingsTask;
     }
 
     private async Task SetDensity(UiDensity density)

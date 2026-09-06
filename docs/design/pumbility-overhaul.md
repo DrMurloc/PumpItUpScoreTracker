@@ -129,6 +129,13 @@ describe is §3.10; the measurements behind them are §4.9.
 | D57 | **Your top 50 leaves the Play list for the PUMBILITY Breakdown page (round nine, 2026-09-05).** Owner: *"move the 'your top 50' back out of 'Play' on the pumbility page and onto the 'Your pool' page. Basically anything breaking down YOUR CHARTs should be there, suggested charts are all on Play … keep using the same tier list elements, just switch it to top 50 and don't give people the 'Your Top 50' option on the Play page."* The rule that decides the section: **Play holds what is projected, the Breakdown page holds what you hold.** The fifty become the Breakdown page's last block (§3.11) — the pool curve, then the fifty as tier-list cards banded by what each is worth to you under the D46 vocabulary, with the density trio and Download above the list — and Grouped by on Play is Prevalence · Projected gains again. **No peers' data on those rows** (*"don't worry about peers details on top 50"*): no projected grade, no hold count, no Better Than, and no gain corner, since a held chart that would pay is already a Play row that names its slot; the value rides the jacket corner in both densities and Compact's other corner is your grade. **No waiting room** (*"No waiting room"*): the curve keeps ghosting the six, the list stops at the fiftieth. Both mixes. Presentation only (§6.11): the frame's record already carries the fifty with place, value, score, plate and date, so the Breakdown page reads nothing it did not read before, and a saved `Pumbility__GroupBy` of `YourTop50` simply fails to parse and lands on Prevalence |
 | D58 | **Where your PUMBILITY comes from grows two sections: you against your peers by chart type, and by level (round nine, part two, 2026-09-05).** Owner: *"move the 'where the level sits' to the 'Your pumbility page' and give an additional card for 'your singles versus doubles' (similar to 'Phoenix 2 · same scores, repriced' but with your actual phoenix 2 scores) … fold all of that into the 'where your pumbility comes from'"*, then *"make 'Singles and Doubles' read '<Pumbility> (<chart count>)', get rid of the individual sub-cards … add a second bar beneath that that gives you a comparison of your peer's average break down"*. **Singles and doubles**: two of the Phoenix 1 card's bars, one above the other — your real fifty and your peers' average fifty — each segment reading its PUMBILITY whole with the chart count (owner, 2026-09-05: *"drop the decimal for the bar"* — the one whole number on the section, for the segment's width), doubles then singles, sized by value like every stack on the card (the Phoenix 1 card sizes by count). **Your peers** are the union of your singles peers and your doubles peers (D53; one definition, D55), and a peer's breakdown is their merged fifty — their records of both types priced, merged, the top fifty taken — which nothing stores, so it is read once and cached beside the sweep for its day; only a full fifty counts. The bars show only for the merged fifty — All on Phoenix 2, the one pool on Phoenix 1 — and your bar stands alone while no type has peers. **Where the levels sit** moves off the Play lede into the card as the section after, unchanged in what it draws (D41), one tile per lit type in the selected pool. Both arrive by one query off the cached sweep (§6.12), so Play reads nothing new and the Breakdown page reads one thing more, after the frame has warmed the sweep |
 
+| D59 | **Official board players are PUMBILITY peers (round ten, 2026-09-06).** Owner: *"we have a couple high level players now … what's the practicality for using official leaderboard players for them as pumbility peers"* → *"I don't think we want to do pumbility gate. I think we just naturally start mixing them in"* → *"for all intents and purposes, just like we do with rivals, these are your peers."* The top of the site is peer-starved by arithmetic rather than taste: its strongest singles account holds **four** peers under D53, and four can never satisfy the five-voice floor, so its Play list is empty and always would be (§4.12). The official per-type PUMBILITY boards publish the same quantity `SinglesRating`/`DoublesRating` holds, for ~1,145 players a mix, so a board player's membership needs no estimate; the per-chart boards carry their scores. They enter the same window (D53), count toward the same five-voice floor (D24), and are peers on every surface a site peer is — the projection, the tier-list lens (D55), the standing that colors your own scores, Hot Streak, the roster, and the board a source line opens. **No strength gate**: the per-chart boards are blind below level 20 and a pool short of fifty prices low, so the window and the fifty check (D60) exclude the middle on their own. Measured ungated on 13,547 pairs, MAE by viewer rung: PLATINUM 9,720, DIAMOND 8,401–9,285, RED BERYL 8,308–9,626, ALEXANDRITE 6,533 — against the site-only baseline's 9,174 — and the bias turns conservative at the top (ALEXANDRITE −4,052). Phoenix 2 only: Phoenix 1's PUMBILITY board is not per-type, so there is no window to read |
+| D60 | **A board player counts only when we can see their fifty, and the tolerance is 270 (round ten).** piugame prints each player's per-type pool on its own board, so a fifty rebuilt from the chart rows the mirror holds can be checked against it — and the gap runs one way only, a chart we cannot see being a chart missing from our copy. The tolerance is **270**, which is what the plate costs across a whole pool: Phoenix 2 prices a chart Base(level) × (grade + plateBonus), Base(25) is 260 for a Double and 270 for a Single (which prices one level up), and a Perfect Game's plate bonus is 0.020 — so 5.20 a chart, **260.00 across a full fifty of doubles, 270.00 of singles**. A board row carries a score and no plate, so that band is exactly what cannot be known, and no smaller tolerance is reachable; it is also under one whole chart, worth 373 at the bottom of a pool that size. Owner: *"just set the tolerance to 270. That's less than one chart so won't pick up 'PG'd 49 but missing 1' (which is unrealistic anyways, TG to UG is going to be the standard for most of these). keeps it simple."* The realistic TG→UG spread is 0.012 × 260 × 50 = 156, so 270 clears it with room. **This never reaches a page** — it decides who is on the roster, and the roster lists them (D62). Nearly all-or-nothing in practice: of 863 board-only players on the Phoenix 2 singles board, 336 of the 629 between 17,000 and 18,000 can fill a fifty at all and 330 of those pass; above 18,000, 212 of 219 fill and all 212 pass |
+| D61 | **One board row, one person — and a private account is read as a board player (round ten).** A row is matched to an account by its link or by game tag with spacing and case ignored: the site stores `NAME #1234` and the board stores `NAME#1234`, so an exact compare finds **zero** matches and a normalised one finds 300 accounts the link column never caught, 55 of them on the Phoenix 2 singles board. Twelve accounts own more than one row after a rename (`EUPHO#5163` → `EUPHO#6352`) and fold into one voice, best score per chart across the rows. A **public** account is then judged by its own record and its board copy dropped — `ELIJAHTS#6216` reads 628 above his real pool, which is what a board number would use to drag him into a window his record puts him outside of. A **private** account that qualifies on the board is a **board player**: named by its public tag, scored from public rows, membership from the board's number, and nothing of its PIU Scores record read. Owner: *"if someone has a private piuscores account but matches as a board qualifier, treat them as a board account, not a piuscores account. That'll keep them from showing scores outside of what's publicly visible already"* and, on where the rule lives, *"mirror should not be pretending there's a linked account when that linked account is private."* It costs nothing measured: the two private accounts in the reporter's own window cover 41 and 42 of his fifty from board rows against 41 and 32 from their records. A private account **not** on the board is unchanged — counted in every number, named nowhere |
+| D62 | **The roster gains a chip, not a column (round ten).** Owner: *"players don't need to see all the evidence of WHY someone was included. Just who the matches are. The board chip is prob good enough."* `PeerRoster` keeps its own columns; a board row wears the **BOARD** chip beside the name and an em-dash in the two competitive-level cells, which the boards do not publish. The fifty check, the rebuild shortfall and the count of charts seen are all membership arithmetic and are rendered nowhere. `/Account` is not reworded either — *"PUMBILITY page including those i think is more than enough"* — its PUMBILITY peers row keeps its definition, which board players satisfy as written, and only the count moves |
+| D63 | **A PUMBILITY row's score is coloured, and its popover is real (round ten, 2026-09-06).** Owner, on the Breakdown page: *"pumbility page (pumbility breakdown specifically) is still just… hanging? I don't see activity in the console logs either."* Neither PUMBILITY list had ever asked for a peer standing — not on this branch and not before it — so every score there painted plain and its popover had nothing to say, which after the D62 round's "Still working out where this sits." read as a page still loading. Both lists read `GetPeerStandingsQuery` for the charts on screen now, beside the identity chips they already read. **The caption stays off** (`TierListChartCard.ShowStandingText`): a Better Than line under a Breakdown row is exactly what D57 excluded, while the colour is the site-wide `PeerScore` treatment every other list gets rather than peers' detail. **And the popover's source lines open their board** (D12), which is the other half of the same field test: wired to nothing they render inert, and a row that reads as a link and does nothing is worse than plain text. Both pages open the chart dialog on that source's scope, on the Leaderboard tab — the Breakdown page falling back to the World and Play to the mix's own board when a card is opened plainly |
+| D64 | **A board row wears the face the mirror swept (round ten, 2026-09-06).** Owner: *"we have avatars for the board peers, don't we? those should show on the leaderboards."* We do — the sweep has scraped an avatar per board player since the mirror was built, and the Official scope has always drawn them; nothing else did, so a board peer stood among site players who all had a picture and was the one row without. `OfficialTagScore` carries the avatar now, and the chart board keeps one tag-keyed map that the official board, the PUMBILITY peers read and a ghost rival all fill. A board player the sweep saw no face for still gets the default one, because a half-drawn row reads as broken. **A private player's Anonymous row deliberately gets none**: it has no account to be known by either, but inventing a face for it would say something about a person who asked us not to |
+
 ## 3. The section
 
 ### 3.1 The three pages
@@ -1113,6 +1120,54 @@ under −500..+250 against the band's 61 and 37. King's Tomb D24, the chart the 
 where the band read it off higher-rung specialists and pushed it. ⚠ Snapshot figures of a live account;
 re-run the probe rather than quoting them.
 
+### 4.12 Round ten — official board players as peers, measured (2026-09-06)
+
+Measured against the prod-synced local database, official snapshots through 30 Aug 2026.
+
+**The starvation is arithmetic.** Site peers under D53, and the charts that reach the five-voice
+floor, against what the official per-type boards would add in the same window:
+
+| | S peers site→board | S charts at the floor | D peers site→board | D charts |
+|---|---|---|---|---|
+| RSS (S 19,200 / D 19,444) | 4 → 40 | **0 → 280** | 5 → 32 | 33 → 270 |
+| ORIU #9860 | 6 → 48 | 44 → 304 | 6 → 34 | 56 → 288 |
+| SUNMU #7646 | 10 → 118 | 102 → 471 | 8 → 48 | 85 → 352 |
+| SANDEX | 19 → 163 | 231 → 494 | 8 → 71 | 67 → 480 |
+| Tomatonium | 28 → 283 | 279 → 511 | 7 → 64 | 64 → 421 |
+
+Site players holding a full Phoenix 2 pool: 162 singles, 107 doubles. Official players with fifty or
+more charts visible: 702 singles, 590 doubles.
+
+**Board evidence is clean and level-truncated.** On 14,676 rows shared with linked accounts' ledgers:
+**95.4% exact score match** (the rest is snapshot lag, both directions), **17 broken rows — 0.12%**,
+so a placement is a pass for D9's purposes. Coverage by singles level: **S18 0%** of 3,259 ledger
+rows, S19 5%, S20 73%, S21 80%, S22 80%, S23 87%, S24 89%, S25 94%. Within a level the visible slice
+averages 3.5k–6.5k above the hidden slice, netting roughly **+1.5k on the visible sample** — small
+against a 9k MAE, and in a known direction.
+
+**Why nothing below level 20 needs a rule.** The lowest chart in a player's own top fifty climbs with
+their pool — level 15 at singles pool 17,000, 17 at 17,500, **19 at 18,000**, 20 at 18,500, 22 at
+19,000 — so a pool rises above the boards' visibility floor exactly where the boards start seeing it.
+The share of a player's own fifty the boards show, by gem rung (singles/doubles): PLATINUM 15%/18%,
+DIAMOND 1–2 47%/51%, DIAMOND 3–5 72%/60%, RED BERYL 1–2 85%/74%, RED BERYL 3–5 88%/84%,
+ALEXANDRITE **96%/92%**.
+
+**A per-peer coverage filter earns nothing.** Restricting board peers to those seen on 100+ charts,
+against no restriction: DIAMOND MAE 9,055 vs 8,876, RED BERYL **9,471 vs 8,838 — worse** — PLATINUM
+identical, and the pair count barely moves (6,257 → 6,111). The estimator never reads a peer's pool,
+only their score on the chart in front of it; a peer seen on forty charts votes on forty and is silent
+on the rest, and silence is not a wrong vote. What the fifty check (D60) protects is everything that
+reads a **pool** — the roster's overlap, the Breakdown card's peer average (D58), the prevalence
+grouping — not the estimate.
+
+**Supply per viewer rung**, new board peers beside the site peers they join, under D60: PLATINUM 25
+site / ~0 board · DIAMOND 1–2 46 / ~0 · DIAMOND 3–5 50 / ~5 · RED BERYL 1–2 41 / 117 · RED BERYL 3–5
+28 / 160 · ALEXANDRITE 12 / 99. Nothing below RED BERYL 3–5 is starved, and nothing below it gains.
+
+⚠ Every figure here is a snapshot of a live population read through a weekly mirror. Re-run the probe
+(§6.13) rather than quoting them.
+
+
 ## 5. Phoenix 2 carryover — the Phoenix 1 page
 
 Its own route since round two (`/Pumbility/Phoenix1`, D14), and only on the Phoenix 2 view; Phoenix 1
@@ -1513,6 +1568,190 @@ strip. `Tests.Integration`: none — the reads are existing ones.
 
 **Build order** — docs first, i18n last, pushed per commit: (1) this section, D58, D41, §3.6, §3.10, the page
 map; (2) the probe's merged-fifty export; (3) Domain; (4) PlayerProgress; (5) Web; (6) nine locales.
+
+### 6.13 Round ten — the mirror's board players
+
+**Forced by the layer graph.** `ScoreProjector` lives in `Domain/Services/`, so it cannot reference a
+vertical and the board's evidence has to arrive through a Domain secondary port. Half of that port
+already exists: `IOfficialPlacementReader` (`Domain/SecondaryPorts/ISessionCaptureReaders.cs`),
+implemented by OfficialMirror's `Infrastructure/OfficialPlacementReader`, already answers
+`GetPumbilityBoard(mix, boardName)` — but `OfficialBoardReading` carries values and no player ids,
+because its job is "where would my pool rank". Membership needs ids, pools and identity, so these are
+new reads beside it rather than a change to that record.
+
+**Domain** — `GetBoardPeers` and `GetBoardScores` on `IOfficialPlacementReader`, with
+`BoardPeerReading` (tag, pool, the account it resolves to when the mirror may speak for one) and
+`BoardScoreReading`; `PeerVoice`, the site-or-board identity a projection and a standing both count;
+`PeerGroup` and `ScoreProjection` carry the board half and the mirror's `AsOf`;
+`ScoreProjector.ProjectFromPumbilityPeers` merges the two evidence sources, one voice per identity.
+`PeerEstimator` is untouched — it takes scores, not players.
+
+**OfficialMirror** — the two reads, the identity resolution of D61 (link, then normalised tag, then
+the many-to-one fold, then the private rule) and the fifty rebuild of D60, which prices board scores
+with `ScoringConfiguration.PumbilityScoring(Phoenix2)` and `ExpectedPlateForScore`. The private rule
+lives here rather than in Rivals because the mirror should not report a linked account it is not
+entitled to speak for; one answer, and no drift between the projection's path and the standing's.
+
+**PlayerProgress** — the sweep gains the board source; `ProjectionSweep`, `PumbilityProjection` and
+`PumbilityPageRecord` carry board peers; `GetPumbilityPeersQuery` stops returning `Guid`.
+`PumbilityProjectionCache` is untouched: it caches the sweep, and the sweep is what grew — peers'
+scores moving deliberately does not evict (§6.5), and a weekly mirror is less volatile than the daily
+imports that already do not.
+
+**Rivals** — `PeerStandingReader.PumbilityPeers()`, `PeerStandingCalculator.SourceMembers`, and the
+roster and catalog contracts. **ChartIntelligence** — the lens reads the sweep at request time (D55),
+so it needs only to understand a board voice. **Web** — `ChartLeaderboardScopes` builds the board,
+`PeerRoster` gains the chip (D62), `PeersAndColorsPanel` the count, `PeerStandingPopover` and
+`PeerBoardRequest` the mirror's asterisk and date, as `RivalScoreReader` already does for a ghost.
+
+**Nothing else.** No migration, no table, no index —
+`IX_OfficialLeaderboardPlacement_PlayerId_SnapshotId` covers the evidence read and the clustered key
+covers the board read — no scheduled job, no cache hook, no new vertical. Measured on the local
+database: one viewer's peer evidence is 8,776 rows in 122 ms, and the entire eligible population's
+every chart is 68,769 rows in 136 ms.
+
+**Corrected after the bug check (2026-09-06).** Two things D59 needed and did not have. The mirror is
+now told **who is asking** (`GetBoardPeers(..., viewerAccountId, ...)`): the site half removes the viewer
+with a `Remove()`, the board half had nothing to remove with, and a private account comes back naming
+nobody (D61) — so a caller could not recognise its own row, while the window, being centred on the
+viewer's own pool, contained it essentially always. The reader keeps the resolved account beside the
+reading rather than inside it, so the refusal costs the private link nothing. And `GetBoardScoresOn`
+**returns the sweep date** with its rows: the standing prints an asterisk against a board peer's count,
+and the footnote under it was only ever set by the ghost-rival branch — so a player without ghost rivals,
+which is most of them, got the mark and no date (D37).
+
+**Tests** — `DomainTests`: the fifty rebuild and its 270 gate, the voice merge. `ApplicationTests`:
+the three dedupe legs, the private flip, the projector's mixed pool, the standing's counts.
+`Tests.Components`: the roster chip, the board's rows and asterisk, the popover line, the account
+count. `Tests.Integration`: both reads against a real migrated database with seeded placements — a
+mocked repository cannot catch a wrong join across snapshots. `ExplorationTests`: the census re-run on
+the shipping code.
+
+**Build order** — docs first, i18n last, pushed per commit: (1) this section, D59–D62,
+[peers-abstraction.md](peers-abstraction.md) D36–D38; (2) the two reads; (3) identity; (4) the fifty
+check; (5) the Domain voice; (6) the contract change; (7) the projector; (8) Rivals; (9) the chart
+dialog; (10) the roster chip and the account count; (11) the tier-list lens; (12) integration;
+(13) the census probe; (14) nine locales.
+
+
+### 6.14 Round ten, part two — the peer scores are held in memory
+
+**The bug this fixes was already in production.** The PUMBILITY page draws several folders and asks
+for a peer group's scores once per folder; the tier list draws one and never showed it. Adding board
+peers made it visible rather than causing it — the first sweep after a restart was measured at 7.3
+seconds, of which 2.5 was the fifty check, per chart type, recomputed for every viewer in the band.
+Score colouring reads the same standings, which is why the page said "none of your peers have passed
+this" on scores that a hundred peers had passed: nothing was wrong with the answer, it just had not
+arrived yet.
+
+**Two stores, and they are not the same shape**, because what makes them stale is not the same.
+
+| | `BoardScoreStore` (OfficialMirror) | `PeerScoreStore` (ScoreLedger) |
+|---|---|---|
+| Holds | every board player's best per chart, per mix | every player's passing bests, per mix |
+| Keyed by | the latest sealed snapshot | the player |
+| Released by | a new sweep — the key changes | the player's own import, per player |
+| Size | Phoenix 2 191,746 rows, Phoenix 1 124,300 | Phoenix 2 41,706 rows, Phoenix 1 1,039,022 |
+
+The board store **never needs invalidating**: the set is stamped with the snapshot it was built
+from, a sweep produces a new one, and the old is dropped. Nothing has to remember to evict it, and a
+second app instance builds its own and is correct by construction. Which snapshot is current is
+itself re-read at most once a minute, which is as often as a weekly sweep can matter.
+
+The site store is **per player**, which is the shape both eviction and arrival want: a player who
+imports has their own slice dropped and rebuilt on next use, a player nobody has asked about yet is
+fetched when they are, and nobody else moves either way. `PeerScoreCacheConsumer` drops a slice off
+`PlayerScoresUpdatedEvent` and `PlayerScoreDataDeletedEvent` — the same two the projection cache has
+always used, for the same reason and in both directions. There is deliberately **no whole-set
+expiry**: that would put a multi-second rebuild in front of one unlucky viewer for a staleness that
+is per player in the first place. The twelve-hour per-player backstop is for an event that never
+arrived, not the mechanism.
+
+**Two rules the bug check made explicit (2026-09-06).** *A write drops the player then and there.*
+Four of the site store's readers ask it about one person — their own scores: the tier-list blend, the
+session breakdown's Phoenix 1 mark, the rating saga's re-price, and the projector's own pool gate. The
+bus event is debounced by minutes, which is right for a peer and far too slow for the player who just
+recorded the score, so every write path in `EFPhoenixRecordsRepository` evicts alongside the per-user
+cache it already dropped. *And stale beats absent.* A player who imports while somebody else's read is
+fetching them is refused by `Put` — correctly, those rows predate the eviction — but the read still
+answers with them, because a peer missing from a read is a peer who passed nothing as far as every count
+on the page can tell, and the standing built from it is cached for fifteen minutes.
+
+**⚠ The scale-out caveat.** The board store is snapshot-keyed and safe on any number of instances.
+The site store's eviction rides the in-memory bus, so it reaches only the instance that ran the
+import. On one instance that is exact; before this app is ever scaled out the site store needs a
+cross-instance signal, or a second instance serves its own stale copy of a peer's scores until the
+backstop. This is the one thing in this section that a second instance breaks.
+
+**Neither store changes an answer.** Both hold what their SQL held: the site store keeps broken runs
+out, masks a private player's name and says `IsPublic` outright; the board store keeps supplemented
+rows out and collapses to each player's best across every sealed snapshot. Both hold **every type
+and level**, not only what prices into a pool — the same reads answer a chart dialog, and a CO-OP
+chart has a board and no pool. Trimming the board to singles and doubles above level 10 would have
+saved 5% and turned a board peer into silence on every CO-OP page.
+
+**What is not held with the scores.** A name and a public flag change without a score changing, so
+they ride a separate five-minute read rather than the slice — otherwise a player who goes private
+stays named for twelve hours. `BoardPeerReader`'s folded board carries the same fact (whether the
+mirror may name the account behind a row, D61) and is held for the same five minutes.
+
+**Two more caches fell out of the same read.** The fifty check is a property of the player and the
+snapshot, not of the viewer, so it is answered once per snapshot and shared. So is everything else
+in `GetBoardPeers` except the window itself, so the board is **folded to people once** and the
+window filters the fold — which is also the more honest order, since a person's pool is their best
+row, so a person whose best sits above the window is above it even when a lesser row of theirs would
+have fit inside.
+
+**The two stores read differently, on purpose.** The board store asks
+`IOfficialSnapshotRepository.GetEveryChartHistory` — a new bulk form of the two reads it replaces —
+because the placement table has exactly one reader and a `PlacementScope` with no default, so that a
+supplemented row cannot enter an official reading by an author forgetting a predicate
+([supplemented-leaderboards.md §7](supplemented-leaderboards.md)); an architecture ratchet holds that
+line and caught the first attempt at this. The site store reads its own table directly, because the
+Ledger has no such flag to get wrong and the read it needs is one EF cannot afford:
+
+**A million rows will not go through EF.** The site store reads its rows off a `DbDataReader`
+straight into the structs it keeps, and the chart's level and type come from a four-thousand-row
+dimension held beside the scores rather than two columns repeated a million times down the wire. A
+player's rows are then kept in `(type, level)` order, so a folder read is two binary searches rather
+than a walk of everything that player has ever passed.
+
+**Measured**, on the prod-synced local database, one viewer's peer group of 200 players over 14
+folders — every number the *whole sweep*, not one read:
+
+| | straight to the database | store, first call | store, warm |
+|---|---|---|---|
+| Phoenix 2, 15,460 rows | 240 ms | 1,649 ms | **9 ms** |
+| Phoenix 1, 128,333 rows | 265 ms | 8,582 ms | **57 ms** |
+| Board peers, singles | — | 4,997 ms | **12 ms** |
+| Board peers, doubles | — | 1,822 ms | **2 ms** |
+
+Row counts are identical before and after in every case, which is the check that matters more than
+the milliseconds.
+
+**The warm-up is Phoenix 2 only** (`PeerScoreCacheWarmer`, background and fully swallowed like the
+chart-page warmer). Phoenix 2 is the mix the peers page runs on and its whole population is forty
+thousand scores — about six seconds for both stores together, paid at startup where nobody waits.
+Phoenix 1 is a million, and preloading all of it at every deploy would spend minutes of a small
+instance on players nobody is going to look at; there the store fills a peer group at a time. Note
+that whole-mix load times measured locally run through the Docker port proxy and are a ceiling, not
+a forecast — the numbers worth trusting are the warm ones above.
+
+**Memory.** About 40 MB for Phoenix 1 held whole, 2 MB for Phoenix 2, and roughly 12 MB for both
+boards — against a 1.5 GB working set on a 3.5 GB B2. Restricting the site store to players who
+qualify as somebody's peer was measured at a 21% saving and is not worth the coupling.
+
+**Classes** — `ScoreLedger/Infrastructure/PeerScoreStore` (singleton) and
+`ScoreLedger/Application/PeerScoreCacheConsumer`; `OfficialMirror/Infrastructure/BoardScoreStore`
+(singleton). `EFPhoenixRecordsRepository`'s two cohort reads and `EFOfficialSnapshotRepository`'s two
+history reads delegate to them and hold no SQL of their own any more. One command per vertical
+(`WarmPeerScoresCommand`, `WarmBoardScoresCommand`) exists because a vertical may not reference the
+hosting abstractions and the stores are internal, so the host asks through the MediatR seam.
+
+**Tests** — `Tests.Integration/PeerScoreStoreTests`: that a slice really is held between reads, that
+eviction is what releases it, that a one-mix eviction leaves the other, and that none of the SQL's
+answers moved. `Tests.Integration/BoardPeerReadTests`: the CO-OP and low-level rows the store must
+still carry. `ExplorationTests/Pumbility/PeerCacheProbeTests`: the table above, re-runnable.
 
 ## 7. Responsive
 

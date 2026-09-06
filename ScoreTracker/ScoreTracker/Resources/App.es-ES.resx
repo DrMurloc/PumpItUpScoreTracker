@@ -6745,6 +6745,12 @@
   <data name="Reached {0}" xml:space="preserve">
     <value>Ha alcanzado {0}</value>
   </data>
+  <data name="Read from the official board, as of {0}. No account on PIU Scores." xml:space="preserve">
+    <value>Leído del ranking oficial, a fecha de {0}. Sin cuenta en PIU Scores.</value>
+  </data>
+  <data name="Read from the official board. No account on PIU Scores." xml:space="preserve">
+    <value>Leído del ranking oficial. Sin cuenta en PIU Scores.</value>
+  </data>
   <data name="Read in" xml:space="preserve">
     <value>Leer en</value>
   </data>
@@ -8088,6 +8094,9 @@
   </data>
   <data name="still isn't enough at {0}" xml:space="preserve">
     <value>aún no basta con {0}</value>
+  </data>
+  <data name="Still working out where this sits." xml:space="preserve">
+    <value>Todavía calculando dónde encaja.</value>
   </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>tacaño al puntuar incluso pasado</value>
@@ -10737,6 +10746,12 @@
   </data>
   <data name="{0} of them tried and broke." xml:space="preserve">
     <value>{0} de ellos lo intentaron y rompieron.</value>
+  </data>
+  <data name="{0} of these are read from the official board, as of {1}." xml:space="preserve">
+    <value>{0} de estos se leen del ranking oficial, a fecha de {1}.</value>
+  </data>
+  <data name="{0} of these are read from the official board." xml:space="preserve">
+    <value>{0} de estos se leen del ranking oficial.</value>
   </data>
   <data name="{0} of this song's charts were re-stepped." xml:space="preserve">
     <value>{0} charts de esta canción fueron repisados.</value>

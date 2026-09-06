@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.SharedKernel.Enums;
@@ -18,6 +19,9 @@ namespace ScoreTracker.Tests.DomainTests;
 /// </summary>
 public sealed class PumbilityPeerPoolsTests
 {
+    private static IReadOnlySet<PeerVoice> Voices(params Guid[] ids) =>
+        ids.Select(PeerVoice.Account).ToHashSet();
+
     private static readonly ScoringConfiguration Scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
 
     [Fact]
@@ -34,12 +38,12 @@ public sealed class PumbilityPeerPoolsTests
             .OrderByDescending(r => r.Rating).ThenBy(r => r.ChartId)
             .Select(r => r.ChartId).ToArray();
 
-        var summary = PumbilityPeerPools.Build(records, new HashSet<Guid> { peer }, catalog, Scoring);
+        var summary = PumbilityPeerPools.Build(records, Voices(peer), catalog, Scoring);
 
-        Assert.Equal(50, summary.Pools[peer].Count);
+        Assert.Equal(50, summary.Pools[PeerVoice.Account(peer)].Count);
         Assert.Equal(50, summary.Charts[expected[0]].Points);
         Assert.Equal(1, summary.Charts[expected[49]].Points);
-        Assert.Equal(expected.Take(50).ToHashSet(), summary.Pools[peer]);
+        Assert.Equal(expected.Take(50).ToHashSet(), summary.Pools[PeerVoice.Account(peer)]);
         // The two that fell outside the fifty are scored, not held — and one scorer earns no row.
         Assert.False(summary.Charts.ContainsKey(expected[50]));
         Assert.False(summary.Charts.ContainsKey(expected[51]));
@@ -61,7 +65,7 @@ public sealed class PumbilityPeerPoolsTests
         };
         var catalog = new[] { shared, onlyA, onlyB }.ToDictionary(c => c.Id);
 
-        var summary = PumbilityPeerPools.Build(records, new HashSet<Guid> { a, b }, catalog, Scoring);
+        var summary = PumbilityPeerPools.Build(records, Voices(a, b), catalog, Scoring);
 
         // A's pool: shared (#1, 50) then onlyA (#2, 49). B's: onlyB (#1, 50) then shared (#2, 49).
         Assert.Equal(2, summary.Charts[shared.Id].Holders);
@@ -69,7 +73,7 @@ public sealed class PumbilityPeerPoolsTests
         Assert.Equal(1, summary.Charts[onlyA.Id].Holders);
         Assert.Equal(49, summary.Charts[onlyA.Id].Points);
         Assert.Equal(50, summary.Charts[onlyB.Id].Points);
-        Assert.Equal(new[] { a, b }.ToHashSet(), summary.PeerIds);
+        Assert.Equal(new[] { a, b }.Select(PeerVoice.Account).ToHashSet(), summary.Peers);
     }
 
     [Fact]
@@ -85,13 +89,13 @@ public sealed class PumbilityPeerPoolsTests
             Score(peer, Guid.NewGuid(), 999_000)
         };
 
-        var summary = PumbilityPeerPools.Build(records, new HashSet<Guid> { peer },
+        var summary = PumbilityPeerPools.Build(records, Voices(peer),
             new Dictionary<Guid, Chart> { [chart.Id] = chart }, Scoring);
 
         Assert.Equal(1, summary.Charts[chart.Id].Holders);
         Assert.Equal(1, summary.Charts[chart.Id].Scored);
         Assert.Single(summary.Charts);
-        Assert.False(summary.Pools.ContainsKey(stranger));
+        Assert.False(summary.Pools.ContainsKey(PeerVoice.Account(stranger)));
     }
 
     [Fact]
@@ -107,12 +111,12 @@ public sealed class PumbilityPeerPoolsTests
             ? new[] { Score(p, chart.Id, scores[i]) }
             : fillers.Select(f => Score(p, f.Id, 999_000)).Append(Score(p, chart.Id, scores[i]))).ToArray();
 
-        var summary = PumbilityPeerPools.Build(records, peers.ToHashSet(), catalog, Scoring);
+        var summary = PumbilityPeerPools.Build(records, Voices(peers), catalog, Scoring);
 
         var entry = summary.Charts[chart.Id];
         Assert.Equal(4, entry.Holders);
         Assert.Equal(5, entry.Scored);
-        Assert.False(summary.Pools[peers[4]].Contains(chart.Id));
+        Assert.False(summary.Pools[PeerVoice.Account(peers[4])].Contains(chart.Id));
         // Midpoint-convention quantiles over 940 / 962 / 975 / 985 / 990k — the estimator's own
         // arithmetic, read on demand at any rung (D51, D52).
         Assert.Equal(975_000, (int)entry.ProjectedAt(PeerEstimator.Median)!.Value);
@@ -121,7 +125,7 @@ public sealed class PumbilityPeerPoolsTests
 
         // Four scorers: held, so it appears — but no opinion at any rung.
         var four = PumbilityPeerPools.Build(records.Where(r => r.UserId != peers[4]).ToArray(),
-            peers.Take(4).ToHashSet(), catalog, Scoring);
+            Voices(peers.Take(4).ToArray()), catalog, Scoring);
         Assert.Equal(4, four.Charts[chart.Id].Scored);
         Assert.Null(four.Charts[chart.Id].ProjectedAt(PeerEstimator.Median));
         Assert.Null(four.Charts[chart.Id].ProjectedAt(PeerEstimator.LowerQuartile));
@@ -137,12 +141,12 @@ public sealed class PumbilityPeerPoolsTests
         var peers = Enumerable.Range(0, 5).Select(_ => Guid.NewGuid()).ToArray();
         var records = peers.Select(p => Score(p, low.Id, 990_000)).ToArray();
 
-        var five = PumbilityPeerPools.Build(records, peers.ToHashSet(), catalog, Scoring);
+        var five = PumbilityPeerPools.Build(records, Voices(peers), catalog, Scoring);
         Assert.Equal(0, five.Charts[low.Id].Holders);
         Assert.Equal(5, five.Charts[low.Id].Scored);
         Assert.NotNull(five.Charts[low.Id].ProjectedAt(PeerEstimator.Median));
 
-        var four = PumbilityPeerPools.Build(records.Take(4).ToArray(), peers.Take(4).ToHashSet(), catalog, Scoring);
+        var four = PumbilityPeerPools.Build(records.Take(4).ToArray(), Voices(peers.Take(4).ToArray()), catalog, Scoring);
         Assert.False(four.Charts.ContainsKey(low.Id));
     }
 

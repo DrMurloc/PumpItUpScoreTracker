@@ -17,6 +17,14 @@
             <a href="/Account?tab=peers">@L["Choose peers"] ›</a>
         </div>
     }
+    else if (Standing == null)
+    {
+        @* Nothing has measured this score yet — the peers read is still in flight, or the
+           load that would have carried it was superseded. Saying "none of your peers have
+           passed this" here states a fact nobody checked, and on a chart the viewer has just
+           Perfect-Gamed it is plainly wrong. *@
+        <div class="peer-pop-empty">@L["Still working out where this sits."]</div>
+    }
     else if (Standing is not { HasCohort: true })
     {
         <div class="peer-pop-empty">

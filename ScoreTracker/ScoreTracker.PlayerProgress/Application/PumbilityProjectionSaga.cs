@@ -28,7 +28,7 @@ namespace ScoreTracker.PlayerProgress.Application
     /// </summary>
     internal sealed class PumbilityProjectionSaga : IRequestHandler<ProjectPumbilityGainsQuery, PumbilityProjection>,
         IRequestHandler<GetPumbilityPeersPageQuery, PumbilityPeersPageRecord>,
-        IRequestHandler<GetPumbilityPeersQuery, IReadOnlyCollection<Guid>>,
+        IRequestHandler<GetPumbilityPeersQuery, IReadOnlyCollection<PeerVoice>>,
         IRequestHandler<GetPumbilityPoolCompareQuery, PumbilityPoolCompareRecord>
     {
         /// <summary>
@@ -113,7 +113,7 @@ namespace ScoreTracker.PlayerProgress.Application
             foreach (var type in lit)
             {
                 var summary = sweep.PeerPools[type];
-                var peerCount = summary.PeerIds.Count;
+                var peerCount = summary.Peers.Count;
 
                 var myPool = MyPoolOf(type, mine, charts, scoring);
                 var myRank = myPool.Select((r, i) => (r.ChartId, Rank: i + 1)).ToDictionary(r => r.ChartId, r => r.Rank);
@@ -155,15 +155,15 @@ namespace ScoreTracker.PlayerProgress.Application
         ///     Phoenix 2, the competitive band on Phoenix 1 (D43) — empty for a dark type or for
         ///     nobody signed in.
         /// </summary>
-        public async Task<IReadOnlyCollection<Guid>> Handle(GetPumbilityPeersQuery request,
+        public async Task<IReadOnlyCollection<PeerVoice>> Handle(GetPumbilityPeersQuery request,
             CancellationToken cancellationToken)
         {
-            if (!_currentUser.IsLoggedIn) return Array.Empty<Guid>();
+            if (!_currentUser.IsLoggedIn) return Array.Empty<PeerVoice>();
             var userId = _currentUser.User.Id;
             var sweep = await _cache.GetOrAdd(userId, request.Mix, () => Estimate(userId, request.Mix));
             return sweep.PeerPools.TryGetValue(request.ChartType, out var summary)
-                ? summary.PeerIds.ToArray()
-                : Array.Empty<Guid>();
+                ? summary.Peers.ToArray()
+                : Array.Empty<PeerVoice>();
         }
 
         /// <summary>
@@ -193,7 +193,10 @@ namespace ScoreTracker.PlayerProgress.Application
 
             var peers = pool == null
                 ? await _cache.GetOrAddSplit(userId, mix, () => AverageSplit(mix,
-                    lit.SelectMany(type => sweep.PeerPools[type].PeerIds).ToHashSet(), charts, scoring))
+                    // Accounts only: the average split is built from the peers' own records, and a
+                    // board peer has none — the mirror publishes what they scored, not a ledger.
+                    lit.SelectMany(type => sweep.PeerPools[type].Peers)
+                        .Where(p => p.UserId != null).Select(p => p.UserId!.Value).ToHashSet(), charts, scoring))
                 : null;
             return new PumbilityPoolCompareRecord(levels, peers);
         }
@@ -267,42 +270,65 @@ namespace ScoreTracker.PlayerProgress.Application
             MixEnum mix, Guid userId, IReadOnlyCollection<ChartType> lit, ProjectionSweep sweep,
             IReadOnlyDictionary<ChartType, IReadOnlyDictionary<Guid, int>> myPools, CancellationToken cancellationToken)
         {
-            var peerFor = new Dictionary<Guid, HashSet<ChartType>>();
+            var peerFor = new Dictionary<PeerVoice, HashSet<ChartType>>();
             foreach (var type in lit)
-            foreach (var peer in sweep.PeerPools[type].PeerIds)
+            foreach (var peer in sweep.PeerPools[type].Peers)
             {
                 if (!peerFor.TryGetValue(peer, out var types)) peerFor[peer] = types = new HashSet<ChartType>();
                 types.Add(type);
             }
 
-            var ids = peerFor.Keys.Append(userId).Distinct().ToArray();
+            var me = PeerVoice.Account(userId);
+            var ids = peerFor.Keys.Where(p => p.UserId != null).Select(p => p.UserId!.Value)
+                .Append(userId).Distinct().ToArray();
             var users = (await _users.GetUsers(ids, cancellationToken)).ToDictionary(u => u.Id);
             var stats = (await _stats.GetStats(mix, ids, cancellationToken)).ToDictionary(s => s.UserId);
 
-            PeerRosterEntry Row(Guid id, User user)
+            IReadOnlyDictionary<ChartType, int> OverlapOf(PeerVoice voice, IReadOnlySet<ChartType>? types)
             {
-                var stat = stats.GetValueOrDefault(id);
-                var total = stat?.SkillRating ?? 0;
                 var overlap = new Dictionary<ChartType, int>();
-                if (peerFor.TryGetValue(id, out var types))
-                    foreach (var type in types)
-                        overlap[type] = sweep.PeerPools[type].Pools.TryGetValue(id, out var held)
-                            ? held.Count(myPools[type].ContainsKey)
-                            : 0;
+                if (types == null) return overlap;
+                foreach (var type in types)
+                    overlap[type] = sweep.PeerPools[type].Pools.TryGetValue(voice, out var held)
+                        ? held.Count(myPools[type].ContainsKey)
+                        : 0;
+                return overlap;
+            }
+
+            PeerRosterEntry Row(PeerVoice voice, User user)
+            {
+                var stat = stats.GetValueOrDefault(voice.UserId!.Value);
+                var total = stat?.SkillRating ?? 0;
+                peerFor.TryGetValue(voice, out var types);
                 // The gem is read off the total on the one mix that has a ladder to read it from.
                 return new PeerRosterEntry(user, total,
                     mix == MixEnum.Phoenix2 ? Phoenix2PumbilityLevel.From(total).Index : null,
                     stat?.SinglesCompetitiveLevel ?? 0, stat?.DoublesCompetitiveLevel ?? 0,
-                    types ?? new HashSet<ChartType>(), overlap);
+                    types ?? new HashSet<ChartType>(), OverlapOf(voice, types), null);
+            }
+
+            // A board peer has no account to read a level or a competitive level from, and none of
+            // those columns can be filled for them — the boards publish a pool and nothing else.
+            // They are named by their public tag and stand in the same sort (D62).
+            PeerRosterEntry BoardRow(PeerVoice voice)
+            {
+                peerFor.TryGetValue(voice, out var types);
+                var total = lit.Select(type => sweep.PeerPools[type].TotalsFromBoard
+                        .TryGetValue(voice, out var published) ? published : 0d)
+                    .DefaultIfEmpty(0d).Max();
+                return new PeerRosterEntry(null, total,
+                    mix == MixEnum.Phoenix2 ? Phoenix2PumbilityLevel.From(total).Index : null, 0, 0,
+                    types ?? new HashSet<ChartType>(), OverlapOf(voice, types), voice.Tag);
             }
 
             var roster = peerFor.Keys
-                .Where(id => users.TryGetValue(id, out var u) && u.IsPublic)
-                .Select(id => Row(id, users[id]))
+                .Where(p => p.IsFromBoard || (users.TryGetValue(p.UserId!.Value, out var u) && u.IsPublic))
+                .Select(p => p.IsFromBoard ? BoardRow(p) : Row(p, users[p.UserId!.Value]))
                 .OrderByDescending(r => r.Total)
                 .ToArray();
-            var privatePeers = peerFor.Keys.Count(id => !users.TryGetValue(id, out var u) || !u.IsPublic);
-            var you = users.TryGetValue(userId, out var me) ? Row(userId, me) : null;
+            var privatePeers = peerFor.Keys.Count(p =>
+                !p.IsFromBoard && (!users.TryGetValue(p.UserId!.Value, out var u) || !u.IsPublic));
+            var you = users.TryGetValue(userId, out var mine) ? Row(me, mine) : null;
             return (roster, privatePeers, you);
         }
 

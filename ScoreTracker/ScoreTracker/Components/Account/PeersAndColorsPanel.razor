@@ -258,10 +258,10 @@
 
     private int DoublesUnion => Union(o => o.DoublesMembers);
 
-    private int Union(Func<PeerSourceOption, IReadOnlySet<Guid>> members)
+    private int Union(Func<PeerSourceOption, IReadOnlySet<PeerVoice>> members)
     {
         if (_catalog == null) return 0;
-        var union = new HashSet<Guid>();
+        var union = new HashSet<PeerVoice>();
         foreach (var option in _catalog.Options.Where(IsTicked)) union.UnionWith(members(option));
         return union.Count;
     }

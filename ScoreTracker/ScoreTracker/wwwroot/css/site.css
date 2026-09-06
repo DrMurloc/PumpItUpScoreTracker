@@ -14328,6 +14328,28 @@ span.ct-console-pick { cursor: default; }
     margin-left: 6px;
 }
 
+/* A peer the official board is the only record of: named by their public tag, and marked, because
+   the row carries no level and no competitive levels and the reader should know why
+   (docs/design/pumbility-overhaul.md D62). */
+.pmb-roster-board-name {
+    font-weight: 500;
+}
+
+.pmb-roster-board-tag {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--mix-secondary);
+    border: 1px solid color-mix(in srgb, var(--mix-secondary) 45%, transparent);
+    border-radius: 3px;
+    padding: 0 5px;
+    margin-left: 6px;
+    cursor: help;
+}
+
 .pmb-roster-level {
     display: inline-flex;
     align-items: center;

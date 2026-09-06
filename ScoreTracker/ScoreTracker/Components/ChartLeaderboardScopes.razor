@@ -257,10 +257,21 @@ else
     ///     peers are can mean running the projection sweep for a viewer who has not opened the
     ///     PUMBILITY page today, and that is not a cost to pay on every chart view.
     /// </summary>
-    private IReadOnlySet<Guid>? _pumbilityPeers;
+    private IReadOnlySet<PeerVoice>? _pumbilityPeers;
+
+    /// <summary>The board peers on this chart, by tag — they have no account to be known by.</summary>
+    private IReadOnlySet<string> _pumbilityBoardNames = new HashSet<string>();
+
+    /// <summary>When the mirror those rows came from was swept. Null while none are on the board.</summary>
+    private DateTimeOffset? _pumbilityBoardAsOf;
     private OfficialChartBoardRecord? _officialBoard;
     private IReadOnlySet<Guid> _officialPublicLinks = new HashSet<Guid>();
-    private IReadOnlyDictionary<string, Uri?> _officialAvatars = new Dictionary<string, Uri?>();
+    /// <summary>
+    ///     Every board player on screen, by tag, with the face the mirror swept. Board rows have
+    ///     no account to be known by, so the tag is the key — and the map is filled by whichever
+    ///     scope drew them: the official board, the PUMBILITY peers read, or a ghost rival.
+    /// </summary>
+    private Dictionary<string, Uri?> _boardAvatars = new(StringComparer.OrdinalIgnoreCase);
     private DateTimeOffset? _officialAsOf => _officialBoard?.AsOf;
     private IReadOnlySet<Guid> _officialRivalEdges = new HashSet<Guid>();
     private DateTimeOffset? _rivalOfficialAsOf;
@@ -286,6 +297,9 @@ else
         _scope = InitialScope;
         _officialBoard = null;
         _pumbilityPeers = null;
+        _pumbilityBoardNames = new HashSet<string>();
+        _pumbilityBoardAsOf = null;
+        _boardAvatars = new Dictionary<string, Uri?>(StringComparer.OrdinalIgnoreCase);
         await LoadChartAsync();
     }
 
@@ -448,7 +462,27 @@ else
                 _pumbilityPeers ??= (await Mediator.Send(new GetPumbilityPeersQuery(_chart.Type, Mix))).ToHashSet();
                 _communityUserIds = _clubmates;
                 var me = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : (Guid?)null;
-                return _world.Where(s => _pumbilityPeers.Contains(s.UserId) || s.UserId == me).ToArray();
+                var siteRows = _world.Where(s => _pumbilityPeers.Contains(PeerVoice.Account(s.UserId)) || s.UserId == me);
+
+                // The peers the official board is the only record of are not in _world at all — no
+                // account, no site score — so they are read off the mirror by their tag and put on
+                // the board beside everyone else, carrying its asterisk and its date (D59, D37).
+                var boardTags = _pumbilityPeers.Where(p => p.IsFromBoard && p.Tag != null)
+                    .Select(p => p.Tag!).ToArray();
+                if (boardTags.Length == 0) return siteRows.ToArray();
+
+                var mirrored = await Mediator.Send(new GetOfficialScoresForTagsQuery(Mix, boardTags,
+                    new[] { ChartId }));
+                _pumbilityBoardAsOf = mirrored.AsOf;
+                _pumbilityBoardNames = mirrored.Scores.Select(r => r.Tag).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                // The same faces the Official scope draws: a board peer sits among site players
+                // here, and the one row without a picture reads as a placeholder, not a person.
+                foreach (var mirroredScore in mirrored.Scores)
+                    _boardAvatars[mirroredScore.Tag] = mirroredScore.Avatar;
+                return siteRows
+                    .Concat(mirrored.Scores.Select(r => new UserPhoenixScore(Guid.Empty, ChartId, r.Tag, r.Score,
+                        null, false)))
+                    .ToArray();
             }
             case LeaderboardScope.LowestPassing:
             {
@@ -482,6 +516,10 @@ else
                 // everywhere else in this feature.
                 _rivalGhostNames = rivalRows.Where(r => r.UserId == null).Select(r => r.DisplayName)
                     .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                // A ghost rival is a board player too, and the rival read has always carried
+                // their face — nothing on this board had ever asked for it.
+                foreach (var ghost in rivalRows.Where(r => r.UserId == null))
+                    _boardAvatars[ghost.DisplayName] = ghost.Avatar;
                 var mine = CurrentUser.IsLoggedIn
                     ? _world.Where(s => s.UserId == CurrentUser.User.Id).ToArray()
                     : Array.Empty<UserPhoenixScore>();
@@ -513,10 +551,8 @@ else
 
                 // The mirror has an avatar for every board player, and it is the same source a
                 // site avatar comes from — keyed by tag, since unlinked rows share Guid.Empty.
-                _officialAvatars = _officialBoard.Entries
-                    .GroupBy(e => e.Player.Username, StringComparer.OrdinalIgnoreCase)
-                    .ToDictionary(g => g.Key, g => g.First().Player.AvatarUrl,
-                        StringComparer.OrdinalIgnoreCase);
+                foreach (var entry in _officialBoard.Entries)
+                    _boardAvatars[entry.Player.Username] = entry.Player.AvatarUrl;
 
                 return _officialBoard.Entries
                     .Select(e => new UserPhoenixScore(
@@ -619,10 +655,19 @@ else
 
     private string? AvatarFor(Row row)
     {
+        // Every row on the official board is a board player, named even when the mirror swept
+        // no face for them.
         if (_scope == LeaderboardScope.Official)
-            return _officialAvatars.TryGetValue(row.Score.UserName.ToString(), out var mirrored)
+            return _boardAvatars.TryGetValue(row.Score.UserName.ToString(), out var mirrored)
                 ? mirrored?.ToString() ?? DefaultAvatar
                 : DefaultAvatar;
+        // Elsewhere a row with no account is a board row IF the mirror drew it. A private
+        // player's Anonymous row has no account either and is deliberately not in that map:
+        // giving it a face would be inventing one.
+        if (row.Score.UserId == Guid.Empty)
+            return _boardAvatars.TryGetValue(row.Score.UserName.ToString(), out var board)
+                ? board?.ToString() ?? DefaultAvatar
+                : null;
         return _users.TryGetValue(row.Score.UserId, out var user) ? user.ProfileImage.ToString() : null;
     }
 
@@ -633,8 +678,14 @@ else
         (score.UserId != Guid.Empty && _rivalUserIds.Contains(score.UserId))
         || _rivalGhostNames.Contains(score.UserName.ToString());
 
+    // A board row has no account, which is what separates it from a site peer whose username
+    // happens to read like somebody's board tag — that peer used to collect the mirror's asterisk
+    // on a score the mirror never saw (bug check 2026-09-06).
     private bool IsOfficialRow(UserPhoenixScore score) =>
-        _scope == LeaderboardScope.Rivals && _officialRivalEdges.Count > 0 && score.UserId == Guid.Empty;
+        score.UserId == Guid.Empty
+        && ((_scope == LeaderboardScope.Rivals && _officialRivalEdges.Count > 0)
+            || (_scope == LeaderboardScope.PumbilityPeers
+                && _pumbilityBoardNames.Contains(score.UserName.ToString())));
 
     // The shared ladder, not a private copy of it. This board carried its own you/clubmate
     // ternary with no rival arm at all, so a rival read as a plain clubmate on every scope —
@@ -691,6 +742,10 @@ else
             if (_scope == LeaderboardScope.Official)
                 return _officialAsOf is { } officialAsOf
                     ? L["Official board data, as of {0}.", officialAsOf.ToString("d MMM")].Value
+                    : null;
+            if (_scope == LeaderboardScope.PumbilityPeers)
+                return _pumbilityBoardAsOf is { } peerAsOf
+                    ? L["* Official board data, as of {0}.", peerAsOf.ToString("d MMM")].Value
                     : null;
             if (_scope != LeaderboardScope.Rivals) return null;
             var parts = new List<string>();

@@ -17,6 +17,7 @@ using ScoreTracker.Rivals.Application;
 using ScoreTracker.Rivals.Contracts.Queries;
 using ScoreTracker.Rivals.Domain;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Tests.TestHelpers;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
@@ -56,7 +57,7 @@ public sealed class PeerStandingReaderTests
         _mediator.Setup(m => m.Send(It.IsAny<GetUserUiSettingsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => _settings);
         _mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<Guid>());
+            .ReturnsAsync(Array.Empty<PeerVoice>());
         _mediator.Setup(m => m.Send(It.IsAny<ResolveOfficialPlayersQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<OfficialPlayerResolution>());
         _mediator.Setup(m => m.Send(It.IsAny<GetOfficialScoresForTagsQuery>(), It.IsAny<CancellationToken>()))
@@ -87,11 +88,13 @@ public sealed class PeerStandingReaderTests
     private static PlayerStatsRecord Stats(Guid id, double level) =>
         new(id, 1000, 21, 100, 0, 0, 800, 900000, 21, 800, 900000, 21, 700, 880000, 20, level, level, level - 1);
 
+    private readonly Mock<IOfficialPlacementReader> _official = NoBoard.Mock();
+
     private PeerStandingReader Reader() => new(_rivals.Object,
         new RivalSubjectResolver(_users.Object, _mediator.Object),
         new RivalScoreReader(_scores.Object, _mediator.Object),
         _communities.Object, _stats.Object, _scores.Object, _charts.Object, _users.Object, _visibility.Object,
-        _mediator.Object, _currentUser.Object, new MemoryCache(new MemoryCacheOptions()));
+        _mediator.Object, _currentUser.Object, new MemoryCache(new MemoryCacheOptions()), _official.Object);
 
     private void MyBestIs(Guid chartId, int score) =>
         _scores.Setup(s => s.GetBestScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
@@ -129,6 +132,63 @@ public sealed class PeerStandingReaderTests
         Assert.Equal(3, standing.Cohort);
         var line = Assert.Single(standing.Sources);
         Assert.Equal(PeerSourceKind.CompetitiveLevel, line.Kind);
+    }
+
+    /// <summary>
+    ///     A PUMBILITY peer the official board is the only record of counts on both sides of the
+    ///     standing — in the cohort, and among the ones who passed it when the board publishes a
+    ///     score (docs/design/pumbility-overhaul.md D59). Without the board read they would sit in
+    ///     the denominator forever.
+    /// </summary>
+    [Fact]
+    public async Task ABoardPeerCountsAmongThePeersWhoPassedIt()
+    {
+        _settings[PeerSourceSelection.SettingKey] =
+            new PeerSourceSelection(false, false, true, new HashSet<Guid>()).Serialize();
+        _currentUser.Setup(c => c.IsLoggedIn).Returns(true);
+        MyBestIs(_single.Id, 950_000);
+        _mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { PeerVoice.FromBoard(11, "URUSA#9487") });
+        _official.Setup(o => o.GetBoardScoresOn(It.IsAny<MixEnum>(), It.IsAny<IReadOnlyCollection<int>>(),
+                It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BoardScoreReadings(Sealed,
+                new[] { new BoardScoreReading(11, _single.Id, 23, 995_000) }));
+
+        var standing = (await Reader().GetStandings(Me, MixEnum.Phoenix2, new[] { _single.Id }))[_single.Id];
+
+        Assert.Equal(1, standing.PeerCount);
+        Assert.Equal(1, standing.Passed);
+        Assert.Equal(2, standing.Place);
+        Assert.Equal(1, Assert.Single(standing.Sources).FromOfficialBoard);
+        // The source line prints an asterisk against that count, and the footnote under it is
+        // gated on this. Without a ghost rival in the group nothing else was setting it, so most
+        // players got the mark and no date (D37, bug check 2026-09-06).
+        Assert.Equal(Sealed, standing.OfficialAsOf);
+    }
+
+    /// <summary>
+    ///     The reporter's own configuration, 2026-09-06: competitive level AND PUMBILITY peers
+    ///     ticked together, on Phoenix 2. Every score read "None of your peers have passed this
+    ///     yet", which is what an EMPTY union renders.
+    /// </summary>
+    [Fact]
+    public async Task CompetitiveAndPumbilityTogetherStillMeasureAScore()
+    {
+        var band = Guid.NewGuid();
+        var pumbility = Guid.NewGuid();
+        _settings[PeerSourceSelection.SettingKey] =
+            new PeerSourceSelection(false, true, true, new HashSet<Guid>()).Serialize();
+        MyBestIs(_single.Id, 950_000);
+        BandIs(Me, band);
+        _mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { PeerVoice.Account(pumbility) });
+        PeerScoresAre(Score(band, _single.Id, 960_000), Score(pumbility, _single.Id, 940_000));
+
+        var standing = (await Reader().GetStandings(Me, MixEnum.Phoenix2, new[] { _single.Id }))[_single.Id];
+
+        Assert.Equal(2, standing.PeerCount);
+        Assert.Equal(2, standing.Passed);
+        Assert.Equal(2, standing.Sources.Count);
     }
 
     [Fact]

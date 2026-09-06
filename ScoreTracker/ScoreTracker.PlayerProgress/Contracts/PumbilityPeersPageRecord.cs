@@ -94,14 +94,17 @@ public sealed record PeerAloneEntry(Guid ChartId, ChartType ChartType, int MyPoo
 ///     One row of the roster: who, their level and total, their competitive levels, which types
 ///     they are a peer for, and how many of the viewer's pool charts of each type they also hold.
 ///     <paramref name="RungIndex" /> is null where the mix has no PUMBILITY ladder to read a gem
-///     from (Phoenix 1, D43).
+///     from (Phoenix 1, D43). <paramref name="User" /> is null for a peer the official board is the
+///     only record of, and <paramref name="BoardTag" /> is the public tag they are named by
+///     instead (D62); their competitive levels come back zero, because the boards publish none.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record PeerRosterEntry(
-    User User,
+    User? User,
     double Total,
     int? RungIndex,
     double SinglesLevel,
     double DoublesLevel,
     IReadOnlySet<ChartType> PeerFor,
-    IReadOnlyDictionary<ChartType, int> Overlap);
+    IReadOnlyDictionary<ChartType, int> Overlap,
+    string? BoardTag = null);

@@ -52,6 +52,11 @@ public sealed class PeersSectionTests : ComponentTestBase
         Services.AddSingleton(new Mock<IRandomNumberGenerator>().Object);
         Mediator.Setup(m => m.Send(It.IsAny<GetChartIdentityQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, ChartIdentityRecord>());
+        // Every card on this list carries the viewer's own score, and a score on this site is
+        // coloured by where it stands among their peers. Empty, not absent: the handler answers
+        // only for charts they hold, and never returns null.
+        Mediator.Setup(m => m.Send(It.IsAny<GetPeerStandingsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyDictionary<Guid, PeerStanding>)new Dictionary<Guid, PeerStanding>());
         Mediator.Setup(m => m.Send(It.IsAny<GetMyRivalsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<RivalSubject>());
         Mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))

@@ -459,11 +459,13 @@ internal sealed class LeaderboardHubSaga :
             return new OfficialTagScores(latest.CompletedAt, Array.Empty<OfficialTagScore>());
 
         var tagById = players.ToDictionary(p => p.Id, p => p.Username);
+        var avatarById = players.ToDictionary(p => p.Id, p => p.Avatar);
         var placements = await _snapshots.GetChartPlacementsFor(latest.Id, tagById.Keys.ToArray(),
             request.ChartIds, cancellationToken);
 
         return new OfficialTagScores(latest.CompletedAt, placements
-            .Select(p => new OfficialTagScore(tagById[p.PlayerId], p.ChartId, p.Place, (int)p.Score))
+            .Select(p => new OfficialTagScore(tagById[p.PlayerId], p.ChartId, p.Place, (int)p.Score,
+                avatarById[p.PlayerId]))
             .ToArray());
 
     }

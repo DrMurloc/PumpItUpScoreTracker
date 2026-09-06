@@ -291,6 +291,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
 
     private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
+    private readonly PeerScoreStore _peers;
     private readonly IChartRepository _charts;
     private readonly IXXChartAttemptRepository _xxAttempts;
     private readonly IMediator _mediator;
@@ -308,7 +309,8 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         IChartRepository charts,
         IXXChartAttemptRepository xxAttempts,
         IMediator mediator,
-        IPlayerStatsReader playerStats)
+        IPlayerStatsReader playerStats,
+        PeerScoreStore peers)
     {
         _cache = cache;
         _factory = factory;
@@ -316,6 +318,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         _xxAttempts = xxAttempts;
         _mediator = mediator;
         _playerStats = playerStats;
+        _peers = peers;
     }
 
     internal static JudgementCounts? JudgementsOf(PhoenixRecordEntity pba)
@@ -378,6 +381,11 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         var cache = await GetCachedScores(mix, userId, cancellationToken);
         cache[score.ChartId] = score;
         _cache.Set(ScoreCache(userId, mix), cache);
+        // The peer store holds this player for everyone who has them as a peer — including
+        // themselves: four of its readers ask it about one person, their own. The bus event that
+        // normally drops them is debounced by minutes, which is fine for a peer and far too slow
+        // for the player who just recorded the score (docs/design/pumbility-overhaul.md §6.14).
+        _peers.Evict(userId, mix);
     }
 
     private async Task<ConcurrentDictionary<Guid, RecordedPhoenixScore>> GetCachedScores(MixEnum mix, Guid userId,
@@ -483,24 +491,17 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             .ToArrayAsync(cancellationToken);
     }
 
+    // Both cohort reads are served from memory (PeerScoreStore, docs/design/pumbility-overhaul.md
+    // §6.14). They are the only two reads that ask about OTHER people in bulk, they run once per
+    // folder on a page that draws several, and a peer group is dozens to hundreds of IN-list
+    // parameters each time. Cohort percentile machinery only — a walkoff in the distribution makes
+    // everyone else's percentile look better than it is, so broken rows never enter, which is the
+    // store's contract too.
     public async Task<IEnumerable<UserPhoenixScore>> GetPlayerScores(MixEnum mix, IEnumerable<Guid> userIds,
         IEnumerable<Guid> chartIds, CancellationToken cancellationToken = default)
     {
-        var userIdArray = userIds.Distinct().ToArray();
-        var chartIdArray = chartIds.Distinct().ToArray();
-        var mixId = MixIds.For(mix);
-        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        // Cohort percentile machinery only — a walkoff in the distribution makes everyone
-        // else's percentile look better than it is, so broken rows never enter.
-        return await (from pba in database.Set<PhoenixRecordEntity>()
-                join u in database.User on pba.UserId equals u.Id
-                where chartIdArray.Contains(pba.ChartId) && pba.MixId == mixId && pba.Score != null &&
-                      !pba.IsBroken &&
-                      userIdArray.Contains(pba.UserId)
-                select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
-                    pba.Score!.Value,
-                    PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, u.IsPublic, pba.RecordedDate))
-            .ToArrayAsync(cancellationToken);
+        return await _peers.OnCharts(mix, userIds.Distinct().ToArray(), chartIds.Distinct().ToArray(),
+            cancellationToken);
     }
 
     public async Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetBrokenBests(MixEnum mix,
@@ -526,26 +527,8 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         IEnumerable<Guid> userIds, ChartType chartType, DifficultyLevel minimumLevel,
         DifficultyLevel maximumLevel, CancellationToken cancellationToken = default)
     {
-        var userIdArray = userIds.Distinct().ToArray();
-        var mixId = MixIds.For(mix);
-        var min = (int)minimumLevel;
-        var max = (int)maximumLevel;
-        var chartTypeString = chartType.ToString();
-        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        // Same cohort-only contract as the other cohort reads: a broken row is a walkoff in
-        // the distribution and never enters.
-        return await (from cm in database.ChartMix
-                join c in database.Chart on cm.ChartId equals c.Id
-                join pba in database.Set<PhoenixRecordEntity>() on c.Id equals pba.ChartId
-                join u in database.User on pba.UserId equals u.Id
-                where cm.MixId == mixId && pba.MixId == mixId
-                      && cm.Level >= min && cm.Level <= max && c.Type == chartTypeString
-                      && pba.Score != null && !pba.IsBroken
-                      && userIdArray.Contains(pba.UserId)
-                select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
-                    pba.Score!.Value, PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, u.IsPublic,
-                    pba.RecordedDate))
-            .ToArrayAsync(cancellationToken);
+        return await _peers.InLevelRange(mix, userIds.Distinct().ToArray(), chartType, minimumLevel,
+            maximumLevel, cancellationToken);
     }
 
     public async Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetPlayerScores(
@@ -742,6 +725,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             .Where(p => p.UserId == userId && p.ChartId == chartId && p.MixId == mixId)
             .ExecuteDeleteAsync(cancellationToken);
         _cache.Remove(ScoreCache(userId, mix));
+        _peers.Evict(userId, mix);
     }
 
     // Imported breaks only, and the same predicate on both the count and the delete so the number
@@ -780,6 +764,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             .Where(p => p.UserId == userId && p.MixId == mixId && chartIds.Contains(p.ChartId))
             .ExecuteDeleteAsync(cancellationToken);
         _cache.Remove(ScoreCache(userId, mix));
+        _peers.Evict(userId, mix);
         return removed;
     }
 
@@ -828,5 +813,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         // Cheaper to drop every per-(user, mix) entry than to reason about which survived.
         foreach (var cached in Enum.GetValues<MixEnum>())
             _cache.Remove(ScoreCache(userId, cached));
+        // A null mix is an every-mix wipe, which Evict already reads as "all of them".
+        _peers.Evict(userId, mix);
     }
 }

@@ -6784,6 +6784,12 @@
   <data name="Reached {0}" xml:space="preserve">
     <value>Gromrglorg {0}</value>
   </data>
+  <data name="Read from the official board, as of {0}. No account on PIU Scores." xml:space="preserve">
+    <value>Blurgab urgmrmurg mrglblarg, mrp {0}. Mrgl aglombu mrp PIU Mgrlgmrg.</value>
+  </data>
+  <data name="Read from the official board. No account on PIU Scores." xml:space="preserve">
+    <value>Blurgab urgmrmurg mrglblarg. Mrgl aglombu mrp PIU Mgrlgmrg.</value>
+  </data>
   <data name="Read in" xml:space="preserve">
     <value>Blurgl gropmur</value>
   </data>
@@ -8145,6 +8151,9 @@
   </data>
   <data name="still isn't enough at {0}" xml:space="preserve">
     <value>larg bo blurg og {0}</value>
+  </data>
+  <data name="Still working out where this sits." xml:space="preserve">
+    <value>Murgl blurgab mrp glorgmurg.</value>
   </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>murpmurp grgl mrglrgl mrpplgl mrpgrrgl rglplgl</value>
@@ -10805,6 +10814,12 @@
   </data>
   <data name="{0} of them tried and broke." xml:space="preserve">
     <value>{0} ob rorgglr glorggrog opa morgl.</value>
+  </data>
+  <data name="{0} of these are read from the official board, as of {1}." xml:space="preserve">
+    <value>{0} murgl blurgab urgmrmurg mrglblarg, mrp {1}.</value>
+  </data>
+  <data name="{0} of these are read from the official board." xml:space="preserve">
+    <value>{0} murgl blurgab urgmrmurg mrglblarg.</value>
   </data>
   <data name="{0} of this song's charts were re-stepped." xml:space="preserve">
     <value>{0} mrgl grglmrp mrgl murgl glmagl gl-plglmorgplgl.</value>

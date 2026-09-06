@@ -55,7 +55,15 @@ else
                 <tr class="@RowClass(row, isYou)" data-testid="@(isYou ? "roster-you" : "roster-peer")">
                     <td class="pmb-num pmb-muted">@(isYou ? string.Empty : place.ToString())</td>
                     <td>
-                        <UserLabel User="row.User"></UserLabel>
+                        @if (row.User != null)
+                        {
+                            <UserLabel User="row.User"></UserLabel>
+                        }
+                        else
+                        {
+                            <span class="pmb-roster-board-name">@row.BoardTag</span>
+                            <span class="pmb-roster-board-tag" title="@BoardTitle">@L["Board"]</span>
+                        }
                         @if (isYou)
                         {
                             <span class="pmb-roster-you-tag">@L["You"]</span>
@@ -97,6 +105,14 @@ else
             @(Visible.Below == 1 ? L["1 more peer below"] : L["{0} more peers below", Visible.Below])
         </p>
     }
+    @if (BoardPeers > 0)
+    {
+        <p class="pmb-roster-note" data-testid="roster-board">
+            @(BoardAsOf is { } asOf
+                ? L["{0} of these are read from the official board, as of {1}.", BoardPeers, asOf.ToString("d MMM")]
+                : L["{0} of these are read from the official board.", BoardPeers])
+        </p>
+    }
     @if (PrivatePeers > 0)
     {
         <p class="pmb-roster-note" data-testid="roster-private">
@@ -114,6 +130,15 @@ else
 
     [Parameter] public int PrivatePeers { get; set; }
 
+    /// <summary>How many rows the official board is the only record of (D59), and when it was swept.</summary>
+    [Parameter] public int BoardPeers { get; set; }
+
+    [Parameter] public DateTimeOffset? BoardAsOf { get; set; }
+
+    private string BoardTitle => BoardAsOf is { } asOf
+        ? L["Read from the official board, as of {0}. No account on PIU Scores.", asOf.ToString("d MMM")].Value
+        : L["Read from the official board. No account on PIU Scores."].Value;
+
     /// <summary>Under All the roster spans both types, and which type each peer is a peer for is worth a column.</summary>
     [Parameter] public bool ShowPeerFor { get; set; }
 
@@ -123,9 +148,10 @@ else
     /// <summary>The members of your own communities, to glow green.</summary>
     [Parameter] public IReadOnlySet<Guid>? Clubmates { get; set; }
 
+    // A board row is nobody's rival and nobody's clubmate — those edges are between accounts.
     private string RowClass(PeerRosterEntry row, bool isYou) =>
-        CommunityGlowReader.RowClass(isYou, Rivals?.Contains(row.User.Id) == true,
-            Clubmates?.Contains(row.User.Id) == true, "pmb-roster-you");
+        CommunityGlowReader.RowClass(isYou, row.User != null && Rivals?.Contains(row.User.Id) == true,
+            row.User != null && Clubmates?.Contains(row.User.Id) == true, "pmb-roster-you");
 
     /// <summary>Rows shown at most; past it the table is a window around the viewer (D43).</summary>
     public const int Window = 50;
@@ -145,7 +171,9 @@ else
             var place = 0;
             foreach (var row in Ordered)
             {
-                var isYou = You != null && row.User.Id == You.User.Id;
+                // A board row has no account, so it can never be the viewer — and asking it for one
+                // is what took the page down the moment a board peer landed on the roster.
+                var isYou = row.User != null && You?.User != null && row.User.Id == You.User.Id;
                 if (!isYou) place++;
                 all.Add((row, place, isYou));
             }

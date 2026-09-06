@@ -52,6 +52,7 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
     private readonly RivalScoreReader _rivalScores;
     private readonly IRivalRepository _rivals;
     private readonly IScoreReader _scores;
+    private readonly IOfficialPlacementReader _official;
     private readonly IPlayerStatsReader _stats;
     private readonly IUserReader _users;
     private readonly IPlayerVisibilityReader _visibility;
@@ -59,7 +60,7 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
     public PeerStandingReader(IRivalRepository rivals, RivalSubjectResolver resolver, RivalScoreReader rivalScores,
         ICommunityReader communities, IPlayerStatsReader stats, IScoreReader scores, IChartRepository charts,
         IUserReader users, IPlayerVisibilityReader visibility, IMediator mediator,
-        ICurrentUserAccessor currentUser, IMemoryCache cache)
+        ICurrentUserAccessor currentUser, IMemoryCache cache, IOfficialPlacementReader official)
     {
         _rivals = rivals;
         _resolver = resolver;
@@ -73,6 +74,7 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         _mediator = mediator;
         _currentUser = currentUser;
         _cache = cache;
+        _official = official;
     }
 
     public Task<IReadOnlyDictionary<Guid, PeerStanding>> Handle(GetPeerStandingsQuery request,
@@ -144,7 +146,7 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
                 byType.Select(s => s.ChartId).Distinct().ToArray(), cancellationToken);
             foreach (var score in byType)
             {
-                var chartRows = (rows.GetValueOrDefault(score.ChartId) ?? ChartRows.None).Without(userId);
+                var chartRows = (rows.GetValueOrDefault(score.ChartId) ?? ChartRows.None).Without(PeerVoice.Account(userId));
                 result[score] = PeerStandingCalculator.Compute(score.Score, chartRows.Passes,
                     chartRows.Broken, peers.Sources, peers.Union, chartRows.OfficialAsOf);
             }
@@ -170,7 +172,8 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         // The two bulk reads — every peer's account and stats — are the widget's whole cost and
         // ran on every dashboard load. Read with the viewer put back and cached by the peer set
         // for the scores' fifteen minutes: a band shares one read, a new rival changes the key.
-        var readIds = peers.Union.Append(me).Where(id => !peers.GhostKeys.Contains(id)).Distinct().ToArray();
+        var readIds = peers.Union.Where(v => v.UserId != null).Select(v => v.UserId!.Value)
+            .Append(me).Distinct().ToArray();
         var setKey = PeerSetKey(peers, me);
         var users = await _cache.GetOrCreateAsync($"{nameof(PeerStandingReader)}__RosterUsers__{setKey}",
             async entry =>
@@ -212,7 +215,11 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
 
         var rivals = await _resolver.Resolve(await _rivals.GetRivalsOwnedBy(me, cancellationToken), request.Mix,
             cancellationToken);
-        var rivalIds = rivals.Where(r => r.UserId != null).Select(r => r.UserId!.Value).ToHashSet();
+        var rivalIds = rivals
+            .Select(r => r.UserId is { } id
+                ? PeerVoice.Account(id)
+                : PeerVoice.RivalGhost(r.EdgeId, r.Tag ?? r.DisplayName))
+            .ToHashSet();
         options.Add(new PeerSourceOption(PeerSourceKind.Rivals, null, string.Empty, false, false, true, rivalIds,
             rivalIds, rivals.Count(r => r.IsGhost)));
 
@@ -246,7 +253,7 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
     private static readonly IReadOnlyDictionary<Guid, PeerStanding> Empty = new Dictionary<Guid, PeerStanding>();
     private static readonly IReadOnlyDictionary<ScoreOnChart, PeerStanding> EmptyScores =
         new Dictionary<ScoreOnChart, PeerStanding>();
-    private static readonly IReadOnlySet<Guid> NoIds = new HashSet<Guid>();
+    private static readonly IReadOnlySet<PeerVoice> NoIds = new HashSet<PeerVoice>();
 
     private async Task<PeerSourceSelection> ReadSelection(Guid userId, CancellationToken cancellationToken)
     {
@@ -260,19 +267,21 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
     private sealed class ResolvedPeers
     {
         public List<PeerStandingCalculator.SourceMembers> Sources { get; } = new();
-        public HashSet<Guid> Union { get; } = new();
+        public HashSet<PeerVoice> Union { get; } = new();
         public IReadOnlyList<RivalSubject> Ghosts { get; set; } = Array.Empty<RivalSubject>();
-        public IReadOnlySet<Guid> GhostKeys => Ghosts.Select(g => g.EdgeId).ToHashSet();
+        public IReadOnlySet<PeerVoice> GhostKeys =>
+            Ghosts.Select(g => PeerVoice.RivalGhost(g.EdgeId, g.Tag ?? g.DisplayName)).ToHashSet();
 
         public bool Has(PeerSourceKind kind, Guid id) =>
-            Sources.Any(s => s.Kind == kind && s.Members.Contains(id));
+            Sources.Any(s => s.Kind == kind && s.Members.Contains(PeerVoice.Account(id)));
 
         /// <summary>A member of one of your clubs — World and a country are communities, not clubs (D34).</summary>
         public bool IsClubmate(Guid id) =>
-            Sources.Any(s => s.Kind == PeerSourceKind.Community && !s.IsRegional && !s.IsWorld && s.Members.Contains(id));
+            Sources.Any(s => s.Kind == PeerSourceKind.Community && !s.IsRegional && !s.IsWorld
+                             && s.Members.Contains(PeerVoice.Account(id)));
 
         public IReadOnlyList<string> CommunityNames(Guid id) =>
-            Sources.Where(s => s.Kind == PeerSourceKind.Community && s.Members.Contains(id))
+            Sources.Where(s => s.Kind == PeerSourceKind.Community && s.Members.Contains(PeerVoice.Account(id)))
                 .Select(s => s.CommunityName ?? string.Empty).ToArray();
 
         public IReadOnlyList<PeerStandingSource> Lines() =>
@@ -300,7 +309,11 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
             var rivals = await _resolver.Resolve(await _rivals.GetRivalsOwnedBy(userId, cancellationToken), mix,
                 cancellationToken);
             peers.Ghosts = rivals.Where(r => r.IsGhost).ToArray();
-            var members = rivals.Select(r => r.UserId ?? r.EdgeId).Where(id => id != userId).ToHashSet();
+            var members = rivals
+                .Select(r => r.UserId is { } id
+                    ? PeerVoice.Account(id)
+                    : PeerVoice.RivalGhost(r.EdgeId, r.Tag ?? r.DisplayName))
+                .Where(v => v.UserId != userId).ToHashSet();
             peers.Add(new PeerStandingCalculator.SourceMembers(PeerSourceKind.Rivals, null, null, false, false,
                 members));
         }
@@ -328,7 +341,7 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         if (selection.Pumbility && mix == MixEnum.Phoenix2 && _currentUser.IsLoggedIn &&
             _currentUser.User.Id == userId && (forRoster || bandType != null))
         {
-            var ids = new HashSet<Guid>();
+            var ids = new HashSet<PeerVoice>();
             foreach (var type in bandType is { } one ? new[] { one } : new[] { ChartType.Single, ChartType.Double })
                 ids.UnionWith(await PumbilityPeers(mix, type, userId, cancellationToken));
             peers.Add(new PeerStandingCalculator.SourceMembers(PeerSourceKind.Pumbility, null, null, false, false,
@@ -359,8 +372,8 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
     private static double Bucket(double competitiveLevel) =>
         Math.Round(competitiveLevel * 2, MidpointRounding.AwayFromZero) / 2.0;
 
-    private async Task<IReadOnlySet<Guid>> CompetitiveBand(MixEnum mix, ChartType? type, PlayerStatsRecord stats,
-        Guid exclude, CancellationToken cancellationToken)
+    private async Task<IReadOnlySet<PeerVoice>> CompetitiveBand(MixEnum mix, ChartType? type,
+        PlayerStatsRecord stats, Guid exclude, CancellationToken cancellationToken)
     {
         var bucket = Bucket(LevelOn(stats, type));
         if (bucket <= 0) return NoIds;
@@ -372,17 +385,17 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
                 return (await _stats.GetPlayersByCompetitiveRange(mix, type, bucket, .5, cancellationToken))
                     .ToHashSet();
             }) ?? new HashSet<Guid>();
-        return band.Contains(exclude) ? band.Where(id => id != exclude).ToHashSet() : band;
+        return band.Where(id => id != exclude).Select(PeerVoice.Account).ToHashSet();
     }
 
-    private async Task<IReadOnlySet<Guid>> PumbilityPeers(MixEnum mix, ChartType type, Guid exclude,
+    private async Task<IReadOnlySet<PeerVoice>> PumbilityPeers(MixEnum mix, ChartType type, Guid exclude,
         CancellationToken cancellationToken)
     {
         return (await _mediator.Send(new GetPumbilityPeersQuery(type, mix), cancellationToken))
-            .Where(id => id != exclude).ToHashSet();
+            .Where(voice => voice.UserId != exclude).ToHashSet();
     }
 
-    private async Task<IReadOnlySet<Guid>> CommunityMembers(CommunityOverviewRecord community, Guid exclude,
+    private async Task<IReadOnlySet<PeerVoice>> CommunityMembers(CommunityOverviewRecord community, Guid exclude,
         CancellationToken cancellationToken)
     {
         var members = await _cache.GetOrCreateAsync(
@@ -392,24 +405,24 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
                 entry.AbsoluteExpirationRelativeToNow = BandTtl;
                 return (await _communities.GetMembers(community.CommunityName, cancellationToken)).ToHashSet();
             }) ?? new HashSet<Guid>();
-        return members.Contains(exclude) ? members.Where(id => id != exclude).ToHashSet() : members;
+        return members.Where(id => id != exclude).Select(PeerVoice.Account).ToHashSet();
     }
 
     // ---------------------------------------------------------------- scores
 
     /// <summary>One chart's peer rows: the passes (site and board), and who only broke it.</summary>
     private sealed record ChartRows(IReadOnlyList<PeerStandingCalculator.PeerPass> Passes,
-        IReadOnlySet<Guid> Broken, DateTimeOffset? OfficialAsOf)
+        IReadOnlySet<PeerVoice> Broken, DateTimeOffset? OfficialAsOf)
     {
         public static ChartRows None { get; } =
-            new(Array.Empty<PeerStandingCalculator.PeerPass>(), new HashSet<Guid>(), null);
+            new(Array.Empty<PeerStandingCalculator.PeerPass>(), new HashSet<PeerVoice>(), null);
 
         /// <summary>The rows are read with the subject put back so a band can share them; their own comes out here.</summary>
-        public ChartRows Without(Guid subject) =>
+        public ChartRows Without(PeerVoice subject) =>
             Passes.All(p => p.PlayerKey != subject) && !Broken.Contains(subject)
                 ? this
                 : new ChartRows(Passes.Where(p => p.PlayerKey != subject).ToArray(),
-                    Broken.Where(id => id != subject).ToHashSet(), OfficialAsOf);
+                    Broken.Where(voice => voice != subject).ToHashSet(), OfficialAsOf);
     }
 
     /// <summary>
@@ -420,7 +433,9 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
     /// </summary>
     private static string PeerSetKey(ResolvedPeers peers, Guid subject)
     {
-        var ids = peers.Union.Append(subject).Distinct().OrderBy(id => id).Select(id => id.ToString("N"));
+        // The subject goes back in as a voice, not as a bare id: two players in one band only
+        // collapse onto the same key when their own row is spelled the way the band spells them.
+        var ids = peers.Union.Append(PeerVoice.Account(subject)).Select(v => v.ToString()).Distinct().Order();
         return Convert.ToHexString(SHA256.HashData(Encoding.ASCII.GetBytes(string.Join(",", ids))), 0, 16);
     }
 
@@ -443,33 +458,58 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
                 missing.Add(chartId);
         if (missing.Count == 0) return result;
 
-        var siteIds = peers.Union.Append(userId).Where(id => !peers.GhostKeys.Contains(id)).Distinct().ToArray();
+        var siteIds = peers.Union.Where(v => v.UserId != null).Select(v => v.UserId!.Value)
+            .Append(userId).Distinct().ToArray();
         var passes = new Dictionary<Guid, List<PeerStandingCalculator.PeerPass>>();
-        var broken = new Dictionary<Guid, HashSet<Guid>>();
+        var broken = new Dictionary<Guid, HashSet<PeerVoice>>();
         if (siteIds.Length > 0)
         {
             foreach (var score in await _scores.GetPlayerScores(mix, siteIds, missing, cancellationToken))
-                Passes(passes, score.ChartId).Add(new PeerStandingCalculator.PeerPass(score.UserId, (int)score.Score, false));
+                Passes(passes, score.ChartId).Add(new PeerStandingCalculator.PeerPass(
+                    PeerVoice.Account(score.UserId), (int)score.Score, false));
             foreach (var (user, chart) in await _scores.GetBrokenBests(mix, siteIds, missing, cancellationToken))
-                Broken(broken, chart).Add(user);
+                Broken(broken, chart).Add(PeerVoice.Account(user));
         }
 
         DateTimeOffset? asOf = null;
+
+        // The PUMBILITY source can carry players the official board is the only record of (D59).
+        // Their passes come off the mirror exactly as a ghost rival's do, so they count toward the
+        // same "N of M peers" the site half does — without this they would sit in the denominator
+        // and never be able to appear in the numerator.
+        var boardVoices = peers.Union.Where(v => v.IsFromBoard && v.RivalEdgeId == null)
+            .ToDictionary(v => v.BoardPlayerId);
+        if (boardVoices.Count > 0)
+        {
+            var board = await _official.GetBoardScoresOn(mix, boardVoices.Keys.ToArray(), missing,
+                cancellationToken);
+            // The asterisk their rows put on the standing needs a date under it, and this is
+            // where it comes from on the ordinary path: most players have no ghost rivals, and
+            // the ghost branch below was the only thing setting it (D37).
+            asOf ??= board.AsOf;
+            foreach (var row in board.Scores)
+            {
+                if (!boardVoices.TryGetValue(row.BoardPlayerId, out var voice)) continue;
+                Passes(passes, row.ChartId).Add(new PeerStandingCalculator.PeerPass(voice, row.Score, true));
+            }
+        }
+
         if (peers.Ghosts.Count > 0)
         {
             // Site rivals are already in the union read; only the ghosts' board placements are new.
             var official = await _rivalScores.Read(peers.Ghosts, mix, missing, cancellationToken);
-            asOf = official.OfficialAsOf;
+            asOf ??= official.OfficialAsOf;
             foreach (var (chartId, rows) in official.ByChart)
             foreach (var row in rows.Where(r => r.Source == RivalScoreSource.Official && !r.IsBroken))
-                Passes(passes, chartId).Add(new PeerStandingCalculator.PeerPass(row.EdgeId, row.Score, true));
+                Passes(passes, chartId).Add(new PeerStandingCalculator.PeerPass(
+                    PeerVoice.RivalGhost(row.EdgeId, row.Tag ?? row.DisplayName), row.Score, true));
         }
 
         foreach (var chartId in missing)
         {
             var rows = new ChartRows(
                 passes.TryGetValue(chartId, out var p) ? p : Array.Empty<PeerStandingCalculator.PeerPass>(),
-                broken.TryGetValue(chartId, out var b) ? b : new HashSet<Guid>(),
+                broken.TryGetValue(chartId, out var b) ? b : new HashSet<PeerVoice>(),
                 asOf);
             _cache.Set(RowsKey(mix, setKey, chartId), rows, ScoresTtl);
             result[chartId] = rows;
@@ -485,9 +525,9 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         return list;
     }
 
-    private static HashSet<Guid> Broken(Dictionary<Guid, HashSet<Guid>> broken, Guid chartId)
+    private static HashSet<PeerVoice> Broken(Dictionary<Guid, HashSet<PeerVoice>> broken, Guid chartId)
     {
-        if (!broken.TryGetValue(chartId, out var set)) broken[chartId] = set = new HashSet<Guid>();
+        if (!broken.TryGetValue(chartId, out var set)) broken[chartId] = set = new HashSet<PeerVoice>();
         return set;
     }
 

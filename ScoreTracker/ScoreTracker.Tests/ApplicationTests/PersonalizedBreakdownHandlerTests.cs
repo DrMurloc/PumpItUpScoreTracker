@@ -15,6 +15,7 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Tests.TestHelpers;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
@@ -207,7 +208,7 @@ public sealed class PersonalizedBreakdownHandlerTests
             .ReturnsAsync(new PumbilityTierListFolder(Array.Empty<PumbilityTierListRecord>(), 0));
         return new PersonalizedBreakdownHandler(mediator.Object, charts.Object,
             new Mock<ICurrentUserAccessor>().Object, new MemoryCache(new MemoryCacheOptions()),
-            new ScoreProjector(scores.Object, playerStats.Object, history.Object),
+            new ScoreProjector(scores.Object, playerStats.Object, history.Object, NoBoard.Reader),
             tierLists.Object, new Mock<ITitleRepository>().Object, scores.Object);
     }
 }
