@@ -2360,6 +2360,9 @@
   <data name="Delete this community and everything in it? This cannot be undone." xml:space="preserve">
     <value>Delete this community and everything in it? This cannot be undone.</value>
   </data>
+  <data name="Delete this session" xml:space="preserve">
+    <value>Delete this session</value>
+  </data>
   <data name="Delete tool" xml:space="preserve">
     <value>Delete tool</value>
   </data>
@@ -3889,6 +3892,9 @@
   <data name="It cannot record scores or change anything on your account. You can disconnect any time from Community Tools." xml:space="preserve">
     <value>It cannot record scores or change anything on your account. You can disconnect any time from Community Tools.</value>
   </data>
+  <data name="It comes off the {0} {1} board and everyone below it moves up one." xml:space="preserve">
+    <value>It comes off the {0} {1} board and everyone below it moves up one.</value>
+  </data>
   <data name="It flags your tool for review — then post in the Discord and someone will look. There is no queue anybody watches." xml:space="preserve">
     <value>It flags your tool for review — then post in the Discord and someone will look. There is no queue anybody watches.</value>
   </data>
@@ -4799,6 +4805,9 @@
   <data name="Name" xml:space="preserve">
 	  <value>Name</value>
 	  <comment>Name</comment>
+  </data>
+  <data name="Name this set" xml:space="preserve">
+    <value>Name this set</value>
   </data>
   <data name="Name Tool" xml:space="preserve">
     <value>Name Tool</value>
@@ -7060,6 +7069,9 @@
   <data name="Record it" xml:space="preserve">
     <value>Record it</value>
   </data>
+  <data name="Record it again from the season page. This cannot be undone." xml:space="preserve">
+    <value>Record it again from the season page. This cannot be undone.</value>
+  </data>
   <data name="Record Score" xml:space="preserve">
     <value>Record Score</value>
   </data>
@@ -7224,6 +7236,9 @@
   </data>
   <data name="replaced {0}" xml:space="preserve">
     <value>replaced {0}</value>
+  </data>
+  <data name="Replaces the set already called that." xml:space="preserve">
+    <value>Replaces the set already called that.</value>
   </data>
   <data name="Replay" xml:space="preserve">
     <value>Replay</value>
@@ -8504,6 +8519,9 @@
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it.</value>
   </data>
+  <data name="Take this session off the board?" xml:space="preserve">
+    <value>Take this session off the board?</value>
+  </data>
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>
   </data>
@@ -9124,6 +9142,9 @@
   </data>
   <data name="Tick counts are inferred: tap counts come from community simfiles, the totals from real plays, and the difference is the ticks. Treat charts within a few percent of each other as tied — the numbers are estimates right now." xml:space="preserve">
     <value>Tick counts are inferred: tap counts come from community simfiles, the totals from real plays, and the difference is the ticks. Treat charts within a few percent of each other as tied — the numbers are estimates right now.</value>
+  </data>
+  <data name="Tick some charts to save a set." xml:space="preserve">
+    <value>Tick some charts to save a set.</value>
   </data>
   <data name="ticks" xml:space="preserve">
     <value>ticks</value>
@@ -10829,6 +10850,9 @@
   </data>
   <data name="{0} charts have no note count recorded, so they aren't compared." xml:space="preserve">
     <value>{0} charts have no note count recorded, so they aren't compared.</value>
+  </data>
+  <data name="{0} charts in that set are not in this book, so they were left out." xml:space="preserve">
+    <value>{0} charts in that set are not in this book, so they were left out.</value>
   </data>
   <data name="{0} charts match the community tier" xml:space="preserve">
     <value>{0} charts match the community tier</value>

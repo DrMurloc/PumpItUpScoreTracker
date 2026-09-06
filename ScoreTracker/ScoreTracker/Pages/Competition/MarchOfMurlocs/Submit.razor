@@ -60,10 +60,18 @@ else if (_draft is { } draft)
                 @L["Frozen: to change it, delete and record again."]
             </p>
             <div class="cta">
-                <MudButton Href="@MoMText.SessionPath(draft.SessionId)" Variant="Variant.Filled" Color="Color.Primary"
+                <MudButton Href="@MoMText.SessionDownloadPath(draft.SessionId)" Variant="Variant.Filled"
+                           Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Download">@L["Download image"]</MudButton>
                 <MudButton Href="@MoMText.SessionPath(draft.SessionId)" Variant="Variant.Outlined" Color="Color.Primary">@L["Breakdown"]</MudButton>
                 <MudButton Href="@MoMText.SeasonRoute" Variant="Variant.Text" Color="Color.Primary">@L["Season"]</MudButton>
+            </div>
+            @* D17: a correction is delete-and-resubmit, which the paragraph above promises, so the
+               control it points at has to be here. *@
+            <div class="cta mom-published-delete">
+                <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" Disabled="_busy"
+                           StartIcon="@Icons.Material.Filled.Delete" OnClick="ConfirmDelete"
+                           data-testid="mom-delete-published">@L["Delete this session"]</MudButton>
             </div>
         </section>
     }
@@ -473,6 +481,23 @@ else
         {
             _busy = false;
         }
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (_draft is not { } draft) return;
+
+        var body = new string[]
+        {
+            L["It comes off the {0} {1} board and everyone below it moves up one.",
+                MixName(draft.Mix), TypeName(draft.ChartType)],
+            L["{0} points", draft.TotalScore.ToString("N0")] + " · " + L["{0} charts", draft.Charts.Count] + ".",
+            L["Record it again from the season page. This cannot be undone."]
+        };
+        if (!await Confirm(L["Take this session off the board?"], body, L["Delete"])) return;
+
+        await Mediator.Send(new DeleteMoMSessionCommand(draft.SessionId));
+        Nav.NavigateTo(MoMText.SeasonRoute);
     }
 
     private async Task ConfirmDiscard()

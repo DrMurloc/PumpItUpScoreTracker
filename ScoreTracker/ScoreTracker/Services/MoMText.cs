@@ -19,6 +19,13 @@ public static class MoMText
     public static string SessionPath(Guid sessionId) => $"{SeasonRoute}/Session/{sessionId}";
 
     /// <summary>
+    ///     The breakdown, arriving with the download dialog already open. The image is composed in
+    ///     the browser from that page's own card, so the button that promises a file has to land on
+    ///     the page that can make one rather than beside it.
+    /// </summary>
+    public static string SessionDownloadPath(Guid sessionId) => $"{SessionPath(sessionId)}?download=1";
+
+    /// <summary>
     ///     Opening or resuming a draft on a board. Submit hands over to the session's own URL once
     ///     it has one, so this link is a doorway rather than a page (§11.4).
     /// </summary>

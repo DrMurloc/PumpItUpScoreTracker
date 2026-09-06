@@ -14,10 +14,13 @@ using ScoreTracker.EventCompetition.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
+using MudBlazor;
 using ScoreTracker.Web.Components;
+using ScoreTracker.Web.Components.MoM;
 using ScoreTracker.Web.Pages.Competition.MoM;
 using ScoreTracker.Web.Services.Contracts;
 using Xunit;
+using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
 
 namespace ScoreTracker.Tests.Components;
 
@@ -271,5 +274,42 @@ public sealed class MoMPlannerPageTests : ComponentTestBase
 
         Assert.Contains("Sign in", cut.Find("[data-testid=mom-plan-empty]").TextContent);
         Assert.Empty(cut.FindAll("[data-testid=mom-plan-controls]"));
+    }
+
+    [Fact]
+    public async Task EnergyAppearsWithTheProjectionsItDrivesAndNotBefore()
+    {
+        Plan();
+
+        var cut = Render();
+
+        // With projections off every price is the player's own record, so the rung chooses between
+        // nothing and the three options produced identical plans.
+        Assert.Empty(cut.FindAll("[data-testid=mom-plan-energy]"));
+        Assert.Contains("A ceiling", cut.Find("[data-testid=mom-plan-projection]").TextContent);
+
+        // Through the dispatcher: a component method called from the test thread throws instead
+        // of rendering.
+        await cut.InvokeAsync(() => cut.FindComponent<MudCheckBox<bool>>().Instance.ValueChanged
+            .InvokeAsync(true));
+
+        Assert.Single(cut.FindAll("[data-testid=mom-plan-energy]"));
+    }
+
+    [Fact]
+    public async Task SavingASetOpensTheNamingDialogOnTheDescriptionItWouldHaveGenerated()
+    {
+        Plan();
+        var cut = Render();
+        await cut.Find("[data-testid=mom-plan-suggest]").ClickAsync(new());
+
+        await cut.Find("[data-testid=mom-plan-save]").ClickAsync(new());
+
+        // The generated description is the starting point, not the name: two different sets of the
+        // same size topping out at the same level used to collide on it and replace each other.
+        var dialog = cut.FindComponent<MoMSavedSetsDialog>().Instance;
+        Assert.True(dialog.Visible);
+        Assert.True(dialog.CanSave);
+        Assert.Contains("charts, up to", dialog.SuggestedName);
     }
 }

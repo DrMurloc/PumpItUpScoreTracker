@@ -184,4 +184,31 @@ public sealed class MoMSubmitPageTests : ComponentTestBase
         Assert.NotEmpty(cut.FindAll("[data-testid=mom-submit-missing]"));
         Mediator.Verify(m => m.Send(It.IsAny<GetMoMDraftQuery>(), It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    [Fact]
+    public void APublishedSessionCanBeTakenOffTheBoard()
+    {
+        Draft(published: true);
+
+        var cut = Render();
+
+        // The published copy says a correction is delete-and-record-again (D17), so the control it
+        // points at has to be on the same screen.
+        Assert.Contains("Frozen", cut.Find("[data-testid=mom-published]").TextContent);
+        Assert.Single(cut.FindAll("[data-testid=mom-delete-published]"));
+    }
+
+    [Fact]
+    public void DownloadImageLandsWhereTheImageIsMade()
+    {
+        Draft(published: true);
+
+        var cut = Render();
+
+        var buttons = cut.FindAll("[data-testid=mom-published] a");
+        var download = buttons.Single(b => b.TextContent.Contains("Download image"));
+        // The card is composed in the browser on the breakdown page, so the button opens that
+        // page's dialog rather than landing beside it.
+        Assert.EndsWith("?download=1", download.GetAttribute("href"));
+    }
 }

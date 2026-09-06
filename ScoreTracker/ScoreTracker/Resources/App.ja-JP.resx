@@ -2360,6 +2360,9 @@
   <data name="Delete this community and everything in it? This cannot be undone." xml:space="preserve">
     <value>このコミュニティと全データを削除しますか？元に戻せません。</value>
   </data>
+  <data name="Delete this session" xml:space="preserve">
+    <value>このセッションを削除</value>
+  </data>
   <data name="Delete tool" xml:space="preserve">
     <value>ツールを削除</value>
   </data>
@@ -3889,6 +3892,9 @@
   <data name="It cannot record scores or change anything on your account. You can disconnect any time from Community Tools." xml:space="preserve">
     <value>スコアの記録やアカウントの変更はできません。コミュニティツールからいつでも接続を解除できます。</value>
   </data>
+  <data name="It comes off the {0} {1} board and everyone below it moves up one." xml:space="preserve">
+    <value>{0} {1} ボードから外れ、下の全員が一つずつ上がります。</value>
+  </data>
   <data name="It flags your tool for review — then post in the Discord and someone will look. There is no queue anybody watches." xml:space="preserve">
     <value>ツールに確認待ちの印を付けるだけです — そのあと Discord に書き込めば誰かが見ます。誰かが見張っている待ち行列はありません。</value>
   </data>
@@ -4800,6 +4806,9 @@
 	  <value>名前</value>
 	  
   <comment>名</comment></data>
+  <data name="Name this set" xml:space="preserve">
+    <value>このセットに名前をつける</value>
+  </data>
   <data name="Name Tool" xml:space="preserve">
     <value>ツール名</value>
   </data>
@@ -7060,6 +7069,9 @@
   <data name="Record it" xml:space="preserve">
     <value>記録する</value>
   </data>
+  <data name="Record it again from the season page. This cannot be undone." xml:space="preserve">
+    <value>シーズンページからもう一度記録してください。これは元に戻せません。</value>
+  </data>
   <data name="Record Score" xml:space="preserve">
     <value>スコアを記録</value>
   </data>
@@ -7224,6 +7236,9 @@
   </data>
   <data name="replaced {0}" xml:space="preserve">
     <value>{0} を置き換え</value>
+  </data>
+  <data name="Replaces the set already called that." xml:space="preserve">
+    <value>同じ名前のセットを置き換えます。</value>
   </data>
   <data name="Replay" xml:space="preserve">
     <value>再送</value>
@@ -8504,6 +8519,9 @@
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>Nノートごとに1回失敗し続けると、体力はどこかに収束します。崖の下ではゼロに収束します。曲線は緩やかに落ちるのではなく、崖のように落ちます。倍率を建て直すより速く倍率が死んでいるからです。</value>
   </data>
+  <data name="Take this session off the board?" xml:space="preserve">
+    <value>このセッションをボードから外しますか？</value>
+  </data>
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>
   </data>
@@ -9124,6 +9142,9 @@
   </data>
   <data name="Tick counts are inferred: tap counts come from community simfiles, the totals from real plays, and the difference is the ticks. Treat charts within a few percent of each other as tied — the numbers are estimates right now." xml:space="preserve">
     <value>ティック数は推定です。タップ数はコミュニティの譜面ファイル、合計は実プレイから取り、その差がティックです。数パーセント以内の譜面は同率とみなしてください。現時点でこの数値は推定値です。</value>
+  </data>
+  <data name="Tick some charts to save a set." xml:space="preserve">
+    <value>セットを保存するには譜面をいくつか選んでください。</value>
   </data>
   <data name="ticks" xml:space="preserve">
     <value>ティック</value>
@@ -10829,6 +10850,9 @@
   </data>
   <data name="{0} charts have no note count recorded, so they aren't compared." xml:space="preserve">
     <value>{0} 件の譜面はノーツ数が未記録のため、比較していません。</value>
+  </data>
+  <data name="{0} charts in that set are not in this book, so they were left out." xml:space="preserve">
+    <value>そのセットの {0} 譜面はこの本にないため、除外されました。</value>
   </data>
   <data name="{0} charts match the community tier" xml:space="preserve">
     <value>{0}譜面がコミュニティの評価と一致</value>

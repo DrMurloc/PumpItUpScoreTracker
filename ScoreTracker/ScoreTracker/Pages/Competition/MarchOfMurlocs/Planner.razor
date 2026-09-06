@@ -9,6 +9,7 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Components.MoM
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Enums
@@ -59,23 +60,29 @@ else
                         }
                     </div>
                 </div>
-                <div class="pl-energy">
-                    <span class="k">@L["Energy"]</span>
-                    <MudSelect T="MoMEnergy" Value="plan.Energy" ValueChanged="SetEnergy" Dense="true"
-                               Margin="Margin.Dense" Variant="Variant.Outlined" Disabled="_busy"
-                               data-testid="mom-plan-energy">
-                        @foreach (var energy in Energies)
-                        {
-                            <MudSelectItem T="MoMEnergy" Value="energy" title="@L[HintKey(energy)]">@L[LabelKey(energy)]</MudSelectItem>
-                        }
-                    </MudSelect>
-                </div>
+                @* Energy chooses which of your peers' scores to price an unplayed chart at, so
+                   with projections off there is nothing for it to choose between: every price is
+                   your own record. It appears with the checkbox that gives it something to do. *@
+                @if (_includeProjected)
+                {
+                    <div class="pl-energy">
+                        <span class="k">@L["Energy"]</span>
+                        <MudSelect T="MoMEnergy" Value="plan.Energy" ValueChanged="SetEnergy" Dense="true"
+                                   Margin="Margin.Dense" Variant="Variant.Outlined" Disabled="_busy"
+                                   data-testid="mom-plan-energy">
+                            @foreach (var energy in Energies)
+                            {
+                                <MudSelectItem T="MoMEnergy" Value="energy" title="@L[HintKey(energy)]">@L[LabelKey(energy)]</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </div>
+                }
             </div>
 
             @* A plan you can take to a machine is built from what you have actually scored, so
                charts the peers only think you would pass are opt-in. *@
             <MudCheckBox T="bool" Value="_includeProjected" ValueChanged="SetIncludeProjected" Dense="true"
-                         Color="Color.Primary" Disabled="@(_busy || plan.Energy == MoMEnergy.TopOfMyGame)"
+                         Color="Color.Primary" Disabled="_busy"
                          Class="pl-projected-toggle" data-testid="mom-plan-include-projected">
                 @L["Include projected scores"]
             </MudCheckBox>
@@ -122,7 +129,7 @@ else
     <section class="pl-proj" data-testid="mom-plan-projection">
         <div class="pl-proj-top">
             <div>
-                <span class="pl-proj-k">@L["Projected points"] · @L[LabelKey(plan.Energy)]</span>
+                <span class="pl-proj-k">@ProjectionLabel</span>
                 <div class="pl-proj-big @(_picked.Count == 0 ? "zero" : "")">@Points.ToString("N0")</div>
             </div>
             @if (Conversion is { } conversion)
@@ -134,9 +141,9 @@ else
             }
         </div>
         <p class="pl-say">
-            @(plan.Energy == MoMEnergy.TopOfMyGame
-                ? L["A ceiling — every chart at your best."]
-                : L["At what players like you score on each chart."])
+            @(_includeProjected && plan.Energy != MoMEnergy.TopOfMyGame
+                ? L["At what players like you score on each chart."]
+                : L["A ceiling — every chart at your best."])
         </p>
         <div class="four">
             <div><span class="k">@L["Charts"]</span><div class="v">@_picked.Count</div></div>
@@ -241,6 +248,10 @@ else
 
     <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="plan.Mix"></ChartDetailsDialog>
 
+    <MoMSavedSetsDialog @bind-Visible="_setsOpen" Names="@_sets.Select(x => x.Name).ToArray()"
+                        SuggestedName="@SuggestedSetName(plan)" CanSave="@(Picked.Count > 0)"
+                        OnSave="SaveSet" OnLoad="LoadSet" OnDelete="DeleteSet"></MoMSavedSetsDialog>
+
     <div class="mom-footer-bar">
         <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" OnClick="OpenSaved"
                    data-testid="mom-plan-saved">@L["Saved sets"]</MudButton>
@@ -249,7 +260,7 @@ else
                    StartIcon="@Icons.Material.Filled.Download" OnClick="DownloadCsv"
                    data-testid="mom-plan-csv">@L["Download CSV"]</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(_picked.Count == 0)"
-                   OnClick="SaveSet" data-testid="mom-plan-save">@L["Save this set"]</MudButton>
+                   OnClick="OpenSaved" data-testid="mom-plan-save">@L["Save this set"]</MudButton>
     </div>
 }
 
@@ -384,7 +395,6 @@ else
     [Inject] public IMediator Mediator { get; set; } = default!;
     [Inject] public ICurrentUserAccessor CurrentUser { get; set; } = default!;
     [Inject] public IUiSettingsAccessor UiSettings { get; set; } = default!;
-    [Inject] public IDialogService Dialogs { get; set; } = default!;
     [Inject] public ISnackbar Snackbar { get; set; } = default!;
     [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
 
@@ -410,6 +420,9 @@ else
 
     private bool _detailsOpen;
     private Chart? _detailsChart;
+
+    private bool _setsOpen;
+    private List<SavedSet> _sets = new();
 
     /// <summary>The set, as ticked. Empty on arrival: suggesting is an offer, not the starting position.</summary>
     private readonly List<Guid> _picked = new();
@@ -490,6 +503,10 @@ else
     private async Task SetIncludeProjected(bool include)
     {
         _includeProjected = include;
+        // Top of my game prices every chart at your own best, so it is the one rung that projects
+        // nothing. Turning projections on while it is chosen would show a selector that changes
+        // nothing, so the rung moves to the one the query defaults to.
+        if (include && _energy == MoMEnergy.TopOfMyGame) _energy = MoMEnergy.Good;
         if (_plan is { } plan) await Reload(plan.BoardId);
         // A set built from charts that just left the book is not a set any more.
         _picked.RemoveAll(id => _plan?.Charts.All(c => c.Chart.Id != id) ?? true);
@@ -547,6 +564,14 @@ else
 
     /// <summary>Every number recomputes from what is ticked, not from what was suggested.</summary>
     private int Points => Picked.Sum(c => c.Points);
+
+    /// <summary>
+    ///     The projection's heading. The energy rung is named only while it is on screen doing
+    ///     something; with projections off the sentence underneath says what the numbers are.
+    /// </summary>
+    private string ProjectionLabel => _includeProjected
+        ? $"{L["Projected points"]} · {L[LabelKey(_plan?.Energy ?? _energy)]}"
+        : L["Projected points"];
 
     /// <summary>
     ///     What was banked as a share of the set on screen. The denominator is the ticked set, not
@@ -632,50 +657,60 @@ else
         await UiSettings.SetSetting(DensityKey, density.ToString());
     }
 
-    private async Task SaveSet()
-    {
-        if (_plan is not { } plan || Picked.Count == 0) return;
-
-        var suggested = L["{0} — {1} charts, up to {2}", TypeName(plan.ChartType), Picked.Count,
-            TypeName(plan.ChartType) + Picked.Max(c => (int)c.Chart.Level)];
-        var name = await Dialogs.ShowMessageBox(new MessageBoxOptions
-        {
-            Title = L["Save this set"],
-            Message = suggested,
-            YesText = L["Save"],
-            CancelText = L["Cancel"]
-        });
-        if (name != true) return;
-
-        var sets = await LoadSets();
-        sets.RemoveAll(s => s.Name == suggested);
-        sets.Insert(0, new SavedSet(suggested, _picked.ToArray()));
-        await UiSettings.SetSetting(SetsKey, JsonSerializer.Serialize(sets.Take(20)));
-        Snackbar.Add(L["Saved."], Severity.Success);
-    }
+    /// <summary>What the name field opens on — a description of the set, which the player may keep.</summary>
+    private string SuggestedSetName(MoMPlanView plan) =>
+        Picked.Count == 0
+            ? string.Empty
+            : L["{0} — {1} charts, up to {2}", TypeName(plan.ChartType), Picked.Count,
+                TypeName(plan.ChartType) + Picked.Max(c => (int)c.Chart.Level)];
 
     private async Task OpenSaved()
     {
-        var sets = await LoadSets();
-        if (sets.Count == 0)
-        {
-            Snackbar.Add(L["No saved sets yet."], Severity.Info);
-            return;
-        }
+        _sets = await LoadSets();
+        _setsOpen = true;
+    }
 
-        var chosen = await Dialogs.ShowMessageBox(new MessageBoxOptions
-        {
-            Title = L["Saved sets"],
-            Message = string.Join(" · ", sets.Select(s => s.Name)),
-            YesText = L["Load the newest"],
-            CancelText = L["Cancel"]
-        });
-        if (chosen != true) return;
+    private async Task SaveSet(string name)
+    {
+        if (Picked.Count == 0) return;
+
+        // One set per name, newest first. Saving over a name is the player's own choice now that
+        // they typed it, rather than two different sets colliding on a generated description.
+        _sets.RemoveAll(x => x.Name == name);
+        _sets.Insert(0, new SavedSet(name, Picked.Select(c => c.Chart.Id).ToArray()));
+        await PersistSets();
+        Snackbar.Add(L["Saved."], Severity.Success);
+    }
+
+    private void LoadSet(int index)
+    {
+        if (index < 0 || index >= _sets.Count) return;
+
+        // A saved set may name charts the book no longer holds — the projected ones leave it when
+        // the checkbox goes back off — and those cannot be ticked, so they do not travel.
+        var wanted = _sets[index].ChartIds
+            .Where(id => _plan?.Charts.Any(c => c.Chart.Id == id) == true)
+            .ToArray();
+        var dropped = _sets[index].ChartIds.Count - wanted.Length;
 
         _picked.Clear();
-        _picked.AddRange(sets[0].ChartIds.Where(id => _plan?.Charts.Any(c => c.Chart.Id == id) == true));
+        _picked.AddRange(wanted);
         _handPicked = true;
+        if (dropped > 0)
+            Snackbar.Add(L["{0} charts in that set are not in this book, so they were left out.", dropped],
+                Severity.Info);
     }
+
+    private async Task DeleteSet(int index)
+    {
+        if (index < 0 || index >= _sets.Count) return;
+
+        _sets.RemoveAt(index);
+        await PersistSets();
+    }
+
+    private Task PersistSets() =>
+        UiSettings.SetSetting(SetsKey, JsonSerializer.Serialize(_sets.Take(20)));
 
     /// <summary>
     ///     The set walks to a machine as a numbered list. No backend at all — a client-side blob,

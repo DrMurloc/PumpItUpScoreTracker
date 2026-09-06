@@ -19636,6 +19636,14 @@ a.peer-pop-row:hover {
 .mom-entry .mud-input-adornment .mud-icon-root, .pl-controls .mud-input-adornment .mud-icon-root { font-size: 18px; }
 .mom-entry .mud-input-adornment .mud-button-root, .pl-controls .mud-input-adornment .mud-button-root { padding: 2px; }
 .pl-projected-toggle { margin-top: 10px; font-size: 13px; }
+/* The delete sits under the three ways out, not beside them: it is the one that cannot be undone. */
+.mom-published-delete { margin-top: 10px; padding-top: 10px; border-top: 1px solid color-mix(in srgb, var(--mix-ink) 8%, transparent); }
+.pl-saveset { display: flex; align-items: center; gap: 10px; }
+.pl-saveset .mud-input-control { flex: 1 1 auto; }
+.pl-saveset-note { display: block; margin-top: 6px; color: var(--mix-ink-muted); }
+.pl-setlist { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+.pl-setrow { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 8px; background: color-mix(in srgb, var(--mix-ink) 5%, transparent); }
+.pl-setrow-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
 .pl-table-chart { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
 .pl-table-chart .w700 { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 26ch; }
 

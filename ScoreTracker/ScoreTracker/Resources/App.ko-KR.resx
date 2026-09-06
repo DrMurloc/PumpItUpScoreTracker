@@ -2347,6 +2347,9 @@
   <data name="Delete this community and everything in it? This cannot be undone." xml:space="preserve">
     <value>이 커뮤니티와 모든 데이터를 삭제하시겠습니까? 되돌릴 수 없습니다.</value>
   </data>
+  <data name="Delete this session" xml:space="preserve">
+    <value>이 세션 삭제</value>
+  </data>
   <data name="Delete tool" xml:space="preserve">
     <value>도구 삭제</value>
   </data>
@@ -3871,6 +3874,9 @@
   <data name="It cannot record scores or change anything on your account. You can disconnect any time from Community Tools." xml:space="preserve">
     <value>점수를 기록하거나 계정을 변경할 수는 없습니다. 커뮤니티 도구에서 언제든 연결을 해제할 수 있습니다.</value>
   </data>
+  <data name="It comes off the {0} {1} board and everyone below it moves up one." xml:space="preserve">
+    <value>{0} {1} 보드에서 내려가고 아래 순위가 모두 한 칸씩 올라갑니다.</value>
+  </data>
   <data name="It flags your tool for review — then post in the Discord and someone will look. There is no queue anybody watches." xml:space="preserve">
     <value>도구를 검토 대상으로 표시할 뿐입니다 — 그다음 디스코드에 글을 남기면 누군가 확인합니다. 지켜보는 대기열은 없습니다.</value>
   </data>
@@ -4770,6 +4776,9 @@
   </data>
   <data name="Name" xml:space="preserve">
     <value>이름</value>
+  </data>
+  <data name="Name this set" xml:space="preserve">
+    <value>이 세트의 이름</value>
   </data>
   <data name="Name Tool" xml:space="preserve">
     <value>도구 이름</value>
@@ -7021,6 +7030,9 @@
   <data name="Record it" xml:space="preserve">
     <value>기록하기</value>
   </data>
+  <data name="Record it again from the season page. This cannot be undone." xml:space="preserve">
+    <value>시즌 페이지에서 다시 기록하세요. 되돌릴 수 없습니다.</value>
+  </data>
   <data name="Record Score" xml:space="preserve">
     <value>점수 기록</value>
   </data>
@@ -7182,6 +7194,9 @@
   </data>
   <data name="replaced {0}" xml:space="preserve">
     <value>{0} 대체</value>
+  </data>
+  <data name="Replaces the set already called that." xml:space="preserve">
+    <value>같은 이름의 세트를 대체합니다.</value>
   </data>
   <data name="Replay" xml:space="preserve">
     <value>재전송</value>
@@ -8446,6 +8461,9 @@
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>N노트마다 브레이크를 계속 내면 라이프는 어딘가로 수렴합니다. 절벽 아래에서는 0으로 수렴합니다. 곡선은 완만해지는 게 아니라 뚝 떨어집니다. 배율을 다시 쌓는 속도보다 배율이 죽는 속도가 빠르기 때문입니다.</value>
   </data>
+  <data name="Take this session off the board?" xml:space="preserve">
+    <value>이 세션을 보드에서 내릴까요?</value>
+  </data>
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>
   </data>
@@ -9066,6 +9084,9 @@
   </data>
   <data name="Tick counts are inferred: tap counts come from community simfiles, the totals from real plays, and the difference is the ticks. Treat charts within a few percent of each other as tied — the numbers are estimates right now." xml:space="preserve">
     <value>틱 수는 추정값입니다. 탭 수는 커뮤니티 채보 파일에서, 합계는 실제 플레이에서 가져오며 그 차이가 틱입니다. 몇 퍼센트 이내의 채보는 동률로 보시기 바랍니다. 현재 이 수치는 추정치입니다.</value>
+  </data>
+  <data name="Tick some charts to save a set." xml:space="preserve">
+    <value>세트를 저장하려면 차트를 몇 개 선택하세요.</value>
   </data>
   <data name="ticks" xml:space="preserve">
     <value>틱</value>
@@ -10761,6 +10782,9 @@
   </data>
   <data name="{0} charts have no note count recorded, so they aren't compared." xml:space="preserve">
     <value>{0}개 채보는 노트 수가 기록되어 있지 않아 비교하지 않았습니다.</value>
+  </data>
+  <data name="{0} charts in that set are not in this book, so they were left out." xml:space="preserve">
+    <value>그 세트의 {0}개 차트는 이 북에 없어서 제외됐습니다.</value>
   </data>
   <data name="{0} charts match the community tier" xml:space="preserve">
     <value>{0}개 채보가 커뮤니티 티어와 일치</value>
