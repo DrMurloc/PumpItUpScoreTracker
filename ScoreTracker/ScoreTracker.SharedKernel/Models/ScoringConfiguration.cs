@@ -26,7 +26,10 @@ namespace ScoreTracker.SharedKernel.Models
             { ChartType.Double, 1.0 },
             { ChartType.CoOp, 1.0 },
             { ChartType.SinglePerformance, 0.0 },
-            { ChartType.DoublePerformance, 0.0 }
+            { ChartType.DoublePerformance, 0.0 },
+            // Half-double is a legacy-only layout: priced like the performance types, so a lookup
+            // for it answers zero instead of throwing.
+            { ChartType.HalfDouble, 0.0 }
         };
 
         public IDictionary<PhoenixLetterGrade, double> LetterGradeModifiers { get; set; } =

@@ -1,0 +1,185 @@
+@using MediatR
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
+@namespace ScoreTracker.Web.Components.MoM
+@inject IMediator Mediator
+@* Compare (docs/design/march-of-murlocs.md §11.3, D26 — last on the page): against another session
+   on this board, or against the owner's own past seasons on the same lineage, where the older
+   session is re-priced under the newer season and the ledger splits what the balance moved from
+   what the tables moved (D20). Both modes list the charts the two sessions share: a total says who
+   won, this says where. Never across chart types or mixes (D15) — the picker only offers what may be
+   compared. *@
+<div class="sbd-section" data-testid="mom-compare">
+    <div class="mom-cmp-head">
+        <span class="sbd-eyebrow">@L["Compare"]</span>
+        <MudButtonGroup OverrideStyles="false" Class="mom-seggroup">
+            <MudButton Size="Size.Small" Color="Color.Primary" Variant="@(_mode == Mode.Board ? Variant.Filled : Variant.Outlined)"
+                       OnClick="() => SetMode(Mode.Board)" data-testid="mom-cmp-board">@L["This board"]</MudButton>
+            <MudButton Size="Size.Small" Color="Color.Primary" Variant="@(_mode == Mode.Seasons ? Variant.Filled : Variant.Outlined)"
+                       Disabled="Session.OwnersPastSessions.Count == 0" OnClick="() => SetMode(Mode.Seasons)" data-testid="mom-cmp-seasons">
+                @(IsOwn ? L["My past seasons"] : L["Their past seasons"])
+            </MudButton>
+        </MudButtonGroup>
+        @if (_mode == Mode.Board && Others.Count > 0)
+        {
+            <MudSelect T="Guid?" Value="_target" ValueChanged="SetTarget" Dense="true" Margin="Margin.Dense" Variant="Variant.Outlined"
+                       Class="mom-cmp-select" data-testid="mom-cmp-target">
+                @foreach (var s in Others)
+                {
+                    <MudSelectItem T="Guid?" Value="@((Guid?)s.SessionId)">@(s.Player?.Name.ToString() ?? L["Unknown player"]) · @MoMText.Ordinal(s.Place, L)</MudSelectItem>
+                }
+            </MudSelect>
+        }
+        else if (_mode == Mode.Seasons)
+        {
+            <MudSelect T="Guid?" Value="_target" ValueChanged="SetTarget" Dense="true" Margin="Margin.Dense" Variant="Variant.Outlined"
+                       Class="mom-cmp-select" data-testid="mom-cmp-target">
+                @foreach (var p in Session.OwnersPastSessions)
+                {
+                    <MudSelectItem T="Guid?" Value="@((Guid?)p.SessionId)">@p.Season.Name · @p.PublishedAt.ToString("MMM yyyy")</MudSelectItem>
+                }
+            </MudSelect>
+        }
+    </div>
+    @if (_mode == Mode.Board && Others.Count == 0)
+    {
+        <p class="mom-cmp-empty">@L["Nobody else has played this board yet."]</p>
+    }
+    else if (_comparison is { } c)
+    {
+        <div class="mom-cmp-grid" data-testid="mom-cmp-grid">
+            <div class="mom-cmp-cell">
+                <span class="k">@L["Charts"]</span>
+                <div class="pair">@c.Mine.ChartsPlayed<span class="them">@L["vs"] @c.Theirs.ChartsPlayed</span></div>
+                @Delta(c.Mine.ChartsPlayed - c.Theirs.ChartsPlayed, v => L["{0} charts", v], false)
+            </div>
+            <div class="mom-cmp-cell">
+                <span class="k">@L["Avg difficulty"]</span>
+                <div class="pair">@c.Mine.AverageBalancedLevel.ToString("F2")<span class="them">@L["vs"] @c.Theirs.AverageBalancedLevel.ToString("F2")</span></div>
+                @Delta(c.Mine.AverageBalancedLevel - c.Theirs.AverageBalancedLevel, v => v.ToString("F2"), false)
+            </div>
+            <div class="mom-cmp-cell">
+                <span class="k">@L["Avg grade"]</span>
+                <div class="pair">
+                    <LetterGradeIcon Grade="c.Mine.AverageGrade" Height="20"></LetterGradeIcon>
+                    <span class="them">@L["vs"] <LetterGradeIcon Grade="c.Theirs.AverageGrade" Height="16"></LetterGradeIcon></span>
+                </div>
+                @Delta((int)c.Mine.AverageScore - (int)c.Theirs.AverageScore, v => v.ToString("N0"), false)
+            </div>
+            <div class="mom-cmp-cell">
+                <span class="k">@L["Downtime"]</span>
+                <div class="pair">@MoMText.MinutesSeconds(c.Mine.Downtime)<span class="them">@L["vs"] @MoMText.MinutesSeconds(c.Theirs.Downtime)</span></div>
+                @Delta((c.Mine.Downtime - c.Theirs.Downtime).TotalSeconds, v => MoMText.MinutesSeconds(TimeSpan.FromSeconds(v)), true)
+            </div>
+        </div>
+        @if (c.SameBoard)
+        {
+            <p class="mom-verdict" data-testid="mom-verdict">@Verdict(c)</p>
+        }
+        else if (c.Repricing is { } split)
+        {
+            var newer = c.OlderIsMine ? c.OtherSeason.Name : Session.Season.Name;
+            var older = c.OlderIsMine ? Session.Season.Name : c.OtherSeason.Name;
+            var newerTotal = c.OlderIsMine ? c.Theirs.TotalScore : c.Mine.TotalScore;
+            <div class="sbd-section-head mom-cmp-sub">
+                <span class="sbd-eyebrow">@L["What changed underneath you"]</span>
+                <span class="sbd-section-note">@L["the old session re-priced under this season's balance and tables"]</span>
+            </div>
+            <div class="mom-ledger" data-testid="mom-ledger">
+                <div><span>@older</span><span></span><span class="r">@split.OldTotal.ToString("N0")</span></div>
+                <div><span class="sub">@L["charts re-rated"]</span><span class="r d @Sign(split.ChartsReRated)">@Signed(split.ChartsReRated)</span><span></span></div>
+                <div><span class="sub">@L["scoring tables re-cut"]</span><span class="r d @Sign(split.TablesReCut)">@Signed(split.TablesReCut)</span><span></span></div>
+                <div><span>@L["priced as {0}", newer]</span><span class="r muted">@Signed(split.TotalShift)</span><span class="r">@split.RepricedTotal.ToString("N0")</span></div>
+                <div class="hi"><span><b>@newer</b> <span class="muted">— @(IsOwn ? L["You"] : L["them"])</span></span><span class="r d @Sign(newerTotal - split.RepricedTotal)">@Signed(newerTotal - split.RepricedTotal)</span><span class="r">@newerTotal.ToString("N0")</span></div>
+            </div>
+            <p class="mom-ledger-note">@L["The middle lines multiply, so they add to less than the total."]</p>
+        }
+        @if (c.Shared.Count > 0)
+        {
+            <div class="sbd-section-head mom-cmp-sub">
+                <span class="sbd-eyebrow">@(c.SameBoard ? L["Charts you both played"] : L["Charts in both sessions"])</span>
+                <span class="sbd-section-note">@c.Shared.Count@(c.SameBoard ? $" · {L["worst gap first"]}" : string.Empty)</span>
+            </div>
+            <div data-testid="mom-shared">
+                @foreach (var s in c.Shared)
+                {
+                    <div class="sbd-row mom-gap-row" data-testid="mom-shared-row">
+                        <DifficultyBubble Chart="s.Chart" Small="true"></DifficultyBubble>
+                        <SongImage Song="s.Chart.Song" Small="true"></SongImage>
+                        <div class="sbd-row-body">
+                            <div class="sbd-row-line"><span class="mom-gap-song">@s.Chart.Song.Name</span></div>
+                            <div class="sbd-row-line">
+                                <span class="mom-gap-vs">@if (!c.SameBoard) { <span class="muted">@L["now"]</span> }<ScoreBreakdown Score="s.MyScore" Plate="s.MyPlate" IsBroken="s.MyBroken" Mix="Session.Mix" ShowScore="true" Stacked="true"></ScoreBreakdown><span class="mom-gap-pts">@s.MyPoints.ToString("N0")</span></span>
+                                <span class="mom-gap-vs"><span class="muted">@(c.SameBoard ? L["vs"] : L["then"])</span><ScoreBreakdown Score="s.TheirScore" Plate="s.TheirPlate" IsBroken="s.TheirBroken" Mix="Session.Mix" ShowScore="true" Stacked="true"></ScoreBreakdown><span class="num muted">@s.TheirPoints.ToString("N0")</span></span>
+                            </div>
+                        </div>
+                        <span class="mom-gap d @Sign(s.Gap)">@Signed(s.Gap)</span>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+@code {
+    private enum Mode { Board, Seasons }
+
+    [Parameter] [EditorRequired] public MoMSessionView Session { get; set; } = null!;
+    [Parameter] public bool IsOwn { get; set; }
+    /// <summary>The session under comparison, so the host can light it on the four-number strips.</summary>
+    [Parameter] public EventCallback<Guid?> OnTargetChanged { get; set; }
+
+    private Mode _mode = Mode.Board;
+    private Guid? _target;
+    private MoMComparison? _comparison;
+
+    private IReadOnlyList<MoMBoardSessionSummary> Others =>
+        Session.BoardSessions.Where(s => s.SessionId != Session.SessionId).ToArray();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // The session one place above yours — the most motivating comparison — or the one
+        // below when you lead the board.
+        var above = Others.Where(s => s.Place < Session.Place).OrderByDescending(s => s.Place).FirstOrDefault()
+                    ?? Others.OrderBy(s => s.Place).FirstOrDefault();
+        if (above != null) await SetTarget(above.SessionId);
+    }
+
+    private async Task SetMode(Mode mode)
+    {
+        if (_mode == mode) return;
+        _mode = mode;
+        var first = mode == Mode.Board ? Others.OrderBy(s => s.Place).FirstOrDefault()?.SessionId : Session.OwnersPastSessions.FirstOrDefault()?.SessionId;
+        _comparison = null;
+        _target = null;
+        if (first != null) await SetTarget(first);
+        else await OnTargetChanged.InvokeAsync(null);
+    }
+
+    private async Task SetTarget(Guid? target)
+    {
+        _target = target;
+        _comparison = target == null ? null : await Mediator.Send(new CompareMoMSessionsQuery(Session.SessionId, target.Value));
+        await OnTargetChanged.InvokeAsync(_mode == Mode.Board ? target : null);
+    }
+
+    private static string Sign(double v) => v > 0 ? "up" : v < 0 ? "down" : "flat";
+    private static string Signed(int v) => v > 0 ? $"+{v:N0}" : v < 0 ? $"−{Math.Abs(v):N0}" : "±0";
+
+    private RenderFragment Delta(double v, Func<double, string> format, bool lessIsBetter) => @<span class="d @((v == 0) ? "flat" : (v > 0) != lessIsBetter ? "up" : "down")">@(v > 0 ? "+" : v < 0 ? "−" : "±")@format(Math.Abs(v))</span>;
+
+    private string Verdict(MoMComparison c)
+    {
+        var parts = new List<string>();
+        var lead = c.Mine.TotalScore - c.Theirs.TotalScore;
+        parts.Add(lead >= 0 ? L["{0} ahead", lead.ToString("N0")] : L["{0} behind", (-lead).ToString("N0")]);
+        if (c.Mine.ChartsPlayed > c.Theirs.ChartsPlayed) parts.Add(L["{0} more charts", c.Mine.ChartsPlayed - c.Theirs.ChartsPlayed]);
+        else if (c.Mine.ChartsPlayed < c.Theirs.ChartsPlayed) parts.Add(L["{0} fewer charts", c.Theirs.ChartsPlayed - c.Mine.ChartsPlayed]);
+        if (c.Mine.Downtime < c.Theirs.Downtime) parts.Add(L["{0} less downtime", MoMText.MinutesSeconds(c.Theirs.Downtime - c.Mine.Downtime)]);
+        else if (c.Mine.Downtime > c.Theirs.Downtime) parts.Add(L["{0} more downtime", MoMText.MinutesSeconds(c.Mine.Downtime - c.Theirs.Downtime)]);
+        if ((int)c.Mine.AverageScore < (int)c.Theirs.AverageScore) parts.Add(L["lower average score"]);
+        else if ((int)c.Mine.AverageScore > (int)c.Theirs.AverageScore) parts.Add(L["higher average score"]);
+        return string.Join(" · ", parts);
+    }
+}

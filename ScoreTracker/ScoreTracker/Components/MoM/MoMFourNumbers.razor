@@ -1,0 +1,81 @@
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
+@namespace ScoreTracker.Web.Components.MoM
+@* "Where the points came from" (docs/design/march-of-murlocs.md §11.6): total score is how many
+   charts × how hard × how well, capped by time, so a session is these four numbers. Each carries
+   its place on the board and a strip with one mark per session — yours lit, the compare target
+   in the accent — so the number is read against the board rather than alone. Average difficulty
+   is the season's frozen balanced level, the folder figure beside it so the half-level gap never
+   reads as a bug. "The four levers" never reaches the screen. *@
+<div class="mom-four" data-testid="mom-four">
+    <div>
+        <span class="k">@L["Charts"]</span>
+        <div class="v">@Levers.ChartsPlayed</div>
+        <span class="sub">@L["{0} of songs", MoMText.HoursMinutesSeconds(Levers.SongTime)]</span>
+        @Rank(Places.Charts, L["Most on the board"])
+        @Dots(s => s.Levers.ChartsPlayed, true)
+    </div>
+    <div>
+        <span class="k">@L["Avg difficulty"]</span>
+        <div class="v">@Levers.AverageBalancedLevel.ToString("F2")</div>
+        <span class="sub">@L["balanced · {0} by folder", Levers.AverageFolderLevel.ToString("F2")]</span>
+        @Rank(Places.Difficulty, L["Highest on the board"])
+        @Dots(s => s.Levers.AverageBalancedLevel, true)
+    </div>
+    <div>
+        <span class="k">@L["Avg grade"]</span>
+        <div class="v">
+            @if (Levers.ChartsPlayed > 0)
+            {
+                <LetterGradeIcon Grade="Levers.AverageGrade" Height="26"></LetterGradeIcon>
+            }
+            <span class="v-score">@(((int)Levers.AverageScore).ToString("N0"))</span>
+        </div>
+        <span class="sub">@L["avg score"]</span>
+        @Rank(Places.Grade, L["Cleanest on the board"])
+        @Dots(s => (int)s.Levers.AverageScore, true)
+    </div>
+    <div>
+        <span class="k">@L["Downtime"]</span>
+        <div class="v">@MoMText.MinutesSeconds(Levers.Downtime)</div>
+        <span class="sub">@L["not on a chart"]</span>
+        @Rank(Places.Downtime, L["Least on the board"])
+        @Dots(s => s.Levers.Downtime.TotalSeconds, false)
+    </div>
+</div>
+@code {
+    [Parameter] [EditorRequired] public MoMLevers Levers { get; set; } = null!;
+    [Parameter] [EditorRequired] public MoMLeverPlaces Places { get; set; } = null!;
+    [Parameter] [EditorRequired] public IReadOnlyList<MoMBoardSessionSummary> Board { get; set; } = Array.Empty<MoMBoardSessionSummary>();
+    [Parameter] [EditorRequired] public Guid SessionId { get; set; }
+
+    /// <summary>The compare target, lit in the accent on every strip; null lights nobody else.</summary>
+    [Parameter] public Guid? HighlightSessionId { get; set; }
+
+    private bool OnBoard => Board.Any(s => s.SessionId == SessionId);
+
+    // Place 1 gets the superlative; a draft off the board says so instead of ranking.
+    private RenderFragment Rank(int place, string superlative) => @<text>
+        @if (!OnBoard)
+        {
+            <span class="rank muted">@L["not on the board"]</span>
+        }
+        else if (place == 1)
+        {
+            <span class="rank top">@superlative</span>
+        }
+        else
+        {
+            <span class="rank">@MoMText.Ordinal(place, L) @L["of {0}", Places.Of]</span>
+        }
+    </text>;
+
+    // Worst on the left, best on the right, so "you" reads as a position along the board.
+    private RenderFragment Dots(Func<MoMBoardSessionSummary, double> value, bool higherIsBetter) => @<span class="dots" aria-hidden="true">
+        @foreach (var s in higherIsBetter ? Board.OrderBy(value) : Board.OrderByDescending(value))
+        {
+            <i class="@(s.SessionId == SessionId ? "you" : s.SessionId == HighlightSessionId ? "them" : null)"></i>
+        }
+    </span>;
+}

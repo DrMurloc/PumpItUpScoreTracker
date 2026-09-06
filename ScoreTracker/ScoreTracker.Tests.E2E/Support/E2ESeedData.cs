@@ -403,4 +403,45 @@ public sealed class E2ESeedData
             $"INSERT INTO [scores].[TierListEntry] ([Id], [TierListName], [ChartId], [Category], [Order]) VALUES ({Guid.NewGuid()}, {tierListName}, {chartId}, {category}, {order})",
             cancellationToken);
     }
+
+    /// <summary>
+    ///     A live March of Murlocs season with one Phoenix Doubles board (EventCompetition-internal
+    ///     tables — SQL, per the house rule). The frozen configuration is the minimal JSON the board
+    ///     reader accepts; the read surfaces print stored figures and never re-score, so no table needs
+    ///     to be complete.
+    /// </summary>
+    public async Task<(Guid SeasonId, Guid BoardId)> SeedMoMSeasonAsync(string name, DateTimeOffset startsAt,
+        DateTimeOffset endsAt, CancellationToken cancellationToken = default)
+    {
+        var seasonId = Guid.NewGuid();
+        var boardId = Guid.NewGuid();
+        var config = "{\"Id\":\"" + boardId + "\",\"Name\":\"March of Murlocs " + name + " - Doubles\"," +
+                     "\"LevelRatings\":{},\"SongTypeModifiers\":{},\"ChartTypeModifiers\":{},\"LetterGradeModifiers\":{}," +
+                     "\"PlateModifiers\":{},\"ChartModifiers\":{},\"CalculationType\":0,\"PgModifier\":1.6,\"MinimumScore\":0," +
+                     "\"CustomFormula\":\"\",\"StageBreakModifier\":1.0,\"AdjustToTime\":true,\"ContinuousLetterGradeScale\":true," +
+                     "\"MaxTime\":\"01:45:00\",\"AllowRepeats\":false}";
+        await using var context = await _factory.CreateDbContextAsync(cancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO [scores].[MoMSeason] ([Id], [Name], [StartsAt], [EndsAt], [CreatedAt]) VALUES ({seasonId}, {name}, {startsAt}, {endsAt}, {startsAt})",
+            cancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO [scores].[MoMBoard] ([Id], [SeasonId], [MixId], [ChartType], [ScoringConfig]) VALUES ({boardId}, {seasonId}, {PhoenixMixId}, {(byte)1}, {config})",
+            cancellationToken);
+        return (seasonId, boardId);
+    }
+
+    /// <summary>A published session on a MoM board, with one chart row and the derived columns the board prints.</summary>
+    public async Task<Guid> SeedMoMSessionAsync(Guid boardId, Guid userId, Guid chartId, int score, int points,
+        DateTimeOffset publishedAt, CancellationToken cancellationToken = default)
+    {
+        var id = Guid.NewGuid();
+        await using var context = await _factory.CreateDbContextAsync(cancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO [scores].[MoMSession] ([Id], [BoardId], [UserId], [PublishedAt], [TotalScore], [ChartsPlayed], [RestTime], [AverageDifficulty], [AverageGrade], [LowestLevel], [HighestLevel], [CreatedAt], [UpdatedAt]) VALUES ({id}, {boardId}, {userId}, {publishedAt}, {points}, 1, {TimeSpan.FromMinutes(103).Ticks}, 24.5, 8, 24, 24, {publishedAt}, {publishedAt})",
+            cancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO [scores].[MoMSessionChart] ([SessionId], [Ordinal], [ChartId], [Score], [Plate], [IsBroken], [SessionScore], [BonusPoints], [PlayedAt]) VALUES ({id}, 0, {chartId}, {score}, {"FairGame"}, 0, {points}, 0, NULL)",
+            cancellationToken);
+        return id;
+    }
 }

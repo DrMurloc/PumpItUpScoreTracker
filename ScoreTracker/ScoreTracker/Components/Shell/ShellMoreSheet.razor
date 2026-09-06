@@ -64,8 +64,12 @@
                         <ShellMenuItem Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</ShellMenuItem>
                     }
                     <ShellMenuItem Href="/ChartRandomizer" Icon="@Icons.Material.Filled.Casino">@L["Chart Randomizer"]</ShellMenuItem>
-                    <ShellMenuItem Href="/Tournaments/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</ShellMenuItem>
-                    @foreach (var tourney in Model.HighlightedEvents)
+                    @if (Model.CurrentMix.HasMarchOfMurlocs())
+                    {
+                        <ShellMenuItem Href="/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</ShellMenuItem>
+                    }
+                    @* The live season's boards are highlighted MoM records; they live under the one link above. *@
+                    @foreach (var tourney in Model.HighlightedEvents.Where(t => !t.IsMoM))
                     {
                         @if (tourney.Type == TournamentType.Stamina)
                         {

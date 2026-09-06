@@ -224,3 +224,22 @@ of you on the PUMBILITY level ladder holding a full 50-chart pool of the type �
 | you stand on {0} | você está em {0} | Same as `you sit at {0}`; {0} is a rung name in the game's notation, never translated. |
 | Peers IQR | IQR dos pares | The `/Pumbility` targets' column: the peers' first and third quartiles as two grades. `IQR` rather than `IIQ`/`AIQ` — the site's audience reads the English acronym on every stats tool, and the label exists to tell a reader who knows the term that it is not a min–max. |
 | From {0} peers | Com {0} pares | The column's tooltip; same shape as `From {0} scores` → `Com {0} pontuações`. |
+
+## March of Murlocs (2026-09-05)
+
+Terms fixed by the Slice 4a read surfaces ([march-of-murlocs.md](design/march-of-murlocs.md) §12.2):
+the Season page, the Session Breakdown, the seasons dialog and the share card. "Session" is the
+event's one word for a run (D22) and follows the existing Session / Sessions keys.
+
+| English | pt-BR |
+|---|---|
+| season | temporada |
+| session | sessão |
+| board | quadro |
+| downtime | descanso |
+| balanced level | nível balanceado |
+| Draft | Rascunho |
+| Planner | Planejador |
+| Past seasons | Temporadas anteriores |
+| Doubles / Singles | Doubles / Singles (unchanged) |
+| 1st / 2nd / 3rd / 4th | {0}º for every place |

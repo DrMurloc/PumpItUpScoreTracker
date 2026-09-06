@@ -284,4 +284,29 @@ public sealed class ScoringConfigurationTests
 
         Assert.Equal(config.LevelRatings[DifficultyLevel.From(20)], config.GetScorelessScore(chart));
     }
+
+    // ---- Default tables ----
+
+    /// <summary>
+    ///     Every value the engine can be asked about has a default row: a lookup for a value with no row
+    ///     throws, and the stamina planner looks every value of every enum up when it draws its panels.
+    /// </summary>
+    [Fact]
+    public void TheDefaultTablesCarryEveryEnumValueAndEveryLevel()
+    {
+        var config = new ScoringConfiguration();
+
+        Assert.All(Enum.GetValues<ChartType>(), t => Assert.True(config.ChartTypeModifiers.ContainsKey(t), t.ToString()));
+        Assert.All(Enum.GetValues<SongType>(), t => Assert.True(config.SongTypeModifiers.ContainsKey(t), t.ToString()));
+        Assert.All(Enum.GetValues<PhoenixLetterGrade>(), g => Assert.True(config.LetterGradeModifiers.ContainsKey(g), g.ToString()));
+        Assert.All(Enum.GetValues<PhoenixPlate>(), p => Assert.True(config.PlateModifiers.ContainsKey(p), p.ToString()));
+        Assert.All(DifficultyLevel.All, l => Assert.True(config.LevelRatings.ContainsKey(l), l.ToString()));
+    }
+
+    /// <summary>Half-double earns nothing in a stamina session, the same as the performance types.</summary>
+    [Fact]
+    public void HalfDoubleIsPricedAtZeroByDefault()
+    {
+        Assert.Equal(0.0, new ScoringConfiguration().ChartTypeModifiers[ChartType.HalfDouble]);
+    }
 }

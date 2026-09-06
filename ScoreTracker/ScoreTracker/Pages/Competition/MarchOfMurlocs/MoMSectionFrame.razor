@@ -1,0 +1,36 @@
+@namespace ScoreTracker.Web.Pages.Competition.MoM
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Components.MoM
+@using ScoreTracker.Web.Services
+@* The March of Murlocs section chrome (docs/design/march-of-murlocs.md §12.2): the nav chips
+   in the PUMBILITY frame's idiom, and the Past-seasons dialog island. The chips are real links,
+   which is the site's navigation model anyway; Past seasons is the one control that needs a
+   circuit, so it is a static button the island answers through mom-seasons.js — inert, honest
+   HTML until the circuit connects, exactly as the challenges hub does it. The frame is static
+   itself; only the island declares a render mode, so a static page can host it. *@
+<nav class="pmb-frame-nav mom-frame-nav" aria-label="March of Murlocs">
+    <MudButton Href="@MoMText.SeasonRoute" Size="Size.Small" Color="Color.Primary"
+               Variant="@(Active == "season" ? Variant.Filled : Variant.Outlined)">@L["This season"]</MudButton>
+    <MudButton Href="@MoMText.PlannerRoute" Size="Size.Small" Color="Color.Primary"
+               Variant="@(Active == "planner" ? Variant.Filled : Variant.Outlined)">@L["Planner"]</MudButton>
+    <button type="button" data-mom-seasons data-testid="mom-past-seasons"
+            class="mud-button-root mud-button mud-button-outlined mud-button-outlined-primary mud-button-outlined-size-small mud-ripple">
+        <span class="mud-button-label">@L["Past seasons"]</span>
+    </button>
+    <span class="mom-frame-spacer"></span>
+    @if (RecordBoardId is { } boardId)
+    {
+        <MudButton Href="@MoMText.RecordPath(boardId)" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled"
+                   Class="mom-desk-only" StartIcon="@Icons.Material.Filled.Edit">@L["Record a session"]</MudButton>
+    }
+</nav>
+<MoMPastSeasonsIsland @rendermode="RenderModes.Interactive" Mix="Mix"/>
+@code {
+    /// <summary>Which chip is filled: "season" or "planner".</summary>
+    [Parameter] [EditorRequired] public string Active { get; set; } = "season";
+
+    [Parameter] [EditorRequired] public MixEnum Mix { get; set; }
+
+    /// <summary>The board a new session would be recorded on; null hides the Record chip (Phoenix 2, no board).</summary>
+    [Parameter] public Guid? RecordBoardId { get; set; }
+}

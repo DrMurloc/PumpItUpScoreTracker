@@ -475,6 +475,83 @@ its six sentences go with it. One line points at the PUMBILITY page instead. Reu
 (progress), `Romorg` (see), `plglur` (page). `PUMBILITY` is protected, and *the* is dropped the
 way `See the Score breakdown` already drops it.
 
+### The March of Murlocs batch (2026-09-05)
+
+Coined for Slice 4a of the March of Murlocs overhaul ([march-of-murlocs.md](design/march-of-murlocs.md)
+§12.2) — the Season page, the Session Breakdown, the seasons dialog and the share card. Established words
+reused as-is: `Orgab` (session, number unmarked — the recovered singular; the older `Glorgmaglgro` plural
+is not re-coined for new strings), `maglgrgl` (season, recovered from *Next season*), `Mrglblarg` /
+`Grrglplgl` (board / boards), `Murgl` (chart), `mrglublgl` (points), `Mrglrgl` (score), `Rorgl` (grade),
+`Grorpmurm` (level), `Groggl` / `Mrglrlgl` (Doubles / Singles), `lurg` (play / played), `Morp` (player),
+`Murgmorp` (rival), `Rorg` (average), `Momorp` is new below. *March of Murlocs* itself stays the recovered
+`Urgmr mrgl Murlocmrp`.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| downtime | Morgglgrgl | `Morggl` (rest, from *Rest Time* → `Morggl Grglmrgl`) + `grgl`. One word, like the English. |
+| rest (in a row's stat line) | morggl | The bare root, lowercase mid-line. |
+| balanced (level) | grulmgro | `grulm` (span) + `gro` — the level the balance settled on. |
+| folder | glargub | |
+| frozen | brolgro | `brolg` (solid) + `gro`. |
+| scoring | mrglrglurg | `Mrglrgl` (score) + `urg`. |
+| tables (scoring tables) | mrpblarg | Lowercase of the recovered `Mrpblarg` (Table). |
+| re-rated | mrgmrglrg | `mrg` (again) + `mrglrg` (rating). |
+| re-cut | mrggrolub | `mrg` (again) + `grolub` (cut). |
+| priced (as) | gogl (gam) | `gogl` is the recovered *base / priced*; `gam` doubles as *as* and *how*. |
+| multiply | murmgrogla | From `murmgrog` (multiplier). |
+| total | ulboggrog | `ulbog` (all) + `grog`. |
+| nobody | Momorp | `mo` (negation) + `morp` (player). Title-case at a sentence start. |
+| past (seasons) | glorg | The `glorg` (old) of the recovered `glorgglorg` (oldest). |
+| this | blu | Recovered from the existing *This tool* → `Blu Rorgl`. |
+| current | gruglo | Recovered from the download-settings batch. |
+| ended | lurgblub | Recovered from *Your session ended.* |
+| starts | grolp | |
+| runs (on) | grogrol (ap) | `grogrol` is the recovered *running*. |
+| plan / planner | Plagrub / Plagrubgl | |
+| record (verb) | Blubgrorp | Recovered from the existing *Record*. |
+| draft | Grubrogl | Not `blubgrog`, which is *submit*. |
+| watch | Blomorg | Recovered from *saw*; a Murloc watches with the same word. |
+| pace | Grulgrog | |
+| length (of a song) | Grulm | The recovered *span*, title-cased for the column. |
+| at (a clock time) | og | Recovered. |
+| second (of time) | rogro | Recovered from *Points Per Second* → `… Rogro`. `mrglublgl/rogro` is pts/s. |
+| min (minute, abbreviated) | rglrgl | Short of the recovered `Rglrglgrorp` (Minutes). |
+| lvl (level, abbreviated) | grorp | Short of `Grorpmurm`. |
+| day / days | gralp | |
+| left (remaining) | lurgo | |
+| ahead / behind | urgrog / glubrog | `urg` (up) and `glub` (below) on `rog`. |
+| higher / lower | mrrglgro / glubgro | The comparative rides one extra `r`, as the rules say; *lower* rides `glub`. |
+| worst | glubglub | The doubled root, the owner's superlative device — `Glubglub` is already *Lowest*. |
+| gap | grulm | Recovered *span / gap*. |
+| first (worst gap first) | murpargl | Recovered from *newest first* → `… murpargl`. |
+| both | blugrob | |
+| now / then | bam / bamglorg | `bam` is recovered; *then* is `bam` + `glorg` (old). |
+| them (the other player) | grglblarg | Recovered *them / their*. |
+| unknown | Moblargub | `mo` (negation) + `blargub` (known). |
+| won | murgrab | Not `grabgro` (earned) — a win is its own word. |
+| sat out | blorgo | |
+| open / opens | urgrolp | |
+| own (its own boards) | ubgro | |
+| system (a rating system) | grogpla | |
+| settled | groblub | Recovered *committed*. |
+| tuned | grulubgro | From `grulub` (curve). |
+| bank (points) | grubgrab | `grub` + `grab` (get). |
+| stamina ladder | gromrgrgl gropla | Both recovered. |
+| quarterly | murgrogl | |
+| set up | groglurg | |
+| check back | mrglurg bagro | `bagro` is *back* (the direction); `bagrol` stays *before*. |
+| dashed (line) | pogrol | The dotted-line family: `Pogrol` is the recovered *dotted*. |
+| derived / estimated | blogub | Recovered. |
+| hand-entered | blargurg | Recovered *Manual*. |
+| order (play order) | groglar | |
+| changed | grolurg | |
+| came from | grolm blarg | `blarg` is the recovered *from*. |
+| closing (chart) | grorp | Recovered *Close*, lowercase. |
+| clean / cleanest | plglmurm | Recovered from *clean notes* → `plglmurm roblub`. |
+| ordinal suffix (1st, 2nd, 3rd, 4th) | bo | One suffix for every place: Murloc does not decline. `{0}bo`. |
+| it | ug | Recovered. |
+| yet | larg | Recovered. |
+
 ## The API usage counters (2026-09-06)
 
 The maker console's three key phrases (docs/design/api-usage-telemetry.md): what a key was used

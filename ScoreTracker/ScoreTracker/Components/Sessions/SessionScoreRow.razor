@@ -16,10 +16,12 @@
 <div class="sbd-row @ThreadClass" data-testid="session-score-row">
     @if (Score.Chart != null)
     {
+        @* Bubble, then jacket, then the words (UX rule 3): the bubble is the fastest thing to
+           recognise at a glance, the jacket the second, the name the fallback. *@
+        <DifficultyBubble Chart="Score.Chart" Small="true"></DifficultyBubble>
         <SongImage Song="Score.Chart.Song" Small="true"></SongImage>
         <div class="sbd-row-body">
             <div class="sbd-row-line">
-                <DifficultyBubble Chart="Score.Chart" Small="true"></DifficultyBubble>
                 @* The name IS the affordance now. It used to navigate to the chart page while a
                    separate trophy opened a board; both did the same job badly, and the details
                    dialogue carries the board itself. *@
@@ -55,7 +57,7 @@
                                Mix="Score.Chart.Mix" IsBroken="Score.Row.IsBroken"
                                Plate="PhoenixPlateHelperMethods.TryParse(Score.Row.Plate)"
                                Standing="Score.Standing" Chart="Score.Chart" Class="sbd-score"
-                               ShowStanding="false" OnOpenBoard="OnOpenBoard"></PeerScore>
+                               ShowStanding="false" Stacked="true" OnOpenBoard="OnOpenBoard"></PeerScore>
                 }
                 @if (Score.Row.Judgements is { } judgements)
                 {

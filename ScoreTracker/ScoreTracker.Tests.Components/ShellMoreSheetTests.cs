@@ -179,6 +179,32 @@ public sealed class ShellMoreSheetTests : ComponentTestBase
         Assert.Contains($"/Tournament/Stamina/{stamina.Id}", HrefsUnder(sheet, "Compete"));
     }
 
+    [Fact]
+    public void MarchOfMurlocsIsOneLinkToTheSeasonPageOnPhoenixLineageMixes()
+    {
+        // Slice 4a (docs/design/march-of-murlocs.md D19): the live season is the landing page, and
+        // it exists only for mixes with Phoenix scoring.
+        Assert.Contains("/MarchOfMurlocs", HrefsUnder(Render(Model(mix: MixEnum.Phoenix)), "Compete"));
+        Assert.Contains("/MarchOfMurlocs", HrefsUnder(Render(Model(mix: MixEnum.Phoenix2)), "Compete"));
+        Assert.DoesNotContain("/MarchOfMurlocs", AllHrefs(Render(Model(mix: MixEnum.XX))));
+        Assert.DoesNotContain("/Tournaments/MarchOfMurlocs", AllHrefs(Render(Model(mix: MixEnum.Phoenix))));
+    }
+
+    [Fact]
+    public void TheLiveSeasonsBoardsDoNotDoubleAsStaminaLinks()
+    {
+        // The season's boards are highlighted MoM records; they live under the one link, not as
+        // two more Stamina entries pointing at the retired board page.
+        var board = new TournamentRecord(Guid.NewGuid(), Name.From("March of Murlocs Summer 2026 - Doubles"), 3,
+            TournamentType.Stamina, "Remote", IsHighlighted: true, LinkOverride: null,
+            StartDate: null, EndDate: null, IsMoM: true);
+
+        var sheet = Render(Model(events: new[] { board }));
+
+        Assert.DoesNotContain($"/Tournament/Stamina/{board.Id}", AllHrefs(sheet));
+        Assert.Contains("/MarchOfMurlocs", HrefsUnder(sheet, "Compete"));
+    }
+
     /// <summary>
     ///     A legacy mix keeps everything that is not about a Phoenix-only concept. The old
     ///     route gate hid nearly the whole sheet off one flag; scoping is per destination now,

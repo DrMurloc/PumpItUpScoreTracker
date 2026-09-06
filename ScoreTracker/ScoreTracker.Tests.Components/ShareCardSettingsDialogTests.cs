@@ -276,4 +276,49 @@ public sealed class ShareCardSettingsDialogTests : ComponentTestBase
 
         Assert.True(request()!.Token.IsCancellationRequested);
     }
+    private IRenderedFragment RenderSessionDialog()
+    {
+        return Render(builder =>
+        {
+            builder.OpenComponent<MudDialogProvider>(0);
+            builder.CloseComponent();
+            builder.OpenComponent<ShareCardSettingsDialog>(1);
+            builder.AddAttribute(2, nameof(ShareCardSettingsDialog.Visible), true);
+            builder.AddAttribute(3, nameof(ShareCardSettingsDialog.SignedIn), true);
+            builder.AddAttribute(4, nameof(ShareCardSettingsDialog.OffersPumbility), true);
+            builder.AddAttribute(5, nameof(ShareCardSettingsDialog.HideListBoundaries), true);
+            builder.AddAttribute(6, nameof(ShareCardSettingsDialog.CornerLabel), "Session points");
+            builder.AddAttribute(7, nameof(ShareCardSettingsDialog.FileName), "MarchOfMurlocs_test.png");
+            builder.CloseComponent();
+        });
+    }
+
+    [Fact]
+    public void ASessionCardHidesTheListBoundariesAndRelabelsTheCorner()
+    {
+        // march-of-murlocs.md D25: To Do, Passed in other mixes and Top 50 mean nothing on a session,
+        // and the corner prints session points where the tier-list card prints PUMBILITY.
+        var cut = RenderSessionDialog();
+
+        Assert.Empty(cut.FindAll("[data-testid=sc-opt-btodo]"));
+        Assert.Empty(cut.FindAll("[data-testid=sc-opt-bother]"));
+        Assert.Empty(cut.FindAll("[data-testid=sc-opt-btop50]"));
+        Assert.NotEmpty(cut.FindAll("[data-testid=sc-opt-bpass]"));
+        Assert.NotEmpty(cut.FindAll("[data-testid=sc-opt-bbroken]"));
+        // MudSwitch puts the test id on the input; the label wraps it.
+        var label = cut.Find("input[data-testid=sc-opt-pumbility]").Closest("label")!.TextContent;
+        Assert.Contains("Session points", label);
+        Assert.DoesNotContain("PUMBILITY", label);
+    }
+
+    [Fact]
+    public async Task ExpectedGainsNeverShowsUnderARelabelledCorner()
+    {
+        var cut = RenderSessionDialog();
+
+        await cut.Find("input[data-testid=sc-opt-pumbility]").ChangeAsync(new ChangeEventArgs { Value = true });
+
+        Assert.Empty(cut.FindAll("[data-testid=sc-opt-expected]"));
+        Assert.Contains(_saved, v => v.Contains(nameof(ShareCardOptions.Pumbility)));
+    }
 }
