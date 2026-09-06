@@ -1,5 +1,4 @@
-﻿using System.Text;
-using System.Text.Encodings.Web;
+﻿using System.Text.Encodings.Web;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
@@ -34,26 +33,12 @@ namespace ScoreTracker.Web.Security
             var authHeader = authHeaders[0];
             if (string.IsNullOrWhiteSpace(authHeader)) return AuthenticateResult.Fail("Authorization header is empty");
 
-            if (!authHeader.StartsWith("Basic ")) return AuthenticateResult.Fail("Authorization header must be Basic");
+            var credential = ApiCredential.Parse(authHeader);
+            if (credential.Failure is not null) return AuthenticateResult.Fail(credential.Failure);
+            if (credential.Kind != ApiCredentialKind.Basic)
+                return AuthenticateResult.Fail("Authorization header must be Basic");
 
-            var encodedToken = authHeader["Basic ".Length..].Trim();
-            if (string.IsNullOrWhiteSpace(encodedToken)) return AuthenticateResult.Fail("Encoded token is missing");
-            var encoding = Encoding.GetEncoding("iso-8859-1");
-            string usernamePassword;
-            try
-            {
-                usernamePassword = encoding.GetString(Convert.FromBase64String(encodedToken));
-            }
-            catch (Exception)
-            {
-                return AuthenticateResult.Fail("Could not decode token");
-            }
-
-            var split = usernamePassword.Split(":");
-            if (split.Length != 2)
-                return AuthenticateResult.Fail(@"Encoded token must be formatted as "":<ApiToken>""");
-
-            if (!Guid.TryParse(split[1], out var apiToken))
+            if (!Guid.TryParse(credential.Secret, out var apiToken))
                 return AuthenticateResult.Fail("Decrypted API Token is invalid (should be a GUID)");
 
             var user = await context.RequestServices.GetRequiredService<IMediator>()

@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using System.Text;
 using System.Text.Encodings.Web;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
@@ -61,47 +60,28 @@ public sealed class ToolKeyAuthenticationScheme : AuthenticationHandler<Authenti
         if (!context.Request.Headers.TryGetValue("Authorization", out var headers) || headers.Count != 1)
             return AuthenticateResult.Fail("Exactly one Authorization header is required");
 
-        var header = headers[0];
-        if (string.IsNullOrWhiteSpace(header)) return AuthenticateResult.Fail("Authorization header is empty");
+        var credential = ApiCredential.Parse(headers[0]);
+        if (credential.Failure is not null) return AuthenticateResult.Fail(credential.Failure);
 
         var mediator = context.RequestServices.GetRequiredService<IMediator>();
 
-        if (header.StartsWith("Bearer ", StringComparison.Ordinal))
+        if (credential.Kind == ApiCredentialKind.Bearer)
         {
-            var tool = await mediator.Send(new GetToolByApiKeyQuery(header["Bearer ".Length..].Trim()));
+            var tool = await mediator.Send(new GetToolByApiKeyQuery(credential.Secret));
             if (tool is null) return AuthenticateResult.Fail("API key is not valid");
 
             return AuthenticateResult.Success(
                 new AuthenticationTicket(new ClaimsPrincipal(ToolIdentity(tool)), SchemeName));
         }
 
-        if (!header.StartsWith("Basic ", StringComparison.Ordinal))
-            return AuthenticateResult.Fail("Authorization must be Bearer (tool key) or Basic (personal token)");
-
-        // Personal tokens are unchanged from v1, down to the iso-8859-1 decode.
-        string decoded;
-        try
-        {
-            decoded = Encoding.GetEncoding("iso-8859-1")
-                .GetString(Convert.FromBase64String(header["Basic ".Length..].Trim()));
-        }
-        catch (Exception)
-        {
-            return AuthenticateResult.Fail("Could not decode credentials");
-        }
-
-        var split = decoded.Split(":");
-        if (split.Length != 2)
-            return AuthenticateResult.Fail("Basic credentials must be username:password");
-
         // A tool key in the password position resolves as a tool. Bearer is what the docs say and
         // what Swagger sends, but v1 taught every integrator here that a credential goes in the
         // Basic password box with junk for the username — so that is the first thing they try, and
         // failing it teaches them nothing except that their new key is broken. Same key material,
         // same TLS, same claim: the only thing rejecting it bought was a support question.
-        if (!Guid.TryParse(split[1], out var apiToken))
+        if (!Guid.TryParse(credential.Secret, out var apiToken))
         {
-            var toolByBasic = await mediator.Send(new GetToolByApiKeyQuery(split[1]));
+            var toolByBasic = await mediator.Send(new GetToolByApiKeyQuery(credential.Secret));
             if (toolByBasic is null)
                 return AuthenticateResult.Fail(
                     "Password must be a personal token (a GUID) or a tool API key");
