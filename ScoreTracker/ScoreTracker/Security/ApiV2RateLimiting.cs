@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.Threading.RateLimiting;
+using MediatR;
 using Microsoft.AspNetCore.RateLimiting;
+using ScoreTracker.CommunityTools.Contracts.Commands;
 
 namespace ScoreTracker.Web.Security;
 
@@ -51,7 +53,7 @@ public static class ApiV2RateLimiting
             });
         });
 
-        options.OnRejected = (context, cancellationToken) =>
+        options.OnRejected = async (context, cancellationToken) =>
         {
             context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
 
@@ -65,7 +67,15 @@ public static class ApiV2RateLimiting
             }
 
             context.HttpContext.Response.Headers["RateLimit-Remaining"] = "0";
-            return ValueTask.CompletedTask;
+
+            // Counted after the fact, under the key's name. The scheme has not run — this hook sits
+            // above authorization — so the credential is all there is to name the caller by, and
+            // the vertical answers with the principal it resolved on the calls that got through.
+            var credential = ApiCredential.Parse(context.HttpContext.Request.Headers.Authorization.ToString());
+            if (credential.Failure is not null) return;
+
+            var mediator = context.HttpContext.RequestServices.GetRequiredService<IMediator>();
+            await mediator.Send(new RecordRateLimitedRequestCommand(credential.Secret), cancellationToken);
         };
 
         return options;

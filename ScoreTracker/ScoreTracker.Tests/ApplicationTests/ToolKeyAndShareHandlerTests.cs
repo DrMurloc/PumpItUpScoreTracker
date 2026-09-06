@@ -155,6 +155,46 @@ public sealed class ToolKeyAndShareHandlerTests
             It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    /// <summary>
+    ///     The limiter runs before the scheme, so a rejected request arrives as a bare credential.
+    ///     A key that resolved recently is still in the cache, and that is the name it counts under.
+    /// </summary>
+    [Fact]
+    public async Task ARateLimitedRequestCountsUnderTheKeyThatResolvedRecently()
+    {
+        var (key, hash, _) = ApiKeyMint.Mint();
+        _keys.Setup(k => k.ResolveToolByKeyHash(hash, Now, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ToolKeyResolution(ToolId, "production", IsExpired: false));
+        var saga = KeySaga();
+        await saga.Handle(new GetToolByApiKeyQuery(key), CancellationToken.None);
+
+        var named = await saga.Handle(new RecordRateLimitedRequestCommand(key), CancellationToken.None);
+
+        Assert.Equal(new ToolKeyPrincipal(ToolId, "production"), named);
+        _activity.Verify(a => a.Increment(ToolId, ToolActivityKind.RateLimited, Now, "production",
+            It.IsAny<CancellationToken>()), Times.Once);
+        // Never the database: a lookup per rejected request is the load a limit exists to refuse.
+        _keys.Verify(k => k.ResolveToolByKeyHash(It.IsAny<string>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>A key nobody resolved recently, or a personal token, is dropped rather than looked up.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ARateLimitedRequestOnAnUnseenCredentialCountsNothing(bool looksLikeAKey)
+    {
+        var credential = looksLikeAKey ? ApiKeyMint.Mint().Key : Guid.NewGuid().ToString();
+
+        var named = await KeySaga().Handle(new RecordRateLimitedRequestCommand(credential), CancellationToken.None);
+
+        Assert.Null(named);
+        _activity.Verify(a => a.Increment(It.IsAny<Guid>(), It.IsAny<ToolActivityKind>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+        _keys.Verify(k => k.ResolveToolByKeyHash(It.IsAny<string>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     /// <summary>An unknown or revoked key is nobody's: nothing to count it under.</summary>
     [Fact]
     public async Task AnUnknownKeyCountsNothing()

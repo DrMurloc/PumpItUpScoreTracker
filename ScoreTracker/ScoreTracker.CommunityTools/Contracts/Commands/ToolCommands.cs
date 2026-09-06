@@ -174,3 +174,13 @@ public sealed record SetToolMakerBanNotesCommand(Guid UserId, string? Notes) : I
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record RecordToolClickCommand(Guid ToolId) : IRequest;
+
+/// <summary>
+///     The rate limiter turned a request away. It runs before the v2 scheme, so the request has no
+///     claims to name its tool by — only the credential it presented, which is handed here to be
+///     counted under the key it belongs to. Answers the key's principal so the caller can log the
+///     rejection under the same name; a credential that is not a recently seen tool key counts
+///     nothing and answers null.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record RecordRateLimitedRequestCommand(string Credential) : IRequest<ToolKeyPrincipal?>;

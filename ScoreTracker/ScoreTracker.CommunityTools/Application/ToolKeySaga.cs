@@ -18,7 +18,8 @@ internal sealed class ToolKeySaga :
     IRequestHandler<GetToolApiKeysQuery, IReadOnlyList<ApiKeyRecord>>,
     IRequestHandler<GetToolInviteLinksQuery, IReadOnlyList<ToolInviteLinkRecord>>,
     IRequestHandler<GetToolInvitePreviewQuery, ToolInvitePreview?>,
-    IRequestHandler<GetToolByApiKeyQuery, ToolKeyPrincipal?>
+    IRequestHandler<GetToolByApiKeyQuery, ToolKeyPrincipal?>,
+    IRequestHandler<RecordRateLimitedRequestCommand, ToolKeyPrincipal?>
 {
     /// <summary>
     ///     How long a resolved key is remembered for the rate limiter's sake. A tool is only ever
@@ -164,6 +165,23 @@ internal sealed class ToolKeySaga :
         var principal = new ToolKeyPrincipal(resolution.ToolId, resolution.KeyName);
         _cache.Set(PrincipalCacheKey(hash), principal,
             new MemoryCacheEntryOptions { SlidingExpiration = PrincipalLifetime });
+        return principal;
+    }
+
+    public async Task<ToolKeyPrincipal?> Handle(RecordRateLimitedRequestCommand request,
+        CancellationToken cancellationToken)
+    {
+        if (!ApiKeyMint.LooksLikeAKey(request.Credential)) return null;
+
+        // The cache and only the cache. A tool is limited after hundreds of successes inside the
+        // same minute, so a key that is not here has not been resolving — and a database lookup
+        // per rejected request is exactly the load a limit exists to refuse.
+        if (!_cache.TryGetValue(PrincipalCacheKey(ApiKeyMint.HashOf(request.Credential)),
+                out ToolKeyPrincipal? principal) || principal is null)
+            return null;
+
+        await _activity.Increment(principal.ToolId, ToolActivityKind.RateLimited, _dateTime.Now,
+            principal.KeyName, cancellationToken);
         return principal;
     }
 
