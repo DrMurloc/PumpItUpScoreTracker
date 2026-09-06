@@ -2,7 +2,7 @@
 
 Status: **Slices 0, 1, R, 2 and 3 are shipped** — the tables are live under the old pages
 (PR #274) and MoM's import reads the score journal (§2.5, resolved 2026-08-24). The slice order
-was re-ordered after Slice 1 (§8); **4a, the read surfaces, is in progress** (build began 2026-09-05 against §12.2 — it
+was re-ordered after Slice 1 (§8); **4a shipped in PR #319 (merged 2026-09-05). Phoenix 2 go-live and the Rules page are in progress** (§12.6): the site becomes the rules of record, the Google Doc is retired, and the Phoenix 2 boards open on PUMBILITY+ with their own grade tuning (D41).
 deletes the old Season list and board pages). Explored 2026-08-09, workshopped
 and mocked 2026-08-10/11; mocks redrawn and re-decided 2026-09-05 (§11.9).
 
@@ -44,16 +44,16 @@ in them is production-synced data.
 | 4 | Planner | `/MarchOfMurlocs/Planner` | [artifact](https://claude.ai/code/artifact/17d2ed81-eaef-451a-9c74-0ab5792ba3f2) |
 | 5 | Discord card | — | [artifact](https://claude.ai/code/artifact/58eb672e-a479-4845-80ac-4c3d36544b55) |
 | 6 | Past seasons | *a dialog, no route* | [artifact](https://claude.ai/code/artifact/360658de-b554-4e15-9de4-37c1bb6faba4) |
-| 7 | My Sessions on-ramp | `/Player/{id}/Sessions` | [artifact](https://claude.ai/code/artifact/b0b13385-89b9-412b-b135-16d9099122ec) |
+| 7 | My Sessions on-ramp | `/Player/{id}/Sessions` | [artifact](https://claude.ai/code/artifact/b0b13385-89b9-412b-b135-16d9099122ec · 8 Rules https://claude.ai/code/artifact/bfdd0131-64b7-4253-adfb-b3606b864ac0) |
 
 ---
 
 ## 1. The rules
 
-Confirmed by the owner 2026-08-09 against the
-[rules doc](https://docs.google.com/document/d/1Nwr-PDy6lgkTSt4dKu1-0fdeDXdgLWvl7j5yiuIcRCw/edit).
-**The rules are not changing in this pass.** Verification is the one exception, and it is a
-deletion rather than a rule change (§3).
+The site is the rules of record: the **Rules page** (`/MarchOfMurlocs/Rules`, §11.11) states them
+and this section keeps the reasoning. The Google rules doc that governed until 2026-09-05 is
+retired (D42) — it described verification tiers, a "best score on a repeat" rule the code never
+implemented, and a Phoenix-only event, none of which is true any more.
 
 - **Quarterly seasons.** Jan–Mar = *Winter*, Apr–Jun = *Spring*, Jul–Sep = *Summer*,
   Oct–Dec = *Fall*. A season ends at 23:59:59 on the last day of its final month, UTC−5.
@@ -62,31 +62,38 @@ deletion rather than a rule change (§3).
   on Gargoyle FULL SONG is the standard play (owner, 2026-08-11). `CanAdd` implements the stricter
   rule today; see §2.9.
 - **Singles and Doubles are separate boards, and nothing in MoM ever compares them** (D15).
-  As of this pass, Phoenix and Phoenix 2 are separate too.
+  Phoenix and Phoenix 2 are separate boards too, and **both are live** (D38).
 - **A player may run a season as many times as they like** (D16). Each is its own session
   and boards rank sessions, not players — three good sessions may hold the top three places.
   In practice almost nobody runs twice; the session is brutal.
-- **Repeats are banned** — but the identity is song + chart type + *level*. The same song at a
-  different difficulty is a different chart and is legal.
+- **A chart counts once per session, and the better play is the one that counts** (D39, owner
+  2026-09-05: "if someone plays the same chart twice, you keep the better one, the other doesn't
+  even make it into the session"). The identity is song + chart type + *level*: the same song at a
+  different difficulty is a different chart and is legal. `TournamentSession.CanAdd` blocks the
+  second play outright today; keep-the-better replaces that in this pass (§12.6).
 - **Ties never happen in practice**; when they do, **earliest submission wins**.
-- **Phoenix 1 scoring is frozen. No part of it changes in this pass** (owner, 2026-08-11, "in any
-  way shape or form"). What the ladder does today is the rule of record: a score below 750,000 is
-  worth zero, the 750,000–824,999 A band earns interpolated partial credit rising to nearly half
-  an A+, and a zero-point play is an ordinary entry — it counts toward chart count and blocks a
-  repeat of that chart. The external rules doc's "A and below are worth zero" and its non-play
-  clause describe neither; the code stands and the divergence is documented in §2.8, not fixed.
-- **Phoenix 2: the "A or below" rule is unsettled** and will be decided after the scoring
-  experiment (§10). P2 ships on stock P2 pumbility, where a passing F pays nothing at all and the
-  worst grade that still pays is a D.
+- **A broken score counts at face value. A stage break scores nothing, because there is nothing
+  to score** (D40). Passing and scoring are different concepts and MoM scores the latter — a failed
+  SS was not a mash — so `StageBreakModifier` stays `1.0`. "Stage break" means the game ended the
+  song (the 51-miss drop-out): no score is recorded, the chart pays nothing, the time is gone. The
+  old doc's "0 points" line meant that, not the broken flag.
+- **Phoenix 1 scoring is frozen. No part of it changes** (owner, 2026-08-11, "in any way shape
+  or form"). What the ladder does today is the rule of record: a score below 750,000 is worth zero,
+  the 750,000–824,999 A band earns interpolated partial credit rising to nearly half an A+, and a
+  zero-point play is an ordinary entry — it counts toward chart count and stands as the chart's one
+  play unless a better one replaces it. The old doc's "A and below are worth zero" described
+  neither; the divergence is documented in §2.8, not fixed.
+- **Phoenix 2 runs the same PUMBILITY+ structure with its own grade tuning** (D41, owner
+  2026-09-05, verified against prior seasons): A 0 · A+ 0.7 · AA 0.8 · AA+ 0.9 · AAA 1.0 ·
+  AAA+ 1.1, S and up unchanged, PG 1.6, on **Phoenix 2's own letter cutoffs** (A 800,000 · A+
+  900,000 · AA 920,000 · AA+ 940,000 · AAA 950,000). Nothing below 800,000 scores. Sub-10 charts
+  pay 10…90 and Singles carry no bump, exactly as on Phoenix (§5). Every surface calls both
+  tunings PUMBILITY+; the Phoenix planner carries a one-line disclaimer that below AAA is slightly
+  different there (4b).
 - Song length scales value, with a 2-minute baseline.
-- Charts 22+ carry an exponential bonus (Phoenix 1 only — see §5).
-- **Stage break is deliberately outside the algorithm, on both mixes.** Passing and scoring are
-  different concepts and MoM scores the latter — a failed SS was not a mash. A broken play is
-  worth exactly what its score is worth. `StageBreakModifier` stays `1.0`; see §9.2 for the
-  inheritance hazard this creates for PUMBILITY2+.
+- Charts 22+ carry an exponential bonus on both mixes (§4).
 
 ---
-
 ## 2. Why now — eight defects, all confirmed against production-synced data
 
 ### 2.1 The runaway — **fixed in Slice 0**; the junk rows are still owner-run cleanup
@@ -290,10 +297,16 @@ chart later. Consequences worth writing down:
 | D20 | **A cross-season comparison re-prices the old session under the new season's whole frozen config** — snapshot *and* scoring tables — and reports what moved underneath separately from what the player earned. | Owner 2026-08-10. A raw season-over-season delta silently mixes "I got better" with "the game changed". Measured between MoM 2 and Winter 2025, both moved: 10 charts re-rated **and** every level-23+ rating raised while the grade table was cut. §11.3. |
 | D21 | **The session list carries all three sanctioned densities**, with sort behind a **Sort by** popover in Comfortable and Compact, and on the column headers in Table. | Owner 2026-08-10. UX rule 5's three modes, no fourth. A visible button group spent toolbar width on a control that is used once; Table already sorts from its headers, so a popover there would be a second control for one job. §11.3. |
 | D22 | **The word is "session", everywhere.** Not run, not attempt, not entry. | Owner, 2026-08-10 and enforced again 2026-08-11 after "run" crept back into every mock. One ubiquitous term for the thing a player records, publishes, breaks down and plans — page copy, headings, Discord cards, localization keys and the `MoMSession` table alike. "Run" reads fine in isolation, which is exactly why it keeps returning. |
+| D38 | **Phoenix 2 boards go live**, on the Phoenix 2 tuning of PUMBILITY+. Supersedes D12's admin gate. | Owner 2026-09-05, after the scoring workshop: "We want Phoenix 2 to go 'live' with this PR." |
+| D39 | **A repeated chart keeps the better play.** The weaker play never enters the session. Supersedes "repeats are banned" and the `CanAdd` block. | Owner 2026-09-05: "If someone plays the same chart twice, you keep the better one, the other doesn't even make it into the session." |
+| D40 | **A broken score counts at face value; a stage break scores nothing.** The vocabulary: "broken score" is the flag on a finished play, "stage break" is the game ending the song. | Owner 2026-09-05, correcting a reading of the old doc's "0 points" line. |
+| D41 | **One name, two tunings.** Phoenix 2 runs PUMBILITY+'s structure and kicker with A+ 0.70 · AA 0.80 · AA+ 0.90 · AAA+ 1.10 on its own cutoffs; Phoenix keeps its frozen table. Supersedes D11 and the PUMBILITY2+ plan (§5). | Owner 2026-09-05/06: "port Phoenix 1's MoM scoring system to Phoenix 2 exactly as it is", then the workshop's grade table, then "call it PUMBILITY+ everywhere". The minimal-PUMBILITY2+ census (62 sessions) showed a rest-minimisation contest, not a stamina ladder. |
+| D42 | **The site owns the rules.** `/MarchOfMurlocs/Rules` is static HTML; the Google Doc is retired; the season page's *How it works* and *Full rules* both land there. | Owner 2026-09-05: "I'd love to get rid of the doc." Static and shareable "like our /Welcome page". |
+| D43 | **The season cycle heals a live season**: any of the four mix × type boards a season is missing is added on the daily run, with that mix's level snapshot taken then. | Owner 2026-09-05 ("ill hit hangfire"): no admin button, no migration; one *Trigger now* seats Summer 2026's Phoenix 2 boards. |
 
 ### Explicitly rejected
 
-- **Building PUMBILITY2+ on PUMBILITY+'s Phoenix 1 curve.** Rejected 2026-08-09: the quadratic
+- **Building PUMBILITY2+ on PUMBILITY+'s Phoenix 1 curve.** *Reversed 2026-09-05 (D41, §5): measured over 62 sessions, the volume axis overturned the single-play argument below.* Rejected 2026-08-09: the quadratic
   base and the 22+ kicker exist to solve a *Phoenix 1* problem (see §5).
 - **Lazy season creation** (materialise on first visit). The chart-level snapshot must freeze at
   season start to be fair, and `IChartScoringLevelRepository` is a current-state projection with
@@ -303,7 +316,9 @@ chart later. Consequences worth writing down:
 
 ---
 
-## 4. The balancing algorithm (Phoenix 1)
+## 4. The balancing algorithm
+
+Since D41 this runs on both mixes; the only per-mix difference is the grade column below (§5).
 
 Previously undocumented — it existed only in code. **`CalculationType.Avalanche` is a selectable
 formula in the enum and MoM does not use it.** MoM runs `CalculationType.Default` (all modifiers
@@ -316,15 +331,19 @@ levels 1–9 are 0 by default and hand-set to 10…90 in `CreateScoring()`.
 **2 — grade modifiers, rewritten for stamina.** `ContinuousLetterGradeScale = true` interpolates
 between rungs.
 
-| Grade | Default | PUMBILITY+ |
-|---|---|---|
-| AAA | 1.10 | **1.00** |
-| AA+ | 1.05 | **0.90** |
-| AA | 1.00 | **0.75** |
-| A+ | 0.90 | **0.50** |
-| A and below | 0.4–0.8 | **0** |
-| AAA+ … SSS+ | 1.15 … 1.50 | *unchanged* |
-| Perfect Game | 1.50 | **1.60** |
+| Grade | Default | PUMBILITY+ · Phoenix (frozen) | PUMBILITY+ · Phoenix 2 (D41) |
+|---|---|---|---|
+| AAA | 1.10 | **1.00** | **1.00** |
+| AA+ | 1.05 | **0.90** | **0.90** |
+| AA | 1.00 | **0.75** | **0.80** |
+| A+ | 0.90 | **0.50** | **0.70** |
+| A and below | 0.4–0.8 | **0** | **0** |
+| AAA+ | 1.15 | *unchanged* | **1.10** |
+| S … SSS+ | 1.20 … 1.50 | *unchanged* | *unchanged* |
+| Perfect Game | 1.50 | **1.60** | **1.60** |
+
+Each column's rungs sit on its own mix's letter cutoffs — Phoenix 2's A starts at 800,000, its
+AA at 920,000 — so the same score does not pay the same on both mixes below AAA (§5).
 
 **3 — the 22+ kicker**, applied in the MoM handler on top of the base:
 
@@ -358,59 +377,46 @@ CoOp is filtered from the pool anyway.
 
 ---
 
-## 5. PUMBILITY2+
+## 5. Phoenix 2: the same algorithm, its own grade tuning
 
-**The principle (D11): PUMBILITY+ means *that mix's own pumbility, plus stamina adaptations*.**
-
-Phoenix 1's pumbility rewards level so steeply that mashing high charts beats scoring well, so
-PUMBILITY+ had to correct it — that is what the grade rewrite and the 22+ kicker are. **Phoenix 2
-already solved scoring-versus-passing**, so its adaptation is nearly empty. Both configs are
-then principled; neither is legacy.
+**D41 replaced D11.** The 2026-09-05 scoring workshop re-priced all 62 historical sessions under
+a minimal PUMBILITY2+ (stock Phoenix 2 pumbility plus the stamina adaptations) and found it is not
+a stamina ladder: the flat base compresses best-to-worst from 13.6× to 1.7×, downtime becomes the
+dominant predictor, and level-10 SSS+ spam at zero rest podiums on every board ever run. The
+owner's call: **port PUMBILITY+ to Phoenix 2 as it is**, structure and kicker included, and tune
+only the grade table.
 
 ```
-PUMBILITY2+ = Phoenix2PumbilityScoring
-            + ContinuousLetterGradeScale = true
-            + AdjustToTime = true            (set by MoM, never in core — §9.5)
-            + StageBreakModifier  = 1.0      (RESET — the base config carries 0.0 — §9.2)
-            + LevelRatings[1..9]  = 0        (so CanAdd blocks sub-10 — §9.4)
-            + non-matching chart types zeroed
-            − no grade rewrite, no 22+ kicker, no PG bonus
+PUMBILITY+ on Phoenix 2 = CreateScoring()                    (the Phoenix builder, verbatim)
+                        + Mix = Phoenix2                       (letters on Phoenix 2's own cutoffs)
+                        + A+ 0.70 · AA 0.80 · AA+ 0.90 · AAA+ 1.10
+                          (A 0, AAA 1.00, S … SSS+ and PG 1.60 as Phoenix)
+                        + the two Phoenix 2 pumbility rules OFF  (sub-10 = 0, Singles +5/+10 — §9.2)
 ```
 
-Phoenix 2's base is `130 + 5L + 5·max(0, L−24)` — near-linear where Phoenix 1's is quadratic.
+Everything else is identical: the quadratic base, levels 1–9 at 10…90, the 22+ kicker, the
+2-minute length baseline, the per-season level lift, `StageBreakModifier = 1.0`, PG 1.6.
 
-| Level | 10 | 20 | 22 | 25 | 26 | 29 |
-|---|---|---|---|---|---|---|
-| PUMBILITY+ (with kicker) | 100 | 650 | 930 | 1,800 | 2,210 | 3,800 |
-| Phoenix 2 | 180 | 230 | 240 | 260 | 270 | 300 |
-
-**This produces the intended incentive.** The L26/L20 base ratio is 270/230 = 1.174, so climbing
-six levels pays whenever `grade(26) > 0.852 × grade(20)`:
-
-| Play | vs a clean AAA level 20 |
-|---|---|
-| 26 at A+ (1.33 on a Single, 1.35 on a Double) | wins — ratio 0.94 / 0.96 |
-| 26 at A (1.28) | wins, barely — 0.91 |
-| 26 at F | **scores nothing at all** — P2 excludes an F outright, passed or not |
-
-Phoenix 2 says *go as hard as you can still play competently*. Phoenix 1 with the kicker says
-*go as hard as you can survive at all* — even A+ at 0.50 wins by 1.7×.
-
-**Grade floors are identical from AAA (950,000) upward on both mixes.** The tables diverge only
-below 950,000, which bounds the behavioural change precisely:
-
-| | Phoenix 1 | Phoenix 2 |
+| | Phoenix (frozen) | Phoenix 2 |
 |---|---|---|
-| Zero cliff | < 750,000 *(settled — §2.8)* | **< 500,000** — an F scores nothing on P2 |
-| 0.50 → 1.00 ramp | 825k → 950k | *n/a — P2 uses its own 1.00 → 1.50* |
+| Zero cliff | < 750,000 *(§2.8)* | **< 800,000** — Phoenix 2's A floor |
+| A+ | 0.50 from 825,000 | **0.70 from 900,000** |
+| AA | 0.75 from 900,000 | **0.80 from 920,000** |
+| AA+ | 0.90 from 925,000 | **0.90 from 940,000** |
+| AAA | 1.00 from 950,000 | 1.00 from 950,000 |
+| AAA+ | 1.15 from 960,000 | **1.10 from 960,000** |
+| S … SSS+, PG | 1.20 … 1.50, 1.60 | identical |
 
-Implementation: keep the parameterless `ScoringConfiguration.PumbilityPlus` **exactly as it is**
-and add a mix-aware factory beside it that only MoM calls (§9.5). Write P1's corrections as an
-explicitly-labelled *Phoenix 1 anti-mash block* so the next reader does not carry them forward
-by default.
+The continuous scale (§2.8) still ramps each band in a straight line: on Phoenix 2, 890,000 pays
+0.63× and 935,000 pays 0.88×. AAA+ is 1.10 rather than 1.15 because "1.15x is a sharp jump from
+AAA and makes S's not as meaningful" (owner). The Phoenix table is frozen and unchanged; both
+tunings are named PUMBILITY+ on every surface (D41), and the Phoenix planner carries the one-line
+disclaimer that below AAA is slightly different there (4b).
+
+The workshop's data, scripts and the interactive scoring bench live in the owner's Downloads
+(`mom-p2-scoring-2026-09-05`); the numbers above are the ones that shipped.
 
 ---
-
 ## 6. Target schema
 
 Five tables, replacing dependence on fifteen. Registered through EventCompetition's
@@ -554,7 +560,7 @@ re-ordered after Slice 1** (2026-08-11). What changed and why is under the table
 | **4a — Read surfaces** | Season, Session Breakdown, Past seasons dialog. The Stamina→MoM rename, the old pages deleted. (Verification removal moved up into Slice 2.) | 2 |
 | **4b — Write surfaces** | Submit — draft/publish lifecycle, minimal-click entry, the import with gap detection — and the Planner with named saved sets and CSV. | 2, 3 |
 | **4c — Discord card** | The fourth `DiscordFeedKind`, the card, `/piu feed mom`. | 2 |
-| **5 — Per-mix boards** *was Slice 3* | Four boards live, mix-correct grading and snapshots, PUMBILITY2+, `MixCapabilities` entry (D19), Phoenix 2 ungated. | 2, and the scoring session |
+| **5 — Per-mix boards** *was Slice 3* | Four boards live, mix-correct grading and snapshots, PUMBILITY+'s Phoenix 2 tuning (D41), `MixCapabilities` entry (D19), Phoenix 2 ungated. | 2, and the scoring session |
 | **separate session** | Phoenix 2 scoring min/max (≈6 rounds, owner estimate). | — |
 
 **Why the back half moved.**
@@ -596,23 +602,23 @@ season carrying player data.
 `BITE 7 - Co-Op` is a **real** tournament that also has `EndDate < StartDate`. Never loosen the
 cleanup predicate to inverted-dates alone.
 
-### 9.2 PUMBILITY2+ inherits a stage-break rule MoM does not want
+### 9.2 Phoenix 2's two pumbility rules ride on `Mix`, and MoM must not inherit them
 
-**Reset `StageBreakModifier` to `1.0` when composing PUMBILITY2+.**
+`ScoringConfiguration.GetScore` carries two rules keyed on `Mix == Phoenix2`: a chart below level
+10 pays nothing, and a Single is bumped +5 (+10 from level 25) before the grade multiplies. Both
+are right for piugame's Phoenix 2 pumbility and wrong for PUMBILITY+ on Phoenix 2, which prices
+levels 1–9 at 10…90 and treats Singles as Phoenix does (D41). Yet a Phoenix 2 board's config must
+carry `Mix = Phoenix2`, because that is what puts the letter rungs on Phoenix 2's cutoffs.
 
-Both official pumbility configs — `PhoenixPumbilityScoring` *and* `Phoenix2PumbilityScoring` —
-set `StageBreakModifier = 0.0`, which is correct for them: piugame does not count broken plays
-in the pumbility pool. MoM's rule is the opposite and deliberate (§1): passing and scoring are
-different concepts, a failed SS was not a mash, and a broken play is worth whatever its score is
-worth.
+**So the two rules are configuration booleans** that only `Phoenix2PumbilityScoring` turns on
+and MoM's builder leaves off. The stock output is byte-identical before and after, pinned by a grid
+test over scores, levels and chart types. Neither flag is serialized: a MoM board never stores
+them, and the pumbility config is never stored at all.
 
-Phoenix 1 never hit this because `CreateScoring()` composes from a bare
-`new ScoringConfiguration()` (default `1.0`), not from the official config. **PUMBILITY2+ does
-compose from the official config** — that is the whole point of D11 — so it inherits `0.0` and
-will silently start zeroing broken plays unless the reset is explicit.
-
-Worth a test: a broken play and a passed play at the same score must score identically on both
-mixes.
+The older hazard this section carried — `StageBreakModifier` inherited as `0.0` from the official
+config — is moot: the Phoenix 2 builder composes from `CreateScoring()`, not from
+`Phoenix2PumbilityScoring`, so the modifier is `1.0` by construction. The test still stands: a
+broken play and a passed play at the same score score identically on both mixes.
 
 ### 9.3 Delta-only snapshots are an exact equivalence, not an approximation
 
@@ -672,7 +678,7 @@ the persistence gap cannot bite. A board carrying a two-type table would be mean
 
 `Phoenix2PumbilityScoring` mirrors piugame's own number and must stay discrete-grade /
 additive-plate — `/Pumbility` and the reconciliation probes compare it against the live site.
-PUMBILITY2+ is a tournament formula. Two configs, never merged. Comment both.
+PUMBILITY+ is a tournament formula on both mixes. Two configs (pumbility vs. PUMBILITY+), never merged. Comment both.
 
 ### 9.7 Ratchets that will go red if missed
 
@@ -716,7 +722,7 @@ page for.)*
 
 Settled with the owner over three workshop rounds, 2026-08-09/10. Mocks build from this section.
 
-### 11.1 The six surfaces
+### 11.1 The seven surfaces
 
 | Surface | Route | Leads with |
 |---|---|---|
@@ -725,6 +731,7 @@ Settled with the owner over three workshop rounds, 2026-08-09/10. Mocks build fr
 | **Session Breakdown** | `/MarchOfMurlocs/Session/{id}` | one session's four numbers, its charts, its timeline |
 | **Submit** | `/MarchOfMurlocs/Session/{id}/Edit` | draft editing; publishing freezes the session |
 | **Planner** | `/MarchOfMurlocs/Planner` | a projected session in the same four numbers |
+| **Rules** | `/MarchOfMurlocs/Rules` | how it works — the window, the seasons, the tables and the FAQ — as real HTML (§11.11) |
 
 The old pages are **retired, not ported** — `MarchOfMurlocs.razor` (a directory of eight
 tournaments with the live one buried among them), `StaminaTournament.razor`,
@@ -1099,6 +1106,31 @@ and the 14 August night is Phoenix 2 priced under Phoenix 1 because that is the 
 
 ---
 
+### 11.11 The Rules page
+
+`/MarchOfMurlocs/Rules` is the rules of record (D42) and the section's explainer: the season page's
+eyebrow *How it works →* and the summary's *Full rules →* both land here, and the Google Doc link is
+gone. Mock 8 in the header is the contract (three rounds, 2026-09-06).
+
+**Static SSR, built like `/Welcome`**: real HTML with inline SVG, in the sitemap, with its own head,
+no circuit. Six sections in reading order — the session (a 1:45 timeline with the last chart
+overhanging the buzzer), seasons (four quarter tiles, the live one lit), charts, scoring, recording,
+and the FAQ in the owner's voice. Scoring carries the formula card
+(`points = level value × grade multiplier × song length ÷ 2:00`), the level curve with the 22+ bonus
+stacked on each bar, the balanced-level note, the grade ramp by score with the letter and plate
+images on its axis, a **horizontal** grade table comparing regular Phoenix PUMBILITY with PUMBILITY+
+(images only, never a letter spelled out beside one; it scrolls inside its own box), song-length
+tiles and a worked example.
+
+**One name, one tuning shown.** The page says PUMBILITY+ everywhere and shows the Phoenix 2 tuning
+on Phoenix 2's cutoffs (D41). The Phoenix boards' frozen table is not on the page; the Phoenix
+planner will carry the disclaimer (4b).
+
+**Every number comes from `MoMRules`** (EventCompetition Contracts), the same constants the season
+cycle builds a board's configuration from, so static copy cannot drift from the engine. Deliberately
+absent from the old doc: verification tiers and approval, the 2024 changelog, the Murloc Den invite,
+the co-op speculation, the ban line, dead routes.
+
 ## 12. Build scope
 
 The slices of §8 stand: **4a read surfaces → 4b write surfaces → 4c Discord**, then 5. This is what
@@ -1208,5 +1240,28 @@ everything MoM-shaped lands there; the other verticals are read through their pu
 
 ### 12.5 Out of scope, on purpose
 
-Phoenix 2 boards (Slice 5, admin-gated until the scoring session), any dashboard widget, any
-change to §1's rules or §6's tables, and weaving rest charts into a suggested set.
+Any dashboard widget, weaving rest charts into a suggested set, and the Phoenix planner's
+below-AAA disclaimer (it lands with 4b's planner).
+
+### 12.6 Phoenix 2 go-live + the Rules page — the PR after #319
+
+One PR (owner, 2026-09-05), docs first and internationalization last:
+
+- **SharedKernel:** the two Phoenix 2 pumbility rules become configuration flags (§9.2); stock
+  output pinned identical.
+- **EventCompetition Domain:** `MoMScoring.For(mix)` — the PUMBILITY+ builder per mix, Phoenix
+  extracted verbatim, Phoenix 2 with D41's rows; `IMoMRepository.AddBoards`.
+- **EventCompetition Contracts:** `MoMRules`, the tables the Rules page renders and the cycle
+  builds from.
+- **EventCompetition Application:** the cycle seats four boards per season and heals a live season
+  missing any (D43). **Infrastructure:** `EFMoMRepository.AddBoards`; no schema change.
+- **Domain (shared):** `TournamentSession` keeps the better play of a repeated chart (D39); the
+  record page and the auto-build handler follow.
+- **Web:** `Rules.razor` (static SSR, §11.11), the head resolver, sitemap and static-page ratchet
+  entries; the season page relinks both rules links, drops the Google Doc constant and its two
+  Phoenix 2 gate blocks.
+- **Tests:** flag equivalence; both tables and the continuity math; four boards and the heal;
+  keep-the-better; the Contracts constants equal the cycle's config; the Rules page renders from
+  them; the season page shows Phoenix 2 boards; `AddBoards` against a real database; one E2E
+  assertion per page.
+- **Post-deploy:** one *Trigger now* on `try-schedule-mom` seats Summer 2026's Phoenix 2 boards.
