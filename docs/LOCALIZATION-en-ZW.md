@@ -474,3 +474,18 @@ its six sentences go with it. One line points at the PUMBILITY page instead. Reu
 `Grrglgro` (search, standing in for *looking for*), `ba` (for), `mrgl` (title), `mrglrlgl`
 (progress), `Romorg` (see), `plglur` (page). `PUMBILITY` is protected, and *the* is dropped the
 way `See the Score breakdown` already drops it.
+
+## The API usage counters (2026-09-06)
+
+The maker console's three key phrases (docs/design/api-usage-telemetry.md): what a key was used
+for, how often it hit the limit, and how many requests bounced after it expired. Reused, not
+re-coined: `Grub` (key, from the table above), `murgblarg` (calls), `murgm murmo` (rate limit,
+the existing *Rate limited*), `murgloo` (expired, from *Expires*), `blorp` (rejected). `API` is an
+acronym and stays. The three retired keys took `Grorp {0} murgl` with them — `murgl` is *chart*,
+which is what the old *Rate limited {0} times* was counting in.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| hit (a limit) | bomp | Coined. |
+| times (occurrences) | plurgl | Coined; never `murgl`, which is *chart*. |
+| requests | gramurg | Coined; distinct from `murgm` (used). |

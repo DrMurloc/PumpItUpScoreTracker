@@ -403,9 +403,6 @@
   <data name="A home page that's yours" xml:space="preserve">
     <value>온전히 내 것인 홈 화면</value>
   </data>
-  <data name="A key expired" xml:space="preserve">
-    <value>키가 만료되었습니다</value>
-  </data>
   <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
     <value>만료가 없는 키는 직접 취소할 때까지 유효합니다 — 노트북을 잃어버리거나 저장소가 공개된 뒤에도요. 특별한 이유가 없다면 날짜를 정하세요.</value>
   </data>
@@ -3658,6 +3655,15 @@
   <data name="Key Name" xml:space="preserve">
     <value>키 이름</value>
   </data>
+  <data name="Key {0} expired: {1} requests rejected" xml:space="preserve">
+    <value>키 {0} 만료됨: 요청 {1}건 거부됨</value>
+  </data>
+  <data name="Key {0}: rate limit hit {1} times" xml:space="preserve">
+    <value>키 {0}: 속도 제한 {1}회 도달</value>
+  </data>
+  <data name="Key {0}: {1} API calls" xml:space="preserve">
+    <value>키 {0}: API 호출 {1}회</value>
+  </data>
   <data name="Korean Name" xml:space="preserve">
     <value>한국어 이름</value>
   </data>
@@ -6297,9 +6303,6 @@
   </data>
   <data name="Rate limited" xml:space="preserve">
     <value>속도 제한</value>
-  </data>
-  <data name="Rate limited {0} times" xml:space="preserve">
-    <value>{0}회 속도 제한</value>
   </data>
   <data name="Rating" xml:space="preserve">
     <value>레이팅</value>
@@ -9777,9 +9780,6 @@
   </data>
   <data name="{0} and up" xml:space="preserve">
     <value>{0} 이상</value>
-  </data>
-  <data name="{0} API calls" xml:space="preserve">
-    <value>API 호출 {0}회</value>
   </data>
   <data name="{0} arrived" xml:space="preserve">
     <value>{0}개 들어옴</value>
