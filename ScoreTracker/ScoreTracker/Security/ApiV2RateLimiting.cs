@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.RateLimiting;
 using MediatR;
 using Microsoft.AspNetCore.RateLimiting;
@@ -17,8 +19,12 @@ namespace ScoreTracker.Web.Security;
 ///         honest traffic.
 ///     </para>
 ///     <para>
-///         Partitioned by the Authorization header rather than by IP: a tool is one caller wherever
-///         it runs from, and several makers behind one cloud NAT are not each other's problem.
+///         Partitioned by the credential rather than by IP: a tool is one caller wherever it runs
+///         from, and several makers behind one cloud NAT are not each other's problem. By the
+///         credential, not the header it came in: the same key as Bearer, as a Basic password, or
+///         with stray whitespace is one caller, and partitioning on the raw header handed such a
+///         caller a bucket per spelling — which the per-key tally would have been the first thing
+///         to show.
 ///     </para>
 ///     <para>
 ///         Both tiers sit at the same ceiling because the heaviest honest job on a personal token
@@ -38,15 +44,11 @@ public static class ApiV2RateLimiting
     {
         options.AddPolicy(PolicyName, context =>
         {
-            var header = context.Request.Headers.Authorization.ToString();
-            var isTool = header.StartsWith("Bearer ", StringComparison.Ordinal);
-            var permit = isTool ? ToolRequestsPerMinute : PersonalRequestsPerMinute;
+            var credential = ApiCredential.Parse(context.Request.Headers.Authorization.ToString());
+            var isPersonal = credential.Failure is null && Guid.TryParse(credential.Secret, out _);
+            var permit = isPersonal ? PersonalRequestsPerMinute : ToolRequestsPerMinute;
 
-            // An unauthenticated request has no credential to partition on; it shares one bucket,
-            // which is the right shape because it is about to be rejected anyway.
-            var key = string.IsNullOrEmpty(header) ? "anonymous" : header;
-
-            return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+            return RateLimitPartition.GetFixedWindowLimiter(PartitionKey(credential), _ => new FixedWindowRateLimiterOptions
             {
                 PermitLimit = permit,
                 Window = TimeSpan.FromMinutes(1),
@@ -90,5 +92,17 @@ public static class ApiV2RateLimiting
         };
 
         return options;
+    }
+
+    /// <summary>
+    ///     One bucket per credential, however it was presented. Hashed, so the limiter's partition
+    ///     table is as safe to dump as the key table. An unreadable or empty credential shares one
+    ///     bucket, which is the right shape because it is about to be rejected anyway.
+    /// </summary>
+    public static string PartitionKey(ApiCredential credential)
+    {
+        if (credential.Failure is not null || credential.Secret.Length == 0) return "anonymous";
+
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(credential.Secret)));
     }
 }
