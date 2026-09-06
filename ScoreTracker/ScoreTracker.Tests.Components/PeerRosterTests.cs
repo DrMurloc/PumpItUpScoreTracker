@@ -148,7 +148,10 @@ public sealed class PeerRosterTests : ComponentTestBase
             BoardRow("URUSA#9487", 19_540.84, 32, 41)
         };
 
+        // With a You row, because that is the arrangement every real page renders — and asking a
+        // board row for the account it has not got is what took the page down.
         var cut = RenderComponent<PeerRoster>(p => p.Add(x => x.Rows, rows)
+            .Add(x => x.You, Row("Viewer", 18_200, 27, singles: 22.6, doubles: 22.2, overlap: 0))
             .Add(x => x.BoardPeers, 1)
             .Add(x => x.BoardAsOf, new DateTimeOffset(2026, 8, 30, 0, 0, 0, TimeSpan.Zero)));
 
@@ -166,6 +169,8 @@ public sealed class PeerRosterTests : ComponentTestBase
         Assert.Contains("ALEXANDRITE", top.TextContent);
         Assert.Contains("1 of these are read from the official board, as of 30 Aug.",
             cut.Find("[data-testid=roster-board]").TextContent);
+        // The viewer is still found and still unnumbered — a board row cannot be mistaken for them.
+        Assert.Equal(string.Empty, cut.Find("[data-testid=roster-you] td").TextContent.Trim());
     }
 
     private static PeerRosterEntry Row(string name, double total, int? rung, double singles, double doubles, int overlap,

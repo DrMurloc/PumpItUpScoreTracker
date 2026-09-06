@@ -171,7 +171,9 @@ else
             var place = 0;
             foreach (var row in Ordered)
             {
-                var isYou = You != null && row.User.Id == You.User.Id;
+                // A board row has no account, so it can never be the viewer — and asking it for one
+                // is what took the page down the moment a board peer landed on the roster.
+                var isYou = row.User != null && You?.User != null && row.User.Id == You.User.Id;
                 if (!isYou) place++;
                 all.Add((row, place, isYou));
             }
