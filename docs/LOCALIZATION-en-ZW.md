@@ -566,3 +566,81 @@ which is what the old *Rate limited {0} times* was counting in.
 | hit (a limit) | bomp | Coined. |
 | times (occurrences) | plurgl | Coined; never `murgl`, which is *chart*. |
 | requests | gramurg | Coined; distinct from `murgm` (used). |
+
+### The Rules page batch (2026-09-06)
+
+Coined for the Rules page ([march-of-murlocs.md](design/march-of-murlocs.md) §11.11, D42) — the rules of
+record and the section's explainer — plus the keep-the-better messages on the record page (D39). The MoM
+batch above is reused wholesale (`Orgab`, `maglgrgl`, `Mrglblarg`, `Murgl`, `mrglublgl`, `Mrglrgl`, `Rorgl`,
+`Grorpmurm`, `Morgglgrgl`, `grulmgro`, `glargub`, `brolgro`, `mrpblarg`, `murmgrog`, `Momorp`, `Plagrubgl`,
+`Blubgrorp`, `Blomorg`, `Grulm`, `og`, `rogro`, `gralp`). Song names are not protected nouns, so the FAQ's
+Banya and Paradoxx are rendered as words (`murgmrogl`, `blu murgl S26`) and the owner's handle is written
+as the protected `DrMurloc`.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| rules | murpgl | `murp` + `gl`. |
+| works (how it works) | grogrolg | `grogrol` (running) + `g`. |
+| window (the 1:45) | glargrog | An opening; `glarg` + `rog`. |
+| buzzer | brglbrgl | The doubled root is the noise. |
+| clock / timer | grglmrglub | `grglmrgl` (time) + `ub`. |
+| timed | grglmrglurg | The verb form on `urg`. |
+| hour | grogl | Recovered from *1 hour 45 minutes*. |
+| minutes | rglrglgrorp | Recovered. |
+| song | mrogl | |
+| full song | ulbog mrogl | *whole song*. |
+| short cut / remix | glubgrulm / mrgmrogl | *short span* / *again-song*. |
+| arcade (a song; a place) | lurgglargub | The place is the same word. |
+| finish | lurgblubgl | `lurgblub` (ended) + `gl`. |
+| classic | glorgurg | `glorg` (old) + `urg`. |
+| ties | blugrobgro | `blugrob` (both) + `gro`. |
+| earlier | glorggro | `glorg` + `gro`. |
+| quarter / calendar | grgrogl / gralpblarg | |
+| Winter / Spring / Summer / Fall | Brolggrgl / Glorgargl / Murgargl / Blubargl | |
+| month | mrglgralp | *many days*; the month ranges are `Mrglgralp 1 – 3`. |
+| modifiers | murmgroggl | From `murmgrog` (multiplier): a thing that changes the play. |
+| random / mirror | grogurg / blomorgl | |
+| broken (score) | brglurg | `brgl` (break) + `urg`. |
+| stage break | glubbrgl | `glub` (down) + `brgl`. |
+| plate / plates | plglub | |
+| face value | gogl ulbog | *priced whole*. |
+| passing | lurgurg | |
+| co-op | Groggrob | |
+| video | blomorgmurgl | *watch-thing*. |
+| publishing | blubgrogurg | `blubgrog` (submit) + `urg`. |
+| delete | glubgrob | |
+| import / play history | grubmurgl / lurg glorg | |
+| by hand | gam gurg | |
+| questions | Arglrub | `argl` + `rub`. |
+| meta | murmglarg | |
+| stopwatch / countdown | grglmrglub / grglmrgl glub | |
+| operator menu | mrgloprgl murpblarg | |
+| game over | lurgblub | The recovered *ended*. |
+| friends | blugrobmorp | *both-player*. |
+| abusing / nerf | glubgurg / glubgrog | |
+| knowledge / planning | blargub / plagrubg | |
+| risky | brglgro | `brgl` + `gro`. |
+| cheats | glubmurm | |
+| scheduling / slots / swap | plagrubgrgl / glargrog / grobmurg | |
+| worthless | moglarg | `mo` + `glarg`. |
+| straight line / climb | grolpgrgl / urggrog | |
+| ladder | urgblarg | |
+| perfect game | Ulboglurg | *whole play*, title-cased as the plate's name. |
+| baseline | gogl grglmrgl | *priced time*. |
+| example / worked | blomorgub / grogrolgro | |
+| bonus / stamina | urgmrglublgl / murgbrolg | *up-points* / *strong-solid*. |
+| stacks / grows / fast | urgurg / urggro / grogrog | |
+| number | grorp | |
+| page | mrpglargl | |
+| step (into a song) | lurggl | |
+| premium / event mode | urgmurm / Argl murm | |
+| misses | moglub | |
+| encourage | urggab | |
+| already / better | gab / mrrglgro | `mrrglgro` is the recovered comparative *higher*. |
+| replaced | grobmurg | The recovered *swap*. |
+
+### The newcomer card (2026-09-06)
+
+The Season page's card for a viewer who has never published a session (D44). Reuses the Rules-page
+batch throughout; two new words: *new here?* is `Murpargl ap?` (`murpargl`, the recovered *first / newest*,
+as *first time*) and *read* is `Blomorg` (the recovered *watch / see*, which is how a Murloc reads).

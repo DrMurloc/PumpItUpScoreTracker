@@ -247,28 +247,37 @@
         var start = _checked.Select((c, i) => (c,i)).First(c => c.c).i;
         var end = _checked.Select((c, i) => (c,i)).Last(c => c.c).i;
         var added = 0;
+        var kept = 0;
         var skipped = 0;
         for (var i = start; i <= end; i++)
         {
             var record = _importedScores[i];
             var chart = _chartsById[record.ChartId];
-            // Add throws on a chart the session cannot take — a repeat, or a session already at
-            // MaxTime — and an unguarded throw here kills the circuit. A range that spans two
-            // outings, or a return to a saved session, hits both routinely, so a rejected row is
-            // skipped rather than fatal (the same rule 11.4 sets for the rebuilt Submit page).
+            // Add throws on a chart the session cannot take — a session already at MaxTime —
+            // and an unguarded throw here kills the circuit. A return to a saved session hits it
+            // routinely, so a rejected row is skipped rather than fatal (the same rule 11.4 sets
+            // for the rebuilt Submit page). A chart already in the session is not rejected: the
+            // better play stays (D39).
             if (!(_session?.CanAdd(chart) ?? false))
             {
                 skipped++;
                 continue;
             }
 
-            _session.Add(chart, record.Score!.Value, record.Plate ?? PhoenixPlate.RoughGame, record.IsBroken);
-            added++;
+            if (_session.Add(chart, record.Score!.Value, record.Plate ?? PhoenixPlate.RoughGame, record.IsBroken)
+                == TournamentSession.AddOutcome.KeptExisting)
+                kept++;
+            else
+                added++;
         }
         _showImportDialog = false;
-        if (added == 0)
+        if (added == 0 && kept > 0 && skipped == 0)
         {
-            Snackbar.Add(L["None of those plays could be added — they repeat charts already in the session, or it is already full."], Severity.Warning);
+            Snackbar.Add(L["You already had a better play of every one of those."], Severity.Info);
+        }
+        else if (added == 0)
+        {
+            Snackbar.Add(L["None of those plays could be added — the session is already full."], Severity.Warning);
         }
         else if (skipped > 0)
         {
@@ -362,7 +371,15 @@
             : $"https://piuimages.arroweclip.se/difficulty/{chart.Mix}/{chart.DifficultyString.ToLower()}.png";
     private void AddChart()
     {
-        _session?.Add(_selectedChart!, _score, _plate, _isBroken);
+        switch (_session?.Add(_selectedChart!, _score, _plate, _isBroken))
+        {
+            case TournamentSession.AddOutcome.Replaced:
+                Snackbar.Add(L["That beats your earlier play of this chart, which is replaced."], Severity.Success);
+                break;
+            case TournamentSession.AddOutcome.KeptExisting:
+                Snackbar.Add(L["Your earlier play of this chart scores higher, so it stays."], Severity.Info);
+                break;
+        }
         _selectedChart = null;
         _songSearchString = string.Empty;
         _score = 0;

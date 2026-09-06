@@ -17,6 +17,10 @@
             class="mud-button-root mud-button mud-button-outlined mud-button-outlined-primary mud-button-outlined-size-small mud-ripple">
         <span class="mud-button-label">@L["Past seasons"]</span>
     </button>
+    @* The rules of record, at the size of the rest of the section's navigation (D44). *@
+    <MudButton Href="@MoMText.RulesRoute" Size="Size.Small" Color="Color.Primary" data-testid="mom-how-it-works"
+               Variant="@(Active == "rules" ? Variant.Filled : Variant.Outlined)"
+               StartIcon="@Icons.Material.Filled.MenuBook">@L["How it works"]</MudButton>
     <span class="mom-frame-spacer"></span>
     @if (RecordBoardId is { } boardId)
     {

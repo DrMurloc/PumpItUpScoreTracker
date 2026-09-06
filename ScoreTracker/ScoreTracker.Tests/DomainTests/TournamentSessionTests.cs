@@ -105,8 +105,9 @@ public sealed class TournamentSessionTests
     }
 
     [Fact]
-    public void CanAddRespectsAllowRepeatsFalseForSameSongLevelAndType()
+    public void ARepeatedChartMayEnterAgainAndTheBetterPlayStays()
     {
+        // D39: play a chart twice and only the better score counts; the other never enters.
         var config = Config();
         config.AllowRepeats = false;
         var session = new TournamentSession(Guid.NewGuid(), config);
@@ -115,7 +116,50 @@ public sealed class TournamentSessionTests
         var second = new ChartBuilder().WithSongName("Repeat").WithLevel(15).WithType(ChartType.Single).Build();
         session.Add(first, 900000, PhoenixPlate.SuperbGame, isBroken: false);
 
-        Assert.False(session.CanAdd(second));
+        Assert.True(session.CanAdd(second));
+        Assert.Equal(TournamentSession.AddOutcome.Replaced,
+            session.Add(second, 950000, PhoenixPlate.MarvelousGame, isBroken: false));
+        var held = Assert.Single(session.Entries);
+        Assert.Equal((PhoenixScore)950000, held.Score);
+        Assert.Equal(PhoenixPlate.MarvelousGame, held.Plate);
+        Assert.Equal((int)config.Scoring.GetScore(first, 950000, PhoenixPlate.MarvelousGame, false), held.SessionScore);
+
+        Assert.Equal(TournamentSession.AddOutcome.KeptExisting,
+            session.Add(first, 920000, PhoenixPlate.SuperbGame, isBroken: false));
+        Assert.Equal((PhoenixScore)950000, Assert.Single(session.Entries).Score);
+    }
+
+    [Fact]
+    public void ATieKeepsThePlayAlreadyHeld()
+    {
+        var config = Config();
+        config.AllowRepeats = false;
+        var session = new TournamentSession(Guid.NewGuid(), config);
+        var chart = new ChartBuilder().WithSongName("Tie").WithLevel(15).WithType(ChartType.Single).Build();
+        session.Add(chart, 900000, PhoenixPlate.SuperbGame, isBroken: false);
+
+        Assert.Equal(TournamentSession.AddOutcome.KeptExisting,
+            session.Add(chart, 900000, PhoenixPlate.MarvelousGame, isBroken: false));
+        Assert.Equal(PhoenixPlate.SuperbGame, Assert.Single(session.Entries).Plate);
+    }
+
+    [Fact]
+    public void ABetterPlayOfAHeldChartEntersEvenWhenTheWindowIsFull()
+    {
+        // A replacement adds no duration, so the full-window rule does not apply to it.
+        var config = Config();
+        config.AllowRepeats = false;
+        config.MaxTime = TimeSpan.FromSeconds(90);
+        var session = new TournamentSession(Guid.NewGuid(), config);
+        var filler = new ChartBuilder().WithSong(SongOfDuration("filler", TimeSpan.FromSeconds(90))).Build();
+        session.Add(filler, 900000, PhoenixPlate.SuperbGame, isBroken: false);
+        var another = new ChartBuilder().WithSong(SongOfDuration("another", TimeSpan.FromSeconds(60))).Build();
+
+        Assert.False(session.CanAdd(another));
+        Assert.True(session.CanAdd(filler));
+        Assert.Equal(TournamentSession.AddOutcome.Replaced,
+            session.Add(filler, 960000, PhoenixPlate.SuperbGame, isBroken: false));
+        Assert.Equal((PhoenixScore)960000, Assert.Single(session.Entries).Score);
     }
 
     [Fact]
@@ -129,6 +173,10 @@ public sealed class TournamentSessionTests
         session.Add(first, 900000, PhoenixPlate.SuperbGame, isBroken: false);
 
         Assert.True(session.CanAdd(second));
+        // With repeats allowed a second play is its own entry, never a replacement.
+        Assert.Equal(TournamentSession.AddOutcome.Added,
+            session.Add(second, 950000, PhoenixPlate.SuperbGame, isBroken: false));
+        Assert.Equal(2, session.Entries.Count);
     }
 
     [Fact]

@@ -12,9 +12,9 @@ public static class MoMText
 {
     public const string SeasonRoute = "/MarchOfMurlocs";
     public const string PlannerRoute = "/TournamentBuilder";
-    public const string RulesUrl =
-        "https://docs.google.com/document/d/1Nwr-PDy6lgkTSt4dKu1-0fdeDXdgLWvl7j5yiuIcRCw/edit?usp=sharing";
 
+    /// <summary>The rules of record (docs/design/march-of-murlocs.md §11.11, D42): static, in the sitemap.</summary>
+    public const string RulesRoute = "/MarchOfMurlocs/Rules";
     public static string SeasonPath(Guid seasonId) => $"{SeasonRoute}/{seasonId}";
     public static string SessionPath(Guid sessionId) => $"{SeasonRoute}/Session/{sessionId}";
 

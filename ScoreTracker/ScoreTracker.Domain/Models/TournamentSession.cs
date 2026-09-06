@@ -65,15 +65,33 @@ namespace ScoreTracker.Domain.Models
         public TimeSpan TotalPlayTime =>
             TimeSpan.FromTicks(Entries.Select(e => e.Chart).Sum(c => c.Song.Duration.Ticks));
 
+        /// <summary>
+        ///     Whether the chart can enter the session: it must price above zero, and the window
+        ///     must not be filled. A chart already in the session may enter again — the better play
+        ///     is the one that stays (D39, march-of-murlocs.md §1) — and that replacement adds no
+        ///     duration, so it is allowed even once the entered charts fill the window.
+        /// </summary>
         public bool CanAdd(Chart chart)
         {
             if (_configuration.Scoring.GetScorelessScore(chart) == 0) return false;
+            if (Replays(chart)) return true;
             // The window governs when a chart may start, not when it must finish — the closing
             // chart may overhang it, so the candidate's own duration never enters the test.
-            if (TotalPlayTime >= _configuration.MaxTime) return false;
+            return TotalPlayTime < _configuration.MaxTime;
+        }
 
-            return _configuration.AllowRepeats || !Entries.Any(c =>
-                c.Chart.Level == chart.Level && c.Chart.Type == chart.Type && c.Chart.Song.Name == chart.Song.Name);
+        /// <summary>The play this chart would replace: one is already in, and repeats are not separate entries.</summary>
+        private Entry? Held(Chart chart)
+        {
+            return _configuration.AllowRepeats ? null : Entries.FirstOrDefault(e => IsSameChart(e.Chart, chart));
+        }
+
+        private bool Replays(Chart chart) => Held(chart) != null;
+
+        /// <summary>A chart's identity here is song + type + level: the same song at another level is a different chart.</summary>
+        private static bool IsSameChart(Chart a, Chart b)
+        {
+            return a.Level == b.Level && a.Type == b.Type && a.Song.Name == b.Song.Name;
         }
 
         public void Swap(Entry oldEntry, PhoenixScore score, PhoenixPlate plate, bool isBroken)
@@ -96,11 +114,26 @@ namespace ScoreTracker.Domain.Models
             Entries.Remove(entry);
         }
 
-        public void Add(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
+        /// <summary>
+        ///     Enters a play. When the chart is already in the session and repeats are not separate
+        ///     entries, only the better score stays (D39): a higher score replaces the held play, a
+        ///     lower or equal one is dropped and the session is unchanged. Throws for a chart the
+        ///     session cannot take at all.
+        /// </summary>
+        public AddOutcome Add(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
         {
             if (!CanAdd(chart))
             {
                 throw new ArgumentException($"{chart.Song.Name} {chart.DifficultyString} is invalid for this session");
+            }
+
+            var held = Held(chart);
+            if (held != null)
+            {
+                if (score <= held.Score) return AddOutcome.KeptExisting;
+
+                Swap(held, score, plate, isBroken);
+                return AddOutcome.Replaced;
             }
 
             var basePoints = _configuration.Scoring.GetScore(chart, score, plate, isBroken, false);
@@ -108,6 +141,20 @@ namespace ScoreTracker.Domain.Models
             Entries.Add(
                 new Entry(chart, score, plate, isBroken,
                     (int)withBonus, (int)(withBonus - basePoints)));
+            return AddOutcome.Added;
+        }
+
+        /// <summary>What <see cref="Add" /> did with a play.</summary>
+        public enum AddOutcome
+        {
+            /// <summary>A new entry.</summary>
+            Added,
+
+            /// <summary>The chart was already in; this play scored higher and took its place.</summary>
+            Replaced,
+
+            /// <summary>The chart was already in with a score at least as high; nothing changed.</summary>
+            KeptExisting
         }
 
         public sealed record Entry(Chart Chart, PhoenixScore Score, PhoenixPlate Plate, bool IsBroken,

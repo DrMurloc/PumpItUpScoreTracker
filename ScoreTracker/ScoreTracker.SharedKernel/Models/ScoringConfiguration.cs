@@ -99,6 +99,22 @@ namespace ScoreTracker.SharedKernel.Models
         // sub-AAA thresholds, so a P2 config must grade against the P2 table; everything else
         // keeps the original Phoenix table (the default).
         public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+        /// <summary>
+        ///     Phoenix 2's pumbility prices a chart below level 10 at nothing (co-op excepted: its
+        ///     "level" is a player count). That is a rule of the rating system, not of the mix —
+        ///     PUMBILITY+ on Phoenix 2 keeps 10…90 for levels 1–9 — so it is a switch here rather
+        ///     than a test on <see cref="Mix" />. Only <see cref="PumbilityScoring" /> for Phoenix 2
+        ///     turns it on. Never serialized: a tournament board leaves it off.
+        /// </summary>
+        public bool ZeroBelowLevelTen { get; set; }
+
+        /// <summary>
+        ///     Phoenix 2's pumbility adds +5 to a Single's base (+10 from level 25) before the grade
+        ///     multiplies. Same reasoning as <see cref="ZeroBelowLevelTen" />: a rating-system rule,
+        ///     off for PUMBILITY+ on Phoenix 2, never serialized.
+        /// </summary>
+        public bool SinglesLevelBump { get; set; }
         public int MinimumScore { get; set; } = 0;
         public IDictionary<Guid, double> ChartModifiers { get; set; } = new Dictionary<Guid, double>();
         public double StageBreakModifier { get; set; } = 1.0;
@@ -198,10 +214,10 @@ namespace ScoreTracker.SharedKernel.Models
                     // before multiplying the base. A co-op's "level" is its player count, 2–5,
                     // which the sub-10 rule would swallow — it prices on the flat co-op base
                     // instead (the CO-OP Rating), when the configuration counts co-op at all.
-                    if (Mix == MixEnum.Phoenix2 && chartType != ChartType.CoOp && (int)level < 10) return 0;
+                    if (ZeroBelowLevelTen && chartType != ChartType.CoOp && (int)level < 10) return 0;
                     var result = GetScorelessScore(chartId, level, chartType, songType, duration,
                         includeLevelOverride);
-                    if (Mix == MixEnum.Phoenix2 && chartType == ChartType.Single && result > 0)
+                    if (SinglesLevelBump && chartType == ChartType.Single && result > 0)
                         result += (int)level + 1 > 24 ? 10 : 5;
                     result *= letterGradeModifier + PlateModifierFor(plate, chartType);
                     if (isBroken) result *= StageBreakModifier;
@@ -332,10 +348,10 @@ namespace ScoreTracker.SharedKernel.Models
                 }
                 case CalculationType.GradePlusPlate:
                 {
-                    if (Mix == MixEnum.Phoenix2 && chart.Type != ChartType.CoOp && (int)chart.Level < 10)
+                    if (ZeroBelowLevelTen && chart.Type != ChartType.CoOp && (int)chart.Level < 10)
                         return default;
                     var scoreless = GetScorelessScore(chart, includeLevelOverride);
-                    if (Mix == MixEnum.Phoenix2 && chart.Type == ChartType.Single && scoreless > 0)
+                    if (SinglesLevelBump && chart.Type == ChartType.Single && scoreless > 0)
                         scoreless += (int)chart.Level + 1 > 24 ? 10 : 5;
                     var unit = scoreless * breakModifier;
                     return new ScoreContribution(unit, unit * (grade - 1), unit * plateModifier);
@@ -496,6 +512,10 @@ namespace ScoreTracker.SharedKernel.Models
             var config = new ScoringConfiguration
             {
                 Mix = MixEnum.Phoenix2,
+                // The two rules of the rating system itself (§9.2 of the MoM design): on here,
+                // off for PUMBILITY+ on Phoenix 2, which shares the cutoffs but not the rules.
+                ZeroBelowLevelTen = true,
+                SinglesLevelBump = true,
                 Formula = CalculationType.GradePlusPlate,
                 AdjustToTime = false,
                 StageBreakModifier = 0.0,

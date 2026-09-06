@@ -1,0 +1,380 @@
+@page "/MarchOfMurlocs/Rules"
+@using System.Globalization
+@using System.Text
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@namespace ScoreTracker.Web.Pages.Competition.MoM
+@* The rules of record (docs/design/march-of-murlocs.md §11.11, D42): the window, the seasons,
+   the charts, the PUMBILITY+ tables, recording, and the FAQ in the owner's voice. Static SSR — no
+   @rendermode (RenderModeDeclarationTests lists it) — so it is real HTML for a crawler and a share
+   card; the section frame's Past-seasons island is its one circuit. Every number is read off
+   MoMRules, the same constants the season cycle builds a board from, so the page cannot drift
+   from the ladder. The graphics are inline SVG built as markup, because Razor reserves <text>. *@
+<div class="pmb-eyebrow">
+    <span>@MixName · March of Murlocs</span>
+    <a class="pmb-eyebrow-link" href="@MoMText.SeasonRoute">← @L["This season"]</a>
+</div>
+<header class="mom-rl-hero">
+    <h1 class="mom-rl-title">
+        @L["How March of Murlocs works"]
+        <small>@L["One session of 1 hour 45 minutes. Play as many charts as you can and bank points for how hard each one is and how well you played it. The board ranks sessions, so every attempt is its own shot."]</small>
+    </h1>
+    <nav class="mom-rl-toc" aria-label="@L["On this page"]">
+        <a href="#session">@L["The session"]</a>
+        <a href="#seasons">@L["Seasons"]</a>
+        <a href="#charts">@L["Charts"]</a>
+        <a href="#scoring">@L["Scoring"]</a>
+        <a href="#recording">@L["Recording"]</a>
+        <a href="#faq">@L["Questions"]</a>
+    </nav>
+</header>
+<MoMSectionFrame Active="rules" Mix="_mix"/>
+
+<section class="mom-rl-sec" id="session">
+    <h2><span class="k">01</span>@L["The session"]</h2>
+    <p class="lede">@L["Real time, timed by you. What matters is when a chart starts, not when it ends."]</p>
+    <div class="mom-rl-fig">
+        <div class="fig-title"><span>@L["One session"]</span><b>@L["{0} charts · {1} downtime", 29, "14:22"]</b></div>
+        @((MarkupString)TimelineSvg())
+    </div>
+    <ul class="mom-rl-rules">
+        <li><span><b>@L["1 hour 45 minutes of real time."]</b> @L["The clock starts when you step into your first song."]</span></li>
+        <li><span><b>@L["A chart counts if it starts inside the window."]</b> @L["If the buzzer goes mid-song, finish it: it counts in full. Closing on a full song is the classic move."]</span></li>
+        <li><span><b>@L["All Singles or all Doubles."]</b> @L["A session belongs to one board, and the two boards are never compared."]</span></li>
+        <li><span><b>@L["Play as many sessions as you like in a season."]</b> @L["The board ranks sessions, not players, so three great sessions can hold three places. Ties go to the earlier session."]</span></li>
+    </ul>
+</section>
+
+<section class="mom-rl-sec" id="seasons">
+    <h2><span class="k">02</span>@L["Seasons"]</h2>
+    <p class="lede">@L["A season is a calendar quarter, and there is always one running."]</p>
+    <div class="mom-rl-quarters">
+        @foreach (var (quarter, name, months) in Quarters)
+        {
+            <div class="mom-rl-q @(quarter == _liveQuarter ? "live" : "")" data-testid="mom-rl-quarter">
+                @if (quarter == _liveQuarter)
+                {
+                    <span class="mom-rl-live">@L["LIVE"]</span>
+                }
+                <div class="nm">@name</div>
+                <div class="mo">@months</div>
+            </div>
+        }
+    </div>
+    <ul class="mom-rl-rules">
+        <li><span><b>@L["A season ends at 23:59:59 on the last day of its last month, UTC−5."]</b></span></li>
+        <li><span><b>@L["Every season re-balances every chart from how hard it is to score, then freezes."]</b> @L["Nothing moves under you mid-season, and a past season stays priced under its own tables."]</span></li>
+        <li><span><b>@L["Phoenix and Phoenix 2 each have their own Doubles and Singles boards."]</b> @L["You see the boards of the mix you are on."]</span></li>
+    </ul>
+</section>
+
+<section class="mom-rl-sec" id="charts">
+    <h2><span class="k">03</span>@L["Charts"]</h2>
+    <p class="lede">@L["Almost anything goes. The one thing you cannot do is count a chart twice."]</p>
+    <div class="mom-rl-split">
+        <ul class="mom-rl-rules">
+            <li><span><b>@L["Any song type: arcade, short cut, remix, full song. Every level from 1 to 29."]</b> @L["Co-op is out."]</span></li>
+            <li><span><b>@L["Each chart once."]</b> @L["Play it twice and only your better score counts; the other never enters the session. The same song at another level is a different chart."]</span></li>
+            <li><span><b>@L["All modifiers, random and mirror included."]</b></span></li>
+        </ul>
+        <ul class="mom-rl-rules">
+            <li><span><b>@L["A broken score counts at face value."]</b> @L["Passing and scoring are different things."]</span></li>
+            <li><span><b>@L["A stage break is different."]</b> @L["The game ends the song, there is no score to record, and the time is gone."]</span></li>
+            <li><span><b>@L["Plates change nothing."]</b> @L["Only the score and the chart matter."]</span></li>
+        </ul>
+    </div>
+</section>
+
+<section class="mom-rl-sec" id="scoring">
+    <h2><span class="k">04</span>@L["Scoring"]</h2>
+    <p class="lede">@L["Every chart pays its level value, scaled by how well you scored it and by how long the song is. The grade table is PUMBILITY+: AAA is the 1× target, and below it the price drops fast."]</p>
+    <div class="mom-rl-formula">
+        <span class="t res">@L["Points"]</span><span class="op">=</span>
+        <span class="t">@L["Level value"]</span><span class="op">×</span>
+        <span class="t">@L["Grade multiplier"]</span><span class="op">×</span>
+        <span class="t">@L["song length ÷ 2:00"]</span>
+        <span class="sub">@L["per chart, rounded down"] · @L["your session total is the sum"] · @L["no plate bonus"] · @L["a broken score counts at face value"]</span>
+    </div>
+    <div class="mom-rl-panels">
+        <div class="mom-rl-panel span">
+            <h3><span class="n">1</span>@L["Level value"]</h3>
+            <div class="mom-rl-fig">@((MarkupString)LevelSvg())</div>
+            <p>@L["From level 10 up a level is worth 100 + 5 × (L − 10)(L − 9) points; levels 1 to 9 pay 10 to 90."] @L["From 22 up a stamina bonus stacks on top, and it grows fast: +{0} at 22, +{1} at 24, +{2} at 26, +{3} at 29.", N(MoMRules.LevelBonus(22)), N(MoMRules.LevelBonus(24)), N(MoMRules.LevelBonus(26)), N(MoMRules.LevelBonus(29))]</p>
+            <p><b>@L["Balanced level."]</b> @L["A chart is priced at its folder level plus up to one more, from how hard it is to score, set when the season starts. A 24 that scores like a 24 pays {0}; one that scores like a 25 pays {1}; in between is in between. A chart is never worth less than its number.", N(Value(24)), N(Value(25))]</p>
+        </div>
+        <div class="mom-rl-panel span">
+            <h3><span class="n">2</span>@L["Grade multiplier"]</h3>
+            <div class="mom-rl-fig">
+                <div class="fig-title"><span>@L["PUMBILITY+ by score"]</span><b>@L["letters follow Phoenix 2's cutoffs"]</b></div>
+                @((MarkupString)RampSvg())
+            </div>
+            <div class="mom-rl-scroll">
+                <table class="mom-rl-grades" data-testid="mom-rl-grades">
+                    <thead>
+                    <tr>
+                        <th></th>
+                        @foreach (var row in Rows)
+                        {
+                            <th><LetterGradeIcon Grade="row.Grade" Height="20"/></th>
+                        }
+                        <th><img class="mom-rl-plate" alt="@L["Perfect Game"]" src="https://piuimages.arroweclip.se/plates/pg.png"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr class="score">
+                        <td>@L["From score"] · Phoenix 2</td>
+                        @foreach (var row in Rows)
+                        {
+                            <td>@N(row.FromScore)</td>
+                        }
+                        <td>@N(1000000)</td>
+                    </tr>
+                    <tr>
+                        <td>PUMBILITY</td>
+                        @foreach (var row in Rows)
+                        {
+                            <td>@X(MoMRules.RegularPumbilityMultiplier(row.Grade))</td>
+                        }
+                        <td>@X(MoMRules.RegularPerfectGameMultiplier)</td>
+                    </tr>
+                    <tr class="plus" data-testid="mom-rl-plus">
+                        <td>PUMBILITY+</td>
+                        @foreach (var row in Rows)
+                        {
+                            <td class="@(Differs(row) ? "diff" : "")">@X(row.Multiplier)</td>
+                        }
+                        <td class="diff">@X(PerfectGame)</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p><b>@L["Against regular PUMBILITY,"]</b> @L["AAA is worth 1× instead of {0}×, AA drops from {1}× to {2}×, and anything below A pays nothing. The top of the ladder is the same; a perfect game pays {3}×.", X(MoMRules.RegularPumbilityMultiplier(PhoenixLetterGrade.AAA), false), X(MoMRules.RegularPumbilityMultiplier(PhoenixLetterGrade.AA), false), X(Multiplier(PhoenixLetterGrade.AA), false), X(PerfectGame, false)]</p>
+            <p><b>@L["Continuous."]</b> @L["Between two grades the multiplier climbs in a straight line, so {0} pays {1}× and {2} pays {3}×. Below {4} a chart scores nothing.", N(890000), X(MoMRules.MultiplierAt(Tuning, 890000), false), N(935000), X(MoMRules.MultiplierAt(Tuning, 935000), false), N(Rows[0].FromScore)]</p>
+        </div>
+        <div class="mom-rl-panel">
+            <h3><span class="n">3</span>@L["Song length"]</h3>
+            <p>@L["Two minutes is the baseline. A chart pays its length ÷ 2:00, so a short cut pays less and a full song pays more for the same play."]</p>
+            <div class="mom-rl-lens">
+                <div class="mom-rl-len"><div class="d">1:00</div><div class="m">× 0.5</div><div class="bar"><i style="width:25%"></i></div></div>
+                <div class="mom-rl-len"><div class="d">2:00</div><div class="m">× 1.0</div><div class="bar"><i style="width:50%"></i></div></div>
+                <div class="mom-rl-len"><div class="d">4:00</div><div class="m">× 2.0</div><div class="bar"><i style="width:100%"></i></div></div>
+            </div>
+        </div>
+        <div class="mom-rl-panel">
+            <h3><span class="n">4</span>@L["Worked example"]</h3>
+            <div class="mom-rl-ex" data-testid="mom-rl-example">
+                <div class="k">@L["A four-minute D23 at {0}", N(940000)]</div>
+                <div class="eq">@L["{0} × {1} × 2 = {2} points", N(Value(23)), X(MoMRules.MultiplierAt(Tuning, 940000), false), N(Example940)]</div>
+                <div class="eq">@L["{0} more, at {1}: {2} × 1.0 × 2 = {3}", N(10000), N(950000), N(Value(23)), N(Example950)]</div>
+            </div>
+            <p>@L["Ten thousand points of score on one chart is worth {0} points here. That gap is the whole game below AAA.", N(Example950 - Example940)]</p>
+        </div>
+    </div>
+</section>
+
+<section class="mom-rl-sec" id="recording">
+    <h2><span class="k">05</span>@L["Recording a session"]</h2>
+    <div class="mom-rl-split">
+        <ul class="mom-rl-rules">
+            <li><span><b>@L["Record from the season page"]</b> @L["when you are done, or have a friend do it while you play."]</span></li>
+            <li><span><b>@L["Phoenix 2 imports the charts from your play history."]</b> @L["On Phoenix you enter them by hand."]</span></li>
+        </ul>
+        <ul class="mom-rl-rules">
+            <li><span><b>@L["Publishing freezes the session"]</b> @L["and stamps its date. To fix one, delete it and submit again."]</span></li>
+            <li><span><b>@L["A video link is optional."]</b> @L["YouTube embeds on your session for anyone who wants to watch."]</span></li>
+        </ul>
+    </div>
+</section>
+
+<section class="mom-rl-sec" id="faq">
+    <h2><span class="k">06</span>@L["Questions"]</h2>
+    <div class="mom-rl-faq">
+        @foreach (var (question, answer) in Faq)
+        {
+            <div class="mom-rl-qa" data-testid="mom-rl-qa"><h3>@question</h3><p>@answer</p></div>
+        }
+    </div>
+</section>
+
+<div class="mom-rl-foot">
+    <a href="@MoMText.SeasonRoute">← @L["This season"]</a>
+    <span>@L["These are the rules the site enforces. A season freezes its tables when it begins."]</span>
+</div>
+
+@inject IUiSettingsAccessor UiSettings
+@inject IDateTimeOffsetAccessor Clock
+@code {
+    // The page shows the Phoenix 2 tuning under the one name (D41); the Phoenix boards keep their
+    // frozen table, which the Phoenix planner notes (4b).
+    private const MixEnum Tuning = MixEnum.Phoenix2;
+    private static readonly IReadOnlyList<MoMGradeRow> Rows = MoMRules.GradeRows(Tuning);
+    private static readonly double PerfectGame = MoMRules.PerfectGameMultiplier(Tuning);
+    private static readonly int Example940 = (int)(Value(23) * MoMRules.MultiplierAt(Tuning, 940000) * 2);
+    private static readonly int Example950 = (int)(Value(23) * MoMRules.MultiplierAt(Tuning, 950000) * 2);
+
+    private MixEnum _mix = MixEnum.Phoenix;
+    private int _liveQuarter;
+
+    private string MixName => _mix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix";
+
+    private IEnumerable<(int Quarter, string Name, string Months)> Quarters => new[]
+    {
+        (1, L["Winter"].Value, L["January – March"].Value),
+        (2, L["Spring"].Value, L["April – June"].Value),
+        (3, L["Summer"].Value, L["July – September"].Value),
+        (4, L["Fall"].Value, L["October – December"].Value)
+    };
+
+    private IEnumerable<(string Question, string Answer)> Faq => new[]
+    {
+        (L["What is the meta?"].Value, L["Downtime. The sessions that truly excel keep it short: a few in-game seconds between songs, and rest charts instead of standing around. Below the 22s, know your rest songs."].Value),
+        (L["The in-game countdown lies, right?"].Value, L["About 1.5 real seconds per in-game second. Plan with a stopwatch."].Value),
+        (L["Can I no-bar? Theme it?"].Value, L["It is your session against yourself. No-bar, Banya only, classical only, whatever you want."].Value),
+        (L["Who times me?"].Value, L["You do, or a friend does. Timestamps from your play history help."].Value),
+        (L["Event mode or premium?"].Value, L["Up to you, and you can switch mid-session. Event mode rotates one song at a time and is slower. Standard mode stage breaks at 51 misses, and a stage break has no score."].Value),
+        (L["Can I play in a public arcade?"].Value, L["Absolutely. Mind the arcade's rules and its traffic: 1:45 straight is hard to coordinate."].Value),
+        (L["Can I use the operator menu?"].Value, L["Yes. Skipping the game-over screen or trimming the song list is fair game. Nobody has broken the format with it yet."].Value),
+        (L["Modifiers? HJ? JT?"].Value, L["All modifiers, random and mirror included. HJ is allowed and buys you nothing. JT: I highly encourage it."].Value),
+        (L["My friends are all abusing 8 6 full song!"].Value, L["Chart knowledge and planning are the point. Easy-to-score charts pay at some levels and are risky picks at others. I used to nerf them; nobody stopped playing them."].Value),
+        (L["So As are worthless?"].Value, L["Depends on the A. The multiplier is continuous, so an {0} pays {1}×, close to A+ money, and a strong A on a chart levels above your AAAs can still be the right call. Paradoxx S26 is the classic case. The planner will show you.", N(890000), X(MoMRules.MultiplierAt(Tuning, 890000), false)].Value),
+        (L["Why 1:45 and not 2 hours?"].Value, L["Scheduling. Back-to-back players fit two-hour slots with time to swap."].Value),
+        (L["What if someone cheats?"].Value, L["It is a competition against yourself first. If you think someone cheated, message dr_murloc on the official PIU Discord; entries get removed."].Value)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var selected = await UiSettings.GetSelectedMix();
+        _mix = selected is MixEnum.Phoenix or MixEnum.Phoenix2 ? selected : MixEnum.Phoenix;
+        // The season clock runs UTC-5 (§1); the tile for the quarter we are standing in is lit.
+        var local = Clock.Now.ToOffset(TimeSpan.FromHours(-5));
+        _liveQuarter = (local.Month - 1) / 3 + 1;
+    }
+
+    private static int Value(int level) => MoMRules.LevelValue(Tuning, level);
+    private static double Multiplier(PhoenixLetterGrade grade) => Rows.First(r => r.Grade == grade).Multiplier;
+    private static bool Differs(MoMGradeRow row) => Math.Abs(row.Multiplier - MoMRules.RegularPumbilityMultiplier(row.Grade)) > 0.0001;
+    private static string N(int value) => value.ToString("N0", CultureInfo.InvariantCulture);
+    private static string X(double multiplier, bool sign = true) => multiplier.ToString("0.##", CultureInfo.InvariantCulture) + (sign ? "×" : "");
+    private static string F(double value) => value.ToString("0.#", CultureInfo.InvariantCulture);
+
+    // ---- the graphics ---------------------------------------------------------------------
+
+    /// <summary>One real-looking session: charts as blocks, gaps as downtime, the closer overhanging the buzzer.</summary>
+    private string TimelineSvg()
+    {
+        const int width = 760, height = 118, x0 = 20, x1 = 720;
+        var perMinute = (x1 - x0) / MoMRules.Window.TotalMinutes;
+        var plays = new (double Start, double Length)[]
+        {
+            (0, 3.2), (3.6, 2.4), (6.4, 4.1), (11.0, 2.6), (14.0, 3.4), (17.9, 2.9), (21.2, 5.2), (26.9, 2.5), (29.9, 3.3), (33.7, 2.7),
+            (36.9, 4.4), (41.8, 2.4), (44.6, 3.1), (48.2, 2.8), (51.4, 5.9), (57.8, 2.5), (60.7, 3.4), (64.6, 2.6), (67.6, 4.0), (72.1, 2.7),
+            (75.2, 3.5), (79.2, 2.4), (82.0, 3.8), (86.3, 2.6), (89.3, 3.3), (93.1, 2.5), (96.0, 4.6), (101.0, 1.7), (103.0, 5.8)
+        };
+        var s = new StringBuilder();
+        s.Append($"<svg class=\"mom-rl-svg\" viewBox=\"0 0 {width} {height}\" xmlns=\"http://www.w3.org/2000/svg\" role=\"img\" aria-label=\"{Attr(L["A 1 hour 45 minute session: charts as blocks, downtime as gaps, the last chart starting before the buzzer and finishing after it"])}\">");
+        s.Append($"<rect class=\"track\" x=\"{x0}\" y=\"40\" width=\"{x1 - x0}\" height=\"26\" rx=\"4\"/>");
+        for (var i = 0; i < plays.Length; i++)
+        {
+            var last = i == plays.Length - 1;
+            s.Append($"<rect class=\"{(last ? "accent" : "primary")}\" x=\"{F(x0 + plays[i].Start * perMinute)}\" y=\"40\" width=\"{F(plays[i].Length * perMinute)}\" height=\"26\" rx=\"3\"/>");
+        }
+        s.Append($"<line class=\"buzzer\" x1=\"{x1}\" y1=\"26\" x2=\"{x1}\" y2=\"84\"/>");
+        s.Append($"<text class=\"lbl ink display\" x=\"{x1}\" y=\"18\" text-anchor=\"end\">{Attr(L["1:45 buzzer"]).ToUpperInvariant()}</text>");
+        s.Append($"<line class=\"start\" x1=\"{x0}\" y1=\"26\" x2=\"{x0}\" y2=\"84\"/>");
+        s.Append($"<text class=\"lbl primary-ink display\" x=\"{x0 + 4}\" y=\"18\">{Attr(L["0:00 · your first song starts the clock"]).ToUpperInvariant()}</text>");
+        s.Append($"<text class=\"lbl accent-ink\" x=\"{x1 + 4}\" y=\"98\">{Attr(L["started 1:43 →"])}</text>");
+        s.Append($"<text class=\"lbl accent-ink\" x=\"{x1 + 4}\" y=\"112\">{Attr(L["counts in full"])}</text>");
+        s.Append($"<text class=\"lbl muted\" x=\"{F(x0 + 26 * perMinute)}\" y=\"98\">{Attr(L["gaps are downtime: every second not on a chart"])}</text>");
+        for (var minute = 0; minute <= 105; minute += 15)
+        {
+            var x = F(x0 + minute * perMinute);
+            s.Append($"<line class=\"tick\" x1=\"{x}\" y1=\"66\" x2=\"{x}\" y2=\"72\"/>");
+            if (minute % 30 == 0 || minute == 105)
+                s.Append($"<text class=\"lbl muted\" x=\"{x}\" y=\"84\" text-anchor=\"middle\">{minute / 60}:{minute % 60:00}</text>");
+        }
+        return s.Append("</svg>").ToString();
+    }
+
+    /// <summary>Level value per level, 10 to 29, the stamina bonus stacked on each bar.</summary>
+    private string LevelSvg()
+    {
+        const int width = 760, height = 210, x0 = 34, x1 = 750, top = 20, baseline = 178;
+        var levels = MoMRules.Levels.Where(l => l >= 10).ToArray();
+        double max = Value(levels[^1]);
+        var barWidth = (double)(x1 - x0) / levels.Length;
+        double Y(double v) => baseline - v / max * (baseline - top);
+        var s = new StringBuilder();
+        s.Append($"<svg class=\"mom-rl-svg\" viewBox=\"0 0 {width} {height}\" xmlns=\"http://www.w3.org/2000/svg\" role=\"img\" aria-label=\"{Attr(L["Level value by level, 10 to 29, with the stamina bonus from 22 stacked on top"])}\">");
+        foreach (var grid in new[] { 1000, 2000, 3000 })
+        {
+            s.Append($"<line class=\"grid\" x1=\"{x0}\" y1=\"{F(Y(grid))}\" x2=\"{x1}\" y2=\"{F(Y(grid))}\"/>");
+            s.Append($"<text class=\"lbl muted\" x=\"{x0 - 6}\" y=\"{F(Y(grid) + 4)}\" text-anchor=\"end\">{N(grid)}</text>");
+        }
+        for (var i = 0; i < levels.Length; i++)
+        {
+            var level = levels[i];
+            var bonus = MoMRules.LevelBonus(level);
+            var baseValue = Value(level) - bonus;
+            var x = x0 + i * barWidth + 3;
+            var w = barWidth - 6;
+            s.Append($"<rect class=\"primary\" x=\"{F(x)}\" y=\"{F(Y(baseValue))}\" width=\"{F(w)}\" height=\"{F(baseline - Y(baseValue))}\" rx=\"2\"/>");
+            if (bonus > 0)
+                s.Append($"<rect class=\"accent\" x=\"{F(x)}\" y=\"{F(Y(baseValue + bonus))}\" width=\"{F(w)}\" height=\"{F(Y(baseValue) - Y(baseValue + bonus))}\" rx=\"2\"/>");
+            s.Append($"<text class=\"lbl ink display\" x=\"{F(x + w / 2)}\" y=\"{baseline + 14}\" text-anchor=\"middle\">{level}</text>");
+            if (level >= 22 || level == 10 || level == 20)
+                s.Append($"<text class=\"lbl {(bonus > 0 ? "accent-ink" : "muted")}\" x=\"{F(x + w / 2)}\" y=\"{F(Y(baseValue + bonus) - 5)}\" text-anchor=\"middle\">{N(Value(level))}</text>");
+        }
+        s.Append($"<text class=\"lbl muted\" x=\"{x0}\" y=\"{baseline + 30}\">{Attr(L["level ▸"])} · <tspan class=\"primary-ink\">■</tspan> 100 + 5 × (L − 10)(L − 9) · <tspan class=\"accent-ink\">■</tspan> {Attr(L["stamina bonus from 22"])} · {Attr(L["levels 1–9 pay 10 to 90"])}</text>");
+        return s.Append("</svg>").ToString();
+    }
+
+    /// <summary>The multiplier by score: nothing below A, a straight climb between rungs, the perfect game at the top.</summary>
+    private string RampSvg()
+    {
+        const int width = 760, height = 256, x0 = 70, x1 = 735, top = 16, baseline = 196;
+        const int scoreMin = 750000, scoreMax = 1000000;
+        var multiplierMax = PerfectGame;
+        double Px(double score) => x0 + (score - scoreMin) / (scoreMax - scoreMin) * (x1 - x0);
+        double Py(double m) => baseline - m / multiplierMax * (baseline - top);
+        var zeroBelow = Rows[0].FromScore;
+        var s = new StringBuilder();
+        s.Append($"<svg class=\"mom-rl-svg\" viewBox=\"0 0 {width} {height}\" xmlns=\"http://www.w3.org/2000/svg\" role=\"img\" aria-label=\"{Attr(L["PUMBILITY+ grade multiplier by score, 750,000 to 1,000,000"])}\">");
+        foreach (var grid in new[] { 0, .5, 1, 1.5 })
+        {
+            s.Append($"<line class=\"grid\" x1=\"{x0}\" y1=\"{F(Py(grid))}\" x2=\"{x1}\" y2=\"{F(Py(grid))}\"/>");
+            s.Append($"<text class=\"lbl muted\" x=\"{x0 - 6}\" y=\"{F(Py(grid) + 4)}\" text-anchor=\"end\">{grid.ToString("0.0", CultureInfo.InvariantCulture)}×</text>");
+        }
+        s.Append($"<rect class=\"zero\" x=\"{F(Px(scoreMin))}\" y=\"{top}\" width=\"{F(Px(zeroBelow) - Px(scoreMin))}\" height=\"{baseline - top}\"/>");
+        var zeroX = F((Px(scoreMin) + Px(zeroBelow)) / 2);
+        s.Append($"<text class=\"lbl miss display\" x=\"{zeroX}\" y=\"{baseline - 10}\" text-anchor=\"middle\" transform=\"rotate(-90 {zeroX} {baseline - 10})\">{Attr(L["below {0} = 0", N(zeroBelow)]).ToUpperInvariant()}</text>");
+        var path = new StringBuilder($"M{F(Px(scoreMin))} {F(Py(0))}");
+        foreach (var row in Rows) path.Append($" L{F(Px(row.FromScore))} {F(Py(row.Multiplier))}");
+        path.Append($" L{F(Px(scoreMax))} {F(Py(PerfectGame))}");
+        s.Append($"<path class=\"line\" d=\"{path}\"/>");
+        var labelled = new[] { PhoenixLetterGrade.A, PhoenixLetterGrade.APlus, PhoenixLetterGrade.AA, PhoenixLetterGrade.AAPlus, PhoenixLetterGrade.AAA, PhoenixLetterGrade.S, PhoenixLetterGrade.SS, PhoenixLetterGrade.SSS };
+        foreach (var row in Rows)
+        {
+            var x = Px(row.FromScore);
+            s.Append($"<line class=\"tick\" x1=\"{F(x)}\" y1=\"{baseline}\" x2=\"{F(x)}\" y2=\"{baseline + 5}\"/>");
+            if (!labelled.Contains(row.Grade)) continue;
+            s.Append($"<image href=\"https://piuimages.arroweclip.se/letters/{row.Grade.ToString().ToLowerInvariant()}.png\" x=\"{F(x - 15.4)}\" y=\"{baseline + 8}\" height=\"14\" width=\"30.8\" preserveAspectRatio=\"xMidYMid meet\"/>");
+            s.Append($"<text class=\"lbl muted small\" x=\"{F(x)}\" y=\"{baseline + 36}\" text-anchor=\"middle\">{row.FromScore / 1000}k</text>");
+        }
+        s.Append($"<image href=\"https://piuimages.arroweclip.se/plates/pg.png\" x=\"{F(Px(scoreMax) - 22)}\" y=\"{baseline + 8}\" height=\"14\" width=\"44\" preserveAspectRatio=\"xMidYMid meet\"/>");
+        s.Append($"<circle class=\"primary\" cx=\"{F(Px(zeroBelow))}\" cy=\"{F(Py(0))}\" r=\"3.5\"/>");
+        s.Append($"<text class=\"lbl muted\" x=\"{F(Px(zeroBelow) + 6)}\" y=\"{F(Py(0) - 8)}\">{Attr(L["{0} · 0×, then a straight climb", N(zeroBelow)])}</text>");
+        var aaa = Rows.First(r => r.Grade == PhoenixLetterGrade.AAA);
+        s.Append($"<circle class=\"accent\" cx=\"{F(Px(aaa.FromScore))}\" cy=\"{F(Py(aaa.Multiplier))}\" r=\"3.5\"/>");
+        s.Append($"<text class=\"lbl accent-ink\" x=\"{F(Px(aaa.FromScore) - 8)}\" y=\"{F(Py(aaa.Multiplier) - 8)}\" text-anchor=\"end\">{Attr(L["{0} · the 1× target", N(aaa.FromScore)])}</text>");
+        s.Append($"<image href=\"https://piuimages.arroweclip.se/plates/pg.png\" x=\"{x1 - 78}\" y=\"{top - 4}\" height=\"16\" width=\"50\" preserveAspectRatio=\"xMidYMid meet\"/>");
+        s.Append($"<text class=\"lbl pg display\" x=\"{x1}\" y=\"{top + 9}\" text-anchor=\"end\">{X(PerfectGame)}</text>");
+        return s.Append("</svg>").ToString();
+    }
+
+    private static string Attr(string text) => System.Net.WebUtility.HtmlEncode(text);
+}

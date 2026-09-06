@@ -18,7 +18,10 @@ internal sealed partial class MoMReadHandler
             g => MoMBoardRanking.Order(g, s => s.TotalScore, s => s.PublishedAt!.Value));
         // Only the winners need a name and a face here; the viewer's own result is a place.
         var winners = await Players(byBoard.Values.Where(r => r.Count > 0).Select(r => r[0].UserId), cancellationToken);
-        return seasons.OrderByDescending(s => s.StartsAt)
+        // A season with no board of this mix is not part of the mix's history (D38): the
+        // dialog would otherwise offer Phoenix 2 a row of seasons with nothing on them.
+        return seasons.Where(season => boards.Any(b => b.SeasonId == season.Id))
+            .OrderByDescending(s => s.StartsAt)
             .Select(season => new MoMSeasonListing(Summary(season),
                 BoardsInOrder(boards.Where(b => b.SeasonId == season.Id), request.Mix).Select(board =>
                 {

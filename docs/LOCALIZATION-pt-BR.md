@@ -243,3 +243,38 @@ event's one word for a run (D22) and follows the existing Session / Sessions key
 | Past seasons | Temporadas anteriores |
 | Doubles / Singles | Doubles / Singles (unchanged) |
 | 1st / 2nd / 3rd / 4th | {0}º for every place |
+
+## The Rules page (2026-09-06)
+
+Terms fixed by the Rules page ([march-of-murlocs.md](design/march-of-murlocs.md) §11.11), the rules of
+record since the Google Doc retired, and the keep-the-better messages on the record page (D39). The
+March of Murlocs table above still governs season, session, board and downtime.
+
+| English | pt-BR |
+|---|---|
+| rules | regras |
+| window (the 1:45) | janela |
+| buzzer | buzina |
+| clock | relógio |
+| grade multiplier | multiplicador de grau |
+| level value | valor do nível |
+| stamina bonus | bônus de resistência |
+| broken score | pontuação quebrada |
+| stage break | stage break (unchanged) |
+| plate | placa |
+| short cut / full song | short cut / full song (unchanged) |
+| modifiers | modificadores |
+| Winter / Spring / Summer / Fall | Inverno / Primavera / Verão / Outono |
+| Perfect Game | Perfect Game (unchanged) |
+| play (a run of a chart) | jogada |
+| the meta | o meta |
+
+### The newcomer card (2026-09-06)
+
+The Season page's card for a viewer who has never published a session (D44); the Rules-page terms above apply.
+
+| English | pt-BR |
+|---|---|
+| New here? | Novo por aqui? |
+| Read the rules | Ler as regras |
+| timed by you | cronometrada por você |

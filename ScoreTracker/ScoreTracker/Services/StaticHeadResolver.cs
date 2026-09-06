@@ -78,6 +78,9 @@ public sealed class StaticHeadResolver
     {
         if (path.Equals("/WeeklyCharts", StringComparison.OrdinalIgnoreCase))
             return await ResolveWeeklyCharts(currentMix, cancellationToken);
+        // /MarchOfMurlocs/Rules is the rules of record, a static page with fixed copy.
+        if (path.Equals(MoMText.RulesRoute, StringComparison.OrdinalIgnoreCase))
+            return ResolveMarchOfMurlocsRules();
         // /MarchOfMurlocs is the live season; /MarchOfMurlocs/{guid} a season by id.
         if (path.Equals(MoMText.SeasonRoute, StringComparison.OrdinalIgnoreCase))
             return await ResolveMarchOfMurlocs(null, currentMix, cancellationToken);
@@ -311,6 +314,19 @@ public sealed class StaticHeadResolver
     ///     season is canonical at the bare route, so its own id resolves to that URL rather than
     ///     to a second copy of the same page; a past season is canonical at its id.
     /// </summary>
+    /// <summary>
+    ///     The Rules page (docs/design/march-of-murlocs.md §11.11): one canonical URL, no data
+    ///     behind it, so the head needs no query.
+    /// </summary>
+    private StaticHeadModel ResolveMarchOfMurlocsRules()
+    {
+        return new StaticHeadModel(
+            "March of Murlocs · " + _localizer["How March of Murlocs works"],
+            _localizer["One session of 1 hour 45 minutes. Play as many charts as you can and bank points for how hard each one is and how well you played it. The board ranks sessions, so every attempt is its own shot."],
+            null,
+            $"https://piuscores.arroweclip.se{MoMText.RulesRoute}");
+    }
+
     private async Task<StaticHeadModel?> ResolveMarchOfMurlocs(Guid? seasonId, MixEnum currentMix,
         CancellationToken cancellationToken)
     {

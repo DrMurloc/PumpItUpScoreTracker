@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Bunit;
 using Microsoft.AspNetCore.Components;
@@ -66,7 +67,8 @@ public sealed partial class MoMSeasonPageTests : ComponentTestBase
             .ReturnsAsync(Array.Empty<RivalSubject>());
     }
 
-    private void Page(MoMStanding? doublesStanding = null, MoMStanding? singlesStanding = null)
+    private void Page(MoMStanding? doublesStanding = null, MoMStanding? singlesStanding = null,
+        bool viewerHasPublished = false)
     {
         var kim = Player("김재현");
         var rows = new[] { Row(1, kim, 59319), Row(2, Player("yimmythe42"), 57325), Row(3, kim, 41780, 2) };
@@ -78,10 +80,10 @@ public sealed partial class MoMSeasonPageTests : ComponentTestBase
                 new MoMBoardView(Singles, ChartType.Single, MixEnum.Phoenix, TimeSpan.FromMinutes(105), Array.Empty<MoMBoardRow>(), singlesStanding)
             },
             new MoMSeasonSummary(Previous, "March of Murlocs 2", season.StartsAt.AddMonths(-8), season.StartsAt.AddMonths(-6), false),
-            null);
+            null, viewerHasPublished);
         Mediator.Setup(m => m.Send(It.IsAny<GetMoMSeasonPageQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((GetMoMSeasonPageQuery q, CancellationToken _) => q.Mix == MixEnum.Phoenix2
-                ? page with { Boards = Array.Empty<MoMBoardView>() }
+                ? page with { Boards = page.Boards.Select(b => b with { Mix = MixEnum.Phoenix2 }).ToArray() }
                 : page);
     }
 
@@ -105,6 +107,8 @@ public sealed partial class MoMSeasonPageTests : ComponentTestBase
         Assert.Equal($"/MarchOfMurlocs/{Previous}", cut.Find("[data-testid=mom-previous-season]").GetAttribute("href"));
         Assert.Contains("This is the current season", cut.Find(".mom-foot").TextContent);
         Assert.Empty(cut.FindAll(".mom-legend")); // a visitor has no relationships to explain
-        Assert.NotEmpty(cut.FindAll("details.mom-rules"));
+        // The foot's collapsed summary is gone (D44); a visitor gets the newcomer card instead.
+        Assert.Empty(cut.FindAll("details.mom-rules"));
+        Assert.NotEmpty(cut.FindAll("[data-testid=mom-howto]"));
     }
 }

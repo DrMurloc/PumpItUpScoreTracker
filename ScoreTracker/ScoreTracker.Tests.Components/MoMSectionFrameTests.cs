@@ -35,6 +35,21 @@ public sealed class MoMSectionFrameTests : ComponentTestBase
         // The active chip is filled; the others outlined.
         Assert.Contains("mud-button-filled", cut.Find("nav a[href='/MarchOfMurlocs']").ClassList);
         Assert.Contains("mud-button-outlined", cut.Find("nav a[href='/TournamentBuilder']").ClassList);
+        // The rules of record ride the frame on every page (D44), outlined here.
+        var rules = cut.Find("nav a[href='/MarchOfMurlocs/Rules']");
+        Assert.Contains("How it works", rules.TextContent);
+        Assert.Contains("mud-button-outlined", rules.ClassList);
+    }
+
+    [Fact]
+    public void OnTheRulesPageTheHowItWorksChipIsTheFilledOne()
+    {
+        var cut = RenderComponent<MoMSectionFrame>(p => p
+            .Add(f => f.Active, "rules")
+            .Add(f => f.Mix, MixEnum.Phoenix));
+
+        Assert.Contains("mud-button-filled", cut.Find("nav a[href='/MarchOfMurlocs/Rules']").ClassList);
+        Assert.Contains("mud-button-outlined", cut.Find("nav a[href='/MarchOfMurlocs']").ClassList);
     }
 
     [Fact]

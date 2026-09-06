@@ -79,16 +79,50 @@ public sealed class MoMReadHandlerTests
         Assert.Null(page.Boards[1].Viewer);
         Assert.Null(anonymous!.Boards[0].Viewer);
         Assert.Null(stranger!.Boards[0].Viewer);
+        // The newcomer card (D44) is for whoever has never published: the stranger and the
+        // logged-out viewer, never tieny.
+        Assert.True(page.ViewerHasPublished);
+        Assert.False(anonymous.ViewerHasPublished);
+        Assert.False(stranger.ViewerHasPublished);
         Assert.Equal(1, (await f.Handler().Handle(new GetMoMSeasonPageQuery(MixEnum.Phoenix, ViewerId: kim), CancellationToken.None))!.Boards[0].Viewer!.Place);
     }
 
     [Fact]
-    public async Task PhoenixTwoHasTheSeasonButNoBoardsYet()
+    public async Task AMixWithNoBoardsAnywhereGetsTheSeasonWithNoBoardsAndNoNeighbours()
     {
+        // Between a season's creation and the daily heal (D43): the page still answers, and it
+        // never walks Phoenix 2 back to a season that has nothing for it.
         var (f, winter, _, _) = Board();
         var page = await f.Handler().Handle(new GetMoMSeasonPageQuery(MixEnum.Phoenix2), CancellationToken.None);
         Assert.Equal(winter, page!.Season.Id);
         Assert.Empty(page.Boards);
+        Assert.Null(page.Previous);
+        Assert.Null(page.Next);
+    }
+
+    [Fact]
+    public async Task AMixNavigatesOnlyTheSeasonsThatHaveItsBoards()
+    {
+        // Phoenix 2's history starts with its first boards (D38): Winter 2025 has one, March of
+        // Murlocs 2 does not, so Phoenix 2 sees no previous season while Phoenix still does, and
+        // the seasons dialog lists one season for Phoenix 2 and two for Phoenix.
+        var f = new MoMReadHandlerFixture();
+        var mom2 = f.Season("March of Murlocs 2", Feb.AddMonths(-8), Feb.AddMonths(-6));
+        var winter = f.Season("Winter 2025", Feb, Feb.AddMonths(2));
+        f.Board(winter, ChartType.Double);
+        f.Board(mom2, ChartType.Double);
+        f.Board(winter, ChartType.Double, MixEnum.Phoenix2);
+
+        var phoenix2 = await f.Handler().Handle(new GetMoMSeasonPageQuery(MixEnum.Phoenix2), CancellationToken.None);
+        var phoenix = await f.Handler().Handle(new GetMoMSeasonPageQuery(MixEnum.Phoenix), CancellationToken.None);
+        var phoenix2Listing = await f.Handler().Handle(new GetMoMSeasonsQuery(MixEnum.Phoenix2), CancellationToken.None);
+        var phoenixListing = await f.Handler().Handle(new GetMoMSeasonsQuery(MixEnum.Phoenix), CancellationToken.None);
+
+        Assert.Single(phoenix2!.Boards);
+        Assert.Null(phoenix2.Previous);
+        Assert.Equal("March of Murlocs 2", phoenix!.Previous!.Name);
+        Assert.Equal(new[] { "Winter 2025" }, phoenix2Listing.Select(l => l.Season.Name));
+        Assert.Equal(new[] { "Winter 2025", "March of Murlocs 2" }, phoenixListing.Select(l => l.Season.Name));
     }
 
     [Fact]
@@ -97,6 +131,8 @@ public sealed class MoMReadHandlerTests
         var (f, _, _, _) = Board();
         var mom2 = f.Seasons.Single(s => s.Name == "March of Murlocs 2");
         var practice = f.Season("Practice", Feb.AddMonths(-16), Feb.AddMonths(-15));
+        // A neighbour is a season with a board of the mix (D38); every legacy season has one.
+        f.Board(practice, ChartType.Double);
 
         var page = await f.Handler().Handle(new GetMoMSeasonPageQuery(MixEnum.Phoenix, mom2.Id), CancellationToken.None);
 

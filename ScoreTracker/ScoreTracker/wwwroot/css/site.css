@@ -19319,3 +19319,124 @@ a.peer-pop-row:hover {
     .mom-four .v { font-size: 26px; }
     .mom-table .w700 { display: none; }
 }
+
+/* ============================================================================
+   March of Murlocs — the Rules page (docs/design/march-of-murlocs.md §11.11, D42). Static
+   HTML built like the front door: a hero, six numbered sections, inline SVG that reads the mix
+   tokens through the .mom-rl-svg classes, and a horizontal grade table that scrolls inside its
+   own box. Every colour is a token; the letters and plates are the site's images.
+   ============================================================================ */
+.mom-rl-hero { padding: 10px 0 18px; border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); margin-bottom: 8px; }
+.mom-rl-title { font-family: var(--font-display); font-weight: 700; font-size: 56px; line-height: .92; letter-spacing: -.01em; margin: 0; text-transform: uppercase; text-wrap: balance; }
+.mom-rl-title small { display: block; font-family: var(--font-body); font-weight: 400; font-size: 17px; line-height: 1.4; letter-spacing: 0; text-transform: none; color: var(--mix-ink-muted); margin-top: 14px; max-width: 62ch; }
+.mom-rl-toc { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+.mom-rl-toc a { display: inline-flex; align-items: center; height: 26px; padding: 0 11px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); color: var(--mix-ink-muted); font-family: var(--font-display); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; text-decoration: none; }
+.mom-rl-toc a:hover { color: var(--mix-primary); border-color: color-mix(in srgb, var(--mix-primary) 50%, transparent); }
+.mom-rl-sec { padding: 26px 0 8px; }
+.mom-rl-sec + .mom-rl-sec { border-top: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); }
+.mom-rl-sec h2 { font-family: var(--font-display); font-weight: 700; font-size: 30px; letter-spacing: .03em; text-transform: uppercase; margin: 0 0 4px; }
+.mom-rl-sec h2 .k { color: var(--mix-primary); margin-right: 10px; font-size: 20px; vertical-align: 6px; letter-spacing: .1em; }
+.mom-rl-sec .lede { color: var(--mix-ink-muted); margin: 0 0 16px; font-size: 15px; max-width: 70ch; }
+.mom-rl-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px 28px; align-items: start; }
+.mom-rl-rules { margin: 16px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.mom-rl-split .mom-rl-rules { margin-top: 0; }
+.mom-rl-rules li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; font-size: 14.5px; line-height: 1.45; }
+.mom-rl-rules li::before { content: ""; width: 8px; height: 8px; margin: 7px 0 0 6px; border-radius: 50%; background: var(--mix-primary); box-shadow: 0 0 8px var(--mix-glow); }
+.mom-rl-rules b { color: var(--mix-ink); font-weight: 500; }
+.mom-rl-fig { background: var(--mix-surface); border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); border-radius: 12px; padding: 14px 16px 12px; }
+.mom-rl-fig svg { display: block; width: 100%; height: auto; }
+.mom-rl-fig .fig-title { font-family: var(--font-display); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--mix-ink-muted); margin-bottom: 8px; display: flex; justify-content: space-between; gap: 10px; }
+.mom-rl-fig .fig-title b { color: var(--mix-ink); }
+.mom-rl-svg .track { fill: color-mix(in srgb, var(--mix-ink) 5%, transparent); }
+.mom-rl-svg .primary { fill: var(--mix-primary); opacity: .85; }
+.mom-rl-svg .accent { fill: var(--mix-accent); }
+.mom-rl-svg .zero { fill: color-mix(in srgb, var(--judg-miss) 10%, transparent); }
+.mom-rl-svg .grid { stroke: color-mix(in srgb, var(--mix-ink) 8%, transparent); }
+.mom-rl-svg .tick { stroke: var(--mix-ink-muted); stroke-width: 1; }
+.mom-rl-svg .buzzer { stroke: var(--mix-ink); stroke-width: 2; stroke-dasharray: 3 3; }
+.mom-rl-svg .start { stroke: var(--mix-primary); stroke-width: 2; }
+.mom-rl-svg .line { fill: none; stroke: var(--mix-primary); stroke-width: 3; }
+.mom-rl-svg .lbl { font-family: var(--font-body); font-size: 11px; fill: var(--mix-ink); }
+.mom-rl-svg .lbl.display { font-family: var(--font-display); font-weight: 700; font-size: 12px; letter-spacing: .08em; }
+.mom-rl-svg .lbl.small { font-size: 9.5px; }
+.mom-rl-svg .muted { fill: var(--mix-ink-muted); }
+.mom-rl-svg .ink { fill: var(--mix-ink); }
+.mom-rl-svg .primary-ink { fill: var(--mix-primary); }
+.mom-rl-svg .accent-ink { fill: var(--mix-accent); }
+.mom-rl-svg .miss { fill: var(--judg-miss); font-size: 10px; }
+.mom-rl-svg .pg { fill: var(--plate-pg); }
+.mom-rl-quarters { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.mom-rl-q { border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); border-radius: 10px; padding: 12px 12px 10px; background: var(--mix-surface); position: relative; }
+.mom-rl-q .nm { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: .02em; }
+.mom-rl-q .mo { font-size: 12.5px; color: var(--mix-ink-muted); }
+.mom-rl-q.live { border-color: color-mix(in srgb, var(--mix-primary) 60%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--mix-primary) 35%, transparent), 0 0 18px -8px var(--mix-glow); }
+.mom-rl-live { position: absolute; top: 10px; right: 10px; display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 11.5px; font-weight: 500; background: color-mix(in srgb, var(--daily-community) 16%, transparent); color: var(--daily-community); }
+.mom-rl-live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 6px currentColor; }
+.mom-rl-formula { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 18px 16px; border-radius: 12px; background: var(--mix-surface); border: 1px solid color-mix(in srgb, var(--mix-primary) 30%, transparent); margin: 6px 0 18px; }
+.mom-rl-formula .t { font-family: var(--font-display); font-weight: 700; font-size: 26px; letter-spacing: .02em; text-transform: uppercase; }
+.mom-rl-formula .t.res { color: var(--mix-accent); }
+.mom-rl-formula .op { font-family: var(--font-display); font-size: 26px; color: var(--mix-ink-muted); }
+.mom-rl-formula .sub { flex-basis: 100%; text-align: center; font-size: 12.5px; color: var(--mix-ink-muted); margin-top: -4px; }
+.mom-rl-panels { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px 28px; }
+.mom-rl-panel, .mom-rl-split > * { min-width: 0; }
+.mom-rl-panel h3 { font-family: var(--font-display); font-weight: 600; font-size: 20px; letter-spacing: .05em; text-transform: uppercase; margin: 0 0 8px; display: flex; align-items: center; gap: 10px; }
+.mom-rl-panel h3 .n { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--mix-primary); color: var(--mix-primary-contrast); font-size: 14px; }
+.mom-rl-panel p { font-size: 14px; color: var(--mix-ink-muted); margin: 8px 0 0; }
+.mom-rl-panel p b { color: var(--mix-ink); font-weight: 500; }
+.mom-rl-panel.span { grid-column: 1 / -1; }
+.mom-rl-scroll { overflow-x: auto; max-width: 100%; margin-top: 12px; border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); border-radius: 10px; background: var(--mix-surface); }
+.mom-rl-grades { border-collapse: collapse; font-size: 13.5px; min-width: 100%; }
+.mom-rl-grades th, .mom-rl-grades td { padding: 8px 10px; text-align: center; border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 7%, transparent); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mom-rl-grades th:first-child, .mom-rl-grades td:first-child { text-align: left; position: sticky; left: 0; background: var(--mix-surface); font-family: var(--font-display); font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mix-ink-muted); font-weight: 600; box-shadow: 1px 0 0 color-mix(in srgb, var(--mix-ink) 12%, transparent); }
+.mom-rl-grades thead th { border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); vertical-align: bottom; }
+.mom-rl-grades thead img, .mom-rl-grades thead .mud-image { height: 20px; width: auto; display: block; margin: 0 auto; }
+.mom-rl-grades tr.plus td { color: var(--mix-ink); font-weight: 500; background: color-mix(in srgb, var(--mix-primary) 8%, transparent); }
+.mom-rl-grades tr.plus td:first-child { color: var(--mix-primary); }
+.mom-rl-grades tr.plus td.diff { color: var(--mix-accent); }
+.mom-rl-grades tr.score td { color: var(--mix-ink-muted); font-size: 12px; }
+.mom-rl-ex { margin-top: 14px; padding: 12px 14px; border-radius: 10px; border: 1px dashed color-mix(in srgb, var(--mix-accent) 50%, transparent); background: color-mix(in srgb, var(--mix-accent) 6%, var(--mix-surface)); font-size: 14px; }
+.mom-rl-ex .k { font-family: var(--font-display); font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--mix-accent); margin-bottom: 4px; }
+.mom-rl-ex .eq { font-variant-numeric: tabular-nums; }
+.mom-rl-lens { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.mom-rl-len { flex: 1 1 120px; border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); border-radius: 10px; padding: 10px 12px; background: var(--mix-surface); }
+.mom-rl-len .d { font-family: var(--font-display); font-weight: 700; font-size: 22px; }
+.mom-rl-len .m { color: var(--mix-accent); font-family: var(--font-display); font-weight: 600; font-size: 15px; }
+.mom-rl-len .bar { height: 6px; border-radius: 999px; background: color-mix(in srgb, var(--mix-ink) 12%, transparent); margin-top: 8px; overflow: hidden; }
+.mom-rl-len .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--mix-primary), var(--mix-accent)); }
+.mom-rl-faq { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px 28px; }
+.mom-rl-qa { border-top: 1px solid color-mix(in srgb, var(--mix-ink) 7%, transparent); padding-top: 10px; }
+.mom-rl-qa h3 { margin: 0 0 4px; font-family: var(--font-display); font-size: 18px; font-weight: 600; letter-spacing: .02em; }
+.mom-rl-qa p { margin: 0; font-size: 14px; color: var(--mix-ink-muted); }
+.mom-rl-foot { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 26px; padding-top: 12px; border-top: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); font-size: 13px; color: var(--mix-ink-muted); }
+@media (max-width: 700px) {
+    .mom-rl-title { font-size: 40px; }
+    .mom-rl-split, .mom-rl-panels, .mom-rl-faq { grid-template-columns: 1fr; }
+    .mom-rl-quarters { grid-template-columns: 1fr 1fr; }
+    .mom-rl-formula .t, .mom-rl-formula .op { font-size: 20px; }
+    .mom-rl-grades { font-size: 12.5px; }
+    .mom-rl-grades th, .mom-rl-grades td { padding: 6px 8px; }
+}
+
+/* ============================================================================
+   March of Murlocs — the newcomer card on the Season page (docs/design/march-of-murlocs.md
+   D44): the rules in one card until the viewer has published a session; the frame's
+   How-it-works chip carries the link for everyone else.
+   ============================================================================ */
+.mom-howto { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(220px, .8fr); gap: 12px 24px; align-items: center; margin: 14px 0 4px; padding: 16px 18px; border-radius: 12px; background: var(--mix-surface); border: 1px solid color-mix(in srgb, var(--mix-primary) 35%, transparent); box-shadow: 0 0 24px -14px var(--mix-glow); }
+.mom-howto .k { font-family: var(--font-display); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--mix-accent); }
+.mom-howto h2 { margin: 2px 0 6px; font-family: var(--font-display); font-weight: 700; font-size: 26px; letter-spacing: .02em; line-height: 1; }
+.mom-howto p { margin: 0 0 10px; font-size: 14px; color: var(--mix-ink-muted); max-width: 56ch; }
+.mom-howto .facts { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.mom-howto .facts span { display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 11.5px; border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); color: var(--mix-ink-muted); }
+.mom-howto .cta { display: flex; gap: 8px; flex-wrap: wrap; }
+.mom-howto-art svg { display: block; width: 100%; height: auto; }
+.mom-howto-art .track { fill: color-mix(in srgb, var(--mix-ink) 6%, transparent); }
+.mom-howto-art .primary { fill: var(--mix-primary); opacity: .85; }
+.mom-howto-art .accent { fill: var(--mix-accent); }
+.mom-howto-art .buzzer { stroke: var(--mix-ink); stroke-width: 2; stroke-dasharray: 3 3; }
+.mom-howto-art .lbl { font-family: var(--font-display); font-size: 11px; fill: var(--mix-ink); letter-spacing: .08em; }
+@media (max-width: 700px) {
+    .mom-howto { grid-template-columns: 1fr; padding: 14px; }
+    .mom-howto-art { order: -1; }
+    .mom-howto h2 { font-size: 22px; }
+}

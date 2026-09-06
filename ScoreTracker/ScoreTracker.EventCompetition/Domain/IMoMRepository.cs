@@ -18,6 +18,9 @@ internal sealed record MoMSeason(Guid Id, int? Year, byte? Quarter, string Name,
 internal sealed record MoMBoardSeed(Guid Id, MixEnum Mix, ChartType ChartType,
     TournamentConfiguration Configuration, IReadOnlyDictionary<Guid, double> SnapshotDeltas);
 
+/// <summary>The (mix, chart type) pair that identifies a board within its season (D3).</summary>
+internal sealed record MoMBoardKey(MixEnum Mix, ChartType ChartType);
+
 /// <summary>
 ///     The season cycle's storage: quarterly lookups, atomic season + boards + snapshot
 ///     creation, and the D13 prune. Boards, chart levels and sessions cascade with their
@@ -29,6 +32,15 @@ internal interface IMoMRepository
 
     Task CreateSeason(MoMSeason season, IReadOnlyList<MoMBoardSeed> boards,
         CancellationToken cancellationToken);
+
+    /// <summary>The (mix, chart type) pairs a season already has boards for.</summary>
+    Task<IReadOnlyList<MoMBoardKey>> GetBoardKeys(Guid seasonId, CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     Seats boards on an existing season, with their snapshot delta rows — the heal of
+    ///     D43. A snapshot row the season already holds for that (mix, chart) is left alone.
+    /// </summary>
+    Task AddBoards(Guid seasonId, IReadOnlyList<MoMBoardSeed> boards, CancellationToken cancellationToken);
 
     /// <summary>Deletes every ended season with no sessions on any board (D13).</summary>
     Task PruneEndedEmptySeasons(DateTimeOffset now, CancellationToken cancellationToken);

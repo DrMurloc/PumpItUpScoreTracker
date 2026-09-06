@@ -414,20 +414,37 @@ public sealed class E2ESeedData
         DateTimeOffset endsAt, CancellationToken cancellationToken = default)
     {
         var seasonId = Guid.NewGuid();
+        await using (var context = await _factory.CreateDbContextAsync(cancellationToken))
+        {
+            await context.Database.ExecuteSqlInterpolatedAsync(
+                $"INSERT INTO [scores].[MoMSeason] ([Id], [Name], [StartsAt], [EndsAt], [CreatedAt]) VALUES ({seasonId}, {name}, {startsAt}, {endsAt}, {startsAt})",
+                cancellationToken);
+        }
+
+        var boardId = await SeedMoMBoardAsync(seasonId, name, PhoenixMixId, cancellationToken: cancellationToken);
+        return (seasonId, boardId);
+    }
+
+    /// <summary>
+    ///     One board on an existing season — a mix's Doubles board unless told otherwise — with the
+    ///     minimal frozen configuration the read side deserializes (MoM-internal table — SQL, per the
+    ///     house rule). Chart type 1 is Double, 0 Single.
+    /// </summary>
+    public async Task<Guid> SeedMoMBoardAsync(Guid seasonId, string seasonName, Guid mixId, byte chartType = 1,
+        CancellationToken cancellationToken = default)
+    {
         var boardId = Guid.NewGuid();
-        var config = "{\"Id\":\"" + boardId + "\",\"Name\":\"March of Murlocs " + name + " - Doubles\"," +
+        var typeName = chartType == 1 ? "Doubles" : "Singles";
+        var config = "{\"Id\":\"" + boardId + "\",\"Name\":\"March of Murlocs " + seasonName + " - " + typeName + "\"," +
                      "\"LevelRatings\":{},\"SongTypeModifiers\":{},\"ChartTypeModifiers\":{},\"LetterGradeModifiers\":{}," +
                      "\"PlateModifiers\":{},\"ChartModifiers\":{},\"CalculationType\":0,\"PgModifier\":1.6,\"MinimumScore\":0," +
                      "\"CustomFormula\":\"\",\"StageBreakModifier\":1.0,\"AdjustToTime\":true,\"ContinuousLetterGradeScale\":true," +
                      "\"MaxTime\":\"01:45:00\",\"AllowRepeats\":false}";
         await using var context = await _factory.CreateDbContextAsync(cancellationToken);
         await context.Database.ExecuteSqlInterpolatedAsync(
-            $"INSERT INTO [scores].[MoMSeason] ([Id], [Name], [StartsAt], [EndsAt], [CreatedAt]) VALUES ({seasonId}, {name}, {startsAt}, {endsAt}, {startsAt})",
+            $"INSERT INTO [scores].[MoMBoard] ([Id], [SeasonId], [MixId], [ChartType], [ScoringConfig]) VALUES ({boardId}, {seasonId}, {mixId}, {chartType}, {config})",
             cancellationToken);
-        await context.Database.ExecuteSqlInterpolatedAsync(
-            $"INSERT INTO [scores].[MoMBoard] ([Id], [SeasonId], [MixId], [ChartType], [ScoringConfig]) VALUES ({boardId}, {seasonId}, {PhoenixMixId}, {(byte)1}, {config})",
-            cancellationToken);
-        return (seasonId, boardId);
+        return boardId;
     }
 
     /// <summary>A published session on a MoM board, with one chart row and the derived columns the board prints.</summary>

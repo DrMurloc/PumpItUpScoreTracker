@@ -51,6 +51,7 @@ namespace ScoreTracker.Web.Controllers
             // page — each a real crawlable board (march-of-murlocs.md §11.2, §11.8). Seasons are
             // shared across mixes; Phoenix names the boards on them.
             pages.Add("https://piuscores.arroweclip.se" + MoMText.SeasonRoute);
+            pages.Add("https://piuscores.arroweclip.se" + MoMText.RulesRoute);
             pages.AddRange((await _mediator.Send(new GetMoMSeasonsQuery(MixEnum.Phoenix), cancellationToken))
                 .Where(s => !s.Season.IsLive)
                 .Select(s => "https://piuscores.arroweclip.se" + MoMText.SeasonPath(s.Season.Id)));
