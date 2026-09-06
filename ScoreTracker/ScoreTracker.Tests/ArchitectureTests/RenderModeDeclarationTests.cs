@@ -41,7 +41,10 @@ public sealed class RenderModeDeclarationTests
         // The March of Murlocs season page: the boards are real crawlable HTML and a past season
         // never changes; the Past-seasons dialog is its one island
         // (docs/design/march-of-murlocs.md §11.2).
-        "Competition/MarchOfMurlocs/Season.razor"
+        "Competition/MarchOfMurlocs/Season.razor",
+        // The rules of record: fixed copy and inline SVG from the published tables, one
+        // canonical URL for a crawler and a share card (docs/design/march-of-murlocs.md §11.11).
+        "Competition/MarchOfMurlocs/Rules.razor"
     };
 
     [Fact]

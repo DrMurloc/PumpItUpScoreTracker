@@ -70,6 +70,17 @@ public sealed class MoMRulesTests
     }
 
     [Fact]
+    public void TheComparisonRowIsRegularPhoenixPumbility()
+    {
+        Assert.Equal(.8, MoMRules.RegularPumbilityMultiplier(PhoenixLetterGrade.A));
+        Assert.Equal(1.0, MoMRules.RegularPumbilityMultiplier(PhoenixLetterGrade.AA));
+        Assert.Equal(1.10, MoMRules.RegularPumbilityMultiplier(PhoenixLetterGrade.AAA));
+        Assert.Equal(1.15, MoMRules.RegularPumbilityMultiplier(PhoenixLetterGrade.AAAPlus));
+        Assert.Equal(1.50, MoMRules.RegularPumbilityMultiplier(PhoenixLetterGrade.SSSPlus));
+        Assert.Equal(1.50, MoMRules.RegularPerfectGameMultiplier);
+    }
+
+    [Fact]
     public void TheConstantsThePageQuotes()
     {
         Assert.Equal(TimeSpan.FromMinutes(105), MoMRules.Window);

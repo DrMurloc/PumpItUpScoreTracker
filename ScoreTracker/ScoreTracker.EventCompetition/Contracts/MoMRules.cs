@@ -1,5 +1,6 @@
 using ScoreTracker.EventCompetition.Domain;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.EventCompetition.Contracts;
@@ -37,6 +38,19 @@ public static class MoMRules
     {
         return MoMScoring.For(mix).PgLetterGradeModifier;
     }
+
+    /// <summary>
+    ///     The grade's multiplier under regular Phoenix PUMBILITY, the table every player knows:
+    ///     the comparison row that shows what PUMBILITY+ changed.
+    /// </summary>
+    public static double RegularPumbilityMultiplier(PhoenixLetterGrade grade)
+    {
+        return ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, false).LetterGradeModifierFor(grade, ChartType.Double);
+    }
+
+    /// <summary>What a perfect game pays under regular Phoenix PUMBILITY.</summary>
+    public static double RegularPerfectGameMultiplier =>
+        ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, false).PgLetterGradeModifier;
 
     /// <summary>
     ///     The grade rungs from A to SSS+: the score each starts at on this mix and the
