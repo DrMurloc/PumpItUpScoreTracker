@@ -52,6 +52,7 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
     private readonly RivalScoreReader _rivalScores;
     private readonly IRivalRepository _rivals;
     private readonly IScoreReader _scores;
+    private readonly IOfficialPlacementReader _official;
     private readonly IPlayerStatsReader _stats;
     private readonly IUserReader _users;
     private readonly IPlayerVisibilityReader _visibility;
@@ -59,7 +60,7 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
     public PeerStandingReader(IRivalRepository rivals, RivalSubjectResolver resolver, RivalScoreReader rivalScores,
         ICommunityReader communities, IPlayerStatsReader stats, IScoreReader scores, IChartRepository charts,
         IUserReader users, IPlayerVisibilityReader visibility, IMediator mediator,
-        ICurrentUserAccessor currentUser, IMemoryCache cache)
+        ICurrentUserAccessor currentUser, IMemoryCache cache, IOfficialPlacementReader official)
     {
         _rivals = rivals;
         _resolver = resolver;
@@ -73,6 +74,7 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         _mediator = mediator;
         _currentUser = currentUser;
         _cache = cache;
+        _official = official;
     }
 
     public Task<IReadOnlyDictionary<Guid, PeerStanding>> Handle(GetPeerStandingsQuery request,
@@ -470,6 +472,24 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         }
 
         DateTimeOffset? asOf = null;
+
+        // The PUMBILITY source can carry players the official board is the only record of (D59).
+        // Their passes come off the mirror exactly as a ghost rival's do, so they count toward the
+        // same "N of M peers" the site half does — without this they would sit in the denominator
+        // and never be able to appear in the numerator.
+        var boardVoices = peers.Union.Where(v => v.IsFromBoard && v.RivalEdgeId == null)
+            .ToDictionary(v => v.BoardPlayerId);
+        if (boardVoices.Count > 0)
+        {
+            var board = await _official.GetBoardScoresOn(mix, boardVoices.Keys.ToArray(), missing,
+                cancellationToken);
+            foreach (var row in board)
+            {
+                if (!boardVoices.TryGetValue(row.BoardPlayerId, out var voice)) continue;
+                Passes(passes, row.ChartId).Add(new PeerStandingCalculator.PeerPass(voice, row.Score, true));
+            }
+        }
+
         if (peers.Ghosts.Count > 0)
         {
             // Site rivals are already in the union read; only the ghosts' board placements are new.

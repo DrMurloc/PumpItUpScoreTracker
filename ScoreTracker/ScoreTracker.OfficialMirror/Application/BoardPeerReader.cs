@@ -199,4 +199,16 @@ internal sealed class BoardPeerReader
 
         return rows.Select(r => new BoardScoreReading(r.PlayerId, r.ChartId, r.Level, r.Score)).ToArray();
     }
+
+    public async Task<IReadOnlyList<BoardScoreReading>> GetBoardScoresOn(MixEnum mix,
+        IReadOnlyCollection<int> boardPlayerIds, IReadOnlyCollection<Guid> chartIds,
+        CancellationToken cancellationToken)
+    {
+        if (boardPlayerIds.Count == 0 || chartIds.Count == 0) return Array.Empty<BoardScoreReading>();
+
+        var rows = await _snapshots.GetChartHistoryOn(mix, boardPlayerIds, chartIds, PlacementScope.OfficialOnly,
+            cancellationToken);
+
+        return rows.Select(r => new BoardScoreReading(r.PlayerId, r.ChartId, r.Level, r.Score)).ToArray();
+    }
 }

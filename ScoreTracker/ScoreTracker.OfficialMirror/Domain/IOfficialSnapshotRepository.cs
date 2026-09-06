@@ -141,6 +141,15 @@ internal interface IOfficialSnapshotRepository
         PlacementScope scope, CancellationToken ct);
 
     /// <summary>
+    ///     The same read bounded by CHARTS rather than by a level band, for a caller that already
+    ///     knows which charts it is asking about — a chart's peer board asks about the one chart in
+    ///     front of it and would otherwise pull a whole level range to throw most of it away.
+    /// </summary>
+    Task<IReadOnlyList<PlayerChartHistoryRow>> GetChartHistoryOn(MixEnum mix,
+        IReadOnlyCollection<int> playerIds, IReadOnlyCollection<Guid> chartIds, PlacementScope scope,
+        CancellationToken ct);
+
+    /// <summary>
     ///     Every player id with a placement in any of this mix's snapshots before the given
     ///     one — the all-history "seen" set that makes a debut a debut.
     /// </summary>

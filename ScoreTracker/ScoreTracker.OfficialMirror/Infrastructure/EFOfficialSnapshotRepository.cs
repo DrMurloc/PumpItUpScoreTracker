@@ -571,6 +571,26 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
             .ToArrayAsync(ct);
     }
 
+    public async Task<IReadOnlyList<PlayerChartHistoryRow>> GetChartHistoryOn(MixEnum mix,
+        IReadOnlyCollection<int> playerIds, IReadOnlyCollection<Guid> chartIds, PlacementScope scope,
+        CancellationToken ct)
+    {
+        if (playerIds.Count == 0 || chartIds.Count == 0) return Array.Empty<PlayerChartHistoryRow>();
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var mixId = MixIds.For(mix);
+        return await Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
+            .Where(p => playerIds.Contains(p.PlayerId))
+            .Join(database.Set<OfficialLeaderboardEntity>()
+                    .Where(b => b.MixId == mixId && b.LeaderboardType == LeaderboardTypes.Chart
+                                                 && b.ChartId != null && chartIds.Contains(b.ChartId.Value)),
+                p => p.LeaderboardId, b => b.Id,
+                (p, b) => new { p.PlayerId, ChartId = b.ChartId!.Value, Level = b.Level ?? 0, p.Score })
+            .GroupBy(x => new { x.PlayerId, x.ChartId, x.Level })
+            .Select(g => new PlayerChartHistoryRow(g.Key.PlayerId, g.Key.ChartId, g.Key.Level,
+                (int)g.Max(x => x.Score)))
+            .ToArrayAsync(ct);
+    }
+
     public async Task<IReadOnlyList<PlacementRow>> GetBoardPlacements(int snapshotId, int leaderboardId,
         PlacementScope scope, CancellationToken ct)
     {

@@ -21,6 +21,13 @@ internal sealed class OfficialPlacementReader(IMediator mediator, BoardPeerReade
         return boardPeers.GetBoardPeers(mix, chartType, minimumPool, maximumPool, cancellationToken);
     }
 
+    public Task<IReadOnlyList<BoardScoreReading>> GetBoardScoresOn(MixEnum mix,
+        IReadOnlyCollection<int> boardPlayerIds, IReadOnlyCollection<Guid> chartIds,
+        CancellationToken cancellationToken)
+    {
+        return boardPeers.GetBoardScoresOn(mix, boardPlayerIds, chartIds, cancellationToken);
+    }
+
     public Task<IReadOnlyList<BoardScoreReading>> GetBoardScores(MixEnum mix, ChartType chartType,
         IReadOnlyCollection<int> boardPlayerIds, int minimumLevel, int maximumLevel,
         CancellationToken cancellationToken)

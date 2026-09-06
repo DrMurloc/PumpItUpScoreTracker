@@ -70,6 +70,14 @@ namespace ScoreTracker.Domain.SecondaryPorts
         Task<IReadOnlyList<BoardScoreReading>> GetBoardScores(MixEnum mix, ChartType chartType,
             IReadOnlyCollection<int> boardPlayerIds, int minimumLevel, int maximumLevel,
             CancellationToken cancellationToken);
+
+        /// <summary>
+        ///     The same read bounded by charts rather than by a level band, for a caller that
+        ///     already knows which charts it is asking about — a chart's own board asks about one.
+        /// </summary>
+        Task<IReadOnlyList<BoardScoreReading>> GetBoardScoresOn(MixEnum mix,
+            IReadOnlyCollection<int> boardPlayerIds, IReadOnlyCollection<Guid> chartIds,
+            CancellationToken cancellationToken);
     }
 
     /// <summary>
