@@ -76,6 +76,10 @@ Owner rulings from the 2026-09-05 workshop, in his words where quoted.
 | D34 | **The clubmate edge is for clubs.** World and a country tag the roster row like any community (D18); the green edge means a club everywhere on the site, so a peer who shares only your country wears the tag and not the edge. |
 | D35 | **Field test (owner, 2026-09-05).** The settings are their own tab on `/Account` (`?tab=peers`), not a dialog behind a Profile card; a radio's text toggles it; the two glow inputs share one width; the preview stacks grade over plate beside the number as the tier card does; a popover line's board request opens the dialog on the Leaderboard tab whatever tab was remembered; and closing the popover by tapping outside stops at the popover instead of opening the card's details. |
 
+| D36 | **PUMBILITY peers include official board players** ([pumbility-overhaul.md](pumbility-overhaul.md) D59–D62, 2026-09-06). Owner: *"for all intents and purposes, just like we do with rivals, these are your peers."* A player on the mix's per-type PUMBILITY board whose pool sits in the same window, and whose fifty the mirror can rebuild, joins the source — so this is the first source that lands on **both** sides of D3: the projection it calibrates and the standing it paints are the same set. D3 is otherwise unchanged; competitive-level peers and the community sources are untouched. |
+| D37 | **A board peer is a board-only rival in every way that shows.** Named by its public tag, carrying no competitive level because the boards publish none, its standings wearing the mirror's asterisk and as-of date, counting only on the charts the mirror publishes — the treatment D8 already gives a ghost. `RivalSubject`'s site-or-tag shape generalises rather than a second one being invented. The roster gains the **BOARD** tag it already has for a ghost (D18) and no new column. |
+| D38 | **A private account that qualifies on the board is read as a board player** — public tag, public rows, nothing of its PIU Scores record. Owner: *"That'll keep them from showing scores outside of what's publicly visible already"*, and on where it lives: *"mirror should not be pretending there's a linked account when that linked account is private."* So the rule sits in the mirror's own resolution, not beside `PlayerVisibilityReader`, and both the projection and the standing get one answer. A private account **not** on the board is unchanged: counted in every number, named nowhere. |
+
 ## 3. What a peer pool is
 
 A **peer pool** is a rule that, for a player, produces a set of other players to compare against.
@@ -85,7 +89,7 @@ Four exist, and D1 makes them tickable together:
 |---|---|---|
 | **Rivals** | the players you chose — site accounts and board-only tags | `IRivalRepository` + `RivalSubjectResolver`; ghost standings via `RivalScoreReader` |
 | **Competitive level** | players within ±0.5 competitive level of you, per chart type, on the half-level bucket the cohort cache already shares | `IPlayerStatsReader.GetPlayersByCompetitiveRange` |
-| **PUMBILITY peers** | Phoenix 2: players whose pool of the type sits within 500 below and 250 above yours, each holding a full pool of it ([pumbility-overhaul.md](pumbility-overhaul.md) D53) | `GetPumbilityPeersQuery` |
+| **PUMBILITY peers** | Phoenix 2: players whose pool of the type sits within 500 below and 250 above yours, each holding a full pool of it ([pumbility-overhaul.md](pumbility-overhaul.md) D53) — site accounts and official board players alike (D36) | `GetPumbilityPeersQuery` |
 | **A community** | its members — a club you joined, your country, or World | `ICommunityReader.GetMembers` |
 
 The calibrated pools the calculative features use (D3) are *not* these — the projection draws its
