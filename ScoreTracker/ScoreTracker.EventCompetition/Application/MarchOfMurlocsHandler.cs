@@ -82,24 +82,7 @@ namespace ScoreTracker.EventCompetition.Application
             var boards = new List<MoMBoardSeed>();
             foreach (var chartType in new[] { ChartType.Double, ChartType.Single })
             {
-                // PumbilityPlus returns a fresh instance, so the MoM-only overrides below stay
-                // out of PlayerRatingSaga's stored stat and the public v1 API (§9.5).
-                var scoring = ScoringConfiguration.PumbilityPlus;
-                scoring.AdjustToTime = true;
-                scoring.LevelRatings[22] += 50;
-                scoring.LevelRatings[23] += 150;
-                scoring.LevelRatings[24] += 300;
-                scoring.LevelRatings[25] += 500;
-                scoring.LevelRatings[26] += 750;
-                scoring.LevelRatings[27] += 1050;
-                scoring.LevelRatings[28] += 1400;
-                scoring.LevelRatings[29] += 1800;
-                foreach (var key in scoring.ChartTypeModifiers.Keys)
-                {
-                    if (key == chartType) continue;
-
-                    scoring.ChartTypeModifiers[key] = 0;
-                }
+                var scoring = MoMScoring.ForBoard(MixEnum.Phoenix, chartType);
 
                 var boardId = Guid.NewGuid();
                 var configuration = new TournamentConfiguration(boardId,
@@ -109,7 +92,7 @@ namespace ScoreTracker.EventCompetition.Application
                     AllowRepeats = false,
                     EndDate = endsAt,
                     StartDate = now,
-                    MaxTime = TimeSpan.FromHours(1) + TimeSpan.FromMinutes(45)
+                    MaxTime = MoMScoring.Window
                 };
 
                 // The balanced level per chart, kept only where it differs from the folder
@@ -118,13 +101,9 @@ namespace ScoreTracker.EventCompetition.Application
                 var deltas = new Dictionary<Guid, double>();
                 foreach (var chart in charts.Where(c => c.Type == chartType))
                 {
-                    // The community scoring level, clamped to at most one level above the
-                    // folder and never below the folder's own + 0.5; a chart with no scoring
-                    // level sits at the floor.
                     var floor = chart.Level + .5;
-                    var balanced = scoringLevels.TryGetValue(chart.Id, out var scoringLevel)
-                        ? Math.Clamp(scoringLevel, floor, chart.Level + 1.5)
-                        : floor;
+                    var balanced = MoMScoring.BalancedLevel((int)chart.Level,
+                        scoringLevels.TryGetValue(chart.Id, out var scoringLevel) ? scoringLevel : null);
                     if (Math.Abs(balanced - floor) > 0.0001) deltas[chart.Id] = balanced;
                 }
 
