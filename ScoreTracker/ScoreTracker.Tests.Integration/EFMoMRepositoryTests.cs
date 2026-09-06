@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Moq;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.EventCompetition.Domain;
 using ScoreTracker.EventCompetition.Infrastructure;
 using ScoreTracker.EventCompetition.Infrastructure.Entities;
@@ -33,7 +35,8 @@ public sealed class EFMoMRepositoryTests : IAsyncLifetime
     public Task InitializeAsync() => _fixture.ResetAsync();
     public Task DisposeAsync() => Task.CompletedTask;
 
-    private EFMoMRepository Repo() => new(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions()));
+    private EFMoMRepository Repo() => new(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions()),
+        Mock.Of<IDateTimeOffsetAccessor>(d => d.Now == Start));
 
     private static MoMSeason Summer2026() => new(Guid.NewGuid(), 2026, 3, "Summer 2026", Start, End, Start);
 

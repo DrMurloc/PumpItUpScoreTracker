@@ -1163,7 +1163,7 @@ everything MoM-shaped lands there; the other verticals are read through their pu
 | Need | Source |
 |---|---|
 | The player's record book (bests) for the Planner | ScoreLedger `IScoreReader` |
-| The journal for the import dialog and the on-ramp | ScoreLedger `GetPlayerJournalQuery` (already what Slice 3 repointed onto) |
+| The journal for the import dialog and the on-ramp | ScoreLedger's **published port** `IScoreReader.GetRecentPlays` — not `GetPlayerJournalQuery`, because an EventCompetition → ScoreLedger project reference closes a cycle (ScoreLedger → Communities → Randomizer → EventCompetition) and a MediatR send needs the query type. Published ports are the sanctioned way out of exactly that (ARCHITECTURE.md §1) |
 | Energy pricing (Good / Great rungs) | PlayerProgress's projector — the `IScoreProjector` domain service the PUMBILITY page reads; Top of my game is the best attempt, no projector |
 | Rest-chart facts | **Catalog** (owner of chart identity and the folder baselines): a new contract `GetRestChartFactsQuery(mix, chartIds)` that computes the five tests inside Catalog against the folder and returns flags — the metrics live in `scores.ChartSkillMetric`, the folder quartiles are a small in-memory pass over ≤ 200 charts, and the rule never leaves the vertical |
 | Board tints (you · rival · community) and who may look | Rivals / Communities through the same path the weekly boards use, `IPlayerVisibilityReader` for the session page's visibility |

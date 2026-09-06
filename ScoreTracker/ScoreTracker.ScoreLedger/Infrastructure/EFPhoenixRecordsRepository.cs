@@ -118,6 +118,26 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 IsStageBroken: e.IsStageBroken));
     }
 
+    async Task<IReadOnlyList<ScoreJournalEntry>> IScoreReader.GetRecentPlays(MixEnum mix, Guid userId,
+        DateTimeOffset since, int limit, CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // Newest first to take the cap, then flipped: a night that overruns the limit should lose
+        // its oldest plays, not its most recent ones.
+        return (await database.Set<ScoreEventJournalEntity>()
+                .Where(e => e.UserId == userId && e.MixId == mixId && e.OccurredAt >= since)
+                .OrderByDescending(e => e.OccurredAt)
+                .Take(limit)
+                .ToArrayAsync(cancellationToken))
+            .Select(e => new ScoreJournalEntry(e.OccurredAt, e.Source, e.UserId, e.ChartId,
+                e.Score, PhoenixPlateHelperMethods.TryParse(e.Plate), e.IsBroken, MixIds.ToEnum(e.MixId),
+                Judgements: EFScoreJournalRepository.JudgementsOf(e), IsBest: e.IsBest,
+                IsStageBroken: e.IsStageBroken))
+            .OrderBy(e => e.OccurredAt)
+            .ToArray();
+    }
+
     async Task<IReadOnlySet<Guid>> IScoreReader.GetActiveUserIds(MixEnum mix, DateTimeOffset since,
         CancellationToken cancellationToken)
     {
