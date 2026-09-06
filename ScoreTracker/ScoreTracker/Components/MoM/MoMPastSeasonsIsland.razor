@@ -1,0 +1,118 @@
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components.MoM
+@implements IDisposable
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IJSRuntime JS
+@* Past seasons is a dialog, not a page (docs/design/march-of-murlocs.md §11.8, D35): every
+   season newest first, one row per board — sessions, the winner with their avatar and points,
+   and your own result in words a player already uses. The row is one link, the whole season.
+   The section's static "Past seasons" chip reaches this island through mom-seasons.js; the list
+   loads on first open, so a page that never opens it never pays for it. *@
+<MudDialog @bind-Visible="_open" Options="new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true }">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L["Seasons"]</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_seasons == null)
+        {
+            <div class="mom-seasons-wait"><MudProgressCircular Indeterminate="true" Size="Size.Small"></MudProgressCircular></div>
+        }
+        else
+        {
+            <div class="mom-seasons" data-testid="mom-seasons">
+                @foreach (var listing in _seasons)
+                {
+                    <a class="mom-season-row" href="@MoMText.SeasonPath(listing.Season.Id)" data-testid="mom-season-row">
+                        <div class="mom-season-name">
+                            <b>@listing.Season.Name</b>
+                            @if (listing.Season.IsLive)
+                            {
+                                <span class="mom-chip mom-chip-live">@L["running now"]</span>
+                            }
+                            <span class="mom-season-dates">@MoMText.DateSpan(listing.Season.StartsAt, listing.Season.EndsAt)</span>
+                        </div>
+                        @if (listing.Boards.Count == 0)
+                        {
+                            <div class="mom-board-line"><span class="mom-board-none">@L["No boards on this mix yet."]</span></div>
+                        }
+                        @foreach (var board in listing.Boards)
+                        {
+                            <div class="mom-board-line" data-testid="mom-season-board">
+                                <span class="mom-board-type">@(board.ChartType == ChartType.Double ? L["Doubles"] : L["Singles"])</span>
+                                @if (board.SessionCount == 0)
+                                {
+                                    <span class="mom-board-none">@L["no sessions yet"]</span>
+                                }
+                                else
+                                {
+                                    <span class="mom-board-n">@L["{0} sessions", board.SessionCount]</span>
+                                    <span class="mom-board-winner">
+                                        @if (board.Winner != null)
+                                        {
+                                            <UserLabel User="board.Winner" ShowAvatar="true" AvatarSize="18"></UserLabel>
+                                        }
+                                        <span class="mom-board-pts">@board.WinningScore?.ToString("N0")</span>
+                                    </span>
+                                }
+                                @if (CurrentUser.IsLoggedIn)
+                                {
+                                    <span class="mom-board-me @MeClass(board)">@MeText(board)</span>
+                                }
+                            </div>
+                        }
+                    </a>
+                }
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="() => _open = false">@L["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [Parameter] [EditorRequired] public MixEnum Mix { get; set; }
+
+    private bool _open;
+    private IReadOnlyList<MoMSeasonListing>? _seasons;
+    private DotNetObjectReference<MoMPastSeasonsIsland>? _selfRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        _selfRef = DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync("momSeasons.register", _selfRef);
+    }
+
+    [JSInvokable]
+    public async Task Open()
+    {
+        _open = true;
+        StateHasChanged();
+        _seasons ??= await Mediator.Send(new GetMoMSeasonsQuery(Mix, CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null));
+        StateHasChanged();
+    }
+
+    // Your result, in the words a player uses; the class carries the same fact as colour.
+    private static string MeClass(MoMSeasonBoardListing board) =>
+        board.SessionCount == 0 || board.ViewerPlace == null ? "out" : board.ViewerPlace == 1 ? "won" : "placed";
+
+    private string MeText(MoMSeasonBoardListing board)
+    {
+        if (board.SessionCount == 0) return L["you have not played it"];
+        if (board.ViewerPlace == null) return L["you sat this one out"];
+        if (board.ViewerPlace == 1) return L["you won it"];
+        return L["you were {0} — {1}", MoMText.Ordinal(board.ViewerPlace.Value, L), board.ViewerScore?.ToString("N0")];
+    }
+
+    public void Dispose()
+    {
+        _selfRef?.Dispose();
+    }
+}

@@ -49,8 +49,8 @@
                             {
                                 <MudSwitch T="bool" Color="Color.Primary" Value="_options.Pumbility"
                                            ValueChanged="v => Set(_options with { Pumbility = v })" Disabled="_downloading"
-                                           Label="PUMBILITY" data-testid="sc-opt-pumbility"></MudSwitch>
-                                @if (_options.Pumbility)
+                                           Label="@(CornerLabel ?? "PUMBILITY")" data-testid="sc-opt-pumbility"></MudSwitch>
+                                @if (_options.Pumbility && CornerLabel == null)
                                 {
                                     <div class="scdl-sub">
                                         <MudSwitch T="bool" Color="Color.Primary" Value="_options.ExpectedGains"
@@ -75,12 +75,15 @@
                     <div>
                         <MudText Typo="Typo.overline">@L["Boundaries"]</MudText>
                         <div class="scdl-switches">
+                            @if (!HideListBoundaries)
+                            {
                             <div class="scdl-row">
                                 <MudSwitch T="bool" Color="Color.Primary" Value="_options.BoundaryTodo"
                                            ValueChanged="v => Set(_options with { BoundaryTodo = v })" Disabled="_downloading"
                                            Label="@L["To Do"]" data-testid="sc-opt-btodo"></MudSwitch>
                                 <span class="scdl-swatch scdl-sw-todo" title="@L["Overrides every other boundary"]"></span>
                             </div>
+                            }
                             <div class="scdl-row">
                                 <MudSwitch T="bool" Color="Color.Primary" Value="_options.BoundaryPass"
                                            ValueChanged="SetPass" Disabled="_downloading"
@@ -104,19 +107,22 @@
                                     </div>
                                 </div>
                             }
+                            @if (!HideListBoundaries)
+                            {
                             <div class="scdl-row">
                                 <MudSwitch T="bool" Color="Color.Primary" Value="_options.BoundaryOtherMixes"
                                            ValueChanged="v => Set(_options with { BoundaryOtherMixes = v })" Disabled="_downloading"
                                            Label="@L["Passed in other mixes"]" data-testid="sc-opt-bother"></MudSwitch>
                                 <span class="scdl-swatch scdl-sw-other"></span>
                             </div>
+                            }
                             <div class="scdl-row">
                                 <MudSwitch T="bool" Color="Color.Primary" Value="_options.BoundaryBroken"
                                            ValueChanged="v => Set(_options with { BoundaryBroken = v })" Disabled="_downloading"
                                            Label="@L["Broken with score"]" data-testid="sc-opt-bbroken"></MudSwitch>
                                 <span class="scdl-swatch scdl-sw-broken"></span>
                             </div>
-                            @if (OffersPumbility)
+                            @if (OffersPumbility && !HideListBoundaries)
                             {
                                 <div class="scdl-row">
                                     <MudSwitch T="bool" Color="Color.Primary" Value="_options.BoundaryTop50"
@@ -307,6 +313,18 @@
     [Parameter] public EventCallback<ShareCardDownloadRequest> OnDownload { get; set; }
 
     [Parameter] public string FileName { get; set; } = string.Empty;
+
+    /// <summary>
+    ///     A session card (march-of-murlocs.md D25) has no list to be on: To Do, Passed in other mixes
+    ///     and Top 50 hide, and the host forces them off in the options it composes with.
+    /// </summary>
+    [Parameter] public bool HideListBoundaries { get; set; }
+
+    /// <summary>
+    ///     What the corner prints instead of PUMBILITY ("Session points"): the switch takes this label
+    ///     and Expected gains, a PUMBILITY-only reading, stays hidden.
+    /// </summary>
+    [Parameter] public string? CornerLabel { get; set; }
 
     private ShareCardOptions _options = ShareCardOptions.Default;
     private bool _loaded;

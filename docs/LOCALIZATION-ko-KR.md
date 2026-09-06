@@ -228,3 +228,22 @@ existing `동급 {0}명` / `또래 대비` family.
 | Charts fewer than 5 of them have passed are not shown. | 그중 5명 미만이 클리어한 채보는 표시하지 않습니다. | 클리어 for "passed", per the existing Passed → 클리어. |
 | Peers IQR | 동료 IQR | The `/Pumbility` targets' column: the peers' first and third quartiles as two grades. `IQR` stays as the acronym — the label exists to tell a reader who knows the term that it is not a min–max. |
 | From {0} peers | 동료 {0}명 기반 | The column's tooltip; same shape as `From {0} scores` → `{0}개 스코어 기반`. |
+
+## March of Murlocs (2026-09-05)
+
+Terms fixed by the Slice 4a read surfaces ([march-of-murlocs.md](design/march-of-murlocs.md) §12.2):
+the Season page, the Session Breakdown, the seasons dialog and the share card. "Session" is the
+event's one word for a run (D22) and follows the existing Session / Sessions keys.
+
+| English | ko-KR |
+|---|---|
+| season | 시즌 |
+| session | 세션 |
+| board | 보드 |
+| downtime | 휴식 |
+| balanced level | 보정 레벨 |
+| Draft | 임시 저장 |
+| Planner | 플래너 |
+| Past seasons | 지난 시즌 |
+| Doubles / Singles | 더블 / 싱글 (as the existing keys) |
+| 1st / 2nd / 3rd / 4th | {0}위 for every place |

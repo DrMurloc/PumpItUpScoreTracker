@@ -5,6 +5,7 @@ using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.EventCompetition.Contracts.Queries;
 using ScoreTracker.WeeklyChallenge.Contracts.Queries;
 using ScoreTracker.Web.Services.PumbilityCalculator;
 using ScoreTracker.Web.Services.ScoreCalculator;
@@ -77,6 +78,12 @@ public sealed class StaticHeadResolver
     {
         if (path.Equals("/WeeklyCharts", StringComparison.OrdinalIgnoreCase))
             return await ResolveWeeklyCharts(currentMix, cancellationToken);
+        // /MarchOfMurlocs is the live season; /MarchOfMurlocs/{guid} a season by id.
+        if (path.Equals(MoMText.SeasonRoute, StringComparison.OrdinalIgnoreCase))
+            return await ResolveMarchOfMurlocs(null, currentMix, cancellationToken);
+        if (path.StartsWithSegments(MoMText.SeasonRoute, out var momRest)
+            && Guid.TryParse(momRest.Value?.Trim('/'), out var momSeason))
+            return await ResolveMarchOfMurlocs(momSeason, currentMix, cancellationToken);
 
         if (path.StartsWithSegments(PumbilityCalculatorMixes.Root, out var calculatorRest))
             return ResolvePumbilityCalculator(calculatorRest, currentMix);
@@ -299,6 +306,27 @@ public sealed class StaticHeadResolver
     ///     is the unfurl art, and every filter/week variant folds into the clean URL. Mixes
     ///     without weekly boards read Phoenix, mirroring the page.
     /// </summary>
+    /// <summary>
+    ///     The March of Murlocs season page (docs/design/march-of-murlocs.md §11.2). The live
+    ///     season is canonical at the bare route, so its own id resolves to that URL rather than
+    ///     to a second copy of the same page; a past season is canonical at its id.
+    /// </summary>
+    private async Task<StaticHeadModel?> ResolveMarchOfMurlocs(Guid? seasonId, MixEnum currentMix,
+        CancellationToken cancellationToken)
+    {
+        var mix = currentMix is MixEnum.Phoenix or MixEnum.Phoenix2 ? currentMix : MixEnum.Phoenix;
+        var page = await _mediator.Send(new GetMoMSeasonPageQuery(mix, seasonId), cancellationToken);
+        if (page == null) return null;
+        var sessions = page.Boards.Sum(b => b.Rows.Count);
+        var canonical = page.Season.IsLive ? MoMText.SeasonRoute : MoMText.SeasonPath(page.Season.Id);
+        return new StaticHeadModel(
+            $"March of Murlocs · {page.Season.Name}",
+            _localizer["The quarterly Pump It Up stamina ladder: 1 hour 45 minutes to bank as many points as you can. {0} sessions on the {1} boards.",
+                sessions, page.Season.Name],
+            null,
+            $"https://piuscores.arroweclip.se{canonical}");
+    }
+
     private async Task<StaticHeadModel> ResolveWeeklyCharts(MixEnum currentMix,
         CancellationToken cancellationToken)
     {

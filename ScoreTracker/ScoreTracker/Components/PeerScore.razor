@@ -17,7 +17,7 @@
           aria-haspopup="@(CanOpen ? "dialog" : null)" aria-expanded="@(CanOpen ? _open.ToString().ToLowerInvariant() : null)"
           aria-label="@(CanOpen ? L["Where this score stands among your peers"].Value : null)"
           data-testid="peer-score" @onclick="Toggle" @onclick:stopPropagation="true" @onkeydown="Key">
-        <ScoreBreakdown Score="Score" IsBroken="IsBroken" Plate="Plate" Mix="Mix" ShowScore="true" OneLine="OneLine"
+        <ScoreBreakdown Score="Score" IsBroken="IsBroken" Plate="Plate" Mix="Mix" ShowScore="true" OneLine="OneLine" Stacked="Stacked"
                         Tooltip="false" Height="Height" InferPlate="InferPlate"></ScoreBreakdown>
     </span>
     @if (ShowStanding && StandingText != null)
@@ -81,6 +81,9 @@
     [Parameter] public int Height { get; set; } = 20;
 
     [Parameter] public bool OneLine { get; set; } = true;
+
+    /// <summary>Grade over plate with the number beside them (UX rule 3) — the stacked score, wherever a row prints one.</summary>
+    [Parameter] public bool Stacked { get; set; }
 
     /// <summary>Extra classes on the score box itself — the tier card hands its grid class in here.</summary>
     [Parameter] public string? Class { get; set; }

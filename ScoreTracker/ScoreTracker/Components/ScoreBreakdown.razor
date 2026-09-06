@@ -6,9 +6,18 @@
 @* MudTooltip renders a popover, which throws in static SSR (no provider in the static tree).
    The tooltip only carries hover text, so a static render drops it and keeps the grade, plate
    and score; in a circuit it comes back. *@
-@if (RendererInfo.IsInteractive && Tooltip)
+@* The stacked variant (UX rule 3): the grade over the plate at 11px, the number beside them
+   spanning both rows, so the pair is exactly as tall as the score and a row keeps its width for
+   the song name. It emits the .sbd-score-stack wrapper itself and never the tooltip: the grid
+   places img/img/p as direct children, which MudTooltip's wrapper would break. The hover text
+   rides a title attribute instead. *@
+@if (Stacked)
 {
-    <MudTooltip Text=@(ShowTextAsTooltip?Text:ScoreString) ShowOnFocus="true">
+    <span class="sbd-score-stack sbd-score-stack-fixed" title="@(Tooltip && HoverText.Length > 0 ? HoverText : null)">@Body</span>
+}
+else if (RendererInfo.IsInteractive && Tooltip)
+{
+    <MudTooltip Text="@HoverText" ShowOnFocus="true">
         @Body
     </MudTooltip>
 }
@@ -90,6 +99,15 @@ else
 
     [Parameter]
     public bool OneLine { get; set; } = false;
+
+    /// <summary>
+    ///     Grade over plate, number beside — the sitewide score (UX rule 3). Replaces OneLine and
+    ///     the tooltip: the stack is its own layout.
+    /// </summary>
+    [Parameter]
+    public bool Stacked { get; set; } = false;
+
+    private string HoverText => ShowTextAsTooltip ? Text : ScoreString;
 
     // The grade image depends on the mix's score→grade table (Phoenix 2 re-cut sub-AAA),
     // so every consumer names the mix its score was earned in.
