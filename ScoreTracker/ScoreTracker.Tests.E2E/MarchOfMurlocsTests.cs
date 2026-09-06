@@ -162,11 +162,9 @@ public sealed class MarchOfMurlocsTests : IAsyncLifetime
         var slam = await _fixture.Seed.SeedPhoenixChartAsync("Slam", 24, "Double");
         var gargoyle = await _fixture.Seed.SeedPhoenixChartAsync("Gargoyle", 20, "Double");
         var now = DateTimeOffset.UtcNow;
-        var (seasonId, _) = await _fixture.Seed.SeedMoMSeasonAsync("Recordable 2099", now.AddDays(-10),
-            now.AddDays(50));
-        // A board with real level ratings: a chart that prices to zero cannot enter a session.
-        var board = await _fixture.Seed.SeedMoMBoardAsync(seasonId, "Recordable 2099", MixIds.Phoenix,
-            levelRatings: new Dictionary<int, int> { [20] = 650, [24] = 1450 });
+        // Real level ratings on the board: a chart that prices to zero cannot enter a session.
+        var (_, board) = await _fixture.Seed.SeedMoMSeasonAsync("Recordable 2099", now.AddDays(-10),
+            now.AddDays(50), new Dictionary<int, int> { [20] = 650, [24] = 1450 });
 
         // A night in the journal, twenty minutes apart, plus a stray play a day earlier that the
         // fifteen-minute split has to leave in its own block.
@@ -177,6 +175,10 @@ public sealed class MarchOfMurlocsTests : IAsyncLifetime
             false, null, "officialImport");
         await _fixture.Seed.SeedJournalRowAsync(me, slam, now.AddDays(-1), 900000, "SuperbGame", false, null,
             "officialImport");
+
+        // Seeding happened after the reset, and the catalog caches a whole mix for a fortnight
+        // under one key: without this the app serves the world as it was before these charts.
+        _fixture.ClearCaches();
 
         await _page.GotoAsync($"{_fixture.BaseUrl}/Login");
         await _page.EvaluateAsync(
@@ -194,16 +196,21 @@ public sealed class MarchOfMurlocsTests : IAsyncLifetime
 
         // The dialog opens on the block worth most, which is tonight's two plays, not yesterday's.
         var add = _page.Locator("[data-testid=mom-import-add]");
-        await Expect(add).ToContainTextAsync("Add 2 charts", new LocatorAssertionsToContainTextOptions { Timeout = 60_000 });
-        await Expect(_page.Locator("[data-testid=mom-import-play]")).ToHaveCountAsync(3);
+        await Expect(_page.Locator("[data-testid=mom-import-play]")).ToHaveCountAsync(3,
+            new LocatorAssertionsToHaveCountOptions { Timeout = 60_000 });
+        await Expect(add).ToContainTextAsync("Add 2 charts");
         await add.ClickAsync();
 
-        await Expect(_page.Locator("[data-testid=mom-session-row]")).ToHaveCountAsync(2);
+        await Expect(_page.Locator("[data-testid=mom-session-row]")).ToHaveCountAsync(2,
+            new LocatorAssertionsToHaveCountOptions { Timeout = 30_000 });
         await Expect(_page.Locator("[data-testid=mom-budget]")).ToContainTextAsync("2 charts");
 
         await _page.Locator("[data-testid=mom-publish]").ClickAsync();
-        await _page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Publish", Exact = true })
-            .Last.ClickAsync();
+        // Scoped to the dialog: the page's own Publish button carries the same name and sits
+        // behind the scrim, so an unscoped match resolves to something that cannot be clicked.
+        await _page.Locator(".mud-dialog")
+            .GetByRole(AriaRole.Button, new LocatorGetByRoleOptions { Name = "Publish", Exact = true })
+            .ClickAsync(new LocatorClickOptions { Timeout = 30_000 });
 
         await Expect(_page.Locator("[data-testid=mom-published]")).ToBeVisibleAsync(
             new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
