@@ -421,7 +421,8 @@ public sealed class E2ESeedData
                 cancellationToken);
         }
 
-        var boardId = await SeedMoMBoardAsync(seasonId, name, PhoenixMixId, cancellationToken: cancellationToken);
+        var boardId = await SeedMoMBoardAsync(seasonId, name, PhoenixMixId,
+            cancellationToken: cancellationToken);
         return (seasonId, boardId);
     }
 
@@ -430,13 +431,20 @@ public sealed class E2ESeedData
     ///     minimal frozen configuration the read side deserializes (MoM-internal table — SQL, per the
     ///     house rule). Chart type 1 is Double, 0 Single.
     /// </summary>
+    /// <param name="levelRatings">
+    ///     Level to rating, for a board a session can actually be recorded onto: a chart with no
+    ///     rating prices to zero, and a chart that prices to zero cannot enter a session at all.
+    /// </param>
     public async Task<Guid> SeedMoMBoardAsync(Guid seasonId, string seasonName, Guid mixId, byte chartType = 1,
-        CancellationToken cancellationToken = default)
+        IReadOnlyDictionary<int, int>? levelRatings = null, CancellationToken cancellationToken = default)
     {
         var boardId = Guid.NewGuid();
         var typeName = chartType == 1 ? "Doubles" : "Singles";
+        var ratings = levelRatings == null
+            ? "{}"
+            : "{" + string.Join(",", levelRatings.Select(r => $"\"{r.Key}\":{r.Value}")) + "}";
         var config = "{\"Id\":\"" + boardId + "\",\"Name\":\"March of Murlocs " + seasonName + " - " + typeName + "\"," +
-                     "\"LevelRatings\":{},\"SongTypeModifiers\":{},\"ChartTypeModifiers\":{},\"LetterGradeModifiers\":{}," +
+                     "\"LevelRatings\":" + ratings + ",\"SongTypeModifiers\":{},\"ChartTypeModifiers\":{},\"LetterGradeModifiers\":{}," +
                      "\"PlateModifiers\":{},\"ChartModifiers\":{},\"CalculationType\":0,\"PgModifier\":1.6,\"MinimumScore\":0," +
                      "\"CustomFormula\":\"\",\"StageBreakModifier\":1.0,\"AdjustToTime\":true,\"ContinuousLetterGradeScale\":true," +
                      "\"MaxTime\":\"01:45:00\",\"AllowRepeats\":false}";
