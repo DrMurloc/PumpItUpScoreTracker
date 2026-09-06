@@ -642,3 +642,20 @@ The Season page's card for a viewer who has never published a session (D44); the
 | New here? | Nouveau ici ? |
 | Read the rules | Lire les règles |
 | timed by you | chronométrée par vous |
+
+### Recording and planning, slice 4b (2026-09-06)
+
+Submit, the journal import dialog, the Planner and the My Sessions on-ramp (docs/design/march-of-murlocs.md §11.4 and §11.5). A session's own vocabulary is above; these are the terms the write surfaces added.
+
+| English | fr-FR |
+|---|---|
+| draft (an unpublished session) | brouillon |
+| record book | carnet de records |
+| set | set (unchanged) |
+| rest chart | chart de repos |
+| finisher | finisseuse |
+| window (the 1:45) | fenêtre |
+| push (how hard) | pousser |
+| publish | publier |
+| import | importer |
+| closing chart | chart de clôture |

@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Tests.E2E.Support;
 using static Microsoft.Playwright.Assertions;
 
@@ -146,5 +147,78 @@ public sealed class MarchOfMurlocsTests : IAsyncLifetime
         await Expect(_page.Locator("[data-testid=mom-four]")).ToBeVisibleAsync();
         await Expect(_page.Locator("[data-testid=mom-chart-card]")).ToHaveCountAsync(1);
         await Expect(_page.Locator("[data-testid=mom-compare]")).ToBeVisibleAsync();
+    }
+
+    /// <summary>
+    ///     The site's critical March of Murlocs journey (§12.3): open a draft from the season page,
+    ///     fill it from the score journal, publish it, and find it on the board. Every step is a
+    ///     real circuit against a real database — the import re-reads the journal, so what lands is
+    ///     what was played rather than anything the page asserted.
+    /// </summary>
+    [Fact]
+    public async Task ANightIsDraftedImportedPublishedAndLandsOnTheBoard()
+    {
+        var me = await _fixture.Seed.SeedUserAsync("DRMURLOC");
+        var slam = await _fixture.Seed.SeedPhoenixChartAsync("Slam", 24, "Double");
+        var gargoyle = await _fixture.Seed.SeedPhoenixChartAsync("Gargoyle", 20, "Double");
+        var now = DateTimeOffset.UtcNow;
+        // Real level ratings on the board: a chart that prices to zero cannot enter a session.
+        var (_, board) = await _fixture.Seed.SeedMoMSeasonAsync("Recordable 2099", now.AddDays(-10),
+            now.AddDays(50), new Dictionary<int, int> { [20] = 650, [24] = 1450 });
+
+        // A night in the journal, twenty minutes apart, plus a stray play a day earlier that the
+        // fifteen-minute split has to leave in its own block.
+        var night = now.AddHours(-3);
+        await _fixture.Seed.SeedJournalRowAsync(me, slam, night, 980000, "MarvelousGame", false, null,
+            "officialImport");
+        await _fixture.Seed.SeedJournalRowAsync(me, gargoyle, night.AddMinutes(4), 986121, "MarvelousGame",
+            false, null, "officialImport");
+        await _fixture.Seed.SeedJournalRowAsync(me, slam, now.AddDays(-1), 900000, "SuperbGame", false, null,
+            "officialImport");
+
+        // Seeding happened after the reset, and the catalog caches a whole mix for a fortnight
+        // under one key: without this the app serves the world as it was before these charts.
+        _fixture.ClearCaches();
+
+        await _page.GotoAsync($"{_fixture.BaseUrl}/Login");
+        await _page.EvaluateAsync(
+            "id => fetch('/Login/Dev', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'userId=' + id })",
+            me.ToString());
+
+        // The season page's Record chip opens a draft and hands over to the session's own URL.
+        await _page.GotoAsync($"{_fixture.BaseUrl}/MarchOfMurlocs/Record/{board}");
+        await Expect(_page).ToHaveURLAsync(new Regex("/MarchOfMurlocs/Session/.+/Edit$", RegexOptions.IgnoreCase),
+            new PageAssertionsToHaveURLOptions { Timeout = 60_000 });
+        await Expect(_page.Locator("[data-testid=mom-submit-state]")).ToContainTextAsync("Draft");
+        await Expect(_page.Locator("[data-testid=mom-session-empty]")).ToBeVisibleAsync();
+
+        await _page.Locator("[data-testid=mom-open-import]").ClickAsync();
+
+        // The dialog opens on the block worth most, which is tonight's two plays, not yesterday's.
+        var add = _page.Locator("[data-testid=mom-import-add]");
+        await Expect(_page.Locator("[data-testid=mom-import-play]")).ToHaveCountAsync(3,
+            new LocatorAssertionsToHaveCountOptions { Timeout = 60_000 });
+        await Expect(add).ToContainTextAsync("Add 2 charts");
+        await add.ClickAsync();
+
+        await Expect(_page.Locator("[data-testid=mom-session-row]")).ToHaveCountAsync(2,
+            new LocatorAssertionsToHaveCountOptions { Timeout = 30_000 });
+        await Expect(_page.Locator("[data-testid=mom-budget]")).ToContainTextAsync("2 charts");
+
+        await _page.Locator("[data-testid=mom-publish]").ClickAsync();
+        // Scoped to the dialog: the page's own Publish button carries the same name and sits
+        // behind the scrim, so an unscoped match resolves to something that cannot be clicked.
+        await _page.Locator(".mud-dialog")
+            .GetByRole(AriaRole.Button, new LocatorGetByRoleOptions { Name = "Publish", Exact = true })
+            .ClickAsync(new LocatorClickOptions { Timeout = 30_000 });
+
+        await Expect(_page.Locator("[data-testid=mom-published]")).ToBeVisibleAsync(
+            new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
+        await Expect(_page.Locator("[data-testid=mom-submit-state]")).ToContainTextAsync("on the board");
+
+        // And it is on the board, which is the whole point.
+        var seasonHtml = await (await _page.APIRequest.GetAsync($"{_fixture.BaseUrl}/MarchOfMurlocs")).TextAsync();
+        Assert.Contains("DRMURLOC", seasonHtml);
+        Assert.Contains("Recordable 2099", seasonHtml);
     }
 }

@@ -106,7 +106,11 @@ public sealed class E2ESeedData
             Id = songId,
             Name = songName,
             ImagePath = $"https://e2e-files.invalid/songs/{songId:N}.png",
-            Type = "Arcade"
+            Type = "Arcade",
+            // A real arcade cut, because a song of no length is not a chart anyone can play: MoM
+            // scales every chart by its duration, so a zero here prices the whole catalog at zero
+            // and nothing can enter a session at all.
+            Duration = TimeSpan.FromMinutes(2)
         });
         context.Chart.Add(new ChartEntity
         {
@@ -410,8 +414,14 @@ public sealed class E2ESeedData
     ///     reader accepts; the read surfaces print stored figures and never re-score, so no table needs
     ///     to be complete.
     /// </summary>
+    /// <param name="levelRatings">
+    ///     Passed to the season's Doubles board. Omit for a board that only has to be read from;
+    ///     supply it when something has to be recorded onto it, because an unrated chart prices to
+    ///     zero and a chart that prices to zero cannot enter a session.
+    /// </param>
     public async Task<(Guid SeasonId, Guid BoardId)> SeedMoMSeasonAsync(string name, DateTimeOffset startsAt,
-        DateTimeOffset endsAt, CancellationToken cancellationToken = default)
+        DateTimeOffset endsAt, IReadOnlyDictionary<int, int>? levelRatings = null,
+        CancellationToken cancellationToken = default)
     {
         var seasonId = Guid.NewGuid();
         await using (var context = await _factory.CreateDbContextAsync(cancellationToken))
@@ -421,7 +431,8 @@ public sealed class E2ESeedData
                 cancellationToken);
         }
 
-        var boardId = await SeedMoMBoardAsync(seasonId, name, PhoenixMixId, cancellationToken: cancellationToken);
+        var boardId = await SeedMoMBoardAsync(seasonId, name, PhoenixMixId, levelRatings: levelRatings,
+            cancellationToken: cancellationToken);
         return (seasonId, boardId);
     }
 
@@ -430,14 +441,45 @@ public sealed class E2ESeedData
     ///     minimal frozen configuration the read side deserializes (MoM-internal table — SQL, per the
     ///     house rule). Chart type 1 is Double, 0 Single.
     /// </summary>
+    /// <param name="levelRatings">
+    ///     Level to rating, for a board a session can actually be recorded onto: a chart with no
+    ///     rating prices to zero, and a chart that prices to zero cannot enter a session at all.
+    /// </param>
     public async Task<Guid> SeedMoMBoardAsync(Guid seasonId, string seasonName, Guid mixId, byte chartType = 1,
-        CancellationToken cancellationToken = default)
+        IReadOnlyDictionary<int, int>? levelRatings = null, CancellationToken cancellationToken = default)
     {
         var boardId = Guid.NewGuid();
         var typeName = chartType == 1 ? "Doubles" : "Singles";
+        // A board that is only read from can carry empty tables; a board something is recorded
+        // onto cannot. Pricing a chart reads ChartTypeModifiers, SongTypeModifiers and the grade
+        // scale by key, and a missing key is a KeyNotFoundException rather than a zero.
+        var ratings = levelRatings == null
+            ? "{}"
+            : "{" + string.Join(",", levelRatings.Select(r => $"\"{r.Key}\":{r.Value}")) + "}";
+        var chartTypes = levelRatings == null
+            ? "{}"
+            : "{\"Single\":1.0,\"Double\":1.0,\"CoOp\":0.0,\"SinglePerformance\":0.0," +
+              "\"DoublePerformance\":0.0,\"HalfDouble\":0.0}";
+        var songTypes = levelRatings == null
+            ? "{}"
+            : "{\"Arcade\":1.0,\"ShortCut\":1.0,\"FullSong\":1.0,\"Remix\":1.0}";
+        // PUMBILITY+'s grade table, which is what the live boards freeze. Every grade needs a key,
+        // F and B included: the lookup is an indexer, and the continuous scale reads the rung below
+        // whatever was scored.
+        var grades = levelRatings == null
+            ? "{}"
+            : "{\"F\":0.0,\"D\":0.0,\"C\":0.0,\"B\":0.0,\"A\":0.0,\"APlus\":0.7,\"AA\":0.8," +
+              "\"AAPlus\":0.9,\"AAA\":1.0,\"AAAPlus\":1.1,\"S\":1.2,\"SPlus\":1.26,\"SS\":1.32," +
+              "\"SSPlus\":1.38,\"SSS\":1.44,\"SSSPlus\":1.5}";
+        // A plate is worth 1.0 under PUMBILITY+ and a Perfect Game 1.6; every plate needs a key,
+        // because the lookup is an indexer and a missing plate throws rather than scoring zero.
+        var plates = levelRatings == null
+            ? "{}"
+            : "{\"RoughGame\":1.0,\"FairGame\":1.0,\"TalentedGame\":1.0,\"MarvelousGame\":1.0," +
+              "\"SuperbGame\":1.0,\"ExtremeGame\":1.0,\"UltimateGame\":1.0,\"PerfectGame\":1.6}";
         var config = "{\"Id\":\"" + boardId + "\",\"Name\":\"March of Murlocs " + seasonName + " - " + typeName + "\"," +
-                     "\"LevelRatings\":{},\"SongTypeModifiers\":{},\"ChartTypeModifiers\":{},\"LetterGradeModifiers\":{}," +
-                     "\"PlateModifiers\":{},\"ChartModifiers\":{},\"CalculationType\":0,\"PgModifier\":1.6,\"MinimumScore\":0," +
+                     "\"LevelRatings\":" + ratings + ",\"SongTypeModifiers\":" + songTypes + ",\"ChartTypeModifiers\":" + chartTypes + ",\"LetterGradeModifiers\":" + grades + "," +
+                     "\"PlateModifiers\":" + plates + ",\"ChartModifiers\":{},\"CalculationType\":0,\"PgModifier\":1.6,\"MinimumScore\":0," +
                      "\"CustomFormula\":\"\",\"StageBreakModifier\":1.0,\"AdjustToTime\":true,\"ContinuousLetterGradeScale\":true," +
                      "\"MaxTime\":\"01:45:00\",\"AllowRepeats\":false}";
         await using var context = await _factory.CreateDbContextAsync(cancellationToken);

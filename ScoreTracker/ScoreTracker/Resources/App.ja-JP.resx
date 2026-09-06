@@ -385,6 +385,9 @@
   <data name="A broken score counts at face value." xml:space="preserve">
     <value>ブロークンのスコアはそのままの値でカウントします。</value>
   </data>
+  <data name="A ceiling — every chart at your best." xml:space="preserve">
+    <value>上限値です。すべての譜面を自己ベストで通した場合。</value>
+  </data>
   <data name="a chart" xml:space="preserve">
     <value>譜面</value>
   </data>
@@ -393,6 +396,9 @@
   </data>
   <data name="A chart is priced at its folder level plus up to one more, from how hard it is to score, set when the season starts. A 24 that scores like a 24 pays {0}; one that scores like a 25 pays {1}; in between is in between. A chart is never worth less than its number." xml:space="preserve">
     <value>譜面の値はフォルダのレベルに、スコアの出しにくさに応じて最大1レベルを足したもので、シーズン開始時に固定されます。24相応の24は{0}、25相応の24は{1}、その間はその間。譜面の値が自分の数字を下回ることはありません。</value>
+  </data>
+  <data name="A chart may start until the bar is full; the last one may run over and counts in full." xml:space="preserve">
+    <value>バーが埋まるまで譜面を始められます。最後の1曲ははみ出しても全部数えます。</value>
   </data>
   <data name="A chart you passed years ago and never revisited counts as new territory." xml:space="preserve">
     <value>何年も前にクリアしたきり触れていない譜面は、新しい挑戦として扱います。</value>
@@ -429,6 +435,9 @@
   </data>
   <data name="A great at a capped multiplier." xml:space="preserve">
     <value>倍率上限での Great。</value>
+  </data>
+  <data name="A higher score replaces it; a lower one is discarded." xml:space="preserve">
+    <value>より高いスコアなら置き換わり、低ければ破棄されます。</value>
   </data>
   <data name="A home page that's yours" xml:space="preserve">
     <value>自分だけのホームページ</value>
@@ -486,6 +495,9 @@
   </data>
   <data name="A PUMBILITY peer" xml:space="preserve">
     <value>PUMBILITYピア</value>
+  </data>
+  <data name="A score is a number from 0 to 1,000,000." xml:space="preserve">
+    <value>スコアは 0 から 1,000,000 までの数字です。</value>
   </data>
   <data name="A score only one in four of your peers beat." xml:space="preserve">
     <value>ピアの4人に1人しか上回らないスコアです。</value>
@@ -620,6 +632,9 @@
   <data name="Add as rival" xml:space="preserve">
     <value>ライバルに追加</value>
   </data>
+  <data name="Add every chart in order. Nothing reaches the board until you publish; the draft saves as you go." xml:space="preserve">
+    <value>譜面を順番に追加してください。公開するまでボードには載りません。下書きは自動で保存されます。</value>
+  </data>
   <data name="Add photo" xml:space="preserve">
     <value>写真を追加</value>
   </data>
@@ -652,6 +667,9 @@
   </data>
   <data name="Add {0} as a rival" xml:space="preserve">
     <value>{0} をライバルに追加</value>
+  </data>
+  <data name="Add {0} charts" xml:space="preserve">
+    <value>{0} 譜面を追加</value>
   </data>
   <data name="Added" xml:space="preserve">
 	  <value>追加済み</value>
@@ -788,6 +806,9 @@
   </data>
   <data name="Already have an account? Any sign-in method you've linked works — and you can link more from your Account page." xml:space="preserve">
     <value>すでにアカウントをお持ちですか？連携済みのログイン方法ならどれでも使えます。アカウントページからさらに追加できます。</value>
+  </data>
+  <data name="Already in this session" xml:space="preserve">
+    <value>すでにこのセッションにあります</value>
   </data>
   <data name="Also forget my saved PIUGAME password" xml:space="preserve">
     <value>保存された PIUGAME のパスワードも削除する</value>
@@ -976,11 +997,17 @@
   <data name="At least" xml:space="preserve">
     <value>以上</value>
   </data>
+  <data name="At what players like you score on each chart." xml:space="preserve">
+    <value>あなたと近い人が各譜面で出すスコアで計算します。</value>
+  </data>
   <data name="at {0}" xml:space="preserve">
     <value>{0}で</value>
   </data>
   <data name="at {0} or better" xml:space="preserve">
     <value>{0}以上で</value>
+  </data>
+  <data name="at {0}." xml:space="preserve">
+    <value>スコアは {0}。</value>
   </data>
   <data name="Attempt {0}" xml:space="preserve">
     <value>試行 {0}</value>
@@ -1008,6 +1035,9 @@
   </data>
   <data name="Auto Submit Turned On" xml:space="preserve">
     <value>自動提出をオンにしました。インポートがここに登録されます。</value>
+  </data>
+  <data name="Auto-select set" xml:space="preserve">
+    <value>セットを自動で選ぶ</value>
   </data>
   <data name="Automatic" xml:space="preserve">
     <value>自動</value>
@@ -1368,6 +1398,9 @@
   <data name="Browse tools" xml:space="preserve">
     <value>ツールを見る</value>
   </data>
+  <data name="Build a set, tune it, take it to the machine." xml:space="preserve">
+    <value>セットを組んで、詰めて、筐体へ持っていきましょう。</value>
+  </data>
   <data name="Build Session" xml:space="preserve">
 	  <value>セッション構築</value>
   </data>
@@ -1451,6 +1484,9 @@
   </data>
   <data name="Cancel deletion" xml:space="preserve">
     <value>削除を取り消す</value>
+  </data>
+  <data name="Cannot be edited afterwards — delete and record again instead." xml:space="preserve">
+    <value>あとから編集はできません。削除して記録し直してください。</value>
   </data>
   <data name="Capped — perfects pay +{0}" xml:space="preserve">
     <value>上限 — Perfect は +{0}</value>
@@ -1576,6 +1612,9 @@
   <data name="Chart view" xml:space="preserve">
     <value>グラフ表示</value>
   </data>
+  <data name="Chart, score," xml:space="preserve">
+    <value>譜面、スコア、</value>
+  </data>
   <data name="Charts" xml:space="preserve">
     <value>譜面</value>
   </data>
@@ -1652,6 +1691,9 @@
   <data name="Classic" xml:space="preserve">
     <value>クラシック</value>
   </data>
+  <data name="clean" xml:space="preserve">
+    <value>クリーン</value>
+  </data>
   <data name="Cleanest on the board" xml:space="preserve">
     <value>ボード最良</value>
   </data>
@@ -1714,6 +1756,9 @@
   </data>
   <data name="Closest · Singles" xml:space="preserve">
     <value>最も近い · Singles</value>
+  </data>
+  <data name="closing" xml:space="preserve">
+    <value>締め</value>
   </data>
   <data name="closing chart" xml:space="preserve">
     <value>最後の譜面</value>
@@ -2315,6 +2360,9 @@
   <data name="Delete this community and everything in it? This cannot be undone." xml:space="preserve">
     <value>このコミュニティと全データを削除しますか？元に戻せません。</value>
   </data>
+  <data name="Delete this session" xml:space="preserve">
+    <value>このセッションを削除</value>
+  </data>
   <data name="Delete tool" xml:space="preserve">
     <value>ツールを削除</value>
   </data>
@@ -2407,6 +2455,15 @@
   </data>
   <data name="Directory" xml:space="preserve">
     <value>ディレクトリ</value>
+  </data>
+  <data name="Discard" xml:space="preserve">
+    <value>破棄</value>
+  </data>
+  <data name="Discard draft" xml:space="preserve">
+    <value>下書きを破棄</value>
+  </data>
+  <data name="Discard this draft?" xml:space="preserve">
+    <value>この下書きを破棄しますか？</value>
   </data>
   <data name="Disconnect" xml:space="preserve">
     <value>連携解除</value>
@@ -2520,6 +2577,9 @@
   <data name="Draft" xml:space="preserve">
     <value>下書き</value>
   </data>
+  <data name="Draft · only you can see this" xml:space="preserve">
+    <value>下書き · あなただけが見られます</value>
+  </data>
   <data name="Drain now" xml:space="preserve">
     <value>今すぐ処理</value>
   </data>
@@ -2624,6 +2684,9 @@
   </data>
   <data name="Energy: Great" xml:space="preserve">
     <value>とても好調</value>
+  </data>
+  <data name="Enter" xml:space="preserve">
+    <value>Enter</value>
   </data>
   <data name="Enter a play above and its grade's row lights up." xml:space="preserve">
     <value>上でプレイを入力すると、そのランクの行がハイライトされます。</value>
@@ -2753,6 +2816,9 @@
   <data name="Everyone within half a competitive level of you who has played these charts. Each score counts for less the more that player has improved since setting it." xml:space="preserve">
     <value>競技レベルが0.5以内で、これらの譜面をプレイした全員です。記録後にそのプレイヤーが上達しているほど、そのスコアの重みは下がります。</value>
   </data>
+  <data name="Everything" xml:space="preserve">
+    <value>すべて</value>
+  </data>
   <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
     <value>この下はすべてサイトの実データです — スクリーンショットではなく、実際のプロダクトです。</value>
   </data>
@@ -2764,6 +2830,9 @@
   </data>
   <data name="Everything it saved is already in — but anything it hadn't reached yet is still missing. Importing again picks up whatever didn't land." xml:space="preserve">
     <value>保存された分はすでに反映されていますが、まだ読み取れていない記録は不足しています。もう一度インポートすると残りを取り込みます。</value>
+  </data>
+  <data name="Everything you have entered goes with it. Nothing was on the board yet." xml:space="preserve">
+    <value>入力した内容もすべて消えます。まだボードには何も載っていません。</value>
   </data>
   <data name="Evidence" xml:space="preserve">
     <value>データ量</value>
@@ -2791,6 +2860,9 @@
   </data>
   <data name="Expanding soon" xml:space="preserve">
     <value>まもなく拡張</value>
+  </data>
+  <data name="Expected" xml:space="preserve">
+    <value>予測</value>
   </data>
   <data name="Expected gains" xml:space="preserve">
     <value>予想ゲイン</value>
@@ -2876,6 +2948,9 @@
   <data name="Few Holds" xml:space="preserve">
     <value>ホールド少なめ</value>
   </data>
+  <data name="Few steps, hold-heavy, no drills, soft crux — against their own level. Nothing is woven in; tick what you want." xml:space="preserve">
+    <value>同じレベルの中で、踏み数が少なくホールドが多く、ドリルがなく、山場もゆるい譜面です。自動では入りません。好きなものを選んでください。</value>
+  </data>
   <data name="Fewer than 5 peers scored it" xml:space="preserve">
     <value>スコアを出したピアが 5 人未満</value>
   </data>
@@ -2890,6 +2965,9 @@
   </data>
   <data name="File is too large — 5 MB max." xml:space="preserve">
     <value>ファイルが大きすぎます — 最大5MBです。</value>
+  </data>
+  <data name="files it as broken." xml:space="preserve">
+    <value>でブレイクとして記録します。</value>
   </data>
   <data name="Fill Gaps" xml:space="preserve">
     <value>穴埋め</value>
@@ -2952,6 +3030,9 @@
   <data name="Finished" xml:space="preserve">
     <value>完了</value>
   </data>
+  <data name="Finishers" xml:space="preserve">
+    <value>締め曲</value>
+  </data>
   <data name="First" xml:space="preserve">
     <value>初</value>
   </data>
@@ -2969,6 +3050,15 @@
   </data>
   <data name="first-ever appearance on any chart board" xml:space="preserve">
     <value>譜面ボード初登場</value>
+  </data>
+  <data name="first." xml:space="preserve">
+    <value>してください。</value>
+  </data>
+  <data name="fits." xml:space="preserve">
+    <value>収まります。</value>
+  </data>
+  <data name="fits; only the last chart runs over." xml:space="preserve">
+    <value>収まります。最後の1曲だけがはみ出します。</value>
   </data>
   <data name="floor" xml:space="preserve">
     <value>下限</value>
@@ -3102,6 +3192,9 @@
   <data name="From {0} up it flips: Phoenix 2 prices every level above 24 at double the step, so at {1} an SSS+ buys {2} levels here against {3} on Phoenix — up there a level counts for more against a score than it did." xml:space="preserve">
     <value>{0}から上では逆転します。Phoenix 2は24より上のレベルを倍の刻みで値付けするので、{1}ではSSS+がここでは{2}レベル分、Phoenixでは{3}レベル分を買えます — その上ではスコアに対してレベルの方が以前より重くなります。</value>
   </data>
+  <data name="Frozen: to change it, delete and record again." xml:space="preserve">
+    <value>確定済み。変更するには削除して記録し直してください。</value>
+  </data>
   <data name="Full board" xml:space="preserve">
     <value>ランキング全体</value>
   </data>
@@ -3194,6 +3287,9 @@
   </data>
   <data name="Goal" xml:space="preserve">
     <value>目標</value>
+  </data>
+  <data name="Goes on the {0} {1} board now, recorded as played now." xml:space="preserve">
+    <value>いま {0} の {1} ボードに載り、いまプレイしたものとして記録されます。</value>
   </data>
   <data name="Good" xml:space="preserve">
     <value>良い</value>
@@ -3426,6 +3522,9 @@
   <data name="How each skill runs against your own average" xml:space="preserve">
     <value>各スキルが自分の平均に対してどう出ているか</value>
   </data>
+  <data name="How hard to push" xml:space="preserve">
+    <value>どこまで攻めるか</value>
+  </data>
   <data name="How is this personalized?" xml:space="preserve">
     <value>どうパーソナライズされている？</value>
   </data>
@@ -3615,6 +3714,9 @@
   <data name="Import queued - watch the runs table" xml:space="preserve">
     <value>インポートをキューに追加しました - 実行履歴テーブルを確認してください</value>
   </data>
+  <data name="Import recent plays" xml:space="preserve">
+    <value>最近のプレイを取り込む</value>
+  </data>
   <data name="Import runs" xml:space="preserve">
     <value>インポート実行履歴</value>
   </data>
@@ -3705,6 +3807,9 @@
   <data name="In your PUMBILITY top 50" xml:space="preserve">
     <value>PUMBILITYトップ50入り</value>
   </data>
+  <data name="In your set" xml:space="preserve">
+    <value>セット内</value>
+  </data>
   <data name="In {0} the split is level {1} / score {2}; in {3} it is {4} / {5}. The pool’s average level climbs from {6} to {7} along the way and S or better from {8} to {9} of fifty: passing harder charts is the whole ladder for most players, and scoring is what the last stretch is made of." xml:space="preserve">
     <value>{0}では内訳がレベル{1} / スコア{2}、{3}では{4} / {5}です。その間にプールの平均レベルは{6}から{7}へ、50譜面中S以上は{8}から{9}譜面へ上がります。ほとんどのプレーヤーにとって階段はより難しい譜面をクリアすることで、スコアは最後の一区間を作るものです。</value>
   </data>
@@ -3720,8 +3825,14 @@
   <data name="Include my rivals" xml:space="preserve">
     <value>ライバルを含める</value>
   </data>
+  <data name="Include projected scores" xml:space="preserve">
+    <value>予測スコアを含める</value>
+  </data>
   <data name="Input Json" xml:space="preserve">
 	  <value>JSON入力</value>
+  </data>
+  <data name="inside the window." xml:space="preserve">
+    <value>ウィンドウ内です。</value>
   </data>
   <data name="Insights" xml:space="preserve">
     <value>インサイト</value>
@@ -3780,6 +3891,9 @@
   </data>
   <data name="It cannot record scores or change anything on your account. You can disconnect any time from Community Tools." xml:space="preserve">
     <value>スコアの記録やアカウントの変更はできません。コミュニティツールからいつでも接続を解除できます。</value>
+  </data>
+  <data name="It comes off the {0} {1} board and everyone below it moves up one." xml:space="preserve">
+    <value>{0} {1} ボードから外れ、下の全員が一つずつ上がります。</value>
   </data>
   <data name="It flags your tool for review — then post in the Discord and someone will look. There is no queue anybody watches." xml:space="preserve">
     <value>ツールに確認待ちの印を付けるだけです — そのあと Discord に書き込めば誰かが見ます。誰かが見張っている待ち行列はありません。</value>
@@ -4156,6 +4270,9 @@
   <data name="Load one of your plays" xml:space="preserve">
     <value>自分のプレイを読み込む</value>
   </data>
+  <data name="Load the newest" xml:space="preserve">
+    <value>最新のものを読み込む</value>
+  </data>
   <data name="Loading your plays…" xml:space="preserve">
     <value>プレイを読み込み中…</value>
   </data>
@@ -4198,6 +4315,9 @@
   </data>
   <data name="Logout" xml:space="preserve">
     <value>ログアウト</value>
+  </data>
+  <data name="longer than the window. Your longest break inside it was {0}, before {1} at {2}." xml:space="preserve">
+    <value>ウィンドウより長いです。いちばん長い休憩は {0}、{2} の {1} の前でした。</value>
   </data>
   <data name="Longest run: {0}s" xml:space="preserve">
     <value>最長ラン: {0}秒</value>
@@ -4294,6 +4414,12 @@
   </data>
   <data name="Manual score edit" xml:space="preserve">
     <value>スコアを手動で編集</value>
+  </data>
+  <data name="March of Murlocs" xml:space="preserve">
+    <value>March of Murlocs</value>
+  </data>
+  <data name="March of Murlocs session" xml:space="preserve">
+    <value>March of Murlocs のセッション</value>
   </data>
   <data name="Marked for review" xml:space="preserve">
     <value>確認待ちにしました</value>
@@ -4460,6 +4586,9 @@
   <data name="Missing charts" xml:space="preserve">
     <value>未登録の譜面</value>
   </data>
+  <data name="Missing tonight?" xml:space="preserve">
+    <value>今夜の分がない？</value>
+  </data>
   <data name="Mix" xml:space="preserve">
     <value>バージョン</value>
   </data>
@@ -4474,6 +4603,9 @@
   </data>
   <data name="Mix set to {0}" xml:space="preserve">
     <value>バージョンを {0} に設定しました</value>
+  </data>
+  <data name="mixed" xml:space="preserve">
+    <value>混在</value>
   </data>
   <data name="Mixes" xml:space="preserve">
     <value>バージョン</value>
@@ -4674,6 +4806,9 @@
 	  <value>名前</value>
 	  
   <comment>名</comment></data>
+  <data name="Name this set" xml:space="preserve">
+    <value>このセットに名前をつける</value>
+  </data>
   <data name="Name Tool" xml:space="preserve">
     <value>ツール名</value>
   </data>
@@ -4828,6 +4963,9 @@
   <data name="No charts matched those settings." xml:space="preserve">
     <value>条件に一致する譜面がありませんでした。</value>
   </data>
+  <data name="No charts yet." xml:space="preserve">
+    <value>まだ譜面がありません。</value>
+  </data>
   <data name="No close matches yet." xml:space="preserve">
     <value>近いライバルはまだいません。</value>
   </data>
@@ -4918,6 +5056,9 @@
   <data name="No recent plays found in your score journal. Run Import Scores first, then come back." xml:space="preserve">
     <value>スコアジャーナルに最近のプレイが見つかりません。先にスコアインポートを実行してから、戻ってきてください。</value>
   </data>
+  <data name="No recent plays to import. Run Import Scores first, then come back." xml:space="preserve">
+    <value>取り込める最近のプレイがありません。スコアの取り込みを実行してから戻ってください。</value>
+  </data>
   <data name="No Recorded Scores" xml:space="preserve">
 	  <value>スコア記録なし</value>
   </data>
@@ -4926,6 +5067,9 @@
   </data>
   <data name="No rivals yet" xml:space="preserve">
     <value>まだライバルがいません</value>
+  </data>
+  <data name="No saved sets yet." xml:space="preserve">
+    <value>保存したセットはまだありません。</value>
   </data>
   <data name="No Score Yet" xml:space="preserve">
     <value>スコアなし</value>
@@ -5025,9 +5169,6 @@
   </data>
   <data name="Nobody has played {0} yet this season." xml:space="preserve">
     <value>今シーズンはまだ誰も{0}をプレイしていません。</value>
-  </data>
-  <data name="Nobody has played {0} yet." xml:space="preserve">
-    <value>まだ誰も{0}をプレイしていません。</value>
   </data>
   <data name="Nobody here has played this yet." xml:space="preserve">
     <value>ここではまだ誰もプレイしていません。</value>
@@ -5267,6 +5408,9 @@
   <data name="Nothing in your pool yet — every non-broken pass at level 10 or above takes a slot." xml:space="preserve">
     <value>プールにはまだ何もありません — レベル 10 以上でステージブレイクしていないクリアはすべて 1 枠を占めます。</value>
   </data>
+  <data name="Nothing is capped. Harder charts are faded, still tickable." xml:space="preserve">
+    <value>上限はありません。難しい譜面は薄く表示されますが、選べます。</value>
+  </data>
   <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
     <value>何も削除されません。ツールも、アクティビティも、配信履歴もそのまま残るので、何が起きたか確認できますし、取り消すこともできます。</value>
   </data>
@@ -5284,6 +5428,9 @@
   </data>
   <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
     <value>この絞り込みに該当するものはありません。いずれかを解除してください。</value>
+  </data>
+  <data name="Nothing more can start." xml:space="preserve">
+    <value>これ以上は始められません。</value>
   </data>
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>変更なし — {0} 譜面すべてが難度を維持しています。</value>
@@ -5362,6 +5509,12 @@
   </data>
   <data name="Of Note" xml:space="preserve">
     <value>注目</value>
+  </data>
+  <data name="of songs" xml:space="preserve">
+    <value>が曲の時間</value>
+  </data>
+  <data name="of this plan is what you actually banked" xml:space="preserve">
+    <value>が実際に記録できた割合です</value>
   </data>
   <data name="of your peers." xml:space="preserve">
     <value>ピアの中で。</value>
@@ -5467,6 +5620,12 @@
   </data>
   <data name="On Phoenix you enter them by hand." xml:space="preserve">
     <value>Phoenix では手入力です。</value>
+  </data>
+  <data name="on the board" xml:space="preserve">
+    <value>ボード掲載中</value>
+  </data>
+  <data name="On the board." xml:space="preserve">
+    <value>ボードに載りました。</value>
   </data>
   <data name="on this device only. Useless on its own." xml:space="preserve">
     <value>このデバイスのみ。それ単体では役に立ちません。</value>
@@ -5657,6 +5816,9 @@
   </data>
   <data name="outscored {0}" xml:space="preserve">
     <value>{0}を上回った</value>
+  </data>
+  <data name="over {0} before the last chart. Trim an end." xml:space="preserve">
+    <value>最後の譜面より前で {0} を超えています。端を削ってください。</value>
   </data>
   <data name="Over-90 Twists" xml:space="preserve">
     <value>90度以上の捻り</value>
@@ -6484,6 +6646,9 @@
   <data name="Projected gains" xml:space="preserve">
     <value>予測増加</value>
   </data>
+  <data name="Projected points" xml:space="preserve">
+    <value>予測ポイント</value>
+  </data>
   <data name="Projected Score" xml:space="preserve">
     <value>予測スコア</value>
   </data>
@@ -6514,12 +6679,18 @@
   <data name="Pts / s" xml:space="preserve">
     <value>pt/秒</value>
   </data>
+  <data name="pts/s" xml:space="preserve">
+    <value>pts/秒</value>
+  </data>
   <data name="Public" xml:space="preserve">
     <value>公開</value>
     
   <comment>(on/offもしアカウントが公開が設定された)</comment></data>
   <data name="Public comments are mine." xml:space="preserve">
     <value>公開コメントは私の担当です。</value>
+  </data>
+  <data name="Public on the board even if your profile is private." xml:space="preserve">
+    <value>プロフィールが非公開でも、ボード上では公開されます。</value>
   </data>
   <data name="Public players and your community members." xml:space="preserve">
     <value>公開プレイヤーと、あなたのコミュニティのメンバー。</value>
@@ -6535,6 +6706,15 @@
   </data>
   <data name="Public tool" xml:space="preserve">
     <value>公開ツール</value>
+  </data>
+  <data name="Publish" xml:space="preserve">
+    <value>公開</value>
+  </data>
+  <data name="Publish this session?" xml:space="preserve">
+    <value>このセッションを公開しますか？</value>
+  </data>
+  <data name="Published." xml:space="preserve">
+    <value>公開しました。</value>
   </data>
   <data name="Publishing freezes the session" xml:space="preserve">
     <value>公開するとセッションは固定され</value>
@@ -6877,11 +7057,20 @@
   <data name="Record another" xml:space="preserve">
     <value>もう1つ記録</value>
   </data>
+  <data name="Record as a March of Murlocs session" xml:space="preserve">
+    <value>March of Murlocs のセッションとして記録</value>
+  </data>
   <data name="Record broken scores as your best" xml:space="preserve">
     <value>Break Offスコアをベストとして記録</value>
   </data>
   <data name="Record from the season page" xml:space="preserve">
     <value>シーズンページから記録します</value>
+  </data>
+  <data name="Record it" xml:space="preserve">
+    <value>記録する</value>
+  </data>
+  <data name="Record it again from the season page. This cannot be undone." xml:space="preserve">
+    <value>シーズンページからもう一度記録してください。これは元に戻せません。</value>
   </data>
   <data name="Record Score" xml:space="preserve">
     <value>スコアを記録</value>
@@ -6891,6 +7080,9 @@
   </data>
   <data name="Record to" xml:space="preserve">
     <value>記録先</value>
+  </data>
+  <data name="Record your session" xml:space="preserve">
+    <value>セッションを記録</value>
   </data>
   <data name="Recorded" xml:space="preserve">
     <value>記録しました</value>
@@ -7042,6 +7234,12 @@
   <data name="Reordering…" xml:space="preserve">
     <value>並び替え中…</value>
   </data>
+  <data name="replaced {0}" xml:space="preserve">
+    <value>{0} を置き換え</value>
+  </data>
+  <data name="Replaces the set already called that." xml:space="preserve">
+    <value>同じ名前のセットを置き換えます。</value>
+  </data>
   <data name="Replay" xml:space="preserve">
     <value>再送</value>
   </data>
@@ -7101,6 +7299,18 @@
   </data>
   <data name="Response Secret" xml:space="preserve">
     <value>応答シークレット</value>
+  </data>
+  <data name="Rest" xml:space="preserve">
+    <value>休憩</value>
+  </data>
+  <data name="Rest between charts" xml:space="preserve">
+    <value>譜面のあいだの休憩</value>
+  </data>
+  <data name="Rest charts" xml:space="preserve">
+    <value>休憩譜面</value>
+  </data>
+  <data name="rest in 1:45" xml:space="preserve">
+    <value>1:45 中の休憩</value>
   </data>
   <data name="Rest Time" xml:space="preserve">
 	  <value>休憩時間</value>
@@ -7203,6 +7413,9 @@
   <data name="Run import now" xml:space="preserve">
     <value>今すぐインポートを実行</value>
   </data>
+  <data name="Run Import Scores" xml:space="preserve">
+    <value>スコアの取り込みを実行</value>
+  </data>
   <data name="Run PIU Center Crawl" xml:space="preserve">
     <value>PIU Centerクロールを実行</value>
   </data>
@@ -7248,6 +7461,9 @@
   <data name="Save Scores" xml:space="preserve">
     <value>スコア保存</value>
   </data>
+  <data name="Save this set" xml:space="preserve">
+    <value>このセットを保存</value>
+  </data>
   <data name="Saved" xml:space="preserve">
     <value>保存しました</value>
   </data>
@@ -7260,8 +7476,14 @@
   <data name="Saved Password Incorrect" xml:space="preserve">
     <value>保存済みのパスワードが正しくないようです。phoenix.piugame.com にログインできませんでした。</value>
   </data>
+  <data name="Saved sets" xml:space="preserve">
+    <value>保存したセット</value>
+  </data>
   <data name="Saved!" xml:space="preserve">
 	  <value>保存しました！</value>
+  </data>
+  <data name="Saved." xml:space="preserve">
+    <value>保存しました。</value>
   </data>
   <data name="scale" xml:space="preserve">
     <value>基準</value>
@@ -7443,6 +7665,9 @@
   <data name="Searching for Molex connectors" xml:space="preserve">
     <value>Molex コネクタを探しています</value>
   </data>
+  <data name="Season" xml:space="preserve">
+    <value>シーズン</value>
+  </data>
   <data name="Seasons" xml:space="preserve">
     <value>シーズン</value>
   </data>
@@ -7508,6 +7733,9 @@
   </data>
   <data name="Select what to delete" xml:space="preserve">
     <value>削除するものを選ぶ</value>
+  </data>
+  <data name="selected" xml:space="preserve">
+    <value>選択中</value>
   </data>
   <data name="Selected Chart" xml:space="preserve">
 	  <value>選択した譜面</value>
@@ -7648,6 +7876,9 @@
   <data name="Sharing your scores with community tools needs a public profile. You can also connect to a single tool with an invite link from its maker — that works either way." xml:space="preserve">
     <value>コミュニティツールとスコアを共有するには公開プロフィールが必要です。制作者の招待リンクを使って特定のツール1つだけに接続することもでき、そちらはどちらの設定でも利用できます。</value>
   </data>
+  <data name="Shift" xml:space="preserve">
+    <value>Shift</value>
+  </data>
   <data name="Short Cut" xml:space="preserve">
     <value>ショートカット</value>
   </data>
@@ -7783,6 +8014,9 @@
   </data>
   <data name="Sign in to order by your own tier lists" xml:space="preserve">
     <value>自分のティアリストで並び替えるにはログインしてください</value>
+  </data>
+  <data name="Sign in to plan a session from your own scores." xml:space="preserve">
+    <value>自分のスコアからセッションを組むにはログインしてください。</value>
   </data>
   <data name="Sign in to record scores, track your standings and keep your Daily Step history." xml:space="preserve">
     <value>ログインするとスコアの記録、順位の確認、Daily Step 履歴の保存ができます。</value>
@@ -8011,6 +8245,9 @@
   <data name="Spikes" xml:space="preserve">
     <value>連打区間</value>
   </data>
+  <data name="Split at breaks over fifteen minutes. Click a play to move the nearer end." xml:space="preserve">
+    <value>15分を超える休憩で区切っています。プレイをクリックすると近いほうの端が動きます。</value>
+  </data>
   <data name="Splits" xml:space="preserve">
     <value>スプリット</value>
   </data>
@@ -8048,6 +8285,9 @@
   <data name="Stage break · {0}% in" xml:space="preserve">
     <value>Stage Break · {0}%地点</value>
   </data>
+  <data name="stage breaks" xml:space="preserve">
+    <value>ステージブレイク</value>
+  </data>
   <data name="Stage Pass" xml:space="preserve">
 	  <value>Stageクリア</value>
 	  
@@ -8084,6 +8324,9 @@
   </data>
   <data name="started 1:43 →" xml:space="preserve">
     <value>1:43 に開始 →</value>
+  </data>
+  <data name="Started inside the window, ran past it" xml:space="preserve">
+    <value>ウィンドウ内で開始し、はみ出した曲</value>
   </data>
   <data name="Started {0} · no result recorded" xml:space="preserve">
     <value>開始 {0} · 結果の記録なし</value>
@@ -8203,6 +8446,9 @@
   <data name="Suggested Next" xml:space="preserve">
     <value>次のおすすめ</value>
   </data>
+  <data name="Suggested sets stop at {0} — a level below your session average is where most players hold up." xml:space="preserve">
+    <value>提案されるセットは {0} まで。セッション平均より1レベル下が、多くの人が持ちこたえるラインです。</value>
+  </data>
   <data name="Suggested · Fill Gaps" xml:space="preserve">
     <value>おすすめ · 穴埋め</value>
   </data>
@@ -8273,6 +8519,9 @@
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>Nノートごとに1回失敗し続けると、体力はどこかに収束します。崖の下ではゼロに収束します。曲線は緩やかに落ちるのではなく、崖のように落ちます。倍率を建て直すより速く倍率が死んでいるからです。</value>
   </data>
+  <data name="Take this session off the board?" xml:space="preserve">
+    <value>このセッションをボードから外しますか？</value>
+  </data>
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>
   </data>
@@ -8293,6 +8542,12 @@
   </data>
   <data name="That beats your earlier play of this chart, which is replaced." xml:space="preserve">
     <value>この譜面の前回のプレイを上回ったので、置き換えました。</value>
+  </data>
+  <data name="That chart cannot be added — the session is already full." xml:space="preserve">
+    <value>その譜面は追加できません。セッションはすでに満杯です。</value>
+  </data>
+  <data name="That chart is worth nothing on this board, so it cannot be added." xml:space="preserve">
+    <value>この譜面はこのボードでは得点にならないため、追加できません。</value>
   </data>
   <data name="That command isn't available yet." xml:space="preserve">
     <value>このコマンドはまだ利用できません。</value>
@@ -8320,6 +8575,9 @@
   </data>
   <data name="That session can't be undone." xml:space="preserve">
     <value>そのセッションは取り消せません。</value>
+  </data>
+  <data name="That session is not yours, or no longer exists." xml:space="preserve">
+    <value>そのセッションはあなたのものではないか、すでに存在しません。</value>
   </data>
   <data name="That session was undone, so it no longer exists. Showing your most recent one instead." xml:space="preserve">
     <value>そのセッションは取り消され、存在しません。最新のセッションを表示しています。</value>
@@ -8588,6 +8846,9 @@
   <data name="The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture." xml:space="preserve">
     <value>ティアリスト、ランキング、計算機は誰でも見られます — 自分のスコアを重ねたくなったらログインを。</value>
   </data>
+  <data name="The video link needs to be a full address, starting with https://." xml:space="preserve">
+    <value>動画のリンクは https:// で始まる完全なアドレスにしてください。</value>
+  </data>
   <data name="The way Pass personalizes is being reworked, so this page waits for it rather than explaining the version being replaced." xml:space="preserve">
     <value>パスのパーソナライズは作り直し中です。置き換わる版を説明するより、このページは待ちます。</value>
   </data>
@@ -8629,6 +8890,9 @@
   </data>
   <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
     <value>このアドレスには何もありません — バージョンとともに移動したか、最初から存在しなかったのかもしれません。検索はすべての譜面を知っています。</value>
+  </data>
+  <data name="These are Phoenix board points. A few grades price slightly differently here than on the rules page, mostly below AAA." xml:space="preserve">
+    <value>これは Phoenix ボードのポイントです。ルールページとは一部のグレードの価値がわずかに違い、多くは AAA 未満です。</value>
   </data>
   <data name="These are the rules the site enforces. A season freezes its tables when it begins." xml:space="preserve">
     <value>これがサイトの適用するルールです。シーズンは開始時に表を固定します。</value>
@@ -8768,6 +9032,9 @@
   <data name="This link goes to a site I don't know anything about:" xml:space="preserve">
     <value>このリンクは私がまったく知らないサイトに移動します:</value>
   </data>
+  <data name="This looks like a March of Murlocs session." xml:space="preserve">
+    <value>これは March of Murlocs のセッションのようです。</value>
+  </data>
   <data name="This mix isn't score-normalized — only Letter Grade &amp; Pass are available." xml:space="preserve">
     <value>このバージョンはスコア正規化されていません — レターグレードとクリアのみ利用可能です。</value>
   </data>
@@ -8800,6 +9067,9 @@
   </data>
   <data name="This season's boards are being set up." xml:space="preserve">
     <value>このシーズンのボードを準備中です。</value>
+  </data>
+  <data name="This season's boards are being set up. Check back shortly." xml:space="preserve">
+    <value>今シーズンのボードを準備中です。少ししてからご確認ください。</value>
   </data>
   <data name="This session isn't here." xml:space="preserve">
     <value>このセッションは見つかりません。</value>
@@ -8861,6 +9131,9 @@
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>3年半のPumpを、ひとつのリキャップに。あなたの記録を見に行こう。いいところはスクショで。</value>
   </data>
+  <data name="Three minutes or more. The last chart only has to start inside the window, so the biggest one is worth starting with seconds left." xml:space="preserve">
+    <value>3分以上の曲です。最後の1曲はウィンドウ内に始まればよいので、残り数秒で一番大きい曲を入れる価値があります。</value>
+  </data>
   <data name="Thresholds — each becomes a line" xml:space="preserve">
     <value>しきい値 — それぞれが1本の線になります</value>
   </data>
@@ -8869,6 +9142,9 @@
   </data>
   <data name="Tick counts are inferred: tap counts come from community simfiles, the totals from real plays, and the difference is the ticks. Treat charts within a few percent of each other as tied — the numbers are estimates right now." xml:space="preserve">
     <value>ティック数は推定です。タップ数はコミュニティの譜面ファイル、合計は実プレイから取り、その差がティックです。数パーセント以内の譜面は同率とみなしてください。現時点でこの数値は推定値です。</value>
+  </data>
+  <data name="Tick some charts to save a set." xml:space="preserve">
+    <value>セットを保存するには譜面をいくつか選んでください。</value>
   </data>
   <data name="ticks" xml:space="preserve">
     <value>ティック</value>
@@ -9435,6 +9711,9 @@
   <data name="Video info is not formatted correctly" xml:space="preserve">
 	  <value>ビデオ情報の形式が正しくありません</value>
   </data>
+  <data name="Video link (optional)" xml:space="preserve">
+    <value>動画リンク（任意）</value>
+  </data>
   <data name="Video URL" xml:space="preserve">
 	  <value>ビデオURL</value>
   </data>
@@ -9820,6 +10099,9 @@
   <data name="Will be skipped" xml:space="preserve">
     <value>スキップされます</value>
   </data>
+  <data name="Window full" xml:space="preserve">
+    <value>ウィンドウが満杯</value>
+  </data>
   <data name="wins in range" xml:space="preserve">
     <value>同範囲内で優勝</value>
   </data>
@@ -10023,9 +10305,6 @@
   <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
     <value>まだコミュニティに参加していません。下から探すか、自分で作成しましょう。</value>
   </data>
-  <data name="You haven't played {0} this season." xml:space="preserve">
-    <value>今シーズンはまだ{0}をプレイしていません。</value>
-  </data>
   <data name="You hold the coded note" xml:space="preserve">
     <value>あなたは暗号化されたメモを持っています</value>
   </data>
@@ -10037,6 +10316,9 @@
   </data>
   <data name="You need the Manage Channels permission in this server to do that." xml:space="preserve">
     <value>この操作にはサーバーの「チャンネルの管理」権限が必要です。</value>
+  </data>
+  <data name="You played it twice; the better one is on the board" xml:space="preserve">
+    <value>2回プレイしています。良いほうがボードに載ります</value>
   </data>
   <data name="you sat this one out" xml:space="preserve">
     <value>このシーズンは不参加</value>
@@ -10209,6 +10491,9 @@
   <data name="Your last import started but never reported back." xml:space="preserve">
     <value>前回のインポートは開始しましたが、結果が返りませんでした。</value>
   </data>
+  <data name="your last session's average" xml:space="preserve">
+    <value>前回セッションの平均</value>
+  </data>
   <data name="Your level history starts tracking with your next import." xml:space="preserve">
     <value>レベル履歴は次回のインポートから記録されます。</value>
   </data>
@@ -10305,6 +10590,9 @@
   <data name="your real top 50 against your peers' average, by type" xml:space="preserve">
     <value>あなたの実際のトップ50とピアの平均を、タイプ別に</value>
   </data>
+  <data name="Your record book" xml:space="preserve">
+    <value>あなたの記録帳</value>
+  </data>
   <data name="Your Region" xml:space="preserve">
     <value>自分の地域</value>
   </data>
@@ -10353,11 +10641,17 @@
   <data name="Your scores, your plates and your player profile, on every mix you've played. It cannot record scores, change anything, or act as you." xml:space="preserve">
     <value>プレイしたすべてのバージョンのスコア、プレート、プレイヤープロフィール。スコアの記録や変更、あなたとして振る舞うことはできません。</value>
   </data>
+  <data name="Your session" xml:space="preserve">
+    <value>あなたのセッション</value>
+  </data>
   <data name="Your session ended." xml:space="preserve">
     <value>セッションが終了しました。</value>
   </data>
   <data name="your session total is the sum" xml:space="preserve">
     <value>セッション合計はその総和</value>
+  </data>
+  <data name="Your set" xml:space="preserve">
+    <value>あなたのセット</value>
   </data>
   <data name="your singles pool is {0}" xml:space="preserve">
     <value>あなたの Singles プールは {0}</value>
@@ -10413,6 +10707,9 @@
   <data name="Yours alone" xml:space="preserve">
     <value>あなただけ</value>
   </data>
+  <data name="Yours now — Suggest a set to retune." xml:space="preserve">
+    <value>いまは手動です。「セットを提案」で組み直せます。</value>
+  </data>
   <data name="Yours only. Editable afterwards from the tool list." xml:space="preserve">
     <value>あなた専用です。あとからツール一覧で編集できます。</value>
   </data>
@@ -10460,6 +10757,9 @@
   </data>
   <data name="{0} a chart is:" xml:space="preserve">
     <value>譜面ごと {0} は:</value>
+  </data>
+  <data name="{0} added" xml:space="preserve">
+    <value>{0} 件追加</value>
   </data>
   <data name="{0} added as a rival." xml:space="preserve">
     <value>{0} をライバルに追加しました。</value>
@@ -10550,6 +10850,9 @@
   </data>
   <data name="{0} charts have no note count recorded, so they aren't compared." xml:space="preserve">
     <value>{0} 件の譜面はノーツ数が未記録のため、比較していません。</value>
+  </data>
+  <data name="{0} charts in that set are not in this book, so they were left out." xml:space="preserve">
+    <value>そのセットの {0} 譜面はこの本にないため、除外されました。</value>
   </data>
   <data name="{0} charts match the community tier" xml:space="preserve">
     <value>{0}譜面がコミュニティの評価と一致</value>
@@ -10647,6 +10950,9 @@
   <data name="{0} fewer Misses" xml:space="preserve">
     <value>Missを{0}減らす</value>
   </data>
+  <data name="{0} first to last" xml:space="preserve">
+    <value>最初から最後まで {0}</value>
+  </data>
   <data name="{0} folder" xml:space="preserve">
     <value>{0} フォルダ</value>
   </data>
@@ -10658,6 +10964,9 @@
   </data>
   <data name="{0} from the official board*" xml:space="preserve">
     <value>公式ボードから{0}人*</value>
+  </data>
+  <data name="{0} gap" xml:space="preserve">
+    <value>{0} の休憩</value>
   </data>
   <data name="{0} h ago" xml:space="preserve">
     <value>{0} 時間前</value>
@@ -10694,6 +11003,9 @@
   </data>
   <data name="{0} isn't available for {1} yet." xml:space="preserve">
     <value>{0}は{1}ではまだ利用できません。</value>
+  </data>
+  <data name="{0} kept" xml:space="preserve">
+    <value>{0} 件は据え置き</value>
   </data>
   <data name="{0} left" xml:space="preserve">
     <value>{0} 件が出た</value>
@@ -10866,6 +11178,9 @@
   <data name="{0} only" xml:space="preserve">
     <value>{0}のみ</value>
   </data>
+  <data name="{0} open" xml:space="preserve">
+    <value>残り {0}</value>
+  </data>
   <data name="{0} paragons" xml:space="preserve">
     <value>パラゴン {0} 件</value>
   </data>
@@ -10914,6 +11229,12 @@
   <data name="{0} players · {1} board-only" xml:space="preserve">
     <value>{0}人 · ボードのみ{1}人</value>
   </data>
+  <data name="{0} plays" xml:space="preserve">
+    <value>{0} プレイ</value>
+  </data>
+  <data name="{0} plays of the other chart type skipped." xml:space="preserve">
+    <value>別の譜面タイプのプレイ {0} 件をスキップしました。</value>
+  </data>
   <data name="{0} points" xml:space="preserve">
     <value>{0}点</value>
   </data>
@@ -10940,6 +11261,12 @@
   </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>今週の Pump It Up チャレンジ譜面{0}件、ライブ順位付きのデイリー譜面、そして月間 PUMBILITY ボード。</value>
+  </data>
+  <data name="{0} repeat plays — only your best on each chart is added." xml:space="preserve">
+    <value>重複プレイ {0} 件。各譜面のベストだけが追加されます。</value>
+  </data>
+  <data name="{0} replaced a better play" xml:space="preserve">
+    <value>{0} 件が既存のプレイを置き換え</value>
   </data>
   <data name="{0} replies" xml:space="preserve">
     <value>返信 {0}件</value>
@@ -10980,6 +11307,9 @@
   <data name="{0} singles · {1} doubles passed" xml:space="preserve">
     <value>シングル{0}・ダブル{1}クリア</value>
   </data>
+  <data name="{0} skipped" xml:space="preserve">
+    <value>{0} 件スキップ</value>
+  </data>
   <data name="{0} songs arrived, bringing {1} new charts." xml:space="preserve">
     <value>{0} 曲が追加され、{1} 譜面が増えました。</value>
   </data>
@@ -10988,6 +11318,9 @@
   </data>
   <data name="{0} spent, {1} committed in flight, against a {2} ceiling." xml:space="preserve">
     <value>支出 {0}、処理中の見込み {1}、上限 {2}。</value>
+  </data>
+  <data name="{0} stage breaks skipped: {1}." xml:space="preserve">
+    <value>ステージブレイク {0} 件をスキップ: {1}。</value>
   </data>
   <data name="{0} texts re-queued. They spend against the ceiling on the coming nights." xml:space="preserve">
     <value>{0} 件を再キューしました。今後の夜間に上限内で処理されます。</value>
@@ -11040,6 +11373,9 @@
   <data name="{0} — {1} at {2}" xml:space="preserve">
     <value>{0} — {1}（{2}）</value>
   </data>
+  <data name="{0} — {1} charts, up to {2}" xml:space="preserve">
+    <value>{0} — {1} 譜面、{2} まで</value>
+  </data>
   <data name="{0} — {1}." xml:space="preserve">
     <value>{0}——{1}。</value>
   </data>
@@ -11090,6 +11426,9 @@
   </data>
   <data name="{0}rd" xml:space="preserve">
     <value>{0}位</value>
+  </data>
+  <data name="{0}s" xml:space="preserve">
+    <value>{0}秒</value>
   </data>
   <data name="{0}st" xml:space="preserve">
     <value>{0}位</value>

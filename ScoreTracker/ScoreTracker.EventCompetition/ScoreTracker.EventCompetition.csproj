@@ -30,6 +30,10 @@
          The Match subsystem (MatchSaga, EFMatchRepository, TournamentPlayer/TournamentMachine)
          deliberately stays behind in Application/Data — it is C5-gated for deletion. -->
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
+    <!-- Slice 4b: the Planner's rest shelf asks Catalog which charts are rest charts, through its
+         published GetRestChartFactsQuery (D29). Catalog references only Domain and Data, so the
+         edge is one-way. -->
+    <ProjectReference Include="..\ScoreTracker.Catalog\ScoreTracker.Catalog.csproj" />
   </ItemGroup>
 
 </Project>

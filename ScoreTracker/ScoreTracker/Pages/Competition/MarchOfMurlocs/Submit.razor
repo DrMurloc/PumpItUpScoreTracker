@@ -1,0 +1,526 @@
+@page "/MarchOfMurlocs/Session/{SessionId:guid}/Edit"
+@page "/MarchOfMurlocs/Record/{BoardId:guid}"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.EventCompetition.Contracts.Commands
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Web.Components.MoM
+@using ScoreTracker.Web.Services
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Pages.Competition.MoM
+@* Recording a session (docs/design/march-of-murlocs.md §11.4). Its own page rather than a panel on
+   the Season page: thirty charts entered over several minutes should not live under a board you
+   might scroll away from, the Season page is static SSR and a form would drag it into a circuit,
+   and a half-entered session has to survive a closed tab. A draft IS a session with no publication
+   stamp (D17), so /Record/{board} opens or resumes one and hands over to the session's own URL.
+
+   Minimising clicks matters more than it looks: the picker keeps focus, so entry is chart, score,
+   Enter, and Shift+Enter files a run as broken without reaching for the plate. A repeat is one
+   line and nothing more (D45) — the better play stays either way. *@
+
+<PageTitle>@L["Record your session"] · @L["March of Murlocs"]</PageTitle>
+
+@if (_notFound)
+{
+    <div class="pmb-eyebrow"><span>@L["March of Murlocs"]</span></div>
+    <MudAlert Severity="Severity.Info" data-testid="mom-submit-missing">@L["That session is not yours, or no longer exists."]</MudAlert>
+}
+else if (_draft is { } draft)
+{
+    <div class="pmb-eyebrow crumbs">
+        <span>
+            @MixName(draft.Mix) ·
+            <MudLink Href="@MoMText.SeasonRoute" Color="Color.Primary">@L["March of Murlocs"]</MudLink> ·
+            @draft.SeasonName · @TypeName(draft.ChartType)
+        </span>
+        @if (draft.IsPublished)
+        {
+            <span class="mom-chip-live" data-testid="mom-submit-state">@L["on the board"]</span>
+        }
+        else
+        {
+            <span class="mom-chip-draft" data-testid="mom-submit-state">@L["Draft · only you can see this"]</span>
+        }
+    </div>
+
+    @if (draft.IsPublished)
+    {
+        <div class="sub-head"><h1 class="sub-title">@L["On the board."]</h1></div>
+        <section class="mom-published notice-good" data-testid="mom-published">
+            <h4>@L["Published."]</h4>
+            <p>
+                @L["{0} points", draft.TotalScore.ToString("N0")] · @L["{0} charts", draft.Charts.Count].
+                @L["Frozen: to change it, delete and record again."]
+            </p>
+            <div class="cta">
+                <MudButton Href="@MoMText.SessionDownloadPath(draft.SessionId)" Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Download">@L["Download image"]</MudButton>
+                <MudButton Href="@MoMText.SessionPath(draft.SessionId)" Variant="Variant.Outlined" Color="Color.Primary">@L["Breakdown"]</MudButton>
+                <MudButton Href="@MoMText.SeasonRoute" Variant="Variant.Text" Color="Color.Primary">@L["Season"]</MudButton>
+            </div>
+            @* D17: a correction is delete-and-resubmit, which the paragraph above promises, so the
+               control it points at has to be here. *@
+            <div class="cta mom-published-delete">
+                <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" Disabled="_busy"
+                           StartIcon="@Icons.Material.Filled.Delete" OnClick="ConfirmDelete"
+                           data-testid="mom-delete-published">@L["Delete this session"]</MudButton>
+            </div>
+        </section>
+    }
+    else
+    {
+        <div class="sub-head">
+            <div>
+                <h1 class="sub-title">@L["Record your session"]</h1>
+                <p class="sub-lede">@L["Add every chart in order. Nothing reaches the board until you publish; the draft saves as you go."]</p>
+            </div>
+        </div>
+
+        @* The budget bar: song time fills it, and only the time before the closing chart can
+           overflow, because the window governs when a chart may START (§1). *@
+        <section class="mom-budget @(draft.WindowFull ? "blocked" : "")" data-testid="mom-budget">
+            <div class="mom-budget-top">
+                <span class="played">@MoMText.HoursMinutesSeconds(draft.SongTime)</span>
+                <span class="of">@L["of {0}", MoMText.HoursMinutesSeconds(draft.Window)] · @L["{0} charts", draft.Charts.Count]</span>
+                <span class="left">
+                    @if (draft.WindowFull)
+                    {
+                        @L["Window full"]
+                    }
+                    else
+                    {
+                        @L["{0} open", MoMText.HoursMinutesSeconds(Remaining(draft))]
+                    }
+                </span>
+            </div>
+            <div class="mom-budget-bar" aria-hidden="true">
+                <i style="width:@(Percent(draft.SongTimeBeforeLast, draft.Window))%"></i>
+                <i class="last" style="width:@(Percent(draft.SongTime - draft.SongTimeBeforeLast, draft.Window, Percent(draft.SongTimeBeforeLast, draft.Window)))%"></i>
+            </div>
+            <p class="mom-budget-note">
+                @(draft.WindowFull
+                    ? L["Nothing more can start."]
+                    : L["A chart may start until the bar is full; the last one may run over and counts in full."])
+            </p>
+        </section>
+
+        <section class="mom-entry" data-testid="mom-entry">
+            <div class="mom-entry-row">
+                <div class="f-chart">
+                    <ChartSelector Mix="draft.Mix" Charts="_selectable" Variant="Variant.Outlined"
+                                   Margin="Margin.Dense" Label="@L["Chart"]" Placeholder="@L["Song Name"]"
+                                   Disabled="_busy" ChartIdSelected="PickChart"/>
+                </div>
+                <div class="f-score">
+                    <MudTextField T="int?" @bind-Value="_score" Label="@L["Score"]" Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" InputMode="InputMode.numeric" Disabled="_busy"
+                                  Immediate="true" OnKeyDown="OnScoreKey" data-testid="mom-entry-score"/>
+                </div>
+                <div class="f-plate">
+                    <MudSelect T="string" @bind-Value="_result" Label="@L["Result"]" Variant="Variant.Outlined"
+                               Margin="Margin.Dense" Dense="true" Disabled="_busy" data-testid="mom-entry-result">
+                        <MudSelectItem T="string" Value="@BrokenValue">@L["Broken"]</MudSelectItem>
+                        @foreach (var plate in Plates)
+                        {
+                            <MudSelectItem T="string" Value="@plate.ToString()">@plate.GetName()</MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(_busy || _picked == null)"
+                           OnClick="@(() => AddPicked(false))" data-testid="mom-entry-add">@L["Add"]</MudButton>
+            </div>
+
+            @* D45: the whole of the repeat treatment. The chart is already here, at this score,
+               and the better play is the one that stays. No dialog, no block. *@
+            @if (Held(draft) is { } held)
+            {
+                <div class="mom-checks" data-testid="mom-entry-repeat">
+                    <div class="mom-check warn">
+                        <i>↻</i>
+                        <span>
+                            <b>@L["Already in this session"]</b>
+                            @L["at {0}.", ((int)held.Score).ToString("N0")]
+                            @L["A higher score replaces it; a lower one is discarded."]
+                        </span>
+                    </div>
+                </div>
+            }
+
+            <p class="mom-entry-hint">
+                @L["Chart, score,"] <span class="kbd">@L["Enter"]</span>.
+                <span class="kbd">@L["Shift"]</span>+<span class="kbd">@L["Enter"]</span> @L["files it as broken."]
+            </p>
+            <div class="mom-entry-import">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="_busy"
+                           StartIcon="@Icons.Material.Filled.Download" OnClick="OpenImport"
+                           data-testid="mom-open-import">@L["Import recent plays"]</MudButton>
+                <span>@L["Missing tonight?"] <MudLink Href="/UploadPhoenixScores" Color="Color.Primary">@L["Run Import Scores"]</MudLink> @L["first."]</span>
+            </div>
+        </section>
+    }
+
+    <section class="mom-sess" data-testid="mom-session">
+        <div class="mom-sess-head">
+            <span class="sbd-eyebrow">@L["Your session"]</span>
+            <span class="mom-sess-total num">
+                @draft.TotalScore.ToString("N0")<small>@L["Points"] · @L["{0} charts", draft.Charts.Count]</small>
+            </span>
+        </div>
+        @if (draft.Charts.Count == 0)
+        {
+            <div class="mom-sess-empty" data-testid="mom-session-empty">@L["No charts yet."]</div>
+        }
+        else
+        {
+            @for (var i = 0; i < draft.Charts.Count; i++)
+            {
+                var ordinal = i;
+                var chart = draft.Charts[i];
+                var closing = ordinal == draft.Charts.Count - 1 && draft.SongTime > draft.Window;
+                <div class="sbd-row mom-sess-row" data-testid="mom-session-row">
+                    <span class="mom-ordn">@(ordinal + 1)</span>
+                    <DifficultyBubble Chart="chart.Chart"/>
+                    <SongImage Song="chart.Chart.Song" Height="35"/>
+                    <div class="sbd-row-body">
+                        <div class="sbd-row-line">
+                            <span class="song">@chart.Chart.Song.Name</span>
+                            @if (closing)
+                            {
+                                <span class="mom-chip-accent" title="@L["Started inside the window, ran past it"]">@L["closing chart"]</span>
+                            }
+                            @if (_replaced.TryGetValue(chart.Chart.Id, out var was))
+                            {
+                                <span class="mom-chip-outline" title="@L["You played it twice; the better one is on the board"]"
+                                      data-testid="mom-session-replaced">@L["replaced {0}", was.ToString("N0")]</span>
+                            }
+                        </div>
+                        <div class="sbd-row-line">
+                            <ScoreBreakdown Score="chart.Score" Plate="chart.Plate" IsBroken="chart.IsBroken"
+                                            Mix="draft.Mix" Stacked="true" ShowScore="true"/>
+                            <span class="sbd-peerpct">@MoMText.MinutesSeconds(chart.Chart.Song.Duration)</span>
+                        </div>
+                    </div>
+                    <span class="tier-chart-card-corner pmb-corner-gain" title="@L["Session points"]">@L["{0} pts", chart.SessionScore.ToString("N0")]</span>
+                    @if (!draft.IsPublished)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Disabled="_busy"
+                                       aria-label="@L["Remove"]" data-testid="mom-session-remove"
+                                       OnClick="@(() => Remove(ordinal))"/>
+                    }
+                </div>
+            }
+        }
+        @if (!draft.IsPublished)
+        {
+            <MudTextField T="string" Value="@_video" ValueChanged="SetVideo" DebounceInterval="600"
+                          Label="@L["Video link (optional)"]" Variant="Variant.Outlined" Margin="Margin.Dense"
+                          Class="mom-video" Placeholder="https://youtu.be/…"/>
+        }
+    </section>
+
+    @if (!draft.IsPublished)
+    {
+        <div class="mom-footer-bar">
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Disabled="_busy"
+                       StartIcon="@Icons.Material.Filled.Delete" OnClick="ConfirmDiscard"
+                       data-testid="mom-discard">@L["Discard draft"]</MudButton>
+            <span class="spacer"></span>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large"
+                       Disabled="@(_busy || draft.Charts.Count == 0)" StartIcon="@Icons.Material.Filled.Check"
+                       OnClick="ConfirmPublish" data-testid="mom-publish">@L["Publish"]</MudButton>
+        </div>
+    }
+}
+else
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary"/>
+}
+
+@code {
+    /// <summary>The session being edited. Absent on the /Record route, which opens one first.</summary>
+    [Parameter] public Guid? SessionId { get; set; }
+
+    /// <summary>The board to open or resume a draft on, when arriving from a Record link.</summary>
+    [Parameter] public Guid? BoardId { get; set; }
+
+    [Inject] public IMediator Mediator { get; set; } = default!;
+    [Inject] public NavigationManager Nav { get; set; } = default!;
+    [Inject] public IDialogService Dialogs { get; set; } = default!;
+    [Inject] public ISnackbar Snackbar { get; set; } = default!;
+    [Inject] public ICurrentUserAccessor CurrentUser { get; set; } = default!;
+
+    private const string BrokenValue = "__broken";
+
+    private static readonly PhoenixPlate[] Plates = Enum.GetValues<PhoenixPlate>();
+
+    private MoMDraftView? _draft;
+    private bool _notFound;
+    private bool _busy;
+    private Chart? _picked;
+    private int? _score;
+    private string _result = BrokenValue;
+    private string? _video;
+    private IEnumerable<Chart>? _selectable;
+
+    /// <summary>
+    ///     What a repeat displaced, by chart, for the row's chip. Held in page state rather than
+    ///     stored: it is feedback about what just happened, not a fact about the session (D45).
+    /// </summary>
+    private readonly Dictionary<Guid, int> _replaced = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            _notFound = true;
+            return;
+        }
+
+        if (BoardId is { } board)
+        {
+            // Opening or resuming, then handing over to the session's own URL so a reload does not
+            // look like a second "New session".
+            var opened = await Mediator.Send(new CreateMoMDraftCommand(board));
+            if (opened == Guid.Empty)
+            {
+                _notFound = true;
+                return;
+            }
+
+            Nav.NavigateTo(MoMText.EditPath(opened), false, true);
+            return;
+        }
+
+        await Reload();
+    }
+
+    private async Task Reload()
+    {
+        if (SessionId is not { } id) return;
+
+        _draft = await Mediator.Send(new GetMoMDraftQuery(id));
+        _notFound = _draft == null;
+        if (_draft == null) return;
+
+        _video = _draft.VideoUrl?.ToString();
+        // The picker offers this board's chart type only: a board is one type (D15).
+        _selectable ??= (await Mediator.Send(new GetChartsQuery(_draft.Mix)))
+            .Where(c => c.Type == _draft.ChartType)
+            .ToArray();
+    }
+
+    private static TimeSpan Remaining(MoMDraftView draft) =>
+        draft.SongTime >= draft.Window ? TimeSpan.Zero : draft.Window - draft.SongTime;
+
+    private static double Percent(TimeSpan part, TimeSpan whole, double alreadyUsed = 0)
+    {
+        if (whole <= TimeSpan.Zero) return 0;
+        var raw = Math.Max(0, part.TotalSeconds) / whole.TotalSeconds * 100;
+        return Math.Round(Math.Clamp(raw, 0, 100 - alreadyUsed), 2);
+    }
+
+    private static string MixName(MixEnum mix) => mix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix";
+
+    private string TypeName(ChartType type) => type == ChartType.Single ? L["Singles"] : L["Doubles"];
+
+    /// <summary>The play already in the session for the chart in the picker, if any.</summary>
+    private MoMSessionChart? Held(MoMDraftView draft) =>
+        _picked == null
+            ? null
+            : draft.Charts.FirstOrDefault(c => c.Chart.Level == _picked.Level &&
+                                               c.Chart.Type == _picked.Type &&
+                                               c.Chart.Song.Name == _picked.Song.Name);
+
+    private Task PickChart(Chart chart)
+    {
+        _picked = chart;
+        return Task.CompletedTask;
+    }
+
+    private async Task OnScoreKey(KeyboardEventArgs args)
+    {
+        if (args.Key != "Enter") return;
+
+        // Shift+Enter files a run as broken without reaching for the plate.
+        await AddPicked(args.ShiftKey);
+    }
+
+    private async Task AddPicked(bool broken)
+    {
+        if (_draft == null || _picked == null || _score is not { } score || _busy) return;
+
+        if (!PhoenixScore.TryParse(score, out var value))
+        {
+            // The field keeps what was typed: a digit too many is a correction, not a restart.
+            Snackbar.Add(L["A score is a number from 0 to 1,000,000."], Severity.Warning);
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            var isBroken = broken || _result == BrokenValue;
+            var plate = isBroken || !Enum.TryParse<PhoenixPlate>(_result, out var chosen)
+                ? PhoenixPlate.RoughGame
+                : chosen;
+            var chartId = _picked.Id;
+            var result = await Mediator.Send(new AddMoMDraftChartCommand(_draft.SessionId, chartId,
+                value, plate, isBroken));
+
+            switch (result.Outcome)
+            {
+                case MoMEntryOutcome.Replaced:
+                    if (result.PreviousScore is { } was) _replaced[chartId] = was;
+                    Snackbar.Add(L["That beats your earlier play of this chart, which is replaced."], Severity.Success);
+                    break;
+                case MoMEntryOutcome.Kept:
+                    Snackbar.Add(L["Your earlier play of this chart scores higher, so it stays."], Severity.Info);
+                    break;
+                case MoMEntryOutcome.Rejected:
+                    Snackbar.Add(L["That chart cannot be added — the session is already full."], Severity.Warning);
+                    break;
+                case MoMEntryOutcome.Ineligible:
+                    Snackbar.Add(L["That chart is worth nothing on this board, so it cannot be added."],
+                        Severity.Warning);
+                    break;
+            }
+
+            // The picker clears so entry is chart, score, Enter, chart, score, Enter.
+            _score = null;
+            _picked = null;
+            await Reload();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task Remove(int ordinal)
+    {
+        if (_draft == null || _busy) return;
+
+        _busy = true;
+        try
+        {
+            await Mediator.Send(new RemoveMoMDraftChartCommand(_draft.SessionId, ordinal));
+            await Reload();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task SetVideo(string? url)
+    {
+        _video = url;
+        if (_draft == null) return;
+
+        if (!await Mediator.Send(new SetMoMDraftVideoCommand(_draft.SessionId, url)))
+            Snackbar.Add(L["The video link needs to be a full address, starting with https://."],
+                Severity.Warning);
+    }
+
+    private async Task OpenImport()
+    {
+        if (_draft == null) return;
+
+        var parameters = new DialogParameters<MoMImportDialog> { { d => d.SessionId, _draft.SessionId } };
+        var dialog = await Dialogs.ShowAsync<MoMImportDialog>(L["Import recent plays"], parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: MoMImportResult imported })
+        {
+            foreach (var replacement in imported.Replacements)
+            {
+                _replaced[replacement.ChartId] = replacement.PreviousScore;
+            }
+
+            Snackbar.Add(Summarise(imported), Severity.Success);
+            await Reload();
+        }
+    }
+
+    private string Summarise(MoMImportResult imported)
+    {
+        var parts = new List<string> { L["{0} added", imported.Added + imported.Replaced] };
+        if (imported.Replaced > 0) parts.Add(L["{0} replaced a better play", imported.Replaced]);
+        if (imported.Kept > 0) parts.Add(L["{0} kept", imported.Kept]);
+        if (imported.Skipped > 0) parts.Add(L["{0} skipped", imported.Skipped]);
+        return string.Join(" · ", parts);
+    }
+
+    private async Task ConfirmPublish()
+    {
+        if (_draft is not { } draft) return;
+
+        var body = new string[]
+        {
+            L["Goes on the {0} {1} board now, recorded as played now.", MixName(draft.Mix), TypeName(draft.ChartType)],
+            L["Cannot be edited afterwards — delete and record again instead."],
+            L["Public on the board even if your profile is private."]
+        };
+        if (!await Confirm(L["Publish this session?"], body, L["Publish"])) return;
+
+        _busy = true;
+        try
+        {
+            await Mediator.Send(new PublishMoMSessionCommand(draft.SessionId));
+            await Reload();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (_draft is not { } draft) return;
+
+        var body = new string[]
+        {
+            L["It comes off the {0} {1} board and everyone below it moves up one.",
+                MixName(draft.Mix), TypeName(draft.ChartType)],
+            L["{0} points", draft.TotalScore.ToString("N0")] + " · " + L["{0} charts", draft.Charts.Count] + ".",
+            L["Record it again from the season page. This cannot be undone."]
+        };
+        if (!await Confirm(L["Take this session off the board?"], body, L["Delete"])) return;
+
+        await Mediator.Send(new DeleteMoMSessionCommand(draft.SessionId));
+        Nav.NavigateTo(MoMText.SeasonRoute);
+    }
+
+    private async Task ConfirmDiscard()
+    {
+        if (_draft is not { } draft) return;
+
+        var body = new string[] { L["Everything you have entered goes with it. Nothing was on the board yet."] };
+        if (!await Confirm(L["Discard this draft?"], body, L["Discard"])) return;
+
+        await Mediator.Send(new DeleteMoMSessionCommand(draft.SessionId));
+        Nav.NavigateTo(MoMText.SeasonRoute);
+    }
+
+    private async Task<bool> Confirm(string title, IEnumerable<string> lines, string confirmText)
+    {
+        var message = string.Join("<br/>", lines.Select(System.Net.WebUtility.HtmlEncode));
+        var result = await Dialogs.ShowMessageBox(new MessageBoxOptions
+        {
+            Title = title,
+            MarkupMessage = new MarkupString(message),
+            YesText = confirmText,
+            CancelText = L["Back"]
+        }, new DialogOptions { MaxWidth = MaxWidth.ExtraSmall });
+        return result == true;
+    }
+}

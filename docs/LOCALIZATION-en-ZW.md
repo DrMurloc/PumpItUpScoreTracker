@@ -644,3 +644,22 @@ as the protected `DrMurloc`.
 The Season page's card for a viewer who has never published a session (D44). Reuses the Rules-page
 batch throughout; two new words: *new here?* is `Murpargl ap?` (`murpargl`, the recovered *first / newest*,
 as *first time*) and *read* is `Blomorg` (the recovered *watch / see*, which is how a Murloc reads).
+
+### Recording and planning, slice 4b (2026-09-06)
+
+Submit, the journal import dialog, the Planner and the My Sessions on-ramp (docs/design/march-of-murlocs.md §11.4 and §11.5). A session's own vocabulary is above; these are the terms the write surfaces added.
+
+Built from the standing syllables; `rogro` (a second of time) already existed and is what `mrglublgl/rogro` (points per second) is made of.
+
+| English | en-ZW |
+|---|---|
+| draft (an unpublished session) | grublab |
+| record book | mrrgl brulb |
+| set | grolp |
+| rest chart | grolm murgl |
+| finisher | grolmurgl |
+| window (the 1:45) | grolab |
+| push (how hard) | brglgro |
+| publish | blomorg |
+| import | grumla |
+| closing chart | grolm murgl |

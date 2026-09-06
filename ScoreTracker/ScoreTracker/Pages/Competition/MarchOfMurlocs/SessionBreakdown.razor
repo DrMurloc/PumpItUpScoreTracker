@@ -135,6 +135,9 @@ else
 
     [Parameter] public Guid SessionId { get; set; }
 
+    /// <summary>Arrive with the download dialog open — what Submit's Download image button links to.</summary>
+    [Parameter] [SupplyParameterFromQuery(Name = "download")] public string? OpenDownload { get; set; }
+
     private bool _loaded;
     private MoMSessionView? _view;
     private bool _isOwn;
@@ -178,6 +181,7 @@ else
             Enum.TryParse<UiDensity>(await UiSettings.GetSetting(DensityKey), out var density))
             _density = density;
         _loaded = true;
+        _downloadOpen = _view != null && OpenDownload == "1";
     }
 
     private async Task SetDensity(UiDensity density)
