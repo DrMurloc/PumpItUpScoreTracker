@@ -12,6 +12,7 @@ using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.CommunityTools.Domain;
 using ScoreTracker.CommunityTools.Infrastructure;
 using ScoreTracker.CommunityTools.Wiring;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts;
@@ -41,6 +42,7 @@ public sealed class ToolKeyAndShareHandlerTests
     private readonly Mock<IRepositoryReachabilityClient> _repositories = new();
     private readonly Mock<IWebhookDeliveryClient> _webhooks = new();
     private readonly Mock<IToolKeyRepository> _keys = new();
+    private readonly MemoryCache _cache = new(new MemoryCacheOptions());
     private readonly Mock<IToolRepository> _tools = new();
     private readonly Mock<IUserReader> _users = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
@@ -57,7 +59,7 @@ public sealed class ToolKeyAndShareHandlerTests
     private ToolKeySaga KeySaga()
     {
         return new ToolKeySaga(_keys.Object, _tools.Object, _users.Object, _currentUser.Object,
-            FakeDateTime.At(Now).Object);
+            FakeDateTime.At(Now).Object, _activity.Object, _cache);
     }
 
     [Fact]
@@ -121,6 +123,8 @@ public sealed class ToolKeyAndShareHandlerTests
         Assert.Null(resolved);
         _keys.Verify(k => k.ResolveToolByKeyHash(It.IsAny<string>(), It.IsAny<DateTimeOffset>(),
             It.IsAny<CancellationToken>()), Times.Never);
+        _activity.Verify(a => a.Increment(It.IsAny<Guid>(), It.IsAny<ToolActivityKind>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -135,6 +139,35 @@ public sealed class ToolKeyAndShareHandlerTests
         Assert.Equal(new ToolKeyPrincipal(ToolId, "production"), resolved);
     }
 
+    /// <summary>Authenticated is used: the hour's tally moves under the key's own name.</summary>
+    [Fact]
+    public async Task ALiveKeyAddsOneToTheHoursTallyUnderItsName()
+    {
+        var (key, hash, _) = ApiKeyMint.Mint();
+        _keys.Setup(k => k.ResolveToolByKeyHash(hash, Now, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ToolKeyResolution(ToolId, "production", IsExpired: false));
+
+        await KeySaga().Handle(new GetToolByApiKeyQuery(key), CancellationToken.None);
+
+        _activity.Verify(a => a.Increment(ToolId, ToolActivityKind.KeyUsed, Now, "production",
+            It.IsAny<CancellationToken>()), Times.Once);
+        _activity.Verify(a => a.Increment(ToolId, ToolActivityKind.KeyExpired, It.IsAny<DateTimeOffset>(),
+            It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>An unknown or revoked key is nobody's: nothing to count it under.</summary>
+    [Fact]
+    public async Task AnUnknownKeyCountsNothing()
+    {
+        var (key, hash, _) = ApiKeyMint.Mint();
+        _keys.Setup(k => k.ResolveToolByKeyHash(hash, Now, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ToolKeyResolution?)null);
+
+        Assert.Null(await KeySaga().Handle(new GetToolByApiKeyQuery(key), CancellationToken.None));
+        _activity.Verify(a => a.Increment(It.IsAny<Guid>(), It.IsAny<ToolActivityKind>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     /// <summary>The repository names an expired key so the console can; the caller still gets nothing.</summary>
     [Fact]
     public async Task AnExpiredKeyResolvesToNothing()
@@ -144,6 +177,10 @@ public sealed class ToolKeyAndShareHandlerTests
             .ReturnsAsync(new ToolKeyResolution(ToolId, "production", IsExpired: true));
 
         Assert.Null(await KeySaga().Handle(new GetToolByApiKeyQuery(key), CancellationToken.None));
+        _activity.Verify(a => a.Increment(ToolId, ToolActivityKind.KeyExpired, Now, "production",
+            It.IsAny<CancellationToken>()), Times.Once);
+        _activity.Verify(a => a.Increment(ToolId, ToolActivityKind.KeyUsed, It.IsAny<DateTimeOffset>(),
+            It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

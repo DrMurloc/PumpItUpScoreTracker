@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Contracts.Commands;
 using ScoreTracker.CommunityTools.Contracts.Queries;
@@ -19,6 +20,15 @@ internal sealed class ToolKeySaga :
     IRequestHandler<GetToolInvitePreviewQuery, ToolInvitePreview?>,
     IRequestHandler<GetToolByApiKeyQuery, ToolKeyPrincipal?>
 {
+    /// <summary>
+    ///     How long a resolved key is remembered for the rate limiter's sake. A tool is only ever
+    ///     limited after hundreds of successes inside one minute, so anything longer than a minute
+    ///     keeps the entry warm; five keeps it warm across a quiet spell too.
+    /// </summary>
+    private static readonly TimeSpan PrincipalLifetime = TimeSpan.FromMinutes(5);
+
+    private readonly IToolActivityRepository _activity;
+    private readonly IMemoryCache _cache;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IToolKeyRepository _keys;
@@ -26,13 +36,16 @@ internal sealed class ToolKeySaga :
     private readonly IUserReader _users;
 
     public ToolKeySaga(IToolKeyRepository keys, IToolRepository tools, IUserReader users,
-        ICurrentUserAccessor currentUser, IDateTimeOffsetAccessor dateTime)
+        ICurrentUserAccessor currentUser, IDateTimeOffsetAccessor dateTime,
+        IToolActivityRepository activity, IMemoryCache cache)
     {
         _keys = keys;
         _tools = tools;
         _users = users;
         _currentUser = currentUser;
         _dateTime = dateTime;
+        _activity = activity;
+        _cache = cache;
     }
 
     public async Task<MintedApiKey> Handle(CreateToolApiKeyCommand request,
@@ -129,12 +142,35 @@ internal sealed class ToolKeySaga :
         // Shape-check before touching the database so a malformed bearer token never becomes a query.
         if (!ApiKeyMint.LooksLikeAKey(request.Key)) return null;
 
-        var resolution = await _keys.ResolveToolByKeyHash(ApiKeyMint.HashOf(request.Key), _dateTime.Now,
+        var hash = ApiKeyMint.HashOf(request.Key);
+        var now = _dateTime.Now;
+        var resolution = await _keys.ResolveToolByKeyHash(hash, now, cancellationToken);
+        if (resolution is null) return null;
+
+        // An expired key is named for the console's sake — the hour's tally of what bounced is
+        // what turns "my key stopped working" into a date — and still fails here.
+        if (resolution.IsExpired)
+        {
+            await _activity.Increment(resolution.ToolId, ToolActivityKind.KeyExpired, now,
+                resolution.KeyName, cancellationToken);
+            return null;
+        }
+
+        // Authenticated is used. Rate-limited requests never reach this point, so the tally
+        // and the rate-limit tally never count the same request.
+        await _activity.Increment(resolution.ToolId, ToolActivityKind.KeyUsed, now, resolution.KeyName,
             cancellationToken);
-        // An expired key is named for the console's sake and still fails here.
-        return resolution is { IsExpired: false }
-            ? new ToolKeyPrincipal(resolution.ToolId, resolution.KeyName)
-            : null;
+
+        var principal = new ToolKeyPrincipal(resolution.ToolId, resolution.KeyName);
+        _cache.Set(PrincipalCacheKey(hash), principal,
+            new MemoryCacheEntryOptions { SlidingExpiration = PrincipalLifetime });
+        return principal;
+    }
+
+    /// <summary>Keyed by the hash, never the key: the cache must be as safe to dump as the table.</summary>
+    private static string PrincipalCacheKey(string hash)
+    {
+        return "tool-key-principal:" + hash;
     }
 
     /// <summary>

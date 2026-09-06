@@ -18,6 +18,9 @@
     <PackageReference Include="MassTransit" Version="8.5.7" />
     <PackageReference Include="MassTransit.Abstractions" Version="8.5.7" />
     <PackageReference Include="MediatR" Version="14.0.0" />
+    <!-- The key-hash to principal cache the rate limiter's rejection path reads: the limiter runs
+         before the v2 scheme, so a rejected request has no claims to name its tool by. -->
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
     <!-- Outbound webhook delivery. Same exemption OfficialMirror carries for the PiuGame ACL:
