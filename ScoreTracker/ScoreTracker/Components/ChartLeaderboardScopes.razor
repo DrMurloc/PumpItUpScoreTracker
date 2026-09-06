@@ -258,6 +258,12 @@ else
     ///     PUMBILITY page today, and that is not a cost to pay on every chart view.
     /// </summary>
     private IReadOnlySet<PeerVoice>? _pumbilityPeers;
+
+    /// <summary>The board peers on this chart, by tag — they have no account to be known by.</summary>
+    private IReadOnlySet<string> _pumbilityBoardNames = new HashSet<string>();
+
+    /// <summary>When the mirror those rows came from was swept. Null while none are on the board.</summary>
+    private DateTimeOffset? _pumbilityBoardAsOf;
     private OfficialChartBoardRecord? _officialBoard;
     private IReadOnlySet<Guid> _officialPublicLinks = new HashSet<Guid>();
     private IReadOnlyDictionary<string, Uri?> _officialAvatars = new Dictionary<string, Uri?>();
@@ -286,6 +292,8 @@ else
         _scope = InitialScope;
         _officialBoard = null;
         _pumbilityPeers = null;
+        _pumbilityBoardNames = new HashSet<string>();
+        _pumbilityBoardAsOf = null;
         await LoadChartAsync();
     }
 
@@ -448,7 +456,22 @@ else
                 _pumbilityPeers ??= (await Mediator.Send(new GetPumbilityPeersQuery(_chart.Type, Mix))).ToHashSet();
                 _communityUserIds = _clubmates;
                 var me = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : (Guid?)null;
-                return _world.Where(s => _pumbilityPeers.Contains(PeerVoice.Account(s.UserId)) || s.UserId == me)
+                var siteRows = _world.Where(s => _pumbilityPeers.Contains(PeerVoice.Account(s.UserId)) || s.UserId == me);
+
+                // The peers the official board is the only record of are not in _world at all — no
+                // account, no site score — so they are read off the mirror by their tag and put on
+                // the board beside everyone else, carrying its asterisk and its date (D59, D37).
+                var boardTags = _pumbilityPeers.Where(p => p.IsFromBoard && p.Tag != null)
+                    .Select(p => p.Tag!).ToArray();
+                if (boardTags.Length == 0) return siteRows.ToArray();
+
+                var mirrored = await Mediator.Send(new GetOfficialScoresForTagsQuery(Mix, boardTags,
+                    new[] { ChartId }));
+                _pumbilityBoardAsOf = mirrored.AsOf;
+                _pumbilityBoardNames = mirrored.Scores.Select(r => r.Tag).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                return siteRows
+                    .Concat(mirrored.Scores.Select(r => new UserPhoenixScore(Guid.Empty, ChartId, r.Tag, r.Score,
+                        null, false)))
                     .ToArray();
             }
             case LeaderboardScope.LowestPassing:
@@ -635,7 +658,9 @@ else
         || _rivalGhostNames.Contains(score.UserName.ToString());
 
     private bool IsOfficialRow(UserPhoenixScore score) =>
-        _scope == LeaderboardScope.Rivals && _officialRivalEdges.Count > 0 && score.UserId == Guid.Empty;
+        (_scope == LeaderboardScope.Rivals && _officialRivalEdges.Count > 0 && score.UserId == Guid.Empty)
+        || (_scope == LeaderboardScope.PumbilityPeers
+            && _pumbilityBoardNames.Contains(score.UserName.ToString()));
 
     // The shared ladder, not a private copy of it. This board carried its own you/clubmate
     // ternary with no rival arm at all, so a rival read as a plain clubmate on every scope —
@@ -692,6 +717,10 @@ else
             if (_scope == LeaderboardScope.Official)
                 return _officialAsOf is { } officialAsOf
                     ? L["Official board data, as of {0}.", officialAsOf.ToString("d MMM")].Value
+                    : null;
+            if (_scope == LeaderboardScope.PumbilityPeers)
+                return _pumbilityBoardAsOf is { } peerAsOf
+                    ? L["* Official board data, as of {0}.", peerAsOf.ToString("d MMM")].Value
                     : null;
             if (_scope != LeaderboardScope.Rivals) return null;
             var parts = new List<string>();

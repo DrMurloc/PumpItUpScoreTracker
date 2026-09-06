@@ -490,6 +490,36 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
         _mediator.Verify(m => m.Send(It.IsAny<GetPumbilityPeersQuery>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    ///     A peer the official board is the only record of has no account and no site score, so
+    ///     they are read off the mirror by tag and stand on the board beside everyone else, wearing
+    ///     its asterisk and its date (docs/design/pumbility-overhaul.md D59).
+    /// </summary>
+    [Fact]
+    public void ABoardPeerStandsOnThePumbilityBoardWithTheMirrorsMark()
+    {
+        var me = Guid.NewGuid();
+        SignedInAs(me);
+        var peer = Guid.NewGuid();
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsForCommunityQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { ScoreFor(peer, 990_000, "PEER"), ScoreFor(me, 970_000, "ME") });
+        _mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { PeerVoice.Account(peer), PeerVoice.FromBoard(11, "URUSA#9487") });
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialScoresForTagsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialTagScores(When,
+                new[] { new OfficialTagScore("URUSA#9487", ChartId, 3, 995_000) }));
+
+        var dialog = RenderDialog(MixEnum.Phoenix2, ChartLeaderboardScopes.LeaderboardScope.PumbilityPeers);
+
+        dialog.WaitForAssertion(() =>
+        {
+            var names = dialog.FindAll(".weekly-lb-user").Select(e => e.TextContent.Trim()).ToArray();
+            // The asterisk is the mirror's mark, the same one a ghost rival's row carries.
+            Assert.Equal(new[] { "URUSA#9487*", "PEER", "ME" }, names);
+        });
+        Assert.Contains("Official board data", dialog.Markup);
+    }
+
     [Fact]
     public void NoPumbilityPeersYetSaysWhatLightsThemUp()
     {
