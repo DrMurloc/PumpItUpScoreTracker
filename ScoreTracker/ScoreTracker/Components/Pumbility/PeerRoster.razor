@@ -107,11 +107,9 @@ else
     }
     @if (BoardPeers > 0)
     {
-        <p class="pmb-roster-note" data-testid="roster-board">
-            @(BoardAsOf is { } asOf
-                ? L["{0} of these are read from the official board, as of {1}.", BoardPeers, asOf.ToString("d MMM")]
-                : L["{0} of these are read from the official board.", BoardPeers])
-        </p>
+        @* Not "these": the table shows a window of fifty around you and this counts every peer,
+           so the word pointed at rows that may not be on screen (owner, bug check 2026-09-06). *@
+        <p class="pmb-roster-note" data-testid="roster-board">@BoardNote</p>
     }
     @if (PrivatePeers > 0)
     {
@@ -134,6 +132,21 @@ else
     [Parameter] public int BoardPeers { get; set; }
 
     [Parameter] public DateTimeOffset? BoardAsOf { get; set; }
+
+    private string BoardNote
+    {
+        get
+        {
+            if (BoardAsOf is not { } asOf)
+                return BoardPeers == 1
+                    ? L["1 peer is from the official board."]
+                    : L["{0} peers are from the official board.", BoardPeers];
+            var swept = asOf.ToString("d MMM");
+            return BoardPeers == 1
+                ? L["1 peer is from the official board, as of {0}.", swept]
+                : L["{0} peers are from the official board, as of {1}.", BoardPeers, swept];
+        }
+    }
 
     private string BoardTitle => BoardAsOf is { } asOf
         ? L["Read from the official board, as of {0}. No account on PIU Scores.", asOf.ToString("d MMM")].Value

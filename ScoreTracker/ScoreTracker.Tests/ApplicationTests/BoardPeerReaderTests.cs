@@ -162,6 +162,37 @@ public sealed class BoardPeerReaderTests
         Assert.Equal("VIEWER#0001", Assert.Single(group!.Peers).Tag);
     }
 
+    /// <summary>
+    ///     A person who renamed owns two rows, and the caller only ever names one of them — the row
+    ///     their pool was read from. A pass they set under the other tag is theirs too: the
+    ///     projection already counts it, and without this the standing beneath the projection did
+    ///     not, so the two numbers on one card disagreed about who passed the chart (bug check
+    ///     2026-09-06).
+    /// </summary>
+    [Fact]
+    public async Task APassUnderAnOldTagCountsForThePersonWhoSetIt()
+    {
+        var chartId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var players = new[] { Player(1, "NEWNAME#0001", userId), Player(2, "OLDNAME#0002", userId) };
+        Board(Row(1, 18_900m), Row(2, 18_400m));
+        Players(players);
+        Accounts(Account(userId, "Renamed", "NEWNAME#0001", true));
+        // Both rows hold a fifty, and only the OLD one holds a pass on the chart under test.
+        History(players.SelectMany(p => Enumerable.Range(0, 50)
+                .Select(_ => new PlayerChartHistoryRow(p.Id, Guid.NewGuid(), 26, 1_000_000)))
+            .Append(new PlayerChartHistoryRow(2, chartId, 23, 991_000))
+            .ToArray());
+
+        var scores = await Subject.GetBoardScoresOn(MixEnum.Phoenix2, new[] { 1 }, new[] { chartId },
+            CancellationToken.None);
+
+        var row = Assert.Single(scores.Scores);
+        // Answered under the id that was asked about, so the caller can still recognise it.
+        Assert.Equal(1, row.BoardPlayerId);
+        Assert.Equal(991_000, row.Score);
+    }
+
     [Fact]
     public async Task APlayerWithNoAccountIsABoardPeer()
     {

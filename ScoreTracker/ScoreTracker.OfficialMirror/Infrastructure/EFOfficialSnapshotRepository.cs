@@ -531,11 +531,12 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
     }
 
     public async Task<IReadOnlyList<PlayerChartPlacement>> GetChartPlacementsFor(int snapshotId,
-        IReadOnlyCollection<int> playerIds, IReadOnlyCollection<Guid> chartIds, CancellationToken ct)
+        IReadOnlyCollection<int> playerIds, IReadOnlyCollection<Guid> chartIds, PlacementScope scope,
+        CancellationToken ct)
     {
         if (playerIds.Count == 0 || chartIds.Count == 0) return Array.Empty<PlayerChartPlacement>();
         await using var database = await _factory.CreateDbContextAsync(ct);
-        return await database.Set<OfficialLeaderboardPlacementEntity>()
+        return await Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
             .Where(p => p.SnapshotId == snapshotId && playerIds.Contains(p.PlayerId))
             .Join(database.Set<OfficialLeaderboardEntity>()
                     .Where(b => b.LeaderboardType == LeaderboardTypes.Chart

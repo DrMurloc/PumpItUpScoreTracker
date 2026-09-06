@@ -268,6 +268,12 @@
   <data name="1 peer" xml:space="preserve">
     <value>1 jugador similar</value>
   </data>
+  <data name="1 peer is from the official board, as of {0}." xml:space="preserve">
+    <value>1 par es del ranking oficial, con fecha del {0}.</value>
+  </data>
+  <data name="1 peer is from the official board." xml:space="preserve">
+    <value>1 par es del ranking oficial.</value>
+  </data>
   <data name="1 Player" xml:space="preserve">
     <value>1 jugador</value>
   </data>
@@ -10387,12 +10393,6 @@
   <data name="{0} of them tried and broke." xml:space="preserve">
     <value>{0} de ellos lo intentaron y rompieron.</value>
   </data>
-  <data name="{0} of these are read from the official board, as of {1}." xml:space="preserve">
-    <value>{0} de estos se leen del ranking oficial, con fecha del {1}.</value>
-  </data>
-  <data name="{0} of these are read from the official board." xml:space="preserve">
-    <value>{0} de estos se leen del ranking oficial.</value>
-  </data>
   <data name="{0} of this song's charts were re-stepped." xml:space="preserve">
     <value>{0} charts de esta canción fueron repisados.</value>
   </data>
@@ -10461,6 +10461,12 @@
   </data>
   <data name="{0} peers" xml:space="preserve">
     <value>{0} jugadores similares</value>
+  </data>
+  <data name="{0} peers are from the official board, as of {1}." xml:space="preserve">
+    <value>{0} pares son del ranking oficial, con fecha del {1}.</value>
+  </data>
+  <data name="{0} peers are from the official board." xml:space="preserve">
+    <value>{0} pares son del ranking oficial.</value>
   </data>
   <data name="{0} per chart" xml:space="preserve">
     <value>{0} por chart</value>

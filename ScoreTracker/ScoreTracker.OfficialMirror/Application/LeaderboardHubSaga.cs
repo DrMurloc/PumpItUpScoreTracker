@@ -460,8 +460,11 @@ internal sealed class LeaderboardHubSaga :
 
         var tagById = players.ToDictionary(p => p.Id, p => p.Username);
         var avatarById = players.ToDictionary(p => p.Id, p => p.Avatar);
+        // Official rows only. These sit on a board a player reads as piugame's own, and a
+        // supplemented row is our arithmetic laid over it — offered there it would be indis-
+        // tinguishable from a score the site actually published (D59).
         var placements = await _snapshots.GetChartPlacementsFor(latest.Id, tagById.Keys.ToArray(),
-            request.ChartIds, cancellationToken);
+            request.ChartIds, PlacementScope.OfficialOnly, cancellationToken);
 
         return new OfficialTagScores(latest.CompletedAt, placements
             .Select(p => new OfficialTagScore(tagById[p.PlayerId], p.ChartId, p.Place, (int)p.Score,

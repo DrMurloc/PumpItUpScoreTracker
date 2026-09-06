@@ -286,9 +286,52 @@ internal sealed class BoardPeerReader
         var latest = await _snapshots.GetLatestSealed(mix, cancellationToken);
         if (latest?.CompletedAt == null) return BoardScoreReadings.None;
 
-        var rows = await _board.OnCharts(mix, boardPlayerIds, chartIds, cancellationToken);
+        // A caller names one id per person — the row their pool was read from. A person who has
+        // renamed owns others, and a pass recorded under the old tag is theirs just as much: the
+        // projection already counts it, because it is handed the whole set. Without this the two
+        // numbers on one card disagree about who passed the chart (bug check 2026-09-06).
+        var owner = await Owners(mix, latest.Id, boardPlayerIds, cancellationToken);
+        var rows = await _board.OnCharts(mix, owner.Keys.ToArray(), chartIds, cancellationToken);
 
-        return new BoardScoreReadings(latest.CompletedAt.Value,
-            rows.Select(r => new BoardScoreReading(r.PlayerId, r.ChartId, r.Level, r.Score)).ToArray());
+        // Answered under the id the caller asked about, and one row per person per chart: their
+        // best, whichever tag it was set under.
+        var best = new Dictionary<(int Player, Guid Chart), BoardScoreReading>();
+        foreach (var row in rows)
+        {
+            var asked = owner[row.PlayerId];
+            var key = (asked, row.ChartId);
+            if (best.TryGetValue(key, out var held) && held.Score >= row.Score) continue;
+            best[key] = new BoardScoreReading(asked, row.ChartId, row.Level, row.Score);
+        }
+
+        return new BoardScoreReadings(latest.CompletedAt.Value, best.Values.ToArray());
+    }
+
+    /// <summary>
+    ///     Every board id that belongs to the same person as one of the ids asked about, mapped
+    ///     back to the id that was asked about. Read off the folds the peer groups were built
+    ///     from, so it agrees with them by construction rather than by re-deriving the rules —
+    ///     and an id in no fold simply owns itself, which is the common case.
+    /// </summary>
+    private async Task<IReadOnlyDictionary<int, int>> Owners(MixEnum mix, int snapshotId,
+        IReadOnlyCollection<int> boardPlayerIds, CancellationToken cancellationToken)
+    {
+        var folds = new List<PreparedPeer>();
+        // Both per-type boards: the caller has no chart type to give, and a peer qualified on
+        // either is a peer whose rows this has to find.
+        foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
+            folds.AddRange(await PreparedPeers(mix, chartType, snapshotId, cancellationToken));
+
+        var siblings = new Dictionary<int, int[]>();
+        foreach (var fold in folds.Where(f => f.Reading.BoardPlayerIds.Count > 1))
+        foreach (var id in fold.Reading.BoardPlayerIds)
+            siblings[id] = fold.Reading.BoardPlayerIds.ToArray();
+
+        var owner = new Dictionary<int, int>();
+        foreach (var asked in boardPlayerIds.Distinct())
+        foreach (var id in siblings.TryGetValue(asked, out var all) ? all : new[] { asked })
+            owner[id] = asked;
+
+        return owner;
     }
 }

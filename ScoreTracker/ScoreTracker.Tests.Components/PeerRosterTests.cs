@@ -167,7 +167,7 @@ public sealed class PeerRosterTests : ComponentTestBase
         Assert.Equal("—", cells[5]);
         // The gem still reads, because the board publishes the pool the ladder is priced on.
         Assert.Contains("ALEXANDRITE", top.TextContent);
-        Assert.Contains("1 of these are read from the official board, as of 30 Aug.",
+        Assert.Contains("1 peer is from the official board, as of 30 Aug.",
             cut.Find("[data-testid=roster-board]").TextContent);
         // The viewer is still found and still unnumbered — a board row cannot be mistaken for them.
         Assert.Equal(string.Empty, cut.Find("[data-testid=roster-you] td").TextContent.Trim());

@@ -126,7 +126,8 @@ internal interface IOfficialSnapshotRepository
     ///     would put a burst on a page render. Charts with no mirrored board are simply absent.
     /// </summary>
     Task<IReadOnlyList<PlayerChartPlacement>> GetChartPlacementsFor(int snapshotId,
-        IReadOnlyCollection<int> playerIds, IReadOnlyCollection<Guid> chartIds, CancellationToken ct);
+        IReadOnlyCollection<int> playerIds, IReadOnlyCollection<Guid> chartIds, PlacementScope scope,
+        CancellationToken ct);
 
     /// <summary>
     ///     A set of players' best published score per chart across EVERY sealed snapshot of the
