@@ -128,8 +128,10 @@ internal sealed class ToolKeySaga :
         // Shape-check before touching the database so a malformed bearer token never becomes a query.
         if (!ApiKeyMint.LooksLikeAKey(request.Key)) return null;
 
-        return await _keys.ResolveToolByKeyHash(ApiKeyMint.HashOf(request.Key), _dateTime.Now,
+        var resolution = await _keys.ResolveToolByKeyHash(ApiKeyMint.HashOf(request.Key), _dateTime.Now,
             cancellationToken);
+        // An expired key is named for the console's sake and still fails here.
+        return resolution is { IsExpired: false } ? resolution.ToolId : null;
     }
 
     /// <summary>

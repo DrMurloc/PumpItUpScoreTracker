@@ -128,11 +128,22 @@ public sealed class ToolKeyAndShareHandlerTests
     {
         var (key, hash, _) = ApiKeyMint.Mint();
         _keys.Setup(k => k.ResolveToolByKeyHash(hash, Now, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(ToolId);
+            .ReturnsAsync(new ToolKeyResolution(ToolId, "production", IsExpired: false));
 
         var resolved = await KeySaga().Handle(new GetToolByApiKeyQuery(key), CancellationToken.None);
 
         Assert.Equal(ToolId, resolved);
+    }
+
+    /// <summary>The repository names an expired key so the console can; the caller still gets nothing.</summary>
+    [Fact]
+    public async Task AnExpiredKeyResolvesToNothing()
+    {
+        var (key, hash, _) = ApiKeyMint.Mint();
+        _keys.Setup(k => k.ResolveToolByKeyHash(hash, Now, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ToolKeyResolution(ToolId, "production", IsExpired: true));
+
+        Assert.Null(await KeySaga().Handle(new GetToolByApiKeyQuery(key), CancellationToken.None));
     }
 
     [Fact]

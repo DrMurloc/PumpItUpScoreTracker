@@ -11,10 +11,12 @@ internal interface IToolKeyRepository
     Task RevokeKey(Guid toolId, Guid keyId, DateTimeOffset at, CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     Resolves a presented key to its tool, or null when it is unknown, revoked or expired.
-    ///     Also stamps last-used, which is the only signal a maker has that a key is still live.
+    ///     Resolves a presented key to its tool. A live key stamps last-used, the only signal a
+    ///     maker has that a key is still carrying traffic. An expired key comes back named and
+    ///     marked, so the console can say which key stopped working; unknown and revoked keys are
+    ///     null, and nobody hears about them.
     /// </summary>
-    Task<Guid?> ResolveToolByKeyHash(string hash, DateTimeOffset now,
+    Task<ToolKeyResolution?> ResolveToolByKeyHash(string hash, DateTimeOffset now,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<ToolInviteCodeRecord>> GetInviteCodes(Guid toolId,
@@ -32,6 +34,13 @@ internal interface IToolKeyRepository
     /// <summary>The tool an unrevoked invite code belongs to, or null.</summary>
     Task<Guid?> ResolveToolByInviteCode(Guid code, CancellationToken cancellationToken = default);
 }
+
+/// <summary>
+///     What a presented key turned out to be. <see cref="IsExpired" /> is the one failure a maker
+///     is told about by name: their key, their expiry date, their problem to fix.
+/// </summary>
+[ExcludeFromCodeCoverage]
+internal sealed record ToolKeyResolution(Guid ToolId, string KeyName, bool IsExpired);
 
 /// <summary>A live invite code and the maker's private note about where they shared it.</summary>
 [ExcludeFromCodeCoverage]

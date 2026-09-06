@@ -48,7 +48,7 @@ internal sealed class EFToolKeyRepository : IToolKeyRepository
             .ExecuteUpdateAsync(s => s.SetProperty(k => k.RevokedAt, at), cancellationToken);
     }
 
-    public async Task<Guid?> ResolveToolByKeyHash(string hash, DateTimeOffset now,
+    public async Task<ToolKeyResolution?> ResolveToolByKeyHash(string hash, DateTimeOffset now,
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
@@ -56,13 +56,15 @@ internal sealed class EFToolKeyRepository : IToolKeyRepository
             .FirstOrDefaultAsync(k => k.KeyHash == hash, cancellationToken);
 
         if (key is null || key.RevokedAt is not null) return null;
-        if (key.ExpiresAt is not null && key.ExpiresAt <= now) return null;
+        // Named but not stamped: an expired key carried no traffic, it bounced some.
+        if (key.ExpiresAt is not null && key.ExpiresAt <= now)
+            return new ToolKeyResolution(key.ToolId, key.Name, IsExpired: true);
 
         // Last-used is the only signal a maker has that a key is still carrying traffic, so it is
         // written on every call rather than sampled.
         key.LastUsedAt = now;
         await database.SaveChangesAsync(cancellationToken);
-        return key.ToolId;
+        return new ToolKeyResolution(key.ToolId, key.Name, IsExpired: false);
     }
 
     public async Task<IReadOnlyList<ToolInviteCodeRecord>> GetInviteCodes(Guid toolId,
