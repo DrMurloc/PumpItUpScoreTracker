@@ -47,6 +47,19 @@ public sealed class BoardPeerReaderTests
     {
         _snapshots.Setup(s => s.GetPlayersByIds(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(players);
+        // A fifty the mirror can plainly see, so the completeness check (D60) is not what any of
+        // these cases is measuring. The one test that IS measuring it overrides this.
+        History(players.SelectMany(p => Enumerable.Range(0, 50)
+                .Select(i => new PlayerChartHistoryRow(p.Id, Guid.NewGuid(), 26, 1_000_000)))
+            .ToArray());
+    }
+
+    private void History(params PlayerChartHistoryRow[] rows)
+    {
+        _snapshots.Setup(s => s.GetChartHistoryFor(It.IsAny<MixEnum>(), It.IsAny<IReadOnlyCollection<int>>(),
+                It.IsAny<ChartType>(), It.IsAny<int>(), It.IsAny<int>(), PlacementScope.OfficialOnly,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(rows);
     }
 
     private void Accounts(params User[] accounts)
@@ -185,6 +198,25 @@ public sealed class BoardPeerReaderTests
         var group = await Read();
 
         Assert.Equal("IN#2", Assert.Single(group!.Peers).Tag);
+    }
+
+    [Fact]
+    public async Task APlayerWhoseFiftyWeCannotRebuildIsNotAPeer()
+    {
+        Board(Row(1, 18_900m), Row(2, 18_950m));
+        Players(Player(1, "SEEN#1"), Player(2, "THIN#2"));
+        Accounts();
+        // Player 2 places on a handful of charts, so a fifty cannot be built from what the mirror
+        // holds and the shortfall against the board's own number is thousands, not hundreds.
+        History(Enumerable.Range(0, 50)
+            .Select(_ => new PlayerChartHistoryRow(1, Guid.NewGuid(), 26, 1_000_000))
+            .Concat(Enumerable.Range(0, 6)
+                .Select(_ => new PlayerChartHistoryRow(2, Guid.NewGuid(), 26, 1_000_000)))
+            .ToArray());
+
+        var group = await Read();
+
+        Assert.Equal("SEEN#1", Assert.Single(group!.Peers).Tag);
     }
 
     [Fact]

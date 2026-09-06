@@ -1,7 +1,9 @@
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Domain;
+using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.ValueTypes;
 using DomainUser = ScoreTracker.Domain.Models.User;
 
 namespace ScoreTracker.OfficialMirror.Application;
@@ -103,7 +105,40 @@ internal sealed class BoardPeerReader
             })
             .ToArray();
 
-        return new BoardPeerGroupReading(asOf, peers);
+        return new BoardPeerGroupReading(asOf, await KeepWhoseFiftyWeHold(mix, chartType, peers, cancellationToken));
+    }
+
+    /// <summary>
+    ///     Drops the people whose pool the mirror cannot actually see (D60). Their whole history of
+    ///     the type is read rather than the band's, because a pool is fifty charts wherever they
+    ///     sit; the band read that follows is a different, smaller question.
+    /// </summary>
+    private async Task<IReadOnlyList<BoardPeerReading>> KeepWhoseFiftyWeHold(MixEnum mix, ChartType chartType,
+        IReadOnlyList<BoardPeerReading> peers, CancellationToken cancellationToken)
+    {
+        if (peers.Count == 0) return peers;
+
+        var history = (await _snapshots.GetChartHistoryFor(mix,
+                peers.SelectMany(p => p.BoardPlayerIds).Distinct().ToArray(), chartType,
+                PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, PlacementScope.OfficialOnly, cancellationToken))
+            .GroupBy(r => r.PlayerId)
+            .ToDictionary(g => g.Key, g => g.ToArray());
+
+        return peers
+            .Where(peer =>
+            {
+                // One person's rows across every tag they own, best per chart — the same chart under
+                // two tags is one chart, and taking both would rebuild a pool they never held.
+                var rows = peer.BoardPlayerIds
+                    .SelectMany(id => history.TryGetValue(id, out var theirs)
+                        ? theirs
+                        : Array.Empty<PlayerChartHistoryRow>())
+                    .GroupBy(r => r.ChartId)
+                    .Select(g => g.OrderByDescending(r => r.Score).First());
+                return BoardPoolCheck.Confirms(
+                    BoardPoolCheck.Rebuild(chartType, rows.Select(r => (r.Level, r.Score))), peer.Pool);
+            })
+            .ToArray();
     }
 
     /// <summary>
