@@ -150,6 +150,21 @@ internal interface IOfficialSnapshotRepository
         CancellationToken ct);
 
     /// <summary>
+    ///     The same read for EVERYONE, every chart board, every type and level — the bulk form
+    ///     the in-memory board store is built from (docs/design/pumbility-overhaul.md §6.14).
+    ///     A caller that is going to be asked about arbitrary players and arbitrary charts is
+    ///     better off holding this once per sweep than asking a hundred times a page.
+    ///     <para>
+    ///         It is a repository method rather than a query the store writes itself because the
+    ///         placement table has exactly one reader: the scope belongs here, where a supplemented
+    ///         row cannot enter an official reading by an author forgetting a predicate
+    ///         (supplemented-leaderboards.md §7).
+    ///     </para>
+    /// </summary>
+    Task<IReadOnlyList<BoardChartHistoryRow>> GetEveryChartHistory(MixEnum mix, PlacementScope scope,
+        CancellationToken ct);
+
+    /// <summary>
     ///     Every player id with a placement in any of this mix's snapshots before the given
     ///     one — the all-history "seen" set that makes a debut a debut.
     /// </summary>

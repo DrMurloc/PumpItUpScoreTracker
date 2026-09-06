@@ -140,6 +140,13 @@ internal sealed record PlayerChartPlacement(int PlayerId, Guid ChartId, int Plac
 /// </summary>
 internal sealed record PlayerChartHistoryRow(int PlayerId, Guid ChartId, int Level, int Score);
 
+/// <summary>
+///     The same row with the chart type it was published under — the bulk form, for a caller
+///     holding the whole mix rather than asking about one type at a time.
+/// </summary>
+internal sealed record BoardChartHistoryRow(int PlayerId, Guid ChartId, int Level, int Score,
+    ChartType Type);
+
 /// <summary>A placement joined with its board's dimension — the hub read shape.</summary>
 internal sealed record PlacementDetail(int PlayerId, int LeaderboardId, string LeaderboardType, string BoardName,
     Guid? ChartId, string? ChartType, int? Level, int Place, decimal Score, bool IsSupplemented = false);

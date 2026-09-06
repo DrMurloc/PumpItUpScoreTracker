@@ -10,6 +10,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Application;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Domain;
+using ScoreTracker.OfficialMirror.Infrastructure;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 using Xunit;
@@ -30,7 +31,10 @@ public sealed class BoardPeerReaderTests
 
     private readonly IMemoryCache _cache = new MemoryCache(new MemoryCacheOptions());
 
-    private BoardPeerReader Subject => new(_snapshots.Object, _users.Object, _cache);
+    // A fresh board store per subject: it holds the mirror whole, so one built before a stub
+    // was set would answer from an empty snapshot rather than the rows the test wrote.
+    private BoardPeerReader Subject =>
+        new(_snapshots.Object, _users.Object, _cache, new BoardScoreStore(_snapshots.Object));
 
     private void Board(params PlacementRow[] rows)
     {
@@ -57,12 +61,16 @@ public sealed class BoardPeerReaderTests
             .ToArray());
     }
 
+    // The board store reads the mirror whole and narrows in memory, so the stub is the bulk
+    // read; singles because that is the board every case here is priced against.
     private void History(params PlayerChartHistoryRow[] rows)
     {
-        _snapshots.Setup(s => s.GetChartHistoryFor(It.IsAny<MixEnum>(), It.IsAny<IReadOnlyCollection<int>>(),
-                It.IsAny<ChartType>(), It.IsAny<int>(), It.IsAny<int>(), PlacementScope.OfficialOnly,
+        _snapshots.Setup(s => s.GetEveryChartHistory(It.IsAny<MixEnum>(), PlacementScope.OfficialOnly,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(rows);
+            .ReturnsAsync(rows
+                .Select(r => new BoardChartHistoryRow(r.PlayerId, r.ChartId, r.Level, r.Score,
+                    ChartType.Single))
+                .ToArray());
     }
 
     private void Accounts(params User[] accounts)

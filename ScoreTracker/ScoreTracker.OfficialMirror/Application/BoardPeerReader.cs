@@ -2,6 +2,7 @@ using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Domain;
+using ScoreTracker.OfficialMirror.Infrastructure;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -29,15 +30,28 @@ internal sealed class BoardPeerReader
     /// </summary>
     private static readonly TimeSpan QualifiedTtl = TimeSpan.FromHours(12);
 
+    /// <summary>
+    ///     How long the folded board is held. Everything in it but the window is the same for
+    ///     every viewer, so it is prepared once and filtered per person. Five minutes, because one
+    ///     thing inside it moves without a sweep — whether a peer's account is public, which is what
+    ///     decides whether the mirror names the account behind a row at all (D61) — and that is the
+    ///     same fact, held for the same span, as the name and public flag the Ledger's own peer
+    ///     store trusts.
+    /// </summary>
+    private static readonly TimeSpan PreparedTtl = TimeSpan.FromMinutes(5);
+
+    private readonly BoardScoreStore _board;
     private readonly IMemoryCache _cache;
     private readonly IOfficialSnapshotRepository _snapshots;
     private readonly IUserReader _users;
 
-    public BoardPeerReader(IOfficialSnapshotRepository snapshots, IUserReader users, IMemoryCache cache)
+    public BoardPeerReader(IOfficialSnapshotRepository snapshots, IUserReader users, IMemoryCache cache,
+        BoardScoreStore board)
     {
         _snapshots = snapshots;
         _users = users;
         _cache = cache;
+        _board = board;
     }
 
     /// <summary>
@@ -70,29 +84,51 @@ internal sealed class BoardPeerReader
         if (latest?.CompletedAt == null) return null;
         var asOf = latest.CompletedAt.Value;
 
+        // The window is the only part of this that is about the viewer. Everyone in the band asks
+        // the same question of the same board and gets the same fold, so the fold is done once.
+        var prepared = await PreparedPeers(mix, chartType, latest.Id, cancellationToken);
+        return new BoardPeerGroupReading(asOf, prepared
+            .Where(p => p.Pool >= minimumPool && p.Pool <= maximumPool)
+            .ToArray());
+    }
+
+    /// <summary>
+    ///     The whole board folded to people: everyone who qualifies (D60), one entry per person,
+    ///     their pool the best of the rows they own and their tag the row that reads it. Held for
+    ///     <see cref="PreparedTtl" /> and shared by every viewer, because none of it depends on
+    ///     who is asking.
+    ///     <para>
+    ///         The fold happens before the window rather than after, which is also the more honest
+    ///         order: a person's pool is their best row, so a person whose best sits above the
+    ///         window is above it, even when a lesser row of theirs would have fit inside.
+    ///     </para>
+    /// </summary>
+    private async Task<IReadOnlyList<BoardPeerReading>> PreparedPeers(MixEnum mix, ChartType chartType,
+        int snapshotId, CancellationToken cancellationToken)
+    {
+        var key = $"{nameof(BoardPeerReader)}__Prepared__{mix}__{chartType}__{snapshotId}";
+        if (_cache.TryGetValue(key, out IReadOnlyList<BoardPeerReading>? cached) && cached != null) return cached;
+
         var boardName = BoardNameFor(chartType);
         var board = (await _snapshots.GetBoards(mix, cancellationToken))
             .FirstOrDefault(b => b.LeaderboardType == LeaderboardTypes.Rating && b.Name == boardName);
         // Phoenix publishes one PUMBILITY board and no per-type split, so asking it for Singles is a
         // legitimate miss rather than a failure — the caller reads "no board peers on this mix".
-        if (board == null) return new BoardPeerGroupReading(asOf, Array.Empty<BoardPeerReading>());
+        if (board == null) return Empty(key);
 
         // Official rows only: a supplemented row is our own arithmetic laid over the board, and a
         // peer's pool has to be the number piugame published or the window is measuring two things.
-        var everyone = await _snapshots.GetBoardPlacements(latest.Id, board.Id, PlacementScope.OfficialOnly,
-            cancellationToken);
+        var everyone = await _snapshots.GetBoardPlacements(snapshotId, board.Id,
+            PlacementScope.OfficialOnly, cancellationToken);
 
         // Whose fifty the mirror holds is a property of the PLAYER and the snapshot, not of whoever
         // is looking (D60), so it is answered once for the whole board and shared. Per viewer it was
         // two and a half seconds of rebuild on every cold sweep, twice — once per chart type — for
         // an answer every viewer in the band would have computed identically.
-        var qualified = await QualifiedPlayers(mix, chartType, latest.Id, everyone, cancellationToken);
+        var qualified = await QualifiedPlayers(mix, chartType, snapshotId, everyone, cancellationToken);
 
-        var rows = everyone
-            .Where(p => qualified.Contains(p.PlayerId))
-            .Where(p => (double)p.Score >= minimumPool && (double)p.Score <= maximumPool)
-            .ToArray();
-        if (rows.Length == 0) return new BoardPeerGroupReading(asOf, Array.Empty<BoardPeerReading>());
+        var rows = everyone.Where(p => qualified.Contains(p.PlayerId)).ToArray();
+        if (rows.Length == 0) return Empty(key);
 
         var players = (await _snapshots.GetPlayersByIds(rows.Select(r => r.PlayerId).Distinct().ToArray(),
                 cancellationToken))
@@ -124,7 +160,15 @@ internal sealed class BoardPeerReader
             })
             .ToArray();
 
-        return new BoardPeerGroupReading(asOf, peers);
+        _cache.Set(key, (IReadOnlyList<BoardPeerReading>)peers, PreparedTtl);
+        return peers;
+    }
+
+    private IReadOnlyList<BoardPeerReading> Empty(string key)
+    {
+        var none = (IReadOnlyList<BoardPeerReading>)Array.Empty<BoardPeerReading>();
+        _cache.Set(key, none, PreparedTtl);
+        return none;
     }
 
     /// <summary>
@@ -139,9 +183,9 @@ internal sealed class BoardPeerReader
         var key = $"{nameof(BoardPeerReader)}__Qualified__{mix}__{chartType}__{snapshotId}";
         if (_cache.TryGetValue(key, out IReadOnlySet<int>? cached) && cached != null) return cached;
 
-        var history = (await _snapshots.GetChartHistoryFor(mix,
-                everyone.Select(p => p.PlayerId).Distinct().ToArray(), chartType,
-                PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, PlacementScope.OfficialOnly, cancellationToken))
+        var history = (await _board.InLevelRange(mix, chartType,
+                everyone.Select(p => p.PlayerId).Distinct().ToArray(),
+                PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, cancellationToken))
             .GroupBy(r => r.PlayerId)
             .ToDictionary(g => g.Key, g => g.ToArray());
 
@@ -210,8 +254,8 @@ internal sealed class BoardPeerReader
         if (boardPlayerIds.Count == 0 || minimumLevel > maximumLevel)
             return Array.Empty<BoardScoreReading>();
 
-        var rows = await _snapshots.GetChartHistoryFor(mix, boardPlayerIds, chartType, minimumLevel, maximumLevel,
-            PlacementScope.OfficialOnly, cancellationToken);
+        var rows = await _board.InLevelRange(mix, chartType, boardPlayerIds, minimumLevel, maximumLevel,
+            cancellationToken);
 
         return rows.Select(r => new BoardScoreReading(r.PlayerId, r.ChartId, r.Level, r.Score)).ToArray();
     }
@@ -222,8 +266,7 @@ internal sealed class BoardPeerReader
     {
         if (boardPlayerIds.Count == 0 || chartIds.Count == 0) return Array.Empty<BoardScoreReading>();
 
-        var rows = await _snapshots.GetChartHistoryOn(mix, boardPlayerIds, chartIds, PlacementScope.OfficialOnly,
-            cancellationToken);
+        var rows = await _board.OnCharts(mix, boardPlayerIds, chartIds, cancellationToken);
 
         return rows.Select(r => new BoardScoreReading(r.PlayerId, r.ChartId, r.Level, r.Score)).ToArray();
     }

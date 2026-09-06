@@ -119,6 +119,39 @@ public sealed class BoardPeerReadTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task TheChartBoundReadCarriesCoOpAndTheLevelsNoPoolWouldPrice()
+    {
+        // The board is held whole rather than trimmed to what a pool prices, because the same
+        // read answers a chart dialog: a CO-OP chart has a board and no pool, and a level 4
+        // singles chart has a board a fifty would never reach. Trimming either one turns a
+        // board peer into silence on those pages.
+        await Seed();
+        var snapshots = Snapshots();
+        var coopChart = Guid.NewGuid();
+        var tinyChart = Guid.NewGuid();
+        var coop = await snapshots.EnsureBoard(MixEnum.Phoenix2, LeaderboardTypes.Chart, "Chart CoOp3",
+            coopChart, "CoOp", 3, CancellationToken.None);
+        var tiny = await snapshots.EnsureBoard(MixEnum.Phoenix2, LeaderboardTypes.Chart, "Chart S4",
+            tinyChart, "Single", 4, CancellationToken.None);
+        var players = await snapshots.EnsurePlayers(MixEnum.Phoenix2,
+            new[] { ("ALICE#1111", (Uri?)null) }, Week1, CancellationToken.None);
+        var week3 = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week2.AddDays(7),
+            CancellationToken.None);
+        await snapshots.WritePlacements(week3, new[]
+        {
+            new PlacementRow(coop.Id, players[0].Id, 1, 993_000),
+            new PlacementRow(tiny.Id, players[0].Id, 1, 1_000_000)
+        }, CancellationToken.None);
+        await snapshots.Seal(week3, Week2.AddDays(7).AddMinutes(40), CancellationToken.None);
+
+        var rows = await Snapshots().GetChartHistoryOn(MixEnum.Phoenix2, new[] { players[0].Id },
+            new[] { coopChart, tinyChart }, PlacementScope.OfficialOnly, CancellationToken.None);
+
+        Assert.Equal(993_000, Assert.Single(rows, r => r.ChartId == coopChart).Score);
+        Assert.Equal(1_000_000, Assert.Single(rows, r => r.ChartId == tinyChart).Score);
+    }
+
+    [Fact]
     public async Task TheChartBoundReadAnswersOnlyTheChartsAsked()
     {
         var seeded = await Seed();
