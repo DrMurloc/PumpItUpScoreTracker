@@ -268,3 +268,20 @@ The Season page's card for a viewer who has never published a session (D44); the
 | New here? | はじめての方へ |
 | Read the rules | ルールを読む |
 | timed by you | 計るのは自分 |
+
+### Recording and planning, slice 4b (2026-09-06)
+
+Submit, the journal import dialog, the Planner and the My Sessions on-ramp (docs/design/march-of-murlocs.md §11.4 and §11.5). A session's own vocabulary is above; these are the terms the write surfaces added.
+
+| English | ja-JP |
+|---|---|
+| draft (an unpublished session) | 下書き |
+| record book | 記録帳 |
+| set | セット |
+| rest chart | 休憩譜面 |
+| finisher | 締め曲 |
+| window (the 1:45) | ウィンドウ |
+| push (how hard) | 攻める |
+| publish | 公開する |
+| import | 取り込む |
+| closing chart | 締めの譜面 |

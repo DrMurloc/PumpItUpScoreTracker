@@ -40,6 +40,9 @@ else
                 </div>
             </div>
         </div>
+        @* Your standing, and only when you have one: an empty panel under a "Your standing"
+           heading repeats what the board below already says, and carried a second copy of the
+           one call to action the frame already holds (owner, 2026-09-06). *@
         @if (board?.Viewer is { } standing)
         {
             <div class="mom-standing" data-testid="mom-standing">
@@ -54,20 +57,6 @@ else
                         <MudButton Href="@MoMText.RecordPath(board.BoardId)" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit">@L["Record another"]</MudButton>
                     }
                 </div>
-            </div>
-        }
-        else if (board != null)
-        {
-            <div class="mom-standing empty" data-testid="mom-standing">
-                <span class="k">@L["Your standing"] · @typeName</span>
-                <span class="lead">@(board.Rows.Count > 0 ? L["You haven't played {0} this season.", typeName] : L["Nobody has played {0} yet.", typeName])</span>
-                @if (_page.Season.IsLive)
-                {
-                    <div class="cta">
-                        <MudButton Href="@MoMText.RecordPath(board.BoardId)" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit">@L["Record a session"]</MudButton>
-                        <MudButton Href="@MoMText.PlannerRoute" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">@L["Plan a session"]</MudButton>
-                    </div>
-                }
             </div>
         }
     </section>
@@ -152,13 +141,6 @@ else
             {
                 <div class="mom-empty-board">
                     <h3>@L["Nobody has played {0} yet this season.", typeName]</h3>
-                    @if (_page.Season.IsLive)
-                    {
-                        <div class="cta">
-                            <MudButton Href="@MoMText.RecordPath(board.BoardId)" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit">@L["Record a session"]</MudButton>
-                            <MudButton Href="@MoMText.PlannerRoute" Variant="Variant.Outlined" Color="Color.Primary">@L["Plan a session"]</MudButton>
-                        </div>
-                    }
                 </div>
             }
         </section>

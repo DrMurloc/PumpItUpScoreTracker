@@ -282,3 +282,20 @@ The Season page's card for a viewer who has never published a session (D44); the
 | New here? | 처음이신가요? |
 | Read the rules | 규칙 읽기 |
 | timed by you | 시간은 본인이 잼 |
+
+### Recording and planning, slice 4b (2026-09-06)
+
+Submit, the journal import dialog, the Planner and the My Sessions on-ramp (docs/design/march-of-murlocs.md §11.4 and §11.5). A session's own vocabulary is above; these are the terms the write surfaces added.
+
+| English | ko-KR |
+|---|---|
+| draft (an unpublished session) | 임시 저장본 |
+| record book | 기록장 |
+| set | 세트 |
+| rest chart | 휴식 채보 |
+| finisher | 마무리 곡 |
+| window (the 1:45) | 시간 창 |
+| push (how hard) | 밀어붙이다 |
+| publish | 게시하다 |
+| import | 가져오다 |
+| closing chart | 마무리 채보 |

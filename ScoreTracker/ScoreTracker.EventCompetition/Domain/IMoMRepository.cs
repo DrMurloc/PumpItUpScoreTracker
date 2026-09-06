@@ -22,9 +22,10 @@ internal sealed record MoMBoardSeed(Guid Id, MixEnum Mix, ChartType ChartType,
 internal sealed record MoMBoardKey(MixEnum Mix, ChartType ChartType);
 
 /// <summary>
-///     The season cycle's storage: quarterly lookups, atomic season + boards + snapshot
-///     creation, and the D13 prune. Boards, chart levels and sessions cascade with their
-///     season, so a prune is one delete.
+///     The write side of the MoM tables: the season cycle's storage — quarterly lookups, atomic
+///     season + boards + snapshot creation, and the D13 prune, where boards, chart levels and
+///     sessions cascade with their season so a prune is one delete — and, since slice 4b, the
+///     session lifecycle behind Submit.
 /// </summary>
 internal interface IMoMRepository
 {
@@ -44,4 +45,30 @@ internal interface IMoMRepository
 
     /// <summary>Deletes every ended season with no sessions on any board (D13).</summary>
     Task PruneEndedEmptySeasons(DateTimeOffset now, CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     The user's open draft on this board, if they have one. A player may hold many published
+    ///     sessions on a board (D16) but only one draft at a time, so "New session" resumes rather
+    ///     than piling up half-entered rows.
+    /// </summary>
+    Task<Guid?> GetDraftId(Guid boardId, Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     Writes a session and its chart rows wholesale, creating it as a draft when the id is new.
+    ///     Everything below <c>PublishedAt</c> is a derived cache of the chart rows (§6) and is
+    ///     recomputed here, so no caller can store a total that disagrees with its charts. An empty
+    ///     session is kept, not deleted: a draft starts empty and <see cref="DeleteSession" /> is
+    ///     the only way a row goes away.
+    /// </summary>
+    Task SaveSession(Guid sessionId, TournamentSession session, CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     Stamps a draft published, which is what puts it on a board, and is a no-op on a session
+    ///     already published — publishing twice must not move a board placement, since the earliest
+    ///     publication wins a tie (§1). Frozen afterwards (D17): to change it, delete and record again.
+    /// </summary>
+    Task PublishSession(Guid sessionId, DateTimeOffset publishedAt, CancellationToken cancellationToken);
+
+    /// <summary>Removes a session and its chart rows. The only way off a board.</summary>
+    Task DeleteSession(Guid sessionId, CancellationToken cancellationToken);
 }

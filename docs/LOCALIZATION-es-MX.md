@@ -648,3 +648,20 @@ The Season page's card for a viewer who has never published a session (D44); the
 | New here? | ¿Eres nuevo? |
 | Read the rules | Leer las reglas |
 | timed by you | cronometrada por ti |
+
+### Recording and planning, slice 4b (2026-09-06)
+
+Submit, the journal import dialog, the Planner and the My Sessions on-ramp (docs/design/march-of-murlocs.md §11.4 and §11.5). A session's own vocabulary is above; these are the terms the write surfaces added.
+
+| English | es-MX |
+|---|---|
+| draft (an unpublished session) | borrador |
+| record book | libro de récords |
+| set | set (unchanged) |
+| rest chart | chart de descanso |
+| finisher | cierre |
+| window (the 1:45) | ventana |
+| push (how hard) | apretar |
+| publish | publicar |
+| import | importar |
+| closing chart | chart de cierre |

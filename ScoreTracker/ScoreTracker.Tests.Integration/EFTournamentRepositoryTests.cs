@@ -272,78 +272,22 @@ public sealed class EFTournamentRepositoryTests : IAsyncLifetime
         Assert.Null(retrieved);
     }
 
-    [Fact]
-    public async Task SaveSessionPublishesOnSaveAndComputesTheDerivedCache()
+
+
+    /// <summary>
+    ///     Arranges a published session through the port that owns the write since slice 4b. The
+    ///     tournament repository stopped writing sessions with the page that used to; the
+    ///     leaderboard read it still owns is what these facts are about.
+    /// </summary>
+    private async Task<Guid> Publish(TournamentSession session, DateTimeOffset? at = null)
     {
-        var seeder = new TestDataSeeder(_fixture.DbContextFactory);
-        var userId = await seeder.SeedUserAsync();
-        var (seasonId, boardId) = await SeedBoard(MixEnum.Phoenix, ChartType.Double);
-        var chartA = BuildChart(Guid.NewGuid(), MixEnum.Phoenix, 20, ChartType.Double);
-        var chartB = BuildChart(Guid.NewGuid(), MixEnum.Phoenix, 15, ChartType.Double);
-        await using (var ctx = await _fixture.DbContextFactory.CreateDbContextAsync())
-        {
-            await ctx.Database.ExecuteSqlRawAsync(
-                "INSERT INTO scores.MoMChartLevel (SeasonId, MixId, ChartId, Level) VALUES ({0}, {1}, {2}, 21.5)",
-                seasonId, MixIds.Phoenix, chartA.Id);
-        }
-
-        var repo = BuildRepository(ChartRepoReturning(MixEnum.Phoenix, chartA, chartB).Object);
-        var configuration = await repo.GetTournament(boardId, CancellationToken.None);
-        var session = new TournamentSession(userId, configuration);
-        // 990,000 = SSS (ordinal 14), 960,000 = AAA+ (ordinal 9) → average grade 11.5; balanced
-        // levels 21.5 (delta) and 15.5 (fallback) → average difficulty 18.5; two 2-minute songs
-        // in the 105-minute window → 101 minutes of rest.
-        session.Add(chartA, 990000, PhoenixPlate.SuperbGame, isBroken: false);
-        session.Add(chartB, 960000, PhoenixPlate.FairGame, isBroken: true);
-        await repo.SaveSession(session, CancellationToken.None);
-
-        await using (var context = await _fixture.DbContextFactory.CreateDbContextAsync())
-        {
-            var entity = await context.Set<MoMSessionEntity>()
-                .SingleAsync(e => e.BoardId == boardId && e.UserId == userId);
-            Assert.Equal(Now, entity.PublishedAt);
-            Assert.Equal(session.TotalScore, entity.TotalScore);
-            Assert.Equal(2, entity.ChartsPlayed);
-            Assert.Equal(TimeSpan.FromMinutes(101).Ticks, entity.RestTime);
-            Assert.Equal(18.5, entity.AverageDifficulty);
-            Assert.Equal(11.5, entity.AverageGrade);
-            Assert.Equal(15, entity.LowestLevel);
-            Assert.Equal(20, entity.HighestLevel);
-
-            var rows = await context.Set<MoMSessionChartEntity>()
-                .Where(c => c.SessionId == entity.Id).OrderBy(c => c.Ordinal).ToArrayAsync();
-            Assert.Equal(2, rows.Length);
-            Assert.Equal(chartA.Id, rows[0].ChartId);
-            Assert.True(rows[1].IsBroken);
-        }
-
-        var loaded = await BuildRepository(ChartRepoReturning(MixEnum.Phoenix, chartA, chartB).Object)
-            .GetSession(boardId, userId, CancellationToken.None);
-        Assert.Equal(2, loaded.Entries.Count);
-        Assert.Equal(chartA.Id, loaded.Entries[0].Chart.Id);
-        Assert.Equal(session.TotalScore, loaded.TotalScore);
-    }
-
-    [Fact]
-    public async Task SavingAnEmptiedSessionDeletesItAndItsChartRows()
-    {
-        var seeder = new TestDataSeeder(_fixture.DbContextFactory);
-        var userId = await seeder.SeedUserAsync();
-        var (_, boardId) = await SeedBoard(MixEnum.Phoenix, ChartType.Double);
-        var chart = BuildChart(Guid.NewGuid(), MixEnum.Phoenix);
-
-        var repo = BuildRepository(ChartRepoReturning(MixEnum.Phoenix, chart).Object);
-        var configuration = await repo.GetTournament(boardId, CancellationToken.None);
-        var session = new TournamentSession(userId, configuration);
-        session.Add(chart, 950000, PhoenixPlate.SuperbGame, isBroken: false);
-        await repo.SaveSession(session, CancellationToken.None);
-        session.Remove(session.Entries.Single());
-
-        await repo.SaveSession(session, CancellationToken.None);
-
-        await using var context = await _fixture.DbContextFactory.CreateDbContextAsync();
-        Assert.False(await context.Set<MoMSessionEntity>().AnyAsync(e => e.BoardId == boardId));
-        Assert.False(await context.Set<MoMSessionChartEntity>().AnyAsync());
+        var when = at ?? Now;
+        var mom = new EFMoMRepository(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions()),
+            Mock.Of<IDateTimeOffsetAccessor>(d => d.Now == when));
+        var id = Guid.NewGuid();
+        await mom.SaveSession(id, session, CancellationToken.None);
+        await mom.PublishSession(id, when, CancellationToken.None);
+        return id;
     }
 
     [Fact]
@@ -362,10 +306,10 @@ public sealed class EFTournamentRepositoryTests : IAsyncLifetime
         var strongSession = new TournamentSession(strong, configuration);
         strongSession.Add(chartA, 990000, PhoenixPlate.SuperbGame, isBroken: false);
         strongSession.Add(chartB, 990000, PhoenixPlate.SuperbGame, isBroken: false);
-        await repo.SaveSession(strongSession, CancellationToken.None);
+        await Publish(strongSession);
         var weakSession = new TournamentSession(weak, configuration);
         weakSession.Add(chartA, 990000, PhoenixPlate.SuperbGame, isBroken: false);
-        await repo.SaveSession(weakSession, CancellationToken.None);
+        await Publish(weakSession);
         // A draft (PublishedAt NULL) must never appear on a board (D17).
         await using (var ctx = await _fixture.DbContextFactory.CreateDbContextAsync())
         {
@@ -405,10 +349,10 @@ public sealed class EFTournamentRepositoryTests : IAsyncLifetime
         var configuration = await earlyRepo.GetTournament(boardId, CancellationToken.None);
         var earlySession = new TournamentSession(early, configuration);
         earlySession.Add(chart, 990000, PhoenixPlate.SuperbGame, isBroken: false);
-        await earlyRepo.SaveSession(earlySession, CancellationToken.None);
+        await Publish(earlySession);
         var lateSession = new TournamentSession(late, configuration);
         lateSession.Add(chart, 990000, PhoenixPlate.SuperbGame, isBroken: false);
-        await BuildRepository(chartRepo.Object, Now.AddHours(1)).SaveSession(lateSession, CancellationToken.None);
+        await Publish(lateSession, Now.AddHours(1));
 
         var leaderboard = (await BuildRepository(chartRepo.Object)
             .GetLeaderboardRecords(boardId, CancellationToken.None)).ToArray();
@@ -419,31 +363,4 @@ public sealed class EFTournamentRepositoryTests : IAsyncLifetime
         Assert.Equal(late, leaderboard[1].UserId);
     }
 
-    [Fact]
-    public async Task SessionFollowsItsBoardsMixWhenLoading()
-    {
-        var seeder = new TestDataSeeder(_fixture.DbContextFactory);
-        var userId = await seeder.SeedUserAsync();
-        var (_, boardId) = await SeedBoard(MixEnum.Phoenix2, ChartType.Single);
-        var chartId = Guid.NewGuid();
-        var chart = BuildChart(chartId, MixEnum.Phoenix2, 20, ChartType.Single);
-        var chartRepo = ChartRepoReturning(MixEnum.Phoenix2, chart);
-
-        var repo = BuildRepository(chartRepo.Object);
-        var configuration = await repo.GetTournament(boardId, CancellationToken.None);
-        Assert.Equal(MixEnum.Phoenix2, configuration.Scoring.Mix);
-        var session = new TournamentSession(userId, configuration, MixEnum.Phoenix2);
-        session.Add(chart, 950000, PhoenixPlate.SuperbGame, isBroken: false);
-        await repo.SaveSession(session, CancellationToken.None);
-
-        var loaded = await BuildRepository(chartRepo.Object)
-            .GetSession(boardId, userId, CancellationToken.None);
-
-        Assert.Equal(MixEnum.Phoenix2, loaded.Mix);
-        var entry = Assert.Single(loaded.Entries);
-        Assert.Equal(chartId, entry.Chart.Id);
-        chartRepo.Verify(c => c.GetCharts(MixEnum.Phoenix2, null, null,
-            It.Is<IEnumerable<Guid>?>(ids => ids != null && ids.Contains(chartId)),
-            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
-    }
 }

@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Localization;
+﻿using Microsoft.Extensions.Localization;
 
 namespace ScoreTracker.Web.Services;
 
@@ -11,15 +11,28 @@ namespace ScoreTracker.Web.Services;
 public static class MoMText
 {
     public const string SeasonRoute = "/MarchOfMurlocs";
-    public const string PlannerRoute = "/TournamentBuilder";
+    public const string PlannerRoute = "/MarchOfMurlocs/Planner";
 
     /// <summary>The rules of record (docs/design/march-of-murlocs.md §11.11, D42): static, in the sitemap.</summary>
     public const string RulesRoute = "/MarchOfMurlocs/Rules";
     public static string SeasonPath(Guid seasonId) => $"{SeasonRoute}/{seasonId}";
     public static string SessionPath(Guid sessionId) => $"{SeasonRoute}/Session/{sessionId}";
 
-    /// <summary>The old record page, reachable behind the section's links until Slice 4b replaces it.</summary>
-    public static string RecordPath(Guid boardId) => $"/Tournament/Stamina/{boardId}/Record";
+    /// <summary>
+    ///     The breakdown, arriving with the download dialog already open. The image is composed in
+    ///     the browser from that page's own card, so the button that promises a file has to land on
+    ///     the page that can make one rather than beside it.
+    /// </summary>
+    public static string SessionDownloadPath(Guid sessionId) => $"{SessionPath(sessionId)}?download=1";
+
+    /// <summary>
+    ///     Opening or resuming a draft on a board. Submit hands over to the session's own URL once
+    ///     it has one, so this link is a doorway rather than a page (§11.4).
+    /// </summary>
+    public static string RecordPath(Guid boardId) => $"{SeasonRoute}/Record/{boardId}";
+
+    /// <summary>Editing a draft, and the published state that replaces it.</summary>
+    public static string EditPath(Guid sessionId) => $"{SeasonRoute}/Session/{sessionId}/Edit";
 
     public static string Ordinal(int place, IStringLocalizer<App> localizer)
     {

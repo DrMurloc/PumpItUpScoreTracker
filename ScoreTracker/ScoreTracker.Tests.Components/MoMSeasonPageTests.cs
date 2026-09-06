@@ -100,7 +100,9 @@ public sealed partial class MoMSeasonPageTests : ComponentTestBase
         Assert.Equal(3, rows.Count);
         Assert.Contains("59,319", rows[0].TextContent);
         Assert.Contains("2nd session", rows[2].TextContent);
-        Assert.Contains("You haven't played Doubles this season.", cut.Find("[data-testid=mom-standing]").TextContent);
+        // No standing, no standing panel: an empty one repeated the board and carried a second
+        // copy of Record a session (owner, 2026-09-06).
+        Assert.Empty(cut.FindAll("[data-testid=mom-standing]"));
         var segments = cut.FindAll("[data-testid=mom-board-segment]");
         Assert.Equal("true", segments[0].GetAttribute("aria-pressed"));
         Assert.Equal("/MarchOfMurlocs?board=Single", segments[1].GetAttribute("href"));

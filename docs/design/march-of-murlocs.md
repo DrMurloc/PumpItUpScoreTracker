@@ -44,7 +44,13 @@ in them is production-synced data.
 | 4 | Planner | `/MarchOfMurlocs/Planner` | [artifact](https://claude.ai/code/artifact/17d2ed81-eaef-451a-9c74-0ab5792ba3f2) |
 | 5 | Discord card | — | [artifact](https://claude.ai/code/artifact/58eb672e-a479-4845-80ac-4c3d36544b55) |
 | 6 | Past seasons | *a dialog, no route* | [artifact](https://claude.ai/code/artifact/360658de-b554-4e15-9de4-37c1bb6faba4) |
-| 7 | My Sessions on-ramp | `/Player/{id}/Sessions` | [artifact](https://claude.ai/code/artifact/b0b13385-89b9-412b-b135-16d9099122ec · 8 Rules https://claude.ai/code/artifact/bfdd0131-64b7-4253-adfb-b3606b864ac0 · 9 How it works placement https://claude.ai/code/artifact/691789bf-4a7a-4666-8172-82a55794e0a7) |
+| 7 | My Sessions on-ramp | `/Player/{id}/Sessions` | [artifact](https://claude.ai/code/artifact/b0b13385-89b9-412b-b135-16d9099122ec) |
+| 8 | Rules | `/MarchOfMurlocs/Rules` | [artifact](https://claude.ai/code/artifact/bfdd0131-64b7-4253-adfb-b3606b864ac0) |
+| 9 | *How it works* placement | `/MarchOfMurlocs` | [artifact](https://claude.ai/code/artifact/691789bf-4a7a-4666-8172-82a55794e0a7) |
+
+Mocks 3, 4 and 7 were revised on 2026-09-06 for 4b and republished at those same URLs: Submit
+carries D45's repeat line and prices its night on the Phoenix 2 board it was actually played on,
+the Planner carries §11.5's Phoenix note and D44's frame chip, and the on-ramp was unchanged.
 
 ---
 
@@ -304,6 +310,9 @@ chart later. Consequences worth writing down:
 | D42 | **The site owns the rules.** `/MarchOfMurlocs/Rules` is static HTML; the Google Doc is retired; the season page's *How it works* and *Full rules* both land there. | Owner 2026-09-05: "I'd love to get rid of the doc." Static and shareable "like our /Welcome page". |
 | D44 | **"How it works" is a chip in the section frame, and a newcomer card under the standing until the viewer has published a session** (any board, any mix; a logged-out visitor never has). The card carries the sentence, four facts and a *Read the rules* button, and replaces the collapsed summary the season page's foot used to carry; the 11px eyebrow link is gone. | Owner 2026-09-06 ("It's crazy small and easy to miss considering how important it is for new players"), choosing the recommended variant of mock 9. |
 | D43 | **The season cycle heals a live season**: any of the four mix × type boards a season is missing is added on the daily run, with that mix's level snapshot taken then. | Owner 2026-09-05 ("ill hit hangfire"): no admin button, no migration; one *Trigger now* seats Summer 2026's Phoenix 2 boards. |
+| D45 | **A repeat keeps the better play and costs one line of UI.** A session holds one play per chart: `TournamentSession.Add` replaces the held play only when the new score beats it, and the loser never lands. Submit says so where it matters and nowhere else — the entry row names the score already held ("Already in this session at 970,915. A higher score replaces it; a lower one is discarded.") and the import dialog counts the repeat plays under its checks. No dialog, no block, no confirmation. Supersedes §11.4's "skipped on import". | Owner 2026-09-06: "I'm REALLY not worried about the repeat problem. We should not invest a ton of UX into that. people aren't going to repeat charts" — the import logic and a disclaimer, nothing more. |
+| D47 | **Projected scores are opt-in on the Planner, off by default**, and a projected row says so. A plan you can take to a machine is built from what you have actually scored; a chart the peers only think you would pass is a different kind of claim and the page should not mix them silently. The checkbox also gates the projector run, so the expensive half of the read is not paid for when it is not wanted. | Owner, field test 2026-09-06. Also from that round: *Suggest a set* moved to the set builder as **Auto-select set** (it acts on the set, not on the pricing); difficulties read `D24`, never "Doubles 24", and the push anchor prints its folder rather than a measurement; Compact wears the section's own `.mom-sticker` at the size every other compact list uses, with the jacket opening the chart and a corner tick picking it. |
+| D46 | **Saved sets are Presentation state, not an Application concern.** `IUiSettingsAccessor` is a Web service and there is no Domain-side settings port, so a vertical cannot reach it: `Planner.razor` reads and writes its named sets through the accessor, the way `BrokenScorePreference` and `ScoreColorPreferences` already do. | Found while scoping 4b, 2026-09-06. §12.3 had planned `SaveMoMSetCommand` / `GetMoMSetsQuery` inside EventCompetition, which would have needed a new Domain port — the very thing §11.5's "a JSON list in UiSettings, no migration, no repository" argument exists to avoid. |
 
 ### Explicitly rejected
 
@@ -911,8 +920,10 @@ Three checks ride along, and D10 splits them exactly:
   end reaches it.
 - **Unmatched plays are listed by name**, since they have to be added by hand.
 
-Charts already in the draft are skipped on import rather than doubling up — the repeat ban (§1)
-applies to the import path as much as the picker.
+A chart already in the draft does not double up: the import keeps whichever play scored higher and
+drops the other, which is exactly what `TournamentSession.Add` does for the picker (D45). It stays
+one line in the checks — *"6 repeat plays — only your best on each chart is added"* — because playing
+the same chart twice inside one session is rare enough not to earn a dialog.
 
 **Without timestamps there is nothing to detect a gap with** — which is why the pre-Slice-3 page
 needed a hand-picked range. Journal plays always carry `OccurredAt` now; the degraded case left
@@ -930,10 +941,16 @@ how long a run can be, and the plan re-solves as it moves. On 김재현's real D
 
 | Rest per chart | Charts | Projected |
 |---|---|---|
-| 10s | 54 | 93,077 |
-| 35s | 45 | 78,448 |
-| 60s | 39 | 67,697 |
-| 120s | 29 | 51,161 |
+| 10s | 53 | 93,297 |
+| 35s | 44 | 78,668 |
+| 60s | 38 | 67,544 |
+| 120s | 28 | 50,632 |
+
+*(Each row is one chart shorter than the estimate this table first carried, and the totals move by
+under a third of a percent. The closing move is a **swap**, not an extra: the greedy already takes
+one chart past the rest budget, and that chart IS the overhang §1 allows, so appending another
+would spend the allowance twice. Slice 4b's solver is pinned to these numbers against the same
+150-chart record book — `MoMPlannerTests`.)*
 
 **The plan ends on a closing move**, flagged in the list: once nothing more fits the rest budget
 you may still *start* one more (§1), so the run closes on the biggest single chart left. That is
@@ -941,9 +958,16 @@ the rule turned into a suggestion.
 
 **Say plainly that it is a ceiling.** It assumes every chart played to your best, which nobody
 manages ninety minutes into a stamina session — and the gap is the interesting part, so the page
-prints it as a **conversion rate**: 김재현 banked 59,319 against a 78,448 record book, or **76%**.
-At 60s rest the plan lands on exactly his 39 charts and projects 67,697, an 88% conversion at
-matched volume. Nothing else on the site can tell a player what stamina costs them.
+prints it as a **conversion rate**: 김재현 banked 59,319 against a 78,668 record book, or **75%**.
+At 60s rest the plan lands on his 38 charts and projects 67,544, an 88% conversion at matched
+volume. Nothing else on the site can tell a player what stamina costs them.
+
+**A Phoenix planner says whose table it is pricing on.** The Rules page teaches PUMBILITY+ on
+Phoenix 2's tuning (D41) and the Phoenix board keeps its own, so the projection carries one quiet
+line beneath it: *"These are Phoenix board points. A few grades price slightly differently here than
+on the rules page, mostly below AAA."* Deliberately not thorough — AAA+ differs too, at 1.15 against
+1.10 — because Phoenix 1 sessions become rare once D4 lands, and the numbers on the page are always
+the board's own either way.
 
 #### The set is a selection, and it leaves with you
 
@@ -1146,7 +1170,7 @@ everything MoM-shaped lands there; the other verticals are read through their pu
 | Need | Source |
 |---|---|
 | The player's record book (bests) for the Planner | ScoreLedger `IScoreReader` |
-| The journal for the import dialog and the on-ramp | ScoreLedger `GetPlayerJournalQuery` (already what Slice 3 repointed onto) |
+| The journal for the import dialog and the on-ramp | ScoreLedger's **published port** `IScoreReader.GetRecentPlays` — not `GetPlayerJournalQuery`, because an EventCompetition → ScoreLedger project reference closes a cycle (ScoreLedger → Communities → Randomizer → EventCompetition) and a MediatR send needs the query type. Published ports are the sanctioned way out of exactly that (ARCHITECTURE.md §1) |
 | Energy pricing (Good / Great rungs) | PlayerProgress's projector — the `IScoreProjector` domain service the PUMBILITY page reads; Top of my game is the best attempt, no projector |
 | Rest-chart facts | **Catalog** (owner of chart identity and the folder baselines): a new contract `GetRestChartFactsQuery(mix, chartIds)` that computes the five tests inside Catalog against the folder and returns flags — the metrics live in `scores.ChartSkillMetric`, the folder quartiles are a small in-memory pass over ≤ 200 charts, and the rule never leaves the vertical |
 | Board tints (you · rival · community) and who may look | Rivals / Communities through the same path the weekly boards use, `IPlayerVisibilityReader` for the session page's visibility |
@@ -1193,41 +1217,59 @@ everything MoM-shaped lands there; the other verticals are read through their pu
 
 ### 12.3 Slice 4b — write surfaces
 
+One PR (owner, 2026-09-06), documentation first and internationalization last. **No migration:**
+`MoMSession` already carries `PublishedAt` and all seven derived columns, and `MoMSessionChart`
+already carries `PlayedAt`.
+
+- **`ScoreTracker.Domain`:** `TournamentSession.Entry` gains a nullable `PlayedAt`, so the import
+  can carry the journal's `OccurredAt` into the column that already exists. Three real construction
+  sites. The aggregate needs nothing else — `Add` / `Remove` / `Swap` / `CanAdd` and the window
+  predicate landed with Slice R, and `Add` already returns D45's outcome.
+- **Energy is EventCompetition's own** (`MoMEnergy`), not `PlayerProgress.Energy`, though the page
+  borrows that enum's copy through `EnergyLabels`. PUMBILITY's three rungs are peers all the way
+  through, its top rung included — a score only one in four of your peers beat. The Planner's top
+  rung is **your own best** (§12.1), which is a different claim about a different population, and
+  one enum meaning both would be a trap. Good and Great do read the peers, through the same
+  projector.
 - **Domain (EventCompetition, internal):** `MoMSessionDetector` — the D32 window scan as a pure
-  function over (start, duration, chart type, stage-broken) plays, shared by the import dialog's
-  block pre-selection and the My Sessions callout; the draft lifecycle rules (draft → published →
-  frozen, delete allowed; §1's window predicate already lives in `TournamentSession.CanAdd` after
-  Slice R); the Planner solver extends `AutoBuildSessionHandler`'s engine with the energy price,
-  the push cap and the closing-chart swap.
+  function over the journal's (played-at, duration, chart type, stage-broken) plays: split wherever
+  a gap exceeds fifteen minutes, run D10's three checks, pre-select the longest block that fits.
+  Shared by the import dialog and the My Sessions callout. `MoMPlanner` — §11.5's solver, extending
+  `AutoBuildSessionHandler`'s greedy (charts by points per second while the average rest holds) with
+  the energy price, the push cap and the closing-chart swap.
 - **Application:** commands `CreateMoMDraftCommand`, `AddMoMDraftChartCommand` /
-  `RemoveMoMDraftChartCommand` (the per-row `CanAdd` guard of the Slice 3 bug-check is the rule
-  here — skip, never throw), `ImportMoMDraftFromJournalCommand` (writes `PlayedAt` from the
-  journal's `OccurredAt`, skips charts already in the draft), `PublishMoMSessionCommand`
-  (freezes; sets `PublishedAt`; publishes `MoMSessionPublishedEvent` for 4c),
-  `DeleteMoMSessionCommand`, `DiscardMoMDraftCommand`; queries `GetMoMDraftQuery`,
-  `GetMoMImportCandidatesQuery` (journal → blocks split at fifteen-minute gaps, the three checks
-  of §11.4), `BuildMoMPlanQuery` (record book + Energy + push + rest facts + finishers → the
-  four numbers and the set), `DetectMoMSessionQuery` (My Sessions' callout), `SaveMoMSetCommand` /
-  `GetMoMSetsQuery` over UiSettings.
-- **Infrastructure:** `EFMoMRepository` writes for the lifecycle (draft rows, chart rows with
-  `PlayedAt`, publish, delete); the derived columns on `MoMSession` recomputed on every save (§6).
-  Catalog's `GetRestChartFactsQuery` handler (Catalog/Application + a read over
-  `ChartSkillMetric` in Catalog/Infrastructure). No schema change.
-- **Presentation:** `Submit.razor` (circuit; the budget bar, the three-key entry with the plate
-  selector and Shift+Enter, the import dialog with block selection and checks, the publish
-  dialog, the published state with Download image first; page dock on the phone),
-  `Planner.razor` (circuit; Energy select reusing `EnergyLabels`, push segments, rest slider,
-  Suggest a set, the Rest charts and Finishers shelves, three densities with outline selection,
-  saved sets, client-side CSV with a BOM); the My Sessions on-ramp in `SessionHero.razor` (quiet
-  link, callout, recorded chip); the `PasswordManagerHints` ratchet is untouched — there is no
-  credential field anywhere in MoM any more; **deletions**: `RecordTournamentSession.razor` and
-  `SessionBuilder.razor`, and the `GetRandomChartsQuery` note in Known divergences is unaffected.
-- **Tests:** the detector and the solver in `DomainTests` on the two real nights (the 8 August
-  night qualifies, the 14 August night does not) and on 김재현's book (Steady runs dry, Push fills);
-  handler tests for the lifecycle including the skip-not-throw guard; bUnit for the budget bar,
-  the entry row, the import dialog, the shelves and the on-ramp states; one E2E fact for the
-  whole submit flow (draft → import → publish → on the board) against the WireMock piugame stub
-  — the site's critical MoM journey.
+  `RemoveMoMDraftChartCommand` (D45's outcome is the rule — skip, never throw),
+  `ImportMoMDraftFromJournalCommand` (writes `PlayedAt` from `OccurredAt`, keeps the better play of
+  a repeat), `PublishMoMSessionCommand` (freezes, stamps `PublishedAt`, publishes
+  `MoMSessionPublishedEvent` so 4c is purely additive), `DiscardMoMDraftCommand`,
+  `DeleteMoMSessionCommand`; queries `GetMoMDraftQuery`, `GetMoMImportCandidatesQuery`,
+  `BuildMoMPlanQuery`, `DetectMoMSessionQuery`. **Saved sets are not here** (D46).
+- **Infrastructure:** `IMoMRepository` grows a session write surface — it has none today, only
+  season and board creation — and `EFMoMRepository` recomputes the seven derived columns on every
+  save. Catalog gains `GetRestChartFactsQuery` (Contracts), its handler running D29's five tests
+  against each chart's own folder (Catalog/Application) over a `ChartSkillMetric` read
+  (Catalog/Infrastructure); every metric it needs is already a `PiuCenterMetrics` constant with a
+  query reading it. No schema change anywhere.
+- **Demo data:** `docs/design/march-of-murlocs-demo-session.sql` writes a night into the score
+  journal — thirty Doubles charts inside a 1:45 window with 45 minutes of rest, a stage break, a
+  Singles play, a repeat, and a short block the day before — so the on-ramp's callout and the
+  import dialog can both be seen without playing one. It touches no MoM table.
+- **Presentation:** `Submit.razor` and `Planner.razor`, both circuit pages — neither is crawlable,
+  so neither joins `RenderModeDeclarationTests.StaticPages`, `StaticHeadResolver` or the sitemap;
+  the My Sessions on-ramp in `Components/Sessions/SessionHero.razor`; the section frame's *Planner*
+  chip becomes a real link; saved sets through `IUiSettingsAccessor` (D46); the CSV is a
+  client-side blob with a BOM. **Deletions**, each in the commit that lands its replacement:
+  `RecordTournamentSession.razor` — which injects `ITournamentRepository` and calls `SaveSession` /
+  `GetSession` straight from the page, a no-repository-in-Web violation that no ratchet catches —
+  and `SessionBuilder.razor`.
+- **Tests**, against the oracles this document already carries: the detector on the two real nights
+  (8 August qualifies, 14 August does not) and the solver on §11.5's rest table (44 charts and
+  78,668 at 35s, 38 and 67,544 at 60s) in `DomainTests`; D29's rest list in Catalog's handler tests
+  (the six accepted pass, V3 and 4NT fail); handler tests for the lifecycle including the
+  skip-not-throw guard; `Tests.Integration` for the session write path against a real database;
+  bUnit for the budget bar, the entry row and its repeat line, the import dialog, the shelves, the
+  densities and the on-ramp's three states; one E2E fact for the whole submit journey (draft →
+  import → publish → on the board).
 
 ### 12.4 Slice 4c — Discord
 
@@ -1241,8 +1283,8 @@ everything MoM-shaped lands there; the other verticals are read through their pu
 
 ### 12.5 Out of scope, on purpose
 
-Any dashboard widget, weaving rest charts into a suggested set, and the Phoenix planner's
-below-AAA disclaimer (it lands with 4b's planner).
+Any dashboard widget, and weaving rest charts into a suggested set. The Phoenix planner's
+below-AAA disclaimer left this list and landed with 4b (§11.5).
 
 ### 12.6 Phoenix 2 go-live + the Rules page — the PR after #319
 

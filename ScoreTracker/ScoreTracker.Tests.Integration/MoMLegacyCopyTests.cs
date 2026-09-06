@@ -147,14 +147,20 @@ public sealed class MoMLegacyCopyTests : IAsyncLifetime
             chartRepo.Object, _fixture.DbContextFactory, Mock.Of<ICurrentUserAccessor>(),
             Mock.Of<IDateTimeOffsetAccessor>(d => d.Now == PairEnd));
 
-        var loaded = await repository.GetSession(doublesId, userId, CancellationToken.None);
-        Assert.Equal(2, loaded.Entries.Count);
-        Assert.Equal(chartA, loaded.Entries[0].Chart.Id);
-        Assert.Equal((PhoenixScore)990000, loaded.Entries[0].Score);
-        Assert.Equal(PhoenixPlate.SuperbGame, loaded.Entries[0].Plate);
-        Assert.Equal(chartB, loaded.Entries[1].Chart.Id);
-        Assert.True(loaded.Entries[1].IsBroken);
-        Assert.Equal("https://example.invalid/v", loaded.VideoUrl?.ToString());
+        // Read back through the side that owns MoM reads: the copied rows are what matter,
+        // not which port hands them over.
+        var read = new EFMoMReadRepository(_fixture.DbContextFactory);
+        var copied = Assert.Single((await read.GetPublishedSessions(new[] { doublesId },
+            CancellationToken.None)).Where(s => s.UserId == userId));
+        var rows = (await read.GetSessionCharts(new[] { copied.Id }, CancellationToken.None))
+            .OrderBy(r => r.Ordinal).ToArray();
+        Assert.Equal(2, rows.Length);
+        Assert.Equal(chartA, rows[0].ChartId);
+        Assert.Equal((PhoenixScore)990000, rows[0].Score);
+        Assert.Equal(PhoenixPlate.SuperbGame, rows[0].Plate);
+        Assert.Equal(chartB, rows[1].ChartId);
+        Assert.True(rows[1].IsBroken);
+        Assert.Equal("https://example.invalid/v", copied.VideoUrl?.ToString());
 
         var board = (await repository.GetLeaderboardRecords(doublesId, CancellationToken.None)).ToArray();
         var placement = Assert.Single(board);

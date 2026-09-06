@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using ScoreTracker.SharedKernel.Enums;
@@ -296,6 +296,69 @@ public sealed class TournamentSessionTests
 
         Assert.Equal(350, session.CurrentScore);
         Assert.Equal(350, session.TotalScore);
+    }
+
+    // PlayedAt (slice 4b): only the score journal knows when a play happened, so an import
+    // carries its stamp and hand entry carries none. It never touches scoring.
+    [Fact]
+    public void AHandTypedPlayHasNoPlayedAtAndAnImportedOneKeepsTheStampItWasGiven()
+    {
+        var session = new TournamentSession(Guid.NewGuid(), Config());
+        var stamp = new DateTimeOffset(2026, 8, 14, 1, 48, 0, TimeSpan.Zero);
+
+        session.Add(new ChartBuilder().WithSongName("Gargoyle").Build(), 986121, PhoenixPlate.MarvelousGame,
+            isBroken: false);
+        session.Add(new ChartBuilder().WithSongName("4NT").Build(), 992796, PhoenixPlate.MarvelousGame,
+            isBroken: false, stamp);
+
+        Assert.Null(session.Entries[0].PlayedAt);
+        Assert.Equal(stamp, session.Entries[1].PlayedAt);
+    }
+
+    [Fact]
+    public void ABetterRepeatCarriesItsOwnStampOntoTheEntryItReplaces()
+    {
+        // His real 14 August night: Ugly Dee D17 at 02:05, then again at 02:07 for more.
+        var session = new TournamentSession(Guid.NewGuid(), Config());
+        var chart = new ChartBuilder().WithSongName("Ugly Dee").Build();
+        var first = new DateTimeOffset(2026, 8, 15, 2, 5, 0, TimeSpan.Zero);
+        var second = first.AddMinutes(2);
+        session.Add(chart, 969366, PhoenixPlate.MarvelousGame, isBroken: false, first);
+
+        var outcome = session.Add(chart, 970915, PhoenixPlate.MarvelousGame, isBroken: false, second);
+
+        Assert.Equal(TournamentSession.AddOutcome.Replaced, outcome);
+        var kept = Assert.Single(session.Entries);
+        Assert.Equal(970915, (int)kept.Score);
+        Assert.Equal(second, kept.PlayedAt);
+    }
+
+    [Fact]
+    public void ARepeatThatLosesLeavesTheHeldPlaysStampAlone()
+    {
+        var session = new TournamentSession(Guid.NewGuid(), Config());
+        var chart = new ChartBuilder().WithSongName("Ugly Dee").Build();
+        var first = new DateTimeOffset(2026, 8, 15, 2, 5, 0, TimeSpan.Zero);
+        session.Add(chart, 970915, PhoenixPlate.MarvelousGame, isBroken: false, first);
+
+        var outcome = session.Add(chart, 969366, PhoenixPlate.MarvelousGame, isBroken: false, first.AddMinutes(2));
+
+        Assert.Equal(TournamentSession.AddOutcome.KeptExisting, outcome);
+        var kept = Assert.Single(session.Entries);
+        Assert.Equal(970915, (int)kept.Score);
+        Assert.Equal(first, kept.PlayedAt);
+    }
+
+    [Fact]
+    public void CorrectingAScoreByHandKeepsTheStampTheEntryAlreadyHad()
+    {
+        var session = new TournamentSession(Guid.NewGuid(), Config());
+        var stamp = new DateTimeOffset(2026, 8, 15, 2, 5, 0, TimeSpan.Zero);
+        session.Add(new ChartBuilder().Build(), 900000, PhoenixPlate.SuperbGame, isBroken: false, stamp);
+
+        session.Swap(session.Entries.Single(), 990000, PhoenixPlate.PerfectGame, isBroken: false);
+
+        Assert.Equal(stamp, session.Entries.Single().PlayedAt);
     }
 
     private static TournamentConfiguration Config() =>

@@ -84,6 +84,29 @@ public interface IScoreReader
     Task<IEnumerable<ScoreJournalEntry>> GetScoreHistory(MixEnum mix, Guid userId, Guid chartId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     A player's journaled plays in a mix since a cutoff, oldest first, across every chart —
+    ///     <see cref="GetScoreHistory" /> widened from one chart to a night.
+    ///     <para>
+    ///         Entries are submissions as received, so scores are not monotonic and stage breaks are
+    ///         present: deciding which of them were a session is the caller's problem, and it needs
+    ///         the ones that did not become records as much as the ones that did.
+    ///     </para>
+    ///     <para>
+    ///         This exists as a port rather than a MediatR send because EventCompetition cannot
+    ///         reference ScoreLedger: the edge would close a cycle through
+    ///         Communities and Randomizer. Published ports are the sanctioned way out of exactly
+    ///         that (ARCHITECTURE.md, "Verticals split by bounded context").
+    ///     </para>
+    /// </summary>
+    /// <param name="until">
+    ///     The far end of the range, or null for everything since the cutoff. The cap is applied from
+    ///     the newest end, so a caller asking about one night in the past must bound both ends or the
+    ///     cap slides off the night entirely and returns only plays that came after it.
+    /// </param>
+    Task<IReadOnlyList<ScoreJournalEntry>> GetRecentPlays(MixEnum mix, Guid userId, DateTimeOffset since,
+        DateTimeOffset? until, int limit, CancellationToken cancellationToken = default);
+
     /// <summary>Users with any recorded best-attempt activity in a mix on or after the cutoff.</summary>
     Task<IReadOnlySet<Guid>> GetActiveUserIds(MixEnum mix, DateTimeOffset since,
         CancellationToken cancellationToken = default);

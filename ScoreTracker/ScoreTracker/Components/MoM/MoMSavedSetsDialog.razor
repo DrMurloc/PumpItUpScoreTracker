@@ -1,0 +1,113 @@
+@namespace ScoreTracker.Web.Components.MoM
+
+@* The Planner's saved sets (D46). Naming is manual because the generated name described the set
+   rather than the plan — two different sets of forty-four charts topping out at D24 carried the
+   same one and quietly replaced each other. A named set is also worth reaching for by name, so the
+   list opens any of them rather than only the newest. *@
+
+<MudDialog @bind-Visible="Visible" Options="_options">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L["Saved sets"]</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (CanSave)
+        {
+            <div class="pl-saveset">
+                <MudTextField T="string" @bind-Value="_name" Label="@L["Name this set"]" MaxLength="60"
+                              Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true"
+                              OnKeyDown="OnNameKey" data-testid="mom-plan-set-name"/>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save"
+                           Disabled="@string.IsNullOrWhiteSpace(_name)"
+                           data-testid="mom-plan-set-save">@L["Save"]</MudButton>
+            </div>
+            @if (Names.Contains(_name?.Trim() ?? string.Empty))
+            {
+                <MudText Typo="Typo.caption" Class="pl-saveset-note" data-testid="mom-plan-set-replaces">
+                    @L["Replaces the set already called that."]
+                </MudText>
+            }
+        }
+        else
+        {
+            <MudText Typo="Typo.body2">@L["Tick some charts to save a set."]</MudText>
+        }
+
+        @if (Names.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mt-3">@L["No saved sets yet."]</MudText>
+        }
+        else
+        {
+            <div class="pl-setlist" data-testid="mom-plan-set-list">
+                @for (var i = 0; i < Names.Count; i++)
+                {
+                    var index = i;
+                    <div class="pl-setrow">
+                        <span class="pl-setrow-name">@Names[index]</span>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                   OnClick="@(() => Load(index))"
+                                   data-testid="mom-plan-set-load">@L["Open"]</MudButton>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                       aria-label="@L["Delete"]" OnClick="@(() => OnDelete.InvokeAsync(index))"
+                                       data-testid="mom-plan-set-delete"/>
+                    </div>
+                }
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" OnClick="Close">@L["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+
+    /// <summary>The saved sets, newest first — names only; the page owns the charts behind them.</summary>
+    [Parameter] public IReadOnlyList<string> Names { get; set; } = Array.Empty<string>();
+
+    /// <summary>What the name field opens on: the description the page would have generated.</summary>
+    [Parameter] public string SuggestedName { get; set; } = string.Empty;
+
+    /// <summary>Whether anything is ticked. With nothing ticked there is a list but no set to add to it.</summary>
+    [Parameter] public bool CanSave { get; set; }
+
+    [Parameter] public EventCallback<string> OnSave { get; set; }
+    [Parameter] public EventCallback<int> OnLoad { get; set; }
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+
+    private readonly DialogOptions _options = new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+    private string? _name;
+    private bool _wasVisible;
+
+    protected override void OnParametersSet()
+    {
+        // Each opening starts from the suggestion again, so a name left over from last time is not
+        // silently the one that gets saved.
+        if (Visible && !_wasVisible) _name = SuggestedName;
+        _wasVisible = Visible;
+    }
+
+    private async Task OnNameKey(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter" && !string.IsNullOrWhiteSpace(_name)) await Save();
+    }
+
+    private async Task Save()
+    {
+        if (string.IsNullOrWhiteSpace(_name)) return;
+
+        await OnSave.InvokeAsync(_name.Trim());
+        await Close();
+    }
+
+    private async Task Load(int index)
+    {
+        await OnLoad.InvokeAsync(index);
+        await Close();
+    }
+
+    private Task Close() => VisibleChanged.InvokeAsync(false);
+}

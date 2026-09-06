@@ -1,4 +1,4 @@
-using ScoreTracker.SharedKernel.Models;
+﻿using ScoreTracker.SharedKernel.Models;
 ﻿using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
@@ -94,7 +94,14 @@ namespace ScoreTracker.Domain.Models
             return a.Level == b.Level && a.Type == b.Type && a.Song.Name == b.Song.Name;
         }
 
-        public void Swap(Entry oldEntry, PhoenixScore score, PhoenixPlate plate, bool isBroken)
+        /// <summary>
+        ///     Replaces a play in place. <paramref name="playedAt" /> is the surviving play's own
+        ///     stamp, so an import that beats a held play carries the winner's time; a manual
+        ///     correction passes none and keeps the stamp the entry already had, because editing a
+        ///     score does not move when it was played.
+        /// </summary>
+        public void Swap(Entry oldEntry, PhoenixScore score, PhoenixPlate plate, bool isBroken,
+            DateTimeOffset? playedAt = null)
         {
             var index = Entries.IndexOf(oldEntry);
             if (index == -1) return;
@@ -105,7 +112,8 @@ namespace ScoreTracker.Domain.Models
             {
                 Score = score, Plate = plate, IsBroken = isBroken,
                 SessionScore = (int)withBonus,
-                BonusPoints = (int)(withBonus - basePoints)
+                BonusPoints = (int)(withBonus - basePoints),
+                PlayedAt = playedAt ?? oldEntry.PlayedAt
             };
         }
 
@@ -120,7 +128,8 @@ namespace ScoreTracker.Domain.Models
         ///     lower or equal one is dropped and the session is unchanged. Throws for a chart the
         ///     session cannot take at all.
         /// </summary>
-        public AddOutcome Add(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
+        public AddOutcome Add(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken,
+            DateTimeOffset? playedAt = null)
         {
             if (!CanAdd(chart))
             {
@@ -132,7 +141,7 @@ namespace ScoreTracker.Domain.Models
             {
                 if (score <= held.Score) return AddOutcome.KeptExisting;
 
-                Swap(held, score, plate, isBroken);
+                Swap(held, score, plate, isBroken, playedAt);
                 return AddOutcome.Replaced;
             }
 
@@ -140,7 +149,7 @@ namespace ScoreTracker.Domain.Models
             var withBonus = _configuration.Scoring.GetScore(chart, score, plate, isBroken);
             Entries.Add(
                 new Entry(chart, score, plate, isBroken,
-                    (int)withBonus, (int)(withBonus - basePoints)));
+                    (int)withBonus, (int)(withBonus - basePoints), playedAt));
             return AddOutcome.Added;
         }
 
@@ -157,8 +166,14 @@ namespace ScoreTracker.Domain.Models
             KeptExisting
         }
 
+        /// <summary>
+        ///     A play in the session. <see cref="PlayedAt" /> is when the machine recorded it, which
+        ///     only the journal knows: an imported play carries the journal's <c>OccurredAt</c>, a
+        ///     hand-typed one has none, and either way it is a record of the night rather than an
+        ///     input to scoring.
+        /// </summary>
         public sealed record Entry(Chart Chart, PhoenixScore Score, PhoenixPlate Plate, bool IsBroken,
-            int SessionScore, int BonusPoints)
+            int SessionScore, int BonusPoints, DateTimeOffset? PlayedAt = null)
         {
         }
     }

@@ -6,6 +6,8 @@
 @using ScoreTracker.Identity.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Events
 @using ScoreTracker.ScoreLedger.Contracts
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.EventCompetition.Contracts.Queries
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.UiNotifications
@@ -49,7 +51,7 @@
         }
 
         <div class="@(_busy ? "sbd-busy" : null)">
-            <SessionHero Breakdown="_model.Hero" OnOpenChart="OpenChart"
+            <SessionHero Breakdown="_model.Hero" OnOpenChart="OpenChart" MoM="_momOnRamp"
                          OnOpenBreakdown="OpenBreakdown" OnOpenBoard="OpenBoard"></SessionHero>
         </div>
 
@@ -111,6 +113,7 @@
     private DateTime? _before;
     private Chart? _detailsChart;
     private SessionsPageModel _model = new(null, Array.Empty<SessionHistoryRow>(), 0, false);
+    private MoMOnRamp? _momOnRamp;
 
     protected override async Task OnInitializedAsync()
     {
@@ -137,6 +140,21 @@
         _model = await Breakdowns.Build(UserIdParam, _selectedSessionId, _page, HistoryPageSize,
             Before, CancellationToken.None);
         _firstLoad = false;
+        await LoadMoMAsync();
+    }
+
+    /// <summary>
+    ///     What March of Murlocs makes of the session on show (D32). Your own page only: the
+    ///     on-ramp is an offer to record your own play, and a visitor has nothing to do with it.
+    /// </summary>
+    private async Task LoadMoMAsync()
+    {
+        _momOnRamp = null;
+        if (_model.Hero is not { } hero) return;
+        if (!CurrentUser.IsLoggedIn || CurrentUser.User.Id != UserIdParam) return;
+
+        _momOnRamp = await Mediator.Send(new DetectMoMSessionQuery(UserIdParam, hero.Group.Mix,
+            hero.Group.Start, hero.Group.End));
     }
 
     private IDisposable? _captured;
