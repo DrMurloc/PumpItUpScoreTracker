@@ -43,7 +43,7 @@ public sealed class SuggestedTitleLevelTests
         return string.Join(" ", RungAt(title, grade).Folders);
     }
 
-    /// <summary>The AAA answer, which is the one this used to print on its own.</summary>
+    /// <summary>The AAA answer — the bottom of the block, and the one this used to print alone.</summary>
     private static string Folder(string title)
     {
         return Folder(title, PhoenixLetterGrade.AAA);
@@ -126,7 +126,7 @@ public sealed class SuggestedTitleLevelTests
     {
         var rungs = Suggestion("[S] ADVANCED LV.1").Rungs;
         Assert.Equal(
-            new[] { PhoenixLetterGrade.SSSPlus, PhoenixLetterGrade.AAA, PhoenixLetterGrade.A },
+            new[] { PhoenixLetterGrade.SSSPlus, PhoenixLetterGrade.SS, PhoenixLetterGrade.AAA },
             rungs.Select(r => r.Grade));
 
         var levels = rungs.Select(r => int.Parse(r.Folders[0][1..])).ToArray();
@@ -136,16 +136,20 @@ public sealed class SuggestedTitleLevelTests
     [Fact]
     public void PlayingBetterAsksForALowerFolder()
     {
-        // The whole point of three rungs: the same title is eight folders apart end to end.
+        // The point of three rungs, though a narrower one since the floor moved to AAA: the same
+        // title is three folders apart end to end where it used to be eight. Pinned literally on
+        // purpose — retuning a reference grade should have to name its new numbers.
         Assert.Equal("S13", Folder("[S] ADVANCED LV.1", PhoenixLetterGrade.SSSPlus));
+        Assert.Equal("S14", Folder("[S] ADVANCED LV.1", PhoenixLetterGrade.SS));
         Assert.Equal("S16", Folder("[S] ADVANCED LV.1", PhoenixLetterGrade.AAA));
-        Assert.Equal("S20", Folder("[S] ADVANCED LV.1", PhoenixLetterGrade.A));
     }
 
     [Fact]
-    public void TheMiddleRungIsWhatTheDrawerUsedToPrintAlone()
+    public void TheBottomRungIsWhatTheDrawerUsedToPrintAlone()
     {
-        // AAA on a TG plate was the single fixed reference before this became three rungs.
+        // AAA on a TG plate was the single fixed reference before this became three rungs. It was
+        // the middle of the block until 2026-09-06 and is its floor now; either way the number it
+        // answers with has never moved, which is what makes it the safe one to pin.
         Assert.Equal("D17", Folder("[D] ADVANCED LV.1", PhoenixLetterGrade.AAA));
         Assert.Equal("S16 D17", Folder("[P.B] GOLD", PhoenixLetterGrade.AAA));
     }
@@ -153,17 +157,17 @@ public sealed class SuggestedTitleLevelTests
     [Fact]
     public void GradesThatLandOnTheSameFolderMergeIntoOneRung()
     {
-        // The level-10 floor puts SSS+ and AAA both on S10 here; two identical rows would read
-        // as a rendering fault.
-        var rungs = Suggestion("[S] INTERMEDIATE LV.9").Rungs;
+        // SSS+ and SS are 2% apart and a level costs more than that here, so both answer S11;
+        // two identical rows would read as a rendering fault.
+        var rungs = Suggestion("[S] INTERMEDIATE LV.10").Rungs;
         Assert.Equal(2, rungs.Count);
 
         var merged = rungs[0];
-        Assert.Equal("S10", Assert.Single(merged.Folders));
-        Assert.Equal(PhoenixLetterGrade.AAA, merged.Grade);
+        Assert.Equal("S11", Assert.Single(merged.Folders));
+        Assert.Equal(PhoenixLetterGrade.SS, merged.Grade);
         Assert.True(merged.OrBetter);
 
-        Assert.Equal("S14", Assert.Single(rungs[1].Folders));
+        Assert.Equal("S13", Assert.Single(rungs[1].Folders));
         Assert.False(rungs[1].OrBetter);
     }
 
@@ -173,48 +177,23 @@ public sealed class SuggestedTitleLevelTests
         var rungs = Suggestion("[S] INTERMEDIATE LV.1").Rungs;
         var only = Assert.Single(rungs);
         Assert.Equal("S10", Assert.Single(only.Folders));
-        // Named for the lowest grade in the run, so the drawer can say "at A or better".
-        Assert.Equal(PhoenixLetterGrade.A, only.Grade);
+        // Named for the lowest grade in the run, so the drawer can say "at AAA or better".
+        Assert.Equal(PhoenixLetterGrade.AAA, only.Grade);
         Assert.True(only.OrBetter);
     }
 
     [Fact]
-    public void AGradeNoFolderReachesNamesTheCeilingItFallsShortOf()
+    public void NoRungFallsShortAtTheseReferenceGrades()
     {
-        // The 20,000 capstone is the only title fifty charts at a bare A cannot reach from the
-        // top folder on either side. DOUBLE MASTER used to be the example and no longer is: the
-        // Doubles A multiplier is interpolated rather than measured, and the value it currently
-        // holds lifts a D29 ceiling just past that title's 19,500 ask.
-        var rungs = Suggestion("ABYSS ABSOLUTE").Rungs;
-        var last = rungs[^1];
-        Assert.Equal(PhoenixLetterGrade.A, last.Grade);
-        Assert.False(last.Reachable);
-        Assert.Equal(new[] { "S29", "D29" }, last.Folders);
-
-        Assert.All(rungs.Take(rungs.Count - 1), r => Assert.True(r.Reachable));
-    }
-
-    [Fact]
-    public void AnUnreachableRungNeverMergesIntoTheOneAboveIt()
-    {
-        // Its folders name a ceiling rather than an answer, so folding it into a reachable run
-        // would claim that ceiling serves.
-        var rungs = Suggestion("ABYSS ABSOLUTE").Rungs;
-        Assert.Equal(3, rungs.Count);
-        Assert.All(rungs, r => Assert.False(r.OrBetter));
-        Assert.Equal(new[] { "S29", "D29" }, rungs[^1].Folders);
-        Assert.False(rungs[^1].Reachable);
-    }
-
-    [Fact]
-    public void EveryTitleIsReachableAtTheGradeAboveTheOneThatFailsIt()
-    {
-        // A rung is only allowed to fall short at the bottom of the block — an unreachable grade
-        // above a reachable one would mean the curve is not monotonic in grade.
+        // The block can render a rung no folder reaches: its folders name the ceiling that falls
+        // short — "D29 still isn't enough at A" — rather than an answer, and it never merges,
+        // since folding it into a reachable run would claim that ceiling serves.
+        //
+        // Nothing is in that shape while the floor is AAA. ABYSS ABSOLUTE's 20,000 was the last
+        // one, and only at a bare A. The branch stays as a guard against a threshold moving out
+        // from under the curve, so this is the tripwire that says when it has — a failure here
+        // means the block has started printing a ceiling, not that the guard is broken.
         foreach (var title in Phoenix2TitleList.BuildList().OfType<Phoenix2PumbilityTitle>())
-        {
-            var reachable = SuggestedTitleLevel.For(title)!.Rungs.Select(r => r.Reachable).ToArray();
-            Assert.Equal(reachable.OrderByDescending(r => r), reachable);
-        }
+            Assert.All(SuggestedTitleLevel.For(title)!.Rungs, r => Assert.True(r.Reachable));
     }
 }
