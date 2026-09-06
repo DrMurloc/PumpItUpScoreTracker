@@ -250,8 +250,14 @@
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -> 10%</value>
   </data>
+  <data name="0:00 · your first song starts the clock" xml:space="preserve">
+    <value>0:00 · il tuo primo brano fa partire il cronometro</value>
+  </data>
   <data name="1 broken run made it to the end" xml:space="preserve">
 	  <value>1 tentativo fallito è arrivato alla fine</value>
+  </data>
+  <data name="1 hour 45 minutes of real time." xml:space="preserve">
+    <value>1 ora e 45 minuti di tempo reale.</value>
   </data>
   <data name="1 hour 45 minutes. Bank as many points as you can." xml:space="preserve">
     <value>1 ora e 45 minuti. Accumula quanti più punti puoi.</value>
@@ -301,6 +307,9 @@
   <data name="12%" xml:space="preserve">
     <value>12%</value>
   </data>
+  <data name="1:45 buzzer" xml:space="preserve">
+    <value>Sirena 1:45</value>
+  </data>
   <data name="1st" xml:space="preserve">
     <value>1° posto</value>
   </data>
@@ -349,6 +358,9 @@
   <data name="900,000 → SSS+ is worth" xml:space="preserve">
     <value>900.000 → SSS+ vale</value>
   </data>
+  <data name="A 1 hour 45 minute session: charts as blocks, downtime as gaps, the last chart starting before the buzzer and finishing after it" xml:space="preserve">
+    <value>Una sessione di 1 ora e 45 minuti: i chart come blocchi, la pausa come spazi vuoti, l'ultimo chart iniziato prima della sirena e finito dopo</value>
+  </data>
   <data name="A 1,000,000 glows; nothing else does." xml:space="preserve">
     <value>Un 1.000.000 brilla; nient'altro.</value>
   </data>
@@ -367,8 +379,20 @@
   <data name="a broken run" xml:space="preserve">
     <value>un run rotto</value>
   </data>
+  <data name="a broken score counts at face value" xml:space="preserve">
+    <value>un punteggio rotto conta per il suo valore così com'è</value>
+  </data>
+  <data name="A broken score counts at face value." xml:space="preserve">
+    <value>Un punteggio rotto conta per il suo valore così com'è.</value>
+  </data>
   <data name="a chart" xml:space="preserve">
     <value>un chart</value>
+  </data>
+  <data name="A chart counts if it starts inside the window." xml:space="preserve">
+    <value>Un chart conta se inizia dentro la finestra.</value>
+  </data>
+  <data name="A chart is priced at its folder level plus up to one more, from how hard it is to score, set when the season starts. A 24 that scores like a 24 pays {0}; one that scores like a 25 pays {1}; in between is in between. A chart is never worth less than its number." xml:space="preserve">
+    <value>Un chart è valutato al livello della sua cartella più al massimo uno in più, in base a quanto è difficile farci punteggio, fissato all'inizio della stagione. Un 24 che rende come un 24 paga {0}; uno che rende come un 25 paga {1}; nel mezzo, nel mezzo. Un chart non vale mai meno del suo numero.</value>
   </data>
   <data name="A chart you passed years ago and never revisited counts as new territory." xml:space="preserve">
     <value>Un chart passato anni fa e mai rigiocato conta come territorio nuovo.</value>
@@ -387,6 +411,9 @@
   </data>
   <data name="A few things worth getting right up front — everything after this is tuned to them." xml:space="preserve">
     <value>Poche cose da sistemare subito: tutto il resto si adatta a queste.</value>
+  </data>
+  <data name="A four-minute D23 at {0}" xml:space="preserve">
+    <value>Un D23 di quattro minuti a {0}</value>
   </data>
   <data name="A good is a dead note" xml:space="preserve">
     <value>Un Good è una nota morta</value>
@@ -469,14 +496,29 @@
   <data name="A score three in four of your peers reach." xml:space="preserve">
     <value>Un punteggio che tre dei tuoi pari su quattro raggiungono.</value>
   </data>
+  <data name="A season ends at 23:59:59 on the last day of its last month, UTC−5." xml:space="preserve">
+    <value>Una stagione termina alle 23:59:59 dell'ultimo giorno del suo ultimo mese, UTC−5.</value>
+  </data>
+  <data name="A season is a calendar quarter, and there is always one running." xml:space="preserve">
+    <value>Una stagione è un trimestre solare, e ce n'è sempre una in corso.</value>
+  </data>
+  <data name="A session belongs to one board, and the two boards are never compared." xml:space="preserve">
+    <value>Una sessione appartiene a una sola board, e le due board non vengono mai confrontate.</value>
+  </data>
   <data name="A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0." xml:space="preserve">
     <value>Un Single è valutato un livello più su: un S17 paga Base(18). Sotto il livello 10 un chart vale 0.</value>
   </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>Uno zip di snapshot importa direttamente una versione dei dati già scaricata: stesso processo della scansione, senza download</value>
   </data>
+  <data name="A stage break is different." xml:space="preserve">
+    <value>Uno stage break è un'altra cosa.</value>
+  </data>
   <data name="A tiebreaker." xml:space="preserve">
     <value>Uno spareggio.</value>
+  </data>
+  <data name="A video link is optional." xml:space="preserve">
+    <value>Il link al video è facoltativo.</value>
   </data>
   <data name="AA is exactly ×1.00. Steps of 0.05 up to S, then 0.06 a rung to SSS+; 0.10 a rung below AA." xml:space="preserve">
     <value>AA è esattamente ×1,00. Passi di 0,05 fino a S, poi 0,06 a gradino fino a SSS+; 0,10 a gradino sotto AA.</value>
@@ -487,8 +529,14 @@
   <data name="AA+ and above are identical on both types. On a Double the ladder steps −0.01 a rung through the S grades, −0.02 a rung from AAA+ to A+, −0.05 a rung down to C, then −0.10 a rung to F; a Single runs a notch lower from AA down. A perfect 1,000,000 keeps SSS+’s ×1.50 — Perfect Game is a plate." xml:space="preserve">
     <value>AA+ e superiori sono identici sui due tipi. Su un Double la scala scende di −0,01 a gradino nei gradi S, −0,02 a gradino da AAA+ ad A+, −0,05 a gradino fino a C, poi −0,10 a gradino fino a F; un Single sta una tacca più in basso da AA in giù. Un 1.000.000 perfetto mantiene il ×1,50 di SSS+ — Perfect Game è un plate.</value>
   </data>
+  <data name="AAA is worth 1× instead of {0}×, AA drops from {1}× to {2}×, and anything below A pays nothing. The top of the ladder is the same; a perfect game pays {3}×." xml:space="preserve">
+    <value>AAA vale 1× invece di {0}×, AA scende da {1}× a {2}×, e tutto ciò che sta sotto A non paga nulla. La cima della scala è uguale; un perfect game paga {3}×.</value>
+  </data>
   <data name="About" xml:space="preserve">
     <value>Informazioni</value>
+  </data>
+  <data name="About 1.5 real seconds per in-game second. Plan with a stopwatch." xml:space="preserve">
+    <value>Circa 1,5 secondi reali per ogni secondo di gioco. Pianifica con un cronometro.</value>
   </data>
   <data name="about half of a modern chart is hold ticks" xml:space="preserve">
     <value>circa metà di un chart moderno è fatta di tick delle hold</value>
@@ -501,6 +549,9 @@
   </data>
   <data name="above this line a passing F is impossible" xml:space="preserve">
     <value>sopra questa linea un F superato è impossibile</value>
+  </data>
+  <data name="Absolutely. Mind the arcade's rules and its traffic: 1:45 straight is hard to coordinate." xml:space="preserve">
+    <value>Assolutamente. Rispetta le regole della sala e il suo afflusso: 1:45 di fila è difficile da organizzare.</value>
   </data>
   <data name="Accept - merge history" xml:space="preserve">
     <value>Accetta - unisci lo storico</value>
@@ -571,6 +622,9 @@
   </data>
   <data name="Add photo" xml:space="preserve">
     <value>Aggiungi foto</value>
+  </data>
+  <data name="Add Scores" xml:space="preserve">
+    <value>Aggiungi punteggi</value>
   </data>
   <data name="Add the bot" xml:space="preserve">
     <value>Aggiungi il bot</value>
@@ -647,6 +701,9 @@
   <data name="After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed." xml:space="preserve">
     <value>Dopo il caricamento, se ci sono righe/chart/tentativi che non sono stati caricati correttamente, avrai la possibilità di scaricare un elenco delle righe fallite e il motivo dell'errore.</value>
   </data>
+  <data name="Against regular PUMBILITY," xml:space="preserve">
+    <value>Rispetto alla PUMBILITY normale,</value>
+  </data>
   <data name="Against {0} {1}." xml:space="preserve">
     <value>Contro {0} {1}.</value>
   </data>
@@ -672,6 +729,12 @@
   <data name="All mixes" xml:space="preserve">
     <value>Tutti i Mix</value>
   </data>
+  <data name="All modifiers, random and mirror included." xml:space="preserve">
+    <value>Tutti i modificatori, random e mirror compresi.</value>
+  </data>
+  <data name="All modifiers, random and mirror included. HJ is allowed and buys you nothing. JT: I highly encourage it." xml:space="preserve">
+    <value>Tutti i modificatori, random e mirror compresi. HJ è permesso e non ti dà nulla. JT: lo consiglio caldamente.</value>
+  </data>
   <data name="All of it is changeable later in your account." xml:space="preserve">
     <value>Puoi cambiare tutto più tardi nel tuo account.</value>
   </data>
@@ -689,6 +752,9 @@
   </data>
   <data name="All sign-in methods will work on the account you keep, the other account's data is deleted after 30 days" xml:space="preserve">
     <value>Tutti i metodi di accesso funzioneranno sull'account che mantieni, i dati dell'altro account vengono eliminati dopo 30 giorni</value>
+  </data>
+  <data name="All Singles or all Doubles." xml:space="preserve">
+    <value>Tutto Singles o tutto Doubles.</value>
   </data>
   <data name="All three come together only for the split second you press Import — we decode it, log in for you, and immediately forget it. Your real password is never written down anywhere." xml:space="preserve">
     <value>I tre si uniscono solo per la frazione di secondo in cui premi Importa: lo decodifichiamo, accediamo per te e lo dimentichiamo subito. La tua vera password non viene mai scritta da nessuna parte.</value>
@@ -713,6 +779,9 @@
   </data>
   <data name="Allow Repeats" xml:space="preserve">
     <value>Consenti ripetizioni</value>
+  </data>
+  <data name="Almost anything goes. The one thing you cannot do is count a chart twice." xml:space="preserve">
+    <value>Vale quasi tutto. L'unica cosa che non puoi fare è contare un chart due volte.</value>
   </data>
   <data name="Already exists in the Phoenix 2 catalog — will be skipped." xml:space="preserve">
     <value>Esiste già nel catalogo di Phoenix 2 — verrà saltata.</value>
@@ -771,6 +840,9 @@
   <data name="and it breaks the combo" xml:space="preserve">
     <value>e interrompe la combo</value>
   </data>
+  <data name="and stamps its date. To fix one, delete it and submit again." xml:space="preserve">
+    <value>e le assegna la data. Per correggerne una, eliminala e inviala di nuovo.</value>
+  </data>
   <data name="and {0} notes of multiplier" xml:space="preserve">
     <value>e {0} note di moltiplicatore</value>
   </data>
@@ -789,6 +861,9 @@
   </data>
   <data name="any moment now" xml:space="preserve">
     <value>da un momento all'altro</value>
+  </data>
+  <data name="Any song type: arcade, short cut, remix, full song. Every level from 1 to 29." xml:space="preserve">
+    <value>Qualsiasi tipo di brano: arcade, short cut, remix, full song. Tutti i livelli da 1 a 29.</value>
   </data>
   <data name="Any tool that publishes its source code can read your scores. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected." xml:space="preserve">
     <value>Qualsiasi strumento che pubblica il proprio codice sorgente può leggere i tuoi punteggi. Serve soprattutto agli strumenti di analisi. Disattivarlo blocca i nuovi accessi, ma gli strumenti possono conservare ciò che hanno già raccolto.</value>
@@ -849,6 +924,9 @@
   </data>
   <data name="Approving a tool puts its name, description and link in front of every player. Everything else about it — webhooks, keys, who it can read — is the maker's business and is not reviewed here." xml:space="preserve">
     <value>Approvare uno strumento mette il suo nome, la descrizione e il link davanti a tutti i giocatori. Tutto il resto — webhook, chiavi, chi può leggere — riguarda chi lo sviluppa e non viene esaminato qui.</value>
+  </data>
+  <data name="April – June" xml:space="preserve">
+    <value>Aprile – giugno</value>
   </data>
   <data name="Arcade" xml:space="preserve">
     <value>Arcade</value>
@@ -1046,6 +1124,9 @@
   <data name="Balanced at {0}" xml:space="preserve">
     <value>Bilanciato a {0}</value>
   </data>
+  <data name="Balanced level." xml:space="preserve">
+    <value>Livello bilanciato.</value>
+  </data>
   <data name="Balanced Player" xml:space="preserve">
     <value>Balanced Player</value>
   </data>
@@ -1118,6 +1199,9 @@
   <data name="Below this life a miss costs less than a bad." xml:space="preserve">
     <value>Sotto questa vita un Miss costa meno di un Bad.</value>
   </data>
+  <data name="below {0} = 0" xml:space="preserve">
+    <value>sotto {0} = 0</value>
+  </data>
   <data name="Below {0} a 900,000 → SSS+ buys more levels on Phoenix 2 than it did on Phoenix; from {0} up it buys fewer — up there a level counts for more against a score than it did on Phoenix." xml:space="preserve">
     <value>Sotto il {0} un 900.000 → SSS+ compra più livelli su Phoenix 2 di quanti ne comprasse su Phoenix; dal {0} in su ne compra meno — lassù un livello conta più di un punteggio di quanto contasse su Phoenix.</value>
   </data>
@@ -1144,6 +1228,9 @@
   </data>
   <data name="Better Than" xml:space="preserve">
     <value>Meglio di</value>
+  </data>
+  <data name="Between two grades the multiplier climbs in a straight line, so {0} pays {1}× and {2} pays {3}×. Below {4} a chart scores nothing." xml:space="preserve">
+    <value>Tra due gradi il moltiplicatore sale in linea retta, quindi {0} paga {1}× e {2} paga {3}×. Sotto {4} un chart non vale nulla.</value>
   </data>
   <data name="Biased towards larger folders" xml:space="preserve">
     <value>Sbilanciato verso le cartelle grandi</value>
@@ -1347,6 +1434,15 @@
   <data name="Calories say about {0} arrows pressed." xml:space="preserve">
     <value>Le calorie indicano circa {0} frecce premute.</value>
   </data>
+  <data name="Can I no-bar? Theme it?" xml:space="preserve">
+    <value>Posso giocare senza barra? Con un tema?</value>
+  </data>
+  <data name="Can I play in a public arcade?" xml:space="preserve">
+    <value>Posso giocare in una sala giochi?</value>
+  </data>
+  <data name="Can I use the operator menu?" xml:space="preserve">
+    <value>Posso usare il menu operatore?</value>
+  </data>
   <data name="Can Submit Again" xml:space="preserve">
     <value>Può inviare di nuovo in qualsiasi momento finché le qualificazioni sono aperte.</value>
   </data>
@@ -1443,6 +1539,9 @@
   <data name="Chart ID" xml:space="preserve">
     <value>ID del chart</value>
   </data>
+  <data name="Chart knowledge and planning are the point. Easy-to-score charts pay at some levels and are risky picks at others. I used to nerf them; nobody stopped playing them." xml:space="preserve">
+    <value>Conoscere i chart e pianificare è il punto. I chart facili da scorare pagano ad alcuni livelli e sono scelte rischiose ad altri. Una volta li nerfavo; nessuno ha smesso di giocarli.</value>
+  </data>
   <data name="Chart leaderboard" xml:space="preserve">
     <value>Classifica del chart</value>
   </data>
@@ -1516,6 +1615,9 @@
   <data name="ChartScoring" xml:space="preserve">
     <value>ChartScoring</value>
     <comment>Page title on /Experiments/ChartScoring; the source has no space between "Chart" and "Scoring".</comment>
+  </data>
+  <data name="Check back shortly." xml:space="preserve">
+    <value>Ripassa tra poco.</value>
   </data>
   <data name="Check the link" xml:space="preserve">
     <value>Controlla il link</value>
@@ -1625,6 +1727,9 @@
   </data>
   <data name="Co-op earns no PUMBILITY; the Co-Op view ranks raw score." xml:space="preserve">
     <value>Il co-op non dà PUMBILITY; la vista Co-Op ordina per punteggio grezzo.</value>
+  </data>
+  <data name="Co-op is out." xml:space="preserve">
+    <value>Il Co-op è escluso.</value>
   </data>
   <data name="Co-op Pad Transitions" xml:space="preserve">
     <value>Transizioni pad in co-op</value>
@@ -1915,6 +2020,9 @@
   <data name="Continue" xml:space="preserve">
     <value>Continua</value>
   </data>
+  <data name="Continuous." xml:space="preserve">
+    <value>Continuo.</value>
+  </data>
   <data name="Contributions" xml:space="preserve">
     <value>Contributi</value>
   </data>
@@ -2026,6 +2134,9 @@
   </data>
   <data name="Country saved" xml:space="preserve">
     <value>Paese salvato</value>
+  </data>
+  <data name="counts in full" xml:space="preserve">
+    <value>conta per intero</value>
   </data>
   <data name="Counts toward a title" xml:space="preserve">
     <value>Conta per un titolo</value>
@@ -2246,6 +2357,9 @@
   <data name="Density" xml:space="preserve">
     <value>Densità</value>
   </data>
+  <data name="Depends on the A. The multiplier is continuous, so an {0} pays {1}×, close to A+ money, and a strong A on a chart levels above your AAAs can still be the right call. Paradoxx S26 is the classic case. The planner will show you." xml:space="preserve">
+    <value>Dipende dalla A. Il moltiplicatore è continuo, quindi un {0} paga {1}×, vicino a quanto rende una A+, e una A solida su un chart diversi livelli sopra le tue AAA può restare la scelta giusta. Paradoxx S26 è il caso classico. Il pianificatore te lo mostrerà.</value>
+  </data>
   <data name="Description" xml:space="preserve">
     <value>Descrizione</value>
   </data>
@@ -2400,6 +2514,9 @@
   <data name="Downtime" xml:space="preserve">
     <value>Pausa</value>
   </data>
+  <data name="Downtime. The sessions that truly excel keep it short: a few in-game seconds between songs, and rest charts instead of standing around. Below the 22s, know your rest songs." xml:space="preserve">
+    <value>La pausa. Le sessioni davvero eccellenti la tengono corta: pochi secondi di gioco tra un brano e l'altro, e chart di riposo invece di stare fermi. Sotto i 22, conosci i tuoi brani di riposo.</value>
+  </data>
   <data name="Draft" xml:space="preserve">
     <value>Bozza</value>
   </data>
@@ -2444,6 +2561,9 @@
   </data>
   <data name="Duration (seconds)" xml:space="preserve">
     <value>Durata (secondi)</value>
+  </data>
+  <data name="Each chart once." xml:space="preserve">
+    <value>Ogni chart una volta sola.</value>
   </data>
   <data name="Each row is a level. The bar starts at a 900,000 on that level — a clean pass — and climbs through the grades; the axis is" xml:space="preserve">
     <value>Ogni riga è un livello. La barra parte da un 900.000 su quel livello — un pass pulito — e sale attraverso i gradi; l'asse è</value>
@@ -2540,6 +2660,12 @@
     <value>Link dell'evento</value>
     <comment>Event Links</comment>
   </data>
+  <data name="Event mode or premium?" xml:space="preserve">
+    <value>Modalità evento o premium?</value>
+  </data>
+  <data name="Every chart pays its level value, scaled by how well you scored it and by how long the song is. The grade table is PUMBILITY+: AAA is the 1× target, and below it the price drops fast." xml:space="preserve">
+    <value>Ogni chart paga il valore del suo livello, scalato in base a quanto bene l'hai giocato e alla durata del brano. La tabella dei gradi è PUMBILITY+: AAA è l'obiettivo a 1×, e sotto il prezzo scende in fretta.</value>
+  </data>
   <data name="Every chart that moved, arrived, or left between {0} and {1}." xml:space="preserve">
     <value>Tutte le chart che hanno cambiato livello, sono arrivate o sono uscite tra {0} e {1}.</value>
   </data>
@@ -2599,6 +2725,9 @@
   </data>
   <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
     <value>Ogni riga del file vince, anche dove è peggiore di quella che hai.</value>
+  </data>
+  <data name="Every season re-balances every chart from how hard it is to score, then freezes." xml:space="preserve">
+    <value>Ogni stagione ribilancia ogni chart in base a quanto è difficile farci punteggio, poi congela tutto.</value>
   </data>
   <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
     <value>Ogni tag sparito, compresi quelli che si sono uniti da soli. Una regola che ha smesso di trovare cambi di nome sembra una settimana tranquilla se non puoi vedere tutto.</value>
@@ -2713,6 +2842,9 @@
   </data>
   <data name="Fairly rated to pass" xml:space="preserve">
     <value>Difficoltà di pass fedele al livello</value>
+  </data>
+  <data name="Fall" xml:space="preserve">
+    <value>Autunno</value>
   </data>
   <data name="Far Twists" xml:space="preserve">
     <value>Twists larghi</value>
@@ -2928,8 +3060,14 @@
   <data name="From" xml:space="preserve">
     <value>Da</value>
   </data>
+  <data name="From 22 up a stamina bonus stacks on top, and it grows fast: +{0} at 22, +{1} at 24, +{2} at 26, +{3} at 29." xml:space="preserve">
+    <value>Dal 22 in su si impila un bonus resistenza, e cresce in fretta: +{0} al 22, +{1} al 24, +{2} al 26, +{3} al 29.</value>
+  </data>
   <data name="From another mix" xml:space="preserve">
     <value>Da un altro mix</value>
+  </data>
+  <data name="From level 10 up a level is worth 100 + 5 × (L − 10)(L − 9) points; levels 1 to 9 pay 10 to 90." xml:space="preserve">
+    <value>Dal livello 10 in su un livello vale 100 + 5 × (L − 10)(L − 9) punti; i livelli da 1 a 9 pagano da 10 a 90.</value>
   </data>
   <data name="From now on, every import and play session shows up here and you can undo any of them. Scores you already had can still be deleted." xml:space="preserve">
     <value>D'ora in poi ogni importazione e sessione compare qui e puoi annullarne una qualsiasi. I punteggi che avevi già restano eliminabili.</value>
@@ -2939,6 +3077,9 @@
   </data>
   <data name="From page" xml:space="preserve">
     <value>Dalla pagina</value>
+  </data>
+  <data name="From score" xml:space="preserve">
+    <value>Da punteggio</value>
   </data>
   <data name="From the opening 500 life, {0} straight misses or {1} straight bads end the run — {2} and {3} once the overflow is full." xml:space="preserve">
     <value>Dai 500 di vita iniziali, {0} Miss di fila o {1} Bad di fila chiudono la run; {2} e {3} con l'eccedenza piena.</value>
@@ -2993,6 +3134,9 @@
   </data>
   <data name="Gap" xml:space="preserve">
     <value>Scarto</value>
+  </data>
+  <data name="gaps are downtime: every second not on a chart" xml:space="preserve">
+    <value>gli spazi vuoti sono pausa: ogni secondo fuori da un chart</value>
   </data>
   <data name="Generate one" xml:space="preserve">
     <value>Generane uno</value>
@@ -3080,6 +3224,9 @@
   </data>
   <data name="Grade Distribution" xml:space="preserve">
     <value>Distribuzione dei voti</value>
+  </data>
+  <data name="Grade multiplier" xml:space="preserve">
+    <value>Moltiplicatore di grado</value>
   </data>
   <data name="Grade multipliers" xml:space="preserve">
     <value>Moltiplicatori di grado</value>
@@ -3399,6 +3546,9 @@
   <data name="Identity" xml:space="preserve">
     <value>Identità</value>
   </data>
+  <data name="If the buzzer goes mid-song, finish it: it counts in full. Closing on a full song is the classic move." xml:space="preserve">
+    <value>Se la sirena suona a metà brano, finiscilo: conta per intero. Chiudere con una full song è la mossa classica.</value>
+  </data>
   <data name="If you leave this page or cancel, the upload will stop but you will not lose any scores that have already been recorded from your upload." xml:space="preserve">
     <value>Se lasci questa pagina o annulli, il caricamento si fermerà ma non perderai i punteggi già registrati dal tuo upload.</value>
   </data>
@@ -3637,8 +3787,14 @@
   <data name="It flags your tool for review — then post in the Discord and someone will look. There is no queue anybody watches." xml:space="preserve">
     <value>Segna il tuo strumento per la revisione, poi scrivi sul Discord e qualcuno darà un'occhiata. Non c'è nessuna coda che qualcuno sorvegli.</value>
   </data>
+  <data name="It is a competition against yourself first. If you think someone cheated, message dr_murloc on the official PIU Discord; entries get removed." xml:space="preserve">
+    <value>È prima di tutto una gara contro te stesso. Se pensi che qualcuno abbia barato, scrivi a dr_murloc sul Discord ufficiale PIU; le voci vengono rimosse.</value>
+  </data>
   <data name="It is not limited to reading scores, and I can't limit it. The key stays valid until piugame.com expires it." xml:space="preserve">
     <value>Non si limita a leggere i punteggi, e non posso limitarlo. La chiave resta valida finché piugame.com non la fa scadere.</value>
+  </data>
+  <data name="It is your session against yourself. No-bar, Banya only, classical only, whatever you want." xml:space="preserve">
+    <value>È la tua sessione contro te stesso. Senza barra, solo Banya, solo classica, quello che vuoi.</value>
   </data>
   <data name="It may have been replaced by a newer one. Ask them for a fresh link." xml:space="preserve">
     <value>Potrebbe essere stato sostituito da uno più recente. Chiedigli un link nuovo.</value>
@@ -3691,6 +3847,9 @@
   <data name="Jacks" xml:space="preserve">
     <value>Jacks</value>
   </data>
+  <data name="January – March" xml:space="preserve">
+    <value>Gennaio – marzo</value>
+  </data>
   <data name="Join" xml:space="preserve">
     <value>Unisciti</value>
   </data>
@@ -3705,6 +3864,9 @@
   </data>
   <data name="Judgement counts per chart, by level — the band is the middle 80% of charts, the line the median, the dots the extremes." xml:space="preserve">
     <value>Conteggi dei giudizi per chart, per livello — la banda è l'80% centrale dei chart, la linea la mediana, i punti gli estremi.</value>
+  </data>
+  <data name="July – September" xml:space="preserve">
+    <value>Luglio – settembre</value>
   </data>
   <data name="Jumps" xml:space="preserve">
     <value>Jumps</value>
@@ -3859,6 +4021,9 @@
   <data name="Letter grades on {0}" xml:space="preserve">
     <value>Lettere su {0}</value>
   </data>
+  <data name="letters follow Phoenix 2's cutoffs" xml:space="preserve">
+    <value>le lettere seguono le soglie di Phoenix 2</value>
+  </data>
   <data name="Level" xml:space="preserve">
     <value>Livello</value>
     <comment>Level</comment>
@@ -3890,14 +4055,26 @@
   <data name="Level Up" xml:space="preserve">
     <value>Aumento di livello</value>
   </data>
+  <data name="Level value" xml:space="preserve">
+    <value>Valore del livello</value>
+  </data>
+  <data name="Level value by level, 10 to 29, with the stamina bonus from 22 stacked on top" xml:space="preserve">
+    <value>Valore per livello, da 10 a 29, con il bonus resistenza dal 22 impilato sopra</value>
+  </data>
   <data name="Level {0}" xml:space="preserve">
     <value>Livello {0}</value>
   </data>
   <data name="Level · {0}" xml:space="preserve">
     <value>Livello · {0}</value>
   </data>
+  <data name="level ▸" xml:space="preserve">
+    <value>livello ▸</value>
+  </data>
   <data name="Levels" xml:space="preserve">
     <value>Livelli</value>
+  </data>
+  <data name="levels 1–9 pay 10 to 90" xml:space="preserve">
+    <value>i livelli 1–9 pagano da 10 a 90</value>
   </data>
   <data name="Levels above" xml:space="preserve">
     <value>Livelli sopra</value>
@@ -4307,6 +4484,9 @@
   <data name="Modest" xml:space="preserve">
     <value>Modesto</value>
   </data>
+  <data name="Modifiers? HJ? JT?" xml:space="preserve">
+    <value>Modificatori? HJ? JT?</value>
+  </data>
   <data name="Monthly" xml:space="preserve">
     <value>Mensile</value>
   </data>
@@ -4408,6 +4588,9 @@
   </data>
   <data name="My data" xml:space="preserve">
     <value>I miei dati</value>
+  </data>
+  <data name="My friends are all abusing 8 6 full song!" xml:space="preserve">
+    <value>I miei amici abusano tutti dell'8 6 full song!</value>
   </data>
   <data name="My Goods" xml:space="preserve">
     <value>I miei Good</value>
@@ -4702,6 +4885,9 @@
   <data name="No Phoenix 2 chart" xml:space="preserve">
     <value>Nessuna chart in Phoenix 2</value>
   </data>
+  <data name="no plate bonus" xml:space="preserve">
+    <value>nessun bonus placca</value>
+  </data>
   <data name="No plays match." xml:space="preserve">
     <value>Nessuna partita corrisponde.</value>
   </data>
@@ -4861,8 +5047,8 @@
   <data name="None given" xml:space="preserve">
     <value>Non indicato</value>
   </data>
-  <data name="None of those plays could be added — they repeat charts already in the session, or it is already full." xml:space="preserve">
-    <value>Nessuna di quelle partite è stata aggiunta: ripetono chart già presenti nella sessione, oppure la sessione è già piena.</value>
+  <data name="None of those plays could be added — the session is already full." xml:space="preserve">
+    <value>Nessuna di quelle giocate è stata aggiunta: la sessione è già piena.</value>
   </data>
   <data name="None of your peers have passed this yet." xml:space="preserve">
     <value>Nessuno dei tuoi pari l'ha ancora passato.</value>
@@ -5093,6 +5279,9 @@
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>Nulla è cambiato — tutte le {0} chart hanno mantenuto il livello.</value>
   </data>
+  <data name="Nothing moves under you mid-season, and a past season stays priced under its own tables." xml:space="preserve">
+    <value>Niente si muove sotto i tuoi piedi a metà stagione, e una stagione passata resta valutata con le sue tabelle.</value>
+  </data>
   <data name="Nothing on your desk." xml:space="preserve">
     <value>Niente da esaminare.</value>
   </data>
@@ -5149,6 +5338,9 @@
   </data>
   <data name="NX2 / Prime data-mine" xml:space="preserve">
     <value>Dati estratti da NX2 / Prime</value>
+  </data>
+  <data name="October – December" xml:space="preserve">
+    <value>Ottobre – dicembre</value>
   </data>
   <data name="of charts recorded" xml:space="preserve">
     <value>di chart registrate</value>
@@ -5264,8 +5456,14 @@
   <data name="On every chart" xml:space="preserve">
     <value>Su ogni tracciato</value>
   </data>
+  <data name="On Phoenix you enter them by hand." xml:space="preserve">
+    <value>Su Phoenix li inserisci a mano.</value>
+  </data>
   <data name="on this device only. Useless on its own." xml:space="preserve">
     <value>solo su questo dispositivo. Inutile da solo.</value>
+  </data>
+  <data name="On this page" xml:space="preserve">
+    <value>In questa pagina</value>
   </data>
   <data name="On ToDo List" xml:space="preserve">
     <value>Nella lista ToDo</value>
@@ -5318,8 +5516,14 @@
   <data name="One rule, one glow. The color is the spectrum; the glow says a score crossed the line you set." xml:space="preserve">
     <value>Una regola, un bagliore. Il colore è lo spettro; il bagliore dice che un punteggio ha superato la linea che hai fissato.</value>
   </data>
+  <data name="One session" xml:space="preserve">
+    <value>Una sessione</value>
+  </data>
   <data name="One session is 1 hour 45 minutes; a chart only has to start inside it. Every chart scores PUMBILITY+: its balanced level, scaled by song length, times how well you played. Singles and Doubles are separate boards. No repeats — the same song at another level is a different chart. Play as many sessions as you like; the board ranks sessions. Ties go to the earlier session." xml:space="preserve">
     <value>Una sessione dura 1 ora e 45 minuti; un chart deve soltanto iniziare al suo interno. Ogni chart vale PUMBILITY+: il suo livello bilanciato, scalato per la durata della canzone, moltiplicato per quanto bene hai giocato. Singles e Doubles sono board separate. Niente ripetizioni — la stessa canzone a un altro livello è un chart diverso. Gioca quante sessioni vuoi; la board classifica le sessioni. A pari punti vince la sessione più vecchia.</value>
+  </data>
+  <data name="One session of 1 hour 45 minutes. Play as many charts as you can and bank points for how hard each one is and how well you played it. The board ranks sessions, so every attempt is its own shot." xml:space="preserve">
+    <value>Una sessione di 1 ora e 45 minuti. Gioca quanti più chart puoi e accumula punti in base a quanto è difficile ciascuno e a quanto bene l'hai giocato. La board classifica le sessioni, quindi ogni tentativo è un'occasione a sé.</value>
   </data>
   <data name="One shared board, one week — everyone posts their best on the same charts." xml:space="preserve">
     <value>Una sola classifica condivisa, una settimana — tutti registrano il proprio meglio sugli stessi chart.</value>
@@ -5347,6 +5551,9 @@
   </data>
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>Sono elencate solo le canzoni con almeno una chart cambiata.</value>
+  </data>
+  <data name="Only the score and the chart matter." xml:space="preserve">
+    <value>Contano solo il punteggio e il chart.</value>
   </data>
   <data name="Only you" xml:space="preserve">
     <value>Solo tu</value>
@@ -5538,6 +5745,9 @@
   <data name="Passes in Folder" xml:space="preserve">
     <value>Pass nella cartella</value>
   </data>
+  <data name="Passing and scoring are different things." xml:space="preserve">
+    <value>Passare e fare punteggio sono due cose diverse.</value>
+  </data>
   <data name="passing-F ceiling · 37.6%" xml:space="preserve">
     <value>tetto dell'F superato · 37,6%</value>
   </data>
@@ -5620,6 +5830,9 @@
   <data name="per chart · plates never entered it · your best fifty summed" xml:space="preserve">
     <value>per chart · i plate non entravano mai · i tuoi migliori cinquanta sommati</value>
   </data>
+  <data name="per chart, rounded down" xml:space="preserve">
+    <value>per chart, arrotondato per difetto</value>
+  </data>
   <data name="Per-channel language" xml:space="preserve">
     <value>Lingua per canale</value>
   </data>
@@ -5643,6 +5856,9 @@
   </data>
   <data name="Perfect count" xml:space="preserve">
     <value>Numero di Perfects</value>
+  </data>
+  <data name="Perfect Game" xml:space="preserve">
+    <value>Perfect Game</value>
   </data>
   <data name="Perfect Games" xml:space="preserve">
     <value>Perfect Games</value>
@@ -5719,14 +5935,11 @@
   <data name="Phoenix 1:" xml:space="preserve">
     <value>Phoenix 1:</value>
   </data>
-  <data name="Phoenix 2 boards open once the scoring is settled." xml:space="preserve">
-    <value>Le board di Phoenix 2 apriranno quando il punteggio sarà definito.</value>
-  </data>
   <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that is the CO-OP Rating, a separate number with its own titles and board. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
 	  <value>Phoenix 2 un prezzo al chart CO-OP glielo dà, una base fissa di {0} — come Phoenix la dava a {1} — ma quello è il Rating CO-OP, un numero a sé con i suoi titoli e la sua classifica. Non aggiunge nulla alla PUMBILITY su nessuno dei due Mix.</value>
   </data>
-  <data name="Phoenix 2 gets its own Doubles and Singles boards, on Phoenix 2's own rating system. They open once the scoring is settled — this season runs on Phoenix." xml:space="preserve">
-    <value>Phoenix 2 avrà le sue board Doubles e Singles, sul suo sistema di rating. Apriranno quando il punteggio sarà definito — questa stagione si gioca su Phoenix.</value>
+  <data name="Phoenix 2 imports the charts from your play history." xml:space="preserve">
+    <value>Su Phoenix 2 i chart si importano dalla tua cronologia di gioco.</value>
   </data>
   <data name="Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does." xml:space="preserve">
     <value>Phoenix 2 poggia sul punteggio circa {0}× più di Phoenix.</value>
@@ -5746,11 +5959,11 @@
   <data name="Phoenix 2 runs an electric effect along the bar once the overflow is completely full — the one moment the game admits the hidden life is there." xml:space="preserve">
     <value>Phoenix 2 fa scorrere un effetto elettrico lungo la barra quando l'eccedenza è completamente piena: l'unico momento in cui il gioco ammette che quella vita nascosta esiste.</value>
   </data>
-  <data name="Phoenix 2 scoring is still being tuned." xml:space="preserve">
-    <value>Il punteggio di Phoenix 2 è ancora in fase di taratura.</value>
-  </data>
   <data name="Phoenix 2 · same scores, repriced" xml:space="preserve">
     <value>Phoenix 2 · gli stessi punteggi, rivalutati</value>
+  </data>
+  <data name="Phoenix and Phoenix 2 each have their own Doubles and Singles boards." xml:space="preserve">
+    <value>Phoenix e Phoenix 2 hanno ciascuno le proprie board Doubles e Singles.</value>
   </data>
   <data name="Phoenix and Phoenix 2 score a play identically; Phoenix 2 changed what the letters below AAA demand." xml:space="preserve">
     <value>Phoenix e Phoenix 2 assegnano lo stesso punteggio; Phoenix 2 ha cambiato ciò che chiedono le lettere sotto AAA.</value>
@@ -5974,6 +6187,9 @@
   <data name="Plates" xml:space="preserve">
     <value>Plate</value>
   </data>
+  <data name="Plates change nothing." xml:space="preserve">
+    <value>Le placche non cambiano nulla.</value>
+  </data>
   <data name="Plates earned" xml:space="preserve">
     <value>Plate ottenuti</value>
   </data>
@@ -5992,8 +6208,14 @@
   <data name="Play" xml:space="preserve">
     <value>Gioca</value>
   </data>
+  <data name="Play as many sessions as you like in a season." xml:space="preserve">
+    <value>Gioca tutte le sessioni che vuoi in una stagione.</value>
+  </data>
   <data name="Play count" xml:space="preserve">
     <value>Numero di plays</value>
+  </data>
+  <data name="Play it twice and only your better score counts; the other never enters the session. The same song at another level is a different chart." xml:space="preserve">
+    <value>Se lo giochi due volte conta solo il punteggio migliore; l'altro non entra mai nella sessione. La stessa canzone a un altro livello è un chart diverso.</value>
   </data>
   <data name="Play Num" xml:space="preserve">
     <value>Gioca almeno {0}</value>
@@ -6302,6 +6524,9 @@
   <data name="Public tool" xml:space="preserve">
     <value>Strumento pubblico</value>
   </data>
+  <data name="Publishing freezes the session" xml:space="preserve">
+    <value>Pubblicare congela la sessione</value>
+  </data>
   <data name="pull up a chart's stats and similar charts, with links to its pages" xml:space="preserve">
     <value>mostra le statistiche di un chart e i chart simili, con i link alle sue pagine</value>
   </data>
@@ -6346,6 +6571,12 @@
   </data>
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>Top 50 PUMBILITY</value>
+  </data>
+  <data name="PUMBILITY+ by score" xml:space="preserve">
+    <value>PUMBILITY+ per punteggio</value>
+  </data>
+  <data name="PUMBILITY+ grade multiplier by score, 750,000 to 1,000,000" xml:space="preserve">
+    <value>Moltiplicatore di grado PUMBILITY+ per punteggio, da 750.000 a 1.000.000</value>
   </data>
   <data name="Pump It Up didn't award titles until Prime 2." xml:space="preserve">
     <value>Pump It Up non aveva titoli prima di Prime 2.</value>
@@ -6419,6 +6650,9 @@
   </data>
   <data name="Quarter Double" xml:space="preserve">
     <value>Quarto doppio</value>
+  </data>
+  <data name="Questions" xml:space="preserve">
+    <value>Domande</value>
   </data>
   <data name="Queued" xml:space="preserve">
     <value>In coda</value>
@@ -6568,6 +6802,9 @@
   <data name="Ready" xml:space="preserve">
     <value>Pronto</value>
   </data>
+  <data name="Real time, timed by you. What matters is when a chart starts, not when it ends." xml:space="preserve">
+    <value>Tempo reale, cronometrato da te. Conta quando un chart inizia, non quando finisce.</value>
+  </data>
   <data name="Reason" xml:space="preserve">
     <value>Motivo</value>
   </data>
@@ -6631,6 +6868,9 @@
   <data name="Record broken scores as your best" xml:space="preserve">
     <value>Registra i punteggi rotti come tuo record</value>
   </data>
+  <data name="Record from the season page" xml:space="preserve">
+    <value>Registra dalla pagina della stagione</value>
+  </data>
   <data name="Record Score" xml:space="preserve">
     <value>Registra punteggio</value>
   </data>
@@ -6661,6 +6901,12 @@
   </data>
   <data name="Recorded {0} days ago" xml:space="preserve">
     <value>Registrato {0} giorni fa</value>
+  </data>
+  <data name="Recording" xml:space="preserve">
+    <value>Registrazione</value>
+  </data>
+  <data name="Recording a session" xml:space="preserve">
+    <value>Registrare una sessione</value>
   </data>
   <data name="Refresh" xml:space="preserve">
     <value>Aggiorna</value>
@@ -7007,6 +7253,9 @@
   </data>
   <data name="scale" xml:space="preserve">
     <value>scala</value>
+  </data>
+  <data name="Scheduling. Back-to-back players fit two-hour slots with time to swap." xml:space="preserve">
+    <value>Per organizzazione. Giocatori uno dopo l'altro stanno in turni da due ore con il tempo per il cambio.</value>
   </data>
   <data name="Schema reference:" xml:space="preserve">
     <value>Riferimento dello schema:</value>
@@ -7650,6 +7899,9 @@
   <data name="Slow" xml:space="preserve">
     <value>Lento</value>
   </data>
+  <data name="So As are worthless?" xml:space="preserve">
+    <value>Quindi le A non valgono niente?</value>
+  </data>
   <data name="so scoring one chart at 20 is worth" xml:space="preserve">
     <value>quindi il punteggio su un chart a 20 vale</value>
   </data>
@@ -7682,6 +7934,12 @@
   </data>
   <data name="Song Duration" xml:space="preserve">
     <value>Durata della canzone</value>
+  </data>
+  <data name="Song length" xml:space="preserve">
+    <value>Durata del brano</value>
+  </data>
+  <data name="song length ÷ 2:00" xml:space="preserve">
+    <value>durata del brano ÷ 2:00</value>
   </data>
   <data name="Song Name" xml:space="preserve">
     <value>Nome della canzone</value>
@@ -7747,6 +8005,9 @@
   <data name="Spreadsheet is uploading and being processed..." xml:space="preserve">
     <value>Lo Spreadsheet è in fase di caricamento ed elaborazione...</value>
   </data>
+  <data name="Spring" xml:space="preserve">
+    <value>Primavera</value>
+  </data>
   <data name="Ss" xml:space="preserve">
     <value>Ss</value>
     <comment>Plural of letter grade S.</comment>
@@ -7785,6 +8046,9 @@
   <data name="Stale weight" xml:space="preserve">
     <value>Peso obsoleto</value>
   </data>
+  <data name="stamina bonus from 22" xml:space="preserve">
+    <value>bonus resistenza dal 22</value>
+  </data>
   <data name="Standings" xml:space="preserve">
     <value>Classifica</value>
   </data>
@@ -7805,6 +8069,9 @@
   </data>
   <data name="Started" xml:space="preserve">
     <value>Inizio</value>
+  </data>
+  <data name="started 1:43 →" xml:space="preserve">
+    <value>iniziato a 1:43 →</value>
   </data>
   <data name="Started {0} · no result recorded" xml:space="preserve">
     <value>Avviata il {0} · nessun esito registrato</value>
@@ -7939,6 +8206,9 @@
   <data name="Suggested · Title Hunt" xml:space="preserve">
     <value>Suggeriti · Caccia ai titoli</value>
   </data>
+  <data name="Summer" xml:space="preserve">
+    <value>Estate</value>
+  </data>
   <data name="Supplemented roll-up queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>Raccolta integrata in coda: si riaggancia all'ultima istantanea</value>
   </data>
@@ -7994,6 +8264,9 @@
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>
   </data>
+  <data name="Ten thousand points of score on one chart is worth {0} points here. That gap is the whole game below AAA." xml:space="preserve">
+    <value>Diecimila punti di punteggio su un solo chart valgono {0} punti qui. Quel divario è tutto il gioco sotto AAA.</value>
+  </data>
   <data name="Test Scores" xml:space="preserve">
     <value>Punteggi di test</value>
   </data>
@@ -8005,6 +8278,9 @@
   </data>
   <data name="Thanks — a moderator will take a look." xml:space="preserve">
     <value>Grazie — un moderatore darà un'occhiata.</value>
+  </data>
+  <data name="That beats your earlier play of this chart, which is replaced." xml:space="preserve">
+    <value>Batte la tua giocata precedente su questo chart, che viene sostituita.</value>
   </data>
   <data name="That command isn't available yet." xml:space="preserve">
     <value>Questo comando non è ancora disponibile.</value>
@@ -8057,6 +8333,9 @@
   <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
     <value>La classifica non è piena - qualsiasi top 50 ti fa entrare.</value>
   </data>
+  <data name="The board ranks sessions, not players, so three great sessions can hold three places. Ties go to the earlier session." xml:space="preserve">
+    <value>La board classifica le sessioni, non i giocatori, quindi tre grandi sessioni possono occupare tre posti. In caso di parità vince la sessione più vecchia.</value>
+  </data>
   <data name="The cabinet" xml:space="preserve">
     <value>La bacheca</value>
   </data>
@@ -8080,6 +8359,9 @@
   </data>
   <data name="The cliff, not a slope" xml:space="preserve">
     <value>Un dirupo, non una salita</value>
+  </data>
+  <data name="The clock starts when you step into your first song." xml:space="preserve">
+    <value>Il cronometro parte quando entri nel tuo primo brano.</value>
   </data>
   <data name="The code may have been revoked, or the community no longer exists." xml:space="preserve">
     <value>Il codice potrebbe essere stato revocato o la comunità non esiste più.</value>
@@ -8132,6 +8414,9 @@
   <data name="The gain chip, with the grade you'd be expected to get beside it." xml:space="preserve">
     <value>Il chip del guadagno, con il voto previsto accanto.</value>
   </data>
+  <data name="The game ends the song, there is no score to record, and the time is gone." xml:space="preserve">
+    <value>Il gioco interrompe il brano, non c'è nessun punteggio da registrare e il tempo è andato.</value>
+  </data>
   <data name="The game's own judgement colors, literally: Miss red at the bottom, then Bad violet, Good amber, Great green, Perfect ice at the top. The one ladder that starts red — opt-in only." xml:space="preserve">
     <value>I colori di giudizio del gioco, alla lettera: Miss rosso in basso, poi Bad viola, Good ambra, Great verde, Perfect ghiaccio in cima. L'unica scala che parte dal rosso: solo se la scegli.</value>
   </data>
@@ -8146,6 +8431,9 @@
   </data>
   <data name="The import ran into an error." xml:space="preserve">
     <value>L'importazione ha riscontrato un errore.</value>
+  </data>
+  <data name="The in-game countdown lies, right?" xml:space="preserve">
+    <value>Il conto alla rovescia del gioco mente, vero?</value>
   </data>
   <data name="The intro is the danger zone" xml:space="preserve">
     <value>L'intro è la zona di pericolo</value>
@@ -8330,6 +8618,9 @@
   <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
     <value>Non c'è nulla a questo indirizzo — forse è cambiato con un Mix, o non è mai esistito. La ricerca conosce tutti i chart.</value>
   </data>
+  <data name="These are the rules the site enforces. A season freezes its tables when it begins." xml:space="preserve">
+    <value>Queste sono le regole che il sito applica. Una stagione congela le sue tabelle quando inizia.</value>
+  </data>
   <data name="These come straight from piucenter. Header names can change when their data changes." xml:space="preserve">
     <value>Vengono direttamente da piucenter. I nomi delle intestazioni possono cambiare quando cambiano i loro dati.</value>
   </data>
@@ -8495,8 +8786,8 @@
   <data name="This season" xml:space="preserve">
     <value>Questa stagione</value>
   </data>
-  <data name="This season runs on Phoenix." xml:space="preserve">
-    <value>Questa stagione si gioca su Phoenix.</value>
+  <data name="This season's boards are being set up." xml:space="preserve">
+    <value>Le board di questa stagione sono in preparazione.</value>
   </data>
   <data name="This session isn't here." xml:space="preserve">
     <value>Questa sessione non è qui.</value>
@@ -8838,6 +9129,9 @@
   <data name="Two can be active at once, so rotating one costs no downtime. No email goes out when one expires — this page is the whole warning." xml:space="preserve">
     <value>Due possono essere attive insieme, quindi ruotarne una non costa tempo di fermo. Nessuna email parte alla scadenza — questa pagina è tutto l'avviso.</value>
   </data>
+  <data name="Two minutes is the baseline. A chart pays its length ÷ 2:00, so a short cut pays less and a full song pays more for the same play." xml:space="preserve">
+    <value>Due minuti sono il riferimento. Un chart paga la sua durata ÷ 2:00, quindi uno short cut paga meno e una full song paga di più per la stessa giocata.</value>
+  </data>
   <data name="Two versions" xml:space="preserve">
     <value>Due versioni</value>
   </data>
@@ -8970,6 +9264,9 @@
   </data>
   <data name="up to" xml:space="preserve">
     <value>fino a</value>
+  </data>
+  <data name="Up to you, and you can switch mid-session. Event mode rotates one song at a time and is slower. Standard mode stage breaks at 51 misses, and a stage break has no score." xml:space="preserve">
+    <value>Come preferisci, e puoi cambiare a metà sessione. La modalità evento ruota un brano alla volta ed è più lenta. La modalità standard fa stage break a 51 miss, e uno stage break non ha punteggio.</value>
   </data>
   <data name="Up to {0} new texts a night. The ceiling is a fuse, not a budget — if it parks the pipeline, find the bug before raising it." xml:space="preserve">
     <value>Fino a {0} nuovi testi a notte. Il tetto è un fusibile, non un budget: se ferma la pipeline, trova il bug prima di alzarlo.</value>
@@ -9301,6 +9598,12 @@
   <data name="What holds the rungs" xml:space="preserve">
     <value>Cosa difende ogni gradino</value>
   </data>
+  <data name="What if someone cheats?" xml:space="preserve">
+    <value>E se qualcuno bara?</value>
+  </data>
+  <data name="What is the meta?" xml:space="preserve">
+    <value>Qual è il meta?</value>
+  </data>
   <data name="What is this tool?" xml:space="preserve">
     <value>Cos'è questo strumento?</value>
   </data>
@@ -9388,6 +9691,9 @@
   <data name="When somebody adds you, they show up here." xml:space="preserve">
     <value>Quando qualcuno ti aggiunge, compare qui.</value>
   </data>
+  <data name="when you are done, or have a friend do it while you play." xml:space="preserve">
+    <value>quando hai finito, oppure lascia che lo faccia un amico mentre giochi.</value>
+  </data>
   <data name="Where a player lands when they click through from the directory." xml:space="preserve">
     <value>Dove arriva un giocatore quando clicca dalla directory.</value>
   </data>
@@ -9469,6 +9775,9 @@
   <data name="who played these charts" xml:space="preserve">
     <value>che hanno giocato questi chart</value>
   </data>
+  <data name="Who times me?" xml:space="preserve">
+    <value>Chi mi cronometra?</value>
+  </data>
   <data name="Who your peers are" xml:space="preserve">
     <value>Chi sono i tuoi pari</value>
   </data>
@@ -9477,6 +9786,9 @@
   </data>
   <data name="Why" xml:space="preserve">
     <value>Perché</value>
+  </data>
+  <data name="Why 1:45 and not 2 hours?" xml:space="preserve">
+    <value>Perché 1:45 e non 2 ore?</value>
   </data>
   <data name="Why are you reporting this?" xml:space="preserve">
     <value>Perché lo stai segnalando?</value>
@@ -9496,6 +9808,9 @@
   <data name="wins in range" xml:space="preserve">
     <value>vittorie nel tuo range</value>
   </data>
+  <data name="Winter" xml:space="preserve">
+    <value>Inverno</value>
+  </data>
   <data name="Wiping of the baby powder" xml:space="preserve">
     <value>Rimozione del talco</value>
   </data>
@@ -9510,6 +9825,9 @@
   </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>Senza di essi funziona lo stesso — per te, sui tuoi punteggi.</value>
+  </data>
+  <data name="Worked example" xml:space="preserve">
+    <value>Esempio svolto</value>
   </data>
   <data name="Worked examples" xml:space="preserve">
     <value>Esempi svolti</value>
@@ -9594,6 +9912,9 @@
   <data name="Yes, cycle all keys" xml:space="preserve">
     <value>Sì, ruota tutte le chiavi</value>
   </data>
+  <data name="Yes. Skipping the game-over screen or trimming the song list is fair game. Nobody has broken the format with it yet." xml:space="preserve">
+    <value>Sì. Saltare la schermata di game over o accorciare la lista dei brani è lecito. Nessuno ha ancora rotto il formato così.</value>
+  </data>
   <data name="Yesterday" xml:space="preserve">
     <value>Ieri</value>
   </data>
@@ -9614,6 +9935,9 @@
   </data>
   <data name="You ahead" xml:space="preserve">
     <value>Tu avanti</value>
+  </data>
+  <data name="You already had a better play of every one of those." xml:space="preserve">
+    <value>Avevi già una giocata migliore per ognuno di quelli.</value>
   </data>
   <data name="You are already connected to your own tool, so you have one real player to build against — yourself. An invite link adds anyone else, public profile or not." xml:space="preserve">
     <value>Sei già connesso al tuo stesso strumento, quindi hai un giocatore vero su cui lavorare: te stesso. Un link d'invito ne aggiunge altri, con profilo pubblico o meno.</value>
@@ -9650,6 +9974,9 @@
   </data>
   <data name="You connected directly" xml:space="preserve">
     <value>Ti sei collegato direttamente</value>
+  </data>
+  <data name="You do, or a friend does. Timestamps from your play history help." xml:space="preserve">
+    <value>Tu, o un amico. I timestamp della tua cronologia di gioco aiutano.</value>
   </data>
   <data name="You don't have a saved preset called &quot;{0}&quot;." xml:space="preserve">
     <value>Non hai un preset salvato chiamato &quot;{0}&quot;.</value>
@@ -9698,6 +10025,9 @@
   </data>
   <data name="you sat this one out" xml:space="preserve">
     <value>questa l'hai saltata</value>
+  </data>
+  <data name="You see the boards of the mix you are on." xml:space="preserve">
+    <value>Vedi le board del Mix in cui ti trovi.</value>
   </data>
   <data name="you sit at {0}" xml:space="preserve">
     <value>sei a {0}</value>
@@ -9827,6 +10157,9 @@
   </data>
   <data name="your doubles pool is {0}" xml:space="preserve">
     <value>il tuo insieme doubles è {0}</value>
+  </data>
+  <data name="Your earlier play of this chart scores higher, so it stays." xml:space="preserve">
+    <value>La tua giocata precedente su questo chart ha un punteggio più alto, quindi resta.</value>
   </data>
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>Il tuo endpoint risponde a una richiesta di verifica con questo. Non viene inviato da nessuna parte: è ciò che rende una prova il risponderci con esso, ed è perché un DNS dirottato non passa. Se ne conserva solo un hash, quindi annotalo dove lo ritrovi.</value>
@@ -10005,6 +10338,9 @@
   <data name="Your session ended." xml:space="preserve">
     <value>La tua sessione è terminata.</value>
   </data>
+  <data name="your session total is the sum" xml:space="preserve">
+    <value>il totale della sessione è la somma</value>
+  </data>
   <data name="your singles pool is {0}" xml:space="preserve">
     <value>il tuo insieme singles è {0}</value>
   </data>
@@ -10064,6 +10400,9 @@
   </data>
   <data name="Yours only. The player who follows the link never sees it." xml:space="preserve">
     <value>Solo per te. Il giocatore che segue il link non la vede mai.</value>
+  </data>
+  <data name="YouTube embeds on your session for anyone who wants to watch." xml:space="preserve">
+    <value>YouTube si incorpora nella tua sessione per chi vuole guardarla.</value>
   </data>
   <data name="\* = reclears" xml:space="preserve">
     <value>\* = reclear</value>
@@ -10226,6 +10565,9 @@
   </data>
   <data name="{0} charts · {1} down to {2}" xml:space="preserve">
     <value>{0} chart · da {1} a {2}</value>
+  </data>
+  <data name="{0} charts · {1} downtime" xml:space="preserve">
+    <value>{0} chart · {1} di pausa</value>
   </data>
   <data name="{0} charts, chosen for being nothing like this one." xml:space="preserve">
     <value>{0} chart, scelte per non somigliare per niente a questa.</value>
@@ -10406,6 +10748,9 @@
   </data>
   <data name="{0} more scores" xml:space="preserve">
     <value>Altri {0} punteggi</value>
+  </data>
+  <data name="{0} more, at {1}: {2} × 1.0 × 2 = {3}" xml:space="preserve">
+    <value>{0} in più, a {1}: {2} × 1,0 × 2 = {3}</value>
   </data>
   <data name="{0} needs your PIUGame session" xml:space="preserve">
     <value>{0} richiede la tua sessione PIUGame</value>
@@ -10662,8 +11007,17 @@
   <data name="{0} {1}% → **{2}%**" xml:space="preserve">
     <value>{0} {1}% → **{2}%**</value>
   </data>
+  <data name="{0} · 0×, then a straight climb" xml:space="preserve">
+    <value>{0} · 0×, poi una salita in linea retta</value>
+  </data>
   <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
     <value>{0} · livelli {1}–{2} · {3}</value>
+  </data>
+  <data name="{0} · the 1× target" xml:space="preserve">
+    <value>{0} · l'obiettivo a 1×</value>
+  </data>
+  <data name="{0} × {1} × 2 = {2} points" xml:space="preserve">
+    <value>{0} × {1} × 2 = {2} punti</value>
   </data>
   <data name="{0} — settings" xml:space="preserve">
     <value>{0} — impostazioni</value>

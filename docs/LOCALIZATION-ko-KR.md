@@ -247,3 +247,28 @@ event's one word for a run (D22) and follows the existing Session / Sessions key
 | Past seasons | 지난 시즌 |
 | Doubles / Singles | 더블 / 싱글 (as the existing keys) |
 | 1st / 2nd / 3rd / 4th | {0}위 for every place |
+
+## The Rules page (2026-09-06)
+
+Terms fixed by the Rules page ([march-of-murlocs.md](design/march-of-murlocs.md) §11.11), the rules of
+record since the Google Doc retired, and the keep-the-better messages on the record page (D39). The
+March of Murlocs table above still governs season, session, board and downtime.
+
+| English | ko-KR |
+|---|---|
+| rules | 규칙 |
+| window (the 1:45) | 시간 (안에 시작) |
+| buzzer | 버저 |
+| clock | 시계 |
+| grade multiplier | 등급 배율 |
+| level value | 레벨 값 |
+| stamina bonus | 체력 보너스 |
+| broken score | 브로큰 점수 |
+| stage break | 스테이지 브레이크 |
+| plate | 플레이트 |
+| short cut / full song | 숏컷 / 풀송 |
+| modifiers | 모디파이어 |
+| Winter / Spring / Summer / Fall | 겨울 / 봄 / 여름 / 가을 |
+| Perfect Game | 퍼펙트 게임 |
+| play (a run of a chart) | 플레이 |
+| the meta | 메타 |

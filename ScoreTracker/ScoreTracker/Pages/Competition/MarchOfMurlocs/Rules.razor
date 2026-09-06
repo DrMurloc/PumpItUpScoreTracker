@@ -59,7 +59,7 @@
             <div class="mom-rl-q @(quarter == _liveQuarter ? "live" : "")" data-testid="mom-rl-quarter">
                 @if (quarter == _liveQuarter)
                 {
-                    <span class="mom-rl-live">@L["Live"]</span>
+                    <span class="mom-rl-live">@L["LIVE"]</span>
                 }
                 <div class="nm">@name</div>
                 <div class="mo">@months</div>
@@ -94,9 +94,9 @@
     <h2><span class="k">04</span>@L["Scoring"]</h2>
     <p class="lede">@L["Every chart pays its level value, scaled by how well you scored it and by how long the song is. The grade table is PUMBILITY+: AAA is the 1× target, and below it the price drops fast."]</p>
     <div class="mom-rl-formula">
-        <span class="t res">@L["points"]</span><span class="op">=</span>
-        <span class="t">@L["level value"]</span><span class="op">×</span>
-        <span class="t">@L["grade multiplier"]</span><span class="op">×</span>
+        <span class="t res">@L["Points"]</span><span class="op">=</span>
+        <span class="t">@L["Level value"]</span><span class="op">×</span>
+        <span class="t">@L["Grade multiplier"]</span><span class="op">×</span>
         <span class="t">@L["song length ÷ 2:00"]</span>
         <span class="sub">@L["per chart, rounded down"] · @L["your session total is the sum"] · @L["no plate bonus"] · @L["a broken score counts at face value"]</span>
     </div>

@@ -199,3 +199,29 @@ event's one word for a run (D22) and follows the existing Session / Sessions key
 | Past seasons | Temporadas anteriores |
 | Doubles / Singles | Doubles / Singles (unchanged, as the mix keys already do) |
 | 1st / 2nd / 3rd / 4th | {0}.º for every place |
+
+## The Rules page (2026-09-06)
+
+Terms fixed by the Rules page ([march-of-murlocs.md](design/march-of-murlocs.md) §11.11), the rules of
+record since the Google Doc retired, and the keep-the-better messages on the record page (D39). The
+March of Murlocs table above still governs season, session, board and downtime.
+
+| English | es-ES |
+|---|---|
+| rules | reglas |
+| window (the 1:45) | ventana |
+| buzzer | bocina |
+| clock | reloj |
+| grade multiplier | multiplicador de grado |
+| level value | valor del nivel |
+| stamina bonus | bonus de resistencia |
+| broken score | puntuación rota |
+| stage break | stage break (unchanged) |
+| plate | placa |
+| score | puntuación (never puntaje — the es-MX word) |
+| short cut / full song | short cut / full song (unchanged) |
+| modifiers | modificadores |
+| Winter / Spring / Summer / Fall | Invierno / Primavera / Verano / Otoño |
+| Perfect Game | Perfect Game (unchanged) |
+| play (a run of a chart) | jugada |
+| the meta | el meta |

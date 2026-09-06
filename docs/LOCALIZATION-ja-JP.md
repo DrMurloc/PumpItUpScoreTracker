@@ -233,3 +233,28 @@ event's one word for a run (D22) and follows the existing Session / Sessions key
 | Past seasons | 過去のシーズン |
 | Doubles / Singles | Doubles / Singles (unchanged) |
 | 1st / 2nd / 3rd / 4th | {0}位 for every place |
+
+## The Rules page (2026-09-06)
+
+Terms fixed by the Rules page ([march-of-murlocs.md](design/march-of-murlocs.md) §11.11), the rules of
+record since the Google Doc retired, and the keep-the-better messages on the record page (D39). The
+March of Murlocs table above still governs season, session, board and downtime.
+
+| English | ja-JP |
+|---|---|
+| rules | ルール |
+| window (the 1:45) | 枠 |
+| buzzer | ブザー |
+| clock | タイマー |
+| grade multiplier | グレード倍率 |
+| level value | レベル値 |
+| stamina bonus | スタミナボーナス |
+| broken score | ブロークンのスコア |
+| stage break | ステージブレイク |
+| plate | プレート |
+| short cut / full song | ショートカット / フルソング |
+| modifiers | モディファイア |
+| Winter / Spring / Summer / Fall | 冬 / 春 / 夏 / 秋 |
+| Perfect Game | Perfect Game (unchanged) |
+| play (a run of a chart) | プレイ |
+| the meta | メタ |
