@@ -365,7 +365,8 @@ records of both types priced under the mix's formula, merged, the top fifty take
 (`PumbilityPoolSplit`), only a full fifty counting. Nothing stores that, so it is read once per viewer
 and mix and cached beside the sweep for its day. The bars show only for the merged fifty — All on
 Phoenix 2, the one pool on Phoenix 1 — since a singles or doubles pool is one type by definition; your
-bar stands alone while no type has peers. On the owner's account (2026-09-05): 36 singles worth
+bar stands alone while no type has peers, and the line under the bars names the peers the mix
+has — the pool window on Phoenix 2, the competitive band on Phoenix 1 (D43). On the owner's account (2026-09-05): 36 singles worth
 12,773.08 against the peers' average 34 worth 12,085.84, and 14 doubles worth 4,958.59 against 16 worth
 5,508.22, over 64 peers.
 

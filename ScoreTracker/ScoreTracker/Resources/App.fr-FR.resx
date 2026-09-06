@@ -5476,6 +5476,9 @@
   <data name="Peers: the average top 50 of the {0} players near your singles or doubles pool" xml:space="preserve">
     <value>Pairs : le top 50 moyen des {0} joueurs proches de ton pool singles ou doubles</value>
   </data>
+  <data name="Peers: the average top 50 of the {0} players within one competitive level of you" xml:space="preserve">
+    <value>Pairs : le top 50 moyen des {0} joueurs à ±1 niveau compétitif de toi</value>
+  </data>
   <data name="Peers: {0}% of their pool weight at {1}" xml:space="preserve">
     <value>Pairs : {0} % du poids de leur ensemble au {1}</value>
   </data>

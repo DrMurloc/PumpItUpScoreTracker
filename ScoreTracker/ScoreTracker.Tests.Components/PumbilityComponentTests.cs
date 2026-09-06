@@ -248,6 +248,29 @@ public sealed class PumbilityComponentTests : ComponentTestBase
     }
 
     [Fact]
+    public void TheLegendNamesThePeersTheMixActuallyHas()
+    {
+        // Phoenix 2's peers are the window on the pool of the type; Phoenix 1's are the competitive
+        // band (D43, D53). The fixture's record is Phoenix 1.
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPoolCompareQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Compare(new PoolTypeSplit(12, 30, 20, 11_000, 6_000)));
+
+        var phoenix1 = RenderComponent<PumbilityBreakdown>(p => p
+            .Add(x => x.Breakdown, new PoolBreakdown(12442, 5524, 75, 174)).Add(x => x.PoolCount, 50)
+            .Add(x => x.Page, (PumbilityPageRecord)page).Add(x => x.Charts, page.Charts()));
+        phoenix1.WaitForAssertion(() =>
+            Assert.Contains("within one competitive level of you", phoenix1.Find("[data-testid=wpc-types]").TextContent));
+
+        var phoenix2 = RenderComponent<PumbilityBreakdown>(p => p
+            .Add(x => x.Breakdown, new PoolBreakdown(12442, 5524, 75, 174)).Add(x => x.PoolCount, 50)
+            .Add(x => x.Page, ((PumbilityPageRecord)page) with { Mix = MixEnum.Phoenix2 }).Add(x => x.Charts, page.Charts()));
+        phoenix2.WaitForAssertion(() =>
+            Assert.Contains("near your singles or doubles pool", phoenix2.Find("[data-testid=wpc-types]").TextContent));
+    }
+
+    [Fact]
     public void ATypePoolKeepsTheLevelsAndDropsTheSplit()
     {
         // A singles or doubles pool is one type by definition: nothing to split, still a level to sit at.

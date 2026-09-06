@@ -123,7 +123,12 @@
                     <span><i class="pmb-swatch" style="background:var(--chart-singles)"></i>@L["Singles"]</span>
                     @if (_compare?.Peers is { } averaged)
                     {
-                        <span class="pmb-muted">@L["Peers: the average top 50 of the {0} players near your singles or doubles pool", averaged.Peers]</span>
+                        @* Who the peers are differs by mix (D43, D53), and the line says which. *@
+                        <span class="pmb-muted">
+                            @(Page!.Mix == MixEnum.Phoenix2
+                                ? L["Peers: the average top 50 of the {0} players near your singles or doubles pool", averaged.Peers]
+                                : L["Peers: the average top 50 of the {0} players within one competitive level of you", averaged.Peers])
+                        </span>
                     }
                 </div>
             </div>

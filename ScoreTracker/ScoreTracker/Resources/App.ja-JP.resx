@@ -5477,6 +5477,9 @@
   <data name="Peers: the average top 50 of the {0} players near your singles or doubles pool" xml:space="preserve">
     <value>ピア：あなたの Singles または Doubles プールに近い {0} 人のプレーヤーの平均トップ50</value>
   </data>
+  <data name="Peers: the average top 50 of the {0} players within one competitive level of you" xml:space="preserve">
+    <value>ピア：あなたと競技レベル 1 以内の {0} 人のプレーヤーの平均トップ50</value>
+  </data>
   <data name="Peers: {0}% of their pool weight at {1}" xml:space="preserve">
     <value>ピア: プール比重の {0}% がレベル {1}</value>
   </data>

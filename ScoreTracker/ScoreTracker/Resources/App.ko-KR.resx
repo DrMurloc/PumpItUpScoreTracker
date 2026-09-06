@@ -5445,6 +5445,9 @@
   <data name="Peers: the average top 50 of the {0} players near your singles or doubles pool" xml:space="preserve">
     <value>동료: 내 싱글 또는 더블 풀에 가까운 플레이어 {0}명의 평균 상위 50</value>
   </data>
+  <data name="Peers: the average top 50 of the {0} players within one competitive level of you" xml:space="preserve">
+    <value>동료: 나와 경쟁 레벨 1 이내인 플레이어 {0}명의 평균 상위 50</value>
+  </data>
   <data name="Peers: {0}% of their pool weight at {1}" xml:space="preserve">
     <value>동료: 풀 비중의 {0}%가 레벨 {1}</value>
   </data>
