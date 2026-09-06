@@ -1,4 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Bunit;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -161,6 +165,31 @@ public sealed class PeerPoolListTests : ComponentTestBase
     }
 
     // ------------------------------------------------------------------ fixture
+
+    /// <summary>
+    ///     A popover source line offers that source’s board, and offering it means the page hears
+    ///     about it. Without the delegate the popover still opens and still explains the colour,
+    ///     but its rows go inert — a row that reads as a link and does nothing (owner field test,
+    ///     2026-09-06). The delegate has to reach the score itself, which is what draws them.
+    /// </summary>
+    [Fact]
+    public void ThePagesBoardHandlerReachesTheScoreThatDrawsTheSourceRows()
+    {
+        var f = new Fixture().Held("Mine", TierListCategory.Easy, holders: 8, points: 200, mine: 966_887,
+            myRank: 20);
+        var chartId = f.Charts.Keys.Single();
+        var standing = new PeerStanding(12, 8, 2, 0, 0, new[]
+        {
+            new PeerStandingSource(PeerSourceKind.Pumbility, null, null, false, false, 12, 8, 2, 0)
+        }, null);
+
+        var cut = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page())
+            .Add(x => x.Charts, f.Charts).Add(x => x.Density, UiDensity.Comfortable)
+            .Add(x => x.Standings, new Dictionary<Guid, PeerStanding> { [chartId] = standing })
+            .Add(x => x.OnOpenBoard, _ => { }));
+
+        Assert.True(cut.FindComponent<ScoreTracker.Web.Components.PeerScore>().Instance.OnOpenBoard.HasDelegate);
+    }
 
     private sealed class Fixture
     {

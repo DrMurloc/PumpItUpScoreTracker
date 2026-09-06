@@ -165,7 +165,7 @@
         <div class="pmb-list@(_reloading ? " pmb-list-reloading" : "")" aria-busy="@(_reloading ? "true" : "false")" data-testid="peers-list">
             <PeerPoolLegend Density="_density" HasCarried="HasCarried && _projectPhoenix1 && _groupBy == PeerGrouping.ProjectedGains"></PeerPoolLegend>
             <PeerPoolList @ref="_list" Page="_peers" Charts="Charts" Gains="Gains" Mix="Shown.Mix" Density="_density" Skills="_skills"
-                          Standings="_standings"
+                          Standings="_standings" OnOpenBoard="OnOpenBoard"
                           GroupBy="_groupBy" GainsOnly="_gainsOnly"
                           ShowToDo="true" ToDos="ToDos" OnToDo="OnToDo" OnOpen="OnOpen" OnPlay="OnPlay"
                           Collapsed="_collapsed" CollapsedChanged="SetCollapsed"></PeerPoolList>
@@ -226,6 +226,13 @@
     [Parameter] public EventCallback<Chart> OnOpen { get; set; }
 
     [Parameter] public EventCallback<Chart> OnPlay { get; set; }
+
+    /// <summary>
+    ///     A popover source line asking for that source’s board. Without it the popover still
+    ///     opens and still explains the colour, but its rows are inert — which is worse than
+    ///     plain text, because a row that looks like a link and does nothing reads as broken.
+    /// </summary>
+    [Parameter] public EventCallback<PeerBoardRequest> OnOpenBoard { get; set; }
 
     // Kept as the section's original key rather than a new one: the convention is per page,
     // and this IS the Play page — renaming would reset the preference for everyone holding one.

@@ -80,7 +80,7 @@
 
     <div class="pmb-list" data-testid="pool-list">
         <PumbilityPoolList @ref="_list" Page="Page" Charts="Charts" Density="_density" Skills="_skills"
-                           Standings="_standings"
+                           Standings="_standings" OnOpenBoard="OnOpenBoard"
                            ShowToDo="true" ToDos="ToDos" OnToDo="OnToDo" OnOpen="OnOpen" OnPlay="OnPlay"
                            Collapsed="_collapsed" CollapsedChanged="SetCollapsed"></PumbilityPoolList>
     </div>
@@ -104,6 +104,13 @@
     [Parameter] public EventCallback<Chart> OnOpen { get; set; }
 
     [Parameter] public EventCallback<Chart> OnPlay { get; set; }
+
+    /// <summary>
+    ///     A popover source line asking for that source’s board. Without it the popover still
+    ///     opens and still explains the colour, but its rows are inert — which is worse than
+    ///     plain text, because a row that looks like a link and does nothing reads as broken.
+    /// </summary>
+    [Parameter] public EventCallback<PeerBoardRequest> OnOpenBoard { get; set; }
 
     /// <summary>Per page, like every list's (UX rule 5): this is the Breakdown page, not Play.</summary>
     public const string DensitySettingKey = "Density__PumbilityBreakdown";

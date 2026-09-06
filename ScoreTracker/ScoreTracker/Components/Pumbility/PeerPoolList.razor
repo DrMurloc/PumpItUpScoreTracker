@@ -122,6 +122,7 @@ else
                                                Score="@ScoreOf(row)"
                                                Standing="@StandingFor(row)"
                                                ShowStandingText="false"
+                                               OnOpenBoard="OnOpenBoard"
                                                Passed="row.MyScore != null"
                                                IsToDo="ToDos.Contains(row.Chart.Id)"
                                                PassedInAnotherMix="row.Carried"
@@ -177,6 +178,13 @@ else
     /// </summary>
     [Parameter] public IReadOnlyDictionary<Guid, PeerStanding> Standings { get; set; } =
         new Dictionary<Guid, PeerStanding>();
+
+    /// <summary>
+    ///     A popover source line asking for that source’s board. Without it the popover still
+    ///     opens and still explains the colour, but its rows are inert — which is worse than
+    ///     plain text, because a row that looks like a link and does nothing reads as broken.
+    /// </summary>
+    [Parameter] public EventCallback<PeerBoardRequest> OnOpenBoard { get; set; }
 
     private PeerStanding? StandingFor(Row row) =>
         Standings.TryGetValue(row.Chart.Id, out var standing) ? standing : null;
