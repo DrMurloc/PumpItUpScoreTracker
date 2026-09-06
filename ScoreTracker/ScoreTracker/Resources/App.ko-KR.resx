@@ -6502,6 +6502,12 @@
   <data name="Reached {0}" xml:space="preserve">
     <value>{0} 달성</value>
   </data>
+  <data name="Read from the official board, as of {0}. No account on PIU Scores." xml:space="preserve">
+    <value>공식 랭킹에서 읽음 ({0} 기준). PIU Scores 계정 없음.</value>
+  </data>
+  <data name="Read from the official board. No account on PIU Scores." xml:space="preserve">
+    <value>공식 랭킹에서 읽음. PIU Scores 계정 없음.</value>
+  </data>
   <data name="Read in" xml:space="preserve">
     <value>표시 언어</value>
   </data>
@@ -10377,6 +10383,12 @@
   </data>
   <data name="{0} of them tried and broke." xml:space="preserve">
     <value>그중 {0}명은 도전했지만 브레이크 오프했습니다.</value>
+  </data>
+  <data name="{0} of these are read from the official board, as of {1}." xml:space="preserve">
+    <value>이 중 {0}명은 공식 랭킹에서 읽었습니다 ({1} 기준).</value>
+  </data>
+  <data name="{0} of these are read from the official board." xml:space="preserve">
+    <value>이 중 {0}명은 공식 랭킹에서 읽었습니다.</value>
   </data>
   <data name="{0} of this song's charts were re-stepped." xml:space="preserve">
     <value>이 노래의 채보 중 {0}개가 변경되었습니다.</value>

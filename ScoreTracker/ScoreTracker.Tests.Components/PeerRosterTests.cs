@@ -154,7 +154,10 @@ public sealed class PeerRosterTests : ComponentTestBase
 
         var top = cut.FindAll("[data-testid=roster-peer]")[0];
         Assert.Contains("URUSA#9487", top.TextContent);
-        Assert.Contains("BOARD", top.TextContent);
+        // The chip reuses the existing "Board" key — a "BOARD" key would differ from it only by
+        // case, which GenerateResource resolves to nothing. The CSS is what upper-cases it.
+        Assert.NotNull(top.QuerySelector(".pmb-roster-board-tag"));
+        Assert.Equal("Board", top.QuerySelector(".pmb-roster-board-tag")!.TextContent.Trim());
         // No competitive levels: the boards publish none, so both cells read as absent.
         var cells = top.QuerySelectorAll("td").Select(c => c.TextContent.Trim()).ToArray();
         Assert.Equal("—", cells[4]);

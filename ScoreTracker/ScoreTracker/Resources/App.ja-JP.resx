@@ -6541,6 +6541,12 @@
   <data name="Reached {0}" xml:space="preserve">
     <value>{0}に到達</value>
   </data>
+  <data name="Read from the official board, as of {0}. No account on PIU Scores." xml:space="preserve">
+    <value>公式ランキングから読み取り（{0}時点）。PIU Scoresのアカウントはありません。</value>
+  </data>
+  <data name="Read from the official board. No account on PIU Scores." xml:space="preserve">
+    <value>公式ランキングから読み取り。PIU Scoresのアカウントはありません。</value>
+  </data>
   <data name="Read in" xml:space="preserve">
     <value>表示言語</value>
   </data>
@@ -10445,6 +10451,12 @@
   </data>
   <data name="{0} of them tried and broke." xml:space="preserve">
     <value>そのうち{0}人は挑戦してBreak Offしました。</value>
+  </data>
+  <data name="{0} of these are read from the official board, as of {1}." xml:space="preserve">
+    <value>このうち{0}人は公式ランキングから読み取っています（{1}時点）。</value>
+  </data>
+  <data name="{0} of these are read from the official board." xml:space="preserve">
+    <value>このうち{0}人は公式ランキングから読み取っています。</value>
   </data>
   <data name="{0} of this song's charts were re-stepped." xml:space="preserve">
     <value>この曲の譜面のうち {0} 件が変更されています。</value>
