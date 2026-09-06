@@ -1027,6 +1027,9 @@
   <data name="Auto Submit Turned On" xml:space="preserve">
     <value>Envio automático ligado. As importações serão publicadas aqui.</value>
   </data>
+  <data name="Auto-select set" xml:space="preserve">
+    <value>Escolher set automaticamente</value>
+  </data>
   <data name="Automatic" xml:space="preserve">
     <value>Automático</value>
   </data>
@@ -3798,6 +3801,9 @@
   </data>
   <data name="Include my rivals" xml:space="preserve">
     <value>Incluir meus rivais</value>
+  </data>
+  <data name="Include projected scores" xml:space="preserve">
+    <value>Incluir pontuações projetadas</value>
   </data>
   <data name="Input Json" xml:space="preserve">
     <value>JSON de entrada</value>
@@ -8349,9 +8355,6 @@
   </data>
   <data name="Submit Score" xml:space="preserve">
     <value>Enviar pontuação</value>
-  </data>
-  <data name="Suggest a set" xml:space="preserve">
-    <value>Sugerir um set</value>
   </data>
   <data name="Suggested" xml:space="preserve">
     <value>Sugerida</value>

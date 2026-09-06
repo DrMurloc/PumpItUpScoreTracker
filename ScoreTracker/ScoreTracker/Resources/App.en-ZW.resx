@@ -1033,6 +1033,9 @@
   <data name="Auto Submit Turned On" xml:space="preserve">
     <value>Mrglaug gorb. Murgla blarg lomo.</value>
   </data>
+  <data name="Auto-select set" xml:space="preserve">
+    <value>Mrgl ogro grolp</value>
+  </data>
   <data name="Automatic" xml:space="preserve">
     <value>Blurgmorgl</value>
   </data>
@@ -3815,6 +3818,9 @@
   </data>
   <data name="Include my rivals" xml:space="preserve">
     <value>Glorggro Murgmorp mrp blub</value>
+  </data>
+  <data name="Include projected scores" xml:space="preserve">
+    <value>Ograb grolab mrrgl</value>
   </data>
   <data name="Input Json" xml:space="preserve">
 	  <value>Murpgro Glorgmurg</value>
@@ -8406,9 +8412,6 @@
   </data>
   <data name="Submit Score" xml:space="preserve">
     <value>Blarg Mrglrgl</value>
-  </data>
-  <data name="Suggest a set" xml:space="preserve">
-    <value>Grolab ogro grolp</value>
   </data>
   <data name="Suggested" xml:space="preserve">
     <value>Groblu</value>

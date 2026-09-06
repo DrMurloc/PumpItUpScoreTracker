@@ -14,6 +14,7 @@ using ScoreTracker.EventCompetition.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Pages.Competition.MoM;
 using ScoreTracker.Web.Services.Contracts;
 using Xunit;
@@ -117,8 +118,8 @@ public sealed class MoMPlannerPageTests : ComponentTestBase
         Plan();
         var cut = Render();
 
-        // Compact is the default density, where the sticker IS the tick.
-        await cut.FindAll("[data-testid=mom-plan-row]")[2].ClickAsync(new());
+        // The jacket opens the chart, so the corner tick is what picks it.
+        await cut.FindAll("[data-testid=mom-plan-tick]")[2].ClickAsync(new());
 
         Assert.Equal("930", cut.Find(".pl-proj-big").TextContent);
         Assert.NotEmpty(cut.FindAll("[data-testid=mom-plan-handpicked]"));
@@ -192,6 +193,73 @@ public sealed class MoMPlannerPageTests : ComponentTestBase
             .QuerySelectorAll("[data-testid=mom-plan-shelf-row]");
         Assert.Single(rows);
         Assert.Contains("Long one", rows[0].TextContent);
+    }
+
+    [Fact]
+    public async Task ClickingAChartOpensItRatherThanPickingIt()
+    {
+        Plan();
+        var cut = Render();
+
+        await cut.FindAll("[data-testid=mom-plan-row]")[0].ClickAsync(new());
+
+        // Nothing was picked, and the chart dialog is what came up.
+        Assert.Equal("0", cut.Find(".pl-proj-big").TextContent);
+        Assert.NotEmpty(cut.FindComponents<ChartDetailsDialog>()
+            .Where(d => d.Instance.Visible));
+    }
+
+    [Fact]
+    public void ProjectedScoresAreOffUntilAskedFor()
+    {
+        Plan();
+
+        var cut = Render();
+
+        Assert.Contains("Include projected scores", cut.Find("[data-testid=mom-plan-controls]").TextContent);
+        // Off is the default, and the query is what actually keeps them out of the book.
+        Mediator.Verify(m => m.Send(It.Is<BuildMoMPlanQuery>(q => !q.IncludeProjected),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+        Mediator.Verify(m => m.Send(It.Is<BuildMoMPlanQuery>(q => q.IncludeProjected),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public void AProjectedChartSaysSoOnItsSticker()
+    {
+        var chart = Chart("Never played", 22, 120);
+        Plan(new[] { Row(chart, 930, false) with { IsProjected = true } });
+
+        var cut = Render();
+
+        Assert.Contains("Projected", cut.Find("[data-testid=mom-plan-row]").TextContent);
+    }
+
+    [Fact]
+    public void ADifficultyIsWrittenTheWayTheSiteWritesIt()
+    {
+        Plan();
+
+        var cut = Render();
+
+        var push = cut.Find("[data-testid=mom-plan-push]").TextContent;
+        // D23, not "Doubles 23.67": a folder, not a measurement.
+        Assert.Contains("D23", push);
+        Assert.DoesNotContain("23.67", push);
+        Assert.DoesNotContain("Doubles 23", push);
+    }
+
+    [Fact]
+    public void AutoSelectSitsWithTheSetRatherThanWithTheControls()
+    {
+        Plan();
+
+        var cut = Render();
+
+        var button = cut.Find("[data-testid=mom-plan-suggest]");
+        Assert.Contains("Auto-select set", button.TextContent);
+        Assert.Empty(cut.Find("[data-testid=mom-plan-controls]")
+            .QuerySelectorAll("[data-testid=mom-plan-suggest]"));
     }
 
     [Fact]

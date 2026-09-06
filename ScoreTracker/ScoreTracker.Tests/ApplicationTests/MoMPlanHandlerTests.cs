@@ -33,6 +33,7 @@ public sealed class MoMPlanHandlerTests
     private readonly List<RecordedPhoenixScore> _bests = new();
     private readonly Dictionary<Guid, PhoenixScore> _projected = new();
     private readonly List<RestChartFacts> _rest = new();
+    private readonly List<ScoreProjectionRequest> _projectorCalls = new();
     private User _me = null!;
     private bool _loggedIn = true;
 
@@ -62,6 +63,7 @@ public sealed class MoMPlanHandlerTests
 
         var projector = new Mock<IScoreProjector>();
         projector.Setup(p => p.Project(It.IsAny<ScoreProjectionRequest>(), It.IsAny<CancellationToken>()))
+            .Callback((ScoreProjectionRequest r, CancellationToken _) => _projectorCalls.Add(r))
             .ReturnsAsync(() => new ScoreProjection(_projected, _projected.Count, 24, 1));
 
         var mediator = new Mock<IMediator>();
@@ -92,8 +94,9 @@ public sealed class MoMPlanHandlerTests
     }
 
     private Task<MoMPlanView?> Plan(MoMBoardInfo board, MoMEnergy energy = MoMEnergy.TopOfMyGame,
-        MoMPush push = MoMPush.AllOut, int rest = 35) =>
-        Handler().Handle(new BuildMoMPlanQuery(board.Id, energy, push, rest), CancellationToken.None);
+        MoMPush push = MoMPush.AllOut, int rest = 35, bool includeProjected = false) =>
+        Handler().Handle(new BuildMoMPlanQuery(board.Id, energy, push, rest, includeProjected),
+            CancellationToken.None);
 
     [Fact]
     public async Task ASignedOutVisitorHasNoRecordBookToPlanFrom()
@@ -132,21 +135,36 @@ public sealed class MoMPlanHandlerTests
     }
 
     [Fact]
-    public async Task AChartYouHaveNeverPlayedIsAbsentAtTheTopRungAndPricedAtTheOthers()
+    public async Task AChartYouHaveNeverPlayedIsOnlyInTheBookWhenAskedFor()
     {
         var board = Board();
         Held("Slam", 24, 128, 980000);
         var unplayed = _fixture.Chart("Never played", 22, 120);
+        _projected[unplayed.Id] = 950000;
 
+        // A plan you can take to a machine is built from what you have actually scored.
         var top = await Plan(board);
         Assert.DoesNotContain(top!.Charts, c => c.Chart.Id == unplayed.Id);
+        var greatWithout = await Plan(board, MoMEnergy.Great);
+        Assert.DoesNotContain(greatWithout!.Charts, c => c.Chart.Id == unplayed.Id);
 
-        _projected[unplayed.Id] = 950000;
-        var great = await Plan(board, MoMEnergy.Great);
+        var great = await Plan(board, MoMEnergy.Great, includeProjected: true);
 
         var projected = Assert.Single(great!.Charts, c => c.Chart.Id == unplayed.Id);
         Assert.True(projected.IsProjected);
         Assert.Equal(950000, (int)projected.Score);
+    }
+
+    [Fact]
+    public async Task TheProjectorIsNotEvenAskedWhenProjectedScoresAreOff()
+    {
+        var board = Board();
+        Held("Slam", 24, 128, 980000);
+
+        await Plan(board, MoMEnergy.Great);
+
+        // The projector is the expensive half of this read; nothing pays for what it will not use.
+        Assert.Empty(_projectorCalls);
     }
 
     [Fact]

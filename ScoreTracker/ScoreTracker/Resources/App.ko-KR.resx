@@ -1027,6 +1027,9 @@
   <data name="Auto Submit Turned On" xml:space="preserve">
     <value>자동 제출을 켰습니다. 가져오기가 여기에 올라갑니다.</value>
   </data>
+  <data name="Auto-select set" xml:space="preserve">
+    <value>세트 자동 선택</value>
+  </data>
   <data name="Automatic" xml:space="preserve">
     <value>자동</value>
   </data>
@@ -3798,6 +3801,9 @@
   </data>
   <data name="Include my rivals" xml:space="preserve">
     <value>내 라이벌 포함</value>
+  </data>
+  <data name="Include projected scores" xml:space="preserve">
+    <value>예상 점수 포함</value>
   </data>
   <data name="Input Json" xml:space="preserve">
     <value>JSON 입력</value>
@@ -8349,9 +8355,6 @@
   </data>
   <data name="Submit Score" xml:space="preserve">
     <value>점수 제출</value>
-  </data>
-  <data name="Suggest a set" xml:space="preserve">
-    <value>세트 제안</value>
   </data>
   <data name="Suggested" xml:space="preserve">
     <value>추천</value>

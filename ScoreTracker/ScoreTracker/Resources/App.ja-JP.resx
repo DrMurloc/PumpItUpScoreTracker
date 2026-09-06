@@ -1033,6 +1033,9 @@
   <data name="Auto Submit Turned On" xml:space="preserve">
     <value>自動提出をオンにしました。インポートがここに登録されます。</value>
   </data>
+  <data name="Auto-select set" xml:space="preserve">
+    <value>セットを自動で選ぶ</value>
+  </data>
   <data name="Automatic" xml:space="preserve">
     <value>自動</value>
   </data>
@@ -3815,6 +3818,9 @@
   </data>
   <data name="Include my rivals" xml:space="preserve">
     <value>ライバルを含める</value>
+  </data>
+  <data name="Include projected scores" xml:space="preserve">
+    <value>予測スコアを含める</value>
   </data>
   <data name="Input Json" xml:space="preserve">
 	  <value>JSON入力</value>
@@ -8406,9 +8412,6 @@
   </data>
   <data name="Submit Score" xml:space="preserve">
     <value>スコアを提出</value>
-  </data>
-  <data name="Suggest a set" xml:space="preserve">
-    <value>セットを提案</value>
   </data>
   <data name="Suggested" xml:space="preserve">
     <value>おすすめ</value>

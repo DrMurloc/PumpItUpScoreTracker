@@ -66,7 +66,7 @@ internal sealed class MoMPlanHandler : IRequestHandler<BuildMoMPlanQuery, MoMPla
 
         // The two peer rungs come from the projector; the top rung is your own record and asks it
         // nothing. Projecting is the expensive half of this read, so it is skipped where unused.
-        var projected = request.Energy == MoMEnergy.TopOfMyGame
+        var projected = request.Energy == MoMEnergy.TopOfMyGame || !request.IncludeProjected
             ? new Dictionary<Guid, PhoenixScore>()
             : await Project(board, userId, charts, request.Energy, cancellationToken);
 
@@ -78,6 +78,8 @@ internal sealed class MoMPlanHandler : IRequestHandler<BuildMoMPlanQuery, MoMPla
             var held = bests.GetValueOrDefault(chart.Id);
             var (score, plate, isProjected) = Priced(chart, held, projected, request.Energy);
             if (score is not { } value) continue;
+            // A chart you have never passed is only in the book when asked for.
+            if (isProjected && !request.IncludeProjected) continue;
 
             var points = (int)scoring.GetScore(chart, value, plate ?? PhoenixPlate.RoughGame, false);
             if (points <= 0) continue;

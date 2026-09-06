@@ -59,10 +59,11 @@ else
                         }
                     </div>
                 </div>
-                <div>
+                <div class="pl-energy">
                     <span class="k">@L["Energy"]</span>
                     <MudSelect T="MoMEnergy" Value="plan.Energy" ValueChanged="SetEnergy" Dense="true"
-                               Variant="Variant.Outlined" Disabled="_busy" data-testid="mom-plan-energy">
+                               Margin="Margin.Dense" Variant="Variant.Outlined" Disabled="_busy"
+                               data-testid="mom-plan-energy">
                         @foreach (var energy in Energies)
                         {
                             <MudSelectItem T="MoMEnergy" Value="energy" title="@L[HintKey(energy)]">@L[LabelKey(energy)]</MudSelectItem>
@@ -70,6 +71,14 @@ else
                     </MudSelect>
                 </div>
             </div>
+
+            @* A plan you can take to a machine is built from what you have actually scored, so
+               charts the peers only think you would pass are opt-in. *@
+            <MudCheckBox T="bool" Value="_includeProjected" ValueChanged="SetIncludeProjected" Dense="true"
+                         Color="Color.Primary" Disabled="@(_busy || plan.Energy == MoMEnergy.TopOfMyGame)"
+                         Class="pl-projected-toggle" data-testid="mom-plan-include-projected">
+                @L["Include projected scores"]
+            </MudCheckBox>
 
             <div class="pl-slider">
                 <span class="k">@L["Rest between charts"]</span>
@@ -82,8 +91,6 @@ else
                 }
             </div>
 
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_busy" OnClick="Suggest"
-                       StartIcon="@Icons.Material.Filled.Star" data-testid="mom-plan-suggest">@L["Suggest a set"]</MudButton>
         </div>
 
         <div class="pl-push" data-testid="mom-plan-push">
@@ -91,7 +98,7 @@ else
             @if (plan.Anchor is { } anchor)
             {
                 <p class="pl-anchor">
-                    <b>@TypeName(plan.ChartType) @anchor.ToString("N2")</b>
+                    <b>@Folder(plan.ChartType, anchor)</b>
                     @L["your last session's average"]
                 </p>
             }
@@ -105,7 +112,7 @@ else
             </div>
             <p class="pl-push-note">
                 @(plan.LevelCap is { } cap
-                    ? L["Suggested sets stop at {0} — a level below your session average is where most players hold up.", TypeName(plan.ChartType) + cap]
+                    ? L["Suggested sets stop at {0} — a level below your session average is where most players hold up.", TypeShort(plan.ChartType) + cap]
                     : L["Nothing is capped. Harder charts are faded, still tickable."])
             </p>
         </div>
@@ -186,6 +193,9 @@ else
                 @L["In your set"]@(_picked.Count > 0 ? $" · {_picked.Count}" : string.Empty)
             </MudButton>
         </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="_busy"
+                   StartIcon="@Icons.Material.Filled.Star" OnClick="Suggest"
+                   data-testid="mom-plan-suggest">@L["Auto-select set"]</MudButton>
         <span class="pl-tools">
             <MudButtonGroup OverrideStyles="false">
                 <MudTooltip Text="@L["Comfortable"]"><MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy" Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)" OnClick="@(() => _density = UiDensity.Comfortable)" aria-label="@L["Comfortable"]"/></MudTooltip>
@@ -229,6 +239,8 @@ else
         </div>
     }
 
+    <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="plan.Mix"></ChartDetailsDialog>
+
     <div class="mom-footer-bar">
         <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" OnClick="OpenSaved"
                    data-testid="mom-plan-saved">@L["Saved sets"]</MudButton>
@@ -246,8 +258,10 @@ else
 @code {
     private RenderFragment ShelfRow(MoMPlanChartView chart, string? note) =>
         @<div class="sbd-row pl-shelf-row" data-testid="mom-plan-shelf-row">
-            <DifficultyBubble Chart="chart.Chart"/>
-            <SongImage Song="chart.Chart.Song" Height="35"/>
+            <span role="button" tabindex="0" class="pl-open" @onclick="@(() => ShowChart(chart.Chart))">
+                <DifficultyBubble Chart="chart.Chart"/>
+                <SongImage Song="chart.Chart.Song" Height="35"/>
+            </span>
             <div class="sbd-row-body">
                 <div class="sbd-row-line">
                     <span class="song">@chart.Chart.Song.Name</span>
@@ -283,8 +297,13 @@ else
 
     private RenderFragment Card(MoMPlanChartView chart) =>
         @<div class="hl-card pl-card @(chart.InSet ? "picked" : "")" data-testid="mom-plan-row">
-            <div class="hl-card-art" style="background-image:url('@chart.Chart.Song.ImagePath')">
-                <span class="hl-card-bubble"><DifficultyBubble Chart="chart.Chart"/></span>
+            <div class="hl-card-art" style="background-image:url('@chart.Chart.Song.ImagePath')"
+                 role="button" tabindex="0" @onclick="@(() => ShowChart(chart.Chart))">
+                <span class="hl-card-bubble"><DifficultyBubble Chart="chart.Chart" Height="24"/></span>
+                @if (chart.IsProjected)
+                {
+                    <span class="hl-card-badges"><span class="hl-card-badge">@L["Projected"]</span></span>
+                }
             </div>
             <div class="hl-card-body">
                 <div class="hl-card-song" title="@chart.Chart.Song.Name">@chart.Chart.Song.Name</div>
@@ -296,21 +315,33 @@ else
                     @Tick(chart)
                     <span class="hl-card-standing">
                         @chart.PointsPerSecond.ToString("N1") @L["pts/s"] · @MoMText.MinutesSeconds(chart.Chart.Song.Duration)
-                        @if (chart.IsProjected)
-                        {
-                            <span> · @L["Projected"]</span>
-                        }
+
                     </span>
                 </div>
             </div>
         </div>;
 
     private RenderFragment Sticker(MoMPlanChartView chart) =>
-        @<div class="sticker pl-sticker @(chart.InSet ? "picked" : "")" data-testid="mom-plan-row"
-              title="@($"{chart.Chart.Song.Name} · {chart.Points:N0} pts")" @onclick="@(() => TogglePick(chart.Chart.Id))">
-            <div class="sticker-jacket" style="background-image:url('@chart.Chart.Song.ImagePath')">
-                <span class="sticker-bubble"><DifficultyBubble Chart="chart.Chart"/></span>
-                <span class="tier-chart-card-corner pmb-corner-gain pts">@chart.Points.ToString("N0")</span>
+        @<div class="mom-sticker pl-sticker @(_picked.Contains(chart.Chart.Id) ? "picked" : "")" role="button"
+              tabindex="0" data-testid="mom-plan-row"
+              title="@($"{chart.Chart.Song.Name} · {chart.Points:N0} pts")"
+              @onclick="@(() => ShowChart(chart.Chart))">
+            <div class="mom-sticker-jacket" style="background-image:url('@chart.Chart.Song.ImagePath')">
+                <span class="mom-sticker-bubble"><DifficultyBubble Chart="chart.Chart" Height="18"/></span>
+                @* The jacket opens the chart; the corner is what picks it. *@
+                <span class="pl-sticker-tick" role="checkbox" aria-checked="@_picked.Contains(chart.Chart.Id)"
+                      aria-label="@chart.Chart.Song.Name" data-testid="mom-plan-tick"
+                      @onclick:stopPropagation="true" @onclick="@(() => TogglePick(chart.Chart.Id))">
+                    @if (_picked.Contains(chart.Chart.Id))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small"/>
+                    }
+                </span>
+                @if (chart.IsProjected)
+                {
+                    <span class="pl-sticker-projected" title="@L["Projected"]">@L["Projected"]</span>
+                }
+                <span class="tier-chart-card-corner pmb-corner-gain mom-sticker-pts">@chart.Points.ToString("N0")</span>
             </div>
         </div>;
 
@@ -320,9 +351,15 @@ else
             <td class="num muted">@(chart.InSet ? (SetOrder(chart.Chart.Id) + 1).ToString() : string.Empty)</td>
             <td>
                 <span class="pl-table-chart">
-                    <DifficultyBubble Chart="chart.Chart"/>
-                    <SongImage Song="chart.Chart.Song" Height="22"/>
+                    <span role="button" tabindex="0" class="pl-open" @onclick="@(() => ShowChart(chart.Chart))">
+                        <DifficultyBubble Chart="chart.Chart"/>
+                        <SongImage Song="chart.Chart.Song" Height="22"/>
+                    </span>
                     <span class="w700">@chart.Chart.Song.Name</span>
+                    @if (chart.IsProjected)
+                    {
+                        <span class="mom-chip-outline">@L["Projected"]</span>
+                    }
                     @if (chart.Rest is { IsRest: true })
                     {
                         <span class="mom-chip-outline">@L["Rest"]</span>
@@ -366,6 +403,12 @@ else
     private string _scope = "all";
     private UiDensity _density = UiDensity.Compact;
 
+    /// <summary>Charts the peers only think you would pass. Off by default (owner, 2026-09-06).</summary>
+    private bool _includeProjected;
+
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
+
     /// <summary>The set, as ticked. Empty on arrival: suggesting is an offer, not the starting position.</summary>
     private readonly List<Guid> _picked = new();
 
@@ -395,7 +438,8 @@ else
         _busy = true;
         try
         {
-            _plan = await Mediator.Send(new BuildMoMPlanQuery(boardId, _energy, _push, _restSeconds));
+            _plan = await Mediator.Send(new BuildMoMPlanQuery(boardId, _energy, _push, _restSeconds,
+                _includeProjected));
         }
         finally
         {
@@ -437,6 +481,21 @@ else
         _restSeconds = seconds;
         if (_plan is { } plan) await Reload(plan.BoardId);
         if (!_handPicked) Autopilot();
+    }
+
+    private async Task SetIncludeProjected(bool include)
+    {
+        _includeProjected = include;
+        if (_plan is { } plan) await Reload(plan.BoardId);
+        // A set built from charts that just left the book is not a set any more.
+        _picked.RemoveAll(id => _plan?.Charts.All(c => c.Chart.Id != id) ?? true);
+        if (!_handPicked) Autopilot();
+    }
+
+    private void ShowChart(Chart chart)
+    {
+        _detailsChart = chart;
+        _detailsOpen = true;
     }
 
     private void Suggest()
@@ -503,6 +562,13 @@ else
     private string MixName => _mix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix";
 
     private string TypeName(ChartType type) => type == ChartType.Single ? L["Singles"] : L["Doubles"];
+
+    /// <summary>The site's short difficulty vocabulary: D24, S17 — never "Doubles 24".</summary>
+    private static string TypeShort(ChartType type) => type == ChartType.Single ? "S" : "D";
+
+    /// <summary>A folder, not a measurement: the level the cap arithmetic actually reads.</summary>
+    private static string Folder(ChartType type, double level) =>
+        TypeShort(type) + (int)Math.Floor(level);
 
     // The Energy control borrows PUMBILITY's copy; the meanings are MoMEnergy's own.
     private static string LabelKey(MoMEnergy energy) => energy switch
