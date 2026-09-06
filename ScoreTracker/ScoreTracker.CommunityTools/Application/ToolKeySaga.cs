@@ -17,7 +17,7 @@ internal sealed class ToolKeySaga :
     IRequestHandler<GetToolApiKeysQuery, IReadOnlyList<ApiKeyRecord>>,
     IRequestHandler<GetToolInviteLinksQuery, IReadOnlyList<ToolInviteLinkRecord>>,
     IRequestHandler<GetToolInvitePreviewQuery, ToolInvitePreview?>,
-    IRequestHandler<GetToolByApiKeyQuery, Guid?>
+    IRequestHandler<GetToolByApiKeyQuery, ToolKeyPrincipal?>
 {
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IDateTimeOffsetAccessor _dateTime;
@@ -123,7 +123,8 @@ internal sealed class ToolKeySaga :
             tool.RepositoryUrl?.ToString(), tool.Kind);
     }
 
-    public async Task<Guid?> Handle(GetToolByApiKeyQuery request, CancellationToken cancellationToken)
+    public async Task<ToolKeyPrincipal?> Handle(GetToolByApiKeyQuery request,
+        CancellationToken cancellationToken)
     {
         // Shape-check before touching the database so a malformed bearer token never becomes a query.
         if (!ApiKeyMint.LooksLikeAKey(request.Key)) return null;
@@ -131,7 +132,9 @@ internal sealed class ToolKeySaga :
         var resolution = await _keys.ResolveToolByKeyHash(ApiKeyMint.HashOf(request.Key), _dateTime.Now,
             cancellationToken);
         // An expired key is named for the console's sake and still fails here.
-        return resolution is { IsExpired: false } ? resolution.ToolId : null;
+        return resolution is { IsExpired: false }
+            ? new ToolKeyPrincipal(resolution.ToolId, resolution.KeyName)
+            : null;
     }
 
     /// <summary>

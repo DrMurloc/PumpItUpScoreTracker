@@ -38,9 +38,12 @@ public sealed record GetToolInviteLinksQuery(Guid ToolId) : IQuery<IReadOnlyList
 [ExcludeFromCodeCoverage]
 public sealed record GetToolInvitePreviewQuery(Guid Code) : IQuery<ToolInvitePreview?>;
 
-/// <summary>Resolves a presented API key to its tool. The v2 auth scheme's only question.</summary>
+/// <summary>
+///     Resolves a presented API key to its tool and the key's name. The v2 auth scheme's only
+///     question; null for a key that is unknown, revoked or expired.
+/// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record GetToolByApiKeyQuery(string Key) : IQuery<Guid?>;
+public sealed record GetToolByApiKeyQuery(string Key) : IQuery<ToolKeyPrincipal?>;
 
 /// <summary>Every player one tool may read, resolved across direct grants, the pool and blocks.</summary>
 [ExcludeFromCodeCoverage]

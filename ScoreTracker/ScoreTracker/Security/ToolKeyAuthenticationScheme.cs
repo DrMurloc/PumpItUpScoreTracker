@@ -4,6 +4,7 @@ using System.Text.Encodings.Web;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
+using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Web.Accessors;
@@ -34,6 +35,13 @@ public sealed class ToolKeyAuthenticationScheme : AuthenticationHandler<Authenti
     /// <summary>Present, and carrying the tool id, exactly when the caller is a tool.</summary>
     public const string ToolIdClaim = "ScoreTracker.ToolId";
 
+    /// <summary>
+    ///     The name the maker gave the key that authenticated this call. Beside the tool id rather
+    ///     than folded into it: a tool has two live keys so rotation costs no downtime, and a count
+    ///     that cannot say which key it belongs to is half a number.
+    /// </summary>
+    public const string KeyNameClaim = "ScoreTracker.ToolKeyName";
+
     public const string SchemeName = "ApiV2";
 
     private readonly IHttpContextAccessor _httpContextAccessor;
@@ -60,11 +68,11 @@ public sealed class ToolKeyAuthenticationScheme : AuthenticationHandler<Authenti
 
         if (header.StartsWith("Bearer ", StringComparison.Ordinal))
         {
-            var toolId = await mediator.Send(new GetToolByApiKeyQuery(header["Bearer ".Length..].Trim()));
-            if (toolId is null) return AuthenticateResult.Fail("API key is not valid");
+            var tool = await mediator.Send(new GetToolByApiKeyQuery(header["Bearer ".Length..].Trim()));
+            if (tool is null) return AuthenticateResult.Fail("API key is not valid");
 
             return AuthenticateResult.Success(
-                new AuthenticationTicket(new ClaimsPrincipal(ToolIdentity(toolId.Value)), SchemeName));
+                new AuthenticationTicket(new ClaimsPrincipal(ToolIdentity(tool)), SchemeName));
         }
 
         if (!header.StartsWith("Basic ", StringComparison.Ordinal))
@@ -99,7 +107,7 @@ public sealed class ToolKeyAuthenticationScheme : AuthenticationHandler<Authenti
                     "Password must be a personal token (a GUID) or a tool API key");
 
             return AuthenticateResult.Success(new AuthenticationTicket(
-                new ClaimsPrincipal(ToolIdentity(toolByBasic.Value)), SchemeName));
+                new ClaimsPrincipal(ToolIdentity(toolByBasic)), SchemeName));
         }
 
         var user = await mediator.Send(new GetUserByApiTokenQuery(apiToken));
@@ -110,12 +118,13 @@ public sealed class ToolKeyAuthenticationScheme : AuthenticationHandler<Authenti
     }
 
     /// <summary>A tool, whichever header carried its key. Never a user.</summary>
-    private static ClaimsIdentity ToolIdentity(Guid toolId)
+    private static ClaimsIdentity ToolIdentity(ToolKeyPrincipal tool)
     {
         return new ClaimsIdentity(new[]
         {
-            new Claim(ToolIdClaim, toolId.ToString()),
-            new Claim(ClaimTypes.Name, toolId.ToString())
+            new Claim(ToolIdClaim, tool.ToolId.ToString()),
+            new Claim(KeyNameClaim, tool.KeyName),
+            new Claim(ClaimTypes.Name, tool.ToolId.ToString())
         }, SchemeName);
     }
 }

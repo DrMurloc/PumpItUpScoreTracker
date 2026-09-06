@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
+using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Identity.Contracts.Queries;
@@ -41,10 +42,10 @@ public sealed class V2AuthenticationTests
         var mediator = new Mock<IMediator>();
         mediator.Setup(m => m.Send(It.Is<GetToolByApiKeyQuery>(q => q.Key == ToolKey || q.Key == LegacyToolKey),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(AToolId);
+            .ReturnsAsync(new ToolKeyPrincipal(AToolId, "production"));
         mediator.Setup(m => m.Send(It.Is<GetToolByApiKeyQuery>(q => q.Key != ToolKey && q.Key != LegacyToolKey),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Guid?)null);
+            .ReturnsAsync((ToolKeyPrincipal?)null);
         mediator.Setup(m => m.Send(It.Is<GetUserByApiTokenQuery>(q => q.ApiToken == APersonalToken),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User(AUserId, Name.From("DrMurloc"), true, null,
@@ -92,6 +93,7 @@ public sealed class V2AuthenticationTests
         Assert.True(result.Succeeded);
         Assert.Equal(AToolId.ToString(),
             result.Principal!.FindFirstValue(ToolKeyAuthenticationScheme.ToolIdClaim));
+        Assert.Equal("production", result.Principal.FindFirstValue(ToolKeyAuthenticationScheme.KeyNameClaim));
     }
 
     /// <summary>
@@ -107,6 +109,7 @@ public sealed class V2AuthenticationTests
         Assert.True(result.Succeeded);
         Assert.Equal(AToolId.ToString(),
             result.Principal!.FindFirstValue(ToolKeyAuthenticationScheme.ToolIdClaim));
+        Assert.Equal("production", result.Principal.FindFirstValue(ToolKeyAuthenticationScheme.KeyNameClaim));
     }
 
     /// <summary>
@@ -127,6 +130,7 @@ public sealed class V2AuthenticationTests
 
         Assert.True(result.Succeeded);
         Assert.Null(result.Principal!.FindFirstValue(ToolKeyAuthenticationScheme.ToolIdClaim));
+        Assert.Null(result.Principal.FindFirstValue(ToolKeyAuthenticationScheme.KeyNameClaim));
     }
 
     [Theory]

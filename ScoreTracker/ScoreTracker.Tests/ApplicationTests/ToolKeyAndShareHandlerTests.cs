@@ -132,7 +132,7 @@ public sealed class ToolKeyAndShareHandlerTests
 
         var resolved = await KeySaga().Handle(new GetToolByApiKeyQuery(key), CancellationToken.None);
 
-        Assert.Equal(ToolId, resolved);
+        Assert.Equal(new ToolKeyPrincipal(ToolId, "production"), resolved);
     }
 
     /// <summary>The repository names an expired key so the console can; the caller still gets nothing.</summary>
