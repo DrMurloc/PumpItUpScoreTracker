@@ -44,14 +44,17 @@ namespace ScoreTracker.Domain.Services;
 public sealed class ScoreProjector : IScoreProjector
 {
     private readonly IPlayerHistoryRepository _history;
+    private readonly IOfficialPlacementReader _official;
     private readonly IScoreReader _scores;
     private readonly IPlayerStatsReader _stats;
 
-    public ScoreProjector(IScoreReader scores, IPlayerStatsReader stats, IPlayerHistoryRepository history)
+    public ScoreProjector(IScoreReader scores, IPlayerStatsReader stats, IPlayerHistoryRepository history,
+        IOfficialPlacementReader official)
     {
         _scores = scores;
         _stats = stats;
         _history = history;
+        _official = official;
     }
 
     public Task<ScoreProjection> Project(ScoreProjectionRequest request, CancellationToken cancellationToken)
@@ -237,19 +240,52 @@ public sealed class ScoreProjector : IScoreProjector
             .Where(g => PoolCount(g) >= PeerGroup.PumbilityPoolSize)
             .Select(g => g.Key)
             .ToHashSet();
-        var group = PeerGroup.Pumbility(center, peers.Count, ownPool, gate, totalIsEstimate);
-        if (peers.Count == 0) return ScoreProjection.None(myLevel, group);
+        // The same window on the official board (D59). A row that resolves to an account is not
+        // added: that person is a site peer or their own pool put them outside the window, and the
+        // read above already answered which. What is left are the players the mirror is the only
+        // record of, each already holding a fifty we can see (D60).
+        var board = await _official.GetBoardPeers(mix, chartType,
+            center - PeerGroup.PumbilityWindowBelow, center + PeerGroup.PumbilityWindowAbove, cancellationToken);
+        var boardPeers = board?.Peers.Where(p => p.AccountId == null).ToArray()
+                         ?? Array.Empty<BoardPeerReading>();
+        var voiceOf = new Dictionary<int, PeerVoice>();
+        var boardTotals = new Dictionary<PeerVoice, double>();
+        foreach (var peer in boardPeers)
+        {
+            var voice = PeerVoice.FromBoard(peer.BoardPlayerIds[0], peer.Tag);
+            boardTotals[voice] = peer.Pool;
+            foreach (var id in peer.BoardPlayerIds) voiceOf[id] = voice;
+        }
+
+        var voices = peers.Select(PeerVoice.Account).Concat(boardTotals.Keys).ToHashSet();
+        var group = PeerGroup.Pumbility(center, voices.Count, ownPool, gate, totalIsEstimate,
+            boardTotals.Count, boardTotals.Count > 0 ? board?.AsOf : null);
+        if (voices.Count == 0) return ScoreProjection.None(myLevel, group);
+
+        // Their scores, over the whole pool range so the pools below are built from the same rows
+        // the estimate is. One row per person per chart: the mirror already folded a player's tags.
+        var boardScores = boardPeers.Length == 0
+            ? Array.Empty<BoardPeerScore>()
+            : (await _official.GetBoardScores(mix, chartType, voiceOf.Keys.ToArray(),
+                    PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, cancellationToken))
+                .Where(r => voiceOf.ContainsKey(r.BoardPlayerId))
+                .GroupBy(r => (voiceOf[r.BoardPlayerId], r.ChartId))
+                .Select(g => new BoardPeerScore(g.Key.Item1, g.Key.ChartId, g.Max(r => r.Score)))
+                .ToArray();
 
         // The peers' pools ride the same read when the caller brought the catalog to price it with
         // (§3.10): every chart they hold and everything they scored, the viewer already out.
         var pools = catalog == null
             ? null
-            : PumbilityPeerPools.Build(records, peers.Select(PeerVoice.Account).ToHashSet(), catalog,
-                ScoringConfiguration.PumbilityScoring(mix, false));
+            : PumbilityPeerPools.Build(records, voices, catalog,
+                ScoringConfiguration.PumbilityScoring(mix, false), boardScores, boardTotals);
 
         var wanted = targets.Select(t => t.ChartId).ToHashSet();
         var heard = records
             .Where(s => peers.Contains(s.UserId) && wanted.Contains(s.ChartId))
+            .Select(s => (Voice: PeerVoice.Account(s.UserId), s.ChartId, Score: (int)s.Score))
+            .Concat(boardScores.Where(b => wanted.Contains(b.ChartId))
+                .Select(b => (b.Voice, b.ChartId, b.Score)))
             .GroupBy(s => s.ChartId)
             .ToArray();
 
@@ -282,21 +318,22 @@ public sealed class ScoreProjector : IScoreProjector
     ///     what <paramref name="minimumPeers" /> decides.
     /// </summary>
     private static (Dictionary<Guid, PhoenixScore> Projected, Dictionary<Guid, PeerLadder> Ladders,
-        HashSet<Guid> Contributors) Estimate(
-            IEnumerable<IGrouping<Guid, UserPhoenixScore>> heard, int minimumPeers, ScoreProjectionRequest request)
+        HashSet<PeerVoice> Contributors) Estimate(
+            IEnumerable<IGrouping<Guid, (PeerVoice Voice, Guid ChartId, int Score)>> heard, int minimumPeers,
+            ScoreProjectionRequest request)
     {
         var projected = new Dictionary<Guid, PhoenixScore>();
         var ladders = new Dictionary<Guid, PeerLadder>();
-        var contributors = new HashSet<Guid>();
+        var contributors = new HashSet<PeerVoice>();
         foreach (var chart in heard)
         {
             var voices = chart.ToArray();
             // Full voice for every score: nothing here is dated against a level (D25).
-            var scored = voices.Select(s => new PeerScore((int)s.Score, 0, 0)).ToArray();
+            var scored = voices.Select(s => new PeerScore(s.Score, 0, 0)).ToArray();
             var ladder = PeerEstimator.Ladder(scored, request.Rungs, 0, minimumPeers);
             if (ladder == null) continue;
 
-            foreach (var voice in voices) contributors.Add(voice.UserId);
+            foreach (var voice in voices) contributors.Add(voice.Voice);
             projected[chart.Key] = ladder.At(request.PrimaryQuantile);
             ladders[chart.Key] = ladder;
         }

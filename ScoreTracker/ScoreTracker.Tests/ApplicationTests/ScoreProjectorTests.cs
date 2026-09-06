@@ -10,6 +10,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Tests.TestHelpers;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
@@ -27,6 +28,9 @@ namespace ScoreTracker.Tests.ApplicationTests;
 /// </summary>
 public sealed class ScoreProjectorTests
 {
+    /// <summary>When the mirror was last swept, for the board half of a group (D59).</summary>
+    private static readonly DateTimeOffset BoardSweptAt = new(2026, 8, 30, 17, 13, 0, TimeSpan.Zero);
+
     private static readonly Guid Viewer = Guid.NewGuid();
     private static readonly Guid ChartA = Guid.NewGuid();
     private static readonly Guid ChartB = Guid.NewGuid();
@@ -518,6 +522,77 @@ public sealed class ScoreProjectorTests
 
     // ------------------------------------------------------------------ fixture
 
+
+    [Fact]
+    public async Task ABoardPlayerInTheWindowIsAPeerAndTheirScoreCounts()
+    {
+        // Four site peers is one short of the floor; the board's fifth is what answers the chart.
+        var ctx = new Context(viewerPool: 17_600, viewerPoolSize: 50);
+        foreach (var _ in Enumerable.Range(0, 4))
+        {
+            var peer = ctx.WithPeer(50);
+            ctx.WithScore(peer, ChartA, 980_000);
+        }
+
+        ctx.WithBoardPeer(11, "URUSA#9487", 19_100, null, (ChartA, 990_000));
+
+        var result = await ctx.Project(ChartType.Single, ChartA);
+
+        Assert.True(result.Scores.ContainsKey(ChartA));
+        Assert.Equal(5, result.PeerCount);
+        Assert.Equal(5, result.Group!.Size);
+        Assert.Equal(1, result.Group.BoardSize);
+        Assert.Equal(BoardSweptAt, result.Group.BoardAsOf);
+    }
+
+    [Fact]
+    public async Task ABoardRowThatBelongsToAnAccountIsNotAlsoABoardPeer()
+    {
+        // The site read already answered for that person — counting the mirror's copy of them
+        // would give them two votes (D61).
+        var ctx = new Context(viewerPool: 17_600, viewerPoolSize: 50);
+        var peer = ctx.WithPeer(50);
+        ctx.WithScore(peer, ChartA, 980_000);
+        ctx.WithBoardPeer(11, "SUNMU#7646", 19_100, peer, (ChartA, 999_000));
+
+        var result = await ctx.Project(ChartType.Single, ChartA);
+
+        Assert.Equal(1, result.Group!.Size);
+        Assert.Equal(0, result.Group.BoardSize);
+        Assert.Null(result.Group.BoardAsOf);
+    }
+
+    [Fact]
+    public async Task ABoardPeerHoldsAPoolAndIsNamedByTheirTag()
+    {
+        var ctx = new Context(viewerPool: 17_600, viewerPoolSize: 50);
+        var peer = ctx.WithPeer(50);
+        ctx.WithScore(peer, ChartA, 980_000);
+        ctx.WithBoardPeer(11, "AZUL#1041", 19_300, null, (ChartA, 995_000), (ChartB, 991_000));
+
+        var result = await ctx.Project(ChartType.Single, ctx.Catalog(ChartA, ChartB), ChartA);
+
+        var voice = Assert.Single(result.PeerPools!.Peers, v => v.IsFromBoard);
+        Assert.Equal("AZUL#1041", voice.Tag);
+        Assert.Equal(19_300d, result.PeerPools.TotalsFromBoard[voice]);
+        Assert.Contains(ChartB, result.PeerPools.Pools[voice]);
+        // Two holders on A: the site peer and the board one.
+        Assert.Equal(2, result.PeerPools.Charts[ChartA].Holders);
+    }
+
+    [Fact]
+    public async Task AMirrorWithNothingOnItLeavesTheProjectionAlone()
+    {
+        var ctx = new Context(viewerPool: 17_600, viewerPoolSize: 50);
+        var peer = ctx.WithPeer(50);
+        ctx.WithScore(peer, ChartA, 980_000);
+
+        var result = await ctx.Project(ChartType.Single, ChartA);
+
+        Assert.Equal(1, result.Group!.Size);
+        Assert.Equal(0, result.Group.BoardSize);
+    }
+
     private sealed class Context
     {
         private readonly Dictionary<Guid, int> _phoenix2PoolSizes = new();
@@ -578,12 +653,32 @@ public sealed class ScoreProjectorTests
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<PlayerRatingRecord>());
 
-            Projector = new ScoreProjector(Scores.Object, Stats.Object, History.Object);
+            Projector = new ScoreProjector(Scores.Object, Stats.Object, History.Object, Official.Object);
         }
 
         public Mock<IPlayerStatsReader> Stats { get; } = new();
         public Mock<IScoreReader> Scores { get; } = new();
         public Mock<IPlayerHistoryRepository> History { get; } = new();
+        public Mock<IOfficialPlacementReader> Official { get; } = NoBoard.Mock();
+
+        /// <summary>A board player in the window, with the scores the mirror publishes for them.</summary>
+        public void WithBoardPeer(int boardPlayerId, string tag, double pool, Guid? account = null,
+            params (Guid Chart, int Score)[] scores)
+        {
+            _boardPeers.Add(new BoardPeerReading(new[] { boardPlayerId }, tag, pool, account));
+            foreach (var (chart, score) in scores)
+                _boardScores.Add(new BoardScoreReading(boardPlayerId, chart, 22, score));
+            Official.Setup(o => o.GetBoardPeers(MixEnum.Phoenix2, It.IsAny<ChartType>(), It.IsAny<double>(),
+                    It.IsAny<double>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new BoardPeerGroupReading(BoardSweptAt, _boardPeers));
+            Official.Setup(o => o.GetBoardScores(MixEnum.Phoenix2, It.IsAny<ChartType>(),
+                    It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<int>(), It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(() => _boardScores);
+        }
+
+        private readonly List<BoardPeerReading> _boardPeers = new();
+        private readonly List<BoardScoreReading> _boardScores = new();
         public ScoreProjector Projector { get; }
 
         public Guid WithPeer(int poolSize)

@@ -45,22 +45,35 @@ public static class PumbilityPeerPools
     ///     it is not a score anyway — <paramref name="records" /> are the peers' non-broken bests.
     /// </summary>
     public static PeerPoolSummary Build(IEnumerable<UserPhoenixScore> records, IReadOnlySet<PeerVoice> peers,
-        IReadOnlyDictionary<Guid, Chart> charts, ScoringConfiguration scoring)
+        IReadOnlyDictionary<Guid, Chart> charts, ScoringConfiguration scoring,
+        IEnumerable<BoardPeerScore>? boardScores = null,
+        IReadOnlyDictionary<PeerVoice, double>? boardTotals = null)
     {
         var byPeer = new Dictionary<PeerVoice, List<(Guid ChartId, double Rating, int Score)>>();
         var scores = new Dictionary<Guid, List<int>>();
-        foreach (var record in records)
+
+        // A board row carries a score and no plate, so it is priced at the plate that score most
+        // plausibly carries — the same expectation the projection uses for an unplayed chart.
+        var all = records
+            .Select(r => (Voice: PeerVoice.Account(r.UserId), r.ChartId, Score: (int)r.Score, r.Plate, r.IsBroken))
+            .Concat((boardScores ?? Array.Empty<BoardPeerScore>())
+                .Select(b => (b.Voice, b.ChartId, b.Score,
+                    Plate: (PhoenixPlate?)ScoringConfiguration.ExpectedPlateForScore(PhoenixScore.From(b.Score)),
+                    IsBroken: false)));
+
+        foreach (var record in all)
         {
-            var voice = PeerVoice.Account(record.UserId);
+            var voice = record.Voice;
             if (!peers.Contains(voice) || !charts.TryGetValue(record.ChartId, out var chart)) continue;
             if (!scores.TryGetValue(record.ChartId, out var voices)) scores[record.ChartId] = voices = new List<int>();
-            voices.Add((int)record.Score);
+            voices.Add(record.Score);
 
-            var rating = scoring.GetScore(chart, record.Score, record.Plate ?? PhoenixPlate.RoughGame, record.IsBroken);
+            var rating = scoring.GetScore(chart, PhoenixScore.From(record.Score),
+                record.Plate ?? PhoenixPlate.RoughGame, record.IsBroken);
             if (rating <= 0) continue;
             if (!byPeer.TryGetValue(voice, out var priced))
                 byPeer[voice] = priced = new List<(Guid, double, int)>();
-            priced.Add((record.ChartId, rating, (int)record.Score));
+            priced.Add((record.ChartId, rating, record.Score));
         }
 
         var pools = new Dictionary<PeerVoice, IReadOnlySet<Guid>>();
@@ -93,6 +106,12 @@ public static class PumbilityPeerPools
             summary[chartId] = new PeerPoolChart(held, points.GetValueOrDefault(chartId), voices.Count, voices);
         }
 
-        return new PeerPoolSummary(peers, pools, summary);
+        return new PeerPoolSummary(peers, pools, summary, boardTotals);
     }
 }
+
+/// <summary>
+///     One board peer's published score on one chart — what the mirror has instead of a record
+///     (docs/design/pumbility-overhaul.md D59). No plate, because a board row carries none.
+/// </summary>
+public readonly record struct BoardPeerScore(PeerVoice Voice, Guid ChartId, int Score);
