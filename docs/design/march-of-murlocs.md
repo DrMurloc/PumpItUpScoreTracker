@@ -940,10 +940,16 @@ how long a run can be, and the plan re-solves as it moves. On 김재현's real D
 
 | Rest per chart | Charts | Projected |
 |---|---|---|
-| 10s | 54 | 93,077 |
-| 35s | 45 | 78,448 |
-| 60s | 39 | 67,697 |
-| 120s | 29 | 51,161 |
+| 10s | 53 | 93,297 |
+| 35s | 44 | 78,668 |
+| 60s | 38 | 67,544 |
+| 120s | 28 | 50,632 |
+
+*(Each row is one chart shorter than the estimate this table first carried, and the totals move by
+under a third of a percent. The closing move is a **swap**, not an extra: the greedy already takes
+one chart past the rest budget, and that chart IS the overhang §1 allows, so appending another
+would spend the allowance twice. Slice 4b's solver is pinned to these numbers against the same
+150-chart record book — `MoMPlannerTests`.)*
 
 **The plan ends on a closing move**, flagged in the list: once nothing more fits the rest budget
 you may still *start* one more (§1), so the run closes on the biggest single chart left. That is
@@ -951,9 +957,9 @@ the rule turned into a suggestion.
 
 **Say plainly that it is a ceiling.** It assumes every chart played to your best, which nobody
 manages ninety minutes into a stamina session — and the gap is the interesting part, so the page
-prints it as a **conversion rate**: 김재현 banked 59,319 against a 78,448 record book, or **76%**.
-At 60s rest the plan lands on exactly his 39 charts and projects 67,697, an 88% conversion at
-matched volume. Nothing else on the site can tell a player what stamina costs them.
+prints it as a **conversion rate**: 김재현 banked 59,319 against a 78,668 record book, or **75%**.
+At 60s rest the plan lands on his 38 charts and projects 67,544, an 88% conversion at matched
+volume. Nothing else on the site can tell a player what stamina costs them.
 
 **A Phoenix planner says whose table it is pricing on.** The Rules page teaches PUMBILITY+ on
 Phoenix 2's tuning (D41) and the Phoenix board keeps its own, so the projection carries one quiet
@@ -1218,6 +1224,12 @@ already carries `PlayedAt`.
   can carry the journal's `OccurredAt` into the column that already exists. Three real construction
   sites. The aggregate needs nothing else — `Add` / `Remove` / `Swap` / `CanAdd` and the window
   predicate landed with Slice R, and `Add` already returns D45's outcome.
+- **Energy is EventCompetition's own** (`MoMEnergy`), not `PlayerProgress.Energy`, though the page
+  borrows that enum's copy through `EnergyLabels`. PUMBILITY's three rungs are peers all the way
+  through, its top rung included — a score only one in four of your peers beat. The Planner's top
+  rung is **your own best** (§12.1), which is a different claim about a different population, and
+  one enum meaning both would be a trap. Good and Great do read the peers, through the same
+  projector.
 - **Domain (EventCompetition, internal):** `MoMSessionDetector` — the D32 window scan as a pure
   function over the journal's (played-at, duration, chart type, stage-broken) plays: split wherever
   a gap exceeds fifteen minutes, run D10's three checks, pre-select the longest block that fits.
