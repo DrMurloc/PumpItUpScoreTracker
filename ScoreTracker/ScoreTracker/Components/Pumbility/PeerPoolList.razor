@@ -186,7 +186,11 @@ else
 
     [Parameter] public EventCallback<Chart> OnPlay { get; set; }
 
-    /// <summary>Section keys folded when the list first renders; Slim and Poor by default (D34).</summary>
+    /// <summary>
+    ///     Section keys folded; Slim and Poor by default (D34). The host's, copied on every render
+    ///     rather than latched on the first — the rule the Breakdown list follows (bug check,
+    ///     2026-09-05); here the patience card kept the latch honest only by accident of order.
+    /// </summary>
     [Parameter] public IReadOnlySet<string>? Collapsed { get; set; }
 
     [Parameter] public EventCallback<IReadOnlySet<string>> CollapsedChanged { get; set; }
@@ -253,17 +257,11 @@ else
         row.MyScore == null && row.Target is { Current: not null, CurrentIsBroken: true };
 
     private HashSet<string> _collapsed = new();
-    private bool _collapsedInitialised;
     private IReadOnlyList<Section> _sections = Array.Empty<Section>();
 
     protected override void OnParametersSet()
     {
-        if (!_collapsedInitialised)
-        {
-            _collapsed = new HashSet<string>(Collapsed ?? DefaultCollapsed);
-            _collapsedInitialised = true;
-        }
-
+        _collapsed = new HashSet<string>(Collapsed ?? DefaultCollapsed);
         _sections = Build();
     }
 
