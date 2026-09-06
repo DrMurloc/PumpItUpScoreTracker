@@ -7873,6 +7873,9 @@
   <data name="still isn't enough at {0}" xml:space="preserve">
     <value>{0}では届きません</value>
   </data>
+  <data name="Still working out where this sits." xml:space="preserve">
+    <value>この位置はまだ計算中です。</value>
+  </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>クリアしてもスコアは渋い</value>
   </data>

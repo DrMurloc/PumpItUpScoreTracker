@@ -7816,6 +7816,9 @@
   <data name="still isn't enough at {0}" xml:space="preserve">
     <value>aún no basta con {0}</value>
   </data>
+  <data name="Still working out where this sits." xml:space="preserve">
+    <value>Todavía calculando dónde encaja.</value>
+  </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>tacaño al puntuar incluso pasado</value>
   </data>
