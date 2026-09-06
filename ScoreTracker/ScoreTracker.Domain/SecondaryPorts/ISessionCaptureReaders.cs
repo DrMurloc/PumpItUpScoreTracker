@@ -81,16 +81,22 @@ namespace ScoreTracker.Domain.SecondaryPorts
     public sealed record BoardPeerGroupReading(DateTimeOffset AsOf, IReadOnlyList<BoardPeerReading> Peers);
 
     /// <summary>
-    ///     A player on the official board: the id their placements are keyed on, the public tag they
-    ///     are named by, and the pool the board publishes for them.
+    ///     One person on the official board: the public tag they are named by and the pool the board
+    ///     publishes for them.
     /// </summary>
+    /// <param name="BoardPlayerIds">
+    ///     Every board row this person owns, because one person can own more than one — an account
+    ///     that changed tags keeps the old row, and both can sit on the same board. All of them are
+    ///     read for evidence and the person still votes once (D61).
+    /// </param>
     /// <param name="AccountId">
-    ///     The PIU Scores account this row speaks for, when the mirror may speak for one — null both
-    ///     for a player with no account and for one the mirror will not claim (D61). A caller counts
-    ///     a non-null id once, as that account, and never also as a board player.
+    ///     The PIU Scores account this person speaks for, when the mirror may speak for one — null
+    ///     both for a player with no account and for a private one, which the mirror will not claim.
+    ///     A caller counts a non-null id once, as that account, and never also as a board player.
     /// </param>
     [ExcludeFromCodeCoverage]
-    public sealed record BoardPeerReading(int BoardPlayerId, string Tag, double Pool, Guid? AccountId);
+    public sealed record BoardPeerReading(IReadOnlyList<int> BoardPlayerIds, string Tag, double Pool,
+        Guid? AccountId);
 
     /// <summary>One board player's best published score on one chart.</summary>
     [ExcludeFromCodeCoverage]
