@@ -7,6 +7,7 @@
 @using ScoreTracker.Web.Enums
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Theming
+@using ScoreTracker.Domain.Models
 @namespace ScoreTracker.Web.Components
 
 @* The fifty as a tier list (docs/design/pumbility-overhaul.md §3.11, D57): the selected pool's
@@ -90,6 +91,8 @@ else
                             <TierListChartCard Chart="row.Chart"
                                                Density="Density"
                                                Score="@ScoreOf(row)"
+                                               Standing="@StandingFor(row)"
+                                               ShowStandingText="false"
                                                Passed="true"
                                                IsToDo="ToDos.Contains(row.Chart.Id)"
                                                ShowToDo="ShowToDo"
@@ -127,6 +130,17 @@ else
     [Parameter] public IReadOnlyDictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>> Skills { get; set; } =
         new Dictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>>();
 
+    /// <summary>
+    ///     Where each of the viewer’s own scores stands among the peers they chose
+    ///     (docs/design/peers-abstraction.md). Handed down like the chips, and for the same
+    ///     reason: this component is presentational and the block above it reads once for the
+    ///     whole list. Absent while that read is in flight, which is what the popover says.
+    /// </summary>
+    [Parameter] public IReadOnlyDictionary<Guid, PeerStanding> Standings { get; set; } =
+        new Dictionary<Guid, PeerStanding>();
+
+    private PeerStanding? StandingFor(Row row) =>
+        Standings.TryGetValue(row.Chart.Id, out var standing) ? standing : null;
     [Parameter] public UiDensity Density { get; set; } = UiDensity.Comfortable;
 
     [Parameter] public bool ShowToDo { get; set; }
