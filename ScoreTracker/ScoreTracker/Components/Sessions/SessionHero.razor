@@ -64,14 +64,14 @@
                         <b>@TypeName(candidate.ChartType)</b>
                         <span>@candidate.From.ToLocalTime().ToString("t") – @candidate.To.ToLocalTime().ToString("t")</span>
                     </span>
-                    <span class="fact"><b>@candidate.Charts</b><span>@L["charts"]</span></span>
+                    <span class="fact"><b>@candidate.Charts</b><span>@L["Charts"]</span></span>
                     <span class="fact"><b>@MoMText.HoursMinutesSeconds(candidate.SongTime)</b><span>@L["of songs"]</span></span>
                     <span class="fact"><b>@MoMText.MinutesSeconds(candidate.Rest)</b><span>@L["rest in 1:45"]</span></span>
                     @if (candidate.StageBreaks > 0)
                     {
                         <span class="fact">
                             <b>@candidate.StageBreaks</b>
-                            <span>@(candidate.StageBreaks == 1 ? L["stage break"] : L["stage breaks"])</span>
+                            <span>@(candidate.StageBreaks == 1 ? L["Stage break"] : L["stage breaks"])</span>
                         </span>
                     }
                 </div>

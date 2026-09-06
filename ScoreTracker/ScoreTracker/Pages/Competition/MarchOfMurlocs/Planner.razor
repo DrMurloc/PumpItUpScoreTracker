@@ -298,7 +298,7 @@ else
                         @chart.PointsPerSecond.ToString("N1") @L["pts/s"] · @MoMText.MinutesSeconds(chart.Chart.Song.Duration)
                         @if (chart.IsProjected)
                         {
-                            <span> · @L["projected"]</span>
+                            <span> · @L["Projected"]</span>
                         }
                     </span>
                 </div>
@@ -325,7 +325,7 @@ else
                     <span class="w700">@chart.Chart.Song.Name</span>
                     @if (chart.Rest is { IsRest: true })
                     {
-                        <span class="mom-chip-outline">@L["rest"]</span>
+                        <span class="mom-chip-outline">@L["Rest"]</span>
                     }
                     @if (chart.IsClosing)
                     {

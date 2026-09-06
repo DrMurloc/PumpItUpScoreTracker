@@ -108,7 +108,7 @@ else if (_draft is { } draft)
             <div class="mom-entry-row">
                 <div class="f-chart">
                     <ChartSelector Mix="draft.Mix" Charts="_selectable" Variant="Variant.Outlined"
-                                   Label="@L["Chart"]" Placeholder="@L["Song name"]" Disabled="_busy"
+                                   Label="@L["Chart"]" Placeholder="@L["Song Name"]" Disabled="_busy"
                                    ChartIdSelected="PickChart"/>
                 </div>
                 <div class="f-score">
@@ -163,7 +163,7 @@ else if (_draft is { } draft)
         <div class="mom-sess-head">
             <span class="sbd-eyebrow">@L["Your session"]</span>
             <span class="mom-sess-total num">
-                @draft.TotalScore.ToString("N0")<small>@L["points"] · @L["{0} charts", draft.Charts.Count]</small>
+                @draft.TotalScore.ToString("N0")<small>@L["Points"] · @L["{0} charts", draft.Charts.Count]</small>
             </span>
         </div>
         @if (draft.Charts.Count == 0)
