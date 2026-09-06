@@ -66,8 +66,18 @@ public sealed class ApiRequestLogMiddlewareTests
     {
         return new ClaimsPrincipal(new ClaimsIdentity(new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, AUserId.ToString())
+            new Claim(ClaimTypes.NameIdentifier, AUserId.ToString()),
+            new Claim(ToolKeyAuthenticationScheme.PersonalTokenClaim, "true")
         }, "ApiToken"));
+    }
+
+    /// <summary>The cookie principal: the same site claims, without the mark a token leaves.</summary>
+    private static ClaimsPrincipal Browser()
+    {
+        return new ClaimsPrincipal(new ClaimsIdentity(new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, AUserId.ToString())
+        }, "External"));
     }
 
     private static async Task<Dictionary<string, object?>> Run(DefaultHttpContext context, int status = 200)
@@ -110,6 +120,20 @@ public sealed class ApiRequestLogMiddlewareTests
         Assert.Null(line["ToolId"]);
         Assert.Null(line["KeyName"]);
         Assert.Equal(AUserId, line["UserId"]);
+    }
+
+    /// <summary>
+    ///     The admin's own browser on /api/admin, or a signed-in Swagger try-out without a token,
+    ///     is a session: not the personal tier, and never the person's id in the trace.
+    /// </summary>
+    [Fact]
+    public async Task ASignedInBrowserOnAnApiRouteIsASessionNotAPerson()
+    {
+        var line = await Run(Request("/api/admin/scoreBatches", "api/admin/scoreBatches", Browser()));
+
+        Assert.Equal("session", line["Tier"]);
+        Assert.Null(line["UserId"]);
+        Assert.Null(line["ToolId"]);
     }
 
     /// <summary>No claims at all — a 401 in flight, or a public endpoint — is still a line.</summary>

@@ -79,8 +79,14 @@ public sealed partial class ApiRequestLogMiddleware
     {
         var user = context.User;
         var toolId = Parse(user.FindFirstValue(ToolKeyAuthenticationScheme.ToolIdClaim));
-        var userId = toolId is null ? Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)) : null;
-        var tier = toolId is not null ? "tool" : userId is not null ? "personal" : "anonymous";
+        var personal = toolId is null && user.HasClaim(c => c.Type == ToolKeyAuthenticationScheme.PersonalTokenClaim);
+        var userId = personal ? Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)) : null;
+        // A signed-in browser reaching an API route carries the cookie principal, not a token —
+        // the admin's own page today, a Swagger try-out tomorrow. Its own tier, never the person's id.
+        var tier = toolId is not null ? "tool"
+            : personal ? "personal"
+            : user.Identity?.IsAuthenticated == true ? "session"
+            : "anonymous";
 
         ApiRequest(logger, tier, toolId, user.FindFirstValue(ToolKeyAuthenticationScheme.KeyNameClaim), userId,
             context.Request.Method, RouteOf(context), status, durationMs);

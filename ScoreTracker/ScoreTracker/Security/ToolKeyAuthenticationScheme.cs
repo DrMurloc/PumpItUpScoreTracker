@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Contracts.Queries;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Web.Accessors;
 
@@ -40,6 +41,13 @@ public sealed class ToolKeyAuthenticationScheme : AuthenticationHandler<Authenti
     ///     that cannot say which key it belongs to is half a number.
     /// </summary>
     public const string KeyNameClaim = "ScoreTracker.ToolKeyName";
+
+    /// <summary>
+    ///     Present exactly when a person authenticated with a personal token, on v1 or v2. The
+    ///     cookie principal a signed-in browser carries into an API route is built from the same
+    ///     claims, and the request trace has to tell a token from a session.
+    /// </summary>
+    public const string PersonalTokenClaim = "ScoreTracker.PersonalToken";
 
     public const string SchemeName = "ApiV2";
 
@@ -93,8 +101,15 @@ public sealed class ToolKeyAuthenticationScheme : AuthenticationHandler<Authenti
         var user = await mediator.Send(new GetUserByApiTokenQuery(apiToken));
         if (user == null) return AuthenticateResult.Fail("No user has that personal token");
 
-        return AuthenticateResult.Success(
-            new AuthenticationTicket(user.GetClaimsPrincipal(), SchemeName));
+        return AuthenticateResult.Success(new AuthenticationTicket(PersonalIdentity(user), SchemeName));
+    }
+
+    /// <summary>A person, by their token — the site's claims plus the mark that says a token brought them.</summary>
+    public static ClaimsPrincipal PersonalIdentity(User user)
+    {
+        var principal = user.GetClaimsPrincipal();
+        ((ClaimsIdentity)principal.Identity!).AddClaim(new Claim(PersonalTokenClaim, "true"));
+        return principal;
     }
 
     /// <summary>A tool, whichever header carried its key. Never a user.</summary>

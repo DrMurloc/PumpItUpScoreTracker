@@ -46,7 +46,8 @@ namespace ScoreTracker.Web.Security
 
             if (user == null) return AuthenticateResult.Fail("User with this api token was not found");
 
-            return AuthenticateResult.Success(new AuthenticationTicket(user.GetClaimsPrincipal(), "ApiToken"));
+            return AuthenticateResult.Success(new AuthenticationTicket(
+                ToolKeyAuthenticationScheme.PersonalIdentity(user), "ApiToken"));
         }
     }
 }

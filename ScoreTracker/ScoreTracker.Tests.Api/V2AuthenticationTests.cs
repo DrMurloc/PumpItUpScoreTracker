@@ -131,6 +131,16 @@ public sealed class V2AuthenticationTests
         Assert.True(result.Succeeded);
         Assert.Null(result.Principal!.FindFirstValue(ToolKeyAuthenticationScheme.ToolIdClaim));
         Assert.Null(result.Principal.FindFirstValue(ToolKeyAuthenticationScheme.KeyNameClaim));
+        Assert.True(result.Principal.HasClaim(c => c.Type == ToolKeyAuthenticationScheme.PersonalTokenClaim));
+    }
+
+    /// <summary>The mark is a token's, never a tool's — the trace keys its tiers on it.</summary>
+    [Fact]
+    public async Task AToolNeverCarriesThePersonalTokenMark()
+    {
+        var result = await Authenticate($"Bearer {ToolKey}");
+
+        Assert.False(result.Principal!.HasClaim(c => c.Type == ToolKeyAuthenticationScheme.PersonalTokenClaim));
     }
 
     [Theory]
