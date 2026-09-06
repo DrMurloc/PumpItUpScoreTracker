@@ -1,4 +1,5 @@
-﻿using ScoreTracker.Domain.Records;
+﻿using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Enums;
@@ -105,7 +106,8 @@ public sealed class ScoreProjector : IScoreProjector
                 PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, cancellationToken)).ToArray();
         var pools = catalog == null
             ? null
-            : PumbilityPeerPools.Build(records, peers, catalog, ScoringConfiguration.PumbilityScoring(mix, false));
+            : PumbilityPeerPools.Build(records, peers.Select(PeerVoice.Account).ToHashSet(), catalog,
+                ScoringConfiguration.PumbilityScoring(mix, false));
         var peerScores = records.Where(s => wanted.Contains(s.ChartId)).ToArray();
 
         // Their level NOW, and their level history, so a score can be dated against the player
@@ -242,7 +244,8 @@ public sealed class ScoreProjector : IScoreProjector
         // (§3.10): every chart they hold and everything they scored, the viewer already out.
         var pools = catalog == null
             ? null
-            : PumbilityPeerPools.Build(records, peers, catalog, ScoringConfiguration.PumbilityScoring(mix, false));
+            : PumbilityPeerPools.Build(records, peers.Select(PeerVoice.Account).ToHashSet(), catalog,
+                ScoringConfiguration.PumbilityScoring(mix, false));
 
         var wanted = targets.Select(t => t.ChartId).ToHashSet();
         var heard = records

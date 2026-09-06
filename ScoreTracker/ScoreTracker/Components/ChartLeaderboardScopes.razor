@@ -257,7 +257,7 @@ else
     ///     peers are can mean running the projection sweep for a viewer who has not opened the
     ///     PUMBILITY page today, and that is not a cost to pay on every chart view.
     /// </summary>
-    private IReadOnlySet<Guid>? _pumbilityPeers;
+    private IReadOnlySet<PeerVoice>? _pumbilityPeers;
     private OfficialChartBoardRecord? _officialBoard;
     private IReadOnlySet<Guid> _officialPublicLinks = new HashSet<Guid>();
     private IReadOnlyDictionary<string, Uri?> _officialAvatars = new Dictionary<string, Uri?>();
@@ -448,7 +448,8 @@ else
                 _pumbilityPeers ??= (await Mediator.Send(new GetPumbilityPeersQuery(_chart.Type, Mix))).ToHashSet();
                 _communityUserIds = _clubmates;
                 var me = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : (Guid?)null;
-                return _world.Where(s => _pumbilityPeers.Contains(s.UserId) || s.UserId == me).ToArray();
+                return _world.Where(s => _pumbilityPeers.Contains(PeerVoice.Account(s.UserId)) || s.UserId == me)
+                    .ToArray();
             }
             case LeaderboardScope.LowestPassing:
             {

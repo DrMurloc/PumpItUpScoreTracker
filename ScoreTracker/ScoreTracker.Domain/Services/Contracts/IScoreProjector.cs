@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -312,13 +313,27 @@ public sealed record PeerPoolChart(int Holders, int Points, int Scored, IReadOnl
 ///     removed (D31), so a page listing "what players like me build their number from" and the
 ///     projection beside it cannot disagree about who those players are.
 /// </summary>
-/// <param name="PeerIds">The peers — every player in the window holding a full pool of the type.</param>
+/// <param name="Peers">
+///     The peers — every player in the window holding a full pool of the type, whether that is a PIU
+///     Scores account or a player the official board is the only record of (D59).
+/// </param>
 /// <param name="Pools">Each peer's top-50 chart set, keyed by peer.</param>
 /// <param name="Charts">Every chart at least one peer holds, or at least five scored.</param>
+/// <param name="BoardTotals">
+///     What the official board publishes as the whole PUMBILITY of each peer that has no account —
+///     the one number a caller cannot look up for them, since there is no stats row to read. Empty
+///     for account peers, whose totals the caller already has.
+/// </param>
 public sealed record PeerPoolSummary(
-    IReadOnlySet<Guid> PeerIds,
-    IReadOnlyDictionary<Guid, IReadOnlySet<Guid>> Pools,
-    IReadOnlyDictionary<Guid, PeerPoolChart> Charts);
+    IReadOnlySet<PeerVoice> Peers,
+    IReadOnlyDictionary<PeerVoice, IReadOnlySet<Guid>> Pools,
+    IReadOnlyDictionary<Guid, PeerPoolChart> Charts,
+    IReadOnlyDictionary<PeerVoice, double>? BoardTotals = null)
+{
+    /// <summary>The board peers' totals, never null so a caller need not check.</summary>
+    public IReadOnlyDictionary<PeerVoice, double> TotalsFromBoard =>
+        BoardTotals ?? new Dictionary<PeerVoice, double>();
+}
 
 /// <summary>
 ///     What a projection run produced, and the peers it produced it from.

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
@@ -375,14 +376,14 @@ public sealed class ScoreProjectorTests
         var result = await ctx.Project(ChartType.Single, ctx.Catalog(ChartA, ChartB), ChartA);
 
         var pools = result.PeerPools!;
-        Assert.Equal(new[] { peer, other }.ToHashSet(), pools.PeerIds);
+        Assert.Equal(new[] { peer, other }.Select(PeerVoice.Account).ToHashSet(), pools.Peers);
         // Only the catalog charts are priced into a pool: each peer's real scores are their whole
         // pool here, so A sits at other's #2 (49) and peer's #1 (50), B at other's #1 (50).
         Assert.Equal(2, pools.Charts[ChartA].Holders);
         Assert.Equal(99, pools.Charts[ChartA].Points);
         Assert.Equal(50, pools.Charts[ChartB].Points);
-        Assert.Contains(ChartB, pools.Pools[other]);
-        Assert.DoesNotContain(ChartB, pools.Pools[peer]);
+        Assert.Contains(ChartB, pools.Pools[PeerVoice.Account(other)]);
+        Assert.DoesNotContain(ChartB, pools.Pools[PeerVoice.Account(peer)]);
         // Two scorers: held, so present, and under the five-peer floor for a projected grade.
         Assert.Equal(2, pools.Charts[ChartA].Scored);
         Assert.Null(pools.Charts[ChartA].ProjectedAt(PeerEstimator.Median));
@@ -411,7 +412,7 @@ public sealed class ScoreProjectorTests
 
         var result = await ctx.Project(ChartType.Single, ctx.Catalog(ChartA), ChartA);
 
-        Assert.DoesNotContain(Viewer, result.PeerPools!.PeerIds);
+        Assert.DoesNotContain(PeerVoice.Account(Viewer), result.PeerPools!.Peers);
         Assert.Equal(1, result.PeerPools.Charts[ChartA].Holders);
         Assert.Equal(1, result.PeerPools.Charts[ChartA].Scored);
     }
@@ -431,7 +432,7 @@ public sealed class ScoreProjectorTests
         var result = await ctx.Project(MixEnum.Phoenix, ChartType.Single, 1.0, ctx.Catalog(MixEnum.Phoenix, ChartA, ChartB), ChartA);
 
         var pools = result.PeerPools!;
-        Assert.Equal(new[] { peer, thin }.ToHashSet(), pools.PeerIds);
+        Assert.Equal(new[] { peer, thin }.Select(PeerVoice.Account).ToHashSet(), pools.Peers);
         Assert.Equal(2, pools.Charts[ChartA].Holders);
         // A at peer's #2 (49) and thin's #1 (50); B at peer's #1 (50). A thin pool casts a shorter vote, not none.
         Assert.Equal(99, pools.Charts[ChartA].Points);

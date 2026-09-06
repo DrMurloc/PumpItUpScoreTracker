@@ -12,13 +12,16 @@ public sealed class PeerStandingCalculatorTests
     private static readonly DateTimeOffset Sealed = new(2026, 8, 31, 0, 0, 0, TimeSpan.Zero);
 
     private static PeerStandingCalculator.PeerPass Pass(Guid key, int score, bool board = false) =>
-        new(key, score, board);
+        new(PeerVoice.Account(key), score, board);
 
     private static PeerStandingCalculator.SourceMembers Source(PeerSourceKind kind, params Guid[] members) =>
-        new(kind, null, null, false, false, members.ToHashSet());
+        new(kind, null, null, false, false, members.Select(PeerVoice.Account).ToHashSet());
 
-    private static IReadOnlySet<Guid> Union(params PeerStandingCalculator.SourceMembers[] sources) =>
+    private static IReadOnlySet<PeerVoice> Union(params PeerStandingCalculator.SourceMembers[] sources) =>
         sources.SelectMany(s => s.Members).ToHashSet();
+
+    private static IReadOnlySet<PeerVoice> Broke(params Guid[] members) =>
+        members.Select(PeerVoice.Account).ToHashSet();
 
     [Fact]
     public void RanksOnlyPassesInsideTheUnionAndReadsThePlaceWithYouInTheCohort()
@@ -31,7 +34,7 @@ public sealed class PeerStandingCalculatorTests
 
         var standing = PeerStandingCalculator.Compute(950_000,
             new[] { Pass(a, 990_000), Pass(b, 940_000), Pass(outsider, 999_000) },
-            new HashSet<Guid>(), new[] { rivals }, Union(rivals), null);
+            Broke(), new[] { rivals }, Union(rivals), null);
 
         // Two rivals passed it, one above you: #2 of 3. The outsider's 999k never counts, and
         // the rival who has not passed it is the not-passed count.
@@ -48,7 +51,7 @@ public sealed class PeerStandingCalculatorTests
         var rivals = Source(PeerSourceKind.Rivals, a);
 
         var standing = PeerStandingCalculator.Compute(950_000, new[] { Pass(a, 950_000) },
-            new HashSet<Guid>(), new[] { rivals }, Union(rivals), null);
+            Broke(), new[] { rivals }, Union(rivals), null);
 
         Assert.True(standing.IsFirst);
         Assert.Equal(1.0, standing.Percentile);
@@ -62,7 +65,7 @@ public sealed class PeerStandingCalculatorTests
         var rivals = Source(PeerSourceKind.Rivals, passer, breaker);
 
         var standing = PeerStandingCalculator.Compute(900_000, new[] { Pass(passer, 910_000) },
-            new HashSet<Guid> { breaker }, new[] { rivals }, Union(rivals), null);
+            Broke(breaker), new[] { rivals }, Union(rivals), null);
 
         Assert.Equal(1, standing.Passed);
         Assert.Equal(1, standing.Broke);
@@ -77,7 +80,7 @@ public sealed class PeerStandingCalculatorTests
         var rivals = Source(PeerSourceKind.Rivals, player);
 
         var standing = PeerStandingCalculator.Compute(900_000, new[] { Pass(player, 910_000) },
-            new HashSet<Guid> { player }, new[] { rivals }, Union(rivals), null);
+            Broke(player), new[] { rivals }, Union(rivals), null);
 
         Assert.Equal(0, standing.Broke);
         Assert.Equal(1, standing.Passed);
@@ -93,7 +96,7 @@ public sealed class PeerStandingCalculatorTests
 
         var standing = PeerStandingCalculator.Compute(900_000,
             new[] { Pass(both, 990_000), Pass(rivalOnly, 880_000) },
-            new HashSet<Guid>(), new[] { rivals, club }, Union(rivals, club), null);
+            Broke(), new[] { rivals, club }, Union(rivals, club), null);
 
         Assert.Equal(2, standing.PeerCount);
         Assert.Equal(2, standing.Place);
@@ -112,7 +115,7 @@ public sealed class PeerStandingCalculatorTests
 
         var standing = PeerStandingCalculator.Compute(PeerStandingCalculator.PerfectGame,
             new[] { Pass(a, PeerStandingCalculator.PerfectGame), Pass(b, 999_000) },
-            new HashSet<Guid>(), new[] { rivals }, Union(rivals), null);
+            Broke(), new[] { rivals }, Union(rivals), null);
 
         Assert.Equal(1, standing.PerfectGames);
         Assert.True(standing.IsFirst);
@@ -127,9 +130,9 @@ public sealed class PeerStandingCalculatorTests
 
         var withGhost = PeerStandingCalculator.Compute(900_000,
             new[] { Pass(ghostEdge, 995_000, board: true), Pass(site, 950_000) },
-            new HashSet<Guid>(), new[] { rivals }, Union(rivals), Sealed);
+            Broke(), new[] { rivals }, Union(rivals), Sealed);
         var siteOnly = PeerStandingCalculator.Compute(900_000, new[] { Pass(site, 950_000) },
-            new HashSet<Guid>(), new[] { rivals }, Union(rivals), Sealed);
+            Broke(), new[] { rivals }, Union(rivals), Sealed);
 
         Assert.Equal(Sealed, withGhost.OfficialAsOf);
         Assert.Equal(1, withGhost.Sources.Single().FromOfficialBoard);
@@ -144,7 +147,7 @@ public sealed class PeerStandingCalculatorTests
 
         var standing = PeerStandingCalculator.Compute(900_000,
             new[] { Pass(player, 910_000), Pass(player, 880_000) },
-            new HashSet<Guid>(), new[] { rivals }, Union(rivals), null);
+            Broke(), new[] { rivals }, Union(rivals), null);
 
         Assert.Equal(1, standing.Passed);
         Assert.Equal(2, standing.Place);
@@ -157,7 +160,7 @@ public sealed class PeerStandingCalculatorTests
         var rivals = Source(PeerSourceKind.Rivals, a);
 
         var standing = PeerStandingCalculator.Compute(900_000, Array.Empty<PeerStandingCalculator.PeerPass>(),
-            new HashSet<Guid> { a }, new[] { rivals }, Union(rivals), null);
+            Broke(a), new[] { rivals }, Union(rivals), null);
 
         Assert.False(standing.HasCohort);
         Assert.Equal(1, standing.Broke);

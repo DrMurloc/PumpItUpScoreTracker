@@ -254,12 +254,12 @@ internal sealed class TierListBlendBuilder
         var counts = folderCharts.ToDictionary(c => c.Id,
             c => pools.Charts.TryGetValue(c.Id, out var chart) ? chart.Holders : 0);
         if (counts.Values.Sum() == 0)
-            return new PumbilityComputation(new Dictionary<Guid, SongTierListEntry>(), counts, pools.PeerIds.Count);
+            return new PumbilityComputation(new Dictionary<Guid, SongTierListEntry>(), counts, pools.Peers.Count);
 
         return new PumbilityComputation(
             TierListProcessor.ProcessIntoLogScaledTierList(PumbilitySource, counts).ToDictionary(e => e.ChartId),
             counts,
-            pools.PeerIds.Count);
+            pools.Peers.Count);
     }
 
     /// <summary>

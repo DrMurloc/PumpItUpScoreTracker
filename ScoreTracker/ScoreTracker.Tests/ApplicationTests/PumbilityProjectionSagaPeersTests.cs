@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Models;
 using System;
 using System.Linq;
 using System.Threading;
@@ -185,15 +186,15 @@ public sealed partial class PumbilityProjectionSagaTests
         var doubles = await ctx.Saga.Handle(new GetPumbilityPeersQuery(ChartType.Double, MixEnum.Phoenix2), CancellationToken.None);
         var page = await ctx.Saga.Handle(new GetPumbilityPeersPageQuery(ctx.UserId, MixEnum.Phoenix2), CancellationToken.None);
 
-        Assert.Equal(new[] { a, b }.ToHashSet(), singles.ToHashSet());
+        Assert.Equal(new[] { a, b }.Select(PeerVoice.Account).ToHashSet(), singles.ToHashSet());
         Assert.Empty(doubles); // the viewer's doubles pool is short: no doubles peers (D28)
-        Assert.Contains(a, page.Roster.Select(r => r.User.Id));
+        Assert.Contains(a, page.Roster.Where(r => r.User != null).Select(r => r.User!.Id));
         // One sweep served all three reads.
         ctx.Stats.Verify(s => s.GetPlayersByPoolOfType(MixEnum.Phoenix2, It.IsAny<ChartType>(), It.IsAny<double>(), It.IsAny<double>(),
             It.IsAny<CancellationToken>()), Times.Once); // the one sweep; the dark doubles type never reaches the band read
 
         // On Phoenix 1 the same question answers the competitive band — these peers are in both.
-        Assert.Equal(new[] { a, b }.ToHashSet(),
+        Assert.Equal(new[] { a, b }.Select(PeerVoice.Account).ToHashSet(),
             (await ctx.Saga.Handle(new GetPumbilityPeersQuery(ChartType.Single, MixEnum.Phoenix), CancellationToken.None)).ToHashSet());
 
         ctx.CurrentUser.Setup(c => c.IsLoggedIn).Returns(false);

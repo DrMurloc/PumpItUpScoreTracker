@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Enums;
@@ -43,25 +44,26 @@ public static class PumbilityPeerPools
     ///     (a broken run, a sub-10 chart) can hold no pool slot and is left out of the pools, but
     ///     it is not a score anyway — <paramref name="records" /> are the peers' non-broken bests.
     /// </summary>
-    public static PeerPoolSummary Build(IEnumerable<UserPhoenixScore> records, IReadOnlySet<Guid> peers,
+    public static PeerPoolSummary Build(IEnumerable<UserPhoenixScore> records, IReadOnlySet<PeerVoice> peers,
         IReadOnlyDictionary<Guid, Chart> charts, ScoringConfiguration scoring)
     {
-        var byPeer = new Dictionary<Guid, List<(Guid ChartId, double Rating, int Score)>>();
+        var byPeer = new Dictionary<PeerVoice, List<(Guid ChartId, double Rating, int Score)>>();
         var scores = new Dictionary<Guid, List<int>>();
         foreach (var record in records)
         {
-            if (!peers.Contains(record.UserId) || !charts.TryGetValue(record.ChartId, out var chart)) continue;
+            var voice = PeerVoice.Account(record.UserId);
+            if (!peers.Contains(voice) || !charts.TryGetValue(record.ChartId, out var chart)) continue;
             if (!scores.TryGetValue(record.ChartId, out var voices)) scores[record.ChartId] = voices = new List<int>();
             voices.Add((int)record.Score);
 
             var rating = scoring.GetScore(chart, record.Score, record.Plate ?? PhoenixPlate.RoughGame, record.IsBroken);
             if (rating <= 0) continue;
-            if (!byPeer.TryGetValue(record.UserId, out var priced))
-                byPeer[record.UserId] = priced = new List<(Guid, double, int)>();
+            if (!byPeer.TryGetValue(voice, out var priced))
+                byPeer[voice] = priced = new List<(Guid, double, int)>();
             priced.Add((record.ChartId, rating, (int)record.Score));
         }
 
-        var pools = new Dictionary<Guid, IReadOnlySet<Guid>>();
+        var pools = new Dictionary<PeerVoice, IReadOnlySet<Guid>>();
         var holders = new Dictionary<Guid, int>();
         var points = new Dictionary<Guid, int>();
         foreach (var (peer, priced) in byPeer)

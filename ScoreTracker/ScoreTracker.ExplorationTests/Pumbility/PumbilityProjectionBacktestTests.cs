@@ -374,11 +374,12 @@ public sealed class PumbilityProjectionBacktestTests
                 continue;
             }
 
-            var peers = projection.PeerPools.PeerIds;
+            var peers = projection.PeerPools.Peers.Where(v => v.UserId != null)
+                .Select(v => v.UserId!.Value).ToArray();
             var peerStats = (await stats.GetStats(MixEnum.Phoenix2, peers, CancellationToken.None)).ToDictionary(p => p.UserId);
             var voices = (await scores.GetPlayerScores(MixEnum.Phoenix2, peers, targets.Select(c => c.Id), CancellationToken.None))
                 .Where(v => !v.IsBroken).GroupBy(v => v.ChartId).ToDictionary(g => g.Key, g => g.ToArray());
-            _output.WriteLine($"=== {type}: {peers.Count} PUMBILITY peers, pools {projection.Group?.Lowest:F0}..{projection.Group?.Highest:F0} around your {type} pool {projection.Group?.Center:F0} (D53) ===");
+            _output.WriteLine($"=== {type}: {peers.Length} PUMBILITY peers, pools {projection.Group?.Lowest:F0}..{projection.Group?.Highest:F0} around your {type} pool {projection.Group?.Center:F0} (D53) ===");
             var bandRungs = peers.Select(p => Phoenix2PumbilityLevel.From(peerStats[p].SkillRating).Index - myRung.Index)
                 .GroupBy(o => o).OrderBy(g => g.Key).Select(g => $"{g.Key:+0;-0;0}:{g.Count()}");
             _output.WriteLine($"  the band by rung offset from you (offset:count): {string.Join("  ", bandRungs)}");
@@ -463,7 +464,8 @@ public sealed class PumbilityProjectionBacktestTests
                     PeerEstimator.CompetitiveWindow, charts, Quantiles: Rungs), CancellationToken.None);
                 if (projection.PeerPools == null || projection.Ladders == null || projection.Ladders.Count == 0) continue;
 
-                var peers = projection.PeerPools.PeerIds;
+                var peers = projection.PeerPools.Peers.Where(v => v.UserId != null)
+                .Select(v => v.UserId!.Value).ToArray();
                 var peerRung = (await stats.GetStats(MixEnum.Phoenix2, peers, CancellationToken.None))
                     .ToDictionary(p => p.UserId, p => Phoenix2PumbilityLevel.From(p.SkillRating).Index - myRung);
                 var voices = (await scores.GetPlayerScores(MixEnum.Phoenix2, peers,

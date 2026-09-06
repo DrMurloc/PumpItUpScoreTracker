@@ -28,6 +28,9 @@ namespace ScoreTracker.Tests.Components;
 /// </summary>
 public sealed class PeersAndColorsPanelTests : ComponentTestBase
 {
+    private static IReadOnlySet<PeerVoice> Voices(params Guid[] ids) =>
+        ids.Select(PeerVoice.Account).ToHashSet();
+
     private static readonly Guid Club = Guid.NewGuid();
     private static readonly Guid Region = Guid.NewGuid();
     private static readonly Guid Shared = Guid.NewGuid();
@@ -45,15 +48,15 @@ public sealed class PeersAndColorsPanelTests : ComponentTestBase
             .ReturnsAsync(new PeerSourceCatalog(new[]
             {
                 new PeerSourceOption(PeerSourceKind.Rivals, null, "", false, false, true,
-                    new HashSet<Guid> { Shared, RivalOnly }, new HashSet<Guid> { Shared, RivalOnly }, 1),
+                    Voices(Shared, RivalOnly), Voices(Shared, RivalOnly), 1),
                 new PeerSourceOption(PeerSourceKind.CompetitiveLevel, null, "", false, false, true,
-                    new HashSet<Guid> { Shared, Guid.NewGuid(), Guid.NewGuid() }, new HashSet<Guid> { Guid.NewGuid() }, 0),
+                    Voices(Shared, Guid.NewGuid(), Guid.NewGuid()), Voices(Guid.NewGuid()), 0),
                 new PeerSourceOption(PeerSourceKind.Pumbility, null, "", false, false, false,
-                    new HashSet<Guid>(), new HashSet<Guid>(), 0),
+                    Voices(), Voices(), 0),
                 new PeerSourceOption(PeerSourceKind.Community, Club, "NorCal Pump", false, false, true,
-                    new HashSet<Guid> { Clubmate, Shared }, new HashSet<Guid> { Clubmate, Shared }, 0),
+                    Voices(Clubmate, Shared), Voices(Clubmate, Shared), 0),
                 new PeerSourceOption(PeerSourceKind.Community, Region, "United States", true, false, true,
-                    new HashSet<Guid> { Clubmate }, new HashSet<Guid> { Clubmate }, 0)
+                    Voices(Clubmate), Voices(Clubmate), 0)
             }));
         // The preview's difficulty bubbles read scoring levels through the mediator this test
         // registers, so the base's stub for that query has to be repeated here.

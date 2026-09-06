@@ -56,7 +56,7 @@ public sealed class PeerStandingReaderTests
         _mediator.Setup(m => m.Send(It.IsAny<GetUserUiSettingsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => _settings);
         _mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<Guid>());
+            .ReturnsAsync(Array.Empty<PeerVoice>());
         _mediator.Setup(m => m.Send(It.IsAny<ResolveOfficialPlayersQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<OfficialPlayerResolution>());
         _mediator.Setup(m => m.Send(It.IsAny<GetOfficialScoresForTagsQuery>(), It.IsAny<CancellationToken>()))

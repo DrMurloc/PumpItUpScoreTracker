@@ -53,7 +53,7 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
         _mediator.Setup(m => m.Send(It.IsAny<GetCompetitivePlayersQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Guid>());
         _mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<Guid>());
+            .ReturnsAsync(Array.Empty<PeerVoice>());
         // Every chart view asks whether it carries a limbo board. Unstubbed this hands back null
         // and the component dereferences it during load, which takes out every test in the file
         // rather than just the limbo ones.
@@ -468,7 +468,7 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
         // The peer read never names the viewer (D31) — the board puts them on it anyway.
         _mediator.Setup(m => m.Send(It.Is<GetPumbilityPeersQuery>(q => q.Mix == MixEnum.Phoenix2 && q.ChartType == ScoreTracker.SharedKernel.Enums.ChartType.Single),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { peer, hidden });
+            .ReturnsAsync(new[] { PeerVoice.Account(peer), PeerVoice.Account(hidden) });
 
         // A host that means the PUMBILITY board passes it as the initial scope — a peers-page card does.
         var dialog = RenderDialog(MixEnum.Phoenix2, ChartLeaderboardScopes.LeaderboardScope.PumbilityPeers);
