@@ -5474,6 +5474,12 @@
   <data name="peers:" xml:space="preserve">
     <value>morp:</value>
   </data>
+  <data name="Peers: the average top 50 of the {0} players near your singles or doubles pool" xml:space="preserve">
+    <value>Maglmurp: mrgl rorg morp 50 mrglro mrgl {0} morp plgl argl mrglrlgl ol groggl blubgro</value>
+  </data>
+  <data name="Peers: the average top 50 of the {0} players within one competitive level of you" xml:space="preserve">
+    <value>Maglmurp: mrgl rorg morp 50 mrglro mrgl {0} morp glorg mrp murglrogl grorpmurm mrglro blub</value>
+  </data>
   <data name="Peers: {0}% of their pool weight at {1}" xml:space="preserve">
     <value>Maglmurp: {0}% blarg grglblarg blubgro murm ur {1}</value>
   </data>
@@ -6162,9 +6168,6 @@
   </data>
   <data name="PUMBILITY peers" xml:space="preserve">
     <value>PUMBILITY maglmurp</value>
-  </data>
-  <data name="PUMBILITY Pool" xml:space="preserve">
-    <value>PUMBILITY Blubgro</value>
   </data>
   <data name="Pumbility Push" xml:space="preserve">
     <value>Pumbility Morggrgl</value>
@@ -7928,6 +7931,9 @@
   <data name="The extremes are real charts, not noise — the shortest and longest chart at each level." xml:space="preserve">
     <value>Gro bralmogl gro urblarg murgl, bo grulb — gro mrrgl-marglgro ro mrrgl-grogro murgl og blub grorpmurm.</value>
   </data>
+  <data name="The fifty charts your PUMBILITY is the sum of, grouped by what each is worth to you — its place, its value, and the score that earned it." xml:space="preserve">
+    <value>Mrgl murgro murgl argl PUMBILITY gl mrgl blubro ma, grorgl ur mup morgl gl blarg ro argrl — glub morp, glub blarg, o mrgl mrglrgl mup roglub gl.</value>
+  </data>
   <data name="The first Phoenix 2 score to beat your Phoenix 1 best" xml:space="preserve">
     <value>Blarg murgloo Phoenix 2 glorgmurp mrgl blub Phoenix 1 magloo</value>
   </data>
@@ -9166,12 +9172,6 @@
   <data name="Where the levels sit" xml:space="preserve">
     <value>Morggrrgl grorpmurm</value>
   </data>
-  <data name="Where the levels sit · doubles" xml:space="preserve">
-    <value>Morggrrgl grorpmurm · Groggl</value>
-  </data>
-  <data name="Where the levels sit · singles" xml:space="preserve">
-    <value>Morggrrgl grorpmurm · Mrglrlgl</value>
-  </data>
   <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
     <value>Blarggrorp grglmrp murgl grgllurg grorp, murm arglrglmrmurm grorpmurm.</value>
   </data>
@@ -9570,6 +9570,9 @@
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>Bloop am olo blurgl marogl la grumb. Alla blorp mo — opa mo golba pragl, opa DNS marogl alla bo. Golba am grumb, opa blorp la mo bloop.</value>
   </data>
+  <data name="your fifty against what your peers hold, by level" xml:space="preserve">
+    <value>argl murgro urgro mup argl maglmurp glub, gro grorpmurm</value>
+  </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>Gromurp mrblub ro blarggrorp grogrgl 10LURG, blgrlro murgmurp gl ro lurg morgro.</value>
   </data>
@@ -9642,9 +9645,6 @@
   <data name="Your pool" xml:space="preserve">
     <value>Morp Blubgro</value>
   </data>
-  <data name="Your pool by place, with what your peers do on each chart — how many hold it, their median and how split they are — and the waiting room below the bar." xml:space="preserve">
-    <value>Morp blubgro murm blublurg, magl mrgl maglmurp mrgloru argl mrgl Murgl — mrgl mrgloru, blarg lurggrgl ap blgrlmurm — ap Blargmo Gurg glub Rgl.</value>
-  </data>
   <data name="Your pool holds {0} of 50. Until it's full, every chart you play counts whole — there's no bar to beat yet." xml:space="preserve">
     <value>Morp Blubgro mrgl {0} blarg 50. Mrgl mrrgl, mrgl Murgl morp mrglrlgl mrgloru — mo Rgl blub.</value>
   </data>
@@ -9686,6 +9686,9 @@
   </data>
   <data name="Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them." xml:space="preserve">
     <value>Pumbility, gorbalu, larpu — molu blurpa. Gorb prala.</value>
+  </data>
+  <data name="your real top 50 against your peers' average, by type" xml:space="preserve">
+    <value>argl marg morp 50 urgro argl maglmurp rorg, gro morg</value>
   </data>
   <data name="Your Region" xml:space="preserve">
     <value>Gromurp Rglargl</value>

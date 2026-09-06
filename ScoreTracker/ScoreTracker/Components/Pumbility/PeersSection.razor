@@ -52,22 +52,17 @@
    the controls a reader had just used and jumped the page twice (owner, field test round eight).
    Grouped by is a re-sort of what is already here and needs none of this.
 
-   The controls: Grouped by — Prevalence, Projected gains, Your top 50 (D44) — then Energy, then, left-aligned
-   beside it, the one switch that means something under that grouping — Project Phoenix 1 scores
-   under Projected gains and only when the record holds carried rows; Only projected PUMBILITY
-   gains under Prevalence; nothing under Your top 50 — then the density trio at the far end, right
-   above the list (D34, D36). Every preference persists as a UiSetting. *@
+   The controls: Grouped by — Prevalence, Projected gains (D36; the Your top 50 lens left for the
+   Breakdown page in round nine, D57) — then Energy, then, left-aligned beside it, the one switch
+   that means something under that grouping — Project Phoenix 1 scores under Projected gains and
+   only when the record holds carried rows; Only projected PUMBILITY gains under Prevalence — then
+   the density trio at the far end, right above the list (D34). Every preference persists as a
+   UiSetting; a saved Your top 50 no longer parses and reads as Prevalence. *@
 <section class="pmb-block" data-testid="peers-section">
     <div class="pmb-block-head">
         <h2 class="pmb-block-title">@L["PUMBILITY Targets"]</h2>
     </div>
-    <div class="pmb-peers-head">
-        <p class="pmb-block-lede">@Lede</p>
-        @if (_peers != null)
-        {
-            <PeerCompareStrip Page="_peers" Charts="Charts"></PeerCompareStrip>
-        }
-    </div>
+    <p class="pmb-block-lede">@Lede</p>
     @if (ShortPool is { } short_)
     {
         @* The finish is the pool of the type (D48, D53), so it prints as a PUMBILITY total — two
@@ -103,7 +98,6 @@
                        Disabled="_reloading" Value="_groupBy" ValueChanged="SetGrouping" data-testid="peers-groupby">
                 <MudSelectItem T="PeerGrouping" Value="PeerGrouping.Prevalence">@L["Prevalence"]</MudSelectItem>
                 <MudSelectItem T="PeerGrouping" Value="PeerGrouping.ProjectedGains">@L["Projected gains"]</MudSelectItem>
-                <MudSelectItem T="PeerGrouping" Value="PeerGrouping.YourTop50">@L["Your top 50"]</MudSelectItem>
             </MudSelect>
             @* Energy (D51): how you're playing today, as the rung of your peers every projected score
                and gain on the page reads. The select explains itself on hover and each option says
@@ -168,7 +162,7 @@
            screen is exactly the previous shape, blanked by the pulse, and it flips once. *@
         <div class="pmb-list@(_reloading ? " pmb-list-reloading" : "")" aria-busy="@(_reloading ? "true" : "false")" data-testid="peers-list">
             <PeerPoolLegend Density="_density" HasCarried="HasCarried && _projectPhoenix1 && _groupBy == PeerGrouping.ProjectedGains"></PeerPoolLegend>
-            <PeerPoolList @ref="_list" Page="_peers" Charts="Charts" Gains="Gains" Mix="Shown.Mix" Density="_density" PoolRecord="Shown" Skills="_skills"
+            <PeerPoolList @ref="_list" Page="_peers" Charts="Charts" Gains="Gains" Mix="Shown.Mix" Density="_density" Skills="_skills"
                           GroupBy="_groupBy" GainsOnly="_gainsOnly"
                           ShowToDo="true" ToDos="ToDos" OnToDo="OnToDo" OnOpen="OnOpen" OnPlay="OnPlay"
                           Collapsed="_collapsed" CollapsedChanged="SetCollapsed"></PeerPoolList>
@@ -346,9 +340,7 @@
         .Select(t => groups[t])
         .ToArray();
 
-    private string Lede => _groupBy == PeerGrouping.YourTop50
-        ? L["Your pool by place, with what your peers do on each chart — how many hold it, their median and how split they are — and the waiting room below the bar."]
-        : _groupBy == PeerGrouping.ProjectedGains
+    private string Lede => _groupBy == PeerGrouping.ProjectedGains
         ? L["Ranked by what each chart would add if you played it to the standard your peers set — priced against your bar as it stands now, so every row means what the first one does. Everything here clears your bar."]
         : _gainsOnly
             ? HasPumbilityPeers
@@ -371,6 +363,13 @@
     ///     The record says what it was priced at, so this never has to guess from a reference.
     /// </summary>
     private bool PageIsCurrent => Page.Pool_ == _loadedPool && Page.Energy == _loadedEnergy;
+
+    protected override void OnInitialized()
+    {
+        // One helper per circuit: the memberships it caches are the viewer's, and it is what
+        // makes this list's download and the Breakdown page's the same picture.
+        _card = new PumbilityShareCard(Mediator, JSRuntime, CurrentUser.User.Id, key => L[key].Value);
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -397,8 +396,7 @@
         _pendingPeerOnlyGains = null;
         // The share card's top-50 reads are dropped on every re-read, so a membership never
         // outlives the list it was read for; the next dialog open re-fetches.
-        _top50ByType.Clear();
-        _top50Combined = null;
+        _card.Forget();
 
         // The first paint has no shape to hold, so the card stands in for the block. Every read
         // after it keeps what is on screen — the old peers against the old record — under the
@@ -478,6 +476,14 @@
 
     private bool _downloadOpen;
 
+    /// <summary>
+    ///     The card build and download the two PUMBILITY pages share; the memberships it caches
+    ///     are dropped on every re-read, so one never outlives the list it was read for.
+    /// </summary>
+    private PumbilityShareCard _card = null!;
+
+    private const string ShareUrl = "https://piuscores.arroweclip.se/Pumbility";
+
     private string DownloadFileName => ShareCardTitles.TargetsFileName(Shown.Mix, _groupBy.ToString(),
         Shown.Energy.ToString(), ShownPool?.ToString() ?? "All", Clock.Now.ToString("yyyy-MM-dd"));
 
@@ -491,86 +497,21 @@
             var other => other.ToString()
         };
 
-    // The top-50 membership reads, fetched when the gold boundary first asks and dropped on a
-    // pool change — the answer is per mix and per type.
-    private readonly Dictionary<ChartType, IReadOnlySet<Guid>> _top50ByType = new();
-    private IReadOnlySet<Guid>? _top50Combined;
-
-    private async Task EnsureShareData(ShareCardOptions options, IReadOnlyList<PeerPoolList.ShareSection> sections,
-        CancellationToken cancellationToken = default)
-    {
-        if (!options.BoundaryTop50) return;
-        _top50Combined ??= (await Mediator.Send(
-                new GetTop50ForPlayerQuery(CurrentUser.User.Id, null, 50, Shown.Mix), cancellationToken))
-            .Select(s => s.ChartId).ToHashSet();
-        foreach (var type in sections.SelectMany(s => s.Tiles).Select(t => t.Chart.Type).Distinct())
-            if (!_top50ByType.ContainsKey(type))
-                _top50ByType[type] = (await Mediator.Send(
-                        new GetTop50ForPlayerQuery(CurrentUser.User.Id, type, 50, Shown.Mix), cancellationToken))
-                    .Select(s => s.ChartId).ToHashSet();
-    }
-
-    private ShareCardComposer.TileFacts FactsFor(PeerPoolList.ShareTile tile, ShareCardOptions options)
-    {
-        // The pool's own value wins where the frame already computed it; anything else prices
-        // through the same formula the pool page uses, so the chip never disagrees with it.
-        var current = options.Pumbility && !options.ExpectedGains
-            ? tile.PoolValue ?? ShareCardComposer.CurrentPumbility(tile.Chart, tile.Score, tile.Plate,
-                tile.Broken, Shown.Mix)
-            : null;
-        return new ShareCardComposer.TileFacts(tile.Chart, tile.Score, tile.Plate,
-            Passed: tile.Score != null && !tile.Broken,
-            Broken: tile.Broken,
-            IsToDo: tile.IsToDo,
-            PassedInOtherMix: tile.Carried,
-            InTop50Type: _top50ByType.TryGetValue(tile.Chart.Type, out var typed) && typed.Contains(tile.Chart.Id),
-            InTop50Combined: _top50Combined?.Contains(tile.Chart.Id) ?? false,
-            tile.Gain, tile.Expected, current,
-            options.Skills && _skills.TryGetValue(tile.Chart.Id, out var chips) ? chips : null,
-            // Every difficulty at once: without the bubble on the tile the picture cannot say
-            // what any of it is (owner, field test round six; design doc §5).
-            ShareCardImages.DifficultyBubble(tile.Chart));
-    }
-
-    private TierListShareCard BuildTargetsCard(IReadOnlyList<TierListShareCard.Row> rows, ShareCardOptions options)
-    {
-        var palette = MixThemes.PaletteFor(Shown.Mix);
-        // The header rule (design doc §9): the grouping is what the rows are, so it rides the
-        // title; the energy, the pool scope and the switches that cut or project the list are
-        // how to read it, so they ride the subtitle — each only when it applies. The energy
-        // travels on the picture because a Good card and a Great card show different grades
-        // on the same charts, and a reader has to be able to tell which this was.
-        var header = ShareCardTitles.Targets(_groupBy == PeerGrouping.YourTop50, GroupingName,
-            L[EnergyLabels.Label(Energy)], SharePoolLabel,
-            gainsOnly: _groupBy == PeerGrouping.Prevalence && _gainsOnly,
-            phoenix1Projected: _groupBy == PeerGrouping.ProjectedGains && HasCarried && _projectPhoenix1,
-            Shown.Mix.GetName(), Clock.Now.ToString("yyyy-MM-dd"),
-            CurrentUser.User.GameTag ?? CurrentUser.User.Name, key => L[key].Value);
-        return new TierListShareCard(
-            header.Title,
-            header.Subtitle,
-            header.Stamp ?? string.Empty,
-            palette.Primary, palette.Background, palette.Surface, palette.Ink, palette.InkMuted,
-            "https://piuscores.arroweclip.se/Pumbility",
-            null,
-            rows,
-            ShareCardComposer.Legend(options, Shown.Mix, palette, key => L[key].Value));
-    }
-
-    private TierListShareCard.Row ComposeRow(PeerPoolList.ShareSection section,
-        IReadOnlyList<PeerPoolList.ShareTile> tiles, ShareCardOptions options, MixPalette palette)
-    {
-        return new TierListShareCard.Row(section.Name,
-            section.Tier is { } tier ? MixThemes.PumbilityHex(Shown.Mix, tier) : palette.Primary,
-            tiles.Select(t => ShareCardComposer.Compose(FactsFor(t, options), options, Shown.Mix, palette))
-                .ToArray());
-    }
-
     /// <summary>
-    ///     The dialog's example: the list's first six jackets wearing the scripted states
-    ///     (design doc §10) — stage props, so every option shows at once and no top-50 read
-    ///     runs for a preview.
+    ///     The header rule (design doc §9): the grouping is what the rows are, so it rides the
+    ///     title; the energy, the pool scope and the switches that cut or project the list are
+    ///     how to read it, so they ride the subtitle — each only when it applies. The energy
+    ///     travels on the picture because a Good card and a Great card show different grades
+    ///     on the same charts, and a reader has to be able to tell which this was.
     /// </summary>
+    private ShareCardTitles.Header ShareHeader => ShareCardTitles.Targets(GroupingName,
+        L[EnergyLabels.Label(Energy)], SharePoolLabel,
+        gainsOnly: _groupBy == PeerGrouping.Prevalence && _gainsOnly,
+        phoenix1Projected: _groupBy == PeerGrouping.ProjectedGains && HasCarried && _projectPhoenix1,
+        Shown.Mix.GetName(), Clock.Now.ToString("yyyy-MM-dd"),
+        CurrentUser.User.GameTag ?? CurrentUser.User.Name, key => L[key].Value);
+
+    /// <summary>The dialog's example: the list's first jackets wearing the scripted states (design doc §10).</summary>
     private Task<TierListShareCard?> BuildSampleCard(ShareCardOptions options)
     {
         if (_list == null) return Task.FromResult<TierListShareCard?>(null);
@@ -578,27 +519,14 @@
             .SelectMany(s => s.Tiles)
             .Select(t => t.Chart)
             .DistinctBy(c => c.Id)
-            .Take(ShareCardSample.Size)
             .ToArray();
-        if (charts.Length == 0) return Task.FromResult<TierListShareCard?>(null);
-        var palette = MixThemes.PaletteFor(Shown.Mix);
-        var facts = ShareCardSample.Facts(charts, Shown.Mix,
-            c => options.Skills && _skills.TryGetValue(c.Id, out var chips) ? chips : null,
-            ShareCardImages.DifficultyBubble);
-        var rows = new[]
-        {
-            new TierListShareCard.Row(L["Example"], palette.Primary, facts
-                .Select(f => ShareCardComposer.Compose(f, options, Shown.Mix, palette))
-                .ToArray())
-        };
-        return Task.FromResult<TierListShareCard?>(BuildTargetsCard(rows, options));
+        return Task.FromResult(_card.Sample(charts, options, Shown.Mix, _skills, ShareHeader, ShareUrl));
     }
 
     /// <summary>
-    ///     The list as a PNG, through the tier list's own share-card query, renderer and composer
-    ///     — the same model and the same settings, so nothing here is a second layout to keep in
-    ///     step. Sections and their colours come off the rendered list, so the image says what
-    ///     the screen says.
+    ///     The list as a PNG, through the build the Breakdown page shares — the same model and
+    ///     the same settings, so nothing here is a second layout to keep in step. Sections and
+    ///     their colours come off the rendered list, so the image says what the screen says.
     /// </summary>
     private async Task Download(ShareCardDownloadRequest request)
     {
@@ -606,36 +534,9 @@
         _building = true;
         try
         {
-            var options = request.Options;
-            var sections = _list.ShareSections();
-            await EnsureShareData(options, sections, request.Token);
-            var palette = MixThemes.PaletteFor(Shown.Mix);
-            var rows = sections
-                .Where(s => s.Tiles.Count > 0)
-                .Select(s => ComposeRow(s, s.Tiles, options, palette))
-                .ToArray();
-            if (rows.Length == 0) return;
-            var card = BuildTargetsCard(rows, options);
-
-            // The slow phase, driven from here so the dialog's bar counts real images
-            // (design doc §8): warm the card's art in batches, then render against the
-            // warm cache. The token is the dialog's Cancel — and any close of it.
-            var urls = ShareCardArt.CollectUrls(card);
-            var done = 0;
-            request.Progress(new ShareCardFetchProgress(0, urls.Count, false));
-            foreach (var batch in urls.Chunk(ShareCardArt.FetchBatch))
-            {
-                await Mediator.Send(new PrefetchShareCardArtCommand(batch), request.Token);
-                done += batch.Length;
-                request.Progress(new ShareCardFetchProgress(done, urls.Count, false));
-            }
-
-            request.Progress(new ShareCardFetchProgress(urls.Count, urls.Count, true));
-            var bytes = await Mediator.Send(new GetTierListShareCardQuery(card), request.Token);
-            using var stream = new MemoryStream(bytes);
-            using var streamRef = new DotNetStreamReference(stream);
-            var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
-            await module.InvokeVoidAsync("downloadFileFromStream", DownloadFileName, streamRef);
+            var rows = await _card.ComposeRows(_list.ShareSections(), request.Options, Shown.Mix, _skills, request.Token);
+            if (rows.Count == 0) return;
+            await _card.Download(_card.Card(ShareHeader, ShareUrl, rows, request.Options, Shown.Mix), request, DownloadFileName);
         }
         catch (OperationCanceledException)
         {
@@ -650,7 +551,6 @@
     private string GroupingName => _groupBy switch
     {
         PeerGrouping.ProjectedGains => L["Projected gains"],
-        PeerGrouping.YourTop50 => L["Your top 50"],
         _ => L["Prevalence"]
     };
 

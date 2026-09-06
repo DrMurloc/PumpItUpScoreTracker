@@ -1,14 +1,23 @@
+@using MediatR
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Components
 @page "/Pumbility/Breakdown"
 @page "/Pumbility/Pool"
 @rendermode RenderModes.Interactive
 @namespace ScoreTracker.Web.Pages.Progress
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
 
-@* What the number is worth and what it is made of (docs/design/pumbility-overhaul.md D45): the
-   title rails, where your PUMBILITY comes from, and the pool curve. The fifty themselves moved
-   to the Play list as its Your top 50 lens (D44); the curve stays, because it draws the bar, not
-   the list. The old route still resolves — a second @page, not a redirect, because nothing about
-   the page is canonical to a crawler: it is signed-in only. *@
+@* What the number is worth, what it is made of, and what it is: the title rails, where your
+   PUMBILITY comes from, and your top 50 with the pool curve at its head
+   (docs/design/pumbility-overhaul.md D45, D57, D58). The fifty came back here in round nine —
+   this page holds what you hold, Play holds what is projected — so nothing on them is a peers'
+   number; the one comparison against your peers, by type and by level, sits inside the
+   breakdown band. The old route still resolves — a second @page, not a redirect, because nothing
+   about the page is canonical to a crawler: it is signed-in only. *@
 
 <PumbilitySectionFrame Active="breakdown">
     <Body Context="ctx">
@@ -26,11 +35,66 @@
         }
 
         <section class="pmb-block">
-            <PumbilityBreakdown Breakdown="ctx.Page.Breakdown" PoolCount="ctx.Page.Pool.Count"></PumbilityBreakdown>
+            <PumbilityBreakdown Breakdown="ctx.Page.Breakdown" PoolCount="ctx.Page.Pool.Count"
+                                Page="ctx.Page" Charts="ctx.Charts"></PumbilityBreakdown>
         </section>
 
-        <section class="pmb-block">
-            <PoolCurve Page="ctx.Page" Charts="ctx.Charts"></PoolCurve>
-        </section>
+        <PumbilityPoolSection Page="ctx.Page" Charts="ctx.Charts"
+                              ToDos="_todos" OnToDo="ToggleToDo" OnOpen="ShowChartDetails" OnPlay="PlayChart"></PumbilityPoolSection>
+
+        @* AutoPlay is bound rather than fixed: the card's play button and its jacket open the
+           same dialog, and only one of them asked for the video. A card here is one of your own
+           charts with no peer number on it to audit, so its board opens on the World. *@
+        <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="ctx.Mix"
+                            AutoPlay="_detailsAutoPlay"
+                            IsToDo="_detailsChart != null && _todos.Contains(_detailsChart.Id)"
+                            OnToDo="ToggleToDo"></ChartDetailsDialog>
     </Body>
 </PumbilitySectionFrame>
+
+@code {
+    private Chart? _detailsChart;
+    private bool _detailsOpen;
+    private bool _detailsAutoPlay;
+
+    private readonly ISet<Guid> _todos = new HashSet<Guid>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        foreach (var saved in (await Mediator.Send(new GetSavedChartsQuery()))
+                 .Where(c => c.ListType == ChartListType.ToDo))
+            _todos.Add(saved.ChartId);
+    }
+
+    private void ShowChartDetails(Chart chart)
+    {
+        _detailsChart = chart;
+        _detailsAutoPlay = false;
+        _detailsOpen = true;
+    }
+
+    private void PlayChart(Chart chart)
+    {
+        _detailsChart = chart;
+        _detailsAutoPlay = true;
+        _detailsOpen = true;
+    }
+
+    private async Task ToggleToDo(Guid chartId)
+    {
+        if (_todos.Contains(chartId))
+        {
+            await Mediator.Send(new RemoveChartFromListCommand(ChartListType.ToDo, chartId));
+            Snackbar.Add(L["Removed from ToDo List!"], Severity.Success);
+            _todos.Remove(chartId);
+        }
+        else
+        {
+            await Mediator.Send(new SaveChartToListCommand(ChartListType.ToDo, chartId));
+            Snackbar.Add(L["Added to ToDo List!"], Severity.Success);
+            _todos.Add(chartId);
+        }
+
+        StateHasChanged();
+    }
+}

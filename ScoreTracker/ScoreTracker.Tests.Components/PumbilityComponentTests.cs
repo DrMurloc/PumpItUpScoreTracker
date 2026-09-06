@@ -1,4 +1,10 @@
+using System.Globalization;
+using System.Threading;
 using Bunit;
+using Moq;
+using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Services;
+using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -188,6 +194,125 @@ public sealed class PumbilityComponentTests : ComponentTestBase
             .Add(x => x.Carryover, carry).Add(x => x.Charts, new Dictionary<Guid, Chart>()));
 
         Assert.Empty(cut.FindAll(".pmb-fact-warn"));
+    }
+
+
+    // ------------------------------------------------------------------ you against your peers (D58)
+
+    private static readonly Guid Me = Guid.NewGuid();
+
+    private void SignIn()
+    {
+        CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        CurrentUser.SetupGet(c => c.User)
+            .Returns(new User(Me, "Me", true, null, new Uri("https://piu.test/me.png"), null));
+    }
+
+    private static PumbilityPoolCompareRecord Compare(PoolTypeSplit? peers) => new(
+        new Dictionary<ChartType, PeerCompare>
+        {
+            [ChartType.Single] = new(new Dictionary<int, int> { [20] = 25 }, new Dictionary<int, double> { [20] = 1 })
+        },
+        peers);
+
+    [Fact]
+    public void TheCardSplitsYourFiftyByTypeAndSetsThePeersAverageBeneath()
+    {
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.Is<GetPumbilityPoolCompareQuery>(q => q.Pool == null), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Compare(new PoolTypeSplit(64, 34.4, 15.6, 12_085.84, 5_508.22)));
+
+        var cut = RenderComponent<PumbilityBreakdown>(p => p
+            .Add(x => x.Breakdown, new PoolBreakdown(12442, 5524, 75, 174)).Add(x => x.PoolCount, 50)
+            .Add(x => x.Page, (PumbilityPageRecord)page).Add(x => x.Charts, page.Charts()));
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=wpc-levels]")));
+        var bars = cut.FindAll("[data-testid=wpc-types] .pmb-flip-bar");
+        Assert.Equal(2, bars.Count);
+        // Your fifty alternates the types, twenty-five of each; each segment is its worth with
+        // the count, doubles first, as the Phoenix 1 card draws it.
+        var mine = bars[0].QuerySelectorAll(".pmb-flip-seg").ToArray();
+        Assert.Equal(2, mine.Length);
+        Assert.All(mine, s => Assert.EndsWith("(25)", s.TextContent.Trim()));
+        Assert.Contains("d", mine[0].ClassName.Split(' '));
+        var peers = bars[1].QuerySelectorAll(".pmb-flip-seg").Select(s => s.TextContent.Trim()).ToArray();
+        // Whole numbers on the bar (owner, 2026-09-05): the segment is too narrow for decimals.
+        Assert.Equal(new[] { "5,508 (16)", "12,086 (34)" }, peers);
+        Assert.Contains("the average top 50 of the 64 players", cut.Find("[data-testid=wpc-types]").TextContent);
+        // Sized by value: the singles segment is the wider one on the peers' bar.
+        var flex = bars[1].QuerySelectorAll(".pmb-flip-seg")
+            .Select(s => double.Parse(s.GetAttribute("style")!.Split(':')[1], CultureInfo.InvariantCulture)).ToArray();
+        Assert.True(flex[1] > flex[0]);
+        var tile = Assert.Single(cut.FindAll("[data-testid=wpc-levels] .pmb-compare-tile"));
+        Assert.Equal("Singles", tile.QuerySelector(".pmb-compare-label")!.TextContent.Trim());
+    }
+
+    [Fact]
+    public void TheLegendNamesThePeersTheMixActuallyHas()
+    {
+        // Phoenix 2's peers are the window on the pool of the type; Phoenix 1's are the competitive
+        // band (D43, D53). The fixture's record is Phoenix 1.
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPoolCompareQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Compare(new PoolTypeSplit(12, 30, 20, 11_000, 6_000)));
+
+        var phoenix1 = RenderComponent<PumbilityBreakdown>(p => p
+            .Add(x => x.Breakdown, new PoolBreakdown(12442, 5524, 75, 174)).Add(x => x.PoolCount, 50)
+            .Add(x => x.Page, (PumbilityPageRecord)page).Add(x => x.Charts, page.Charts()));
+        phoenix1.WaitForAssertion(() =>
+            Assert.Contains("within one competitive level of you", phoenix1.Find("[data-testid=wpc-types]").TextContent));
+
+        var phoenix2 = RenderComponent<PumbilityBreakdown>(p => p
+            .Add(x => x.Breakdown, new PoolBreakdown(12442, 5524, 75, 174)).Add(x => x.PoolCount, 50)
+            .Add(x => x.Page, ((PumbilityPageRecord)page) with { Mix = MixEnum.Phoenix2 }).Add(x => x.Charts, page.Charts()));
+        phoenix2.WaitForAssertion(() =>
+            Assert.Contains("near your singles or doubles pool", phoenix2.Find("[data-testid=wpc-types]").TextContent));
+    }
+
+    [Fact]
+    public void ATypePoolKeepsTheLevelsAndDropsTheSplit()
+    {
+        // A singles or doubles pool is one type by definition: nothing to split, still a level to sit at.
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPoolCompareQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Compare(null));
+
+        var cut = RenderComponent<PumbilityBreakdown>(p => p
+            .Add(x => x.Breakdown, new PoolBreakdown(12442, 5524, 75, 174)).Add(x => x.PoolCount, 50)
+            .Add(x => x.Page, ((PumbilityPageRecord)page) with { Pool_ = ChartType.Single }).Add(x => x.Charts, page.Charts()));
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=wpc-levels]")));
+        Assert.Empty(cut.FindAll("[data-testid=wpc-types]"));
+    }
+
+    [Fact]
+    public void YourBarStandsAloneWhileNoPeerHoldsAFullFifty()
+    {
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPoolCompareQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Compare(null));
+
+        var cut = RenderComponent<PumbilityBreakdown>(p => p
+            .Add(x => x.Breakdown, new PoolBreakdown(12442, 5524, 75, 174)).Add(x => x.PoolCount, 50)
+            .Add(x => x.Page, (PumbilityPageRecord)page).Add(x => x.Charts, page.Charts()));
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=wpc-levels]")));
+        Assert.Single(cut.FindAll("[data-testid=wpc-types] .pmb-flip-bar"));
+        Assert.DoesNotContain("the average top 50", cut.Find("[data-testid=wpc-types]").TextContent);
+    }
+
+    [Fact]
+    public void ACardWithoutAFrameRecordReadsNothingAndKeepsToItsThreeParts()
+    {
+        var cut = RenderComponent<PumbilityBreakdown>(p => p
+            .Add(x => x.Breakdown, new PoolBreakdown(12442, 5524, 75, 174)).Add(x => x.PoolCount, 50));
+
+        Assert.Empty(cut.FindAll(".pmb-wpc-sub"));
+        Mediator.Verify(m => m.Send(It.IsAny<GetPumbilityPoolCompareQuery>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     // ------------------------------------------------------------------ helpers

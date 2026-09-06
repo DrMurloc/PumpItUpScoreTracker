@@ -5474,6 +5474,12 @@
   <data name="peers:" xml:space="preserve">
     <value>il tuo livello:</value>
   </data>
+  <data name="Peers: the average top 50 of the {0} players near your singles or doubles pool" xml:space="preserve">
+    <value>Pari: la top 50 media dei {0} giocatori vicini al tuo pool singles o doubles</value>
+  </data>
+  <data name="Peers: the average top 50 of the {0} players within one competitive level of you" xml:space="preserve">
+    <value>Pari: la top 50 media dei {0} giocatori entro ±1 livello competitivo da te</value>
+  </data>
   <data name="Peers: {0}% of their pool weight at {1}" xml:space="preserve">
     <value>Pari: {0}% del peso del loro insieme a {1}</value>
   </data>
@@ -6162,9 +6168,6 @@
   </data>
   <data name="PUMBILITY peers" xml:space="preserve">
     <value>Pari PUMBILITY</value>
-  </data>
-  <data name="PUMBILITY Pool" xml:space="preserve">
-    <value>Pool PUMBILITY</value>
   </data>
   <data name="Pumbility Push" xml:space="preserve">
     <value>Spinta al Pumbility</value>
@@ -7928,6 +7931,9 @@
   <data name="The extremes are real charts, not noise — the shortest and longest chart at each level." xml:space="preserve">
     <value>Gli estremi sono chart reali, non rumore — il chart più corto e quello più lungo di ogni livello.</value>
   </data>
+  <data name="The fifty charts your PUMBILITY is the sum of, grouped by what each is worth to you — its place, its value, and the score that earned it." xml:space="preserve">
+    <value>I cinquanta chart che compongono il tuo PUMBILITY, raggruppati per quanto ciascuno vale per te: la posizione, il valore e il punteggio che l'ha ottenuto.</value>
+  </data>
   <data name="The first Phoenix 2 score to beat your Phoenix 1 best" xml:space="preserve">
     <value>Il primo punteggio Phoenix 2 che batte il tuo record di Phoenix 1</value>
   </data>
@@ -9166,12 +9172,6 @@
   <data name="Where the levels sit" xml:space="preserve">
     <value>Dove stanno i livelli</value>
   </data>
-  <data name="Where the levels sit · doubles" xml:space="preserve">
-    <value>Dove stanno i livelli · Doubles</value>
-  </data>
-  <data name="Where the levels sit · singles" xml:space="preserve">
-    <value>Dove stanno i livelli · Singles</value>
-  </data>
   <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
     <value>Dove si collocano i pass di questo chart, per livello competitivo.</value>
   </data>
@@ -9570,6 +9570,9 @@
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>Il tuo endpoint risponde a una richiesta di verifica con questo. Non viene inviato da nessuna parte: è ciò che rende una prova il risponderci con esso, ed è perché un DNS dirottato non passa. Se ne conserva solo un hash, quindi annotalo dove lo ritrovi.</value>
   </data>
+  <data name="your fifty against what your peers hold, by level" xml:space="preserve">
+    <value>i tuoi cinquanta contro ciò che tengono i tuoi pari, per livello</value>
+  </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>Il file superava i 10MB, riducilo e riprova.</value>
   </data>
@@ -9642,9 +9645,6 @@
   <data name="Your pool" xml:space="preserve">
     <value>Il tuo insieme</value>
   </data>
-  <data name="Your pool by place, with what your peers do on each chart — how many hold it, their median and how split they are — and the waiting room below the bar." xml:space="preserve">
-    <value>Il tuo insieme per posizione, con quello che i tuoi pari fanno su ogni chart — quanti la tengono, la loro mediana e quanto sono divisi — e la sala d'attesa sotto la soglia.</value>
-  </data>
   <data name="Your pool holds {0} of 50. Until it's full, every chart you play counts whole — there's no bar to beat yet." xml:space="preserve">
     <value>Il tuo insieme ne ha {0} su 50. Finché non è pieno, ogni chart che giochi conta per intero — non c'è ancora una soglia da superare.</value>
   </data>
@@ -9686,6 +9686,9 @@
   </data>
   <data name="Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them." xml:space="preserve">
     <value>Pumbility, titoli, lampade delle cartelle e statistiche si calcolano da questi dati: si azzerano da soli. Non puoi conservarli.</value>
+  </data>
+  <data name="your real top 50 against your peers' average, by type" xml:space="preserve">
+    <value>la tua vera top 50 contro la media dei tuoi pari, per tipo</value>
   </data>
   <data name="Your Region" xml:space="preserve">
     <value>La tua regione</value>

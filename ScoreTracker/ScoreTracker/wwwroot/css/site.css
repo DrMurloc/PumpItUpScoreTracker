@@ -15651,6 +15651,68 @@ span.ct-console-pick { cursor: default; }
     margin: 0;
 }
 
+/* --- you against your peers, inside the card (D58) --- */
+.pmb-wpc-sub {
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    padding-top: 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pmb-wpc-sub-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 12.5px;
+}
+
+.pmb-wpc-sub-head strong {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+/* Two bars in rows labelled You and Peers: the Phoenix 1 card's bar, sized by value here, each
+   segment reading what it is worth and how many charts it is. */
+.pmb-splitrows {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 6px 8px;
+    align-items: center;
+}
+
+.pmb-splitrow-lbl {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.pmb-splitrows .pmb-flip-seg {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 0 6px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* The level tiles inside the card sit on the card's own surface, so they drop their border. */
+.pmb-wpc-sub .pmb-compare {
+    margin: 0;
+}
+
+.pmb-wpc-sub .pmb-compare-tile {
+    background: var(--mix-surface-muted);
+    border-color: transparent;
+}
+
 @media (max-width: 699.98px) {
     .pmb-wpc-keys {
         grid-template-columns: 1fr;

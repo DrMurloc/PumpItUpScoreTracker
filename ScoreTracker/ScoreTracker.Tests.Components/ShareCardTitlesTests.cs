@@ -52,27 +52,30 @@ public sealed class ShareCardTitlesTests
     [Fact]
     public void TargetsPromoteTheGroupingAndPrintOnlyTheClarifiersThatApply()
     {
-        var prevalence = ShareCardTitles.Targets(false, "Prevalence", "Great", "Singles pool",
+        var prevalence = ShareCardTitles.Targets("Prevalence", "Great", "Singles pool",
             gainsOnly: true, phoenix1Projected: false, "Phoenix 2", "2026-09-02", "DrMurloc", L);
         Assert.Equal("PUMBILITY Targets — Prevalence", prevalence.Title);
         Assert.Equal("Energy: Great · Singles pool · Only projected PUMBILITY gains · Phoenix 2 · 2026-09-02",
             prevalence.Subtitle);
         Assert.Equal("Personalized for DrMurloc", prevalence.Stamp);
 
-        var gains = ShareCardTitles.Targets(false, "Projected gains", "Good", null,
+        var gains = ShareCardTitles.Targets("Projected gains", "Good", null,
             gainsOnly: false, phoenix1Projected: true, "Phoenix", "2026-09-02", "DrMurloc", L);
         Assert.Equal("PUMBILITY Targets — Projected gains", gains.Title);
         Assert.Equal("Energy: Good · Phoenix 1 projected · Phoenix · 2026-09-02", gains.Subtitle);
     }
 
     [Fact]
-    public void ThePoolLensIsThePoolNotATargetsList()
+    public void TheBreakdownPagesFiftyNameThePageAndTheBlockAndCarryNoEnergy()
     {
-        var pool = ShareCardTitles.Targets(true, "Your top 50", "Great", "Doubles pool",
-            gainsOnly: false, phoenix1Projected: false, "Phoenix 2", "2026-09-02", "DrMurloc", L);
+        // PUMBILITY doc D57, §3.11: nothing on that page reads an Energy, so none rides the card.
+        var pool = ShareCardTitles.Pool("Doubles pool", "Phoenix 2", "2026-09-05", "DrMurloc", L);
+        Assert.Equal("PUMBILITY Breakdown — Your top 50", pool.Title);
+        Assert.Equal("Doubles pool · Phoenix 2 · 2026-09-05", pool.Subtitle);
+        Assert.Equal("Personalized for DrMurloc", pool.Stamp);
 
-        Assert.Equal("PUMBILITY Pool — Top 50", pool.Title);
-        Assert.Equal("Energy: Great · Doubles pool · Phoenix 2 · 2026-09-02", pool.Subtitle);
+        var onePool = ShareCardTitles.Pool(null, "Phoenix", "2026-09-05", "DrMurloc", L);
+        Assert.Equal("Phoenix · 2026-09-05", onePool.Subtitle);
     }
 
     [Fact]
@@ -85,5 +88,7 @@ public sealed class ShareCardTitlesTests
                 "2026-09-02"));
         Assert.Equal("PumbilityTargets_Phoenix2_Prevalence_Great_Single_2026-09-02.png",
             ShareCardTitles.TargetsFileName(MixEnum.Phoenix2, "Prevalence", "Great", "Single", "2026-09-02"));
+        Assert.Equal("PumbilityTop50_Phoenix2_Single_2026-09-05.png",
+            ShareCardTitles.PoolFileName(MixEnum.Phoenix2, "Single", "2026-09-05"));
     }
 }
