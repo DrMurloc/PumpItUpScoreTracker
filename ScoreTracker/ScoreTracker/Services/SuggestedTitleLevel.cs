@@ -38,26 +38,28 @@ public sealed record SuggestedLevel(IReadOnlyList<SuggestedRung> Rungs, PhoenixP
 ///         imported nothing.
 ///     </para>
 ///     <para>
-///         One folder is the wrong shape for that answer, because how well you play moves it by up
-///         to eight levels. So it answers at three grades instead, and the middle one is the AAA
-///         this used to print alone.
+///         One folder is the wrong shape for that answer, because how well you play moves it. So
+///         it answers at three grades instead — SSS+ down to the AAA this used to print alone,
+///         which is now the floor of the bracket rather than its middle.
 ///     </para>
 /// </summary>
 public static class SuggestedTitleLevel
 {
     /// <summary>
     ///     Best first, so the levels ascend down the block and the grades read in the order every
-    ///     other grade list on the site uses. A is the bottom rung because it is the lowest grade
-    ///     that reads as a real target rather than a near-miss — grinding a folder to a B is not
-    ///     an ask anyone acts on. It was also once the lowest multiplier verified against live
-    ///     data; that is no longer the reason, since a Double's A is itself interpolated while a
-    ///     Single's B, C and D are all measured.
+    ///     other grade list on the site uses. AAA is the bottom rung because it is the lowest grade
+    ///     a player might actually average across fifty charts — the block floored at A until
+    ///     2026-09-06, and a Phoenix 2 A is 800,000, so that row was naming a folder its own reader
+    ///     would have been scraping through rather than farming. The bracket pays for the honest
+    ///     floor in width: SSS+ / SS / AAA spans 6.4% where SSS+ / AAA / A spanned 17%, so the
+    ///     three rows sit within three levels of each other and merge more often. Widen it with a
+    ///     grade players average, never by reaching back down the ladder.
     /// </summary>
     private static readonly PhoenixLetterGrade[] ReferenceGrades =
     {
         PhoenixLetterGrade.SSSPlus,
-        PhoenixLetterGrade.AAA,
-        PhoenixLetterGrade.A
+        PhoenixLetterGrade.SS,
+        PhoenixLetterGrade.AAA
     };
 
     private const PhoenixPlate ReferencePlate = PhoenixPlate.TalentedGame;

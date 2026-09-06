@@ -67,7 +67,7 @@ public sealed class TitleDetailDrawerTests : ComponentTestBase
         // the low number is the hard one, and only the row can say so.
         var rows = Rows(Open("[S] ADVANCED LV.1"));
 
-        Assert.Equal(new[] { "S13 at SSS+", "S16 at AAA", "S20 at A" }, rows);
+        Assert.Equal(new[] { "S13 at SSS+", "S14 at SS", "S16 at AAA" }, rows);
     }
 
     [Fact]
@@ -75,15 +75,15 @@ public sealed class TitleDetailDrawerTests : ComponentTestBase
     {
         var rows = Rows(Open("[P.B] GOLD"));
 
-        Assert.Equal(new[] { "S13 · D14 at SSS+", "S16 · D17 at AAA", "S20 · D21 at A" }, rows);
+        Assert.Equal(new[] { "S13 · D14 at SSS+", "S14 · D15 at SS", "S16 · D17 at AAA" }, rows);
     }
 
     [Fact]
     public void GradesSharingAFolderRenderOnceRatherThanAsIdenticalRows()
     {
-        var rows = Rows(Open("[S] INTERMEDIATE LV.9"));
+        var rows = Rows(Open("[S] INTERMEDIATE LV.10"));
 
-        Assert.Equal(new[] { "S10 at AAA or better", "S14 at A" }, rows);
+        Assert.Equal(new[] { "S11 at SS or better", "S13 at AAA" }, rows);
     }
 
     [Fact]
@@ -91,20 +91,22 @@ public sealed class TitleDetailDrawerTests : ComponentTestBase
     {
         var rows = Rows(Open("[S] INTERMEDIATE LV.1"));
 
-        Assert.Equal("S10 at A or better", Assert.Single(rows));
+        Assert.Equal("S10 at AAA or better", Assert.Single(rows));
     }
 
     [Fact]
-    public void AGradeNoFolderReachesKeepsItsRowAndSaysWhy()
+    public void NoRowFallsShortAtTheseReferenceGrades()
     {
-        // The 20,000 capstone is the only title the top folder cannot reach at a bare A. Only
-        // the last row is pinned here — the rows above it are another test's subject, and this
-        // one is about the row that falls short still being shown, and saying so.
+        // A row the top folder cannot reach renders dimmed and says why — "still isn't enough
+        // at {grade}" — instead of naming a folder that would not serve. No title is in that
+        // shape while the block floors at AAA; ABYSS ABSOLUTE's 20,000 was the last one, and
+        // only at the bare A the block carried until 2026-09-06. Pinned on the capstone because
+        // it is the title that would fall short first if a threshold ever outran the curve.
         var drawer = Open("ABYSS ABSOLUTE");
 
-        Assert.Equal("S29 · D29 still isn't enough at A", Rows(drawer)[^1]);
-        // Dimmed, because that number is the ceiling it falls short of rather than an answer.
-        Assert.Single(drawer.FindAll(".title-suggest-row.short"));
+        Assert.Equal(new[] { "S25 · D26 at SSS+", "S26 · D27 at SS", "S27 · D28 at AAA" },
+            Rows(drawer));
+        Assert.Empty(drawer.FindAll(".title-suggest-row.short"));
     }
 
     [Fact]
