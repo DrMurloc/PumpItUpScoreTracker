@@ -57,7 +57,7 @@ public static class ApiV2RateLimiting
             });
         });
 
-        options.OnRejected = async (context, cancellationToken) =>
+        options.OnRejected = async (context, _) =>
         {
             context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
 
@@ -76,19 +76,28 @@ public static class ApiV2RateLimiting
             // above authorization — so the credential is all there is to name the caller by, and
             // the vertical answers with the principal it resolved on the calls that got through.
             var credential = ApiCredential.Parse(context.HttpContext.Request.Headers.Authorization.ToString());
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<ApiRequestLogMiddleware>>();
             ToolKeyPrincipal? principal = null;
             if (credential.Failure is null)
             {
-                var mediator = context.HttpContext.RequestServices.GetRequiredService<IMediator>();
-                principal = await mediator.Send(new RecordRateLimitedRequestCommand(credential.Secret),
-                    cancellationToken);
+                try
+                {
+                    // Best effort, on its own token. The request's own token is the wrong one: a
+                    // flooding client that hangs up before its 429 is exactly the request worth
+                    // counting, and a count that cannot be written must not cost the 429 its line.
+                    var mediator = context.HttpContext.RequestServices.GetRequiredService<IMediator>();
+                    principal = await mediator.Send(new RecordRateLimitedRequestCommand(credential.Secret),
+                        CancellationToken.None);
+                }
+                catch (Exception e)
+                {
+                    logger.LogWarning(e, "A rate-limited request could not be counted");
+                }
             }
 
             // The request log's line for this request: the middleware that writes it sits below
             // this hook and never sees a rejection.
-            ApiRequestLogMiddleware.LogRejected(
-                context.HttpContext.RequestServices.GetRequiredService<ILogger<ApiRequestLogMiddleware>>(),
-                context.HttpContext, credential, principal);
+            ApiRequestLogMiddleware.LogRejected(logger, context.HttpContext, credential, principal);
         };
 
         return options;
