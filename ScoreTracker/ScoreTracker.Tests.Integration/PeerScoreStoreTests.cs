@@ -44,10 +44,10 @@ public sealed class PeerScoreStoreTests : IAsyncLifetime
 
     // A writer that goes straight to the table, so a test can move a score behind a store's back —
     // which is exactly what an import on another instance would look like.
-    private EFPhoenixRecordsRepository Writer() =>
+    private EFPhoenixRecordsRepository Writer(PeerScoreStore? store = null) =>
         new(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions()),
             Mock.Of<IChartRepository>(), new EFXXChartAttemptRepository(_fixture.DbContextFactory),
-            Mock.Of<IMediator>(), Mock.Of<IPlayerStatsReader>(), Store());
+            Mock.Of<IMediator>(), Mock.Of<IPlayerStatsReader>(), store ?? Store());
 
     [Fact]
     public async Task AScoreWrittenBehindTheStoreIsNotSeenUntilThePlayerIsEvicted()
@@ -76,6 +76,88 @@ public sealed class PeerScoreStoreTests : IAsyncLifetime
 
         Assert.Equal(first, Assert.Single(before).ChartId);
         Assert.Equal(first, Assert.Single(stale).ChartId);
+        Assert.Equal(new[] { first, second }.OrderBy(g => g), after.Select(r => r.ChartId).OrderBy(g => g));
+    }
+
+    /// <summary>
+    ///     A player who imports while somebody else's read is fetching them must still be IN that
+    ///     read. The store is right to refuse rows older than the eviction — but refusing to store
+    ///     them is not the same as refusing to answer, and a peer missing from a read is a peer who
+    ///     passed nothing as far as every count on the page can tell. The standing built from it is
+    ///     then cached for a quarter of an hour (bug check 2026-09-06).
+    /// </summary>
+    [Fact]
+    public async Task APlayerEvictedWhileTheirRowsWereInFlightIsStaleInTheReadRatherThanAbsent()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedPhoenixChartAsync(20);
+        await Writer().UpdateBestAttempt(MixEnum.Phoenix, userId, new RecordedPhoenixScore(chartId,
+            PhoenixScore.From(950_000), PhoenixPlate.SuperbGame, false, RecordedAt));
+
+        var store = Store();
+        // The eviction lands between the fetch starting and its rows arriving. Evicting a player
+        // the store has never held is exactly that: the tombstone is newer than any fetch that
+        // has not finished, which is what Put checks.
+        store.Evict(userId, MixEnum.Phoenix);
+
+        var read = await store.InLevelRange(MixEnum.Phoenix, new[] { userId }, ChartType.Single, 20, 20,
+            CancellationToken.None);
+
+        Assert.Equal(chartId, Assert.Single(read).ChartId);
+    }
+
+    /// <summary>
+    ///     And the refusal still stands: the rows were served, not stored, so the next read goes
+    ///     back to the database rather than keeping what the eviction rejected.
+    /// </summary>
+    [Fact]
+    public async Task RowsRefusedByAnEvictionAreServedOnceAndNotKept()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var first = await _seed.SeedPhoenixChartAsync(20);
+        var second = await _seed.SeedPhoenixChartAsync(20);
+        await Writer().UpdateBestAttempt(MixEnum.Phoenix, userId, new RecordedPhoenixScore(first,
+            PhoenixScore.From(950_000), PhoenixPlate.SuperbGame, false, RecordedAt));
+
+        var store = Store();
+        store.Evict(userId, MixEnum.Phoenix);
+        await store.InLevelRange(MixEnum.Phoenix, new[] { userId }, ChartType.Single, 20, 20,
+            CancellationToken.None);
+
+        // Written behind the store. Had the refused rows been kept, this would not show up.
+        await Writer().UpdateBestAttempt(MixEnum.Phoenix, userId, new RecordedPhoenixScore(second,
+            PhoenixScore.From(960_000), PhoenixPlate.SuperbGame, false, RecordedAt));
+        store.Evict(userId, MixEnum.Phoenix);
+        var after = await store.InLevelRange(MixEnum.Phoenix, new[] { userId }, ChartType.Single, 20, 20,
+            CancellationToken.None);
+
+        Assert.Equal(new[] { first, second }.OrderBy(g => g), after.Select(r => r.ChartId).OrderBy(g => g));
+    }
+
+    /// <summary>
+    ///     Recording a score drops the player from the store then and there. Four of its readers
+    ///     ask about one person — their own scores — and the bus event that would otherwise drop
+    ///     them is debounced by minutes (bug check 2026-09-06).
+    /// </summary>
+    [Fact]
+    public async Task RecordingAScoreDropsThePlayerWithoutWaitingForTheBus()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var first = await _seed.SeedPhoenixChartAsync(20);
+        var second = await _seed.SeedPhoenixChartAsync(20);
+        var store = Store();
+        // One writer for the whole test, so the store it evicts is the store being read.
+        var writer = Writer(store);
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, userId, new RecordedPhoenixScore(first,
+            PhoenixScore.From(950_000), PhoenixPlate.SuperbGame, false, RecordedAt));
+        await store.InLevelRange(MixEnum.Phoenix, new[] { userId }, ChartType.Single, 20, 20,
+            CancellationToken.None);
+
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, userId, new RecordedPhoenixScore(second,
+            PhoenixScore.From(970_000), PhoenixPlate.SuperbGame, false, RecordedAt));
+        var after = await store.InLevelRange(MixEnum.Phoenix, new[] { userId }, ChartType.Single, 20, 20,
+            CancellationToken.None);
+
         Assert.Equal(new[] { first, second }.OrderBy(g => g), after.Select(r => r.ChartId).OrderBy(g => g));
     }
 

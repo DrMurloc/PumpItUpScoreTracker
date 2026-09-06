@@ -76,7 +76,7 @@ internal sealed class BoardPeerReader
     }
 
     public async Task<BoardPeerGroupReading?> GetBoardPeers(MixEnum mix, ChartType chartType, double minimumPool,
-        double maximumPool, CancellationToken cancellationToken)
+        double maximumPool, Guid? viewerAccountId, CancellationToken cancellationToken)
     {
         if (minimumPool > maximumPool) return null;
 
@@ -84,13 +84,30 @@ internal sealed class BoardPeerReader
         if (latest?.CompletedAt == null) return null;
         var asOf = latest.CompletedAt.Value;
 
-        // The window is the only part of this that is about the viewer. Everyone in the band asks
-        // the same question of the same board and gets the same fold, so the fold is done once.
+        // The window and the viewer are the only parts of this that are about who is asking.
+        // Everyone in the band asks the same question of the same board and gets the same fold,
+        // so the fold is done once and filtered per person.
         var prepared = await PreparedPeers(mix, chartType, latest.Id, cancellationToken);
         return new BoardPeerGroupReading(asOf, prepared
-            .Where(p => p.Pool >= minimumPool && p.Pool <= maximumPool)
+            // Never yourself (D31). The window is centred on your own pool and the board
+            // publishes that same number for you, so your row is inside it essentially always —
+            // and if your account is private it comes back naming nobody, which is exactly the
+            // shape a caller cannot recognise. Answered here because this is the one place that
+            // knows the account behind a row it refuses to name.
+            .Where(p => viewerAccountId == null || p.Account != viewerAccountId)
+            .Where(p => p.Reading.Pool >= minimumPool && p.Reading.Pool <= maximumPool)
+            .Select(p => p.Reading)
             .ToArray());
     }
+
+    /// <summary>
+    ///     A folded person, with the account the mirror resolved kept beside the reading rather
+    ///     than inside it. <see cref="Account" /> is what the mirror KNOWS; the reading names an
+    ///     account only when it is public and may be named (D61). The difference is the whole
+    ///     reason a viewer can be excluded from their own board peers without their private link
+    ///     ever leaving this class.
+    /// </summary>
+    private sealed record PreparedPeer(BoardPeerReading Reading, Guid? Account);
 
     /// <summary>
     ///     The whole board folded to people: everyone who qualifies (D60), one entry per person,
@@ -103,11 +120,11 @@ internal sealed class BoardPeerReader
     ///         window is above it, even when a lesser row of theirs would have fit inside.
     ///     </para>
     /// </summary>
-    private async Task<IReadOnlyList<BoardPeerReading>> PreparedPeers(MixEnum mix, ChartType chartType,
+    private async Task<IReadOnlyList<PreparedPeer>> PreparedPeers(MixEnum mix, ChartType chartType,
         int snapshotId, CancellationToken cancellationToken)
     {
         var key = $"{nameof(BoardPeerReader)}__Prepared__{mix}__{chartType}__{snapshotId}";
-        if (_cache.TryGetValue(key, out IReadOnlyList<BoardPeerReading>? cached) && cached != null) return cached;
+        if (_cache.TryGetValue(key, out IReadOnlyList<PreparedPeer>? cached) && cached != null) return cached;
 
         var boardName = BoardNameFor(chartType);
         var board = (await _snapshots.GetBoards(mix, cancellationToken))
@@ -150,23 +167,23 @@ internal sealed class BoardPeerReader
             {
                 var best = g.OrderByDescending(c => c.Row.Score).ThenBy(c => c.Player.Id).First();
                 accounts.TryGetValue(best.Player.Id, out var account);
-                return new BoardPeerReading(
+                return new PreparedPeer(new BoardPeerReading(
                     g.OrderByDescending(c => c.Row.Score).Select(c => c.Player.Id).ToArray(),
                     best.Player.Username,
                     (double)best.Row.Score,
                     // A private account is a board player: named by its public tag, scored from
                     // public rows, and never reported as the account it happens to be (D61).
-                    account is { IsPublic: true } ? account.Id : null);
+                    account is { IsPublic: true } ? account.Id : null), account?.Id);
             })
             .ToArray();
 
-        _cache.Set(key, (IReadOnlyList<BoardPeerReading>)peers, PreparedTtl);
+        _cache.Set(key, (IReadOnlyList<PreparedPeer>)peers, PreparedTtl);
         return peers;
     }
 
-    private IReadOnlyList<BoardPeerReading> Empty(string key)
+    private IReadOnlyList<PreparedPeer> Empty(string key)
     {
-        var none = (IReadOnlyList<BoardPeerReading>)Array.Empty<BoardPeerReading>();
+        var none = (IReadOnlyList<PreparedPeer>)Array.Empty<PreparedPeer>();
         _cache.Set(key, none, PreparedTtl);
         return none;
     }
@@ -260,14 +277,18 @@ internal sealed class BoardPeerReader
         return rows.Select(r => new BoardScoreReading(r.PlayerId, r.ChartId, r.Level, r.Score)).ToArray();
     }
 
-    public async Task<IReadOnlyList<BoardScoreReading>> GetBoardScoresOn(MixEnum mix,
+    public async Task<BoardScoreReadings> GetBoardScoresOn(MixEnum mix,
         IReadOnlyCollection<int> boardPlayerIds, IReadOnlyCollection<Guid> chartIds,
         CancellationToken cancellationToken)
     {
-        if (boardPlayerIds.Count == 0 || chartIds.Count == 0) return Array.Empty<BoardScoreReading>();
+        if (boardPlayerIds.Count == 0 || chartIds.Count == 0) return BoardScoreReadings.None;
+
+        var latest = await _snapshots.GetLatestSealed(mix, cancellationToken);
+        if (latest?.CompletedAt == null) return BoardScoreReadings.None;
 
         var rows = await _board.OnCharts(mix, boardPlayerIds, chartIds, cancellationToken);
 
-        return rows.Select(r => new BoardScoreReading(r.PlayerId, r.ChartId, r.Level, r.Score)).ToArray();
+        return new BoardScoreReadings(latest.CompletedAt.Value,
+            rows.Select(r => new BoardScoreReading(r.PlayerId, r.ChartId, r.Level, r.Score)).ToArray());
     }
 }

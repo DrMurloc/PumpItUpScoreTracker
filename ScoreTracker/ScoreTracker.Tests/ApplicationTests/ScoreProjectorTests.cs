@@ -669,7 +669,7 @@ public sealed class ScoreProjectorTests
             foreach (var (chart, score) in scores)
                 _boardScores.Add(new BoardScoreReading(boardPlayerId, chart, 22, score));
             Official.Setup(o => o.GetBoardPeers(MixEnum.Phoenix2, It.IsAny<ChartType>(), It.IsAny<double>(),
-                    It.IsAny<double>(), It.IsAny<CancellationToken>()))
+                    It.IsAny<double>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new BoardPeerGroupReading(BoardSweptAt, _boardPeers));
             Official.Setup(o => o.GetBoardScores(MixEnum.Phoenix2, It.IsAny<ChartType>(),
                     It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<int>(), It.IsAny<int>(),

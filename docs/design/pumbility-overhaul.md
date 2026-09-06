@@ -1610,6 +1610,16 @@ covers the board read — no scheduled job, no cache hook, no new vertical. Meas
 database: one viewer's peer evidence is 8,776 rows in 122 ms, and the entire eligible population's
 every chart is 68,769 rows in 136 ms.
 
+**Corrected after the bug check (2026-09-06).** Two things D59 needed and did not have. The mirror is
+now told **who is asking** (`GetBoardPeers(..., viewerAccountId, ...)`): the site half removes the viewer
+with a `Remove()`, the board half had nothing to remove with, and a private account comes back naming
+nobody (D61) — so a caller could not recognise its own row, while the window, being centred on the
+viewer's own pool, contained it essentially always. The reader keeps the resolved account beside the
+reading rather than inside it, so the refusal costs the private link nothing. And `GetBoardScoresOn`
+**returns the sweep date** with its rows: the standing prints an asterisk against a board peer's count,
+and the footnote under it was only ever set by the ghost-rival branch — so a player without ghost rivals,
+which is most of them, got the mark and no date (D37).
+
 **Tests** — `DomainTests`: the fifty rebuild and its 270 gate, the voice merge. `ApplicationTests`:
 the three dedupe legs, the private flip, the projector's mixed pool, the standing's counts.
 `Tests.Components`: the roster chip, the board's rows and asterisk, the popover line, the account
@@ -1656,6 +1666,16 @@ always used, for the same reason and in both directions. There is deliberately *
 expiry**: that would put a multi-second rebuild in front of one unlucky viewer for a staleness that
 is per player in the first place. The twelve-hour per-player backstop is for an event that never
 arrived, not the mechanism.
+
+**Two rules the bug check made explicit (2026-09-06).** *A write drops the player then and there.*
+Four of the site store's readers ask it about one person — their own scores: the tier-list blend, the
+session breakdown's Phoenix 1 mark, the rating saga's re-price, and the projector's own pool gate. The
+bus event is debounced by minutes, which is right for a peer and far too slow for the player who just
+recorded the score, so every write path in `EFPhoenixRecordsRepository` evicts alongside the per-user
+cache it already dropped. *And stale beats absent.* A player who imports while somebody else's read is
+fetching them is refused by `Put` — correctly, those rows predate the eviction — but the read still
+answers with them, because a peer missing from a read is a peer who passed nothing as far as every count
+on the page can tell, and the standing built from it is cached for fifteen minutes.
 
 **⚠ The scale-out caveat.** The board store is snapshot-keyed and safe on any number of instances.
 The site store's eviction rides the in-memory bus, so it reaches only the instance that ran the

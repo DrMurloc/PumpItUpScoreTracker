@@ -54,6 +54,9 @@ internal sealed class PeerScoreStore
     private Dictionary<Guid, Player> _identity = new();
     private DateTimeOffset _identityAt = DateTimeOffset.MinValue;
 
+    /// <summary>Ids the last identity read could not find, so a purged account is asked for once.</summary>
+    private IReadOnlySet<Guid> _identityAbsent = new HashSet<Guid>();
+
     public PeerScoreStore(IDbContextFactory<ChartAttemptDbContext> factory)
     {
         _factory = factory;
@@ -150,16 +153,17 @@ internal sealed class PeerScoreStore
     {
         var loaded = Mix(mix);
         var missing = userIds.Distinct().Where(id => !loaded.Holds(id)).ToArray();
+        IReadOnlyDictionary<Guid, Row[]>? declined = null;
         if (missing.Length > 0)
         {
             // One query for everyone the store has not got, not one per player: after an import
             // that is a single player, and on a cold store it is the peer group.
             var startedAt = DateTimeOffset.UtcNow;
-            loaded.Put(missing, await Fetch(mix, missing, cancellationToken), startedAt);
+            declined = loaded.Put(missing, await Fetch(mix, missing, cancellationToken), startedAt);
         }
 
         var identity = await Identity(userIds, cancellationToken);
-        return loaded.Read(userIds, identity, span, keep);
+        return loaded.Read(userIds, identity, span, keep, declined);
     }
 
     private Loaded Mix(MixEnum mix)
@@ -174,12 +178,18 @@ internal sealed class PeerScoreStore
     /// <summary>
     ///     Names and public flags for everyone. Re-read whole on expiry rather than per player: it
     ///     is one narrow row each, and a rename has to reach every surface that quotes the name.
+    ///     <para>
+    ///         An id nobody can find is remembered as missing. Without that, a peer group that
+    ///         still names a purged account — the band caches outlive the account by an hour — read
+    ///         the whole User table again on every folder of every page for as long as it lingered.
+    ///     </para>
     /// </summary>
     private async Task<IReadOnlyDictionary<Guid, Player>> Identity(IReadOnlyCollection<Guid> needed,
         CancellationToken cancellationToken)
     {
         var known = _identity;
-        if (DateTimeOffset.UtcNow - _identityAt < IdentityTtl && needed.All(known.ContainsKey)) return known;
+        var fresh = DateTimeOffset.UtcNow - _identityAt < IdentityTtl;
+        if (fresh && needed.All(id => known.ContainsKey(id) || _identityAbsent.Contains(id))) return known;
 
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var rows = await database.User
@@ -187,6 +197,7 @@ internal sealed class PeerScoreStore
             .ToArrayAsync(cancellationToken);
         var built = rows.ToDictionary(u => u.Id, u => new Player(Name.From(u.Name), u.IsPublic));
         _identity = built;
+        _identityAbsent = needed.Where(id => !built.ContainsKey(id)).ToHashSet();
         _identityAt = DateTimeOffset.UtcNow;
         return built;
     }
@@ -204,8 +215,11 @@ internal sealed class PeerScoreStore
     ///         store exists to stop paying.
     ///     </para>
     ///     <para>
-    ///         A chart the dimension has never heard of is dropped, which is what the join used to
-    ///         do: a record on a chart that is not in this mix is not this mix’s evidence.
+    ///         A chart the catalog has never heard of is dropped. A chart the catalog knows but
+    ///         this mix has no level for is kept at level zero, which is how the two reads differed
+    ///         before the store: the band read joined ChartMix and so never saw it, and the
+    ///         chart-set read did not join and so did. A band starts at ten, so zero falls out of
+    ///         one read and stays in the other without either being told about the difference.
     ///     </para>
     /// </summary>
     private async Task<Dictionary<Guid, List<Row>>> Fetch(MixEnum mix, IReadOnlyCollection<Guid>? userIds,
@@ -279,9 +293,11 @@ internal sealed class PeerScoreStore
     }
 
     /// <summary>
-    ///     Which charts the mix has, and what level and type each is. Rebuilt on the hour: charts
-    ///     arrive with a content update rather than with play, so an hour behind is a chart whose
-    ///     first scores have not been imported yet either.
+    ///     Every chart the catalog holds, with the level this mix gives it — zero when the mix
+    ///     gives it none, so a record on a chart this mix dropped is still answerable by chart id
+    ///     and still outside every band. Rebuilt on the hour: charts arrive with a content update
+    ///     rather than with play, so an hour behind is a chart whose first scores have not been
+    ///     imported yet either.
     /// </summary>
     private async Task<IReadOnlyDictionary<Guid, Chart>> Charts(MixEnum mix, ChartAttemptDbContext database,
         CancellationToken cancellationToken)
@@ -293,13 +309,13 @@ internal sealed class PeerScoreStore
         }
 
         var mixId = MixIds.For(mix);
-        var rows = await (from cm in database.ChartMix
-            join c in database.Chart on cm.ChartId equals c.Id
-            where cm.MixId == mixId
-            select new { c.Id, cm.Level, c.Type }).ToArrayAsync(cancellationToken);
+        var rows = await (from c in database.Chart
+            join cm in database.ChartMix.Where(m => m.MixId == mixId) on c.Id equals cm.ChartId into levels
+            from level in levels.DefaultIfEmpty()
+            select new { c.Id, Level = (int?)level.Level, c.Type }).ToArrayAsync(cancellationToken);
 
         var built = (IReadOnlyDictionary<Guid, Chart>)rows.ToDictionary(r => r.Id,
-            r => new Chart((short)r.Level, Enum.Parse<ChartType>(r.Type)));
+            r => new Chart((short)(r.Level ?? 0), Enum.Parse<ChartType>(r.Type)));
         lock (_charts)
         {
             _charts[mix] = (built, DateTimeOffset.UtcNow);
@@ -359,26 +375,41 @@ internal sealed class PeerScoreStore
         }
 
         /// <summary>
-        ///     Stores these players wholesale. A player in <paramref name="requested" /> with no rows
-        ///     is stored empty rather than left out — "they have passed nothing" is an answer, and
-        ///     leaving them out would re-query them on every read forever. A player who imported
-        ///     while the fetch was running is skipped: their rows are older than the eviction that
-        ///     was the point of dropping them.
+        ///     Stores these players wholesale, and reports the ones it would not. A player in
+        ///     <paramref name="requested" /> with no rows is stored empty rather than left out —
+        ///     "they have passed nothing" is an answer, and leaving them out would re-query them on
+        ///     every read forever.
+        ///     <para>
+        ///         A player who imported while the fetch was running is NOT stored: these rows are
+        ///         older than the eviction that was the point of dropping them. They are still handed
+        ///         back, because the caller is mid-read and the choice there is stale or absent —
+        ///         and absent is the worse answer by far. A peer who vanishes from a read is a peer
+        ///         who never passed the chart as far as every count on the page can tell, and the
+        ///         standing that came out of it is cached for a quarter of an hour.
+        ///     </para>
         /// </summary>
-        public void Put(IReadOnlyCollection<Guid> requested, Dictionary<Guid, List<Row>> fetched,
-            DateTimeOffset startedAt)
+        public IReadOnlyDictionary<Guid, Row[]> Put(IReadOnlyCollection<Guid> requested,
+            Dictionary<Guid, List<Row>> fetched, DateTimeOffset startedAt)
         {
             var loadedAt = DateTimeOffset.UtcNow;
+            var declined = new Dictionary<Guid, Row[]>();
             lock (_players)
             {
                 foreach (var userId in requested)
                 {
-                    if (_evictedAt.TryGetValue(userId, out var evicted) && evicted > startedAt) continue;
+                    var rows = fetched.TryGetValue(userId, out var found) ? Sorted(found) : None;
+                    if (_evictedAt.TryGetValue(userId, out var evicted) && evicted > startedAt)
+                    {
+                        declined[userId] = rows;
+                        continue;
+                    }
+
                     _evictedAt.Remove(userId);
-                    _players[userId] = new Slice(
-                        fetched.TryGetValue(userId, out var rows) ? Sorted(rows) : None, loadedAt);
+                    _players[userId] = new Slice(rows, loadedAt);
                 }
             }
+
+            return declined;
         }
 
         private static Row[] Sorted(List<Row> rows)
@@ -390,7 +421,7 @@ internal sealed class PeerScoreStore
 
         public IReadOnlyList<UserPhoenixScore> Read(IReadOnlyCollection<Guid> userIds,
             IReadOnlyDictionary<Guid, Player> identity, Func<Row[], (int Start, int End)> span,
-            Func<Row, bool>? keep)
+            Func<Row, bool>? keep, IReadOnlyDictionary<Guid, Row[]>? alsoServe = null)
         {
             // The arrays are never mutated once stored, so they are collected under the lock and
             // read outside it — a folder's filter has no business holding up an import's eviction.
@@ -398,8 +429,12 @@ internal sealed class PeerScoreStore
             lock (_players)
             {
                 foreach (var userId in userIds.Distinct())
-                    if (_players.TryGetValue(userId, out var slice))
-                        held.Add((userId, slice.Rows));
+                    if (_players.TryGetValue(userId, out var slice)) held.Add((userId, slice.Rows));
+                    // Fetched during this read and refused by the store because they imported
+                    // meanwhile. Answering with them is a moment stale; answering without them
+                    // says they passed nothing.
+                    else if (alsoServe != null && alsoServe.TryGetValue(userId, out var declined))
+                        held.Add((userId, declined));
             }
 
             var result = new List<UserPhoenixScore>();

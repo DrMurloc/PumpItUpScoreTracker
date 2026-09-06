@@ -53,8 +53,14 @@ namespace ScoreTracker.Domain.SecondaryPorts
         ///     their scores. Null when the mix has never swept that board; Phoenix publishes only
         ///     the combined one, so asking it for Singles is a legitimate miss.
         /// </summary>
+        /// <param name="viewerAccountId">
+        ///     Who is asking, so their own row never comes back. The mirror has to do this: a
+        ///     private account is reported as a board player with no account named at all (D61),
+        ///     so a caller holding only what comes back cannot tell its own row from a stranger's.
+        ///     You are never one of your own peers (D31), on either half of the draw.
+        /// </param>
         Task<BoardPeerGroupReading?> GetBoardPeers(MixEnum mix, ChartType chartType, double minimumPool,
-            double maximumPool, CancellationToken cancellationToken);
+            double maximumPool, Guid? viewerAccountId, CancellationToken cancellationToken);
 
         /// <summary>
         ///     What those players scored, one row per player and chart: the highest placement they
@@ -75,7 +81,14 @@ namespace ScoreTracker.Domain.SecondaryPorts
         ///     The same read bounded by charts rather than by a level band, for a caller that
         ///     already knows which charts it is asking about — a chart's own board asks about one.
         /// </summary>
-        Task<IReadOnlyList<BoardScoreReading>> GetBoardScoresOn(MixEnum mix,
+        /// <remarks>
+        ///     Returns the sweep date with the rows. This is the read a chart's standing is built
+        ///     from, and a standing that counts a board player prints an asterisk against them —
+        ///     which needs a footnote saying how old the number is (D37). Asking separately would
+        ///     let the two drift; the band form above has no such need, its caller already holding
+        ///     the date from the peer group.
+        /// </remarks>
+        Task<BoardScoreReadings> GetBoardScoresOn(MixEnum mix,
             IReadOnlyCollection<int> boardPlayerIds, IReadOnlyCollection<Guid> chartIds,
             CancellationToken cancellationToken);
     }
@@ -109,6 +122,17 @@ namespace ScoreTracker.Domain.SecondaryPorts
     /// <summary>One board player's best published score on one chart.</summary>
     [ExcludeFromCodeCoverage]
     public sealed record BoardScoreReading(int BoardPlayerId, Guid ChartId, int Level, int Score);
+
+    /// <summary>
+    ///     Board scores and the sweep they came from — the same shape, and the same reason, as
+    ///     <see cref="BoardPeerGroupReading" />. <c>AsOf</c> is null only when the mix has never
+    ///     been swept, in which case there are no rows either.
+    /// </summary>
+    [ExcludeFromCodeCoverage]
+    public sealed record BoardScoreReadings(DateTimeOffset? AsOf, IReadOnlyList<BoardScoreReading> Scores)
+    {
+        public static readonly BoardScoreReadings None = new(null, Array.Empty<BoardScoreReading>());
+    }
 
     [ExcludeFromCodeCoverage]
     public sealed record OfficialPlacementReading(int Place, int BoardDepth, DateTimeOffset AsOf);

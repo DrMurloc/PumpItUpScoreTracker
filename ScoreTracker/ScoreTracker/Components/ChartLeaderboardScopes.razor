@@ -678,10 +678,14 @@ else
         (score.UserId != Guid.Empty && _rivalUserIds.Contains(score.UserId))
         || _rivalGhostNames.Contains(score.UserName.ToString());
 
+    // A board row has no account, which is what separates it from a site peer whose username
+    // happens to read like somebody's board tag — that peer used to collect the mirror's asterisk
+    // on a score the mirror never saw (bug check 2026-09-06).
     private bool IsOfficialRow(UserPhoenixScore score) =>
-        (_scope == LeaderboardScope.Rivals && _officialRivalEdges.Count > 0 && score.UserId == Guid.Empty)
-        || (_scope == LeaderboardScope.PumbilityPeers
-            && _pumbilityBoardNames.Contains(score.UserName.ToString()));
+        score.UserId == Guid.Empty
+        && ((_scope == LeaderboardScope.Rivals && _officialRivalEdges.Count > 0)
+            || (_scope == LeaderboardScope.PumbilityPeers
+                && _pumbilityBoardNames.Contains(score.UserName.ToString())));
 
     // The shared ladder, not a private copy of it. This board carried its own you/clubmate
     // ternary with no rival arm at all, so a rival read as a plain clubmate on every scope —

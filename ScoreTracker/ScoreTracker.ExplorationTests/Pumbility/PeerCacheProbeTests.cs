@@ -98,13 +98,13 @@ public sealed class PeerCacheProbeTests
             var cold = await Time(async () =>
             {
                 var reading = await official.GetBoardPeers(MixEnum.Phoenix2, chartType, pool - 500, pool + 250,
-                    CancellationToken.None);
+                    null, CancellationToken.None);
                 return reading?.Peers.Count ?? 0;
             });
             var warm = await Time(async () =>
             {
                 var reading = await official.GetBoardPeers(MixEnum.Phoenix2, chartType, pool - 500, pool + 250,
-                    CancellationToken.None);
+                    null, CancellationToken.None);
                 return reading?.Peers.Count ?? 0;
             });
 

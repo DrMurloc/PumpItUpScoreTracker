@@ -381,6 +381,11 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         var cache = await GetCachedScores(mix, userId, cancellationToken);
         cache[score.ChartId] = score;
         _cache.Set(ScoreCache(userId, mix), cache);
+        // The peer store holds this player for everyone who has them as a peer — including
+        // themselves: four of its readers ask it about one person, their own. The bus event that
+        // normally drops them is debounced by minutes, which is fine for a peer and far too slow
+        // for the player who just recorded the score (docs/design/pumbility-overhaul.md §6.14).
+        _peers.Evict(userId, mix);
     }
 
     private async Task<ConcurrentDictionary<Guid, RecordedPhoenixScore>> GetCachedScores(MixEnum mix, Guid userId,
@@ -720,6 +725,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             .Where(p => p.UserId == userId && p.ChartId == chartId && p.MixId == mixId)
             .ExecuteDeleteAsync(cancellationToken);
         _cache.Remove(ScoreCache(userId, mix));
+        _peers.Evict(userId, mix);
     }
 
     // Imported breaks only, and the same predicate on both the count and the delete so the number
@@ -758,6 +764,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             .Where(p => p.UserId == userId && p.MixId == mixId && chartIds.Contains(p.ChartId))
             .ExecuteDeleteAsync(cancellationToken);
         _cache.Remove(ScoreCache(userId, mix));
+        _peers.Evict(userId, mix);
         return removed;
     }
 
@@ -806,5 +813,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         // Cheaper to drop every per-(user, mix) entry than to reason about which survived.
         foreach (var cached in Enum.GetValues<MixEnum>())
             _cache.Remove(ScoreCache(userId, cached));
+        // A null mix is an every-mix wipe, which Evict already reads as "all of them".
+        _peers.Evict(userId, mix);
     }
 }

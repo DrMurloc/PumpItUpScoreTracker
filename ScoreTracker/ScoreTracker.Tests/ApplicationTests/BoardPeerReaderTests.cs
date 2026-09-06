@@ -108,7 +108,58 @@ public sealed class BoardPeerReaderTests
 
     private Task<BoardPeerGroupReading?> Read(double min = 18_700, double max = 19_450)
     {
-        return Subject.GetBoardPeers(MixEnum.Phoenix2, ChartType.Single, min, max, CancellationToken.None);
+        return Subject.GetBoardPeers(MixEnum.Phoenix2, ChartType.Single, min, max, null, CancellationToken.None);
+    }
+
+    /// <summary>
+    ///     You are never one of your own peers (D31), and the board half had no way to honour it:
+    ///     a private account is reported with no account named at all (D61), so a caller holding
+    ///     only the reading cannot tell its own row from a stranger's — and the window is centred
+    ///     on the viewer's own pool, which the board publishes for them, so their row is inside it
+    ///     essentially always. Left alone they were counted as a peer, listed twice on the roster,
+    ///     and told a peer had beaten them by their own score (bug check 2026-09-06).
+    /// </summary>
+    [Fact]
+    public async Task YourOwnRowIsNeverOfferedBackToYouEvenWhenYourAccountIsPrivate()
+    {
+        var me = Guid.NewGuid();
+        Board(Row(1, 18_900m), Row(2, 18_950m));
+        Players(Player(1, "VIEWER#0001", me), Player(2, "STRANGER#0002"));
+        Accounts(Account(me, "Viewer", "VIEWER#0001", false));
+
+        var group = await Subject.GetBoardPeers(MixEnum.Phoenix2, ChartType.Single, 18_700, 19_450, me,
+            CancellationToken.None);
+
+        Assert.Equal("STRANGER#0002", Assert.Single(group!.Peers).Tag);
+    }
+
+    /// <summary>And a public account of the viewer's is refused by the same rule, not by luck.</summary>
+    [Fact]
+    public async Task YourOwnRowIsNeverOfferedBackToYouWhenYourAccountIsPublicEither()
+    {
+        var me = Guid.NewGuid();
+        Board(Row(1, 18_900m));
+        Players(Player(1, "VIEWER#0001", me));
+        Accounts(Account(me, "Viewer", "VIEWER#0001", true));
+
+        var group = await Subject.GetBoardPeers(MixEnum.Phoenix2, ChartType.Single, 18_700, 19_450, me,
+            CancellationToken.None);
+
+        Assert.Empty(group!.Peers);
+    }
+
+    /// <summary>Nobody asking means nobody excluded: the read still answers for a caller with no viewer.</summary>
+    [Fact]
+    public async Task NoViewerMeansNobodyIsFilteredOut()
+    {
+        var someone = Guid.NewGuid();
+        Board(Row(1, 18_900m));
+        Players(Player(1, "VIEWER#0001", someone));
+        Accounts(Account(someone, "Viewer", "VIEWER#0001", false));
+
+        var group = await Read();
+
+        Assert.Equal("VIEWER#0001", Assert.Single(group!.Peers).Tag);
     }
 
     [Fact]
@@ -241,7 +292,7 @@ public sealed class BoardPeerReaderTests
                 new BoardDimension(1, LeaderboardTypes.Rating, PumbilityBoards.Combined, null, null, null)
             });
 
-        var group = await Subject.GetBoardPeers(MixEnum.Phoenix, ChartType.Single, 0, 30_000,
+        var group = await Subject.GetBoardPeers(MixEnum.Phoenix, ChartType.Single, 0, 30_000, null,
             CancellationToken.None);
 
         Assert.NotNull(group);

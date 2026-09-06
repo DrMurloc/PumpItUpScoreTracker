@@ -20,7 +20,7 @@ internal static class NoBoard
     {
         var reader = new Mock<IOfficialPlacementReader>();
         reader.Setup(r => r.GetBoardPeers(It.IsAny<MixEnum>(), It.IsAny<ChartType>(), It.IsAny<double>(),
-                It.IsAny<double>(), It.IsAny<CancellationToken>()))
+                It.IsAny<double>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BoardPeerGroupReading?)null);
         reader.Setup(r => r.GetBoardScores(It.IsAny<MixEnum>(), It.IsAny<ChartType>(),
                 It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<int>(), It.IsAny<int>(),

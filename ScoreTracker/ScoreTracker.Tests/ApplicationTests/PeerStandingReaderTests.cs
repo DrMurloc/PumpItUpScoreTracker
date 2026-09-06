@@ -151,7 +151,8 @@ public sealed class PeerStandingReaderTests
             .ReturnsAsync(new[] { PeerVoice.FromBoard(11, "URUSA#9487") });
         _official.Setup(o => o.GetBoardScoresOn(It.IsAny<MixEnum>(), It.IsAny<IReadOnlyCollection<int>>(),
                 It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { new BoardScoreReading(11, _single.Id, 23, 995_000) });
+            .ReturnsAsync(new BoardScoreReadings(Sealed,
+                new[] { new BoardScoreReading(11, _single.Id, 23, 995_000) }));
 
         var standing = (await Reader().GetStandings(Me, MixEnum.Phoenix2, new[] { _single.Id }))[_single.Id];
 
@@ -159,6 +160,10 @@ public sealed class PeerStandingReaderTests
         Assert.Equal(1, standing.Passed);
         Assert.Equal(2, standing.Place);
         Assert.Equal(1, Assert.Single(standing.Sources).FromOfficialBoard);
+        // The source line prints an asterisk against that count, and the footnote under it is
+        // gated on this. Without a ghost rival in the group nothing else was setting it, so most
+        // players got the mark and no date (D37, bug check 2026-09-06).
+        Assert.Equal(Sealed, standing.OfficialAsOf);
     }
 
     /// <summary>

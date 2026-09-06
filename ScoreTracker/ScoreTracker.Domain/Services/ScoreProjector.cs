@@ -240,12 +240,15 @@ public sealed class ScoreProjector : IScoreProjector
             .Where(g => PoolCount(g) >= PeerGroup.PumbilityPoolSize)
             .Select(g => g.Key)
             .ToHashSet();
-        // The same window on the official board (D59). A row that resolves to an account is not
+        // The same window on the official board (D59), minus the viewer: the mirror is told who
+        // is asking because a private account comes back naming nobody, and this half has no
+        // Remove() of its own to answer with. A row that resolves to an account is not
         // added: that person is a site peer or their own pool put them outside the window, and the
         // read above already answered which. What is left are the players the mirror is the only
         // record of, each already holding a fifty we can see (D60).
         var board = await _official.GetBoardPeers(mix, chartType,
-            center - PeerGroup.PumbilityWindowBelow, center + PeerGroup.PumbilityWindowAbove, cancellationToken);
+            center - PeerGroup.PumbilityWindowBelow, center + PeerGroup.PumbilityWindowAbove, userId,
+            cancellationToken);
         var boardPeers = board?.Peers.Where(p => p.AccountId == null).ToArray()
                          ?? Array.Empty<BoardPeerReading>();
         var voiceOf = new Dictionary<int, PeerVoice>();

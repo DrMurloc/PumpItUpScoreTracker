@@ -483,7 +483,11 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         {
             var board = await _official.GetBoardScoresOn(mix, boardVoices.Keys.ToArray(), missing,
                 cancellationToken);
-            foreach (var row in board)
+            // The asterisk their rows put on the standing needs a date under it, and this is
+            // where it comes from on the ordinary path: most players have no ghost rivals, and
+            // the ghost branch below was the only thing setting it (D37).
+            asOf ??= board.AsOf;
+            foreach (var row in board.Scores)
             {
                 if (!boardVoices.TryGetValue(row.BoardPlayerId, out var voice)) continue;
                 Passes(passes, row.ChartId).Add(new PeerStandingCalculator.PeerPass(voice, row.Score, true));
@@ -494,7 +498,7 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         {
             // Site rivals are already in the union read; only the ghosts' board placements are new.
             var official = await _rivalScores.Read(peers.Ghosts, mix, missing, cancellationToken);
-            asOf = official.OfficialAsOf;
+            asOf ??= official.OfficialAsOf;
             foreach (var (chartId, rows) in official.ByChart)
             foreach (var row in rows.Where(r => r.Source == RivalScoreSource.Official && !r.IsBroken))
                 Passes(passes, chartId).Add(new PeerStandingCalculator.PeerPass(

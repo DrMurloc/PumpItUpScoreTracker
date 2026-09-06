@@ -16,12 +16,13 @@ internal sealed class OfficialPlacementReader(IMediator mediator, BoardPeerReade
     : IOfficialPlacementReader
 {
     public Task<BoardPeerGroupReading?> GetBoardPeers(MixEnum mix, ChartType chartType, double minimumPool,
-        double maximumPool, CancellationToken cancellationToken)
+        double maximumPool, Guid? viewerAccountId, CancellationToken cancellationToken)
     {
-        return boardPeers.GetBoardPeers(mix, chartType, minimumPool, maximumPool, cancellationToken);
+        return boardPeers.GetBoardPeers(mix, chartType, minimumPool, maximumPool, viewerAccountId,
+            cancellationToken);
     }
 
-    public Task<IReadOnlyList<BoardScoreReading>> GetBoardScoresOn(MixEnum mix,
+    public Task<BoardScoreReadings> GetBoardScoresOn(MixEnum mix,
         IReadOnlyCollection<int> boardPlayerIds, IReadOnlyCollection<Guid> chartIds,
         CancellationToken cancellationToken)
     {
