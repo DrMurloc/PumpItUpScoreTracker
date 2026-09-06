@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Contracts.Commands;
 using ScoreTracker.CommunityTools.Contracts.Queries;
@@ -33,12 +34,13 @@ internal sealed class ToolKeySaga :
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IToolKeyRepository _keys;
+    private readonly ILogger<ToolKeySaga> _logger;
     private readonly IToolRepository _tools;
     private readonly IUserReader _users;
 
     public ToolKeySaga(IToolKeyRepository keys, IToolRepository tools, IUserReader users,
         ICurrentUserAccessor currentUser, IDateTimeOffsetAccessor dateTime,
-        IToolActivityRepository activity, IMemoryCache cache)
+        IToolActivityRepository activity, IMemoryCache cache, ILogger<ToolKeySaga> logger)
     {
         _keys = keys;
         _tools = tools;
@@ -47,6 +49,7 @@ internal sealed class ToolKeySaga :
         _dateTime = dateTime;
         _activity = activity;
         _cache = cache;
+        _logger = logger;
     }
 
     public async Task<MintedApiKey> Handle(CreateToolApiKeyCommand request,
@@ -152,15 +155,14 @@ internal sealed class ToolKeySaga :
         // what turns "my key stopped working" into a date — and still fails here.
         if (resolution.IsExpired)
         {
-            await _activity.Increment(resolution.ToolId, ToolActivityKind.KeyExpired, now,
-                resolution.KeyName, cancellationToken);
+            await Tally(resolution.ToolId, ToolActivityKind.KeyExpired, now, resolution.KeyName,
+                cancellationToken);
             return null;
         }
 
         // Authenticated is used. Rate-limited requests never reach this point, so the tally
         // and the rate-limit tally never count the same request.
-        await _activity.Increment(resolution.ToolId, ToolActivityKind.KeyUsed, now, resolution.KeyName,
-            cancellationToken);
+        await Tally(resolution.ToolId, ToolActivityKind.KeyUsed, now, resolution.KeyName, cancellationToken);
 
         var principal = new ToolKeyPrincipal(resolution.ToolId, resolution.KeyName);
         _cache.Set(PrincipalCacheKey(hash), principal,
@@ -180,9 +182,27 @@ internal sealed class ToolKeySaga :
                 out ToolKeyPrincipal? principal) || principal is null)
             return null;
 
-        await _activity.Increment(principal.ToolId, ToolActivityKind.RateLimited, _dateTime.Now,
-            principal.KeyName, cancellationToken);
+        await Tally(principal.ToolId, ToolActivityKind.RateLimited, _dateTime.Now, principal.KeyName,
+            cancellationToken);
         return principal;
+    }
+
+    /// <summary>
+    ///     A counter must never fail the call it counts. The row is a maker's convenience; the
+    ///     request behind it is a player's data, and it had already authenticated by the time the
+    ///     tally is written. A tally that cannot be written is logged and lost.
+    /// </summary>
+    private async Task Tally(Guid toolId, ToolActivityKind kind, DateTimeOffset at, string keyName,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _activity.Increment(toolId, kind, at, keyName, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning(e, "The {Kind} tally for tool {ToolId} could not be written", kind, toolId);
+        }
     }
 
     /// <summary>Keyed by the hash, never the key: the cache must be as safe to dump as the table.</summary>

@@ -13,6 +13,7 @@ using ScoreTracker.CommunityTools.Domain;
 using ScoreTracker.CommunityTools.Infrastructure;
 using ScoreTracker.CommunityTools.Wiring;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts;
@@ -59,7 +60,7 @@ public sealed class ToolKeyAndShareHandlerTests
     private ToolKeySaga KeySaga()
     {
         return new ToolKeySaga(_keys.Object, _tools.Object, _users.Object, _currentUser.Object,
-            FakeDateTime.At(Now).Object, _activity.Object, _cache);
+            FakeDateTime.At(Now).Object, _activity.Object, _cache, NullLogger<ToolKeySaga>.Instance);
     }
 
     [Fact]
@@ -193,6 +194,28 @@ public sealed class ToolKeyAndShareHandlerTests
             It.IsAny<DateTimeOffset>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
         _keys.Verify(k => k.ResolveToolByKeyHash(It.IsAny<string>(), It.IsAny<DateTimeOffset>(),
             It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    ///     The tally is written after the key has already authenticated. A database that refuses
+    ///     the row must not turn a working call into a 500, on either path.
+    /// </summary>
+    [Fact]
+    public async Task ATallyThatCannotBeWrittenNeverFailsTheCall()
+    {
+        var (key, hash, _) = ApiKeyMint.Mint();
+        _keys.Setup(k => k.ResolveToolByKeyHash(hash, Now, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ToolKeyResolution(ToolId, "production", IsExpired: false));
+        _activity.Setup(a => a.Increment(It.IsAny<Guid>(), It.IsAny<ToolActivityKind>(), It.IsAny<DateTimeOffset>(),
+                It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("deadlock victim"));
+        var saga = KeySaga();
+
+        var resolved = await saga.Handle(new GetToolByApiKeyQuery(key), CancellationToken.None);
+        var rejected = await saga.Handle(new RecordRateLimitedRequestCommand(key), CancellationToken.None);
+
+        Assert.Equal(new ToolKeyPrincipal(ToolId, "production"), resolved);
+        Assert.Equal(new ToolKeyPrincipal(ToolId, "production"), rejected);
     }
 
     /// <summary>An unknown or revoked key is nobody's: nothing to count it under.</summary>
