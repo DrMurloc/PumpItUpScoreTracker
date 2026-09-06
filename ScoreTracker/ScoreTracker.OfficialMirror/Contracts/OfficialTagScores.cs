@@ -10,5 +10,11 @@ public sealed record OfficialTagScores(
     DateTimeOffset? AsOf,
     IReadOnlyList<OfficialTagScore> Scores);
 
+/// <summary>
+///     One board score, with the face the mirror swept beside it. The avatar rides here rather
+///     than being looked up per row: these rows sit on a board next to site players who all have
+///     one, and a row that is the only one without a picture reads as a placeholder rather than a
+///     person. Null when the sweep never saw one.
+/// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record OfficialTagScore(string Tag, Guid ChartId, int Place, int Score);
+public sealed record OfficialTagScore(string Tag, Guid ChartId, int Place, int Score, Uri? Avatar = null);

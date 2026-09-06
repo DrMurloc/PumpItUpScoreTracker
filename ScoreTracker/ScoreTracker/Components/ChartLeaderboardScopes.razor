@@ -266,7 +266,12 @@ else
     private DateTimeOffset? _pumbilityBoardAsOf;
     private OfficialChartBoardRecord? _officialBoard;
     private IReadOnlySet<Guid> _officialPublicLinks = new HashSet<Guid>();
-    private IReadOnlyDictionary<string, Uri?> _officialAvatars = new Dictionary<string, Uri?>();
+    /// <summary>
+    ///     Every board player on screen, by tag, with the face the mirror swept. Board rows have
+    ///     no account to be known by, so the tag is the key — and the map is filled by whichever
+    ///     scope drew them: the official board, the PUMBILITY peers read, or a ghost rival.
+    /// </summary>
+    private Dictionary<string, Uri?> _boardAvatars = new(StringComparer.OrdinalIgnoreCase);
     private DateTimeOffset? _officialAsOf => _officialBoard?.AsOf;
     private IReadOnlySet<Guid> _officialRivalEdges = new HashSet<Guid>();
     private DateTimeOffset? _rivalOfficialAsOf;
@@ -294,6 +299,7 @@ else
         _pumbilityPeers = null;
         _pumbilityBoardNames = new HashSet<string>();
         _pumbilityBoardAsOf = null;
+        _boardAvatars = new Dictionary<string, Uri?>(StringComparer.OrdinalIgnoreCase);
         await LoadChartAsync();
     }
 
@@ -469,6 +475,10 @@ else
                     new[] { ChartId }));
                 _pumbilityBoardAsOf = mirrored.AsOf;
                 _pumbilityBoardNames = mirrored.Scores.Select(r => r.Tag).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                // The same faces the Official scope draws: a board peer sits among site players
+                // here, and the one row without a picture reads as a placeholder, not a person.
+                foreach (var mirroredScore in mirrored.Scores)
+                    _boardAvatars[mirroredScore.Tag] = mirroredScore.Avatar;
                 return siteRows
                     .Concat(mirrored.Scores.Select(r => new UserPhoenixScore(Guid.Empty, ChartId, r.Tag, r.Score,
                         null, false)))
@@ -506,6 +516,10 @@ else
                 // everywhere else in this feature.
                 _rivalGhostNames = rivalRows.Where(r => r.UserId == null).Select(r => r.DisplayName)
                     .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                // A ghost rival is a board player too, and the rival read has always carried
+                // their face — nothing on this board had ever asked for it.
+                foreach (var ghost in rivalRows.Where(r => r.UserId == null))
+                    _boardAvatars[ghost.DisplayName] = ghost.Avatar;
                 var mine = CurrentUser.IsLoggedIn
                     ? _world.Where(s => s.UserId == CurrentUser.User.Id).ToArray()
                     : Array.Empty<UserPhoenixScore>();
@@ -537,10 +551,8 @@ else
 
                 // The mirror has an avatar for every board player, and it is the same source a
                 // site avatar comes from — keyed by tag, since unlinked rows share Guid.Empty.
-                _officialAvatars = _officialBoard.Entries
-                    .GroupBy(e => e.Player.Username, StringComparer.OrdinalIgnoreCase)
-                    .ToDictionary(g => g.Key, g => g.First().Player.AvatarUrl,
-                        StringComparer.OrdinalIgnoreCase);
+                foreach (var entry in _officialBoard.Entries)
+                    _boardAvatars[entry.Player.Username] = entry.Player.AvatarUrl;
 
                 return _officialBoard.Entries
                     .Select(e => new UserPhoenixScore(
@@ -643,10 +655,19 @@ else
 
     private string? AvatarFor(Row row)
     {
+        // Every row on the official board is a board player, named even when the mirror swept
+        // no face for them.
         if (_scope == LeaderboardScope.Official)
-            return _officialAvatars.TryGetValue(row.Score.UserName.ToString(), out var mirrored)
+            return _boardAvatars.TryGetValue(row.Score.UserName.ToString(), out var mirrored)
                 ? mirrored?.ToString() ?? DefaultAvatar
                 : DefaultAvatar;
+        // Elsewhere a row with no account is a board row IF the mirror drew it. A private
+        // player's Anonymous row has no account either and is deliberately not in that map:
+        // giving it a face would be inventing one.
+        if (row.Score.UserId == Guid.Empty)
+            return _boardAvatars.TryGetValue(row.Score.UserName.ToString(), out var board)
+                ? board?.ToString() ?? DefaultAvatar
+                : null;
         return _users.TryGetValue(row.Score.UserId, out var user) ? user.ProfileImage.ToString() : null;
     }
 

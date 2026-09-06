@@ -520,6 +520,53 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
         Assert.Contains("Official board data", dialog.Markup);
     }
 
+    /// <summary>
+    ///     And they wear the face the mirror swept, like every other row on the board. The site
+    ///     rows around them all have a picture, so the one row without one reads as a placeholder
+    ///     rather than a person (owner, 2026-09-06) — and the mirror has had these all along.
+    /// </summary>
+    [Fact]
+    public void ABoardPeerWearsTheFaceTheMirrorSwept()
+    {
+        var me = Guid.NewGuid();
+        SignedInAs(me);
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsForCommunityQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { ScoreFor(me, 970_000, "ME") });
+        _mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { PeerVoice.FromBoard(11, "URUSA#9487") });
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialScoresForTagsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialTagScores(When,
+                new[]
+                {
+                    new OfficialTagScore("URUSA#9487", ChartId, 3, 995_000,
+                        new Uri("https://piuimages.test/urusa.png"))
+                }));
+
+        var dialog = RenderDialog(MixEnum.Phoenix2, ChartLeaderboardScopes.LeaderboardScope.PumbilityPeers);
+
+        dialog.WaitForAssertion(() =>
+            Assert.Contains("https://piuimages.test/urusa.png", dialog.Markup));
+    }
+
+    /// <summary>A board player the sweep saw no face for still gets one, so the row is not half-drawn.</summary>
+    [Fact]
+    public void ABoardPeerWithNoSweptFaceStillGetsOne()
+    {
+        var me = Guid.NewGuid();
+        SignedInAs(me);
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsForCommunityQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { ScoreFor(me, 970_000, "ME") });
+        _mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { PeerVoice.FromBoard(11, "URUSA#9487") });
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialScoresForTagsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialTagScores(When,
+                new[] { new OfficialTagScore("URUSA#9487", ChartId, 3, 995_000) }));
+
+        var dialog = RenderDialog(MixEnum.Phoenix2, ChartLeaderboardScopes.LeaderboardScope.PumbilityPeers);
+
+        dialog.WaitForAssertion(() => Assert.NotEmpty(dialog.FindAll(".sbd-avatar")));
+    }
+
     [Fact]
     public void NoPumbilityPeersYetSaysWhatLightsThemUp()
     {
