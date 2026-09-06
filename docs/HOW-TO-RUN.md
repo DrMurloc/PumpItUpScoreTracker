@@ -39,6 +39,7 @@ This boots the [.NET Aspire](https://learn.microsoft.com/dotnet/aspire/) local o
 - provisions a **SQL Server container** with a pinned password and port (from [AppHost appsettings.json](../ScoreTracker/ScoreTracker.AppHost/appsettings.json)) and a persistent volume, so your data survives restarts;
 - **applies all EF migrations automatically** at startup;
 - enables the **dev login backdoor** so you don't need OAuth credentials to sign in;
+- keeps **webhooks on your machine**: a local run refuses to deliver to any address outside loopback and the private ranges, so a database copied from production can never push into a maker's real endpoint (the startup import-recovery pass alone would otherwise replay hundreds of sessions into them). `localhost` targets still deliver, which is what local tool development needs;
 - opens the **Aspire dashboard** (logs, traces, resource states) in your browser.
 
 Click through to the **web** resource in the dashboard (or go to `https://localhost:7144`).

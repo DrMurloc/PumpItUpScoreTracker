@@ -31,7 +31,7 @@ The two orphaned localization keys left behind then are consumed here.
 | 10 | **One table, one bool.** `IsSupplemented` on the existing placement and highlight tables, with the filter applied thoroughly (§7 makes that machine-checked). |
 | 11 | **Nothing is ever pruned.** Supplemented history is kept as long as official history — the point is being able to look back at previous weeks. |
 | 12 | **Account deletion purges supplemented rows.** |
-| 13 | **`api/v2/official/*` stays official-only** for now. |
+| 13 | ~~**`api/v2/official/*` stays official-only** for now.~~ **Superseded 2026-09-05**: the four reads the switch covers take an opt-in `supplemented` flag, default official; the site user id stays stripped ([api-v2-round-2.md](api-v2-round-2.md)). |
 | 14 | **Phoenix leaderboard processing switches off in September**, when the game goes offline. Phoenix 2 is the long-term carrier. |
 
 ## 2. What this is worth, measured
@@ -308,6 +308,8 @@ switch, row marker, disclaimer, count line · **S8** admin button · **S9** link
   permanently unused. Harmless; sweep them with the next resx cleanup.
 - **Discord digest** — deliberately official-only in v1. A supplemented weekly section is an obvious
   follow-up and the highlight rows are already the right shape.
-- **`api/v2/official`** — decision 13 is "not for now", not "never". If it ever changes, it publishes
-  a piugame-tag-to-site-account map in bulk, which is what that controller's class doc currently
-  refuses.
+- **`api/v2/official`** — ~~decision 13 is "not for now", not "never".~~ Changed 2026-09-05: the
+  reads the switch covers take `supplemented=true` ([api-v2-round-2.md](api-v2-round-2.md)). The
+  map it publishes is tag → *the fact of a public account*, which the site's switch already shows
+  anyone; the site user id itself stays off every official read, so the controller's class doc still
+  holds.

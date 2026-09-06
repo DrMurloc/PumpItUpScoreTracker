@@ -73,4 +73,19 @@ internal static class WebhookTarget
                || host.EndsWith(".local", StringComparison.OrdinalIgnoreCase)
                || host.EndsWith(".internal", StringComparison.OrdinalIgnoreCase);
     }
+
+    /// <summary>
+    ///     The mirror-image question, asked by a local run that must never deliver off the machine:
+    ///     is this target on loopback or a private range? Judged on the name or the literal address
+    ///     alone, with no DNS lookup — the server-side check resolves because a public name can hide
+    ///     a private address and that matters there; here the cost of being strict is a developer
+    ///     typing an IP instead of a LAN hostname, and the cost of being lenient is a real maker's
+    ///     endpoint receiving a laptop's replay. Anything not provably local is public.
+    /// </summary>
+    public static bool IsLocalTarget(Uri url)
+    {
+        if (HasPrivateHostname(url)) return true;
+        // IdnHost rather than Host: an IPv6 literal comes back without its brackets.
+        return IPAddress.TryParse(url.IdnHost, out var address) && IsPrivate(address);
+    }
 }

@@ -437,4 +437,19 @@ public sealed class ToolKeyAndShareHandlerTests
         _tools.Verify(t => t.GrantShare(ToolId, MakerId, ShareSource.Direct, Now,
             It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    /// <summary>
+    ///     The owner read is ungated: a request made with a tool key has no signed-in user, so the
+    ///     gated tool query cannot serve it, and the key already proves the caller acts for the tool.
+    /// </summary>
+    [Fact]
+    public async Task ToolOwnerAnswersWithoutASignedInUserAndNullForNoSuchTool()
+    {
+        _currentUser.SetupGet(c => c.IsLoggedIn).Returns(false);
+        _currentUser.SetupGet(c => c.User).Throws(new InvalidOperationException("no signed-in user"));
+        var saga = ManagementSaga();
+
+        Assert.Equal(MakerId, await saga.Handle(new GetToolOwnerQuery(ToolId), CancellationToken.None));
+        Assert.Null(await saga.Handle(new GetToolOwnerQuery(Guid.NewGuid()), CancellationToken.None));
+    }
 }

@@ -478,4 +478,134 @@ public sealed class LeaderboardHubSagaTests
         Assert.Equal("ChartBoards", runs[1].Stage);
         Assert.Contains("503", runs[1].Error);
     }
+
+    /// <summary>
+    ///     The supplemented ranking interleaves two rulers -- piugame's number for board players,
+    ///     ours for everyone else -- and the row is the only place a reader can tell them apart.
+    ///     The mark used to be dropped twice on the way to the row: once when the snapshot stats
+    ///     rebuilt the rating board, once when the dimension lookup rebuilt the player. Every
+    ///     merged row read as official, and the Rankings rail had nothing to draw.
+    /// </summary>
+    [Fact]
+    public async Task SupplementedRankingRowsCarryTheMarkAndOfficialRowsDoNot()
+    {
+        var f = Arrange(Run(2, Week2));
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, PlacementScope.IncludingSupplemented,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                Pumbility(11, 1, 19412.88m),
+                Pumbility(12, 2, 19205.13m) with { IsSupplemented = true },
+                Chart(11, ChartA, 1, 997000, level: 24, boardId: 500),
+                Chart(12, ChartA, 301, 951000, level: 24, boardId: 500) with { IsSupplemented = true }
+            });
+
+        var result = await f.Saga.Handle(new GetOfficialRankingsQuery(MixEnum.Phoenix2, Supplemented: true),
+            CancellationToken.None);
+
+        Assert.Equal(2, result.Rankings.Count);
+        Assert.False(result.Rankings[0].Player.IsSupplemented);
+        Assert.Equal("PLAYER11", result.Rankings[0].Player.Username);
+        Assert.True(result.Rankings[1].Player.IsSupplemented);
+        Assert.Equal("PLAYER12", result.Rankings[1].Player.Username);
+    }
+
+    /// <summary>
+    ///     An off-board player's profile PUMBILITY is the site's computed number. The profile says
+    ///     so on the value itself, separately from the player-level mark, because a player can be
+    ///     on a chart board officially and still be absent from piugame's PUMBILITY ranking.
+    /// </summary>
+    [Fact]
+    public async Task ProfileSaysWhenItsPumbilityCameFromTheSupplementedRow()
+    {
+        var f = Arrange(Run(2, Week2));
+        var player = new PlayerDimension(12, "NEWCOMER", null, null);
+        f.Snapshots.Setup(s => s.GetPlayerByUsername(MixEnum.Phoenix2, "NEWCOMER", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(player);
+        f.Snapshots.Setup(s => s.GetPlayerTimeline(12, PlacementScope.IncludingSupplemented,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new PlayerTimelineRow(2, Week2, LeaderboardTypes.Rating, "PUMBILITY", null, 1432, 14320.50m,
+                    IsSupplemented: true),
+                new PlayerTimelineRow(2, Week2, LeaderboardTypes.Chart, "Altale D24", ChartA, 1, 999120)
+            });
+
+        var supplemented = await f.Saga.Handle(
+            new GetOfficialPlayerProfileQuery(MixEnum.Phoenix2, "NEWCOMER", Supplemented: true),
+            CancellationToken.None);
+
+        Assert.NotNull(supplemented);
+        Assert.Equal(14320.50m, supplemented!.Pumbility);
+        Assert.True(supplemented.PumbilityIsSupplemented);
+        // The chart row is official, so the player-level mark stays off: only the number is ours.
+        Assert.False(supplemented.Player.IsSupplemented);
+
+        f.Snapshots.Setup(s => s.GetPlayerTimeline(12, PlacementScope.OfficialOnly, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new PlayerTimelineRow(2, Week2, LeaderboardTypes.Chart, "Altale D24", ChartA, 1, 999120)
+            });
+
+        var official = await f.Saga.Handle(new GetOfficialPlayerProfileQuery(MixEnum.Phoenix2, "NEWCOMER"),
+            CancellationToken.None);
+
+        Assert.Null(official!.Pumbility);
+        Assert.False(official.PumbilityIsSupplemented);
+    }
+
+    /// <summary>
+    ///     The co-op ranking is computed from co-op rows alone, so its mark is judged over co-op
+    ///     rows alone: a player with official singles rows and only supplemented co-op rows is on
+    ///     the co-op ranking because of PIU Scores, whatever their singles say.
+    /// </summary>
+    [Fact]
+    public async Task SupplementedCoOpRankingMarksAPlayerByTheirCoOpRowsOnly()
+    {
+        var f = Arrange(Run(2, Week2));
+        var coopA = Guid.NewGuid();
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, PlacementScope.IncludingSupplemented,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                CoOpChart(11, coopA, 1, 1_000_000),
+                // Official on a singles board, on the co-op board only because PIU Scores knows the score.
+                Chart(12, ChartA, 1, 999_000, level: 26, boardId: 500),
+                CoOpChart(12, coopA, 2, 994_999) with { IsSupplemented = true }
+            });
+
+        var result = await f.Saga.Handle(new GetOfficialRankingsQuery(MixEnum.Phoenix2, "CoOp", Supplemented: true),
+            CancellationToken.None);
+
+        Assert.Equal(2, result.Rankings.Count);
+        Assert.False(result.Rankings.Single(r => r.Player.Username == "PLAYER11").Player.IsSupplemented);
+        Assert.True(result.Rankings.Single(r => r.Player.Username == "PLAYER12").Player.IsSupplemented);
+    }
+
+    [Fact]
+    public async Task LinkedTagsByIdsAnswerOneTagPerAccountAndSkipTheUnlinked()
+    {
+        var f = Arrange(Run(2, Week2));
+        var linked = Guid.NewGuid();
+        var renamed = Guid.NewGuid();
+        var unlinked = Guid.NewGuid();
+        f.Snapshots.Setup(s => s.GetPlayersByUserIds(MixEnum.Phoenix2, It.IsAny<IReadOnlyCollection<Guid>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new PlayerDimension(11, "NIMBUS9", null, linked, Week2),
+                // Two rows for one account: the crawl saw the newer tag more recently.
+                new PlayerDimension(12, "OLDTAG#1", null, renamed, Week1),
+                new PlayerDimension(13, "NEWTAG#1", null, renamed, Week2)
+            });
+
+        var tags = await f.Saga.Handle(
+            new GetLinkedOfficialPlayerTagsQuery(MixEnum.Phoenix2, new[] { linked, renamed, unlinked }),
+            CancellationToken.None);
+
+        Assert.Equal(2, tags.Count);
+        Assert.Equal("NIMBUS9", tags[linked]);
+        Assert.Equal("NEWTAG#1", tags[renamed]);
+        Assert.False(tags.ContainsKey(unlinked));
+    }
 }

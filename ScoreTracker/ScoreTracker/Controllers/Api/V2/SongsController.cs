@@ -20,10 +20,14 @@ public sealed class SongsController : ApiV2ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>The song catalog for one mix, keyed by name, with artist, duration and BPM range.</summary>
     /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>, e.g. "Phoenix2".</param>
     /// <param name="cursor">Opaque. Follow the envelope's <c>next</c> rather than building one.</param>
     /// <param name="limit">Rows per page, 1–500.</param>
     [HttpGet]
+    [ProducesResponseType(typeof(CursorPageDto<SongV2Dto>), StatusCodes.Status200OK, "application/json")]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Get(
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "cursor")] string? cursor = null,

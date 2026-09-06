@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -67,9 +68,6 @@ public sealed partial class PumbilityProjectionSagaTests
         Assert.Equal(2, alone.MyPoolRank);
         Assert.Equal(990_000, (int)alone.Score);
 
-        var compare = page.Compare[ChartType.Single];
-        Assert.Equal(2, compare.MyLevels.Values.Sum());
-        Assert.Equal(1, compare.PeerShareByLevel.Values.Sum(), 6);
     }
 
     [Fact]
@@ -201,5 +199,68 @@ public sealed partial class PumbilityProjectionSagaTests
         ctx.CurrentUser.Setup(c => c.IsLoggedIn).Returns(false);
         Assert.Empty(await ctx.Saga.Handle(new GetPumbilityPeersQuery(ChartType.Single, MixEnum.Phoenix2), CancellationToken.None));
         Assert.Empty(await ctx.Saga.Handle(new GetPumbilityPeersQuery(ChartType.Single, MixEnum.Phoenix), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task ThePoolCompareAnswersTheLevelsOffTheSweepAndNoSplitForATypeScope()
+    {
+        // D58: the comparison the Play lede used to carry is this query's now. A type scope is one
+        // type by definition, so the merged-fifty split is not a question there.
+        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_609.59)
+            .WithChart(out var staple, ChartType.Single, 21)
+            .WithChart(out var mine, ChartType.Single, 15);
+        for (var i = 0; i < 6; i++) ctx.WithPumbilityPeer(staple, phoenix2Score: 970_000);
+        ctx.WithOwnScore(staple, 960_000).WithOwnScore(mine, 990_000);
+
+        var typed = await ctx.Saga.Handle(new GetPumbilityPoolCompareQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Single),
+            CancellationToken.None);
+
+        var levels = typed.Levels[ChartType.Single];
+        Assert.Equal(2, levels.MyLevels.Values.Sum());
+        Assert.Equal(1, levels.PeerShareByLevel.Values.Sum(), 6);
+        Assert.Null(typed.Peers);
+    }
+
+    [Fact]
+    public async Task ThePoolCompareAveragesThePeersMergedFiftiesOnceAndKeepsIt()
+    {
+        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_609.59)
+            .WithChart(out var anchor, ChartType.Single, 21);
+        ctx.WithPumbilityPeer(out var peer, anchor, phoenix2Score: 980_000);
+        // The peer's merged fifty is thirty singles and twenty doubles of real catalog charts; the
+        // fixture's filler charts pad each type's pool but are not in the catalog, so they price at
+        // nothing here — the split only counts what it can price.
+        for (var i = 1; i < 50; i++)
+        {
+            ctx.WithChart(out var chart, i < 30 ? ChartType.Single : ChartType.Double, 20);
+            ctx.WithPeerPhoenix2Score(peer, chart, 970_000);
+        }
+
+        ctx.WithOwnScore(anchor, 960_000);
+
+        var merged = await ctx.Saga.Handle(new GetPumbilityPoolCompareQuery(ctx.UserId, MixEnum.Phoenix2), CancellationToken.None);
+
+        var peers = Assert.IsType<PoolTypeSplit>(merged.Peers);
+        Assert.Equal(1, peers.Peers);
+        Assert.Equal(30, peers.SinglesCount);
+        Assert.Equal(20, peers.DoublesCount);
+        Assert.True(peers.SinglesValue > peers.DoublesValue);
+        Assert.Equal(peers.SinglesValue + peers.DoublesValue, peers.Total, 6);
+
+        // A second ask is a cache hit on both halves: no range read runs again.
+        var reads = ctx.Scores.Invocations.Count(i => i.Method.Name == nameof(IScoreReader.GetPlayerScoresInLevelRange));
+        await ctx.Saga.Handle(new GetPumbilityPoolCompareQuery(ctx.UserId, MixEnum.Phoenix2), CancellationToken.None);
+        Assert.Equal(reads, ctx.Scores.Invocations.Count(i => i.Method.Name == nameof(IScoreReader.GetPlayerScoresInLevelRange)));
+    }
+
+    [Fact]
+    public async Task ThePoolCompareIsEmptyForAViewerWithNoLitType()
+    {
+        var ctx = new ProjectionContext().WithChart(out _, ChartType.Single, 21);
+
+        var record = await ctx.Saga.Handle(new GetPumbilityPoolCompareQuery(ctx.UserId, MixEnum.Phoenix2), CancellationToken.None);
+
+        Assert.Empty(record.Levels);
+        Assert.Null(record.Peers);
     }
 }

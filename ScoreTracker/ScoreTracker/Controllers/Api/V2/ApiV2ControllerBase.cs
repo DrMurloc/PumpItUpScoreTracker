@@ -1,10 +1,14 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using MediatR;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using ScoreTracker.CommunityTools.Contracts.Queries;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Dtos.ApiV2;
+using ScoreTracker.Web.Security;
 
 namespace ScoreTracker.Web.Controllers.Api.V2;
 
@@ -18,6 +22,17 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 ///     </para>
 /// </summary>
 [EnableCors("API")]
+// What every v2 action answers with, declared once so Swagger shows it on all of them: a 401 for
+// a missing or bad credential, and a 429 with Retry-After from the rate limiter.
+//
+// ⚠ Never add [Produces("application/json")] here. It is not only Swagger metadata — it is a
+// result filter that rewrites every ObjectResult's content type before the formatter runs, and
+// every 400/404 below is an ObjectResult carrying application/problem+json. It shipped on this
+// class for one commit and turned every v2 error into plain application/json on the wire while
+// the docs kept promising a problem document. The JSON content type of a 200 is declared on each
+// action's ProducesResponseType instead, which carries no filter (V2ConventionTests pins both).
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+[ProducesResponseType(StatusCodes.Status429TooManyRequests)]
 public abstract class ApiV2ControllerBase : Controller
 {
     public const string RoutePrefix = "api/v2";
@@ -53,6 +68,33 @@ public abstract class ApiV2ControllerBase : Controller
     {
         return Problem("mix-required", "The mix parameter is required.",
             detail: $"Valid values: {V2MixParser.ValidValues}");
+    }
+
+    /// <summary>The envelope's <c>scoringModel</c>: <c>phoenix</c> or <c>legacy</c>.</summary>
+    protected static string ScoringModelOf(MixEnum mix)
+    {
+        return mix.UsesLegacyScoring() ? "legacy" : "phoenix";
+    }
+
+    /// <summary>
+    ///     The player ids the calling credential may read: the tool's share pool, or the caller
+    ///     alone on a personal token. Every player-scoped list on v2 starts from this set.
+    /// </summary>
+    protected async Task<IReadOnlyList<Guid>> ReadablePlayerIds(IMediator mediator, ICurrentUserAccessor currentUser)
+    {
+        var toolId = User.ToolId();
+        return toolId is null
+            ? new[] { currentUser.User.Id }
+            : await mediator.Send(new GetToolReadablePlayersQuery(toolId.Value));
+    }
+
+    /// <summary>
+    ///     What a cursor is bound to on the credential side: the tool, or the person. Two personal
+    ///     tokens must never be able to trade cursors, so the person is part of the fingerprint.
+    /// </summary>
+    protected Guid CredentialKey(ICurrentUserAccessor currentUser)
+    {
+        return User.ToolId() ?? currentUser.User.Id;
     }
 
     protected ObjectResult InvalidCursorProblem()

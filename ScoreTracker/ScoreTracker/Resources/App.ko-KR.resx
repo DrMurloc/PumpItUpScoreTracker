@@ -5569,6 +5569,12 @@
   <data name="peers:" xml:space="preserve">
     <value>동급:</value>
   </data>
+  <data name="Peers: the average top 50 of the {0} players near your singles or doubles pool" xml:space="preserve">
+    <value>동료: 내 싱글 또는 더블 풀에 가까운 플레이어 {0}명의 평균 상위 50</value>
+  </data>
+  <data name="Peers: the average top 50 of the {0} players within one competitive level of you" xml:space="preserve">
+    <value>동료: 나와 경쟁 레벨 1 이내인 플레이어 {0}명의 평균 상위 50</value>
+  </data>
   <data name="Peers: {0}% of their pool weight at {1}" xml:space="preserve">
     <value>동료: 풀 비중의 {0}%가 레벨 {1}</value>
   </data>
@@ -6288,9 +6294,6 @@
   </data>
   <data name="PUMBILITY peers" xml:space="preserve">
     <value>PUMBILITY 동료</value>
-  </data>
-  <data name="PUMBILITY Pool" xml:space="preserve">
-    <value>PUMBILITY 풀</value>
   </data>
   <data name="Pumbility Push" xml:space="preserve">
     <value>Pumbility 올리기</value>
@@ -8053,6 +8056,9 @@
   <data name="The extremes are real charts, not noise — the shortest and longest chart at each level." xml:space="preserve">
     <value>극단값은 잡음이 아니라 실제 채보입니다. 각 레벨에서 가장 짧은 채보와 가장 긴 채보입니다.</value>
   </data>
+  <data name="The fifty charts your PUMBILITY is the sum of, grouped by what each is worth to you — its place, its value, and the score that earned it." xml:space="preserve">
+    <value>내 PUMBILITY를 이루는 50개 채보입니다. 각 채보가 내게 얼마나 가치 있는지로 묶었으며, 순위와 값, 그리고 그 값을 만든 점수를 함께 보여 줍니다.</value>
+  </data>
   <data name="The first Phoenix 2 score to beat your Phoenix 1 best" xml:space="preserve">
     <value>Phoenix 1 최고 기록을 처음으로 넘은 Phoenix 2 점수</value>
   </data>
@@ -9340,12 +9346,6 @@
   <data name="Where the levels sit" xml:space="preserve">
     <value>레벨 분포</value>
   </data>
-  <data name="Where the levels sit · doubles" xml:space="preserve">
-    <value>레벨 분포 · 더블</value>
-  </data>
-  <data name="Where the levels sit · singles" xml:space="preserve">
-    <value>레벨 분포 · 싱글</value>
-  </data>
   <data name="Where the points came from" xml:space="preserve">
     <value>점수의 출처</value>
   </data>
@@ -9763,6 +9763,9 @@
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>확인 요청에 이 값으로 응답하면 됩니다. 이 값은 어디에도 전송되지 않습니다 — 그래서 이 값으로 응답하는 것이 증명이 되고, 탈취된 DNS로는 통과할 수 없습니다. 해시로만 보관되니 찾을 수 있는 곳에 적어 두세요.</value>
   </data>
+  <data name="your fifty against what your peers hold, by level" xml:space="preserve">
+    <value>내 50개 채보와 동료가 보유한 채보를 레벨별로</value>
+  </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>파일이 10MB를 초과했습니다. 크기를 줄여 다시 시도해 주세요.</value>
   </data>
@@ -9838,9 +9841,6 @@
   <data name="Your pool" xml:space="preserve">
     <value>내 풀</value>
   </data>
-  <data name="Your pool by place, with what your peers do on each chart — how many hold it, their median and how split they are — and the waiting room below the bar." xml:space="preserve">
-    <value>내 풀을 순위 순으로, 각 채보에 대한 동료들의 기록과 함께 — 몇 명이 보유하는지, 중앙값과 얼마나 갈리는지 — 그리고 기준선 아래의 대기실까지.</value>
-  </data>
   <data name="Your pool holds {0} of 50. Until it's full, every chart you play counts whole — there's no bar to beat yet." xml:space="preserve">
     <value>풀은 50개 중 {0}개입니다. 다 차기 전까지는 플레이한 채보가 그대로 더해집니다 — 아직 넘어야 할 기준선이 없습니다.</value>
   </data>
@@ -9882,6 +9882,9 @@
   </data>
   <data name="Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them." xml:space="preserve">
     <value>Pumbility, 칭호, 폴더 램프, 플레이어 통계는 이 데이터에서 계산되므로 자동으로 초기화됩니다. 남길 수 없습니다.</value>
+  </data>
+  <data name="your real top 50 against your peers' average, by type" xml:space="preserve">
+    <value>내 실제 상위 50과 동료 평균을 종류별로</value>
   </data>
   <data name="Your Region" xml:space="preserve">
     <value>내 지역</value>

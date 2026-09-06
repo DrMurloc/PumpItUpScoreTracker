@@ -38,6 +38,11 @@ var web = builder.AddProject<Projects.ScoreTracker_Web>("web")
     // develop against their own machine. Refused anywhere else: from our servers a private
     // address points at our infrastructure, not theirs.
     .WithEnvironment("CommunityTools__AllowPrivateWebhookTargets", "true")
+    // ...and NOTHING outside the machine: the local database is a copy of production, complete
+    // with real tools, real endpoints and deliveries still queued, and the startup import-recovery
+    // pass alone would replay hundreds of sessions into them from a laptop. Public targets are
+    // refused at the one client every webhook POST goes through; loopback still delivers.
+    .WithEnvironment("CommunityTools__AllowPublicWebhookTargets", "false")
     .WaitFor(database);
 
 // Copy-paste secret flow-through: any values set in AppHost user-secrets under these

@@ -4,8 +4,10 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Text;
+using Microsoft.Extensions.Options;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Domain;
+using ScoreTracker.CommunityTools.Wiring;
 
 namespace ScoreTracker.CommunityTools.Infrastructure;
 
@@ -26,15 +28,30 @@ internal sealed class WebhookDeliveryClient : IWebhookDeliveryClient
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
 
     private readonly HttpClient _client;
+    private readonly IOptions<CommunityToolsConfiguration> _configuration;
 
-    public WebhookDeliveryClient(HttpClient client)
+    public WebhookDeliveryClient(HttpClient client, IOptions<CommunityToolsConfiguration> configuration)
     {
         _client = client;
+        _configuration = configuration;
+    }
+
+    /// <summary>
+    ///     The last gate before a byte leaves the process, which is why it lives in the client and
+    ///     not in any of its three callers: a local run configured to keep its webhooks on the
+    ///     machine refuses a public target here whether the POST is a delivery, a retry of a row the
+    ///     production copy arrived with, a session hand-off or a verification.
+    /// </summary>
+    private bool MayTarget(Uri url)
+    {
+        return _configuration.Value.AllowPublicWebhookTargets || WebhookTarget.IsLocalTarget(url);
     }
 
     public async Task<WebhookDeliveryOutcome> Post(Uri url, string body, string deliveryId,
         string? headerName, string? headerValue, CancellationToken cancellationToken)
     {
+        if (!MayTarget(url)) return WebhookDeliveryOutcome.Refused();
+
         using var request = new HttpRequestMessage(HttpMethod.Post, url)
         {
             Content = new StringContent(body, Encoding.UTF8, "application/json")
@@ -92,6 +109,9 @@ internal sealed class WebhookDeliveryClient : IWebhookDeliveryClient
     public async Task<WebhookVerificationOutcome> Verify(Uri url, string expectedSecretHash,
         string? headerName, string? headerValue, CancellationToken cancellationToken)
     {
+        if (!MayTarget(url))
+            return WebhookVerificationOutcome.Failed(WebhookFailureReason.RefusedTarget, null, null);
+
         var body = JsonSerializer.Serialize(new { type = WebhookSecrets.VerificationType });
         using var request = new HttpRequestMessage(HttpMethod.Post, url)
         {
@@ -187,6 +207,18 @@ internal sealed record WebhookDeliveryOutcome(
     {
         return new WebhookDeliveryOutcome(false, reason, statusCode, snippet, latencyMs);
     }
+
+    /// <summary>Never sent: the target is outside where this instance may deliver.</summary>
+    public static WebhookDeliveryOutcome Refused()
+    {
+        return new WebhookDeliveryOutcome(false, WebhookFailureReason.RefusedTarget, null, null, 0);
+    }
+
+    /// <summary>
+    ///     Whether trying again could change the answer. A refused target cannot: the address is
+    ///     the address, and scheduling it five more times would only keep the row alive.
+    /// </summary>
+    public bool Retryable => Reason != WebhookFailureReason.RefusedTarget;
 }
 
 internal interface IWebhookDeliveryClient

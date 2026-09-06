@@ -422,9 +422,34 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
         var mixId = MixIds.For(mix);
+        // The same rule as the bulk read: where an account still owns two rows in a mix, the one
+        // the crawl saw most recently is the tag in use. Unordered, SQL Server hands back
+        // whichever it likes — typically the older row — and the single and bulk reads disagreed
+        // about one player's tag.
         var entity = await database.Set<OfficialPlayerEntity>()
-            .FirstOrDefaultAsync(p => p.MixId == mixId && p.UserId == userId, ct);
+            .Where(p => p.MixId == mixId && p.UserId == userId)
+            .OrderByDescending(p => p.LastSeenAt)
+            .FirstOrDefaultAsync(ct);
         return entity == null ? null : ToPlayer(entity);
+    }
+
+    public async Task<IReadOnlyList<PlayerDimension>> GetPlayersByUserIds(MixEnum mix,
+        IReadOnlyCollection<Guid> userIds, CancellationToken ct)
+    {
+        if (userIds.Count == 0) return Array.Empty<PlayerDimension>();
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var mixId = MixIds.For(mix);
+        var results = new List<PlayerDimension>(userIds.Count);
+        foreach (var chunk in userIds.Chunk(1000))
+        {
+            var ids = chunk;
+            results.AddRange((await database.Set<OfficialPlayerEntity>()
+                    .Where(p => p.MixId == mixId && p.UserId != null && ids.Contains(p.UserId.Value))
+                    .ToArrayAsync(ct))
+                .Select(ToPlayer));
+        }
+
+        return results;
     }
 
     public async Task<IReadOnlyList<string>> GetPlayerNames(MixEnum mix, PlacementScope scope,

@@ -28,8 +28,8 @@ public sealed class DevHarnessRouteTests
     private static readonly Type[] V2Controllers =
     {
         typeof(MixesController), typeof(SongsController), typeof(ChartsController),
-        typeof(TierListsController), typeof(PlayersController), typeof(OfficialController),
-        typeof(WeeklyChartsController)
+        typeof(ChartScoresController), typeof(TierListsController), typeof(PlayersController),
+        typeof(OfficialController), typeof(WeeklyChartsController)
     };
 
     /// <summary>Every GET route the v2 controllers register, as slash-separated templates.</summary>
