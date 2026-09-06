@@ -43,13 +43,15 @@ internal sealed partial class MoMReadHandler :
             ? seasons.FirstOrDefault(s => s.Id == id)
             : LiveSeason(seasons);
         if (season == null) return null;
-        // Neighbours on the season clock, not in the list: the archive's crawlable path.
-        var chronological = seasons.OrderBy(s => s.StartsAt).ToList();
-        var index = chronological.FindIndex(s => s.Id == season.Id);
-        var previous = index > 0 ? chronological[index - 1] : null;
-        var next = index < chronological.Count - 1 ? chronological[index + 1] : null;
+        // Neighbours on the season clock, not in the list: the archive's crawlable path. Only
+        // seasons that have a board of this mix count — Phoenix 2's history starts with its first
+        // boards, so the page never walks it back to a season that has nothing for it.
+        var allBoards = await _mom.GetBoards(seasons.Select(s => s.Id), cancellationToken);
+        var ofMix = seasons.Where(s => allBoards.Any(b => b.SeasonId == s.Id && b.Mix == request.Mix)).ToList();
+        var previous = ofMix.Where(s => s.StartsAt < season.StartsAt).MaxBy(s => s.StartsAt);
+        var next = ofMix.Where(s => s.StartsAt > season.StartsAt).MinBy(s => s.StartsAt);
 
-        var boards = BoardsInOrder(await _mom.GetBoards(new[] { season.Id }, cancellationToken), request.Mix);
+        var boards = BoardsInOrder(allBoards.Where(b => b.SeasonId == season.Id), request.Mix);
         var sessions = await _mom.GetPublishedSessions(boards.Select(b => b.Id), cancellationToken);
         var players = await Players(sessions.Select(s => s.UserId), cancellationToken);
         var views = boards.Select(board =>
