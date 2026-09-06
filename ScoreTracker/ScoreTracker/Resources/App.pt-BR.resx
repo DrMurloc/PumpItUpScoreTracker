@@ -529,6 +529,9 @@
   <data name="AA+ and above are identical on both types. On a Double the ladder steps −0.01 a rung through the S grades, −0.02 a rung from AAA+ to A+, −0.05 a rung down to C, then −0.10 a rung to F; a Single runs a notch lower from AA down. A perfect 1,000,000 keeps SSS+’s ×1.50 — Perfect Game is a plate." xml:space="preserve">
     <value>AA+ e acima são idênticos nos dois tipos. Em um Double a escada desce −0,01 por degrau nos graus S, −0,02 por degrau de AAA+ a A+, −0,05 por degrau até C, depois −0,10 por degrau até F; um Single fica um entalhe abaixo de AA para baixo. Um 1.000.000 perfeito mantém o ×1,50 de SSS+ — Perfect Game é um plate.</value>
   </data>
+  <data name="AAA is the 1× target" xml:space="preserve">
+    <value>AAA é o alvo de 1×</value>
+  </data>
   <data name="AAA is worth 1× instead of {0}×, AA drops from {1}× to {2}×, and anything below A pays nothing. The top of the ladder is the same; a perfect game pays {3}×." xml:space="preserve">
     <value>AAA vale 1× em vez de {0}×, AA cai de {1}× para {2}×, e tudo abaixo de A não paga nada. O topo da escada é igual; um perfect game paga {3}×.</value>
   </data>
@@ -3094,9 +3097,6 @@
   <data name="Full Privacy Policy" xml:space="preserve">
     <value>Política de privacidade completa</value>
   </data>
-  <data name="Full rules" xml:space="preserve">
-    <value>Regras completas</value>
-  </data>
   <data name="Full Song" xml:space="preserve">
     <value>Full Song</value>
   </data>
@@ -4693,6 +4693,9 @@
   <data name="New folder" xml:space="preserve">
     <value>Pasta nova</value>
   </data>
+  <data name="New here?" xml:space="preserve">
+    <value>Novo por aqui?</value>
+  </data>
   <data name="New here? Signing in creates your account automatically — no forms, no site password." xml:space="preserve">
     <value>Novo por aqui? Ao entrar, sua conta é criada automaticamente — sem formulários e sem senha do site.</value>
   </data>
@@ -5446,6 +5449,9 @@
   <data name="On — your scores show on leaderboards and in communities" xml:space="preserve">
     <value>Ativado: suas pontuações aparecem nas classificações e nas comunidades</value>
   </data>
+  <data name="one board per session" xml:space="preserve">
+    <value>um quadro por sessão</value>
+  </data>
   <data name="One break every N notes" xml:space="preserve">
     <value>Uma quebra a cada N notas</value>
   </data>
@@ -5488,8 +5494,8 @@
   <data name="One session" xml:space="preserve">
     <value>Uma sessão</value>
   </data>
-  <data name="One session is 1 hour 45 minutes; a chart only has to start inside it. Every chart scores PUMBILITY+: its balanced level, scaled by song length, times how well you played. Singles and Doubles are separate boards. No repeats — the same song at another level is a different chart. Play as many sessions as you like; the board ranks sessions. Ties go to the earlier session." xml:space="preserve">
-    <value>Uma sessão dura 1 hora e 45 minutos; um chart só precisa começar dentro dela. Cada chart pontua com PUMBILITY+: seu nível balanceado, escalado pela duração da música, vezes o quão bem você jogou. Singles e Doubles são quadros separados. Sem repetições — a mesma música em outro nível é outro chart. Jogue quantas sessões quiser; o quadro classifica sessões. Empates favorecem a sessão mais antiga.</value>
+  <data name="One session of 1 hour 45 minutes. Play as many charts as you can and bank points for how hard each one is and how well you played it." xml:space="preserve">
+    <value>Uma sessão de 1 hora e 45 minutos. Jogue o máximo de charts que conseguir e acumule pontos conforme a dificuldade de cada um e o quão bem você jogou.</value>
   </data>
   <data name="One session of 1 hour 45 minutes. Play as many charts as you can and bank points for how hard each one is and how well you played it. The board ranks sessions, so every attempt is its own shot." xml:space="preserve">
     <value>Uma sessão de 1 hora e 45 minutos. Jogue o máximo de charts que conseguir e acumule pontos conforme a dificuldade de cada um e o quão bem você jogou. O quadro classifica sessões, então cada tentativa é uma chance própria.</value>
@@ -6741,6 +6747,9 @@
   </data>
   <data name="Read straight up from the end of a bar to see which level it matches." xml:space="preserve">
     <value>Leia direto para cima a partir do fim de uma barra para ver a que nível ela corresponde.</value>
+  </data>
+  <data name="Read the rules" xml:space="preserve">
+    <value>Ler as regras</value>
   </data>
   <data name="Read the source" xml:space="preserve">
     <value>Ler o código</value>
@@ -8833,6 +8842,9 @@
   <data name="Time runs downward — arrows colored by panel, feet, or timing." xml:space="preserve">
 	  <value>O tempo corre para baixo — setas coloridas por painel, pé ou subdivisão.</value>
   </data>
+  <data name="timed by you" xml:space="preserve">
+    <value>cronometrada por você</value>
+  </data>
   <data name="Title" xml:space="preserve">
     <value>Título</value>
   </data>
@@ -10053,6 +10065,9 @@
   </data>
   <data name="your best of {0} sessions" xml:space="preserve">
     <value>sua melhor de {0} sessões</value>
+  </data>
+  <data name="your best play of a chart counts" xml:space="preserve">
+    <value>sua melhor jogada de um chart conta</value>
   </data>
   <data name="Your chart's current value, bottom right." xml:space="preserve">
     <value>O valor atual do seu chart, embaixo à direita.</value>

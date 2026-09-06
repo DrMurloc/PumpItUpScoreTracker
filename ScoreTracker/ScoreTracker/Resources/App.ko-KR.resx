@@ -529,6 +529,9 @@
   <data name="AA+ and above are identical on both types. On a Double the ladder steps −0.01 a rung through the S grades, −0.02 a rung from AAA+ to A+, −0.05 a rung down to C, then −0.10 a rung to F; a Single runs a notch lower from AA down. A perfect 1,000,000 keeps SSS+’s ×1.50 — Perfect Game is a plate." xml:space="preserve">
     <value>AA+ 이상은 두 종류가 동일합니다. 더블에서는 S 등급대에서 단계당 −0.01, AAA+에서 A+까지 단계당 −0.02, C까지 단계당 −0.05, 그다음 F까지 단계당 −0.10; 싱글은 AA 아래부터 한 칸씩 낮습니다. 완벽한 1,000,000도 SSS+의 ×1.50을 유지합니다 — Perfect Game은 플레이트입니다.</value>
   </data>
+  <data name="AAA is the 1× target" xml:space="preserve">
+    <value>AAA가 1× 기준</value>
+  </data>
   <data name="AAA is worth 1× instead of {0}×, AA drops from {1}× to {2}×, and anything below A pays nothing. The top of the ladder is the same; a perfect game pays {3}×." xml:space="preserve">
     <value>AAA는 {0}× 대신 1×, AA는 {1}×에서 {2}×로 내려가고, A 아래는 아무것도 받지 못합니다. 사다리 위쪽은 같으며, 퍼펙트 게임은 {3}×입니다.</value>
   </data>
@@ -3094,9 +3097,6 @@
   <data name="Full Privacy Policy" xml:space="preserve">
     <value>개인정보 방침</value>
   </data>
-  <data name="Full rules" xml:space="preserve">
-    <value>전체 규칙</value>
-  </data>
   <data name="Full Song" xml:space="preserve">
     <value>풀 송</value>
   </data>
@@ -4693,6 +4693,9 @@
   <data name="New folder" xml:space="preserve">
     <value>새 폴더</value>
   </data>
+  <data name="New here?" xml:space="preserve">
+    <value>처음이신가요?</value>
+  </data>
   <data name="New here? Signing in creates your account automatically — no forms, no site password." xml:space="preserve">
     <value>처음이신가요? 로그인하면 계정이 자동으로 생성됩니다. 가입 양식도, 사이트 비밀번호도 필요 없습니다.</value>
   </data>
@@ -5446,6 +5449,9 @@
   <data name="On — your scores show on leaderboards and in communities" xml:space="preserve">
     <value>켜짐 — 점수가 리더보드와 커뮤니티에 표시됩니다</value>
   </data>
+  <data name="one board per session" xml:space="preserve">
+    <value>세션당 보드 하나</value>
+  </data>
   <data name="One break every N notes" xml:space="preserve">
     <value>N노트마다 브레이크 한 번</value>
   </data>
@@ -5488,8 +5494,8 @@
   <data name="One session" xml:space="preserve">
     <value>세션 하나</value>
   </data>
-  <data name="One session is 1 hour 45 minutes; a chart only has to start inside it. Every chart scores PUMBILITY+: its balanced level, scaled by song length, times how well you played. Singles and Doubles are separate boards. No repeats — the same song at another level is a different chart. Play as many sessions as you like; the board ranks sessions. Ties go to the earlier session." xml:space="preserve">
-    <value>한 세션은 1시간 45분이며, 채보는 그 안에 시작만 하면 됩니다. 모든 채보는 PUMBILITY+로 채점됩니다: 보정된 레벨에 곡 길이를 반영하고, 얼마나 잘 쳤는지를 곱합니다. 싱글과 더블은 별도의 보드입니다. 반복 불가 — 같은 곡이라도 레벨이 다르면 다른 채보입니다. 세션은 원하는 만큼 플레이할 수 있고, 보드는 세션 단위로 순위를 매깁니다. 동점이면 먼저 기록한 세션이 앞섭니다.</value>
+  <data name="One session of 1 hour 45 minutes. Play as many charts as you can and bank points for how hard each one is and how well you played it." xml:space="preserve">
+    <value>1시간 45분짜리 세션 하나. 최대한 많은 채보를 플레이하고, 각 채보의 난이도와 플레이 결과에 따라 점수를 쌓으세요.</value>
   </data>
   <data name="One session of 1 hour 45 minutes. Play as many charts as you can and bank points for how hard each one is and how well you played it. The board ranks sessions, so every attempt is its own shot." xml:space="preserve">
     <value>1시간 45분짜리 세션 하나. 최대한 많은 채보를 플레이하고, 각 채보의 난이도와 플레이 결과에 따라 점수를 쌓으세요. 보드는 세션 단위로 순위를 매기므로 모든 도전이 저마다의 기회입니다.</value>
@@ -6741,6 +6747,9 @@
   </data>
   <data name="Read straight up from the end of a bar to see which level it matches." xml:space="preserve">
     <value>막대 끝에서 곧장 위로 읽으면 어느 레벨과 같은지 보입니다.</value>
+  </data>
+  <data name="Read the rules" xml:space="preserve">
+    <value>규칙 읽기</value>
   </data>
   <data name="Read the source" xml:space="preserve">
     <value>소스 읽기</value>
@@ -8833,6 +8842,9 @@
   <data name="Time runs downward — arrows colored by panel, feet, or timing." xml:space="preserve">
 	  <value>시간은 아래로 흐릅니다 — 화살표 색은 패널·발·박자 기준으로 전환됩니다.</value>
   </data>
+  <data name="timed by you" xml:space="preserve">
+    <value>시간은 본인이 잼</value>
+  </data>
   <data name="Title" xml:space="preserve">
     <value>제목</value>
   </data>
@@ -10053,6 +10065,9 @@
   </data>
   <data name="your best of {0} sessions" xml:space="preserve">
     <value>{0}개 세션 중 최고</value>
+  </data>
+  <data name="your best play of a chart counts" xml:space="preserve">
+    <value>채보마다 최고의 플레이만 인정</value>
   </data>
   <data name="Your chart's current value, bottom right." xml:space="preserve">
     <value>이 차트의 현재 값을 오른쪽 아래에 표시합니다.</value>

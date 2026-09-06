@@ -268,3 +268,13 @@ March of Murlocs table above still governs season, session, board and downtime.
 | Perfect Game | Perfect Game (unchanged) |
 | play (a run of a chart) | jogada |
 | the meta | o meta |
+
+### The newcomer card (2026-09-06)
+
+The Season page's card for a viewer who has never published a session (D44); the Rules-page terms above apply.
+
+| English | pt-BR |
+|---|---|
+| New here? | Novo por aqui? |
+| Read the rules | Ler as regras |
+| timed by you | cronometrada por você |

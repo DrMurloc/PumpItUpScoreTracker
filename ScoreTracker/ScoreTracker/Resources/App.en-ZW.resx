@@ -529,6 +529,9 @@
   <data name="AA+ and above are identical on both types. On a Double the ladder steps −0.01 a rung through the S grades, −0.02 a rung from AAA+ to A+, −0.05 a rung down to C, then −0.10 a rung to F; a Single runs a notch lower from AA down. A perfect 1,000,000 keeps SSS+’s ×1.50 — Perfect Game is a plate." xml:space="preserve">
     <value>AA+ ur grogro lu plom ap ambo morg. Ap a Groggl a gropla grop −0.01 a grop plglarg a Ｓ rorgl, −0.02 a grop blarg AAA+ ro A+, −0.05 a grop blo ro Ｃ, ulgo −0.10 a grop ro Ｆ; a Mrglrlgl grrglgrrgl a grop bloblo blarg AA blo. A murgloo 1,000,000 gab SSS+’a ×1.50 — Murgloo Gurgl lu a murp.</value>
   </data>
+  <data name="AAA is the 1× target" xml:space="preserve">
+    <value>AAA gab blu 1× grolp</value>
+  </data>
   <data name="AAA is worth 1× instead of {0}×, AA drops from {1}× to {2}×, and anything below A pays nothing. The top of the ladder is the same; a perfect game pays {3}×." xml:space="preserve">
     <value>AAA gab 1× mo {0}×, AA glubgro mrgl {1}× ap {2}×, ap ulbog glub A gogl mo. Blu urg mrgl blu urgblarg gab blu; ogro ulboglurg gogl {3}×.</value>
   </data>
@@ -3111,9 +3114,6 @@
   <data name="Full Privacy Policy" xml:space="preserve">
     <value>Mrglmr Grrglglgro Murpgrorp</value>
   </data>
-  <data name="Full rules" xml:space="preserve">
-    <value>Mrglmr Murgrgl</value>
-  </data>
   <data name="Full Song" xml:space="preserve">
     <value>Mrglmr Mrgl</value>
   </data>
@@ -4723,6 +4723,9 @@
   <data name="New folder" xml:space="preserve">
     <value>Grgl grrgllurg</value>
   </data>
+  <data name="New here?" xml:space="preserve">
+    <value>Murpargl ap?</value>
+  </data>
   <data name="New here? Signing in creates your account automatically — no forms, no site password." xml:space="preserve">
     <value>Grgl blubmorg? Urgmurgurg mrp murmmrpblgrl gromurp grgl blubromaglgrrgl — mrp rogro, mrp plglmorg glorgmrpmurm.</value>
   </data>
@@ -5477,6 +5480,9 @@
   <data name="On — your scores show on leaderboards and in communities" xml:space="preserve">
     <value>Blub — grumal oglurp mrglrmrglrgl agl marmurg</value>
   </data>
+  <data name="one board per session" xml:space="preserve">
+    <value>ogro mrglblarg ogro orgab</value>
+  </data>
   <data name="One break every N notes" xml:space="preserve">
     <value>Argl arglglorg murgglorg GRRGL roblub</value>
   </data>
@@ -5519,8 +5525,8 @@
   <data name="One session" xml:space="preserve">
     <value>Ogro orgab</value>
   </data>
-  <data name="One session is 1 hour 45 minutes; a chart only has to start inside it. Every chart scores PUMBILITY+: its balanced level, scaled by song length, times how well you played. Singles and Doubles are separate boards. No repeats — the same song at another level is a different chart. Play as many sessions as you like; the board ranks sessions. Ties go to the earlier session." xml:space="preserve">
-    <value>Mrp orgab blub 1 grogl 45 rglrglgrorp; a murgl ub grab ro grolp gropmur ug. Olga murgl mrglrgl PUMBILITY+: ug grulmgro grorpmurm, groglo bu mrgl grulm, murmgrog gam gromb blub lurg. Mrglrlgl ap Groggl blub blgrl grrglplgl. Mo mrgmrgl — mrp mrgl mrgl og ugmorg grorpmurm blub a ugmorg murgl. Lurg gam mrrgl orgab gam blub plglro; mrp mrglblarg groglar orgab. Grulmplub ro mrp bagrol orgab.</value>
+  <data name="One session of 1 hour 45 minutes. Play as many charts as you can and bank points for how hard each one is and how well you played it." xml:space="preserve">
+    <value>Ogro Orgab mrgl 1 grogl 45 rglrglgrorp. Lurg gam mrrgl murgl gam blub gab ap grubgrab mrglublgl gam brglgro ogro gab ap gam murm blub lurg.</value>
   </data>
   <data name="One session of 1 hour 45 minutes. Play as many charts as you can and bank points for how hard each one is and how well you played it. The board ranks sessions, so every attempt is its own shot." xml:space="preserve">
     <value>Ogro Orgab mrgl 1 grogl 45 rglrglgrorp. Lurg gam mrrgl murgl gam blub gab ap grubgrab mrglublgl gam brglgro ogro gab ap gam murm blub lurg. Blu Mrglblarg rorgl orgab, murm ulbog lurg gab blu ogro grolp.</value>
@@ -6780,6 +6786,9 @@
   </data>
   <data name="Read straight up from the end of a bar to see which level it matches." xml:space="preserve">
     <value>Grumbo plag gro blarg a gulp ba a rgl ro grumbo urg grorpmurm mo plom.</value>
+  </data>
+  <data name="Read the rules" xml:space="preserve">
+    <value>Blomorg blu murpgl</value>
   </data>
   <data name="Read the source" xml:space="preserve">
     <value>Blurgl murgblub</value>
@@ -8891,6 +8900,9 @@
   <data name="Time runs downward — arrows colored by panel, feet, or timing." xml:space="preserve">
 	  <value>Mogro grogl lurggrogl — prglgl gromorgro ur murpgl, glubro, ro murgrog.</value>
   </data>
+  <data name="timed by you" xml:space="preserve">
+    <value>grglmrglurg gam blub</value>
+  </data>
   <data name="Title" xml:space="preserve">
 	  <value>Mrgl</value>
   </data>
@@ -10121,6 +10133,9 @@
   </data>
   <data name="your best of {0} sessions" xml:space="preserve">
     <value>gromurp mgrlgmrg ub {0} orgab</value>
+  </data>
+  <data name="your best play of a chart counts" xml:space="preserve">
+    <value>blub mrrglgro lurg mrgl ogro murgl gab</value>
   </data>
   <data name="Your chart's current value, bottom right." xml:space="preserve">
     <value>Mur murgl gruglo grulb, moglurg raglo.</value>

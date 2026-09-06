@@ -623,3 +623,9 @@ as the protected `DrMurloc`.
 | encourage | urggab | |
 | already / better | gab / mrrglgro | `mrrglgro` is the recovered comparative *higher*. |
 | replaced | grobmurg | The recovered *swap*. |
+
+### The newcomer card (2026-09-06)
+
+The Season page's card for a viewer who has never published a session (D44). Reuses the Rules-page
+batch throughout; two new words: *new here?* is `Murpargl ap?` (`murpargl`, the recovered *first / newest*,
+as *first time*) and *read* is `Blomorg` (the recovered *watch / see*, which is how a Murloc reads).

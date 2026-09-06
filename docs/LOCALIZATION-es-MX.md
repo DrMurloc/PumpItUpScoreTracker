@@ -638,3 +638,13 @@ March of Murlocs table above still governs season, session, board and downtime.
 | play (a run of a chart) | jugada |
 | enter by hand | capturar a mano |
 | the meta | el meta |
+
+### The newcomer card (2026-09-06)
+
+The Season page's card for a viewer who has never published a session (D44); the Rules-page terms above apply.
+
+| English | es-MX |
+|---|---|
+| New here? | ¿Eres nuevo? |
+| Read the rules | Leer las reglas |
+| timed by you | cronometrada por ti |
