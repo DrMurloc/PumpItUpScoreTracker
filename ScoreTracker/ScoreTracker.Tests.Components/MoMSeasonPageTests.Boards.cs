@@ -8,6 +8,7 @@ using ScoreTracker.EventCompetition.Contracts;
 using ScoreTracker.EventCompetition.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Pages.Competition.MoM;
+using ScoreTracker.Web.Services;
 using Xunit;
 
 namespace ScoreTracker.Tests.Components;
@@ -60,17 +61,49 @@ public sealed partial class MoMSeasonPageTests
     }
 
     [Fact]
-    public void PhoenixTwoExplainsItselfInsteadOfHidingTheSeason()
+    public void PhoenixTwoShowsItsOwnBoards()
     {
+        // D38: the Phoenix 2 boards are live, and the page treats them exactly as Phoenix's.
         _mix = MixEnum.Phoenix2;
         Page();
 
         var cut = RenderComponent<Season>();
 
-        Assert.Contains("Phoenix 2 boards open once the scoring is settled.", cut.Find("[data-testid=mom-standing]").TextContent);
-        Assert.NotEmpty(cut.FindAll("[data-testid=mom-p2-notice]"));
+        Assert.Contains("Phoenix 2 · March of Murlocs", cut.Find(".pmb-eyebrow").TextContent);
+        Assert.Equal(2, cut.FindAll("[data-testid=mom-board-segment]").Count);
+        Assert.NotEmpty(cut.FindAll("[data-testid=mom-board-row]"));
+        Assert.Empty(cut.FindAll("[data-testid=mom-no-boards]"));
+        Assert.DoesNotContain("scoring is settled", cut.Markup);
+    }
+
+    [Fact]
+    public void ASeasonWithoutThisMixBoardsYetSaysSoInOneLine()
+    {
+        // Between a season's creation and the daily heal (D43) a mix may have no boards.
+        _mix = MixEnum.Phoenix2;
+        Page();
+        Mediator.Setup(m => m.Send(It.IsAny<GetMoMSeasonPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((GetMoMSeasonPageQuery q, CancellationToken _) =>
+                new MoMSeasonPage(new MoMSeasonSummary(Guid.NewGuid(), "Summer 2026", Now.AddDays(-20), Now.AddDays(40), true),
+                    Array.Empty<MoMBoardView>(), null, null));
+
+        var cut = RenderComponent<Season>();
+
+        Assert.NotEmpty(cut.FindAll("[data-testid=mom-no-boards]"));
         Assert.Empty(cut.FindAll("[data-testid=mom-board-segment]"));
-        Assert.Empty(cut.FindAll("[data-testid=mom-board-row]"));
+        Assert.Empty(cut.FindAll("[data-testid=mom-standing]"));
+    }
+
+    [Fact]
+    public void BothRulesLinksLandOnTheRulesPage()
+    {
+        Page();
+
+        var cut = RenderComponent<Season>();
+
+        Assert.Equal(MoMText.RulesRoute, cut.Find(".pmb-eyebrow-link").GetAttribute("href"));
+        Assert.Equal(MoMText.RulesRoute, cut.Find(".mom-rules a").GetAttribute("href"));
+        Assert.DoesNotContain("docs.google.com", cut.Markup);
     }
 
     [Fact]

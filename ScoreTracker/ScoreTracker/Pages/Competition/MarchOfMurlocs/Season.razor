@@ -17,8 +17,8 @@
    switcher (D33), the rules, and the previous / next season links that keep the archive
    crawlable without a seasons route (§11.8). Static SSR: no @rendermode (RenderModeDeclarationTests
    lists it), every control a link or a native disclosure, the Past-seasons dialog the one island.
-   Which boards you see follows your mix, as the weekly boards do; Phoenix 2 has no boards until
-   the scoring session (D12) and the page says so rather than hiding. *@
+   Which boards you see follows your mix, as the weekly boards do; Phoenix 2's boards are live on
+   PUMBILITY+ (D38, D41), and a season the daily job has not yet seated boards for says so. *@
 @if (_page == null)
 {
     <div class="pmb-eyebrow"><span>@MixName · March of Murlocs</span></div>
@@ -30,7 +30,7 @@ else
     var typeName = board == null ? string.Empty : TypeName(board.ChartType);
     <div class="pmb-eyebrow">
         <span>@MixName · March of Murlocs</span>
-        <a class="pmb-eyebrow-link" href="#rules">@L["How it works"] →</a>
+        <a class="pmb-eyebrow-link" href="@MoMText.RulesRoute">@L["How it works"] →</a>
     </div>
     <section class="mom-hero">
         <div>
@@ -43,14 +43,7 @@ else
                 </div>
             </div>
         </div>
-        @if (_mix == MixEnum.Phoenix2)
-        {
-            <div class="mom-standing empty" data-testid="mom-standing">
-                <span class="lead">@L["Phoenix 2 boards open once the scoring is settled."]</span>
-                <span class="sub">@L["This season runs on Phoenix."]</span>
-            </div>
-        }
-        else if (board?.Viewer is { } standing)
+        @if (board?.Viewer is { } standing)
         {
             <div class="mom-standing" data-testid="mom-standing">
                 <span class="k">@L["Your standing"] · @typeName</span>
@@ -103,11 +96,12 @@ else
         </div>
     }
     <MoMSectionFrame Active="season" Mix="_mix" RecordBoardId="@(_page.Season.IsLive ? board?.BoardId : null)"/>
-    @if (_mix == MixEnum.Phoenix2 || board == null)
+    @if (board == null)
     {
-        <div class="mom-notice" data-testid="mom-p2-notice">
-            <h4>@L["Phoenix 2 scoring is still being tuned."]</h4>
-            <p>@L["Phoenix 2 gets its own Doubles and Singles boards, on Phoenix 2's own rating system. They open once the scoring is settled — this season runs on Phoenix."]</p>
+        @* A season the daily job has not seated this mix's boards on yet (D43) — one calm line. *@
+        <div class="mom-notice" data-testid="mom-no-boards">
+            <h4>@L["This season's boards are being set up."]</h4>
+            <p>@L["Check back shortly."]</p>
         </div>
     }
     else
@@ -151,7 +145,7 @@ else
     }
     <details class="mom-rules" id="rules">
         <summary>@L["How March of Murlocs works"]</summary>
-        <p>@L["One session is 1 hour 45 minutes; a chart only has to start inside it. Every chart scores PUMBILITY+: its balanced level, scaled by song length, times how well you played. Singles and Doubles are separate boards. No repeats — the same song at another level is a different chart. Play as many sessions as you like; the board ranks sessions. Ties go to the earlier session."] <a href="@MoMText.RulesUrl" target="_blank" rel="noopener">@L["Full rules"] →</a></p>
+        <p>@L["One session is 1 hour 45 minutes; a chart only has to start inside it. Every chart scores PUMBILITY+: its balanced level, scaled by song length, times how well you played. Singles and Doubles are separate boards. No repeats — the same song at another level is a different chart. Play as many sessions as you like; the board ranks sessions. Ties go to the earlier session."] <a href="@MoMText.RulesRoute">@L["Full rules"] →</a></p>
     </details>
     <div class="mom-foot">
         @if (_page.Previous is { } previous)

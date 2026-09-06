@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Bunit;
 using Microsoft.AspNetCore.Components;
@@ -81,7 +82,7 @@ public sealed partial class MoMSeasonPageTests : ComponentTestBase
             null);
         Mediator.Setup(m => m.Send(It.IsAny<GetMoMSeasonPageQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((GetMoMSeasonPageQuery q, CancellationToken _) => q.Mix == MixEnum.Phoenix2
-                ? page with { Boards = Array.Empty<MoMBoardView>() }
+                ? page with { Boards = page.Boards.Select(b => b with { Mix = MixEnum.Phoenix2 }).ToArray() }
                 : page);
     }
 
