@@ -1,0 +1,632 @@
+@page "/MarchOfMurlocs/Planner"
+@page "/MarchOfMurlocs/Planner/{BoardId:guid}"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Enums
+@using System.Text
+@using System.Text.Json
+@using System.Globalization
+@using Microsoft.JSInterop
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Pages.Competition.MoM
+@* The Planner (docs/design/march-of-murlocs.md §11.5): the Season's future tense. Your record book
+   priced at one energy, solved into a set, and reported in the same four numbers a played session
+   is described by — so what you are chasing and what you posted read identically.
+
+   Rest per chart is the only control that really matters and the plan re-solves as it moves. The
+   page opens on Everything with an empty set: suggesting is an offer, not the starting position,
+   and every number recomputes from what is ticked. Selection reads as an outline, never as
+   dimming — an unpicked chart is not lesser information. *@
+
+<PageTitle>@L["Planner"] · @L["March of Murlocs"]</PageTitle>
+
+<div class="pmb-eyebrow"><span>@MixName · @L["March of Murlocs"]</span></div>
+<h1 class="pl-title">@L["Planner"]</h1>
+<p class="pl-lede">@L["Build a set, tune it, take it to the machine."]</p>
+<MoMSectionFrame Active="planner" Mix="_mix" RecordBoardId="@_plan?.BoardId"/>
+
+@if (_plan is not { } plan)
+{
+    <MudAlert Severity="Severity.Info" data-testid="mom-plan-empty">
+        @(_notSignedIn
+            ? L["Sign in to plan a session from your own scores."]
+            : L["This season's boards are being set up. Check back shortly."])
+    </MudAlert>
+}
+else
+{
+    <section class="pl-controls" data-testid="mom-plan-controls">
+        <div>
+            <div class="ctl-row">
+                <div>
+                    <span class="k">@L["Board"]</span>
+                    <div class="seggroup" data-testid="mom-plan-board">
+                        @foreach (var option in _boards)
+                        {
+                            var board = option;
+                            <MudButton Variant="@(board.BoardId == plan.BoardId ? Variant.Filled : Variant.Outlined)"
+                                       Color="Color.Primary" Size="Size.Small" Disabled="_busy"
+                                       OnClick="@(() => SwitchBoard(board.BoardId))">@TypeName(board.ChartType)</MudButton>
+                        }
+                    </div>
+                </div>
+                <div>
+                    <span class="k">@L["Energy"]</span>
+                    <MudSelect T="MoMEnergy" Value="plan.Energy" ValueChanged="SetEnergy" Dense="true"
+                               Variant="Variant.Outlined" Disabled="_busy" data-testid="mom-plan-energy">
+                        @foreach (var energy in Energies)
+                        {
+                            <MudSelectItem T="MoMEnergy" Value="energy" title="@L[HintKey(energy)]">@L[LabelKey(energy)]</MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+            </div>
+
+            <div class="pl-slider">
+                <span class="k">@L["Rest between charts"]</span>
+                <MudSlider T="int" Value="_restSeconds" ValueChanged="SetRest" Min="10" Max="180" Step="5"
+                           Immediate="false" Disabled="_busy" data-testid="mom-plan-rest"/>
+                <span class="readout">@L["{0}s", _restSeconds]</span>
+                @if (_handPicked)
+                {
+                    <div class="pl-note" data-testid="mom-plan-handpicked">@L["Yours now — Suggest a set to retune."]</div>
+                }
+            </div>
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_busy" OnClick="Suggest"
+                       StartIcon="@Icons.Material.Filled.Star" data-testid="mom-plan-suggest">@L["Suggest a set"]</MudButton>
+        </div>
+
+        <div class="pl-push" data-testid="mom-plan-push">
+            <span class="k">@L["How hard to push"]</span>
+            @if (plan.Anchor is { } anchor)
+            {
+                <p class="pl-anchor">
+                    <b>@TypeName(plan.ChartType) @anchor.ToString("N2")</b>
+                    @L["your last session's average"]
+                </p>
+            }
+            <div class="seggroup">
+                @foreach (var option in Pushes)
+                {
+                    var push = option;
+                    <MudButton Variant="@(push == _push ? Variant.Filled : Variant.Outlined)" Color="Color.Primary"
+                               Size="Size.Small" Disabled="_busy" OnClick="@(() => SetPush(push))">@L[PushKey(push)]</MudButton>
+                }
+            </div>
+            <p class="pl-push-note">
+                @(plan.LevelCap is { } cap
+                    ? L["Suggested sets stop at {0} — a level below your session average is where most players hold up.", TypeName(plan.ChartType) + cap]
+                    : L["Nothing is capped. Harder charts are faded, still tickable."])
+            </p>
+        </div>
+    </section>
+
+    @* Projected points, then the four numbers a session is described by. *@
+    <section class="pl-proj" data-testid="mom-plan-projection">
+        <div class="pl-proj-top">
+            <div>
+                <span class="pl-proj-k">@L["Projected points"] · @L[LabelKey(plan.Energy)]</span>
+                <div class="pl-proj-big @(_picked.Count == 0 ? "zero" : "")">@Points.ToString("N0")</div>
+            </div>
+            @if (plan.Conversion is { } conversion && _picked.Count > 0)
+            {
+                <div class="pl-conversion" data-testid="mom-plan-conversion">
+                    <b>@((conversion * 100).ToString("N0"))%</b>
+                    <span>@L["of this plan is what you actually banked"]</span>
+                </div>
+            }
+        </div>
+        <p class="pl-say">
+            @(plan.Energy == MoMEnergy.TopOfMyGame
+                ? L["A ceiling — every chart at your best."]
+                : L["At what players like you score on each chart."])
+        </p>
+        <div class="four">
+            <div><span class="k">@L["Charts"]</span><div class="v">@_picked.Count</div></div>
+            <div><span class="k">@L["Level value"]</span><div class="v">@AverageLevel.ToString("N2")</div></div>
+            <div><span class="k">@L["Avg grade"]</span><div class="v">@AverageScore.ToString("N0")</div></div>
+            <div><span class="k">@L["Downtime"]</span><div class="v">@MoMText.MinutesSeconds(Downtime)</div></div>
+        </div>
+        @* The rules page teaches PUMBILITY+ on Phoenix 2's tuning (D41); the Phoenix board keeps
+           its own, so a Phoenix planner says so once rather than letting the numbers argue. *@
+        @if (plan.Mix != MixEnum.Phoenix2)
+        {
+            <p class="pl-mixnote" data-testid="mom-plan-mixnote">
+                @L["These are Phoenix board points. A few grades price slightly differently here than on the rules page, mostly below AAA."]
+                <MudLink Href="@MoMText.RulesRoute" Color="Color.Primary">@L["The rules"] →</MudLink>
+            </p>
+        }
+    </section>
+
+    @if (RestCharts.Any())
+    {
+        <section class="pl-shelf" data-testid="mom-plan-rest-shelf">
+            <span class="sbd-eyebrow">@L["Rest charts"]</span>
+            <p class="pl-shelf-note">@L["Few steps, hold-heavy, no drills, soft crux — against their own level. Nothing is woven in; tick what you want."]</p>
+            <div class="pl-shelf-rows">
+                @foreach (var chart in RestCharts)
+                {
+                    @ShelfRow(chart, chart.Rest!.IsRest && (int)chart.Score >= 950000 ? L["clean"] : null)
+                }
+            </div>
+        </section>
+    }
+
+    @if (Finishers.Any())
+    {
+        <section class="pl-shelf" data-testid="mom-plan-finishers">
+            <span class="sbd-eyebrow">@L["Finishers"]</span>
+            <p class="pl-shelf-note">@L["Three minutes or more. The last chart only has to start inside the window, so the biggest one is worth starting with seconds left."]</p>
+            <div class="pl-shelf-rows">
+                @foreach (var chart in Finishers)
+                {
+                    @ShelfRow(chart, chart.IsClosing ? L["closing chart"] : null)
+                }
+            </div>
+        </section>
+    }
+
+    <div class="pl-setbar">
+        <span class="sbd-eyebrow">@(_scope == "set" ? L["Your set"] : L["Your record book"])</span>
+        <div class="seggroup" data-testid="mom-plan-scope">
+            <MudButton Variant="@(_scope == "all" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary"
+                       Size="Size.Small" OnClick="@(() => _scope = "all")">@L["Everything"]</MudButton>
+            <MudButton Variant="@(_scope == "set" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary"
+                       Size="Size.Small" OnClick="@(() => _scope = "set")">
+                @L["In your set"]@(_picked.Count > 0 ? $" · {_picked.Count}" : string.Empty)
+            </MudButton>
+        </div>
+        <span class="pl-tools">
+            <MudButtonGroup OverrideStyles="false">
+                <MudTooltip Text="@L["Comfortable"]"><MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy" Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)" OnClick="@(() => _density = UiDensity.Comfortable)" aria-label="@L["Comfortable"]"/></MudTooltip>
+                <MudTooltip Text="@L["Compact"]"><MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView" Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)" OnClick="@(() => _density = UiDensity.Compact)" aria-label="@L["Compact"]"/></MudTooltip>
+                <MudTooltip Text="@L["Table"]"><MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows" Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)" OnClick="@(() => _density = UiDensity.Table)" aria-label="@L["Table"]"/></MudTooltip>
+            </MudButtonGroup>
+        </span>
+    </div>
+
+    @if (_density == UiDensity.Table)
+    {
+        <div class="table-wrap pl-list" data-testid="mom-plan-list">
+            <table class="olb-board-table">
+                <thead>
+                <tr>
+                    <th></th>
+                    <th>#</th>
+                    <th>@L["Chart"]</th>
+                    <th class="r">@(plan.Energy == MoMEnergy.TopOfMyGame ? L["Your best"] : L["Expected"])</th>
+                    <th class="r">@L["Projected"]</th>
+                    <th class="r">@L["Pts / s"]</th>
+                    <th class="r">@L["Length"]</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var chart in Visible)
+                {
+                    @ListRow(chart)
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="pl-list @(_density == UiDensity.Compact ? "stickers" : "hl-cards")" data-testid="mom-plan-list">
+            @foreach (var chart in Visible)
+            {
+                @ListRow(chart)
+            }
+        </div>
+    }
+
+    <div class="mom-footer-bar">
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" OnClick="OpenSaved"
+                   data-testid="mom-plan-saved">@L["Saved sets"]</MudButton>
+        <span class="spacer"></span>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="@(_picked.Count == 0)"
+                   StartIcon="@Icons.Material.Filled.Download" OnClick="DownloadCsv"
+                   data-testid="mom-plan-csv">@L["Download CSV"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(_picked.Count == 0)"
+                   OnClick="SaveSet" data-testid="mom-plan-save">@L["Save this set"]</MudButton>
+    </div>
+}
+
+@* One row of a shelf: the chart, what it is worth, and the tick. Shelves are suggestions —
+   nothing is woven into a set (§11.5). *@
+@code {
+    private RenderFragment ShelfRow(MoMPlanChartView chart, string? note) =>
+        @<div class="sbd-row pl-shelf-row" data-testid="mom-plan-shelf-row">
+            <DifficultyBubble Chart="chart.Chart"/>
+            <SongImage Song="chart.Chart.Song" Height="35"/>
+            <div class="sbd-row-body">
+                <div class="sbd-row-line">
+                    <span class="song">@chart.Chart.Song.Name</span>
+                    @if (note != null)
+                    {
+                        <span class="mom-chip-accent">@note</span>
+                    }
+                </div>
+                <div class="sbd-row-line">
+                    <ScoreBreakdown Score="chart.Score" Plate="chart.Plate" Mix="_mix" Stacked="true" ShowScore="true"/>
+                    <span class="sbd-peerpct">@MoMText.MinutesSeconds(chart.Chart.Song.Duration) · @chart.PointsPerSecond.ToString("N1") @L["pts/s"]</span>
+                </div>
+            </div>
+            <span class="tier-chart-card-corner pmb-corner-gain">@L["{0} pts", chart.Points.ToString("N0")]</span>
+            @Tick(chart)
+        </div>;
+
+    /// <summary>
+    ///     The tick. Selection reads as an outline and never as dimming (§11.5), so this is the only
+    ///     control a row carries — the jacket stays the chart's own affordance.
+    /// </summary>
+    private RenderFragment Tick(MoMPlanChartView chart) =>
+        @<MudCheckBox T="bool" Value="@_picked.Contains(chart.Chart.Id)" Dense="true" Color="Color.Primary"
+                      ValueChanged="@(_ => TogglePick(chart.Chart.Id))" data-testid="mom-plan-tick"
+                      aria-label="@chart.Chart.Song.Name"/>;
+
+    private RenderFragment ListRow(MoMPlanChartView chart) => _density switch
+    {
+        UiDensity.Compact => Sticker(chart),
+        UiDensity.Table => TableRow(chart),
+        _ => Card(chart)
+    };
+
+    private RenderFragment Card(MoMPlanChartView chart) =>
+        @<div class="hl-card pl-card @(chart.InSet ? "picked" : "")" data-testid="mom-plan-row">
+            <div class="hl-card-art" style="background-image:url('@chart.Chart.Song.ImagePath')">
+                <span class="hl-card-bubble"><DifficultyBubble Chart="chart.Chart"/></span>
+            </div>
+            <div class="hl-card-body">
+                <div class="hl-card-song" title="@chart.Chart.Song.Name">@chart.Chart.Song.Name</div>
+                <div class="hl-card-scoreline">
+                    <ScoreBreakdown Score="chart.Score" Plate="chart.Plate" Mix="_mix" Stacked="true" ShowScore="true"/>
+                    <span class="tier-chart-card-corner pmb-corner-gain hl-card-gain">@L["{0} pts", chart.Points.ToString("N0")]</span>
+                </div>
+                <div class="hl-card-foot">
+                    @Tick(chart)
+                    <span class="hl-card-standing">
+                        @chart.PointsPerSecond.ToString("N1") @L["pts/s"] · @MoMText.MinutesSeconds(chart.Chart.Song.Duration)
+                        @if (chart.IsProjected)
+                        {
+                            <span> · @L["projected"]</span>
+                        }
+                    </span>
+                </div>
+            </div>
+        </div>;
+
+    private RenderFragment Sticker(MoMPlanChartView chart) =>
+        @<div class="sticker pl-sticker @(chart.InSet ? "picked" : "")" data-testid="mom-plan-row"
+              title="@($"{chart.Chart.Song.Name} · {chart.Points:N0} pts")" @onclick="@(() => TogglePick(chart.Chart.Id))">
+            <div class="sticker-jacket" style="background-image:url('@chart.Chart.Song.ImagePath')">
+                <span class="sticker-bubble"><DifficultyBubble Chart="chart.Chart"/></span>
+                <span class="tier-chart-card-corner pmb-corner-gain pts">@chart.Points.ToString("N0")</span>
+            </div>
+        </div>;
+
+    private RenderFragment TableRow(MoMPlanChartView chart) =>
+        @<tr class="@(chart.InSet ? "picked" : "")" data-testid="mom-plan-row">
+            <td>@Tick(chart)</td>
+            <td class="num muted">@(chart.InSet ? (SetOrder(chart.Chart.Id) + 1).ToString() : string.Empty)</td>
+            <td>
+                <span class="pl-table-chart">
+                    <DifficultyBubble Chart="chart.Chart"/>
+                    <SongImage Song="chart.Chart.Song" Height="22"/>
+                    <span class="w700">@chart.Chart.Song.Name</span>
+                    @if (chart.Rest is { IsRest: true })
+                    {
+                        <span class="mom-chip-outline">@L["rest"]</span>
+                    }
+                    @if (chart.IsClosing)
+                    {
+                        <span class="mom-chip-accent">@L["closing"]</span>
+                    }
+                </span>
+            </td>
+            <td class="r"><ScoreBreakdown Score="chart.Score" Plate="chart.Plate" Mix="_mix" Stacked="true" ShowScore="true"/></td>
+            <td class="r"><b class="num">@chart.Points.ToString("N0")</b></td>
+            <td class="r num muted">@chart.PointsPerSecond.ToString("N1")</td>
+            <td class="r num muted">@MoMText.MinutesSeconds(chart.Chart.Song.Duration)</td>
+        </tr>;
+}
+
+@code {
+    /// <summary>The board to plan for; absent means the viewer's mix's Doubles board.</summary>
+    [Parameter] public Guid? BoardId { get; set; }
+
+    [Inject] public IMediator Mediator { get; set; } = default!;
+    [Inject] public ICurrentUserAccessor CurrentUser { get; set; } = default!;
+    [Inject] public IUiSettingsAccessor UiSettings { get; set; } = default!;
+    [Inject] public IDialogService Dialogs { get; set; } = default!;
+    [Inject] public ISnackbar Snackbar { get; set; } = default!;
+    [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
+
+    private static readonly MoMEnergy[] Energies = { MoMEnergy.Good, MoMEnergy.Great, MoMEnergy.TopOfMyGame };
+    private static readonly MoMPush[] Pushes = { MoMPush.Steady, MoMPush.Push, MoMPush.AllOut };
+
+    private MixEnum _mix = MixEnum.Phoenix;
+    private MoMPlanView? _plan;
+    private IReadOnlyList<MoMBoardView> _boards = Array.Empty<MoMBoardView>();
+    private bool _notSignedIn;
+    private bool _busy;
+
+    private MoMEnergy _energy = MoMEnergy.Good;
+    private MoMPush _push = MoMPush.Steady;
+    private int _restSeconds = 35;
+    private string _scope = "all";
+    private UiDensity _density = UiDensity.Compact;
+
+    /// <summary>The set, as ticked. Empty on arrival: suggesting is an offer, not the starting position.</summary>
+    private readonly List<Guid> _picked = new();
+
+    /// <summary>A hand tick takes the set off autopilot, so the rest slider stops retuning it.</summary>
+    private bool _handPicked;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            _notSignedIn = true;
+            return;
+        }
+
+        _mix = await UiSettings.GetSelectedMix(CancellationToken.None);
+        var season = await Mediator.Send(new GetMoMSeasonPageQuery(_mix, null, CurrentUser.User.Id));
+        _boards = season?.Boards ?? Array.Empty<MoMBoardView>();
+        if (_boards.Count == 0) return;
+
+        var board = BoardId ?? _boards.FirstOrDefault(b => b.ChartType == ChartType.Double)?.BoardId
+            ?? _boards[0].BoardId;
+        await Reload(board);
+    }
+
+    private async Task Reload(Guid boardId)
+    {
+        _busy = true;
+        try
+        {
+            _plan = await Mediator.Send(new BuildMoMPlanQuery(boardId, _energy, _push, _restSeconds));
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task SwitchBoard(Guid boardId)
+    {
+        if (_plan?.BoardId == boardId) return;
+
+        // A set is a set of one board's charts; switching starts a new one rather than carrying
+        // charts the other board cannot take.
+        _picked.Clear();
+        _handPicked = false;
+        await Reload(boardId);
+    }
+
+    private async Task SetEnergy(MoMEnergy energy)
+    {
+        _energy = energy;
+        if (_plan is { } plan) await Reload(plan.BoardId);
+        if (!_handPicked) Autopilot();
+    }
+
+    private async Task SetPush(MoMPush push)
+    {
+        _push = push;
+        if (_plan is { } plan) await Reload(plan.BoardId);
+        if (!_handPicked) Autopilot();
+    }
+
+    /// <summary>
+    ///     The rest slider retunes a suggested set live and never a hand-built one: dragging would
+    ///     otherwise silently discard the set someone just chose (§11.5).
+    /// </summary>
+    private async Task SetRest(int seconds)
+    {
+        _restSeconds = seconds;
+        if (_plan is { } plan) await Reload(plan.BoardId);
+        if (!_handPicked) Autopilot();
+    }
+
+    private void Suggest()
+    {
+        _handPicked = false;
+        Autopilot();
+    }
+
+    private void Autopilot()
+    {
+        _picked.Clear();
+        if (_plan is not { } plan) return;
+
+        _picked.AddRange(plan.Charts.Where(c => c.InSet).Select(c => c.Chart.Id));
+    }
+
+    private void TogglePick(Guid chartId)
+    {
+        _handPicked = true;
+        if (!_picked.Remove(chartId)) _picked.Add(chartId);
+    }
+
+    private int SetOrder(Guid chartId) => _picked.IndexOf(chartId);
+
+    private IReadOnlyList<MoMPlanChartView> Picked =>
+        _plan == null
+            ? Array.Empty<MoMPlanChartView>()
+            : _picked.Select(id => _plan.Charts.FirstOrDefault(c => c.Chart.Id == id))
+                .Where(c => c != null).Select(c => c!).ToArray();
+
+    private IEnumerable<MoMPlanChartView> Visible =>
+        _plan == null
+            ? Array.Empty<MoMPlanChartView>()
+            : _scope == "set"
+                ? Picked
+                : _plan.Charts;
+
+    private IReadOnlyList<MoMPlanChartView> RestCharts =>
+        _plan?.Charts.Where(c => c.Rest is { IsRest: true }).OrderByDescending(c => c.Points).Take(12).ToArray()
+        ?? Array.Empty<MoMPlanChartView>();
+
+    private IReadOnlyList<MoMPlanChartView> Finishers =>
+        _plan?.Charts.Where(c => c.IsFinisher).OrderByDescending(c => c.Points).Take(8).ToArray()
+        ?? Array.Empty<MoMPlanChartView>();
+
+    /// <summary>Every number recomputes from what is ticked, not from what was suggested.</summary>
+    private int Points => Picked.Sum(c => c.Points);
+
+    private double AverageLevel => Picked.Count == 0 ? 0 : Picked.Average(c => c.BalancedLevel);
+
+    private double AverageScore => Picked.Count == 0 ? 0 : Picked.Average(c => (int)c.Score);
+
+    private TimeSpan Downtime
+    {
+        get
+        {
+            if (_plan is not { } plan) return TimeSpan.Zero;
+
+            var song = TimeSpan.FromTicks(Picked.Sum(c => c.Chart.Song.Duration.Ticks));
+            return song >= plan.Window ? TimeSpan.Zero : plan.Window - song;
+        }
+    }
+
+    private string MixName => _mix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix";
+
+    private string TypeName(ChartType type) => type == ChartType.Single ? L["Singles"] : L["Doubles"];
+
+    // The Energy control borrows PUMBILITY's copy; the meanings are MoMEnergy's own.
+    private static string LabelKey(MoMEnergy energy) => energy switch
+    {
+        MoMEnergy.Great => EnergyLabels.Label(Energy.Great),
+        MoMEnergy.TopOfMyGame => EnergyLabels.Label(Energy.TopOfMyGame),
+        _ => EnergyLabels.Label(Energy.Good)
+    };
+
+    private static string HintKey(MoMEnergy energy) => energy switch
+    {
+        MoMEnergy.Great => EnergyLabels.Hint(Energy.Great),
+        MoMEnergy.TopOfMyGame => "Your best on every chart.",
+        _ => EnergyLabels.Hint(Energy.Good)
+    };
+
+    private static string PushKey(MoMPush push) => push switch
+    {
+        MoMPush.Push => "Push",
+        MoMPush.AllOut => "All out",
+        _ => "Steady"
+    };
+
+    // ---- saved sets: settings, not a table (D46) ----------------------------------------------
+
+    private string SetsKey => $"MoMSets__{_plan?.BoardId}";
+
+    private async Task<List<SavedSet>> LoadSets()
+    {
+        var raw = await UiSettings.GetSetting(SetsKey);
+        if (string.IsNullOrWhiteSpace(raw)) return new List<SavedSet>();
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<SavedSet>>(raw) ?? new List<SavedSet>();
+        }
+        catch (JsonException)
+        {
+            // A settings value is a string someone could have written anything into; a plan is not
+            // worth failing a page over.
+            return new List<SavedSet>();
+        }
+    }
+
+    private async Task SaveSet()
+    {
+        if (_plan is not { } plan || _picked.Count == 0) return;
+
+        var suggested = L["{0} — {1} charts, up to {2}", TypeName(plan.ChartType), _picked.Count,
+            TypeName(plan.ChartType) + Picked.Max(c => (int)c.Chart.Level)];
+        var name = await Dialogs.ShowMessageBox(new MessageBoxOptions
+        {
+            Title = L["Save this set"],
+            Message = suggested,
+            YesText = L["Save"],
+            CancelText = L["Cancel"]
+        });
+        if (name != true) return;
+
+        var sets = await LoadSets();
+        sets.RemoveAll(s => s.Name == suggested);
+        sets.Insert(0, new SavedSet(suggested, _picked.ToArray()));
+        await UiSettings.SetSetting(SetsKey, JsonSerializer.Serialize(sets.Take(20)));
+        Snackbar.Add(L["Saved."], Severity.Success);
+    }
+
+    private async Task OpenSaved()
+    {
+        var sets = await LoadSets();
+        if (sets.Count == 0)
+        {
+            Snackbar.Add(L["No saved sets yet."], Severity.Info);
+            return;
+        }
+
+        var chosen = await Dialogs.ShowMessageBox(new MessageBoxOptions
+        {
+            Title = L["Saved sets"],
+            Message = string.Join(" · ", sets.Select(s => s.Name)),
+            YesText = L["Load the newest"],
+            CancelText = L["Cancel"]
+        });
+        if (chosen != true) return;
+
+        _picked.Clear();
+        _picked.AddRange(sets[0].ChartIds);
+        _handPicked = true;
+    }
+
+    /// <summary>
+    ///     The set walks to a machine as a numbered list. No backend at all — a client-side blob,
+    ///     with a byte-order mark so Excel opens Korean and Japanese titles as UTF-8.
+    /// </summary>
+    private async Task DownloadCsv()
+    {
+        if (_plan is not { } plan || _picked.Count == 0) return;
+
+        var rows = new StringBuilder();
+        rows.AppendLine("#,Song,Difficulty,Length,Score,Points,Points per second");
+        var ordinal = 1;
+        foreach (var chart in Picked)
+        {
+            rows.AppendLine(string.Join(",",
+                ordinal++,
+                Csv(chart.Chart.Song.Name.ToString()),
+                Csv(chart.Chart.DifficultyString),
+                Csv(MoMText.MinutesSeconds(chart.Chart.Song.Duration)),
+                (int)chart.Score,
+                chart.Points,
+                chart.PointsPerSecond.ToString("N2", CultureInfo.InvariantCulture)));
+        }
+
+        var bytes = Encoding.UTF8.GetBytes("﻿" + rows);
+        using var stream = new MemoryStream(bytes);
+        using var reference = new DotNetStreamReference(stream);
+        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
+        await module.InvokeVoidAsync("downloadFileFromStream",
+            $"march-of-murlocs-{plan.SeasonName}-{TypeName(plan.ChartType)}.csv", reference);
+    }
+
+    private static string Csv(string value) =>
+        value.Contains(',') || value.Contains('"')
+            ? "\"" + value.Replace("\"", "\"\"") + "\""
+            : value;
+
+    private sealed record SavedSet(string Name, IReadOnlyList<Guid> ChartIds);
+}

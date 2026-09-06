@@ -27,7 +27,7 @@ public sealed class MoMSectionFrameTests : ComponentTestBase
 
         var links = cut.FindAll("nav.mom-frame-nav a");
         Assert.Contains(links, a => a.GetAttribute("href") == "/MarchOfMurlocs" && a.TextContent.Contains("This season"));
-        Assert.Contains(links, a => a.GetAttribute("href") == "/TournamentBuilder" && a.TextContent.Contains("Planner"));
+        Assert.Contains(links, a => a.GetAttribute("href") == "/MarchOfMurlocs/Planner" && a.TextContent.Contains("Planner"));
         // Slice 4b: Record opens or resumes a draft and hands over to the session's own URL.
         Assert.Contains(links, a => a.GetAttribute("href") == $"/MarchOfMurlocs/Record/{board}" && a.TextContent.Contains("Record a session"));
         var past = cut.Find("button[data-mom-seasons]");
@@ -35,7 +35,7 @@ public sealed class MoMSectionFrameTests : ComponentTestBase
         Assert.Contains("mud-button-outlined", past.ClassList);
         // The active chip is filled; the others outlined.
         Assert.Contains("mud-button-filled", cut.Find("nav a[href='/MarchOfMurlocs']").ClassList);
-        Assert.Contains("mud-button-outlined", cut.Find("nav a[href='/TournamentBuilder']").ClassList);
+        Assert.Contains("mud-button-outlined", cut.Find("nav a[href='/MarchOfMurlocs/Planner']").ClassList);
         // The rules of record ride the frame on every page (D44), outlined here.
         var rules = cut.Find("nav a[href='/MarchOfMurlocs/Rules']");
         Assert.Contains("How it works", rules.TextContent);

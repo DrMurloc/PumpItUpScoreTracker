@@ -11,7 +11,7 @@ namespace ScoreTracker.Web.Services;
 public static class MoMText
 {
     public const string SeasonRoute = "/MarchOfMurlocs";
-    public const string PlannerRoute = "/TournamentBuilder";
+    public const string PlannerRoute = "/MarchOfMurlocs/Planner";
 
     /// <summary>The rules of record (docs/design/march-of-murlocs.md §11.11, D42): static, in the sitemap.</summary>
     public const string RulesRoute = "/MarchOfMurlocs/Rules";

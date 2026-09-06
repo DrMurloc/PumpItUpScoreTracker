@@ -19551,3 +19551,59 @@ a.peer-pop-row:hover {
     .mom-callout .act .mud-button-root { width: 100%; justify-content: center; }
     .mom-recorded { width: 100%; }
 }
+
+/* ===== March of Murlocs — Planner (docs/design/march-of-murlocs.md §11.5) =================
+   The Season's future tense: the controls, the projection, the two shelves and the record book
+   in three densities. Selection reads as an outline, never as dimming — an unpicked chart is not
+   lesser information, and fading four-fifths of a browsing surface to mark the fifth is the wrong
+   way round. */
+.pl-title { font-weight: 700; font-size: 34px; line-height: 1; margin: 0; }
+.pl-lede { color: var(--mix-ink-muted); font-size: 13px; margin: 6px 0 0; }
+.pl-controls { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 18px; margin-top: 14px; padding: 14px; border-radius: 10px; background: var(--mix-surface); border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); }
+.pl-controls .k { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--mix-ink-muted); margin-bottom: 4px; }
+.pl-controls .ctl-row { display: flex; gap: 18px; flex-wrap: wrap; }
+.pl-slider { margin-top: 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pl-slider .mud-slider { flex: 1; min-width: 160px; }
+.pl-slider .readout { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 44px; }
+.pl-note, .pl-push-note { font-size: 12px; color: var(--mix-ink-muted); margin: 6px 0 0; }
+.pl-anchor { margin: 0 0 8px; font-size: 12.5px; color: var(--mix-ink-muted); }
+.pl-anchor b { color: var(--mix-ink); font-size: 15px; margin-right: 6px; font-variant-numeric: tabular-nums; }
+.pl-push { padding-left: 18px; border-left: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent); }
+
+.pl-proj { margin-top: 14px; padding: 16px 18px 14px; border-radius: 10px; background: var(--mix-surface); border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); border-top: 2px solid var(--mix-accent); }
+.pl-proj-top { display: flex; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
+.pl-proj-k { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--mix-ink-muted); }
+.pl-proj-big { font-weight: 700; font-size: 46px; line-height: .96; font-variant-numeric: tabular-nums; color: var(--rarity-prism); text-shadow: 0 0 14px var(--mix-glow); }
+.pl-proj-big.zero { color: var(--mix-ink-muted); text-shadow: none; }
+.pl-conversion { margin-left: auto; text-align: right; }
+.pl-conversion b { display: block; font-weight: 700; font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; }
+.pl-conversion span { font-size: 11.5px; color: var(--mix-ink-muted); }
+.pl-say { margin: 6px 0 0; font-size: 12.5px; color: var(--mix-ink-muted); }
+.pl-proj .four { margin-top: 12px; border-top: 1px solid color-mix(in srgb, var(--mix-ink) 7%, transparent); }
+.pl-proj .four .k { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--mix-ink-muted); }
+.pl-mixnote { margin: 10px 0 0; font-size: 12px; color: var(--mix-ink-muted); max-width: 70ch; }
+
+.pl-shelf { margin-top: 18px; }
+.pl-shelf-note { margin: 2px 0 8px; font-size: 12px; color: var(--mix-ink-muted); max-width: 80ch; }
+.pl-shelf-rows { border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent); border-radius: 10px; padding: 2px 10px; }
+.pl-shelf-row { padding: 6px 2px; }
+
+.pl-setbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 18px 0 8px; }
+.pl-setbar .pl-tools { margin-left: auto; }
+.pl-list.hl-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(236px, 1fr)); gap: 12px; }
+.pl-list.stickers { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+.pl-card.picked, .pl-sticker.picked { border-color: var(--mix-primary); box-shadow: 0 0 0 1px var(--mix-primary), 0 0 14px -6px var(--mix-glow); }
+.pl-sticker { position: relative; border-radius: 6px; overflow: hidden; background: var(--mix-surface); border: 2px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); cursor: pointer; }
+.pl-sticker .sticker-jacket { height: 72px; background-size: cover; background-position: center; position: relative; }
+.pl-table-chart { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.pl-table-chart .w700 { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 26ch; }
+
+@media (max-width: 900px) {
+    .pl-controls { grid-template-columns: 1fr; }
+    .pl-push { padding-left: 0; border-left: 0; padding-top: 14px; border-top: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent); }
+}
+@media (max-width: 700px) {
+    .pl-title { font-size: 28px; }
+    .pl-proj-big { font-size: 38px; }
+    .pl-conversion { margin-left: 0; text-align: left; }
+}
