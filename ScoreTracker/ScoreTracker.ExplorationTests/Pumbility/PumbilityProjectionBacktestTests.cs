@@ -14,6 +14,7 @@ using ScoreTracker.ExplorationTests.Catalog;
 using ScoreTracker.Identity.Wiring;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.SharedKernel.Enums;
@@ -927,6 +928,63 @@ public sealed class PumbilityProjectionBacktestTests
             $"| >20k high {100.0 * diffs.Count(d => d > 20_000) / pairs.Count,4:F1}%  >20k low {100.0 * diffs.Count(d => d < -20_000) / pairs.Count,4:F1}%");
     }
 
+    /// <summary>
+    ///     Round ten's census, re-run on the shipping code (docs/design/pumbility-overhaul.md §4.12):
+    ///     how many peers each full-pool player has from the site and from the official board, and
+    ///     how many charts reach the five-voice floor either way. This is the probe to run before
+    ///     quoting any figure in that section — every one of them is a snapshot of a live
+    ///     population read through a weekly mirror.
+    /// </summary>
+    [CatalogProbeFact]
+    public async Task Board_peers_census_by_gem_rung()
+    {
+        await using var services = BuildServices();
+        var projector = services.GetRequiredService<IScoreProjector>();
+        var statsRepository = services.GetRequiredService<IPlayerStatsRepository>();
+        var charts = (await services.GetRequiredService<IChartRepository>()
+            .GetCharts(MixEnum.Phoenix2, cancellationToken: CancellationToken.None)).ToDictionary(c => c.Id);
+
+        var stats = services.GetRequiredService<IPlayerStatsReader>();
+        var ids = (await statsRepository.GetUserIdsWithStats(MixEnum.Phoenix2, CancellationToken.None)).ToArray();
+        var everyone = (await stats.GetStats(MixEnum.Phoenix2, ids, CancellationToken.None)).ToArray();
+        _output.WriteLine($"{everyone.Length} Phoenix 2 accounts with a stats row");
+
+        foreach (var type in new[] { ChartType.Single, ChartType.Double })
+        {
+            var rows = new List<(string Rung, int Site, int Board, int Charts)>();
+            foreach (var player in everyone)
+            {
+                var targets = charts.Values.Where(c => c.Type == type)
+                    .Select(c => new ProjectionTarget(c.Id, (int)c.Level)).ToArray();
+                var projection = await projector.Project(new ScoreProjectionRequest(MixEnum.Phoenix2, type,
+                    player.UserId, targets, 1.0, charts), CancellationToken.None);
+                if (projection.Group is not { IsLit: true } group || group.Size == 0) continue;
+
+                rows.Add((RungOf(player.SkillRating), group.Size - group.BoardSize, group.BoardSize,
+                    projection.Scores.Count));
+            }
+
+            _output.WriteLine($"=== {type} ===");
+            foreach (var g in rows.GroupBy(r => r.Rung).OrderBy(g => g.Key))
+                _output.WriteLine($"  {g.Key,-18} players {g.Count(),4}  site peers {g.Average(r => r.Site),6:F1}" +
+                                  $"  board peers {g.Average(r => r.Board),6:F1}" +
+                                  $"  charts answered {g.Average(r => r.Charts),6:F1}");
+        }
+    }
+
+    /// <summary>The gem rung a total pool sits on, for grouping the census the way the doc reports it.</summary>
+    private static string RungOf(double total) => total switch
+    {
+        >= 20_000 => "h ABYSS",
+        >= 19_000 => "g ALEXANDRITE",
+        >= 18_500 => "f RED BERYL 3-5",
+        >= 18_000 => "e RED BERYL 1-2",
+        >= 17_500 => "d DIAMOND 3-5",
+        >= 17_000 => "c DIAMOND 1-2",
+        >= 16_000 => "b PLATINUM",
+        _ => "a below PLATINUM"
+    };
+
     private static ServiceProvider BuildServices()
     {
         var services = new ServiceCollection();
@@ -945,6 +1003,10 @@ public sealed class PumbilityProjectionBacktestTests
         services.AddScoreLedger();
         services.AddChartIntelligence();
         services.AddPlayerProgress();
+        // The projector reads the official board for its peers now (D59), so the mirror's own
+        // registrations come with it. Its HTTP client is registered and never used: nothing here
+        // scrapes, and every board read is a query against the mirrored snapshots.
+        services.AddOfficialMirror();
         services.AddTransient<IScoreProjector, ScoreProjector>();
         // The pool read (GetTop50ForPlayerQuery) lives on a saga that also wants a clock, a bus
         // and a current user for its other handlers; none of the three is touched by a read, so
