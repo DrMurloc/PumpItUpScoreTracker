@@ -5128,9 +5128,6 @@
   <data name="Nobody has played {0} yet this season." xml:space="preserve">
     <value>이번 시즌에는 아직 아무도 {0}을(를) 플레이하지 않았습니다.</value>
   </data>
-  <data name="Nobody has played {0} yet." xml:space="preserve">
-    <value>아직 아무도 {0}을(를) 플레이하지 않았습니다.</value>
-  </data>
   <data name="Nobody here has played this yet." xml:space="preserve">
     <value>여기서는 아직 아무도 플레이하지 않았습니다.</value>
   </data>
@@ -10209,9 +10206,6 @@
   </data>
   <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
     <value>아직 가입한 커뮤니티가 없습니다 — 아래에서 찾거나 직접 만들어보세요.</value>
-  </data>
-  <data name="You haven't played {0} this season." xml:space="preserve">
-    <value>이번 시즌에 {0}을(를) 플레이하지 않았습니다.</value>
   </data>
   <data name="You hold the coded note" xml:space="preserve">
     <value>당신은 암호화된 메모를 가지고 있습니다</value>

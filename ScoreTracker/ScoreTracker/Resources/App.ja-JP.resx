@@ -5158,9 +5158,6 @@
   <data name="Nobody has played {0} yet this season." xml:space="preserve">
     <value>今シーズンはまだ誰も{0}をプレイしていません。</value>
   </data>
-  <data name="Nobody has played {0} yet." xml:space="preserve">
-    <value>まだ誰も{0}をプレイしていません。</value>
-  </data>
   <data name="Nobody here has played this yet." xml:space="preserve">
     <value>ここではまだ誰もプレイしていません。</value>
   </data>
@@ -10277,9 +10274,6 @@
   </data>
   <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
     <value>まだコミュニティに参加していません。下から探すか、自分で作成しましょう。</value>
-  </data>
-  <data name="You haven't played {0} this season." xml:space="preserve">
-    <value>今シーズンはまだ{0}をプレイしていません。</value>
   </data>
   <data name="You hold the coded note" xml:space="preserve">
     <value>あなたは暗号化されたメモを持っています</value>

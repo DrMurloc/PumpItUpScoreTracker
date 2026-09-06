@@ -5158,9 +5158,6 @@
   <data name="Nobody has played {0} yet this season." xml:space="preserve">
     <value>Nobody has played {0} yet this season.</value>
   </data>
-  <data name="Nobody has played {0} yet." xml:space="preserve">
-    <value>Nobody has played {0} yet.</value>
-  </data>
   <data name="Nobody here has played this yet." xml:space="preserve">
     <value>Nobody here has played this yet.</value>
   </data>
@@ -10277,9 +10274,6 @@
   </data>
   <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
     <value>You haven't joined any communities yet — find one below or create your own.</value>
-  </data>
-  <data name="You haven't played {0} this season." xml:space="preserve">
-    <value>You haven't played {0} this season.</value>
   </data>
   <data name="You hold the coded note" xml:space="preserve">
     <value>You hold the coded note</value>

@@ -5128,9 +5128,6 @@
   <data name="Nobody has played {0} yet this season." xml:space="preserve">
     <value>Ninguém jogou {0} ainda nesta temporada.</value>
   </data>
-  <data name="Nobody has played {0} yet." xml:space="preserve">
-    <value>Ninguém jogou {0} ainda.</value>
-  </data>
   <data name="Nobody here has played this yet." xml:space="preserve">
     <value>Ninguém aqui jogou isto ainda.</value>
   </data>
@@ -10209,9 +10206,6 @@
   </data>
   <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
     <value>Você ainda não entrou em nenhuma comunidade — encontre uma abaixo ou crie a sua.</value>
-  </data>
-  <data name="You haven't played {0} this season." xml:space="preserve">
-    <value>Você não jogou {0} nesta temporada.</value>
   </data>
   <data name="You hold the coded note" xml:space="preserve">
     <value>Você guarda o bilhete codificado</value>

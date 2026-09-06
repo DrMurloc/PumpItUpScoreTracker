@@ -5158,9 +5158,6 @@
   <data name="Nobody has played {0} yet this season." xml:space="preserve">
     <value>Momorp grab lurg {0} larg blu maglgrgl.</value>
   </data>
-  <data name="Nobody has played {0} yet." xml:space="preserve">
-    <value>Momorp grab lurg {0} larg.</value>
-  </data>
   <data name="Nobody here has played this yet." xml:space="preserve">
     <value>Mo murlog blub gurgl allo.</value>
   </data>
@@ -10277,9 +10274,6 @@
   </data>
   <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
     <value>Blub blubmurm urgmr ro grglrglplglblub argl — blubgl argl blgrlblarg argl mrpmurp gromurp grrgl.</value>
-  </data>
-  <data name="You haven't played {0} this season." xml:space="preserve">
-    <value>Blub bo lurg {0} blu maglgrgl.</value>
   </data>
   <data name="You hold the coded note" xml:space="preserve">
     <value>Blub rglmr mrp urgrgl grogrgl</value>
