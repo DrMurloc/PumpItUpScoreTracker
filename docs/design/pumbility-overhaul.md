@@ -1622,6 +1622,115 @@ dialog; (10) the roster chip and the account count; (11) the tier-list lens; (12
 (13) the census probe; (14) nine locales.
 
 
+### 6.14 Round ten, part two — the peer scores are held in memory
+
+**The bug this fixes was already in production.** The PUMBILITY page draws several folders and asks
+for a peer group's scores once per folder; the tier list draws one and never showed it. Adding board
+peers made it visible rather than causing it — the first sweep after a restart was measured at 7.3
+seconds, of which 2.5 was the fifty check, per chart type, recomputed for every viewer in the band.
+Score colouring reads the same standings, which is why the page said "none of your peers have passed
+this" on scores that a hundred peers had passed: nothing was wrong with the answer, it just had not
+arrived yet.
+
+**Two stores, and they are not the same shape**, because what makes them stale is not the same.
+
+| | `BoardScoreStore` (OfficialMirror) | `PeerScoreStore` (ScoreLedger) |
+|---|---|---|
+| Holds | every board player's best per chart, per mix | every player's passing bests, per mix |
+| Keyed by | the latest sealed snapshot | the player |
+| Released by | a new sweep — the key changes | the player's own import, per player |
+| Size | Phoenix 2 191,746 rows, Phoenix 1 124,300 | Phoenix 2 41,706 rows, Phoenix 1 1,039,022 |
+
+The board store **never needs invalidating**: the set is stamped with the snapshot it was built
+from, a sweep produces a new one, and the old is dropped. Nothing has to remember to evict it, and a
+second app instance builds its own and is correct by construction. Which snapshot is current is
+itself re-read at most once a minute, which is as often as a weekly sweep can matter.
+
+The site store is **per player**, which is the shape both eviction and arrival want: a player who
+imports has their own slice dropped and rebuilt on next use, a player nobody has asked about yet is
+fetched when they are, and nobody else moves either way. `PeerScoreCacheConsumer` drops a slice off
+`PlayerScoresUpdatedEvent` and `PlayerScoreDataDeletedEvent` — the same two the projection cache has
+always used, for the same reason and in both directions. There is deliberately **no whole-set
+expiry**: that would put a multi-second rebuild in front of one unlucky viewer for a staleness that
+is per player in the first place. The twelve-hour per-player backstop is for an event that never
+arrived, not the mechanism.
+
+**⚠ The scale-out caveat.** The board store is snapshot-keyed and safe on any number of instances.
+The site store's eviction rides the in-memory bus, so it reaches only the instance that ran the
+import. On one instance that is exact; before this app is ever scaled out the site store needs a
+cross-instance signal, or a second instance serves its own stale copy of a peer's scores until the
+backstop. This is the one thing in this section that a second instance breaks.
+
+**Neither store changes an answer.** Both hold what their SQL held: the site store keeps broken runs
+out, masks a private player's name and says `IsPublic` outright; the board store keeps supplemented
+rows out and collapses to each player's best across every sealed snapshot. Both hold **every type
+and level**, not only what prices into a pool — the same reads answer a chart dialog, and a CO-OP
+chart has a board and no pool. Trimming the board to singles and doubles above level 10 would have
+saved 5% and turned a board peer into silence on every CO-OP page.
+
+**What is not held with the scores.** A name and a public flag change without a score changing, so
+they ride a separate five-minute read rather than the slice — otherwise a player who goes private
+stays named for twelve hours. `BoardPeerReader`'s folded board carries the same fact (whether the
+mirror may name the account behind a row, D61) and is held for the same five minutes.
+
+**Two more caches fell out of the same read.** The fifty check is a property of the player and the
+snapshot, not of the viewer, so it is answered once per snapshot and shared. So is everything else
+in `GetBoardPeers` except the window itself, so the board is **folded to people once** and the
+window filters the fold — which is also the more honest order, since a person's pool is their best
+row, so a person whose best sits above the window is above it even when a lesser row of theirs would
+have fit inside.
+
+**The two stores read differently, on purpose.** The board store asks
+`IOfficialSnapshotRepository.GetEveryChartHistory` — a new bulk form of the two reads it replaces —
+because the placement table has exactly one reader and a `PlacementScope` with no default, so that a
+supplemented row cannot enter an official reading by an author forgetting a predicate
+([supplemented-leaderboards.md §7](supplemented-leaderboards.md)); an architecture ratchet holds that
+line and caught the first attempt at this. The site store reads its own table directly, because the
+Ledger has no such flag to get wrong and the read it needs is one EF cannot afford:
+
+**A million rows will not go through EF.** The site store reads its rows off a `DbDataReader`
+straight into the structs it keeps, and the chart's level and type come from a four-thousand-row
+dimension held beside the scores rather than two columns repeated a million times down the wire. A
+player's rows are then kept in `(type, level)` order, so a folder read is two binary searches rather
+than a walk of everything that player has ever passed.
+
+**Measured**, on the prod-synced local database, one viewer's peer group of 200 players over 14
+folders — every number the *whole sweep*, not one read:
+
+| | straight to the database | store, first call | store, warm |
+|---|---|---|---|
+| Phoenix 2, 15,460 rows | 240 ms | 1,649 ms | **9 ms** |
+| Phoenix 1, 128,333 rows | 265 ms | 8,582 ms | **57 ms** |
+| Board peers, singles | — | 4,997 ms | **12 ms** |
+| Board peers, doubles | — | 1,822 ms | **2 ms** |
+
+Row counts are identical before and after in every case, which is the check that matters more than
+the milliseconds.
+
+**The warm-up is Phoenix 2 only** (`PeerScoreCacheWarmer`, background and fully swallowed like the
+chart-page warmer). Phoenix 2 is the mix the peers page runs on and its whole population is forty
+thousand scores — about six seconds for both stores together, paid at startup where nobody waits.
+Phoenix 1 is a million, and preloading all of it at every deploy would spend minutes of a small
+instance on players nobody is going to look at; there the store fills a peer group at a time. Note
+that whole-mix load times measured locally run through the Docker port proxy and are a ceiling, not
+a forecast — the numbers worth trusting are the warm ones above.
+
+**Memory.** About 40 MB for Phoenix 1 held whole, 2 MB for Phoenix 2, and roughly 12 MB for both
+boards — against a 1.5 GB working set on a 3.5 GB B2. Restricting the site store to players who
+qualify as somebody's peer was measured at a 21% saving and is not worth the coupling.
+
+**Classes** — `ScoreLedger/Infrastructure/PeerScoreStore` (singleton) and
+`ScoreLedger/Application/PeerScoreCacheConsumer`; `OfficialMirror/Infrastructure/BoardScoreStore`
+(singleton). `EFPhoenixRecordsRepository`'s two cohort reads and `EFOfficialSnapshotRepository`'s two
+history reads delegate to them and hold no SQL of their own any more. One command per vertical
+(`WarmPeerScoresCommand`, `WarmBoardScoresCommand`) exists because a vertical may not reference the
+hosting abstractions and the stores are internal, so the host asks through the MediatR seam.
+
+**Tests** — `Tests.Integration/PeerScoreStoreTests`: that a slice really is held between reads, that
+eviction is what releases it, that a one-mix eviction leaves the other, and that none of the SQL's
+answers moved. `Tests.Integration/BoardPeerReadTests`: the CO-OP and low-level rows the store must
+still carry. `ExplorationTests/Pumbility/PeerCacheProbeTests`: the table above, re-runnable.
+
 ## 7. Responsive
 
 The class ladder in [UX-GUIDELINES.md §1](../UX-GUIDELINES.md), no new numbers:
