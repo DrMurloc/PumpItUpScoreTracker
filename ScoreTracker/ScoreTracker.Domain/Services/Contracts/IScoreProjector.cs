@@ -138,6 +138,15 @@ public enum PeerGroupKind
 ///     Whether <paramref name="Center" /> came from an extrapolated finish rather than the viewer's
 ///     settled pool of the type (D48, D53). False on a competitive band, which places nobody by a pool.
 /// </param>
+/// <param name="BoardSize">
+///     How many of <paramref name="Size" /> came from the official board rather than from a PIU
+///     Scores account (docs/design/pumbility-overhaul.md D59). Zero on a competitive band, which
+///     draws from accounts alone.
+/// </param>
+/// <param name="BoardAsOf">
+///     When the board those peers came from was last swept. Null when none did. Every surface that
+///     names a board peer prints how old their side of the group is (peers-abstraction.md D37).
+/// </param>
 /// <param name="AnsweredBelowFloor">
 ///     Whether this run fell back below the five-peer floor (D47) and produced rows from it —
 ///     every score in the projection then rests on FEWER than five peers, because a single chart
@@ -147,7 +156,8 @@ public enum PeerGroupKind
 ///     False when the strict floor answered, and on a competitive band, which has no floor.
 /// </param>
 public sealed record PeerGroup(PeerGroupKind Kind, double Center, double Below, double Above, int Size,
-    int PoolCount, int PoolSize, bool PlacedByEstimate = false, bool AnsweredBelowFloor = false)
+    int PoolCount, int PoolSize, bool PlacedByEstimate = false, bool AnsweredBelowFloor = false,
+    int BoardSize = 0, DateTimeOffset? BoardAsOf = null)
 {
     /// <summary>
     ///     How far below the viewer's pool of the type a Phoenix 2 peer's pool of that type may sit
@@ -216,14 +226,15 @@ public sealed record PeerGroup(PeerGroupKind Kind, double Center, double Below, 
     ///     up — twenty where the caller supplied a projected finish, fifty otherwise (D48).
     /// </summary>
     public static PeerGroup Pumbility(double poolOfType, int size, int poolCount,
-        int poolSize = PumbilityPoolSize, bool placedByEstimate = false)
+        int poolSize = PumbilityPoolSize, bool placedByEstimate = false, int boardSize = 0,
+        DateTimeOffset? boardAsOf = null)
     {
         // Counted against the FULL pool rather than the gate, so a lit-but-short viewer still
         // knows how many of the fifty they hold — which is what the note that explains their
         // projection has to say (D48). The cap only ever bites above fifty, where the viewer is
         // lit under either gate and no surface prints the count anyway.
         return new PeerGroup(PeerGroupKind.PumbilityPeers, poolOfType, PumbilityWindowBelow, PumbilityWindowAbove,
-            size, Math.Min(poolCount, PumbilityPoolSize), poolSize, placedByEstimate);
+            size, Math.Min(poolCount, PumbilityPoolSize), poolSize, placedByEstimate, false, boardSize, boardAsOf);
     }
 }
 
