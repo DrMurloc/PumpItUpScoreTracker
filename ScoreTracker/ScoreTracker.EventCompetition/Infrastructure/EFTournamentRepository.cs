@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -323,7 +323,8 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                     Plate = e.Plate.ToString(),
                     IsBroken = e.IsBroken,
                     SessionScore = e.SessionScore,
-                    BonusPoints = e.BonusPoints
+                    BonusPoints = e.BonusPoints,
+                    PlayedAt = e.PlayedAt
                 }), cancellationToken);
 
             await database.SaveChangesAsync(cancellationToken);
@@ -362,7 +363,8 @@ namespace ScoreTracker.EventCompetition.Infrastructure
 
                 var session = new TournamentSession(userId, tournamentConfig, mix);
                 foreach (var row in chartRows)
-                    session.Add(charts[row.ChartId], row.Score, Enum.Parse<PhoenixPlate>(row.Plate), row.IsBroken);
+                    session.Add(charts[row.ChartId], row.Score, Enum.Parse<PhoenixPlate>(row.Plate), row.IsBroken,
+                        row.PlayedAt);
                 session.VideoUrl = ParseUri(entity.VideoUrl);
 
                 return session;
