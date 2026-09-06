@@ -97,15 +97,19 @@ public sealed class MoMSubmitPageTests : ComponentTestBase
     }
 
     [Fact]
-    public void TheClosingChartMayOverhangWithoutBlockingAnything()
+    public void TheClosingChartOverhangsAndTheWindowIsFullBehindIt()
     {
+        // 1:47 of song, of which 1:43 came before the closing chart: that chart started inside the
+        // window and ran past it, which is what §1 allows. The session is finished, not spoiled.
         Draft(songTime: TimeSpan.FromMinutes(107), beforeLast: TimeSpan.FromMinutes(103));
 
         var cut = Render();
 
         var budget = cut.Find("[data-testid=mom-budget]");
-        Assert.DoesNotContain("blocked", budget.ClassName);
         Assert.Contains("closing chart", cut.Find("[data-testid=mom-session-row]").TextContent);
+        // Nothing else can start, which is what the bar has to say — this is the state every
+        // completed session ends in, and it read "0:00 open" until the predicate was fixed.
+        Assert.Contains("Window full", budget.TextContent);
     }
 
     [Fact]
