@@ -496,6 +496,9 @@
   <data name="A PUMBILITY peer" xml:space="preserve">
     <value>A PUMBILITY maglmurp</value>
   </data>
+  <data name="A score is a number from 0 to 1,000,000." xml:space="preserve">
+    <value>Mrrgl ab morgab 0 malu 1,000,000.</value>
+  </data>
   <data name="A score only one in four of your peers beat." xml:space="preserve">
     <value>A mrglrgl ub mrp argl glurg ub morp maglmurp grrgl.</value>
   </data>
@@ -8525,6 +8528,9 @@
   <data name="That chart cannot be added — the session is already full." xml:space="preserve">
     <value>Murgl mua ograb — orgab ab morg.</value>
   </data>
+  <data name="That chart is worth nothing on this board, so it cannot be added." xml:space="preserve">
+    <value>Murgl gorab murm ba orgab, murm mua ograb.</value>
+  </data>
   <data name="That command isn't available yet." xml:space="preserve">
     <value>Blubgrrgl plglgroargl blgrlro blargromrp argl.</value>
   </data>
@@ -8821,6 +8827,9 @@
   </data>
   <data name="The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture." xml:space="preserve">
     <value>Mrp mrpgrrgl grog, maglmrpplgl, ro mrpmrglmurpgl mrp mrprgl — mrpmurp mrp mrpgrrgl blub mrlurg gromurp grrgl mgrlgmrg mrp mrp blgrlmrpplgl.</value>
+  </data>
+  <data name="The video link needs to be a full address, starting with https://." xml:space="preserve">
+    <value>Blurgab glorp ab morgab murlom, ograb ba gulpar.</value>
   </data>
   <data name="The way Pass personalizes is being reworked, so this page waits for it rather than explaining the version being replaced." xml:space="preserve">
     <value>Maglplgl urgblargmurmmorg blarg maglmr, mrogl gaal grog blublurg mrp murgablar gaal orlo.</value>

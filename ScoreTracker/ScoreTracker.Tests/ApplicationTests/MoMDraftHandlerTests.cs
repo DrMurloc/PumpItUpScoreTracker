@@ -88,7 +88,7 @@ public sealed class MoMDraftHandlerTests
             .Returns(Task.CompletedTask);
 
         _scores.Setup(s => s.GetRecentPlays(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(),
-                It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                It.IsAny<DateTimeOffset?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => _journal.OrderBy(e => e.OccurredAt).ToArray());
 
         var currentUser = new Mock<ICurrentUserAccessor>();
@@ -270,7 +270,10 @@ public sealed class MoMDraftHandlerTests
 
         Assert.Equal(53, view!.Charts.Count);
         Assert.True(view.SongTime > view.Window);
-        Assert.False(view.WindowFull);
+        // The closing chart overhangs, which is what §1 allows — and the window is now full, so the
+        // bar says so at the same moment the session starts refusing charts.
+        Assert.True(view.WindowFull);
+        Assert.Equal(TimeSpan.FromMinutes(104), view.SongTimeBeforeLast);
 
         // One more cannot start: everything before it now fills the window.
         var rejected = await handler.Handle(new AddMoMDraftChartCommand(draft,
@@ -452,5 +455,56 @@ public sealed class MoMDraftHandlerTests
         var candidates = await handler.Handle(new GetMoMImportCandidatesQuery(draft), CancellationToken.None);
         Assert.Empty(candidates!.Plays);
         Assert.Equal(0, candidates.Checks.Charts);
+    }
+
+    [Fact]
+    public async Task ARecordLinkForABoardThatIsGoneAnswersWithNoDraft()
+    {
+        Board();
+        var handler = Handler();
+
+        // D13 prunes ended empty seasons and their boards go with them, so a bookmarked link
+        // routinely names one that no longer exists. The page renders its own not-found state.
+        var opened = await handler.Handle(new CreateMoMDraftCommand(Guid.NewGuid()), CancellationToken.None);
+
+        Assert.Equal(Guid.Empty, opened);
+        Assert.Empty(_fixture.Sessions);
+    }
+
+    [Fact]
+    public async Task AChartOfTheOtherTypeCannotBeEnteredOnThisBoard()
+    {
+        var board = Board();
+        var handler = Handler();
+        var draft = await handler.Handle(new CreateMoMDraftCommand(board.Id), CancellationToken.None);
+
+        var result = await handler.Handle(new AddMoMDraftChartCommand(draft,
+            _fixture.Chart("Singles Thing", 20, 120, ChartType.Single).Id, 980000,
+            PhoenixPlate.MarvelousGame, false), CancellationToken.None);
+
+        // A board is one chart type (D15), which the aggregate does not know -- and this is a
+        // different answer from the window being full.
+        Assert.Equal(MoMEntryOutcome.Ineligible, result.Outcome);
+        Assert.Empty(_fixture.Rows);
+    }
+
+    [Fact]
+    public async Task ALinkThatIsNotAnAddressIsRefusedRatherThanStoredAsNoVideo()
+    {
+        var board = Board();
+        var handler = Handler();
+        var draft = await handler.Handle(new CreateMoMDraftCommand(board.Id), CancellationToken.None);
+        await handler.Handle(new SetMoMDraftVideoCommand(draft, "https://youtu.be/abc"), CancellationToken.None);
+
+        var typo = await handler.Handle(new SetMoMDraftVideoCommand(draft, "youtu.be/abc"),
+            CancellationToken.None);
+
+        Assert.False(typo);
+        var view = await handler.Handle(new GetMoMDraftQuery(draft), CancellationToken.None);
+        Assert.Equal("https://youtu.be/abc", view!.VideoUrl?.ToString());
+
+        // Clearing it is a real intent and still works.
+        Assert.True(await handler.Handle(new SetMoMDraftVideoCommand(draft, null), CancellationToken.None));
+        Assert.Null((await handler.Handle(new GetMoMDraftQuery(draft), CancellationToken.None))!.VideoUrl);
     }
 }

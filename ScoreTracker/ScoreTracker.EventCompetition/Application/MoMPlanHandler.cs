@@ -97,6 +97,9 @@ internal sealed class MoMPlanHandler : IRequestHandler<BuildMoMPlanQuery, MoMPla
         var rest = TimeSpan.FromSeconds(Math.Max(0, request.RestSeconds));
         var plan = MoMPlanner.Solve(solvable, board.Configuration.MaxTime, rest, cap ?? MoMPlanner.NoLevelCap);
         var inSet = plan.Set.ToHashSet();
+        // Where each chart sits in the played order, resolved once: looking it up per comparison
+        // rebuilds the whole set for every chart in the book.
+        var setOrder = plan.Set.Select((id, i) => (id, i)).ToDictionary(x => x.id, x => x.i);
 
         var facts = (await _mediator.Send(new GetRestChartFactsQuery(board.Mix,
                 priced.Select(p => p.Chart.Id).ToArray()), cancellationToken))
@@ -111,7 +114,7 @@ internal sealed class MoMPlanHandler : IRequestHandler<BuildMoMPlanQuery, MoMPla
             })
             // The set in the order it would be played, then the rest of the book by rate.
             .OrderByDescending(p => p.InSet)
-            .ThenBy(p => p.InSet ? plan.Set.ToList().IndexOf(p.Chart.Id) : int.MaxValue)
+            .ThenBy(p => setOrder.TryGetValue(p.Chart.Id, out var at) ? at : int.MaxValue)
             .ThenByDescending(p => p.PointsPerSecond)
             .ToArray();
 

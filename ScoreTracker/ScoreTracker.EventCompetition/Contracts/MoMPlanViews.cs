@@ -97,9 +97,4 @@ public sealed record MoMPlanView(
     PhoenixScore AverageScore,
     TimeSpan Downtime,
     int? BankedThisSeason,
-    IReadOnlyList<MoMPlanChartView> Charts)
-{
-    /// <summary>What you actually banked as a share of what the book plans, or null with nothing banked.</summary>
-    public double? Conversion =>
-        BankedThisSeason is { } banked && ProjectedPoints > 0 ? banked / (double)ProjectedPoints : null;
-}
+    IReadOnlyList<MoMPlanChartView> Charts);

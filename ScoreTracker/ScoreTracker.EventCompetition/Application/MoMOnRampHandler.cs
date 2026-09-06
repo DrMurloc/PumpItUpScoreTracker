@@ -93,10 +93,12 @@ internal sealed class MoMOnRampHandler : IRequestHandler<DetectMoMSessionQuery, 
     private async Task<MoMSessionCandidate?> Candidate(IReadOnlyList<MoMBoardInfo> boards,
         DetectMoMSessionQuery request, CancellationToken cancellationToken)
     {
-        var entries = await _scores.GetRecentPlays(request.Mix, request.UserId, request.From,
-            JournalLimit, cancellationToken);
-        var inNight = entries.Where(e => e.OccurredAt <= request.To).ToArray();
-        if (inNight.Length == 0) return null;
+        // Bounded at both ends. The cap counts from the newest play, so asking only for everything
+        // since this night began hands back the 300 most recent plays in the mix — which for any
+        // night but the latest is entirely plays that came after it, and the callout never appears.
+        var inNight = await _scores.GetRecentPlays(request.Mix, request.UserId, request.From,
+            request.To, JournalLimit, cancellationToken);
+        if (inNight.Count == 0) return null;
 
         var charts = (await _charts.GetCharts(request.Mix,
                 chartIds: inNight.Select(e => e.ChartId).Distinct().ToArray(),

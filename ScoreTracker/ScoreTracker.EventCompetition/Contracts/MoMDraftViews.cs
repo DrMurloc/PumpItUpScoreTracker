@@ -15,8 +15,11 @@ public enum MoMEntryOutcome
     /// <summary>The chart was already in with a score at least as high; nothing changed.</summary>
     Kept,
 
-    /// <summary>The session could not take it at all: the window is full, or the chart prices zero.</summary>
-    Rejected
+    /// <summary>The window is full: the charts already in it leave no room for one to start.</summary>
+    Rejected,
+
+    /// <summary>The chart cannot go on this board at all: it prices nothing here, or it is the other type.</summary>
+    Ineligible
 }
 
 /// <summary>
@@ -52,6 +55,10 @@ public sealed record MoMDraftView(
     Uri? VideoUrl,
     IReadOnlyList<MoMSessionChart> Charts)
 {
-    /// <summary>Nothing more can start: the charts before the last one already fill the window.</summary>
-    public bool WindowFull => SongTimeBeforeLast >= Window;
+    /// <summary>
+    ///     Nothing more can start. This is the aggregate's own guard read from outside — a chart may
+    ///     enter while the entered ones total under the window (§1) — so the bar goes red at the
+    ///     same moment the session begins refusing charts.
+    /// </summary>
+    public bool WindowFull => SongTime >= Window;
 }

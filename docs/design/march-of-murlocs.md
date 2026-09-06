@@ -1263,8 +1263,8 @@ already carries `PlayedAt`.
   `GetSession` straight from the page, a no-repository-in-Web violation that no ratchet catches —
   and `SessionBuilder.razor`.
 - **Tests**, against the oracles this document already carries: the detector on the two real nights
-  (8 August qualifies, 14 August does not) and the solver on §11.5's rest table (45 charts and
-  78,448 at 35s, 39 and 67,697 at 60s) in `DomainTests`; D29's rest list in Catalog's handler tests
+  (8 August qualifies, 14 August does not) and the solver on §11.5's rest table (44 charts and
+  78,668 at 35s, 38 and 67,544 at 60s) in `DomainTests`; D29's rest list in Catalog's handler tests
   (the six accepted pass, V3 and 4NT fail); handler tests for the lifecycle including the
   skip-not-throw guard; `Tests.Integration` for the session write path against a real database;
   bUnit for the budget bar, the entry row and its repeat line, the import dialog, the shelves, the

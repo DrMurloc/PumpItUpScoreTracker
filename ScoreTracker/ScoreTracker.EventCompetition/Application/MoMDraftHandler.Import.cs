@@ -133,7 +133,7 @@ internal sealed partial class MoMDraftHandler :
         RecentPlays(LoadedSession loaded, CancellationToken cancellationToken)
     {
         var entries = await _scores.GetRecentPlays(loaded.Board.Mix, loaded.Stored.UserId,
-            _dateTime.Now - JournalWindow, JournalLimit, cancellationToken);
+            _dateTime.Now - JournalWindow, null, JournalLimit, cancellationToken);
         var charts = (await _charts.GetCharts(loaded.Board.Mix,
                 chartIds: entries.Select(e => e.ChartId).Distinct().ToArray(),
                 cancellationToken: cancellationToken))
@@ -159,10 +159,16 @@ internal sealed partial class MoMDraftHandler :
             return new MoMImportChecks(0, 0, TimeSpan.Zero, false, TimeSpan.Zero, false, null, null, null,
                 Array.Empty<Name>(), 0, 0);
 
-        var checks = MoMSessionDetector.Check(plays, start, end, type, window);
+        // Measured against what the draft already holds: importing into a session with charts in
+        // it spends the window that is left, and a chart already in it costs none of that window.
+        var held = loaded.Session.Entries.Select(e => e.Chart.Id).ToHashSet();
+        var checks = MoMSessionDetector.Check(plays, start, end, type, window,
+            loaded.Session.TotalPlayTime, held);
         var scoring = loaded.Board.Configuration.Scoring;
+        // One line each, like the charts beside it: a repeat play adds no second chart to price.
         var points = plays.Skip(start).Take(end - start + 1)
             .Where(p => !p.IsStageBroken && p.Type == type)
+            .DistinctBy(p => p.ChartId)
             .Sum(p => (int)scoring.GetScorelessScore(charts[p.ChartId]));
 
         return new MoMImportChecks(

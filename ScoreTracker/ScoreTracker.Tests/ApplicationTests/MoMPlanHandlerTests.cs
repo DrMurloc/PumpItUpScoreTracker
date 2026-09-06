@@ -216,7 +216,7 @@ public sealed class MoMPlanHandlerTests
     }
 
     [Fact]
-    public async Task TheConversionIsWhatYouBankedAgainstWhatTheBookPlans()
+    public async Task YourBestPublishedSessionOnTheBoardRidesAlongForTheConversion()
     {
         var board = Board();
         Held("Slam", 24, 128, 980000);
@@ -224,8 +224,10 @@ public sealed class MoMPlanHandlerTests
 
         var plan = await Plan(board);
 
+        // The division belongs to the page, which measures against the set on screen rather than
+        // the solver's; the handler's job is to carry what was banked at all.
         Assert.Equal(700, plan!.BankedThisSeason);
-        Assert.Equal(700.0 / plan.ProjectedPoints, plan.Conversion!.Value, 6);
+        Assert.True(plan.ProjectedPoints > 0);
     }
 
     [Fact]
@@ -253,7 +255,7 @@ public sealed class MoMPlanHandlerTests
         Assert.Empty(plan!.Charts);
         Assert.Equal(0, plan.ChartsPlanned);
         Assert.Equal(0, plan.ProjectedPoints);
-        Assert.Null(plan.Conversion);
+        Assert.Null(plan.BankedThisSeason);
         Assert.Equal(board.Configuration.MaxTime, plan.Downtime);
     }
 }

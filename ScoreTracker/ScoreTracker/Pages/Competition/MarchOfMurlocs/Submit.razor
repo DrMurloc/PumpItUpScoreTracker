@@ -281,7 +281,13 @@ else
             // Opening or resuming, then handing over to the session's own URL so a reload does not
             // look like a second "New session".
             var opened = await Mediator.Send(new CreateMoMDraftCommand(board));
-            Nav.NavigateTo($"{MoMText.SeasonRoute}/Session/{opened}/Edit", false, true);
+            if (opened == Guid.Empty)
+            {
+                _notFound = true;
+                return;
+            }
+
+            Nav.NavigateTo(MoMText.EditPath(opened), false, true);
             return;
         }
 
@@ -343,6 +349,13 @@ else
     {
         if (_draft == null || _picked == null || _score is not { } score || _busy) return;
 
+        if (!PhoenixScore.TryParse(score, out var value))
+        {
+            // The field keeps what was typed: a digit too many is a correction, not a restart.
+            Snackbar.Add(L["A score is a number from 0 to 1,000,000."], Severity.Warning);
+            return;
+        }
+
         _busy = true;
         try
         {
@@ -352,7 +365,7 @@ else
                 : chosen;
             var chartId = _picked.Id;
             var result = await Mediator.Send(new AddMoMDraftChartCommand(_draft.SessionId, chartId,
-                PhoenixScore.From(score), plate, isBroken));
+                value, plate, isBroken));
 
             switch (result.Outcome)
             {
@@ -365,6 +378,10 @@ else
                     break;
                 case MoMEntryOutcome.Rejected:
                     Snackbar.Add(L["That chart cannot be added — the session is already full."], Severity.Warning);
+                    break;
+                case MoMEntryOutcome.Ineligible:
+                    Snackbar.Add(L["That chart is worth nothing on this board, so it cannot be added."],
+                        Severity.Warning);
                     break;
             }
 
@@ -400,7 +417,9 @@ else
         _video = url;
         if (_draft == null) return;
 
-        await Mediator.Send(new SetMoMDraftVideoCommand(_draft.SessionId, url));
+        if (!await Mediator.Send(new SetMoMDraftVideoCommand(_draft.SessionId, url)))
+            Snackbar.Add(L["The video link needs to be a full address, starting with https://."],
+                Severity.Warning);
     }
 
     private async Task OpenImport()

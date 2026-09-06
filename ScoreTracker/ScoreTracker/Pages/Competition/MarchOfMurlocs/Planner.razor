@@ -125,7 +125,7 @@ else
                 <span class="pl-proj-k">@L["Projected points"] · @L[LabelKey(plan.Energy)]</span>
                 <div class="pl-proj-big @(_picked.Count == 0 ? "zero" : "")">@Points.ToString("N0")</div>
             </div>
-            @if (plan.Conversion is { } conversion && _picked.Count > 0)
+            @if (Conversion is { } conversion)
             {
                 <div class="pl-conversion" data-testid="mom-plan-conversion">
                     <b>@((conversion * 100).ToString("N0"))%</b>
@@ -198,9 +198,9 @@ else
                    data-testid="mom-plan-suggest">@L["Auto-select set"]</MudButton>
         <span class="pl-tools">
             <MudButtonGroup OverrideStyles="false">
-                <MudTooltip Text="@L["Comfortable"]"><MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy" Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)" OnClick="@(() => _density = UiDensity.Comfortable)" aria-label="@L["Comfortable"]"/></MudTooltip>
-                <MudTooltip Text="@L["Compact"]"><MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView" Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)" OnClick="@(() => _density = UiDensity.Compact)" aria-label="@L["Compact"]"/></MudTooltip>
-                <MudTooltip Text="@L["Table"]"><MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows" Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)" OnClick="@(() => _density = UiDensity.Table)" aria-label="@L["Table"]"/></MudTooltip>
+                <MudTooltip Text="@L["Comfortable"]"><MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy" Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)" OnClick="@(() => SetDensity(UiDensity.Comfortable))" aria-label="@L["Comfortable"]"/></MudTooltip>
+                <MudTooltip Text="@L["Compact"]"><MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView" Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)" OnClick="@(() => SetDensity(UiDensity.Compact))" aria-label="@L["Compact"]"/></MudTooltip>
+                <MudTooltip Text="@L["Table"]"><MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows" Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)" OnClick="@(() => SetDensity(UiDensity.Table))" aria-label="@L["Table"]"/></MudTooltip>
             </MudButtonGroup>
         </span>
     </div>
@@ -400,6 +400,8 @@ else
     private MoMEnergy _energy = MoMEnergy.Good;
     private MoMPush _push = MoMPush.Steady;
     private int _restSeconds = 35;
+    private const string DensityKey = "Density__MoMPlanner";
+
     private string _scope = "all";
     private UiDensity _density = UiDensity.Compact;
 
@@ -423,6 +425,8 @@ else
             return;
         }
 
+        if (Enum.TryParse<UiDensity>(await UiSettings.GetSetting(DensityKey), out var density))
+            _density = density;
         _mix = await UiSettings.GetSelectedMix(CancellationToken.None);
         var season = await Mediator.Send(new GetMoMSeasonPageQuery(_mix, null, CurrentUser.User.Id));
         _boards = season?.Boards ?? Array.Empty<MoMBoardView>();
@@ -544,6 +548,13 @@ else
     /// <summary>Every number recomputes from what is ticked, not from what was suggested.</summary>
     private int Points => Picked.Sum(c => c.Points);
 
+    /// <summary>
+    ///     What was banked as a share of the set on screen. The denominator is the ticked set, not
+    ///     the solver's, because the ticked set is what the rest of this panel describes.
+    /// </summary>
+    private double? Conversion =>
+        _plan?.BankedThisSeason is { } banked && Points > 0 ? banked / (double)Points : null;
+
     private double AverageLevel => Picked.Count == 0 ? 0 : Picked.Average(c => c.BalancedLevel);
 
     private double AverageScore => Picked.Count == 0 ? 0 : Picked.Average(c => (int)c.Score);
@@ -613,11 +624,19 @@ else
         }
     }
 
+    private async Task SetDensity(UiDensity density)
+    {
+        if (_density == density) return;
+
+        _density = density;
+        await UiSettings.SetSetting(DensityKey, density.ToString());
+    }
+
     private async Task SaveSet()
     {
-        if (_plan is not { } plan || _picked.Count == 0) return;
+        if (_plan is not { } plan || Picked.Count == 0) return;
 
-        var suggested = L["{0} — {1} charts, up to {2}", TypeName(plan.ChartType), _picked.Count,
+        var suggested = L["{0} — {1} charts, up to {2}", TypeName(plan.ChartType), Picked.Count,
             TypeName(plan.ChartType) + Picked.Max(c => (int)c.Chart.Level)];
         var name = await Dialogs.ShowMessageBox(new MessageBoxOptions
         {
@@ -654,7 +673,7 @@ else
         if (chosen != true) return;
 
         _picked.Clear();
-        _picked.AddRange(sets[0].ChartIds);
+        _picked.AddRange(sets[0].ChartIds.Where(id => _plan?.Charts.Any(c => c.Chart.Id == id) == true));
         _handPicked = true;
     }
 

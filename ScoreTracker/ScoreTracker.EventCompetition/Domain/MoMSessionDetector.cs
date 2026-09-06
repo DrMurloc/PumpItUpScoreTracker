@@ -140,14 +140,25 @@ internal static class MoMSessionDetector
     ///     one — telling someone to trim an end is useless when the break is in the middle.
     /// </summary>
     public static MoMRangeChecks Check(IReadOnlyList<MoMPlay> plays, int startIndex, int endIndex,
-        ChartType type, TimeSpan window)
+        ChartType type, TimeSpan window, TimeSpan alreadyUsed = default,
+        IReadOnlySet<Guid>? alreadyHeld = null)
     {
         var (from, to) = Clamp(plays, startIndex, endIndex);
         var selected = Range(plays, from, to);
         var counted = selected.Where(p => Counts(p, type)).ToArray();
-        var songTime = Sum(counted);
-        var beforeLast = counted.Length == 0 ? TimeSpan.Zero : songTime - counted[^1].Duration;
-        var overBeforeLast = beforeLast >= window;
+
+        // The budget is what the resulting session would spend, not what the night took: a session
+        // holds each chart once (D45 replaces in place), and a chart the draft already holds spends
+        // nothing at all, because entering it again is a swap. Counting either twice blocks a
+        // selection that would have fitted.
+        var seen = new HashSet<Guid>();
+        var fresh = counted.Where(p => seen.Add(p.ChartId) && alreadyHeld?.Contains(p.ChartId) != true)
+            .ToArray();
+        var songTime = alreadyUsed + Sum(fresh);
+        // Running time only grows, so the one add that can find the window full is the last new
+        // chart — which makes the time before it the whole test.
+        var beforeLast = fresh.Length == 0 ? alreadyUsed : songTime - fresh[^1].Duration;
+        var overBeforeLast = fresh.Length > 0 && beforeLast >= window;
 
         var span = selected.Count == 0
             ? TimeSpan.Zero
@@ -156,10 +167,11 @@ internal static class MoMSessionDetector
 
         // A repeat is a play whose chart is already in: within one mix a chart id is the whole
         // identity (song, type and level), which is what D45 compares.
-        var repeats = counted.Length - counted.Select(p => p.ChartId).Distinct().Count();
+        var distinct = counted.Select(p => p.ChartId).Distinct().Count();
+        var repeats = counted.Length - distinct;
 
         return new MoMRangeChecks(
-            counted.Length - repeats,
+            distinct,
             songTime,
             overBeforeLast,
             span,

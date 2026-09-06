@@ -99,8 +99,13 @@ public interface IScoreReader
     ///         that (ARCHITECTURE.md, "Verticals split by bounded context").
     ///     </para>
     /// </summary>
+    /// <param name="until">
+    ///     The far end of the range, or null for everything since the cutoff. The cap is applied from
+    ///     the newest end, so a caller asking about one night in the past must bound both ends or the
+    ///     cap slides off the night entirely and returns only plays that came after it.
+    /// </param>
     Task<IReadOnlyList<ScoreJournalEntry>> GetRecentPlays(MixEnum mix, Guid userId, DateTimeOffset since,
-        int limit, CancellationToken cancellationToken = default);
+        DateTimeOffset? until, int limit, CancellationToken cancellationToken = default);
 
     /// <summary>Users with any recorded best-attempt activity in a mix on or after the cutoff.</summary>
     Task<IReadOnlySet<Guid>> GetActiveUserIds(MixEnum mix, DateTimeOffset since,

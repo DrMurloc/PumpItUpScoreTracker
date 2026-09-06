@@ -496,6 +496,9 @@
   <data name="A PUMBILITY peer" xml:space="preserve">
     <value>Un par de PUMBILITY</value>
   </data>
+  <data name="A score is a number from 0 to 1,000,000." xml:space="preserve">
+    <value>Una puntuación es un número de 0 a 1,000,000.</value>
+  </data>
   <data name="A score only one in four of your peers beat." xml:space="preserve">
     <value>Un puntaje que solo uno de cada cuatro de sus pares supera.</value>
   </data>
@@ -8467,6 +8470,9 @@
   <data name="That chart cannot be added — the session is already full." xml:space="preserve">
     <value>Ese chart no se puede agregar: la sesión ya está llena.</value>
   </data>
+  <data name="That chart is worth nothing on this board, so it cannot be added." xml:space="preserve">
+    <value>Ese chart no vale nada en esta tabla, así que no se puede agregar.</value>
+  </data>
   <data name="That command isn't available yet." xml:space="preserve">
     <value>Ese comando aún no está disponible.</value>
   </data>
@@ -8763,6 +8769,9 @@
   </data>
   <data name="The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture." xml:space="preserve">
     <value>Las tier lists, clasificaciones y calculadoras están abiertas — inicia sesión cuando quieras ver tus propias puntuaciones en escena.</value>
+  </data>
+  <data name="The video link needs to be a full address, starting with https://." xml:space="preserve">
+    <value>El enlace del video tiene que ser una dirección completa, que empiece con https://.</value>
   </data>
   <data name="The way Pass personalizes is being reworked, so this page waits for it rather than explaining the version being replaced." xml:space="preserve">
     <value>La forma en que Pass se personaliza se está rehaciendo, así que esta página espera en vez de explicar la versión que se va a reemplazar.</value>

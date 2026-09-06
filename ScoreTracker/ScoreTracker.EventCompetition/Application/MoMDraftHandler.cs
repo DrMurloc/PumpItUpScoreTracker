@@ -28,7 +28,7 @@ internal sealed partial class MoMDraftHandler :
     IRequestHandler<CreateMoMDraftCommand, Guid>,
     IRequestHandler<AddMoMDraftChartCommand, MoMEntryResult>,
     IRequestHandler<RemoveMoMDraftChartCommand>,
-    IRequestHandler<SetMoMDraftVideoCommand>,
+    IRequestHandler<SetMoMDraftVideoCommand, bool>,
     IRequestHandler<PublishMoMSessionCommand>,
     IRequestHandler<DeleteMoMSessionCommand>,
     IRequestHandler<GetMoMDraftQuery, MoMDraftView?>
@@ -65,8 +65,11 @@ internal sealed partial class MoMDraftHandler :
         var existing = await _write.GetDraftId(request.BoardId, userId, cancellationToken);
         if (existing is { } open) return open;
 
-        var board = await _read.GetBoard(request.BoardId, cancellationToken)
-                    ?? throw new ArgumentException("That board does not exist.");
+        // A board outlives none of its links: D13 prunes ended empty seasons and boards go with
+        // them, so a bookmarked Record URL routinely names one that is gone. The page renders its
+        // own not-found state from this, which throwing here would replace with a dead circuit.
+        var board = await _read.GetBoard(request.BoardId, cancellationToken);
+        if (board == null) return Guid.Empty;
 
         var sessionId = Guid.NewGuid();
         await _write.SaveSession(sessionId, new TournamentSession(userId, board.Configuration, board.Mix),
@@ -81,7 +84,13 @@ internal sealed partial class MoMDraftHandler :
 
         var chart = (await _charts.GetCharts(loaded.Board.Mix, chartIds: new[] { request.ChartId },
             cancellationToken: cancellationToken)).FirstOrDefault();
-        if (chart == null || !loaded.Session.CanAdd(chart))
+        // A board is one chart type (D15) and the aggregate does not know that, so this is where the
+        // other type is refused. Worth nothing on this board is the same answer to the player: the
+        // chart cannot go on it, which is a different problem from the window being full.
+        if (chart == null || chart.Type != loaded.Board.ChartType ||
+            loaded.Board.Configuration.Scoring.GetScorelessScore(chart) == 0)
+            return new MoMEntryResult(MoMEntryOutcome.Ineligible, null);
+        if (!loaded.Session.CanAdd(chart))
             return new MoMEntryResult(MoMEntryOutcome.Rejected, null);
 
         // Read the held score before the add, because a replacement overwrites it in place.
@@ -101,13 +110,20 @@ internal sealed partial class MoMDraftHandler :
         await _write.SaveSession(request.SessionId, loaded.Session, cancellationToken);
     }
 
-    public async Task Handle(SetMoMDraftVideoCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(SetMoMDraftVideoCommand request, CancellationToken cancellationToken)
     {
         var loaded = await LoadDraft(request.SessionId, cancellationToken);
-        if (loaded == null) return;
+        if (loaded == null) return true;
+
+        // Clearing the field is a real intent; text that is not a URL is a typo, and storing null
+        // for it would wipe the link that is already there and say nothing.
+        if (!string.IsNullOrWhiteSpace(request.Url) &&
+            !Uri.TryCreate(request.Url, UriKind.Absolute, out _))
+            return false;
 
         loaded.Session.VideoUrl = Uri.TryCreate(request.Url, UriKind.Absolute, out var url) ? url : null;
         await _write.SaveSession(request.SessionId, loaded.Session, cancellationToken);
+        return true;
     }
 
     public async Task Handle(PublishMoMSessionCommand request, CancellationToken cancellationToken)

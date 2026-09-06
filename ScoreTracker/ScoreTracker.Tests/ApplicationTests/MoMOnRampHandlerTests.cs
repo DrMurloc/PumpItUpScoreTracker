@@ -53,10 +53,17 @@ public sealed class MoMOnRampHandlerTests
                 _fixture.Charts.Where(c => ids == null || ids.Contains(c.Id)).ToArray());
 
         var scores = new Mock<IScoreReader>();
+        // The real query caps from the NEWEST end, so the stub does too: a handler that asks only
+        // for everything since a night began must come back empty-handed for an older night.
         scores.Setup(s => s.GetRecentPlays(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(),
-                It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((MixEnum _, Guid _, DateTimeOffset since, int _, CancellationToken _) =>
-                _journal.Where(e => e.OccurredAt >= since).OrderBy(e => e.OccurredAt).ToArray());
+                It.IsAny<DateTimeOffset?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MixEnum _, Guid _, DateTimeOffset since, DateTimeOffset? until, int limit,
+                    CancellationToken _) =>
+                _journal.Where(e => e.OccurredAt >= since && (until == null || e.OccurredAt <= until))
+                    .OrderByDescending(e => e.OccurredAt)
+                    .Take(limit)
+                    .OrderBy(e => e.OccurredAt)
+                    .ToArray());
 
         return new MoMOnRampHandler(read.Object, charts.Object, scores.Object, FakeDateTime.At(Now).Object);
     }
@@ -195,5 +202,24 @@ public sealed class MoMOnRampHandlerTests
 
         Assert.Null(onRamp!.Recorded);
         Assert.NotNull(onRamp.Candidate);
+    }
+
+    [Fact]
+    public async Task ANightBuriedUnderLaterPlaysIsStillFound()
+    {
+        LiveSeason();
+        PlayRun(30);
+        // Everything since that night, newest first, is four hundred plays of something else. A read
+        // bounded only at the old end hands back none of the night at all.
+        var later = _fixture.Chart("Since Then", 20, 120);
+        for (var i = 0; i < 400; i++)
+            _journal.Add(new ScoreJournalEntry(Night.AddDays(1).AddSeconds(i * 150),
+                ScoreJournalEntry.OfficialImportSource, _me, later.Id, 980000, PhoenixPlate.MarvelousGame,
+                false, MixEnum.Phoenix));
+
+        var onRamp = await Detect();
+
+        Assert.NotNull(onRamp!.Candidate);
+        Assert.Equal(30, onRamp.Candidate!.Charts);
     }
 }

@@ -496,6 +496,9 @@
   <data name="A PUMBILITY peer" xml:space="preserve">
     <value>A PUMBILITY peer</value>
   </data>
+  <data name="A score is a number from 0 to 1,000,000." xml:space="preserve">
+    <value>A score is a number from 0 to 1,000,000.</value>
+  </data>
   <data name="A score only one in four of your peers beat." xml:space="preserve">
     <value>A score only one in four of your peers beat.</value>
   </data>
@@ -8525,6 +8528,9 @@
   <data name="That chart cannot be added — the session is already full." xml:space="preserve">
     <value>That chart cannot be added — the session is already full.</value>
   </data>
+  <data name="That chart is worth nothing on this board, so it cannot be added." xml:space="preserve">
+    <value>That chart is worth nothing on this board, so it cannot be added.</value>
+  </data>
   <data name="That command isn't available yet." xml:space="preserve">
     <value>That command isn't available yet.</value>
   </data>
@@ -8821,6 +8827,9 @@
   </data>
   <data name="The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture." xml:space="preserve">
     <value>The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture.</value>
+  </data>
+  <data name="The video link needs to be a full address, starting with https://." xml:space="preserve">
+    <value>The video link needs to be a full address, starting with https://.</value>
   </data>
   <data name="The way Pass personalizes is being reworked, so this page waits for it rather than explaining the version being replaced." xml:space="preserve">
     <value>The way Pass personalizes is being reworked, so this page waits for it rather than explaining the version being replaced.</value>

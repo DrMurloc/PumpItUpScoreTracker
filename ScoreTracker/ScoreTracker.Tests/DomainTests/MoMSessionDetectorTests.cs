@@ -113,7 +113,9 @@ public sealed class MoMSessionDetectorTests
         Assert.Equal(1, checks.RepeatPlays);
         Assert.Equal(1, checks.StageBreaksSkipped);
         Assert.Equal(0, checks.WrongTypeSkipped);
-        Assert.Equal(new TimeSpan(0, 16, 35), checks.SongTime);
+        // Eight charts of song, not nine plays of it: the session this would build holds Ugly Dee
+        // once, so the second play buys none of the window. Counting it again is 16:35.
+        Assert.Equal(new TimeSpan(0, 14, 59), checks.SongTime);
         Assert.False(checks.OverWindowBeforeLast);
         Assert.False(checks.SpanOverWindow);
         Assert.Null(checks.LongestBreak);
@@ -283,4 +285,35 @@ public sealed class MoMSessionDetectorTests
         (9345, 119, ChartType.Double, false, 14),
         (9562, 118, ChartType.Double, true, 15),
     });
+
+    [Fact]
+    public void ADraftWithChartsInItSpendsOnlyTheWindowThatIsLeft()
+    {
+        var night = AugustFourteenth();
+        var held = new HashSet<Guid>();
+
+        // An hour and three quarters of the window is already gone, so the eight charts this block
+        // would add no longer fit before its last one.
+        var checks = MoMSessionDetector.Check(night, 14, 23, ChartType.Double, Window,
+            TimeSpan.FromMinutes(104), held);
+
+        Assert.Equal(8, checks.Charts);
+        Assert.True(checks.OverWindowBeforeLast);
+        Assert.Equal(TimeSpan.FromMinutes(104) + new TimeSpan(0, 14, 59), checks.SongTime);
+    }
+
+    [Fact]
+    public void ChartsTheDraftAlreadyHoldsCostNoneOfTheWindow()
+    {
+        var night = AugustFourteenth();
+        var held = night.Skip(14).Take(10).Select(p => p.ChartId).ToHashSet();
+
+        // Every chart in the block is already in the session, so importing it replaces plays in
+        // place and buys no time at all -- however full the session already is.
+        var checks = MoMSessionDetector.Check(night, 14, 23, ChartType.Double, Window,
+            TimeSpan.FromMinutes(104), held);
+
+        Assert.False(checks.OverWindowBeforeLast);
+        Assert.Equal(TimeSpan.FromMinutes(104), checks.SongTime);
+    }
 }

@@ -496,6 +496,9 @@
   <data name="A PUMBILITY peer" xml:space="preserve">
     <value>PUMBILITYピア</value>
   </data>
+  <data name="A score is a number from 0 to 1,000,000." xml:space="preserve">
+    <value>スコアは 0 から 1,000,000 までの数字です。</value>
+  </data>
   <data name="A score only one in four of your peers beat." xml:space="preserve">
     <value>ピアの4人に1人しか上回らないスコアです。</value>
   </data>
@@ -8525,6 +8528,9 @@
   <data name="That chart cannot be added — the session is already full." xml:space="preserve">
     <value>その譜面は追加できません。セッションはすでに満杯です。</value>
   </data>
+  <data name="That chart is worth nothing on this board, so it cannot be added." xml:space="preserve">
+    <value>この譜面はこのボードでは得点にならないため、追加できません。</value>
+  </data>
   <data name="That command isn't available yet." xml:space="preserve">
     <value>このコマンドはまだ利用できません。</value>
   </data>
@@ -8821,6 +8827,9 @@
   </data>
   <data name="The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture." xml:space="preserve">
     <value>ティアリスト、ランキング、計算機は誰でも見られます — 自分のスコアを重ねたくなったらログインを。</value>
+  </data>
+  <data name="The video link needs to be a full address, starting with https://." xml:space="preserve">
+    <value>動画のリンクは https:// で始まる完全なアドレスにしてください。</value>
   </data>
   <data name="The way Pass personalizes is being reworked, so this page waits for it rather than explaining the version being replaced." xml:space="preserve">
     <value>パスのパーソナライズは作り直し中です。置き換わる版を説明するより、このページは待ちます。</value>

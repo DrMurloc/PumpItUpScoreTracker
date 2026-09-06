@@ -197,7 +197,7 @@ internal sealed class EFMoMRepository : IMoMRepository
             }), cancellationToken);
 
         await database.SaveChangesAsync(cancellationToken);
-        Evict(session.TournamentId, session.UsersId);
+        Evict();
     }
 
     public async Task PublishSession(Guid sessionId, DateTimeOffset publishedAt,
@@ -211,7 +211,7 @@ internal sealed class EFMoMRepository : IMoMRepository
         entity.PublishedAt = publishedAt;
         entity.UpdatedAt = publishedAt;
         await database.SaveChangesAsync(cancellationToken);
-        Evict(entity.BoardId, entity.UserId);
+        Evict();
     }
 
     public async Task DeleteSession(Guid sessionId, CancellationToken cancellationToken)
@@ -224,17 +224,13 @@ internal sealed class EFMoMRepository : IMoMRepository
         // Chart rows cascade with the session.
         database.Set<MoMSessionEntity>().Remove(entity);
         await database.SaveChangesAsync(cancellationToken);
-        Evict(entity.BoardId, entity.UserId);
+        Evict();
     }
 
-    /// <summary>
-    ///     A board's rankings and the legacy per-user session read are both cached, and a write to
-    ///     either side of a session invalidates both.
-    /// </summary>
-    private void Evict(Guid boardId, Guid userId)
+    /// <summary>A board's rankings are cached, and a write to either side of a session ages them.</summary>
+    private void Evict()
     {
         _memoryCache.Remove(EFTournamentRepository.TourneyCacheKey);
-        _memoryCache.Remove($"{nameof(EFTournamentRepository)}__Tournament:{boardId}__User:{userId}");
     }
 
     public async Task PruneEndedEmptySeasons(DateTimeOffset now, CancellationToken cancellationToken)

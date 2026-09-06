@@ -248,11 +248,6 @@ namespace ScoreTracker.EventCompetition.Infrastructure
             _memoryCache.Remove(TourneyIdCacheKey(tournament.Id));
         }
 
-        internal static string CacheKey(Guid tournamentId, Guid userId)
-        {
-            return $"{nameof(EFTournamentRepository)}__Tournament:{tournamentId}__User:{userId}";
-        }
-
         public async Task<IEnumerable<LeaderboardRecord>> GetLeaderboardRecords(Guid tournamentId,
             CancellationToken cancellationToken)
         {

@@ -119,14 +119,15 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     }
 
     async Task<IReadOnlyList<ScoreJournalEntry>> IScoreReader.GetRecentPlays(MixEnum mix, Guid userId,
-        DateTimeOffset since, int limit, CancellationToken cancellationToken)
+        DateTimeOffset since, DateTimeOffset? until, int limit, CancellationToken cancellationToken)
     {
         var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         // Newest first to take the cap, then flipped: a night that overruns the limit should lose
         // its oldest plays, not its most recent ones.
         return (await database.Set<ScoreEventJournalEntity>()
-                .Where(e => e.UserId == userId && e.MixId == mixId && e.OccurredAt >= since)
+                .Where(e => e.UserId == userId && e.MixId == mixId && e.OccurredAt >= since &&
+                            (until == null || e.OccurredAt <= until))
                 .OrderByDescending(e => e.OccurredAt)
                 .Take(limit)
                 .ToArrayAsync(cancellationToken))
