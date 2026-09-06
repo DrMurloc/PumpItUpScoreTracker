@@ -1,0 +1,218 @@
+@using MediatR
+@using ScoreTracker.EventCompetition.Contracts
+@using ScoreTracker.EventCompetition.Contracts.Commands
+@using ScoreTracker.EventCompetition.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components.MoM
+@* The import dialog (docs/design/march-of-murlocs.md §11.4). The journal hands back an
+   undifferentiated list of recent plays, so the dialog splits them wherever a gap exceeds fifteen
+   minutes and opens on the block worth most. Everything outside the selection stays on screen,
+   dimmed, with the gap printed between blocks: the choice has to be legible rather than magic.
+   Clicking any play moves whichever end is nearer, which needs no drag handles and works the same
+   on a phone. D10's three checks ride underneath — song time over the window is a hard block, the
+   wall-clock span is only a warning and names the break in the middle, and what could not count is
+   listed by name. *@
+<MudDialog>
+    <DialogContent>
+        @if (_candidates is not { } view)
+        {
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary"/>
+        }
+        else if (view.Plays.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info" data-testid="mom-import-empty">
+                @L["No recent plays to import. Run Import Scores first, then come back."]
+            </MudAlert>
+        }
+        else
+        {
+            <p class="mom-imp-lede">@L["Split at breaks over fifteen minutes. Click a play to move the nearer end."]</p>
+            @foreach (var block in view.Blocks)
+            {
+                @if (block.GapBefore is { } gap)
+                {
+                    <div class="mom-gapline">@L["{0} gap", MoMText.MinutesSeconds(gap)]</div>
+                }
+                var inSelection = block.StartIndex >= view.SelectedStart && block.EndIndex <= view.SelectedEnd;
+                <div class="mom-blk">
+                    <div class="mom-blk-head">
+                        <b>@block.From.ToLocalTime().ToString("t") – @block.To.ToLocalTime().ToString("t")</b>
+                        <span>
+                            @L["{0} plays", block.Plays] · @L["{0} of songs", MoMText.MinutesSeconds(block.SongTime)] ·
+                            @L["{0} rest", MoMText.MinutesSeconds(block.RestTime)]
+                        </span>
+                        @if (block.MixedTypes)
+                        {
+                            <span class="mom-chip-outline">@L["mixed"]</span>
+                        }
+                        @if (inSelection)
+                        {
+                            <span class="mom-chip-primary">@L["selected"]</span>
+                        }
+                    </div>
+                    @for (var i = block.StartIndex; i <= block.EndIndex; i++)
+                    {
+                        var index = i;
+                        var play = view.Plays[index];
+                        var selected = index >= view.SelectedStart && index <= view.SelectedEnd;
+                        var dim = play.IsStageBroken || play.WrongType;
+                        <div class="mom-play @(selected ? "sel" : "") @(dim ? "dim" : "")"
+                             data-testid="mom-import-play" @onclick="@(() => MoveNearerEnd(index))">
+                            <span class="t">@play.PlayedAt.ToLocalTime().ToString("t")</span>
+                            <DifficultyBubble Chart="play.Chart"/>
+                            <SongImage Song="play.Chart.Song" Height="22"/>
+                            <span class="nm">@play.Chart.Song.Name</span>
+                            @if (play.IsStageBroken)
+                            {
+                                <span class="why">@L["stage break"]</span>
+                            }
+                            else if (play.WrongType)
+                            {
+                                <span class="why">@(view.ChartType == ChartType.Double ? L["Singles"] : L["Doubles"])</span>
+                            }
+                            else
+                            {
+                                <ScoreBreakdown Score="play.Score" Plate="play.Plate" IsBroken="play.IsBroken"
+                                                Stacked="true" ShowScore="true"/>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            <div class="mom-checks">
+                <div class="mom-check @(view.Checks.OverWindowBeforeLast ? "block" : "ok")">
+                    <i>@(view.Checks.OverWindowBeforeLast ? "!" : "✓")</i>
+                    <span>
+                        <b>@L["{0} of songs", MoMText.HoursMinutesSeconds(view.Checks.SongTime)]</b> —
+                        @if (view.Checks.OverWindowBeforeLast)
+                        {
+                            @L["over {0} before the last chart. Trim an end.", MoMText.HoursMinutesSeconds(view.Window)]
+                        }
+                        else if (view.Checks.SongTime > view.Window)
+                        {
+                            @L["fits; only the last chart runs over."]
+                        }
+                        else
+                        {
+                            @L["fits."]
+                        }
+                    </span>
+                </div>
+                <div class="mom-check @(view.Checks.SpanOverWindow ? "warn" : "ok")">
+                    <i>@(view.Checks.SpanOverWindow ? "!" : "✓")</i>
+                    <span>
+                        <b>@L["{0} first to last", MoMText.HoursMinutesSeconds(view.Checks.Span)]</b> —
+                        @if (view.Checks.SpanOverWindow && view.Checks.LongestBreak is { } longest)
+                        {
+                            @L["longer than the window. Your longest break inside it was {0}, before {1} at {2}.",
+                                MoMText.MinutesSeconds(longest), view.Checks.LongestBreakBefore?.ToString() ?? string.Empty,
+                                view.Checks.LongestBreakAt?.ToLocalTime().ToString("T") ?? string.Empty]
+                        }
+                        else
+                        {
+                            @L["inside the window."]
+                        }
+                    </span>
+                </div>
+                @if (view.Checks.StageBreaksSkipped.Count > 0)
+                {
+                    <div class="mom-check note">
+                        <i>·</i>
+                        <span>@L["{0} stage breaks skipped: {1}.", view.Checks.StageBreaksSkipped.Count,
+                                 string.Join(", ", view.Checks.StageBreaksSkipped.Select(n => n.ToString()))]</span>
+                    </div>
+                }
+                @if (view.Checks.WrongTypeSkipped > 0)
+                {
+                    <div class="mom-check note">
+                        <i>·</i>
+                        <span>@L["{0} plays of the other chart type skipped.", view.Checks.WrongTypeSkipped]</span>
+                    </div>
+                }
+                @if (view.Checks.RepeatPlays > 0)
+                {
+                    @* D45: repeats get one line and nothing else. *@
+                    <div class="mom-check note" data-testid="mom-import-repeats">
+                        <i>·</i>
+                        <span>@L["{0} repeat plays — only your best on each chart is added.", view.Checks.RepeatPlays]</span>
+                    </div>
+                }
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        @if (_candidates is { } actions)
+        {
+            <span class="mom-imp-lead muted">
+                @L["{0} charts", actions.Checks.Charts] · @L["{0} points", actions.Checks.Points.ToString("N0")]
+            </span>
+        }
+        <MudButton Variant="Variant.Text" OnClick="Cancel" data-testid="mom-import-cancel">@L["Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Import" data-testid="mom-import-add"
+                   Disabled="@(_busy || _candidates == null || _candidates.Checks.OverWindowBeforeLast || _candidates.Checks.Charts == 0)">
+            @L["Add {0} charts", _candidates?.Checks.Charts ?? 0]
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] [EditorRequired] public Guid SessionId { get; set; }
+
+    [Inject] public IMediator Mediator { get; set; } = default!;
+
+    private MoMImportCandidates? _candidates;
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _candidates = await Mediator.Send(new GetMoMImportCandidatesQuery(SessionId));
+    }
+
+    /// <summary>
+    ///     Clicking a play moves whichever end of the selection is nearer to it, so a range is
+    ///     adjusted with taps rather than handles.
+    /// </summary>
+    private async Task MoveNearerEnd(int index)
+    {
+        if (_candidates is not { } view || _busy) return;
+
+        var start = view.SelectedStart;
+        var end = view.SelectedEnd;
+        if (Math.Abs(index - start) <= Math.Abs(index - end))
+        {
+            start = Math.Min(index, end);
+        }
+        else
+        {
+            end = Math.Max(index, start);
+        }
+
+        _candidates = await Mediator.Send(new GetMoMImportCandidatesQuery(SessionId, start, end));
+    }
+
+    private async Task Import()
+    {
+        if (_candidates is not { } view || _busy) return;
+
+        _busy = true;
+        try
+        {
+            // The range travels as timestamps: the handler re-reads the journal, so what is added
+            // is what was actually played rather than anything this page could assert.
+            var result = await Mediator.Send(new ImportMoMDraftFromJournalCommand(SessionId,
+                view.Plays[view.SelectedStart].PlayedAt, view.Plays[view.SelectedEnd].PlayedAt));
+            Dialog.Close(DialogResult.Ok(result));
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void Cancel() => Dialog.Cancel();
+}

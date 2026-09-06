@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Localization;
+﻿using Microsoft.Extensions.Localization;
 
 namespace ScoreTracker.Web.Services;
 
@@ -18,8 +18,14 @@ public static class MoMText
     public static string SeasonPath(Guid seasonId) => $"{SeasonRoute}/{seasonId}";
     public static string SessionPath(Guid sessionId) => $"{SeasonRoute}/Session/{sessionId}";
 
-    /// <summary>The old record page, reachable behind the section's links until Slice 4b replaces it.</summary>
-    public static string RecordPath(Guid boardId) => $"/Tournament/Stamina/{boardId}/Record";
+    /// <summary>
+    ///     Opening or resuming a draft on a board. Submit hands over to the session's own URL once
+    ///     it has one, so this link is a doorway rather than a page (§11.4).
+    /// </summary>
+    public static string RecordPath(Guid boardId) => $"{SeasonRoute}/Record/{boardId}";
+
+    /// <summary>Editing a draft, and the published state that replaces it.</summary>
+    public static string EditPath(Guid sessionId) => $"{SeasonRoute}/Session/{sessionId}/Edit";
 
     public static string Ordinal(int place, IStringLocalizer<App> localizer)
     {

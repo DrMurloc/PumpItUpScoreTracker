@@ -28,7 +28,8 @@ public sealed class MoMSectionFrameTests : ComponentTestBase
         var links = cut.FindAll("nav.mom-frame-nav a");
         Assert.Contains(links, a => a.GetAttribute("href") == "/MarchOfMurlocs" && a.TextContent.Contains("This season"));
         Assert.Contains(links, a => a.GetAttribute("href") == "/TournamentBuilder" && a.TextContent.Contains("Planner"));
-        Assert.Contains(links, a => a.GetAttribute("href") == $"/Tournament/Stamina/{board}/Record" && a.TextContent.Contains("Record a session"));
+        // Slice 4b: Record opens or resumes a draft and hands over to the session's own URL.
+        Assert.Contains(links, a => a.GetAttribute("href") == $"/MarchOfMurlocs/Record/{board}" && a.TextContent.Contains("Record a session"));
         var past = cut.Find("button[data-mom-seasons]");
         Assert.Contains("Past seasons", past.TextContent);
         Assert.Contains("mud-button-outlined", past.ClassList);

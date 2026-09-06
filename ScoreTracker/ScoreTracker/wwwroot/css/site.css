@@ -19440,3 +19440,91 @@ a.peer-pop-row:hover {
     .mom-howto-art { order: -1; }
     .mom-howto h2 { font-size: 22px; }
 }
+
+/* ===== March of Murlocs — Submit (docs/design/march-of-murlocs.md §11.4) ==================
+   Recording a session: the budget bar that fills with song time, the three-key entry row, the
+   session list, and the import dialog's blocks and checks. Tokens only — the page wears the mix
+   theme like every other MoM surface. */
+.sub-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.sub-title { font-family: var(--mud-typography-h4-family, inherit); font-weight: 700; font-size: 34px; line-height: 1; margin: 0; }
+.sub-lede { color: var(--mix-ink-muted); font-size: 13px; margin: 6px 0 0; max-width: 60ch; }
+
+/* The budget: song time fills it, and the lighter tail is the closing chart, which may overhang
+   the window because a chart only has to START inside it (§1). */
+.mom-budget { position: sticky; top: 48px; z-index: 15; margin: 14px 0 0; padding: 10px 14px 12px; border-radius: 10px; background: color-mix(in srgb, var(--mix-surface) 92%, transparent); backdrop-filter: blur(8px); border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); }
+.mom-budget-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.mom-budget-top .played { font-weight: 700; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; }
+.mom-budget-top .of { color: var(--mix-ink-muted); font-size: 13px; }
+.mom-budget-top .left { margin-left: auto; font-weight: 600; font-size: 16px; color: var(--mix-accent); font-variant-numeric: tabular-nums; }
+.mom-budget-bar { height: 10px; border-radius: 999px; background: color-mix(in srgb, var(--mix-ink) 12%, transparent); margin-top: 8px; overflow: hidden; display: flex; }
+.mom-budget-bar i { display: block; height: 100%; background: var(--mix-primary); }
+.mom-budget-bar i.last { background: color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+.mom-budget-note { font-size: 12px; color: var(--mix-ink-muted); margin: 6px 0 0; }
+.mom-budget.blocked { border-color: color-mix(in srgb, var(--judg-miss) 55%, transparent); }
+.mom-budget.blocked .left { color: var(--judg-miss); }
+
+.mom-entry { margin-top: 14px; padding: 14px; border-radius: 10px; background: var(--mix-surface); border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); }
+.mom-entry-row { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(110px, .9fr) minmax(150px, 1fr) auto; gap: 10px; align-items: flex-end; }
+.mom-entry-row > .mud-button-root { height: 40px; }
+.mom-entry-hint { margin: 10px 0 0; font-size: 12.5px; color: var(--mix-ink-muted); }
+.mom-entry-import { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid color-mix(in srgb, var(--mix-ink) 7%, transparent); font-size: 12.5px; color: var(--mix-ink-muted); }
+.kbd { display: inline-block; padding: 0 5px; border-radius: 4px; border: 1px solid color-mix(in srgb, var(--mix-ink) 30%, transparent); font-size: 11px; line-height: 16px; color: var(--mix-ink); background: color-mix(in srgb, var(--mix-ink) 6%, transparent); }
+
+/* The checks, shared by the entry row's repeat line and the import dialog's three. */
+.mom-checks { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.mom-check { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; }
+.mom-check i { flex: none; width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; font-style: normal; margin-top: 1px; }
+.mom-check.ok i { background: color-mix(in srgb, var(--daily-community) 25%, transparent); color: var(--daily-community); }
+.mom-check.warn i { background: color-mix(in srgb, var(--mix-accent) 25%, transparent); color: var(--mix-accent); }
+.mom-check.block i { background: color-mix(in srgb, var(--judg-miss) 25%, transparent); color: var(--judg-miss); }
+.mom-check.note i { background: color-mix(in srgb, var(--mix-ink) 12%, transparent); color: var(--mix-ink-muted); }
+
+.mom-sess { margin-top: 18px; }
+.mom-sess-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.mom-sess-total { margin-left: auto; font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; }
+.mom-sess-total small { font-size: 12px; font-weight: 500; color: var(--mix-ink-muted); margin-left: 6px; }
+.mom-sess-row { padding: 7px 4px; }
+.mom-sess-row .song { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.mom-ordn { min-width: 22px; text-align: right; color: var(--mix-ink-muted); font-variant-numeric: tabular-nums; font-size: 12px; }
+.mom-sess-empty { padding: 26px 16px; text-align: center; border: 1px dashed color-mix(in srgb, var(--mix-ink) 12%, transparent); border-radius: 10px; color: var(--mix-ink-muted); }
+.mom-video { margin-top: 14px; }
+
+.mom-footer-bar { display: flex; gap: 8px; align-items: center; margin-top: 18px; padding-top: 12px; border-top: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); }
+.mom-footer-bar .spacer { flex: 1; }
+
+.mom-published { margin-top: 14px; padding: 14px 16px; border-radius: 10px; background: color-mix(in srgb, var(--daily-community) 7%, var(--mix-surface)); border: 1px solid color-mix(in srgb, var(--daily-community) 45%, transparent); }
+.mom-published h4 { margin: 0 0 3px; font-size: 17px; font-weight: 600; }
+.mom-published p { margin: 0; color: var(--mix-ink-muted); font-size: 13px; }
+.mom-published .cta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+.mom-chip-draft, .mom-chip-outline, .mom-chip-accent, .mom-chip-primary { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 11.5px; font-weight: 500; white-space: nowrap; }
+.mom-chip-draft, .mom-chip-outline { background: transparent; border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); color: var(--mix-ink-muted); }
+.mom-chip-accent { background: color-mix(in srgb, var(--mix-accent) 16%, transparent); color: var(--mix-accent); }
+.mom-chip-primary { background: color-mix(in srgb, var(--mix-primary) 18%, transparent); color: var(--mix-primary); }
+
+/* The import dialog: every play stays on screen, dimmed where it cannot count, with the gap
+   between blocks printed so the choice is legible rather than magic. */
+.mom-imp-lede { color: var(--mix-ink-muted); font-size: 13px; margin: 0 0 10px; }
+.mom-imp-lead { margin-right: auto; font-size: 12px; color: var(--mix-ink-muted); }
+.mom-blk { border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); border-radius: 8px; overflow: hidden; margin-top: 8px; }
+.mom-blk-head { display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: var(--mix-surface-muted); font-size: 12px; color: var(--mix-ink-muted); }
+.mom-blk-head b { color: var(--mix-ink); font-size: 14px; }
+.mom-blk-head > :last-child { margin-left: auto; }
+.mom-play { display: flex; align-items: center; gap: 8px; padding: 5px 10px; border-top: 1px solid color-mix(in srgb, var(--mix-ink) 7%, transparent); font-size: 13px; cursor: pointer; }
+.mom-play:hover { background: color-mix(in srgb, var(--mix-ink) 4%, transparent); }
+.mom-play .t { min-width: 44px; color: var(--mix-ink-muted); font-variant-numeric: tabular-nums; font-size: 12px; }
+.mom-play .nm { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mom-play.sel { background: color-mix(in srgb, var(--mix-primary) 12%, transparent); box-shadow: inset 3px 0 0 var(--mix-primary); }
+.mom-play.dim { opacity: .45; }
+.mom-play .why { font-size: 11px; color: var(--mix-ink-muted); white-space: nowrap; }
+.mom-gapline { display: flex; align-items: center; gap: 10px; margin: 6px 0; font-size: 11.5px; color: var(--mix-ink-muted); }
+.mom-gapline::before, .mom-gapline::after { content: ""; flex: 1; border-top: 1px dashed color-mix(in srgb, var(--mix-ink) 12%, transparent); }
+
+@media (max-width: 700px) {
+    .sub-title { font-size: 28px; }
+    .mom-budget { margin-left: -4px; margin-right: -4px; }
+    .mom-entry-row { grid-template-columns: 1fr 1fr; }
+    .mom-entry-row > .f-chart { grid-column: 1 / -1; }
+    .mom-entry-row > .mud-button-root { grid-column: 1 / -1; justify-content: center; }
+    .mom-play .why { display: none; }
+}
