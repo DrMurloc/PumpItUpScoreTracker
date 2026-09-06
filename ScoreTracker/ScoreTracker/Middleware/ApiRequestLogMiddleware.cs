@@ -79,12 +79,12 @@ public sealed partial class ApiRequestLogMiddleware
     public static void LogRejected(ILogger logger, HttpContext context, ApiCredential credential,
         ToolKeyPrincipal? principal)
     {
-        var (tier, userId) = principal is not null ? ("tool", (Guid?)null)
-            : credential.Failure is null && Guid.TryParse(credential.Secret, out _) ? ("personal", null)
-            : ("anonymous", null);
+        var tier = principal is not null ? "tool"
+            : credential.Failure is null && Guid.TryParse(credential.Secret, out _) ? "personal"
+            : "anonymous";
 
-        ApiRequest(logger, tier, principal?.ToolId, principal?.KeyName, userId, context.Request.Method,
-            RouteOf(context), StatusCodes.Status429TooManyRequests, 0);
+        ApiRequest(logger, tier, Text(principal?.ToolId), principal?.KeyName ?? string.Empty, string.Empty,
+            context.Request.Method, RouteOf(context), StatusCodes.Status429TooManyRequests, 0);
     }
 
     private static void Log(ILogger logger, HttpContext context, int status, long durationMs)
@@ -100,8 +100,19 @@ public sealed partial class ApiRequestLogMiddleware
             : user.Identity?.IsAuthenticated == true ? "session"
             : "anonymous";
 
-        ApiRequest(logger, tier, toolId, user.FindFirstValue(ToolKeyAuthenticationScheme.KeyNameClaim), userId,
-            context.Request.Method, RouteOf(context), status, durationMs);
+        ApiRequest(logger, tier, Text(toolId),
+            toolId is null ? string.Empty : user.FindFirstValue(ToolKeyAuthenticationScheme.KeyNameClaim) ?? string.Empty,
+            Text(userId), context.Request.Method, RouteOf(context), status, durationMs);
+    }
+
+    /// <summary>
+    ///     An absent field is an empty string, never a null: the exporter between this line and the
+    ///     query is nobody's to inspect, and `isnotempty()` reads an empty string the same way
+    ///     whatever a null would have become.
+    /// </summary>
+    private static string Text(Guid? id)
+    {
+        return id?.ToString() ?? string.Empty;
     }
 
     /// <summary>The template, never the URL: a player's id is not a column anyone needs.</summary>
@@ -122,6 +133,6 @@ public sealed partial class ApiRequestLogMiddleware
 
     [LoggerMessage(EventId = 4200, Level = LogLevel.Information,
         Message = "ApiRequest {Tier} {ToolId} {KeyName} {UserId} {Method} {Route} {Status} {DurationMs}")]
-    private static partial void ApiRequest(ILogger logger, string tier, Guid? toolId, string? keyName,
-        Guid? userId, string method, string route, int status, long durationMs);
+    private static partial void ApiRequest(ILogger logger, string tier, string toolId, string keyName,
+        string userId, string method, string route, int status, long durationMs);
 }

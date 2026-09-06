@@ -100,9 +100,9 @@ public sealed class ApiRequestLogMiddlewareTests
         var line = await Run(Request("/api/v2/players/" + AUserId + "/scores", "api/v2/players/{id}/scores", Tool()));
 
         Assert.Equal("tool", line["Tier"]);
-        Assert.Equal(AToolId, line["ToolId"]);
+        Assert.Equal(AToolId.ToString(), line["ToolId"]);
         Assert.Equal("production", line["KeyName"]);
-        Assert.Null(line["UserId"]);
+        Assert.Equal(string.Empty, line["UserId"]);
         Assert.Equal("GET", line["Method"]);
         Assert.Equal("api/v2/players/{id}/scores", line["Route"]);
         Assert.Equal(200, line["Status"]);
@@ -117,9 +117,9 @@ public sealed class ApiRequestLogMiddlewareTests
         var line = await Run(Request("/api/v2/players/me", "api/v2/players/me", Person()));
 
         Assert.Equal("personal", line["Tier"]);
-        Assert.Null(line["ToolId"]);
-        Assert.Null(line["KeyName"]);
-        Assert.Equal(AUserId, line["UserId"]);
+        Assert.Equal(string.Empty, line["ToolId"]);
+        Assert.Equal(string.Empty, line["KeyName"]);
+        Assert.Equal(AUserId.ToString(), line["UserId"]);
     }
 
     /// <summary>
@@ -132,8 +132,8 @@ public sealed class ApiRequestLogMiddlewareTests
         var line = await Run(Request("/api/admin/scoreBatches", "api/admin/scoreBatches", Browser()));
 
         Assert.Equal("session", line["Tier"]);
-        Assert.Null(line["UserId"]);
-        Assert.Null(line["ToolId"]);
+        Assert.Equal(string.Empty, line["UserId"]);
+        Assert.Equal(string.Empty, line["ToolId"]);
     }
 
     /// <summary>No claims at all — a 401 in flight, or a public endpoint — is still a line.</summary>
@@ -143,8 +143,8 @@ public sealed class ApiRequestLogMiddlewareTests
         var line = await Run(Request("/api/v2/charts", "api/v2/charts"), 401);
 
         Assert.Equal("anonymous", line["Tier"]);
-        Assert.Null(line["ToolId"]);
-        Assert.Null(line["UserId"]);
+        Assert.Equal(string.Empty, line["ToolId"]);
+        Assert.Equal(string.Empty, line["UserId"]);
         Assert.Equal(401, line["Status"]);
     }
 
@@ -219,6 +219,8 @@ public sealed class ApiRequestLogMiddlewareTests
         Assert.All(logger.Lines, l => Assert.Equal(429, l["Status"]));
         Assert.Equal(new object?[] { "tool", "personal", "anonymous" }, logger.Lines.Select(l => l["Tier"]));
         Assert.Equal("production", logger.Lines[0]["KeyName"]);
-        Assert.Null(logger.Lines[1]["UserId"]);
+        Assert.Equal(string.Empty, logger.Lines[1]["UserId"]);
+        // Never a null anywhere in the state: the exporter's rendering of one is nobody's to inspect.
+        Assert.All(logger.Lines, l => Assert.DoesNotContain(l.Values, v => v is null));
     }
 }
