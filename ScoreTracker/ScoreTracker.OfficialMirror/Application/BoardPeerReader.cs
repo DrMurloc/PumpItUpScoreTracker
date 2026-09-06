@@ -1,0 +1,93 @@
+using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.OfficialMirror.Contracts;
+using ScoreTracker.OfficialMirror.Domain;
+using ScoreTracker.SharedKernel.Enums;
+
+namespace ScoreTracker.OfficialMirror.Application;
+
+/// <summary>
+///     The mirror's answer to "who is on the board around me, and what did they score" — the read
+///     behind PUMBILITY peers drawn from the official boards
+///     (docs/design/pumbility-overhaul.md D59, §6.13).
+///     <para>
+///         It lives here rather than in the reader because the rules are the mirror's own and there
+///         should be one copy of them: the projection and the standing ask the same question and
+///         must not get different answers.
+///     </para>
+/// </summary>
+internal sealed class BoardPeerReader
+{
+    private readonly IOfficialSnapshotRepository _snapshots;
+
+    public BoardPeerReader(IOfficialSnapshotRepository snapshots)
+    {
+        _snapshots = snapshots;
+    }
+
+    /// <summary>
+    ///     The per-type PUMBILITY board a chart type is priced against. Anything but Singles or
+    ///     Doubles reads the combined board — a co-op chart has no pool of its own, and the
+    ///     combined board is the only honest stand-in.
+    /// </summary>
+    public static string BoardNameFor(ChartType chartType)
+    {
+        return chartType switch
+        {
+            ChartType.Single => PumbilityBoards.Singles,
+            ChartType.Double => PumbilityBoards.Doubles,
+            _ => PumbilityBoards.Combined
+        };
+    }
+
+    public async Task<BoardPeerGroupReading?> GetBoardPeers(MixEnum mix, ChartType chartType, double minimumPool,
+        double maximumPool, CancellationToken cancellationToken)
+    {
+        if (minimumPool > maximumPool) return null;
+
+        var latest = await _snapshots.GetLatestSealed(mix, cancellationToken);
+        if (latest?.CompletedAt == null) return null;
+
+        var boardName = BoardNameFor(chartType);
+        var board = (await _snapshots.GetBoards(mix, cancellationToken))
+            .FirstOrDefault(b => b.LeaderboardType == LeaderboardTypes.Rating && b.Name == boardName);
+        // Phoenix publishes one PUMBILITY board and no per-type split, so asking it for Singles is a
+        // legitimate miss rather than a failure — the caller reads "no board peers on this mix".
+        if (board == null) return new BoardPeerGroupReading(latest.CompletedAt.Value, Array.Empty<BoardPeerReading>());
+
+        // Official rows only: a supplemented row is our own arithmetic laid over the board, and a
+        // peer's pool has to be the number piugame published or the window is measuring two things.
+        var rows = (await _snapshots.GetBoardPlacements(latest.Id, board.Id, PlacementScope.OfficialOnly,
+                cancellationToken))
+            .Where(p => (double)p.Score >= minimumPool && (double)p.Score <= maximumPool)
+            .ToArray();
+        if (rows.Length == 0) return new BoardPeerGroupReading(latest.CompletedAt.Value, Array.Empty<BoardPeerReading>());
+
+        var players = (await _snapshots.GetPlayersByIds(rows.Select(r => r.PlayerId).Distinct().ToArray(),
+                cancellationToken))
+            .ToDictionary(p => p.Id);
+
+        var peers = rows
+            .Where(r => players.ContainsKey(r.PlayerId))
+            .Select(r =>
+            {
+                var player = players[r.PlayerId];
+                return new BoardPeerReading(r.PlayerId, player.Username, (double)r.Score, player.UserId);
+            })
+            .ToArray();
+
+        return new BoardPeerGroupReading(latest.CompletedAt.Value, peers);
+    }
+
+    public async Task<IReadOnlyList<BoardScoreReading>> GetBoardScores(MixEnum mix, ChartType chartType,
+        IReadOnlyCollection<int> boardPlayerIds, int minimumLevel, int maximumLevel,
+        CancellationToken cancellationToken)
+    {
+        if (boardPlayerIds.Count == 0 || minimumLevel > maximumLevel)
+            return Array.Empty<BoardScoreReading>();
+
+        var rows = await _snapshots.GetChartHistoryFor(mix, boardPlayerIds, chartType, minimumLevel, maximumLevel,
+            PlacementScope.OfficialOnly, cancellationToken);
+
+        return rows.Select(r => new BoardScoreReading(r.PlayerId, r.ChartId, r.Level, r.Score)).ToArray();
+    }
+}

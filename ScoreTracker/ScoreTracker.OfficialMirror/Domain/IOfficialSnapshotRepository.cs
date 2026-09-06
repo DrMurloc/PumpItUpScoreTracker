@@ -129,6 +129,18 @@ internal interface IOfficialSnapshotRepository
         IReadOnlyCollection<int> playerIds, IReadOnlyCollection<Guid> chartIds, CancellationToken ct);
 
     /// <summary>
+    ///     A set of players' best published score per chart across EVERY sealed snapshot of the
+    ///     mix, bounded by chart type and level. Across snapshots rather than within one because a
+    ///     score that dropped off a crowding board is still a score they set: the best of what was
+    ///     ever published is the reading (docs/design/pumbility-overhaul.md D59). The level bound
+    ///     is what keeps a band's read to a band; unbounded this carries every level the boards
+    ///     reach. Served by IX_OfficialLeaderboardPlacement_PlayerId_SnapshotId.
+    /// </summary>
+    Task<IReadOnlyList<PlayerChartHistoryRow>> GetChartHistoryFor(MixEnum mix,
+        IReadOnlyCollection<int> playerIds, ChartType chartType, int minimumLevel, int maximumLevel,
+        PlacementScope scope, CancellationToken ct);
+
+    /// <summary>
     ///     Every player id with a placement in any of this mix's snapshots before the given
     ///     one — the all-history "seen" set that makes a debut a debut.
     /// </summary>

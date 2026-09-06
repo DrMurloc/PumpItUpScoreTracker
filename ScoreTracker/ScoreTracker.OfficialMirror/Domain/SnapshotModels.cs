@@ -133,6 +133,13 @@ internal sealed record RenameProposal(int Id, int OldPlayerId, int? NewPlayerId,
 /// <summary>One player's place and score on one chart's board.</summary>
 internal sealed record PlayerChartPlacement(int PlayerId, Guid ChartId, int Place, decimal Score);
 
+/// <summary>
+///     One player's best published score on one chart, across every snapshot that ever carried it.
+///     The level rides along because the caller prices the chart and would otherwise read the
+///     catalog for something the board dimension already knows.
+/// </summary>
+internal sealed record PlayerChartHistoryRow(int PlayerId, Guid ChartId, int Level, int Score);
+
 /// <summary>A placement joined with its board's dimension — the hub read shape.</summary>
 internal sealed record PlacementDetail(int PlayerId, int LeaderboardId, string LeaderboardType, string BoardName,
     Guid? ChartId, string? ChartType, int? Level, int Place, decimal Score, bool IsSupplemented = false);
