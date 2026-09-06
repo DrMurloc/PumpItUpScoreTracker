@@ -629,6 +629,10 @@ needed. Rule 8: each severity carries an icon and a word, never colour alone.
 `RateLimited` and `KeyUsed` are **hourly rollups**, not per-request. One bad loop must not be able to
 flood the log or the table.
 
+Neither rollup was written by anything until 2026-09-06: the console summed kinds that had no writer, so
+the API card read zero for every maker. How they are written now, and the request trace that carries
+what the rollups cannot, is [api-usage-telemetry.md](api-usage-telemetry.md).
+
 ### Debug tools
 
 Three, in order of value per unit of build:
