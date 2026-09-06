@@ -70,6 +70,13 @@ public sealed record OfficialRankingsRecord(DateTimeOffset? SnapshotAt, bool Rat
 public sealed record OfficialRankingRecord(int Rank, int? PreviousRank, OfficialPlayerRecord Player,
     decimal Rating, int BoardsInTop, RecapPlayerType? PlayerType);
 
+/// <param name="PumbilityIsSupplemented">
+///     True when <paramref name="Pumbility" /> came from PIU Scores' supplemented ranking row --
+///     the site's computed number for a player piugame's ranking does not list -- rather than
+///     from piugame's own. Always false in the official reading, and false when there is no
+///     PUMBILITY value at all, which is why it is not spelled "is official": a null number is
+///     nobody's.
+/// </param>
 [ExcludeFromCodeCoverage]
 public sealed record OfficialPlayerProfileRecord(
     OfficialPlayerRecord Player,
@@ -82,7 +89,8 @@ public sealed record OfficialPlayerProfileRecord(
     int BestPlace,
     int TopTens,
     IReadOnlyList<OfficialPlayerHistoryPoint> History,
-    IReadOnlyList<OfficialPlayerChartRecord> Placements);
+    IReadOnlyList<OfficialPlayerChartRecord> Placements,
+    bool PumbilityIsSupplemented = false);
 
 [ExcludeFromCodeCoverage]
 public sealed record OfficialPlayerHistoryPoint(DateTimeOffset At, decimal? Pumbility, int? PumbilityRank,

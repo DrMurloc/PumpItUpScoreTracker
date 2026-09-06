@@ -1,6 +1,8 @@
-﻿using ScoreTracker.CommunityTools.Contracts;
+using Microsoft.Extensions.Options;
+using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Domain;
 using ScoreTracker.CommunityTools.Infrastructure;
+using ScoreTracker.CommunityTools.Wiring;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
 using WireMock.Server;
@@ -34,7 +36,7 @@ public sealed class WebhookDeliveryClientTests : IDisposable
     {
         // The real timeout is ten seconds; the client owns it, so the tests that need it to fire
         // wait it out rather than reaching in to shorten it.
-        return new WebhookDeliveryClient(new HttpClient());
+        return new WebhookDeliveryClient(new HttpClient(), Options.Create(new CommunityToolsConfiguration()));
     }
 
     /// <summary>
@@ -49,6 +51,29 @@ public sealed class WebhookDeliveryClientTests : IDisposable
     private Uri Hook(string path)
     {
         return new Uri($"{_maker.Urls[0].TrimEnd('/')}/{path}");
+    }
+
+    /// <summary>
+    ///     The local-run rule against a real listener: with public targets refused, the maker on
+    ///     loopback still receives the POST, and a public hostname is refused without a request.
+    ///     The proof of "without a request" is the unit test; this is the proof that loopback
+    ///     classification holds for the address WireMock actually binds.
+    /// </summary>
+    [Fact]
+    public async Task ALocalRunStillDeliversToTheLoopbackMakerWhenPublicTargetsAreRefused()
+    {
+        _maker.Given(Request.Create().WithPath("/local").UsingPost())
+            .RespondWith(Response.Create().WithStatusCode(200));
+        var local = new WebhookDeliveryClient(new HttpClient(),
+            Options.Create(new CommunityToolsConfiguration { AllowPublicWebhookTargets = false }));
+
+        var delivered = await local.Post(Hook("local"), "{}", "d-1", null, null, CancellationToken.None);
+        var refused = await local.Post(new Uri("https://tool.example/hooks"), "{}", "d-2", null, null,
+            CancellationToken.None);
+
+        Assert.True(delivered.Succeeded);
+        Assert.Equal(WebhookFailureReason.RefusedTarget, refused.Reason);
+        Assert.Single(_maker.LogEntries);
     }
 
     [Fact]

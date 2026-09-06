@@ -28,6 +28,7 @@ namespace ScoreTracker.Communities.Application;
 internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, IRequestHandler<JoinCommunityCommand>,
     IRequestHandler<LeaveCommunityCommand>,
     IRequestHandler<GetCommunityMembersQuery, IEnumerable<Guid>>,
+    IRequestHandler<GetCommunityMembersForViewerQuery, IReadOnlySet<Guid>?>,
     IRequestHandler<GetCommunityLeaderboardQuery, IEnumerable<CommunityLeaderboardRecord>>,
     IRequestHandler<GetCommunityCompetitiveRangesQuery, IEnumerable<Contracts.CommunityCompetitiveRangeRecord>>,
     IRequestHandler<CreateInviteLinkCommand, Guid>,
@@ -1014,6 +1015,21 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     {
         var community = await _communities.GetCommunityByName(request.CommunityName, cancellationToken);
         return community?.MemberIds ?? (IEnumerable<Guid>)Array.Empty<Guid>();
+    }
+
+    public async Task<IReadOnlySet<Guid>?> Handle(GetCommunityMembersForViewerQuery request,
+        CancellationToken cancellationToken)
+    {
+        var community = await _communities.GetCommunityByName(request.CommunityName, cancellationToken);
+        if (community is null) return null;
+
+        // The same gate the leaderboard page applies before it renders a private roster, answered
+        // the same way for "no such community" so the name itself gives nothing away.
+        if (community.PrivacyType == CommunityPrivacyType.Private
+            && (request.ViewerUserId is null || !community.MemberIds.Contains(request.ViewerUserId.Value)))
+            return null;
+
+        return community.MemberIds.ToHashSet();
     }
 
     public async Task Handle(JoinCommunityByInviteCodeCommand request, CancellationToken cancellationToken)

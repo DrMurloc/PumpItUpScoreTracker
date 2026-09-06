@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -8,6 +8,7 @@ using ScoreTracker.CommunityTools.Application;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Domain;
 using ScoreTracker.CommunityTools.Infrastructure;
+using ScoreTracker.CommunityTools.Wiring;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
@@ -82,7 +83,7 @@ public sealed class WebhookDeliveryChainTests : IAsyncLifetime, IDisposable
 
     private WebhookDeliveryDispatcher Dispatcher()
     {
-        return new WebhookDeliveryDispatcher(Deliveries, new WebhookDeliveryClient(new HttpClient()),
+        return new WebhookDeliveryDispatcher(Deliveries, new WebhookDeliveryClient(new HttpClient(), Options.Create(new CommunityToolsConfiguration())),
             Tools, Secrets,
             Mock.Of<IDateTimeOffsetAccessor>(d => d.Now == Now));
     }
@@ -221,7 +222,7 @@ public sealed class WebhookDeliveryChainTests : IAsyncLifetime, IDisposable
         await Tools.Save(tool);
         await Tools.GrantShare(ToolId, PlayerId, ShareSource.Direct, Now);
 
-        var client = new SessionDeliveryClient(Tools, new WebhookDeliveryClient(new HttpClient()),
+        var client = new SessionDeliveryClient(Tools, new WebhookDeliveryClient(new HttpClient(), Options.Create(new CommunityToolsConfiguration())),
             Secrets,
             new EFToolActivityRepository(_fixture.DbContextFactory),
             Mock.Of<IDateTimeOffsetAccessor>(d => d.Now == Now),

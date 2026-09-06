@@ -1598,6 +1598,66 @@ public sealed class CommunitySagaTests
         Assert.Equal(58, result);
     }
 
+    // ── members as a viewer sees them ────────────────────────────────────────────────────────
+
+    private static Community CommunityOf(CommunityPrivacyType privacy, params Guid[] members)
+    {
+        return new Community(Name.From("Acme"), Guid.NewGuid(), privacy, members,
+            Array.Empty<Community.ChannelConfiguration>(), new Dictionary<Guid, DateOnly?>(), false);
+    }
+
+    [Theory]
+    [InlineData(CommunityPrivacyType.Public)]
+    [InlineData(CommunityPrivacyType.PublicWithCode)]
+    public async Task MembersForViewerAnswerAnyoneOnAListedCommunity(CommunityPrivacyType privacy)
+    {
+        var ctx = new HandlerContext();
+        var member = Guid.NewGuid();
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CommunityOf(privacy, member));
+
+        var asStranger = await ctx.Saga.Handle(
+            new GetCommunityMembersForViewerQuery(Name.From("Acme"), Guid.NewGuid()), CancellationToken.None);
+        var asNobody = await ctx.Saga.Handle(
+            new GetCommunityMembersForViewerQuery(Name.From("Acme"), null), CancellationToken.None);
+
+        Assert.Equal(new[] { member }, asStranger!.ToArray());
+        Assert.Equal(new[] { member }, asNobody!.ToArray());
+    }
+
+    /// <summary>
+    ///     A private roster is for members, and to everyone else the community answers exactly
+    ///     as an unknown name does — the same null — so an API filter cannot be used to probe
+    ///     which private community names exist.
+    /// </summary>
+    [Fact]
+    public async Task MembersForViewerOnAPrivateCommunityAnswerOnlyAMemberAndHideLikeAnUnknownName()
+    {
+        var ctx = new HandlerContext();
+        var member = Guid.NewGuid();
+        var other = Guid.NewGuid();
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.Is<Name>(n => (string)n == "Acme"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CommunityOf(CommunityPrivacyType.Private, member, other));
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.Is<Name>(n => (string)n == "Nowhere"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Community?)null);
+
+        var asMember = await ctx.Saga.Handle(
+            new GetCommunityMembersForViewerQuery(Name.From("Acme"), member), CancellationToken.None);
+        var asStranger = await ctx.Saga.Handle(
+            new GetCommunityMembersForViewerQuery(Name.From("Acme"), Guid.NewGuid()), CancellationToken.None);
+        var asNobody = await ctx.Saga.Handle(
+            new GetCommunityMembersForViewerQuery(Name.From("Acme"), null), CancellationToken.None);
+        var unknown = await ctx.Saga.Handle(
+            new GetCommunityMembersForViewerQuery(Name.From("Nowhere"), member), CancellationToken.None);
+
+        Assert.Equal(new HashSet<Guid> { member, other }, asMember);
+        Assert.Null(asStranger);
+        Assert.Null(asNobody);
+        Assert.Null(unknown);
+    }
+
     private sealed class HandlerContext
     {
         public Mock<ICurrentUserAccessor> CurrentUser { get; } = new();

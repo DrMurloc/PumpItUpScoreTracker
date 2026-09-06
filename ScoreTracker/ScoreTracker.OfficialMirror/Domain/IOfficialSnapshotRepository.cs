@@ -80,6 +80,13 @@ internal interface IOfficialSnapshotRepository
     Task<PlayerDimension?> GetPlayerByUserId(MixEnum mix, Guid userId, CancellationToken ct);
 
     /// <summary>
+    ///     <see cref="GetPlayerByUserId" /> for a set of accounts at once — a page of API rows
+    ///     that each carry a game tag. Accounts with no link in the mix are absent.
+    /// </summary>
+    Task<IReadOnlyList<PlayerDimension>> GetPlayersByUserIds(MixEnum mix, IReadOnlyCollection<Guid> userIds,
+        CancellationToken ct);
+
+    /// <summary>
     ///     Tags the player search offers: those with a placement in the latest sealed snapshot
     ///     at this reading. Every dim row would include tags an import created but no crawl has
     ///     ever seen, and picking one of those renders a confident profile full of blanks.

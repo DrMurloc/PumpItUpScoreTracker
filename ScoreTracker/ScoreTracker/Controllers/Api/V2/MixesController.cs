@@ -26,6 +26,8 @@ public sealed class MixesController : ApiV2ControllerBase
 
     /// <summary>All thirty mixes, oldest first. Takes no mix parameter — it is the mix list.</summary>
     [HttpGet]
+    [ProducesResponseType(typeof(CursorPageDto<MixDto>), StatusCodes.Status200OK, "application/json")]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
     public async Task<IActionResult> Get()
     {
         var mixes = await _mediator.Send(new GetMixesQuery());

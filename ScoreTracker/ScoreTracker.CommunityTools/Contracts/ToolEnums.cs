@@ -114,5 +114,12 @@ public enum WebhookFailureReason
     ServerError,
 
     /// <summary>Connected, but the answer was not something we could accept.</summary>
-    InvalidResponse
+    InvalidResponse,
+
+    /// <summary>
+    ///     Never sent: this instance does not deliver to that address. A local run refuses every
+    ///     target outside loopback and the private ranges, so a copy of production can never push
+    ///     into a maker's real endpoint. Not retried — the answer will not change.
+    /// </summary>
+    RefusedTarget
 }
