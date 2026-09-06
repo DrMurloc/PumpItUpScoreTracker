@@ -114,8 +114,8 @@ title, so `SuggestedTitleLevel` is deliberately **impersonal**:
 
 ```
 S13   at SSS+
+S14   at SS
 S16   at AAA
-S20   at A
 Fifty charts, TG plate.
 ```
 
@@ -124,21 +124,35 @@ grades** on a Talented Game plate, every multiplier read from the shipped `Scori
 Singles price one level up the base curve; nothing below level 10 counts (Phoenix 2 prices those at
 zero). A merged-pool rung names both types, since either side can fill it.
 
-One number was the wrong shape for this answer: how well you play moves it by **up to eight
-levels** ([S] ADVANCED LV.4 is S15 at SSS+ and S23 at A), so a single folder was right only for the
-player already performing at the reference. Three rungs bracket it instead, and AAA — what the
-drawer printed alone before — stays the middle one. **A is the floor on purpose**: it is the lowest
-grade whose multiplier is verified against live data, and below it the config is still extrapolating
-at −0.05 a step.
+One number was the wrong shape for this answer: how well you play moves it by **three levels**
+([S] ADVANCED LV.4 is S15 at SSS+ and S18 at AAA), so a single folder was right only for the player
+already performing at the reference. Three rungs bracket it instead, and AAA — what the drawer
+printed alone before — is now the floor of that bracket rather than its middle.
+
+**The floor is set by what the field averages, not by how wide a bracket it makes** (owner,
+2026-09-06). The block read SSS+ / AAA / A until then, which spanned eight levels — and the bottom
+row was the reason the whole thing looked wrong: an A on Phoenix 2 is 800,000, so *fifty S28s at an
+A* told a player they could earn `[S] EXPERT LV.8` on a folder they would be scraping through. A
+grade nobody averages names a folder nobody plays. Raising the floor to AAA costs the bracket most
+of its width — SSS+ / SS / AAA is 1.50 / 1.47 / 1.41, a 6.4% span against the old 17%, so the three
+rows now land within three levels of each other and 28 of 70 rungs merge at least two of them. That
+is the deliberate trade: three narrow rows that are all askable beat three wide ones whose bottom is
+fiction. Do not widen it again by reaching down the grade ladder — the way to widen it is a grade
+players actually average.
 
 Grades run best-first, so the levels ascend down the block and the column reads in the same order as
-every other grade list on the site. Two shapes fall out of the curve's ends and both are rendered
-rather than hidden:
+every other grade list on the site. One shape falls out of the curve's ends and is rendered rather
+than hidden:
 
 | Shape | Rungs | What the drawer does |
 |---|---|---|
-| Grades landing on the same folder | 19 of 70 | The run collapses to one row reading *at {lowest} or better* — the level-10 floor produces two identical rows for every easy title, and identical rows read as a rendering fault. 15 of those collapse all the way to a single row. |
-| No folder reaches it at that grade | 4 of 70 | [D] EXPERT LV.9/LV.10, DOUBLE MASTER, ABYSS ABSOLUTE. Fifty D29s at a bare A come to 19,260. The row keeps its place naming the ceiling that falls short — *D29 still isn't enough at A* — and never merges, since its folders are not an answer. |
+| Grades landing on the same folder | 28 of 70 | The run collapses to one row reading *at {lowest} or better* — the level-10 floor produces identical rows for every easy title, the narrow grade span produces them again wherever a level costs more than 6.4%, and identical rows read as a rendering fault. 19 of those collapse all the way to a single row. |
+
+A rung no folder reaches keeps its place naming the ceiling that falls short (*D29 still isn't
+enough at A*) and never merges, since its folders are not an answer. **No title is in that shape at
+the current reference grades** — at AAA the top folder reaches every threshold, and ABYSS ABSOLUTE,
+the last one that fell short, does so only at a bare A. The branch stays as a guard against a
+threshold moving out from under the curve.
 
 Owner call, field-test round 3: a personalised version was built first and rejected as too wordy —
 *"don't mix in personalization here."* Three impersonal rungs are the answer to the same problem
