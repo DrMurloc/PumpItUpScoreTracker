@@ -1,3 +1,6 @@
+using System.Linq;
+using System.Collections.Generic;
+using System;
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -127,6 +130,39 @@ public sealed class PeerRosterTests : ComponentTestBase
         Assert.Equal(string.Empty, ClassOf("Stranger"));
         // You win the ladder outright — a viewer who is somehow also in the sets stays your colour.
         Assert.Equal("pmb-roster-you", ClassOf("Viewer"));
+    }
+
+    /// <summary>A peer the official board is the only record of: a tag, a pool, and no account.</summary>
+    private static PeerRosterEntry BoardRow(string tag, double total, int? rung, int overlap)
+    {
+        return new PeerRosterEntry(null, total, rung, 0, 0, new HashSet<ChartType> { ChartType.Single },
+            new Dictionary<ChartType, int> { [ChartType.Single] = overlap }, tag);
+    }
+
+    [Fact]
+    public void ABoardPeerIsNamedByItsTagAndMarkedAndCarriesNoCompetitiveLevels()
+    {
+        var rows = new[]
+        {
+            Row("Account", 18_000, 26, singles: 22.5, doubles: 22.1, overlap: 5),
+            BoardRow("URUSA#9487", 19_540.84, 32, 41)
+        };
+
+        var cut = RenderComponent<PeerRoster>(p => p.Add(x => x.Rows, rows)
+            .Add(x => x.BoardPeers, 1)
+            .Add(x => x.BoardAsOf, new DateTimeOffset(2026, 8, 30, 0, 0, 0, TimeSpan.Zero)));
+
+        var top = cut.FindAll("[data-testid=roster-peer]")[0];
+        Assert.Contains("URUSA#9487", top.TextContent);
+        Assert.Contains("BOARD", top.TextContent);
+        // No competitive levels: the boards publish none, so both cells read as absent.
+        var cells = top.QuerySelectorAll("td").Select(c => c.TextContent.Trim()).ToArray();
+        Assert.Equal("—", cells[4]);
+        Assert.Equal("—", cells[5]);
+        // The gem still reads, because the board publishes the pool the ladder is priced on.
+        Assert.Contains("ALEXANDRITE", top.TextContent);
+        Assert.Contains("1 of these are read from the official board, as of 30 Aug.",
+            cut.Find("[data-testid=roster-board]").TextContent);
     }
 
     private static PeerRosterEntry Row(string name, double total, int? rung, double singles, double doubles, int overlap,

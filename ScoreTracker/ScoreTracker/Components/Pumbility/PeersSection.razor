@@ -182,6 +182,7 @@
                 : L["Players within one competitive level of you for the type. You are never one of your own peers; the highlighted row is where you would sit."])
         </p>
         <PeerRoster Rows="_peers.Roster" You="_peers.You" PrivatePeers="_peers.PrivatePeers" ShowPeerFor="ShownPool == null"
+                    BoardPeers="BoardPeerCount" BoardAsOf="BoardAsOf"
                     Rivals="_rivals" Clubmates="_clubmates"></PeerRoster>
     </section>
 }
@@ -191,6 +192,16 @@
                          FileName="@DownloadFileName"></ShareCardSettingsDialog>
 
 @code {
+    /// <summary>
+    ///     How many of the roster's rows the official board is the only record of, and when that
+    ///     board was swept (docs/design/pumbility-overhaul.md D59). Counted off the rows rather
+    ///     than the group so the note agrees with the table it sits under.
+    /// </summary>
+    private int BoardPeerCount => _peers?.Roster.Count(r => r.User == null) ?? 0;
+
+    private DateTimeOffset? BoardAsOf =>
+        _peers?.Peers.Values.Select(g => g.BoardAsOf).FirstOrDefault(a => a != null);
+
     /// <summary>The frame's page record — the totals, the bar, and the target list this block prices its gains from.</summary>
     [Parameter] [EditorRequired] public PumbilityPageRecord Page { get; set; } = null!;
 
