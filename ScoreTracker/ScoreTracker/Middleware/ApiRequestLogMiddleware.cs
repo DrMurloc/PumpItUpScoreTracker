@@ -23,6 +23,13 @@ namespace ScoreTracker.Web.Middleware;
 /// </summary>
 public sealed partial class ApiRequestLogMiddleware
 {
+    /// <summary>
+    ///     The status a request the client abandoned is logged under. Not one the caller ever
+    ///     receives — nobody is listening — but the conventional "client closed request", so the
+    ///     trace can tell a hang-up from a crash.
+    /// </summary>
+    public const int ClientClosedRequest = 499;
+
     private static readonly PathString ApiPrefix = new("/api");
 
     private readonly ILogger<ApiRequestLogMiddleware> _logger;
@@ -50,8 +57,13 @@ public sealed partial class ApiRequestLogMiddleware
         catch
         {
             // The status on the context is whatever was set before the throw, which is nothing
-            // useful; what the caller will see is the 500 the exception handler turns this into.
-            Log(_logger, context, StatusCodes.Status500InternalServerError, Elapsed(started));
+            // useful. A client that hung up mid-response surfaces here too — a bulk pull against a
+            // short client timeout — and that is not a server error; anything else is the 500 the
+            // exception handler is about to produce.
+            var status = context.RequestAborted.IsCancellationRequested
+                ? ClientClosedRequest
+                : StatusCodes.Status500InternalServerError;
+            Log(_logger, context, status, Elapsed(started));
             throw;
         }
 

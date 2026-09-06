@@ -156,6 +156,35 @@ public sealed class ApiRequestLogMiddlewareTests
         Assert.Equal("(unmatched)", line["Route"]);
     }
 
+    /// <summary>
+    ///     A bulk pull against a client with a short timeout ends in an exception here, not a
+    ///     response. Nobody received a 500, so the trace must not say one was sent.
+    /// </summary>
+    [Fact]
+    public async Task ARequestTheClientAbandonedIsLoggedAsClientClosedNotAsACrash()
+    {
+        var logger = new CapturingLogger();
+        var context = Request("/api/v2/players/1/scores", "api/v2/players/{id}/scores", Tool());
+        context.RequestAborted = new CancellationToken(canceled: true);
+        var middleware = new ApiRequestLogMiddleware(_ => throw new OperationCanceledException(), logger);
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() => middleware.InvokeAsync(context));
+
+        Assert.Equal(ApiRequestLogMiddleware.ClientClosedRequest, Assert.Single(logger.Lines)["Status"]);
+    }
+
+    [Fact]
+    public async Task ACrashIsLoggedAsA500AndStillThrown()
+    {
+        var logger = new CapturingLogger();
+        var middleware = new ApiRequestLogMiddleware(_ => throw new InvalidOperationException("boom"), logger);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            middleware.InvokeAsync(Request("/api/v2/charts", "api/v2/charts", Tool())));
+
+        Assert.Equal(500, Assert.Single(logger.Lines)["Status"]);
+    }
+
     [Fact]
     public async Task NothingOutsideTheApiIsLogged()
     {
