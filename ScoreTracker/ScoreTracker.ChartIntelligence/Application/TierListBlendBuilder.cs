@@ -233,7 +233,9 @@ internal sealed class TierListBlendBuilder
     ///     folder's charts, banded with the writer's own processor. One definition across the site
     ///     (D55): this is the same <see cref="PeerPoolSummary" /> the PUMBILITY page's Play list
     ///     counts, so the lens and that page cannot disagree about who the peers are or what they
-    ///     hold. A viewer short of a full pool of the type has no peers for it (D28) and votes on
+    ///     hold — including the peers the official board is the only record of (D59), which arrive
+    ///     in the summary already priced and need nothing of their own here. A viewer short of a
+    ///     full pool of the type has no peers for it (D28) and votes on
     ///     nothing — the projector says so on the group, and the empty answer is cached briefly.
     ///     No thin-band fallback and no short-pool finish are asked for: the list ranks charts
     ///     against each other, and the community list is a better answer than a folder ranked on
@@ -265,7 +267,7 @@ internal sealed class TierListBlendBuilder
     /// <summary>
     ///     Phoenix 2, signed in: the folders the viewer's PUMBILITY peers' pools reach — every
     ///     level at which at least one peer holds a chart of the type in their top fifty, from the
-    ///     pool floor up. The same projector read as <see cref="ProjectedPumbility" />, over every
+    ///     pool floor up, board peers among them. The same projector read as <see cref="ProjectedPumbility" />, over every
     ///     chart of the type, so the picker offers exactly the folders the lens can answer for.
     ///     Empty for a viewer without a full pool of the type.
     /// </summary>
