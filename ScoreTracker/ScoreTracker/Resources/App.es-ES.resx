@@ -406,9 +406,6 @@
   <data name="A home page that's yours" xml:space="preserve">
     <value>Una página de inicio que es tuya</value>
   </data>
-  <data name="A key expired" xml:space="preserve">
-    <value>Una clave caducó</value>
-  </data>
   <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
     <value>Una clave sin caducidad sigue siendo válida hasta que la revoques a mano — incluso después de perder un portátil o de que un repositorio se haga público. Elige una fecha salvo que tengas un motivo.</value>
   </data>
@@ -3727,6 +3724,15 @@
   <data name="Key Name" xml:space="preserve">
     <value>Nombre de la clave</value>
   </data>
+  <data name="Key {0} expired: {1} requests rejected" xml:space="preserve">
+    <value>Clave {0} caducada: {1} solicitudes rechazadas</value>
+  </data>
+  <data name="Key {0}: rate limit hit {1} times" xml:space="preserve">
+    <value>Clave {0}: límite alcanzado {1} veces</value>
+  </data>
+  <data name="Key {0}: {1} API calls" xml:space="preserve">
+    <value>Clave {0}: {1} llamadas a la API</value>
+  </data>
   <data name="Korean Name" xml:space="preserve">
     <value>Nombre en coreano</value>
   </data>
@@ -6459,9 +6465,6 @@
   </data>
   <data name="Rate limited" xml:space="preserve">
     <value>Limitadas</value>
-  </data>
-  <data name="Rate limited {0} times" xml:space="preserve">
-    <value>Limitado {0} veces</value>
   </data>
   <data name="Rating" xml:space="preserve">
     <value>Rating</value>
@@ -10050,9 +10053,6 @@
   </data>
   <data name="{0} and up" xml:space="preserve">
     <value>{0} o más</value>
-  </data>
-  <data name="{0} API calls" xml:space="preserve">
-    <value>{0} llamadas a la API</value>
   </data>
   <data name="{0} arrived" xml:space="preserve">
     <value>{0} entraron</value>

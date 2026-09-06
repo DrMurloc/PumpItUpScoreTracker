@@ -406,9 +406,6 @@
   <data name="A home page that's yours" xml:space="preserve">
     <value>GRO blargplgl urggrgl grorpgrgl glmagl</value>
   </data>
-  <data name="A key expired" xml:space="preserve">
-    <value>Murgblarg murgloo</value>
-  </data>
   <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
     <value>Blarglurp murm bo murgloo murmo mublu murgm gromurp murgloo blu blomurp — murm blorm murgblarg murmo arplo mrpgrogl murgm Mrglrgll. Murgargl murgl murgm gromurp bam murgblub.</value>
   </data>
@@ -3745,6 +3742,15 @@
   <data name="Key Name" xml:space="preserve">
     <value>Grumb Marogl</value>
   </data>
+  <data name="Key {0} expired: {1} requests rejected" xml:space="preserve">
+    <value>Grub {0} murgloo: {1} gramurg blorp</value>
+  </data>
+  <data name="Key {0}: rate limit hit {1} times" xml:space="preserve">
+    <value>Grub {0}: murgm murmo bomp {1} plurgl</value>
+  </data>
+  <data name="Key {0}: {1} API calls" xml:space="preserve">
+    <value>Grub {0}: {1} API murgblarg</value>
+  </data>
   <data name="Korean Name" xml:space="preserve">
 	  <value>Urgglorg Mrg</value>
   </data>
@@ -6497,9 +6503,6 @@
   </data>
   <data name="Rate limited" xml:space="preserve">
     <value>Murgm murmo</value>
-  </data>
-  <data name="Rate limited {0} times" xml:space="preserve">
-    <value>Grorp {0} murgl</value>
   </data>
   <data name="Rating" xml:space="preserve">
     <value>Mrglrg</value>
@@ -10118,9 +10121,6 @@
   </data>
   <data name="{0} and up" xml:space="preserve">
     <value>{0} ur gro</value>
-  </data>
-  <data name="{0} API calls" xml:space="preserve">
-    <value>{0} API murgblarg</value>
   </data>
   <data name="{0} arrived" xml:space="preserve">
     <value>{0} gromurgargl</value>

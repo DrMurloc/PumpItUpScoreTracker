@@ -12,6 +12,8 @@ using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.CommunityTools.Domain;
 using ScoreTracker.CommunityTools.Infrastructure;
 using ScoreTracker.CommunityTools.Wiring;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts;
@@ -41,6 +43,7 @@ public sealed class ToolKeyAndShareHandlerTests
     private readonly Mock<IRepositoryReachabilityClient> _repositories = new();
     private readonly Mock<IWebhookDeliveryClient> _webhooks = new();
     private readonly Mock<IToolKeyRepository> _keys = new();
+    private readonly MemoryCache _cache = new(new MemoryCacheOptions());
     private readonly Mock<IToolRepository> _tools = new();
     private readonly Mock<IUserReader> _users = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
@@ -57,7 +60,7 @@ public sealed class ToolKeyAndShareHandlerTests
     private ToolKeySaga KeySaga()
     {
         return new ToolKeySaga(_keys.Object, _tools.Object, _users.Object, _currentUser.Object,
-            FakeDateTime.At(Now).Object);
+            FakeDateTime.At(Now).Object, _activity.Object, _cache, NullLogger<ToolKeySaga>.Instance);
     }
 
     [Fact]
@@ -121,6 +124,8 @@ public sealed class ToolKeyAndShareHandlerTests
         Assert.Null(resolved);
         _keys.Verify(k => k.ResolveToolByKeyHash(It.IsAny<string>(), It.IsAny<DateTimeOffset>(),
             It.IsAny<CancellationToken>()), Times.Never);
+        _activity.Verify(a => a.Increment(It.IsAny<Guid>(), It.IsAny<ToolActivityKind>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -128,11 +133,143 @@ public sealed class ToolKeyAndShareHandlerTests
     {
         var (key, hash, _) = ApiKeyMint.Mint();
         _keys.Setup(k => k.ResolveToolByKeyHash(hash, Now, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(ToolId);
+            .ReturnsAsync(new ToolKeyResolution(ToolId, "production", IsExpired: false));
 
         var resolved = await KeySaga().Handle(new GetToolByApiKeyQuery(key), CancellationToken.None);
 
-        Assert.Equal(ToolId, resolved);
+        Assert.Equal(new ToolKeyPrincipal(ToolId, "production"), resolved);
+    }
+
+    /// <summary>Authenticated is used: the hour's tally moves under the key's own name.</summary>
+    [Fact]
+    public async Task ALiveKeyAddsOneToTheHoursTallyUnderItsName()
+    {
+        var (key, hash, _) = ApiKeyMint.Mint();
+        _keys.Setup(k => k.ResolveToolByKeyHash(hash, Now, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ToolKeyResolution(ToolId, "production", IsExpired: false));
+
+        await KeySaga().Handle(new GetToolByApiKeyQuery(key), CancellationToken.None);
+
+        _activity.Verify(a => a.Increment(ToolId, ToolActivityKind.KeyUsed, Now, "production",
+            It.IsAny<CancellationToken>()), Times.Once);
+        _activity.Verify(a => a.Increment(ToolId, ToolActivityKind.KeyExpired, It.IsAny<DateTimeOffset>(),
+            It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    ///     The limiter runs before the scheme, so a rejected request arrives as a bare credential.
+    ///     A key that resolved recently is still in the cache, and that is the name it counts under.
+    /// </summary>
+    [Fact]
+    public async Task ARateLimitedRequestCountsUnderTheKeyThatResolvedRecently()
+    {
+        var (key, hash, _) = ApiKeyMint.Mint();
+        _keys.Setup(k => k.ResolveToolByKeyHash(hash, Now, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ToolKeyResolution(ToolId, "production", IsExpired: false));
+        var saga = KeySaga();
+        await saga.Handle(new GetToolByApiKeyQuery(key), CancellationToken.None);
+
+        var named = await saga.Handle(new RecordRateLimitedRequestCommand(key), CancellationToken.None);
+
+        Assert.Equal(new ToolKeyPrincipal(ToolId, "production"), named);
+        _activity.Verify(a => a.Increment(ToolId, ToolActivityKind.RateLimited, Now, "production",
+            It.IsAny<CancellationToken>()), Times.Once);
+        // Never the database: a lookup per rejected request is the load a limit exists to refuse.
+        _keys.Verify(k => k.ResolveToolByKeyHash(It.IsAny<string>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     Revocation exists for a tool that is out of control, which is exactly when the limiter
+    ///     is rejecting it. The first request the scheme sees after the revoke must take the key
+    ///     out of the cache, or the flood keeps counting under a dead name.
+    /// </summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task AKeyThatStopsResolvingStopsCountingRateLimitsAtOnce(bool expiredRatherThanRevoked)
+    {
+        var (key, hash, _) = ApiKeyMint.Mint();
+        _keys.Setup(k => k.ResolveToolByKeyHash(hash, Now, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ToolKeyResolution(ToolId, "production", IsExpired: false));
+        var saga = KeySaga();
+        await saga.Handle(new GetToolByApiKeyQuery(key), CancellationToken.None);
+        _keys.Setup(k => k.ResolveToolByKeyHash(hash, Now, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expiredRatherThanRevoked ? new ToolKeyResolution(ToolId, "production", IsExpired: true) : null);
+        await saga.Handle(new GetToolByApiKeyQuery(key), CancellationToken.None);
+
+        var named = await saga.Handle(new RecordRateLimitedRequestCommand(key), CancellationToken.None);
+
+        Assert.Null(named);
+        _activity.Verify(a => a.Increment(ToolId, ToolActivityKind.RateLimited, It.IsAny<DateTimeOffset>(),
+            It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>A key nobody resolved recently, or a personal token, is dropped rather than looked up.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ARateLimitedRequestOnAnUnseenCredentialCountsNothing(bool looksLikeAKey)
+    {
+        var credential = looksLikeAKey ? ApiKeyMint.Mint().Key : Guid.NewGuid().ToString();
+
+        var named = await KeySaga().Handle(new RecordRateLimitedRequestCommand(credential), CancellationToken.None);
+
+        Assert.Null(named);
+        _activity.Verify(a => a.Increment(It.IsAny<Guid>(), It.IsAny<ToolActivityKind>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+        _keys.Verify(k => k.ResolveToolByKeyHash(It.IsAny<string>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    ///     The tally is written after the key has already authenticated. A database that refuses
+    ///     the row must not turn a working call into a 500, on either path.
+    /// </summary>
+    [Fact]
+    public async Task ATallyThatCannotBeWrittenNeverFailsTheCall()
+    {
+        var (key, hash, _) = ApiKeyMint.Mint();
+        _keys.Setup(k => k.ResolveToolByKeyHash(hash, Now, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ToolKeyResolution(ToolId, "production", IsExpired: false));
+        _activity.Setup(a => a.Increment(It.IsAny<Guid>(), It.IsAny<ToolActivityKind>(), It.IsAny<DateTimeOffset>(),
+                It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("deadlock victim"));
+        var saga = KeySaga();
+
+        var resolved = await saga.Handle(new GetToolByApiKeyQuery(key), CancellationToken.None);
+        var rejected = await saga.Handle(new RecordRateLimitedRequestCommand(key), CancellationToken.None);
+
+        Assert.Equal(new ToolKeyPrincipal(ToolId, "production"), resolved);
+        Assert.Equal(new ToolKeyPrincipal(ToolId, "production"), rejected);
+    }
+
+    /// <summary>An unknown or revoked key is nobody's: nothing to count it under.</summary>
+    [Fact]
+    public async Task AnUnknownKeyCountsNothing()
+    {
+        var (key, hash, _) = ApiKeyMint.Mint();
+        _keys.Setup(k => k.ResolveToolByKeyHash(hash, Now, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ToolKeyResolution?)null);
+
+        Assert.Null(await KeySaga().Handle(new GetToolByApiKeyQuery(key), CancellationToken.None));
+        _activity.Verify(a => a.Increment(It.IsAny<Guid>(), It.IsAny<ToolActivityKind>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>The repository names an expired key so the console can; the caller still gets nothing.</summary>
+    [Fact]
+    public async Task AnExpiredKeyResolvesToNothing()
+    {
+        var (key, hash, _) = ApiKeyMint.Mint();
+        _keys.Setup(k => k.ResolveToolByKeyHash(hash, Now, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ToolKeyResolution(ToolId, "production", IsExpired: true));
+
+        Assert.Null(await KeySaga().Handle(new GetToolByApiKeyQuery(key), CancellationToken.None));
+        _activity.Verify(a => a.Increment(ToolId, ToolActivityKind.KeyExpired, Now, "production",
+            It.IsAny<CancellationToken>()), Times.Once);
+        _activity.Verify(a => a.Increment(ToolId, ToolActivityKind.KeyUsed, It.IsAny<DateTimeOffset>(),
+            It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

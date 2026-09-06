@@ -175,6 +175,8 @@ Three rules follow, and they bind anything the SSR migration touches next:
 
 **Accessors** (`Accessors/`): Web-bound implementations of domain ports that need ASP.NET (`HttpContextUserAccessor : ICurrentUserAccessor`, `DateTimeOffsetAccessor : IDateTimeOffsetAccessor`).
 
+**Middleware** (`Middleware/`): request-pipeline pieces that belong to no page. `ApiRequestLogMiddleware` writes one structured log line per `api/*` request — tier, tool, key name, route, status, duration — which is how API usage reaches App Insights ([docs/design/api-usage-telemetry.md](design/api-usage-telemetry.md)). It sits between the rate limiter and authorization so a 401 is logged too; a 429 is logged from the limiter's own rejection hook.
+
 ### Data access
 
 One SQL Server database, one `DbContext`, table-by-table breakdown in [DATABASE-SCHEMA.md](DATABASE-SCHEMA.md). Repositories take `IDbContextFactory<ChartAttemptDbContext>` and create scoped contexts. Migrations: scaffold from `ScoreTracker.Data` with `--startup-project ../ScoreTracker.CompositionRoot` (the design-time factory includes every vertical's contribution); production applies them via the deploy-pipeline EF bundle, local dev auto-migrates through the AppHost.

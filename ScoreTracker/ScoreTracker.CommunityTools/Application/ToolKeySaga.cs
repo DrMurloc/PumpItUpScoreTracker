@@ -1,4 +1,6 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Contracts.Commands;
 using ScoreTracker.CommunityTools.Contracts.Queries;
@@ -17,22 +19,43 @@ internal sealed class ToolKeySaga :
     IRequestHandler<GetToolApiKeysQuery, IReadOnlyList<ApiKeyRecord>>,
     IRequestHandler<GetToolInviteLinksQuery, IReadOnlyList<ToolInviteLinkRecord>>,
     IRequestHandler<GetToolInvitePreviewQuery, ToolInvitePreview?>,
-    IRequestHandler<GetToolByApiKeyQuery, Guid?>
+    IRequestHandler<GetToolByApiKeyQuery, ToolKeyPrincipal?>,
+    IRequestHandler<RecordRateLimitedRequestCommand, ToolKeyPrincipal?>
 {
+    /// <summary>
+    ///     How long a resolved key is remembered for the rate limiter's sake. A tool is only ever
+    ///     limited after hundreds of successes inside one minute, so anything longer than a minute
+    ///     keeps the entry warm; five keeps it warm across a quiet spell too.
+    ///     <para>
+    ///         Absolute, never sliding. Every successful resolve rewrites the entry, so the window
+    ///         always runs from the last success — and a sliding window would be refreshed by the
+    ///         rejection path's reads, which is how a key revoked mid-flood would have kept counting
+    ///         for as long as the flood lasted.
+    ///     </para>
+    /// </summary>
+    private static readonly TimeSpan PrincipalLifetime = TimeSpan.FromMinutes(5);
+
+    private readonly IToolActivityRepository _activity;
+    private readonly IMemoryCache _cache;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IToolKeyRepository _keys;
+    private readonly ILogger<ToolKeySaga> _logger;
     private readonly IToolRepository _tools;
     private readonly IUserReader _users;
 
     public ToolKeySaga(IToolKeyRepository keys, IToolRepository tools, IUserReader users,
-        ICurrentUserAccessor currentUser, IDateTimeOffsetAccessor dateTime)
+        ICurrentUserAccessor currentUser, IDateTimeOffsetAccessor dateTime,
+        IToolActivityRepository activity, IMemoryCache cache, ILogger<ToolKeySaga> logger)
     {
         _keys = keys;
         _tools = tools;
         _users = users;
         _currentUser = currentUser;
         _dateTime = dateTime;
+        _activity = activity;
+        _cache = cache;
+        _logger = logger;
     }
 
     public async Task<MintedApiKey> Handle(CreateToolApiKeyCommand request,
@@ -123,13 +146,84 @@ internal sealed class ToolKeySaga :
             tool.RepositoryUrl?.ToString(), tool.Kind);
     }
 
-    public async Task<Guid?> Handle(GetToolByApiKeyQuery request, CancellationToken cancellationToken)
+    public async Task<ToolKeyPrincipal?> Handle(GetToolByApiKeyQuery request,
+        CancellationToken cancellationToken)
     {
         // Shape-check before touching the database so a malformed bearer token never becomes a query.
         if (!ApiKeyMint.LooksLikeAKey(request.Key)) return null;
 
-        return await _keys.ResolveToolByKeyHash(ApiKeyMint.HashOf(request.Key), _dateTime.Now,
+        var hash = ApiKeyMint.HashOf(request.Key);
+        var cacheKey = PrincipalCacheKey(hash);
+        var now = _dateTime.Now;
+        var resolution = await _keys.ResolveToolByKeyHash(hash, now, cancellationToken);
+
+        // A key that no longer resolves — revoked, expired, gone — leaves the cache the moment
+        // the database says so, so the rejection path stops counting under its name at once.
+        if (resolution is null)
+        {
+            _cache.Remove(cacheKey);
+            return null;
+        }
+
+        // An expired key is named for the console's sake — the hour's tally of what bounced is
+        // what turns "my key stopped working" into a date — and still fails here.
+        if (resolution.IsExpired)
+        {
+            _cache.Remove(cacheKey);
+            await Tally(resolution.ToolId, ToolActivityKind.KeyExpired, now, resolution.KeyName,
+                cancellationToken);
+            return null;
+        }
+
+        // Authenticated is used. Rate-limited requests never reach this point, so the tally
+        // and the rate-limit tally never count the same request.
+        await Tally(resolution.ToolId, ToolActivityKind.KeyUsed, now, resolution.KeyName, cancellationToken);
+
+        var principal = new ToolKeyPrincipal(resolution.ToolId, resolution.KeyName);
+        _cache.Set(cacheKey, principal,
+            new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = PrincipalLifetime });
+        return principal;
+    }
+
+    public async Task<ToolKeyPrincipal?> Handle(RecordRateLimitedRequestCommand request,
+        CancellationToken cancellationToken)
+    {
+        if (!ApiKeyMint.LooksLikeAKey(request.Credential)) return null;
+
+        // The cache and only the cache. A tool is limited after hundreds of successes inside the
+        // same minute, so a key that is not here has not been resolving — and a database lookup
+        // per rejected request is exactly the load a limit exists to refuse.
+        if (!_cache.TryGetValue(PrincipalCacheKey(ApiKeyMint.HashOf(request.Credential)),
+                out ToolKeyPrincipal? principal) || principal is null)
+            return null;
+
+        await Tally(principal.ToolId, ToolActivityKind.RateLimited, _dateTime.Now, principal.KeyName,
             cancellationToken);
+        return principal;
+    }
+
+    /// <summary>
+    ///     A counter must never fail the call it counts. The row is a maker's convenience; the
+    ///     request behind it is a player's data, and it had already authenticated by the time the
+    ///     tally is written. A tally that cannot be written is logged and lost.
+    /// </summary>
+    private async Task Tally(Guid toolId, ToolActivityKind kind, DateTimeOffset at, string keyName,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _activity.Increment(toolId, kind, at, keyName, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning(e, "The {Kind} tally for tool {ToolId} could not be written", kind, toolId);
+        }
+    }
+
+    /// <summary>Keyed by the hash, never the key: the cache must be as safe to dump as the table.</summary>
+    private static string PrincipalCacheKey(string hash)
+    {
+        return "tool-key-principal:" + hash;
     }
 
     /// <summary>
