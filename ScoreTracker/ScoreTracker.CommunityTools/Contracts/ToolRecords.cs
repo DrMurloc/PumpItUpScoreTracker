@@ -109,6 +109,14 @@ public sealed record ApiKeyRecord(
 public sealed record MintedApiKey(Guid Id, string Key, DateTimeOffset? ExpiresAt);
 
 /// <summary>
+///     Who a live key turned out to be: the tool it belongs to and the name its maker gave it. The
+///     name travels with the principal so the console can say which of a tool's two keys did the
+///     talking without anyone asking the database twice.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record ToolKeyPrincipal(Guid ToolId, string KeyName);
+
+/// <summary>
 ///     Generates the secret a maker's endpoint answers a verification request with.
 ///     <para>
 ///         Public because the console offers to generate one and the rest of the vertical is

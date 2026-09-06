@@ -132,7 +132,50 @@ public sealed class EFToolKeyRepositoryTests : IAsyncLifetime
         await Repository.AddKey(AToolId, Guid.NewGuid(), "old", ApiKeyMint.HashOf(legacy),
             legacy[^4..], Now, null);
 
-        Assert.Equal(AToolId, await Repository.ResolveToolByKeyHash(ApiKeyMint.HashOf(minted.Key), Now));
-        Assert.Equal(AToolId, await Repository.ResolveToolByKeyHash(ApiKeyMint.HashOf(legacy), Now));
+        Assert.Equal(AToolId, (await Repository.ResolveToolByKeyHash(ApiKeyMint.HashOf(minted.Key), Now))?.ToolId);
+        Assert.Equal(AToolId, (await Repository.ResolveToolByKeyHash(ApiKeyMint.HashOf(legacy), Now))?.ToolId);
+    }
+
+    /// <summary>
+    ///     A live key is stamped on every resolve — the maker's only proof it carries traffic — and
+    ///     a revoked one resolves to nothing at all, which is indistinguishable from a key that
+    ///     never existed.
+    /// </summary>
+    [Fact]
+    public async Task ALiveKeyIsNamedAndStampedAndARevokedOneIsNothing()
+    {
+        var live = ApiKeyMint.Mint();
+        var revoked = ApiKeyMint.Mint();
+        var revokedId = Guid.NewGuid();
+        await Repository.AddKey(AToolId, Guid.NewGuid(), "live", live.Hash, live.Last4, Now, null);
+        await Repository.AddKey(AToolId, revokedId, "gone", revoked.Hash, revoked.Last4, Now, null);
+        await Repository.RevokeKey(AToolId, revokedId, Now);
+
+        var resolution = await Repository.ResolveToolByKeyHash(live.Hash, Now.AddMinutes(5));
+
+        Assert.NotNull(resolution);
+        Assert.Equal("live", resolution!.KeyName);
+        Assert.False(resolution.IsExpired);
+        Assert.Null(await Repository.ResolveToolByKeyHash(revoked.Hash, Now.AddMinutes(5)));
+        var keys = await Repository.GetKeys(AToolId);
+        Assert.Equal(Now.AddMinutes(5), keys.Single(k => k.Name == "live").LastUsedAt);
+        Assert.Null(keys.Single(k => k.Name == "gone").LastUsedAt);
+    }
+
+    /// <summary>Named so the console can say which key bounced, but never stamped: it carried nothing.</summary>
+    [Fact]
+    public async Task AnExpiredKeyIsNamedButNotStamped()
+    {
+        var minted = ApiKeyMint.Mint();
+        await Repository.AddKey(AToolId, Guid.NewGuid(), "old", minted.Hash, minted.Last4,
+            Now.AddDays(-30), Now.AddDays(-1));
+
+        var resolution = await Repository.ResolveToolByKeyHash(minted.Hash, Now);
+
+        Assert.NotNull(resolution);
+        Assert.True(resolution!.IsExpired);
+        Assert.Equal("old", resolution.KeyName);
+        Assert.Equal(AToolId, resolution.ToolId);
+        Assert.Null(Assert.Single(await Repository.GetKeys(AToolId)).LastUsedAt);
     }
 }

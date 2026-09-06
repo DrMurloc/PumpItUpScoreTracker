@@ -32,10 +32,13 @@ internal sealed class EFToolActivityRepository : IToolActivityRepository
     {
         var window = new DateTimeOffset(at.Year, at.Month, at.Day, at.Hour, 0, 0, at.Offset);
         var type = kind.ToString();
+        // Truncated before it becomes part of the match, so the row found is the row written.
+        var detailKey = Truncate(detail);
 
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var updated = await database.Set<ToolActivityEntity>()
-            .Where(a => a.ToolId == toolId && a.EventType == type && a.WindowStart == window)
+            .Where(a => a.ToolId == toolId && a.EventType == type && a.WindowStart == window
+                        && a.Detail == detailKey)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(a => a.Count, a => a.Count + 1)
                 .SetProperty(a => a.OccurredAt, at), cancellationToken);
@@ -45,7 +48,7 @@ internal sealed class EFToolActivityRepository : IToolActivityRepository
         await database.Set<ToolActivityEntity>().AddAsync(new ToolActivityEntity
         {
             Id = Guid.NewGuid(), ToolId = toolId, EventType = type, OccurredAt = at,
-            WindowStart = window, Count = 1, Detail = Truncate(detail)
+            WindowStart = window, Count = 1, Detail = detailKey
         }, cancellationToken);
 
         try
@@ -57,7 +60,8 @@ internal sealed class EFToolActivityRepository : IToolActivityRepository
             // Two requests can open the same hour at once. Losing the race is not an error — the
             // other insert already created the row, so fold into it.
             await database.Set<ToolActivityEntity>()
-                .Where(a => a.ToolId == toolId && a.EventType == type && a.WindowStart == window)
+                .Where(a => a.ToolId == toolId && a.EventType == type && a.WindowStart == window
+                            && a.Detail == detailKey)
                 .ExecuteUpdateAsync(s => s.SetProperty(a => a.Count, a => a.Count + 1), cancellationToken);
         }
     }

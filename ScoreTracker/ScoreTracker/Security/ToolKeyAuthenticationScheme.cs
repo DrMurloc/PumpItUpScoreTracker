@@ -1,10 +1,11 @@
 using System.Security.Claims;
-using System.Text;
 using System.Text.Encodings.Web;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
+using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Contracts.Queries;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Web.Accessors;
 
@@ -34,6 +35,20 @@ public sealed class ToolKeyAuthenticationScheme : AuthenticationHandler<Authenti
     /// <summary>Present, and carrying the tool id, exactly when the caller is a tool.</summary>
     public const string ToolIdClaim = "ScoreTracker.ToolId";
 
+    /// <summary>
+    ///     The name the maker gave the key that authenticated this call. Beside the tool id rather
+    ///     than folded into it: a tool has two live keys so rotation costs no downtime, and a count
+    ///     that cannot say which key it belongs to is half a number.
+    /// </summary>
+    public const string KeyNameClaim = "ScoreTracker.ToolKeyName";
+
+    /// <summary>
+    ///     Present exactly when a person authenticated with a personal token, on v1 or v2. The
+    ///     cookie principal a signed-in browser carries into an API route is built from the same
+    ///     claims, and the request trace has to tell a token from a session.
+    /// </summary>
+    public const string PersonalTokenClaim = "ScoreTracker.PersonalToken";
+
     public const string SchemeName = "ApiV2";
 
     private readonly IHttpContextAccessor _httpContextAccessor;
@@ -53,69 +68,58 @@ public sealed class ToolKeyAuthenticationScheme : AuthenticationHandler<Authenti
         if (!context.Request.Headers.TryGetValue("Authorization", out var headers) || headers.Count != 1)
             return AuthenticateResult.Fail("Exactly one Authorization header is required");
 
-        var header = headers[0];
-        if (string.IsNullOrWhiteSpace(header)) return AuthenticateResult.Fail("Authorization header is empty");
+        var credential = ApiCredential.Parse(headers[0]);
+        if (credential.Failure is not null) return AuthenticateResult.Fail(credential.Failure);
 
         var mediator = context.RequestServices.GetRequiredService<IMediator>();
 
-        if (header.StartsWith("Bearer ", StringComparison.Ordinal))
+        if (credential.Kind == ApiCredentialKind.Bearer)
         {
-            var toolId = await mediator.Send(new GetToolByApiKeyQuery(header["Bearer ".Length..].Trim()));
-            if (toolId is null) return AuthenticateResult.Fail("API key is not valid");
+            var tool = await mediator.Send(new GetToolByApiKeyQuery(credential.Secret));
+            if (tool is null) return AuthenticateResult.Fail("API key is not valid");
 
             return AuthenticateResult.Success(
-                new AuthenticationTicket(new ClaimsPrincipal(ToolIdentity(toolId.Value)), SchemeName));
+                new AuthenticationTicket(new ClaimsPrincipal(ToolIdentity(tool)), SchemeName));
         }
-
-        if (!header.StartsWith("Basic ", StringComparison.Ordinal))
-            return AuthenticateResult.Fail("Authorization must be Bearer (tool key) or Basic (personal token)");
-
-        // Personal tokens are unchanged from v1, down to the iso-8859-1 decode.
-        string decoded;
-        try
-        {
-            decoded = Encoding.GetEncoding("iso-8859-1")
-                .GetString(Convert.FromBase64String(header["Basic ".Length..].Trim()));
-        }
-        catch (Exception)
-        {
-            return AuthenticateResult.Fail("Could not decode credentials");
-        }
-
-        var split = decoded.Split(":");
-        if (split.Length != 2)
-            return AuthenticateResult.Fail("Basic credentials must be username:password");
 
         // A tool key in the password position resolves as a tool. Bearer is what the docs say and
         // what Swagger sends, but v1 taught every integrator here that a credential goes in the
         // Basic password box with junk for the username — so that is the first thing they try, and
         // failing it teaches them nothing except that their new key is broken. Same key material,
         // same TLS, same claim: the only thing rejecting it bought was a support question.
-        if (!Guid.TryParse(split[1], out var apiToken))
+        if (!Guid.TryParse(credential.Secret, out var apiToken))
         {
-            var toolByBasic = await mediator.Send(new GetToolByApiKeyQuery(split[1]));
+            var toolByBasic = await mediator.Send(new GetToolByApiKeyQuery(credential.Secret));
             if (toolByBasic is null)
                 return AuthenticateResult.Fail(
                     "Password must be a personal token (a GUID) or a tool API key");
 
             return AuthenticateResult.Success(new AuthenticationTicket(
-                new ClaimsPrincipal(ToolIdentity(toolByBasic.Value)), SchemeName));
+                new ClaimsPrincipal(ToolIdentity(toolByBasic)), SchemeName));
         }
 
         var user = await mediator.Send(new GetUserByApiTokenQuery(apiToken));
         if (user == null) return AuthenticateResult.Fail("No user has that personal token");
 
-        return AuthenticateResult.Success(
-            new AuthenticationTicket(user.GetClaimsPrincipal(), SchemeName));
+        return AuthenticateResult.Success(new AuthenticationTicket(PersonalIdentity(user), SchemeName));
+    }
+
+    /// <summary>A person, by their token — the site's claims plus the mark that says a token brought them.</summary>
+    public static ClaimsPrincipal PersonalIdentity(User user)
+    {
+        var principal = user.GetClaimsPrincipal();
+        ((ClaimsIdentity)principal.Identity!).AddClaim(new Claim(PersonalTokenClaim, "true"));
+        return principal;
     }
 
     /// <summary>A tool, whichever header carried its key. Never a user.</summary>
-    private static ClaimsIdentity ToolIdentity(Guid toolId)
+    private static ClaimsIdentity ToolIdentity(ToolKeyPrincipal tool)
     {
         return new ClaimsIdentity(new[]
         {
-            new Claim(ToolIdClaim, toolId.ToString()),
-            new Claim(ClaimTypes.Name, toolId.ToString())
+            new Claim(ToolIdClaim, tool.ToolId.ToString()),
+            new Claim(KeyNameClaim, tool.KeyName),
+            new Claim(ClaimTypes.Name, tool.ToolId.ToString())
         }, SchemeName);
     }
 }

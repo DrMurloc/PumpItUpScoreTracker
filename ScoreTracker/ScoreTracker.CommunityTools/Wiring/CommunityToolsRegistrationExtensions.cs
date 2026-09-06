@@ -34,6 +34,10 @@ public static class CommunityToolsRegistrationExtensions
         // The Domain port OfficialMirror hands a live piugame session to. Registered here rather
         // than by the CompositionRoot's reflection pass, which only scans ScoreTracker.Data.
         services.AddTransient<ISessionDeliveryClient, SessionDeliveryClient>();
+        // Holds a resolved key's principal for a few minutes so a rate-limited request, which
+        // never reaches the scheme, can still be counted under its key. Idempotent if the host
+        // registered a cache already.
+        services.AddMemoryCache();
         services.AddSingleton<IDbModelContribution, CommunityToolsModelContribution>();
         // Bound by the host; the defaults are the safe ones, so a missing section is not a hole.
         services.AddOptions<CommunityToolsConfiguration>();

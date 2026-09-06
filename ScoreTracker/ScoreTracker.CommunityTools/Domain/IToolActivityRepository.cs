@@ -15,6 +15,11 @@ internal interface IToolActivityRepository
     ///         per-call row would put tens of thousands of rows a day in front of a maker who wants
     ///         one line saying "you hit the limit 212 times this hour".
     ///     </para>
+    ///     <para>
+    ///         The detail is part of the row's identity — a key's name — so two keys used in the same
+    ///         hour are two rows rather than one labelled with whichever came first. A null detail
+    ///         is its own row, which is what the directory-click roll-up relies on.
+    ///     </para>
     /// </summary>
     Task Increment(Guid toolId, ToolActivityKind kind, DateTimeOffset at, string? detail = null,
         CancellationToken cancellationToken = default);
