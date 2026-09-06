@@ -161,6 +161,31 @@ public sealed class PeerStandingReaderTests
         Assert.Equal(1, Assert.Single(standing.Sources).FromOfficialBoard);
     }
 
+    /// <summary>
+    ///     The reporter's own configuration, 2026-09-06: competitive level AND PUMBILITY peers
+    ///     ticked together, on Phoenix 2. Every score read "None of your peers have passed this
+    ///     yet", which is what an EMPTY union renders.
+    /// </summary>
+    [Fact]
+    public async Task CompetitiveAndPumbilityTogetherStillMeasureAScore()
+    {
+        var band = Guid.NewGuid();
+        var pumbility = Guid.NewGuid();
+        _settings[PeerSourceSelection.SettingKey] =
+            new PeerSourceSelection(false, true, true, new HashSet<Guid>()).Serialize();
+        MyBestIs(_single.Id, 950_000);
+        BandIs(Me, band);
+        _mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { PeerVoice.Account(pumbility) });
+        PeerScoresAre(Score(band, _single.Id, 960_000), Score(pumbility, _single.Id, 940_000));
+
+        var standing = (await Reader().GetStandings(Me, MixEnum.Phoenix2, new[] { _single.Id }))[_single.Id];
+
+        Assert.Equal(2, standing.PeerCount);
+        Assert.Equal(2, standing.Passed);
+        Assert.Equal(2, standing.Sources.Count);
+    }
+
     [Fact]
     public async Task NothingTickedMeansNoStandingsAtAll()
     {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -27,7 +28,9 @@ public sealed class BoardPeerReaderTests
     private readonly Mock<IOfficialSnapshotRepository> _snapshots = new();
     private readonly Mock<IUserReader> _users = new();
 
-    private BoardPeerReader Subject => new(_snapshots.Object, _users.Object);
+    private readonly IMemoryCache _cache = new MemoryCache(new MemoryCacheOptions());
+
+    private BoardPeerReader Subject => new(_snapshots.Object, _users.Object, _cache);
 
     private void Board(params PlacementRow[] rows)
     {

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Domain;
@@ -21,13 +22,22 @@ namespace ScoreTracker.OfficialMirror.Application;
 /// </summary>
 internal sealed class BoardPeerReader
 {
+    /// <summary>
+    ///     How long the qualified set is held. The mirror is swept weekly and the key carries the
+    ///     snapshot, so a new sweep is a new key rather than a stale answer; this only bounds how
+    ///     long a dead snapshot's set occupies memory.
+    /// </summary>
+    private static readonly TimeSpan QualifiedTtl = TimeSpan.FromHours(12);
+
+    private readonly IMemoryCache _cache;
     private readonly IOfficialSnapshotRepository _snapshots;
     private readonly IUserReader _users;
 
-    public BoardPeerReader(IOfficialSnapshotRepository snapshots, IUserReader users)
+    public BoardPeerReader(IOfficialSnapshotRepository snapshots, IUserReader users, IMemoryCache cache)
     {
         _snapshots = snapshots;
         _users = users;
+        _cache = cache;
     }
 
     /// <summary>
@@ -69,8 +79,17 @@ internal sealed class BoardPeerReader
 
         // Official rows only: a supplemented row is our own arithmetic laid over the board, and a
         // peer's pool has to be the number piugame published or the window is measuring two things.
-        var rows = (await _snapshots.GetBoardPlacements(latest.Id, board.Id, PlacementScope.OfficialOnly,
-                cancellationToken))
+        var everyone = await _snapshots.GetBoardPlacements(latest.Id, board.Id, PlacementScope.OfficialOnly,
+            cancellationToken);
+
+        // Whose fifty the mirror holds is a property of the PLAYER and the snapshot, not of whoever
+        // is looking (D60), so it is answered once for the whole board and shared. Per viewer it was
+        // two and a half seconds of rebuild on every cold sweep, twice — once per chart type — for
+        // an answer every viewer in the band would have computed identically.
+        var qualified = await QualifiedPlayers(mix, chartType, latest.Id, everyone, cancellationToken);
+
+        var rows = everyone
+            .Where(p => qualified.Contains(p.PlayerId))
             .Where(p => (double)p.Score >= minimumPool && (double)p.Score <= maximumPool)
             .ToArray();
         if (rows.Length == 0) return new BoardPeerGroupReading(asOf, Array.Empty<BoardPeerReading>());
@@ -105,40 +124,37 @@ internal sealed class BoardPeerReader
             })
             .ToArray();
 
-        return new BoardPeerGroupReading(asOf, await KeepWhoseFiftyWeHold(mix, chartType, peers, cancellationToken));
+        return new BoardPeerGroupReading(asOf, peers);
     }
 
     /// <summary>
-    ///     Drops the people whose pool the mirror cannot actually see (D60). Their whole history of
-    ///     the type is read rather than the band's, because a pool is fifty charts wherever they
-    ///     sit; the band read that follows is a different, smaller question.
+    ///     Every player on this board whose fifty the mirror can rebuild to within the tolerance
+    ///     (D60), answered once per snapshot and chart type and shared by every viewer. The check
+    ///     runs per BOARD ROW rather than per person: a person's rows are folded later, and a fold
+    ///     can only add charts, so a row that qualifies alone still qualifies folded.
     /// </summary>
-    private async Task<IReadOnlyList<BoardPeerReading>> KeepWhoseFiftyWeHold(MixEnum mix, ChartType chartType,
-        IReadOnlyList<BoardPeerReading> peers, CancellationToken cancellationToken)
+    private async Task<IReadOnlySet<int>> QualifiedPlayers(MixEnum mix, ChartType chartType, int snapshotId,
+        IReadOnlyList<PlacementRow> everyone, CancellationToken cancellationToken)
     {
-        if (peers.Count == 0) return peers;
+        var key = $"{nameof(BoardPeerReader)}__Qualified__{mix}__{chartType}__{snapshotId}";
+        if (_cache.TryGetValue(key, out IReadOnlySet<int>? cached) && cached != null) return cached;
 
         var history = (await _snapshots.GetChartHistoryFor(mix,
-                peers.SelectMany(p => p.BoardPlayerIds).Distinct().ToArray(), chartType,
+                everyone.Select(p => p.PlayerId).Distinct().ToArray(), chartType,
                 PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, PlacementScope.OfficialOnly, cancellationToken))
             .GroupBy(r => r.PlayerId)
             .ToDictionary(g => g.Key, g => g.ToArray());
 
-        return peers
-            .Where(peer =>
-            {
-                // One person's rows across every tag they own, best per chart — the same chart under
-                // two tags is one chart, and taking both would rebuild a pool they never held.
-                var rows = peer.BoardPlayerIds
-                    .SelectMany(id => history.TryGetValue(id, out var theirs)
-                        ? theirs
-                        : Array.Empty<PlayerChartHistoryRow>())
-                    .GroupBy(r => r.ChartId)
-                    .Select(g => g.OrderByDescending(r => r.Score).First());
-                return BoardPoolCheck.Confirms(
-                    BoardPoolCheck.Rebuild(chartType, rows.Select(r => (r.Level, r.Score))), peer.Pool);
-            })
-            .ToArray();
+        var qualified = everyone
+            .Where(row => history.TryGetValue(row.PlayerId, out var theirs)
+                          && BoardPoolCheck.Confirms(
+                              BoardPoolCheck.Rebuild(chartType, theirs.Select(r => (r.Level, r.Score))),
+                              (double)row.Score))
+            .Select(row => row.PlayerId)
+            .ToHashSet();
+
+        _cache.Set(key, (IReadOnlySet<int>)qualified, QualifiedTtl);
+        return qualified;
     }
 
     /// <summary>
