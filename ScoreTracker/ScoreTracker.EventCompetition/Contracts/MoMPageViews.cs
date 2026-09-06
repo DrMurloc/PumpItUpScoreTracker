@@ -32,8 +32,13 @@ public sealed record MoMBoardView(Guid BoardId, ChartType ChartType, MixEnum Mix
 ///     archive crawlable without a seasons route (§11.8).
 /// </summary>
 [ExcludeFromCodeCoverage]
+/// <summary>
+///     The season page. <paramref name="ViewerHasPublished" /> is whether the viewer has ever
+///     published a session on any board of any mix; the page shows its newcomer card until they
+///     have (D44). A logged-out viewer never has.
+/// </summary>
 public sealed record MoMSeasonPage(MoMSeasonSummary Season, IReadOnlyList<MoMBoardView> Boards,
-    MoMSeasonSummary? Previous, MoMSeasonSummary? Next);
+    MoMSeasonSummary? Previous, MoMSeasonSummary? Next, bool ViewerHasPublished = false);
 
 /// <summary>Where each of a session's four numbers places it among the board's sessions (equals share the better place).</summary>
 [ExcludeFromCodeCoverage]

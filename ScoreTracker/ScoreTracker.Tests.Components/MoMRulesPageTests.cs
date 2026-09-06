@@ -107,6 +107,8 @@ public sealed class MoMRulesPageTests : ComponentTestBase
         Assert.Equal(MoMText.SeasonRoute, cut.Find(".mom-rl-foot a").GetAttribute("href"));
         Assert.Contains("Phoenix 2 · March of Murlocs", cut.Find(".pmb-eyebrow").TextContent);
         Assert.NotNull(cut.Find("[data-testid=mom-past-seasons]"));
+        // The frame's How-it-works chip is the filled one here (D44).
+        Assert.Contains("mud-button-filled", cut.Find("nav.mom-frame-nav a[href='/MarchOfMurlocs/Rules']").ClassList);
         Assert.Equal(12, cut.FindAll("[data-testid=mom-rl-qa]").Count);
         Assert.Contains("So As are worthless?", cut.Markup);
         Assert.Contains("My friends are all abusing 8 6 full song!", cut.Markup);

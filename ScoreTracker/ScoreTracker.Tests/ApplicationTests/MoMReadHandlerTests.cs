@@ -79,6 +79,11 @@ public sealed class MoMReadHandlerTests
         Assert.Null(page.Boards[1].Viewer);
         Assert.Null(anonymous!.Boards[0].Viewer);
         Assert.Null(stranger!.Boards[0].Viewer);
+        // The newcomer card (D44) is for whoever has never published: the stranger and the
+        // logged-out viewer, never tieny.
+        Assert.True(page.ViewerHasPublished);
+        Assert.False(anonymous.ViewerHasPublished);
+        Assert.False(stranger.ViewerHasPublished);
         Assert.Equal(1, (await f.Handler().Handle(new GetMoMSeasonPageQuery(MixEnum.Phoenix, ViewerId: kim), CancellationToken.None))!.Boards[0].Viewer!.Place);
     }
 

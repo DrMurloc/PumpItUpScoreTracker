@@ -64,8 +64,13 @@ internal sealed partial class MoMReadHandler :
             return new MoMBoardView(board.Id, board.ChartType, board.Mix, board.Configuration.MaxTime, rows,
                 Standing(rows, request.ViewerId));
         }).ToArray();
+        // The newcomer card (D44) shows until the viewer has published a session anywhere: any
+        // board, any mix. A Phoenix veteran visiting Phoenix 2 already knows the rules.
+        var viewerHasPublished = request.ViewerId is { } viewer &&
+                                 (await _mom.GetPublishedSessions(allBoards.Select(b => b.Id), cancellationToken))
+                                 .Any(s => s.UserId == viewer);
         return new MoMSeasonPage(Summary(season), views, previous == null ? null : Summary(previous),
-            next == null ? null : Summary(next));
+            next == null ? null : Summary(next), viewerHasPublished);
     }
 
     public async Task<MoMBoardLocator?> Handle(GetMoMBoardLocatorQuery request, CancellationToken cancellationToken)

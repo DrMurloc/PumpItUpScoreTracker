@@ -95,15 +95,36 @@ public sealed partial class MoMSeasonPageTests
     }
 
     [Fact]
-    public void BothRulesLinksLandOnTheRulesPage()
+    public void ANewcomerGetsTheCardAndTheChipAndBothLandOnTheRulesPage()
     {
+        // D44: a viewer who has never published a session — the logged-out viewer here — gets
+        // the newcomer card under the standing; the frame's chip is there for everyone. The
+        // 11px eyebrow link and the foot's collapsed summary are gone.
         Page();
 
         var cut = RenderComponent<Season>();
 
-        Assert.Equal(MoMText.RulesRoute, cut.Find(".pmb-eyebrow-link").GetAttribute("href"));
-        Assert.Equal(MoMText.RulesRoute, cut.Find(".mom-rules a").GetAttribute("href"));
+        var card = cut.Find("[data-testid=mom-howto]");
+        Assert.Contains("How March of Murlocs works", card.TextContent);
+        Assert.Equal(4, card.QuerySelectorAll(".facts span").Length);
+        Assert.Equal(MoMText.RulesRoute, cut.Find("[data-testid=mom-howto-rules]").GetAttribute("href"));
+        Assert.Equal(MoMText.RulesRoute, cut.Find("nav.mom-frame-nav a[href='/MarchOfMurlocs/Rules']").GetAttribute("href"));
+        Assert.NotEmpty(card.QuerySelectorAll(".mom-howto-art svg rect"));
+        Assert.Empty(cut.FindAll(".pmb-eyebrow-link"));
+        Assert.Empty(cut.FindAll(".mom-rules"));
         Assert.DoesNotContain("docs.google.com", cut.Markup);
+    }
+
+    [Fact]
+    public void AViewerWhoHasPublishedASessionKeepsOnlyTheChip()
+    {
+        SignIn();
+        Page(viewerHasPublished: true);
+
+        var cut = RenderComponent<Season>();
+
+        Assert.Empty(cut.FindAll("[data-testid=mom-howto]"));
+        Assert.NotEmpty(cut.FindAll("nav.mom-frame-nav a[href='/MarchOfMurlocs/Rules']"));
     }
 
     [Fact]

@@ -19416,3 +19416,27 @@ a.peer-pop-row:hover {
     .mom-rl-grades { font-size: 12.5px; }
     .mom-rl-grades th, .mom-rl-grades td { padding: 6px 8px; }
 }
+
+/* ============================================================================
+   March of Murlocs — the newcomer card on the Season page (docs/design/march-of-murlocs.md
+   D44): the rules in one card until the viewer has published a session; the frame's
+   How-it-works chip carries the link for everyone else.
+   ============================================================================ */
+.mom-howto { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(220px, .8fr); gap: 12px 24px; align-items: center; margin: 14px 0 4px; padding: 16px 18px; border-radius: 12px; background: var(--mix-surface); border: 1px solid color-mix(in srgb, var(--mix-primary) 35%, transparent); box-shadow: 0 0 24px -14px var(--mix-glow); }
+.mom-howto .k { font-family: var(--font-display); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--mix-accent); }
+.mom-howto h2 { margin: 2px 0 6px; font-family: var(--font-display); font-weight: 700; font-size: 26px; letter-spacing: .02em; line-height: 1; }
+.mom-howto p { margin: 0 0 10px; font-size: 14px; color: var(--mix-ink-muted); max-width: 56ch; }
+.mom-howto .facts { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.mom-howto .facts span { display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 11.5px; border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent); color: var(--mix-ink-muted); }
+.mom-howto .cta { display: flex; gap: 8px; flex-wrap: wrap; }
+.mom-howto-art svg { display: block; width: 100%; height: auto; }
+.mom-howto-art .track { fill: color-mix(in srgb, var(--mix-ink) 6%, transparent); }
+.mom-howto-art .primary { fill: var(--mix-primary); opacity: .85; }
+.mom-howto-art .accent { fill: var(--mix-accent); }
+.mom-howto-art .buzzer { stroke: var(--mix-ink); stroke-width: 2; stroke-dasharray: 3 3; }
+.mom-howto-art .lbl { font-family: var(--font-display); font-size: 11px; fill: var(--mix-ink); letter-spacing: .08em; }
+@media (max-width: 700px) {
+    .mom-howto { grid-template-columns: 1fr; padding: 14px; }
+    .mom-howto-art { order: -1; }
+    .mom-howto h2 { font-size: 22px; }
+}

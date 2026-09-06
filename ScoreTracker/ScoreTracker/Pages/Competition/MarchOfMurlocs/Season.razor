@@ -28,10 +28,7 @@ else
 {
     var board = _board;
     var typeName = board == null ? string.Empty : TypeName(board.ChartType);
-    <div class="pmb-eyebrow">
-        <span>@MixName · March of Murlocs</span>
-        <a class="pmb-eyebrow-link" href="@MoMText.RulesRoute">@L["How it works"] →</a>
-    </div>
+    <div class="pmb-eyebrow"><span>@MixName · March of Murlocs</span></div>
     <section class="mom-hero">
         <div>
             <h1 class="mom-title">@_page.Season.Name<small>@L["1 hour 45 minutes. Bank as many points as you can."]</small></h1>
@@ -95,6 +92,29 @@ else
             }
         </div>
     }
+    @if (!_page.ViewerHasPublished)
+    {
+        @* D44: until the viewer has published a session anywhere — a logged-out visitor never has —
+           the rules get a card here, not an 11px eyebrow link. The frame's chip stays for everyone. *@
+        <section class="mom-howto" aria-label="@L["How March of Murlocs works"]" data-testid="mom-howto">
+            <div class="mom-howto-copy">
+                <span class="k">@L["New here?"]</span>
+                <h2>@L["How March of Murlocs works"]</h2>
+                <p>@L["One session of 1 hour 45 minutes. Play as many charts as you can and bank points for how hard each one is and how well you played it."]</p>
+                <div class="facts">
+                    <span>@L["timed by you"]</span>
+                    <span>@L["one board per session"]</span>
+                    <span>@L["your best play of a chart counts"]</span>
+                    <span>@L["AAA is the 1× target"]</span>
+                </div>
+                <div class="cta">
+                    <MudButton Href="@MoMText.RulesRoute" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.MenuBook" data-testid="mom-howto-rules">@L["Read the rules"]</MudButton>
+                    <MudButton Href="@MoMText.PlannerRoute" Variant="Variant.Outlined" Color="Color.Primary">@L["Plan a session"]</MudButton>
+                </div>
+            </div>
+            <div class="mom-howto-art">@((MarkupString)HowToArt)</div>
+        </section>
+    }
     <MoMSectionFrame Active="season" Mix="_mix" RecordBoardId="@(_page.Season.IsLive ? board?.BoardId : null)"/>
     @if (board == null)
     {
@@ -143,10 +163,6 @@ else
             }
         </section>
     }
-    <details class="mom-rules" id="rules">
-        <summary>@L["How March of Murlocs works"]</summary>
-        <p>@L["One session is 1 hour 45 minutes; a chart only has to start inside it. Every chart scores PUMBILITY+: its balanced level, scaled by song length, times how well you played. Singles and Doubles are separate boards. No repeats — the same song at another level is a different chart. Play as many sessions as you like; the board ranks sessions. Ties go to the earlier session."] <a href="@MoMText.RulesRoute">@L["Full rules"] →</a></p>
-    </details>
     <div class="mom-foot">
         @if (_page.Previous is { } previous)
         {
@@ -195,6 +211,20 @@ else
     private IReadOnlySet<Guid> _clubmates = new HashSet<Guid>();
 
     private string MixName => _mix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix";
+
+    /// <summary>One session in miniature for the newcomer card: charts as blocks, the closer past the buzzer.</summary>
+    private const string HowToArt =
+        "<svg viewBox=\"0 0 260 72\" aria-hidden=\"true\"><rect x=\"4\" y=\"22\" width=\"232\" height=\"18\" rx=\"3\" class=\"track\"/>"
+        + "<rect x=\"4\" y=\"22\" width=\"10\" height=\"18\" rx=\"2\" class=\"primary\"/><rect x=\"17\" y=\"22\" width=\"8\" height=\"18\" rx=\"2\" class=\"primary\"/>"
+        + "<rect x=\"28\" y=\"22\" width=\"14\" height=\"18\" rx=\"2\" class=\"primary\"/><rect x=\"45\" y=\"22\" width=\"9\" height=\"18\" rx=\"2\" class=\"primary\"/>"
+        + "<rect x=\"57\" y=\"22\" width=\"11\" height=\"18\" rx=\"2\" class=\"primary\"/><rect x=\"71\" y=\"22\" width=\"8\" height=\"18\" rx=\"2\" class=\"primary\"/>"
+        + "<rect x=\"82\" y=\"22\" width=\"16\" height=\"18\" rx=\"2\" class=\"primary\"/><rect x=\"101\" y=\"22\" width=\"9\" height=\"18\" rx=\"2\" class=\"primary\"/>"
+        + "<rect x=\"113\" y=\"22\" width=\"12\" height=\"18\" rx=\"2\" class=\"primary\"/><rect x=\"128\" y=\"22\" width=\"8\" height=\"18\" rx=\"2\" class=\"primary\"/>"
+        + "<rect x=\"139\" y=\"22\" width=\"15\" height=\"18\" rx=\"2\" class=\"primary\"/><rect x=\"157\" y=\"22\" width=\"9\" height=\"18\" rx=\"2\" class=\"primary\"/>"
+        + "<rect x=\"169\" y=\"22\" width=\"11\" height=\"18\" rx=\"2\" class=\"primary\"/><rect x=\"183\" y=\"22\" width=\"8\" height=\"18\" rx=\"2\" class=\"primary\"/>"
+        + "<rect x=\"194\" y=\"22\" width=\"14\" height=\"18\" rx=\"2\" class=\"primary\"/><rect x=\"211\" y=\"22\" width=\"9\" height=\"18\" rx=\"2\" class=\"primary\"/>"
+        + "<rect x=\"223\" y=\"22\" width=\"20\" height=\"18\" rx=\"2\" class=\"accent\"/>"
+        + "<line x1=\"236\" y1=\"12\" x2=\"236\" y2=\"50\" class=\"buzzer\"/><text x=\"236\" y=\"64\" text-anchor=\"end\" class=\"lbl\">1:45</text><text x=\"4\" y=\"64\" class=\"lbl\">0:00</text></svg>";
 
     private string RailNote
     {

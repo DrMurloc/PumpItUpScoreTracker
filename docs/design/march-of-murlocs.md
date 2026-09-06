@@ -44,7 +44,7 @@ in them is production-synced data.
 | 4 | Planner | `/MarchOfMurlocs/Planner` | [artifact](https://claude.ai/code/artifact/17d2ed81-eaef-451a-9c74-0ab5792ba3f2) |
 | 5 | Discord card | — | [artifact](https://claude.ai/code/artifact/58eb672e-a479-4845-80ac-4c3d36544b55) |
 | 6 | Past seasons | *a dialog, no route* | [artifact](https://claude.ai/code/artifact/360658de-b554-4e15-9de4-37c1bb6faba4) |
-| 7 | My Sessions on-ramp | `/Player/{id}/Sessions` | [artifact](https://claude.ai/code/artifact/b0b13385-89b9-412b-b135-16d9099122ec · 8 Rules https://claude.ai/code/artifact/bfdd0131-64b7-4253-adfb-b3606b864ac0) |
+| 7 | My Sessions on-ramp | `/Player/{id}/Sessions` | [artifact](https://claude.ai/code/artifact/b0b13385-89b9-412b-b135-16d9099122ec · 8 Rules https://claude.ai/code/artifact/bfdd0131-64b7-4253-adfb-b3606b864ac0 · 9 How it works placement https://claude.ai/code/artifact/691789bf-4a7a-4666-8172-82a55794e0a7) |
 
 ---
 
@@ -302,6 +302,7 @@ chart later. Consequences worth writing down:
 | D40 | **A broken score counts at face value; a stage break scores nothing.** The vocabulary: "broken score" is the flag on a finished play, "stage break" is the game ending the song. | Owner 2026-09-05, correcting a reading of the old doc's "0 points" line. |
 | D41 | **One name, two tunings.** Phoenix 2 runs PUMBILITY+'s structure and kicker with A+ 0.70 · AA 0.80 · AA+ 0.90 · AAA+ 1.10 on its own cutoffs; Phoenix keeps its frozen table. Supersedes D11 and the PUMBILITY2+ plan (§5). | Owner 2026-09-05/06: "port Phoenix 1's MoM scoring system to Phoenix 2 exactly as it is", then the workshop's grade table, then "call it PUMBILITY+ everywhere". The minimal-PUMBILITY2+ census (62 sessions) showed a rest-minimisation contest, not a stamina ladder. |
 | D42 | **The site owns the rules.** `/MarchOfMurlocs/Rules` is static HTML; the Google Doc is retired; the season page's *How it works* and *Full rules* both land there. | Owner 2026-09-05: "I'd love to get rid of the doc." Static and shareable "like our /Welcome page". |
+| D44 | **"How it works" is a chip in the section frame, and a newcomer card under the standing until the viewer has published a session** (any board, any mix; a logged-out visitor never has). The card carries the sentence, four facts and a *Read the rules* button, and replaces the collapsed summary the season page's foot used to carry; the 11px eyebrow link is gone. | Owner 2026-09-06 ("It's crazy small and easy to miss considering how important it is for new players"), choosing the recommended variant of mock 9. |
 | D43 | **The season cycle heals a live season**: any of the four mix × type boards a season is missing is added on the daily run, with that mix's level snapshot taken then. | Owner 2026-09-05 ("ill hit hangfire"): no admin button, no migration; one *Trigger now* seats Summer 2026's Phoenix 2 boards. |
 
 ### Explicitly rejected

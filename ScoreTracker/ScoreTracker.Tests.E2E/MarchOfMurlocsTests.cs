@@ -67,6 +67,11 @@ public sealed class MarchOfMurlocsTests : IAsyncLifetime
         Assert.Contains("<title>March of Murlocs", html);
         Assert.Contains("og:description", html);
         Assert.Contains("data-mom-seasons", html); // the Past-seasons chip, inert until the island connects
+        // D44: a logged-out visitor has never published, so the newcomer card is in the HTML with
+        // its Read-the-rules button, and the frame carries the How-it-works chip.
+        Assert.Contains("data-testid=\"mom-howto\"", html);
+        Assert.Contains("data-testid=\"mom-howto-rules\"", html);
+        Assert.Contains("href=\"/MarchOfMurlocs/Rules\"", html);
 
         var directory = await _page.APIRequest.GetAsync($"{_fixture.BaseUrl}/Tournaments/MarchOfMurlocs",
             new APIRequestContextOptions { MaxRedirects = 0 });
