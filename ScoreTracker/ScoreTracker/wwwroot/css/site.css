@@ -19602,6 +19602,16 @@ a.peer-pop-row:hover {
 .pl-open { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
 .pl-energy .mud-input-control { min-width: 160px; }
 .pl-energy .mud-select { max-width: 200px; }
+
+/* Every select, autocomplete and field in the section reads at one compact height. MudBlazor's
+   dense margin still leaves an input taller than the buttons beside it, and a row of controls
+   that do not share a baseline reads as three different things (owner, 2026-09-06). */
+.mom-entry .mud-input-control, .pl-controls .mud-input-control { margin-top: 0; }
+.mom-entry .mud-input-root, .pl-controls .mud-input-root { min-height: 38px; font-size: 14px; }
+.mom-entry .mud-input-root input, .pl-controls .mud-input-root input { padding-top: 7px; padding-bottom: 7px; }
+.mom-entry .mud-input-root .mud-input-slot, .pl-controls .mud-input-root .mud-input-slot { padding-top: 7px; padding-bottom: 7px; }
+.mom-entry .mud-input-label, .pl-controls .mud-input-label { font-size: 12.5px; }
+.mom-entry .mud-select .mud-input-adornment, .pl-controls .mud-select .mud-input-adornment { padding: 0; }
 .pl-projected-toggle { margin-top: 10px; font-size: 13px; }
 .pl-table-chart { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
 .pl-table-chart .w700 { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 26ch; }

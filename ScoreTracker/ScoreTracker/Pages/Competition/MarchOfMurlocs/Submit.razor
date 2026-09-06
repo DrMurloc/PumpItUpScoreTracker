@@ -108,17 +108,17 @@ else if (_draft is { } draft)
             <div class="mom-entry-row">
                 <div class="f-chart">
                     <ChartSelector Mix="draft.Mix" Charts="_selectable" Variant="Variant.Outlined"
-                                   Label="@L["Chart"]" Placeholder="@L["Song Name"]" Disabled="_busy"
-                                   ChartIdSelected="PickChart"/>
+                                   Margin="Margin.Dense" Label="@L["Chart"]" Placeholder="@L["Song Name"]"
+                                   Disabled="_busy" ChartIdSelected="PickChart"/>
                 </div>
                 <div class="f-score">
                     <MudTextField T="int?" @bind-Value="_score" Label="@L["Score"]" Variant="Variant.Outlined"
-                                  InputMode="InputMode.numeric" Disabled="_busy" Immediate="true"
-                                  OnKeyDown="OnScoreKey" data-testid="mom-entry-score"/>
+                                  Margin="Margin.Dense" InputMode="InputMode.numeric" Disabled="_busy"
+                                  Immediate="true" OnKeyDown="OnScoreKey" data-testid="mom-entry-score"/>
                 </div>
                 <div class="f-plate">
                     <MudSelect T="string" @bind-Value="_result" Label="@L["Result"]" Variant="Variant.Outlined"
-                               Disabled="_busy" data-testid="mom-entry-result">
+                               Margin="Margin.Dense" Dense="true" Disabled="_busy" data-testid="mom-entry-result">
                         <MudSelectItem T="string" Value="@BrokenValue">@L["Broken"]</MudSelectItem>
                         @foreach (var plate in Plates)
                         {
@@ -213,8 +213,8 @@ else if (_draft is { } draft)
         @if (!draft.IsPublished)
         {
             <MudTextField T="string" Value="@_video" ValueChanged="SetVideo" DebounceInterval="600"
-                          Label="@L["Video link (optional)"]" Variant="Variant.Outlined" Class="mom-video"
-                          Placeholder="https://youtu.be/…"/>
+                          Label="@L["Video link (optional)"]" Variant="Variant.Outlined" Margin="Margin.Dense"
+                          Class="mom-video" Placeholder="https://youtu.be/…"/>
         }
     </section>
 
