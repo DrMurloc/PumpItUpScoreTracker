@@ -38,6 +38,7 @@ using ScoreTracker.Web.Accessors;
 using ScoreTracker.Data.DevTooling;
 using ScoreTracker.Web.Configuration;
 using ScoreTracker.Web.HostedServices;
+using ScoreTracker.Web.Middleware;
 using ScoreTracker.Web.Security;
 using ScoreTracker.Web.Services;
 using ScoreTracker.Web.Services.Contracts;
@@ -406,6 +407,10 @@ app.UseAuthentication();
 app.UseRequestLocalization(CultureResolution.BuildOptions());
 
 app.UseRateLimiter();
+// Between the limiter and authorization, deliberately: below authorization it would never see a
+// 401, since that middleware answers those itself; above the limiter it would see the 429s but
+// never the principal (docs/design/api-usage-telemetry.md).
+app.UseMiddleware<ApiRequestLogMiddleware>();
 app.UseAuthorization();
 // Required by MapRazorComponents: a static-rendered form posts back to its own endpoint, so the
 // endpoint carries an antiforgery requirement and the middleware is what satisfies it. Without

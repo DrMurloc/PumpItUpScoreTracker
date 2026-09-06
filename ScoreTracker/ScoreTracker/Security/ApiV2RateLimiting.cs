@@ -2,7 +2,9 @@ using System.Globalization;
 using System.Threading.RateLimiting;
 using MediatR;
 using Microsoft.AspNetCore.RateLimiting;
+using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Contracts.Commands;
+using ScoreTracker.Web.Middleware;
 
 namespace ScoreTracker.Web.Security;
 
@@ -72,10 +74,19 @@ public static class ApiV2RateLimiting
             // above authorization — so the credential is all there is to name the caller by, and
             // the vertical answers with the principal it resolved on the calls that got through.
             var credential = ApiCredential.Parse(context.HttpContext.Request.Headers.Authorization.ToString());
-            if (credential.Failure is not null) return;
+            ToolKeyPrincipal? principal = null;
+            if (credential.Failure is null)
+            {
+                var mediator = context.HttpContext.RequestServices.GetRequiredService<IMediator>();
+                principal = await mediator.Send(new RecordRateLimitedRequestCommand(credential.Secret),
+                    cancellationToken);
+            }
 
-            var mediator = context.HttpContext.RequestServices.GetRequiredService<IMediator>();
-            await mediator.Send(new RecordRateLimitedRequestCommand(credential.Secret), cancellationToken);
+            // The request log's line for this request: the middleware that writes it sits below
+            // this hook and never sees a rejection.
+            ApiRequestLogMiddleware.LogRejected(
+                context.HttpContext.RequestServices.GetRequiredService<ILogger<ApiRequestLogMiddleware>>(),
+                context.HttpContext, credential, principal);
         };
 
         return options;
