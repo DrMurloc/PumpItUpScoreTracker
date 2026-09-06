@@ -19603,15 +19603,29 @@ a.peer-pop-row:hover {
 .pl-energy .mud-input-control { min-width: 160px; }
 .pl-energy .mud-select { max-width: 200px; }
 
-/* Every select, autocomplete and field in the section reads at one compact height. MudBlazor's
-   dense margin still leaves an input taller than the buttons beside it, and a row of controls
-   that do not share a baseline reads as three different things (owner, 2026-09-06). */
-.mom-entry .mud-input-control, .pl-controls .mud-input-control { margin-top: 0; }
-.mom-entry .mud-input-root, .pl-controls .mud-input-root { min-height: 38px; font-size: 14px; }
-.mom-entry .mud-input-root input, .pl-controls .mud-input-root input { padding-top: 7px; padding-bottom: 7px; }
-.mom-entry .mud-input-root .mud-input-slot, .pl-controls .mud-input-root .mud-input-slot { padding-top: 7px; padding-bottom: 7px; }
-.mom-entry .mud-input-label, .pl-controls .mud-input-label { font-size: 12.5px; }
-.mom-entry .mud-select .mud-input-adornment, .pl-controls .mud-select .mud-input-adornment { padding: 0; }
+/* Every select, autocomplete and field in the section reads at one compact height (owner,
+   2026-09-06). MudBlazor's dense margin is not enough on its own: the outlined input carries an
+   explicit height AND mud-typography-subtitle1, so the row still stands twice as tall as the
+   buttons beside it. The same shape the app-bar search already uses — unset the height, set the
+   padding — applied to .mud-input-slot, which is the one class on both a text input and a
+   select's visible value div. */
+.mom-entry .mud-input-control.mud-input-control-margin-dense,
+.pl-controls .mud-input-control.mud-input-control-margin-dense { margin-top: 0; margin-bottom: 0; }
+.mom-entry .mud-input, .pl-controls .mud-input { font-size: 14px; line-height: 1.45; }
+/* Out-specifies MudBlazor's own dense rule, which sets 10.5px top and bottom on the slot and is
+   itself three classes deep — a two-class override loses to it silently. */
+.mom-entry .mud-input.mud-input-outlined .mud-input-slot.mud-input-root,
+.pl-controls .mud-input.mud-input-outlined .mud-input-slot.mud-input-root {
+    height: unset;
+    min-height: 0;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    font-size: 14px;
+    line-height: 1.45;
+}
+.mom-entry .mud-input-label, .pl-controls .mud-input-label { font-size: 13px; }
+.mom-entry .mud-input-adornment .mud-icon-root, .pl-controls .mud-input-adornment .mud-icon-root { font-size: 18px; }
+.mom-entry .mud-input-adornment .mud-button-root, .pl-controls .mud-input-adornment .mud-button-root { padding: 2px; }
 .pl-projected-toggle { margin-top: 10px; font-size: 13px; }
 .pl-table-chart { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
 .pl-table-chart .w700 { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 26ch; }
