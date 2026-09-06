@@ -107,4 +107,21 @@ public sealed class PeerStandingPopoverTests : ComponentTestBase
         Assert.Contains("You have no peer groups selected.", cut.Markup);
         Assert.Contains("href=\"/Account?tab=peers\"", cut.Markup);
     }
+
+    /// <summary>
+    ///     Nothing has measured the score yet — the peers read is in flight, or the load that would
+    ///     have carried it was superseded. The popover must not answer a question nobody asked:
+    ///     the reporter tapped a Perfect Game and was told none of his peers had passed it
+    ///     (2026-09-06).
+    /// </summary>
+    [Fact]
+    public void AnUnmeasuredScoreSaysSoRatherThanClaimingNobodyPassedIt()
+    {
+        var cut = RenderComponent<PeerStandingPopover>(p => p
+            .Add(x => x.Standing, null)
+            .Add(x => x.SourcesChosen, true));
+
+        Assert.Contains("Still working out where this sits.", cut.Markup);
+        Assert.DoesNotContain("have passed this yet", cut.Markup);
+    }
 }

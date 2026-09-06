@@ -3,6 +3,7 @@
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Components
 @page "/Pumbility/Breakdown"
 @page "/Pumbility/Pool"
@@ -40,13 +41,17 @@
         </section>
 
         <PumbilityPoolSection Page="ctx.Page" Charts="ctx.Charts"
-                              ToDos="_todos" OnToDo="ToggleToDo" OnOpen="ShowChartDetails" OnPlay="PlayChart"></PumbilityPoolSection>
+                              ToDos="_todos" OnToDo="ToggleToDo" OnOpen="ShowChartDetails" OnPlay="PlayChart"
+                              OnOpenBoard="@(r => OpenBoard(r, ctx.Charts))"></PumbilityPoolSection>
 
         @* AutoPlay is bound rather than fixed: the card's play button and its jacket open the
-           same dialog, and only one of them asked for the video. A card here is one of your own
-           charts with no peer number on it to audit, so its board opens on the World. *@
+           same dialog, and only one of them asked for the video. The board opens on the World,
+           these being your own charts — unless a popover line asked for its own source's board,
+           which is the one thing on these rows that names a peer group (D63). *@
         <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="ctx.Mix"
                             AutoPlay="_detailsAutoPlay"
+                            BoardScope="@(_detailsBoardScope ?? ChartLeaderboardScopes.LeaderboardScope.World)"
+                            BoardCommunity="_detailsBoardCommunity" InitialTab="_detailsTab"
                             IsToDo="_detailsChart != null && _todos.Contains(_detailsChart.Id)"
                             OnToDo="ToggleToDo"></ChartDetailsDialog>
     </Body>
@@ -70,6 +75,7 @@
     {
         _detailsChart = chart;
         _detailsAutoPlay = false;
+        Plain();
         _detailsOpen = true;
     }
 
@@ -77,6 +83,38 @@
     {
         _detailsChart = chart;
         _detailsAutoPlay = true;
+        Plain();
+        _detailsOpen = true;
+    }
+
+    /// <summary>Forgets the last board request, so opening a card plainly is a plain open.</summary>
+    private void Plain()
+    {
+        _detailsBoardScope = null;
+        _detailsBoardCommunity = null;
+        _detailsTab = null;
+    }
+
+    /// <summary>The board the dialog opens on: a popover line’s, until the next plain open.</summary>
+    private ChartLeaderboardScopes.LeaderboardScope? _detailsBoardScope;
+
+    private Name? _detailsBoardCommunity;
+
+    /// <summary>Null lets the dialog open on the tab the player remembers; a board request forces Leaderboard.</summary>
+    private ChartDetailsDialog.DetailsTab? _detailsTab;
+
+    /// <summary>
+    ///     A card’s popover asked for one source’s board (peers-abstraction.md D12): details, on
+    ///     that scope, on the Leaderboard tab whatever tab the player last left it on.
+    /// </summary>
+    private void OpenBoard(PeerBoardRequest request, IReadOnlyDictionary<Guid, Chart> charts)
+    {
+        if (!charts.TryGetValue(request.ChartId, out var chart)) return;
+        _detailsChart = chart;
+        _detailsAutoPlay = false;
+        _detailsBoardScope = request.Scope;
+        _detailsBoardCommunity = request.Community;
+        _detailsTab = ChartDetailsDialog.DetailsTab.Leaderboard;
         _detailsOpen = true;
     }
 

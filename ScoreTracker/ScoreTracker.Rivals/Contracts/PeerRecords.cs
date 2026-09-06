@@ -44,8 +44,8 @@ public sealed record PeerSourceOption(
     bool IsRegional,
     bool IsWorld,
     bool Available,
-    IReadOnlySet<Guid> SinglesMembers,
-    IReadOnlySet<Guid> DoublesMembers,
+    IReadOnlySet<PeerVoice> SinglesMembers,
+    IReadOnlySet<PeerVoice> DoublesMembers,
     int BoardOnlyRivals);
 
 [ExcludeFromCodeCoverage]

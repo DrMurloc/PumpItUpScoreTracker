@@ -13,11 +13,11 @@ internal static class PeerStandingCalculator
     public const int PerfectGame = 1_000_000;
 
     /// <summary>
-    ///     One peer's passing score on the chart. The key is the player's user id for a site
-    ///     account and the rival edge id for a board-only rival — both Guids, never colliding,
-    ///     which is what lets one set hold both kinds.
+    ///     One peer's passing score on the chart. The key is a <see cref="PeerVoice" />, so an
+    ///     account, a board-only rival and a player the official board is the only record of all
+    ///     sit in one set without any of them having to borrow another's kind of id.
     /// </summary>
-    public sealed record PeerPass(Guid PlayerKey, int Score, bool FromOfficialBoard);
+    public sealed record PeerPass(PeerVoice PlayerKey, int Score, bool FromOfficialBoard);
 
     /// <summary>A ticked source and the player keys it contributes (the subject already removed).</summary>
     public sealed record SourceMembers(
@@ -26,19 +26,19 @@ internal static class PeerStandingCalculator
         string? CommunityName,
         bool IsRegional,
         bool IsWorld,
-        IReadOnlySet<Guid> Members);
+        IReadOnlySet<PeerVoice> Members);
 
     /// <summary>
     ///     <paramref name="passes" /> and <paramref name="brokenKeys" /> may carry players outside
     ///     <paramref name="union" /> (a shared read serving several charts); only union members count.
     /// </summary>
     public static PeerStanding Compute(int subjectScore, IReadOnlyCollection<PeerPass> passes,
-        IReadOnlySet<Guid> brokenKeys, IReadOnlyList<SourceMembers> sources, IReadOnlySet<Guid> union,
+        IReadOnlySet<PeerVoice> brokenKeys, IReadOnlyList<SourceMembers> sources, IReadOnlySet<PeerVoice> union,
         DateTimeOffset? officialAsOf)
     {
         // One pass per player: a key that arrives twice (a site rival read once by the union and
         // once by the rival reader) keeps its higher score and is counted once.
-        var best = new Dictionary<Guid, PeerPass>();
+        var best = new Dictionary<PeerVoice, PeerPass>();
         foreach (var pass in passes)
         {
             if (!union.Contains(pass.PlayerKey)) continue;

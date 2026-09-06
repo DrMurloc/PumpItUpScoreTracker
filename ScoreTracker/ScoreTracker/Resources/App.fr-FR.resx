@@ -274,6 +274,12 @@
   <data name="1 peer" xml:space="preserve">
     <value>1 joueur similaire</value>
   </data>
+  <data name="1 peer is from the official board, as of {0}." xml:space="preserve">
+    <value>1 pair provient du classement officiel, au {0}.</value>
+  </data>
+  <data name="1 peer is from the official board." xml:space="preserve">
+    <value>1 pair provient du classement officiel.</value>
+  </data>
   <data name="1 Player" xml:space="preserve">
     <value>1 joueur</value>
   </data>
@@ -6963,6 +6969,12 @@
   <data name="Reached {0}" xml:space="preserve">
     <value>A atteint {0}</value>
   </data>
+  <data name="Read from the official board, as of {0}. No account on PIU Scores." xml:space="preserve">
+    <value>Lu sur le classement officiel, au {0}. Pas de compte sur PIU Scores.</value>
+  </data>
+  <data name="Read from the official board. No account on PIU Scores." xml:space="preserve">
+    <value>Lu sur le classement officiel. Pas de compte sur PIU Scores.</value>
+  </data>
   <data name="Read in" xml:space="preserve">
     <value>Lire en</value>
   </data>
@@ -8387,6 +8399,9 @@
   </data>
   <data name="still isn't enough at {0}" xml:space="preserve">
     <value>ne suffit toujours pas avec {0}</value>
+  </data>
+  <data name="Still working out where this sits." xml:space="preserve">
+    <value>Calcul de sa place en cours.</value>
   </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>avare en score même une fois passé</value>
@@ -11188,6 +11203,12 @@
   </data>
   <data name="{0} peers" xml:space="preserve">
     <value>{0} joueurs similaires</value>
+  </data>
+  <data name="{0} peers are from the official board, as of {1}." xml:space="preserve">
+    <value>{0} pairs proviennent du classement officiel, au {1}.</value>
+  </data>
+  <data name="{0} peers are from the official board." xml:space="preserve">
+    <value>{0} pairs proviennent du classement officiel.</value>
   </data>
   <data name="{0} per chart" xml:space="preserve">
     <value>{0} par chart</value>

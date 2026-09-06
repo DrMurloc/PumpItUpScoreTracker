@@ -38,7 +38,8 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
             new EFPhoenixRecordsRepository(_fixture.DbContextFactory,
                 new MemoryCache(new MemoryCacheOptions()), new Mock<IChartRepository>().Object,
                 new EFXXChartAttemptRepository(_fixture.DbContextFactory),
-                Mock.Of<IMediator>(), Mock.Of<IPlayerStatsReader>()),
+                Mock.Of<IMediator>(), Mock.Of<IPlayerStatsReader>(),
+                new PeerScoreStore(_fixture.DbContextFactory)),
             new EFTitleRepository(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions())));
 
     [Fact]

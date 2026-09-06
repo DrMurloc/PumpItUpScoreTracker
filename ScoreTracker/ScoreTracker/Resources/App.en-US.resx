@@ -274,6 +274,12 @@
   <data name="1 peer" xml:space="preserve">
     <value>1 peer</value>
   </data>
+  <data name="1 peer is from the official board, as of {0}." xml:space="preserve">
+    <value>1 peer is from the official board, as of {0}.</value>
+  </data>
+  <data name="1 peer is from the official board." xml:space="preserve">
+    <value>1 peer is from the official board.</value>
+  </data>
   <data name="1 Player" xml:space="preserve">
     <value>1 Player</value>
   </data>
@@ -6964,6 +6970,12 @@
   <data name="Reached {0}" xml:space="preserve">
     <value>Reached {0}</value>
   </data>
+  <data name="Read from the official board, as of {0}. No account on PIU Scores." xml:space="preserve">
+    <value>Read from the official board, as of {0}. No account on PIU Scores.</value>
+  </data>
+  <data name="Read from the official board. No account on PIU Scores." xml:space="preserve">
+    <value>Read from the official board. No account on PIU Scores.</value>
+  </data>
   <data name="Read in" xml:space="preserve">
     <value>Read in</value>
   </data>
@@ -8388,6 +8400,9 @@
   </data>
   <data name="still isn't enough at {0}" xml:space="preserve">
     <value>still isn't enough at {0}</value>
+  </data>
+  <data name="Still working out where this sits." xml:space="preserve">
+    <value>Still working out where this sits.</value>
   </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>stingy to score even when passed</value>
@@ -11189,6 +11204,12 @@
   </data>
   <data name="{0} peers" xml:space="preserve">
     <value>{0} peers</value>
+  </data>
+  <data name="{0} peers are from the official board, as of {1}." xml:space="preserve">
+    <value>{0} peers are from the official board, as of {1}.</value>
+  </data>
+  <data name="{0} peers are from the official board." xml:space="preserve">
+    <value>{0} peers are from the official board.</value>
   </data>
   <data name="{0} per chart" xml:space="preserve">
     <value>{0} per chart</value>

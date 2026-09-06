@@ -33,6 +33,9 @@ public static class ScoreLedgerRegistrationExtensions
         // handler instances (moved here from Web.Accessors — it has no ASP.NET
         // dependency and the Ledger owns the batching seam).
         services.AddSingleton<IPlayerScoreBatchAccumulator, PlayerScoreBatchAccumulator>();
+        // Every player's passing bests, held for the two reads that ask about other people.
+        // Singleton or it is not a cache; evicted per player by PeerScoreCacheConsumer.
+        services.AddSingleton<PeerScoreStore>();
         services.AddSingleton<IDbModelContribution, ScoreLedgerModelContribution>();
         return services;
     }
@@ -54,5 +57,7 @@ public static class ScoreLedgerRegistrationExtensions
         // NO session is ever marked, so every one of them looks interrupted and the recovery pass
         // replays the world on the next boot.
         configurator.AddConsumer<SessionRecoverySaga>();
+        // Drops the importing player's held scores so their peers see the import.
+        configurator.AddConsumer<PeerScoreCacheConsumer>();
     }
 }

@@ -274,6 +274,12 @@
   <data name="1 peer" xml:space="preserve">
     <value>同レベル1人</value>
   </data>
+  <data name="1 peer is from the official board, as of {0}." xml:space="preserve">
+    <value>ピア 1 人は公式ランキングからです（{0}時点）。</value>
+  </data>
+  <data name="1 peer is from the official board." xml:space="preserve">
+    <value>ピア 1 人は公式ランキングからです。</value>
+  </data>
   <data name="1 Player" xml:space="preserve">
     <value>1人</value>
   </data>
@@ -6964,6 +6970,12 @@
   <data name="Reached {0}" xml:space="preserve">
     <value>{0}に到達</value>
   </data>
+  <data name="Read from the official board, as of {0}. No account on PIU Scores." xml:space="preserve">
+    <value>公式ランキングから読み取り（{0}時点）。PIU Scoresのアカウントはありません。</value>
+  </data>
+  <data name="Read from the official board. No account on PIU Scores." xml:space="preserve">
+    <value>公式ランキングから読み取り。PIU Scoresのアカウントはありません。</value>
+  </data>
   <data name="Read in" xml:space="preserve">
     <value>表示言語</value>
   </data>
@@ -8388,6 +8400,9 @@
   </data>
   <data name="still isn't enough at {0}" xml:space="preserve">
     <value>{0}では届きません</value>
+  </data>
+  <data name="Still working out where this sits." xml:space="preserve">
+    <value>この位置はまだ計算中です。</value>
   </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>クリアしてもスコアは渋い</value>
@@ -11189,6 +11204,12 @@
   </data>
   <data name="{0} peers" xml:space="preserve">
     <value>同レベル{0}人</value>
+  </data>
+  <data name="{0} peers are from the official board, as of {1}." xml:space="preserve">
+    <value>ピア {0} 人は公式ランキングからです（{1}時点）。</value>
+  </data>
+  <data name="{0} peers are from the official board." xml:space="preserve">
+    <value>ピア {0} 人は公式ランキングからです。</value>
   </data>
   <data name="{0} per chart" xml:space="preserve">
     <value>1譜面あたり{0}</value>

@@ -41,13 +41,15 @@ public sealed class BrokenRecordCleanupTests : IAsyncLifetime
     public Task DisposeAsync() => Task.CompletedTask;
 
     // A fresh MemoryCache per call, so a read after the delete goes to the database rather than
-    // seeing the writer's in-process copy of the scores it just removed.
+    // seeing the writer's in-process copy of the scores it just removed. The peer
+    // store is fresh for the same reason: it holds a player's scores whole.
     private EFPhoenixRecordsRepository BuildRepository() =>
         new(_fixture.DbContextFactory,
             new MemoryCache(new MemoryCacheOptions()),
             Mock.Of<IChartRepository>(),
             new EFXXChartAttemptRepository(_fixture.DbContextFactory),
-            Mock.Of<IMediator>(), Mock.Of<IPlayerStatsReader>());
+            Mock.Of<IMediator>(), Mock.Of<IPlayerStatsReader>(),
+            new PeerScoreStore(_fixture.DbContextFactory));
 
     [Fact]
     public async Task TheCleanupTakesEveryBrokenRecordAndNothingElse()

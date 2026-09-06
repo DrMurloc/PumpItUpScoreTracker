@@ -18,6 +18,7 @@ using ScoreTracker.PlayerProgress.Application;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Tests.TestHelpers;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
@@ -761,7 +762,7 @@ public sealed partial class PumbilityProjectionSagaTests
             // are written against cohort membership and level-when-set, so faking it would leave
             // the plumbing this fixture exists to drive unexercised.
             Saga = new PumbilityProjectionSaga(Mediator.Object,
-                new ScoreProjector(Scores.Object, Stats.Object, History.Object), Cache, Scores.Object, Stats.Object,
+                new ScoreProjector(Scores.Object, Stats.Object, History.Object, NoBoard.Reader), Cache, Scores.Object, Stats.Object,
                 Users.Object, CurrentUser.Object);
         }
 

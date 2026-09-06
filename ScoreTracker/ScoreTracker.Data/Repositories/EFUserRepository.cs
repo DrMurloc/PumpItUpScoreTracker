@@ -239,6 +239,22 @@ public sealed class EFUserRepository : IUserRepository, IUserReader
     }
 
 
+    public async Task<IReadOnlyList<User>> GetUsersByGameTags(IReadOnlyCollection<string> gameTags,
+        CancellationToken cancellationToken = default)
+    {
+        if (gameTags.Count == 0) return Array.Empty<User>();
+        // Normalised on both sides. Spaces come out in SQL so the comparison happens in the
+        // database rather than over every account with a tag; case is the column's own collation.
+        var wanted = gameTags.Select(t => t.Replace(" ", string.Empty)).Distinct().ToArray();
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.User
+            .Where(u => u.GameTag != null && wanted.Contains(u.GameTag.Replace(" ", "")))
+            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName,
+                u.IsContentLocked, u.ClaimsInvalidatedAt,
+                u.ImportedProfileImage == null ? null : new Uri(u.ImportedProfileImage), u.AvatarIsPinned))
+            .ToArrayAsync(cancellationToken);
+    }
+
     public async Task<User?> GetUser(Guid userId, CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);

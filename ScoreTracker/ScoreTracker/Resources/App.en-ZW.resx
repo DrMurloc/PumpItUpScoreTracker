@@ -274,6 +274,12 @@
   <data name="1 peer" xml:space="preserve">
     <value>1 morp</value>
   </data>
+  <data name="1 peer is from the official board, as of {0}." xml:space="preserve">
+    <value>1 maglmurp blurgab urgmrmurg mrglblarg, mrp {0}.</value>
+  </data>
+  <data name="1 peer is from the official board." xml:space="preserve">
+    <value>1 maglmurp blurgab urgmrmurg mrglblarg.</value>
+  </data>
   <data name="1 Player" xml:space="preserve">
     <value>1 Morp</value>
   </data>
@@ -6964,6 +6970,12 @@
   <data name="Reached {0}" xml:space="preserve">
     <value>Gromrglorg {0}</value>
   </data>
+  <data name="Read from the official board, as of {0}. No account on PIU Scores." xml:space="preserve">
+    <value>Blurgab urgmrmurg mrglblarg, mrp {0}. Mrgl aglombu mrp PIU Mgrlgmrg.</value>
+  </data>
+  <data name="Read from the official board. No account on PIU Scores." xml:space="preserve">
+    <value>Blurgab urgmrmurg mrglblarg. Mrgl aglombu mrp PIU Mgrlgmrg.</value>
+  </data>
   <data name="Read in" xml:space="preserve">
     <value>Blurgl gropmur</value>
   </data>
@@ -8388,6 +8400,9 @@
   </data>
   <data name="still isn't enough at {0}" xml:space="preserve">
     <value>larg bo blurg og {0}</value>
+  </data>
+  <data name="Still working out where this sits." xml:space="preserve">
+    <value>Murgl blurgab mrp glorgmurg.</value>
   </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>murpmurp grgl mrglrgl mrpplgl mrpgrrgl rglplgl</value>
@@ -11189,6 +11204,12 @@
   </data>
   <data name="{0} peers" xml:space="preserve">
     <value>{0} morp</value>
+  </data>
+  <data name="{0} peers are from the official board, as of {1}." xml:space="preserve">
+    <value>{0} maglmurp blurgab urgmrmurg mrglblarg, mrp {1}.</value>
+  </data>
+  <data name="{0} peers are from the official board." xml:space="preserve">
+    <value>{0} maglmurp blurgab urgmrmurg mrglblarg.</value>
   </data>
   <data name="{0} per chart" xml:space="preserve">
     <value>{0} morg murgl</value>

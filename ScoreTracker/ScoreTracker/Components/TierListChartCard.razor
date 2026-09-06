@@ -131,7 +131,7 @@ else
         {
             <MudText Typo="Typo.caption" Class="tier-chart-card-tier" Style="@($"color:{TierColor}")">@TierLabel</MudText>
         }
-        @if (StandingText != null)
+        @if (ShowStandingText && StandingText != null)
         {
             @* The standing in words, beside the color it explains (rule 8). *@
             <MudText Typo="Typo.caption" Class="tier-chart-card-meta tier-chart-card-standing">@StandingText</MudText>
@@ -216,6 +216,14 @@ else
 
     /// <summary>Where the score stands among the viewer's peers; null paints it plain.</summary>
     [Parameter] public PeerStanding? Standing { get; set; }
+
+    /// <summary>
+    ///     Whether the standing is also spelled out under the card. On by default (rule 8: the
+    ///     colour is never the only channel), and off where the list has already decided its
+    ///     body carries no peers' data — the PUMBILITY lists, where the caption would be the
+    ///     one line of it (D57). The colour and the popover are unaffected either way.
+    /// </summary>
+    [Parameter] public bool ShowStandingText { get; set; } = true;
 
     /// <summary>A popover source line asking for that source's board; the page opens details on it.</summary>
     [Parameter] public EventCallback<PeerBoardRequest> OnOpenBoard { get; set; }

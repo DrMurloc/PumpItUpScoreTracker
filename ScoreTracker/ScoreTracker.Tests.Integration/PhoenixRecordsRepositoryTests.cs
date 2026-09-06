@@ -34,13 +34,14 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
     public Task DisposeAsync() => Task.CompletedTask;
 
     // Each call returns a repo with a fresh MemoryCache, so a read built via BuildRepository()
-    // goes to the database rather than seeing the writer's in-process cache.
+    // goes to the database rather than seeing the writer's in-process cache. The peer store is fresh for the same reason.
     private EFPhoenixRecordsRepository BuildRepository() =>
         new(_fixture.DbContextFactory,
             new MemoryCache(new MemoryCacheOptions()),
             Mock.Of<IChartRepository>(),
             new EFXXChartAttemptRepository(_fixture.DbContextFactory),
-            Mock.Of<IMediator>(), Mock.Of<IPlayerStatsReader>());
+            Mock.Of<IMediator>(), Mock.Of<IPlayerStatsReader>(),
+            new PeerScoreStore(_fixture.DbContextFactory));
 
     [Fact]
     public async Task GetPlayerScoresInLevelRangeReadsTheBandAndNothingOutsideIt()

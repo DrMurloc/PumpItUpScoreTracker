@@ -274,6 +274,12 @@
   <data name="1 peer" xml:space="preserve">
     <value>1 jogador similar</value>
   </data>
+  <data name="1 peer is from the official board, as of {0}." xml:space="preserve">
+    <value>1 par é do ranking oficial, em {0}.</value>
+  </data>
+  <data name="1 peer is from the official board." xml:space="preserve">
+    <value>1 par é do ranking oficial.</value>
+  </data>
   <data name="1 Player" xml:space="preserve">
     <value>1 jogador</value>
   </data>
@@ -6925,6 +6931,12 @@
   <data name="Reached {0}" xml:space="preserve">
     <value>Alcançou {0}</value>
   </data>
+  <data name="Read from the official board, as of {0}. No account on PIU Scores." xml:space="preserve">
+    <value>Lido do ranking oficial, em {0}. Sem conta no PIU Scores.</value>
+  </data>
+  <data name="Read from the official board. No account on PIU Scores." xml:space="preserve">
+    <value>Lido do ranking oficial. Sem conta no PIU Scores.</value>
+  </data>
   <data name="Read in" xml:space="preserve">
     <value>Ler em</value>
   </data>
@@ -8331,6 +8343,9 @@
   </data>
   <data name="still isn't enough at {0}" xml:space="preserve">
     <value>ainda não basta com {0}</value>
+  </data>
+  <data name="Still working out where this sits." xml:space="preserve">
+    <value>Ainda a calcular onde isto se encaixa.</value>
   </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>avarento na pontuação mesmo depois de passar</value>
@@ -11121,6 +11136,12 @@
   </data>
   <data name="{0} peers" xml:space="preserve">
     <value>{0} jogadores similares</value>
+  </data>
+  <data name="{0} peers are from the official board, as of {1}." xml:space="preserve">
+    <value>{0} pares são do ranking oficial, em {1}.</value>
+  </data>
+  <data name="{0} peers are from the official board." xml:space="preserve">
+    <value>{0} pares são do ranking oficial.</value>
   </data>
   <data name="{0} per chart" xml:space="preserve">
     <value>{0} por chart</value>

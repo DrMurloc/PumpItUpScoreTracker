@@ -32,6 +32,11 @@ public static class OfficialMirrorRegistrationExtensions
         });
         services.AddTransient<IOfficialSiteClient, OfficialSiteClient>();
         services.AddTransient<IOfficialSnapshotRepository, EFOfficialSnapshotRepository>();
+        // The mirror's board scores, held whole and stamped with the snapshot they came from.
+        // Singleton or it is not a cache; the repository it reads through holds only a context
+        // factory, so nothing scoped is captured (docs/design/pumbility-overhaul.md §6.14).
+        services.AddSingleton<BoardScoreStore>();
+        services.AddTransient<BoardPeerReader>();
         services.AddTransient<IOfficialPlacementReader, OfficialPlacementReader>();
         services.AddTransient<IOfficialRecordRepository, EFOfficialRecordRepository>();
         services.AddTransient<IOfficialPlayerIdentityRepository, EFOfficialPlayerIdentityRepository>();
