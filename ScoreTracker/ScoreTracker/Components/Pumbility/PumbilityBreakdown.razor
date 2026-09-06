@@ -202,10 +202,12 @@
     private static string Flex(double value) =>
         Math.Max(0, value).ToString("0.##", CultureInfo.InvariantCulture);
 
-    // A pool part prints two decimals on this page (the precision rule); an averaged count
-    // prints whole, since a fraction of a chart is not a thing a reader can picture.
+    // The segment prints whole PUMBILITY — the one whole number on the section (owner,
+    // 2026-09-05: "drop the decimal for the bar"): the segment is narrow, and two decimals
+    // bought nothing at that width. An averaged count prints whole too, since a fraction of a
+    // chart is not a thing a reader can picture.
     private static string Segment(double value, double count) =>
-        $"{value.ToString("N2")} ({Math.Round(count).ToString("N0")})";
+        $"{value.ToString("N0")} ({Math.Round(count).ToString("N0")})";
 
     // The stack is drawn true to scale, so a part worth nothing takes no width. Negative is
     // possible on the score part below the reference grade and draws as nothing rather than

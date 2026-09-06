@@ -237,7 +237,8 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         Assert.All(mine, s => Assert.EndsWith("(25)", s.TextContent.Trim()));
         Assert.Contains("d", mine[0].ClassName.Split(' '));
         var peers = bars[1].QuerySelectorAll(".pmb-flip-seg").Select(s => s.TextContent.Trim()).ToArray();
-        Assert.Equal(new[] { "5,508.22 (16)", "12,085.84 (34)" }, peers);
+        // Whole numbers on the bar (owner, 2026-09-05): the segment is too narrow for decimals.
+        Assert.Equal(new[] { "5,508 (16)", "12,086 (34)" }, peers);
         Assert.Contains("the average top 50 of the 64 players", cut.Find("[data-testid=wpc-types]").TextContent);
         // Sized by value: the singles segment is the wider one on the peers' bar.
         var flex = bars[1].QuerySelectorAll(".pmb-flip-seg")
