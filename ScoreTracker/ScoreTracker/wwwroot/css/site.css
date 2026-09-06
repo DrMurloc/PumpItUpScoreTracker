@@ -19528,3 +19528,26 @@ a.peer-pop-row:hover {
     .mom-entry-row > .mud-button-root { grid-column: 1 / -1; justify-content: center; }
     .mom-play .why { display: none; }
 }
+
+/* ===== March of Murlocs — the My Sessions on-ramp (D32) ===================================
+   Three states under one session's title: a night already on a board wears the gold chip, a
+   night holding a session-shaped window gets the callout, everything else the quiet link. */
+.mom-quiet { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 12.5px; color: var(--mix-primary); text-decoration: none; }
+.mom-quiet:hover { text-decoration: underline; }
+.mom-recorded { display: inline-flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-top: 8px; padding: 5px 10px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--rarity-gold) 55%, transparent); background: color-mix(in srgb, var(--rarity-gold) 10%, transparent); color: var(--rarity-gold); font-size: 12.5px; text-decoration: none; }
+.mom-recorded .l2 { color: var(--mix-ink); font-variant-numeric: tabular-nums; }
+.mom-recorded:hover { text-decoration: none; filter: brightness(1.1); }
+.mom-callout { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; margin: 0 18px 14px; padding: 12px 14px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--mix-accent) 50%, transparent); background: color-mix(in srgb, var(--mix-accent) 7%, transparent); }
+.mom-callout .ico { color: var(--mix-accent); display: flex; }
+.mom-callout h3 { margin: 0 0 8px; font-size: 17px; font-weight: 600; }
+.mom-callout .facts { display: flex; gap: 18px; flex-wrap: wrap; }
+.mom-callout .fact { display: flex; flex-direction: column; line-height: 1.15; }
+.mom-callout .fact b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.mom-callout .fact span { font-size: 11px; color: var(--mix-ink-muted); }
+.mom-callout .act { margin-left: auto; align-self: center; }
+@media (max-width: 700px) {
+    .mom-callout { margin-left: 12px; margin-right: 12px; }
+    .mom-callout .act { margin-left: 0; width: 100%; }
+    .mom-callout .act .mud-button-root { width: 100%; justify-content: center; }
+    .mom-recorded { width: 100%; }
+}

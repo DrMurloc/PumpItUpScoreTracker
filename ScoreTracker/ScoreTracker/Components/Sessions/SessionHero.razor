@@ -1,4 +1,5 @@
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.EventCompetition.Contracts
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.ScoreLedger.Contracts
 @using ScoreTracker.SharedKernel.Enums
@@ -22,6 +23,26 @@
                     <span class="sbd-hero-tag">@L["imported from {0}", Breakdown.AccountTag]</span>
                 }
             </span>
+            @* The one-way door into March of Murlocs (D32). A night already on a board wears the
+               chip; every other night gets the quiet link, because there is always a season. *@
+            @if (MoM?.Recorded is { } recorded)
+            {
+                <a class="mom-recorded" href="@MoMText.SessionPath(recorded.SessionId)" data-testid="mom-onramp-recorded">
+                    <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Small"/>
+                    <span>@L["March of Murlocs session"]</span>
+                    <span class="l2">
+                        <b>@L["{0} on {1}", MoMText.Ordinal(recorded.Place, L), TypeName(recorded.ChartType)]</b>
+                        · @L["{0} points", recorded.TotalScore.ToString("N0")] →
+                    </span>
+                </a>
+            }
+            else if (MoM?.RecordBoardId is { } quietBoard)
+            {
+                <a class="mom-quiet" href="@MoMText.RecordPath(quietBoard)" data-testid="mom-onramp-link">
+                    <MudIcon Icon="@Icons.Material.Filled.Alarm" Size="Size.Small"/>
+                    @L["Record as a March of Murlocs session"]
+                </a>
+            }
         </div>
         <div class="sbd-tally">
             <div><span class="sbd-tally-v sbd-pass">@Breakdown.PassCount</span><span class="sbd-tally-k">@L["Passes"]</span></div>
@@ -29,6 +50,38 @@
             <div><span class="sbd-tally-v">@Breakdown.PlayCount</span><span class="sbd-tally-k">@L["Plays"]</span></div>
         </div>
     </div>
+
+    @* The loud half of D32: this night holds a window that would make a session, so it says so
+       with the numbers that decide it and a button that opens Submit on the right board. *@
+    @if (MoM?.Candidate is { } candidate)
+    {
+        <div class="mom-callout" data-testid="mom-onramp-callout">
+            <div class="ico"><MudIcon Icon="@Icons.Material.Filled.Alarm"/></div>
+            <div>
+                <h3>@L["This looks like a March of Murlocs session."]</h3>
+                <div class="facts">
+                    <span class="fact">
+                        <b>@TypeName(candidate.ChartType)</b>
+                        <span>@candidate.From.ToLocalTime().ToString("t") – @candidate.To.ToLocalTime().ToString("t")</span>
+                    </span>
+                    <span class="fact"><b>@candidate.Charts</b><span>@L["charts"]</span></span>
+                    <span class="fact"><b>@MoMText.HoursMinutesSeconds(candidate.SongTime)</b><span>@L["of songs"]</span></span>
+                    <span class="fact"><b>@MoMText.MinutesSeconds(candidate.Rest)</b><span>@L["rest in 1:45"]</span></span>
+                    @if (candidate.StageBreaks > 0)
+                    {
+                        <span class="fact">
+                            <b>@candidate.StageBreaks</b>
+                            <span>@(candidate.StageBreaks == 1 ? L["stage break"] : L["stage breaks"])</span>
+                        </span>
+                    }
+                </div>
+            </div>
+            <div class="act">
+                <MudButton Href="@MoMText.RecordPath(candidate.BoardId)" Variant="Variant.Filled" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Edit" data-testid="mom-onramp-record">@L["Record it"]</MudButton>
+            </div>
+        </div>
+    }
 
     @* The band stays above the card on purpose. Its figures come from your stats row, not from
        capture, so they are true the moment the import lands — what it is missing is the deltas,
@@ -133,6 +186,16 @@
     private const int NotableRows = 6;
 
     [Parameter] [EditorRequired] public SessionBreakdown Breakdown { get; set; } = null!;
+
+    /// <summary>
+    ///     What March of Murlocs makes of this night (D32). Null when the page did not ask, when
+    ///     there is no live season, or when the viewer is looking at someone else's sessions — the
+    ///     on-ramp is an offer to record your own play.
+    /// </summary>
+    [Parameter] public MoMOnRamp? MoM { get; set; }
+
+    private string TypeName(ScoreTracker.SharedKernel.Enums.ChartType type) =>
+        type == ScoreTracker.SharedKernel.Enums.ChartType.Single ? L["Singles"] : L["Doubles"];
     [Parameter] public EventCallback<Chart> OnOpenChart { get; set; }
     [Parameter] public EventCallback<SessionScore> OnOpenBreakdown { get; set; }
 
