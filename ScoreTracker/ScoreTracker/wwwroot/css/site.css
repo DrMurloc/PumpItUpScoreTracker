@@ -19624,6 +19624,15 @@ a.peer-pop-row:hover {
     line-height: 1.45;
 }
 .mom-entry .mud-input-label, .pl-controls .mud-input-label { font-size: 13px; }
+/* A resting label is translated down by an amount tuned to the taller input, which leaves it
+   sitting below centre once the input is this short. The floated one lands in the notch and is
+   already right, so only the un-shrunk label moves — and a focused field floats its label with
+   :focus-within rather than a class, so that state has to be excluded by hand or this rule
+   out-specifies it and the label sits on top of what is being typed. */
+.mom-entry .mud-input.mud-input-outlined:not(.mud-shrink):not(:focus-within) ~ .mud-input-label.mud-input-label-outlined,
+.pl-controls .mud-input.mud-input-outlined:not(.mud-shrink):not(:focus-within) ~ .mud-input-label.mud-input-label-outlined {
+    transform: translate(14px, 6px) scale(1);
+}
 .mom-entry .mud-input-adornment .mud-icon-root, .pl-controls .mud-input-adornment .mud-icon-root { font-size: 18px; }
 .mom-entry .mud-input-adornment .mud-button-root, .pl-controls .mud-input-adornment .mud-button-root { padding: 2px; }
 .pl-projected-toggle { margin-top: 10px; font-size: 13px; }
