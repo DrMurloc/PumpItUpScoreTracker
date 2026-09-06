@@ -26,6 +26,12 @@ internal sealed class ToolKeySaga :
     ///     How long a resolved key is remembered for the rate limiter's sake. A tool is only ever
     ///     limited after hundreds of successes inside one minute, so anything longer than a minute
     ///     keeps the entry warm; five keeps it warm across a quiet spell too.
+    ///     <para>
+    ///         Absolute, never sliding. Every successful resolve rewrites the entry, so the window
+    ///         always runs from the last success — and a sliding window would be refreshed by the
+    ///         rejection path's reads, which is how a key revoked mid-flood would have kept counting
+    ///         for as long as the flood lasted.
+    ///     </para>
     /// </summary>
     private static readonly TimeSpan PrincipalLifetime = TimeSpan.FromMinutes(5);
 
@@ -147,14 +153,23 @@ internal sealed class ToolKeySaga :
         if (!ApiKeyMint.LooksLikeAKey(request.Key)) return null;
 
         var hash = ApiKeyMint.HashOf(request.Key);
+        var cacheKey = PrincipalCacheKey(hash);
         var now = _dateTime.Now;
         var resolution = await _keys.ResolveToolByKeyHash(hash, now, cancellationToken);
-        if (resolution is null) return null;
+
+        // A key that no longer resolves — revoked, expired, gone — leaves the cache the moment
+        // the database says so, so the rejection path stops counting under its name at once.
+        if (resolution is null)
+        {
+            _cache.Remove(cacheKey);
+            return null;
+        }
 
         // An expired key is named for the console's sake — the hour's tally of what bounced is
         // what turns "my key stopped working" into a date — and still fails here.
         if (resolution.IsExpired)
         {
+            _cache.Remove(cacheKey);
             await Tally(resolution.ToolId, ToolActivityKind.KeyExpired, now, resolution.KeyName,
                 cancellationToken);
             return null;
@@ -165,8 +180,8 @@ internal sealed class ToolKeySaga :
         await Tally(resolution.ToolId, ToolActivityKind.KeyUsed, now, resolution.KeyName, cancellationToken);
 
         var principal = new ToolKeyPrincipal(resolution.ToolId, resolution.KeyName);
-        _cache.Set(PrincipalCacheKey(hash), principal,
-            new MemoryCacheEntryOptions { SlidingExpiration = PrincipalLifetime });
+        _cache.Set(cacheKey, principal,
+            new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = PrincipalLifetime });
         return principal;
     }
 

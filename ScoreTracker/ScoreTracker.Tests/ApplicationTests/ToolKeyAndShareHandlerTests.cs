@@ -179,6 +179,32 @@ public sealed class ToolKeyAndShareHandlerTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    ///     Revocation exists for a tool that is out of control, which is exactly when the limiter
+    ///     is rejecting it. The first request the scheme sees after the revoke must take the key
+    ///     out of the cache, or the flood keeps counting under a dead name.
+    /// </summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task AKeyThatStopsResolvingStopsCountingRateLimitsAtOnce(bool expiredRatherThanRevoked)
+    {
+        var (key, hash, _) = ApiKeyMint.Mint();
+        _keys.Setup(k => k.ResolveToolByKeyHash(hash, Now, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ToolKeyResolution(ToolId, "production", IsExpired: false));
+        var saga = KeySaga();
+        await saga.Handle(new GetToolByApiKeyQuery(key), CancellationToken.None);
+        _keys.Setup(k => k.ResolveToolByKeyHash(hash, Now, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expiredRatherThanRevoked ? new ToolKeyResolution(ToolId, "production", IsExpired: true) : null);
+        await saga.Handle(new GetToolByApiKeyQuery(key), CancellationToken.None);
+
+        var named = await saga.Handle(new RecordRateLimitedRequestCommand(key), CancellationToken.None);
+
+        Assert.Null(named);
+        _activity.Verify(a => a.Increment(ToolId, ToolActivityKind.RateLimited, It.IsAny<DateTimeOffset>(),
+            It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     /// <summary>A key nobody resolved recently, or a personal token, is dropped rather than looked up.</summary>
     [Theory]
     [InlineData(true)]
