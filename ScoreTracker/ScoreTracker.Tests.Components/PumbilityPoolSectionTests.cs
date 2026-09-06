@@ -104,6 +104,27 @@ public sealed class PumbilityPoolSectionTests : ComponentTestBase
         Mediator.Verify(m => m.Send(It.IsAny<GetChartIdentityQuery>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public void ASavedFoldAppliesEvenWhenTheSettingLandsAfterTheFirstPaint()
+    {
+        // The settings accessor is a database round trip, so the block paints once before it
+        // answers; the list has to take the folds when they arrive rather than keep its first
+        // copy (bug check, 2026-09-05). Two charts a sigma apart band into two sections.
+        var folds = new TaskCompletionSource<string?>();
+        Mock.Get(Services.GetRequiredService<IUiSettingsAccessor>())
+            .Setup(s => s.GetSetting(PumbilityPoolSection.CollapsedSettingKey, It.IsAny<CancellationToken>(), It.IsAny<Guid?>()))
+            .Returns(folds.Task);
+        var f = new Fixture(poolSize: 2);
+
+        var cut = RenderComponent<PumbilityPoolSection>(p => p.Add(x => x.Page, f.Page).Add(x => x.Charts, f.Charts));
+
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".tier-section-body").Count));
+        folds.SetResult("VeryEasy");
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".tier-section-body")));
+        Assert.Empty(cut.FindAll("[data-testid=ppl-section-VeryEasy] .tier-section-body"));
+        Assert.NotEmpty(cut.FindAll("[data-testid=ppl-section-Hard] .tier-section-body"));
+    }
+
     // ------------------------------------------------------------------ fixture
 
     private sealed class Fixture

@@ -139,7 +139,12 @@ else
 
     [Parameter] public EventCallback<Chart> OnPlay { get; set; }
 
-    /// <summary>Section keys folded when the list first renders; nothing by default — the bar is at the bottom, and that is the part a reader came for.</summary>
+    /// <summary>
+    ///     Section keys folded; nothing by default — the bar is at the bottom, and that is the part
+    ///     a reader came for. The host owns them and hands them down on every render: it reads the
+    ///     saved folds from a UiSetting after its first paint, so a list that kept its first copy
+    ///     showed every section open on every load (bug check, 2026-09-05).
+    /// </summary>
     [Parameter] public IReadOnlySet<string>? Collapsed { get; set; }
 
     [Parameter] public EventCallback<IReadOnlySet<string>> CollapsedChanged { get; set; }
@@ -154,7 +159,6 @@ else
     private sealed record Section(string Key, string Name, string Color, IReadOnlyList<Row> Rows, TierListCategory Tier);
 
     private HashSet<string> _collapsed = new();
-    private bool _collapsedInitialised;
     private IReadOnlyList<Section> _sections = Array.Empty<Section>();
 
     /// <summary>
@@ -172,12 +176,8 @@ else
 
     protected override void OnParametersSet()
     {
-        if (!_collapsedInitialised)
-        {
-            _collapsed = new HashSet<string>(Collapsed ?? DefaultCollapsed);
-            _collapsedInitialised = true;
-        }
-
+        // A controlled parameter, copied on every render rather than latched on the first.
+        _collapsed = new HashSet<string>(Collapsed ?? DefaultCollapsed);
         _sections = Build();
     }
 
