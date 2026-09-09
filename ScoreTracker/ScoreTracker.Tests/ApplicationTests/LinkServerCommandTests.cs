@@ -59,7 +59,7 @@ public sealed class LinkServerCommandTests
             .ReturnsAsync(CommunityId);
         GivenPermission(CommunityPermission.All);
         _bot.Setup(b => b.GetGuild(Guild, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new BotGuild(Guild, "Arrow Eclipse"));
+            .ReturnsAsync(new BotGuild(Guild, "Arrow Eclipse", true));
     }
 
     private void GivenPermission(CommunityPermission permissions)

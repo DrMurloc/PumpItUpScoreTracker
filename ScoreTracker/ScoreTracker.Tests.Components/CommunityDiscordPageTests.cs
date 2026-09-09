@@ -35,7 +35,7 @@ public sealed class CommunityDiscordPageTests : ComponentTestBase
 
     private static CommunityDiscordView Linked(
         IReadOnlyList<CommunityTitleRoleView>? mappings = null, bool canManage = true) =>
-        new(CommunityId, Name.From("Arrow Eclipse"), Server(), true, canManage, true,
+        new(CommunityId, Name.From("Arrow Eclipse"), Server(), true, true, canManage, true,
             mappings ?? new[]
             {
                 new CommunityTitleRoleView("[P.B] BRONZE", "PUMBILITY Total", 1, "@Bronze", null, null, 4),
@@ -116,6 +116,31 @@ public sealed class CommunityDiscordPageTests : ComponentTestBase
 
         Assert.Contains("above the bot", markup);
         Assert.Contains("drag the PIU Scores role above them", markup);
+    }
+
+    /// <summary>
+    ///     The state every server invited before this feature is in, and the one the canary caught
+    ///     on its first real run. It is NOT a hierarchy problem, so the page must not send an admin
+    ///     off to reorder roles — nothing there can fix a permission the bot was never given.
+    /// </summary>
+    [Fact]
+    public void ABotWithNoManageRolesIsToldToReAddRatherThanReorder()
+    {
+        Given(_view with
+        {
+            BotCanManageRoles = false,
+            Mappings = new[]
+            {
+                new CommunityTitleRoleView("[P.B] BRONZE", "PUMBILITY Total", 1, "@Bronze", null,
+                    BotRoleBlockedReason.BotCannotManageRoles, 4)
+            }
+        });
+
+        var markup = Render().Markup;
+
+        Assert.Contains("no permission to manage roles", markup);
+        Assert.Contains("Re-add the bot", markup);
+        Assert.DoesNotContain("drag the PIU Scores role above them", markup);
     }
 
     [Fact]

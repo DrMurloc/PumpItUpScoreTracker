@@ -83,8 +83,12 @@ internal sealed class DiscordRoleAdminSaga :
         var canManage = viewerId != Guid.Empty &&
                         community.HasPermission(viewerId, CommunityPermission.ManageDiscord);
 
+        // One read answers both: whether the bot is still in the server, and whether it holds the
+        // permission at all. The second is false for every server invited before this feature.
+        var guild = server == null ? null : await _bot.GetGuild(server.GuildId, cancellationToken);
+
         return new CommunityDiscordView(communityId, community.Name, server,
-            server != null && await _bot.GetGuild(server.GuildId, cancellationToken) != null,
+            guild != null, guild?.CanManageRoles ?? false,
             canManage,
             // Only asked when it can matter: designating a server is done as yourself in Discord,
             // so the page tells an admin up front rather than letting them find out mid-command.

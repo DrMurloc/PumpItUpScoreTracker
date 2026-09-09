@@ -72,12 +72,18 @@ public sealed class DiscordRoleCanaryTests
             var guild = await bot.GetGuild(GuildId!.Value);
             Assert.NotNull(guild);
 
-            var roles = await bot.GetGuildRoles(GuildId.Value);
-            var role = Assert.Single(roles.Where(r => r.Id == RoleId!.Value));
+            // The half a mocked suite cannot reach, and the one this canary found on its first
+            // run: the bot was invited with the old permission integer and holds no Manage Roles
+            // at all, so every position check passes and the write returns 50001 Missing Access.
+            Assert.True(guild!.CanManageRoles,
+                "The bot has no Manage Roles permission in this server. Re-run the invite URL from " +
+                "/Communities — moving roles around cannot fix this one.");
 
-            // The hierarchy check the whole feature turns on. A role above the bot is refused
-            // silently, so a canary that skipped this would pass while production handed out
-            // nothing at all.
+            var roles = await bot.GetGuildRoles(GuildId.Value);
+            var role = Assert.Single(roles, r => r.Id == RoleId!.Value);
+
+            // The hierarchy check. A role above the bot is refused silently, so a canary that
+            // skipped this would pass while production handed out nothing at all.
             Assert.True(role.CanAssign,
                 $"The canary role is not assignable ({role.BlockedReason}). Move the bot's role above it.");
 

@@ -222,7 +222,10 @@ public sealed class DiscordBotClient : IBotClient
     public async Task<BotGuild?> GetGuild(ulong guildId, CancellationToken cancellationToken = default)
     {
         var guild = Client.GetGuild(guildId);
-        return guild == null ? null : await Task.FromResult(new BotGuild(guild.Id, guild.Name));
+        return guild == null
+            ? null
+            : await Task.FromResult(new BotGuild(guild.Id, guild.Name,
+                guild.CurrentUser?.GuildPermissions.ManageRoles ?? false));
     }
 
     /// <summary>
@@ -236,10 +239,16 @@ public sealed class DiscordBotClient : IBotClient
         var guild = Client.GetGuild(guildId);
         if (guild == null) return Array.Empty<BotGuildRole>();
 
+        // Hierarchy is only half the question. A bot invited WITHOUT Manage Roles passes every
+        // position check and then gets 50001 Missing Access on the write — which Discord reports
+        // to nobody. Asking the guild for the bot's own permission is the other half, and it is
+        // the state every server invited before this feature shipped is in.
+        var canManage = guild.CurrentUser?.GuildPermissions.ManageRoles ?? false;
         var ceiling = guild.CurrentUser?.Roles.Max(r => (int?)r.Position) ?? -1;
         return await Task.FromResult(guild.Roles
             .OrderByDescending(r => r.Position)
-            .Select(r => new BotGuildRole(r.Id, r.Name, ColorOf(r), BlockedReasonFor(r, ceiling)))
+            .Select(r => new BotGuildRole(r.Id, r.Name, ColorOf(r),
+                BlockedReasonFor(r, ceiling) ?? (canManage ? null : BotRoleBlockedReason.BotCannotManageRoles)))
             .ToArray());
     }
 

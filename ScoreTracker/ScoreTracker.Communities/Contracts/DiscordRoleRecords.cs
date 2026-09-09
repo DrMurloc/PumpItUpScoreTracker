@@ -47,6 +47,7 @@ public sealed record CommunityDiscordView(
     Name CommunityName,
     CommunityDiscordServerRecord? Server,
     bool BotIsInServer,
+    bool BotCanManageRoles,
     bool ViewerCanManage,
     bool ViewerHasDiscordLinked,
     IReadOnlyList<CommunityTitleRoleView> Mappings,

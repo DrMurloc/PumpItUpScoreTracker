@@ -7054,6 +7054,9 @@
     <value>評定</value>
     
   <comment>レーティング</comment></data>
+  <data name="Re-add the bot from the Communities page — it keeps this server and its channels, and picks up the permission." xml:space="preserve">
+    <value>コミュニティページからボットを再追加してください — サーバーもチャンネルもそのままで、権限だけが加わります。</value>
+  </data>
   <data name="Re-price {0} ratings" xml:space="preserve">
     <value>{0} の評定を再計算</value>
   </data>
@@ -8755,6 +8758,9 @@
   </data>
   <data name="The bot can hand out every role below." xml:space="preserve">
     <value>ボットは下のすべてのロールを付与できます。</value>
+  </data>
+  <data name="The bot has no permission to manage roles here." xml:space="preserve">
+    <value>このサーバーではボットにロール管理の権限がありません。</value>
   </data>
   <data name="The bot is in this server." xml:space="preserve">
     <value>ボットはこのサーバーにいます。</value>

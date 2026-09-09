@@ -7015,6 +7015,9 @@
   <data name="Rating" xml:space="preserve">
     <value>Rating</value>
   </data>
+  <data name="Re-add the bot from the Communities page — it keeps this server and its channels, and picks up the permission." xml:space="preserve">
+    <value>Vuelve a añadir el bot desde la página de Comunidades: conserva este servidor y sus canales, y obtiene el permiso.</value>
+  </data>
   <data name="Re-price {0} ratings" xml:space="preserve">
     <value>Recalcular los ratings de {0}</value>
   </data>
@@ -8697,6 +8700,9 @@
   </data>
   <data name="The bot can hand out every role below." xml:space="preserve">
     <value>El bot puede otorgar todos los roles de abajo.</value>
+  </data>
+  <data name="The bot has no permission to manage roles here." xml:space="preserve">
+    <value>El bot no tiene permiso para gestionar roles aquí.</value>
   </data>
   <data name="The bot is in this server." xml:space="preserve">
     <value>El bot está en este servidor.</value>
