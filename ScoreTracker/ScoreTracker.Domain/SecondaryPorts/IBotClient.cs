@@ -67,5 +67,49 @@ namespace ScoreTracker.Domain.SecondaryPorts
         ///     canaries; the app registers commands through <see cref="RegisterCommands" />.
         /// </summary>
         public void WhenReady(Func<Task> execution);
+
+        /// <summary>
+        ///     The server, or null when the bot is not in it (or was removed). The role page
+        ///     reads this to say whether the designation still points anywhere.
+        /// </summary>
+        public Task<BotGuild?> GetGuild(ulong guildId, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     Every role in the server, each already carrying whether the bot may assign it —
+        ///     see <see cref="BotGuildRole.BlockedReason" />. Empty when the bot is not in the
+        ///     server. Ordered strongest-first, the way Discord's own settings list reads.
+        /// </summary>
+        public Task<IReadOnlyList<BotGuildRole>> GetGuildRoles(ulong guildId,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     The role ids a member currently holds, or <b>null when they are not in the
+        ///     server</b> — one call answers both "are they in it" and "what do they have", which
+        ///     is exactly the pair a reconcile needs. Does not require the members intent:
+        ///     fetching one member by id is not gated, only listing them all is.
+        /// </summary>
+        public Task<IReadOnlyCollection<ulong>?> GetMemberRoles(ulong guildId, ulong userId,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     Grants a role. A no-op if they already hold it. Throws if the bot cannot assign it —
+        ///     callers check <see cref="BotGuildRole.CanAssign" /> first rather than discovering
+        ///     it here.
+        /// </summary>
+        public Task AddRole(ulong guildId, ulong userId, ulong roleId,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>Removes a role. A no-op if they do not hold it.</summary>
+        public Task RemoveRole(ulong guildId, ulong userId, ulong roleId,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///     Runs <paramref name="onMemberJoined" /> whenever someone joins a server the bot is
+        ///     in. Requires the Server Members privileged intent, which is enabled on the
+        ///     application; without it Discord simply never raises the event and this stays
+        ///     silent. Like <see cref="RegisterCommands" />, the handler follows every client
+        ///     instance the adapter builds, so it survives a gateway restart.
+        /// </summary>
+        public void OnMemberJoined(Func<ulong, ulong, Task> onMemberJoined);
     }
 }
