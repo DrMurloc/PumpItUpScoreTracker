@@ -9645,6 +9645,9 @@
   <data name="Use this avatar" xml:space="preserve">
     <value>このアバターを使う</value>
   </data>
+  <data name="Use this server for a community's title roles" xml:space="preserve">
+    <value>このサーバーをコミュニティの称号ロールに使用</value>
+  </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>デバッグ用</value>
   </data>
@@ -10065,6 +10068,9 @@
   </data>
   <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
     <value>バージョン（既定は Phoenix 2）</value>
+  </data>
+  <data name="Which of your communities" xml:space="preserve">
+    <value>どのコミュニティですか</value>
   </data>
   <data name="Which registration to remove" xml:space="preserve">
     <value>解除する登録</value>

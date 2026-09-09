@@ -9645,6 +9645,9 @@
   <data name="Use this avatar" xml:space="preserve">
     <value>Murp mo Blargblgrl</value>
   </data>
+  <data name="Use this server for a community's title roles" xml:space="preserve">
+    <value>Blugra gomo umbor og pulmagra rolab</value>
+  </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Morgmrgl mrmrpplgl ro blgrlrglmr</value>
   </data>
@@ -10065,6 +10068,9 @@
   </data>
   <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
     <value>Gromorg mrg (murmurgmr grgl Phoenix 2)</value>
+  </data>
+  <data name="Which of your communities" xml:space="preserve">
+    <value>Grulm og gru gomorablu</value>
   </data>
   <data name="Which registration to remove" xml:space="preserve">
     <value>Gromorg blargplglmaglblarg grgl plglgrgl</value>

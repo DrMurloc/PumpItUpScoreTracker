@@ -113,6 +113,61 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
     }
 
     /// <summary>
+    ///     What the next pass would do, without doing any of it — the page's dry run. Runs the same
+    ///     planner the reconcile runs, so a preview cannot promise something the real pass would
+    ///     not do.
+    /// </summary>
+    public async Task<IReadOnlyList<DiscordRolePlanRecord>> PreviewCommunity(Guid communityId,
+        CancellationToken cancellationToken)
+    {
+        var context = await BuildContext(communityId, cancellationToken);
+        if (context == null) return Array.Empty<DiscordRolePlanRecord>();
+
+        var names = context.Mappings.ToDictionary(m => m.RoleId, m => m.TitleName);
+        var granted = (await _roles.GetGrants(communityId, cancellationToken))
+            .ToDictionary(g => g.UserId, g => g.DiscordUserId);
+        var candidates = context.LinkedMembers.Keys.Concat(context.Members.Keys)
+            .Concat(granted.Keys).Distinct();
+
+        var pending = new List<DiscordRolePlanRecord>();
+        foreach (var userId in candidates)
+        {
+            var snowflake = context.LinkedMembers.TryGetValue(userId, out var linked)
+                ? linked
+                : granted.TryGetValue(userId, out var previous) ? previous : (ulong?)null;
+            var plan = await PlanMember(context, userId, snowflake, cancellationToken);
+            if (plan == null || (!plan.HasWork && plan.Blocked.Count == 0)) continue;
+
+            pending.Add(new DiscordRolePlanRecord(userId,
+                plan.Grant.Select(r => names.GetValueOrDefault(r, string.Empty)).ToArray(),
+                plan.Revoke.Select(r => names.GetValueOrDefault(r, string.Empty)).ToArray(),
+                plan.Blocked.Count == 0
+                    ? null
+                    : names.GetValueOrDefault(plan.Blocked[0], string.Empty)));
+        }
+
+        return pending;
+    }
+
+    /// <summary>
+    ///     Takes one role off everybody this community granted for. Used when a mapping is dropped
+    ///     WITH the box ticked — and only then, since dropping a row is otherwise a configuration
+    ///     edit rather than a mass revocation (D13).
+    /// </summary>
+    public async Task RevokeRole(Guid communityId, ulong roleId, CancellationToken cancellationToken)
+    {
+        var server = await _roles.GetServer(communityId, cancellationToken);
+        if (server == null) return;
+
+        foreach (var grant in await _roles.GetGrants(communityId, cancellationToken))
+        {
+            var current = await _bot.GetMemberRoles(server.GuildId, grant.DiscordUserId, cancellationToken);
+            if (current?.Contains(roleId) == true)
+                await _bot.RemoveRole(server.GuildId, grant.DiscordUserId, roleId, cancellationToken);
+        }
+    }
+
+    /// <summary>
     ///     Every community that designates a server, one after another. Deliberately serial: a
     ///     reconcile is mostly Discord REST calls, and running every community at once would spend
     ///     one rate limit budget on work nothing is waiting for.
@@ -185,8 +240,7 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         foreach (var grant in await _roles.GetGrantsForUser(userId, cancellationToken))
         {
             var context = await BuildContext(grant.CommunityId, cancellationToken);
-            if (context != null)
-                await Apply(context, grant.DiscordUserId, Array.Empty<ulong>(), cancellationToken);
+            if (context != null) await Revoke(context, grant.DiscordUserId, cancellationToken);
             await _roles.DeleteGrant(grant.CommunityId, userId, cancellationToken);
         }
     }
@@ -201,7 +255,7 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         var context = await BuildContext(communityId, cancellationToken);
         if (context != null)
             foreach (var grant in await _roles.GetGrants(communityId, cancellationToken))
-                await Apply(context, grant.DiscordUserId, Array.Empty<ulong>(), cancellationToken);
+                await Revoke(context, grant.DiscordUserId, cancellationToken);
 
         await _roles.DeleteGrantsForCommunity(communityId, cancellationToken);
     }
@@ -209,39 +263,66 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
     // ---- the rule ---------------------------------------------------------------------------
 
     /// <summary>
-    ///     The four facts. Returns whether anything actually changed in Discord.
+    ///     The four facts, decided but not acted on. Split from the writing half so the page's dry
+    ///     run and the real reconcile cannot answer differently — a preview computed a second way
+    ///     would become a lie the moment either drifted.
     /// </summary>
-    private async Task<bool> ReconcileMember(ReconcileContext context, Guid userId, ulong? discordUserId,
+    private async Task<MemberPlan?> PlanMember(ReconcileContext context, Guid userId, ulong? discordUserId,
         CancellationToken cancellationToken)
     {
         // No Discord account is linked and none was ever granted against: there is nobody in the
         // server to act on, and nothing to remember.
-        if (discordUserId is not { } snowflake)
+        if (discordUserId is not { } snowflake) return null;
+
+        var eligible = IsMember(context, userId) && context.LinkedMembers.ContainsKey(userId);
+        var earned = eligible
+            ? await DesiredRoles(context, userId, cancellationToken)
+            : EarnedRoles.None;
+
+        var current = await _bot.GetMemberRoles(context.GuildId, snowflake, cancellationToken);
+        // Not in the server. Discord took the roles with them when they left, so there is nothing
+        // to remove and nothing we could grant.
+        if (current == null)
+            return new MemberPlan(userId, snowflake, Array.Empty<ulong>(), Array.Empty<ulong>(),
+                Array.Empty<ulong>(), eligible, false);
+
+        return new MemberPlan(userId, snowflake,
+            earned.Assignable.Where(r => !current.Contains(r)).ToArray(),
+            // Only ever mapped roles: a role this community does not manage belongs to somebody else.
+            context.Managed.Where(r => current.Contains(r) && !earned.Assignable.Contains(r)).ToArray(),
+            earned.Blocked, eligible, true);
+    }
+
+    /// <summary>Decides, then writes. Returns whether anything actually changed in Discord.</summary>
+    private async Task<bool> ReconcileMember(ReconcileContext context, Guid userId, ulong? discordUserId,
+        CancellationToken cancellationToken)
+    {
+        var plan = await PlanMember(context, userId, discordUserId, cancellationToken);
+        if (plan == null)
         {
             await _roles.DeleteGrant(context.CommunityId, userId, cancellationToken);
             return false;
         }
 
-        var eligible = IsMember(context, userId) && context.LinkedMembers.ContainsKey(userId);
-        var desired = eligible
-            ? await DesiredRoles(context, userId, cancellationToken)
-            : Array.Empty<ulong>();
+        foreach (var roleId in plan.Grant)
+            await _bot.AddRole(context.GuildId, plan.DiscordUserId, roleId, cancellationToken);
+        foreach (var roleId in plan.Revoke)
+            await _bot.RemoveRole(context.GuildId, plan.DiscordUserId, roleId, cancellationToken);
 
-        var changed = await Apply(context, snowflake, desired, cancellationToken);
-
-        if (eligible)
-            await _roles.SaveGrant(context.CommunityId, userId, snowflake, _dateTime.Now, cancellationToken);
+        if (plan.Eligible)
+            await _roles.SaveGrant(context.CommunityId, userId, plan.DiscordUserId, _dateTime.Now,
+                cancellationToken);
         else
             await _roles.DeleteGrant(context.CommunityId, userId, cancellationToken);
 
-        return changed;
+        return plan.HasWork;
     }
 
     /// <summary>
     ///     Which mapped roles this member has earned: the titles they hold that the community maps,
     ///     thinned to one rung per pumbility pool, then to the roles the bot can actually assign.
     /// </summary>
-    private async Task<IReadOnlyCollection<ulong>> DesiredRoles(ReconcileContext context, Guid userId,
+    private async Task<EarnedRoles> DesiredRoles(ReconcileContext context, Guid userId,
         CancellationToken cancellationToken)
     {
         var held = (await _titles.GetCompletedTitles(RoleMix, userId, cancellationToken))
@@ -252,40 +333,29 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
             .Where(m => held.Contains(m.TitleName) && TitlesByName.ContainsKey(m.TitleName))
             .ToArray();
 
-        return TitleExclusivity.HighestOnly(earned, m => TitlesByName[m.TitleName])
+        var worn = TitleExclusivity.HighestOnly(earned, m => TitlesByName[m.TitleName])
             .Select(m => m.RoleId)
-            .Where(context.Assignable.Contains)
             .ToArray();
+
+        // Split rather than filtered: a role the bot cannot hand out is the one failure Discord
+        // reports to nobody, so the page has to be able to say "earned, and stuck".
+        return new EarnedRoles(worn.Where(context.Assignable.Contains).ToArray(),
+            worn.Where(r => !context.Assignable.Contains(r)).ToArray());
     }
 
     /// <summary>
-    ///     Writes the difference and nothing else. A role the bot cannot assign is never written:
-    ///     Discord would reject it, and the rejection is invisible to the player, so spending the
-    ///     call would only turn a visible configuration problem into a silent one.
+    ///     Hands back every managed role one account holds, without asking whether they earned it.
+    ///     The two paths where the REASON for the roles is going away, rather than the member's
+    ///     standing changing.
     /// </summary>
-    private async Task<bool> Apply(ReconcileContext context, ulong discordUserId,
-        IReadOnlyCollection<ulong> desired, CancellationToken cancellationToken)
+    private async Task Revoke(ReconcileContext context, ulong discordUserId,
+        CancellationToken cancellationToken)
     {
         var current = await _bot.GetMemberRoles(context.GuildId, discordUserId, cancellationToken);
-        // Not in the server. Discord took the roles with them when they left, so there is nothing
-        // to remove and nothing we could grant.
-        if (current == null) return false;
+        if (current == null) return;
 
-        var changed = false;
-        foreach (var roleId in desired.Where(r => !current.Contains(r)))
-        {
-            await _bot.AddRole(context.GuildId, discordUserId, roleId, cancellationToken);
-            changed = true;
-        }
-
-        // Only ever mapped roles: a role this community does not manage belongs to somebody else.
-        foreach (var roleId in context.Managed.Where(r => current.Contains(r) && !desired.Contains(r)))
-        {
+        foreach (var roleId in context.Managed.Where(current.Contains))
             await _bot.RemoveRole(context.GuildId, discordUserId, roleId, cancellationToken);
-            changed = true;
-        }
-
-        return changed;
     }
 
     // ---- context ----------------------------------------------------------------------------
@@ -353,6 +423,23 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
             if (ulong.TryParse(raw, out var id))
                 parsed[userId] = id;
         return parsed;
+    }
+
+    /// <summary>What a reconcile has decided about one member, before it does any of it.</summary>
+    private sealed record MemberPlan(Guid UserId, ulong DiscordUserId, IReadOnlyList<ulong> Grant,
+        IReadOnlyList<ulong> Revoke, IReadOnlyList<ulong> Blocked, bool Eligible, bool InServer)
+    {
+        public bool HasWork => Grant.Count > 0 || Revoke.Count > 0;
+    }
+
+    /// <summary>
+    ///     The roles a member's titles have earned, split by whether the bot can actually hand
+    ///     them over.
+    /// </summary>
+    private sealed record EarnedRoles(IReadOnlyList<ulong> Assignable, IReadOnlyList<ulong> Blocked)
+    {
+        public static readonly EarnedRoles None =
+            new(Array.Empty<ulong>(), Array.Empty<ulong>());
     }
 
     private sealed record ReconcileContext(

@@ -9645,6 +9645,9 @@
   <data name="Use this avatar" xml:space="preserve">
     <value>Usa questo avatar</value>
   </data>
+  <data name="Use this server for a community's title roles" xml:space="preserve">
+    <value>Usa questo server per i ruoli titolo di una community</value>
+  </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Usato principalmente per il debugging</value>
   </data>
@@ -10065,6 +10068,9 @@
   </data>
   <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
     <value>Quale Mix (predefinito Phoenix 2)</value>
+  </data>
+  <data name="Which of your communities" xml:space="preserve">
+    <value>Quale delle tue community</value>
   </data>
   <data name="Which registration to remove" xml:space="preserve">
     <value>Quale registrazione rimuovere</value>

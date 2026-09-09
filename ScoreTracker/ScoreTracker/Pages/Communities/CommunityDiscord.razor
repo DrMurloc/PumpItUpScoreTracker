@@ -1,0 +1,493 @@
+@page "/Community/Discord"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.Communities.Contracts
+@using ScoreTracker.Communities.Contracts.Commands
+@using ScoreTracker.Communities.Contracts.Queries
+@using ScoreTracker.Domain.Models.Titles
+@using ScoreTracker.Domain.Models.Titles.Phoenix2
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.SharedKernel.ValueTypes
+
+<PageTitle>@L["Discord"]</PageTitle>
+
+@if (_loading)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Small"/>
+}
+else if (_view == null)
+{
+    <MudText Typo="Typo.h5">@L["Community was not found."]</MudText>
+}
+else
+{
+    <MudBreadcrumbs Items="_crumbs" Class="pa-0 mb-2"></MudBreadcrumbs>
+    <MudText Typo="Typo.h4">@((string)_view.CommunityName) — @L["Discord"]</MudText>
+    <MudText Typo="Typo.body2" Class="mb-4">
+        @L["Give members a Discord role when they earn a Phoenix 2 title. Roles are kept in step automatically — nobody has to ask."]
+    </MudText>
+
+    @* ---------------- 1. the server ---------------- *@
+    <MudPaper Class="pa-4 mb-4" Outlined="true">
+        <MudText Typo="Typo.h5" Class="mb-3">@L["Discord server"]</MudText>
+
+        @if (_view.Server is { } server)
+        {
+            <div class="d-flex align-center flex-wrap mb-3" style="gap:14px">
+                <MudIcon Icon="@Icons.Custom.Brands.Discord" Size="Size.Large" Color="Color.Primary"/>
+                <div>
+                    <MudText Typo="Typo.h6">
+                        @(string.IsNullOrWhiteSpace(server.GuildName) ? L["Linked server"] : server.GuildName)
+                    </MudText>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                        @L["Set {0}", server.DesignatedAt.ToString("d")]
+                    </MudText>
+                </div>
+                @if (_view.ViewerCanManage)
+                {
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small" Class="ml-auto"
+                               Disabled="_busy" OnClick="AskUnlink">@L["Change server"]</MudButton>
+                }
+            </div>
+
+            <MudList T="string" Dense="true" Class="pa-0">
+                <MudListItem T="string" Icon="@(_view.BotIsInServer ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Error)"
+                             IconColor="@(_view.BotIsInServer ? Color.Success : Color.Error)">
+                    @(_view.BotIsInServer ? L["The bot is in this server."] : L["The bot is no longer in this server."])
+                </MudListItem>
+                @if (_view.Blocked.Any())
+                {
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Warning" IconColor="Color.Warning">
+                        <MudText Typo="Typo.body2">
+                            @L["Discord won't let the bot hand out {0} of these roles.", _view.Blocked.Count]
+                        </MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            @L["In Server Settings → Roles, drag the PIU Scores role above them."]
+                        </MudText>
+                    </MudListItem>
+                }
+                else if (_view.BotIsInServer && _view.Mappings.Any())
+                {
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                        @L["The bot can hand out every role below."]
+                    </MudListItem>
+                }
+            </MudList>
+        }
+        else if (!_view.ViewerCanManage)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                @L["This community doesn't give out Discord roles."]
+            </MudText>
+        }
+        else if (!_view.ViewerHasDiscordLinked)
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-3">
+                @L["Link your own Discord account first — setting the server means running a command as yourself in Discord."]
+            </MudAlert>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/Account">
+                @L["Link Discord on my account"]
+            </MudButton>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info" Class="mb-3">
+                @L["A channel that posts scores here isn't the same as this community's server — setting one is a separate step."]
+            </MudAlert>
+            <MudText Typo="Typo.body2" Class="mb-1">@L["Open the Discord server you want, where you have Manage Server, then run:"]</MudText>
+            <MudText Typo="Typo.body1" Style="font-family:monospace" Class="mb-1">/piu link-server</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">@L["Come back here once it's done."]</MudText>
+        }
+    </MudPaper>
+
+    @* ---------------- 2. titles and roles ---------------- *@
+    @if (_view.Server != null)
+    {
+        <MudPaper Class="pa-4 mb-4" Outlined="true">
+            <div class="d-flex align-center justify-space-between flex-wrap mb-1" style="gap:10px">
+                <MudText Typo="Typo.h5">@L["Titles and roles"]</MudText>
+                @if (_view.ViewerCanManage)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Add" Disabled="_busy"
+                               OnClick="OpenAdd">@L["Add a role"]</MudButton>
+                }
+            </div>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                @L["Pick a Phoenix 2 title, pick a role in your server. Anyone who has the title gets the role."]
+            </MudText>
+
+            @if (!_view.Mappings.Any())
+            {
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                    @L["No roles yet — add one to start handing them out."]
+                </MudText>
+            }
+
+            @foreach (var group in _view.Mappings.GroupBy(m => m.ExclusivityGroup).OrderBy(g => g.Key ?? "￿"))
+            {
+                <div class="mt-3 mb-1 d-flex align-center flex-wrap" style="gap:8px">
+                    <MudText Typo="Typo.overline" Class="mud-text-secondary">
+                        @(group.Key == null ? L["Everything else"] : GroupLabel(group.Key))
+                    </MudText>
+                    @if (group.Key != null)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">
+                            @L["Highest only"]
+                        </MudChip>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            @L["lower rungs come off automatically"]
+                        </MudText>
+                    }
+                </div>
+                <MudDivider Class="mb-1"/>
+
+                @foreach (var mapping in group.OrderBy(m => m.TitleName))
+                {
+                    <div class="d-flex align-center flex-wrap py-2" style="gap:10px">
+                        <MudText Typo="Typo.body2" Style="font-family:monospace">@mapping.TitleName</MudText>
+                        <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small"
+                                 Class="mud-text-secondary"/>
+                        <MudText Typo="Typo.body2">
+                            @(mapping.RoleName ?? L["(role deleted)"].Value)
+                        </MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary ml-auto">
+                            @L["{0} members", mapping.HolderCount]
+                        </MudText>
+                        @if (_view.ViewerCanManage)
+                        {
+                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close"
+                                           aria-label="@L["Remove"]" Disabled="_busy"
+                                           OnClick="() => AskRemove(mapping)"/>
+                        }
+                    </div>
+                    @if (mapping.BlockedReason is { } reason)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Warning" Class="pb-2">
+                            @BlockedText(reason)
+                        </MudText>
+                    }
+                    else if (mapping.RoleMissing && _view.BotIsInServer)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Warning" Class="pb-2">
+                            @L["That role no longer exists in the server."]
+                        </MudText>
+                    }
+                }
+            }
+        </MudPaper>
+
+        @* ---------------- 3. the rule ---------------- *@
+        <MudPaper Class="pa-4 mb-4" Outlined="true">
+            <MudText Typo="Typo.h5" Class="mb-1">@L["When a role is given"]</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                @L["All of these have to be true. If any one stops being true, the role comes off."]
+            </MudText>
+            <MudList T="string" Dense="true" Class="pa-0">
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Check" IconColor="Color.Success">
+                    @L["A member of {0}, and not banned", (string)_view.CommunityName]
+                </MudListItem>
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Check" IconColor="Color.Success">
+                    @L["In this Discord server, with their account linked"]
+                </MudListItem>
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Check" IconColor="Color.Success">
+                    @L["Holds the title on Phoenix 2, with no higher rung"]
+                </MudListItem>
+            </MudList>
+            <div class="d-flex align-center flex-wrap mt-3" style="gap:12px">
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                    @L["{0} of {1} members hold at least one role", _view.MembersHoldingRoles, _view.MemberCount]
+                </MudText>
+                @if (_view.ViewerCanManage)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                               Class="ml-auto" Disabled="_busy" OnClick="CheckNow">@L["Check now"]</MudButton>
+                }
+            </div>
+        </MudPaper>
+
+        @* ---------------- 4. the dry run ---------------- *@
+        @if (_view.ViewerCanManage)
+        {
+            <MudPaper Class="pa-4 mb-4" Outlined="true">
+                <MudText Typo="Typo.h5" Class="mb-1">@L["Next check will change"]</MudText>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                    @L["A dry run of what's about to happen, so nothing lands as a surprise."]
+                </MudText>
+
+                @if (!_pending.Any())
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@L["Nothing to change."]</MudText>
+                }
+                else
+                {
+                    <MudTable T="DiscordRoleChangeRecord" Items="_pending" Dense="true" Hover="true"
+                              Class="olb-board-table">
+                        <HeaderContent>
+                            <MudTh>@L["Member"]</MudTh>
+                            <MudTh>@L["Change"]</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>
+                                <div class="d-flex align-center" style="gap:8px">
+                                    <MudAvatar Size="Size.Small">
+                                        <MudImage Src="@context.ProfileImage.ToString()"
+                                                  Alt="@((string)context.PlayerName)"/>
+                                    </MudAvatar>
+                                    <span>@((string)context.PlayerName)</span>
+                                </div>
+                            </MudTd>
+                            <MudTd>
+                                @foreach (var granting in context.Granting)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Success"
+                                             Variant="Variant.Text">+ @granting</MudChip>
+                                }
+                                @foreach (var revoking in context.Revoking)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Error"
+                                             Variant="Variant.Text">− @revoking</MudChip>
+                                }
+                                @if (context.Note is { } blocked)
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Warning">
+                                        @L["Earned {0}, but the bot can't hand that role out.", blocked]
+                                    </MudText>
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudPaper>
+        }
+    }
+}
+
+@* ---------------- add dialog ---------------- *@
+<MudDialog @bind-Visible="_showAdd" Options="_dialogOptions">
+    <TitleContent><MudText Typo="Typo.h6">@L["Add a role"]</MudText></TitleContent>
+    <DialogContent>
+        <MudAutocomplete T="string" Label="@L["Title"]" @bind-Value="_newTitle"
+                         SearchFunc="SearchTitles" MaxItems="30" Dense="true"
+                         Clearable="true" CoerceValue="false" Class="mb-3"/>
+        <MudSelect T="ulong" Label="@L["Discord role"]" @bind-Value="_newRoleId" Dense="true">
+            @foreach (var role in _assignableRoles)
+            {
+                <MudSelectItem T="ulong" Value="@role.Id" Disabled="!role.CanAssign">
+                    @role.Name @(role.CanAssign ? string.Empty : "— " + BlockedText(role.BlockedReason!.Value))
+                </MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _showAdd = false">@L["Cancel"]</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="_busy || !CanSaveNew"
+                   OnClick="SaveMapping">@L["Add"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* ---------------- remove dialog ---------------- *@
+<MudDialog @bind-Visible="_showRemove" Options="_dialogOptions">
+    <TitleContent><MudText Typo="Typo.h6">@L["Remove this role"]</MudText></TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            @L["{0} will stop being handed out.", _removeTarget?.TitleName ?? string.Empty]
+        </MudText>
+        <MudCheckBox T="bool" @bind-Value="_takeRoleBack" Dense="true"
+                     Label="@L["Also take the role off everyone who has it"]"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _showRemove = false">@L["Cancel"]</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" Disabled="_busy"
+                   OnClick="ConfirmRemove">@L["Remove"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* ---------------- change-server dialog ---------------- *@
+<MudDialog @bind-Visible="_showUnlink" Options="_dialogOptions">
+    <TitleContent><MudText Typo="Typo.h6">@L["Change server"]</MudText></TitleContent>
+    <DialogContent>
+        <MudAlert Severity="Severity.Warning" Class="mb-3">
+            @L["Every role this community gave out in the current server comes off first."]
+        </MudAlert>
+        <MudText Typo="Typo.body2">
+            @L["Afterwards, run /piu link-server in the server you want."]
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _showUnlink = false">@L["Cancel"]</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" Disabled="_busy"
+                   OnClick="ConfirmUnlink">@L["Take the roles back"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IStringLocalizer<App> L
+@inject NavigationManager NavManager
+
+@code {
+    [Parameter, SupplyParameterFromQuery] public string? CommunityName { get; set; }
+
+    private static readonly IReadOnlyList<string> AllTitles =
+        Phoenix2TitleList.BuildList().Select(t => (string)t.Name).OrderBy(n => n).ToArray();
+
+    private readonly DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Small, FullWidth = true };
+
+    private CommunityDiscordView? _view;
+    private IReadOnlyList<DiscordRoleChangeRecord> _pending = Array.Empty<DiscordRoleChangeRecord>();
+    private IReadOnlyList<BotGuildRole> _assignableRoles = Array.Empty<BotGuildRole>();
+    private List<BreadcrumbItem> _crumbs = new();
+    private bool _loading = true;
+    private bool _busy;
+
+    private bool _showAdd;
+    private string? _newTitle;
+    private ulong _newRoleId;
+
+    private bool _showRemove;
+    private CommunityTitleRoleView? _removeTarget;
+    private bool _takeRoleBack;
+
+    private bool _showUnlink;
+
+    private bool CanSaveNew => !string.IsNullOrWhiteSpace(_newTitle) && _newRoleId != 0;
+
+    protected override async Task OnInitializedAsync() => await Load();
+
+    private async Task Load()
+    {
+        _loading = true;
+        if (string.IsNullOrWhiteSpace(CommunityName))
+        {
+            _loading = false;
+            return;
+        }
+
+        try
+        {
+            _view = await Mediator.Send(new GetCommunityDiscordQuery(Name.From(CommunityName)));
+            _crumbs = new List<BreadcrumbItem>
+            {
+                new(L["Communities"].Value, "/Communities"),
+                new((string)_view.CommunityName, $"/Community/Leaderboard?communityName={Uri.EscapeDataString((string)_view.CommunityName)}"),
+                new(L["Discord"].Value, null, true)
+            };
+
+            if (_view.ViewerCanManage && _view.Server != null)
+            {
+                _assignableRoles = await Mediator.Send(
+                    new GetCommunityDiscordRolesQuery(_view.CommunityName));
+                _pending = await Mediator.Send(
+                    new GetCommunityDiscordPreviewQuery(_view.CommunityName));
+            }
+        }
+        catch (Exception)
+        {
+            _view = null;
+        }
+
+        _loading = false;
+    }
+
+    private Task<IEnumerable<string>> SearchTitles(string? value, CancellationToken token)
+    {
+        var term = value?.Trim() ?? string.Empty;
+        var mapped = _view?.Mappings.Select(m => m.TitleName).ToHashSet(StringComparer.Ordinal)
+                     ?? new HashSet<string>(StringComparer.Ordinal);
+        return Task.FromResult(AllTitles
+            .Where(t => !mapped.Contains(t))
+            .Where(t => term.Length == 0 || t.Contains(term, StringComparison.OrdinalIgnoreCase))
+            .Take(30)
+            .AsEnumerable());
+    }
+
+    private void OpenAdd()
+    {
+        _newTitle = null;
+        _newRoleId = 0;
+        _showAdd = true;
+    }
+
+    private async Task SaveMapping()
+    {
+        if (_view == null || !CanSaveNew) return;
+        _showAdd = false;
+        await Run(new SetCommunityTitleRoleCommand(_view.CommunityName, _newTitle!, _newRoleId),
+            "Could not add that role.");
+    }
+
+    private void AskRemove(CommunityTitleRoleView mapping)
+    {
+        _removeTarget = mapping;
+        _takeRoleBack = false;
+        _showRemove = true;
+    }
+
+    private async Task ConfirmRemove()
+    {
+        if (_view == null || _removeTarget == null) return;
+        _showRemove = false;
+        await Run(new RemoveCommunityTitleRoleCommand(_view.CommunityName, _removeTarget.TitleName,
+            _takeRoleBack), "Could not remove that role.");
+        _removeTarget = null;
+    }
+
+    private void AskUnlink() => _showUnlink = true;
+
+    private async Task ConfirmUnlink()
+    {
+        if (_view == null) return;
+        _showUnlink = false;
+        await Run(new UnlinkCommunityDiscordServerCommand(_view.CommunityName),
+            "Could not unlink the server.");
+    }
+
+    private async Task CheckNow()
+    {
+        if (_view == null) return;
+        _busy = true;
+        try
+        {
+            await Mediator.Send(new ReconcileCommunityDiscordRolesCommand(_view.CommunityName));
+        }
+        catch (Exception)
+        {
+            Snackbar.Add(L["Could not reach Discord just now."].Value, Severity.Error);
+        }
+
+        _busy = false;
+        await Load();
+    }
+
+    private async Task Run(IRequest command, string errorMessage)
+    {
+        _busy = true;
+        try
+        {
+            await Mediator.Send(command);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add(L[errorMessage].Value, Severity.Error);
+        }
+
+        _busy = false;
+        await Load();
+    }
+
+    private string GroupLabel(string group) => group switch
+    {
+        "PUMBILITY Total" => L["PUMBILITY — combined"].Value,
+        "PUMBILITY Singles" => L["PUMBILITY — singles"].Value,
+        "PUMBILITY Doubles" => L["PUMBILITY — doubles"].Value,
+        _ => group
+    };
+
+    private string BlockedText(BotRoleBlockedReason reason) => reason switch
+    {
+        BotRoleBlockedReason.AboveBot => L["This role is above the bot, so it can't be handed out."].Value,
+        BotRoleBlockedReason.Managed => L["Discord manages this role, so nobody can hand it out."].Value,
+        _ => L["Everyone has this role already."].Value
+    };
+}

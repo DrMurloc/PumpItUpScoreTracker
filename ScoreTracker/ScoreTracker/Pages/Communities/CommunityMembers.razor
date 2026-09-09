@@ -42,6 +42,25 @@ else
         <ReportedCommentsPanel CommunityId="_communityId.Value"></ReportedCommentsPanel>
     }
 
+    @if (CanManageDiscord)
+    {
+        <MudPaper Class="pa-4 mb-4" Outlined="true">
+            <div class="d-flex align-center justify-space-between flex-wrap" style="gap:10px">
+                <div>
+                    <MudText Typo="Typo.h5">@L["Discord"]</MudText>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                        @L["Give members a Discord role when they earn a Phoenix 2 title."]
+                    </MudText>
+                </div>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                           StartIcon="@Icons.Custom.Brands.Discord"
+                           Href="@($"/Community/Discord?CommunityName={Uri.EscapeDataString((string)_community.Name)}")">
+                    @L["Manage Discord roles"]
+                </MudButton>
+            </div>
+        </MudPaper>
+    }
+
     @if (CanManageInvites)
     {
         <MudPaper Class="pa-4 mb-4" Outlined="true">
@@ -330,6 +349,9 @@ else
             _ => false
         };
     }
+
+    private bool CanManageDiscord => _community != null && _myRole != null &&
+                                     _myRole.Permissions.HasFlag(CommunityPermission.ManageDiscord);
 
     private bool CanManageInvites => _community is { RequiresCode: true } && _myRole != null &&
                                      (_myRole.Role == CommunityRole.Creator ||
