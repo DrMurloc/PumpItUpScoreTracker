@@ -975,6 +975,62 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("CommunityChannel", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Communities.Infrastructure.Entities.CommunityDiscordGrantEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CommunityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("DiscordUserId")
+                        .HasColumnType("decimal(20,0)");
+
+                    b.Property<DateTimeOffset>("LastReconciledAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("CommunityId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("CommunityDiscordGrant", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.Communities.Infrastructure.Entities.CommunityDiscordServerEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CommunityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("DesignatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("decimal(20,0)");
+
+                    b.Property<string>("GuildName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CommunityId")
+                        .IsUnique();
+
+                    b.ToTable("CommunityDiscordServer", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Communities.Infrastructure.Entities.CommunityEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1102,6 +1158,34 @@ namespace ScoreTracker.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("CommunityMembership", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.Communities.Infrastructure.Entities.CommunityTitleRoleEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CommunityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("RoleId")
+                        .HasColumnType("decimal(20,0)");
+
+                    b.Property<string>("TitleName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CommunityId", "RoleId")
+                        .IsUnique();
+
+                    b.HasIndex("CommunityId", "TitleName")
+                        .IsUnique();
+
+                    b.ToTable("CommunityTitleRole", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.Communities.Infrastructure.Entities.DiscordFeedSubscriptionEntity", b =>

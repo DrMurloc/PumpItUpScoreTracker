@@ -157,6 +157,9 @@
   <data name="(Optional) Also delete historical data" xml:space="preserve">
     <value>(선택) 이력 데이터도 삭제</value>
   </data>
+  <data name="(role deleted)" xml:space="preserve">
+    <value>(역할 삭제됨)</value>
+  </data>
   <data name="* Official board data, as of {0}." xml:space="preserve">
     <value>* 공식 보드 데이터, {0} 기준.</value>
   </data>
@@ -394,6 +397,9 @@
   <data name="A ceiling — every chart at your best." xml:space="preserve">
     <value>상한선입니다. 모든 채보를 자기 최고 기록으로 쳤을 때.</value>
   </data>
+  <data name="A channel that posts scores here isn't the same as this community's server — setting one is a separate step." xml:space="preserve">
+    <value>여기에 점수를 올리는 채널과 이 커뮤니티의 서버는 다릅니다 — 서버 지정은 별도의 단계입니다.</value>
+  </data>
   <data name="a chart" xml:space="preserve">
     <value>채보</value>
   </data>
@@ -420,6 +426,9 @@
   </data>
   <data name="A delivery can arrive twice. If PIU Scores restarts mid-import, that import is sent again once it comes back — key your handler on the chart and the score's recorded time rather than on each delivery being unique. PIUGame session deliveries are the exception: those are never re-sent, because the session is gone by then." xml:space="preserve">
     <value>전송이 두 번 도착할 수 있습니다. 가져오기 도중에 PIU Scores가 다시 시작되면 복구 후 해당 가져오기가 다시 전송됩니다. 전송이 한 번뿐이라고 가정하지 말고 차트와 기록 시각을 기준으로 처리하세요. PIUGame 세션 전송은 예외입니다. 그때는 세션이 이미 사라졌기 때문에 다시 보내지 않습니다.</value>
+  </data>
+  <data name="A dry run of what's about to happen, so nothing lands as a surprise." xml:space="preserve">
+    <value>곧 일어날 일의 미리 보기입니다. 놀랄 일이 없도록.</value>
   </data>
   <data name="A few things worth getting right up front — everything after this is tuned to them." xml:space="preserve">
     <value>먼저 정해두면 좋은 몇 가지입니다. 이후의 모든 것이 여기에 맞춰집니다.</value>
@@ -450,6 +459,9 @@
   </data>
   <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
     <value>만료가 없는 키는 직접 취소할 때까지 유효합니다 — 노트북을 잃어버리거나 저장소가 공개된 뒤에도요. 특별한 이유가 없다면 날짜를 정하세요.</value>
+  </data>
+  <data name="A member of {0}, and not banned" xml:space="preserve">
+    <value>{0}의 멤버이며 차단되지 않음</value>
   </data>
   <data name="A miss also halves whatever combo it splits — dead-centre on {0} notes it costs {1} points, not {2}. Edges are cheap; middles are not." xml:space="preserve">
     <value>미스는 끊은 콤보를 절반으로 나눕니다. {0}노트 채보 정중앙이면 {2}점이 아니라 {1}점을 잃습니다. 가장자리는 싸고 중간은 비쌉니다.</value>
@@ -634,6 +646,9 @@
   <data name="Add a rival" xml:space="preserve">
     <value>라이벌 추가</value>
   </data>
+  <data name="Add a role" xml:space="preserve">
+    <value>역할 추가</value>
+  </data>
   <data name="Add as rival" xml:space="preserve">
     <value>라이벌로 추가</value>
   </data>
@@ -724,6 +739,9 @@
   <data name="After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed." xml:space="preserve">
     <value>업로드 후에 일부 행/채보/기록이 올바르게 업로드되지 않은 경우, 실패한 행 목록과 실패 사유를 다운로드하실 수 있는 옵션이 제공됩니다.</value>
   </data>
+  <data name="Afterwards, run this in the server you want:" xml:space="preserve">
+    <value>그 다음, 원하는 서버에서 이것을 실행하세요:</value>
+  </data>
   <data name="Against regular PUMBILITY," xml:space="preserve">
     <value>일반 PUMBILITY와 비교하면,</value>
   </data>
@@ -759,6 +777,9 @@
   </data>
   <data name="All of it is changeable later in your account." xml:space="preserve">
     <value>모두 나중에 계정에서 변경할 수 있습니다.</value>
+  </data>
+  <data name="All of these have to be true. If any one stops being true, the role comes off." xml:space="preserve">
+    <value>이 모두가 참이어야 합니다. 하나라도 아니게 되면 역할이 해제됩니다.</value>
   </data>
   <data name="all permissions" xml:space="preserve">
     <value>모든 권한</value>
@@ -816,6 +837,9 @@
   </data>
   <data name="Also forget my saved PIUGAME password" xml:space="preserve">
     <value>저장된 PIUGAME 비밀번호도 삭제</value>
+  </data>
+  <data name="Also take the role off everyone who has it" xml:space="preserve">
+    <value>이 역할을 가진 모두에게서 회수</value>
   </data>
   <data name="Always" xml:space="preserve">
     <value>항상</value>
@@ -1504,6 +1528,9 @@
   <data name="Center" xml:space="preserve">
 	  <value>중앙</value>
   </data>
+  <data name="Change" xml:space="preserve">
+    <value>변경</value>
+  </data>
   <data name="Change avatar" xml:space="preserve">
     <value>아바타 변경</value>
   </data>
@@ -1515,6 +1542,9 @@
   </data>
   <data name="Change mix" xml:space="preserve">
     <value>시리즈 변경</value>
+  </data>
+  <data name="Change server" xml:space="preserve">
+    <value>서버 변경</value>
   </data>
   <data name="Changing the URL or the secret clears this." xml:space="preserve">
     <value>URL이나 비밀 값을 바꾸면 확인이 해제됩니다.</value>
@@ -1654,6 +1684,9 @@
   <data name="Check back shortly." xml:space="preserve">
     <value>잠시 후 다시 확인해 주세요.</value>
   </data>
+  <data name="Check now" xml:space="preserve">
+    <value>지금 확인</value>
+  </data>
   <data name="Check the link" xml:space="preserve">
     <value>링크 확인</value>
   </data>
@@ -1662,6 +1695,9 @@
   </data>
   <data name="Checked {0}" xml:space="preserve">
     <value>{0}에 확인함</value>
+  </data>
+  <data name="Checking roles" xml:space="preserve">
+    <value>역할 확인 중</value>
   </data>
   <data name="Choose a game card, then press Import again." xml:space="preserve">
     <value>게임 카드를 선택한 다음 가져오기를 다시 누르세요.</value>
@@ -1827,6 +1863,9 @@
   </data>
   <data name="Combo, priced" xml:space="preserve">
     <value>콤보의 가격</value>
+  </data>
+  <data name="Come back here once it's done." xml:space="preserve">
+    <value>완료되면 여기로 돌아오세요.</value>
   </data>
   <data name="Comfortable" xml:space="preserve">
     <value>기본</value>
@@ -2118,6 +2157,9 @@
   </data>
   <data name="Could not mute this member." xml:space="preserve">
     <value>이 멤버를 음소거하지 못했습니다.</value>
+  </data>
+  <data name="Could not reach Discord just now." xml:space="preserve">
+    <value>지금 Discord에 연결할 수 없습니다.</value>
   </data>
   <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
     <value>PIUGAME에 연결할 수 없습니다. 나중에 다시 시도해 주세요</value>
@@ -2467,6 +2509,18 @@
   <data name="Discord" xml:space="preserve">
     <value>Discord</value>
   </data>
+  <data name="Discord manages this role, so nobody can hand it out." xml:space="preserve">
+    <value>Discord가 관리하는 역할이라 아무도 부여할 수 없습니다.</value>
+  </data>
+  <data name="Discord role" xml:space="preserve">
+    <value>Discord 역할</value>
+  </data>
+  <data name="Discord server" xml:space="preserve">
+    <value>Discord 서버</value>
+  </data>
+  <data name="Discord won't let the bot hand out {0} of these roles." xml:space="preserve">
+    <value>Discord가 이 역할 중 {0}개를 봇이 부여하지 못하게 합니다.</value>
+  </data>
   <data name="Discord, wired in" xml:space="preserve">
     <value>디스코드 연동</value>
   </data>
@@ -2632,6 +2686,9 @@
   <data name="Earned" xml:space="preserve">
     <value>획득함</value>
   </data>
+  <data name="Earned {0}, but the bot can't hand that role out." xml:space="preserve">
+    <value>{0}을(를) 획득했지만 봇이 그 역할을 부여할 수 없습니다.</value>
+  </data>
   <data name="Earned, not given" xml:space="preserve">
     <value>노력으로 얻은 것</value>
   </data>
@@ -2776,6 +2833,9 @@
   <data name="Every record held this week." xml:space="preserve">
     <value>이번 주에는 모든 기록이 유지되었습니다.</value>
   </data>
+  <data name="Every role this community gave out in the current server comes off first." xml:space="preserve">
+    <value>현재 서버에서 이 커뮤니티가 부여한 모든 역할이 먼저 해제됩니다.</value>
+  </data>
   <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
     <value>파일의 모든 행이 우선합니다. 지금 기록보다 나빠도 덮어씁니다.</value>
   </data>
@@ -2791,8 +2851,14 @@
   <data name="Every tracked personal best on this mix, stacked by grade band per level. The typical best at almost every level is an S or better." xml:space="preserve">
     <value>이 시리즈에서 추적된 모든 개인 최고 기록을 레벨별 랭크 구간으로 쌓아 보여줍니다. 거의 모든 레벨에서 일반적인 최고 기록은 S 이상입니다.</value>
   </data>
+  <data name="Everyone already has the right roles." xml:space="preserve">
+    <value>이미 모두 올바른 역할을 가지고 있습니다.</value>
+  </data>
   <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
     <value>다른 사람들의 도구입니다. 관리할 수 있으며, 제작자에게는 알리지 않습니다.</value>
+  </data>
+  <data name="Everyone has this role already." xml:space="preserve">
+    <value>이미 모두가 이 역할을 가지고 있습니다.</value>
   </data>
   <data name="Everyone on your rivals roster, board-only rivals included — their standings come from the weekly official board, so they only count on the charts it publishes." xml:space="preserve">
     <value>라이벌 명단의 모든 사람이며, 보드 전용 라이벌도 포함됩니다. 이들의 순위는 매주 갱신되는 공식 보드에서 오므로 보드가 공개하는 채보에서만 집계됩니다.</value>
@@ -2811,6 +2877,9 @@
   </data>
   <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
     <value>아래는 모두 사이트의 실제 데이터입니다 — 스크린샷이 아니라 실제 프로덕트입니다.</value>
+  </data>
+  <data name="Everything else" xml:space="preserve">
+    <value>그 외 전부</value>
   </data>
   <data name="Everything goes — scores, history, votes, tournament results, communities, and the account itself." xml:space="preserve">
     <value>전부 사라집니다 — 점수, 기록, 투표, 대회 결과, 커뮤니티, 그리고 계정 자체까지.</value>
@@ -3247,6 +3316,12 @@
   <data name="Give a song name." xml:space="preserve">
     <value>곡 이름을 입력해주세요.</value>
   </data>
+  <data name="Give members a Discord role when they earn a Phoenix 2 title." xml:space="preserve">
+    <value>멤버가 Phoenix 2 칭호를 얻으면 Discord 역할을 부여합니다.</value>
+  </data>
+  <data name="Give members a Discord role when they earn a Phoenix 2 title. Roles are kept in step automatically — nobody has to ask." xml:space="preserve">
+    <value>멤버가 Phoenix 2 칭호를 얻으면 Discord 역할을 부여합니다. 역할은 자동으로 맞춰지며, 아무도 요청할 필요가 없습니다.</value>
+  </data>
   <data name="Glow" xml:space="preserve">
     <value>발광</value>
   </data>
@@ -3367,6 +3442,9 @@
   <data name="Hand over your communities first" xml:space="preserve">
     <value>먼저 커뮤니티를 넘겨주세요</value>
   </data>
+  <data name="Handing out the role" xml:space="preserve">
+    <value>역할 부여 중</value>
+  </data>
   <data name="Hands" xml:space="preserve">
     <value>손</value>
   </data>
@@ -3439,6 +3517,9 @@
   <data name="Highest on the board" xml:space="preserve">
     <value>보드 최고</value>
   </data>
+  <data name="Highest only" xml:space="preserve">
+    <value>최고 등급만</value>
+  </data>
   <data name="Highest score wins." xml:space="preserve">
     <value>최고 점수가 승리합니다.</value>
   </data>
@@ -3489,6 +3570,9 @@
   </data>
   <data name="holds the combo, doesn't extend it" xml:space="preserve">
     <value>콤보를 유지하되 늘리지 않음</value>
+  </data>
+  <data name="Holds the title on Phoenix 2, with no higher rung" xml:space="preserve">
+    <value>Phoenix 2에서 해당 칭호를 보유하고, 더 높은 단계는 없음</value>
   </data>
   <data name="Home" xml:space="preserve">
     <value>메인으로</value>
@@ -3772,6 +3856,9 @@
   <data name="In progress" xml:space="preserve">
     <value>진행 중</value>
   </data>
+  <data name="In Server Settings → Roles, drag the PIU Scores role above them." xml:space="preserve">
+    <value>서버 설정 → 역할에서 PIU Mgrlgmrg 역할을 그 위로 올리세요.</value>
+  </data>
   <data name="In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades." xml:space="preserve">
     <value>그러한 경우, 수천 개의 등급을 수동으로 입력하는 대신 스프레드시트를 업로드하는 것이 더 빠를 수 있습니다.</value>
   </data>
@@ -3783,6 +3870,9 @@
   </data>
   <data name="in the top ten" xml:space="preserve">
     <value>개 보드 10위 이내</value>
+  </data>
+  <data name="In this Discord server, with their account linked" xml:space="preserve">
+    <value>이 Discord 서버에 있고, 계정이 연결되어 있음</value>
   </data>
   <data name="In this folder" xml:space="preserve">
     <value>이 폴더에서</value>
@@ -4231,6 +4321,15 @@
   <data name="Link" xml:space="preserve">
     <value>링크</value>
   </data>
+  <data name="Link Discord on my account" xml:space="preserve">
+    <value>내 계정에 Discord 연결</value>
+  </data>
+  <data name="Link your own Discord account first — setting the server means running a command as yourself in Discord." xml:space="preserve">
+    <value>먼저 본인의 Discord 계정을 연결하세요 — 서버 지정은 Discord에서 본인으로 명령을 실행하는 것입니다.</value>
+  </data>
+  <data name="Linked server" xml:space="preserve">
+    <value>연결된 서버</value>
+  </data>
   <data name="Linked to a site account" xml:space="preserve">
     <value>사이트 계정과 연결됨</value>
   </data>
@@ -4327,6 +4426,9 @@
   <data name="lower average score" xml:space="preserve">
     <value>평균 점수 낮음</value>
   </data>
+  <data name="lower rungs come off automatically" xml:space="preserve">
+    <value>하위 단계는 자동으로 해제됩니다</value>
+  </data>
   <data name="Lowest" xml:space="preserve">
     <value>최하</value>
   </data>
@@ -4374,6 +4476,9 @@
   </data>
   <data name="Manage channel subscriptions" xml:space="preserve">
     <value>채널 알림 관리</value>
+  </data>
+  <data name="Manage Discord roles" xml:space="preserve">
+    <value>Discord 역할 관리</value>
   </data>
   <data name="Manage invite links" xml:space="preserve">
     <value>초대 링크 관리</value>
@@ -4891,6 +4996,9 @@
   <data name="next best candidate {0}" xml:space="preserve">
     <value>다음 후보 {0}</value>
   </data>
+  <data name="Next check will change" xml:space="preserve">
+    <value>다음 확인에서 바뀔 내용</value>
+  </data>
   <data name="Next comment" xml:space="preserve">
     <value>다음 댓글</value>
   </data>
@@ -5043,6 +5151,9 @@
   </data>
   <data name="No rivals yet" xml:space="preserve">
     <value>아직 라이벌이 없습니다</value>
+  </data>
+  <data name="No roles yet — add one to start handing them out." xml:space="preserve">
+    <value>아직 역할이 없습니다 — 하나 추가해 부여를 시작하세요.</value>
   </data>
   <data name="No saved sets yet." xml:space="preserve">
     <value>아직 저장한 세트가 없습니다.</value>
@@ -5422,6 +5533,9 @@
   <data name="nothing ticked, so scores render plain" xml:space="preserve">
     <value>체크한 항목이 없어 점수가 색상 없이 표시됩니다</value>
   </data>
+  <data name="Nothing to change." xml:space="preserve">
+    <value>바꿀 내용이 없습니다.</value>
+  </data>
   <data name="Nothing to compare yet" xml:space="preserve">
     <value>아직 비교할 것이 없습니다</value>
   </data>
@@ -5748,6 +5862,9 @@
   </data>
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>추천 채보 열기</value>
+  </data>
+  <data name="Open the Discord server you want, where you have Manage Server, then run:" xml:space="preserve">
+    <value>원하는 Discord 서버를 열고 — 서버 관리 권한이 있는 곳에서 — 다음을 실행하세요:</value>
   </data>
   <data name="Open thread" xml:space="preserve">
     <value>대화 열기</value>
@@ -6186,6 +6303,9 @@
   </data>
   <data name="Pick a mix." xml:space="preserve">
     <value>시리즈를 선택해주세요.</value>
+  </data>
+  <data name="Pick a Phoenix 2 title, pick a role in your server. Anyone who has the title gets the role." xml:space="preserve">
+    <value>Phoenix 2 칭호를 고르고, 서버의 역할을 고르세요. 그 칭호를 가진 사람은 역할을 받습니다.</value>
   </data>
   <data name="Pick a player to see their boards, history, and PUMBILITY over time - departed tags stay searchable." xml:space="preserve">
     <value>플레이어를 선택하면 보드, 기록, PUMBILITY 추이를 볼 수 있습니다 - 떠난 태그도 계속 검색됩니다.</value>
@@ -6733,6 +6853,15 @@
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>PUMBILITY 톱 50</value>
   </data>
+  <data name="PUMBILITY — combined" xml:space="preserve">
+    <value>PUMBILITY — 통합</value>
+  </data>
+  <data name="PUMBILITY — doubles" xml:space="preserve">
+    <value>PUMBILITY — 더블</value>
+  </data>
+  <data name="PUMBILITY — singles" xml:space="preserve">
+    <value>PUMBILITY — 싱글</value>
+  </data>
   <data name="PUMBILITY+ by score" xml:space="preserve">
     <value>점수별 PUMBILITY+</value>
   </data>
@@ -6894,6 +7023,12 @@
   </data>
   <data name="Rating" xml:space="preserve">
     <value>레이팅</value>
+  </data>
+  <data name="Re-add the bot" xml:space="preserve">
+    <value>봇 다시 추가</value>
+  </data>
+  <data name="Re-add the bot from the Communities page — it keeps this server and its channels, and picks up the permission." xml:space="preserve">
+    <value>커뮤니티 페이지에서 봇을 다시 추가하세요 — 서버와 채널은 그대로 유지되고 권한만 추가됩니다.</value>
   </data>
   <data name="Re-price {0} ratings" xml:space="preserve">
     <value>{0} 레이팅 재계산</value>
@@ -7165,6 +7300,9 @@
   <data name="Remove this comment?" xml:space="preserve">
     <value>이 댓글을 삭제할까요?</value>
   </data>
+  <data name="Remove this role" xml:space="preserve">
+    <value>이 역할 제거</value>
+  </data>
   <data name="Remove This Score" xml:space="preserve">
     <value>이 점수 삭제</value>
   </data>
@@ -7194,6 +7332,9 @@
   </data>
   <data name="Removed {0} for {1} from this channel." xml:space="preserve">
     <value>이 채널에서 {1}의 {0} 알림을 해제했습니다.</value>
+  </data>
+  <data name="Removing the mapping" xml:space="preserve">
+    <value>연결 해제 중</value>
   </data>
   <data name="Rename" xml:space="preserve">
     <value>이름 변경</value>
@@ -7347,6 +7488,9 @@
   </data>
   <data name="Role" xml:space="preserve">
     <value>역할</value>
+  </data>
+  <data name="Roles are handed out as they're earned. Only check if somebody says theirs is missing." xml:space="preserve">
+    <value>역할은 획득하는 즉시 부여됩니다. 누군가 역할이 없다고 할 때만 확인하세요.</value>
   </data>
   <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
     <value>랜덤마이저로 채보를 뽑고, 오락실에서 브래킷과 카드 드래프트를 운영하고, 라이브 뷰를 공유해 현장 전체 — 또는 방송 — 가 라운드를 따라오게 하세요.</value>
@@ -7782,6 +7926,9 @@
   </data>
   <data name="Set your country on your account page to join a region." xml:space="preserve">
     <value>계정 페이지에서 국가를 설정하면 지역에 가입됩니다.</value>
+  </data>
+  <data name="Set {0}" xml:space="preserve">
+    <value>{0}에 설정됨</value>
   </data>
   <data name="Sets what the whole site shows you." xml:space="preserve">
     <value>사이트 전체에 표시되는 내용을 결정합니다.</value>
@@ -8350,8 +8497,17 @@
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>클리어해도 점수는 짜게 나옵니다</value>
   </data>
+  <data name="Stop" xml:space="preserve">
+    <value>중단</value>
+  </data>
   <data name="Stop one of this channel's feeds" xml:space="preserve">
     <value>이 채널의 피드 중단</value>
+  </data>
+  <data name="Stopped. What it got through is already applied." xml:space="preserve">
+    <value>중단했습니다. 처리된 부분은 이미 적용되었습니다.</value>
+  </data>
+  <data name="Stopping is safe — the next check picks up where this one left off." xml:space="preserve">
+    <value>중단해도 안전합니다 — 다음 확인이 멈춘 지점부터 이어서 진행합니다.</value>
   </data>
   <data name="Store" xml:space="preserve">
     <value>저장</value>
@@ -8476,8 +8632,20 @@
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>N노트마다 브레이크를 계속 내면 라이프는 어딘가로 수렴합니다. 절벽 아래에서는 0으로 수렴합니다. 곡선은 완만해지는 게 아니라 뚝 떨어집니다. 배율을 다시 쌓는 속도보다 배율이 죽는 속도가 빠르기 때문입니다.</value>
   </data>
+  <data name="Take the role off everyone who has it" xml:space="preserve">
+    <value>이 역할을 가진 모두에게서 회수</value>
+  </data>
+  <data name="Take the roles back" xml:space="preserve">
+    <value>역할 회수</value>
+  </data>
   <data name="Take this session off the board?" xml:space="preserve">
     <value>이 세션을 보드에서 내릴까요?</value>
+  </data>
+  <data name="Taking the role back" xml:space="preserve">
+    <value>역할 회수 중</value>
+  </data>
+  <data name="Taking the roles back" xml:space="preserve">
+    <value>역할 회수 중</value>
   </data>
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>
@@ -8527,6 +8695,9 @@
   <data name="That PIUGAME account is not connected to the selected account" xml:space="preserve">
     <value>해당 PIUGAME 계정은 선택한 계정에 연결되어 있지 않습니다</value>
   </data>
+  <data name="That role no longer exists in the server." xml:space="preserve">
+    <value>그 역할은 서버에 더 이상 존재하지 않습니다.</value>
+  </data>
   <data name="That scoring configuration is invalid." xml:space="preserve">
     <value>유효하지 않은 점수 구성입니다.</value>
   </data>
@@ -8562,6 +8733,21 @@
   </data>
   <data name="The board ranks sessions, not players, so three great sessions can hold three places. Ties go to the earlier session." xml:space="preserve">
     <value>보드는 플레이어가 아니라 세션에 순위를 매기므로, 훌륭한 세션 셋이 세 자리를 차지할 수도 있습니다. 동점이면 먼저 올린 세션이 위입니다.</value>
+  </data>
+  <data name="The bot can hand out every role below." xml:space="preserve">
+    <value>봇이 아래의 모든 역할을 부여할 수 있습니다.</value>
+  </data>
+  <data name="The bot can't hand out roles in this server yet — it was added before roles existed." xml:space="preserve">
+    <value>이 서버에서는 아직 봇이 역할을 부여할 수 없습니다 — 역할 기능이 생기기 전에 추가되었습니다.</value>
+  </data>
+  <data name="The bot has no permission to manage roles here." xml:space="preserve">
+    <value>여기에서 봇에게 역할 관리 권한이 없습니다.</value>
+  </data>
+  <data name="The bot is in this server." xml:space="preserve">
+    <value>봇이 이 서버에 있습니다.</value>
+  </data>
+  <data name="The bot is no longer in this server." xml:space="preserve">
+    <value>봇이 더 이상 이 서버에 없습니다.</value>
   </data>
   <data name="The cabinet" xml:space="preserve">
     <value>진열장</value>
@@ -8929,6 +9115,9 @@
   <data name="This chart is on the right side of the video" xml:space="preserve">
     <value>이 채보는 영상의 오른쪽에 있습니다</value>
   </data>
+  <data name="This community doesn't give out Discord roles." xml:space="preserve">
+    <value>이 커뮤니티는 Discord 역할을 부여하지 않습니다.</value>
+  </data>
   <data name="This does not send anything." xml:space="preserve">
     <value>이 버튼은 아무것도 보내지 않습니다.</value>
   </data>
@@ -9018,6 +9207,9 @@
   </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>이 리캡은 아직 계산되지 않았습니다. 나중에 다시 확인해 주세요.</value>
+  </data>
+  <data name="This role is above the bot, so it can't be handed out." xml:space="preserve">
+    <value>이 역할이 봇보다 위에 있어 부여할 수 없습니다.</value>
   </data>
   <data name="This season" xml:space="preserve">
     <value>이번 시즌</value>
@@ -9156,6 +9348,9 @@
   </data>
   <data name="Titles" xml:space="preserve">
     <value>칭호</value>
+  </data>
+  <data name="Titles and roles" xml:space="preserve">
+    <value>칭호와 역할</value>
   </data>
   <data name="titles earned" xml:space="preserve">
     <value>칭호 획득</value>
@@ -9499,6 +9694,9 @@
   <data name="Unranked" xml:space="preserve">
     <value>미분류</value>
   </data>
+  <data name="Untick to leave it on people — the site just stops maintaining it." xml:space="preserve">
+    <value>체크를 해제하면 역할은 그대로 남고, 사이트가 관리만 중단합니다.</value>
+  </data>
   <data name="until everything is deleted" xml:space="preserve">
     <value>모두 삭제되기까지</value>
   </data>
@@ -9531,6 +9729,9 @@
   </data>
   <data name="updated {0:N0} charts" xml:space="preserve">
     <value>{0:N0}개 채보 업데이트</value>
+  </data>
+  <data name="Updated {0} members." xml:space="preserve">
+    <value>{0}명의 멤버를 갱신했습니다.</value>
   </data>
   <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
     <value>JSON 파일을 업로드하여 Phoenix 2 곡과 채보를 일괄 생성합니다.</value>
@@ -9582,6 +9783,9 @@
   </data>
   <data name="Use this avatar" xml:space="preserve">
     <value>이 아바타 사용</value>
+  </data>
+  <data name="Use this server for a community's title roles" xml:space="preserve">
+    <value>이 서버를 커뮤니티 칭호 역할에 사용</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>주로 디버깅을 위해 사용함</value>
@@ -9934,6 +10138,9 @@
   <data name="When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today." xml:space="preserve">
     <value>새 시리즈가 나와도 여기서는 아무것도 초기화되지 않습니다. 기록한 모든 스코어가 남아 — 돌아보고, 비교하고, 쌓아 올릴 수 있습니다. 1999년부터 오늘까지 {0}개 시리즈가 나란히 기록되어 있습니다.</value>
   </data>
+  <data name="When a role is given" xml:space="preserve">
+    <value>역할이 부여되는 조건</value>
+  </data>
   <data name="When somebody adds you, they show up here." xml:space="preserve">
     <value>누군가 나를 추가하면 여기에 표시됩니다.</value>
   </data>
@@ -10002,6 +10209,9 @@
   </data>
   <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
     <value>시리즈 (기본값 Phoenix 2)</value>
+  </data>
+  <data name="Which of your communities" xml:space="preserve">
+    <value>어느 커뮤니티인가요</value>
   </data>
   <data name="Which registration to remove" xml:space="preserve">
     <value>해제할 등록</value>
@@ -10081,11 +10291,17 @@
   <data name="Worked examples" xml:space="preserve">
     <value>계산 예시</value>
   </data>
+  <data name="Working it out…" xml:space="preserve">
+    <value>계산 중…</value>
+  </data>
   <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
     <value>이 세션이 무엇을 움직였는지 계산 중 — 칭호, 풀, 그리고 동급 플레이어 사이에서 각 점수의 위치.</value>
   </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>예상치를 계산하는 중입니다. 비슷한 레벨의 플레이어 수백 명을 참조하므로 잠시 걸립니다.</value>
+  </data>
+  <data name="Working through the members…" xml:space="preserve">
+    <value>멤버를 처리하는 중…</value>
   </data>
   <data name="World" xml:space="preserve">
     <value>World</value>
@@ -11095,6 +11311,12 @@
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>폴더 {1}개 중 {0}개</value>
   </data>
+  <data name="{0} of {1} members" xml:space="preserve">
+    <value>{1}명 중 {0}명</value>
+  </data>
+  <data name="{0} of {1} members hold at least one role" xml:space="preserve">
+    <value>멤버 {1}명 중 {0}명이 역할을 하나 이상 보유</value>
+  </data>
   <data name="{0} of {1} peers" xml:space="preserve">
     <value>동료 {1}명 중 {0}명</value>
   </data>
@@ -11304,6 +11526,9 @@
   </data>
   <data name="{0} viewers watching" xml:space="preserve">
     <value>{0}명 시청 중</value>
+  </data>
+  <data name="{0} will stop being handed out." xml:space="preserve">
+    <value>{0}은(는) 더 이상 부여되지 않습니다.</value>
   </data>
   <data name="{0} {1}% → **{2}%**" xml:space="preserve">
     <value>{0} {1}% → **{2}%**</value>

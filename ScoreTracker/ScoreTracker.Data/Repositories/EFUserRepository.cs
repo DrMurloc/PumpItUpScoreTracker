@@ -153,6 +153,24 @@ public sealed class EFUserRepository : IUserRepository, IUserReader
             .ToArrayAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyDictionary<Guid, string>> GetExternalLogins(IEnumerable<Guid> userIds,
+        string loginProviderName, CancellationToken cancellationToken = default)
+    {
+        var ids = userIds as IReadOnlyCollection<Guid> ?? userIds.ToArray();
+        if (ids.Count == 0) return new Dictionary<Guid, string>();
+
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var rows = await database.ExternalLogin
+            .Where(e => e.LoginProvider == loginProviderName && ids.Contains(e.UserId))
+            .Select(e => new { e.UserId, e.ExternalId })
+            .ToArrayAsync(cancellationToken);
+
+        // One account is not expected to hold two logins for one provider, but the table does not
+        // forbid it and a throwing ToDictionary would take a sweep down over a data oddity.
+        return rows.GroupBy(r => r.UserId)
+            .ToDictionary(g => g.Key, g => g.First().ExternalId);
+    }
+
     public async Task RemoveExternalLogin(Guid userId, string loginProviderName, string externalId,
         CancellationToken cancellationToken = default)
     {

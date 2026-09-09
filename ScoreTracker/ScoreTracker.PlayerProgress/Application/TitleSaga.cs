@@ -3,6 +3,7 @@ using MediatR;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts;
+using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Domain;
 using ScoreTracker.SharedKernel.Enums;
@@ -197,6 +198,14 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
             .Select(t => new TitleAchievedRecord(userId, t.Title.Name, GetLevel(t))).ToArray();
 
         await _titles.SaveTitles(mix, userId, allCompleted, cancellationToken);
+
+        // Fired on BOTH paths — the score path persists through here with mint:false and returns
+        // before the announcements below, so publishing after that check would miss every title
+        // earned by playing. Only when the set actually moved: a re-save of the same badges is
+        // most of the traffic through this method.
+        if (allCompleted.Length != existingTitles.Count ||
+            allCompleted.Any(c => !existingTitles.ContainsKey(c.Title)))
+            await _bus.Publish(new PlayerTitlesChangedEvent(userId, mix), cancellationToken);
 
         var highest = allCompleted.Select(t => GetTitleByName(mix, t.Title))
             .Where(t => t is PhoenixDifficultyTitle).Cast<PhoenixDifficultyTitle>()

@@ -157,6 +157,9 @@
   <data name="(Optional) Also delete historical data" xml:space="preserve">
 	  <value>(Blgrllurggrorp) Morgglorg lurggrgl mrgrglmrgl gromurm</value>
   </data>
+  <data name="(role deleted)" xml:space="preserve">
+    <value>(roglub glubgrob)</value>
+  </data>
   <data name="* Official board data, as of {0}." xml:space="preserve">
     <value>* Urgmrmurg mrglblarg glorgmurg, mrp {0}.</value>
   </data>
@@ -394,6 +397,9 @@
   <data name="A ceiling — every chart at your best." xml:space="preserve">
     <value>Ogro grolab — ogrob murgl gam blub mrrglgro.</value>
   </data>
+  <data name="A channel that posts scores here isn't the same as this community's server — setting one is a separate step." xml:space="preserve">
+    <value>Grogl murgblub grogl blarg Mgrlgmrg bo mrp blubmurg ub blu plglmurgblub — mrp murgl blarg grop.</value>
+  </data>
   <data name="a chart" xml:space="preserve">
     <value>gro murgl</value>
   </data>
@@ -420,6 +426,9 @@
   </data>
   <data name="A delivery can arrive twice. If PIU Scores restarts mid-import, that import is sent again once it comes back — key your handler on the chart and the score's recorded time rather than on each delivery being unique. PIUGame session deliveries are the exception: those are never re-sent, because the session is gone by then." xml:space="preserve">
     <value>Murp murlg blub mrgl gropm. Murgl Mgrlgmrg Mrglrlgrlgl murlg, murlg blub argl gro morg — prgl gro brgl mo murgl blarg mrp glub rorg mo murp murlg blub argl. PIUGame murpmurp murlg blub mrp murrgl, argl murpmurp blub mo.</value>
+  </data>
+  <data name="A dry run of what's about to happen, so nothing lands as a surprise." xml:space="preserve">
+    <value>Mrp murgblarg ub algro bam grabmurp, ba bo murgloo blorp.</value>
   </data>
   <data name="A few things worth getting right up front — everything after this is tuned to them." xml:space="preserve">
     <value>Gramol arglu bolgrump — gluru marob apglurg oglam.</value>
@@ -450,6 +459,9 @@
   </data>
   <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
     <value>Blarglurp murm bo murgloo murmo mublu murgm gromurp murgloo blu blomurp — murm blorm murgblarg murmo arplo mrpgrogl murgm Mrglrgll. Murgargl murgl murgm gromurp bam murgblub.</value>
+  </data>
+  <data name="A member of {0}, and not banned" xml:space="preserve">
+    <value>Grogmurgl ub {0}, ap bo morgblarg</value>
   </data>
   <data name="A miss also halves whatever combo it splits — dead-centre on {0} notes it costs {1} points, not {2}. Edges are cheap; middles are not." xml:space="preserve">
     <value>A mrgla ro blugrogro gro grogrgl ur morgl — blugro-margl ur {0} glub ur gogl {1} mrglublgl, bo {2}. Bralmo gro mrglgogl; blugro bo.</value>
@@ -635,6 +647,9 @@
   <data name="Add a rival" xml:space="preserve">
     <value>Glorg gro Murgmorp</value>
   </data>
+  <data name="Add a role" xml:space="preserve">
+    <value>Blarg mrp roglub</value>
+  </data>
   <data name="Add as rival" xml:space="preserve">
     <value>Glorg mrp Murgmorp</value>
   </data>
@@ -725,6 +740,9 @@
   <data name="After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed." xml:space="preserve">
 	  <value>Glmrp mrp grglargl, mr blgrlgrrgl mrp mrgrgl grorpgro/murgl/blargarglmurp blubgrrgl gl murm grglargl grogroglorg, blub murmurg glorg murgargl mrp urgglorg grgl murlg gro grog mrgl mrp rglmurm grorpgro ro mrp groglorg maglgro rglmurm.</value>
   </data>
+  <data name="Afterwards, run this in the server you want:" xml:space="preserve">
+    <value>Murgbam, grabmurp blu ur blubmurg opa murgloo:</value>
+  </data>
   <data name="Against regular PUMBILITY," xml:space="preserve">
     <value>Glub gruglo PUMBILITY,</value>
   </data>
@@ -761,6 +779,9 @@
   </data>
   <data name="All of it is changeable later in your account." xml:space="preserve">
     <value>Umgloru grabalu magl grgl.</value>
+  </data>
+  <data name="All of these have to be true. If any one stops being true, the role comes off." xml:space="preserve">
+    <value>Ulbog blu murgl morgblub. Bo mrp morgblub, roglub murgl blarg.</value>
   </data>
   <data name="all permissions" xml:space="preserve">
     <value>rgl urgmurpmrpmagl</value>
@@ -818,6 +839,9 @@
   </data>
   <data name="Also forget my saved PIUGAME password" xml:space="preserve">
     <value>Blurp PIUGAME gorbal ampu</value>
+  </data>
+  <data name="Also take the role off everyone who has it" xml:space="preserve">
+    <value>Ap blarg roglub ub olga grogmurgl opa mrogl mrp</value>
   </data>
   <data name="Always" xml:space="preserve">
     <value>Mrgmurg</value>
@@ -1512,6 +1536,9 @@
   <data name="Center" xml:space="preserve">
 	  <value>Murmgro</value>
   </data>
+  <data name="Change" xml:space="preserve">
+    <value>Grolurg</value>
+  </data>
   <data name="Change avatar" xml:space="preserve">
     <value>Grglmurg Blargblgrl</value>
   </data>
@@ -1523,6 +1550,9 @@
   </data>
   <data name="Change mix" xml:space="preserve">
     <value>Blgrlblub mrg</value>
+  </data>
+  <data name="Change server" xml:space="preserve">
+    <value>Grolurg blubmurg</value>
   </data>
   <data name="Changing the URL or the secret clears this." xml:space="preserve">
     <value>Golba URL opa grumb, marogl alla.</value>
@@ -1664,6 +1694,9 @@
   <data name="Check back shortly." xml:space="preserve">
     <value>Blomorg mrg glub.</value>
   </data>
+  <data name="Check now" xml:space="preserve">
+    <value>Mrglurg bam</value>
+  </data>
   <data name="Check the link" xml:space="preserve">
     <value>Murgl murgm grog</value>
   </data>
@@ -1672,6 +1705,9 @@
   </data>
   <data name="Checked {0}" xml:space="preserve">
     <value>Murgl {0}</value>
+  </data>
+  <data name="Checking roles" xml:space="preserve">
+    <value>Mrglurg roglubrgl</value>
   </data>
   <data name="Choose a game card, then press Import again." xml:space="preserve">
     <value>Arglro gro glorgargl mrpmorg, mrplurg urgglorg Glorggl morgro.</value>
@@ -1838,6 +1874,9 @@
   </data>
   <data name="Combo, priced" xml:space="preserve">
     <value>Grogrgl, glorgargl</value>
+  </data>
+  <data name="Come back here once it's done." xml:space="preserve">
+    <value>Mrglurg bagro grogl murgbam morgrorp.</value>
   </data>
   <data name="Comfortable" xml:space="preserve">
     <value>Glorggrglmurggrgl</value>
@@ -2130,6 +2169,9 @@
   </data>
   <data name="Could not mute this member." xml:space="preserve">
     <value>Blub blub — mrglup murgloblub.</value>
+  </data>
+  <data name="Could not reach Discord just now." xml:space="preserve">
+    <value>Bo murgl Discord bam.</value>
   </data>
   <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
     <value>Arglgro murm mrargl PIUGAME, lurg morgro blubblub</value>
@@ -2480,6 +2522,18 @@
   <data name="Discord" xml:space="preserve">
     <value>Discord</value>
   </data>
+  <data name="Discord manages this role, so nobody can hand it out." xml:space="preserve">
+    <value>Discord murmargl blu roglub, ba bo grogmurgl grabmurp mrp.</value>
+  </data>
+  <data name="Discord role" xml:space="preserve">
+    <value>Discord roglub</value>
+  </data>
+  <data name="Discord server" xml:space="preserve">
+    <value>Discord blubmurg</value>
+  </data>
+  <data name="Discord won't let the bot hand out {0} of these roles." xml:space="preserve">
+    <value>Discord bo murgl murpgl grabmurp {0} ub blu roglubrgl.</value>
+  </data>
   <data name="Discord, wired in" xml:space="preserve">
     <value>Discord, lurgmurp mrp</value>
   </data>
@@ -2646,6 +2700,9 @@
   <data name="Earned" xml:space="preserve">
     <value>Plglgrorp</value>
   </data>
+  <data name="Earned {0}, but the bot can't hand that role out." xml:space="preserve">
+    <value>Grabgro {0}, murp murpgl bo grabmurp roglub.</value>
+  </data>
   <data name="Earned, not given" xml:space="preserve">
     <value>Plglgrorp, murm murgargl</value>
   </data>
@@ -2792,6 +2849,9 @@
   <data name="Every record held this week." xml:space="preserve">
     <value>Murgglorg blubgrorp glorgblgrl grglmrp plglmorg.</value>
   </data>
+  <data name="Every role this community gave out in the current server comes off first." xml:space="preserve">
+    <value>Ulbog roglubrgl opa blu plglmurgblub grabmurp ur blubmurg bam murgl blarg bagrol.</value>
+  </data>
   <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
     <value>Grorp mrogl blub murgblub grolub, gro rorgl mrrgl morgl blurgo mrgl grgl.</value>
   </data>
@@ -2807,8 +2867,14 @@
   <data name="Every tracked personal best on this mix, stacked by grade band per level. The typical best at almost every level is an S or better." xml:space="preserve">
     <value>Blub grobgro morp gro mgrlgmrg ur ur mrg, groplo pa rorgl grolgub pa grorpmurm. Gro groblub gro og ro blub grorpmurm gro a Ｓ ol grombl.</value>
   </data>
+  <data name="Everyone already has the right roles." xml:space="preserve">
+    <value>Olga grogmurgl mrogl roglubrgl bam.</value>
+  </data>
   <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
     <value>Blurgl bloop am olo. Golba marogl, opa grumb alla pragl.</value>
+  </data>
+  <data name="Everyone has this role already." xml:space="preserve">
+    <value>Olga grogmurgl mrogl blu roglub bam.</value>
   </data>
   <data name="Everyone on your rivals roster, board-only rivals included — their standings come from the weekly official board, so they only count on the charts it publishes." xml:space="preserve">
     <value>Grolurgmorp ap morp murgmorp glurg, mrglblarg-argl murgmorp glprglro — groggrrgl margmurgblarg gurgglarg blarg ur mrglmurm urgmrmurg mrglblarg, ro glmagl argl murpgl ap ur murgl mrp grogmurmprgl.</value>
@@ -2827,6 +2893,9 @@
   </data>
   <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
     <value>Grglmurpmurm blgrlblarg urg mrmrp plglmorg gromurm — mrp rglargl urgmurpgrrgl, murm rglmaglmurmmurg.</value>
+  </data>
+  <data name="Everything else" xml:space="preserve">
+    <value>Algrog murgblarg</value>
   </data>
   <data name="Everything goes — scores, history, votes, tournament results, communities, and the account itself." xml:space="preserve">
     <value>Molu blurpa — blorgu, larpu,grumba, gorbam.</value>
@@ -3264,6 +3333,12 @@
   <data name="Give a song name." xml:space="preserve">
     <value>Blgrlgro gro mrgl mrg.</value>
   </data>
+  <data name="Give members a Discord role when they earn a Phoenix 2 title." xml:space="preserve">
+    <value>Grabmurp grogmurgl mrp Discord roglub murgbam opa grabgro Phoenix 2 mrgl.</value>
+  </data>
+  <data name="Give members a Discord role when they earn a Phoenix 2 title. Roles are kept in step automatically — nobody has to ask." xml:space="preserve">
+    <value>Grabmurp grogmurgl mrp Discord roglub murgbam opa grabgro Phoenix 2 mrgl. Roglubrgl murgl gropla murmargl — bo grogmurgl murgloo.</value>
+  </data>
   <data name="Glow" xml:space="preserve">
     <value>Roglurg</value>
   </data>
@@ -3384,6 +3459,9 @@
   <data name="Hand over your communities first" xml:space="preserve">
     <value>Grumba obla polu</value>
   </data>
+  <data name="Handing out the role" xml:space="preserve">
+    <value>Grabmurp roglub</value>
+  </data>
   <data name="Hands" xml:space="preserve">
     <value>Mrpro</value>
   </data>
@@ -3456,6 +3534,9 @@
   <data name="Highest on the board" xml:space="preserve">
     <value>Mrrglmrrgl ap mrp mrglblarg</value>
   </data>
+  <data name="Highest only" xml:space="preserve">
+    <value>Grorpmurg ub</value>
+  </data>
   <data name="Highest score wins." xml:space="preserve">
     <value>Grrglmrpgro mrglrgl blgrlblarg.</value>
   </data>
@@ -3506,6 +3587,9 @@
   </data>
   <data name="holds the combo, doesn't extend it" xml:space="preserve">
     <value>gurg gro grogrgl, bo groglo ur</value>
+  </data>
+  <data name="Holds the title on Phoenix 2, with no higher rung" xml:space="preserve">
+    <value>Mrogl mrgl ur Phoenix 2, mag bo grorpmurg grop</value>
   </data>
   <data name="Home" xml:space="preserve">
     <value>Blargplgl</value>
@@ -3789,6 +3873,9 @@
   <data name="In progress" xml:space="preserve">
     <value>Mrp mrglrlgl</value>
   </data>
+  <data name="In Server Settings → Roles, drag the PIU Scores role above them." xml:space="preserve">
+    <value>Ur Blubmurg Murmargl → Roglubrgl, blarg PIU Mgrlgmrg roglub grorpmurg.</value>
+  </data>
   <data name="In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades." xml:space="preserve">
 	  <value>Mrp mrgrgl mrgl grglblarg mrglmurm, gl murg glorg glorgmurm grgl grglargl gro Blgrlgrrglmaglmorg grrglmurpblgrl mrgl rglblargmurm mrmurgargl murgblublurg mrgl urglurg.</value>
   </data>
@@ -3800,6 +3887,9 @@
   </data>
   <data name="in the top ten" xml:space="preserve">
     <value>mrp mrp blarg blgrl</value>
+  </data>
+  <data name="In this Discord server, with their account linked" xml:space="preserve">
+    <value>Ur blu Discord blubmurg, mag grgl murmargl</value>
   </data>
   <data name="In this folder" xml:space="preserve">
     <value>Mrp grglmrp grrgllurg</value>
@@ -4252,6 +4342,15 @@
 	  <value>Grorpgl</value>
 	  <comment>Link</comment>
   </data>
+  <data name="Link Discord on my account" xml:space="preserve">
+    <value>Murmargl Discord ur grgl</value>
+  </data>
+  <data name="Link your own Discord account first — setting the server means running a command as yourself in Discord." xml:space="preserve">
+    <value>Murmargl grgl ub Discord bagrol — blubmurg murgl grabmurp mrp blargurg ur Discord.</value>
+  </data>
+  <data name="Linked server" xml:space="preserve">
+    <value>Murmargl blubmurg</value>
+  </data>
   <data name="Linked to a site account" xml:space="preserve">
     <value>Glgl grgl gro plglmorg grgl</value>
   </data>
@@ -4349,6 +4448,9 @@
   <data name="lower average score" xml:space="preserve">
     <value>glubgro rorg mrglrgl</value>
   </data>
+  <data name="lower rungs come off automatically" xml:space="preserve">
+    <value>grop blarg murgl blarg murmargl</value>
+  </data>
   <data name="Lowest" xml:space="preserve">
     <value>Glubglub</value>
   </data>
@@ -4396,6 +4498,9 @@
   </data>
   <data name="Manage channel subscriptions" xml:space="preserve">
     <value>Blubblub glmurmblarg groblarggrglro</value>
+  </data>
+  <data name="Manage Discord roles" xml:space="preserve">
+    <value>Murmargl Discord roglubrgl</value>
   </data>
   <data name="Manage invite links" xml:space="preserve">
     <value>Blubblub blargmurgl grrglglorg</value>
@@ -4921,6 +5026,9 @@
   <data name="next best candidate {0}" xml:space="preserve">
     <value>gorulab grumblab {0}</value>
   </data>
+  <data name="Next check will change" xml:space="preserve">
+    <value>Mrglurg murgbam grolurg</value>
+  </data>
   <data name="Next comment" xml:space="preserve">
     <value>Grorpglorg blurp</value>
   </data>
@@ -5073,6 +5181,9 @@
   </data>
   <data name="No rivals yet" xml:space="preserve">
     <value>Bo Murgmorp argl</value>
+  </data>
+  <data name="No roles yet — add one to start handing them out." xml:space="preserve">
+    <value>Bo roglubrgl bam — blarg mrp ro grabmurp.</value>
   </data>
   <data name="No saved sets yet." xml:space="preserve">
     <value>Mua lurgab grolp gob.</value>
@@ -5453,6 +5564,9 @@
   <data name="nothing ticked, so scores render plain" xml:space="preserve">
     <value>mo rogrg, ro mgrlgmrg romurm margblurg</value>
   </data>
+  <data name="Nothing to change." xml:space="preserve">
+    <value>Bo grolurg.</value>
+  </data>
   <data name="Nothing to compare yet" xml:space="preserve">
     <value>Bo grgl Lurgplglgrgl argl</value>
   </data>
@@ -5780,6 +5894,9 @@
   </data>
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>Mrprgl Romorgrgl Murgl</value>
+  </data>
+  <data name="Open the Discord server you want, where you have Manage Server, then run:" xml:space="preserve">
+    <value>Grorp Discord blubmurg opa murgloo, blarg mrogl Murmargl Blubmurg, ap grabmurp:</value>
   </data>
   <data name="Open thread" xml:space="preserve">
     <value>Mrprgl blurpgro</value>
@@ -6221,6 +6338,9 @@
   </data>
   <data name="Pick a mix." xml:space="preserve">
     <value>Rglgro gro mrg.</value>
+  </data>
+  <data name="Pick a Phoenix 2 title, pick a role in your server. Anyone who has the title gets the role." xml:space="preserve">
+    <value>Murgloo mrp Phoenix 2 mrgl, murgloo mrp roglub ur blubmurg. Olga opa mrogl mrgl grabgro roglub.</value>
   </data>
   <data name="Pick a player to see their boards, history, and PUMBILITY over time - departed tags stay searchable." xml:space="preserve">
     <value>Rglgro gro morp grgl blarg grglblarg grrglplgl, lurgmrmorg, ro PUMBILITY grglglorg grglmrgl - morgmrglmurm gromurg mrpro murgmrmrgl.</value>
@@ -6770,6 +6890,15 @@
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>PUMBILITY blarg 50</value>
   </data>
+  <data name="PUMBILITY — combined" xml:space="preserve">
+    <value>PUMBILITY — murgblub</value>
+  </data>
+  <data name="PUMBILITY — doubles" xml:space="preserve">
+    <value>PUMBILITY — blurg</value>
+  </data>
+  <data name="PUMBILITY — singles" xml:space="preserve">
+    <value>PUMBILITY — mrp</value>
+  </data>
   <data name="PUMBILITY+ by score" xml:space="preserve">
     <value>PUMBILITY+ og mrglrgl</value>
   </data>
@@ -6933,6 +7062,12 @@
   <data name="Rating" xml:space="preserve">
     <value>Mrglrg</value>
     <comment>Rating</comment>
+  </data>
+  <data name="Re-add the bot" xml:space="preserve">
+    <value>Blarg murpgl bagro</value>
+  </data>
+  <data name="Re-add the bot from the Communities page — it keeps this server and its channels, and picks up the permission." xml:space="preserve">
+    <value>Blarg murpgl bagro blarg Plglmurgblub plglur — mrp mrogl blubmurg ap murgblub, ap grabgro murmargl.</value>
   </data>
   <data name="Re-price {0} ratings" xml:space="preserve">
     <value>Mralg {0} Mrglrg</value>
@@ -7207,6 +7342,9 @@
   <data name="Remove this comment?" xml:space="preserve">
     <value>Grombo bo blurp?</value>
   </data>
+  <data name="Remove this role" xml:space="preserve">
+    <value>Glubgrob blu roglub</value>
+  </data>
   <data name="Remove This Score" xml:space="preserve">
     <value>Gora Obo Mrglrgl</value>
   </data>
@@ -7236,6 +7374,9 @@
   </data>
   <data name="Removed {0} for {1} from this channel." xml:space="preserve">
     <value>Grorpmorglurg {0} ro {1} romurg grglmrp glmurmblarg.</value>
+  </data>
+  <data name="Removing the mapping" xml:space="preserve">
+    <value>Glubgrob murmargl</value>
   </data>
   <data name="Rename" xml:space="preserve">
     <value>Glorggrgl</value>
@@ -7390,6 +7531,9 @@
   </data>
   <data name="Role" xml:space="preserve">
     <value>Blargmorg</value>
+  </data>
+  <data name="Roles are handed out as they're earned. Only check if somebody says theirs is missing." xml:space="preserve">
+    <value>Roglubrgl grabmurp murgbam grabgro. Mrglurg ub murgbam grogmurgl blorp bo mrogl roglub.</value>
   </data>
   <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
     <value>Romagl murgl glgrgl mrp rmrgmrml, plgl mrpurgmrgl ro mrpmorg mrgrorp mr gromurp blgrlglorg, ro murmmurm gro mrmrp murmblub blarg mrp grorpro grglgro — argl mrp grogrorp — grorp urgblub mrp urgblgrl.</value>
@@ -7829,6 +7973,9 @@
   </data>
   <data name="Set your country on your account page to join a region." xml:space="preserve">
     <value>Gro gromurp arglgrorplurg lurg gromurp grgl urggrgl grgl grorpblgrl gro rglargl.</value>
+  </data>
+  <data name="Set {0}" xml:space="preserve">
+    <value>Murmargl {0}</value>
   </data>
   <data name="Sets what the whole site shows you." xml:space="preserve">
     <value>Ograbalu gluma balurgl marob.</value>
@@ -8407,8 +8554,17 @@
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>murpmurp grgl mrglrgl mrpplgl mrpgrrgl rglplgl</value>
   </data>
+  <data name="Stop" xml:space="preserve">
+    <value>Grorp</value>
+  </data>
   <data name="Stop one of this channel's feeds" xml:space="preserve">
     <value>Roglorg argl mrgl grglmrp mrmrglgro glorgmorg</value>
+  </data>
+  <data name="Stopped. What it got through is already applied." xml:space="preserve">
+    <value>Grorp. Algro mrp grabmurp mrogl bam.</value>
+  </data>
+  <data name="Stopping is safe — the next check picks up where this one left off." xml:space="preserve">
+    <value>Grorp mrogl marglub — murgbam mrglurg grabmurp blarg mrp grorp.</value>
   </data>
   <data name="Store" xml:space="preserve">
     <value>Morgmrgl</value>
@@ -8534,8 +8690,20 @@
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>Murmglorg argl arglglorg murgglorg GRRGL roblub murgmurpblub ro gromurp glorgrgl plglmurmro rorglrgl. Blgrlblarg mrp murmargl gl plglmurmro lurg romurg — mrp murggrrgl argllurg murm arglglorg, gl groplgl morg. Blubgrrgl urg mrp glmurmargl mrpmurg glorgmurm grogrgl blub grorp glrolurg gl.</value>
   </data>
+  <data name="Take the role off everyone who has it" xml:space="preserve">
+    <value>Blarg roglub ub olga grogmurgl opa mrogl mrp</value>
+  </data>
+  <data name="Take the roles back" xml:space="preserve">
+    <value>Blarg roglubrgl bagro</value>
+  </data>
   <data name="Take this session off the board?" xml:space="preserve">
     <value>Molgab orgab ab morgab?</value>
+  </data>
+  <data name="Taking the role back" xml:space="preserve">
+    <value>Blarg roglub bagro</value>
+  </data>
+  <data name="Taking the roles back" xml:space="preserve">
+    <value>Blarg roglubrgl bagro</value>
   </data>
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Rglmrgl Murgmrmrpmagl</value>
@@ -8585,6 +8753,9 @@
   <data name="That PIUGAME account is not connected to the selected account" xml:space="preserve">
     <value>Blubgrrgl PIUGAME grgl urg murm urgblgrlplgl grgl mrp urggrrglgro grgl</value>
   </data>
+  <data name="That role no longer exists in the server." xml:space="preserve">
+    <value>Roglub bo mrogl ur blubmurg bam.</value>
+  </data>
   <data name="That scoring configuration is invalid." xml:space="preserve">
     <value>Blubgrrgl blgrlblgrlplgl grgllurgblubblub urg arglgrourg.</value>
   </data>
@@ -8620,6 +8791,21 @@
   </data>
   <data name="The board ranks sessions, not players, so three great sessions can hold three places. Ties go to the earlier session." xml:space="preserve">
     <value>Blu mrglblarg rorgl orgab, mo morp, murm 3 mrrgl orgab gab grub 3 glargrog. Blugrobgro gab ap blu glorggro orgab.</value>
+  </data>
+  <data name="The bot can hand out every role below." xml:space="preserve">
+    <value>Murpgl grabmurp ulbog roglubrgl blarg.</value>
+  </data>
+  <data name="The bot can't hand out roles in this server yet — it was added before roles existed." xml:space="preserve">
+    <value>Murpgl bo grabmurp roglubrgl ur blu blubmurg bam — mrp blarg bagrol roglubrgl mrogl.</value>
+  </data>
+  <data name="The bot has no permission to manage roles here." xml:space="preserve">
+    <value>Murpgl bo mrogl murmargl roglubrgl ur blu blubmurg.</value>
+  </data>
+  <data name="The bot is in this server." xml:space="preserve">
+    <value>Murpgl mrogl ur blu blubmurg.</value>
+  </data>
+  <data name="The bot is no longer in this server." xml:space="preserve">
+    <value>Murpgl bo mrogl ur blu blubmurg bam.</value>
   </data>
   <data name="The cabinet" xml:space="preserve">
     <value>Mrp mrglglmorg</value>
@@ -8987,6 +9173,9 @@
   <data name="This chart is on the right side of the video" xml:space="preserve">
     <value>Grglmrp murgl lu ur a rulurg blgrlgro ub a grrrgl</value>
   </data>
+  <data name="This community doesn't give out Discord roles." xml:space="preserve">
+    <value>Blu plglmurgblub bo grabmurp Discord roglubrgl.</value>
+  </data>
   <data name="This does not send anything." xml:space="preserve">
     <value>Mo alla blorp.</value>
   </data>
@@ -9076,6 +9265,9 @@
   </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>Grglmrp grrglmr grogrrgl murmmrp maglmrglplgl argl — urgmurp arglblgrl blarggrorp.</value>
+  </data>
+  <data name="This role is above the bot, so it can't be handed out." xml:space="preserve">
+    <value>Blu roglub grorpmurg murpgl, ba bo grabmurp.</value>
   </data>
   <data name="This season" xml:space="preserve">
     <value>Blu Maglgrgl</value>
@@ -9214,6 +9406,9 @@
   </data>
   <data name="Titles" xml:space="preserve">
     <value>Mrgl</value>
+  </data>
+  <data name="Titles and roles" xml:space="preserve">
+    <value>Mrgl ap roglubrgl</value>
   </data>
   <data name="titles earned" xml:space="preserve">
     <value>mrgl plglgrorp</value>
@@ -9559,6 +9754,9 @@
   <data name="Unranked" xml:space="preserve">
     <value>Groglubblarg</value>
   </data>
+  <data name="Untick to leave it on people — the site just stops maintaining it." xml:space="preserve">
+    <value>Blarg mrp ba grogmurgl mrogl roglub — plglur ub murmargl bam.</value>
+  </data>
   <data name="until everything is deleted" xml:space="preserve">
     <value>molu blurpa gorbo</value>
   </data>
@@ -9592,6 +9790,9 @@
   </data>
   <data name="updated {0:N0} charts" xml:space="preserve">
     <value>glgrorpmrgl {0:N0} murgl</value>
+  </data>
+  <data name="Updated {0} members." xml:space="preserve">
+    <value>{0} grogmurgl grolurg.</value>
   </data>
   <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
     <value>Grglargl gro JSON mrblub grgl mrpmurp Phoenix 2 mrgl ro murgl mrp grgllurg.</value>
@@ -9644,6 +9845,9 @@
   </data>
   <data name="Use this avatar" xml:space="preserve">
     <value>Murp mo Blargblgrl</value>
+  </data>
+  <data name="Use this server for a community's title roles" xml:space="preserve">
+    <value>Blugra gomo umbor og pulmagra rolab</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Morgmrgl mrmrpplgl ro blgrlrglmr</value>
@@ -9997,6 +10201,9 @@
   <data name="When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today." xml:space="preserve">
     <value>Mrpgrrgl gro grgl mrg grglroro, blarggllurg blubmorg murmrgl. Murgglorg mrglrgl plglgrrgl murmgrglurg murgblgrl — grgl glmurp arglblgrl lurg, lurgplglgrgl murmlurgmurp, ro glorgmurg romurg. {0} mrgrgl lurg blubgrorp, urgro murm urgro, 1999 grgl grorplurg.</value>
   </data>
+  <data name="When a role is given" xml:space="preserve">
+    <value>Murgbam roglub grabmurp</value>
+  </data>
   <data name="When somebody adds you, they show up here." xml:space="preserve">
     <value>Mrp argl morp glorg blub, gro mrpo blubmorg.</value>
   </data>
@@ -10065,6 +10272,9 @@
   </data>
   <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
     <value>Gromorg mrg (murmurgmr grgl Phoenix 2)</value>
+  </data>
+  <data name="Which of your communities" xml:space="preserve">
+    <value>Grulm og gru gomorablu</value>
   </data>
   <data name="Which registration to remove" xml:space="preserve">
     <value>Gromorg blargplglmaglblarg grgl plglgrgl</value>
@@ -10144,11 +10354,17 @@
   <data name="Worked examples" xml:space="preserve">
     <value>Grumbo grumbo</value>
   </data>
+  <data name="Working it out…" xml:space="preserve">
+    <value>Grabmurp…</value>
+  </data>
   <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
     <value>Glorgmurp murp gapla urgblarg mrglaba — blub maglurp, blub grolba, mrgl brolgo malgo glorgmurprolba maglmurp blub mrgloo.</value>
   </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>Murgablar promglu. Blub morp mrgl oglu porum, mrogl gaal amur.</value>
+  </data>
+  <data name="Working through the members…" xml:space="preserve">
+    <value>Grabmurp grogmurgl…</value>
   </data>
   <data name="World" xml:space="preserve">
     <value>Grolurg</value>
@@ -11163,6 +11379,12 @@
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>{0} mrgl {1} blargblgrlmurp</value>
   </data>
+  <data name="{0} of {1} members" xml:space="preserve">
+    <value>{0} ub {1} grogmurgl</value>
+  </data>
+  <data name="{0} of {1} members hold at least one role" xml:space="preserve">
+    <value>{0} ub {1} grogmurgl mrogl mrp roglub</value>
+  </data>
   <data name="{0} of {1} peers" xml:space="preserve">
     <value>{0} ub {1} maglmurp</value>
   </data>
@@ -11372,6 +11594,9 @@
   </data>
   <data name="{0} viewers watching" xml:space="preserve">
     <value>{0} mrglgrorpblgrl lurgmrpgl</value>
+  </data>
+  <data name="{0} will stop being handed out." xml:space="preserve">
+    <value>{0} murgl bo grabmurp bam.</value>
   </data>
   <data name="{0} {1}% → **{2}%**" xml:space="preserve">
     <value>{0} {1}% → **{2}%**</value>

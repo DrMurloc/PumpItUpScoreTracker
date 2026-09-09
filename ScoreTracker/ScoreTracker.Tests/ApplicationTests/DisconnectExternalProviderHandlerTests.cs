@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MassTransit;
 using Moq;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Records;
@@ -17,12 +18,13 @@ public sealed class DisconnectExternalProviderHandlerTests
     private readonly Guid _userId = Guid.NewGuid();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IUserRepository> _users = new();
+    private readonly Mock<IBus> _bus = new();
     private readonly DisconnectExternalProviderHandler _handler;
 
     public DisconnectExternalProviderHandlerTests()
     {
         _currentUser.Setup(c => c.User).Returns(new UserBuilder().WithId(_userId).Build());
-        _handler = new DisconnectExternalProviderHandler(_currentUser.Object, _users.Object);
+        _handler = new DisconnectExternalProviderHandler(_currentUser.Object, _users.Object, _bus.Object);
     }
 
     [Fact]

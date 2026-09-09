@@ -1,0 +1,276 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using MassTransit;
+using MediatR;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
+using ScoreTracker.Communities.Application;
+using ScoreTracker.Communities.Contracts;
+using ScoreTracker.Communities.Contracts.Commands;
+using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
+using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Tests.TestData;
+using ScoreTracker.Communities.Contracts.Messages;
+using ScoreTracker.Communities.Domain;
+using ScoreTracker.Domain.Events;
+using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Identity.Contracts.Events;
+using ScoreTracker.PlayerProgress.Contracts.Events;
+using ScoreTracker.SharedKernel.Enums;
+using Xunit;
+
+namespace ScoreTracker.Tests.ApplicationTests;
+
+/// <summary>
+///     The angles that reach the reconcile from outside it. The rule itself is pinned in
+///     <see cref="DiscordRoleSagaTests" />; what these assert is that each thing which can change
+///     one of the four facts actually says so — and, for the two orderings that matter, that it
+///     says so at the right moment.
+/// </summary>
+public sealed class DiscordRoleTriggerTests
+{
+    private static readonly Guid CommunityId = Guid.Parse("33333333-3333-3333-3333-333333333333");
+    private static readonly Guid UserId = Guid.Parse("44444444-4444-4444-4444-444444444444");
+
+    private readonly Mock<IDiscordRoleService> _roles = new();
+
+    [Fact]
+    public async Task ATriggerForOneMemberSettlesOnlyThatMember()
+    {
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new ReconcileDiscordRolesCommand(CommunityId, UserId)));
+
+        _roles.Verify(r => r.ReconcileOne(CommunityId, UserId, It.IsAny<CancellationToken>()), Times.Once);
+        _roles.Verify(r => r.ReconcileCommunity(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ATriggerWithNoMemberSettlesTheWholeCommunity()
+    {
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new ReconcileDiscordRolesCommand(CommunityId)));
+
+        _roles.Verify(r => r.ReconcileCommunity(CommunityId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     Discord being unreachable is not a reason to fail whatever the player was doing. The
+    ///     sweep re-settles anyone this dropped.
+    /// </summary>
+    [Fact]
+    public async Task ADiscordFailureDoesNotEscapeTheConsumer()
+    {
+        _roles.Setup(r => r.ReconcileOne(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TimeoutException("discord is down"));
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new ReconcileDiscordRolesCommand(CommunityId, UserId)));
+    }
+
+    /// <summary>
+    ///     The ordering the whole grant table exists for. Identity deletes the external login on
+    ///     the first purge pass, so if the row went before the roles came off there would be
+    ///     nothing left that knows which Discord account to take them from.
+    /// </summary>
+    [Fact]
+    public async Task PurgingTakesTheRolesBackBeforeItDeletesTheRowThatNamesThem()
+    {
+        var order = new List<string>();
+        var purge = new Mock<IAccountPurgeRepository>();
+        _roles.Setup(r => r.RemoveAllForUser(UserId, It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("roles")).Returns(Task.CompletedTask);
+        purge.Setup(p => p.DeleteAllForUser(UserId, It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("rows")).Returns(Task.CompletedTask);
+
+        var consumer = new AccountPurgeConsumer(purge.Object, _roles.Object,
+            NullLogger<AccountPurgeConsumer>.Instance);
+        await consumer.Consume(Message(new AccountPurgeStartedEvent(UserId)));
+
+        Assert.Equal(new[] { "roles", "rows" }, order);
+    }
+
+    /// <summary>
+    ///     A purge must complete even when Discord does not answer — the account's data is deleted
+    ///     either way, and the event re-fires daily for a week while the grant row still exists.
+    /// </summary>
+    [Fact]
+    public async Task APurgeStillDeletesTheDataWhenDiscordIsUnreachable()
+    {
+        var purge = new Mock<IAccountPurgeRepository>();
+        _roles.Setup(r => r.RemoveAllForUser(UserId, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TimeoutException("discord is down"));
+
+        var consumer = new AccountPurgeConsumer(purge.Object, _roles.Object,
+            NullLogger<AccountPurgeConsumer>.Instance);
+        await consumer.Consume(Message(new AccountPurgeStartedEvent(UserId)));
+
+        purge.Verify(p => p.DeleteAllForUser(UserId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task EarningAPhoenix2TitleSettlesEveryCommunityThePlayerIsIn()
+    {
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new PlayerTitlesChangedEvent(UserId, MixEnum.Phoenix2)));
+
+        _roles.Verify(r => r.ReconcileUserEverywhere(UserId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>Roles are a Phoenix 2 feature; a Phoenix 1 title moves nothing.</summary>
+    [Theory]
+    [InlineData(MixEnum.Phoenix)]
+    [InlineData(MixEnum.XX)]
+    public async Task ATitleOnAnotherMixIsIgnored(MixEnum mix)
+    {
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new PlayerTitlesChangedEvent(UserId, mix)));
+
+        _roles.Verify(r => r.ReconcileUserEverywhere(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task SomebodyJoiningAServerIsSettledThere()
+    {
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new ReconcileGuildMemberCommand(900, 42)));
+
+        _roles.Verify(r => r.ReconcileGuildMember(900, 42, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AFailureSettlingANewArrivalDoesNotEscape()
+    {
+        _roles.Setup(r => r.ReconcileGuildMember(It.IsAny<ulong>(), It.IsAny<ulong>(),
+            It.IsAny<CancellationToken>())).ThrowsAsync(new TimeoutException("discord is down"));
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new ReconcileGuildMemberCommand(900, 42)));
+    }
+
+    [Fact]
+    public async Task TheSweepSettlesEveryConfiguredCommunity()
+    {
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new SweepDiscordRolesCommand()));
+
+        _roles.Verify(r => r.SweepAll(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     Linking is the LAST step of ordinary onboarding — the community join happens before
+    ///     there is a Discord account, and the server join happens before there is a site account
+    ///     to find. It used to fire nothing, leaving the player waiting on a nightly sweep they
+    ///     cannot trigger: Check now is admin-only.
+    /// </summary>
+    [Fact]
+    public async Task LinkingDiscordSettlesTheAccountAtOnce()
+    {
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new ExternalLoginAddedEvent(UserId, "Discord")));
+
+        _roles.Verify(r => r.ReconcileUserEverywhere(UserId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task LinkingAnotherProviderIsIgnored()
+    {
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new ExternalLoginAddedEvent(UserId, "Google")));
+
+        _roles.Verify(r => r.ReconcileUserEverywhere(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    /// <summary>
+    ///     The one change nothing else reported. Standing granted off the back of a linked account
+    ///     must not outlive the link — before this, the roles stood until the next sweep.
+    /// </summary>
+    [Fact]
+    public async Task UnlinkingDiscordSettlesTheAccountAtOnce()
+    {
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new ExternalLoginRemovedEvent(UserId, "Discord")));
+
+        _roles.Verify(r => r.ReconcileUserEverywhere(UserId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>Unlinking Google says nothing about Discord roles.</summary>
+    [Theory]
+    [InlineData("Google")]
+    [InlineData("PiuGame")]
+    public async Task UnlinkingAnotherProviderIsIgnored(string provider)
+    {
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new ExternalLoginRemovedEvent(UserId, provider)));
+
+        _roles.Verify(r => r.ReconcileUserEverywhere(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    /// <summary>
+    ///     Mapping a title hands the role out on the spot. It used to publish and return, which
+    ///     left an admin looking at a page where nothing had happened, reaching for Check now.
+    /// </summary>
+    [Fact]
+    public async Task MappingATitleHandsTheRoleOutImmediately()
+    {
+        var communities = new Mock<ICommunityRepository>();
+        var roleRepo = new Mock<IDiscordRoleRepository>();
+        var bot = new Mock<IBotClient>();
+        var titles = new Mock<ITitleRepository>();
+        var users = new Mock<IUserReader>();
+        var bus = new Mock<IBus>();
+        var currentUser = new Mock<ICurrentUserAccessor>();
+
+        var name = Name.From("Arrow Eclipse");
+        currentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        currentUser.SetupGet(c => c.User).Returns(new UserBuilder().WithId(UserId).Build());
+        communities.Setup(c => c.GetCommunityId(name, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CommunityId);
+        communities.Setup(c => c.GetCommunityByName(name, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Community(name, UserId, CommunityPrivacyType.Public,
+                new[] { new CommunityMember(UserId, CommunityRole.Creator, CommunityPermission.All, null, null) },
+                Array.Empty<Community.ChannelConfiguration>(), new Dictionary<Guid, DateOnly?>(), false,
+                CommunityPermission.None, null));
+        roleRepo.Setup(r => r.GetMappings(CommunityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<CommunityTitleRoleRecord>());
+        // The handler checks the role is one the bot can actually hand out — @everyone carries the
+        // guild's own id, and mapping it would put every member's baseline role into the managed set.
+        roleRepo.Setup(r => r.GetServer(CommunityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CommunityDiscordServerRecord(CommunityId, 900, "Arrow Eclipse",
+                DateTimeOffset.UnixEpoch));
+        bot.Setup(b => b.GetGuildRoles(900, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new BotGuildRole(1, "@Bronze", null, null) });
+
+        var saga = new DiscordRoleAdminSaga(roleRepo.Object, communities.Object, bot.Object,
+            currentUser.Object, _roles.Object, titles.Object, users.Object, bus.Object);
+
+        await saga.Handle(new SetCommunityTitleRoleCommand(name, "[P.B] BRONZE", 1),
+            CancellationToken.None);
+
+        _roles.Verify(r => r.ReconcileCommunity(CommunityId, It.IsAny<CancellationToken>(),
+            It.IsAny<IProgress<DiscordRoleProgress>?>()), Times.Once);
+    }
+
+    private static ConsumeContext<T> Message<T>(T message) where T : class
+    {
+        var context = new Mock<ConsumeContext<T>>();
+        context.SetupGet(c => c.Message).Returns(message);
+        context.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
+        return context.Object;
+    }
+}

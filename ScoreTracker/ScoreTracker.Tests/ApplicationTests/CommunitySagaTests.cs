@@ -1670,6 +1670,7 @@ public sealed class CommunitySagaTests
         public Mock<IMediator> Mediator { get; } = new();
         public Mock<IDateTimeOffsetAccessor> DateTime { get; } = FakeDateTime.At(Now);
         public Mock<ILocalizedTextAccessor> Localizer { get; } = new();
+        public Mock<IBus> Bus { get; } = new();
         public CommunitySaga Saga { get; }
 
         public HandlerContext(Guid? currentUserId = null, bool isLoggedIn = true)
@@ -1698,7 +1699,7 @@ public sealed class CommunitySagaTests
                 It.IsAny<CancellationToken>())).ReturnsAsync(Stats(0, 0));
             Saga = new CommunitySaga(CurrentUser.Object, Communities.Object, Bot.Object, Users.Object,
                 Charts.Object, Scores.Object, Mediator.Object, PlayerStats.Object, DateTime.Object,
-                Localizer.Object);
+                Localizer.Object, Bus.Object);
         }
 
         private static PlayerStatsRecord Stats(double singlesCompetitive, double doublesCompetitive)

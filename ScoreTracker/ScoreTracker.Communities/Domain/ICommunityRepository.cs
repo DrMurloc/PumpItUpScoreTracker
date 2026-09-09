@@ -69,6 +69,13 @@ namespace ScoreTracker.Communities.Domain
 
         Task<Community?> GetCommunityByName(Name communityName, CancellationToken cancellationToken);
 
+        /// <summary>
+        ///     The community's row id, or null when no community has that name. The domain model is
+        ///     name-shaped, but anything keyed to a community stores the id — a name can be
+        ///     renamed and the id cannot.
+        /// </summary>
+        Task<Guid?> GetCommunityId(Name communityName, CancellationToken cancellationToken);
+
         /// <summary>Every community this Discord channel is registered to, with its regional flag (may be empty).</summary>
         Task<IReadOnlyList<ChannelCommunityInfo>> GetChannelCommunities(ulong channelId,
             CancellationToken cancellationToken);

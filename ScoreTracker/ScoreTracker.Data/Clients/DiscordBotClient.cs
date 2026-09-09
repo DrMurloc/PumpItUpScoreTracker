@@ -23,6 +23,7 @@ public sealed class DiscordBotClient : IBotClient
     private readonly ILogger _logger;
     private readonly SemaphoreSlim _publishLock = new(1, 1);
     private volatile bool _commandsPublished;
+    private Func<ulong, ulong, Task>? _memberJoined;
     private CommandRegistration? _registration;
     private GatewaySession? _session;
 
@@ -84,6 +85,7 @@ public sealed class DiscordBotClient : IBotClient
     {
         client.SlashCommandExecuted -= OnSlashCommand;
         client.AutocompleteExecuted -= OnAutocomplete;
+        client.UserJoined -= OnUserJoined;
         try
         {
             await client.StopAsync();
@@ -120,7 +122,14 @@ public sealed class DiscordBotClient : IBotClient
         var state = new GatewayStateTracker();
         var client = new DiscordSocketClient(new DiscordSocketConfig
         {
-            LogLevel = LogSeverity.Info
+            LogLevel = LogSeverity.Info,
+            // GuildMembers is privileged and enabled on the application. It buys exactly one
+            // thing: being told when somebody joins a server, which is the only fact the Discord
+            // role feature needs that changes without telling us. AlwaysDownloadUsers stays OFF
+            // — the member-list download is the expensive half of that intent and nothing here
+            // needs it, since a single member is fetched by id over REST.
+            GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers,
+            AlwaysDownloadUsers = false
         });
 
         // Severity, source and exception all travel: the disconnect reason Discord.Net reports
@@ -133,6 +142,7 @@ public sealed class DiscordBotClient : IBotClient
         };
         client.SlashCommandExecuted += OnSlashCommand;
         client.AutocompleteExecuted += OnAutocomplete;
+        client.UserJoined += OnUserJoined;
         // The tree is published once the socket is up. Either hook may be the one that finds
         // the registration in place; the publish itself runs once per process. Connected fires
         // on a resume as well as a fresh identify, so a failed publish retries within hours.
@@ -209,6 +219,128 @@ public sealed class DiscordBotClient : IBotClient
         return permissions.ViewChannel && permissions.SendMessages;
     }
 
+    public async Task<BotGuild?> GetGuild(ulong guildId, CancellationToken cancellationToken = default)
+    {
+        var guild = Client.GetGuild(guildId);
+        return guild == null
+            ? null
+            : await Task.FromResult(new BotGuild(guild.Id, guild.Name,
+                guild.CurrentUser?.GuildPermissions.ManageRoles ?? false));
+    }
+
+    /// <summary>
+    ///     Roles strongest-first, each carrying why the bot cannot assign it. The hierarchy test is
+    ///     Discord's own: a role at or above the bot's highest position is refused, and the refusal
+    ///     is invisible to the player, so it has to be decided before a write rather than after.
+    /// </summary>
+    public async Task<IReadOnlyList<BotGuildRole>> GetGuildRoles(ulong guildId,
+        CancellationToken cancellationToken = default)
+    {
+        var guild = Client.GetGuild(guildId);
+        if (guild == null) return Array.Empty<BotGuildRole>();
+
+        // Hierarchy is only half the question. A bot invited WITHOUT Manage Roles passes every
+        // position check and then gets 50001 Missing Access on the write — which Discord reports
+        // to nobody. Asking the guild for the bot's own permission is the other half, and it is
+        // the state every server invited before this feature shipped is in.
+        var canManage = guild.CurrentUser?.GuildPermissions.ManageRoles ?? false;
+        var ceiling = guild.CurrentUser?.Roles.Max(r => (int?)r.Position) ?? -1;
+        return await Task.FromResult(guild.Roles
+            .OrderByDescending(r => r.Position)
+            // The missing permission wins over the position check. A bot with no Manage Roles at
+            // all also sits below plenty of roles, and labelling those AboveBot tells an admin to
+            // drag roles around — which cannot fix a permission that was never granted.
+            .Select(r => new BotGuildRole(r.Id, r.Name, ColorOf(r),
+                !canManage && !r.IsEveryone && !r.IsManaged
+                    ? BotRoleBlockedReason.BotCannotManageRoles
+                    : BlockedReasonFor(r, ceiling)))
+            .ToArray());
+    }
+
+    private static string? ColorOf(SocketRole role) =>
+        role.Color.RawValue == 0 ? null : $"#{role.Color.RawValue:X6}";
+
+    private static BotRoleBlockedReason? BlockedReasonFor(SocketRole role, int botCeiling)
+    {
+        if (role.IsEveryone) return BotRoleBlockedReason.Everyone;
+        if (role.IsManaged) return BotRoleBlockedReason.Managed;
+        return role.Position >= botCeiling ? BotRoleBlockedReason.AboveBot : null;
+    }
+
+    /// <summary>
+    ///     Null means "not in the server" — the one call that answers both halves a reconcile
+    ///     needs. Deliberately a REST fetch of a single member rather than a cache read: fetching
+    ///     one member by id is not gated on the members intent (only listing them all is), and the
+    ///     socket's member cache is not populated because AlwaysDownloadUsers stays off.
+    /// </summary>
+    public async Task<IReadOnlyCollection<ulong>?> GetMemberRoles(ulong guildId, ulong userId,
+        CancellationToken cancellationToken = default)
+    {
+        var guild = Client.GetGuild(guildId);
+        if (guild == null) return null;
+
+        var member = guild.GetUser(userId) ?? (IGuildUser?)await Client.Rest.GetGuildUserAsync(guildId, userId);
+        // Not in the server. Distinct from "in it holding nothing", which is an empty set.
+        return member?.RoleIds.ToArray();
+    }
+
+    /// <summary>
+    ///     One walk of the server's members instead of one fetch each. Gated on the Server Members
+    ///     intent, which the application has. A guild the bot cannot see reports NULL rather than
+    ///     an empty roster — the two mean opposite things and the callers act on the difference.
+    /// </summary>
+    public async Task<IReadOnlyDictionary<ulong, IReadOnlyCollection<ulong>>?> GetGuildMemberRoles(
+        ulong guildId, CancellationToken cancellationToken = default)
+    {
+        // Null, not empty: the socket is also null mid-reconnect, and a caller that read that as
+        // "the server has nobody in it" would revoke nothing and report success.
+        var guild = Client.GetGuild(guildId);
+        if (guild == null) return null;
+
+        // Populates the socket cache for THIS guild, on demand. Deliberately not what
+        // AlwaysDownloadUsers does — that pays for every guild at every connect, whether or not
+        // anyone is handing out roles there.
+        await guild.DownloadUsersAsync();
+
+        var roles = new Dictionary<ulong, IReadOnlyCollection<ulong>>();
+        foreach (var member in guild.Users)
+            roles[member.Id] = member.Roles.Select(r => r.Id).ToArray();
+
+        return roles;
+    }
+
+    public async Task AddRole(ulong guildId, ulong userId, ulong roleId,
+        CancellationToken cancellationToken = default)
+    {
+        var member = await Member(guildId, userId);
+        if (member != null) await member.AddRoleAsync(roleId);
+    }
+
+    public async Task RemoveRole(ulong guildId, ulong userId, ulong roleId,
+        CancellationToken cancellationToken = default)
+    {
+        var member = await Member(guildId, userId);
+        if (member != null) await member.RemoveRoleAsync(roleId);
+    }
+
+    private async Task<IGuildUser?> Member(ulong guildId, ulong userId)
+    {
+        var guild = Client.GetGuild(guildId);
+        if (guild == null) return null;
+        return guild.GetUser(userId) ?? (IGuildUser?)await Client.Rest.GetGuildUserAsync(guildId, userId);
+    }
+
+    /// <summary>
+    ///     Stored on the adapter rather than on a client instance, so — like the command
+    ///     registration — it follows every client the adapter builds and survives a gateway
+    ///     restart. Silent without the Server Members intent: Discord simply never raises the
+    ///     event.
+    /// </summary>
+    public void OnMemberJoined(Func<ulong, ulong, Task> onMemberJoined)
+    {
+        _memberJoined = onMemberJoined;
+    }
+
     public Task RegisterCommands(
         IReadOnlyList<BotCommandDefinition> commands,
         Func<BotInteraction, Task<BotReply>> onInteraction,
@@ -250,6 +382,24 @@ public sealed class DiscordBotClient : IBotClient
         finally
         {
             _publishLock.Release();
+        }
+    }
+
+    /// <summary>
+    ///     Someone walked into a server the bot is in. Swallows on failure: a join is a
+    ///     notification, not a transaction, and the reconcile sweep covers anything missed here.
+    /// </summary>
+    private async Task OnUserJoined(SocketGuildUser member)
+    {
+        var joined = _memberJoined;
+        if (joined == null || member.IsBot) return;
+        try
+        {
+            await joined(member.Guild.Id, member.Id);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error handling a member joining guild {GuildId}", member.Guild.Id);
         }
     }
 
@@ -331,7 +481,7 @@ public sealed class DiscordBotClient : IBotClient
         var display = guildUser?.DisplayName ?? command.User.GlobalName ?? command.User.Username;
         return new BotInteraction(path, options, command.Channel.Id,
             (command.Channel as IGuildChannel)?.GuildId, command.User.Id, display, canManage,
-            command.UserLocale);
+            command.UserLocale, guildUser?.GuildPermissions.ManageGuild ?? false);
     }
 
     private async Task Followup(SocketSlashCommand command, BotReply reply, bool ephemeral)

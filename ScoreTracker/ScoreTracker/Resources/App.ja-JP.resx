@@ -157,6 +157,9 @@
   <data name="(Optional) Also delete historical data" xml:space="preserve">
 	  <value>（任意）履歴データも削除する</value>
   </data>
+  <data name="(role deleted)" xml:space="preserve">
+    <value>（ロール削除済み）</value>
+  </data>
   <data name="* Official board data, as of {0}." xml:space="preserve">
     <value>* 公式ボードのデータ（{0} 時点）。</value>
   </data>
@@ -394,6 +397,9 @@
   <data name="A ceiling — every chart at your best." xml:space="preserve">
     <value>上限値です。すべての譜面を自己ベストで通した場合。</value>
   </data>
+  <data name="A channel that posts scores here isn't the same as this community's server — setting one is a separate step." xml:space="preserve">
+    <value>ここにスコアを投稿するチャンネルと、このコミュニティのサーバーは別物です — サーバーの指定は別の手順です。</value>
+  </data>
   <data name="a chart" xml:space="preserve">
     <value>譜面</value>
   </data>
@@ -420,6 +426,9 @@
   </data>
   <data name="A delivery can arrive twice. If PIU Scores restarts mid-import, that import is sent again once it comes back — key your handler on the chart and the score's recorded time rather than on each delivery being unique. PIUGame session deliveries are the exception: those are never re-sent, because the session is gone by then." xml:space="preserve">
     <value>配信は2回届くことがあります。インポート中に PIU Scores が再起動すると、復帰後にそのインポートが再送されます。配信が一度きりであることを前提にせず、譜面と記録時刻をキーにしてください。PIUGame セッションの配信は例外で、その時点でセッションは失われているため再送されません。</value>
+  </data>
+  <data name="A dry run of what's about to happen, so nothing lands as a surprise." xml:space="preserve">
+    <value>これから起こることの予行演習です。驚きがないように。</value>
   </data>
   <data name="A few things worth getting right up front — everything after this is tuned to them." xml:space="preserve">
     <value>最初に決めておくとよい項目です。この後のすべてがこれに合わせて調整されます。</value>
@@ -450,6 +459,9 @@
   </data>
   <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
     <value>期限のないキーは、手動で取り消すまで有効です — ノートPCを失くした後も、リポジトリが公開された後も。理由がなければ日付を選んでください。</value>
+  </data>
+  <data name="A member of {0}, and not banned" xml:space="preserve">
+    <value>{0} のメンバーで、ブロックされていない</value>
   </data>
   <data name="A miss also halves whatever combo it splits — dead-centre on {0} notes it costs {1} points, not {2}. Edges are cheap; middles are not." xml:space="preserve">
     <value>Missは切ったコンボを半分にします。{0}ノーツの真ん中なら失点は{2}点ではなく{1}点です。端は安く、中間は高くつきます。</value>
@@ -635,6 +647,9 @@
   <data name="Add a rival" xml:space="preserve">
     <value>ライバルを追加</value>
   </data>
+  <data name="Add a role" xml:space="preserve">
+    <value>ロールを追加</value>
+  </data>
   <data name="Add as rival" xml:space="preserve">
     <value>ライバルに追加</value>
   </data>
@@ -725,6 +740,9 @@
   <data name="After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed." xml:space="preserve">
 	  <value>アップロード後、正しくアップロードされなかった行・譜面・試行があれば、失敗した行とその理由のリストをダウンロードできます。</value>
   </data>
+  <data name="Afterwards, run this in the server you want:" xml:space="preserve">
+    <value>そのあと、使いたいサーバーでこれを実行してください：</value>
+  </data>
   <data name="Against regular PUMBILITY," xml:space="preserve">
     <value>通常の PUMBILITY と比べると、</value>
   </data>
@@ -761,6 +779,9 @@
   </data>
   <data name="All of it is changeable later in your account." xml:space="preserve">
     <value>すべて後からアカウントで変更できます。</value>
+  </data>
+  <data name="All of these have to be true. If any one stops being true, the role comes off." xml:space="preserve">
+    <value>これらすべてが成り立つ必要があります。ひとつでも崩れると、ロールは外れます。</value>
   </data>
   <data name="all permissions" xml:space="preserve">
     <value>全権限</value>
@@ -818,6 +839,9 @@
   </data>
   <data name="Also forget my saved PIUGAME password" xml:space="preserve">
     <value>保存された PIUGAME のパスワードも削除する</value>
+  </data>
+  <data name="Also take the role off everyone who has it" xml:space="preserve">
+    <value>このロールを持っている全員から外す</value>
   </data>
   <data name="Always" xml:space="preserve">
     <value>常に</value>
@@ -1512,6 +1536,9 @@
   <data name="Center" xml:space="preserve">
 	  <value>中央</value>
   </data>
+  <data name="Change" xml:space="preserve">
+    <value>変更</value>
+  </data>
   <data name="Change avatar" xml:space="preserve">
     <value>アバターを変更</value>
   </data>
@@ -1523,6 +1550,9 @@
   </data>
   <data name="Change mix" xml:space="preserve">
     <value>バージョンを変更</value>
+  </data>
+  <data name="Change server" xml:space="preserve">
+    <value>サーバーを変更</value>
   </data>
   <data name="Changing the URL or the secret clears this." xml:space="preserve">
     <value>URL か秘密の値を変えると確認は解除されます。</value>
@@ -1664,6 +1694,9 @@
   <data name="Check back shortly." xml:space="preserve">
     <value>しばらくしてからまた見てください。</value>
   </data>
+  <data name="Check now" xml:space="preserve">
+    <value>今すぐ確認</value>
+  </data>
   <data name="Check the link" xml:space="preserve">
     <value>リンクを確認</value>
   </data>
@@ -1672,6 +1705,9 @@
   </data>
   <data name="Checked {0}" xml:space="preserve">
     <value>{0} に確認</value>
+  </data>
+  <data name="Checking roles" xml:space="preserve">
+    <value>ロールを確認中</value>
   </data>
   <data name="Choose a game card, then press Import again." xml:space="preserve">
     <value>ゲームカードを選んでから、もう一度インポートを押してください。</value>
@@ -1838,6 +1874,9 @@
   </data>
   <data name="Combo, priced" xml:space="preserve">
     <value>コンボの値段</value>
+  </data>
+  <data name="Come back here once it's done." xml:space="preserve">
+    <value>終わったらここに戻ってきてください。</value>
   </data>
   <data name="Comfortable" xml:space="preserve">
     <value>標準</value>
@@ -2130,6 +2169,9 @@
   </data>
   <data name="Could not mute this member." xml:space="preserve">
     <value>このメンバーをミュートできませんでした。</value>
+  </data>
+  <data name="Could not reach Discord just now." xml:space="preserve">
+    <value>今は Discord に接続できませんでした。</value>
   </data>
   <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
     <value>PIUGAMEに接続できません。後でもう一度お試しください</value>
@@ -2480,6 +2522,18 @@
   <data name="Discord" xml:space="preserve">
     <value>Discord</value>
   </data>
+  <data name="Discord manages this role, so nobody can hand it out." xml:space="preserve">
+    <value>Discord が管理しているロールなので、誰も付与できません。</value>
+  </data>
+  <data name="Discord role" xml:space="preserve">
+    <value>Discord ロール</value>
+  </data>
+  <data name="Discord server" xml:space="preserve">
+    <value>Discord サーバー</value>
+  </data>
+  <data name="Discord won't let the bot hand out {0} of these roles." xml:space="preserve">
+    <value>Discord はこれらのロールのうち {0} 個をボットに付与させません。</value>
+  </data>
   <data name="Discord, wired in" xml:space="preserve">
     <value>Discord 連携</value>
   </data>
@@ -2646,6 +2700,9 @@
   <data name="Earned" xml:space="preserve">
     <value>獲得済み</value>
   </data>
+  <data name="Earned {0}, but the bot can't hand that role out." xml:space="preserve">
+    <value>{0} を獲得しましたが、ボットはそのロールを付与できません。</value>
+  </data>
   <data name="Earned, not given" xml:space="preserve">
     <value>勝ち取った称号</value>
   </data>
@@ -2792,6 +2849,9 @@
   <data name="Every record held this week." xml:space="preserve">
     <value>今週はすべての記録が守られました。</value>
   </data>
+  <data name="Every role this community gave out in the current server comes off first." xml:space="preserve">
+    <value>現在のサーバーでこのコミュニティが付与したロールは、すべて先に外れます。</value>
+  </data>
   <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
     <value>ファイルのすべての行が優先されます。今の記録より悪くても上書きされます。</value>
   </data>
@@ -2807,8 +2867,14 @@
   <data name="Every tracked personal best on this mix, stacked by grade band per level. The typical best at almost every level is an S or better." xml:space="preserve">
     <value>このバージョンで追跡している自己ベストをレベルごとにランク帯で積み上げています。ほぼどのレベルでも、典型的な自己ベストはS以上です。</value>
   </data>
+  <data name="Everyone already has the right roles." xml:space="preserve">
+    <value>全員すでに正しいロールを持っています。</value>
+  </data>
   <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
     <value>ほかの人のものです。管理できますが、作者には通知されません。</value>
+  </data>
+  <data name="Everyone has this role already." xml:space="preserve">
+    <value>すでに全員がこのロールを持っています。</value>
   </data>
   <data name="Everyone on your rivals roster, board-only rivals included — their standings come from the weekly official board, so they only count on the charts it publishes." xml:space="preserve">
     <value>ライバル名簿の全員で、ボードのみのライバルも含みます。その順位は毎週の公式ボードから来るため、ボードに掲載される譜面でのみ数えられます。</value>
@@ -2827,6 +2893,9 @@
   </data>
   <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
     <value>この下はすべてサイトの実データです — スクリーンショットではなく、実際のプロダクトです。</value>
+  </data>
+  <data name="Everything else" xml:space="preserve">
+    <value>その他すべて</value>
   </data>
   <data name="Everything goes — scores, history, votes, tournament results, communities, and the account itself." xml:space="preserve">
     <value>すべて消えます — スコア、履歴、投票、大会結果、コミュニティ、そしてアカウント自体。</value>
@@ -3264,6 +3333,12 @@
   <data name="Give a song name." xml:space="preserve">
     <value>曲名を入力してください。</value>
   </data>
+  <data name="Give members a Discord role when they earn a Phoenix 2 title." xml:space="preserve">
+    <value>メンバーが Phoenix 2 の称号を獲得したら Discord ロールを付与します。</value>
+  </data>
+  <data name="Give members a Discord role when they earn a Phoenix 2 title. Roles are kept in step automatically — nobody has to ask." xml:space="preserve">
+    <value>メンバーが Phoenix 2 の称号を獲得したら Discord ロールを付与します。ロールは自動で同期され、誰も頼む必要はありません。</value>
+  </data>
   <data name="Glow" xml:space="preserve">
     <value>発光</value>
   </data>
@@ -3384,6 +3459,9 @@
   <data name="Hand over your communities first" xml:space="preserve">
     <value>先にコミュニティを譲渡してください</value>
   </data>
+  <data name="Handing out the role" xml:space="preserve">
+    <value>ロールを付与中</value>
+  </data>
   <data name="Hands" xml:space="preserve">
     <value>ハンド</value>
   </data>
@@ -3456,6 +3534,9 @@
   <data name="Highest on the board" xml:space="preserve">
     <value>ボード最高</value>
   </data>
+  <data name="Highest only" xml:space="preserve">
+    <value>最上位のみ</value>
+  </data>
   <data name="Highest score wins." xml:space="preserve">
     <value>最高スコアが勝ちです。</value>
   </data>
@@ -3506,6 +3587,9 @@
   </data>
   <data name="holds the combo, doesn't extend it" xml:space="preserve">
     <value>コンボを維持するが伸ばさない</value>
+  </data>
+  <data name="Holds the title on Phoenix 2, with no higher rung" xml:space="preserve">
+    <value>Phoenix 2 でその称号を持ち、上位の段はない</value>
   </data>
   <data name="Home" xml:space="preserve">
     <value>ホームページ</value>
@@ -3789,6 +3873,9 @@
   <data name="In progress" xml:space="preserve">
     <value>進行中</value>
   </data>
+  <data name="In Server Settings → Roles, drag the PIU Scores role above them." xml:space="preserve">
+    <value>サーバー設定 → ロールで、PIU Scores のロールをそれらより上に移動してください。</value>
+  </data>
   <data name="In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades." xml:space="preserve">
 	  <value>そのような場合、何千ものランクを手入力するより、スプレッドシートをアップロードする方が早いです。</value>
   </data>
@@ -3800,6 +3887,9 @@
   </data>
   <data name="in the top ten" xml:space="preserve">
     <value>件がトップ10以内</value>
+  </data>
+  <data name="In this Discord server, with their account linked" xml:space="preserve">
+    <value>この Discord サーバーにいて、アカウントが連携済み</value>
   </data>
   <data name="In this folder" xml:space="preserve">
     <value>このフォルダでは</value>
@@ -4252,6 +4342,15 @@
 	  <value>リンク</value>
 	  
   <comment>Link</comment></data>
+  <data name="Link Discord on my account" xml:space="preserve">
+    <value>自分のアカウントに Discord を連携</value>
+  </data>
+  <data name="Link your own Discord account first — setting the server means running a command as yourself in Discord." xml:space="preserve">
+    <value>まず自分の Discord アカウントを連携してください — サーバーの指定は、Discord で自分としてコマンドを実行することです。</value>
+  </data>
+  <data name="Linked server" xml:space="preserve">
+    <value>連携済みサーバー</value>
+  </data>
   <data name="Linked to a site account" xml:space="preserve">
     <value>サイトアカウントと連携済み</value>
   </data>
@@ -4349,6 +4448,9 @@
   <data name="lower average score" xml:space="preserve">
     <value>平均スコアは低め</value>
   </data>
+  <data name="lower rungs come off automatically" xml:space="preserve">
+    <value>下位の段は自動で外れます</value>
+  </data>
   <data name="Lowest" xml:space="preserve">
     <value>最下位</value>
   </data>
@@ -4396,6 +4498,9 @@
   </data>
   <data name="Manage channel subscriptions" xml:space="preserve">
     <value>チャンネル通知の管理</value>
+  </data>
+  <data name="Manage Discord roles" xml:space="preserve">
+    <value>Discord ロールを管理</value>
   </data>
   <data name="Manage invite links" xml:space="preserve">
     <value>招待リンクの管理</value>
@@ -4921,6 +5026,9 @@
   <data name="next best candidate {0}" xml:space="preserve">
     <value>次点の候補 {0}</value>
   </data>
+  <data name="Next check will change" xml:space="preserve">
+    <value>次の確認で変わるもの</value>
+  </data>
   <data name="Next comment" xml:space="preserve">
     <value>次のコメント</value>
   </data>
@@ -5073,6 +5181,9 @@
   </data>
   <data name="No rivals yet" xml:space="preserve">
     <value>まだライバルがいません</value>
+  </data>
+  <data name="No roles yet — add one to start handing them out." xml:space="preserve">
+    <value>まだロールがありません — ひとつ追加して付与を始めましょう。</value>
   </data>
   <data name="No saved sets yet." xml:space="preserve">
     <value>保存したセットはまだありません。</value>
@@ -5453,6 +5564,9 @@
   <data name="nothing ticked, so scores render plain" xml:space="preserve">
     <value>何もチェックされていないため、スコアは無色で表示されます</value>
   </data>
+  <data name="Nothing to change." xml:space="preserve">
+    <value>変更はありません。</value>
+  </data>
   <data name="Nothing to compare yet" xml:space="preserve">
     <value>まだ比較できるものがありません</value>
   </data>
@@ -5780,6 +5894,9 @@
   </data>
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>おすすめ譜面を開く</value>
+  </data>
+  <data name="Open the Discord server you want, where you have Manage Server, then run:" xml:space="preserve">
+    <value>使いたい Discord サーバーを開き（サーバー管理権限があるところで）、次を実行します：</value>
   </data>
   <data name="Open thread" xml:space="preserve">
     <value>スレッドを開く</value>
@@ -6221,6 +6338,9 @@
   </data>
   <data name="Pick a mix." xml:space="preserve">
     <value>バージョンを選んでください。</value>
+  </data>
+  <data name="Pick a Phoenix 2 title, pick a role in your server. Anyone who has the title gets the role." xml:space="preserve">
+    <value>Phoenix 2 の称号を選び、サーバーのロールを選びます。その称号を持つ人にロールが付きます。</value>
   </data>
   <data name="Pick a player to see their boards, history, and PUMBILITY over time - departed tags stay searchable." xml:space="preserve">
     <value>プレイヤーを選ぶとボード、履歴、PUMBILITYの推移を確認できます - 引退したタグも検索できます。</value>
@@ -6770,6 +6890,15 @@
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>PUMBILITY トップ 50</value>
   </data>
+  <data name="PUMBILITY — combined" xml:space="preserve">
+    <value>PUMBILITY — 合算</value>
+  </data>
+  <data name="PUMBILITY — doubles" xml:space="preserve">
+    <value>PUMBILITY — ダブル</value>
+  </data>
+  <data name="PUMBILITY — singles" xml:space="preserve">
+    <value>PUMBILITY — シングル</value>
+  </data>
   <data name="PUMBILITY+ by score" xml:space="preserve">
     <value>スコア別 PUMBILITY+</value>
   </data>
@@ -6934,6 +7063,12 @@
     <value>評定</value>
     
   <comment>レーティング</comment></data>
+  <data name="Re-add the bot" xml:space="preserve">
+    <value>ボットを再追加</value>
+  </data>
+  <data name="Re-add the bot from the Communities page — it keeps this server and its channels, and picks up the permission." xml:space="preserve">
+    <value>コミュニティページからボットを再追加してください — サーバーもチャンネルもそのままで、権限だけが加わります。</value>
+  </data>
   <data name="Re-price {0} ratings" xml:space="preserve">
     <value>{0} の評定を再計算</value>
   </data>
@@ -7207,6 +7342,9 @@
   <data name="Remove this comment?" xml:space="preserve">
     <value>このコメントを削除しますか？</value>
   </data>
+  <data name="Remove this role" xml:space="preserve">
+    <value>このロールを外す</value>
+  </data>
   <data name="Remove This Score" xml:space="preserve">
     <value>このスコアを削除</value>
   </data>
@@ -7236,6 +7374,9 @@
   </data>
   <data name="Removed {0} for {1} from this channel." xml:space="preserve">
     <value>このチャンネルから {1} の {0} を解除しました。</value>
+  </data>
+  <data name="Removing the mapping" xml:space="preserve">
+    <value>対応付けを解除中</value>
   </data>
   <data name="Rename" xml:space="preserve">
     <value>名前を変更</value>
@@ -7390,6 +7531,9 @@
   </data>
   <data name="Role" xml:space="preserve">
     <value>役割</value>
+  </data>
+  <data name="Roles are handed out as they're earned. Only check if somebody says theirs is missing." xml:space="preserve">
+    <value>ロールは獲得と同時に付与されます。誰かが付いていないと言ったときだけ確認してください。</value>
   </data>
   <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
     <value>ランダマイザーでチャートを抽選し、ゲーセンでブラケットやカードドラフトを運営、ライブビューを共有すれば会場全体 — や配信 — がラウンドを追えます。</value>
@@ -7829,6 +7973,9 @@
   </data>
   <data name="Set your country on your account page to join a region." xml:space="preserve">
     <value>アカウントページで国を設定すると地域に参加できます。</value>
+  </data>
+  <data name="Set {0}" xml:space="preserve">
+    <value>{0} に設定</value>
   </data>
   <data name="Sets what the whole site shows you." xml:space="preserve">
     <value>サイト全体の表示内容が変わります。</value>
@@ -8407,8 +8554,17 @@
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>クリアしてもスコアは渋い</value>
   </data>
+  <data name="Stop" xml:space="preserve">
+    <value>中断</value>
+  </data>
   <data name="Stop one of this channel's feeds" xml:space="preserve">
     <value>このチャンネルのフィードを停止</value>
+  </data>
+  <data name="Stopped. What it got through is already applied." xml:space="preserve">
+    <value>中断しました。処理済みの分はすでに反映されています。</value>
+  </data>
+  <data name="Stopping is safe — the next check picks up where this one left off." xml:space="preserve">
+    <value>中断しても安全です — 次の確認が続きから再開します。</value>
   </data>
   <data name="Store" xml:space="preserve">
     <value>保存</value>
@@ -8534,8 +8690,20 @@
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>Nノートごとに1回失敗し続けると、体力はどこかに収束します。崖の下ではゼロに収束します。曲線は緩やかに落ちるのではなく、崖のように落ちます。倍率を建て直すより速く倍率が死んでいるからです。</value>
   </data>
+  <data name="Take the role off everyone who has it" xml:space="preserve">
+    <value>このロールを持っている全員から外す</value>
+  </data>
+  <data name="Take the roles back" xml:space="preserve">
+    <value>ロールを回収</value>
+  </data>
   <data name="Take this session off the board?" xml:space="preserve">
     <value>このセッションをボードから外しますか？</value>
+  </data>
+  <data name="Taking the role back" xml:space="preserve">
+    <value>ロールを回収中</value>
+  </data>
+  <data name="Taking the roles back" xml:space="preserve">
+    <value>ロールを回収中</value>
   </data>
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>
@@ -8585,6 +8753,9 @@
   <data name="That PIUGAME account is not connected to the selected account" xml:space="preserve">
     <value>そのPIUGAMEアカウントは選択したアカウントに連携されていません</value>
   </data>
+  <data name="That role no longer exists in the server." xml:space="preserve">
+    <value>そのロールはサーバーにもう存在しません。</value>
+  </data>
   <data name="That scoring configuration is invalid." xml:space="preserve">
     <value>このスコア構成は無効です。</value>
   </data>
@@ -8620,6 +8791,21 @@
   </data>
   <data name="The board ranks sessions, not players, so three great sessions can hold three places. Ties go to the earlier session." xml:space="preserve">
     <value>ボードはプレイヤーではなくセッションを順位づけするので、名セッション3本で3つの順位を独占できます。同点なら早いセッションが上です。</value>
+  </data>
+  <data name="The bot can hand out every role below." xml:space="preserve">
+    <value>ボットは下のすべてのロールを付与できます。</value>
+  </data>
+  <data name="The bot can't hand out roles in this server yet — it was added before roles existed." xml:space="preserve">
+    <value>このサーバーではまだボットがロールを付与できません — ロール機能ができる前に追加されたためです。</value>
+  </data>
+  <data name="The bot has no permission to manage roles here." xml:space="preserve">
+    <value>このサーバーではボットにロール管理の権限がありません。</value>
+  </data>
+  <data name="The bot is in this server." xml:space="preserve">
+    <value>ボットはこのサーバーにいます。</value>
+  </data>
+  <data name="The bot is no longer in this server." xml:space="preserve">
+    <value>ボットはもうこのサーバーにいません。</value>
   </data>
   <data name="The cabinet" xml:space="preserve">
     <value>ショーケース</value>
@@ -8987,6 +9173,9 @@
   <data name="This chart is on the right side of the video" xml:space="preserve">
     <value>この譜面は動画の右側にあります</value>
   </data>
+  <data name="This community doesn't give out Discord roles." xml:space="preserve">
+    <value>このコミュニティは Discord ロールを付与しません。</value>
+  </data>
   <data name="This does not send anything." xml:space="preserve">
     <value>これは何も送りません。</value>
   </data>
@@ -9076,6 +9265,9 @@
   </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>このリキャップはまだ計算されていません。後でもう一度お試しください。</value>
+  </data>
+  <data name="This role is above the bot, so it can't be handed out." xml:space="preserve">
+    <value>このロールはボットより上にあるため、付与できません。</value>
   </data>
   <data name="This season" xml:space="preserve">
     <value>今シーズン</value>
@@ -9214,6 +9406,9 @@
   </data>
   <data name="Titles" xml:space="preserve">
     <value>タイトル</value>
+  </data>
+  <data name="Titles and roles" xml:space="preserve">
+    <value>称号とロール</value>
   </data>
   <data name="titles earned" xml:space="preserve">
     <value>称号獲得</value>
@@ -9559,6 +9754,9 @@
   <data name="Unranked" xml:space="preserve">
     <value>未分類</value>
   </data>
+  <data name="Untick to leave it on people — the site just stops maintaining it." xml:space="preserve">
+    <value>チェックを外すとロールは残り、サイトが管理をやめるだけです。</value>
+  </data>
   <data name="until everything is deleted" xml:space="preserve">
     <value>すべてが削除されるまで</value>
   </data>
@@ -9592,6 +9790,9 @@
   </data>
   <data name="updated {0:N0} charts" xml:space="preserve">
     <value>{0:N0} 譜面を更新</value>
+  </data>
+  <data name="Updated {0} members." xml:space="preserve">
+    <value>{0} 人のメンバーを更新しました。</value>
   </data>
   <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
     <value>JSONファイルをアップロードして、Phoenix 2の楽曲とチャートを一括作成します。</value>
@@ -9644,6 +9845,9 @@
   </data>
   <data name="Use this avatar" xml:space="preserve">
     <value>このアバターを使う</value>
+  </data>
+  <data name="Use this server for a community's title roles" xml:space="preserve">
+    <value>このサーバーをコミュニティの称号ロールに使用</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>デバッグ用</value>
@@ -9997,6 +10201,9 @@
   <data name="When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today." xml:space="preserve">
     <value>新しいバージョンが来ても、ここでは何もリセットされません。記録したスコアはすべて残ります — 振り返り、比較し、積み上げるために。{0} バージョンの記録が、1999年から今日まで並んでいます。</value>
   </data>
+  <data name="When a role is given" xml:space="preserve">
+    <value>ロールが付く条件</value>
+  </data>
   <data name="When somebody adds you, they show up here." xml:space="preserve">
     <value>誰かがあなたを追加すると、ここに表示されます。</value>
   </data>
@@ -10065,6 +10272,9 @@
   </data>
   <data name="Which mix (defaults to Phoenix 2)" xml:space="preserve">
     <value>バージョン（既定は Phoenix 2）</value>
+  </data>
+  <data name="Which of your communities" xml:space="preserve">
+    <value>どのコミュニティですか</value>
   </data>
   <data name="Which registration to remove" xml:space="preserve">
     <value>解除する登録</value>
@@ -10144,11 +10354,17 @@
   <data name="Worked examples" xml:space="preserve">
     <value>計算例</value>
   </data>
+  <data name="Working it out…" xml:space="preserve">
+    <value>計算中…</value>
+  </data>
   <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
     <value>このセッションが動かしたものを計算中 — 称号、プール、そして同レベル帯での各スコアの位置。</value>
   </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>予測を計算しています。同水準のプレイヤー数百人を参照するため、少し時間がかかります。</value>
+  </data>
+  <data name="Working through the members…" xml:space="preserve">
+    <value>メンバーを処理しています…</value>
   </data>
   <data name="World" xml:space="preserve">
     <value>World</value>
@@ -11163,6 +11379,12 @@
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>{1} 中 {0} フォルダ</value>
   </data>
+  <data name="{0} of {1} members" xml:space="preserve">
+    <value>{1} 人中 {0} 人</value>
+  </data>
+  <data name="{0} of {1} members hold at least one role" xml:space="preserve">
+    <value>{1} 人中 {0} 人が少なくとも 1 つのロールを持っています</value>
+  </data>
   <data name="{0} of {1} peers" xml:space="preserve">
     <value>ピア {1} 人中 {0} 人</value>
   </data>
@@ -11372,6 +11594,9 @@
   </data>
   <data name="{0} viewers watching" xml:space="preserve">
     <value>{0} 人が視聴中</value>
+  </data>
+  <data name="{0} will stop being handed out." xml:space="preserve">
+    <value>{0} は今後付与されなくなります。</value>
   </data>
   <data name="{0} {1}% → **{2}%**" xml:space="preserve">
     <value>{0} {1}% → **{2}%**</value>

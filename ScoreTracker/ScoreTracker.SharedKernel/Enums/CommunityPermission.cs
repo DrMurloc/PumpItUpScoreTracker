@@ -17,7 +17,15 @@ namespace ScoreTracker.SharedKernel.Enums
         ManageUsers = 1 << 2,
         ManageChannelSubscriptions = 1 << 3,
         ModerateComments = 1 << 4,
+
+        /// <summary>
+        ///     Designate the community's Discord server and map titles to roles in it. Kept
+        ///     separate from <see cref="ManageChannelSubscriptions" /> rather than folded into it:
+        ///     a score feed and a role table are configured by different people in practice, and
+        ///     this one can hand out standing in someone else's server.
+        /// </summary>
+        ManageDiscord = 1 << 5,
         All = ManageInviteLinks | PromoteAdmins | ManageUsers | ManageChannelSubscriptions |
-              ModerateComments
+              ModerateComments | ManageDiscord
     }
 }

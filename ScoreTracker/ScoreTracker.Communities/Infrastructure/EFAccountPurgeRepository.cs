@@ -17,7 +17,12 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
     internal static readonly Type[] UserOwned =
     {
         typeof(CommunityMembershipEntity),
-        typeof(CommunityHighlightEntity)
+        typeof(CommunityHighlightEntity),
+        // The record of which Discord account we granted roles against. AccountPurgeConsumer
+        // strips the Discord roles BEFORE calling this manifest, in the same consumer rather than
+        // a second one racing it — the row is the only surviving handle on the snowflake once
+        // Identity has dropped the external login.
+        typeof(CommunityDiscordGrantEntity)
     };
 
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;

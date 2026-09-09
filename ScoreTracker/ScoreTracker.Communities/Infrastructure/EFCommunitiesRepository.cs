@@ -401,6 +401,14 @@ namespace ScoreTracker.Communities.Infrastructure
                 }).ToArray();
         }
 
+        public async Task<Guid?> GetCommunityId(Name communityName, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var nameString = communityName.ToString();
+            return await database.Set<CommunityEntity>().Where(c => c.Name == nameString)
+                .Select(c => (Guid?)c.Id).FirstOrDefaultAsync(cancellationToken);
+        }
+
         public async Task<Community?> GetCommunityByName(Name communityName, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);

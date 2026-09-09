@@ -1,0 +1,60 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Contracts
+@inject IUiSettingsAccessor UiSettings
+
+@* The pointer that tells a community admin their bot was added before roles existed, so it never
+   asked for Manage Roles. Driven by the REAL state (IBotClient reports the bot's own guild
+   permission), not by "have you seen this yet" — so it retires itself server by server as people
+   re-add, and an admin who never re-adds keeps being told. The × is for somebody who granted the
+   permission by hand and wants it gone anyway; that dismissal is per-account, like the tier list's
+   title pointer. Renders nothing until the flag has been read, so a dismissed pointer never
+   flashes on the way in. *@
+@if (Show && _read && !_dismissed)
+{
+    <div class="title-pointer" data-testid="discord-reinvite">
+        <MudIcon Icon="@Icons.Material.Filled.Warning" Size="Size.Small" Class="title-pointer-ic"></MudIcon>
+        <span>@L["The bot can't hand out roles in this server yet — it was added before roles existed."]</span>
+        <a class="title-pointer-link" href="@InviteUrl" target="_blank" rel="noopener">@L["Re-add the bot"]</a>
+        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Class="title-pointer-x"
+                       OnClick="Dismiss" aria-label="@L["Dismiss"]" data-testid="discord-reinvite-dismiss"></MudIconButton>
+    </div>
+}
+
+@code {
+    /// <summary>
+    ///     Set once the admin closes the pointer, PER COMMUNITY. Unlike the tier list's site-wide
+    ///     title pointer, what this reports is per-server state — an admin who fixed one community
+    ///     by hand and dismissed it there must still be told about the others, and the people who
+    ///     run several communities are exactly who this is for.
+    /// </summary>
+    public static string KeyFor(Guid communityId) =>
+        $"Community__ReinvitePointerDismissed__{communityId}";
+
+    /// <summary>
+    ///     Whether the bot actually lacks Manage Roles in the community's server. The page decides
+    ///     it (server designated, permission missing, viewer can manage); this component owns only
+    ///     the dismissal.
+    /// </summary>
+    [Parameter] public bool Show { get; set; }
+
+    /// <summary>The invite URL to re-run. Empty when the app has no Discord client id configured.</summary>
+    [Parameter] public string InviteUrl { get; set; } = string.Empty;
+
+    /// <summary>Which community's server this is about — the dismissal is scoped to it.</summary>
+    [Parameter] public Guid CommunityId { get; set; }
+
+    private bool _read;
+    private bool _dismissed;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _dismissed = await UiSettings.GetSetting(KeyFor(CommunityId)) is not null;
+        _read = true;
+    }
+
+    private async Task Dismiss()
+    {
+        _dismissed = true;
+        await UiSettings.SetSetting(KeyFor(CommunityId), "true");
+    }
+}

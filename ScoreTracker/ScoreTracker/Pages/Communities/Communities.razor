@@ -515,9 +515,9 @@
 @code {
 
     // Requested scopes: bot + application commands; permissions cover view channel, send
-    // messages, read history, embed links, and use external emoji (the grade/plate bubbles).
-    private string BotInviteUrl =>
-        $"https://discord.com/oauth2/authorize?client_id={DiscordConfig.Value.ClientId}&scope=bot+applications.commands&permissions=347136";
+    // messages, read history, embed links, use external emoji (the grade/plate bubbles) and
+    // manage roles (the community title roles). The number itself lives in DiscordBotInvite.
+    private string BotInviteUrl => DiscordBotInvite.UrlFor(DiscordConfig.Value.ClientId);
 
     private IEnumerable<CommunityOverviewRecord> _communities = Array.Empty<CommunityOverviewRecord>();
     private ISet<Name> _myCommunities = new HashSet<Name>();

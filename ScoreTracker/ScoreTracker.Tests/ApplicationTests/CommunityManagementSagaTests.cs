@@ -28,13 +28,15 @@ public sealed class CommunityManagementSagaTests
     private readonly Mock<ICommunityRepository> _communities = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<IDiscordRoleService> _discordRoles = new();
+    private readonly Mock<IDiscordRoleRepository> _roleConfiguration = new();
 
     private CommunityManagementSaga Build(Guid actingUserId)
     {
         _currentUser.SetupGet(u => u.User).Returns(new UserBuilder().WithId(actingUserId).Build());
         _currentUser.SetupGet(u => u.IsLoggedIn).Returns(true);
         return new CommunityManagementSaga(_communities.Object, _currentUser.Object, _mediator.Object,
-            _bus.Object);
+            _bus.Object, _discordRoles.Object, _roleConfiguration.Object);
     }
 
     private void GivenCommunity(Community community)
@@ -240,5 +242,29 @@ public sealed class CommunityManagementSagaTests
             CancellationToken.None);
 
         Assert.Equal(Name.From("Acme"), names[communityId]);
+    }
+
+    /// <summary>
+    ///     World and the country communities are the site's. Nothing used to guard this because
+    ///     they had no owner and so had no Creator — but naming somebody on the row is now a
+    ///     legitimate thing to do (it is how the official Discord gets its title roles), which put
+    ///     a delete button on a community holding every account on the site.
+    /// </summary>
+    [Theory]
+    [InlineData("World", false)]
+    [InlineData("Japan", true)]
+    public async Task ASystemCommunityCannotBeDeletedEvenByItsOwner(string name, bool isRegional)
+    {
+        var creator = Guid.NewGuid();
+        GivenCommunity(new Community(Name.From(name), creator, CommunityPrivacyType.Public,
+            new[] { new CommunityMember(creator, CommunityRole.Creator, CommunityPermission.All, null, null) },
+            Array.Empty<Community.ChannelConfiguration>(), new Dictionary<Guid, DateOnly?>(), isRegional,
+            CommunityPermission.None, null));
+
+        await Assert.ThrowsAsync<CommunityPermissionException>(() =>
+            Build(creator).Handle(new DeleteCommunityCommand(Name.From(name)), CancellationToken.None));
+
+        _communities.Verify(c => c.DeleteCommunity(It.IsAny<Name>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

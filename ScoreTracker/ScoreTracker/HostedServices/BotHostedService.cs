@@ -1,7 +1,9 @@
+using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Options;
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Contracts.Commands;
+using ScoreTracker.Communities.Contracts.Messages;
 using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Domain.Records;
@@ -52,6 +54,11 @@ namespace ScoreTracker.Web.HostedServices
             await _botClient.RegisterCommands(PiuCommandCatalog.Localized(_localizer), OnInteraction,
                 OnAutocomplete);
 
+            // Someone walking into a server is the one thing a Discord role hangs on that changes
+            // without telling us. Published rather than handled here: the reconcile is internal to
+            // Communities, and a gateway callback is no place to hold a DI scope open.
+            _botClient.OnMemberJoined(OnMemberJoined);
+
             _logger.LogInformation("Started bot client");
         }
 
@@ -70,6 +77,13 @@ namespace ScoreTracker.Web.HostedServices
             using var scope = _serviceProvider.CreateScope();
             return await scope.ServiceProvider.GetRequiredService<IMediator>()
                 .Send(new HandleBotInteractionCommand(interaction));
+        }
+
+        private async Task OnMemberJoined(ulong guildId, ulong discordUserId)
+        {
+            using var scope = _serviceProvider.CreateScope();
+            await scope.ServiceProvider.GetRequiredService<IBus>()
+                .Publish(new ReconcileGuildMemberCommand(guildId, discordUserId));
         }
 
         private async Task<IReadOnlyList<BotOptionChoice>> OnAutocomplete(BotAutocompleteRequest request)

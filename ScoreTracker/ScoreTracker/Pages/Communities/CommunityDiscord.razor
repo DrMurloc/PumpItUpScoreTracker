@@ -1,0 +1,677 @@
+@page "/Community/Discord"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.Communities.Contracts
+@using ScoreTracker.Communities.Contracts.Commands
+@using ScoreTracker.Communities.Contracts.Queries
+@using ScoreTracker.Domain.Models.Titles
+@using ScoreTracker.Domain.Models.Titles.Phoenix2
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.SharedKernel.ValueTypes
+@using Microsoft.Extensions.Options
+@using ScoreTracker.Data.Configuration
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
+
+<PageTitle>@L["Discord"]</PageTitle>
+
+@if (_loading)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Small"/>
+}
+else if (_view == null)
+{
+    <MudText Typo="Typo.h5">@L["Community was not found."]</MudText>
+}
+else
+{
+    <MudBreadcrumbs Items="_crumbs" Class="pa-0 mb-2"></MudBreadcrumbs>
+    <MudText Typo="Typo.h4">@((string)_view.CommunityName) — @L["Discord"]</MudText>
+    <MudText Typo="Typo.body2" Class="mb-4">
+        @L["Give members a Discord role when they earn a Phoenix 2 title. Roles are kept in step automatically — nobody has to ask."]
+    </MudText>
+
+    @* The state every server invited before this feature is in: the bot holds no Manage Roles,
+       which no amount of role reordering fixes. Shown only while that is actually true, so it
+       retires itself as people re-add. *@
+    <DiscordReinvitePointer Show="NeedsReinvite" InviteUrl="@BotInviteUrl"
+                            CommunityId="@_view.CommunityId"></DiscordReinvitePointer>
+
+    @* ---------------- 1. the server ---------------- *@
+    <MudPaper Class="pa-4 mb-4" Outlined="true">
+        <MudText Typo="Typo.h5" Class="mb-3">@L["Discord server"]</MudText>
+
+        @if (_view.Server is { } server)
+        {
+            <div class="d-flex align-center flex-wrap mb-3" style="gap:14px">
+                <MudIcon Icon="@Icons.Custom.Brands.Discord" Size="Size.Large" Color="Color.Primary"/>
+                <div>
+                    <MudText Typo="Typo.h6">
+                        @(string.IsNullOrWhiteSpace(server.GuildName) ? L["Linked server"] : server.GuildName)
+                    </MudText>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                        @L["Set {0}", server.DesignatedAt.ToString("d")]
+                    </MudText>
+                </div>
+                @if (_view.ViewerCanManage)
+                {
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small" Class="ml-auto"
+                               Disabled="_busy" OnClick="AskUnlink">@L["Change server"]</MudButton>
+                }
+            </div>
+
+            <MudList T="string" Dense="true" Class="pa-0">
+                <MudListItem T="string" Icon="@(_view.BotIsInServer ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Error)"
+                             IconColor="@(_view.BotIsInServer ? Color.Success : Color.Error)">
+                    @(_view.BotIsInServer ? L["The bot is in this server."] : L["The bot is no longer in this server."])
+                </MudListItem>
+                @if (!_view.BotCanManageRoles)
+                {
+                    @* Not a hierarchy problem, and the hierarchy advice below would send an admin
+                       to move roles around forever. A bot invited before this feature existed
+                       simply never asked for the permission. *@
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Error" IconColor="Color.Error">
+                        <MudText Typo="Typo.body2">@L["The bot has no permission to manage roles here."]</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            @L["Re-add the bot from the Communities page — it keeps this server and its channels, and picks up the permission."]
+                        </MudText>
+                    </MudListItem>
+                }
+                else if (_view.Blocked.Any())
+                {
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Warning" IconColor="Color.Warning">
+                        <MudText Typo="Typo.body2">
+                            @L["Discord won't let the bot hand out {0} of these roles.", _view.Blocked.Count]
+                        </MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            @L["In Server Settings → Roles, drag the PIU Scores role above them."]
+                        </MudText>
+                    </MudListItem>
+                }
+                else if (_view.BotIsInServer && _view.Mappings.Any())
+                {
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                        @L["The bot can hand out every role below."]
+                    </MudListItem>
+                }
+            </MudList>
+        }
+        else if (!_view.ViewerCanManage)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                @L["This community doesn't give out Discord roles."]
+            </MudText>
+        }
+        else if (!_view.ViewerHasDiscordLinked)
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-3">
+                @L["Link your own Discord account first — setting the server means running a command as yourself in Discord."]
+            </MudAlert>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/Account">
+                @L["Link Discord on my account"]
+            </MudButton>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info" Class="mb-3">
+                @L["A channel that posts scores here isn't the same as this community's server — setting one is a separate step."]
+            </MudAlert>
+            <MudText Typo="Typo.body2" Class="mb-1">@L["Open the Discord server you want, where you have Manage Server, then run:"]</MudText>
+            <MudText Typo="Typo.body1" Style="font-family:monospace" Class="mb-1">/piu link-server</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">@L["Come back here once it's done."]</MudText>
+        }
+    </MudPaper>
+
+    @* ---------------- 2. titles and roles ---------------- *@
+    @if (_view.Server != null)
+    {
+        <MudPaper Class="pa-4 mb-4" Outlined="true">
+            <div class="d-flex align-center justify-space-between flex-wrap mb-1" style="gap:10px">
+                <MudText Typo="Typo.h5">@L["Titles and roles"]</MudText>
+                @if (_view.ViewerCanManage)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Add" Disabled="_busy"
+                               OnClick="OpenAdd">@L["Add a role"]</MudButton>
+                }
+            </div>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                @L["Pick a Phoenix 2 title, pick a role in your server. Anyone who has the title gets the role."]
+            </MudText>
+
+            @if (!_view.Mappings.Any())
+            {
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                    @L["No roles yet — add one to start handing them out."]
+                </MudText>
+            }
+
+            @foreach (var group in _view.Mappings.GroupBy(m => m.ExclusivityGroup).OrderBy(g => g.Key ?? "￿"))
+            {
+                <div class="mt-3 mb-1 d-flex align-center flex-wrap" style="gap:8px">
+                    <MudText Typo="Typo.overline" Class="mud-text-secondary">
+                        @(group.Key == null ? L["Everything else"] : GroupLabel(group.Key))
+                    </MudText>
+                    @if (group.Key != null)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">
+                            @L["Highest only"]
+                        </MudChip>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            @L["lower rungs come off automatically"]
+                        </MudText>
+                    }
+                </div>
+                <MudDivider Class="mb-1"/>
+
+                @foreach (var mapping in group.OrderBy(m => m.TitleName))
+                {
+                    <div class="d-flex align-center flex-wrap py-2" style="gap:10px">
+                        <MudText Typo="Typo.body2" Style="font-family:monospace">@mapping.TitleName</MudText>
+                        <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small"
+                                 Class="mud-text-secondary"/>
+                        <MudText Typo="Typo.body2">
+                            @(mapping.RoleName ?? L["(role deleted)"].Value)
+                        </MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary ml-auto">
+                            @L["{0} members", mapping.HolderCount]
+                        </MudText>
+                        @if (_view.ViewerCanManage)
+                        {
+                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close"
+                                           aria-label="@L["Remove"]" Disabled="_busy"
+                                           OnClick="() => AskRemove(mapping)"/>
+                        }
+                    </div>
+                    @if (mapping.BlockedReason is { } reason)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Warning" Class="pb-2">
+                            @BlockedText(reason)
+                        </MudText>
+                    }
+                    else if (mapping.RoleMissing && _view.BotIsInServer)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Warning" Class="pb-2">
+                            @L["That role no longer exists in the server."]
+                        </MudText>
+                    }
+                }
+            }
+        </MudPaper>
+
+        @* ---------------- 3. the rule ---------------- *@
+        <MudPaper Class="pa-4 mb-4" Outlined="true">
+            <MudText Typo="Typo.h5" Class="mb-1">@L["When a role is given"]</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                @L["All of these have to be true. If any one stops being true, the role comes off."]
+            </MudText>
+            <MudList T="string" Dense="true" Class="pa-0">
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Check" IconColor="Color.Success">
+                    @L["A member of {0}, and not banned", (string)_view.CommunityName]
+                </MudListItem>
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Check" IconColor="Color.Success">
+                    @L["In this Discord server, with their account linked"]
+                </MudListItem>
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Check" IconColor="Color.Success">
+                    @L["Holds the title on Phoenix 2, with no higher rung"]
+                </MudListItem>
+            </MudList>
+            <div class="d-flex align-center flex-wrap mt-3" style="gap:12px">
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                    @L["{0} of {1} members hold at least one role", _view.MembersHoldingRoles, _view.MemberCount]
+                </MudText>
+                @if (_view.ViewerCanManage)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                               Class="ml-auto" Disabled="_busy" OnClick="CheckNow">@L["Check now"]</MudButton>
+                }
+            </div>
+            @if (_view.ViewerCanManage)
+            {
+                @* Adding a role now hands it out on the spot, so this button is no longer how
+                   anything gets done — it is the answer to "somebody says they're missing it". *@
+                <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mt-1">
+                    @L["Roles are handed out as they're earned. Only check if somebody says theirs is missing."]
+                </MudText>
+            }
+        </MudPaper>
+
+        @* ---------------- 4. the dry run ---------------- *@
+        @if (_view.ViewerCanManage)
+        {
+            <MudPaper Class="pa-4 mb-4" Outlined="true">
+                <MudText Typo="Typo.h5" Class="mb-1">@L["Next check will change"]</MudText>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                    @L["A dry run of what's about to happen, so nothing lands as a surprise."]
+                </MudText>
+
+                @if (_previewLoading)
+                {
+                    <div class="d-flex align-center" style="gap:10px">
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">@L["Working it out…"]</MudText>
+                    </div>
+                }
+                else if (!_pending.Any())
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@L["Nothing to change."]</MudText>
+                }
+                else
+                {
+                    <MudTable T="DiscordRoleChangeRecord" Items="_pending" Dense="true" Hover="true"
+                              Class="olb-board-table">
+                        <HeaderContent>
+                            <MudTh>@L["Member"]</MudTh>
+                            <MudTh>@L["Change"]</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>
+                                <div class="d-flex align-center" style="gap:8px">
+                                    <MudAvatar Size="Size.Small">
+                                        <MudImage Src="@context.ProfileImage.ToString()"
+                                                  Alt="@((string)context.PlayerName)"/>
+                                    </MudAvatar>
+                                    <span>@((string)context.PlayerName)</span>
+                                </div>
+                            </MudTd>
+                            <MudTd>
+                                @foreach (var granting in context.Granting)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Success"
+                                             Variant="Variant.Text">+ @granting</MudChip>
+                                }
+                                @foreach (var revoking in context.Revoking)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Error"
+                                             Variant="Variant.Text">− @revoking</MudChip>
+                                }
+                                @if (context.Note is { } blocked)
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Warning">
+                                        @L["Earned {0}, but the bot can't hand that role out.", blocked]
+                                    </MudText>
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudPaper>
+        }
+    }
+}
+
+@* ---------------- add dialog ---------------- *@
+<MudDialog @bind-Visible="_showAdd" Options="_dialogOptions">
+    <TitleContent><MudText Typo="Typo.h6">@L["Add a role"]</MudText></TitleContent>
+    <DialogContent>
+        <MudAutocomplete T="string" Label="@L["Title"]" @bind-Value="_newTitle"
+                         SearchFunc="SearchTitles" MaxItems="30" Dense="true"
+                         Clearable="true" CoerceValue="false" Class="mb-3"/>
+        <MudAutocomplete T="BotGuildRole" Label="@L["Discord role"]" @bind-Value="_newRole"
+                         SearchFunc="SearchRoles" MaxItems="30" Dense="true" Clearable="true"
+                         ToStringFunc="@(r => r == null ? string.Empty : r.Name)">
+            <ItemTemplate Context="role">
+                <div class="d-flex align-center" style="gap:8px">
+                    <span>@role.Name</span>
+                    @if (!role.CanAssign)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Warning" Class="ml-auto">
+                            @BlockedText(role.BlockedReason!.Value)
+                        </MudText>
+                    }
+                </div>
+            </ItemTemplate>
+        </MudAutocomplete>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _showAdd = false">@L["Cancel"]</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="_busy || !CanSaveNew"
+                   OnClick="SaveMapping">@L["Add"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* ---------------- remove dialog ---------------- *@
+<MudDialog @bind-Visible="_showRemove" Options="_dialogOptions">
+    <TitleContent><MudText Typo="Typo.h6">@L["Remove this role"]</MudText></TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            @L["{0} will stop being handed out.", _removeTarget?.TitleName ?? string.Empty]
+        </MudText>
+        <MudCheckBox T="bool" @bind-Value="_takeRoleBack" Dense="true"
+                     Label="@L["Take the role off everyone who has it"]"/>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+            @L["Untick to leave it on people — the site just stops maintaining it."]
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _showRemove = false">@L["Cancel"]</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" Disabled="_busy"
+                   OnClick="ConfirmRemove">@L["Remove"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* ---------------- progress ---------------- *@
+@* Deterministic on purpose: the reconcile knows its whole work list before the first write, so
+   the bar starts at a real denominator. A spinner on a five-hundred-member server is a minute of
+   watching nothing. Not dismissable — Cancel is the way out, and it leaves a half-finished pass,
+   which is safe because reconciling is idempotent and the next pass picks up where this stopped. *@
+<MudDialog @bind-Visible="_showProgress" Options="_blockingDialog">
+    <TitleContent><MudText Typo="Typo.h6">@_progressTitle</MudText></TitleContent>
+    <DialogContent>
+        <MudProgressLinear Color="Color.Primary" Size="Size.Large" Striped="true"
+                           Value="@(_progress?.Percent ?? 0)" Class="mb-3"/>
+        <MudText Typo="Typo.body2">
+            @L["{0} of {1} members", _progress?.Done ?? 0, _progress?.Total ?? 0]
+        </MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+            @L["Stopping is safe — the next check picks up where this one left off."]
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CancelCheck">@L["Stop"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* ---------------- change-server dialog ---------------- *@
+<MudDialog @bind-Visible="_showUnlink" Options="_dialogOptions">
+    <TitleContent><MudText Typo="Typo.h6">@L["Change server"]</MudText></TitleContent>
+    <DialogContent>
+        <MudAlert Severity="Severity.Warning" Class="mb-3">
+            @L["Every role this community gave out in the current server comes off first."]
+        </MudAlert>
+        <MudText Typo="Typo.body2" Class="mb-1">
+            @L["Afterwards, run this in the server you want:"]
+        </MudText>
+        <MudText Typo="Typo.body1" Style="font-family:monospace">/piu link-server</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _showUnlink = false">@L["Cancel"]</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" Disabled="_busy"
+                   OnClick="ConfirmUnlink">@L["Take the roles back"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@inject IMediator Mediator
+@inject IOptions<DiscordConfiguration> DiscordConfig
+@inject ISnackbar Snackbar
+@inject IStringLocalizer<App> L
+@inject NavigationManager NavManager
+
+@code {
+    [Parameter, SupplyParameterFromQuery] public string? CommunityName { get; set; }
+
+    private static readonly IReadOnlyList<string> AllTitles =
+        Phoenix2TitleList.BuildList().Select(t => (string)t.Name).OrderBy(n => n).ToArray();
+
+    private readonly DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Small, FullWidth = true };
+
+    private CommunityDiscordView? _view;
+    private IReadOnlyList<DiscordRoleChangeRecord> _pending = Array.Empty<DiscordRoleChangeRecord>();
+    private IReadOnlyList<BotGuildRole> _assignableRoles = Array.Empty<BotGuildRole>();
+    private List<BreadcrumbItem> _crumbs = new();
+    private bool _loading = true;
+    private bool _busy;
+
+    private bool _showAdd;
+    private string? _newTitle;
+    private BotGuildRole? _newRole;
+
+    private bool _showRemove;
+    private CommunityTitleRoleView? _removeTarget;
+    private bool _takeRoleBack;
+
+    private bool _showUnlink;
+
+    private readonly DialogOptions _blockingDialog = new()
+    {
+        MaxWidth = MaxWidth.ExtraSmall, FullWidth = true,
+        BackdropClick = false, CloseOnEscapeKey = false
+    };
+
+    private bool _showProgress;
+    private string _progressTitle = string.Empty;
+    private DiscordRoleProgress? _progress;
+    private CancellationTokenSource? _checking;
+    private bool _previewLoading;
+
+    private bool CanSaveNew =>
+        !string.IsNullOrWhiteSpace(_newTitle) && _newRole is { CanAssign: true };
+
+    /// <summary>
+    ///     A designated server whose bot cannot manage roles, seen by somebody who could fix it.
+    ///     A member sees nothing: re-adding the bot is not theirs to do.
+    /// </summary>
+    private bool NeedsReinvite =>
+        _view is { Server: not null, BotIsInServer: true, BotCanManageRoles: false, ViewerCanManage: true };
+
+    private string BotInviteUrl => DiscordBotInvite.UrlFor(DiscordConfig.Value.ClientId);
+
+    protected override async Task OnInitializedAsync() => await Load();
+
+    private async Task Load()
+    {
+        _loading = true;
+        if (string.IsNullOrWhiteSpace(CommunityName))
+        {
+            _loading = false;
+            return;
+        }
+
+        try
+        {
+            _view = await Mediator.Send(new GetCommunityDiscordQuery(Name.From(CommunityName)));
+            _crumbs = new List<BreadcrumbItem>
+            {
+                new(L["Communities"].Value, "/Communities"),
+                new((string)_view.CommunityName, $"/Community/Leaderboard?communityName={Uri.EscapeDataString((string)_view.CommunityName)}"),
+                new(L["Discord"].Value, null, true)
+            };
+
+            if (_view.ViewerCanManage && _view.Server != null)
+                _assignableRoles = await Mediator.Send(
+                    new GetCommunityDiscordRolesQuery(_view.CommunityName));
+        }
+        catch (Exception)
+        {
+            _view = null;
+        }
+
+        _loading = false;
+
+        // The dry run reads the whole server, which is the slowest thing this page does. Paint
+        // first and fill it in — the rest of the page is usable while it works.
+        await LoadPreview();
+    }
+
+    private async Task LoadPreview()
+    {
+        if (_view is not { ViewerCanManage: true, Server: not null })
+        {
+            _pending = Array.Empty<DiscordRoleChangeRecord>();
+            return;
+        }
+
+        _previewLoading = true;
+        StateHasChanged();
+        try
+        {
+            _pending = await Mediator.Send(new GetCommunityDiscordPreviewQuery(_view.CommunityName));
+        }
+        catch (Exception)
+        {
+            _pending = Array.Empty<DiscordRoleChangeRecord>();
+        }
+
+        _previewLoading = false;
+        StateHasChanged();
+    }
+
+    private Task<IEnumerable<string>> SearchTitles(string? value, CancellationToken token)
+    {
+        var term = value?.Trim() ?? string.Empty;
+        var mapped = _view?.Mappings.Select(m => m.TitleName).ToHashSet(StringComparer.Ordinal)
+                     ?? new HashSet<string>(StringComparer.Ordinal);
+        return Task.FromResult(AllTitles
+            .Where(t => !mapped.Contains(t))
+            .Where(t => term.Length == 0 || t.Contains(term, StringComparison.OrdinalIgnoreCase))
+            .Take(30)
+            .AsEnumerable());
+    }
+
+    private void OpenAdd()
+    {
+        _newTitle = null;
+        _newRole = null;
+        _showAdd = true;
+    }
+
+    /// <summary>
+    ///     Roles the server has, unmapped first — one already spoken for would take itself from
+    ///     whatever title holds it. Roles the bot cannot assign stay in the list, labelled: an
+    ///     admin needs to SEE the role they meant to pick and why it is unavailable.
+    /// </summary>
+    private Task<IEnumerable<BotGuildRole>> SearchRoles(string? value, CancellationToken token)
+    {
+        var term = value?.Trim() ?? string.Empty;
+        var taken = _view?.Mappings.Select(m => m.RoleId).ToHashSet() ?? new HashSet<ulong>();
+        return Task.FromResult(_assignableRoles
+            .Where(r => term.Length == 0 || r.Name.Contains(term, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(r => taken.Contains(r.Id))
+            .ThenBy(r => !r.CanAssign)
+            .ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase)
+            .Take(30)
+            .AsEnumerable());
+    }
+
+    private async Task SaveMapping()
+    {
+        if (_view == null || !CanSaveNew) return;
+        _showAdd = false;
+        await RunWithProgress(L["Handing out the role"].Value,
+            report => new SetCommunityTitleRoleCommand(_view.CommunityName, _newTitle!, _newRole!.Id, report),
+            "Could not add that role.");
+    }
+
+    private void AskRemove(CommunityTitleRoleView mapping)
+    {
+        _removeTarget = mapping;
+        // On by default: a role the site handed out and then stopped maintaining is an orphan
+        // nobody can clear except by hand, which surprises people more than losing it does.
+        _takeRoleBack = true;
+        _showRemove = true;
+    }
+
+    private async Task ConfirmRemove()
+    {
+        if (_view == null || _removeTarget == null) return;
+        _showRemove = false;
+        var target = _removeTarget;
+        var takeBack = _takeRoleBack;
+        await RunWithProgress(
+            takeBack ? L["Taking the role back"].Value : L["Removing the mapping"].Value,
+            report => new RemoveCommunityTitleRoleCommand(_view.CommunityName, target.TitleName,
+                takeBack, report),
+            "Could not remove that role.");
+        _removeTarget = null;
+    }
+
+    private void AskUnlink() => _showUnlink = true;
+
+    private async Task ConfirmUnlink()
+    {
+        if (_view == null) return;
+        _showUnlink = false;
+        await RunWithProgress(L["Taking the roles back"].Value,
+            report => new UnlinkCommunityDiscordServerCommand(_view.CommunityName, report),
+            "Could not unlink the server.");
+    }
+
+    private async Task CheckNow()
+    {
+        if (_view == null) return;
+        var changed = 0;
+        var ran = await RunWithProgress(L["Checking roles"].Value,
+            report => new ReconcileCommunityDiscordRolesCommand(_view.CommunityName, report),
+            "Could not reach Discord just now.",
+            async (command, token) => changed = await Mediator.Send(command, token));
+
+        if (ran)
+            Snackbar.Add(changed == 0
+                    ? L["Everyone already has the right roles."].Value
+                    : L["Updated {0} members.", changed].Value,
+                changed == 0 ? Severity.Info : Severity.Success);
+    }
+
+    /// <summary>
+    ///     Every operation that writes to Discord goes through here: they all walk members one at a
+    ///     time, so they all need the same bar and the same way out. Returns whether it finished —
+    ///     false when it was stopped or failed, so a caller does not announce a result it did not
+    ///     get.
+    /// </summary>
+    private async Task<bool> RunWithProgress<TCommand>(string title,
+        Func<IProgress<DiscordRoleProgress>, TCommand> build, string errorMessage,
+        Func<TCommand, CancellationToken, Task>? send = null)
+        where TCommand : IBaseRequest
+    {
+        _progress = null;
+        _progressTitle = title;
+        _showProgress = true;
+        _busy = true;
+        _checking = new CancellationTokenSource();
+
+        // Progress arrives off the render thread, so every report has to be marshalled back onto
+        // the circuit's dispatcher before it touches the UI.
+        var report = new Progress<DiscordRoleProgress>(p =>
+            _ = InvokeAsync(() =>
+            {
+                _progress = p;
+                StateHasChanged();
+            }));
+
+        var finished = false;
+        try
+        {
+            var command = build(report);
+            if (send != null) await send(command, _checking.Token);
+            else await Mediator.Send(command, _checking.Token);
+            finished = true;
+        }
+        catch (OperationCanceledException)
+        {
+            Snackbar.Add(L["Stopped. What it got through is already applied."].Value, Severity.Info);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add(L[errorMessage].Value, Severity.Error);
+        }
+        finally
+        {
+            _showProgress = false;
+            _busy = false;
+            _checking?.Dispose();
+            _checking = null;
+        }
+
+        await Load();
+        return finished;
+    }
+
+    private void CancelCheck() => _checking?.Cancel();
+
+    private string GroupLabel(string group) => group switch
+    {
+        "PUMBILITY Total" => L["PUMBILITY — combined"].Value,
+        "PUMBILITY Singles" => L["PUMBILITY — singles"].Value,
+        "PUMBILITY Doubles" => L["PUMBILITY — doubles"].Value,
+        _ => group
+    };
+
+    private string BlockedText(BotRoleBlockedReason reason) => reason switch
+    {
+        BotRoleBlockedReason.AboveBot => L["This role is above the bot, so it can't be handed out."].Value,
+        BotRoleBlockedReason.Managed => L["Discord manages this role, so nobody can hand it out."].Value,
+        BotRoleBlockedReason.BotCannotManageRoles =>
+            L["The bot has no permission to manage roles here."].Value,
+        _ => L["Everyone has this role already."].Value
+    };
+}

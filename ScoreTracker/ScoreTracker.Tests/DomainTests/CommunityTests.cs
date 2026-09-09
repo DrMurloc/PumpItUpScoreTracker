@@ -196,9 +196,12 @@ public sealed class CommunityTests
         // The ChartCommentModeration migration rewrites stored permission ints 13 -> 29 and
         // 15 -> 31. Those literals are only correct while the flags keep these values, so a
         // reordering of the enum fails here instead of silently corrupting the backfill.
+        // Adding a NEW bit is safe and only moves All: stored rows keep their meaning, and an
+        // existing admin simply does not hold the new capability until somebody grants it.
         Assert.Equal(16, (int)CommunityPermission.ModerateComments);
+        Assert.Equal(32, (int)CommunityPermission.ManageDiscord);
         Assert.Equal(29, (int)Community.DefaultAdminPermissionsSeed);
-        Assert.Equal(31, (int)CommunityPermission.All);
+        Assert.Equal(63, (int)CommunityPermission.All);
     }
 
     [Fact]

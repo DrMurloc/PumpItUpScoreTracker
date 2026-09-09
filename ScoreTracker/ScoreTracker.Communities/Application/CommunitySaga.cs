@@ -2,6 +2,7 @@
 using MediatR;
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Contracts.Commands;
+using ScoreTracker.Communities.Contracts.Messages;
 using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Communities.Domain;
 using ScoreTracker.Catalog.Contracts.Queries;
@@ -54,6 +55,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     private const string WorldCommunityName = "World";
 
     private readonly IBotClient _bot;
+    private readonly IBus _bus;
     private readonly IChartRepository _charts;
     private readonly ICommunityRepository _communities;
     private readonly ICurrentUserAccessor _currentUser;
@@ -66,8 +68,10 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
 
     public CommunitySaga(ICurrentUserAccessor currentUser, ICommunityRepository communities, IBotClient bot,
         IUserReader users, IChartRepository charts, IScoreReader scores, IMediator mediator,
-        IPlayerStatsReader playerStats, IDateTimeOffsetAccessor dateTime, ILocalizedTextAccessor localizer)
+        IPlayerStatsReader playerStats, IDateTimeOffsetAccessor dateTime, ILocalizedTextAccessor localizer,
+        IBus bus)
     {
+        _bus = bus;
         _currentUser = currentUser;
         _communities = communities;
         _bot = bot;
@@ -1095,6 +1099,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         // One row, not the whole aggregate: saving the community would write back the member set
         // as it looked when this handler loaded it, deleting anyone who joined in between.
         await _communities.AddMembership(community.Name, userId, cancellationToken);
+        await SettleDiscordRoles(community.Name, userId, cancellationToken);
     }
 
     public async Task Handle(LeaveCommunityCommand request, CancellationToken cancellationToken)
@@ -1104,6 +1109,18 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         if (!community.MemberIds.Contains(userId)) return;
 
         await _communities.RemoveMembership(community.Name, userId, cancellationToken);
+        await SettleDiscordRoles(community.Name, userId, cancellationToken);
+    }
+
+    /// <summary>
+    ///     Membership is one of the four facts a Discord role hangs on, so a join or a leave has to
+    ///     settle it. Published rather than called: joining a community must not wait on Discord's
+    ///     REST API, and a dropped message is picked up by the sweep.
+    /// </summary>
+    private async Task SettleDiscordRoles(Name communityName, Guid userId, CancellationToken cancellationToken)
+    {
+        if (await _communities.GetCommunityId(communityName, cancellationToken) is { } communityId)
+            await _bus.Publish(new ReconcileDiscordRolesCommand(communityId, userId), cancellationToken);
     }
 
     public async Task Handle(RemoveDiscordChannelFromCommunityCommand request, CancellationToken cancellationToken)

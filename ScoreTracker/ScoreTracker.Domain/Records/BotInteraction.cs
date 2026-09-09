@@ -11,6 +11,14 @@ namespace ScoreTracker.Domain.Records;
 ///         answers when the account has chosen no language — or when we do not know the account
 ///         at all (docs/design/culture-resolution.md).
 ///     </para>
+///     <para>
+///         The two permission bits are the invoker's own authority in the server, read off the
+///         interaction payload — so a command can check it without the bot fetching anything.
+///         <see cref="InvokerCanManageGuild" /> is the stronger of the two and is what designating
+///         a community's Discord requires: pointing a community at a server is a claim about that
+///         server, so site permission alone must not be enough
+///         (docs/design/discord-role-management.md D9).
+///     </para>
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record BotInteraction(
@@ -21,7 +29,8 @@ public sealed record BotInteraction(
     ulong UserId,
     string UserDisplayName,
     bool InvokerCanManageChannels,
-    string? UserLocale = null);
+    string? UserLocale = null,
+    bool InvokerCanManageGuild = false);
 
 /// <summary>
 ///     A live autocomplete request for the focused option. Handlers typically switch on
