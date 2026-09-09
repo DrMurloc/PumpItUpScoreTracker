@@ -14,6 +14,7 @@ using ScoreTracker.Communities.Application;
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Contracts.Commands;
 using ScoreTracker.Communities.Contracts.Queries;
+using MassTransit;
 using ScoreTracker.Communities.Domain;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
@@ -26,6 +27,7 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -38,6 +40,10 @@ public sealed class BotCommandSagaTests
     private readonly Mock<IDiscordFeedSubscriptionRepository> _feeds = new();
     private readonly Mock<ILocalizedTextAccessor> _localizer = new();
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<IDiscordRoleRepository> _roleConfiguration = new();
+    private readonly Mock<IDiscordRoleService> _discordRoles = new();
+    private readonly Mock<IBus> _bus = new();
+    private static readonly DateTimeOffset Now = new(2026, 9, 9, 12, 0, 0, TimeSpan.Zero);
 
     public BotCommandSagaTests()
     {
@@ -54,7 +60,8 @@ public sealed class BotCommandSagaTests
 
     private BotCommandSaga Saga() =>
         new(_bot.Object, _communities.Object, _feeds.Object, _mediator.Object, _currentUser.Object,
-            _localizer.Object);
+            _localizer.Object, _roleConfiguration.Object, _discordRoles.Object,
+            FakeDateTime.At(Now).Object, _bus.Object);
 
     private static HandleBotInteractionCommand Invoke(string[] path, Dictionary<string, string> options,
         bool canManage = false, string? userLocale = null) =>

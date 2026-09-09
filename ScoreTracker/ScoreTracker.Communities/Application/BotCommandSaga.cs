@@ -1,5 +1,7 @@
 using System.Globalization;
-using MediatR;
+using MediatR;
+using ScoreTracker.Communities.Contracts.Messages;
+using MassTransit;
 using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts;
@@ -39,12 +41,21 @@ namespace ScoreTracker.Communities.Application
         private readonly ICurrentUserAccessor _currentUser;
         private readonly IDiscordFeedSubscriptionRepository _feeds;
         private readonly ILocalizedTextAccessor _localizer;
-        private readonly IMediator _mediator;
+        private readonly IMediator _mediator;
+        private readonly IDiscordRoleRepository _roleConfiguration;
+        private readonly IDiscordRoleService _discordRoles;
+        private readonly IDateTimeOffsetAccessor _dateTime;
+        private readonly IBus _bus;
 
         public BotCommandSaga(IBotClient bot, ICommunityRepository communities,
             IDiscordFeedSubscriptionRepository feeds, IMediator mediator, ICurrentUserAccessor currentUser,
-            ILocalizedTextAccessor localizer)
+            ILocalizedTextAccessor localizer, IDiscordRoleRepository roleConfiguration,
+            IDiscordRoleService discordRoles, IDateTimeOffsetAccessor dateTime, IBus bus)
         {
+            _roleConfiguration = roleConfiguration;
+            _discordRoles = discordRoles;
+            _dateTime = dateTime;
+            _bus = bus;
             _bot = bot;
             _communities = communities;
             _feeds = feeds;
@@ -67,6 +78,7 @@ namespace ScoreTracker.Communities.Application
                 "register" => await Register(interaction, culture, cancellationToken),
                 "unregister" => await Unregister(interaction, culture, cancellationToken),
                 "feeds" => await Feeds(interaction, culture, cancellationToken),
+                "link-server" => await LinkServer(interaction, user, culture, cancellationToken),
                 _ => new BotReply(Text: _localizer.Get(culture, "That command isn't available yet."))
             };
         }
@@ -105,6 +117,7 @@ namespace ScoreTracker.Communities.Application
                 "preset" => await PresetChoices(request.Request, cancellationToken),
                 "name" => await CommunityNameChoices(request.Request, cancellationToken),
                 "feed" => await FeedChoices(request.Request, cancellationToken),
+                "community" => await ManageableCommunityChoices(request.Request, cancellationToken),
                 _ => Array.Empty<BotOptionChoice>()
             };
         }
@@ -165,6 +178,78 @@ namespace ScoreTracker.Communities.Application
             {
                 return new BotReply(Text: e.Message);
             }
+        }
+
+        /// <summary>
+        ///     Claims this server for one of the invoker's communities. Both authorities are
+        ///     checked: Manage Server here, so nobody points a community at a Discord they do not
+        ///     run, and ManageDiscord on the site, so nobody claims a community that is not theirs.
+        ///     <para>
+        ///         Repointing an existing designation hands back every role granted under the old
+        ///         server first — a role must never outlive the reason it was given (D14).
+        ///     </para>
+        /// </summary>
+        private async Task<BotReply> LinkServer(BotInteraction interaction, User? user,
+            string? invokerCulture, CancellationToken cancellationToken)
+        {
+            if (interaction.GuildId is not { } guildId)
+                return new BotReply(Text: _localizer.Get(invokerCulture,
+                    "Run this in the server you want to use."));
+            if (!interaction.InvokerCanManageGuild)
+                return new BotReply(Text: _localizer.Get(invokerCulture,
+                    "You need Manage Server permission in this Discord to do that."));
+            if (user == null)
+                return new BotReply(Text: _localizer.Get(invokerCulture,
+                    "Link your Discord account on PIU Scores first, so we know who you are."));
+
+            if (!interaction.Options.TryGetValue("community", out var name) || string.IsNullOrWhiteSpace(name))
+                return new BotReply(Text: _localizer.Get(invokerCulture, "Pick a community."));
+
+            var communityName = Name.From(name);
+            var communityId = await _communities.GetCommunityId(communityName, cancellationToken);
+            if (communityId is not { } id)
+                return new BotReply(Text: _localizer.Get(invokerCulture, "That community wasn't found."));
+
+            var community = await _communities.GetCommunityByName(communityName, cancellationToken);
+            if (community == null || !community.HasPermission(user.Id, CommunityPermission.ManageDiscord))
+                return new BotReply(Text: _localizer.Get(invokerCulture,
+                    "You don't have permission to manage Discord for that community."));
+
+            var existing = await _roleConfiguration.GetServer(id, cancellationToken);
+            if (existing != null && existing.GuildId != guildId)
+                await _discordRoles.RevokeAll(id, cancellationToken);
+
+            var guild = await _bot.GetGuild(guildId, cancellationToken);
+            await _roleConfiguration.SaveServer(id, guildId, guild?.Name ?? string.Empty, _dateTime.Now,
+                cancellationToken);
+            await _bus.Publish(new ReconcileDiscordRolesCommand(id), cancellationToken);
+
+            return new BotReply(Text: _localizer.Get(invokerCulture,
+                "Done — this server now gives out {0}'s title roles. Set them up on the site under Discord.",
+                (string)community.Name));
+        }
+
+        /// <summary>
+        ///     The invoker's own communities that they may configure Discord for — never a public
+        ///     directory search, since this option hands a server to whatever it names.
+        /// </summary>
+        private async Task<IReadOnlyList<BotOptionChoice>> ManageableCommunityChoices(
+            BotAutocompleteRequest request, CancellationToken cancellationToken)
+        {
+            var user = await ResolveUser(request.UserId, cancellationToken);
+            if (user == null) return Array.Empty<BotOptionChoice>();
+
+            var partial = request.PartialValue?.Trim() ?? string.Empty;
+            var roles = await _communities.GetUserRoles(user.Id, cancellationToken);
+            return roles
+                .Where(r => r.Role == CommunityRole.Creator ||
+                            (r.Permissions & CommunityPermission.ManageDiscord) == CommunityPermission.ManageDiscord)
+                .Select(r => (string)r.CommunityName)
+                .Where(name => name.Contains(partial, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(name => name)
+                .Take(25)
+                .Select(name => new BotOptionChoice(name, name))
+                .ToArray();
         }
 
         private async Task<BotReply> Unregister(BotInteraction interaction, string? invokerCulture,

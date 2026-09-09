@@ -20,7 +20,7 @@ namespace ScoreTracker.Communities.Contracts
             new[]
             {
                 new BotCommandDefinition(RootName, "PIU Scores tools",
-                    new[] { Calc, Chart, Random, Suggest, Unregister, Feeds },
+                    new[] { Calc, Chart, Random, Suggest, Unregister, Feeds, LinkServer },
                     new[] { Register })
             };
 
@@ -173,6 +173,20 @@ namespace ScoreTracker.Communities.Contracts
                     new BotSubCommand("official", "Official leaderboards — the weekly digest",
                         new[] { RequiredMix, Language }, Ephemeral: true)
                 });
+
+        /// <summary>
+        ///     Claims this server for a community's Discord roles. Run IN the server on purpose:
+        ///     the interaction proves which server it is and that the invoker runs it, neither of
+        ///     which a dropdown on the site could establish — we are not permitted to list
+        ///     somebody's servers at all (docs/design/discord-role-management.md D9).
+        /// </summary>
+        private static BotSubCommand LinkServer =>
+            new("link-server", "Use this server for a community's title roles",
+                new[]
+                {
+                    new BotCommandOption("community", "Which of your communities",
+                        BotCommandOptionType.String, Required: true, Autocomplete: true)
+                }, Ephemeral: true);
 
         private static BotSubCommand Unregister =>
             new("unregister", "Stop one of this channel's feeds",
