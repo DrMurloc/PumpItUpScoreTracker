@@ -16,6 +16,7 @@ namespace ScoreTracker.Communities.Application;
 ///     </para>
 /// </summary>
 internal sealed class DiscordRoleConsumer : IConsumer<ReconcileDiscordRolesCommand>,
+    IConsumer<SweepDiscordRolesCommand>,
     IConsumer<ReconcileGuildMemberCommand>,
     IConsumer<PlayerTitlesChangedEvent>
 {
@@ -43,6 +44,19 @@ internal sealed class DiscordRoleConsumer : IConsumer<ReconcileDiscordRolesComma
         {
             _logger.LogError(e, "Could not settle Discord roles after a title change for {UserId}",
                 context.Message.UserId);
+        }
+    }
+
+    /// <summary>The hourly backstop. See <see cref="SweepDiscordRolesCommand" />.</summary>
+    public async Task Consume(ConsumeContext<SweepDiscordRolesCommand> context)
+    {
+        try
+        {
+            await _saga.SweepAll(context.CancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "The Discord role sweep did not finish");
         }
     }
 

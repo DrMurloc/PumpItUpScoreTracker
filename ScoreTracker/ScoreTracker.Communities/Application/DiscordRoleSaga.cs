@@ -113,6 +113,28 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
     }
 
     /// <summary>
+    ///     Every community that designates a server, one after another. Deliberately serial: a
+    ///     reconcile is mostly Discord REST calls, and running every community at once would spend
+    ///     one rate limit budget on work nothing is waiting for.
+    /// </summary>
+    public async Task<int> SweepAll(CancellationToken cancellationToken)
+    {
+        var servers = await _roles.GetAllServers(cancellationToken);
+        foreach (var server in servers)
+            try
+            {
+                await ReconcileCommunity(server.CommunityId, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                // One community's Discord being unreachable must not end the sweep for the rest.
+                _logger.LogError(e, "Sweep could not settle community {CommunityId}", server.CommunityId);
+            }
+
+        return servers.Count;
+    }
+
+    /// <summary>
     ///     Settles one account everywhere it could hold a role. Intersects the communities that
     ///     designate a server with the ones the account belongs to, so the common case — a player
     ///     in World, their region and a club, none of which hand out roles — costs two reads and

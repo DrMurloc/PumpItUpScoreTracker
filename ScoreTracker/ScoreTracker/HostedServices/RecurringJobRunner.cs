@@ -120,4 +120,10 @@ public sealed class RecurringJobRunner
     // otherwise retries a dead resume host forever (docs/design/discord-overhaul.md §10).
     public Task PublishCheckDiscordGateway() =>
         _bus.Publish(new CheckDiscordGatewayCommand());
+
+    // Settles every community's Discord roles. The backstop for the two things nothing reports —
+    // somebody unlinking their Discord, and a join the gateway missed — and the self-heal for any
+    // trigger the in-memory bus dropped (docs/design/discord-role-management.md §4.2).
+    public Task PublishSweepDiscordRoles() =>
+        _bus.Publish(new SweepDiscordRolesCommand());
 }

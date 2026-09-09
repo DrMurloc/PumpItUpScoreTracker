@@ -149,6 +149,16 @@ public sealed class DiscordRoleTriggerTests
         await consumer.Consume(Message(new ReconcileGuildMemberCommand(900, 42)));
     }
 
+    [Fact]
+    public async Task TheSweepSettlesEveryConfiguredCommunity()
+    {
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new SweepDiscordRolesCommand()));
+
+        _roles.Verify(r => r.SweepAll(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private static ConsumeContext<T> Message<T>(T message) where T : class
     {
         var context = new Mock<ConsumeContext<T>>();
