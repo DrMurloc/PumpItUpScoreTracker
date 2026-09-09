@@ -364,6 +364,52 @@ public sealed class DiscordRoleSagaTests
             Saga().RevokeRole(CommunityId, BronzeRole, CancellationToken.None));
     }
 
+    /// <summary>
+    ///     A grant row means "holds at least one role we handed out", which is what the page counts
+    ///     when it says how many members have one. Keying it on "member with Discord linked"
+    ///     instead gave a row to everyone who had never been in the server.
+    /// </summary>
+    [Fact]
+    public async Task SomebodyInTheCommunityHoldingNothingIsNotRememberedAsAHolder()
+    {
+        Holds();
+
+        await Saga().ReconcileOne(CommunityId, UserId, CancellationToken.None);
+
+        _roles.Verify(r => r.SaveGrant(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<ulong>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SomebodyNotInTheServerIsNotRememberedAsAHolder()
+    {
+        NotInTheServer();
+
+        await Saga().ReconcileOne(CommunityId, UserId, CancellationToken.None);
+
+        _roles.Verify(r => r.SaveGrant(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<ulong>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    ///     A sweep used to spend a DbContext and a round trip per member whether or not anything
+    ///     moved. Most members of most communities hold nothing here.
+    /// </summary>
+    [Fact]
+    public async Task ASweepWritesNothingForMembersItHasNothingToSay()
+    {
+        Holds();
+        _roles.Setup(r => r.GetGrants(CommunityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<CommunityDiscordGrantRecord>());
+
+        await Saga().ReconcileCommunity(CommunityId, CancellationToken.None);
+
+        _roles.Verify(r => r.DeleteGrant(It.IsAny<Guid>(), It.IsAny<Guid>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        _roles.Verify(r => r.SaveGrant(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<ulong>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     [Fact]
     public async Task AnUnmanagedRoleTheMemberHoldsIsLeftAlone()
     {

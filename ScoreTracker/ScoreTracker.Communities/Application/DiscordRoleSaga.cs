@@ -378,22 +378,40 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         // one to take away just because the bot momentarily cannot re-grant it. Comparing against
         // Assignable alone meant a role that drifted above the bot was stripped from every earner.
         var keep = earned.Assignable.Concat(earned.Blocked).ToHashSet();
+        var revoke = context.Managed.Where(r => current.Contains(r) && !keep.Contains(r)).ToArray();
 
         return new MemberPlan(userId, snowflake,
             earned.Assignable.Where(r => !current.Contains(r)).ToArray(),
             // Only ever mapped roles: a role this community does not manage belongs to somebody else.
-            context.Managed.Where(r => current.Contains(r) && !keep.Contains(r)).ToArray(),
-            earned.Blocked, eligible, true);
+            revoke,
+            earned.Blocked, eligible, true,
+            // What they will be wearing once this plan runs — the grant row's whole meaning.
+            HoldsAnything: earned.Assignable.Count > 0 ||
+                           context.Managed.Any(r => current.Contains(r) && !revoke.Contains(r)));
     }
 
-    /// <summary>Decides, then writes. Returns whether anything actually changed in Discord.</summary>
+    /// <summary>
+    ///     Decides, then writes. Returns whether anything actually changed in Discord.
+    ///     <para>
+    ///         A grant row means what its name says — <b>this member holds at least one role we
+    ///         handed out</b> — so it is written for somebody wearing one and deleted for anybody
+    ///         else. Keying it on "is a member with Discord linked" instead accumulated a row for
+    ///         every linked member who had never even been in the server, which is what made the
+    ///         page claim five hundred people held roles when five did.
+    ///     </para>
+    ///     <para>
+    ///         Neither write happens unless it changes something. A pass over a three-thousand
+    ///         member community was three thousand DbContexts and three thousand round trips with
+    ///         nothing to say.
+    ///     </para>
+    /// </summary>
     private async Task<bool> ReconcileMember(ReconcileContext context, Guid userId, ulong? discordUserId,
         CancellationToken cancellationToken)
     {
         var plan = await PlanMember(context, userId, discordUserId, cancellationToken);
         if (plan == null)
         {
-            await _roles.DeleteGrant(context.CommunityId, userId, cancellationToken);
+            await ForgetGrant(context, userId, cancellationToken);
             return false;
         }
 
@@ -402,13 +420,24 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         foreach (var roleId in plan.Revoke)
             await _bot.RemoveRole(context.GuildId, plan.DiscordUserId, roleId, cancellationToken);
 
-        if (plan.Eligible)
+        if (plan.HoldsAnything)
             await _roles.SaveGrant(context.CommunityId, userId, plan.DiscordUserId, _dateTime.Now,
                 cancellationToken);
         else
-            await _roles.DeleteGrant(context.CommunityId, userId, cancellationToken);
+            await ForgetGrant(context, userId, cancellationToken);
 
         return plan.HasWork;
+    }
+
+    /// <summary>
+    ///     Deletes the grant row, unless a bulk pass already knows there is none. Most members of
+    ///     most communities hold nothing here, so the check is the difference between a sweep
+    ///     writing once per member and writing not at all.
+    /// </summary>
+    private Task ForgetGrant(ReconcileContext context, Guid userId, CancellationToken cancellationToken)
+    {
+        if (context.GrantedUsers?.Contains(userId) == false) return Task.CompletedTask;
+        return _roles.DeleteGrant(context.CommunityId, userId, cancellationToken);
     }
 
     /// <summary>
@@ -496,13 +525,16 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         var roster = wholeCommunity
             ? await _bot.GetGuildMemberRoles(server.GuildId, cancellationToken)
             : null;
+        var grantedUsers = wholeCommunity
+            ? (await _roles.GetGrants(communityId, cancellationToken)).Select(g => g.UserId).ToHashSet()
+            : null;
 
         return new ReconcileContext(communityId, server.GuildId, mappings, assignable,
             // Removal is not gated on assignability the way granting is: a role that moved above
             // the bot after we handed it out simply cannot come off, and Discord tells us so, but
             // one that is merely missing from the server must not be asked for at all.
             mappings.Select(m => m.RoleId).Where(live.Contains).ToHashSet(),
-            members, Snowflakes(linked), holders, roster);
+            members, Snowflakes(linked), holders, roster, grantedUsers);
     }
 
     /// <summary>
@@ -551,7 +583,8 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
 
     /// <summary>What a reconcile has decided about one member, before it does any of it.</summary>
     private sealed record MemberPlan(Guid UserId, ulong DiscordUserId, IReadOnlyList<ulong> Grant,
-        IReadOnlyList<ulong> Revoke, IReadOnlyList<ulong> Blocked, bool Eligible, bool InServer)
+        IReadOnlyList<ulong> Revoke, IReadOnlyList<ulong> Blocked, bool Eligible, bool InServer,
+        bool HoldsAnything = false)
     {
         public bool HasWork => Grant.Count > 0 || Revoke.Count > 0;
     }
@@ -580,5 +613,7 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         /// <summary>Which of the MAPPED titles each member holds. One read, not one per member.</summary>
         IReadOnlyDictionary<Guid, IReadOnlySet<string>> HoldersByUser,
         /// <summary>The server's members and their roles on a bulk pass; null when settling one person.</summary>
-        IReadOnlyDictionary<ulong, IReadOnlyCollection<ulong>>? Roster);
+        IReadOnlyDictionary<ulong, IReadOnlyCollection<ulong>>? Roster,
+        /// <summary>Who already has a grant row on a bulk pass; null when settling one person.</summary>
+        IReadOnlySet<Guid>? GrantedUsers);
 }

@@ -217,8 +217,15 @@ internal sealed class DiscordRoleAdminSaga :
             : null;
 
     /// <summary>
-    ///     How many members hold each mapped title today. One read for every holder of every mapped
-    ///     title, intersected with the roster — a per-title count would be one query per row.
+    ///     How many members each mapped title would actually hand its role to. One read for every
+    ///     holder of every mapped title, intersected with the community — a per-title count would be
+    ///     one query per row.
+    ///     <para>
+    ///         Thinned by the same exclusivity the reconcile applies, because the number sits
+    ///         directly under a header reading "Highest only — lower rungs come off automatically".
+    ///         Counting raw holders made a lower gem claim members who had climbed past it and will
+    ///         never receive that role, which reads as a promise the row does not keep.
+    ///     </para>
     /// </summary>
     private async Task<IReadOnlyDictionary<string, int>> HolderCounts(Community community,
         IReadOnlyList<CommunityTitleRoleRecord> mappings, CancellationToken cancellationToken)
@@ -231,10 +238,22 @@ internal sealed class DiscordRoleAdminSaga :
             .ToArray();
         if (titles.Length == 0) return new Dictionary<string, int>();
 
-        var holders = await _titles.GetUsersWithTitles(MixEnum.Phoenix2, titles, cancellationToken);
-        return holders
+        var mapped = mappings.Select(m => m.TitleName).ToHashSet(StringComparer.Ordinal);
+        var holders = (await _titles.GetUsersWithTitles(MixEnum.Phoenix2, titles, cancellationToken))
             .Where(h => community.MemberIds.Contains(h.UserId))
-            .GroupBy(h => (string)h.Title)
-            .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal);
+            .ToArray();
+
+        var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var member in holders.GroupBy(h => h.UserId))
+        {
+            var earned = member.Where(h => mapped.Contains((string)h.Title)).ToArray();
+            foreach (var worn in TitleExclusivity.HighestOnly(earned, h => TitlesByName[(string)h.Title]))
+            {
+                var title = (string)worn.Title;
+                counts[title] = counts.GetValueOrDefault(title) + 1;
+            }
+        }
+
+        return counts;
     }
 }
