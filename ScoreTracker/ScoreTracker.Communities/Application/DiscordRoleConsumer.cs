@@ -16,6 +16,7 @@ namespace ScoreTracker.Communities.Application;
 ///     </para>
 /// </summary>
 internal sealed class DiscordRoleConsumer : IConsumer<ReconcileDiscordRolesCommand>,
+    IConsumer<ReconcileGuildMemberCommand>,
     IConsumer<PlayerTitlesChangedEvent>
 {
     private readonly ILogger<DiscordRoleConsumer> _logger;
@@ -42,6 +43,25 @@ internal sealed class DiscordRoleConsumer : IConsumer<ReconcileDiscordRolesComma
         {
             _logger.LogError(e, "Could not settle Discord roles after a title change for {UserId}",
                 context.Message.UserId);
+        }
+    }
+
+    /// <summary>
+    ///     A new arrival. Silent for the overwhelming majority of them: somebody with no PIU
+    ///     Scores account, or a server no community has designated, stops after one read.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ReconcileGuildMemberCommand> context)
+    {
+        var message = context.Message;
+        try
+        {
+            await _saga.ReconcileGuildMember(message.GuildId, message.DiscordUserId,
+                context.CancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Could not settle Discord roles for {DiscordUserId} joining {GuildId}",
+                message.DiscordUserId, message.GuildId);
         }
     }
 

@@ -129,6 +129,26 @@ public sealed class DiscordRoleTriggerTests
             Times.Never);
     }
 
+    [Fact]
+    public async Task SomebodyJoiningAServerIsSettledThere()
+    {
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new ReconcileGuildMemberCommand(900, 42)));
+
+        _roles.Verify(r => r.ReconcileGuildMember(900, 42, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AFailureSettlingANewArrivalDoesNotEscape()
+    {
+        _roles.Setup(r => r.ReconcileGuildMember(It.IsAny<ulong>(), It.IsAny<ulong>(),
+            It.IsAny<CancellationToken>())).ThrowsAsync(new TimeoutException("discord is down"));
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new ReconcileGuildMemberCommand(900, 42)));
+    }
+
     private static ConsumeContext<T> Message<T>(T message) where T : class
     {
         var context = new Mock<ConsumeContext<T>>();

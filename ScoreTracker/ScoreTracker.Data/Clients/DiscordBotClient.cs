@@ -122,7 +122,14 @@ public sealed class DiscordBotClient : IBotClient
         var state = new GatewayStateTracker();
         var client = new DiscordSocketClient(new DiscordSocketConfig
         {
-            LogLevel = LogSeverity.Info
+            LogLevel = LogSeverity.Info,
+            // GuildMembers is privileged and enabled on the application. It buys exactly one
+            // thing: being told when somebody joins a server, which is the only fact the Discord
+            // role feature needs that changes without telling us. AlwaysDownloadUsers stays OFF
+            // — the member-list download is the expensive half of that intent and nothing here
+            // needs it, since a single member is fetched by id over REST.
+            GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers,
+            AlwaysDownloadUsers = false
         });
 
         // Severity, source and exception all travel: the disconnect reason Discord.Net reports
