@@ -1696,6 +1696,9 @@
   <data name="Checked {0}" xml:space="preserve">
     <value>Comprobado el {0}</value>
   </data>
+  <data name="Checking roles" xml:space="preserve">
+    <value>Revisando roles</value>
+  </data>
   <data name="Choose a game card, then press Import again." xml:space="preserve">
     <value>Elige una tarjeta de juego y vuelve a presionar Importar.</value>
   </data>
@@ -8485,8 +8488,17 @@
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>tacaño al puntuar incluso pasado</value>
   </data>
+  <data name="Stop" xml:space="preserve">
+    <value>Parar</value>
+  </data>
   <data name="Stop one of this channel's feeds" xml:space="preserve">
     <value>Detén uno de los feeds de este canal</value>
+  </data>
+  <data name="Stopped. What it got through is already applied." xml:space="preserve">
+    <value>Parado. Lo que alcanzó a hacer ya está aplicado.</value>
+  </data>
+  <data name="Stopping is safe — the next check picks up where this one left off." xml:space="preserve">
+    <value>Parar es seguro: la próxima revisión sigue donde esta se quedó.</value>
   </data>
   <data name="Store" xml:space="preserve">
     <value>Guardar</value>
@@ -10264,6 +10276,9 @@
   <data name="Worked examples" xml:space="preserve">
     <value>Ejemplos resueltos</value>
   </data>
+  <data name="Working it out…" xml:space="preserve">
+    <value>Calculando…</value>
+  </data>
   <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
     <value>Calculando lo que movió esta sesión: tus títulos, tu pool y la posición de cada puntuación entre jugadores de tu nivel.</value>
   </data>
@@ -11280,6 +11295,9 @@
   </data>
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>{0} de {1} carpetas</value>
+  </data>
+  <data name="{0} of {1} members" xml:space="preserve">
+    <value>{0} de {1} miembros</value>
   </data>
   <data name="{0} of {1} members hold at least one role" xml:space="preserve">
     <value>{0} de {1} miembros tienen al menos un rol</value>

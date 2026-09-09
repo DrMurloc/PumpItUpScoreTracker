@@ -25,6 +25,15 @@ public sealed record RemoveCommunityTitleRoleCommand(Name CommunityName, string 
 [ExcludeFromCodeCoverage]
 public sealed record UnlinkCommunityDiscordServerCommand(Name CommunityName) : IRequest;
 
-/// <summary>The page's Check now button. Runs the same pass the hourly sweep runs, for one community.</summary>
+/// <summary>
+///     The page's Check now button — the same pass the nightly sweep runs, for one community, on
+///     demand. Returns how many members actually changed.
+///     <para>
+///         <paramref name="Progress" /> is reported as it walks, so the page can draw a real bar
+///         instead of a spinner: a big server is a minute of watching nothing otherwise. A MediatR
+///         request, never a bus message, so carrying a callback here is in-process and safe.
+///     </para>
+/// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record ReconcileCommunityDiscordRolesCommand(Name CommunityName) : IRequest<int>;
+public sealed record ReconcileCommunityDiscordRolesCommand(Name CommunityName,
+    IProgress<DiscordRoleProgress>? Progress = null) : IRequest<int>;

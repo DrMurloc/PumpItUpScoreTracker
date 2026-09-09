@@ -31,16 +31,6 @@ else
         @L["Give members a Discord role when they earn a Phoenix 2 title. Roles are kept in step automatically — nobody has to ask."]
     </MudText>
 
-    @* A pass writes to Discord one member at a time, so it takes a moment on a real community.
-       Something has to move while it does. *@
-    @if (_busy)
-    {
-        <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mb-2"></MudProgressLinear>
-        <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mb-3">
-            @L["Working through the members…"]
-        </MudText>
-    }
-
     @* The state every server invited before this feature is in: the bot holds no Manage Roles,
        which no amount of role reordering fixes. Shown only while that is actually true, so it
        retires itself as people re-add. *@
@@ -246,7 +236,14 @@ else
                     @L["A dry run of what's about to happen, so nothing lands as a surprise."]
                 </MudText>
 
-                @if (!_pending.Any())
+                @if (_previewLoading)
+                {
+                    <div class="d-flex align-center" style="gap:10px">
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">@L["Working it out…"]</MudText>
+                    </div>
+                }
+                else if (!_pending.Any())
                 {
                     <MudText Typo="Typo.body2" Class="mud-text-secondary">@L["Nothing to change."]</MudText>
                 }
@@ -344,6 +341,28 @@ else
     </DialogActions>
 </MudDialog>
 
+@* ---------------- progress ---------------- *@
+@* Deterministic on purpose: the reconcile knows its whole work list before the first write, so
+   the bar starts at a real denominator. A spinner on a five-hundred-member server is a minute of
+   watching nothing. Not dismissable — Cancel is the way out, and it leaves a half-finished pass,
+   which is safe because reconciling is idempotent and the next pass picks up where this stopped. *@
+<MudDialog @bind-Visible="_showProgress" Options="_blockingDialog">
+    <TitleContent><MudText Typo="Typo.h6">@L["Checking roles"]</MudText></TitleContent>
+    <DialogContent>
+        <MudProgressLinear Color="Color.Primary" Size="Size.Large" Striped="true"
+                           Value="@(_progress?.Percent ?? 0)" Class="mb-3"/>
+        <MudText Typo="Typo.body2">
+            @L["{0} of {1} members", _progress?.Done ?? 0, _progress?.Total ?? 0]
+        </MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+            @L["Stopping is safe — the next check picks up where this one left off."]
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CancelCheck">@L["Stop"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @* ---------------- change-server dialog ---------------- *@
 <MudDialog @bind-Visible="_showUnlink" Options="_dialogOptions">
     <TitleContent><MudText Typo="Typo.h6">@L["Change server"]</MudText></TitleContent>
@@ -394,6 +413,17 @@ else
 
     private bool _showUnlink;
 
+    private readonly DialogOptions _blockingDialog = new()
+    {
+        MaxWidth = MaxWidth.ExtraSmall, FullWidth = true,
+        BackdropClick = false, CloseOnEscapeKey = false
+    };
+
+    private bool _showProgress;
+    private DiscordRoleProgress? _progress;
+    private CancellationTokenSource? _checking;
+    private bool _previewLoading;
+
     private bool CanSaveNew =>
         !string.IsNullOrWhiteSpace(_newTitle) && _newRole is { CanAssign: true };
 
@@ -428,12 +458,8 @@ else
             };
 
             if (_view.ViewerCanManage && _view.Server != null)
-            {
                 _assignableRoles = await Mediator.Send(
                     new GetCommunityDiscordRolesQuery(_view.CommunityName));
-                _pending = await Mediator.Send(
-                    new GetCommunityDiscordPreviewQuery(_view.CommunityName));
-            }
         }
         catch (Exception)
         {
@@ -441,6 +467,33 @@ else
         }
 
         _loading = false;
+
+        // The dry run reads the whole server, which is the slowest thing this page does. Paint
+        // first and fill it in — the rest of the page is usable while it works.
+        await LoadPreview();
+    }
+
+    private async Task LoadPreview()
+    {
+        if (_view is not { ViewerCanManage: true, Server: not null })
+        {
+            _pending = Array.Empty<DiscordRoleChangeRecord>();
+            return;
+        }
+
+        _previewLoading = true;
+        StateHasChanged();
+        try
+        {
+            _pending = await Mediator.Send(new GetCommunityDiscordPreviewQuery(_view.CommunityName));
+        }
+        catch (Exception)
+        {
+            _pending = Array.Empty<DiscordRoleChangeRecord>();
+        }
+
+        _previewLoading = false;
+        StateHasChanged();
     }
 
     private Task<IEnumerable<string>> SearchTitles(string? value, CancellationToken token)
@@ -519,24 +572,50 @@ else
     private async Task CheckNow()
     {
         if (_view == null) return;
+
+        _progress = null;
+        _showProgress = true;
         _busy = true;
+        _checking = new CancellationTokenSource();
+
+        // Progress arrives off the render thread, so every report has to be marshalled back onto
+        // the circuit's dispatcher before it touches the UI.
+        var report = new Progress<DiscordRoleProgress>(p =>
+            _ = InvokeAsync(() =>
+            {
+                _progress = p;
+                StateHasChanged();
+            }));
+
         try
         {
             var changed = await Mediator.Send(
-                new ReconcileCommunityDiscordRolesCommand(_view.CommunityName));
+                new ReconcileCommunityDiscordRolesCommand(_view.CommunityName, report), _checking.Token);
             Snackbar.Add(changed == 0
                     ? L["Everyone already has the right roles."].Value
                     : L["Updated {0} members.", changed].Value,
                 changed == 0 ? Severity.Info : Severity.Success);
         }
+        catch (OperationCanceledException)
+        {
+            Snackbar.Add(L["Stopped. What it got through is already applied."].Value, Severity.Info);
+        }
         catch (Exception)
         {
             Snackbar.Add(L["Could not reach Discord just now."].Value, Severity.Error);
         }
+        finally
+        {
+            _showProgress = false;
+            _busy = false;
+            _checking?.Dispose();
+            _checking = null;
+        }
 
-        _busy = false;
         await Load();
     }
+
+    private void CancelCheck() => _checking?.Cancel();
 
     private async Task Run(IRequest command, string errorMessage)
     {

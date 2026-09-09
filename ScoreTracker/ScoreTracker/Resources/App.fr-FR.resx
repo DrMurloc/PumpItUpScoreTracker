@@ -1706,6 +1706,9 @@
   <data name="Checked {0}" xml:space="preserve">
     <value>Vérifié le {0}</value>
   </data>
+  <data name="Checking roles" xml:space="preserve">
+    <value>Vérification des rôles</value>
+  </data>
   <data name="Choose a game card, then press Import again." xml:space="preserve">
     <value>Choisissez une carte de jeu, puis appuyez de nouveau sur Importer.</value>
   </data>
@@ -8541,8 +8544,17 @@
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>avare en score même une fois passé</value>
   </data>
+  <data name="Stop" xml:space="preserve">
+    <value>Arrêter</value>
+  </data>
   <data name="Stop one of this channel's feeds" xml:space="preserve">
     <value>Arrêtez l'un des flux de ce salon</value>
+  </data>
+  <data name="Stopped. What it got through is already applied." xml:space="preserve">
+    <value>Arrêté. Ce qui a été fait est déjà appliqué.</value>
+  </data>
+  <data name="Stopping is safe — the next check picks up where this one left off." xml:space="preserve">
+    <value>Arrêter ne pose aucun problème — la prochaine vérification reprend où celle-ci s'est arrêtée.</value>
   </data>
   <data name="Store" xml:space="preserve">
     <value>Enregistrer</value>
@@ -10326,6 +10338,9 @@
   <data name="Worked examples" xml:space="preserve">
     <value>Exemples calculés</value>
   </data>
+  <data name="Working it out…" xml:space="preserve">
+    <value>Calcul en cours…</value>
+  </data>
   <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
     <value>Calcul de ce que cette session a changé : vos titres, votre pool, et la place de chaque score parmi les joueurs de votre niveau.</value>
   </data>
@@ -11347,6 +11362,9 @@
   </data>
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>{0} sur {1} dossiers</value>
+  </data>
+  <data name="{0} of {1} members" xml:space="preserve">
+    <value>{0} membres sur {1}</value>
   </data>
   <data name="{0} of {1} members hold at least one role" xml:space="preserve">
     <value>{0} membres sur {1} ont au moins un rôle</value>

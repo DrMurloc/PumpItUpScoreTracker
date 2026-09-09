@@ -1696,6 +1696,9 @@
   <data name="Checked {0}" xml:space="preserve">
     <value>Verificado em {0}</value>
   </data>
+  <data name="Checking roles" xml:space="preserve">
+    <value>Verificando cargos</value>
+  </data>
   <data name="Choose a game card, then press Import again." xml:space="preserve">
     <value>Escolha um cartão de jogo e aperte Importar de novo.</value>
   </data>
@@ -8485,8 +8488,17 @@
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>avarento na pontuação mesmo depois de passar</value>
   </data>
+  <data name="Stop" xml:space="preserve">
+    <value>Parar</value>
+  </data>
   <data name="Stop one of this channel's feeds" xml:space="preserve">
     <value>Pare um dos feeds deste canal</value>
+  </data>
+  <data name="Stopped. What it got through is already applied." xml:space="preserve">
+    <value>Parado. O que já foi feito continua aplicado.</value>
+  </data>
+  <data name="Stopping is safe — the next check picks up where this one left off." xml:space="preserve">
+    <value>Parar é seguro — a próxima verificação continua de onde esta parou.</value>
   </data>
   <data name="Store" xml:space="preserve">
     <value>Guardar</value>
@@ -10264,6 +10276,9 @@
   <data name="Worked examples" xml:space="preserve">
     <value>Exemplos resolvidos</value>
   </data>
+  <data name="Working it out…" xml:space="preserve">
+    <value>Calculando…</value>
+  </data>
   <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
     <value>Calculando o que esta sessão moveu: seus títulos, seu pool e a posição de cada pontuação entre jogadores do seu nível.</value>
   </data>
@@ -11280,6 +11295,9 @@
   </data>
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>{0} de {1} pastas</value>
+  </data>
+  <data name="{0} of {1} members" xml:space="preserve">
+    <value>{0} de {1} membros</value>
   </data>
   <data name="{0} of {1} members hold at least one role" xml:space="preserve">
     <value>{0} de {1} membros têm pelo menos um cargo</value>

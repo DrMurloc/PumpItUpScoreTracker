@@ -11,6 +11,7 @@ using ScoreTracker.Communities.Contracts.Messages;
 using ScoreTracker.Communities.Domain;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Identity.Contracts.Events;
 using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.SharedKernel.Enums;
 using Xunit;
@@ -157,6 +158,34 @@ public sealed class DiscordRoleTriggerTests
         await consumer.Consume(Message(new SweepDiscordRolesCommand()));
 
         _roles.Verify(r => r.SweepAll(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     The one change nothing else reported. Standing granted off the back of a linked account
+    ///     must not outlive the link — before this, the roles stood until the next sweep.
+    /// </summary>
+    [Fact]
+    public async Task UnlinkingDiscordSettlesTheAccountAtOnce()
+    {
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new ExternalLoginRemovedEvent(UserId, "Discord")));
+
+        _roles.Verify(r => r.ReconcileUserEverywhere(UserId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>Unlinking Google says nothing about Discord roles.</summary>
+    [Theory]
+    [InlineData("Google")]
+    [InlineData("PiuGame")]
+    public async Task UnlinkingAnotherProviderIsIgnored(string provider)
+    {
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new ExternalLoginRemovedEvent(UserId, provider)));
+
+        _roles.Verify(r => r.ReconcileUserEverywhere(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     private static ConsumeContext<T> Message<T>(T message) where T : class

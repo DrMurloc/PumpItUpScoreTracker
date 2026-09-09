@@ -179,7 +179,7 @@ internal sealed class DiscordRoleAdminSaga :
     {
         var (_, communityId) = await Load(request.CommunityName, cancellationToken);
         await EnsureCanManage(request.CommunityName, cancellationToken);
-        return await _discordRoles.ReconcileCommunity(communityId, cancellationToken);
+        return await _discordRoles.ReconcileCommunity(communityId, cancellationToken, request.Progress);
     }
 
     // ---- helpers ----------------------------------------------------------------------------

@@ -426,6 +426,28 @@ public sealed class DiscordRoleSagaTests
             Times.Never);
     }
 
+    /// <summary>
+    ///     The bar is deterministic because the work list is known before the first write. A
+    ///     progress report that only ever grew its own denominator would be a spinner with numbers
+    ///     on it.
+    /// </summary>
+    [Fact]
+    public async Task ASweepReportsItsWholeWorkListBeforeItStarts()
+    {
+        InCommunity(CommunityRole.Member);
+        var reports = new List<DiscordRoleProgress>();
+
+        await Saga().ReconcileCommunity(CommunityId, CancellationToken.None,
+            new Progress<DiscordRoleProgress>(reports.Add));
+
+        // Progress<T> posts to the sync context, so drain it before asserting.
+        await Task.Delay(50);
+        Assert.NotEmpty(reports);
+        Assert.Equal(0, reports[0].Done);
+        Assert.All(reports, r => Assert.Equal(reports[0].Total, r.Total));
+        Assert.Equal(reports[0].Total, reports[^1].Done);
+    }
+
     [Fact]
     public async Task RevokingAllTakesEveryManagedRoleAndForgetsTheCommunity()
     {

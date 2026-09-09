@@ -12,6 +12,16 @@ public sealed record CommunityDiscordServerRecord(Guid CommunityId, ulong GuildI
 [ExcludeFromCodeCoverage]
 public sealed record CommunityTitleRoleRecord(string TitleName, ulong RoleId);
 
+/// <summary>
+///     How far a reconcile has got. <see cref="Total" /> is known before the first write, so the
+///     bar is deterministic from the outset rather than filling in as it goes.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record DiscordRoleProgress(int Done, int Total)
+{
+    public int Percent => Total == 0 ? 100 : (int)(100L * Done / Total);
+}
+
 /// <summary>A member we have granted roles for, and the Discord account we granted against.</summary>
 [ExcludeFromCodeCoverage]
 public sealed record CommunityDiscordGrantRecord(Guid CommunityId, Guid UserId, ulong DiscordUserId,

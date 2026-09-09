@@ -1696,6 +1696,9 @@
   <data name="Checked {0}" xml:space="preserve">
     <value>{0}에 확인함</value>
   </data>
+  <data name="Checking roles" xml:space="preserve">
+    <value>역할 확인 중</value>
+  </data>
   <data name="Choose a game card, then press Import again." xml:space="preserve">
     <value>게임 카드를 선택한 다음 가져오기를 다시 누르세요.</value>
   </data>
@@ -8485,8 +8488,17 @@
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>클리어해도 점수는 짜게 나옵니다</value>
   </data>
+  <data name="Stop" xml:space="preserve">
+    <value>중단</value>
+  </data>
   <data name="Stop one of this channel's feeds" xml:space="preserve">
     <value>이 채널의 피드 중단</value>
+  </data>
+  <data name="Stopped. What it got through is already applied." xml:space="preserve">
+    <value>중단했습니다. 처리된 부분은 이미 적용되었습니다.</value>
+  </data>
+  <data name="Stopping is safe — the next check picks up where this one left off." xml:space="preserve">
+    <value>중단해도 안전합니다 — 다음 확인이 멈춘 지점부터 이어서 진행합니다.</value>
   </data>
   <data name="Store" xml:space="preserve">
     <value>저장</value>
@@ -10264,6 +10276,9 @@
   <data name="Worked examples" xml:space="preserve">
     <value>계산 예시</value>
   </data>
+  <data name="Working it out…" xml:space="preserve">
+    <value>계산 중…</value>
+  </data>
   <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
     <value>이 세션이 무엇을 움직였는지 계산 중 — 칭호, 풀, 그리고 동급 플레이어 사이에서 각 점수의 위치.</value>
   </data>
@@ -11280,6 +11295,9 @@
   </data>
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>폴더 {1}개 중 {0}개</value>
+  </data>
+  <data name="{0} of {1} members" xml:space="preserve">
+    <value>{1}명 중 {0}명</value>
   </data>
   <data name="{0} of {1} members hold at least one role" xml:space="preserve">
     <value>멤버 {1}명 중 {0}명이 역할을 하나 이상 보유</value>

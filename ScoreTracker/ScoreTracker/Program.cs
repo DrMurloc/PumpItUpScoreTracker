@@ -474,10 +474,12 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     // minutes the consumer checks how long the socket has been down and replaces the client past
     // five, so a dead gateway is answered within seven minutes instead of at the next app restart.
     ("check-discord-gateway",            r => r.PublishCheckDiscordGateway(),             "*/2 * * * *"),
-    // Community Discord roles. Every trigger that grants one is event-driven; this is what
-    // catches the two changes nothing reports (an unlinked Discord, a missed join) and anything
-    // the in-memory bus dropped. A pass with nothing to fix reads and writes nothing.
-    ("sweep-discord-roles",              r => r.PublishSweepDiscordRoles(),               "17 * * * *"),
+    // Community Discord roles. Every trigger that grants one is event-driven and the page has a
+    // Check now button, so this is a backstop rather than the mechanism: it catches a join the
+    // gateway missed and anything the in-memory bus dropped. Nightly rather than hourly (owner,
+    // 2026-09-09) because a pass downloads each server's roster, and paying that twenty-four times
+    // a day to almost always find nothing is traffic nobody asked for.
+    ("sweep-discord-roles",              r => r.PublishSweepDiscordRoles(),               "40 4 * * *"),
     ("prune-webhook-deliveries",         r => r.PublishPruneWebhookDeliveries(),          "0 8 * * *"),  // 08:00 UTC — 7-day bodies, 14-day activity log
     // Refills every account's deep-scan balance on the 1st. One UPDATE across the User table; an
     // unused allowance does not roll over.

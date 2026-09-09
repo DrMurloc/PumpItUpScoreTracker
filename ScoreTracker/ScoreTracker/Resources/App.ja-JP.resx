@@ -1706,6 +1706,9 @@
   <data name="Checked {0}" xml:space="preserve">
     <value>{0} に確認</value>
   </data>
+  <data name="Checking roles" xml:space="preserve">
+    <value>ロールを確認中</value>
+  </data>
   <data name="Choose a game card, then press Import again." xml:space="preserve">
     <value>ゲームカードを選んでから、もう一度インポートを押してください。</value>
   </data>
@@ -8542,8 +8545,17 @@
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>クリアしてもスコアは渋い</value>
   </data>
+  <data name="Stop" xml:space="preserve">
+    <value>中断</value>
+  </data>
   <data name="Stop one of this channel's feeds" xml:space="preserve">
     <value>このチャンネルのフィードを停止</value>
+  </data>
+  <data name="Stopped. What it got through is already applied." xml:space="preserve">
+    <value>中断しました。処理済みの分はすでに反映されています。</value>
+  </data>
+  <data name="Stopping is safe — the next check picks up where this one left off." xml:space="preserve">
+    <value>中断しても安全です — 次の確認が続きから再開します。</value>
   </data>
   <data name="Store" xml:space="preserve">
     <value>保存</value>
@@ -10327,6 +10339,9 @@
   <data name="Worked examples" xml:space="preserve">
     <value>計算例</value>
   </data>
+  <data name="Working it out…" xml:space="preserve">
+    <value>計算中…</value>
+  </data>
   <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
     <value>このセッションが動かしたものを計算中 — 称号、プール、そして同レベル帯での各スコアの位置。</value>
   </data>
@@ -11348,6 +11363,9 @@
   </data>
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>{1} 中 {0} フォルダ</value>
+  </data>
+  <data name="{0} of {1} members" xml:space="preserve">
+    <value>{1} 人中 {0} 人</value>
   </data>
   <data name="{0} of {1} members hold at least one role" xml:space="preserve">
     <value>{1} 人中 {0} 人が少なくとも 1 つのロールを持っています</value>

@@ -1706,6 +1706,9 @@
   <data name="Checked {0}" xml:space="preserve">
     <value>Murgl {0}</value>
   </data>
+  <data name="Checking roles" xml:space="preserve">
+    <value>Mrglurg roglubrgl</value>
+  </data>
   <data name="Choose a game card, then press Import again." xml:space="preserve">
     <value>Arglro gro glorgargl mrpmorg, mrplurg urgglorg Glorggl morgro.</value>
   </data>
@@ -8542,8 +8545,17 @@
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>murpmurp grgl mrglrgl mrpplgl mrpgrrgl rglplgl</value>
   </data>
+  <data name="Stop" xml:space="preserve">
+    <value>Grorp</value>
+  </data>
   <data name="Stop one of this channel's feeds" xml:space="preserve">
     <value>Roglorg argl mrgl grglmrp mrmrglgro glorgmorg</value>
+  </data>
+  <data name="Stopped. What it got through is already applied." xml:space="preserve">
+    <value>Grorp. Algro mrp grabmurp mrogl bam.</value>
+  </data>
+  <data name="Stopping is safe — the next check picks up where this one left off." xml:space="preserve">
+    <value>Grorp mrogl marglub — murgbam mrglurg grabmurp blarg mrp grorp.</value>
   </data>
   <data name="Store" xml:space="preserve">
     <value>Morgmrgl</value>
@@ -10327,6 +10339,9 @@
   <data name="Worked examples" xml:space="preserve">
     <value>Grumbo grumbo</value>
   </data>
+  <data name="Working it out…" xml:space="preserve">
+    <value>Grabmurp…</value>
+  </data>
   <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
     <value>Glorgmurp murp gapla urgblarg mrglaba — blub maglurp, blub grolba, mrgl brolgo malgo glorgmurprolba maglmurp blub mrgloo.</value>
   </data>
@@ -11348,6 +11363,9 @@
   </data>
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>{0} mrgl {1} blargblgrlmurp</value>
+  </data>
+  <data name="{0} of {1} members" xml:space="preserve">
+    <value>{0} ub {1} grogmurgl</value>
   </data>
   <data name="{0} of {1} members hold at least one role" xml:space="preserve">
     <value>{0} ub {1} grogmurgl mrogl mrp roglub</value>

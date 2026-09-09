@@ -17,9 +17,11 @@ internal interface IDiscordRoleService
 
     /// <summary>
     ///     Settles a whole community: every member, plus everyone it still holds a grant for.
-    ///     Returns how many people actually changed.
+    ///     Returns how many people actually changed. <paramref name="progress" /> is reported once
+    ///     the work list is known and again after each member, so a caller can draw a real bar.
     /// </summary>
-    Task<int> ReconcileCommunity(Guid communityId, CancellationToken cancellationToken);
+    Task<int> ReconcileCommunity(Guid communityId, CancellationToken cancellationToken,
+        IProgress<DiscordRoleProgress>? progress = null);
 
     /// <summary>Settles somebody who just walked into a server, in every community that uses it.</summary>
     Task ReconcileGuildMember(ulong guildId, ulong discordUserId, CancellationToken cancellationToken);

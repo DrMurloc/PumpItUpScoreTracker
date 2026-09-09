@@ -88,25 +88,38 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
     ///     second half is the point: somebody who left, was banned, or unlinked their Discord is no
     ///     longer in the roster, so a roster-only pass would leave their roles standing forever.
     /// </summary>
-    public async Task<int> ReconcileCommunity(Guid communityId, CancellationToken cancellationToken)
+    public async Task<int> ReconcileCommunity(Guid communityId, CancellationToken cancellationToken,
+        IProgress<DiscordRoleProgress>? progress = null)
     {
         var context = await BuildContext(communityId, cancellationToken, wholeCommunity: true);
-        if (context == null) return 0;
+        if (context == null)
+        {
+            progress?.Report(new DiscordRoleProgress(0, 0));
+            return 0;
+        }
 
         var granted = (await _roles.GetGrants(communityId, cancellationToken))
             .ToDictionary(g => g.UserId, g => g.DiscordUserId);
         var candidates = context.LinkedMembers.Keys.Concat(context.Members.Keys)
             .Concat(granted.Keys).Distinct().ToArray();
 
+        // Reported before the first write, so the bar starts at a real denominator rather than
+        // growing one.
+        var done = 0;
+        progress?.Report(new DiscordRoleProgress(done, candidates.Length));
+
         var changed = 0;
         foreach (var userId in candidates)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             // A member who unlinked has no login left, so the grant row is the only surviving
             // handle on the account we granted against — and the only way to take it back.
             var snowflake = context.LinkedMembers.TryGetValue(userId, out var linked)
                 ? linked
                 : granted.TryGetValue(userId, out var previous) ? previous : (ulong?)null;
             if (await ReconcileMember(context, userId, snowflake, cancellationToken)) changed++;
+            progress?.Report(new DiscordRoleProgress(++done, candidates.Length));
         }
 
         return changed;

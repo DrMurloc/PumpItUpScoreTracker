@@ -1,6 +1,7 @@
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Communities.Contracts.Messages;
+using ScoreTracker.Identity.Contracts.Events;
 using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.SharedKernel.Enums;
 
@@ -16,6 +17,7 @@ namespace ScoreTracker.Communities.Application;
 ///     </para>
 /// </summary>
 internal sealed class DiscordRoleConsumer : IConsumer<ReconcileDiscordRolesCommand>,
+    IConsumer<ExternalLoginRemovedEvent>,
     IConsumer<SweepDiscordRolesCommand>,
     IConsumer<ReconcileGuildMemberCommand>,
     IConsumer<PlayerTitlesChangedEvent>
@@ -47,7 +49,26 @@ internal sealed class DiscordRoleConsumer : IConsumer<ReconcileDiscordRolesComma
         }
     }
 
-    /// <summary>The hourly backstop. See <see cref="SweepDiscordRolesCommand" />.</summary>
+    /// <summary>
+    ///     Somebody unlinked a sign-in. Only Discord matters here: a role granted off the back of
+    ///     a linked account must not outlive the link, and this is the one change nothing else
+    ///     reports — without it the roles stand until the nightly sweep.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ExternalLoginRemovedEvent> context)
+    {
+        if (!context.Message.LoginProviderName.Equals(DiscordRoleSaga.DiscordProvider,
+                StringComparison.OrdinalIgnoreCase)) return;
+        try
+        {
+            await _saga.ReconcileUserEverywhere(context.Message.UserId, context.CancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Could not settle Discord roles after {UserId} unlinked", context.Message.UserId);
+        }
+    }
+
+    /// <summary>The nightly backstop. See <see cref="SweepDiscordRolesCommand" />.</summary>
     public async Task Consume(ConsumeContext<SweepDiscordRolesCommand> context)
     {
         try
