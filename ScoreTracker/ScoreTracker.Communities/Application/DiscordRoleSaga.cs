@@ -106,8 +106,7 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
 
         var granted = (await _roles.GetGrants(communityId, cancellationToken))
             .ToDictionary(g => g.UserId, g => g.DiscordUserId);
-        var candidates = context.LinkedMembers.Keys.Concat(context.Members.Keys)
-            .Concat(granted.Keys).Distinct().ToArray();
+        var candidates = Candidates(context, granted.Keys);
 
         // Reported before the first write, so the bar starts at a real denominator rather than
         // growing one.
@@ -157,8 +156,7 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         var names = context.Mappings.ToDictionary(m => m.RoleId, m => m.TitleName);
         var granted = (await _roles.GetGrants(communityId, cancellationToken))
             .ToDictionary(g => g.UserId, g => g.DiscordUserId);
-        var candidates = context.LinkedMembers.Keys.Concat(context.Members.Keys)
-            .Concat(granted.Keys).Distinct();
+        var candidates = Candidates(context, granted.Keys);
 
         var pending = new List<DiscordRolePlanRecord>();
         foreach (var userId in candidates)
@@ -569,6 +567,20 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
             return roster.TryGetValue(discordUserId, out var held) ? held : null;
         return await _bot.GetMemberRoles(context.GuildId, discordUserId, cancellationToken);
     }
+
+    /// <summary>
+    ///     Who a pass could possibly change: members with a Discord account linked, plus anyone we
+    ///     still hold a grant for.
+    ///     <para>
+    ///         Members with no linked Discord are deliberately NOT here. They resolve to no
+    ///         snowflake, which yields no plan, and with no grant row there is nothing to forget —
+    ///         a guaranteed no-op. Including them cost nothing per head but made the work list the
+    ///         whole roster, which on World is every account on the site: a progress bar reading
+    ///         "12 of 14,000" while it does almost nothing.
+    ///     </para>
+    /// </summary>
+    private static Guid[] Candidates(ReconcileContext context, IEnumerable<Guid> granted) =>
+        context.LinkedMembers.Keys.Concat(granted).Distinct().ToArray();
 
     private static bool IsMember(ReconcileContext context, Guid userId) =>
         context.Members.TryGetValue(userId, out var role) && role != CommunityRole.Banned;

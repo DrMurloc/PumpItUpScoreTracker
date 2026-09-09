@@ -613,6 +613,47 @@ public sealed class DiscordRoleSagaTests
         Assert.Equal(1, reports[0].Total);
     }
 
+    /// <summary>
+    ///     A member with no Discord linked and no grant row cannot be changed by a pass, so they
+    ///     are not on its work list. On World — every account on the site — carrying them made the
+    ///     progress bar read "12 of 14,000" while it did almost nothing.
+    /// </summary>
+    [Fact]
+    public async Task TheWorkListSkipsMembersAPassCouldNotPossiblyChange()
+    {
+        var unlinked = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        _communities.Setup(c => c.GetMemberRoles(CommunityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new CommunityMemberRoleRecord(UserId, CommunityRole.Member),
+                new CommunityMemberRoleRecord(unlinked, CommunityRole.Member)
+            });
+
+        var reports = new List<DiscordRoleProgress>();
+        await Saga().ReconcileCommunity(CommunityId, CancellationToken.None,
+            new Progress<DiscordRoleProgress>(reports.Add));
+
+        await Task.Delay(50);
+        Assert.Equal(1, reports[0].Total);
+    }
+
+    /// <summary>
+    ///     Dropping them from the work list must not drop them from the RULE: somebody who left
+    ///     the community is reached through their grant row, not the roster.
+    /// </summary>
+    [Fact]
+    public async Task SomebodyWhoLeftIsStillOnTheWorkList()
+    {
+        InCommunity(null);
+        AlreadyHolds(BronzeRole);
+        _roles.Setup(r => r.GetGrants(CommunityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new CommunityDiscordGrantRecord(CommunityId, UserId, Snowflake, Now) });
+
+        await Saga().ReconcileCommunity(CommunityId, CancellationToken.None);
+
+        VerifyRevoked(BronzeRole, Times.Once());
+    }
+
     [Fact]
     public async Task RevokingAllTakesEveryManagedRoleAndForgetsTheCommunity()
     {

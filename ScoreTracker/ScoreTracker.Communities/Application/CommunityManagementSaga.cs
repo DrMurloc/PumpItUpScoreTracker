@@ -112,6 +112,13 @@ internal sealed class CommunityManagementSaga :
         if (community.RoleOf(_currentUser.User.Id) != CommunityRole.Creator)
             throw new CommunityPermissionException("Only the creator may delete the community.");
 
+        // World and the country communities are the site's, not a player's. Nothing used to guard
+        // this because they had no owner and so had no Creator — but naming somebody on the row is
+        // now a legitimate thing to do (it is how the official Discord gets its title roles), and
+        // that made the delete button appear on a community holding every account on the site.
+        if (SystemCommunities.IsSystem(community.Name, community.IsRegional))
+            throw new CommunityPermissionException("This community belongs to the site and can't be deleted.");
+
         // Hand the Discord roles back BEFORE the club goes: the mappings say which roles are ours
         // to take, and a moment later they will not exist. Inline rather than published for the
         // same reason — there is no second chance once the rows are gone.

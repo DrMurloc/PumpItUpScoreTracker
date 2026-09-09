@@ -55,6 +55,7 @@ Owner calls from the 2026-09-09 workshop.
 | D16 | **The sweep is nightly, and a backstop rather than the mechanism** (owner, 2026-09-09). Everything it does, the page's **Check now** does on demand — so it exists for a join the gateway missed and for anything the in-memory bus dropped, not for correctness. Hourly was paying for a roster download twenty-four times a day to almost always find nothing. |
 | D17 | **Unlinking Discord publishes an event.** It was the one change nothing reported, so roles granted off the back of a sign-in outlived it until a sweep noticed. `ExternalLoginRemovedEvent` makes it immediate, which is what let the sweep drop to nightly without leaving a silent case. |
 | D19 | **Linking Discord publishes one too.** The mirror of D17, and the same reason: linking is the LAST step of ordinary onboarding — the community join happens before there is a Discord account, the server join before there is a site account to find — so it was the one step that fired nothing, leaving the player on a nightly sweep they cannot trigger (Check now is admin-only). |
+| D20 | **A system community may be owned, but never deleted.** World and the ninety-odd country communities are auto-joined and site-owned, and nothing guarded deletion because being ownerless left them with no Creator. Naming somebody on the row is a legitimate thing to do — it is how the official Discord gets its title roles — so the guard is explicit now (owner, 2026-09-09). Without it, World carrying every account on the site was one confirm from deletion. |
 
 ---
 
@@ -82,6 +83,11 @@ holds(user, role) ⟺  ∃ mapping (community → title → role)
 | Discord account linked | `IUserReader.GetExternalLogins` | link on `/Account`; unlink publishes `ExternalLoginRemovedEvent` (D17); account purge |
 | in the server | `IBotClient.GetMemberRoles` returns non-null | joins, leaves, kicked, banned |
 | holds the title | `ITitleRepository.GetCompletedTitles` | a score import earns one |
+
+A pass's work list is **members with Discord linked, plus anyone we still hold a grant for** — not
+the whole roster. A member with neither resolves to no account and no plan, so visiting them is a
+guaranteed no-op; carrying them made the work list every account on the site for World, and a
+progress bar that read "12 of 14,000" while doing nothing.
 
 Only one of those — **joining the server** — changes outside the system without telling us. That is
 the fact the Server Members intent exists to catch, and the sweep is the backstop for it.

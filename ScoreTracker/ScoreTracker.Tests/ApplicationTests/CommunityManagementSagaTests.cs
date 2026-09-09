@@ -243,4 +243,28 @@ public sealed class CommunityManagementSagaTests
 
         Assert.Equal(Name.From("Acme"), names[communityId]);
     }
+
+    /// <summary>
+    ///     World and the country communities are the site's. Nothing used to guard this because
+    ///     they had no owner and so had no Creator — but naming somebody on the row is now a
+    ///     legitimate thing to do (it is how the official Discord gets its title roles), which put
+    ///     a delete button on a community holding every account on the site.
+    /// </summary>
+    [Theory]
+    [InlineData("World", false)]
+    [InlineData("Japan", true)]
+    public async Task ASystemCommunityCannotBeDeletedEvenByItsOwner(string name, bool isRegional)
+    {
+        var creator = Guid.NewGuid();
+        GivenCommunity(new Community(Name.From(name), creator, CommunityPrivacyType.Public,
+            new[] { new CommunityMember(creator, CommunityRole.Creator, CommunityPermission.All, null, null) },
+            Array.Empty<Community.ChannelConfiguration>(), new Dictionary<Guid, DateOnly?>(), isRegional,
+            CommunityPermission.None, null));
+
+        await Assert.ThrowsAsync<CommunityPermissionException>(() =>
+            Build(creator).Handle(new DeleteCommunityCommand(Name.From(name)), CancellationToken.None));
+
+        _communities.Verify(c => c.DeleteCommunity(It.IsAny<Name>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
 }
