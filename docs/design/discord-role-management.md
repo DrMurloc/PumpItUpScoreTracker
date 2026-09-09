@@ -1,6 +1,6 @@
 # Discord role management — design
 
-> **Status: building.** Workshopped 2026-09-09, one PR.
+> **Status: BUILT.** Workshopped and built 2026-09-09, one PR, 14 commits.
 >
 > Mock (owner-approved): <https://claude.ai/code/artifact/c143bfe5-cff8-4b9a-b878-665a1aac8197>
 
@@ -76,7 +76,7 @@ holds(user, role) ⟺  ∃ mapping (community → title → role)
 | member of the community | `Community.MemberIds` / `RoleOf` | join, leave, ban, unban, community deleted |
 | the mapping exists | `CommunityTitleRole` | an admin edits the table |
 | a server is designated | `CommunityDiscordServer` | `/piu link-server`, change, unlink |
-| Discord account linked | `IUserRepository.GetExternalLogins` | link on `/Account`, unlink, account purge |
+| Discord account linked | `IUserReader.GetExternalLogins` | link on `/Account`, unlink, account purge |
 | in the server | `IBotClient.GetMemberRoles` returns non-null | joins, leaves, kicked, banned |
 | holds the title | `ITitleRepository.GetCompletedTitles` | a score import earns one |
 
@@ -276,3 +276,67 @@ Domain port it can see, and the one cross-vertical event rides a reference that 
 1. **Re-run the bot invite URL** on every server that already has the bot, or grant its role Manage
    Roles by hand. Existing installs do not gain the permission on their own (§5.3).
 2. The Server Members intent is already enabled on the application (owner, 2026-09-09).
+
+---
+
+## 9. As built
+
+Fourteen commits, docs first and localization last. Nothing in §1–§7 changed shape during the
+build; what follows is what the code learned on the way.
+
+### 9.1 Two corrections the build made to this document
+
+- **Exclusivity keys on the pool, not the rail.** `Title.Ladder` looked like the primitive and is
+  not: `Phoenix2TitleList` rails a pool as three bands plus a capstone, so grouping on it gives
+  *per-band* exclusivity and leaves `[S] ADVANCED LV.10` standing under `[S] EXPERT LV.1`.
+  `TitleExclusivity.GroupOf` keys on `Phoenix2PumbilityTitle.Pool`, and a test pins the two rails
+  apart so the mistake cannot be made again.
+- **The feature cannot be stateless.** §3.3 was written after finding that Identity's purge drops
+  `ExternalLoginEntity` on its first pass, right after an in-memory publish that returns on
+  dispatch — and that a roster sweep never visits somebody who left. `CommunityDiscordGrant` is the
+  answer to both.
+
+### 9.2 Shapes that emerged
+
+- **`IDiscordRoleService`** exists because `DiscordRoleSaga` is sealed and two callers need it in a
+  specific order relative to their own work (the purge, the community delete). Those orderings are
+  now asserted rather than hoped for.
+- **Plan and apply are separate.** `PlanMember` decides; `ReconcileMember` writes. The page's dry
+  run calls the planner, so a preview cannot promise something the real pass would not do — and the
+  plan carries the roles a member *earned* but the bot cannot hand over, which is what lets the page
+  name the silent failure on the row.
+- **Triggers publish, two paths do not.** Join, leave, ban and unban publish
+  `ReconcileDiscordRolesCommand` so nothing waits on Discord's REST API. The purge and the community
+  delete call in-process, because both must run before rows they depend on are gone.
+
+### 9.3 Ratchets that fired, and were right to
+
+| Ratchet | What it caught |
+|---|---|
+| `LayerDependencyTests` | `IUserRepository` injected into a vertical. The bulk external-login read moved to `IUserReader`; the reverse lookup sends Identity's existing query rather than growing a second port member. |
+| `CommunityTests` | The new `ManageDiscord` flag moving `All` 31 → 63. Adding a bit is safe where reordering is not. |
+| `MessageTaxonomyTests` | Two view records living in `Queries/`, which is for `*Query` types only. |
+| Command-tree localization | `/piu link-server`'s description with no translation. |
+| `MurlocValuesUseOnlyTheMurlocAlphabet` | `/piu` inside a translated string. A slash command is a literal — the page prints it as markup now. |
+
+### 9.4 The resx trap worth remembering
+
+A resx opens with the schema comment, and that comment contains **example `<data>` elements**
+(`Name1`, `Color1`, `Bitmap1`). An alphabetical insert that scans the file from the top can pick one
+of those as the neighbour and splice a real entry *inside the comment*, where `GenerateResource`
+never sees it and the UI silently renders the key name. Anchor the scan after the last
+`</resheader>`.
+
+### 9.5 Testing
+
+- `ScoreTracker.Tests/ApplicationTests` — the rule (22), the triggers and their two orderings (10),
+  the `/piu link-server` authorities (7).
+- `ScoreTracker.Tests/DomainTests` — exclusivity, including the band-vs-pool regression.
+- `ScoreTracker.Tests.Components` — the three server states, both silent failures, the preview.
+- `ScoreTracker.Tests.Integration` — the generic purge probe covers `CommunityDiscordGrant` the
+  moment it joined the manifest; no per-entity test code was needed.
+- `ScoreTracker.ExplorationTests/DiscordCanary/DiscordRoleCanaryTests` — the only test that WRITES a
+  role to real Discord. Owner-authorized against a throwaway role, gated on three extra secrets,
+  restores the starting state whether or not the assertions pass. It buys the three failures no
+  mocked suite can see: that the token carries Manage Roles, that the role sits below the bot, and
+  that a single member can be fetched by id.
