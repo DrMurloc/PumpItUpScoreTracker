@@ -25,6 +25,7 @@ public static class CommunitiesRegistrationExtensions
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddTransient<IContributionDeletionRepository, EFContributionDeletionRepository>();
         services.AddTransient<ICommunityHighlightRepository, EFCommunityHighlightRepository>();
+        services.AddTransient<IDiscordRoleRepository, EFDiscordRoleRepository>();
         services.AddSingleton<IDbModelContribution, CommunitiesModelContribution>();
         return services;
     }
