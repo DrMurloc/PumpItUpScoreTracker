@@ -3459,6 +3459,9 @@
   <data name="Hand over your communities first" xml:space="preserve">
     <value>Grumba obla polu</value>
   </data>
+  <data name="Handing out the role" xml:space="preserve">
+    <value>Grabmurp roglub</value>
+  </data>
   <data name="Hands" xml:space="preserve">
     <value>Mrpro</value>
   </data>
@@ -7372,6 +7375,9 @@
   <data name="Removed {0} for {1} from this channel." xml:space="preserve">
     <value>Grorpmorglurg {0} ro {1} romurg grglmrp glmurmblarg.</value>
   </data>
+  <data name="Removing the mapping" xml:space="preserve">
+    <value>Glubgrob murmargl</value>
+  </data>
   <data name="Rename" xml:space="preserve">
     <value>Glorggrgl</value>
   </data>
@@ -7525,6 +7531,9 @@
   </data>
   <data name="Role" xml:space="preserve">
     <value>Blargmorg</value>
+  </data>
+  <data name="Roles are handed out as they're earned. Only check if somebody says theirs is missing." xml:space="preserve">
+    <value>Roglubrgl grabmurp murgbam grabgro. Mrglurg ub murgbam grogmurgl blorp bo mrogl roglub.</value>
   </data>
   <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
     <value>Romagl murgl glgrgl mrp rmrgmrml, plgl mrpurgmrgl ro mrpmorg mrgrorp mr gromurp blgrlglorg, ro murmmurm gro mrmrp murmblub blarg mrp grorpro grglgro — argl mrp grogrorp — grorp urgblub mrp urgblgrl.</value>
@@ -8689,6 +8698,12 @@
   </data>
   <data name="Take this session off the board?" xml:space="preserve">
     <value>Molgab orgab ab morgab?</value>
+  </data>
+  <data name="Taking the role back" xml:space="preserve">
+    <value>Blarg roglub bagro</value>
+  </data>
+  <data name="Taking the roles back" xml:space="preserve">
+    <value>Blarg roglubrgl bagro</value>
   </data>
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Rglmrgl Murgmrmrpmagl</value>

@@ -3442,6 +3442,9 @@
   <data name="Hand over your communities first" xml:space="preserve">
     <value>Primeiro transfira suas comunidades</value>
   </data>
+  <data name="Handing out the role" xml:space="preserve">
+    <value>Distribuindo o cargo</value>
+  </data>
   <data name="Hands" xml:space="preserve">
     <value>Mãos</value>
   </data>
@@ -7330,6 +7333,9 @@
   <data name="Removed {0} for {1} from this channel." xml:space="preserve">
     <value>{0} para {1} removido deste canal.</value>
   </data>
+  <data name="Removing the mapping" xml:space="preserve">
+    <value>Removendo a associação</value>
+  </data>
   <data name="Rename" xml:space="preserve">
     <value>Renomear</value>
   </data>
@@ -7482,6 +7488,9 @@
   </data>
   <data name="Role" xml:space="preserve">
     <value>Cargo</value>
+  </data>
+  <data name="Roles are handed out as they're earned. Only check if somebody says theirs is missing." xml:space="preserve">
+    <value>Os cargos são dados conforme são conquistados. Verifique só se alguém disser que o dele está faltando.</value>
   </data>
   <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
     <value>Sorteie charts com o randomizer, rode brackets e drafts de cartas no seu local, e compartilhe uma visão ao vivo para que todo o fliperama — ou a stream — acompanhe a rodada.</value>
@@ -8631,6 +8640,12 @@
   </data>
   <data name="Take this session off the board?" xml:space="preserve">
     <value>Tirar esta sessão da tabela?</value>
+  </data>
+  <data name="Taking the role back" xml:space="preserve">
+    <value>Retomando o cargo</value>
+  </data>
+  <data name="Taking the roles back" xml:space="preserve">
+    <value>Retomando os cargos</value>
   </data>
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>

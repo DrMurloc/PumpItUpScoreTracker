@@ -448,6 +448,42 @@ public sealed class DiscordRoleSagaTests
         Assert.Equal(reports[0].Total, reports[^1].Done);
     }
 
+    /// <summary>
+    ///     Taking one role back reads the roster once rather than fetching each grant holder, and
+    ///     counts only the people who actually hold it — a bar whose denominator is "everyone we
+    ///     ever granted for" finishes instantly and tells you nothing.
+    /// </summary>
+    [Fact]
+    public async Task RevokingOneRoleCountsOnlyItsHoldersAndReadsTheRosterOnce()
+    {
+        var other = Guid.Parse("88888888-8888-8888-8888-888888888888");
+        const ulong otherSnowflake = 43;
+        _roles.Setup(r => r.GetGrants(CommunityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new CommunityDiscordGrantRecord(CommunityId, UserId, Snowflake, Now),
+                new CommunityDiscordGrantRecord(CommunityId, other, otherSnowflake, Now)
+            });
+        _bot.Setup(b => b.GetGuildMemberRoles(Guild, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<ulong, IReadOnlyCollection<ulong>>
+            {
+                [Snowflake] = new[] { BronzeRole },
+                [otherSnowflake] = Array.Empty<ulong>()
+            });
+
+        var reports = new List<DiscordRoleProgress>();
+        await Saga().RevokeRole(CommunityId, BronzeRole, CancellationToken.None,
+            new Progress<DiscordRoleProgress>(reports.Add));
+
+        await Task.Delay(50);
+        VerifyRevoked(BronzeRole, Times.Once());
+        _bot.Verify(b => b.RemoveRole(Guild, otherSnowflake, It.IsAny<ulong>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        _bot.Verify(b => b.GetMemberRoles(It.IsAny<ulong>(), It.IsAny<ulong>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        Assert.Equal(1, reports[0].Total);
+    }
+
     [Fact]
     public async Task RevokingAllTakesEveryManagedRoleAndForgetsTheCommunity()
     {

@@ -3459,6 +3459,9 @@
   <data name="Hand over your communities first" xml:space="preserve">
     <value>先にコミュニティを譲渡してください</value>
   </data>
+  <data name="Handing out the role" xml:space="preserve">
+    <value>ロールを付与中</value>
+  </data>
   <data name="Hands" xml:space="preserve">
     <value>ハンド</value>
   </data>
@@ -7372,6 +7375,9 @@
   <data name="Removed {0} for {1} from this channel." xml:space="preserve">
     <value>このチャンネルから {1} の {0} を解除しました。</value>
   </data>
+  <data name="Removing the mapping" xml:space="preserve">
+    <value>対応付けを解除中</value>
+  </data>
   <data name="Rename" xml:space="preserve">
     <value>名前を変更</value>
   </data>
@@ -7525,6 +7531,9 @@
   </data>
   <data name="Role" xml:space="preserve">
     <value>役割</value>
+  </data>
+  <data name="Roles are handed out as they're earned. Only check if somebody says theirs is missing." xml:space="preserve">
+    <value>ロールは獲得と同時に付与されます。誰かが付いていないと言ったときだけ確認してください。</value>
   </data>
   <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
     <value>ランダマイザーでチャートを抽選し、ゲーセンでブラケットやカードドラフトを運営、ライブビューを共有すれば会場全体 — や配信 — がラウンドを追えます。</value>
@@ -8689,6 +8698,12 @@
   </data>
   <data name="Take this session off the board?" xml:space="preserve">
     <value>このセッションをボードから外しますか？</value>
+  </data>
+  <data name="Taking the role back" xml:space="preserve">
+    <value>ロールを回収中</value>
+  </data>
+  <data name="Taking the roles back" xml:space="preserve">
+    <value>ロールを回収中</value>
   </data>
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>

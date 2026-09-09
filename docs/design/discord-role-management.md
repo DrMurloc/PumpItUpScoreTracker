@@ -47,6 +47,7 @@ Owner calls from the 2026-09-09 workshop.
 | # | Decision |
 |---|---|
 | D11 | **One reconcile function, called from every angle.** `Reconcile(community, user)` computes the whole desired role set and diffs it. Nothing computes roles a second way, so nothing can disagree. |
+| D18 | **Mapping a title hands the role out on the spot** (owner, 2026-09-09). It used to publish and return, which left an admin looking at a page where nothing had happened, reaching for **Check now**. Every write the page makes runs inline behind the progress dialog, and Check now says what it is actually for: somebody reporting a missing role. |
 | D12 | **The mapping table is the managed set.** A mapped role handed out by hand is taken back. This is stated on the page, because it is surprising. |
 | D13 | **Unmapping a title takes the role back**, unless the admin unticks the box. Reversed after the first field test: a role the site handed out and then stopped maintaining is an orphan nobody can clear except by hand, which surprises people more than losing it does. Unticking keeps it as a manual role. |
 | D14 | **Changing the designated server strips every role granted under the old one first.** Confirmed, not silent. |
@@ -359,6 +360,11 @@ The callback rides a MediatR request, never a bus message, so it stays in-proces
 
 The dry run stopped blocking the page as well: it walks the whole server, which makes it the slowest
 read here, so the page paints first and fills it in.
+
+Every write the page makes goes through the same dialog — adding a mapping, removing one, changing
+the server — because they all walk members one at a time and all need the same way out. `RevokeRole`
+counts only the people who actually hold the role rather than everyone the community ever granted
+for; a bar whose denominator is the wrong set finishes instantly and says nothing.
 
 ### 9.3 Ratchets that fired, and were right to
 

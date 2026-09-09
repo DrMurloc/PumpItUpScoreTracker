@@ -3458,6 +3458,9 @@
   <data name="Hand over your communities first" xml:space="preserve">
     <value>Transférez d'abord vos communautés</value>
   </data>
+  <data name="Handing out the role" xml:space="preserve">
+    <value>Attribution du rôle</value>
+  </data>
   <data name="Hands" xml:space="preserve">
     <value>Mains</value>
   </data>
@@ -7371,6 +7374,9 @@
   <data name="Removed {0} for {1} from this channel." xml:space="preserve">
     <value>{0} pour {1} retiré de ce salon.</value>
   </data>
+  <data name="Removing the mapping" xml:space="preserve">
+    <value>Suppression de l'association</value>
+  </data>
   <data name="Rename" xml:space="preserve">
     <value>Renommer</value>
   </data>
@@ -7524,6 +7530,9 @@
   </data>
   <data name="Role" xml:space="preserve">
     <value>Rôle</value>
+  </data>
+  <data name="Roles are handed out as they're earned. Only check if somebody says theirs is missing." xml:space="preserve">
+    <value>Les rôles sont attribués au fur et à mesure. Ne vérifiez que si quelqu'un signale qu'il lui manque le sien.</value>
   </data>
   <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
     <value>Tirez des charts au randomizer, gérez brackets et drafts de cartes dans votre salle, et partagez une vue en direct pour que toute la salle — ou le stream — suive la manche.</value>
@@ -8688,6 +8697,12 @@
   </data>
   <data name="Take this session off the board?" xml:space="preserve">
     <value>Retirer cette session du tableau ?</value>
+  </data>
+  <data name="Taking the role back" xml:space="preserve">
+    <value>Retrait du rôle</value>
+  </data>
+  <data name="Taking the roles back" xml:space="preserve">
+    <value>Retrait des rôles</value>
   </data>
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>

@@ -7,6 +7,11 @@ using MediatR;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using ScoreTracker.Communities.Application;
+using ScoreTracker.Communities.Contracts;
+using ScoreTracker.Communities.Contracts.Commands;
+using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Tests.TestData;
 using ScoreTracker.Communities.Contracts.Messages;
 using ScoreTracker.Communities.Domain;
 using ScoreTracker.Domain.Events;
@@ -186,6 +191,44 @@ public sealed class DiscordRoleTriggerTests
 
         _roles.Verify(r => r.ReconcileUserEverywhere(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    /// <summary>
+    ///     Mapping a title hands the role out on the spot. It used to publish and return, which
+    ///     left an admin looking at a page where nothing had happened, reaching for Check now.
+    /// </summary>
+    [Fact]
+    public async Task MappingATitleHandsTheRoleOutImmediately()
+    {
+        var communities = new Mock<ICommunityRepository>();
+        var roleRepo = new Mock<IDiscordRoleRepository>();
+        var bot = new Mock<IBotClient>();
+        var titles = new Mock<ITitleRepository>();
+        var users = new Mock<IUserReader>();
+        var bus = new Mock<IBus>();
+        var currentUser = new Mock<ICurrentUserAccessor>();
+
+        var name = Name.From("Arrow Eclipse");
+        currentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        currentUser.SetupGet(c => c.User).Returns(new UserBuilder().WithId(UserId).Build());
+        communities.Setup(c => c.GetCommunityId(name, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CommunityId);
+        communities.Setup(c => c.GetCommunityByName(name, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Community(name, UserId, CommunityPrivacyType.Public,
+                new[] { new CommunityMember(UserId, CommunityRole.Creator, CommunityPermission.All, null, null) },
+                Array.Empty<Community.ChannelConfiguration>(), new Dictionary<Guid, DateOnly?>(), false,
+                CommunityPermission.None, null));
+        roleRepo.Setup(r => r.GetMappings(CommunityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<CommunityTitleRoleRecord>());
+
+        var saga = new DiscordRoleAdminSaga(roleRepo.Object, communities.Object, bot.Object,
+            currentUser.Object, _roles.Object, titles.Object, users.Object, bus.Object);
+
+        await saga.Handle(new SetCommunityTitleRoleCommand(name, "[P.B] BRONZE", 1),
+            CancellationToken.None);
+
+        _roles.Verify(r => r.ReconcileCommunity(CommunityId, It.IsAny<CancellationToken>(),
+            It.IsAny<IProgress<DiscordRoleProgress>?>()), Times.Once);
     }
 
     private static ConsumeContext<T> Message<T>(T message) where T : class

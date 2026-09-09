@@ -30,14 +30,19 @@ internal interface IDiscordRoleService
     Task RemoveAllForUser(Guid userId, CancellationToken cancellationToken);
 
     /// <summary>Takes back everything one community handed out.</summary>
-    Task RevokeAll(Guid communityId, CancellationToken cancellationToken);
+    Task RevokeAll(Guid communityId, CancellationToken cancellationToken,
+        IProgress<DiscordRoleProgress>? progress = null);
 
     /// <summary>What the next pass would change, without changing it.</summary>
     Task<IReadOnlyList<DiscordRolePlanRecord>> PreviewCommunity(Guid communityId,
         CancellationToken cancellationToken);
 
-    /// <summary>Takes one role off everybody this community granted for.</summary>
-    Task RevokeRole(Guid communityId, ulong roleId, CancellationToken cancellationToken);
+    /// <summary>
+    ///     Takes one role off everybody this community granted for. <paramref name="progress" />
+    ///     counts only the people who actually hold it, so the bar means something.
+    /// </summary>
+    Task RevokeRole(Guid communityId, ulong roleId, CancellationToken cancellationToken,
+        IProgress<DiscordRoleProgress>? progress = null);
 
     /// <summary>Settles every community that has designated a server. Returns how many it visited.</summary>
     Task<int> SweepAll(CancellationToken cancellationToken);

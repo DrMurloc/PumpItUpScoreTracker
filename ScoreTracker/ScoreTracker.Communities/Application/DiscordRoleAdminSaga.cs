@@ -143,7 +143,10 @@ internal sealed class DiscordRoleAdminSaga :
             await _roles.DeleteMapping(communityId, clash.TitleName, cancellationToken);
 
         await _roles.SaveMapping(communityId, request.TitleName, request.RoleId, cancellationToken);
-        await _bus.Publish(new ReconcileDiscordRolesCommand(communityId), cancellationToken);
+
+        // Inline, not published: saying "this title gets this role" and then being told to press
+        // Check now reads as though nothing happened. The caller watches it work.
+        await _discordRoles.ReconcileCommunity(communityId, cancellationToken, request.Progress);
     }
 
     public async Task Handle(RemoveCommunityTitleRoleCommand request, CancellationToken cancellationToken)
@@ -158,7 +161,8 @@ internal sealed class DiscordRoleAdminSaga :
         // Taking it back has to happen while the mapping still says the role is ours — once the
         // row is gone, nothing knows this community ever managed it.
         if (request.TakeRoleBack)
-            await _discordRoles.RevokeRole(communityId, mapping.RoleId, cancellationToken);
+            await _discordRoles.RevokeRole(communityId, mapping.RoleId, cancellationToken,
+                request.Progress);
 
         await _roles.DeleteMapping(communityId, request.TitleName, cancellationToken);
     }
@@ -170,7 +174,7 @@ internal sealed class DiscordRoleAdminSaga :
 
         // Roles come off before the designation does — afterwards nothing knows which server they
         // were in (D14).
-        await _discordRoles.RevokeAll(communityId, cancellationToken);
+        await _discordRoles.RevokeAll(communityId, cancellationToken, request.Progress);
         await _roles.DeleteServer(communityId, cancellationToken);
     }
 

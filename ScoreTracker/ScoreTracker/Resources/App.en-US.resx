@@ -3459,6 +3459,9 @@
   <data name="Hand over your communities first" xml:space="preserve">
     <value>Hand over your communities first</value>
   </data>
+  <data name="Handing out the role" xml:space="preserve">
+    <value>Handing out the role</value>
+  </data>
   <data name="Hands" xml:space="preserve">
     <value>Hands</value>
   </data>
@@ -7372,6 +7375,9 @@
   <data name="Removed {0} for {1} from this channel." xml:space="preserve">
     <value>Removed {0} for {1} from this channel.</value>
   </data>
+  <data name="Removing the mapping" xml:space="preserve">
+    <value>Removing the mapping</value>
+  </data>
   <data name="Rename" xml:space="preserve">
     <value>Rename</value>
   </data>
@@ -7525,6 +7531,9 @@
   </data>
   <data name="Role" xml:space="preserve">
     <value>Role</value>
+  </data>
+  <data name="Roles are handed out as they're earned. Only check if somebody says theirs is missing." xml:space="preserve">
+    <value>Roles are handed out as they're earned. Only check if somebody says theirs is missing.</value>
   </data>
   <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
     <value>Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round.</value>
@@ -8689,6 +8698,12 @@
   </data>
   <data name="Take this session off the board?" xml:space="preserve">
     <value>Take this session off the board?</value>
+  </data>
+  <data name="Taking the role back" xml:space="preserve">
+    <value>Taking the role back</value>
+  </data>
+  <data name="Taking the roles back" xml:space="preserve">
+    <value>Taking the roles back</value>
   </data>
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>

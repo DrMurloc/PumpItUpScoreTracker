@@ -225,6 +225,14 @@ else
                                Class="ml-auto" Disabled="_busy" OnClick="CheckNow">@L["Check now"]</MudButton>
                 }
             </div>
+            @if (_view.ViewerCanManage)
+            {
+                @* Adding a role now hands it out on the spot, so this button is no longer how
+                   anything gets done — it is the answer to "somebody says they're missing it". *@
+                <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mt-1">
+                    @L["Roles are handed out as they're earned. Only check if somebody says theirs is missing."]
+                </MudText>
+            }
         </MudPaper>
 
         @* ---------------- 4. the dry run ---------------- *@
@@ -347,7 +355,7 @@ else
    watching nothing. Not dismissable — Cancel is the way out, and it leaves a half-finished pass,
    which is safe because reconciling is idempotent and the next pass picks up where this stopped. *@
 <MudDialog @bind-Visible="_showProgress" Options="_blockingDialog">
-    <TitleContent><MudText Typo="Typo.h6">@L["Checking roles"]</MudText></TitleContent>
+    <TitleContent><MudText Typo="Typo.h6">@_progressTitle</MudText></TitleContent>
     <DialogContent>
         <MudProgressLinear Color="Color.Primary" Size="Size.Large" Striped="true"
                            Value="@(_progress?.Percent ?? 0)" Class="mb-3"/>
@@ -420,6 +428,7 @@ else
     };
 
     private bool _showProgress;
+    private string _progressTitle = string.Empty;
     private DiscordRoleProgress? _progress;
     private CancellationTokenSource? _checking;
     private bool _previewLoading;
@@ -537,7 +546,8 @@ else
     {
         if (_view == null || !CanSaveNew) return;
         _showAdd = false;
-        await Run(new SetCommunityTitleRoleCommand(_view.CommunityName, _newTitle!, _newRole!.Id),
+        await RunWithProgress(L["Handing out the role"].Value,
+            report => new SetCommunityTitleRoleCommand(_view.CommunityName, _newTitle!, _newRole!.Id, report),
             "Could not add that role.");
     }
 
@@ -554,8 +564,13 @@ else
     {
         if (_view == null || _removeTarget == null) return;
         _showRemove = false;
-        await Run(new RemoveCommunityTitleRoleCommand(_view.CommunityName, _removeTarget.TitleName,
-            _takeRoleBack), "Could not remove that role.");
+        var target = _removeTarget;
+        var takeBack = _takeRoleBack;
+        await RunWithProgress(
+            takeBack ? L["Taking the role back"].Value : L["Removing the mapping"].Value,
+            report => new RemoveCommunityTitleRoleCommand(_view.CommunityName, target.TitleName,
+                takeBack, report),
+            "Could not remove that role.");
         _removeTarget = null;
     }
 
@@ -565,15 +580,40 @@ else
     {
         if (_view == null) return;
         _showUnlink = false;
-        await Run(new UnlinkCommunityDiscordServerCommand(_view.CommunityName),
+        await RunWithProgress(L["Taking the roles back"].Value,
+            report => new UnlinkCommunityDiscordServerCommand(_view.CommunityName, report),
             "Could not unlink the server.");
     }
 
     private async Task CheckNow()
     {
         if (_view == null) return;
+        var changed = 0;
+        var ran = await RunWithProgress(L["Checking roles"].Value,
+            report => new ReconcileCommunityDiscordRolesCommand(_view.CommunityName, report),
+            "Could not reach Discord just now.",
+            async (command, token) => changed = await Mediator.Send(command, token));
 
+        if (ran)
+            Snackbar.Add(changed == 0
+                    ? L["Everyone already has the right roles."].Value
+                    : L["Updated {0} members.", changed].Value,
+                changed == 0 ? Severity.Info : Severity.Success);
+    }
+
+    /// <summary>
+    ///     Every operation that writes to Discord goes through here: they all walk members one at a
+    ///     time, so they all need the same bar and the same way out. Returns whether it finished —
+    ///     false when it was stopped or failed, so a caller does not announce a result it did not
+    ///     get.
+    /// </summary>
+    private async Task<bool> RunWithProgress<TCommand>(string title,
+        Func<IProgress<DiscordRoleProgress>, TCommand> build, string errorMessage,
+        Func<TCommand, CancellationToken, Task>? send = null)
+        where TCommand : IBaseRequest
+    {
         _progress = null;
+        _progressTitle = title;
         _showProgress = true;
         _busy = true;
         _checking = new CancellationTokenSource();
@@ -587,14 +627,13 @@ else
                 StateHasChanged();
             }));
 
+        var finished = false;
         try
         {
-            var changed = await Mediator.Send(
-                new ReconcileCommunityDiscordRolesCommand(_view.CommunityName, report), _checking.Token);
-            Snackbar.Add(changed == 0
-                    ? L["Everyone already has the right roles."].Value
-                    : L["Updated {0} members.", changed].Value,
-                changed == 0 ? Severity.Info : Severity.Success);
+            var command = build(report);
+            if (send != null) await send(command, _checking.Token);
+            else await Mediator.Send(command, _checking.Token);
+            finished = true;
         }
         catch (OperationCanceledException)
         {
@@ -602,7 +641,7 @@ else
         }
         catch (Exception)
         {
-            Snackbar.Add(L["Could not reach Discord just now."].Value, Severity.Error);
+            Snackbar.Add(L[errorMessage].Value, Severity.Error);
         }
         finally
         {
@@ -613,25 +652,10 @@ else
         }
 
         await Load();
+        return finished;
     }
 
     private void CancelCheck() => _checking?.Cancel();
-
-    private async Task Run(IRequest command, string errorMessage)
-    {
-        _busy = true;
-        try
-        {
-            await Mediator.Send(command);
-        }
-        catch (Exception)
-        {
-            Snackbar.Add(L[errorMessage].Value, Severity.Error);
-        }
-
-        _busy = false;
-        await Load();
-    }
 
     private string GroupLabel(string group) => group switch
     {

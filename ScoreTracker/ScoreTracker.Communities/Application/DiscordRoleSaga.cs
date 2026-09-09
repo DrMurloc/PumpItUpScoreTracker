@@ -167,16 +167,31 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
     ///     WITH the box ticked — and only then, since dropping a row is otherwise a configuration
     ///     edit rather than a mass revocation (D13).
     /// </summary>
-    public async Task RevokeRole(Guid communityId, ulong roleId, CancellationToken cancellationToken)
+    public async Task RevokeRole(Guid communityId, ulong roleId, CancellationToken cancellationToken,
+        IProgress<DiscordRoleProgress>? progress = null)
     {
         var server = await _roles.GetServer(communityId, cancellationToken);
-        if (server == null) return;
-
-        foreach (var grant in await _roles.GetGrants(communityId, cancellationToken))
+        if (server == null)
         {
-            var current = await _bot.GetMemberRoles(server.GuildId, grant.DiscordUserId, cancellationToken);
-            if (current?.Contains(roleId) == true)
-                await _bot.RemoveRole(server.GuildId, grant.DiscordUserId, roleId, cancellationToken);
+            progress?.Report(new DiscordRoleProgress(0, 0));
+            return;
+        }
+
+        // One roster read rather than one fetch per grant, and it also narrows the work list to
+        // the people who actually hold the role — so the bar counts real work instead of counting
+        // everybody and finishing instantly.
+        var roster = await _bot.GetGuildMemberRoles(server.GuildId, cancellationToken);
+        var holders = (await _roles.GetGrants(communityId, cancellationToken))
+            .Where(g => roster.TryGetValue(g.DiscordUserId, out var held) && held.Contains(roleId))
+            .ToArray();
+
+        var done = 0;
+        progress?.Report(new DiscordRoleProgress(done, holders.Length));
+        foreach (var grant in holders)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await _bot.RemoveRole(server.GuildId, grant.DiscordUserId, roleId, cancellationToken);
+            progress?.Report(new DiscordRoleProgress(++done, holders.Length));
         }
     }
 
@@ -263,12 +278,22 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
     ///     or dropped, so roles never outlive the reason for them (D14), and when the community
     ///     itself is deleted.
     /// </summary>
-    public async Task RevokeAll(Guid communityId, CancellationToken cancellationToken)
+    public async Task RevokeAll(Guid communityId, CancellationToken cancellationToken,
+        IProgress<DiscordRoleProgress>? progress = null)
     {
         var context = await BuildContext(communityId, cancellationToken, wholeCommunity: true);
         if (context != null)
-            foreach (var grant in await _roles.GetGrants(communityId, cancellationToken))
+        {
+            var grants = await _roles.GetGrants(communityId, cancellationToken);
+            var done = 0;
+            progress?.Report(new DiscordRoleProgress(done, grants.Count));
+            foreach (var grant in grants)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
                 await Revoke(context, grant.DiscordUserId, cancellationToken);
+                progress?.Report(new DiscordRoleProgress(++done, grants.Count));
+            }
+        }
 
         await _roles.DeleteGrantsForCommunity(communityId, cancellationToken);
     }
