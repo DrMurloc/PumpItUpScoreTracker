@@ -28,13 +28,15 @@ public sealed class CommunityManagementSagaTests
     private readonly Mock<ICommunityRepository> _communities = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<IDiscordRoleService> _discordRoles = new();
+    private readonly Mock<IDiscordRoleRepository> _roleConfiguration = new();
 
     private CommunityManagementSaga Build(Guid actingUserId)
     {
         _currentUser.SetupGet(u => u.User).Returns(new UserBuilder().WithId(actingUserId).Build());
         _currentUser.SetupGet(u => u.IsLoggedIn).Returns(true);
         return new CommunityManagementSaga(_communities.Object, _currentUser.Object, _mediator.Object,
-            _bus.Object);
+            _bus.Object, _discordRoles.Object, _roleConfiguration.Object);
     }
 
     private void GivenCommunity(Community community)

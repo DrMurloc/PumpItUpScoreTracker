@@ -26,7 +26,7 @@ namespace ScoreTracker.Communities.Application;
 ///         it.
 ///     </para>
 /// </summary>
-internal sealed class DiscordRoleSaga
+internal sealed class DiscordRoleSaga : IDiscordRoleService
 {
     /// <summary>
     ///     The external-login provider name, matching the one LoginController challenges under.

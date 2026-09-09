@@ -57,4 +57,10 @@ internal interface IDiscordRoleRepository
 
     /// <summary>Drops every grant a community holds — it stopped handing out roles entirely.</summary>
     Task DeleteGrantsForCommunity(Guid communityId, CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     Server, mappings and grants together, for a community that no longer exists. The
+    ///     community delete does not cascade here, so without this the rows outlive the club.
+    /// </summary>
+    Task DeleteAllForCommunity(Guid communityId, CancellationToken cancellationToken);
 }

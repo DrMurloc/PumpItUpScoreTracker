@@ -187,4 +187,18 @@ internal sealed class EFDiscordRoleRepository : IDiscordRoleRepository
             .Where(g => g.CommunityId == communityId)
             .ExecuteDeleteAsync(cancellationToken);
     }
+
+    public async Task DeleteAllForCommunity(Guid communityId, CancellationToken cancellationToken)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        await database.Set<CommunityDiscordGrantEntity>()
+            .Where(g => g.CommunityId == communityId)
+            .ExecuteDeleteAsync(cancellationToken);
+        await database.Set<CommunityTitleRoleEntity>()
+            .Where(m => m.CommunityId == communityId)
+            .ExecuteDeleteAsync(cancellationToken);
+        await database.Set<CommunityDiscordServerEntity>()
+            .Where(s => s.CommunityId == communityId)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
 }

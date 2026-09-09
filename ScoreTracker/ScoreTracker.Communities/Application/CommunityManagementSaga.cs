@@ -2,6 +2,7 @@ using MassTransit;
 using MediatR;
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Contracts.Commands;
+using ScoreTracker.Communities.Contracts.Messages;
 using ScoreTracker.Communities.Contracts.Events;
 using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Communities.Domain;
@@ -42,15 +43,20 @@ internal sealed class CommunityManagementSaga :
     private readonly IBus _bus;
     private readonly ICommunityRepository _communities;
     private readonly ICurrentUserAccessor _currentUser;
+    private readonly IDiscordRoleService _discordRoles;
     private readonly IMediator _mediator;
+    private readonly IDiscordRoleRepository _roleConfiguration;
 
     public CommunityManagementSaga(ICommunityRepository communities, ICurrentUserAccessor currentUser,
-        IMediator mediator, IBus bus)
+        IMediator mediator, IBus bus, IDiscordRoleService discordRoles,
+        IDiscordRoleRepository roleConfiguration)
     {
         _communities = communities;
         _currentUser = currentUser;
         _mediator = mediator;
         _bus = bus;
+        _discordRoles = discordRoles;
+        _roleConfiguration = roleConfiguration;
     }
 
     public Task Handle(PromoteMemberCommand request, CancellationToken cancellationToken) =>
@@ -68,11 +74,11 @@ internal sealed class CommunityManagementSaga :
 
     public Task Handle(BanMemberCommand request, CancellationToken cancellationToken) =>
         Mutate(request.CommunityName, community =>
-            community.Ban(_currentUser.User.Id, request.UserId), cancellationToken);
+            community.Ban(_currentUser.User.Id, request.UserId), cancellationToken, request.UserId);
 
     public Task Handle(UnbanMemberCommand request, CancellationToken cancellationToken) =>
         Mutate(request.CommunityName, community =>
-            community.Unban(_currentUser.User.Id, request.UserId), cancellationToken);
+            community.Unban(_currentUser.User.Id, request.UserId), cancellationToken, request.UserId);
 
     public async Task Handle(TransferCommunityOwnershipCommand request, CancellationToken cancellationToken)
     {
@@ -105,6 +111,16 @@ internal sealed class CommunityManagementSaga :
         // Deletion is a repository operation, not an aggregate state change — authorize here.
         if (community.RoleOf(_currentUser.User.Id) != CommunityRole.Creator)
             throw new CommunityPermissionException("Only the creator may delete the community.");
+
+        // Hand the Discord roles back BEFORE the club goes: the mappings say which roles are ours
+        // to take, and a moment later they will not exist. Inline rather than published for the
+        // same reason — there is no second chance once the rows are gone.
+        if (await _communities.GetCommunityId(request.CommunityName, cancellationToken) is { } communityId)
+        {
+            await _discordRoles.RevokeAll(communityId, cancellationToken);
+            await _roleConfiguration.DeleteAllForCommunity(communityId, cancellationToken);
+        }
+
         var deletedId = await _communities.DeleteCommunity(request.CommunityName, cancellationToken);
 
         // The last moment the id/name pair exists — the row is already gone. Other verticals
@@ -149,11 +165,22 @@ internal sealed class CommunityManagementSaga :
         return roster.Where(m => m.IsPublic).ToArray();
     }
 
-    private async Task Mutate(Name communityName, Action<Community> action, CancellationToken cancellationToken)
+    /// <summary>
+    ///     <paramref name="affectedUserId" /> settles that member's Discord roles afterwards. Only
+    ///     the mutations that change who is IN the community pass it — a language or permission
+    ///     edit changes none of the four facts a role hangs on, and a whole-roster pass for one
+    ///     would be work nobody asked for.
+    /// </summary>
+    private async Task Mutate(Name communityName, Action<Community> action,
+        CancellationToken cancellationToken, Guid? affectedUserId = null)
     {
         var community = await Load(communityName, cancellationToken);
         action(community);
         await _communities.SaveCommunity(community, cancellationToken);
+
+        if (affectedUserId is { } userId &&
+            await _communities.GetCommunityId(communityName, cancellationToken) is { } communityId)
+            await _bus.Publish(new ReconcileDiscordRolesCommand(communityId, userId), cancellationToken);
     }
 
     private async Task<Community> Load(Name communityName, CancellationToken cancellationToken) =>
