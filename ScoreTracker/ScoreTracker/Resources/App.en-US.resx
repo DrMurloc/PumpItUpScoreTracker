@@ -7054,6 +7054,9 @@
     <value>Rating</value>
     <comment>Rating</comment>
   </data>
+  <data name="Re-add the bot" xml:space="preserve">
+    <value>Re-add the bot</value>
+  </data>
   <data name="Re-add the bot from the Communities page — it keeps this server and its channels, and picks up the permission." xml:space="preserve">
     <value>Re-add the bot from the Communities page — it keeps this server and its channels, and picks up the permission.</value>
   </data>
@@ -8758,6 +8761,9 @@
   </data>
   <data name="The bot can hand out every role below." xml:space="preserve">
     <value>The bot can hand out every role below.</value>
+  </data>
+  <data name="The bot can't hand out roles in this server yet — it was added before roles existed." xml:space="preserve">
+    <value>The bot can't hand out roles in this server yet — it was added before roles existed.</value>
   </data>
   <data name="The bot has no permission to manage roles here." xml:space="preserve">
     <value>The bot has no permission to manage roles here.</value>

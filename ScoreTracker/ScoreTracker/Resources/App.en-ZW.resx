@@ -7054,6 +7054,9 @@
     <value>Mrglrg</value>
     <comment>Rating</comment>
   </data>
+  <data name="Re-add the bot" xml:space="preserve">
+    <value>Blarg murpgl bagro</value>
+  </data>
   <data name="Re-add the bot from the Communities page — it keeps this server and its channels, and picks up the permission." xml:space="preserve">
     <value>Blarg murpgl bagro blarg Plglmurgblub plglur — mrp mrogl blubmurg ap murgblub, ap grabgro murmargl.</value>
   </data>
@@ -8758,6 +8761,9 @@
   </data>
   <data name="The bot can hand out every role below." xml:space="preserve">
     <value>Murpgl grabmurp ulbog roglubrgl blarg.</value>
+  </data>
+  <data name="The bot can't hand out roles in this server yet — it was added before roles existed." xml:space="preserve">
+    <value>Murpgl bo grabmurp roglubrgl ur blu blubmurg bam — mrp blarg bagrol roglubrgl mrogl.</value>
   </data>
   <data name="The bot has no permission to manage roles here." xml:space="preserve">
     <value>Murpgl bo mrogl murmargl roglubrgl ur blu blubmurg.</value>

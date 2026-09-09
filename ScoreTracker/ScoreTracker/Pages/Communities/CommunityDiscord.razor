@@ -8,6 +8,10 @@
 @using ScoreTracker.Domain.Models.Titles.Phoenix2
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.SharedKernel.ValueTypes
+@using Microsoft.Extensions.Options
+@using ScoreTracker.Data.Configuration
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
 
 <PageTitle>@L["Discord"]</PageTitle>
 
@@ -26,6 +30,11 @@ else
     <MudText Typo="Typo.body2" Class="mb-4">
         @L["Give members a Discord role when they earn a Phoenix 2 title. Roles are kept in step automatically — nobody has to ask."]
     </MudText>
+
+    @* The state every server invited before this feature is in: the bot holds no Manage Roles,
+       which no amount of role reordering fixes. Shown only while that is actually true, so it
+       retires itself as people re-add. *@
+    <DiscordReinvitePointer Show="NeedsReinvite" InviteUrl="@BotInviteUrl"></DiscordReinvitePointer>
 
     @* ---------------- 1. the server ---------------- *@
     <MudPaper Class="pa-4 mb-4" Outlined="true">
@@ -335,6 +344,7 @@ else
 </MudDialog>
 
 @inject IMediator Mediator
+@inject IOptions<DiscordConfiguration> DiscordConfig
 @inject ISnackbar Snackbar
 @inject IStringLocalizer<App> L
 @inject NavigationManager NavManager
@@ -365,6 +375,15 @@ else
     private bool _showUnlink;
 
     private bool CanSaveNew => !string.IsNullOrWhiteSpace(_newTitle) && _newRoleId != 0;
+
+    /// <summary>
+    ///     A designated server whose bot cannot manage roles, seen by somebody who could fix it.
+    ///     A member sees nothing: re-adding the bot is not theirs to do.
+    /// </summary>
+    private bool NeedsReinvite =>
+        _view is { Server: not null, BotIsInServer: true, BotCanManageRoles: false, ViewerCanManage: true };
+
+    private string BotInviteUrl => DiscordBotInvite.UrlFor(DiscordConfig.Value.ClientId);
 
     protected override async Task OnInitializedAsync() => await Load();
 

@@ -143,6 +143,30 @@ public sealed class CommunityDiscordPageTests : ComponentTestBase
         Assert.DoesNotContain("drag the PIU Scores role above them", markup);
     }
 
+    /// <summary>
+    ///     The pointer is only for somebody who can act on it — re-adding the bot is an admin's
+    ///     job, and a member being nagged about it could do nothing with the information.
+    /// </summary>
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    public void TheReinvitePointerIsOnlyShownToSomebodyWhoCanFixIt(bool canManage, bool expected)
+    {
+        Given(Linked(canManage: canManage) with { BotCanManageRoles = false });
+
+        var shown = Render().Markup.Contains("discord-reinvite");
+
+        Assert.Equal(expected, shown);
+    }
+
+    [Fact]
+    public void TheReinvitePointerIsAbsentOnceTheBotCanManageRoles()
+    {
+        Given(Linked());
+
+        Assert.DoesNotContain("discord-reinvite", Render().Markup);
+    }
+
     [Fact]
     public void AMappingPointingAtADeletedRoleSaysSo()
     {

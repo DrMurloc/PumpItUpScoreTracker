@@ -7015,6 +7015,9 @@
   <data name="Rating" xml:space="preserve">
     <value>레이팅</value>
   </data>
+  <data name="Re-add the bot" xml:space="preserve">
+    <value>봇 다시 추가</value>
+  </data>
   <data name="Re-add the bot from the Communities page — it keeps this server and its channels, and picks up the permission." xml:space="preserve">
     <value>커뮤니티 페이지에서 봇을 다시 추가하세요 — 서버와 채널은 그대로 유지되고 권한만 추가됩니다.</value>
   </data>
@@ -8700,6 +8703,9 @@
   </data>
   <data name="The bot can hand out every role below." xml:space="preserve">
     <value>봇이 아래의 모든 역할을 부여할 수 있습니다.</value>
+  </data>
+  <data name="The bot can't hand out roles in this server yet — it was added before roles existed." xml:space="preserve">
+    <value>이 서버에서는 아직 봇이 역할을 부여할 수 없습니다 — 역할 기능이 생기기 전에 추가되었습니다.</value>
   </data>
   <data name="The bot has no permission to manage roles here." xml:space="preserve">
     <value>여기에서 봇에게 역할 관리 권한이 없습니다.</value>

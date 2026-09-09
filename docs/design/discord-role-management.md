@@ -236,8 +236,18 @@ enumerate servers we are not permitted to list.
 `Communities.razor` asks for `permissions=347136` — view, send, embed, history, external emojis.
 Manage Roles is `268435456`, so the URL becomes **`268782592`**.
 
-⚠ **This does not retroactively grant anything.** A server that already has the bot must re-run the
-invite URL, or be given the permission by hand.
+⚠ **This does not retroactively grant anything.** Discord applies an invite's permissions when the
+invite is accepted, so a server that already has the bot keeps whatever it was added with.
+
+The page says so itself rather than relying on anyone reading a release note: `IBotClient` reports
+the bot's own `ManageRoles` in the guild, a role reports `BotCannotManageRoles` when it is absent,
+and `DiscordReinvitePointer` offers the invite link while that is true. It is driven by the real
+state, not by a "seen it" flag — so it retires itself server by server as people re-add, and an
+admin who never re-adds keeps being told. The ✕ dismisses it per account (UiSettings, the same shape
+as the tier list's title pointer) for somebody who granted the permission by hand.
+
+**Hierarchy and permission are different failures with different fixes**, which is why they are
+separate reasons: no amount of role reordering fixes a permission the bot was never given.
 
 ---
 
@@ -308,6 +318,17 @@ build; what follows is what the code learned on the way.
 - **Triggers publish, two paths do not.** Join, leave, ban and unban publish
   `ReconcileDiscordRolesCommand` so nothing waits on Discord's REST API. The purge and the community
   delete call in-process, because both must run before rows they depend on are gone.
+
+### 9.2b What the canary caught on its first real run
+
+The bot in the owner's lab server holds **no Manage Roles at all** — it was added with the old
+`347136` invite. `CanAssign` compared role *positions* only, so every role passed and the write came
+back `50001 Missing Access`, which Discord reports to nobody. The page would have said "the bot can
+hand out every role below" while nothing worked.
+
+That is the whole reason a canary that writes exists, and it is the state **every** server invited
+before this feature is in. Fixed in the same pass: `BotGuild.CanManageRoles`, the
+`BotCannotManageRoles` reason, the page's wording, and the re-invite pointer above.
 
 ### 9.3 Ratchets that fired, and were right to
 

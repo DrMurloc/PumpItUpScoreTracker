@@ -516,13 +516,7 @@
 
     // Requested scopes: bot + application commands; permissions cover view channel, send
     // messages, read history, embed links, and use external emoji (the grade/plate bubbles).
-    // 268782592 = view channel + send + embed + read history + external emojis (the feed
-    // permissions, 347136) PLUS Manage Roles (268435456), which the community title-role feature
-    // needs. ⚠ Changing this number does NOT grant anything to a server that already added the
-    // bot — an existing install has to re-run this URL, or be given the permission by hand
-    // (docs/design/discord-role-management.md §5.3).
-    private string BotInviteUrl =>
-        $"https://discord.com/oauth2/authorize?client_id={DiscordConfig.Value.ClientId}&scope=bot+applications.commands&permissions=268782592";
+    private string BotInviteUrl => DiscordBotInvite.UrlFor(DiscordConfig.Value.ClientId);
 
     private IEnumerable<CommunityOverviewRecord> _communities = Array.Empty<CommunityOverviewRecord>();
     private ISet<Name> _myCommunities = new HashSet<Name>();
