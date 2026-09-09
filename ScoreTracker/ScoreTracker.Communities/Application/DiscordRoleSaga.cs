@@ -88,6 +88,11 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
     ///     Settles every member of one community, plus everyone it still holds a grant for. The
     ///     second half is the point: somebody who left, was banned, or unlinked their Discord is no
     ///     longer in the roster, so a roster-only pass would leave their roles standing forever.
+    ///     <para>
+    ///         Deliberately NOT everyone in the Discord server. A community's reach stops at its own
+    ///         roster (D12), so a mapped role handed by hand to somebody who never joined the
+    ///         community is left alone — that person is not ours to manage.
+    ///     </para>
     /// </summary>
     public async Task<int> ReconcileCommunity(Guid communityId, CancellationToken cancellationToken,
         IProgress<DiscordRoleProgress>? progress = null)
