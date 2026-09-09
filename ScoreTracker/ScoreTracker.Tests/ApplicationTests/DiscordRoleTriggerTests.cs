@@ -10,6 +10,7 @@ using ScoreTracker.Communities.Application;
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Contracts.Commands;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using ScoreTracker.Communities.Contracts.Messages;
@@ -166,6 +167,33 @@ public sealed class DiscordRoleTriggerTests
     }
 
     /// <summary>
+    ///     Linking is the LAST step of ordinary onboarding — the community join happens before
+    ///     there is a Discord account, and the server join happens before there is a site account
+    ///     to find. It used to fire nothing, leaving the player waiting on a nightly sweep they
+    ///     cannot trigger: Check now is admin-only.
+    /// </summary>
+    [Fact]
+    public async Task LinkingDiscordSettlesTheAccountAtOnce()
+    {
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new ExternalLoginAddedEvent(UserId, "Discord")));
+
+        _roles.Verify(r => r.ReconcileUserEverywhere(UserId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task LinkingAnotherProviderIsIgnored()
+    {
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new ExternalLoginAddedEvent(UserId, "Google")));
+
+        _roles.Verify(r => r.ReconcileUserEverywhere(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    /// <summary>
     ///     The one change nothing else reported. Standing granted off the back of a linked account
     ///     must not outlive the link — before this, the roles stood until the next sweep.
     /// </summary>
@@ -220,6 +248,13 @@ public sealed class DiscordRoleTriggerTests
                 CommunityPermission.None, null));
         roleRepo.Setup(r => r.GetMappings(CommunityId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<CommunityTitleRoleRecord>());
+        // The handler checks the role is one the bot can actually hand out — @everyone carries the
+        // guild's own id, and mapping it would put every member's baseline role into the managed set.
+        roleRepo.Setup(r => r.GetServer(CommunityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CommunityDiscordServerRecord(CommunityId, 900, "Arrow Eclipse",
+                DateTimeOffset.UnixEpoch));
+        bot.Setup(b => b.GetGuildRoles(900, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new BotGuildRole(1, "@Bronze", null, null) });
 
         var saga = new DiscordRoleAdminSaga(roleRepo.Object, communities.Object, bot.Object,
             currentUser.Object, _roles.Object, titles.Object, users.Object, bus.Object);

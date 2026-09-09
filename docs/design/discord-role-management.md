@@ -54,6 +54,7 @@ Owner calls from the 2026-09-09 workshop.
 | D15 | **Server Members intent ON, `AlwaysDownloadUsers` OFF.** The intent buys the join event; the member-list download is the expensive half and this feature never needs it. |
 | D16 | **The sweep is nightly, and a backstop rather than the mechanism** (owner, 2026-09-09). Everything it does, the page's **Check now** does on demand — so it exists for a join the gateway missed and for anything the in-memory bus dropped, not for correctness. Hourly was paying for a roster download twenty-four times a day to almost always find nothing. |
 | D17 | **Unlinking Discord publishes an event.** It was the one change nothing reported, so roles granted off the back of a sign-in outlived it until a sweep noticed. `ExternalLoginRemovedEvent` makes it immediate, which is what let the sweep drop to nightly without leaving a silent case. |
+| D19 | **Linking Discord publishes one too.** The mirror of D17, and the same reason: linking is the LAST step of ordinary onboarding — the community join happens before there is a Discord account, the server join before there is a site account to find — so it was the one step that fired nothing, leaving the player on a nightly sweep they cannot trigger (Check now is admin-only). |
 
 ---
 
@@ -181,7 +182,7 @@ Every one of these ends in the same `Reconcile`.
 | joined, left, banned, unbanned | in-process call from the existing management handlers |
 | community deleted | existing `CommunityDeletedEvent` consumer |
 | account purged | existing `AccountPurgeStartedEvent` consumer, reading the grant row |
-| linked or unlinked Discord | `ExternalLoginRemovedEvent` (D17); the grant row holds the snowflake to strip |
+| linked or unlinked Discord | `ExternalLoginAddedEvent` (D19) / `ExternalLoginRemovedEvent` (D17); the grant row holds the snowflake to strip |
 | admin edited a mapping | bulk reconcile over the community |
 | server designated or changed | bulk reconcile; the old server is stripped first (D14) |
 | **joined the Discord server** | `GuildMemberAdded`, plus the sweep as backstop |

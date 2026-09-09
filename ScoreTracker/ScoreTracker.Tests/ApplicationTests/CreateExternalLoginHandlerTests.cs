@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MassTransit;
 using Moq;
 using ScoreTracker.Identity.Contracts.Commands;
 using ScoreTracker.Identity.Contracts.Events;
@@ -22,7 +23,7 @@ public sealed class CreateExternalLoginHandlerTests
         users.Setup(u => u.GetUserByExternalLogin("Discord", "ext-1", It.IsAny<CancellationToken>()))
             .ReturnsAsync((Domain.Models.User?)null);
 
-        var handler = new CreateExternalLoginHandler(users.Object);
+        var handler = new CreateExternalLoginHandler(users.Object, new Mock<IBus>().Object);
         var userId = Guid.NewGuid();
         await handler.Handle(new CreateExternalLoginCommand(userId, "ext-1", "Discord"), CancellationToken.None);
 
@@ -38,7 +39,7 @@ public sealed class CreateExternalLoginHandlerTests
         users.Setup(u => u.GetUserByExternalLogin("Discord", "ext-1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(existing);
 
-        var handler = new CreateExternalLoginHandler(users.Object);
+        var handler = new CreateExternalLoginHandler(users.Object, new Mock<IBus>().Object);
 
         await Assert.ThrowsAsync<Exception>(() =>
             handler.Handle(new CreateExternalLoginCommand(Guid.NewGuid(), "ext-1", "Discord"), CancellationToken.None));

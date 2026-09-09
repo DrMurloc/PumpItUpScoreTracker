@@ -22,10 +22,13 @@ public sealed class DiscordReinvitePointerTests : ComponentTestBase
 
     private readonly Mock<IUiSettingsAccessor> _settings = new();
 
+    private static readonly Guid CommunityId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+
     private IRenderedComponent<DiscordReinvitePointer> Render(bool show = true) =>
         RenderComponent<DiscordReinvitePointer>(p => p
             .Add(c => c.Show, show)
-            .Add(c => c.InviteUrl, Invite));
+            .Add(c => c.InviteUrl, Invite)
+            .Add(c => c.CommunityId, CommunityId));
 
     public DiscordReinvitePointerTests()
     {
@@ -56,10 +59,24 @@ public sealed class DiscordReinvitePointerTests : ComponentTestBase
     [Fact]
     public void ADismissedPointerStaysGoneAndNeverFlashes()
     {
-        _settings.Setup(s => s.GetSetting(DiscordReinvitePointer.DismissedKey,
+        _settings.Setup(s => s.GetSetting(DiscordReinvitePointer.KeyFor(CommunityId),
             It.IsAny<CancellationToken>(), It.IsAny<Guid?>())).ReturnsAsync("true");
 
         Assert.Empty(Render().Markup.Trim());
+    }
+
+    /// <summary>
+    ///     The dismissal is per community, because what it reports is per-server state. An admin
+    ///     who fixed one community by hand must still be told about the others — and the people who
+    ///     run several are exactly who this is for.
+    /// </summary>
+    [Fact]
+    public void DismissingItForOneCommunityLeavesItShowingForAnother()
+    {
+        _settings.Setup(s => s.GetSetting(DiscordReinvitePointer.KeyFor(Guid.NewGuid()),
+            It.IsAny<CancellationToken>(), It.IsAny<Guid?>())).ReturnsAsync("true");
+
+        Assert.Contains("can't hand out roles", Render().Markup);
     }
 
     [Fact]
@@ -69,7 +86,7 @@ public sealed class DiscordReinvitePointerTests : ComponentTestBase
 
         await pointer.Find("[data-testid=discord-reinvite-dismiss]").ClickAsync(new MouseEventArgs());
 
-        _settings.Verify(s => s.SetSetting(DiscordReinvitePointer.DismissedKey, "true",
+        _settings.Verify(s => s.SetSetting(DiscordReinvitePointer.KeyFor(CommunityId), "true",
             It.IsAny<CancellationToken>()), Times.Once);
         Assert.Empty(pointer.Markup.Trim());
     }

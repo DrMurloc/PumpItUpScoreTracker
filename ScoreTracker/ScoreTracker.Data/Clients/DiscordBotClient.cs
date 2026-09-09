@@ -247,8 +247,13 @@ public sealed class DiscordBotClient : IBotClient
         var ceiling = guild.CurrentUser?.Roles.Max(r => (int?)r.Position) ?? -1;
         return await Task.FromResult(guild.Roles
             .OrderByDescending(r => r.Position)
+            // The missing permission wins over the position check. A bot with no Manage Roles at
+            // all also sits below plenty of roles, and labelling those AboveBot tells an admin to
+            // drag roles around — which cannot fix a permission that was never granted.
             .Select(r => new BotGuildRole(r.Id, r.Name, ColorOf(r),
-                BlockedReasonFor(r, ceiling) ?? (canManage ? null : BotRoleBlockedReason.BotCannotManageRoles)))
+                !canManage && !r.IsEveryone && !r.IsManaged
+                    ? BotRoleBlockedReason.BotCannotManageRoles
+                    : BlockedReasonFor(r, ceiling)))
             .ToArray());
     }
 

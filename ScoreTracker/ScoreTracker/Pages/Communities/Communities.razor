@@ -515,7 +515,8 @@
 @code {
 
     // Requested scopes: bot + application commands; permissions cover view channel, send
-    // messages, read history, embed links, and use external emoji (the grade/plate bubbles).
+    // messages, read history, embed links, use external emoji (the grade/plate bubbles) and
+    // manage roles (the community title roles). The number itself lives in DiscordBotInvite.
     private string BotInviteUrl => DiscordBotInvite.UrlFor(DiscordConfig.Value.ClientId);
 
     private IEnumerable<CommunityOverviewRecord> _communities = Array.Empty<CommunityOverviewRecord>();

@@ -34,7 +34,8 @@ else
     @* The state every server invited before this feature is in: the bot holds no Manage Roles,
        which no amount of role reordering fixes. Shown only while that is actually true, so it
        retires itself as people re-add. *@
-    <DiscordReinvitePointer Show="NeedsReinvite" InviteUrl="@BotInviteUrl"></DiscordReinvitePointer>
+    <DiscordReinvitePointer Show="NeedsReinvite" InviteUrl="@BotInviteUrl"
+                            CommunityId="@_view.CommunityId"></DiscordReinvitePointer>
 
     @* ---------------- 1. the server ---------------- *@
     <MudPaper Class="pa-4 mb-4" Outlined="true">

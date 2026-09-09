@@ -62,6 +62,12 @@ internal sealed class DiscordRoleAdminSaga :
     {
         var (community, communityId) = await Load(request.CommunityName, cancellationToken);
         var viewerId = _currentUser.IsLoggedIn ? _currentUser.User.Id : Guid.Empty;
+
+        // The read is open for the same reason the roster is — except where the roster is not. A
+        // private community's server name, role table and member counts are as private as the rest
+        // of it, and every sibling read already gates on this.
+        if (community.PrivacyType == CommunityPrivacyType.Private && !community.MemberIds.Contains(viewerId))
+            throw new CommunityNotFoundException();
         var server = await _roles.GetServer(communityId, cancellationToken);
 
         var roles = server == null
@@ -136,13 +142,33 @@ internal sealed class DiscordRoleAdminSaga :
         if (!TitlesByName.ContainsKey(request.TitleName))
             throw new CommunityPermissionException("That isn't a Phoenix 2 title.");
 
+        // The picker will not offer one, but the handler is the contract. @everyone in particular
+        // carries the guild's own id, and mapping it would put every member's baseline role into
+        // the managed set — every pass would then try to take it off everybody.
+        var server = await _roles.GetServer(communityId, cancellationToken)
+                     ?? throw new CommunityPermissionException("This community has no Discord server yet.");
+        var role = (await _bot.GetGuildRoles(server.GuildId, cancellationToken))
+            .FirstOrDefault(r => r.Id == request.RoleId);
+        if (role is not { CanAssign: true })
+            throw new CommunityPermissionException("That role can't be handed out by the bot.");
+
         // Two titles pointing at one role would leave "should this role come off" with no single
         // answer, so claiming a role takes it from whatever held it.
         var existing = await _roles.GetMappings(communityId, cancellationToken);
         foreach (var clash in existing.Where(m => m.RoleId == request.RoleId && m.TitleName != request.TitleName))
             await _roles.DeleteMapping(communityId, clash.TitleName, cancellationToken);
 
-        await _roles.SaveMapping(communityId, request.TitleName, request.RoleId, cancellationToken);
+        try
+        {
+            await _roles.SaveMapping(communityId, request.TitleName, request.RoleId, cancellationToken);
+        }
+        catch (Exception e) when (e is not CommunityPermissionException)
+        {
+            // Two admins claiming the same role at once race the unique index, and the raw EF
+            // exception would reach a player's screen.
+            throw new CommunityPermissionException(
+                "Somebody just changed that role. Reload and try again.");
+        }
 
         // Inline, not published: saying "this title gets this role" and then being told to press
         // Check now reads as though nothing happened. The caller watches it work.

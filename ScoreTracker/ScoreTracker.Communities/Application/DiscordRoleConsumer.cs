@@ -17,6 +17,7 @@ namespace ScoreTracker.Communities.Application;
 ///     </para>
 /// </summary>
 internal sealed class DiscordRoleConsumer : IConsumer<ReconcileDiscordRolesCommand>,
+    IConsumer<ExternalLoginAddedEvent>,
     IConsumer<ExternalLoginRemovedEvent>,
     IConsumer<SweepDiscordRolesCommand>,
     IConsumer<ReconcileGuildMemberCommand>,
@@ -50,21 +51,33 @@ internal sealed class DiscordRoleConsumer : IConsumer<ReconcileDiscordRolesComma
     }
 
     /// <summary>
+    ///     Somebody linked a sign-in. Until now this was the one step of ordinary onboarding that
+    ///     fired nothing: the community join happens before there is a Discord account, and the
+    ///     server join happens before there is a site account to find.
+    /// </summary>
+    public Task Consume(ConsumeContext<ExternalLoginAddedEvent> context) =>
+        Settle(context.Message.UserId, context.Message.LoginProviderName, "linked",
+            context.CancellationToken);
+
+    /// <summary>
     ///     Somebody unlinked a sign-in. Only Discord matters here: a role granted off the back of
     ///     a linked account must not outlive the link, and this is the one change nothing else
     ///     reports — without it the roles stand until the nightly sweep.
     /// </summary>
-    public async Task Consume(ConsumeContext<ExternalLoginRemovedEvent> context)
+    public Task Consume(ConsumeContext<ExternalLoginRemovedEvent> context) =>
+        Settle(context.Message.UserId, context.Message.LoginProviderName, "unlinked",
+            context.CancellationToken);
+
+    private async Task Settle(Guid userId, string provider, string what, CancellationToken cancellationToken)
     {
-        if (!context.Message.LoginProviderName.Equals(DiscordRoleSaga.DiscordProvider,
-                StringComparison.OrdinalIgnoreCase)) return;
+        if (!provider.Equals(DiscordRoleSaga.DiscordProvider, StringComparison.OrdinalIgnoreCase)) return;
         try
         {
-            await _saga.ReconcileUserEverywhere(context.Message.UserId, context.CancellationToken);
+            await _saga.ReconcileUserEverywhere(userId, cancellationToken);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Could not settle Discord roles after {UserId} unlinked", context.Message.UserId);
+            _logger.LogError(e, "Could not settle Discord roles after {UserId} {What} Discord", userId, what);
         }
     }
 
