@@ -9,6 +9,7 @@ using Moq;
 using ScoreTracker.Communities.Application;
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Domain;
+using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -279,6 +280,88 @@ public sealed class DiscordRoleSagaTests
         await Saga().ReconcileOne(CommunityId, UserId, CancellationToken.None);
 
         VerifyGranted(AboveBotRole, Times.Never());
+    }
+
+    /// <summary>
+    ///     The stall. A role that drifts above the bot AFTER it was handed out is still earned —
+    ///     taking it back because the bot momentarily cannot re-grant it strips every earner, and
+    ///     Discord refuses the removal too, which used to end the pass for everyone behind them.
+    /// </summary>
+    [Fact]
+    public async Task ARoleThatBecameUnassignableIsKeptNotStripped()
+    {
+        _bot.Setup(b => b.GetGuildRoles(Guild, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new BotGuildRole(BronzeRole, "@Bronze", null, BotRoleBlockedReason.AboveBot),
+                new BotGuildRole(GoldRole, "@Gold", null, null),
+                new BotGuildRole(BreakerRole, "@Boss Breaker", null, null)
+            });
+        AlreadyHolds(BronzeRole);
+
+        await Saga().ReconcileOne(CommunityId, UserId, CancellationToken.None);
+
+        VerifyRevoked(BronzeRole, Times.Never());
+        VerifyGranted(BronzeRole, Times.Never());
+    }
+
+    /// <summary>
+    ///     One member Discord refuses is one member. The candidate order is stable, so without
+    ///     isolation the same people are stranded on every pass, forever, behind whoever failed.
+    /// </summary>
+    [Fact]
+    public async Task OneMemberDiscordRefusesDoesNotEndTheCommunityPass()
+    {
+        var second = Guid.Parse("99999999-9999-9999-9999-999999999999");
+        const ulong secondSnowflake = 43;
+        _communities.Setup(c => c.GetMemberRoles(CommunityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new CommunityMemberRoleRecord(UserId, CommunityRole.Member),
+                new CommunityMemberRoleRecord(second, CommunityRole.Member)
+            });
+        _users.Setup(u => u.GetExternalLogins(It.IsAny<IEnumerable<Guid>>(), "Discord",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, string>
+            {
+                [UserId] = Snowflake.ToString(), [second] = secondSnowflake.ToString()
+            });
+        _titles.Setup(t => t.GetUsersWithTitles(MixEnum.Phoenix2, It.IsAny<IEnumerable<Name>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new TitleAchievedRecord(UserId, Name.From("[P.B] BRONZE"), ParagonLevel.None),
+                new TitleAchievedRecord(second, Name.From("[P.B] BRONZE"), ParagonLevel.None)
+            });
+        _bot.Setup(b => b.GetGuildMemberRoles(Guild, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<ulong, IReadOnlyCollection<ulong>>
+            {
+                [Snowflake] = Array.Empty<ulong>(), [secondSnowflake] = Array.Empty<ulong>()
+            });
+        _bot.Setup(b => b.AddRole(Guild, Snowflake, BronzeRole, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Missing Permissions"));
+
+        await Saga().ReconcileCommunity(CommunityId, CancellationToken.None);
+
+        _bot.Verify(b => b.AddRole(Guild, secondSnowflake, BronzeRole, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    /// <summary>
+    ///     A roster that cannot be read is an outage, not an empty server. Reporting success here
+    ///     let an admin watch "take the role off everyone" finish having removed nothing — and the
+    ///     mapping was then deleted, leaving exactly the orphan D13 was reversed to prevent.
+    /// </summary>
+    [Fact]
+    public async Task RevokingARoleRefusesWhenTheServerCannotBeRead()
+    {
+        _roles.Setup(r => r.GetGrants(CommunityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new CommunityDiscordGrantRecord(CommunityId, UserId, Snowflake, Now) });
+        _bot.Setup(b => b.GetGuildMemberRoles(Guild, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyDictionary<ulong, IReadOnlyCollection<ulong>>?)null);
+
+        await Assert.ThrowsAsync<DiscordUnreachableException>(() =>
+            Saga().RevokeRole(CommunityId, BronzeRole, CancellationToken.None));
     }
 
     [Fact]

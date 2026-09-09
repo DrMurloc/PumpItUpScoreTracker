@@ -99,11 +99,16 @@ namespace ScoreTracker.Domain.SecondaryPorts
         ///         For settling a whole community at once, where one fetch per member is the
         ///         difference between a pass costing a second and costing a minute. Unlike the
         ///         single-member read this DOES need the Server Members intent, which the
-        ///         application has; without it Discord returns nothing and callers see an empty
-        ///         server rather than an error.
+        ///         application has.
+        ///     </para>
+        ///     <para>
+        ///         <b>Null when the server cannot be read at all</b> — the bot is gone, or the
+        ///         gateway is down mid-reconnect. Distinct from an empty result, which means a
+        ///         server with nobody in it: a caller that could not tell them apart would take an
+        ///         outage for "nobody holds anything" and report success having done nothing.
         ///     </para>
         /// </summary>
-        public Task<IReadOnlyDictionary<ulong, IReadOnlyCollection<ulong>>> GetGuildMemberRoles(
+        public Task<IReadOnlyDictionary<ulong, IReadOnlyCollection<ulong>>?> GetGuildMemberRoles(
             ulong guildId, CancellationToken cancellationToken = default);
 
         /// <summary>

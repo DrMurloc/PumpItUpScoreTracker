@@ -280,16 +280,17 @@ public sealed class DiscordBotClient : IBotClient
     }
 
     /// <summary>
-    ///     One paginated REST walk of the server's members instead of one fetch each. Gated on the
-    ///     Server Members intent, which the application has; a guild the bot cannot see reports
-    ///     nobody, which reads downstream as "everybody left" — so callers treat an empty roster as
-    ///     a reason to do nothing rather than a reason to strip.
+    ///     One walk of the server's members instead of one fetch each. Gated on the Server Members
+    ///     intent, which the application has. A guild the bot cannot see reports NULL rather than
+    ///     an empty roster — the two mean opposite things and the callers act on the difference.
     /// </summary>
-    public async Task<IReadOnlyDictionary<ulong, IReadOnlyCollection<ulong>>> GetGuildMemberRoles(
+    public async Task<IReadOnlyDictionary<ulong, IReadOnlyCollection<ulong>>?> GetGuildMemberRoles(
         ulong guildId, CancellationToken cancellationToken = default)
     {
+        // Null, not empty: the socket is also null mid-reconnect, and a caller that read that as
+        // "the server has nobody in it" would revoke nothing and report success.
         var guild = Client.GetGuild(guildId);
-        if (guild == null) return new Dictionary<ulong, IReadOnlyCollection<ulong>>();
+        if (guild == null) return null;
 
         // Populates the socket cache for THIS guild, on demand. Deliberately not what
         // AlwaysDownloadUsers does — that pays for every guild at every connect, whether or not

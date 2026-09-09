@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Domain;
+using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models.Titles;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -118,7 +119,19 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
             var snowflake = context.LinkedMembers.TryGetValue(userId, out var linked)
                 ? linked
                 : granted.TryGetValue(userId, out var previous) ? previous : (ulong?)null;
-            if (await ReconcileMember(context, userId, snowflake, cancellationToken)) changed++;
+            try
+            {
+                if (await ReconcileMember(context, userId, snowflake, cancellationToken)) changed++;
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                // One member Discord refuses is one member, not the rest of the community. The
+                // candidate order is stable, so without this the SAME people are stranded on every
+                // pass, forever, behind whoever failed first.
+                _logger.LogError(e, "Could not settle {UserId} in community {CommunityId}",
+                    userId, communityId);
+            }
+
             progress?.Report(new DiscordRoleProgress(++done, candidates.Length));
         }
 
@@ -180,7 +193,8 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         // One roster read rather than one fetch per grant, and it also narrows the work list to
         // the people who actually hold the role — so the bar counts real work instead of counting
         // everybody and finishing instantly.
-        var roster = await _bot.GetGuildMemberRoles(server.GuildId, cancellationToken);
+        var roster = await _bot.GetGuildMemberRoles(server.GuildId, cancellationToken)
+                     ?? throw new DiscordUnreachableException();
         var holders = (await _roles.GetGrants(communityId, cancellationToken))
             .Where(g => roster.TryGetValue(g.DiscordUserId, out var held) && held.Contains(roleId))
             .ToArray();
@@ -233,7 +247,15 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
             .Where(r => r.Role != CommunityRole.Banned && withServers.Contains(r.CommunityId));
 
         foreach (var membership in mine)
-            await ReconcileOne(membership.CommunityId, userId, cancellationToken);
+            try
+            {
+                await ReconcileOne(membership.CommunityId, userId, cancellationToken);
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                _logger.LogError(e, "Could not settle {UserId} in community {CommunityId}",
+                    userId, membership.CommunityId);
+            }
     }
 
     /// <summary>
@@ -254,7 +276,15 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         if (user == null) return;
 
         foreach (var server in servers)
-            await ReconcileOne(server.CommunityId, user.Id, cancellationToken);
+            try
+            {
+                await ReconcileOne(server.CommunityId, user.Id, cancellationToken);
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                _logger.LogError(e, "Could not settle a new arrival in community {CommunityId}",
+                    server.CommunityId);
+            }
     }
 
     /// <summary>
@@ -267,8 +297,18 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
     {
         foreach (var grant in await _roles.GetGrantsForUser(userId, cancellationToken))
         {
-            var context = await BuildContext(grant.CommunityId, cancellationToken);
-            if (context != null) await Revoke(context, grant.DiscordUserId, cancellationToken);
+            try
+            {
+                var context = await BuildContext(grant.CommunityId, cancellationToken);
+                if (context != null) await Revoke(context, grant.DiscordUserId, cancellationToken);
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                // The row still goes: a purge must not stall on one community's Discord.
+                _logger.LogError(e, "Could not take roles back from purged account {UserId} in {CommunityId}",
+                    userId, grant.CommunityId);
+            }
+
             await _roles.DeleteGrant(grant.CommunityId, userId, cancellationToken);
         }
     }
@@ -284,13 +324,24 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         var context = await BuildContext(communityId, cancellationToken, wholeCommunity: true);
         if (context != null)
         {
+            if (context.Roster == null) throw new DiscordUnreachableException();
+
             var grants = await _roles.GetGrants(communityId, cancellationToken);
             var done = 0;
             progress?.Report(new DiscordRoleProgress(done, grants.Count));
             foreach (var grant in grants)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                await Revoke(context, grant.DiscordUserId, cancellationToken);
+                try
+                {
+                    await Revoke(context, grant.DiscordUserId, cancellationToken);
+                }
+                catch (Exception e) when (e is not OperationCanceledException)
+                {
+                    _logger.LogError(e, "Could not take roles back from {DiscordUserId} in {CommunityId}",
+                        grant.DiscordUserId, communityId);
+                }
+
                 progress?.Report(new DiscordRoleProgress(++done, grants.Count));
             }
         }
@@ -322,10 +373,16 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
             return new MemberPlan(userId, snowflake, Array.Empty<ulong>(), Array.Empty<ulong>(),
                 Array.Empty<ulong>(), eligible, false);
 
+        // Granting uses Assignable, because a blocked role cannot be handed over. REVOKING has to
+        // compare against everything they earned, blocked included: a role they qualify for is not
+        // one to take away just because the bot momentarily cannot re-grant it. Comparing against
+        // Assignable alone meant a role that drifted above the bot was stripped from every earner.
+        var keep = earned.Assignable.Concat(earned.Blocked).ToHashSet();
+
         return new MemberPlan(userId, snowflake,
             earned.Assignable.Where(r => !current.Contains(r)).ToArray(),
             // Only ever mapped roles: a role this community does not manage belongs to somebody else.
-            context.Managed.Where(r => current.Contains(r) && !earned.Assignable.Contains(r)).ToArray(),
+            context.Managed.Where(r => current.Contains(r) && !keep.Contains(r)).ToArray(),
             earned.Blocked, eligible, true);
     }
 
