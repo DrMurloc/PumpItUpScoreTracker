@@ -10686,6 +10686,12 @@
   <data name="Your Discord handle" xml:space="preserve">
     <value>あなたの Discord ハンドル</value>
   </data>
+  <data name="Your Discord is linked to {0} on PIU Scores, and {0} isn't in {1}. If you manage {1} from another account, link Discord to that account instead." xml:space="preserve">
+    <value>この Discord は PIU Scores の {0} に連携されていますが、{0} は {1} のメンバーではありません。{1} を別のアカウントで管理している場合は、そのアカウントに Discord を連携してください。</value>
+  </data>
+  <data name="Your Discord is linked to {0} on PIU Scores, which is in {1} without the Manage Discord roles permission. The community's creator can grant it on the Members page." xml:space="preserve">
+    <value>この Discord は PIU Scores の {0} に連携されていますが、{0} には {1} の Discord ロールを管理する権限がありません。コミュニティの作成者がメンバーページで付与できます。</value>
+  </data>
   <data name="your doubles pool is {0}" xml:space="preserve">
     <value>あなたの Doubles プールは {0}</value>
   </data>

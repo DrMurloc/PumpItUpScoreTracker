@@ -211,9 +211,13 @@ namespace ScoreTracker.Communities.Application
                 return new BotReply(Text: _localizer.Get(invokerCulture, "That community wasn't found."));
 
             var community = await _communities.GetCommunityByName(communityName, cancellationToken);
-            if (community == null || !community.HasPermission(user.Id, CommunityPermission.ManageDiscord))
-                return new BotReply(Text: _localizer.Get(invokerCulture,
-                    "You don't have permission to manage Discord for that community."));
+            // A second read of the same name, so it answers separately from the id lookup above —
+            // and it must answer the same way, because "no such community" folded into the
+            // permission refusal is how a typo came back as an authority problem.
+            if (community == null)
+                return new BotReply(Text: _localizer.Get(invokerCulture, "That community wasn't found."));
+            if (!community.HasPermission(user.Id, CommunityPermission.ManageDiscord))
+                return new BotReply(Text: RefusalReason(community, user, invokerCulture));
 
             var existing = await _roleConfiguration.GetServer(id, cancellationToken);
             if (existing != null && existing.GuildId != guildId)
@@ -230,8 +234,39 @@ namespace ScoreTracker.Communities.Application
         }
 
         /// <summary>
+        ///     Why the site side said no. The three causes are fixed by three different people, so
+        ///     one sentence for all of them sent everybody to the wrong one — and the commonest is
+        ///     not a permission problem at all: a Discord account linked to a second PIU Scores
+        ///     login refuses exactly like a missing flag does. Naming the account the invocation
+        ///     resolved to is the whole diagnosis in that case, and it is the invoker's own name in
+        ///     an ephemeral reply, so it tells them nothing they do not own.
+        /// </summary>
+        private string RefusalReason(Community community, User user, string? culture)
+        {
+            var name = (string)community.Name;
+            var account = (string)user.Name;
+
+            return community.RoleOf(user.Id) is null or CommunityRole.Banned
+                ? _localizer.Get(culture,
+                    "Your Discord is linked to {0} on PIU Scores, and {0} isn't in {1}. " +
+                    "If you manage {1} from another account, link Discord to that account instead.",
+                    account, name)
+                : _localizer.Get(culture,
+                    "Your Discord is linked to {0} on PIU Scores, which is in {1} without the " +
+                    "Manage Discord roles permission. The community's creator can grant it on the Members page.",
+                    account, name);
+        }
+
+        /// <summary>
         ///     The invoker's own communities that they may configure Discord for — never a public
         ///     directory search, since this option hands a server to whatever it names.
+        ///     <para>
+        ///         One predicate, and it is the command's own: the creator's standing already
+        ///         carries <see cref="CommunityPermission.All" /> by the time it reaches here, so a
+        ///         second Creator clause would only re-answer a question the flag has answered, and
+        ///         re-answering it off a different column is what let this list offer a community
+        ///         the command then refused.
+        ///     </para>
         /// </summary>
         private async Task<IReadOnlyList<BotOptionChoice>> ManageableCommunityChoices(
             BotAutocompleteRequest request, CancellationToken cancellationToken)
@@ -242,8 +277,8 @@ namespace ScoreTracker.Communities.Application
             var partial = request.PartialValue?.Trim() ?? string.Empty;
             var roles = await _communities.GetUserRoles(user.Id, cancellationToken);
             return roles
-                .Where(r => r.Role == CommunityRole.Creator ||
-                            (r.Permissions & CommunityPermission.ManageDiscord) == CommunityPermission.ManageDiscord)
+                .Where(r => (r.Permissions & CommunityPermission.ManageDiscord) ==
+                            CommunityPermission.ManageDiscord)
                 .Select(r => (string)r.CommunityName)
                 .Where(name => name.Contains(partial, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(name => name)

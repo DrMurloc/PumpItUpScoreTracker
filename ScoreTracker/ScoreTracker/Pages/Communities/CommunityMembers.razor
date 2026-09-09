@@ -312,11 +312,15 @@ else
     private CommunityMemberRecord? _muteTarget;
     private string? _muteReason;
 
+    // Every delegable flag, in enum order. A permission missing HERE is a permission no admin
+    // can ever hold: this array drives both the per-admin dialog and the promotion defaults, and
+    // there is no other way to grant one. ManageDiscord shipped absent from it, which left
+    // /piu link-server refusing every admin the community's creator thought they had authorized.
     private static readonly CommunityPermission[] ManageablePermissions =
     {
         CommunityPermission.ManageInviteLinks, CommunityPermission.PromoteAdmins,
         CommunityPermission.ManageUsers, CommunityPermission.ManageChannelSubscriptions,
-        CommunityPermission.ModerateComments
+        CommunityPermission.ModerateComments, CommunityPermission.ManageDiscord
     };
 
     private bool CanPromote => _myRole != null && _myRole.Permissions.HasFlag(CommunityPermission.PromoteAdmins);
@@ -574,6 +578,7 @@ else
         CommunityPermission.ManageUsers => L["Manage users (ban/unban)"].Value,
         CommunityPermission.ManageChannelSubscriptions => L["Manage channel subscriptions"].Value,
         CommunityPermission.ModerateComments => L["Moderate comments (remove/mute)"].Value,
+        CommunityPermission.ManageDiscord => L["Manage Discord roles"].Value,
         _ => permission.ToString()
     };
 

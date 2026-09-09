@@ -62,12 +62,11 @@ public sealed class LinkServerCommandTests
             .ReturnsAsync(new BotGuild(Guild, "Arrow Eclipse", true));
     }
 
-    private void GivenPermission(CommunityPermission permissions)
+    private void GivenPermission(CommunityPermission permissions) =>
+        GivenCommunity(new CommunityMember(UserId, CommunityRole.Admin, permissions, null, null));
+
+    private void GivenCommunity(params CommunityMember[] members)
     {
-        var members = new[]
-        {
-            new CommunityMember(UserId, CommunityRole.Admin, permissions, null, null)
-        };
         _communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Community(Name.From("Arrow Eclipse"), Guid.NewGuid(),
                 CommunityPrivacyType.Public, members, Array.Empty<Community.ChannelConfiguration>(),
@@ -138,6 +137,50 @@ public sealed class LinkServerCommandTests
         Assert.Contains("Link your Discord account", reply.Text);
         _roleConfiguration.Verify(r => r.SaveServer(It.IsAny<Guid>(), It.IsAny<ulong>(), It.IsAny<string>(),
             It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    ///     The commonest refusal is not a permission problem: a Discord linked to a second PIU
+    ///     Scores login refuses exactly like a missing flag does, and one sentence for both sent
+    ///     people to /Account when the answer was on the Members page and the other way round.
+    ///     Each names the account the invocation resolved to, which is the whole diagnosis.
+    /// </summary>
+    [Fact]
+    public async Task AnAccountWithNoStandingIsToldWhichAccountItLandedOn()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetUserByExternalLoginQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserBuilder().WithId(UserId).WithName("Stranger").Build());
+        GivenCommunity(new CommunityMember(Guid.NewGuid(), CommunityRole.Creator, CommunityPermission.All,
+            null, null));
+
+        var reply = await Saga().Handle(Invoke(), CancellationToken.None);
+
+        Assert.Contains("Stranger", reply.Text);
+        Assert.Contains("isn't in Arrow Eclipse", reply.Text);
+        _roleConfiguration.Verify(r => r.SaveServer(It.IsAny<Guid>(), It.IsAny<ulong>(), It.IsAny<string>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AnAdminWithoutTheFlagIsPointedAtTheCreatorRatherThanAtLinking()
+    {
+        GivenPermission(CommunityPermission.ManageUsers);
+
+        var reply = await Saga().Handle(Invoke(), CancellationToken.None);
+
+        Assert.Contains("Manage Discord roles permission", reply.Text);
+        Assert.Contains("creator", reply.Text);
+    }
+
+    [Fact]
+    public async Task AnUnknownCommunityIsNotReportedAsAPermissionProblem()
+    {
+        _communities.Setup(c => c.GetCommunityId(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid?)null);
+
+        var reply = await Saga().Handle(Invoke(), CancellationToken.None);
+
+        Assert.Contains("wasn't found", reply.Text);
     }
 
     /// <summary>

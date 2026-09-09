@@ -504,6 +504,22 @@ namespace ScoreTracker.Communities.Infrastructure
                 }))!;
         }
 
+        /// <summary>
+        ///     Standing in each of the caller's communities, resolved the same way the aggregate
+        ///     resolves it: the ban row wins, then the community's own owning row, then whatever
+        ///     the membership row says.
+        ///     <para>
+        ///         Reading the membership row alone made this a SECOND authority on who the creator
+        ///         is, and the two can disagree — <see cref="Community" /> derives Creator (and its
+        ///         implicit <see cref="CommunityPermission.All" />) from <c>OwningUserId</c>, which
+        ///         is what every server-side gate then checks. A row saying Creator over a
+        ///         community owned by somebody else offered <c>/piu link-server</c> a community it
+        ///         would refuse; a hand-named owner over an ordinary Member row hid one it would
+        ///         accept. Neither is reachable through a save — both are reachable by naming an
+        ///         owner on a system community's row, which is how the official Discord gets its
+        ///         title roles (D20).
+        ///     </para>
+        /// </summary>
         public async Task<IEnumerable<MyCommunityRoleRecord>> GetUserRoles(Guid userId,
             CancellationToken cancellationToken)
         {
@@ -511,12 +527,37 @@ namespace ScoreTracker.Communities.Infrastructure
             var rows = await (from cm in database.Set<CommunityMembershipEntity>()
                     where cm.UserId == userId
                     join c in database.Set<CommunityEntity>() on cm.CommunityId equals c.Id
-                    select new { c.Id, c.Name, cm.Role, cm.Permissions })
+                    select new { c.Id, c.Name, c.OwningUserId, cm.Role, cm.Permissions })
                 .ToArrayAsync(cancellationToken);
 
-            return rows.Select(r => new MyCommunityRoleRecord(r.Id, r.Name,
-                Enum.TryParse<CommunityRole>(r.Role, out var role) ? role : CommunityRole.Member,
-                (CommunityPermission)r.Permissions)).ToArray();
+            return rows.Select(r =>
+            {
+                var stored = Enum.TryParse<CommunityRole>(r.Role, out var parsed)
+                    ? parsed
+                    : CommunityRole.Member;
+                var (role, permissions) = Standing(userId, r.OwningUserId, stored,
+                    (CommunityPermission)r.Permissions);
+                return new MyCommunityRoleRecord(r.Id, r.Name, role, permissions);
+            }).ToArray();
+        }
+
+        /// <summary>
+        ///     <see cref="Community.RoleOf" /> and <see cref="Community.PermissionsOf" />, in the
+        ///     same order and off the same two columns the aggregate hydrates from: a ban outranks
+        ///     everything, the owning row is the only source of Creator, permissions are only
+        ///     meaningful on an admin row. A Creator row over somebody else's community is a plain
+        ///     member here for the same reason it is one there — the flag bits on it were never
+        ///     honored by any gate.
+        /// </summary>
+        private static (CommunityRole Role, CommunityPermission Permissions) Standing(Guid userId,
+            Guid owningUserId, CommunityRole stored, CommunityPermission storedPermissions)
+        {
+            if (stored == CommunityRole.Banned) return (CommunityRole.Banned, CommunityPermission.None);
+            if (userId != Guid.Empty && userId == owningUserId)
+                return (CommunityRole.Creator, CommunityPermission.All);
+            return stored == CommunityRole.Admin
+                ? (CommunityRole.Admin, storedPermissions)
+                : (CommunityRole.Member, CommunityPermission.None);
         }
 
         public async Task<IEnumerable<CommunityMemberRoleRecord>> GetMemberRoles(Guid communityId,

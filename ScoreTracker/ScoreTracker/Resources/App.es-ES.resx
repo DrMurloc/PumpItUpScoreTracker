@@ -10618,6 +10618,12 @@
   <data name="Your Discord handle" xml:space="preserve">
     <value>Tu usuario de Discord</value>
   </data>
+  <data name="Your Discord is linked to {0} on PIU Scores, and {0} isn't in {1}. If you manage {1} from another account, link Discord to that account instead." xml:space="preserve">
+    <value>Tu Discord está vinculado a {0} en PIU Scores, y {0} no está en {1}. Si gestionas {1} desde otra cuenta, vincula Discord a esa cuenta.</value>
+  </data>
+  <data name="Your Discord is linked to {0} on PIU Scores, which is in {1} without the Manage Discord roles permission. The community's creator can grant it on the Members page." xml:space="preserve">
+    <value>Tu Discord está vinculado a {0} en PIU Scores, que está en {1} sin el permiso Gestionar los roles de Discord. Quien creó la comunidad puede concederlo en la página Miembros.</value>
+  </data>
   <data name="your doubles pool is {0}" xml:space="preserve">
     <value>tu conjunto de doubles es {0}</value>
   </data>

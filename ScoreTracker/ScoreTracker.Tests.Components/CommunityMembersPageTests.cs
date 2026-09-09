@@ -2,11 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
+using AngleSharp.Dom;
 using Bunit;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ScoreTracker.Communities.Contracts;
+using ScoreTracker.Communities.Contracts.Commands;
 using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Enums;
@@ -128,4 +133,59 @@ public sealed class CommunityMembersPageTests : ComponentTestBase
         Assert.Contains("Edit Permissions", cut.Markup);
         Assert.DoesNotContain("Make Creator", cut.Markup);
     }
+
+    /// <summary>
+    ///     A permission the creator cannot tick is a permission no admin can ever hold, and this
+    ///     page is the only place any of them are handed out. ManageDiscord shipped missing from
+    ///     the list, so every admin sent to /piu link-server was refused by a flag their creator
+    ///     had no way to grant.
+    /// </summary>
+    [Fact]
+    public void EveryDelegablePermissionIsOfferedToTheCreator()
+    {
+        GivenMyRole(CommunityRole.Creator, CommunityPermission.All);
+        var cut = Render();
+
+        foreach (var permission in Enum.GetValues<CommunityPermission>()
+                     .Where(p => p is not (CommunityPermission.None or CommunityPermission.All)))
+            Assert.Contains(PermissionLabels[permission], cut.Markup);
+    }
+
+    /// <summary>
+    ///     Offered is not the same as grantable — the switch has to reach the command carrying the
+    ///     flag. Driven through the promotion defaults rather than the per-admin dialog because a
+    ///     MudDialog's body needs a provider this tree has none of; both read the same array, so
+    ///     the array is what is under test either way.
+    /// </summary>
+    [Fact]
+    public async Task TickingManageDiscordSendsTheFlagToTheCommand()
+    {
+        GivenMyRole(CommunityRole.Creator, CommunityPermission.All);
+        var cut = Render();
+
+        await cut.FindAll("input[type=checkbox]")
+            .Single(input => Label(input)?.Contains("Manage Discord roles") == true)
+            .ChangeAsync(new ChangeEventArgs { Value = true });
+
+        // The page dispatches through a shared Dispatch(IRequest ...) helper, so the mock records
+        // the call at IRequest — matching on the concrete type here would never bind.
+        _mediator.Verify(m => m.Send(
+            It.Is<IRequest>(c => c is SetDefaultAdminPermissionsCommand &&
+                                 ((SetDefaultAdminPermissionsCommand)c).Permissions
+                                 .HasFlag(CommunityPermission.ManageDiscord)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>MudSwitch renders its caption on the wrapping label, not on the input.</summary>
+    private static string? Label(IElement input) => input.Closest("label")?.TextContent;
+
+    private static readonly Dictionary<CommunityPermission, string> PermissionLabels = new()
+    {
+        [CommunityPermission.ManageInviteLinks] = "Manage invite links",
+        [CommunityPermission.PromoteAdmins] = "Promote other admins",
+        [CommunityPermission.ManageUsers] = "Manage users (ban/unban)",
+        [CommunityPermission.ManageChannelSubscriptions] = "Manage channel subscriptions",
+        [CommunityPermission.ModerateComments] = "Moderate comments (remove/mute)",
+        [CommunityPermission.ManageDiscord] = "Manage Discord roles"
+    };
 }
