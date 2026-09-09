@@ -18,15 +18,6 @@ public interface IUserRepository
     Task RemoveExternalLogin(Guid userId, string loginProviderName, string externalId,
         CancellationToken cancellationToken = default);
 
-    /// <summary>
-    ///     One provider's external ids for many accounts at once, keyed by user id. Accounts with
-    ///     no login for that provider are absent rather than null-valued. Exists so a sweep over a
-    ///     community's roster is one read instead of one per member; an account holding two logins
-    ///     for the same provider is not expected, and the first wins.
-    /// </summary>
-    Task<IReadOnlyDictionary<Guid, string>> GetExternalLogins(IEnumerable<Guid> userIds,
-        string loginProviderName, CancellationToken cancellationToken = default);
-
     Task<IEnumerable<User>> SearchForUsersByName(string searchText, CancellationToken cancellationToken = default);
 
     /// <summary>
