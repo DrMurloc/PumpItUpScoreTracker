@@ -1,6 +1,8 @@
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Communities.Contracts.Messages;
+using ScoreTracker.PlayerProgress.Contracts.Events;
+using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Communities.Application;
 
@@ -13,7 +15,8 @@ namespace ScoreTracker.Communities.Application;
 ///         property that lets the whole feature survive an in-memory transport.
 ///     </para>
 /// </summary>
-internal sealed class DiscordRoleConsumer : IConsumer<ReconcileDiscordRolesCommand>
+internal sealed class DiscordRoleConsumer : IConsumer<ReconcileDiscordRolesCommand>,
+    IConsumer<PlayerTitlesChangedEvent>
 {
     private readonly ILogger<DiscordRoleConsumer> _logger;
     private readonly IDiscordRoleService _saga;
@@ -22,6 +25,24 @@ internal sealed class DiscordRoleConsumer : IConsumer<ReconcileDiscordRolesComma
     {
         _saga = saga;
         _logger = logger;
+    }
+
+    /// <summary>
+    ///     Holding a title is account-wide, so this fans out to every community the player is in
+    ///     that hands out roles. Phoenix 2 only — a Phoenix 1 title moves nothing here.
+    /// </summary>
+    public async Task Consume(ConsumeContext<PlayerTitlesChangedEvent> context)
+    {
+        if (context.Message.Mix != MixEnum.Phoenix2) return;
+        try
+        {
+            await _saga.ReconcileUserEverywhere(context.Message.UserId, context.CancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Could not settle Discord roles after a title change for {UserId}",
+                context.Message.UserId);
+        }
     }
 
     public async Task Consume(ConsumeContext<ReconcileDiscordRolesCommand> context)

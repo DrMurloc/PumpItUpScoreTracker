@@ -11,6 +11,8 @@ using ScoreTracker.Communities.Contracts.Messages;
 using ScoreTracker.Communities.Domain;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.PlayerProgress.Contracts.Events;
+using ScoreTracker.SharedKernel.Enums;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -101,6 +103,30 @@ public sealed class DiscordRoleTriggerTests
         await consumer.Consume(Message(new AccountPurgeStartedEvent(UserId)));
 
         purge.Verify(p => p.DeleteAllForUser(UserId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task EarningAPhoenix2TitleSettlesEveryCommunityThePlayerIsIn()
+    {
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new PlayerTitlesChangedEvent(UserId, MixEnum.Phoenix2)));
+
+        _roles.Verify(r => r.ReconcileUserEverywhere(UserId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>Roles are a Phoenix 2 feature; a Phoenix 1 title moves nothing.</summary>
+    [Theory]
+    [InlineData(MixEnum.Phoenix)]
+    [InlineData(MixEnum.XX)]
+    public async Task ATitleOnAnotherMixIsIgnored(MixEnum mix)
+    {
+        var consumer = new DiscordRoleConsumer(_roles.Object, NullLogger<DiscordRoleConsumer>.Instance);
+
+        await consumer.Consume(Message(new PlayerTitlesChangedEvent(UserId, mix)));
+
+        _roles.Verify(r => r.ReconcileUserEverywhere(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     private static ConsumeContext<T> Message<T>(T message) where T : class

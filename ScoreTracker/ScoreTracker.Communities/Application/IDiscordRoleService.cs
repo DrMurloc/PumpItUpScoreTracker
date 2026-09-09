@@ -27,4 +27,11 @@ internal interface IDiscordRoleService
 
     /// <summary>Takes back everything one community handed out.</summary>
     Task RevokeAll(Guid communityId, CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     Settles one account in every community that hands out roles and that they belong to.
+    ///     What a title change reaches for: holding a title is account-wide, so every community
+    ///     mapping it has to be looked at.
+    /// </summary>
+    Task ReconcileUserEverywhere(Guid userId, CancellationToken cancellationToken);
 }

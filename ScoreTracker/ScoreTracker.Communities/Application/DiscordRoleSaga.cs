@@ -113,6 +113,25 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
     }
 
     /// <summary>
+    ///     Settles one account everywhere it could hold a role. Intersects the communities that
+    ///     designate a server with the ones the account belongs to, so the common case — a player
+    ///     in World, their region and a club, none of which hand out roles — costs two reads and
+    ///     stops.
+    /// </summary>
+    public async Task ReconcileUserEverywhere(Guid userId, CancellationToken cancellationToken)
+    {
+        var servers = await _roles.GetAllServers(cancellationToken);
+        if (servers.Count == 0) return;
+
+        var withServers = servers.Select(s => s.CommunityId).ToHashSet();
+        var mine = (await _communities.GetUserRoles(userId, cancellationToken))
+            .Where(r => r.Role != CommunityRole.Banned && withServers.Contains(r.CommunityId));
+
+        foreach (var membership in mine)
+            await ReconcileOne(membership.CommunityId, userId, cancellationToken);
+    }
+
+    /// <summary>
     ///     Somebody walked into a server. Every community that designated it gets a look — normally
     ///     one; two communities pointing at one Discord is not forbidden, and each manages only its
     ///     own mapped roles.
