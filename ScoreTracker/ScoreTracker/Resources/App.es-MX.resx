@@ -157,6 +157,9 @@
   <data name="(Optional) Also delete historical data" xml:space="preserve">
     <value>(Opcional) Borrar también los datos históricos</value>
   </data>
+  <data name="(role deleted)" xml:space="preserve">
+    <value>(rol eliminado)</value>
+  </data>
   <data name="* Official board data, as of {0}." xml:space="preserve">
     <value>* Datos del marcador oficial, al {0}.</value>
   </data>
@@ -394,6 +397,9 @@
   <data name="A ceiling — every chart at your best." xml:space="preserve">
     <value>Un techo: cada chart a tu mejor nivel.</value>
   </data>
+  <data name="A channel that posts scores here isn't the same as this community's server — setting one is a separate step." xml:space="preserve">
+    <value>Un canal que publica puntajes aquí no es lo mismo que el servidor de esta comunidad: designarlo es un paso aparte.</value>
+  </data>
   <data name="a chart" xml:space="preserve">
     <value>un chart</value>
   </data>
@@ -420,6 +426,9 @@
   </data>
   <data name="A delivery can arrive twice. If PIU Scores restarts mid-import, that import is sent again once it comes back — key your handler on the chart and the score's recorded time rather than on each delivery being unique. PIUGame session deliveries are the exception: those are never re-sent, because the session is gone by then." xml:space="preserve">
     <value>Un envío puede llegar dos veces. Si PIU Scores se reinicia durante una importación, esa importación se envía de nuevo al volver: usa el chart y la hora registrada de la puntuación como clave, en lugar de suponer que cada envío es único. Los envíos de sesión de PIUGame son la excepción: nunca se reenvían, porque la sesión ya no existe.</value>
+  </data>
+  <data name="A dry run of what's about to happen, so nothing lands as a surprise." xml:space="preserve">
+    <value>Un ensayo de lo que va a pasar, para que nada te sorprenda.</value>
   </data>
   <data name="A few things worth getting right up front — everything after this is tuned to them." xml:space="preserve">
     <value>Un par de cosas que conviene dejar bien desde el principio: todo lo demás se ajusta a ellas.</value>
@@ -450,6 +459,9 @@
   </data>
   <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
     <value>Una clave sin caducidad sigue siendo válida hasta que la revoques a mano — incluso después de perder un portátil o de que un repositorio se haga público. Elige una fecha salvo que tengas un motivo.</value>
+  </data>
+  <data name="A member of {0}, and not banned" xml:space="preserve">
+    <value>Es miembro de {0} y no está baneado</value>
   </data>
   <data name="A miss also halves whatever combo it splits — dead-centre on {0} notes it costs {1} points, not {2}. Edges are cheap; middles are not." xml:space="preserve">
     <value>Un miss también parte a la mitad el combo que rompe — en el centro exacto de {0} notas cuesta {1} puntos, no {2}. Los bordes salen baratos; el centro no.</value>
@@ -634,6 +646,9 @@
   <data name="Add a rival" xml:space="preserve">
     <value>Agregar un rival</value>
   </data>
+  <data name="Add a role" xml:space="preserve">
+    <value>Agregar un rol</value>
+  </data>
   <data name="Add as rival" xml:space="preserve">
     <value>Agregar como rival</value>
   </data>
@@ -724,6 +739,9 @@
   <data name="After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed." xml:space="preserve">
     <value>Después de la carga, si hay algunas filas/charts/intentos que no se cargaron correctamente, tendrá la opción de descargar una lista de las filas fallidas y la razón por la que fallaron.</value>
   </data>
+  <data name="Afterwards, run this in the server you want:" xml:space="preserve">
+    <value>Después, ejecuta esto en el servidor que quieras:</value>
+  </data>
   <data name="Against regular PUMBILITY," xml:space="preserve">
     <value>Frente a la PUMBILITY normal,</value>
   </data>
@@ -759,6 +777,9 @@
   </data>
   <data name="All of it is changeable later in your account." xml:space="preserve">
     <value>Todo se puede cambiar después en tu cuenta.</value>
+  </data>
+  <data name="All of these have to be true. If any one stops being true, the role comes off." xml:space="preserve">
+    <value>Todo esto debe cumplirse. Si algo deja de cumplirse, el rol se retira.</value>
   </data>
   <data name="all permissions" xml:space="preserve">
     <value>todos los permisos</value>
@@ -816,6 +837,9 @@
   </data>
   <data name="Also forget my saved PIUGAME password" xml:space="preserve">
     <value>Olvidar también mi contraseña guardada de PIUGAME</value>
+  </data>
+  <data name="Also take the role off everyone who has it" xml:space="preserve">
+    <value>Quitar también el rol a todos los que lo tengan</value>
   </data>
   <data name="Always" xml:space="preserve">
     <value>Siempre</value>
@@ -1504,6 +1528,9 @@
   <data name="Center" xml:space="preserve">
 	  <value>Centro</value>
   </data>
+  <data name="Change" xml:space="preserve">
+    <value>Cambio</value>
+  </data>
   <data name="Change avatar" xml:space="preserve">
     <value>Cambiar avatar</value>
   </data>
@@ -1515,6 +1542,9 @@
   </data>
   <data name="Change mix" xml:space="preserve">
     <value>Cambiar versión</value>
+  </data>
+  <data name="Change server" xml:space="preserve">
+    <value>Cambiar de servidor</value>
   </data>
   <data name="Changing the URL or the secret clears this." xml:space="preserve">
     <value>Cambiar la URL o el secreto anula esto.</value>
@@ -1653,6 +1683,9 @@
   </data>
   <data name="Check back shortly." xml:space="preserve">
     <value>Vuelve en un rato.</value>
+  </data>
+  <data name="Check now" xml:space="preserve">
+    <value>Revisar ahora</value>
   </data>
   <data name="Check the link" xml:space="preserve">
     <value>Comprobar el enlace</value>
@@ -1827,6 +1860,9 @@
   </data>
   <data name="Combo, priced" xml:space="preserve">
     <value>El combo, con precio</value>
+  </data>
+  <data name="Come back here once it's done." xml:space="preserve">
+    <value>Vuelve aquí cuando esté hecho.</value>
   </data>
   <data name="Comfortable" xml:space="preserve">
     <value>Cómodo</value>
@@ -2118,6 +2154,9 @@
   </data>
   <data name="Could not mute this member." xml:space="preserve">
     <value>No se pudo silenciar a este miembro.</value>
+  </data>
+  <data name="Could not reach Discord just now." xml:space="preserve">
+    <value>No se pudo contactar con Discord ahora mismo.</value>
   </data>
   <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
     <value>No se pudo conectar con PIUGAME, inténtalo más tarde</value>
@@ -2467,6 +2506,18 @@
   <data name="Discord" xml:space="preserve">
     <value>Discord</value>
   </data>
+  <data name="Discord manages this role, so nobody can hand it out." xml:space="preserve">
+    <value>Discord gestiona este rol, así que nadie puede otorgarlo.</value>
+  </data>
+  <data name="Discord role" xml:space="preserve">
+    <value>Rol de Discord</value>
+  </data>
+  <data name="Discord server" xml:space="preserve">
+    <value>Servidor de Discord</value>
+  </data>
+  <data name="Discord won't let the bot hand out {0} of these roles." xml:space="preserve">
+    <value>Discord no deja que el bot otorgue {0} de estos roles.</value>
+  </data>
   <data name="Discord, wired in" xml:space="preserve">
     <value>Discord, conectado</value>
   </data>
@@ -2632,6 +2683,9 @@
   <data name="Earned" xml:space="preserve">
     <value>Conseguidos</value>
   </data>
+  <data name="Earned {0}, but the bot can't hand that role out." xml:space="preserve">
+    <value>Consiguió {0}, pero el bot no puede otorgar ese rol.</value>
+  </data>
   <data name="Earned, not given" xml:space="preserve">
     <value>Ganado, no regalado</value>
   </data>
@@ -2776,6 +2830,9 @@
   <data name="Every record held this week." xml:space="preserve">
     <value>Todos los récords se mantuvieron esta semana.</value>
   </data>
+  <data name="Every role this community gave out in the current server comes off first." xml:space="preserve">
+    <value>Primero se retiran todos los roles que esta comunidad dio en el servidor actual.</value>
+  </data>
   <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
     <value>Cada fila del archivo gana, incluso si es peor que lo que ya tienes.</value>
   </data>
@@ -2794,6 +2851,9 @@
   <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
     <value>Las de los demás. Puedes administrarlas, y no se avisa a quien las hizo.</value>
   </data>
+  <data name="Everyone has this role already." xml:space="preserve">
+    <value>Todo el mundo ya tiene este rol.</value>
+  </data>
   <data name="Everyone on your rivals roster, board-only rivals included — their standings come from the weekly official board, so they only count on the charts it publishes." xml:space="preserve">
     <value>Todos los de tu lista de rivales, rivales solo de marcador incluidos: sus posiciones vienen del marcador oficial semanal, así que solo cuentan en los charts que publica.</value>
   </data>
@@ -2811,6 +2871,9 @@
   </data>
   <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
     <value>Todo lo de abajo son datos reales del sitio: el producto de verdad, no capturas.</value>
+  </data>
+  <data name="Everything else" xml:space="preserve">
+    <value>Todo lo demás</value>
   </data>
   <data name="Everything goes — scores, history, votes, tournament results, communities, and the account itself." xml:space="preserve">
     <value>Se va todo: puntuaciones, historial, votos, resultados de torneos, comunidades y la propia cuenta.</value>
@@ -3247,6 +3310,12 @@
   <data name="Give a song name." xml:space="preserve">
     <value>Escribe el nombre de una canción.</value>
   </data>
+  <data name="Give members a Discord role when they earn a Phoenix 2 title." xml:space="preserve">
+    <value>Da a los miembros un rol de Discord cuando consiguen un título de Phoenix 2.</value>
+  </data>
+  <data name="Give members a Discord role when they earn a Phoenix 2 title. Roles are kept in step automatically — nobody has to ask." xml:space="preserve">
+    <value>Da a los miembros un rol de Discord cuando consiguen un título de Phoenix 2. Los roles se mantienen al día solos: nadie tiene que pedirlo.</value>
+  </data>
   <data name="Glow" xml:space="preserve">
     <value>Brillo</value>
   </data>
@@ -3439,6 +3508,9 @@
   <data name="Highest on the board" xml:space="preserve">
     <value>El más alto del tablero</value>
   </data>
+  <data name="Highest only" xml:space="preserve">
+    <value>Solo el más alto</value>
+  </data>
   <data name="Highest score wins." xml:space="preserve">
     <value>Gana el puntaje más alto.</value>
   </data>
@@ -3489,6 +3561,9 @@
   </data>
   <data name="holds the combo, doesn't extend it" xml:space="preserve">
     <value>mantiene el combo, no lo alarga</value>
+  </data>
+  <data name="Holds the title on Phoenix 2, with no higher rung" xml:space="preserve">
+    <value>Tiene el título en Phoenix 2, sin ningún peldaño superior</value>
   </data>
   <data name="Home" xml:space="preserve">
     <value>Inicio</value>
@@ -3772,6 +3847,9 @@
   <data name="In progress" xml:space="preserve">
     <value>En progreso</value>
   </data>
+  <data name="In Server Settings → Roles, drag the PIU Scores role above them." xml:space="preserve">
+    <value>En Ajustes del servidor → Roles, arrastra el rol de PIU Scores por encima de ellos.</value>
+  </data>
   <data name="In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades." xml:space="preserve">
     <value>En algunos de esos casos, puede ser más rápido subir un Spreadsheet en lugar de ingresar manualmente miles de calificaciones.</value>
   </data>
@@ -3783,6 +3861,9 @@
   </data>
   <data name="in the top ten" xml:space="preserve">
     <value>en el top 10</value>
+  </data>
+  <data name="In this Discord server, with their account linked" xml:space="preserve">
+    <value>Está en este servidor de Discord, con su cuenta vinculada</value>
   </data>
   <data name="In this folder" xml:space="preserve">
     <value>En esta carpeta</value>
@@ -4231,6 +4312,15 @@
   <data name="Link" xml:space="preserve">
     <value>Enlace</value>
   </data>
+  <data name="Link Discord on my account" xml:space="preserve">
+    <value>Vincular Discord en mi cuenta</value>
+  </data>
+  <data name="Link your own Discord account first — setting the server means running a command as yourself in Discord." xml:space="preserve">
+    <value>Vincula primero tu propia cuenta de Discord: designar el servidor implica ejecutar un comando como tú mismo en Discord.</value>
+  </data>
+  <data name="Linked server" xml:space="preserve">
+    <value>Servidor vinculado</value>
+  </data>
   <data name="Linked to a site account" xml:space="preserve">
     <value>Vinculado a una cuenta del sitio</value>
   </data>
@@ -4327,6 +4417,9 @@
   <data name="lower average score" xml:space="preserve">
     <value>puntaje promedio más bajo</value>
   </data>
+  <data name="lower rungs come off automatically" xml:space="preserve">
+    <value>los peldaños inferiores se retiran solos</value>
+  </data>
   <data name="Lowest" xml:space="preserve">
     <value>Mínimo</value>
   </data>
@@ -4374,6 +4467,9 @@
   </data>
   <data name="Manage channel subscriptions" xml:space="preserve">
     <value>Administrar suscripciones de canales</value>
+  </data>
+  <data name="Manage Discord roles" xml:space="preserve">
+    <value>Administrar los roles de Discord</value>
   </data>
   <data name="Manage invite links" xml:space="preserve">
     <value>Administrar enlaces de invitación</value>
@@ -4891,6 +4987,9 @@
   <data name="next best candidate {0}" xml:space="preserve">
     <value>siguiente candidato {0}</value>
   </data>
+  <data name="Next check will change" xml:space="preserve">
+    <value>El próximo repaso cambiará</value>
+  </data>
   <data name="Next comment" xml:space="preserve">
     <value>Comentario siguiente</value>
   </data>
@@ -5043,6 +5142,9 @@
   </data>
   <data name="No rivals yet" xml:space="preserve">
     <value>Aún no hay rivales</value>
+  </data>
+  <data name="No roles yet — add one to start handing them out." xml:space="preserve">
+    <value>Aún no hay roles: agrega uno para empezar a repartirlos.</value>
   </data>
   <data name="No saved sets yet." xml:space="preserve">
     <value>Todavía no hay sets guardados.</value>
@@ -5422,6 +5524,9 @@
   <data name="nothing ticked, so scores render plain" xml:space="preserve">
     <value>no hay nada marcado, así que los puntajes se muestran sin color</value>
   </data>
+  <data name="Nothing to change." xml:space="preserve">
+    <value>Nada que cambiar.</value>
+  </data>
   <data name="Nothing to compare yet" xml:space="preserve">
     <value>Nada que comparar todavía</value>
   </data>
@@ -5748,6 +5853,9 @@
   </data>
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>Abrir charts sugeridos</value>
+  </data>
+  <data name="Open the Discord server you want, where you have Manage Server, then run:" xml:space="preserve">
+    <value>Abre el servidor de Discord que quieras, donde tengas Administrar servidor, y ejecuta:</value>
   </data>
   <data name="Open thread" xml:space="preserve">
     <value>Abrir el hilo</value>
@@ -6186,6 +6294,9 @@
   </data>
   <data name="Pick a mix." xml:space="preserve">
     <value>Elige una versión.</value>
+  </data>
+  <data name="Pick a Phoenix 2 title, pick a role in your server. Anyone who has the title gets the role." xml:space="preserve">
+    <value>Elige un título de Phoenix 2 y un rol de tu servidor. Quien tenga el título recibe el rol.</value>
   </data>
   <data name="Pick a player to see their boards, history, and PUMBILITY over time - departed tags stay searchable." xml:space="preserve">
     <value>Elige un jugador para ver sus tableros, historial y PUMBILITY en el tiempo - los tags retirados siguen apareciendo en la búsqueda.</value>
@@ -6733,6 +6844,15 @@
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>Top 50 de PUMBILITY</value>
   </data>
+  <data name="PUMBILITY — combined" xml:space="preserve">
+    <value>PUMBILITY — combinada</value>
+  </data>
+  <data name="PUMBILITY — doubles" xml:space="preserve">
+    <value>PUMBILITY — dobles</value>
+  </data>
+  <data name="PUMBILITY — singles" xml:space="preserve">
+    <value>PUMBILITY — individuales</value>
+  </data>
   <data name="PUMBILITY+ by score" xml:space="preserve">
     <value>PUMBILITY+ por puntaje</value>
   </data>
@@ -7164,6 +7284,9 @@
   </data>
   <data name="Remove this comment?" xml:space="preserve">
     <value>¿Eliminar este comentario?</value>
+  </data>
+  <data name="Remove this role" xml:space="preserve">
+    <value>Quitar este rol</value>
   </data>
   <data name="Remove This Score" xml:space="preserve">
     <value>Quitar esta puntuación</value>
@@ -7782,6 +7905,9 @@
   </data>
   <data name="Set your country on your account page to join a region." xml:space="preserve">
     <value>Configure su país en su página de cuenta para unirse a una región.</value>
+  </data>
+  <data name="Set {0}" xml:space="preserve">
+    <value>Fijado el {0}</value>
   </data>
   <data name="Sets what the whole site shows you." xml:space="preserve">
     <value>Define lo que te muestra todo el sitio.</value>
@@ -8476,6 +8602,9 @@
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>Corta una vez cada N notas indefinidamente y tu vida converge en algún punto. Debajo del acantilado converge en cero: la curva no se suaviza, se cae. Es el multiplicador muriendo más rápido de lo que puedes reconstruirlo.</value>
   </data>
+  <data name="Take the roles back" xml:space="preserve">
+    <value>Retirar los roles</value>
+  </data>
   <data name="Take this session off the board?" xml:space="preserve">
     <value>¿Quitar esta sesión de la tabla?</value>
   </data>
@@ -8527,6 +8656,9 @@
   <data name="That PIUGAME account is not connected to the selected account" xml:space="preserve">
     <value>Esa cuenta de PIUGAME no está conectada a la cuenta seleccionada</value>
   </data>
+  <data name="That role no longer exists in the server." xml:space="preserve">
+    <value>Ese rol ya no existe en el servidor.</value>
+  </data>
   <data name="That scoring configuration is invalid." xml:space="preserve">
     <value>Esa configuración de puntaje no es válida.</value>
   </data>
@@ -8562,6 +8694,15 @@
   </data>
   <data name="The board ranks sessions, not players, so three great sessions can hold three places. Ties go to the earlier session." xml:space="preserve">
     <value>El tablero clasifica sesiones, no jugadores, así que tres sesiones geniales pueden ocupar tres lugares. Los empates van a la sesión más antigua.</value>
+  </data>
+  <data name="The bot can hand out every role below." xml:space="preserve">
+    <value>El bot puede otorgar todos los roles de abajo.</value>
+  </data>
+  <data name="The bot is in this server." xml:space="preserve">
+    <value>El bot está en este servidor.</value>
+  </data>
+  <data name="The bot is no longer in this server." xml:space="preserve">
+    <value>El bot ya no está en este servidor.</value>
   </data>
   <data name="The cabinet" xml:space="preserve">
     <value>La vitrina</value>
@@ -8929,6 +9070,9 @@
   <data name="This chart is on the right side of the video" xml:space="preserve">
     <value>Este chart está en el lado derecho del video</value>
   </data>
+  <data name="This community doesn't give out Discord roles." xml:space="preserve">
+    <value>Esta comunidad no reparte roles de Discord.</value>
+  </data>
   <data name="This does not send anything." xml:space="preserve">
     <value>Esto no envía nada.</value>
   </data>
@@ -9018,6 +9162,9 @@
   </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>Este resumen aún no se ha calculado — vuelve pronto.</value>
+  </data>
+  <data name="This role is above the bot, so it can't be handed out." xml:space="preserve">
+    <value>Este rol está por encima del bot, así que no se puede otorgar.</value>
   </data>
   <data name="This season" xml:space="preserve">
     <value>Esta temporada</value>
@@ -9156,6 +9303,9 @@
   </data>
   <data name="Titles" xml:space="preserve">
     <value>Títulos</value>
+  </data>
+  <data name="Titles and roles" xml:space="preserve">
+    <value>Títulos y roles</value>
   </data>
   <data name="titles earned" xml:space="preserve">
     <value>títulos conseguidos</value>
@@ -9936,6 +10086,9 @@
   </data>
   <data name="When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today." xml:space="preserve">
     <value>Cuando llega una versión nueva, aquí no se reinicia nada. Cada puntuación que registraste se queda — para mirar atrás, comparar y seguir construyendo. {0} versiones registradas, lado a lado, de 1999 a hoy.</value>
+  </data>
+  <data name="When a role is given" xml:space="preserve">
+    <value>Cuándo se otorga un rol</value>
   </data>
   <data name="When somebody adds you, they show up here." xml:space="preserve">
     <value>Cuando alguien te agregue, aparecerá aquí.</value>
@@ -11101,6 +11254,9 @@
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>{0} de {1} carpetas</value>
   </data>
+  <data name="{0} of {1} members hold at least one role" xml:space="preserve">
+    <value>{0} de {1} miembros tienen al menos un rol</value>
+  </data>
   <data name="{0} of {1} peers" xml:space="preserve">
     <value>{0} de {1} pares</value>
   </data>
@@ -11310,6 +11466,9 @@
   </data>
   <data name="{0} viewers watching" xml:space="preserve">
     <value>{0} espectadores viendo</value>
+  </data>
+  <data name="{0} will stop being handed out." xml:space="preserve">
+    <value>{0} dejará de repartirse.</value>
   </data>
   <data name="{0} {1}% → **{2}%**" xml:space="preserve">
     <value>{0} {1}% → **{2}%**</value>

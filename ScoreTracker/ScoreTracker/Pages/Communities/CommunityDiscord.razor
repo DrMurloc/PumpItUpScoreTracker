@@ -310,9 +310,10 @@ else
         <MudAlert Severity="Severity.Warning" Class="mb-3">
             @L["Every role this community gave out in the current server comes off first."]
         </MudAlert>
-        <MudText Typo="Typo.body2">
-            @L["Afterwards, run /piu link-server in the server you want."]
+        <MudText Typo="Typo.body2" Class="mb-1">
+            @L["Afterwards, run this in the server you want:"]
         </MudText>
+        <MudText Typo="Typo.body1" Style="font-family:monospace">/piu link-server</MudText>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => _showUnlink = false">@L["Cancel"]</MudButton>
