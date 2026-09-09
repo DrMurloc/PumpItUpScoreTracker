@@ -1,8 +1,10 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Communities.Domain;
 using ScoreTracker.Communities.Infrastructure;
+using ScoreTracker.Communities.Infrastructure.Entities;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
@@ -194,6 +196,52 @@ public sealed class EFCommunitiesRepositoryTests : IAsyncLifetime
         Assert.DoesNotContain(belongs, c => (string)c.CommunityName == "Clubhouse");
         var row = Assert.Single(holds, r => (string)r.CommunityName == "Clubhouse");
         Assert.Equal(CommunityRole.Banned, row.Role);
+    }
+
+    /// <summary>
+    ///     Two columns can say who the creator is — the community's own owning row and the seat's
+    ///     Role string — and only the first is the one every server-side gate reads, because it is
+    ///     what <see cref="Community" /> hydrates from. A save writes them together, so they agree
+    ///     until somebody names an owner on a system community's row by hand (D20, and how the
+    ///     official Discord gets its title roles). This read has to answer like the aggregate does
+    ///     in both directions: a stale Creator seat is a plain member, and a named owner is the
+    ///     creator whatever their seat says. Offering /piu link-server a community the command
+    ///     then refuses — or hiding one it would accept — is the difference otherwise.
+    /// </summary>
+    [Theory]
+    [InlineData("Creator", false, CommunityRole.Member, CommunityPermission.None)]
+    [InlineData("Member", true, CommunityRole.Creator, CommunityPermission.All)]
+    public async Task StandingFollowsTheOwningRowRatherThanTheSeatsRoleString(string seatRole, bool ownsIt,
+        CommunityRole expectedRole, CommunityPermission expectedPermissions)
+    {
+        var owner = Guid.NewGuid();
+        var subject = Guid.NewGuid();
+        await BuildRepository().SaveCommunity(new Community("Divergent", owner, CommunityPrivacyType.Public,
+                new[] { owner, subject }, Array.Empty<Community.ChannelConfiguration>(),
+                new Dictionary<Guid, DateOnly?>(), false), CancellationToken.None);
+
+        // Straight to the rows: this is a state SaveCommunity cannot produce, which is the point.
+        await using (var database = await _fixture.DbContextFactory.CreateDbContextAsync())
+        {
+            var community = await database.Set<CommunityEntity>()
+                .SingleAsync(c => c.Name == "Divergent");
+            if (ownsIt) community.OwningUserId = subject;
+
+            var seat = await database.Set<CommunityMembershipEntity>()
+                .SingleAsync(m => m.CommunityId == community.Id && m.UserId == subject);
+            seat.Role = seatRole;
+            seat.Permissions = (int)CommunityPermission.All;
+            await database.SaveChangesAsync();
+        }
+
+        var rows = await BuildRepository().GetUserRoles(subject, CancellationToken.None);
+        var aggregate = await BuildRepository().GetCommunityByName("Divergent", CancellationToken.None);
+
+        var row = Assert.Single(rows, r => (string)r.CommunityName == "Divergent");
+        Assert.Equal(expectedRole, row.Role);
+        Assert.Equal(expectedPermissions, row.Permissions);
+        Assert.Equal(aggregate!.RoleOf(subject), row.Role);
+        Assert.Equal(aggregate.PermissionsOf(subject), row.Permissions);
     }
 
     [Fact]

@@ -10685,6 +10685,12 @@
   <data name="Your Discord handle" xml:space="preserve">
     <value>Votre pseudo Discord</value>
   </data>
+  <data name="Your Discord is linked to {0} on PIU Scores, and {0} isn't in {1}. If you manage {1} from another account, link Discord to that account instead." xml:space="preserve">
+    <value>Votre Discord est lié à {0} sur PIU Scores, et {0} n'est pas dans {1}. Si vous gérez {1} depuis un autre compte, liez Discord à ce compte.</value>
+  </data>
+  <data name="Your Discord is linked to {0} on PIU Scores, which is in {1} without the Manage Discord roles permission. The community's creator can grant it on the Members page." xml:space="preserve">
+    <value>Votre Discord est lié à {0} sur PIU Scores, qui est dans {1} sans la permission Gérer les rôles Discord. Le créateur de la communauté peut l'accorder sur la page Membres.</value>
+  </data>
   <data name="your doubles pool is {0}" xml:space="preserve">
     <value>votre ensemble doubles est de {0}</value>
   </data>

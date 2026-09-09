@@ -10686,6 +10686,12 @@
   <data name="Your Discord handle" xml:space="preserve">
     <value>Murgm Discord mrg</value>
   </data>
+  <data name="Your Discord is linked to {0} on PIU Scores, and {0} isn't in {1}. If you manage {1} from another account, link Discord to that account instead." xml:space="preserve">
+    <value>Blu Discord murmargl ur {0} ur PIU Mgrlgmrg, ol {0} bo rgllurg ur {1}. Ub murm {1} mrp glorg grgl, murmargl Discord ur blu grgl.</value>
+  </data>
+  <data name="Your Discord is linked to {0} on PIU Scores, which is in {1} without the Manage Discord roles permission. The community's creator can grant it on the Members page." xml:space="preserve">
+    <value>Blu Discord murmargl ur {0} ur PIU Mgrlgmrg, molu ur {1} bo Murmargl Discord roglubrgl urgmurpmrp. Plglmurgblub murmarglmurm morp grabmurp brgl ur Mrglmurmro mrpglargl.</value>
+  </data>
   <data name="your doubles pool is {0}" xml:space="preserve">
     <value>morp groggl blubgro arg {0}</value>
   </data>

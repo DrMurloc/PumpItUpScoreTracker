@@ -38,9 +38,10 @@ Owner calls from the 2026-09-09 workshop.
 
 | # | Decision |
 |---|---|
-| D8 | **New `CommunityPermission.ManageDiscord`**, delegable by the Creator under the existing rules. It does not subsume `ManageChannelSubscriptions`; feeds and roles are configured by different people in practice. |
+| D8 | **New `CommunityPermission.ManageDiscord`**, delegable by the Creator under the existing rules. It does not subsume `ManageChannelSubscriptions`; feeds and roles are configured by different people in practice. **Delegable means a switch on `/Community/Members`** — the flag shipped absent from that page's `ManageablePermissions`, which is the only array that hands any permission out, so no creator could grant it and every admin sent to `/piu link-server` was refused (fixed 2026-09-09). A permission missing from that list is a permission nobody but the creator can ever hold. |
 | D9 | **Designating a server requires Discord authority too** — `Manage Server` in the target guild, read off the interaction that links it. Site permission alone cannot point a community at a server the admin does not run. |
 | D10 | **The admin needs their own Discord account linked**, because designation happens by running a command as themselves. The page checks up front and sends them to `/Account` rather than letting them discover it mid-command. |
+| D21 | **The refusal says which of the three things is wrong** (2026-09-09). One sentence covered the community not existing, the invoker's Discord resolving to a *different* PIU Scores login, and an admin missing the flag — three causes fixed by three different people. The second is the commonest and reads exactly like a permission problem, so each refusal now names the account the invocation resolved to. |
 
 ### Mechanics
 
@@ -239,6 +240,12 @@ Run in the target server, community chosen by autocomplete. The interaction prov
 is (`GuildId`) and that the invoker holds `Manage Server` there (`InvokerCanManageGuild`, new); the
 handler checks `ManageDiscord` on the site side. Both authorities, one step, and no need to
 enumerate servers we are not permitted to list.
+
+The autocomplete asks the command's own question — `ManageDiscord` on the standing
+`GetUserRoles` returns — rather than a second one off the membership row's `Role` string. Two
+authorities on who the creator is can disagree (the aggregate derives it from `OwningUserId`, which
+is what every gate reads), and D20 made that reachable: naming an owner on a system community's row
+left the list offering a community the command refused, or hiding one it would accept.
 
 ### 5.3 The bot invite URL
 
