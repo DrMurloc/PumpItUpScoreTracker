@@ -51,7 +51,8 @@ Owner calls from the 2026-09-09 workshop.
 | D13 | **Unmapping a title takes the role back**, unless the admin unticks the box. Reversed after the first field test: a role the site handed out and then stopped maintaining is an orphan nobody can clear except by hand, which surprises people more than losing it does. Unticking keeps it as a manual role. |
 | D14 | **Changing the designated server strips every role granted under the old one first.** Confirmed, not silent. |
 | D15 | **Server Members intent ON, `AlwaysDownloadUsers` OFF.** The intent buys the join event; the member-list download is the expensive half and this feature never needs it. |
-| D16 | **The sweep exists regardless of the intent.** The transport is in-memory: a dropped event would otherwise strand someone permanently. |
+| D16 | **The sweep is nightly, and a backstop rather than the mechanism** (owner, 2026-09-09). Everything it does, the page's **Check now** does on demand — so it exists for a join the gateway missed and for anything the in-memory bus dropped, not for correctness. Hourly was paying for a roster download twenty-four times a day to almost always find nothing. |
+| D17 | **Unlinking Discord publishes an event.** It was the one change nothing reported, so roles granted off the back of a sign-in outlived it until a sweep noticed. `ExternalLoginRemovedEvent` makes it immediate, which is what let the sweep drop to nightly without leaving a silent case. |
 
 ---
 
@@ -76,7 +77,7 @@ holds(user, role) ⟺  ∃ mapping (community → title → role)
 | member of the community | `Community.MemberIds` / `RoleOf` | join, leave, ban, unban, community deleted |
 | the mapping exists | `CommunityTitleRole` | an admin edits the table |
 | a server is designated | `CommunityDiscordServer` | `/piu link-server`, change, unlink |
-| Discord account linked | `IUserReader.GetExternalLogins` | link on `/Account`, unlink, account purge |
+| Discord account linked | `IUserReader.GetExternalLogins` | link on `/Account`; unlink publishes `ExternalLoginRemovedEvent` (D17); account purge |
 | in the server | `IBotClient.GetMemberRoles` returns non-null | joins, leaves, kicked, banned |
 | holds the title | `ITitleRepository.GetCompletedTitles` | a score import earns one |
 
@@ -179,7 +180,7 @@ Every one of these ends in the same `Reconcile`.
 | joined, left, banned, unbanned | in-process call from the existing management handlers |
 | community deleted | existing `CommunityDeletedEvent` consumer |
 | account purged | existing `AccountPurgeStartedEvent` consumer, reading the grant row |
-| linked or unlinked Discord | picked up by the sweep; the grant row holds the snowflake to strip |
+| linked or unlinked Discord | `ExternalLoginRemovedEvent` (D17); the grant row holds the snowflake to strip |
 | admin edited a mapping | bulk reconcile over the community |
 | server designated or changed | bulk reconcile; the old server is stripped first (D14) |
 | **joined the Discord server** | `GuildMemberAdded`, plus the sweep as backstop |
@@ -344,6 +345,20 @@ Twenty seconds to add one mapping. Two N+1s, both mine:
   every guild at every connect). Settling ONE person still goes by id, which needs no intent.
 
 `ASweepReadsTitlesAndTheServerRosterOnceEach` fails if either goes back to being per-member.
+
+### 9.2d Progress, and why it is deterministic
+
+A pass writes to Discord one member at a time, so on a big server it is a minute of watching
+nothing. `ReconcileCommunity` takes an `IProgress<DiscordRoleProgress>` and reports its **whole work
+list before the first write**, so the bar starts at a real denominator rather than growing one — a
+report that only ever grew its own total would be a spinner with numbers on it. The page draws it in
+a blocking dialog with a Stop button; stopping is safe, because reconciling is idempotent and the
+next pass resumes from wherever it stopped.
+
+The callback rides a MediatR request, never a bus message, so it stays in-process.
+
+The dry run stopped blocking the page as well: it walks the whole server, which makes it the slowest
+read here, so the page paints first and fills it in.
 
 ### 9.3 Ratchets that fired, and were right to
 
