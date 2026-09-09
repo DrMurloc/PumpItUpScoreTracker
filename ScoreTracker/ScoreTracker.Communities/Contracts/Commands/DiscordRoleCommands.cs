@@ -10,12 +10,13 @@ public sealed record SetCommunityTitleRoleCommand(Name CommunityName, string Tit
 
 /// <summary>
 ///     Drops a mapping. <paramref name="TakeRoleBack" /> also strips the role from everyone
-///     holding it — off by default, because removing a row is a configuration edit and a mass
-///     revocation is not (docs/design/discord-role-management.md D13).
+///     holding it — ON by default: a role the site handed out and then stopped maintaining is an
+///     orphan nobody can clear except by hand, which surprises people more than losing it does
+///     (docs/design/discord-role-management.md D13). Untick to keep it as a manual role.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record RemoveCommunityTitleRoleCommand(Name CommunityName, string TitleName,
-    bool TakeRoleBack = false) : IRequest;
+    bool TakeRoleBack = true) : IRequest;
 
 /// <summary>
 ///     Stops handing out roles for this community. Every role it granted comes off first — a role

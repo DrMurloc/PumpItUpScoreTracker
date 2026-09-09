@@ -2848,6 +2848,9 @@
   <data name="Every tracked personal best on this mix, stacked by grade band per level. The typical best at almost every level is an S or better." xml:space="preserve">
     <value>Cada recorde pessoal rastreado nesta versão, empilhado por faixa de letra por nível. O recorde típico em quase todo nível é um S ou melhor.</value>
   </data>
+  <data name="Everyone already has the right roles." xml:space="preserve">
+    <value>Todo mundo já tem os cargos certos.</value>
+  </data>
   <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
     <value>As dos outros. Você pode gerenciá-las, e quem as fez não é avisado.</value>
   </data>
@@ -8608,6 +8611,9 @@
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>Quebre uma vez a cada N notas indefinidamente e sua vida converge em algum ponto. Abaixo do penhasco ela converge em zero: a curva não suaviza, ela despenca. É o multiplicador morrendo mais rápido do que você consegue reconstruir.</value>
   </data>
+  <data name="Take the role off everyone who has it" xml:space="preserve">
+    <value>Remover o cargo de todos que o têm</value>
+  </data>
   <data name="Take the roles back" xml:space="preserve">
     <value>Retomar os cargos</value>
   </data>
@@ -9661,6 +9667,9 @@
   <data name="Unranked" xml:space="preserve">
     <value>Sem classificação</value>
   </data>
+  <data name="Untick to leave it on people — the site just stops maintaining it." xml:space="preserve">
+    <value>Desmarque para deixá-lo com as pessoas — o site só para de mantê-lo.</value>
+  </data>
   <data name="until everything is deleted" xml:space="preserve">
     <value>até tudo ser excluído</value>
   </data>
@@ -9693,6 +9702,9 @@
   </data>
   <data name="updated {0:N0} charts" xml:space="preserve">
     <value>atualizou {0:N0} charts</value>
+  </data>
+  <data name="Updated {0} members." xml:space="preserve">
+    <value>{0} membros atualizados.</value>
   </data>
   <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
     <value>Envie um arquivo JSON para criar músicas e charts do Phoenix 2 em massa.</value>
@@ -10257,6 +10269,9 @@
   </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>Calculando suas projeções. Isso consulta algumas centenas de jogadores do seu nível, então leva um momento.</value>
+  </data>
+  <data name="Working through the members…" xml:space="preserve">
+    <value>Processando os membros…</value>
   </data>
   <data name="World" xml:space="preserve">
     <value>World</value>

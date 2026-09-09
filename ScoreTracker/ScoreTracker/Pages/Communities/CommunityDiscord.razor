@@ -31,6 +31,16 @@ else
         @L["Give members a Discord role when they earn a Phoenix 2 title. Roles are kept in step automatically — nobody has to ask."]
     </MudText>
 
+    @* A pass writes to Discord one member at a time, so it takes a moment on a real community.
+       Something has to move while it does. *@
+    @if (_busy)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mb-2"></MudProgressLinear>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mb-3">
+            @L["Working through the members…"]
+        </MudText>
+    }
+
     @* The state every server invited before this feature is in: the bot holds no Manage Roles,
        which no amount of role reordering fixes. Shown only while that is actually true, so it
        retires itself as people re-add. *@
@@ -291,14 +301,21 @@ else
         <MudAutocomplete T="string" Label="@L["Title"]" @bind-Value="_newTitle"
                          SearchFunc="SearchTitles" MaxItems="30" Dense="true"
                          Clearable="true" CoerceValue="false" Class="mb-3"/>
-        <MudSelect T="ulong" Label="@L["Discord role"]" @bind-Value="_newRoleId" Dense="true">
-            @foreach (var role in _assignableRoles)
-            {
-                <MudSelectItem T="ulong" Value="@role.Id" Disabled="!role.CanAssign">
-                    @role.Name @(role.CanAssign ? string.Empty : "— " + BlockedText(role.BlockedReason!.Value))
-                </MudSelectItem>
-            }
-        </MudSelect>
+        <MudAutocomplete T="BotGuildRole" Label="@L["Discord role"]" @bind-Value="_newRole"
+                         SearchFunc="SearchRoles" MaxItems="30" Dense="true" Clearable="true"
+                         ToStringFunc="@(r => r == null ? string.Empty : r.Name)">
+            <ItemTemplate Context="role">
+                <div class="d-flex align-center" style="gap:8px">
+                    <span>@role.Name</span>
+                    @if (!role.CanAssign)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Warning" Class="ml-auto">
+                            @BlockedText(role.BlockedReason!.Value)
+                        </MudText>
+                    }
+                </div>
+            </ItemTemplate>
+        </MudAutocomplete>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => _showAdd = false">@L["Cancel"]</MudButton>
@@ -315,7 +332,10 @@ else
             @L["{0} will stop being handed out.", _removeTarget?.TitleName ?? string.Empty]
         </MudText>
         <MudCheckBox T="bool" @bind-Value="_takeRoleBack" Dense="true"
-                     Label="@L["Also take the role off everyone who has it"]"/>
+                     Label="@L["Take the role off everyone who has it"]"/>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+            @L["Untick to leave it on people — the site just stops maintaining it."]
+        </MudText>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="() => _showRemove = false">@L["Cancel"]</MudButton>
@@ -366,7 +386,7 @@ else
 
     private bool _showAdd;
     private string? _newTitle;
-    private ulong _newRoleId;
+    private BotGuildRole? _newRole;
 
     private bool _showRemove;
     private CommunityTitleRoleView? _removeTarget;
@@ -374,7 +394,8 @@ else
 
     private bool _showUnlink;
 
-    private bool CanSaveNew => !string.IsNullOrWhiteSpace(_newTitle) && _newRoleId != 0;
+    private bool CanSaveNew =>
+        !string.IsNullOrWhiteSpace(_newTitle) && _newRole is { CanAssign: true };
 
     /// <summary>
     ///     A designated server whose bot cannot manage roles, seen by somebody who could fix it.
@@ -437,22 +458,42 @@ else
     private void OpenAdd()
     {
         _newTitle = null;
-        _newRoleId = 0;
+        _newRole = null;
         _showAdd = true;
+    }
+
+    /// <summary>
+    ///     Roles the server has, unmapped first — one already spoken for would take itself from
+    ///     whatever title holds it. Roles the bot cannot assign stay in the list, labelled: an
+    ///     admin needs to SEE the role they meant to pick and why it is unavailable.
+    /// </summary>
+    private Task<IEnumerable<BotGuildRole>> SearchRoles(string? value, CancellationToken token)
+    {
+        var term = value?.Trim() ?? string.Empty;
+        var taken = _view?.Mappings.Select(m => m.RoleId).ToHashSet() ?? new HashSet<ulong>();
+        return Task.FromResult(_assignableRoles
+            .Where(r => term.Length == 0 || r.Name.Contains(term, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(r => taken.Contains(r.Id))
+            .ThenBy(r => !r.CanAssign)
+            .ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase)
+            .Take(30)
+            .AsEnumerable());
     }
 
     private async Task SaveMapping()
     {
         if (_view == null || !CanSaveNew) return;
         _showAdd = false;
-        await Run(new SetCommunityTitleRoleCommand(_view.CommunityName, _newTitle!, _newRoleId),
+        await Run(new SetCommunityTitleRoleCommand(_view.CommunityName, _newTitle!, _newRole!.Id),
             "Could not add that role.");
     }
 
     private void AskRemove(CommunityTitleRoleView mapping)
     {
         _removeTarget = mapping;
-        _takeRoleBack = false;
+        // On by default: a role the site handed out and then stopped maintaining is an orphan
+        // nobody can clear except by hand, which surprises people more than losing it does.
+        _takeRoleBack = true;
         _showRemove = true;
     }
 
@@ -481,7 +522,12 @@ else
         _busy = true;
         try
         {
-            await Mediator.Send(new ReconcileCommunityDiscordRolesCommand(_view.CommunityName));
+            var changed = await Mediator.Send(
+                new ReconcileCommunityDiscordRolesCommand(_view.CommunityName));
+            Snackbar.Add(changed == 0
+                    ? L["Everyone already has the right roles."].Value
+                    : L["Updated {0} members.", changed].Value,
+                changed == 0 ? Severity.Info : Severity.Success);
         }
         catch (Exception)
         {

@@ -48,7 +48,7 @@ Owner calls from the 2026-09-09 workshop.
 |---|---|
 | D11 | **One reconcile function, called from every angle.** `Reconcile(community, user)` computes the whole desired role set and diffs it. Nothing computes roles a second way, so nothing can disagree. |
 | D12 | **The mapping table is the managed set.** A mapped role handed out by hand is taken back. This is stated on the page, because it is surprising. |
-| D13 | **Unmapping a title leaves the role on people** unless the admin ticks the box. Removing a row is a config edit, not a mass revocation. |
+| D13 | **Unmapping a title takes the role back**, unless the admin unticks the box. Reversed after the first field test: a role the site handed out and then stopped maintaining is an orphan nobody can clear except by hand, which surprises people more than losing it does. Unticking keeps it as a manual role. |
 | D14 | **Changing the designated server strips every role granted under the old one first.** Confirmed, not silent. |
 | D15 | **Server Members intent ON, `AlwaysDownloadUsers` OFF.** The intent buys the join event; the member-list download is the expensive half and this feature never needs it. |
 | D16 | **The sweep exists regardless of the intent.** The transport is in-memory: a dropped event would otherwise strand someone permanently. |
@@ -329,6 +329,21 @@ hand out every role below" while nothing worked.
 That is the whole reason a canary that writes exists, and it is the state **every** server invited
 before this feature is in. Fixed in the same pass: `BotGuild.CanManageRoles`, the
 `BotCannotManageRoles` reason, the page's wording, and the re-invite pointer above.
+
+### 9.2c The first field test: it was slow, and why
+
+Twenty seconds to add one mapping. Two N+1s, both mine:
+
+- `GetCompletedTitles(mix, userId)` returns **every** title row a member holds — all 272 titles'
+  worth, each with a `ParagonLevel` to parse — and the reconcile called it once per member. It is
+  one `GetUsersWithTitles` now, scoped to the titles the community actually maps, read once per
+  pass in `BuildContext`.
+- `GetMemberRoles` is one Discord REST round trip, and the reconcile made one per member. A bulk
+  pass reads the server's roster once (`GetGuildMemberRoles`, an on-demand
+  `DownloadUsersAsync` for that guild — deliberately not `AlwaysDownloadUsers`, which would pay for
+  every guild at every connect). Settling ONE person still goes by id, which needs no intent.
+
+`ASweepReadsTitlesAndTheServerRosterOnceEach` fails if either goes back to being per-member.
 
 ### 9.3 Ratchets that fired, and were right to
 

@@ -2864,6 +2864,9 @@
   <data name="Every tracked personal best on this mix, stacked by grade band per level. The typical best at almost every level is an S or better." xml:space="preserve">
     <value>このバージョンで追跡している自己ベストをレベルごとにランク帯で積み上げています。ほぼどのレベルでも、典型的な自己ベストはS以上です。</value>
   </data>
+  <data name="Everyone already has the right roles." xml:space="preserve">
+    <value>全員すでに正しいロールを持っています。</value>
+  </data>
   <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
     <value>ほかの人のものです。管理できますが、作者には通知されません。</value>
   </data>
@@ -8666,6 +8669,9 @@
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>Nノートごとに1回失敗し続けると、体力はどこかに収束します。崖の下ではゼロに収束します。曲線は緩やかに落ちるのではなく、崖のように落ちます。倍率を建て直すより速く倍率が死んでいるからです。</value>
   </data>
+  <data name="Take the role off everyone who has it" xml:space="preserve">
+    <value>このロールを持っている全員から外す</value>
+  </data>
   <data name="Take the roles back" xml:space="preserve">
     <value>ロールを回収</value>
   </data>
@@ -9721,6 +9727,9 @@
   <data name="Unranked" xml:space="preserve">
     <value>未分類</value>
   </data>
+  <data name="Untick to leave it on people — the site just stops maintaining it." xml:space="preserve">
+    <value>チェックを外すとロールは残り、サイトが管理をやめるだけです。</value>
+  </data>
   <data name="until everything is deleted" xml:space="preserve">
     <value>すべてが削除されるまで</value>
   </data>
@@ -9754,6 +9763,9 @@
   </data>
   <data name="updated {0:N0} charts" xml:space="preserve">
     <value>{0:N0} 譜面を更新</value>
+  </data>
+  <data name="Updated {0} members." xml:space="preserve">
+    <value>{0} 人のメンバーを更新しました。</value>
   </data>
   <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
     <value>JSONファイルをアップロードして、Phoenix 2の楽曲とチャートを一括作成します。</value>
@@ -10320,6 +10332,9 @@
   </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>予測を計算しています。同水準のプレイヤー数百人を参照するため、少し時間がかかります。</value>
+  </data>
+  <data name="Working through the members…" xml:space="preserve">
+    <value>メンバーを処理しています…</value>
   </data>
   <data name="World" xml:space="preserve">
     <value>World</value>

@@ -92,6 +92,21 @@ namespace ScoreTracker.Domain.SecondaryPorts
             CancellationToken cancellationToken = default);
 
         /// <summary>
+        ///     Every member of the server and the roles they hold, in one call. Somebody absent
+        ///     from the result is not in the server — the same distinction
+        ///     <see cref="GetMemberRoles" /> draws with null.
+        ///     <para>
+        ///         For settling a whole community at once, where one fetch per member is the
+        ///         difference between a pass costing a second and costing a minute. Unlike the
+        ///         single-member read this DOES need the Server Members intent, which the
+        ///         application has; without it Discord returns nothing and callers see an empty
+        ///         server rather than an error.
+        ///     </para>
+        /// </summary>
+        public Task<IReadOnlyDictionary<ulong, IReadOnlyCollection<ulong>>> GetGuildMemberRoles(
+            ulong guildId, CancellationToken cancellationToken = default);
+
+        /// <summary>
         ///     Grants a role. A no-op if they already hold it. Throws if the bot cannot assign it —
         ///     callers check <see cref="BotGuildRole.CanAssign" /> first rather than discovering
         ///     it here.

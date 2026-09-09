@@ -2864,6 +2864,9 @@
   <data name="Every tracked personal best on this mix, stacked by grade band per level. The typical best at almost every level is an S or better." xml:space="preserve">
     <value>Every tracked personal best on this mix, stacked by grade band per level. The typical best at almost every level is an S or better.</value>
   </data>
+  <data name="Everyone already has the right roles." xml:space="preserve">
+    <value>Everyone already has the right roles.</value>
+  </data>
   <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
     <value>Everyone else's. You can manage these, and the maker is not told.</value>
   </data>
@@ -8666,6 +8669,9 @@
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it.</value>
   </data>
+  <data name="Take the role off everyone who has it" xml:space="preserve">
+    <value>Take the role off everyone who has it</value>
+  </data>
   <data name="Take the roles back" xml:space="preserve">
     <value>Take the roles back</value>
   </data>
@@ -9721,6 +9727,9 @@
   <data name="Unranked" xml:space="preserve">
     <value>Unranked</value>
   </data>
+  <data name="Untick to leave it on people — the site just stops maintaining it." xml:space="preserve">
+    <value>Untick to leave it on people — the site just stops maintaining it.</value>
+  </data>
   <data name="until everything is deleted" xml:space="preserve">
     <value>until everything is deleted</value>
   </data>
@@ -9754,6 +9763,9 @@
   </data>
   <data name="updated {0:N0} charts" xml:space="preserve">
     <value>updated {0:N0} charts</value>
+  </data>
+  <data name="Updated {0} members." xml:space="preserve">
+    <value>Updated {0} members.</value>
   </data>
   <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
     <value>Upload a JSON file to create Phoenix 2 songs and charts in bulk.</value>
@@ -10320,6 +10332,9 @@
   </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>Working out your projections. This reads a few hundred players at your level, so it takes a moment.</value>
+  </data>
+  <data name="Working through the members…" xml:space="preserve">
+    <value>Working through the members…</value>
   </data>
   <data name="World" xml:space="preserve">
     <value>World</value>

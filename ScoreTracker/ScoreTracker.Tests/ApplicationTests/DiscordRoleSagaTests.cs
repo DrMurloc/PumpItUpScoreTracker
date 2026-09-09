@@ -72,6 +72,7 @@ public sealed class DiscordRoleSagaTests
             });
         _bot.Setup(b => b.GetMemberRoles(Guild, Snowflake, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<ulong>());
+        AlreadyHolds();
 
         InCommunity(CommunityRole.Member);
         HasDiscordLinked();
@@ -97,23 +98,37 @@ public sealed class DiscordRoleSagaTests
                 : new Dictionary<Guid, string>());
     }
 
+    /// <summary>
+    ///     Titles come from ONE read scoped to the community's mapped titles, not a per-member
+    ///     read of everything somebody holds — so the stub answers the bulk shape.
+    /// </summary>
     private void Holds(params string[] titles)
     {
-        _titles.Setup(t => t.GetCompletedTitles(MixEnum.Phoenix2, UserId, It.IsAny<CancellationToken>()))
+        _titles.Setup(t => t.GetUsersWithTitles(MixEnum.Phoenix2, It.IsAny<IEnumerable<Name>>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(titles.Select(t =>
                 new TitleAchievedRecord(UserId, Name.From(t), ParagonLevel.None)));
     }
 
+    /// <summary>
+    ///     Both reads, because a one-member reconcile fetches by id and a bulk pass reads the
+    ///     server's roster once. A test that set only one would pass on the path it happened to
+    ///     take and say nothing about the other.
+    /// </summary>
     private void AlreadyHolds(params ulong[] roleIds)
     {
         _bot.Setup(b => b.GetMemberRoles(Guild, Snowflake, It.IsAny<CancellationToken>()))
             .ReturnsAsync(roleIds);
+        _bot.Setup(b => b.GetGuildMemberRoles(Guild, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<ulong, IReadOnlyCollection<ulong>> { [Snowflake] = roleIds });
     }
 
     private void NotInTheServer()
     {
         _bot.Setup(b => b.GetMemberRoles(Guild, Snowflake, It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyCollection<ulong>?)null);
+        _bot.Setup(b => b.GetGuildMemberRoles(Guild, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<ulong, IReadOnlyCollection<ulong>>());
     }
 
     private DiscordRoleSaga Saga() => new(_roles.Object, _communities.Object, _titles.Object,
@@ -369,6 +384,46 @@ public sealed class DiscordRoleSagaTests
         await Saga().ReconcileCommunity(CommunityId, CancellationToken.None);
 
         VerifyRevoked(BronzeRole, Times.Once());
+    }
+
+    /// <summary>
+    ///     The cost regression. Reading a member's titles one at a time pulled every row they hold
+    ///     — all 272 titles' worth, each with a ParagonLevel to parse — once per member, and
+    ///     fetching each member from Discord separately cost an HTTP round trip each. A sweep over
+    ///     a real community took twenty seconds. Both are one read now, and this fails if either
+    ///     goes back to being per-member.
+    /// </summary>
+    [Fact]
+    public async Task ASweepReadsTitlesAndTheServerRosterOnceEach()
+    {
+        InCommunity(CommunityRole.Member);
+        _roles.Setup(r => r.GetGrants(CommunityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new CommunityDiscordGrantRecord(CommunityId, UserId, Snowflake, Now) });
+
+        await Saga().ReconcileCommunity(CommunityId, CancellationToken.None);
+
+        _titles.Verify(t => t.GetCompletedTitles(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        _titles.Verify(t => t.GetUsersWithTitles(MixEnum.Phoenix2, It.IsAny<IEnumerable<Name>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _bot.Verify(b => b.GetGuildMemberRoles(Guild, It.IsAny<CancellationToken>()), Times.Once);
+        _bot.Verify(b => b.GetMemberRoles(It.IsAny<ulong>(), It.IsAny<ulong>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    ///     Settling ONE person still goes by id — that read needs no privileged intent, and
+    ///     downloading a whole server to answer a single title change would be worse than the
+    ///     problem it solves.
+    /// </summary>
+    [Fact]
+    public async Task SettlingOneMemberDoesNotDownloadTheWholeServer()
+    {
+        await Saga().ReconcileOne(CommunityId, UserId, CancellationToken.None);
+
+        _bot.Verify(b => b.GetMemberRoles(Guild, Snowflake, It.IsAny<CancellationToken>()), Times.Once);
+        _bot.Verify(b => b.GetGuildMemberRoles(It.IsAny<ulong>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

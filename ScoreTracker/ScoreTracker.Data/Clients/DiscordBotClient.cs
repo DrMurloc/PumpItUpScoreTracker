@@ -279,6 +279,30 @@ public sealed class DiscordBotClient : IBotClient
         return member?.RoleIds.ToArray();
     }
 
+    /// <summary>
+    ///     One paginated REST walk of the server's members instead of one fetch each. Gated on the
+    ///     Server Members intent, which the application has; a guild the bot cannot see reports
+    ///     nobody, which reads downstream as "everybody left" — so callers treat an empty roster as
+    ///     a reason to do nothing rather than a reason to strip.
+    /// </summary>
+    public async Task<IReadOnlyDictionary<ulong, IReadOnlyCollection<ulong>>> GetGuildMemberRoles(
+        ulong guildId, CancellationToken cancellationToken = default)
+    {
+        var guild = Client.GetGuild(guildId);
+        if (guild == null) return new Dictionary<ulong, IReadOnlyCollection<ulong>>();
+
+        // Populates the socket cache for THIS guild, on demand. Deliberately not what
+        // AlwaysDownloadUsers does — that pays for every guild at every connect, whether or not
+        // anyone is handing out roles there.
+        await guild.DownloadUsersAsync();
+
+        var roles = new Dictionary<ulong, IReadOnlyCollection<ulong>>();
+        foreach (var member in guild.Users)
+            roles[member.Id] = member.Roles.Select(r => r.Id).ToArray();
+
+        return roles;
+    }
+
     public async Task AddRole(ulong guildId, ulong userId, ulong roleId,
         CancellationToken cancellationToken = default)
     {

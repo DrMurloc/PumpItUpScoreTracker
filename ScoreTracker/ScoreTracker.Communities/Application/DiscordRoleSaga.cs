@@ -90,7 +90,7 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
     /// </summary>
     public async Task<int> ReconcileCommunity(Guid communityId, CancellationToken cancellationToken)
     {
-        var context = await BuildContext(communityId, cancellationToken);
+        var context = await BuildContext(communityId, cancellationToken, wholeCommunity: true);
         if (context == null) return 0;
 
         var granted = (await _roles.GetGrants(communityId, cancellationToken))
@@ -120,7 +120,7 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
     public async Task<IReadOnlyList<DiscordRolePlanRecord>> PreviewCommunity(Guid communityId,
         CancellationToken cancellationToken)
     {
-        var context = await BuildContext(communityId, cancellationToken);
+        var context = await BuildContext(communityId, cancellationToken, wholeCommunity: true);
         if (context == null) return Array.Empty<DiscordRolePlanRecord>();
 
         var names = context.Mappings.ToDictionary(m => m.RoleId, m => m.TitleName);
@@ -252,7 +252,7 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
     /// </summary>
     public async Task RevokeAll(Guid communityId, CancellationToken cancellationToken)
     {
-        var context = await BuildContext(communityId, cancellationToken);
+        var context = await BuildContext(communityId, cancellationToken, wholeCommunity: true);
         if (context != null)
             foreach (var grant in await _roles.GetGrants(communityId, cancellationToken))
                 await Revoke(context, grant.DiscordUserId, cancellationToken);
@@ -275,11 +275,9 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         if (discordUserId is not { } snowflake) return null;
 
         var eligible = IsMember(context, userId) && context.LinkedMembers.ContainsKey(userId);
-        var earned = eligible
-            ? await DesiredRoles(context, userId, cancellationToken)
-            : EarnedRoles.None;
+        var earned = eligible ? DesiredRoles(context, userId) : EarnedRoles.None;
 
-        var current = await _bot.GetMemberRoles(context.GuildId, snowflake, cancellationToken);
+        var current = await CurrentRoles(context, snowflake, cancellationToken);
         // Not in the server. Discord took the roles with them when they left, so there is nothing
         // to remove and nothing we could grant.
         if (current == null)
@@ -322,12 +320,11 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
     ///     Which mapped roles this member has earned: the titles they hold that the community maps,
     ///     thinned to one rung per pumbility pool, then to the roles the bot can actually assign.
     /// </summary>
-    private async Task<EarnedRoles> DesiredRoles(ReconcileContext context, Guid userId,
-        CancellationToken cancellationToken)
+    private EarnedRoles DesiredRoles(ReconcileContext context, Guid userId)
     {
-        var held = (await _titles.GetCompletedTitles(RoleMix, userId, cancellationToken))
-            .Select(t => (string)t.Title)
-            .ToHashSet(StringComparer.Ordinal);
+        var held = context.HoldersByUser.TryGetValue(userId, out var titles)
+            ? titles
+            : EmptyTitles;
 
         var earned = context.Mappings
             .Where(m => held.Contains(m.TitleName) && TitlesByName.ContainsKey(m.TitleName))
@@ -351,7 +348,7 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
     private async Task Revoke(ReconcileContext context, ulong discordUserId,
         CancellationToken cancellationToken)
     {
-        var current = await _bot.GetMemberRoles(context.GuildId, discordUserId, cancellationToken);
+        var current = await CurrentRoles(context, discordUserId, cancellationToken);
         if (current == null) return;
 
         foreach (var roleId in context.Managed.Where(current.Contains))
@@ -365,7 +362,8 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
     ///     a sweep over a roster does not re-read it per person. Null when the community hands out
     ///     no roles at all — the common case, and two reads to establish.
     /// </summary>
-    private async Task<ReconcileContext?> BuildContext(Guid communityId, CancellationToken cancellationToken)
+    private async Task<ReconcileContext?> BuildContext(Guid communityId, CancellationToken cancellationToken,
+        bool wholeCommunity = false)
     {
         var server = await _roles.GetServer(communityId, cancellationToken);
         if (server == null) return null;
@@ -387,12 +385,29 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
             .ToDictionary(m => m.UserId, m => m.Role);
         var linked = await _users.GetExternalLogins(members.Keys, DiscordProvider, cancellationToken);
 
+        // ONE read for the whole community, scoped to the titles it actually maps. Reading a
+        // member's titles individually pulled every row they hold — all 272 titles' worth, each
+        // with a ParagonLevel to parse — once per member.
+        var mapped = mappings.Select(m => m.TitleName).Where(TitlesByName.ContainsKey)
+            .Select(Name.From).ToArray();
+        var holders = (await _titles.GetUsersWithTitles(RoleMix, mapped, cancellationToken))
+            .GroupBy(h => h.UserId)
+            .ToDictionary(g => g.Key,
+                g => (IReadOnlySet<string>)g.Select(h => (string)h.Title).ToHashSet(StringComparer.Ordinal));
+
+        // A bulk pass reads the server's members once rather than once per person. The Server
+        // Members intent is what makes this one call legal; a single-member reconcile still goes
+        // by id, which needs no intent at all.
+        var roster = wholeCommunity
+            ? await _bot.GetGuildMemberRoles(server.GuildId, cancellationToken)
+            : null;
+
         return new ReconcileContext(communityId, server.GuildId, mappings, assignable,
             // Removal is not gated on assignability the way granting is: a role that moved above
             // the bot after we handed it out simply cannot come off, and Discord tells us so, but
             // one that is merely missing from the server must not be asked for at all.
             mappings.Select(m => m.RoleId).Where(live.Contains).ToHashSet(),
-            members, Snowflakes(linked));
+            members, Snowflakes(linked), holders, roster);
     }
 
     /// <summary>
@@ -407,6 +422,20 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
 
         var grants = await _roles.GetGrantsForUser(userId, cancellationToken);
         return grants.FirstOrDefault(g => g.CommunityId == context.CommunityId)?.DiscordUserId;
+    }
+
+    /// <summary>
+    ///     What one member holds right now — from the roster snapshot on a bulk pass, or a single
+    ///     by-id fetch when settling one person. The snapshot is one call for the whole server
+    ///     instead of one per member, which is the difference between a sweep costing a second and
+    ///     costing a minute.
+    /// </summary>
+    private async Task<IReadOnlyCollection<ulong>?> CurrentRoles(ReconcileContext context,
+        ulong discordUserId, CancellationToken cancellationToken)
+    {
+        if (context.Roster is { } roster)
+            return roster.TryGetValue(discordUserId, out var held) ? held : null;
+        return await _bot.GetMemberRoles(context.GuildId, discordUserId, cancellationToken);
     }
 
     private static bool IsMember(ReconcileContext context, Guid userId) =>
@@ -442,6 +471,9 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
             new(Array.Empty<ulong>(), Array.Empty<ulong>());
     }
 
+    private static readonly IReadOnlySet<string> EmptyTitles =
+        new HashSet<string>(StringComparer.Ordinal);
+
     private sealed record ReconcileContext(
         Guid CommunityId,
         ulong GuildId,
@@ -449,5 +481,9 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         IReadOnlySet<ulong> Assignable,
         IReadOnlySet<ulong> Managed,
         IReadOnlyDictionary<Guid, CommunityRole> Members,
-        IReadOnlyDictionary<Guid, ulong> LinkedMembers);
+        IReadOnlyDictionary<Guid, ulong> LinkedMembers,
+        /// <summary>Which of the MAPPED titles each member holds. One read, not one per member.</summary>
+        IReadOnlyDictionary<Guid, IReadOnlySet<string>> HoldersByUser,
+        /// <summary>The server's members and their roles on a bulk pass; null when settling one person.</summary>
+        IReadOnlyDictionary<ulong, IReadOnlyCollection<ulong>>? Roster);
 }

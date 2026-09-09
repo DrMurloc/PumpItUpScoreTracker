@@ -2848,6 +2848,9 @@
   <data name="Every tracked personal best on this mix, stacked by grade band per level. The typical best at almost every level is an S or better." xml:space="preserve">
     <value>이 시리즈에서 추적된 모든 개인 최고 기록을 레벨별 랭크 구간으로 쌓아 보여줍니다. 거의 모든 레벨에서 일반적인 최고 기록은 S 이상입니다.</value>
   </data>
+  <data name="Everyone already has the right roles." xml:space="preserve">
+    <value>이미 모두 올바른 역할을 가지고 있습니다.</value>
+  </data>
   <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
     <value>다른 사람들의 도구입니다. 관리할 수 있으며, 제작자에게는 알리지 않습니다.</value>
   </data>
@@ -8608,6 +8611,9 @@
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>N노트마다 브레이크를 계속 내면 라이프는 어딘가로 수렴합니다. 절벽 아래에서는 0으로 수렴합니다. 곡선은 완만해지는 게 아니라 뚝 떨어집니다. 배율을 다시 쌓는 속도보다 배율이 죽는 속도가 빠르기 때문입니다.</value>
   </data>
+  <data name="Take the role off everyone who has it" xml:space="preserve">
+    <value>이 역할을 가진 모두에게서 회수</value>
+  </data>
   <data name="Take the roles back" xml:space="preserve">
     <value>역할 회수</value>
   </data>
@@ -9661,6 +9667,9 @@
   <data name="Unranked" xml:space="preserve">
     <value>미분류</value>
   </data>
+  <data name="Untick to leave it on people — the site just stops maintaining it." xml:space="preserve">
+    <value>체크를 해제하면 역할은 그대로 남고, 사이트가 관리만 중단합니다.</value>
+  </data>
   <data name="until everything is deleted" xml:space="preserve">
     <value>모두 삭제되기까지</value>
   </data>
@@ -9693,6 +9702,9 @@
   </data>
   <data name="updated {0:N0} charts" xml:space="preserve">
     <value>{0:N0}개 채보 업데이트</value>
+  </data>
+  <data name="Updated {0} members." xml:space="preserve">
+    <value>{0}명의 멤버를 갱신했습니다.</value>
   </data>
   <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
     <value>JSON 파일을 업로드하여 Phoenix 2 곡과 채보를 일괄 생성합니다.</value>
@@ -10257,6 +10269,9 @@
   </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>예상치를 계산하는 중입니다. 비슷한 레벨의 플레이어 수백 명을 참조하므로 잠시 걸립니다.</value>
+  </data>
+  <data name="Working through the members…" xml:space="preserve">
+    <value>멤버를 처리하는 중…</value>
   </data>
   <data name="World" xml:space="preserve">
     <value>World</value>

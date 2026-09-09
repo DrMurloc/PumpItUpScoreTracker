@@ -2864,6 +2864,9 @@
   <data name="Every tracked personal best on this mix, stacked by grade band per level. The typical best at almost every level is an S or better." xml:space="preserve">
     <value>Blub grobgro morp gro mgrlgmrg ur ur mrg, groplo pa rorgl grolgub pa grorpmurm. Gro groblub gro og ro blub grorpmurm gro a Ｓ ol grombl.</value>
   </data>
+  <data name="Everyone already has the right roles." xml:space="preserve">
+    <value>Olga grogmurgl mrogl roglubrgl bam.</value>
+  </data>
   <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
     <value>Blurgl bloop am olo. Golba marogl, opa grumb alla pragl.</value>
   </data>
@@ -8666,6 +8669,9 @@
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>Murmglorg argl arglglorg murgglorg GRRGL roblub murgmurpblub ro gromurp glorgrgl plglmurmro rorglrgl. Blgrlblarg mrp murmargl gl plglmurmro lurg romurg — mrp murggrrgl argllurg murm arglglorg, gl groplgl morg. Blubgrrgl urg mrp glmurmargl mrpmurg glorgmurm grogrgl blub grorp glrolurg gl.</value>
   </data>
+  <data name="Take the role off everyone who has it" xml:space="preserve">
+    <value>Blarg roglub ub olga grogmurgl opa mrogl mrp</value>
+  </data>
   <data name="Take the roles back" xml:space="preserve">
     <value>Blarg roglubrgl bagro</value>
   </data>
@@ -9721,6 +9727,9 @@
   <data name="Unranked" xml:space="preserve">
     <value>Groglubblarg</value>
   </data>
+  <data name="Untick to leave it on people — the site just stops maintaining it." xml:space="preserve">
+    <value>Blarg mrp ba grogmurgl mrogl roglub — plglur ub murmargl bam.</value>
+  </data>
   <data name="until everything is deleted" xml:space="preserve">
     <value>molu blurpa gorbo</value>
   </data>
@@ -9754,6 +9763,9 @@
   </data>
   <data name="updated {0:N0} charts" xml:space="preserve">
     <value>glgrorpmrgl {0:N0} murgl</value>
+  </data>
+  <data name="Updated {0} members." xml:space="preserve">
+    <value>{0} grogmurgl grolurg.</value>
   </data>
   <data name="Upload a JSON file to create Phoenix 2 songs and charts in bulk." xml:space="preserve">
     <value>Grglargl gro JSON mrblub grgl mrpmurp Phoenix 2 mrgl ro murgl mrp grgllurg.</value>
@@ -10320,6 +10332,9 @@
   </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>Murgablar promglu. Blub morp mrgl oglu porum, mrogl gaal amur.</value>
+  </data>
+  <data name="Working through the members…" xml:space="preserve">
+    <value>Grabmurp grogmurgl…</value>
   </data>
   <data name="World" xml:space="preserve">
     <value>Grolurg</value>
