@@ -9,7 +9,7 @@ using Xunit;
 namespace ScoreTracker.Tests.DomainTests;
 
 /// <summary>
-///     Where the levels sit (docs/design/pumbility-overhaul.md D66): how many charts of each level every peer
+///     Where the levels sit (docs/design/pumbility-overhaul.md D67): how many charts of each level every peer
 ///     keeps in their fifty, which levels earn a column, and where the viewer's own fifty sits among them.
 /// </summary>
 public sealed class PeerLevelSpreadTests

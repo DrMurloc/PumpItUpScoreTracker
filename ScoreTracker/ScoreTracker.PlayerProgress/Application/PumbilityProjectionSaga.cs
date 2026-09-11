@@ -190,7 +190,7 @@ namespace ScoreTracker.PlayerProgress.Application
         /// <summary>
         ///     The Breakdown page's comparison (docs/design/pumbility-overhaul.md D58), off the same
         ///     cached sweep: how many charts of each level every peer keeps in their fifty of each lit
-        ///     type, with the viewer's own count on it (D66), and — for the merged scope only, since a
+        ///     type, with the viewer's own count on it (D67), and — for the merged scope only, since a
         ///     singles or doubles pool is one type by definition — the peers' average merged fifty split
         ///     by type. That split is the one read of its own on the page, over the union of the lit
         ///     types' peers, and it is cached beside the sweep for the sweep's day and evicted with it.

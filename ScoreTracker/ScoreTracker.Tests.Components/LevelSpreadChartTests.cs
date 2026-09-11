@@ -10,7 +10,7 @@ using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
 namespace ScoreTracker.Tests.Components;
 
 /// <summary>
-///     Where the levels sit, as your peers' spread (docs/design/pumbility-overhaul.md D66): a tile per lit
+///     Where the levels sit, as your peers' spread (docs/design/pumbility-overhaul.md D67): a tile per lit
 ///     type, a column per level on one shared scale, the diamond at your count, and the tooltip each column
 ///     carries.
 /// </summary>

@@ -3,7 +3,7 @@ using ScoreTracker.Domain.Services.Contracts;
 namespace ScoreTracker.Domain.Services;
 
 /// <summary>
-///     One level of a peer group's spread (docs/design/pumbility-overhaul.md D66): how many charts of the
+///     One level of a peer group's spread (docs/design/pumbility-overhaul.md D67): how many charts of the
 ///     level each peer keeps in their fifty, summarised the way the chart draws it, and where the viewer's
 ///     own fifty sits among them.
 /// </summary>
@@ -35,7 +35,7 @@ public sealed record LevelSpreadColumn(
     int PeersLevelWithMine);
 
 /// <summary>
-///     Where the levels sit (docs/design/pumbility-overhaul.md D66): for one chart type, a column per level of
+///     Where the levels sit (docs/design/pumbility-overhaul.md D67): for one chart type, a column per level of
 ///     how many charts of it each peer keeps in their fifty, with the viewer's own count on it. Pure — the
 ///     peers, their pools and the viewer's fifty are the caller's, so the Breakdown page's chart and the probe
 ///     that mocked it read the same arithmetic.

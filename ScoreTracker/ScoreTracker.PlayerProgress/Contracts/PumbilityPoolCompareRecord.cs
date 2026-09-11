@@ -10,7 +10,7 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 /// </summary>
 /// <param name="Levels">
 ///     Per lit type in scope, how many charts of each level every peer keeps in their fifty of the
-///     type, with the viewer's own count on it (D66). Empty for a viewer with no lit type.
+///     type, with the viewer's own count on it (D67). Empty for a viewer with no lit type.
 /// </param>
 /// <param name="Peers">
 ///     The peers' average merged fifty split by type — the union of the lit types' peers, each

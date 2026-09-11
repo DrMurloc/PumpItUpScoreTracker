@@ -1,4 +1,4 @@
-// The pointer half of LevelSpreadChart (docs/design/pumbility-overhaul.md D66). The chart draws itself
+// The pointer half of LevelSpreadChart (docs/design/pumbility-overhaul.md D67). The chart draws itself
 // in HTML and CSS; this only reads where the pointer is. Over a column it opens that column's tooltip —
 // whose lines the component rendered hidden inside the column — marks the count under the pointer, and
 // writes the one line that depends on it: how many peers keep exactly that many charts. Keyboard focus
