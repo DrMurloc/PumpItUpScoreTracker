@@ -216,6 +216,23 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
         Assert.Empty(cut.FindAll(".mud-expand-panel.mud-panel-expanded"));
     }
 
+    [Theory]
+    [InlineData(MixEnum.Phoenix, "phoenix.piugame.com")]
+    [InlineData(MixEnum.Phoenix2, "piugame.com")]
+    public async Task CopyScriptHandsOutTheSelectedMixesSite(MixEnum mix, string site)
+    {
+        // The script used to read phoenix.piugame.com whatever the mix, so a Phoenix 2 player's copy
+        // found nothing on their own best list.
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(mix);
+        var cut = RenderComponent<UploadPhoenixScores>();
+        await cut.Find(".mud-expand-panel-header").ClickAsync(new MouseEventArgs());
+
+        await cut.FindAll("button").First(b => b.TextContent.Contains("Copy Script")).ClickAsync(new MouseEventArgs());
+
+        var copied = Assert.Single(JSInterop.Invocations, i => i.Identifier == "navigator.clipboard.writeText");
+        Assert.Contains($"const site = \"{site}\";", Assert.IsType<string>(copied.Arguments[0]));
+    }
+
     [Fact]
     public async Task ABrokenCsvRowSavesAsBroken()
     {
