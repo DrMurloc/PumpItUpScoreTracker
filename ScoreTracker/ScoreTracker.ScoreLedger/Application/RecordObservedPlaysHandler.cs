@@ -59,6 +59,19 @@ internal sealed class RecordObservedPlaysHandler(IScoreJournalRepository journal
 
         await journal.AppendObservations(entries, cancellationToken);
 
+        // A replay can settle a run the session recorded earlier, so every chart this write gave a
+        // judged stage break is re-solved against the whole session.
+        if (request.SessionId is { } sessionId)
+        {
+            var replayed = entries.Where(e => e.IsStageBroken && e.Judgements != null)
+                .Select(e => e.ChartId)
+                .Distinct()
+                .ToDictionary(chartId => chartId, chartId => facts[chartId]);
+            if (replayed.Count > 0)
+                await SessionStageBreaks.Resolve(journal, request.UserId, request.Mix, sessionId, replayed,
+                    cancellationToken);
+        }
+
         // The limbo board reads exactly these rows, so it goes stale exactly here. Evicted AFTER
         // the write, which is why this is the hook rather than ScoreImportCompletedEvent — that
         // one is published before the rows it describes exist, and only for official imports

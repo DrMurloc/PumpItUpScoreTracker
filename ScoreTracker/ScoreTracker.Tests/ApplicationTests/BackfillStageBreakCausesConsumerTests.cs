@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
@@ -90,6 +91,62 @@ public sealed class BackfillStageBreakCausesConsumerTests
             Times.Once);
     }
 
+    [Fact]
+    public async Task ASessionsReplaysOfAChartAreSolvedTogether()
+    {
+        // Alone, the six-miss run guesses SSS and matches Marvelous Game; its replay in the same
+        // session could only have crossed SSS+ and matches no plate, so both are written back SSS+.
+        var ctx = new ConsumerContext();
+        var session = Guid.NewGuid();
+        ctx.GivenChart(MixEnum.Phoenix2, Chart, 1000, 26);
+        ctx.GivenStageBreaks(MixEnum.Phoenix2, Alice,
+            (new JudgementCounts(900, 0, 0, 0, 6), session, At),
+            (new JudgementCounts(806, 1, 0, 0, 4), session, At.AddMinutes(2)));
+
+        await ctx.Consumer.Consume(Context());
+
+        Assert.Equal(2, ctx.Written.Count);
+        Assert.All(ctx.Written, row =>
+        {
+            Assert.Equal(PhoenixLetterGrade.SSSPlus, row.Cause.PassGrade);
+            Assert.Null(row.Cause.PassPlate);
+        });
+    }
+
+    [Fact]
+    public async Task BreaksInDifferentSessionsAreSolvedApart()
+    {
+        var ctx = new ConsumerContext();
+        ctx.GivenChart(MixEnum.Phoenix2, Chart, 1000, 26);
+        ctx.GivenStageBreaks(MixEnum.Phoenix2, Alice,
+            (new JudgementCounts(900, 0, 0, 0, 6), Guid.NewGuid(), At),
+            (new JudgementCounts(806, 1, 0, 0, 4), Guid.NewGuid(), At.AddMinutes(2)));
+
+        await ctx.Consumer.Consume(Context());
+
+        var sixMisses = Assert.Single(ctx.Written, row => row.OccurredAt == At);
+        Assert.Equal(PhoenixLetterGrade.SSS, sixMisses.Cause.PassGrade);
+        Assert.Equal(PhoenixPlate.MarvelousGame, sixMisses.Cause.PassPlate);
+    }
+
+    [Fact]
+    public async Task RowsFromBeforeSessionCaptureShareACalendarDay()
+    {
+        var ctx = new ConsumerContext();
+        ctx.GivenChart(MixEnum.Phoenix2, Chart, 1000, 26);
+        ctx.GivenStageBreaks(MixEnum.Phoenix2, Alice,
+            (new JudgementCounts(900, 0, 0, 0, 6), null, At),
+            (new JudgementCounts(806, 1, 0, 0, 4), null, At.AddHours(2)),
+            (new JudgementCounts(900, 0, 0, 0, 6), null, At.AddDays(1)));
+
+        await ctx.Consumer.Consume(Context());
+
+        Assert.Equal(PhoenixLetterGrade.SSSPlus,
+            Assert.Single(ctx.Written, row => row.OccurredAt == At).Cause.PassGrade);
+        Assert.Equal(PhoenixLetterGrade.SSS,
+            Assert.Single(ctx.Written, row => row.OccurredAt == At.AddDays(1)).Cause.PassGrade);
+    }
+
     private static ConsumeContext<BackfillStageBreakCausesCommand> Context()
     {
         var context = new Mock<ConsumeContext<BackfillStageBreakCausesCommand>>();
@@ -101,6 +158,7 @@ public sealed class BackfillStageBreakCausesConsumerTests
     {
         public Mock<IScoreJournalRepository> Journal { get; } = new();
         public Mock<IChartRepository> Charts { get; } = new();
+        public List<(Guid ChartId, DateTimeOffset OccurredAt, StageBreakCause Cause)> Written { get; } = new();
         public BackfillStageBreakCausesConsumer Consumer { get; }
 
         public ConsumerContext()
@@ -110,8 +168,25 @@ public sealed class BackfillStageBreakCausesConsumerTests
             Journal.Setup(j => j.GetJudgedStageBreaks(It.IsAny<Guid>(), It.IsAny<MixEnum>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<ScoreJournalEntry>());
+            Journal.Setup(j => j.SetStageBreakCauses(It.IsAny<Guid>(), It.IsAny<MixEnum>(),
+                    It.IsAny<IReadOnlyList<(Guid ChartId, DateTimeOffset OccurredAt, StageBreakCause Cause)>>(),
+                    It.IsAny<CancellationToken>()))
+                .Callback<Guid, MixEnum, IReadOnlyList<(Guid ChartId, DateTimeOffset OccurredAt, StageBreakCause Cause)>,
+                    CancellationToken>((_, _, causes, _) => Written.AddRange(causes))
+                .Returns(Task.CompletedTask);
             Consumer = new BackfillStageBreakCausesConsumer(Journal.Object, Charts.Object,
                 NullLogger<BackfillStageBreakCausesConsumer>.Instance);
+        }
+
+        public void GivenStageBreaks(MixEnum mix, Guid userId,
+            params (JudgementCounts Judgements, Guid? SessionId, DateTimeOffset At)[] rows)
+        {
+            Journal.Setup(j => j.GetUsersWithJudgedEntries(mix, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new[] { userId });
+            Journal.Setup(j => j.GetJudgedStageBreaks(userId, mix, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(rows.Select(row => new ScoreJournalEntry(row.At, ScoreJournalEntry.OfficialImportSource,
+                    userId, Chart, null, null, true, mix, row.SessionId, row.Judgements, false,
+                    IsStageBroken: true)).ToArray());
         }
 
         public void GivenChart(MixEnum mix, Guid chartId, int noteCount, int level)

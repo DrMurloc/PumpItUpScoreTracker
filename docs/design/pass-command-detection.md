@@ -1,14 +1,16 @@
 # Pass command detection
 
-Status: **owner-workshopped 2026-08-28/29, settled (§8); building.** Splits stage breaks into the
-ones the life bar caused and the ones a **Stage Pass command** caused, names the command where the
-evidence allows, and shows it on the session page.
+Status: **owner-workshopped 2026-08-28/29, settled (§8); revised 2026-09-11 (D37–D43).** Splits stage
+breaks into the ones the life bar caused and the ones a **Stage Pass command** caused, names the
+command — proven where the counts pin it, a best guess where they cannot — and shows it on the
+session page.
 
 Companion spec: [stage-breaks-and-max-combo.md](stage-breaks-and-max-combo.md) — that one taught the
 importer to tell a *failed* stage from an *interrupted* one and gave us `IsStageBroken`. This one
 asks the next question: **what interrupted it.** Decisions continue that chain's numbering (D29
 onward). Every measurement below was taken against the prod-synced local database on 2026-08-28/29,
-over the 2,593 judged stage breaks a fresh production import had produced by then.
+over the 2,593 judged stage breaks a fresh production import had produced by then — except D37–D43,
+measured on the 2026-09-10 copy.
 
 ## 1. What a Stage Pass command is
 
@@ -71,11 +73,11 @@ greats and perfects heal.
    one for any ordering), and orderings that empty the bar mid-run clamp and continue — invalid as
    evidence, so counting them only errs toward refusing to claim.
 
-**Only a run whose worst ordering still ends above the margin is flagged.** Empirically the bar
+**Only a run whose worst ordering still ends above zero is flagged** (D37). Empirically the bar
 does not die early on real passes — 2,791 finished-and-*passed* runs in the journal carry exactly
-3 misses; 1,989 carry 6 — which is why the margin (D30) rather than zero is the boundary.
+3 misses; 1,989 carry 6 — which is why the margin (D30) rather than zero was the boundary until D37.
 
-### D30 — a 5% life margin, because the calculation is generous
+### D30 — a 5% life margin, because the calculation is generous *(superseded by D37)*
 
 The gate heals first and takes all damage second, which is the most survival-friendly ordering
 possible. Without a margin, 105 rows "survive" on 1–5% of the bar — one is `174/2/0/0/12` on **15
@@ -85,7 +87,8 @@ Past 5% the unexplained share sits flat, so 5% is the knob's whole value.
 ### D31 — plate and grade are two fields, not one label
 
 A row can satisfy both tests (41 do). Storing them separately makes that a fact rather than a
-precedence argument, and lets a reader see both.
+precedence argument, and lets a reader see both. Neither outranks the other: the badge shows both
+possibilities (re-confirmed 2026-09-11).
 
 ### D32 — a plate is named when it was broken by exactly one judgement
 
@@ -94,7 +97,7 @@ the first miss, then `MG` at the 6th miss, `TG` at the 11th, `FG` at the 21st. W
 fits, take the **highest** — `EG` over `SG` when a miss ended a run carrying no bads, since both
 would have fired and `EG` is the higher target.
 
-### D33 — a grade is named when the reachable ceiling died within one note of its floor
+### D33 — a grade is named when the reachable ceiling died within one note of its floor *(superseded by D38–D39)*
 
 Best score still reachable = every remaining note perfect, best possible max combo. If that ceiling
 sits below a grade floor by less than one note's worth of score, that grade just became unattainable
@@ -148,29 +151,114 @@ it is fabricated — level 2 makes a 1,012 bar — and nothing is known about ho
 actually works. All 48 judged co-op stage breaks in production happened to fall the safe side of
 that fabricated bar; the skip makes the mistake impossible instead of lucky. Never guess.
 
+### D37 — the worst-case search needs no margin (2026-09-11)
+
+D29's second screen already answers with the least life any ordering of the judgements can end on,
+applying every heal as a great and letting a mid-run death clamp and continue — both choices only
+push that answer down. A run whose cruellest ordering still ends above zero provably did not empty
+the bar, and that is the whole flag. D30's margin was sized for the friendlier heal-first walk and
+double-counted once the cruel one arrived: it refused 99 Phoenix 2 breaks (35 players) that no
+ordering could have killed — the owner's Iolite Sky `91/0/0/0/5` and Caprice of DJ Otada
+`104/7/2/0/5` among them — and no Phoenix 1 break at all.
+
+### D38 — a grade is named only where the run could have just crossed its line (2026-09-11)
+
+A Pass command fires on the judgement that makes its target unattainable, so a named grade has to be
+a line the *last* judgement could have taken the run under. The test is exact over every arrangement
+the counts allow. A run's best reachable score is every remaining note perfect with the longest combo
+still possible — `max(longest combo so far, current combo + notes remaining)` — and a line is
+**crossable** when some placement of the bads and misses among the judged notes puts that score at
+or above the line just before the last judgement and below it just after. Perfects never move the
+score, so the last judgement is a great, good, bad or miss; a good holds the combo without advancing
+it; a bad or miss ends it.
+
+D33's window missed both ways. A mid-run miss costs its note *and* the combo it cuts, and the combo
+is 0.5% of the score — one whole grade band at the top — so one miss can drop a run several notes
+past a line: the owner's Caprice `593/14/0/0/3` fell 1,108 points under SSS where the window allowed
+1,101. And the bound it measured from assumed every break sat at the end of the run, which left 389
+flagged breaks' ceilings at or above a line they had already dropped under.
+
+### D39 — the best guess assumes evenly spread breaks (2026-09-11)
+
+Where more than one line is crossable, the name is the best guess the counts support: the killing
+judgement last and the other bads and misses spread evenly through the run, so the longest combo
+still possible is `max(⌈(perfects + greats) ÷ (bads + misses)⌉, notes remaining)` — or every
+unjudged note on top of `perfects + greats` when the run carries no bad or miss. The guess is the
+nearest crossable line above that estimate, or the highest crossable line when the estimate clears
+them all. Against the grades replay streaks settle (D40), evenly spread breaks alone pick the right
+line 98% of the time; the end-bunched bound D33 measured from picks it 61–70% of the time, always one
+grade high, and random break positions 93–96%.
+
+### D40 — replays of one chart in one session share one command (2026-09-11)
+
+A player replaying a chart keeps the command they set, so a session's stage breaks on one chart are
+solved together. Each run's crossable grades (D38) and every plate it breaks by exactly one judgement
+(D32 — all of them, not only the highest) are intersected across the replays, and what fits every run
+names every run. When nothing fits every run the player switched commands, and each run falls back to
+its own answer. A run that fits no target on its own — an all-perfect break, or one the other pad's
+command ended — could not have been ended by the player's command, so it sits out the intersection and
+keeps its empty answer; left in, one such run would read as a switch and undo the replays' answer.
+Rows from before session capture group by calendar day.
+
+Replays are the evidence a lone run lacks. A fake grade line halfway between two real ones fits a lone
+multi-miss run almost as often as a real line does — 63% against 64% on the flagged breaks D33 left
+unnamed — but it survives every run of a streak far less often: 30% of 2-run streaks, 18% of 3-run,
+2% of 4+, where a real line survives 61–71%. On the 2026-09-10 copy 669 of the 1,176 flagged breaks
+with a note count sit in 201 streaks; 179 hold (131 on a grade, 42 on a plate, 6 on both) and 22
+switch, and runs in a streak that pin their own answer agree 49 times in 55.
+
+### D41 — a streak drops the plates its replays rule out (2026-09-11)
+
+D31 shows a plate and a grade side by side because both are possibilities, and a plate one replay
+matched while another replay contradicts it is not one. When a streak holds, each run wears the
+highest plate that fits every replay, or none: the owner's Caprice of DJ Otada session keeps SSS on
+all six runs and loses the UG and EG two of them matched by count. 75 plate badges fall away and 11
+become the streak's lower plate.
+
+### D42 — withdrawn: every Phoenix-family mix is solved the same way (2026-09-11)
+
+The revision first named targets on Phoenix 2 only, reading Stage Pass as a Phoenix 2 command. Pass G
+existed on Phoenix 1 too, and every distinction the solver draws — stage break against finished
+fail, walked off, not the life bar — holds on either mix. The Phoenix 2 check changed 2 breaks and
+cost a branch in both entry points, so it came back out: the solver reads each mix's own grade floors
+and otherwise never asks which mix it is solving.
+
+### D43 — one grade per row (2026-09-11)
+
+The journal keeps one `PassGrade`. A streak that leaves two grades fitting every run names the line
+most of its runs' D39 guesses pick, and the higher line on a tie: evenly spread breaks are the combo's
+worst case, so the guess runs low.
+
 ## 4. What it finds
 
-Over the 2,593 judged stage breaks, at the 5% margin:
+Measured on the 2026-09-10 copy with D37–D43 in place, over Phoenix 2's 6,306 judged stage breaks
+(co-op, never classified, left out), grouped the way the backfill groups them:
 
 | | rows |
 |---|---|
-| Life bar could have emptied under some ordering — untouched | 2,269 |
-| **Non-Lifebar break** | **324** |
-| — Pass Plate named | 152 |
-| — Pass Grade named | 123 |
-| — both named | 37 |
-| — neither | 86 |
+| Life bar could have emptied under some ordering, or no level to size it — untouched | 4,064 |
+| Walked off (D36) | 1,052 |
+| **Non-Lifebar break** | **1,190** |
+| — Pass Plate named | 394 |
+| — Pass Grade named | 933 |
+| — both named | 151 |
+| — neither | 14 |
 
-Named plates: `PG 82 · SG 20 · UG 16 · MG 16 · EG 15 · TG 3`. Named grades: `SSS 62 · SSS+ 54 ·
-SS+ 3 · SS 2 · S+ 1 · S 1`. 33 distinct players. (An earlier revision of this table paired the
-5% margin with histograms measured at 0% — these are all one measurement of the shipped pipeline.)
+Named plates: `PG 223 · SG 46 · MG 44 · UG 38 · EG 31 · TG 12`. Named grades: `SSS 468 · SSS+ 238 ·
+SS+ 97 · SS 63 · S 41 · S+ 22 · AAA+ 2 · AAA 1 · AA 1`. 86 distinct players. Against the columns the
+revision replaces, 519 breaks gain a grade, 8 change grade and 2 lose one; 75 plates are dropped by
+their streaks, 11 change, and 18 appear on breaks the margin used to refuse. Solved one run at a time
+instead, the same breaks would name 485 plates and 936 grades — the streaks give up 91 plates the
+replays contradict.
 
-**Every Non-Lifebar break is Phoenix 2. None of the 569 judged Phoenix 1 breaks qualify.** Noise
-would have spread across both mixes in proportion; a Phoenix-2-only feature producing a
-Phoenix-2-only signal is the strongest corroboration in this document.
+Phoenix 1's 1,289 judged breaks hold 279 walk-offs and just 2 the life bar could not have caused —
+still almost none, where noise would have spread across both mixes. One of the 2 names a grade (S+).
 
-A further 1,616 stage breaks carry no judgement counts at all and can never be classified. They
-render exactly as they do today.
+A further 2,427 Phoenix 2 stage breaks carry no judgement counts at all and can never be classified.
+They render exactly as they do today.
+
+Before the revision (2026-08-28/29, 2,593 judged breaks, the 5% margin and D33's window): 324
+Non-Lifebar breaks, 152 plates and 123 grades named, 37 both, 86 neither, 33 players.
 
 ## 5. What was tried and rejected
 
@@ -204,8 +292,29 @@ Recorded because each looked right and cost real time.
 - **Closest-plate-by-miss-count** as a fallback label. On the owner's own five Pass SSS+ runs it
   produces `MG, MG, MG, SG, SG` — confidently wrong five times, and inconsistent within one session
   on one chart. Grade must resolve first, and the plate test stays exact.
+- **The end-bunched bound as the grade test** (D33). The one arrangement least like a real run:
+  against replay-streak answers it names the right line 61–70% of the time, always one grade high.
+  Superseded by D38–D39.
+- **A bare "nearest line above" guess**, without D38's check. It names lines a run passed long before
+  its last judgement — goods-only `500/0/98/0/0` becomes Pass AA+ — and on the 641 flagged runs outside
+  a streak it puts a stray SSS or SSS+ on 15 runs a Pass MG or SG ended, and SSS+ on 4 runs whose only
+  crossable line was SSS.
+- **Random break positions as the estimate.** 93–96% against replay-streak answers; evenly spread
+  breaks reach 98%.
+- **Other charts in the session, and the player's history on the chart, as evidence.** Another
+  chart's clear answer matches a run 65% of the time against 40% for a stranger's session; replays of
+  the same chart are far sharper (D40), and the evenly spread guess covers the runs no streak reaches.
 
-## 6. The 86 we cannot explain
+## 6. What stays unnamed
+
+After D37–D43, 14 of the 1,190 Non-Lifebar Phoenix 2 breaks name nothing: 10 all-perfect runs, which
+only another player's command on the shared cabinet explains (D34) — Rex's Pavane among them — 2 on
+charts with no note count, and 2 whose judgements fit neither a line they could have crossed nor a
+plate. The accepted cost runs the other way. That same other-pad command, ending a run that carries any
+non-perfect, is named as the player's own best guess — 385 breaks rest on the guess alone, 205 of
+them Singles — and nothing in the counts can tell the two apart.
+
+### Before the revision: the 86 we could not explain
 
 Non-Lifebar, no plate broken by one, no grade within a note. (92 before the adversarial gate
 reclaimed six; the analysis below was measured on those 92 and its conclusions are unchanged.)
@@ -230,10 +339,10 @@ That is the cheapest remaining improvement and it is a data task, not a code one
 
 | Layer | What |
 |---|---|
-| `SharedKernel` | `StageBreakCauseSolver` + `StageBreakCause`; the plate miss-tolerance table moves onto `PhoenixPlate` so this and `ScoreScreen.PlateText` read one source |
+| `SharedKernel` | `StageBreakCauseSolver` + `StageBreakCause`; the plate miss-tolerance table moves onto `PhoenixPlate` so this and `ScoreScreen.PlateText` read one source; the revision adds crossable lines, the evenly spread guess and the streak solve (D38–D43) |
 | `Domain` | `ScoreScreen.PlateText` reads the extracted table. Nothing else |
 | `Application` | nothing |
-| `ScoreLedger` | three journal columns; `NoteCountWatch` widened to carry Level; both write paths classify; `SessionRow` carries it out; backfill command + consumer |
+| `ScoreLedger` | three journal columns; `NoteCountWatch` widened to carry Level; both write paths classify; `SessionRow` carries it out; backfill command + consumer; the revision solves a session's breaks on one chart together, on both write paths and in the backfill (D40) |
 | `Data` | the migration only |
 | `Web` | `PassCommandBadge`, the session row, the admin backfill button, the strings |
 
@@ -258,6 +367,18 @@ also makes it testable with no doubles at all.
   path regardless, so a SQL port would be a second implementation of a formula that has already
   moved twice.
 
+2026-09-11, after the owner reported Pass SSS+ and SSS breaks going unnamed:
+
+- Drop the 5% margin (D37).
+- Show both possibilities: plate and grade side by side, neither outranks the other (D31).
+- Replays of one chart in one session share one command (D40).
+- Everything else takes the best guess from evenly spread breaks, on a line the run could have
+  crossed (D38–D39).
+- Accepted with the build: a streak drops the plates its replays rule out (D41), one grade per row
+  (D43), and a guessed badge keeps the same art and tooltip as a proven one. Naming on Phoenix 2 only
+  (D42) went in and came back out: Phoenix 1 had Pass G and Pass M, and a mix check that moved 2
+  breaks was not worth its branch.
+
 ## 9. Build order
 
 Docs first, i18n last, one PR.
@@ -280,6 +401,26 @@ not a regression.
 A review pass (2026-08-29, same PR) followed: the adversarial gate, the goods-transparent combo,
 the same-kind fill guard, the co-op skip, the breaks-only backfill read, the Single Performance
 copy, and a resx key whose apostrophe didn't match its call site.
+
+### The 2026-09-11 revision
+
+Docs first, one PR, no strings added or changed:
+
+1. this revision of the document and the schema row
+2. `fix(kernel)` — the worst-case search needs no margin (D37)
+3. `feat(kernel)` — which lines a run could have just crossed (D38, no behaviour change)
+4. `fix(kernel)` — name the grade a run could have crossed, evenly spread when unsure (D38–D39)
+5. `feat(kernel)` — Stage Pass is named on Phoenix 2 only (D42)
+6. `feat(kernel)` — replays of one chart in one session share one command (D40, D43)
+7. `feat(kernel)` — a streak drops the plates its replays rule out (D41)
+8. `feat(ledger)` — the recently-played import solves a chart's session breaks together
+9. `feat(ledger)` — a best-list stage break re-solves its chart's session too
+10. `feat(ledger)` — the backfill solves by session and chart; §4 re-measured
+
+A bug check followed on the same PR: a run that fits no target on its own now sits out its streak
+instead of reading as a command switch (D40).
+
+After deploy: press **Backfill stage break causes** once.
 
 ## 10. Not in this pass
 

@@ -80,6 +80,12 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
                         false, IsStageBroken: true,
                         Cause: NoteCountWatch.CauseFor(true, request.Judgements, breakFacts, request.Mix))
                 }, cancellationToken);
+
+                // A replay can settle a run the session recorded earlier, so the chart's judged stage
+                // breaks are re-solved against the whole session.
+                if (request.Judgements != null)
+                    await SessionStageBreaks.Resolve(journal, user.User.Id, request.Mix, sessionId,
+                        new Dictionary<Guid, ChartFacts> { [request.ChartId] = breakFacts }, cancellationToken);
             }
             return;
         }

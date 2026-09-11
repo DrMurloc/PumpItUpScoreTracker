@@ -62,6 +62,18 @@ internal static class NoteCountWatch
     }
 
     /// <summary>
+    ///     Solves one session's judged stage breaks on one chart together, in input order: replays of a
+    ///     chart share the command that ended them. Co-op is never classified.
+    /// </summary>
+    public static IReadOnlyList<StageBreakCause> CausesFor(IReadOnlyList<JudgementCounts> streak, ChartFacts facts,
+        MixEnum mix)
+    {
+        if (facts.Type == ChartType.CoOp) return streak.Select(_ => StageBreakCause.Unattributed).ToArray();
+
+        return StageBreakCauseSolver.SolveStreak(streak, facts.NoteCount, facts.Level, mix);
+    }
+
+    /// <summary>
     ///     One warning when a finished play's breakdown does not sum to the catalog's count. A
     ///     stage break judged fewer notes by definition and is not a disagreement.
     /// </summary>

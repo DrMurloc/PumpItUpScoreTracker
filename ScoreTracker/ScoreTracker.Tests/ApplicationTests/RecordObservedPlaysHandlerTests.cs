@@ -230,12 +230,79 @@ public sealed class RecordObservedPlaysHandlerTests
         Assert.False(entry.Cause.IsNamed);
     }
 
+    [Fact]
+    public async Task ReplaysOfAChartInOneImportAreSolvedTogether()
+    {
+        // Two runs of one chart in the same window. Alone, the six-miss run guesses SSS and matches
+        // Marvelous Game; the replay could only have crossed SSS+ and matches no plate, so the first
+        // run is re-solved to the command both share.
+        var ctx = new HandlerContext();
+        ctx.GivenChart(ChartId, 1000, 26);
+
+        await ctx.Handler.Handle(Command(
+            new RecordObservedPlaysCommand.ObservedPlay(ChartId, null, null, false, PlayedAt,
+                new JudgementCounts(900, 0, 0, 0, 6), IsStageBroken: true),
+            new RecordObservedPlaysCommand.ObservedPlay(ChartId, null, null, false, PlayedAt.AddMinutes(2),
+                new JudgementCounts(806, 1, 0, 0, 4), IsStageBroken: true)), CancellationToken.None);
+
+        var resolved = Assert.Single(ctx.Resolved);
+        Assert.Equal(PlayedAt, resolved.OccurredAt);
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, resolved.Cause.PassGrade);
+        Assert.Null(resolved.Cause.PassPlate);
+    }
+
+    [Fact]
+    public async Task AReplayResolvesARunTheSessionRecordedEarlier()
+    {
+        // The session already holds a run of this chart from an earlier window, solved alone as SSS
+        // with Marvelous Game. This window's replay settles it on SSS+.
+        var ctx = new HandlerContext();
+        ctx.GivenChart(ChartId, 1000, 26);
+        var command = Command(new RecordObservedPlaysCommand.ObservedPlay(ChartId, null, null, false,
+            PlayedAt.AddMinutes(10), new JudgementCounts(806, 1, 0, 0, 4), IsStageBroken: true));
+        ctx.Stored.Add(new ScoreJournalEntry(PlayedAt, ScoreJournalEntry.OfficialImportSource, UserId, ChartId,
+            null, null, true, MixEnum.Phoenix2, command.SessionId, new JudgementCounts(900, 0, 0, 0, 6), false,
+            IsStageBroken: true,
+            Cause: new StageBreakCause(true, PhoenixPlate.MarvelousGame, PhoenixLetterGrade.SSS)));
+
+        await ctx.Handler.Handle(command, CancellationToken.None);
+
+        var resolved = Assert.Single(ctx.Resolved);
+        Assert.Equal(PlayedAt, resolved.OccurredAt);
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, resolved.Cause.PassGrade);
+    }
+
+    [Fact]
+    public async Task ASessionlessImportLeavesEachRunItsOwnAnswer()
+    {
+        var ctx = new HandlerContext();
+        ctx.GivenChart(ChartId, 1000, 26);
+
+        await ctx.Handler.Handle(new RecordObservedPlaysCommand(UserId, MixEnum.Phoenix2,
+            ScoreJournalEntry.OfficialImportSource, null, new[]
+            {
+                new RecordObservedPlaysCommand.ObservedPlay(ChartId, null, null, false, PlayedAt,
+                    new JudgementCounts(900, 0, 0, 0, 6), IsStageBroken: true),
+                new RecordObservedPlaysCommand.ObservedPlay(ChartId, null, null, false, PlayedAt.AddMinutes(2),
+                    new JudgementCounts(806, 1, 0, 0, 4), IsStageBroken: true)
+            }), CancellationToken.None);
+
+        Assert.Equal(PhoenixLetterGrade.SSS, ctx.Written[0].Cause.PassGrade);
+        ctx.Journal.Verify(j => j.GetSessionEntries(It.IsAny<Guid>(), It.IsAny<Guid>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private sealed class HandlerContext
     {
         public Mock<IScoreJournalRepository> Journal { get; } = new();
         public Mock<IChartRepository> Charts { get; } = new();
         public Mock<ILogger<RecordObservedPlaysHandler>> Logger { get; } = new();
         public List<ScoreJournalEntry> Written { get; } = new();
+
+        /// <summary>Rows the session already held before the command under test.</summary>
+        public List<ScoreJournalEntry> Stored { get; } = new();
+
+        public List<(Guid ChartId, DateTimeOffset OccurredAt, StageBreakCause Cause)> Resolved { get; } = new();
         public RecordObservedPlaysHandler Handler { get; }
 
         public HandlerContext()
@@ -244,6 +311,14 @@ public sealed class RecordObservedPlaysHandlerTests
                     It.IsAny<CancellationToken>()))
                 .Callback<IReadOnlyList<ScoreJournalEntry>, CancellationToken>((entries, _) =>
                     Written.AddRange(entries))
+                .Returns(Task.CompletedTask);
+            Journal.Setup(j => j.GetSessionEntries(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(() => Stored.Concat(Written).ToArray());
+            Journal.Setup(j => j.SetStageBreakCauses(It.IsAny<Guid>(), It.IsAny<MixEnum>(),
+                    It.IsAny<IReadOnlyList<(Guid ChartId, DateTimeOffset OccurredAt, StageBreakCause Cause)>>(),
+                    It.IsAny<CancellationToken>()))
+                .Callback<Guid, MixEnum, IReadOnlyList<(Guid ChartId, DateTimeOffset OccurredAt, StageBreakCause Cause)>,
+                    CancellationToken>((_, _, causes, _) => Resolved.AddRange(causes))
                 .Returns(Task.CompletedTask);
             Handler = new RecordObservedPlaysHandler(Journal.Object, new MemoryCache(new MemoryCacheOptions()),
                 Charts.Object, Logger.Object);

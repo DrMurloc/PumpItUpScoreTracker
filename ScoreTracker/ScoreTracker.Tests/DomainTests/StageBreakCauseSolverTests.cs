@@ -116,14 +116,15 @@ public sealed class StageBreakCauseSolverTests
     }
 
     [Fact]
-    public void ACeilingThatIsNowhereNearAFloorNamesNoGrade()
+    public void AMissThatCutsTheComboNamesTheGradeTheRunFellMoreThanANotePast()
     {
-        // Eight misses on a 1,000-note level 26 leaves the bar at 868 of 3,028 and the ceiling at
-        // 988,968 — a thousand points under SSS, which is more than one note away.
+        // Eight misses on a 1,000-note level 26: the end-bunched best reachable score sits a thousand
+        // points under SSS, more than a note — but a miss costs its note and the combo it cuts, and
+        // SSS is the only line the last judgement could have crossed.
         var cause = StageBreakCauseSolver.Solve(700, 4, 0, 0, 8, 1000, 26, MixEnum.Phoenix2);
 
         Assert.True(cause.IsNonLifebarBreak);
-        Assert.Null(cause.PassGrade);
+        Assert.Equal(PhoenixLetterGrade.SSS, cause.PassGrade);
     }
 
     [Fact]
@@ -140,26 +141,117 @@ public sealed class StageBreakCauseSolverTests
     }
 
     [Fact]
-    public void SixMissesOnAShortRunCanStillBeALifebarDeath()
+    public void SixMissesThatLeaveLifeUnderTheCruellestOrderingAreNotALifebarDeath()
     {
-        // 115 perfects and 6 misses at level 24: exactly the Marvelous Game threshold, and the
-        // ship gate flagged it wearing MG and SSS+. The cruellest ordering ends on 60 life of a
-        // 2,728 bar — under the margin — so neither badge was ever provable.
+        // 115 perfects and 6 misses at level 24. The cruellest ordering of those judgements still
+        // ends on 60 life of a 2,728 bar, so no ordering emptied it — and six misses is exactly
+        // Marvelous Game's threshold, while SSS+ is the only line the sixth could have crossed.
         var cause = StageBreakCauseSolver.Solve(115, 0, 0, 0, 6, 1000, 24, MixEnum.Phoenix2);
 
-        Assert.False(cause.IsNonLifebarBreak);
-        Assert.False(cause.IsNamed);
+        Assert.True(cause.IsNonLifebarBreak);
+        Assert.Equal(PhoenixPlate.MarvelousGame, cause.PassPlate);
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, cause.PassGrade);
     }
 
     [Fact]
-    public void ARunSurvivingOnASliverOfBarIsTreatedAsALifebarDeath()
+    public void AnySliverOfLifeLeftIsStillProofTheBarDidNotEmpty()
     {
-        // Sixteen misses at level 26 ends on 16 life of 3,028. The arithmetic heals first and
-        // takes every point of damage second, so "survived" here is the calculation flattering
-        // a run that died (D30).
+        // Sixteen misses at level 26: the cruellest ordering ends on 16 life of 3,028. Every heal
+        // counts as a great and every mid-run death clamps and continues, so the search can only
+        // land at or below the real run — 16 left means the bar held.
         var cause = StageBreakCauseSolver.Solve(700, 4, 0, 0, 16, 1000, 26, MixEnum.Phoenix2);
 
-        Assert.False(cause.IsNonLifebarBreak);
+        Assert.True(cause.IsNonLifebarBreak);
+        Assert.Equal(PhoenixLetterGrade.SS, cause.PassGrade);
+    }
+
+    [Fact]
+    public void AnSSSPlusBreakWhoseMissesSplitTheComboIsNamed()
+    {
+        // Iolite Sky D21, three misses 93% of the way in. Bunched at the end they would have left
+        // SSS+ within reach; anywhere else they cut the combo under it, and SSS+ is the only line
+        // the last judgement could have crossed.
+        var cause = StageBreakCauseSolver.Solve(920, 4, 0, 0, 3, 1000, 21, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, cause.PassGrade);
+        Assert.Null(cause.PassPlate);
+    }
+
+    [Fact]
+    public void ALateGreatCanCrossTheLineAMidRunMissLeftTheRunOn()
+    {
+        // Iolite Sky D21, one miss and six greats. A miss at the very end would leave SSS+ standing,
+        // so the miss fell mid-run and a later great crossed the line. A lone miss is also Ultimate
+        // Game's first break, so both are named.
+        var cause = StageBreakCauseSolver.Solve(791, 6, 0, 0, 1, 1000, 21, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixPlate.UltimateGame, cause.PassPlate);
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, cause.PassGrade);
+    }
+
+    [Fact]
+    public void TheGuessNamesOnlyALineTheRunCouldHaveCrossed()
+    {
+        // Conflict S22: spread evenly, the one miss leaves the best reachable score just over SSS,
+        // where the nearest line above is SSS+ — but SSS is the only line the last judgement could
+        // have crossed.
+        var cause = StageBreakCauseSolver.Solve(899, 25, 0, 0, 1, 1400, 22, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixPlate.UltimateGame, cause.PassPlate);
+        Assert.Equal(PhoenixLetterGrade.SSS, cause.PassGrade);
+    }
+
+    [Fact]
+    public void AGradeAlreadyGoneBeforeTheLastJudgementIsNotNamed()
+    {
+        // Switronic S15: the best reachable score fell under SSS+ several judgements before the run
+        // ended, so a Pass SSS+ would have ended it there. Only the plate its lone good broke is named.
+        var cause = StageBreakCauseSolver.Solve(223, 11, 1, 0, 0, 852, 15, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixPlate.UltimateGame, cause.PassPlate);
+        Assert.Null(cause.PassGrade);
+    }
+
+    [Fact]
+    public void APlateRunNamesNoGradeItCouldNotHaveCrossed()
+    {
+        // Guitar Man S20, six misses: Marvelous Game fell on the last of them, and no grade floor sits
+        // where that miss could have taken the run under.
+        var cause = StageBreakCauseSolver.Solve(391, 8, 0, 1, 6, 880, 20, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixPlate.MarvelousGame, cause.PassPlate);
+        Assert.Null(cause.PassGrade);
+    }
+
+    [Fact]
+    public void TwoCrossableLinesAreSettledByEvenlySpreadBreaks()
+    {
+        // Six misses 90% of the way in could have left SSS or SSS+ just gone. Spread evenly, they
+        // leave the best reachable score just under SSS, so SSS is the guess.
+        var cause = StageBreakCauseSolver.Solve(900, 0, 0, 0, 6, 1000, 26, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixLetterGrade.SSS, cause.PassGrade);
+    }
+
+    [Fact]
+    public void AnEarlySSSPlusBreakIsFlaggedWithFewHealsBehindIt()
+    {
+        // Iolite Sky D21, 96 notes in: five misses and nothing but perfects. The multiplier had
+        // barely started to heal, so the cruellest ordering ends on 89 life — low, but not empty.
+        var cause = StageBreakCauseSolver.Solve(91, 0, 0, 0, 5, 1000, 21, MixEnum.Phoenix2);
+
+        Assert.True(cause.IsNonLifebarBreak);
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, cause.PassGrade);
+    }
+
+    [Fact]
+    public void AnEarlySSSBreakIsFlaggedWithFewHealsBehindIt()
+    {
+        // Caprice of DJ Otada S21, 118 notes in; the cruellest ordering ends on 109 life.
+        var cause = StageBreakCauseSolver.Solve(104, 7, 2, 0, 5, 904, 21, MixEnum.Phoenix2);
+
+        Assert.True(cause.IsNonLifebarBreak);
+        Assert.Equal(PhoenixLetterGrade.SSS, cause.PassGrade);
     }
 
     [Fact]
@@ -173,17 +265,33 @@ public sealed class StageBreakCauseSolverTests
     }
 
     [Fact]
-    public void EachMixReadsItsOwnGradeFloors()
+    public void AGoodsHeavyBreakNamesTheFloorItsLastGoodCrossed()
     {
-        // A ceiling of 919,900: goods drive it down because they cost score and no life at all,
-        // and with no bad or miss the combo runs straight through them. Phoenix 2 puts AA at
-        // 920,000, so it just went out of reach; Phoenix puts AA at 900,000, already cleared,
-        // and its next floor up is 5,100 away.
-        var onPhoenix = StageBreakCauseSolver.Solve(500, 0, 100, 0, 0, 1000, 21, MixEnum.Phoenix);
-        var onPhoenix2 = StageBreakCauseSolver.Solve(500, 0, 100, 0, 0, 1000, 21, MixEnum.Phoenix2);
+        // A best reachable score of 919,900: goods drive it down because they cost score and no life
+        // at all, and with no bad or miss the combo runs straight through them. Phoenix 2 puts AA at
+        // 920,000, so the last good took it out of reach.
+        var cause = StageBreakCauseSolver.Solve(500, 0, 100, 0, 0, 1000, 21, MixEnum.Phoenix2);
 
-        Assert.Equal(PhoenixLetterGrade.AA, onPhoenix2.PassGrade);
-        Assert.Null(onPhoenix.PassGrade);
+        Assert.Equal(PhoenixLetterGrade.AA, cause.PassGrade);
+    }
+
+    [Fact]
+    public void APhoenixOneBreakIsSolvedTheSameWay()
+    {
+        // The Iolite Sky Pass SSS+ run's judgements played on Phoenix. The floors from AAA up are the
+        // same on both mixes, so the answer is too.
+        var cause = StageBreakCauseSolver.Solve(806, 1, 0, 0, 4, 1000, 21, MixEnum.Phoenix);
+
+        Assert.True(cause.IsNonLifebarBreak);
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, cause.PassGrade);
+    }
+
+    [Fact]
+    public void APhoenixOneWalkOffIsStillAWalkOff()
+    {
+        var cause = StageBreakCauseSolver.Solve(500, 10, 5, 3, 51, null, null, MixEnum.Phoenix);
+
+        Assert.True(cause.IsWalkOff);
     }
 
     [Fact]
@@ -222,5 +330,216 @@ public sealed class StageBreakCauseSolverTests
 
         Assert.False(cause.IsWalkOff);
         Assert.Equal(StageBreakCause.Unattributed, cause);
+    }
+
+    [Fact]
+    public void AMissThatCutsTheComboCanTakeARunMoreThanOneNotePastALine()
+    {
+        // Caprice of DJ Otada S21, three misses: the best reachable score now sits 1,108 points
+        // under SSS on a chart where a note is worth 1,101. A miss costs its note and the combo it
+        // cuts, so SSS is still the line the last judgement could have crossed.
+        var crossable = StageBreakCauseSolver.CrossableGrades(593, 14, 0, 0, 3, 904, MixEnum.Phoenix2);
+
+        Assert.Equal(new[] { PhoenixLetterGrade.SSS }, crossable);
+    }
+
+    [Fact]
+    public void ARunWithNoBadOrMissFarFromEveryFloorCrossedNothing()
+    {
+        // With no break the combo is known exactly: the last good left the best reachable score at
+        // 921,502, still over AA's 920,000 and nowhere near AA+.
+        var crossable = StageBreakCauseSolver.CrossableGrades(500, 0, 98, 0, 0, 1000, MixEnum.Phoenix2);
+
+        Assert.Empty(crossable);
+    }
+
+    [Fact]
+    public void BreaksThatCouldHaveFallenAnywhereCanLeaveTwoLinesCrossable()
+    {
+        // Six misses 90% of the way in: bunched, they leave SSS+ just gone; spread out, SSS.
+        var crossable = StageBreakCauseSolver.CrossableGrades(900, 0, 0, 0, 6, 1000, MixEnum.Phoenix2);
+
+        Assert.Equal(new[] { PhoenixLetterGrade.SSS, PhoenixLetterGrade.SSSPlus }, crossable);
+    }
+
+    [Fact]
+    public void CrossableGradesReadEachMixsOwnFloors()
+    {
+        // The last of a hundred goods takes the best reachable score to 919,900: under Phoenix 2's
+        // AA floor at 920,000, while Phoenix's AA sits at 900,000 and its next floor 5,100 above.
+        Assert.Equal(new[] { PhoenixLetterGrade.AA },
+            StageBreakCauseSolver.CrossableGrades(500, 0, 100, 0, 0, 1000, MixEnum.Phoenix2));
+        Assert.Empty(StageBreakCauseSolver.CrossableGrades(500, 0, 100, 0, 0, 1000, MixEnum.Phoenix));
+    }
+
+    [Fact]
+    public void JudgementsThatOutnumberTheChartCrossNothing()
+    {
+        Assert.Empty(StageBreakCauseSolver.CrossableGrades(900, 0, 0, 0, 6, 800, MixEnum.Phoenix2));
+    }
+
+    [Fact]
+    public void EveryPlateOneJudgementBrokeIsListedStrictestFirst()
+    {
+        // A lone bad is at once the first non-perfect, the first good/bad/miss and the first
+        // bad/miss, so Perfect, Ultimate and Extreme Game all fell on it.
+        Assert.Equal(new[] { PhoenixPlate.PerfectGame, PhoenixPlate.UltimateGame, PhoenixPlate.ExtremeGame },
+            StageBreakCauseSolver.BrokenPlates(0, 0, 1, 0));
+    }
+
+    [Fact]
+    public void APlateIsBrokenOnlyByTheJudgementJustPastItsTolerance()
+    {
+        // Guitar Man S20: the sixth miss is one past Marvelous Game's five; every stricter plate was
+        // lost judgements earlier.
+        Assert.Equal(new[] { PhoenixPlate.MarvelousGame }, StageBreakCauseSolver.BrokenPlates(8, 0, 1, 6));
+    }
+
+    [Fact]
+    public void ReplaysOfOneChartShareTheGradeEveryRunCouldHaveCrossed()
+    {
+        // Two runs on one chart. Six misses could have left SSS or SSS+ just gone, and alone the
+        // evenly spread guess says SSS; the replay could only have crossed SSS+. One command ended
+        // both, so both are SSS+.
+        var causes = StageBreakCauseSolver.SolveStreak(new[]
+        {
+            new JudgementCounts(900, 0, 0, 0, 6),
+            new JudgementCounts(806, 1, 0, 0, 4)
+        }, 1000, 26, MixEnum.Phoenix2);
+
+        Assert.All(causes, cause => Assert.Equal(PhoenixLetterGrade.SSSPlus, cause.PassGrade));
+    }
+
+    [Fact]
+    public void AStreakWithNoGradeInCommonLeavesEachRunItsOwnAnswer()
+    {
+        // Ugly Dee S17 twice: the first run could only have crossed SSS and the second only SSS+, so
+        // the command changed between them.
+        var causes = StageBreakCauseSolver.SolveStreak(new[]
+        {
+            new JudgementCounts(251, 7, 0, 0, 2),
+            new JudgementCounts(254, 8, 0, 0, 0)
+        }, 597, 17, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixLetterGrade.SSS, causes[0].PassGrade);
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, causes[1].PassGrade);
+    }
+
+    [Fact]
+    public void TwoGradesInCommonTakeTheLineMostRunsGuess()
+    {
+        // Eleven misses twice: either run could have left SS+ or SSS just gone, and spread evenly
+        // both land just under SS+.
+        var causes = StageBreakCauseSolver.SolveStreak(new[]
+        {
+            new JudgementCounts(900, 0, 0, 0, 11),
+            new JudgementCounts(950, 0, 0, 0, 11)
+        }, 1000, 26, MixEnum.Phoenix2);
+
+        Assert.All(causes, cause => Assert.Equal(PhoenixLetterGrade.SSPlus, cause.PassGrade));
+    }
+
+    [Fact]
+    public void AStreakLeavesAWalkOffAlone()
+    {
+        var causes = StageBreakCauseSolver.SolveStreak(new[]
+        {
+            new JudgementCounts(900, 0, 0, 0, 6),
+            new JudgementCounts(806, 1, 0, 0, 4),
+            new JudgementCounts(500, 10, 5, 3, 51)
+        }, 1000, 26, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, causes[0].PassGrade);
+        Assert.Equal(StageBreakCause.WalkedOff, causes[2]);
+    }
+
+    [Fact]
+    public void ALoneRunSolvesExactlyAsItWouldOnItsOwn()
+    {
+        var alone = StageBreakCauseSolver.Solve(900, 0, 0, 0, 6, 1000, 26, MixEnum.Phoenix2);
+
+        var streak = StageBreakCauseSolver.SolveStreak(new[] { new JudgementCounts(900, 0, 0, 0, 6) }, 1000, 26,
+            MixEnum.Phoenix2);
+
+        Assert.Equal(alone, Assert.Single(streak));
+    }
+
+    [Fact]
+    public void AStreakDropsThePlatesItsReplaysRuleOut()
+    {
+        // Caprice of DJ Otada S21, six runs in one session. Every run could have crossed SSS. Two also
+        // matched a plate by count — Ultimate Game on a lone good, Extreme Game on a lone miss — that
+        // the other replays contradict, so neither plate names anything.
+        var causes = StageBreakCauseSolver.SolveStreak(new[]
+        {
+            new JudgementCounts(593, 14, 0, 0, 3),
+            new JudgementCounts(697, 13, 2, 0, 2),
+            new JudgementCounts(873, 21, 1, 0, 0),
+            new JudgementCounts(104, 7, 2, 0, 5),
+            new JudgementCounts(713, 16, 2, 0, 1),
+            new JudgementCounts(701, 17, 3, 0, 0)
+        }, 904, 21, MixEnum.Phoenix2);
+
+        Assert.All(causes, cause =>
+        {
+            Assert.Equal(PhoenixLetterGrade.SSS, cause.PassGrade);
+            Assert.Null(cause.PassPlate);
+        });
+    }
+
+    [Fact]
+    public void AStreakSwapsARunsHigherPlateForTheOneEveryReplayFits()
+    {
+        // Two runs ending on a lone miss. The first carried no bad, so Extreme Game fell on that miss
+        // along with Superb Game; the second carried a bad before it, which rules Extreme Game out.
+        // Superb Game fits both.
+        var causes = StageBreakCauseSolver.SolveStreak(new[]
+        {
+            new JudgementCounts(900, 5, 2, 0, 1),
+            new JudgementCounts(900, 5, 2, 1, 1)
+        }, 1000, 26, MixEnum.Phoenix2);
+
+        Assert.All(causes, cause =>
+        {
+            Assert.Equal(PhoenixPlate.SuperbGame, cause.PassPlate);
+            Assert.Equal(PhoenixLetterGrade.SSSPlus, cause.PassGrade);
+        });
+    }
+
+    [Fact]
+    public void ARunThatFitsNoTargetSitsOutTheStreak()
+    {
+        // Seven straight perfects fit no plate and no grade, so the player's own command could not
+        // have ended that run and it says nothing about which command they set. The two replays still
+        // share SSS+.
+        var causes = StageBreakCauseSolver.SolveStreak(new[]
+        {
+            new JudgementCounts(900, 0, 0, 0, 6),
+            new JudgementCounts(806, 1, 0, 0, 4),
+            new JudgementCounts(7, 0, 0, 0, 0)
+        }, 1000, 26, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, causes[0].PassGrade);
+        Assert.Null(causes[0].PassPlate);
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, causes[1].PassGrade);
+        Assert.True(causes[2].IsNonLifebarBreak);
+        Assert.False(causes[2].IsNamed);
+    }
+
+    [Fact]
+    public void ARunThatFitsNoTargetDoesNotBringBackAPlateTheReplaysRuledOut()
+    {
+        // Two runs ending on a lone miss share Superb Game; a third, with bads but no miss, fits
+        // nothing. It does not undo the streak, so Extreme Game stays ruled out for the first run.
+        var causes = StageBreakCauseSolver.SolveStreak(new[]
+        {
+            new JudgementCounts(900, 5, 2, 0, 1),
+            new JudgementCounts(900, 5, 2, 1, 1),
+            new JudgementCounts(44, 24, 14, 3, 0)
+        }, 1000, 21, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixPlate.SuperbGame, causes[0].PassPlate);
+        Assert.Equal(PhoenixPlate.SuperbGame, causes[1].PassPlate);
+        Assert.False(causes[2].IsNamed);
     }
 }

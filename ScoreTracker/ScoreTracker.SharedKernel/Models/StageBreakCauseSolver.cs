@@ -11,15 +11,6 @@ namespace ScoreTracker.SharedKernel.Models;
 /// </summary>
 public static class StageBreakCauseSolver
 {
-    /// <summary>
-    ///     How much of the bar must survive before we call a break non-lifebar.
-    ///     <see cref="LifeRemaining" /> heals first and takes every point of damage second, which
-    ///     is the most survival-friendly ordering there is — so a run "surviving" on a sliver of
-    ///     bar is a life bar death the arithmetic flattered. Measured: without this, 105 rows
-    ///     survive on 1-5% of the bar, one of them on 15 life (D30).
-    /// </summary>
-    private const double SurvivingFraction = 0.05;
-
     /// <summary>The lowest grade the Stage Pass command list offers. Below this there is no target.</summary>
     private const PhoenixLetterGrade LowestPassGrade = PhoenixLetterGrade.A;
 
@@ -34,9 +25,21 @@ public static class StageBreakCauseSolver
     /// </summary>
     public const int WalkOffMissFloor = 51;
 
+    private const double ScoreScale = 1_000_000.0;
+    private const double NoteShare = 0.995;
+    private const double ComboShare = 0.005;
+
+    /// <summary>Score arithmetic in doubles lands a hair either side of an integer floor.</summary>
+    private const double FloorTolerance = 1e-6;
+
+    /// <summary>The judgements that can move the best reachable score; a perfect never does.</summary>
+    private static readonly Judgment[] ScoreMovingJudgments =
+        { Judgment.Great, Judgment.Good, Judgment.Bad, Judgment.Miss };
+
     /// <summary>
-    ///     A null note count, a null level or an unjudged play all mean the same thing: not enough
-    ///     to tell, so no claim. Never guess — an absent badge is silent, a wrong one is not.
+    ///     A null level or an unjudged play leaves the life bar unsized, so no claim. A run the bar
+    ///     provably did not end names the plate it broke by exactly one judgement and, where the note
+    ///     count allows, the grade its last judgement could have crossed.
     /// </summary>
     public static StageBreakCause Solve(int perfects, int greats, int goods, int bads, int misses,
         int? noteCount, DifficultyLevel? level, MixEnum mix)
@@ -48,20 +51,118 @@ public static class StageBreakCauseSolver
 
         if (level == null) return StageBreakCause.Unattributed;
 
-        var margin = new LifebarSimulator(level.Value).MaxLife * SurvivingFraction;
         // Two screens, cheapest first. The heal-first walk is the FRIENDLIEST ordering — if
-        // even that one dies, the row is refuted without touching the search. What survives it
-        // still faces the adversarial minimum, because an ordering that spaces the damage
-        // through the heal stream keeps the multiplier crushed and suppresses nearly all the
-        // healing — which is not a curiosity, it is what a struggling run actually looks like.
-        if (LifeRemaining(perfects, greats, bads, misses, level.Value) <= margin)
+        // even that one empties the bar, the row is refuted without touching the search. What
+        // survives it still faces the adversarial minimum, because an ordering that spaces the
+        // damage through the heal stream keeps the multiplier crushed and suppresses nearly all
+        // the healing — which is not a curiosity, it is what a struggling run actually looks like.
+        // A run whose cruellest ordering still ends with any life left did not empty the bar.
+        if (LifeRemaining(perfects, greats, bads, misses, level.Value) <= 0)
             return StageBreakCause.Unattributed;
-        if (MinimalEndingLife(perfects + greats, bads, misses, level.Value) <= margin)
+        if (MinimalEndingLife(perfects + greats, bads, misses, level.Value) <= 0)
             return StageBreakCause.Unattributed;
 
         return new StageBreakCause(true,
             BrokenPlate(greats, goods, bads, misses),
-            UnreachableGrade(perfects, greats, goods, bads, misses, noteCount, mix));
+            NamedGrade(perfects, greats, goods, bads, misses, noteCount, mix));
+    }
+
+    /// <summary>
+    ///     Solves one player's stage breaks on one chart in one session together, in input order.
+    ///     Each run is solved alone first. A player replaying a chart keeps the command they set, so
+    ///     the targets that fit every run the bar did not end name all of them: the grade every such
+    ///     run could have crossed — the one most of their evenly spread guesses pick when more than one
+    ///     fits, the higher on a tie — and the highest plate every such run broke by exactly one
+    ///     judgement. A target one run fits and another rules out names none of them. When nothing
+    ///     fits them all, the command changed and each run keeps its own answer. A run that fits no
+    ///     target on its own sits out and keeps its empty answer: the player's command could not have
+    ///     ended it, so it says nothing about which command was set.
+    /// </summary>
+    public static IReadOnlyList<StageBreakCause> SolveStreak(IReadOnlyList<JudgementCounts> runs, int? noteCount,
+        DifficultyLevel? level, MixEnum mix)
+    {
+        var causes = runs
+            .Select(run => Solve(run.Perfects, run.Greats, run.Goods, run.Bads, run.Misses, noteCount, level, mix))
+            .ToArray();
+        var candidates = Enumerable.Range(0, runs.Count)
+            .Where(i => causes[i].IsNonLifebarBreak && causes[i].IsNamed)
+            .ToArray();
+        if (candidates.Length < 2) return causes;
+
+        IEnumerable<PhoenixPlate> sharedPlates = Plates(runs[candidates[0]]);
+        foreach (var i in candidates.Skip(1)) sharedPlates = sharedPlates.Intersect(Plates(runs[i]));
+        var plates = sharedPlates.ToArray();
+
+        var notes = noteCount.GetValueOrDefault();
+        var grades = Array.Empty<PhoenixLetterGrade>();
+        if (notes > 0)
+        {
+            IEnumerable<PhoenixLetterGrade> sharedGrades = Crossable(runs[candidates[0]]);
+            foreach (var i in candidates.Skip(1)) sharedGrades = sharedGrades.Intersect(Crossable(runs[i]));
+            grades = sharedGrades.OrderBy(grade => grade).ToArray();
+        }
+
+        if (grades.Length == 0 && plates.Length == 0) return causes;
+
+        PhoenixLetterGrade? named = grades.Length switch
+        {
+            0 => null,
+            1 => grades[0],
+            _ => candidates
+                .Select(i => EvenlySpreadGuess(runs[i].Perfects, runs[i].Greats, runs[i].Goods, runs[i].Bads,
+                    runs[i].Misses, notes, mix, grades))
+                .GroupBy(guess => guess)
+                .OrderByDescending(votes => votes.Count())
+                .ThenByDescending(votes => votes.Key)
+                .First().Key
+        };
+        PhoenixPlate? plate = plates.Length == 0 ? null : plates[0];
+
+        foreach (var i in candidates) causes[i] = causes[i] with { PassPlate = plate, PassGrade = named };
+        return causes;
+
+        IReadOnlyList<PhoenixLetterGrade> Crossable(JudgementCounts run)
+        {
+            return CrossableGrades(run.Perfects, run.Greats, run.Goods, run.Bads, run.Misses, notes, mix);
+        }
+
+        IReadOnlyList<PhoenixPlate> Plates(JudgementCounts run)
+        {
+            return BrokenPlates(run.Greats, run.Goods, run.Bads, run.Misses);
+        }
+    }
+
+    /// <summary>
+    ///     Every grade this run's last judgement could have put out of reach, ascending. A grade
+    ///     qualifies when some placement of the run's bads and misses among its judged notes leaves
+    ///     the best reachable score at or above the grade's floor just before the last judgement and
+    ///     below it just after. The best reachable score is every remaining note perfect with the
+    ///     longest combo still possible; only bads and misses break a combo, and a good holds it
+    ///     without advancing it.
+    /// </summary>
+    public static IReadOnlyList<PhoenixLetterGrade> CrossableGrades(int perfects, int greats, int goods, int bads,
+        int misses, int noteCount, MixEnum mix)
+    {
+        if (noteCount <= 0 || perfects + greats + goods + bads + misses > noteCount)
+            return Array.Empty<PhoenixLetterGrade>();
+
+        return Enum.GetValues<PhoenixLetterGrade>()
+            .Where(grade => grade >= LowestPassGrade)
+            .Where(grade => CouldHaveJustCrossed(perfects, greats, goods, bads, misses, noteCount,
+                grade.GetMinimumScoreFor(mix)))
+            .ToArray();
+    }
+
+    /// <summary>
+    ///     Every plate this run broke by exactly one judgement, strictest first — the plates a Pass
+    ///     command would have fired on as the run ended.
+    /// </summary>
+    public static IReadOnlyList<PhoenixPlate> BrokenPlates(int greats, int goods, int bads, int misses)
+    {
+        return PhoenixPlateHelperMethods.Tolerances
+            .Where(tolerance => tolerance.CountIn(greats, goods, bads, misses) == tolerance.MaxAllowed + 1)
+            .Select(tolerance => tolerance.Plate)
+            .ToArray();
     }
 
     /// <summary>
@@ -94,7 +195,7 @@ public static class StageBreakCauseSolver
     ///     The least life ANY ordering of these judgements can end on. This is the half of the
     ///     gate that makes the flag a proof: <see cref="LifeRemaining" /> asks how well the run
     ///     could have gone, this asks how badly — and only a run whose WORST ordering still
-    ///     ends above the margin provably did not die.
+    ///     ends with life left provably did not die.
     ///     <para>
     ///         A Pareto search over (life, multiplier) after (heals, misses, bads) events, both
     ///         axes minimised — lower life and a lower multiplier are each worse for survival,
@@ -197,69 +298,125 @@ public static class StageBreakCauseSolver
 
     /// <summary>
     ///     The highest plate this run broke by exactly one judgement — the one a Pass command
-    ///     would have fired on. The tolerance table is ordered strictest first, so the first
-    ///     match is the highest: a first miss with no bads before it names Extreme Game rather
+    ///     would have fired on. <see cref="BrokenPlates" /> lists strictest first, so the first
+    ///     entry is the highest: a first miss with no bads before it names Extreme Game rather
     ///     than Superb Game, since both would have fired and Extreme is the higher target (D32).
     /// </summary>
     private static PhoenixPlate? BrokenPlate(int greats, int goods, int bads, int misses)
     {
-        foreach (var tolerance in PhoenixPlateHelperMethods.Tolerances)
-            if (tolerance.CountIn(greats, goods, bads, misses) == tolerance.MaxAllowed + 1)
-                return tolerance.Plate;
-
-        return null;
+        var plates = BrokenPlates(greats, goods, bads, misses);
+        return plates.Count == 0 ? null : plates[0];
     }
 
     /// <summary>
-    ///     The grade that stopped being reachable on this run's last judgement, if any. Compares
-    ///     the best score still attainable — every remaining note perfect, best possible combo —
-    ///     against each floor, and names the one it fell under by less than a single note's worth
-    ///     of score (D33).
+    ///     The grade this run's last judgement put out of reach: the one grade it could have crossed,
+    ///     or the evenly spread guess when it could have crossed more than one.
     /// </summary>
-    private static PhoenixLetterGrade? UnreachableGrade(int perfects, int greats, int goods, int bads,
-        int misses, int? noteCount, MixEnum mix)
+    private static PhoenixLetterGrade? NamedGrade(int perfects, int greats, int goods, int bads, int misses,
+        int? noteCount, MixEnum mix)
     {
         if (noteCount is not > 0) return null;
 
-        var judged = perfects + greats + goods + bads + misses;
-        if (judged > noteCount.Value) return null;
-
-        var ceiling = ReachableCeiling(perfects, greats, goods, bads, misses, judged, noteCount.Value);
-        var oneNote = 995_000.0 / noteCount.Value;
-
-        // Declaration order is ascending, so the first floor above the ceiling is the nearest one.
-        foreach (var grade in Enum.GetValues<PhoenixLetterGrade>())
+        var crossable = CrossableGrades(perfects, greats, goods, bads, misses, noteCount.Value, mix);
+        return crossable.Count switch
         {
-            if (grade < LowestPassGrade) continue;
-
-            double floor = grade.GetMinimumScoreFor(mix);
-            if (floor <= ceiling) continue;
-
-            return floor - ceiling < oneNote ? grade : null;
-        }
-
-        return null;
+            0 => null,
+            1 => crossable[0],
+            _ => EvenlySpreadGuess(perfects, greats, goods, bads, misses, noteCount.Value, mix, crossable)
+        };
     }
 
     /// <summary>
-    ///     The best score this run could still have finished on. Max combo is never observed on a
-    ///     stage break, so it is bounded rather than estimated: a point estimate cannot work here —
-    ///     the combo component is 0.5% of the score, which is exactly one top-end grade band
-    ///     (D33, §5). Only bads and misses break a combo; a good HOLDS it without advancing it.
-    ///     So a run whose only blemishes are goods can still combo every other note, and a run
-    ///     carrying a bad or miss is bounded by its longest breaker-free stretch — everything
-    ///     before the break (goods transparent) or every note after it.
+    ///     The candidate the run most likely just fell under. The estimate puts the killing judgement
+    ///     last and spreads the other bads and misses evenly through the run, so the longest combo still
+    ///     possible is the judged combo notes shared across the stretches between breaks, or every note
+    ///     left when that is longer. The guess is the nearest candidate floor above that best reachable
+    ///     score, or the highest candidate when the score clears them all. Candidates are ascending.
     /// </summary>
-    private static double ReachableCeiling(int perfects, int greats, int goods, int bads, int misses,
-        int judged, int noteCount)
+    private static PhoenixLetterGrade EvenlySpreadGuess(int perfects, int greats, int goods, int bads, int misses,
+        int noteCount, MixEnum mix, IReadOnlyList<PhoenixLetterGrade> candidates)
     {
-        var remaining = noteCount - judged;
-        var combo = bads + misses == 0
+        var remaining = noteCount - (perfects + greats + goods + bads + misses);
+        var breaks = bads + misses;
+        var combo = breaks == 0
             ? perfects + greats + remaining
-            : Math.Max(perfects + greats, remaining);
+            : Math.Max((perfects + greats + breaks - 1) / breaks, remaining);
+        var estimate = ScoreScale * (NoteShare * (perfects + 0.6 * greats + 0.2 * goods + 0.1 * bads + remaining)
+                                     + ComboShare * combo) / noteCount;
 
-        return 1_000_000.0 *
-               (0.995 * (perfects + 0.6 * greats + 0.2 * goods + 0.1 * bads + remaining)
-                + 0.005 * combo) / noteCount;
+        foreach (var candidate in candidates)
+        {
+            double floor = candidate.GetMinimumScoreFor(mix);
+            if (floor > estimate) return candidate;
+        }
+
+        return candidates[^1];
+    }
+
+    /// <summary>
+    ///     Whether some placement of the run's bads and misses puts the best reachable score at or
+    ///     above <paramref name="floor" /> before the last judgement and below it after. The judged
+    ///     notes that advance a combo split into finished stretches and the stretch still running
+    ///     when the run ended. A longer finished stretch only raises the score on both sides of the
+    ///     last judgement, so for each length of the running stretch the shortest finished stretch
+    ///     that still reaches the floor beforehand is the one to test afterwards.
+    /// </summary>
+    private static bool CouldHaveJustCrossed(int perfects, int greats, int goods, int bads, int misses,
+        int noteCount, double floor)
+    {
+        var remainingAfter = noteCount - (perfects + greats + goods + bads + misses);
+        var remainingBefore = remainingAfter + 1;
+        var noteCredit = perfects + 0.6 * greats + 0.2 * goods + 0.1 * bads;
+        var perComboNote = ScoreScale * ComboShare / noteCount;
+        var notesAfter = ScoreScale * NoteShare * (noteCredit + remainingAfter) / noteCount;
+        var threshold = floor - FloorTolerance;
+
+        foreach (var last in ScoreMovingJudgments)
+        {
+            var (count, credit) = last switch
+            {
+                Judgment.Great => (greats, 0.6),
+                Judgment.Good => (goods, 0.2),
+                Judgment.Bad => (bads, 0.1),
+                _ => (misses, 0.0)
+            };
+            if (count == 0) continue;
+
+            var notesBefore = ScoreScale * NoteShare * (noteCredit - credit + remainingBefore) / noteCount;
+            var comboNotes = perfects + greats - (last == Judgment.Great ? 1 : 0);
+            var breaks = bads + misses - (last is Judgment.Bad or Judgment.Miss ? 1 : 0);
+
+            // Before the last judgement no combo is longer than one unbroken run through every note
+            // left; after it, the combo still to come is at least the notes left.
+            if (notesBefore + perComboNote * (comboNotes + remainingBefore) < threshold) continue;
+            if (notesAfter + perComboNote * remainingAfter >= threshold) continue;
+
+            for (var running = 0; running <= comboNotes; running++)
+            {
+                var finishedNotes = comboNotes - running;
+                if (breaks == 0 && finishedNotes > 0) continue;
+
+                var finished = breaks == 0 ? 0 : (finishedNotes + breaks - 1) / breaks;
+                if (notesBefore + perComboNote * Math.Max(finished, running + remainingBefore) < threshold)
+                {
+                    var needed = (int)Math.Ceiling((threshold - notesBefore) / perComboNote);
+                    if (needed > finishedNotes) continue;
+
+                    finished = Math.Max(finished, needed);
+                    if (notesBefore + perComboNote * Math.Max(finished, running + remainingBefore) < threshold)
+                        continue;
+                }
+
+                var comboAfter = last switch
+                {
+                    Judgment.Great => Math.Max(finished, running + remainingBefore),
+                    Judgment.Good => Math.Max(finished, running + remainingAfter),
+                    _ => Math.Max(Math.Max(finished, running), remainingAfter)
+                };
+                if (notesAfter + perComboNote * comboAfter < threshold) return true;
+            }
+        }
+
+        return false;
     }
 }
