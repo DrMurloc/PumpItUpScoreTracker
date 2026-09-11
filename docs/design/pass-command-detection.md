@@ -215,10 +215,13 @@ highest plate that fits every replay, or none: the owner's Caprice of DJ Otada s
 all six runs and loses the UG and EG two of them matched by count. 75 plate badges fall away and 11
 become the streak's lower plate.
 
-### D42 — Stage Pass is named on Phoenix 2 only (2026-09-11)
+### D42 — withdrawn: every Phoenix-family mix is solved the same way (2026-09-11)
 
-Stage Pass is a Phoenix 2 Premium Mode command. A Phoenix 1 break still answers the life bar question
-— walked off, not the life bar, or no claim — but names no plate and no grade.
+The revision first named targets on Phoenix 2 only, reading Stage Pass as a Phoenix 2 command. Pass G
+existed on Phoenix 1 too, and every distinction the solver draws — stage break against finished
+fail, walked off, not the life bar — holds on either mix. The Phoenix 2 check changed 2 breaks and
+cost a branch in both entry points, so it came back out: the solver reads each mix's own grade floors
+and otherwise never asks which mix it is solving.
 
 ### D43 — one grade per row (2026-09-11)
 
@@ -249,7 +252,7 @@ instead, the same breaks would name 485 plates and 936 grades — the streaks gi
 replays contradict.
 
 Phoenix 1's 1,289 judged breaks hold 279 walk-offs and just 2 the life bar could not have caused —
-still almost none, where noise would have spread across both mixes — and name nothing (D42).
+still almost none, where noise would have spread across both mixes. One of the 2 names a grade (S+).
 
 A further 2,427 Phoenix 2 stage breaks carry no judgement counts at all and can never be classified.
 They render exactly as they do today.
@@ -371,9 +374,10 @@ also makes it testable with no doubles at all.
 - Replays of one chart in one session share one command (D40).
 - Everything else takes the best guess from evenly spread breaks, on a line the run could have
   crossed (D38–D39).
-- Accepted with the build: a streak drops the plates its replays rule out (D41), Stage Pass is named
-  on Phoenix 2 only (D42), one grade per row (D43), and a guessed badge keeps the same art and tooltip
-  as a proven one.
+- Accepted with the build: a streak drops the plates its replays rule out (D41), one grade per row
+  (D43), and a guessed badge keeps the same art and tooltip as a proven one. Naming on Phoenix 2 only
+  (D42) went in and came back out: Phoenix 1 had Pass G and Pass M, and a mix check that moved 2
+  breaks was not worth its branch.
 
 ## 9. Build order
 
