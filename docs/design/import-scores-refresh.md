@@ -115,7 +115,8 @@ with the truth-model work.
   into fragments would assume an English word order that ja-JP and ko-KR do not share.
 - **A CSV upload is a manual submission** (D9), so it is authoritative and may lower a record.
   The confirm step's "Only new or improved scores will be saved" was true and is not any more;
-  it now reads *"Your file becomes your records, even where it scores lower."*
+  it now reads *"Your file becomes your records, even where it scores lower."* Since 2026-09-11 it
+  adds *"Broken scores never lower a record."*, because a broken row can only raise one (below).
 
 **Amended 2026-09-11 — the manual import reads Phoenix 2.** Until now the console script fetched
 phoenix.piugame.com whatever mix was selected and matched only the classic best-list markup, so
