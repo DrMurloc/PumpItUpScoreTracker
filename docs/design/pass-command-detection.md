@@ -195,13 +195,16 @@ A player replaying a chart keeps the command they set, so a session's stage brea
 solved together. Each run's crossable grades (D38) and every plate it breaks by exactly one judgement
 (D32 — all of them, not only the highest) are intersected across the replays, and what fits every run
 names every run. When nothing fits every run the player switched commands, and each run falls back to
-its own answer. Rows from before session capture group by calendar day.
+its own answer. A run that fits no target on its own — an all-perfect break, or one the other pad's
+command ended — could not have been ended by the player's command, so it sits out the intersection and
+keeps its empty answer; left in, one such run would read as a switch and undo the replays' answer.
+Rows from before session capture group by calendar day.
 
 Replays are the evidence a lone run lacks. A fake grade line halfway between two real ones fits a lone
 multi-miss run almost as often as a real line does — 63% against 64% on the flagged breaks D33 left
 unnamed — but it survives every run of a streak far less often: 30% of 2-run streaks, 18% of 3-run,
-2% of 4+, where a real line survives 61–71%. On the 2026-09-10 copy 679 of the 1,176 flagged breaks
-with a note count sit in 201 streaks; 176 hold (131 on a grade, 39 on a plate, 6 on both) and 25
+2% of 4+, where a real line survives 61–71%. On the 2026-09-10 copy 669 of the 1,176 flagged breaks
+with a note count sit in 201 streaks; 179 hold (131 on a grade, 42 on a plate, 6 on both) and 22
 switch, and runs in a streak that pin their own answer agree 49 times in 55.
 
 ### D41 — a streak drops the plates its replays rule out (2026-09-11)
@@ -209,7 +212,7 @@ switch, and runs in a streak that pin their own answer agree 49 times in 55.
 D31 shows a plate and a grade side by side because both are possibilities, and a plate one replay
 matched while another replay contradicts it is not one. When a streak holds, each run wears the
 highest plate that fits every replay, or none: the owner's Caprice of DJ Otada session keeps SSS on
-all six runs and loses the UG and EG two of them matched by count. 75 plate badges fall away and 10
+all six runs and loses the UG and EG two of them matched by count. 75 plate badges fall away and 11
 become the streak's lower plate.
 
 ### D42 — Stage Pass is named on Phoenix 2 only (2026-09-11)
@@ -238,10 +241,10 @@ Measured on the 2026-09-10 copy with D37–D43 in place, over Phoenix 2's 6,306 
 | — both named | 151 |
 | — neither | 14 |
 
-Named plates: `PG 223 · SG 45 · MG 44 · UG 38 · EG 32 · TG 12`. Named grades: `SSS 468 · SSS+ 238 ·
+Named plates: `PG 223 · SG 46 · MG 44 · UG 38 · EG 31 · TG 12`. Named grades: `SSS 468 · SSS+ 238 ·
 SS+ 97 · SS 63 · S 41 · S+ 22 · AAA+ 2 · AAA 1 · AA 1`. 86 distinct players. Against the columns the
 revision replaces, 519 breaks gain a grade, 8 change grade and 2 lose one; 75 plates are dropped by
-their streaks, 10 change, and 18 appear on breaks the margin used to refuse. Solved one run at a time
+their streaks, 11 change, and 18 appear on breaks the margin used to refuse. Solved one run at a time
 instead, the same breaks would name 485 plates and 936 grades — the streaks give up 91 plates the
 replays contradict.
 
@@ -409,6 +412,9 @@ Docs first, one PR, no strings added or changed:
 8. `feat(ledger)` — the recently-played import solves a chart's session breaks together
 9. `feat(ledger)` — a best-list stage break re-solves its chart's session too
 10. `feat(ledger)` — the backfill solves by session and chart; §4 re-measured
+
+A bug check followed on the same PR: a run that fits no target on its own now sits out its streak
+instead of reading as a command switch (D40).
 
 After deploy: press **Backfill stage break causes** once.
 
