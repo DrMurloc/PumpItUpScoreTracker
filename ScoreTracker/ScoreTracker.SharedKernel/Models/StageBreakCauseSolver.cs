@@ -37,9 +37,9 @@ public static class StageBreakCauseSolver
         { Judgment.Great, Judgment.Good, Judgment.Bad, Judgment.Miss };
 
     /// <summary>
-    ///     A null level or an unjudged play leaves the life bar unsized, so no claim. A run the bar
-    ///     provably did not end names the plate it broke by exactly one judgement and, where the note
-    ///     count allows, the grade its last judgement could have crossed.
+    ///     A null level or an unjudged play leaves the life bar unsized, so no claim. A Phoenix 2 run
+    ///     the bar provably did not end names the plate it broke by exactly one judgement and, where
+    ///     the note count allows, the grade its last judgement could have crossed.
     /// </summary>
     public static StageBreakCause Solve(int perfects, int greats, int goods, int bads, int misses,
         int? noteCount, DifficultyLevel? level, MixEnum mix)
@@ -61,6 +61,10 @@ public static class StageBreakCauseSolver
             return StageBreakCause.Unattributed;
         if (MinimalEndingLife(perfects + greats, bads, misses, level.Value) <= 0)
             return StageBreakCause.Unattributed;
+
+        // Stage Pass is a Phoenix 2 command: another mix's break still proves the bar held, but has
+        // no command to name.
+        if (mix != MixEnum.Phoenix2) return new StageBreakCause(true, null, null);
 
         return new StageBreakCause(true,
             BrokenPlate(greats, goods, bads, misses),

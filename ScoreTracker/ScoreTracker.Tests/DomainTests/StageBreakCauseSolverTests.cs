@@ -265,17 +265,33 @@ public sealed class StageBreakCauseSolverTests
     }
 
     [Fact]
-    public void EachMixReadsItsOwnGradeFloors()
+    public void AGoodsHeavyBreakNamesTheFloorItsLastGoodCrossed()
     {
-        // A ceiling of 919,900: goods drive it down because they cost score and no life at all,
-        // and with no bad or miss the combo runs straight through them. Phoenix 2 puts AA at
-        // 920,000, so it just went out of reach; Phoenix puts AA at 900,000, already cleared,
-        // and its next floor up is 5,100 away.
-        var onPhoenix = StageBreakCauseSolver.Solve(500, 0, 100, 0, 0, 1000, 21, MixEnum.Phoenix);
-        var onPhoenix2 = StageBreakCauseSolver.Solve(500, 0, 100, 0, 0, 1000, 21, MixEnum.Phoenix2);
+        // A best reachable score of 919,900: goods drive it down because they cost score and no life
+        // at all, and with no bad or miss the combo runs straight through them. Phoenix 2 puts AA at
+        // 920,000, so the last good took it out of reach.
+        var cause = StageBreakCauseSolver.Solve(500, 0, 100, 0, 0, 1000, 21, MixEnum.Phoenix2);
 
-        Assert.Equal(PhoenixLetterGrade.AA, onPhoenix2.PassGrade);
-        Assert.Null(onPhoenix.PassGrade);
+        Assert.Equal(PhoenixLetterGrade.AA, cause.PassGrade);
+    }
+
+    [Fact]
+    public void APhoenixOneBreakProvesTheBarHeldButNamesNoCommand()
+    {
+        // The Iolite Sky Pass SSS+ run's judgements played on Phoenix: the bar provably held, but
+        // Stage Pass is a Phoenix 2 command, so there is nothing to name.
+        var cause = StageBreakCauseSolver.Solve(806, 1, 0, 0, 4, 1000, 21, MixEnum.Phoenix);
+
+        Assert.True(cause.IsNonLifebarBreak);
+        Assert.False(cause.IsNamed);
+    }
+
+    [Fact]
+    public void APhoenixOneWalkOffIsStillAWalkOff()
+    {
+        var cause = StageBreakCauseSolver.Solve(500, 10, 5, 3, 51, null, null, MixEnum.Phoenix);
+
+        Assert.True(cause.IsWalkOff);
     }
 
     [Fact]
