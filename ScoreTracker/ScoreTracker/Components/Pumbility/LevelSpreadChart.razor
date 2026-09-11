@@ -70,7 +70,7 @@
                                         <div><strong>@($"{column.Fewest}–{column.Most}")</strong> <span>@L["fewest to most"]</span></div>
                                         <div><strong>@($"{Percent(column.Keeping, spread.Peers)}%")</strong> <span>@L["keep at least one"]</span></div>
                                         <div class="pmb-spread-tipyou">
-                                            <strong>@L["You {0}", column.Mine]</strong>
+                                            <strong>@L["Level Spread You {0}", column.Mine]</strong>
                                             <span>@(column.Mine == 0
                                                       ? L["· like the {0}% who keep none", Percent(column.PeersLevelWithMine, spread.Peers)]
                                                       : L["· more than {0}% of your peers", Percent(column.PeersBelowMine, spread.Peers)])</span>

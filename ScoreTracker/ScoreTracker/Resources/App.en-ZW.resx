@@ -259,6 +259,9 @@
   <data name="1 broken run made it to the end" xml:space="preserve">
 	  <value>1 morgl gro glorggl ur murgl</value>
   </data>
+  <data name="1 chart" xml:space="preserve">
+    <value>1 murgl</value>
+  </data>
   <data name="1 hour 45 minutes of real time." xml:space="preserve">
     <value>1 grogl 45 rglrglgrorp mrgl ogro grglmrgl.</value>
   </data>
@@ -3029,6 +3032,9 @@
   <data name="Fewer than 5 peers scored it" xml:space="preserve">
     <value>Murgl grogrgl 5 maglmurp mrglrgl</value>
   </data>
+  <data name="fewest to most" xml:space="preserve">
+    <value>mggl ro mrrrgl</value>
+  </data>
   <data name="Fiesta" xml:space="preserve">
     <value>Glorgplgl</value>
   </data>
@@ -3633,6 +3639,9 @@
   <data name="How many (1–10, default 3)" xml:space="preserve">
     <value>Gro mrblgrl (1–10, plglgrgllurg 3)</value>
   </data>
+  <data name="how many charts of each level your peers keep in their top 50, and where yours sit" xml:space="preserve">
+    <value>gam mrgl murgl ub algro grorpmurm morp maglmurp gurg gropmur grglblarg ropgl 50, ap gorpo morp mrogl</value>
+  </data>
   <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
     <value>Gro mrblgrl glorg-mr murgl plglgrrgl blarggrrglglorg, murm morp glorgmurp.</value>
   </data>
@@ -3644,6 +3653,9 @@
   </data>
   <data name="How many of your PUMBILITY peers hold it in their top 50" xml:space="preserve">
     <value>Mrgl blarg PUMBILITY maglmurp mrgloru ur grglblarg mrrgl 50</value>
+  </data>
+  <data name="how many peers keep that many" xml:space="preserve">
+    <value>gam mrgl maglmurp gurg argo mrgl</value>
   </data>
   <data name="How March of Murlocs works" xml:space="preserve">
     <value>Gam Urgmr mrgl Murlocmrp grogrol</value>
@@ -4102,6 +4114,9 @@
   <data name="Keep" xml:space="preserve">
     <value>Algo</value>
   </data>
+  <data name="keep at least one" xml:space="preserve">
+    <value>gurg mr mggl mrp</value>
+  </data>
   <data name="Keep it" xml:space="preserve">
     <value>Golba mo</value>
   </data>
@@ -4267,6 +4282,12 @@
   </data>
   <data name="Level required, by ranking tier" xml:space="preserve">
     <value>Grorpmurm blargblargglorg, murm glarglro mrpgrrgl</value>
+  </data>
+  <data name="Level Spread You" xml:space="preserve">
+    <value>blub</value>
+  </data>
+  <data name="Level Spread You {0}" xml:space="preserve">
+    <value>Blub {0}</value>
   </data>
   <data name="Level Up" xml:space="preserve">
     <value>Grorpmurm Morg</value>
@@ -4588,6 +4609,9 @@
   </data>
   <data name="median {0}" xml:space="preserve">
     <value>blugrogl {0}</value>
+  </data>
+  <data name="median · middle half {0}–{1}" xml:space="preserve">
+    <value>blugrogl · mogrgl blugro {0}–{1}</value>
   </data>
   <data name="Medium" xml:space="preserve">
     <value>Mmmmrgl</value>
@@ -6113,9 +6137,6 @@
   </data>
   <data name="Peers: the average top 50 of the {0} players within one competitive level of you" xml:space="preserve">
     <value>Maglmurp: mrgl rorg morp 50 mrglro mrgl {0} morp glorg mrp murglrogl grorpmurm mrglro blub</value>
-  </data>
-  <data name="Peers: {0}% of their pool weight at {1}" xml:space="preserve">
-    <value>Maglmurp: {0}% blarg grglblarg blubgro murm ur {1}</value>
   </data>
   <data name="Pending" xml:space="preserve">
     <value>Murggrglurg</value>
@@ -8921,6 +8942,12 @@
   <data name="The maker sees this on their tool page." xml:space="preserve">
     <value>Blurgl mogla am bo groblu.</value>
   </data>
+  <data name="the median peer" xml:space="preserve">
+    <value>a blugrogl maglmurp</value>
+  </data>
+  <data name="the middle half of your peers" xml:space="preserve">
+    <value>a mogrgl blugro ub morp maglmurp</value>
+  </data>
   <data name="The middle lines multiply, so they add to less than the total." xml:space="preserve">
     <value>Mrp blugro grolgub murmgrogla, op ulg glorg ro mgl grogrgl mrp ulboggrog.</value>
   </data>
@@ -10611,9 +10638,6 @@
   <data name="you:" xml:space="preserve">
     <value>blub:</value>
   </data>
-  <data name="You: {0} charts at {1}" xml:space="preserve">
-    <value>Blub: {0} Murgl ur {1}</value>
-  </data>
   <data name="You: {0} · similar players average {1}" xml:space="preserve">
     <value>Blub: {0} · maglarglblgrl morp rorg {1}</value>
   </data>
@@ -10700,9 +10724,6 @@
   </data>
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>Bloop am olo blurgl marogl la grumb. Alla blorp mo — opa mo golba pragl, opa DNS marogl alla bo. Golba am grumb, opa blorp la mo bloop.</value>
-  </data>
-  <data name="your fifty against what your peers hold, by level" xml:space="preserve">
-    <value>argl murgro urgro mup argl maglmurp glub, gro grorpmurm</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>Gromurp mrblub ro blarggrorp grogrgl 10LURG, blgrlro murgmurp gl ro lurg morgro.</value>
@@ -11199,6 +11220,9 @@
   <data name="{0} folders at 90% or better" xml:space="preserve">
     <value>{0} blargblgrlmurp mr 90% argl morgmrp</value>
   </data>
+  <data name="{0} from the official board" xml:space="preserve">
+    <value>{0} blarg ur urgmrmurg mrglblarg</value>
+  </data>
   <data name="{0} from the official board*" xml:space="preserve">
     <value>{0} blarg ur urgmrmurg mrglblarg*</value>
   </data>
@@ -11616,6 +11640,9 @@
   <data name="{0} · the 1× target" xml:space="preserve">
     <value>{0} · blu 1× grolp</value>
   </data>
+  <data name="{0} · your peers" xml:space="preserve">
+    <value>{0} · morp maglmurp</value>
+  </data>
   <data name="{0} × {1} × 2 = {2} points" xml:space="preserve">
     <value>{0} × {1} × 2 = {2} mrglublgl</value>
   </data>
@@ -11654,6 +11681,12 @@
   </data>
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}: a SSS+ ap {1} lu gromb a 900,000 ap {2}</value>
+  </data>
+  <data name="{0}: charts of each level your peers keep in their top 50" xml:space="preserve">
+    <value>{0}: murgl ub algro grorpmurm morp maglmurp gurg gropmur grglblarg ropgl 50</value>
+  </data>
+  <data name="{0}: your peers keep a median of {1}, middle half {2} to {3}; you keep {4}" xml:space="preserve">
+    <value>{0}: morp maglmurp gurg a blugrogl ub {1}, mogrgl blugro {2} ro {3}; blub gurg {4}</value>
   </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>{0}o mrgla</value>
@@ -11696,6 +11729,18 @@
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>~#{0} orb pum</value>
+  </data>
+  <data name="· 1 peer ({0}%)" xml:space="preserve">
+    <value>· 1 maglmurp ({0}%)</value>
+  </data>
+  <data name="· like the {0}% who keep none" xml:space="preserve">
+    <value>· plglro a {0}% murpo gurg bomo</value>
+  </data>
+  <data name="· more than {0}% of your peers" xml:space="preserve">
+    <value>· mrrgl grogrgl {0}% ub morp maglmurp</value>
+  </data>
+  <data name="· {0} peers ({1}%)" xml:space="preserve">
+    <value>· {0} maglmurp ({1}%)</value>
   </data>
   <data name="— optional" xml:space="preserve">
     <value>— murgal</value>

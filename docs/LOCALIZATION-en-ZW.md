@@ -663,3 +663,20 @@ Built from the standing syllables; `rogro` (a second of time) already existed an
 | publish | blomorg |
 | import | grumla |
 | closing chart | grolm murgl |
+
+## The level spread (2026-09-11)
+
+Coined for the PUMBILITY Breakdown card's level spread ([pumbility-overhaul.md](design/pumbility-overhaul.md)
+D66): the caption, the tile's peers line, the legend, the tooltip and each column's screen-reader label.
+Reused, not re-coined: `maglmurp` (peers), `morp` (your, and yours), `blub` (you), `gurg` (hold, here
+*keep*), `algro` (each), `grorpmurm` (level), `gropmur` (in), `ropgl 50` (top 50), `blugrogl` (median),
+`mogrgl blugro` (middle half), `mrrgl grogrgl` (more than), `mr mggl` (at least, from *At least*),
+`mggl ro mrrrgl` (*fewest to most*, on *least* and *most*), `plglro` (like), `bomo` (nothing, here
+*none*), `gam` (how), `mrogl` (sits), `blarg` (from) and `urgmrmurg mrglblarg` (official board).
+
+| English | en-ZW | Notes |
+|---|---|---|
+| who | murpo | The word for *whose*: a Murloc does not decline it. |
+| that (that many) | argo | Coined. |
+| many | mrgl | Recovered from *month*, `mrglgralp` (*many days*). |
+| where | gorpo | `gorp` (there) + `o`. |

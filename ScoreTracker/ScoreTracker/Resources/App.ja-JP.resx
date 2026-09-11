@@ -259,6 +259,9 @@
   <data name="1 broken run made it to the end" xml:space="preserve">
 	  <value>1回の失敗プレイが最後まで完走</value>
   </data>
+  <data name="1 chart" xml:space="preserve">
+    <value>1譜面</value>
+  </data>
   <data name="1 hour 45 minutes of real time." xml:space="preserve">
     <value>リアルタイムで1時間45分。</value>
   </data>
@@ -3029,6 +3032,9 @@
   <data name="Fewer than 5 peers scored it" xml:space="preserve">
     <value>スコアを出したピアが 5 人未満</value>
   </data>
+  <data name="fewest to most" xml:space="preserve">
+    <value>最少～最多</value>
+  </data>
   <data name="Fiesta" xml:space="preserve">
     <value>Fiesta</value>
   </data>
@@ -3633,6 +3639,9 @@
   <data name="How many (1–10, default 3)" xml:space="preserve">
     <value>何枚（1–10、既定 3）</value>
   </data>
+  <data name="how many charts of each level your peers keep in their top 50, and where yours sit" xml:space="preserve">
+    <value>ピアがトップ50に持つ各レベルの譜面数と、あなたの位置</value>
+  </data>
   <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
     <value>プレイ人数別に、クリアしたCo-Op譜面の数。</value>
   </data>
@@ -3644,6 +3653,9 @@
   </data>
   <data name="How many of your PUMBILITY peers hold it in their top 50" xml:space="preserve">
     <value>この譜面をトップ50に持つPUMBILITYピアの数</value>
+  </data>
+  <data name="how many peers keep that many" xml:space="preserve">
+    <value>その数を持つピアの人数</value>
   </data>
   <data name="How March of Murlocs works" xml:space="preserve">
     <value>March of Murlocs の仕組み</value>
@@ -4102,6 +4114,9 @@
   <data name="Keep" xml:space="preserve">
     <value>残す</value>
   </data>
+  <data name="keep at least one" xml:space="preserve">
+    <value>1譜面以上持つ</value>
+  </data>
   <data name="Keep it" xml:space="preserve">
     <value>そのままにする</value>
   </data>
@@ -4267,6 +4282,12 @@
   </data>
   <data name="Level required, by ranking tier" xml:space="preserve">
     <value>ランキング帯別の必要レベル</value>
+  </data>
+  <data name="Level Spread You" xml:space="preserve">
+    <value>あなた</value>
+  </data>
+  <data name="Level Spread You {0}" xml:space="preserve">
+    <value>あなた {0}</value>
   </data>
   <data name="Level Up" xml:space="preserve">
     <value>レベルアップ</value>
@@ -4588,6 +4609,9 @@
   </data>
   <data name="median {0}" xml:space="preserve">
     <value>中央値 {0}</value>
+  </data>
+  <data name="median · middle half {0}–{1}" xml:space="preserve">
+    <value>中央値 · 中間の半分 {0}～{1}</value>
   </data>
   <data name="Medium" xml:space="preserve">
     <value>中</value>
@@ -6113,9 +6137,6 @@
   </data>
   <data name="Peers: the average top 50 of the {0} players within one competitive level of you" xml:space="preserve">
     <value>ピア：あなたと競技レベル 1 以内の {0} 人のプレーヤーの平均トップ50</value>
-  </data>
-  <data name="Peers: {0}% of their pool weight at {1}" xml:space="preserve">
-    <value>ピア: プール比重の {0}% がレベル {1}</value>
   </data>
   <data name="Pending" xml:space="preserve">
     <value>未決定</value>
@@ -8921,6 +8942,12 @@
   <data name="The maker sees this on their tool page." xml:space="preserve">
     <value>作者は自分のツールページでこれを見ます。</value>
   </data>
+  <data name="the median peer" xml:space="preserve">
+    <value>ピアの中央値</value>
+  </data>
+  <data name="the middle half of your peers" xml:space="preserve">
+    <value>ピアの中間の半分</value>
+  </data>
   <data name="The middle lines multiply, so they add to less than the total." xml:space="preserve">
     <value>中央の行は掛け合わされるため、合計より小さくなります。</value>
   </data>
@@ -10611,9 +10638,6 @@
   <data name="you:" xml:space="preserve">
     <value>あなた:</value>
   </data>
-  <data name="You: {0} charts at {1}" xml:space="preserve">
-    <value>あなた: レベル {1} の譜面 {0}</value>
-  </data>
   <data name="You: {0} · similar players average {1}" xml:space="preserve">
     <value>あなた: {0} · 同レベルの平均: {1}</value>
   </data>
@@ -10700,9 +10724,6 @@
   </data>
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>確認リクエストにはこの値で応答してください。どこにも送られません — だからこそこの値で応答できることが証明になり、乗っ取られた DNS では通りません。保管されるのはハッシュだけなので、見つけられる場所に控えておいてください。</value>
-  </data>
-  <data name="your fifty against what your peers hold, by level" xml:space="preserve">
-    <value>あなたの50譜面とピアが持つものを、レベル別に</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>ファイルが10MBを超えています。サイズを小さくして再試行してください。</value>
@@ -11199,6 +11220,9 @@
   <data name="{0} folders at 90% or better" xml:space="preserve">
     <value>{0}フォルダが90%以上</value>
   </data>
+  <data name="{0} from the official board" xml:space="preserve">
+    <value>公式ボードから{0}人</value>
+  </data>
   <data name="{0} from the official board*" xml:space="preserve">
     <value>公式ボードから{0}人*</value>
   </data>
@@ -11616,6 +11640,9 @@
   <data name="{0} · the 1× target" xml:space="preserve">
     <value>{0} · 1× の基準</value>
   </data>
+  <data name="{0} · your peers" xml:space="preserve">
+    <value>{0} · あなたのピア</value>
+  </data>
   <data name="{0} × {1} × 2 = {2} points" xml:space="preserve">
     <value>{0} × {1} × 2 = {2} ポイント</value>
   </data>
@@ -11654,6 +11681,12 @@
   </data>
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}：{1}のSSS+は{2}の900,000相当</value>
+  </data>
+  <data name="{0}: charts of each level your peers keep in their top 50" xml:space="preserve">
+    <value>{0}: ピアがトップ50に持つ各レベルの譜面数</value>
+  </data>
+  <data name="{0}: your peers keep a median of {1}, middle half {2} to {3}; you keep {4}" xml:space="preserve">
+    <value>{0}: ピアの中央値は{1}、中間の半分は{2}～{3}、あなたは{4}</value>
   </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>{0}日前</value>
@@ -11696,6 +11729,18 @@
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>公式ランキングで ~#{0}</value>
+  </data>
+  <data name="· 1 peer ({0}%)" xml:space="preserve">
+    <value>· ピア1人（{0}%）</value>
+  </data>
+  <data name="· like the {0}% who keep none" xml:space="preserve">
+    <value>· 1つも持たない{0}%と同じ</value>
+  </data>
+  <data name="· more than {0}% of your peers" xml:space="preserve">
+    <value>· ピアの{0}%より多い</value>
+  </data>
+  <data name="· {0} peers ({1}%)" xml:space="preserve">
+    <value>· ピア{0}人（{1}%）</value>
   </data>
   <data name="— optional" xml:space="preserve">
     <value>— 任意</value>

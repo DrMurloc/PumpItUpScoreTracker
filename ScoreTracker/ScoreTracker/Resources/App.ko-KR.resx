@@ -259,6 +259,9 @@
   <data name="1 broken run made it to the end" xml:space="preserve">
 	  <value>실패한 플레이 1회가 끝까지 완주</value>
   </data>
+  <data name="1 chart" xml:space="preserve">
+    <value>1개 채보</value>
+  </data>
   <data name="1 hour 45 minutes of real time." xml:space="preserve">
     <value>실제 시간으로 1시간 45분.</value>
   </data>
@@ -3013,6 +3016,9 @@
   <data name="Fewer than 5 peers scored it" xml:space="preserve">
     <value>점수를 낸 동료가 5명 미만</value>
   </data>
+  <data name="fewest to most" xml:space="preserve">
+    <value>최소~최대</value>
+  </data>
   <data name="Fiesta" xml:space="preserve">
     <value>Fiesta</value>
   </data>
@@ -3616,6 +3622,9 @@
   <data name="How many (1–10, default 3)" xml:space="preserve">
     <value>몇 개 (1–10, 기본 3)</value>
   </data>
+  <data name="how many charts of each level your peers keep in their top 50, and where yours sit" xml:space="preserve">
+    <value>동료가 상위 50에 보유한 레벨별 채보 수와 내 위치</value>
+  </data>
   <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
     <value>플레이 인원수별로 클리어한 Co-Op 채보 수.</value>
   </data>
@@ -3627,6 +3636,9 @@
   </data>
   <data name="How many of your PUMBILITY peers hold it in their top 50" xml:space="preserve">
     <value>이 채보를 상위 50에 보유한 PUMBILITY 동료 수</value>
+  </data>
+  <data name="how many peers keep that many" xml:space="preserve">
+    <value>그만큼 보유한 동료 수</value>
   </data>
   <data name="How March of Murlocs works" xml:space="preserve">
     <value>March of Murlocs 진행 방식</value>
@@ -4084,6 +4096,9 @@
   <data name="Keep" xml:space="preserve">
     <value>유지</value>
   </data>
+  <data name="keep at least one" xml:space="preserve">
+    <value>1개 이상 보유</value>
+  </data>
   <data name="Keep it" xml:space="preserve">
     <value>그대로 두기</value>
   </data>
@@ -4248,6 +4263,12 @@
   </data>
   <data name="Level required, by ranking tier" xml:space="preserve">
     <value>랭킹 구간별 필요 레벨</value>
+  </data>
+  <data name="Level Spread You" xml:space="preserve">
+    <value>나</value>
+  </data>
+  <data name="Level Spread You {0}" xml:space="preserve">
+    <value>나 {0}</value>
   </data>
   <data name="Level Up" xml:space="preserve">
     <value>레벨 업</value>
@@ -4563,6 +4584,9 @@
   </data>
   <data name="median {0}" xml:space="preserve">
     <value>중앙값 {0}</value>
+  </data>
+  <data name="median · middle half {0}–{1}" xml:space="preserve">
+    <value>중앙값 · 가운데 절반 {0}~{1}</value>
   </data>
   <data name="Medium" xml:space="preserve">
     <value>중간</value>
@@ -6081,9 +6105,6 @@
   </data>
   <data name="Peers: the average top 50 of the {0} players within one competitive level of you" xml:space="preserve">
     <value>동료: 나와 경쟁 레벨 1 이내인 플레이어 {0}명의 평균 상위 50</value>
-  </data>
-  <data name="Peers: {0}% of their pool weight at {1}" xml:space="preserve">
-    <value>동료: 풀 비중의 {0}%가 레벨 {1}</value>
   </data>
   <data name="Pending" xml:space="preserve">
     <value>대기 중</value>
@@ -8863,6 +8884,12 @@
   <data name="The maker sees this on their tool page." xml:space="preserve">
     <value>제작자가 자신의 도구 페이지에서 이 내용을 봅니다.</value>
   </data>
+  <data name="the median peer" xml:space="preserve">
+    <value>동료의 중앙값</value>
+  </data>
+  <data name="the middle half of your peers" xml:space="preserve">
+    <value>동료의 가운데 절반</value>
+  </data>
   <data name="The middle lines multiply, so they add to less than the total." xml:space="preserve">
     <value>중간 항목은 곱해지기 때문에 합계보다 작게 더해집니다.</value>
   </data>
@@ -10543,9 +10570,6 @@
   <data name="you:" xml:space="preserve">
     <value>나:</value>
   </data>
-  <data name="You: {0} charts at {1}" xml:space="preserve">
-    <value>나: 레벨 {1} 채보 {0}개</value>
-  </data>
   <data name="You: {0} · similar players average {1}" xml:space="preserve">
     <value>나: {0} · 비슷한 플레이어 평균: {1}</value>
   </data>
@@ -10632,9 +10656,6 @@
   </data>
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>확인 요청에 이 값으로 응답하면 됩니다. 이 값은 어디에도 전송되지 않습니다 — 그래서 이 값으로 응답하는 것이 증명이 되고, 탈취된 DNS로는 통과할 수 없습니다. 해시로만 보관되니 찾을 수 있는 곳에 적어 두세요.</value>
-  </data>
-  <data name="your fifty against what your peers hold, by level" xml:space="preserve">
-    <value>내 50개 채보와 동료가 보유한 채보를 레벨별로</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>파일이 10MB를 초과했습니다. 크기를 줄여 다시 시도해 주세요.</value>
@@ -11131,6 +11152,9 @@
   <data name="{0} folders at 90% or better" xml:space="preserve">
     <value>{0}개 폴더 90% 이상</value>
   </data>
+  <data name="{0} from the official board" xml:space="preserve">
+    <value>공식 보드에서 {0}명</value>
+  </data>
   <data name="{0} from the official board*" xml:space="preserve">
     <value>공식 보드에서 {0}명*</value>
   </data>
@@ -11548,6 +11572,9 @@
   <data name="{0} · the 1× target" xml:space="preserve">
     <value>{0} · 1× 기준</value>
   </data>
+  <data name="{0} · your peers" xml:space="preserve">
+    <value>{0} · 내 동료</value>
+  </data>
   <data name="{0} × {1} × 2 = {2} points" xml:space="preserve">
     <value>{0} × {1} × 2 = {2}점</value>
   </data>
@@ -11586,6 +11613,12 @@
   </data>
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}: {1}의 SSS+는 {2}의 900,000어치</value>
+  </data>
+  <data name="{0}: charts of each level your peers keep in their top 50" xml:space="preserve">
+    <value>{0}: 동료가 상위 50에 보유한 레벨별 채보 수</value>
+  </data>
+  <data name="{0}: your peers keep a median of {1}, middle half {2} to {3}; you keep {4}" xml:space="preserve">
+    <value>{0}: 동료의 중앙값은 {1}, 가운데 절반은 {2}~{3}, 나는 {4}</value>
   </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>{0}일 전</value>
@@ -11628,6 +11661,18 @@
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>공식 순위표 ~#{0}</value>
+  </data>
+  <data name="· 1 peer ({0}%)" xml:space="preserve">
+    <value>· 동료 1명 ({0}%)</value>
+  </data>
+  <data name="· like the {0}% who keep none" xml:space="preserve">
+    <value>· 하나도 없는 {0}%와 같음</value>
+  </data>
+  <data name="· more than {0}% of your peers" xml:space="preserve">
+    <value>· 동료의 {0}%보다 많음</value>
+  </data>
+  <data name="· {0} peers ({1}%)" xml:space="preserve">
+    <value>· 동료 {0}명 ({1}%)</value>
   </data>
   <data name="— optional" xml:space="preserve">
     <value>— 선택</value>
