@@ -959,6 +959,33 @@ public sealed class UpdatePhoenixRecordHandlerTests
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public async Task AJudgedStageBreakResolvesTheSessionsEarlierRunOfTheChart()
+    {
+        // The session already holds a six-miss run of this chart, solved alone as SSS with Marvelous
+        // Game. The best list's stage break could only have crossed SSS+, so the earlier run is
+        // re-solved to the command both share.
+        var ctx = new HandlerContext();
+        ctx.Charts.Setup(c => c.GetChart(MixEnum.Phoenix2, ChartId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChartBuilder().WithId(ChartId).WithNoteCount(1000).WithLevel(26).Build());
+        var earlier = Now.AddMinutes(-10);
+        ctx.Stored.Add(new ScoreJournalEntry(earlier, ScoreJournalEntry.OfficialImportSource, UserId, ChartId,
+            null, null, true, MixEnum.Phoenix2, Guid.Empty, new JudgementCounts(900, 0, 0, 0, 6), false,
+            IsStageBroken: true,
+            Cause: new StageBreakCause(true, PhoenixPlate.MarvelousGame, PhoenixLetterGrade.SSS)));
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: true, Score: null, Plate: null,
+                Source: ScoreJournalEntry.OfficialImportSource, Mix: MixEnum.Phoenix2, RecordedAt: Now,
+                Judgements: new JudgementCounts(806, 1, 0, 0, 4), IsStageBroken: true),
+            CancellationToken.None);
+
+        var resolved = Assert.Single(ctx.Resolved);
+        Assert.Equal(earlier, resolved.OccurredAt);
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, resolved.Cause.PassGrade);
+        Assert.Null(resolved.Cause.PassPlate);
+    }
+
     private sealed class HandlerContext
     {
         public Mock<IPhoenixRecordRepository> Records { get; } = new();
@@ -978,11 +1005,29 @@ public sealed class UpdatePhoenixRecordHandlerTests
         /// </summary>
         public MemoryCache Cache { get; } = new(new MemoryCacheOptions());
 
+        /// <summary>The session's journal rows: what it held before the command, plus what the command observed.</summary>
+        public List<ScoreJournalEntry> Stored { get; } = new();
+
+        public List<(Guid ChartId, DateTimeOffset OccurredAt, StageBreakCause Cause)> Resolved { get; } = new();
+
         public UpdatePhoenixRecordHandler Handler { get; }
 
         public HandlerContext()
         {
             CurrentUser.SetupGet(u => u.User).Returns(new UserBuilder().WithId(UserId).Build());
+            Journal.Setup(j => j.AppendObservations(It.IsAny<IReadOnlyList<ScoreJournalEntry>>(),
+                    It.IsAny<CancellationToken>()))
+                .Callback<IReadOnlyList<ScoreJournalEntry>, CancellationToken>((entries, _) =>
+                    Stored.AddRange(entries))
+                .Returns(Task.CompletedTask);
+            Journal.Setup(j => j.GetSessionEntries(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(() => Stored.ToArray());
+            Journal.Setup(j => j.SetStageBreakCauses(It.IsAny<Guid>(), It.IsAny<MixEnum>(),
+                    It.IsAny<IReadOnlyList<(Guid ChartId, DateTimeOffset OccurredAt, StageBreakCause Cause)>>(),
+                    It.IsAny<CancellationToken>()))
+                .Callback<Guid, MixEnum, IReadOnlyList<(Guid ChartId, DateTimeOffset OccurredAt, StageBreakCause Cause)>,
+                    CancellationToken>((_, _, causes, _) => Resolved.AddRange(causes))
+                .Returns(Task.CompletedTask);
             Handler = new UpdatePhoenixRecordHandler(Records.Object, CurrentUser.Object, DateTime.Object,
                 Bus.Object, Scheduler.Object, Batches.Object, Journal.Object, Sessions.Object, Cache,
                 Charts.Object, Logger.Object);
