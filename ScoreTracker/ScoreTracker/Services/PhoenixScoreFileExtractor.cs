@@ -56,7 +56,8 @@ public sealed class PhoenixScoreFileExtractor : IPhoenixScoreFileExtractor
                     continue;
                 }
 
-                var plate = record.Plate.Trim().ToLower() switch
+                // A failed stage is awarded no plate, so a broken row needs none and keeps none.
+                PhoenixPlate? plate = record.IsBroken ? null : record.Plate.Trim().ToLower() switch
                 {
                     "rg" => PhoenixPlate.RoughGame,
                     "tg" => PhoenixPlate.TalentedGame,

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Bunit;
 using MediatR;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -19,9 +20,12 @@ using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.ScoreLedger.Contracts.Commands;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Web.Dtos;
 using ScoreTracker.Web.Pages;
 using ScoreTracker.Web.Services;
 using ScoreTracker.Web.Services.Contracts;
@@ -42,6 +46,7 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
     private readonly Mock<IUiSettingsAccessor> _uiSettings = new();
     private readonly Mock<IImportCredentialClientStore> _clientStore = new();
     private readonly Mock<IUiNotificationHub> _uiHub = new();
+    private readonly Mock<IPhoenixScoreFileExtractor> _extractor = new();
 
     public UploadPhoenixScoresPageTests()
     {
@@ -78,7 +83,7 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
             .Returns(Mock.Of<IDisposable>());
         Services.AddSingleton(_uiHub.Object);
 
-        Services.AddSingleton(Mock.Of<IPhoenixScoreFileExtractor>());
+        Services.AddSingleton(_extractor.Object);
         Services.AddScoped<PageDockService>();
         Services.AddLogging();
 
@@ -209,6 +214,63 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
 
         Assert.Contains("Manual import — console script + CSV", cut.Markup);
         Assert.Empty(cut.FindAll(".mud-expand-panel.mud-panel-expanded"));
+    }
+
+    [Fact]
+    public async Task ABrokenCsvRowSavesAsBroken()
+    {
+        // The save used to send every row as a pass, so a failed stage in the file would have
+        // landed as a clear.
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(MixEnum.Phoenix2);
+        var chartId = Guid.NewGuid();
+        GivenTheFileParsesTo(new RecordedPhoenixScore(chartId, 590032, null, true, Uploaded));
+
+        var cut = await UploadAndSave();
+
+        cut.WaitForAssertion(() => _mediator.Verify(m => m.Send(
+            It.Is<UpdatePhoenixBestAttemptCommand>(c =>
+                c.ChartId == chartId && c.IsBroken && c.Plate == null && c.Mix == MixEnum.Phoenix2),
+            It.IsAny<CancellationToken>()), Times.Once));
+    }
+
+    [Fact]
+    public async Task BrokenCsvRowsStayOutWhileTheBrokenScoreBoxIsUnticked()
+    {
+        // Phoenix leaves the box unticked. The passing row is the proof the save ran at all.
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(MixEnum.Phoenix);
+        var passId = Guid.NewGuid();
+        var brokenId = Guid.NewGuid();
+        GivenTheFileParsesTo(
+            new RecordedPhoenixScore(passId, 990032, PhoenixPlate.FairGame, false, Uploaded),
+            new RecordedPhoenixScore(brokenId, 590032, null, true, Uploaded));
+
+        var cut = await UploadAndSave();
+
+        cut.WaitForAssertion(() => _mediator.Verify(m => m.Send(
+            It.Is<UpdatePhoenixBestAttemptCommand>(c => c.ChartId == passId && !c.IsBroken),
+            It.IsAny<CancellationToken>()), Times.Once));
+        _mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.ChartId == brokenId),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private static readonly DateTimeOffset Uploaded = new(2026, 9, 11, 0, 0, 0, TimeSpan.Zero);
+
+    private void GivenTheFileParsesTo(params RecordedPhoenixScore[] scores)
+    {
+        _extractor.Setup(e => e.GetScores(It.IsAny<IBrowserFile>(), It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((scores.AsEnumerable(), Enumerable.Empty<SpreadsheetScoreErrorDto>()));
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
+    }
+
+    private async Task<IRenderedComponent<UploadPhoenixScores>> UploadAndSave()
+    {
+        var cut = RenderComponent<UploadPhoenixScores>();
+        await cut.Find(".mud-expand-panel-header").ClickAsync(new MouseEventArgs());
+        cut.FindComponent<InputFile>().UploadFiles(InputFileContent.CreateFromText("Song,Difficulty,Score,Plate", "piu-scores.csv"));
+        cut.WaitForAssertion(() => Assert.Contains(cut.FindAll("button"), b => b.TextContent.Contains("Save Scores")));
+        await cut.FindAll("button").First(b => b.TextContent.Contains("Save Scores")).ClickAsync(new MouseEventArgs());
+        return cut;
     }
 
     [Fact]

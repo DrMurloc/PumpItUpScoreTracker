@@ -826,9 +826,12 @@
         // authoritative and may lower a record (docs/design/score-truth-model.md D9). Rows
         // matching the record exactly are still skipped — the ledger would no-op them anyway,
         // and this keeps a re-upload from walking every chart.
+        // A broken row becomes a record only while the broken-scores box is ticked — the rule the
+        // official import follows.
         var toSaveScores = _spreadSheetScores
+            .Where(s => !s.IsBroken || _includeBroken)
             .Where(s => !myScores.TryGetValue(s.ChartId, out var existing)
-                        || existing.IsBroken
+                        || existing.IsBroken != s.IsBroken
                         || existing.Plate != s.Plate
                         || existing.Score != s.Score).ToArray();
 
@@ -846,7 +849,7 @@
             _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxSaving - (double)_currentSaved) / (double)_currentSaved);
             try
             {
-                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId, false, best.Score, best.Plate,
+                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId, best.IsBroken, best.Score, best.Plate,
                     Source: ScoreJournalEntry.CsvSource, Mix: _currentMix, SessionId: uploadSessionId),
                     cancellationToken);
             }
