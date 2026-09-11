@@ -59,9 +59,17 @@ internal sealed class BackfillStageBreakCausesConsumer(IScoreJournalRepository j
         foreach (var chartId in stageBreaks.Select(e => e.ChartId).Distinct())
             facts[chartId] = await NoteCountWatch.FactsFor(charts, mix, chartId, cancellationToken);
 
+        // A session's breaks on one chart are solved together, replays sharing the command that ended
+        // them; rows from before session capture group by calendar day instead.
         var causes = stageBreaks
-            .Select(e => (e.ChartId, e.OccurredAt,
-                NoteCountWatch.CauseFor(true, e.Judgements, facts[e.ChartId], mix)))
+            .GroupBy(e => (e.ChartId, e.SessionId, Day: e.SessionId == null ? e.OccurredAt.Date : (DateTime?)null))
+            .SelectMany(streak =>
+            {
+                var runs = streak.OrderBy(e => e.OccurredAt).ToArray();
+                var solved = NoteCountWatch.CausesFor(runs.Select(e => e.Judgements!).ToArray(),
+                    facts[streak.Key.ChartId], mix);
+                return runs.Select((e, i) => (e.ChartId, e.OccurredAt, solved[i]));
+            })
             .ToArray();
         await journal.SetStageBreakCauses(userId, mix, causes, cancellationToken);
 

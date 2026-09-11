@@ -225,29 +225,34 @@ worst case, so the guess runs low.
 
 ## 4. What it finds
 
-*Measured before D37–D43; the revision re-measures this section when its backfill lands (§9).*
-
-Over the 2,593 judged stage breaks, at the 5% margin:
+Measured on the 2026-09-10 copy with D37–D43 in place, over Phoenix 2's 6,306 judged stage breaks
+(co-op, never classified, left out), grouped the way the backfill groups them:
 
 | | rows |
 |---|---|
-| Life bar could have emptied under some ordering — untouched | 2,269 |
-| **Non-Lifebar break** | **324** |
-| — Pass Plate named | 152 |
-| — Pass Grade named | 123 |
-| — both named | 37 |
-| — neither | 86 |
+| Life bar could have emptied under some ordering, or no level to size it — untouched | 4,064 |
+| Walked off (D36) | 1,052 |
+| **Non-Lifebar break** | **1,190** |
+| — Pass Plate named | 394 |
+| — Pass Grade named | 933 |
+| — both named | 151 |
+| — neither | 14 |
 
-Named plates: `PG 82 · SG 20 · UG 16 · MG 16 · EG 15 · TG 3`. Named grades: `SSS 62 · SSS+ 54 ·
-SS+ 3 · SS 2 · S+ 1 · S 1`. 33 distinct players. (An earlier revision of this table paired the
-5% margin with histograms measured at 0% — these are all one measurement of the shipped pipeline.)
+Named plates: `PG 223 · SG 45 · MG 44 · UG 38 · EG 32 · TG 12`. Named grades: `SSS 468 · SSS+ 238 ·
+SS+ 97 · SS 63 · S 41 · S+ 22 · AAA+ 2 · AAA 1 · AA 1`. 86 distinct players. Against the columns the
+revision replaces, 519 breaks gain a grade, 8 change grade and 2 lose one; 75 plates are dropped by
+their streaks, 10 change, and 18 appear on breaks the margin used to refuse. Solved one run at a time
+instead, the same breaks would name 485 plates and 936 grades — the streaks give up 91 plates the
+replays contradict.
 
-**Every Non-Lifebar break is Phoenix 2. None of the 569 judged Phoenix 1 breaks qualify.** Noise
-would have spread across both mixes in proportion; a Phoenix-2-only feature producing a
-Phoenix-2-only signal is the strongest corroboration in this document.
+Phoenix 1's 1,289 judged breaks hold 279 walk-offs and just 2 the life bar could not have caused —
+still almost none, where noise would have spread across both mixes — and name nothing (D42).
 
-A further 1,616 stage breaks carry no judgement counts at all and can never be classified. They
-render exactly as they do today.
+A further 2,427 Phoenix 2 stage breaks carry no judgement counts at all and can never be classified.
+They render exactly as they do today.
+
+Before the revision (2026-08-28/29, 2,593 judged breaks, the 5% margin and D33's window): 324
+Non-Lifebar breaks, 152 plates and 123 grades named, 37 both, 86 neither, 33 players.
 
 ## 5. What was tried and rejected
 
@@ -296,9 +301,10 @@ Recorded because each looked right and cost real time.
 
 ## 6. What stays unnamed
 
-After D37–D43, 12 of the 1,190 flagged Phoenix 2 breaks name nothing: 10 all-perfect runs, which only
-another player's command on the shared cabinet explains (D34), and 2 on charts with no note count.
-The accepted cost runs the other way. That same other-pad command, ending a run that carries any
+After D37–D43, 14 of the 1,190 Non-Lifebar Phoenix 2 breaks name nothing: 10 all-perfect runs, which
+only another player's command on the shared cabinet explains (D34) — Rex's Pavane among them — 2 on
+charts with no note count, and 2 whose judgements fit neither a line they could have crossed nor a
+plate. The accepted cost runs the other way. That same other-pad command, ending a run that carries any
 non-perfect, is named as the player's own best guess — 385 breaks rest on the guess alone, 205 of
 them Singles — and nothing in the counts can tell the two apart.
 
