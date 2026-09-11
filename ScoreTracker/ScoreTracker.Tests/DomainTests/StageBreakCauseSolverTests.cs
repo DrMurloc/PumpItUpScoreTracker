@@ -244,4 +244,67 @@ public sealed class StageBreakCauseSolverTests
         Assert.False(cause.IsWalkOff);
         Assert.Equal(StageBreakCause.Unattributed, cause);
     }
+
+    [Fact]
+    public void AMissThatCutsTheComboCanTakeARunMoreThanOneNotePastALine()
+    {
+        // Caprice of DJ Otada S21, three misses: the best reachable score now sits 1,108 points
+        // under SSS on a chart where a note is worth 1,101. A miss costs its note and the combo it
+        // cuts, so SSS is still the line the last judgement could have crossed.
+        var crossable = StageBreakCauseSolver.CrossableGrades(593, 14, 0, 0, 3, 904, MixEnum.Phoenix2);
+
+        Assert.Equal(new[] { PhoenixLetterGrade.SSS }, crossable);
+    }
+
+    [Fact]
+    public void ARunWithNoBadOrMissFarFromEveryFloorCrossedNothing()
+    {
+        // With no break the combo is known exactly: the last good left the best reachable score at
+        // 921,502, still over AA's 920,000 and nowhere near AA+.
+        var crossable = StageBreakCauseSolver.CrossableGrades(500, 0, 98, 0, 0, 1000, MixEnum.Phoenix2);
+
+        Assert.Empty(crossable);
+    }
+
+    [Fact]
+    public void BreaksThatCouldHaveFallenAnywhereCanLeaveTwoLinesCrossable()
+    {
+        // Six misses 90% of the way in: bunched, they leave SSS+ just gone; spread out, SSS.
+        var crossable = StageBreakCauseSolver.CrossableGrades(900, 0, 0, 0, 6, 1000, MixEnum.Phoenix2);
+
+        Assert.Equal(new[] { PhoenixLetterGrade.SSS, PhoenixLetterGrade.SSSPlus }, crossable);
+    }
+
+    [Fact]
+    public void CrossableGradesReadEachMixsOwnFloors()
+    {
+        // The last of a hundred goods takes the best reachable score to 919,900: under Phoenix 2's
+        // AA floor at 920,000, while Phoenix's AA sits at 900,000 and its next floor 5,100 above.
+        Assert.Equal(new[] { PhoenixLetterGrade.AA },
+            StageBreakCauseSolver.CrossableGrades(500, 0, 100, 0, 0, 1000, MixEnum.Phoenix2));
+        Assert.Empty(StageBreakCauseSolver.CrossableGrades(500, 0, 100, 0, 0, 1000, MixEnum.Phoenix));
+    }
+
+    [Fact]
+    public void JudgementsThatOutnumberTheChartCrossNothing()
+    {
+        Assert.Empty(StageBreakCauseSolver.CrossableGrades(900, 0, 0, 0, 6, 800, MixEnum.Phoenix2));
+    }
+
+    [Fact]
+    public void EveryPlateOneJudgementBrokeIsListedStrictestFirst()
+    {
+        // A lone bad is at once the first non-perfect, the first good/bad/miss and the first
+        // bad/miss, so Perfect, Ultimate and Extreme Game all fell on it.
+        Assert.Equal(new[] { PhoenixPlate.PerfectGame, PhoenixPlate.UltimateGame, PhoenixPlate.ExtremeGame },
+            StageBreakCauseSolver.BrokenPlates(0, 0, 1, 0));
+    }
+
+    [Fact]
+    public void APlateIsBrokenOnlyByTheJudgementJustPastItsTolerance()
+    {
+        // Guitar Man S20: the sixth miss is one past Marvelous Game's five; every stricter plate was
+        // lost judgements earlier.
+        Assert.Equal(new[] { PhoenixPlate.MarvelousGame }, StageBreakCauseSolver.BrokenPlates(8, 0, 1, 6));
+    }
 }
