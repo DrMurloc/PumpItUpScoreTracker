@@ -3749,7 +3749,7 @@
     <value>Importação concluída</value>
   </data>
   <data name="Import Confirming" xml:space="preserve">
-    <value>Seu arquivo vira seu recorde, inclusive onde a pontuação for menor. Salvar não pode ser desfeito — parar no meio mantém o que já foi salvo.</value>
+    <value>Seu arquivo vira seu recorde, inclusive onde a pontuação for menor. Pontuações quebradas nunca rebaixam um recorde. Salvar não pode ser desfeito — parar no meio mantém o que já foi salvo.</value>
   </data>
   <data name="Import Error Notify" xml:space="preserve">
     <value>Houve um erro ao importar suas pontuações. Tente novamente mais tarde. Se persistir, avise o DrMurloc.</value>

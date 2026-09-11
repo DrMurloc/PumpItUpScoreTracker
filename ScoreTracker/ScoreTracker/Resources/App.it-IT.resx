@@ -3766,7 +3766,7 @@
     <value>Importazione completata</value>
   </data>
   <data name="Import Confirming" xml:space="preserve">
-    <value>Il tuo file diventa il tuo record, anche dove il punteggio è più basso. Il salvataggio non si può annullare: fermarlo a metà conserva quanto già salvato.</value>
+    <value>Il tuo file diventa il tuo record, anche dove il punteggio è più basso. I punteggi rotti non abbassano mai un record. Il salvataggio non si può annullare: fermarlo a metà conserva quanto già salvato.</value>
   </data>
   <data name="Import Error Notify" xml:space="preserve">
     <value>Si è verificato un errore durante l'importazione dei punteggi. Riprova più tardi. Se persiste, avvisa DrMurloc.</value>

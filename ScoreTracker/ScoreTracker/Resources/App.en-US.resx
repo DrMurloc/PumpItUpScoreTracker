@@ -3766,7 +3766,7 @@
     <value>Import complete</value>
   </data>
   <data name="Import Confirming" xml:space="preserve">
-    <value>Your file becomes your records, even where it scores lower. Saving can't be undone — stopping midway keeps what's already saved.</value>
+    <value>Your file becomes your records, even where it scores lower. Broken scores never lower a record. Saving can't be undone — stopping midway keeps what's already saved.</value>
   </data>
   <data name="Import Error Notify" xml:space="preserve">
     <value>There was an error while trying to import your scores. Try again later. If this persists, notify DrMurloc.</value>

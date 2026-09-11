@@ -3749,7 +3749,7 @@
     <value>Importación completada</value>
   </data>
   <data name="Import Confirming" xml:space="preserve">
-    <value>Tu archivo pasa a ser tu marca, incluso donde puntúa menos. El guardado no se puede deshacer; si lo detienes a medias, lo ya guardado se conserva.</value>
+    <value>Tu archivo pasa a ser tu marca, incluso donde puntúa menos. Los scores con break nunca bajan una marca. El guardado no se puede deshacer; si lo detienes a medias, lo ya guardado se conserva.</value>
   </data>
   <data name="Import Error Notify" xml:space="preserve">
     <value>Hubo un error al importar tus puntuaciones. Inténtalo más tarde. Si persiste, avisa a DrMurloc.</value>

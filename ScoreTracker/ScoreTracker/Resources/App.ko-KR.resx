@@ -3749,7 +3749,7 @@
     <value>가져오기 완료</value>
   </data>
   <data name="Import Confirming" xml:space="preserve">
-    <value>파일 내용이 그대로 기록이 됩니다. 점수가 낮아지는 경우도 마찬가지입니다. 저장은 취소할 수 없으며, 도중에 멈춰도 이미 저장된 항목은 남습니다.</value>
+    <value>파일 내용이 그대로 기록이 됩니다. 점수가 낮아지는 경우도 마찬가지입니다. 브레이크 오프 점수로 기록이 낮아지지는 않습니다. 저장은 취소할 수 없으며, 도중에 멈춰도 이미 저장된 항목은 남습니다.</value>
   </data>
   <data name="Import Error Notify" xml:space="preserve">
     <value>점수를 가져오는 중 오류가 발생했습니다. 나중에 다시 시도하세요. 계속되면 DrMurloc에게 알려주세요.</value>
