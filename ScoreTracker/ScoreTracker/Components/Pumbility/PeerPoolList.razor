@@ -13,7 +13,7 @@
 
 @* What the viewer's peers build their number from, in the tier list's own shape
    (docs/design/pumbility-overhaul.md §3.10, D34): collapsible sections of TierListChartCard —
-   grouped by prevalence (Staple … Poor, D33) or by projected gain in bands of points (D36) — in
+   grouped by prevalence (Staple … Poor, D33), by projected gain in bands of points (D36) or by rarity (D66) — in
    the three densities. The viewer's own fifty are the Breakdown page's list (D57). The jacket carries the gain and nothing else, and only when the chart
    pays (D38); the peers' median and how split they are ride the card body, the count rides the
    caption; the border language and its precedence are the tier list's (passed, To-Do, carried).
@@ -40,11 +40,22 @@ else
                                 <th class="tier-table-jacket-cell"></th>
                                 <th>@L["Song Name"]</th>
                                 <th>@L["Chart"]</th>
-                                <th title="@L["How many of your PUMBILITY peers hold it in their top 50"]">@L["Peers"]</th>
+                                @if (IsRarity)
+                                {
+                                    <th title="@L["How many of your PUMBILITY peers hold it in their top 50"]">@L["Kept"]</th>
+                                    <th>@L["Played"]</th>
+                                }
+                                else
+                                {
+                                    <th title="@L["How many of your PUMBILITY peers hold it in their top 50"]">@L["Peers"]</th>
+                                }
                                 <th>@L["Projected"]</th>
                                 <th class="pmb-r" title="@L["What it would add to your PUMBILITY, measured against your bar as it stands"]">@L["Gain"]</th>
                                 <th>@L["My Score"]</th>
-                                <th>@L["Better Than"]</th>
+                                @if (!IsRarity)
+                                {
+                                    <th>@L["Better Than"]</th>
+                                }
                                 <th>@L["Your pool"]</th>
                                 <th></th>
                             </tr>
@@ -60,7 +71,24 @@ else
                                     </td>
                                     <td>@row.Chart.Song.Name</td>
                                     <td>@row.Chart.DifficultyString</td>
-                                    <td title="@WeightedSum(row)">@HoldText(row)</td>
+                                    @if (IsRarity)
+                                    {
+                                        <td title="@WeightedSum(row)">@(L["{0} of {1}", row.Entry!.Holders, row.Entry!.PeerCount])</td>
+                                        <td class="pmb-num">
+                                            @if (PlayedBelowFloor(row.Entry!))
+                                            {
+                                                <span class="pmb-muted">@L["under {0}", PumbilityPeerPools.MinimumScored]</span>
+                                            }
+                                            else
+                                            {
+                                                @(row.Entry!.Scored)
+                                            }
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td title="@WeightedSum(row)">@HoldText(row)</td>
+                                    }
                                     <td>
                                         @if (ProjectedOf(row) is { } projected)
                                         {
@@ -88,12 +116,15 @@ else
                                             <ScoreBreakdown Score="mine" Mix="Mix" OneLine="true" ShowScore="true" Plate="row.MyPlate"></ScoreBreakdown>
                                         }
                                     </td>
-                                    <td>
-                                        @if (row.Entry?.MyPercentile is { } percentile)
-                                        {
-                                            <span style="@ThemeScales.RarityStyle(percentile)">@((100.0 * percentile).ToString("N0"))%</span>
-                                        }
-                                    </td>
+                                    @if (!IsRarity)
+                                    {
+                                        <td>
+                                            @if (row.Entry?.MyPercentile is { } percentile)
+                                            {
+                                                <span style="@ThemeScales.RarityStyle(percentile)">@((100.0 * percentile).ToString("N0"))%</span>
+                                            }
+                                        </td>
+                                    }
                                     <td>@PoolText(row)</td>
                                     <td>
                                         @if (ShowToDo)
@@ -133,7 +164,7 @@ else
                                                CornerBadgeStart="@CornerBadgeStartFor(row)"
                                                CornerBadgeStartClass="pmb-corner-gain"
                                                TierLabel="@(Density == UiDensity.Comfortable ? CaptionFor(row) : null)"
-                                               TierColor="@(row.Entry != null ? ThemeScales.PumbilityColor(row.Entry.Tier) : ThemeScales.PumbilityColor(TierListCategory.Unrecorded))"
+                                               TierColor="@TierColorFor(row)"
                                                TooltipNote="@CompactNote(row)"
                                                Skills="@SkillsFor(row)"
                                                Body="@CardBody(row)"
@@ -227,6 +258,12 @@ else
         TierListCategory.VeryHard.ToString(), TierListCategory.Underrated.ToString()
     };
 
+    /// <summary>The Rarity sections folded by default: the bands a quarter of the peers or more keep (D66).</summary>
+    public static readonly IReadOnlySet<string> RarityDefaultCollapsed = new HashSet<string>
+    {
+        RarityBand.Emerald.ToString(), RarityBand.Silver.ToString(), RarityBand.Common.ToString()
+    };
+
     /// <summary>The gain bands under Projected gains, in PUMBILITY points, biggest first (D42).</summary>
     private static readonly (double Low, double High)[] GainBands =
     {
@@ -253,7 +290,7 @@ else
     }
 
     private sealed record Section(string Key, string Name, string Color, IReadOnlyList<Row> Rows, string? Stat,
-        string WrapperClass, TierListCategory? Tier = null);
+        string WrapperClass, TierListCategory? Tier = null, RarityBand? Band = null);
 
     /// <summary>
     ///     What the list is showing, for the page's Download button — the same sections in the same
@@ -270,7 +307,7 @@ else
                 r.Carried,
                 r.Pays ? r.Gain : null,
                 r.Target?.Projected,
-                PoolValue: null)).ToArray()))
+                PoolValue: null)).ToArray(), s.Band))
             .ToArray();
 
     // A row's broken best: the page's Row hides it behind a null MyScore, but the picture's
@@ -283,7 +320,7 @@ else
 
     protected override void OnParametersSet()
     {
-        _collapsed = new HashSet<string>(Collapsed ?? DefaultCollapsed);
+        _collapsed = new HashSet<string>(Collapsed ?? (IsRarity ? RarityDefaultCollapsed : DefaultCollapsed));
         _sections = Build();
     }
 
@@ -296,6 +333,8 @@ else
 
     private IReadOnlyList<Section> Build()
     {
+        if (IsRarity) return RaritySections();
+
         var held = Page.Entries.Where(e => Charts.ContainsKey(e.ChartId))
             .Select(e => new Row(Charts[e.ChartId], e, Gains.GetValueOrDefault(e.ChartId), null))
             .ToList();
@@ -362,7 +401,82 @@ else
         return low == 0 ? L["Under +{0}", high] : L["+{0} to +{1}", low, high];
     }
 
-    private string EmptyText => GroupBy == PeerGrouping.ProjectedGains || GainsOnly
+    private bool IsRarity => GroupBy == PeerGrouping.Rarity;
+
+    /// <summary>The bands rarest first — the order the Rarity sections render in.</summary>
+    private static readonly RarityBand[] RarityBands =
+    {
+        RarityBand.Prism, RarityBand.Sapphire, RarityBand.Gold, RarityBand.Emerald, RarityBand.Silver, RarityBand.Common
+    };
+
+    /// <summary>
+    ///     The Rarity grouping (D66): every chart of the levels in reach — the peers' entries at those
+    ///     levels and the charts no peer holds — banded by the share of the peers who keep it, rarest
+    ///     first. Inside a band the fewest keepers lead, then the lowest in the pools that keep it, then
+    ///     the fewest who played it, then the harder chart.
+    /// </summary>
+    private IReadOnlyList<Section> RaritySections()
+    {
+        var rows = Page.Entries.Where(InReach)
+            .Concat(Page.UnheldCharts)
+            .Where(e => Charts.ContainsKey(e.ChartId))
+            .Select(e => new Row(Charts[e.ChartId], e, Gains.GetValueOrDefault(e.ChartId), null))
+            .ToArray();
+
+        var sections = new List<Section>();
+        foreach (var band in RarityBands)
+        {
+            var inBand = rows.Where(r => BandOf(r.Entry!) == band)
+                .OrderBy(r => KeptShare(r.Entry!))
+                .ThenBy(r => r.Entry!.Share)
+                .ThenBy(r => r.Entry!.Scored)
+                .ThenByDescending(r => (int)r.Chart.Level)
+                .ThenBy(r => r.Chart.Song.Name.ToString(), StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            if (inBand.Length == 0) continue;
+            sections.Add(new Section(band.ToString(), RarityBandName(band), ThemeScales.CssVar(band), inBand, null,
+                "pmb-rarity-section", Band: band));
+        }
+
+        return sections;
+    }
+
+    private bool InReach(PeerPoolEntry entry) =>
+        Page.LevelsInReach.TryGetValue(entry.ChartType, out var levels) &&
+        Charts.TryGetValue(entry.ChartId, out var chart) && levels.Contains((int)chart.Level);
+
+    private static double KeptShare(PeerPoolEntry entry) =>
+        entry.PeerCount == 0 ? 0 : entry.Holders / (double)entry.PeerCount;
+
+    /// <summary>How rare a chart is among the peers: the share of them who do not keep it, on the rarity ramp.</summary>
+    private static RarityBand BandOf(PeerPoolEntry entry) => ThemeScales.BandFor(1 - KeptShare(entry));
+
+    /// <summary>A band is named for the share of the peers it covers, read off the floors the band cuts at.</summary>
+    private string RarityBandName(RarityBand band) => band switch
+    {
+        RarityBand.Prism => L["Kept by {0}% or fewer", KeptPercent(band)],
+        RarityBand.Common => L["Kept by over {0}%", KeptPercent(RarityBand.Silver)],
+        _ => L["Kept by {0}–{1}%", KeptPercent(band + 1), KeptPercent(band)]
+    };
+
+    /// <summary>The most a band's charts can be kept by, as a whole percentage of the peers.</summary>
+    private static int KeptPercent(RarityBand band) => (int)Math.Round(100 * (1 - ThemeScales.FloorOf(band)));
+
+    /// <summary>The pools count a chart nobody keeps only once five peers scored it; under that, the count is unknown.</summary>
+    private static bool PlayedBelowFloor(PeerPoolEntry entry) =>
+        entry.Holders == 0 && entry.Scored < PumbilityPeerPools.MinimumScored;
+
+    /// <summary>"Kept by 2 of 395 · played by 20".</summary>
+    private string KeptText(PeerPoolEntry entry) => PlayedBelowFloor(entry)
+        ? L["Kept by {0} of {1} · played by fewer than {2}", entry.Holders, entry.PeerCount, PumbilityPeerPools.MinimumScored]
+        : L["Kept by {0} of {1} · played by {2}", entry.Holders, entry.PeerCount, entry.Scored];
+
+    /// <summary>The caption's colour: the rarity band under Rarity, the prevalence tier otherwise.</summary>
+    private string TierColorFor(Row row) => IsRarity && row.Entry is { } entry
+        ? ThemeScales.CssVar(BandOf(entry))
+        : ThemeScales.PumbilityColor(row.Entry?.Tier ?? TierListCategory.Unrecorded);
+
+    private string EmptyText => GroupBy == PeerGrouping.ProjectedGains || (GroupBy == PeerGrouping.Prevalence && GainsOnly)
             ? L["Nothing your peers hold would clear your bar right now — play a few more charts and check back."]
             : L["Your peers' pools have nothing in them yet."];
 
@@ -396,6 +510,7 @@ else
     /// <summary>The Comfortable caption under the score line: the count, with the tier in front where the section is not the tier.</summary>
     private string? CaptionFor(Row row)
     {
+        if (IsRarity && row.Entry is { } kept) return KeptText(kept);
         if (row.Entry == null) return row.Alone != null ? L["No peer holds it"] : null;
         return GroupBy == PeerGrouping.Prevalence ? HoldText(row) : $"{TierCaption(row)} · {HoldText(row)}";
     }
@@ -414,9 +529,17 @@ else
         var parts = new List<string>();
         if (row.Entry != null)
         {
-            parts.Add(TierCaption(row));
+            if (IsRarity)
+            {
+                parts.Add(KeptText(row.Entry!));
+            }
+            else
+            {
+                parts.Add(TierCaption(row));
             parts.Add(HoldText(row));
             parts.Add(WeightedSum(row));
+            }
+
             if (ProjectedOf(row) is { } projected)
                 parts.Add($"{L["Projected"]} {projected.LetterGradeFor(Mix).GetName()}");
         }

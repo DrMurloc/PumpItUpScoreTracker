@@ -21,6 +21,8 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Components;
+using ScoreTracker.Web.Enums;
+using ScoreTracker.Web.Services.Contracts;
 using ScoreTracker.Web.Services.HomeDashboard;
 using Xunit;
 
@@ -239,6 +241,29 @@ public sealed class PeersSectionTests : ComponentTestBase
         var names = cut.FindAll(".tier-chart-card-name");
         Assert.Single(names);
         Assert.Equal("DoublesSong", names[0].TextContent);
+    }
+
+    [Fact]
+    public void RarityIsOfferedWithNoSwitchAndItsLedeNamesTheLevelsInReach()
+    {
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Peers() with
+            {
+                RarityLevels = new Dictionary<ChartType, IReadOnlyList<int>> { [ChartType.Single] = new[] { 20, 21, 22, 23 } }
+            });
+        Mock.Get(Services.GetRequiredService<IUiSettingsAccessor>())
+            .Setup(s => s.GetSetting(PeersSection.GroupBySettingKey, It.IsAny<CancellationToken>(), It.IsAny<Guid?>()))
+            .ReturnsAsync(nameof(PeerGrouping.Rarity));
+
+        var cut = Render(Energy.Great);
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=peers-controls]")));
+
+        Assert.Empty(cut.FindAll("[data-testid=peers-gains-switch]"));
+        Assert.Empty(cut.FindAll("[data-testid=peers-p1-switch]"));
+        Assert.Equal("S20–S23", cut.Find(".pmb-block-lede b").TextContent);
+        // Twelve of twenty peers keep the one chart: the 50–75% band, which starts folded.
+        Assert.Equal("Kept by 50–75%", cut.Find(".tier-section-name").TextContent);
+        Assert.Empty(cut.FindAll(".tier-section-body"));
     }
 
     private IRenderedComponent<PeersSection> Render(Energy energy)
