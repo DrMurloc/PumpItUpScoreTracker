@@ -261,6 +261,8 @@ public sealed class PeersSectionTests : ComponentTestBase
         Assert.Empty(cut.FindAll("[data-testid=peers-gains-switch]"));
         Assert.Empty(cut.FindAll("[data-testid=peers-p1-switch]"));
         Assert.Equal("S20–S23", cut.Find(".pmb-block-lede b").TextContent);
+        Assert.Contains("These are likely to be the hardest charts to score in your level range.",
+            cut.Find(".pmb-block-lede").TextContent);
         // Twelve of twenty peers keep the one chart: the 50–75% band, which starts folded.
         Assert.Equal("Kept by 50–75%", cut.Find(".tier-section-name").TextContent);
         Assert.Empty(cut.FindAll(".tier-section-body"));
