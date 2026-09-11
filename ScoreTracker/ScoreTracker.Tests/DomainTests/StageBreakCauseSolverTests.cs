@@ -140,26 +140,47 @@ public sealed class StageBreakCauseSolverTests
     }
 
     [Fact]
-    public void SixMissesOnAShortRunCanStillBeALifebarDeath()
+    public void SixMissesThatLeaveLifeUnderTheCruellestOrderingAreNotALifebarDeath()
     {
-        // 115 perfects and 6 misses at level 24: exactly the Marvelous Game threshold, and the
-        // ship gate flagged it wearing MG and SSS+. The cruellest ordering ends on 60 life of a
-        // 2,728 bar — under the margin — so neither badge was ever provable.
+        // 115 perfects and 6 misses at level 24. The cruellest ordering of those judgements still
+        // ends on 60 life of a 2,728 bar, so no ordering emptied it — and six misses is exactly
+        // Marvelous Game's threshold.
         var cause = StageBreakCauseSolver.Solve(115, 0, 0, 0, 6, 1000, 24, MixEnum.Phoenix2);
 
-        Assert.False(cause.IsNonLifebarBreak);
-        Assert.False(cause.IsNamed);
+        Assert.True(cause.IsNonLifebarBreak);
+        Assert.Equal(PhoenixPlate.MarvelousGame, cause.PassPlate);
     }
 
     [Fact]
-    public void ARunSurvivingOnASliverOfBarIsTreatedAsALifebarDeath()
+    public void AnySliverOfLifeLeftIsStillProofTheBarDidNotEmpty()
     {
-        // Sixteen misses at level 26 ends on 16 life of 3,028. The arithmetic heals first and
-        // takes every point of damage second, so "survived" here is the calculation flattering
-        // a run that died (D30).
+        // Sixteen misses at level 26: the cruellest ordering ends on 16 life of 3,028. Every heal
+        // counts as a great and every mid-run death clamps and continues, so the search can only
+        // land at or below the real run — 16 left means the bar held.
         var cause = StageBreakCauseSolver.Solve(700, 4, 0, 0, 16, 1000, 26, MixEnum.Phoenix2);
 
-        Assert.False(cause.IsNonLifebarBreak);
+        Assert.True(cause.IsNonLifebarBreak);
+    }
+
+    [Fact]
+    public void AnEarlySSSPlusBreakIsFlaggedWithFewHealsBehindIt()
+    {
+        // Iolite Sky D21, 96 notes in: five misses and nothing but perfects. The multiplier had
+        // barely started to heal, so the cruellest ordering ends on 89 life — low, but not empty.
+        var cause = StageBreakCauseSolver.Solve(91, 0, 0, 0, 5, 1000, 21, MixEnum.Phoenix2);
+
+        Assert.True(cause.IsNonLifebarBreak);
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, cause.PassGrade);
+    }
+
+    [Fact]
+    public void AnEarlySSSBreakIsFlaggedWithFewHealsBehindIt()
+    {
+        // Caprice of DJ Otada S21, 118 notes in; the cruellest ordering ends on 109 life.
+        var cause = StageBreakCauseSolver.Solve(104, 7, 2, 0, 5, 904, 21, MixEnum.Phoenix2);
+
+        Assert.True(cause.IsNonLifebarBreak);
+        Assert.Equal(PhoenixLetterGrade.SSS, cause.PassGrade);
     }
 
     [Fact]

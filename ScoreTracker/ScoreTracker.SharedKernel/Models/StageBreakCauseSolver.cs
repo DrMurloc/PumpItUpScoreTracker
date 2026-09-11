@@ -11,15 +11,6 @@ namespace ScoreTracker.SharedKernel.Models;
 /// </summary>
 public static class StageBreakCauseSolver
 {
-    /// <summary>
-    ///     How much of the bar must survive before we call a break non-lifebar.
-    ///     <see cref="LifeRemaining" /> heals first and takes every point of damage second, which
-    ///     is the most survival-friendly ordering there is — so a run "surviving" on a sliver of
-    ///     bar is a life bar death the arithmetic flattered. Measured: without this, 105 rows
-    ///     survive on 1-5% of the bar, one of them on 15 life (D30).
-    /// </summary>
-    private const double SurvivingFraction = 0.05;
-
     /// <summary>The lowest grade the Stage Pass command list offers. Below this there is no target.</summary>
     private const PhoenixLetterGrade LowestPassGrade = PhoenixLetterGrade.A;
 
@@ -48,15 +39,15 @@ public static class StageBreakCauseSolver
 
         if (level == null) return StageBreakCause.Unattributed;
 
-        var margin = new LifebarSimulator(level.Value).MaxLife * SurvivingFraction;
         // Two screens, cheapest first. The heal-first walk is the FRIENDLIEST ordering — if
-        // even that one dies, the row is refuted without touching the search. What survives it
-        // still faces the adversarial minimum, because an ordering that spaces the damage
-        // through the heal stream keeps the multiplier crushed and suppresses nearly all the
-        // healing — which is not a curiosity, it is what a struggling run actually looks like.
-        if (LifeRemaining(perfects, greats, bads, misses, level.Value) <= margin)
+        // even that one empties the bar, the row is refuted without touching the search. What
+        // survives it still faces the adversarial minimum, because an ordering that spaces the
+        // damage through the heal stream keeps the multiplier crushed and suppresses nearly all
+        // the healing — which is not a curiosity, it is what a struggling run actually looks like.
+        // A run whose cruellest ordering still ends with any life left did not empty the bar.
+        if (LifeRemaining(perfects, greats, bads, misses, level.Value) <= 0)
             return StageBreakCause.Unattributed;
-        if (MinimalEndingLife(perfects + greats, bads, misses, level.Value) <= margin)
+        if (MinimalEndingLife(perfects + greats, bads, misses, level.Value) <= 0)
             return StageBreakCause.Unattributed;
 
         return new StageBreakCause(true,
@@ -94,7 +85,7 @@ public static class StageBreakCauseSolver
     ///     The least life ANY ordering of these judgements can end on. This is the half of the
     ///     gate that makes the flag a proof: <see cref="LifeRemaining" /> asks how well the run
     ///     could have gone, this asks how badly — and only a run whose WORST ordering still
-    ///     ends above the margin provably did not die.
+    ///     ends with life left provably did not die.
     ///     <para>
     ///         A Pareto search over (life, multiplier) after (heals, misses, bads) events, both
     ///         axes minimised — lower life and a lower multiplier are each worse for survival,
