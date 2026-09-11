@@ -38,6 +38,8 @@ public sealed record RecentSessionsPage(int TotalGroups, IReadOnlyList<RecentSes
         string Source,
         Guid? SessionId,
         ScoreEventClassification Classification,
+        // The best passing score in this mix before this play, on every row; null until
+        // something has passed.
         int? PreviousBest,
         bool IsReclear = false,
         bool IsStageBroken = false,

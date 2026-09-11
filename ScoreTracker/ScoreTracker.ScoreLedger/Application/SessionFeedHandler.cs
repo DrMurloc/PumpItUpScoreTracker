@@ -96,9 +96,13 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
         var prior = chartHistory
             .Where(h => h.IsBest && h.Mix == row.Mix && h.OccurredAt < row.OccurredAt)
             .ToArray();
-        var priorBest = prior.Where(p => p.Score != null).Select(p => (int?)(int)p.Score!.Value).Max();
-        var priorPassed = prior.Any(p => !p.IsBroken);
-        var priorBestPlate = prior.Where(p => !p.IsBroken && p.Plate != null).Select(p => p.Plate).Max();
+        // The bar is the best PASS: a pass outranks any break whatever the numbers
+        // (BestAttemptPolicy), so a failed attempt that scored higher is not what a later pass has
+        // to beat — counting it read a genuine upscore as a plain play.
+        var passes = prior.Where(p => !p.IsBroken).ToArray();
+        var priorBest = passes.Where(p => p.Score != null).Select(p => (int?)(int)p.Score!.Value).Max();
+        var priorPassed = passes.Length > 0;
+        var priorBestPlate = passes.Where(p => p.Plate != null).Select(p => p.Plate).Max();
         var classification = ClassifyRow(row, priorPassed, priorBest, priorBestPlate);
 
         // A New Pass on a chart cleared non-broken elsewhere is a reclear: the other
@@ -114,7 +118,9 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
         return new RecentSessionsPage.ScoreEventRecord(row.ChartId, row.OccurredAt,
             row.Score == null ? null : (int)row.Score.Value, row.Plate?.ToString(), row.IsBroken, row.Source,
             row.SessionId, classification,
-            classification == ScoreEventClassification.Upscore ? priorBest : null,
+            // Every row carries it, not only upscores: "+N over P1" is spent once an earlier pass
+            // reached the Phoenix 1 best, and a repeat needs the same bar to say so.
+            priorBest,
             isReclear, row.IsStageBroken, row.Judgements?.NoteCount, row.Judgements,
             row.Cause.IsNonLifebarBreak, row.Cause.PassPlate?.GetName(), row.Cause.PassGrade?.GetName(),
             row.Cause.IsWalkOff);

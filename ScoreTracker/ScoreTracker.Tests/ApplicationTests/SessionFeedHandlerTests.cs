@@ -95,6 +95,48 @@ public sealed class SessionFeedHandlerTests
     }
 
     [Fact]
+    public async Task AFailedAttemptThatScoredHigherIsNotTheBarALaterUpscoreClears()
+    {
+        // A pass outranks any break whatever the numbers, so once the chart is passed the record is
+        // that pass — beating it is an upscore even though the failed first try scored more.
+        var ctx = new HandlerContext();
+        var rows = new[]
+        {
+            Entry(Now.AddDays(-2), 960000, isBroken: true, mix: MixEnum.Phoenix2),
+            Entry(Now.AddDays(-1), 900000, mix: MixEnum.Phoenix2),
+            Entry(Now, 930000, mix: MixEnum.Phoenix2)
+        };
+        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2, rows));
+        ctx.GivenHistories(rows);
+
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId), CancellationToken.None);
+
+        var latest = page.Groups.Single().Rows.Single(r => r.OccurredAt == Now);
+        Assert.Equal(ScoreEventClassification.Upscore, latest.Classification);
+        Assert.Equal(900000, latest.PreviousBest);
+    }
+
+    [Fact]
+    public async Task APlayThatNeverBecameTheRecordStillCarriesTheBestPassBeforeIt()
+    {
+        // "+N over P1" reads this on every row. A play the recently-played list reported, scoring
+        // under the record, has to be able to say an earlier pass already reached the bar.
+        var ctx = new HandlerContext();
+        var record = Entry(Now.AddDays(-1), 960000, mix: MixEnum.Phoenix2);
+        var observed = new ScoreJournalEntry(Now, "officialImport", UserId, ChartId, 955000, PhoenixPlate.FairGame,
+            false, MixEnum.Phoenix2, IsBest: false);
+        var rows = new[] { record, observed };
+        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2, rows));
+        ctx.GivenHistories(rows);
+
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId), CancellationToken.None);
+
+        var row = page.Groups.Single().Rows.Single(r => r.OccurredAt == Now);
+        Assert.Equal(ScoreEventClassification.Played, row.Classification);
+        Assert.Equal(960000, row.PreviousBest);
+    }
+
+    [Fact]
     public async Task AStageBreakReadsAsPlayedAndCarriesTheFlagAndHowManyNotesItJudged()
     {
         // History and nothing else: it moved no record, so it classifies like any observation,

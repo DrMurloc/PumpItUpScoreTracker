@@ -221,12 +221,14 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
 
     /// <summary>
     ///     How far this play went past the player's Phoenix 1 best — and only the first time it
-    ///     does. Once a previous Phoenix 2 score already cleared that bar the mark is spent: it
-    ///     is about the moment you passed your old self, not a standing comparison that would
-    ///     then ride every later upscore on the same chart.
+    ///     does. Once an earlier Phoenix 2 pass already cleared that bar the mark is spent: it is
+    ///     about the moment you passed your old self, not a standing comparison that would then
+    ///     ride every later play on the same chart. Every row carries <c>PreviousBest</c> — the
+    ///     best pass before it — so a repeat, or a play that never became the record, reads the
+    ///     same bar an upscore does.
     ///     <para>
-    ///         A new pass carries no <c>PreviousBest</c>, and that is exactly the case the mark
-    ///         is for — nothing stood here before, so anything above Phoenix 1 clears it.
+    ///         A first pass carries no <c>PreviousBest</c>, and that is exactly the case the mark
+    ///         is for — nothing had passed here before, so anything above Phoenix 1 clears it.
     ///     </para>
     /// </summary>
     private static int? Phoenix1Gain(RecentSessionsPage.ScoreEventRecord row,
