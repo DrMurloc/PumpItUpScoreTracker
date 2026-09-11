@@ -39,7 +39,7 @@
                             {
                                 var name = Prefix(type) + column.Level;
                                 var widest = Widest(column);
-                                <div class="pmb-spread-col" tabindex="0" data-level="@column.Level"
+                                <div class="pmb-spread-col" role="group" tabindex="0" data-level="@column.Level"
                                      data-bins="@Bins(column)" data-peers="@spread.Peers"
                                      aria-label="@L["{0}: your peers hold a median of {1}, middle half {2} to {3}; you hold {4}", name, Quantity(column.Median), Quantity(column.FirstQuartile), Quantity(column.ThirdQuartile), column.Mine]">
                                     <div class="pmb-spread-colplot" aria-hidden="true">
@@ -51,7 +51,7 @@
                                         @if (spread.Peers > 0)
                                         {
                                             <i class="pmb-spread-whisker"
-                                               style="bottom:@Css(Position(column.Fewest))%;height:@Css(Position(Math.Min(column.Most, _top)) - Position(column.Fewest))%"></i>
+                                               style="bottom:@Css(Position(Clip(column.Fewest)))%;height:@Css(Position(Clip(column.Most)) - Position(Clip(column.Fewest)))%"></i>
                                             @* A few peers past the top of the scale: the line runs off it and says so. *@
                                             @if (column.Most > _top)
                                             {
@@ -147,7 +147,7 @@
 
     /// <summary>
     ///     One scale for every tile, so a singles column reads against a doubles one. It stops at the 99th
-    ///     percentile of what peers hold, or at your own highest if that is higher, rounded up to five — a
+    ///     percentile of what peers hold, or at your own highest if that is higher, rounded up to the step the axis draws — a
     ///     handful of one-folder pools would otherwise flatten every box.
     /// </summary>
     private static int Top(IEnumerable<PeerLevelSpread> spreads)
@@ -165,7 +165,9 @@
 
         counts.Sort();
         var reach = Math.Max(Quantile(counts, 0.99), yours);
-        return Math.Max(MinimumTop, (int)(Math.Ceiling(reach / 5) * 5));
+        // Rounded to the step the axis draws, so the top gridline always lands on the cap.
+        var step = reach > 30 ? 10 : 5;
+        return Math.Max(MinimumTop, (int)(Math.Ceiling(reach / step) * step));
     }
 
     private static double Quantile(IReadOnlyList<int> sorted, double q)

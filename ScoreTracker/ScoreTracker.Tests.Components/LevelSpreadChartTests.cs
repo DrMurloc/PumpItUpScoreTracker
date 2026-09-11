@@ -158,4 +158,38 @@ public sealed class LevelSpreadChartTests : ComponentTestBase
         var above = (int)Math.Ceiling(position);
         return sorted[below] + (sorted[above] - sorted[below]) * (position - below);
     }
+
+    [Fact]
+    public void ATileWhosePeersAllHoldMoreThanTheCapStillDrawsItsWhiskerAndCaret()
+    {
+        // Twelve hundred singles counts set the shared scale; the six doubles peers are too few to move
+        // it and every one of them holds thirty, which is off the top of it.
+        var cut = Render(new Dictionary<ChartType, PeerLevelSpread>
+        {
+            [ChartType.Single] = Spread(600, 0, Column(21, 2, (1, 600)), Column(22, 0, (1, 600))),
+            [ChartType.Double] = Spread(6, 0, Column(22, 0, (30, 6)))
+        });
+
+        var doubles = cut.Find("[data-testid=level-spread-Double]");
+        var whisker = doubles.QuerySelector(".pmb-spread-whisker")!.GetAttribute("style")!;
+        // Both ends clip to the cap, so a whisker entirely above it has no height rather than a negative one.
+        Assert.DoesNotContain("-", whisker);
+        Assert.Contains("height:0%", whisker);
+        Assert.NotNull(doubles.QuerySelector(".pmb-spread-clip"));
+    }
+
+    [Fact]
+    public void TheTopGridlineLandsOnTheCap()
+    {
+        // Your own thirty-three sets the reach. The axis steps by ten above thirty, so the cap rounds to
+        // forty rather than thirty-five, where the top gridline would have had nowhere to land.
+        var cut = Render(new Dictionary<ChartType, PeerLevelSpread>
+        {
+            [ChartType.Single] = Spread(4, 0, Column(21, 33, (1, 2), (2, 2)))
+        });
+
+        Assert.Equal("40", cut.Find(".pmb-spread-plot").GetAttribute("data-top"));
+        Assert.Equal(new[] { "0", "10", "20", "30", "40" },
+            cut.FindAll(".pmb-spread-gridline b").Select(b => b.TextContent.Trim()).ToArray());
+    }
 }
