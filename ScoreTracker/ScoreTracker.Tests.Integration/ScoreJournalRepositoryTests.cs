@@ -1,4 +1,5 @@
 using ScoreTracker.Domain.Records;
+using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.ScoreLedger.Infrastructure;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -215,6 +216,27 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
         Assert.True(row.IsStageBroken);
         Assert.False(row.IsBest);
         Assert.Null(row.Score);
+    }
+
+    [Fact]
+    public async Task AppendReportsWhenAnotherPlayHoldsTheTime()
+    {
+        // The record handler journals the best at a time of its own when told, so the report has to
+        // be exact: a new row and the same play again are both written; a different play is not.
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        var firstPlay = Now.AddDays(-6);
+
+        Assert.Equal(JournalAppend.Written,
+            await repo.Append(Entry(userId, chart, firstPlay, 983934), CancellationToken.None));
+        Assert.Equal(JournalAppend.Written,
+            await repo.Append(Entry(userId, chart, firstPlay, 983934), CancellationToken.None));
+        Assert.Equal(JournalAppend.TimeHeldByAnotherPlay,
+            await repo.Append(Entry(userId, chart, firstPlay, 999283), CancellationToken.None));
+
+        var row = Assert.Single(await repo.GetChartHistories(userId, new[] { chart }, CancellationToken.None));
+        Assert.Equal(983934, (int)row.Score!.Value);
     }
 
     [Fact]
