@@ -282,7 +282,7 @@ public sealed partial class PumbilityProjectionSagaTests
     [Fact]
     public async Task ThePoolCompareSpreadsEachLevelAcrossThePeersWithTheViewerOnIt()
     {
-        // D67: six peers all keep the S21 and two of them keep the S22 as well; the viewer keeps the S21
+        // D67: six peers all hold the S21 and two of them hold the S22 as well; the viewer keeps the S21
         // and an S20 nobody else does. The spread counts every peer at every level from the 20 to the 22.
         var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_609.59)
             .WithChart(out var staple, ChartType.Single, 21)
@@ -306,7 +306,7 @@ public sealed partial class PumbilityProjectionSagaTests
         Assert.Equal(1, twentyOne.Mine);
         Assert.Equal(6, twentyOne.PeersLevelWithMine);
         var twentyTwo = spread.Columns.Single(c => c.Level == 22);
-        Assert.Equal(2, twentyTwo.Keeping);
+        Assert.Equal(2, twentyTwo.Holding);
         Assert.Equal(0, twentyTwo.Mine);
         var twenty = spread.Columns.Single(c => c.Level == 20);
         Assert.Equal(1, twenty.Mine);

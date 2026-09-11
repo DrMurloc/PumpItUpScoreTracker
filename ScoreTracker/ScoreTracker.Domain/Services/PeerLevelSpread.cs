@@ -4,23 +4,23 @@ namespace ScoreTracker.Domain.Services;
 
 /// <summary>
 ///     One level of a peer group's spread (docs/design/pumbility-overhaul.md D67): how many charts of the
-///     level each peer keeps in their fifty, summarised the way the chart draws it, and where the viewer's
+///     level each peer holds in their fifty, summarised the way the chart draws it, and where the viewer's
 ///     own fifty sits among them.
 /// </summary>
 /// <param name="Level">The chart level the column is for.</param>
 /// <param name="PeersByCount">
-///     How many peers keep exactly that many charts of the level, keyed by the count — zero included, so the
-///     peers keeping none are a count like any other.
+///     How many peers hold exactly that many charts of the level, keyed by the count — zero included, so the
+///     peers holding none are a count like any other.
 /// </param>
-/// <param name="Fewest">The fewest charts of the level any peer keeps.</param>
+/// <param name="Fewest">The fewest charts of the level any peer holds.</param>
 /// <param name="FirstQuartile">The bottom of the middle half.</param>
 /// <param name="Median">The median peer's count.</param>
 /// <param name="ThirdQuartile">The top of the middle half.</param>
-/// <param name="Most">The most charts of the level any peer keeps.</param>
-/// <param name="Keeping">How many peers keep at least one.</param>
+/// <param name="Most">The most charts of the level any peer holds.</param>
+/// <param name="Holding">How many peers hold at least one.</param>
 /// <param name="Mine">How many charts of the level the viewer's own fifty holds.</param>
-/// <param name="PeersBelowMine">How many peers keep fewer than the viewer.</param>
-/// <param name="PeersLevelWithMine">How many peers keep exactly as many as the viewer.</param>
+/// <param name="PeersBelowMine">How many peers hold fewer than the viewer.</param>
+/// <param name="PeersLevelWithMine">How many peers hold exactly as many as the viewer.</param>
 public sealed record LevelSpreadColumn(
     int Level,
     IReadOnlyDictionary<int, int> PeersByCount,
@@ -29,14 +29,14 @@ public sealed record LevelSpreadColumn(
     double Median,
     double ThirdQuartile,
     int Most,
-    int Keeping,
+    int Holding,
     int Mine,
     int PeersBelowMine,
     int PeersLevelWithMine);
 
 /// <summary>
 ///     Where the levels sit (docs/design/pumbility-overhaul.md D67): for one chart type, a column per level of
-///     how many charts of it each peer keeps in their fifty, with the viewer's own count on it. Pure — the
+///     how many charts of it each peer holds in their fifty, with the viewer's own count on it. Pure — the
 ///     peers, their pools and the viewer's fifty are the caller's, so the Breakdown page's chart and the probe
 ///     that mocked it read the same arithmetic.
 /// </summary>
@@ -46,13 +46,13 @@ public sealed record LevelSpreadColumn(
 public sealed record PeerLevelSpread(int Peers, int BoardPeers, IReadOnlyList<LevelSpreadColumn> Columns)
 {
     /// <summary>
-    ///     A level earns a column when at least one peer in this many keeps a chart of it, or the viewer does.
+    ///     A level earns a column when at least one peer in this many holds a chart of it, or the viewer does.
     ///     Below that a column is a handful of outliers drawn as though they were a folder the group plays.
     /// </summary>
     public const int ColumnShare = 50;
 
     /// <summary>
-    ///     The spread of one peer group's pools. A peer the summary holds no pool for keeps nothing at every
+    ///     The spread of one peer group's pools. A peer the summary has no pool for holds nothing at every
     ///     level rather than dropping out of the count, and a chart <paramref name="levels" /> does not know —
     ///     one outside the mix's catalog — counts nowhere.
     /// </summary>
@@ -71,12 +71,12 @@ public sealed record PeerLevelSpread(int Peers, int BoardPeers, IReadOnlyList<Le
             .ToArray();
         var myCounts = CountByLevel(mine, levels);
 
-        var keepers = new Dictionary<int, int>();
+        var holders = new Dictionary<int, int>();
         foreach (var counts in perPeer)
         foreach (var level in counts.Keys)
-            keepers[level] = keepers.GetValueOrDefault(level) + 1;
+            holders[level] = holders.GetValueOrDefault(level) + 1;
 
-        var shown = keepers.Where(kv => kv.Value * ColumnShare >= peers.Length).Select(kv => kv.Key)
+        var shown = holders.Where(kv => kv.Value * ColumnShare >= peers.Length).Select(kv => kv.Key)
             .Concat(myCounts.Keys)
             .ToArray();
         if (shown.Length == 0)

@@ -10,16 +10,16 @@ namespace ScoreTracker.Tests.DomainTests;
 
 /// <summary>
 ///     Where the levels sit (docs/design/pumbility-overhaul.md D67): how many charts of each level every peer
-///     keeps in their fifty, which levels earn a column, and where the viewer's own fifty sits among them.
+///     holds in their fifty, which levels earn a column, and where the viewer's own fifty sits among them.
 /// </summary>
 public sealed class PeerLevelSpreadTests
 {
     private readonly Dictionary<Guid, int> _levels = new();
 
     [Fact]
-    public void AColumnCountsHowManyChartsOfItsLevelEveryPeerKeeps()
+    public void AColumnCountsHowManyChartsOfItsLevelEveryPeerHolds()
     {
-        // Four peers keeping 0, 2, 5 and 9 charts of level 21. The median sits halfway between the middle
+        // Four peers holding 0, 2, 5 and 9 charts of level 21. The median sits halfway between the middle
         // two, and the middle half runs a quarter and three quarters of the way through the sorted counts.
         var pools = new[] { Pool(), Pool((21, 2)), Pool((21, 5)), Pool((21, 9)) };
 
@@ -35,15 +35,15 @@ public sealed class PeerLevelSpreadTests
         Assert.Equal(1.5, column.FirstQuartile, 6);
         Assert.Equal(3.5, column.Median, 6);
         Assert.Equal(6, column.ThirdQuartile, 6);
-        Assert.Equal(3, column.Keeping);
+        Assert.Equal(3, column.Holding);
     }
 
     [Fact]
-    public void ALevelEarnsAColumnAtOnePeerInFiftyOrWhenYouKeepOne()
+    public void ALevelEarnsAColumnAtOnePeerInFiftyOrWhenYouHoldOne()
     {
-        // A hundred peers. Two keep a 25, which is one in fifty; one keeps a 27, which is not. The viewer alone
-        // keeps an 18. Every level from the lowest shown to the highest is a column, so the 19 and 20 nobody
-        // keeps still stand between them.
+        // A hundred peers. Two hold a 25, which is one in fifty; one holds a 27, which is not. The viewer alone
+        // holds an 18. Every level from the lowest shown to the highest is a column, so the 19 and 20 nobody
+        // holds still stand between them.
         var pools = Enumerable.Range(0, 100).Select(i => i switch
         {
             0 or 1 => Pool((21, 10), (25, 1)),
@@ -65,15 +65,15 @@ public sealed class PeerLevelSpreadTests
 
         var column = Assert.Single(spread.Columns);
         Assert.Equal(4, column.Mine);
-        Assert.Equal(2, column.PeersBelowMine); // the peer keeping one, and the peer keeping none
+        Assert.Equal(2, column.PeersBelowMine); // the peer holding one, and the peer holding none
         Assert.Equal(2, column.PeersLevelWithMine);
     }
 
     [Fact]
-    public void KeepingNoneOfALevelIsACountLikeAnyOther()
+    public void HoldingNoneOfALevelIsACountLikeAnyOther()
     {
-        // Two of three peers keep a 23 and the viewer keeps none, which puts them level with the one peer who
-        // keeps none either.
+        // Two of three peers hold a 23 and the viewer holds none, which puts them level with the one peer who
+        // holds none either.
         var pools = new[] { Pool((23, 3)), Pool((23, 6)), Pool((24, 2)) };
 
         var spread = PeerLevelSpread.Of(Summary(pools), _levels, Charts(24, 1));
@@ -86,7 +86,7 @@ public sealed class PeerLevelSpreadTests
     }
 
     [Fact]
-    public void BoardPeersCountAndAPeerWithNoPoolKeepsNothingAnywhere()
+    public void BoardPeersCountAndAPeerWithNoPoolHoldsNothingAnywhere()
     {
         var board = PeerVoice.FromBoard(7, "BOARD#1234");
         var account = PeerVoice.Account(Guid.NewGuid());
@@ -105,7 +105,7 @@ public sealed class PeerLevelSpreadTests
         Assert.Equal(1, spread.BoardPeers);
         var column = Assert.Single(spread.Columns);
         Assert.Equal(1, column.PeersByCount[0]);
-        Assert.Equal(2, column.Keeping);
+        Assert.Equal(2, column.Holding);
         Assert.Equal(3, column.Most);
     }
 

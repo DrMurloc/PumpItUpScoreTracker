@@ -44,19 +44,19 @@ public sealed class LevelSpreadChartTests : ComponentTestBase
 
         var columns = cut.FindAll(".pmb-spread-col");
         Assert.Equal(new[] { "20", "21" }, columns.Select(c => c.QuerySelector(".pmb-spread-level")!.TextContent.Trim()));
-        // Nobody keeps more than nine, so the scale is the shortest one: ten, eleven counts tall. Two charts
+        // Nobody holds more than nine, so the scale is the shortest one: ten, eleven counts tall. Two charts
         // sit two and a half counts up it.
         Assert.Equal("10", cut.Find(".pmb-spread-plot").GetAttribute("data-top"));
         Assert.Contains($"calc({2.5 / 11 * 100:0.###}% - 4.5px)",
             columns[1].QuerySelector(".pmb-spread-you")!.GetAttribute("style"));
-        // Every count a peer keeps is a bar, zero included.
+        // Every count a peer holds is a bar, zero included.
         Assert.Equal(4, columns[1].QuerySelectorAll(".pmb-spread-bin").Length);
     }
 
     [Fact]
     public void OneScaleServesEveryTileAndStopsAtTheNinetyNinthPercentile()
     {
-        // Two hundred singles peers: one keeps forty-nine 22s, the rest eight. The doubles tile's peers keep
+        // Two hundred singles peers: one holds forty-nine 22s, the rest eight. The doubles tile's peers keep
         // up to twelve. The scale is shared and rounds the 99th percentile up to five, so the forty-nine runs
         // off the top — clipped, marked, and never drawn as a bar.
         var cut = Render(new Dictionary<ChartType, PeerLevelSpread>
@@ -88,19 +88,19 @@ public sealed class LevelSpreadChartTests : ComponentTestBase
         Assert.Contains("0–9", text);
         Assert.Contains("75%", text);
         Assert.Contains("You 5", text);
-        // Two of four peers keep fewer than five.
+        // Two of four peers hold fewer than five.
         Assert.Contains("· more than 50% of your peers", text);
     }
 
     [Fact]
-    public void KeepingNoneReadsAlongsideThePeersWhoKeepNone()
+    public void HoldingNoneReadsAlongsideThePeersWhoHoldNone()
     {
         var cut = Render(new Dictionary<ChartType, PeerLevelSpread>
         {
             [ChartType.Double] = Spread(4, 0, Column(24, 0, (0, 1), (1, 3)))
         });
 
-        Assert.Contains("· like the 25% who keep none", cut.Find(".pmb-spread-tipbody").TextContent);
+        Assert.Contains("· like the 25% who hold none", cut.Find(".pmb-spread-tipbody").TextContent);
     }
 
     [Fact]
@@ -142,7 +142,7 @@ public sealed class LevelSpreadChartTests : ComponentTestBase
         return new PeerLevelSpread(peers, board, columns);
     }
 
-    /// <summary>A column from how many peers keep each count, with the viewer keeping <paramref name="mine" />.</summary>
+    /// <summary>A column from how many peers hold each count, with the viewer holding <paramref name="mine" />.</summary>
     private static LevelSpreadColumn Column(int level, int mine, params (int Count, int Peers)[] bins)
     {
         var counts = bins.SelectMany(b => Enumerable.Repeat(b.Count, b.Peers)).OrderBy(c => c).ToArray();
