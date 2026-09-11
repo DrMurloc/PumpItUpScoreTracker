@@ -253,6 +253,8 @@ else
 
     public const string AloneKey = "Alone";
 
+    public const string UnkeptKey = "Unkept";
+
     public static readonly IReadOnlySet<string> DefaultCollapsed = new HashSet<string>
     {
         TierListCategory.VeryHard.ToString(), TierListCategory.Underrated.ToString()
@@ -411,7 +413,8 @@ else
 
     /// <summary>
     ///     The Rarity grouping (D66): every chart of the levels in reach — the peers' entries at those
-    ///     levels and the charts no peer holds — banded by the share of the peers who keep it, rarest
+    ///     levels and the charts no peer holds — the charts nobody keeps in a section of their own, then the
+    ///     rest banded by the share of the peers who keep it, rarest
     ///     first. Inside a band the fewest keepers lead, then the lowest in the pools that keep it, then
     ///     the fewest who played it, then the harder chart.
     /// </summary>
@@ -424,9 +427,19 @@ else
             .ToArray();
 
         var sections = new List<Section>();
+        // Nobody keeping a chart is always a section of its own, ahead of the rarest band rather than inside it.
+        var unkept = rows.Where(r => r.Entry!.Holders == 0)
+            .OrderBy(r => r.Entry!.Scored)
+            .ThenByDescending(r => (int)r.Chart.Level)
+            .ThenBy(r => r.Chart.Song.Name.ToString(), StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (unkept.Length > 0)
+            sections.Add(new Section(UnkeptKey, L[PumbilityTierNames.NameOf(TierListCategory.Unrecorded)],
+                ThemeScales.CssVar(RarityBand.Prism), unkept, null, "pmb-rarity-section", Band: RarityBand.Prism));
+
         foreach (var band in RarityBands)
         {
-            var inBand = rows.Where(r => BandOf(r.Entry!) == band)
+            var inBand = rows.Where(r => r.Entry!.Holders > 0 && BandOf(r.Entry!) == band)
                 .OrderBy(r => KeptShare(r.Entry!))
                 .ThenBy(r => r.Entry!.Share)
                 .ThenBy(r => r.Entry!.Scored)

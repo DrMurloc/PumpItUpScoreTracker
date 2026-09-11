@@ -167,7 +167,7 @@ public sealed class PeerPoolListTests : ComponentTestBase
     [Fact]
     public void RarityBandsEveryChartInReachByHowFewPeersKeepItAndFoldsTheMostKept()
     {
-        // 23 peers. Nobody keeps the two unheld charts (1% or fewer); two keep Few (1–10%), five keep
+        // 23 peers. Nobody keeps the two unheld charts (their own section); two keep Few (1–10%), five keep
         // Some (10–25%), nine keep Many (25–50%, folded by default). An S23 outside the levels never shows.
         var f = new Fixture().InReach(20, 21)
             .Held("Few", TierListCategory.Underrated, holders: 2, points: 40, mine: null, level: 21, scored: 9)
@@ -180,13 +180,31 @@ public sealed class PeerPoolListTests : ComponentTestBase
         var cut = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
             .Add(x => x.GroupBy, PeerGrouping.Rarity).Add(x => x.Density, UiDensity.Comfortable));
 
-        Assert.Equal(new[] { "Kept by 1% or fewer", "Kept by 1–10%", "Kept by 10–25%", "Kept by 25–50%" },
+        Assert.Equal(new[] { "Not in anyone's PUMBILITY", "Kept by 1–10%", "Kept by 10–25%", "Kept by 25–50%" },
             cut.FindAll(".tier-section-name").Select(n => n.TextContent).ToArray());
         // 25% and up starts folded: three bodies for four sections.
         Assert.Equal(3, cut.FindAll(".tier-section-body").Count);
         Assert.DoesNotContain("Elsewhere", cut.Markup);
         // The chart nobody played leads the one five and more played; then each band in turn.
         Assert.Equal(new[] { "Untouched", "Tried", "Few", "Some" },
+            cut.FindAll(".tier-chart-card-name").Select(n => n.TextContent).ToArray());
+    }
+
+    [Fact]
+    public void ChartsNobodyKeepsAreAlwaysASectionApartFromTheRarestBand()
+    {
+        // Two hundred peers: one keeper is half a percent, which is the rarest band — and still not the
+        // same section as a chart nobody keeps.
+        var f = new Fixture().WithPeers(200)
+            .Held("OneKeeper", TierListCategory.Underrated, holders: 1, points: 3, mine: null, scored: 12)
+            .Unheld("NoKeeper", scored: 7, projected: 948_000);
+
+        var cut = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
+            .Add(x => x.GroupBy, PeerGrouping.Rarity).Add(x => x.Density, UiDensity.Comfortable));
+
+        Assert.Equal(new[] { "Not in anyone's PUMBILITY", "Kept by 1% or fewer" },
+            cut.FindAll(".tier-section-name").Select(n => n.TextContent).ToArray());
+        Assert.Equal(new[] { "NoKeeper", "OneKeeper" },
             cut.FindAll(".tier-chart-card-name").Select(n => n.TextContent).ToArray());
     }
 
@@ -259,6 +277,7 @@ public sealed class PeerPoolListTests : ComponentTestBase
     {
         private readonly List<PeerPoolEntry> _entries = new();
         private readonly List<PeerPoolEntry> _unheld = new();
+        private int _peers = 23;
         private IReadOnlyList<int> _levels = new[] { 21 };
         private readonly List<PeerAloneEntry> _alone = new();
         private readonly Dictionary<Guid, PumbilityTarget> _gains = new();
@@ -275,7 +294,7 @@ public sealed class PeerPoolListTests : ComponentTestBase
             int? scored = null)
         {
             var chart = NewChart(name, level);
-            _entries.Add(new PeerPoolEntry(chart.Id, ChartType.Single, holders, 23, points, tier, _entries.Count,
+            _entries.Add(new PeerPoolEntry(chart.Id, ChartType.Single, holders, _peers, points, tier, _entries.Count,
                 scored ?? holders, myRank, mine, mine == null ? null : PhoenixPlate.MarvelousGame, percentile, median));
             if (gain is { } g)
                 _gains[chart.Id] = new PumbilityTarget(chart.Id, projected ?? 980_000, g, mine, false, null);
@@ -300,8 +319,15 @@ public sealed class PeerPoolListTests : ComponentTestBase
         public Fixture Unheld(string name, int level = 21, int scored = 0, int? mine = null, int? projected = null)
         {
             var chart = NewChart(name, level);
-            _unheld.Add(new PeerPoolEntry(chart.Id, ChartType.Single, 0, 23, 0, TierListCategory.Unrecorded, 0,
+            _unheld.Add(new PeerPoolEntry(chart.Id, ChartType.Single, 0, _peers, 0, TierListCategory.Unrecorded, 0,
                 scored, null, mine, mine == null ? null : PhoenixPlate.MarvelousGame, null, projected));
+            return this;
+        }
+
+        /// <summary>How many peers every entry added after this counts against.</summary>
+        public Fixture WithPeers(int peers)
+        {
+            _peers = peers;
             return this;
         }
 
