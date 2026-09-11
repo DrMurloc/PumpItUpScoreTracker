@@ -505,4 +505,41 @@ public sealed class StageBreakCauseSolverTests
             Assert.Equal(PhoenixLetterGrade.SSSPlus, cause.PassGrade);
         });
     }
+
+    [Fact]
+    public void ARunThatFitsNoTargetSitsOutTheStreak()
+    {
+        // Seven straight perfects fit no plate and no grade, so the player's own command could not
+        // have ended that run and it says nothing about which command they set. The two replays still
+        // share SSS+.
+        var causes = StageBreakCauseSolver.SolveStreak(new[]
+        {
+            new JudgementCounts(900, 0, 0, 0, 6),
+            new JudgementCounts(806, 1, 0, 0, 4),
+            new JudgementCounts(7, 0, 0, 0, 0)
+        }, 1000, 26, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, causes[0].PassGrade);
+        Assert.Null(causes[0].PassPlate);
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, causes[1].PassGrade);
+        Assert.True(causes[2].IsNonLifebarBreak);
+        Assert.False(causes[2].IsNamed);
+    }
+
+    [Fact]
+    public void ARunThatFitsNoTargetDoesNotBringBackAPlateTheReplaysRuledOut()
+    {
+        // Two runs ending on a lone miss share Superb Game; a third, with bads but no miss, fits
+        // nothing. It does not undo the streak, so Extreme Game stays ruled out for the first run.
+        var causes = StageBreakCauseSolver.SolveStreak(new[]
+        {
+            new JudgementCounts(900, 5, 2, 0, 1),
+            new JudgementCounts(900, 5, 2, 1, 1),
+            new JudgementCounts(44, 24, 14, 3, 0)
+        }, 1000, 21, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixPlate.SuperbGame, causes[0].PassPlate);
+        Assert.Equal(PhoenixPlate.SuperbGame, causes[1].PassPlate);
+        Assert.False(causes[2].IsNamed);
+    }
 }

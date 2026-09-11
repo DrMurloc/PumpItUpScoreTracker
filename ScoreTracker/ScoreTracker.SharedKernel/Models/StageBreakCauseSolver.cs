@@ -78,7 +78,9 @@ public static class StageBreakCauseSolver
     ///     run could have crossed — the one most of their evenly spread guesses pick when more than one
     ///     fits, the higher on a tie — and the highest plate every such run broke by exactly one
     ///     judgement. A target one run fits and another rules out names none of them. When nothing
-    ///     fits them all, the command changed and each run keeps its own answer.
+    ///     fits them all, the command changed and each run keeps its own answer. A run that fits no
+    ///     target on its own sits out and keeps its empty answer: the player's command could not have
+    ///     ended it, so it says nothing about which command was set.
     /// </summary>
     public static IReadOnlyList<StageBreakCause> SolveStreak(IReadOnlyList<JudgementCounts> runs, int? noteCount,
         DifficultyLevel? level, MixEnum mix)
@@ -86,19 +88,21 @@ public static class StageBreakCauseSolver
         var causes = runs
             .Select(run => Solve(run.Perfects, run.Greats, run.Goods, run.Bads, run.Misses, noteCount, level, mix))
             .ToArray();
-        var flagged = Enumerable.Range(0, runs.Count).Where(i => causes[i].IsNonLifebarBreak).ToArray();
-        if (mix != MixEnum.Phoenix2 || flagged.Length < 2) return causes;
+        var candidates = Enumerable.Range(0, runs.Count)
+            .Where(i => causes[i].IsNonLifebarBreak && causes[i].IsNamed)
+            .ToArray();
+        if (mix != MixEnum.Phoenix2 || candidates.Length < 2) return causes;
 
-        IEnumerable<PhoenixPlate> sharedPlates = Plates(runs[flagged[0]]);
-        foreach (var i in flagged.Skip(1)) sharedPlates = sharedPlates.Intersect(Plates(runs[i]));
+        IEnumerable<PhoenixPlate> sharedPlates = Plates(runs[candidates[0]]);
+        foreach (var i in candidates.Skip(1)) sharedPlates = sharedPlates.Intersect(Plates(runs[i]));
         var plates = sharedPlates.ToArray();
 
         var notes = noteCount.GetValueOrDefault();
         var grades = Array.Empty<PhoenixLetterGrade>();
         if (notes > 0)
         {
-            IEnumerable<PhoenixLetterGrade> sharedGrades = Crossable(runs[flagged[0]]);
-            foreach (var i in flagged.Skip(1)) sharedGrades = sharedGrades.Intersect(Crossable(runs[i]));
+            IEnumerable<PhoenixLetterGrade> sharedGrades = Crossable(runs[candidates[0]]);
+            foreach (var i in candidates.Skip(1)) sharedGrades = sharedGrades.Intersect(Crossable(runs[i]));
             grades = sharedGrades.OrderBy(grade => grade).ToArray();
         }
 
@@ -108,7 +112,7 @@ public static class StageBreakCauseSolver
         {
             0 => null,
             1 => grades[0],
-            _ => flagged
+            _ => candidates
                 .Select(i => EvenlySpreadGuess(runs[i].Perfects, runs[i].Greats, runs[i].Goods, runs[i].Bads,
                     runs[i].Misses, notes, mix, grades))
                 .GroupBy(guess => guess)
@@ -118,7 +122,7 @@ public static class StageBreakCauseSolver
         };
         PhoenixPlate? plate = plates.Length == 0 ? null : plates[0];
 
-        foreach (var i in flagged) causes[i] = causes[i] with { PassPlate = plate, PassGrade = named };
+        foreach (var i in candidates) causes[i] = causes[i] with { PassPlate = plate, PassGrade = named };
         return causes;
 
         IReadOnlyList<PhoenixLetterGrade> Crossable(JudgementCounts run)
