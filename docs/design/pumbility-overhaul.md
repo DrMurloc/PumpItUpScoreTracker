@@ -142,7 +142,7 @@ Round eleven, 2026-09-11 — the Rarity grouping. The page it describes is §3.1
 
 | # | Ruling |
 |---|---|
-| D66 | **Rarity — the peers' list read from the other end (round eleven, 2026-09-11).** Owner: *"A bizzaro mode for PUMBILITY page … takes folders that are realistically within your PUMBILITY range (based on how prevelant they are to peers, we want to trim off edge case folders), then ranks everything by how FEW people's top 50 pumbility they show up in"*; on the mock's three placements, *"lets do A"* — a third option in Grouped by, not its own tab and not a flip link on the title — and *"Rarity is a good name"*. **A level is in range when at least half of the peers who hold anything keep a chart of it** in their pool of the type (`PumbilityPeerPools.RarityReach`), and the list is **every chart of those levels**, the ones no peer keeps included, ordered by the share of the peers who keep it — fewest first, then lowest in their pools, then fewest who played it. The sections are the rarity bands read as *the rarity of a thing is the share of people who lack it* (UX-GUIDELINES §6), `ThemeScales.BandFor(1 − share)`, each named for the share it covers — *Kept by 1% or fewer · 1–10% · 10–25% · 25–50% · 50–75% · over 75%* — from the floors the bands themselves cut on; 25% and up start folded, under a setting of their own. A card says *Kept by 2 of 395 · played by 20*, and a chart no peer keeps that fewer than five of them played says *played by fewer than 5*: the peers' pool data does not hold a chart nobody keeps until five have scored it, and this grouping leaves that alone. No switch shows under it — *Only projected PUMBILITY gains* would empty it, because almost nothing a peer group skips would pay (§4.13). The gain corner, the projected grade, Energy, the borders, the To-Do ring and Download are Prevalence's; the Table carries *Kept · Played* where Prevalence has *Peers · Better Than*. Like the other groupings it is a re-sort (D56): the levels and the unkept charts ride every peers read. Both mixes |
+| D66 | **Rarity — the peers' list read from the other end (round eleven, 2026-09-11).** Owner: *"A bizzaro mode for PUMBILITY page … takes folders that are realistically within your PUMBILITY range (based on how prevelant they are to peers, we want to trim off edge case folders), then ranks everything by how FEW people's top 50 pumbility they show up in"*; on the mock's three placements, *"lets do A"* — a third option in Grouped by, not its own tab and not a flip link on the title — and *"Rarity is a good name"*. **A level is in range when at least half of the peers who hold anything keep a chart of it** in their pool of the type (`PumbilityPeerPools.RarityReach`), and the list is **every chart of those levels**, the ones no peer keeps included, ordered by the share of the peers who keep it — fewest first, then lowest in their pools, then fewest who played it. The sections are the rarity bands read as *the rarity of a thing is the share of people who lack it* (UX-GUIDELINES §6), `ThemeScales.BandFor(1 − share)`, each named for the share it covers — *Kept by 1% or fewer · 1–10% · 10–25% · 25–50% · 50–75% · over 75%* — from the floors the bands themselves cut on; 25% and up start folded, under a setting of their own. A card says *Kept by 2 of 395 · played by 20*, and a chart no peer keeps that fewer than five of them played says *played by fewer than 5*: the peers' pool data does not hold a chart nobody keeps until five have scored it, and this grouping leaves that alone. No switch shows under it — *Only projected PUMBILITY gains* would empty it, because almost nothing a peer group skips would pay (§4.13). The gain corner, the projected grade, Energy, the borders, the To-Do ring and Download are Prevalence's; the Table carries *Kept · Played* where Prevalence has *Peers · Better Than*. Like the other groupings it is a re-sort (D56): the levels and the unkept charts ride every peers read. The lede says what the list is made of — *these are likely to be the hardest charts to score in your level range* (owner, on the PR), measured in §4.13. Both mixes |
 
 ## 3. The section
 
@@ -542,8 +542,8 @@ chart — the ones nobody keeps included — fewest keepers first. It answers *w
 me skip*, and measured, that is deep cuts: remixes, short cuts and full songs are 40% of the fifty
 rarest singles against 14% of the levels overall, and almost none of them would clear the bar
 (§4.13). The lede names the levels — *Every chart in S20–S23, the folders your peers build their
-PUMBILITY from, with the ones fewest of them keep first. A folder counts when at least half your peers
-keep a chart from it.* — joining the two types under All. The sections are rarity bands by the share
+PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level
+range. A folder counts when at least half your peers keep a chart from it.* — joining the two types under All. The sections are rarity bands by the share
 of peers who keep a chart, 25% and up folded under `Pumbility__RarityCollapsed`; the Comfortable
 caption says how many keep it and how many played it, the Compact tooltip carries the same, and the
 Table swaps *Peers · Better Than* for *Kept · Played*. Everything else on a card is Prevalence's. No
@@ -1227,6 +1227,14 @@ is kept by 24. Doubles: 672, with **36** no peer keeps, about half of them old D
 remixes, short cuts or full songs** against 67 of the 480 in range (40% against 14%); doubles 9 of 50
 against 80 of 672. At Great, **none of the fifty rarest singles and one of the fifty rarest doubles
 would clear the bar** — a chart that paid would be in somebody's pool.
+
+**They are the hardest charts to score in the range.** Against the peers' median score on every chart
+of the same level, 49 of the fifty rarest singles sit below it, by a median of 16,944 points — the
+other 430 read +888, with 189 below. All fifty were played by five or more peers, and the median chart
+among them was kept by 21% of the peers who played it: tried, and not kept. Of the fifty rarest doubles,
+the 25 with five or more scorers all sit below their level's median, by 23,171; the other 25 are charts
+almost nobody plays, most of them old D24s. So the lede says it (owner, on the PR: *"these are likely to
+be the hardest charts in your level range"*).
 
 **Levels are not normalised.** A harder level is kept less per chart (S23 averages 28 keepers against
 S20's 44; D24 10 against D21's 24), so the plain count leans on the top level in range: 22 of the
