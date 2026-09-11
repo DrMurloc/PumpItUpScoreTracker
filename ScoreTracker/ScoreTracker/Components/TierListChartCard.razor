@@ -76,28 +76,36 @@ else
                 <span class="tier-chart-card-play-glyph" aria-hidden="true"></span>
             </button>
         }
-        @if (CornerBadge != null)
-        {
-            <div class="tier-chart-card-compact-grade tier-chart-card-corner @CornerBadgeClass">@CornerBadge</div>
-        }
     </div>
     @* The strip that rides up onto the jacket, and the ONLY things allowed on it: what the
-       chart is called and how you did on it. It reserves its height whether or not it has
-       either, so a folder of cards stays aligned — and so that nothing else inherits the
-       overlap by being first. It did: with song names switched off, the chip row and a lone
-       tier word were landing on the album art, which says nothing at all over a picture
-       (field test, 2026-08-26).
+       chart is called, the value printed beside the name, and how you did on it. It reserves
+       its height whether or not it has any of them, so a folder of cards stays aligned — and
+       so that nothing else inherits the overlap by being first. It did: with song names
+       switched off, the chip row and a lone tier word were landing on the album art, which
+       says nothing at all over a picture (field test, 2026-08-26).
        Clickable for the same reason the jacket is, and for the 30px of jacket it covers —
        removing the info button left the art as the only way in, and a strip that swallowed
        clicks would have made a dead zone of its bottom edge. Deliberately NOT a button and
        not a tab stop: the jacket beside it already announces and operates this exact action,
        so a second one would be an unoperable duplicate in the reading order. *@
     <div class="tier-chart-card-head" @onclick="() => OnOpen.InvokeAsync(Chart.Id)">
-        @if (ShowName)
+        @if (ShowName || CornerBadge != null)
         {
-            <MudTooltip Text="@Chart.Song.Name.ToString()" ShowOnFocus="true">
-                <MudText Typo="Typo.subtitle1" Class="tier-chart-card-name">@Chart.Song.Name</MudText>
-            </MudTooltip>
+            @* The printed value takes the end of the name's line rather than the jacket corner:
+               the name is the one part of the line allowed to shrink, so a long name ends in "…"
+               where the value starts instead of running underneath it. *@
+            <div class="tier-chart-card-nameline">
+                @if (ShowName)
+                {
+                    <MudTooltip Text="@Chart.Song.Name.ToString()" ShowOnFocus="true">
+                        <MudText Typo="Typo.subtitle1" Class="tier-chart-card-name">@Chart.Song.Name</MudText>
+                    </MudTooltip>
+                }
+                @if (CornerBadge != null)
+                {
+                    <div class="tier-chart-card-corner tier-chart-card-nameline-value @CornerBadgeClass">@CornerBadge</div>
+                }
+            </div>
         }
         @if (Score?.Score != null)
         {
@@ -297,9 +305,9 @@ else
 
     [Parameter] public EventCallback<Guid> OnOpen { get; set; }
 
-    // A printed value in the jacket's bottom-right corner. Wins that slot over the grade
-    // icon in Compact, and is the only thing a Compact card can say in words — so it is for
-    // the number the list is RANKED by, not decoration.
+    // A printed value: the jacket's bottom-right corner in Compact, the end of the name's line in
+    // Comfortable. Wins the Compact slot over the grade icon, and is the only thing a Compact card
+    // can say in words — so it is for the number the list is RANKED by, not decoration.
     // The jacket's other bottom corner. Content rather than text, because what goes here is a
     // picture — the difficulty bubble owns the top edge, so the two badges share the bottom.
     [Parameter] public RenderFragment? CornerBadgeStart { get; set; }

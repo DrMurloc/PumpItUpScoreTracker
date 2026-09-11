@@ -569,6 +569,19 @@ public sealed class SimilarChartsShelfTests : TestContext
     }
 
     [Fact]
+    public void TheNameIsItsOwnElementSoItCanTruncateAndKeepsItsTextInATooltip()
+    {
+        // A "…" never draws on the flex title row itself; the name needs an element of its own to
+        // shrink, and a cut name owes its full text to a tooltip (UX rule 7).
+        var cut = RenderCard(badges: Badge("bracket", 0.5));
+
+        var name = cut.Find(".chart-card-title h3 > .chart-card-name");
+        Assert.Equal("Neighbour", name.TextContent);
+        Assert.Equal("Neighbour", name.GetAttribute("title"));
+        Assert.Single(cut.FindAll(".chart-card-title h3 > .chart-card-name + a.chart-card-golink"));
+    }
+
+    [Fact]
     public void TheJacketPlaysAndTheLinkIsNowhereNearIt()
     {
         // Two disjoint targets, which is what dissolved the old problem: the play control
