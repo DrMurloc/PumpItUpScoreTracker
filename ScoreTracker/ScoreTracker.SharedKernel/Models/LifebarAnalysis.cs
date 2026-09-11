@@ -149,6 +149,24 @@ public static class LifebarAnalysis
         return probe.CurrentLife - before;
     }
 
+    /// <summary>
+    ///     How many straight misses from this exact state end the run. A miss costs a quarter of
+    ///     the life it lands on plus twenty, and the multiplier plays no part — so one means the
+    ///     next miss is the last, whatever the level. Zero when the run has already ended.
+    /// </summary>
+    public static int MissesToFail(LifebarSimulator sim)
+    {
+        var probe = sim.Fork();
+        var misses = 0;
+        while (probe.CurrentLife > 0)
+        {
+            probe.ApplyJudgment(Judgment.Miss);
+            misses++;
+        }
+
+        return misses;
+    }
+
     /// <summary>The overflow a level buys you: everything above the visible bar.</summary>
     public static int OverflowFor(DifficultyLevel level) => new LifebarSimulator(level).MaxLife - VisibleLife;
 }
