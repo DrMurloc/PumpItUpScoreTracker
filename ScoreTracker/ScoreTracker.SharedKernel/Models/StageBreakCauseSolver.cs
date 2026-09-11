@@ -74,10 +74,11 @@ public static class StageBreakCauseSolver
     /// <summary>
     ///     Solves one player's stage breaks on one chart in one session together, in input order.
     ///     Each run is solved alone first. A player replaying a chart keeps the command they set, so
-    ///     when a grade could have been crossed by every run the bar did not end, that grade names
-    ///     all of them — and when more than one fits them all, the grade most of their evenly spread
-    ///     guesses pick, the higher on a tie. When no grade fits them all, the command changed and
-    ///     each run keeps its own answer.
+    ///     the targets that fit every run the bar did not end name all of them: the grade every such
+    ///     run could have crossed — the one most of their evenly spread guesses pick when more than one
+    ///     fits, the higher on a tie — and the highest plate every such run broke by exactly one
+    ///     judgement. A target one run fits and another rules out names none of them. When nothing
+    ///     fits them all, the command changed and each run keeps its own answer.
     /// </summary>
     public static IReadOnlyList<StageBreakCause> SolveStreak(IReadOnlyList<JudgementCounts> runs, int? noteCount,
         DifficultyLevel? level, MixEnum mix)
@@ -86,30 +87,48 @@ public static class StageBreakCauseSolver
             .Select(run => Solve(run.Perfects, run.Greats, run.Goods, run.Bads, run.Misses, noteCount, level, mix))
             .ToArray();
         var flagged = Enumerable.Range(0, runs.Count).Where(i => causes[i].IsNonLifebarBreak).ToArray();
-        if (mix != MixEnum.Phoenix2 || noteCount is not > 0 || flagged.Length < 2) return causes;
+        if (mix != MixEnum.Phoenix2 || flagged.Length < 2) return causes;
 
-        var notes = noteCount.Value;
-        IEnumerable<PhoenixLetterGrade> shared = Crossable(runs[flagged[0]]);
-        foreach (var i in flagged.Skip(1)) shared = shared.Intersect(Crossable(runs[i]));
-        var common = shared.OrderBy(grade => grade).ToArray();
-        if (common.Length == 0) return causes;
+        IEnumerable<PhoenixPlate> sharedPlates = Plates(runs[flagged[0]]);
+        foreach (var i in flagged.Skip(1)) sharedPlates = sharedPlates.Intersect(Plates(runs[i]));
+        var plates = sharedPlates.ToArray();
 
-        var named = common.Length == 1
-            ? common[0]
-            : flagged
+        var notes = noteCount.GetValueOrDefault();
+        var grades = Array.Empty<PhoenixLetterGrade>();
+        if (notes > 0)
+        {
+            IEnumerable<PhoenixLetterGrade> sharedGrades = Crossable(runs[flagged[0]]);
+            foreach (var i in flagged.Skip(1)) sharedGrades = sharedGrades.Intersect(Crossable(runs[i]));
+            grades = sharedGrades.OrderBy(grade => grade).ToArray();
+        }
+
+        if (grades.Length == 0 && plates.Length == 0) return causes;
+
+        PhoenixLetterGrade? named = grades.Length switch
+        {
+            0 => null,
+            1 => grades[0],
+            _ => flagged
                 .Select(i => EvenlySpreadGuess(runs[i].Perfects, runs[i].Greats, runs[i].Goods, runs[i].Bads,
-                    runs[i].Misses, notes, mix, common))
+                    runs[i].Misses, notes, mix, grades))
                 .GroupBy(guess => guess)
                 .OrderByDescending(votes => votes.Count())
                 .ThenByDescending(votes => votes.Key)
-                .First().Key;
+                .First().Key
+        };
+        PhoenixPlate? plate = plates.Length == 0 ? null : plates[0];
 
-        foreach (var i in flagged) causes[i] = causes[i] with { PassGrade = named };
+        foreach (var i in flagged) causes[i] = causes[i] with { PassPlate = plate, PassGrade = named };
         return causes;
 
         IReadOnlyList<PhoenixLetterGrade> Crossable(JudgementCounts run)
         {
             return CrossableGrades(run.Perfects, run.Greats, run.Goods, run.Bads, run.Misses, notes, mix);
+        }
+
+        IReadOnlyList<PhoenixPlate> Plates(JudgementCounts run)
+        {
+            return BrokenPlates(run.Greats, run.Goods, run.Bads, run.Misses);
         }
     }
 

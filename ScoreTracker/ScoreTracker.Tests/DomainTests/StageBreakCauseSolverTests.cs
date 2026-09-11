@@ -463,4 +463,46 @@ public sealed class StageBreakCauseSolverTests
 
         Assert.Equal(alone, Assert.Single(streak));
     }
+
+    [Fact]
+    public void AStreakDropsThePlatesItsReplaysRuleOut()
+    {
+        // Caprice of DJ Otada S21, six runs in one session. Every run could have crossed SSS. Two also
+        // matched a plate by count — Ultimate Game on a lone good, Extreme Game on a lone miss — that
+        // the other replays contradict, so neither plate names anything.
+        var causes = StageBreakCauseSolver.SolveStreak(new[]
+        {
+            new JudgementCounts(593, 14, 0, 0, 3),
+            new JudgementCounts(697, 13, 2, 0, 2),
+            new JudgementCounts(873, 21, 1, 0, 0),
+            new JudgementCounts(104, 7, 2, 0, 5),
+            new JudgementCounts(713, 16, 2, 0, 1),
+            new JudgementCounts(701, 17, 3, 0, 0)
+        }, 904, 21, MixEnum.Phoenix2);
+
+        Assert.All(causes, cause =>
+        {
+            Assert.Equal(PhoenixLetterGrade.SSS, cause.PassGrade);
+            Assert.Null(cause.PassPlate);
+        });
+    }
+
+    [Fact]
+    public void AStreakSwapsARunsHigherPlateForTheOneEveryReplayFits()
+    {
+        // Two runs ending on a lone miss. The first carried no bad, so Extreme Game fell on that miss
+        // along with Superb Game; the second carried a bad before it, which rules Extreme Game out.
+        // Superb Game fits both.
+        var causes = StageBreakCauseSolver.SolveStreak(new[]
+        {
+            new JudgementCounts(900, 5, 2, 0, 1),
+            new JudgementCounts(900, 5, 2, 1, 1)
+        }, 1000, 26, MixEnum.Phoenix2);
+
+        Assert.All(causes, cause =>
+        {
+            Assert.Equal(PhoenixPlate.SuperbGame, cause.PassPlate);
+            Assert.Equal(PhoenixLetterGrade.SSSPlus, cause.PassGrade);
+        });
+    }
 }
