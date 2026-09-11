@@ -186,10 +186,11 @@ public sealed class SessionHeroTests : ComponentTestBase
     }
 
     [Fact]
-    public void OlderPlaysInARunCarryTheirLifetimeAttemptNumber()
+    public void EveryPlayInARunCarriesItsLifetimeAttemptNumber()
     {
-        // The rail joins the run; each older play prints its number among every play of the chart
-        // in its mix (D51), and the newest stays bare — its badges tell the ending (D49).
+        // The rail joins the run, and every play from the fifth on prints its number among every
+        // play of the chart in its mix (D51) — the newest included, since it is the number a player
+        // looks for.
         var chart = ChartAt(ChartType.Double, 23);
         var rows = Enumerable.Range(0, 3)
             .Select(i => Row(chart.Id, Start.AddMinutes(i * 7), 900000 + i * 5000,
@@ -201,10 +202,10 @@ public sealed class SessionHeroTests : ComponentTestBase
         Assert.Equal(3, hero.FindAll(".sbd-thread").Count);
         Assert.Single(hero.FindAll(".sbd-thread-start"));
         Assert.Single(hero.FindAll(".sbd-thread-end"));
-        Assert.Equal(2, hero.FindAll("[data-testid='session-row-attempt']").Count);
+        Assert.Equal(3, hero.FindAll("[data-testid='session-row-attempt']").Count);
+        Assert.Contains("Attempt 13", hero.Markup);
         Assert.Contains("Attempt 12", hero.Markup);
         Assert.Contains("Attempt 11", hero.Markup);
-        Assert.DoesNotContain("Attempt 13", hero.Markup);
     }
 
     [Fact]
@@ -226,17 +227,17 @@ public sealed class SessionHeroTests : ComponentTestBase
     }
 
     [Fact]
-    public void AChartPlayedOnceInASessionNeverCarriesANumber()
+    public void AChartPlayedOnceInASessionCarriesItsNumberToo()
     {
-        // A lone play is its own run's newest row, so it tells its ending bare however many times
-        // the chart was played before (D51).
+        // A lone play is its own run's newest row, and the newest row carries the number (D51).
         var chart = ChartAt(ChartType.Single, 20);
         var rows = new[] { Row(chart.Id, Start, 931000, ScoreEventClassification.Upscore) with { PlayNumber = 40 } };
 
         var hero = RenderComponent<SessionHero>(p => p.Add(h => h.Breakdown, WithRows(chart, rows)));
 
         Assert.Empty(hero.FindAll(".sbd-thread"));
-        Assert.Empty(hero.FindAll("[data-testid='session-row-attempt']"));
+        Assert.Contains("Attempt 40",
+            Assert.Single(hero.FindAll("[data-testid='session-row-attempt']")).TextContent);
     }
 
     private static SessionBreakdown WithRows(Chart chart, RecentSessionsPage.ScoreEventRecord[] rows) =>

@@ -241,11 +241,9 @@
     private bool HasFlagged;
 
     /// <summary>
-    ///     Runs of one chart get the rail. Every row but a run's newest also gets "Attempt N" once
-    ///     N reaches the floor, N being the play's number among every play of the chart in its mix,
-    ///     counted by the session feed (D51). The newest is the one whose badges tell the ending,
-    ///     and numbering it too would caption the punchline (D49) — so a chart played once in a
-    ///     session never carries a number.
+    ///     Runs of one chart get the rail. Every play also gets "Attempt N" once N reaches the floor,
+    ///     N being the play's number among every play of the chart in its mix, counted by the session
+    ///     feed (D51) — the newest included, since its number is the one a player looks for.
     /// </summary>
     private static IReadOnlyList<OrderedPlay> Thread(IReadOnlyList<SessionScore> ordered)
     {
@@ -258,7 +256,7 @@
             for (var i = start; i <= end; i++)
             {
                 var play = ordered[i].Row.PlayNumber;
-                int? attempt = i > start && play >= AttemptCaptionFloor ? play : null;
+                int? attempt = play >= AttemptCaptionFloor ? play : null;
                 plays[i] = new OrderedPlay(ordered[i], RailFor(i, start, end), attempt);
             }
 
