@@ -211,7 +211,11 @@ public sealed class PumbilityComponentTests : ComponentTestBase
     private static PumbilityPoolCompareRecord Compare(PoolTypeSplit? peers) => new(
         new Dictionary<ChartType, PeerCompare>
         {
-            [ChartType.Single] = new(new Dictionary<int, int> { [20] = 25 }, new Dictionary<int, double> { [20] = 1 })
+            [ChartType.Single] = new(new Dictionary<int, int> { [20] = 25 }, new Dictionary<int, double> { [20] = 1 },
+                new PeerLevelSpread(64, 0, new[]
+                {
+                    new LevelSpreadColumn(20, new Dictionary<int, int> { [25] = 64 }, 25, 25, 25, 25, 25, 64, 25, 0, 64)
+                }))
         },
         peers);
 
@@ -244,8 +248,8 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         var flex = bars[1].QuerySelectorAll(".pmb-flip-seg")
             .Select(s => double.Parse(s.GetAttribute("style")!.Split(':')[1], CultureInfo.InvariantCulture)).ToArray();
         Assert.True(flex[1] > flex[0]);
-        var tile = Assert.Single(cut.FindAll("[data-testid=wpc-levels] .pmb-compare-tile"));
-        Assert.Equal("Singles", tile.QuerySelector(".pmb-compare-label")!.TextContent.Trim());
+        var tile = Assert.Single(cut.FindAll("[data-testid=wpc-levels] .pmb-spread-tile"));
+        Assert.Equal("Singles", tile.QuerySelector(".pmb-spread-label")!.TextContent.Trim());
     }
 
     [Fact]

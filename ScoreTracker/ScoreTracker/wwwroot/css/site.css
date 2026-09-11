@@ -14406,51 +14406,36 @@ span.ct-console-pick { cursor: default; }
     margin: 8px 0 0;
 }
 
-/* The lede and the level-bars tile share a row on a wide screen and stack once the viewport is
-   square or taller, which is where the lede's own line length runs out (owner, field test round
-   two). The tile keeps its natural width; the lede takes the rest. */
-.pmb-peers-head {
+/* --- where the levels sit, as your peers' spread (D66) --- */
+.pmb-spread {
+    position: relative;
     display: flex;
-    align-items: flex-start;
-    gap: 6px 20px;
-    flex-wrap: wrap;
-    margin: 0 0 10px;
+    flex-direction: column;
+    gap: 8px;
 }
 
-.pmb-peers-head .pmb-block-lede {
-    flex: 1 1 26rem;
-    min-width: 0;
-    margin: 0;
-}
-
-.pmb-peers-head .pmb-compare {
-    flex: 1 1 24rem;
-    margin: 0;
-}
-
-@media (max-aspect-ratio: 1/1) {
-    .pmb-peers-head .pmb-compare {
-        flex-basis: 100%;
-    }
-}
-
-/* The compare strip (D41): the level bars in you-vs-peers colours, one tile per lit type. */
-.pmb-compare {
+.pmb-spread-tiles {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 10px;
-    margin: 0 0 14px;
 }
 
-.pmb-compare-tile {
-    background: var(--mix-surface);
-    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+.pmb-spread-tile {
+    background: var(--mix-surface-muted);
     border-radius: 6px;
-    padding: 10px 12px 11px;
+    padding: 9px 10px 4px;
     min-width: 0;
 }
 
-.pmb-compare-label {
+.pmb-spread-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 2px 8px;
+}
+
+.pmb-spread-label {
     font-family: var(--font-display);
     font-weight: 600;
     font-size: 11px;
@@ -14459,78 +14444,246 @@ span.ct-console-pick { cursor: default; }
     color: var(--mix-ink-muted);
 }
 
-.pmb-compare-num {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 28px;
-    line-height: 1;
-    margin-top: 4px;
+.pmb-spread-peers {
+    font-size: 11.5px;
+    color: var(--mix-ink-muted);
     font-variant-numeric: tabular-nums;
 }
 
-.pmb-compare-num small {
-    font-size: 14px;
-    color: var(--mix-ink-muted);
-    font-weight: 600;
-    margin-left: 4px;
-}
-
-.pmb-compare-say {
-    font-size: 12px;
-    color: var(--mix-ink-muted);
-    margin-top: 3px;
-}
-
-.pmb-compare-say b {
-    color: var(--mix-ink);
-    font-weight: 600;
-}
-
-.pmb-levelbars {
-    display: grid;
-    grid-template-columns: 38px 1fr;
-    gap: 3px 8px;
-    align-items: end;
+/* A gutter for the tick labels, then the columns. Every position inside a column is a percent of its
+   height, on one scale for every tile; the glyphs keep their own pixel sizes. */
+.pmb-spread-plot {
+    position: relative;
     margin-top: 6px;
+    padding-left: 22px;
+}
+
+.pmb-spread-grid {
+    position: absolute;
+    top: 0;
+    left: 22px;
+    right: 0;
+    height: 168px;
+    pointer-events: none;
+}
+
+.pmb-spread-gridline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 0;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 9%, transparent);
+}
+
+.pmb-spread-gridline.is-base {
+    border-top-color: color-mix(in srgb, var(--mix-ink) 24%, transparent);
+}
+
+.pmb-spread-gridline b {
+    position: absolute;
+    top: 0;
+    right: calc(100% + 5px);
+    transform: translateY(-50%);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.pmb-spread-cols {
+    position: relative;
+    display: flex;
+}
+
+.pmb-spread-col {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    outline: none;
+    cursor: crosshair;
+}
+
+.pmb-spread-colplot {
+    position: relative;
+    height: 168px;
+    border-radius: 4px;
+}
+
+.pmb-spread-col[data-active] .pmb-spread-colplot {
+    background: color-mix(in srgb, var(--mix-ink) 5%, transparent);
+}
+
+.pmb-spread-col:focus-visible .pmb-spread-colplot {
+    box-shadow: inset 0 0 0 1.5px var(--mix-ink);
+}
+
+.pmb-spread-colplot i {
+    position: absolute;
+    left: 50%;
+    display: block;
+}
+
+.pmb-spread-bin {
+    transform: translateX(-50%);
+    min-width: 3px;
+    max-width: 68px;
+    background: var(--mix-secondary);
+    opacity: .3;
+}
+
+.pmb-spread-bin[data-hot] {
+    opacity: .65;
+}
+
+.pmb-spread-whisker {
+    width: 1.25px;
+    transform: translateX(-50%);
+    background: var(--mix-secondary);
+    opacity: .75;
+}
+
+/* A line past the top of the scale ends in a caret rather than a cap. */
+.pmb-spread-clip {
+    width: 7px;
+    height: 7px;
+    border-left: 1.5px solid var(--mix-secondary);
+    border-top: 1.5px solid var(--mix-secondary);
+    transform: translateX(-50%) rotate(45deg);
+}
+
+.pmb-spread-box {
+    width: 8px;
+    transform: translateX(-50%);
+    background: var(--mix-secondary);
+    border-radius: 2px;
+    box-shadow: 0 0 0 2px var(--mix-surface-muted);
+}
+
+.pmb-spread-median {
+    width: 16px;
+    height: 2.5px;
+    transform: translateX(-50%);
+    background: var(--mix-ink);
+    border-radius: 1.25px;
+}
+
+.pmb-spread-you {
+    width: 9px;
+    height: 9px;
+    transform: translateX(-50%) rotate(45deg);
+    background: var(--mix-accent);
+    box-shadow: 0 0 0 2px var(--mix-surface-muted);
+}
+
+.pmb-spread-level {
+    display: block;
+    padding: 4px 0 2px;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 600;
     font-size: 11px;
+    letter-spacing: .04em;
     color: var(--mix-ink-muted);
 }
 
-.pmb-levelrow {
+.pmb-spread-legend {
     display: flex;
-    gap: 2px;
-    align-items: flex-end;
-    height: 22px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 16px;
+    font-size: 11.5px;
+    color: var(--mix-ink-muted);
 }
 
-.pmb-levelrow i {
-    flex: 1;
-    display: block;
-    min-height: 2px;
-    border-radius: 1px 1px 0 0;
+.pmb-spread-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.pmb-levelrow-you i {
-    background: var(--mix-accent);
+.pmb-spread-key {
+    display: inline-block;
+    flex: none;
 }
 
-.pmb-levelrow-peers i {
+.pmb-spread-key-shape {
+    width: 14px;
+    height: 8px;
+    border-radius: 1px;
+    background: var(--mix-secondary);
+    opacity: .3;
+}
+
+.pmb-spread-key-box {
+    width: 6px;
+    height: 12px;
+    border-radius: 1.5px;
     background: var(--mix-secondary);
 }
 
-.pmb-levelaxis {
-    display: flex;
-    gap: 2px;
-    grid-column: 2;
+.pmb-spread-key-median {
+    width: 14px;
+    height: 3px;
+    border-radius: 1.5px;
+    background: var(--mix-ink);
 }
 
-.pmb-levelaxis span {
-    flex: 1;
-    text-align: center;
-    font-size: 9.5px;
+.pmb-spread-key-you {
+    width: 8px;
+    height: 8px;
+    margin: 0 2px;
+    transform: rotate(45deg);
+    background: var(--mix-accent);
+}
+
+/* The tooltip level-spread.js opens beside the pointer, filled from the column's own hidden lines. */
+.pmb-spread-tip {
+    position: absolute;
+    z-index: 5;
+    display: none;
+    pointer-events: none;
+    min-width: 190px;
+    max-width: 260px;
+    padding: 7px 9px;
+    background: var(--mix-nav);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 25%, transparent);
+    border-radius: 4px;
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--mix-bg) 70%, transparent);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.pmb-spread-tip[data-open] {
+    display: block;
+}
+
+.pmb-spread-tiphead {
+    margin-bottom: 2px;
     font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.pmb-spread-tip strong {
     font-weight: 600;
-    letter-spacing: .04em;
+    font-variant-numeric: tabular-nums;
+}
+
+.pmb-spread-tip span {
+    color: var(--mix-ink-muted);
+}
+
+.pmb-spread-tipyou strong {
+    color: var(--mix-accent);
+}
+
+.pmb-spread-tippointer {
+    margin-bottom: 3px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
 }
 
 /* The chart's value, as the Your top 50 lens prints it. */
@@ -15748,16 +15901,6 @@ span.ct-console-pick { cursor: default; }
     white-space: nowrap;
     padding: 0 6px;
     font-variant-numeric: tabular-nums;
-}
-
-/* The level tiles inside the card sit on the card's own surface, so they drop their border. */
-.pmb-wpc-sub .pmb-compare {
-    margin: 0;
-}
-
-.pmb-wpc-sub .pmb-compare-tile {
-    background: var(--mix-surface-muted);
-    border-color: transparent;
 }
 
 @media (max-width: 699.98px) {

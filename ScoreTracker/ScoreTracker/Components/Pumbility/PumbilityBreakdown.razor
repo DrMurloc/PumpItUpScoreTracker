@@ -24,7 +24,7 @@
    Since round nine, part two (D58) the card carries two more sections, you against your peers:
    your real fifty split by chart type over your peers' average fifty -- the Phoenix 1 card's
    bar twice, each segment reading what it is worth and how many charts it is, sized by value
-   like every stack here -- and where the levels sit, the tiles that stood beside the Play lede.
+   like every stack here -- and where the levels sit, as your peers' spread with you on it (D66).
    The split is a statement about the merged fifty, so it shows only for that scope; the peers'
    half and the tiles arrive by one read, held by this component because the pool it is scoped
    to comes from the section frame as a parameter. *@
@@ -139,9 +139,9 @@
             <div class="pmb-wpc-sub" data-testid="wpc-levels">
                 <div class="pmb-wpc-sub-head">
                     <strong>@L["Where the levels sit"]</strong>
-                    <span class="pmb-muted">@L["your fifty against what your peers hold, by level"]</span>
+                    <span class="pmb-muted">@L["how many charts of each level your peers keep in their top 50, and where yours sit"]</span>
                 </div>
-                <PeerCompareStrip Compare="compare.Levels"></PeerCompareStrip>
+                <LevelSpreadChart Spreads="Spreads(compare)"></LevelSpreadChart>
             </div>
         }
     </div>
@@ -198,6 +198,10 @@
             <div class="pmb-flip-seg s" style="flex:@Flex(split.SinglesValue)" title="@L["Singles"]">@Segment(split.SinglesValue, split.SinglesCount)</div>
         }
     </div>;
+
+    /// <summary>The spread per lit type the comparison carries — what the levels section draws (D66).</summary>
+    private static IReadOnlyDictionary<ChartType, PeerLevelSpread> Spreads(PumbilityPoolCompareRecord compare) =>
+        compare.Levels.Where(kv => kv.Value.Spread != null).ToDictionary(kv => kv.Key, kv => kv.Value.Spread!);
 
     private static string Flex(double value) =>
         Math.Max(0, value).ToString("0.##", CultureInfo.InvariantCulture);
