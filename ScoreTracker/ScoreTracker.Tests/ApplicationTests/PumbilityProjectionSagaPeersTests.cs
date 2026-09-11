@@ -217,8 +217,9 @@ public sealed partial class PumbilityProjectionSagaTests
             CancellationToken.None);
 
         var levels = typed.Levels[ChartType.Single];
-        Assert.Equal(2, levels.MyLevels.Values.Sum());
-        Assert.Equal(1, levels.PeerShareByLevel.Values.Sum(), 6);
+        Assert.Equal(6, levels.Peers);
+        Assert.All(levels.Columns, column => Assert.Equal(6, column.PeersByCount.Values.Sum()));
+        Assert.Equal(2, levels.Columns.Sum(column => column.Mine));
         Assert.Null(typed.Peers);
     }
 
@@ -240,7 +241,7 @@ public sealed partial class PumbilityProjectionSagaTests
         var record = await ctx.Saga.Handle(new GetPumbilityPoolCompareQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Single),
             CancellationToken.None);
 
-        var spread = Assert.IsType<PeerLevelSpread>(record.Levels[ChartType.Single].Spread);
+        var spread = record.Levels[ChartType.Single];
         Assert.Equal(6, spread.Peers);
         Assert.Equal(0, spread.BoardPeers);
         Assert.Equal(new[] { 20, 21, 22 }, spread.Columns.Select(c => c.Level).ToArray());

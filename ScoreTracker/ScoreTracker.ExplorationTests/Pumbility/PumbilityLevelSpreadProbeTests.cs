@@ -30,7 +30,7 @@ namespace ScoreTracker.ExplorationTests.Pumbility;
 ///     how many charts of every level each of the player's PUMBILITY peers keeps in their top 50,
 ///     beside the page's own frame, breakdown card and comparison record, so a mock can draw the
 ///     card exactly as the page would. The peers are the page's (the projector's call as the
-///     projection saga makes it, board peers included), checked against the saga's own share.
+///     projection saga makes it, board peers included), checked against the saga's own spread.
 ///     <para>
 ///         Configure <c>CatalogProbe:ConnectionString</c> or SCORETRACKER_CATALOG_CONNECTION;
 ///         SCORETRACKER_PUMBILITY_PROBE_USER picks the player; SCORETRACKER_PROBE_OUT names a
@@ -150,23 +150,27 @@ public sealed class PumbilityLevelSpreadProbeTests
                     .ToDictionary(g => g.Key.ToString(), g => g.Count())
             }).ToArray();
 
-            // The check that these are the page's peers: the saga's prevalence share per level,
-            // rebuilt from this summary the way CompareWith builds it.
-            var totalPoints = summary.Charts.Values.Sum(c => (double)c.Points);
-            var mineShare = summary.Charts
-                .Where(kv => kv.Value.Points > 0 && charts.ContainsKey(kv.Key))
-                .GroupBy(kv => (int)charts[kv.Key].Level)
-                .ToDictionary(g => g.Key, g => totalPoints == 0 ? 0 : g.Sum(kv => kv.Value.Points) / totalPoints);
-            var sagaLevels = compares["All"].Levels.TryGetValue(type, out var sagaCompare) ? sagaCompare : null;
-            var maxDiff = sagaLevels == null
-                ? double.NaN
-                : mineShare.Keys.Union(sagaLevels.PeerShareByLevel.Keys)
-                    .Max(l => Math.Abs(mineShare.GetValueOrDefault(l) - sagaLevels.PeerShareByLevel.GetValueOrDefault(l)));
+            // The check that these are the page's peers: at every level the saga's spread draws, how
+            // many peers keep each count, rebuilt from this summary.
+            var countsByPeer = summary.Peers
+                .Select(p => summary.Pools.TryGetValue(p, out var held)
+                    ? held.Where(charts.ContainsKey).GroupBy(id => (int)charts[id].Level).ToDictionary(g => g.Key, g => g.Count())
+                    : new Dictionary<int, int>())
+                .ToArray();
+            var sagaSpread = compares["All"].Levels.GetValueOrDefault(type);
+            var columnsOff = sagaSpread?.Columns.Count(column =>
+            {
+                var rebuilt = countsByPeer.GroupBy(c => c.GetValueOrDefault(column.Level)).ToDictionary(g => g.Key, g => g.Count());
+                return rebuilt.Count != column.PeersByCount.Count ||
+                       rebuilt.Any(kv => column.PeersByCount.GetValueOrDefault(kv.Key) != kv.Value);
+            });
+            var mine = sagaSpread?.Columns.Where(c => c.Mine > 0).ToDictionary(c => c.Level, c => c.Mine) ??
+                       new Dictionary<int, int>();
 
             var poolSizes = summary.Pools.Values.Select(p => p.Count).ToArray();
             _output.WriteLine($"{type}: peers {summary.Peers.Count} (board {group.BoardSize}) · window {group.Lowest:F0}–{group.Highest:F0} · " +
-                              $"pool sizes {poolSizes.Min()}–{poolSizes.Max()} · share vs saga max diff {maxDiff:E2} · " +
-                              $"mine {string.Join(" ", (sagaLevels?.MyLevels ?? new Dictionary<int, int>()).OrderBy(kv => kv.Key).Select(kv => $"{kv.Key}x{kv.Value}"))}");
+                              $"pool sizes {poolSizes.Min()}–{poolSizes.Max()} · spread columns off from the saga {columnsOff?.ToString() ?? "n/a"} · " +
+                              $"mine {string.Join(" ", mine.OrderBy(kv => kv.Key).Select(kv => $"{kv.Key}x{kv.Value}"))}");
 
             spread[key] = new
             {
@@ -175,8 +179,8 @@ public sealed class PumbilityLevelSpreadProbeTests
                 boardAsOf = group.BoardAsOf,
                 lowest = group.Lowest,
                 highest = group.Highest,
-                shareDiffVsSaga = maxDiff,
-                mine = sagaLevels?.MyLevels,
+                spreadColumnsOffVsSaga = columnsOff,
+                mine,
                 perPeer
             };
         }

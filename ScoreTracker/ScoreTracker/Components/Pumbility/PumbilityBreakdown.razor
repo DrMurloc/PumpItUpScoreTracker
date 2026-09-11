@@ -141,7 +141,7 @@
                     <strong>@L["Where the levels sit"]</strong>
                     <span class="pmb-muted">@L["how many charts of each level your peers keep in their top 50, and where yours sit"]</span>
                 </div>
-                <LevelSpreadChart Spreads="Spreads(compare)"></LevelSpreadChart>
+                <LevelSpreadChart Spreads="compare.Levels"></LevelSpreadChart>
             </div>
         }
     </div>
@@ -198,10 +198,6 @@
             <div class="pmb-flip-seg s" style="flex:@Flex(split.SinglesValue)" title="@L["Singles"]">@Segment(split.SinglesValue, split.SinglesCount)</div>
         }
     </div>;
-
-    /// <summary>The spread per lit type the comparison carries — what the levels section draws (D66).</summary>
-    private static IReadOnlyDictionary<ChartType, PeerLevelSpread> Spreads(PumbilityPoolCompareRecord compare) =>
-        compare.Levels.Where(kv => kv.Value.Spread != null).ToDictionary(kv => kv.Key, kv => kv.Value.Spread!);
 
     private static string Flex(double value) =>
         Math.Max(0, value).ToString("0.##", CultureInfo.InvariantCulture);

@@ -9,8 +9,8 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 ///     merged fifty.
 /// </summary>
 /// <param name="Levels">
-///     Per lit type in scope, where the viewer's fifty of the type sits against the peers' by
-///     level (D41). Empty for a viewer with no lit type.
+///     Per lit type in scope, how many charts of each level every peer keeps in their fifty of the
+///     type, with the viewer's own count on it (D66). Empty for a viewer with no lit type.
 /// </param>
 /// <param name="Peers">
 ///     The peers' average merged fifty split by type — the union of the lit types' peers, each
@@ -20,27 +20,10 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 /// </param>
 [ExcludeFromCodeCoverage]
 public sealed record PumbilityPoolCompareRecord(
-    IReadOnlyDictionary<ChartType, PeerCompare> Levels,
+    IReadOnlyDictionary<ChartType, PeerLevelSpread> Levels,
     PoolTypeSplit? Peers)
 {
     /// <summary>The answer for a viewer with no lit type: nothing to compare against.</summary>
     public static PumbilityPoolCompareRecord Empty { get; } =
-        new(new Dictionary<ChartType, PeerCompare>(), null);
+        new(new Dictionary<ChartType, PeerLevelSpread>(), null);
 }
-
-/// <summary>
-///     Where the viewer's pool sits against the peers' by level (D41). The in-common, held-by-one
-///     and yours-alone counts were computed here too until the field test cut the tiles that
-///     printed them — a count nobody can act on is not worth a read.
-/// </summary>
-/// <param name="MyLevels">The viewer's pool charts per level.</param>
-/// <param name="PeerShareByLevel">The peers' prevalence points per level, as a share of the type's total.</param>
-/// <param name="Spread">
-///     How many charts of each level every peer keeps in their fifty, with the viewer's own count on it
-///     (D66) — what the Breakdown page's chart draws.
-/// </param>
-[ExcludeFromCodeCoverage]
-public sealed record PeerCompare(
-    IReadOnlyDictionary<int, int> MyLevels,
-    IReadOnlyDictionary<int, double> PeerShareByLevel,
-    PeerLevelSpread? Spread = null);

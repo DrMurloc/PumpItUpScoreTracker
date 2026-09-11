@@ -209,13 +209,12 @@ public sealed class PumbilityComponentTests : ComponentTestBase
     }
 
     private static PumbilityPoolCompareRecord Compare(PoolTypeSplit? peers) => new(
-        new Dictionary<ChartType, PeerCompare>
+        new Dictionary<ChartType, PeerLevelSpread>
         {
-            [ChartType.Single] = new(new Dictionary<int, int> { [20] = 25 }, new Dictionary<int, double> { [20] = 1 },
-                new PeerLevelSpread(64, 0, new[]
-                {
-                    new LevelSpreadColumn(20, new Dictionary<int, int> { [25] = 64 }, 25, 25, 25, 25, 25, 64, 25, 0, 64)
-                }))
+            [ChartType.Single] = new(64, 0, new[]
+            {
+                new LevelSpreadColumn(20, new Dictionary<int, int> { [25] = 64 }, 25, 25, 25, 25, 25, 64, 25, 0, 64)
+            })
         },
         peers);
 
