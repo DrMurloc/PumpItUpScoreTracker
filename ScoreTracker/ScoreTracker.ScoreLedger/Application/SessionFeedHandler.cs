@@ -123,7 +123,18 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
             priorBest,
             isReclear, row.IsStageBroken, row.Judgements?.NoteCount, row.Judgements,
             row.Cause.IsNonLifebarBreak, row.Cause.PassPlate?.GetName(), row.Cause.PassGrade?.GetName(),
-            row.Cause.IsWalkOff);
+            row.Cause.IsWalkOff, PlayNumber(row, chartHistory));
+    }
+
+    /// <summary>
+    ///     Where this play falls among every play of its chart in its mix, itself included:
+    ///     records, plays that never beat one, and stage breaks all count. The history is
+    ///     cross-mix — a returning song keeps one ChartId — so the mix filter is what keeps
+    ///     Phoenix 1's plays out of a Phoenix 2 number.
+    /// </summary>
+    private static int PlayNumber(ScoreJournalEntry row, ScoreJournalEntry[] chartHistory)
+    {
+        return chartHistory.Count(h => h.Mix == row.Mix && h.OccurredAt <= row.OccurredAt);
     }
 
     private static ScoreEventClassification ClassifyRow(ScoreJournalEntry row, bool priorPassed, int? priorBest,

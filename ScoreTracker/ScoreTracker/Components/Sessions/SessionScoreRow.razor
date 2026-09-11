@@ -95,7 +95,10 @@
     /// <summary>Raised with this row's play when its strip is tapped; the host owns the dialog.</summary>
     [Parameter] public EventCallback<SessionScore> OnOpenBreakdown { get; set; }
 
-    /// <summary>"Attempt N", only supplied by the host once a chart hits five plays (D49).</summary>
+    /// <summary>
+    ///     "Attempt N": the play's number among every play of the chart in its mix. The host
+    ///     supplies it from the fifth play on, and never on a run's newest row (D51).
+    /// </summary>
     [Parameter] public int? AttemptNumber { get; set; }
 
     /// <summary>The dotted rail joining adjacent plays of one chart — the host computes runs.</summary>
