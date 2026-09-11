@@ -2792,6 +2792,9 @@
   <data name="Event mode or premium?" xml:space="preserve">
     <value>Argl murm ap urgmurm?</value>
   </data>
+  <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
+    <value>Algro murgl gropmur {0}, a glargub morp maglmurp murgablar grglblarg PUMBILITY blarg, mag a mrp mggl ub grglblarg mrgloru murpargl. Blu blub murgab ro bru a mrrrglmrgl murgl ro mrglrgl gropmur morp grorpmurm murm. A glargub grorpgl ob og mggl blugro morp maglmurp mrgloru a murgl blarg ug.</value>
+  </data>
   <data name="Every chart pays its level value, scaled by how well you scored it and by how long the song is. The grade table is PUMBILITY+: AAA is the 1× target, and below it the price drops fast." xml:space="preserve">
     <value>Ulbog murgl gogl blu grorpmurm ulbog, murmgrogla gam gam blub mrglrgl blu ap gam grulm blu mrogl gab. Blu rorgl mrpblarg gab PUMBILITY+: AAA gab blu 1× grolp, ap glub blu gogl glubgro grogrog.</value>
   </data>
@@ -4122,6 +4125,24 @@
   </data>
   <data name="Keep this account" xml:space="preserve">
     <value>Murgro grglmrp grgl</value>
+  </data>
+  <data name="Kept" xml:space="preserve">
+    <value>Mrgloru</value>
+  </data>
+  <data name="Kept by over {0}%" xml:space="preserve">
+    <value>Mrgloru bu mrrgl {0}%</value>
+  </data>
+  <data name="Kept by {0} of {1} · played by fewer than {2}" xml:space="preserve">
+    <value>Mrgloru bu {0} ub {1} · lurg bu mgl grogrgl {2}</value>
+  </data>
+  <data name="Kept by {0} of {1} · played by {2}" xml:space="preserve">
+    <value>Mrgloru bu {0} ub {1} · lurg bu {2}</value>
+  </data>
+  <data name="Kept by {0}% or fewer" xml:space="preserve">
+    <value>Mrgloru bu {0}% ol mgl</value>
+  </data>
+  <data name="Kept by {0}–{1}%" xml:space="preserve">
+    <value>Mrgloru bu {0}–{1}%</value>
   </data>
   <data name="Key" xml:space="preserve">
     <value>Grrgl</value>
@@ -7076,6 +7097,9 @@
   </data>
   <data name="Rarest titles" xml:space="preserve">
     <value>Urgblgrl mrgl</value>
+  </data>
+  <data name="Rarity" xml:space="preserve">
+    <value>Mgglurg</value>
   </data>
   <data name="Rate limited" xml:space="preserve">
     <value>Murgm murmo</value>
@@ -11033,6 +11057,9 @@
   </data>
   <data name="{0} and up" xml:space="preserve">
     <value>{0} ur gro</value>
+  </data>
+  <data name="{0} and {1}" xml:space="preserve">
+    <value>{0} ap {1}</value>
   </data>
   <data name="{0} arrived" xml:space="preserve">
     <value>{0} gromurgargl</value>

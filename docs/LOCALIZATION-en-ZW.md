@@ -664,10 +664,29 @@ Built from the standing syllables; `rogro` (a second of time) already existed an
 | import | grumla |
 | closing chart | grolm murgl |
 
+## The Rarity grouping (2026-09-11)
+
+Coined for the `/Pumbility` Play page's third grouping (docs/design/pumbility-overhaul.md D66): the
+option, its lede, the six band names, the caption and the Table's column. Reused, not re-coined:
+`maglmurp` (peers), `murgl` (chart), `glargub` (folder), `mrgloru` (hold / keep, recovered from *No peer
+holds it*), `lurg` (played), `bu` (by), `ub` (of), `mgl` / `mggl` (less / least), `grogrgl` (than), `ol`
+(or), `mrrgl` (over), `ap` (and), `algro` (every), `gropmur` (in), `a` (the), `murgablar` (build,
+recovered from the peers lede), `blarg` (from), `mag` (with), `mrp` (one), `murpargl` (first), `og`
+(at), `blugro` (half), `ug` (it), `morp` (your).
+
+| English | en-ZW | Notes |
+|---|---|---|
+| Rarity | Mgglurg | `mggl` (least) + `urg` — how few keep it. |
+| Kept | Mrgloru | The recovered *hold*, title-cased as the column and the band names' first word. |
+| counts (a folder counts) | grorpgl | `grorp` (number) + `gl`. |
+| when | ob | The recovered *if*; a Murloc does not split the two. |
+| these | blu | The recovered *this*; number unmarked. |
+| likely | murgab | Coined for the lede's *these are likely to be the hardest charts to score*. `bru` (be), `mrrrglmrgl` (hardest), `grorpmurm murm` (level range) are all recovered. |
+
 ## The level spread (2026-09-11)
 
 Coined for the PUMBILITY Breakdown card's level spread ([pumbility-overhaul.md](design/pumbility-overhaul.md)
-D66): the caption, the tile's peers line, the legend, the tooltip and each column's screen-reader label.
+D67): the caption, the tile's peers line, the legend, the tooltip and each column's screen-reader label.
 Reused, not re-coined: `maglmurp` (peers), `morp` (your, and yours), `blub` (you), `gurg` (hold, here
 *keep*), `algro` (each), `grorpmurm` (level), `gropmur` (in), `ropgl 50` (top 50), `blugrogl` (median),
 `mogrgl blugro` (middle half), `mrrgl grogrgl` (more than), `mr mggl` (at least, from *At least*),

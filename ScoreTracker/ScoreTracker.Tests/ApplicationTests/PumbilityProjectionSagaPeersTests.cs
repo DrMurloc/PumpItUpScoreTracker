@@ -175,6 +175,62 @@ public sealed partial class PumbilityProjectionSagaTests
     }
 
     [Fact]
+    public async Task RarityReachesTheLevelsHalfThePeersKeepAndListsTheChartsThereNobodyHolds()
+    {
+        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_609.59)
+            .WithChart(out var staple, ChartType.Single, 20)
+            .WithChart(out var half, ChartType.Single, 22)
+            .WithChart(out var edge, ChartType.Single, 24)
+            .WithChart(out var skipped, ChartType.Single, 20)
+            .WithChart(out var skippedToo, ChartType.Single, 22)
+            .WithChart(out var beyond, ChartType.Single, 24);
+        // Four peers keep the S20, two of them an S22 (exactly half), one an S24 (a quarter).
+        ctx.WithPumbilityPeer(out var a, staple, 990_000).WithPumbilityPeer(out var b, staple, 985_000)
+            .WithPumbilityPeer(staple, 980_000).WithPumbilityPeer(staple, 975_000);
+        ctx.WithPeerPhoenix2Score(a, half, 970_000).WithPeerPhoenix2Score(b, half, 965_000)
+            .WithPeerPhoenix2Score(a, edge, 960_000);
+        // The viewer has played one of the charts nobody keeps.
+        ctx.WithOwnScore(skippedToo, 950_000);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPeersPageQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Single),
+            CancellationToken.None);
+
+        Assert.Equal(new[] { 20, 22 }, page.LevelsInReach[ChartType.Single].ToArray());
+        // Every chart of those levels no peer holds — and nothing of the S24 only a quarter reach.
+        Assert.Equal(new[] { skipped.Id, skippedToo.Id }.ToHashSet(), page.UnheldCharts.Select(e => e.ChartId).ToHashSet());
+        Assert.DoesNotContain(page.UnheldCharts, e => e.ChartId == beyond.Id);
+        var mine = Assert.Single(page.UnheldCharts, e => e.ChartId == skippedToo.Id);
+        Assert.Equal(0, mine.Holders);
+        Assert.Equal(4, mine.PeerCount);
+        Assert.Equal(TierListCategory.Unrecorded, mine.Tier);
+        // Nobody scored it, so there is no count, grade or standing to read — but the viewer's own is theirs.
+        Assert.Equal(0, mine.Scored);
+        Assert.Null(mine.Projected);
+        Assert.Null(mine.MyPercentile);
+        Assert.Equal(950_000, (int)mine.MyScore!.Value);
+        Assert.Equal(1, mine.MyPoolRank);
+        // The charts the peers hold are the entries, exactly as before.
+        Assert.Equal(new[] { staple.Id, half.Id, edge.Id }.ToHashSet(), page.Entries.Select(e => e.ChartId).ToHashSet());
+    }
+
+    [Fact]
+    public async Task Phoenix1RarityReadsTheCompetitiveBandsPools()
+    {
+        var ctx = new ProjectionContext()
+            .WithChart(out var chart, ChartType.Single, 21)
+            .WithChart(out var other, ChartType.Single, 20)
+            .WithChart(out var nobody, ChartType.Single, 21);
+        ctx.WithPumbilityPeer(out var peer, chart, phoenix1Score: 975_000).WithOwnScore(chart, 960_000);
+        ctx.WithPeerPhoenix1Score(peer, other, 990_000);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPeersPageQuery(ctx.UserId, MixEnum.Phoenix),
+            CancellationToken.None);
+
+        Assert.Equal(new[] { 20, 21 }, page.LevelsInReach[ChartType.Single].ToArray());
+        Assert.Equal(nobody.Id, Assert.Single(page.UnheldCharts).ChartId);
+    }
+
+    [Fact]
     public async Task ThePeerIdsComeOffTheSameSweepAndAreEmptyWhereThereAreNoPeers()
     {
         var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_609.59)

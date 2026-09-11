@@ -1004,6 +1004,12 @@ html.sheet-open .more-sheet-scrim {
     display: block;
 }
 
+/* Comfortable wraps the name in its tooltip, whose root is inline-block and, inside the body's
+   block layout, would grow to the whole name and leave the "…" nothing to cut. */
+.draw-card .tier-chart-card-body > .mud-tooltip-root {
+    display: block;
+}
+
 /* ===== Randomizer page (draw-first layout) ===== */
 
 .rand-header {
@@ -2156,6 +2162,33 @@ html.sheet-open .more-sheet-scrim {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* The name's line: the name and, when the list prints one, its value. The name's tooltip root is
+   the part allowed to shrink, so a long name ends in "…" where the value starts; the value keeps
+   its width at the line's end. */
+.tier-chart-card-nameline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.tier-chart-card-nameline > .mud-tooltip-root {
+    min-width: 0;
+}
+
+.tier-chart-card-nameline-value {
+    flex: none;
+    margin-left: auto;
+    border-radius: 4px;
+}
+
+/* 14px against subtitle1's 16px, so more names fit whole at two cards to a row. subtitle1's line
+   height is a unitless ratio, so the line shrinks with the text — which keeps a name with no score
+   under it centered on the jacket's bottom edge. */
+.tier-chart-card-head .tier-chart-card-name {
+    font-size: 14px;
 }
 
 .tier-chart-card-actions {
@@ -5819,6 +5852,12 @@ button.chart-card-art {
     font-weight: 600;
     font-size: .88rem;
     line-height: 1.25;
+}
+
+/* The name is its own element because a "…" never draws on a flex container — declared on the
+   h3, a long name clips mid-letter and pushes the link icon out of view. */
+.chart-card-name {
+    min-width: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

@@ -4,6 +4,7 @@ using System.Linq;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.Services;
+using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -148,6 +149,63 @@ public sealed class PumbilityPeerPoolsTests
 
         var four = PumbilityPeerPools.Build(records.Take(4).ToArray(), Voices(peers.Take(4).ToArray()), catalog, Scoring);
         Assert.False(four.Charts.ContainsKey(low.Id));
+    }
+
+    [Fact]
+    public void ALevelIsInReachWhenAtLeastHalfThePeersHoldingAnythingKeepAChartOfIt()
+    {
+        var s20 = Chart(20);
+        var s21 = Chart(21);
+        var otherS21 = Chart(21);
+        var s23 = Chart(23);
+        var catalog = new[] { s20, s21, otherS21, s23 }.ToDictionary(c => c.Id);
+        var peers = Enumerable.Range(0, 4).Select(_ => PeerVoice.Account(Guid.NewGuid())).ToArray();
+
+        // Every peer keeps an S20. Two keep an S21, different ones: exactly half, and it is the
+        // level that counts. One keeps an S23, a quarter. A chart outside the catalog has no level.
+        var summary = Summary(peers,
+            new[] { s20.Id, s21.Id, s23.Id, Guid.NewGuid() },
+            new[] { s20.Id, otherS21.Id },
+            new[] { s20.Id },
+            new[] { s20.Id });
+
+        Assert.Equal(new[] { 20, 21 }, PumbilityPeerPools.LevelsInReach(summary, catalog).ToArray());
+    }
+
+    [Fact]
+    public void APeerWhosePoolIsEmptyCountsAgainstNoLevel()
+    {
+        var s22 = Chart(22);
+        var catalog = new Dictionary<Guid, Chart> { [s22.Id] = s22 };
+        var peers = Enumerable.Range(0, 3).Select(_ => PeerVoice.Account(Guid.NewGuid())).ToArray();
+
+        // One peer keeps an S22 and two hold nothing: one of the one peer holding anything.
+        var summary = Summary(peers, new[] { s22.Id }, Array.Empty<Guid>(), Array.Empty<Guid>());
+
+        Assert.Equal(new[] { 22 }, PumbilityPeerPools.LevelsInReach(summary, catalog).ToArray());
+    }
+
+    [Fact]
+    public void ABoardPeerCountsLikeAnAccountAndNoPoolsMeanNoLevels()
+    {
+        var s20 = Chart(20);
+        var s24 = Chart(24);
+        var catalog = new[] { s20, s24 }.ToDictionary(c => c.Id);
+        var peers = new[] { PeerVoice.Account(Guid.NewGuid()), PeerVoice.FromBoard(7, "BOARD#1234") };
+
+        var summary = Summary(peers, new[] { s20.Id }, new[] { s24.Id });
+
+        Assert.Equal(new[] { 20, 24 }, PumbilityPeerPools.LevelsInReach(summary, catalog).ToArray());
+        Assert.Empty(PumbilityPeerPools.LevelsInReach(Summary(Array.Empty<PeerVoice>()), catalog));
+    }
+
+    /// <summary>A summary holding exactly these pools, one per peer in order, and no chart statistics.</summary>
+    private static PeerPoolSummary Summary(PeerVoice[] peers, params Guid[][] pools)
+    {
+        return new PeerPoolSummary(peers.ToHashSet(),
+            peers.Select((peer, i) => (peer, pool: (IReadOnlySet<Guid>)pools[i].ToHashSet()))
+                .ToDictionary(p => p.peer, p => p.pool),
+            new Dictionary<Guid, PeerPoolChart>());
     }
 
     private static Chart Chart(int level)

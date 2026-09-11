@@ -2776,6 +2776,9 @@
   <data name="Event mode or premium?" xml:space="preserve">
     <value>¿Modo evento o premium?</value>
   </data>
+  <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
+    <value>Cada chart de {0}, las carpetas de las que tus pares sacan su PUMBILITY, con los que menos de ellos guardan primero. Probablemente sean los charts más difíciles de puntuar de tu rango de niveles. Una carpeta cuenta cuando al menos la mitad de tus pares guarda un chart de ella.</value>
+  </data>
   <data name="Every chart pays its level value, scaled by how well you scored it and by how long the song is. The grade table is PUMBILITY+: AAA is the 1× target, and below it the price drops fast." xml:space="preserve">
     <value>Cada chart paga el valor de su nivel, escalado según qué tan bien lo jugaste y cuánto dura la canción. La tabla de grados es PUMBILITY+: AAA es la meta de 1×, y por debajo el precio cae rápido.</value>
   </data>
@@ -4104,6 +4107,24 @@
   </data>
   <data name="Keep this account" xml:space="preserve">
     <value>Conservar esta cuenta</value>
+  </data>
+  <data name="Kept" xml:space="preserve">
+    <value>Guardado</value>
+  </data>
+  <data name="Kept by over {0}%" xml:space="preserve">
+    <value>Guardado por más del {0}%</value>
+  </data>
+  <data name="Kept by {0} of {1} · played by fewer than {2}" xml:space="preserve">
+    <value>Guardado por {0} de {1} · jugado por menos de {2}</value>
+  </data>
+  <data name="Kept by {0} of {1} · played by {2}" xml:space="preserve">
+    <value>Guardado por {0} de {1} · jugado por {2}</value>
+  </data>
+  <data name="Kept by {0}% or fewer" xml:space="preserve">
+    <value>Guardado por el {0}% o menos</value>
+  </data>
+  <data name="Kept by {0}–{1}%" xml:space="preserve">
+    <value>Guardado por el {0}–{1}%</value>
   </data>
   <data name="Key" xml:space="preserve">
     <value>Clave</value>
@@ -7038,6 +7059,9 @@
   </data>
   <data name="Rarest titles" xml:space="preserve">
     <value>Títulos más raros</value>
+  </data>
+  <data name="Rarity" xml:space="preserve">
+    <value>Rareza</value>
   </data>
   <data name="Rate limited" xml:space="preserve">
     <value>Limitadas</value>
@@ -10965,6 +10989,9 @@
   </data>
   <data name="{0} and up" xml:space="preserve">
     <value>{0} o más</value>
+  </data>
+  <data name="{0} and {1}" xml:space="preserve">
+    <value>{0} y {1}</value>
   </data>
   <data name="{0} arrived" xml:space="preserve">
     <value>{0} entraron</value>

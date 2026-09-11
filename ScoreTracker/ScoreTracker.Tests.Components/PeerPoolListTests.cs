@@ -164,6 +164,88 @@ public sealed class PeerPoolListTests : ComponentTestBase
         Assert.Contains("tier-row-pass", row.ClassName);
     }
 
+    [Fact]
+    public void RarityBandsEveryChartInReachByHowFewPeersKeepItAndFoldsTheMostKept()
+    {
+        // 23 peers. Nobody keeps the two unheld charts (their own section); two keep Few (1–10%), five keep
+        // Some (10–25%), nine keep Many (25–50%, folded by default). An S23 outside the levels never shows.
+        var f = new Fixture().InReach(20, 21)
+            .Held("Few", TierListCategory.Underrated, holders: 2, points: 40, mine: null, level: 21, scored: 9)
+            .Held("Some", TierListCategory.Hard, holders: 5, points: 120, mine: null, level: 20, scored: 11)
+            .Held("Many", TierListCategory.Easy, holders: 9, points: 300, mine: null, level: 21, scored: 15)
+            .Held("Elsewhere", TierListCategory.Underrated, holders: 1, points: 3, mine: null, level: 23)
+            .Unheld("Untouched", level: 20)
+            .Unheld("Tried", level: 21, scored: 6, projected: 951_000);
+
+        var cut = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
+            .Add(x => x.GroupBy, PeerGrouping.Rarity).Add(x => x.Density, UiDensity.Comfortable));
+
+        Assert.Equal(new[] { "Not in anyone's PUMBILITY", "Kept by 1–10%", "Kept by 10–25%", "Kept by 25–50%" },
+            cut.FindAll(".tier-section-name").Select(n => n.TextContent).ToArray());
+        // 25% and up starts folded: three bodies for four sections.
+        Assert.Equal(3, cut.FindAll(".tier-section-body").Count);
+        Assert.DoesNotContain("Elsewhere", cut.Markup);
+        // The chart nobody played leads the one five and more played; then each band in turn.
+        Assert.Equal(new[] { "Untouched", "Tried", "Few", "Some" },
+            cut.FindAll(".tier-chart-card-name").Select(n => n.TextContent).ToArray());
+    }
+
+    [Fact]
+    public void ChartsNobodyKeepsAreAlwaysASectionApartFromTheRarestBand()
+    {
+        // Two hundred peers: one keeper is half a percent, which is the rarest band — and still not the
+        // same section as a chart nobody keeps.
+        var f = new Fixture().WithPeers(200)
+            .Held("OneKeeper", TierListCategory.Underrated, holders: 1, points: 3, mine: null, scored: 12)
+            .Unheld("NoKeeper", scored: 7, projected: 948_000);
+
+        var cut = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
+            .Add(x => x.GroupBy, PeerGrouping.Rarity).Add(x => x.Density, UiDensity.Comfortable));
+
+        Assert.Equal(new[] { "Not in anyone's PUMBILITY", "Kept by 1% or fewer" },
+            cut.FindAll(".tier-section-name").Select(n => n.TextContent).ToArray());
+        Assert.Equal(new[] { "NoKeeper", "OneKeeper" },
+            cut.FindAll(".tier-chart-card-name").Select(n => n.TextContent).ToArray());
+    }
+
+    [Fact]
+    public void UnderRarityTheCaptionSaysHowManyKeepAndPlayedIt()
+    {
+        var f = new Fixture()
+            .Held("Kept", TierListCategory.Hard, holders: 2, points: 40, mine: null, scored: 20)
+            .Unheld("Nobody");
+
+        var cut = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
+            .Add(x => x.GroupBy, PeerGrouping.Rarity).Add(x => x.Density, UiDensity.Comfortable));
+
+        Assert.Contains("Kept by 2 of 23 · played by 20", cut.Markup);
+        // Nobody keeps it and fewer than five played it, which is as close as the pools can count.
+        Assert.Contains("Kept by 0 of 23 · played by fewer than 5", cut.Markup);
+    }
+
+    [Fact]
+    public void UnderRarityTheTableCarriesKeptAndPlayedInsteadOfPeersAndBetterThan()
+    {
+        var f = new Fixture()
+            .Held("Row", TierListCategory.Hard, holders: 2, points: 40, mine: 966_887, myRank: 20, scored: 17,
+                percentile: 0.11)
+            .Unheld("Nobody");
+
+        var cut = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
+            .Add(x => x.GroupBy, PeerGrouping.Rarity).Add(x => x.Density, UiDensity.Table));
+
+        var headers = cut.FindAll("thead th").Select(h => h.TextContent.Trim()).ToArray();
+        Assert.Contains("Kept", headers);
+        Assert.Contains("Played", headers);
+        Assert.DoesNotContain("Peers", headers);
+        Assert.DoesNotContain("Better Than", headers);
+        var row = cut.FindAll("tbody tr").Single(r => r.TextContent.Contains("Row"));
+        Assert.Contains("2 of 23", row.TextContent);
+        Assert.Equal("17", row.QuerySelector("td.pmb-num")!.TextContent.Trim());
+        var nobody = cut.FindAll("tbody tr").Single(r => r.TextContent.Contains("Nobody"));
+        Assert.Equal("under 5", nobody.QuerySelector("td.pmb-num")!.TextContent.Trim());
+    }
+
     // ------------------------------------------------------------------ fixture
 
     /// <summary>
@@ -194,6 +276,9 @@ public sealed class PeerPoolListTests : ComponentTestBase
     private sealed class Fixture
     {
         private readonly List<PeerPoolEntry> _entries = new();
+        private readonly List<PeerPoolEntry> _unheld = new();
+        private int _peers = 23;
+        private IReadOnlyList<int> _levels = new[] { 21 };
         private readonly List<PeerAloneEntry> _alone = new();
         private readonly Dictionary<Guid, PumbilityTarget> _gains = new();
         private readonly Dictionary<string, Guid> _ids = new();
@@ -205,11 +290,12 @@ public sealed class PeerPoolListTests : ComponentTestBase
         public Guid Id(string name) => _ids[name];
 
         public Fixture Held(string name, TierListCategory tier, int holders, int points, int? mine, int? myRank = null,
-            int? median = null, double? gain = null, int? projected = null, double? percentile = null)
+            int? median = null, double? gain = null, int? projected = null, double? percentile = null, int level = 21,
+            int? scored = null)
         {
-            var chart = NewChart(name);
-            _entries.Add(new PeerPoolEntry(chart.Id, ChartType.Single, holders, 23, points, tier, _entries.Count,
-                holders, myRank, mine, mine == null ? null : PhoenixPlate.MarvelousGame, percentile, median));
+            var chart = NewChart(name, level);
+            _entries.Add(new PeerPoolEntry(chart.Id, ChartType.Single, holders, _peers, points, tier, _entries.Count,
+                scored ?? holders, myRank, mine, mine == null ? null : PhoenixPlate.MarvelousGame, percentile, median));
             if (gain is { } g)
                 _gains[chart.Id] = new PumbilityTarget(chart.Id, projected ?? 980_000, g, mine, false, null);
             return this;
@@ -229,18 +315,41 @@ public sealed class PeerPoolListTests : ComponentTestBase
             return this;
         }
 
+        /// <summary>A chart of the levels in reach no peer holds; nobody scored it unless told otherwise.</summary>
+        public Fixture Unheld(string name, int level = 21, int scored = 0, int? mine = null, int? projected = null)
+        {
+            var chart = NewChart(name, level);
+            _unheld.Add(new PeerPoolEntry(chart.Id, ChartType.Single, 0, _peers, 0, TierListCategory.Unrecorded, 0,
+                scored, null, mine, mine == null ? null : PhoenixPlate.MarvelousGame, null, projected));
+            return this;
+        }
+
+        /// <summary>How many peers every entry added after this counts against.</summary>
+        public Fixture WithPeers(int peers)
+        {
+            _peers = peers;
+            return this;
+        }
+
+        public Fixture InReach(params int[] levels)
+        {
+            _levels = levels;
+            return this;
+        }
+
         public PumbilityPeersPageRecord Page()
         {
             return new PumbilityPeersPageRecord(MixEnum.Phoenix2, ChartType.Single,
                 new Dictionary<ChartType, PeerGroup> { [ChartType.Single] = PeerGroup.Pumbility(17_609.59, 23, 50) },
-                _entries, _alone, Array.Empty<PeerRosterEntry>(), 0, null);
+                _entries, _alone, Array.Empty<PeerRosterEntry>(), 0, null, _unheld,
+                new Dictionary<ChartType, IReadOnlyList<int>> { [ChartType.Single] = _levels });
         }
 
-        private Chart NewChart(string name)
+        private Chart NewChart(string name, int level = 21)
         {
             var chart = new Chart(Guid.NewGuid(), MixEnum.Phoenix2,
                 new Song(name, SongType.Arcade, new Uri("https://piu.test/i.png"), TimeSpan.FromMinutes(2), "Artist", 180),
-                ChartType.Single, 21, MixEnum.Phoenix2, null, null);
+                ChartType.Single, level, MixEnum.Phoenix2, null, null);
             Charts[chart.Id] = chart;
             _ids[name] = chart.Id;
             return chart;

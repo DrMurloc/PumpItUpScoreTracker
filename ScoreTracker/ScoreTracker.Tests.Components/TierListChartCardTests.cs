@@ -75,14 +75,28 @@ public sealed class TierListChartCardTests : ComponentTestBase
         Assert.Equal("true", cut.Find("[data-testid='peer-score']").GetAttribute("aria-expanded"));
     }
 
+    [Fact]
+    public void APrintedValueSharesTheNamesLineSoALongNameStopsWhereTheValueStarts()
+    {
+        // The value takes the end of the name's line, not the jacket corner, so the name is what
+        // gives way when the two do not fit side by side.
+        var cut = RenderComponent<TierListChartCard>(p => p
+            .Add(x => x.Chart, ProbeChart())
+            .Add(x => x.CornerBadge, "+18")
+            .Add(x => x.CornerBadgeClass, "pmb-corner-gain"));
+
+        var line = cut.Find(".tier-chart-card-head .tier-chart-card-nameline");
+        Assert.Equal("Sarabande", line.QuerySelector(".tier-chart-card-name")!.TextContent);
+        var value = line.QuerySelector(".tier-chart-card-corner")!;
+        Assert.Equal("+18", value.TextContent.Trim());
+        Assert.Contains("pmb-corner-gain", value.ClassName);
+        Assert.Empty(cut.FindAll(".tier-chart-card-jacket .tier-chart-card-corner"));
+    }
+
     private IRenderedComponent<TierListChartCard> RenderScored(PeerStanding? standing,
         EventCallback<Guid> onOpen = default)
     {
-        var chart = new Chart(Guid.NewGuid(), MixEnum.Phoenix,
-            new Song(Name.From("Sarabande"), SongType.Arcade,
-                new Uri("https://piuimages.arroweclip.se/probe.png"), TimeSpan.Zero,
-                Name.From("Probe"), null),
-            ChartType.Double, DifficultyLevel.From(18), MixEnum.Phoenix, null, null);
+        var chart = ProbeChart();
         var score = new RecordedPhoenixScore(chart.Id, PhoenixScore.From(972_000), null, false,
             new DateTimeOffset(2026, 8, 1, 0, 0, 0, TimeSpan.Zero));
 
@@ -95,15 +109,16 @@ public sealed class TierListChartCardTests : ComponentTestBase
 
     private IRenderedComponent<TierListChartCard> Render(bool showProjected, int? projected)
     {
-        var chart = new Chart(Guid.NewGuid(), MixEnum.Phoenix,
+        return RenderComponent<TierListChartCard>(p => p
+            .Add(x => x.Chart, ProbeChart())
+            .Add(x => x.ShowProjectedScore, showProjected)
+            .Add(x => x.ProjectedScore, projected == null ? null : PhoenixScore.From(projected.Value)));
+    }
+
+    private static Chart ProbeChart() =>
+        new(Guid.NewGuid(), MixEnum.Phoenix,
             new Song(Name.From("Sarabande"), SongType.Arcade,
                 new Uri("https://piuimages.arroweclip.se/probe.png"), TimeSpan.Zero,
                 Name.From("Probe"), null),
             ChartType.Double, DifficultyLevel.From(18), MixEnum.Phoenix, null, null);
-
-        return RenderComponent<TierListChartCard>(p => p
-            .Add(x => x.Chart, chart)
-            .Add(x => x.ShowProjectedScore, showProjected)
-            .Add(x => x.ProjectedScore, projected == null ? null : PhoenixScore.From(projected.Value)));
-    }
 }
