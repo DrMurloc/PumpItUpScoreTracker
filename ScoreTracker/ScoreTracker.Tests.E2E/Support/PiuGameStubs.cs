@@ -57,6 +57,25 @@ internal static class PiuGameStubs
     }
 
     /// <summary>
+    ///     The Phoenix 2 best list as the console script walks it: two trimmed pages of the redesigned
+    ///     markup whose pager ends the list at page 2, and a bare root page to run the script on, since
+    ///     it fetches same-origin the way it does from the player's own tab. Maps nothing else, so a
+    ///     test calls it on a reset server after any login it needs.
+    /// </summary>
+    public static void MapPhoenix2BestScorePages(this WireMockServer server)
+    {
+        server.Given(Request.Create().WithPath("/my_page/my_best_score.php").WithParam("page", "1").UsingGet())
+            .RespondWith(HtmlFixture("BestScores_Phoenix2_Page1.html"));
+        server.Given(Request.Create().WithPath("/my_page/my_best_score.php").WithParam("page", "2").UsingGet())
+            .RespondWith(HtmlFixture("BestScores_Phoenix2_Page2.html"));
+        server.Given(Request.Create().WithPath("/").UsingGet())
+            .RespondWith(Response.Create()
+                .WithStatusCode(200)
+                .WithHeader("Content-Type", "text/html; charset=utf-8")
+                .WithBody("<!DOCTYPE html><html><body></body></html>"));
+    }
+
+    /// <summary>
     ///     The wrong-password shape: piugame still issues a session cookie, but the
     ///     account page carries no profile/title list, which GetAccountData reports as
     ///     AccountName "INVALID" and the login flow maps to InvalidCredentialException.

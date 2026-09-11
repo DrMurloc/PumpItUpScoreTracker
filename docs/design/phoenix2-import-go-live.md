@@ -45,9 +45,13 @@ Verified against piugame.com with the test account (DRMURLOC #7251, 5 plays), sn
 
 Evidence caveats (n=1 account, 5 plays):
 
-- Multi-page pagination of the new best list is **unverified** (account fits one page;
+- ~~Multi-page pagination of the new best list is **unverified** (account fits one page;
   out-of-range `?page=` clamps to identical bytes, consistent with P2 board pages). The
-  owner will generate more data; re-run the recon before trusting the pager walk.
+  owner will generate more data; re-run the recon before trusting the pager walk.~~
+  **Verified 2026-09-11** with `Page_snapshot_instrument_dumps_both_sites_my_pages` on an
+  account holding 216 bests: 12 cards a page over 18 pages, and the last-page button carries
+  `location.href='?&&page=18'` in the same grammar as the classic list. A trimmed copy of two
+  of those pages is the E2E fixture the manual import's console script is tested against.
 - The one broken best observed scored 0 (a walkoff). **Assume broken bests usually carry
   real partial scores** (owner-confirmed expectation) — broken detection keys on the empty
   plate slot, never on `score == 0`.
