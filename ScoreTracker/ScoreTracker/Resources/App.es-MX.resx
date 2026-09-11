@@ -3626,7 +3626,7 @@
     <value>Cuántos (1–10, por defecto 3)</value>
   </data>
   <data name="how many charts of each level your peers keep in their top 50, and where yours sit" xml:space="preserve">
-    <value>cuántos charts de cada nivel tienen tus pares en su top 50, y dónde caen los tuyos</value>
+    <value>cuántos charts de cada nivel guardan tus pares en su top 50, y dónde caen los tuyos</value>
   </data>
   <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
     <value>Cuántos charts de Co-Op has superado, por número de jugadores.</value>
@@ -3641,7 +3641,7 @@
     <value>Cuántos de tus pares de PUMBILITY lo tienen en su top 50</value>
   </data>
   <data name="how many peers keep that many" xml:space="preserve">
-    <value>cuántos pares tienen esa cantidad</value>
+    <value>cuántos pares guardan esa cantidad</value>
   </data>
   <data name="How March of Murlocs works" xml:space="preserve">
     <value>Cómo funciona March of Murlocs</value>
@@ -4100,7 +4100,7 @@
     <value>Conservar</value>
   </data>
   <data name="keep at least one" xml:space="preserve">
-    <value>tienen al menos uno</value>
+    <value>guardan al menos uno</value>
   </data>
   <data name="Keep it" xml:space="preserve">
     <value>Conservarla</value>
@@ -11642,10 +11642,10 @@
     <value>{0}: un SSS+ en {1} vale un 900,000 en {2}</value>
   </data>
   <data name="{0}: charts of each level your peers keep in their top 50" xml:space="preserve">
-    <value>{0}: charts de cada nivel que tus pares tienen en su top 50</value>
+    <value>{0}: charts de cada nivel que tus pares guardan en su top 50</value>
   </data>
   <data name="{0}: your peers keep a median of {1}, middle half {2} to {3}; you keep {4}" xml:space="preserve">
-    <value>{0}: tus pares tienen una mediana de {1}, mitad central de {2} a {3}; tú tienes {4}</value>
+    <value>{0}: tus pares guardan una mediana de {1}, mitad central de {2} a {3}; tú guardas {4}</value>
   </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>hace {0} d</value>
@@ -11693,7 +11693,7 @@
     <value>· 1 par ({0}%)</value>
   </data>
   <data name="· like the {0}% who keep none" xml:space="preserve">
-    <value>· como el {0}% que no tiene ninguno</value>
+    <value>· como el {0}% que no guarda ninguno</value>
   </data>
   <data name="· more than {0}% of your peers" xml:space="preserve">
     <value>· más que el {0}% de tus pares</value>

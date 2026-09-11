@@ -3643,7 +3643,7 @@
     <value>Gro mrblgrl (1–10, plglgrgllurg 3)</value>
   </data>
   <data name="how many charts of each level your peers keep in their top 50, and where yours sit" xml:space="preserve">
-    <value>gam mrgl murgl ub algro grorpmurm morp maglmurp gurg gropmur grglblarg ropgl 50, ap gorpo morp mrogl</value>
+    <value>gam mrgl murgl ub algro grorpmurm morp maglmurp mrgloru gropmur grglblarg ropgl 50, ap gorpo morp mrogl</value>
   </data>
   <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
     <value>Gro mrblgrl glorg-mr murgl plglgrrgl blarggrrglglorg, murm morp glorgmurp.</value>
@@ -3658,7 +3658,7 @@
     <value>Mrgl blarg PUMBILITY maglmurp mrgloru ur grglblarg mrrgl 50</value>
   </data>
   <data name="how many peers keep that many" xml:space="preserve">
-    <value>gam mrgl maglmurp gurg argo mrgl</value>
+    <value>gam mrgl maglmurp mrgloru argo mrgl</value>
   </data>
   <data name="How March of Murlocs works" xml:space="preserve">
     <value>Gam Urgmr mrgl Murlocmrp grogrol</value>
@@ -4118,7 +4118,7 @@
     <value>Algo</value>
   </data>
   <data name="keep at least one" xml:space="preserve">
-    <value>gurg mr mggl mrp</value>
+    <value>mrgloru mr mggl mrp</value>
   </data>
   <data name="Keep it" xml:space="preserve">
     <value>Golba mo</value>
@@ -11710,10 +11710,10 @@
     <value>{0}: a SSS+ ap {1} lu gromb a 900,000 ap {2}</value>
   </data>
   <data name="{0}: charts of each level your peers keep in their top 50" xml:space="preserve">
-    <value>{0}: murgl ub algro grorpmurm morp maglmurp gurg gropmur grglblarg ropgl 50</value>
+    <value>{0}: murgl ub algro grorpmurm morp maglmurp mrgloru gropmur grglblarg ropgl 50</value>
   </data>
   <data name="{0}: your peers keep a median of {1}, middle half {2} to {3}; you keep {4}" xml:space="preserve">
-    <value>{0}: morp maglmurp gurg a blugrogl ub {1}, mogrgl blugro {2} ro {3}; blub gurg {4}</value>
+    <value>{0}: morp maglmurp mrgloru a blugrogl ub {1}, mogrgl blugro {2} ro {3}; blub mrgloru {4}</value>
   </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>{0}o mrgla</value>
@@ -11761,7 +11761,7 @@
     <value>· 1 maglmurp ({0}%)</value>
   </data>
   <data name="· like the {0}% who keep none" xml:space="preserve">
-    <value>· plglro a {0}% murpo gurg bomo</value>
+    <value>· plglro a {0}% murpo mrgloru bomo</value>
   </data>
   <data name="· more than {0}% of your peers" xml:space="preserve">
     <value>· mrrgl grogrgl {0}% ub morp maglmurp</value>

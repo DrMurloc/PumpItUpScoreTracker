@@ -11693,7 +11693,7 @@
     <value>· 동료 1명 ({0}%)</value>
   </data>
   <data name="· like the {0}% who keep none" xml:space="preserve">
-    <value>· 하나도 없는 {0}%와 같음</value>
+    <value>· 하나도 보유하지 않은 {0}%와 같음</value>
   </data>
   <data name="· more than {0}% of your peers" xml:space="preserve">
     <value>· 동료의 {0}%보다 많음</value>
