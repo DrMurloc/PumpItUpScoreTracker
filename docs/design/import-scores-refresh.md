@@ -133,6 +133,11 @@ on Phoenix 2 it found no scores and told a signed-in player to sign in.
 - On upload a broken row needs no plate, saves as broken, and is saved only while "Record broken
   scores as your best" is ticked — the rule the official import already follows. Before this every
   CSV row was saved as a pass.
+- A broken row can only raise a record (owner, 2026-09-11): it fills a chart with no record or
+  replaces a lower broken one, and never lowers a record or touches a pass. The Phoenix 2 best list
+  keeps a chart's first failed attempt until it is passed (stage-breaks-and-max-combo.md D17), so a
+  script CSV can carry a broken card below a better fail the import already recorded, and uploading
+  it would have dragged that record back down. Passing rows stay authoritative (score-truth-model.md D9).
 - Step 3's copy names the site through `{0}`.
 
 ## Field-test rounds
