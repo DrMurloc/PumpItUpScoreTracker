@@ -76,6 +76,30 @@ public sealed class PhoenixScoreFileExtractorTests
     }
 
     [Fact]
+    public async Task ABlankIsBrokenCellReadsAsAPass()
+    {
+        // A hand-kept sheet marks only its broken rows and leaves the rest empty.
+        var (scores, errors) = await Extract(Header + "\"Arcana Force\",D20,990032,sss,fg,\r\n");
+
+        var score = Assert.Single(scores);
+        Assert.Empty(errors);
+        Assert.False(score.IsBroken);
+    }
+
+    [Fact]
+    public async Task AnUnreadableIsBrokenCellFailsItsOwnRowAndTheRestStillImport()
+    {
+        // CsvHelper used to throw converting the cell outside the per-row catch, and the page then
+        // rejected the whole file without naming a row.
+        var (scores, errors) = await Extract(Header
+                                             + "\"Arcana Force\",D20,990032,sss,fg,FALSO\r\n"
+                                             + "\"Arcana Force\",D20,590032,x_d,,true\r\n");
+
+        Assert.True(Assert.Single(scores).IsBroken);
+        Assert.Single(errors);
+    }
+
+    [Fact]
     public async Task ChartsResolveInTheMixTheFileIsUploadedTo()
     {
         await Extract(Header + "\"Arcana Force\",D20,990032,sss,fg,false\r\n", MixEnum.Phoenix2);
