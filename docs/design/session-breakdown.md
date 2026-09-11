@@ -15,6 +15,10 @@
 > sections retire in favour of the chart details dialog's boards, and the repeated-play highlight
 > bug is fixed. Mock (round 3, owner-locked):
 > <https://claude.ai/code/artifact/d8c512fa-d348-4912-915e-f6ab9c3e5d42>
+>
+> **Revised 2026-09-11** (D50–D51): "+N over P1" marks only the first Phoenix 2 play past
+> your Phoenix 1 best, and "Attempt N" counts every play of the chart in its mix rather than
+> the plays in one session.
 
 The page stops being a list of equal cards. **The most recent session renders big**; everything
 older collapses to a board-skinned table with a date, three counts and a **View** button that
@@ -80,7 +84,9 @@ positions.
 | D46 | **Superseded 2026-09-05 (peers-abstraction.md D15): glow is the player's threshold rule, and *Off* switches off the Perfect Game glow too — *"having PG only lets them opt back into PGs"*.** ~~**A Perfect Game always wears the prism glow**~~ (reversed at the 2026-08-25 field test, before the shared-PG mute ever reached players). The mute answered the ties-at-1.0 offender by dimming shared PGs — and promptly made the owner's own PGs on low charts glow *nothing*, because below the capture floor there is no cohort at all. The ruling: 1,000,000 cannot be beaten, so the glow is the achievement's own, not a rarity claim — `SessionScore.IsPerfectGame` forces prism + glow-3 on rows and cards regardless of cohort. The standing line still prints "PG · x of y peers have it" where a cohort exists — that is still the honest fact. |
 | D47 | **⬆ retires on this page** (owner, 2026-08-25). The competitive readout (`22.8 (+0.2)`, D31) says it with a number. The flag stays in the model and on the Discord card; rows from batches before the baseline capture began (2026-08-08) simply show no mark. |
 | D48 | **A PUMBILITY gain on a card wears the established chip** — `PumbilityDelta` inside `tier-chart-card-corner` + `pmb-corner-gain` (the Play page's projected-gain chip) — on the score line, aligned right. Rows keep their crown-adjacent gain badge. |
-| D49 | **Attempt threading**: adjacent same-chart rows in All plays are joined by a dotted rail; the "Attempt N" caption renders only once the chart reaches **5+ plays in the session**. To keep threads adjacent, All plays orders level-desc → chart → time-desc. The journal stays a flat neutral log (D6) — the rail annotates, it never groups or hides. |
+| D49 | **Attempt threading**: adjacent same-chart rows in All plays are joined by a dotted rail; ~~the "Attempt N" caption renders only once the chart reaches **5+ plays in the session**~~ (**superseded 2026-09-11 by D51**: the number counts every play of the chart in its mix). To keep threads adjacent, All plays orders level-desc → chart → time-desc. The journal stays a flat neutral log (D6) — the rail annotates, it never groups or hides. |
+| D50 | **"+N over P1" marks the first Phoenix 2 play past your Phoenix 1 best, and only that one** (owner, 2026-09-10: *"it should only show the FIRST time"*). Every session row carries `PreviousBest` — the best **passing** score in that mix before the play — not just upscores, and a play whose previous best already reached the Phoenix 1 best wears no mark. Before this, a repeat or a play that never became the record carried no previous best, so every one of them that scored above Phoenix 1 earned the mark again. Passing-only is also what the classifier compares against: `BestAttemptPolicy` ranks any pass above any break, so a failed first attempt at 960,000 no longer turns a later 930,000 upscore over a 900,000 pass into "Played". |
+| D51 | **"Attempt N" is the play's number among every play of that chart in its mix** (owner, 2026-09-10: *"how many times you've played a chart ever in a mix, not just within the one session"*). The session feed counts the chart's journal rows in that mix up to and including the play — records, plays that never beat one, stage breaks — and carries the number on the row. The caption prints from attempt 5 up, on every row of a run except the newest, whose badges tell the ending (D49); a chart played once in a session is its own run's newest play and stays uncaptioned. The number is what the journal holds: gap-free on Phoenix 2, and on Phoenix 1 it counts from the June 2026 backfill. |
 
 ### Deliberately not decided here
 

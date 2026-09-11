@@ -65,7 +65,7 @@ the copy deck below is the mock's copy verbatim.
 | Manual footnote | For re-importing older scores |
 | Step 1 | Choose which pages of your best scores to pull. Leave To page empty for all of them. |
 | Step 2 | Copy the script. |
-| Step 3 | While logged in on phoenix.piugame.com, paste it into the browser console (F12) — it downloads a CSV of your scores. Ad blockers can break it. |
+| Step 3 | While logged in on {0}, paste it into the browser console (F12) — it downloads a CSV of your scores. Ad blockers can break it. `{0}` is the selected mix's site (amended 2026-09-11). |
 | Step 4 | Upload the CSV here — also takes a hand-kept spreadsheet with the same columns. |
 | Skeleton caption | Imported scores will appear here as they come in. |
 | Confirming | Only new or improved scores will be saved. Saving can't be undone — stopping midway keeps what's already saved. |
@@ -83,7 +83,8 @@ Voice: second person, "PIU Scores" (with the space), no first-person "I", no apo
 - The route stays `/UploadPhoenixScores` (the Import widget and shell menus link it); the
   user-facing title becomes "Import Scores", matching the nav and the widget.
 - The CSV wire shape (`Song,Difficulty,Score,LetterGrade,Plate`) and
-  `PhoenixScoreFileExtractor` are untouched.
+  `PhoenixScoreFileExtractor` are untouched. (The wire shape gained an optional `IsBroken` column
+  on 2026-09-11 — see below.)
 
 **Amended 2026-07-30 ([score-truth-model.md](score-truth-model.md)):** two copy changes ride
 with the truth-model work.
@@ -115,6 +116,24 @@ with the truth-model work.
 - **A CSV upload is a manual submission** (D9), so it is authoritative and may lower a record.
   The confirm step's "Only new or improved scores will be saved" was true and is not any more;
   it now reads *"Your file becomes your records, even where it scores lower."*
+
+**Amended 2026-09-11 — the manual import reads Phoenix 2.** Until now the console script fetched
+phoenix.piugame.com whatever mix was selected and matched only the classic best-list markup, so
+on Phoenix 2 it found no scores and told a signed-in player to sign in.
+
+- The script is built for the selected mix. It names that mix's site, stops with a message when
+  pasted on the other one, and reads both best-list layouts the way the official import's parser
+  does — Phoenix 1's classic list and the Phoenix 2 redesign.
+- Chart type comes from the stepball's text image. Phoenix 2 draws every level digit with the
+  Singles glyph, so reading the type off the digits would export every Doubles chart as Singles.
+- The walk reads the last page number once, from the first page, and stops there — a page past the
+  end answers with the last page again rather than an empty one.
+- A card with no plate is a broken best, marked in an optional `IsBroken` column. Stage breaks and
+  walk-offs are skipped: neither can be a record (`BestAttemptPolicy`).
+- On upload a broken row needs no plate, saves as broken, and is saved only while "Record broken
+  scores as your best" is ticked — the rule the official import already follows. Before this every
+  CSV row was saved as a pass.
+- Step 3's copy names the site through `{0}`.
 
 ## Field-test rounds
 
