@@ -246,7 +246,8 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
 
         cut.WaitForAssertion(() => _mediator.Verify(m => m.Send(
             It.Is<UpdatePhoenixBestAttemptCommand>(c =>
-                c.ChartId == chartId && c.IsBroken && c.Plate == null && c.Mix == MixEnum.Phoenix2),
+                c.ChartId == chartId && c.IsBroken && c.Plate == null && c.Mix == MixEnum.Phoenix2
+                && c.KeepBestStats),
             It.IsAny<CancellationToken>()), Times.Once));
     }
 
@@ -268,6 +269,59 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
             It.IsAny<CancellationToken>()), Times.Once));
         _mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.ChartId == brokenId),
             It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ABrokenCsvRowOnlyRaisesARecord()
+    {
+        // The Phoenix 2 best list keeps a chart's first failed attempt until it is passed, so a script
+        // CSV can carry a broken card below a better fail the import already recorded. A broken row
+        // raises a lower broken record, and never lowers one or touches a pass.
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(MixEnum.Phoenix2);
+        var wouldLower = Guid.NewGuid();
+        var passed = Guid.NewGuid();
+        var raises = Guid.NewGuid();
+        GivenTheFileParsesTo(
+            new RecordedPhoenixScore(wouldLower, 426227, null, true, Uploaded),
+            new RecordedPhoenixScore(passed, 990000, null, true, Uploaded),
+            new RecordedPhoenixScore(raises, 944503, null, true, Uploaded));
+        GivenTheRecords(
+            new RecordedPhoenixScore(wouldLower, 944503, null, true, Uploaded),
+            new RecordedPhoenixScore(passed, 900000, PhoenixPlate.FairGame, false, Uploaded),
+            new RecordedPhoenixScore(raises, 426227, null, true, Uploaded));
+
+        var cut = await UploadAndSave();
+
+        // The raising row is last in the file, so its save proves the loop reached the end.
+        cut.WaitForAssertion(() => _mediator.Verify(m => m.Send(
+            It.Is<UpdatePhoenixBestAttemptCommand>(c => c.ChartId == raises && c.IsBroken && c.KeepBestStats),
+            It.IsAny<CancellationToken>()), Times.Once));
+        _mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.ChartId == wouldLower),
+            It.IsAny<CancellationToken>()), Times.Never);
+        _mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.ChartId == passed),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task APassingCsvRowStillLowersARecord()
+    {
+        // The file is what the player wants shown, so a passing row overwrites, lower or not (D9).
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(MixEnum.Phoenix2);
+        var chartId = Guid.NewGuid();
+        GivenTheFileParsesTo(new RecordedPhoenixScore(chartId, 880000, PhoenixPlate.FairGame, false, Uploaded));
+        GivenTheRecords(new RecordedPhoenixScore(chartId, 900000, PhoenixPlate.FairGame, false, Uploaded));
+
+        var cut = await UploadAndSave();
+
+        cut.WaitForAssertion(() => _mediator.Verify(m => m.Send(
+            It.Is<UpdatePhoenixBestAttemptCommand>(c => c.ChartId == chartId && !c.IsBroken && !c.KeepBestStats),
+            It.IsAny<CancellationToken>()), Times.Once));
+    }
+
+    private void GivenTheRecords(params RecordedPhoenixScore[] records)
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(records);
     }
 
     private static readonly DateTimeOffset Uploaded = new(2026, 9, 11, 0, 0, 0, TimeSpan.Zero);

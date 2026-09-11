@@ -5,6 +5,7 @@
 @using ScoreTracker.Rivals.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Commands
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.ScoreLedger.Contracts
 @using ScoreTracker.ScoreLedger.Contracts.Commands
 @using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Commands
@@ -825,18 +826,22 @@
         // One upload = one session.
         var uploadSessionId = Guid.NewGuid();
         var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(_userId, _currentMix), cancellationToken)).ToDictionary(s => s.ChartId);
-        // A CSV is a manual submission: the file is what the player wants shown, so it is
-        // authoritative and may lower a record (docs/design/score-truth-model.md D9). Rows
-        // matching the record exactly are still skipped — the ledger would no-op them anyway,
-        // and this keeps a re-upload from walking every chart.
-        // A broken row becomes a record only while the broken-scores box is ticked — the rule the
-        // official import follows.
+        // A CSV is a manual submission: a passing row is what the player wants shown, so it is
+        // authoritative and may lower a record (docs/design/score-truth-model.md D9). A broken row is
+        // not. The Phoenix 2 best list keeps a chart's first failed attempt until it is passed, so a
+        // script CSV can carry a broken card below a better fail the import already recorded. A
+        // broken row becomes a record only while the broken-scores box is ticked, and only where the
+        // published policy says it beats what is stored — the official import's rule for broken
+        // scores. Rows that would change nothing are skipped, so a re-upload never walks every chart.
         var toSaveScores = _spreadSheetScores
             .Where(s => !s.IsBroken || _includeBroken)
-            .Where(s => !myScores.TryGetValue(s.ChartId, out var existing)
-                        || existing.IsBroken != s.IsBroken
-                        || existing.Plate != s.Plate
-                        || existing.Score != s.Score).ToArray();
+            .Where(s =>
+            {
+                var existing = myScores.GetValueOrDefault(s.ChartId);
+                return s.IsBroken
+                    ? BestAttemptPolicy.Beats(existing, s.Score, s.Plate, true)
+                    : existing == null || existing.IsBroken || existing.Plate != s.Plate || existing.Score != s.Score;
+            }).ToArray();
 
         _maxSaving = toSaveScores.Length;
         foreach (var best in toSaveScores)
@@ -853,7 +858,8 @@
             try
             {
                 await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId, best.IsBroken, best.Score, best.Plate,
-                    Source: ScoreJournalEntry.CsvSource, Mix: _currentMix, SessionId: uploadSessionId),
+                    KeepBestStats: best.IsBroken, Source: ScoreJournalEntry.CsvSource, Mix: _currentMix,
+                    SessionId: uploadSessionId),
                     cancellationToken);
             }
             catch (OperationCanceledException)
