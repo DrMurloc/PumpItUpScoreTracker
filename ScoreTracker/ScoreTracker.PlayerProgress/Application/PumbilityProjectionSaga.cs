@@ -188,8 +188,9 @@ namespace ScoreTracker.PlayerProgress.Application
             var mine = (await _scores.GetBestScores(mix, userId, cancellationToken))
                 .Where(r => r.Score != null && !r.IsBroken && charts.ContainsKey(r.ChartId))
                 .ToDictionary(r => r.ChartId);
+            var levelOf = charts.ToDictionary(kv => kv.Key, kv => (int)kv.Value.Level);
             var levels = lit.ToDictionary(type => type, type => CompareWith(sweep.PeerPools[type],
-                MyPoolOf(type, mine, charts, scoring).Select(r => r.ChartId).ToArray(), charts));
+                MyPoolOf(type, mine, charts, scoring).Select(r => r.ChartId).ToArray(), charts, levelOf));
 
             var peers = pool == null
                 ? await _cache.GetOrAddSplit(userId, mix, () => AverageSplit(mix,
@@ -245,10 +246,11 @@ namespace ScoreTracker.PlayerProgress.Application
 
         /// <summary>
         ///     Where the viewer's pool of one type sits against the peers' by level (D41): their
-        ///     charts per level, and the peers' prevalence points per level as a share of the type.
+        ///     charts per level, the peers' prevalence points per level as a share of the type, and
+        ///     how many charts of each level every peer keeps, with the viewer on it (D66).
         /// </summary>
         private static PeerCompare CompareWith(PeerPoolSummary summary, IReadOnlyCollection<Guid> myPool,
-            IReadOnlyDictionary<Guid, Chart> charts)
+            IReadOnlyDictionary<Guid, Chart> charts, IReadOnlyDictionary<Guid, int> levelOf)
         {
             var totalPoints = summary.Charts.Values.Sum(c => (double)c.Points);
             var shareByLevel = summary.Charts
@@ -257,7 +259,8 @@ namespace ScoreTracker.PlayerProgress.Application
                 .ToDictionary(g => g.Key, g => totalPoints == 0 ? 0 : g.Sum(kv => kv.Value.Points) / totalPoints);
             return new PeerCompare(
                 myPool.Where(charts.ContainsKey).GroupBy(id => (int)charts[id].Level).ToDictionary(g => g.Key, g => g.Count()),
-                shareByLevel);
+                shareByLevel,
+                PeerLevelSpread.Of(summary, levelOf, myPool));
         }
 
         /// <summary>

@@ -223,6 +223,40 @@ public sealed partial class PumbilityProjectionSagaTests
     }
 
     [Fact]
+    public async Task ThePoolCompareSpreadsEachLevelAcrossThePeersWithTheViewerOnIt()
+    {
+        // D66: six peers all keep the S21 and two of them keep the S22 as well; the viewer keeps the S21
+        // and an S20 nobody else does. The spread counts every peer at every level from the 20 to the 22.
+        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_609.59)
+            .WithChart(out var staple, ChartType.Single, 21)
+            .WithChart(out var second, ChartType.Single, 22)
+            .WithChart(out var mine, ChartType.Single, 20);
+        ctx.WithPumbilityPeer(out var first, staple, phoenix2Score: 980_000)
+            .WithPumbilityPeer(out var other, staple, phoenix2Score: 975_000);
+        for (var i = 0; i < 4; i++) ctx.WithPumbilityPeer(staple, phoenix2Score: 970_000);
+        ctx.WithPeerPhoenix2Score(first, second, 990_000).WithPeerPhoenix2Score(other, second, 985_000);
+        ctx.WithOwnScore(staple, 960_000).WithOwnScore(mine, 990_000);
+
+        var record = await ctx.Saga.Handle(new GetPumbilityPoolCompareQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Single),
+            CancellationToken.None);
+
+        var spread = Assert.IsType<PeerLevelSpread>(record.Levels[ChartType.Single].Spread);
+        Assert.Equal(6, spread.Peers);
+        Assert.Equal(0, spread.BoardPeers);
+        Assert.Equal(new[] { 20, 21, 22 }, spread.Columns.Select(c => c.Level).ToArray());
+        var twentyOne = spread.Columns.Single(c => c.Level == 21);
+        Assert.Equal(6, twentyOne.PeersByCount[1]);
+        Assert.Equal(1, twentyOne.Mine);
+        Assert.Equal(6, twentyOne.PeersLevelWithMine);
+        var twentyTwo = spread.Columns.Single(c => c.Level == 22);
+        Assert.Equal(2, twentyTwo.Keeping);
+        Assert.Equal(0, twentyTwo.Mine);
+        var twenty = spread.Columns.Single(c => c.Level == 20);
+        Assert.Equal(1, twenty.Mine);
+        Assert.Equal(6, twenty.PeersBelowMine);
+    }
+
+    [Fact]
     public async Task ThePoolCompareAveragesThePeersMergedFiftiesOnceAndKeepsIt()
     {
         var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_609.59)

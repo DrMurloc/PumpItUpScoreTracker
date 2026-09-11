@@ -35,7 +35,12 @@ public sealed record PumbilityPoolCompareRecord(
 /// </summary>
 /// <param name="MyLevels">The viewer's pool charts per level.</param>
 /// <param name="PeerShareByLevel">The peers' prevalence points per level, as a share of the type's total.</param>
+/// <param name="Spread">
+///     How many charts of each level every peer keeps in their fifty, with the viewer's own count on it
+///     (D66) — what the Breakdown page's chart draws.
+/// </param>
 [ExcludeFromCodeCoverage]
 public sealed record PeerCompare(
     IReadOnlyDictionary<int, int> MyLevels,
-    IReadOnlyDictionary<int, double> PeerShareByLevel);
+    IReadOnlyDictionary<int, double> PeerShareByLevel,
+    PeerLevelSpread? Spread = null);

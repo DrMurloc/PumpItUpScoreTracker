@@ -1778,7 +1778,8 @@ cached sweep; one pure Domain function turns them into columns.
 
 **Tests.** `DomainTests/PeerLevelSpreadTests` (the counts per peer, the column rule, the quartiles, where you
 stand, a peer keeping none, nobody but you). `PumbilityProjectionSagaPeersTests`: the compare query answers a
-spread per lit type off one sweep, the board peers counted. `Tests.Components`: `LevelSpreadChartTests` (a tile
+spread per lit type off one sweep, with the viewer on it — the board peers are counted in the Domain tests,
+the saga's fixture having none. `Tests.Components`: `LevelSpreadChartTests` (a tile
 per type in order, the peers line, a column per level, the diamond at your count, the shared cap and its caret,
 the tooltip's lines) and `PumbilityComponentTests` (the card draws the chart). `Tests.Integration`: none — the
 reads are existing ones.
