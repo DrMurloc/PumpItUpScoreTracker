@@ -680,3 +680,5 @@ recovered from the peers lede), `blarg` (from), `mag` (with), `mrp` (one), `murp
 | Kept | Mrgloru | The recovered *hold*, title-cased as the column and the band names' first word. |
 | counts (a folder counts) | grorpgl | `grorp` (number) + `gl`. |
 | when | ob | The recovered *if*; a Murloc does not split the two. |
+| these | blu | The recovered *this*; number unmarked. |
+| likely | murgab | Coined for the lede's *these are likely to be the hardest charts to score*. `bru` (be), `mrrrglmrgl` (hardest), `grorpmurm murm` (level range) are all recovered. |

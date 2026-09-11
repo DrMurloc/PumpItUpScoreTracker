@@ -2789,8 +2789,8 @@
   <data name="Event mode or premium?" xml:space="preserve">
     <value>イベントモード？プレミアム？</value>
   </data>
-  <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
-    <value>ピアがPUMBILITYを築いているフォルダ {0} のすべての譜面を、持っているピアが少ない順に示します。ピアの半数以上が譜面を持っているフォルダが対象です。</value>
+  <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
+    <value>ピアがPUMBILITYを築いているフォルダ {0} のすべての譜面を、持っているピアが少ない順に示します。あなたのレベル帯でスコアを出すのが最も難しい譜面である可能性が高いです。ピアの半数以上が譜面を持っているフォルダが対象です。</value>
   </data>
   <data name="Every chart pays its level value, scaled by how well you scored it and by how long the song is. The grade table is PUMBILITY+: AAA is the 1× target, and below it the price drops fast." xml:space="preserve">
     <value>各譜面はレベル値を基本に、スコアの出来と曲の長さで増減します。グレード表は PUMBILITY+：AAA が 1× の基準で、それより下は価値が急に下がります。</value>

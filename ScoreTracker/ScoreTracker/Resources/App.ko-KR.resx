@@ -2773,8 +2773,8 @@
   <data name="Event mode or premium?" xml:space="preserve">
     <value>이벤트 모드? 프리미엄?</value>
   </data>
-  <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
-    <value>동료들이 PUMBILITY를 쌓는 폴더 {0}의 모든 채보를, 보유한 동료가 적은 순으로 보여줍니다. 동료의 절반 이상이 채보를 보유한 폴더가 포함됩니다.</value>
+  <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
+    <value>동료들이 PUMBILITY를 쌓는 폴더 {0}의 모든 채보를, 보유한 동료가 적은 순으로 보여줍니다. 내 레벨대에서 점수를 내기 가장 어려운 채보일 가능성이 높습니다. 동료의 절반 이상이 채보를 보유한 폴더가 포함됩니다.</value>
   </data>
   <data name="Every chart pays its level value, scaled by how well you scored it and by how long the song is. The grade table is PUMBILITY+: AAA is the 1× target, and below it the price drops fast." xml:space="preserve">
     <value>각 채보는 레벨 값을 기본으로, 점수와 곡 길이에 따라 배율이 붙습니다. 등급표는 PUMBILITY+: AAA가 1× 기준이고, 그 아래로는 값이 빠르게 떨어집니다.</value>

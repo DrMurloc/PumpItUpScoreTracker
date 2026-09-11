@@ -2773,8 +2773,8 @@
   <data name="Event mode or premium?" xml:space="preserve">
     <value>¿Modo evento o premium?</value>
   </data>
-  <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
-    <value>Cada chart de {0}, las carpetas de las que tus pares sacan su PUMBILITY, con los que menos de ellos guardan primero. Una carpeta cuenta cuando al menos la mitad de tus pares guarda un chart de ella.</value>
+  <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
+    <value>Cada chart de {0}, las carpetas de las que tus pares sacan su PUMBILITY, con los que menos de ellos guardan primero. Probablemente sean los charts más difíciles de puntuar de tu rango de niveles. Una carpeta cuenta cuando al menos la mitad de tus pares guarda un chart de ella.</value>
   </data>
   <data name="Every chart pays its level value, scaled by how well you scored it and by how long the song is. The grade table is PUMBILITY+: AAA is the 1× target, and below it the price drops fast." xml:space="preserve">
     <value>Cada chart paga el valor de su nivel, escalado según lo bien que lo puntúes y la duración de la canción. La tabla de grados es PUMBILITY+: AAA es el objetivo de 1×, y por debajo el precio cae rápido.</value>
