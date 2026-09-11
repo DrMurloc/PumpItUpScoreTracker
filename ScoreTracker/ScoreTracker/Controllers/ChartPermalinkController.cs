@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Web.Services;
 
@@ -21,7 +22,8 @@ namespace ScoreTracker.Web.Controllers
             CancellationToken cancellationToken)
         {
             var canonical = await resolver.CanonicalPathFor(id, ChartUrlResolver.DefaultMix, cancellationToken);
-            return canonical == null ? NotFound() : RedirectPermanent(canonical);
+            // Percent-encoded, as the chart page's own redirect is: slugs keep unicode.
+            return canonical == null ? NotFound() : RedirectPermanent(new PathString(canonical).ToUriComponent());
         }
 
         // Bare /Chart and the legacy /Record alias had no identity of their own — they were
