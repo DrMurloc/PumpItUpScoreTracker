@@ -3567,6 +3567,9 @@
   <data name="History" xml:space="preserve">
     <value>履歴</value>
   </data>
+  <data name="hold at least one" xml:space="preserve">
+    <value>1譜面以上持つ</value>
+  </data>
   <data name="Hold Footslides" xml:space="preserve">
     <value>ホールドスライド</value>
   </data>
@@ -3642,7 +3645,7 @@
   <data name="How many (1–10, default 3)" xml:space="preserve">
     <value>何枚（1–10、既定 3）</value>
   </data>
-  <data name="how many charts of each level your peers keep in their top 50, and where yours sit" xml:space="preserve">
+  <data name="how many charts of each level your peers hold in their top 50, and where yours sit" xml:space="preserve">
     <value>ピアがトップ50に持つ各レベルの譜面数と、あなたの位置</value>
   </data>
   <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
@@ -3657,7 +3660,7 @@
   <data name="How many of your PUMBILITY peers hold it in their top 50" xml:space="preserve">
     <value>この譜面をトップ50に持つPUMBILITYピアの数</value>
   </data>
-  <data name="how many peers keep that many" xml:space="preserve">
+  <data name="how many peers hold that many" xml:space="preserve">
     <value>その数を持つピアの人数</value>
   </data>
   <data name="How March of Murlocs works" xml:space="preserve">
@@ -4116,9 +4119,6 @@
   </data>
   <data name="Keep" xml:space="preserve">
     <value>残す</value>
-  </data>
-  <data name="keep at least one" xml:space="preserve">
-    <value>1譜面以上持つ</value>
   </data>
   <data name="Keep it" xml:space="preserve">
     <value>そのままにする</value>
@@ -11709,10 +11709,10 @@
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}：{1}のSSS+は{2}の900,000相当</value>
   </data>
-  <data name="{0}: charts of each level your peers keep in their top 50" xml:space="preserve">
+  <data name="{0}: charts of each level your peers hold in their top 50" xml:space="preserve">
     <value>{0}: ピアがトップ50に持つ各レベルの譜面数</value>
   </data>
-  <data name="{0}: your peers keep a median of {1}, middle half {2} to {3}; you keep {4}" xml:space="preserve">
+  <data name="{0}: your peers hold a median of {1}, middle half {2} to {3}; you hold {4}" xml:space="preserve">
     <value>{0}: ピアの中央値は{1}、中間の半分は{2}～{3}、あなたは{4}</value>
   </data>
   <data name="{0}d ago" xml:space="preserve">
@@ -11760,7 +11760,7 @@
   <data name="· 1 peer ({0}%)" xml:space="preserve">
     <value>· ピア1人（{0}%）</value>
   </data>
-  <data name="· like the {0}% who keep none" xml:space="preserve">
+  <data name="· like the {0}% who hold none" xml:space="preserve">
     <value>· 1つも持たない{0}%と同じ</value>
   </data>
   <data name="· more than {0}% of your peers" xml:space="preserve">

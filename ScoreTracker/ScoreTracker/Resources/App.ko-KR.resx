@@ -3550,6 +3550,9 @@
   <data name="History" xml:space="preserve">
     <value>역사</value>
   </data>
+  <data name="hold at least one" xml:space="preserve">
+    <value>1개 이상 보유</value>
+  </data>
   <data name="Hold Footslides" xml:space="preserve">
     <value>홀드 슬라이드</value>
   </data>
@@ -3625,7 +3628,7 @@
   <data name="How many (1–10, default 3)" xml:space="preserve">
     <value>몇 개 (1–10, 기본 3)</value>
   </data>
-  <data name="how many charts of each level your peers keep in their top 50, and where yours sit" xml:space="preserve">
+  <data name="how many charts of each level your peers hold in their top 50, and where yours sit" xml:space="preserve">
     <value>동료가 상위 50에 보유한 레벨별 채보 수와 내 위치</value>
   </data>
   <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
@@ -3640,7 +3643,7 @@
   <data name="How many of your PUMBILITY peers hold it in their top 50" xml:space="preserve">
     <value>이 채보를 상위 50에 보유한 PUMBILITY 동료 수</value>
   </data>
-  <data name="how many peers keep that many" xml:space="preserve">
+  <data name="how many peers hold that many" xml:space="preserve">
     <value>그만큼 보유한 동료 수</value>
   </data>
   <data name="How March of Murlocs works" xml:space="preserve">
@@ -4098,9 +4101,6 @@
   </data>
   <data name="Keep" xml:space="preserve">
     <value>유지</value>
-  </data>
-  <data name="keep at least one" xml:space="preserve">
-    <value>1개 이상 보유</value>
   </data>
   <data name="Keep it" xml:space="preserve">
     <value>그대로 두기</value>
@@ -11641,10 +11641,10 @@
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}: {1}의 SSS+는 {2}의 900,000어치</value>
   </data>
-  <data name="{0}: charts of each level your peers keep in their top 50" xml:space="preserve">
+  <data name="{0}: charts of each level your peers hold in their top 50" xml:space="preserve">
     <value>{0}: 동료가 상위 50에 보유한 레벨별 채보 수</value>
   </data>
-  <data name="{0}: your peers keep a median of {1}, middle half {2} to {3}; you keep {4}" xml:space="preserve">
+  <data name="{0}: your peers hold a median of {1}, middle half {2} to {3}; you hold {4}" xml:space="preserve">
     <value>{0}: 동료의 중앙값은 {1}, 가운데 절반은 {2}~{3}, 나는 {4}</value>
   </data>
   <data name="{0}d ago" xml:space="preserve">
@@ -11692,7 +11692,7 @@
   <data name="· 1 peer ({0}%)" xml:space="preserve">
     <value>· 동료 1명 ({0}%)</value>
   </data>
-  <data name="· like the {0}% who keep none" xml:space="preserve">
+  <data name="· like the {0}% who hold none" xml:space="preserve">
     <value>· 하나도 보유하지 않은 {0}%와 같음</value>
   </data>
   <data name="· more than {0}% of your peers" xml:space="preserve">

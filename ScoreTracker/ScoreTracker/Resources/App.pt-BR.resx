@@ -3550,6 +3550,9 @@
   <data name="History" xml:space="preserve">
     <value>Histórico</value>
   </data>
+  <data name="hold at least one" xml:space="preserve">
+    <value>têm pelo menos um</value>
+  </data>
   <data name="Hold Footslides" xml:space="preserve">
     <value>Footslides com hold</value>
   </data>
@@ -3625,8 +3628,8 @@
   <data name="How many (1–10, default 3)" xml:space="preserve">
     <value>Quantos (1–10, padrão 3)</value>
   </data>
-  <data name="how many charts of each level your peers keep in their top 50, and where yours sit" xml:space="preserve">
-    <value>quantos charts de cada nível seus pares mantêm no top 50, e onde ficam os seus</value>
+  <data name="how many charts of each level your peers hold in their top 50, and where yours sit" xml:space="preserve">
+    <value>quantos charts de cada nível seus pares têm no top 50, e onde ficam os seus</value>
   </data>
   <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
     <value>Quantos charts de Co-Op você limpou, por número de jogadores.</value>
@@ -3640,8 +3643,8 @@
   <data name="How many of your PUMBILITY peers hold it in their top 50" xml:space="preserve">
     <value>Quantos dos seus pares de PUMBILITY o têm no top 50</value>
   </data>
-  <data name="how many peers keep that many" xml:space="preserve">
-    <value>quantos pares mantêm essa quantidade</value>
+  <data name="how many peers hold that many" xml:space="preserve">
+    <value>quantos pares têm essa quantidade</value>
   </data>
   <data name="How March of Murlocs works" xml:space="preserve">
     <value>Como funciona o March of Murlocs</value>
@@ -4098,9 +4101,6 @@
   </data>
   <data name="Keep" xml:space="preserve">
     <value>Manter</value>
-  </data>
-  <data name="keep at least one" xml:space="preserve">
-    <value>mantêm pelo menos um</value>
   </data>
   <data name="Keep it" xml:space="preserve">
     <value>Manter</value>
@@ -11641,11 +11641,11 @@
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}: um SSS+ em {1} vale um 900.000 em {2}</value>
   </data>
-  <data name="{0}: charts of each level your peers keep in their top 50" xml:space="preserve">
-    <value>{0}: charts de cada nível que seus pares mantêm no top 50</value>
+  <data name="{0}: charts of each level your peers hold in their top 50" xml:space="preserve">
+    <value>{0}: charts de cada nível que seus pares têm no top 50</value>
   </data>
-  <data name="{0}: your peers keep a median of {1}, middle half {2} to {3}; you keep {4}" xml:space="preserve">
-    <value>{0}: seus pares mantêm uma mediana de {1}, metade central de {2} a {3}; você mantém {4}</value>
+  <data name="{0}: your peers hold a median of {1}, middle half {2} to {3}; you hold {4}" xml:space="preserve">
+    <value>{0}: seus pares têm uma mediana de {1}, metade central de {2} a {3}; você tem {4}</value>
   </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>há {0} d</value>
@@ -11692,8 +11692,8 @@
   <data name="· 1 peer ({0}%)" xml:space="preserve">
     <value>· 1 par ({0}%)</value>
   </data>
-  <data name="· like the {0}% who keep none" xml:space="preserve">
-    <value>· como os {0}% que não mantêm nenhum</value>
+  <data name="· like the {0}% who hold none" xml:space="preserve">
+    <value>· como os {0}% que não têm nenhum</value>
   </data>
   <data name="· more than {0}% of your peers" xml:space="preserve">
     <value>· mais que {0}% dos seus pares</value>

@@ -687,7 +687,7 @@ recovered from the peers lede), `blarg` (from), `mag` (with), `mrp` (one), `murp
 
 Coined for the PUMBILITY Breakdown card's level spread ([pumbility-overhaul.md](design/pumbility-overhaul.md)
 D67): the caption, the tile's peers line, the legend, the tooltip and each column's screen-reader label.
-Reused, not re-coined: `maglmurp` (peers), `morp` (your, and yours), `blub` (you), `mrgloru` (keep, as the Rarity grouping
+Reused, not re-coined: `maglmurp` (peers), `morp` (your, and yours), `blub` (you), `mrgloru` (hold, as the Rarity grouping
 recovered it), `algro` (each), `grorpmurm` (level), `gropmur` (in), `ropgl 50` (top 50), `blugrogl` (median),
 `mogrgl blugro` (middle half), `mrrgl grogrgl` (more than), `mr mggl` (at least, from *At least*),
 `mggl ro mrrrgl` (*fewest to most*, on *least* and *most*), `plglro` (like), `bomo` (nothing, here
