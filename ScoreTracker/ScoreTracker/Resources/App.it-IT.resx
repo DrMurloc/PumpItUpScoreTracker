@@ -3787,7 +3787,7 @@
     <value>Copia lo script.</value>
   </data>
   <data name="Import Manual Step 3" xml:space="preserve">
-    <value>Con l'accesso attivo su phoenix.piugame.com, incollalo nella console del browser (F12): scarica un CSV dei tuoi punteggi. Gli ad blocker possono romperlo.</value>
+    <value>Con l'accesso attivo su {0}, incollalo nella console del browser (F12): scarica un CSV dei tuoi punteggi. Gli ad blocker possono romperlo.</value>
   </data>
   <data name="Import Manual Step 4" xml:space="preserve">
     <value>Carica qui il CSV — accetta anche un foglio di calcolo tenuto a mano con le stesse colonne.</value>

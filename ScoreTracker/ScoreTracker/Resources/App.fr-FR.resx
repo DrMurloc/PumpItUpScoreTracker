@@ -3786,7 +3786,7 @@
     <value>Copiez le script.</value>
   </data>
   <data name="Import Manual Step 3" xml:space="preserve">
-    <value>Connecté sur phoenix.piugame.com, collez-le dans la console du navigateur (F12) — il télécharge un CSV de vos scores. Les bloqueurs de publicité peuvent le casser.</value>
+    <value>Connecté sur {0}, collez-le dans la console du navigateur (F12) — il télécharge un CSV de vos scores. Les bloqueurs de publicité peuvent le casser.</value>
   </data>
   <data name="Import Manual Step 4" xml:space="preserve">
     <value>Uploadez le CSV ici — accepte aussi un tableur tenu à la main avec les mêmes colonnes.</value>

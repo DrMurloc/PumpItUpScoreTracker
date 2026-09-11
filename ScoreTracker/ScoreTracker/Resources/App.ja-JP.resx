@@ -3787,7 +3787,7 @@
     <value>スクリプトをコピーします。</value>
   </data>
   <data name="Import Manual Step 3" xml:space="preserve">
-    <value>phoenix.piugame.com にログインした状態で、ブラウザのコンソール（F12）に貼り付けると、スコアの CSV がダウンロードされます。広告ブロッカーが動作を妨げることがあります。</value>
+    <value>{0} にログインした状態で、ブラウザのコンソール（F12）に貼り付けると、スコアの CSV がダウンロードされます。広告ブロッカーが動作を妨げることがあります。</value>
   </data>
   <data name="Import Manual Step 4" xml:space="preserve">
     <value>その CSV をここにアップロードします。同じ列構成の自作スプレッドシートも使えます。</value>
