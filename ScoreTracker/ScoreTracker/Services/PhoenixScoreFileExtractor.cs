@@ -56,7 +56,16 @@ public sealed class PhoenixScoreFileExtractor : IPhoenixScoreFileExtractor
                     continue;
                 }
 
-                var plate = record.Plate.Trim().ToLower() switch
+                // Blank reads as a pass: a hand-kept sheet marks only its broken rows.
+                var isBroken = false;
+                if (!string.IsNullOrWhiteSpace(record.IsBroken) && !bool.TryParse(record.IsBroken.Trim(), out isBroken))
+                {
+                    failures.Add(record.ToError("Could not parse IsBroken Column"));
+                    continue;
+                }
+
+                // A failed stage is awarded no plate, so a broken row needs none and keeps none.
+                PhoenixPlate? plate = isBroken ? null : record.Plate.Trim().ToLower() switch
                 {
                     "rg" => PhoenixPlate.RoughGame,
                     "tg" => PhoenixPlate.TalentedGame,
@@ -91,7 +100,7 @@ public sealed class PhoenixScoreFileExtractor : IPhoenixScoreFileExtractor
                 if (chart == null)
                     throw new ScoreFileParseException($"This chart was not found: {name} {chartType} {level}");
 
-                var attempt = new RecordedPhoenixScore(chart.Id, score, plate, record.IsBroken, DateTimeOffset.Now);
+                var attempt = new RecordedPhoenixScore(chart.Id, score, plate, isBroken, DateTimeOffset.Now);
 
                 scores.Add(attempt);
             }

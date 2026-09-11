@@ -95,6 +95,48 @@ public sealed class SessionFeedHandlerTests
     }
 
     [Fact]
+    public async Task AFailedAttemptThatScoredHigherIsNotTheBarALaterUpscoreClears()
+    {
+        // A pass outranks any break whatever the numbers, so once the chart is passed the record is
+        // that pass — beating it is an upscore even though the failed first try scored more.
+        var ctx = new HandlerContext();
+        var rows = new[]
+        {
+            Entry(Now.AddDays(-2), 960000, isBroken: true, mix: MixEnum.Phoenix2),
+            Entry(Now.AddDays(-1), 900000, mix: MixEnum.Phoenix2),
+            Entry(Now, 930000, mix: MixEnum.Phoenix2)
+        };
+        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2, rows));
+        ctx.GivenHistories(rows);
+
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId), CancellationToken.None);
+
+        var latest = page.Groups.Single().Rows.Single(r => r.OccurredAt == Now);
+        Assert.Equal(ScoreEventClassification.Upscore, latest.Classification);
+        Assert.Equal(900000, latest.PreviousBest);
+    }
+
+    [Fact]
+    public async Task APlayThatNeverBecameTheRecordStillCarriesTheBestPassBeforeIt()
+    {
+        // "+N over P1" reads this on every row. A play the recently-played list reported, scoring
+        // under the record, has to be able to say an earlier pass already reached the bar.
+        var ctx = new HandlerContext();
+        var record = Entry(Now.AddDays(-1), 960000, mix: MixEnum.Phoenix2);
+        var observed = new ScoreJournalEntry(Now, "officialImport", UserId, ChartId, 955000, PhoenixPlate.FairGame,
+            false, MixEnum.Phoenix2, IsBest: false);
+        var rows = new[] { record, observed };
+        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2, rows));
+        ctx.GivenHistories(rows);
+
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId), CancellationToken.None);
+
+        var row = page.Groups.Single().Rows.Single(r => r.OccurredAt == Now);
+        Assert.Equal(ScoreEventClassification.Played, row.Classification);
+        Assert.Equal(960000, row.PreviousBest);
+    }
+
+    [Fact]
     public async Task AStageBreakReadsAsPlayedAndCarriesTheFlagAndHowManyNotesItJudged()
     {
         // History and nothing else: it moved no record, so it classifies like any observation,
@@ -200,6 +242,52 @@ public sealed class SessionFeedHandlerTests
         var row = page.Groups.Single().Rows.Single();
         Assert.Equal(ScoreEventClassification.NewPass, row.Classification);
         Assert.False(row.IsReclear);
+    }
+
+    [Fact]
+    public async Task EveryRowCarriesItsNumberAmongEveryPlayOfTheChartInItsMix()
+    {
+        // "Attempt N" is lifetime: plays from earlier sessions count, and so do the plays that never
+        // became a record. A Phoenix 1 play on the same chart id does not.
+        var ctx = new HandlerContext();
+        var phoenix1 = Entry(Now.AddMonths(-3), 990000, mix: MixEnum.Phoenix);
+        var earlier = new[]
+        {
+            Entry(Now.AddDays(-9), 880000, mix: MixEnum.Phoenix2),
+            new ScoreJournalEntry(Now.AddDays(-9).AddMinutes(4), "officialImport", UserId, ChartId, 870000,
+                PhoenixPlate.FairGame, false, MixEnum.Phoenix2, IsBest: false),
+            Entry(Now.AddDays(-2), 910000, mix: MixEnum.Phoenix2)
+        };
+        var tonight = new[]
+        {
+            new ScoreJournalEntry(Now.AddMinutes(-10), "officialImport", UserId, ChartId, 905000,
+                PhoenixPlate.FairGame, false, MixEnum.Phoenix2, IsBest: false),
+            Entry(Now, 930000, mix: MixEnum.Phoenix2)
+        };
+        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2, tonight));
+        ctx.GivenHistories(earlier.Concat(tonight).Append(phoenix1));
+
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId), CancellationToken.None);
+
+        var rows = page.Groups.Single().Rows.OrderBy(r => r.OccurredAt).ToArray();
+        Assert.Equal(4, rows[0].PlayNumber);
+        Assert.Equal(5, rows[1].PlayNumber);
+    }
+
+    [Fact]
+    public async Task AStageBreakIsAPlayTheNumberCounts()
+    {
+        var ctx = new HandlerContext();
+        var stageBreak = new ScoreJournalEntry(Now.AddMinutes(-5), "officialImport", UserId, ChartId, null, null,
+            true, MixEnum.Phoenix2, IsBest: false, IsStageBroken: true);
+        var pass = Entry(Now, 912000, mix: MixEnum.Phoenix2);
+        var rows = new[] { stageBreak, pass };
+        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2, rows));
+        ctx.GivenHistories(rows);
+
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId), CancellationToken.None);
+
+        Assert.Equal(2, page.Groups.Single().Rows.Single(r => r.OccurredAt == Now).PlayNumber);
     }
 
     [Fact]

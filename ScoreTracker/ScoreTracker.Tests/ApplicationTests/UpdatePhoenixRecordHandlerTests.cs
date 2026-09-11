@@ -61,6 +61,50 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
+    public async Task ABestWhoseTimeAnotherPlayHoldsIsJournaledWhenTheImportFoundIt()
+    {
+        // A Phoenix 2 best-list card keeps its chart's first-play date as the score improves, so a
+        // best whose own play left the recent window arrives wearing the first play's time. The
+        // record keeps the card's date; the journal row lands at the import's time instead.
+        var ctx = new HandlerContext();
+        var firstPlay = Now.AddDays(-6);
+        ctx.GivenExistingScore(score: 983934, plate: PhoenixPlate.SuperbGame, isBroken: false);
+        ctx.Journal.Setup(j => j.Append(It.Is<ScoreJournalEntry>(e => e.OccurredAt == firstPlay),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(JournalAppend.TimeHeldByAnotherPlay);
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 999283,
+                Plate: PhoenixPlate.UltimateGame, KeepBestStats: true,
+                Source: ScoreJournalEntry.OfficialImportSource, RecordedAt: firstPlay),
+            CancellationToken.None);
+
+        ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
+            It.Is<RecordedPhoenixScore>(s => s.Score == (PhoenixScore)999283 && s.RecordedDate == firstPlay),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Journal.Verify(j => j.Append(
+            It.Is<ScoreJournalEntry>(e => e.OccurredAt == Now && e.Score == (PhoenixScore)999283),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ABestWrittenAtItsOwnTimeIsJournaledOnce()
+    {
+        var ctx = new HandlerContext();
+        var playedAt = Now.AddHours(-2);
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000,
+                Plate: PhoenixPlate.SuperbGame, RecordedAt: playedAt),
+            CancellationToken.None);
+
+        ctx.Journal.Verify(j => j.Append(It.IsAny<ScoreJournalEntry>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        ctx.Journal.Verify(j => j.Append(It.Is<ScoreJournalEntry>(e => e.OccurredAt == playedAt),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task AnImprovedPlateAtALowerScoreIsNotAPersonalBest()
     {
         // The plate leak: this used to write the better plate AND drag the record's score down

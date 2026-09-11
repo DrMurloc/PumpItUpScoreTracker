@@ -86,6 +86,13 @@ This doc replaces four rules with one, and states what each store is for.
   `RecordScore`, and CSV upload. A player may save whatever they want; `Source` is how we tell
   later that a human meant it.
 
+  **Amended 2026-09-11 (owner):** a broken row in a CSV upload is the exception — it goes through
+  the precedence policy below and can only raise a record. The Phoenix 2 best list keeps a chart's
+  first failed attempt until it is passed, so the console script's CSV can carry a broken card below
+  a better fail the import already recorded; applied as authoritative, re-uploading it dragged that
+  record back down (199 records across 84 players on the 2026-09-10 prod copy). Passing rows, and
+  every other manual route, still overwrite.
+
 ### The precedence policy
 
 One comparison, used everywhere:
@@ -102,7 +109,8 @@ incoming beats stored when:
 Rule 5 is the existing progress-only guard and it stays: the import deliberately re-scrapes past
 its cutoff, so repeats are expected and must not touch the record, the journal, or `RecordedDate`.
 
-Manual sources (D9) skip the policy entirely and overwrite. Everything else is subject to it.
+Manual sources (D9) skip the policy entirely and overwrite — except a broken row in a CSV upload,
+which is subject to it (D9, amended 2026-09-11). Everything else is subject to it.
 
 ### Source authority
 
@@ -271,7 +279,7 @@ Docs to update in the same PR:
 ## 9. Settled by the owner, 2026-07-30
 
 - **CSV is authoritative** (§2 D9). The import page's "only new or improved" promise changes
-  with it.
+  with it. *Amended 2026-09-11:* broken rows excepted — they can only raise a record.
 - **The import widget gains a control.** `ImportScoresConfig` takes the opt-in as `bool?` —
   null keeps today's behavior (on for Phoenix 2, off for Phoenix 1), so no config migration.
 - **Weekly and Daily Step keep accepting broken entries** and go nullable-plate (D8). The

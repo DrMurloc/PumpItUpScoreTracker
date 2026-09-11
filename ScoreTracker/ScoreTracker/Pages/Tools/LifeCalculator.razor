@@ -357,6 +357,8 @@
 
 @code
 {
+    // The red zone: the game's 12% mark on the visible bar, and the line below which a miss costs
+    // less than a bad. It paints the track; "one miss from out" is MissesToFail's call, not this.
     private const int DangerLife = 120;
     private const double MaxMultiplier = .8;
     private const int MaxCombo = 70;
@@ -430,7 +432,7 @@
         0 => "dead",
         var l when l == _sim.MaxLife && Overflow > 0 => "overflow-full",
         var l when l > LifebarAnalysis.VisibleLife => "into-overflow",
-        var l when l <= DangerLife => "danger",
+        _ when LifebarAnalysis.MissesToFail(_sim) == 1 => "danger",
         _ => "ok"
     };
 
@@ -451,22 +453,8 @@
         ? L["and {0} notes of multiplier", (int)Math.Ceiling(_sim.LifeMultiplier / .02)]
         : L["multiplier already gone"];
 
-    private string MissesLeft
-    {
-        get
-        {
-            if (_sim.CurrentLife == 0) return "—";
-            var probe = _sim.Fork();
-            var count = 0;
-            while (probe.CurrentLife > 0)
-            {
-                probe.ApplyJudgment(Judgment.Miss);
-                count++;
-            }
-
-            return count.ToString("N0");
-        }
-    }
+    private string MissesLeft =>
+        _sim.CurrentLife == 0 ? "—" : LifebarAnalysis.MissesToFail(_sim).ToString("N0");
 
     private string Signed(int value) => value > 0 ? $"+{value:N0}" : value < 0 ? $"−{Math.Abs(value):N0}" : "0";
 

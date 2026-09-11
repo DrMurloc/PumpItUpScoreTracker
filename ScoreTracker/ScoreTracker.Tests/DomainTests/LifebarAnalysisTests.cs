@@ -94,6 +94,21 @@ public sealed class LifebarAnalysisTests
     }
 
     [Fact]
+    public void OneMissEndsTheRunOnlyAtTwentySixLifeOrLessAtEveryLevel()
+    {
+        // What "One miss from out" means. The 120 red zone is where a miss gets cheaper than a bad,
+        // not where it kills: at 105 life three misses are still left.
+        foreach (var level in DifficultyLevel.All)
+        {
+            Assert.Equal(1, LifebarAnalysis.MissesToFail(LifebarSimulator.At(level, 26, 0)));
+            Assert.Equal(2, LifebarAnalysis.MissesToFail(LifebarSimulator.At(level, 27, 0)));
+            Assert.Equal(3, LifebarAnalysis.MissesToFail(LifebarSimulator.At(level, 105, 0)));
+            Assert.Equal(4, LifebarAnalysis.MissesToFail(LifebarSimulator.At(level, 120, 0)));
+            Assert.Equal(0, LifebarAnalysis.MissesToFail(LifebarSimulator.At(level, 0, 0)));
+        }
+    }
+
+    [Fact]
     public void SevenStraightMissesEndARunFromSongStartAtEveryLevel()
     {
         foreach (var level in DifficultyLevel.All)

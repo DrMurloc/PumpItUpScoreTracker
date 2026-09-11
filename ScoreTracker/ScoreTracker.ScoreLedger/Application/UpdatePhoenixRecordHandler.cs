@@ -127,9 +127,14 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
                 recordedAt, request.Source, judgements), cancellationToken);
         // The journal is the record's history: it gets the resulting best-attempt state,
         // exactly and only when that state changes.
-        await journal.Append(new ScoreJournalEntry(recordedAt, request.Source, user.User.Id,
-                request.ChartId, request.Score, plate, request.IsBroken, request.Mix, sessionId, judgements),
-            cancellationToken);
+        var entry = new ScoreJournalEntry(recordedAt, request.Source, user.User.Id,
+            request.ChartId, request.Score, plate, request.IsBroken, request.Mix, sessionId, judgements);
+        // A best-list card keeps its chart's first-play date as the score improves, so a best whose
+        // own play has left the recent window arrives wearing the first play's time, and the first
+        // play's row already holds it. The best is journaled at the time the import found it instead:
+        // later plays then see it, at the cost of a time that says when it was seen, not played.
+        if (await journal.Append(entry, cancellationToken) == JournalAppend.TimeHeldByAnotherPlay)
+            await journal.Append(entry with { OccurredAt = dateTimeOffset.Now }, cancellationToken);
         // A first pass on a limbo chart is journaled here rather than as an observation, and it may
         // be the player's only one — so this path evicts too. Remove on an absent key is a no-op,
         // which is why nothing checks whether the chart is flagged first.

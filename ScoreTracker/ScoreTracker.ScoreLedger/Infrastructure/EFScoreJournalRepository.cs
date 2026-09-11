@@ -19,7 +19,7 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
         _factory = factory;
     }
 
-    public async Task Append(ScoreJournalEntry entry, CancellationToken cancellationToken)
+    public async Task<JournalAppend> Append(ScoreJournalEntry entry, CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var mixId = MixIds.For(entry.Mix);
@@ -36,18 +36,19 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             // the chart first reaches the list and keeps that stamp as the score improves. Raising
             // the flag here would leave one play's row wearing another play's standing (the shape
             // that put a broken score under a passing record). The row is left exactly as it is:
-            // what it says happened, happened. The record itself is written either way, and the
-            // play earns its own row as soon as a recent window dates it.
-            if (!IsSamePlay(existing, entry)) return;
+            // what it says happened, happened. The caller is told, and journals the best at a time
+            // of its own.
+            if (!IsSamePlay(existing, entry)) return JournalAppend.TimeHeldByAnotherPlay;
 
             existing.IsBest = true;
             existing.SessionId ??= entry.SessionId;
             await database.SaveChangesAsync(cancellationToken);
-            return;
+            return JournalAppend.Written;
         }
 
         await database.AddAsync(Entity(entry, mixId, true), cancellationToken);
         await database.SaveChangesAsync(cancellationToken);
+        return JournalAppend.Written;
     }
 
     public async Task AppendObservations(IReadOnlyList<ScoreJournalEntry> entries,
