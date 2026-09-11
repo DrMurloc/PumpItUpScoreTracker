@@ -307,6 +307,16 @@ Two consequences, both fixed here:
   it. The cost is deliberate: a pass imported long after the fact has no journal row until a
   window catches it, which is better than a row that misdates a play or overwrites a real one.
 
+  **Amended 2026-09-11 (owner):** "until a window catches it" turned out to mean never. A best whose
+  play has left the window is never dated by one again, and a re-scrape of the unchanged record
+  writes nothing, so the Sessions page never saw those bests — 664 of 48,792 Phoenix 2 passing
+  records on the 2026-09-10 prod copy, 661 of them dated at the chart's first journaled play. The
+  previous best under later plays stayed low, "+N over P1" came back, and "Attempt N" skipped the
+  play. `Append` now reports the held time, and the record handler journals the best again at the
+  time the import found it. That row is honest about when the best was seen rather than when it was
+  played; plays in the same import made after the best still cannot see it, and records written
+  before this change have no row.
+
 The rows already carrying this shape are a data question, not a code one — they are repaired
 with the §8 script or left alone.
 
