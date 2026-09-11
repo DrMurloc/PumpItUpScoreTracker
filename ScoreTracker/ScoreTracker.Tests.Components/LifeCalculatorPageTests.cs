@@ -70,6 +70,25 @@ public sealed class LifeCalculatorPageTests : ComponentTestBase
     }
 
     [Fact]
+    public async Task OneMissFromOutWaitsUntilTheNextMissWouldEndTheRun()
+    {
+        // Four misses from song start leave 105 life: inside the red zone, three misses from out.
+        // Two more leave 25, where the next miss is the last.
+        var page = RenderComponent<LifeCalculator>();
+        for (var i = 0; i < 4; i++) await Press(page, "miss");
+
+        Assert.Equal(105, Life(page));
+        Assert.Equal("true", page.Find(".lc-track").GetAttribute("data-danger"));
+        Assert.Equal("ok", page.Find(".lc-state").GetAttribute("data-state"));
+
+        await Press(page, "miss");
+        await Press(page, "miss");
+
+        Assert.Equal(25, Life(page));
+        Assert.Equal("danger", page.Find(".lc-state").GetAttribute("data-state"));
+    }
+
+    [Fact]
     public async Task APerfectAtSongStartActuallyMovesTheBar()
     {
         var page = RenderComponent<LifeCalculator>();

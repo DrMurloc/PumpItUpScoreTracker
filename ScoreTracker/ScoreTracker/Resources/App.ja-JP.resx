@@ -3766,7 +3766,7 @@
     <value>インポート完了</value>
   </data>
   <data name="Import Confirming" xml:space="preserve">
-    <value>ファイルの内容がそのまま記録になります。スコアが下がる場合も同じです。保存は取り消せません。途中で止めても保存済みの分は残ります。</value>
+    <value>ファイルの内容がそのまま記録になります。スコアが下がる場合も同じです。Break Offスコアで記録が下がることはありません。保存は取り消せません。途中で止めても保存済みの分は残ります。</value>
   </data>
   <data name="Import Error Notify" xml:space="preserve">
     <value>スコアのインポート中にエラーが発生しました。後でもう一度お試しください。続く場合は DrMurloc にお知らせください。</value>
@@ -3787,7 +3787,7 @@
     <value>スクリプトをコピーします。</value>
   </data>
   <data name="Import Manual Step 3" xml:space="preserve">
-    <value>phoenix.piugame.com にログインした状態で、ブラウザのコンソール（F12）に貼り付けると、スコアの CSV がダウンロードされます。広告ブロッカーが動作を妨げることがあります。</value>
+    <value>{0} にログインした状態で、ブラウザのコンソール（F12）に貼り付けると、スコアの CSV がダウンロードされます。広告ブロッカーが動作を妨げることがあります。</value>
   </data>
   <data name="Import Manual Step 4" xml:space="preserve">
     <value>その CSV をここにアップロードします。同じ列構成の自作スプレッドシートも使えます。</value>

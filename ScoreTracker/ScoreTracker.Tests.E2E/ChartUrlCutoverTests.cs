@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.RegularExpressions;
 using ScoreTracker.Tests.E2E.Support;
 
 namespace ScoreTracker.Tests.E2E;
@@ -15,6 +16,7 @@ namespace ScoreTracker.Tests.E2E;
 public sealed class ChartUrlCutoverTests : IAsyncLifetime
 {
     private const string Canonical = "/Charts/phoenix/conflict/s20";
+    private const string EscapedCanonical = "/Charts/phoenix/allegro-pi%C3%B9-mosso/s19";
 
     private readonly E2EAppFixture _fixture;
     private HttpClient _client = null!;
@@ -86,6 +88,51 @@ public sealed class ChartUrlCutoverTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.MovedPermanently, response.StatusCode);
         Assert.Equal(Canonical, response.Headers.Location?.OriginalString);
+    }
+
+    [Fact]
+    public async Task ARedirectOntoANonAsciiTitleCarriesAnEscapedLocationThatResolves()
+    {
+        // Slugs keep unicode, so the Location header has to carry the path percent-encoded — a raw
+        // "più" reached the browser mangled, and the redirect it followed matched no chart.
+        await _fixture.Seed.SeedPhoenixChartAsync("Allegro Più Mosso", 19, "Single");
+        _fixture.ClearCaches();
+
+        var response = await _client.GetAsync("/Charts/Phoenix/Allegro-Pi%C3%B9-Mosso/S19");
+
+        Assert.Equal(HttpStatusCode.MovedPermanently, response.StatusCode);
+        Assert.Equal(EscapedCanonical, response.Headers.Location?.OriginalString);
+        Assert.Equal(HttpStatusCode.OK, (await _client.GetAsync(EscapedCanonical)).StatusCode);
+    }
+
+    [Fact]
+    public async Task TheGuidPermalinkOfANonAsciiTitle301sToTheEscapedCanonical()
+    {
+        var chartId = await _fixture.Seed.SeedPhoenixChartAsync("Allegro Più Mosso", 19, "Single");
+        _fixture.ClearCaches();
+
+        var response = await _client.GetAsync($"/Chart/{chartId}");
+
+        Assert.Equal(HttpStatusCode.MovedPermanently, response.StatusCode);
+        Assert.Equal(EscapedCanonical, response.Headers.Location?.OriginalString);
+    }
+
+    [Fact]
+    public async Task SwitchingMixOnANonAsciiTitleReturnsToTheEscapedPath()
+    {
+        // The mix switcher sends you back through /Mix/Set's LocalRedirect, so the shell has to hand it
+        // the encoded path: a decoded "più" came back out of the redirect mangled, and the page 404'd.
+        await _fixture.Seed.SeedPhoenixChartAsync("Allegro Più Mosso", 19, "Single");
+        _fixture.ClearCaches();
+
+        var page = await (await _client.GetAsync(EscapedCanonical)).Content.ReadAsStringAsync();
+        var link = Regex.Match(page, @"href=""(/Mix/Set\?mix=Phoenix2&amp;redirectUrl=[^""]+)""");
+        Assert.True(link.Success, "The shell rendered no Phoenix 2 mix link.");
+
+        var response = await _client.GetAsync(WebUtility.HtmlDecode(link.Groups[1].Value));
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal(EscapedCanonical, response.Headers.Location?.OriginalString);
     }
 
     [Fact]

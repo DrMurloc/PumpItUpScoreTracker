@@ -88,8 +88,10 @@ public sealed class ShellModelFactory
             loggedIn && await HasRecap(userId!.Value, cancellationToken),
             await GetHighlightedEvents(cancellationToken),
             http.Request.Path.HasValue ? http.Request.Path.Value! : "/",
-            // Mix switching reloads the page it was invoked from, query and all.
-            $"{(http.Request.Path.HasValue ? http.Request.Path.Value : "/")}{http.Request.QueryString}");
+            // Mix switching reloads the page it was invoked from, query and all. Percent-encoded,
+            // because /Mix/Set hands it straight to LocalRedirect: a decoded non-ASCII slug ("più")
+            // written raw into Location reaches the browser mangled into a URL that 404s.
+            $"{(http.Request.Path.HasValue ? http.Request.Path.ToUriComponent() : "/")}{http.Request.QueryString}");
     }
 
     private static string? Setting(IDictionary<string, string> settings, string key) =>

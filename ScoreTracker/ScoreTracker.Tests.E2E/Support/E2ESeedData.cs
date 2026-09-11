@@ -24,6 +24,9 @@ public sealed class E2ESeedData
     // about charts no modern mix carries.
     public static readonly Guid InfinityMixId = Guid.Parse("363B8D21-2DDE-4CE0-A54E-2AEE2B7280A2");
 
+    // Mirrors ScoreTracker.Data.Persistence.MixIds.Phoenix2.
+    public static readonly Guid Phoenix2MixId = Guid.Parse("A9B7D3C1-52E8-4F06-9B1A-2F8C33E01948");
+
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
     public E2ESeedData(IDbContextFactory<ChartAttemptDbContext> factory)
@@ -93,6 +96,13 @@ public sealed class E2ESeedData
     {
         await EnsurePhoenixMixAsync(cancellationToken);
         return await SeedChartAsync(PhoenixMixId, songName, level, type, cancellationToken);
+    }
+
+    public async Task<Guid> SeedPhoenix2ChartAsync(string songName, int level, string type,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureMixAsync(Phoenix2MixId, "Phoenix2", cancellationToken);
+        return await SeedChartAsync(Phoenix2MixId, songName, level, type, cancellationToken);
     }
 
     private async Task<Guid> SeedChartAsync(Guid mixId, string songName, int level, string type,

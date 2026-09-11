@@ -297,7 +297,9 @@
                                 && HttpContext is { Response.HasStarted: false })
         {
             HttpContext.Response.StatusCode = 301;
-            HttpContext.Response.Headers.Location = resolution.CanonicalPath;
+            // Percent-encoded on the wire: a slug keeps unicode ("più"), and a raw non-ASCII
+            // header value reaches the browser mangled into a URL no slug matches.
+            HttpContext.Response.Headers.Location = new PathString(resolution.CanonicalPath).ToUriComponent();
             _chart = null;
             return;
         }

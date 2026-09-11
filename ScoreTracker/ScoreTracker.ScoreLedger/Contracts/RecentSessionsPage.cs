@@ -38,6 +38,8 @@ public sealed record RecentSessionsPage(int TotalGroups, IReadOnlyList<RecentSes
         string Source,
         Guid? SessionId,
         ScoreEventClassification Classification,
+        // The best passing score in this mix before this play, on every row; null until
+        // something has passed.
         int? PreviousBest,
         bool IsReclear = false,
         bool IsStageBroken = false,
@@ -50,5 +52,8 @@ public sealed record RecentSessionsPage(int TotalGroups, IReadOnlyList<RecentSes
         string? PassPlate = null,
         string? PassGrade = null,
         // The AFK guard ended it — a give-up wearing the 51-miss tail, not a death (D36).
-        bool IsWalkOff = false);
+        bool IsWalkOff = false,
+        // This play's number among every play of the chart in its mix, itself included: what
+        // "Attempt N" prints. It counts what the journal holds.
+        int PlayNumber = 0);
 }

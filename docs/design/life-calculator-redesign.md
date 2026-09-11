@@ -95,7 +95,8 @@ Every figure on the page is computed at render time from `LifebarSimulator` via
 | Straight bads from song start | 10 | 500 ÷ 50 |
 | Straight misses from a full bar, level 23 | 15 | level-dependent, unlike the combo figures |
 | Miss cost at ≥1000 life | −270 | `trunc(min(life,1000) ÷ 4 + 20)` |
-| Life below which a miss is cheaper than a bad | 120 | the old page's "12% or lower visual life" |
+| Life below which a miss is cheaper than a bad | 120 | the old page's "12% or lower visual life" — the bar's red border and its 12% tick |
+| Life at or below which one miss ends the run | 26 | level-independent. "One miss from out" means this, read off the simulator (`LifebarAnalysis.MissesToFail`) — never off the 120 line, which is where a miss gets cheaper than a bad, not where it kills. The label fired at 120 until 2026-09-11, with up to four misses still left |
 | Multiplier rebuild after a miss | 40 perfects / 50 greats | 0 → the 0.80 cap |
 | Overflow | `3 × level²` | 300 at level 10, 2523 at level 29 |
 

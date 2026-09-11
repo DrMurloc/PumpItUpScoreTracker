@@ -13,10 +13,11 @@ internal interface IScoreJournalRepository
 {
     /// <summary>
     ///     Records a play that became the record. Idempotent on the play key: the same play
-    ///     already journaled as an observation is raised to IsBest rather than duplicated.
+    ///     already journaled as an observation is raised to IsBest rather than duplicated. A
+    ///     different play already holding that key is left alone and reported, so the caller can
+    ///     journal the record at a time of its own.
     /// </summary>
-    Task Append(ScoreJournalEntry entry, CancellationToken cancellationToken);
-
+    Task<JournalAppend> Append(ScoreJournalEntry entry, CancellationToken cancellationToken);
     /// <summary>
     ///     Records plays that did NOT become the record — the official site's recently-played
     ///     list. Existing rows on the same play key are left exactly as they are, so an

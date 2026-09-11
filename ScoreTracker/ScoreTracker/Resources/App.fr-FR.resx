@@ -3765,7 +3765,7 @@
     <value>Importation terminée</value>
   </data>
   <data name="Import Confirming" xml:space="preserve">
-    <value>Votre fichier devient votre record, même là où il note moins. L'enregistrement est irréversible — un arrêt en cours conserve ce qui est déjà enregistré.</value>
+    <value>Votre fichier devient votre record, même là où il note moins. Les scores cassés ne font jamais baisser un record. L'enregistrement est irréversible — un arrêt en cours conserve ce qui est déjà enregistré.</value>
   </data>
   <data name="Import Error Notify" xml:space="preserve">
     <value>Une erreur est survenue lors de l'import de vos scores. Réessayez plus tard. Si cela persiste, prévenez DrMurloc.</value>
@@ -3786,7 +3786,7 @@
     <value>Copiez le script.</value>
   </data>
   <data name="Import Manual Step 3" xml:space="preserve">
-    <value>Connecté sur phoenix.piugame.com, collez-le dans la console du navigateur (F12) — il télécharge un CSV de vos scores. Les bloqueurs de publicité peuvent le casser.</value>
+    <value>Connecté sur {0}, collez-le dans la console du navigateur (F12) — il télécharge un CSV de vos scores. Les bloqueurs de publicité peuvent le casser.</value>
   </data>
   <data name="Import Manual Step 4" xml:space="preserve">
     <value>Uploadez le CSV ici — accepte aussi un tableur tenu à la main avec les mêmes colonnes.</value>

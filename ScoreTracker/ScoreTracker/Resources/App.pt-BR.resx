@@ -3749,7 +3749,7 @@
     <value>Importação concluída</value>
   </data>
   <data name="Import Confirming" xml:space="preserve">
-    <value>Seu arquivo vira seu recorde, inclusive onde a pontuação for menor. Salvar não pode ser desfeito — parar no meio mantém o que já foi salvo.</value>
+    <value>Seu arquivo vira seu recorde, inclusive onde a pontuação for menor. Pontuações quebradas nunca rebaixam um recorde. Salvar não pode ser desfeito — parar no meio mantém o que já foi salvo.</value>
   </data>
   <data name="Import Error Notify" xml:space="preserve">
     <value>Houve um erro ao importar suas pontuações. Tente novamente mais tarde. Se persistir, avise o DrMurloc.</value>
@@ -3770,7 +3770,7 @@
     <value>Copie o script.</value>
   </data>
   <data name="Import Manual Step 3" xml:space="preserve">
-    <value>Conectado no phoenix.piugame.com, cole-o no console do navegador (F12) — ele baixa um CSV das suas pontuações. Bloqueadores de anúncio podem quebrá-lo.</value>
+    <value>Conectado no {0}, cole-o no console do navegador (F12) — ele baixa um CSV das suas pontuações. Bloqueadores de anúncio podem quebrá-lo.</value>
   </data>
   <data name="Import Manual Step 4" xml:space="preserve">
     <value>Envie o CSV aqui — também aceita uma planilha própria com as mesmas colunas.</value>

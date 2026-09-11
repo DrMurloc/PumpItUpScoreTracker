@@ -209,7 +209,7 @@
     private IReadOnlyList<SessionScore> Notable = Array.Empty<SessionScore>();
     private IReadOnlyList<OrderedPlay> OrderedPlays = Array.Empty<OrderedPlay>();
 
-    /// <summary>An "Attempt N" caption starts meaning something at this many plays (D49).</summary>
+    /// <summary>The first lifetime play that prints "Attempt N" (D51); below it the number is noise.</summary>
     private const int AttemptCaptionFloor = 5;
 
     protected override void OnParametersSet()
@@ -241,10 +241,9 @@
     private bool HasFlagged;
 
     /// <summary>
-    ///     Runs of one chart get the rail; runs of five or more also get "Attempt N" captions
-    ///     on every row but the newest — the newest is the one whose badges tell the ending,
-    ///     and numbering it too would caption the punchline (D49). Attempts count from the
-    ///     oldest play, so "Attempt 2" is the second time the player stepped on.
+    ///     Runs of one chart get the rail. Every play also gets "Attempt N" once N reaches the floor,
+    ///     N being the play's number among every play of the chart in its mix, counted by the session
+    ///     feed (D51) — the newest included, since its number is the one a player looks for.
     /// </summary>
     private static IReadOnlyList<OrderedPlay> Thread(IReadOnlyList<SessionScore> ordered)
     {
@@ -254,10 +253,10 @@
         {
             var end = start;
             while (end + 1 < ordered.Count && ordered[end + 1].Row.ChartId == ordered[start].Row.ChartId) end++;
-            var length = end - start + 1;
             for (var i = start; i <= end; i++)
             {
-                int? attempt = length >= AttemptCaptionFloor && i > start ? length - (i - start) : null;
+                var play = ordered[i].Row.PlayNumber;
+                int? attempt = play >= AttemptCaptionFloor ? play : null;
                 plays[i] = new OrderedPlay(ordered[i], RailFor(i, start, end), attempt);
             }
 

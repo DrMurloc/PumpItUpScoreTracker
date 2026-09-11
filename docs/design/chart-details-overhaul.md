@@ -88,6 +88,13 @@ surface and the destination worthy of the dialog's vocabulary.
   own logic), and **`SlugifySong` carries an unslugifiable-name fallback** (`"!"` →
   `"exclamation"`). Name twins that never share a mix (`STEP`/`Step`) collide on nothing; the
   suffix-with-artist contingency stays shelved until two same-slug songs coexist in one mix.
+- **A redirect writes its target percent-encoded** (`PathString.ToUriComponent()`), and only the
+  redirect does — the comparison against the request path stays on the decoded form. Slugs keep
+  unicode, and until 2026-09-11 a raw `più` went into the `Location` header, reached the browser as
+  `piÃ¹`, and matched no slug: every redirect onto a non-ASCII title — the Phoenix 2 copy of a
+  chart, a mixed-case slug, a GUID permalink — ended in a 404, while the canonical URL itself
+  rendered fine. The shell's return URL — where the mix switcher sends you back to — is built
+  from the encoded path for the same reason: `/Mix/Set` hands it straight to `LocalRedirect`.
 - When the site default mix flips (~per mix era), the canonical namespace 301s wholesale and the
   sitemap regenerates — accepted (mass 301 migrations transfer signals).
 - Sitemap lists **canonical vanity URLs only** (replacing GUIDs), and ships **in the same PR** as

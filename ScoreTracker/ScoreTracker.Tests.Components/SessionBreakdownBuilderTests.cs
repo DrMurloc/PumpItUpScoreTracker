@@ -204,6 +204,23 @@ public sealed class SessionBreakdownBuilderTests
     }
 
     [Fact]
+    public async Task APlayThatIsNotAnUpscoreDoesNotEarnTheMarkOnceAnEarlierPassReachedPhoenix1()
+    {
+        // The repeat that earned it again on every visit: a play under the record but over the
+        // Phoenix 1 best, on a chart an earlier Phoenix 2 pass had already taken past it.
+        var chart = ChartAt(ChartType.Single, 21);
+        var repeat = Row(chart.Id, Start, 955000, false, ScoreEventClassification.Played) with
+        {
+            PreviousBest = 960000
+        };
+
+        var model = await Build(chart, new[] { repeat }, MixEnum.Phoenix2,
+            new[] { Phoenix1(chart.Id, 940000) });
+
+        Assert.Null(model.Hero!.Scores.Single().Phoenix1Gain);
+    }
+
+    [Fact]
     public async Task MatchingYourPhoenix1BestIsNotPassingIt()
     {
         var chart = ChartAt(ChartType.Single, 21);

@@ -5,10 +5,13 @@
 @using ScoreTracker.Rivals.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Commands
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.ScoreLedger.Contracts
 @using ScoreTracker.ScoreLedger.Contracts.Commands
 @using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Commands
 @using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.OfficialMirror.Wiring
+@using Microsoft.Extensions.Options
 @using ScoreTracker.Identity.Contracts.Commands
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.SharedKernel.Models
@@ -296,7 +299,7 @@
                                    OnClick="CopyPIUGameScript">@L["Copy Script"]</MudButton>
                     </li>
                     <li>
-                        <MudText Typo="Typo.body2">@L["Import Manual Step 3"]</MudText>
+                        <MudText Typo="Typo.body2">@L["Import Manual Step 3", ManualSiteHost]</MudText>
                     </li>
                     <li>
                         <MudText Typo="Typo.body2">@L["Import Manual Step 4"]</MudText>
@@ -388,6 +391,7 @@
 @inject IImportCredentialClientStore ClientStore;
 @inject IDialogService DialogService;
 @inject IUiNotificationHub UiHub;
+@inject IOptions<PiuGameConfiguration> PiuGameSites;
 @code
 {
     // The spreadsheet pipeline's own states — the password form is not a step, it is the page.
@@ -822,15 +826,22 @@
         // One upload = one session.
         var uploadSessionId = Guid.NewGuid();
         var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(_userId, _currentMix), cancellationToken)).ToDictionary(s => s.ChartId);
-        // A CSV is a manual submission: the file is what the player wants shown, so it is
-        // authoritative and may lower a record (docs/design/score-truth-model.md D9). Rows
-        // matching the record exactly are still skipped — the ledger would no-op them anyway,
-        // and this keeps a re-upload from walking every chart.
+        // A CSV is a manual submission: a passing row is what the player wants shown, so it is
+        // authoritative and may lower a record (docs/design/score-truth-model.md D9). A broken row is
+        // not. The Phoenix 2 best list keeps a chart's first failed attempt until it is passed, so a
+        // script CSV can carry a broken card below a better fail the import already recorded. A
+        // broken row becomes a record only while the broken-scores box is ticked, and only where the
+        // published policy says it beats what is stored — the official import's rule for broken
+        // scores. Rows that would change nothing are skipped, so a re-upload never walks every chart.
         var toSaveScores = _spreadSheetScores
-            .Where(s => !myScores.TryGetValue(s.ChartId, out var existing)
-                        || existing.IsBroken
-                        || existing.Plate != s.Plate
-                        || existing.Score != s.Score).ToArray();
+            .Where(s => !s.IsBroken || _includeBroken)
+            .Where(s =>
+            {
+                var existing = myScores.GetValueOrDefault(s.ChartId);
+                return s.IsBroken
+                    ? BestAttemptPolicy.Beats(existing, s.Score, s.Plate, true)
+                    : existing == null || existing.IsBroken || existing.Plate != s.Plate || existing.Score != s.Score;
+            }).ToArray();
 
         _maxSaving = toSaveScores.Length;
         foreach (var best in toSaveScores)
@@ -846,8 +857,9 @@
             _remainingTime = (DateTimeOffset.Now - startTime) * (((double)_maxSaving - (double)_currentSaved) / (double)_currentSaved);
             try
             {
-                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId, false, best.Score, best.Plate,
-                    Source: ScoreJournalEntry.CsvSource, Mix: _currentMix, SessionId: uploadSessionId),
+                await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId, best.IsBroken, best.Score, best.Plate,
+                    KeepBestStats: best.IsBroken, Source: ScoreJournalEntry.CsvSource, Mix: _currentMix,
+                    SessionId: uploadSessionId),
                     cancellationToken);
             }
             catch (OperationCanceledException)
@@ -894,63 +906,13 @@
     }
     private async Task CopyPIUGameScript()
     {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _piuGameScript());
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText",
+            PiuGameConsoleScript.For(PiuGameSites.Value.BaseUrlFor(_currentMix), _startPage, _endPage));
         Snackbar.Add(L["Copied to clipboard!"].Value, Severity.Success);
     }
 
-    private string _pageLimitString() => _endPage == null ? "" : $"pageIndex>{_endPage}||";
-    // The paste-into-console scraper. Downloads a Blob through a temporary <a download> —
-    // top-frame data: navigation has been blocked by browsers for years, and popup blockers
-    // ate window.open. The BOM keeps Excel from garbling CJK song names; song names travel
-    // verbatim (the old #→Num mangling existed only to survive a data: URI).
-    private string _piuGameScript() => $@"
-var rows=""Song,Difficulty,Score,LetterGrade,Plate\r\n"";
-var pageIndex={_startPage};
-var pageCount=0, scoreCount=0, failedRows=0;
-while(true) {{
-    var pageHtml = await $.get(""https://phoenix.piugame.com/my_page/my_best_score.php?page=""+pageIndex);
-    var page=$(pageHtml);
-    var found=$(""ul.my_best_scoreList>li>div.in"",page);
-    if(found.length==0 && pageCount==0) {{
-        alert(""No scores found - sign in on https://phoenix.piugame.com first, then run this again."");
-        break;
-    }}
-    found.each(function(){{
-        try {{
-            var songName = $("".song_name p"",this).first().text().replaceAll('""','""""');
-            var typeMatch = ($("".stepBall_img_wrap .imG img"",this).first().attr(""src"")||"""").match(/\/full\/([a-z]+)_num_/i);
-            var chartType = typeMatch ? typeMatch[1] : ""?"";
-            var level = $("".stepBall_img_wrap .imG img"",this).map(function(i,el){{var m=$(el).attr(""src"").match(/_num_([0-9])\.png/);return m?m[1]:"""";}}).get().join("""");
-            var score = $("".etc_con span.num"",this).first().text().replaceAll("","","""");
-            var letterMatch = ($("".etc_con img[src*='/grade/']"",this).attr(""src"")||"""").match(/\/grade\/([a-z_]+)\.png/i);
-            var letter = (letterMatch?letterMatch[1]:""?"").replace(""_p"",""+"");
-            var plateMatch = ($("".etc_con img[src*='/plate/']"",this).attr(""src"")||"""").match(/\/plate\/([a-z]+)\.png/i);
-            var plate = plateMatch?plateMatch[1]:""?"";
-            rows+='""'+songName+'"",'+chartType+level+"",""+score+"",""+letter+"",""+plate+""\r\n"";
-            scoreCount++;
-        }} catch(e) {{
-            failedRows++;
-            console.error(""Skipped a row on page ""+pageIndex, e);
-        }}
-    }});
-    console.log(""Page ""+pageIndex+"" done"");
-    pageCount++;
-    pageIndex++;
-    if({_pageLimitString()}$("".xi.last"",page).length==0){{
-        break;
-    }}
-}}
-if(scoreCount>0) {{
-    var blobUrl = URL.createObjectURL(new Blob([""\uFEFF""+rows], {{type:""text/csv;charset=utf-8""}}));
-    var link = document.createElement(""a"");
-    link.href = blobUrl;
-    link.download = ""piu-scores.csv"";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(blobUrl);
-    console.log(""Done - ""+scoreCount+"" scores across ""+pageCount+"" pages""+(failedRows>0?"", ""+failedRows+"" rows skipped (see errors above)"":"""")+"". Saved as piu-scores.csv"");
-}}";
+    /// <summary>The selected mix's official site: what the copied script reads, and what step 3 names.</summary>
+    private string ManualSiteHost => new Uri(PiuGameSites.Value.BaseUrlFor(_currentMix)).Host;
 
     public void Dispose()
     {
