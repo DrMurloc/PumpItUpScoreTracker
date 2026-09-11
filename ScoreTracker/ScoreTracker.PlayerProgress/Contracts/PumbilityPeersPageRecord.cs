@@ -26,6 +26,17 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 /// <param name="Roster">The public peers, strongest total first. Private peers are counted, never listed.</param>
 /// <param name="PrivatePeers">How many peers are private accounts, so the page can say they exist.</param>
 /// <param name="You">The viewer's own row in the roster's terms, for the page to place among the peers.</param>
+/// <param name="Unheld">
+///     The Rarity grouping's other half (docs/design/pumbility-overhaul.md D66): every chart of the
+///     <paramref name="RarityLevels" /> that no peer holds, for every lit type in scope — no holders, no
+///     tier, and the viewer's own score and slot. The peers' count, projected grade and the viewer's
+///     standing among them come only where five or more peers scored the chart; where fewer did, it
+///     reads zero scored.
+/// </param>
+/// <param name="RarityLevels">
+///     Per lit type, the levels at least half of the peers holding anything keep a chart of, ascending
+///     (<see cref="PumbilityPeerPools.LevelsInReach" />).
+/// </param>
 [ExcludeFromCodeCoverage]
 public sealed record PumbilityPeersPageRecord(
     MixEnum Mix,
@@ -35,8 +46,17 @@ public sealed record PumbilityPeersPageRecord(
     IReadOnlyList<PeerAloneEntry> YoursAlone,
     IReadOnlyList<PeerRosterEntry> Roster,
     int PrivatePeers,
-    PeerRosterEntry? You)
+    PeerRosterEntry? You,
+    IReadOnlyList<PeerPoolEntry>? Unheld = null,
+    IReadOnlyDictionary<ChartType, IReadOnlyList<int>>? RarityLevels = null)
 {
+    /// <summary><see cref="Unheld" />, never null.</summary>
+    public IReadOnlyList<PeerPoolEntry> UnheldCharts => Unheld ?? Array.Empty<PeerPoolEntry>();
+
+    /// <summary><see cref="RarityLevels" />, never null: a type absent from it has no level in reach.</summary>
+    public IReadOnlyDictionary<ChartType, IReadOnlyList<int>> LevelsInReach =>
+        RarityLevels ?? new Dictionary<ChartType, IReadOnlyList<int>>();
+
     /// <summary>The empty answer: no peers, nothing held, nobody to list.</summary>
     public static PumbilityPeersPageRecord Empty(MixEnum mix, ChartType? pool)
     {

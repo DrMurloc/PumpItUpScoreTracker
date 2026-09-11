@@ -110,6 +110,8 @@ namespace ScoreTracker.PlayerProgress.Application
             var entries = new List<PeerPoolEntry>();
             var alone = new List<PeerAloneEntry>();
             var myPools = new Dictionary<ChartType, IReadOnlyDictionary<Guid, int>>();
+            var unheld = new List<PeerPoolEntry>();
+            var rarityLevels = new Dictionary<ChartType, IReadOnlyList<int>>();
             foreach (var type in lit)
             {
                 var summary = sweep.PeerPools[type];
@@ -144,10 +146,29 @@ namespace ScoreTracker.PlayerProgress.Application
                     alone.Add(new PeerAloneEntry(chartId, type, myRank[chartId], record.Score!.Value, record.Plate, rating));
                 }
 
+                // The Rarity grouping (D66): the levels the peers build their pools from, and every chart
+                // of those levels nobody holds — the charts the entries above cannot carry. The pools only
+                // know a chart nobody holds once five peers have scored it, so the rest read zero scored.
+                var levels = PumbilityPeerPools.LevelsInReach(summary, charts);
+                rarityLevels[type] = levels;
+                var inReach = levels.ToHashSet();
+                foreach (var candidate in charts.Values.Where(c => c.Type == type && inReach.Contains((int)c.Level)))
+                {
+                    var known = summary.Charts.GetValueOrDefault(candidate.Id);
+                    if (known is { Holders: > 0 }) continue;
+                    var myScore = mine.TryGetValue(candidate.Id, out var record) ? record.Score : null;
+                    unheld.Add(new PeerPoolEntry(candidate.Id, type, 0, peerCount, 0, TierListCategory.Unrecorded, 0,
+                        known?.Scored ?? 0,
+                        myRank.TryGetValue(candidate.Id, out var rank) ? rank : null,
+                        myScore, record?.Plate,
+                        myScore is { } score && known != null ? known.PercentileOf((int)score) : null,
+                        known?.ProjectedAt(quantile)));
+                }
             }
 
             var (roster, privatePeers, you) = await Roster(mix, userId, lit, sweep, myPools, cancellationToken);
-            return new PumbilityPeersPageRecord(mix, pool, groups, entries, alone, roster, privatePeers, you);
+            return new PumbilityPeersPageRecord(mix, pool, groups, entries, alone, roster, privatePeers, you,
+                unheld, rarityLevels);
         }
 
         /// <summary>
