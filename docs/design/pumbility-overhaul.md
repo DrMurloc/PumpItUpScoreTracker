@@ -137,6 +137,13 @@ describe is §3.10; the measurements behind them are §4.9.
 | D64 | **A board row wears the face the mirror swept (round ten, 2026-09-06).** Owner: *"we have avatars for the board peers, don't we? those should show on the leaderboards."* We do — the sweep has scraped an avatar per board player since the mirror was built, and the Official scope has always drawn them; nothing else did, so a board peer stood among site players who all had a picture and was the one row without. `OfficialTagScore` carries the avatar now, and the chart board keeps one tag-keyed map that the official board, the PUMBILITY peers read and a ghost rival all fill. A board player the sweep saw no face for still gets the default one, because a half-drawn row reads as broken. **A private player's Anonymous row deliberately gets none**: it has no account to be known by either, but inventing a face for it would say something about a person who asked us not to |
 | D65 | **What the bug check settled (2026-09-06).** Four calls, in the owner's words. *A person counted twice* — a public account the mirror cannot match is a site peer by their record and a board peer by their board row; matching cannot bridge a rename the account never told us about, so this is an **accepted ceiling**: a peer count can read one high for a renamed, unlinked player. *The chart dialog's PUMBILITY board* shows **what is on the official list right now** — one snapshot, official rows only — even though the popover above it counts a peer's best ever published, so the two can differ and the board is the one telling the simpler truth. `GetChartPlacementsFor` takes a `PlacementScope` now and the ratchet names all four chart-shaped reads. *A renamed person lends every row they own to the standing*, not just the one their pool was read from — the mirror folds them, the way the projection already had them folded. *And the roster's board note stops saying "these"*: the table shows a window of fifty and the note counts everyone, so it reads "{0} peers are from the official board" and names no rows. Left alone by the same call: a board row losing every exact tie for want of a date, and the board store holding a sweep still in flight, as its three siblings always have |
 
+Round eleven, 2026-09-11 — the Rarity grouping. The page it describes is §3.10; the measurements are
+§4.13, the scope §6.15.
+
+| # | Ruling |
+|---|---|
+| D66 | **Rarity — the peers' list read from the other end (round eleven, 2026-09-11).** Owner: *"A bizzaro mode for PUMBILITY page … takes folders that are realistically within your PUMBILITY range (based on how prevelant they are to peers, we want to trim off edge case folders), then ranks everything by how FEW people's top 50 pumbility they show up in"*; on the mock's three placements, *"lets do A"* — a third option in Grouped by, not its own tab and not a flip link on the title — and *"Rarity is a good name"*. **A level is in range when at least half of the peers who hold anything keep a chart of it** in their pool of the type (`PumbilityPeerPools.RarityReach`), and the list is **every chart of those levels**, the ones no peer keeps included, ordered by the share of the peers who keep it — fewest first, then lowest in their pools, then fewest who played it. The sections are the rarity bands read as *the rarity of a thing is the share of people who lack it* (UX-GUIDELINES §6), `ThemeScales.BandFor(1 − share)`, each named for the share it covers — *Kept by 1% or fewer · 1–10% · 10–25% · 25–50% · 50–75% · over 75%* — from the floors the bands themselves cut on; 25% and up start folded, under a setting of their own. A card says *Kept by 2 of 395 · played by 20*, and a chart no peer keeps that fewer than five of them played says *played by fewer than 5*: the peers' pool data does not hold a chart nobody keeps until five have scored it, and this grouping leaves that alone. No switch shows under it — *Only projected PUMBILITY gains* would empty it, because almost nothing a peer group skips would pay (§4.13). The gain corner, the projected grade, Energy, the borders, the To-Do ring and Download are Prevalence's; the Table carries *Kept · Played* where Prevalence has *Peers · Better Than*. Like the other groupings it is a re-sort (D56): the levels and the unkept charts ride every peers read. Both mixes |
+
 ## 3. The section
 
 ### 3.1 The three pages
@@ -149,7 +156,7 @@ FRAME   your number · pool selector · the bar        ← left-aligned, all thr
         [ Play ]  [ PUMBILITY Breakdown ]  [ Phoenix 1 ]
 
 Play          your peers, both mixes (§3.10)                      /Pumbility
-              Grouped by: Prevalence · Projected gains
+              Grouped by: Prevalence · Rarity · Projected gains
 PUMBILITY     your PUMBILITY titles                               /Pumbility/Breakdown
 Breakdown     where your PUMBILITY comes from                     (/Pumbility/Pool still resolves)
               your top 50: the pool curve, then the fifty (§3.11)
@@ -528,6 +535,19 @@ as a claim about the tier rather than about you (field test round one). The `Gro
 tier list's own control, capped in width so the density trio stays beside it; the two switches
 beside it (Only projected PUMBILITY gains under Prevalence; Project Phoenix 1 scores under Projected
 gains) are the page's only filters, and each shows only where it means something.
+
+**Rarity (D66, round eleven).** The third grouping reads the same pools from the other end, over a
+narrower field: only the levels at least half of the peers keep a chart from, and within them every
+chart — the ones nobody keeps included — fewest keepers first. It answers *what does everyone around
+me skip*, and measured, that is deep cuts: remixes, short cuts and full songs are 40% of the fifty
+rarest singles against 14% of the levels overall, and almost none of them would clear the bar
+(§4.13). The lede names the levels — *Every chart in S20–S23, the folders your peers build their
+PUMBILITY from, with the ones fewest of them keep first. A folder counts when at least half your peers
+keep a chart from it.* — joining the two types under All. The sections are rarity bands by the share
+of peers who keep a chart, 25% and up folded under `Pumbility__RarityCollapsed`; the Comfortable
+caption says how many keep it and how many played it, the Compact tooltip carries the same, and the
+Table swaps *Peers · Better Than* for *Kept · Played*. Everything else on a card is Prevalence's. No
+switch shows under this grouping.
 
 **Energy (D51, round seven).** A select in the control row, between Grouped by and the grouping's own switch,
 labelled *Energy* and reading *Good* by default with *Great* and *Top of my game* behind it — the peers' 25th, 50th and
@@ -1169,6 +1189,52 @@ site / ~0 board · DIAMOND 1–2 46 / ~0 · DIAMOND 3–5 50 / ~5 · RED BERYL 1
 (§6.13) rather than quoting them.
 
 
+### 4.13 Round eleven — which levels a peer group draws on, and what it skips (2026-09-11)
+
+The reporter's account on the prod-synced local database, through
+`ScoreTracker.ExplorationTests/Pumbility/PumbilityInvertedRankingProbeTests` — the projection saga's
+own projector call, so the peers are the page's, board peers included.
+
+**Where the pools sit.** Phoenix 2 singles: 395 peers (340 from the official board) around a pool of
+17,655.95; doubles: 257 (222 board) around 17,414.97. For each level, the share of the peers keeping
+at least one chart of it, and its share of all their pool slots:
+
+| Singles | S19 | S20 | S21 | S22 | S23 | S24 | S25 |
+|---|---|---|---|---|---|---|---|
+| peers keeping one | 10% | 98% | 100% | 98% | 82% | 37% | 9% |
+| share of slots | 1.1% | 30.4% | 33.7% | 21.9% | 9.4% | 2.3% | 0.5% |
+
+| Doubles | D19 | D20 | D21 | D22 | D23 | D24 | D25 |
+|---|---|---|---|---|---|---|---|
+| peers keeping one | 11% | 95% | 100% | 100% | 97% | 85% | 24% |
+| share of slots | 1.1% | 20.6% | 24.6% | 20.1% | 21.6% | 10.0% | 1.3% |
+
+**Three rules, one answer.** Half the peers keeping a chart of the level, a level holding 5% or more
+of the slots, and the central 90% of the slots all choose **S20–S23** and **D20–D24**; only the
+central 95% differs, adding S24. The half rule ships because it is the one a player can be told in a
+sentence.
+
+**Phoenix 1, whose peers are the competitive band.** The worry was a band full of players holding a
+handful of charts, thinning every level's reach. On this account it does not happen: singles 256
+peers, 253 of them with a full fifty, choosing **S21–S24** (80 / 99 / 97 / 70%; S20 29%, S25 32%);
+doubles 192 peers, 188 full, choosing **D22–D25** (86 / 99 / 96 / 58%; D21 30%). Counting every peer
+or only the peers holding anything gives the same levels.
+
+**What the flipped list holds.** Phoenix 2: 480 singles charts in range and **one** no peer keeps
+(Log In S20, which 25 of them played) — a group of 395 covers nearly everything, and the median chart
+is kept by 24. Doubles: 672, with **36** no peer keeps, about half of them old D24s; median kept by
+10. Phoenix 1: 326 singles with 17 unkept, 411 doubles with 23. Of the fifty rarest singles, **20 are
+remixes, short cuts or full songs** against 67 of the 480 in range (40% against 14%); doubles 9 of 50
+against 80 of 672. At Great, **none of the fifty rarest singles and one of the fifty rarest doubles
+would clear the bar** — a chart that paid would be in somebody's pool.
+
+**Levels are not normalised.** A harder level is kept less per chart (S23 averages 28 keepers against
+S20's 44; D24 10 against D21's 24), so the plain count leans on the top level in range: 22 of the
+fifty rarest doubles are D24s. Ranking by the share of each level's own average moves that to 18 —
+not enough to justify a second rule, and the plain count is what was asked for.
+
+⚠ Snapshot figures of a live account and a weekly mirror; re-run the probe rather than quoting them.
+
 ## 5. Phoenix 2 carryover — the Phoenix 1 page
 
 Its own route since round two (`/Pumbility/Phoenix1`, D14), and only on the Phoenix 2 view; Phoenix 1
@@ -1753,6 +1819,41 @@ hosting abstractions and the stores are internal, so the host asks through the M
 eviction is what releases it, that a one-mix eviction leaves the other, and that none of the SQL's
 answers moved. `Tests.Integration/BoardPeerReadTests`: the CO-OP and low-level rows the store must
 still carry. `ExplorationTests/Pumbility/PeerCacheProbeTests`: the table above, re-runnable.
+
+### 6.15 Round eleven — the Rarity grouping
+
+**Domain** — `PumbilityPeerPools.LevelsInReach(summary, charts)` and `RarityReach = 0.5`: the levels at
+which at least half of the peers holding anything keep a chart. Pure, and it reads only the pools.
+`Build` is untouched, so a chart nobody keeps stays out of the peers' pool data until five peers have
+scored it.
+
+**PlayerProgress** — `PumbilityPeersPageRecord` gains two trailing parameters, defaulted so no caller
+changes: `Unheld`, every chart of the reach levels no peer holds, as a `PeerPoolEntry` with no holders
+and no tier that carries the peers' count, grade and the viewer's standing wherever the pool data kept
+the chart; and `RarityLevels`, the levels per lit type. The peers-page handler fills both off the
+cached sweep it already reads — no new query, no new handler, no cache change.
+
+**Web** — `PeerGrouping.Rarity`. `PeersSection` offers it between Prevalence and Projected gains, names
+the levels in its lede, shows no switch under it, and keeps its folds under `Pumbility__RarityCollapsed`:
+the shared `Pumbility__CollapsedTiers` stores what is folded, so anyone who had ever folded a prevalence
+tier would have opened Rarity with nothing folded. `PeerPoolList` bands the rows with
+`ThemeScales.BandFor(1 − share)` and names each section from `ThemeScales.FloorOf`, the floors `BandFor`
+cuts on; the Compact tooltip and the Table (*Kept · Played* for *Peers · Better Than*) follow. The
+download is still drawn from the rendered sections, and `PumbilityShareSection` carries the band so the
+picture colours a section the way the screen does.
+
+**Nothing else.** No table, migration, port, job, API or cache change, and nothing post-deploy. Per
+peers read, one pass over the catalog of each lit type.
+
+**Tests** — `DomainTests`: the half rule (exactly half is in, a peer with an empty pool counts against
+nothing, a board peer counts like an account, no peers means no levels). `ApplicationTests`: the
+handler's levels and unkept charts on both mixes. `Tests.Components`: the bands, their order and folds,
+the caption, the Table's columns, the select's third option with no switch, and the band floors pinned
+against `BandFor`. `ExplorationTests`: the probe behind §4.13.
+
+**Build order** — docs first, i18n last, pushed per commit: (1) this section, D66, §3.10, §4.13;
+(2) the probe; (3) the Domain rule; (4) the record and the handler; (5) the grouping on the page;
+(6) nine locales.
 
 ## 7. Responsive
 
