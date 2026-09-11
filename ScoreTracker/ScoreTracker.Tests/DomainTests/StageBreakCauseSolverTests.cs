@@ -394,4 +394,73 @@ public sealed class StageBreakCauseSolverTests
         // lost judgements earlier.
         Assert.Equal(new[] { PhoenixPlate.MarvelousGame }, StageBreakCauseSolver.BrokenPlates(8, 0, 1, 6));
     }
+
+    [Fact]
+    public void ReplaysOfOneChartShareTheGradeEveryRunCouldHaveCrossed()
+    {
+        // Two runs on one chart. Six misses could have left SSS or SSS+ just gone, and alone the
+        // evenly spread guess says SSS; the replay could only have crossed SSS+. One command ended
+        // both, so both are SSS+.
+        var causes = StageBreakCauseSolver.SolveStreak(new[]
+        {
+            new JudgementCounts(900, 0, 0, 0, 6),
+            new JudgementCounts(806, 1, 0, 0, 4)
+        }, 1000, 26, MixEnum.Phoenix2);
+
+        Assert.All(causes, cause => Assert.Equal(PhoenixLetterGrade.SSSPlus, cause.PassGrade));
+    }
+
+    [Fact]
+    public void AStreakWithNoGradeInCommonLeavesEachRunItsOwnAnswer()
+    {
+        // Ugly Dee S17 twice: the first run could only have crossed SSS and the second only SSS+, so
+        // the command changed between them.
+        var causes = StageBreakCauseSolver.SolveStreak(new[]
+        {
+            new JudgementCounts(251, 7, 0, 0, 2),
+            new JudgementCounts(254, 8, 0, 0, 0)
+        }, 597, 17, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixLetterGrade.SSS, causes[0].PassGrade);
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, causes[1].PassGrade);
+    }
+
+    [Fact]
+    public void TwoGradesInCommonTakeTheLineMostRunsGuess()
+    {
+        // Eleven misses twice: either run could have left SS+ or SSS just gone, and spread evenly
+        // both land just under SS+.
+        var causes = StageBreakCauseSolver.SolveStreak(new[]
+        {
+            new JudgementCounts(900, 0, 0, 0, 11),
+            new JudgementCounts(950, 0, 0, 0, 11)
+        }, 1000, 26, MixEnum.Phoenix2);
+
+        Assert.All(causes, cause => Assert.Equal(PhoenixLetterGrade.SSPlus, cause.PassGrade));
+    }
+
+    [Fact]
+    public void AStreakLeavesAWalkOffAlone()
+    {
+        var causes = StageBreakCauseSolver.SolveStreak(new[]
+        {
+            new JudgementCounts(900, 0, 0, 0, 6),
+            new JudgementCounts(806, 1, 0, 0, 4),
+            new JudgementCounts(500, 10, 5, 3, 51)
+        }, 1000, 26, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, causes[0].PassGrade);
+        Assert.Equal(StageBreakCause.WalkedOff, causes[2]);
+    }
+
+    [Fact]
+    public void ALoneRunSolvesExactlyAsItWouldOnItsOwn()
+    {
+        var alone = StageBreakCauseSolver.Solve(900, 0, 0, 0, 6, 1000, 26, MixEnum.Phoenix2);
+
+        var streak = StageBreakCauseSolver.SolveStreak(new[] { new JudgementCounts(900, 0, 0, 0, 6) }, 1000, 26,
+            MixEnum.Phoenix2);
+
+        Assert.Equal(alone, Assert.Single(streak));
+    }
 }

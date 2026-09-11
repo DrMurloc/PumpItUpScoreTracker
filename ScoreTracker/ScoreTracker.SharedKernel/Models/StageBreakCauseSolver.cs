@@ -72,6 +72,48 @@ public static class StageBreakCauseSolver
     }
 
     /// <summary>
+    ///     Solves one player's stage breaks on one chart in one session together, in input order.
+    ///     Each run is solved alone first. A player replaying a chart keeps the command they set, so
+    ///     when a grade could have been crossed by every run the bar did not end, that grade names
+    ///     all of them — and when more than one fits them all, the grade most of their evenly spread
+    ///     guesses pick, the higher on a tie. When no grade fits them all, the command changed and
+    ///     each run keeps its own answer.
+    /// </summary>
+    public static IReadOnlyList<StageBreakCause> SolveStreak(IReadOnlyList<JudgementCounts> runs, int? noteCount,
+        DifficultyLevel? level, MixEnum mix)
+    {
+        var causes = runs
+            .Select(run => Solve(run.Perfects, run.Greats, run.Goods, run.Bads, run.Misses, noteCount, level, mix))
+            .ToArray();
+        var flagged = Enumerable.Range(0, runs.Count).Where(i => causes[i].IsNonLifebarBreak).ToArray();
+        if (mix != MixEnum.Phoenix2 || noteCount is not > 0 || flagged.Length < 2) return causes;
+
+        var notes = noteCount.Value;
+        IEnumerable<PhoenixLetterGrade> shared = Crossable(runs[flagged[0]]);
+        foreach (var i in flagged.Skip(1)) shared = shared.Intersect(Crossable(runs[i]));
+        var common = shared.OrderBy(grade => grade).ToArray();
+        if (common.Length == 0) return causes;
+
+        var named = common.Length == 1
+            ? common[0]
+            : flagged
+                .Select(i => EvenlySpreadGuess(runs[i].Perfects, runs[i].Greats, runs[i].Goods, runs[i].Bads,
+                    runs[i].Misses, notes, mix, common))
+                .GroupBy(guess => guess)
+                .OrderByDescending(votes => votes.Count())
+                .ThenByDescending(votes => votes.Key)
+                .First().Key;
+
+        foreach (var i in flagged) causes[i] = causes[i] with { PassGrade = named };
+        return causes;
+
+        IReadOnlyList<PhoenixLetterGrade> Crossable(JudgementCounts run)
+        {
+            return CrossableGrades(run.Perfects, run.Greats, run.Goods, run.Bads, run.Misses, notes, mix);
+        }
+    }
+
+    /// <summary>
     ///     Every grade this run's last judgement could have put out of reach, ascending. A grade
     ///     qualifies when some placement of the run's bads and misses among its judged notes leaves
     ///     the best reachable score at or above the grade's floor just before the last judgement and
