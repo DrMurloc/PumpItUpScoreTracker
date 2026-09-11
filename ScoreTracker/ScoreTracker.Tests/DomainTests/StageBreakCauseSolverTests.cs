@@ -276,14 +276,14 @@ public sealed class StageBreakCauseSolverTests
     }
 
     [Fact]
-    public void APhoenixOneBreakProvesTheBarHeldButNamesNoCommand()
+    public void APhoenixOneBreakIsSolvedTheSameWay()
     {
-        // The Iolite Sky Pass SSS+ run's judgements played on Phoenix: the bar provably held, but
-        // Stage Pass is a Phoenix 2 command, so there is nothing to name.
+        // The Iolite Sky Pass SSS+ run's judgements played on Phoenix. The floors from AAA up are the
+        // same on both mixes, so the answer is too.
         var cause = StageBreakCauseSolver.Solve(806, 1, 0, 0, 4, 1000, 21, MixEnum.Phoenix);
 
         Assert.True(cause.IsNonLifebarBreak);
-        Assert.False(cause.IsNamed);
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, cause.PassGrade);
     }
 
     [Fact]
