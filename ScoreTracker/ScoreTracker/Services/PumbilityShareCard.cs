@@ -37,10 +37,12 @@ public sealed record PumbilityShareTile(Chart Chart, PhoenixScore? Score, Phoeni
 
 /// <summary>
 ///     One section of a downloadable PUMBILITY card: its printed name, the ramp category it took
-///     its colour from (null for a gain band, which is not on the ramp), and its tiles in order.
+///     its colour from (null for a gain band, which is not on the ramp), its tiles in order, and the
+///     rarity band a Rarity section takes its colour from instead.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record PumbilityShareSection(string Name, TierListCategory? Tier, IReadOnlyList<PumbilityShareTile> Tiles);
+public sealed record PumbilityShareSection(string Name, TierListCategory? Tier, IReadOnlyList<PumbilityShareTile> Tiles,
+    RarityBand? Band = null);
 
 /// <summary>
 ///     The share-card build and download the PUMBILITY pages share
@@ -93,7 +95,9 @@ public sealed class PumbilityShareCard
         return sections
             .Where(s => s.Tiles.Count > 0)
             .Select(s => new TierListShareCard.Row(s.Name,
-                s.Tier is { } tier ? MixThemes.PumbilityHex(mix, tier) : palette.Primary,
+                s.Tier is { } tier ? MixThemes.PumbilityHex(mix, tier)
+                : s.Band is { } band ? MixThemes.RarityHex(mix, band)
+                : palette.Primary,
                 s.Tiles.Select(t => ShareCardComposer.Compose(Facts(t, options, mix, skills), options, mix, palette))
                     .ToArray()))
             .ToArray();

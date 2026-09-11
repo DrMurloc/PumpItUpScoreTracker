@@ -54,7 +54,7 @@
    the controls a reader had just used and jumped the page twice (owner, field test round eight).
    Grouped by is a re-sort of what is already here and needs none of this.
 
-   The controls: Grouped by — Prevalence, Projected gains (D36; the Your top 50 lens left for the
+   The controls: Grouped by — Prevalence, Rarity (D66), Projected gains (D36; the Your top 50 lens left for the
    Breakdown page in round nine, D57) — then Energy, then, left-aligned beside it, the one switch
    that means something under that grouping — Project Phoenix 1 scores under Projected gains and
    only when the record holds carried rows; Only projected PUMBILITY gains under Prevalence — then
@@ -64,7 +64,16 @@
     <div class="pmb-block-head">
         <h2 class="pmb-block-title">@L["PUMBILITY Targets"]</h2>
     </div>
-    <p class="pmb-block-lede">@Lede</p>
+    <p class="pmb-block-lede">
+        @if (_groupBy == PeerGrouping.Rarity)
+        {
+            @RarityLede
+        }
+        else
+        {
+            @Lede
+        }
+    </p>
     @if (ShortPool is { } short_)
     {
         @* The finish is the pool of the type (D48, D53), so it prints as a PUMBILITY total — two
@@ -99,6 +108,7 @@
             <MudSelect T="PeerGrouping" Class="pmb-peers-controls-select" Label="@L["Grouped by"]" Dense="true"
                        Disabled="_reloading" Value="_groupBy" ValueChanged="SetGrouping" data-testid="peers-groupby">
                 <MudSelectItem T="PeerGrouping" Value="PeerGrouping.Prevalence">@L["Prevalence"]</MudSelectItem>
+                <MudSelectItem T="PeerGrouping" Value="PeerGrouping.Rarity">@L["Rarity"]</MudSelectItem>
                 <MudSelectItem T="PeerGrouping" Value="PeerGrouping.ProjectedGains">@L["Projected gains"]</MudSelectItem>
             </MudSelect>
             @* Energy (D51): how you're playing today, as the rung of your peers every projected score
@@ -168,7 +178,7 @@
                           Standings="_standings" OnOpenBoard="OnOpenBoard"
                           GroupBy="_groupBy" GainsOnly="_gainsOnly"
                           ShowToDo="true" ToDos="ToDos" OnToDo="OnToDo" OnOpen="OnOpen" OnPlay="OnPlay"
-                          Collapsed="_collapsed" CollapsedChanged="SetCollapsed"></PeerPoolList>
+                          Collapsed="CollapsedForGrouping" CollapsedChanged="SetCollapsed"></PeerPoolList>
         </div>
     }
 </section>
@@ -246,6 +256,12 @@
 
     public const string CollapsedSettingKey = "Pumbility__CollapsedTiers";
 
+    /// <summary>
+    ///     The Rarity grouping's folds, kept apart from the other two groupings': a setting stores what is
+    ///     folded, so anyone who had ever folded a prevalence tier would open Rarity with nothing folded (D66).
+    /// </summary>
+    public const string RarityCollapsedSettingKey = "Pumbility__RarityCollapsed";
+
     private PumbilityPeersPageRecord? _peers;
 
     /// <summary>
@@ -273,6 +289,10 @@
     // The front page opens on what pays (D42); the whole prevalence list is one switch away.
     private bool _gainsOnly = true;
     private HashSet<string> _collapsed = new(PeerPoolList.DefaultCollapsed);
+    private HashSet<string> _rarityCollapsed = new(PeerPoolList.RarityDefaultCollapsed);
+
+    /// <summary>The folds of the grouping on screen.</summary>
+    private IReadOnlySet<string> CollapsedForGrouping => _groupBy == PeerGrouping.Rarity ? _rarityCollapsed : _collapsed;
 
     /// <summary>The peer-only projection, read once when the Phoenix 1 switch first goes off.</summary>
     private IReadOnlyDictionary<Guid, PumbilityTarget>? _peerOnlyGains;
@@ -373,6 +393,53 @@
             : HasPumbilityPeers
                 ? L["What players whose pool of the type sits within {0} below and {1} above yours build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand.", WindowBelow, WindowAbove]
                 : L["What players within one competitive level of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand."];
+
+    /// <summary>
+    ///     The Rarity lede (D66), with the levels in reach in bold. The sentence is one localized string with
+    ///     one placeholder, split around it, so every locale keeps its own word order.
+    /// </summary>
+    private RenderFragment RarityLede => builder =>
+    {
+        var sentence = L["Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it."].Value;
+        var at = sentence.IndexOf("{0}", StringComparison.Ordinal);
+        if (at < 0)
+        {
+            builder.AddContent(0, sentence);
+            return;
+        }
+
+        builder.AddContent(1, sentence[..at]);
+        builder.OpenElement(2, "b");
+        builder.AddContent(3, LevelsText);
+        builder.CloseElement();
+        builder.AddContent(4, sentence[(at + 3)..]);
+    };
+
+    /// <summary>"S20–S23", or "S20–S23 and D20–D24" where the list holds both types: the levels it is drawn from.</summary>
+    private string LevelsText
+    {
+        get
+        {
+            var peers = _peers;
+            if (peers == null) return string.Empty;
+            var ranges = (ShownPool is { } one ? new[] { one } : new[] { ChartType.Single, ChartType.Double })
+                .Where(type => peers.LevelsInReach.TryGetValue(type, out var levels) && levels.Count > 0)
+                .Select(type => RangeOf(type, peers.LevelsInReach[type]))
+                .ToArray();
+            return ranges.Length == 2 ? L["{0} and {1}", ranges[0], ranges[1]] : ranges.FirstOrDefault() ?? string.Empty;
+        }
+    }
+
+    /// <summary>A type's levels the way a folder is written: a run as "S20–S23", a gap spelled out level by level.</summary>
+    private static string RangeOf(ChartType type, IReadOnlyList<int> levels)
+    {
+        var letter = type == ChartType.Double ? "D" : "S";
+        if (levels.Count == 1) return $"{letter}{levels[0]}";
+        var contiguous = levels.Zip(levels.Skip(1), (low, high) => high - low).All(step => step == 1);
+        return contiguous
+            ? $"{letter}{levels[0]}–{letter}{levels[^1]}"
+            : string.Join(", ", levels.Select(level => $"{letter}{level}"));
+    }
 
     /// <summary>
     ///     The peers read for the pool and energy the frame last asked for, held back until the
@@ -496,6 +563,9 @@
         var collapsed = await UiSettings.GetSetting(CollapsedSettingKey);
         if (!string.IsNullOrWhiteSpace(collapsed))
             _collapsed = collapsed.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet();
+        var rarityCollapsed = await UiSettings.GetSetting(RarityCollapsedSettingKey);
+        if (!string.IsNullOrWhiteSpace(rarityCollapsed))
+            _rarityCollapsed = rarityCollapsed.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet();
     }
 
     private async Task<IReadOnlyDictionary<Guid, PumbilityTarget>> ReadPeerOnlyGains(ChartType? pool, Energy energy)
@@ -582,6 +652,7 @@
     private string GroupingName => _groupBy switch
     {
         PeerGrouping.ProjectedGains => L["Projected gains"],
+        PeerGrouping.Rarity => L["Rarity"],
         _ => L["Prevalence"]
     };
 
@@ -612,6 +683,13 @@
 
     private async Task SetCollapsed(IReadOnlySet<string> collapsed)
     {
+        if (_groupBy == PeerGrouping.Rarity)
+        {
+            _rarityCollapsed = collapsed.ToHashSet();
+            await UiSettings.SetSetting(RarityCollapsedSettingKey, string.Join(",", _rarityCollapsed));
+            return;
+        }
+
         _collapsed = collapsed.ToHashSet();
         await UiSettings.SetSetting(CollapsedSettingKey, string.Join(",", _collapsed));
     }

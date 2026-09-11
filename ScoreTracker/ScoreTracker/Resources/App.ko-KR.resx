@@ -2773,6 +2773,9 @@
   <data name="Event mode or premium?" xml:space="preserve">
     <value>이벤트 모드? 프리미엄?</value>
   </data>
+  <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
+    <value>동료들이 PUMBILITY를 쌓는 폴더 {0}의 모든 채보를, 보유한 동료가 적은 순으로 보여줍니다. 내 레벨대에서 점수를 내기 가장 어려운 채보일 가능성이 높습니다. 동료의 절반 이상이 채보를 보유한 폴더가 포함됩니다.</value>
+  </data>
   <data name="Every chart pays its level value, scaled by how well you scored it and by how long the song is. The grade table is PUMBILITY+: AAA is the 1× target, and below it the price drops fast." xml:space="preserve">
     <value>각 채보는 레벨 값을 기본으로, 점수와 곡 길이에 따라 배율이 붙습니다. 등급표는 PUMBILITY+: AAA가 1× 기준이고, 그 아래로는 값이 빠르게 떨어집니다.</value>
   </data>
@@ -4089,6 +4092,24 @@
   </data>
   <data name="Keep this account" xml:space="preserve">
     <value>이 계정 유지</value>
+  </data>
+  <data name="Kept" xml:space="preserve">
+    <value>보유</value>
+  </data>
+  <data name="Kept by over {0}%" xml:space="preserve">
+    <value>보유 {0}% 초과</value>
+  </data>
+  <data name="Kept by {0} of {1} · played by fewer than {2}" xml:space="preserve">
+    <value>동료 {1}명 중 {0}명 보유 · {2}명 미만 플레이</value>
+  </data>
+  <data name="Kept by {0} of {1} · played by {2}" xml:space="preserve">
+    <value>동료 {1}명 중 {0}명 보유 · {2}명 플레이</value>
+  </data>
+  <data name="Kept by {0}% or fewer" xml:space="preserve">
+    <value>보유 {0}% 이하</value>
+  </data>
+  <data name="Kept by {0}–{1}%" xml:space="preserve">
+    <value>보유 {0}–{1}%</value>
   </data>
   <data name="Key" xml:space="preserve">
     <value>키</value>
@@ -7017,6 +7038,9 @@
   </data>
   <data name="Rarest titles" xml:space="preserve">
     <value>가장 희귀한 타이틀</value>
+  </data>
+  <data name="Rarity" xml:space="preserve">
+    <value>희귀도</value>
   </data>
   <data name="Rate limited" xml:space="preserve">
     <value>속도 제한</value>
@@ -10944,6 +10968,9 @@
   </data>
   <data name="{0} and up" xml:space="preserve">
     <value>{0} 이상</value>
+  </data>
+  <data name="{0} and {1}" xml:space="preserve">
+    <value>{0} 및 {1}</value>
   </data>
   <data name="{0} arrived" xml:space="preserve">
     <value>{0}개 들어옴</value>

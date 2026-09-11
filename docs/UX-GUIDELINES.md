@@ -404,7 +404,10 @@ generalizes to any progression the game already models as a ladder:
   explains it in words.
 - **Rarity of a thing is the percentile of people who lack it**, so it rides the shipped rarity
   ramp (`ThemeScales.BandFor(1 - share)`) instead of a second inverted set of cutoffs, and the
-  percentage always prints beside the colour (rule 8).
+  percentage always prints beside the colour (rule 8). The PUMBILITY Play page's **Rarity** grouping
+  reads it the same way: a chart's band is the share of your peers who keep it, and each section
+  names its range (*Kept by 1–10%*) from `ThemeScales.FloorOf`, the floors `BandFor` itself cuts
+  on ([pumbility-overhaul.md D66](design/pumbility-overhaul.md)).
 
 ## 7. Maker-facing surfaces (Community Tools)
 

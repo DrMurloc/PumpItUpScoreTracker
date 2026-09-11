@@ -39,6 +39,35 @@ public static class PumbilityPeerPools
     public const int MinimumScored = PeerEstimator.Phoenix2MinimumPeers;
 
     /// <summary>
+    ///     The share of the peers holding anything who must keep a chart of a level before the Rarity
+    ///     grouping counts that level as in range (docs/design/pumbility-overhaul.md D66).
+    /// </summary>
+    public const double RarityReach = 0.5;
+
+    /// <summary>
+    ///     The levels a peer group builds its pools from: every level at which at least
+    ///     <see cref="RarityReach" /> of the peers who hold anything keep a chart, ascending. Two
+    ///     different charts of a level reach it as surely as one shared chart does. A peer whose pool
+    ///     is empty draws on no level, so they count against none, and a chart missing from
+    ///     <paramref name="charts" /> has no level to count. Empty when no peer holds anything.
+    /// </summary>
+    public static IReadOnlyList<int> LevelsInReach(PeerPoolSummary summary, IReadOnlyDictionary<Guid, Chart> charts)
+    {
+        var holding = summary.Pools.Values.Where(pool => pool.Count > 0).ToArray();
+        if (holding.Length == 0) return Array.Empty<int>();
+
+        var reach = new Dictionary<int, int>();
+        foreach (var pool in holding)
+        foreach (var level in pool.Where(charts.ContainsKey).Select(id => (int)charts[id].Level).Distinct())
+            reach[level] = reach.GetValueOrDefault(level) + 1;
+
+        return reach.Where(kv => kv.Value >= RarityReach * holding.Length)
+            .Select(kv => kv.Key)
+            .OrderBy(level => level)
+            .ToArray();
+    }
+
+    /// <summary>
     ///     Builds the summary. Records of players outside <paramref name="peers" /> and records of
     ///     charts outside <paramref name="charts" /> are ignored; a record that prices at zero
     ///     (a broken run, a sub-10 chart) can hold no pool slot and is left out of the pools, but

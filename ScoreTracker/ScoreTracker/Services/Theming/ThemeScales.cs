@@ -33,12 +33,32 @@ public static class ThemeScales
     /// </summary>
     public static RarityBand BandFor(double percentile) => percentile switch
     {
-        < .25 => RarityBand.Common,
-        < .50 => RarityBand.Silver,
-        < .75 => RarityBand.Emerald,
-        < .90 => RarityBand.Gold,
-        < .99 => RarityBand.Sapphire,
+        < SilverFloor => RarityBand.Common,
+        < EmeraldFloor => RarityBand.Silver,
+        < GoldFloor => RarityBand.Emerald,
+        < SapphireFloor => RarityBand.Gold,
+        < PrismFloor => RarityBand.Sapphire,
         _ => RarityBand.Prism
+    };
+
+    private const double SilverFloor = .25;
+    private const double EmeraldFloor = .50;
+    private const double GoldFloor = .75;
+    private const double SapphireFloor = .90;
+    private const double PrismFloor = .99;
+
+    /// <summary>
+    /// The percentile a band starts at — the cut <see cref="BandFor"/> makes there — so a surface that
+    /// names a band's range prints the numbers its colour is chosen by. Common starts at zero.
+    /// </summary>
+    public static double FloorOf(RarityBand band) => band switch
+    {
+        RarityBand.Silver => SilverFloor,
+        RarityBand.Emerald => EmeraldFloor,
+        RarityBand.Gold => GoldFloor,
+        RarityBand.Sapphire => SapphireFloor,
+        RarityBand.Prism => PrismFloor,
+        _ => 0
     };
 
     public static string CssVar(RarityBand band) => band switch
