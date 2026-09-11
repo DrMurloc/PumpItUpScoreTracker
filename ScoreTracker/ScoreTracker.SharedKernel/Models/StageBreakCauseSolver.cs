@@ -37,8 +37,9 @@ public static class StageBreakCauseSolver
         { Judgment.Great, Judgment.Good, Judgment.Bad, Judgment.Miss };
 
     /// <summary>
-    ///     A null note count, a null level or an unjudged play all mean the same thing: not enough
-    ///     to tell, so no claim. Never guess — an absent badge is silent, a wrong one is not.
+    ///     A null level or an unjudged play leaves the life bar unsized, so no claim. A run the bar
+    ///     provably did not end names the plate it broke by exactly one judgement and, where the note
+    ///     count allows, the grade its last judgement could have crossed.
     /// </summary>
     public static StageBreakCause Solve(int perfects, int greats, int goods, int bads, int misses,
         int? noteCount, DifficultyLevel? level, MixEnum mix)
@@ -63,7 +64,7 @@ public static class StageBreakCauseSolver
 
         return new StageBreakCause(true,
             BrokenPlate(greats, goods, bads, misses),
-            UnreachableGrade(perfects, greats, goods, bads, misses, noteCount, mix));
+            NamedGrade(perfects, greats, goods, bads, misses, noteCount, mix));
     }
 
     /// <summary>
@@ -243,6 +244,51 @@ public static class StageBreakCauseSolver
     }
 
     /// <summary>
+    ///     The grade this run's last judgement put out of reach: the one grade it could have crossed,
+    ///     or the evenly spread guess when it could have crossed more than one.
+    /// </summary>
+    private static PhoenixLetterGrade? NamedGrade(int perfects, int greats, int goods, int bads, int misses,
+        int? noteCount, MixEnum mix)
+    {
+        if (noteCount is not > 0) return null;
+
+        var crossable = CrossableGrades(perfects, greats, goods, bads, misses, noteCount.Value, mix);
+        return crossable.Count switch
+        {
+            0 => null,
+            1 => crossable[0],
+            _ => EvenlySpreadGuess(perfects, greats, goods, bads, misses, noteCount.Value, mix, crossable)
+        };
+    }
+
+    /// <summary>
+    ///     The candidate the run most likely just fell under. The estimate puts the killing judgement
+    ///     last and spreads the other bads and misses evenly through the run, so the longest combo still
+    ///     possible is the judged combo notes shared across the stretches between breaks, or every note
+    ///     left when that is longer. The guess is the nearest candidate floor above that best reachable
+    ///     score, or the highest candidate when the score clears them all. Candidates are ascending.
+    /// </summary>
+    private static PhoenixLetterGrade EvenlySpreadGuess(int perfects, int greats, int goods, int bads, int misses,
+        int noteCount, MixEnum mix, IReadOnlyList<PhoenixLetterGrade> candidates)
+    {
+        var remaining = noteCount - (perfects + greats + goods + bads + misses);
+        var breaks = bads + misses;
+        var combo = breaks == 0
+            ? perfects + greats + remaining
+            : Math.Max((perfects + greats + breaks - 1) / breaks, remaining);
+        var estimate = ScoreScale * (NoteShare * (perfects + 0.6 * greats + 0.2 * goods + 0.1 * bads + remaining)
+                                     + ComboShare * combo) / noteCount;
+
+        foreach (var candidate in candidates)
+        {
+            double floor = candidate.GetMinimumScoreFor(mix);
+            if (floor > estimate) return candidate;
+        }
+
+        return candidates[^1];
+    }
+
+    /// <summary>
     ///     Whether some placement of the run's bads and misses puts the best reachable score at or
     ///     above <paramref name="floor" /> before the last judgement and below it after. The judged
     ///     notes that advance a combo split into finished stretches and the stretch still running
@@ -307,58 +353,5 @@ public static class StageBreakCauseSolver
         }
 
         return false;
-    }
-
-    /// <summary>
-    ///     The grade that stopped being reachable on this run's last judgement, if any. Compares
-    ///     the best score still attainable — every remaining note perfect, best possible combo —
-    ///     against each floor, and names the one it fell under by less than a single note's worth
-    ///     of score (D33).
-    /// </summary>
-    private static PhoenixLetterGrade? UnreachableGrade(int perfects, int greats, int goods, int bads,
-        int misses, int? noteCount, MixEnum mix)
-    {
-        if (noteCount is not > 0) return null;
-
-        var judged = perfects + greats + goods + bads + misses;
-        if (judged > noteCount.Value) return null;
-
-        var ceiling = ReachableCeiling(perfects, greats, goods, bads, misses, judged, noteCount.Value);
-        var oneNote = 995_000.0 / noteCount.Value;
-
-        // Declaration order is ascending, so the first floor above the ceiling is the nearest one.
-        foreach (var grade in Enum.GetValues<PhoenixLetterGrade>())
-        {
-            if (grade < LowestPassGrade) continue;
-
-            double floor = grade.GetMinimumScoreFor(mix);
-            if (floor <= ceiling) continue;
-
-            return floor - ceiling < oneNote ? grade : null;
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    ///     The best score this run could still have finished on. Max combo is never observed on a
-    ///     stage break, so it is bounded rather than estimated: a point estimate cannot work here —
-    ///     the combo component is 0.5% of the score, which is exactly one top-end grade band
-    ///     (D33, §5). Only bads and misses break a combo; a good HOLDS it without advancing it.
-    ///     So a run whose only blemishes are goods can still combo every other note, and a run
-    ///     carrying a bad or miss is bounded by its longest breaker-free stretch — everything
-    ///     before the break (goods transparent) or every note after it.
-    /// </summary>
-    private static double ReachableCeiling(int perfects, int greats, int goods, int bads, int misses,
-        int judged, int noteCount)
-    {
-        var remaining = noteCount - judged;
-        var combo = bads + misses == 0
-            ? perfects + greats + remaining
-            : Math.Max(perfects + greats, remaining);
-
-        return 1_000_000.0 *
-               (0.995 * (perfects + 0.6 * greats + 0.2 * goods + 0.1 * bads + remaining)
-                + 0.005 * combo) / noteCount;
     }
 }

@@ -116,14 +116,15 @@ public sealed class StageBreakCauseSolverTests
     }
 
     [Fact]
-    public void ACeilingThatIsNowhereNearAFloorNamesNoGrade()
+    public void AMissThatCutsTheComboNamesTheGradeTheRunFellMoreThanANotePast()
     {
-        // Eight misses on a 1,000-note level 26 leaves the bar at 868 of 3,028 and the ceiling at
-        // 988,968 — a thousand points under SSS, which is more than one note away.
+        // Eight misses on a 1,000-note level 26: the end-bunched best reachable score sits a thousand
+        // points under SSS, more than a note — but a miss costs its note and the combo it cuts, and
+        // SSS is the only line the last judgement could have crossed.
         var cause = StageBreakCauseSolver.Solve(700, 4, 0, 0, 8, 1000, 26, MixEnum.Phoenix2);
 
         Assert.True(cause.IsNonLifebarBreak);
-        Assert.Null(cause.PassGrade);
+        Assert.Equal(PhoenixLetterGrade.SSS, cause.PassGrade);
     }
 
     [Fact]
@@ -144,11 +145,12 @@ public sealed class StageBreakCauseSolverTests
     {
         // 115 perfects and 6 misses at level 24. The cruellest ordering of those judgements still
         // ends on 60 life of a 2,728 bar, so no ordering emptied it — and six misses is exactly
-        // Marvelous Game's threshold.
+        // Marvelous Game's threshold, while SSS+ is the only line the sixth could have crossed.
         var cause = StageBreakCauseSolver.Solve(115, 0, 0, 0, 6, 1000, 24, MixEnum.Phoenix2);
 
         Assert.True(cause.IsNonLifebarBreak);
         Assert.Equal(PhoenixPlate.MarvelousGame, cause.PassPlate);
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, cause.PassGrade);
     }
 
     [Fact]
@@ -160,6 +162,75 @@ public sealed class StageBreakCauseSolverTests
         var cause = StageBreakCauseSolver.Solve(700, 4, 0, 0, 16, 1000, 26, MixEnum.Phoenix2);
 
         Assert.True(cause.IsNonLifebarBreak);
+        Assert.Equal(PhoenixLetterGrade.SS, cause.PassGrade);
+    }
+
+    [Fact]
+    public void AnSSSPlusBreakWhoseMissesSplitTheComboIsNamed()
+    {
+        // Iolite Sky D21, three misses 93% of the way in. Bunched at the end they would have left
+        // SSS+ within reach; anywhere else they cut the combo under it, and SSS+ is the only line
+        // the last judgement could have crossed.
+        var cause = StageBreakCauseSolver.Solve(920, 4, 0, 0, 3, 1000, 21, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, cause.PassGrade);
+        Assert.Null(cause.PassPlate);
+    }
+
+    [Fact]
+    public void ALateGreatCanCrossTheLineAMidRunMissLeftTheRunOn()
+    {
+        // Iolite Sky D21, one miss and six greats. A miss at the very end would leave SSS+ standing,
+        // so the miss fell mid-run and a later great crossed the line. A lone miss is also Ultimate
+        // Game's first break, so both are named.
+        var cause = StageBreakCauseSolver.Solve(791, 6, 0, 0, 1, 1000, 21, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixPlate.UltimateGame, cause.PassPlate);
+        Assert.Equal(PhoenixLetterGrade.SSSPlus, cause.PassGrade);
+    }
+
+    [Fact]
+    public void TheGuessNamesOnlyALineTheRunCouldHaveCrossed()
+    {
+        // Conflict S22: spread evenly, the one miss leaves the best reachable score just over SSS,
+        // where the nearest line above is SSS+ — but SSS is the only line the last judgement could
+        // have crossed.
+        var cause = StageBreakCauseSolver.Solve(899, 25, 0, 0, 1, 1400, 22, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixPlate.UltimateGame, cause.PassPlate);
+        Assert.Equal(PhoenixLetterGrade.SSS, cause.PassGrade);
+    }
+
+    [Fact]
+    public void AGradeAlreadyGoneBeforeTheLastJudgementIsNotNamed()
+    {
+        // Switronic S15: the best reachable score fell under SSS+ several judgements before the run
+        // ended, so a Pass SSS+ would have ended it there. Only the plate its lone good broke is named.
+        var cause = StageBreakCauseSolver.Solve(223, 11, 1, 0, 0, 852, 15, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixPlate.UltimateGame, cause.PassPlate);
+        Assert.Null(cause.PassGrade);
+    }
+
+    [Fact]
+    public void APlateRunNamesNoGradeItCouldNotHaveCrossed()
+    {
+        // Guitar Man S20, six misses: Marvelous Game fell on the last of them, and no grade floor sits
+        // where that miss could have taken the run under.
+        var cause = StageBreakCauseSolver.Solve(391, 8, 0, 1, 6, 880, 20, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixPlate.MarvelousGame, cause.PassPlate);
+        Assert.Null(cause.PassGrade);
+    }
+
+    [Fact]
+    public void TwoCrossableLinesAreSettledByEvenlySpreadBreaks()
+    {
+        // Six misses 90% of the way in could have left SSS or SSS+ just gone. Spread evenly, they
+        // leave the best reachable score just under SSS, so SSS is the guess.
+        var cause = StageBreakCauseSolver.Solve(900, 0, 0, 0, 6, 1000, 26, MixEnum.Phoenix2);
+
+        Assert.Equal(PhoenixLetterGrade.SSS, cause.PassGrade);
     }
 
     [Fact]
