@@ -33,6 +33,13 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 ///     When the board half was swept, so the card can say how old it is (peers-abstraction.md D37).
 ///     Null when no board player is counted.
 /// </param>
+/// <param name="Archetypes">
+///     How their fifties fall across the five playstyle archetypes, and where the viewer's own
+///     stands among them (docs/design/pumbility-overhaul.md D69). Null on a singles or doubles
+///     pool: an archetype is the merged fifty's statement, the same rule
+///     <paramref name="Split" /> follows, and banding a typed fifty would name an archetype the
+///     player's own chip disagrees with.
+/// </param>
 [ExcludeFromCodeCoverage]
 public sealed record PumbilityCohortRecord(
     Name? Band,
@@ -40,7 +47,8 @@ public sealed record PumbilityCohortRecord(
     int BoardHolders,
     PeerLevelSpread Spread,
     PoolTypeSplit? Split,
-    DateTimeOffset? BoardAsOf)
+    DateTimeOffset? BoardAsOf,
+    ArchetypeSpread? Archetypes = null)
 {
     /// <summary>The answer for a viewer with no band to read: nothing to compare against.</summary>
     public static PumbilityCohortRecord Empty { get; } =
