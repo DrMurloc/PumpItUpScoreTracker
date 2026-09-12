@@ -8860,8 +8860,8 @@
   <data name="The Charts" xml:space="preserve">
     <value>채보 목록</value>
   </data>
-  <data name="The charts almost nobody holds in a PUMBILITY pool, priced the same way. Rebuilt every Sunday after the official import." xml:space="preserve">
-    <value>PUMBILITY 풀에 거의 아무도 담지 않는 차트를 같은 방식으로 계산합니다. 공식 가져오기 후 매주 일요일에 재계산됩니다.</value>
+  <data name="The charts almost nobody holds in a PUMBILITY pool, priced the same way. The chart list is rebuilt on Sundays; standings update as players import." xml:space="preserve">
+    <value>PUMBILITY 풀에 거의 아무도 담지 않는 차트를 같은 방식으로 계산합니다. 차트 목록은 매주 일요일에 갱신되고, 순위는 가져올 때마다 업데이트됩니다.</value>
   </data>
   <data name="the charts themselves" xml:space="preserve">
     <value>차트 자체</value>

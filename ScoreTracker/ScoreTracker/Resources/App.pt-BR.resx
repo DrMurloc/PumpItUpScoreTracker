@@ -8860,8 +8860,8 @@
   <data name="The Charts" xml:space="preserve">
     <value>As tabelas</value>
   </data>
-  <data name="The charts almost nobody holds in a PUMBILITY pool, priced the same way. Rebuilt every Sunday after the official import." xml:space="preserve">
-    <value>Os charts que quase ninguém tem em uma bolsa PUMBILITY, calculados do mesmo jeito. Reconstruídos todo domingo após a importação oficial.</value>
+  <data name="The charts almost nobody holds in a PUMBILITY pool, priced the same way. The chart list is rebuilt on Sundays; standings update as players import." xml:space="preserve">
+    <value>Os charts que quase ninguém tem em uma bolsa PUMBILITY, calculados do mesmo jeito. A lista é reconstruída todo domingo; as classificações se atualizam a cada importação.</value>
   </data>
   <data name="the charts themselves" xml:space="preserve">
     <value>os próprios gráficos</value>
