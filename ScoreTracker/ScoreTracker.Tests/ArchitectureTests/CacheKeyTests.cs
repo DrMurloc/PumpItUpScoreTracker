@@ -52,10 +52,9 @@ public sealed class CacheKeyTests
     // commit of the slice lowers or removes its entries, and the slice ends with this empty.
     private static readonly IReadOnlyDictionary<string, int> Allowance = new Dictionary<string, int>
     {
-        ["ScoreTracker.Catalog/Application/GetHoldTickProfileHandler.cs"] = 1,
-        ["ScoreTracker.Catalog/Application/SearchChartsHandler.cs"] = 1,
-        ["ScoreTracker.Catalog/Infrastructure/EFChartFolderBaselineRepository.cs"] = 1,
-        ["ScoreTracker.Catalog/Infrastructure/EFChartRepository.cs"] = 1,
+        // Catalog burned its four entries in slice 0's catalog commit: the chart dictionary is a
+        // Viewer key (it carries the level); baselines, the search vocabulary and the hold-tick
+        // profile are Mix.
         // ChartIntelligence burned its seven entries in slice 0's intelligence commit: the
         // personalized lenses are Viewer keys, the community lists and the verdict are Mix.
         ["ScoreTracker.Communities/Infrastructure/EFCommunitiesRepository.cs"] = 1,

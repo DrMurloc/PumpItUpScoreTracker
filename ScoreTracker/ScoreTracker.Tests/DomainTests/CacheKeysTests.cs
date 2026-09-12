@@ -58,6 +58,17 @@ public sealed class CacheKeysTests
     }
 
     [Fact]
+    public void AMixRowIdKeysTheSameWayAsTheEnumWhenThatIsWhatTheCallerHolds()
+    {
+        var mixId = Guid.Parse("A9B7D3C1-52E8-4F06-9B1A-2F8C33E01948");
+
+        Assert.Equal("EFChartRepository__viewer__a9b7d3c1-52e8-4f06-9b1a-2f8c33e01948__charts",
+            CacheKeys.Viewer("EFChartRepository", mixId, "charts"));
+        Assert.Equal("EFChartRepository__a9b7d3c1-52e8-4f06-9b1a-2f8c33e01948__levels",
+            CacheKeys.Mix("EFChartRepository", mixId, "levels"));
+    }
+
+    [Fact]
     public void AnOwnerIsRequired()
     {
         Assert.Throws<ArgumentException>(() => CacheKeys.Mix(" ", MixEnum.Phoenix2));

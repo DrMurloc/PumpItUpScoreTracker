@@ -38,14 +38,28 @@ public static class CacheKeys
         return Build(owner, "viewer", mix, parts);
     }
 
-    private static string Build(string owner, string? kind, MixEnum mix, object?[] parts)
+    /// <summary>
+    ///     The same declarations for a caller that holds the mix as its row id rather than the
+    ///     enum (the catalog repositories key their dictionaries that way).
+    /// </summary>
+    public static string Mix(string owner, Guid mixId, params object?[] parts)
+    {
+        return Build(owner, null, mixId, parts);
+    }
+
+    public static string Viewer(string owner, Guid mixId, params object?[] parts)
+    {
+        return Build(owner, "viewer", mixId, parts);
+    }
+
+    private static string Build(string owner, string? kind, object mix, object?[] parts)
     {
         if (string.IsNullOrWhiteSpace(owner))
             throw new ArgumentException("A cache key names its owner.", nameof(owner));
 
         var key = new StringBuilder(owner);
         if (kind != null) key.Append(Separator).Append(kind);
-        key.Append(Separator).Append(mix);
+        key.Append(Separator).Append(Format(mix));
         foreach (var part in parts) key.Append(Separator).Append(Format(part));
         return key.ToString();
     }

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Catalog.Domain;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 
@@ -33,7 +34,7 @@ internal sealed class GetHoldTickProfileHandler(
     public async Task<HoldTickProfile> Handle(GetHoldTickProfileQuery request,
         CancellationToken cancellationToken)
     {
-        var key = $"HoldTickProfile__{request.Mix}";
+        var key = CacheKeys.Mix("HoldTickProfile", request.Mix);
         if (cache.TryGetValue(key, out HoldTickProfile? cached) && cached != null) return cached;
 
         var profile = await Build(request.Mix, cancellationToken);
