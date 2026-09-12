@@ -144,15 +144,24 @@ ports carry both directions rather than adding project references (D13).
 |---|---|
 | **Domain** | `IOfficialPoolReader` (board pools, implemented in OfficialMirror) · `IHardmodeChartReader` (the week's list, implemented in ChartIntelligence) · `HardmodeChartsRebuiltEvent` — in `Domain/Events/` because its consumers live in verticals that cannot reference the publisher |
 | **ChartIntelligence** | `HardmodeCut` (the rule) · `HardmodeCensusSaga` (the weekly sweep) · `HardmodeChart` table · `RebuildHardmodeChartsCommand` / `GetHardmodeChartsQuery` |
-| **PlayerProgress** | `HardmodeRatingSaga` (site ratings) · three `PlayerStats` columns · `GetHardmodePageQuery` / `GetHardmodeBoardQuery` — render-time reads of your own pool and the board |
+| **PlayerProgress** | `HardmodeSaga` (site ratings, the weekly sweep AND the per-import reprice) · six `PlayerStats` columns · `GetHardmodePageQuery` / `GetHardmodeBoardQuery` — render-time reads of your own pool and the board |
 | **OfficialMirror** | `OfficialPoolReader` · `OfficialHardmodeRating` table + its writer |
 | **Web** | `/Pumbility/Hardmode` · `HardmodeBoardSection` · `HardmodeQualifyingSection` · the gold card state · the `/Admin` backfill button |
 
 Everything except the list and the ratings is computed at render time from the viewer's own records
 against the week's frozen list, so your number moves with your imports while the list holds until Sunday.
 
-**The weekly job** is its own Hangfire cron at `0 18 * * 0`, after the Sunday 16:30 Phoenix 2 import
-seals (D14). Chaining off `OfficialSnapshotSealedEvent` would be stricter, but that event is
+**The board is live; only the chart list is weekly** (D15, owner 2026-09-12: *"the chart pool
+re-calculates every sunday, but the leaderboard itself should be live updated as people import"*).
+The stored totals exist because a leaderboard has to be an ordered read, not because the number is
+a weekly fact — so `HardmodeSaga.RepriceHardmodePool` reprices ONE account against the current list
+as a failure-isolated in-process step of `HighlightCaptureSaga`, beside the rating and title steps.
+The page and the board therefore agree the moment an import lands, instead of the page being current
+and the board being up to six days stale. The weekly sweep still exists, and is now the thing that
+repopulates every account after the LIST changes under them.
+
+**The weekly job** rebuilds the LIST (and reprices everyone against the new one). It is its own
+Hangfire cron at `0 18 * * 0`, after the Sunday 16:30 Phoenix 2 import seals (D14). Chaining off `OfficialSnapshotSealedEvent` would be stricter, but that event is
 OfficialMirror's contract and ChartIntelligence cannot see it; the cost of strictness is a project
 reference, and a one-week-stale board population is acceptable on a board whose whole point is weekly
 stability. `/Admin` carries a one-shot button for the first run.

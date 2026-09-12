@@ -28,8 +28,20 @@ namespace ScoreTracker.PlayerProgress.Application;
 internal sealed class HardmodeSaga :
     IConsumer<HardmodeChartsRebuiltEvent>,
     IRequestHandler<GetHardmodePageQuery, HardmodePageRecord>,
-    IRequestHandler<GetHardmodeBoardQuery, IReadOnlyList<HardmodeBoardRow>>
+    IRequestHandler<GetHardmodeBoardQuery, IReadOnlyList<HardmodeBoardRow>>,
+    IRequestHandler<HardmodeSaga.RepriceHardmodePool, Unit>
 {
+    /// <summary>
+    ///     Reprice ONE account against the current chart list. The list is weekly so the board
+    ///     does not jerk about day to day, but the standing on it is not: it moves with the
+    ///     player's last import, the way every other PUMBILITY number does (owner, 2026-09-12).
+    ///     <para>
+    ///         An in-process step of the score-batch pipeline, like the rating and title steps,
+    ///         rather than a bus message of its own — ordering comes from pipeline shape.
+    ///     </para>
+    /// </summary>
+    public sealed record RepriceHardmodePool(Guid UserId, MixEnum Mix) : IRequest<Unit>;
+
     /// <summary>A pool is fifty, which is what makes a threshold a per-chart ask.</summary>
     private const int PoolSize = 50;
 
@@ -91,6 +103,21 @@ internal sealed class HardmodeSaga :
             rows.Length, qualifying.Count);
     }
 
+    public async Task<Unit> Handle(RepriceHardmodePool request, CancellationToken cancellationToken)
+    {
+        var qualifying = await _hardmodeCharts.GetQualifyingCharts(request.Mix, cancellationToken);
+        if (qualifying.Count == 0) return Unit.Value;
+
+        var priced = await Priced(request.Mix, request.UserId, qualifying, cancellationToken);
+
+        // Written even when it prices to nothing: a player who lost their only qualifying score
+        // has to stop carrying last week's number, and Save touches this account alone.
+        await _ratings.Save(request.Mix,
+            new[] { Row(request.UserId, priced.Select(p => (p.Chart.Type, p.Value)).ToArray()) },
+            cancellationToken);
+        return Unit.Value;
+    }
+
     public async Task<HardmodePageRecord> Handle(GetHardmodePageQuery request,
         CancellationToken cancellationToken)
     {
@@ -100,18 +127,7 @@ internal sealed class HardmodeSaga :
                 HardmodePoolTotals.Empty, HardmodePoolTotals.Empty, Array.Empty<PoolEntry>(),
                 Array.Empty<PoolEntry>(), Array.Empty<TitleRail>(), 0);
 
-        var ids = qualifying.Select(c => c.ChartId).ToHashSet();
-        var charts = (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
-            .Where(c => ids.Contains(c.Id)).ToDictionary(c => c.Id);
-        var scoring = ScoringConfiguration.PumbilityScoring(request.Mix, false);
-
-        var priced = (await _scores.GetBestScores(request.Mix, request.UserId, cancellationToken))
-            .Where(r => r.Score != null && !r.IsBroken && charts.ContainsKey(r.ChartId))
-            .Select(r => (Record: r, Chart: charts[r.ChartId],
-                Value: scoring.GetScore(charts[r.ChartId], r.Score!.Value,
-                    r.Plate ?? ScoringConfiguration.ExpectedPlateForScore(r.Score!.Value), false)))
-            .Where(p => p.Value > 0)
-            .ToArray();
+        var priced = await Priced(request.Mix, request.UserId, qualifying, cancellationToken);
 
         var combined = Totals(priced, null);
         var singles = Totals(priced, ChartType.Single);
@@ -148,6 +164,29 @@ internal sealed class HardmodeSaga :
         CancellationToken cancellationToken)
     {
         return await _ratings.GetBoard(request.Mix, request.Pool, cancellationToken);
+    }
+
+    /// <summary>
+    ///     One account's qualifying charts, priced. The shared read behind both the page and the
+    ///     single-account reprice, so the number a player sees and the number the board stores
+    ///     cannot come from two different pricings.
+    /// </summary>
+    private async Task<IReadOnlyList<(RecordedPhoenixScore Record, Chart Chart, double Value)>> Priced(
+        MixEnum mix, Guid userId, IReadOnlyList<HardmodeChartEntry> qualifying,
+        CancellationToken cancellationToken)
+    {
+        var ids = qualifying.Select(c => c.ChartId).ToHashSet();
+        var charts = (await _charts.GetCharts(mix, cancellationToken: cancellationToken))
+            .Where(c => ids.Contains(c.Id)).ToDictionary(c => c.Id);
+        var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
+
+        return (await _scores.GetBestScores(mix, userId, cancellationToken))
+            .Where(r => r.Score != null && !r.IsBroken && charts.ContainsKey(r.ChartId))
+            .Select(r => (Record: r, Chart: charts[r.ChartId],
+                Value: scoring.GetScore(charts[r.ChartId], r.Score!.Value,
+                    r.Plate ?? ScoringConfiguration.ExpectedPlateForScore(r.Score!.Value), false)))
+            .Where(p => p.Value > 0)
+            .ToArray();
     }
 
     private static HardmodePoolTotals Totals(

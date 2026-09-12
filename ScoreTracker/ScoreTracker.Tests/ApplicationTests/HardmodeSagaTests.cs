@@ -207,6 +207,64 @@ public sealed class HardmodeSagaTests
         return saved;
     }
 
+    [Fact]
+    public async Task AnImportRepricesThatOneAccountAndClearsNothing()
+    {
+        // The chart list is weekly so the board does not move under players day to day, but a
+        // standing ON it moves with the import (owner, 2026-09-12). The board stored totals only
+        // because a leaderboard has to be an ordered read - not because the number is weekly.
+        var charts = Enumerable.Range(0, 3).Select(_ => Qualifying(21, ChartType.Single)).ToArray();
+        var user = Guid.NewGuid();
+        var ratings = new Mock<IHardmodeRatingRepository>();
+        var saga = Build(charts, Array.Empty<(Guid, Chart, int)>(), ratings, qualifying: charts,
+            bests: charts.Select((c, i) => (c, 990_000 - i * 10_000)).ToArray());
+        var saved = Captured(ratings);
+
+        await saga.Handle(new HardmodeSaga.RepriceHardmodePool(user, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        var row = Assert.Single(saved);
+        Assert.Equal(user, row.UserId);
+        Assert.Equal(3, row.Held);
+        Assert.True(row.Combined > 0);
+        // Clear() zeroes the whole mix. One account's import must never do that to everyone else.
+        ratings.Verify(r => r.Clear(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AnImportBeforeTheFirstCensusWritesNothing()
+    {
+        var ratings = new Mock<IHardmodeRatingRepository>();
+        var saga = Build(Array.Empty<Chart>(), Array.Empty<(Guid, Chart, int)>(), ratings,
+            qualifying: Array.Empty<Chart>());
+
+        await saga.Handle(new HardmodeSaga.RepriceHardmodePool(Guid.NewGuid(), MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        ratings.Verify(r => r.Save(It.IsAny<MixEnum>(), It.IsAny<IReadOnlyCollection<HardmodeRatingRow>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TheRepricedTotalIsTheSameNumberThePageShows()
+    {
+        // The page reads live and the board reads stored, so they are two pricings of one pool.
+        // They must not disagree - that is the defect the top-fifty fix was about.
+        var charts = Enumerable.Range(0, 60).Select(_ => Qualifying(21, ChartType.Single)).ToArray();
+        var user = Guid.NewGuid();
+        var ratings = new Mock<IHardmodeRatingRepository>();
+        var saga = Build(charts, Array.Empty<(Guid, Chart, int)>(), ratings, qualifying: charts,
+            bests: charts.Select((c, i) => (c, 999_000 - i * 1_000)).ToArray());
+        var saved = Captured(ratings);
+
+        await saga.Handle(new HardmodeSaga.RepriceHardmodePool(user, MixEnum.Phoenix2),
+            CancellationToken.None);
+        var page = await saga.Handle(new GetHardmodePageQuery(user, MixEnum.Phoenix2), CancellationToken.None);
+
+        Assert.Equal(page.Combined.Total, Assert.Single(saved).Combined, 6);
+        Assert.Equal(page.Combined.Held, Assert.Single(saved).Held);
+    }
+
     private static Chart Qualifying(int level, ChartType type)
     {
         return new ChartBuilder().WithType(type).WithLevel(level).WithMix(MixEnum.Phoenix2).Build();
