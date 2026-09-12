@@ -11,24 +11,42 @@ public static class RecapPlayerTypeCalculator
     /// </summary>
     public const int MinimumScores = 10;
 
-    // The cutoffs are tuned raw score ranges, deliberately pinned rather than derived
-    // from any mix's grade table: Phoenix 2 re-cut the sub-AAA grade floors, and a future
-    // re-cut must never silently re-tune who counts as which type. The values coincide
-    // with the AAA / S / SS / SSS+ floors, which are identical in every Phoenix-family mix.
-    private const int PassRefinerFloor = 950_000;
-    private const int BalancedFloor = 970_000;
-    private const int CompetitiveFloor = 980_000;
-    private const int PerfectionistFloor = 995_000;
+    /// <summary>
+    ///     Phoenix's bands: AAA / S / SS / SSS+, the floors of its own grade table.
+    /// </summary>
+    private static readonly int[] PhoenixFloors = { 950_000, 970_000, 980_000, 995_000 };
 
     /// <summary>
-    ///     Bands over the average of the player's top-50 Pumbility scores:
-    ///     under 950k / 950k–970k / 970k–980k / 980k–995k / 995k and up.
+    ///     Phoenix 2's bands: S / S+ / SS / SS+, the floors of ITS grade table, which re-cut
+    ///     everything below AAA and packed the live range into four rungs. One rung per type, so
+    ///     the archetype is a sentence — a fifty averaging an S+ is a Balanced Player
+    ///     (docs/design/pumbility-overhaul.md D69, measured in §4.15).
     /// </summary>
-    public static RecapPlayerType? Calculate(IReadOnlyCollection<PhoenixScore> topPumbilityScores)
+    private static readonly int[] Phoenix2Floors = { 970_000, 975_000, 980_000, 985_000 };
+
+    /// <summary>
+    ///     The cutoffs a mix bands on. They are pinned rather than read out of
+    ///     <see cref="PhoenixLetterGradeHelperMethods.GetMinimumScoreFor" /> deliberately: the two
+    ///     tables agreeing today is the point, and a future grade re-cut must be a decision about
+    ///     archetypes rather than something that silently re-tunes who is which type. Phoenix 2's
+    ///     own re-cut is exactly that story — it moved the grade floors in 2026-07 and the
+    ///     archetypes went on reading Phoenix 1's numbers until they were re-measured.
+    /// </summary>
+    private static int[] FloorsFor(MixEnum mix)
+    {
+        return mix == MixEnum.Phoenix2 ? Phoenix2Floors : PhoenixFloors;
+    }
+
+    /// <summary>
+    ///     Bands over the average of the player's top-Pumbility scores. There is deliberately no
+    ///     mix-less form — the same rule <see cref="PhoenixLetterGradeHelperMethods.LetterGradeFor" />
+    ///     follows, since a Phoenix 2 fifty read on Phoenix's floors lands two archetypes low.
+    /// </summary>
+    public static RecapPlayerType? Calculate(IReadOnlyCollection<PhoenixScore> topPumbilityScores, MixEnum mix)
     {
         if (topPumbilityScores.Count < MinimumScores) return null;
 
-        return FromAverage(topPumbilityScores.Average(s => (int)s));
+        return FromAverage(topPumbilityScores.Average(s => (int)s), mix);
     }
 
     /// <summary>
@@ -36,12 +54,39 @@ public static class RecapPlayerTypeCalculator
     ///     (player stats) instead of the raw score list. The caller owns the
     ///     <see cref="MinimumScores" /> sample-size guard.
     /// </summary>
+    public static RecapPlayerType FromAverage(double average, MixEnum mix)
+    {
+        var floors = FloorsFor(mix);
+        if (average >= floors[3]) return RecapPlayerType.Perfectionist;
+        if (average >= floors[2]) return RecapPlayerType.Competitive;
+        if (average >= floors[1]) return RecapPlayerType.BalancedPlayer;
+        if (average >= floors[0]) return RecapPlayerType.PassRefiner;
+        return RecapPlayerType.PassPusher;
+    }
+
+    /// <summary>
+    ///     The mix-less forms the three callers still use. They band on Phoenix, which is what
+    ///     every caller got before the tables split, so this commit changes nothing for anybody;
+    ///     they retire in the next one, once each caller names the mix it is reading.
+    /// </summary>
+    public static RecapPlayerType? Calculate(IReadOnlyCollection<PhoenixScore> topPumbilityScores)
+    {
+        return Calculate(topPumbilityScores, MixEnum.Phoenix);
+    }
+
+    /// <inheritdoc cref="Calculate(IReadOnlyCollection{PhoenixScore})" />
     public static RecapPlayerType FromAverage(double average)
     {
-        if (average >= PerfectionistFloor) return RecapPlayerType.Perfectionist;
-        if (average >= CompetitiveFloor) return RecapPlayerType.Competitive;
-        if (average >= BalancedFloor) return RecapPlayerType.BalancedPlayer;
-        if (average >= PassRefinerFloor) return RecapPlayerType.PassRefiner;
-        return RecapPlayerType.PassPusher;
+        return FromAverage(average, MixEnum.Phoenix);
+    }
+
+    /// <summary>
+    ///     The lowest average that earns <paramref name="type" /> in this mix, or null for
+    ///     <see cref="RecapPlayerType.PassPusher" />, which has no floor beneath it. What a surface
+    ///     naming the bands reads, so the copy and the banding cannot drift apart.
+    /// </summary>
+    public static int? FloorFor(RecapPlayerType type, MixEnum mix)
+    {
+        return type == RecapPlayerType.PassPusher ? null : FloorsFor(mix)[(int)type - 1];
     }
 }
