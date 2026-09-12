@@ -8764,6 +8764,9 @@
   <data name="The arc" xml:space="preserve">
     <value>성장 곡선</value>
   </data>
+  <data name="the archetypes their top 50 lands in, and where yours lands" xml:space="preserve">
+    <value>그들의 상위 50이 속하는 유형과 내 것이 속하는 곳</value>
+  </data>
   <data name="The bar" xml:space="preserve">
     <value>기준선</value>
   </data>
@@ -10252,6 +10255,9 @@
   <data name="Where your score came from" xml:space="preserve">
     <value>점수의 출처</value>
   </data>
+  <data name="Where your scores sit" xml:space="preserve">
+    <value>내 점수 분포</value>
+  </data>
   <data name="Which Chart Did You Play" xml:space="preserve">
     <value>어떤 채보를 플레이했나요?</value>
   </data>
@@ -10686,6 +10692,15 @@
   </data>
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>확인 요청에 이 값으로 응답하면 됩니다. 이 값은 어디에도 전송되지 않습니다 — 그래서 이 값으로 응답하는 것이 증명이 되고, 탈취된 DNS로는 통과할 수 없습니다. 해시로만 보관되니 찾을 수 있는 곳에 적어 두세요.</value>
+  </data>
+  <data name="your fifty" xml:space="preserve">
+    <value>내 상위 50</value>
+  </data>
+  <data name="Your fifty averages {0} — {1}, so {2}. {3}% of {4} are there too." xml:space="preserve">
+    <value>내 상위 50 평균은 {0} — {1}, 즉 {2}입니다. {4}의 {3}%도 같습니다.</value>
+  </data>
+  <data name="Your fifty is too short to place on this yet — {0} charts does it." xml:space="preserve">
+    <value>내 상위 50은 아직 너무 짧아 위치를 잡을 수 없습니다 — {0}개 채보면 됩니다.</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>파일이 10MB를 초과했습니다. 크기를 줄여 다시 시도해 주세요.</value>
@@ -11652,6 +11667,9 @@
   </data>
   <data name="{0}: the average top 50 of the {1} of them holding a full one" xml:space="preserve">
     <value>{0}: 완전한 상위 50을 보유한 {1}명의 평균 상위 50</value>
+  </data>
+  <data name="{0}: {1} of them, {2}%" xml:space="preserve">
+    <value>{0}: {1}명, {2}%</value>
   </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>{0}일 전</value>

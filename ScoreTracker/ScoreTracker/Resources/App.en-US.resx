@@ -8822,6 +8822,9 @@
   <data name="The arc" xml:space="preserve">
     <value>The arc</value>
   </data>
+  <data name="the archetypes their top 50 lands in, and where yours lands" xml:space="preserve">
+    <value>the archetypes their top 50 lands in, and where yours lands</value>
+  </data>
   <data name="The bar" xml:space="preserve">
     <value>The bar</value>
   </data>
@@ -10315,6 +10318,9 @@
   <data name="Where your score came from" xml:space="preserve">
     <value>Where your score came from</value>
   </data>
+  <data name="Where your scores sit" xml:space="preserve">
+    <value>Where your scores sit</value>
+  </data>
   <data name="Which Chart Did You Play" xml:space="preserve">
     <value>Which chart did you play?</value>
   </data>
@@ -10754,6 +10760,15 @@
   </data>
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it.</value>
+  </data>
+  <data name="your fifty" xml:space="preserve">
+    <value>your fifty</value>
+  </data>
+  <data name="Your fifty averages {0} — {1}, so {2}. {3}% of {4} are there too." xml:space="preserve">
+    <value>Your fifty averages {0} — {1}, so {2}. {3}% of {4} are there too.</value>
+  </data>
+  <data name="Your fifty is too short to place on this yet — {0} charts does it." xml:space="preserve">
+    <value>Your fifty is too short to place on this yet — {0} charts does it.</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>Your file was larger than 10MB, please reduce it and try again.</value>
@@ -11720,6 +11735,9 @@
   </data>
   <data name="{0}: the average top 50 of the {1} of them holding a full one" xml:space="preserve">
     <value>{0}: the average top 50 of the {1} of them holding a full one</value>
+  </data>
+  <data name="{0}: {1} of them, {2}%" xml:space="preserve">
+    <value>{0}: {1} of them, {2}%</value>
   </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>{0}d ago</value>
