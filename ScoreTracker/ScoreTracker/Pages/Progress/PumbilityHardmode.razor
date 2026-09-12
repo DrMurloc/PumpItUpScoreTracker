@@ -1,4 +1,5 @@
 ﻿@using MediatR
+@using ScoreTracker.Domain.Models.Titles.Phoenix2
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
@@ -34,7 +35,7 @@
 
             <HardmodeBoardSection Mix="ctx.Mix" Pool="ctx.Pool" Standing="Standing"></HardmodeBoardSection>
 
-            @if (_page.Rails.Count > 0)
+            @if (RailsFor(ctx.Pool).Count > 0)
             {
                 <section class="pmb-block">
                     <div class="pmb-block-head">
@@ -43,7 +44,7 @@
                     <p class="pmb-block-lede">
                         @L["The same ladders the Breakdown page draws, asked of your Hardmode pool instead of your whole record book."]
                     </p>
-                    <PumbilityTitleRails Rails="_page.Rails"></PumbilityTitleRails>
+                    <PumbilityTitleRails Rails="RailsFor(ctx.Pool)"></PumbilityTitleRails>
                 </section>
             }
 
@@ -112,6 +113,21 @@
         _pool = pool;
         await ctx.ChangePool(pool);
         await Load();
+    }
+
+    /// <summary>
+    ///     The ladder for the pool on screen and no other (owner, 2026-09-12). All three are in
+    ///     the record because the pool selector can switch to any of them without a re-read.
+    /// </summary>
+    private IReadOnlyList<TitleRail> RailsFor(ChartType? pool)
+    {
+        var ladder = pool switch
+        {
+            ChartType.Single => PumbilityPool.Singles,
+            ChartType.Double => PumbilityPool.Doubles,
+            _ => PumbilityPool.Total
+        };
+        return _page?.Rails.Where(r => r.Pool == ladder).ToArray() ?? Array.Empty<TitleRail>();
     }
 
     private void OpenChart(Chart chart)
