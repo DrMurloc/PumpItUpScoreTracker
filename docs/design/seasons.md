@@ -1,6 +1,6 @@
 # Seasons
 
-Status: **design complete; slice 0 built (2026-09-12), slice 1a next on the owner's go.** Scoped and decided 2026-09-12 with the owner
+Status: **design complete; slice 0 built and bug-checked (2026-09-12), slice 1a next on the owner's go.** Scoped and decided 2026-09-12 with the owner
 ([scoping artifact, Round 2c](https://claude.ai/code/artifact/de8ed96c-d3c2-47fe-a25e-1c726348ff53):
 the census, the re-scored feature table, the boolean analysis); mocks published and corrected the same
 day (§13, four sheets, Round 2). The decisions in §3 are the owner's where marked and *decided unless
@@ -481,7 +481,8 @@ per season and small beside the journal.
   string in nine locales; `Season` / `Seasons` already exist and belong to MoM's dialog copy.
 - `DiagnosticExposureTests`: the admin dry run may print internals; the What-moved page prints counts only.
 - `PumbilityPrecisionTests`: TOTAL PUMBILITY and the season pools are doubles; rounding at the razor.
-- The new cache-key ratchet (§4.5).
+- `CacheKeyTests` (§4.5, §12.1): no hand-spelled key that names a mix, and no `CacheKeys.Mix` key
+  whose parts name a player.
 - Never edit an applied migration; the `PhoenixRecord` index change is a new migration with both index
   names spelled out.
 
@@ -544,11 +545,13 @@ cached object contains:
 | `SearchChartsHandler` `ChartSearch__Community__{mix}` (Catalog) | per mix | the community vocabulary and aggregates; the viewer's bests are read outside the cache | no |
 | `ChartUrlResolver__{mix}` (Web) | per mix | slugs | no |
 | `ChartCatalogCache` (Web, home widgets) | per mix, **circuit-scoped** | the widget chart catalog from `GetChartsQuery` | no — a circuit holds one view at a time, so it follows whatever the query returns |
-| `EFTierListRepository.TierListKey(mix, name)`, `ChartVerdictHandler` keys, `EFChartFolderBaselineRepository.CacheKey(mix)`, `CohortScoreProvider` keys, `RecapSaga` keys, `PlayerHighlightCapturer` rarity, `HighlightCaptureSaga` cohort, `EFTitleRepository.CacheKey(mix)`, `EFCommunitiesRepository` `CompRanges_{mix}`, `BoardPeerReader` keys, `OfficialCacheKeys.*`, `LedgerCacheKeys.*` (Limbo, population, stage breaks), Weekly and Daily Step keys, tournament keys, `EFLedgerStatsRepository`, `EFChartRepository` videos / song names / `MixLevelsCacheKey`, `EFUserRepository`, `ShellModelFactory`, `FrontDoor`, `AccountProofService`, `ToolKeySaga`, `ToolHostAllowlist`, `EFChartStepChartRepository`, `EFChartSkillMetricRepository`, `GetChartMetricsHandler`, `EFAvatarRepository`, `EFArchivedSkillTagRepository`, `SkiaShareCardRenderer`, `SendGridAdminNotificationClient` | various | community projections, catalog facts, identity, settings, tooling | **no** — all-time or view-free by design (D6, D18) |
+| `RecapSaga` top-50 sets `(mix, "Top50", type, userId)` and `HighlightCaptureSaga` cohort `(mix, "Cohort", userId, type, level)` (PlayerProgress, both import-time) | per user × mix | one player's own top-50 chart ids; the scores at one level of the players around one player — the user id stands in for their competitive band | **yes, by shape** — each entry is one player's, so it declares `Viewer`; both consumers read all-time (D6, D18) and, running at import with no ambient view (§4.5), pass all-time explicitly once the segment lands. Declared `Mix` in the first cut; the slice 0 bug check (2026-09-12) caught it, and the ratchet's second fact now would. |
+| `EFTierListRepository.TierListKey(mix, name)`, `ChartVerdictHandler` keys, `EFChartFolderBaselineRepository.CacheKey(mix)`, `CohortScoreProvider` keys, `RecapSaga` shared inputs, `PlayerHighlightCapturer` rarity, `EFTitleRepository.CacheKey(mix)`, `EFCommunitiesRepository` `CompRanges_{mix}`, `BoardPeerReader` keys, `OfficialCacheKeys.*`, `LedgerCacheKeys.*` (Limbo, population, stage breaks), Weekly and Daily Step keys, tournament keys, `EFLedgerStatsRepository`, `EFChartRepository` videos / song names / `MixLevelsCacheKey`, `EFUserRepository`, `ShellModelFactory`, `FrontDoor`, `AccountProofService`, `ToolKeySaga`, `ToolHostAllowlist`, `EFChartStepChartRepository`, `EFChartSkillMetricRepository`, `GetChartMetricsHandler`, `EFAvatarRepository`, `EFArchivedSkillTagRepository`, `SkiaShareCardRenderer`, `SendGridAdminNotificationClient` | various | community projections, catalog facts, identity, settings, tooling | **no** — all-time or view-free by design (D6, D18) |
 
 So the view-sensitive set is small — four classes for certain, three handlers' user variants, one
-reader's rival sets — and the point of the builder is that the rest declare themselves all-time on
-purpose rather than by omission.
+reader's rival sets, two import-time per-player caches that will hand it all-time explicitly — and
+the point of the builder is that the rest declare themselves all-time on purpose rather than by
+omission.
 
 **The builder.** A static `CacheKeys` in `ScoreTracker.SharedKernel` (a pure string function over
 `MixEnum` and parts; SharedKernel references nothing and needs nothing here), with two entry points
@@ -571,7 +574,11 @@ load-bearing for the eviction pairs) and build through the shared one. Per-user 
 interpolation containing a mix token, outside `SharedKernel/CacheKeys.cs`, `LedgerCacheKeys.cs`,
 `OfficialCacheKeys.cs`. Shrink-only allowlist, empty at the end of slice 0. It cannot see a key built
 from a variable it does not recognize; that is why the builder is the primary control and the ratchet
-the backstop.
+the backstop. A second fact guards the builder's other door: a `CacheKeys.Mix` call whose parts name
+a player (`userId`, `viewerId`, `playerId`) fails outright, no allowance — a Mix key never varies by
+who is looking, so an entry that is one player's belongs under `Viewer`. The first fact cannot see
+that: the key is built by the builder, through the wrong door. The slice 0 bug check (2026-09-12)
+found the two above declared Mix.
 
 **Reach.** Production files touched: ScoreLedger (`EFPhoenixRecordsRepository`, `EFAccountPurgeRepository`,
 `LedgerCacheKeys`), PlayerProgress (`EFPlayerStatsRepository`, `EFTitleRepository`, `PumbilityProjectionCache`,
@@ -613,6 +620,11 @@ touched: no SQL, no API shape, no partner-visible change.
 - **The flag**: `Seasons:EnableUI` bound at startup in `Program.cs`, forwarded from the AppHost like
   the other sections, exposed through a small `ISeasonsUiGate` (true for admins always). Nothing reads
   it yet.
+- **`CacheKeys.Viewer` takes the view** (§12.1): a season parameter, `Guid.Empty` = all-time, and every
+  `Viewer` caller passes it — the page's view where a request carries one (all-time until the flips in
+  slice 2), and all-time explicitly at the two import-time sites, `RecapSaga`'s top-50 sets and
+  `HighlightCaptureSaga`'s cohort, background consumers having no ambient view (§4.5). Nothing reads a
+  season yet, so every key still carries all-time.
 
 ### 12.3 Slice 1b — tracking begins: where it lands
 
