@@ -1,12 +1,12 @@
 # Seasons
 
-Status: **design complete, nothing built.** Scoped and decided 2026-09-12 with the owner
+Status: **design complete; slice 0 built (2026-09-12), slice 1a next on the owner's go.** Scoped and decided 2026-09-12 with the owner
 ([scoping artifact, Round 2c](https://claude.ai/code/artifact/de8ed96c-d3c2-47fe-a25e-1c726348ff53):
 the census, the re-scored feature table, the boolean analysis); mocks published and corrected the same
 day (§13, four sheets, Round 2). The decisions in §3 are the owner's where marked and *decided unless
-objected* otherwise. The build is the slow roll in §12 — slice 0 first, on the owner's go — and this
-document ships with slice 0. If you are picking this up cold: §1 says what it is, §3 what was decided
-and why, §12 what to build next and what it touches, §13 what it should look like.
+objected* otherwise. The build is the slow roll in §12; this document shipped with slice 0. If you are
+picking this up cold: §1 says what it is, §3 what was decided and why, §12 what to build next and what
+it touches (§12.2 is slice 1a), §13 what it should look like.
 
 Every quarter your Phoenix 2 scores start over on a seasonal board while your all-time record stays
 exactly where it is. You re-grind. Every chart carries a **season rating** one folder up or down from
@@ -495,7 +495,7 @@ is visible to anyone else.
 
 | # | Slice | What lands | What you can test | Gate to the next |
 |---|---|---|---|---|
-| 0 | **Cache-key builder and ratchet** | Every hand-spelled memory-cache key moved to one builder that takes the view; a shrink-only architecture test that fails a key naming a mix outside it. No feature code. | Nothing visible. Suites green; the ratchet's allowlist is empty. | Merged. |
+| 0 | **Cache-key builder and ratchet** — *built 2026-09-12, branch `claude/seasons-feature-scoping-ca5bc5`* | Every hand-spelled memory-cache key moved to `CacheKeys` (`Mix` / `Viewer`, with mix-id overloads for the catalog); `CacheKeyTests` ratchets it with an allowlist that started at 27 files / 32 statements and ended empty; `LedgerCacheKeys` and `OfficialCacheKeys` delegate. No feature code. | Nothing visible. Fast suites green; the allowlist is empty. | Merged. |
 | 1a | **The schema, reading nothing new** | `Seasons` vertical skeleton; `scores.Season`; the `SeasonId` columns (`Guid.Empty` = all-time) on the personal-best, player-stats, folder-level and chart-mix tables, with the key and index changes; the EF global query filters; the reader audit (§6.4) including the peer store's raw SQL; the `Seasons:EnableUI` flag read at startup with the admin bypass (nothing behind it yet). No writer, no season row. | The whole site behaves exactly as before. The API v2 content test and the audit prove no read changed. This is the deploy that carries the index rebuild on the record table, alone, so its cost is measured once and by itself. | A prod smoke after deploy: numbers on the PUMBILITY page, a community board and API v2 unchanged. |
 | 1b | **Tracking begins** | `roll-season` (create the quarter's row; seal an ended one after seven days: archive copy, batched delete, `SealedAt`); the seasonal write in the import chain with the counting rule (D15); the season pass in the rating saga (quiet) writing the season `PlayerStats` row and folder levels; the nightly rollup; the flagged score reader answering seasonal bests; the archive tables and purge manifests; undo/delete replay; the backfill button; the admin season console (live season, roll now, re-price, backfill). | Press **Backfill seasons**: Summer 2026 appears sealed with its archive rows and standings, Fall 2026 appears live; your own seasonal personal bests exist in SQL; an import you make writes a Fall 2026 row beside the all-time one; an undo removes it. Nothing player-facing changes. | Integration tests for the writer, the replay and the seal; one week of imports accumulating in prod while nobody sees them. |
 | 2a | **The view, with nothing flipped** | Picker option and pill, setting + cookie through the mix redirect, the shell seed, the intro dialog (once), the caption on excluded pages, the Account peers disclaimer. Every page still shows all-time numbers. | As admin: switch to Fall 2026, see the pill everywhere including static pages, get the intro once, see the caption on Weekly Charts; a non-admin sees none of it. The cookie survives a new tab; the anonymous default is all-time. | Plumbing proven before any number depends on it. |
