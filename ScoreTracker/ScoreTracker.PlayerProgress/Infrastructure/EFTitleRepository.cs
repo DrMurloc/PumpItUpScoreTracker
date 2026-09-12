@@ -184,6 +184,19 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                 .ToArrayAsync(cancellationToken);
         }
 
+        public async Task<Name?> GetHighestTitle(MixEnum mix, Guid userId, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
+            var name = await database.Set<UserHighestTitleEntity>()
+                .Where(u => u.UserId == userId && u.MixId == mixId)
+                .Select(u => u.TitleName)
+                .FirstOrDefaultAsync(cancellationToken);
+            // A null cast, not a ternary: Name's implicit conversion would turn the null branch into
+            // a From(null) and throw before the ternary ever produced one.
+            return name == null ? (Name?)null : Name.From(name);
+        }
+
         public async Task DeleteHighestTitle(MixEnum mix, Guid userId, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);

@@ -116,13 +116,6 @@ internal sealed class BoardPeerReader
     }
 
     /// <summary>
-    ///     A folded person, with the account the mirror resolved kept beside the reading rather
-    ///     than inside it. <see cref="Account" /> is what the mirror KNOWS; the reading names an
-    ///     account only when it is public and may be named (D61). The difference is the whole
-    ///     reason a viewer can be excluded from their own board peers without their private link
-    ///     ever leaving this class.
-    /// </summary>
-    /// <summary>
     ///     The board's own players standing on one band of a PUMBILITY ladder (D68): half-open, and
     ///     read off the board that ladder ranks — the combined board for the merged one, the
     ///     per-type boards for the others. A player counts only where the mirror can rebuild their
@@ -130,22 +123,31 @@ internal sealed class BoardPeerReader
     ///     the combined number. Null when the mix has never swept that board.
     /// </summary>
     public async Task<BoardPeerGroupReading?> GetBoardBand(MixEnum mix, PumbilityPool pool, double floor,
-        double? ceiling, Guid? viewerAccountId, CancellationToken cancellationToken)
+        double? ceiling, CancellationToken cancellationToken)
     {
         var latest = await _snapshots.GetLatestSealed(mix, cancellationToken);
         if (latest?.CompletedAt == null) return null;
 
         var prepared = await PreparedPeers(mix, pool, latest.Id, cancellationToken);
         return new BoardPeerGroupReading(latest.CompletedAt.Value, prepared
-            // Never yourself (D31), answered here because this is the one place that knows the
-            // account behind a row it will not name (D61).
-            .Where(p => viewerAccountId == null || p.Account != viewerAccountId)
+            // Only the players no account claims, private links included — a band is a census, and
+            // anyone with an account was already counted by the ladder's own read of the site.
+            // Answered here because this is the one place that knows the account behind a row it
+            // will not name (D61); it is also why the caller need not say who is asking.
+            .Where(p => p.Account == null)
             // Half-open: a pool sitting exactly on the next rung's threshold holds that title.
             .Where(p => p.Reading.Pool >= floor && (ceiling is not { } top || p.Reading.Pool < top))
             .Select(p => p.Reading)
             .ToArray());
     }
 
+    /// <summary>
+    ///     A folded person, with the account the mirror resolved kept beside the reading rather
+    ///     than inside it. <see cref="Account" /> is what the mirror KNOWS; the reading names an
+    ///     account only when it is public and may be named (D61). The difference is the whole
+    ///     reason a viewer can be excluded from their own board peers, and a band can drop everyone
+    ///     an account claims, without a private link ever leaving this class.
+    /// </summary>
     private sealed record PreparedPeer(BoardPeerReading Reading, Guid? Account);
 
     /// <summary>

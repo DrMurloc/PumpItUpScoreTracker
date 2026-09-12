@@ -213,7 +213,8 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         {
             [ChartType.Single] = new(64, 0, new[]
             {
-                new LevelSpreadColumn(20, new Dictionary<int, int> { [25] = 64 }, 25, 25, 25, 25, 25, 64, 25, 0, 64)
+                new LevelSpreadColumn(20, ChartType.Single, new Dictionary<int, int> { [25] = 64 },
+                    25, 25, 25, 25, 25, 64, 25, 0, 64)
             })
         },
         peers);

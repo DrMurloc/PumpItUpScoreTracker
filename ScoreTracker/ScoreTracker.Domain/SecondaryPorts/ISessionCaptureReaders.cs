@@ -70,9 +70,16 @@ namespace ScoreTracker.Domain.SecondaryPorts
         ///     Half-open, because a band ends where the next rung's title begins — unlike the peer
         ///     window above, which is a distance and takes both ends. The merged ladder reads the
         ///     combined board and rebuilds both types together to qualify a player (D60).
+        ///     <para>
+        ///         Only the players no account claims come back, and no viewer is named because none
+        ///         is asked for: a band is a census of everyone standing on it rather than a group
+        ///         drawn around somebody, so the same answer serves every reader. A row the mirror
+        ///         resolves to an account — including a private one, which it will not name (D61) —
+        ///         is left out, that person being answered by the ladder's own read of the site.
+        ///     </para>
         /// </summary>
         Task<BoardPeerGroupReading?> GetBoardBand(MixEnum mix, PumbilityPool pool, double floor, double? ceiling,
-            Guid? viewerAccountId, CancellationToken cancellationToken);
+            CancellationToken cancellationToken);
 
         /// <summary>
         ///     What those players scored, one row per player and chart: the highest placement they

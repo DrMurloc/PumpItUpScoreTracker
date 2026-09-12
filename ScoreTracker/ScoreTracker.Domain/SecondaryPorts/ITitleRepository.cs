@@ -42,6 +42,13 @@ namespace ScoreTracker.Domain.SecondaryPorts
         Task<IEnumerable<Guid>> GetUserIdsWithHighestTitle(MixEnum mix, Name title,
             CancellationToken cancellationToken);
 
+        /// <summary>
+        ///     The viewer's own highest difficulty title, which is the band the Breakdown card reads
+        ///     Phoenix 1's cohort for (docs/design/pumbility-overhaul.md D68). Null when they have
+        ///     never earned one.
+        /// </summary>
+        Task<Name?> GetHighestTitle(MixEnum mix, Guid userId, CancellationToken cancellationToken);
+
         Task DeleteHighestTitle(MixEnum mix, Guid userId, CancellationToken cancellationToken);
     }
 }

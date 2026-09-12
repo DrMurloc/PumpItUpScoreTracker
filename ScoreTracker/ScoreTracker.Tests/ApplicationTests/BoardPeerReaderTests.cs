@@ -378,7 +378,7 @@ public sealed class BoardPeerReaderTests
         Players(Player(1, "FLOOR#0001"), Player(2, "INSIDE#0002"), Player(3, "NEXTRUNG#0003"));
         Accounts();
 
-        var band = await Subject.GetBoardBand(MixEnum.Phoenix2, PumbilityPool.Singles, 18_700, 18_900, null,
+        var band = await Subject.GetBoardBand(MixEnum.Phoenix2, PumbilityPool.Singles, 18_700, 18_900,
             CancellationToken.None);
 
         Assert.Equal(new[] { "FLOOR#0001", "INSIDE#0002" },
@@ -403,9 +403,33 @@ public sealed class BoardPeerReaderTests
             .ToArray());
         Accounts();
 
-        var band = await Subject.GetBoardBand(MixEnum.Phoenix2, PumbilityPool.Total, 17_600, 17_800, null,
+        var band = await Subject.GetBoardBand(MixEnum.Phoenix2, PumbilityPool.Total, 17_600, 17_800,
             CancellationToken.None);
 
         Assert.Equal("WHOLE#0001", Assert.Single(band!.Peers).Tag.ToString());
+    }
+
+    /// <summary>
+    ///     A band is a census, and everyone with an account is already in the ladder's own read of
+    ///     the site — so a row the mirror can claim is left out, whether or not it may name the
+    ///     account (D61, D68). The private one is the case that matters: the reading names nobody
+    ///     for it, so a caller counting what comes back cannot tell it apart from a stranger and
+    ///     would count that player once as themselves and again as a board player.
+    /// </summary>
+    [Fact]
+    public async Task ABandLeavesOutEveryRowAnAccountClaims()
+    {
+        var publicAccount = Guid.NewGuid();
+        var privateAccount = Guid.NewGuid();
+        Board(Row(1, 18_800m), Row(2, 18_810m), Row(3, 18_820m));
+        Players(Player(1, "PUBLIC#0001", publicAccount), Player(2, "PRIVATE#0002", privateAccount),
+            Player(3, "NOBODY#0003"));
+        Accounts(Account(publicAccount, "Public", "PUBLIC#0001", true),
+            Account(privateAccount, "Private", "PRIVATE#0002", false));
+
+        var band = await Subject.GetBoardBand(MixEnum.Phoenix2, PumbilityPool.Singles, 18_700, 18_900,
+            CancellationToken.None);
+
+        Assert.Equal("NOBODY#0003", Assert.Single(band!.Peers).Tag.ToString());
     }
 }

@@ -146,7 +146,7 @@ public sealed class LevelSpreadChartTests : ComponentTestBase
     private static LevelSpreadColumn Column(int level, int mine, params (int Count, int Peers)[] bins)
     {
         var counts = bins.SelectMany(b => Enumerable.Repeat(b.Count, b.Peers)).OrderBy(c => c).ToArray();
-        return new LevelSpreadColumn(level, bins.ToDictionary(b => b.Count, b => b.Peers),
+        return new LevelSpreadColumn(level, ChartType.Single, bins.ToDictionary(b => b.Count, b => b.Peers),
             counts[0], Quantile(counts, 0.25), Quantile(counts, 0.5), Quantile(counts, 0.75), counts[^1],
             counts.Count(c => c > 0), mine, counts.Count(c => c < mine), counts.Count(c => c == mine));
     }

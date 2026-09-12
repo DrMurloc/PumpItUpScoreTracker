@@ -209,8 +209,7 @@ namespace ScoreTracker.PlayerProgress.Application
             var mine = (await _scores.GetBestScores(mix, userId, cancellationToken))
                 .Where(r => r.Score != null && !r.IsBroken && charts.ContainsKey(r.ChartId))
                 .ToDictionary(r => r.ChartId);
-            var levelOf = charts.ToDictionary(kv => kv.Key, kv => (int)kv.Value.Level);
-            var levels = lit.ToDictionary(type => type, type => PeerLevelSpread.Of(sweep.PeerPools[type], levelOf,
+            var levels = lit.ToDictionary(type => type, type => PeerLevelSpread.Of(sweep.PeerPools[type], charts,
                 MyPoolOf(type, mine, charts, scoring).Select(r => r.ChartId)));
 
             var peers = pool == null

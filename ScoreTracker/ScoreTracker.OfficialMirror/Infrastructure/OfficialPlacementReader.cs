@@ -24,9 +24,9 @@ internal sealed class OfficialPlacementReader(IMediator mediator, BoardPeerReade
     }
 
     public Task<BoardPeerGroupReading?> GetBoardBand(MixEnum mix, PumbilityPool pool, double floor, double? ceiling,
-        Guid? viewerAccountId, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        return boardPeers.GetBoardBand(mix, pool, floor, ceiling, viewerAccountId, cancellationToken);
+        return boardPeers.GetBoardBand(mix, pool, floor, ceiling, cancellationToken);
     }
 
     public Task<BoardScoreReadings> GetBoardScoresOn(MixEnum mix,
