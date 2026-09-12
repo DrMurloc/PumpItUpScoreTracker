@@ -16,6 +16,15 @@ public sealed class ChartIntelligenceModelContribution : IDbModelContribution
 {
     public void Contribute(ModelBuilder modelBuilder)
     {
+        // One row per (mix, chart) — the list is a set of charts, so the chart is the key and
+        // the folder facts ride along rather than living in a second table.
+        modelBuilder.Entity<HardmodeChartEntity>().ToTable("HardmodeChart")
+            .HasKey(e => new { e.MixId, e.ChartId });
+        modelBuilder.Entity<HardmodeChartEntity>()
+            .HasOne<ChartEntity>()
+            .WithMany()
+            .HasForeignKey(e => e.ChartId);
+
         modelBuilder.Entity<CoOpRatingEntity>().ToTable("CoOpRating")
             .HasOne<ChartEntity>()
             .WithMany()

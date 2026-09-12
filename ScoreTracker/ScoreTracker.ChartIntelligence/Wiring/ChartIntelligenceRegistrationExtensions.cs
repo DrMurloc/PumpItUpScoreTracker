@@ -29,6 +29,10 @@ public static class ChartIntelligenceRegistrationExtensions
         services.AddTransient<IFolderCohortStatsRepository, EFFolderCohortStatsRepository>();
         services.AddTransient<IChartSimilarityRepository, EFChartSimilarityRepository>();
         services.AddTransient<IPumbilityPoolCompositionRepository, EFPumbilityPoolCompositionRepository>();
+        services.AddTransient<IHardmodeChartRepository, EFHardmodeChartRepository>();
+        // The Domain port over the same storage, so a vertical on the wrong side of the
+        // reference chain reads the week's Hardmode list without a project reference.
+        services.AddTransient<IHardmodeChartReader, HardmodeChartReader>();
         services.AddSingleton<IDbModelContribution, ChartIntelligenceModelContribution>();
         return services;
     }
@@ -46,5 +50,6 @@ public static class ChartIntelligenceRegistrationExtensions
         configurator.AddConsumer<AccountPurgeConsumer>();
         configurator.AddConsumer<ChartSimilaritySaga>();
         configurator.AddConsumer<SpeedTierListTrigger>();
+        configurator.AddConsumer<HardmodeCensusSaga>();
     }
 }
