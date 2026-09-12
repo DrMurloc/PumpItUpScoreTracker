@@ -78,7 +78,12 @@ else
        not a tab stop: the jacket beside it already announces and operates this exact action,
        so a second one would be an unoperable duplicate in the reading order. *@
     <div class="tier-chart-card-head" @onclick="() => OnOpen.InvokeAsync(Chart.Id)">
-        @if (ShowName || CornerBadge != null)
+    @* One box around the two lines, so the name can be positioned against the SCORE rather
+       than against the head. Anchored to the head, the name landed at the head's top edge -
+       14px clear of the score with a gap of bare artwork between them (owner, 2026-09-12:
+       "song name and pumbility chip too high"). *@
+    <div class="tier-chart-card-headlines">
+        @if (ShowName || (CornerBadge != null && !HasScoreLine))
         {
             @* The printed value takes the end of the name's line rather than the jacket corner:
                the name is the one part of the line allowed to shrink, so a long name ends in "…"
@@ -90,7 +95,7 @@ else
                         <MudText Typo="Typo.subtitle1" Class="tier-chart-card-name">@Chart.Song.Name</MudText>
                     </MudTooltip>
                 }
-                @if (CornerBadge != null)
+                @if (CornerBadge != null && !HasScoreLine)
                 {
                     <div class="tier-chart-card-corner tier-chart-card-nameline-value @CornerBadgeClass">@CornerBadge</div>
                 }
@@ -115,6 +120,12 @@ else
                 <PeerScore Score="Score.Score.Value" IsBroken="Score.IsBroken" Mix="Chart.Mix" Height="12"
                            Plate="Score.Plate" Standing="Standing" Chart="Chart" Class="sbd-score-stack"
                            ShowStanding="false" OnOpenBoard="OnOpenBoard"></PeerScore>
+                @if (CornerBadge != null)
+                {
+                    @* The printed value sits ON the score's line, at its end - it needs no line
+                       of its own and no lift onto the artwork (owner, 2026-09-12). *@
+                    <div class="tier-chart-card-corner tier-chart-card-nameline-value @CornerBadgeClass">@CornerBadge</div>
+                }
             </div>
         }
         else if (LegacyGrade != null)
@@ -124,8 +135,13 @@ else
                another chart's. ScoreBreakdown is built around the 1,000,000 scale. *@
             <div class="tier-chart-card-scoreline">
                 <LetterGradeIcon LegacyGrade="LegacyGrade" IsBroken="Score?.IsBroken ?? false" Height="20"></LetterGradeIcon>
+                @if (CornerBadge != null)
+                {
+                    <div class="tier-chart-card-corner tier-chart-card-nameline-value @CornerBadgeClass">@CornerBadge</div>
+                }
             </div>
         }
+    </div>
     </div>
     <div class="tier-chart-card-body">
         @if (TierLabel != null)
@@ -240,6 +256,13 @@ else
     [Parameter] public bool PassedInAnotherMix { get; set; }
 
     [Parameter] public bool ShowName { get; set; } = true;
+
+    /// <summary>
+    ///     Whether the head prints a score line at all. It owns the jacket's edge and carries
+    ///     the printed value, so the name line only exists when there is a name, and the value
+    ///     falls back to the name's line only when there is no score to sit beside.
+    /// </summary>
+    private bool HasScoreLine => Score?.Score != null || LegacyGrade != null;
 
     [Parameter] public bool ShowToDo { get; set; } = true;
 

@@ -2177,6 +2177,14 @@ html.sheet-open .more-sheet-scrim {
     min-width: 0;
 }
 
+/* The two lines' own box. Its in-flow content is the score line alone, so its height IS the
+   score's and the name hangs directly off its top edge - against the head, the name landed at
+   the head's top, 14px clear of the score with bare artwork between (owner, 2026-09-12). */
+.tier-chart-card-headlines {
+    position: relative;
+    min-width: 0;
+}
+
 /* The score owns the edge, and the name rides above it on the art (owner, 2026-09-12).
    Out of flow ON PURPOSE: in flow, a name added its own line to a bottom-justified column
    whose top was pinned by the pull, so the box grew DOWNWARD and carried the score with it.
@@ -2184,10 +2192,10 @@ html.sheet-open .more-sheet-scrim {
    what "the tier list bumps the score down when the song name is showing" was.
    Only when there IS a score: a card with a name and no score has nothing else to anchor, so
    the name stays in flow and takes the edge itself. */
-.tier-chart-card-head:has(.tier-chart-card-scoreline) .tier-chart-card-nameline {
+.tier-chart-card-headlines:has(.tier-chart-card-scoreline) .tier-chart-card-nameline {
     position: absolute;
-    left: 8px;
-    right: 8px;
+    left: 0;
+    right: 0;
     bottom: 100%;
 }
 
@@ -2507,8 +2515,14 @@ html.sheet-open .more-sheet-scrim {
     font-variant-numeric: tabular-nums;
 }
 
+/* A row, because the printed value sits on it (owner, 2026-09-12) rather than taking a line of
+   its own above the artwork. The stack keeps its intrinsic width and the value is pushed to the
+   end by its own margin, the same way it ended the name's line. */
 .tier-chart-card-scoreline {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
 }
 
 .lamp-strip {
