@@ -37,6 +37,7 @@ public static class PlayerProgressRegistrationExtensions
         // Singleton: the projection outlives the request that built it, which is the
         // entire point, and its eviction consumer has to see the same instance.
         services.AddSingleton<PumbilityProjectionCache>();
+        services.AddTransient<IHardmodeRatingRepository, EFHardmodeRatingRepository>();
         services.AddSingleton<IDbModelContribution, PlayerProgressModelContribution>();
         return services;
     }
@@ -74,5 +75,6 @@ public static class PlayerProgressRegistrationExtensions
         // If this registration goes, the page serves a projection up to six hours
         // stale after an import and looks like it ignored the scores.
         configurator.AddConsumer<PumbilityProjectionCacheConsumer>();
+        configurator.AddConsumer<HardmodeSaga>();
     }
 }
