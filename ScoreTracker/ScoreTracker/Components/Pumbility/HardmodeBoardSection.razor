@@ -3,8 +3,11 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.OfficialMirror.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Services.HomeDashboard
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Services.Theming
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
@@ -12,6 +15,7 @@
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
 @inject IUserReader Users
+@inject CommunityGlowReader Glow
 
 @* The Hardmode leaderboard (docs/design/hardmode-leaderboard.md §4), on the board the site
    already has: the olb-grid row template, which sheds Held at 600px and the playstyle chip at
@@ -25,7 +29,7 @@
         <h2 class="pmb-block-title">@L["Hardmode leaderboard"]</h2>
     </div>
     <p class="pmb-block-lede">
-        @L["The charts almost nobody holds in a PUMBILITY pool, priced the same way. Rebuilt every Sunday after the official import."]
+        @L["The charts almost nobody holds in a PUMBILITY pool, priced the same way. The chart list is rebuilt on Sundays; standings update as players import."]
     </p>
 
     @if (Standing is { Rank: not null })
@@ -88,7 +92,7 @@
             </div>
             @foreach (var row in Page)
             {
-                <div class="olb-grid-row @(row.IsMe ? "olb-row-me" : null)">
+                <div class="olb-grid-row @row.Glow">
                     <span class="olb-grid-num hmd-rank" style="@ThemeScales.RarityStyle(RowPercentile(row.Place))">
                         @($"#{row.Place}")
                     </span>
@@ -143,7 +147,7 @@
     ///     a site row opens a profile, a board row carries the mirror's asterisk.
     /// </summary>
     private sealed record Row(int Place, string Name, User? User, double Hardmode, int Held,
-        RecapPlayerType? PlayerType, bool IsMe);
+        RecapPlayerType? PlayerType, string Glow);
 
     [Parameter] [EditorRequired] public MixEnum Mix { get; set; }
 
@@ -212,17 +216,57 @@
     private async Task<IReadOnlyList<Row>> SiteRows()
     {
         var rows = await Mediator.Send(new GetHardmodeBoardQuery(Mix, Pool));
-        var users = (await Users.GetUsers(rows.Select(r => r.UserId).Distinct())).ToDictionary(u => u.Id);
+        var ids = rows.Select(r => r.UserId).Distinct().ToArray();
+        var users = (await Users.GetUsers(ids)).ToDictionary(u => u.Id);
         var me = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : (Guid?)null;
+        var rivals = await Glow.GetMyRivalIds(Mix);
+        var clubmates = await Glow.GetMyCommunityMemberIds();
+
+        // Playstyle is the recap's banding over the player's top-PUMBILITY average, and
+        // SkillScore IS that average — the same read the community rankings make. The
+        // thresholds live in RecapPlayerTypeCalculator and are read, never restated here.
+        var types = (await Mediator.Send(new GetPlayersStatsQuery(ids, Mix)))
+            .Where(s => s.ClearCount >= RecapPlayerTypeCalculator.MinimumScores && (int)s.SkillScore > 0)
+            .ToDictionary(s => s.UserId, s => RecapPlayerTypeCalculator.FromAverage((int)s.SkillScore));
+
         return rows.Select(r => new Row(r.Place,
             users.TryGetValue(r.UserId, out var user) ? user.GameTag?.ToString() ?? user.Name.ToString() : "?",
-            users.GetValueOrDefault(r.UserId), r.Hardmode, r.Held, null, r.UserId == me)).ToArray();
+            users.GetValueOrDefault(r.UserId), r.Hardmode, r.Held,
+            types.TryGetValue(r.UserId, out var type) ? type : null,
+            CommunityGlowReader.RowClass(r.UserId, me, rivals, clubmates, "olb-row-me", "olb-row-community")))
+            .ToArray();
     }
 
     private async Task<IReadOnlyList<Row>> OfficialRows()
     {
         var rows = await Mediator.Send(new GetOfficialHardmodeBoardQuery(Mix, Pool));
-        return rows.Select(r => new Row(r.Place, r.Username, null, r.Hardmode, r.Held, null, false))
+        var rivalTags = await Glow.GetMyRivalTags(Mix);
+
+        // The board players' playstyle is the rankings hub's own — it computes it from the
+        // mirrored top 50 and caches the census, so this is a contract read rather than a
+        // second census. Keyed by board player id, which is what a Hardmode row carries.
+        var rankings = await Mediator.Send(new GetOfficialRankingsQuery(Mix, RankingsType));
+        var types = rankings.Rankings
+            .Where(r => r.PlayerType != null)
+            .GroupBy(r => r.Player.PlayerId)
+            .ToDictionary(g => g.Key, g => g.First().PlayerType);
+
+        // Tags, not ids: this is the one place a rival with no site account is a ROW rather than
+        // an absence, and a Hardmode board row carries no UserId to match on either way. Neither
+        // "you" nor a clubmate can appear here — the census excludes every linked player, so a
+        // viewer's own account is on the PIU Scores tab and never on this one.
+        return rows.Select(r => new Row(r.Place, r.Username, null, r.Hardmode, r.Held,
+                types.TryGetValue(r.OfficialPlayerId, out var type) ? type : null,
+                CommunityGlowReader.RowClass(false, rivalTags.Contains(r.Username), false,
+                    "olb-row-me", "olb-row-community")))
             .ToArray();
     }
+
+    /// <summary>The rankings board this pool corresponds to, in that query's own vocabulary.</summary>
+    private string RankingsType => Pool switch
+    {
+        ChartType.Single => "Singles",
+        ChartType.Double => "Doubles",
+        _ => "All"
+    };
 }
