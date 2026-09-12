@@ -1,6 +1,8 @@
-using Bunit;
+﻿using Bunit;
 using MediatR;
 using Moq;
+using ScoreTracker.Catalog.Contracts;
+using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Models;
@@ -99,6 +101,11 @@ public sealed class HardmodeQualifyingSectionTests : ComponentTestBase
             It.IsAny<CancellationToken>())).ReturnsAsync(qualifying);
         Mediator.Setup(m => m.Send(It.IsAny<GetPeerStandingsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, PeerStanding>());
+        // The cards carry what each chart IS, read through Catalog's contract. It is stubbed
+        // rather than guarded against in the component: every read in that section throws if it
+        // fails, and chips are not the one to make an exception for.
+        Mediator.Setup(m => m.Send(It.IsAny<GetChartIdentityQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyDictionary<Guid, ChartIdentityRecord>)new Dictionary<Guid, ChartIdentityRecord>());
         CurrentUser.SetupGet(u => u.IsLoggedIn).Returns(false);
         // The cards nest DifficultyBubble, which gates its tooltip on RendererInfo.IsInteractive.
         this.RenderInteractive();
