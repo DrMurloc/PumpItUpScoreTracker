@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Domain.SecondaryPorts
@@ -61,6 +62,17 @@ namespace ScoreTracker.Domain.SecondaryPorts
         /// </param>
         Task<BoardPeerGroupReading?> GetBoardPeers(MixEnum mix, ChartType chartType, double minimumPool,
             double maximumPool, Guid? viewerAccountId, CancellationToken cancellationToken);
+
+        /// <summary>
+        ///     The board's own players standing on one band of a PUMBILITY ladder
+        ///     (docs/design/pumbility-overhaul.md D68): pool at or above <paramref name="floor" />
+        ///     and strictly below <paramref name="ceiling" />, which is null at the top of a ladder.
+        ///     Half-open, because a band ends where the next rung's title begins — unlike the peer
+        ///     window above, which is a distance and takes both ends. The merged ladder reads the
+        ///     combined board and rebuilds both types together to qualify a player (D60).
+        /// </summary>
+        Task<BoardPeerGroupReading?> GetBoardBand(MixEnum mix, PumbilityPool pool, double floor, double? ceiling,
+            Guid? viewerAccountId, CancellationToken cancellationToken);
 
         /// <summary>
         ///     What those players scored, one row per player and chart: the highest placement they

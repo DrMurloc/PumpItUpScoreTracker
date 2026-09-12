@@ -39,9 +39,19 @@ internal static class BoardPoolCheck
     /// </summary>
     public static double Rebuild(ChartType chartType, IEnumerable<(int Level, int Score)> rows)
     {
+        return Rebuild(rows.Select(r => (chartType, r.Level, r.Score)));
+    }
+
+    /// <summary>
+    ///     The same over rows of both types at once — the fifty the combined board ranks on (D68).
+    ///     The type rides each row because a singles chart prices one level up, so a merged pool
+    ///     cannot be priced by one call's worth of type.
+    /// </summary>
+    public static double Rebuild(IEnumerable<(ChartType Type, int Level, int Score)> rows)
+    {
         var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
         return rows
-            .Select(r => scoring.GetScore(chartType, DifficultyLevel.From(r.Level), PhoenixScore.From(r.Score),
+            .Select(r => scoring.GetScore(r.Type, DifficultyLevel.From(r.Level), PhoenixScore.From(r.Score),
                 ScoringConfiguration.ExpectedPlateForScore(PhoenixScore.From(r.Score))))
             .Where(v => v > 0)
             .OrderByDescending(v => v)
