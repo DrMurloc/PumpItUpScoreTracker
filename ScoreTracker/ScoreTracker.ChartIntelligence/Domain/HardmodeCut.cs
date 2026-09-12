@@ -1,4 +1,4 @@
-using ScoreTracker.SharedKernel.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.ChartIntelligence.Domain;
 
@@ -15,8 +15,8 @@ internal static class HardmodeCut
     public const int FlatCut = 25;
 
     /// <summary>
-    ///     A folder this small or smaller gives up exactly one chart. Without it ⌊2 ÷ 4⌋ = 0
-    ///     excluded S26 entirely, which is to say it excluded 1948 (D2).
+    ///     A folder this small or smaller gives up AT LEAST one chart. Without a floor,
+    ///     ⌊2 ÷ 4⌋ = 0 excluded S26 entirely, which is to say it excluded 1948 (D2).
     /// </summary>
     public const int TinyFolder = 4;
 
@@ -34,7 +34,12 @@ internal static class HardmodeCut
     public static int CutSize(int folderSize, int unheld)
     {
         if (folderSize <= 0) return 0;
-        if (folderSize <= TinyFolder) return 1;
+        // At least one, and never fewer than the unheld rule would take (D2 revised,
+        // 2026-09-12). D2 exists to stop a tiny folder being dropped ENTIRELY; capping it at one
+        // made it contradict the line below, where a folder nobody holds gives up all of itself.
+        // Two folders in the same state behaved differently on size alone: five unheld charts
+        // all qualified, four unheld charts sent one and silently dropped three.
+        if (folderSize <= TinyFolder) return Math.Max(1, Math.Min(unheld, folderSize));
         return Math.Max(Math.Min(FlatCut, folderSize / 4), Math.Min(unheld, folderSize));
     }
 

@@ -21,8 +21,21 @@ count beside it counts each player once.
 **The cut** (D1): `max(unheld, min(25, ⌊folder ÷ 4⌋))`, where `unheld` is how many of the folder's charts
 no full pool holds at all. So a folder gives up 25 charts, or a quarter of itself if that is fewer, or
 **every unheld chart** when there are more of those than the cut would otherwise take. A folder of four
-charts or fewer gives up exactly **one** (D2) — without that, ⌊2 ÷ 4⌋ = 0 silently excluded S26 entirely,
+charts or fewer gives up **at least one** (D2) — without that, ⌊2 ÷ 4⌋ = 0 silently excluded S26 entirely,
 which is to say it excluded *1948*.
+
+D2 was *exactly* one until 2026-09-12, which made it contradict the line above it: a five-chart
+folder nobody holds gave up all five, while a four-chart folder nobody holds gave up one and silently
+dropped three. It is a floor now, not a cap — at least one, and never fewer than the unheld rule
+would take.
+
+The owner's original line on this was "Paradoxx should definitely NOT be in this board", which the
+cap was assumed to be protecting. It was not: measured on the prod-synced database, **Paradoxx S26 has
+151 scorers** (13 site, 138 board) against **1948 S26's 27** (3 site, 24 board), so 1948 is the rarer
+of the two by a wide margin and the cut takes it on merit. The census's own output agrees — 1948 S26
+is on the list with 19 holders and Paradoxx is not. Paradoxx cannot be *unheld*, so the revised rule
+cannot promote it. The folder this actually reaches is **D28**, where the four hardest doubles charts
+in the game have between one and four scorers each.
 
 **Ordering and ties** (D3): weighted points ascending, then **scoring level descending**, then name.
 94 doubles charts and 19 singles charts at level 20+ carry no usable `ChartScoringLevel`, so a missing

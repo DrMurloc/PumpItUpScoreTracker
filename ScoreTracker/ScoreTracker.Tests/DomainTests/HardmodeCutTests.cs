@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.SharedKernel.Enums;
@@ -27,11 +27,25 @@ public sealed class HardmodeCutTests
     [InlineData(2)] // S26 — 1948 and Paradoxx
     [InlineData(4)] // D28
     [InlineData(1)] // D29
-    public void AFolderOfFourOrFewerGivesUpExactlyOne(int folderSize)
+    public void AFolderOfFourOrFewerGivesUpAtLeastOne(int folderSize)
     {
         // Without this a quarter of two is zero, and S26 left the list silently — which is to
         // say 1948 left the list silently.
         Assert.Equal(1, HardmodeCut.CutSize(folderSize, 0));
+    }
+
+    [Theory]
+    [InlineData(4, 4, 4)] // D28: four charts, and on the measured data nobody holds some of them
+    [InlineData(4, 2, 2)]
+    [InlineData(4, 0, 1)] // all held - the floor still sends the rarest one
+    [InlineData(2, 2, 2)] // S26, IF nobody held either. Paradoxx has 151 scorers, so it cannot.
+    [InlineData(1, 1, 1)]
+    public void ATinyFolderNobodyHoldsIsNotCappedAtOne(int folderSize, int unheld, int expected)
+    {
+        // The floor exists so a tiny folder is never dropped entirely; it was also capping one
+        // that the unheld rule would have taken whole, so four unheld charts sent one and
+        // silently dropped three while five unheld charts all qualified (D2 revised).
+        Assert.Equal(expected, HardmodeCut.CutSize(folderSize, unheld));
     }
 
     [Fact]
