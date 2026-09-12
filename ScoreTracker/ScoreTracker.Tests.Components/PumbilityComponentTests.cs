@@ -473,6 +473,131 @@ public sealed class PumbilityComponentTests : ComponentTestBase
                 new Uri("https://piu.test/i.png"), TimeSpan.FromMinutes(2), "Artist", 180),
             type, level, MixEnum.Phoenix, null, null);
 
+    private static ArchetypeSpread Archetypes(int[] counts, double? mine, int boardHolders = 0,
+        MixEnum mix = MixEnum.Phoenix2)
+    {
+        var byType = Enum.GetValues<RecapPlayerType>()
+            .Select((type, i) => (type, count: counts[i])).ToDictionary(x => x.type, x => x.count);
+        var cohort = new CohortArchetypeSpread(counts.Sum(), byType);
+        return ArchetypeSpread.Of(cohort, boardHolders,
+            mine is { } average
+                ? Enumerable.Repeat((int)average, RecapPlayerTypeCalculator.MinimumScores).ToArray()
+                : Array.Empty<int>(), mix);
+    }
+
+    [Fact]
+    public void TheArchetypeSpectrumSizesEachBandByTheShareOfTheCohortStandingInIt()
+    {
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Cohort(null) with { Archetypes = Archetypes(new[] { 10, 20, 30, 20, 20 }, 977_000) });
+
+        var cut = Card(page, page.Charts());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=archetype-spectrum]")));
+        var bands = cut.FindAll("[data-testid=archetype-spectrum] .pmb-arch-band");
+        Assert.Equal(5, bands.Count);
+        Assert.Contains("width:10%", bands[0].GetAttribute("style"));
+        Assert.Contains("width:30%", bands[2].GetAttribute("style"));
+        // The viewer's own band is the outlined one, and it is the one their average falls in.
+        Assert.Equal("3", Assert.Single(bands, b => b.ClassList.Contains("is-mine")).GetAttribute("data-k"));
+        // Every band's count prints beneath it, the empty ones included.
+        Assert.Equal(new[] { "10", "20", "30", "20", "20" },
+            cut.FindAll("[data-testid=archetype-spectrum] .pmb-arch-tick")
+                .Select(t => t.TextContent.Trim()).ToArray());
+    }
+
+    [Fact]
+    public void TheMarkerSitsInsideTheBandTheLineNames()
+    {
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Cohort(null) with { Archetypes = Archetypes(new[] { 10, 20, 30, 20, 20 }, 982_000) });
+
+        var cut = Card(page, page.Charts());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=archetype-spectrum]")));
+        var marker = cut.Find("[data-testid=archetype-spectrum] .pmb-arch-you");
+        var at = double.Parse(marker.GetAttribute("style")!.Replace("left:", "").Replace("%", ""),
+            CultureInfo.InvariantCulture);
+        // Competitive spans 60% to 80% of the strip, and the marker has to land inside it or the
+        // drawing outlines one archetype while pointing at another.
+        Assert.InRange(at, 60, 80);
+        Assert.Equal("4", Assert.Single(cut.FindAll("[data-testid=archetype-spectrum] .pmb-arch-band"),
+            b => b.ClassList.Contains("is-mine")).GetAttribute("data-k"));
+    }
+
+    [Fact]
+    public void TheLineNamesTheBandAndTheShareHoldingItAndNeverAStanding()
+    {
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Cohort(null) with { Archetypes = Archetypes(new[] { 10, 20, 30, 20, 20 }, 977_000) });
+
+        var cut = Card(page, page.Charts());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=archetype-say]")));
+        var said = cut.Find("[data-testid=archetype-say]").TextContent;
+        Assert.Contains("977,000", said);
+        Assert.Contains("Balanced Player", said);
+        Assert.Contains("30%", said);
+        Assert.Contains(DiamondLevel, said);
+        // The archetypes are lateral (D69): nothing on this section may rank them.
+        foreach (var ranking in new[] { "ahead of", "above", "higher", "top " })
+            Assert.DoesNotContain(ranking, said, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void TooShortAFiftyDrawsTheCohortAndSaysSoInsteadOfPlacingYou()
+    {
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Cohort(null) with { Archetypes = Archetypes(new[] { 10, 20, 30, 20, 20 }, null) });
+
+        var cut = Card(page, page.Charts());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=archetype-spectrum]")));
+        Assert.Equal(5, cut.FindAll("[data-testid=archetype-spectrum] .pmb-arch-band").Count);
+        Assert.Empty(cut.FindAll("[data-testid=archetype-spectrum] .pmb-arch-you"));
+        Assert.DoesNotContain(cut.FindAll("[data-testid=archetype-spectrum] .pmb-arch-band"),
+            b => b.ClassList.Contains("is-mine"));
+    }
+
+    [Fact]
+    public void ABandTooNarrowForItsLabelDropsTheLabelRatherThanClippingIt()
+    {
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Cohort(null) with { Archetypes = Archetypes(new[] { 1, 0, 60, 20, 19 }, 977_000) });
+
+        var cut = Card(page, page.Charts());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=archetype-spectrum]")));
+        var bands = cut.FindAll("[data-testid=archetype-spectrum] .pmb-arch-band");
+        Assert.Empty(bands[0].QuerySelectorAll("b"));
+        Assert.Empty(bands[1].QuerySelectorAll("b"));
+        Assert.Equal("BP", bands[2].QuerySelectorAll("b").Single().TextContent);
+    }
+
+    [Fact]
+    public void ATypedPoolDrawsNoArchetypeSection()
+    {
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Cohort(null));
+
+        var cut = Card(((PumbilityPageRecord)page) with { Pool_ = ChartType.Single }, page.Charts());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=wpc-levels]")));
+        Assert.Empty(cut.FindAll("[data-testid=wpc-archetypes]"));
+    }
+
     private static PageFixture Page(int poolSize, int waiting = 0, int targets = 0) =>
         new(poolSize, waiting, targets);
 

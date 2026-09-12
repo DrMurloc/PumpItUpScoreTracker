@@ -184,6 +184,20 @@
             </div>
         }
 
+        @* The merged fifty only, the rule the split bar above follows: an archetype is the whole
+           fifty's statement, and banding a typed one would name a player something the chip they
+           wear everywhere else contradicts (D69). *@
+        @if (_cohort is { Band: { } archBand, Archetypes: { Holders: > 0 } archetypes })
+        {
+            <div class="pmb-wpc-sub" data-testid="wpc-archetypes">
+                <div class="pmb-wpc-sub-head">
+                    <strong>@L["Where your scores sit"]</strong>
+                    <span class="pmb-muted">@L["the archetypes their top 50 lands in, and where yours lands"]</span>
+                </div>
+                <ArchetypeSpectrum Spread="archetypes" Band="archBand" Mix="Page!.Mix"></ArchetypeSpectrum>
+            </div>
+        }
+
         @if (_cohort is { Spread.Columns.Count: > 0 } cohort)
         {
             <div class="pmb-wpc-sub" data-testid="wpc-levels">
