@@ -59,7 +59,7 @@ SharedKernel ◄── Domain ◄── Application ◄── Data ◄── ver
 
 | Project | Allowed external packages | Forbidden |
 |---|---|---|
-| `ScoreTracker.SharedKernel` | `MediatR` only | Everything else — the kernel references nothing. Namespaces: `ScoreTracker.SharedKernel.ValueTypes/Enums/Models`. |
+| `ScoreTracker.SharedKernel` | `MediatR` only | Everything else — the kernel references nothing. Namespaces: `ScoreTracker.SharedKernel.ValueTypes/Enums/Models/Caching` (`Caching` holds only the `CacheKeys` string builder — see Cache keys below). |
 | `ScoreTracker.Domain` | `MediatR`, `Microsoft.Extensions.Logging.Abstractions` (+ project ref to `SharedKernel`) | Anything else. No EF, no `HttpClient`, no MassTransit, no ASP.NET, no Azure/Discord/SendGrid. |
 | `ScoreTracker.Application` | + `MassTransit.Abstractions`, `Microsoft.Extensions.Caching.Memory` | EF Core, ASP.NET, `HttpClient`, vendor SDKs. Application must never know it's behind a web server. |
 | `ScoreTracker.Data` | + `Microsoft.EntityFrameworkCore.SqlServer`, `Azure.Storage.Blobs`, `Discord.Net`, `HtmlAgilityPack`, `SendGrid`, `SkiaSharp` (+ Linux native assets) + `QRCoder` (the share-card renderer) + `Azure.Security.KeyVault.Keys` / `Azure.Identity` (the remembered-credential KEK envelope, `IKeyEnvelope`) + `Anthropic` (`AnthropicBatchClient : ILanguageModelBatchClient`, the translation pipeline's Batch API adapter — reports itself unconfigured and stays inert without `ClaudeApi:ApiKey`) | ASP.NET, and `Microsoft.Extensions.Http` — `DevTooling/` reads the live site's `api/v2` on a plain `HttpClient` it owns, because a factory client carries ServiceDefaults' 30-second resilience timeout and a bulk download outlives it. |
@@ -96,6 +96,10 @@ Adding a package outside its allowed layer is a violation. Adding a project refe
 - Non-EF integrations: concrete types in `ScoreTracker.Data.Clients/` and `ScoreTracker.Data.Apis/`.
 - DI wiring: `CompositionRoot.RegistrationExtensions.AddInfrastructure` reflects over `ScoreTracker.Data` types and binds every `Domain.SecondaryPorts.*` interface they implement as **transient by default**. `IBotClient` is the only singleton. Adding a port = no DI wiring needed if the implementation lives in `Data` and follows naming. Other lifetimes require an explicit registration. Vertical services register through their `AddXxx()` hooks.
 - Cross-cutting Web-bound ports (`HttpContextUserAccessor : ICurrentUserAccessor`, `DateTimeOffsetAccessor : IDateTimeOffsetAccessor`) live in `ScoreTracker.Web.Accessors/` because they depend on ASP.NET.
+
+### Cache keys
+
+- **A memory-cache key that names a mix is built by `CacheKeys`** (`ScoreTracker.SharedKernel.Caching`), never spelled at the call site (arch-test enforced, `CacheKeyTests`, shrink-only allowlist). Two entry points say what the cached object is: `CacheKeys.Mix(owner, mix, parts…)` for a community projection or a catalog fact that must never vary by who is looking (tier lists, cohorts, verdicts, baselines, boards), and `CacheKeys.Viewer(owner, mix, parts…)` for an object that depends on the viewer's own scores or on chart levels (a player's best scores, a `PlayerStats` row, the per-mix chart dictionary, a PUMBILITY projection). They produce the same shape today; `Viewer` is where the seasonal view's segment lands ([docs/design/seasons.md](docs/design/seasons.md) §4.5, §12.1), so the classification is the decision, made once at the key. A vertical may keep a local builder for its eviction pairs (`LedgerCacheKeys`, `OfficialCacheKeys`) as long as it builds through `CacheKeys`. The reason this is a ratchet and not a convention: a key that forgets the view serves one viewer's numbers to the next with no error anywhere.
 
 ### Domain models
 
