@@ -6,6 +6,7 @@ using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services.Contracts;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.ChartIntelligence.Application;
@@ -46,8 +47,9 @@ internal sealed class PersonalizedBreakdownHandler
                 "Only the Score lens personalizes");
 
         var userId = request.UserId ?? _currentUser.User.Id;
-        var cacheKey =
-            $"{nameof(PersonalizedBreakdownHandler)}_{request.Mix}_{lens}_{request.ChartType}_{request.Level}_{userId}";
+        // A Viewer key: the breakdown is the viewer's own scores against the blend.
+        var cacheKey = CacheKeys.Viewer(nameof(PersonalizedBreakdownHandler), request.Mix, lens, request.ChartType,
+            request.Level, userId);
         return await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6);

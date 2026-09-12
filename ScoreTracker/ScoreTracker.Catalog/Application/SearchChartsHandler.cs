@@ -5,6 +5,7 @@ using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Catalog.Domain;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 
@@ -177,7 +178,7 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
 
     private async Task<CommunityBundle> GetCommunityBundle(MixEnum mix, CancellationToken cancellationToken)
     {
-        return (await _cache.GetOrCreateAsync($"ChartSearch__Community__{mix}", async entry =>
+        return (await _cache.GetOrCreateAsync(CacheKeys.Mix("ChartSearch", mix, "Community"), async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = UntilNextRecompute();
 

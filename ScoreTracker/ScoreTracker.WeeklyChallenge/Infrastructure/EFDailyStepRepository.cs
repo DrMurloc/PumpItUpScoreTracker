@@ -4,6 +4,7 @@ using ScoreTracker.WeeklyChallenge.Infrastructure.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.SecondaryPorts;
 
@@ -17,7 +18,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
     {
         private static string CurrentChartKey(MixEnum mix)
         {
-            return $@"{nameof(EFDailyStepRepository)}__CurrentChart__{mix}";
+            return CacheKeys.Mix(nameof(EFDailyStepRepository), mix, "CurrentChart");
         }
 
         // 0–1 boards per mix; cached like the weekly board so N widget reads share one query.

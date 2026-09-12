@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Communities.Infrastructure.Entities;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
@@ -466,7 +467,7 @@ namespace ScoreTracker.Communities.Infrastructure
         public async Task<IEnumerable<CommunityCompetitiveRangeRecord>> GetCompetitiveRanges(MixEnum mix,
             CancellationToken cancellationToken)
         {
-            return (await _cache.GetOrCreateAsync($"{nameof(EFCommunitiesRepository)}_CompRanges_{mix}",
+            return (await _cache.GetOrCreateAsync(CacheKeys.Mix(nameof(EFCommunitiesRepository), mix, "CompRanges"),
                 async cache =>
                 {
                     // Directory metadata over every community incl. regional/World; day-stale is

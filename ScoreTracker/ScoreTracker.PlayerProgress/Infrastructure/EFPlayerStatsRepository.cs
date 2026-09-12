@@ -6,6 +6,7 @@ using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.PlayerProgress.Infrastructure.Entities;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -26,9 +27,10 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             _factory = factory;
         }
 
+        // A Viewer key: the season's stats row is a different row, and this is where that lands.
         private string CacheKey(MixEnum mix, Guid userId)
         {
-            return $"{nameof(EFPlayerStatsRepository)}_PlayerStats_{mix}_{userId}";
+            return CacheKeys.Viewer(nameof(EFPlayerStatsRepository), mix, userId);
         }
 
         public async Task<IEnumerable<Guid>> GetUserIdsWithStats(MixEnum mix, CancellationToken cancellationToken)

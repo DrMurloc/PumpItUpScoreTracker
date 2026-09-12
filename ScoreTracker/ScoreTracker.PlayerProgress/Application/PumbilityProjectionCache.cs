@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
@@ -152,9 +153,11 @@ namespace ScoreTracker.PlayerProgress.Application
             }
         }
 
+        // A Viewer key: the sweep is all-time peers against the viewer's own pool, and the pool is
+        // what the seasonal view swaps.
         private static string Key(Guid userId, MixEnum mix)
         {
-            return $"pumbility:estimates:{userId}:{mix}";
+            return CacheKeys.Viewer(nameof(PumbilityProjectionCache), mix, userId);
         }
     }
 }

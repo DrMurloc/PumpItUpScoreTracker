@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -113,7 +114,7 @@ namespace ScoreTracker.WeeklyChallenge.Infrastructure
 
         private static string WeeklyChartsKey(MixEnum mix)
         {
-            return $@"{nameof(EFWeeklyTourneyRepository)}__WeeklyCharts__{mix}";
+            return CacheKeys.Mix(nameof(EFWeeklyTourneyRepository), mix, "WeeklyCharts");
         }
 
         public async Task<IEnumerable<WeeklyTournamentChart>> GetWeeklyCharts(MixEnum mix,

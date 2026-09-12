@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services.Contracts;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.ChartIntelligence.Application;
@@ -40,8 +41,9 @@ internal sealed class ProjectedScoresHandler
         // blend has computed a projection, and the alternative is computing the sweep twice for
         // one folder. Same shape as the blend's cache, for the same reason — peers' play moving
         // under a six-hour-old answer is not something a reader can tell.
-        var cacheKey =
-            $"{nameof(ProjectedScoresHandler)}_{request.Mix}_{request.ChartType}_{request.Level}_{userId}";
+        // A Viewer key: a projection is computed from the viewer's own pool.
+        var cacheKey = CacheKeys.Viewer(nameof(ProjectedScoresHandler), request.Mix, request.ChartType, request.Level,
+            userId);
         return await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6);

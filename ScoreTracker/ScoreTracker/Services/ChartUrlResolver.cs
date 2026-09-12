@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 
@@ -130,7 +131,7 @@ public sealed class ChartUrlResolver
 
     private async Task<IReadOnlyList<Chart>> Charts(MixEnum mix, CancellationToken cancellationToken)
     {
-        return (await _cache.GetOrCreateAsync($"ChartUrlResolver__{mix}", async entry =>
+        return (await _cache.GetOrCreateAsync(CacheKeys.Mix(nameof(ChartUrlResolver), mix), async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
             return (IReadOnlyList<Chart>)(await _mediator.Send(new GetChartsQuery(mix), cancellationToken))

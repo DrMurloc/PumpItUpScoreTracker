@@ -5,6 +5,7 @@ using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services.Contracts;
+using ScoreTracker.SharedKernel.Caching;
 
 namespace ScoreTracker.ChartIntelligence.Application;
 
@@ -38,8 +39,13 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
             throw new ArgumentOutOfRangeException(nameof(request.Lens), lens, "Unknown tier list lens");
 
         var userId = request.Personalized ? request.UserId ?? _currentUser.User.Id : (Guid?)null;
-        var cacheKey =
-            $"{nameof(BlendedTierListHandler)}_{request.Mix}_{lens}_{request.ChartType}_{request.Level}_{userId?.ToString() ?? "community"}";
+        // The community blend is the population's (Mix); a personalized blend folds in the
+        // viewer's own scores (Viewer), which is what the seasonal view swaps.
+        var cacheKey = userId == null
+            ? CacheKeys.Mix(nameof(BlendedTierListHandler), request.Mix, lens, request.ChartType, request.Level,
+                "community")
+            : CacheKeys.Viewer(nameof(BlendedTierListHandler), request.Mix, lens, request.ChartType, request.Level,
+                userId);
         return await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6);

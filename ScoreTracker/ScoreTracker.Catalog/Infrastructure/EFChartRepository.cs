@@ -4,6 +4,7 @@ using ScoreTracker.Data.Persistence;
 using ScoreTracker.Catalog.Domain;
 using ScoreTracker.Catalog.Infrastructure.Entities;
 using ScoreTracker.Data.Persistence.Entities;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
@@ -483,9 +484,10 @@ internal sealed class EFChartRepository : IChartRepository
         }))!;
     }
 
+    // A Viewer key: the dictionary carries Chart.Level, and a season's chart-mix rows change it.
     private static string ChartCacheKey(Guid mixId)
     {
-        return $"{nameof(EFChartRepository)}_{nameof(GetAllCharts)}_Mix:{mixId}";
+        return CacheKeys.Viewer(nameof(EFChartRepository), mixId, nameof(GetAllCharts));
     }
 
     private const string MixLevelsCacheKey = $"{nameof(EFChartRepository)}__ChartMixLevels";

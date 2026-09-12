@@ -12,6 +12,7 @@ using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Domain;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -572,8 +573,11 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
     private async Task<IReadOnlyDictionary<Guid, PhoenixScore[]>> GetCohortScores(MixEnum mix, Guid userId,
         ChartType type, DifficultyLevel level, double competitive, CancellationToken cancellationToken)
     {
+        // A Viewer key: the entry is one player's neighborhood — the user id stands in for their
+        // competitive band, and the chart set at a level is the view's. Highlights read all-time
+        // (docs/design/seasons.md D6, D18).
         return await _cache.GetOrCreateAsync(
-            $"{nameof(HighlightCaptureSaga)}__Cohort__{mix}__{userId}__{type}__{(int)level}",
+            CacheKeys.Viewer(nameof(HighlightCaptureSaga), mix, "Cohort", userId, type, (int)level),
             async o =>
             {
                 o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);

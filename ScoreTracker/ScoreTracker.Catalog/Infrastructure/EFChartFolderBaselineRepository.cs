@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Catalog.Domain;
 using ScoreTracker.Catalog.Infrastructure.Entities;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Catalog.Infrastructure;
@@ -25,7 +26,7 @@ internal sealed class EFChartFolderBaselineRepository : IChartFolderBaselineRepo
 
     private static string CacheKey(MixEnum mix)
     {
-        return $"ChartFolderBaselines__{mix}";
+        return CacheKeys.Mix("ChartFolderBaselines", mix);
     }
 
     public async Task ReplaceBaselines(MixEnum mix, IEnumerable<ChartFolderBaseline> baselines,
