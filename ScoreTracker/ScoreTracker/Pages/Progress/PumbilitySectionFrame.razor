@@ -1,4 +1,4 @@
-@namespace ScoreTracker.Web.Pages.Progress
+﻿@namespace ScoreTracker.Web.Pages.Progress
 @using MediatR
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.PlayerProgress.Contracts
@@ -134,7 +134,7 @@ else if (_mixKnown)
     private bool _mixKnown;
     private PumbilityPageRecord? _page;
     private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
-    private IReadOnlyList<PumbilityHero.PoolOption> _pools = Array.Empty<PumbilityHero.PoolOption>();
+    private IReadOnlyList<PumbilityPoolPicker.PoolOption> _pools = Array.Empty<PumbilityPoolPicker.PoolOption>();
     private ChartType? _pool;
     private Energy _energy = Energy.Great;
 
@@ -192,12 +192,12 @@ else if (_mixKnown)
         // All three totals come back on the record. Filling the selector used to mean running
         // the whole read twice more from here, for two pools the page was not looking at.
         _pools = _page.Totals == null
-            ? Array.Empty<PumbilityHero.PoolOption>()
+            ? Array.Empty<PumbilityPoolPicker.PoolOption>()
             : new[]
             {
-                new PumbilityHero.PoolOption(null, L["All"], _page.Totals.All),
-                new PumbilityHero.PoolOption(ChartType.Single, L["Singles"], _page.Totals.Singles),
-                new PumbilityHero.PoolOption(ChartType.Double, L["Doubles"], _page.Totals.Doubles)
+                new PumbilityPoolPicker.PoolOption(null, L["All"], _page.Totals.All),
+                new PumbilityPoolPicker.PoolOption(ChartType.Single, L["Singles"], _page.Totals.Singles),
+                new PumbilityPoolPicker.PoolOption(ChartType.Double, L["Doubles"], _page.Totals.Doubles)
             };
     }
 

@@ -24,6 +24,12 @@
 
 <PumbilitySectionFrame Active="hardmode" HeroFromBody="true">
     <Body Context="ctx">
+        @* The frame owns the mix and the pool; this page owns the record priced for them. It
+           reads them off the context on every render rather than keeping its own copy, because
+           the frame resolves both from settings AFTER its own first render - seeding once raced
+           it, and the page shipped showing a player their Combined fifty under a "Doubles"
+           label, with the All button dead until they clicked something else first. *@
+        @{ _ctx = ctx; }
         @if (_page == null)
         {
             <div class="pmb-frame pmb-frame-waiting" aria-hidden="true"></div>
@@ -31,7 +37,7 @@
         }
         else
         {
-            <HardmodeHero Page="_page" Pool="ctx.Pool" OnPoolChanged="p => ChangePool(ctx, p)"></HardmodeHero>
+            <HardmodeHero Page="_page" Pool="ctx.Pool" OnPoolChanged="ctx.ChangePool"></HardmodeHero>
 
             <HardmodeBoardSection Mix="ctx.Mix" Pool="ctx.Pool" Standing="Standing"></HardmodeBoardSection>
 
@@ -76,22 +82,31 @@
     private bool _detailsOpen;
     private MixEnum _mix = MixEnum.Phoenix2;
     private ChartType? _pool;
+    private bool _priced;
+    private PumbilitySectionFrame.SectionContext? _ctx;
 
     /// <summary>The selected pool's standing, for the strip above the board.</summary>
     private HardmodePoolTotals? Standing => _page == null
         ? null
-        : _pool switch
+        : _ctx?.Pool switch
         {
             ChartType.Single => _page.Singles,
             ChartType.Double => _page.Doubles,
             _ => _page.Combined
         };
 
+    /// <summary>
+    ///     Price when the frame's answer first arrives, and again whenever it moves. Not on
+    ///     firstRender: the frame has not resolved the pool by then, which is the whole bug this
+    ///     shape replaces. The guard is what stops Load's own StateHasChanged looping.
+    /// </summary>
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // The frame resolves the mix and the pool from settings, and it does that after its own
-        // first render — so the page reads them from the context rather than racing it.
-        if (!firstRender || _page != null) return;
+        if (_ctx == null) return;
+        if (_priced && _mix == _ctx.Mix && _pool == _ctx.Pool) return;
+        _priced = true;
+        _mix = _ctx.Mix;
+        _pool = _ctx.Pool;
         await Load();
     }
 
@@ -100,19 +115,6 @@
         if (!CurrentUser.IsLoggedIn) return;
         _page = await Mediator.Send(new GetHardmodePageQuery(CurrentUser.User.Id, _mix, _pool));
         StateHasChanged();
-    }
-
-    /// <summary>
-    ///     The pool selector drives the section's one setting through the frame, then this page
-    ///     re-prices. Two reads rather than one because the pool is the frame's state and the
-    ///     number is this page's.
-    /// </summary>
-    private async Task ChangePool(PumbilitySectionFrame.SectionContext ctx, ChartType? pool)
-    {
-        if (_pool == pool) return;
-        _pool = pool;
-        await ctx.ChangePool(pool);
-        await Load();
     }
 
     /// <summary>

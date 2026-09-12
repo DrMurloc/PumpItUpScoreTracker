@@ -20,19 +20,7 @@
         <div class="pmb-hero-sub">@Subtitle</div>
     </div>
 
-    @if (Pools.Count > 1)
-    {
-        <div class="pmb-poolsplit" role="group" aria-label="@L["Pool"]">
-            @foreach (var pool in Pools)
-            {
-                <button type="button" class="pmb-poolsplit-seg"
-                        aria-pressed="@(pool.Value == Selected ? "true" : "false")"
-                        @onclick="() => OnPoolChanged.InvokeAsync(pool.Value)">
-                    <strong>@pool.Total.ToString("N2")</strong>@pool.Label
-                </button>
-            }
-        </div>
-    }
+    <PumbilityPoolPicker Pools="Pools" Selected="Selected" OnPoolChanged="OnPoolChanged"></PumbilityPoolPicker>
 
     @if (Page.Bar != null)
     {
@@ -79,15 +67,14 @@
         new Dictionary<Guid, Chart>();
 
     /// <summary>Phoenix 2 keeps three independent pools; Phoenix 1 has one, so this is empty there.</summary>
-    [Parameter] public IReadOnlyList<PoolOption> Pools { get; set; } = Array.Empty<PoolOption>();
+    [Parameter] public IReadOnlyList<PumbilityPoolPicker.PoolOption> Pools { get; set; } =
+        Array.Empty<PumbilityPoolPicker.PoolOption>();
 
     [Parameter] public ChartType? Selected { get; set; }
 
     [Parameter] public EventCallback<ChartType?> OnPoolChanged { get; set; }
 
     [Parameter] public string? Subtitle { get; set; }
-
-    public sealed record PoolOption(ChartType? Value, string Label, double Total);
 
     private PoolEntry? BarEntry => Page.Pool.Count > 0 && Page.Bar != null ? Page.Pool[^1] : null;
 
