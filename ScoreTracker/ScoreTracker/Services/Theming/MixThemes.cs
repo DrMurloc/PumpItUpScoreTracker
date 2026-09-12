@@ -552,6 +552,12 @@ public static class MixThemes
             // Emitted alongside the plates because ThemeScales.GradeColor bottoms out here.
             + $"\n    --grade-sub-a: {SubAGradeHex};"
             + "\n" + string.Join("\n", SlotColors.Select(kv => $"    --slot-{kv.Key}: {kv.Value};"));
+        // The five playstyle archetypes (D69). They wear the plate metals — PlayerTypeHex is
+        // the one source — but they are their own group rather than a reuse of --plate-*: an
+        // archetype is not a plate, and a plate re-colour must not move one. Mix-invariant,
+        // like the chip that has always drawn them.
+        var archetypes = string.Join("\n", Enum.GetValues<RecapPlayerType>().Select(type =>
+            $"    --ptype-{(int)type + 1}: {PlayerTypeHex(type)};"));
         // The owner's five badge families (2026-07-26) — the granular piucenter vocabulary's
         // identity colors, replacing the retired rollup buckets. Mix-invariant: a family's hue
         // is what makes it recognisable, so it never re-hues per theme.
@@ -630,6 +636,7 @@ public static class MixThemes
     --rarity-prism: {p.Rarity.Prism};
 {difficulty}
 {plates}
+{archetypes}
 {badgeCategories}
 {brands}
 {chartTypes}
