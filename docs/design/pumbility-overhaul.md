@@ -1988,8 +1988,8 @@ answering from the stored title. `Tests.Components`: the band and its count on t
 pool and one on a typed pool, the selector switching and clearing. `ExplorationTests`: the probe behind §4.14.
 `Tests.Integration`: none — no new persistence.
 
-**Build order** — docs first, i18n last, pushed per commit: (1) this section, D68, §3.6, §4.14; (2) the probe;
-(3) Domain; (4) the stats and title reads; (5) the mirror's merged rebuild; (6) the cohort query and its cache;
+**Build order** — docs first, i18n last, pushed per commit: (1) this section, D68, §3.6, §4.14; (2) Domain;
+(3) the stats and title reads; (4) the probe, over the reads it measures; (5) the mirror's merged rebuild; (6) the cohort query and its cache;
 (7) the card, the chart and the selector; (8) the compare query retires; (9) nine locales.
 
 ## 7. Responsive
