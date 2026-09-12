@@ -129,7 +129,11 @@ Three states in the qualifying list, in the site's owner-locked border language 
 | Scored, outside your fifty | **solid `--mud-palette-success`** (`tier-chart-card-pass`) | you cleared it and it does not count here |
 | No score yet | default | the opportunity |
 
-Gold beats green where both apply, matching the share card's precedence (Top 50 before Pass). The
+Gold beats green where both apply, matching the share card's precedence (Top 50 before Pass), and
+**To-Do beats both** (owner, 2026-09-12: it "overwrites other boarder colors"). Every other state
+reports something the record already knows; To-Do is the one the player put there, so a flag that a
+pass or the pool's own gold could hide is a flag that does not work. It sits at the top of
+`TierListChartCard.StateClass`, ahead of the custom states as well as the record's. The
 qualifying list sections in that order reversed — **Not played yet → Scored, outside your 50 → In your
 Hardmode pool** — so the opportunity is on top.
 

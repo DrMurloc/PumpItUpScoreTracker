@@ -125,6 +125,47 @@ public sealed class TierListChartCardTests : ComponentTestBase
         Assert.True(name < score, "the name is read before the score");
     }
 
+    [Fact]
+    public void ToDoOutranksAPassOnTheBorder()
+    {
+        // Every other border state REPORTS something about the chart; To-Do is the one the
+        // player put there (owner, 2026-09-12: it "overwrites other boarder colors"). A flag you
+        // cannot see on a chart you have already passed is a flag that does not work.
+        var cut = RenderComponent<TierListChartCard>(p => p
+            .Add(x => x.Chart, ProbeChart())
+            .Add(x => x.Passed, true)
+            .Add(x => x.IsToDo, true));
+
+        Assert.Contains("tier-chart-card-todo", cut.Markup);
+        Assert.DoesNotContain("tier-chart-card-pass", cut.Markup);
+    }
+
+    [Fact]
+    public void ToDoOutranksACustomStateBorderToo()
+    {
+        // The Hardmode pool paints its fifty gold through CustomStateClass. A To-Do on one of
+        // those still has to read as a To-Do.
+        var cut = RenderComponent<TierListChartCard>(p => p
+            .Add(x => x.Chart, ProbeChart())
+            .Add(x => x.CustomStateClass, "tier-chart-card-top50")
+            .Add(x => x.IsToDo, true));
+
+        Assert.Contains("tier-chart-card-todo", cut.Markup);
+        Assert.DoesNotContain("tier-chart-card-top50", cut.Markup);
+    }
+
+    [Fact]
+    public void ACustomStateStillWinsWhenNothingIsFlagged()
+    {
+        var cut = RenderComponent<TierListChartCard>(p => p
+            .Add(x => x.Chart, ProbeChart())
+            .Add(x => x.CustomStateClass, "tier-chart-card-top50")
+            .Add(x => x.Passed, true));
+
+        Assert.Contains("tier-chart-card-top50", cut.Markup);
+        Assert.DoesNotContain("tier-chart-card-pass", cut.Markup);
+    }
+
     private IRenderedComponent<TierListChartCard> RenderScored(PeerStanding? standing,
         EventCallback<Guid> onOpen = default)
     {

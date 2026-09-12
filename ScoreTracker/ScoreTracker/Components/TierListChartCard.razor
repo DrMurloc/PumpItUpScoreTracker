@@ -365,15 +365,19 @@ else
     // which reads as a chart nobody has ever seen the player touch.
     [Parameter] public bool Broke { get; set; }
 
-    private string StateClass => CustomStateClass != null ? CustomStateClass :
+    // To-Do is the top of the ladder, ahead of the custom states as well as the record's own
+    // (owner, 2026-09-12). Every other state REPORTS something about the chart; To-Do is the one
+    // the player put there, and a flag you cannot see on a chart you have already passed - or on
+    // one the Hardmode pool has painted gold - is a flag that does not work.
+    private string StateClass =>
+        IsToDo && ShowStateBorder ? "tier-chart-card-todo" :
+        CustomStateClass != null ? CustomStateClass :
         !ShowStateBorder ? string.Empty :
         Passed ? "tier-chart-card-pass" :
-        IsToDo ? "tier-chart-card-todo" :
         PassedInAnotherMix ? "tier-chart-card-other-mix" :
         Broke ? "tier-chart-card-broken" : string.Empty;
 
-    private string? StateTitle => CustomStateTitle ?? (Passed ? L["Passed"] :
-        IsToDo ? L["To Do"] :
+    private string? StateTitle => IsToDo ? L["To Do"] : CustomStateTitle ?? (Passed ? L["Passed"] :
         PassedInAnotherMix ? L["Passed in other mixes"] :
         Broke ? L["Played, not passed"] : null);
 
