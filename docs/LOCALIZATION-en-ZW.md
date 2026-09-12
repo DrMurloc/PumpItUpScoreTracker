@@ -723,3 +723,8 @@ rather than the gem six times, and the entry for "your own" went away — the se
 was read. `Ulbog Grorpmurm` (All Levels) is the recovered `ulbog` (all) on `grorpmurm` (level); `Grorpmurm {0}`
 (Level {0}) already existed. `Morp oblug mrgl` (Your own title) retires with the entry, but `oblug` stays in the
 table — a coined word is not un-coined by one string leaving.
+
+**Second addendum (same day).** The clear-the-level button went — the gem is a line in the selector, so a second
+control for it only asked which one was which — and `Mrpmurg a grorpmurm` (Clear the level) and `Lurgplglgrgl
+urgro ulbog ub {0} ugmorgru` (Compare against all of {0} instead) retire with it. `ugmorgru` (instead) and
+`urgro` (against) stay in the tables; a coined word is not un-coined by one string leaving.

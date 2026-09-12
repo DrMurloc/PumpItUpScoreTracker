@@ -1750,9 +1750,6 @@
   <data name="Clear Progress" xml:space="preserve">
     <value>Progreso de pases</value>
   </data>
-  <data name="Clear the level" xml:space="preserve">
-    <value>Quitar el nivel</value>
-  </data>
   <data name="Cleared on attempt {0}" xml:space="preserve">
     <value>Superado en el intento {0}</value>
   </data>
@@ -1983,9 +1980,6 @@
   </data>
   <data name="Compare" xml:space="preserve">
     <value>Comparar</value>
-  </data>
-  <data name="Compare against all of {0} instead" xml:space="preserve">
-    <value>Comparar con todo {0} en su lugar</value>
   </data>
   <data name="Compared against" xml:space="preserve">
     <value>Comparado con</value>

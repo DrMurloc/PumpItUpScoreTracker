@@ -317,25 +317,6 @@ public sealed class PumbilityComponentTests : ComponentTestBase
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    [Fact]
-    public async Task ClearingTheLevelReadsTheGemAroundIt()
-    {
-        SignIn();
-        RememberedBand();
-        var fixture = Page(poolSize: 50);
-        var charts = fixture.Charts();
-        var page = ((PumbilityPageRecord)fixture) with { Mix = MixEnum.Phoenix2 };
-        var asked = new List<Name?>();
-        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
-            .Callback((object q, CancellationToken _) => asked.Add(((GetPumbilityTitleCohortQuery)q).Band))
-            .ReturnsAsync(Cohort(null));
-
-        var cut = Card(page, charts);
-        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=cohort-clear]")));
-        await cut.Find("[data-testid=cohort-clear]").ClickAsync(new MouseEventArgs());
-
-        Assert.Equal(Name.From("[P.B] DIAMOND"), asked[^1]);
-    }
 
     [Fact]
     public void TheSelectorStartsOnTheBandThatWasReadAndOffersNoEntryForYourOwn()
@@ -354,8 +335,10 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         var options = cut.Find("[data-testid=cohort-select]").QuerySelectorAll("option");
         // Every option is a band: picking your own back IS picking it, so there is no "mine" entry.
         Assert.All(options, o => Assert.NotEqual(string.Empty, o.GetAttribute("value")));
-        Assert.Equal(DiamondLevel,
-            Assert.Single(options, o => o.HasAttribute("selected")).GetAttribute("value"));
+        var selected = Assert.Single(options, o => o.HasAttribute("selected"));
+        Assert.Equal(DiamondLevel, selected.GetAttribute("value"));
+        // And it spells its band out, because a closed select shows that line and nothing else.
+        Assert.Equal(DiamondLevel, selected.TextContent.Trim());
     }
 
     [Fact]
@@ -374,31 +357,15 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=cohort-select]")));
         var diamond = Assert.Single(cut.Find("[data-testid=cohort-select]").QuerySelectorAll("optgroup"),
             g => g.GetAttribute("label") == "[P.B] DIAMOND");
-        // The group heading says which gem it is, so its lines never spell it out again.
-        Assert.Equal(new[] { "All Levels", "Level 1", "Level 2", "Level 3", "Level 4", "Level 5" },
+        // The group heading says which gem it is, so its lines never spell it out again — except the
+        // selected one, which is the only line a closed select shows.
+        Assert.Equal(new[] { "All Levels", "Level 1", DiamondLevel, "Level 3", "Level 4", "Level 5" },
             diamond.QuerySelectorAll("option").Select(o => o.TextContent.Trim()));
         Assert.Equal(DiamondLevel, diamond.QuerySelectorAll("option")[2].GetAttribute("value"));
         // The capstone is a gem with no levels inside it, so it lists one line and not two.
         var abyss = Assert.Single(cut.Find("[data-testid=cohort-select]").QuerySelectorAll("optgroup"),
             g => g.GetAttribute("label") == "ABYSS ABSOLUTE");
         Assert.Equal(new[] { "All Levels" }, abyss.QuerySelectorAll("option").Select(o => o.TextContent.Trim()));
-    }
-
-    [Fact]
-    public void AGemHasNothingCoarserToClearTo()
-    {
-        SignIn();
-        RememberedBand();
-        var fixture = Page(poolSize: 50);
-        var charts = fixture.Charts();
-        var page = ((PumbilityPageRecord)fixture) with { Mix = MixEnum.Phoenix2 };
-        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Cohort(null, "[P.B] DIAMOND"));
-
-        var cut = Card(page, charts);
-
-        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=cohort-band]")));
-        Assert.Empty(cut.FindAll("[data-testid=cohort-clear]"));
     }
 
     [Fact]

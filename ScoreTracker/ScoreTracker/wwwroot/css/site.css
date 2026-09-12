@@ -15970,22 +15970,6 @@ span.ct-console-pick { cursor: default; }
     font-size: 12.5px;
 }
 
-.pmb-cohort-clear {
-    padding: 4px 8px;
-    background: none;
-    color: var(--mix-ink-muted);
-    border: 1px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
-    border-radius: 4px;
-    font: inherit;
-    font-size: 11.5px;
-    cursor: pointer;
-}
-
-.pmb-cohort-clear:hover {
-    color: var(--mix-ink);
-    border-color: color-mix(in srgb, var(--mix-ink) 34%, transparent);
-}
-
 .pmb-cohort-count {
     display: flex;
     align-items: baseline;
