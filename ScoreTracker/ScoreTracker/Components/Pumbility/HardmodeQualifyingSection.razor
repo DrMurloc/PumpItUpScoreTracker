@@ -1,6 +1,7 @@
 ﻿@using MediatR
 @using ScoreTracker.ChartIntelligence.Contracts
 @using ScoreTracker.ChartIntelligence.Contracts.Queries
+@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
@@ -9,6 +10,7 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Services.Theming
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
@@ -140,6 +142,7 @@
                                                OnOpenBoard="OnOpenBoard"
                                                CustomStateClass="@StateClass(row.State)"
                                                CustomStateTitle="@StateWord(row.State)"
+                                               Skills="@SkillsFor(row.Chart)"
                                                Body="@CardBody(row)"
                                                OnOpen="OpenById"></TierListChartCard>
                         }
@@ -203,6 +206,16 @@
     private HashSet<string> _collapsed = new();
     private IReadOnlyList<HardmodeChartRecord> _qualifying = Array.Empty<HardmodeChartRecord>();
     private IReadOnlyDictionary<Guid, PeerStanding> _standings = new Dictionary<Guid, PeerStanding>();
+
+    /// <summary>
+    ///     What each chart IS (docs/design/chart-identity.md) - the same chips the Play tab and
+    ///     the tier lists print, read through Catalog's contract rather than derived here. Unlike
+    ///     the standings these do not need a login: they are a property of the chart.
+    /// </summary>
+    private IReadOnlyDictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>> _skills =
+        new Dictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>>();
+
+    private HashSet<Guid> _skillsFor = new();
     private HashSet<Guid> _standingsFor = new();
 
     private string HeldTitle => L["How many pools hold it"];
@@ -327,12 +340,14 @@
             if (first != null) (_type, _level) = (first.ChartType, first.Level);
         }
 
+        await LoadSkills();
         await LoadStandings();
     }
 
     private async Task PickFolder((ChartType Type, int Level) folder)
     {
         (_type, _level) = folder;
+        await LoadSkills();
         await LoadStandings();
     }
 
@@ -340,6 +355,18 @@
     ///     Where each of the folder's charts stands among the peers the viewer chose — read for
     ///     the folder on screen, and again only when the folder changes.
     /// </summary>
+    private async Task LoadSkills()
+    {
+        var ids = Folder.Select(c => c.ChartId).Where(Charts.ContainsKey).ToHashSet();
+        if (ids.Count == 0 || ids.SetEquals(_skillsFor)) return;
+        _skillsFor = ids;
+        var identity = await Mediator.Send(new GetChartIdentityQuery(ids.ToArray(), Mix));
+        _skills = identity.ToDictionary(kv => kv.Key, kv => IdentityChips.ToCardChips(kv.Value, false, L));
+    }
+
+    private IReadOnlyList<TierListChartCard.CardSkillChip>? SkillsFor(Chart chart) =>
+        _skills.TryGetValue(chart.Id, out var chips) && chips.Count > 0 ? chips : null;
+
     private async Task LoadStandings()
     {
         if (!CurrentUser.IsLoggedIn) return;

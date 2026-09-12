@@ -1,4 +1,5 @@
 ﻿@using MediatR
+@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
@@ -116,10 +117,10 @@
                                            OnOpenBoard="OnOpenBoard"
                                            CustomStateClass="tier-chart-card-top50"
                                            CustomStateTitle="@L["In your Hardmode pool"]"
+                                           Skills="@SkillsFor(row.Chart)"
                                            ShowToDo="false"
                                            CornerBadge="@row.Entry.Value.ToString("N2")"
                                            CornerBadgeClass="pmb-corner-gain"
-                                           Body="@CardBody(row)"
                                            OnOpen="OpenById"></TierListChartCard>
                     }
                 </div>
@@ -151,6 +152,13 @@
     private UiDensity _density = UiDensity.Comfortable;
     private HashSet<string> _collapsed = new();
     private IReadOnlyDictionary<Guid, PeerStanding> _standings = new Dictionary<Guid, PeerStanding>();
+    /// <summary>
+    ///     What each chart IS (docs/design/chart-identity.md) - the same chips the Play tab and
+    ///     the tier lists print, read through Catalog's contract rather than derived here.
+    /// </summary>
+    private IReadOnlyDictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>> _skills =
+        new Dictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>>();
+
     private HashSet<Guid> _standingsFor = new();
 
     /// <summary>
@@ -204,9 +212,8 @@
         return _standings.GetValueOrDefault(row.Chart.Id);
     }
 
-    private RenderFragment CardBody(Row row) => @<text>
-        <span class="tier-chart-card-meta">@row.Chart.DifficultyString</span>
-    </text>;
+    private IReadOnlyList<TierListChartCard.CardSkillChip>? SkillsFor(Chart chart) =>
+        _skills.TryGetValue(chart.Id, out var chips) && chips.Count > 0 ? chips : null;
 
     private Task OpenById(Guid chartId)
     {
@@ -230,13 +237,21 @@
     /// </summary>
     protected override async Task OnParametersSetAsync()
     {
-        if (!CurrentUser.IsLoggedIn) return;
         var ids = Pool.Select(e => e.ChartId).Where(Charts.ContainsKey).ToHashSet();
         if (ids.SetEquals(_standingsFor)) return;
         _standingsFor = ids;
-        _standings = ids.Count == 0
-            ? new Dictionary<Guid, PeerStanding>()
-            : await Mediator.Send(new GetPeerStandingsQuery(Mix, ids.ToArray()));
+        if (ids.Count == 0)
+        {
+            _standings = new Dictionary<Guid, PeerStanding>();
+            _skills = new Dictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>>();
+            return;
+        }
+
+        var identity = await Mediator.Send(new GetChartIdentityQuery(ids.ToArray(), Mix));
+        _skills = identity.ToDictionary(kv => kv.Key, kv => IdentityChips.ToCardChips(kv.Value, false, L));
+        _standings = CurrentUser.IsLoggedIn
+            ? await Mediator.Send(new GetPeerStandingsQuery(Mix, ids.ToArray()))
+            : new Dictionary<Guid, PeerStanding>();
     }
 
     private async Task SetDensity(UiDensity density)
