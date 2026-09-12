@@ -9,6 +9,7 @@ using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Application.Commands;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
@@ -199,7 +200,7 @@ namespace ScoreTracker.WeeklyChallenge.Application
             // that flat. Community-scoped and past-window reads stay uncached.
             if (request.OnlyUserIds == null && request.AnchorWeek == null)
                 return (await cache.GetOrCreateAsync(
-                    $"{nameof(WeeklyTournamentSaga)}:monthly:{request.Mix}:{request.Type}",
+                    CacheKeys.Mix(nameof(WeeklyTournamentSaga), request.Mix, "monthly", request.Type),
                     async e =>
                     {
                         e.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60);

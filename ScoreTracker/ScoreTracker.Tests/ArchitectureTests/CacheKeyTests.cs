@@ -48,29 +48,12 @@ public sealed class CacheKeyTests
         "ScoreTracker.OfficialMirror/Application/OfficialCacheKeys.cs"
     };
 
-    // Baseline captured 2026-09-12 at the start of seasons slice 0. Shrink-only: each migration
-    // commit of the slice lowers or removes its entries, and the slice ends with this empty.
-    private static readonly IReadOnlyDictionary<string, int> Allowance = new Dictionary<string, int>
-    {
-        // Catalog burned its four entries in slice 0's catalog commit: the chart dictionary is a
-        // Viewer key (it carries the level); baselines, the search vocabulary and the hold-tick
-        // profile are Mix.
-        // ChartIntelligence burned its seven entries in slice 0's intelligence commit: the
-        // personalized lenses are Viewer keys, the community lists and the verdict are Mix.
-        ["ScoreTracker.Communities/Infrastructure/EFCommunitiesRepository.cs"] = 1,
-        // OfficialMirror burned its entries in slice 0's mirror commit: OfficialCacheKeys and the
-        // board peer reader build Mix keys through CacheKeys.
-        // PlayerProgress burned its eight entries in slice 0's progress commit: the stats row and
-        // the projection sweep are Viewer keys; cohorts, recap, rarity, capture and titles are Mix.
-        // Rivals burned its entry in slice 0's rivals commit: a peer set's rows and roster stats
-        // are Viewer keys (a set may be the viewer's rivals), the band is Mix.
-        // ScoreLedger burned its entry in slice 0's ledger commit: the record score cache is a
-        // Viewer key and LedgerCacheKeys builds through CacheKeys.
-        ["ScoreTracker.WeeklyChallenge/Application/WeeklyTournamentSaga.cs"] = 1,
-        ["ScoreTracker.WeeklyChallenge/Infrastructure/EFDailyStepRepository.cs"] = 1,
-        ["ScoreTracker.WeeklyChallenge/Infrastructure/EFWeeklyTourneyRepository.cs"] = 1,
-        ["ScoreTracker/Services/ChartUrlResolver.cs"] = 1
-    };
+    // Baseline captured 2026-09-12 at the start of seasons slice 0: 27 files, 32 statements.
+    // The slice's migration commits burned every entry — ScoreLedger, OfficialMirror,
+    // PlayerProgress, ChartIntelligence, Catalog, Rivals, then Communities, WeeklyChallenge and
+    // the web's URL resolver — and the list has been empty since. Shrink-only: it never grows
+    // again; a new hand-spelled key is a build failure, not a new entry.
+    private static readonly IReadOnlyDictionary<string, int> Allowance = new Dictionary<string, int>();
 
     [Fact]
     public void CacheKeysThatNameAMixAreBuiltByCacheKeys()
