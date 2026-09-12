@@ -1,4 +1,4 @@
-using ScoreTracker.PlayerProgress.Contracts;
+﻿using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.PlayerProgress.Domain;
@@ -12,7 +12,8 @@ namespace ScoreTracker.PlayerProgress.Domain;
 internal interface IHardmodeRatingRepository
 {
     /// <summary>
-    ///     Writes one account's three totals and its held count. Only touches accounts the census
+    ///     Writes one account's three totals and the held count of each — three different
+///     top-fifties, so "40 of 50" combined and "12 of 50" doubles are both true of one player. Only touches accounts the census
     ///     found something for — an account with no qualifying score keeps its zeroes.
     /// </summary>
     Task Save(MixEnum mix, IReadOnlyCollection<HardmodeRatingRow> rows, CancellationToken cancellationToken);
@@ -28,4 +29,4 @@ internal interface IHardmodeRatingRepository
 
 /// <summary>One account's Hardmode totals, all three pools at once because they are written together.</summary>
 internal sealed record HardmodeRatingRow(Guid UserId, double Combined, double Singles, double Doubles,
-    int Held);
+    int Held, int SinglesHeld, int DoublesHeld);

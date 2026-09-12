@@ -1,4 +1,4 @@
-using ScoreTracker.OfficialMirror.Contracts;
+﻿using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.OfficialMirror.Domain;
@@ -17,5 +17,9 @@ internal interface IOfficialHardmodeRatingRepository
         CancellationToken cancellationToken);
 }
 
+/// <summary>
+///     One board player's three pools. Each held count belongs to its own pool: they are three
+///     different top-fifties, and one shared count read "50 / 50" on every tab.
+/// </summary>
 internal sealed record OfficialHardmodeRating(int OfficialPlayerId, double Combined, double Singles,
-    double Doubles, int Held);
+    double Doubles, int Held, int SinglesHeld, int DoublesHeld);

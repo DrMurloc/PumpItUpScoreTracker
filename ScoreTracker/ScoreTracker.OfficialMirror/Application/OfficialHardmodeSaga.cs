@@ -1,4 +1,4 @@
-using MassTransit;
+﻿using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Domain.Events;
@@ -63,11 +63,12 @@ internal sealed class OfficialHardmodeSaga :
         {
             var valued = player.Charts.Where(c => qualifyingIds.Contains(c.ChartId)).ToArray();
             if (valued.Length == 0) continue;
+            var singles = valued.Where(v => v.ChartType == ChartType.Single).Select(v => v.Value).ToArray();
+            var doubles = valued.Where(v => v.ChartType == ChartType.Double).Select(v => v.Value).ToArray();
             rows.Add(new OfficialHardmodeRating(player.OfficialPlayerId,
-                Top(valued.Select(v => v.Value)),
-                Top(valued.Where(v => v.ChartType == ChartType.Single).Select(v => v.Value)),
-                Top(valued.Where(v => v.ChartType == ChartType.Double).Select(v => v.Value)),
-                Math.Min(PoolSize, valued.Length)));
+                Top(valued.Select(v => v.Value)), Top(singles), Top(doubles),
+                Math.Min(PoolSize, valued.Length), Math.Min(PoolSize, singles.Length),
+                Math.Min(PoolSize, doubles.Length)));
         }
 
         await _ratings.Replace(mix, rows, _clock.Now, cancellationToken);

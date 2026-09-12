@@ -1,11 +1,10 @@
-namespace ScoreTracker.OfficialMirror.Contracts;
+﻿namespace ScoreTracker.OfficialMirror.Contracts;
 
 /// <summary>
-///     One row of the Official Boards Hardmode leaderboard. <paramref name="Pumbility" /> is the
-///     pool piugame itself publishes for that player where the mirror holds it, so the row can
-///     make the same comparison the PIU Scores board makes; null where no rating board carried
-///     them.
+///     One row of the Official Boards Hardmode leaderboard. <paramref name="Hardmode" /> IS the
+///     PUMBILITY this page ranks on; the player's published pool is deliberately not carried
+///     (owner, 2026-09-12), which also spares the board a rating-board read per load.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record OfficialHardmodeRow(int Place, int OfficialPlayerId, string Username, double Hardmode,
-    int Held, double? Pumbility);
+    int Held);

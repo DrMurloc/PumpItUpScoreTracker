@@ -1,4 +1,4 @@
-using ScoreTracker.OfficialMirror.Contracts;
+﻿using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.OfficialMirror.Domain;
@@ -69,14 +69,6 @@ internal interface IOfficialSnapshotRepository
     /// </summary>
     Task<IReadOnlyList<ChartBoardHigh>> GetChartBoardHighs(MixEnum mix, PlacementScope scope,
         CancellationToken ct);
-
-    /// <summary>
-    ///     What one rating board published for each player in the latest sealed snapshot — the
-    ///     PUMBILITY pool piugame itself prints, for the board row that shows it beside a
-    ///     Hardmode total. Empty where no sealed snapshot carries that board.
-    /// </summary>
-    Task<IReadOnlyDictionary<int, decimal>> GetRatingBoardScores(MixEnum mix, string boardName,
-        PlacementScope scope, CancellationToken ct);
 
     /// <summary>
     ///     Clears one snapshot's supplemented rows, leaving every official row alone. The

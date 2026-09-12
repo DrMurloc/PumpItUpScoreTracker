@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.PlayerProgress.Infrastructure.Entities
 {
@@ -37,7 +37,11 @@ namespace ScoreTracker.PlayerProgress.Infrastructure.Entities
         public double HardmodeRating { get; set; }
         public double HardmodeSinglesRating { get; set; }
         public double HardmodeDoublesRating { get; set; }
+        // One per pool: three different top-fifties, so a player can hold forty combined and
+        // twelve doubles. One shared count printed "50 / 50" on every tab.
         public int HardmodeChartsHeld { get; set; }
+        public int HardmodeSinglesChartsHeld { get; set; }
+        public int HardmodeDoublesChartsHeld { get; set; }
 
         // Where the player's PUMBILITY pool would place on the official board, ranked against
         // the last sealed snapshot rather than read back from it — that is what makes the

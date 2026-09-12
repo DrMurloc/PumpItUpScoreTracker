@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -139,6 +139,72 @@ public sealed class HardmodeSagaTests
         Assert.Empty(page.Rails);
         Assert.Equal(0, page.QualifyingCharts);
         Assert.Equal(0, page.Combined.Total);
+    }
+
+    [Fact]
+    public async Task TheBoardTotalIsTheBestFiftyAndAgreesWithThePage()
+    {
+        // Sixty qualifying charts, so ten of them are surplus to a fifty-chart pool.
+        var charts = Enumerable.Range(0, 60).Select(_ => Qualifying(21, ChartType.Single)).ToArray();
+        var user = Guid.NewGuid();
+        var ratings = new Mock<IHardmodeRatingRepository>();
+        var saga = Build(charts, charts.Select((c, i) => (user, c, 999_000 - i * 1_000)).ToArray(), ratings,
+            qualifying: charts, bests: charts.Select((c, i) => (c, 999_000 - i * 1_000)).ToArray());
+        var saved = Captured(ratings);
+
+        await saga.Consume(Rebuilt());
+        var page = await saga.Handle(new GetHardmodePageQuery(user, MixEnum.Phoenix2), CancellationToken.None);
+
+        var row = Assert.Single(saved);
+        Assert.Equal(50, row.Held);
+        Assert.Equal(50, row.SinglesHeld);
+        // The board and the page price the same records off the same list, so they must not
+        // disagree. The board summed EVERY qualifying chart a player had scored, which is not a
+        // pool at all: it read three times high, and above the player's own PUMBILITY, which the
+        // subset relationship makes impossible.
+        Assert.Equal(page.Combined.Total, row.Combined, 6);
+        // ...and there really was surplus to leave out, so the equality above is not vacuous.
+        Assert.Equal(10, page.ScoredOutsidePool.Count);
+        Assert.True(page.Pool.Sum(p => p.Value) + page.ScoredOutsidePool.Sum(p => p.Value) > row.Combined);
+    }
+
+    [Fact]
+    public async Task EachPoolCarriesItsOwnHeldCount()
+    {
+        var singles = Enumerable.Range(0, 60).Select(_ => Qualifying(21, ChartType.Single)).ToArray();
+        var doubles = Enumerable.Range(0, 12).Select(_ => Qualifying(21, ChartType.Double)).ToArray();
+        var user = Guid.NewGuid();
+        var all = singles.Concat(doubles).ToArray();
+        var ratings = new Mock<IHardmodeRatingRepository>();
+        var saga = Build(all, all.Select((c, i) => (user, c, 999_000 - i * 500)).ToArray(), ratings,
+            qualifying: all);
+        var saved = Captured(ratings);
+
+        await saga.Consume(Rebuilt());
+
+        var row = Assert.Single(saved);
+        Assert.Equal(50, row.Held);
+        Assert.Equal(50, row.SinglesHeld);
+        // Twelve, not fifty. One shared count printed "50 / 50" on the doubles tab for a player
+        // holding twelve doubles charts, because the combined pool happened to be full.
+        Assert.Equal(12, row.DoublesHeld);
+        // The combined pool draws its fifty from the union, so it is never worth less than one type's.
+        Assert.True(row.Combined >= row.Singles);
+    }
+
+    /// <summary>
+    ///     Captures what the reprice wrote. Call it AFTER <see cref="Build" />, whose own Save
+    ///     setup would otherwise replace this one.
+    /// </summary>
+    private static List<HardmodeRatingRow> Captured(Mock<IHardmodeRatingRepository> ratings)
+    {
+        var saved = new List<HardmodeRatingRow>();
+        ratings.Setup(r => r.Save(It.IsAny<MixEnum>(), It.IsAny<IReadOnlyCollection<HardmodeRatingRow>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback((MixEnum _, IReadOnlyCollection<HardmodeRatingRow> rows, CancellationToken _) =>
+                saved.AddRange(rows))
+            .Returns(Task.CompletedTask);
+        return saved;
     }
 
     private static Chart Qualifying(int level, ChartType type)

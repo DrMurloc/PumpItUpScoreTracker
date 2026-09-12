@@ -1,4 +1,4 @@
-@using MediatR
+﻿@using MediatR
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.OfficialMirror.Contracts
@@ -78,16 +78,13 @@
         @* One grid template drives every row, so the columns line up down the board and the row
            sheds a whole column at a time as it narrows. *@
         <div class="olb-rank-cards"
-             style="--olb-grid-cols:40px minmax(150px,1.7fr) 1fr .8fr 1fr 1fr;--olb-grid-cols-600:40px minmax(140px,1.7fr) 1fr 1fr 1fr;--olb-grid-cols-500:34px minmax(96px,1fr) 1fr 1fr">
+             style="--olb-grid-cols:40px minmax(150px,1.7fr) 1fr .8fr 1fr;--olb-grid-cols-600:40px minmax(140px,1.7fr) 1fr 1fr;--olb-grid-cols-500:34px minmax(96px,1fr) 1fr">
             <div class="olb-grid-head">
                 <span>#</span>
                 <span>@L["Player"]</span>
                 <span class="olb-hide-phone">@L["Playstyle"]</span>
                 <span class="olb-hide-narrow olb-grid-num" title="@L["Hardmode charts held"]">@L["held"]</span>
-                <span class="olb-stack">
-                    <span class="olb-grid-num" title="@L["Their full PUMBILITY"]">PUMBILITY</span>
-                    <span class="olb-grid-num">@L["Hardmode"]</span>
-                </span>
+                <span class="olb-grid-num" title="@L["Their Hardmode pool, priced by the PUMBILITY formula"]">PUMBILITY</span>
             </div>
             @foreach (var row in Page)
             {
@@ -118,12 +115,7 @@
                     <span class="olb-hide-narrow olb-grid-num mud-text-secondary" title="@L["Hardmode charts held"]">
                         @string.Format(L["{0} / 50"], row.Held)
                     </span>
-                    <span class="olb-stack">
-                        <span class="olb-grid-num mud-text-secondary" title="@L["Their full PUMBILITY"]">
-                            @(row.Pumbility == null ? "—" : row.Pumbility.Value.ToString("N2"))
-                        </span>
-                        <span class="olb-grid-num"><b>@row.Hardmode.ToString("N2")</b></span>
-                    </span>
+                    <span class="olb-grid-num"><b>@row.Hardmode.ToString("N2")</b></span>
                 </div>
             }
         </div>
@@ -150,7 +142,7 @@
     ///     One row shape for both populations, so the markup has no branch beyond the identity:
     ///     a site row opens a profile, a board row carries the mirror's asterisk.
     /// </summary>
-    private sealed record Row(int Place, string Name, User? User, double Hardmode, int Held, double? Pumbility,
+    private sealed record Row(int Place, string Name, User? User, double Hardmode, int Held,
         RecapPlayerType? PlayerType, bool IsMe);
 
     [Parameter] [EditorRequired] public MixEnum Mix { get; set; }
@@ -224,13 +216,13 @@
         var me = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : (Guid?)null;
         return rows.Select(r => new Row(r.Place,
             users.TryGetValue(r.UserId, out var user) ? user.GameTag?.ToString() ?? user.Name.ToString() : "?",
-            users.GetValueOrDefault(r.UserId), r.Hardmode, r.Held, r.Pumbility, null, r.UserId == me)).ToArray();
+            users.GetValueOrDefault(r.UserId), r.Hardmode, r.Held, null, r.UserId == me)).ToArray();
     }
 
     private async Task<IReadOnlyList<Row>> OfficialRows()
     {
         var rows = await Mediator.Send(new GetOfficialHardmodeBoardQuery(Mix, Pool));
-        return rows.Select(r => new Row(r.Place, r.Username, null, r.Hardmode, r.Held, r.Pumbility, null, false))
+        return rows.Select(r => new Row(r.Place, r.Username, null, r.Hardmode, r.Held, null, false))
             .ToArray();
     }
 }

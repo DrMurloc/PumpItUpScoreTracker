@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.OfficialMirror.Infrastructure.Entities
 {
@@ -20,7 +20,13 @@ namespace ScoreTracker.OfficialMirror.Infrastructure.Entities
 
         public double Doubles { get; set; }
 
+        // One per pool, for the same reason the three totals are separate: a board player
+        // holding forty charts combined may hold twelve of them on doubles.
         public int ChartsHeld { get; set; }
+
+        public int SinglesChartsHeld { get; set; }
+
+        public int DoublesChartsHeld { get; set; }
 
         public DateTimeOffset ComputedAt { get; set; }
     }

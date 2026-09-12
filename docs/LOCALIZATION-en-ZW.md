@@ -236,6 +236,7 @@ that **Hardmode is NOT a protected proper noun** — it is not all-caps and it i
 | Hardmode | Mrglmorg | `mrgl` (hard) + `morg` (type/mode), compounded the way `Grglmrg` (GameTag) is. |
 | pool (a top-50) | grogmurgl | `grog` (list) + `murgl` (chart) — the fifty charts, not a swimming pool. |
 | hold / held | grogro | The chart a pool keeps. Distinct from `grabmrp` (include). |
+| priced by the formula | `blargmurm gogl` | The board tooltip, from the recovered `blargmurm` (formula) + `gogl` (priced). |
 | qualify / qualifying | grabmrp | Reuses the download batch's `grabmrp` (include): a qualifying chart is one the list includes. |
 | rare / rarest | mrrrglmurp | Built on the `Mrrrgl` (most) intensity form. |
 | folder | grogblub | Reuses the existing crew word's shape; a folder is a gathering of charts. |

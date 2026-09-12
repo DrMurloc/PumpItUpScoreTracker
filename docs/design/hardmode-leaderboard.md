@@ -81,9 +81,22 @@ official boards plays everything and would occupy the same places on both, and a
 profile to open — their rows carry the `*` mark the rivals and chart boards already use for mirrored data.
 
 Board rows read: rank (coloured by percentile through the rarity ramp), player, playstyle chip, **Held**
-(how many of the 50 they hold), their full PUMBILITY, their Hardmode total, and an expander for their
-pool. The grid is `olb-grid-row` with the standard column template, so it sheds Held at 600px and the
-playstyle chip at 500px.
+(how many of that pool's 50 they hold) and one figure column, **PUMBILITY** — which on this page *is*
+the Hardmode pool. The grid is `olb-grid-row` with the standard column template, so it sheds Held at
+600px and the playstyle chip at 500px.
+
+The board deliberately does **not** print the player's ordinary PUMBILITY beside it (owner,
+2026-09-12). It did at first, and setting the two side by side invites reading them as rival measures
+of the same player when one is a strict subset of the other: every qualifying chart is a chart ordinary
+PUMBILITY already chose its own fifty from, so a Hardmode pool can only ever be **smaller**. Dropping
+the column also spares the Official Boards tab a rating-board read on every load.
+
+A pool total is the best **fifty** of that pool and nothing else. The first build of the weekly reprice
+summed every qualifying chart an account had scored, which is not a pool but an unbounded count of
+effort; it put the top of the board at 45,379 against that player's real PUMBILITY of 15,859 — the
+impossibility above, printed. The held count hid it by being capped at fifty rather than measured, so
+every inflated row still read "50 / 50". The site half and the page now price identically, and a test
+asserts they agree on the same records.
 
 ## 5. Titles
 

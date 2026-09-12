@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Domain;
@@ -349,23 +349,6 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
                 select new ChartBoardHigh(highs.Key.PlayerId, highs.Key.ChartId, highs.Min(h => h.Type),
                     highs.Min(h => h.Level), highs.Max(h => h.Score)))
             .ToArrayAsync(ct);
-    }
-
-    public async Task<IReadOnlyDictionary<int, decimal>> GetRatingBoardScores(MixEnum mix, string boardName,
-        PlacementScope scope, CancellationToken ct)
-    {
-        await using var database = await _factory.CreateDbContextAsync(ct);
-        var mixId = MixIds.For(mix);
-        var rows = await (
-                from placement in Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
-                join board in database.Set<OfficialLeaderboardEntity>()
-                    on placement.LeaderboardId equals board.Id
-                where board.MixId == mixId && board.LeaderboardType == "Rating" && board.Name == boardName
-                group placement.Score by placement.PlayerId
-                into scores
-                select new { PlayerId = scores.Key, Score = scores.Max() })
-            .ToArrayAsync(ct);
-        return rows.ToDictionary(r => r.PlayerId, r => r.Score);
     }
 
     public async Task DeleteSupplementedPlacements(int snapshotId, CancellationToken ct)

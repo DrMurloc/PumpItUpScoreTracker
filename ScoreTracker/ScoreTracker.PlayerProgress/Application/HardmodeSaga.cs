@@ -1,4 +1,4 @@
-using MassTransit;
+﻿using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Domain.Events;
@@ -85,12 +85,7 @@ internal sealed class HardmodeSaga :
         }
 
         await _ratings.Clear(mix, cancellationToken);
-        var rows = valued.Select(kv => new HardmodeRatingRow(kv.Key,
-                Sum(kv.Value.Select(v => v.Value)),
-                Sum(kv.Value.Where(v => v.Type == ChartType.Single).Select(v => v.Value)),
-                Sum(kv.Value.Where(v => v.Type == ChartType.Double).Select(v => v.Value)),
-                Math.Min(PoolSize, kv.Value.Count)))
-            .ToArray();
+        var rows = valued.Select(kv => Row(kv.Key, kv.Value)).ToArray();
         await _ratings.Save(mix, rows, cancellationToken);
         _logger.LogInformation("Hardmode ratings for {Mix}: {Accounts} accounts over {Charts} charts", mix,
             rows.Length, qualifying.Count);
@@ -177,6 +172,40 @@ internal sealed class HardmodeSaga :
     private static double Sum(IEnumerable<double> values)
     {
         return values.Sum();
+    }
+
+    /// <summary>
+    ///     One account's three pools, each the best fifty of its OWN set with a held count from
+    ///     that same set. A doubles pool holding twelve charts must not read "50 of 50" because
+    ///     the combined pool happens to be full.
+    /// </summary>
+    private static HardmodeRatingRow Row(Guid userId,
+        IReadOnlyCollection<(ChartType Type, double Value)> valued)
+    {
+        var singles = valued.Where(v => v.Type == ChartType.Single).Select(v => v.Value).ToArray();
+        var doubles = valued.Where(v => v.Type == ChartType.Double).Select(v => v.Value).ToArray();
+        return new HardmodeRatingRow(userId,
+            Top(valued.Select(v => v.Value)), Top(singles), Top(doubles),
+            Math.Min(PoolSize, valued.Count), Math.Min(PoolSize, singles.Length),
+            Math.Min(PoolSize, doubles.Length));
+    }
+
+    /// <summary>
+    ///     The best fifty, summed — the same rule the page's <see cref="Fifty" /> applies, and the
+    ///     official half's own Top.
+    ///     <para>
+    ///         Summing every qualifying chart instead does not overstate a pool slightly; it
+    ///         prices a different, unbounded thing. It put board totals ABOVE the same player's
+    ///         PUMBILITY, which cannot happen: the qualifying charts are a subset of the ones
+    ///         PUMBILITY already picks its own fifty from, so a Hardmode pool is bounded by it.
+    ///         The held count read "50 / 50" throughout while that was true, because it was
+    ///         capped rather than measured — so the row looked ordinary beside a total that
+    ///         was nearly three times real.
+    ///     </para>
+    /// </summary>
+    private static double Top(IEnumerable<double> values)
+    {
+        return values.OrderByDescending(v => v).Take(PoolSize).Sum();
     }
 
     private async Task<HardmodePoolTotals> Ranked(HardmodePoolTotals totals, MixEnum mix, ChartType? pool,
