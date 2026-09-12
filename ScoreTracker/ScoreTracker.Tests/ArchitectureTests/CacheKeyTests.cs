@@ -64,7 +64,8 @@ public sealed class CacheKeyTests
         ["ScoreTracker.ChartIntelligence/Application/PumbilityPoolCompositionHandler.cs"] = 1,
         ["ScoreTracker.ChartIntelligence/Infrastructure/EFTierListRepository.cs"] = 1,
         ["ScoreTracker.Communities/Infrastructure/EFCommunitiesRepository.cs"] = 1,
-        ["ScoreTracker.OfficialMirror/Application/BoardPeerReader.cs"] = 2,
+        // OfficialMirror burned its entries in slice 0's mirror commit: OfficialCacheKeys and the
+        // board peer reader build Mix keys through CacheKeys.
         ["ScoreTracker.PlayerProgress/Application/CohortScoreProvider.cs"] = 2,
         ["ScoreTracker.PlayerProgress/Application/HighlightCaptureSaga.cs"] = 1,
         ["ScoreTracker.PlayerProgress/Application/PlayerHighlightCapturer.cs"] = 1,

@@ -1,3 +1,4 @@
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.OfficialMirror.Application;
@@ -6,7 +7,8 @@ namespace ScoreTracker.OfficialMirror.Application;
 ///     The hub's snapshot-keyed cache entries. A sealed snapshot is immutable, so keying on
 ///     its id is normally enough to never stale — but anything that writes MORE rows onto an
 ///     already-sealed snapshot has to evict by hand, which is why these formats are shared
-///     rather than private to the reader.
+///     rather than private to the reader. All <see cref="CacheKeys.Mix" /> keys: a mirrored
+///     board is piugame's, not the viewer's (CLAUDE.md "Cache keys").
 /// </summary>
 internal static class OfficialCacheKeys
 {
@@ -18,12 +20,12 @@ internal static class OfficialCacheKeys
     /// </summary>
     public static string SnapshotStats(MixEnum mix, int snapshotId, bool supplemented)
     {
-        return $"OfficialSnapshotStats__{mix}__{snapshotId}__{Reading(supplemented)}";
+        return CacheKeys.Mix("OfficialSnapshotStats", mix, snapshotId, Reading(supplemented));
     }
 
     public static string WhatItTakes(MixEnum mix, string type, int snapshotId)
     {
-        return $"OfficialWhatItTakes__{mix}__{type}__{snapshotId}";
+        return CacheKeys.Mix("OfficialWhatItTakes", mix, type, snapshotId);
     }
 
     /// <summary>The board types <see cref="WhatItTakes" /> is asked for, for bulk eviction.</summary>

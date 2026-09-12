@@ -5,6 +5,7 @@ using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.OfficialMirror.Infrastructure;
 using ScoreTracker.Domain.Services.Contracts;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 using DomainUser = ScoreTracker.Domain.Models.User;
@@ -164,7 +165,7 @@ internal sealed class BoardPeerReader
     private async Task<IReadOnlyList<PreparedPeer>> PreparedPeers(MixEnum mix, PumbilityPool pool,
         int snapshotId, CancellationToken cancellationToken)
     {
-        var key = $"{nameof(BoardPeerReader)}__Prepared__{mix}__{pool}__{snapshotId}";
+        var key = CacheKeys.Mix(nameof(BoardPeerReader), mix, "Prepared", pool, snapshotId);
         if (_cache.TryGetValue(key, out IReadOnlyList<PreparedPeer>? cached) && cached != null) return cached;
 
         var boardName = BoardNameFor(pool);
@@ -238,7 +239,7 @@ internal sealed class BoardPeerReader
     private async Task<IReadOnlySet<int>> QualifiedPlayers(MixEnum mix, PumbilityPool pool, int snapshotId,
         IReadOnlyList<PlacementRow> everyone, CancellationToken cancellationToken)
     {
-        var key = $"{nameof(BoardPeerReader)}__Qualified__{mix}__{pool}__{snapshotId}";
+        var key = CacheKeys.Mix(nameof(BoardPeerReader), mix, "Qualified", pool, snapshotId);
         if (_cache.TryGetValue(key, out IReadOnlySet<int>? cached) && cached != null) return cached;
 
         var history = (await PricedRows(mix, pool, everyone.Select(p => p.PlayerId).Distinct().ToArray(),
