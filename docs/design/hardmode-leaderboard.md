@@ -26,8 +26,11 @@ which is to say it excluded *1948*.
 
 **Ordering and ties** (D3): weighted points ascending, then **scoring level descending**, then name.
 94 doubles charts and 19 singles charts at level 20+ carry no usable `ChartScoringLevel`, so a missing
-scoring level falls straight through to the name rather than sorting last. Exact-points ties at the cut
-line are rare; this exists so the list is deterministic, not because the order carries much.
+scoring level stands in as the chart's own nominal level rather than sorting last — a folder *is* one
+level, so that is the neutral position, and two unrated charts then fall through to the name. Chart level
+is not a tiebreak dimension of its own (it is constant inside a folder); it is only what a missing scoring
+level reads as. Exact-points ties at the cut line are rare; this exists so the list is deterministic,
+not because the order carries much.
 
 **All levels are in** (D4). The census below level 20 is decided by a small group and says so on the
 page — see §6.
