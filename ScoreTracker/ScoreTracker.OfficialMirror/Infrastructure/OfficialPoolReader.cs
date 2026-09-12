@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
-using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.OfficialMirror.Infrastructure.Entities;
@@ -28,9 +27,12 @@ internal sealed class OfficialPoolReader : IOfficialPoolReader, IOfficialPoolSou
     private const int PoolSize = 50;
 
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
+    private readonly IOfficialSnapshotRepository _snapshots;
 
-    public OfficialPoolReader(IDbContextFactory<ChartAttemptDbContext> factory)
+    public OfficialPoolReader(IOfficialSnapshotRepository snapshots,
+        IDbContextFactory<ChartAttemptDbContext> factory)
     {
+        _snapshots = snapshots;
         _factory = factory;
     }
 
@@ -61,51 +63,47 @@ internal sealed class OfficialPoolReader : IOfficialPoolReader, IOfficialPoolSou
     public async Task<IReadOnlyList<OfficialPricedPool>> GetPricedPools(MixEnum mix,
         CancellationToken cancellationToken)
     {
-        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixIds.For(mix);
+        // OfficialOnly, and not by default: supplemented rows are this site's own additions to
+        // piugame's boards, and counting them would let our data vote in our own census of what
+        // the world plays (supplemented-leaderboards.md §7).
+        var highs = await _snapshots.GetChartBoardHighs(mix, PlacementScope.OfficialOnly, cancellationToken);
+        if (highs.Count == 0) return Array.Empty<OfficialPricedPool>();
 
-        // The best score the mirror holds per (player, chart) across every snapshot, because a
-        // board is a top-N and a player drops off it as others pass them — the highest row we
-        // ever saw is the closest thing to their record. Players already linked to a site
-        // account are excluded: they count once, through their own records.
-        var rows = await (
-                from placement in database.Set<OfficialLeaderboardPlacementEntity>()
-                join board in database.Set<OfficialLeaderboardEntity>()
-                    on placement.LeaderboardId equals board.Id
-                join player in database.Set<OfficialPlayerEntity>() on placement.PlayerId equals player.Id
-                join chart in database.Set<ChartEntity>() on board.ChartId equals chart.Id
-                join chartMix in database.Set<ChartMixEntity>() on chart.Id equals chartMix.ChartId
-                where board.MixId == mixId && board.LeaderboardType == "Chart" && board.ChartId != null
-                      && player.UserId == null && chartMix.MixId == mixId
-                      && (chart.Type == "Single" || chart.Type == "Double")
-                group new { placement.Score, chart.Type, chartMix.Level } by
-                    new { placement.PlayerId, ChartId = chart.Id }
-                into scores
-                select new
-                {
-                    scores.Key.PlayerId,
-                    scores.Key.ChartId,
-                    Score = scores.Max(s => s.Score),
-                    Type = scores.Min(s => s.Type),
-                    Level = scores.Min(s => s.Level)
-                })
-            .ToArrayAsync(cancellationToken);
-
+        // Board players already linked to a site account are dropped: they count once, through
+        // their own records, which carry real plates.
+        var linked = await LinkedPlayerIds(mix, cancellationToken);
         var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
         var byPlayer = new Dictionary<int, List<OfficialPricedChart>>();
-        foreach (var row in rows)
+        foreach (var high in highs)
         {
-            if (!Enum.TryParse<ChartType>(row.Type, out var chartType)) continue;
-            var score = PhoenixScore.From((int)row.Score);
-            var value = scoring.GetScore(chartType, DifficultyLevel.From(row.Level), score,
+            if (linked.Contains(high.PlayerId)) continue;
+            if (!Enum.TryParse<ChartType>(high.ChartType, out var chartType)) continue;
+            if (chartType is not (ChartType.Single or ChartType.Double)) continue;
+            var score = PhoenixScore.From((int)high.Score);
+            var value = scoring.GetScore(chartType, DifficultyLevel.From(high.Level), score,
                 ScoringConfiguration.ExpectedPlateForScore(score));
             if (value <= 0) continue;
-            (byPlayer.TryGetValue(row.PlayerId, out var list) ? list : byPlayer[row.PlayerId] = new())
-                .Add(new OfficialPricedChart(row.ChartId, chartType, value));
+            (byPlayer.TryGetValue(high.PlayerId, out var list) ? list : byPlayer[high.PlayerId] = new())
+                .Add(new OfficialPricedChart(high.ChartId, chartType, value));
         }
 
         return byPlayer.Select(kv => new OfficialPricedPool(kv.Key,
                 kv.Value.OrderByDescending(c => c.Value).ThenBy(c => c.ChartId).ToArray()))
             .ToArray();
+    }
+
+    /// <summary>
+    ///     The player dimension, not the placement table — a link is a property of the tag, so
+    ///     this read carries no placement scope to get wrong.
+    /// </summary>
+    private async Task<IReadOnlySet<int>> LinkedPlayerIds(MixEnum mix, CancellationToken cancellationToken)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var mixId = MixIds.For(mix);
+        var ids = await database.Set<OfficialPlayerEntity>()
+            .Where(p => p.MixId == mixId && p.UserId != null)
+            .Select(p => p.Id)
+            .ToArrayAsync(cancellationToken);
+        return ids.ToHashSet();
     }
 }

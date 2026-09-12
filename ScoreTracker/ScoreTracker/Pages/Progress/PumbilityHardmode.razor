@@ -1,0 +1,134 @@
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@page "/Pumbility/Hardmode"
+@rendermode RenderModes.Interactive
+@namespace ScoreTracker.Web.Pages.Progress
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+
+@* Hardmode (docs/design/hardmode-leaderboard.md): the same PUMBILITY formula over the rarest
+   slice of every folder — the charts almost nobody holds in a top 50.
+
+   The section frame keeps the eyebrow, the nav and the one pool setting; the band is this page's
+   because the number is a different number, and handing the shared hero a PUMBILITY record it
+   did not compute would put a lie in the shape of the headline figure. Order answers the two
+   questions a player opens this tab with — where do I stand, and what do I play — before the
+   board they scroll to. *@
+
+<PumbilitySectionFrame Active="hardmode" HeroFromBody="true">
+    <Body Context="ctx">
+        @if (_page == null)
+        {
+            <div class="pmb-frame pmb-frame-waiting" aria-hidden="true"></div>
+            <PatienceCard Explanation="@L["Pricing your records against this week's Hardmode charts."]"></PatienceCard>
+        }
+        else
+        {
+            <HardmodeHero Page="_page" Pool="ctx.Pool" OnPoolChanged="p => ChangePool(ctx, p)"></HardmodeHero>
+
+            <HardmodeBoardSection Mix="ctx.Mix" Pool="ctx.Pool" Standing="Standing"></HardmodeBoardSection>
+
+            @if (_page.Rails.Count > 0)
+            {
+                <section class="pmb-block">
+                    <div class="pmb-block-head">
+                        <h2 class="pmb-block-title">@L["Titles, on Hardmode"]</h2>
+                    </div>
+                    <p class="pmb-block-lede">
+                        @L["The same ladders the Breakdown page draws, asked of your Hardmode pool instead of your whole record book."]
+                    </p>
+                    <PumbilityTitleRails Rails="_page.Rails"></PumbilityTitleRails>
+                </section>
+            }
+
+            <section class="pmb-block">
+                <div class="pmb-block-head">
+                    <h2 class="pmb-block-title">@L["Your Hardmode pool"]</h2>
+                </div>
+                <p class="pmb-block-lede">
+                    @L["The charts your Hardmode number is the sum of, banded by what each is worth to you."]
+                </p>
+                <HardmodePoolList Mix="ctx.Mix" Charts="ctx.Charts" Pool="_page.Pool"
+                                  OnOpen="OpenChart" OnPlay="PlayChart"></HardmodePoolList>
+            </section>
+
+            <HardmodeQualifyingSection Mix="ctx.Mix" Charts="ctx.Charts" Pool="_page.Pool"
+                                       ScoredOutsidePool="_page.ScoredOutsidePool"
+                                       QualifyingCount="_page.QualifyingCharts"
+                                       OnOpen="OpenChart" OnPlay="PlayChart"></HardmodeQualifyingSection>
+        }
+
+        @* The card's play button and its jacket open the same dialog; only one of them asked
+           for the video, so AutoPlay is bound rather than fixed — the Play tab's own wiring. *@
+        <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_selected" Mix="ctx.Mix"
+                            AutoPlay="_autoPlay"></ChartDetailsDialog>
+    </Body>
+</PumbilitySectionFrame>
+
+
+@code {
+    private HardmodePageRecord? _page;
+    private Chart? _selected;
+    private bool _detailsOpen;
+    private bool _autoPlay;
+    private MixEnum _mix = MixEnum.Phoenix2;
+    private ChartType? _pool;
+
+    /// <summary>The selected pool's standing, for the strip above the board.</summary>
+    private HardmodePoolTotals? Standing => _page == null
+        ? null
+        : _pool switch
+        {
+            ChartType.Single => _page.Singles,
+            ChartType.Double => _page.Doubles,
+            _ => _page.Combined
+        };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // The frame resolves the mix and the pool from settings, and it does that after its own
+        // first render — so the page reads them from the context rather than racing it.
+        if (!firstRender || _page != null) return;
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        if (!CurrentUser.IsLoggedIn) return;
+        _page = await Mediator.Send(new GetHardmodePageQuery(CurrentUser.User.Id, _mix, _pool));
+        StateHasChanged();
+    }
+
+    /// <summary>
+    ///     The pool selector drives the section's one setting through the frame, then this page
+    ///     re-prices. Two reads rather than one because the pool is the frame's state and the
+    ///     number is this page's.
+    /// </summary>
+    private async Task ChangePool(PumbilitySectionFrame.SectionContext ctx, ChartType? pool)
+    {
+        if (_pool == pool) return;
+        _pool = pool;
+        await ctx.ChangePool(pool);
+        await Load();
+    }
+
+    private void OpenChart(Chart chart)
+    {
+        _selected = chart;
+        _autoPlay = false;
+        _detailsOpen = true;
+    }
+
+    private void PlayChart(Chart chart)
+    {
+        _selected = chart;
+        _autoPlay = true;
+        _detailsOpen = true;
+    }
+}

@@ -1,4 +1,4 @@
-/* Self-hosted display face — headings, stat numerals, wordmark. Latin subset only:
+﻿/* Self-hosted display face — headings, stat numerals, wordmark. Latin subset only:
    Korean/Japanese glyphs fall through per-glyph to the system CJK fonts in the stack
    (see --font-display), which keeps mixed-script headings from going anemic. */
 @font-face {
@@ -2610,6 +2610,16 @@ html.sheet-open .more-sheet-scrim {
    what guarantees the state classes win everywhere they're worn. */
 .tier-chart-card-pass {
     border-color: var(--mud-palette-success);
+    border-style: solid;
+}
+
+/* Hardmode's one addition to the border vocabulary: gold means "this counts". It is the share
+   card's own "Top 50 — combined" boundary (ShareCardComposer.Boundary), so the same fact wears
+   the same colour in the page and in the download, and it outranks the green pass where both
+   apply — exactly as the card composer orders them
+   (docs/design/hardmode-leaderboard.md D12). */
+.tier-chart-card-top50 {
+    border-color: var(--rarity-gold);
     border-style: solid;
 }
 
@@ -19716,4 +19726,64 @@ a.peer-pop-row:hover {
     .pl-title { font-size: 28px; }
     .pl-proj-big { font-size: 38px; }
     .pl-conversion { margin-left: 0; text-align: left; }
+}
+
+/* ===== Hardmode (docs/design/hardmode-leaderboard.md) =====
+   The three facts a qualifying chart carries under its score: how many pools hold it, and which
+   of the three states it is in for this viewer. Each on its own line — two of them inline read
+   as one run-on caption. */
+.hmd-held,
+.hmd-in,
+.hmd-out,
+.hmd-none {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 10.5px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    line-height: 1.5;
+}
+
+.hmd-held {
+    color: var(--mix-ink-muted);
+}
+
+/* A chart no full pool holds is the rarest thing in its folder, so it reads at the top of the
+   rarity ramp rather than as missing data. */
+.hmd-held-zero {
+    color: var(--rarity-prism);
+}
+
+.hmd-in {
+    color: var(--rarity-gold);
+}
+
+.hmd-out {
+    color: var(--mud-palette-success);
+}
+
+.hmd-none {
+    color: var(--mix-ink-muted);
+}
+
+/* The board's rank and identity cells. The rank is coloured by percentile through the rarity
+   ramp, like every other board on the site, and prints its place beside the colour. */
+.hmd-rank {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.hmd-player {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+/* A board player has no profile to open, so their tag is text — and it still has to truncate. */
+.hmd-tag {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }

@@ -10,10 +10,13 @@ namespace ScoreTracker.OfficialMirror.Infrastructure;
 internal sealed class EFOfficialHardmodeRatingRepository : IOfficialHardmodeRatingRepository
 {
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
+    private readonly IOfficialSnapshotRepository _snapshots;
 
-    public EFOfficialHardmodeRatingRepository(IDbContextFactory<ChartAttemptDbContext> factory)
+    public EFOfficialHardmodeRatingRepository(IDbContextFactory<ChartAttemptDbContext> factory,
+        IOfficialSnapshotRepository snapshots)
     {
         _factory = factory;
+        _snapshots = snapshots;
     }
 
     public async Task Replace(MixEnum mix, IReadOnlyCollection<OfficialHardmodeRating> rows,
@@ -56,17 +59,13 @@ internal sealed class EFOfficialHardmodeRatingRepository : IOfficialHardmodeRati
             _ => "PUMBILITY"
         };
 
-        var published = from placement in database.Set<OfficialLeaderboardPlacementEntity>()
-            join board in database.Set<OfficialLeaderboardEntity>() on placement.LeaderboardId equals board.Id
-            where board.MixId == mixId && board.LeaderboardType == "Rating" && board.Name == boardName
-            group placement by placement.PlayerId
-            into ratings
-            select new { PlayerId = ratings.Key, Score = ratings.Max(r => r.Score) };
+        // Through the snapshot repository, which forces a placement scope: piugame's own board
+        // is what this column quotes, and a supplemented row is ours (supplemented-leaderboards.md §7).
+        var published = await _snapshots.GetRatingBoardScores(mix, boardName, PlacementScope.OfficialOnly,
+            cancellationToken);
 
         var rows = await (from rating in database.Set<OfficialHardmodeRatingEntity>()
                 join player in database.Set<OfficialPlayerEntity>() on rating.OfficialPlayerId equals player.Id
-                join pub in published on player.Id equals pub.PlayerId into publications
-                from publication in publications.DefaultIfEmpty()
                 where rating.MixId == mixId
                 select new
                 {
@@ -75,14 +74,13 @@ internal sealed class EFOfficialHardmodeRatingRepository : IOfficialHardmodeRati
                     Hardmode = pool == ChartType.Single ? rating.Singles
                         : pool == ChartType.Double ? rating.Doubles
                         : rating.Combined,
-                    rating.ChartsHeld,
-                    Pumbility = publication == null ? (decimal?)null : publication.Score
+                    rating.ChartsHeld
                 })
             .Where(r => r.Hardmode > 0)
             .OrderByDescending(r => r.Hardmode)
             .ToArrayAsync(cancellationToken);
 
         return rows.Select((r, i) => new OfficialHardmodeRow(i + 1, r.Id, r.Username, r.Hardmode, r.ChartsHeld,
-            r.Pumbility == null ? null : (double)r.Pumbility.Value)).ToArray();
+            published.TryGetValue(r.Id, out var pumbility) ? (double)pumbility : null)).ToArray();
     }
 }

@@ -1,0 +1,236 @@
+@using MediatR
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUserReader Users
+
+@* The Hardmode leaderboard (docs/design/hardmode-leaderboard.md §4), on the board the site
+   already has: the olb-grid row template, which sheds Held at 600px and the playstyle chip at
+   500px, with the rank coloured by percentile through the rarity ramp.
+
+   Two populations, two tabs, never one ranked list. The top of the official boards plays
+   everything and would sit in the same places on both; a board player has no site profile to
+   open, and their rows carry the * the rivals and chart boards already use for mirrored data. *@
+<section class="pmb-block">
+    <div class="pmb-block-head">
+        <h2 class="pmb-block-title">@L["Hardmode leaderboard"]</h2>
+    </div>
+    <p class="pmb-block-lede">
+        @L["The charts almost nobody holds in a PUMBILITY pool, priced the same way. Rebuilt every Sunday after the official import."]
+    </p>
+
+    @if (Standing is { Rank: not null })
+    {
+        <div class="cld-standing">
+            <span class="cld-standing-place" style="@ThemeScales.RarityStyle(Percentile)">
+                @string.Format(L["#{0} of {1}"], Standing.Rank, Standing.Field)
+            </span>
+            <span class="cld-standing-scope">
+                @($"{L["PIU Scores"]} · {PoolLabel} · {string.Format(L["{0} of 50 held"], Standing.Held)}")
+            </span>
+        </div>
+    }
+
+    <div class="pmb-peers-controls">
+        <span class="pmb-peers-controls-start">
+            <MudButtonGroup OverrideStyles="false">
+                <MudButton Size="Size.Small" Color="Color.Primary"
+                           Variant="@(_source == Source.Site ? Variant.Filled : Variant.Outlined)"
+                           OnClick="() => SetSource(Source.Site)">@L["PIU Scores"]</MudButton>
+                <MudButton Size="Size.Small" Color="Color.Primary"
+                           Variant="@(_source == Source.Official ? Variant.Filled : Variant.Outlined)"
+                           OnClick="() => SetSource(Source.Official)">@L["Official Boards"]</MudButton>
+            </MudButtonGroup>
+        </span>
+        <span class="pmb-peers-controls-end">
+            <MudTextField T="string" Value="_filter" ValueChanged="SetFilter" Label="@L["Find a player"]"
+                          Immediate="true" Adornment="Adornment.Start" Clearable="true"
+                          AdornmentIcon="@Icons.Material.Filled.Search" Style="max-width:260px"></MudTextField>
+        </span>
+    </div>
+
+    @if (_source == Source.Official)
+    {
+        <MudAlert Severity="Severity.Info" Dense="true" Class="my-2">
+            @L["Official-board players. Their pools are rebuilt from the mirrored chart boards, which only exist at level 20 and up — so a board player's Hardmode pool is level-20-plus by construction."]
+        </MudAlert>
+    }
+
+    @if (_loading)
+    {
+        <MudSkeleton Height="300px" SkeletonType="SkeletonType.Rectangle"></MudSkeleton>
+    }
+    else if (Rows.Count == 0)
+    {
+        <p class="pmb-empty">@L["Nobody is on this board yet — it fills in after the first weekly rebuild."]</p>
+    }
+    else
+    {
+        @* One grid template drives every row, so the columns line up down the board and the row
+           sheds a whole column at a time as it narrows. *@
+        <div class="olb-rank-cards"
+             style="--olb-grid-cols:40px minmax(150px,1.7fr) 1fr .8fr 1fr 1fr;--olb-grid-cols-600:40px minmax(140px,1.7fr) 1fr 1fr 1fr;--olb-grid-cols-500:34px minmax(96px,1fr) 1fr 1fr">
+            <div class="olb-grid-head">
+                <span>#</span>
+                <span>@L["Player"]</span>
+                <span class="olb-hide-phone">@L["Playstyle"]</span>
+                <span class="olb-hide-narrow olb-grid-num" title="@L["Hardmode charts held"]">@L["Held"]</span>
+                <span class="olb-stack">
+                    <span class="olb-grid-num" title="@L["Their full PUMBILITY"]">PUMBILITY</span>
+                    <span class="olb-grid-num">@L["Hardmode"]</span>
+                </span>
+            </div>
+            @foreach (var row in Page)
+            {
+                <div class="olb-grid-row @(row.IsMe ? "olb-row-me" : null)">
+                    <span class="olb-grid-num hmd-rank" style="@ThemeScales.RarityStyle(RowPercentile(row.Place))">
+                        @($"#{row.Place}")
+                    </span>
+                    <span class="hmd-player">
+                        @if (row.User != null)
+                        {
+                            <MudLink Href="@($"/Player/{row.User.Id}")" Underline="Underline.None"
+                                     Style="display:flex;align-items:center;min-width:0">
+                                <UserLabel User="row.User" ShowAvatar="true" AvatarSize="24"></UserLabel>
+                            </MudLink>
+                        }
+                        else
+                        {
+                            <span class="hmd-tag">@row.Name</span>
+                            <span class="rival-official-mark" title="@L["Official board data"]">*</span>
+                        }
+                    </span>
+                    <span class="olb-hide-phone">
+                        @if (row.PlayerType != null)
+                        {
+                            <PlayerTypeChip Type="row.PlayerType.Value"></PlayerTypeChip>
+                        }
+                    </span>
+                    <span class="olb-hide-narrow olb-grid-num mud-text-secondary" title="@L["Hardmode charts held"]">
+                        @string.Format(L["{0} / 50"], row.Held)
+                    </span>
+                    <span class="olb-stack">
+                        <span class="olb-grid-num mud-text-secondary" title="@L["Their full PUMBILITY"]">
+                            @(row.Pumbility == null ? "—" : row.Pumbility.Value.ToString("N2"))
+                        </span>
+                        <span class="olb-grid-num"><b>@row.Hardmode.ToString("N2")</b></span>
+                    </span>
+                </div>
+            }
+        </div>
+        @if (PageCount > 1)
+        {
+            <div class="d-flex justify-center mt-2">
+                <MudPagination Count="PageCount" Selected="_page" SelectedChanged="p => _page = p"
+                               Color="Color.Primary"></MudPagination>
+            </div>
+        }
+    }
+</section>
+
+@code {
+    private const int PageSize = 10;
+
+    private enum Source
+    {
+        Site,
+        Official
+    }
+
+    /// <summary>
+    ///     One row shape for both populations, so the markup has no branch beyond the identity:
+    ///     a site row opens a profile, a board row carries the mirror's asterisk.
+    /// </summary>
+    private sealed record Row(int Place, string Name, User? User, double Hardmode, int Held, double? Pumbility,
+        RecapPlayerType? PlayerType, bool IsMe);
+
+    [Parameter] [EditorRequired] public MixEnum Mix { get; set; }
+
+    [Parameter] public ChartType? Pool { get; set; }
+
+    /// <summary>The viewer's own standing in the selected pool, for the strip above the board.</summary>
+    [Parameter] public HardmodePoolTotals? Standing { get; set; }
+
+    private Source _source = Source.Site;
+    private string _filter = string.Empty;
+    private int _page = 1;
+    private bool _loading = true;
+    private IReadOnlyList<Row> _rows = Array.Empty<Row>();
+
+    private string PoolLabel => Pool switch
+    {
+        ChartType.Single => L["Singles"],
+        ChartType.Double => L["Doubles"],
+        _ => L["All"]
+    };
+
+    /// <summary>1.0 is first place — the flip the printed place makes unnecessary, but the colour needs.</summary>
+    private double Percentile => Standing is { Rank: not null, Field: > 1 }
+        ? (Standing.Field.Value - Standing.Rank!.Value) / (double)(Standing.Field.Value - 1)
+        : 1;
+
+    private double RowPercentile(int place)
+    {
+        return _rows.Count > 1 ? (_rows.Count - place) / (double)(_rows.Count - 1) : 1;
+    }
+
+    private IReadOnlyList<Row> Rows => _filter.Length == 0
+        ? _rows
+        : _rows.Where(r => r.Name.Contains(_filter, StringComparison.OrdinalIgnoreCase)).ToArray();
+
+    private int PageCount => Math.Max(1, (int)Math.Ceiling(Rows.Count / (double)PageSize));
+
+    private IEnumerable<Row> Page => Rows.Skip((Math.Min(_page, PageCount) - 1) * PageSize).Take(PageSize);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Load();
+    }
+
+    private async Task SetSource(Source source)
+    {
+        if (_source == source) return;
+        _source = source;
+        _page = 1;
+        await Load();
+    }
+
+    private void SetFilter(string filter)
+    {
+        _filter = filter ?? string.Empty;
+        _page = 1;
+    }
+
+    private async Task Load()
+    {
+        _loading = true;
+        _rows = _source == Source.Site ? await SiteRows() : await OfficialRows();
+        _loading = false;
+    }
+
+    private async Task<IReadOnlyList<Row>> SiteRows()
+    {
+        var rows = await Mediator.Send(new GetHardmodeBoardQuery(Mix, Pool));
+        var users = (await Users.GetUsers(rows.Select(r => r.UserId).Distinct())).ToDictionary(u => u.Id);
+        var me = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : (Guid?)null;
+        return rows.Select(r => new Row(r.Place,
+            users.TryGetValue(r.UserId, out var user) ? user.GameTag?.ToString() ?? user.Name.ToString() : "?",
+            users.GetValueOrDefault(r.UserId), r.Hardmode, r.Held, r.Pumbility, null, r.UserId == me)).ToArray();
+    }
+
+    private async Task<IReadOnlyList<Row>> OfficialRows()
+    {
+        var rows = await Mediator.Send(new GetOfficialHardmodeBoardQuery(Mix, Pool));
+        return rows.Select(r => new Row(r.Place, r.Username, null, r.Hardmode, r.Held, r.Pumbility, null, false))
+            .ToArray();
+    }
+}

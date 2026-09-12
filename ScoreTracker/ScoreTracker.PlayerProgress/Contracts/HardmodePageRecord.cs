@@ -9,6 +9,11 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 /// </summary>
 /// <param name="Combined">The pool across both types — the board's headline number.</param>
 /// <param name="Pool">The selected pool's charts in descending value order.</param>
+/// <param name="ScoredOutsidePool">
+///     Qualifying charts the viewer has a score on that the fifty does not hold — the third state
+///     the chart list draws. Empty while the pool is short of fifty, because then nothing is
+///     displaced (design §7).
+/// </param>
 /// <param name="Rails">The Phoenix 2 ladders asked of the Hardmode pool.</param>
 /// <param name="QualifyingCharts">How many charts the week's list holds, so the page can say so.</param>
 [ExcludeFromCodeCoverage]
@@ -19,6 +24,7 @@ public sealed record HardmodePageRecord(
     HardmodePoolTotals Singles,
     HardmodePoolTotals Doubles,
     IReadOnlyList<PoolEntry> Pool,
+    IReadOnlyList<PoolEntry> ScoredOutsidePool,
     IReadOnlyList<TitleRail> Rails,
     int QualifyingCharts);
 

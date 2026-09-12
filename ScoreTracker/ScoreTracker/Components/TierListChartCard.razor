@@ -336,22 +336,34 @@ else
     // on, so a To-Do ring there would be a fourth meaning competing with three.
     [Parameter] public bool ShowStateBorder { get; set; } = true;
 
+    /// <summary>
+    ///     A border class the host supplies instead of the card's own vocabulary. Hardmode's
+    ///     "in your top 50" gold has no equivalent in pass / To-Do / other-mix / broken, and it
+    ///     is the host that knows which of its states a card is in. Always paired with
+    ///     <see cref="CustomStateTitle" /> so the hue never travels alone (UX rule 8).
+    /// </summary>
+    [Parameter] public string? CustomStateClass { get; set; }
+
+    /// <summary>The word for <see cref="CustomStateClass" />, on the card's title and its compact tooltip.</summary>
+    [Parameter] public string? CustomStateTitle { get; set; }
+
     // A run that broke. Ranked below the two pass states on purpose: where a chart is both
     // attempted here and passed elsewhere, where the number came from is the more useful
     // thing to say. It earns a state of its own because the alternative is no border at all,
     // which reads as a chart nobody has ever seen the player touch.
     [Parameter] public bool Broke { get; set; }
 
-    private string StateClass => !ShowStateBorder ? string.Empty :
+    private string StateClass => CustomStateClass != null ? CustomStateClass :
+        !ShowStateBorder ? string.Empty :
         Passed ? "tier-chart-card-pass" :
         IsToDo ? "tier-chart-card-todo" :
         PassedInAnotherMix ? "tier-chart-card-other-mix" :
         Broke ? "tier-chart-card-broken" : string.Empty;
 
-    private string? StateTitle => Passed ? L["Passed"] :
+    private string? StateTitle => CustomStateTitle ?? (Passed ? L["Passed"] :
         IsToDo ? L["To Do"] :
         PassedInAnotherMix ? L["Passed in other mixes"] :
-        Broke ? L["Played, not passed"] : null;
+        Broke ? L["Played, not passed"] : null);
 
     // Compact hides the name, so the tooltip carries the identity (rule 7: no
     // truncation without a tooltip) plus the state and lens-tier words (rule 8).

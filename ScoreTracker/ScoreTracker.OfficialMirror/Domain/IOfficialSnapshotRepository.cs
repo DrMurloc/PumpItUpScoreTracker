@@ -52,6 +52,33 @@ internal interface IOfficialSnapshotRepository
     Task<IReadOnlyList<PlacementRow>> GetPlacements(int snapshotId, PlacementScope scope, CancellationToken ct);
 
     /// <summary>
+    ///     The best score every board player has ever been seen with, per chart board, across
+    ///     every sealed snapshot of the mix — what the Hardmode census counts them on
+    ///     (docs/design/hardmode-leaderboard.md §2).
+    ///     <para>
+    ///         Across snapshots rather than the latest, because a chart board is a top-N and a
+    ///         player drops off it as others pass them: the highest row the mirror ever saw is
+    ///         the closest thing it has to their record. Chart type and level ride along so a
+    ///         caller can price the row without a second read.
+    ///     </para>
+    ///     <para>
+    ///         ⚠ The scope is not optional and the census passes <see cref="PlacementScope.OfficialOnly" />:
+    ///         supplemented rows are this site's own additions, and counting them would let our
+    ///         data vote in our own census of what the world plays.
+    ///     </para>
+    /// </summary>
+    Task<IReadOnlyList<ChartBoardHigh>> GetChartBoardHighs(MixEnum mix, PlacementScope scope,
+        CancellationToken ct);
+
+    /// <summary>
+    ///     What one rating board published for each player in the latest sealed snapshot — the
+    ///     PUMBILITY pool piugame itself prints, for the board row that shows it beside a
+    ///     Hardmode total. Empty where no sealed snapshot carries that board.
+    /// </summary>
+    Task<IReadOnlyDictionary<int, decimal>> GetRatingBoardScores(MixEnum mix, string boardName,
+        PlacementScope scope, CancellationToken ct);
+
+    /// <summary>
     ///     Clears one snapshot's supplemented rows, leaving every official row alone. The
     ///     roll-up runs this first so a re-press of the admin button replaces its own output
     ///     rather than doubling it.

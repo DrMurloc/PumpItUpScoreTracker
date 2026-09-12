@@ -103,7 +103,7 @@ internal sealed class HardmodeSaga :
         if (qualifying.Count == 0)
             return new HardmodePageRecord(request.Mix, request.Pool, HardmodePoolTotals.Empty,
                 HardmodePoolTotals.Empty, HardmodePoolTotals.Empty, Array.Empty<PoolEntry>(),
-                Array.Empty<TitleRail>(), 0);
+                Array.Empty<PoolEntry>(), Array.Empty<TitleRail>(), 0);
 
         var ids = qualifying.Select(c => c.ChartId).ToHashSet();
         var charts = (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
@@ -122,7 +122,19 @@ internal sealed class HardmodeSaga :
         var singles = Totals(priced, ChartType.Single);
         var doubles = Totals(priced, ChartType.Double);
 
-        var pool = Fifty(priced, request.Pool)
+        var fifty = Fifty(priced, request.Pool);
+        var pool = fifty
+            .Select((p, i) => new PoolEntry(i + 1, p.Record.ChartId, p.Record.Score!.Value, p.Record.Plate,
+                p.Record.IsBroken, p.Record.RecordedDate, p.Value))
+            .ToArray();
+
+        // Everything else the viewer has scored on a qualifying chart. The chart list draws it as
+        // its own state — a pass that does not count here — and while the pool is short of fifty
+        // this is simply empty, because nothing is being displaced.
+        var held = fifty.Select(f => f.Record.ChartId).ToHashSet();
+        var outside = priced
+            .Where(p => !held.Contains(p.Record.ChartId))
+            .OrderByDescending(p => p.Value)
             .Select((p, i) => new PoolEntry(i + 1, p.Record.ChartId, p.Record.Score!.Value, p.Record.Plate,
                 p.Record.IsBroken, p.Record.RecordedDate, p.Value))
             .ToArray();
@@ -133,7 +145,7 @@ internal sealed class HardmodeSaga :
         singles = await Ranked(singles, request.Mix, ChartType.Single, request.UserId, cancellationToken);
         doubles = await Ranked(doubles, request.Mix, ChartType.Double, request.UserId, cancellationToken);
 
-        return new HardmodePageRecord(request.Mix, request.Pool, combined, singles, doubles, pool,
+        return new HardmodePageRecord(request.Mix, request.Pool, combined, singles, doubles, pool, outside,
             Rails(combined, singles, doubles, request.Mix), qualifying.Count);
     }
 

@@ -83,6 +83,15 @@ public sealed class RecurringJobRunner
             _bus.Publish(new ProcessPumbilityTierListCommand(MixEnum.Phoenix)),
             _bus.Publish(new ProcessPumbilityTierListCommand(MixEnum.Phoenix2)));
 
+    /// <summary>
+    ///     The weekly Hardmode census (docs/design/hardmode-leaderboard.md). Phoenix 2 alone —
+    ///     Phoenix 1 has no census and a mix without one writes nothing rather than a list of
+    ///     every chart in the game. Timed after Sunday's Phoenix 2 import seals, because half
+    ///     the electorate is board players whose pools come out of that snapshot.
+    /// </summary>
+    public Task PublishRebuildHardmodeCharts() =>
+        _bus.Publish(new RebuildHardmodeChartsCommand(MixEnum.Phoenix2));
+
     public Task PublishCalculateChartLetterDifficulties() =>
         Task.WhenAll(
             _bus.Publish(new RecalculateChartLetterDifficultiesCommand(MixEnum.Phoenix)),
