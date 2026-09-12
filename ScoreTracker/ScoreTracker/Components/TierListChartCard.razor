@@ -370,9 +370,9 @@ else
     // the player put there, and a flag you cannot see on a chart you have already passed - or on
     // one the Hardmode pool has painted gold - is a flag that does not work.
     private string StateClass =>
-        IsToDo && ShowStateBorder ? "tier-chart-card-todo" :
-        CustomStateClass != null ? CustomStateClass :
         !ShowStateBorder ? string.Empty :
+        IsToDo ? "tier-chart-card-todo" :
+        CustomStateClass != null ? CustomStateClass :
         Passed ? "tier-chart-card-pass" :
         PassedInAnotherMix ? "tier-chart-card-other-mix" :
         Broke ? "tier-chart-card-broken" : string.Empty;

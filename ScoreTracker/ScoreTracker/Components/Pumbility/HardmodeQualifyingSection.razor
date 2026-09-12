@@ -220,9 +220,19 @@
 
     private string HeldTitle => L["How many pools hold it"];
 
+    /// <summary>
+    ///     Rarest first, and the name breaks the tie — the census's own last tiebreak. Without it
+    ///     the printed #1, #2, #3 was whatever order the database returned, which shuffles between
+    ///     loads: equal points is not an edge case here, it is the entire unheld head of a folder.
+    ///     (The census also sorts on scoring level between those two; the record does not carry
+    ///     one, and this list is a rarity reading rather than the cut itself.)
+    /// </summary>
     private IReadOnlyList<HardmodeChartRecord> Folder => _qualifying
         .Where(c => c.ChartType == _type && c.Level == _level)
         .OrderBy(c => c.Points)
+        .ThenBy(c => Charts.TryGetValue(c.ChartId, out var chart) ? chart.Song.Name.ToString() : string.Empty,
+            StringComparer.OrdinalIgnoreCase)
+        .ThenBy(c => c.ChartId)
         .ToArray();
 
     private string FolderSummary

@@ -463,7 +463,7 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     // consumer of OfficialSnapshotSealedEvent — that event is OfficialMirror's contract and
     // ChartIntelligence cannot see it, and a week-stale board population is acceptable on a
     // list whose whole point is weekly stability.
-    ("rebuild-hardmode-charts",          r => r.PublishRebuildHardmodeCharts(),           "0 18 * * 0"), // Sundays 13:00 ET
+    ("rebuild-hardmode-charts",          r => r.PublishRebuildHardmodeCharts(),           "0 18 * * 0"), // Sundays 14:00 ET
     ("try-schedule-mom",                 r => r.PublishTryScheduleMoM(),                  "0 11 * * *"), // 06:00 ET
     ("process-account-purges",           r => r.PublishProcessAccountPurges(),            "30 11 * * *"), // 06:30 ET — merged-account grace-window purges
     ("crawl-piucenter",                  r => r.PublishCrawlPiuCenter(),                  "0 6 * * 1"),  // Mondays 01:00 ET — gap-driven, near no-op unless piucenter shipped a new data release
