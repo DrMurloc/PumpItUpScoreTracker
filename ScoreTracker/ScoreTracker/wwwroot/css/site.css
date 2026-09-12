@@ -19977,9 +19977,3 @@ a.peer-pop-row:hover {
     min-width: 0;
 }
 
-/* A board player has no profile to open, so their tag is text — and it still has to truncate. */
-.hmd-tag {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}

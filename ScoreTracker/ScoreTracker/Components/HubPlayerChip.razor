@@ -1,4 +1,9 @@
+﻿@namespace ScoreTracker.Web.Components
 @using ScoreTracker.OfficialMirror.Contracts
+@* Moved out of Pages/OfficialLeaderboards when the Hardmode board became a second
+   consumer: a board player is one visual concept, so it is one shared component
+   (UX rule 3). Every list that shows one gets the avatar, the linked-account tick and
+   the supplemented chip for free, which is the point of it living here. *@
 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="min-width-0">
     <MudAvatar Size="@(Dense ? Size.Small : Size.Medium)">
         <MudImage Src="@AvatarUrl" ObjectFit="ObjectFit.Cover"/>

@@ -3,7 +3,6 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Queries
-@using ScoreTracker.OfficialMirror.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.SharedKernel.Models
@@ -104,10 +103,9 @@
                                 <UserLabel User="row.User" ShowAvatar="true" AvatarSize="24"></UserLabel>
                             </MudLink>
                         }
-                        else
+                        else if (row.Board != null)
                         {
-                            <span class="hmd-tag">@row.Name</span>
-                            <span class="rival-official-mark" title="@L["Official board data"]">*</span>
+                            <HubPlayerChip Player="row.Board" Dense="true"></HubPlayerChip>
                         }
                     </span>
                     <span class="olb-hide-phone">
@@ -146,8 +144,13 @@
     ///     One row shape for both populations, so the markup has no branch beyond the identity:
     ///     a site row opens a profile, a board row carries the mirror's asterisk.
     /// </summary>
-    private sealed record Row(int Place, string Name, User? User, double Hardmode, int Held,
-        RecapPlayerType? PlayerType, string Glow);
+    /// <summary>
+    ///     One row shape for both populations. <paramref name="User" /> is a site account and
+    ///     <paramref name="Board" /> a mirrored board player; exactly one of them is set, and
+    ///     which one is the only branch the markup makes.
+    /// </summary>
+    private sealed record Row(int Place, string Name, User? User, OfficialPlayerRecord? Board,
+        double Hardmode, int Held, RecapPlayerType? PlayerType, string Glow);
 
     [Parameter] [EditorRequired] public MixEnum Mix { get; set; }
 
@@ -231,7 +234,7 @@
 
         return rows.Select(r => new Row(r.Place,
             users.TryGetValue(r.UserId, out var user) ? user.GameTag?.ToString() ?? user.Name.ToString() : "?",
-            users.GetValueOrDefault(r.UserId), r.Hardmode, r.Held,
+            users.GetValueOrDefault(r.UserId), null, r.Hardmode, r.Held,
             types.TryGetValue(r.UserId, out var type) ? type : null,
             CommunityGlowReader.RowClass(r.UserId, me, rivals, clubmates, "olb-row-me", "olb-row-community")))
             .ToArray();
@@ -255,9 +258,9 @@
         // an absence, and a Hardmode board row carries no UserId to match on either way. Neither
         // "you" nor a clubmate can appear here — the census excludes every linked player, so a
         // viewer's own account is on the PIU Scores tab and never on this one.
-        return rows.Select(r => new Row(r.Place, r.Username, null, r.Hardmode, r.Held,
-                types.TryGetValue(r.OfficialPlayerId, out var type) ? type : null,
-                CommunityGlowReader.RowClass(false, rivalTags.Contains(r.Username), false,
+        return rows.Select(r => new Row(r.Place, r.Player.Username, null, r.Player, r.Hardmode, r.Held,
+                types.TryGetValue(r.Player.PlayerId, out var type) ? type : null,
+                CommunityGlowReader.RowClass(false, rivalTags.Contains(r.Player.Username), false,
                     "olb-row-me", "olb-row-community")))
             .ToArray();
     }

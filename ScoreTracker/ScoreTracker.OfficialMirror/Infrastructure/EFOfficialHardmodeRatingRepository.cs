@@ -55,6 +55,8 @@ internal sealed class EFOfficialHardmodeRatingRepository : IOfficialHardmodeRati
                 {
                     player.Id,
                     player.Username,
+                    player.AvatarUrl,
+                    player.UserId,
                     Hardmode = pool == ChartType.Single ? rating.Singles
                         : pool == ChartType.Double ? rating.Doubles
                         : rating.Combined,
@@ -66,7 +68,14 @@ internal sealed class EFOfficialHardmodeRatingRepository : IOfficialHardmodeRati
             .OrderByDescending(r => r.Hardmode)
             .ToArrayAsync(cancellationToken);
 
-        return rows.Select((r, i) => new OfficialHardmodeRow(i + 1, r.Id, r.Username, r.Hardmode, r.Held))
+        // The avatar rides the row rather than being fetched per player by the page: it is one
+        // column of a join the board already makes. IsSupplemented stays false by construction -
+        // a Hardmode rating has no supplemented reading, and the census excludes linked players,
+        // so UserId is null here too.
+        return rows.Select((r, i) => new OfficialHardmodeRow(i + 1,
+                new OfficialPlayerRecord(r.Id, r.Username,
+                    string.IsNullOrWhiteSpace(r.AvatarUrl) ? null : new Uri(r.AvatarUrl), r.UserId),
+                r.Hardmode, r.Held))
             .ToArray();
     }
 }

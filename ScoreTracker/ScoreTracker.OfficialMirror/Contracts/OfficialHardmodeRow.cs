@@ -6,5 +6,5 @@
 ///     (owner, 2026-09-12), which also spares the board a rating-board read per load.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record OfficialHardmodeRow(int Place, int OfficialPlayerId, string Username, double Hardmode,
+public sealed record OfficialHardmodeRow(int Place, OfficialPlayerRecord Player, double Hardmode,
     int Held);
