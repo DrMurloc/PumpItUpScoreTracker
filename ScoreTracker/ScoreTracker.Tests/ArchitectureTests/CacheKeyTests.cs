@@ -74,7 +74,8 @@ public sealed class CacheKeyTests
         ["ScoreTracker.PlayerProgress/Infrastructure/EFPlayerStatsRepository.cs"] = 1,
         ["ScoreTracker.PlayerProgress/Infrastructure/EFTitleRepository.cs"] = 1,
         ["ScoreTracker.Rivals/Application/PeerStandingReader.cs"] = 3,
-        ["ScoreTracker.ScoreLedger/Infrastructure/EFPhoenixRecordsRepository.cs"] = 1,
+        // ScoreLedger burned its entry in slice 0's ledger commit: the record score cache is a
+        // Viewer key and LedgerCacheKeys builds through CacheKeys.
         ["ScoreTracker.WeeklyChallenge/Application/WeeklyTournamentSaga.cs"] = 1,
         ["ScoreTracker.WeeklyChallenge/Infrastructure/EFDailyStepRepository.cs"] = 1,
         ["ScoreTracker.WeeklyChallenge/Infrastructure/EFWeeklyTourneyRepository.cs"] = 1,

@@ -1,3 +1,4 @@
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.ScoreLedger.Application;
@@ -5,7 +6,9 @@ namespace ScoreTracker.ScoreLedger.Application;
 /// <summary>
 ///     The Ledger's cache entries, shared rather than private to their readers — a format only the
 ///     reader knows is exactly what leaves an evicting writer guessing (the OfficialCacheKeys
-///     precedent).
+///     precedent). Every one is a <see cref="CacheKeys.Mix" /> key: the limbo boards, the census
+///     and the stage-break rail are the population's, never the viewer's, so the seasonal view
+///     leaves them alone by declaration (CLAUDE.md "Cache keys").
 /// </summary>
 internal static class LedgerCacheKeys
 {
@@ -17,7 +20,7 @@ internal static class LedgerCacheKeys
     /// </summary>
     public static string LimboCharts(MixEnum mix)
     {
-        return $"LimboCharts__{mix}";
+        return CacheKeys.Mix("LimboCharts", mix);
     }
 
     /// <summary>Five minutes: an INSERT lights its chip on the same visit, not the next restart.</summary>
@@ -29,7 +32,7 @@ internal static class LedgerCacheKeys
     /// </summary>
     public static string LimboBoard(MixEnum mix, Guid chartId)
     {
-        return $"LimboBoard__{mix}__{chartId}";
+        return CacheKeys.Mix("LimboBoard", mix, chartId);
     }
 
     public static readonly TimeSpan LimboBoardTtl = TimeSpan.FromHours(24);
@@ -41,7 +44,7 @@ internal static class LedgerCacheKeys
     /// </summary>
     public static string ScorePopulation(MixEnum mix)
     {
-        return $"ScorePopulation__{mix}";
+        return CacheKeys.Mix("ScorePopulation", mix);
     }
 
     public static readonly TimeSpan ScorePopulationTtl = TimeSpan.FromHours(6);
@@ -49,7 +52,7 @@ internal static class LedgerCacheKeys
     /// <summary>The measured per-grade judgement spreads, on the same terms as the census.</summary>
     public static string JudgementSpreads(MixEnum mix)
     {
-        return $"JudgementSpreads__{mix}";
+        return CacheKeys.Mix("JudgementSpreads", mix);
     }
 
     public static readonly TimeSpan JudgementSpreadsTtl = TimeSpan.FromHours(6);
@@ -61,7 +64,7 @@ internal static class LedgerCacheKeys
     /// </summary>
     public static string StageBreaks(MixEnum mix, Guid chartId)
     {
-        return $"StageBreaks__{mix}__{chartId}";
+        return CacheKeys.Mix("StageBreaks", mix, chartId);
     }
 
     public static readonly TimeSpan StageBreaksTtl = TimeSpan.FromMinutes(5);

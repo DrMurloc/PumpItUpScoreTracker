@@ -6,6 +6,7 @@ using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
@@ -320,9 +321,11 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
 
     // Internal so the purge repository evicts under the identical key rather than
     // reconstructing the format and drifting from it.
+    // A Viewer key: a player's own bests are exactly what the seasonal view swaps, so the season's
+    // segment lands here without this file knowing (CLAUDE.md "Cache keys").
     internal static string ScoreCache(Guid userId, MixEnum mix)
     {
-        return $"{nameof(EFPhoenixRecordsRepository)}_UserScores_{userId}_{mix}";
+        return CacheKeys.Viewer(nameof(EFPhoenixRecordsRepository), mix, userId);
     }
 
     public EFPhoenixRecordsRepository(IDbContextFactory<ChartAttemptDbContext> factory,
