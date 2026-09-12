@@ -15957,12 +15957,15 @@ span.ct-console-pick { cursor: default; }
 }
 
 /* The chip's own phone-width short form, which fits wherever the label is drawn at all. */
+/* The page's own ground, on the light metal the band is painted in. --mix-bg is the token the
+   theme emits; --mix-background is not one, and an undefined var() on an inherited property
+   falls back to the ink, which is near-white on every one of the five. */
 .pmb-arch-band b {
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 11px;
     letter-spacing: .08em;
-    color: var(--mix-background);
+    color: var(--mix-bg);
     white-space: nowrap;
 }
 
