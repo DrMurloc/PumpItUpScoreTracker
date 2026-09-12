@@ -1,4 +1,4 @@
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using ScoreTracker.ExplorationTests.Catalog;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -104,6 +104,10 @@ public sealed class HardmodeCensusProbeTests
                            JOIN scores.Song s ON s.Id = c.SongId
                            LEFT JOIN scores.ChartScoringLevel sl ON sl.ChartId = c.Id AND sl.MixId = cm.MixId
                            WHERE cm.MixId = @mix AND c.Type IN ('Single','Double') AND cm.Level >= 10
+                           -- The level floor is the SHIPPED rule now, not the probe's own
+                           -- convenience: the census drops anything PUMBILITY prices at zero,
+                           -- which on Phoenix 2 is exactly this. Both sides census one universe
+                           -- again, which is the only way this probe can disagree usefully.
                            """;
         var result = new Dictionary<Guid, ChartRow>();
         await using var reader = await Read(sql);

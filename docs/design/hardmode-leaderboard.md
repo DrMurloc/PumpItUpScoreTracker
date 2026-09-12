@@ -32,7 +32,19 @@ is not a tiebreak dimension of its own (it is constant inside a folder); it is o
 level reads as. Exact-points ties at the cut line are rare; this exists so the list is deterministic,
 not because the order carries much.
 
-**All levels are in** (D4). The census below level 20 is decided by a small group and says so on the
+**Every level PUMBILITY pays for is in** (D4, floored by D16). There is no level-20 floor and no
+level-17 one; there IS a level-10 one, because Phoenix 2's formula pays **zero** below 10 and a chart
+that cannot be worth anything is not an opportunity (owner, 2026-09-12). The census asks the mix's own
+scoring configuration rather than testing the number, so the rule stays true if a mix ever pays
+differently.
+
+Leaving them in was not a rounding error. Nobody can be credited with holding a chart worth zero, so
+every sub-10 folder read **100% unheld**, the cut rule opened all the way, and the board offered whole
+folders as the rarest charts in the game — for 0.00 a play. A player who had actually passed one
+still saw *No Score Yet*, because the pricing filters the same zero out. The measured figures below
+were taken on a level-10-floored universe, which is now what ships.
+
+The census below level 20 is decided by a small group and says so on the
 page — see §6.
 
 On the measured 2026-09-06 population the list comes out at **1,211 charts**, 955 of them below level 20.
@@ -104,8 +116,9 @@ The existing Phoenix 2 ladders, asked of the Hardmode pool instead of the record
 `[P.B]` gem rungs on Combined, `[S]`/`[D]` on the per-type pools, drawn by the Breakdown page's own
 `PumbilityTitleRails` with no new thresholds. About 30 of 301 accounts clear `[P.B] BRONZE` today, so
 nearly every rail reads *not started* — which is the honest picture of a board nobody has played yet, and
-the `pmb-ask` row beside it ("BRONZE asks 200.00 · your charts average 303.57 · charts held 11 / 50")
-says exactly what is missing.
+the `pmb-ask` row beside it ("BRONZE asks 200.00 · your charts average 303.57") says exactly what is
+missing. Only the ladder for the pool on screen is drawn (owner, 2026-09-12) — all three at once put a
+Combined threshold beside a Singles number.
 
 ## 6. The sub-20 disclaimer
 

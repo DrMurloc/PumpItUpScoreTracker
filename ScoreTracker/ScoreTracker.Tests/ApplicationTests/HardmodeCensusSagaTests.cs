@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -145,6 +145,46 @@ public sealed class HardmodeCensusSagaTests
 
         repository.Verify(r => r.Replace(It.IsAny<MixEnum>(), It.IsAny<IReadOnlyCollection<HardmodeChartRecord>>(),
             It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ChartsPumbilityPricesAtZeroAreNotCandidates()
+    {
+        // Phoenix 2 pays nothing below level 10, so nobody can be credited with holding one -
+        // which made every sub-10 folder read 100% unheld, opened the cut all the way, and put
+        // whole folders on the board as the rarest charts in the game, worth 0.00 a play.
+        // Sixty at 21 so the voter's pool is a real fifty; twelve at 8 that can never be worth
+        // anything to anyone.
+        var scoring = Folder(60, ChartType.Single, 21);
+        var free = Folder(12, ChartType.Single, 8);
+        var repository = new Mock<IHardmodeChartRepository>();
+        var saga = Build(scoring.Concat(free).ToArray(),
+            new[] { (Guid.NewGuid(), FullPool(scoring)) }, repository, new Mock<IBus>());
+
+        await saga.Consume(Context(new RebuildHardmodeChartsCommand(MixEnum.Phoenix2)));
+
+        repository.Verify(r => r.Replace(MixEnum.Phoenix2,
+            It.Is<IReadOnlyCollection<HardmodeChartRecord>>(rows =>
+                rows.Count > 0 && rows.All(x => x.Level >= 10)),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AFolderOfUnscorableChartsIsNotTakenWhole()
+    {
+        // The specific shape it produced: a folder nobody can hold is a folder nobody holds, and
+        // "take every unheld chart" then takes all of it.
+        var free = Folder(40, ChartType.Single, 3);
+        var real = Folder(60, ChartType.Single, 21);
+        var repository = new Mock<IHardmodeChartRepository>();
+        var saga = Build(free.Concat(real).ToArray(),
+            new[] { (Guid.NewGuid(), FullPool(real)) }, repository, new Mock<IBus>());
+
+        await saga.Consume(Context(new RebuildHardmodeChartsCommand(MixEnum.Phoenix2)));
+
+        repository.Verify(r => r.Replace(MixEnum.Phoenix2,
+            It.Is<IReadOnlyCollection<HardmodeChartRecord>>(rows => rows.Count == 15),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private static Chart[] Folder(int count, ChartType type, int level)

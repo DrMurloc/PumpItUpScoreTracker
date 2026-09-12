@@ -1,4 +1,4 @@
-using MassTransit;
+﻿using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.ChartIntelligence.Contracts;
@@ -55,8 +55,17 @@ internal sealed class HardmodeCensusSaga :
         var mix = context.Message.Mix;
         var cancellationToken = context.CancellationToken;
 
+        // A chart the mix's own PUMBILITY prices at zero is not an opportunity, so it is not a
+        // candidate (owner, 2026-09-12). On Phoenix 2 that is everything below level 10, and
+        // leaving them in was not a rounding error: nobody can be credited with holding one, so
+        // every sub-10 folder read 100% unheld, the cut rule opened all the way, and the page
+        // offered whole folders as the rarest thing in the game — at 0.00 a play. Asking the
+        // scoring configuration rather than writing "level >= 10" keeps the rule true if a mix
+        // ever prices a different floor.
+        var catalogScoring = ScoringConfiguration.PumbilityScoring(mix, false);
         var charts = (await _charts.GetCharts(mix, cancellationToken: cancellationToken))
             .Where(c => c.Type is ChartType.Single or ChartType.Double)
+            .Where(c => CanEverScore(catalogScoring, c))
             .ToDictionary(c => c.Id);
         if (charts.Count == 0)
         {
@@ -96,6 +105,9 @@ internal sealed class HardmodeCensusSaga :
             .ToArray();
 
         await _repository.Replace(mix, qualifying, _clock.Now, cancellationToken);
+        // Pools, not players: one account with a full singles AND doubles record contributes
+        // three (combined, singles, doubles), so this reads about 3x the account count the
+        // design doc quotes.
         _logger.LogInformation("Hardmode census for {Mix}: {Charts} charts from {Pools} pools", mix,
             qualifying.Length, pools);
         await _bus.Publish(new HardmodeChartsRebuiltEvent(mix, qualifying.Length, pools), cancellationToken);
@@ -112,6 +124,17 @@ internal sealed class HardmodeCensusSaga :
     ///     sweep walks the same population — the scores arrive per level, so the pools are
     ///     assembled here rather than read whole.
     /// </summary>
+    /// <summary>
+    ///     Whether a perfect game on this chart would be worth anything at all. The census and
+    ///     both pricing halves agree on what counts BECAUSE they all ask the same configuration:
+    ///     a chart worth zero is skipped by the pricing loops anyway, so one left in the catalog
+    ///     could only ever be a chart nobody holds.
+    /// </summary>
+    private static bool CanEverScore(ScoringConfiguration scoring, Chart chart)
+    {
+        return scoring.GetScore(chart, PhoenixScore.From(1_000_000), PhoenixPlate.PerfectGame, false) > 0;
+    }
+
     private async Task<int> CountSitePools(MixEnum mix, IReadOnlyDictionary<Guid, Chart> charts,
         IDictionary<Guid, double> weights, IDictionary<Guid, HashSet<string>> holders,
         CancellationToken cancellationToken)
