@@ -459,7 +459,9 @@ internal sealed class RecapSaga :
     {
         // Candidate sets tolerate staleness (top-50 chart-id sets drift slowly); the
         // subject's own set always recomputes so a fresh import reshapes their overlaps.
-        var key = CacheKeys.Mix(nameof(RecapSaga), mix, "Top50", type, userId);
+        // A Viewer key: each entry is one player's own top fifty. The recap reads all-time
+        // (docs/design/seasons.md D18, §8.3).
+        var key = CacheKeys.Viewer(nameof(RecapSaga), mix, "Top50", type, userId);
         if (!refresh && _cache.TryGetValue(key, out IReadOnlySet<Guid>? cached) && cached != null)
             return cached;
 
