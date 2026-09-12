@@ -30,6 +30,13 @@ public abstract class ComponentTestBase : TestContext
     /// </summary>
     protected Mock<IMediator> Mediator { get; } = new();
 
+    /// <summary>
+    ///     The shared UI-settings store, for the same reason: a suite whose constructor renders —
+    ///     anything calling <c>RenderInteractive()</c> — has frozen the provider before its first
+    ///     test body runs, so a setting can only be stubbed through a mock that is already in it.
+    /// </summary>
+    protected Mock<IUiSettingsAccessor> UiSettings { get; } = new();
+
     protected ComponentTestBase()
     {
         Services.AddSingleton(CurrentUser.Object);
@@ -43,9 +50,11 @@ public abstract class ComponentTestBase : TestContext
         Services.AddSingleton(Mediator.Object);
         Services.AddScoped<ChartScoringLevels>();
 
-        // The shared LeaderboardDialog reads the relevant-players setting; a loose stub keeps
-        // every consumer renderable (tests that assert on the setting register their own).
-        Services.AddSingleton(Mock.Of<IUiSettingsAccessor>());
+        // The shared LeaderboardDialog reads the relevant-players setting; an unconfigured mock
+        // answers every getter with its default and keeps every consumer renderable. A suite that
+        // registers its own before rendering still wins — the later registration is the one
+        // resolved — and a suite that cannot register stubs this one instead.
+        Services.AddSingleton(UiSettings.Object);
         // PeerScore reads the viewer's peer and color settings through this; the loose settings
         // stub above makes it answer the defaults (competitive alone, the judgement spectrum).
         Services.AddScoped<ScoreColorPreferences>();

@@ -14445,7 +14445,7 @@ span.ct-console-pick { cursor: default; }
     margin: 8px 0 0;
 }
 
-/* --- where the levels sit, as your peers' spread (D67) --- */
+/* --- where the levels sit, as the spread of everyone holding your title (D68) --- */
 .pmb-spread {
     position: relative;
     display: flex;
@@ -14453,47 +14453,17 @@ span.ct-console-pick { cursor: default; }
     gap: 8px;
 }
 
-.pmb-spread-tiles {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 10px;
-}
-
 .pmb-spread-tile {
     background: var(--mix-surface-muted);
     border-radius: 6px;
-    padding: 9px 10px 4px;
+    padding: 10px 10px 4px;
     min-width: 0;
 }
 
-.pmb-spread-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 2px 8px;
-}
-
-.pmb-spread-label {
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: 11px;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--mix-ink-muted);
-}
-
-.pmb-spread-peers {
-    font-size: 11.5px;
-    color: var(--mix-ink-muted);
-    font-variant-numeric: tabular-nums;
-}
-
 /* A gutter for the tick labels, then the columns. Every position inside a column is a percent of its
-   height, on one scale for every tile; the glyphs keep their own pixel sizes. */
+   height, on one scale for the whole chart; the glyphs keep their own pixel sizes. */
 .pmb-spread-plot {
     position: relative;
-    margin-top: 6px;
     padding-left: 22px;
 }
 
@@ -14534,6 +14504,20 @@ span.ct-console-pick { cursor: default; }
     display: flex;
 }
 
+/* One level: its columns side by side over one shared level label. A mixed pool draws two of them,
+   singles then doubles, and the label belongs to the pair rather than to either column. */
+.pmb-spread-group {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.pmb-spread-pair {
+    display: flex;
+    gap: 1px;
+}
+
 .pmb-spread-col {
     flex: 1 1 0;
     min-width: 0;
@@ -14541,6 +14525,15 @@ span.ct-console-pick { cursor: default; }
     flex-direction: column;
     outline: none;
     cursor: crosshair;
+}
+
+/* The card's own type colours, so a level's two columns are never read as one (D68). */
+.pmb-spread-col.is-s {
+    --spread-hue: var(--chart-singles);
+}
+
+.pmb-spread-col.is-d {
+    --spread-hue: var(--chart-doubles);
 }
 
 .pmb-spread-colplot {
@@ -14567,7 +14560,7 @@ span.ct-console-pick { cursor: default; }
     transform: translateX(-50%);
     min-width: 3px;
     max-width: 68px;
-    background: var(--mix-secondary);
+    background: var(--spread-hue, var(--mix-secondary));
     opacity: .3;
 }
 
@@ -14578,7 +14571,7 @@ span.ct-console-pick { cursor: default; }
 .pmb-spread-whisker {
     width: 1.25px;
     transform: translateX(-50%);
-    background: var(--mix-secondary);
+    background: var(--spread-hue, var(--mix-secondary));
     opacity: .75;
 }
 
@@ -14586,15 +14579,15 @@ span.ct-console-pick { cursor: default; }
 .pmb-spread-clip {
     width: 7px;
     height: 7px;
-    border-left: 1.5px solid var(--mix-secondary);
-    border-top: 1.5px solid var(--mix-secondary);
+    border-left: 1.5px solid var(--spread-hue, var(--mix-secondary));
+    border-top: 1.5px solid var(--spread-hue, var(--mix-secondary));
     transform: translateX(-50%) rotate(45deg);
 }
 
 .pmb-spread-box {
     width: 8px;
     transform: translateX(-50%);
-    background: var(--mix-secondary);
+    background: var(--spread-hue, var(--mix-secondary));
     border-radius: 2px;
     box-shadow: 0 0 0 2px var(--mix-surface-muted);
 }
@@ -14613,6 +14606,21 @@ span.ct-console-pick { cursor: default; }
     transform: translateX(-50%) rotate(45deg);
     background: var(--mix-accent);
     box-shadow: 0 0 0 2px var(--mix-surface-muted);
+}
+
+/* Two columns share the width one used to have, so the glyphs come in with them — a median tick
+   wider than its own column reads as the neighbour's. */
+.pmb-spread.is-two-tone .pmb-spread-box {
+    width: 6px;
+}
+
+.pmb-spread.is-two-tone .pmb-spread-median {
+    width: 11px;
+}
+
+.pmb-spread.is-two-tone .pmb-spread-you {
+    width: 7px;
+    height: 7px;
 }
 
 .pmb-spread-level {
@@ -14652,6 +14660,16 @@ span.ct-console-pick { cursor: default; }
     border-radius: 1px;
     background: var(--mix-secondary);
     opacity: .3;
+}
+
+.pmb-spread-key-shape.is-s {
+    background: var(--chart-singles);
+    opacity: .55;
+}
+
+.pmb-spread-key-shape.is-d {
+    background: var(--chart-doubles);
+    opacity: .55;
 }
 
 .pmb-spread-key-box {
@@ -15916,11 +15934,82 @@ span.ct-console-pick { cursor: default; }
     text-transform: uppercase;
 }
 
-/* Two bars in rows labelled You and Peers: the Phoenix 1 card's bar, sized by value here, each
-   segment reading what it is worth and how many charts it is. */
+/* --- who both comparisons are against: the players holding your title (D68) --- */
+.pmb-cohort {
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    padding-top: 11px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+}
+
+.pmb-cohort-pick {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 0;
+}
+
+.pmb-cohort-lbl {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.pmb-cohort-sel {
+    max-width: 220px;
+    padding: 4px 8px;
+    background: var(--mix-surface-muted);
+    color: var(--mix-ink);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 22%, transparent);
+    border-radius: 4px;
+    font: inherit;
+    font-size: 12.5px;
+}
+
+.pmb-cohort-clear {
+    padding: 4px 8px;
+    background: none;
+    color: var(--mix-ink-muted);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
+    border-radius: 4px;
+    font: inherit;
+    font-size: 11.5px;
+    cursor: pointer;
+}
+
+.pmb-cohort-clear:hover {
+    color: var(--mix-ink);
+    border-color: color-mix(in srgb, var(--mix-ink) 34%, transparent);
+}
+
+.pmb-cohort-count {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 2px 8px;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+.pmb-cohort-count strong {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: .06em;
+}
+
+/* Two bars in rows labelled You and the band: the Phoenix 1 card's bar, sized by value here, each
+   segment reading what it is worth and how many charts it is. The label column takes a title
+   rather than a word now, so it grows to one and wraps instead of running into the bar. */
 .pmb-splitrows {
     display: grid;
-    grid-template-columns: 44px 1fr;
+    grid-template-columns: minmax(44px, 96px) 1fr;
     gap: 6px 8px;
     align-items: center;
 }
@@ -15932,6 +16021,7 @@ span.ct-console-pick { cursor: default; }
     letter-spacing: .08em;
     text-transform: uppercase;
     color: var(--mix-ink-muted);
+    overflow-wrap: anywhere;
 }
 
 .pmb-splitrows .pmb-flip-seg {

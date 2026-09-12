@@ -10,95 +10,93 @@ using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
 namespace ScoreTracker.Tests.Components;
 
 /// <summary>
-///     Where the levels sit, as your peers' spread (docs/design/pumbility-overhaul.md D67): a tile per lit
-///     type, a column per level on one shared scale, the diamond at your count, and the tooltip each column
-///     carries.
+///     Where the levels sit, as the spread of everyone holding your title
+///     (docs/design/pumbility-overhaul.md D68): a column per level — two where the pool holds both types —
+///     on one shared scale, the diamond at your count, and the tooltip each column carries.
 /// </summary>
 public sealed class LevelSpreadChartTests : ComponentTestBase
 {
     [Fact]
-    public void ATileForEachTypeSinglesFirstWithWhoItCounts()
+    public void AMixedPoolDrawsTwoTonedColumnsUnderOneLevelLabel()
     {
-        var cut = Render(new Dictionary<ChartType, PeerLevelSpread>
-        {
-            [ChartType.Double] = Spread(12, 0, Column(22, 1, (0, 4), (3, 8))),
-            [ChartType.Single] = Spread(395, 340, Column(21, 2, (0, 95), (5, 300)))
-        });
+        var cut = Render(Spread(12, 0,
+            Column(21, ChartType.Single, 2, (0, 2), (4, 10)),
+            Column(21, ChartType.Double, 1, (0, 6), (2, 6))));
 
-        var tiles = cut.FindAll(".pmb-spread-tile");
-        Assert.Equal(2, tiles.Count);
-        Assert.Equal("Singles", tiles[0].QuerySelector(".pmb-spread-label")!.TextContent.Trim());
-        Assert.Equal("395 peers · 340 from the official board", tiles[0].QuerySelector(".pmb-spread-peers")!.TextContent.Trim());
-        Assert.Equal("Doubles", tiles[1].QuerySelector(".pmb-spread-label")!.TextContent.Trim());
-        // No board peers, no board note.
-        Assert.Equal("12 peers", tiles[1].QuerySelector(".pmb-spread-peers")!.TextContent.Trim());
+        var group = Assert.Single(cut.FindAll(".pmb-spread-group"));
+        Assert.Equal("21", group.QuerySelector(".pmb-spread-level")!.TextContent.Trim());
+        var columns = group.QuerySelectorAll(".pmb-spread-col");
+        Assert.Equal(2, columns.Length);
+        Assert.Contains("is-s", columns[0].ClassName);
+        Assert.Contains("is-d", columns[1].ClassName);
+        Assert.Contains("is-two-tone", cut.Find(".pmb-spread").ClassName);
+    }
+
+    [Fact]
+    public void AOneTypePoolDrawsOneColumnPerLevelInThatTypesTone()
+    {
+        var cut = Render(Spread(4, 0, Column(20, ChartType.Double, 0, (0, 4))));
+
+        Assert.Contains("is-d", Assert.Single(cut.FindAll(".pmb-spread-col")).ClassName);
+        Assert.DoesNotContain("is-two-tone", cut.Find(".pmb-spread").ClassName);
     }
 
     [Fact]
     public void AColumnPerLevelWithYourDiamondAtYourCount()
     {
-        var cut = Render(new Dictionary<ChartType, PeerLevelSpread>
-        {
-            [ChartType.Single] = Spread(4, 0, Column(20, 0, (0, 4)), Column(21, 2, (0, 1), (2, 1), (5, 1), (9, 1)))
-        });
+        var cut = Render(Spread(4, 0, Column(20, ChartType.Single, 0, (0, 4)),
+            Column(21, ChartType.Single, 2, (0, 1), (2, 1), (5, 1), (9, 1))));
 
-        var columns = cut.FindAll(".pmb-spread-col");
-        Assert.Equal(new[] { "20", "21" }, columns.Select(c => c.QuerySelector(".pmb-spread-level")!.TextContent.Trim()));
+        Assert.Equal(new[] { "20", "21" },
+            cut.FindAll(".pmb-spread-level").Select(c => c.TextContent.Trim()));
         // Nobody holds more than nine, so the scale is the shortest one: ten, eleven counts tall. Two charts
         // sit two and a half counts up it.
         Assert.Equal("10", cut.Find(".pmb-spread-plot").GetAttribute("data-top"));
+        var columns = cut.FindAll(".pmb-spread-col");
         Assert.Contains($"calc({2.5 / 11 * 100:0.###}% - 4.5px)",
             columns[1].QuerySelector(".pmb-spread-you")!.GetAttribute("style"));
-        // Every count a peer holds is a bar, zero included.
+        // Every count a holder holds is a bar, zero included.
         Assert.Equal(4, columns[1].QuerySelectorAll(".pmb-spread-bin").Length);
     }
 
     [Fact]
-    public void OneScaleServesEveryTileAndStopsAtTheNinetyNinthPercentile()
+    public void OneScaleServesEveryColumnAndStopsAtTheNinetyNinthPercentile()
     {
-        // Two hundred singles peers: one holds forty-nine 22s, the rest eight. The doubles tile's peers keep
-        // up to twelve. The scale is shared and rounds the 99th percentile up to five, so the forty-nine runs
-        // off the top — clipped, marked, and never drawn as a bar.
-        var cut = Render(new Dictionary<ChartType, PeerLevelSpread>
-        {
-            [ChartType.Single] = Spread(200, 0, Column(22, 3, (8, 199), (49, 1))),
-            [ChartType.Double] = Spread(20, 0, Column(23, 0, (12, 20)))
-        });
+        // Two hundred holders: one holds forty-nine 22s, the rest eight, and everyone keeps up to twelve 23s.
+        // The scale is shared and rounds the 99th percentile up to fifteen, so the forty-nine runs off the
+        // top — clipped, marked, and never drawn as a bar.
+        var cut = Render(Spread(200, 0, Column(22, ChartType.Single, 3, (8, 199), (49, 1)),
+            Column(23, ChartType.Single, 0, (12, 200))));
 
-        Assert.All(cut.FindAll(".pmb-spread-plot"), plot => Assert.Equal("15", plot.GetAttribute("data-top")));
-        var singles = cut.Find("[data-testid=level-spread-Single] .pmb-spread-col");
-        Assert.NotNull(singles.QuerySelector(".pmb-spread-clip"));
-        Assert.Null(singles.QuerySelector(".pmb-spread-bin[data-k='49']"));
-        Assert.Null(cut.Find("[data-testid=level-spread-Double] .pmb-spread-col").QuerySelector(".pmb-spread-clip"));
+        Assert.Equal("15", cut.Find(".pmb-spread-plot").GetAttribute("data-top"));
+        var columns = cut.FindAll(".pmb-spread-col");
+        Assert.NotNull(columns[0].QuerySelector(".pmb-spread-clip"));
+        Assert.Null(columns[0].QuerySelector(".pmb-spread-bin[data-k='49']"));
+        Assert.Null(columns[1].QuerySelector(".pmb-spread-clip"));
     }
 
     [Fact]
     public void EachColumnCarriesItsTooltipLines()
     {
-        var cut = Render(new Dictionary<ChartType, PeerLevelSpread>
-        {
-            [ChartType.Single] = Spread(4, 0, Column(21, 5, (0, 1), (2, 1), (5, 1), (9, 1)))
-        });
+        var cut = Render(Spread(4, 0,
+            Column(21, ChartType.Single, 5, (0, 1), (2, 1), (5, 1), (9, 1))));
 
         var body = cut.Find(".pmb-spread-col .pmb-spread-tipbody");
         Assert.True(body.HasAttribute("hidden"));
         var text = body.TextContent;
-        Assert.Contains("S21 · your peers", text);
+        Assert.Contains("S21", text);
         Assert.Contains("median · middle half 1.5–6", text);
         Assert.Contains("0–9", text);
         Assert.Contains("75%", text);
         Assert.Contains("You 5", text);
-        // Two of four peers hold fewer than five.
-        Assert.Contains("· more than 50% of your peers", text);
+        // Two of four holders hold fewer than five.
+        Assert.Contains("· more than 50% of them", text);
     }
 
     [Fact]
-    public void HoldingNoneReadsAlongsideThePeersWhoHoldNone()
+    public void HoldingNoneReadsAlongsideTheHoldersWhoHoldNone()
     {
-        var cut = Render(new Dictionary<ChartType, PeerLevelSpread>
-        {
-            [ChartType.Double] = Spread(4, 0, Column(24, 0, (0, 1), (1, 3)))
-        });
+        var cut = Render(Spread(4, 0, Column(24, ChartType.Double, 0, (0, 1), (1, 3))));
 
         Assert.Contains("· like the 25% who hold none", cut.Find(".pmb-spread-tipbody").TextContent);
     }
@@ -106,10 +104,8 @@ public sealed class LevelSpreadChartTests : ComponentTestBase
     [Fact]
     public void ThePointerLineTheScriptWritesHasItsWordsAndItsBinsInTheMarkup()
     {
-        var cut = Render(new Dictionary<ChartType, PeerLevelSpread>
-        {
-            [ChartType.Single] = Spread(4, 0, Column(21, 2, (0, 1), (2, 1), (5, 1), (9, 1)))
-        });
+        var cut = Render(Spread(4, 0,
+            Column(21, ChartType.Single, 2, (0, 1), (2, 1), (5, 1), (9, 1))));
 
         var root = cut.Find(".pmb-spread");
         Assert.Equal("1 chart", root.GetAttribute("data-chart-one"));
@@ -124,29 +120,53 @@ public sealed class LevelSpreadChartTests : ComponentTestBase
     [Fact]
     public void NothingToSpreadDrawsNothing()
     {
-        var cut = Render(new Dictionary<ChartType, PeerLevelSpread>
-        {
-            [ChartType.Single] = new(0, 0, Array.Empty<LevelSpreadColumn>())
-        });
+        var cut = Render(new PeerLevelSpread(0, 0, Array.Empty<LevelSpreadColumn>()));
 
         Assert.Empty(cut.FindAll(".pmb-spread"));
     }
 
-    private IRenderedComponent<LevelSpreadChart> Render(IReadOnlyDictionary<ChartType, PeerLevelSpread> spreads)
+    [Fact]
+    public void AColumnWhoseHoldersAllHoldMoreThanTheCapStillDrawsItsWhiskerAndCaret()
     {
-        return RenderComponent<LevelSpreadChart>(p => p.Add(x => x.Spreads, spreads));
+        // Twelve hundred counts of one set the scale; the six holders of thirty are too few to move it, and
+        // every one of them is off the top of it.
+        var cut = Render(Spread(600, 0, Column(21, ChartType.Single, 2, (1, 600)),
+            Column(22, ChartType.Single, 0, (1, 594), (30, 6))));
+
+        var tall = cut.FindAll(".pmb-spread-col")[1];
+        var whisker = tall.QuerySelector(".pmb-spread-whisker")!.GetAttribute("style")!;
+        // The top end clips to the cap, so a whisker running past it never draws a negative height.
+        Assert.DoesNotContain("-", whisker);
+        Assert.NotNull(tall.QuerySelector(".pmb-spread-clip"));
     }
 
-    private static PeerLevelSpread Spread(int peers, int board, params LevelSpreadColumn[] columns)
+    [Fact]
+    public void TheTopGridlineLandsOnTheCap()
     {
-        return new PeerLevelSpread(peers, board, columns);
+        // Your own thirty-three sets the reach. The axis steps by ten above thirty, so the cap rounds to
+        // forty rather than thirty-five, where the top gridline would have had nowhere to land.
+        var cut = Render(Spread(4, 0, Column(21, ChartType.Single, 33, (1, 2), (2, 2))));
+
+        Assert.Equal("40", cut.Find(".pmb-spread-plot").GetAttribute("data-top"));
+        Assert.Equal(new[] { "0", "10", "20", "30", "40" },
+            cut.FindAll(".pmb-spread-gridline b").Select(b => b.TextContent.Trim()).ToArray());
     }
 
-    /// <summary>A column from how many peers hold each count, with the viewer holding <paramref name="mine" />.</summary>
-    private static LevelSpreadColumn Column(int level, int mine, params (int Count, int Peers)[] bins)
+    private IRenderedComponent<LevelSpreadChart> Render(PeerLevelSpread spread)
     {
-        var counts = bins.SelectMany(b => Enumerable.Repeat(b.Count, b.Peers)).OrderBy(c => c).ToArray();
-        return new LevelSpreadColumn(level, ChartType.Single, bins.ToDictionary(b => b.Count, b => b.Peers),
+        return RenderComponent<LevelSpreadChart>(p => p.Add(x => x.Spread, spread));
+    }
+
+    private static PeerLevelSpread Spread(int holders, int board, params LevelSpreadColumn[] columns)
+    {
+        return new PeerLevelSpread(holders, board, columns);
+    }
+
+    /// <summary>A column from how many holders hold each count, with the viewer holding <paramref name="mine" />.</summary>
+    private static LevelSpreadColumn Column(int level, ChartType type, int mine, params (int Count, int Holders)[] bins)
+    {
+        var counts = bins.SelectMany(b => Enumerable.Repeat(b.Count, b.Holders)).OrderBy(c => c).ToArray();
+        return new LevelSpreadColumn(level, type, bins.ToDictionary(b => b.Count, b => b.Holders),
             counts[0], Quantile(counts, 0.25), Quantile(counts, 0.5), Quantile(counts, 0.75), counts[^1],
             counts.Count(c => c > 0), mine, counts.Count(c => c < mine), counts.Count(c => c == mine));
     }
@@ -157,39 +177,5 @@ public sealed class LevelSpreadChartTests : ComponentTestBase
         var below = (int)Math.Floor(position);
         var above = (int)Math.Ceiling(position);
         return sorted[below] + (sorted[above] - sorted[below]) * (position - below);
-    }
-
-    [Fact]
-    public void ATileWhosePeersAllHoldMoreThanTheCapStillDrawsItsWhiskerAndCaret()
-    {
-        // Twelve hundred singles counts set the shared scale; the six doubles peers are too few to move
-        // it and every one of them holds thirty, which is off the top of it.
-        var cut = Render(new Dictionary<ChartType, PeerLevelSpread>
-        {
-            [ChartType.Single] = Spread(600, 0, Column(21, 2, (1, 600)), Column(22, 0, (1, 600))),
-            [ChartType.Double] = Spread(6, 0, Column(22, 0, (30, 6)))
-        });
-
-        var doubles = cut.Find("[data-testid=level-spread-Double]");
-        var whisker = doubles.QuerySelector(".pmb-spread-whisker")!.GetAttribute("style")!;
-        // Both ends clip to the cap, so a whisker entirely above it has no height rather than a negative one.
-        Assert.DoesNotContain("-", whisker);
-        Assert.Contains("height:0%", whisker);
-        Assert.NotNull(doubles.QuerySelector(".pmb-spread-clip"));
-    }
-
-    [Fact]
-    public void TheTopGridlineLandsOnTheCap()
-    {
-        // Your own thirty-three sets the reach. The axis steps by ten above thirty, so the cap rounds to
-        // forty rather than thirty-five, where the top gridline would have had nowhere to land.
-        var cut = Render(new Dictionary<ChartType, PeerLevelSpread>
-        {
-            [ChartType.Single] = Spread(4, 0, Column(21, 33, (1, 2), (2, 2)))
-        });
-
-        Assert.Equal("40", cut.Find(".pmb-spread-plot").GetAttribute("data-top"));
-        Assert.Equal(new[] { "0", "10", "20", "30", "40" },
-            cut.FindAll(".pmb-spread-gridline b").Select(b => b.TextContent.Trim()).ToArray());
     }
 }

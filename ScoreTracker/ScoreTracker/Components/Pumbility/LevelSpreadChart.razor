@@ -5,88 +5,96 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 
-@* Where the levels sit, as your peers' spread (docs/design/pumbility-overhaul.md D67): one tile per lit
-   type, a column per level of how many charts of it each peer holds in their fifty, and a diamond where
-   your own fifty sits. It is HTML and CSS against one scale for every tile — positions in percent, glyphs
-   at their own pixel sizes — so it scales with its tile and needs no script to draw. level-spread.js only
-   reads the pointer: it opens a column's tooltip, marks the count under the pointer and writes that one
-   line, which the circuit could only do by hearing every mouse move. The rest of each tooltip renders
-   here, hidden, with the column it describes. *@
-@if (_tiles.Count > 0)
+@* Where the levels sit, as the spread of everyone holding your title (docs/design/pumbility-overhaul.md
+   D68): a column per level of how many charts of it each of them holds in their fifty, and a diamond
+   where your own fifty sits. Where the pool holds both types a level draws two columns, singles and
+   doubles, in the card's own type colours — never one column summing them. It is HTML and CSS against
+   one scale, positions in percent and glyphs at their own pixel sizes, so it scales with its tile and
+   needs no script to draw. level-spread.js only reads the pointer: it opens a column's tooltip, marks
+   the count under the pointer and writes that one line, which the circuit could only do by hearing
+   every mouse move. The rest of each tooltip renders here, hidden, with the column it describes. *@
+@if (_levels.Count > 0)
 {
-    <div class="pmb-spread" @ref="_root" data-testid="level-spread"
+    <div class="pmb-spread @(_twoTone ? "is-two-tone" : "")" @ref="_root" data-testid="level-spread"
          data-chart-one="@L["1 chart"]" data-charts="@L["{0} charts"]"
          data-peer-one="@L["· 1 peer ({0}%)"]" data-peers="@L["· {0} peers ({1}%)"]">
-        <div class="pmb-spread-tiles">
-            @foreach (var (type, spread) in _tiles)
-            {
-                var label = type == ChartType.Single ? L["Singles"].Value : L["Doubles"].Value;
-                <div class="pmb-spread-tile" data-testid="@($"level-spread-{type}")">
-                    <div class="pmb-spread-head">
-                        <span class="pmb-spread-label">@label</span>
-                        <span class="pmb-spread-peers">@PeersLine(spread)</span>
-                    </div>
-                    <div class="pmb-spread-plot" data-top="@_top" role="group"
-                         aria-label="@L["{0}: charts of each level your peers hold in their top 50", label]">
-                        <div class="pmb-spread-grid" aria-hidden="true">
-                            @foreach (var tick in Ticks)
-                            {
-                                <span class="pmb-spread-gridline @(tick == 0 ? "is-base" : "")" style="bottom:@Css(Position(tick))%"><b>@tick</b></span>
-                            }
-                        </div>
-                        <div class="pmb-spread-cols">
-                            @foreach (var column in spread.Columns)
-                            {
-                                var name = Prefix(type) + column.Level;
-                                var widest = Widest(column);
-                                <div class="pmb-spread-col" role="group" tabindex="0" data-level="@column.Level"
-                                     data-bins="@Bins(column)" data-peers="@spread.Peers"
-                                     aria-label="@L["{0}: your peers hold a median of {1}, middle half {2} to {3}; you hold {4}", name, Quantity(column.Median), Quantity(column.FirstQuartile), Quantity(column.ThirdQuartile), column.Mine]">
-                                    <div class="pmb-spread-colplot" aria-hidden="true">
-                                        @foreach (var (count, peers) in column.PeersByCount.Where(kv => kv.Key <= _top).OrderBy(kv => kv.Key))
-                                        {
-                                            <i class="pmb-spread-bin" data-k="@count"
-                                               style="bottom:@Css(Position(count - 0.5))%;height:calc(@Css(Unit)% - 1px);width:@Css(84.0 * peers / widest)%"></i>
-                                        }
-                                        @if (spread.Peers > 0)
-                                        {
-                                            <i class="pmb-spread-whisker"
-                                               style="bottom:@Css(Position(Clip(column.Fewest)))%;height:@Css(Position(Clip(column.Most)) - Position(Clip(column.Fewest)))%"></i>
-                                            @* A few peers past the top of the scale: the line runs off it and says so. *@
-                                            @if (column.Most > _top)
+        <div class="pmb-spread-tile">
+            <div class="pmb-spread-plot" data-top="@_top" role="group"
+                 aria-label="@L["Charts of each level the players holding your title keep in their top 50"]">
+                <div class="pmb-spread-grid" aria-hidden="true">
+                    @foreach (var tick in Ticks)
+                    {
+                        <span class="pmb-spread-gridline @(tick == 0 ? "is-base" : "")" style="bottom:@Css(Position(tick))%"><b>@tick</b></span>
+                    }
+                </div>
+                <div class="pmb-spread-cols">
+                    @foreach (var (level, columns) in _levels)
+                    {
+                        <div class="pmb-spread-group">
+                            <div class="pmb-spread-pair">
+                                @foreach (var column in columns)
+                                {
+                                    var name = Prefix(column.Type) + column.Level;
+                                    var widest = Widest(column);
+                                    <div class="pmb-spread-col @TypeClass(column.Type)" role="group" tabindex="0"
+                                         data-level="@column.Level" data-type="@column.Type"
+                                         data-bins="@Bins(column)" data-peers="@Spread.Peers"
+                                         aria-label="@L["{0}: a median of {1}, middle half {2} to {3}; you hold {4}", name, Quantity(column.Median), Quantity(column.FirstQuartile), Quantity(column.ThirdQuartile), column.Mine]">
+                                        <div class="pmb-spread-colplot" aria-hidden="true">
+                                            @foreach (var (count, peers) in column.PeersByCount.Where(kv => kv.Key <= _top).OrderBy(kv => kv.Key))
                                             {
-                                                <i class="pmb-spread-clip" style="bottom:calc(@Css(Position(_top))% - 4px)"></i>
+                                                <i class="pmb-spread-bin" data-k="@count"
+                                                   style="bottom:@Css(Position(count - 0.5))%;height:calc(@Css(Unit)% - 1px);width:@Css(84.0 * peers / widest)%"></i>
                                             }
-                                            <i class="pmb-spread-box"
-                                               style="bottom:calc(@Css(Position(Clip(column.FirstQuartile)))% - 1.5px);height:calc(@Css(Position(Clip(column.ThirdQuartile)) - Position(Clip(column.FirstQuartile)))% + 3px)"></i>
-                                            <i class="pmb-spread-median" style="bottom:calc(@Css(Position(Clip(column.Median)))% - 1.25px)"></i>
-                                        }
-                                        <i class="pmb-spread-you" style="bottom:calc(@Css(Position(column.Mine))% - 4.5px)"></i>
-                                    </div>
-                                    <span class="pmb-spread-level">@column.Level</span>
-                                    <div class="pmb-spread-tipbody" hidden>
-                                        <div class="pmb-spread-tiphead">@L["{0} · your peers", name]</div>
-                                        <div><strong>@Quantity(column.Median)</strong> <span>@L["median · middle half {0}–{1}", Quantity(column.FirstQuartile), Quantity(column.ThirdQuartile)]</span></div>
-                                        <div><strong>@($"{column.Fewest}–{column.Most}")</strong> <span>@L["fewest to most"]</span></div>
-                                        <div><strong>@($"{Percent(column.Holding, spread.Peers)}%")</strong> <span>@L["hold at least one"]</span></div>
-                                        <div class="pmb-spread-tipyou">
-                                            <strong>@L["Level Spread You {0}", column.Mine]</strong>
-                                            <span>@(column.Mine == 0
-                                                      ? L["· like the {0}% who hold none", Percent(column.PeersLevelWithMine, spread.Peers)]
-                                                      : L["· more than {0}% of your peers", Percent(column.PeersBelowMine, spread.Peers)])</span>
+                                            @if (Spread.Peers > 0)
+                                            {
+                                                <i class="pmb-spread-whisker"
+                                                   style="bottom:@Css(Position(Clip(column.Fewest)))%;height:@Css(Position(Clip(column.Most)) - Position(Clip(column.Fewest)))%"></i>
+                                                @* A few holders past the top of the scale: the line runs off it and says so. *@
+                                                @if (column.Most > _top)
+                                                {
+                                                    <i class="pmb-spread-clip" style="bottom:calc(@Css(Position(_top))% - 4px)"></i>
+                                                }
+                                                <i class="pmb-spread-box"
+                                                   style="bottom:calc(@Css(Position(Clip(column.FirstQuartile)))% - 1.5px);height:calc(@Css(Position(Clip(column.ThirdQuartile)) - Position(Clip(column.FirstQuartile)))% + 3px)"></i>
+                                                <i class="pmb-spread-median" style="bottom:calc(@Css(Position(Clip(column.Median)))% - 1.25px)"></i>
+                                            }
+                                            <i class="pmb-spread-you" style="bottom:calc(@Css(Position(column.Mine))% - 4.5px)"></i>
+                                        </div>
+                                        <div class="pmb-spread-tipbody" hidden>
+                                            @* The prefix already names the type, so a two-tone column needs nothing further. *@
+                                            <div class="pmb-spread-tiphead">@name</div>
+                                            <div><strong>@Quantity(column.Median)</strong> <span>@L["median · middle half {0}–{1}", Quantity(column.FirstQuartile), Quantity(column.ThirdQuartile)]</span></div>
+                                            <div><strong>@($"{column.Fewest}–{column.Most}")</strong> <span>@L["fewest to most"]</span></div>
+                                            <div><strong>@($"{Percent(column.Holding, Spread.Peers)}%")</strong> <span>@L["hold at least one"]</span></div>
+                                            <div class="pmb-spread-tipyou">
+                                                <strong>@L["Level Spread You {0}", column.Mine]</strong>
+                                                <span>@(column.Mine == 0
+                                                          ? L["· like the {0}% who hold none", Percent(column.PeersLevelWithMine, Spread.Peers)]
+                                                          : L["· more than {0}% of them", Percent(column.PeersBelowMine, Spread.Peers)])</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            }
+                                }
+                            </div>
+                            <span class="pmb-spread-level">@level</span>
                         </div>
-                    </div>
+                    }
                 </div>
-            }
+            </div>
         </div>
         <div class="pmb-spread-legend">
-            <span><i class="pmb-spread-key pmb-spread-key-shape"></i>@L["how many peers hold that many"]</span>
-            <span><i class="pmb-spread-key pmb-spread-key-box"></i>@L["the middle half of your peers"]</span>
-            <span><i class="pmb-spread-key pmb-spread-key-median"></i>@L["the median peer"]</span>
+            @if (_twoTone)
+            {
+                <span><i class="pmb-spread-key pmb-spread-key-shape is-s"></i>@L["Singles"]</span>
+                <span><i class="pmb-spread-key pmb-spread-key-shape is-d"></i>@L["Doubles"]</span>
+            }
+            else
+            {
+                <span><i class="pmb-spread-key pmb-spread-key-shape @TypeClass(_only)"></i>@L["how many hold that many"]</span>
+            }
+            <span><i class="pmb-spread-key pmb-spread-key-box"></i>@L["the middle half of them"]</span>
+            <span><i class="pmb-spread-key pmb-spread-key-median"></i>@L["the median holder"]</span>
             <span><i class="pmb-spread-key pmb-spread-key-you"></i>@L["Level Spread You"]</span>
         </div>
         <div class="pmb-spread-tip" aria-hidden="true"></div>
@@ -94,16 +102,20 @@
 }
 
 @code {
-    /// <summary>The spread per lit type in scope. A type whose spread has no columns draws no tile.</summary>
-    [Parameter] [EditorRequired] public IReadOnlyDictionary<ChartType, PeerLevelSpread> Spreads { get; set; } =
-        new Dictionary<ChartType, PeerLevelSpread>();
+    /// <summary>
+    ///     The cohort's spread for the pool in scope. A spread with no columns draws nothing at all.
+    /// </summary>
+    [Parameter] [EditorRequired] public PeerLevelSpread Spread { get; set; } = PeerLevelSpread.Empty;
 
     /// <summary>The shortest scale the chart draws, however little anyone holds.</summary>
     private const int MinimumTop = 10;
 
-    private IReadOnlyList<(ChartType Type, PeerLevelSpread Spread)> _tiles =
-        Array.Empty<(ChartType, PeerLevelSpread)>();
+    /// <summary>One entry per level, lowest first, carrying that level's column per type.</summary>
+    private IReadOnlyList<(int Level, IReadOnlyList<LevelSpreadColumn> Columns)> _levels =
+        Array.Empty<(int, IReadOnlyList<LevelSpreadColumn>)>();
 
+    private bool _twoTone;
+    private ChartType _only = ChartType.Single;
     private int _top = MinimumTop;
     private ElementReference _root;
     private IJSObjectReference? _module;
@@ -118,18 +130,20 @@
 
     protected override void OnParametersSet()
     {
-        _tiles = Spreads.Where(kv => kv.Value.Columns.Count > 0)
-            .OrderBy(kv => kv.Key)
-            .Select(kv => (kv.Key, kv.Value))
+        _levels = Spread.Columns.GroupBy(c => c.Level).OrderBy(g => g.Key)
+            .Select(g => (g.Key, (IReadOnlyList<LevelSpreadColumn>)g.OrderBy(c => c.Type).ToArray()))
             .ToArray();
-        _top = Top(_tiles.Select(t => t.Spread));
+        var types = Spread.Columns.Select(c => c.Type).Distinct().ToArray();
+        _twoTone = types.Length > 1;
+        _only = types.Length == 1 ? types[0] : ChartType.Single;
+        _top = Top(Spread);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // The root comes and goes with the tiles, so it is mounted whenever it is a new element; the
+        // The root comes and goes with the columns, so it is mounted whenever it is a new element; the
         // import map rewrites the specifier to the content-hashed asset.
-        if (_tiles.Count == 0 || _root.Id == null || _root.Id == _mountedId) return;
+        if (_levels.Count == 0 || _root.Id == null || _root.Id == _mountedId) return;
         _mountedId = _root.Id;
         _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/level-spread.js");
         await Unmount();
@@ -146,15 +160,15 @@
     }
 
     /// <summary>
-    ///     One scale for every tile, so a singles column reads against a doubles one. It stops at the 99th
-    ///     percentile of what peers hold, or at your own highest if that is higher, rounded up to the step the axis draws — a
-    ///     handful of one-folder pools would otherwise flatten every box.
+    ///     One scale for every column, so a singles column reads against the doubles one beside it. It
+    ///     stops at the 99th percentile of what the cohort holds, or at your own highest if that is
+    ///     higher, rounded up to the step the axis draws — a handful of one-folder pools would otherwise
+    ///     flatten every box.
     /// </summary>
-    private static int Top(IEnumerable<PeerLevelSpread> spreads)
+    private static int Top(PeerLevelSpread spread)
     {
         var counts = new List<int>();
         var yours = 0;
-        foreach (var spread in spreads)
         foreach (var column in spread.Columns)
         {
             foreach (var (count, peers) in column.PeersByCount)
@@ -199,15 +213,11 @@
     private int Widest(LevelSpreadColumn column) =>
         Math.Max(1, column.PeersByCount.Where(kv => kv.Key <= _top).Select(kv => kv.Value).DefaultIfEmpty(0).Max());
 
-    private string PeersLine(PeerLevelSpread spread)
-    {
-        var peers = spread.Peers == 1 ? L["1 peer"].Value : L["{0} peers", spread.Peers.ToString("N0")].Value;
-        return spread.BoardPeers > 0
-            ? $"{peers} · {L["{0} from the official board", spread.BoardPeers.ToString("N0")]}"
-            : peers;
-    }
-
     private static string Prefix(ChartType type) => type == ChartType.Single ? "S" : "D";
+
+    /// <summary>The tone a column draws in — the card's own type colours, never summed into one.</summary>
+    private static string TypeClass(ChartType type) => type == ChartType.Single ? "is-s" : "is-d";
+
 
     /// <summary>The bins the script reads the pointer line from: count:peers, comma separated.</summary>
     private static string Bins(LevelSpreadColumn column) =>
