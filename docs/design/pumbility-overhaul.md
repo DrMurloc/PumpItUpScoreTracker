@@ -400,9 +400,16 @@ has — the pool window on Phoenix 2, the competitive band on Phoenix 1 (D43). O
 12,773.08 against the peers' average 34 worth 12,085.84, and 14 doubles worth 4,958.59 against 16 worth
 5,508.22, over 64 peers. **Since D68 the bar beneath yours is the players who hold your title rather than your peers, and it still shows on the combined pool alone.**
 
+**Who both comparisons are against (D68).** One line above the two of them, since one cohort answers both: the
+band being drawn — your title, or the level inside it — how many players hold it, and how many of those the
+official board is the only record of, with the sweep date beside them (peers-abstraction D37). The selector sits
+on that line: your own band by default, an **×** on a [P.B] level that drops back to the gem around it, and every
+rung of the ladder in scope in a list, the merged one grouped by gem. The choice is remembered as
+`Pumbility__CompareBand`, and a band that is not a rung of the ladder in scope — a gem still remembered from the
+merged pool, a Phoenix 2 rung on Phoenix 1 — reads as no choice rather than as an empty cohort.
+
 **Where the levels sit (D41, moved here by D58, redrawn by D67, repopulated by D68).** The card's last section,
-one tile for the selected pool, headed by the band it draws — your title, or the level inside it — and how many
-players hold it, board players among them named as such. Each level is a column of **that cohort's spread** — how
+one tile for the selected pool, under the band line above. Each level is a column of **that cohort's spread** — how
 many charts of the level each of them holds in their fifty: a shape for how many hold each count, the middle half
 as a bar, the median as a tick, fewest to most as a thin line — and **a diamond for you**. Where the pool holds
 both types a level draws **two columns, singles and doubles**, in the card's own type colours; nothing is ever
@@ -1974,10 +1981,10 @@ board side is the mirror's sealed snapshot.
 | Layer | Change |
 |---|---|
 | **Domain** | `PumbilityBand` beside `Phoenix2PumbilityLevel`: a pool value and a `PumbilityPool` answer the ladder, the rung's band, its name, and — on the merged ladder alone — the gem the rung sits in. `MinimumForLevel = 25` is the count a level needs before it is read instead of its gem (§4.14). `PeerLevelSpread` gains a per-type dimension where the pool holds both types: one column set per chart type, never summed |
-| **Ports** | `IPlayerStatsReader.GetPlayersByPool(mix, pool, lo, hi)`, one method over `SkillRating` / `SinglesRating` / `DoublesRating`, beside the per-type window the peers keep; the title port answers Phoenix 1's cohort off `UserHighestTitle`; the board port answers the rows of a named PUMBILITY board inside a pool range, official rows only, carrying the snapshot's as-of |
+| **Ports** | `IPlayerStatsReader.GetPlayersInPoolBand(mix, pool, floor, ceiling)`, one method over `SkillRating` / `SinglesRating` / `DoublesRating`, beside the per-type window the peers keep; the title port answers Phoenix 1's cohort off `UserHighestTitle`, and the viewer's own title beside it; the board port answers the rows of a named PUMBILITY board inside a pool range, official rows only, carrying the snapshot's as-of, and only the players no account claims — a private link included, since a band is a census and anyone with an account is already in the ladder's own read (D61) |
 | **OfficialMirror** | The merged fifty a board player is banded on: both types' rows priced, merged, the top fifty taken, and checked against the combined board's own number at the 270 tolerance D60 already sets. The per-type rebuilds are untouched |
 | **PlayerProgress** | `GetPumbilityTitleCohortQuery(mix, pool, band?)` answers `PumbilityCohortRecord` — the band's name, how many hold it, how many of those the board is the only record of, the spread, the split for the combined pool, and the board's as-of. `PumbilityCohortCache` keys on mix, pool and band rather than on the viewer, because a cohort is the same for everyone reading it, and holds the aggregate rather than the pools |
-| **Web** | `PumbilityBreakdown` reads the cohort instead of the compare record; `LevelSpreadChart` takes one spread and draws a column per type per level in the card's own `--chart-singles` / `--chart-doubles`; a band selector sits on the section — your own band by default, the gem once a level is cleared, any rung selectable — remembered as `Pumbility__CompareBand` |
+| **Web** | `PumbilityBreakdown` reads the cohort instead of the compare record; `LevelSpreadChart` takes one spread and draws a column per type per level in the card's own `--chart-singles` / `--chart-doubles`; a band line above both comparison sections carries the band, its count and the selector — your own band by default, the gem once a level is cleared, any rung selectable — remembered as `Pumbility__CompareBand`, and a band that does not resolve on the ladder in scope is dropped rather than sent |
 | **Retired** | `GetPumbilityPoolCompareQuery`, `PumbilityPoolCompareRecord`, `AverageSplit` and its cache slice. Play's peers are untouched |
 | **Localization** | The band line and its count, the selector and its clear, and the section's caption |
 
