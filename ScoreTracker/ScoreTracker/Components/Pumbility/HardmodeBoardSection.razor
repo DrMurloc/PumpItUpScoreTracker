@@ -227,10 +227,12 @@
 
         // Playstyle is the recap's banding over the player's top-PUMBILITY average, and
         // SkillScore IS that average — the same read the community rankings make. The
-        // thresholds live in RecapPlayerTypeCalculator and are read, never restated here.
+        // thresholds live in RecapPlayerTypeCalculator and are read, never restated here, which
+        // is what let this board pick up Phoenix 2's own cuts by passing the mix.
         var types = (await Mediator.Send(new GetPlayersStatsQuery(ids, Mix)))
             .Where(s => s.ClearCount >= RecapPlayerTypeCalculator.MinimumScores && (int)s.SkillScore > 0)
-            .ToDictionary(s => s.UserId, s => RecapPlayerTypeCalculator.FromAverage((int)s.SkillScore));
+            .ToDictionary(s => s.UserId,
+                s => RecapPlayerTypeCalculator.FromAverage((int)s.SkillScore, Mix));
 
         return rows.Select(r => new Row(r.Place,
             users.TryGetValue(r.UserId, out var user) ? user.GameTag?.ToString() ?? user.Name.ToString() : "?",
