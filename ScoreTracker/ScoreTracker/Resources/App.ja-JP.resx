@@ -259,6 +259,9 @@
   <data name="1 broken run made it to the end" xml:space="preserve">
 	  <value>1回の失敗プレイが最後まで完走</value>
   </data>
+  <data name="1 chart" xml:space="preserve">
+    <value>1譜面</value>
+  </data>
   <data name="1 hour 45 minutes of real time." xml:space="preserve">
     <value>リアルタイムで1時間45分。</value>
   </data>
@@ -274,9 +277,6 @@
   <data name="1 paragon" xml:space="preserve">
     <value>パラゴン 1 件</value>
   </data>
-  <data name="1 peer" xml:space="preserve">
-    <value>同レベル1人</value>
-  </data>
   <data name="1 peer is from the official board, as of {0}." xml:space="preserve">
     <value>ピア 1 人は公式ランキングからです（{0}時点）。</value>
   </data>
@@ -285,6 +285,9 @@
   </data>
   <data name="1 Player" xml:space="preserve">
     <value>1人</value>
+  </data>
+  <data name="1 player holds it" xml:space="preserve">
+    <value>1人が保持しています</value>
   </data>
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>非公開アカウント 1 件はピアですが表示されません。</value>
@@ -767,6 +770,9 @@
   </data>
   <data name="All Folders" xml:space="preserve">
     <value>全フォルダー</value>
+  </data>
+  <data name="All Levels" xml:space="preserve">
+    <value>全レベル</value>
   </data>
   <data name="All mixes" xml:space="preserve">
     <value>全バージョン</value>
@@ -1986,6 +1992,9 @@
   <data name="Compare" xml:space="preserve">
     <value>比較</value>
   </data>
+  <data name="Compared against" xml:space="preserve">
+    <value>比較対象</value>
+  </data>
   <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
     <value>譜面{0}件を比較（{1}）— 基準を超えた譜面はありません。</value>
   </data>
@@ -3032,6 +3041,9 @@
   <data name="Fewer than 5 peers scored it" xml:space="preserve">
     <value>スコアを出したピアが 5 人未満</value>
   </data>
+  <data name="fewest to most" xml:space="preserve">
+    <value>最少～最多</value>
+  </data>
   <data name="Fiesta" xml:space="preserve">
     <value>Fiesta</value>
   </data>
@@ -3561,6 +3573,9 @@
   <data name="History" xml:space="preserve">
     <value>履歴</value>
   </data>
+  <data name="hold at least one" xml:space="preserve">
+    <value>1譜面以上持つ</value>
+  </data>
   <data name="Hold Footslides" xml:space="preserve">
     <value>ホールドスライド</value>
   </data>
@@ -3636,8 +3651,14 @@
   <data name="How many (1–10, default 3)" xml:space="preserve">
     <value>何枚（1–10、既定 3）</value>
   </data>
+  <data name="how many charts of each level they hold in their top 50, and where yours sit" xml:space="preserve">
+    <value>彼らがトップ50に持つ各レベルの譜面数と、あなたの位置</value>
+  </data>
   <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
     <value>プレイ人数別に、クリアしたCo-Op譜面の数。</value>
+  </data>
+  <data name="how many hold that many" xml:space="preserve">
+    <value>その数を持つ人数</value>
   </data>
   <data name="How many notes is a level?" xml:space="preserve">
     <value>レベルごとのノーツ数は？</value>
@@ -4289,6 +4310,12 @@
   <data name="Level required, by ranking tier" xml:space="preserve">
     <value>ランキング帯別の必要レベル</value>
   </data>
+  <data name="Level Spread You" xml:space="preserve">
+    <value>あなた</value>
+  </data>
+  <data name="Level Spread You {0}" xml:space="preserve">
+    <value>あなた {0}</value>
+  </data>
   <data name="Level Up" xml:space="preserve">
     <value>レベルアップ</value>
   </data>
@@ -4609,6 +4636,9 @@
   </data>
   <data name="median {0}" xml:space="preserve">
     <value>中央値 {0}</value>
+  </data>
+  <data name="median · middle half {0}–{1}" xml:space="preserve">
+    <value>中央値 · 中間の半分 {0}～{1}</value>
   </data>
   <data name="Medium" xml:space="preserve">
     <value>中</value>
@@ -6128,15 +6158,6 @@
   </data>
   <data name="peers:" xml:space="preserve">
     <value>同水準:</value>
-  </data>
-  <data name="Peers: the average top 50 of the {0} players near your singles or doubles pool" xml:space="preserve">
-    <value>ピア：あなたの Singles または Doubles プールに近い {0} 人のプレーヤーの平均トップ50</value>
-  </data>
-  <data name="Peers: the average top 50 of the {0} players within one competitive level of you" xml:space="preserve">
-    <value>ピア：あなたと競技レベル 1 以内の {0} 人のプレーヤーの平均トップ50</value>
-  </data>
-  <data name="Peers: {0}% of their pool weight at {1}" xml:space="preserve">
-    <value>ピア: プール比重の {0}% がレベル {1}</value>
   </data>
   <data name="Pending" xml:space="preserve">
     <value>未決定</value>
@@ -8945,6 +8966,12 @@
   <data name="The maker sees this on their tool page." xml:space="preserve">
     <value>作者は自分のツールページでこれを見ます。</value>
   </data>
+  <data name="the median holder" xml:space="preserve">
+    <value>中央値の人</value>
+  </data>
+  <data name="the middle half of them" xml:space="preserve">
+    <value>彼らの中間の半分</value>
+  </data>
   <data name="The middle lines multiply, so they add to less than the total." xml:space="preserve">
     <value>中央の行は掛け合わされるため、合計より小さくなります。</value>
   </data>
@@ -10635,9 +10662,6 @@
   <data name="you:" xml:space="preserve">
     <value>あなた:</value>
   </data>
-  <data name="You: {0} charts at {1}" xml:space="preserve">
-    <value>あなた: レベル {1} の譜面 {0}</value>
-  </data>
   <data name="You: {0} · similar players average {1}" xml:space="preserve">
     <value>あなた: {0} · 同レベルの平均: {1}</value>
   </data>
@@ -10724,9 +10748,6 @@
   </data>
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>確認リクエストにはこの値で応答してください。どこにも送られません — だからこそこの値で応答できることが証明になり、乗っ取られた DNS では通りません。保管されるのはハッシュだけなので、見つけられる場所に控えておいてください。</value>
-  </data>
-  <data name="your fifty against what your peers hold, by level" xml:space="preserve">
-    <value>あなたの50譜面とピアが持つものを、レベル別に</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>ファイルが10MBを超えています。サイズを小さくして再試行してください。</value>
@@ -10848,8 +10869,8 @@
   <data name="Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them." xml:space="preserve">
     <value>Pumbility・称号・フォルダランプ・プレイヤー統計はこれらから計算されるため、自動的にリセットされます。残すことはできません。</value>
   </data>
-  <data name="your real top 50 against your peers' average, by type" xml:space="preserve">
-    <value>あなたの実際のトップ50とピアの平均を、タイプ別に</value>
+  <data name="your real top 50 against theirs, by type" xml:space="preserve">
+    <value>あなたの実際のトップ50と彼らのものを、タイプ別に</value>
   </data>
   <data name="Your record book" xml:space="preserve">
     <value>あなたの記録帳</value>
@@ -11229,6 +11250,9 @@
   <data name="{0} from the official board*" xml:space="preserve">
     <value>公式ボードから{0}人*</value>
   </data>
+  <data name="{0} from the official board, as of {1}" xml:space="preserve">
+    <value>{0} 人は公式ランキングから（{1}時点）</value>
+  </data>
   <data name="{0} gap" xml:space="preserve">
     <value>{0} の休憩</value>
   </data>
@@ -11457,9 +11481,6 @@
   <data name="{0} pass in this folder" xml:space="preserve">
     <value>このフォルダ {0} 通過</value>
   </data>
-  <data name="{0} peers" xml:space="preserve">
-    <value>同レベル{0}人</value>
-  </data>
   <data name="{0} peers are from the official board, as of {1}." xml:space="preserve">
     <value>ピア {0} 人は公式ランキングからです（{1}時点）。</value>
   </data>
@@ -11483,6 +11504,9 @@
   </data>
   <data name="{0} players found" xml:space="preserve">
     <value>{0}人のプレイヤーが見つかりました</value>
+  </data>
+  <data name="{0} players hold it" xml:space="preserve">
+    <value>{0}人が保持しています</value>
   </data>
   <data name="{0} players left their mark on the chart boards." xml:space="preserve">
     <value>{0}人のプレイヤーが譜面ボードに記録を残しました。</value>
@@ -11679,8 +11703,17 @@
   <data name="{0}/s" xml:space="preserve">
     <value>{0}/秒</value>
   </data>
+  <data name="{0}: a median of {1}, middle half {2} to {3}; you hold {4}" xml:space="preserve">
+    <value>{0}: 中央値は{1}、中間の半分は{2}～{3}、あなたは{4}</value>
+  </data>
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}：{1}のSSS+は{2}の900,000相当</value>
+  </data>
+  <data name="{0}: charts of each level the players holding your title keep in their top 50" xml:space="preserve">
+    <value>{0}: あなたの称号を持つプレーヤーがトップ50に持つ各レベルの譜面数</value>
+  </data>
+  <data name="{0}: the average top 50 of the {1} of them holding a full one" xml:space="preserve">
+    <value>{0}：完全なトップ50を持つ {1} 人の平均トップ50</value>
   </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>{0}日前</value>
@@ -11723,6 +11756,18 @@
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>公式ランキングで ~#{0}</value>
+  </data>
+  <data name="· 1 peer ({0}%)" xml:space="preserve">
+    <value>· ピア1人（{0}%）</value>
+  </data>
+  <data name="· like the {0}% who hold none" xml:space="preserve">
+    <value>· 1つも持たない{0}%と同じ</value>
+  </data>
+  <data name="· more than {0}% of them" xml:space="preserve">
+    <value>· 彼らの{0}%より多い</value>
+  </data>
+  <data name="· {0} peers ({1}%)" xml:space="preserve">
+    <value>· ピア{0}人（{1}%）</value>
   </data>
   <data name="— optional" xml:space="preserve">
     <value>— 任意</value>

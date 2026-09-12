@@ -37,6 +37,9 @@ public static class PlayerProgressRegistrationExtensions
         // Singleton: the projection outlives the request that built it, which is the
         // entire point, and its eviction consumer has to see the same instance.
         services.AddSingleton<PumbilityProjectionCache>();
+        // Singleton for the same reason, and keyed on the band rather than the reader: a
+        // cohort is the same answer for everyone standing on it (D68).
+        services.AddSingleton<PumbilityCohortCache>();
         services.AddSingleton<IDbModelContribution, PlayerProgressModelContribution>();
         return services;
     }

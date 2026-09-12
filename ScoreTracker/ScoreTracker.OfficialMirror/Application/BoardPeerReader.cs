@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Memory;
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Domain;
@@ -59,13 +60,27 @@ internal sealed class BoardPeerReader
     ///     Doubles reads the combined board — a co-op chart has no pool of its own, and the
     ///     combined board is the only honest stand-in.
     /// </summary>
-    public static string BoardNameFor(ChartType chartType)
+    public static string BoardNameFor(PumbilityPool pool)
+    {
+        return pool switch
+        {
+            PumbilityPool.Singles => PumbilityBoards.Singles,
+            PumbilityPool.Doubles => PumbilityBoards.Doubles,
+            _ => PumbilityBoards.Combined
+        };
+    }
+
+    /// <summary>
+    ///     The ladder a chart type's peers stand on — its own pool, and the merged one for anything
+    ///     that has none of its own.
+    /// </summary>
+    private static PumbilityPool PoolOf(ChartType chartType)
     {
         return chartType switch
         {
-            ChartType.Single => PumbilityBoards.Singles,
-            ChartType.Double => PumbilityBoards.Doubles,
-            _ => PumbilityBoards.Combined
+            ChartType.Single => PumbilityPool.Singles,
+            ChartType.Double => PumbilityPool.Doubles,
+            _ => PumbilityPool.Total
         };
     }
 
@@ -87,7 +102,7 @@ internal sealed class BoardPeerReader
         // The window and the viewer are the only parts of this that are about who is asking.
         // Everyone in the band asks the same question of the same board and gets the same fold,
         // so the fold is done once and filtered per person.
-        var prepared = await PreparedPeers(mix, chartType, latest.Id, cancellationToken);
+        var prepared = await PreparedPeers(mix, PoolOf(chartType), latest.Id, cancellationToken);
         return new BoardPeerGroupReading(asOf, prepared
             // Never yourself (D31). The window is centred on your own pool and the board
             // publishes that same number for you, so your row is inside it essentially always —
@@ -101,11 +116,37 @@ internal sealed class BoardPeerReader
     }
 
     /// <summary>
+    ///     The board's own players standing on one band of a PUMBILITY ladder (D68): half-open, and
+    ///     read off the board that ladder ranks — the combined board for the merged one, the
+    ///     per-type boards for the others. A player counts only where the mirror can rebuild their
+    ///     whole fifty (D60), which on the merged ladder means both types rebuilt together against
+    ///     the combined number. Null when the mix has never swept that board.
+    /// </summary>
+    public async Task<BoardPeerGroupReading?> GetBoardBand(MixEnum mix, PumbilityPool pool, double floor,
+        double? ceiling, CancellationToken cancellationToken)
+    {
+        var latest = await _snapshots.GetLatestSealed(mix, cancellationToken);
+        if (latest?.CompletedAt == null) return null;
+
+        var prepared = await PreparedPeers(mix, pool, latest.Id, cancellationToken);
+        return new BoardPeerGroupReading(latest.CompletedAt.Value, prepared
+            // Only the players no account claims, private links included — a band is a census, and
+            // anyone with an account was already counted by the ladder's own read of the site.
+            // Answered here because this is the one place that knows the account behind a row it
+            // will not name (D61); it is also why the caller need not say who is asking.
+            .Where(p => p.Account == null)
+            // Half-open: a pool sitting exactly on the next rung's threshold holds that title.
+            .Where(p => p.Reading.Pool >= floor && (ceiling is not { } top || p.Reading.Pool < top))
+            .Select(p => p.Reading)
+            .ToArray());
+    }
+
+    /// <summary>
     ///     A folded person, with the account the mirror resolved kept beside the reading rather
     ///     than inside it. <see cref="Account" /> is what the mirror KNOWS; the reading names an
     ///     account only when it is public and may be named (D61). The difference is the whole
-    ///     reason a viewer can be excluded from their own board peers without their private link
-    ///     ever leaving this class.
+    ///     reason a viewer can be excluded from their own board peers, and a band can drop everyone
+    ///     an account claims, without a private link ever leaving this class.
     /// </summary>
     private sealed record PreparedPeer(BoardPeerReading Reading, Guid? Account);
 
@@ -120,13 +161,13 @@ internal sealed class BoardPeerReader
     ///         window is above it, even when a lesser row of theirs would have fit inside.
     ///     </para>
     /// </summary>
-    private async Task<IReadOnlyList<PreparedPeer>> PreparedPeers(MixEnum mix, ChartType chartType,
+    private async Task<IReadOnlyList<PreparedPeer>> PreparedPeers(MixEnum mix, PumbilityPool pool,
         int snapshotId, CancellationToken cancellationToken)
     {
-        var key = $"{nameof(BoardPeerReader)}__Prepared__{mix}__{chartType}__{snapshotId}";
+        var key = $"{nameof(BoardPeerReader)}__Prepared__{mix}__{pool}__{snapshotId}";
         if (_cache.TryGetValue(key, out IReadOnlyList<PreparedPeer>? cached) && cached != null) return cached;
 
-        var boardName = BoardNameFor(chartType);
+        var boardName = BoardNameFor(pool);
         var board = (await _snapshots.GetBoards(mix, cancellationToken))
             .FirstOrDefault(b => b.LeaderboardType == LeaderboardTypes.Rating && b.Name == boardName);
         // Phoenix publishes one PUMBILITY board and no per-type split, so asking it for Singles is a
@@ -142,7 +183,7 @@ internal sealed class BoardPeerReader
         // is looking (D60), so it is answered once for the whole board and shared. Per viewer it was
         // two and a half seconds of rebuild on every cold sweep, twice — once per chart type — for
         // an answer every viewer in the band would have computed identically.
-        var qualified = await QualifiedPlayers(mix, chartType, snapshotId, everyone, cancellationToken);
+        var qualified = await QualifiedPlayers(mix, pool, snapshotId, everyone, cancellationToken);
 
         var rows = everyone.Where(p => qualified.Contains(p.PlayerId)).ToArray();
         if (rows.Length == 0) return Empty(key);
@@ -194,28 +235,48 @@ internal sealed class BoardPeerReader
     ///     runs per BOARD ROW rather than per person: a person's rows are folded later, and a fold
     ///     can only add charts, so a row that qualifies alone still qualifies folded.
     /// </summary>
-    private async Task<IReadOnlySet<int>> QualifiedPlayers(MixEnum mix, ChartType chartType, int snapshotId,
+    private async Task<IReadOnlySet<int>> QualifiedPlayers(MixEnum mix, PumbilityPool pool, int snapshotId,
         IReadOnlyList<PlacementRow> everyone, CancellationToken cancellationToken)
     {
-        var key = $"{nameof(BoardPeerReader)}__Qualified__{mix}__{chartType}__{snapshotId}";
+        var key = $"{nameof(BoardPeerReader)}__Qualified__{mix}__{pool}__{snapshotId}";
         if (_cache.TryGetValue(key, out IReadOnlySet<int>? cached) && cached != null) return cached;
 
-        var history = (await _board.InLevelRange(mix, chartType,
-                everyone.Select(p => p.PlayerId).Distinct().ToArray(),
-                PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, cancellationToken))
+        var history = (await PricedRows(mix, pool, everyone.Select(p => p.PlayerId).Distinct().ToArray(),
+                cancellationToken))
             .GroupBy(r => r.PlayerId)
             .ToDictionary(g => g.Key, g => g.ToArray());
 
         var qualified = everyone
             .Where(row => history.TryGetValue(row.PlayerId, out var theirs)
                           && BoardPoolCheck.Confirms(
-                              BoardPoolCheck.Rebuild(chartType, theirs.Select(r => (r.Level, r.Score))),
+                              BoardPoolCheck.Rebuild(theirs.Select(r => (r.Type, r.Level, r.Score))),
                               (double)row.Score))
             .Select(row => row.PlayerId)
             .ToHashSet();
 
         _cache.Set(key, (IReadOnlySet<int>)qualified, QualifiedTtl);
         return qualified;
+    }
+
+    /// <summary>
+    ///     The rows a pool is rebuilt from: one type's for a typed ladder, and both types' for the
+    ///     merged one, whose fifty is drawn from either (D68).
+    /// </summary>
+    private async Task<IReadOnlyList<(int PlayerId, ChartType Type, int Level, int Score)>> PricedRows(MixEnum mix,
+        PumbilityPool pool, IReadOnlyCollection<int> playerIds, CancellationToken cancellationToken)
+    {
+        var types = pool switch
+        {
+            PumbilityPool.Singles => new[] { ChartType.Single },
+            PumbilityPool.Doubles => new[] { ChartType.Double },
+            _ => new[] { ChartType.Single, ChartType.Double }
+        };
+        var rows = new List<(int PlayerId, ChartType Type, int Level, int Score)>();
+        foreach (var type in types)
+            rows.AddRange((await _board.InLevelRange(mix, type, playerIds, PeerGroup.PumbilityPoolFloor,
+                    DifficultyLevel.Max, cancellationToken))
+                .Select(r => (r.PlayerId, type, r.Level, r.Score)));
+        return rows;
     }
 
     /// <summary>
@@ -317,10 +378,10 @@ internal sealed class BoardPeerReader
         IReadOnlyCollection<int> boardPlayerIds, CancellationToken cancellationToken)
     {
         var folds = new List<PreparedPeer>();
-        // Both per-type boards: the caller has no chart type to give, and a peer qualified on
+        // Both per-type ladders: the caller has no pool to give, and a peer qualified on
         // either is a peer whose rows this has to find.
-        foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
-            folds.AddRange(await PreparedPeers(mix, chartType, snapshotId, cancellationToken));
+        foreach (var pool in new[] { PumbilityPool.Singles, PumbilityPool.Doubles })
+            folds.AddRange(await PreparedPeers(mix, pool, snapshotId, cancellationToken));
 
         var siblings = new Dictionary<int, int[]>();
         foreach (var fold in folds.Where(f => f.Reading.BoardPlayerIds.Count > 1))

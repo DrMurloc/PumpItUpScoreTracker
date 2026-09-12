@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -21,6 +22,9 @@ internal static class NoBoard
         var reader = new Mock<IOfficialPlacementReader>();
         reader.Setup(r => r.GetBoardPeers(It.IsAny<MixEnum>(), It.IsAny<ChartType>(), It.IsAny<double>(),
                 It.IsAny<double>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BoardPeerGroupReading?)null);
+        reader.Setup(r => r.GetBoardBand(It.IsAny<MixEnum>(), It.IsAny<PumbilityPool>(), It.IsAny<double>(),
+                It.IsAny<double?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((BoardPeerGroupReading?)null);
         reader.Setup(r => r.GetBoardScores(It.IsAny<MixEnum>(), It.IsAny<ChartType>(),
                 It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<int>(), It.IsAny<int>(),

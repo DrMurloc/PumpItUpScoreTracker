@@ -110,7 +110,7 @@ describe is §3.10; the measurements behind them are §4.9.
 | D38 | **The jacket carries the gain and nothing else.** *"Switch out the X/Y peers for the green/blue outlined Projected PUMBILITY (if you're projected to have a gain)"*, then *"drop the X/Y peers number on the song jacket for both comfortable and compact."* The badge is the target list's own — mix-primary outline, `+18` — and the gain is the target list's own rule (D11/D29, carried wins, measured against the bar as it stands, D13), so the two pages can never disagree about a number. A chart that would not pay wears no corner at all; the hold count lives in the Comfortable body and the Compact tooltip. Compact's other bottom corner is the projected grade, as on the target list |
 | D39 | **The peers get a roster** — *"give them a dedicated table at the bottom"* — name, PUMBILITY level, PUMBILITY total (N2, it is a pool), **competitive levels too** (*"maybe competitive level too"*), which type they are a peer for under All, and how many of your fifty they also hold; sorted by total with your own row highlighted where you would sit. **Private accounts are counted as peers and not named**, with *"X private accounts not shown"* beneath |
 | D40 | **The chart leaderboard gets one Peers chip with a sub-row** — Competitive · PUMBILITY — *"for now"*; the sub-row appears only where both exist (Phoenix 2, the viewer's type lit), and the default when clicked cold is **Competitive** (*"do competitive for now"*). Hosts pass the sub-scope: a card on this page opens on PUMBILITY, a session score row on Competitive as before. Private peers stay on the board as Anonymous rows, exactly as Competitive Peers keeps them. This is the first surface presenting two of the [peer pools](peers-abstraction.md) as one control **Your own row is on the PUMBILITY board** (owner, 2026-09-01: *"we should make sure you, yourself, show in the pumbility peers leaderboard. it's weird not having yourself on there, even if you're not technically your peer"*): the peer read leaves the viewer out (D31), the board adds their World row back, and the standing line counts them |
-| D41 | ~~**The compare strip and the Yours-alone section ship, on the mock's evidence, as cuttable.**~~ **Ruled in field test round two: the In-common and Yours-alone tiles are cut** (*"not useful"*) and the strip is the **level bars alone**, sitting beside the list's lede on a wide screen and dropping below it once the viewport is square or taller. `PeerCompare` lost the three counts with them — a number nobody can act on is not worth computing. The Yours-alone *section* in the list survives. **Round nine, part two (D58): the level bars leave the Play lede for the Breakdown page's card** |
+| D41 | ~~**The compare strip and the Yours-alone section ship, on the mock's evidence, as cuttable.**~~ **Ruled in field test round two: the In-common and Yours-alone tiles are cut** (*"not useful"*) and the strip is the **level bars alone**, sitting beside the list's lede on a wide screen and dropping below it once the viewport is square or taller. `PeerCompare` lost the three counts with them — a number nobody can act on is not worth computing. The Yours-alone *section* in the list survives. **Round nine, part two (D58): the level bars leave the Play lede for the Breakdown page's card. Round twelve (D67): they become your peers' spread, with a diamond for you** |
 | D46 | **The Your top 50 list has its own tier vocabulary (field test round two).** Owner: *"Staple/Strong/etc. make no sense"* on your own fifty. Those bands are what a chart is worth to **you**, not how many players keep it, so they read as a magnitude: **Highest · Very High · High · Average · Low · Very Low · Lowest**. Average, Low and Very Low are the Score lens's own words, so the two ramps sound like one family; `PumbilityTierNames.PoolNameOf` is the second map beside `NameOf`. Since round nine those names band the Breakdown page's top-50 sections (D57, §3.11) |
 | D42 | **What is assumed until the field test says otherwise:** the front page lands on **Prevalence with the gains switch on** (confirmed in round six: *"Stay on Prevalence"*); the block title is ~~**"Your PUMBILITY peers"**~~ **"Your peers"** on both mixes since round six (D43) and does not change with the grouping; the gain-band sections are fixed point bands (+25 and up · +15 to +25 · +10 to +15 · +5 to +10 · +2 to +5 · under +2), the unit the bar and the ask are read in, rather than σ-banded |
 | D43 | **Phoenix 1 gets the page too, with the competitive band as its peers (round six).** Owner: *"has phoenix 1 not been getting the same exact treatment as 2? functionally it should be exactly the same for all the grouped by etc. right?"* `/Pumbility` renders the peers page on both mixes; `TargetList` is deleted, and what it ranked survives as the Projected gains lens (D38). A Phoenix 1 peer is the band the projection already draws from — players within one competitive level of you for the type (§4.7), the viewer out — which is also the cohort the leaderboard's Peers chip shows there, so the page, the chip and the gain agree about who "peers" are on both mixes. **No full-fifty gate on Phoenix 1**: the band is drawn from competitive level, which is real at any pool size, so a Phoenix 1 player is never dark (D28 stays Phoenix 2's) and a thin peer simply casts a shorter vote. The read widens from the targets' level band to the pool floor — level 10 is the formula's floor on both mixes, `BaseRating` is zero below it — roughly twice today's Phoenix 1 sweep, on the same 24-hour cache; a first visit already says it takes a moment. Stated, not hidden: Phoenix 1's gain is the discounted quantile of §4.1 and the card's "Peers' median" is the plain median of the same group, so the two can differ by a grade there — on Phoenix 2 they are one number (D26). The block is **Your peers** on both mixes and the lede names the cohort. **The roster is capped at fifty rows around you** with the counts above and below — a band is several hundred players, and the roster's question is "where do I sit", not "who is first" |
@@ -144,6 +144,20 @@ Round eleven, 2026-09-11 — the Rarity grouping. The page it describes is §3.1
 |---|---|
 | D66 | **Rarity — the peers' list read from the other end (round eleven, 2026-09-11).** Owner: *"A bizzaro mode for PUMBILITY page … takes folders that are realistically within your PUMBILITY range (based on how prevelant they are to peers, we want to trim off edge case folders), then ranks everything by how FEW people's top 50 pumbility they show up in"*; on the mock's three placements, *"lets do A"* — a third option in Grouped by, not its own tab and not a flip link on the title — and *"Rarity is a good name"*. **A level is in range when at least half of the peers who hold anything keep a chart of it** in their pool of the type (`PumbilityPeerPools.RarityReach`), and the list is **every chart of those levels**, the ones no peer keeps included, ordered by the share of the peers who keep it — fewest first, then lowest in their pools, then fewest who played it. The sections are the rarity bands read as *the rarity of a thing is the share of people who lack it* (UX-GUIDELINES §6), `ThemeScales.BandFor(1 − share)`, each named for the share it covers — *Kept by 1% or fewer · 1–10% · 10–25% · 25–50% · 50–75% · over 75%* — from the floors the bands themselves cut on — and ahead of them, always a section of its own, the charts nobody keeps, *Not in anyone's PUMBILITY*, the PUMBILITY lens's own name for them (owner, on the PR: *"0% should ALWAYS be a separate category from <1%"*); 25% and up start folded, under a setting of their own. A card says *Kept by 2 of 395 · played by 20*, and a chart no peer keeps that fewer than five of them played says *played by fewer than 5*: the peers' pool data does not hold a chart nobody keeps until five have scored it, and this grouping leaves that alone. No switch shows under it — *Only projected PUMBILITY gains* would empty it, because almost nothing a peer group skips would pay (§4.13). The gain corner, the projected grade, Energy, the borders, the To-Do ring and Download are Prevalence's; the Table carries *Kept · Played* where Prevalence has *Peers · Better Than*. Like the other groupings it is a re-sort (D56): the levels and the unkept charts ride every peers read. The lede says what the list is made of — *these are likely to be the hardest charts to score in your level range* (owner, on the PR), measured in §4.13. Both mixes |
 
+Round twelve, 2026-09-11 — where the levels sit, as your peers' spread. The page it describes is §3.6; the
+scope §6.16.
+
+| # | Ruling |
+|---|---|
+| D67 | **Where the levels sit shows your peers' spread, and you on it (round twelve, 2026-09-11).** Owner: *"how hard would it be to replace the level distribution graphs we have on the pumbility page with those graphs and an indicator of where you are on the graph?"* → *"dont worry about 'all charts', and yeah use peers, not title level"* → on the mock, *"I love it."* D41's tiles drew your charts per level beside one number per level — the peers' prevalence share — which could say where the peers lean but not how many of them sit where you do. Each lit type's tile now draws, for every level, **how many charts of it each peer holds in their fifty**: a shape for how many peers hold each count, a bar for the middle half, a tick for the median, a thin line from fewest to most, and **a diamond for you** in the accent, D41's own you-colour. **One scale serves both tiles**, so a singles column reads against a doubles one, and it stops at the 99th percentile of what peers hold (or at your own highest, if that is higher): a handful of one-folder pools reach 49 and would otherwise flatten every box, so a line that runs past the top ends in a caret and the tooltip keeps the true range. **A level earns a column** when at least one peer in fifty holds a chart there, or you do. Hovering or tapping a column reads it: the count under the pointer and how many peers hold exactly that many, the median and middle half, fewest to most, the share holding at least one, and where you stand. **The peers are the page's own** (D53, D55), board players included (D59, D60), since the spread is read from the same pools — and **there is no merged-fifty tile**: a board peer has no merged pool to spread (D58's split is accounts-only), and a title rung is not a peer group (D55). Supersedes D41's drawing; the prevalence share it read retires with it. **The chart says hold, never keep** (owner, on the PR: *"the terminology 'keep that many' doesn't feel quite right … can we switch that to 'hold' that many"*) — the word the site already says for a chart in somebody's fifty (*How many of your PUMBILITY peers hold it in their top 50*). Rarity's *Kept by* bands (D66) keep their own. **Superseded in population by D68**: the drawing stands, but the fifties it counts are the players who hold your title, not your projection peers |
+
+
+Round thirteen, 2026-09-12 — the Breakdown card's comparisons become your title's. The page it describes is
+§3.6; the measurements are §4.14, the scope §6.17.
+
+| # | Ruling |
+|---|---|
+| D68 | **You are compared against the players who hold your title, not against your projection peers (round thirteen, 2026-09-12).** Owner: *"when im looking at comparing my combined pumbility pool, I dont care about comparing myself to peers that we use for score projection. I care about comparing myself to people on my level. So I think maybe we should actually do it by 'players with X title' (and title level for combined), NOT peers"*, and *"If we had a way to switch which title/level you viewed comparisons for that'd be ideal too"*. Peers are drawn to **project a score** — a window on the pool of the type, half as far up as down (D53) — and this card projects nothing; it describes what you hold. The population that answers *what does somebody at my level hold* is the title. **The cohort per pool:** the combined pool reads the **[P.B] gem**, refined to the **gem + level** when that level holds **25 or more** (*"load the players with the title, if theres enough within a specific level you just stay on the level, otherwise you flip the level off"* → *"25 it is"*, measured in §4.14), clearable back to the gem and switchable to any rung — both by picking that line in the selector, there being no second control for it (owner, on the PR); a singles or doubles pool reads its **[S] / [D] rung**, which has no coarser grouping to fall back to (*"Each level there is the cohort, and theres just no subcategories within them"*). **Phoenix 1 reads the difficulty title** (*"Phoenix 1 should just be by difficulty title. Cut and dry."*), straight off the highest title already stored; no board players there, since a board row is a PUMBILITY number and a difficulty title is rating earned on a level. **Board players count on Phoenix 2**, banded by their row on the matching PUMBILITY board. **Singles and doubles are never summed** (*"no mixing singles and doubles. On combined they should be separate. Two tone"*): where the pool holds both types they draw as two tiles side by side, one per type, in the card's own type colours — never striped into one plot, which reads as a single series banded rather than as two answers (owner, on the PR: *"can we put singles and doubles into two seperate side by side graphs like they were before? it's disruptive visually having them interlaced together in one"*). **The split bar stays on the combined pool alone** (*"That only shows on combined"*), now against the cohort's average rather than the peers'. Supersedes the population in D67 and the peers' average in D58; the drawings themselves stand. It also settles D55 for this card, which stops being a peers surface at all |
 ## 3. The section
 
 ### 3.1 The three pages
@@ -384,13 +398,34 @@ Phoenix 2, the one pool on Phoenix 1 — since a singles or doubles pool is one 
 bar stands alone while no type has peers, and the line under the bars names the peers the mix
 has — the pool window on Phoenix 2, the competitive band on Phoenix 1 (D43). On the owner's account (2026-09-05): 36 singles worth
 12,773.08 against the peers' average 34 worth 12,085.84, and 14 doubles worth 4,958.59 against 16 worth
-5,508.22, over 64 peers.
+5,508.22, over 64 peers. **Since D68 the bar beneath yours is the players who hold your title rather than your peers, and it still shows on the combined pool alone.**
 
-**Where the levels sit (D41, moved here by D58).** The Play lede's tiles, unchanged in what they draw —
-your fifty per level against the peers' prevalence per level — as the card's last section, one tile per
-lit type in the selected pool, labelled by type. They come with the split, in one query off the cached
-sweep (§6.12), so Play reads nothing new and this page reads one thing more, after the frame has warmed
-the sweep.
+**Who both comparisons are against (D68).** One line above the two of them, since one cohort answers both: the
+band being drawn — your title, or the level inside it — how many players hold it, and how many of those the
+official board is the only record of, with the sweep date beside them (peers-abstraction D37). The selector sits
+on that line, and it is the only control there: every rung of the ladder in scope in a list, the merged one grouped
+by gem. It **starts on the band that was read**, so a viewer who has chosen nothing is already on their own — there
+is no separate *mine* entry, because picking your own band back is picking it, and no clear-the-level button either,
+since clearing to the gem is one of the lines in the list and a second way to do it only asks which one is which
+(owner, on the PR). Inside a gem's group the heading already says which gem it is, so the lines read **All
+Levels**, **Level 1**, **Level 2** rather than spelling the gem out six times — **except the selected one, which
+spells its band out**, a closed selector showing that line and nothing else. The choice is remembered as
+`Pumbility__CompareBand`, and a band that is not a rung of the ladder in scope — a gem still remembered from the
+merged pool, a Phoenix 2 rung on Phoenix 1 — reads as no choice rather than as an empty cohort.
+
+**Where the levels sit (D41, moved here by D58, redrawn by D67, repopulated by D68).** The card's last section,
+under the band line above. Each level is a column of **that cohort's spread** — how
+many charts of the level each of them holds in their fifty: a shape for how many hold each count, the middle half
+as a bar, the median as a tick, fewest to most as a thin line — and **a diamond for you**. Where the pool holds
+both types they draw as **two tiles side by side**, singles then doubles, each in the card's own type colour;
+nothing is ever summed across them, and they are never striped into one plot, which reads as a single series
+banded rather than as two answers (owner, on the PR). Both tiles share one scale, capped at the 99th percentile of what the cohort holds or at your own
+highest, so a few one-folder pools cannot flatten the boxes; a line that runs past the top ends in a caret. A level
+gets a column when one holder in fifty has a chart there, or you do. Each column's tooltip names the count under
+the pointer, the median and middle half, fewest to most, the share holding at least one, and where you stand; the
+line under the pointer is the one thing a small script writes (`wwwroot/js/level-spread.js`), since reading the
+pointer through the circuit would send every mouse move to the server. The cohort is read once per band rather
+than once per viewer (§6.17), so every DIAMOND player reads the same answer.
 
 ### 3.7 Your PUMBILITY titles
 
@@ -1244,6 +1279,61 @@ not enough to justify a second rule, and the plain count is what was asked for.
 
 ⚠ Snapshot figures of a live account and a weekly mirror; re-run the probe rather than quoting them.
 
+### 4.14 Round thirteen — how many players hold a title (2026-09-12)
+
+Counted on the prod-synced local database against snapshot 19 (sealed 2026-09-06). A board row matched to a site
+account is dropped so nobody is counted twice (D61).
+
+**Phoenix 2, the merged [P.B] ladder.** A gem is always a real cohort; a level only above the board's floor:
+
+| Gem | Site | Board | Cohort |
+|---|---|---|---|
+| BRONZE | 23 | 0 | 23 |
+| SILVER | 30 | 0 | 30 |
+| GOLD | 38 | 0 | 38 |
+| PLATINUM | 59 | 0 | 59 |
+| DIAMOND | 95 | 435 | 530 |
+| RED BERYL | 46 | 439 | 485 |
+| ALEXANDRITE | 6 | 33 | 39 |
+| ABYSS ABSOLUTE | 0 | 2 | 2 |
+
+Levels run from 1 to 225 — DIA LV.4 holds 225 and RB LV.1 holds 187, while GOLD LV.3 holds 7 and PLAT LV.1 holds
+17. **Every official board publishes exactly 1,000 rows**, so the combined board bottoms out at 17,519.49, and 193
+of the 297 ladder-eligible accounts sit below it with no board player in their band at all.
+
+**Where 25 comes from.** Over those 297 accounts, reading the level when its cohort clears the number:
+
+| Enough | Stays on its level | Flips to the gem | Smallest cohort anyone reads | Average |
+|---|---|---|---|---|
+| 20 | 125 | 172 | 23 | 97 |
+| 25 | 125 | 172 | 23 | 97 |
+| 30 | 98 | 199 | 23 | 143 |
+| 40 | 90 | 207 | 23 | 155 |
+| 50 | 90 | 207 | 23 | 155 |
+| 75 | 85 | 212 | 23 | 162 |
+| 100 | 55 | 242 | 23 | 205 |
+
+20 and 25 buy the same 125 readers the finer view and 30 costs 27 of them, so 25 is the top of that plateau. And
+whatever the number, nobody ever reads a cohort under 23: flipping off lands on the gem, and BRONZE — the smallest
+— holds 23.
+
+**The typed ladders have no gem to fall back to**, and they are thin for most of the site:
+
+| Ladder | Players | Cohort under 10 | 10–24 | 25–49 | 50 or more |
+|---|---|---|---|---|---|
+| Singles | 291 | 32 | 163 | 15 | 81 |
+| Doubles | 232 | 76 | 72 | 7 | 77 |
+
+Singles is fat from [S] ADV LV.10 to [S] EXP LV.5 (67 to 218 a rung) and thin either side of it; doubles from
+[D] ADV LV.6 to [D] EXP LV.3 (48 to 171). That is the population rather than a banding artefact — the whole
+Phoenix 2 site is 381 accounts — so the count rides the tile and a rung of six reads as a rung of six.
+
+**Phoenix 1 needs none of this arithmetic.** Its cohort is the highest difficulty title already stored per player:
+1,412 carry one, and **1,339 of them hold a title that 25 or more players share**. Only the roof is thin — Expert
+Lv. 7 has 19, Lv. 8 has 11, Lv. 9 has 5, and Lv. 10 and The Master have one each. Board players cannot join there:
+a Phoenix 1 board row is a PUMBILITY number, and a difficulty title is rating earned on one level, which no total
+can be banded into.
+
 ## 5. Phoenix 2 carryover — the Phoenix 1 page
 
 Its own route since round two (`/Pumbility/Phoenix1`, D14), and only on the Phoenix 2 view; Phoenix 1
@@ -1864,6 +1954,57 @@ against `BandFor`. `ExplorationTests`: the probe behind §4.13.
 (2) the probe; (3) the Domain rule; (4) the record and the handler; (5) the grouping on the page;
 (6) nine locales.
 
+### 6.16 Round twelve — where the levels sit, as your peers' spread
+
+**No new table, migration, job, read or cache.** The pools the spread is read from are already in the
+cached sweep; one pure Domain function turns them into columns.
+
+| Layer | Change |
+|---|---|
+| **Domain** | `PeerLevelSpread` (pure, `Domain/Services`, beside `PumbilityPoolSplit`): `Of(PeerPoolSummary, levels, mine)` counts every peer's fifty per level and answers the peers, the board peers and one `LevelSpreadColumn` per level, from the lowest to the highest that one peer in fifty holds or you do — how many peers hold each count, fewest, the quartiles and the median, most, how many hold at least one, your count, and how many peers hold fewer than you and exactly as many |
+| **PlayerProgress** | `PumbilityPoolCompareRecord.Levels` becomes `IReadOnlyDictionary<ChartType, PeerLevelSpread>`; the compare handler in `PumbilityProjectionSaga` builds it with `PeerLevelSpread.Of`, from each lit type's `PeerPoolSummary` and the viewer's own pool of the type. `PeerCompare` — your charts per level beside the prevalence share — retires whole, `CompareWith` with it: your counts ride the spread's columns, and keeping both would be two fields for one fact |
+| **Web** | `LevelSpreadChart` (`Components/Pumbility`) replaces `PeerCompareStrip`, which is deleted with every `.pmb-compare*` and `.pmb-level*` rule and the `.pmb-peers-head` row it last sat beside the Play lede in (nothing else used them). The chart is HTML and CSS — columns, shapes, bars and the diamond placed in percent, the glyphs at their own pixel sizes, tokens only — so it scales with its tile and needs no script to draw. `wwwroot/js/level-spread.js`, imported the way `step-chart.js` is, reads the pointer: it opens the column's tooltip, marks the count under the pointer and writes that one line; the rest of the tooltip renders with the chart. `PumbilityBreakdown` swaps the strip for the chart and takes the new caption |
+| **Localization** | New: the caption, the tile's peers line, the legend, the tooltip's lines and each column's label. Retired: the strip's two tooltips and its caption |
+
+**Tests.** `DomainTests/PeerLevelSpreadTests` (the counts per peer, the column rule, the quartiles, where you
+stand, a peer holding none, nobody but you). `PumbilityProjectionSagaPeersTests`: the compare query answers a
+spread per lit type off one sweep, with the viewer on it — the board peers are counted in the Domain tests,
+the saga's fixture having none. `Tests.Components`: `LevelSpreadChartTests` (a tile
+per type in order, the peers line, a column per level, the diamond at your count, the shared cap and its caret,
+the tooltip's lines) and `PumbilityComponentTests` (the card draws the chart). `Tests.Integration`: none — the
+reads are existing ones.
+
+**Build order** — docs first, i18n last, pushed per commit: (1) this section, D67, §3.6, §7, the page map and UX
+rule 3; (2) the probe that fed the mock; (3) Domain; (4) PlayerProgress, the spread beside the share; (5) Web;
+(6) the share and `PeerCompare` retire; (7) nine locales.
+
+### 6.17 Round thirteen — the comparisons are your title's
+
+**No new table, migration, job or post-deploy step.** Every input is already stored or already swept: the ladders
+are Domain tables, the pool sums sit on `PlayerStats`, Phoenix 1's titles are rows in `UserHighestTitle`, and the
+board side is the mirror's sealed snapshot.
+
+| Layer | Change |
+|---|---|
+| **Domain** | `PumbilityBand` beside `Phoenix2PumbilityLevel`: a pool value and a `PumbilityPool` answer the ladder, the rung's band, its name, and — on the merged ladder alone — the gem the rung sits in. `MinimumForLevel = 25` is the count a level needs before it is read instead of its gem (§4.14). `PeerLevelSpread` gains a per-type dimension where the pool holds both types: one column set per chart type, never summed |
+| **Ports** | `IPlayerStatsReader.GetPlayersInPoolBand(mix, pool, floor, ceiling)`, one method over `SkillRating` / `SinglesRating` / `DoublesRating`, beside the per-type window the peers keep; the title port answers Phoenix 1's cohort off `UserHighestTitle`, and the viewer's own title beside it; the board port answers the rows of a named PUMBILITY board inside a pool range, official rows only, carrying the snapshot's as-of, and only the players no account claims — a private link included, since a band is a census and anyone with an account is already in the ladder's own read (D61) |
+| **OfficialMirror** | The merged fifty a board player is banded on: both types' rows priced, merged, the top fifty taken, and checked against the combined board's own number at the 270 tolerance D60 already sets. The per-type rebuilds are untouched |
+| **PlayerProgress** | `GetPumbilityTitleCohortQuery(mix, pool, band?)` answers `PumbilityCohortRecord` — the band's name, how many hold it, how many of those the board is the only record of, the spread, the split for the combined pool, and the board's as-of. `PumbilityCohortCache` keys on mix, pool and band rather than on the viewer, because a cohort is the same for everyone reading it, and holds the aggregate rather than the pools |
+| **Web** | `PumbilityBreakdown` reads the cohort instead of the compare record; `LevelSpreadChart` takes one spread and draws a tile per chart type, side by side on one scale, in the card's own `--chart-singles` / `--chart-doubles`; a band line above both comparison sections carries the band, its count and the selector — starting on the band that was read rather than on a "mine" entry and with no clear button beside it, any rung selectable, a gem's levels reading as All Levels / Level 1 under the gem's own heading and the selected line spelling its band out — remembered as `Pumbility__CompareBand`, and a band that does not resolve on the ladder in scope is dropped rather than sent |
+| **Retired** | `GetPumbilityPoolCompareQuery`, `PumbilityPoolCompareRecord`, `AverageSplit` and its cache slice. Play's peers are untouched |
+| **Localization** | The band line and its count, the selector and its clear, and the section's caption |
+
+**Tests.** `DomainTests`: the band table (every threshold, the gem a level sits in, the capstone, a value under the
+ladder) and the 25 rule. `ApplicationTests`: the cohort assembled off one read, site and board members folded
+together, a private account counted from the board (D61), a thin level falling back to its gem, and Phoenix 1
+answering from the stored title. `Tests.Components`: the band and its count on the tile, two tones on a combined
+pool and one on a typed pool, the selector switching and clearing. `ExplorationTests`: the probe behind §4.14.
+`Tests.Integration`: the two new reads, which are SQL — the half-open band on each ladder’s own pool, and the highest-title cohort.
+
+**Build order** — docs first, i18n last, pushed per commit: (1) this section, D68, §3.6, §4.14; (2) Domain;
+(3) the stats and title reads; (4) the probe, over the reads it measures; (5) the mirror's merged rebuild; (6) the cohort query and its cache;
+(7) the card, the chart and the selector; (8) the compare query retires; (9) nine locales.
+
 ## 7. Responsive
 
 The class ladder in [UX-GUIDELINES.md §1](../UX-GUIDELINES.md), no new numbers:
@@ -1885,6 +2026,10 @@ The hero goes single-column at **860**, deliberately in the gap between the real
 bar card was drawn pushed right with `margin-left:auto`, which reads fine on one line and strands it
 against the far edge with nothing beneath it the moment the row breaks. Left-aligned it simply stacks
 under the number. The nav row underneath fills the air that costs at desktop width.
+
+**Where the levels sit** keeps its two tiles side by side while each has 280px and stacks them below that
+(D67). Inside a tile the columns share the width and the glyphs keep their pixel sizes, so a phone narrows
+the shapes rather than shrinking the type.
 
 ## 8. Honesty boundaries
 

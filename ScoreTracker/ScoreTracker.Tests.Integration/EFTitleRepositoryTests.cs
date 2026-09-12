@@ -138,4 +138,29 @@ public sealed class EFTitleRepositoryTests : IAsyncLifetime
         Assert.Equal(1, aggregations[(Name)"The Master"]);
         Assert.Equal(2, await BuildRepository().CountTitledUsers(CancellationToken.None));
     }
+
+    [Fact]
+    public async Task GetUserIdsWithHighestTitleAnswersOnlyTheHoldersOfThatOne()
+    {
+        // Phoenix 1's cohort (D68): whose highest title IS this one, not everyone who has ever
+        // earned it. Advanced Lv. 1 through 3 all sit on level 20, so the name is what decides.
+        var first = await _seed.SeedUserAsync("First");
+        var second = await _seed.SeedUserAsync("Second");
+        var higher = await _seed.SeedUserAsync("Higher");
+        var otherMix = await _seed.SeedUserAsync("OtherMix");
+        var repository = BuildRepository();
+        await repository.SetHighestDifficultyTitle(MixEnum.Phoenix, first, "Advanced Lv. 2",
+            DifficultyLevel.From(20), CancellationToken.None);
+        await repository.SetHighestDifficultyTitle(MixEnum.Phoenix, second, "Advanced Lv. 2",
+            DifficultyLevel.From(20), CancellationToken.None);
+        await repository.SetHighestDifficultyTitle(MixEnum.Phoenix, higher, "Advanced Lv. 3",
+            DifficultyLevel.From(20), CancellationToken.None);
+        await repository.SetHighestDifficultyTitle(MixEnum.Phoenix2, otherMix, "Advanced Lv. 2",
+            DifficultyLevel.From(20), CancellationToken.None);
+
+        var holders = (await repository.GetUserIdsWithHighestTitle(MixEnum.Phoenix, "Advanced Lv. 2",
+            CancellationToken.None)).ToHashSet();
+
+        Assert.Equal(new[] { first, second }.ToHashSet(), holders);
+    }
 }
