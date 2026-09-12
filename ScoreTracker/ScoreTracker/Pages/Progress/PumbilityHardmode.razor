@@ -29,7 +29,7 @@
            the frame resolves both from settings AFTER its own first render - seeding once raced
            it, and the page shipped showing a player their Combined fifty under a "Doubles"
            label, with the All button dead until they clicked something else first. *@
-        @{ _ctx = ctx; }
+        @{ Sync(ctx); }
         @if (_page == null)
         {
             <div class="pmb-frame pmb-frame-waiting" aria-hidden="true"></div>
@@ -96,18 +96,31 @@
         };
 
     /// <summary>
-    ///     Price when the frame's answer first arrives, and again whenever it moves. Not on
-    ///     firstRender: the frame has not resolved the pool by then, which is the whole bug this
-    ///     shape replaces. The guard is what stops Load's own StateHasChanged looping.
+    ///     Price when the frame's answer arrives, and again whenever it moves.
+    ///     <para>
+    ///         Driven from the body's own render, NOT from an OnAfterRender hook here. The body
+    ///         is a fragment rendered inside the FRAME's tree, so the frame resolving its
+    ///         settings re-renders the frame — not this page. A hook here fires after this
+    ///         page renders, which happens once, before the context exists: it read a null
+    ///         context, returned, and was never called again, so the page sat on its loading
+    ///         card forever.
+    ///     </para>
+    ///     <para>
+    ///         The guard is on the two things the record is priced for, so a re-render that
+    ///         changes neither costs nothing and Load's own StateHasChanged cannot loop.
+    ///     </para>
     /// </summary>
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private void Sync(PumbilitySectionFrame.SectionContext ctx)
     {
-        if (_ctx == null) return;
-        if (_priced && _mix == _ctx.Mix && _pool == _ctx.Pool) return;
+        _ctx = ctx;
+        if (_priced && _mix == ctx.Mix && _pool == ctx.Pool) return;
         _priced = true;
-        _mix = _ctx.Mix;
-        _pool = _ctx.Pool;
-        await Load();
+        _mix = ctx.Mix;
+        _pool = ctx.Pool;
+        // Queued rather than awaited: this runs inside a render, which cannot await. Load
+        // ends in StateHasChanged, and re-rendering this page hands the frame a fresh body
+        // fragment, so the content appears on the pass after the record lands.
+        _ = InvokeAsync(Load);
     }
 
     private async Task Load()
