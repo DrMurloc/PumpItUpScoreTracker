@@ -1,4 +1,4 @@
-@using MediatR
+﻿@using MediatR
 @using ScoreTracker.ChartIntelligence.Contracts
 @using ScoreTracker.ChartIntelligence.Contracts.Queries
 @using ScoreTracker.Domain.Models
@@ -140,10 +140,8 @@
                                                OnOpenBoard="OnOpenBoard"
                                                CustomStateClass="@StateClass(row.State)"
                                                CustomStateTitle="@StateWord(row.State)"
-                                               ShowPlay="@(_density == UiDensity.Comfortable)"
                                                Body="@CardBody(row)"
-                                               OnOpen="OpenById"
-                                               OnPlay="PlayById"></TierListChartCard>
+                                               OnOpen="OpenById"></TierListChartCard>
                         }
                     </div>
                 }
@@ -196,8 +194,6 @@
     [Parameter] public int QualifyingCount { get; set; }
 
     [Parameter] public EventCallback<Chart> OnOpen { get; set; }
-
-    [Parameter] public EventCallback<Chart> OnPlay { get; set; }
 
     [Parameter] public EventCallback<PeerBoardRequest> OnOpenBoard { get; set; }
 
@@ -305,11 +301,6 @@
     private Task OpenById(Guid chartId)
     {
         return Charts.TryGetValue(chartId, out var chart) ? OnOpen.InvokeAsync(chart) : Task.CompletedTask;
-    }
-
-    private Task PlayById(Guid chartId)
-    {
-        return Charts.TryGetValue(chartId, out var chart) ? OnPlay.InvokeAsync(chart) : Task.CompletedTask;
     }
 
     /// <summary>Folders with nothing in the list are greyed rather than hidden — the holes are the map.</summary>

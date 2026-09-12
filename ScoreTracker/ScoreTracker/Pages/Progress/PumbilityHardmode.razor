@@ -1,4 +1,4 @@
-@using MediatR
+﻿@using MediatR
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
@@ -55,19 +55,16 @@
                     @L["The charts your Hardmode number is the sum of, banded by what each is worth to you."]
                 </p>
                 <HardmodePoolList Mix="ctx.Mix" Charts="ctx.Charts" Pool="_page.Pool"
-                                  OnOpen="OpenChart" OnPlay="PlayChart"></HardmodePoolList>
+                                  OnOpen="OpenChart"></HardmodePoolList>
             </section>
 
             <HardmodeQualifyingSection Mix="ctx.Mix" Charts="ctx.Charts" Pool="_page.Pool"
                                        ScoredOutsidePool="_page.ScoredOutsidePool"
                                        QualifyingCount="_page.QualifyingCharts"
-                                       OnOpen="OpenChart" OnPlay="PlayChart"></HardmodeQualifyingSection>
+                                       OnOpen="OpenChart"></HardmodeQualifyingSection>
         }
 
-        @* The card's play button and its jacket open the same dialog; only one of them asked
-           for the video, so AutoPlay is bound rather than fixed — the Play tab's own wiring. *@
-        <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_selected" Mix="ctx.Mix"
-                            AutoPlay="_autoPlay"></ChartDetailsDialog>
+        <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_selected" Mix="ctx.Mix"></ChartDetailsDialog>
     </Body>
 </PumbilitySectionFrame>
 
@@ -76,7 +73,6 @@
     private HardmodePageRecord? _page;
     private Chart? _selected;
     private bool _detailsOpen;
-    private bool _autoPlay;
     private MixEnum _mix = MixEnum.Phoenix2;
     private ChartType? _pool;
 
@@ -121,14 +117,7 @@
     private void OpenChart(Chart chart)
     {
         _selected = chart;
-        _autoPlay = false;
         _detailsOpen = true;
     }
 
-    private void PlayChart(Chart chart)
-    {
-        _selected = chart;
-        _autoPlay = true;
-        _detailsOpen = true;
-    }
 }

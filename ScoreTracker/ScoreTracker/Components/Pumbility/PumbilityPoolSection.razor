@@ -1,4 +1,4 @@
-@using MediatR
+﻿@using MediatR
 @using Microsoft.JSInterop
 @using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.Models
@@ -81,7 +81,7 @@
     <div class="pmb-list" data-testid="pool-list">
         <PumbilityPoolList @ref="_list" Page="Page" Charts="Charts" Density="_density" Skills="_skills"
                            Standings="_standings" OnOpenBoard="OnOpenBoard"
-                           ShowToDo="true" ToDos="ToDos" OnToDo="OnToDo" OnOpen="OnOpen" OnPlay="OnPlay"
+                           ShowToDo="true" ToDos="ToDos" OnToDo="OnToDo" OnOpen="OnOpen"
                            Collapsed="_collapsed" CollapsedChanged="SetCollapsed"></PumbilityPoolList>
     </div>
 </section>
@@ -102,8 +102,6 @@
     [Parameter] public EventCallback<Guid> OnToDo { get; set; }
 
     [Parameter] public EventCallback<Chart> OnOpen { get; set; }
-
-    [Parameter] public EventCallback<Chart> OnPlay { get; set; }
 
     /// <summary>
     ///     A popover source line asking for that source’s board. Without it the popover still

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Bunit;
 using Microsoft.AspNetCore.Components;
@@ -91,6 +91,38 @@ public sealed class TierListChartCardTests : ComponentTestBase
         Assert.Equal("+18", value.TextContent.Trim());
         Assert.Contains("pmb-corner-gain", value.ClassName);
         Assert.Empty(cut.FindAll(".tier-chart-card-jacket .tier-chart-card-corner"));
+    }
+
+    [Fact]
+    public void TheJacketOpensTheChartAndNothingElse()
+    {
+        // The jacket USED to carry a full-bleed play button (inset: 0) that opened the details
+        // dialog with the video autoplaying, so clicking the artwork played a song instead of
+        // opening the chart, and hovering it put a glyph over the art. Both gone (owner,
+        // 2026-09-12) - the jacket is the way in, and the only way in it offers.
+        var cut = RenderScored(null);
+
+        Assert.DoesNotContain("tier-chart-card-play", cut.Markup);
+        Assert.DoesNotContain("jacket-playable", cut.Markup);
+    }
+
+    [Fact]
+    public void TheNameComesBeforeTheScoreInTheReadingOrder()
+    {
+        // The name is lifted out of the head's flow by CSS so it cannot push the score off the
+        // jacket's edge, but it must still be READ first: it says what the card is about, and a
+        // screen reader takes the DOM order, not the painted one.
+        var cut = RenderComponent<TierListChartCard>(p => p
+            .Add(x => x.Chart, ProbeChart())
+            .Add(x => x.ShowName, true)
+            .Add(x => x.Score, new RecordedPhoenixScore(Guid.NewGuid(), PhoenixScore.From(972_000), null,
+                false, new DateTimeOffset(2026, 8, 1, 0, 0, 0, TimeSpan.Zero))));
+
+        var head = cut.Find(".tier-chart-card-head").InnerHtml;
+        var name = head.IndexOf("tier-chart-card-nameline", StringComparison.Ordinal);
+        var score = head.IndexOf("tier-chart-card-scoreline", StringComparison.Ordinal);
+        Assert.True(name >= 0 && score >= 0, "the head carries both lines");
+        Assert.True(name < score, "the name is read before the score");
     }
 
     private IRenderedComponent<TierListChartCard> RenderScored(PeerStanding? standing,

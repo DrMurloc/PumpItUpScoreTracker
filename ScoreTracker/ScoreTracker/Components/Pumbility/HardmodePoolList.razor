@@ -1,4 +1,4 @@
-@using MediatR
+﻿@using MediatR
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
@@ -117,12 +117,10 @@
                                            CustomStateClass="tier-chart-card-top50"
                                            CustomStateTitle="@L["In your Hardmode pool"]"
                                            ShowToDo="false"
-                                           ShowPlay="@(_density == UiDensity.Comfortable)"
                                            CornerBadge="@row.Entry.Value.ToString("N2")"
                                            CornerBadgeClass="pmb-corner-gain"
                                            Body="@CardBody(row)"
-                                           OnOpen="OpenById"
-                                           OnPlay="PlayById"></TierListChartCard>
+                                           OnOpen="OpenById"></TierListChartCard>
                     }
                 </div>
             }
@@ -147,8 +145,6 @@
     [Parameter] public IReadOnlyList<PoolEntry> Pool { get; set; } = Array.Empty<PoolEntry>();
 
     [Parameter] public EventCallback<Chart> OnOpen { get; set; }
-
-    [Parameter] public EventCallback<Chart> OnPlay { get; set; }
 
     [Parameter] public EventCallback<PeerBoardRequest> OnOpenBoard { get; set; }
 
@@ -215,11 +211,6 @@
     private Task OpenById(Guid chartId)
     {
         return Charts.TryGetValue(chartId, out var chart) ? OnOpen.InvokeAsync(chart) : Task.CompletedTask;
-    }
-
-    private Task PlayById(Guid chartId)
-    {
-        return Charts.TryGetValue(chartId, out var chart) ? OnPlay.InvokeAsync(chart) : Task.CompletedTask;
     }
 
     protected override async Task OnInitializedAsync()

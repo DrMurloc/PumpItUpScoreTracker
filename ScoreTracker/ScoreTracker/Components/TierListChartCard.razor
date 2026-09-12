@@ -1,4 +1,4 @@
-@namespace ScoreTracker.Web.Components
+﻿@namespace ScoreTracker.Web.Components
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
@@ -59,23 +59,12 @@
 else
 {
 <div class="tier-chart-card @StateClass" title="@StateTitle">
-    <div class="tier-chart-card-jacket @(ShowPlay ? "tier-chart-card-jacket-playable" : null)" role="button" tabindex="0"
+    <div class="tier-chart-card-jacket" role="button" tabindex="0"
          @onclick="() => OnOpen.InvokeAsync(Chart.Id)"
          style="background-image:url('@Chart.Song.ImagePath')">
         <div class="tier-chart-card-bubble">
             <DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble>
         </div>
-        @if (ShowPlay)
-        {
-            @* Its own button, stacked over the jacket: opening details and watching the
-               chart are different intents, and the video one has to be reachable by
-               keyboard without going through the card. *@
-            <button type="button" class="tier-chart-card-play" @onclick:stopPropagation="true"
-                    @onclick="() => OnPlay.InvokeAsync(Chart.Id)"
-                    aria-label="@L["Watch {0}", Chart.Song.Name]">
-                <span class="tier-chart-card-play-glyph" aria-hidden="true"></span>
-            </button>
-        }
     </div>
     @* The strip that rides up onto the jacket, and the ONLY things allowed on it: what the
        chart is called, the value printed beside the name, and how you did on it. It reserves
@@ -107,6 +96,10 @@ else
                 }
             </div>
         }
+        @* The score straddles the jacket's bottom edge and stays there, name or no name
+           (owner, 2026-09-12) — it is the card's anchor, so a folder of cards reads as one
+           row of numbers. When a name is shown it rides ABOVE the score on the art rather
+           than pushing it down, which is what the head's flow used to do. *@
         @if (Score?.Score != null)
         {
             @* Own line always — short song names left the tooltip-wrapped name and the
@@ -322,10 +315,6 @@ else
     // Extra body content under the name, above the skill chips. Comfortable only —
     // Compact renders no body at all.
     [Parameter] public RenderFragment? Body { get; set; }
-
-    [Parameter] public bool ShowPlay { get; set; }
-
-    [Parameter] public EventCallback<Guid> OnPlay { get; set; }
 
     // Appended to the Compact tooltip. Compact hides the body, so anything the card says
     // only in Comfortable has to be reachable here or it is lost (rule 7).

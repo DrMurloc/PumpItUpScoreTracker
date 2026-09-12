@@ -1,4 +1,4 @@
-@using ScoreTracker.Domain.Models
+﻿@using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.Services
 @using ScoreTracker.PlayerProgress.Contracts
@@ -97,7 +97,6 @@ else
                                                Passed="true"
                                                IsToDo="ToDos.Contains(row.Chart.Id)"
                                                ShowToDo="ShowToDo"
-                                               ShowPlay="@(Density == UiDensity.Comfortable)"
                                                CornerBadge="@row.Entry.Value.ToString("N2")"
                                                CornerBadgeClass="pmb-corner-gain"
                                                CornerBadgeStart="@(Density == UiDensity.Compact ? Grade(row) : null)"
@@ -106,8 +105,7 @@ else
                                                Skills="@SkillsFor(row)"
                                                Body="@CardBody(row)"
                                                OnToDo="OnToDo"
-                                               OnOpen="OpenById"
-                                               OnPlay="PlayById"></TierListChartCard>
+                                               OnOpen="OpenById"></TierListChartCard>
                         }
                     </div>
                 }
@@ -158,8 +156,6 @@ else
     [Parameter] public EventCallback<Guid> OnToDo { get; set; }
 
     [Parameter] public EventCallback<Chart> OnOpen { get; set; }
-
-    [Parameter] public EventCallback<Chart> OnPlay { get; set; }
 
     /// <summary>
     ///     Section keys folded; nothing by default — the bar is at the bottom, and that is the part
@@ -236,8 +232,6 @@ else
     }
 
     private Task OpenById(Guid chartId) => OnOpen.InvokeAsync(Charts[chartId]);
-
-    private Task PlayById(Guid chartId) => OnPlay.InvokeAsync(Charts[chartId]);
 
     private IReadOnlyList<TierListChartCard.CardSkillChip>? SkillsFor(Row row) =>
         Skills.TryGetValue(row.Chart.Id, out var chips) && chips.Count > 0 ? chips : null;
