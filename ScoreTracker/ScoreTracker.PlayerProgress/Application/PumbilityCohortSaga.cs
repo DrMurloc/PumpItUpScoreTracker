@@ -57,8 +57,15 @@ namespace ScoreTracker.PlayerProgress.Application
             if (band is not { } name) return PumbilityCohortRecord.Empty;
 
             var mine = await MyPool(mix, pool, userId, charts, scoring, cancellationToken);
+            // The archetypes are the merged fifty's own statement, like the split: banding a typed
+            // fifty would hand the viewer an archetype their chip disagrees with, which 77% of
+            // full-fifty accounts would see (§4.15).
+            var archetypes = pool == PumbilityPool.Total
+                ? ArchetypeSpread.Of(reading.Archetypes, mine.Select(m => (int)m.Score).ToArray(), mix)
+                : null;
             return new PumbilityCohortRecord(name, reading.Spread.Holders, reading.Spread.BoardHolders,
-                PeerLevelSpread.Of(reading.Spread, charts, mine), reading.Split, reading.BoardAsOf);
+                PeerLevelSpread.Of(reading.Spread, charts, mine.Select(m => m.ChartId)), reading.Split,
+                reading.BoardAsOf, archetypes);
         }
 
         /// <summary>
@@ -114,7 +121,7 @@ namespace ScoreTracker.PlayerProgress.Application
             return (around.Name, await Read(mix, pool, around, around.Name, charts, scoring));
         }
 
-        private static CohortReading Empty => new(CohortLevelSpread.Empty, null, null);
+        private static CohortReading Empty => new(CohortLevelSpread.Empty, CohortArchetypeSpread.Empty, null, null);
 
         /// <summary>
         ///     Everyone standing on one band and what their fifties are made of, through the cache
@@ -156,7 +163,8 @@ namespace ScoreTracker.PlayerProgress.Application
             var split = pool == PumbilityPool.Total
                 ? PumbilityPoolSplit.Average(Priced(records, boardScores, charts, scoring).Values)
                 : null;
-            return new CohortReading(CohortLevelSpread.Of(summary, charts), split, boardAsOf);
+            return new CohortReading(CohortLevelSpread.Of(summary, charts),
+                CohortArchetypeSpread.Of(summary, mix), split, boardAsOf);
         }
 
         /// <summary>
@@ -232,19 +240,23 @@ namespace ScoreTracker.PlayerProgress.Application
         ///     The viewer's own fifty of the pool, by the same rule the cohort's were built with: the
         ///     fifty highest-priced non-broken records above zero, over the types the pool holds.
         /// </summary>
-        private async Task<IReadOnlyList<Guid>> MyPool(MixEnum mix, PumbilityPool pool, Guid userId,
-            IReadOnlyDictionary<Guid, Chart> charts, ScoringConfiguration scoring, CancellationToken cancellationToken)
+        private async Task<IReadOnlyList<(Guid ChartId, PhoenixScore Score)>> MyPool(MixEnum mix,
+            PumbilityPool pool, Guid userId, IReadOnlyDictionary<Guid, Chart> charts, ScoringConfiguration scoring,
+            CancellationToken cancellationToken)
         {
             var types = TypesOf(pool);
+            // One definition of the viewer's fifty, carried out with its scores as well as its
+            // charts: the level spread counts the charts and the archetype bands the scores, and
+            // the two describing different fifties is exactly the disagreement to avoid.
             return (await _scores.GetBestScores(mix, userId, cancellationToken))
                 .Where(r => r.Score != null && !r.IsBroken && charts.ContainsKey(r.ChartId)
                             && types.Contains(charts[r.ChartId].Type))
-                .Select(r => (r.ChartId, Rating: scoring.GetScore(charts[r.ChartId], r.Score!.Value,
-                    r.Plate ?? PhoenixPlate.RoughGame, r.IsBroken)))
+                .Select(r => (r.ChartId, Score: r.Score!.Value, Rating: scoring.GetScore(charts[r.ChartId],
+                    r.Score!.Value, r.Plate ?? PhoenixPlate.RoughGame, r.IsBroken)))
                 .Where(r => r.Rating > 0)
                 .OrderByDescending(r => r.Rating).ThenBy(r => r.ChartId)
                 .Take(PumbilityPeerPools.PoolSize)
-                .Select(r => r.ChartId)
+                .Select(r => (r.ChartId, r.Score))
                 .ToArray();
         }
 

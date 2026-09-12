@@ -106,12 +106,18 @@ public static class PumbilityPeerPools
         }
 
         var pools = new Dictionary<PeerVoice, IReadOnlySet<Guid>>();
+        var averages = new Dictionary<PeerVoice, double>();
         var holders = new Dictionary<Guid, int>();
         var points = new Dictionary<Guid, int>();
         foreach (var (peer, priced) in byPeer)
         {
             var pool = priced.OrderByDescending(p => p.Rating).ThenBy(p => p.ChartId).Take(PoolSize).ToArray();
             pools[peer] = pool.Select(p => p.ChartId).ToHashSet();
+            // The same fifty, measured on score instead of value — what an archetype bands on
+            // (D69). Taken here because this is where the fifty is chosen; rebuilding it from the
+            // chart ids afterwards would have to price and sort it a second time to get the same
+            // set back, and a tie at the fiftieth slot could hand back a different one.
+            averages[peer] = pool.Average(p => p.Score);
             for (var slot = 0; slot < pool.Length; slot++)
             {
                 holders[pool[slot].ChartId] = holders.GetValueOrDefault(pool[slot].ChartId) + 1;
@@ -135,7 +141,7 @@ public static class PumbilityPeerPools
             summary[chartId] = new PeerPoolChart(held, points.GetValueOrDefault(chartId), voices.Count, voices);
         }
 
-        return new PeerPoolSummary(peers, pools, summary, boardTotals);
+        return new PeerPoolSummary(peers, pools, summary, boardTotals, averages);
     }
 }
 

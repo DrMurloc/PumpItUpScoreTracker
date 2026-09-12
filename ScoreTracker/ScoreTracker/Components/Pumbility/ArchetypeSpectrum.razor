@@ -1,0 +1,135 @@
+@using System.Globalization
+@using ScoreTracker.Domain.Services
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@namespace ScoreTracker.Web.Components
+
+@* Where the viewer's scoring sits among the players holding their title
+   (docs/design/pumbility-overhaul.md D69): five segments, each as wide as the share of the cohort
+   whose own fifty lands in that archetype, in the chips' own metal colours, with a diamond where
+   the viewer's fifty falls. HTML and CSS against percentages, so it scales with the card and needs
+   no script.
+
+   Nothing here is a ranking. The archetypes are five ways to hold a fifty and none is above
+   another, so the copy names the band and how many hold it — never a standing. *@
+<div class="pmb-arch" data-testid="archetype-spectrum">
+    <div class="pmb-arch-strip">
+        <div class="pmb-arch-bands">
+            @foreach (var type in Archetypes)
+            {
+                var share = Spread.ShareOf(type);
+                var holders = Spread.HoldersByArchetype.GetValueOrDefault(type);
+                <div class="pmb-arch-band @(Spread.Mine == type ? "is-mine" : "")" data-k="@Rung(type)"
+                     style="width:@Css(100 * share)%"
+                     title="@Describe(type, holders, share)" aria-label="@Describe(type, holders, share)">
+                    @if (share >= LabelFloor)
+                    {
+                        <b>@L[PlayerTypeChip.ShortNameOf(type)]</b>
+                    }
+                </div>
+            }
+        </div>
+        @if (Spread.Ahead is { } at)
+        {
+            <i class="pmb-arch-you" style="left:@Css(100 * at)%" aria-hidden="true"></i>
+        }
+    </div>
+    <div class="pmb-arch-ticks" aria-hidden="true">
+        @foreach (var type in Archetypes)
+        {
+            <span class="pmb-arch-tick" style="width:@Css(100 * Spread.ShareOf(type))%">
+                @Spread.HoldersByArchetype.GetValueOrDefault(type)
+            </span>
+        }
+    </div>
+    <p class="pmb-wpc-say" data-testid="archetype-say">@Say</p>
+    <div class="pmb-arch-legend">
+        @foreach (var type in Archetypes)
+        {
+            <span>
+                <i class="pmb-arch-key" data-k="@Rung(type)"></i>
+                @L[PlayerTypeChip.NameOf(type)]
+                <span class="pmb-muted">· @GradeOf(type)</span>
+            </span>
+        }
+        @if (Spread.Mine != null)
+        {
+            <span><i class="pmb-arch-key pmb-arch-key-you"></i>@L["your fifty"]</span>
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>The cohort's five counts with the viewer laid over them.</summary>
+    [Parameter] [EditorRequired] public ArchetypeSpread Spread { get; set; } = ArchetypeSpread.Empty;
+
+    /// <summary>The band the cohort is, for the line that names who is being described.</summary>
+    [Parameter] [EditorRequired] public Name Band { get; set; }
+
+    /// <summary>The mix, which owns the cutoffs the grades in the legend are read off.</summary>
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    /// <summary>
+    ///     A segment narrower than this drops its label rather than clipping it. Two letters fit
+    ///     in a twentieth of the card at every width the page supports.
+    /// </summary>
+    private const double LabelFloor = 0.05;
+
+    private static readonly RecapPlayerType[] Archetypes = Enum.GetValues<RecapPlayerType>();
+
+    private static int Rung(RecapPlayerType type) => (int)type + 1;
+
+    private static string Css(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
+
+    /// <summary>
+    ///     The grades a band covers, read off the calculator rather than a copy of it so a re-cut
+    ///     moves the legend with the banding. A band is one rung on Phoenix 2 by construction and
+    ///     several on Phoenix 1 — Competitive spans SS through SSS there — so it prints the span
+    ///     rather than the grade it opens at, which would read as a contradiction beside a line
+    ///     naming the viewer's own grade. The weakest band has no floor and the summit no ceiling.
+    /// </summary>
+    private string GradeOf(RecapPlayerType type)
+    {
+        var floor = RecapPlayerTypeCalculator.FloorFor(type, Mix);
+        if (floor is not { } from)
+            return L["under {0}", Grade(RecapPlayerTypeCalculator.FloorFor(type + 1, Mix)!.Value)];
+
+        var opens = Grade(from);
+        if (type == RecapPlayerType.Perfectionist) return L["{0} and up", opens];
+
+        var tops = Grade(RecapPlayerTypeCalculator.FloorFor(type + 1, Mix)!.Value - 1);
+        return opens == tops ? opens : L["{0}–{1}", opens, tops];
+    }
+
+    private string Grade(int score) => PhoenixScore.From(score).LetterGradeFor(Mix).GetName();
+
+    private string Describe(RecapPlayerType type, int holders, double share)
+    {
+        return L["{0}: {1} of them, {2}%", L[PlayerTypeChip.NameOf(type)], holders.ToString("N0"),
+            Math.Round(100 * share).ToString("N0")].Value;
+    }
+
+    /// <summary>
+    ///     What the section says in words: the average, the grade it is, the archetype that makes,
+    ///     and how many of the cohort are there too. Never a standing — the archetypes are lateral
+    ///     (D69), so there is no "ahead of" anywhere in this.
+    /// </summary>
+    private string Say
+    {
+        get
+        {
+            if (Spread.Mine is not { } mine || Spread.MyAverage is not { } average)
+                return L["Your fifty is too short to place on this yet — {0} charts does it.",
+                    RecapPlayerTypeCalculator.MinimumScores.ToString("N0")];
+
+            var rounded = (int)Math.Round(average);
+            var here = Spread.Holders == 0
+                ? 0
+                : (int)Math.Round(100.0 * Spread.StandingWithMe / Spread.Holders);
+            return L["Your fifty averages {0} — {1}, so {2}. {3}% of {4} are there too.",
+                rounded.ToString("N0"), PhoenixScore.From(rounded).LetterGradeFor(Mix).GetName(),
+                L[PlayerTypeChip.NameOf(mine)], here.ToString("N0"), Band].Value;
+        }
+    }
+}

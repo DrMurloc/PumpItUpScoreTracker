@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
@@ -229,12 +230,6 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         }),
         split, asOf);
 
-    private void RememberedBand(string? saved = null)
-    {
-        UiSettings.Setup(s => s.GetSetting(PumbilityBreakdown.BandSettingKey, It.IsAny<CancellationToken>(),
-            It.IsAny<Guid?>())).ReturnsAsync(saved);
-    }
-
     private IRenderedComponent<PumbilityBreakdown> Card(PumbilityPageRecord page,
         IReadOnlyDictionary<Guid, Chart> charts) =>
         RenderComponent<PumbilityBreakdown>(p => p
@@ -296,97 +291,69 @@ public sealed class PumbilityComponentTests : ComponentTestBase
     }
 
     [Fact]
-    public async Task PickingABandReadsThatOneAndRemembersIt()
+    public async Task PickingABandReadsThatOneAndNeverWritesItDown()
     {
         SignIn();
-        RememberedBand();
         var fixture = Page(poolSize: 50);
-        var charts = fixture.Charts();
         var page = ((PumbilityPageRecord)fixture) with { Mix = MixEnum.Phoenix2 };
         var asked = new List<Name?>();
         Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
             .Callback((object q, CancellationToken _) => asked.Add(((GetPumbilityTitleCohortQuery)q).Band))
             .ReturnsAsync(Cohort(null));
 
-        var cut = Card(page, charts);
+        var cut = Card(page, fixture.Charts());
         cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=cohort-select]")));
         await cut.Find("[data-testid=cohort-select]").ChangeAsync(new ChangeEventArgs { Value = "[P.B] BRONZE" });
 
         Assert.Equal(new Name?[] { null, Name.From("[P.B] BRONZE") }, asked);
-        UiSettings.Verify(s => s.SetSetting(PumbilityBreakdown.BandSettingKey, "[P.B] BRONZE",
-            It.IsAny<CancellationToken>()), Times.Once);
+        // The choice lasts the visit and no longer (owner, 2026-09-12). Nothing is stored, so
+        // nothing has to be read back, validated against the ladder in scope, or invalidated.
+        UiSettings.Verify(s => s.SetSetting(It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        UiSettings.Verify(s => s.GetSetting(It.IsAny<string>(), It.IsAny<CancellationToken>(),
+            It.IsAny<Guid?>()), Times.Never);
     }
 
-
     [Fact]
-    public void TheSelectorStartsOnTheBandThatWasReadAndOffersNoEntryForYourOwn()
+    public void TheCardOpensOnYourOwnBandEveryVisit()
     {
+        // It describes where you stand, so it opens on where you stand — the query's own answer,
+        // gem-flipped when the level is too thin to read (D68). A second visit is a second null.
         SignIn();
-        RememberedBand();
         var fixture = Page(poolSize: 50);
-        var charts = fixture.Charts();
         var page = ((PumbilityPageRecord)fixture) with { Mix = MixEnum.Phoenix2 };
-        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Cohort(null));
-
-        var cut = Card(page, charts);
-
-        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=cohort-select]")));
-        var options = cut.Find("[data-testid=cohort-select]").QuerySelectorAll("option");
-        // Every option is a band: picking your own back IS picking it, so there is no "mine" entry.
-        Assert.All(options, o => Assert.NotEqual(string.Empty, o.GetAttribute("value")));
-        var selected = Assert.Single(options, o => o.HasAttribute("selected"));
-        Assert.Equal(DiamondLevel, selected.GetAttribute("value"));
-        // And it spells its band out, because a closed select shows that line and nothing else.
-        Assert.Equal(DiamondLevel, selected.TextContent.Trim());
-    }
-
-    [Fact]
-    public void AGemsLevelsReadAsLevelNumbersUnderTheGemsOwnName()
-    {
-        SignIn();
-        RememberedBand();
-        var fixture = Page(poolSize: 50);
-        var charts = fixture.Charts();
-        var page = ((PumbilityPageRecord)fixture) with { Mix = MixEnum.Phoenix2 };
-        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Cohort(null));
-
-        var cut = Card(page, charts);
-
-        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=cohort-select]")));
-        var diamond = Assert.Single(cut.Find("[data-testid=cohort-select]").QuerySelectorAll("optgroup"),
-            g => g.GetAttribute("label") == "[P.B] DIAMOND");
-        // The group heading says which gem it is, so its lines never spell it out again — except the
-        // selected one, which is the only line a closed select shows.
-        Assert.Equal(new[] { "All Levels", "Level 1", DiamondLevel, "Level 3", "Level 4", "Level 5" },
-            diamond.QuerySelectorAll("option").Select(o => o.TextContent.Trim()));
-        Assert.Equal(DiamondLevel, diamond.QuerySelectorAll("option")[2].GetAttribute("value"));
-        // The capstone is a gem with no levels inside it, so it lists one line and not two.
-        var abyss = Assert.Single(cut.Find("[data-testid=cohort-select]").QuerySelectorAll("optgroup"),
-            g => g.GetAttribute("label") == "ABYSS ABSOLUTE");
-        Assert.Equal(new[] { "All Levels" }, abyss.QuerySelectorAll("option").Select(o => o.TextContent.Trim()));
-    }
-
-    [Fact]
-    public void ARememberedBandFromAnotherLadderReadsAsNoChoiceAtAll()
-    {
-        // A [P.B] gem remembered from the merged pool is not a rung of the singles ladder, so it is
-        // dropped rather than sent to a query that could only answer nothing for it.
-        SignIn();
-        RememberedBand("[P.B] DIAMOND");
-        var fixture = Page(poolSize: 50);
-        var charts = fixture.Charts();
-        var page = ((PumbilityPageRecord)fixture) with { Mix = MixEnum.Phoenix2, Pool_ = ChartType.Single };
         var asked = new List<Name?>();
         Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
             .Callback((object q, CancellationToken _) => asked.Add(((GetPumbilityTitleCohortQuery)q).Band))
-            .ReturnsAsync(Cohort(null, "[S] EXPERT LV.3"));
+            .ReturnsAsync(Cohort(null));
+
+        Card(page, fixture.Charts()).WaitForAssertion(() => Assert.Single(asked));
+        Card(page, fixture.Charts()).WaitForAssertion(() => Assert.Equal(2, asked.Count));
+
+        Assert.Equal(new Name?[] { null, null }, asked);
+    }
+
+    [Fact]
+    public async Task ABandFromAnotherLadderReadsAsNoChoiceAtAll()
+    {
+        // A [P.B] gem picked on the merged pool is not a rung of the singles ladder, so switching
+        // pools drops it rather than sending it to a query that could only answer nothing for it.
+        SignIn();
+        var fixture = Page(poolSize: 50);
+        var charts = fixture.Charts();
+        var page = ((PumbilityPageRecord)fixture) with { Mix = MixEnum.Phoenix2 };
+        var asked = new List<Name?>();
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .Callback((object q, CancellationToken _) => asked.Add(((GetPumbilityTitleCohortQuery)q).Band))
+            .ReturnsAsync(Cohort(null));
 
         var cut = Card(page, charts);
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=cohort-select]")));
+        await cut.Find("[data-testid=cohort-select]").ChangeAsync(new ChangeEventArgs { Value = "[P.B] DIAMOND" });
+        cut.SetParametersAndRender(p => p.Add(x => x.Page, page with { Pool_ = ChartType.Single }));
 
-        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=cohort-band]")));
-        Assert.Equal(new Name?[] { null }, asked);
+        cut.WaitForAssertion(() => Assert.Equal(3, asked.Count));
+        Assert.Equal(new Name?[] { null, Name.From("[P.B] DIAMOND"), null }, asked);
     }
 
     [Fact]
@@ -439,6 +406,180 @@ public sealed class PumbilityComponentTests : ComponentTestBase
             new Song($"Song {Guid.NewGuid():N}"[..12], SongType.Arcade,
                 new Uri("https://piu.test/i.png"), TimeSpan.FromMinutes(2), "Artist", 180),
             type, level, MixEnum.Phoenix, null, null);
+
+    private static ArchetypeSpread Archetypes(int[] counts, double? mine, MixEnum mix = MixEnum.Phoenix2)
+    {
+        var byType = Enum.GetValues<RecapPlayerType>()
+            .Select((type, i) => (type, count: counts[i])).ToDictionary(x => x.type, x => x.count);
+        var cohort = new CohortArchetypeSpread(counts.Sum(), byType);
+        return ArchetypeSpread.Of(cohort,
+            mine is { } average
+                ? Enumerable.Repeat((int)average, RecapPlayerTypeCalculator.MinimumScores).ToArray()
+                : Array.Empty<int>(), mix);
+    }
+
+    [Fact]
+    public void TheArchetypeSpectrumSizesEachBandByTheShareOfTheCohortStandingInIt()
+    {
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Cohort(null) with { Archetypes = Archetypes(new[] { 10, 20, 30, 20, 20 }, 977_000) });
+
+        var cut = Card(page, page.Charts());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=archetype-spectrum]")));
+        var bands = cut.FindAll("[data-testid=archetype-spectrum] .pmb-arch-band");
+        Assert.Equal(5, bands.Count);
+        Assert.Contains("width:10%", bands[0].GetAttribute("style"));
+        Assert.Contains("width:30%", bands[2].GetAttribute("style"));
+        // The viewer's own band is the outlined one, and it is the one their average falls in.
+        Assert.Equal("3", Assert.Single(bands, b => b.ClassList.Contains("is-mine")).GetAttribute("data-k"));
+        // Every band's count prints beneath it, the empty ones included.
+        Assert.Equal(new[] { "10", "20", "30", "20", "20" },
+            cut.FindAll("[data-testid=archetype-spectrum] .pmb-arch-tick")
+                .Select(t => t.TextContent.Trim()).ToArray());
+    }
+
+    [Fact]
+    public void TheMarkerSitsInsideTheBandTheLineNames()
+    {
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Cohort(null) with { Archetypes = Archetypes(new[] { 10, 20, 30, 20, 20 }, 982_000) });
+
+        var cut = Card(page, page.Charts());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=archetype-spectrum]")));
+        var marker = cut.Find("[data-testid=archetype-spectrum] .pmb-arch-you");
+        var at = double.Parse(marker.GetAttribute("style")!.Replace("left:", "").Replace("%", ""),
+            CultureInfo.InvariantCulture);
+        // Competitive spans 60% to 80% of the strip, and the marker has to land inside it or the
+        // drawing outlines one archetype while pointing at another.
+        Assert.InRange(at, 60, 80);
+        Assert.Equal("4", Assert.Single(cut.FindAll("[data-testid=archetype-spectrum] .pmb-arch-band"),
+            b => b.ClassList.Contains("is-mine")).GetAttribute("data-k"));
+    }
+
+    [Fact]
+    public void TheLineNamesTheBandAndTheShareHoldingItAndNeverAStanding()
+    {
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Cohort(null) with { Archetypes = Archetypes(new[] { 10, 20, 30, 20, 20 }, 977_000) });
+
+        var cut = Card(page, page.Charts());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=archetype-say]")));
+        var said = cut.Find("[data-testid=archetype-say]").TextContent;
+        Assert.Contains("977,000", said);
+        Assert.Contains("Balanced Player", said);
+        Assert.Contains("30%", said);
+        Assert.Contains(DiamondLevel, said);
+        // The archetypes are lateral (D69): nothing on this section may rank them.
+        foreach (var ranking in new[] { "ahead of", "above", "higher", "top " })
+            Assert.DoesNotContain(ranking, said, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void TooShortAFiftyDrawsTheCohortAndSaysSoInsteadOfPlacingYou()
+    {
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Cohort(null) with { Archetypes = Archetypes(new[] { 10, 20, 30, 20, 20 }, null) });
+
+        var cut = Card(page, page.Charts());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=archetype-spectrum]")));
+        Assert.Equal(5, cut.FindAll("[data-testid=archetype-spectrum] .pmb-arch-band").Count);
+        Assert.Empty(cut.FindAll("[data-testid=archetype-spectrum] .pmb-arch-you"));
+        Assert.DoesNotContain(cut.FindAll("[data-testid=archetype-spectrum] .pmb-arch-band"),
+            b => b.ClassList.Contains("is-mine"));
+    }
+
+    [Fact]
+    public void ABandTooNarrowForItsLabelDropsTheLabelRatherThanClippingIt()
+    {
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Cohort(null) with { Archetypes = Archetypes(new[] { 1, 0, 60, 20, 19 }, 977_000) });
+
+        var cut = Card(page, page.Charts());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=archetype-spectrum]")));
+        var bands = cut.FindAll("[data-testid=archetype-spectrum] .pmb-arch-band");
+        Assert.Empty(bands[0].QuerySelectorAll("b"));
+        Assert.Empty(bands[1].QuerySelectorAll("b"));
+        Assert.Equal("BP", bands[2].QuerySelectorAll("b").Single().TextContent);
+    }
+
+    [Fact]
+    public void TheLegendSpellsOutEveryGradeABandCoversOnEitherMix()
+    {
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Cohort(null) with { Archetypes = Archetypes(new[] { 10, 20, 30, 20, 20 }, 977_000) });
+
+        var cut = Card(((PumbilityPageRecord)page) with { Mix = MixEnum.Phoenix2 }, page.Charts());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".pmb-arch-legend")));
+        // The name and its grade are separate elements, so the markup's own whitespace sits
+        // between them; collapse it and read the line as a reader would.
+        var legend = Regex.Replace(cut.Find(".pmb-arch-legend").TextContent, @"\s+", " ");
+        // Phoenix 2 cuts one rung per archetype, so four of them are a single grade — and the
+        // summit is open, which is not the same statement as "SS+".
+        Assert.Contains("under S", legend);
+        Assert.Contains("Pass Refiner · S", legend);
+        Assert.Contains("Balanced Player · S+", legend);
+        Assert.Contains("Competitive · SS", legend);
+        Assert.Contains("SS+ and up", legend);
+    }
+
+    [Fact]
+    public void APhoenix1BandSpansSeveralGradesAndTheLegendSaysSo()
+    {
+        // Phoenix 1's bands are its own floors and cover more than one rung each. Printing only
+        // the grade a band opens at put "Competitive · SS" beside a viewer told their S+ average
+        // made them Balanced — a card contradicting itself.
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Cohort(null, "EXPERT") with
+            {
+                Archetypes = Archetypes(new[] { 10, 20, 30, 20, 20 }, 978_000, MixEnum.Phoenix)
+            });
+
+        var cut = Card(((PumbilityPageRecord)page) with { Mix = MixEnum.Phoenix }, page.Charts());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".pmb-arch-legend")));
+        // The name and its grade are separate elements, so the markup's own whitespace sits
+        // between them; collapse it and read the line as a reader would.
+        var legend = Regex.Replace(cut.Find(".pmb-arch-legend").TextContent, @"\s+", " ");
+        Assert.Contains("under AAA", legend);
+        Assert.Contains("Pass Refiner · AAA–AAA+", legend);
+        Assert.Contains("Balanced Player · S–S+", legend);
+        Assert.Contains("Competitive · SS–SSS", legend);
+        Assert.Contains("SSS+ and up", legend);
+    }
+
+    [Fact]
+    public void ATypedPoolDrawsNoArchetypeSection()
+    {
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Cohort(null));
+
+        var cut = Card(((PumbilityPageRecord)page) with { Pool_ = ChartType.Single }, page.Charts());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=wpc-levels]")));
+        Assert.Empty(cut.FindAll("[data-testid=wpc-archetypes]"));
+    }
 
     private static PageFixture Page(int poolSize, int waiting = 0, int targets = 0) =>
         new(poolSize, waiting, targets);

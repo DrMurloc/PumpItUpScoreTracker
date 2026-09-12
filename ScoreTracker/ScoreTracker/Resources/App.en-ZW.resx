@@ -8867,6 +8867,9 @@
   <data name="The arc" xml:space="preserve">
     <value>Mrp gl</value>
   </data>
+  <data name="the archetypes their top 50 lands in, and where yours lands" xml:space="preserve">
+    <value>grl morpgrol grglblarg ropgl 50 murgro, obu morggrrgl morp murgro</value>
+  </data>
   <data name="The bar" xml:space="preserve">
     <value>Rgl</value>
   </data>
@@ -10381,6 +10384,9 @@
   <data name="Where your score came from" xml:space="preserve">
     <value>Blarg blub mrglrgl glorb</value>
   </data>
+  <data name="Where your scores sit" xml:space="preserve">
+    <value>Morggrrgl morp mgrlgmrg grorpmurm</value>
+  </data>
   <data name="Which Chart Did You Play" xml:space="preserve">
     <value>Guma murgl murpla?</value>
   </data>
@@ -10823,6 +10829,15 @@
   </data>
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>Bloop am olo blurgl marogl la grumb. Alla blorp mo — opa mo golba pragl, opa DNS marogl alla bo. Golba am grumb, opa blorp la mo bloop.</value>
+  </data>
+  <data name="your fifty" xml:space="preserve">
+    <value>morp ropgl 50</value>
+  </data>
+  <data name="Your fifty averages {0} — {1}, so {2}. {3}% of {4} are there too." xml:space="preserve">
+    <value>Morp ropgl 50 rorg {0} — {1}, obu {2}. {3}% bu {4} blarg mrrgl obu.</value>
+  </data>
+  <data name="Your fifty is too short to place on this yet — {0} charts does it." xml:space="preserve">
+    <value>Morp ropgl 50 blarg mrgloru gropl blub murgro ug — {0} murgl mrglbu ug.</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>Gromurp mrblub ro blarggrorp grogrgl 10LURG, blgrlro murgmurp gl ro lurg morgro.</value>
@@ -11811,6 +11826,9 @@
   <data name="{0}: the average top 50 of the {1} of them holding a full one" xml:space="preserve">
     <value>{0}: a rorg ropgl 50 ub a {1} ub grglblarg mrgloru a mrglmr mrp</value>
   </data>
+  <data name="{0}: {1} of them, {2}%" xml:space="preserve">
+    <value>{0}: {1} bu grglblarg, {2}%</value>
+  </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>{0}o mrgla</value>
   </data>
@@ -11843,6 +11861,9 @@
   </data>
   <data name="{0}th" xml:space="preserve">
     <value>{0}bo</value>
+  </data>
+  <data name="{0}–{1}" xml:space="preserve">
+    <value>{0}–{1}</value>
   </data>
   <data name="{0}–{1} min" xml:space="preserve">
     <value>{0}–{1} rglrgl</value>

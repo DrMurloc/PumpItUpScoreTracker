@@ -8867,6 +8867,9 @@
   <data name="The arc" xml:space="preserve">
     <value>あなたの軌跡</value>
   </data>
+  <data name="the archetypes their top 50 lands in, and where yours lands" xml:space="preserve">
+    <value>彼らのトップ50が入るアーキタイプと、あなたのものが入る場所</value>
+  </data>
   <data name="The bar" xml:space="preserve">
     <value>基準</value>
   </data>
@@ -10381,6 +10384,9 @@
   <data name="Where your score came from" xml:space="preserve">
     <value>スコアの内訳</value>
   </data>
+  <data name="Where your scores sit" xml:space="preserve">
+    <value>スコアの分布</value>
+  </data>
   <data name="Which Chart Did You Play" xml:space="preserve">
     <value>どの譜面をプレイしましたか？</value>
   </data>
@@ -10823,6 +10829,15 @@
   </data>
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>確認リクエストにはこの値で応答してください。どこにも送られません — だからこそこの値で応答できることが証明になり、乗っ取られた DNS では通りません。保管されるのはハッシュだけなので、見つけられる場所に控えておいてください。</value>
+  </data>
+  <data name="your fifty" xml:space="preserve">
+    <value>あなたのトップ50</value>
+  </data>
+  <data name="Your fifty averages {0} — {1}, so {2}. {3}% of {4} are there too." xml:space="preserve">
+    <value>あなたのトップ50の平均は{0} — {1}、つまり{2}です。{4}の{3}%も同じです。</value>
+  </data>
+  <data name="Your fifty is too short to place on this yet — {0} charts does it." xml:space="preserve">
+    <value>あなたのトップ50はまだ短すぎて位置づけられません — {0}譜面で足ります。</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>ファイルが10MBを超えています。サイズを小さくして再試行してください。</value>
@@ -11811,6 +11826,9 @@
   <data name="{0}: the average top 50 of the {1} of them holding a full one" xml:space="preserve">
     <value>{0}：完全なトップ50を持つ {1} 人の平均トップ50</value>
   </data>
+  <data name="{0}: {1} of them, {2}%" xml:space="preserve">
+    <value>{0}：{1}人、{2}%</value>
+  </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>{0}日前</value>
   </data>
@@ -11843,6 +11861,9 @@
   </data>
   <data name="{0}th" xml:space="preserve">
     <value>{0}位</value>
+  </data>
+  <data name="{0}–{1}" xml:space="preserve">
+    <value>{0}〜{1}</value>
   </data>
   <data name="{0}–{1} min" xml:space="preserve">
     <value>{0}–{1}分</value>
