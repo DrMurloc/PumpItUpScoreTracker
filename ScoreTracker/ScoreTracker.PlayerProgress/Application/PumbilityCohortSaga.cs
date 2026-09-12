@@ -61,8 +61,7 @@ namespace ScoreTracker.PlayerProgress.Application
             // fifty would hand the viewer an archetype their chip disagrees with, which 77% of
             // full-fifty accounts would see (§4.15).
             var archetypes = pool == PumbilityPool.Total
-                ? ArchetypeSpread.Of(reading.Archetypes, reading.Spread.BoardHolders,
-                    mine.Select(m => (int)m.Score).ToArray(), mix)
+                ? ArchetypeSpread.Of(reading.Archetypes, mine.Select(m => (int)m.Score).ToArray(), mix)
                 : null;
             return new PumbilityCohortRecord(name, reading.Spread.Holders, reading.Spread.BoardHolders,
                 PeerLevelSpread.Of(reading.Spread, charts, mine.Select(m => m.ChartId)), reading.Split,

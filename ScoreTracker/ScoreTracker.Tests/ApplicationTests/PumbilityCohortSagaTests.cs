@@ -208,14 +208,23 @@ public sealed class PumbilityCohortSagaTests
     [Fact]
     public async Task TheCohortsFiftiesAreBandedByArchetypeAndYoursIsPlacedAmongThem()
     {
-        var ctx = new CohortContext()
-            .WithChart(out var staple, ChartType.Single, 21)
-            .WithOwnPool(Diamond);
+        var ctx = new CohortContext().WithOwnPool(Diamond);
+        var pool = new List<Chart>();
+        for (var i = 0; i < RecapPlayerTypeCalculator.MinimumScores; i++)
+        {
+            ctx.WithChart(out var chart, ChartType.Single, 21);
+            pool.Add(chart);
+        }
+
         // Twenty-six holders, so the level is read: nine average a Refiner's S, nine a Balanced
-        // Player's S+, eight a Competitive SS. The viewer averages an S+ like the middle nine.
+        // Player's S+, eight a Competitive SS, each over a poolful of charts.
         for (var i = 0; i < 26; i++)
-            ctx.WithHolder(out _, (staple, i < 9 ? 972_000 : i < 18 ? 977_000 : 982_000));
-        ctx.WithOwnScore(staple, 977_000);
+        {
+            var score = i < 9 ? 972_000 : i < 18 ? 977_000 : 982_000;
+            ctx.WithHolder(out _, pool.Select(c => (c, score)).ToArray());
+        }
+
+        foreach (var chart in pool) ctx.WithOwnScore(chart, 977_000);
 
         var record = await ctx.Handle();
 
@@ -225,10 +234,24 @@ public sealed class PumbilityCohortSagaTests
         Assert.Equal(9, archetypes.HoldersByArchetype[RecapPlayerType.BalancedPlayer]);
         Assert.Equal(8, archetypes.HoldersByArchetype[RecapPlayerType.Competitive]);
         Assert.Equal(0, archetypes.HoldersByArchetype[RecapPlayerType.PassPusher]);
-        // The viewer holds one chart, which is under the guard the chip applies, so the cohort
-        // draws and the marker stays off it.
-        Assert.Null(archetypes.Mine);
-        Assert.Null(archetypes.Ahead);
+        Assert.Equal(RecapPlayerType.BalancedPlayer, archetypes.Mine);
+        Assert.Equal(9, archetypes.StandingWithMe);
+    }
+
+    [Fact]
+    public async Task AHolderTooShortToBandIsCountedOnTheBandButNotOnTheSpectrum()
+    {
+        // The band is a census and counts everybody; the spectrum bands only the fifties long
+        // enough to mean something, the same guard the viewer's own marker applies.
+        var ctx = new CohortContext()
+            .WithChart(out var staple, ChartType.Single, 21)
+            .WithOwnPool(Diamond);
+        for (var i = 0; i < 26; i++) ctx.WithHolder(out _, (staple, 982_000));
+
+        var record = await ctx.Handle();
+
+        Assert.Equal(26, record.Holders);
+        Assert.Equal(0, Assert.IsType<ArchetypeSpread>(record.Archetypes).Holders);
     }
 
     [Fact]

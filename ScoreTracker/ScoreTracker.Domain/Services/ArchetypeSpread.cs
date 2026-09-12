@@ -34,6 +34,14 @@ public sealed record CohortArchetypeSpread(
     ///     The band's own answer, over the fifties the pool summary already measured. The mix picks
     ///     the cutoffs and is never inferred — a Phoenix 2 fifty read on Phoenix's floors lands two
     ///     archetypes low.
+    ///     <para>
+    ///         A holder under <see cref="RecapPlayerTypeCalculator.MinimumScores" /> charts is left
+    ///         out, the same guard the chip and the viewer's own marker apply: below that an average
+    ///         says more about how much has been played than about how it was played. Every band of
+    ///         every ladder sits high enough that this is unreachable today — the weakest needs
+    ///         roughly fourteen charts to reach at all — but the cohort must not be the one place
+    ///         the rule is skipped.
+    ///     </para>
     /// </summary>
     public static CohortArchetypeSpread Of(PeerPoolSummary summary, MixEnum mix)
     {
@@ -42,6 +50,8 @@ public sealed record CohortArchetypeSpread(
         foreach (var peer in summary.Peers)
         {
             if (!summary.AveragesByPeer.TryGetValue(peer, out var average)) continue;
+            if (!summary.Pools.TryGetValue(peer, out var pool) ||
+                pool.Count < RecapPlayerTypeCalculator.MinimumScores) continue;
             counts[RecapPlayerTypeCalculator.FromAverage(average, mix)]++;
             holders++;
         }
@@ -61,7 +71,6 @@ public sealed record CohortArchetypeSpread(
 ///     </para>
 /// </summary>
 /// <param name="Holders">Everyone on the band whose fifty could be banded.</param>
-/// <param name="BoardHolders">How many of those the official board is the only record of.</param>
 /// <param name="HoldersByArchetype">The five counts, every archetype present even at zero.</param>
 /// <param name="MyAverage">
 ///     The viewer's own top-50 average, or null when they hold too short a pool to band — the
@@ -70,14 +79,13 @@ public sealed record CohortArchetypeSpread(
 /// <param name="Mine">The archetype that average lands in, null with no average.</param>
 public sealed record ArchetypeSpread(
     int Holders,
-    int BoardHolders,
     IReadOnlyDictionary<RecapPlayerType, int> HoldersByArchetype,
     double? MyAverage,
     RecapPlayerType? Mine)
 {
     /// <summary>Nothing to draw.</summary>
     public static ArchetypeSpread Empty { get; } =
-        new(0, 0, CohortArchetypeSpread.Empty.HoldersByArchetype, null, null);
+        new(0, CohortArchetypeSpread.Empty.HoldersByArchetype, null, null);
 
     /// <summary>How many of the cohort stand in the viewer's own archetype, the viewer included.</summary>
     public int StandingWithMe => Mine is { } mine ? HoldersByArchetype.GetValueOrDefault(mine) : 0;
@@ -104,13 +112,13 @@ public sealed record ArchetypeSpread(
     ///     is the viewer's pool as the page already built it; too short a one leaves the marker off
     ///     rather than banding a handful of charts, the same guard the chip applies.
     /// </summary>
-    public static ArchetypeSpread Of(CohortArchetypeSpread cohort, int boardHolders,
-        IReadOnlyCollection<int> myScores, MixEnum mix)
+    public static ArchetypeSpread Of(CohortArchetypeSpread cohort, IReadOnlyCollection<int> myScores,
+        MixEnum mix)
     {
         var mine = myScores.Count >= RecapPlayerTypeCalculator.MinimumScores
             ? myScores.Average()
             : (double?)null;
-        return new ArchetypeSpread(cohort.Holders, boardHolders, cohort.HoldersByArchetype, mine,
+        return new ArchetypeSpread(cohort.Holders, cohort.HoldersByArchetype, mine,
             mine is { } average ? RecapPlayerTypeCalculator.FromAverage(average, mix) : null)
         {
             Ahead = mine is { } own && cohort.Holders > 0 ? AheadOf(cohort, own, mix) : null
@@ -139,6 +147,10 @@ public sealed record ArchetypeSpread(
         var within = floor is { } from && ceiling is { } to && to > from
             ? Math.Clamp((average - from) / (to - from), 0, 1)
             : 0.5;
-        return (below + within * cohort.HoldersByArchetype.GetValueOrDefault(mine)) / cohort.Holders;
+        var at = (below + within * cohort.HoldersByArchetype.GetValueOrDefault(mine)) / cohort.Holders;
+        // Off the ends: the marker is centred on its position, so 0 or 1 hangs half of it outside
+        // the strip. Reachable at 1 whenever nobody in the cohort shares the viewer's archetype and
+        // everyone sits below them — a low gem's Perfectionist, which §4.15 measured four of.
+        return Math.Clamp(at, 0.005, 0.995);
     }
 }

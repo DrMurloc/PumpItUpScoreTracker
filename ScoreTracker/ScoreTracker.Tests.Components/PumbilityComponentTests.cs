@@ -406,13 +406,12 @@ public sealed class PumbilityComponentTests : ComponentTestBase
                 new Uri("https://piu.test/i.png"), TimeSpan.FromMinutes(2), "Artist", 180),
             type, level, MixEnum.Phoenix, null, null);
 
-    private static ArchetypeSpread Archetypes(int[] counts, double? mine, int boardHolders = 0,
-        MixEnum mix = MixEnum.Phoenix2)
+    private static ArchetypeSpread Archetypes(int[] counts, double? mine, MixEnum mix = MixEnum.Phoenix2)
     {
         var byType = Enum.GetValues<RecapPlayerType>()
             .Select((type, i) => (type, count: counts[i])).ToDictionary(x => x.type, x => x.count);
         var cohort = new CohortArchetypeSpread(counts.Sum(), byType);
-        return ArchetypeSpread.Of(cohort, boardHolders,
+        return ArchetypeSpread.Of(cohort,
             mine is { } average
                 ? Enumerable.Repeat((int)average, RecapPlayerTypeCalculator.MinimumScores).ToArray()
                 : Array.Empty<int>(), mix);

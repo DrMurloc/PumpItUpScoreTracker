@@ -14,20 +14,31 @@ public sealed class ArchetypeSpreadTests
 {
     private const MixEnum Mix = MixEnum.Phoenix2;
 
-    private static PeerPoolSummary Summary(params (double Average, bool FromBoard)[] holders)
+    /// <summary>
+    ///     A cohort of holders at given averages. Each gets a pool of <paramref name="poolSize" />
+    ///     charts — a real one by default, since a holder under the sample-size guard is deliberately
+    ///     not banded at all.
+    /// </summary>
+    private static PeerPoolSummary Summary(int poolSize, params (double Average, bool FromBoard)[] holders)
     {
         var peers = new HashSet<PeerVoice>();
         var averages = new Dictionary<PeerVoice, double>();
+        var pools = new Dictionary<PeerVoice, IReadOnlySet<Guid>>();
         for (var i = 0; i < holders.Length; i++)
         {
-            var voice = holders[i].FromBoard ? PeerVoice.FromBoard(i + 1, $"board{i + 1}") : PeerVoice.Account(Guid.NewGuid());
+            var voice = holders[i].FromBoard
+                ? PeerVoice.FromBoard(i + 1, $"board{i + 1}")
+                : PeerVoice.Account(Guid.NewGuid());
             peers.Add(voice);
             averages[voice] = holders[i].Average;
+            pools[voice] = Enumerable.Range(0, poolSize).Select(_ => Guid.NewGuid()).ToHashSet();
         }
 
-        return new PeerPoolSummary(peers, new Dictionary<PeerVoice, IReadOnlySet<Guid>>(),
-            new Dictionary<Guid, PeerPoolChart>(), null, averages);
+        return new PeerPoolSummary(peers, pools, new Dictionary<Guid, PeerPoolChart>(), null, averages);
     }
+
+    private static PeerPoolSummary Summary(params (double Average, bool FromBoard)[] holders) =>
+        Summary(50, holders);
 
     private static int[] Pool(int score, int count = 50)
     {
@@ -76,7 +87,7 @@ public sealed class ArchetypeSpreadTests
     {
         var cohort = CohortArchetypeSpread.Of(Summary((972_000, false), (982_000, false)), Mix);
 
-        var spread = ArchetypeSpread.Of(cohort, 0, Pool(977_000), Mix);
+        var spread = ArchetypeSpread.Of(cohort, Pool(977_000), Mix);
 
         Assert.Equal(RecapPlayerType.BalancedPlayer, spread.Mine);
         Assert.Equal(977_000, spread.MyAverage);
@@ -87,7 +98,7 @@ public sealed class ArchetypeSpreadTests
     {
         var cohort = CohortArchetypeSpread.Of(Summary((982_000, false), (983_000, false)), Mix);
 
-        var spread = ArchetypeSpread.Of(cohort, 0, Pool(977_000, RecapPlayerTypeCalculator.MinimumScores - 1), Mix);
+        var spread = ArchetypeSpread.Of(cohort, Pool(977_000, RecapPlayerTypeCalculator.MinimumScores - 1), Mix);
 
         Assert.Null(spread.Mine);
         Assert.Null(spread.MyAverage);
@@ -100,7 +111,7 @@ public sealed class ArchetypeSpreadTests
     {
         var cohort = CohortArchetypeSpread.Of(Summary((977_000, false), (978_000, false), (982_000, false)), Mix);
 
-        var spread = ArchetypeSpread.Of(cohort, 0, Pool(976_000), Mix);
+        var spread = ArchetypeSpread.Of(cohort, Pool(976_000), Mix);
 
         Assert.Equal(RecapPlayerType.BalancedPlayer, spread.Mine);
         Assert.Equal(2, spread.StandingWithMe);
@@ -111,7 +122,7 @@ public sealed class ArchetypeSpreadTests
     {
         var cohort = CohortArchetypeSpread.Of(Summary((972_000, false), (973_000, false)), Mix);
 
-        var spread = ArchetypeSpread.Of(cohort, 0, Pool(988_000), Mix);
+        var spread = ArchetypeSpread.Of(cohort, Pool(988_000), Mix);
 
         Assert.Equal(RecapPlayerType.Perfectionist, spread.Mine);
         Assert.Equal(0, spread.StandingWithMe);
@@ -123,7 +134,7 @@ public sealed class ArchetypeSpreadTests
         var cohort = CohortArchetypeSpread.Of(Summary((972_000, false), (977_000, false),
             (978_000, false), (982_000, false)), Mix);
 
-        var spread = ArchetypeSpread.Of(cohort, 0, Pool(977_000), Mix);
+        var spread = ArchetypeSpread.Of(cohort, Pool(977_000), Mix);
 
         Assert.Equal(0.25, spread.ShareOf(RecapPlayerType.PassRefiner));
         Assert.Equal(0.50, spread.ShareOf(RecapPlayerType.BalancedPlayer));
@@ -133,7 +144,7 @@ public sealed class ArchetypeSpreadTests
     [Fact]
     public void AnEmptyCohortSharesNothingRatherThanDividingByZero()
     {
-        var spread = ArchetypeSpread.Of(CohortArchetypeSpread.Empty, 0, Pool(977_000), Mix);
+        var spread = ArchetypeSpread.Of(CohortArchetypeSpread.Empty, Pool(977_000), Mix);
 
         Assert.Equal(0, spread.ShareOf(RecapPlayerType.BalancedPlayer));
         Assert.Null(spread.Ahead);
@@ -153,7 +164,7 @@ public sealed class ArchetypeSpreadTests
         var cohort = CohortArchetypeSpread.Of(Summary((968_000, false), (972_000, false), (977_000, false),
             (982_000, false), (988_000, false)), Mix);
 
-        var spread = ArchetypeSpread.Of(cohort, 0, Pool(average), Mix);
+        var spread = ArchetypeSpread.Of(cohort, Pool(average), Mix);
 
         Assert.Equal(expected, spread.Mine);
         var below = Enum.GetValues<RecapPlayerType>().Where(t => t < expected).Sum(spread.ShareOf);
@@ -161,14 +172,39 @@ public sealed class ArchetypeSpreadTests
     }
 
     [Fact]
-    public void BoardHoldersAreCarriedThroughForTheLineThatNamesThem()
+    public void BoardHoldersAreBandedLikeAnybodyElse()
     {
         var cohort = CohortArchetypeSpread.Of(Summary((977_000, false), (982_000, true), (983_000, true)), Mix);
 
-        var spread = ArchetypeSpread.Of(cohort, 2, Pool(977_000), Mix);
+        var spread = ArchetypeSpread.Of(cohort, Pool(977_000), Mix);
 
         Assert.Equal(3, spread.Holders);
-        Assert.Equal(2, spread.BoardHolders);
+        Assert.Equal(2, spread.HoldersByArchetype[RecapPlayerType.Competitive]);
+    }
+
+    [Fact]
+    public void AHolderUnderTheSampleSizeGuardIsNotBanded()
+    {
+        // The same guard the chip and the viewer's own marker apply: below it an average says more
+        // about how much has been played than about how it was played.
+        var cohort = CohortArchetypeSpread.Of(
+            Summary(RecapPlayerTypeCalculator.MinimumScores - 1, (982_000, false), (983_000, false)), Mix);
+
+        Assert.Equal(0, cohort.Holders);
+        Assert.All(cohort.HoldersByArchetype.Values, count => Assert.Equal(0, count));
+    }
+
+    [Fact]
+    public void TheMarkerNeverSitsOnEitherEndOfTheStrip()
+    {
+        // Nobody shares the viewer's archetype and everyone sits below them — a low gem's
+        // Perfectionist, which §4.15 measured four of. Unclamped that is exactly 1.0, and the
+        // marker is centred on its position, so half the diamond would hang off the strip.
+        var cohort = CohortArchetypeSpread.Of(Summary((972_000, false), (973_000, false)), Mix);
+
+        var spread = ArchetypeSpread.Of(cohort, Pool(988_000), Mix);
+
+        Assert.InRange(spread.Ahead!.Value, 0.5, 0.995);
     }
 
     private static int[] Counts(CohortArchetypeSpread cohort)
