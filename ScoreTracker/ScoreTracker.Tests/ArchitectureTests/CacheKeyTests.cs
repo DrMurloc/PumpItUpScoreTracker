@@ -56,13 +56,8 @@ public sealed class CacheKeyTests
         ["ScoreTracker.Catalog/Application/SearchChartsHandler.cs"] = 1,
         ["ScoreTracker.Catalog/Infrastructure/EFChartFolderBaselineRepository.cs"] = 1,
         ["ScoreTracker.Catalog/Infrastructure/EFChartRepository.cs"] = 1,
-        ["ScoreTracker.ChartIntelligence/Application/BlendedTierListHandler.cs"] = 1,
-        ["ScoreTracker.ChartIntelligence/Application/ChartVerdictHandler.cs"] = 1,
-        ["ScoreTracker.ChartIntelligence/Application/PersonalizedBreakdownHandler.cs"] = 1,
-        ["ScoreTracker.ChartIntelligence/Application/ProjectedScoresHandler.cs"] = 1,
-        ["ScoreTracker.ChartIntelligence/Application/PumbilityFoldersHandler.cs"] = 1,
-        ["ScoreTracker.ChartIntelligence/Application/PumbilityPoolCompositionHandler.cs"] = 1,
-        ["ScoreTracker.ChartIntelligence/Infrastructure/EFTierListRepository.cs"] = 1,
+        // ChartIntelligence burned its seven entries in slice 0's intelligence commit: the
+        // personalized lenses are Viewer keys, the community lists and the verdict are Mix.
         ["ScoreTracker.Communities/Infrastructure/EFCommunitiesRepository.cs"] = 1,
         // OfficialMirror burned its entries in slice 0's mirror commit: OfficialCacheKeys and the
         // board peer reader build Mix keys through CacheKeys.

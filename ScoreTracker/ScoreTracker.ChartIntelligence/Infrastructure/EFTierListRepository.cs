@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Data.Persistence.Entities;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -30,7 +31,7 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure
 
         private static string TierListKey(MixEnum mix, Name tierListName)
         {
-            return $"{nameof(EFTierListRepository)}_TierList_{mix}_{tierListName}";
+            return CacheKeys.Mix(nameof(EFTierListRepository), mix, "TierList", tierListName);
         }
 
         public async Task SaveEntry(MixEnum mix, SongTierListEntry entry, CancellationToken cancellationToken)

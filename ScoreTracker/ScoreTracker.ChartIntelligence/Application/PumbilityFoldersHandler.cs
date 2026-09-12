@@ -5,6 +5,7 @@ using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services.Contracts;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.ChartIntelligence.Application;
@@ -31,7 +32,11 @@ internal sealed class PumbilityFoldersHandler
         CancellationToken cancellationToken)
     {
         var userId = request.Personalized ? request.UserId ?? _currentUser.User.Id : (Guid?)null;
-        var cacheKey = $"{nameof(PumbilityFoldersHandler)}_{request.Mix}_{userId?.ToString() ?? "community"}";
+        // The community lens is the population's (Mix); the personalized lens reads the viewer's
+        // own pool (Viewer).
+        var cacheKey = userId == null
+            ? CacheKeys.Mix(nameof(PumbilityFoldersHandler), request.Mix, "community")
+            : CacheKeys.Viewer(nameof(PumbilityFoldersHandler), request.Mix, userId);
         if (_cache.TryGetValue<IReadOnlyList<PumbilityFolderRecord>>(cacheKey, out var cached) &&
             cached is { Count: > 0 })
             return cached;

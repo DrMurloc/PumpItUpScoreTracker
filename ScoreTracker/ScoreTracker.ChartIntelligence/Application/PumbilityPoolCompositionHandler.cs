@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Domain;
+using ScoreTracker.SharedKernel.Caching;
 
 namespace ScoreTracker.ChartIntelligence.Application;
 
@@ -21,7 +22,7 @@ internal sealed class PumbilityPoolCompositionHandler
     public async Task<PumbilityPoolCompositionRecord?> Handle(GetPumbilityPoolCompositionQuery request,
         CancellationToken cancellationToken)
     {
-        var cacheKey = $"{nameof(PumbilityPoolCompositionHandler)}_{request.Mix}";
+        var cacheKey = CacheKeys.Mix(nameof(PumbilityPoolCompositionHandler), request.Mix);
         if (_cache.TryGetValue<PumbilityPoolCompositionRecord?>(cacheKey, out var cached) && cached != null)
             return cached;
 

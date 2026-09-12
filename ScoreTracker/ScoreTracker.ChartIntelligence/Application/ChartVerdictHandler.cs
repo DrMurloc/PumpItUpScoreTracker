@@ -6,6 +6,7 @@ using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.ChartIntelligence.Application;
@@ -45,7 +46,7 @@ internal sealed class ChartVerdictHandler : IRequestHandler<GetChartVerdictQuery
     public async Task<IReadOnlyList<ChartVerdictFacet>> Handle(GetChartVerdictQuery request,
         CancellationToken cancellationToken)
     {
-        return (await _cache.GetOrCreateAsync($"ChartVerdict__{request.Mix}__{request.ChartId}", async entry =>
+        return (await _cache.GetOrCreateAsync(CacheKeys.Mix("ChartVerdict", request.Mix, request.ChartId), async entry =>
         {
             // Relative, derived from the clock seam — the cache measures expiry on its
             // own (real) clock, so an absolute stamp from an injected clock would skew.
