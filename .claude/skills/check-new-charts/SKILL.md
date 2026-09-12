@@ -55,6 +55,11 @@ secret values**), rotates `catalog.csv`, and appends new-to-the-site songs to th
 - **Chart-set drift on a shipped song** means a new chart video for an already-imported song.
   The admin tool skips already-in-P2 songs on Confirm, so this needs manual chart addition —
   tell the owner.
+- **Name the patch in the handoff.** Chart videos never say their version; the teaser title
+  (`The 1st Content Update Teaser (V1.01.0)`), the BGA descriptions (`ver.1.01.0 Released Song`)
+  and the per-version playlist (`[PIU PHOENIX 2] v1.01.0 - STEP CHART VIDEO (…)`) do. Tell the
+  owner which version the batch belongs to and its Korean notice date, so the BulkAddCharts
+  Version picker gets the right row (docs/design/chart-versions.md §6).
 - **Handoff**: give the owner the batch + report paths. Preview in `/Admin/BulkAddCharts` is
   the human checkpoint (its already-in-catalog warnings are the dedup net for stale
   watermarks). With real blob creds the images mirror to the production CDN for real.
