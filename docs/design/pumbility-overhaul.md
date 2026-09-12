@@ -1986,7 +1986,7 @@ ladder) and the 25 rule. `ApplicationTests`: the cohort assembled off one read, 
 together, a private account counted from the board (D61), a thin level falling back to its gem, and Phoenix 1
 answering from the stored title. `Tests.Components`: the band and its count on the tile, two tones on a combined
 pool and one on a typed pool, the selector switching and clearing. `ExplorationTests`: the probe behind §4.14.
-`Tests.Integration`: none — no new persistence.
+`Tests.Integration`: the two new reads, which are SQL — the half-open band on each ladder’s own pool, and the highest-title cohort.
 
 **Build order** — docs first, i18n last, pushed per commit: (1) this section, D68, §3.6, §4.14; (2) Domain;
 (3) the stats and title reads; (4) the probe, over the reads it measures; (5) the mirror's merged rebuild; (6) the cohort query and its cache;

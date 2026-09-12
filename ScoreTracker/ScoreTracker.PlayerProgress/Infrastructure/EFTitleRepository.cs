@@ -171,6 +171,19 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                 .ToArrayAsync(cancellationToken);
         }
 
+        public async Task<IEnumerable<Guid>> GetUserIdsWithHighestTitle(MixEnum mix, Name title,
+            CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
+            var name = title.ToString();
+            return await database.Set<UserHighestTitleEntity>()
+                .Where(e => e.MixId == mixId && e.TitleName == name)
+                .Select(e => e.UserId)
+                .Distinct()
+                .ToArrayAsync(cancellationToken);
+        }
+
         public async Task DeleteHighestTitle(MixEnum mix, Guid userId, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);

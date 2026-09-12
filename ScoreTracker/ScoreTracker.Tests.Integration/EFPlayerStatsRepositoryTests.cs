@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.PlayerProgress.Infrastructure;
@@ -59,5 +60,41 @@ public sealed class EFPlayerStatsRepositoryTests : IAsyncLifetime
 
         Assert.Equal(new HashSet<Guid> { onTheFloor, inside, onTheCeiling }, singles);
         Assert.Equal(new HashSet<Guid> { doublesOnly }, doubles);
+    }
+
+    [Fact]
+    public async Task GetPlayersInPoolBandIsHalfOpenAndReadsTheLaddersOwnPool()
+    {
+        // [S] ADVANCED LV.9 runs 17,000 to 17,250, and the rung above begins where it ends (D68),
+        // so a pool sitting exactly on 17,250 holds that one instead. A doubles pool never enters a
+        // singles band, the merged ladder reads the total, and another mix's rows are not ours.
+        var onTheFloor = Guid.NewGuid();
+        var inside = Guid.NewGuid();
+        var onTheNextRung = Guid.NewGuid();
+        var below = Guid.NewGuid();
+        var doublesOnly = Guid.NewGuid();
+        var otherMix = Guid.NewGuid();
+        var repo = BuildRepository();
+        await repo.SaveStats(MixEnum.Phoenix2, onTheFloor, Pools(onTheFloor, 17_000.00, 0), CancellationToken.None);
+        await repo.SaveStats(MixEnum.Phoenix2, inside, Pools(inside, 17_249.99, 0), CancellationToken.None);
+        await repo.SaveStats(MixEnum.Phoenix2, onTheNextRung, Pools(onTheNextRung, 17_250.00, 0), CancellationToken.None);
+        await repo.SaveStats(MixEnum.Phoenix2, below, Pools(below, 16_999.99, 0), CancellationToken.None);
+        await repo.SaveStats(MixEnum.Phoenix2, doublesOnly, Pools(doublesOnly, 0, 17_100.00), CancellationToken.None);
+        await repo.SaveStats(MixEnum.Phoenix, otherMix, Pools(otherMix, 17_100.00, 0), CancellationToken.None);
+
+        var singles = (await repo.GetPlayersInPoolBand(MixEnum.Phoenix2, PumbilityPool.Singles, 17_000, 17_250,
+            CancellationToken.None)).ToHashSet();
+        Assert.Equal(new[] { onTheFloor, inside }.ToHashSet(), singles);
+
+        // The merged ladder stands on the total, which is where the doubles-only player is.
+        var merged = (await repo.GetPlayersInPoolBand(MixEnum.Phoenix2, PumbilityPool.Total, 17_000, 17_250,
+            CancellationToken.None)).ToHashSet();
+        Assert.Contains(doublesOnly, merged);
+        Assert.DoesNotContain(below, merged);
+
+        // The top rung of a ladder has no ceiling.
+        var roof = (await repo.GetPlayersInPoolBand(MixEnum.Phoenix2, PumbilityPool.Singles, 17_000, null,
+            CancellationToken.None)).ToHashSet();
+        Assert.Contains(onTheNextRung, roof);
     }
 }

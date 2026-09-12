@@ -34,6 +34,14 @@ namespace ScoreTracker.Domain.SecondaryPorts
         Task<IEnumerable<Guid>> GetUserIdsOnHighestLevel(MixEnum mix, DifficultyLevel level,
             CancellationToken cancellationToken);
 
+        /// <summary>
+        ///     The players whose highest difficulty title is this one — Phoenix 1's cohort for the
+        ///     Breakdown card (docs/design/pumbility-overhaul.md D68). Distinct from
+        ///     <see cref="GetUsersWithTitle" />, which answers everyone who has ever earned it.
+        /// </summary>
+        Task<IEnumerable<Guid>> GetUserIdsWithHighestTitle(MixEnum mix, Name title,
+            CancellationToken cancellationToken);
+
         Task DeleteHighestTitle(MixEnum mix, Guid userId, CancellationToken cancellationToken);
     }
 }
