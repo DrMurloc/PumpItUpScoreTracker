@@ -83,17 +83,26 @@
     private static string Css(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
 
     /// <summary>
-    ///     The grade a band starts at, from the calculator rather than a copy of it, so a re-cut
-    ///     moves the legend with the banding. The weakest band has no floor and reads as what it
-    ///     is: everything under the next one.
+    ///     The grades a band covers, read off the calculator rather than a copy of it so a re-cut
+    ///     moves the legend with the banding. A band is one rung on Phoenix 2 by construction and
+    ///     several on Phoenix 1 — Competitive spans SS through SSS there — so it prints the span
+    ///     rather than the grade it opens at, which would read as a contradiction beside a line
+    ///     naming the viewer's own grade. The weakest band has no floor and the summit no ceiling.
     /// </summary>
     private string GradeOf(RecapPlayerType type)
     {
         var floor = RecapPlayerTypeCalculator.FloorFor(type, Mix);
-        if (floor is { } own) return PhoenixScore.From(own).LetterGradeFor(Mix).GetName();
-        var next = RecapPlayerTypeCalculator.FloorFor(type + 1, Mix)!.Value;
-        return L["under {0}", PhoenixScore.From(next).LetterGradeFor(Mix).GetName()];
+        if (floor is not { } from)
+            return L["under {0}", Grade(RecapPlayerTypeCalculator.FloorFor(type + 1, Mix)!.Value)];
+
+        var opens = Grade(from);
+        if (type == RecapPlayerType.Perfectionist) return L["{0} and up", opens];
+
+        var tops = Grade(RecapPlayerTypeCalculator.FloorFor(type + 1, Mix)!.Value - 1);
+        return opens == tops ? opens : L["{0}–{1}", opens, tops];
     }
+
+    private string Grade(int score) => PhoenixScore.From(score).LetterGradeFor(Mix).GetName();
 
     private string Describe(RecapPlayerType type, int holders, double share)
     {

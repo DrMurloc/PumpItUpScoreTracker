@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
@@ -514,6 +515,56 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         Assert.Empty(bands[0].QuerySelectorAll("b"));
         Assert.Empty(bands[1].QuerySelectorAll("b"));
         Assert.Equal("BP", bands[2].QuerySelectorAll("b").Single().TextContent);
+    }
+
+    [Fact]
+    public void TheLegendSpellsOutEveryGradeABandCoversOnEitherMix()
+    {
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Cohort(null) with { Archetypes = Archetypes(new[] { 10, 20, 30, 20, 20 }, 977_000) });
+
+        var cut = Card(((PumbilityPageRecord)page) with { Mix = MixEnum.Phoenix2 }, page.Charts());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".pmb-arch-legend")));
+        // The name and its grade are separate elements, so the markup's own whitespace sits
+        // between them; collapse it and read the line as a reader would.
+        var legend = Regex.Replace(cut.Find(".pmb-arch-legend").TextContent, @"\s+", " ");
+        // Phoenix 2 cuts one rung per archetype, so four of them are a single grade — and the
+        // summit is open, which is not the same statement as "SS+".
+        Assert.Contains("under S", legend);
+        Assert.Contains("Pass Refiner · S", legend);
+        Assert.Contains("Balanced Player · S+", legend);
+        Assert.Contains("Competitive · SS", legend);
+        Assert.Contains("SS+ and up", legend);
+    }
+
+    [Fact]
+    public void APhoenix1BandSpansSeveralGradesAndTheLegendSaysSo()
+    {
+        // Phoenix 1's bands are its own floors and cover more than one rung each. Printing only
+        // the grade a band opens at put "Competitive · SS" beside a viewer told their S+ average
+        // made them Balanced — a card contradicting itself.
+        SignIn();
+        var page = Page(poolSize: 50);
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Cohort(null, "EXPERT") with
+            {
+                Archetypes = Archetypes(new[] { 10, 20, 30, 20, 20 }, 978_000, MixEnum.Phoenix)
+            });
+
+        var cut = Card(((PumbilityPageRecord)page) with { Mix = MixEnum.Phoenix }, page.Charts());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".pmb-arch-legend")));
+        // The name and its grade are separate elements, so the markup's own whitespace sits
+        // between them; collapse it and read the line as a reader would.
+        var legend = Regex.Replace(cut.Find(".pmb-arch-legend").TextContent, @"\s+", " ");
+        Assert.Contains("under AAA", legend);
+        Assert.Contains("Pass Refiner · AAA–AAA+", legend);
+        Assert.Contains("Balanced Player · S–S+", legend);
+        Assert.Contains("Competitive · SS–SSS", legend);
+        Assert.Contains("SSS+ and up", legend);
     }
 
     [Fact]

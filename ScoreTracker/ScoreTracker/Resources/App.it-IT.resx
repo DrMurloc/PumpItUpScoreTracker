@@ -11766,6 +11766,9 @@
   <data name="{0}th" xml:space="preserve">
     <value>{0}º</value>
   </data>
+  <data name="{0}–{1}" xml:space="preserve">
+    <value>{0}–{1}</value>
+  </data>
   <data name="{0}–{1} min" xml:space="preserve">
     <value>{0}–{1} min</value>
   </data>

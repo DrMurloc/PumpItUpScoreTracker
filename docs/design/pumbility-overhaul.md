@@ -2130,6 +2130,14 @@ already computed and thrown away inside `PumbilityPeerPools.Build`, which D68's 
 | **Web** | `ArchetypeSpectrum` in `Components/Pumbility/`, rendered from `PumbilityBreakdown` as a `.pmb-wpc-sub` under the band line. Five segments sized by share, the chip's short form inside any wide enough, the counts beneath, a diamond for the viewer. HTML and CSS, no script — positions are percentages and the glyphs keep their pixel sizes |
 | **Localization** | The section heading and caption, the legend's five names with their grade, and the one line under the spectrum |
 
+**The legend prints the span, not the opening grade.** Phoenix 2's bands are one rung each by
+construction, so the two read the same there; Phoenix 1's are its own floors and cover more — Pass
+Refiner is AAA–AAA+, Balanced Player S–S+, Competitive SS–SSS — and the section draws on that mix
+too, off the stored difficulty title. Printing the grade a band opens at put *Competitive · SS* on
+screen beside a viewer told their S+ average made them a Balanced Player, a card contradicting
+itself. The summit band is open on both mixes and says so (*SS+ and up*) rather than naming its
+floor as though it were the whole of it.
+
 **The band selector forgets.** D68 remembered the viewer's choice in `Pumbility__CompareBand`; it no longer
 stores anything (owner, 2026-09-12). `PumbilityBreakdown` drops the setting key, the `OnInitializedAsync` read,
 the write in `SetBand` and its `IUiSettingsAccessor` injection — the field lives for the visit. The resolve check
