@@ -151,7 +151,8 @@ internal sealed class HardmodeSaga :
             .ToArray();
 
         // The viewer's own ranks come from the stored board rather than being recomputed here:
-        // a rank is a fact about everyone, and the one thing on this page that is a week old.
+        // a rank is a fact about everyone, and this page's own totals are not what it is measured
+        // against. Both move with an import now (D15); the CHART LIST is the week-old part.
         combined = await Ranked(combined, request.Mix, null, request.UserId, cancellationToken);
         singles = await Ranked(singles, request.Mix, ChartType.Single, request.UserId, cancellationToken);
         doubles = await Ranked(doubles, request.Mix, ChartType.Double, request.UserId, cancellationToken);
@@ -250,9 +251,10 @@ internal sealed class HardmodeSaga :
     private async Task<HardmodePoolTotals> Ranked(HardmodePoolTotals totals, MixEnum mix, ChartType? pool,
         Guid userId, CancellationToken cancellationToken)
     {
-        var board = await _ratings.GetBoard(mix, pool, cancellationToken);
-        var mine = board.FirstOrDefault(r => r.UserId == userId);
-        return mine == null ? totals : totals with { Rank = mine.Place, Field = board.Count };
+        var standing = await _ratings.GetStanding(mix, pool, userId, cancellationToken);
+        return standing == null
+            ? totals
+            : totals with { Rank = standing.Value.Place, Field = standing.Value.Field };
     }
 
     /// <summary>

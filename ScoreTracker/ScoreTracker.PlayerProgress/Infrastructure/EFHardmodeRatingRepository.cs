@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Domain;
@@ -10,10 +11,13 @@ namespace ScoreTracker.PlayerProgress.Infrastructure;
 internal sealed class EFHardmodeRatingRepository : IHardmodeRatingRepository
 {
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
+    private readonly ILogger<EFHardmodeRatingRepository> _logger;
 
-    public EFHardmodeRatingRepository(IDbContextFactory<ChartAttemptDbContext> factory)
+    public EFHardmodeRatingRepository(IDbContextFactory<ChartAttemptDbContext> factory,
+        ILogger<EFHardmodeRatingRepository> logger)
     {
         _factory = factory;
+        _logger = logger;
     }
 
     public async Task Save(MixEnum mix, IReadOnlyCollection<HardmodeRatingRow> rows,
@@ -26,6 +30,12 @@ internal sealed class EFHardmodeRatingRepository : IHardmodeRatingRepository
         var existing = await database.Set<PlayerStatsEntity>()
             .Where(e => e.MixId == mixId && byUser.Keys.Contains(e.UserId))
             .ToArrayAsync(cancellationToken);
+        if (existing.Length != rows.Count)
+            _logger.LogWarning(
+                "Hardmode ratings for {Mix}: {Missing} of {Total} accounts have no PlayerStats row " +
+                "and were not written",
+                mix, rows.Count - existing.Length, rows.Count);
+
         foreach (var entity in existing)
         {
             var row = byUser[entity.UserId];
@@ -49,7 +59,13 @@ internal sealed class EFHardmodeRatingRepository : IHardmodeRatingRepository
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var mixId = MixIds.For(mix);
         await database.Set<PlayerStatsEntity>()
+            // Every column this resets is named here. Today combined >= either type, so the two
+            // per-type ratings could not be non-zero alone - but that is an invariant of the one
+            // writer, not of the schema, and a predicate that does not name what it clears leaves
+            // a stale rating on the board forever the day that stops holding.
             .Where(e => e.MixId == mixId && (e.HardmodeRating > 0 || e.HardmodeChartsHeld > 0
+                                             || e.HardmodeSinglesRating > 0
+                                             || e.HardmodeDoublesRating > 0
                                              || e.HardmodeSinglesChartsHeld > 0
                                              || e.HardmodeDoublesChartsHeld > 0))
             .ExecuteUpdateAsync(e => e
@@ -86,6 +102,37 @@ internal sealed class EFHardmodeRatingRepository : IHardmodeRatingRepository
             .OrderByDescending(e => e.Hardmode)
             .ToArrayAsync(cancellationToken);
         return rows.Select((r, i) => new HardmodeBoardRow(i + 1, r.UserId, r.Hardmode, r.Held)).ToArray();
+    }
+
+    /// <summary>
+    ///     Two aggregates rather than a materialised board: how many stand above you, and how
+    ///     many stand at all. Ties share a place, which the board's own index-based numbering
+    ///     does not — on a float pool total that is a theoretical difference, and the competition
+    ///     ranking is the more defensible of the two anyway.
+    /// </summary>
+    public async Task<(int Place, int Field)?> GetStanding(MixEnum mix, ChartType? pool, Guid userId,
+        CancellationToken cancellationToken)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var mixId = MixIds.For(mix);
+        var rated = database.Set<PlayerStatsEntity>()
+            .Where(e => e.MixId == mixId)
+            .Select(e => new
+            {
+                e.UserId,
+                Hardmode = pool == ChartType.Single ? e.HardmodeSinglesRating
+                    : pool == ChartType.Double ? e.HardmodeDoublesRating
+                    : e.HardmodeRating
+            })
+            .Where(e => e.Hardmode > 0);
+
+        var mine = await rated.Where(e => e.UserId == userId).Select(e => (double?)e.Hardmode)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (mine == null) return null;
+
+        var above = await rated.CountAsync(e => e.Hardmode > mine, cancellationToken);
+        var field = await rated.CountAsync(cancellationToken);
+        return (above + 1, field);
     }
 
     public async Task<HardmodeRatingRow?> Get(MixEnum mix, Guid userId, CancellationToken cancellationToken)

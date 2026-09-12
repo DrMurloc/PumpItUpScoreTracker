@@ -25,6 +25,18 @@ internal interface IHardmodeRatingRepository
         CancellationToken cancellationToken);
 
     Task<HardmodeRatingRow?> Get(MixEnum mix, Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     One account's place and field on one pool, counted in SQL. The page needs three of
+    ///     these and used to get them by materialising and ordering every PlayerStats row on the
+    ///     mix, three times, for one row each.
+    ///     <para>
+    ///         Null when the account holds nothing on that pool: a zero is not a standing, which
+    ///         is the same rule the board's own read applies.
+    ///     </para>
+    /// </summary>
+    Task<(int Place, int Field)?> GetStanding(MixEnum mix, ChartType? pool, Guid userId,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>One account's Hardmode totals, all three pools at once because they are written together.</summary>

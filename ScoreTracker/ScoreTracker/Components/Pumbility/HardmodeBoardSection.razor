@@ -163,6 +163,7 @@
     private string _filter = string.Empty;
     private int _page = 1;
     private bool _loading = true;
+    private (MixEnum Mix, ChartType? Pool, Source Source)? _loadedFor;
     private IReadOnlyList<Row> _rows = Array.Empty<Row>();
 
     private string PoolLabel => Pool switch
@@ -190,8 +191,15 @@
 
     private IEnumerable<Row> Page => Rows.Skip((Math.Min(_page, PageCount) - 1) * PageSize).Take(PageSize);
 
+    /// <summary>
+    ///     Blazor calls this on every parent render, whether or not a parameter moved — and opening
+    ///     or closing a chart dialog re-renders the page. Unguarded, every card click tore the board
+    ///     down to a skeleton and re-issued five queries. The sibling lists guard the same way.
+    /// </summary>
     protected override async Task OnParametersSetAsync()
     {
+        if (_loadedFor == (Mix, Pool, _source)) return;
+        _loadedFor = (Mix, Pool, _source);
         await Load();
     }
 
@@ -200,6 +208,7 @@
         if (_source == source) return;
         _source = source;
         _page = 1;
+        _loadedFor = (Mix, Pool, _source);
         await Load();
     }
 
