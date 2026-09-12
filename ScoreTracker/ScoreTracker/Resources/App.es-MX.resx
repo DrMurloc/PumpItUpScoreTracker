@@ -8758,6 +8758,9 @@
   <data name="The arc" xml:space="preserve">
     <value>El arco</value>
   </data>
+  <data name="the archetypes their top 50 lands in, and where yours lands" xml:space="preserve">
+    <value>los arquetipos en los que cae su top 50, y dónde cae el tuyo</value>
+  </data>
   <data name="The bar" xml:space="preserve">
     <value>El límite</value>
   </data>
@@ -10246,6 +10249,9 @@
   <data name="Where your score came from" xml:space="preserve">
     <value>De dónde salió tu puntuación</value>
   </data>
+  <data name="Where your scores sit" xml:space="preserve">
+    <value>Dónde caen tus scores</value>
+  </data>
   <data name="Which Chart Did You Play" xml:space="preserve">
     <value>¿Qué tabla jugaste?</value>
   </data>
@@ -10680,6 +10686,15 @@
   </data>
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>Tu endpoint responde a una petición de verificación con esto. No se envía a ninguna parte: por eso responder con él es una prueba, y por eso un DNS secuestrado no puede pasar. Se guarda como hash, así que anótalo donde puedas encontrarlo.</value>
+  </data>
+  <data name="your fifty" xml:space="preserve">
+    <value>tu top 50</value>
+  </data>
+  <data name="Your fifty averages {0} — {1}, so {2}. {3}% of {4} are there too." xml:space="preserve">
+    <value>Tu top 50 promedia {0} — {1}, así que {2}. El {3}% de {4} también está ahí.</value>
+  </data>
+  <data name="Your fifty is too short to place on this yet — {0} charts does it." xml:space="preserve">
+    <value>Tu top 50 aún es demasiado corto para situarte aquí: con {0} charts basta.</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>Tu archivo superaba los 10MB, redúcelo e inténtalo de nuevo.</value>
@@ -11647,6 +11662,9 @@
   <data name="{0}: the average top 50 of the {1} of them holding a full one" xml:space="preserve">
     <value>{0}: el top 50 promedio de los {1} de ellos que tienen una completa</value>
   </data>
+  <data name="{0}: {1} of them, {2}%" xml:space="preserve">
+    <value>{0}: {1} de ellos, {2}%</value>
+  </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>hace {0} d</value>
   </data>
@@ -11679,6 +11697,9 @@
   </data>
   <data name="{0}th" xml:space="preserve">
     <value>{0}.º</value>
+  </data>
+  <data name="{0}–{1}" xml:space="preserve">
+    <value>{0}–{1}</value>
   </data>
   <data name="{0}–{1} min" xml:space="preserve">
     <value>{0}–{1} min</value>

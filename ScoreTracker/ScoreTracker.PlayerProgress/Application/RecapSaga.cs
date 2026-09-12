@@ -109,7 +109,7 @@ internal sealed class RecapSaga :
             .Select(s => s.Score!.Value)
             .ToArray();
 
-        var playerType = RecapPlayerTypeCalculator.Calculate(top50Pumbility);
+        var playerType = RecapPlayerTypeCalculator.Calculate(top50Pumbility, mix);
         var recap = new PlayerRecap(
             PlayerRecap.CurrentSchemaVersion,
             _dateTime.Now,

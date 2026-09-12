@@ -158,6 +158,7 @@ Round thirteen, 2026-09-12 — the Breakdown card's comparisons become your titl
 | # | Ruling |
 |---|---|
 | D68 | **You are compared against the players who hold your title, not against your projection peers (round thirteen, 2026-09-12).** Owner: *"when im looking at comparing my combined pumbility pool, I dont care about comparing myself to peers that we use for score projection. I care about comparing myself to people on my level. So I think maybe we should actually do it by 'players with X title' (and title level for combined), NOT peers"*, and *"If we had a way to switch which title/level you viewed comparisons for that'd be ideal too"*. Peers are drawn to **project a score** — a window on the pool of the type, half as far up as down (D53) — and this card projects nothing; it describes what you hold. The population that answers *what does somebody at my level hold* is the title. **The cohort per pool:** the combined pool reads the **[P.B] gem**, refined to the **gem + level** when that level holds **25 or more** (*"load the players with the title, if theres enough within a specific level you just stay on the level, otherwise you flip the level off"* → *"25 it is"*, measured in §4.14), clearable back to the gem and switchable to any rung — both by picking that line in the selector, there being no second control for it (owner, on the PR); a singles or doubles pool reads its **[S] / [D] rung**, which has no coarser grouping to fall back to (*"Each level there is the cohort, and theres just no subcategories within them"*). **Phoenix 1 reads the difficulty title** (*"Phoenix 1 should just be by difficulty title. Cut and dry."*), straight off the highest title already stored; no board players there, since a board row is a PUMBILITY number and a difficulty title is rating earned on a level. **Board players count on Phoenix 2**, banded by their row on the matching PUMBILITY board. **Singles and doubles are never summed** (*"no mixing singles and doubles. On combined they should be separate. Two tone"*): where the pool holds both types they draw as two tiles side by side, one per type, in the card's own type colours — never striped into one plot, which reads as a single series banded rather than as two answers (owner, on the PR: *"can we put singles and doubles into two seperate side by side graphs like they were before? it's disruptive visually having them interlaced together in one"*). **The split bar stays on the combined pool alone** (*"That only shows on combined"*), now against the cohort's average rather than the peers'. Supersedes the population in D67 and the peers' average in D58; the drawings themselves stand. It also settles D55 for this card, which stops being a peers surface at all |
+| D69 | **The card says which archetype your fifty makes you, and how many of your cohort it makes the same (round fourteen, 2026-09-12).** Owner: *"i'm looking to re-evaluate the player type labels thresholds for phoenix 2"*, then *"give me a mock of a segment of 'Pumbility breakdown' that can show where you fall on the Player Type spectrum compared to others"*. **Phoenix 2 takes its own cutoffs, one letter-grade rung per archetype** — under S Pass Pusher, S Pass Refiner, S+ Balanced Player, SS Competitive, SS+ and up Perfectionist (**970,000 / 975,000 / 980,000 / 985,000**). Phoenix 1 keeps 950/970/980/995, which are its own grade floors. The alternative was a set tuned to hit a target population shape (10/25/30/25/10, reachable at 967,500 / 976,250 / 981,500 / 986,500); the grade-anchored set won because it is the one a player can be told in a sentence and because the whole point of the constants coinciding with grade floors is that a future grade re-cut cannot silently re-tune who is which type. Measured in §4.15: on the old cuts 90% of Phoenix 2 stood in two bands with the median player 900 points under the Balanced/Competitive line; on the new ones the five run 13 / 16 / 27 / 28 / 15, Pass Pusher empties at ALEXANDRITE on its own (0 of 39) and RED BERYL still keeps 21 of 479 (owner: *"I like pass pusher dissapearing for alexandrite … but i expect one or two to exist for red beryl even if it's rare"*). **The segment draws the cohort D68 already reads** — the players holding your title — so the population is the one the rest of the card compares against and the spectrum is the very number the chip bands. **Combined pool only**, beside the split bar, since a per-type fifty would re-band a player whose chip says otherwise: 77% of full-fifty accounts have at least one type disagreeing with their merged band, 64% have the two types disagreeing with each other, 15 of them by four whole bands. **The spectrum is drawn by players, not by score** — five segments as wide as the share of the cohort standing in each, a diamond where your own fifty falls — because a score axis spends half its width on a band a mid-ladder cohort barely occupies. **The archetypes are lateral, never a ladder** (owner: *"I dont want to imply anywhere that one player type is higher or lower than the others"*): no copy may say *ahead of*, *above*, *higher* or *top*; what the section states is which band you are in and how many hold it with you. Colours are the chips' own (`MixThemes.PlayerTypeHex`, the grade-metal ladder), emitted as `--ptype-*` so CSS can read them without a literal |
 ## 3. The section
 
 ### 3.1 The three pages
@@ -409,9 +410,27 @@ is no separate *mine* entry, because picking your own band back is picking it, a
 since clearing to the gem is one of the lines in the list and a second way to do it only asks which one is which
 (owner, on the PR). Inside a gem's group the heading already says which gem it is, so the lines read **All
 Levels**, **Level 1**, **Level 2** rather than spelling the gem out six times — **except the selected one, which
-spells its band out**, a closed selector showing that line and nothing else. The choice is remembered as
-`Pumbility__CompareBand`, and a band that is not a rung of the ladder in scope — a gem still remembered from the
-merged pool, a Phoenix 2 rung on Phoenix 1 — reads as no choice rather than as an empty cohort.
+spells its band out**, a closed selector showing that line and nothing else.
+
+**The choice lasts the visit and no longer** (owner, 2026-09-12: *"I just realized the 'compared against'
+dropdown is persisting. Please make that not persist. it should always default to your personal title/level
+(with fallback if level is too small on cohorts)"*). The card is a description of where you stand, so it opens
+on where you stand — your own rung, or the gem around a level too thin to read. A remembered band quietly made
+it somebody else's, with nothing on the page to say the answer was to an old question. Nothing is stored, which
+also retires the question of what a stored band means on another ladder: a band still selected when the pool
+switches — a [P.B] gem on the singles ladder — reads as no choice rather than as an empty cohort, and lands
+back on your own.
+
+**Where your scores sit (D69, round fourteen).** The card's archetype section, under the band line and beside the
+split bar — **the combined pool alone**, for the same reason the split bar is: a singles or doubles fifty re-bands
+a player whose chip is the merged one, and 77% of full-fifty accounts would watch it disagree (§4.15). Five
+segments across the width, each as wide as the share of your cohort whose own fifty lands in that archetype, in
+the chips' own metal colours, carrying the chip's phone-width short form wherever a segment is wide enough to hold
+one, with the counts beneath. A diamond marks where your own fifty falls. The line under it names the band you are
+in and how many of the cohort stand in it with you — **never a rank**: the archetypes are five ways to hold a
+fifty and none of them is above another (D69), so the copy reads *28% of DIAMOND LV.4 are there too* and never
+*ahead of*. On the owner's account (2026-09-12): 979,770, an S+, **Balanced Player**, against DIAMOND LV.4's 189
+holders splitting **23 / 47 / 53 / 46 / 20**.
 
 **Where the levels sit (D41, moved here by D58, redrawn by D67, repopulated by D68).** The card's last section,
 under the band line above. Each level is a column of **that cohort's spread** — how
@@ -1334,6 +1353,95 @@ Lv. 7 has 19, Lv. 8 has 11, Lv. 9 has 5, and Lv. 10 and The Master have one each
 a Phoenix 1 board row is a PUMBILITY number, and a difficulty title is rating earned on one level, which no total
 can be banded into.
 
+### 4.15 Round fourteen — what a Phoenix 2 fifty is graded at, and where the archetypes cut (2026-09-12)
+
+Owner: *"basically everyone is competitive or balanced"* (2026-09-05), then *"query players in my local sql, both
+piu scores players and official leaderboard players that we have insight into their top 50 pumbility charts, and
+tell me what the average letter grade distribution looks like across them"*.
+
+**The population — 1,207 players whose fifty is genuinely visible.** 357 PIU Scores accounts holding ten or more
+pool-eligible charts (252 of them a full fifty), priced from their own records, plus 850 official board players
+whose rebuilt fifty is confirmed against the published combined PUMBILITY number (snapshot 19, `BoardPoolCheck`'s
+270 tolerance; 933 passed, worst shortfall 205.9, and 82 dropped as site duplicates by link-then-unique-tag).
+Elite-skewed on both halves — the board side is the top 1,000 rows, the site side the active accounts — so it
+describes the people who *have* a visible fifty, not the playerbase. Fidelity: the SQL replica reproduced stored
+`SkillRating` within 0.01 on **374 of 375** Phoenix 2 accounts ([p2 pool census](phoenix2-implementation.md)).
+
+**Every slot of every pool, by grade** (55,150 charts):
+
+| SSS+ | SSS | SS+ | SS | S+ | S | AAA+ | AAA | AA+ | AA | A+ | A |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 11.1% | 16.0% | 14.4% | 14.0% | 12.4% | 9.3% | 10.8% | 6.3% | 2.8% | 2.1% | 0.7% | 0.1% |
+
+Nothing in any pool sits below an A. 77% of every pooled chart is an S or better and 55% an SS or better; the
+median player's fifty holds 40 at S or better, 28 at SS, 20 at SS+ and exactly one below AAA.
+
+**The per-player average — the number the archetype actually reads.** p10 970,041 · p25 974,798 · **p50 979,086** ·
+p75 983,306 · p90 986,506. **88% of players average between S and SS+**, a 15,000-point window, and three of the
+four old cutoffs (950,000, 995,000 and everything under 970,000) sit at or outside its edges. The median player
+stood **900 points** under the 980,000 line, which is why Balanced and Competitive split 45.0 / 45.1.
+
+| ≥ | SSS+ 995k | SSS 990k | SS+ 985k | SS 980k | S+ 975k | S 970k | AAA+ 960k | AAA 950k |
+|---|---|---|---|---|---|---|---|---|
+| share | 0.2% | 2.5% | 15.7% | **45.2%** | 73.7% | 90.2% | 97.9% | 98.9% |
+
+**The cut.** Over the population the chip really bands (site accounts at ten charts or more, plus the confirmed
+board fifties — 1,207):
+
+| Set | Cutoffs | Shape |
+|---|---|---|
+| the old one | 950,000 / 970,000 / 980,000 / 995,000 | 1.7 / 11.4 / 43.2 / 43.3 / 0.2 |
+| the target shape | 967,500 / 976,250 / 981,500 / 986,500 | 9.5 / 25.0 / 30.7 / 24.6 / 10.1 |
+| **shipped — grade rungs** | **970,000 / 975,000 / 980,000 / 985,000** | **13.2 / 16.2 / 27.0 / 28.3 / 15.3** |
+
+The exact quantiles for a 10 / 25 / 30 / 25 / 10 shape are 967,938 / 976,327 / 981,475 / 986,505 — **not one of
+them is a grade floor**, and the live band's floors are 5,000 apart with the population spread unevenly across
+them, so no floor-anchored set reaches 10% at both ends. The grade rungs were taken anyway: each archetype is one
+letter grade, which is a sentence rather than a table.
+
+**Per [P.B] gem, under the shipped cut** (counts; every gem below DIAMOND is site-only):
+
+| Gem | n | PP | PR | BP | CP | PF |
+|---|---|---|---|---|---|---|
+| ABYSS ABSOLUTE | 2 | 0 | 0 | 0 | 2 | 0 |
+| ALEXANDRITE | 39 | **0** | 4 | 11 | 16 | 8 |
+| RED BERYL | 479 | **21** | 51 | 126 | 178 | 103 |
+| DIAMOND | 477 | 58 | 102 | 142 | 119 | 56 |
+| PLATINUM | 59 | 9 | 12 | 28 | 8 | 2 |
+| GOLD | 38 | 14 | 9 | 8 | 3 | 4 |
+| SILVER | 30 | 14 | 8 | 3 | 1 | 4 |
+| BRONZE | 23 | 12 | 5 | 2 | 3 | 1 |
+| no gem | 60 | 31 | 5 | 6 | 11 | 7 |
+
+ALEXANDRITE's zero is earned rather than engineered — its softest player averages 973,785, nowhere near the line —
+and RED BERYL's 21 are real full fifties, the softest averaging 936,789 on an 18,421 pool. The fade up the ladder
+is gradual, RED BERYL LV.1 through LV.5 running 8 · 5 · 5 · 3 · 0. Two rows to read carefully: SILVER's four
+Perfectionists are short pools of low-level charts scored near-perfectly, and *no gem* is almost entirely accounts
+the ten-chart guard admits with barely more than ten.
+
+**Why the archetype is not a restatement of the gem, and not about difficulty either.** Pool size and top-50
+average correlate only **0.350**. Under the old cuts RED BERYL was 58.5% Competitive and DIAMOND 51.2% Balanced —
+the chip was telling a player what their own badge already said; under the new ones every gem from GOLD up carries
+all five. And the band tracks no difficulty at all: median pool level runs **22.3 / 22.4 / 22.3 / 22.2 / 22.0**
+across the five. A Pass Pusher on Phoenix 2 holds the same charts as a Perfectionist and scores them lower, which
+is what the formula argument predicted — the pool is flat in score and graded by level (median score at slot 1
+981,380, at slot 25 982,165, at slot 50 980,048, while median level runs 24 → 22 → 22).
+
+**Why the section is combined-only.** Over the 252 accounts holding a full fifty, **193 (77%)** have at least one
+per-type band disagreeing with their merged one and **162 (64%)** have singles and doubles disagreeing with each
+other, 15 of them by four whole bands. The owner's own account is the clean case: 979,770 merged (Balanced Player)
+against 980,331 singles and 980,393 doubles (Competitive both).
+
+**The cohorts the section actually draws** (2026-09-12, re-run rather than quoted): DIAMOND LV.4, the owner's band,
+189 holders (16 site, 173 board) splitting 23 / 47 / 53 / 46 / 20; cleared to the DIAMOND gem, 458 holders
+(95 site, 363 board) splitting 57 / 100 / 137 / 110 / 54.
+
+**One pre-existing drift the new cut makes slightly more visible, and does not cause.** `CommunityLeaderboard`
+bands on the stored `PlayerStats.AverageSkillScore` rather than recomputing. Across the 357 Phoenix 2 accounts
+with ten or more pool charts, 239 match a rebuild exactly and 314 within 100 points, but 13 drift past 1,000 (worst
+10,010, all of them short pools). Seven would wear an archetype their records do not justify under the new cut,
+five under the old. A Recalculate ratings pass clears it; nothing here needs one to ship.
+
 ## 5. Phoenix 2 carryover — the Phoenix 1 page
 
 Its own route since round two (`/Pumbility/Phoenix1`, D14), and only on the Phoenix 2 view; Phoenix 1
@@ -1990,7 +2098,7 @@ board side is the mirror's sealed snapshot.
 | **Ports** | `IPlayerStatsReader.GetPlayersInPoolBand(mix, pool, floor, ceiling)`, one method over `SkillRating` / `SinglesRating` / `DoublesRating`, beside the per-type window the peers keep; the title port answers Phoenix 1's cohort off `UserHighestTitle`, and the viewer's own title beside it; the board port answers the rows of a named PUMBILITY board inside a pool range, official rows only, carrying the snapshot's as-of, and only the players no account claims — a private link included, since a band is a census and anyone with an account is already in the ladder's own read (D61) |
 | **OfficialMirror** | The merged fifty a board player is banded on: both types' rows priced, merged, the top fifty taken, and checked against the combined board's own number at the 270 tolerance D60 already sets. The per-type rebuilds are untouched |
 | **PlayerProgress** | `GetPumbilityTitleCohortQuery(mix, pool, band?)` answers `PumbilityCohortRecord` — the band's name, how many hold it, how many of those the board is the only record of, the spread, the split for the combined pool, and the board's as-of. `PumbilityCohortCache` keys on mix, pool and band rather than on the viewer, because a cohort is the same for everyone reading it, and holds the aggregate rather than the pools |
-| **Web** | `PumbilityBreakdown` reads the cohort instead of the compare record; `LevelSpreadChart` takes one spread and draws a tile per chart type, side by side on one scale, in the card's own `--chart-singles` / `--chart-doubles`; a band line above both comparison sections carries the band, its count and the selector — starting on the band that was read rather than on a "mine" entry and with no clear button beside it, any rung selectable, a gem's levels reading as All Levels / Level 1 under the gem's own heading and the selected line spelling its band out — remembered as `Pumbility__CompareBand`, and a band that does not resolve on the ladder in scope is dropped rather than sent |
+| **Web** | `PumbilityBreakdown` reads the cohort instead of the compare record; `LevelSpreadChart` takes one spread and draws a tile per chart type, side by side on one scale, in the card's own `--chart-singles` / `--chart-doubles`; a band line above both comparison sections carries the band, its count and the selector — starting on the band that was read rather than on a "mine" entry and with no clear button beside it, any rung selectable, a gem's levels reading as All Levels / Level 1 under the gem's own heading and the selected line spelling its band out — **never remembered** (D69's round: the card opens on your own band every visit), and a band that does not resolve on the ladder in scope is dropped rather than sent |
 | **Retired** | `GetPumbilityPoolCompareQuery`, `PumbilityPoolCompareRecord`, `AverageSplit` and its cache slice. Play's peers are untouched |
 | **Localization** | The band line and its count, the selector and its clear, and the section's caption |
 
@@ -2004,6 +2112,51 @@ pool and one on a typed pool, the selector switching and clearing. `ExplorationT
 **Build order** — docs first, i18n last, pushed per commit: (1) this section, D68, §3.6, §4.14; (2) Domain;
 (3) the stats and title reads; (4) the probe, over the reads it measures; (5) the mirror's merged rebuild; (6) the cohort query and its cache;
 (7) the card, the chart and the selector; (8) the compare query retires; (9) nine locales.
+
+### 6.18 Round fourteen — the archetype spectrum, and Phoenix 2's own cutoffs
+
+**No new table, migration, job, cache or post-deploy step.** Nothing stores an archetype: all three surfaces that
+wear the chip compute it on read, the two caches in the path are in-process and cold after a deploy, and the one
+persisted copy — the Phoenix 1 season recap — is on a mix whose cutoffs do not move. The spectrum's own input is
+already computed and thrown away inside `PumbilityPeerPools.Build`, which D68's cohort sweep still calls.
+
+| Layer | Change |
+|---|---|
+| **SharedKernel** | `RecapPlayerTypeCalculator` takes the mix: `FromAverage(average, mix)` and `Calculate(scores, mix)`, with **no mix-less form left behind** — the same rule `LetterGradeFor` follows, since an archetype resolved without naming a mix is a Phoenix 2 fifty read on Phoenix 1's floors. Phoenix 2's table is 970,000 / 975,000 / 980,000 / 985,000, Phoenix's stays 950,000 / 970,000 / 980,000 / 995,000, and both are still each mix's own AAA/S/SS/SSS+ or S/S+/SS/SS+ floors rather than free numbers |
+| **Callers** | `LeaderboardHubSaga.ComputeStats` and `RecapSaga` already hold their mix; `CommunityLeaderboard` passes `_currentMix`. Recap stays Phoenix-only, so its stored types and its `TypeBands` grade strings are unchanged |
+| **Domain** | `PeerPoolSummary` gains `Averages`, each voice's own top-50 average — the builder already prices and sorts that fifty and keeps only the chart ids. `ArchetypeSpread` beside `PeerLevelSpread`: the five band counts over a cohort, the holders behind them, the viewer's own average and the band it stands in, and the share standing there with them. It bands through `RecapPlayerTypeCalculator`, so the section and the chip cannot cut differently |
+| **PlayerProgress** | `PricedRecord` carries the raw score beside its value; `PumbilityCohortSaga.Sweep` builds the spread beside the split, over the merged pool alone; `PumbilityCohortRecord.Archetypes` carries it, null on a typed pool. Cohort-wide counts ride the cached reading, the viewer's own average is layered on at answer time — the same two-stage shape `CohortLevelSpread.Of` then `PeerLevelSpread.Of` already uses |
+| **Theming** | `MixThemes` emits `--ptype-1`…`--ptype-5` off the constants `PlayerTypeHex` already returns. A group of its own rather than the `--plate-*` it borrows from: an archetype is not a plate, and a plate re-colour must not move it |
+| **Web** | `ArchetypeSpectrum` in `Components/Pumbility/`, rendered from `PumbilityBreakdown` as a `.pmb-wpc-sub` under the band line. Five segments sized by share, the chip's short form inside any wide enough, the counts beneath, a diamond for the viewer. HTML and CSS, no script — positions are percentages and the glyphs keep their pixel sizes |
+| **Localization** | The section heading and caption, the legend's five names with their grade, and the one line under the spectrum |
+
+**The legend prints the span, not the opening grade.** Phoenix 2's bands are one rung each by
+construction, so the two read the same there; Phoenix 1's are its own floors and cover more — Pass
+Refiner is AAA–AAA+, Balanced Player S–S+, Competitive SS–SSS — and the section draws on that mix
+too, off the stored difficulty title. Printing the grade a band opens at put *Competitive · SS* on
+screen beside a viewer told their S+ average made them a Balanced Player, a card contradicting
+itself. The summit band is open on both mixes and says so (*SS+ and up*) rather than naming its
+floor as though it were the whole of it.
+
+**The band selector forgets.** D68 remembered the viewer's choice in `Pumbility__CompareBand`; it no longer
+stores anything (owner, 2026-09-12). `PumbilityBreakdown` drops the setting key, the `OnInitializedAsync` read,
+the write in `SetBand` and its `IUiSettingsAccessor` injection — the field lives for the visit. The resolve check
+stays and changes meaning rather than going: it now catches a band selected on one ladder when the pool switches
+to another, instead of one remembered from a previous visit.
+
+**Copy rule, ratcheted by review rather than by a test.** Nothing in this section may order the archetypes:
+no *ahead of*, *above*, *higher*, *top* or *better* (D69). The line states the band and the share holding it.
+
+**Tests.** `DomainTests`: both mixes' cutoff tables at every boundary and both sides of each, the mix-less form
+being gone, and the spread's counts, own-band and share — including a cohort where nobody stands in the viewer's
+band but the viewer. `ApplicationTests`: the spread built off one cohort read, board holders counted, a typed pool
+answering null. `Tests.Components`: the five segments and their widths, the short form appearing and disappearing
+with the width, the diamond's position, and the line naming band and share. `ExplorationTests`: the probe behind
+§4.15.
+
+**Build order** — docs first, i18n last, pushed per commit: (1) this section, D69, §3.6, §4.15, DOMAIN and
+UX-GUIDELINES; (2) the probe; (3) the calculator, additive; (4) the callers, and the mix-less form retires;
+(5) Domain; (6) the cohort sweep; (7) the tokens; (8) the component; (9) nine locales.
 
 ## 7. Responsive
 
@@ -2030,6 +2183,10 @@ under the number. The nav row underneath fills the air that costs at desktop wid
 **Where the levels sit** keeps its two tiles side by side while each has 280px and stacks them below that
 (D67). Inside a tile the columns share the width and the glyphs keep their pixel sizes, so a phone narrows
 the shapes rather than shrinking the type.
+
+**Where your scores sit** is one strip across the card's width at every rung (D69) — a segment narrower than its
+short form drops the label rather than the segment, and the counts beneath keep their column. Nothing about it
+needs a breakpoint.
 
 ## 8. Honesty boundaries
 

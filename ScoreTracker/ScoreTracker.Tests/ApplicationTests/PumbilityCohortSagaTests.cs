@@ -205,6 +205,93 @@ public sealed class PumbilityCohortSagaTests
     ///     A mocked port stack and a cohort built over it: the ladder's read answers whoever was
     ///     seated on the band asked for, and the score read answers what they hold.
     /// </summary>
+    [Fact]
+    public async Task TheCohortsFiftiesAreBandedByArchetypeAndYoursIsPlacedAmongThem()
+    {
+        var ctx = new CohortContext().WithOwnPool(Diamond);
+        var pool = new List<Chart>();
+        for (var i = 0; i < RecapPlayerTypeCalculator.MinimumScores; i++)
+        {
+            ctx.WithChart(out var chart, ChartType.Single, 21);
+            pool.Add(chart);
+        }
+
+        // Twenty-six holders, so the level is read: nine average a Refiner's S, nine a Balanced
+        // Player's S+, eight a Competitive SS, each over a poolful of charts.
+        for (var i = 0; i < 26; i++)
+        {
+            var score = i < 9 ? 972_000 : i < 18 ? 977_000 : 982_000;
+            ctx.WithHolder(out _, pool.Select(c => (c, score)).ToArray());
+        }
+
+        foreach (var chart in pool) ctx.WithOwnScore(chart, 977_000);
+
+        var record = await ctx.Handle();
+
+        var archetypes = Assert.IsType<ArchetypeSpread>(record.Archetypes);
+        Assert.Equal(26, archetypes.Holders);
+        Assert.Equal(9, archetypes.HoldersByArchetype[RecapPlayerType.PassRefiner]);
+        Assert.Equal(9, archetypes.HoldersByArchetype[RecapPlayerType.BalancedPlayer]);
+        Assert.Equal(8, archetypes.HoldersByArchetype[RecapPlayerType.Competitive]);
+        Assert.Equal(0, archetypes.HoldersByArchetype[RecapPlayerType.PassPusher]);
+        Assert.Equal(RecapPlayerType.BalancedPlayer, archetypes.Mine);
+        Assert.Equal(9, archetypes.StandingWithMe);
+    }
+
+    [Fact]
+    public async Task AHolderTooShortToBandIsCountedOnTheBandButNotOnTheSpectrum()
+    {
+        // The band is a census and counts everybody; the spectrum bands only the fifties long
+        // enough to mean something, the same guard the viewer's own marker applies.
+        var ctx = new CohortContext()
+            .WithChart(out var staple, ChartType.Single, 21)
+            .WithOwnPool(Diamond);
+        for (var i = 0; i < 26; i++) ctx.WithHolder(out _, (staple, 982_000));
+
+        var record = await ctx.Handle();
+
+        Assert.Equal(26, record.Holders);
+        Assert.Equal(0, Assert.IsType<ArchetypeSpread>(record.Archetypes).Holders);
+    }
+
+    [Fact]
+    public async Task AViewerWithAPoolToBandGetsTheirOwnArchetypeAndTheShareHoldingIt()
+    {
+        var ctx = new CohortContext().WithOwnPool(Diamond);
+        var pool = new List<(Chart Chart, int Score)>();
+        for (var i = 0; i < RecapPlayerTypeCalculator.MinimumScores; i++)
+        {
+            ctx.WithChart(out var chart, ChartType.Single, 21);
+            pool.Add((chart, 982_000));
+        }
+
+        for (var i = 0; i < 26; i++) ctx.WithHolder(out _, pool.Select(p => (p.Chart, i < 20 ? 982_000 : 972_000)).ToArray());
+        foreach (var (chart, score) in pool) ctx.WithOwnScore(chart, score);
+
+        var record = await ctx.Handle();
+
+        var archetypes = Assert.IsType<ArchetypeSpread>(record.Archetypes);
+        Assert.Equal(RecapPlayerType.Competitive, archetypes.Mine);
+        Assert.Equal(982_000, archetypes.MyAverage);
+        Assert.Equal(20, archetypes.StandingWithMe);
+        Assert.NotNull(archetypes.Ahead);
+    }
+
+    [Fact]
+    public async Task ATypedPoolHasNoArchetypeBecauseTheChipIsTheMergedFifty()
+    {
+        var ctx = new CohortContext()
+            .WithChart(out var staple, ChartType.Single, 21)
+            .WithOwnPool(Diamond, singles: Diamond);
+        for (var i = 0; i < 26; i++) ctx.WithHolder(out _, PumbilityBand.LevelOf(PumbilityPool.Singles, Diamond)!,
+            (staple, 982_000));
+        ctx.WithOwnScore(staple, 982_000);
+
+        var record = await ctx.Handle(PumbilityPool.Singles);
+
+        Assert.Null(record.Archetypes);
+    }
+
     private sealed class CohortContext
     {
         public static readonly DateTimeOffset Swept = new(2026, 9, 6, 0, 0, 0, TimeSpan.Zero);

@@ -762,7 +762,7 @@ internal sealed class LeaderboardHubSaga :
             var doubles = contributions.Where(x => x.Detail.ChartType == ChartType.Double.ToString())
                 .OrderByDescending(x => x.Rating).Take(50).Sum(x => x.Rating);
             var playerType = RecapPlayerTypeCalculator.Calculate(
-                top50.Select(x => PhoenixScore.From((int)x.Detail.Score)).ToArray());
+                top50.Select(x => PhoenixScore.From((int)x.Detail.Score)).ToArray(), mix);
             // The CO-OP Rating is every co-op chart summed, not a top 50 — the mirror only holds
             // the charts a player is top-300 on, so this reads as a lower bound on the account's
             // own number rather than a differently-shaped one. Chart ratings merge both pools —

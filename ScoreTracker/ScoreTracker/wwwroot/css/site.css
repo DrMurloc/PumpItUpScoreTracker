@@ -13071,11 +13071,15 @@ button.chart-card-art {
     border-color: color-mix(in srgb, var(--mix-ink-muted) 40%, transparent);
 }
 
+/* A code you copy sits in a well below its card, not on a block above it: the page's own ground
+   plus the hairline, which is how .ct-secret draws the API key. --mix-bg is the token; there is
+   no --mix-background, and an undefined var() in a background shorthand computes to transparent,
+   so this rendered as a bordered box with the card showing through. */
 .rvl-code {
     display: flex;
     align-items: center;
     gap: 9px;
-    background: var(--mix-background);
+    background: var(--mix-bg);
     border: 1px solid rgba(255, 255, 255, .14);
     border-radius: 5px;
     padding: 7px 11px;
@@ -15903,6 +15907,131 @@ span.ct-console-pick { cursor: default; }
 .pmb-wpc-say {
     font-size: 13px;
     margin: 0;
+}
+
+/* --- the archetype spectrum, inside the card (D69) --- */
+/* Five segments as wide as the share of the cohort standing in each, in the chips' own metal
+   colours. Ordered by the average they band, which is the only order a spectrum has — the
+   archetypes themselves are lateral, so nothing here reads as a rank. */
+.pmb-arch {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.pmb-arch-strip {
+    position: relative;
+}
+
+.pmb-arch-bands {
+    display: flex;
+    height: 26px;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.pmb-arch-band {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2px;
+}
+
+.pmb-arch-band[data-k="1"] { background: var(--ptype-1); }
+.pmb-arch-band[data-k="2"] { background: var(--ptype-2); }
+.pmb-arch-band[data-k="3"] { background: var(--ptype-3); }
+.pmb-arch-band[data-k="4"] { background: var(--ptype-4); }
+/* The summit archetype glows, the way PlayerTypeChip glows it — the only thing separating it
+   from Competitive, which sits one shade away on the same metal. */
+.pmb-arch-band[data-k="5"] {
+    background: var(--ptype-5);
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, .4);
+}
+
+/* Drawn on a pseudo-element so the outline sits inside the clipped band rather than being
+   trimmed off with it. */
+.pmb-arch-band.is-mine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    outline: 2px solid var(--mix-ink);
+    outline-offset: -2px;
+}
+
+/* The chip's own phone-width short form, which fits wherever the label is drawn at all. */
+/* The page's own ground, on the light metal the band is painted in. --mix-bg is the token the
+   theme emits; --mix-background is not one, and an undefined var() on an inherited property
+   falls back to the ink, which is near-white on every one of the five. */
+.pmb-arch-band b {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: .08em;
+    color: var(--mix-bg);
+    white-space: nowrap;
+}
+
+.pmb-arch-you {
+    position: absolute;
+    top: -6px;
+    width: 11px;
+    height: 11px;
+    transform: translateX(-50%) rotate(45deg);
+    background: var(--mix-accent);
+    box-shadow: 0 0 0 2px var(--mix-surface-muted);
+}
+
+.pmb-arch-ticks {
+    display: flex;
+    margin-top: 5px;
+}
+
+.pmb-arch-tick {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 10.5px;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.pmb-arch-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 14px;
+    font-size: 11.5px;
+    color: var(--mix-ink-muted);
+}
+
+.pmb-arch-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.pmb-arch-key {
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+    border-radius: 2px;
+}
+
+.pmb-arch-key[data-k="1"] { background: var(--ptype-1); }
+.pmb-arch-key[data-k="2"] { background: var(--ptype-2); }
+.pmb-arch-key[data-k="3"] { background: var(--ptype-3); }
+.pmb-arch-key[data-k="4"] { background: var(--ptype-4); }
+.pmb-arch-key[data-k="5"] { background: var(--ptype-5); }
+
+.pmb-arch-key-you {
+    width: 8px;
+    height: 8px;
+    border-radius: 0;
+    transform: rotate(45deg);
+    background: var(--mix-accent);
 }
 
 /* --- you against your peers, inside the card (D58) --- */

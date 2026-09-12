@@ -8816,6 +8816,9 @@
   <data name="The arc" xml:space="preserve">
     <value>L&apos;arco</value>
   </data>
+  <data name="the archetypes their top 50 lands in, and where yours lands" xml:space="preserve">
+    <value>gli archetipi in cui cade la loro top 50, e dove cade la tua</value>
+  </data>
   <data name="The bar" xml:space="preserve">
     <value>La soglia</value>
   </data>
@@ -10309,6 +10312,9 @@
   <data name="Where your score came from" xml:space="preserve">
     <value>Da dove viene il tuo punteggio</value>
   </data>
+  <data name="Where your scores sit" xml:space="preserve">
+    <value>Dove stanno i tuoi punteggi</value>
+  </data>
   <data name="Which Chart Did You Play" xml:space="preserve">
     <value>Quale chart hai giocato?</value>
   </data>
@@ -10748,6 +10754,15 @@
   </data>
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>Il tuo endpoint risponde a una richiesta di verifica con questo. Non viene inviato da nessuna parte: è ciò che rende una prova il risponderci con esso, ed è perché un DNS dirottato non passa. Se ne conserva solo un hash, quindi annotalo dove lo ritrovi.</value>
+  </data>
+  <data name="your fifty" xml:space="preserve">
+    <value>la tua top 50</value>
+  </data>
+  <data name="Your fifty averages {0} — {1}, so {2}. {3}% of {4} are there too." xml:space="preserve">
+    <value>La tua top 50 fa una media di {0} — {1}, quindi {2}. Il {3}% di {4} sta lì con te.</value>
+  </data>
+  <data name="Your fifty is too short to place on this yet — {0} charts does it." xml:space="preserve">
+    <value>La tua top 50 è ancora troppo corta per collocarti qui — bastano {0} chart.</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>Il file superava i 10MB, riducilo e riprova.</value>
@@ -11715,6 +11730,9 @@
   <data name="{0}: the average top 50 of the {1} of them holding a full one" xml:space="preserve">
     <value>{0}: la top 50 media dei {1} di loro che ne tengono una piena</value>
   </data>
+  <data name="{0}: {1} of them, {2}%" xml:space="preserve">
+    <value>{0}: {1} di loro, {2}%</value>
+  </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>{0} g fa</value>
   </data>
@@ -11747,6 +11765,9 @@
   </data>
   <data name="{0}th" xml:space="preserve">
     <value>{0}º</value>
+  </data>
+  <data name="{0}–{1}" xml:space="preserve">
+    <value>{0}–{1}</value>
   </data>
   <data name="{0}–{1} min" xml:space="preserve">
     <value>{0}–{1} min</value>

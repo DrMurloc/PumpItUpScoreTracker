@@ -7,11 +7,13 @@ using ScoreTracker.SharedKernel.ValueTypes;
 namespace ScoreTracker.PlayerProgress.Application
 {
     /// <summary>
-    ///     What one band's read produced: the cohort's spread over the levels, their average merged
-    ///     fifty by chart type where the pool is merged, and when the board half was swept. No
-    ///     viewer anywhere in it — that is the point (docs/design/pumbility-overhaul.md D68).
+    ///     What one band's read produced: the cohort's spread over the levels, how their fifties
+    ///     fall across the archetypes and their average merged fifty by chart type where the pool is
+    ///     merged, and when the board half was swept. No viewer anywhere in it — that is the point
+    ///     (docs/design/pumbility-overhaul.md D68, D69).
     /// </summary>
-    internal sealed record CohortReading(CohortLevelSpread Spread, PoolTypeSplit? Split, DateTimeOffset? BoardAsOf);
+    internal sealed record CohortReading(CohortLevelSpread Spread, CohortArchetypeSpread Archetypes,
+        PoolTypeSplit? Split, DateTimeOffset? BoardAsOf);
 
     /// <summary>
     ///     Holds what the players standing on one band of a PUMBILITY ladder are made of, between
