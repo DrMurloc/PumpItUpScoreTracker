@@ -277,9 +277,6 @@
   <data name="1 paragon" xml:space="preserve">
     <value>1 paragon</value>
   </data>
-  <data name="1 peer" xml:space="preserve">
-    <value>1 jugador similar</value>
-  </data>
   <data name="1 peer is from the official board, as of {0}." xml:space="preserve">
     <value>1 par es del ranking oficial, con fecha del {0}.</value>
   </data>
@@ -288,6 +285,9 @@
   </data>
   <data name="1 Player" xml:space="preserve">
     <value>1 jugador</value>
+  </data>
+  <data name="1 player holds it" xml:space="preserve">
+    <value>1 jugador lo tiene</value>
   </data>
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>1 cuenta privada es par pero no se muestra.</value>
@@ -1663,6 +1663,9 @@
   <data name="Charts not yet featured" xml:space="preserve">
     <value>Charts aún no destacados</value>
   </data>
+  <data name="Charts of each level the players holding your title keep in their top 50" xml:space="preserve">
+    <value>Charts de cada nivel que los jugadores con tu título tienen en su top 50</value>
+  </data>
   <data name="Charts picked for you, tuned by goal." xml:space="preserve">
     <value>Charts elegidos para ti, según tu objetivo.</value>
   </data>
@@ -1746,6 +1749,9 @@
   </data>
   <data name="Clear Progress" xml:space="preserve">
     <value>Progreso de pases</value>
+  </data>
+  <data name="Clear the level" xml:space="preserve">
+    <value>Quitar el nivel</value>
   </data>
   <data name="Cleared on attempt {0}" xml:space="preserve">
     <value>Superado en el intento {0}</value>
@@ -1977,6 +1983,12 @@
   </data>
   <data name="Compare" xml:space="preserve">
     <value>Comparar</value>
+  </data>
+  <data name="Compare against all of {0} instead" xml:space="preserve">
+    <value>Comparar con todo {0} en su lugar</value>
+  </data>
+  <data name="Compared against" xml:space="preserve">
+    <value>Comparado con</value>
   </data>
   <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
     <value>{0} charts comparados ({1}): ninguno superó el listón.</value>
@@ -3628,11 +3640,14 @@
   <data name="How many (1–10, default 3)" xml:space="preserve">
     <value>Cuántos (1–10, por defecto 3)</value>
   </data>
-  <data name="how many charts of each level your peers hold in their top 50, and where yours sit" xml:space="preserve">
-    <value>cuántos charts de cada nivel tienen tus pares en su top 50, y dónde caen los tuyos</value>
+  <data name="how many charts of each level they hold in their top 50, and where yours sit" xml:space="preserve">
+    <value>cuántos charts de cada nivel tienen en su top 50, y dónde caen los tuyos</value>
   </data>
   <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
     <value>Cuántos charts de Co-Op has superado, por número de jugadores.</value>
+  </data>
+  <data name="how many hold that many" xml:space="preserve">
+    <value>cuántos tienen esa cantidad</value>
   </data>
   <data name="How many notes is a level?" xml:space="preserve">
     <value>¿Cuántas notas tiene un nivel?</value>
@@ -3642,9 +3657,6 @@
   </data>
   <data name="How many of your PUMBILITY peers hold it in their top 50" xml:space="preserve">
     <value>Cuántos de tus pares de PUMBILITY lo tienen en su top 50</value>
-  </data>
-  <data name="how many peers hold that many" xml:space="preserve">
-    <value>cuántos pares tienen esa cantidad</value>
   </data>
   <data name="How March of Murlocs works" xml:space="preserve">
     <value>Cómo funciona March of Murlocs</value>
@@ -6120,12 +6132,6 @@
   </data>
   <data name="peers:" xml:space="preserve">
     <value>tu nivel:</value>
-  </data>
-  <data name="Peers: the average top 50 of the {0} players near your singles or doubles pool" xml:space="preserve">
-    <value>Pares: el top 50 promedio de los {0} jugadores cercanos a tu pool de simples o dobles</value>
-  </data>
-  <data name="Peers: the average top 50 of the {0} players within one competitive level of you" xml:space="preserve">
-    <value>Pares: el top 50 promedio de los {0} jugadores a ±1 nivel competitivo de ti</value>
   </data>
   <data name="Pending" xml:space="preserve">
     <value>Pendiente</value>
@@ -8908,11 +8914,11 @@
   <data name="The maker sees this on their tool page." xml:space="preserve">
     <value>Quien la desarrolla verá esto en la página de su herramienta.</value>
   </data>
-  <data name="the median peer" xml:space="preserve">
-    <value>la mediana de tus pares</value>
+  <data name="the median holder" xml:space="preserve">
+    <value>la mediana de ellos</value>
   </data>
-  <data name="the middle half of your peers" xml:space="preserve">
-    <value>la mitad central de tus pares</value>
+  <data name="the middle half of them" xml:space="preserve">
+    <value>la mitad central de ellos</value>
   </data>
   <data name="The middle lines multiply, so they add to less than the total." xml:space="preserve">
     <value>Las líneas intermedias se multiplican, por eso suman menos que el total.</value>
@@ -10723,6 +10729,9 @@
   <data name="your only session this season" xml:space="preserve">
     <value>tu única sesión esta temporada</value>
   </data>
+  <data name="Your own title" xml:space="preserve">
+    <value>Tu propio título</value>
+  </data>
   <data name="Your peers" xml:space="preserve">
     <value>Tus pares</value>
   </data>
@@ -10801,8 +10810,8 @@
   <data name="Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them." xml:space="preserve">
     <value>Tu Pumbility, tus títulos, las luces de carpeta y tus estadísticas se calculan a partir de esto: se reinician solos. No puedes conservarlos.</value>
   </data>
-  <data name="your real top 50 against your peers' average, by type" xml:space="preserve">
-    <value>tu top 50 real frente al promedio de tus pares, por tipo</value>
+  <data name="your real top 50 against theirs, by type" xml:space="preserve">
+    <value>tu top 50 real frente al suyo, por tipo</value>
   </data>
   <data name="Your record book" xml:space="preserve">
     <value>Tu libro de récords</value>
@@ -11179,11 +11188,11 @@
   <data name="{0} folders at 90% or better" xml:space="preserve">
     <value>{0} folders al 90% o más</value>
   </data>
-  <data name="{0} from the official board" xml:space="preserve">
-    <value>{0} del marcador oficial</value>
-  </data>
   <data name="{0} from the official board*" xml:space="preserve">
     <value>{0} del marcador oficial*</value>
+  </data>
+  <data name="{0} from the official board, as of {1}" xml:space="preserve">
+    <value>{0} del ranking oficial, con fecha del {1}</value>
   </data>
   <data name="{0} gap" xml:space="preserve">
     <value>{0} de pausa</value>
@@ -11413,9 +11422,6 @@
   <data name="{0} pass in this folder" xml:space="preserve">
     <value>{0} paso en este folder</value>
   </data>
-  <data name="{0} peers" xml:space="preserve">
-    <value>{0} jugadores similares</value>
-  </data>
   <data name="{0} peers are from the official board, as of {1}." xml:space="preserve">
     <value>{0} pares son del ranking oficial, con fecha del {1}.</value>
   </data>
@@ -11439,6 +11445,9 @@
   </data>
   <data name="{0} players found" xml:space="preserve">
     <value>{0} jugadores encontrados</value>
+  </data>
+  <data name="{0} players hold it" xml:space="preserve">
+    <value>{0} jugadores lo tienen</value>
   </data>
   <data name="{0} players left their mark on the chart boards." xml:space="preserve">
     <value>{0} jugadores dejaron su huella en los tableros de charts.</value>
@@ -11599,9 +11608,6 @@
   <data name="{0} · the 1× target" xml:space="preserve">
     <value>{0} · la meta de 1×</value>
   </data>
-  <data name="{0} · your peers" xml:space="preserve">
-    <value>{0} · tus pares</value>
-  </data>
   <data name="{0} × {1} × 2 = {2} points" xml:space="preserve">
     <value>{0} × {1} × 2 = {2} puntos</value>
   </data>
@@ -11638,14 +11644,14 @@
   <data name="{0}/s" xml:space="preserve">
     <value>{0}/s</value>
   </data>
+  <data name="{0}: a median of {1}, middle half {2} to {3}; you hold {4}" xml:space="preserve">
+    <value>{0}: una mediana de {1}, mitad central de {2} a {3}; tú tienes {4}</value>
+  </data>
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}: un SSS+ en {1} vale un 900,000 en {2}</value>
   </data>
-  <data name="{0}: charts of each level your peers hold in their top 50" xml:space="preserve">
-    <value>{0}: charts de cada nivel que tus pares tienen en su top 50</value>
-  </data>
-  <data name="{0}: your peers hold a median of {1}, middle half {2} to {3}; you hold {4}" xml:space="preserve">
-    <value>{0}: tus pares tienen una mediana de {1}, mitad central de {2} a {3}; tú tienes {4}</value>
+  <data name="{0}: the average top 50 of the {1} of them holding a full one" xml:space="preserve">
+    <value>{0}: el top 50 promedio de los {1} de ellos que tienen una completa</value>
   </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>hace {0} d</value>
@@ -11695,8 +11701,8 @@
   <data name="· like the {0}% who hold none" xml:space="preserve">
     <value>· como el {0}% que no tiene ninguno</value>
   </data>
-  <data name="· more than {0}% of your peers" xml:space="preserve">
-    <value>· más que el {0}% de tus pares</value>
+  <data name="· more than {0}% of them" xml:space="preserve">
+    <value>· más que el {0}% de ellos</value>
   </data>
   <data name="· {0} peers ({1}%)" xml:space="preserve">
     <value>· {0} pares ({1}%)</value>

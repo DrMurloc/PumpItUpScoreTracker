@@ -699,3 +699,21 @@ recovered it), `algro` (each), `grorpmurm` (level), `gropmur` (in), `ropgl 50` (
 | that (that many) | argo | Coined. |
 | many | mrgl | Recovered from *month*, `mrglgralp` (*many days*). |
 | where | gorpo | `gorp` (there) + `o`. |
+
+## The title cohort (2026-09-12)
+
+Coined for the PUMBILITY Breakdown card's band selector and its count
+([pumbility-overhaul.md](design/pumbility-overhaul.md) D68), where the card stops comparing you against
+your peers and compares you against the players holding your title. The spread's own words are the
+level-spread batch above, unchanged; `maglmurp` (peers) leaves this card entirely, and `grglblarg`
+(them / their) is what took its place. Reused, not re-coined: `Mrgl` (title), `Morp` (player, and
+your), `mrgloru` (hold), `ug` (it), `Mrpmurg` (clear), `urgro` (against), `Lurgplglgrgl` (compare) and
+`Glorgmurplurg` (compared), `ulbog` (all), `ub` (of), `a` (the), `mrp` (as, and one), `mrglmr` (full),
+`rorg` (average), `ropgl 50` (top 50), `blarg` (from), `urgmrmurg mrglblarg` (official board), `bu`
+(by), `morg` (type) and `grorpmurm` (level).
+
+| English | en-ZW | Notes |
+|---|---|---|
+| own | oblug | Coined for *Your own title* — the band you stand on rather than one you picked. |
+| holder | mrglorup | `mrgloru` (hold) + `p`, the way `Morp` (player) ends. The one who holds the title. |
+| instead | ugmorgru | On `ugmorg` (other) — a Murloc names the swap by what it swaps to. |

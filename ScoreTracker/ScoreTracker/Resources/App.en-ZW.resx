@@ -277,9 +277,6 @@
   <data name="1 paragon" xml:space="preserve">
     <value>1 mrpurggl</value>
   </data>
-  <data name="1 peer" xml:space="preserve">
-    <value>1 morp</value>
-  </data>
   <data name="1 peer is from the official board, as of {0}." xml:space="preserve">
     <value>1 maglmurp blurgab urgmrmurg mrglblarg, mrp {0}.</value>
   </data>
@@ -288,6 +285,9 @@
   </data>
   <data name="1 Player" xml:space="preserve">
     <value>1 Morp</value>
+  </data>
+  <data name="1 player holds it" xml:space="preserve">
+    <value>1 morp mrgloru ug</value>
   </data>
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>1 mrglrgll grgl mrgl maglmurp mo blgrlargl.</value>
@@ -1672,6 +1672,9 @@
   <data name="Charts not yet featured" xml:space="preserve">
     <value>Murgl murm argl glmurgmurg</value>
   </data>
+  <data name="Charts of each level the players holding your title keep in their top 50" xml:space="preserve">
+    <value>Murgl ub algro grorpmurm a morp mrgloru morp mrgl mrgloru gropmur grglblarg ropgl 50</value>
+  </data>
   <data name="Charts picked for you, tuned by goal." xml:space="preserve">
     <value>Murgl mrpblgrl ro blub, glorgmorg murm mrpmrp.</value>
   </data>
@@ -1756,6 +1759,9 @@
   </data>
   <data name="Clear Progress" xml:space="preserve">
     <value>Mrpmurg Mrglrlgl</value>
+  </data>
+  <data name="Clear the level" xml:space="preserve">
+    <value>Mrpmurg a grorpmurm</value>
   </data>
   <data name="Cleared on attempt {0}" xml:space="preserve">
     <value>Palo blub {0}</value>
@@ -1988,6 +1994,12 @@
   </data>
   <data name="Compare" xml:space="preserve">
     <value>Lurgplglgrgl</value>
+  </data>
+  <data name="Compare against all of {0} instead" xml:space="preserve">
+    <value>Lurgplglgrgl urgro ulbog ub {0} ugmorgru</value>
+  </data>
+  <data name="Compared against" xml:space="preserve">
+    <value>Glorgmurplurg urgro</value>
   </data>
   <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
     <value>Glorgmurplurg {0} murgl ({1}) — rglmagl blarggrrglglorg mrp mr.</value>
@@ -3645,11 +3657,14 @@
   <data name="How many (1–10, default 3)" xml:space="preserve">
     <value>Gro mrblgrl (1–10, plglgrgllurg 3)</value>
   </data>
-  <data name="how many charts of each level your peers hold in their top 50, and where yours sit" xml:space="preserve">
-    <value>gam mrgl murgl ub algro grorpmurm morp maglmurp mrgloru gropmur grglblarg ropgl 50, ap gorpo morp mrogl</value>
+  <data name="how many charts of each level they hold in their top 50, and where yours sit" xml:space="preserve">
+    <value>gam mrgl murgl ub algro grorpmurm grglblarg mrgloru gropmur grglblarg ropgl 50, ap gorpo morp mrogl</value>
   </data>
   <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
     <value>Gro mrblgrl glorg-mr murgl plglgrrgl blarggrrglglorg, murm morp glorgmurp.</value>
+  </data>
+  <data name="how many hold that many" xml:space="preserve">
+    <value>gam mrgl mrgloru argo mrgl</value>
   </data>
   <data name="How many notes is a level?" xml:space="preserve">
     <value>Gromur murg glub gro a grorpmurm?</value>
@@ -3659,9 +3674,6 @@
   </data>
   <data name="How many of your PUMBILITY peers hold it in their top 50" xml:space="preserve">
     <value>Mrgl blarg PUMBILITY maglmurp mrgloru ur grglblarg mrrgl 50</value>
-  </data>
-  <data name="how many peers hold that many" xml:space="preserve">
-    <value>gam mrgl maglmurp mrgloru argo mrgl</value>
   </data>
   <data name="How March of Murlocs works" xml:space="preserve">
     <value>Gam Urgmr mrgl Murlocmrp grogrol</value>
@@ -6152,12 +6164,6 @@
   </data>
   <data name="peers:" xml:space="preserve">
     <value>morp:</value>
-  </data>
-  <data name="Peers: the average top 50 of the {0} players near your singles or doubles pool" xml:space="preserve">
-    <value>Maglmurp: mrgl rorg morp 50 mrglro mrgl {0} morp plgl argl mrglrlgl ol groggl blubgro</value>
-  </data>
-  <data name="Peers: the average top 50 of the {0} players within one competitive level of you" xml:space="preserve">
-    <value>Maglmurp: mrgl rorg morp 50 mrglro mrgl {0} morp glorg mrp murglrogl grorpmurm mrglro blub</value>
   </data>
   <data name="Pending" xml:space="preserve">
     <value>Murggrglurg</value>
@@ -8966,11 +8972,11 @@
   <data name="The maker sees this on their tool page." xml:space="preserve">
     <value>Blurgl mogla am bo groblu.</value>
   </data>
-  <data name="the median peer" xml:space="preserve">
-    <value>a blugrogl maglmurp</value>
+  <data name="the median holder" xml:space="preserve">
+    <value>a blugrogl mrglorup</value>
   </data>
-  <data name="the middle half of your peers" xml:space="preserve">
-    <value>a mogrgl blugro ub morp maglmurp</value>
+  <data name="the middle half of them" xml:space="preserve">
+    <value>a mogrgl blugro ub grglblarg</value>
   </data>
   <data name="The middle lines multiply, so they add to less than the total." xml:space="preserve">
     <value>Mrp blugro grolgub murmgrogla, op ulg glorg ro mgl grogrgl mrp ulboggrog.</value>
@@ -10791,6 +10797,9 @@
   <data name="your only session this season" xml:space="preserve">
     <value>gromurp ub orgab blu maglgrgl</value>
   </data>
+  <data name="Your own title" xml:space="preserve">
+    <value>Morp oblug mrgl</value>
+  </data>
   <data name="Your peers" xml:space="preserve">
     <value>Morp maglmurp</value>
   </data>
@@ -10869,8 +10878,8 @@
   <data name="Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them." xml:space="preserve">
     <value>Pumbility, gorbalu, larpu — molu blurpa. Gorb prala.</value>
   </data>
-  <data name="your real top 50 against your peers' average, by type" xml:space="preserve">
-    <value>argl marg morp 50 urgro argl maglmurp rorg, gro morg</value>
+  <data name="your real top 50 against theirs, by type" xml:space="preserve">
+    <value>argl marg ropgl 50 urgro grglblarg, bu morg</value>
   </data>
   <data name="Your record book" xml:space="preserve">
     <value>Blub mrrgl brulb</value>
@@ -11247,11 +11256,11 @@
   <data name="{0} folders at 90% or better" xml:space="preserve">
     <value>{0} blargblgrlmurp mr 90% argl morgmrp</value>
   </data>
-  <data name="{0} from the official board" xml:space="preserve">
-    <value>{0} blarg ur urgmrmurg mrglblarg</value>
-  </data>
   <data name="{0} from the official board*" xml:space="preserve">
     <value>{0} blarg ur urgmrmurg mrglblarg*</value>
+  </data>
+  <data name="{0} from the official board, as of {1}" xml:space="preserve">
+    <value>{0} blarg a urgmrmurg mrglblarg, mrp ub {1}</value>
   </data>
   <data name="{0} gap" xml:space="preserve">
     <value>{0} grolm</value>
@@ -11481,9 +11490,6 @@
   <data name="{0} pass in this folder" xml:space="preserve">
     <value>{0} maglplgl mrp grglmrp grrgllurg</value>
   </data>
-  <data name="{0} peers" xml:space="preserve">
-    <value>{0} morp</value>
-  </data>
   <data name="{0} peers are from the official board, as of {1}." xml:space="preserve">
     <value>{0} maglmurp blurgab urgmrmurg mrglblarg, mrp {1}.</value>
   </data>
@@ -11507,6 +11513,9 @@
   </data>
   <data name="{0} players found" xml:space="preserve">
     <value>{0} morp arglurg</value>
+  </data>
+  <data name="{0} players hold it" xml:space="preserve">
+    <value>{0} morp mrgloru ug</value>
   </data>
   <data name="{0} players left their mark on the chart boards." xml:space="preserve">
     <value>{0} morp rolurg grglblarg murmmurm lurg mrp murgl grrglplgl.</value>
@@ -11667,9 +11676,6 @@
   <data name="{0} · the 1× target" xml:space="preserve">
     <value>{0} · blu 1× grolp</value>
   </data>
-  <data name="{0} · your peers" xml:space="preserve">
-    <value>{0} · morp maglmurp</value>
-  </data>
   <data name="{0} × {1} × 2 = {2} points" xml:space="preserve">
     <value>{0} × {1} × 2 = {2} mrglublgl</value>
   </data>
@@ -11706,14 +11712,14 @@
   <data name="{0}/s" xml:space="preserve">
     <value>{0}/rogro</value>
   </data>
+  <data name="{0}: a median of {1}, middle half {2} to {3}; you hold {4}" xml:space="preserve">
+    <value>{0}: a blugrogl ub {1}, mogrgl blugro {2} ro {3}; blub mrgloru {4}</value>
+  </data>
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}: a SSS+ ap {1} lu gromb a 900,000 ap {2}</value>
   </data>
-  <data name="{0}: charts of each level your peers hold in their top 50" xml:space="preserve">
-    <value>{0}: murgl ub algro grorpmurm morp maglmurp mrgloru gropmur grglblarg ropgl 50</value>
-  </data>
-  <data name="{0}: your peers hold a median of {1}, middle half {2} to {3}; you hold {4}" xml:space="preserve">
-    <value>{0}: morp maglmurp mrgloru a blugrogl ub {1}, mogrgl blugro {2} ro {3}; blub mrgloru {4}</value>
+  <data name="{0}: the average top 50 of the {1} of them holding a full one" xml:space="preserve">
+    <value>{0}: a rorg ropgl 50 ub a {1} ub grglblarg mrgloru a mrglmr mrp</value>
   </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>{0}o mrgla</value>
@@ -11763,8 +11769,8 @@
   <data name="· like the {0}% who hold none" xml:space="preserve">
     <value>· plglro a {0}% murpo mrgloru bomo</value>
   </data>
-  <data name="· more than {0}% of your peers" xml:space="preserve">
-    <value>· mrrgl grogrgl {0}% ub morp maglmurp</value>
+  <data name="· more than {0}% of them" xml:space="preserve">
+    <value>· mrrgl grogrgl {0}% ub grglblarg</value>
   </data>
   <data name="· {0} peers ({1}%)" xml:space="preserve">
     <value>· {0} maglmurp ({1}%)</value>

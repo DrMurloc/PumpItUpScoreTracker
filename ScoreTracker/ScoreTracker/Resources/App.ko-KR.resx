@@ -277,9 +277,6 @@
   <data name="1 paragon" xml:space="preserve">
     <value>파라곤 1개</value>
   </data>
-  <data name="1 peer" xml:space="preserve">
-    <value>동급 1명</value>
-  </data>
   <data name="1 peer is from the official board, as of {0}." xml:space="preserve">
     <value>동료 1명은 공식 랭킹에서 가져왔습니다 ({0} 기준).</value>
   </data>
@@ -288,6 +285,9 @@
   </data>
   <data name="1 Player" xml:space="preserve">
     <value>1명</value>
+  </data>
+  <data name="1 player holds it" xml:space="preserve">
+    <value>1명이 보유</value>
   </data>
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>비공개 계정 1개가 동료이지만 표시되지 않습니다.</value>
@@ -1663,6 +1663,9 @@
   <data name="Charts not yet featured" xml:space="preserve">
     <value>아직 출제되지 않은 채보</value>
   </data>
+  <data name="Charts of each level the players holding your title keep in their top 50" xml:space="preserve">
+    <value>내 칭호를 가진 플레이어가 상위 50에 보유한 레벨별 채보 수</value>
+  </data>
   <data name="Charts picked for you, tuned by goal." xml:space="preserve">
     <value>목표에 맞춰 고른 채보.</value>
   </data>
@@ -1746,6 +1749,9 @@
   </data>
   <data name="Clear Progress" xml:space="preserve">
     <value>클리어 진행도</value>
+  </data>
+  <data name="Clear the level" xml:space="preserve">
+    <value>레벨 해제</value>
   </data>
   <data name="Cleared on attempt {0}" xml:space="preserve">
     <value>{0}번째 시도에 클리어</value>
@@ -1977,6 +1983,12 @@
   </data>
   <data name="Compare" xml:space="preserve">
     <value>비교</value>
+  </data>
+  <data name="Compare against all of {0} instead" xml:space="preserve">
+    <value>대신 {0} 전체와 비교</value>
+  </data>
+  <data name="Compared against" xml:space="preserve">
+    <value>비교 대상</value>
   </data>
   <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
     <value>채보 {0}개 비교 ({1}) — 기준을 넘은 채보가 없습니다.</value>
@@ -3628,11 +3640,14 @@
   <data name="How many (1–10, default 3)" xml:space="preserve">
     <value>몇 개 (1–10, 기본 3)</value>
   </data>
-  <data name="how many charts of each level your peers hold in their top 50, and where yours sit" xml:space="preserve">
-    <value>동료가 상위 50에 보유한 레벨별 채보 수와 내 위치</value>
+  <data name="how many charts of each level they hold in their top 50, and where yours sit" xml:space="preserve">
+    <value>그들이 상위 50에 보유한 레벨별 채보 수와 내 위치</value>
   </data>
   <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
     <value>플레이 인원수별로 클리어한 Co-Op 채보 수.</value>
+  </data>
+  <data name="how many hold that many" xml:space="preserve">
+    <value>그만큼 보유한 수</value>
   </data>
   <data name="How many notes is a level?" xml:space="preserve">
     <value>레벨별 노트 수는?</value>
@@ -3642,9 +3657,6 @@
   </data>
   <data name="How many of your PUMBILITY peers hold it in their top 50" xml:space="preserve">
     <value>이 채보를 상위 50에 보유한 PUMBILITY 동료 수</value>
-  </data>
-  <data name="how many peers hold that many" xml:space="preserve">
-    <value>그만큼 보유한 동료 수</value>
   </data>
   <data name="How March of Murlocs works" xml:space="preserve">
     <value>March of Murlocs 진행 방식</value>
@@ -6120,12 +6132,6 @@
   </data>
   <data name="peers:" xml:space="preserve">
     <value>동급:</value>
-  </data>
-  <data name="Peers: the average top 50 of the {0} players near your singles or doubles pool" xml:space="preserve">
-    <value>동료: 내 싱글 또는 더블 풀에 가까운 플레이어 {0}명의 평균 상위 50</value>
-  </data>
-  <data name="Peers: the average top 50 of the {0} players within one competitive level of you" xml:space="preserve">
-    <value>동료: 나와 경쟁 레벨 1 이내인 플레이어 {0}명의 평균 상위 50</value>
   </data>
   <data name="Pending" xml:space="preserve">
     <value>대기 중</value>
@@ -8908,11 +8914,11 @@
   <data name="The maker sees this on their tool page." xml:space="preserve">
     <value>제작자가 자신의 도구 페이지에서 이 내용을 봅니다.</value>
   </data>
-  <data name="the median peer" xml:space="preserve">
-    <value>동료의 중앙값</value>
+  <data name="the median holder" xml:space="preserve">
+    <value>중앙값 보유자</value>
   </data>
-  <data name="the middle half of your peers" xml:space="preserve">
-    <value>동료의 가운데 절반</value>
+  <data name="the middle half of them" xml:space="preserve">
+    <value>그들의 가운데 절반</value>
   </data>
   <data name="The middle lines multiply, so they add to less than the total." xml:space="preserve">
     <value>중간 항목은 곱해지기 때문에 합계보다 작게 더해집니다.</value>
@@ -10723,6 +10729,9 @@
   <data name="your only session this season" xml:space="preserve">
     <value>이번 시즌 유일한 세션</value>
   </data>
+  <data name="Your own title" xml:space="preserve">
+    <value>내 칭호</value>
+  </data>
   <data name="Your peers" xml:space="preserve">
     <value>내 동료</value>
   </data>
@@ -10801,8 +10810,8 @@
   <data name="Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them." xml:space="preserve">
     <value>Pumbility, 칭호, 폴더 램프, 플레이어 통계는 이 데이터에서 계산되므로 자동으로 초기화됩니다. 남길 수 없습니다.</value>
   </data>
-  <data name="your real top 50 against your peers' average, by type" xml:space="preserve">
-    <value>내 실제 상위 50과 동료 평균을 종류별로</value>
+  <data name="your real top 50 against theirs, by type" xml:space="preserve">
+    <value>내 실제 상위 50과 그들의 것을 종류별로</value>
   </data>
   <data name="Your record book" xml:space="preserve">
     <value>회원님의 기록장</value>
@@ -11179,11 +11188,11 @@
   <data name="{0} folders at 90% or better" xml:space="preserve">
     <value>{0}개 폴더 90% 이상</value>
   </data>
-  <data name="{0} from the official board" xml:space="preserve">
-    <value>공식 보드에서 {0}명</value>
-  </data>
   <data name="{0} from the official board*" xml:space="preserve">
     <value>공식 보드에서 {0}명*</value>
+  </data>
+  <data name="{0} from the official board, as of {1}" xml:space="preserve">
+    <value>{0}명은 공식 랭킹에서 ({1} 기준)</value>
   </data>
   <data name="{0} gap" xml:space="preserve">
     <value>{0} 휴식</value>
@@ -11413,9 +11422,6 @@
   <data name="{0} pass in this folder" xml:space="preserve">
     <value>이 폴더 {0} 통과</value>
   </data>
-  <data name="{0} peers" xml:space="preserve">
-    <value>동급 {0}명</value>
-  </data>
   <data name="{0} peers are from the official board, as of {1}." xml:space="preserve">
     <value>동료 {0}명은 공식 랭킹에서 가져왔습니다 ({1} 기준).</value>
   </data>
@@ -11439,6 +11445,9 @@
   </data>
   <data name="{0} players found" xml:space="preserve">
     <value>플레이어 {0}명 발견</value>
+  </data>
+  <data name="{0} players hold it" xml:space="preserve">
+    <value>{0}명이 보유</value>
   </data>
   <data name="{0} players left their mark on the chart boards." xml:space="preserve">
     <value>{0}명의 플레이어가 채보 보드에 기록을 남겼습니다.</value>
@@ -11599,9 +11608,6 @@
   <data name="{0} · the 1× target" xml:space="preserve">
     <value>{0} · 1× 기준</value>
   </data>
-  <data name="{0} · your peers" xml:space="preserve">
-    <value>{0} · 내 동료</value>
-  </data>
   <data name="{0} × {1} × 2 = {2} points" xml:space="preserve">
     <value>{0} × {1} × 2 = {2}점</value>
   </data>
@@ -11638,14 +11644,14 @@
   <data name="{0}/s" xml:space="preserve">
     <value>{0}/초</value>
   </data>
+  <data name="{0}: a median of {1}, middle half {2} to {3}; you hold {4}" xml:space="preserve">
+    <value>{0}: 중앙값은 {1}, 가운데 절반은 {2}~{3}, 나는 {4}</value>
+  </data>
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}: {1}의 SSS+는 {2}의 900,000어치</value>
   </data>
-  <data name="{0}: charts of each level your peers hold in their top 50" xml:space="preserve">
-    <value>{0}: 동료가 상위 50에 보유한 레벨별 채보 수</value>
-  </data>
-  <data name="{0}: your peers hold a median of {1}, middle half {2} to {3}; you hold {4}" xml:space="preserve">
-    <value>{0}: 동료의 중앙값은 {1}, 가운데 절반은 {2}~{3}, 나는 {4}</value>
+  <data name="{0}: the average top 50 of the {1} of them holding a full one" xml:space="preserve">
+    <value>{0}: 완전한 상위 50을 보유한 {1}명의 평균 상위 50</value>
   </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>{0}일 전</value>
@@ -11695,8 +11701,8 @@
   <data name="· like the {0}% who hold none" xml:space="preserve">
     <value>· 하나도 보유하지 않은 {0}%와 같음</value>
   </data>
-  <data name="· more than {0}% of your peers" xml:space="preserve">
-    <value>· 동료의 {0}%보다 많음</value>
+  <data name="· more than {0}% of them" xml:space="preserve">
+    <value>· 그들의 {0}%보다 많음</value>
   </data>
   <data name="· {0} peers ({1}%)" xml:space="preserve">
     <value>· 동료 {0}명 ({1}%)</value>
