@@ -113,16 +113,17 @@
             <div class="pmb-cohort" data-testid="cohort-band">
                 <div class="pmb-cohort-pick">
                     <label class="pmb-cohort-lbl" for="pmb-cohort-sel">@L["Compared against"]</label>
+                    @* The band that was read is the one selected, so a viewer who has picked nothing
+                       still sees their own. There is no "mine" entry: picking it back IS picking it. *@
                     <select id="pmb-cohort-sel" class="pmb-cohort-sel" data-testid="cohort-select"
-                            value="@_band?.ToString()" @onchange="PickBand">
-                        <option value="">@L["Your own title"]</option>
+                            value="@band.ToString()" @onchange="PickBand">
                         @foreach (var group in BandOptions)
                         {
                             @if (group.Name == null)
                             {
                                 @foreach (var option in group.Bands)
                                 {
-                                    <option value="@option" selected="@(_band?.ToString() == option)">@option</option>
+                                    <option value="@option.Value" selected="@(band.ToString() == option.Value)">@option.Label</option>
                                 }
                             }
                             else
@@ -130,7 +131,7 @@
                                 <optgroup label="@group.Name">
                                     @foreach (var option in group.Bands)
                                     {
-                                        <option value="@option" selected="@(_band?.ToString() == option)">@option</option>
+                                        <option value="@option.Value" selected="@(band.ToString() == option.Value)">@option.Label</option>
                                     }
                                 </optgroup>
                             }
@@ -276,7 +277,7 @@
 
     /// <summary>Whether a remembered band is a band of the ladder in scope at all.</summary>
     private bool Resolves(Name? band) =>
-        band is { } name && BandOptions.Any(group => group.Bands.Contains(name.ToString()));
+        band is { } name && BandOptions.Any(group => group.Bands.Any(o => o.Value == name.ToString()));
 
     /// <summary>
     ///     The gem a band sits inside, for the clear that drops a level back to it. Null on a gem
@@ -294,31 +295,38 @@
 
     /// <summary>
     ///     Every band the selector offers, grouped where the ladder has groups: the merged ladder by
-    ///     gem, since forty-four rungs in one list is a scroll rather than a choice. Phoenix 1 offers
-    ///     its difficulty titles, which is the whole ladder it has.
+    ///     gem, since forty-four rungs in one list is a scroll rather than a choice. Inside a gem the
+    ///     group heading already says which gem it is, so its lines read <em>All Levels</em> and
+    ///     <em>Level 1</em> rather than spelling the gem out five more times (owner, on the PR).
+    ///     Phoenix 1 offers its difficulty titles, which is the whole ladder it has.
     /// </summary>
-    private IReadOnlyList<(string? Name, IReadOnlyList<string> Bands)> BandOptions
+    private IReadOnlyList<(string? Name, IReadOnlyList<(string Value, string Label)> Bands)> BandOptions
     {
         get
         {
-            if (Page == null) return Array.Empty<(string?, IReadOnlyList<string>)>();
+            if (Page == null) return Array.Empty<(string?, IReadOnlyList<(string, string)>)>();
             if (Page.Mix != MixEnum.Phoenix2)
-                return new (string?, IReadOnlyList<string>)[]
+                return new (string?, IReadOnlyList<(string, string)>)[]
                 {
                     (null, PhoenixTitleList.BuildList().OfType<PhoenixDifficultyTitle>()
-                        .Select(t => t.Name.ToString()).ToArray())
+                        .Select(t => (t.Name.ToString(), t.Name.ToString())).ToArray())
                 };
 
             var pool = PoolOf(Page.Pool_);
             var levels = PumbilityBand.Levels(pool);
             if (pool != PumbilityPool.Total)
-                return new (string?, IReadOnlyList<string>)[] { (null, levels.Select(b => b.Name.ToString()).ToArray()) };
+                return new (string?, IReadOnlyList<(string, string)>)[]
+                {
+                    (null, levels.Select(b => (b.Name.ToString(), b.Name.ToString())).ToArray())
+                };
 
-            // Distinct because the capstone is its own gem and its only level, under one name.
+            // The capstone is its own gem and its only level, so its group holds the one line.
             return PumbilityBand.Gems()
-                .Select(gem => ((string?)gem.Name.ToString(), (IReadOnlyList<string>)new[] { gem.Name.ToString() }
-                    .Concat(levels.Where(l => l.Gem == gem.Name).Select(l => l.Name.ToString()))
-                    .Distinct().ToArray()))
+                .Select(gem => ((string?)gem.Name.ToString(),
+                    (IReadOnlyList<(string, string)>)new[] { (gem.Name.ToString(), L["All Levels"].Value) }
+                    .Concat(levels.Where(l => l.Gem == gem.Name && l.Level is { } level)
+                        .Select(l => (l.Name.ToString(), L["Level {0}", l.Level!.Value].Value)))
+                    .ToArray()))
                 .ToArray();
         }
     }

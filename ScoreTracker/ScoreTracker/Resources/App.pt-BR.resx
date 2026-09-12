@@ -769,6 +769,9 @@
   <data name="All Folders" xml:space="preserve">
     <value>Todas as pastas</value>
   </data>
+  <data name="All Levels" xml:space="preserve">
+    <value>Todos os níveis</value>
+  </data>
   <data name="All mixes" xml:space="preserve">
     <value>Todas as versões</value>
   </data>
@@ -1662,9 +1665,6 @@
   </data>
   <data name="Charts not yet featured" xml:space="preserve">
     <value>Charts ainda não destacados</value>
-  </data>
-  <data name="Charts of each level the players holding your title keep in their top 50" xml:space="preserve">
-    <value>Charts de cada nível que os jogadores com seu título têm no top 50</value>
   </data>
   <data name="Charts picked for you, tuned by goal." xml:space="preserve">
     <value>Charts escolhidos para você, conforme o objetivo.</value>
@@ -10729,9 +10729,6 @@
   <data name="your only session this season" xml:space="preserve">
     <value>sua única sessão nesta temporada</value>
   </data>
-  <data name="Your own title" xml:space="preserve">
-    <value>Seu próprio título</value>
-  </data>
   <data name="Your peers" xml:space="preserve">
     <value>Seus pares</value>
   </data>
@@ -11649,6 +11646,9 @@
   </data>
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}: um SSS+ em {1} vale um 900.000 em {2}</value>
+  </data>
+  <data name="{0}: charts of each level the players holding your title keep in their top 50" xml:space="preserve">
+    <value>{0}: charts de cada nível que os jogadores com seu título têm no top 50</value>
   </data>
   <data name="{0}: the average top 50 of the {1} of them holding a full one" xml:space="preserve">
     <value>{0}: o top 50 médio dos {1} deles que têm um completo</value>

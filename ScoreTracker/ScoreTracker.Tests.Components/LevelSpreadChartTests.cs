@@ -17,28 +17,30 @@ namespace ScoreTracker.Tests.Components;
 public sealed class LevelSpreadChartTests : ComponentTestBase
 {
     [Fact]
-    public void AMixedPoolDrawsTwoTonedColumnsUnderOneLevelLabel()
+    public void AMixedPoolDrawsATileEachSinglesFirstAndNeverOnePlotStripingBoth()
     {
         var cut = Render(Spread(12, 0,
-            Column(21, ChartType.Single, 2, (0, 2), (4, 10)),
-            Column(21, ChartType.Double, 1, (0, 6), (2, 6))));
+            Column(21, ChartType.Double, 1, (0, 6), (2, 6)),
+            Column(21, ChartType.Single, 2, (0, 2), (4, 10))));
 
-        var group = Assert.Single(cut.FindAll(".pmb-spread-group"));
-        Assert.Equal("21", group.QuerySelector(".pmb-spread-level")!.TextContent.Trim());
-        var columns = group.QuerySelectorAll(".pmb-spread-col");
-        Assert.Equal(2, columns.Length);
-        Assert.Contains("is-s", columns[0].ClassName);
-        Assert.Contains("is-d", columns[1].ClassName);
-        Assert.Contains("is-two-tone", cut.Find(".pmb-spread").ClassName);
+        var tiles = cut.FindAll(".pmb-spread-tile");
+        Assert.Equal(2, tiles.Count);
+        Assert.Equal("Singles", tiles[0].QuerySelector(".pmb-spread-label")!.TextContent.Trim());
+        Assert.Equal("Doubles", tiles[1].QuerySelector(".pmb-spread-label")!.TextContent.Trim());
+        // One column per tile, each in its own type's tone.
+        Assert.Contains("is-s", Assert.Single(tiles[0].QuerySelectorAll(".pmb-spread-col")).ClassName);
+        Assert.Contains("is-d", Assert.Single(tiles[1].QuerySelectorAll(".pmb-spread-col")).ClassName);
     }
 
     [Fact]
-    public void AOneTypePoolDrawsOneColumnPerLevelInThatTypesTone()
+    public void AOneTypePoolDrawsOneTileWithNoTypeHeadingToRead()
     {
         var cut = Render(Spread(4, 0, Column(20, ChartType.Double, 0, (0, 4))));
 
+        Assert.Single(cut.FindAll(".pmb-spread-tile"));
         Assert.Contains("is-d", Assert.Single(cut.FindAll(".pmb-spread-col")).ClassName);
-        Assert.DoesNotContain("is-two-tone", cut.Find(".pmb-spread").ClassName);
+        // Nothing to tell apart, so the tile carries no label.
+        Assert.Empty(cut.FindAll(".pmb-spread-label"));
     }
 
     [Fact]

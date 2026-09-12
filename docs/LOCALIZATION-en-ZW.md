@@ -717,3 +717,9 @@ your), `mrgloru` (hold), `ug` (it), `Mrpmurg` (clear), `urgro` (against), `Lurgp
 | own | oblug | Coined for *Your own title* — the band you stand on rather than one you picked. |
 | holder | mrglorup | `mrgloru` (hold) + `p`, the way `Morp` (player) ends. The one who holds the title. |
 | instead | ugmorgru | On `ugmorg` (other) — a Murloc names the swap by what it swaps to. |
+
+**Addendum (same day).** The selector's group heading names the gem, so its lines read *All Levels* and *Level 1*
+rather than the gem six times, and the entry for "your own" went away — the selector simply starts on the band that
+was read. `Ulbog Grorpmurm` (All Levels) is the recovered `ulbog` (all) on `grorpmurm` (level); `Grorpmurm {0}`
+(Level {0}) already existed. `Morp oblug mrgl` (Your own title) retires with the entry, but `oblug` stays in the
+table — a coined word is not un-coined by one string leaving.

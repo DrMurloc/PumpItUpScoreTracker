@@ -769,6 +769,9 @@
   <data name="All Folders" xml:space="preserve">
     <value>전체 폴더</value>
   </data>
+  <data name="All Levels" xml:space="preserve">
+    <value>전체 레벨</value>
+  </data>
   <data name="All mixes" xml:space="preserve">
     <value>모든 시리즈</value>
   </data>
@@ -1662,9 +1665,6 @@
   </data>
   <data name="Charts not yet featured" xml:space="preserve">
     <value>아직 출제되지 않은 채보</value>
-  </data>
-  <data name="Charts of each level the players holding your title keep in their top 50" xml:space="preserve">
-    <value>내 칭호를 가진 플레이어가 상위 50에 보유한 레벨별 채보 수</value>
   </data>
   <data name="Charts picked for you, tuned by goal." xml:space="preserve">
     <value>목표에 맞춰 고른 채보.</value>
@@ -10729,9 +10729,6 @@
   <data name="your only session this season" xml:space="preserve">
     <value>이번 시즌 유일한 세션</value>
   </data>
-  <data name="Your own title" xml:space="preserve">
-    <value>내 칭호</value>
-  </data>
   <data name="Your peers" xml:space="preserve">
     <value>내 동료</value>
   </data>
@@ -11649,6 +11646,9 @@
   </data>
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}: {1}의 SSS+는 {2}의 900,000어치</value>
+  </data>
+  <data name="{0}: charts of each level the players holding your title keep in their top 50" xml:space="preserve">
+    <value>{0}: 내 칭호를 가진 플레이어가 상위 50에 보유한 레벨별 채보 수</value>
   </data>
   <data name="{0}: the average top 50 of the {1} of them holding a full one" xml:space="preserve">
     <value>{0}: 완전한 상위 50을 보유한 {1}명의 평균 상위 50</value>

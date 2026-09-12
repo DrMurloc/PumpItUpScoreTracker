@@ -14453,11 +14453,36 @@ span.ct-console-pick { cursor: default; }
     gap: 8px;
 }
 
+/* One tile per chart type, side by side — never one plot striping the two together (D68, owner). */
+.pmb-spread-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 10px;
+}
+
 .pmb-spread-tile {
     background: var(--mix-surface-muted);
     border-radius: 6px;
     padding: 10px 10px 4px;
     min-width: 0;
+}
+
+.pmb-spread-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 2px 8px;
+    margin-bottom: 4px;
+}
+
+.pmb-spread-label {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
 }
 
 /* A gutter for the tick labels, then the columns. Every position inside a column is a percent of its
@@ -14502,20 +14527,6 @@ span.ct-console-pick { cursor: default; }
 .pmb-spread-cols {
     position: relative;
     display: flex;
-}
-
-/* One level: its columns side by side over one shared level label. A mixed pool draws two of them,
-   singles then doubles, and the label belongs to the pair rather than to either column. */
-.pmb-spread-group {
-    flex: 1 1 0;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-.pmb-spread-pair {
-    display: flex;
-    gap: 1px;
 }
 
 .pmb-spread-col {
@@ -14608,20 +14619,6 @@ span.ct-console-pick { cursor: default; }
     box-shadow: 0 0 0 2px var(--mix-surface-muted);
 }
 
-/* Two columns share the width one used to have, so the glyphs come in with them — a median tick
-   wider than its own column reads as the neighbour's. */
-.pmb-spread.is-two-tone .pmb-spread-box {
-    width: 6px;
-}
-
-.pmb-spread.is-two-tone .pmb-spread-median {
-    width: 11px;
-}
-
-.pmb-spread.is-two-tone .pmb-spread-you {
-    width: 7px;
-    height: 7px;
-}
 
 .pmb-spread-level {
     display: block;

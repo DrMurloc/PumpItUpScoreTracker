@@ -771,6 +771,9 @@
   <data name="All Folders" xml:space="preserve">
     <value>Rgl Blargblgrlmurp</value>
   </data>
+  <data name="All Levels" xml:space="preserve">
+    <value>Ulbog Grorpmurm</value>
+  </data>
   <data name="All mixes" xml:space="preserve">
     <value>Rgl mrgrgl</value>
   </data>
@@ -1671,9 +1674,6 @@
   </data>
   <data name="Charts not yet featured" xml:space="preserve">
     <value>Murgl murm argl glmurgmurg</value>
-  </data>
-  <data name="Charts of each level the players holding your title keep in their top 50" xml:space="preserve">
-    <value>Murgl ub algro grorpmurm a morp mrgloru morp mrgl mrgloru gropmur grglblarg ropgl 50</value>
   </data>
   <data name="Charts picked for you, tuned by goal." xml:space="preserve">
     <value>Murgl mrpblgrl ro blub, glorgmorg murm mrpmrp.</value>
@@ -10797,9 +10797,6 @@
   <data name="your only session this season" xml:space="preserve">
     <value>gromurp ub orgab blu maglgrgl</value>
   </data>
-  <data name="Your own title" xml:space="preserve">
-    <value>Morp oblug mrgl</value>
-  </data>
   <data name="Your peers" xml:space="preserve">
     <value>Morp maglmurp</value>
   </data>
@@ -11717,6 +11714,9 @@
   </data>
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}: a SSS+ ap {1} lu gromb a 900,000 ap {2}</value>
+  </data>
+  <data name="{0}: charts of each level the players holding your title keep in their top 50" xml:space="preserve">
+    <value>{0}: murgl ub algro grorpmurm a morp mrgloru morp mrgl mrgloru gropmur grglblarg ropgl 50</value>
   </data>
   <data name="{0}: the average top 50 of the {1} of them holding a full one" xml:space="preserve">
     <value>{0}: a rorg ropgl 50 ub a {1} ub grglblarg mrgloru a mrglmr mrp</value>

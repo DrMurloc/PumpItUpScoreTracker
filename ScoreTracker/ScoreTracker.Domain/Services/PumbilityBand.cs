@@ -14,7 +14,13 @@ namespace ScoreTracker.Domain.Services;
 ///     </para>
 /// </summary>
 /// <param name="Gem">The gem a merged level sits in, and null on every other band.</param>
-public sealed record PumbilityBand(PumbilityPool Pool, Name Name, double Floor, double? Ceiling, Name? Gem = null)
+/// <param name="Level">
+///     Which of the gem's five levels this is, for a surface that lists them under the gem's own
+///     name and would otherwise repeat it on every line. Null on a gem, on a typed rung, and on the
+///     capstone, which is a gem with no levels inside it.
+/// </param>
+public sealed record PumbilityBand(PumbilityPool Pool, Name Name, double Floor, double? Ceiling, Name? Gem = null,
+    int? Level = null)
 {
     /// <summary>
     ///     How many players a level needs before it is read in place of the gem around it. Measured
@@ -76,7 +82,7 @@ public sealed record PumbilityBand(PumbilityPool Pool, Name Name, double Floor, 
         return Phoenix2PumbilityLevel.All
             .Where(rung => rung.IsRanked)
             .Select(rung => new PumbilityBand(PumbilityPool.Total, NameOf(rung), rung.Threshold,
-                rung.NextThreshold, rung.Gem))
+                rung.NextThreshold, rung.Gem, rung.Level))
             .ToArray();
     }
 

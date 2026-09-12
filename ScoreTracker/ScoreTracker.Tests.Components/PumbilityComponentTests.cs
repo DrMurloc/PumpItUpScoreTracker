@@ -338,6 +338,53 @@ public sealed class PumbilityComponentTests : ComponentTestBase
     }
 
     [Fact]
+    public void TheSelectorStartsOnTheBandThatWasReadAndOffersNoEntryForYourOwn()
+    {
+        SignIn();
+        RememberedBand();
+        var fixture = Page(poolSize: 50);
+        var charts = fixture.Charts();
+        var page = ((PumbilityPageRecord)fixture) with { Mix = MixEnum.Phoenix2 };
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Cohort(null));
+
+        var cut = Card(page, charts);
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=cohort-select]")));
+        var options = cut.Find("[data-testid=cohort-select]").QuerySelectorAll("option");
+        // Every option is a band: picking your own back IS picking it, so there is no "mine" entry.
+        Assert.All(options, o => Assert.NotEqual(string.Empty, o.GetAttribute("value")));
+        Assert.Equal(DiamondLevel,
+            Assert.Single(options, o => o.HasAttribute("selected")).GetAttribute("value"));
+    }
+
+    [Fact]
+    public void AGemsLevelsReadAsLevelNumbersUnderTheGemsOwnName()
+    {
+        SignIn();
+        RememberedBand();
+        var fixture = Page(poolSize: 50);
+        var charts = fixture.Charts();
+        var page = ((PumbilityPageRecord)fixture) with { Mix = MixEnum.Phoenix2 };
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Cohort(null));
+
+        var cut = Card(page, charts);
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=cohort-select]")));
+        var diamond = Assert.Single(cut.Find("[data-testid=cohort-select]").QuerySelectorAll("optgroup"),
+            g => g.GetAttribute("label") == "[P.B] DIAMOND");
+        // The group heading says which gem it is, so its lines never spell it out again.
+        Assert.Equal(new[] { "All Levels", "Level 1", "Level 2", "Level 3", "Level 4", "Level 5" },
+            diamond.QuerySelectorAll("option").Select(o => o.TextContent.Trim()));
+        Assert.Equal(DiamondLevel, diamond.QuerySelectorAll("option")[2].GetAttribute("value"));
+        // The capstone is a gem with no levels inside it, so it lists one line and not two.
+        var abyss = Assert.Single(cut.Find("[data-testid=cohort-select]").QuerySelectorAll("optgroup"),
+            g => g.GetAttribute("label") == "ABYSS ABSOLUTE");
+        Assert.Equal(new[] { "All Levels" }, abyss.QuerySelectorAll("option").Select(o => o.TextContent.Trim()));
+    }
+
+    [Fact]
     public void AGemHasNothingCoarserToClearTo()
     {
         SignIn();
