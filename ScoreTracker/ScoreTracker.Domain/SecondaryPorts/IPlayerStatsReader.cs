@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Records;
 
@@ -29,4 +30,15 @@ public interface IPlayerStatsReader
     /// </summary>
     Task<IEnumerable<Guid>> GetPlayersByPoolOfType(MixEnum mix, ChartType chartType, double minimumPool,
         double maximumPool, CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     The players standing on one band of a PUMBILITY ladder (docs/design/pumbility-overhaul.md
+    ///     D68): pool at or above <paramref name="floor" /> and strictly below
+    ///     <paramref name="ceiling" />, which is null at the top of a ladder. Half-open, unlike the
+    ///     peer window above it — a pool exactly on the next rung's threshold holds that rung's title
+    ///     rather than this one — and <paramref name="pool" /> picks the ladder: the merged total,
+    ///     the singles pool or the doubles pool.
+    /// </summary>
+    Task<IEnumerable<Guid>> GetPlayersInPoolBand(MixEnum mix, PumbilityPool pool, double floor, double? ceiling,
+        CancellationToken cancellationToken);
 }

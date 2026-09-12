@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using MediatR;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Application;
@@ -20,6 +21,12 @@ internal sealed class OfficialPlacementReader(IMediator mediator, BoardPeerReade
     {
         return boardPeers.GetBoardPeers(mix, chartType, minimumPool, maximumPool, viewerAccountId,
             cancellationToken);
+    }
+
+    public Task<BoardPeerGroupReading?> GetBoardBand(MixEnum mix, PumbilityPool pool, double floor, double? ceiling,
+        CancellationToken cancellationToken)
+    {
+        return boardPeers.GetBoardBand(mix, pool, floor, ceiling, cancellationToken);
     }
 
     public Task<BoardScoreReadings> GetBoardScoresOn(MixEnum mix,

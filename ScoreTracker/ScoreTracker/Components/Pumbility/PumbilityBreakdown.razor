@@ -1,15 +1,20 @@
 @using System.Globalization
 @using MediatR
+@using ScoreTracker.Domain.Models.Titles.Phoenix
+@using ScoreTracker.Domain.Models.Titles.Phoenix2
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.Services
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Components
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
 
 @* Where the number comes from: the charts, the scores on them, and the plates. The split is
    exact rather than modelled -- a pool entry is Base(level) x grade x plate and nothing else,
@@ -21,13 +26,14 @@
    rail underneath instead, running the full span from the worst plate on all fifty to the
    best, which is a scale it can be read on without exaggerating it anywhere.
 
-   Since round nine, part two (D58) the card carries two more sections, you against your peers:
-   your real fifty split by chart type over your peers' average fifty -- the Phoenix 1 card's
-   bar twice, each segment reading what it is worth and how many charts it is, sized by value
-   like every stack here -- and where the levels sit, the tiles that stood beside the Play lede.
-   The split is a statement about the merged fifty, so it shows only for that scope; the peers'
-   half and the tiles arrive by one read, held by this component because the pool it is scoped
-   to comes from the section frame as a parameter. *@
+   Since round nine, part two (D58) the card carries two more sections, and since D68 both are
+   against the players holding your title rather than against your projection peers: your real
+   fifty split by chart type over theirs -- the Phoenix 1 card's bar twice, each segment reading
+   what it is worth and how many charts it is, sized by value like every stack here -- and where
+   the levels sit, as their spread with you on it. The split is a statement about the merged
+   fifty, so it shows only for that scope. Both arrive by one read, held by this component
+   because the pool it is scoped to comes from the section frame as a parameter, and the band
+   selector above them is what re-reads it. *@
 @if (Breakdown is { Total: > 0 })
 {
     <div class="pmb-wpc">
@@ -99,49 +105,88 @@
             }
         </div>
 
+        @* Who you are measured against, for both sections below: the players holding your title
+           (D68). The band is your own until you pick another one from the ladder. *@
+        @if (_cohort?.Band is { } band)
+        {
+            <div class="pmb-cohort" data-testid="cohort-band">
+                <div class="pmb-cohort-pick">
+                    <label class="pmb-cohort-lbl" for="pmb-cohort-sel">@L["Compared against"]</label>
+                    @* The band that was read is the one selected, so a viewer who has picked nothing
+                       still sees their own. There is no "mine" entry: picking it back IS picking it.
+                       The selected line reads its whole name — a closed select shows only that one, and
+                       "Level 1" alone does not say which gem's (owner, on the PR). The rest keep the
+                       short label their group heading already qualifies. *@
+                    <select id="pmb-cohort-sel" class="pmb-cohort-sel" data-testid="cohort-select"
+                            value="@band.ToString()" @onchange="PickBand">
+                        @foreach (var group in BandOptions)
+                        {
+                            @if (group.Name == null)
+                            {
+                                @foreach (var option in group.Bands)
+                                {
+                                    <option value="@option.Value" selected="@(band.ToString() == option.Value)">@Shown(option, band)</option>
+                                }
+                            }
+                            else
+                            {
+                                <optgroup label="@group.Name">
+                                    @foreach (var option in group.Bands)
+                                    {
+                                        <option value="@option.Value" selected="@(band.ToString() == option.Value)">@Shown(option, band)</option>
+                                    }
+                                </optgroup>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="pmb-cohort-count" data-testid="cohort-count">
+                    <strong>@band</strong>
+                    <span class="pmb-muted">@HoldersLine</span>
+                </div>
+            </div>
+        }
+
         @* The merged fifty only: a singles or doubles pool is one type by definition, so the
            question does not arise there. Your bar draws off the frame's record at once; the
-           peers' bar waits for the read and the row simply is not there until it lands. *@
+           cohort's bar waits for the read and the row simply is not there until it lands. *@
         @if (Page is { Pool_: null, Pool.Count: > 0 })
         {
             <div class="pmb-wpc-sub" data-testid="wpc-types">
                 <div class="pmb-wpc-sub-head">
                     <strong>@L["Singles and doubles"]</strong>
-                    <span class="pmb-muted">@L["your real top 50 against your peers' average, by type"]</span>
+                    <span class="pmb-muted">@L["your real top 50 against theirs, by type"]</span>
                 </div>
                 <div class="pmb-splitrows">
                     <span class="pmb-splitrow-lbl">@L["You"]</span>
                     @SplitBar(Mine)
-                    @if (_compare?.Peers is { } peers)
+                    @if (_cohort is { Band: { } holders, Split: { } split })
                     {
-                        <span class="pmb-splitrow-lbl">@L["Peers"]</span>
-                        @SplitBar(peers)
+                        <span class="pmb-splitrow-lbl">@holders</span>
+                        @SplitBar(split)
                     }
                 </div>
                 <div class="pmb-curve-legend">
                     <span><i class="pmb-swatch" style="background:var(--chart-doubles)"></i>@L["Doubles"]</span>
                     <span><i class="pmb-swatch" style="background:var(--chart-singles)"></i>@L["Singles"]</span>
-                    @if (_compare?.Peers is { } averaged)
+                    @if (_cohort is { Band: { } title, Split: { } averaged })
                     {
-                        @* Who the peers are differs by mix (D43, D53), and the line says which. *@
                         <span class="pmb-muted">
-                            @(Page!.Mix == MixEnum.Phoenix2
-                                ? L["Peers: the average top 50 of the {0} players near your singles or doubles pool", averaged.Peers]
-                                : L["Peers: the average top 50 of the {0} players within one competitive level of you", averaged.Peers])
+                            @L["{0}: the average top 50 of the {1} of them holding a full one", title, averaged.Peers]
                         </span>
                     }
                 </div>
             </div>
         }
 
-        @if (_compare is { Levels.Count: > 0 } compare)
+        @if (_cohort is { Spread.Columns.Count: > 0 } cohort)
         {
             <div class="pmb-wpc-sub" data-testid="wpc-levels">
                 <div class="pmb-wpc-sub-head">
                     <strong>@L["Where the levels sit"]</strong>
-                    <span class="pmb-muted">@L["your fifty against what your peers hold, by level"]</span>
+                    <span class="pmb-muted">@L["how many charts of each level they hold in their top 50, and where yours sit"]</span>
                 </div>
-                <PeerCompareStrip Compare="compare.Levels"></PeerCompareStrip>
+                <LevelSpreadChart Spread="cohort.Spread"></LevelSpreadChart>
             </div>
         }
     </div>
@@ -160,21 +205,136 @@
 
     [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
 
-    private PumbilityPoolCompareRecord? _compare;
+    /// <summary>
+    ///     The band the viewer picked, remembered across visits. One key rather than one per pool:
+    ///     a band belongs to a ladder, and a saved name that does not resolve on the ladder in scope
+    ///     is simply dropped back to their own — which is what switching pools does to it.
+    /// </summary>
+    public const string BandSettingKey = "Pumbility__CompareBand";
 
-    /// <summary>The scope the comparison was read for; the frame hands down a new record on every pool change.</summary>
-    private (MixEnum Mix, ChartType? Pool)? _loaded;
+    private PumbilityCohortRecord? _cohort;
 
-    protected override async Task OnParametersSetAsync()
+    /// <summary>Null reads the viewer's own band, with the thin-level flip the query applies (D68).</summary>
+    private Name? _band;
+
+    /// <summary>The scope the cohort was read for; the frame hands down a new record on every pool change.</summary>
+    private (MixEnum Mix, ChartType? Pool, string Band)? _loaded;
+
+    protected override async Task OnInitializedAsync()
     {
-        if (Page == null) return;
-        var key = (Page.Mix, Page.Pool_);
+        var saved = await UiSettings.GetSetting(BandSettingKey);
+        if (!string.IsNullOrWhiteSpace(saved)) _band = Name.From(saved);
+    }
+
+    protected override Task OnParametersSetAsync()
+    {
+        return Page == null ? Task.CompletedTask : Load();
+    }
+
+    /// <summary>
+    ///     The cohort for the pool in scope and the band chosen for it. A band that does not resolve
+    ///     on this ladder — a [P.B] gem still remembered from the merged pool, a Phoenix 2 rung on
+    ///     Phoenix 1 — reads as no choice at all rather than as an empty cohort.
+    /// </summary>
+    private async Task Load()
+    {
+        var pool = PoolOf(Page!.Pool_);
+        var band = Resolves(_band) ? _band : null;
+        var key = (Page.Mix, Page.Pool_, band?.ToString() ?? string.Empty);
         if (_loaded == key) return;
         _loaded = key;
-        _compare = null;
-        var record = await Mediator.Send(new GetPumbilityPoolCompareQuery(CurrentUser.User.Id, key.Mix, key.Pool_));
+        _cohort = null;
+        var record = await Mediator.Send(new GetPumbilityTitleCohortQuery(CurrentUser.User.Id, Page.Mix, pool, band));
         // A quicker second change superseded this read; its own read is in flight and will land.
-        if (_loaded == key) _compare = record;
+        if (_loaded == key) _cohort = record;
+    }
+
+    private async Task PickBand(ChangeEventArgs args)
+    {
+        var picked = args.Value?.ToString();
+        await SetBand(string.IsNullOrWhiteSpace(picked) ? null : Name.From(picked));
+    }
+
+    private async Task SetBand(Name? band)
+    {
+        _band = band;
+        await UiSettings.SetSetting(BandSettingKey, band?.ToString() ?? string.Empty);
+        await Load();
+    }
+
+    /// <summary>The ladder a pool reads: the merged one, or the [S] / [D] rungs.</summary>
+    private static PumbilityPool PoolOf(ChartType? pool) => pool switch
+    {
+        ChartType.Single => PumbilityPool.Singles,
+        ChartType.Double => PumbilityPool.Doubles,
+        _ => PumbilityPool.Total
+    };
+
+    /// <summary>Whether a remembered band is a band of the ladder in scope at all.</summary>
+    private bool Resolves(Name? band) =>
+        band is { } name && BandOptions.Any(group => group.Bands.Any(o => o.Value == name.ToString()));
+
+    /// <summary>
+    ///     What a line reads. The selected one spells its band out, because a closed select shows that
+    ///     line alone and <em>Level 1</em> on its own does not say which gem's.
+    /// </summary>
+    private static string Shown((string Value, string Label) option, Name band) =>
+        option.Value == band.ToString() ? option.Value : option.Label;
+
+    /// <summary>
+    ///     Every band the selector offers, grouped where the ladder has groups: the merged ladder by
+    ///     gem, since forty-four rungs in one list is a scroll rather than a choice. Inside a gem the
+    ///     group heading already says which gem it is, so its lines read <em>All Levels</em> and
+    ///     <em>Level 1</em> rather than spelling the gem out five more times (owner, on the PR).
+    ///     Phoenix 1 offers its difficulty titles, which is the whole ladder it has.
+    /// </summary>
+    private IReadOnlyList<(string? Name, IReadOnlyList<(string Value, string Label)> Bands)> BandOptions
+    {
+        get
+        {
+            if (Page == null) return Array.Empty<(string?, IReadOnlyList<(string, string)>)>();
+            if (Page.Mix != MixEnum.Phoenix2)
+                return new (string?, IReadOnlyList<(string, string)>)[]
+                {
+                    (null, PhoenixTitleList.BuildList().OfType<PhoenixDifficultyTitle>()
+                        .Select(t => (t.Name.ToString(), t.Name.ToString())).ToArray())
+                };
+
+            var pool = PoolOf(Page.Pool_);
+            var levels = PumbilityBand.Levels(pool);
+            if (pool != PumbilityPool.Total)
+                return new (string?, IReadOnlyList<(string, string)>)[]
+                {
+                    (null, levels.Select(b => (b.Name.ToString(), b.Name.ToString())).ToArray())
+                };
+
+            // The capstone is its own gem and its only level, so its group holds the one line.
+            return PumbilityBand.Gems()
+                .Select(gem => ((string?)gem.Name.ToString(),
+                    (IReadOnlyList<(string, string)>)new[] { (gem.Name.ToString(), L["All Levels"].Value) }
+                    .Concat(levels.Where(l => l.Gem == gem.Name && l.Level is { } level)
+                        .Select(l => (l.Name.ToString(), L["Level {0}", l.Level!.Value].Value)))
+                    .ToArray()))
+                .ToArray();
+        }
+    }
+
+    /// <summary>
+    ///     How many hold the band, and how many of those the official board is the only record of —
+    ///     with the sweep date, because a surface that counts a board player says how old that side
+    ///     of it is (docs/design/peers-abstraction.md D37).
+    /// </summary>
+    private string HoldersLine
+    {
+        get
+        {
+            if (_cohort == null) return string.Empty;
+            var holders = _cohort.Holders == 1
+                ? L["1 player holds it"].Value
+                : L["{0} players hold it", _cohort.Holders.ToString("N0")].Value;
+            if (_cohort is not { BoardHolders: > 0, BoardAsOf: { } asOf }) return holders;
+            return $"{holders} · {L["{0} from the official board, as of {1}", _cohort.BoardHolders.ToString("N0"), asOf.ToString("d MMM")]}";
+        }
     }
 
     /// <summary>

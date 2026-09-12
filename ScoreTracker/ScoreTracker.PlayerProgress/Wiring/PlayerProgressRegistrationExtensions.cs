@@ -1,4 +1,4 @@
-using MassTransit;
+﻿using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -38,6 +38,9 @@ public static class PlayerProgressRegistrationExtensions
         // entire point, and its eviction consumer has to see the same instance.
         services.AddSingleton<PumbilityProjectionCache>();
         services.AddTransient<IHardmodeRatingRepository, EFHardmodeRatingRepository>();
+        // Singleton for the same reason, and keyed on the band rather than the reader: a
+        // cohort is the same answer for everyone standing on it (D68).
+        services.AddSingleton<PumbilityCohortCache>();
         services.AddSingleton<IDbModelContribution, PlayerProgressModelContribution>();
         return services;
     }

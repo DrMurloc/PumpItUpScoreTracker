@@ -259,6 +259,9 @@
   <data name="1 broken run made it to the end" xml:space="preserve">
 	  <value>1 tentativo fallito è arrivato alla fine</value>
   </data>
+  <data name="1 chart" xml:space="preserve">
+    <value>1 chart</value>
+  </data>
   <data name="1 hour 45 minutes of real time." xml:space="preserve">
     <value>1 ora e 45 minuti di tempo reale.</value>
   </data>
@@ -274,9 +277,6 @@
   <data name="1 paragon" xml:space="preserve">
     <value>1 paragon</value>
   </data>
-  <data name="1 peer" xml:space="preserve">
-    <value>1 giocatore simile</value>
-  </data>
   <data name="1 peer is from the official board, as of {0}." xml:space="preserve">
     <value>1 pari proviene dalla classifica ufficiale, al {0}.</value>
   </data>
@@ -285,6 +285,9 @@
   </data>
   <data name="1 Player" xml:space="preserve">
     <value>1 giocatore</value>
+  </data>
+  <data name="1 player holds it" xml:space="preserve">
+    <value>1 giocatore lo tiene</value>
   </data>
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>1 account privato è un pari ma non viene mostrato.</value>
@@ -767,6 +770,9 @@
   </data>
   <data name="All Folders" xml:space="preserve">
     <value>Tutte le cartelle</value>
+  </data>
+  <data name="All Levels" xml:space="preserve">
+    <value>Tutti i livelli</value>
   </data>
   <data name="All mixes" xml:space="preserve">
     <value>Tutti i Mix</value>
@@ -1986,6 +1992,9 @@
   <data name="Compare" xml:space="preserve">
     <value>Confronta</value>
   </data>
+  <data name="Compared against" xml:space="preserve">
+    <value>Confrontato con</value>
+  </data>
   <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
     <value>{0} chart confrontate ({1}) — nessuna ha superato la soglia.</value>
   </data>
@@ -3032,6 +3041,9 @@
   <data name="Fewer than 5 peers scored it" xml:space="preserve">
     <value>Meno di 5 pari l'hanno giocata</value>
   </data>
+  <data name="fewest to most" xml:space="preserve">
+    <value>dal minimo al massimo</value>
+  </data>
   <data name="Fiesta" xml:space="preserve">
     <value>Fiesta</value>
   </data>
@@ -3576,6 +3588,9 @@
   <data name="History" xml:space="preserve">
     <value>Cronologia</value>
   </data>
+  <data name="hold at least one" xml:space="preserve">
+    <value>ne tengono almeno una</value>
+  </data>
   <data name="Hold Footslides" xml:space="preserve">
     <value>Footslides su hold</value>
   </data>
@@ -3651,8 +3666,14 @@
   <data name="How many (1–10, default 3)" xml:space="preserve">
     <value>Quanti (1–10, predefinito 3)</value>
   </data>
+  <data name="how many charts of each level they hold in their top 50, and where yours sit" xml:space="preserve">
+    <value>quanti chart di ogni livello tengono nella loro top 50, e dove stanno i tuoi</value>
+  </data>
   <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
     <value>Quanti chart Co-Op hai superato, per numero di giocatori.</value>
+  </data>
+  <data name="how many hold that many" xml:space="preserve">
+    <value>quanti ne tengono tante</value>
   </data>
   <data name="How many notes is a level?" xml:space="preserve">
     <value>Quante note ha un livello?</value>
@@ -4313,6 +4334,12 @@
   <data name="Level required, by ranking tier" xml:space="preserve">
     <value>Livello richiesto, per fascia di classifica</value>
   </data>
+  <data name="Level Spread You" xml:space="preserve">
+    <value>tu</value>
+  </data>
+  <data name="Level Spread You {0}" xml:space="preserve">
+    <value>Tu {0}</value>
+  </data>
   <data name="Level Up" xml:space="preserve">
     <value>Aumento di livello</value>
   </data>
@@ -4633,6 +4660,9 @@
   </data>
   <data name="median {0}" xml:space="preserve">
     <value>mediana {0}</value>
+  </data>
+  <data name="median · middle half {0}–{1}" xml:space="preserve">
+    <value>mediana · metà centrale {0}–{1}</value>
   </data>
   <data name="Medium" xml:space="preserve">
     <value>Medio</value>
@@ -6164,15 +6194,6 @@
   </data>
   <data name="peers:" xml:space="preserve">
     <value>il tuo livello:</value>
-  </data>
-  <data name="Peers: the average top 50 of the {0} players near your singles or doubles pool" xml:space="preserve">
-    <value>Pari: la top 50 media dei {0} giocatori vicini al tuo pool singles o doubles</value>
-  </data>
-  <data name="Peers: the average top 50 of the {0} players within one competitive level of you" xml:space="preserve">
-    <value>Pari: la top 50 media dei {0} giocatori entro ±1 livello competitivo da te</value>
-  </data>
-  <data name="Peers: {0}% of their pool weight at {1}" xml:space="preserve">
-    <value>Pari: {0}% del peso del loro insieme a {1}</value>
   </data>
   <data name="Pending" xml:space="preserve">
     <value>In attesa</value>
@@ -9002,6 +9023,12 @@
   <data name="The maker sees this on their tool page." xml:space="preserve">
     <value>Chi lo sviluppa vedrà questo sulla pagina del suo strumento.</value>
   </data>
+  <data name="the median holder" xml:space="preserve">
+    <value>la mediana di loro</value>
+  </data>
+  <data name="the middle half of them" xml:space="preserve">
+    <value>la metà centrale di loro</value>
+  </data>
   <data name="The middle lines multiply, so they add to less than the total." xml:space="preserve">
     <value>Le righe centrali si moltiplicano, quindi la loro somma è inferiore al totale.</value>
   </data>
@@ -10710,9 +10737,6 @@
   <data name="you:" xml:space="preserve">
     <value>tu:</value>
   </data>
-  <data name="You: {0} charts at {1}" xml:space="preserve">
-    <value>Tu: {0} chart a {1}</value>
-  </data>
   <data name="You: {0} · similar players average {1}" xml:space="preserve">
     <value>Tu: {0} · media dei giocatori simili: {1}</value>
   </data>
@@ -10799,9 +10823,6 @@
   </data>
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>Il tuo endpoint risponde a una richiesta di verifica con questo. Non viene inviato da nessuna parte: è ciò che rende una prova il risponderci con esso, ed è perché un DNS dirottato non passa. Se ne conserva solo un hash, quindi annotalo dove lo ritrovi.</value>
-  </data>
-  <data name="your fifty against what your peers hold, by level" xml:space="preserve">
-    <value>i tuoi cinquanta contro ciò che tengono i tuoi pari, per livello</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>Il file superava i 10MB, riducilo e riprova.</value>
@@ -10932,8 +10953,8 @@
   <data name="Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them." xml:space="preserve">
     <value>Pumbility, titoli, lampade delle cartelle e statistiche si calcolano da questi dati: si azzerano da soli. Non puoi conservarli.</value>
   </data>
-  <data name="your real top 50 against your peers' average, by type" xml:space="preserve">
-    <value>la tua vera top 50 contro la media dei tuoi pari, per tipo</value>
+  <data name="your real top 50 against theirs, by type" xml:space="preserve">
+    <value>la tua vera top 50 contro la loro, per tipo</value>
   </data>
   <data name="Your record book" xml:space="preserve">
     <value>Il tuo libro dei record</value>
@@ -11319,6 +11340,9 @@
   <data name="{0} from the official board*" xml:space="preserve">
     <value>{0} dalla classifica ufficiale*</value>
   </data>
+  <data name="{0} from the official board, as of {1}" xml:space="preserve">
+    <value>{0} dalla classifica ufficiale, al {1}</value>
+  </data>
   <data name="{0} gap" xml:space="preserve">
     <value>{0} di pausa</value>
   </data>
@@ -11553,9 +11577,6 @@
   <data name="{0} pass in this folder" xml:space="preserve">
     <value>{0} passaggio in questo folder</value>
   </data>
-  <data name="{0} peers" xml:space="preserve">
-    <value>{0} giocatori simili</value>
-  </data>
   <data name="{0} peers are from the official board, as of {1}." xml:space="preserve">
     <value>{0} pari provengono dalla classifica ufficiale, al {1}.</value>
   </data>
@@ -11579,6 +11600,9 @@
   </data>
   <data name="{0} players found" xml:space="preserve">
     <value>{0} giocatori trovati</value>
+  </data>
+  <data name="{0} players hold it" xml:space="preserve">
+    <value>{0} giocatori lo tengono</value>
   </data>
   <data name="{0} players left their mark on the chart boards." xml:space="preserve">
     <value>{0} giocatori hanno lasciato il segno nelle classifiche dei chart.</value>
@@ -11775,8 +11799,17 @@
   <data name="{0}/s" xml:space="preserve">
     <value>{0}/s</value>
   </data>
+  <data name="{0}: a median of {1}, middle half {2} to {3}; you hold {4}" xml:space="preserve">
+    <value>{0}: una mediana di {1}, metà centrale da {2} a {3}; tu ne tieni {4}</value>
+  </data>
   <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
     <value>{0}: un SSS+ su {1} vale un 900.000 su {2}</value>
+  </data>
+  <data name="{0}: charts of each level the players holding your title keep in their top 50" xml:space="preserve">
+    <value>{0}: chart di ogni livello che i giocatori con il tuo titolo tengono nella loro top 50</value>
+  </data>
+  <data name="{0}: the average top 50 of the {1} of them holding a full one" xml:space="preserve">
+    <value>{0}: la top 50 media dei {1} di loro che ne tengono una piena</value>
   </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>{0} g fa</value>
@@ -11819,6 +11852,18 @@
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>~#{0} nella classifica ufficiale</value>
+  </data>
+  <data name="· 1 peer ({0}%)" xml:space="preserve">
+    <value>· 1 pari ({0}%)</value>
+  </data>
+  <data name="· like the {0}% who hold none" xml:space="preserve">
+    <value>· come il {0}% che non ne tiene nessuna</value>
+  </data>
+  <data name="· more than {0}% of them" xml:space="preserve">
+    <value>· più del {0}% di loro</value>
+  </data>
+  <data name="· {0} peers ({1}%)" xml:space="preserve">
+    <value>· {0} pari ({1}%)</value>
   </data>
   <data name="— optional" xml:space="preserve">
     <value>— facoltativo</value>

@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -184,6 +185,26 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                 ChartType.Single => query.Where(p => p.SinglesRating >= minimumPool && p.SinglesRating <= maximumPool),
                 ChartType.Double => query.Where(p => p.DoublesRating >= minimumPool && p.DoublesRating <= maximumPool),
                 _ => query.Where(p => p.SkillRating >= minimumPool && p.SkillRating <= maximumPool)
+            };
+            return await query.Select(p => p.UserId).Distinct().ToArrayAsync(cancellationToken);
+        }
+
+        /// <summary>
+        ///     One band of a ladder (D68). Half-open on purpose: the peer window above is a distance
+        ///     from a pool and takes both ends, while a band ends where the next rung's title begins.
+        /// </summary>
+        public async Task<IEnumerable<Guid>> GetPlayersInPoolBand(MixEnum mix, PumbilityPool pool, double floor,
+            double? ceiling, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
+            var top = ceiling ?? double.MaxValue;
+            var query = database.Set<PlayerStatsEntity>().Where(p => p.MixId == mixId);
+            query = pool switch
+            {
+                PumbilityPool.Singles => query.Where(p => p.SinglesRating >= floor && p.SinglesRating < top),
+                PumbilityPool.Doubles => query.Where(p => p.DoublesRating >= floor && p.DoublesRating < top),
+                _ => query.Where(p => p.SkillRating >= floor && p.SkillRating < top)
             };
             return await query.Select(p => p.UserId).Distinct().ToArrayAsync(cancellationToken);
         }

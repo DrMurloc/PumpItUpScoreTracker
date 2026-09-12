@@ -702,3 +702,49 @@ recovered from the peers lede), `blarg` (from), `mag` (with), `mrp` (one), `murp
 | when | ob | The recovered *if*; a Murloc does not split the two. |
 | these | blu | The recovered *this*; number unmarked. |
 | likely | murgab | Coined for the lede's *these are likely to be the hardest charts to score*. `bru` (be), `mrrrglmrgl` (hardest), `grorpmurm murm` (level range) are all recovered. |
+
+## The level spread (2026-09-11)
+
+Coined for the PUMBILITY Breakdown card's level spread ([pumbility-overhaul.md](design/pumbility-overhaul.md)
+D67): the caption, the tile's peers line, the legend, the tooltip and each column's screen-reader label.
+Reused, not re-coined: `maglmurp` (peers), `morp` (your, and yours), `blub` (you), `mrgloru` (hold, as the Rarity grouping
+recovered it), `algro` (each), `grorpmurm` (level), `gropmur` (in), `ropgl 50` (top 50), `blugrogl` (median),
+`mogrgl blugro` (middle half), `mrrgl grogrgl` (more than), `mr mggl` (at least, from *At least*),
+`mggl ro mrrrgl` (*fewest to most*, on *least* and *most*), `plglro` (like), `bomo` (nothing, here
+*none*), `gam` (how), `mrogl` (sits), `blarg` (from) and `urgmrmurg mrglblarg` (official board).
+
+| English | en-ZW | Notes |
+|---|---|---|
+| who | murpo | The word for *whose*: a Murloc does not decline it. |
+| that (that many) | argo | Coined. |
+| many | mrgl | Recovered from *month*, `mrglgralp` (*many days*). |
+| where | gorpo | `gorp` (there) + `o`. |
+
+## The title cohort (2026-09-12)
+
+Coined for the PUMBILITY Breakdown card's band selector and its count
+([pumbility-overhaul.md](design/pumbility-overhaul.md) D68), where the card stops comparing you against
+your peers and compares you against the players holding your title. The spread's own words are the
+level-spread batch above, unchanged; `maglmurp` (peers) leaves this card entirely, and `grglblarg`
+(them / their) is what took its place. Reused, not re-coined: `Mrgl` (title), `Morp` (player, and
+your), `mrgloru` (hold), `ug` (it), `Mrpmurg` (clear), `urgro` (against), `Lurgplglgrgl` (compare) and
+`Glorgmurplurg` (compared), `ulbog` (all), `ub` (of), `a` (the), `mrp` (as, and one), `mrglmr` (full),
+`rorg` (average), `ropgl 50` (top 50), `blarg` (from), `urgmrmurg mrglblarg` (official board), `bu`
+(by), `morg` (type) and `grorpmurm` (level).
+
+| English | en-ZW | Notes |
+|---|---|---|
+| own | oblug | Coined for *Your own title* — the band you stand on rather than one you picked. |
+| holder | mrglorup | `mrgloru` (hold) + `p`, the way `Morp` (player) ends. The one who holds the title. |
+| instead | ugmorgru | On `ugmorg` (other) — a Murloc names the swap by what it swaps to. |
+
+**Addendum (same day).** The selector's group heading names the gem, so its lines read *All Levels* and *Level 1*
+rather than the gem six times, and the entry for "your own" went away — the selector simply starts on the band that
+was read. `Ulbog Grorpmurm` (All Levels) is the recovered `ulbog` (all) on `grorpmurm` (level); `Grorpmurm {0}`
+(Level {0}) already existed. `Morp oblug mrgl` (Your own title) retires with the entry, but `oblug` stays in the
+table — a coined word is not un-coined by one string leaving.
+
+**Second addendum (same day).** The clear-the-level button went — the gem is a line in the selector, so a second
+control for it only asked which one was which — and `Mrpmurg a grorpmurm` (Clear the level) and `Lurgplglgrgl
+urgro ulbog ub {0} ugmorgru` (Compare against all of {0} instead) retire with it. `ugmorgru` (instead) and
+`urgro` (against) stay in the tables; a coined word is not un-coined by one string leaving.

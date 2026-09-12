@@ -28,8 +28,7 @@ namespace ScoreTracker.PlayerProgress.Application
     /// </summary>
     internal sealed class PumbilityProjectionSaga : IRequestHandler<ProjectPumbilityGainsQuery, PumbilityProjection>,
         IRequestHandler<GetPumbilityPeersPageQuery, PumbilityPeersPageRecord>,
-        IRequestHandler<GetPumbilityPeersQuery, IReadOnlyCollection<PeerVoice>>,
-        IRequestHandler<GetPumbilityPoolCompareQuery, PumbilityPoolCompareRecord>
+        IRequestHandler<GetPumbilityPeersQuery, IReadOnlyCollection<PeerVoice>>
     {
         /// <summary>
         ///     Phoenix 1: how far a chart's scoring level may sit from the player's competitive
@@ -188,65 +187,6 @@ namespace ScoreTracker.PlayerProgress.Application
         }
 
         /// <summary>
-        ///     The Breakdown page's comparison (docs/design/pumbility-overhaul.md D58), off the same
-        ///     cached sweep: where the viewer's fifty of each lit type sits against the peers' by level
-        ///     (D41), and — for the merged scope only, since a singles or doubles pool is one type by
-        ///     definition — the peers' average merged fifty split by type. That split is the one read
-        ///     of its own on the page, over the union of the lit types' peers, and it is cached beside
-        ///     the sweep for the sweep's day and evicted with it.
-        /// </summary>
-        public async Task<PumbilityPoolCompareRecord> Handle(GetPumbilityPoolCompareQuery request,
-            CancellationToken cancellationToken)
-        {
-            var (userId, mix, pool) = request;
-            var sweep = await _cache.GetOrAdd(userId, mix, () => Estimate(userId, mix));
-            var types = pool is { } only ? new[] { only } : new[] { ChartType.Single, ChartType.Double };
-            var lit = types.Where(sweep.PeerPools.ContainsKey).ToArray();
-            if (lit.Length == 0) return PumbilityPoolCompareRecord.Empty;
-
-            var charts = (await _mediator.Send(new GetChartsQuery(mix), cancellationToken)).ToDictionary(c => c.Id);
-            var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
-            var mine = (await _scores.GetBestScores(mix, userId, cancellationToken))
-                .Where(r => r.Score != null && !r.IsBroken && charts.ContainsKey(r.ChartId))
-                .ToDictionary(r => r.ChartId);
-            var levels = lit.ToDictionary(type => type, type => CompareWith(sweep.PeerPools[type],
-                MyPoolOf(type, mine, charts, scoring).Select(r => r.ChartId).ToArray(), charts));
-
-            var peers = pool == null
-                ? await _cache.GetOrAddSplit(userId, mix, () => AverageSplit(mix,
-                    // Accounts only: the average split is built from the peers' own records, and a
-                    // board peer has none — the mirror publishes what they scored, not a ledger.
-                    lit.SelectMany(type => sweep.PeerPools[type].Peers)
-                        .Where(p => p.UserId != null).Select(p => p.UserId!.Value).ToHashSet(), charts, scoring))
-                : null;
-            return new PumbilityPoolCompareRecord(levels, peers);
-        }
-
-        /// <summary>
-        ///     The peers' average merged fifty by type (D58): each peer's records of both types, priced
-        ///     under the mix's formula, through <see cref="PumbilityPoolSplit.Average" /> — two range
-        ///     reads over the union, the same read the sweep makes per type. Only a full fifty counts.
-        ///     No request token: the answer outlives the request that first asked for it.
-        /// </summary>
-        private async Task<PoolTypeSplit?> AverageSplit(MixEnum mix, IReadOnlySet<Guid> peers,
-            IReadOnlyDictionary<Guid, Chart> charts, ScoringConfiguration scoring)
-        {
-            if (peers.Count == 0) return null;
-            var byPeer = new Dictionary<Guid, List<PricedRecord>>();
-            foreach (var type in new[] { ChartType.Single, ChartType.Double })
-            foreach (var record in await _scores.GetPlayerScoresInLevelRange(mix, peers, type,
-                         PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, CancellationToken.None))
-            {
-                if (!charts.TryGetValue(record.ChartId, out var chart)) continue;
-                if (!byPeer.TryGetValue(record.UserId, out var list)) byPeer[record.UserId] = list = new List<PricedRecord>();
-                list.Add(new PricedRecord(chart.Type,
-                    scoring.GetScore(chart, record.Score, record.Plate ?? PhoenixPlate.RoughGame, record.IsBroken)));
-            }
-
-            return PumbilityPoolSplit.Average(byPeer.Values);
-        }
-
-        /// <summary>
         ///     The viewer's own pool of a type, by the same rule the peers' were built with: the fifty
         ///     highest-priced non-broken records above zero, ranked.
         /// </summary>
@@ -262,23 +202,6 @@ namespace ScoreTracker.PlayerProgress.Application
                 .OrderByDescending(r => r.Rating).ThenBy(r => r.ChartId)
                 .Take(PumbilityPeerPools.PoolSize)
                 .ToArray();
-        }
-
-        /// <summary>
-        ///     Where the viewer's pool of one type sits against the peers' by level (D41): their
-        ///     charts per level, and the peers' prevalence points per level as a share of the type.
-        /// </summary>
-        private static PeerCompare CompareWith(PeerPoolSummary summary, IReadOnlyCollection<Guid> myPool,
-            IReadOnlyDictionary<Guid, Chart> charts)
-        {
-            var totalPoints = summary.Charts.Values.Sum(c => (double)c.Points);
-            var shareByLevel = summary.Charts
-                .Where(kv => kv.Value.Points > 0 && charts.ContainsKey(kv.Key))
-                .GroupBy(kv => (int)charts[kv.Key].Level)
-                .ToDictionary(g => g.Key, g => totalPoints == 0 ? 0 : g.Sum(kv => kv.Value.Points) / totalPoints);
-            return new PeerCompare(
-                myPool.Where(charts.ContainsKey).GroupBy(id => (int)charts[id].Level).ToDictionary(g => g.Key, g => g.Count()),
-                shareByLevel);
         }
 
         /// <summary>
