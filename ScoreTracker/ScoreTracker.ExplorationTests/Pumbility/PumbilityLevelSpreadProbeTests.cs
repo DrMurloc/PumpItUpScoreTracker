@@ -8,6 +8,7 @@ using ScoreTracker.Catalog.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Configuration;
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
@@ -19,18 +20,19 @@ using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.SharedKernel.Enums;
-using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using Xunit.Abstractions;
 
 namespace ScoreTracker.ExplorationTests.Pumbility;
 
 /// <summary>
-///     Workshop probe for a level-spread chart on the PUMBILITY Breakdown page: for each chart type,
-///     how many charts of every level each of the player's PUMBILITY peers keeps in their top 50,
-///     beside the page's own frame, breakdown card and comparison record, so a mock can draw the
-///     card exactly as the page would. The peers are the page's (the projector's call as the
-///     projection saga makes it, board peers included), checked against the saga's own spread.
+///     Workshop probe for the PUMBILITY Breakdown card: the page's own frame and breakdown record
+///     beside the cohort each pool is compared against (D68) — the band, who holds it, and the
+///     level spread with the player on it — so a mock can draw the card exactly as the page would.
+///     <para>
+///         What the population IS, and the twenty-five a level owes before it is read over its gem,
+///         is <see cref="PumbilityTitleCohortProbeTests" />; this one is about one player's card.
+///     </para>
 ///     <para>
 ///         Configure <c>CatalogProbe:ConnectionString</c> or SCORETRACKER_CATALOG_CONNECTION;
 ///         SCORETRACKER_PUMBILITY_PROBE_USER picks the player; SCORETRACKER_PROBE_OUT names a
@@ -48,11 +50,10 @@ public sealed class PumbilityLevelSpreadProbeTests
     }
 
     [CatalogProbeFact]
-    public async Task One_players_level_spread_against_their_peers()
+    public async Task One_players_card_against_the_players_holding_their_title()
     {
         await using var services = BuildServices();
         var mediator = services.GetRequiredService<IMediator>();
-        var projector = services.GetRequiredService<IScoreProjector>();
         var chartRepository = services.GetRequiredService<IChartRepository>();
         var statsRepository = services.GetRequiredService<IPlayerStatsRepository>();
         const MixEnum mix = MixEnum.Phoenix2;
@@ -61,17 +62,20 @@ public sealed class PumbilityLevelSpreadProbeTests
                      (await statsRepository.GetUserIdsWithStats(mix, CancellationToken.None)).First();
         var charts = (await chartRepository.GetCharts(mix, cancellationToken: CancellationToken.None))
             .ToDictionary(c => c.Id);
-        var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
 
-        // The frame's reads at Great and the Breakdown card's comparison, for all three pools.
+        // The frame's reads at Great and the card's cohort, for all three pools.
         var pages = new Dictionary<string, PumbilityPageRecord>();
-        var compares = new Dictionary<string, PumbilityPoolCompareRecord>();
-        foreach (var (key, pool) in new (string, ChartType?)[]
-                     { ("All", null), ("Single", ChartType.Single), ("Double", ChartType.Double) })
+        var cohorts = new Dictionary<string, PumbilityCohortRecord>();
+        foreach (var (key, pool, ladder) in new (string, ChartType?, PumbilityPool)[]
+                 {
+                     ("All", null, PumbilityPool.Total),
+                     ("Single", ChartType.Single, PumbilityPool.Singles),
+                     ("Double", ChartType.Double, PumbilityPool.Doubles)
+                 })
         {
             pages[key] = await mediator.Send(new GetPumbilityPageQuery(userId, mix, pool, Energy.Great),
                 CancellationToken.None);
-            compares[key] = await mediator.Send(new GetPumbilityPoolCompareQuery(userId, mix, pool),
+            cohorts[key] = await mediator.Send(new GetPumbilityTitleCohortQuery(userId, mix, ladder),
                 CancellationToken.None);
         }
 
@@ -112,80 +116,24 @@ public sealed class PumbilityLevelSpreadProbeTests
                 pool = kv.Value.Pool.Select(Entry).ToArray(),
                 waitingRoom = kv.Value.WaitingRoom.Select(Entry).ToArray()
             }),
-            ["compare"] = compares
+            ["cohort"] = cohorts
         };
 
-        var floor = Math.Min(pages["Single"].Bar ?? 0, pages["Double"].Bar ?? 0);
-        var spread = new Dictionary<string, object>();
-        foreach (var type in new[] { ChartType.Single, ChartType.Double })
+        foreach (var (key, cohort) in cohorts)
         {
-            var key = type.ToString();
-            var page = pages[key];
-
-            // The projection saga's own call (ProjectType), so the peers are the page's: the
-            // finish is the pool of the type, and a short one is filled at its weakest chart.
-            double? finish = page.Pool.Count == 0 ? null
-                : page.Pool.Count >= PeerGroup.PumbilityPoolSize ? page.Total
-                : page.Total + (PeerGroup.PumbilityPoolSize - page.Pool.Count) * page.Pool[^1].Value;
-            var scoped = charts.Values.Where(c => c.Type == type)
-                .Where(c => scoring.GetScore(c, PhoenixScore.Max, PhoenixPlate.PerfectGame, false) > floor)
-                .Select(c => new ProjectionTarget(c.Id, (int)c.Level))
-                .ToArray();
-            var projection = await projector.Project(new ScoreProjectionRequest(mix, type, userId, scoped,
-                PeerEstimator.CompetitiveWindow, charts, RelaxFloorWhenEmpty: true, ProjectedTotal: finish,
-                ProjectedTotalIsEstimate: page.Pool.Count is > 0 and < PeerGroup.PumbilityPoolSize,
-                Quantiles: EnergyRungs.All), CancellationToken.None);
-            if (projection.PeerPools is not { } summary || projection.Group is not { IsLit: true } group)
+            if (cohort.Band is not { } band)
             {
-                _output.WriteLine($"{type}: dark, or no pools came back");
+                _output.WriteLine($"{key}: no band — the player stands under this ladder");
                 continue;
             }
 
-            var perPeer = summary.Pools.Select(kv => new
-            {
-                src = kv.Key.UserId != null ? "site" : "board",
-                levels = kv.Value.Where(charts.ContainsKey)
-                    .GroupBy(id => (int)charts[id].Level)
-                    .OrderBy(g => g.Key)
-                    .ToDictionary(g => g.Key.ToString(), g => g.Count())
-            }).ToArray();
-
-            // The check that these are the page's peers: at every level the saga's spread draws, how
-            // many peers keep each count, rebuilt from this summary.
-            var countsByPeer = summary.Peers
-                .Select(p => summary.Pools.TryGetValue(p, out var held)
-                    ? held.Where(charts.ContainsKey).GroupBy(id => (int)charts[id].Level).ToDictionary(g => g.Key, g => g.Count())
-                    : new Dictionary<int, int>())
-                .ToArray();
-            var sagaSpread = compares["All"].Levels.GetValueOrDefault(type);
-            var columnsOff = sagaSpread?.Columns.Count(column =>
-            {
-                var rebuilt = countsByPeer.GroupBy(c => c.GetValueOrDefault(column.Level)).ToDictionary(g => g.Key, g => g.Count());
-                return rebuilt.Count != column.PeersByCount.Count ||
-                       rebuilt.Any(kv => column.PeersByCount.GetValueOrDefault(kv.Key) != kv.Value);
-            });
-            var mine = sagaSpread?.Columns.Where(c => c.Mine > 0).ToDictionary(c => c.Level, c => c.Mine) ??
-                       new Dictionary<int, int>();
-
-            var poolSizes = summary.Pools.Values.Select(p => p.Count).ToArray();
-            _output.WriteLine($"{type}: peers {summary.Peers.Count} (board {group.BoardSize}) · window {group.Lowest:F0}–{group.Highest:F0} · " +
-                              $"pool sizes {poolSizes.Min()}–{poolSizes.Max()} · spread columns off from the saga {columnsOff?.ToString() ?? "n/a"} · " +
-                              $"mine {string.Join(" ", mine.OrderBy(kv => kv.Key).Select(kv => $"{kv.Key}x{kv.Value}"))}");
-
-            spread[key] = new
-            {
-                peers = summary.Peers.Count,
-                board = group.BoardSize,
-                boardAsOf = group.BoardAsOf,
-                lowest = group.Lowest,
-                highest = group.Highest,
-                spreadColumnsOffVsSaga = columnsOff,
-                mine,
-                perPeer
-            };
+            var mine = cohort.Spread.Columns.Where(c => c.Mine > 0)
+                .Select(c => $"{(c.Type == ChartType.Single ? "S" : "D")}{c.Level}x{c.Mine}");
+            _output.WriteLine($"{key}: {band} · {cohort.Holders} holders (board {cohort.BoardHolders}, " +
+                              $"as of {cohort.BoardAsOf?.ToString("d MMM") ?? "never swept"}) · " +
+                              $"{cohort.Spread.Columns.Count} columns · split {cohort.Split?.Peers.ToString() ?? "none"} · " +
+                              $"mine {string.Join(" ", mine)}");
         }
-
-        export["spread"] = spread;
 
         if (Environment.GetEnvironmentVariable("SCORETRACKER_PROBE_OUT") is { Length: > 0 } outDir)
         {
@@ -224,7 +172,8 @@ public sealed class PumbilityLevelSpreadProbeTests
         services.AddScoreLedger();
         services.AddChartIntelligence();
         services.AddPlayerProgress();
-        // The projector reads the official board for its peers (D59); nothing here scrapes.
+        // The page's projection reads the official board for its peers (D59), and the cohort reads
+        // it for the players no account claims (D68); nothing here scrapes.
         services.AddOfficialMirror();
         services.AddTransient<IScoreProjector, ScoreProjector>();
         services.AddSingleton<IDateTimeOffsetAccessor>(new SystemClock());
