@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.Services;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
@@ -73,7 +74,7 @@ namespace ScoreTracker.PlayerProgress.Application
         public Task<CohortReading> GetOrAdd(MixEnum mix, PumbilityPool pool, Name band,
             Func<Task<CohortReading>> compute)
         {
-            var key = $"pumbility:cohort:{mix}:{pool}:{band}";
+            var key = CacheKeys.Mix(nameof(PumbilityCohortCache), mix, pool, band);
             if (_cache.TryGetValue(key, out Task<CohortReading>? running) && running != null) return running;
 
             lock (_gate)

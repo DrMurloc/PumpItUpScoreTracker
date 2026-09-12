@@ -66,14 +66,8 @@ public sealed class CacheKeyTests
         ["ScoreTracker.Communities/Infrastructure/EFCommunitiesRepository.cs"] = 1,
         // OfficialMirror burned its entries in slice 0's mirror commit: OfficialCacheKeys and the
         // board peer reader build Mix keys through CacheKeys.
-        ["ScoreTracker.PlayerProgress/Application/CohortScoreProvider.cs"] = 2,
-        ["ScoreTracker.PlayerProgress/Application/HighlightCaptureSaga.cs"] = 1,
-        ["ScoreTracker.PlayerProgress/Application/PlayerHighlightCapturer.cs"] = 1,
-        ["ScoreTracker.PlayerProgress/Application/PumbilityCohortCache.cs"] = 1,
-        ["ScoreTracker.PlayerProgress/Application/PumbilityProjectionCache.cs"] = 1,
-        ["ScoreTracker.PlayerProgress/Application/RecapSaga.cs"] = 2,
-        ["ScoreTracker.PlayerProgress/Infrastructure/EFPlayerStatsRepository.cs"] = 1,
-        ["ScoreTracker.PlayerProgress/Infrastructure/EFTitleRepository.cs"] = 1,
+        // PlayerProgress burned its eight entries in slice 0's progress commit: the stats row and
+        // the projection sweep are Viewer keys; cohorts, recap, rarity, capture and titles are Mix.
         ["ScoreTracker.Rivals/Application/PeerStandingReader.cs"] = 3,
         // ScoreLedger burned its entry in slice 0's ledger commit: the record score cache is a
         // Viewer key and LedgerCacheKeys builds through CacheKeys.

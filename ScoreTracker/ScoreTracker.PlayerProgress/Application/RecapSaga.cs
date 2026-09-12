@@ -12,6 +12,7 @@ using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts.Recap;
 using ScoreTracker.PlayerProgress.Domain;
 using ScoreTracker.PlayerProgress.Domain.Recap;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -458,7 +459,7 @@ internal sealed class RecapSaga :
     {
         // Candidate sets tolerate staleness (top-50 chart-id sets drift slowly); the
         // subject's own set always recomputes so a fresh import reshapes their overlaps.
-        var key = $"{nameof(RecapSaga)}__Top50__{mix}__{type}__{userId}";
+        var key = CacheKeys.Mix(nameof(RecapSaga), mix, "Top50", type, userId);
         if (!refresh && _cache.TryGetValue(key, out IReadOnlySet<Guid>? cached) && cached != null)
             return cached;
 
@@ -480,7 +481,7 @@ internal sealed class RecapSaga :
 
     private static string SharedCacheKey(MixEnum mix)
     {
-        return $"{nameof(RecapSaga)}__Shared__{mix}";
+        return CacheKeys.Mix(nameof(RecapSaga), mix, "Shared");
     }
 
     private async Task<RecapTrophies> BuildTrophies(MixEnum mix, Guid userId, RecordedPhoenixScore[] passes,

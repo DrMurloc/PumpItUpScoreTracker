@@ -12,6 +12,7 @@ using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Domain;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -573,7 +574,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         ChartType type, DifficultyLevel level, double competitive, CancellationToken cancellationToken)
     {
         return await _cache.GetOrCreateAsync(
-            $"{nameof(HighlightCaptureSaga)}__Cohort__{mix}__{userId}__{type}__{(int)level}",
+            CacheKeys.Mix(nameof(HighlightCaptureSaga), mix, "Cohort", userId, type, (int)level),
             async o =>
             {
                 o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);

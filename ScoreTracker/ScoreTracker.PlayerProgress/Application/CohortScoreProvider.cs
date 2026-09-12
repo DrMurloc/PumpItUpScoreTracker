@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
@@ -40,7 +41,7 @@ internal sealed class CohortScoreProvider
         CancellationToken cancellationToken)
     {
         return await _cache.GetOrCreateAsync(
-            $"{nameof(ScoreQualitySaga)}__GetComparablePlayers__{mix}__{bucket}__{chartType}",
+            CacheKeys.Mix(nameof(ScoreQualitySaga), mix, "GetComparablePlayers", bucket, chartType),
             async o =>
             {
                 o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
@@ -91,6 +92,6 @@ internal sealed class CohortScoreProvider
 
     private static string CohortScoresKey(MixEnum mix, ChartType chartType, double bucket, Guid chartId)
     {
-        return $"{nameof(ScoreQualitySaga)}__CohortScores__{mix}__{chartType}__{bucket}__{chartId}";
+        return CacheKeys.Mix(nameof(ScoreQualitySaga), mix, "CohortScores", chartType, bucket, chartId);
     }
 }

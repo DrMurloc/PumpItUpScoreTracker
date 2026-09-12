@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.PlayerProgress.Domain;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.PlayerProgress.Application;
@@ -70,7 +71,7 @@ internal sealed class PlayerHighlightCapturer : IPlayerHighlightCapturer
 
     private async Task<RaritySnapshot> GetRaritySnapshot(MixEnum mix, CancellationToken cancellationToken)
     {
-        return (await _cache.GetOrCreateAsync($"player-highlight-rarity:{mix}", async entry =>
+        return (await _cache.GetOrCreateAsync(CacheKeys.Mix(nameof(PlayerHighlightCapturer), mix, "Rarity"), async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = RarityCacheTtl;
             var pgHolders = (await _scores.GetChartScoreAggregates(mix, cancellationToken))

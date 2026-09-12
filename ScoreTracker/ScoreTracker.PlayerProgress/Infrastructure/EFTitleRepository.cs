@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.PlayerProgress.Infrastructure.Entities;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -23,7 +24,7 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
 
         private static string CacheKey(MixEnum mix)
         {
-            return $"{nameof(EFTitleRepository)}__Titles__{mix}";
+            return CacheKeys.Mix(nameof(EFTitleRepository), mix, "Titles");
         }
 
         public async Task SaveTitles(MixEnum mix, Guid userId, IEnumerable<TitleAchievedRecord> acquiredTitles,
