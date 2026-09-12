@@ -7,7 +7,8 @@ public sealed record Chart(Guid Id, MixEnum OriginalMix, Song Song, ChartType Ty
     Name? StepArtist,
     int? NoteCount,
     LegacySlot? Slot = null,
-    int? PlayerCountOverride = null)
+    int? PlayerCountOverride = null,
+    ChartRelease? Release = null)
 {
     public string DifficultyString => $"{Type.GetShortHand()}{Level}";
 

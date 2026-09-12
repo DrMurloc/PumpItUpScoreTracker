@@ -1,4 +1,4 @@
-﻿using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Domain.Models
@@ -54,6 +54,14 @@ namespace ScoreTracker.Domain.Models
         };
 
         public ISet<Guid> ChartIds { get; set; } = new HashSet<Guid>();
+
+        /// <summary>
+        ///     The patches to draw from, by version name, on the mix the settings belong to. Empty
+        ///     means every version. Stored as the exact set rather than a bound, so a preset saved
+        ///     as "through 2.09.0" keeps excluding later patches after they ship — a cab that has
+        ///     not updated, a tournament that froze its pool (docs/design/chart-versions.md §4).
+        /// </summary>
+        public ISet<string> Versions { get; set; } = new HashSet<string>(StringComparer.Ordinal);
         public ResultsOrdering Ordering { get; set; } = ResultsOrdering.Randomized;
         public bool? ClearStatus { get; set; }
         public ISet<PhoenixLetterGrade> LetterGrades { get; set; } = new HashSet<PhoenixLetterGrade>();
