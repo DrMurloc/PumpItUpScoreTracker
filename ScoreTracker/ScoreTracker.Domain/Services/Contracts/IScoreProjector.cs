@@ -318,6 +318,13 @@ public sealed record PeerPoolChart(int Holders, int Points, int Scored, IReadOnl
 ///     Scores account or a player the official board is the only record of (D59).
 /// </param>
 /// <param name="Pools">Each peer's top-50 chart set, keyed by peer.</param>
+/// <param name="Averages">
+///     Each peer's own top-50 average SCORE, keyed by peer — what an archetype bands on
+///     (docs/design/pumbility-overhaul.md D69). It is the fifty in <paramref name="Pools" />
+///     measured a second way rather than a second reading: the builder already prices and orders
+///     that fifty and had simply been keeping only which charts it was. A peer with no priceable
+///     record is absent rather than zero, the same way an empty pool is empty.
+/// </param>
 /// <param name="Charts">Every chart at least one peer holds, or at least five scored.</param>
 /// <param name="BoardTotals">
 ///     What the official board publishes as the whole PUMBILITY of each peer that has no account —
@@ -328,8 +335,13 @@ public sealed record PeerPoolSummary(
     IReadOnlySet<PeerVoice> Peers,
     IReadOnlyDictionary<PeerVoice, IReadOnlySet<Guid>> Pools,
     IReadOnlyDictionary<Guid, PeerPoolChart> Charts,
-    IReadOnlyDictionary<PeerVoice, double>? BoardTotals = null)
+    IReadOnlyDictionary<PeerVoice, double>? BoardTotals = null,
+    IReadOnlyDictionary<PeerVoice, double>? Averages = null)
 {
+    /// <summary>Each peer's top-50 average score, never null so a caller need not check.</summary>
+    public IReadOnlyDictionary<PeerVoice, double> AveragesByPeer =>
+        Averages ?? new Dictionary<PeerVoice, double>();
+
     /// <summary>The board peers' totals, never null so a caller need not check.</summary>
     public IReadOnlyDictionary<PeerVoice, double> TotalsFromBoard =>
         BoardTotals ?? new Dictionary<PeerVoice, double>();
