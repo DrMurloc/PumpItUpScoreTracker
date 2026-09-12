@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.PlayerProgress.Infrastructure.Entities
 {
@@ -28,6 +28,20 @@ namespace ScoreTracker.PlayerProgress.Infrastructure.Entities
         public double CompetitiveLevel { get; set; }
         public double SinglesCompetitiveLevel { get; set; }
         public double DoublesCompetitiveLevel { get; set; }
+
+        // The Hardmode pools — the same formula over the week's qualifying chart list
+        // (docs/design/hardmode-leaderboard.md). Unrounded for the same reason the pools above
+        // are, and zero until the census first runs, which is what a mix without Hardmode looks
+        // like too. HardmodeChartsHeld rides beside them because "11 of 50" is the sentence the
+        // page leads with and it would otherwise cost a second sweep to recover.
+        public double HardmodeRating { get; set; }
+        public double HardmodeSinglesRating { get; set; }
+        public double HardmodeDoublesRating { get; set; }
+        // One per pool: three different top-fifties, so a player can hold forty combined and
+        // twelve doubles. One shared count printed "50 / 50" on every tab.
+        public int HardmodeChartsHeld { get; set; }
+        public int HardmodeSinglesChartsHeld { get; set; }
+        public int HardmodeDoublesChartsHeld { get; set; }
 
         // Where the player's PUMBILITY pool would place on the official board, ranked against
         // the last sealed snapshot rather than read back from it — that is what makes the

@@ -1,7 +1,8 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Domain;
+using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.OfficialMirror.Infrastructure.Entities;
 using ScoreTracker.SharedKernel.Enums;
 
@@ -324,6 +325,29 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
         return await Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
             .Where(p => p.SnapshotId == snapshotId)
             .Select(p => new PlacementRow(p.LeaderboardId, p.PlayerId, p.Place, p.Score, p.IsSupplemented))
+            .ToArrayAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<ChartBoardHigh>> GetChartBoardHighs(MixEnum mix, PlacementScope scope,
+        CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var mixId = MixIds.For(mix);
+        // Grouped in SQL rather than in memory: this is every placement on every chart board of
+        // every snapshot, and the answer is one row per player per chart.
+        return await (
+                from placement in Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
+                join board in database.Set<OfficialLeaderboardEntity>()
+                    on placement.LeaderboardId equals board.Id
+                join chart in database.Set<ChartEntity>() on board.ChartId equals chart.Id
+                join chartMix in database.Set<ChartMixEntity>() on chart.Id equals chartMix.ChartId
+                where board.MixId == mixId && board.LeaderboardType == "Chart" && board.ChartId != null
+                      && chartMix.MixId == mixId
+                group new { placement.Score, chart.Type, chartMix.Level } by
+                    new { placement.PlayerId, ChartId = chart.Id }
+                into highs
+                select new ChartBoardHigh(highs.Key.PlayerId, highs.Key.ChartId, highs.Min(h => h.Type),
+                    highs.Min(h => h.Level), highs.Max(h => h.Score)))
             .ToArrayAsync(ct);
     }
 

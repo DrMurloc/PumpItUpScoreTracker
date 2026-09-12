@@ -1,4 +1,4 @@
-@namespace ScoreTracker.Web.Pages.Progress
+﻿@namespace ScoreTracker.Web.Pages.Progress
 @using MediatR
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.PlayerProgress.Contracts
@@ -37,13 +37,13 @@
     }
 </p>
 
-@if (_page != null)
+@if (_page != null && !HeroFromBody)
 {
     <PumbilityHero Page="_page" Charts="_charts" Pools="_pools" Selected="_pool"
                    Subtitle="@L["The sum of your 50 best-rated charts."]"
                    OnPoolChanged="ChangePool"></PumbilityHero>
 }
-else
+else if (!HeroFromBody)
 {
     <div class="pmb-frame pmb-frame-waiting" aria-hidden="true"></div>
 }
@@ -66,7 +66,7 @@ else
 
 @if (_page != null)
 {
-    @Body(new SectionContext(_page, _charts, _currentMix, _pool, _energy, ChangeEnergy))
+    @Body(new SectionContext(_page, _charts, _currentMix, _pool, _energy, ChangeEnergy, ChangePool))
 }
 else if (_mixKnown)
 {
@@ -82,7 +82,8 @@ else if (_mixKnown)
     ///     the way a pool change does.
     /// </summary>
     public sealed record SectionContext(PumbilityPageRecord Page, IReadOnlyDictionary<Guid, Chart> Charts,
-        MixEnum Mix, ChartType? Pool, Energy Energy, Func<Energy, Task> ChangeEnergy);
+        MixEnum Mix, ChartType? Pool, Energy Energy, Func<Energy, Task> ChangeEnergy,
+        Func<ChartType?, Task> ChangePool);
 
     /// <summary>
     ///     Which pool the whole section is scoped to. A setting rather than circuit state
@@ -103,16 +104,27 @@ else if (_mixKnown)
 
     private const string BreakdownKey = "breakdown";
 
+    private const string HardmodeKey = "hardmode";
+
     private static readonly (string Key, string Href, string Label)[] AllLinks =
     {
         ("play", "/Pumbility", "Play"),
         (BreakdownKey, "/Pumbility/Breakdown", "PUMBILITY Breakdown"),
+        (HardmodeKey, "/Pumbility/Hardmode", "Hardmode"),
         (Phoenix1Key, "/Pumbility/Phoenix1", "Phoenix 1")
     };
 
     [Parameter] [EditorRequired] public string Active { get; set; } = "play";
 
     [Parameter] [EditorRequired] public RenderFragment<SectionContext> Body { get; set; } = null!;
+
+    /// <summary>
+    ///     Set by a tab whose headline figure is not the PUMBILITY pool — Hardmode prices a
+    ///     different chart set, and handing the shared hero a record it did not compute would
+    ///     be a lie-shaped object. The frame still owns the eyebrow, the nav and the one pool
+    ///     setting; the body draws the band.
+    /// </summary>
+    [Parameter] public bool HeroFromBody { get; set; }
 
     // PUMBILITY is a Phoenix-lineage stat: it prices a 1,000,000-scale score against a
     // chart's level, and no older mix has one of those. Every legacy viewer keeps seeing
@@ -122,7 +134,7 @@ else if (_mixKnown)
     private bool _mixKnown;
     private PumbilityPageRecord? _page;
     private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
-    private IReadOnlyList<PumbilityHero.PoolOption> _pools = Array.Empty<PumbilityHero.PoolOption>();
+    private IReadOnlyList<PumbilityPoolPicker.PoolOption> _pools = Array.Empty<PumbilityPoolPicker.PoolOption>();
     private ChartType? _pool;
     private Energy _energy = Energy.Great;
 
@@ -136,7 +148,7 @@ else if (_mixKnown)
     // Phoenix 1 has no carryover to show, so it is a two-page section. The chip comes out
     // rather than rendering inert — the same move the official frame makes for What It Takes.
     private IEnumerable<(string Key, string Href, string Label)> Links =>
-        AllLinks.Where(l => l.Key != Phoenix1Key || _currentMix == MixEnum.Phoenix2);
+        AllLinks.Where(l => l.Key is not (Phoenix1Key or HardmodeKey) || _currentMix == MixEnum.Phoenix2);
 
     protected override async Task OnInitializedAsync()
     {
@@ -151,7 +163,7 @@ else if (_mixKnown)
 
         // Reached by URL on a mix that has no such page — send them somewhere that means
         // something rather than rendering an empty argument.
-        if (Active == Phoenix1Key && _currentMix != MixEnum.Phoenix2)
+        if (Active is Phoenix1Key or HardmodeKey && _currentMix != MixEnum.Phoenix2)
         {
             NavManager.NavigateTo("/Pumbility");
             return;
@@ -180,12 +192,12 @@ else if (_mixKnown)
         // All three totals come back on the record. Filling the selector used to mean running
         // the whole read twice more from here, for two pools the page was not looking at.
         _pools = _page.Totals == null
-            ? Array.Empty<PumbilityHero.PoolOption>()
+            ? Array.Empty<PumbilityPoolPicker.PoolOption>()
             : new[]
             {
-                new PumbilityHero.PoolOption(null, L["All"], _page.Totals.All),
-                new PumbilityHero.PoolOption(ChartType.Single, L["Singles"], _page.Totals.Singles),
-                new PumbilityHero.PoolOption(ChartType.Double, L["Doubles"], _page.Totals.Doubles)
+                new PumbilityPoolPicker.PoolOption(null, L["All"], _page.Totals.All),
+                new PumbilityPoolPicker.PoolOption(ChartType.Single, L["Singles"], _page.Totals.Singles),
+                new PumbilityPoolPicker.PoolOption(ChartType.Double, L["Doubles"], _page.Totals.Doubles)
             };
     }
 

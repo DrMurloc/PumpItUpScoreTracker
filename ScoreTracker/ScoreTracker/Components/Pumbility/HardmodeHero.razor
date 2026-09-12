@@ -1,0 +1,61 @@
+﻿@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* The Hardmode band, in the section frame's own clothes (docs/design/hardmode-leaderboard.md).
+   Its own component rather than PumbilityHero with a hand-built record: that one reads a
+   PumbilityPageRecord and this number is not one, so passing a fake would put a lie in the
+   shape of the section's headline figure. Same classes, same three parts — the number, the pool
+   selector, the callout — so the band is visually the frame's and cannot drift from it. *@
+<div class="pmb-frame">
+    <div class="pmb-frame-figure">
+        <div class="pmb-hero-value stat-display">@Selected.Total.ToString("N2")</div>
+        <div class="pmb-hero-sub">@L["The sum of your 50 best-rated Hardmode charts."]</div>
+    </div>
+
+    <PumbilityPoolPicker Pools="Pools" Selected="Pool" OnPoolChanged="OnPoolChanged"></PumbilityPoolPicker>
+
+    @* The same mechanic the PUMBILITY bar card explains, and under fifty charts the same
+       sentence — which is already the Hardmode pitch, so it does the motivating for free. *@
+    <div class="pmb-barcard @(Selected.Held >= PoolSize ? null : "pmb-barcard-none")">
+        <div class="pmb-barcard-say">
+            @if (Selected.Held >= PoolSize)
+            {
+                @L["Your Hardmode pool is full. Nothing counts until it beats your fiftieth — a qualifying chart worth more replaces it and you keep the difference."]
+            }
+            else
+            {
+                @string.Format(
+                    L["Your Hardmode pool holds {0} of 50. Until it's full, every qualifying chart you play counts whole — there's no bar to beat yet."],
+                    Selected.Held)
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private const int PoolSize = 50;
+
+    [Parameter] [EditorRequired] public HardmodePageRecord Page { get; set; } = null!;
+
+    [Parameter] public ChartType? Pool { get; set; }
+
+    [Parameter] public EventCallback<ChartType?> OnPoolChanged { get; set; }
+
+    private HardmodePoolTotals Selected => Pool switch
+    {
+        ChartType.Single => Page.Singles,
+        ChartType.Double => Page.Doubles,
+        _ => Page.Combined
+    };
+
+    /// <summary>The three pools, in the shared strip's own option type.</summary>
+    private IReadOnlyList<PumbilityPoolPicker.PoolOption> Pools =>
+        new[]
+        {
+            new PumbilityPoolPicker.PoolOption(null, L["All"], Page.Combined.Total),
+            new PumbilityPoolPicker.PoolOption(ChartType.Single, L["Singles"], Page.Singles.Total),
+            new PumbilityPoolPicker.PoolOption(ChartType.Double, L["Doubles"], Page.Doubles.Total)
+        };
+}

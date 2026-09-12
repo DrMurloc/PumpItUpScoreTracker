@@ -1,4 +1,4 @@
-/* Self-hosted display face — headings, stat numerals, wordmark. Latin subset only:
+﻿/* Self-hosted display face — headings, stat numerals, wordmark. Latin subset only:
    Korean/Japanese glyphs fall through per-glyph to the system CJK fonts in the stack
    (see --font-display), which keeps mixed-script headings from going anemic. */
 @font-face {
@@ -2073,7 +2073,8 @@ html.sheet-open .more-sheet-scrim {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: linear-gradient(180deg, color-mix(in srgb, var(--mix-bg) 0%, transparent) 55%,
+    background: linear-gradient(180deg, color-mix(in srgb, var(--mix-bg) 0%, transparent) 30%,
+        color-mix(in srgb, var(--mix-bg) 55%, transparent) 62%,
         color-mix(in srgb, var(--mix-bg) 92%, transparent) 97%);
 }
 
@@ -2081,7 +2082,6 @@ html.sheet-open .more-sheet-scrim {
    the bubble and the corner badge, which is most visible exactly where it matters — the
    bottom corners, where the scrim is at its most opaque. */
 .tier-chart-card-bubble,
-.tier-chart-card-play,
 .tier-chart-card-corner,
 .tier-chart-card-lens-dot,
 .tier-chart-card-compact-grade {
@@ -2099,23 +2099,26 @@ html.sheet-open .more-sheet-scrim {
    confirm an affordance but cannot advertise one. Hover-capable pointers only: on a touch
    screen :hover sticks after a tap and the card would stay lit. */
 @media (hover: hover) {
-    .tier-chart-card-jacket {
-        transition: filter .12s ease;
+    /* The clickable indicator is a ring around the card, the treatment .sbd-card uses on the
+       session pages (owner, 2026-09-12). It deliberately does NOT recolour the border: that
+       border is owner-locked state language — solid success is a pass, dashed info is To-Do,
+       dashed success is another mix, solid gold is your top 50 — so a hover that touched it
+       would overwrite what the card is telling you. A ring outside the border says "clickable"
+       without saying anything about the chart.
+       Lighting the artwork instead was the old treatment; it competed with the jacket's own
+       scrim and, once the whole jacket stopped being a play button, there was nothing to
+       advertise there but the same open-details action the ring already covers.
+       Hover-capable pointers only: on a touch screen :hover sticks after a tap. */
+    .tier-chart-card {
+        transition: box-shadow .12s ease;
     }
 
-    /* The head sits over the jacket's bottom 30px and takes the pointer there, so hovering the
-       name or the score would otherwise leave the art it is printed on unlit — the one part of
-       the jacket a reader is most likely to be pointing at. It opens the same chart, so it
-       lights the same way. */
-    .tier-chart-card-jacket:hover,
-    .tier-chart-card:has(.tier-chart-card-head:hover) .tier-chart-card-jacket {
-        filter: brightness(1.12);
-    }
-
-    .tier-chart-card-jacket:hover::after,
-    .tier-chart-card:has(.tier-chart-card-head:hover) .tier-chart-card-jacket::after {
-        background: linear-gradient(180deg, color-mix(in srgb, var(--mix-primary) 10%, transparent) 55%,
-            color-mix(in srgb, var(--mix-bg) 92%, transparent) 97%);
+    /* The two things that actually open the chart. The body's chips and captions do not, so
+       hovering them promises nothing. */
+    .tier-chart-card:has(.tier-chart-card-jacket:hover),
+    .tier-chart-card:has(.tier-chart-card-head:hover) {
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--mix-primary) 45%, transparent),
+        0 0 18px color-mix(in srgb, var(--mix-primary) 13%, transparent);
     }
 }
 
@@ -2172,6 +2175,28 @@ html.sheet-open .more-sheet-scrim {
     align-items: center;
     gap: 6px;
     min-width: 0;
+}
+
+/* The two lines' own box. Its in-flow content is the score line alone, so its height IS the
+   score's and the name hangs directly off its top edge - against the head, the name landed at
+   the head's top, 14px clear of the score with bare artwork between (owner, 2026-09-12). */
+.tier-chart-card-headlines {
+    position: relative;
+    min-width: 0;
+}
+
+/* The score owns the edge, and the name rides above it on the art (owner, 2026-09-12).
+   Out of flow ON PURPOSE: in flow, a name added its own line to a bottom-justified column
+   whose top was pinned by the pull, so the box grew DOWNWARD and carried the score with it.
+   The score sat on the edge with names off and a line below it with names on — which is
+   what "the tier list bumps the score down when the song name is showing" was.
+   Only when there IS a score: a card with a name and no score has nothing else to anchor, so
+   the name stays in flow and takes the edge itself. */
+.tier-chart-card-headlines:has(.tier-chart-card-scoreline) .tier-chart-card-nameline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
 }
 
 .tier-chart-card-nameline > .mud-tooltip-root {
@@ -2275,55 +2300,6 @@ html.sheet-open .more-sheet-scrim {
     align-items: center;
     border-radius: 4px;
     padding: 1px 3px;
-}
-
-/* Play affordance on the jacket — .chart-card-play's treatment at card scale. Revealed on
-   hover, always present for keyboard. */
-.tier-chart-card-play {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    padding: 0;
-    border: 0;
-    background: none;
-    cursor: pointer;
-    z-index: 2;
-}
-
-.tier-chart-card-play-glyph {
-    display: grid;
-    place-items: center;
-    width: 34px;
-    height: 34px;
-    padding-left: 3px;
-    border-radius: 99px;
-    background: rgba(0, 0, 0, .8);
-    border: 1px solid rgba(255, 255, 255, .2);
-    color: #fff;
-    opacity: 0;
-    transform: scale(.8);
-    transition: opacity .12s ease, transform .12s ease;
-}
-
-.tier-chart-card-play-glyph::before {
-    content: "";
-    border-style: solid;
-    border-width: 6px 0 6px 10px;
-    border-color: transparent transparent transparent currentColor;
-}
-
-.tier-chart-card-play:hover .tier-chart-card-play-glyph,
-.tier-chart-card-play:focus-visible .tier-chart-card-play-glyph {
-    opacity: 1;
-    transform: scale(1);
-    border-color: var(--mix-primary);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .tier-chart-card-play-glyph {
-        transition: none;
-    }
 }
 
 .tier-chart-card-extra {
@@ -2539,8 +2515,14 @@ html.sheet-open .more-sheet-scrim {
     font-variant-numeric: tabular-nums;
 }
 
+/* A row, because the printed value sits on it (owner, 2026-09-12) rather than taking a line of
+   its own above the artwork. The stack keeps its intrinsic width and the value is pushed to the
+   end by its own margin, the same way it ended the name's line. */
 .tier-chart-card-scoreline {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
 }
 
 .lamp-strip {
@@ -2610,6 +2592,16 @@ html.sheet-open .more-sheet-scrim {
    what guarantees the state classes win everywhere they're worn. */
 .tier-chart-card-pass {
     border-color: var(--mud-palette-success);
+    border-style: solid;
+}
+
+/* Hardmode's one addition to the border vocabulary: gold means "this counts". It is the share
+   card's own "Top 50 — combined" boundary (ShareCardComposer.Boundary), so the same fact wears
+   the same colour in the page and in the download, and it outranks the green pass where both
+   apply — exactly as the card composer orders them
+   (docs/design/hardmode-leaderboard.md D12). */
+.tier-chart-card-top50 {
+    border-color: var(--rarity-gold);
     border-style: solid;
 }
 
@@ -20060,3 +20052,57 @@ a.peer-pop-row:hover {
     .pl-proj-big { font-size: 38px; }
     .pl-conversion { margin-left: 0; text-align: left; }
 }
+
+/* ===== Hardmode (docs/design/hardmode-leaderboard.md) =====
+   The three facts a qualifying chart carries under its score: how many pools hold it, and which
+   of the three states it is in for this viewer. Each on its own line — two of them inline read
+   as one run-on caption. */
+.hmd-held,
+.hmd-in,
+.hmd-out,
+.hmd-none {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 10.5px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    line-height: 1.5;
+}
+
+.hmd-held {
+    color: var(--mix-ink-muted);
+}
+
+/* A chart no full pool holds is the rarest thing in its folder, so it reads at the top of the
+   rarity ramp rather than as missing data. */
+.hmd-held-zero {
+    color: var(--rarity-prism);
+}
+
+.hmd-in {
+    color: var(--rarity-gold);
+}
+
+.hmd-out {
+    color: var(--mud-palette-success);
+}
+
+.hmd-none {
+    color: var(--mix-ink-muted);
+}
+
+/* The board's rank and identity cells. The rank is coloured by percentile through the rarity
+   ramp, like every other board on the site, and prints its place beside the colour. */
+.hmd-rank {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.hmd-player {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+

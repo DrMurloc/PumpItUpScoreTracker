@@ -1,0 +1,154 @@
+﻿@using MediatR
+@using ScoreTracker.Domain.Models.Titles.Phoenix2
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@page "/Pumbility/Hardmode"
+@rendermode RenderModes.Interactive
+@namespace ScoreTracker.Web.Pages.Progress
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+
+@* Hardmode (docs/design/hardmode-leaderboard.md): the same PUMBILITY formula over the rarest
+   slice of every folder — the charts almost nobody holds in a top 50.
+
+   The section frame keeps the eyebrow, the nav and the one pool setting; the band is this page's
+   because the number is a different number, and handing the shared hero a PUMBILITY record it
+   did not compute would put a lie in the shape of the headline figure. Order answers the two
+   questions a player opens this tab with — where do I stand, and what do I play — before the
+   board they scroll to. *@
+
+<PumbilitySectionFrame Active="hardmode" HeroFromBody="true">
+    <Body Context="ctx">
+        @* The frame owns the mix and the pool; this page owns the record priced for them. It
+           reads them off the context on every render rather than keeping its own copy, because
+           the frame resolves both from settings AFTER its own first render - seeding once raced
+           it, and the page shipped showing a player their Combined fifty under a "Doubles"
+           label, with the All button dead until they clicked something else first. *@
+        @{ Sync(ctx); }
+        @if (_page == null)
+        {
+            <div class="pmb-frame pmb-frame-waiting" aria-hidden="true"></div>
+            <PatienceCard Explanation="@L["Pricing your records against this week's Hardmode charts."]"></PatienceCard>
+        }
+        else
+        {
+            <HardmodeHero Page="_page" Pool="ctx.Pool" OnPoolChanged="ctx.ChangePool"></HardmodeHero>
+
+            <HardmodeBoardSection Mix="ctx.Mix" Pool="ctx.Pool" Standing="Standing"></HardmodeBoardSection>
+
+            @if (RailsFor(ctx.Pool).Count > 0)
+            {
+                <section class="pmb-block">
+                    <div class="pmb-block-head">
+                        <h2 class="pmb-block-title">@L["Titles, on Hardmode"]</h2>
+                    </div>
+                    <p class="pmb-block-lede">
+                        @L["The same ladders the Breakdown page draws, asked of your Hardmode pool instead of your whole record book."]
+                    </p>
+                    <PumbilityTitleRails Rails="RailsFor(ctx.Pool)"></PumbilityTitleRails>
+                </section>
+            }
+
+            <section class="pmb-block">
+                <div class="pmb-block-head">
+                    <h2 class="pmb-block-title">@L["Your Hardmode pool"]</h2>
+                </div>
+                <p class="pmb-block-lede">
+                    @L["The charts your Hardmode number is the sum of, banded by what each is worth to you."]
+                </p>
+                <HardmodePoolList Mix="ctx.Mix" Charts="ctx.Charts" Pool="_page.Pool"
+                                  OnOpen="OpenChart"></HardmodePoolList>
+            </section>
+
+            <HardmodeQualifyingSection Mix="ctx.Mix" Charts="ctx.Charts" Pool="_page.Pool"
+                                       ScoredOutsidePool="_page.ScoredOutsidePool"
+                                       QualifyingCount="_page.QualifyingCharts"
+                                       OnOpen="OpenChart"></HardmodeQualifyingSection>
+        }
+
+        <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_selected" Mix="ctx.Mix"></ChartDetailsDialog>
+    </Body>
+</PumbilitySectionFrame>
+
+
+@code {
+    private HardmodePageRecord? _page;
+    private Chart? _selected;
+    private bool _detailsOpen;
+    private MixEnum _mix = MixEnum.Phoenix2;
+    private ChartType? _pool;
+    private bool _priced;
+    private PumbilitySectionFrame.SectionContext? _ctx;
+
+    /// <summary>The selected pool's standing, for the strip above the board.</summary>
+    private HardmodePoolTotals? Standing => _page == null
+        ? null
+        : _ctx?.Pool switch
+        {
+            ChartType.Single => _page.Singles,
+            ChartType.Double => _page.Doubles,
+            _ => _page.Combined
+        };
+
+    /// <summary>
+    ///     Price when the frame's answer arrives, and again whenever it moves.
+    ///     <para>
+    ///         Driven from the body's own render, NOT from an OnAfterRender hook here. The body
+    ///         is a fragment rendered inside the FRAME's tree, so the frame resolving its
+    ///         settings re-renders the frame — not this page. A hook here fires after this
+    ///         page renders, which happens once, before the context exists: it read a null
+    ///         context, returned, and was never called again, so the page sat on its loading
+    ///         card forever.
+    ///     </para>
+    ///     <para>
+    ///         The guard is on the two things the record is priced for, so a re-render that
+    ///         changes neither costs nothing and Load's own StateHasChanged cannot loop.
+    ///     </para>
+    /// </summary>
+    private void Sync(PumbilitySectionFrame.SectionContext ctx)
+    {
+        _ctx = ctx;
+        if (_priced && _mix == ctx.Mix && _pool == ctx.Pool) return;
+        _priced = true;
+        _mix = ctx.Mix;
+        _pool = ctx.Pool;
+        // Queued rather than awaited: this runs inside a render, which cannot await. Load
+        // ends in StateHasChanged, and re-rendering this page hands the frame a fresh body
+        // fragment, so the content appears on the pass after the record lands.
+        _ = InvokeAsync(Load);
+    }
+
+    private async Task Load()
+    {
+        if (!CurrentUser.IsLoggedIn) return;
+        _page = await Mediator.Send(new GetHardmodePageQuery(CurrentUser.User.Id, _mix, _pool));
+        StateHasChanged();
+    }
+
+    /// <summary>
+    ///     The ladder for the pool on screen and no other (owner, 2026-09-12). All three are in
+    ///     the record because the pool selector can switch to any of them without a re-read.
+    /// </summary>
+    private IReadOnlyList<TitleRail> RailsFor(ChartType? pool)
+    {
+        var ladder = pool switch
+        {
+            ChartType.Single => PumbilityPool.Singles,
+            ChartType.Double => PumbilityPool.Doubles,
+            _ => PumbilityPool.Total
+        };
+        return _page?.Rails.Where(r => r.Pool == ladder).ToArray() ?? Array.Empty<TitleRail>();
+    }
+
+    private void OpenChart(Chart chart)
+    {
+        _selected = chart;
+        _detailsOpen = true;
+    }
+
+}

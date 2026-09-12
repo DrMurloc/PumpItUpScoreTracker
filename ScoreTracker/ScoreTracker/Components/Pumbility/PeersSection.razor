@@ -177,7 +177,7 @@
             <PeerPoolList @ref="_list" Page="_peers" Charts="Charts" Gains="Gains" Mix="Shown.Mix" Density="_density" Skills="_skills"
                           Standings="_standings" OnOpenBoard="OnOpenBoard"
                           GroupBy="_groupBy" GainsOnly="_gainsOnly"
-                          ShowToDo="true" ToDos="ToDos" OnToDo="OnToDo" OnOpen="OnOpen" OnPlay="OnPlay"
+                          ShowToDo="true" ToDos="ToDos" OnToDo="OnToDo" OnOpen="OnOpen"
                           Collapsed="CollapsedForGrouping" CollapsedChanged="SetCollapsed"></PeerPoolList>
         </div>
     }
@@ -234,8 +234,6 @@
     [Parameter] public EventCallback<Guid> OnToDo { get; set; }
 
     [Parameter] public EventCallback<Chart> OnOpen { get; set; }
-
-    [Parameter] public EventCallback<Chart> OnPlay { get; set; }
 
     /// <summary>
     ///     A popover source line asking for that source’s board. Without it the popover still

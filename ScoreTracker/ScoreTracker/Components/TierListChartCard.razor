@@ -1,4 +1,4 @@
-@namespace ScoreTracker.Web.Components
+﻿@namespace ScoreTracker.Web.Components
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
@@ -59,23 +59,12 @@
 else
 {
 <div class="tier-chart-card @StateClass" title="@StateTitle">
-    <div class="tier-chart-card-jacket @(ShowPlay ? "tier-chart-card-jacket-playable" : null)" role="button" tabindex="0"
+    <div class="tier-chart-card-jacket" role="button" tabindex="0"
          @onclick="() => OnOpen.InvokeAsync(Chart.Id)"
          style="background-image:url('@Chart.Song.ImagePath')">
         <div class="tier-chart-card-bubble">
             <DifficultyBubble Chart="Chart" Small="true"></DifficultyBubble>
         </div>
-        @if (ShowPlay)
-        {
-            @* Its own button, stacked over the jacket: opening details and watching the
-               chart are different intents, and the video one has to be reachable by
-               keyboard without going through the card. *@
-            <button type="button" class="tier-chart-card-play" @onclick:stopPropagation="true"
-                    @onclick="() => OnPlay.InvokeAsync(Chart.Id)"
-                    aria-label="@L["Watch {0}", Chart.Song.Name]">
-                <span class="tier-chart-card-play-glyph" aria-hidden="true"></span>
-            </button>
-        }
     </div>
     @* The strip that rides up onto the jacket, and the ONLY things allowed on it: what the
        chart is called, the value printed beside the name, and how you did on it. It reserves
@@ -89,7 +78,12 @@ else
        not a tab stop: the jacket beside it already announces and operates this exact action,
        so a second one would be an unoperable duplicate in the reading order. *@
     <div class="tier-chart-card-head" @onclick="() => OnOpen.InvokeAsync(Chart.Id)">
-        @if (ShowName || CornerBadge != null)
+    @* One box around the two lines, so the name can be positioned against the SCORE rather
+       than against the head. Anchored to the head, the name landed at the head's top edge -
+       14px clear of the score with a gap of bare artwork between them (owner, 2026-09-12:
+       "song name and pumbility chip too high"). *@
+    <div class="tier-chart-card-headlines">
+        @if (ShowName || (CornerBadge != null && !HasScoreLine))
         {
             @* The printed value takes the end of the name's line rather than the jacket corner:
                the name is the one part of the line allowed to shrink, so a long name ends in "…"
@@ -101,12 +95,16 @@ else
                         <MudText Typo="Typo.subtitle1" Class="tier-chart-card-name">@Chart.Song.Name</MudText>
                     </MudTooltip>
                 }
-                @if (CornerBadge != null)
+                @if (CornerBadge != null && !HasScoreLine)
                 {
                     <div class="tier-chart-card-corner tier-chart-card-nameline-value @CornerBadgeClass">@CornerBadge</div>
                 }
             </div>
         }
+        @* The score straddles the jacket's bottom edge and stays there, name or no name
+           (owner, 2026-09-12) — it is the card's anchor, so a folder of cards reads as one
+           row of numbers. When a name is shown it rides ABOVE the score on the art rather
+           than pushing it down, which is what the head's flow used to do. *@
         @if (Score?.Score != null)
         {
             @* Own line always — short song names left the tooltip-wrapped name and the
@@ -122,6 +120,12 @@ else
                 <PeerScore Score="Score.Score.Value" IsBroken="Score.IsBroken" Mix="Chart.Mix" Height="12"
                            Plate="Score.Plate" Standing="Standing" Chart="Chart" Class="sbd-score-stack"
                            ShowStanding="false" OnOpenBoard="OnOpenBoard"></PeerScore>
+                @if (CornerBadge != null)
+                {
+                    @* The printed value sits ON the score's line, at its end - it needs no line
+                       of its own and no lift onto the artwork (owner, 2026-09-12). *@
+                    <div class="tier-chart-card-corner tier-chart-card-nameline-value @CornerBadgeClass">@CornerBadge</div>
+                }
             </div>
         }
         else if (LegacyGrade != null)
@@ -131,8 +135,13 @@ else
                another chart's. ScoreBreakdown is built around the 1,000,000 scale. *@
             <div class="tier-chart-card-scoreline">
                 <LetterGradeIcon LegacyGrade="LegacyGrade" IsBroken="Score?.IsBroken ?? false" Height="20"></LetterGradeIcon>
+                @if (CornerBadge != null)
+                {
+                    <div class="tier-chart-card-corner tier-chart-card-nameline-value @CornerBadgeClass">@CornerBadge</div>
+                }
             </div>
         }
+    </div>
     </div>
     <div class="tier-chart-card-body">
         @if (TierLabel != null)
@@ -248,6 +257,13 @@ else
 
     [Parameter] public bool ShowName { get; set; } = true;
 
+    /// <summary>
+    ///     Whether the head prints a score line at all. It owns the jacket's edge and carries
+    ///     the printed value, so the name line only exists when there is a name, and the value
+    ///     falls back to the name's line only when there is no score to sit beside.
+    /// </summary>
+    private bool HasScoreLine => Score?.Score != null || LegacyGrade != null;
+
     [Parameter] public bool ShowToDo { get; set; } = true;
 
     [Parameter] public UiDensity Density { get; set; } = UiDensity.Comfortable;
@@ -323,10 +339,6 @@ else
     // Compact renders no body at all.
     [Parameter] public RenderFragment? Body { get; set; }
 
-    [Parameter] public bool ShowPlay { get; set; }
-
-    [Parameter] public EventCallback<Guid> OnPlay { get; set; }
-
     // Appended to the Compact tooltip. Compact hides the body, so anything the card says
     // only in Comfortable has to be reachable here or it is lost (rule 7).
     [Parameter] public string? TooltipNote { get; set; }
@@ -336,22 +348,38 @@ else
     // on, so a To-Do ring there would be a fourth meaning competing with three.
     [Parameter] public bool ShowStateBorder { get; set; } = true;
 
+    /// <summary>
+    ///     A border class the host supplies instead of the card's own vocabulary. Hardmode's
+    ///     "in your top 50" gold has no equivalent in pass / To-Do / other-mix / broken, and it
+    ///     is the host that knows which of its states a card is in. Always paired with
+    ///     <see cref="CustomStateTitle" /> so the hue never travels alone (UX rule 8).
+    /// </summary>
+    [Parameter] public string? CustomStateClass { get; set; }
+
+    /// <summary>The word for <see cref="CustomStateClass" />, on the card's title and its compact tooltip.</summary>
+    [Parameter] public string? CustomStateTitle { get; set; }
+
     // A run that broke. Ranked below the two pass states on purpose: where a chart is both
     // attempted here and passed elsewhere, where the number came from is the more useful
     // thing to say. It earns a state of its own because the alternative is no border at all,
     // which reads as a chart nobody has ever seen the player touch.
     [Parameter] public bool Broke { get; set; }
 
-    private string StateClass => !ShowStateBorder ? string.Empty :
-        Passed ? "tier-chart-card-pass" :
+    // To-Do is the top of the ladder, ahead of the custom states as well as the record's own
+    // (owner, 2026-09-12). Every other state REPORTS something about the chart; To-Do is the one
+    // the player put there, and a flag you cannot see on a chart you have already passed - or on
+    // one the Hardmode pool has painted gold - is a flag that does not work.
+    private string StateClass =>
+        !ShowStateBorder ? string.Empty :
         IsToDo ? "tier-chart-card-todo" :
+        CustomStateClass != null ? CustomStateClass :
+        Passed ? "tier-chart-card-pass" :
         PassedInAnotherMix ? "tier-chart-card-other-mix" :
         Broke ? "tier-chart-card-broken" : string.Empty;
 
-    private string? StateTitle => Passed ? L["Passed"] :
-        IsToDo ? L["To Do"] :
+    private string? StateTitle => IsToDo ? L["To Do"] : CustomStateTitle ?? (Passed ? L["Passed"] :
         PassedInAnotherMix ? L["Passed in other mixes"] :
-        Broke ? L["Played, not passed"] : null;
+        Broke ? L["Played, not passed"] : null);
 
     // Compact hides the name, so the tooltip carries the identity (rule 7: no
     // truncation without a tooltip) plus the state and lens-tier words (rule 8).

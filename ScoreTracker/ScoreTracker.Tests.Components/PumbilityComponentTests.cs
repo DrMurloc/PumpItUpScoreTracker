@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -75,9 +75,9 @@ public sealed class PumbilityComponentTests : ComponentTestBase
             .Add(x => x.Page, page).Add(x => x.Charts, page.Charts())
             .Add(x => x.Pools, new[]
             {
-                new PumbilityHero.PoolOption(null, "All", 18041),
-                new PumbilityHero.PoolOption(ChartType.Single, "Singles", 17969),
-                new PumbilityHero.PoolOption(ChartType.Double, "Doubles", 17864)
+                new PumbilityPoolPicker.PoolOption(null, "All", 18041),
+                new PumbilityPoolPicker.PoolOption(ChartType.Single, "Singles", 17969),
+                new PumbilityPoolPicker.PoolOption(ChartType.Double, "Doubles", 17864)
             }));
         Assert.Equal(3, with.FindAll(".pmb-poolsplit-seg").Count);
     }

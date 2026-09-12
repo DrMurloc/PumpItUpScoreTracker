@@ -1,4 +1,4 @@
-@using ScoreTracker.Domain.Models
+﻿@using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.Services
 @using ScoreTracker.PlayerProgress.Contracts
@@ -158,7 +158,6 @@ else
                                                IsToDo="ToDos.Contains(row.Chart.Id)"
                                                PassedInAnotherMix="row.Carried"
                                                ShowToDo="ShowToDo"
-                                               ShowPlay="@(Density == UiDensity.Comfortable)"
                                                CornerBadge="@CornerBadgeFor(row)"
                                                CornerBadgeClass="pmb-corner-gain"
                                                CornerBadgeStart="@CornerBadgeStartFor(row)"
@@ -169,8 +168,7 @@ else
                                                Skills="@SkillsFor(row)"
                                                Body="@CardBody(row)"
                                                OnToDo="OnToDo"
-                                               OnOpen="OpenById"
-                                               OnPlay="PlayById"></TierListChartCard>
+                                               OnOpen="OpenById"></TierListChartCard>
                         }
                     </div>
                 }
@@ -236,8 +234,6 @@ else
     [Parameter] public EventCallback<Guid> OnToDo { get; set; }
 
     [Parameter] public EventCallback<Chart> OnOpen { get; set; }
-
-    [Parameter] public EventCallback<Chart> OnPlay { get; set; }
 
     /// <summary>
     ///     Section keys folded; Slim and Poor by default (D34). The host's, copied on every render
@@ -494,8 +490,6 @@ else
             : L["Your peers' pools have nothing in them yet."];
 
     private Task OpenById(Guid chartId) => OnOpen.InvokeAsync(Charts[chartId]);
-
-    private Task PlayById(Guid chartId) => OnPlay.InvokeAsync(Charts[chartId]);
 
     private string RowClass(Row row) =>
         row.MyScore != null ? "pmb-row tier-row-pass" : ToDos.Contains(row.Chart.Id) ? "pmb-row tier-row-todo" : row.Carried ? "pmb-row tier-row-other-mix" : "pmb-row";

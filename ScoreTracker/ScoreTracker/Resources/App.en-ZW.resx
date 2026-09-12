@@ -3492,6 +3492,15 @@
   <data name="Hardest {0}s:" xml:space="preserve">
     <value>Murglag {0}:</value>
   </data>
+  <data name="Hardmode" xml:space="preserve">
+    <value>Mrglmorg</value>
+  </data>
+  <data name="Hardmode charts held" xml:space="preserve">
+    <value>Mrglmorg murgl grogro</value>
+  </data>
+  <data name="Hardmode leaderboard" xml:space="preserve">
+    <value>Mrglmorg mrglrmrgl</value>
+  </data>
   <data name="Has errors" xml:space="preserve">
     <value>Rgl maglgrorp</value>
   </data>
@@ -3506,6 +3515,12 @@
   </data>
   <data name="held" xml:space="preserve">
     <value>glorgblgrl</value>
+  </data>
+  <data name="held by nobody" xml:space="preserve">
+    <value>grogro bu bomorp</value>
+  </data>
+  <data name="held by {0}" xml:space="preserve">
+    <value>grogro bu {0}</value>
   </data>
   <data name="held by {0} of titled players" xml:space="preserve">
     <value>glorgblgrl murm {0} mrgl glorgmurm morp</value>
@@ -3668,6 +3683,9 @@
   </data>
   <data name="How many of your PUMBILITY peers hold it in their top 50" xml:space="preserve">
     <value>Mrgl blarg PUMBILITY maglmurp mrgloru ur grglblarg mrrgl 50</value>
+  </data>
+  <data name="How many pools hold it" xml:space="preserve">
+    <value>Murgro grogmurgl grogro urp</value>
   </data>
   <data name="How March of Murlocs works" xml:space="preserve">
     <value>Gam Urgmr mrgl Murlocmrp grogrol</value>
@@ -3920,6 +3938,9 @@
   </data>
   <data name="in your communities" xml:space="preserve">
     <value>gropmur gromurp grglrglplglblub</value>
+  </data>
+  <data name="In your Hardmode pool" xml:space="preserve">
+    <value>Ur grub Mrglmorg grogmurgl</value>
   </data>
   <data name="In your pool #{0}" xml:space="preserve">
     <value>Argl morp blubgro #{0}</value>
@@ -4285,6 +4306,9 @@
   <data name="Level" xml:space="preserve">
 	  <value>Grorpmurm</value>
 	  <comment>Level</comment>
+  </data>
+  <data name="Level 17 and below moves a lot. Only a player whose own fiftieth chart is worth less than one of these can hold one at all, so this folder is decided by a small group — expect the list to change substantially week to week as players join or their PUMBILITY climbs." xml:space="preserve">
+    <value>Grop 17 a bomro mrogl a murgl. Murp a morp mag murgro murgl gogl mgl brolg mrp ub urp bru grogro mrp og ulbog, ol urp grogblub bru mrglrgo bu a mgl grogblub — progl ol grog ro murm mrrgl blurg ro blurg ba morp grabmrp ol grub PUMBILITY mrogl.</value>
   </data>
   <data name="level 24+, first ever, any grade" xml:space="preserve">
     <value>grorpmurm 24+, murpargl urgmorg, ro rorgl</value>
@@ -5329,6 +5353,9 @@
   <data name="No — I want to permanently delete data." xml:space="preserve">
     <value>Gorb — mu blurpa grabo molu.</value>
   </data>
+  <data name="nobody" xml:space="preserve">
+    <value>bomorp</value>
+  </data>
   <data name="Nobody climbed a chart board this week." xml:space="preserve">
     <value>Urggro grogrglro gro murgl mrglblarg grglmrp plglmorg.</value>
   </data>
@@ -5346,6 +5373,9 @@
   </data>
   <data name="Nobody is above the line on every chart — if you were, your level would climb and the line with it." xml:space="preserve">
     <value>Mrp morp blarg amur gaal murm ograll murgl — blub blarg, gromurp grorpmurm morgrorp ro gaal murm blub.</value>
+  </data>
+  <data name="Nobody is on this board yet — it fills in after the first weekly rebuild." xml:space="preserve">
+    <value>Bomorp bru ap urp mrglblarg larg — urp grabmrp ap mrrgl murgro mrgloru.</value>
   </data>
   <data name="Nobody is on this chart board yet." xml:space="preserve">
     <value>Urggro urg lurg grglmrp murgl mrglblarg argl.</value>
@@ -5573,6 +5603,9 @@
   <data name="Nothing here yet. Share what you know about this chart." xml:space="preserve">
     <value>Mrgl blub morgla. Blurgla opa murgl gro murgl.</value>
   </data>
+  <data name="Nothing in your Hardmode pool yet — every non-broken pass on a qualifying chart takes a slot." xml:space="preserve">
+    <value>Bomrp ur grub Mrglmorg grogmurgl larg — olga bomorgl mrglpro ap a grabmrp murgl grabmrp a grop.</value>
+  </data>
   <data name="Nothing in your pool yet — every non-broken pass at level 10 or above takes a slot." xml:space="preserve">
     <value>Mo mrgl argl morp blubgro blub — mrgl mrglrlgl ur grorpmurm 10 ur mrrgl blarg mrgl blubgro.</value>
   </data>
@@ -5758,6 +5791,9 @@
   </data>
   <data name="Official Scores" xml:space="preserve">
     <value>Urgmrmurg Mgrlgmrg</value>
+  </data>
+  <data name="Official-board players. Their pools are rebuilt from the mirrored chart boards, which only exist at level 20 and up — so a board player's Hardmode pool is level-20-plus by construction." xml:space="preserve">
+    <value>Urgmrmurg-mrglblarg morp. Grub grogmurgl bru mrgloru blarg grub barglub murgl mrglblarg, mag murp progl og grop 20 a mrrgl — ol a mrglblarg morp Mrglmorg grogmurgl bru grop-20-mrrgl bu gogl.</value>
   </data>
   <data name="Old" xml:space="preserve">
     <value>Rgl</value>
@@ -6763,6 +6799,9 @@
   <data name="priced base" xml:space="preserve">
     <value>gogl gogl</value>
   </data>
+  <data name="Pricing your records against this week's Hardmode charts." xml:space="preserve">
+    <value>Gogl grub mrglrgl ur urp murm Mrglmorg murgl.</value>
+  </data>
   <data name="Prime" xml:space="preserve">
     <value>Grorpmrp</value>
   </data>
@@ -7092,6 +7131,9 @@
   <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
     <value>Maglmurg Gl, grgl mrgl, ro blarg mgrlgmrg romurg gromurp grglrglplglblub romorg morg blubmorg.</value>
   </data>
+  <data name="Rarest first" xml:space="preserve">
+    <value>Mrrrglmurp murgro</value>
+  </data>
   <data name="Rarest passes" xml:space="preserve">
     <value>Urgblgrl grgllurg</value>
   </data>
@@ -7195,6 +7237,9 @@
   <data name="Reason (optional)" xml:space="preserve">
     <value>Grumlo (obargl)</value>
   </data>
+  <data name="Rebuild Hardmode charts" xml:space="preserve">
+    <value>Mrgloru Mrglmorg murgl</value>
+  </data>
   <data name="Rebuild Latest Sessions" xml:space="preserve">
     <value>Bagl Orgab Lorg</value>
   </data>
@@ -7206,6 +7251,9 @@
   </data>
   <data name="Rebuild {0} Speed tier list" xml:space="preserve">
     <value>Blurgmurgl {0} Murgrgl mrgl morgl</value>
+  </data>
+  <data name="Rebuilding the Hardmode charts, then every pool priced against them. It takes a few minutes." xml:space="preserve">
+    <value>Mrgloru grub Mrglmorg murgl, mrrgl olga grogmurgl gogl ur urp. Urp grabmrp a mgl murm.</value>
   </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>Bagl orgab murlog al.</value>
@@ -7763,6 +7811,9 @@
   </data>
   <data name="Scored" xml:space="preserve">
     <value>Mrglrgla</value>
+  </data>
+  <data name="Scored, outside your 50" xml:space="preserve">
+    <value>Mrglrgl, ugmorg grub 50</value>
   </data>
   <data name="Scores" xml:space="preserve">
 	  <value>Mgrlgmrg</value>
@@ -8870,8 +8921,14 @@
   <data name="The Charts" xml:space="preserve">
     <value>La Murgl</value>
   </data>
+  <data name="The charts almost nobody holds in a PUMBILITY pool, priced the same way. The chart list is rebuilt on Sundays; standings update as players import." xml:space="preserve">
+    <value>Grub murgl mrrgl bomorp grogro ur a PUMBILITY grogmurgl, gogl grub mrp morg. Grog murgl Mrgloru olga Murgromurm; Mrglrmrgl mrp olga grabgru.</value>
+  </data>
   <data name="the charts themselves" xml:space="preserve">
     <value>murgl mrgloru</value>
+  </data>
+  <data name="The charts your Hardmode number is the sum of, banded by what each is worth to you." xml:space="preserve">
+    <value>Grub murgl grub Mrglmorg mrglrg bru grub mrgloru ub, grombrol bu murp olga bru gogl ro grub.</value>
   </data>
   <data name="The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs." xml:space="preserve">
     <value>Mrp urgglorgglorg grglro mrp gromurp blgrlglorgmrgl; mrp grrgllurglurg grrgl grglro mrp magl plglrglmrgl; mrp mrmagl grrgl grglro mrp Grrgl Morgurg. Murpmurmro urgmrp rgl morgmr — gro grogrrgl mrgl ro argl, argl ro grrgl, grogl blarggllurg. Mrp glorgmrpmurm urg urgmorg grrglarglrgl grgl magl plglrglmrgl argl murggro.</value>
@@ -9068,6 +9125,9 @@
   <data name="The S17 pays Base(18) = {0} — a Single is priced one level up. Perfect Game is the plate bonus, not a grade: a 1,000,000 keeps SSS+’s ×{1} and adds +{2}." xml:space="preserve">
     <value>A S17 gogl Gogl(18) = {0} — a Mrglrlgl lu gogl mrp grorpmurm gro. Murgloo Gurgl lu a murp roglubgl, bo a rorgl: a 1,000,000 gab SSS+’a ×{1} ur roglub +{2}.</value>
   </data>
+  <data name="The same ladders the Breakdown page draws, asked of your Hardmode pool instead of your whole record book." xml:space="preserve">
+    <value>Grub mrp gropla grub Mrgloru mrogl bromurm, grubmarg ub grub Mrglmorg grogmurgl ugmorg ub grub ulbog mrglrgl grog.</value>
+  </data>
   <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
     <value>Mrp blubmurm lurggrrglargl mr mrp romurm mrgl gro mrgl, glorggro ro grogrgl.</value>
   </data>
@@ -9095,6 +9155,9 @@
   <data name="The sum of your 50 best-rated charts." xml:space="preserve">
     <value>Mrgloru blarg morp 50 mrrgl Murgl.</value>
   </data>
+  <data name="The sum of your 50 best-rated Hardmode charts." xml:space="preserve">
+    <value>Grub mrgloru ub grub 50 mrrgl-mrglrg Mrglmorg murgl.</value>
+  </data>
   <data name="The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep." xml:space="preserve">
     <value>Mrp grglblarg grrgl blgrlmrp lurg mrp urgmrmurg plglmorg glorg arglurg mrp blgrlroglorg murgl. Glorg mrp murgl, mrplurg grglrogrrgl - gro maglgro-glurgro murgl grorpmorggl lurg mrp grorpglorg grglblarg.</value>
   </data>
@@ -9109,6 +9172,9 @@
   </data>
   <data name="the whole list" xml:space="preserve">
     <value>gaal ograll grog</value>
+  </data>
+  <data name="Their Hardmode pool, priced by the PUMBILITY formula" xml:space="preserve">
+    <value>Mrglmorg grogmurgl, PUMBILITY blargmurm gogl</value>
   </data>
   <data name="Their past seasons" xml:space="preserve">
     <value>Grglblarg glorg maglgrgl</value>
@@ -9232,6 +9298,9 @@
   </data>
   <data name="This does not send anything." xml:space="preserve">
     <value>Mo alla blorp.</value>
+  </data>
+  <data name="This folder has nothing in the Hardmode list." xml:space="preserve">
+    <value>Urp grogblub grogro bomrp ur grub Mrglmorg grog.</value>
   </data>
   <data name="This gives {0} control of your PIUGame account." xml:space="preserve">
     <value>Blugrorp murmo {0} murgblarg gromurp PIUGame Grgl.</value>
@@ -9472,6 +9541,9 @@
   </data>
   <data name="Titles you&apos;re working on" xml:space="preserve">
     <value>Gorb Bagl</value>
+  </data>
+  <data name="Titles, on Hardmode" xml:space="preserve">
+    <value>Mrgl, ap Mrglmorg</value>
   </data>
   <data name="To" xml:space="preserve">
 	  <value>Grgl</value>
@@ -10321,6 +10393,9 @@
   <data name="Which charts are honest for their level — and which lie." xml:space="preserve">
     <value>Gromorg murgl mrp arglmorg ro grglblarg grorpmurm — ro gromorg urg.</value>
   </data>
+  <data name="Which charts qualify" xml:space="preserve">
+    <value>Murp murgl grabmrp</value>
+  </data>
   <data name="which level’s 900,000 is worth the same" xml:space="preserve">
     <value>urg grorpmurm’a 900,000 lu gromb a plom</value>
   </data>
@@ -10773,6 +10848,15 @@
   <data name="Your groups, your region, and the world." xml:space="preserve">
     <value>Gromurp blgrlmr, gromurp rglargl, ro mrp grolurg.</value>
   </data>
+  <data name="Your Hardmode pool" xml:space="preserve">
+    <value>Grub Mrglmorg grogmurgl</value>
+  </data>
+  <data name="Your Hardmode pool holds {0} of 50. Until it's full, every qualifying chart you play counts whole — there's no bar to beat yet." xml:space="preserve">
+    <value>Grub Mrglmorg grogmurgl grogro {0} ub 50. Ro urp bru ulbog, olga grabmrp murgl grub blubgro gogl ulbog — urp bo a bramglorg ro mrogl larg.</value>
+  </data>
+  <data name="Your Hardmode pool is full. Nothing counts until it beats your fiftieth — a qualifying chart worth more replaces it and you keep the difference." xml:space="preserve">
+    <value>Grub Mrglmorg grogmurgl bru ulbog. Bomrp gogl ro urp mrogl grub murgro — a grabmrp murgl gogl mrrgl grombul urp a grub grogro grub mgl.</value>
+  </data>
   <data name="Your import didn't finish" xml:space="preserve">
     <value>Gro murlg mrp brgl</value>
   </data>
@@ -11046,6 +11130,9 @@
   <data name="{0} **+{1}** to {2} · #{3} → **#{4}**" xml:space="preserve">
     <value>{0} **+{1}** grgl {2} · #{3} → **#{4}**</value>
   </data>
+  <data name="{0} / 50" xml:space="preserve">
+    <value>{0} / 50</value>
+  </data>
   <data name="{0} / {1} charts rated" xml:space="preserve">
     <value>{0} / {1} murgl maglmr</value>
   </data>
@@ -11186,6 +11273,9 @@
   </data>
   <data name="{0} charts · {1} downtime" xml:space="preserve">
     <value>{0} murgl · {1} morgglgrgl</value>
+  </data>
+  <data name="{0} charts — the rarest slice of every folder. The ones missing from your pool come first: those are the visits worth making." xml:space="preserve">
+    <value>{0} murgl — grub mrrrglmurp grop ub olga grogblub. Grub urp bomrp blarg grub grogmurgl murgro murgro: urp bru grub mrogl gogl bromurm.</value>
   </data>
   <data name="{0} charts, chosen for being nothing like this one." xml:space="preserve">
     <value>{0} murgl, grorpplgl ro morgmorg blarggllurg plglro grglmrp argl.</value>
@@ -11406,6 +11496,9 @@
   <data name="{0} NPS" xml:space="preserve">
     <value>{0} NPS</value>
   </data>
+  <data name="{0} of 50 held" xml:space="preserve">
+    <value>{0} ub 50 grogro</value>
+  </data>
   <data name="{0} of all Phoenix titles collected" xml:space="preserve">
     <value>{0} mrgl rgl Phoenix mrgl grrglroblub</value>
   </data>
@@ -11438,6 +11531,9 @@
   </data>
   <data name="{0} of {1} charts ({2}%)" xml:space="preserve">
     <value>{0} mrgl {1} murgl ({2}%)</value>
+  </data>
+  <data name="{0} of {1} charts in this folder qualify" xml:space="preserve">
+    <value>{0} ub {1} murgl ur urp grogblub grabmrp</value>
   </data>
   <data name="{0} of {1} charts moved." xml:space="preserve">
     <value>{0} mrgl {1} murgl maglgrorp.</value>

@@ -81,6 +81,12 @@
                data-testid="@($"rebuild-pumbility-tier-lists-{mix}")">@L["Rebuild {0} PUMBILITY tier lists", mix.GetName()]</MudButton>
 }
 
+@* The Hardmode census runs Sundays 18:00 UTC, so this exists for the first run and for a
+   re-run against the last sealed snapshot. Safe to repeat: it rewrites the list wholesale and
+   then repriced every pool from it. Phoenix 2 only — the other mixes have no census. *@
+<MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="RebuildHardmodeCharts"
+           data-testid="rebuild-hardmode-charts">@L["Rebuild Hardmode charts"]</MudButton>
+
 @* Speed bands a folder against its own notes-per-second spread, so it only moves when the
    banked step analysis does — an ingestion rebuilds it on its own, and this is the force. *@
 @foreach (var mix in RepriceableMixes)
@@ -301,6 +307,13 @@
     {
         await Bus.Publish(new RecalculateMixRatingsCommand(mix));
         Snackbar.Add(L["Re-pricing stored {0} ratings. Nothing is announced.", mix.GetName()].Value,
+            Severity.Success);
+    }
+
+    private async Task RebuildHardmodeCharts()
+    {
+        await Bus.Publish(new RebuildHardmodeChartsCommand(MixEnum.Phoenix2));
+        Snackbar.Add(L["Rebuilding the Hardmode charts, then every pool priced against them. It takes a few minutes."].Value,
             Severity.Success);
     }
 

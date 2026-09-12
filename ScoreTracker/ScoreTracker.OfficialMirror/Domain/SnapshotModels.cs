@@ -38,6 +38,12 @@ internal enum PlacementScope
     IncludingSupplemented
 }
 
+/// <summary>
+///     One board player's best seen score on one chart, with what that chart is, so a caller can
+///     price it without a second read. <see cref="Score" /> is decimal because a placement's is.
+/// </summary>
+internal sealed record ChartBoardHigh(int PlayerId, Guid ChartId, string ChartType, int Level, decimal Score);
+
 internal sealed record BoardRecordRow(int LeaderboardId, int HighScore, int AchievedSnapshotId);
 
 /// <summary>

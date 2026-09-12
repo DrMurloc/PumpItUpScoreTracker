@@ -44,6 +44,12 @@ public static class OfficialMirrorRegistrationExtensions
         services.AddTransient<IImportResultRepository, EFImportResultRepository>();
         // Singleton: the in-flight-import set is shared across every request and the bus consumer.
         services.AddSingleton<IImportConcurrencyGuard, ImportConcurrencyGuard>();
+        // Two faces on one read: the Domain port hands the Hardmode census slot order,
+        // the internal source hands this vertical the values its own board needs.
+        services.AddTransient<OfficialPoolReader>();
+        services.AddTransient<IOfficialPoolReader>(p => p.GetRequiredService<OfficialPoolReader>());
+        services.AddTransient<IOfficialPoolSource>(p => p.GetRequiredService<OfficialPoolReader>());
+        services.AddTransient<IOfficialHardmodeRatingRepository, EFOfficialHardmodeRatingRepository>();
         services.AddSingleton<IDbModelContribution, OfficialMirrorModelContribution>();
         return services;
     }
@@ -66,5 +72,6 @@ public static class OfficialMirrorRegistrationExtensions
         // unrecovered — every suite still passes, because nothing else sends its message
         // (docs/design/import-restart-recovery.md §4).
         configurator.AddConsumer<RecoverInterruptedImportsConsumer>();
+        configurator.AddConsumer<OfficialHardmodeSaga>();
     }
 }

@@ -1,0 +1,40 @@
+﻿@namespace ScoreTracker.Web.Components
+@using ScoreTracker.SharedKernel.Enums
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+@* The PUMBILITY section's pool selector. NOT named ...PoolSplit: that is a Domain service
+   (ScoreTracker.Domain.Services.PumbilityPoolSplit, which splits a pool by chart type) and a
+   component of the same name shadows it inside Web's namespace.
+
+   The control: Combined / Singles / Doubles, each printing the pool's
+   own number so the choice is a comparison rather than a label. One component because every tab
+   in the section shows the same control over the same setting (owner, 2026-09-12: "make sure the
+   pool selector is the same one we use for the other tabs") — Hardmode had carried its own copy
+   of this markup, which is how two of them drift.
+
+   Rendered only when there is a choice to make: Phoenix 1 keeps one pool, so the segment strip
+   would be a single dead button there. *@
+@if (Pools.Count > 1)
+{
+    <div class="pmb-poolsplit" role="group" aria-label="@L["Pool"]">
+        @foreach (var pool in Pools)
+        {
+            <button type="button" class="pmb-poolsplit-seg"
+                    aria-pressed="@(pool.Value == Selected ? "true" : "false")"
+                    @onclick="() => OnPoolChanged.InvokeAsync(pool.Value)">
+                <strong>@pool.Total.ToString("N2")</strong>@pool.Label
+            </button>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>One segment: which pool it selects, what it is called, and what it is worth.</summary>
+    public sealed record PoolOption(ChartType? Value, string Label, double Total);
+
+    [Parameter] public IReadOnlyList<PoolOption> Pools { get; set; } = Array.Empty<PoolOption>();
+
+    [Parameter] public ChartType? Selected { get; set; }
+
+    [Parameter] public EventCallback<ChartType?> OnPoolChanged { get; set; }
+}

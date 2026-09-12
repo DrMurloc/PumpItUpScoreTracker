@@ -1,4 +1,4 @@
-using MassTransit;
+﻿using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -155,6 +155,22 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         catch (Exception ex)
         {
             _logger.LogError(ex, "Title step failed for user {UserId} ({Mix}) — snapshot ships without titles",
+                e.UserId, e.Mix);
+        }
+
+        // The Hardmode step: this account's standing on the Hardmode board. The qualifying
+        // chart list is rebuilt weekly so the board does not move under players day to day,
+        // but a standing ON it moves with the import, like every other PUMBILITY number
+        // (owner, 2026-09-12). Failure-isolated for the same reason as the two above: a
+        // second board's total is not worth losing the session card over.
+        try
+        {
+            await _mediator.Send(new HardmodeSaga.RepriceHardmodePool(e.UserId, e.Mix),
+                context.CancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Hardmode step failed for user {UserId} ({Mix}) — the board keeps its last total",
                 e.UserId, e.Mix);
         }
 

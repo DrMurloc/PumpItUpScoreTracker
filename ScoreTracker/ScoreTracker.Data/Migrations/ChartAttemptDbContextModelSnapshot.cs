@@ -753,6 +753,39 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("FolderCohortStats", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.HardmodeChartEntity", b =>
+                {
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ComputedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("FolderCut")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FolderSize")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Holders")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Points")
+                        .HasColumnType("float");
+
+                    b.HasKey("MixId", "ChartId");
+
+                    b.HasIndex("ChartId");
+
+                    b.ToTable("HardmodeChart", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.PumbilityPoolCompositionEntity", b =>
                 {
                     b.Property<Guid>("MixId")
@@ -2755,6 +2788,40 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("OfficialFolderRecord", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialHardmodeRatingEntity", b =>
+                {
+                    b.Property<int>("OfficialPlayerId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ChartsHeld")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Combined")
+                        .HasColumnType("float");
+
+                    b.Property<DateTimeOffset>("ComputedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<double>("Doubles")
+                        .HasColumnType("float");
+
+                    b.Property<int>("DoublesChartsHeld")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Singles")
+                        .HasColumnType("float");
+
+                    b.Property<int>("SinglesChartsHeld")
+                        .HasColumnType("int");
+
+                    b.HasKey("OfficialPlayerId", "MixId");
+
+                    b.ToTable("OfficialHardmodeRating", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialLeaderboardEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -3318,6 +3385,24 @@ namespace ScoreTracker.Data.Migrations
 
                     b.Property<int?>("EstimatedSinglesPumbilityRank")
                         .HasColumnType("int");
+
+                    b.Property<int>("HardmodeChartsHeld")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HardmodeDoublesChartsHeld")
+                        .HasColumnType("int");
+
+                    b.Property<double>("HardmodeDoublesRating")
+                        .HasColumnType("float");
+
+                    b.Property<double>("HardmodeRating")
+                        .HasColumnType("float");
+
+                    b.Property<int>("HardmodeSinglesChartsHeld")
+                        .HasColumnType("int");
+
+                    b.Property<double>("HardmodeSinglesRating")
+                        .HasColumnType("float");
 
                     b.Property<int>("HighestLevel")
                         .HasColumnType("int");
@@ -4435,6 +4520,15 @@ namespace ScoreTracker.Data.Migrations
                 });
 
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.CoOpRatingEntity", b =>
+                {
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ChartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.HardmodeChartEntity", b =>
                 {
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
                         .WithMany()

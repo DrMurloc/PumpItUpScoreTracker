@@ -3492,6 +3492,15 @@
   <data name="Hardest {0}s:" xml:space="preserve">
     <value>最難関の{0}秒:</value>
   </data>
+  <data name="Hardmode" xml:space="preserve">
+    <value>ハードモード</value>
+  </data>
+  <data name="Hardmode charts held" xml:space="preserve">
+    <value>保持しているハードモード譜面</value>
+  </data>
+  <data name="Hardmode leaderboard" xml:space="preserve">
+    <value>ハードモードランキング</value>
+  </data>
   <data name="Has errors" xml:space="preserve">
     <value>エラーあり</value>
   </data>
@@ -3506,6 +3515,12 @@
   </data>
   <data name="held" xml:space="preserve">
     <value>維持</value>
+  </data>
+  <data name="held by nobody" xml:space="preserve">
+    <value>誰も保持していない</value>
+  </data>
+  <data name="held by {0}" xml:space="preserve">
+    <value>{0}人が保持</value>
   </data>
   <data name="held by {0} of titled players" xml:space="preserve">
     <value>称号持ちプレイヤーの{0}が保有</value>
@@ -3668,6 +3683,9 @@
   </data>
   <data name="How many of your PUMBILITY peers hold it in their top 50" xml:space="preserve">
     <value>この譜面をトップ50に持つPUMBILITYピアの数</value>
+  </data>
+  <data name="How many pools hold it" xml:space="preserve">
+    <value>この譜面を保持しているプールの数</value>
   </data>
   <data name="How March of Murlocs works" xml:space="preserve">
     <value>March of Murlocs の仕組み</value>
@@ -3920,6 +3938,9 @@
   </data>
   <data name="in your communities" xml:space="preserve">
     <value>自分のコミュニティ内</value>
+  </data>
+  <data name="In your Hardmode pool" xml:space="preserve">
+    <value>ハードモードプール内</value>
   </data>
   <data name="In your pool #{0}" xml:space="preserve">
     <value>あなたのプール #{0}</value>
@@ -4286,6 +4307,9 @@
 	  <value>レベル</value>
 	  
   <comment>レベル</comment></data>
+  <data name="Level 17 and below moves a lot. Only a player whose own fiftieth chart is worth less than one of these can hold one at all, so this folder is decided by a small group — expect the list to change substantially week to week as players join or their PUMBILITY climbs." xml:space="preserve">
+    <value>レベル17以下は大きく動きます。50番目の譜面がこれらより低い価値のプレイヤーだけが保持できるため、このフォルダは少人数で決まります。プレイヤーが増えたりPUMBILITYが上がるにつれ、リストは週ごとに大きく変わると考えてください。</value>
+  </data>
   <data name="level 24+, first ever, any grade" xml:space="preserve">
     <value>レベル24以上、史上初、全グレード対象</value>
   </data>
@@ -5329,6 +5353,9 @@
   <data name="No — I want to permanently delete data." xml:space="preserve">
     <value>いいえ — データを完全に削除したいです。</value>
   </data>
+  <data name="nobody" xml:space="preserve">
+    <value>誰も</value>
+  </data>
   <data name="Nobody climbed a chart board this week." xml:space="preserve">
     <value>今週は譜面ボードで順位を上げたプレイヤーはいません。</value>
   </data>
@@ -5346,6 +5373,9 @@
   </data>
   <data name="Nobody is above the line on every chart — if you were, your level would climb and the line with it." xml:space="preserve">
     <value>すべての譜面でラインを上回る人はいません。もしそうなら、レベルが上がりラインも一緒に上がります。</value>
+  </data>
+  <data name="Nobody is on this board yet — it fills in after the first weekly rebuild." xml:space="preserve">
+    <value>このランキングにはまだ誰もいません。最初の週次再構築の後に埋まります。</value>
   </data>
   <data name="Nobody is on this chart board yet." xml:space="preserve">
     <value>この譜面ボードにはまだ誰もいません。</value>
@@ -5573,6 +5603,9 @@
   <data name="Nothing here yet. Share what you know about this chart." xml:space="preserve">
     <value>まだ何もありません。この譜面について知っていることを共有しましょう。</value>
   </data>
+  <data name="Nothing in your Hardmode pool yet — every non-broken pass on a qualifying chart takes a slot." xml:space="preserve">
+    <value>ハードモードプールにはまだ何もありません。対象譜面でのステージブレイクでないクリアはすべて枠に入ります。</value>
+  </data>
   <data name="Nothing in your pool yet — every non-broken pass at level 10 or above takes a slot." xml:space="preserve">
     <value>プールにはまだ何もありません — レベル 10 以上でステージブレイクしていないクリアはすべて 1 枠を占めます。</value>
   </data>
@@ -5758,6 +5791,9 @@
   </data>
   <data name="Official Scores" xml:space="preserve">
     <value>公開スコア</value>
+  </data>
+  <data name="Official-board players. Their pools are rebuilt from the mirrored chart boards, which only exist at level 20 and up — so a board player's Hardmode pool is level-20-plus by construction." xml:space="preserve">
+    <value>公式ランキングのプレイヤーです。彼らのプールはミラーした譜面別ランキングから再構築されますが、それはレベル20以上にしか存在しません。つまりランキングプレイヤーのハードモードプールは構造的にレベル20以上になります。</value>
   </data>
   <data name="Old" xml:space="preserve">
     <value>古い</value>
@@ -6763,6 +6799,9 @@
   <data name="priced base" xml:space="preserve">
     <value>計算ベース</value>
   </data>
+  <data name="Pricing your records against this week's Hardmode charts." xml:space="preserve">
+    <value>今週のハードモード譜面であなたの記録を計算しています。</value>
+  </data>
   <data name="Prime" xml:space="preserve">
     <value>Prime</value>
   </data>
@@ -7092,6 +7131,9 @@
   <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
     <value>コミュニティの珍しいPG、大きな称号、トップスコアがここに表示されます。</value>
   </data>
+  <data name="Rarest first" xml:space="preserve">
+    <value>希少な順</value>
+  </data>
   <data name="Rarest passes" xml:space="preserve">
     <value>最もレアなクリア</value>
   </data>
@@ -7195,6 +7237,9 @@
   <data name="Reason (optional)" xml:space="preserve">
     <value>理由（任意）</value>
   </data>
+  <data name="Rebuild Hardmode charts" xml:space="preserve">
+    <value>ハードモード譜面を再構築</value>
+  </data>
   <data name="Rebuild Latest Sessions" xml:space="preserve">
     <value>最新セッションを再構築</value>
   </data>
@@ -7206,6 +7251,9 @@
   </data>
   <data name="Rebuild {0} Speed tier list" xml:space="preserve">
     <value>{0} の速度難易度表を再構築</value>
+  </data>
+  <data name="Rebuilding the Hardmode charts, then every pool priced against them. It takes a few minutes." xml:space="preserve">
+    <value>ハードモード譜面を再構築し、それを基に全プールを計算しています。数分かかります。</value>
   </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>全プレイヤーの最新セッションを再構築しています。</value>
@@ -7763,6 +7811,9 @@
   </data>
   <data name="Scored" xml:space="preserve">
     <value>スコアあり</value>
+  </data>
+  <data name="Scored, outside your 50" xml:space="preserve">
+    <value>スコアあり・トップ50の外</value>
   </data>
   <data name="Scores" xml:space="preserve">
 	  <value>スコア</value>
@@ -8870,8 +8921,14 @@
   <data name="The Charts" xml:space="preserve">
     <value>課題譜面</value>
   </data>
+  <data name="The charts almost nobody holds in a PUMBILITY pool, priced the same way. The chart list is rebuilt on Sundays; standings update as players import." xml:space="preserve">
+    <value>PUMBILITYプールにほとんど誰も入れていない譜面を、同じ計算で評価します。譜面リストは毎週日曜に再构築され、順位はインポートごとに更新されます。</value>
+  </data>
   <data name="the charts themselves" xml:space="preserve">
     <value>譜面そのもの</value>
+  </data>
+  <data name="The charts your Hardmode number is the sum of, banded by what each is worth to you." xml:space="preserve">
+    <value>ハードモードの数値を構成する譜面を、あなたにとっての価値でまとめています。</value>
   </data>
   <data name="The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs." xml:space="preserve">
     <value>暗号文はブラウザに、ラップされた鍵はデータベースに、マスターキーは Key Vault にあります。復号には3つすべてが必要です。1つ、あるいは2つが流出しても何も得られません。パスワードがデータベースやログに書き込まれることは決してありません。</value>
@@ -9068,6 +9125,9 @@
   <data name="The S17 pays Base(18) = {0} — a Single is priced one level up. Perfect Game is the plate bonus, not a grade: a 1,000,000 keeps SSS+’s ×{1} and adds +{2}." xml:space="preserve">
     <value>S17はBase(18) = {0}で払われます — Singlesは1レベル上で計算されます。Perfect Gameはランクではなくプレートボーナスです。1,000,000でもSSS+の×{1}のまま、+{2}が足されます。</value>
   </data>
+  <data name="The same ladders the Breakdown page draws, asked of your Hardmode pool instead of your whole record book." xml:space="preserve">
+    <value>内訳ページと同じラダーを、記録全体ではなくハードモードプールに対して求めます。</value>
+  </data>
   <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
     <value>同じ Perfect でも、コンボ前の曲開始時。</value>
   </data>
@@ -9095,6 +9155,9 @@
   <data name="The sum of your 50 best-rated charts." xml:space="preserve">
     <value>評価上位50譜面の合計です。</value>
   </data>
+  <data name="The sum of your 50 best-rated Hardmode charts." xml:space="preserve">
+    <value>評価が最も高いハードモード譜面50枚の合計です。</value>
+  </data>
   <data name="The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep." xml:space="preserve">
     <value>公式サイトで確認されたもののカタログに譜面が見つかりませんでした。譜面を追加してから解決を押してください - 未解決のままの譜面は次回の取得時に再表示されます。</value>
   </data>
@@ -9109,6 +9172,9 @@
   </data>
   <data name="the whole list" xml:space="preserve">
     <value>リスト全体</value>
+  </data>
+  <data name="Their Hardmode pool, priced by the PUMBILITY formula" xml:space="preserve">
+    <value>PUMBILITYの計算式で算出したハードモードプール</value>
   </data>
   <data name="Their past seasons" xml:space="preserve">
     <value>この人の過去シーズン</value>
@@ -9232,6 +9298,9 @@
   </data>
   <data name="This does not send anything." xml:space="preserve">
     <value>これは何も送りません。</value>
+  </data>
+  <data name="This folder has nothing in the Hardmode list." xml:space="preserve">
+    <value>このフォルダにハードモード対象の譜面はありません。</value>
   </data>
   <data name="This gives {0} control of your PIUGame account." xml:space="preserve">
     <value>これにより{0}があなたのPIUGameアカウントを操作できるようになります。</value>
@@ -9472,6 +9541,9 @@
   </data>
   <data name="Titles you&apos;re working on" xml:space="preserve">
     <value>進行中の称号</value>
+  </data>
+  <data name="Titles, on Hardmode" xml:space="preserve">
+    <value>ハードモードでの称号</value>
   </data>
   <data name="To" xml:space="preserve">
 	  <value>まで</value>
@@ -10321,6 +10393,9 @@
   <data name="Which charts are honest for their level — and which lie." xml:space="preserve">
     <value>レベル表記に正直なチャートはどれか — 嘘をついているのはどれか。</value>
   </data>
+  <data name="Which charts qualify" xml:space="preserve">
+    <value>対象になる譜面</value>
+  </data>
   <data name="which level’s 900,000 is worth the same" xml:space="preserve">
     <value>どのレベルの900,000が同じ価値か</value>
   </data>
@@ -10773,6 +10848,15 @@
   <data name="Your groups, your region, and the world." xml:space="preserve">
     <value>あなたのグループ、あなたの地域、そして世界。</value>
   </data>
+  <data name="Your Hardmode pool" xml:space="preserve">
+    <value>あなたのハードモードプール</value>
+  </data>
+  <data name="Your Hardmode pool holds {0} of 50. Until it's full, every qualifying chart you play counts whole — there's no bar to beat yet." xml:space="preserve">
+    <value>ハードモードプールは50枚中{0}枚です。埋まるまでは、対象譜面をプレイするたびに全額が加算されます。まだ超えるべき基準はありません。</value>
+  </data>
+  <data name="Your Hardmode pool is full. Nothing counts until it beats your fiftieth — a qualifying chart worth more replaces it and you keep the difference." xml:space="preserve">
+    <value>ハードモードプールは満杯です。50番目を超えるまでは加算されません。対象譜面で価値が上回れば入れ替わり、その差分があなたの得点になります。</value>
+  </data>
   <data name="Your import didn't finish" xml:space="preserve">
     <value>インポートが完了しませんでした</value>
   </data>
@@ -11046,6 +11130,9 @@
   <data name="{0} **+{1}** to {2} · #{3} → **#{4}**" xml:space="preserve">
     <value>{0} **+{1}**（{2}）· #{3} → **#{4}**</value>
   </data>
+  <data name="{0} / 50" xml:space="preserve">
+    <value>{0} / 50</value>
+  </data>
   <data name="{0} / {1} charts rated" xml:space="preserve">
     <value>{0} / {1} 譜面が評価済み</value>
   </data>
@@ -11186,6 +11273,9 @@
   </data>
   <data name="{0} charts · {1} downtime" xml:space="preserve">
     <value>{0}譜面 · 休憩{1}</value>
+  </data>
+  <data name="{0} charts — the rarest slice of every folder. The ones missing from your pool come first: those are the visits worth making." xml:space="preserve">
+    <value>{0}譜面 — 各フォルダの最も希少な部分です。プールに欠けているものが先に並びます。そこが行く価値のある譜面です。</value>
   </data>
   <data name="{0} charts, chosen for being nothing like this one." xml:space="preserve">
     <value>この譜面とまったく似ていない、という理由で選ばれた{0}譜面。</value>
@@ -11406,6 +11496,9 @@
   <data name="{0} NPS" xml:space="preserve">
     <value>{0} NPS</value>
   </data>
+  <data name="{0} of 50 held" xml:space="preserve">
+    <value>50枚中{0}枚</value>
+  </data>
   <data name="{0} of all Phoenix titles collected" xml:space="preserve">
     <value>全フェニックス称号の{0}を収集</value>
   </data>
@@ -11438,6 +11531,9 @@
   </data>
   <data name="{0} of {1} charts ({2}%)" xml:space="preserve">
     <value>{1} 譜面中 {0}（{2}%）</value>
+  </data>
+  <data name="{0} of {1} charts in this folder qualify" xml:space="preserve">
+    <value>このフォルダの{1}譜面中{0}譜面が対象</value>
   </data>
   <data name="{0} of {1} charts moved." xml:space="preserve">
     <value>{1} 譜面のうち {0} 譜面の難度が変わりました。</value>

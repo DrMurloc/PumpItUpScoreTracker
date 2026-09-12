@@ -1,0 +1,402 @@
+﻿@using MediatR
+@using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.ChartIntelligence.Contracts.Queries
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.Rivals.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+
+@* Which charts qualify, one folder at a time (docs/design/hardmode-leaderboard.md §7). A folder
+   is how players navigate a big list and FolderPicker is that navigation — a thousand charts
+   stacked into one scroll is not a list anyone reads.
+
+   Three sections in the order that makes them actionable: what you have not played, what you
+   have played that does not count, then what counts. The borders carry the same three facts —
+   gold is the share card's own Top 50 boundary, green is a pass that does not count here. *@
+<section class="pmb-block">
+    <div class="pmb-block-head">
+        <h2 class="pmb-block-title">@L["Which charts qualify"]</h2>
+    </div>
+    <p class="pmb-block-lede">
+        @string.Format(L["{0} charts — the rarest slice of every folder. The ones missing from your pool come first: those are the visits worth making."], QualifyingCount)
+    </p>
+
+    <div class="pmb-peers-controls">
+        <span class="pmb-peers-controls-start">
+            <FolderPicker Type="_type" Level="_level" ShowCoOp="false" IsMissing="IsMissing"
+                          FolderChanged="PickFolder"></FolderPicker>
+        </span>
+        <span class="pmb-peers-controls-end">
+            <MudButtonGroup OverrideStyles="false">
+                <MudTooltip Text="@L["Comfortable"]">
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy"
+                                   Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)"
+                                   OnClick="() => SetDensity(UiDensity.Comfortable)"
+                                   aria-label="@L["Comfortable"]"></MudIconButton>
+                </MudTooltip>
+                <MudTooltip Text="@L["Compact"]">
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView"
+                                   Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)"
+                                   OnClick="() => SetDensity(UiDensity.Compact)"
+                                   aria-label="@L["Compact"]"></MudIconButton>
+                </MudTooltip>
+                <MudTooltip Text="@L["Table"]">
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows"
+                                   Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)"
+                                   OnClick="() => SetDensity(UiDensity.Table)"
+                                   aria-label="@L["Table"]"></MudIconButton>
+                </MudTooltip>
+            </MudButtonGroup>
+        </span>
+    </div>
+
+    @* Below level 18 the electorate is tens, not thousands — a chart is missing from every pool
+       because of its level, not its difficulty, and the list moves accordingly. *@
+    @if (_level <= VolatileBelow)
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true" Class="my-2">
+            @L["Level 17 and below moves a lot. Only a player whose own fiftieth chart is worth less than one of these can hold one at all, so this folder is decided by a small group — expect the list to change substantially week to week as players join or their PUMBILITY climbs."]
+        </MudAlert>
+    }
+
+    <p class="pmb-block-lede">@FolderSummary</p>
+
+    <div class="pmb-list">
+        @foreach (var section in Sections)
+        {
+            <TierSection Name="@section.Name" Color="@section.Color" Count="section.Rows.Count"
+                         Collapsed="_collapsed.Contains(section.Key)"
+                         CollapsedChanged="c => SetCollapsed(section.Key, c)">
+                @if (_density == UiDensity.Table)
+                {
+                    <div class="tier-table-wrap">
+                        <table class="tier-table pmb-table">
+                            <thead>
+                            <tr>
+                                <th class="tier-table-jacket-cell"></th>
+                                <th class="pmb-r" title="@L["Rarest first"]">@L["Rarity"]</th>
+                                <th>@L["Song Name"]</th>
+                                <th>@L["Chart"]</th>
+                                <th>@L["My Score"]</th>
+                                <th class="pmb-r" title="@HeldTitle">@L["held"]</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var row in section.Rows)
+                            {
+                                <tr class="pmb-row @(row.State == HardmodeState.InPool ? "tier-row-pass" : null)">
+                                    <td class="tier-table-jacket-cell">
+                                        <div class="tier-table-jacket" role="button" tabindex="0"
+                                             @onclick="() => OnOpen.InvokeAsync(row.Chart)"
+                                             style="background-image:url('@row.Chart.Song.ImagePath')"></div>
+                                    </td>
+                                    <td class="pmb-r pmb-num pmb-muted">@($"#{row.Rarity}")</td>
+                                    <td>@row.Chart.Song.Name</td>
+                                    <td>@row.Chart.DifficultyString</td>
+                                    <td>
+                                        @if (row.Score != null)
+                                        {
+                                            <PeerScore Score="row.Score.Score" IsBroken="row.Score.IsBroken"
+                                                       Mix="Mix" Height="12" Plate="row.Score.Plate"
+                                                       Standing="@StandingFor(row)" Chart="row.Chart"
+                                                       Class="sbd-score-stack" ShowStanding="false"
+                                                       OnOpenBoard="OnOpenBoard"></PeerScore>
+                                        }
+                                        else
+                                        {
+                                            <span class="hmd-none">@L["No Score Yet"]</span>
+                                        }
+                                    </td>
+                                    <td class="pmb-r pmb-num @(row.Holders == 0 ? null : "pmb-muted")">
+                                        @(row.Holders == 0 ? L["nobody"] : row.Holders.ToString("N0"))
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="@(_density == UiDensity.Compact ? "tier-card-grid tier-card-grid-compact" : "tier-card-grid")">
+                        @foreach (var row in section.Rows)
+                        {
+                            <TierListChartCard Chart="row.Chart"
+                                               Density="_density"
+                                               Score="@ScoreOf(row)"
+                                               Standing="@StandingFor(row)"
+                                               ShowStandingText="false"
+                                               OnOpenBoard="OnOpenBoard"
+                                               CustomStateClass="@StateClass(row.State)"
+                                               CustomStateTitle="@StateWord(row.State)"
+                                               Skills="@SkillsFor(row.Chart)"
+                                               Body="@CardBody(row)"
+                                               OnOpen="OpenById"></TierListChartCard>
+                        }
+                    </div>
+                }
+            </TierSection>
+        }
+        @if (Sections.Count == 0)
+        {
+            <p class="pmb-empty">@L["This folder has nothing in the Hardmode list."]</p>
+        }
+    </div>
+</section>
+
+@code {
+    /// <summary>
+    ///     Below this level a chart's absence from every pool measures its level rather than its
+    ///     difficulty (design §6), so the folder says so.
+    /// </summary>
+    private const int VolatileBelow = 17;
+
+    public const string DensitySettingKey = "Density__HardmodeCharts";
+
+    public const string CollapsedSettingKey = "Hardmode__CollapsedSections";
+
+    private enum HardmodeState
+    {
+        NotPlayed,
+        OutsidePool,
+        InPool
+    }
+
+    private sealed record Row(Chart Chart, int Rarity, int Holders, PoolEntry? Score, HardmodeState State);
+
+    private sealed record Section(string Key, string Name, string Color, IReadOnlyList<Row> Rows);
+
+    [Parameter] [EditorRequired] public MixEnum Mix { get; set; }
+
+    [Parameter] [EditorRequired] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } =
+        new Dictionary<Guid, Chart>();
+
+    /// <summary>The viewer's own pool, so a chart can say whether it counts.</summary>
+    [Parameter] public IReadOnlyList<PoolEntry> Pool { get; set; } = Array.Empty<PoolEntry>();
+
+    /// <summary>
+    ///     Qualifying charts the viewer has scored that the fifty does not hold — the third
+    ///     state. Comes down with the page rather than from a query of its own: the page already
+    ///     priced every one of them to decide the fifty.
+    /// </summary>
+    [Parameter] public IReadOnlyList<PoolEntry> ScoredOutsidePool { get; set; } = Array.Empty<PoolEntry>();
+
+    [Parameter] public int QualifyingCount { get; set; }
+
+    [Parameter] public EventCallback<Chart> OnOpen { get; set; }
+
+    [Parameter] public EventCallback<PeerBoardRequest> OnOpenBoard { get; set; }
+
+    private ChartType _type = ChartType.Single;
+    private int _level = 21;
+    private UiDensity _density = UiDensity.Comfortable;
+    private HashSet<string> _collapsed = new();
+    private IReadOnlyList<HardmodeChartRecord> _qualifying = Array.Empty<HardmodeChartRecord>();
+    private IReadOnlyDictionary<Guid, PeerStanding> _standings = new Dictionary<Guid, PeerStanding>();
+
+    /// <summary>
+    ///     What each chart IS (docs/design/chart-identity.md) - the same chips the Play tab and
+    ///     the tier lists print, read through Catalog's contract rather than derived here. Unlike
+    ///     the standings these do not need a login: they are a property of the chart.
+    /// </summary>
+    private IReadOnlyDictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>> _skills =
+        new Dictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>>();
+
+    private HashSet<Guid> _skillsFor = new();
+    private HashSet<Guid> _standingsFor = new();
+
+    private string HeldTitle => L["How many pools hold it"];
+
+    /// <summary>
+    ///     Rarest first, and the name breaks the tie — the census's own last tiebreak. Without it
+    ///     the printed #1, #2, #3 was whatever order the database returned, which shuffles between
+    ///     loads: equal points is not an edge case here, it is the entire unheld head of a folder.
+    ///     (The census also sorts on scoring level between those two; the record does not carry
+    ///     one, and this list is a rarity reading rather than the cut itself.)
+    /// </summary>
+    private IReadOnlyList<HardmodeChartRecord> Folder => _qualifying
+        .Where(c => c.ChartType == _type && c.Level == _level)
+        .OrderBy(c => c.Points)
+        .ThenBy(c => Charts.TryGetValue(c.ChartId, out var chart) ? chart.Song.Name.ToString() : string.Empty,
+            StringComparer.OrdinalIgnoreCase)
+        .ThenBy(c => c.ChartId)
+        .ToArray();
+
+    private string FolderSummary
+    {
+        get
+        {
+            var folder = Folder;
+            if (folder.Count == 0) return string.Empty;
+            var first = folder[0];
+            return string.Format(L["{0} of {1} charts in this folder qualify"], first.FolderCut,
+                first.FolderSize);
+        }
+    }
+
+    private IReadOnlyList<Section> Sections
+    {
+        get
+        {
+            var scores = Pool.Concat(ScoredOutsidePool).ToDictionary(p => p.ChartId);
+            var pooled = Pool.Select(p => p.ChartId).ToHashSet();
+            var rows = Folder
+                .Where(c => Charts.ContainsKey(c.ChartId))
+                .Select((c, i) => new Row(Charts[c.ChartId], i + 1, c.Holders,
+                    scores.GetValueOrDefault(c.ChartId),
+                    pooled.Contains(c.ChartId) ? HardmodeState.InPool
+                        : scores.ContainsKey(c.ChartId) ? HardmodeState.OutsidePool
+                        : HardmodeState.NotPlayed))
+                .ToArray();
+
+            var sections = new List<Section>();
+            Add("notplayed", L["Not played yet"], "var(--rarity-prism)", HardmodeState.NotPlayed);
+            Add("outside", L["Scored, outside your 50"], "var(--mud-palette-success)", HardmodeState.OutsidePool);
+            Add("inpool", L["In your Hardmode pool"], "var(--rarity-gold)", HardmodeState.InPool);
+            return sections;
+
+            void Add(string key, string name, string color, HardmodeState state)
+            {
+                var of = rows.Where(r => r.State == state).ToArray();
+                if (of.Length > 0) sections.Add(new Section(key, name, color, of));
+            }
+        }
+    }
+
+    /// <summary>
+    ///     The border language, and the one state Hardmode adds: gold is the share card's own
+    ///     "Top 50 — combined" boundary, so the same fact wears the same colour in the page and
+    ///     in the download. Gold outranks green where both apply, as the card composer does.
+    /// </summary>
+    private static string StateClass(HardmodeState state) => state switch
+    {
+        HardmodeState.InPool => "tier-chart-card-top50",
+        HardmodeState.OutsidePool => "tier-chart-card-pass",
+        _ => string.Empty
+    };
+
+    private string StateWord(HardmodeState state) => state switch
+    {
+        HardmodeState.InPool => L["In your Hardmode pool"],
+        HardmodeState.OutsidePool => L["Scored, outside your 50"],
+        _ => L["No Score Yet"]
+    };
+
+    private RenderFragment CardBody(Row row) => @<text>
+        <div class="hmd-held @(row.Holders == 0 ? "hmd-held-zero" : null)" title="@HeldTitle">
+            @(row.Holders == 0 ? L["held by nobody"] : string.Format(L["held by {0}"], row.Holders))
+        </div>
+        <div class="@(row.State == HardmodeState.InPool ? "hmd-in" : row.State == HardmodeState.OutsidePool ? "hmd-out" : "hmd-none")">
+            @StateWord(row.State)
+        </div>
+    </text>;
+
+    /// <summary>
+    ///     The card wants a record, not a pool entry — the page hands down entries because that
+    ///     is what it priced. Null where the viewer has no score, which is the third state.
+    /// </summary>
+    private static RecordedPhoenixScore? ScoreOf(Row row)
+    {
+        return row.Score == null
+            ? null
+            : new RecordedPhoenixScore(row.Chart.Id, row.Score.Score, row.Score.Plate, row.Score.IsBroken,
+                row.Score.RecordedDate);
+    }
+
+    private PeerStanding? StandingFor(Row row)
+    {
+        return _standings.GetValueOrDefault(row.Chart.Id);
+    }
+
+    private Task OpenById(Guid chartId)
+    {
+        return Charts.TryGetValue(chartId, out var chart) ? OnOpen.InvokeAsync(chart) : Task.CompletedTask;
+    }
+
+    /// <summary>Folders with nothing in the list are greyed rather than hidden — the holes are the map.</summary>
+    private bool IsMissing(ChartType type, int level)
+    {
+        return !_qualifying.Any(c => c.ChartType == type && c.Level == level);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Enum.TryParse<UiDensity>(await UiSettings.GetSetting(DensitySettingKey), out var density))
+            _density = density;
+        var collapsed = await UiSettings.GetSetting(CollapsedSettingKey);
+        if (!string.IsNullOrWhiteSpace(collapsed))
+            _collapsed = collapsed.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .ToHashSet();
+
+        _qualifying = await Mediator.Send(new GetHardmodeChartsQuery(Mix));
+
+        // Open on a folder that has something in it rather than on an empty S21.
+        if (IsMissing(_type, _level))
+        {
+            var first = _qualifying.OrderBy(c => c.ChartType).ThenByDescending(c => c.Level).FirstOrDefault();
+            if (first != null) (_type, _level) = (first.ChartType, first.Level);
+        }
+
+        await LoadSkills();
+        await LoadStandings();
+    }
+
+    private async Task PickFolder((ChartType Type, int Level) folder)
+    {
+        (_type, _level) = folder;
+        await LoadSkills();
+        await LoadStandings();
+    }
+
+    /// <summary>
+    ///     Where each of the folder's charts stands among the peers the viewer chose — read for
+    ///     the folder on screen, and again only when the folder changes.
+    /// </summary>
+    private async Task LoadSkills()
+    {
+        var ids = Folder.Select(c => c.ChartId).Where(Charts.ContainsKey).ToHashSet();
+        if (ids.Count == 0 || ids.SetEquals(_skillsFor)) return;
+        _skillsFor = ids;
+        var identity = await Mediator.Send(new GetChartIdentityQuery(ids.ToArray(), Mix));
+        _skills = identity.ToDictionary(kv => kv.Key, kv => IdentityChips.ToCardChips(kv.Value, false, L));
+    }
+
+    private IReadOnlyList<TierListChartCard.CardSkillChip>? SkillsFor(Chart chart) =>
+        _skills.TryGetValue(chart.Id, out var chips) && chips.Count > 0 ? chips : null;
+
+    private async Task LoadStandings()
+    {
+        if (!CurrentUser.IsLoggedIn) return;
+        var scored = Pool.Concat(ScoredOutsidePool).Select(p => p.ChartId).ToHashSet();
+        var ids = Folder.Select(c => c.ChartId).Where(scored.Contains).ToHashSet();
+        if (ids.Count == 0 || ids.SetEquals(_standingsFor)) return;
+        _standingsFor = ids;
+        _standings = await Mediator.Send(new GetPeerStandingsQuery(Mix, ids.ToArray()));
+    }
+
+    private async Task SetDensity(UiDensity density)
+    {
+        _density = density;
+        await UiSettings.SetSetting(DensitySettingKey, density.ToString());
+    }
+
+    private async Task SetCollapsed(string key, bool collapsed)
+    {
+        if (collapsed) _collapsed.Add(key);
+        else _collapsed.Remove(key);
+        await UiSettings.SetSetting(CollapsedSettingKey, string.Join(",", _collapsed));
+    }
+}

@@ -38,6 +38,14 @@ public sealed class OfficialMirrorModelContribution : IDbModelContribution
             .IncludeProperties(e => new { e.LeaderboardId, e.Place, e.Score, e.IsSupplemented });
         placement.Property(e => e.Score).HasPrecision(9, 2);
 
+        // The Official Boards side of the Hardmode leaderboard. Keyed by the board player,
+
+        // never a site UserId — the site half lives on PlayerStats and the two populations
+
+        // are never ranked against each other.
+
+        modelBuilder.Entity<OfficialHardmodeRatingEntity>().ToTable("OfficialHardmodeRating");
+
         modelBuilder.Entity<OfficialChartPopularityEntity>().ToTable("OfficialChartPopularity")
             .HasKey(e => new { e.SnapshotId, e.ChartId });
 

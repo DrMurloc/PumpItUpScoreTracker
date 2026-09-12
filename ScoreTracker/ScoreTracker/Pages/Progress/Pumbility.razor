@@ -1,4 +1,4 @@
-@using MediatR
+﻿@using MediatR
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.SharedKernel.Enums
@@ -20,16 +20,13 @@
 <PumbilitySectionFrame Active="play">
     <Body Context="ctx">
         <PeersSection Page="ctx.Page" Charts="ctx.Charts" Pool="ctx.Pool" Energy="ctx.Energy" OnEnergyChanged="ctx.ChangeEnergy"
-                      ToDos="_todos" OnToDo="ToggleToDo" OnOpen="ShowChartDetails" OnPlay="PlayChart"
+                      ToDos="_todos" OnToDo="ToggleToDo" OnOpen="ShowChartDetails"
                       OnOpenBoard="@(r => OpenBoard(r, ctx.Charts))"></PeersSection>
 
-        @* AutoPlay is bound rather than fixed: the card's play button and its jacket open the
-           same dialog, and only one of them asked for the video. *@
         @* A card is a peers card, so its board opens on the pool its numbers came from — the
            PUMBILITY peers on Phoenix 2, the competitive band on Phoenix 1 — auditable rather than
            asserted (D40, D43). *@
         <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="ctx.Mix"
-                            AutoPlay="_detailsAutoPlay"
                             BoardScope="@(_detailsBoardScope ?? (ctx.Mix == MixEnum.Phoenix2 ? ChartLeaderboardScopes.LeaderboardScope.PumbilityPeers : ChartLeaderboardScopes.LeaderboardScope.CompetitivePeers))"
                             BoardCommunity="_detailsBoardCommunity" InitialTab="_detailsTab"
                             IsToDo="_detailsChart != null && _todos.Contains(_detailsChart.Id)"
@@ -43,8 +40,6 @@
 @code {
     private Chart? _detailsChart;
     private bool _detailsOpen;
-    private bool _detailsAutoPlay;
-
     private readonly ISet<Guid> _todos = new HashSet<Guid>();
 
     protected override async Task OnInitializedAsync()
@@ -57,15 +52,6 @@
     private void ShowChartDetails(Chart chart)
     {
         _detailsChart = chart;
-        _detailsAutoPlay = false;
-        Plain();
-        _detailsOpen = true;
-    }
-
-    private void PlayChart(Chart chart)
-    {
-        _detailsChart = chart;
-        _detailsAutoPlay = true;
         Plain();
         _detailsOpen = true;
     }
@@ -94,7 +80,6 @@
     {
         if (!charts.TryGetValue(request.ChartId, out var chart)) return;
         _detailsChart = chart;
-        _detailsAutoPlay = false;
         _detailsBoardScope = request.Scope;
         _detailsBoardCommunity = request.Community;
         _detailsTab = ChartDetailsDialog.DetailsTab.Leaderboard;

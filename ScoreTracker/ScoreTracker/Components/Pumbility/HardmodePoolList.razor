@@ -1,0 +1,269 @@
+﻿@using MediatR
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.Rivals.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.Theming
+@namespace ScoreTracker.Web.Components
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+
+@* Your Hardmode fifty, banded by what each chart is worth to you — the Breakdown page's own
+   treatment of a pool, in the three densities, with the value on the card's nameline and your
+   score coloured by where it stands among the peers you chose.
+
+   A separate component from PumbilityPoolList rather than a parameter on it: that one reads a
+   PumbilityPageRecord and bands with the shared tier processor's cuts over fifty charts, and a
+   Hardmode pool is usually a handful. The bands here are the same names and the same ramp, cut
+   by standard deviation over however many charts there are. *@
+<div class="pmb-peers-controls">
+    <span class="pmb-peers-controls-start"></span>
+    <span class="pmb-peers-controls-end">
+        <MudButtonGroup OverrideStyles="false">
+            <MudTooltip Text="@L["Comfortable"]">
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy"
+                               Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)"
+                               OnClick="() => SetDensity(UiDensity.Comfortable)"
+                               aria-label="@L["Comfortable"]"></MudIconButton>
+            </MudTooltip>
+            <MudTooltip Text="@L["Compact"]">
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView"
+                               Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)"
+                               OnClick="() => SetDensity(UiDensity.Compact)"
+                               aria-label="@L["Compact"]"></MudIconButton>
+            </MudTooltip>
+            <MudTooltip Text="@L["Table"]">
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows"
+                               Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)"
+                               OnClick="() => SetDensity(UiDensity.Table)"
+                               aria-label="@L["Table"]"></MudIconButton>
+            </MudTooltip>
+        </MudButtonGroup>
+    </span>
+</div>
+
+<div class="pmb-list">
+    @if (Pool.Count == 0)
+    {
+        <p class="pmb-empty">
+            @L["Nothing in your Hardmode pool yet — every non-broken pass on a qualifying chart takes a slot."]
+        </p>
+    }
+    @foreach (var section in Sections)
+    {
+        <TierSection Name="@section.Name" Color="@section.Color" Count="section.Rows.Count"
+                     Collapsed="_collapsed.Contains(section.Key)"
+                     CollapsedChanged="c => SetCollapsed(section.Key, c)">
+            @if (_density == UiDensity.Table)
+            {
+                <div class="tier-table-wrap">
+                    <table class="tier-table pmb-table">
+                        <thead>
+                        <tr>
+                            <th class="tier-table-jacket-cell"></th>
+                            <th>#</th>
+                            <th>@L["Song Name"]</th>
+                            <th>@L["Chart"]</th>
+                            <th>@L["My Score"]</th>
+                            <th class="pmb-r" title="@L["What the chart is worth in your pool right now"]">
+                                @L["Value"]
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var row in section.Rows)
+                        {
+                            <tr class="pmb-row tier-row-pass">
+                                <td class="tier-table-jacket-cell">
+                                    <div class="tier-table-jacket" role="button" tabindex="0"
+                                         @onclick="() => OnOpen.InvokeAsync(row.Chart)"
+                                         style="background-image:url('@row.Chart.Song.ImagePath')"></div>
+                                </td>
+                                <td class="pmb-num pmb-muted">@row.Entry.Place</td>
+                                <td>@row.Chart.Song.Name</td>
+                                <td>@row.Chart.DifficultyString</td>
+                                <td>
+                                    <PeerScore Score="row.Entry.Score" IsBroken="row.Entry.IsBroken" Mix="Mix"
+                                               Height="12" Plate="row.Entry.Plate" Standing="@StandingFor(row)"
+                                               Chart="row.Chart" Class="sbd-score-stack" ShowStanding="false"
+                                               OnOpenBoard="OnOpenBoard"></PeerScore>
+                                </td>
+                                <td class="pmb-r pmb-num pmb-val">@row.Entry.Value.ToString("N2")</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="@(_density == UiDensity.Compact ? "tier-card-grid tier-card-grid-compact" : "tier-card-grid")">
+                    @foreach (var row in section.Rows)
+                    {
+                        @* The value is the card's reason for existing here, so it takes the corner
+                           in both densities — the Breakdown list's own rule. *@
+                        <TierListChartCard Chart="row.Chart"
+                                           Density="_density"
+                                           Score="@ScoreOf(row)"
+                                           Standing="@StandingFor(row)"
+                                           ShowStandingText="false"
+                                           OnOpenBoard="OnOpenBoard"
+                                           CustomStateClass="tier-chart-card-top50"
+                                           CustomStateTitle="@L["In your Hardmode pool"]"
+                                           Skills="@SkillsFor(row.Chart)"
+                                           ShowToDo="false"
+                                           CornerBadge="@row.Entry.Value.ToString("N2")"
+                                           CornerBadgeClass="pmb-corner-gain"
+                                           OnOpen="OpenById"></TierListChartCard>
+                    }
+                </div>
+            }
+        </TierSection>
+    }
+</div>
+
+@code {
+    public const string DensitySettingKey = "Density__HardmodePool";
+
+    public const string CollapsedSettingKey = "HardmodePool__CollapsedTiers";
+
+    private sealed record Row(Chart Chart, PoolEntry Entry);
+
+    private sealed record Section(string Key, string Name, string Color, IReadOnlyList<Row> Rows);
+
+    [Parameter] [EditorRequired] public MixEnum Mix { get; set; }
+
+    [Parameter] [EditorRequired] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } =
+        new Dictionary<Guid, Chart>();
+
+    [Parameter] public IReadOnlyList<PoolEntry> Pool { get; set; } = Array.Empty<PoolEntry>();
+
+    [Parameter] public EventCallback<Chart> OnOpen { get; set; }
+
+    [Parameter] public EventCallback<PeerBoardRequest> OnOpenBoard { get; set; }
+
+    private UiDensity _density = UiDensity.Comfortable;
+    private HashSet<string> _collapsed = new();
+    private IReadOnlyDictionary<Guid, PeerStanding> _standings = new Dictionary<Guid, PeerStanding>();
+    /// <summary>
+    ///     What each chart IS (docs/design/chart-identity.md) - the same chips the Play tab and
+    ///     the tier lists print, read through Catalog's contract rather than derived here.
+    /// </summary>
+    private IReadOnlyDictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>> _skills =
+        new Dictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>>();
+
+    private HashSet<Guid> _standingsFor = new();
+
+    /// <summary>
+    ///     The pool's own bands — the same names and the same rarity ramp the Breakdown list
+    ///     uses, cut by standard deviation over however many charts the pool holds. Empty bands
+    ///     are dropped rather than drawn: a Hardmode pool of eleven has no business showing
+    ///     seven headings.
+    /// </summary>
+    private IReadOnlyList<Section> Sections
+    {
+        get
+        {
+            var rows = Pool.Where(e => Charts.ContainsKey(e.ChartId))
+                .Select(e => new Row(Charts[e.ChartId], e)).ToArray();
+            if (rows.Length == 0) return Array.Empty<Section>();
+
+            var mean = rows.Average(r => r.Entry.Value);
+            var deviation = Math.Sqrt(rows.Average(r => Math.Pow(r.Entry.Value - mean, 2)));
+            var bands = new (string Key, string Name, string Color)[]
+            {
+                ("highest", L["Highest"], "var(--rarity-prism)"),
+                ("high", L["High"], "var(--rarity-gold)"),
+                ("average", L["Average"], "var(--rarity-emerald)"),
+                ("low", L["Low"], "var(--rarity-silver)"),
+                ("lowest", L["Lowest"], "var(--rarity-common)")
+            };
+
+            return rows.GroupBy(r => Band(r.Entry.Value, mean, deviation))
+                .OrderBy(g => g.Key)
+                .Select(g => new Section(bands[g.Key].Key, bands[g.Key].Name, bands[g.Key].Color,
+                    g.OrderByDescending(r => r.Entry.Value).ToArray()))
+                .ToArray();
+        }
+    }
+
+    private static int Band(double value, double mean, double deviation)
+    {
+        if (deviation <= 0) return 2;
+        var z = (value - mean) / deviation;
+        return z >= 1.2 ? 0 : z >= .4 ? 1 : z >= -.4 ? 2 : z >= -1.2 ? 3 : 4;
+    }
+
+    private static RecordedPhoenixScore ScoreOf(Row row)
+    {
+        return new RecordedPhoenixScore(row.Chart.Id, row.Entry.Score, row.Entry.Plate, row.Entry.IsBroken,
+            row.Entry.RecordedDate);
+    }
+
+    private PeerStanding? StandingFor(Row row)
+    {
+        return _standings.GetValueOrDefault(row.Chart.Id);
+    }
+
+    private IReadOnlyList<TierListChartCard.CardSkillChip>? SkillsFor(Chart chart) =>
+        _skills.TryGetValue(chart.Id, out var chips) && chips.Count > 0 ? chips : null;
+
+    private Task OpenById(Guid chartId)
+    {
+        return Charts.TryGetValue(chartId, out var chart) ? OnOpen.InvokeAsync(chart) : Task.CompletedTask;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Enum.TryParse<UiDensity>(await UiSettings.GetSetting(DensitySettingKey), out var density))
+            _density = density;
+        var collapsed = await UiSettings.GetSetting(CollapsedSettingKey);
+        if (!string.IsNullOrWhiteSpace(collapsed))
+            _collapsed = collapsed.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .ToHashSet();
+    }
+
+    /// <summary>
+    ///     Where each of the pool's charts stands among the peers the viewer chose. Read for the
+    ///     charts on screen, and again only when the pool changes — these are all scores the
+    ///     viewer holds, so every one of them has a standing to show.
+    /// </summary>
+    protected override async Task OnParametersSetAsync()
+    {
+        var ids = Pool.Select(e => e.ChartId).Where(Charts.ContainsKey).ToHashSet();
+        if (ids.SetEquals(_standingsFor)) return;
+        _standingsFor = ids;
+        if (ids.Count == 0)
+        {
+            _standings = new Dictionary<Guid, PeerStanding>();
+            _skills = new Dictionary<Guid, IReadOnlyList<TierListChartCard.CardSkillChip>>();
+            return;
+        }
+
+        var identity = await Mediator.Send(new GetChartIdentityQuery(ids.ToArray(), Mix));
+        _skills = identity.ToDictionary(kv => kv.Key, kv => IdentityChips.ToCardChips(kv.Value, false, L));
+        _standings = CurrentUser.IsLoggedIn
+            ? await Mediator.Send(new GetPeerStandingsQuery(Mix, ids.ToArray()))
+            : new Dictionary<Guid, PeerStanding>();
+    }
+
+    private async Task SetDensity(UiDensity density)
+    {
+        _density = density;
+        await UiSettings.SetSetting(DensitySettingKey, density.ToString());
+    }
+
+    private async Task SetCollapsed(string key, bool collapsed)
+    {
+        if (collapsed) _collapsed.Add(key);
+        else _collapsed.Remove(key);
+        await UiSettings.SetSetting(CollapsedSettingKey, string.Join(",", _collapsed));
+    }
+}

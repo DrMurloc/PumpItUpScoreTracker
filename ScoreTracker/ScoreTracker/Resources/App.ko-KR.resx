@@ -3475,6 +3475,15 @@
   <data name="Hardest {0}s:" xml:space="preserve">
     <value>가장 어려운 {0}초:</value>
   </data>
+  <data name="Hardmode" xml:space="preserve">
+    <value>하드모드</value>
+  </data>
+  <data name="Hardmode charts held" xml:space="preserve">
+    <value>보유한 하드모드 차트</value>
+  </data>
+  <data name="Hardmode leaderboard" xml:space="preserve">
+    <value>하드모드 리더보드</value>
+  </data>
   <data name="Has errors" xml:space="preserve">
     <value>오류 있음</value>
   </data>
@@ -3489,6 +3498,12 @@
   </data>
   <data name="held" xml:space="preserve">
     <value>유지</value>
+  </data>
+  <data name="held by nobody" xml:space="preserve">
+    <value>아무도 보유하지 않음</value>
+  </data>
+  <data name="held by {0}" xml:space="preserve">
+    <value>{0}명 보유</value>
   </data>
   <data name="held by {0} of titled players" xml:space="preserve">
     <value>타이틀 보유자의 {0}만 보유</value>
@@ -3651,6 +3666,9 @@
   </data>
   <data name="How many of your PUMBILITY peers hold it in their top 50" xml:space="preserve">
     <value>이 채보를 상위 50에 보유한 PUMBILITY 동료 수</value>
+  </data>
+  <data name="How many pools hold it" xml:space="preserve">
+    <value>이 차트를 보유한 풀의 수</value>
   </data>
   <data name="How March of Murlocs works" xml:space="preserve">
     <value>March of Murlocs 진행 방식</value>
@@ -3903,6 +3921,9 @@
   </data>
   <data name="in your communities" xml:space="preserve">
     <value>내 커뮤니티 소속</value>
+  </data>
+  <data name="In your Hardmode pool" xml:space="preserve">
+    <value>내 하드모드 풀에 있음</value>
   </data>
   <data name="In your pool #{0}" xml:space="preserve">
     <value>내 풀 #{0}</value>
@@ -4266,6 +4287,9 @@
   </data>
   <data name="Level" xml:space="preserve">
     <value>레벨</value>
+  </data>
+  <data name="Level 17 and below moves a lot. Only a player whose own fiftieth chart is worth less than one of these can hold one at all, so this folder is decided by a small group — expect the list to change substantially week to week as players join or their PUMBILITY climbs." xml:space="preserve">
+    <value>레벨 17 이하는 많이 변동합니다. 자신의 50번째 차트가 이 차트들보다 낮은 플레이어만 보유할 수 있어서, 이 폴더는 소수의 플레이어가 결정합니다. 플레이어가 늘거나 PUMBILITY가 오르면서 목록이 주마다 크게 바뀔 것으로 예상하세요.</value>
   </data>
   <data name="level 24+, first ever, any grade" xml:space="preserve">
     <value>레벨 24 이상, 사상 최초, 모든 등급</value>
@@ -5299,6 +5323,9 @@
   <data name="No — I want to permanently delete data." xml:space="preserve">
     <value>아니요 — 데이터를 영구히 삭제하겠습니다.</value>
   </data>
+  <data name="nobody" xml:space="preserve">
+    <value>없음</value>
+  </data>
   <data name="Nobody climbed a chart board this week." xml:space="preserve">
     <value>이번 주에는 채보 보드에서 상승한 플레이어가 없습니다.</value>
   </data>
@@ -5316,6 +5343,9 @@
   </data>
   <data name="Nobody is above the line on every chart — if you were, your level would climb and the line with it." xml:space="preserve">
     <value>모든 채보에서 선 위에 있는 사람은 없습니다 — 그렇다면 레벨이 올라가고 선도 함께 올라갑니다.</value>
+  </data>
+  <data name="Nobody is on this board yet — it fills in after the first weekly rebuild." xml:space="preserve">
+    <value>아직 이 보드에 아무도 없습니다. 첫 주간 재계산 후에 채워집니다.</value>
   </data>
   <data name="Nobody is on this chart board yet." xml:space="preserve">
     <value>아직 이 채보 보드에 아무도 없습니다.</value>
@@ -5542,6 +5572,9 @@
   <data name="Nothing here yet. Share what you know about this chart." xml:space="preserve">
     <value>아직 아무것도 없습니다. 이 채보에 대해 아는 것을 공유해 보세요.</value>
   </data>
+  <data name="Nothing in your Hardmode pool yet — every non-broken pass on a qualifying chart takes a slot." xml:space="preserve">
+    <value>아직 하드모드 풀에 아무것도 없습니다. 대상 차트에서 스테이지 브레이크가 아닌 클리어는 모두 한 자리를 차지합니다.</value>
+  </data>
   <data name="Nothing in your pool yet — every non-broken pass at level 10 or above takes a slot." xml:space="preserve">
     <value>아직 풀에 아무것도 없습니다 — 레벨 10 이상에서 스테이지 브레이크 없이 클리어한 기록은 모두 한 칸을 차지합니다.</value>
   </data>
@@ -5727,6 +5760,9 @@
   </data>
   <data name="Official Scores" xml:space="preserve">
     <value>공식 점수</value>
+  </data>
+  <data name="Official-board players. Their pools are rebuilt from the mirrored chart boards, which only exist at level 20 and up — so a board player's Hardmode pool is level-20-plus by construction." xml:space="preserve">
+    <value>공식 보드 플레이어입니다. 이들의 풀은 미러링한 차트별 보드에서 재구성되며, 그 보드는 레벨 20 이상에만 존재합니다. 따라서 보드 플레이어의 하드모드 풀은 구조적으로 레벨 20 이상입니다.</value>
   </data>
   <data name="Old" xml:space="preserve">
     <value>오래됨</value>
@@ -6727,6 +6763,9 @@
   <data name="priced base" xml:space="preserve">
     <value>책정 베이스</value>
   </data>
+  <data name="Pricing your records against this week's Hardmode charts." xml:space="preserve">
+    <value>이번 주 하드모드 차트로 내 기록을 계산하는 중입니다.</value>
+  </data>
   <data name="Prime" xml:space="preserve">
     <value>Prime</value>
   </data>
@@ -7054,6 +7093,9 @@
   <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
     <value>커뮤니티의 희귀한 PG, 큰 칭호, 최고 점수가 여기에 표시됩니다.</value>
   </data>
+  <data name="Rarest first" xml:space="preserve">
+    <value>희귀한 순</value>
+  </data>
   <data name="Rarest passes" xml:space="preserve">
     <value>가장 희귀한 클리어</value>
   </data>
@@ -7156,6 +7198,9 @@
   <data name="Reason (optional)" xml:space="preserve">
     <value>사유 (선택)</value>
   </data>
+  <data name="Rebuild Hardmode charts" xml:space="preserve">
+    <value>하드모드 차트 재계산</value>
+  </data>
   <data name="Rebuild Latest Sessions" xml:space="preserve">
     <value>최근 세션 재생성</value>
   </data>
@@ -7167,6 +7212,9 @@
   </data>
   <data name="Rebuild {0} Speed tier list" xml:space="preserve">
     <value>{0} 속도 티어 리스트 재생성</value>
+  </data>
+  <data name="Rebuilding the Hardmode charts, then every pool priced against them. It takes a few minutes." xml:space="preserve">
+    <value>하드모드 차트를 재계산하고, 그것으로 모든 풀을 다시 계산합니다. 몇 분 걸립니다.</value>
   </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>모든 플레이어의 최근 세션을 재생성하는 중입니다.</value>
@@ -7716,6 +7764,9 @@
   </data>
   <data name="Scored" xml:space="preserve">
     <value>점수 있음</value>
+  </data>
+  <data name="Scored, outside your 50" xml:space="preserve">
+    <value>점수 있음, 상위 50 밖</value>
   </data>
   <data name="Scores" xml:space="preserve">
     <value>점수</value>
@@ -8812,8 +8863,14 @@
   <data name="The Charts" xml:space="preserve">
     <value>채보 목록</value>
   </data>
+  <data name="The charts almost nobody holds in a PUMBILITY pool, priced the same way. The chart list is rebuilt on Sundays; standings update as players import." xml:space="preserve">
+    <value>PUMBILITY 풀에 거의 아무도 담지 않는 차트를 같은 방식으로 계산합니다. 차트 목록은 매주 일요일에 갱신되고, 순위는 가져올 때마다 업데이트됩니다.</value>
+  </data>
   <data name="the charts themselves" xml:space="preserve">
     <value>차트 자체</value>
+  </data>
+  <data name="The charts your Hardmode number is the sum of, banded by what each is worth to you." xml:space="preserve">
+    <value>내 하드모드 수치를 이루는 차트를, 각 차트가 나에게 갖는 가치로 묶었습니다.</value>
   </data>
   <data name="The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs." xml:space="preserve">
     <value>암호문은 브라우저에, 래핑된 키는 데이터베이스에, 마스터 키는 Key Vault에 있습니다. 복호화에는 세 가지 모두가 필요합니다 — 하나, 또는 둘이 유출되어도 아무것도 얻지 못합니다. 비밀번호는 데이터베이스나 로그에 절대 기록되지 않습니다.</value>
@@ -9010,6 +9067,9 @@
   <data name="The S17 pays Base(18) = {0} — a Single is priced one level up. Perfect Game is the plate bonus, not a grade: a 1,000,000 keeps SSS+’s ×{1} and adds +{2}." xml:space="preserve">
     <value>S17은 Base(18) = {0}로 계산됩니다 — 싱글은 한 레벨 위로 책정됩니다. Perfect Game은 등급이 아니라 플레이트 보너스입니다: 1,000,000도 SSS+의 ×{1}을 유지하고 +{2}를 더합니다.</value>
   </data>
+  <data name="The same ladders the Breakdown page draws, asked of your Hardmode pool instead of your whole record book." xml:space="preserve">
+    <value>분석 페이지가 그리는 것과 같은 래더를, 전체 기록이 아니라 하드모드 풀에 대해 계산합니다.</value>
+  </data>
   <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
     <value>같은 Perfect라도 콤보 전, 곡 시작 시점.</value>
   </data>
@@ -9037,6 +9097,9 @@
   <data name="The sum of your 50 best-rated charts." xml:space="preserve">
     <value>가장 높게 평가된 채보 50개의 합입니다.</value>
   </data>
+  <data name="The sum of your 50 best-rated Hardmode charts." xml:space="preserve">
+    <value>가장 높이 평가된 하드모드 차트 50개의 합계입니다.</value>
+  </data>
   <data name="The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep." xml:space="preserve">
     <value>공식 사이트에서 발견했지만 카탈로그에 없는 채보입니다. 채보를 추가한 뒤 해결을 누르세요 - 여전히 누락된 채보는 다음 수집 때 다시 표시됩니다.</value>
   </data>
@@ -9051,6 +9114,9 @@
   </data>
   <data name="the whole list" xml:space="preserve">
     <value>목록 전체</value>
+  </data>
+  <data name="Their Hardmode pool, priced by the PUMBILITY formula" xml:space="preserve">
+    <value>PUMBILITY 공식으로 계산한 하드모드 폀</value>
   </data>
   <data name="Their past seasons" xml:space="preserve">
     <value>이 플레이어의 지난 시즌</value>
@@ -9174,6 +9240,9 @@
   </data>
   <data name="This does not send anything." xml:space="preserve">
     <value>이 버튼은 아무것도 보내지 않습니다.</value>
+  </data>
+  <data name="This folder has nothing in the Hardmode list." xml:space="preserve">
+    <value>이 폴더에는 하드모드 목록에 포함된 차트가 없습니다.</value>
   </data>
   <data name="This gives {0} control of your PIUGame account." xml:space="preserve">
     <value>이렇게 하면 {0}이(가) 내 PIUGame 계정을 제어할 수 있게 됩니다.</value>
@@ -9414,6 +9483,9 @@
   </data>
   <data name="Titles you&apos;re working on" xml:space="preserve">
     <value>진행 중인 칭호</value>
+  </data>
+  <data name="Titles, on Hardmode" xml:space="preserve">
+    <value>하드모드 기준 칭호</value>
   </data>
   <data name="To" xml:space="preserve">
     <value>변환</value>
@@ -10258,6 +10330,9 @@
   <data name="Which charts are honest for their level — and which lie." xml:space="preserve">
     <value>어떤 채보가 레벨에 정직한지 — 어떤 채보가 거짓말하는지.</value>
   </data>
+  <data name="Which charts qualify" xml:space="preserve">
+    <value>대상이 되는 차트</value>
+  </data>
   <data name="which level’s 900,000 is worth the same" xml:space="preserve">
     <value>어느 레벨의 900,000이 같은 가치인가</value>
   </data>
@@ -10705,6 +10780,15 @@
   <data name="Your groups, your region, and the world." xml:space="preserve">
     <value>나의 그룹, 나의 지역, 그리고 전 세계까지.</value>
   </data>
+  <data name="Your Hardmode pool" xml:space="preserve">
+    <value>내 하드모드 풀</value>
+  </data>
+  <data name="Your Hardmode pool holds {0} of 50. Until it's full, every qualifying chart you play counts whole — there's no bar to beat yet." xml:space="preserve">
+    <value>하드모드 풀은 50개 중 {0}개입니다. 다 채우기 전까지는 대상 차트를 플레이할 때마다 전부 반영됩니다. 아직 넘어야 할 기준은 없습니다.</value>
+  </data>
+  <data name="Your Hardmode pool is full. Nothing counts until it beats your fiftieth — a qualifying chart worth more replaces it and you keep the difference." xml:space="preserve">
+    <value>하드모드 풀이 꽉 찼습니다. 50번째를 넘어야 반영됩니다. 대상 차트에서 더 높은 가치를 얻으면 교체되고 그 차이만큼 올라갑니다.</value>
+  </data>
   <data name="Your import didn't finish" xml:space="preserve">
     <value>가져오기가 끝나지 않았습니다</value>
   </data>
@@ -10978,6 +11062,9 @@
   <data name="{0} **+{1}** to {2} · #{3} → **#{4}**" xml:space="preserve">
     <value>{0} **+{1}**（{2}）· #{3} → **#{4}**</value>
   </data>
+  <data name="{0} / 50" xml:space="preserve">
+    <value>{0} / 50</value>
+  </data>
   <data name="{0} / {1} charts rated" xml:space="preserve">
     <value>{0} / {1} 채보 평가됨</value>
   </data>
@@ -11118,6 +11205,9 @@
   </data>
   <data name="{0} charts · {1} downtime" xml:space="preserve">
     <value>채보 {0}개 · 휴식 {1}</value>
+  </data>
+  <data name="{0} charts — the rarest slice of every folder. The ones missing from your pool come first: those are the visits worth making." xml:space="preserve">
+    <value>{0}개 차트 — 각 폴더에서 가장 희귀한 부분입니다. 내 풀에 없는 차트가 먼저 나옵니다. 거기가 가볼 만한 차트입니다.</value>
   </data>
   <data name="{0} charts, chosen for being nothing like this one." xml:space="preserve">
     <value>이 채보와 전혀 닮지 않았다는 이유로 뽑힌 채보 {0}개.</value>
@@ -11338,6 +11428,9 @@
   <data name="{0} NPS" xml:space="preserve">
     <value>{0} NPS</value>
   </data>
+  <data name="{0} of 50 held" xml:space="preserve">
+    <value>50개 중 {0}개</value>
+  </data>
   <data name="{0} of all Phoenix titles collected" xml:space="preserve">
     <value>전체 피닉스 타이틀의 {0} 수집</value>
   </data>
@@ -11370,6 +11463,9 @@
   </data>
   <data name="{0} of {1} charts ({2}%)" xml:space="preserve">
     <value>{1}개 채보 중 {0}개 ({2}%)</value>
+  </data>
+  <data name="{0} of {1} charts in this folder qualify" xml:space="preserve">
+    <value>이 폴더의 {1}개 차트 중 {0}개가 대상</value>
   </data>
   <data name="{0} of {1} charts moved." xml:space="preserve">
     <value>{1}개 채보 중 {0}개의 난이도가 바뀌었습니다.</value>
