@@ -89,7 +89,7 @@
                                 <th>@L["Song Name"]</th>
                                 <th>@L["Chart"]</th>
                                 <th>@L["My Score"]</th>
-                                <th class="pmb-r" title="@HeldTitle">@L["Held"]</th>
+                                <th class="pmb-r" title="@HeldTitle">@L["held"]</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -115,7 +115,7 @@
                                         }
                                         else
                                         {
-                                            <span class="hmd-none">@L["no score yet"]</span>
+                                            <span class="hmd-none">@L["No Score Yet"]</span>
                                         }
                                     </td>
                                     <td class="pmb-r pmb-num @(row.Holders == 0 ? null : "pmb-muted")">
@@ -272,8 +272,8 @@
     private string StateWord(HardmodeState state) => state switch
     {
         HardmodeState.InPool => L["In your Hardmode pool"],
-        HardmodeState.OutsidePool => L["Scored, but outside your 50"],
-        _ => L["no score yet"]
+        HardmodeState.OutsidePool => L["Scored, outside your 50"],
+        _ => L["No Score Yet"]
     };
 
     private RenderFragment CardBody(Row row) => @<text>

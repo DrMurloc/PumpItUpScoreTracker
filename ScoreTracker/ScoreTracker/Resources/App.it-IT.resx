@@ -3480,6 +3480,15 @@
   <data name="Hardest {0}s:" xml:space="preserve">
     <value>{0} s più difficili:</value>
   </data>
+  <data name="Hardmode" xml:space="preserve">
+    <value>Hardmode</value>
+  </data>
+  <data name="Hardmode charts held" xml:space="preserve">
+    <value>Chart Hardmode nel tuo pool</value>
+  </data>
+  <data name="Hardmode leaderboard" xml:space="preserve">
+    <value>Classifica Hardmode</value>
+  </data>
   <data name="Has errors" xml:space="preserve">
     <value>Contiene errori</value>
   </data>
@@ -3494,6 +3503,12 @@
   </data>
   <data name="held" xml:space="preserve">
     <value>mantenuto</value>
+  </data>
+  <data name="held by nobody" xml:space="preserve">
+    <value>nessuno lo tiene</value>
+  </data>
+  <data name="held by {0}" xml:space="preserve">
+    <value>{0} lo tengono</value>
   </data>
   <data name="held by {0} of titled players" xml:space="preserve">
     <value>posseduto dal {0} dei giocatori con titoli</value>
@@ -3647,6 +3662,9 @@
   </data>
   <data name="How many of your PUMBILITY peers hold it in their top 50" xml:space="preserve">
     <value>Quanti dei tuoi pari PUMBILITY la tengono nella loro top 50</value>
+  </data>
+  <data name="How many pools hold it" xml:space="preserve">
+    <value>Quanti pool lo tengono</value>
   </data>
   <data name="How March of Murlocs works" xml:space="preserve">
     <value>Come funziona March of Murlocs</value>
@@ -3899,6 +3917,9 @@
   </data>
   <data name="in your communities" xml:space="preserve">
     <value>nelle tue comunità</value>
+  </data>
+  <data name="In your Hardmode pool" xml:space="preserve">
+    <value>Nel tuo pool Hardmode</value>
   </data>
   <data name="In your pool #{0}" xml:space="preserve">
     <value>Nel tuo insieme #{0}</value>
@@ -4264,6 +4285,9 @@
   <data name="Level" xml:space="preserve">
     <value>Livello</value>
     <comment>Level</comment>
+  </data>
+  <data name="Level 17 and below moves a lot. Only a player whose own fiftieth chart is worth less than one of these can hold one at all, so this folder is decided by a small group — expect the list to change substantially week to week as players join or their PUMBILITY climbs." xml:space="preserve">
+    <value>Il livello 17 e inferiori si muovono molto. Solo un giocatore il cui cinquantesimo chart valga meno di uno di questi può tenerne uno, quindi questa cartella è decisa da un gruppo piccolo: aspettati che la lista cambi molto di settimana in settimana man mano che arrivano giocatori o sale il loro PUMBILITY.</value>
   </data>
   <data name="level 24+, first ever, any grade" xml:space="preserve">
     <value>livello 24+, primo nella storia, qualsiasi grade</value>
@@ -5299,6 +5323,9 @@
   <data name="No — I want to permanently delete data." xml:space="preserve">
     <value>No — voglio eliminare i dati in modo definitivo.</value>
   </data>
+  <data name="nobody" xml:space="preserve">
+    <value>nessuno</value>
+  </data>
   <data name="Nobody climbed a chart board this week." xml:space="preserve">
     <value>Nessuno è salito in una classifica dei chart questa settimana.</value>
   </data>
@@ -5316,6 +5343,9 @@
   </data>
   <data name="Nobody is above the line on every chart — if you were, your level would climb and the line with it." xml:space="preserve">
     <value>Nessuno è sopra la linea su ogni chart — se lo fossi, il tuo livello salirebbe e la linea con lui.</value>
+  </data>
+  <data name="Nobody is on this board yet — it fills in after the first weekly rebuild." xml:space="preserve">
+    <value>Non c’è ancora nessuno in questa classifica: si riempie dopo la prima ricostruzione settimanale.</value>
   </data>
   <data name="Nobody is on this chart board yet." xml:space="preserve">
     <value>Nessuno è ancora in questa classifica.</value>
@@ -5543,6 +5573,9 @@
   <data name="Nothing here yet. Share what you know about this chart." xml:space="preserve">
     <value>Ancora niente. Condividi quello che sai su questo chart.</value>
   </data>
+  <data name="Nothing in your Hardmode pool yet — every non-broken pass on a qualifying chart takes a slot." xml:space="preserve">
+    <value>Ancora niente nel tuo pool Hardmode: ogni passaggio non rotto su un chart che qualifica occupa uno slot.</value>
+  </data>
   <data name="Nothing in your pool yet — every non-broken pass at level 10 or above takes a slot." xml:space="preserve">
     <value>Ancora niente nel tuo insieme: ogni clear non rotto di livello 10 o superiore occupa un posto.</value>
   </data>
@@ -5728,6 +5761,9 @@
   </data>
   <data name="Official Scores" xml:space="preserve">
     <value>Punteggi ufficiali</value>
+  </data>
+  <data name="Official-board players. Their pools are rebuilt from the mirrored chart boards, which only exist at level 20 and up — so a board player's Hardmode pool is level-20-plus by construction." xml:space="preserve">
+    <value>Giocatori delle classifiche ufficiali. I loro pool sono ricostruiti dalle classifiche per chart che replichiamo, che esistono solo dal livello 20 in su: quindi il pool Hardmode di un giocatore da classifica è di livello 20 o più per costruzione.</value>
   </data>
   <data name="Old" xml:space="preserve">
     <value>Vecchio</value>
@@ -6742,6 +6778,9 @@
   <data name="priced base" xml:space="preserve">
     <value>base valutata</value>
   </data>
+  <data name="Pricing your records against this week's Hardmode charts." xml:space="preserve">
+    <value>Valutazione dei tuoi record sui chart Hardmode di questa settimana.</value>
+  </data>
   <data name="Prime" xml:space="preserve">
     <value>Prime</value>
   </data>
@@ -7071,6 +7110,9 @@
   <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
     <value>Qui compaiono PG rari, grandi titoli e migliori punteggi dalle tue comunità.</value>
   </data>
+  <data name="Rarest first" xml:space="preserve">
+    <value>I più rari prima</value>
+  </data>
   <data name="Rarest passes" xml:space="preserve">
     <value>Pass più rari</value>
   </data>
@@ -7174,6 +7216,9 @@
   <data name="Reason (optional)" xml:space="preserve">
     <value>Motivo (facoltativo)</value>
   </data>
+  <data name="Rebuild Hardmode charts" xml:space="preserve">
+    <value>Ricostruisci i chart Hardmode</value>
+  </data>
   <data name="Rebuild Latest Sessions" xml:space="preserve">
     <value>Ricostruisci le ultime sessioni</value>
   </data>
@@ -7185,6 +7230,9 @@
   </data>
   <data name="Rebuild {0} Speed tier list" xml:space="preserve">
     <value>Ricostruire la tier list Velocità di {0}</value>
+  </data>
+  <data name="Rebuilding the Hardmode charts, then every pool priced against them. It takes a few minutes." xml:space="preserve">
+    <value>Ricostruzione dei chart Hardmode, poi di ogni pool valutato su di essi. Ci vogliono alcuni minuti.</value>
   </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>Ricostruzione dell'ultima sessione di ogni giocatore.</value>
@@ -7742,6 +7790,9 @@
   </data>
   <data name="Scored" xml:space="preserve">
     <value>Con punteggio</value>
+  </data>
+  <data name="Scored, outside your 50" xml:space="preserve">
+    <value>Con punteggio, fuori dal tuo 50</value>
   </data>
   <data name="Scores" xml:space="preserve">
     <value>Punteggi</value>
@@ -8846,8 +8897,14 @@
   <data name="The Charts" xml:space="preserve">
     <value>Le chart</value>
   </data>
+  <data name="The charts almost nobody holds in a PUMBILITY pool, priced the same way. Rebuilt every Sunday after the official import." xml:space="preserve">
+    <value>I chart che quasi nessuno tiene in un pool PUMBILITY, valutati allo stesso modo. Ricostruiti ogni domenica dopo l’importazione ufficiale.</value>
+  </data>
   <data name="the charts themselves" xml:space="preserve">
     <value>i tracciati stessi</value>
+  </data>
+  <data name="The charts your Hardmode number is the sum of, banded by what each is worth to you." xml:space="preserve">
+    <value>I chart di cui il tuo numero Hardmode è la somma, raggruppati per quanto vale ciascuno per te.</value>
   </data>
   <data name="The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs." xml:space="preserve">
     <value>Il testo cifrato risiede nel tuo browser; la chiave avvolta nel nostro database; la chiave principale in Key Vault. La decifratura richiede tutte e tre: un dump di una, o di due, non rivela nulla. Nessuna password viene mai scritta nel nostro database o nei log.</value>
@@ -9038,6 +9095,9 @@
   <data name="The S17 pays Base(18) = {0} — a Single is priced one level up. Perfect Game is the plate bonus, not a grade: a 1,000,000 keeps SSS+’s ×{1} and adds +{2}." xml:space="preserve">
     <value>L'S17 paga Base(18) = {0} — un Single è valutato un livello più su. Perfect Game è il bonus di plate, non un grado: un 1.000.000 mantiene il ×{1} di SSS+ e aggiunge +{2}.</value>
   </data>
+  <data name="The same ladders the Breakdown page draws, asked of your Hardmode pool instead of your whole record book." xml:space="preserve">
+    <value>Le stesse scale che disegna la pagina Dettaglio, chieste al tuo pool Hardmode invece che a tutto il tuo registro.</value>
+  </data>
   <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
     <value>Lo stesso Perfect all'inizio della canzone, prima di qualsiasi combo.</value>
   </data>
@@ -9065,6 +9125,9 @@
   <data name="The sum of your 50 best-rated charts." xml:space="preserve">
     <value>La somma delle tue 50 chart con il punteggio più alto.</value>
   </data>
+  <data name="The sum of your 50 best-rated Hardmode charts." xml:space="preserve">
+    <value>La somma dei tuoi 50 chart Hardmode meglio valutati.</value>
+  </data>
   <data name="The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep." xml:space="preserve">
     <value>La raccolta li ha visti sul sito ufficiale ma nessun chart del catalogo corrisponde. Aggiungi il chart e poi risolvi: un chart ancora mancante ricomparirà alla prossima raccolta.</value>
   </data>
@@ -9079,6 +9142,9 @@
   </data>
   <data name="the whole list" xml:space="preserve">
     <value>tutta la lista</value>
+  </data>
+  <data name="Their full PUMBILITY" xml:space="preserve">
+    <value>Il loro PUMBILITY completo</value>
   </data>
   <data name="Their past seasons" xml:space="preserve">
     <value>Le sue stagioni passate</value>
@@ -9202,6 +9268,9 @@
   </data>
   <data name="This does not send anything." xml:space="preserve">
     <value>Questo non invia niente.</value>
+  </data>
+  <data name="This folder has nothing in the Hardmode list." xml:space="preserve">
+    <value>Questa cartella non ha nulla nella lista Hardmode.</value>
   </data>
   <data name="This gives {0} control of your PIUGame account." xml:space="preserve">
     <value>Questo dà a {0} il controllo del tuo account PIUGame.</value>
@@ -9442,6 +9511,9 @@
   </data>
   <data name="Titles you&apos;re working on" xml:space="preserve">
     <value>Titoli in corso</value>
+  </data>
+  <data name="Titles, on Hardmode" xml:space="preserve">
+    <value>Titoli, in Hardmode</value>
   </data>
   <data name="To" xml:space="preserve">
     <value>A</value>
@@ -10288,6 +10360,9 @@
   <data name="Which charts are honest for their level — and which lie." xml:space="preserve">
     <value>Quali chart sono onesti per il loro livello — e quali mentono.</value>
   </data>
+  <data name="Which charts qualify" xml:space="preserve">
+    <value>Quali chart qualificano</value>
+  </data>
   <data name="which level’s 900,000 is worth the same" xml:space="preserve">
     <value>il 900.000 di quale livello vale lo stesso</value>
   </data>
@@ -10737,6 +10812,15 @@
   <data name="Your groups, your region, and the world." xml:space="preserve">
     <value>I tuoi gruppi, la tua regione e il mondo.</value>
   </data>
+  <data name="Your Hardmode pool" xml:space="preserve">
+    <value>Il tuo pool Hardmode</value>
+  </data>
+  <data name="Your Hardmode pool holds {0} of 50. Until it's full, every qualifying chart you play counts whole — there's no bar to beat yet." xml:space="preserve">
+    <value>Il tuo pool Hardmode contiene {0} su 50. Finché non è pieno, ogni chart che qualifica e giochi conta per intero: non c’è ancora un minimo da battere.</value>
+  </data>
+  <data name="Your Hardmode pool is full. Nothing counts until it beats your fiftieth — a qualifying chart worth more replaces it and you keep the difference." xml:space="preserve">
+    <value>Il tuo pool Hardmode è pieno. Niente conta finché non batte il tuo cinquantesimo: un chart che qualifica e vale di più lo sostituisce e tu tieni la differenza.</value>
+  </data>
   <data name="Your import didn't finish" xml:space="preserve">
     <value>La tua importazione non è terminata</value>
   </data>
@@ -11010,6 +11094,9 @@
   <data name="{0} **+{1}** to {2} · #{3} → **#{4}**" xml:space="preserve">
     <value>{0} **+{1}** fino a {2} · #{3} → **#{4}**</value>
   </data>
+  <data name="{0} / 50" xml:space="preserve">
+    <value>{0} / 50</value>
+  </data>
   <data name="{0} / {1} charts rated" xml:space="preserve">
     <value>{0} / {1} chart valutati</value>
   </data>
@@ -11150,6 +11237,9 @@
   </data>
   <data name="{0} charts · {1} downtime" xml:space="preserve">
     <value>{0} chart · {1} di pausa</value>
+  </data>
+  <data name="{0} charts — the rarest slice of every folder. The ones missing from your pool come first: those are the visits worth making." xml:space="preserve">
+    <value>{0} chart: la fetta più rara di ogni cartella. Quelli che mancano al tuo pool vengono prima: sono le visite che valgono.</value>
   </data>
   <data name="{0} charts, chosen for being nothing like this one." xml:space="preserve">
     <value>{0} chart, scelte per non somigliare per niente a questa.</value>
@@ -11367,6 +11457,9 @@
   <data name="{0} NPS" xml:space="preserve">
     <value>{0} NPS</value>
   </data>
+  <data name="{0} of 50 held" xml:space="preserve">
+    <value>{0} su 50 tenuti</value>
+  </data>
   <data name="{0} of all Phoenix titles collected" xml:space="preserve">
     <value>{0} di tutti i titoli Phoenix</value>
   </data>
@@ -11399,6 +11492,9 @@
   </data>
   <data name="{0} of {1} charts ({2}%)" xml:space="preserve">
     <value>{0} di {1} chart ({2}%)</value>
+  </data>
+  <data name="{0} of {1} charts in this folder qualify" xml:space="preserve">
+    <value>{0} chart su {1} di questa cartella qualificano</value>
   </data>
   <data name="{0} of {1} charts moved." xml:space="preserve">
     <value>{0} chart su {1} hanno cambiato livello.</value>

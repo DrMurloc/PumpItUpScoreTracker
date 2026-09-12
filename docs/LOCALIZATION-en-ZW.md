@@ -225,6 +225,26 @@ everywhere. `Roglub` (gain) and `Murp` (plate) come from the tables above.
 | all | Ulbog | Distinct from `Olga` (every). |
 | projected | Mrglrgo | Recovered from the existing `Projected gains` → `Mrglrgo roglub`; lowercase mid-sentence. |
 
+### The Hardmode batch (2026-09-12)
+
+Coined for the Hardmode board ([hardmode-leaderboard.md](design/hardmode-leaderboard.md)). Note
+that **Hardmode is NOT a protected proper noun** — it is not all-caps and it is not on the list in
+"Acronyms and brand names stay English", so it takes a Murloc word like any other feature name.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| Hardmode | Mrglmorg | `mrgl` (hard) + `morg` (type/mode), compounded the way `Grglmrg` (GameTag) is. |
+| pool (a top-50) | grogmurgl | `grog` (list) + `murgl` (chart) — the fifty charts, not a swimming pool. |
+| hold / held | grogro | The chart a pool keeps. Distinct from `grabmrp` (include). |
+| qualify / qualifying | grabmrp | Reuses the download batch's `grabmrp` (include): a qualifying chart is one the list includes. |
+| rare / rarest | mrrrglmurp | Built on the `Mrrrgl` (most) intensity form. |
+| folder | grogblub | Reuses the existing crew word's shape; a folder is a gathering of charts. |
+| week / weekly | murm | Coined here; distinct from `Murgromurm` (Sunday). |
+| Sunday | Murgromurm | `murgro` (fifty → the numeral form, reused as the ordinal marker) + `murm` (week). |
+| import | grabgru | `grab` + `gru` (data). |
+| worth / value (verb) | gogl | Reuses the calculator batch's `gogl` — Murloc does not mark price from worth. |
+| group | grogblub | One word with folder, as Tool/Tools is one word. |
+
 ### The PUMBILITY calculator batch (2026-08-16)
 
 Coined for `/PumbilityCalculator/{mix}` ([pumbility-calculator.md](design/pumbility-calculator.md)) and
