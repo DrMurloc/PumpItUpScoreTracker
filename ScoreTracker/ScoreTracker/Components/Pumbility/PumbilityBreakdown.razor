@@ -14,7 +14,6 @@
 @namespace ScoreTracker.Web.Components
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
-@inject IUiSettingsAccessor UiSettings
 
 @* Where the number comes from: the charts, the scores on them, and the plates. The split is
    exact rather than modelled -- a pool entry is Base(level) x grade x plate and nothing else,
@@ -219,26 +218,18 @@
 
     [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
 
-    /// <summary>
-    ///     The band the viewer picked, remembered across visits. One key rather than one per pool:
-    ///     a band belongs to a ladder, and a saved name that does not resolve on the ladder in scope
-    ///     is simply dropped back to their own — which is what switching pools does to it.
-    /// </summary>
-    public const string BandSettingKey = "Pumbility__CompareBand";
-
     private PumbilityCohortRecord? _cohort;
 
-    /// <summary>Null reads the viewer's own band, with the thin-level flip the query applies (D68).</summary>
+    /// <summary>
+    ///     The band the viewer picked, for this visit only. Deliberately NOT remembered (owner,
+    ///     2026-09-12): the card describes where you stand, so it opens on where you stand — your
+    ///     own title, or the gem around a level too thin to read. A remembered band quietly turned
+    ///     that into somebody else's, and the page gave no sign it was answering an old question.
+    /// </summary>
     private Name? _band;
 
     /// <summary>The scope the cohort was read for; the frame hands down a new record on every pool change.</summary>
     private (MixEnum Mix, ChartType? Pool, string Band)? _loaded;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var saved = await UiSettings.GetSetting(BandSettingKey);
-        if (!string.IsNullOrWhiteSpace(saved)) _band = Name.From(saved);
-    }
 
     protected override Task OnParametersSetAsync()
     {
@@ -247,8 +238,8 @@
 
     /// <summary>
     ///     The cohort for the pool in scope and the band chosen for it. A band that does not resolve
-    ///     on this ladder — a [P.B] gem still remembered from the merged pool, a Phoenix 2 rung on
-    ///     Phoenix 1 — reads as no choice at all rather than as an empty cohort.
+    ///     on this ladder — a [P.B] gem still selected when the pool switches to Singles — reads as
+    ///     no choice at all rather than as an empty cohort, which lands back on the viewer's own.
     /// </summary>
     private async Task Load()
     {
@@ -269,11 +260,10 @@
         await SetBand(string.IsNullOrWhiteSpace(picked) ? null : Name.From(picked));
     }
 
-    private async Task SetBand(Name? band)
+    private Task SetBand(Name? band)
     {
         _band = band;
-        await UiSettings.SetSetting(BandSettingKey, band?.ToString() ?? string.Empty);
-        await Load();
+        return Load();
     }
 
     /// <summary>The ladder a pool reads: the merged one, or the [S] / [D] rungs.</summary>
@@ -284,7 +274,7 @@
         _ => PumbilityPool.Total
     };
 
-    /// <summary>Whether a remembered band is a band of the ladder in scope at all.</summary>
+    /// <summary>Whether a selected band is a band of the ladder in scope at all.</summary>
     private bool Resolves(Name? band) =>
         band is { } name && BandOptions.Any(group => group.Bands.Any(o => o.Value == name.ToString()));
 

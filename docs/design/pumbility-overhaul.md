@@ -410,9 +410,16 @@ is no separate *mine* entry, because picking your own band back is picking it, a
 since clearing to the gem is one of the lines in the list and a second way to do it only asks which one is which
 (owner, on the PR). Inside a gem's group the heading already says which gem it is, so the lines read **All
 Levels**, **Level 1**, **Level 2** rather than spelling the gem out six times — **except the selected one, which
-spells its band out**, a closed selector showing that line and nothing else. The choice is remembered as
-`Pumbility__CompareBand`, and a band that is not a rung of the ladder in scope — a gem still remembered from the
-merged pool, a Phoenix 2 rung on Phoenix 1 — reads as no choice rather than as an empty cohort.
+spells its band out**, a closed selector showing that line and nothing else.
+
+**The choice lasts the visit and no longer** (owner, 2026-09-12: *"I just realized the 'compared against'
+dropdown is persisting. Please make that not persist. it should always default to your personal title/level
+(with fallback if level is too small on cohorts)"*). The card is a description of where you stand, so it opens
+on where you stand — your own rung, or the gem around a level too thin to read. A remembered band quietly made
+it somebody else's, with nothing on the page to say the answer was to an old question. Nothing is stored, which
+also retires the question of what a stored band means on another ladder: a band still selected when the pool
+switches — a [P.B] gem on the singles ladder — reads as no choice rather than as an empty cohort, and lands
+back on your own.
 
 **Where your scores sit (D69, round fourteen).** The card's archetype section, under the band line and beside the
 split bar — **the combined pool alone**, for the same reason the split bar is: a singles or doubles fifty re-bands
@@ -2091,7 +2098,7 @@ board side is the mirror's sealed snapshot.
 | **Ports** | `IPlayerStatsReader.GetPlayersInPoolBand(mix, pool, floor, ceiling)`, one method over `SkillRating` / `SinglesRating` / `DoublesRating`, beside the per-type window the peers keep; the title port answers Phoenix 1's cohort off `UserHighestTitle`, and the viewer's own title beside it; the board port answers the rows of a named PUMBILITY board inside a pool range, official rows only, carrying the snapshot's as-of, and only the players no account claims — a private link included, since a band is a census and anyone with an account is already in the ladder's own read (D61) |
 | **OfficialMirror** | The merged fifty a board player is banded on: both types' rows priced, merged, the top fifty taken, and checked against the combined board's own number at the 270 tolerance D60 already sets. The per-type rebuilds are untouched |
 | **PlayerProgress** | `GetPumbilityTitleCohortQuery(mix, pool, band?)` answers `PumbilityCohortRecord` — the band's name, how many hold it, how many of those the board is the only record of, the spread, the split for the combined pool, and the board's as-of. `PumbilityCohortCache` keys on mix, pool and band rather than on the viewer, because a cohort is the same for everyone reading it, and holds the aggregate rather than the pools |
-| **Web** | `PumbilityBreakdown` reads the cohort instead of the compare record; `LevelSpreadChart` takes one spread and draws a tile per chart type, side by side on one scale, in the card's own `--chart-singles` / `--chart-doubles`; a band line above both comparison sections carries the band, its count and the selector — starting on the band that was read rather than on a "mine" entry and with no clear button beside it, any rung selectable, a gem's levels reading as All Levels / Level 1 under the gem's own heading and the selected line spelling its band out — remembered as `Pumbility__CompareBand`, and a band that does not resolve on the ladder in scope is dropped rather than sent |
+| **Web** | `PumbilityBreakdown` reads the cohort instead of the compare record; `LevelSpreadChart` takes one spread and draws a tile per chart type, side by side on one scale, in the card's own `--chart-singles` / `--chart-doubles`; a band line above both comparison sections carries the band, its count and the selector — starting on the band that was read rather than on a "mine" entry and with no clear button beside it, any rung selectable, a gem's levels reading as All Levels / Level 1 under the gem's own heading and the selected line spelling its band out — **never remembered** (D69's round: the card opens on your own band every visit), and a band that does not resolve on the ladder in scope is dropped rather than sent |
 | **Retired** | `GetPumbilityPoolCompareQuery`, `PumbilityPoolCompareRecord`, `AverageSplit` and its cache slice. Play's peers are untouched |
 | **Localization** | The band line and its count, the selector and its clear, and the section's caption |
 
@@ -2122,6 +2129,12 @@ already computed and thrown away inside `PumbilityPeerPools.Build`, which D68's 
 | **Theming** | `MixThemes` emits `--ptype-1`…`--ptype-5` off the constants `PlayerTypeHex` already returns. A group of its own rather than the `--plate-*` it borrows from: an archetype is not a plate, and a plate re-colour must not move it |
 | **Web** | `ArchetypeSpectrum` in `Components/Pumbility/`, rendered from `PumbilityBreakdown` as a `.pmb-wpc-sub` under the band line. Five segments sized by share, the chip's short form inside any wide enough, the counts beneath, a diamond for the viewer. HTML and CSS, no script — positions are percentages and the glyphs keep their pixel sizes |
 | **Localization** | The section heading and caption, the legend's five names with their grade, and the one line under the spectrum |
+
+**The band selector forgets.** D68 remembered the viewer's choice in `Pumbility__CompareBand`; it no longer
+stores anything (owner, 2026-09-12). `PumbilityBreakdown` drops the setting key, the `OnInitializedAsync` read,
+the write in `SetBand` and its `IUiSettingsAccessor` injection — the field lives for the visit. The resolve check
+stays and changes meaning rather than going: it now catches a band selected on one ladder when the pool switches
+to another, instead of one remembered from a previous visit.
 
 **Copy rule, ratcheted by review rather than by a test.** Nothing in this section may order the archetypes:
 no *ahead of*, *above*, *higher*, *top* or *better* (D69). The line states the band and the share holding it.

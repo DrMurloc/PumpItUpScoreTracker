@@ -229,12 +229,6 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         }),
         split, asOf);
 
-    private void RememberedBand(string? saved = null)
-    {
-        UiSettings.Setup(s => s.GetSetting(PumbilityBreakdown.BandSettingKey, It.IsAny<CancellationToken>(),
-            It.IsAny<Guid?>())).ReturnsAsync(saved);
-    }
-
     private IRenderedComponent<PumbilityBreakdown> Card(PumbilityPageRecord page,
         IReadOnlyDictionary<Guid, Chart> charts) =>
         RenderComponent<PumbilityBreakdown>(p => p
@@ -296,97 +290,69 @@ public sealed class PumbilityComponentTests : ComponentTestBase
     }
 
     [Fact]
-    public async Task PickingABandReadsThatOneAndRemembersIt()
+    public async Task PickingABandReadsThatOneAndNeverWritesItDown()
     {
         SignIn();
-        RememberedBand();
         var fixture = Page(poolSize: 50);
-        var charts = fixture.Charts();
         var page = ((PumbilityPageRecord)fixture) with { Mix = MixEnum.Phoenix2 };
         var asked = new List<Name?>();
         Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
             .Callback((object q, CancellationToken _) => asked.Add(((GetPumbilityTitleCohortQuery)q).Band))
             .ReturnsAsync(Cohort(null));
 
-        var cut = Card(page, charts);
+        var cut = Card(page, fixture.Charts());
         cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=cohort-select]")));
         await cut.Find("[data-testid=cohort-select]").ChangeAsync(new ChangeEventArgs { Value = "[P.B] BRONZE" });
 
         Assert.Equal(new Name?[] { null, Name.From("[P.B] BRONZE") }, asked);
-        UiSettings.Verify(s => s.SetSetting(PumbilityBreakdown.BandSettingKey, "[P.B] BRONZE",
-            It.IsAny<CancellationToken>()), Times.Once);
+        // The choice lasts the visit and no longer (owner, 2026-09-12). Nothing is stored, so
+        // nothing has to be read back, validated against the ladder in scope, or invalidated.
+        UiSettings.Verify(s => s.SetSetting(It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        UiSettings.Verify(s => s.GetSetting(It.IsAny<string>(), It.IsAny<CancellationToken>(),
+            It.IsAny<Guid?>()), Times.Never);
     }
 
-
     [Fact]
-    public void TheSelectorStartsOnTheBandThatWasReadAndOffersNoEntryForYourOwn()
+    public void TheCardOpensOnYourOwnBandEveryVisit()
     {
+        // It describes where you stand, so it opens on where you stand — the query's own answer,
+        // gem-flipped when the level is too thin to read (D68). A second visit is a second null.
         SignIn();
-        RememberedBand();
         var fixture = Page(poolSize: 50);
-        var charts = fixture.Charts();
         var page = ((PumbilityPageRecord)fixture) with { Mix = MixEnum.Phoenix2 };
-        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Cohort(null));
-
-        var cut = Card(page, charts);
-
-        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=cohort-select]")));
-        var options = cut.Find("[data-testid=cohort-select]").QuerySelectorAll("option");
-        // Every option is a band: picking your own back IS picking it, so there is no "mine" entry.
-        Assert.All(options, o => Assert.NotEqual(string.Empty, o.GetAttribute("value")));
-        var selected = Assert.Single(options, o => o.HasAttribute("selected"));
-        Assert.Equal(DiamondLevel, selected.GetAttribute("value"));
-        // And it spells its band out, because a closed select shows that line and nothing else.
-        Assert.Equal(DiamondLevel, selected.TextContent.Trim());
-    }
-
-    [Fact]
-    public void AGemsLevelsReadAsLevelNumbersUnderTheGemsOwnName()
-    {
-        SignIn();
-        RememberedBand();
-        var fixture = Page(poolSize: 50);
-        var charts = fixture.Charts();
-        var page = ((PumbilityPageRecord)fixture) with { Mix = MixEnum.Phoenix2 };
-        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Cohort(null));
-
-        var cut = Card(page, charts);
-
-        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=cohort-select]")));
-        var diamond = Assert.Single(cut.Find("[data-testid=cohort-select]").QuerySelectorAll("optgroup"),
-            g => g.GetAttribute("label") == "[P.B] DIAMOND");
-        // The group heading says which gem it is, so its lines never spell it out again — except the
-        // selected one, which is the only line a closed select shows.
-        Assert.Equal(new[] { "All Levels", "Level 1", DiamondLevel, "Level 3", "Level 4", "Level 5" },
-            diamond.QuerySelectorAll("option").Select(o => o.TextContent.Trim()));
-        Assert.Equal(DiamondLevel, diamond.QuerySelectorAll("option")[2].GetAttribute("value"));
-        // The capstone is a gem with no levels inside it, so it lists one line and not two.
-        var abyss = Assert.Single(cut.Find("[data-testid=cohort-select]").QuerySelectorAll("optgroup"),
-            g => g.GetAttribute("label") == "ABYSS ABSOLUTE");
-        Assert.Equal(new[] { "All Levels" }, abyss.QuerySelectorAll("option").Select(o => o.TextContent.Trim()));
-    }
-
-    [Fact]
-    public void ARememberedBandFromAnotherLadderReadsAsNoChoiceAtAll()
-    {
-        // A [P.B] gem remembered from the merged pool is not a rung of the singles ladder, so it is
-        // dropped rather than sent to a query that could only answer nothing for it.
-        SignIn();
-        RememberedBand("[P.B] DIAMOND");
-        var fixture = Page(poolSize: 50);
-        var charts = fixture.Charts();
-        var page = ((PumbilityPageRecord)fixture) with { Mix = MixEnum.Phoenix2, Pool_ = ChartType.Single };
         var asked = new List<Name?>();
         Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
             .Callback((object q, CancellationToken _) => asked.Add(((GetPumbilityTitleCohortQuery)q).Band))
-            .ReturnsAsync(Cohort(null, "[S] EXPERT LV.3"));
+            .ReturnsAsync(Cohort(null));
+
+        Card(page, fixture.Charts()).WaitForAssertion(() => Assert.Single(asked));
+        Card(page, fixture.Charts()).WaitForAssertion(() => Assert.Equal(2, asked.Count));
+
+        Assert.Equal(new Name?[] { null, null }, asked);
+    }
+
+    [Fact]
+    public async Task ABandFromAnotherLadderReadsAsNoChoiceAtAll()
+    {
+        // A [P.B] gem picked on the merged pool is not a rung of the singles ladder, so switching
+        // pools drops it rather than sending it to a query that could only answer nothing for it.
+        SignIn();
+        var fixture = Page(poolSize: 50);
+        var charts = fixture.Charts();
+        var page = ((PumbilityPageRecord)fixture) with { Mix = MixEnum.Phoenix2 };
+        var asked = new List<Name?>();
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityTitleCohortQuery>(), It.IsAny<CancellationToken>()))
+            .Callback((object q, CancellationToken _) => asked.Add(((GetPumbilityTitleCohortQuery)q).Band))
+            .ReturnsAsync(Cohort(null));
 
         var cut = Card(page, charts);
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=cohort-select]")));
+        await cut.Find("[data-testid=cohort-select]").ChangeAsync(new ChangeEventArgs { Value = "[P.B] DIAMOND" });
+        cut.SetParametersAndRender(p => p.Add(x => x.Page, page with { Pool_ = ChartType.Single }));
 
-        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid=cohort-band]")));
-        Assert.Equal(new Name?[] { null }, asked);
+        cut.WaitForAssertion(() => Assert.Equal(3, asked.Count));
+        Assert.Equal(new Name?[] { null, Name.From("[P.B] DIAMOND"), null }, asked);
     }
 
     [Fact]
