@@ -65,22 +65,6 @@ public static class RecapPlayerTypeCalculator
     }
 
     /// <summary>
-    ///     The mix-less forms the three callers still use. They band on Phoenix, which is what
-    ///     every caller got before the tables split, so this commit changes nothing for anybody;
-    ///     they retire in the next one, once each caller names the mix it is reading.
-    /// </summary>
-    public static RecapPlayerType? Calculate(IReadOnlyCollection<PhoenixScore> topPumbilityScores)
-    {
-        return Calculate(topPumbilityScores, MixEnum.Phoenix);
-    }
-
-    /// <inheritdoc cref="Calculate(IReadOnlyCollection{PhoenixScore})" />
-    public static RecapPlayerType FromAverage(double average)
-    {
-        return FromAverage(average, MixEnum.Phoenix);
-    }
-
-    /// <summary>
     ///     The lowest average that earns <paramref name="type" /> in this mix, or null for
     ///     <see cref="RecapPlayerType.PassPusher" />, which has no floor beneath it. What a surface
     ///     naming the bands reads, so the copy and the banding cannot drift apart.

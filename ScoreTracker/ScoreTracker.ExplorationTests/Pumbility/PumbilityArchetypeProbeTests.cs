@@ -138,6 +138,7 @@ public sealed class PumbilityArchetypeProbeTests
 
         _output.WriteLine("");
         _output.WriteLine("-- the candidate cut sets --");
+        _output.WriteLine($"  {"",-28} {string.Join(" / ", ArchetypeNames.Select(n => $"{n,4}"))}");
         foreach (var (name, cuts) in CandidateSets)
         {
             var shape = Shape(averages, cuts);
@@ -146,11 +147,10 @@ public sealed class PumbilityArchetypeProbeTests
         }
 
         // The shipped set and the calculator must agree, or the section and the chip would cut
-        // differently. Once the calculator takes a mix this passes it; until then it bands the
-        // mix it defaults to.
+        // differently.
         var shipped = Shape(averages, CandidateSets[0].Cuts);
         var throughCalculator = new double[5];
-        foreach (var average in averages) throughCalculator[(int)RecapPlayerTypeCalculator.FromAverage(average)]++;
+        foreach (var average in averages) throughCalculator[(int)RecapPlayerTypeCalculator.FromAverage(average, mix)]++;
         for (var i = 0; i < 5; i++) throughCalculator[i] = 100.0 * throughCalculator[i] / averages.Count;
         _output.WriteLine("");
         _output.WriteLine($"  through RecapPlayerTypeCalculator: {string.Join(" / ", throughCalculator.Select(s => $"{s,4:F1}"))}");

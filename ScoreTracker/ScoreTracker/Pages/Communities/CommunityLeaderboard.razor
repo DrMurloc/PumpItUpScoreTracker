@@ -321,7 +321,7 @@
         // type from their own site scores (the official mirror only knows board-charting players).
         _playerTypes = _leaderboard
             .Where(l => l.ClearCount >= RecapPlayerTypeCalculator.MinimumScores && (int)l.SkillRating > 0)
-            .ToDictionary(l => l.UserId, l => RecapPlayerTypeCalculator.FromAverage((int)l.SkillScore));
+            .ToDictionary(l => l.UserId, l => RecapPlayerTypeCalculator.FromAverage((int)l.SkillScore, _currentMix));
 
         // Player communities list every member; the ones without scores in this mix drop out
         // of the ranked rows and land in the roll call below the table. Regions and World are
