@@ -280,10 +280,17 @@
 
     /// <summary>
     ///     The gem a band sits inside, for the clear that drops a level back to it. Null on a gem
-    ///     itself, on a typed rung — those have nothing coarser inside them — and on Phoenix 1.
+    ///     itself, on a typed rung — those have nothing coarser inside them — and on Phoenix 1. The
+    ///     capstone is its own gem and its only level, so it clears to itself and therefore does not.
     /// </summary>
-    private Name? GemAround(Name band) =>
-        Page?.Mix == MixEnum.Phoenix2 ? PumbilityBand.ByName(PoolOf(Page.Pool_), band)?.Gem : null;
+    private Name? GemAround(Name band)
+    {
+        if (Page?.Mix != MixEnum.Phoenix2) return null;
+        var gem = PumbilityBand.ByName(PoolOf(Page.Pool_), band)?.Gem;
+        // The null branch is cast: Name's implicit conversion from string would otherwise take a bare
+        // null through From(null) and throw before the ternary ever produced one.
+        return gem is { } around && around != band ? around : (Name?)null;
+    }
 
     /// <summary>
     ///     Every band the selector offers, grouped where the ladder has groups: the merged ladder by
@@ -307,9 +314,11 @@
             if (pool != PumbilityPool.Total)
                 return new (string?, IReadOnlyList<string>)[] { (null, levels.Select(b => b.Name.ToString()).ToArray()) };
 
+            // Distinct because the capstone is its own gem and its only level, under one name.
             return PumbilityBand.Gems()
                 .Select(gem => ((string?)gem.Name.ToString(), (IReadOnlyList<string>)new[] { gem.Name.ToString() }
-                    .Concat(levels.Where(l => l.Gem == gem.Name).Select(l => l.Name.ToString())).ToArray()))
+                    .Concat(levels.Where(l => l.Gem == gem.Name).Select(l => l.Name.ToString()))
+                    .Distinct().ToArray()))
                 .ToArray();
         }
     }
