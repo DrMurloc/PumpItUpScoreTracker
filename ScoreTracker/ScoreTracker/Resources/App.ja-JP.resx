@@ -1760,9 +1760,6 @@
   <data name="Clear Progress" xml:space="preserve">
     <value>クリア進捗</value>
   </data>
-  <data name="Clear the level" xml:space="preserve">
-    <value>レベルを外す</value>
-  </data>
   <data name="Cleared on attempt {0}" xml:space="preserve">
     <value>{0} 回目でクリア</value>
   </data>
@@ -1994,9 +1991,6 @@
   </data>
   <data name="Compare" xml:space="preserve">
     <value>比較</value>
-  </data>
-  <data name="Compare against all of {0} instead" xml:space="preserve">
-    <value>代わりに{0}全体と比較</value>
   </data>
   <data name="Compared against" xml:space="preserve">
     <value>比較対象</value>

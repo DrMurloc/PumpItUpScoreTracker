@@ -106,15 +106,17 @@
         </div>
 
         @* Who you are measured against, for both sections below: the players holding your title
-           (D68). The band is your own until you pick another, and a level you were placed on can
-           be cleared back to the gem around it. *@
+           (D68). The band is your own until you pick another one from the ladder. *@
         @if (_cohort?.Band is { } band)
         {
             <div class="pmb-cohort" data-testid="cohort-band">
                 <div class="pmb-cohort-pick">
                     <label class="pmb-cohort-lbl" for="pmb-cohort-sel">@L["Compared against"]</label>
                     @* The band that was read is the one selected, so a viewer who has picked nothing
-                       still sees their own. There is no "mine" entry: picking it back IS picking it. *@
+                       still sees their own. There is no "mine" entry: picking it back IS picking it.
+                       The selected line reads its whole name — a closed select shows only that one, and
+                       "Level 1" alone does not say which gem's (owner, on the PR). The rest keep the
+                       short label their group heading already qualifies. *@
                     <select id="pmb-cohort-sel" class="pmb-cohort-sel" data-testid="cohort-select"
                             value="@band.ToString()" @onchange="PickBand">
                         @foreach (var group in BandOptions)
@@ -123,7 +125,7 @@
                             {
                                 @foreach (var option in group.Bands)
                                 {
-                                    <option value="@option.Value" selected="@(band.ToString() == option.Value)">@option.Label</option>
+                                    <option value="@option.Value" selected="@(band.ToString() == option.Value)">@Shown(option, band)</option>
                                 }
                             }
                             else
@@ -131,19 +133,12 @@
                                 <optgroup label="@group.Name">
                                     @foreach (var option in group.Bands)
                                     {
-                                        <option value="@option.Value" selected="@(band.ToString() == option.Value)">@option.Label</option>
+                                        <option value="@option.Value" selected="@(band.ToString() == option.Value)">@Shown(option, band)</option>
                                     }
                                 </optgroup>
                             }
                         }
                     </select>
-                    @if (GemAround(band) is { } gem)
-                    {
-                        <button type="button" class="pmb-cohort-clear" data-testid="cohort-clear"
-                                title="@L["Compare against all of {0} instead", gem]" @onclick="() => SetBand(gem)">
-                            @L["Clear the level"]
-                        </button>
-                    }
                 </div>
                 <div class="pmb-cohort-count" data-testid="cohort-count">
                     <strong>@band</strong>
@@ -294,18 +289,11 @@
         band is { } name && BandOptions.Any(group => group.Bands.Any(o => o.Value == name.ToString()));
 
     /// <summary>
-    ///     The gem a band sits inside, for the clear that drops a level back to it. Null on a gem
-    ///     itself, on a typed rung — those have nothing coarser inside them — and on Phoenix 1. The
-    ///     capstone is its own gem and its only level, so it clears to itself and therefore does not.
+    ///     What a line reads. The selected one spells its band out, because a closed select shows that
+    ///     line alone and <em>Level 1</em> on its own does not say which gem's.
     /// </summary>
-    private Name? GemAround(Name band)
-    {
-        if (Page?.Mix != MixEnum.Phoenix2) return null;
-        var gem = PumbilityBand.ByName(PoolOf(Page.Pool_), band)?.Gem;
-        // The null branch is cast: Name's implicit conversion from string would otherwise take a bare
-        // null through From(null) and throw before the ternary ever produced one.
-        return gem is { } around && around != band ? around : (Name?)null;
-    }
+    private static string Shown((string Value, string Label) option, Name band) =>
+        option.Value == band.ToString() ? option.Value : option.Label;
 
     /// <summary>
     ///     Every band the selector offers, grouped where the ladder has groups: the merged ladder by

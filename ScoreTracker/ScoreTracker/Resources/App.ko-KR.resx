@@ -1750,9 +1750,6 @@
   <data name="Clear Progress" xml:space="preserve">
     <value>클리어 진행도</value>
   </data>
-  <data name="Clear the level" xml:space="preserve">
-    <value>레벨 해제</value>
-  </data>
   <data name="Cleared on attempt {0}" xml:space="preserve">
     <value>{0}번째 시도에 클리어</value>
   </data>
@@ -1983,9 +1980,6 @@
   </data>
   <data name="Compare" xml:space="preserve">
     <value>비교</value>
-  </data>
-  <data name="Compare against all of {0} instead" xml:space="preserve">
-    <value>대신 {0} 전체와 비교</value>
   </data>
   <data name="Compared against" xml:space="preserve">
     <value>비교 대상</value>
