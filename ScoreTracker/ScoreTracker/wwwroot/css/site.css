@@ -13071,11 +13071,15 @@ button.chart-card-art {
     border-color: color-mix(in srgb, var(--mix-ink-muted) 40%, transparent);
 }
 
+/* A code you copy sits in a well below its card, not on a block above it: the page's own ground
+   plus the hairline, which is how .ct-secret draws the API key. --mix-bg is the token; there is
+   no --mix-background, and an undefined var() in a background shorthand computes to transparent,
+   so this rendered as a bordered box with the card showing through. */
 .rvl-code {
     display: flex;
     align-items: center;
     gap: 9px;
-    background: var(--mix-background);
+    background: var(--mix-bg);
     border: 1px solid rgba(255, 255, 255, .14);
     border-radius: 5px;
     padding: 7px 11px;
