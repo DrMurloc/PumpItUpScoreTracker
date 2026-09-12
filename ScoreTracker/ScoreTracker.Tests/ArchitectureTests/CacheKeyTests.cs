@@ -62,7 +62,8 @@ public sealed class CacheKeyTests
         // board peer reader build Mix keys through CacheKeys.
         // PlayerProgress burned its eight entries in slice 0's progress commit: the stats row and
         // the projection sweep are Viewer keys; cohorts, recap, rarity, capture and titles are Mix.
-        ["ScoreTracker.Rivals/Application/PeerStandingReader.cs"] = 3,
+        // Rivals burned its entry in slice 0's rivals commit: a peer set's rows and roster stats
+        // are Viewer keys (a set may be the viewer's rivals), the band is Mix.
         // ScoreLedger burned its entry in slice 0's ledger commit: the record score cache is a
         // Viewer key and LedgerCacheKeys builds through CacheKeys.
         ["ScoreTracker.WeeklyChallenge/Application/WeeklyTournamentSaga.cs"] = 1,

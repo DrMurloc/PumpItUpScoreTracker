@@ -11,6 +11,7 @@ using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Rivals.Contracts;
 using ScoreTracker.Rivals.Contracts.Queries;
 using ScoreTracker.Rivals.Domain;
+using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 
@@ -184,7 +185,7 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         var audience = await _visibility.GetAudience(me, cancellationToken);
         var visible = users.Values.Where(u => u.Id != me && audience.Describe(u.Id, u.IsPublic).CanView).ToArray();
         var levels = await _cache.GetOrCreateAsync(
-            $"{nameof(PeerStandingReader)}__RosterStats__{request.Mix}__{setKey}",
+            CacheKeys.Viewer(nameof(PeerStandingReader), request.Mix, "RosterStats", setKey),
             async entry =>
             {
                 entry.AbsoluteExpirationRelativeToNow = ScoresTtl;
@@ -378,7 +379,7 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         var bucket = Bucket(LevelOn(stats, type));
         if (bucket <= 0) return NoIds;
         var band = await _cache.GetOrCreateAsync(
-            $"{nameof(PeerStandingReader)}__Band__{mix}__{type}__{bucket.ToString(CultureInfo.InvariantCulture)}",
+            CacheKeys.Mix(nameof(PeerStandingReader), mix, "Band", type, bucket),
             async entry =>
             {
                 entry.AbsoluteExpirationRelativeToNow = BandTtl;
@@ -531,6 +532,9 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         return set;
     }
 
+    // A peer set's rows are Viewer keys: a set may be the viewer's rivals, whose scores flip with
+    // the seasonal view (docs/design/seasons.md D6), and a band's bucket is the only set-free key
+    // in this reader.
     private static string RowsKey(MixEnum mix, string setKey, Guid chartId) =>
-        $"{nameof(PeerStandingReader)}__Rows__{mix}__{setKey}__{chartId}";
+        CacheKeys.Viewer(nameof(PeerStandingReader), mix, "Rows", setKey, chartId);
 }
