@@ -23,6 +23,7 @@ randomizer, API, chart details, yeah, basically all the stuff we touched in the 
 | D7 | **No row means unknown, and unknown reads as absence** everywhere: no chip, no fact, never matched by a filter. On day one no song is unknown. | the versions precedent |
 | D8 | **Every path that gives a song a mix writes the row**: the bulk-add batch from the JSON's `channel`, the dev harness from the API's `channel`, and a returning song seeded by hand gets its row by hand, as it gets its version stamp. | follows D2 |
 | D9 | **The dialog shows the page's two version facts, not the mock's three.** Between the mock and the build, [chart-versions.md](chart-versions.md) D13 retired "Released" from the site and the API: the debut fact now carries its patch and date, and Added in appears on a carry-over only. The dialog mirrors that. | chart-versions.md D13, same day |
+| D10 | **The dialog's header carries the identity; Chart Stats carries the history as lines.** At the field test the eight labelled tiles read as a wall, and inside a phone's dialog (326px wide, 278 inside the padding) the grid dropped to one column, sixteen lines deep. Song type, *song by*, *steps by*, BPM and notes became one muted line under the title, above the tabs, so every tab has it. Chart Stats became rows: *History* — the chart page's timeline as lines, the debut, every uprate or downrate with its mark and the patch it happened in, the mix in view, unchanged mixes skipped — and *Channel*, a chip that opens /Charts filtered on it. *Recorded N days ago* left the header, since Score History dates every entry; the score stays `PeerScore`. Mock round 3 ("Chart Stats Layout"), Mock 1 picked. | *"this area is starting to feel like a wall of text … that stuff should be a thin line between video and the tabs … For history, include uprates/downrates"*, 2026-09-13 |
 
 ## 2. The channel
 
@@ -111,10 +112,18 @@ The row hides on a mix with no channel rows.
 **Chart page.** A Channel fact beside Debuted in, in the vocabulary of the mix in view; nothing
 when unknown. No history note: the channel is a present-tense fact like the level.
 
-**Chart details dialog.** The Chart Stats tab's meta grid gains rows after Song Type, the page's
-facts in the page's order: *Debuted in {mix}* with the debut patch and date when the origin
-mix's row knows them, *Added in {mix}* with the patch on a carry-over only, and *Channel*. Each
-row hides the way it does on the page (D4, D9).
+**Chart details dialog.** The header carries the chart's identity as one muted line under the
+title, in the chart page's words — song type, *song by*, *steps by*, BPM, notes — above the
+tabs, so every tab has it; a fact the catalog lacks drops out of the line. The Chart Stats tab
+is rows with a short label column rather than labelled tiles: a *History* row that is the
+chart page's timeline as lines — the debut, every rerate with its ▲/▼ mark and the patch and
+date its row names, and the mix in view; a mix where nothing changed is skipped, so a chart
+alive since 2000 is a few lines — a *Channel* row whose chip opens /Charts filtered on the
+channel, and a *Played* row (popularity overall and in the folder) where the host passes the
+official board. The History reads the same `HistoryVerdict` the page draws its timeline from,
+with each mix's patch riding on `MixLevelRecord`; a debut with no rerate has no facet, and the
+chart's own row says when it arrived. *Recorded N days ago* left the header: Score History
+dates every entry (D4, D9, D10).
 
 **Admin BulkAddCharts.** The JSON names each song's `channel`; the preview shows it on the song's
 card; a missing or unrecognised value is a warning, never an error — the song imports with no
