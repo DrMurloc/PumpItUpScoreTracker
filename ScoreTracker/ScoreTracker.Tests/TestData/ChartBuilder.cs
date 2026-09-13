@@ -25,6 +25,8 @@ internal sealed class ChartBuilder
     private int? _noteCount;
     private LegacySlot? _slot;
     private int? _playerCountOverride;
+    private (string Version, DateOnly? Date, int Order)? _addedIn;
+    private (string Version, DateOnly? Date, int Order)? _debut;
 
     public ChartBuilder WithId(Guid id) { _id = id; return this; }
     public ChartBuilder WithSong(Song song) { _song = song; return this; }
@@ -40,9 +42,21 @@ internal sealed class ChartBuilder
     public ChartBuilder WithNoteCount(int? noteCount) { _noteCount = noteCount; return this; }
     public ChartBuilder WithSlot(LegacySlot slot) { _slot = slot; return this; }
     public ChartBuilder WithPlayerCount(int playerCount) { _playerCountOverride = playerCount; return this; }
+    /// <summary>The patch of the chart's own mix it entered in; on a chart whose mix is its origin, the debut too unless <see cref="WithDebut" /> says otherwise.</summary>
+    public ChartBuilder WithAddedIn(string version, DateOnly? releaseDate = null, int sortOrder = 10) { _addedIn = (version, releaseDate, sortOrder); return this; }
+    /// <summary>The patch of the origin mix the chart first appeared in anywhere.</summary>
+    public ChartBuilder WithDebut(string version, DateOnly? releaseDate = null, int sortOrder = 10) { _debut = (version, releaseDate, sortOrder); return this; }
 
     public Chart Build() => new(_id, _originalMix, _song, _type, _level, _mix,
-        _stepArtist, _noteCount, _slot, _playerCountOverride);
+        _stepArtist, _noteCount, _slot, _playerCountOverride,
+        _addedIn is { } a ? new VersionStamp(_mix, a.Version, a.Date, a.Order) : null, DebutStamp());
+
+    private VersionStamp? DebutStamp()
+    {
+        if (_debut is { } d) return new VersionStamp(_originalMix, d.Version, d.Date, d.Order);
+        if (_mix == _originalMix && _addedIn is { } a) return new VersionStamp(_mix, a.Version, a.Date, a.Order);
+        return null;
+    }
 
     public static implicit operator Chart(ChartBuilder b) => b.Build();
 }

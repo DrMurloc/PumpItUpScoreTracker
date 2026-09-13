@@ -60,8 +60,13 @@ namespace ScoreTracker.Randomizer.Application
             IDictionary<Guid, double> scoringLevels)
         {
             var calculatedWeights = new Dictionary<Guid, int>();
+            // Versions is the exact set a preset saved (docs/design/chart-versions.md §4): empty draws
+            // from every patch, and a chart with no known patch never matches a pick.
             foreach (var chart in
-                     charts.Values.Where(c => !settings.ChartIds.Any() || settings.ChartIds.Contains(c.Id)))
+                     charts.Values.Where(c => !settings.ChartIds.Any() || settings.ChartIds.Contains(c.Id))
+                         .Where(c => settings.Versions.Count == 0 ||
+                                     (c.AddedIn != null && settings.Versions.Contains(c.AddedIn.Version)))
+                         .Where(c => settings.Debut == null || c.IsDebut == settings.Debut))
             {
                 double? scoringLevel = scoringLevels.TryGetValue(chart.Id, out var sl) ? sl : null;
                 if (settings.UseScoringLevels && scoringLevel == null)

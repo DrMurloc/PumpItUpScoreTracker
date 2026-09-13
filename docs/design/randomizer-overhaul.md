@@ -32,6 +32,7 @@ Match subsystem via `IMatchRepository` injected straight into the page. Owner pa
 | 8 | Spectator link is **stable per tournament** (draws swap underneath); personal draws can mint one too — tournaments are only needed when multiple operators need buttons. |
 | 9 | Vetoed cards **stay in place** (dimmed + struck, red border); "Clear vetoed" is the explicit compaction and renumbers. Protected = mix-primary ring + HELD chip — deliberately *not* the owner-locked solid-green "passed" border. |
 | 10 | Draw-order **number badges** on every card — drafts are verbal ("veto four"). |
+| 11 | **Released filter** (2026-09-12, [chart-versions.md](chart-versions.md)): version chips beside Song Types with a *Through a version* bulk select — nothing picked draws from every version; the preset stores the exact set, so "through 2.09.0" keeps excluding later patches after they ship (a cab behind a version, a tournament that froze its pool). `RandomSettings.Versions`; `charts/random` takes the API's four `released*` parameters. |
 | 11 | UI copy says **"Tournament"** (people say "join this tourney"), even for micro ones. |
 | 12 | **Clean break on Match-tournament randomizer settings** — no data migration; the Match dropdown, the page's `IMatchRepository` use, and the match-scoped settings path are deleted. MatchSaga itself remains until its separate owner-gated deletion. |
 

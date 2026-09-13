@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.Data.Persistence.Entities;
@@ -24,4 +24,12 @@ public sealed class ChartMixEntity
     /// </summary>
     [MaxLength(24)]
     public string? LegacySlot { get; set; }
+
+    /// <summary>
+    ///     The patch of this mix the chart first appeared in — its debut patch in its debut mix, the
+    ///     launch version in every mix it carried into. Null is unknown, and every surface reads it
+    ///     as absence. The key onto Catalog's MixVersion table is declared by Catalog's model
+    ///     contribution (docs/design/chart-versions.md §2).
+    /// </summary>
+    public Guid? AddedInVersionId { get; set; }
 }

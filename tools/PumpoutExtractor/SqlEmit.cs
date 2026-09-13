@@ -233,6 +233,74 @@ public static class SqlEmit
         return sql.ToString();
     }
 
+    // ---- S6: the patch each chart was released in, per mix (docs/design/chart-versions.md §5) ----
+    // One statement per (mix, version) with the chart ids in batches, stamping only rows that
+    // are still unknown so the script is idempotent and never overwrites a hand fix. The seed
+    // names live in scores.MixVersion; pumpout's titles map onto them here — the launch build
+    // pumpout calls v1.00.1 is the seed's 1.00.0, a single-version mix's "default" is Release,
+    // Prime JE's versions are the JE pseudo-version. A title the seed does not carry (a hotfix
+    // build) is reported and skipped rather than guessed.
+    private static string SeedVersionName(MixMap.MixDef mix, string pumpoutTitle, bool isPrimeJe)
+    {
+        if (isPrimeJe) return "JE";
+        if (pumpoutTitle == "default") return "Release";
+        var name = pumpoutTitle.StartsWith('v') ? pumpoutTitle[1..] : pumpoutTitle;
+        if (mix.EnumName == "XX" && name == "1.00.1") return "1.00.0";
+        return name;
+    }
+
+    private static readonly HashSet<string> UnseededTitles = new(StringComparer.Ordinal) { "1.03.1", "2.03.1" };
+
+    public static string ReleaseBackfill(Matcher matcher, PumpoutDump dump, List<string> report)
+    {
+        var sql = Header("S6 — ChartMix.AddedInVersionId backfill for every pumpout-backed mix (run AFTER the ChartVersions migration is live and AFTER S3)");
+        var prodChartIdByPump = matcher.ChartMatches.ToDictionary(m => m.PumpoutChartId, m => m.Prod.Id);
+        var rows = 0;
+        var skipped = 0;
+        foreach (var mix in MixMap.All.Where(m => m.PumpoutMixId is not null).OrderBy(m => m.SortOrder))
+        {
+            var byVersion = new Dictionary<string, List<Guid>>(StringComparer.Ordinal);
+            foreach (var (chartId, title, isJe) in dump.FirstPresenceOf(mix))
+            {
+                if (matcher.QuarantinedPumpoutChartIds.Contains(chartId)) continue;
+                // S3 inserted every cut chart under its deterministic id, so a chart pumpout knows
+                // and prod never matched still resolves.
+                var guid = prodChartIdByPump.TryGetValue(chartId, out var matched) ? matched : DeterministicGuid("chart", chartId);
+                var name = SeedVersionName(mix, title, isJe);
+                if (UnseededTitles.Contains(name))
+                {
+                    report.Add($"SKIPPED {mix.ShortName}/{dump.Songs[dump.Charts[chartId].SongId].Title} ({chartId}): first seen in unseeded hotfix {title}");
+                    skipped++;
+                    continue;
+                }
+
+                if (!byVersion.TryGetValue(name, out var list)) byVersion[name] = list = new List<Guid>();
+                list.Add(guid);
+            }
+
+            sql.AppendLine($"-- ============ {mix.FullName} ============");
+            foreach (var (name, guids) in byVersion.OrderBy(kv => kv.Key, StringComparer.Ordinal))
+            {
+                sql.AppendLine($"-- {name}: {guids.Count} charts");
+                foreach (var chunk in guids.Chunk(500))
+                {
+                    var ids = string.Join(", ", chunk.Select(g => $"'{g}'"));
+                    sql.AppendLine("UPDATE cm SET [AddedInVersionId] = v.[Id]");
+                    sql.AppendLine("FROM [scores].[ChartMix] cm");
+                    sql.AppendLine($"JOIN [scores].[MixVersion] v ON v.[MixId] = cm.[MixId] AND v.[Name] = N'{Esc(name)}'");
+                    sql.AppendLine($"WHERE cm.[MixId] = '{mix.Id}' AND cm.[AddedInVersionId] IS NULL AND cm.[ChartId] IN ({ids});");
+                    rows += chunk.Length;
+                }
+            }
+
+            sql.AppendLine();
+        }
+
+        report.Insert(0, $"release rows emitted: {rows}; skipped: {skipped}");
+        sql.AppendLine("COMMIT TRAN;");
+        return sql.ToString();
+    }
+
     // ---- S4: hindsight difficulty votes (owner decision: vote-based legacy tier data) ---
     // One PumpoutBackfill vote per S3 ChartMix row, scaled by where the chart's rating
     // ended up (prod's current level for still-alive charts, pumpout's last-known state

@@ -292,6 +292,9 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>1 cuenta privada es par pero no se muestra.</value>
   </data>
+  <data name="1 private account is on this board but is not shown." xml:space="preserve">
+    <value>1 cuenta privada está en esta clasificación pero no se muestra.</value>
+  </data>
   <data name="1 reply" xml:space="preserve">
     <value>1 respuesta</value>
   </data>
@@ -696,6 +699,18 @@
   </data>
   <data name="Added" xml:space="preserve">
     <value>Agregado</value>
+  </data>
+  <data name="Added in" xml:space="preserve">
+    <value>Agregado en</value>
+  </data>
+  <data name="Added in version" xml:space="preserve">
+    <value>Parche en que se agregó</value>
+  </data>
+  <data name="Added in {0}" xml:space="preserve">
+    <value>Agregado en {0}</value>
+  </data>
+  <data name="Added on" xml:space="preserve">
+    <value>Agregado el</value>
   </data>
   <data name="Added to Favorites!" xml:space="preserve">
     <value>¡Agregado a Favoritos!</value>
@@ -2341,17 +2356,29 @@
   <data name="Debut mix" xml:space="preserve">
     <value>Versión de debut</value>
   </data>
+  <data name="Debut version" xml:space="preserve">
+    <value>Parche de debut</value>
+  </data>
   <data name="debuted at {0}" xml:space="preserve">
     <value>debutó en {0}</value>
   </data>
   <data name="Debuted in" xml:space="preserve">
     <value>Debut en</value>
   </data>
+  <data name="Debuted in {0}" xml:space="preserve">
+    <value>Debut en {0}</value>
+  </data>
   <data name="Debuted in {0}." xml:space="preserve">
     <value>Debutó en {0}.</value>
   </data>
+  <data name="Debuted on" xml:space="preserve">
+    <value>Debut el</value>
+  </data>
   <data name="Debuted this week" xml:space="preserve">
     <value>Debutaron esta semana</value>
+  </data>
+  <data name="Debuts only" xml:space="preserve">
+    <value>Solo debuts</value>
   </data>
   <data name="Deep scan" xml:space="preserve">
     <value>Análisis profundo</value>
@@ -2644,6 +2671,12 @@
   <data name="draw a random set of charts, presets included" xml:space="preserve">
     <value>sortee un set de charts aleatorio, con presets incluidos</value>
   </data>
+  <data name="Draws from everything through {0}." xml:space="preserve">
+    <value>Se sortea de todo hasta {0}.</value>
+  </data>
+  <data name="Draws from {0}." xml:space="preserve">
+    <value>Se sortea de {0}.</value>
+  </data>
   <data name="Drew 1 chart" xml:space="preserve">
     <value>Se sacó 1 chart</value>
   </data>
@@ -2790,6 +2823,9 @@
   </data>
   <data name="Every chart that moved, arrived, or left between {0} and {1}." xml:space="preserve">
     <value>Todos los charts que cambiaron de nivel, llegaron o se fueron entre {0} y {1}.</value>
+  </data>
+  <data name="Every chart this batch creates is stamped with the Phoenix 2 patch you pick here." xml:space="preserve">
+    <value>Cada chart que cree este lote llevará el parche de Phoenix 2 que elijas aquí.</value>
   </data>
   <data name="Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more." xml:space="preserve">
     <value>Cada chart con puntaje dentro de 3 carpetas vota por tus habilidades: las carpetas más cercanas y la mayor cobertura de la habilidad cuentan más.</value>
@@ -5056,6 +5092,9 @@
   <data name="New Username" xml:space="preserve">
     <value>Nuevo nombre de usuario</value>
   </data>
+  <data name="New version" xml:space="preserve">
+    <value>Nuevo parche</value>
+  </data>
   <data name="Newest" xml:space="preserve">
     <value>Recientes</value>
   </data>
@@ -5610,6 +5649,9 @@
   </data>
   <data name="Nothing on your desk." xml:space="preserve">
     <value>No hay nada pendiente.</value>
+  </data>
+  <data name="Nothing picked draws from every version." xml:space="preserve">
+    <value>Sin nada marcado se sortea de todos los parches.</value>
   </data>
   <data name="Nothing selected — click a value." xml:space="preserve">
     <value>Nada seleccionado — haz clic en un valor.</value>
@@ -7344,6 +7386,9 @@
   </data>
   <data name="Rejected" xml:space="preserve">
     <value>Rechazada</value>
+  </data>
+  <data name="Release date" xml:space="preserve">
+    <value>Fecha de lanzamiento</value>
   </data>
   <data name="Relevant players" xml:space="preserve">
     <value>Jugadores relevantes</value>
@@ -9412,6 +9457,15 @@
   <data name="Through &quot;share with all tools&quot;" xml:space="preserve">
     <value>Mediante «compartir con todas las herramientas»</value>
   </data>
+  <data name="Through a version" xml:space="preserve">
+    <value>Hasta un parche</value>
+  </data>
+  <data name="Through a version…" xml:space="preserve">
+    <value>Hasta un parche…</value>
+  </data>
+  <data name="Through {0}" xml:space="preserve">
+    <value>Hasta {0}</value>
+  </data>
   <data name="Tick counts are inferred: tap counts come from community simfiles, the totals from real plays, and the difference is the ticks. Treat charts within a few percent of each other as tied — the numbers are estimates right now." xml:space="preserve">
     <value>Los conteos de ticks son inferidos: los taps salen de simfiles de la comunidad, los totales de intentos reales, y la diferencia son los ticks. Trata como empatados los charts que estén a pocos puntos porcentuales — por ahora los números son estimaciones.</value>
   </data>
@@ -9948,6 +10002,12 @@
   </data>
   <data name="Verify the other account" xml:space="preserve">
     <value>Verifica la otra cuenta</value>
+  </data>
+  <data name="Version" xml:space="preserve">
+    <value>Parche</value>
+  </data>
+  <data name="Version name" xml:space="preserve">
+    <value>Nombre del parche</value>
   </data>
   <data name="Very Easy" xml:space="preserve">
     <value>Muy fácil</value>
@@ -11589,6 +11649,9 @@
   </data>
   <data name="{0} pools · average level {1}" xml:space="preserve">
     <value>{0} pools · nivel promedio {1}</value>
+  </data>
+  <data name="{0} private accounts are on this board but are not shown." xml:space="preserve">
+    <value>{0} cuentas privadas están en esta clasificación pero no se muestran.</value>
   </data>
   <data name="{0} private accounts are peers but are not shown." xml:space="preserve">
     <value>{0} cuentas privadas son pares pero no se muestran.</value>

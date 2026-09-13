@@ -7,8 +7,17 @@ public sealed record Chart(Guid Id, MixEnum OriginalMix, Song Song, ChartType Ty
     Name? StepArtist,
     int? NoteCount,
     LegacySlot? Slot = null,
-    int? PlayerCountOverride = null)
+    int? PlayerCountOverride = null,
+    VersionStamp? AddedIn = null,
+    VersionStamp? Debut = null)
 {
+    /// <summary>
+    ///     Whether this mix is the one the chart first appeared in, so <see cref="AddedIn" /> is the
+    ///     patch that introduced it to the game. Read off the origin mix, so it holds when the
+    ///     patch itself is unknown.
+    /// </summary>
+    public bool IsDebut => Mix == OriginalMix;
+
     public string DifficultyString => $"{Type.GetShortHand()}{Level}";
 
     /// <summary>

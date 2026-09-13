@@ -43,6 +43,19 @@ public sealed record SearchChartsQuery : IQuery<ChartSearchResultPage>
     /// <summary>The mix a chart debuted in — its origin rides every appearance, so this is a per-chart fact.</summary>
     public IReadOnlyList<MixEnum>? DebutMixes { get; init; }
 
+    /// <summary>
+    ///     Version names of the searched mix (<c>1.01.0</c>): the patch of this mix the chart first
+    ///     appeared in. Any-of; a chart with no known patch never matches (docs/design/chart-versions.md §4).
+    /// </summary>
+    public IReadOnlyList<string>? Versions { get; init; }
+
+    /// <summary>
+    ///     Only charts that first appeared in the mix in view — the site's form of the API's
+    ///     <c>debut</c> filter, so a patch chip reads as what the patch introduced rather than
+    ///     everything it put on the cab (docs/design/chart-versions.md §4).
+    /// </summary>
+    public bool DebutsOnly { get; init; }
+
     /// <summary>Pre-Exceed slot identity ("Crazy 6" vs "Hard 6"); only pre-Exceed mixes carry one.</summary>
     public IReadOnlyList<LegacySlot>? LegacySlots { get; init; }
 

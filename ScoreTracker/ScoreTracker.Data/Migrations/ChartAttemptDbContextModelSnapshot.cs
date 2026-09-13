@@ -276,6 +276,34 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("ExternalChartAlias", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.MixVersionEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<DateOnly?>("ReleaseDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MixId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("MixVersion", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.SongNameLanguageEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -1747,6 +1775,9 @@ namespace ScoreTracker.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("AddedInVersionId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("ChartId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1764,6 +1795,8 @@ namespace ScoreTracker.Data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AddedInVersionId");
 
                     b.HasIndex("ChartId");
 
@@ -4586,6 +4619,15 @@ namespace ScoreTracker.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.MixVersionEntity", b =>
+                {
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.MixEntity", null)
+                        .WithMany()
+                        .HasForeignKey("MixId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartScoreStatsEntity", b =>
                 {
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
@@ -4669,6 +4711,11 @@ namespace ScoreTracker.Data.Migrations
 
             modelBuilder.Entity("ScoreTracker.Data.Persistence.Entities.ChartMixEntity", b =>
                 {
+                    b.HasOne("ScoreTracker.Catalog.Infrastructure.Entities.MixVersionEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AddedInVersionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
                         .WithMany()
                         .HasForeignKey("ChartId")

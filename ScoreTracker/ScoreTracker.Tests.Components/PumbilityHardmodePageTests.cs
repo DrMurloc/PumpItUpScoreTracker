@@ -68,6 +68,34 @@ public sealed class PumbilityHardmodePageTests : ComponentTestBase
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public async Task TheBoardIsAskedForTheViewerAndSaysHowManyAccountsItLeftOut()
+    {
+        // A private account is on its own board and nobody else's (D17). The page cannot apply
+        // that rule - the read does - so what it owes is the viewer id and a line saying the
+        // field it printed is smaller than the population, since renumbered places hide it.
+        var cut = Render(pool: null, board: new HardmodeBoardRecord(
+            new[] { new HardmodeBoardRow(1, Guid.NewGuid(), 14_000, 30) }, 3));
+        await WaitForLoad(cut);
+
+        Mediator.Verify(m => m.Send(It.Is<GetHardmodeBoardQuery>(q => q.ViewerId == Me),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+        cut.WaitForState(() => cut.Markup.Contains("hardmode-private"), TimeSpan.FromSeconds(5));
+        Assert.Contains("3 private accounts are on this board but are not shown.", cut.Markup);
+    }
+
+    [Fact]
+    public async Task TheBoardSaysNothingWhenEveryAccountOnItIsVisible()
+    {
+        var cut = Render(pool: null, board: new HardmodeBoardRecord(
+            new[] { new HardmodeBoardRow(1, Guid.NewGuid(), 14_000, 30) }, 0));
+        await WaitForLoad(cut);
+
+        // "0 private accounts are not shown" is a sentence about nothing, and a board that always
+        // carries the line trains the reader to stop seeing it.
+        Assert.DoesNotContain("hardmode-private", cut.Markup);
+    }
+
     private static async Task WaitForLoad(IRenderedFragment cut)
     {
         // The record is queued from the body's render, so it lands a pass or two later.
@@ -75,7 +103,8 @@ public sealed class PumbilityHardmodePageTests : ComponentTestBase
         await Task.CompletedTask;
     }
 
-    private IRenderedComponent<PumbilityHardmode> Render(ChartType? pool)
+    private IRenderedComponent<PumbilityHardmode> Render(ChartType? pool,
+        HardmodeBoardRecord? board = null)
     {
         CurrentUser.SetupGet(u => u.IsLoggedIn).Returns(true);
         CurrentUser.SetupGet(u => u.User).Returns(new User(Me, "Probe", true, null, new Uri("https://piu.test/me.png"), null));
@@ -100,7 +129,7 @@ public sealed class PumbilityHardmodePageTests : ComponentTestBase
         Mediator.Setup(m => m.Send(It.IsAny<GetMyRivalsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<RivalSubject>());
         Mediator.Setup(m => m.Send(It.IsAny<GetHardmodeBoardQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<HardmodeBoardRow>());
+            .ReturnsAsync(board ?? HardmodeBoardRecord.Empty);
         Mediator.Setup(m => m.Send(It.IsAny<GetOfficialHardmodeBoardQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<OfficialHardmodeRow>());
         // Everything the page's children ask for. None of them is what this test is about - the

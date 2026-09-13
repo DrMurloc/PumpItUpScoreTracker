@@ -1,4 +1,4 @@
-﻿/* Self-hosted display face — headings, stat numerals, wordmark. Latin subset only:
+/* Self-hosted display face — headings, stat numerals, wordmark. Latin subset only:
    Korean/Japanese glyphs fall through per-glyph to the system CJK fonts in the stack
    (see --font-display), which keeps mixed-script headings from going anemic. */
 @font-face {
@@ -1600,6 +1600,52 @@ html.sheet-open .more-sheet-scrim {
     background: var(--mix-primary);
     border-color: var(--mix-primary);
     color: var(--mix-primary-contrast);
+}
+
+/* The Released row's head carries the through select at its right edge, dropping to its own
+   line when the panel is narrow; the buttons beside it act on the row, so they are text. */
+.rand-row-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px 12px;
+}
+
+.rand-through {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    font-size: .8rem;
+    color: var(--mix-ink-muted);
+}
+
+.rand-through-select {
+    max-width: 180px;
+    background: var(--mix-surface);
+    color: var(--mix-ink);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 8px;
+    padding: 6px 8px;
+    font: inherit;
+    font-size: .85rem;
+}
+
+.rand-through-btn {
+    background: none;
+    border: none;
+    color: var(--mix-secondary);
+    cursor: pointer;
+    font: inherit;
+    font-size: .8rem;
+    padding: 2px 4px;
+}
+
+.rand-through-btn:hover,
+.rand-through-btn:focus-visible {
+    color: var(--mix-ink);
+    outline: none;
 }
 
 .rand-coop-chips {
@@ -7958,6 +8004,51 @@ button.chart-card-art {
     background: var(--mix-primary);
     border-color: var(--mix-primary);
     font-weight: 600;
+}
+
+/* The through select sits at the facet head's right edge and drops to its own line when
+   the drawer is too narrow for both; the buttons beside it are text, not chips, because
+   they act on the row rather than picking a value. */
+.srp-facet-head-version {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 12px;
+}
+
+.srp-through {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.srp-through-select {
+    max-width: 180px;
+    background: var(--mix-surface);
+    color: var(--mix-ink);
+    border: 1px solid var(--mix-surface-muted);
+    border-radius: 8px;
+    padding: 6px 8px;
+    font: inherit;
+    font-size: .85rem;
+}
+
+.srp-through-btn {
+    background: none;
+    border: none;
+    color: var(--mix-secondary);
+    cursor: pointer;
+    font: inherit;
+    font-size: .8rem;
+    padding: 2px 4px;
+}
+
+.srp-through-btn:hover,
+.srp-through-btn:focus-visible {
+    color: var(--mix-ink);
+    outline: none;
 }
 
 .srp-era {
