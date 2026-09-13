@@ -39,6 +39,7 @@
     <ProjectReference Include="..\ScoreTracker.CommunityTools\ScoreTracker.CommunityTools.csproj" />
     <ProjectReference Include="..\ScoreTracker.Translations\ScoreTracker.Translations.csproj" />
     <ProjectReference Include="..\ScoreTracker.ChartComments\ScoreTracker.ChartComments.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Seasons\ScoreTracker.Seasons.csproj" />
   </ItemGroup>
 
   <ItemGroup>

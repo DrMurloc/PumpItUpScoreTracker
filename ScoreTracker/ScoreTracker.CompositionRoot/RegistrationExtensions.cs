@@ -19,6 +19,7 @@ using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.Randomizer.Wiring;
 using ScoreTracker.Rivals.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
+using ScoreTracker.Seasons.Wiring;
 using ScoreTracker.Translations.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
 
@@ -57,6 +58,7 @@ public static class RegistrationExtensions
         builder.AddRandomizer();
         builder.AddRivals();
         builder.AddScoreLedger();
+        builder.AddSeasons();
         builder.AddTranslations();
         builder.AddWeeklyChallenge();
         builder.AddCommunityTools();

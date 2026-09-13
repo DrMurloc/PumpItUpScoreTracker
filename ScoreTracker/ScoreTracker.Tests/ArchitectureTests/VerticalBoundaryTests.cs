@@ -45,7 +45,8 @@ public sealed class VerticalBoundaryTests
         typeof(HomePage.Wiring.HomePageRegistrationExtensions),
         typeof(Rivals.Wiring.RivalsRegistrationExtensions),
         typeof(CommunityTools.Wiring.CommunityToolsRegistrationExtensions),
-        typeof(Translations.Wiring.TranslationsRegistrationExtensions)
+        typeof(Translations.Wiring.TranslationsRegistrationExtensions),
+        typeof(Seasons.Wiring.SeasonsRegistrationExtensions)
     };
 
     [Theory]
