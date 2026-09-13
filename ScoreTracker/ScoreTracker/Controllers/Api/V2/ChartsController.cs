@@ -1,7 +1,8 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using ScoreTracker.Application.Queries;
+using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts;
@@ -9,6 +10,7 @@ using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Dtos.ApiV2;
 using ScoreTracker.Web.Security;
@@ -36,6 +38,17 @@ public sealed class ChartsController : ApiV2ControllerBase
     /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
     /// <param name="level">Optional difficulty level filter.</param>
     /// <param name="typeValue">Optional chart type filter: Single, Double, CoOp, SinglePerformance, DoublePerformance.</param>
+    /// <param name="releasedIn">
+    ///     Only charts this patch added to the mix, as <c>/api/v2/versions</c> names it. Several:
+    ///     a comma list, or repeat the parameter. A chart carried over from an earlier mix belongs
+    ///     to the mix's launch version.
+    /// </param>
+    /// <param name="releasedBy">Only charts released up to and including this patch — everything a cab on that version has.</param>
+    /// <param name="releasedAfterVersion">Only charts released strictly after this patch — what that cab is missing.</param>
+    /// <param name="releasedAfter">
+    ///     Only charts whose patch shipped after this date, exclusive. A patch with no known date is
+    ///     never after anything, so it is skipped; use the version forms for legacy mixes.
+    /// </param>
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet]
@@ -46,6 +59,10 @@ public sealed class ChartsController : ApiV2ControllerBase
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "level")] int? level = null,
         [FromQuery(Name = "type")] string? typeValue = null,
+        [FromQuery(Name = "releasedInVersion")] string[]? releasedIn = null,
+        [FromQuery(Name = "releasedByVersion")] string? releasedBy = null,
+        [FromQuery(Name = "releasedAfterVersion")] string? releasedAfterVersion = null,
+        [FromQuery(Name = "releasedAfter")] DateOnly? releasedAfter = null,
         [FromQuery(Name = "cursor")] string? cursor = null,
         [FromQuery(Name = "limit")] int? limit = null)
     {
@@ -64,7 +81,11 @@ public sealed class ChartsController : ApiV2ControllerBase
             return Problem("invalid-level", "The level parameter is out of range.",
                 detail: $"Valid range: {DifficultyLevel.Min}–{DifficultyLevel.Max}");
 
-        var fingerprint = ContinuationToken.FingerprintOf(mix, level, type, pageSize);
+        var (versions, versionProblem) = await ResolveVersions(mix, releasedIn, releasedBy, releasedAfterVersion, releasedAfter);
+        if (versionProblem is not null) return versionProblem;
+
+        var fingerprint = ContinuationToken.FingerprintOf(mix, level, type, pageSize,
+            VersionFingerprint(releasedIn, releasedBy, releasedAfterVersion, releasedAfter));
         var offset = 0;
         if (cursor is not null)
         {
@@ -74,6 +95,7 @@ public sealed class ChartsController : ApiV2ControllerBase
 
         var charts = (await _mediator.Send(new GetChartsQuery(mix,
                 level is null ? null : DifficultyLevel.From(level.Value), type)))
+            .Where(c => InVersions(c, versions))
             .OrderBy(c => c.Id)
             .ToArray();
 
@@ -125,6 +147,17 @@ public sealed class ChartsController : ApiV2ControllerBase
     /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
     /// <param name="level">Optional difficulty level filter.</param>
     /// <param name="typeValue">Optional chart type filter: Single, Double, CoOp, SinglePerformance, DoublePerformance.</param>
+    /// <param name="releasedIn">
+    ///     Only charts this patch added to the mix, as <c>/api/v2/versions</c> names it. Several:
+    ///     a comma list, or repeat the parameter. A chart carried over from an earlier mix belongs
+    ///     to the mix's launch version.
+    /// </param>
+    /// <param name="releasedBy">Only charts released up to and including this patch — everything a cab on that version has.</param>
+    /// <param name="releasedAfterVersion">Only charts released strictly after this patch — what that cab is missing.</param>
+    /// <param name="releasedAfter">
+    ///     Only charts whose patch shipped after this date, exclusive. A patch with no known date is
+    ///     never after anything, so it is skipped; use the version forms for legacy mixes.
+    /// </param>
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     // Written out rather than a see cref: Swashbuckle renders a cref as its display name, and for a
@@ -139,6 +172,10 @@ public sealed class ChartsController : ApiV2ControllerBase
         [FromQuery(Name = "mix")] string? mixValue = null,
         [FromQuery(Name = "level")] int? level = null,
         [FromQuery(Name = "type")] string? typeValue = null,
+        [FromQuery(Name = "releasedInVersion")] string[]? releasedIn = null,
+        [FromQuery(Name = "releasedByVersion")] string? releasedBy = null,
+        [FromQuery(Name = "releasedAfterVersion")] string? releasedAfterVersion = null,
+        [FromQuery(Name = "releasedAfter")] DateOnly? releasedAfter = null,
         [FromQuery(Name = "cursor")] string? cursor = null,
         [FromQuery(Name = "limit")] int? limit = null)
     {
@@ -157,7 +194,11 @@ public sealed class ChartsController : ApiV2ControllerBase
             return Problem("invalid-level", "The level parameter is out of range.",
                 detail: $"Valid range: {DifficultyLevel.Min}–{DifficultyLevel.Max}");
 
-        var fingerprint = ContinuationToken.FingerprintOf(mix, level, type, pageSize);
+        var (versions, versionProblem) = await ResolveVersions(mix, releasedIn, releasedBy, releasedAfterVersion, releasedAfter);
+        if (versionProblem is not null) return versionProblem;
+
+        var fingerprint = ContinuationToken.FingerprintOf(mix, level, type, pageSize,
+            VersionFingerprint(releasedIn, releasedBy, releasedAfterVersion, releasedAfter));
         var offset = 0;
         if (cursor is not null)
         {
@@ -167,6 +208,7 @@ public sealed class ChartsController : ApiV2ControllerBase
 
         var chartIds = (await _mediator.Send(new GetChartsQuery(mix,
                 level is null ? null : DifficultyLevel.From(level.Value), type)))
+            .Where(c => InVersions(c, versions))
             .Select(c => c.Id).ToArray();
 
         var profiles = (await _mediator.Send(new GetChartSkillProfilesQuery(chartIds)))
@@ -271,6 +313,17 @@ public sealed class ChartsController : ApiV2ControllerBase
     ///     "S21,S22,D23:4" at least 4 from that set of folders. Bucket minimums win over
     ///     <paramref name="count" /> when they exceed it.
     /// </param>
+    /// <param name="releasedIn">
+    ///     Only charts this patch added to the mix, as <c>/api/v2/versions</c> names it. Several:
+    ///     a comma list, or repeat the parameter. A chart carried over from an earlier mix belongs
+    ///     to the mix's launch version.
+    /// </param>
+    /// <param name="releasedBy">Only charts released up to and including this patch — everything a cab on that version has.</param>
+    /// <param name="releasedAfterVersion">Only charts released strictly after this patch — what that cab is missing.</param>
+    /// <param name="releasedAfter">
+    ///     Only charts whose patch shipped after this date, exclusive. A patch with no known date is
+    ///     never after anything, so it is skipped; use the version forms for legacy mixes.
+    /// </param>
     [HttpGet("random")]
     [ProducesResponseType(typeof(CursorPageDto<ChartV2Dto>), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
@@ -281,12 +334,23 @@ public sealed class ChartsController : ApiV2ControllerBase
         [FromQuery(Name = "songTypes")] string[]? songTypes = null,
         [FromQuery(Name = "minLevel")] int? minLevel = null,
         [FromQuery(Name = "maxLevel")] int? maxLevel = null,
-        [FromQuery(Name = "bucket")] string[]? buckets = null)
+        [FromQuery(Name = "bucket")] string[]? buckets = null,
+        [FromQuery(Name = "releasedInVersion")] string[]? releasedIn = null,
+        [FromQuery(Name = "releasedByVersion")] string? releasedBy = null,
+        [FromQuery(Name = "releasedAfterVersion")] string? releasedAfterVersion = null,
+        [FromQuery(Name = "releasedAfter")] DateOnly? releasedAfter = null)
     {
         if (!V2MixParser.TryParse(mixValue, out var mix)) return MixRequiredProblem();
         if (count < 1) return Problem("invalid-count", "count must be at least 1.");
 
+        var (versions, versionProblem) = await ResolveVersions(mix, releasedIn, releasedBy, releasedAfterVersion, releasedAfter);
+        if (versionProblem is not null) return versionProblem;
+        // A version filter that reaches no patch is an empty draw, not an unfiltered one: the
+        // randomizer reads an empty set as "every version".
+        if (versions is { Count: 0 }) return Json(Page(Array.Empty<ChartV2Dto>(), 0, 0, null));
+
         var settings = new RandomSettings { Count = count };
+        if (versions is not null) settings.Versions = versions.ToHashSet(StringComparer.Ordinal);
 
         var types = chartTypes is null
             ? new[] { ChartType.Single, ChartType.Double }
@@ -358,6 +422,41 @@ public sealed class ChartsController : ApiV2ControllerBase
             // category DiagnosticExposureTests allows through.
             return Problem("randomizer-cannot-satisfy", e.Message);
         }
+    }
+
+    /// <summary>
+    ///     The four version parameters, resolved into the names a chart's release must be in — null
+    ///     when none was asked — or a problem when one names a patch the mix does not have. One
+    ///     resolver for the three chart reads, so they cannot disagree about "through 2.09.0".
+    /// </summary>
+    private async Task<(IReadOnlySet<string>? Names, ObjectResult? Problem)> ResolveVersions(MixEnum mix,
+        string[]? releasedIn, string? releasedBy, string? releasedAfterVersion, DateOnly? releasedAfter)
+    {
+        var inVersions = releasedIn?
+            .SelectMany(v => v.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .ToArray();
+        if (inVersions is not { Length: > 0 } && releasedBy is null && releasedAfterVersion is null && releasedAfter is null)
+            return (null, null);
+
+        var versions = await _mediator.Send(new GetMixVersionsQuery(mix));
+        if (MixVersionRange.TryResolve(versions, inVersions, releasedBy, releasedAfterVersion, releasedAfter,
+                out var names, out var unknown))
+            return (names, null);
+
+        return (null, Problem("invalid-version", $"'{unknown}' is not a version of this mix.",
+            detail: $"The versions of {mix} are listed by /api/v2/versions?mix={mix}."));
+    }
+
+    private static bool InVersions(Chart chart, IReadOnlySet<string>? names)
+    {
+        return names is null || (chart.Release is not null && names.Contains(chart.Release.Version));
+    }
+
+    private static string VersionFingerprint(string[]? releasedIn, string? releasedBy, string? releasedAfterVersion,
+        DateOnly? releasedAfter)
+    {
+        var picks = releasedIn is null ? string.Empty : string.Join(",", releasedIn.OrderBy(v => v, StringComparer.Ordinal));
+        return $"{picks}|{releasedBy}|{releasedAfterVersion}|{releasedAfter:yyyy-MM-dd}";
     }
 
     private ObjectResult BucketProblem(string bucket)
