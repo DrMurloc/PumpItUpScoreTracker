@@ -292,6 +292,9 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>1 account privato è un pari ma non viene mostrato.</value>
   </data>
+  <data name="1 private account is on this board but is not shown." xml:space="preserve">
+    <value>1 account privato è in questa classifica ma non viene mostrato.</value>
+  </data>
   <data name="1 reply" xml:space="preserve">
     <value>1 risposta</value>
   </data>
@@ -11714,6 +11717,9 @@
   </data>
   <data name="{0} pools · average level {1}" xml:space="preserve">
     <value>{0} pool · livello medio {1}</value>
+  </data>
+  <data name="{0} private accounts are on this board but are not shown." xml:space="preserve">
+    <value>{0} account privati sono in questa classifica ma non vengono mostrati.</value>
   </data>
   <data name="{0} private accounts are peers but are not shown." xml:space="preserve">
     <value>{0} account privati sono pari ma non vengono mostrati.</value>

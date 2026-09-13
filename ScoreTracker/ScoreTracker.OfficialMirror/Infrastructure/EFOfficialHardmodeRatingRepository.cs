@@ -50,13 +50,20 @@ internal sealed class EFOfficialHardmodeRatingRepository : IOfficialHardmodeRati
         var mixId = MixIds.For(mix);
         var rows = await (from rating in database.Set<OfficialHardmodeRatingEntity>()
                 join player in database.Set<OfficialPlayerEntity>() on rating.OfficialPlayerId equals player.Id
+                join account in database.User on player.UserId equals account.Id into linked
+                from account in linked.DefaultIfEmpty()
                 where rating.MixId == mixId
                 select new
                 {
                     player.Id,
                     player.Username,
                     player.AvatarUrl,
-                    player.UserId,
+                    // A private account's link is mirrored data they never published, so it does
+                    // not travel: the chip's "Linked to a site account" tick says "this tag is
+                    // someone here" as plainly as a name would (D17). The census drops linked
+                    // players outright, so this only catches the account that linked BETWEEN
+                    // Sunday's rebuild and now — a stale row that still names its owner.
+                    UserId = account != null && account.IsPublic ? player.UserId : null,
                     Hardmode = pool == ChartType.Single ? rating.Singles
                         : pool == ChartType.Double ? rating.Doubles
                         : rating.Combined,
@@ -71,7 +78,7 @@ internal sealed class EFOfficialHardmodeRatingRepository : IOfficialHardmodeRati
         // The avatar rides the row rather than being fetched per player by the page: it is one
         // column of a join the board already makes. IsSupplemented stays false by construction -
         // a Hardmode rating has no supplemented reading, and the census excludes linked players,
-        // so UserId is null here too.
+        // so UserId is normally null here anyway - the read above is what holds when it is not.
         return rows.Select((r, i) => new OfficialHardmodeRow(i + 1,
                 new OfficialPlayerRecord(r.Id, r.Username,
                     string.IsNullOrWhiteSpace(r.AvatarUrl) ? null : new Uri(r.AvatarUrl), r.UserId),

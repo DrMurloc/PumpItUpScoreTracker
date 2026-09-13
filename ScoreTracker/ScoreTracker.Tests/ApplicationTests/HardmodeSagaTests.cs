@@ -307,8 +307,9 @@ public sealed class HardmodeSagaTests
                     PhoenixPlate.MarvelousGame, false, At))
                 .ToArray());
 
-        ratings.Setup(r => r.GetBoard(It.IsAny<MixEnum>(), It.IsAny<ChartType?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<HardmodeBoardRow>());
+        ratings.Setup(r => r.GetBoard(It.IsAny<MixEnum>(), It.IsAny<ChartType?>(), It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(HardmodeBoardRecord.Empty);
         ratings.Setup(r => r.Clear(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         ratings.Setup(r => r.Save(It.IsAny<MixEnum>(), It.IsAny<IReadOnlyCollection<HardmodeRatingRow>>(),
             It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);

@@ -28,7 +28,7 @@ namespace ScoreTracker.PlayerProgress.Application;
 internal sealed class HardmodeSaga :
     IConsumer<HardmodeChartsRebuiltEvent>,
     IRequestHandler<GetHardmodePageQuery, HardmodePageRecord>,
-    IRequestHandler<GetHardmodeBoardQuery, IReadOnlyList<HardmodeBoardRow>>,
+    IRequestHandler<GetHardmodeBoardQuery, HardmodeBoardRecord>,
     IRequestHandler<HardmodeSaga.RepriceHardmodePool, Unit>
 {
     /// <summary>
@@ -161,10 +161,15 @@ internal sealed class HardmodeSaga :
             Rails(combined, singles, doubles, request.Mix), qualifying.Count);
     }
 
-    public async Task<IReadOnlyList<HardmodeBoardRow>> Handle(GetHardmodeBoardQuery request,
+    /// <summary>
+    ///     The board this viewer may see. The visibility rule lives in the read rather than here
+    ///     (D17), so the standing the page prints above the rows is counted over the same
+    ///     population and cannot disagree with them.
+    /// </summary>
+    public async Task<HardmodeBoardRecord> Handle(GetHardmodeBoardQuery request,
         CancellationToken cancellationToken)
     {
-        return await _ratings.GetBoard(request.Mix, request.Pool, cancellationToken);
+        return await _ratings.GetBoard(request.Mix, request.Pool, request.ViewerId, cancellationToken);
     }
 
     /// <summary>

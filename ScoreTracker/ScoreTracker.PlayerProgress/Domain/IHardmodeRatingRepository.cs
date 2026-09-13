@@ -21,7 +21,12 @@ internal interface IHardmodeRatingRepository
     /// <summary>Zeroes the mix before a rebuild, so a player who lost a score does not keep last week's total.</summary>
     Task Clear(MixEnum mix, CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<HardmodeBoardRow>> GetBoard(MixEnum mix, ChartType? pool,
+    /// <summary>
+    ///     The board as one viewer may see it: a private account is on its own board and nobody
+    ///     else's (D17), so the rows and their places are viewer-shaped and the record carries
+    ///     the count of the accounts left out. A null viewer is an anonymous read.
+    /// </summary>
+    Task<HardmodeBoardRecord> GetBoard(MixEnum mix, ChartType? pool, Guid? viewerId,
         CancellationToken cancellationToken);
 
     Task<HardmodeRatingRow?> Get(MixEnum mix, Guid userId, CancellationToken cancellationToken);
@@ -33,6 +38,11 @@ internal interface IHardmodeRatingRepository
     ///     <para>
     ///         Null when the account holds nothing on that pool: a zero is not a standing, which
     ///         is the same rule the board's own read applies.
+    ///     </para>
+    ///     <para>
+    ///         Counted over the same population <see cref="GetBoard" /> lists for this player —
+    ///         public accounts plus their own — so the strip's "#N of M" and the rows beneath it
+    ///         cannot disagree (D17).
     ///     </para>
     /// </summary>
     Task<(int Place, int Field)?> GetStanding(MixEnum mix, ChartType? pool, Guid userId,
