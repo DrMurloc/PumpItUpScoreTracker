@@ -32,6 +32,7 @@ is only a baseline, so seed `oracle.json` from whatever new-song list the owner 
 
 ```powershell
 & scripts\walk-and-fetch.ps1      # YouTube: walk newest -> watermark, cache watch pages
+& scripts\fetch-channels.ps1 -Version v1.02.0   # the patch's playlists -> channels.json (each video's channel)
 & scripts\build-batch.ps1         # emit Downloads\phoenix2-batch-<date>.json + -report.txt
 ```
 

@@ -108,6 +108,10 @@
                                     <td>@song.Type.ToString()</td>
                                 </tr>
                                 <tr>
+                                    <td>@L["Channel"]</td>
+                                    <td>@(song.Channel is { } channel ? L[channel.GetName()].Value : "—")</td>
+                                </tr>
+                                <tr>
                                     <td>@L["BPM"]</td>
                                     <td>@song.Bpm.ToString()</td>
                                 </tr>
@@ -268,6 +272,9 @@
             foreach (var song in parsed.Songs)
             {
                 var warnings = new List<PreviewWarning>();
+                // The parser's own warnings — a missing or unrecognised channel — never block (song-channels.md §5).
+                foreach (var warning in song.Warnings ?? Array.Empty<string>())
+                    warnings.Add(new PreviewWarning(Severity.Warning, warning));
                 var alreadyInPhoenix2 = false;
                 if (song.Song != null)
                 {
@@ -363,6 +370,10 @@
             {
                 var songId = await _charts.CreateSong(song.Name, song.KoreanName, imageUrl, song.Type,
                     song.Duration, song.Artist, song.Bpm);
+                // The song's channel on Phoenix 2, the row every read of this mix will carry
+                // (docs/design/song-channels.md §5). No channel named, no row: it can be set later.
+                if (song.Channel is { } songChannel)
+                    await Mediator.Send(new SetSongChannelCommand(MixEnum.Phoenix2, songId, songChannel));
                 foreach (var chart in song.Charts)
                 {
                     await _charts.CreateChart(MixEnum.Phoenix2, songId, chart.Type, chart.Level,
