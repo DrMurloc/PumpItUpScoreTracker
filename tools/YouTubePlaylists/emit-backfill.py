@@ -10,6 +10,9 @@ back, 0 = commit):
      NULL — a re-run is harmless and a hand fix is never overwritten.
   2. The two charts the 2.12.0 playlist and the wiki list as new charts on an existing song but the
      catalog had as XX debuts — La Cinquantaine S22 and D24: origin → Phoenix (owner decision D9).
+  2b. The one cross-mix revival: Conflict left with its license and came back in Phoenix 2.00.0
+     (NamuWiki's 2.00.0 notes), so its XX charts entered Phoenix there — D18 and D26 keep the
+     2.12.0 step 1 gave them. Within-mix returns need no step: pumpout's S6 is first presence.
   3. Every remaining Phoenix / Phoenix 2 ChartMix row → that mix's 1.00.0: present at launch.
   4. The extractor's S6 body (legacy mixes), when given.
 """
@@ -59,6 +62,15 @@ def main():
     for r in mislabeled:
         w(f"-- {r['song']} {r['type'][0]}{r['level']}")
         w(f"UPDATE [scores].[Chart] SET [OriginalMixId] = '{MIX_IDS['Phoenix']}' WHERE [Id] = '{r['chartId']}' AND [OriginalMixId] = '{XX_ID}';")
+    w("")
+    w("")
+    w("-- ============ 2b. the one cross-mix revival: Conflict left with its license and came back in 2.00.0 (NamuWiki), so its XX charts entered Phoenix there; D18 / D26 keep 2.12.0 from step 1 ============")
+    w("UPDATE cm SET [AddedInVersionId] = v.[Id]")
+    w("FROM [scores].[ChartMix] cm")
+    w("JOIN [scores].[Chart] c ON c.[Id] = cm.[ChartId]")
+    w("JOIN [scores].[Song] s ON s.[Id] = c.[SongId]")
+    w("JOIN [scores].[MixVersion] v ON v.[MixId] = cm.[MixId] AND v.[Name] = N'2.00.0'")
+    w(f"WHERE cm.[MixId] = '{MIX_IDS['Phoenix']}' AND s.[Name] = N'Conflict' AND cm.[AddedInVersionId] IS NULL;")
     w("")
     w("-- ============ 3. everything else in Phoenix / Phoenix 2 was present at launch ============")
     for mix, mix_id in MIX_IDS.items():
