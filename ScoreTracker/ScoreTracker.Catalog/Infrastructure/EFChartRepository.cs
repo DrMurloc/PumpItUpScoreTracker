@@ -486,7 +486,8 @@ internal sealed class EFChartRepository : IChartRepository
     }
 
     // A Viewer key: the dictionary carries Chart.Level, and a season's ChartSeason rows change it.
-    private static string ChartCacheKey(Guid mixId)
+    /// <summary>The per-mix chart dictionary's key; the SongMix write evicts it too.</summary>
+    internal static string ChartCacheKey(Guid mixId)
     {
         return CacheKeys.Viewer(nameof(EFChartRepository), mixId, SeasonId.AllTime, nameof(GetAllCharts));
     }
@@ -514,6 +515,10 @@ internal sealed class EFChartRepository : IChartRepository
                     from om in origins.DefaultIfEmpty()
                     join dv in database.Set<MixVersionEntity>() on om.AddedInVersionId equals dv.Id into debuts
                     from dv in debuts.DefaultIfEmpty()
+                    // The song's channel on THIS mix, a left join for the same reason: no row is an
+                    // unknown channel, never a chart dropped (docs/design/song-channels.md §3).
+                    join sm in database.Set<SongMixEntity>() on new { cm.MixId, c.SongId } equals new { sm.MixId, sm.SongId } into songMixes
+                    from sm in songMixes.DefaultIfEmpty()
                     where cm.MixId == mixId
                     select new
                     {
@@ -537,13 +542,15 @@ internal sealed class EFChartRepository : IChartRepository
                         VersionOrder = v == null ? (int?)null : v.SortOrder,
                         DebutVersionName = dv == null ? null : dv.Name,
                         DebutVersionDate = dv == null ? null : dv.ReleaseDate,
-                        DebutVersionOrder = dv == null ? (int?)null : dv.SortOrder
+                        DebutVersionOrder = dv == null ? (int?)null : dv.SortOrder,
+                        Channel = sm == null ? null : sm.Channel
                     })
                 .ToListAsync(cancellationToken);
             return rows.ToDictionary(r => r.Id, r => new Chart(r.Id, MixIds.ToEnum(r.OriginalMixId),
                 new Song(r.SongName, Enum.Parse<SongType>(r.SongType), new Uri(r.ImagePath), r.Duration,
                     r.Artist ?? "Unknown",
-                    Bpm.From(r.MinBpm, r.MaxBpm)),
+                    Bpm.From(r.MinBpm, r.MaxBpm),
+                    r.Channel == null ? null : Enum.Parse<Channel>(r.Channel)),
                 Enum.Parse<ChartType>(r.ChartType),
                 r.Level, mix, r.StepArtist, r.NoteCount,
                 LegacySlotHelperMethods.ToNullableLegacySlot(r.LegacySlot),
