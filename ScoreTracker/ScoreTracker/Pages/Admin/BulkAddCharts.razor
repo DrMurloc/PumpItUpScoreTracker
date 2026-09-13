@@ -6,6 +6,10 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.Services.Contracts
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@using MediatR
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.Catalog.Contracts.Commands
+@using ScoreTracker.Catalog.Contracts.Queries
 
 <PageTitle>@L["Bulk Add Charts"]</PageTitle>
 
@@ -13,6 +17,28 @@
 <MudText Typo="Typo.body2">@L["Upload a JSON file to create Phoenix 2 songs and charts in bulk."]</MudText>
 <MudText Typo="Typo.caption">@L["Schema reference:"] <code>docs/design/new-charts-json.md</code></MudText>
 <br/>
+@* The patch this batch belongs to (docs/design/chart-versions.md §6). A batch is one patch's
+   content, so the version is picked once here rather than carried in the blob: the newest
+   Phoenix 2 patch by default, or a new one by name and Korean release date. *@
+<MudPaper Outlined="true" Class="pa-3 mt-2 mb-3" Style="max-width: 560px">
+    <MudText Typo="Typo.subtitle2">@L["Version"]</MudText>
+    <MudText Typo="Typo.caption">@L["Every chart this batch creates is stamped with the Phoenix 2 patch you pick here."]</MudText>
+    <MudSelect T="string" @bind-Value="_selectedVersion" Label="@L["Version"]" Dense="true" Disabled="_useNewVersion || _isSaving"
+               Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2">
+        @foreach (var version in _versions)
+        {
+            <MudSelectItem T="string" Value="@version.Name">v@(version.Name) · @(version.ReleaseDate?.ToString("yyyy-MM-dd") ?? "—") · @version.ChartCount</MudSelectItem>
+        }
+    </MudSelect>
+    <MudSwitch T="bool" @bind-Value="_useNewVersion" Label="@L["New version"]" Color="Color.Primary" Disabled="_isSaving"></MudSwitch>
+    @if (_useNewVersion)
+    {
+        <MudTextField T="string" @bind-Value="_newVersionName" Label="@L["Version name"]" Placeholder="1.02.0"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="_isSaving"></MudTextField>
+        <MudDatePicker @bind-Date="_newVersionDate" Label="@L["Release date"]" Variant="Variant.Outlined"
+                       Margin="Margin.Dense" Disabled="_isSaving" Class="mt-2"></MudDatePicker>
+    }
+</MudPaper>
 @* A file upload, not a paste box: bulk blobs overflow the SignalR message cap that
    textarea binds ride on, arriving server-side as an empty string. *@
 <MudButton HtmlTag="label" Color="Color.Primary" Variant="Variant.Filled"
@@ -149,6 +175,7 @@
 
 @inject ICurrentUserAccessor CurrentUser;
 @inject IChartRepository _charts;
+@inject IMediator Mediator;
 @inject IFileUploadClient Files;
 @inject IBulkChartJsonParser Parser;
 @inject ISnackbar Snackbar;
@@ -165,6 +192,30 @@
     private readonly List<PreviewEntry> _entries = new();
     private readonly List<CreationResult> _results = new();
 
+    // The patch picker: the mix's patches, the pick, and the new-version entry.
+    private IReadOnlyList<MixVersionRecord> _versions = Array.Empty<MixVersionRecord>();
+    private string? _selectedVersion;
+    private bool _useNewVersion;
+    private string _newVersionName = string.Empty;
+    private DateTime? _newVersionDate;
+
+    private bool VersionChosen => _useNewVersion
+        ? !string.IsNullOrWhiteSpace(_newVersionName)
+        : _selectedVersion != null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadVersions();
+    }
+
+    /// <summary>Newest patch first in the pick, because a batch is almost always the latest one.</summary>
+    private async Task LoadVersions()
+    {
+        _versions = (await Mediator.Send(new GetMixVersionsQuery(MixEnum.Phoenix2)) ?? Array.Empty<MixVersionRecord>())
+            .OrderByDescending(v => v.SortOrder).ToArray();
+        _selectedVersion ??= _versions.FirstOrDefault()?.Name;
+    }
+
     private sealed record PreviewWarning(Severity Severity, string Message);
 
     private sealed class PreviewEntry
@@ -178,6 +229,7 @@
     private sealed record CreationResult(string Song, string Status, Color Color, string Detail);
 
     private bool CanConfirm => !_isSaving
+                               && VersionChosen
                                && !_globalErrors.Any()
                                && _entries.Any()
                                && _entries.All(e => !e.Parse.Errors.Any())
@@ -238,6 +290,13 @@
     {
         _isSaving = true;
         _progress = 0;
+        // One patch for the whole batch. The create command answers an existing name with its
+        // row rather than a second one, so the picked patch and a re-run both resolve here.
+        var versionName = _useNewVersion ? _newVersionName.Trim() : _selectedVersion!;
+        var versionDate = _useNewVersion
+            ? _newVersionDate is { } picked ? DateOnly.FromDateTime(picked) : null
+            : _versions.FirstOrDefault(v => v.Name == versionName)?.ReleaseDate;
+        var versionId = await Mediator.Send(new CreateMixVersionCommand(MixEnum.Phoenix2, versionName, versionDate));
         _results.Clear();
         var created = 0;
         var failed = 0;
@@ -278,7 +337,7 @@
                 foreach (var chart in song.Charts)
                 {
                     await _charts.CreateChart(MixEnum.Phoenix2, songId, chart.Type, chart.Level,
-                        chart.ChannelName, chart.VideoUrl, chart.StepArtist);
+                        chart.ChannelName, chart.VideoUrl, chart.StepArtist, versionId);
                 }
 
                 created++;
@@ -297,6 +356,9 @@
         _charts.ClearCache();
         _entries.Clear();
         _isSaving = false;
+        _useNewVersion = false;
+        _selectedVersion = versionName;
+        await LoadVersions();
         Snackbar.Add($"{L["Created"]}: {created} · {L["Skipped"]}: {skipped} · {L["Failed"]}: {failed}",
             failed > 0 ? Severity.Warning : Severity.Success);
     }
