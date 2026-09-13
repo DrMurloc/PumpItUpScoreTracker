@@ -649,6 +649,36 @@ public sealed class ChartsPageTests : ComponentTestBase
     }
 
     [Fact]
+    public async Task DebutsOnlyToggleNarrowsTheQueryAndReadsAsAChip()
+    {
+        ShowEveryFilter();
+        SeedVersions(("1.00.0", 10), ("1.01.0", 20));
+        SeedVersionCounts(("1.00.0", 300), ("1.01.0", 53));
+
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".srp-card")));
+        await cut.Find("button[aria-label=Filters]").ClickAsync(new MouseEventArgs());
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".srp-debut-toggle")));
+
+        await cut.Find(".srp-debut-toggle").ClickAsync(new MouseEventArgs());
+
+        cut.WaitForAssertion(() => Assert.True(_lastQuery!.DebutsOnly));
+        Assert.Contains(cut.FindAll(".srp-chip"), c => c.TextContent.Contains("Debuts only"));
+    }
+
+    [Fact]
+    public void ADebutFlagInTheUrlNarrowsTheQueryAndReadsAsAChip()
+    {
+        SeedVersions(("1.00.0", 10), ("1.01.0", 20));
+
+        Services.GetRequiredService<NavigationManager>().NavigateTo("/Charts?Debut=1");
+        var cut = RenderComponent<Charts>();
+
+        cut.WaitForAssertion(() => Assert.True(_lastQuery!.DebutsOnly));
+        Assert.Contains("Debuts only", cut.Markup);
+    }
+
+    [Fact]
     public void AVersionInTheUrlFiltersTheQueryAndReadsAsAChip()
     {
         SeedVersions(("1.00.0", 10), ("1.01.0", 20));

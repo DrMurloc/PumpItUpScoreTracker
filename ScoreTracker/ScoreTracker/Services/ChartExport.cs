@@ -146,12 +146,15 @@ public static class ChartExport
         new("Level", false, (r, _) => ((int)r.Chart.Level).ToString(CultureInfo.InvariantCulture)),
         new("Mix", false, (r, _) => r.Chart.Mix.GetName()),
         new("DebutMix", false, (r, _) => r.DebutMix.GetName()),
-        // The patch of the exported mix the chart arrived in, and its Korean release date (docs/design/chart-versions.md §4).
-        new("Version", false, (r, _) => r.Chart.Release?.Version ?? string.Empty),
-        new("ReleaseDate", false,
-            (r, _) => r.Chart.Release?.ReleaseDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty),
-        // Whether the exported mix is the chart's debut mix, so the patch above is the one that introduced it.
-        new("Debut", false, (r, _) => r.Chart.Mix == r.DebutMix ? "true" : "false"),
+        // The patch of the exported mix the chart entered in and its Korean date, then the patch it first
+        // appeared in anywhere with its date, and whether those are one and the same (docs/design/chart-versions.md §4).
+        new("AddedInVersion", false, (r, _) => r.Chart.AddedIn?.Version ?? string.Empty),
+        new("AddedOn", false,
+            (r, _) => r.Chart.AddedIn?.ReleaseDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty),
+        new("DebutVersion", false, (r, _) => r.Chart.Debut?.Version ?? string.Empty),
+        new("DebutedOn", false,
+            (r, _) => r.Chart.Debut?.ReleaseDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty),
+        new("Debut", false, (r, _) => r.Chart.IsDebut ? "true" : "false"),
         new("LegacyDifficulty", false, (r, _) => r.Chart.Slot?.GetName() ?? string.Empty),
         new("SongType", false, (r, _) => r.Chart.Song.Type.ToString()),
         new("BPM", false, (r, _) => r.Chart.Song.Bpm?.ToString() ?? string.Empty),

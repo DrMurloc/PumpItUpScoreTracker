@@ -482,6 +482,10 @@ else
                        every chip up to the chosen one, and the chips stay toggleable after. *@
                     <div class="srp-facet-head srp-facet-head-version">
                         <span>@L["Version"]</span>
+                        @* The site's form of the API's debut filter: on, a patch chip reads as what the
+                           patch introduced rather than everything it put on the cab. *@
+                        <span class="srp-facet-chip srp-debut-toggle @(_debutsOnly ? "srp-facet-chip-on" : "")"
+                              role="button" tabindex="0" @onclick="ToggleDebutsOnly">@L["Debuts only"]</span>
                         <span class="srp-through">
                             <select @key="_throughKey" class="srp-through-select" aria-label="@L["Through a version"]" value="" @onchange="OnThroughChanged">
                                 <option value="">@L["Through a version…"]</option>
@@ -772,6 +776,7 @@ else
 
     /// <summary>The picked patches, by name — the exact set, so a shared link keeps meaning the same versions after a new patch ships.</summary>
     private List<string> _versions = new();
+    private bool _debutsOnly;
 
     /// <summary>The mix in view's patches, oldest first (docs/design/chart-versions.md §4).</summary>
     private IReadOnlyList<MixVersionRecord> _mixVersions = Array.Empty<MixVersionRecord>();
@@ -784,12 +789,17 @@ else
     /// </summary>
     private bool HasVersions => _mixVersions.Count > 1 && _mixVersions.Any(v => v.ChartCount > 0);
 
-    private string ReleaseLine(ChartSearchResult result)
+    /// <summary>
+    ///     The Newest content sort line: the debut patch, dated, on a chart that debuted here; the
+    ///     debut mix and its patch on a carry-over; the debut mix alone when no patch is known.
+    /// </summary>
+    private string DebutLine(ChartSearchResult result)
     {
-        if (result.Chart.Release is not { } release) return $"{L["Debut"]}: {result.DebutMix.GetName()}";
-        return release.ReleaseDate is { } released
-            ? $"v{release.Version} · {released.ToString("MMM d, yyyy")}"
-            : $"v{release.Version}";
+        if (result.Chart.Debut is not { } debut) return $"{L["Debut"]}: {result.DebutMix.GetName()}";
+        if (!result.Chart.IsDebut) return $"{result.DebutMix.GetName()} · v{debut.Version}";
+        return debut.ReleaseDate is { } debuted
+            ? $"v{debut.Version} · {debuted.ToString("MMM d, yyyy")}"
+            : $"v{debut.Version}";
     }
 
     /// <summary>The digits before the first dot, or null for a name that is not major.rest — JE, Pre-v1.10, Release.</summary>
@@ -926,6 +936,7 @@ else
     [Parameter] [SupplyParameterFromQuery(Name = "Badges")] public string? BadgesParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "DebutMix")] public string? DebutMixParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Version")] public string? VersionParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "Debut")] public string? DebutParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Slots")] public string? SlotsParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "PassDiff")] public string? PassDiffParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "ScoreDiff")] public string? ScoreDiffParam { get; set; }
@@ -974,6 +985,7 @@ else
         _badges = ParseCsv(BadgesParam);
         _debutMixes = ParseCsvEnum<MixEnum>(DebutMixParam);
         _versions = ParseCsv(VersionParam);
+        _debutsOnly = DebutParam == "1";
         _legacySlots = ParseCsvEnum<LegacySlot>(SlotsParam);
         _passDifficulty = ParseCsvEnum<TierListCategory>(PassDiffParam);
         _scoreDifficulty = ParseCsvEnum<TierListCategory>(ScoreDiffParam);
@@ -1055,6 +1067,7 @@ else
             ["Badges"] = _badges.Count == 0 ? null : string.Join(',', _badges),
             ["DebutMix"] = Csv(_debutMixes),
             ["Version"] = _versions.Count == 0 ? null : string.Join(',', _versions),
+            ["Debut"] = _debutsOnly ? "1" : null,
             ["Slots"] = Csv(_legacySlots),
             ["PassDiff"] = Csv(_passDifficulty),
             ["ScoreDiff"] = Csv(_scoreDifficulty),
@@ -1163,6 +1176,7 @@ else
             Badges = _badges.Count == 0 ? null : _badges,
             DebutMixes = _debutMixes.Count == 0 ? null : _debutMixes,
             Versions = _versions.Count == 0 ? null : _versions,
+            DebutsOnly = _debutsOnly,
             LegacySlots = _legacySlots.Count == 0 ? null : _legacySlots,
             PassDifficulty = _passDifficulty.Count == 0 ? null : _passDifficulty,
             ScoreDifficulty = _scoreDifficulty.Count == 0 ? null : _scoreDifficulty,
@@ -1367,6 +1381,12 @@ else
                 }));
             AddListChips(chips, _badges, b => BadgeDisplay(b));
             AddListChips(chips, _debutMixes, m => $"{L["Debut"]}: {m.GetName()}");
+            if (_debutsOnly)
+                chips.Add(new QueryChip(L["Debuts only"], false, async () =>
+                {
+                    _debutsOnly = false;
+                    await ApplyChange();
+                }));
             // Every version up to one reads as a single chip; anything else lists the picks.
             if (_versions.Count > 0 && MixVersionRange.ThroughName(_mixVersions, _versions) is { } through)
                 chips.Add(new QueryChip(L["Through {0}", $"v{through}"], false, async () =>
@@ -1553,6 +1573,12 @@ else
     private Task ToggleDebutMix(MixEnum mix) => Toggle(_debutMixes, mix);
     private Task ToggleVersion(string name) => Toggle(_versions, name);
 
+    private Task ToggleDebutsOnly()
+    {
+        _debutsOnly = !_debutsOnly;
+        return ApplyChange();
+    }
+
     /// <summary>The bulk select: every patch up to and including the pick becomes a chip, individually toggleable after.</summary>
     private async Task OnThroughChanged(ChangeEventArgs e)
     {
@@ -1623,7 +1649,11 @@ else
                     () => _debutMixes.Count > 0, () => _debutMixes.Clear()),
                 // Offered only where the mix has more than one patch (D6): one chip filters nothing.
                 new("version", L["Version"], HasVersions,
-                    () => _versions.Count > 0, () => _versions.Clear()),
+                    () => _versions.Count > 0 || _debutsOnly, () =>
+                    {
+                        _versions.Clear();
+                        _debutsOnly = false;
+                    }),
                 new("legacySlot", L["Legacy Difficulty"], HasLegacySlots,
                     () => _legacySlots.Count > 0, () => _legacySlots.Clear()),
                 new("passDifficulty", L["Pass Difficulty"], true,
@@ -2138,8 +2168,8 @@ else
                 result.CommunityVoteRating == null ? null : $"{L["Community Vote"]} {result.CommunityVoteRating.Value:0.0}",
             ChartSearchSort.ScoringLevel =>
                 result.ScoringLevel == null ? null : $"{L["Scoring level"]} {result.ScoringLevel.Value:0.0}",
-            // The patch of the mix in view, dated when the patch is; the debut mix where no patch is known.
-            ChartSearchSort.DebutEra => ReleaseLine(result),
+            // First appearance anywhere: the debut patch, or the debut mix where no patch is known.
+            ChartSearchSort.DebutEra => DebutLine(result),
             ChartSearchSort.MyRecent when result.My?.RecordedOn != null =>
                 result.My.RecordedOn.Value.ToString("yyyy-MM-dd"),
             _ => null

@@ -231,7 +231,7 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
     }
 
     [Fact]
-    public void ReleasedRowHidesUntilSomeChartCarriesAPatch()
+    public void AddedInRowHidesUntilSomeChartCarriesAPatch()
     {
         SeedVersions(0, ("1.00.0", 10), ("1.01.0", 20));
 
@@ -242,7 +242,7 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
     }
 
     [Fact]
-    public void ReleasedRowHidesWhenTheMixHasASinglePatch()
+    public void AddedInRowHidesWhenTheMixHasASinglePatch()
     {
         SeedVersions(("Release", 10));
 
