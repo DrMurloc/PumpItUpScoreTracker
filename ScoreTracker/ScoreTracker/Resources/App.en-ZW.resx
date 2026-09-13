@@ -292,6 +292,9 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>1 mrglrgll grgl mrgl maglmurp mo blgrlargl.</value>
   </data>
+  <data name="1 private account is on this board but is not shown." xml:space="preserve">
+    <value>1 mrglrgll grgl mrgl ur grogl mrglblarg mo blgrlargl.</value>
+  </data>
   <data name="1 reply" xml:space="preserve">
     <value>1 grublurp</value>
   </data>
@@ -11657,6 +11660,9 @@
   </data>
   <data name="{0} pools · average level {1}" xml:space="preserve">
     <value>{0} blubgro · rorg grorpmurm {1}</value>
+  </data>
+  <data name="{0} private accounts are on this board but are not shown." xml:space="preserve">
+    <value>{0} mrglrgll grglrgl mrgl ur grogl mrglblarg mo blgrlargl.</value>
   </data>
   <data name="{0} private accounts are peers but are not shown." xml:space="preserve">
     <value>{0} mrglrgll grglrgl mrgl maglmurp mo blgrlargl.</value>

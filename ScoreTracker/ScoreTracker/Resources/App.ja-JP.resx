@@ -292,6 +292,9 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>非公開アカウント 1 件はピアですが表示されません。</value>
   </data>
+  <data name="1 private account is on this board but is not shown." xml:space="preserve">
+    <value>非公開アカウント 1 件がこのランキングにいますが表示されません。</value>
+  </data>
   <data name="1 reply" xml:space="preserve">
     <value>返信 1件</value>
   </data>
@@ -11657,6 +11660,9 @@
   </data>
   <data name="{0} pools · average level {1}" xml:space="preserve">
     <value>プール{0}件 · 平均レベル{1}</value>
+  </data>
+  <data name="{0} private accounts are on this board but are not shown." xml:space="preserve">
+    <value>非公開アカウント {0} 件がこのランキングにいますが表示されません。</value>
   </data>
   <data name="{0} private accounts are peers but are not shown." xml:space="preserve">
     <value>非公開アカウント {0} 件はピアですが表示されません。</value>

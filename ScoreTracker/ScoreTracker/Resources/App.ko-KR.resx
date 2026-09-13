@@ -292,6 +292,9 @@
   <data name="1 private account is a peer but is not shown." xml:space="preserve">
     <value>비공개 계정 1개가 동료이지만 표시되지 않습니다.</value>
   </data>
+  <data name="1 private account is on this board but is not shown." xml:space="preserve">
+    <value>비공개 계정 1개가 이 리더보드에 있지만 표시되지 않습니다.</value>
+  </data>
   <data name="1 reply" xml:space="preserve">
     <value>답글 1개</value>
   </data>
@@ -11589,6 +11592,9 @@
   </data>
   <data name="{0} pools · average level {1}" xml:space="preserve">
     <value>풀 {0}개 · 평균 레벨 {1}</value>
+  </data>
+  <data name="{0} private accounts are on this board but are not shown." xml:space="preserve">
+    <value>비공개 계정 {0}개가 이 리더보드에 있지만 표시되지 않습니다.</value>
   </data>
   <data name="{0} private accounts are peers but are not shown." xml:space="preserve">
     <value>비공개 계정 {0}개가 동료이지만 표시되지 않습니다.</value>
