@@ -52,7 +52,7 @@ internal sealed record DevSongRow(string Name, string Type, string Artist, int D
 [ExcludeFromCodeCoverage]
 internal sealed record DevChartRow(Guid ChartId, MixEnum Mix, MixEnum OriginalMix, string SongName,
     string Type, int Level, int? NoteCount, int PlayerCount, string? StepArtist, string? LegacySlot,
-    string? Version = null);
+    string? Version = null, string? Channel = null);
 
 [ExcludeFromCodeCoverage]
 internal sealed record DevTierListRow(string ListName, MixEnum Mix, Guid ChartId, string Category, int Order);

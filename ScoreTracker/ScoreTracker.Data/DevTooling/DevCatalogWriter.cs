@@ -31,7 +31,7 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
     /// </summary>
     private static readonly string[] ClearOrder =
     {
-        "PhoenixRecord", "SavedChart", "ChartScoringLevel", "TierListEntry", "ChartMix", "Chart", "Song", "MixVersion", "Mix"
+        "PhoenixRecord", "SavedChart", "ChartScoringLevel", "TierListEntry", "ChartMix", "Chart", "SongMix", "Song", "MixVersion", "Mix"
     };
 
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
@@ -124,6 +124,21 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
                     ? versionId
                     : DBNull.Value;
             }, cancellationToken);
+
+        // A song's channel per mix rides the chart rows on the wire; one SongMix row per (song, mix)
+        // that names one, the first chart's word taken where a song's charts disagree
+        // (docs/design/song-channels.md §3). A row without a channel writes nothing: unknown is absence.
+        var songMixes = snapshot.Charts
+            .Where(c => known.Contains(c.ChartId) && c.Channel != null)
+            .GroupBy(c => (c.Mix, c.SongName))
+            .Select(g => (g.Key.Mix, g.Key.SongName, g.First().Channel!))
+            .ToArray();
+        await Insert(connection, transaction, "SongMix", songMixes, (row, s) =>
+        {
+            row["SongId"] = songIds[s.SongName];
+            row[MixIdColumn] = MixIds.For(s.Mix);
+            row["Channel"] = s.Item3;
+        }, cancellationToken);
 
         await Insert(connection, transaction, "TierListEntry",
             snapshot.TierListEntries.Where(t => known.Contains(t.ChartId)), (row, t) =>

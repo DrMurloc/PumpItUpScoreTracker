@@ -110,7 +110,7 @@ internal sealed class DevApiReader
                 if (!Enum.TryParse<MixEnum>(chart.OriginalMix, out var originalMix)) originalMix = mix;
                 charts.Add(new DevChartRow(chart.Id, mix, originalMix, chart.SongName, chart.Type,
                     chart.Level, chart.NoteCount, chart.PlayerCount, chart.StepArtist, chart.LegacySlot,
-                    chart.AddedInVersion));
+                    chart.AddedInVersion, chart.Channel));
                 // Scoring level rides on the chart now, so this is one fewer pass per mix.
                 if (chart.ScoringLevel is not null)
                     scoringLevels.Add(new DevScoringLevelRow(mix, chart.Id, chart.ScoringLevel.Value));
@@ -336,7 +336,7 @@ internal sealed class DevApiReader
 
     private sealed record ChartWire(Guid Id, string Mix, string OriginalMix, string SongName, string Type,
         int Level, int? NoteCount, int PlayerCount, string? StepArtist, string? LegacySlot,
-        double? ScoringLevel, string? AddedInVersion = null, DateOnly? AddedOn = null);
+        double? ScoringLevel, string? AddedInVersion = null, DateOnly? AddedOn = null, string? Channel = null);
 
     private sealed record VersionWire(string Name, DateOnly? ReleaseDate, int SortOrder, int ChartCount);
 
