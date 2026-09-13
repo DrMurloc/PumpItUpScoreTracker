@@ -620,4 +620,42 @@ public sealed class ChartDetailsDialogTests : TestContext
 
         Assert.Equal("span", cut.Find($"[data-testid=anchor-{comment.Id}]").TagName.ToLowerInvariant());
     }
+
+    // ── The Chart Stats meta rows the page already had (docs/design/song-channels.md §5) ──
+
+    [Fact]
+    public void TheStatsTabCarriesTheDebutTheAddedInPatchAndTheChannel()
+    {
+        var carried = SetupChart(null);
+        carried = carried with
+        {
+            OriginalMix = MixEnum.Prime,
+            Mix = MixEnum.Phoenix2,
+            AddedIn = new VersionStamp(MixEnum.Phoenix2, "1.00.0", new DateOnly(2026, 7, 9), 10),
+            Debut = new VersionStamp(MixEnum.Prime, "1.06.0", null, 60),
+            Song = carried.Song with { Channel = Channel.WorldMusic }
+        };
+
+        var cut = RenderDialog(carried, ChartDetailsDialog.DetailsTab.Stats);
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-meta-channel")));
+        var debut = cut.Find(".chart-details-meta-debut").TextContent;
+        Assert.Contains("Debuted in Prime", debut);
+        Assert.Contains("v1.06.0", debut);
+        var added = cut.Find(".chart-details-meta-added").TextContent;
+        Assert.Contains("Added in Phoenix 2", added);
+        Assert.Contains("v1.00.0 · Jul 9, 2026", added);
+        Assert.Contains("World Music", cut.Find(".chart-details-meta-channel").TextContent);
+    }
+
+    [Fact]
+    public void ADebutWithNoPatchOrChannelShowsItsMixAloneAndNoAddedInOrChannelRow()
+    {
+        var cut = RenderDialog(SetupChart(null), ChartDetailsDialog.DetailsTab.Stats);
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-meta-debut")));
+        Assert.Contains("Debuted in", cut.Find(".chart-details-meta-debut").TextContent);
+        Assert.Empty(cut.FindAll(".chart-details-meta-added"));
+        Assert.Empty(cut.FindAll(".chart-details-meta-channel"));
+    }
 }

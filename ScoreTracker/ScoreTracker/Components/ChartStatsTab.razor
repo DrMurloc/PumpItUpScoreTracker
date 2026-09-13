@@ -5,6 +5,7 @@
 @using ScoreTracker.ChartIntelligence.Contracts
 @using ScoreTracker.Web.Services
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Services.Theming
 @inject IMediator Mediator
 
@@ -29,6 +30,25 @@
         }
         <div><span class="chart-details-meta-label">@L["Song Artist"]</span><span>@Chart.Song.Artist</span></div>
         <div><span class="chart-details-meta-label">@L["Song Type"]</span><span>@Chart.Song.Type</span></div>
+        @* The page's facts, in the page's order (docs/design/song-channels.md §5): the debut with
+           its patch and date when the origin mix's row knows them, the patch a carry-over entered
+           this mix in, and the song's channel on this mix. Each hides the way it does on the page. *@
+        @if (Chart.Debut is { } debut)
+        {
+            <div class="chart-details-meta-debut"><span class="chart-details-meta-label">@L["Debuted in {0}", Chart.OriginalMix.GetName()]</span><span>@Stamp(debut)</span></div>
+        }
+        else
+        {
+            <div class="chart-details-meta-debut"><span class="chart-details-meta-label">@L["Debuted in"]</span><span>@Chart.OriginalMix.GetName()</span></div>
+        }
+        @if (!Chart.IsDebut && Chart.AddedIn is { } added)
+        {
+            <div class="chart-details-meta-added"><span class="chart-details-meta-label">@L["Added in {0}", Chart.Mix.GetName()]</span><span>@Stamp(added)</span></div>
+        }
+        @if (Chart.Song.Channel is { } channel)
+        {
+            <div class="chart-details-meta-channel"><span class="chart-details-meta-label">@L["Channel"]</span><span>@L[channel.GetName()]</span></div>
+        }
         @* Two separate facts, because they answer different questions: how played this
            chart is across the whole mix, and how played it is against its own folder —
            a chart four hundredth overall can still be the most played thing in its
@@ -108,6 +128,14 @@
 </style>
 
 @code {
+    /// <summary>A patch and, when known, the day it shipped: <c>v2.12.0 · Dec 23, 2025</c> — the chart page's own form.</summary>
+    private static string Stamp(VersionStamp stamp)
+    {
+        return stamp.ReleaseDate is { } shipped
+            ? $"v{stamp.Version} · {shipped.ToString("MMM d, yyyy")}"
+            : $"v{stamp.Version}";
+    }
+
     [Parameter] public Chart? Chart { get; set; }
 
     [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
