@@ -80,14 +80,23 @@ internal sealed class EFHardmodeRatingRepository : IHardmodeRatingRepository
     /// <summary>
     ///     The board, best first, carrying the held count OF THE SELECTED POOL beside its total.
     ///     Only accounts the census found something for appear: a zero is not a standing.
+    ///     <para>
+    ///         Built for the viewer (D17): a private account is on its own board and nobody
+    ///         else's, so the filter runs in SQL and a stranger's private row is never
+    ///         materialised here at all — only counted, so the page can say how many it left out.
+    ///         Places number over what came back, which is why they are viewer-shaped.
+    ///     </para>
     /// </summary>
-    public async Task<IReadOnlyList<HardmodeBoardRow>> GetBoard(MixEnum mix, ChartType? pool,
+    public async Task<HardmodeBoardRecord> GetBoard(MixEnum mix, ChartType? pool, Guid? viewerId,
         CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixIds.For(mix);
-        var rows = await database.Set<PlayerStatsEntity>()
-            .Where(e => e.MixId == mixId)
+        // Guid.Empty stands in for an anonymous viewer rather than comparing against a nullable:
+        // SQL's three-valued logic makes both `UserId = NULL` and `UserId <> NULL` unknown, so a
+        // null viewer would quietly read as "nobody is hidden" on the count below.
+        var viewer = viewerId ?? Guid.Empty;
+
+        var rows = await VisibleTo(database, mix, viewer)
             .Select(e => new
             {
                 e.UserId,
@@ -101,7 +110,52 @@ internal sealed class EFHardmodeRatingRepository : IHardmodeRatingRepository
             .Where(e => e.Hardmode > 0)
             .OrderByDescending(e => e.Hardmode)
             .ToArrayAsync(cancellationToken);
-        return rows.Select((r, i) => new HardmodeBoardRow(i + 1, r.UserId, r.Hardmode, r.Held)).ToArray();
+
+        var hidden = await HiddenFrom(database, mix, viewer)
+            .CountAsync(e => (pool == ChartType.Single ? e.HardmodeSinglesRating
+                : pool == ChartType.Double ? e.HardmodeDoublesRating
+                : e.HardmodeRating) > 0, cancellationToken);
+
+        return new HardmodeBoardRecord(
+            rows.Select((r, i) => new HardmodeBoardRow(i + 1, r.UserId, r.Hardmode, r.Held)).ToArray(),
+            hidden);
+    }
+
+    /// <summary>
+    ///     The stats rows one viewer's board is allowed to draw on: public accounts, plus their
+    ///     own (D17). Every read this page makes starts here, which is what keeps the standing
+    ///     strip's "#N of M" honest against the rows printed under it — a field counted over a
+    ///     different population would disagree with the list and look like a rounding quirk.
+    ///     <para>
+    ///         The join and the filter are one expression so a private row is excluded in SQL
+    ///         rather than after materialising, and the pool's own column is left to the caller:
+    ///         a projection this returned could not then be filtered, since EF cannot translate a
+    ///         predicate over a constructor-projected type.
+    ///     </para>
+    /// </summary>
+    private static IQueryable<PlayerStatsEntity> VisibleTo(ChartAttemptDbContext database, MixEnum mix,
+        Guid viewer)
+    {
+        var mixId = MixIds.For(mix);
+        return from stats in database.Set<PlayerStatsEntity>()
+            join user in database.User on stats.UserId equals user.Id
+            where stats.MixId == mixId && (user.IsPublic || stats.UserId == viewer)
+            select stats;
+    }
+
+    /// <summary>
+    ///     The complement of <see cref="VisibleTo" /> — the accounts this viewer may not see.
+    ///     Deliberately the negation of the same two terms and deliberately only ever counted:
+    ///     the page says how many are missing, and nothing about who.
+    /// </summary>
+    private static IQueryable<PlayerStatsEntity> HiddenFrom(ChartAttemptDbContext database, MixEnum mix,
+        Guid viewer)
+    {
+        var mixId = MixIds.For(mix);
+        return from stats in database.Set<PlayerStatsEntity>()
+            join user in database.User on stats.UserId equals user.Id
+            where stats.MixId == mixId && !user.IsPublic && stats.UserId != viewer
+            select stats;
     }
 
     /// <summary>
@@ -114,9 +168,11 @@ internal sealed class EFHardmodeRatingRepository : IHardmodeRatingRepository
         CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var mixId = MixIds.For(mix);
-        var rated = database.Set<PlayerStatsEntity>()
-            .Where(e => e.MixId == mixId)
+        // The population this player's own board shows them, not every rated account: a place
+        // measured against people they cannot see would print a field the rows contradict (D17).
+        // Their own row is in it whether or not they are public — that is the exception the rule
+        // is built around.
+        var rated = VisibleTo(database, mix, userId)
             .Select(e => new
             {
                 e.UserId,
