@@ -64,6 +64,24 @@ public readonly record struct SeasonId : IComparable<SeasonId>, IFormattable
         return From(value / 10, value % 10);
     }
 
+    /// <summary>
+    ///     The stored number back into a season without throwing — for a cookie or a query string,
+    ///     where a malformed value means an all-time read, not a failed page or a dead circuit.
+    /// </summary>
+    public static bool TryFrom(short value, out SeasonId season)
+    {
+        try
+        {
+            season = From(value);
+            return true;
+        }
+        catch (InvalidSeasonIdException)
+        {
+            season = AllTime;
+            return false;
+        }
+    }
+
     public static implicit operator short(SeasonId season)
     {
         return season._value;

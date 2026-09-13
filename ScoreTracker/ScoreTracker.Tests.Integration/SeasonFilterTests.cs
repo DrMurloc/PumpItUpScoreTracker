@@ -159,4 +159,31 @@ public sealed class SeasonFilterTests : IAsyncLifetime
         Assert.Equal(kept, Assert.Single(list).ChartId);
         Assert.Equal(1, await CountPastTheFilter<HardmodeChartEntity>(Fall2026));
     }
+
+    [Fact]
+    public async Task TheWarmedPeerStoreHoldsOnlyAllTimeBests()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedPhoenixChartAsync(20);
+        await Records().UpdateBestAttempt(MixEnum.Phoenix, userId,
+            new RecordedPhoenixScore(chartId, PhoenixScore.From(950_000), PhoenixPlate.SuperbGame, false, Now));
+        await Plant(new PhoenixRecordEntity
+        {
+            Id = Guid.NewGuid(), UserId = userId, ChartId = chartId, MixId = TestDataSeeder.PhoenixMixId,
+            SeasonId = Fall2026, Score = 999_000, LetterGrade = "SSS", Plate = "PG", IsBroken = false,
+            RecordedDate = Now
+        });
+
+        // Warm takes the everyone statement — the one tuned from five minutes to fifteen seconds and
+        // the busier of the store's two raw reads. The score written behind the warm proves the read
+        // below was served from it rather than fetched again through the named-few statement.
+        var store = new PeerScoreStore(_fixture.DbContextFactory);
+        await store.Warm(MixEnum.Phoenix, CancellationToken.None);
+        await Records().UpdateBestAttempt(MixEnum.Phoenix, userId,
+            new RecordedPhoenixScore(chartId, PhoenixScore.From(960_000), PhoenixPlate.SuperbGame, false, Now));
+
+        var peers = await store.OnCharts(MixEnum.Phoenix, new[] { userId }, new[] { chartId }, CancellationToken.None);
+
+        Assert.Equal(950_000, (int)Assert.Single(peers).Score);
+    }
 }

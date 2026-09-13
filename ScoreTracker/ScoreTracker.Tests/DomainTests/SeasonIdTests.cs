@@ -99,4 +99,16 @@ public sealed class SeasonIdTests
 
         Assert.Equal("20264", fall.ToString("N2", new System.Globalization.CultureInfo("de-DE")));
     }
+
+    [Fact]
+    public void TryFromAnswersWithoutThrowingAndFallsBackToAllTime()
+    {
+        Assert.True(SeasonId.TryFrom(20264, out var fall));
+        Assert.Equal(SeasonId.From(2026, 4), fall);
+        Assert.True(SeasonId.TryFrom(0, out var allTime));
+        Assert.True(allTime.IsAllTime);
+        Assert.False(SeasonId.TryFrom(20265, out var junk));
+        Assert.True(junk.IsAllTime);
+        Assert.False(SeasonId.TryFrom(-3, out _));
+    }
 }
