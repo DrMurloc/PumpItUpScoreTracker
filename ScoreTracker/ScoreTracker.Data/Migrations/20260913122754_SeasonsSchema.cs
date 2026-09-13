@@ -11,21 +11,6 @@ namespace ScoreTracker.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropPrimaryKey(
-                name: "PK_PlayerStats",
-                schema: "scores",
-                table: "PlayerStats");
-
-            migrationBuilder.DropPrimaryKey(
-                name: "PK_PlayerFolderLevel",
-                schema: "scores",
-                table: "PlayerFolderLevel");
-
-            migrationBuilder.DropPrimaryKey(
-                name: "PK_HardmodeChart",
-                schema: "scores",
-                table: "HardmodeChart");
-
             migrationBuilder.AddColumn<short>(
                 name: "SeasonId",
                 schema: "scores",
@@ -66,17 +51,35 @@ namespace ScoreTracker.Data.Migrations
                 nullable: false,
                 defaultValue: (short)0);
 
+            // Hand-ordered: each primary key drops right before it returns with the season in front,
+            // so no table is without one for more than a statement while the previous app version
+            // is still writing (docs/design/seasons.md §6.2).
+            migrationBuilder.DropPrimaryKey(
+                name: "PK_PlayerStats",
+                schema: "scores",
+                table: "PlayerStats");
+
             migrationBuilder.AddPrimaryKey(
                 name: "PK_PlayerStats",
                 schema: "scores",
                 table: "PlayerStats",
                 columns: new[] { "SeasonId", "UserId", "MixId" });
 
+            migrationBuilder.DropPrimaryKey(
+                name: "PK_PlayerFolderLevel",
+                schema: "scores",
+                table: "PlayerFolderLevel");
+
             migrationBuilder.AddPrimaryKey(
                 name: "PK_PlayerFolderLevel",
                 schema: "scores",
                 table: "PlayerFolderLevel",
                 columns: new[] { "SeasonId", "UserId", "MixId", "ChartType", "Level" });
+
+            migrationBuilder.DropPrimaryKey(
+                name: "PK_HardmodeChart",
+                schema: "scores",
+                table: "HardmodeChart");
 
             migrationBuilder.AddPrimaryKey(
                 name: "PK_HardmodeChart",
@@ -168,6 +171,9 @@ namespace ScoreTracker.Data.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            // A schema rollback for a database without season rows. Once slice 1b has written any, the
+            // unique index and the primary keys below collide on them — delete the season rows first,
+            // by hand and on purpose; nothing here deletes data.
             migrationBuilder.DropTable(
                 name: "ChartSeason",
                 schema: "scores");
