@@ -8,7 +8,8 @@ namespace ScoreTracker.Catalog.Contracts;
 ///         <see cref="SortOrder" /> is the ordering truth — "through this version" and "after this
 ///         version" compare on it, never on the name. <see cref="ReleaseDate" /> is null on a legacy
 ///         patch nobody dated, which only the date filter cares about. <see cref="ChartCount" /> is
-///         how many charts first appeared in this patch, in this mix.
+///         how many charts entered this mix in this patch — the launch patch counts every
+///         carry-over — and <see cref="DebutCount" /> how many of those first appeared anywhere here.
 ///     </para>
 /// </summary>
 [ExcludeFromCodeCoverage]
@@ -17,4 +18,5 @@ public sealed record MixVersionRecord(
     string Name,
     DateOnly? ReleaseDate,
     int SortOrder,
-    int ChartCount);
+    int ChartCount,
+    int DebutCount = 0);

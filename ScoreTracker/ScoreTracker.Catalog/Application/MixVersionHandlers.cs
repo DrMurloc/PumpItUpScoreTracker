@@ -29,15 +29,21 @@ internal sealed class GetMixVersionsHandler : IRequestHandler<GetMixVersionsQuer
         var versions = await _versions.GetVersions(request.Mix, cancellationToken);
         if (versions.Count == 0) return Array.Empty<MixVersionRecord>();
 
-        var counts = (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
-            .Where(c => c.Release != null)
-            .GroupBy(c => c.Release!.Version, StringComparer.Ordinal)
+        var stamped = (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
+            .Where(c => c.AddedIn != null)
+            .ToArray();
+        var added = stamped
+            .GroupBy(c => c.AddedIn!.Version, StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal);
+        var debuted = stamped.Where(c => c.IsDebut)
+            .GroupBy(c => c.AddedIn!.Version, StringComparer.Ordinal)
             .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal);
 
         return versions
             .OrderBy(v => v.SortOrder)
             .Select(v => new MixVersionRecord(v.Mix, v.Name, v.ReleaseDate, v.SortOrder,
-                counts.TryGetValue(v.Name, out var n) ? n : 0))
+                added.TryGetValue(v.Name, out var n) ? n : 0,
+                debuted.TryGetValue(v.Name, out var d) ? d : 0))
             .ToArray();
     }
 }

@@ -447,10 +447,13 @@ public sealed class SearchChartsHandlerTests
             Times.Once);
     }
 
-    // ── The patch a chart was released in (docs/design/chart-versions.md §4) ─────────────────
+    // ── The patch a chart entered the mix in, and where it debuted (docs/design/chart-versions.md §4) ──
 
-    private static Chart Released(Chart chart, string version, int order, DateOnly? date = null) =>
-        chart with { Release = new ChartRelease(version, date, order) };
+    private static Chart Stamped(Chart chart, string version, int order, DateOnly? date = null)
+    {
+        var added = new VersionStamp(chart.Mix, version, date, order);
+        return chart with { AddedIn = added, Debut = chart.IsDebut ? added : chart.Debut };
+    }
 
     [Fact]
     public async Task VersionFilterKeepsThePickedPatchesAndDropsChartsWithNoKnownPatch()
@@ -459,8 +462,8 @@ public sealed class SearchChartsHandlerTests
         var patch = Guid.NewGuid();
         var unknown = Guid.NewGuid();
         SeedMix(MixEnum.Phoenix2,
-            Released(MakeChart(launch, MixEnum.Phoenix2, "Conflict", 20), "1.00.0", 10),
-            Released(MakeChart(patch, MixEnum.Phoenix2, "Ghost Bloody Train", 23), "1.01.0", 20),
+            Stamped(MakeChart(launch, MixEnum.Phoenix2, "Conflict", 20), "1.00.0", 10),
+            Stamped(MakeChart(patch, MixEnum.Phoenix2, "Ghost Bloody Train", 23), "1.01.0", 20),
             MakeChart(unknown, MixEnum.Phoenix2, "Mystery", 18));
 
         var page = await BuildHandler().Handle(new SearchChartsQuery
@@ -475,9 +478,9 @@ public sealed class SearchChartsHandlerTests
     public async Task VersionFacetCountsWithItsOwnFilterLiftedAndNeverCountsAnUnknownPatch()
     {
         SeedMix(MixEnum.Phoenix2,
-            Released(MakeChart(Guid.NewGuid(), MixEnum.Phoenix2, "A", 20), "1.00.0", 10),
-            Released(MakeChart(Guid.NewGuid(), MixEnum.Phoenix2, "B", 21), "1.00.0", 10),
-            Released(MakeChart(Guid.NewGuid(), MixEnum.Phoenix2, "C", 22), "1.01.0", 20),
+            Stamped(MakeChart(Guid.NewGuid(), MixEnum.Phoenix2, "A", 20), "1.00.0", 10),
+            Stamped(MakeChart(Guid.NewGuid(), MixEnum.Phoenix2, "B", 21), "1.00.0", 10),
+            Stamped(MakeChart(Guid.NewGuid(), MixEnum.Phoenix2, "C", 22), "1.01.0", 20),
             MakeChart(Guid.NewGuid(), MixEnum.Phoenix2, "D", 18));
 
         var page = await BuildHandler().Handle(new SearchChartsQuery
@@ -492,17 +495,35 @@ public sealed class SearchChartsHandlerTests
     }
 
     [Fact]
-    public async Task NewestContentSortsByThePatchOfTheMixInViewThenDebutEraWithUnknownLast()
+    public async Task DebutsOnlyKeepsChartsThatFirstAppearedInTheMixInViewAndCountsChipsTheSameWay()
+    {
+        var native = Guid.NewGuid();
+        var carried = Guid.NewGuid();
+        SeedMix(MixEnum.Phoenix2,
+            Stamped(MakeChart(native, MixEnum.Phoenix2, "Native", 20), "1.00.0", 10),
+            Stamped(MakeChart(carried, MixEnum.Phoenix2, "Carried", 20, originalMix: MixEnum.XX), "1.00.0", 10));
+
+        var page = await BuildHandler().Handle(new SearchChartsQuery
+        {
+            Mix = MixEnum.Phoenix2, DebutsOnly = true, IncludeFacetCounts = true
+        }, CancellationToken.None);
+
+        Assert.Equal(new[] { native }, page.Results.Select(r => r.Chart.Id));
+        Assert.Equal(1, page.FacetCounts!.Versions!["1.00.0"]);
+    }
+
+    [Fact]
+    public async Task NewestContentSortsByDebutMixEraThenDebutPatchWithAnUnknownPatchAtItsMixTail()
     {
         var launchNative = Guid.NewGuid();
         var launchCarryOver = Guid.NewGuid();
         var patch = Guid.NewGuid();
         var unknown = Guid.NewGuid();
         SeedMix(MixEnum.Phoenix2,
-            Released(MakeChart(launchCarryOver, MixEnum.Phoenix2, "Carried", 20, originalMix: MixEnum.XX), "1.00.0", 10),
-            Released(MakeChart(launchNative, MixEnum.Phoenix2, "Native", 20), "1.00.0", 10),
+            Stamped(MakeChart(launchCarryOver, MixEnum.Phoenix2, "Carried", 20, originalMix: MixEnum.XX), "1.00.0", 10),
+            Stamped(MakeChart(launchNative, MixEnum.Phoenix2, "Native", 20), "1.00.0", 10),
             MakeChart(unknown, MixEnum.Phoenix2, "Mystery", 20),
-            Released(MakeChart(patch, MixEnum.Phoenix2, "Patched", 20), "1.01.0", 20));
+            Stamped(MakeChart(patch, MixEnum.Phoenix2, "Patched", 20), "1.01.0", 20));
 
         var newestFirst = await BuildHandler().Handle(new SearchChartsQuery
         {
@@ -513,7 +534,8 @@ public sealed class SearchChartsHandlerTests
             Mix = MixEnum.Phoenix2, Sort = ChartSearchSort.DebutEra, SortDescending = false
         }, CancellationToken.None);
 
-        Assert.Equal(new[] { patch, launchNative, launchCarryOver, unknown }, newestFirst.Results.Select(r => r.Chart.Id));
+        // The carry-over debuted in XX, so it sorts with XX however recently Phoenix 2 picked it up.
+        Assert.Equal(new[] { patch, launchNative, unknown, launchCarryOver }, newestFirst.Results.Select(r => r.Chart.Id));
         Assert.Equal(new[] { launchCarryOver, launchNative, patch, unknown }, oldestFirst.Results.Select(r => r.Chart.Id));
     }
 }

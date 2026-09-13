@@ -20,12 +20,12 @@ public static class MixVersionRange
     ///     filter names a patch the mix does not have.
     /// </summary>
     public static bool TryResolve(IReadOnlyList<MixVersionRecord> versions,
-        IReadOnlyCollection<string>? inVersions, string? byVersion, string? afterVersion, DateOnly? releasedAfter,
+        IReadOnlyCollection<string>? inVersions, string? byVersion, string? afterVersion, DateOnly? addedAfter,
         out IReadOnlySet<string>? names, out string? unknownName)
     {
         names = null;
         unknownName = null;
-        var asked = inVersions is { Count: > 0 } || byVersion != null || afterVersion != null || releasedAfter != null;
+        var asked = inVersions is { Count: > 0 } || byVersion != null || afterVersion != null || addedAfter != null;
         if (!asked) return true;
 
         var byName = versions.ToDictionary(v => v.Name, v => v, StringComparer.Ordinal);
@@ -36,9 +36,9 @@ public static class MixVersionRange
         unknownName ??= afterVersion is null ? null : KeepAfter(afterVersion, byName, versions, matching);
         if (unknownName != null) return false;
 
-        if (releasedAfter != null)
+        if (addedAfter != null)
             matching.IntersectWith(versions
-                .Where(v => v.ReleaseDate != null && v.ReleaseDate.Value > releasedAfter.Value)
+                .Where(v => v.ReleaseDate != null && v.ReleaseDate.Value > addedAfter.Value)
                 .Select(v => v.Name));
 
         names = matching;

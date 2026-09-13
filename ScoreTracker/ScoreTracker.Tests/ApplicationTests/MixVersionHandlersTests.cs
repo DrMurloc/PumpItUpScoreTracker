@@ -36,9 +36,9 @@ public sealed class MixVersionHandlersTests
         _charts.Setup(c => c.GetCharts(MixEnum.Phoenix2, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Chart[]
             {
-                new ChartBuilder().WithMix(MixEnum.Phoenix2).WithRelease("1.00.0", new DateOnly(2026, 7, 9), 10),
-                new ChartBuilder().WithMix(MixEnum.Phoenix2).WithRelease("1.00.0", new DateOnly(2026, 7, 9), 10),
-                new ChartBuilder().WithMix(MixEnum.Phoenix2).WithRelease("1.01.0", new DateOnly(2026, 9, 3), 20),
+                new ChartBuilder().WithMix(MixEnum.Phoenix2).WithOriginalMix(MixEnum.Phoenix2).WithAddedIn("1.00.0", new DateOnly(2026, 7, 9), 10),
+                new ChartBuilder().WithMix(MixEnum.Phoenix2).WithAddedIn("1.00.0", new DateOnly(2026, 7, 9), 10),
+                new ChartBuilder().WithMix(MixEnum.Phoenix2).WithAddedIn("1.01.0", new DateOnly(2026, 9, 3), 20),
                 new ChartBuilder().WithMix(MixEnum.Phoenix2)
             });
 
@@ -47,6 +47,7 @@ public sealed class MixVersionHandlersTests
 
         Assert.Equal(new[] { "1.00.0", "1.01.0" }, result.Select(r => r.Name));
         Assert.Equal(new[] { 2, 1 }, result.Select(r => r.ChartCount));
+        Assert.Equal(new[] { 1, 0 }, result.Select(r => r.DebutCount));
         Assert.Equal(new DateOnly(2026, 9, 3), result[1].ReleaseDate);
         Assert.Equal(20, result[1].SortOrder);
         Assert.All(result, r => Assert.Equal(MixEnum.Phoenix2, r.Mix));

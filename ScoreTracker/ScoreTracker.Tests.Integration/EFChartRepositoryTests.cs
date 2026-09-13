@@ -382,30 +382,34 @@ public sealed class EFChartRepositoryTests : IAsyncLifetime
         Assert.Equal("트릭크래쉬 220", (string)englishToKorean["TRICKL4SH 220"]);
     }
 
-    // ── The patch a chart was released in (docs/design/chart-versions.md §2) ─────────────────
+    // ── The patch a chart entered the mix in, and where it debuted (docs/design/chart-versions.md §2) ─────────────────
 
     [Fact]
-    public async Task GetChartsCarriesTheReleaseWhenTheRowPointsAtAPatch()
+    public async Task GetChartsCarriesTheAddedInPatchAndItsDebutWhenTheRowPointsAtOne()
     {
         var version = await _seed.SeedMixVersionAsync(TestDataSeeder.PhoenixMixId, "2.09.0", new DateOnly(2025, 5, 27), 190);
         var chartId = await _seed.SeedPhoenixChartAsync(addedInVersionId: version);
 
         var chart = (await BuildRepository().GetCharts(MixEnum.Phoenix)).Single(c => c.Id == chartId);
 
-        Assert.NotNull(chart.Release);
-        Assert.Equal("2.09.0", chart.Release!.Version);
-        Assert.Equal(new DateOnly(2025, 5, 27), chart.Release.ReleaseDate);
-        Assert.Equal(190, chart.Release.SortOrder);
+        Assert.NotNull(chart.AddedIn);
+        Assert.Equal("2.09.0", chart.AddedIn!.Version);
+        Assert.Equal(new DateOnly(2025, 5, 27), chart.AddedIn.ReleaseDate);
+        Assert.Equal(190, chart.AddedIn.SortOrder);
+        // The origin row is this very row, so the debut is the same stamp; a chart whose origin lies in
+        // an older mix reads that mix's patch there instead.
+        Assert.Equal(chart.IsDebut ? chart.AddedIn : null, chart.Debut);
     }
 
     [Fact]
-    public async Task GetChartsLeavesReleaseNullWhenThePatchIsUnknown()
+    public async Task GetChartsLeavesBothStampsNullWhenThePatchIsUnknown()
     {
         var chartId = await _seed.SeedPhoenixChartAsync();
 
         var chart = (await BuildRepository().GetCharts(MixEnum.Phoenix)).Single(c => c.Id == chartId);
 
-        Assert.Null(chart.Release);
+        Assert.Null(chart.AddedIn);
+        Assert.Null(chart.Debut);
     }
 
     [Fact]
@@ -420,7 +424,7 @@ public sealed class EFChartRepositoryTests : IAsyncLifetime
             "PUMP IT UP Official", new Uri("https://www.youtube.com/embed/abcdefghijk"), "EXC", version);
 
         var chart = (await BuildRepository().GetCharts(MixEnum.Phoenix)).Single(c => c.Id == chartId);
-        Assert.Equal("2.12.0", chart.Release?.Version);
+        Assert.Equal("2.12.0", chart.AddedIn?.Version);
         await using var ctx = await _fixture.DbContextFactory.CreateDbContextAsync();
         var row = await ctx.ChartMix.SingleAsync(cm => cm.ChartId == chartId);
         Assert.Equal(version, row.AddedInVersionId);

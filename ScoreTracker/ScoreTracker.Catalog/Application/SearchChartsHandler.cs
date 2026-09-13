@@ -117,8 +117,8 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
             Without(q with { CoOpPlayerCounts = null }).Where(r => r.Chart.Type == ChartType.CoOp)
                 .GroupBy(r => r.Chart.PlayerCount).ToDictionary(g => g.Key, g => g.Count()),
             // Only charts with a known patch count; an unknown patch reads as absence, never as a chip.
-            Without(q with { Versions = null }).Where(r => r.Chart.Release != null)
-                .GroupBy(r => r.Chart.Release!.Version, StringComparer.Ordinal)
+            Without(q with { Versions = null }).Where(r => r.Chart.AddedIn != null)
+                .GroupBy(r => r.Chart.AddedIn!.Version, StringComparer.Ordinal)
                 .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal));
     }
 
@@ -278,8 +278,10 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
 
         if (q.DebutMixes is { Count: > 0 } && !q.DebutMixes.Contains(row.DebutMix)) return false;
 
+        if (q.DebutsOnly && !chart.IsDebut) return false;
+
         if (q.Versions is { Count: > 0 } &&
-            (chart.Release == null || !q.Versions.Contains(chart.Release.Version, StringComparer.Ordinal)))
+            (chart.AddedIn == null || !q.Versions.Contains(chart.AddedIn.Version, StringComparer.Ordinal)))
             return false;
 
         if (q.LegacySlots is { Count: > 0 } &&
@@ -440,13 +442,13 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
             // Pass Difficulty is the community lens, not the raw rate: the ramp already encodes
             // "hard for its level", where a rate needs a sample floor to mean anything.
             ChartSearchSort.PassDifficulty => NullsLast(r => r.PassDifficulty == null ? null : (double)r.PassDifficulty.Value),
-            // Newest content: the patch of the mix in view first, the debut era as the tiebreak.
-            // A chart with no known patch tails in either direction.
+            // Newest content: first appearance anywhere — the debut mix's era, then the debut patch
+            // within it. A chart whose debut patch is unknown keeps its mix and tails it.
             ChartSearchSort.DebutEra => desc
-                ? rows.OrderByDescending(r => r.Chart.Release?.SortOrder ?? int.MinValue)
-                    .ThenByDescending(r => r.DebutMix.DisplayOrder())
-                : rows.OrderBy(r => r.Chart.Release?.SortOrder ?? int.MaxValue)
-                    .ThenBy(r => r.DebutMix.DisplayOrder()),
+                ? rows.OrderByDescending(r => r.DebutMix.DisplayOrder())
+                    .ThenByDescending(r => r.Chart.Debut?.SortOrder ?? int.MinValue)
+                : rows.OrderBy(r => r.DebutMix.DisplayOrder())
+                    .ThenBy(r => r.Chart.Debut?.SortOrder ?? int.MaxValue),
             ChartSearchSort.Name => By(r => r.Chart.Song.Name.ToString()),
             ChartSearchSort.Bpm => NullsLast(r => r.Chart.Song.Bpm == null ? null : (double)r.Chart.Song.Bpm.Value.Max),
             ChartSearchSort.Nps => NullsLast(r => r.Nps == null ? null : (double)r.Nps.Value),

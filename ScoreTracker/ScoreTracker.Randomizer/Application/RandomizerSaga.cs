@@ -65,7 +65,8 @@ namespace ScoreTracker.Randomizer.Application
             foreach (var chart in
                      charts.Values.Where(c => !settings.ChartIds.Any() || settings.ChartIds.Contains(c.Id))
                          .Where(c => settings.Versions.Count == 0 ||
-                                     (c.Release != null && settings.Versions.Contains(c.Release.Version))))
+                                     (c.AddedIn != null && settings.Versions.Contains(c.AddedIn.Version)))
+                         .Where(c => settings.Debut == null || c.IsDebut == settings.Debut))
             {
                 double? scoringLevel = scoringLevels.TryGetValue(chart.Id, out var sl) ? sl : null;
                 if (settings.UseScoringLevels && scoringLevel == null)

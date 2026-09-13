@@ -285,8 +285,8 @@ public sealed class RandomizerSagaTests
     public async Task GetIncludedRandomChartsKeepsOnlyThePickedPatchesAndDropsChartsWithNoKnownPatch()
     {
         var (accessor, userId) = UserAccessor();
-        var picked = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).WithRelease("2.09.0", sortOrder: 190).Build();
-        var other = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).WithRelease("2.10.0", sortOrder: 200).Build();
+        var picked = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).WithAddedIn("2.09.0", sortOrder: 190).Build();
+        var other = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).WithAddedIn("2.10.0", sortOrder: 200).Build();
         var unknown = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
         var charts = ChartsReturning(new[] { picked, other, unknown });
         var settings = SinglesAtLevelTwenty();
@@ -302,10 +302,30 @@ public sealed class RandomizerSagaTests
     }
 
     [Fact]
+    public async Task GetIncludedRandomChartsWithDebutTrueKeepsOnlyChartsThatFirstAppearedInTheMix()
+    {
+        var (accessor, userId) = UserAccessor();
+        var native = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).WithAddedIn("2.09.0", sortOrder: 190).Build();
+        var carried = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).WithOriginalMix(MixEnum.XX)
+            .WithAddedIn("1.00.0", sortOrder: 10).Build();
+        var charts = ChartsReturning(new[] { native, carried });
+        var settings = SinglesAtLevelTwenty();
+        settings.Debut = true;
+
+        var saga = new RandomizerSaga(charts.Object, new Mock<IRandomizerRepository>().Object,
+            accessor.Object, ScoresReturning(userId, Array.Empty<RecordedPhoenixScore>()).Object,
+            new Mock<IRandomNumberGenerator>().Object, EmptyScoringLevels().Object);
+
+        var result = await saga.Handle(new GetIncludedRandomChartsQuery(settings), CancellationToken.None);
+
+        Assert.Equal(new[] { native.Id }, result.Select(c => c.Id).ToArray());
+    }
+
+    [Fact]
     public async Task GetIncludedRandomChartsWithNoPatchPickedDrawsFromEveryPatchIncludingUnknown()
     {
         var (accessor, userId) = UserAccessor();
-        var released = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).WithRelease("2.09.0", sortOrder: 190).Build();
+        var released = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).WithAddedIn("2.09.0", sortOrder: 190).Build();
         var unknown = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
         var charts = ChartsReturning(new[] { released, unknown });
 

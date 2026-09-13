@@ -503,12 +503,17 @@ internal sealed class EFChartRepository : IChartRepository
             // OriginalMix maps through MixIds, not Enum.Parse(Mix.Name): legacy mix names
             // ("Prex 3", "OBG SE") are display strings, not enum identifiers.
             // The patch rides the row as a left join: a chart with no version is a chart whose
-            // Release is null, never a chart dropped from the mix.
+            // AddedIn is null, never a chart dropped from the mix. The debut is the origin mix's own
+            // ChartMix row joined the same way, so a corrected origin corrects the debut with it.
             var rows = await (from cm in database.ChartMix
                     join c in database.Chart on cm.ChartId equals c.Id
                     join s in database.Song on c.SongId equals s.Id
                     join v in database.Set<MixVersionEntity>() on cm.AddedInVersionId equals v.Id into versions
                     from v in versions.DefaultIfEmpty()
+                    join om in database.ChartMix on new { cm.ChartId, MixId = c.OriginalMixId } equals new { om.ChartId, om.MixId } into origins
+                    from om in origins.DefaultIfEmpty()
+                    join dv in database.Set<MixVersionEntity>() on om.AddedInVersionId equals dv.Id into debuts
+                    from dv in debuts.DefaultIfEmpty()
                     where cm.MixId == mixId
                     select new
                     {
@@ -529,7 +534,10 @@ internal sealed class EFChartRepository : IChartRepository
                         c.PlayerCount,
                         VersionName = v == null ? null : v.Name,
                         VersionDate = v == null ? null : v.ReleaseDate,
-                        VersionOrder = v == null ? (int?)null : v.SortOrder
+                        VersionOrder = v == null ? (int?)null : v.SortOrder,
+                        DebutVersionName = dv == null ? null : dv.Name,
+                        DebutVersionDate = dv == null ? null : dv.ReleaseDate,
+                        DebutVersionOrder = dv == null ? (int?)null : dv.SortOrder
                     })
                 .ToListAsync(cancellationToken);
             return rows.ToDictionary(r => r.Id, r => new Chart(r.Id, MixIds.ToEnum(r.OriginalMixId),
@@ -540,7 +548,11 @@ internal sealed class EFChartRepository : IChartRepository
                 r.Level, mix, r.StepArtist, r.NoteCount,
                 LegacySlotHelperMethods.ToNullableLegacySlot(r.LegacySlot),
                 r.PlayerCount,
-                r.VersionName == null ? null : new ChartRelease(r.VersionName, r.VersionDate, r.VersionOrder!.Value)));
+                r.VersionName == null ? null : new VersionStamp(mix, r.VersionName, r.VersionDate, r.VersionOrder!.Value),
+                r.DebutVersionName == null
+                    ? null
+                    : new VersionStamp(MixIds.ToEnum(r.OriginalMixId), r.DebutVersionName, r.DebutVersionDate,
+                        r.DebutVersionOrder!.Value)));
         });
     }
 }

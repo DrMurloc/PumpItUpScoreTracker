@@ -62,6 +62,13 @@ namespace ScoreTracker.Domain.Models
         ///     not updated, a tournament that froze its pool (docs/design/chart-versions.md §4).
         /// </summary>
         public ISet<string> Versions { get; set; } = new HashSet<string>(StringComparer.Ordinal);
+
+    /// <summary>
+    ///     True draws only charts that first appeared in the mix, false only the carry-overs, null
+    ///     either. The API's <c>debut</c> and <c>debutedInVersion</c> land here; the settings panel
+    ///     does not offer it (docs/design/chart-versions.md §4).
+    /// </summary>
+    public bool? Debut { get; set; }
         public ResultsOrdering Ordering { get; set; } = ResultsOrdering.Randomized;
         public bool? ClearStatus { get; set; }
         public ISet<PhoenixLetterGrade> LetterGrades { get; set; } = new HashSet<PhoenixLetterGrade>();

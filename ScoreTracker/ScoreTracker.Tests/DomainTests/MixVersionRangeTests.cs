@@ -23,9 +23,9 @@ public sealed class MixVersionRangeTests
     };
 
     private static IReadOnlySet<string>? Resolve(IReadOnlyCollection<string>? inVersions = null, string? by = null,
-        string? after = null, DateOnly? releasedAfter = null)
+        string? after = null, DateOnly? addedAfter = null)
     {
-        Assert.True(MixVersionRange.TryResolve(Phoenix, inVersions, by, after, releasedAfter, out var names, out var unknown));
+        Assert.True(MixVersionRange.TryResolve(Phoenix, inVersions, by, after, addedAfter, out var names, out var unknown));
         Assert.Null(unknown);
         return names;
     }
@@ -71,7 +71,7 @@ public sealed class MixVersionRangeTests
     [Fact]
     public void ReleasedAfterIsExclusiveAndSkipsUndatedPatches()
     {
-        var names = Resolve(releasedAfter: new DateOnly(2023, 7, 27));
+        var names = Resolve(addedAfter: new DateOnly(2023, 7, 27));
 
         Assert.Equal(new[] { "2.00.0" }, names!);
     }
