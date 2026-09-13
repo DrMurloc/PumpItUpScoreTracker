@@ -3,68 +3,84 @@
 @using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.ChartIntelligence.Contracts.Queries
 @using ScoreTracker.Web.Services
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Services.Theming
 @inject IMediator Mediator
 
-@* What the chart IS, extracted from ChartDetailsDialog: the meta grid, where the tier
-   lists place it, what it is made of, and the way out to PIU Center. It owns the three
-   reads that feed those — placements, the alias key, and the badge chips — so a host that
-   never shows this block never pays for them. *@
+@* What the chart IS, extracted from ChartDetailsDialog: its history and its channel as rows,
+   where the tier lists place it, what it is made of, and the way out to PIU Center. The
+   identity — type, artists, BPM, notes — reads under the title in the dialog's header instead
+   (docs/design/song-channels.md D10). It owns the reads that feed those — the verdict's
+   history, placements, the alias key, and the badge chips — so a host that never shows this
+   block never pays for them. *@
 @if (Chart != null)
 {
-    <div class="chart-details-meta">
-        @if (Chart.Song.Bpm != null)
-        {
-            <div><span class="chart-details-meta-label">@L["BPM"]</span><span>@Chart.Song.Bpm</span></div>
-        }
-        @if (Chart.NoteCount != null)
-        {
-            <div><span class="chart-details-meta-label">@L["Note Count"]</span><span>@Chart.NoteCount</span></div>
-        }
-        @if (Chart.StepArtist != null)
-        {
-            <div><span class="chart-details-meta-label">@L["Step Artist"]</span><span>@Chart.StepArtist</span></div>
-        }
-        <div><span class="chart-details-meta-label">@L["Song Artist"]</span><span>@Chart.Song.Artist</span></div>
-        <div><span class="chart-details-meta-label">@L["Song Type"]</span><span>@Chart.Song.Type</span></div>
-        @* The page's facts, in the page's order (docs/design/song-channels.md §5): the debut with
-           its patch and date when the origin mix's row knows them, the patch a carry-over entered
-           this mix in, and the song's channel on this mix. Each hides the way it does on the page. *@
-        @if (Chart.Debut is { } debut)
-        {
-            <div class="chart-details-meta-debut"><span class="chart-details-meta-label">@L["Debuted in {0}", Chart.OriginalMix.GetName()]</span><span>@Stamp(debut)</span></div>
-        }
-        else
-        {
-            <div class="chart-details-meta-debut"><span class="chart-details-meta-label">@L["Debuted in"]</span><span>@Chart.OriginalMix.GetName()</span></div>
-        }
-        @if (!Chart.IsDebut && Chart.AddedIn is { } added)
-        {
-            <div class="chart-details-meta-added"><span class="chart-details-meta-label">@L["Added in {0}", Chart.Mix.GetName()]</span><span>@Stamp(added)</span></div>
-        }
+    <div class="chart-details-rows">
+        @* The chart page's timeline as lines, in its words: the debut, every rerate with its
+           mark, and the mix in view, each with the patch and date its row names. A mix where
+           nothing changed is skipped, so a chart alive since 2000 is a few lines, not twenty-five. *@
+        <div class="chart-details-row chart-details-row-history">
+            <span class="chart-details-row-label">@L["History"]</span>
+            <span class="chart-details-row-value">
+                @foreach (var line in HistoryLines())
+                {
+                    <span class="chart-details-line">
+                        <span class="chart-details-line-mix">@line.Mix.GetName()</span>
+                        @if (line.Stamp != null)
+                        {
+                            <span class="chart-details-sep">·</span>@VersionStampText.Short(line.Stamp)
+                        }
+                        <span class="chart-details-sep">·</span>
+                        @if (line.Kind == HistoryKind.Debut)
+                        {
+                            @L["debuted at {0}", Label(line.Level)]
+                        }
+                        else if (line.Kind == HistoryKind.Rerated)
+                        {
+                            @L["rerated {0}", Label(line.Level)]
+                            <span class="chart-details-delta">@(line.Delta > 0 ? "▲" : "▼") @(line.Delta > 0 ? "+" : "")@line.Delta</span>
+                        }
+                        else
+                        {
+                            @L["unchanged · {0}", Label(line.Level)]
+                        }
+                    </span>
+                }
+            </span>
+        </div>
+        @* A filter as much as a fact, so the chip opens the chart search on it. Nothing when the
+           mix has no row for the song. *@
         @if (Chart.Song.Channel is { } channel)
         {
-            <div class="chart-details-meta-channel"><span class="chart-details-meta-label">@L["Channel"]</span><span>@L[channel.GetLabelKey()]</span></div>
+            <div class="chart-details-row chart-details-row-channel">
+                <span class="chart-details-row-label">@L["Channel"]</span>
+                <span class="chart-details-row-value">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
+                             Href="@($"/Charts?Channel={channel}")">@L[channel.GetLabelKey()]</MudChip>
+                </span>
+            </div>
         }
         @* Two separate facts, because they answer different questions: how played this
            chart is across the whole mix, and how played it is against its own folder —
            a chart four hundredth overall can still be the most played thing in its
            folder. Both are piugame's play ranking, not this site's score counts. *@
-        @if (OfficialPlace != null)
+        @if (OfficialPlace != null || OfficialFolderPlace != null)
         {
-            <div>
-                <span class="chart-details-meta-label">@L["Popularity overall"]</span>
-                <span>@L["#{0}", OfficialPlace.Value.ToString("N0")]</span>
-            </div>
-        }
-        @if (OfficialFolderPlace != null)
-        {
-            <div>
-                <span class="chart-details-meta-label">@L["Popularity in {0}", Chart.DifficultyString]</span>
-                <span>@L["#{0}", OfficialFolderPlace.Value.ToString("N0")]</span>
+            <div class="chart-details-row chart-details-row-played">
+                <span class="chart-details-row-label">@L["Played"]</span>
+                <span class="chart-details-row-value">
+                    @if (OfficialPlace != null)
+                    {
+                        <span class="chart-details-line">@L["Popularity overall"]<span class="chart-details-sep">·</span>@L["#{0}", OfficialPlace.Value.ToString("N0")]</span>
+                    }
+                    @if (OfficialFolderPlace != null)
+                    {
+                        <span class="chart-details-line">@L["Popularity in {0}", Chart.DifficultyString]<span class="chart-details-sep">·</span>@L["#{0}", OfficialFolderPlace.Value.ToString("N0")]</span>
+                    }
+                </span>
             </div>
         }
     </div>
@@ -93,19 +109,64 @@
 }
 
 <style>
-    .chart-details-meta {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 4px 12px;
+    /* Rows, not tiles: a short label column and one run of values per row, hairlines between.
+       Eight labelled tiles read as a wall and stacked sixteen lines deep inside a phone's dialog
+       (owner, round 3); the label column stays narrow enough for the 278px a phone leaves. */
+    .chart-details-rows {
+        display: flex;
+        flex-direction: column;
         margin-bottom: 8px;
     }
 
-    .chart-details-meta-label {
+    .chart-details-row {
+        display: grid;
+        grid-template-columns: 64px minmax(0, 1fr);
+        gap: 10px;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--mud-palette-lines-default);
+        align-items: baseline;
+    }
+
+    .chart-details-row:first-child {
+        padding-top: 2px;
+    }
+
+    .chart-details-row:last-child {
+        border-bottom: 0;
+    }
+
+    .chart-details-row-label {
         color: var(--mud-palette-text-secondary);
-        font-size: .7rem;
+        font-size: .68rem;
         text-transform: uppercase;
         letter-spacing: .08em;
+    }
+
+    .chart-details-row-value {
+        font-size: .88rem;
+        min-width: 0;
+    }
+
+    .chart-details-line {
         display: block;
+    }
+
+    .chart-details-line-mix {
+        font-weight: 500;
+    }
+
+    .chart-details-sep {
+        opacity: .55;
+        margin: 0 5px;
+    }
+
+    /* The page's timeline mark, in the ramp's hard color whichever way the level moved. */
+    .chart-details-delta {
+        margin-left: 4px;
+        color: var(--diff-hard);
+        font-weight: 800;
+        font-size: .8rem;
+        white-space: nowrap;
     }
 
     .chart-details-placements, .chart-details-skills {
@@ -128,13 +189,15 @@
 </style>
 
 @code {
-    /// <summary>A patch and, when known, the day it shipped: <c>v2.12.0 · Dec 23, 2025</c> — the chart page's own form.</summary>
-    private static string Stamp(VersionStamp stamp)
+    private enum HistoryKind
     {
-        return stamp.ReleaseDate is { } shipped
-            ? $"v{stamp.Version} · {shipped.ToString("MMM d, yyyy")}"
-            : $"v{stamp.Version}";
+        Debut,
+        Rerated,
+        Unchanged
     }
+
+    /// <summary>One line of the History row: a mix, the patch its row names, and what the level did there.</summary>
+    private sealed record HistoryLine(MixEnum Mix, VersionStamp? Stamp, HistoryKind Kind, int Level, int Delta);
 
     [Parameter] public Chart? Chart { get; set; }
 
@@ -152,7 +215,7 @@
 
     /// <summary>
     ///     Set false by a host that renders this behind a tab nobody has selected, so a panel
-    ///     out of sight issues none of its three reads.
+    ///     out of sight issues none of its reads.
     /// </summary>
     [Parameter] public bool Active { get; set; } = true;
 
@@ -164,6 +227,7 @@
 
     private Guid _loadedChartId = Guid.Empty;
     private string? _externalKey;
+    private HistoryVerdict? _history;
     private IReadOnlyList<(string Label, string Color)> _placements = Array.Empty<(string, string)>();
     private IReadOnlyList<TierListChartCard.CardSkillChip> _identityChips =
         Array.Empty<TierListChartCard.CardSkillChip>();
@@ -172,6 +236,9 @@
     {
         if (!Active || Chart == null || Chart.Id == _loadedChartId) return;
         _loadedChartId = Chart.Id;
+        // The same verdict the chart page draws its timeline from, cached per (chart, mix) by
+        // its handler, so the dialog and the page can never disagree about a rerate.
+        _history = (await Mediator.Send(new GetChartVerdictQuery(Chart.Id, Mix))).OfType<HistoryVerdict>().FirstOrDefault();
         _placements = await LoadPlacements(Chart.Id);
         // The alias table's key beats the guessed one (crawler project hardening).
         _externalKey = (await Mediator.Send(new GetChartStepAnalysisQuery(Chart.Id)))?.ExternalKey;
@@ -182,6 +249,47 @@
         _identityChips = IdentityChips.WithSpeedBand(
             IdentityChips.ToCardChips(identity.GetValueOrDefault(Chart.Id), false, L),
             await SpeedBand(Chart.Id), L);
+    }
+
+    /// <summary>
+    ///     The debut, every rerate, and the mix in view, in era order. A mix where the level held
+    ///     is skipped unless it is the one in view. Without a history facet — a debut with no
+    ///     rerate, for which the page shows no History section — the chart's own row still says
+    ///     when it arrived.
+    /// </summary>
+    private IReadOnlyList<HistoryLine> HistoryLines()
+    {
+        if (Chart == null) return Array.Empty<HistoryLine>();
+        var levels = _history?.Levels;
+        if (levels == null || levels.Count == 0)
+        {
+            var own = new List<HistoryLine>
+                { new(Chart.OriginalMix, Chart.Debut, HistoryKind.Debut, (int)Chart.Level, 0) };
+            if (Chart.Mix != Chart.OriginalMix)
+                own.Add(new HistoryLine(Chart.Mix, Chart.AddedIn, HistoryKind.Unchanged, (int)Chart.Level, 0));
+            return own;
+        }
+
+        var lines = new List<HistoryLine>();
+        for (var i = 0; i < levels.Count; i++)
+        {
+            var entry = levels[i];
+            var delta = i == 0 ? 0 : entry.Level - levels[i - 1].Level;
+            var kind = i == 0 ? HistoryKind.Debut : delta != 0 ? HistoryKind.Rerated : HistoryKind.Unchanged;
+            if (kind == HistoryKind.Unchanged && entry.Mix != Chart.Mix) continue;
+            // The facet's stamp first; the chart's own stamps cover the two mixes it knows.
+            var stamp = entry.AddedIn
+                        ?? (entry.Mix == Chart.OriginalMix ? Chart.Debut : entry.Mix == Chart.Mix ? Chart.AddedIn : null);
+            lines.Add(new HistoryLine(entry.Mix, stamp, kind, entry.Level, delta));
+        }
+
+        return lines;
+    }
+
+    /// <summary>The timeline's label for a level: the type's shorthand and the number, <c>D23</c>.</summary>
+    private string Label(int level)
+    {
+        return $"{Chart!.Type.GetShortHand()}{level}";
     }
 
     /// <summary>

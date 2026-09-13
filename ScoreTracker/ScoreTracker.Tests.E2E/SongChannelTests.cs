@@ -6,9 +6,9 @@ namespace ScoreTracker.Tests.E2E;
 
 /// <summary>
 ///     A song's channel reaches the two surfaces a player reads it on: the static chart page's
-///     fact row and the details dialog's Chart Stats grid (docs/design/song-channels.md §5). One
-///     seeded row, the real app on Kestrel, a real browser — the whole path from the SongMix table
-///     through the per-mix chart dictionary to the markup.
+///     fact row and the details dialog's Chart Stats rows (docs/design/song-channels.md §5, D10).
+///     One seeded row, the real app on Kestrel, a real browser — the whole path from the SongMix
+///     table through the per-mix chart dictionary to the markup.
 /// </summary>
 [Collection("E2E")]
 public sealed class SongChannelTests : IAsyncLifetime
@@ -57,10 +57,13 @@ public sealed class SongChannelTests : IAsyncLifetime
         await _page.Locator(".srp-card-link").First.ClickAsync();
         await Expect(_page.Locator(".mud-dialog")).ToBeVisibleAsync(
             new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
+        // The identity line reads under the title before any tab is picked.
+        await Expect(_page.Locator(".chart-details-sub")).ToContainTextAsync("song by");
         await _page.Locator("[data-testid='cdt-tab-Stats']").ClickAsync();
 
-        await Expect(_page.Locator(".chart-details-meta-channel"))
+        await Expect(_page.Locator(".chart-details-row-channel"))
             .ToContainTextAsync("K-Pop", new LocatorAssertionsToContainTextOptions { Timeout = 30_000 });
-        await Expect(_page.Locator(".chart-details-meta-debut")).ToBeVisibleAsync();
+        // A seeded debut with no rerate: the History row is the one line the chart's own row can say.
+        await Expect(_page.Locator(".chart-details-row-history")).ToContainTextAsync("debuted at D21");
     }
 }

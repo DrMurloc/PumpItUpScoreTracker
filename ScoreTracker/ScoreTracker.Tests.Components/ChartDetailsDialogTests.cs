@@ -94,6 +94,10 @@ public sealed class ChartDetailsDialogTests : TestContext
         // run once, so that is the default here too — the drill-down test seeds its own.
         _mediator.Setup(m => m.Send(It.IsAny<GetSimilarChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<ChartSimilarityRecord>());
+        // No verdict is the fresh-database state too: Chart Stats then says only what the chart's
+        // own row can — the history tests seed a facet of their own.
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartVerdictQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChartVerdictFacet>());
         var localizer = new Mock<IStringLocalizer<App>>();
         localizer.Setup(l => l[It.IsAny<string>()])
             .Returns((string key) => new LocalizedString(key, key));
@@ -223,7 +227,7 @@ public sealed class ChartDetailsDialogTests : TestContext
     {
         var cut = RenderDialog(SetupChart(null), ChartDetailsDialog.DetailsTab.Stats);
 
-        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-meta")));
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-rows")));
         Assert.Empty(cut.FindAll("iframe.chart-details-video"));
     }
 
@@ -621,41 +625,106 @@ public sealed class ChartDetailsDialogTests : TestContext
         Assert.Equal("span", cut.Find($"[data-testid=anchor-{comment.Id}]").TagName.ToLowerInvariant());
     }
 
-    // ── The Chart Stats meta rows the page already had (docs/design/song-channels.md §5) ──
+    // ── The identity line and the Chart Stats rows (docs/design/song-channels.md D10) ──
 
+    /// <summary>
+    ///     The header's identity line is the chart page's hero sub-line as one run — type, song by,
+    ///     steps by, BPM, notes — and it reads on every tab, not only Chart Stats.
+    /// </summary>
     [Fact]
-    public void TheStatsTabCarriesTheDebutTheAddedInPatchAndTheChannel()
+    public void TheHeaderCarriesTheIdentityLineOnEveryTab()
     {
-        var carried = SetupChart(null);
-        carried = carried with
+        var chart = SetupChart(null) with { StepArtist = Name.From("SPHAM"), NoteCount = 1111 };
+        chart = chart with { Song = chart.Song with { Bpm = Bpm.From(173, 173) } };
+
+        var cut = RenderDialog(chart, ChartDetailsDialog.DetailsTab.Leaderboard);
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-sub")));
+        Assert.Equal("FullSong · song by msgoon · steps by SPHAM · 173 BPM · 1,111 notes",
+            cut.Find(".chart-details-sub").TextContent);
+    }
+
+    /// <summary>A chart the catalog knows less about drops the missing pieces rather than printing blanks.</summary>
+    [Fact]
+    public void TheIdentityLineDropsWhatTheCatalogLacks()
+    {
+        var cut = RenderDialog(SetupChart(null), ChartDetailsDialog.DetailsTab.Leaderboard);
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-sub")));
+        Assert.Equal("FullSong · song by msgoon", cut.Find(".chart-details-sub").TextContent);
+    }
+
+    /// <summary>
+    ///     History is the chart page's timeline as lines: the debut, every rerate with its mark and
+    ///     the patch it happened in, and the mix in view; a mix where nothing changed is skipped.
+    ///     The channel is a chip that opens the chart search filtered on it.
+    /// </summary>
+    [Fact]
+    public void TheStatsTabListsTheDebutEveryRerateAndTheMixInView()
+    {
+        var chart = SetupChart(null) with
         {
             OriginalMix = MixEnum.Prime,
             Mix = MixEnum.Phoenix2,
-            AddedIn = new VersionStamp(MixEnum.Phoenix2, "1.00.0", new DateOnly(2026, 7, 9), 10),
             Debut = new VersionStamp(MixEnum.Prime, "1.06.0", null, 60),
-            Song = carried.Song with { Channel = Channel.WorldMusic }
+            AddedIn = new VersionStamp(MixEnum.Phoenix2, "1.00.0", new DateOnly(2026, 7, 9), 10)
         };
+        chart = chart with { Song = chart.Song with { Channel = Channel.WorldMusic } };
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartVerdictQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChartVerdictFacet[]
+            {
+                new HistoryVerdict(MixEnum.Prime, new[]
+                {
+                    new MixLevelRecord(MixEnum.Prime, 19),
+                    new MixLevelRecord(MixEnum.XX, 20, new VersionStamp(MixEnum.XX, "1.00.0", new DateOnly(2019, 1, 7), 1)),
+                    new MixLevelRecord(MixEnum.Phoenix, 20),
+                    new MixLevelRecord(MixEnum.Phoenix2, 19)
+                })
+            });
 
-        var cut = RenderDialog(carried, ChartDetailsDialog.DetailsTab.Stats);
+        var cut = RenderDialog(chart, ChartDetailsDialog.DetailsTab.Stats);
 
-        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-meta-channel")));
-        var debut = cut.Find(".chart-details-meta-debut").TextContent;
-        Assert.Contains("Debuted in Prime", debut);
-        Assert.Contains("v1.06.0", debut);
-        var added = cut.Find(".chart-details-meta-added").TextContent;
-        Assert.Contains("Added in Phoenix 2", added);
-        Assert.Contains("v1.00.0 · Jul 9, 2026", added);
-        Assert.Contains("World Music", cut.Find(".chart-details-meta-channel").TextContent);
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-row-history .chart-details-line")));
+        var lines = cut.FindAll(".chart-details-row-history .chart-details-line").Select(l => l.TextContent).ToArray();
+        Assert.Equal(3, lines.Length);
+        Assert.Contains("Prime", lines[0]);
+        Assert.Contains("v1.06.0", lines[0]);
+        Assert.Contains("debuted at D19", lines[0]);
+        // The rerate's patch comes from the facet, which knows every mix's row.
+        Assert.Contains("XX", lines[1]);
+        Assert.Contains("v1.00.0 · Jan 7, 2019", lines[1]);
+        Assert.Contains("rerated D20", lines[1]);
+        Assert.Contains("+1", lines[1]);
+        // The mix in view always has a line; its patch is the chart's own AddedIn.
+        Assert.Contains("Phoenix 2", lines[2]);
+        Assert.Contains("v1.00.0 · Jul 9, 2026", lines[2]);
+        Assert.Contains("rerated D19", lines[2]);
+        Assert.Contains("-1", lines[2]);
+        // Phoenix carried D20 unchanged, so it has no line.
+        Assert.DoesNotContain(lines, l => l.Contains("unchanged"));
+
+        var channel = cut.Find(".chart-details-row-channel [href]");
+        Assert.Contains("World Music", channel.TextContent);
+        Assert.Contains("Channel=WorldMusic", channel.GetAttribute("href"));
     }
 
+    /// <summary>
+    ///     A debut with no rerate has no history facet — the page shows no History section — but
+    ///     the dialog still says when the chart arrived, off the chart's own row. No channel, no row.
+    /// </summary>
     [Fact]
-    public void ADebutWithNoPatchOrChannelShowsItsMixAloneAndNoAddedInOrChannelRow()
+    public void ADebutWithNoRerateShowsOneHistoryLineAndNoChannelRow()
     {
-        var cut = RenderDialog(SetupChart(null), ChartDetailsDialog.DetailsTab.Stats);
+        var stamp = new VersionStamp(MixEnum.Phoenix, "2.06.0", new DateOnly(2024, 12, 26), 160);
+        var chart = SetupChart(null) with { OriginalMix = MixEnum.Phoenix, AddedIn = stamp, Debut = stamp };
 
-        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-meta-debut")));
-        Assert.Contains("Debuted in", cut.Find(".chart-details-meta-debut").TextContent);
-        Assert.Empty(cut.FindAll(".chart-details-meta-added"));
-        Assert.Empty(cut.FindAll(".chart-details-meta-channel"));
+        var cut = RenderDialog(chart, ChartDetailsDialog.DetailsTab.Stats);
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-row-history .chart-details-line")));
+        var line = Assert.Single(cut.FindAll(".chart-details-row-history .chart-details-line")).TextContent;
+        Assert.Contains("Phoenix", line);
+        Assert.Contains("v2.06.0 · Dec 26, 2024", line);
+        Assert.Contains("debuted at D20", line);
+        Assert.Empty(cut.FindAll(".chart-details-row-channel"));
     }
 }

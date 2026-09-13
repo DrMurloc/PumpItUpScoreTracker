@@ -251,12 +251,10 @@
 @inject NavigationManager Nav
 @inject IOptions<ChartCommentsConfiguration> Comments
 @code {
-    /// <summary>A patch and, when known, the day it shipped: <c>v2.12.0 · Dec 23, 2025</c>.</summary>
+    /// <summary>A patch and, when known, the day it shipped: <c>v2.12.0 · Dec 23, 2025</c> — the dialog's form too.</summary>
     private static string Stamp(VersionStamp stamp)
     {
-        return stamp.ReleaseDate is { } shipped
-            ? $"v{stamp.Version} · {shipped.ToString("MMM d, yyyy")}"
-            : $"v{stamp.Version}";
+        return VersionStampText.Short(stamp);
     }
 
     // The canonical vanity route. The GUID permalink and legacy /Record live in
