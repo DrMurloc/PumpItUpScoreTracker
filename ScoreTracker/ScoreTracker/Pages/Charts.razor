@@ -483,7 +483,7 @@ else
                     <div class="srp-facet-head srp-facet-head-version">
                         <span>@L["Version"]</span>
                         <span class="srp-through">
-                            <select class="srp-through-select" aria-label="@L["Through a version"]" value="" @onchange="OnThroughChanged">
+                            <select @key="_throughKey" class="srp-through-select" aria-label="@L["Through a version"]" value="" @onchange="OnThroughChanged">
                                 <option value="">@L["Through a version…"]</option>
                                 @foreach (var v in _mixVersions)
                                 {
@@ -777,24 +777,49 @@ else
     /// <summary>The mix in view's patches, oldest first (docs/design/chart-versions.md §4).</summary>
     private IReadOnlyList<MixVersionRecord> _mixVersions = Array.Empty<MixVersionRecord>();
 
-    /// <summary>A single patch filters nothing, so the facet only exists past one (D6).</summary>
-    private bool HasVersions => _mixVersions.Count > 1;
+    /// <summary>
+    ///     A single patch filters nothing, so the facet only exists past one (D6) — and only once
+    ///     some chart of the mix carries a patch, which the version rows themselves say: between
+    ///     the deploy that seeds them and the backfill that stamps the charts, every count is
+    ///     zero and a facet would offer chips that match nothing.
+    /// </summary>
+    private bool HasVersions => _mixVersions.Count > 1 && _mixVersions.Any(v => v.ChartCount > 0);
+
+    /// <summary>The digits before the first dot, or null for a name that is not major.rest — JE, Pre-v1.10, Release.</summary>
+    private static string? NumericMajor(string name)
+    {
+        var dot = name.IndexOf('.');
+        return dot > 0 && name[..dot].All(char.IsDigit) ? name[..dot] : null;
+    }
 
     /// <summary>
     ///     Chips grouped by major version — Phoenix's twenty-two patches fall into 1.x and 2.x —
-    ///     and ungrouped when the mix has only one major, where a heading would be noise.
+    ///     and ungrouped when the mix has fewer than two numeric majors, where a heading would be
+    ///     noise. A name that is not major.rest never becomes a heading: with two majors it rides
+    ///     in an unlabelled group at the end, in release order.
     /// </summary>
     private IEnumerable<(string? Label, MixVersionRecord[] Versions)> VersionGroups
     {
         get
         {
-            var groups = _mixVersions
-                .GroupBy(v => v.Name.Contains('.') ? v.Name[..v.Name.IndexOf('.')] : v.Name)
-                .Select(g => (Label: (string?)$"v{g.Key}.x", Versions: g.OrderBy(v => v.SortOrder).ToArray()))
-                .ToArray();
-            return groups.Length > 1 ? groups : new[] { (Label: (string?)null, Versions: _mixVersions.OrderBy(v => v.SortOrder).ToArray()) };
+            var ordered = _mixVersions.OrderBy(v => v.SortOrder).ToArray();
+            var majors = ordered.Select(v => NumericMajor(v.Name)).OfType<string>().Distinct().ToArray();
+            if (majors.Length < 2) return new[] { ((string?)null, ordered) };
+            var groups = majors
+                .Select(major => ((string?)$"v{major}.x", ordered.Where(v => NumericMajor(v.Name) == major).ToArray()))
+                .ToList();
+            var unnumbered = ordered.Where(v => NumericMajor(v.Name) == null).ToArray();
+            if (unnumbered.Length > 0) groups.Add((null, unnumbered));
+            return groups;
         }
     }
+
+    /// <summary>
+    ///     Bumped after every bulk pick so the select is rebuilt with its placeholder: a static
+    ///     value="" never reaches the diff, so without this the control keeps reading the last
+    ///     pick and a repeat of the same pick fires no change at all.
+    /// </summary>
+    private int _throughKey;
 
 
     private static readonly MixEnum[] AllKnownMixes =
@@ -1066,6 +1091,9 @@ else
     protected override async Task OnInitializedAsync()
     {
         _mix = await UiSettings.GetSelectedMix();
+        // Before the first render: the query chips need the mix's patches to collapse a shared
+        // link's "through" selection into one chip, and the drawer's own load comes much later.
+        _mixVersions = await Mediator.Send(new GetMixVersionsQuery(_mix)) ?? Array.Empty<MixVersionRecord>();
         ParseQuery();
         if (CurrentUser.IsLoggedIn)
         {
@@ -1527,6 +1555,7 @@ else
         var name = e.Value?.ToString();
         if (string.IsNullOrEmpty(name)) return;
         _versions = MixVersionRange.Through(_mixVersions, name).ToList();
+        _throughKey++;
         await ApplyChange();
     }
 

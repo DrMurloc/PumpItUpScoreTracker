@@ -586,8 +586,13 @@ public sealed class ChartsPageTests : ComponentTestBase
 
     private void SeedVersions(params (string Name, int Order)[] versions)
     {
+        SeedVersions(1, versions);
+    }
+
+    private void SeedVersions(int chartCount, params (string Name, int Order)[] versions)
+    {
         _mediator.Setup(m => m.Send(It.IsAny<GetMixVersionsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(versions.Select(v => new MixVersionRecord(MixEnum.Phoenix, v.Name, null, v.Order, 1)).ToArray());
+            .ReturnsAsync(versions.Select(v => new MixVersionRecord(MixEnum.Phoenix, v.Name, null, v.Order, chartCount)).ToArray());
     }
 
     private void SeedVersionCounts(params (string Name, int Count)[] counts)
@@ -653,5 +658,68 @@ public sealed class ChartsPageTests : ComponentTestBase
 
         cut.WaitForAssertion(() => Assert.Equal(new[] { "1.01.0" }, _lastQuery!.Versions));
         Assert.Contains("v1.01.0", cut.Markup);
+    }
+
+    [Fact]
+    public void ASharedLinkWithAThroughSelectionReadsAsOneChipBeforeTheDrawerEverOpens()
+    {
+        SeedVersions(("1.00.0", 10), ("1.01.0", 20), ("2.00.0", 30));
+
+        Services.GetRequiredService<NavigationManager>().NavigateTo("/Charts?Version=1.00.0,1.01.0");
+        var cut = RenderComponent<Charts>();
+
+        cut.WaitForAssertion(() => Assert.Equal(new[] { "1.00.0", "1.01.0" }, _lastQuery!.Versions));
+        var chips = cut.FindAll(".srp-chip").Select(c => c.TextContent.Trim()).ToArray();
+        Assert.Single(chips, c => c.Contains("Through v1.01.0"));
+        Assert.DoesNotContain(chips, c => c.Contains("v1.00.0"));
+    }
+
+    [Fact]
+    public async Task NonNumericVersionNamesNeverBecomeHeaders()
+    {
+        ShowEveryFilter();
+        SeedVersions(("1.00.0", 10), ("1.21.0", 20), ("JE", 30));
+        SeedVersionCounts(("1.00.0", 1800), ("1.21.0", 15), ("JE", 42));
+
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".srp-card")));
+        await cut.Find("button[aria-label=Filters]").ClickAsync(new MouseEventArgs());
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".srp-through-select")));
+
+        // One numeric major: no headings at all, and JE is a chip like any other.
+        Assert.Empty(cut.FindAll(".srp-era-name"));
+        Assert.Contains(cut.FindAll(".srp-facet-chip"), c => c.TextContent.Contains("vJE"));
+    }
+
+    [Fact]
+    public async Task TwoMajorsGetHeadersAndAnUnnumberedNameRidesUnlabelled()
+    {
+        ShowEveryFilter();
+        SeedVersions(("1.00.0", 10), ("2.00.0", 20), ("JE", 30));
+        SeedVersionCounts(("1.00.0", 1800), ("2.00.0", 107), ("JE", 42));
+
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".srp-card")));
+        await cut.Find("button[aria-label=Filters]").ClickAsync(new MouseEventArgs());
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".srp-through-select")));
+
+        var headers = cut.FindAll(".srp-era-name").Select(e => e.TextContent.Trim()).ToArray();
+        Assert.Equal(new[] { "v1.x", "v2.x" }, headers);
+        Assert.Contains(cut.FindAll(".srp-facet-chip"), c => c.TextContent.Contains("vJE"));
+    }
+
+    [Fact]
+    public async Task VersionFacetHidesUntilSomeChartCarriesAPatch()
+    {
+        ShowEveryFilter();
+        SeedVersions(0, ("1.00.0", 10), ("1.01.0", 20));
+        SeedVersionCounts();
+
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".srp-card")));
+        await cut.Find("button[aria-label=Filters]").ClickAsync(new MouseEventArgs());
+        cut.WaitForAssertion(() => Assert.Contains("Debut mix", cut.Markup));
+
+        Assert.Empty(cut.FindAll(".srp-through-select"));
     }
 }

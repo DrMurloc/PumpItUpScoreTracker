@@ -91,14 +91,14 @@ version reads as one query chip; individual picks read one chip each. The URL ca
 set (`Version=1.00.0,1.01.0,…`), so a shared link still means the same versions after a new patch
 ships. The export gains `Version` and `ReleaseDate` columns. *Newest content* sorts by release
 order within the mix in view, then debut era, and the per-card sort line reads `v2.09.0 · May 27,
-2025`; the card head is untouched. The facet hides on a mix with one version (D6).
+2025`; the card head is untouched. The facet hides on a mix with one version (D6), and until at least one of the mix's charts carries a patch — the window between the deploy that seeds the rows and the backfill that stamps the charts. Group headings exist only for numeric majors; `JE`, `Pre-v1.10` and `Release` never become one.
 
 **Randomizer.** A Released row beside Song Types in the settings panel: the same chips, the same
 through select, All and Clear. Nothing picked draws from every version. The picks save into the
 preset as the exact set of versions, so "through 2.09.0" keeps excluding 2.10.0 and later after
 they ship — right for a cab that has not updated and for a tournament that froze its pool.
 Tournament presets carry it the same way; `charts/random` takes the four API parameters. The row
-hides on a mix with no version data.
+hides on a mix with no version data, and until some chart of the mix carries a patch.
 
 **Chart page.** Two facts beside Debuted in: `v1.01.0` labelled *Added in Phoenix 2*, and the
 date labelled *Released*. The per-mix nuance is the point: a carry-over shows it arrived at the

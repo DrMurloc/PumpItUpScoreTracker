@@ -91,8 +91,10 @@ internal sealed class DevApiReader
             reportProgress($"Downloading {wire.DisplayName}…");
 
             // The mix's patches come first so the chart rows below can name them by version.
+            // Tolerated like the tier lists: a site that has not deployed the versions read yet
+            // still populates a local database, just without patches.
             foreach (var version in await Page<VersionWire>(client, $"api/v2/versions?mix={wire.Name}",
-                         reportProgress, cancellationToken))
+                         reportProgress, cancellationToken, skipMissing: true))
                 versions.Add(new DevMixVersionRow(mix, version.Name, version.ReleaseDate, version.SortOrder));
 
             // Songs repeat across mixes; first one wins, and they are identical by construction

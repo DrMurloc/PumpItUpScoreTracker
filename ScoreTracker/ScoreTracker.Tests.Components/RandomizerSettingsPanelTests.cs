@@ -221,8 +221,24 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
 
     private void SeedVersions(params (string Name, int Order)[] versions)
     {
+        SeedVersions(1, versions);
+    }
+
+    private void SeedVersions(int chartCount, params (string Name, int Order)[] versions)
+    {
         Mediator.Setup(m => m.Send(It.IsAny<GetMixVersionsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(versions.Select(v => new MixVersionRecord(MixEnum.Phoenix, v.Name, null, v.Order, 1)).ToArray());
+            .ReturnsAsync(versions.Select(v => new MixVersionRecord(MixEnum.Phoenix, v.Name, null, v.Order, chartCount)).ToArray());
+    }
+
+    [Fact]
+    public void ReleasedRowHidesUntilSomeChartCarriesAPatch()
+    {
+        SeedVersions(0, ("1.00.0", 10), ("1.01.0", 20));
+
+        var cut = Render(new RandomSettings());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".rand-song-chips")));
+        Assert.Empty(cut.FindAll(".rand-version-chips"));
     }
 
     [Fact]

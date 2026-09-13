@@ -34,7 +34,7 @@
     @if (_useNewVersion)
     {
         <MudTextField T="string" @bind-Value="_newVersionName" Label="@L["Version name"]" Placeholder="1.02.0"
-                      Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="_isSaving"></MudTextField>
+                      MaxLength="MaxVersionNameLength" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="_isSaving"></MudTextField>
         <MudDatePicker @bind-Date="_newVersionDate" Label="@L["Release date"]" Variant="Variant.Outlined"
                        Margin="Margin.Dense" Disabled="_isSaving" Class="mt-2"></MudDatePicker>
     }
@@ -199,8 +199,12 @@
     private string _newVersionName = string.Empty;
     private DateTime? _newVersionDate;
 
+    // The column is nvarchar(16); a longer name would fail the create, and the create runs
+    // before a single chart does.
+    private const int MaxVersionNameLength = 16;
+
     private bool VersionChosen => _useNewVersion
-        ? !string.IsNullOrWhiteSpace(_newVersionName)
+        ? !string.IsNullOrWhiteSpace(_newVersionName) && _newVersionName.Trim().Length <= MaxVersionNameLength
         : _selectedVersion != null;
 
     protected override async Task OnInitializedAsync()
@@ -296,7 +300,19 @@
         var versionDate = _useNewVersion
             ? _newVersionDate is { } picked ? DateOnly.FromDateTime(picked) : null
             : _versions.FirstOrDefault(v => v.Name == versionName)?.ReleaseDate;
-        var versionId = await Mediator.Send(new CreateMixVersionCommand(MixEnum.Phoenix2, versionName, versionDate));
+        Guid versionId;
+        try
+        {
+            versionId = await Mediator.Send(new CreateMixVersionCommand(MixEnum.Phoenix2, versionName, versionDate));
+        }
+        catch (Exception ex)
+        {
+            // The batch stays on screen to retry: a failed version is a snackbar, not a dead circuit
+            // that takes the uploaded file with it.
+            _isSaving = false;
+            Snackbar.Add($"{L["Failed"]}: {versionName} · {ex.Message}", Severity.Error);
+            return;
+        }
         _results.Clear();
         var created = 0;
         var failed = 0;

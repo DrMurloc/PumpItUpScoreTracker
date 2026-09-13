@@ -125,13 +125,13 @@
        the mix, a Through select for the cab that is behind a version or the tournament that
        froze its pool, All and Clear. Nothing picked draws from every patch. Hidden where the
        mix has a single patch, because one chip filters nothing. *@
-    @if (_versions.Count > 1)
+    @if (HasVersions)
     {
         <div class="rand-settings-row">
             <div class="rand-row-head">
                 <span class="rand-settings-label">@L["Released"]</span>
                 <span class="rand-through">
-                    <select class="rand-through-select" aria-label="@L["Through a version"]" value="" @onchange="OnThroughChanged">
+                    <select @key="_throughKey" class="rand-through-select" aria-label="@L["Through a version"]" value="" @onchange="OnThroughChanged">
                         <option value="">@L["Through a version…"]</option>
                         @foreach (var v in _versions)
                         {
@@ -391,6 +391,12 @@
     private IReadOnlyList<MixVersionRecord> _versions = Array.Empty<MixVersionRecord>();
     private MixEnum? _versionsFor;
 
+    /// <summary>Past one patch, and only once some chart carries one — the seeded rows alone make no draw narrower.</summary>
+    private bool HasVersions => _versions.Count > 1 && _versions.Any(v => v.ChartCount > 0);
+
+    /// <summary>Rebuilds the select after a pick so it reads its placeholder again and a repeat pick fires.</summary>
+    private int _throughKey;
+
     private string _minimumType = "Chart Type";
     private int _bucketSize = 1;
     private IReadOnlyCollection<string> _newCustomBuckets = new List<string>();
@@ -633,6 +639,7 @@
         var name = e.Value?.ToString();
         if (string.IsNullOrEmpty(name)) return;
         Settings.Versions = MixVersionRange.Through(_versions, name).ToHashSet(StringComparer.Ordinal);
+        _throughKey++;
         await Notify();
     }
 
