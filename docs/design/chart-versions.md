@@ -16,24 +16,26 @@ the API — and, decided in round 2, the chart page.
 
 | # | Decision | Owner's words |
 |---|---|---|
-| D1 | **`releasedAfter` is the game's release date**, not the day PIU Scores added the row. A chart backfilled later with an old date never surfaces under a tool's last-sync date; catalog change detection stays the ETag and a full pull. | *"yeah, that sounds right"* |
-| D2 | **Three version filters on the API**: in, by (up to and including), after (strictly after). His parameter names. | *"we need releasedInVersion=X (maybe array of versions), and releasedByVersion=X, and releasedAfterVersion=X"* |
+| D1 | **`addedAfter` is the game's release date**, not the day PIU Scores added the row. A chart backfilled later with an old date never surfaces under a tool's last-sync date; catalog change detection stays the ETag and a full pull. | *"yeah, that sounds right"* |
+| D2 | **Three version filters on the API**: in, by (up to and including), after (strictly after). Named `added*` since D13; his `released*` names were the round-one wording. | *"we need releasedInVersion=X (maybe array of versions), and releasedByVersion=X, and releasedAfterVersion=X"* |
 | D3 | **Randomizer: multi-pick chips plus a bulk "through this version" select.** | *"multi pick chips are great, but we need a way to bulk select them so someone can do like 'everything released by this version' (which is common when someone plays on a cab that is behind a version or when a version is too new for a tournament)"* |
-| D4 | **The chart page shows the version as two facts**, Added in and Released, beside Debuted in. | *"your read was right"* (round 2, Q5) |
+| D4 | **The chart page shows the version as two facts** beside Debuted in — since D13, the debut patch on the Debuted in fact, and an Added in fact on a carry-over only. | *"your read was right"* (round 2, Q5) |
 | D5 | **The entity carries a `SortOrder` and its `ReleaseDate` is nullable.** 46 real legacy patches have a name and an order but no known date; a fabricated date is worse than none, and by/after are order questions. | *"yes"* |
 | D6 | **A single-version mix gets one row named `Release`**, dated at its launch, and version controls hide on a mix with one version. | *"yes"* |
-| D7 | **`chartCount` rides every row of the versions endpoint** — charts first released in that patch, in that mix. | *"sure"* |
+| D7 | **`chartCount` rides every row of the versions endpoint** — charts that entered the mix in that patch; `debutCount` beside it since D13. | *"sure"* |
 | D8 | **Prime JE debuts get a `JE` pseudo-version under Prime**, undated, ordered after Prime's last patch. Around 42 charts, per the fold-JE-into-Prime call in [legacy-mixes.md](legacy-mixes.md). | *"yeah, pseudo version is good"* |
 | D9 | **A new chart on an old song debuted in the patch that added it, not in the song's mix.** The 2.12.0 playlist and the wiki both list La Cinquantaine S22 and D24 as new charts on the existing song; the catalog had them as XX debuts. Fixed in the backfill script. The question reached the owner naming Conflict D18/D26 by mistake — those already read Phoenix — and his ruling applies to the pair the data actually flagged. | *"those charts came from phoenix. Conflict has a wonky history, we probably just got those two charts mislabeled. The other conflict charts were from xx. Fix it."* |
 | D10 | **The bulk-upload flow carries the version** from now on: a picker on the admin tool, the patch named in the import skill's report. | *"in future, we should include version when we're bulk uploading charts from a new version"* |
 | D11 | **Per-chart versions for Phoenix and Phoenix 2 come from Andamiro's own per-version playlists**, with NamuWiki's version pages filling what the playlists miss. His pointer replaced the "assume launch" shortcut. | *"https://www.youtube.com/@PUMPITUPOfficial/playlists there ya go"*, *"see what namu's got"* |
 | D12 | Removals and per-version levels stay out. One version per (chart, mix): the one it first appeared in — which is how a return reads too: Conflict, cut with its license and back at 2.00.0, enters Phoenix there. | the ask |
+| D13 | **Per mix stays, and the vocabulary says which timeline it means.** `addedInVersion`/`addedOn` and the `added*` filters are the mix's own timeline; `debutVersion`/`debutedOn`, `debut` and `debutedInVersion` are first appearance anywhere, read off the origin mix's own row, never stored twice. "Released" disappears from the API, the site and the code. The randomizer keeps its through pick and gets no debut switch. | *"okay. fine. per mix. can we add a bool for 'Debut'"* · *"debut is good vocab"* · *"all those other reshapes/renames, go for it"* · *"Not really a proper user journey"* (2026-09-13) |
 
 ## 2. The model
 
 Three attribution kinds now describe where a chart comes from. Origin (`Chart.OriginalMixId`,
 the debut mix) and membership (a `ChartMix` row per mix) came with the legacy-mix work; this adds
-**release**: the patch of *that mix* the chart first appeared in.
+**added in**: the patch of *that mix* the chart entered in — and, read off the origin mix's own
+row, the **debut**: the patch it first appeared in anywhere (D13).
 
 | Field | What it is | Why |
 |---|---|---|
@@ -65,20 +67,23 @@ the debut mix) and membership (a `ChartMix` row per mix) came with the legacy-mi
 
 | Route | What |
 |---|---|
-| `GET /api/v2/versions?mix=` | The mix's patches oldest first: `name`, `releaseDate` (null on an undated legacy patch), `sortOrder`, `chartCount` (D7). A sub-resource rather than an array on `/mixes`, the 2026-08-02 precedent. |
-| `GET /api/v2/charts?mix=&releasedInVersion=1.01.0` | What a patch added. Several: a comma list, or repeat the parameter. |
-| `…&releasedByVersion=2.09.0` | Everything a cab on 2.09.0 has. Up to and including. |
-| `…&releasedAfterVersion=2.09.0` | What that cab is missing. Strictly after. |
-| `…&releasedAfter=2026-08-01` | The date form, exclusive like `recordedAfter`. Skips undated versions. |
+| `GET /api/v2/versions?mix=` | The mix's patches oldest first: `name`, `releaseDate` (null on an undated legacy patch), `sortOrder`, `chartCount` and `debutCount` (D7, D13). A sub-resource rather than an array on `/mixes`, the 2026-08-02 precedent. |
+| `GET /api/v2/charts?mix=&addedInVersion=1.01.0` | What a patch put on the cab, carry-overs included at launch. Several: a comma list, or repeat the parameter. |
+| `…&addedByVersion=2.09.0` | Everything a cab on 2.09.0 has. Up to and including. |
+| `…&addedAfterVersion=2.09.0` | What that cab is missing. Strictly after. |
+| `…&addedAfter=2026-08-01` | The date form, exclusive like `recordedAfter`. Skips undated versions. |
+| `…&debutedInVersion=1.01.0` | What the patch introduced: charts whose first appearance anywhere is that patch of this mix. `addedInVersion` plus `debut=true`, kept as its own name because it is the question people ask. |
+| `…&debut=true` / `false` | Debuts only, or carry-overs only. Reads the origin mix, so it holds where the patch is unknown. |
 
-- Every chart row gains `version` and `releaseDate`, both null when unknown, and `debut`: true when
-  this mix is the chart's debut mix, so the version is the patch that introduced it to the game;
-  false on a carry-over, whatever its version here. A Phoenix carry-over
-  reads `1.00.0` in Phoenix 2: the version of *this* mix it arrived in.
-- The same four parameters ride `charts/skills` and `charts/random`, which take the chart filters
-  by contract.
-- The three version filters combine with AND, so by 2.09.0 plus after 2.05.0 is a range. A
-  version filter never matches a chart whose version is unknown.
+- Every chart row gains `addedInVersion` and `addedOn` — the patch of *this* mix it entered in
+  and that patch's date — `debutVersion` and `debutedOn` — its first appearance anywhere, a patch
+  of `originalMix` — all null when unknown, and `debut`, true when this mix is the origin mix. A
+  Phoenix carry-over reads `addedInVersion` `1.00.0` in Phoenix 2 and its Phoenix patch as
+  `debutVersion`; a debut reads the same patch in both.
+- The same parameters ride `charts/skills` and `charts/random`, which take the chart filters by
+  contract; on `random` the debut names narrow the added-in picks and the flag rides the settings.
+- The version filters combine with AND, so by 2.09.0 plus after 2.05.0 is a range. A named
+  filter never matches a chart whose patch is unknown; the flag needs no patch.
 - An unknown version name is a `400` (`invalid-version`) whose detail points at the versions
   endpoint. Every filter rides the cursor fingerprint. ETags are body hashes, so they change once
   when the fields land and then hold.
@@ -91,20 +96,25 @@ with counts, grouped by major version when the mix has more than one, with a *Th
 select that turns on every chip up to the chosen one, plus All and Clear. Picking through a
 version reads as one query chip; individual picks read one chip each. The URL carries the exact
 set (`Version=1.00.0,1.01.0,…`), so a shared link still means the same versions after a new patch
-ships. The export gains `Version` and `ReleaseDate` columns. *Newest content* sorts by release
-order within the mix in view, then debut era, and the per-card sort line reads `v2.09.0 · May 27,
-2025`; the card head is untouched. The facet hides on a mix with one version (D6), and until at least one of the mix's charts carries a patch — the window between the deploy that seeds the rows and the backfill that stamps the charts. Group headings exist only for numeric majors; `JE`, `Pre-v1.10` and `Release` never become one.
+ships. A *Debuts only* chip in the facet head (`Debut=1` in the URL) keeps charts that first
+appeared in the mix in view, so a patch chip then reads as what the patch introduced; the chips
+otherwise count what each patch put on the cab, which is what the Through pick means. The export
+gains `AddedInVersion`, `AddedOn`, `DebutVersion`, `DebutedOn` and `Debut` columns. *Newest
+content* sorts by first appearance anywhere — the debut mix's era, then the debut patch — and the
+per-card sort line reads `v2.09.0 · May 27, 2025` on a debut and `XX · v2.05.0` on a carry-over;
+the card head is untouched. The facet hides on a mix with one version (D6), and until at least one of the mix's charts carries a patch — the window between the deploy that seeds the rows and the backfill that stamps the charts. Group headings exist only for numeric majors; `JE`, `Pre-v1.10` and `Release` never become one.
 
-**Randomizer.** A Released row beside Song Types in the settings panel: the same chips, the same
+**Randomizer.** An Added in row beside Song Types in the settings panel: the same chips, the same
 through select, All and Clear. Nothing picked draws from every version. The picks save into the
 preset as the exact set of versions, so "through 2.09.0" keeps excluding 2.10.0 and later after
 they ship — right for a cab that has not updated and for a tournament that froze its pool.
 Tournament presets carry it the same way; `charts/random` takes the four API parameters. The row
 hides on a mix with no version data, and until some chart of the mix carries a patch.
 
-**Chart page.** Two facts beside Debuted in: `v1.01.0` labelled *Added in Phoenix 2*, and the
-date labelled *Released*. The per-mix nuance is the point: a carry-over shows it arrived at the
-launch, a debut shows the patch. Neither fact shows when the version is unknown.
+**Chart page.** *Debuted in Phoenix* carries the debut patch and its date, `v2.12.0 · Dec 23,
+2025`, when the origin mix's row knows it, and the mix alone when it does not. A carry-over adds
+*Added in Phoenix 2* with the patch it entered this mix in and that patch's date; a debut says
+nothing twice. Nothing shows for an unknown patch.
 
 **Admin BulkAddCharts.** A Version picker, newest by default, with a new-version entry of name and
 date. The picked version stamps every chart the batch creates. The JSON blob is unchanged.
