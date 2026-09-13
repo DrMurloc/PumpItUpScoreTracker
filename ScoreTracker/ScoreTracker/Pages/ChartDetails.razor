@@ -96,6 +96,23 @@
                     <span class="chart-fact-value">@_chart.OriginalMix.GetName()</span>
                     <span class="chart-fact-label">@L["Debuted in"]</span>
                 </div>
+                @* Two facts, not one: a carry-over shows it arrived at this mix's launch while its
+                   debut mix stays the older one; a debut shows the patch itself. Neither shows when
+                   the patch is unknown (docs/design/chart-versions.md §4). *@
+                @if (_chart.Release is { } release)
+                {
+                    <div>
+                        <span class="chart-fact-value">v@(release.Version)</span>
+                        <span class="chart-fact-label">@L["Added in {0}", _chart.Mix.GetName()]</span>
+                    </div>
+                    @if (release.ReleaseDate is { } released)
+                    {
+                        <div>
+                            <span class="chart-fact-value">@released.ToString("MMM d, yyyy")</span>
+                            <span class="chart-fact-label">@L["Released"]</span>
+                        </div>
+                    }
+                }
                 @if (Population != null)
                 {
                     <div>
