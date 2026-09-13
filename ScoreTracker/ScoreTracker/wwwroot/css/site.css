@@ -1602,6 +1602,52 @@ html.sheet-open .more-sheet-scrim {
     color: var(--mix-primary-contrast);
 }
 
+/* The Released row's head carries the through select at its right edge, dropping to its own
+   line when the panel is narrow; the buttons beside it act on the row, so they are text. */
+.rand-row-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px 12px;
+}
+
+.rand-through {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    font-size: .8rem;
+    color: var(--mix-ink-muted);
+}
+
+.rand-through-select {
+    max-width: 180px;
+    background: var(--mix-surface);
+    color: var(--mix-ink);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 8px;
+    padding: 6px 8px;
+    font: inherit;
+    font-size: .85rem;
+}
+
+.rand-through-btn {
+    background: none;
+    border: none;
+    color: var(--mix-secondary);
+    cursor: pointer;
+    font: inherit;
+    font-size: .8rem;
+    padding: 2px 4px;
+}
+
+.rand-through-btn:hover,
+.rand-through-btn:focus-visible {
+    color: var(--mix-ink);
+    outline: none;
+}
+
 .rand-coop-chips {
     display: flex;
     gap: 6px;

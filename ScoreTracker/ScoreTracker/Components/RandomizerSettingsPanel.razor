@@ -3,9 +3,13 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.ValueTypes
+@using MediatR
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Web.Services.Theming
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @inject ICurrentUserAccessor CurrentUser
+@inject IMediator Mediator
 
 @* The randomizer's settings surface (docs/design/randomizer-overhaul.md, field-test
    round 3): sliders are the front door; Advanced Filters holds one Weighted Levels
@@ -116,6 +120,39 @@
             }
         </div>
     </div>
+
+    @* The patches a draw may pull from (docs/design/chart-versions.md §4): chips per patch of
+       the mix, a Through select for the cab that is behind a version or the tournament that
+       froze its pool, All and Clear. Nothing picked draws from every patch. Hidden where the
+       mix has a single patch, because one chip filters nothing. *@
+    @if (_versions.Count > 1)
+    {
+        <div class="rand-settings-row">
+            <div class="rand-row-head">
+                <span class="rand-settings-label">@L["Released"]</span>
+                <span class="rand-through">
+                    <select class="rand-through-select" aria-label="@L["Through a version"]" value="" @onchange="OnThroughChanged">
+                        <option value="">@L["Through a version…"]</option>
+                        @foreach (var v in _versions)
+                        {
+                            <option value="@v.Name">v@(v.Name)</option>
+                        }
+                    </select>
+                    <button type="button" class="rand-through-btn" @onclick="SelectAllVersions">@L["All"]</button>
+                    <button type="button" class="rand-through-btn" @onclick="ClearVersions">@L["Clear"]</button>
+                </span>
+            </div>
+            <div class="rand-grade-chips rand-version-chips">
+                @foreach (var version in _versions)
+                {
+                    var captured = version.Name;
+                    <button type="button" class="rand-grade-chip @(Settings.Versions.Contains(captured) ? "on" : null)"
+                            @onclick="() => ToggleVersion(captured)">@captured</button>
+                }
+            </div>
+            <MudText Typo="Typo.caption" Class="rand-section-hint">@VersionsHint</MudText>
+        </div>
+    }
 
     <div class="rand-settings-row">
         <button type="button" class="rand-advanced-toggle" @onclick="() => _showAdvanced = !_showAdvanced"
@@ -350,6 +387,10 @@
     private bool _confirmingBack;
     private RandomSettings? _derivedFor;
 
+    /// <summary>The mix's patches, oldest first; loaded per mix, empty where nobody versioned it.</summary>
+    private IReadOnlyList<MixVersionRecord> _versions = Array.Empty<MixVersionRecord>();
+    private MixEnum? _versionsFor;
+
     private string _minimumType = "Chart Type";
     private int _bucketSize = 1;
     private IReadOnlyCollection<string> _newCustomBuckets = new List<string>();
@@ -393,6 +434,18 @@
             .Select(kv => (ChartType.Double, kv.Key)))
         .Concat(Settings.PlayerCountWeights.Where(kv => kv.Value > 0).OrderBy(kv => kv.Key)
             .Select(kv => (ChartType.CoOp, kv.Key)));
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_versionsFor == Mix) return;
+        await LoadVersions(Mix);
+    }
+
+    private async Task LoadVersions(MixEnum mix)
+    {
+        _versionsFor = mix;
+        _versions = await Mediator.Send(new GetMixVersionsQuery(mix)) ?? Array.Empty<MixVersionRecord>();
+    }
 
     protected override void OnParametersSet()
     {
@@ -510,6 +563,9 @@
     private async Task SetMix(MixEnum mix)
     {
         Mix = mix;
+        // Version names belong to one mix; the picks cannot carry across.
+        Settings.Versions.Clear();
+        await LoadVersions(mix);
         if (!PlayerFiltersAvailable)
         {
             Settings.ClearStatus = null;
@@ -555,6 +611,40 @@
     private async Task ToggleCoOp(int players)
     {
         Settings.PlayerCountWeights[players] = Settings.PlayerCountWeights[players] > 0 ? 0 : 1;
+        await Notify();
+    }
+
+    private string VersionsHint => Settings.Versions.Count == 0
+        ? L["Nothing picked draws from every version."]
+        : MixVersionRange.ThroughName(_versions, Settings.Versions.ToArray()) is { } through
+            ? L["Draws from everything through v{0}.", through]
+            : L["Draws from {0}.", string.Join(", ",
+                _versions.Where(v => Settings.Versions.Contains(v.Name)).Select(v => "v" + v.Name))];
+
+    private async Task ToggleVersion(string name)
+    {
+        if (!Settings.Versions.Remove(name)) Settings.Versions.Add(name);
+        await Notify();
+    }
+
+    /// <summary>Every patch up to and including the choice — the picks stay individually toggleable after.</summary>
+    private async Task OnThroughChanged(ChangeEventArgs e)
+    {
+        var name = e.Value?.ToString();
+        if (string.IsNullOrEmpty(name)) return;
+        Settings.Versions = MixVersionRange.Through(_versions, name).ToHashSet(StringComparer.Ordinal);
+        await Notify();
+    }
+
+    private async Task SelectAllVersions()
+    {
+        Settings.Versions = _versions.Select(v => v.Name).ToHashSet(StringComparer.Ordinal);
+        await Notify();
+    }
+
+    private async Task ClearVersions()
+    {
+        Settings.Versions.Clear();
         await Notify();
     }
 
