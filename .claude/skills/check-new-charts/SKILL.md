@@ -22,6 +22,7 @@ sweep is needed to find new videos, only to refresh the oracle.
 | `shipped.json` | Songs emitted in previous batches (name + chart keys + batch file). Excluded from new batches |
 | `catalog.csv` (+`catalog-prev.csv`) | Last full site sweep (Name/Type/Level/Id); the diff baseline for oracle candidates |
 | `videos\<id>.json` | Watch-page cache (title/description/length). Accumulates forever — this is what lets a song complete across multiple runs |
+| `channels.json` | Video id → channel token (`KPop`, `WorldMusic`, …) from the per-version playlists (`fetch-channels.ps1`). Accumulates like the video cache; `build-batch.ps1` names each song's `channel` from it |
 
 If the state dir is missing, this is a first-run bootstrap: ask the owner for the newest
 already-processed video id, write `state.json` by hand (`channelId` is
