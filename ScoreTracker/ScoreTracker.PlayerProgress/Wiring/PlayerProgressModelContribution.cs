@@ -33,6 +33,12 @@ public sealed class PlayerProgressModelContribution : IDbModelContribution
         modelBuilder.Entity<PlayerFolderLevelEntity>()
             .HasKey(e => new { e.SeasonId, e.UserId, e.MixId, e.ChartType, e.Level });
 
+        // Every read sees the all-time rows unless it drops this filter by name (docs/design/seasons.md
+        // D12); the season pass (slice 1b) writes and reads its own season by dropping AllTime, and
+        // UserDataPurge drops every filter so a deletion crosses seasons.
+        modelBuilder.Entity<PlayerStatsEntity>().HasQueryFilter(QueryFilters.AllTime, e => e.SeasonId == 0);
+        modelBuilder.Entity<PlayerFolderLevelEntity>().HasQueryFilter(QueryFilters.AllTime, e => e.SeasonId == 0);
+
         // Session lookups (page deep-links, future import-results reads) skip the
         // pre-capture rows entirely.
         modelBuilder.Entity<ScoreHighlightEntity>().HasIndex(e => e.SessionId)

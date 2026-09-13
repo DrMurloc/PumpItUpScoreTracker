@@ -47,6 +47,10 @@ public sealed class ScoreLedgerModelContribution : IDbModelContribution
         // The chart foreign key's own index, unchanged: a read by chart alone filters the season
         // during the key lookups it already makes.
         modelBuilder.Entity<PhoenixRecordEntity>().HasIndex(e => e.ChartId);
+        // Every read sees all-time bests unless it drops this filter by name (docs/design/seasons.md
+        // D12): a seasonal reader drops AllTime and applies its own season, UserDataPurge drops every
+        // filter, and PeerScoreStore's raw SQL spells SeasonId = 0 itself.
+        modelBuilder.Entity<PhoenixRecordEntity>().HasQueryFilter(QueryFilters.AllTime, e => e.SeasonId == 0);
 
         modelBuilder.Entity<ScoreSessionEntity>().ToTable("ScoreSession");
         // The restart-recovery pass asks only "which sessions never finished their derived work".

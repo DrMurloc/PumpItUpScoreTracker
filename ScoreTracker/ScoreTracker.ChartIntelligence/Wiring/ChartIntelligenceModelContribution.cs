@@ -21,6 +21,10 @@ public sealed class ChartIntelligenceModelContribution : IDbModelContribution
         // (docs/design/seasons.md D31, D34): 0 is the census's all-time list.
         modelBuilder.Entity<HardmodeChartEntity>().ToTable("HardmodeChart")
             .HasKey(e => new { e.SeasonId, e.MixId, e.ChartId });
+        // The census rewrites the list through a filtered query, so it only ever replaces the
+        // all-time rows; a season's copy (written at the roll, slice 1b) is invisible to it
+        // (docs/design/seasons.md D12, D31).
+        modelBuilder.Entity<HardmodeChartEntity>().HasQueryFilter(QueryFilters.AllTime, e => e.SeasonId == 0);
         modelBuilder.Entity<HardmodeChartEntity>()
             .HasOne<ChartEntity>()
             .WithMany()

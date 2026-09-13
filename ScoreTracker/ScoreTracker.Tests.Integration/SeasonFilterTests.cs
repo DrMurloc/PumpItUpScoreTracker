@@ -1,0 +1,162 @@
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Moq;
+using ScoreTracker.ChartIntelligence.Contracts;
+using ScoreTracker.ChartIntelligence.Infrastructure;
+using ScoreTracker.ChartIntelligence.Infrastructure.Entities;
+using ScoreTracker.Data.Persistence;
+using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.PlayerProgress.Contracts;
+using ScoreTracker.PlayerProgress.Infrastructure;
+using ScoreTracker.PlayerProgress.Infrastructure.Entities;
+using ScoreTracker.ScoreLedger.Infrastructure;
+using ScoreTracker.ScoreLedger.Infrastructure.Entities;
+using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Tests.Integration.Fixtures;
+using ScoreTracker.Tests.Integration.TestData;
+
+namespace ScoreTracker.Tests.Integration;
+
+/// <summary>
+///     Seasons slice 1a (docs/design/seasons.md D12, §6.4): every season-discriminated table carries
+///     a query filter named AllTime, so a season row is invisible to every existing read until a
+///     reader drops that filter by name. Each test plants a season row beside an all-time one and asks
+///     the real reader, including the one raw-SQL path the filter cannot cover. The API approval suite
+///     mocks the mediator and cannot see a row, which is why this proof lives here.
+/// </summary>
+[Collection(IntegrationTestCollection.Name)]
+[ExcludeFromCodeCoverage]
+public sealed class SeasonFilterTests : IAsyncLifetime
+{
+    private const short Fall2026 = 20264;
+    private static readonly DateTimeOffset Now = new(2026, 10, 1, 12, 0, 0, TimeSpan.Zero);
+
+    private readonly SqlServerFixture _fixture;
+    private readonly TestDataSeeder _seed;
+
+    public SeasonFilterTests(SqlServerFixture fixture)
+    {
+        _fixture = fixture;
+        _seed = new TestDataSeeder(_fixture.DbContextFactory);
+    }
+
+    public Task InitializeAsync() => _fixture.ResetAsync();
+    public Task DisposeAsync() => Task.CompletedTask;
+
+    // A fresh cache per repository, so every read here goes to the database.
+    private EFPhoenixRecordsRepository Records() =>
+        new(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions()), Mock.Of<IChartRepository>(),
+            new EFXXChartAttemptRepository(_fixture.DbContextFactory), Mock.Of<IMediator>(),
+            Mock.Of<IPlayerStatsReader>(), new PeerScoreStore(_fixture.DbContextFactory));
+
+    private async Task Plant<TEntity>(TEntity row) where TEntity : class
+    {
+        await using var database = await _fixture.DbContextFactory.CreateDbContextAsync();
+        database.Add(row);
+        await database.SaveChangesAsync();
+    }
+
+    private async Task<int> CountPastTheFilter<TEntity>(short season) where TEntity : class
+    {
+        await using var database = await _fixture.DbContextFactory.CreateDbContextAsync();
+        return await database.Set<TEntity>().IgnoreQueryFilters()
+            .CountAsync(e => EF.Property<short>(e, "SeasonId") == season);
+    }
+
+    [Fact]
+    public async Task ARecordReadSeesTheAllTimeBestAndNotTheSeasonsRow()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedPhoenixChartAsync(20);
+        await Records().UpdateBestAttempt(MixEnum.Phoenix, userId,
+            new RecordedPhoenixScore(chartId, PhoenixScore.From(950_000), PhoenixPlate.SuperbGame, false, Now));
+        // A better score, but the season's — a reader that leaked it would print a best the player
+        // never set all-time.
+        await Plant(new PhoenixRecordEntity
+        {
+            Id = Guid.NewGuid(), UserId = userId, ChartId = chartId, MixId = TestDataSeeder.PhoenixMixId,
+            SeasonId = Fall2026, Score = 999_000, LetterGrade = "SSS", Plate = "PG", IsBroken = false,
+            RecordedDate = Now
+        });
+
+        var own = await Records().GetRecordedScore(MixEnum.Phoenix, userId, chartId);
+        var board = (await Records().GetRecordedUserScores(MixEnum.Phoenix, chartId)).ToArray();
+        var peers = await new PeerScoreStore(_fixture.DbContextFactory)
+            .OnCharts(MixEnum.Phoenix, new[] { userId }, new[] { chartId }, CancellationToken.None);
+
+        Assert.Equal(950_000, (int)own!.Score!.Value);
+        Assert.Equal(950_000, (int)Assert.Single(board).Score);
+        Assert.Equal(950_000, (int)Assert.Single(peers).Score);
+        Assert.Equal(1, await CountPastTheFilter<PhoenixRecordEntity>(Fall2026));
+    }
+
+    [Fact]
+    public async Task AStatsReadSeesTheAllTimeRowAndNotTheSeasonsRow()
+    {
+        var userId = Guid.NewGuid();
+        var repository = new EFPlayerStatsRepository(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions()));
+        await repository.SaveStats(MixEnum.Phoenix2, userId,
+            new PlayerStatsRecord(userId, 0, 1, 0, 0, 0, 100, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0),
+            CancellationToken.None);
+        await Plant(new PlayerStatsEntity
+        {
+            UserId = userId, MixId = MixIds.For(MixEnum.Phoenix2), SeasonId = Fall2026, SkillRating = 99_999,
+            SinglesRating = 99_999
+        });
+
+        var fresh = new EFPlayerStatsRepository(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions()));
+        var one = await fresh.GetStats(MixEnum.Phoenix2, userId, CancellationToken.None);
+        var many = (await fresh.GetStats(MixEnum.Phoenix2, new[] { userId }, CancellationToken.None)).ToArray();
+
+        Assert.Equal(100, one.SkillRating);
+        Assert.Equal(100, Assert.Single(many).SkillRating);
+        Assert.Equal(1, await CountPastTheFilter<PlayerStatsEntity>(Fall2026));
+    }
+
+    [Fact]
+    public async Task AFolderReadSeesTheAllTimeFolderAndNotTheSeasonsRow()
+    {
+        var userId = Guid.NewGuid();
+        var repository = new EFPlayerFolderLevelRepository(_fixture.DbContextFactory);
+        await repository.Save(userId,
+            new[] { new FolderLevelRecord(MixEnum.Phoenix, ChartType.Single, DifficultyLevel.From(22), 97, 60, 930_000, 930_000) },
+            Now, CancellationToken.None);
+        await Plant(new PlayerFolderLevelEntity
+        {
+            UserId = userId, MixId = MixIds.For(MixEnum.Phoenix), SeasonId = Fall2026, ChartType = "Single",
+            Level = 22, Size = 97, Played = 3, AverageScore = 900_000, TierScore = 0, UpdatedAt = Now
+        });
+
+        var levels = (await repository.GetFolderLevels(MixEnum.Phoenix, userId, CancellationToken.None)).ToArray();
+
+        Assert.Equal(60, Assert.Single(levels).Played);
+        Assert.Equal(1, await CountPastTheFilter<PlayerFolderLevelEntity>(Fall2026));
+    }
+
+    [Fact]
+    public async Task TheHardmodeCensusRewritesOnlyTheAllTimeListAndReadsOnlyIt()
+    {
+        var kept = await _seed.SeedPhoenixChartAsync(20);
+        var seasonal = await _seed.SeedPhoenixChartAsync(21);
+        var repository = new EFHardmodeChartRepository(_fixture.DbContextFactory);
+        var census = new[] { new HardmodeChartRecord(kept, ChartType.Single, 20, 10, 3, 50, 5) };
+        await repository.Replace(MixEnum.Phoenix, census, Now, CancellationToken.None);
+        // The copy a season takes at its roll (D31): the weekly census must neither read nor
+        // delete it, or the season's locked list would drift with the all-time one.
+        await Plant(new HardmodeChartEntity
+        {
+            SeasonId = Fall2026, MixId = MixIds.For(MixEnum.Phoenix), ChartId = seasonal, Level = 21, Points = 1,
+            Holders = 1, FolderSize = 50, FolderCut = 5, ComputedAt = Now
+        });
+
+        await repository.Replace(MixEnum.Phoenix, census, Now.AddDays(7), CancellationToken.None);
+        var list = await repository.Get(MixEnum.Phoenix, CancellationToken.None);
+
+        Assert.Equal(kept, Assert.Single(list).ChartId);
+        Assert.Equal(1, await CountPastTheFilter<HardmodeChartEntity>(Fall2026));
+    }
+}
