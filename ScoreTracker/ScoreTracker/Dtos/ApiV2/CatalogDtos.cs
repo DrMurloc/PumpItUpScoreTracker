@@ -1,4 +1,4 @@
-﻿using ScoreTracker.Catalog.Contracts;
+using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 
@@ -91,6 +91,11 @@ public sealed class ChartV2Dto
         Id = chart.Id;
         Mix = chart.Mix.ToString();
         OriginalMix = chart.OriginalMix.ToString();
+        AddedInVersion = chart.AddedIn?.Version;
+        AddedOn = chart.AddedIn?.ReleaseDate;
+        DebutVersion = chart.Debut?.Version;
+        DebutedOn = chart.Debut?.ReleaseDate;
+        Debut = chart.IsDebut;
         SongName = chart.Song.Name.ToString();
         ImageUrl = chart.Song.ImagePath.ToString();
         Type = chart.Type.ToString();
@@ -110,6 +115,33 @@ public sealed class ChartV2Dto
 
     /// <summary>The mix the chart first appeared in.</summary>
     public string OriginalMix { get; set; }
+
+    /// <summary>
+    ///     The patch of <i>this</i> mix the chart entered in, as <c>/api/v2/versions</c> names it: a
+    ///     carry-over reads the mix's launch version here, a debut reads the patch that introduced
+    ///     it. Null when unknown.
+    /// </summary>
+    public string? AddedInVersion { get; set; }
+
+    /// <summary>The day that patch shipped in Korea. Null when the patch is unknown or nobody dated it.</summary>
+    public DateOnly? AddedOn { get; set; }
+
+    /// <summary>
+    ///     The patch the chart first appeared in anywhere — a patch of <c>originalMix</c>, so on a
+    ///     debut it equals <c>addedInVersion</c> and on a carry-over it names an older mix's patch.
+    ///     Null when that mix's row is unknown.
+    /// </summary>
+    public string? DebutVersion { get; set; }
+
+    /// <summary>The day the debut patch shipped in Korea. Null when unknown or undated.</summary>
+    public DateOnly? DebutedOn { get; set; }
+
+    /// <summary>
+    ///     True when this mix is the one the chart first appeared in, so <c>addedInVersion</c> is the
+    ///     patch that introduced it to the game. False on a carry-over. Read off <c>originalMix</c>,
+    ///     so it holds even when the patches are unknown.
+    /// </summary>
+    public bool Debut { get; set; }
 
     /// <summary>The song's name; songs are keyed by name in <c>/api/v2/songs</c>.</summary>
     public string SongName { get; set; }
@@ -155,6 +187,34 @@ public sealed class ChartV2Dto
     ///     </para>
     /// </summary>
     public double? ScoringLevel { get; set; }
+}
+
+/// <summary>One patch of a mix — the value every <c>added*Version</c> and <c>debutedInVersion</c> parameter on the chart reads takes.</summary>
+public sealed class MixVersionDto
+{
+    public MixVersionDto(MixVersionRecord record)
+    {
+        Name = record.Name;
+        ReleaseDate = record.ReleaseDate;
+        SortOrder = record.SortOrder;
+        ChartCount = record.ChartCount;
+        DebutCount = record.DebutCount;
+    }
+
+    /// <summary>The number the game prints on its update notice, bare: <c>1.01.0</c>. Pass it to <c>addedInVersion</c>, <c>addedByVersion</c>, <c>addedAfterVersion</c> or <c>debutedInVersion</c>.</summary>
+    public string Name { get; set; }
+
+    /// <summary>The day the patch shipped in Korea. Null on a legacy patch nobody dated — such a patch still filters by version, just not by date.</summary>
+    public DateOnly? ReleaseDate { get; set; }
+
+    /// <summary>Release order within the mix, lowest first. Compare on this, never on the name.</summary>
+    public int SortOrder { get; set; }
+
+    /// <summary>How many charts first appeared in this patch, in this mix.</summary>
+    public int ChartCount { get; set; }
+
+    /// <summary>How many of those first appeared anywhere in this patch — this mix is their debut mix.</summary>
+    public int DebutCount { get; set; }
 }
 
 /// <summary>One chart's place on a tier list.</summary>

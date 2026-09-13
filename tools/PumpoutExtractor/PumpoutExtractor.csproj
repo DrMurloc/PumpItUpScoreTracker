@@ -4,7 +4,7 @@
        Build/run with `dotnet run` from this folder. See README.md. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- ICU must stay on: Matcher.Normalize relies on FormD decomposition, which

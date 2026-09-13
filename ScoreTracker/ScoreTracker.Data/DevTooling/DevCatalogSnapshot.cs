@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Data.DevTooling;
@@ -30,7 +30,12 @@ internal sealed record DevCatalogSnapshot(
     IReadOnlyList<DevSongRow> Songs,
     IReadOnlyList<DevChartRow> Charts,
     IReadOnlyList<DevTierListRow> TierListEntries,
-    IReadOnlyList<DevScoringLevelRow> ScoringLevels);
+    IReadOnlyList<DevScoringLevelRow> ScoringLevels,
+    IReadOnlyList<DevMixVersionRow>? MixVersions = null);
+
+/// <summary>One patch of a mix, as <c>api/v2/versions</c> lists it (docs/design/chart-versions.md).</summary>
+[ExcludeFromCodeCoverage]
+internal sealed record DevMixVersionRow(MixEnum Mix, string Name, DateOnly? ReleaseDate, int SortOrder);
 
 [ExcludeFromCodeCoverage]
 internal sealed record DevMixRow(MixEnum Mix, string DisplayName, int SortOrder, bool IsPrimary);
@@ -46,7 +51,8 @@ internal sealed record DevSongRow(string Name, string Type, string Artist, int D
 /// </summary>
 [ExcludeFromCodeCoverage]
 internal sealed record DevChartRow(Guid ChartId, MixEnum Mix, MixEnum OriginalMix, string SongName,
-    string Type, int Level, int? NoteCount, int PlayerCount, string? StepArtist, string? LegacySlot);
+    string Type, int Level, int? NoteCount, int PlayerCount, string? StepArtist, string? LegacySlot,
+    string? Version = null);
 
 [ExcludeFromCodeCoverage]
 internal sealed record DevTierListRow(string ListName, MixEnum Mix, Guid ChartId, string Category, int Order);

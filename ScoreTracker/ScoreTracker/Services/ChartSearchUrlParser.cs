@@ -34,6 +34,7 @@ public static class ChartSearchUrlParser
             NoteCountMax = Int(query, "NoteMax"),
             Badges = Csv(Str(query, "Badges")),
             DebutMixes = CsvEnum<MixEnum>(Str(query, "DebutMix")),
+            Versions = Csv(Str(query, "Version")),
             LegacySlots = CsvEnum<LegacySlot>(Str(query, "Slots")),
             PassDifficulty = CsvEnum<TierListCategory>(Str(query, "PassDiff")),
             ScoreDifficulty = CsvEnum<TierListCategory>(Str(query, "ScoreDiff")),

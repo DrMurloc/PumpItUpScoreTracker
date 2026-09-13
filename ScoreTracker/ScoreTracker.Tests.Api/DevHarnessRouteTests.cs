@@ -29,7 +29,7 @@ public sealed class DevHarnessRouteTests
     {
         typeof(MixesController), typeof(SongsController), typeof(ChartsController),
         typeof(ChartScoresController), typeof(TierListsController), typeof(PlayersController),
-        typeof(OfficialController), typeof(WeeklyChartsController)
+        typeof(OfficialController), typeof(WeeklyChartsController), typeof(VersionsController)
     };
 
     /// <summary>Every GET route the v2 controllers register, as slash-separated templates.</summary>

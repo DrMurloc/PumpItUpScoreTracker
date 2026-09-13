@@ -24,7 +24,8 @@ public sealed record ChartSearchFacetCounts(
     IReadOnlyDictionary<LegacySlot, int> LegacySlots,
     IReadOnlyDictionary<MixEnum, int> DebutMixes,
     IReadOnlyDictionary<ChartScoreStateFilter, int> ScoreStates,
-    IReadOnlyDictionary<int, int> CoOpPlayerCounts);
+    IReadOnlyDictionary<int, int> CoOpPlayerCounts,
+    IReadOnlyDictionary<string, int>? Versions = null);
 
 /// <summary>
 ///     The mix's real extents for the range facets, so a slider's travel matches the

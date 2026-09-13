@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
@@ -23,6 +23,7 @@ namespace ScoreTracker.Data.DevTooling;
 internal sealed class DevCatalogWriter : IDevCatalogWriter
 {
     private const string Schema = "scores";
+    private const string MixIdColumn = "MixId";
 
     /// <summary>
     ///     Reverse FK order. Scores and saved charts point at Chart, so they clear before the
@@ -30,7 +31,7 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
     /// </summary>
     private static readonly string[] ClearOrder =
     {
-        "PhoenixRecord", "SavedChart", "ChartScoringLevel", "TierListEntry", "ChartMix", "Chart", "Song", "Mix"
+        "PhoenixRecord", "SavedChart", "ChartScoringLevel", "TierListEntry", "ChartMix", "Chart", "Song", "MixVersion", "Mix"
     };
 
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
@@ -60,6 +61,20 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
             row["Name"] = m.DisplayName;
             row["SortOrder"] = m.SortOrder;
             row["IsPrimary"] = m.IsPrimary;
+        }, cancellationToken);
+
+        // Version ids are local surrogates too; the wire names a patch by (mix, name), which is
+        // what the chart rows below carry.
+        var versionRows = snapshot.MixVersions ?? Array.Empty<DevMixVersionRow>();
+        var versionIds = versionRows.ToDictionary(v => (v.Mix, v.Name), _ => Guid.NewGuid());
+        await Insert(connection, transaction, "MixVersion", versionRows, (row, v) =>
+        {
+            row["Id"] = versionIds[(v.Mix, v.Name)];
+            row[MixIdColumn] = MixIds.For(v.Mix);
+            row["Name"] = v.Name;
+            // The bulk-copy table types a date column as DateTime, and a DateOnly will not go in it.
+            row["ReleaseDate"] = v.ReleaseDate is { } released ? released.ToDateTime(TimeOnly.MinValue) : DBNull.Value;
+            row["SortOrder"] = v.SortOrder;
         }, cancellationToken);
 
         await Insert(connection, transaction, "Song", snapshot.Songs, (row, s) =>
@@ -101,10 +116,13 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
             {
                 row["Id"] = Guid.NewGuid();
                 row["ChartId"] = c.ChartId;
-                row["MixId"] = MixIds.For(c.Mix);
+                row[MixIdColumn] = MixIds.For(c.Mix);
                 row["Level"] = c.Level;
                 row["NoteCount"] = (object?)c.NoteCount ?? DBNull.Value;
                 row["LegacySlot"] = (object?)c.LegacySlot ?? DBNull.Value;
+                row["AddedInVersionId"] = c.Version != null && versionIds.TryGetValue((c.Mix, c.Version), out var versionId)
+                    ? versionId
+                    : DBNull.Value;
             }, cancellationToken);
 
         await Insert(connection, transaction, "TierListEntry",
@@ -113,7 +131,7 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
                 row["Id"] = Guid.NewGuid();
                 row["TierListName"] = t.ListName;
                 row["ChartId"] = t.ChartId;
-                row["MixId"] = MixIds.For(t.Mix);
+                row[MixIdColumn] = MixIds.For(t.Mix);
                 row["Category"] = t.Category;
                 row["Order"] = t.Order;
             }, cancellationToken);
@@ -123,7 +141,7 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
             {
                 row["Id"] = Guid.NewGuid();
                 row["ChartId"] = s.ChartId;
-                row["MixId"] = MixIds.For(s.Mix);
+                row[MixIdColumn] = MixIds.For(s.Mix);
                 row["ScoringLevel"] = s.ScoringLevel;
             }, cancellationToken);
 
@@ -151,7 +169,7 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
                 row["Id"] = Guid.NewGuid();
                 row["UserId"] = localUserId;
                 row["ChartId"] = s.ChartId;
-                row["MixId"] = MixIds.For(s.Mix);
+                row[MixIdColumn] = MixIds.For(s.Mix);
                 row["RecordedDate"] = s.RecordedAt;
                 row["Score"] = (object?)s.Score ?? DBNull.Value;
                 row["LetterGrade"] = (object?)s.LetterGrade ?? DBNull.Value;
