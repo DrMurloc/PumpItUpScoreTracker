@@ -4,6 +4,7 @@ using System.Linq;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using Xunit;
 
 namespace ScoreTracker.Tests.DomainTests;
@@ -311,6 +312,22 @@ public sealed class ChartVerdictServiceTests
         var unchanged = ChartVerdictService.ComputeFacets(Inputs(
             mixLevels: new[] { new MixLevel(MixEnum.Phoenix, 20) }));
         Assert.Empty(unchanged.OfType<HistoryVerdict>());
+    }
+
+    /// <summary>
+    ///     A rerate line prints the patch it happened in, so each mix's stamp travels from the
+    ///     evidence to the facet untouched, and a mix the catalog has no patch for carries none.
+    /// </summary>
+    [Fact]
+    public void HistoryCarriesEachMixsPatchStamp()
+    {
+        var stamp = new VersionStamp(MixEnum.Phoenix2, "1.00.0", new DateOnly(2026, 7, 9), 10);
+        var facets = ChartVerdictService.ComputeFacets(Inputs(currentMix: MixEnum.Phoenix2,
+            mixLevels: new[] { new MixLevel(MixEnum.Phoenix, 19), new MixLevel(MixEnum.Phoenix2, 20, stamp) }));
+
+        var history = facets.OfType<HistoryVerdict>().Single();
+        Assert.Null(history.Levels[0].AddedIn);
+        Assert.Equal(stamp, history.Levels[1].AddedIn);
     }
 
     [Fact]

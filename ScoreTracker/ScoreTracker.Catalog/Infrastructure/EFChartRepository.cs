@@ -469,18 +469,35 @@ internal sealed class EFChartRepository : IChartRepository
         return result;
     }
 
-    public async Task<IReadOnlyList<(Guid ChartId, MixEnum Mix, int Level, int? NoteCount)>> GetChartMixLevels(
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<(Guid ChartId, MixEnum Mix, int Level, int? NoteCount, VersionStamp? AddedIn)>>
+        GetChartMixLevels(CancellationToken cancellationToken = default)
     {
         return (await _cache.GetOrCreateAsync(MixLevelsCacheKey, async entry =>
         {
             entry.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(14);
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var rows = await database.ChartMix
-                .Select(cm => new { cm.ChartId, cm.MixId, cm.Level, cm.NoteCount })
+            // The patch rides along as a left join, the way the per-mix dictionary carries it:
+            // a rerate line in the chart's History prints the patch it happened in.
+            var rows = await (from cm in database.ChartMix
+                    join v in database.Set<MixVersionEntity>() on cm.AddedInVersionId equals v.Id into versions
+                    from v in versions.DefaultIfEmpty()
+                    select new
+                    {
+                        cm.ChartId, cm.MixId, cm.Level, cm.NoteCount,
+                        VersionName = v == null ? null : v.Name,
+                        VersionDate = v == null ? null : v.ReleaseDate,
+                        VersionOrder = v == null ? (int?)null : v.SortOrder
+                    })
                 .ToArrayAsync(cancellationToken);
-            return (IReadOnlyList<(Guid, MixEnum, int, int?)>)rows
-                .Select(r => (r.ChartId, MixIds.ToEnum(r.MixId), r.Level, r.NoteCount))
+            return (IReadOnlyList<(Guid, MixEnum, int, int?, VersionStamp?)>)rows
+                .Select(r =>
+                {
+                    var mix = MixIds.ToEnum(r.MixId);
+                    return (r.ChartId, mix, r.Level, r.NoteCount,
+                        r.VersionName == null
+                            ? null
+                            : new VersionStamp(mix, r.VersionName, r.VersionDate, r.VersionOrder!.Value));
+                })
                 .ToArray();
         }))!;
     }

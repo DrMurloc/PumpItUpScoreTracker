@@ -12,6 +12,7 @@ using ScoreTracker.Catalog.Contracts.Messages;
 using ScoreTracker.Catalog.Domain;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
@@ -85,7 +86,7 @@ public sealed class StepChartReprocessConsumerTests
             .ReturnsAsync(new BankedStepChart("50726", Now.AddDays(-30), SecondsOnlyPayload()));
         // The judged count arrived since the original ingest: the verdict must move to Full.
         _charts.Setup(c => c.GetChartMixLevels(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { (ChartId, MixEnum.Phoenix, 21, (int?)2) });
+            .ReturnsAsync(new[] { (ChartId, MixEnum.Phoenix, 21, (int?)2, (VersionStamp?)null) });
         IReadOnlyDictionary<Guid, BankedStepChart>? captured = null;
         _steps.Setup(s => s.Replace(It.IsAny<IReadOnlyDictionary<Guid, BankedStepChart>>(),
                 It.IsAny<CancellationToken>()))

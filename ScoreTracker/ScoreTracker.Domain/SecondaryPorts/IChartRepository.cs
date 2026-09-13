@@ -19,10 +19,12 @@ public interface IChartRepository
     ///     song or skill joins. This is what the cross-mix History needs; deriving it by
     ///     loading all ~30 full catalogs is orders of magnitude slower. Carries the mix's
     ///     judged note count too — the folder-baseline sweep derives each chart's per-mix hold
-    ///     share from it, and it is the same row being read either way.
+    ///     share from it, and it is the same row being read either way — and the patch the
+    ///     row entered its mix in, when the row names one: a rerate in the History reads with
+    ///     its date.
     /// </summary>
-    Task<IReadOnlyList<(Guid ChartId, MixEnum Mix, int Level, int? NoteCount)>> GetChartMixLevels(
-        CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<(Guid ChartId, MixEnum Mix, int Level, int? NoteCount, VersionStamp? AddedIn)>>
+        GetChartMixLevels(CancellationToken cancellationToken = default);
 
     Task<Chart> GetChart(MixEnum mix, Guid chartId, CancellationToken cancellationToken = default);
 

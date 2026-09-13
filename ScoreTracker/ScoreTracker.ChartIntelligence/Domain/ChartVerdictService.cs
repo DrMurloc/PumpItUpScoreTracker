@@ -187,6 +187,6 @@ internal static class ChartVerdictService
         var levelsChanged = inputs.MixLevels.Select(l => l.Level).Distinct().Count() > 1;
         if (inputs.DebutMix == inputs.CurrentMix && !levelsChanged) return null;
         return new HistoryVerdict(inputs.DebutMix,
-            inputs.MixLevels.Select(l => new MixLevelRecord(l.Mix, l.Level)).ToArray());
+            inputs.MixLevels.Select(l => new MixLevelRecord(l.Mix, l.Level, l.AddedIn)).ToArray());
     }
 }

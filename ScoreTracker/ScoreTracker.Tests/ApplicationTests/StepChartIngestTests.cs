@@ -14,6 +14,7 @@ using ScoreTracker.Catalog.Domain;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
@@ -47,8 +48,8 @@ public sealed class StepChartIngestTests
         _charts.Setup(c => c.GetChartMixLevels(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
-                (ChartId, MixEnum.Phoenix, 21, (int?)4),
-                (ChartId, MixEnum.Phoenix2, 21, (int?)null)
+                (ChartId, MixEnum.Phoenix, 21, (int?)4, (VersionStamp?)null),
+                (ChartId, MixEnum.Phoenix2, 21, (int?)null, (VersionStamp?)null)
             });
     }
 

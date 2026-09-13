@@ -1,4 +1,5 @@
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.ChartIntelligence.Domain;
 
@@ -45,5 +46,6 @@ internal sealed record LevelAverage(int Level, double AverageScore);
 [ExcludeFromCodeCoverage]
 internal sealed record LevelPasses(int Level, int Passes);
 
+/// <summary>A chart's level in one mix, and the patch its row entered that mix in when the catalog names one.</summary>
 [ExcludeFromCodeCoverage]
-internal sealed record MixLevel(MixEnum Mix, int Level);
+internal sealed record MixLevel(MixEnum Mix, int Level, VersionStamp? AddedIn = null);

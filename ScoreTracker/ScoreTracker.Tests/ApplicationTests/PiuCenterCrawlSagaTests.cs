@@ -39,7 +39,7 @@ public sealed class PiuCenterCrawlSagaTests
         _metrics.Setup(m => m.GetMetricsByChart(PiuCenterMetrics.Source, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillMetric>>());
         _charts.Setup(c => c.GetChartMixLevels(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<(Guid, MixEnum, int, int?)>());
+            .ReturnsAsync(Array.Empty<(Guid, MixEnum, int, int?, VersionStamp?)>());
     }
 
     private readonly Mock<IChartStepChartRepository> _stepCharts = new();
@@ -109,8 +109,8 @@ public sealed class PiuCenterCrawlSagaTests
         _charts.Setup(c => c.GetChartMixLevels(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
-                (chartId, MixEnum.Phoenix, 20, (int?)1000),
-                (chartId, MixEnum.Phoenix2, 20, (int?)null)
+                (chartId, MixEnum.Phoenix, 20, (int?)1000, (VersionStamp?)null),
+                (chartId, MixEnum.Phoenix2, 20, (int?)null, (VersionStamp?)null)
             });
 
         await Consume();

@@ -1,4 +1,5 @@
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.ChartIntelligence.Contracts;
 
@@ -85,8 +86,12 @@ public enum CruxPlacement
 public sealed record HistoryVerdict(MixEnum DebutMix, IReadOnlyList<MixLevelRecord> Levels)
     : ChartVerdictFacet;
 
+/// <summary>
+///     The chart's level in one mix, with the patch its row entered that mix in when the catalog
+///     names one — a rerate reads with its date, a legacy row with nothing.
+/// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record MixLevelRecord(MixEnum Mix, int Level);
+public sealed record MixLevelRecord(MixEnum Mix, int Level, VersionStamp? AddedIn = null);
 
 /// <summary>How much evidence sits behind everything else on the page.</summary>
 [ExcludeFromCodeCoverage]
