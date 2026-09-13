@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.Seasons.Application;
+using ScoreTracker.Seasons.Contracts;
 
 namespace ScoreTracker.Seasons.Wiring;
 
@@ -16,6 +18,8 @@ public static class SeasonsRegistrationExtensions
     public static IServiceCollection AddSeasons(this IServiceCollection services)
     {
         services.AddSingleton<IDbModelContribution, SeasonsModelContribution>();
+        // Per request, like the user accessor it reads: the flag or the admin (D27).
+        services.AddScoped<ISeasonsUiGate, SeasonsUiGate>();
         return services;
     }
 }

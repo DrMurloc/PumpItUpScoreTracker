@@ -94,6 +94,9 @@ builder.Services.Configure<ScoreTracker.CommunityTools.Wiring.CommunityToolsConf
     builder.Configuration.GetSection(
         ScoreTracker.CommunityTools.Wiring.CommunityToolsConfiguration.SectionName));
 builder.Services.Configure<PiuGameConfiguration>(builder.Configuration.GetSection("PiuGame"));
+// The seasons flag (docs/design/seasons.md D27): off for everyone but admins until slice 6 flips it.
+builder.Services.Configure<ScoreTracker.Seasons.Wiring.SeasonsConfiguration>(
+    builder.Configuration.GetSection("Seasons"));
 builder.Services.Configure<ScoreTracker.Translations.Wiring.TranslationsConfiguration>(
     builder.Configuration.GetSection("Translations"));
 builder.Services.Configure<PiuCenterConfiguration>(builder.Configuration.GetSection("PiuCenter"));
