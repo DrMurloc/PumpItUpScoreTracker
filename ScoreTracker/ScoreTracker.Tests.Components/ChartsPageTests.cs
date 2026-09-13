@@ -14,6 +14,7 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -54,6 +55,8 @@ public sealed class ChartsPageTests : ComponentTestBase
             .Callback<IRequest<ChartSearchResultPage>, CancellationToken>((q, _) => _lastQuery = (SearchChartsQuery)q)
             .ReturnsAsync(() => new ChartSearchResultPage(
                 new[] { MakeResult("District 1", 21), MakeResult("Bee", 23) }, 2));
+        _mediator.Setup(m => m.Send(It.IsAny<GetMixVersionsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<MixVersionRecord>());
         _mediator.Setup(m => m.Send(It.IsAny<GetSavedChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<SavedChartRecord>());
         _mediator.Setup(m => m.Send(It.IsAny<GetSearchBadgesQuery>(), It.IsAny<CancellationToken>()))
@@ -220,7 +223,7 @@ public sealed class ChartsPageTests : ComponentTestBase
 
     /// <summary>Every long-tail filter key, in pick-list order.</summary>
     private const string EveryFilterKey =
-        "songType,artist,stepArtist,bpm,nps,noteCount,duration,skills,debutMix,legacySlot," +
+        "songType,artist,stepArtist,bpm,nps,noteCount,duration,skills,debutMix,version,legacySlot," +
         "passDifficulty,scoreDifficulty,communityVote,passRate,scoringLevel,lists," +
         "phoenixGrade,phoenixPlate,phoenixScore,legacyGrade,recorded";
 
@@ -577,5 +580,78 @@ public sealed class ChartsPageTests : ComponentTestBase
         // The mix is page furniture, not a filter — it never joins the chip row.
         Assert.Contains("Phoenix", cut.Find(".srp-head").TextContent);
         Assert.Empty(cut.FindAll(".srp-chip-row .mud-chip"));
+    }
+
+    // ── The Version facet (docs/design/chart-versions.md §4) ──────────────────────────────
+
+    private void SeedVersions(params (string Name, int Order)[] versions)
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetMixVersionsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(versions.Select(v => new MixVersionRecord(MixEnum.Phoenix, v.Name, null, v.Order, 1)).ToArray());
+    }
+
+    private void SeedVersionCounts(params (string Name, int Count)[] counts)
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<SearchChartsQuery>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<ChartSearchResultPage>, CancellationToken>((q, _) => _lastQuery = (SearchChartsQuery)q)
+            .ReturnsAsync(() => new ChartSearchResultPage(new[] { MakeResult("District 1", 21) }, 1,
+                new ChartSearchFacetCounts(
+                    new Dictionary<ChartType, int>(), new Dictionary<SongType, int>(), new Dictionary<string, int>(),
+                    new Dictionary<TierListCategory, int>(), new Dictionary<TierListCategory, int>(),
+                    new Dictionary<TierListCategory, int>(), new Dictionary<LegacySlot, int>(),
+                    new Dictionary<MixEnum, int>(), new Dictionary<ChartScoreStateFilter, int>(),
+                    new Dictionary<int, int>(),
+                    Versions: counts.ToDictionary(c => c.Name, c => c.Count))));
+    }
+
+    [Fact]
+    public async Task VersionFacetHidesOnAMixWithASinglePatch()
+    {
+        ShowEveryFilter();
+        SeedVersions(("Release", 10));
+        SeedVersionCounts(("Release", 812));
+
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".srp-card")));
+        await cut.Find("button[aria-label=Filters]").ClickAsync(new MouseEventArgs());
+        // The drawer's vocabulary has landed once the debut-mix facet, its neighbour, is on screen.
+        cut.WaitForAssertion(() => Assert.Contains("Debut mix", cut.Markup));
+
+        Assert.Empty(cut.FindAll(".srp-through-select"));
+        Assert.DoesNotContain(cut.FindAll(".srp-facet-chip"), c => c.TextContent.Trim().StartsWith("vRelease"));
+    }
+
+    [Fact]
+    public async Task VersionChipsCarryCountsAndTheThroughSelectPicksEverythingUpToTheChoice()
+    {
+        ShowEveryFilter();
+        SeedVersions(("1.00.0", 10), ("1.01.0", 20), ("2.00.0", 30));
+        SeedVersionCounts(("1.00.0", 300), ("1.01.0", 53), ("2.00.0", 107));
+
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".srp-card")));
+        await cut.Find("button[aria-label=Filters]").ClickAsync(new MouseEventArgs());
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".srp-through-select")));
+
+        Assert.Contains(cut.FindAll(".srp-facet-chip"), c => c.TextContent.Replace(" ", "").Contains("v1.01.0") && c.TextContent.Contains("53"));
+        // Grouped by major: Phoenix reads as v1.x and v2.x.
+        Assert.Contains(cut.FindAll(".srp-era-name"), e => e.TextContent.Trim() == "v2.x");
+
+        await cut.Find(".srp-through-select").ChangeAsync(new ChangeEventArgs { Value = "1.01.0" });
+
+        cut.WaitForAssertion(() => Assert.Equal(new[] { "1.00.0", "1.01.0" }, _lastQuery!.Versions));
+        Assert.Contains(cut.FindAll(".srp-chip"), c => c.TextContent.Contains("Through v1.01.0"));
+    }
+
+    [Fact]
+    public void AVersionInTheUrlFiltersTheQueryAndReadsAsAChip()
+    {
+        SeedVersions(("1.00.0", 10), ("1.01.0", 20));
+
+        Services.GetRequiredService<NavigationManager>().NavigateTo("/Charts?Version=1.01.0");
+        var cut = RenderComponent<Charts>();
+
+        cut.WaitForAssertion(() => Assert.Equal(new[] { "1.01.0" }, _lastQuery!.Versions));
+        Assert.Contains("v1.01.0", cut.Markup);
     }
 }
