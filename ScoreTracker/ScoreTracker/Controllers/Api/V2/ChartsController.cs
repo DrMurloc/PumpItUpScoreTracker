@@ -57,6 +57,11 @@ public sealed class ChartsController : ApiV2ControllerBase
     /// <param name="debut">
     ///     <c>true</c> keeps charts that first appeared in this mix, <c>false</c> the carry-overs.
     /// </param>
+    /// <param name="channels">
+    ///     Only charts whose song sits in these channels on this mix, as <c>/api/v2/channels</c>
+    ///     names them. Several: a comma list, or repeat the parameter. A song with no known channel
+    ///     never matches, and a channel the mix does not offer is a 400.
+    /// </param>
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     [HttpGet]
@@ -73,6 +78,7 @@ public sealed class ChartsController : ApiV2ControllerBase
         [FromQuery(Name = "addedAfter")] DateOnly? addedAfter = null,
         [FromQuery(Name = "debutedInVersion")] string[]? debutedIn = null,
         [FromQuery(Name = "debut")] bool? debut = null,
+        [FromQuery(Name = "channel")] string[]? channels = null,
         [FromQuery(Name = "cursor")] string? cursor = null,
         [FromQuery(Name = "limit")] int? limit = null)
     {
@@ -93,9 +99,12 @@ public sealed class ChartsController : ApiV2ControllerBase
 
         var (versions, debuts, versionProblem) = await ResolveVersions(mix, addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn);
         if (versionProblem is not null) return versionProblem;
+        var (channelPicks, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, (type, title, detail) => Problem(type, title, detail: detail));
+        if (channelProblem is not null) return channelProblem;
 
         var fingerprint = ContinuationToken.FingerprintOf(mix, level, type, pageSize,
-            VersionFingerprint(addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn, debut));
+            VersionFingerprint(addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn, debut),
+            ChannelPicks.Fingerprint(channels));
         var offset = 0;
         if (cursor is not null)
         {
@@ -106,6 +115,7 @@ public sealed class ChartsController : ApiV2ControllerBase
         var charts = (await _mediator.Send(new GetChartsQuery(mix,
                 level is null ? null : DifficultyLevel.From(level.Value), type)))
             .Where(c => InVersions(c, versions, debuts, debut))
+            .Where(c => ChannelPicks.Matches(c, channelPicks))
             .OrderBy(c => c.Id)
             .ToArray();
 
@@ -176,6 +186,11 @@ public sealed class ChartsController : ApiV2ControllerBase
     /// <param name="debut">
     ///     <c>true</c> keeps charts that first appeared in this mix, <c>false</c> the carry-overs.
     /// </param>
+    /// <param name="channels">
+    ///     Only charts whose song sits in these channels on this mix, as <c>/api/v2/channels</c>
+    ///     names them. Several: a comma list, or repeat the parameter. A song with no known channel
+    ///     never matches, and a channel the mix does not offer is a 400.
+    /// </param>
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
     /// <param name="limit">Rows per page, 1–500. Defaults to 100.</param>
     // Written out rather than a see cref: Swashbuckle renders a cref as its display name, and for a
@@ -196,6 +211,7 @@ public sealed class ChartsController : ApiV2ControllerBase
         [FromQuery(Name = "addedAfter")] DateOnly? addedAfter = null,
         [FromQuery(Name = "debutedInVersion")] string[]? debutedIn = null,
         [FromQuery(Name = "debut")] bool? debut = null,
+        [FromQuery(Name = "channel")] string[]? channels = null,
         [FromQuery(Name = "cursor")] string? cursor = null,
         [FromQuery(Name = "limit")] int? limit = null)
     {
@@ -216,9 +232,12 @@ public sealed class ChartsController : ApiV2ControllerBase
 
         var (versions, debuts, versionProblem) = await ResolveVersions(mix, addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn);
         if (versionProblem is not null) return versionProblem;
+        var (channelPicks, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, (type, title, detail) => Problem(type, title, detail: detail));
+        if (channelProblem is not null) return channelProblem;
 
         var fingerprint = ContinuationToken.FingerprintOf(mix, level, type, pageSize,
-            VersionFingerprint(addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn, debut));
+            VersionFingerprint(addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn, debut),
+            ChannelPicks.Fingerprint(channels));
         var offset = 0;
         if (cursor is not null)
         {
@@ -229,6 +248,7 @@ public sealed class ChartsController : ApiV2ControllerBase
         var chartIds = (await _mediator.Send(new GetChartsQuery(mix,
                 level is null ? null : DifficultyLevel.From(level.Value), type)))
             .Where(c => InVersions(c, versions, debuts, debut))
+            .Where(c => ChannelPicks.Matches(c, channelPicks))
             .Select(c => c.Id).ToArray();
 
         var profiles = (await _mediator.Send(new GetChartSkillProfilesQuery(chartIds)))
@@ -352,6 +372,11 @@ public sealed class ChartsController : ApiV2ControllerBase
     /// <param name="debut">
     ///     <c>true</c> keeps charts that first appeared in this mix, <c>false</c> the carry-overs.
     /// </param>
+    /// <param name="channels">
+    ///     Only charts whose song sits in these channels on this mix, as <c>/api/v2/channels</c>
+    ///     names them. Several: a comma list, or repeat the parameter. A song with no known channel
+    ///     never matches, and a channel the mix does not offer is a 400.
+    /// </param>
     [HttpGet("random")]
     [ProducesResponseType(typeof(CursorPageDto<ChartV2Dto>), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
@@ -368,13 +393,16 @@ public sealed class ChartsController : ApiV2ControllerBase
         [FromQuery(Name = "addedAfterVersion")] string? addedAfterVersion = null,
         [FromQuery(Name = "addedAfter")] DateOnly? addedAfter = null,
         [FromQuery(Name = "debutedInVersion")] string[]? debutedIn = null,
-        [FromQuery(Name = "debut")] bool? debut = null)
+        [FromQuery(Name = "debut")] bool? debut = null,
+        [FromQuery(Name = "channel")] string[]? channels = null)
     {
         if (!V2MixParser.TryParse(mixValue, out var mix)) return MixRequiredProblem();
         if (count < 1) return Problem("invalid-count", "count must be at least 1.");
 
         var (versions, debuts, versionProblem) = await ResolveVersions(mix, addedIn, addedBy, addedAfterVersion, addedAfter, debutedIn);
         if (versionProblem is not null) return versionProblem;
+        var (channelPicks, channelProblem) = await ChannelPicks.Resolve(_mediator, mix, channels, (type, title, detail) => Problem(type, title, detail: detail));
+        if (channelProblem is not null) return channelProblem;
         // The debut names narrow the added-in picks: a debut in 1.01.0 is a chart added in 1.01.0
         // whose origin mix is this one, so the draw takes the intersection and the flag.
         IReadOnlySet<string>? picked = versions;
@@ -388,6 +416,7 @@ public sealed class ChartsController : ApiV2ControllerBase
         var settings = new RandomSettings { Count = count };
         if (picked is not null) settings.Versions = picked.ToHashSet(StringComparer.Ordinal);
         if (debuts is not null) settings.Debut = true;
+        if (channelPicks is not null) settings.Channels = channelPicks.ToHashSet();
         else if (debut is not null) settings.Debut = debut;
 
         var types = chartTypes is null

@@ -21,11 +21,12 @@ public sealed record SongRecord(
     TimeSpan Duration,
     Name Artist,
     decimal? MinBpm,
-    decimal? MaxBpm)
+    decimal? MaxBpm,
+    Channel? Channel = null)
 {
     public static SongRecord From(Song song)
     {
         return new SongRecord(song.Name, song.Type, song.ImagePath, song.Duration, song.Artist,
-            song.Bpm?.Min, song.Bpm?.Max);
+            song.Bpm?.Min, song.Bpm?.Max, song.Channel);
     }
 }

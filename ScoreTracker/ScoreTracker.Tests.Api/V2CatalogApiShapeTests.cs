@@ -96,7 +96,7 @@ public sealed class V2CatalogApiShapeTests
             {
                 new SongRecord(Name.From("Conflict"), SongType.Arcade,
                     new Uri("https://piuimages.example.com/conflict.png"), TimeSpan.FromSeconds(95),
-                    Name.From("Doin"), 170m, 190m)
+                    Name.From("Doin"), 170m, 190m, Channel.Original)
             });
 
         var result = await WithContext(new SongsController(_mediator.Object)).Get("Phoenix");
@@ -107,6 +107,7 @@ public sealed class V2CatalogApiShapeTests
                 {
                   "name": "Conflict",
                   "type": "Arcade",
+                  "channel": "Original",
                   "artist": "Doin",
                   "durationSeconds": 95,
                   "imageUrl": "https://piuimages.example.com/conflict.png",
@@ -143,6 +144,7 @@ public sealed class V2CatalogApiShapeTests
                   "debutVersion": null,
                   "debutedOn": null,
                   "debut": true,
+                  "channel": null,
                   "songName": "Conflict",
                   "imageUrl": "https://piuimages.example.com/conflict.png",
                   "type": "Single",
@@ -735,5 +737,184 @@ public sealed class V2CatalogApiShapeTests
 
         Assert.Empty(Ids(result));
         _mediator.Verify(m => m.Send(It.IsAny<GetRandomChartsQuery>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    // ── Channels (docs/design/song-channels.md §4) ──────────────────────────────────────────
+
+    private static readonly Guid KPopChart = Guid.Parse("bbbbbbbb-0000-0000-0000-000000000001");
+    private static readonly Guid XrossChart = Guid.Parse("bbbbbbbb-0000-0000-0000-000000000002");
+    private static readonly Guid OriginalChart = Guid.Parse("bbbbbbbb-0000-0000-0000-000000000003");
+    private static readonly Guid UnchannelledChart = Guid.Parse("bbbbbbbb-0000-0000-0000-000000000004");
+
+    private static Chart InChannel(Chart chart, Channel channel)
+    {
+        return chart with { Song = chart.Song with { Channel = channel } };
+    }
+
+    private static int Total(IActionResult result)
+    {
+        var json = result is ContentResult c
+            ? c.Content ?? string.Empty
+            : System.Text.Json.JsonSerializer.Serialize(((ObjectResult)result).Value);
+        return System.Text.Json.JsonDocument.Parse(json).RootElement.GetProperty("total").GetInt32();
+    }
+
+    /// <summary>Phoenix 2 offers four channels — no J-Music — and its charts sit in three of them, one song with none.</summary>
+    private void SeedPhoenix2Channels()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetMixChannelsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new MixChannelRecord(MixEnum.Phoenix2, Channel.Original, 441, 2997),
+                new MixChannelRecord(MixEnum.Phoenix2, Channel.KPop, 24, 219),
+                new MixChannelRecord(MixEnum.Phoenix2, Channel.WorldMusic, 142, 1088),
+                new MixChannelRecord(MixEnum.Phoenix2, Channel.Xross, 47, 371)
+            });
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                InChannel(ApiTestData.Chart1 with { Id = KPopChart, Mix = MixEnum.Phoenix2 }, Channel.KPop),
+                InChannel(ApiTestData.Chart1 with { Id = XrossChart, Mix = MixEnum.Phoenix2 }, Channel.Xross),
+                InChannel(ApiTestData.Chart1 with { Id = OriginalChart, Mix = MixEnum.Phoenix2 }, Channel.Original),
+                ApiTestData.Chart1 with { Id = UnchannelledChart, Mix = MixEnum.Phoenix2 }
+            });
+    }
+
+    [Fact]
+    public async Task ChannelsListCarriesTheTokenTheDisplayNameTheOrderAndTheCounts()
+    {
+        SeedPhoenix2Channels();
+
+        var result = await WithContext(new ChannelsController(_mediator.Object)).Get("Phoenix2");
+
+        JsonApproval.AssertWireShape("""
+            {
+              "data": [
+                {
+                  "name": "Original",
+                  "displayName": "Original",
+                  "sortOrder": 0,
+                  "songCount": 441,
+                  "chartCount": 2997
+                },
+                {
+                  "name": "KPop",
+                  "displayName": "K-Pop",
+                  "sortOrder": 10,
+                  "songCount": 24,
+                  "chartCount": 219
+                },
+                {
+                  "name": "WorldMusic",
+                  "displayName": "World Music",
+                  "sortOrder": 20,
+                  "songCount": 142,
+                  "chartCount": 1088
+                },
+                {
+                  "name": "Xross",
+                  "displayName": "Xross",
+                  "sortOrder": 40,
+                  "songCount": 47,
+                  "chartCount": 371
+                }
+              ],
+              "limit": 4,
+              "total": 4,
+              "next": null
+            }
+            """, result);
+    }
+
+    [Fact]
+    public async Task ChannelsRequireAMixLikeEveryOtherCatalogRead()
+    {
+        var result = await WithContext(new ChannelsController(_mediator.Object)).Get();
+
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(result).Value);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/mix-required", problem.Type);
+    }
+
+    [Fact]
+    public async Task ChartCarriesTheSongsChannelOnTheMix()
+    {
+        SeedPhoenix2Channels();
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix2");
+
+        Assert.Equal("KPop", FirstRow(result).GetProperty("channel").GetString());
+    }
+
+    [Fact]
+    public async Task ChannelFilterKeepsThePickedChannelsAndTakesACommaListOrARepeatedParameter()
+    {
+        SeedPhoenix2Channels();
+        var controller = WithContext(new ChartsController(_mediator.Object));
+
+        var commaList = await controller.Get("Phoenix2", channels: new[] { "KPop,Xross" });
+        var repeated = await controller.Get("Phoenix2", channels: new[] { "kpop", "XROSS" });
+
+        Assert.Equal(new[] { KPopChart, XrossChart }, Ids(commaList));
+        Assert.Equal(new[] { KPopChart, XrossChart }, Ids(repeated));
+    }
+
+    [Fact]
+    public async Task AChannelTheMixDoesNotOfferIsAProblemPointingAtTheChannelsList()
+    {
+        SeedPhoenix2Channels();
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix2", channels: new[] { "JMusic" });
+
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(result).Value);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-channel", problem.Type);
+        Assert.Contains("/api/v2/channels?mix=Phoenix2", problem.Detail);
+    }
+
+    [Fact]
+    public async Task ADisplayNameIsNotAChannelToken()
+    {
+        SeedPhoenix2Channels();
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix2", channels: new[] { "K-Pop" });
+
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(result).Value);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-channel", problem.Type);
+        Assert.Contains("KPop", problem.Detail);
+    }
+
+    [Fact]
+    public async Task SongsTakeTheChannelFilterAndNeverMatchASongWithNone()
+    {
+        SeedPhoenix2Channels();
+        _mediator.Setup(m => m.Send(It.IsAny<GetSongsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new SongRecord(Name.From("Nostalgia"), SongType.Arcade, new Uri("https://piuimages.example.com/n.png"),
+                    TimeSpan.FromSeconds(125), Name.From("Woody"), 100m, 100m, Channel.KPop),
+                new SongRecord(Name.From("Ghroth"), SongType.Arcade, new Uri("https://piuimages.example.com/g.png"),
+                    TimeSpan.FromSeconds(110), Name.From("nato"), 200m, 200m, Channel.Original),
+                new SongRecord(Name.From("Mystery"), SongType.Arcade, new Uri("https://piuimages.example.com/m.png"),
+                    TimeSpan.FromSeconds(110), Name.From("Unknown"), 200m, 200m)
+            });
+
+        var result = await WithContext(new SongsController(_mediator.Object)).Get("Phoenix2", channels: new[] { "KPop" });
+
+        Assert.Equal(1, Total(result));
+        var row = FirstRow(result);
+        Assert.Equal("Nostalgia", row.GetProperty("name").GetString());
+        Assert.Equal("KPop", row.GetProperty("channel").GetString());
+    }
+
+    [Fact]
+    public async Task ARandomDrawPassesThePickedChannelsToTheSettings()
+    {
+        SeedPhoenix2Channels();
+        _mediator.Setup(m => m.Send(It.IsAny<GetRandomChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Chart>());
+
+        await WithContext(new ChartsController(_mediator.Object)).GetRandom("Phoenix2", channels: new[] { "WorldMusic,Xross" });
+
+        _mediator.Verify(m => m.Send(It.Is<GetRandomChartsQuery>(q =>
+            q.Settings.Channels.SetEquals(new[] { Channel.WorldMusic, Channel.Xross })), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

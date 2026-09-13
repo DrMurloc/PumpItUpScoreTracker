@@ -46,6 +46,7 @@ public sealed class SongV2Dto
     {
         Name = record.Name.ToString();
         Type = record.Type.ToString();
+        Channel = record.Channel?.ToString();
         Artist = record.Artist.ToString();
         DurationSeconds = (int)record.Duration.TotalSeconds;
         ImageUrl = record.ImagePath.ToString();
@@ -59,6 +60,13 @@ public sealed class SongV2Dto
 
     /// <summary>Arcade, ShortCut, FullSong or Remix — the song's cut, which decides its length and where it sits in the game's folders.</summary>
     public string Type { get; set; }
+
+    /// <summary>
+    ///     The channel the song sits in on this mix's song select, as <c>/api/v2/channels</c> names
+    ///     it — <c>Original</c>, <c>KPop</c>, <c>WorldMusic</c>, <c>JMusic</c>, <c>Xross</c>. Per mix:
+    ///     Phoenix 2 folded J-Music into World Music. Null when unknown.
+    /// </summary>
+    public string? Channel { get; set; }
 
     /// <summary>The credited artist.</summary>
     public string Artist { get; set; }
@@ -97,6 +105,7 @@ public sealed class ChartV2Dto
         DebutedOn = chart.Debut?.ReleaseDate;
         Debut = chart.IsDebut;
         SongName = chart.Song.Name.ToString();
+        Channel = chart.Song.Channel?.ToString();
         ImageUrl = chart.Song.ImagePath.ToString();
         Type = chart.Type.ToString();
         Level = chart.Level;
@@ -142,6 +151,13 @@ public sealed class ChartV2Dto
     ///     so it holds even when the patches are unknown.
     /// </summary>
     public bool Debut { get; set; }
+
+    /// <summary>
+    ///     The channel the song sits in on <i>this</i> mix's song select, as <c>/api/v2/channels</c>
+    ///     names it. The same chart reads <c>JMusic</c> under Phoenix and <c>WorldMusic</c> under
+    ///     Phoenix 2. Null when unknown.
+    /// </summary>
+    public string? Channel { get; set; }
 
     /// <summary>The song's name; songs are keyed by name in <c>/api/v2/songs</c>.</summary>
     public string SongName { get; set; }
@@ -365,4 +381,32 @@ public sealed class SimilarChartsDto
 
     /// <summary>The matches, best first, running past <see cref="MatchFloor" /> into the tail on purpose.</summary>
     public SimilarChartDto[] Data { get; set; } = Array.Empty<SimilarChartDto>();
+}
+
+/// <summary>One channel of a mix — the value the <c>channel</c> parameter on the chart and song reads takes.</summary>
+public sealed class MixChannelDto
+{
+    public MixChannelDto(MixChannelRecord record)
+    {
+        Name = record.Channel.ToString();
+        DisplayName = record.Channel.GetName();
+        SortOrder = (int)record.Channel * 10;
+        SongCount = record.SongCount;
+        ChartCount = record.ChartCount;
+    }
+
+    /// <summary>The token — <c>Original</c>, <c>KPop</c>, <c>WorldMusic</c>, <c>JMusic</c>, <c>Xross</c>.</summary>
+    public string Name { get; set; }
+
+    /// <summary>What the site prints: <c>K-Pop</c>, <c>World Music</c>.</summary>
+    public string DisplayName { get; set; }
+
+    /// <summary>The game's order, Original first.</summary>
+    public int SortOrder { get; set; }
+
+    /// <summary>How many of the mix's songs sit in the channel.</summary>
+    public int SongCount { get; set; }
+
+    /// <summary>How many of the mix's charts sit in the channel.</summary>
+    public int ChartCount { get; set; }
 }
