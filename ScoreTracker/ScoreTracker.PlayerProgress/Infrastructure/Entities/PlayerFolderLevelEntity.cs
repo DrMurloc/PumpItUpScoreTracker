@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace ScoreTracker.PlayerProgress.Infrastructure.Entities;
 
 /// <summary>
-///     One player's standing in one folder. Keyed on (user, mix, type, level) — no surrogate id,
+///     One player's standing in one folder. Keyed on (season, user, mix, type, level) — no surrogate id,
 ///     because the folder itself is the identity and every write is an upsert.
 ///     <see cref="Level" /> holds the player count for co-op folders.
 /// </summary>
@@ -11,6 +11,12 @@ internal sealed class PlayerFolderLevelEntity
 {
     public Guid UserId { get; set; }
     public Guid MixId { get; set; }
+
+    /// <summary>
+    ///     0 = the all-time folder, otherwise the season's (docs/design/seasons.md D11, D34). Leads
+    ///     the key so a season is its own range; hidden by the AllTime query filter unless dropped.
+    /// </summary>
+    public short SeasonId { get; set; }
 
     [MaxLength(32)] public string ChartType { get; set; } = string.Empty;
 

@@ -31,5 +31,15 @@ public sealed class CatalogModelContribution : IDbModelContribution
             .HasOne<ChartEntity>()
             .WithMany()
             .HasForeignKey(e => e.ChartId);
+
+        // A chart's season rating where it differs from the printed level (docs/design/seasons.md
+        // D33, §6.3): season first, so a season is its own range; sparse, so a flat season has no
+        // rows. ChartMix itself is never touched by seasons.
+        modelBuilder.Entity<ChartSeasonEntity>().ToTable("ChartSeason")
+            .HasKey(e => new { e.SeasonId, e.MixId, e.ChartId });
+        modelBuilder.Entity<ChartSeasonEntity>()
+            .HasOne<ChartEntity>()
+            .WithMany()
+            .HasForeignKey(e => e.ChartId);
     }
 }

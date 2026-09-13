@@ -2,11 +2,22 @@
 
 namespace ScoreTracker.PlayerProgress.Infrastructure.Entities
 {
-    [PrimaryKey(nameof(UserId), nameof(MixId))]
+    [PrimaryKey(nameof(SeasonId), nameof(UserId), nameof(MixId))]
     internal sealed class PlayerStatsEntity
     {
         public Guid UserId { get; set; }
         public Guid MixId { get; set; }
+
+        // 0 = the all-time row, otherwise the season's row (docs/design/seasons.md D11, D34): the
+        // same columns computed a second time over the seasonal pool, hidden by the AllTime query
+        // filter unless a reader drops it. Leads the key so a season is its own range.
+        public short SeasonId { get; set; }
+
+        // The season's TOTAL PUMBILITY: every seasonal best's PUMBILITY summed, the whole-season
+        // grind board (docs/design/seasons.md §6.2). Not a pool of fifty, but kept unrounded like
+        // the pools because the writer sums doubles. Zero until the season pass writes it (slice
+        // 1b), and zero on every all-time row.
+        public double TotalPumbility { get; set; }
         public int TotalRating { get; set; }
         public int HighestLevel { get; set; }
         public int ClearCount { get; set; }

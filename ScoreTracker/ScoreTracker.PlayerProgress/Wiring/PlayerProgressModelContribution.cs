@@ -28,9 +28,10 @@ public sealed class PlayerProgressModelContribution : IDbModelContribution
         modelBuilder.Entity<PlayerHighlightEntity>().ToTable("PlayerHighlight");
 
         // The folder is the identity, so there is no surrogate id — every write is an upsert
-        // against this key, and the leading (UserId, MixId) also serves the whole-profile read.
+        // against this key. The season leads it (docs/design/seasons.md D34), and (SeasonId, UserId,
+        // MixId) still serves the whole-profile read, which always names its season.
         modelBuilder.Entity<PlayerFolderLevelEntity>()
-            .HasKey(e => new { e.UserId, e.MixId, e.ChartType, e.Level });
+            .HasKey(e => new { e.SeasonId, e.UserId, e.MixId, e.ChartType, e.Level });
 
         // Session lookups (page deep-links, future import-results reads) skip the
         // pre-capture rows entirely.

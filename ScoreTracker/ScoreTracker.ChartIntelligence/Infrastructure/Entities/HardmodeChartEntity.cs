@@ -7,6 +7,10 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure.Entities
     // Composite key configured in ChartIntelligenceModelContribution.
     internal class HardmodeChartEntity
     {
+        // 0 = the census's all-time list, otherwise the copy a season took at its roll
+        // (docs/design/seasons.md D31, D34). Leads the key so a season is its own range.
+        public short SeasonId { get; set; }
+
         public Guid MixId { get; set; }
 
         public Guid ChartId { get; set; }

@@ -16,10 +16,11 @@ public sealed class ChartIntelligenceModelContribution : IDbModelContribution
 {
     public void Contribute(ModelBuilder modelBuilder)
     {
-        // One row per (mix, chart) — the list is a set of charts, so the chart is the key and
-        // the folder facts ride along rather than living in a second table.
+        // One row per (season, mix, chart) — the list is a set of charts, so the chart is the key
+        // and the folder facts ride along rather than living in a second table. The season leads
+        // (docs/design/seasons.md D31, D34): 0 is the census's all-time list.
         modelBuilder.Entity<HardmodeChartEntity>().ToTable("HardmodeChart")
-            .HasKey(e => new { e.MixId, e.ChartId });
+            .HasKey(e => new { e.SeasonId, e.MixId, e.ChartId });
         modelBuilder.Entity<HardmodeChartEntity>()
             .HasOne<ChartEntity>()
             .WithMany()
