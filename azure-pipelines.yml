@@ -81,7 +81,10 @@ stages:
           # EF migrations are generated code — 89k of the repo's 128k C# lines; analyzing
           # them buries real findings and wrecks the new-code metrics. ExplorationTests is a
           # manual-only crawl/OCR workbench (never a CI suite), so its findings are noise here.
-          sonar.exclusions=**/Migrations/**,ScoreTracker/ScoreTracker.ExplorationTests/**
+          # tools/ is the same thing in script form: hand-run extractors and crawlers that never
+          # ship and sit outside the solution. Analyzed, its Python counts as uncovered new code
+          # and trips the agentic-CLI taint rules (a path from argv is the whole point of a script).
+          sonar.exclusions=**/Migrations/**,ScoreTracker/ScoreTracker.ExplorationTests/**,tools/**
           # Coverage comes from the coverlet collectors on the two fast suites below.
           # Before this property existed the analysis had NO coverage input, so the
           # gate's coverage-on-new-code condition read 0.0% on every PR.
