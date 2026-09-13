@@ -50,6 +50,12 @@ public sealed record SearchChartsQuery : IQuery<ChartSearchResultPage>
     public IReadOnlyList<string>? Versions { get; init; }
 
     /// <summary>
+    ///     The song's channel on the searched mix (docs/design/song-channels.md §5). Any-of; a chart
+    ///     whose song has no channel on this mix never matches.
+    /// </summary>
+    public IReadOnlyList<Channel>? Channels { get; init; }
+
+    /// <summary>
     ///     Only charts that first appeared in the mix in view — the site's form of the API's
     ///     <c>debut</c> filter, so a patch chip reads as what the patch introduced rather than
     ///     everything it put on the cab (docs/design/chart-versions.md §4).
