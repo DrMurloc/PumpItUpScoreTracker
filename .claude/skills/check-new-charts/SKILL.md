@@ -60,6 +60,11 @@ secret values**), rotates `catalog.csv`, and appends new-to-the-site songs to th
   and the per-version playlist (`[PIU PHOENIX 2] v1.01.0 - STEP CHART VIDEO (…)`) do. Tell the
   owner which version the batch belongs to and its Korean notice date, so the BulkAddCharts
   Version picker gets the right row (docs/design/chart-versions.md §6).
+- **Name each song's channel.** The same per-version playlists carry it in the title's
+  parenthesis — `(Original)`, `(K-POP)`, `(World Music)`, `(XROSS)` — and the blob's song
+  `channel` field takes the enum name (`Original`, `KPop`, `WorldMusic`, `Xross`; Phoenix 2 has
+  no J-Music). A song in no playlist gets no channel and a FLAG line; the admin tool imports it
+  with none and warns (docs/design/song-channels.md §6).
 - **Handoff**: give the owner the batch + report paths. Preview in `/Admin/BulkAddCharts` is
   the human checkpoint (its already-in-catalog warnings are the dedup net for stale
   watermarks). With real blob creds the images mirror to the production CDN for real.

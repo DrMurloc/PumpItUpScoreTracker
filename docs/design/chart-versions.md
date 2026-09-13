@@ -114,7 +114,8 @@ hides on a mix with no version data, and until some chart of the mix carries a p
 **Chart page.** *Debuted in Phoenix* carries the debut patch and its date, `v2.12.0 · Dec 23,
 2025`, when the origin mix's row knows it, and the mix alone when it does not. A carry-over adds
 *Added in Phoenix 2* with the patch it entered this mix in and that patch's date; a debut says
-nothing twice. Nothing shows for an unknown patch.
+nothing twice. Nothing shows for an unknown patch. The chart details dialog's Chart Stats tab
+carries the same two facts since the channels work ([song-channels.md](song-channels.md)).
 
 **Admin BulkAddCharts.** A Version picker, newest by default, with a new-version entry of name and
 date. The picked version stamps every chart the batch creates. The JSON blob is unchanged.
