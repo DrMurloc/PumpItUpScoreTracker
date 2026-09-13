@@ -123,6 +123,35 @@ impossibility above, printed. The held count hid it by being capped at fifty rat
 every inflated row still read "50 / 50". The site half and the page now price identically, and a test
 asserts they agree on the same records.
 
+**A private account is on its own board and nobody else's** (D17, owner 2026-09-13). The board
+shipped with no visibility filter at all, which on the measured population put **72 of 307** rated
+accounts on a list they had opted out of — three of them in the top ten — with their name, avatar,
+country and a link to a profile that then refuses to open. Every other roster on the site already
+had the rule: the peers roster one page over drops private peers and says how many, the title
+drawer keeps "a private profile stays out of the list entirely", the World chart board is the World
+community's breakdown and a player who hid their profile is not on it. Hardmode was the outlier.
+
+The viewer's own row is the exception, and deliberately: the board is the page's answer to *where
+do I stand*, and a board that hides you from yourself cannot give one. So the read keeps
+`IsPublic OR UserId = viewer` — the same predicate for the rows and for the standing strip above
+them, which is what makes "#6 of 236" and the list agree by construction rather than by care. The
+places renumber over what the viewer may see, so a private player is #6 on their own screen and
+absent from everyone else's. Below the board a line says how many accounts are private and not
+listed, in the peers roster's own wording — the field shrinking silently is the part that would
+otherwise mislead.
+
+The **census** is untouched: a hold count is a cohort statistic, and the site's rule is that
+cohorts keep private players, because dropping them disagrees with every count already printed
+(the same reasoning that keeps them on Competitive Peers). What is private is who you are, not
+that someone holds a chart.
+
+The Official Boards tab never had the leak — `OfficialPoolReader` drops every board player linked
+to a site account, so those rows are unlinked piugame tags. One residual was worth closing: a
+player who links *after* a Sunday rebuild keeps a stale row whose `UserId` is now set, which lit
+`HubPlayerChip`'s "Linked to a site account" tick. That tick is mirrored data a private account
+never published — the chart leaderboards already drop it — so the board read resolves the link and
+keeps the id only when the account is public.
+
 ## 5. Titles
 
 The existing Phoenix 2 ladders, asked of the Hardmode pool instead of the record book (D10) — the
