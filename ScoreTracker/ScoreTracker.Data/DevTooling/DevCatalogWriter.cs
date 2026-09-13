@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
@@ -30,7 +30,7 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
     /// </summary>
     private static readonly string[] ClearOrder =
     {
-        "PhoenixRecord", "SavedChart", "ChartScoringLevel", "TierListEntry", "ChartMix", "Chart", "Song", "Mix"
+        "PhoenixRecord", "SavedChart", "ChartScoringLevel", "TierListEntry", "ChartMix", "Chart", "Song", "MixVersion", "Mix"
     };
 
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;

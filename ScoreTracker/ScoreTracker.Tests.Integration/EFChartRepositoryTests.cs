@@ -381,4 +381,48 @@ public sealed class EFChartRepositoryTests : IAsyncLifetime
         Assert.Equal("TRICKL4SH 220", (string)koreanToEnglish["트릭크래쉬 220"]);
         Assert.Equal("트릭크래쉬 220", (string)englishToKorean["TRICKL4SH 220"]);
     }
+
+    // ── The patch a chart was released in (docs/design/chart-versions.md §2) ─────────────────
+
+    [Fact]
+    public async Task GetChartsCarriesTheReleaseWhenTheRowPointsAtAPatch()
+    {
+        var version = await _seed.SeedMixVersionAsync(TestDataSeeder.PhoenixMixId, "2.09.0", new DateOnly(2025, 5, 27), 190);
+        var chartId = await _seed.SeedPhoenixChartAsync(addedInVersionId: version);
+
+        var chart = (await BuildRepository().GetCharts(MixEnum.Phoenix)).Single(c => c.Id == chartId);
+
+        Assert.NotNull(chart.Release);
+        Assert.Equal("2.09.0", chart.Release!.Version);
+        Assert.Equal(new DateOnly(2025, 5, 27), chart.Release.ReleaseDate);
+        Assert.Equal(190, chart.Release.SortOrder);
+    }
+
+    [Fact]
+    public async Task GetChartsLeavesReleaseNullWhenThePatchIsUnknown()
+    {
+        var chartId = await _seed.SeedPhoenixChartAsync();
+
+        var chart = (await BuildRepository().GetCharts(MixEnum.Phoenix)).Single(c => c.Id == chartId);
+
+        Assert.Null(chart.Release);
+    }
+
+    [Fact]
+    public async Task CreateChartStampsThePatchOnTheMixRow()
+    {
+        var version = await _seed.SeedMixVersionAsync(TestDataSeeder.PhoenixMixId, "2.12.0", new DateOnly(2025, 12, 23), 220);
+        var songId = await BuildRepository().CreateSong("Heliosphere", "헬리오스피어",
+            new Uri("https://example.invalid/heliosphere.png"), SongType.Arcade, TimeSpan.FromSeconds(120),
+            "BlackY", Bpm.From(180, 180));
+
+        var chartId = await BuildRepository().CreateChart(MixEnum.Phoenix, songId, ChartType.Single, 20,
+            "PUMP IT UP Official", new Uri("https://www.youtube.com/embed/abcdefghijk"), "EXC", version);
+
+        var chart = (await BuildRepository().GetCharts(MixEnum.Phoenix)).Single(c => c.Id == chartId);
+        Assert.Equal("2.12.0", chart.Release?.Version);
+        await using var ctx = await _fixture.DbContextFactory.CreateDbContextAsync();
+        var row = await ctx.ChartMix.SingleAsync(cm => cm.ChartId == chartId);
+        Assert.Equal(version, row.AddedInVersionId);
+    }
 }

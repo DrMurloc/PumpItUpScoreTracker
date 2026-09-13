@@ -31,5 +31,21 @@ public sealed class CatalogModelContribution : IDbModelContribution
             .HasOne<ChartEntity>()
             .WithMany()
             .HasForeignKey(e => e.ChartId);
+
+        // A mix's patches, and the shared ChartMix row's link onto them — declared here, the way
+        // ChartVideo's key onto Chart is, because the table is this vertical's while the column
+        // sits on Data's entity (docs/design/chart-versions.md §2).
+        modelBuilder.Entity<MixVersionEntity>().ToTable("MixVersion")
+            .HasIndex(e => new { e.MixId, e.Name })
+            .IsUnique();
+        modelBuilder.Entity<MixVersionEntity>()
+            .HasOne<MixEntity>()
+            .WithMany()
+            .HasForeignKey(e => e.MixId);
+        modelBuilder.Entity<ChartMixEntity>()
+            .HasOne<MixVersionEntity>()
+            .WithMany()
+            .HasForeignKey(e => e.AddedInVersionId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
