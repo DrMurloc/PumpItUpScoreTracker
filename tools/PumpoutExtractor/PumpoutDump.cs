@@ -240,6 +240,25 @@ public sealed class PumpoutDump
         return lastState.Select(kv => new Membership(kv.Key, mix.PumpoutMixId!.Value, kv.Value));
     }
 
+    /// <summary>
+    ///     The first version of a mix each chart is present in — the chart's release within that
+    ///     mix (docs/design/chart-versions.md §5). Walked oldest-first, so a chart that was in the
+    ///     mix from its launch reads the launch build, and Prime JE's versions, appended after
+    ///     Prime's own, only ever claim charts Prime itself never had (owner decision D8).
+    /// </summary>
+    public IEnumerable<(long ChartId, string VersionTitle, bool IsPrimeJe)> FirstPresenceOf(MixMap.MixDef mix)
+    {
+        var seen = new HashSet<long>();
+        foreach (var versionId in VersionsOf(mix))
+        {
+            var (versionMixId, title, _) = _versions[versionId];
+            var isJe = versionMixId == MixMap.PrimeJePumpoutId;
+            foreach (var chartId in ResolveAt(versionId).Present)
+                if (seen.Add(chartId))
+                    yield return (chartId, title, isJe);
+        }
+    }
+
     /// <summary>State of every present chart at the FINAL version of a mix (used for prod matching against current catalogs).</summary>
     public IReadOnlyDictionary<long, ChartState> FinalStateOf(MixMap.MixDef mix)
     {

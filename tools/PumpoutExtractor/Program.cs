@@ -5,7 +5,7 @@ if (args.Length < 3)
     Console.WriteLine("Usage: PumpoutExtractor <pumpout.db> <prodExportDir> <outDir> [aliases.json]");
     Console.WriteLine();
     Console.WriteLine("  pumpout.db     — a dump from github.com/AnyhowStep/pump-out-sqlite3-dump");
-    Console.WriteLine("  prodExportDir  — folder with songs.json/charts.json/chartmixes.json from dev/export/*");
+    Console.WriteLine("  prodExportDir  — folder with songs.json/charts.json/chartmixes.json (export-prod-catalog.py writes them from a prod-synced SQL Server)");
     Console.WriteLine("  outDir         — receives the S1/S2/S3 scripts + reports/ (point at Downloads)");
     return 1;
 }
@@ -49,6 +49,10 @@ var s4Report = new List<string>();
 File.WriteAllText(Path.Combine(outDir, "s4-vote-backfill.sql"),
     SqlEmit.VoteBackfill(backfillRows, prodLevels, dump, s4Report));
 
+var s6Report = new List<string>();
+File.WriteAllText(Path.Combine(outDir, "s6-chart-versions-backfill.sql"), SqlEmit.ReleaseBackfill(matcher, dump, s6Report));
+File.WriteAllLines(Path.Combine(reportDir, "s6-report.txt"), s6Report);
+
 File.WriteAllLines(Path.Combine(reportDir, "notes.txt"), matcher.Notes);
 File.WriteAllLines(Path.Combine(reportDir, "prod-residuals.txt"),
     matcher.ProdResiduals.Select(r => $"{r.Song}\t{r.Chart}"));
@@ -65,6 +69,8 @@ Console.WriteLine("  s1-pumpout-catalog-corrections.sql (schema-independent)");
 Console.WriteLine("  s2-originalmix-backfill.sql        (needs the Mix-seeding migration live)");
 Console.WriteLine("  s3-membership-backfill.sql         (needs LegacySlot/PlayerCount/BestAttempt.MixId live)");
 Console.WriteLine("  s4-vote-backfill.sql               (run AFTER s3 — PumpoutBackfill hindsight votes)");
+Console.WriteLine("  s6-chart-versions-backfill.sql     (run AFTER the ChartVersions migration and S3 — the patch each chart arrived in)");
+if (s6Report.Count > 0) Console.WriteLine("  " + s6Report[0]);
 if (s4Report.Count > 0) Console.WriteLine("  " + s4Report[0]);
 Console.WriteLine($"Reports in {reportDir} — REVIEW suspects.txt and s3-report.txt before running S3.");
 if (s3Report.Count > 0) Console.WriteLine($"  {s3Report[0]}");

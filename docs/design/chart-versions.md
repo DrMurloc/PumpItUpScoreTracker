@@ -24,7 +24,7 @@ the API — and, decided in round 2, the chart page.
 | D6 | **A single-version mix gets one row named `Release`**, dated at its launch, and version controls hide on a mix with one version. | *"yes"* |
 | D7 | **`chartCount` rides every row of the versions endpoint** — charts first released in that patch, in that mix. | *"sure"* |
 | D8 | **Prime JE debuts get a `JE` pseudo-version under Prime**, undated, ordered after Prime's last patch. Around 42 charts, per the fold-JE-into-Prime call in [legacy-mixes.md](legacy-mixes.md). | *"yeah, pseudo version is good"* |
-| D9 | **conflict D18 and D26 debuted in Phoenix.** The 2.12.0 playlist and the wiki both list them as new charts on the existing song; the catalog had them as XX debuts. Fixed in the backfill script. | *"those charts came from phoenix. Conflict has a wonky history, we probably just got those two charts mislabeled. The other conflict charts were from xx. Fix it."* |
+| D9 | **A new chart on an old song debuted in the patch that added it, not in the song's mix.** The 2.12.0 playlist and the wiki both list La Cinquantaine S22 and D24 as new charts on the existing song; the catalog had them as XX debuts. Fixed in the backfill script. The question reached the owner naming Conflict D18/D26 by mistake — those already read Phoenix — and his ruling applies to the pair the data actually flagged. | *"those charts came from phoenix. Conflict has a wonky history, we probably just got those two charts mislabeled. The other conflict charts were from xx. Fix it."* |
 | D10 | **The bulk-upload flow carries the version** from now on: a picker on the admin tool, the patch named in the import skill's report. | *"in future, we should include version when we're bulk uploading charts from a new version"* |
 | D11 | **Per-chart versions for Phoenix and Phoenix 2 come from Andamiro's own per-version playlists**, with NamuWiki's version pages filling what the playlists miss. His pointer replaced the "assume launch" shortcut. | *"https://www.youtube.com/@PUMPITUPOfficial/playlists there ya go"*, *"see what namu's got"* |
 | D12 | Removals, revivals and per-version levels stay out. One version per (chart, mix): the one it first appeared in. | the ask |
@@ -128,11 +128,11 @@ date. The picked version stamps every chart the batch creates. The JSON blob is 
   some low charts and cuts — which NamuWiki's "Add existing songs" lines settle. Together they
   are complete: **Phoenix 1,340 of 1,340 natives assigned, Phoenix 2 308 of 308** (249 at launch,
   59 at 1.01.0). Seven non-native charts sit in version playlists — Prime and Zero revivals
-  reading as "returned in that version", and the two conflict charts of D9.
+  reading as "returned in that version", and the two La Cinquantaine charts of D9.
 - **Delivery.** The version rows are seeded by the migration, so fresh databases carry them;
   new patches are added from the admin tool, never by migration. The per-chart assignment is one
   idempotent script the owner runs (`Downloads\chart-versions-backfill-<date>.sql`, with a
-  what-if switch): the Phoenix and Phoenix 2 assignments by chart id, the conflict fix, every
+  what-if switch): the Phoenix and Phoenix 2 assignments by chart id, the D9 origin fix, every
   remaining Phoenix and Phoenix 2 row to 1.00.0, then the extractor's legacy assignments. Pro and
   Pro 2 have no catalog and stay untouched. The dev harness gets both through the API.
 - The playlist crawler and join live in `tools/YouTubePlaylists/` beside the extractor; their

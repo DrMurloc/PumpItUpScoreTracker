@@ -10,8 +10,9 @@ Generates the legacy-mix backfill SQL scripts from a [Pump Out](https://pumpout2
 # 1. Grab the latest dump
 curl -L -o pumpout.db https://raw.githubusercontent.com/AnyhowStep/pump-out-sqlite3-dump/master/dump/<latest>.db
 
-# 2. Export the prod catalog (ApiToken auth) into a folder:
-#    dev/export/songs, dev/export/charts, dev/export/chartmixes -> songs.json, charts.json, chartmixes.json
+# 2. Export the prod catalog into a folder (the old dev/export routes are gone; this reads a
+#    prod-synced SQL Server, e.g. the local Aspire container):
+python export-prod-catalog.py "Server=127.0.0.1,14330;Database=ScoreTracker;User Id=sa;Password=...;TrustServerCertificate=True" <prodExportDir>
 
 # 3. Run
 dotnet run -- pumpout.db <prodExportDir> <outDir>
@@ -24,6 +25,7 @@ Outputs three idempotent, single-transaction scripts plus `reports/`:
 | `s1-pumpout-catalog-corrections.sql` | none | Song artists + BPM + step artists, pumpout-wins |
 | `s2-originalmix-backfill.sql` | Mix-seeding migration | `Chart.OriginalMixId` → true debut mix |
 | `s3-membership-backfill.sql` | LegacySlot/PlayerCount/BestAttempt.MixId migration | `ChartMix` rows for every legacy mix + cut-content Song/Chart inserts |
+| `s6-chart-versions-backfill.sql` | ChartVersions migration, and S3 applied | `ChartMix.AddedInVersionId` for every pumpout-backed mix: the first version of the mix each chart was present in, mapped onto the seeded `MixVersion` names (pumpout's `v1.00.1` launch build is the seed's `1.00.0`, `default` is `Release`, Prime JE's versions are the `JE` pseudo-version). Only rows still NULL are touched. Phoenix-era mixes are not pumpout's domain: their assignments come from `tools/YouTubePlaylists` ([docs/design/chart-versions.md](../../docs/design/chart-versions.md) §5) |
 
 **Always read `reports/suspects.txt` and `reports/s3-report.txt` before running S3** — suspects are probable prod misattributions (the 2020-era import misfiled some charts); they are quarantined out of S3 and need manual fixes. `reports/art-needed.txt` lists card art to upload for new songs (Song rows are inserted pointing at the piuimages URL convention).
 
