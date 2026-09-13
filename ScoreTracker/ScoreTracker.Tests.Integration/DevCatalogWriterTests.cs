@@ -1,5 +1,6 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using ScoreTracker.Catalog.Infrastructure.Entities;
 using ScoreTracker.Data.DevTooling;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.SharedKernel.Enums;
@@ -233,5 +234,44 @@ public sealed class DevCatalogWriterTests : IAsyncLifetime
         await using var command = new SqlCommand(sql, connection);
         var value = await command.ExecuteScalarAsync();
         return value is DBNull ? null : value;
+    }
+
+    // ── The patches ride the harness like any other catalog fact (docs/design/chart-versions.md §5) ──
+
+    [Fact]
+    public async Task VersionsAreWrittenAndAChartRowLinksToItsPatchByName()
+    {
+        var snapshot = Snapshot(new DevChartRow(Guid.NewGuid(), MixEnum.Phoenix2, MixEnum.Phoenix2, "Bad Apple!!",
+            "Double", 24, 1500, 1, "SUNNY", null, "1.01.0")) with
+        {
+            MixVersions = new[]
+            {
+                new DevMixVersionRow(MixEnum.Phoenix2, "1.00.0", new DateOnly(2026, 7, 9), 10),
+                new DevMixVersionRow(MixEnum.Phoenix2, "1.01.0", new DateOnly(2026, 9, 3), 20)
+            }
+        };
+
+        await BuildSeeder().ReplaceCatalog(snapshot);
+
+        await using var ctx = await _fixture.DbContextFactory.CreateDbContextAsync();
+        var versions = await ctx.Set<MixVersionEntity>().OrderBy(v => v.SortOrder).ToListAsync();
+        Assert.Equal(new[] { "1.00.0", "1.01.0" }, versions.Select(v => v.Name));
+        Assert.Equal(new DateOnly(2026, 9, 3), versions[1].ReleaseDate);
+        var stamped = await ctx.ChartMix.SingleAsync(cm => cm.AddedInVersionId != null);
+        Assert.Equal(versions[1].Id, stamped.AddedInVersionId);
+        Assert.Equal(24, stamped.Level);
+    }
+
+    [Fact]
+    public async Task ARowWhoseVersionNameIsUnknownStaysUnstampedRatherThanFailing()
+    {
+        var snapshot = Snapshot(new DevChartRow(Guid.NewGuid(), MixEnum.Phoenix2, MixEnum.Phoenix2, "Bad Apple!!",
+            "Double", 24, 1500, 1, "SUNNY", null, "9.99.9"));
+
+        await BuildSeeder().ReplaceCatalog(snapshot);
+
+        await using var ctx = await _fixture.DbContextFactory.CreateDbContextAsync();
+        Assert.Empty(await ctx.Set<MixVersionEntity>().ToListAsync());
+        Assert.Equal(0, await ctx.ChartMix.CountAsync(cm => cm.AddedInVersionId != null));
     }
 }

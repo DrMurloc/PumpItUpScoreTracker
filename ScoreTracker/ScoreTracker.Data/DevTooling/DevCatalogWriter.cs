@@ -62,6 +62,20 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
             row["IsPrimary"] = m.IsPrimary;
         }, cancellationToken);
 
+        // Version ids are local surrogates too; the wire names a patch by (mix, name), which is
+        // what the chart rows below carry.
+        var versionRows = snapshot.MixVersions ?? Array.Empty<DevMixVersionRow>();
+        var versionIds = versionRows.ToDictionary(v => (v.Mix, v.Name), _ => Guid.NewGuid());
+        await Insert(connection, transaction, "MixVersion", versionRows, (row, v) =>
+        {
+            row["Id"] = versionIds[(v.Mix, v.Name)];
+            row["MixId"] = MixIds.For(v.Mix);
+            row["Name"] = v.Name;
+            // The bulk-copy table types a date column as DateTime, and a DateOnly will not go in it.
+            row["ReleaseDate"] = v.ReleaseDate is { } released ? released.ToDateTime(TimeOnly.MinValue) : DBNull.Value;
+            row["SortOrder"] = v.SortOrder;
+        }, cancellationToken);
+
         await Insert(connection, transaction, "Song", snapshot.Songs, (row, s) =>
         {
             row["Id"] = songIds[s.Name];
@@ -105,6 +119,9 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
                 row["Level"] = c.Level;
                 row["NoteCount"] = (object?)c.NoteCount ?? DBNull.Value;
                 row["LegacySlot"] = (object?)c.LegacySlot ?? DBNull.Value;
+                row["AddedInVersionId"] = c.Version != null && versionIds.TryGetValue((c.Mix, c.Version), out var versionId)
+                    ? versionId
+                    : DBNull.Value;
             }, cancellationToken);
 
         await Insert(connection, transaction, "TierListEntry",
