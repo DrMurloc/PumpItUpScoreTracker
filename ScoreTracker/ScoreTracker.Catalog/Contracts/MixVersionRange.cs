@@ -31,45 +31,10 @@ public static class MixVersionRange
         var byName = versions.ToDictionary(v => v.Name, v => v, StringComparer.Ordinal);
         var matching = versions.Select(v => v.Name).ToHashSet(StringComparer.Ordinal);
 
-        if (inVersions is { Count: > 0 })
-        {
-            var wanted = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var raw in inVersions)
-            {
-                var name = raw.Trim();
-                if (!byName.ContainsKey(name))
-                {
-                    unknownName = name;
-                    return false;
-                }
-
-                wanted.Add(name);
-            }
-
-            matching.IntersectWith(wanted);
-        }
-
-        if (byVersion != null)
-        {
-            if (!byName.TryGetValue(byVersion.Trim(), out var by))
-            {
-                unknownName = byVersion.Trim();
-                return false;
-            }
-
-            matching.IntersectWith(versions.Where(v => v.SortOrder <= by.SortOrder).Select(v => v.Name));
-        }
-
-        if (afterVersion != null)
-        {
-            if (!byName.TryGetValue(afterVersion.Trim(), out var after))
-            {
-                unknownName = afterVersion.Trim();
-                return false;
-            }
-
-            matching.IntersectWith(versions.Where(v => v.SortOrder > after.SortOrder).Select(v => v.Name));
-        }
+        unknownName = inVersions is { Count: > 0 } ? KeepNamed(inVersions, byName, matching) : null;
+        unknownName ??= byVersion is null ? null : KeepThrough(byVersion, byName, versions, matching);
+        unknownName ??= afterVersion is null ? null : KeepAfter(afterVersion, byName, versions, matching);
+        if (unknownName != null) return false;
 
         if (releasedAfter != null)
             matching.IntersectWith(versions
@@ -78,6 +43,42 @@ public static class MixVersionRange
 
         names = matching;
         return true;
+    }
+
+    /// <summary>Narrows to the named patches; returns the first name the mix does not have, or null.</summary>
+    private static string? KeepNamed(IEnumerable<string> inVersions, IReadOnlyDictionary<string, MixVersionRecord> byName,
+        HashSet<string> matching)
+    {
+        var wanted = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var raw in inVersions)
+        {
+            var name = raw.Trim();
+            if (!byName.ContainsKey(name)) return name;
+            wanted.Add(name);
+        }
+
+        matching.IntersectWith(wanted);
+        return null;
+    }
+
+    /// <summary>Narrows to everything up to and including the patch; returns the name when the mix lacks it.</summary>
+    private static string? KeepThrough(string byVersion, IReadOnlyDictionary<string, MixVersionRecord> byName,
+        IReadOnlyList<MixVersionRecord> versions, HashSet<string> matching)
+    {
+        var name = byVersion.Trim();
+        if (!byName.TryGetValue(name, out var by)) return name;
+        matching.IntersectWith(versions.Where(v => v.SortOrder <= by.SortOrder).Select(v => v.Name));
+        return null;
+    }
+
+    /// <summary>Narrows to everything strictly after the patch; returns the name when the mix lacks it.</summary>
+    private static string? KeepAfter(string afterVersion, IReadOnlyDictionary<string, MixVersionRecord> byName,
+        IReadOnlyList<MixVersionRecord> versions, HashSet<string> matching)
+    {
+        var name = afterVersion.Trim();
+        if (!byName.TryGetValue(name, out var after)) return name;
+        matching.IntersectWith(versions.Where(v => v.SortOrder > after.SortOrder).Select(v => v.Name));
+        return null;
     }
 
     /// <summary>Every version up to and including the named one, in release order — the bulk select behind a chip row.</summary>

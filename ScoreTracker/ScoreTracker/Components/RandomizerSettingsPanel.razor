@@ -133,9 +133,9 @@
                 <span class="rand-through">
                     <select @key="_throughKey" class="rand-through-select" aria-label="@L["Through a version"]" value="" @onchange="OnThroughChanged">
                         <option value="">@L["Through a version…"]</option>
-                        @foreach (var v in _versions)
+                        @foreach (var name in _versions.Select(v => v.Name))
                         {
-                            <option value="@v.Name">v@(v.Name)</option>
+                            <option value="@name">v@(name)</option>
                         }
                     </select>
                     <button type="button" class="rand-through-btn" @onclick="SelectAllVersions">@L["All"]</button>
@@ -143,9 +143,8 @@
                 </span>
             </div>
             <div class="rand-grade-chips rand-version-chips">
-                @foreach (var version in _versions)
+                @foreach (var captured in _versions.Select(v => v.Name))
                 {
-                    var captured = version.Name;
                     <button type="button" class="rand-grade-chip @(Settings.Versions.Contains(captured) ? "on" : null)"
                             @onclick="() => ToggleVersion(captured)">@captured</button>
                 }
@@ -620,12 +619,17 @@
         await Notify();
     }
 
-    private string VersionsHint => Settings.Versions.Count == 0
-        ? L["Nothing picked draws from every version."]
-        : MixVersionRange.ThroughName(_versions, Settings.Versions.ToArray()) is { } through
-            ? L["Draws from everything through {0}.", $"v{through}"]
-            : L["Draws from {0}.", string.Join(", ",
-                _versions.Where(v => Settings.Versions.Contains(v.Name)).Select(v => "v" + v.Name))];
+    private string VersionsHint
+    {
+        get
+        {
+            if (Settings.Versions.Count == 0) return L["Nothing picked draws from every version."];
+            if (MixVersionRange.ThroughName(_versions, Settings.Versions.ToArray()) is { } through)
+                return L["Draws from everything through {0}.", $"v{through}"];
+            var picks = _versions.Where(v => Settings.Versions.Contains(v.Name)).Select(v => "v" + v.Name);
+            return L["Draws from {0}.", string.Join(", ", picks)];
+        }
+    }
 
     private async Task ToggleVersion(string name)
     {

@@ -290,27 +290,40 @@
         }
     }
 
+    /// <summary>
+    ///     One patch for the whole batch. The create command answers an existing name with its
+    ///     row rather than a second one, so the picked patch and a re-run both resolve here. A
+    ///     failure is a snackbar and a null, never an unhandled throw: the batch stays on screen
+    ///     to retry instead of dying with the circuit and the uploaded file.
+    /// </summary>
+    private async Task<Guid?> ResolveBatchVersion(string versionName)
+    {
+        DateOnly? versionDate;
+        if (_useNewVersion)
+            versionDate = _newVersionDate is { } picked ? DateOnly.FromDateTime(picked) : null;
+        else
+            versionDate = _versions.FirstOrDefault(v => v.Name == versionName)?.ReleaseDate;
+
+        try
+        {
+            return await Mediator.Send(new CreateMixVersionCommand(MixEnum.Phoenix2, versionName, versionDate));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"{L["Failed"]}: {versionName} · {ex.Message}", Severity.Error);
+            return null;
+        }
+    }
+
     private async Task Confirm()
     {
         _isSaving = true;
         _progress = 0;
-        // One patch for the whole batch. The create command answers an existing name with its
-        // row rather than a second one, so the picked patch and a re-run both resolve here.
         var versionName = _useNewVersion ? _newVersionName.Trim() : _selectedVersion!;
-        var versionDate = _useNewVersion
-            ? _newVersionDate is { } picked ? DateOnly.FromDateTime(picked) : null
-            : _versions.FirstOrDefault(v => v.Name == versionName)?.ReleaseDate;
-        Guid versionId;
-        try
+        var versionId = await ResolveBatchVersion(versionName);
+        if (versionId is null)
         {
-            versionId = await Mediator.Send(new CreateMixVersionCommand(MixEnum.Phoenix2, versionName, versionDate));
-        }
-        catch (Exception ex)
-        {
-            // The batch stays on screen to retry: a failed version is a snackbar, not a dead circuit
-            // that takes the uploaded file with it.
             _isSaving = false;
-            Snackbar.Add($"{L["Failed"]}: {versionName} · {ex.Message}", Severity.Error);
             return;
         }
         _results.Clear();

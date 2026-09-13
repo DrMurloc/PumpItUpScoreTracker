@@ -54,7 +54,7 @@ public sealed class TestDataSeeder
 
     /// <param name="addedInVersionId">A MixVersion row from <see cref="SeedMixVersionAsync" /> to stamp on the Phoenix ChartMix row; null leaves the patch unknown.</param>
     public async Task<Guid> SeedPhoenixChartAsync(int level = 15, string type = "Single",
-        CancellationToken cancellationToken = default, Guid? addedInVersionId = null)
+        Guid? addedInVersionId = null, CancellationToken cancellationToken = default)
     {
         await EnsurePhoenixMixAsync(cancellationToken);
         return await InsertChartAsync(level, type, true, addedInVersionId, cancellationToken);

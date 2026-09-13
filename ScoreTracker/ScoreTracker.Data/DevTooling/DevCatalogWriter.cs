@@ -23,6 +23,7 @@ namespace ScoreTracker.Data.DevTooling;
 internal sealed class DevCatalogWriter : IDevCatalogWriter
 {
     private const string Schema = "scores";
+    private const string MixIdColumn = "MixId";
 
     /// <summary>
     ///     Reverse FK order. Scores and saved charts point at Chart, so they clear before the
@@ -69,7 +70,7 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
         await Insert(connection, transaction, "MixVersion", versionRows, (row, v) =>
         {
             row["Id"] = versionIds[(v.Mix, v.Name)];
-            row["MixId"] = MixIds.For(v.Mix);
+            row[MixIdColumn] = MixIds.For(v.Mix);
             row["Name"] = v.Name;
             // The bulk-copy table types a date column as DateTime, and a DateOnly will not go in it.
             row["ReleaseDate"] = v.ReleaseDate is { } released ? released.ToDateTime(TimeOnly.MinValue) : DBNull.Value;
@@ -115,7 +116,7 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
             {
                 row["Id"] = Guid.NewGuid();
                 row["ChartId"] = c.ChartId;
-                row["MixId"] = MixIds.For(c.Mix);
+                row[MixIdColumn] = MixIds.For(c.Mix);
                 row["Level"] = c.Level;
                 row["NoteCount"] = (object?)c.NoteCount ?? DBNull.Value;
                 row["LegacySlot"] = (object?)c.LegacySlot ?? DBNull.Value;
@@ -130,7 +131,7 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
                 row["Id"] = Guid.NewGuid();
                 row["TierListName"] = t.ListName;
                 row["ChartId"] = t.ChartId;
-                row["MixId"] = MixIds.For(t.Mix);
+                row[MixIdColumn] = MixIds.For(t.Mix);
                 row["Category"] = t.Category;
                 row["Order"] = t.Order;
             }, cancellationToken);
@@ -140,7 +141,7 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
             {
                 row["Id"] = Guid.NewGuid();
                 row["ChartId"] = s.ChartId;
-                row["MixId"] = MixIds.For(s.Mix);
+                row[MixIdColumn] = MixIds.For(s.Mix);
                 row["ScoringLevel"] = s.ScoringLevel;
             }, cancellationToken);
 
@@ -168,7 +169,7 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
                 row["Id"] = Guid.NewGuid();
                 row["UserId"] = localUserId;
                 row["ChartId"] = s.ChartId;
-                row["MixId"] = MixIds.For(s.Mix);
+                row[MixIdColumn] = MixIds.For(s.Mix);
                 row["RecordedDate"] = s.RecordedAt;
                 row["Score"] = (object?)s.Score ?? DBNull.Value;
                 row["LetterGrade"] = (object?)s.LetterGrade ?? DBNull.Value;

@@ -485,16 +485,16 @@ else
                         <span class="srp-through">
                             <select @key="_throughKey" class="srp-through-select" aria-label="@L["Through a version"]" value="" @onchange="OnThroughChanged">
                                 <option value="">@L["Through a version…"]</option>
-                                @foreach (var v in _mixVersions)
+                                @foreach (var name in _mixVersions.Select(v => v.Name))
                                 {
-                                    <option value="@v.Name">v@(v.Name)</option>
+                                    <option value="@name">v@(name)</option>
                                 }
                             </select>
                             <button type="button" class="srp-through-btn" @onclick="SelectAllVersions">@L["All"]</button>
                             <button type="button" class="srp-through-btn" @onclick="ClearVersions">@L["Clear"]</button>
                         </span>
                     </div>
-                    @foreach (var group in VersionGroups
+                    @foreach (var group in VersionGroups()
                         .Select(g => (g.Label, Versions: g.Versions
                             .Where(v => HasAny(_facetCounts?.Versions, v.Name, _versions.Contains(v.Name))).ToArray()))
                         .Where(g => g.Versions.Length > 0))
@@ -505,9 +505,8 @@ else
                                 <div class="srp-era-name">@group.Label</div>
                             }
                             <div class="srp-chipset">
-                                @foreach (var version in group.Versions)
+                                @foreach (var captured in group.Versions.Select(v => v.Name))
                                 {
-                                    var captured = version.Name;
                                     <span class="srp-facet-chip @(_versions.Contains(captured) ? "srp-facet-chip-on" : "")"
                                           role="button" tabindex="0" @onclick="() => ToggleVersion(captured)">
                                         v@(captured)@CountSuffix(_facetCounts?.Versions, captured)
@@ -785,6 +784,14 @@ else
     /// </summary>
     private bool HasVersions => _mixVersions.Count > 1 && _mixVersions.Any(v => v.ChartCount > 0);
 
+    private string ReleaseLine(ChartSearchResult result)
+    {
+        if (result.Chart.Release is not { } release) return $"{L["Debut"]}: {result.DebutMix.GetName()}";
+        return release.ReleaseDate is { } released
+            ? $"v{release.Version} · {released.ToString("MMM d, yyyy")}"
+            : $"v{release.Version}";
+    }
+
     /// <summary>The digits before the first dot, or null for a name that is not major.rest — JE, Pre-v1.10, Release.</summary>
     private static string? NumericMajor(string name)
     {
@@ -798,20 +805,17 @@ else
     ///     noise. A name that is not major.rest never becomes a heading: with two majors it rides
     ///     in an unlabelled group at the end, in release order.
     /// </summary>
-    private IEnumerable<(string? Label, MixVersionRecord[] Versions)> VersionGroups
+    private IEnumerable<(string? Label, MixVersionRecord[] Versions)> VersionGroups()
     {
-        get
-        {
-            var ordered = _mixVersions.OrderBy(v => v.SortOrder).ToArray();
-            var majors = ordered.Select(v => NumericMajor(v.Name)).OfType<string>().Distinct().ToArray();
-            if (majors.Length < 2) return new[] { ((string?)null, ordered) };
-            var groups = majors
-                .Select(major => ((string?)$"v{major}.x", ordered.Where(v => NumericMajor(v.Name) == major).ToArray()))
-                .ToList();
-            var unnumbered = ordered.Where(v => NumericMajor(v.Name) == null).ToArray();
-            if (unnumbered.Length > 0) groups.Add((null, unnumbered));
-            return groups;
-        }
+        var ordered = _mixVersions.OrderBy(v => v.SortOrder).ToArray();
+        var majors = ordered.Select(v => NumericMajor(v.Name)).OfType<string>().Distinct().ToArray();
+        if (majors.Length < 2) return new[] { ((string?)null, ordered) };
+        var groups = majors
+            .Select(major => ((string?)$"v{major}.x", ordered.Where(v => NumericMajor(v.Name) == major).ToArray()))
+            .ToList();
+        var unnumbered = ordered.Where(v => NumericMajor(v.Name) == null).ToArray();
+        if (unnumbered.Length > 0) groups.Add((null, unnumbered));
+        return groups;
     }
 
     /// <summary>
@@ -2135,11 +2139,7 @@ else
             ChartSearchSort.ScoringLevel =>
                 result.ScoringLevel == null ? null : $"{L["Scoring level"]} {result.ScoringLevel.Value:0.0}",
             // The patch of the mix in view, dated when the patch is; the debut mix where no patch is known.
-            ChartSearchSort.DebutEra => result.Chart.Release is { } release
-                ? release.ReleaseDate is { } released
-                    ? $"v{release.Version} · {released.ToString("MMM d, yyyy")}"
-                    : $"v{release.Version}"
-                : $"{L["Debut"]}: {result.DebutMix.GetName()}",
+            ChartSearchSort.DebutEra => ReleaseLine(result),
             ChartSearchSort.MyRecent when result.My?.RecordedOn != null =>
                 result.My.RecordedOn.Value.ToString("yyyy-MM-dd"),
             _ => null
