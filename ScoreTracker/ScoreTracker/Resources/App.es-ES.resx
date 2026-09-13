@@ -697,8 +697,17 @@
   <data name="Added" xml:space="preserve">
     <value>Añadido</value>
   </data>
+  <data name="Added in" xml:space="preserve">
+    <value>Añadido en</value>
+  </data>
+  <data name="Added in version" xml:space="preserve">
+    <value>Parche en que se añadió</value>
+  </data>
   <data name="Added in {0}" xml:space="preserve">
     <value>Añadido en {0}</value>
+  </data>
+  <data name="Added on" xml:space="preserve">
+    <value>Añadido el</value>
   </data>
   <data name="Added to Favorites!" xml:space="preserve">
     <value>Añadido a favoritos!</value>
@@ -2344,17 +2353,29 @@
   <data name="Debut mix" xml:space="preserve">
     <value>Versión de debut</value>
   </data>
+  <data name="Debut version" xml:space="preserve">
+    <value>Parche de debut</value>
+  </data>
   <data name="debuted at {0}" xml:space="preserve">
     <value>debutó en {0}</value>
   </data>
   <data name="Debuted in" xml:space="preserve">
     <value>Debut en</value>
   </data>
+  <data name="Debuted in {0}" xml:space="preserve">
+    <value>Debut en {0}</value>
+  </data>
   <data name="Debuted in {0}." xml:space="preserve">
     <value>Debutó en {0}.</value>
   </data>
+  <data name="Debuted on" xml:space="preserve">
+    <value>Debut el</value>
+  </data>
   <data name="Debuted this week" xml:space="preserve">
     <value>Debutaron esta semana</value>
+  </data>
+  <data name="Debuts only" xml:space="preserve">
+    <value>Solo debuts</value>
   </data>
   <data name="Deep scan" xml:space="preserve">
     <value>Análisis profundo</value>
@@ -7365,9 +7386,6 @@
   </data>
   <data name="Release date" xml:space="preserve">
     <value>Fecha de publicación</value>
-  </data>
-  <data name="Released" xml:space="preserve">
-    <value>Publicado</value>
   </data>
   <data name="Relevant players" xml:space="preserve">
     <value>Jugadores relevantes</value>

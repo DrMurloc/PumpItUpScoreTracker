@@ -698,8 +698,17 @@
   <data name="Added" xml:space="preserve">
 	  <value>追加済み</value>
   </data>
+  <data name="Added in" xml:space="preserve">
+    <value>追加アップデート</value>
+  </data>
+  <data name="Added in version" xml:space="preserve">
+    <value>追加されたアップデート</value>
+  </data>
   <data name="Added in {0}" xml:space="preserve">
     <value>{0}で追加</value>
+  </data>
+  <data name="Added on" xml:space="preserve">
+    <value>追加日</value>
   </data>
   <data name="Added to Favorites!" xml:space="preserve">
     <value>気に入れに追加しました！</value>
@@ -2357,17 +2366,29 @@
   <data name="Debut mix" xml:space="preserve">
     <value>初出バージョン</value>
   </data>
+  <data name="Debut version" xml:space="preserve">
+    <value>初登場アップデート</value>
+  </data>
   <data name="debuted at {0}" xml:space="preserve">
     <value>{0}で初登場</value>
   </data>
   <data name="Debuted in" xml:space="preserve">
     <value>初登場バージョン</value>
   </data>
+  <data name="Debuted in {0}" xml:space="preserve">
+    <value>{0}で初登場</value>
+  </data>
   <data name="Debuted in {0}." xml:space="preserve">
     <value>{0}で初登場。</value>
   </data>
+  <data name="Debuted on" xml:space="preserve">
+    <value>初登場日</value>
+  </data>
   <data name="Debuted this week" xml:space="preserve">
     <value>今週デビュー</value>
+  </data>
+  <data name="Debuts only" xml:space="preserve">
+    <value>初登場のみ</value>
   </data>
   <data name="Deep scan" xml:space="preserve">
     <value>詳細スキャン</value>
@@ -7405,9 +7426,6 @@
   </data>
   <data name="Release date" xml:space="preserve">
     <value>リリース日</value>
-  </data>
-  <data name="Released" xml:space="preserve">
-    <value>リリース</value>
   </data>
   <data name="Relevant players" xml:space="preserve">
     <value>関連プレイヤー</value>

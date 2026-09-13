@@ -697,8 +697,17 @@
   <data name="Added" xml:space="preserve">
     <value>추가됨</value>
   </data>
+  <data name="Added in" xml:space="preserve">
+    <value>추가 버전</value>
+  </data>
+  <data name="Added in version" xml:space="preserve">
+    <value>추가된 버전</value>
+  </data>
   <data name="Added in {0}" xml:space="preserve">
     <value>{0}에 추가됨</value>
+  </data>
+  <data name="Added on" xml:space="preserve">
+    <value>추가일</value>
   </data>
   <data name="Added to Favorites!" xml:space="preserve">
     <value>즐겨찾기에 추가됨!</value>
@@ -2344,17 +2353,29 @@
   <data name="Debut mix" xml:space="preserve">
     <value>데뷔 시리즈</value>
   </data>
+  <data name="Debut version" xml:space="preserve">
+    <value>데뷔 버전</value>
+  </data>
   <data name="debuted at {0}" xml:space="preserve">
     <value>{0}로 데뷔</value>
   </data>
   <data name="Debuted in" xml:space="preserve">
     <value>데뷔 시리즈</value>
   </data>
+  <data name="Debuted in {0}" xml:space="preserve">
+    <value>{0}에서 데뷔</value>
+  </data>
   <data name="Debuted in {0}." xml:space="preserve">
     <value>{0}에서 데뷔했습니다.</value>
   </data>
+  <data name="Debuted on" xml:space="preserve">
+    <value>데뷔일</value>
+  </data>
   <data name="Debuted this week" xml:space="preserve">
     <value>이번 주 데뷔</value>
+  </data>
+  <data name="Debuts only" xml:space="preserve">
+    <value>데뷔만</value>
   </data>
   <data name="Deep scan" xml:space="preserve">
     <value>정밀 검사</value>
@@ -7365,9 +7386,6 @@
   </data>
   <data name="Release date" xml:space="preserve">
     <value>출시일</value>
-  </data>
-  <data name="Released" xml:space="preserve">
-    <value>출시</value>
   </data>
   <data name="Relevant players" xml:space="preserve">
     <value>관련 플레이어</value>

@@ -698,8 +698,17 @@
   <data name="Added" xml:space="preserve">
 	  <value>Added</value>
   </data>
+  <data name="Added in" xml:space="preserve">
+    <value>Added in</value>
+  </data>
+  <data name="Added in version" xml:space="preserve">
+    <value>Added in version</value>
+  </data>
   <data name="Added in {0}" xml:space="preserve">
     <value>Added in {0}</value>
+  </data>
+  <data name="Added on" xml:space="preserve">
+    <value>Added on</value>
   </data>
   <data name="Added to Favorites!" xml:space="preserve">
     <value>Added to Favorites!</value>
@@ -2357,17 +2366,29 @@
   <data name="Debut mix" xml:space="preserve">
     <value>Debut mix</value>
   </data>
+  <data name="Debut version" xml:space="preserve">
+    <value>Debut version</value>
+  </data>
   <data name="debuted at {0}" xml:space="preserve">
     <value>debuted at {0}</value>
   </data>
   <data name="Debuted in" xml:space="preserve">
     <value>Debuted in</value>
   </data>
+  <data name="Debuted in {0}" xml:space="preserve">
+    <value>Debuted in {0}</value>
+  </data>
   <data name="Debuted in {0}." xml:space="preserve">
     <value>Debuted in {0}.</value>
   </data>
+  <data name="Debuted on" xml:space="preserve">
+    <value>Debuted on</value>
+  </data>
   <data name="Debuted this week" xml:space="preserve">
     <value>Debuted this week</value>
+  </data>
+  <data name="Debuts only" xml:space="preserve">
+    <value>Debuts only</value>
   </data>
   <data name="Deep scan" xml:space="preserve">
     <value>Deep scan</value>
@@ -7405,9 +7426,6 @@
   </data>
   <data name="Release date" xml:space="preserve">
     <value>Release date</value>
-  </data>
-  <data name="Released" xml:space="preserve">
-    <value>Released</value>
   </data>
   <data name="Relevant players" xml:space="preserve">
     <value>Relevant players</value>

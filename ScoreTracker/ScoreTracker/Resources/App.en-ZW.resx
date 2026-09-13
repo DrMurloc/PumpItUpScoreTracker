@@ -698,8 +698,17 @@
   <data name="Added" xml:space="preserve">
 	  <value>Murpgrrgl</value>
   </data>
+  <data name="Added in" xml:space="preserve">
+    <value>Murpgrrgl gl</value>
+  </data>
+  <data name="Added in version" xml:space="preserve">
+    <value>Murpgrrgl gl grogmurgl</value>
+  </data>
   <data name="Added in {0}" xml:space="preserve">
     <value>Murpgrrgl gl {0}</value>
+  </data>
+  <data name="Added on" xml:space="preserve">
+    <value>Murpgrrgl lurg</value>
   </data>
   <data name="Added to Favorites!" xml:space="preserve">
     <value>Murpgrrgl grgl Gromorg!</value>
@@ -2357,17 +2366,29 @@
   <data name="Debut mix" xml:space="preserve">
     <value>Grglro mrg</value>
   </data>
+  <data name="Debut version" xml:space="preserve">
+    <value>Grglro grogmurgl</value>
+  </data>
   <data name="debuted at {0}" xml:space="preserve">
     <value>blargmurmgl mr {0}</value>
   </data>
   <data name="Debuted in" xml:space="preserve">
     <value>Blargmurmgl mrp</value>
   </data>
+  <data name="Debuted in {0}" xml:space="preserve">
+    <value>Blargmurmgl mrp {0}</value>
+  </data>
   <data name="Debuted in {0}." xml:space="preserve">
     <value>Blargmurmgl mrp {0}.</value>
   </data>
+  <data name="Debuted on" xml:space="preserve">
+    <value>Blargmurmgl lurg</value>
+  </data>
   <data name="Debuted this week" xml:space="preserve">
     <value>Blargmurmgl grglmrp plglmorg</value>
+  </data>
+  <data name="Debuts only" xml:space="preserve">
+    <value>Grglro argl</value>
   </data>
   <data name="Deep scan" xml:space="preserve">
     <value>Grrgl Murgblarg</value>
@@ -7405,9 +7426,6 @@
   </data>
   <data name="Release date" xml:space="preserve">
     <value>Blurgmorg morgro</value>
-  </data>
-  <data name="Released" xml:space="preserve">
-    <value>Blurgmorgl</value>
   </data>
   <data name="Relevant players" xml:space="preserve">
     <value>Murglgro morp</value>
