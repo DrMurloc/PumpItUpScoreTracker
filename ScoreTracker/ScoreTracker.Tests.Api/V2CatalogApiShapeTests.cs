@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Catalog.Contracts;
@@ -6,7 +6,9 @@ using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Application.Queries;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Controllers.Api.V2;
 
@@ -136,6 +138,8 @@ public sealed class V2CatalogApiShapeTests
                   "id": "11111111-1111-1111-1111-111111111111",
                   "mix": "Phoenix",
                   "originalMix": "Phoenix",
+                  "version": null,
+                  "releaseDate": null,
                   "songName": "Conflict",
                   "imageUrl": "https://piuimages.example.com/conflict.png",
                   "type": "Single",
@@ -483,5 +487,190 @@ public sealed class V2CatalogApiShapeTests
         var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(result).Value);
         Assert.Equal(StatusCodes.Status404NotFound, problem.Status);
         Assert.Contains("does not", problem.Detail);
+    }
+
+    // ── The patch a chart arrived in, and the four version filters (docs/design/chart-versions.md §3) ──
+
+    private static readonly Guid LaunchChart = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000001");
+    private static readonly Guid PatchChart = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000002");
+    private static readonly Guid RelaunchChart = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000003");
+    private static readonly Guid UnknownChart = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000004");
+
+    private void SeedPhoenixVersions()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetMixVersionsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new MixVersionRecord(MixEnum.Phoenix, "1.00.0", new DateOnly(2023, 7, 4), 10, 1),
+                new MixVersionRecord(MixEnum.Phoenix, "1.01.0", new DateOnly(2023, 7, 27), 20, 1),
+                new MixVersionRecord(MixEnum.Phoenix, "2.00.0", new DateOnly(2024, 5, 27), 30, 1)
+            });
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                ApiTestData.Chart1 with { Id = LaunchChart, Release = new ChartRelease("1.00.0", new DateOnly(2023, 7, 4), 10) },
+                ApiTestData.Chart1 with { Id = PatchChart, Release = new ChartRelease("1.01.0", new DateOnly(2023, 7, 27), 20) },
+                ApiTestData.Chart1 with { Id = RelaunchChart, Release = new ChartRelease("2.00.0", new DateOnly(2024, 5, 27), 30) },
+                ApiTestData.Chart1 with { Id = UnknownChart }
+            });
+    }
+
+    private static Guid[] Ids(IActionResult result)
+    {
+        var json = result switch
+        {
+            ContentResult c => c.Content ?? string.Empty,
+            JsonResult j => System.Text.Json.JsonSerializer.Serialize(j.Value, ApiV2ControllerBase.WireOptions),
+            _ => System.Text.Json.JsonSerializer.Serialize(((ObjectResult)result).Value)
+        };
+        return System.Text.Json.JsonDocument.Parse(json).RootElement.GetProperty("data")
+            .EnumerateArray().Select(row => row.GetProperty("id").GetGuid()).ToArray();
+    }
+
+    [Fact]
+    public async Task ChartCarriesThePatchItArrivedInAndItsDate()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { ApiTestData.Chart1 with { Release = new ChartRelease("1.01.0", new DateOnly(2026, 9, 3), 20) } });
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix2");
+
+        var row = FirstRow(result);
+        Assert.Equal("1.01.0", row.GetProperty("version").GetString());
+        Assert.Equal("2026-09-03", row.GetProperty("releaseDate").GetString());
+    }
+
+    [Fact]
+    public async Task VersionsListCarriesTheDateTheOrderAndWhatEachPatchAdded()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetMixVersionsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new MixVersionRecord(MixEnum.Phoenix2, "1.00.0", new DateOnly(2026, 7, 9), 10, 4675),
+                new MixVersionRecord(MixEnum.Phoenix2, "1.01.0", new DateOnly(2026, 9, 3), 20, 59),
+                new MixVersionRecord(MixEnum.Phoenix2, "JE", null, 30, 0)
+            });
+
+        var result = await WithContext(new VersionsController(_mediator.Object)).Get("Phoenix2");
+
+        JsonApproval.AssertWireShape("""
+            {
+              "data": [
+                {
+                  "name": "1.00.0",
+                  "releaseDate": "2026-07-09",
+                  "sortOrder": 10,
+                  "chartCount": 4675
+                },
+                {
+                  "name": "1.01.0",
+                  "releaseDate": "2026-09-03",
+                  "sortOrder": 20,
+                  "chartCount": 59
+                },
+                {
+                  "name": "JE",
+                  "releaseDate": null,
+                  "sortOrder": 30,
+                  "chartCount": 0
+                }
+              ],
+              "limit": 3,
+              "total": 3,
+              "next": null
+            }
+            """, result);
+    }
+
+    [Fact]
+    public async Task VersionsRequireAMixLikeEveryOtherCatalogRead()
+    {
+        var result = await WithContext(new VersionsController(_mediator.Object)).Get();
+
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(result).Value);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/mix-required", problem.Type);
+    }
+
+    [Fact]
+    public async Task ReleasedByVersionKeepsEverythingUpToAndIncludingItAndNeverAnUnknownPatch()
+    {
+        SeedPhoenixVersions();
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix", releasedBy: "1.01.0");
+
+        Assert.Equal(new[] { LaunchChart, PatchChart }, Ids(result));
+    }
+
+    [Fact]
+    public async Task ReleasedAfterVersionIsStrictlyAfter()
+    {
+        SeedPhoenixVersions();
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix", releasedAfterVersion: "1.01.0");
+
+        Assert.Equal(new[] { RelaunchChart }, Ids(result));
+    }
+
+    [Fact]
+    public async Task ReleasedInVersionTakesACommaListOrARepeatedParameter()
+    {
+        SeedPhoenixVersions();
+        var controller = WithContext(new ChartsController(_mediator.Object));
+
+        var commaList = await controller.Get("Phoenix", releasedIn: new[] { "1.00.0,2.00.0" });
+        var repeated = await controller.Get("Phoenix", releasedIn: new[] { "1.00.0", "2.00.0" });
+
+        Assert.Equal(new[] { LaunchChart, RelaunchChart }, Ids(commaList));
+        Assert.Equal(new[] { LaunchChart, RelaunchChart }, Ids(repeated));
+    }
+
+    [Fact]
+    public async Task ReleasedAfterADateIsExclusiveOfTheDay()
+    {
+        SeedPhoenixVersions();
+
+        var result = await WithContext(new ChartsController(_mediator.Object))
+            .Get("Phoenix", releasedAfter: new DateOnly(2023, 7, 27));
+
+        Assert.Equal(new[] { RelaunchChart }, Ids(result));
+    }
+
+    [Fact]
+    public async Task AnUnknownVersionIsAProblemPointingAtTheVersionsList()
+    {
+        SeedPhoenixVersions();
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix", releasedBy: "9.99.9");
+
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(result).Value);
+        Assert.Equal("https://piuscores.arroweclip.se/errors/invalid-version", problem.Type);
+        Assert.Equal(StatusCodes.Status400BadRequest, problem.Status);
+        Assert.Contains("9.99.9", problem.Title);
+        Assert.Contains("/api/v2/versions?mix=Phoenix", problem.Detail);
+    }
+
+    [Fact]
+    public async Task ARandomDrawCarriesThePickedPatchesIntoItsSettings()
+    {
+        SeedPhoenixVersions();
+        _mediator.Setup(m => m.Send(It.IsAny<GetRandomChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Chart>());
+
+        await WithContext(new ChartsController(_mediator.Object)).GetRandom("Phoenix", releasedBy: "1.01.0");
+
+        _mediator.Verify(m => m.Send(It.Is<GetRandomChartsQuery>(q =>
+            q.Settings.Versions.SetEquals(new[] { "1.00.0", "1.01.0" })), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ARandomDrawWhoseFilterReachesNoPatchIsEmptyRatherThanUnfiltered()
+    {
+        SeedPhoenixVersions();
+
+        var result = await WithContext(new ChartsController(_mediator.Object))
+            .GetRandom("Phoenix", releasedAfter: new DateOnly(2030, 1, 1));
+
+        Assert.Empty(Ids(result));
+        _mediator.Verify(m => m.Send(It.IsAny<GetRandomChartsQuery>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

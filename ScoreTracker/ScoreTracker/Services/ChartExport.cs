@@ -146,6 +146,10 @@ public static class ChartExport
         new("Level", false, (r, _) => ((int)r.Chart.Level).ToString(CultureInfo.InvariantCulture)),
         new("Mix", false, (r, _) => r.Chart.Mix.GetName()),
         new("DebutMix", false, (r, _) => r.DebutMix.GetName()),
+        // The patch of the exported mix the chart arrived in, and its Korean release date (docs/design/chart-versions.md §4).
+        new("Version", false, (r, _) => r.Chart.Release?.Version ?? string.Empty),
+        new("ReleaseDate", false,
+            (r, _) => r.Chart.Release?.ReleaseDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty),
         new("LegacyDifficulty", false, (r, _) => r.Chart.Slot?.GetName() ?? string.Empty),
         new("SongType", false, (r, _) => r.Chart.Song.Type.ToString()),
         new("BPM", false, (r, _) => r.Chart.Song.Bpm?.ToString() ?? string.Empty),

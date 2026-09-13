@@ -399,7 +399,7 @@ internal sealed class EFChartRepository : IChartRepository
     }
 
     public async Task<Guid> CreateChart(MixEnum mix, Guid songId, ChartType type, DifficultyLevel level,
-        Name channelName, Uri videoUrl, Name stepArtist,
+        Name channelName, Uri videoUrl, Name stepArtist, Guid? addedInVersionId = null,
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
@@ -424,7 +424,8 @@ internal sealed class EFChartRepository : IChartRepository
             ChartId = newChart.Id,
             Id = Guid.NewGuid(),
             Level = level,
-            MixId = MixIds.For(mix)
+            MixId = MixIds.For(mix),
+            AddedInVersionId = addedInVersionId
         };
         var newChartVideo = new ChartVideoEntity
         {
@@ -501,19 +502,45 @@ internal sealed class EFChartRepository : IChartRepository
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             // OriginalMix maps through MixIds, not Enum.Parse(Mix.Name): legacy mix names
             // ("Prex 3", "OBG SE") are display strings, not enum identifiers.
-            return await (from cm in database.ChartMix
+            // The patch rides the row as a left join: a chart with no version is a chart whose
+            // Release is null, never a chart dropped from the mix.
+            var rows = await (from cm in database.ChartMix
                     join c in database.Chart on cm.ChartId equals c.Id
                     join s in database.Song on c.SongId equals s.Id
+                    join v in database.Set<MixVersionEntity>() on cm.AddedInVersionId equals v.Id into versions
+                    from v in versions.DefaultIfEmpty()
                     where cm.MixId == mixId
-                    select new Chart(c.Id, MixIds.ToEnum(c.OriginalMixId),
-                        new Song(s.Name, Enum.Parse<SongType>(s.Type), new Uri(s.ImagePath), s.Duration,
-                            s.Artist ?? "Unknown",
-                            Bpm.From(s.MinBpm, s.MaxBpm)),
-                        Enum.Parse<ChartType>(c.Type),
-                        cm.Level, mix, c.StepArtist, cm.NoteCount,
-                        LegacySlotHelperMethods.ToNullableLegacySlot(cm.LegacySlot),
-                        c.PlayerCount))
-                .ToDictionaryAsync(c => c.Id, cancellationToken);
+                    select new
+                    {
+                        c.Id,
+                        c.OriginalMixId,
+                        SongName = s.Name,
+                        SongType = s.Type,
+                        s.ImagePath,
+                        s.Duration,
+                        s.Artist,
+                        s.MinBpm,
+                        s.MaxBpm,
+                        ChartType = c.Type,
+                        cm.Level,
+                        c.StepArtist,
+                        cm.NoteCount,
+                        cm.LegacySlot,
+                        c.PlayerCount,
+                        VersionName = v == null ? null : v.Name,
+                        VersionDate = v == null ? null : v.ReleaseDate,
+                        VersionOrder = v == null ? (int?)null : v.SortOrder
+                    })
+                .ToListAsync(cancellationToken);
+            return rows.ToDictionary(r => r.Id, r => new Chart(r.Id, MixIds.ToEnum(r.OriginalMixId),
+                new Song(r.SongName, Enum.Parse<SongType>(r.SongType), new Uri(r.ImagePath), r.Duration,
+                    r.Artist ?? "Unknown",
+                    Bpm.From(r.MinBpm, r.MaxBpm)),
+                Enum.Parse<ChartType>(r.ChartType),
+                r.Level, mix, r.StepArtist, r.NoteCount,
+                LegacySlotHelperMethods.ToNullableLegacySlot(r.LegacySlot),
+                r.PlayerCount,
+                r.VersionName == null ? null : new ChartRelease(r.VersionName, r.VersionDate, r.VersionOrder!.Value)));
         });
     }
 }

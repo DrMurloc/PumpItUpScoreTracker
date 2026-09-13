@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.Catalog.Infrastructure.Entities;
 using ScoreTracker.Data.Persistence.Entities;
 
 namespace ScoreTracker.Tests.Integration.TestData;
@@ -14,6 +15,9 @@ public sealed class TestDataSeeder
     // Mirrors ScoreTracker.Data.Persistence.MixIds.Phoenix — tests that go through
     // `MixEnum.Phoenix`-typed queries must use this exact ID.
     public static readonly Guid PhoenixMixId = Guid.Parse("1ABB8F5A-BDA3-40F0-9CE7-1C4F9F8F1D3B");
+
+    // Mirrors MixIds.Phoenix2, for the same reason.
+    public static readonly Guid Phoenix2MixId = Guid.Parse("A9B7D3C1-52E8-4F06-9B1A-2F8C33E01948");
 
     private static readonly DateTimeOffset Epoch = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
@@ -45,14 +49,38 @@ public sealed class TestDataSeeder
     public async Task<Guid> SeedChartAsync(int level = 15, string type = "Single",
         CancellationToken cancellationToken = default)
     {
-        return await InsertChartAsync(level, type, addToPhoenixMix: false, cancellationToken);
+        return await InsertChartAsync(level, type, false, null, cancellationToken);
     }
 
+    /// <param name="addedInVersionId">A MixVersion row from <see cref="SeedMixVersionAsync" /> to stamp on the Phoenix ChartMix row; null leaves the patch unknown.</param>
     public async Task<Guid> SeedPhoenixChartAsync(int level = 15, string type = "Single",
-        CancellationToken cancellationToken = default)
+        Guid? addedInVersionId = null, CancellationToken cancellationToken = default)
     {
         await EnsurePhoenixMixAsync(cancellationToken);
-        return await InsertChartAsync(level, type, addToPhoenixMix: true, cancellationToken);
+        return await InsertChartAsync(level, type, true, addedInVersionId, cancellationToken);
+    }
+
+    public async Task EnsureMixAsync(Guid mixId, CancellationToken cancellationToken = default)
+    {
+        await using var ctx = await _factory.CreateDbContextAsync(cancellationToken);
+        if (await ctx.Mix.AnyAsync(m => m.Id == mixId, cancellationToken)) return;
+        ctx.Mix.Add(new MixEntity { Id = mixId, Name = mixId == PhoenixMixId ? "Phoenix" : "Test" });
+        await ctx.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>One patch of a mix, straight into Catalog's MixVersion table (docs/design/chart-versions.md).</summary>
+    public async Task<Guid> SeedMixVersionAsync(Guid mixId, string name, DateOnly? releaseDate = null,
+        int sortOrder = 10, CancellationToken cancellationToken = default)
+    {
+        await EnsureMixAsync(mixId, cancellationToken);
+        var id = Guid.NewGuid();
+        await using var ctx = await _factory.CreateDbContextAsync(cancellationToken);
+        ctx.Set<MixVersionEntity>().Add(new MixVersionEntity
+        {
+            Id = id, MixId = mixId, Name = name, ReleaseDate = releaseDate, SortOrder = sortOrder
+        });
+        await ctx.SaveChangesAsync(cancellationToken);
+        return id;
     }
 
     public async Task EnsurePhoenixMixAsync(CancellationToken cancellationToken = default)
@@ -84,7 +112,7 @@ public sealed class TestDataSeeder
     }
 
     private async Task<Guid> InsertChartAsync(int level, string type, bool addToPhoenixMix,
-        CancellationToken cancellationToken)
+        Guid? addedInVersionId, CancellationToken cancellationToken)
     {
         var chartId = Guid.NewGuid();
         var songId = Guid.NewGuid();
@@ -117,7 +145,8 @@ public sealed class TestDataSeeder
                 Id = Guid.NewGuid(),
                 ChartId = chartId,
                 MixId = PhoenixMixId,
-                Level = level
+                Level = level,
+                AddedInVersionId = addedInVersionId
             });
         }
         await ctx.SaveChangesAsync(cancellationToken);

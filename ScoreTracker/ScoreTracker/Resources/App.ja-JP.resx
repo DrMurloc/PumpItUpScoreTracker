@@ -698,6 +698,9 @@
   <data name="Added" xml:space="preserve">
 	  <value>追加済み</value>
   </data>
+  <data name="Added in {0}" xml:space="preserve">
+    <value>{0}で追加</value>
+  </data>
   <data name="Added to Favorites!" xml:space="preserve">
     <value>気に入れに追加しました！</value>
   </data>
@@ -2658,6 +2661,12 @@
   <data name="draw a random set of charts, presets included" xml:space="preserve">
     <value>ランダムな譜面セットを抽選（プリセット対応）</value>
   </data>
+  <data name="Draws from everything through {0}." xml:space="preserve">
+    <value>{0}までの全アップデートから抽選します。</value>
+  </data>
+  <data name="Draws from {0}." xml:space="preserve">
+    <value>{0}から抽選します。</value>
+  </data>
   <data name="Drew 1 chart" xml:space="preserve">
     <value>1 譜面を抽選しました</value>
   </data>
@@ -2806,6 +2815,9 @@
   </data>
   <data name="Every chart that moved, arrived, or left between {0} and {1}." xml:space="preserve">
     <value>{0}から{1}の間に難度が変わった・追加された・削除された譜面のすべて。</value>
+  </data>
+  <data name="Every chart this batch creates is stamped with the Phoenix 2 patch you pick here." xml:space="preserve">
+    <value>このバッチで作成されるすべての譜面に、ここで選んだPhoenix 2のアップデートが記録されます。</value>
   </data>
   <data name="Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more." xml:space="preserve">
     <value>3フォルダ以内でスコアを記録した譜面すべてがあなたのスキルに投票します — 近いフォルダとスキルの占有率が高い譜面ほど重く数えられます。</value>
@@ -5086,6 +5098,9 @@
   <data name="New Username" xml:space="preserve">
 	  <value>新ユーザー名</value>
   </data>
+  <data name="New version" xml:space="preserve">
+    <value>新しいアップデート</value>
+  </data>
   <data name="Newest" xml:space="preserve">
     <value>新着順</value>
   </data>
@@ -5641,6 +5656,9 @@
   </data>
   <data name="Nothing on your desk." xml:space="preserve">
     <value>対応するものはありません。</value>
+  </data>
+  <data name="Nothing picked draws from every version." xml:space="preserve">
+    <value>何も選ばなければ全アップデートから抽選します。</value>
   </data>
   <data name="Nothing selected — click a value." xml:space="preserve">
     <value>何も選択されていません — 値をクリックしてください。</value>
@@ -7384,6 +7402,12 @@
   </data>
   <data name="Rejected" xml:space="preserve">
     <value>却下しました</value>
+  </data>
+  <data name="Release date" xml:space="preserve">
+    <value>リリース日</value>
+  </data>
+  <data name="Released" xml:space="preserve">
+    <value>リリース</value>
   </data>
   <data name="Relevant players" xml:space="preserve">
     <value>関連プレイヤー</value>
@@ -9470,6 +9494,15 @@
   <data name="Through &quot;share with all tools&quot;" xml:space="preserve">
     <value>「すべてのツールと共有」経由</value>
   </data>
+  <data name="Through a version" xml:space="preserve">
+    <value>指定アップデートまで</value>
+  </data>
+  <data name="Through a version…" xml:space="preserve">
+    <value>指定アップデートまで…</value>
+  </data>
+  <data name="Through {0}" xml:space="preserve">
+    <value>{0}まで</value>
+  </data>
   <data name="Tick counts are inferred: tap counts come from community simfiles, the totals from real plays, and the difference is the ticks. Treat charts within a few percent of each other as tied — the numbers are estimates right now." xml:space="preserve">
     <value>ティック数は推定です。タップ数はコミュニティの譜面ファイル、合計は実プレイから取り、その差がティックです。数パーセント以内の譜面は同率とみなしてください。現時点でこの数値は推定値です。</value>
   </data>
@@ -10010,6 +10043,12 @@
   </data>
   <data name="Verify the other account" xml:space="preserve">
     <value>相手アカウントの確認</value>
+  </data>
+  <data name="Version" xml:space="preserve">
+    <value>アップデート</value>
+  </data>
+  <data name="Version name" xml:space="preserve">
+    <value>アップデート名</value>
   </data>
   <data name="Very Easy" xml:space="preserve">
     <value>とても簡単</value>

@@ -1,4 +1,4 @@
-﻿using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
@@ -39,8 +39,12 @@ public interface IChartRepository
         Bpm bpm,
         CancellationToken cancellationToken = default);
 
+    /// <param name="addedInVersionId">
+    ///     The patch of <paramref name="mix" /> the chart arrives in; null leaves it unknown
+    ///     (docs/design/chart-versions.md §6).
+    /// </param>
     Task<Guid> CreateChart(MixEnum mix, Guid songId, ChartType type, DifficultyLevel level,
-        Name channelName, Uri videoUrl, Name stepArtist,
+        Name channelName, Uri videoUrl, Name stepArtist, Guid? addedInVersionId = null,
         CancellationToken cancellationToken = default);
 
     Task SetChartVideo(Guid id, Uri videoUrl, Name channelName, CancellationToken cancellationToken = default);

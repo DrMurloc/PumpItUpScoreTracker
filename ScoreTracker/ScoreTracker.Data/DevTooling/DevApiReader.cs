@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -42,6 +42,7 @@ internal sealed class DevApiReader
     internal static IReadOnlyList<string> RouteTemplates { get; } = new[]
     {
         "api/v2/mixes",
+        "api/v2/versions",
         "api/v2/songs",
         "api/v2/charts",
         "api/v2/players/{playerId}/scores"
@@ -79,6 +80,7 @@ internal sealed class DevApiReader
 
         var songs = new Dictionary<string, DevSongRow>(StringComparer.Ordinal);
         var charts = new List<DevChartRow>();
+        var versions = new List<DevMixVersionRow>();
         var tierLists = new List<DevTierListRow>();
         var scoringLevels = new List<DevScoringLevelRow>();
 
@@ -87,6 +89,13 @@ internal sealed class DevApiReader
             if (!Enum.TryParse<MixEnum>(wire.Name, out var mix)) continue;
 
             reportProgress($"Downloading {wire.DisplayName}…");
+
+            // The mix's patches come first so the chart rows below can name them by version.
+            // Tolerated like the tier lists: a site that has not deployed the versions read yet
+            // still populates a local database, just without patches.
+            foreach (var version in await Page<VersionWire>(client, $"api/v2/versions?mix={wire.Name}",
+                         reportProgress, cancellationToken, skipMissing: true))
+                versions.Add(new DevMixVersionRow(mix, version.Name, version.ReleaseDate, version.SortOrder));
 
             // Songs repeat across mixes; first one wins, and they are identical by construction
             // (the catalog stores one song row and every mix's charts point at it).
@@ -100,7 +109,8 @@ internal sealed class DevApiReader
             {
                 if (!Enum.TryParse<MixEnum>(chart.OriginalMix, out var originalMix)) originalMix = mix;
                 charts.Add(new DevChartRow(chart.Id, mix, originalMix, chart.SongName, chart.Type,
-                    chart.Level, chart.NoteCount, chart.PlayerCount, chart.StepArtist, chart.LegacySlot));
+                    chart.Level, chart.NoteCount, chart.PlayerCount, chart.StepArtist, chart.LegacySlot,
+                    chart.Version));
                 // Scoring level rides on the chart now, so this is one fewer pass per mix.
                 if (chart.ScoringLevel is not null)
                     scoringLevels.Add(new DevScoringLevelRow(mix, chart.Id, chart.ScoringLevel.Value));
@@ -120,7 +130,7 @@ internal sealed class DevApiReader
             mixes.Where(m => Enum.TryParse<MixEnum>(m.Name, out _))
                 .Select(m => new DevMixRow(Enum.Parse<MixEnum>(m.Name), m.DisplayName, m.SortOrder, m.IsPrimary))
                 .ToArray(),
-            songs.Values.ToArray(), charts, tierLists, scoringLevels), cancellationToken);
+            songs.Values.ToArray(), charts, tierLists, scoringLevels, versions), cancellationToken);
 
         // Scores are per mix and only the primary ones have any worth pulling — a legacy mix's
         // records are a handful of hand-entered rows, and asking for all 29 triples the round trips.
@@ -326,7 +336,9 @@ internal sealed class DevApiReader
 
     private sealed record ChartWire(Guid Id, string Mix, string OriginalMix, string SongName, string Type,
         int Level, int? NoteCount, int PlayerCount, string? StepArtist, string? LegacySlot,
-        double? ScoringLevel);
+        double? ScoringLevel, string? Version = null, DateOnly? ReleaseDate = null);
+
+    private sealed record VersionWire(string Name, DateOnly? ReleaseDate, int SortOrder, int ChartCount);
 
     private sealed record TierListWire(Guid ChartId, string Category, int Order);
 

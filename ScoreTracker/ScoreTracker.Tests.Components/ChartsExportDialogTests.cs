@@ -111,7 +111,7 @@ public sealed class ChartsExportDialogTests : ComponentTestBase
         cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".srp-export-all")));
 
         var chartGroup = cut.FindAll(".srp-export-all")[0];
-        Assert.Equal("All 17", chartGroup.TextContent.Trim());
+        Assert.Equal("All 19", chartGroup.TextContent.Trim());
 
         await chartGroup.ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
 

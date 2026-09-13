@@ -1,4 +1,10 @@
 using Bunit;
+using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.Catalog.Contracts;
+using Moq;
+using System.Threading;
+using System.Linq;
+using System;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
@@ -209,5 +215,74 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
         await repeats.Find("input").ChangeAsync(new ChangeEventArgs { Value = true });
 
         Assert.True(settings.AllowRepeats);
+    }
+
+    // ── The patches a draw may pull from (docs/design/chart-versions.md §4) ─────────────────
+
+    private void SeedVersions(params (string Name, int Order)[] versions)
+    {
+        SeedVersions(1, versions);
+    }
+
+    private void SeedVersions(int chartCount, params (string Name, int Order)[] versions)
+    {
+        Mediator.Setup(m => m.Send(It.IsAny<GetMixVersionsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(versions.Select(v => new MixVersionRecord(MixEnum.Phoenix, v.Name, null, v.Order, chartCount)).ToArray());
+    }
+
+    [Fact]
+    public void ReleasedRowHidesUntilSomeChartCarriesAPatch()
+    {
+        SeedVersions(0, ("1.00.0", 10), ("1.01.0", 20));
+
+        var cut = Render(new RandomSettings());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".rand-song-chips")));
+        Assert.Empty(cut.FindAll(".rand-version-chips"));
+    }
+
+    [Fact]
+    public void ReleasedRowHidesWhenTheMixHasASinglePatch()
+    {
+        SeedVersions(("Release", 10));
+
+        var cut = Render(new RandomSettings());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".rand-song-chips")));
+        Assert.Empty(cut.FindAll(".rand-version-chips"));
+    }
+
+    [Fact]
+    public async Task VersionChipsWriteTheExactSetIntoTheSettings()
+    {
+        SeedVersions(("1.00.0", 10), ("1.01.0", 20), ("2.00.0", 30));
+        var settings = new RandomSettings();
+        var cut = Render(settings);
+        cut.WaitForAssertion(() => Assert.Equal(3, cut.FindAll(".rand-version-chips .rand-grade-chip").Count));
+        Assert.Contains("Nothing picked draws from every version.", cut.Markup);
+
+        await cut.FindAll(".rand-version-chips .rand-grade-chip").Single(c => c.TextContent.Trim() == "1.01.0")
+            .ClickAsync(new MouseEventArgs());
+
+        Assert.Equal(new[] { "1.01.0" }, settings.Versions);
+        cut.WaitForAssertion(() => Assert.Contains("Draws from v1.01.0.", cut.Markup));
+    }
+
+    [Fact]
+    public async Task ThroughSelectPicksEverythingUpToTheChoiceAndTheHintSaysSo()
+    {
+        SeedVersions(("1.00.0", 10), ("1.01.0", 20), ("2.00.0", 30));
+        var settings = new RandomSettings();
+        var cut = Render(settings);
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".rand-through-select")));
+
+        await cut.Find(".rand-through-select").ChangeAsync(new ChangeEventArgs { Value = "1.01.0" });
+
+        Assert.Equal(new[] { "1.00.0", "1.01.0" }, settings.Versions.OrderBy(v => v));
+        cut.WaitForAssertion(() => Assert.Contains("Draws from everything through v1.01.0.", cut.Markup));
+
+        await cut.FindAll(".rand-through-btn").Single(b => b.TextContent.Trim() == "Clear").ClickAsync(new MouseEventArgs());
+
+        Assert.Empty(settings.Versions);
     }
 }

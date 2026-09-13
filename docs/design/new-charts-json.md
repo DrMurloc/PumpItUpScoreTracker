@@ -4,8 +4,7 @@ The contract between the `/Admin/BulkAddCharts` tool and anything that produces 
 JSON for it (today: hand-written by the owner; later: the automated "check for new Phoenix 2
 charts" workflow below). Upload one `.json` file (a file picker, not a paste box — bulk blobs
 overflow the SignalR message cap that Blazor textarea binds ride on) → validation preview →
-Confirm → songs, charts, and the `ko-KR` culture-name rows are created. **Charts are always
-created for Phoenix 2** — the tool has no mix picker; Phoenix-era content is considered complete.
+Confirm → songs, charts, and the `ko-KR` culture-name rows are created. **Charts are always created for Phoenix 2** — the tool has no mix picker; Phoenix-era content is considered complete. Since 2026-09-12 the page carries a **Version** picker (the newest Phoenix 2 patch by default, or a new one entered as name + release date) and every chart the batch creates is stamped with it ([chart-versions.md](chart-versions.md)); the blob itself carries no version, because a batch is one patch's content and the picker is the human checkpoint.
 
 Parsing/validation lives in `BulkChartJsonParser`
 (`ScoreTracker.Domain/Services/BulkChartJsonParser.cs`, unit-tested in
@@ -107,7 +106,7 @@ numbers.
 Per song (already-in-Phoenix-2 entries skipped): copy `imageUrl` to the CDN (see the field
 notes above — a failed copy falls back to the source URL and never blocks the song) →
 `CreateSong` (which also persists the `ko-KR` culture-name row) →
-`CreateChart(MixEnum.Phoenix2, …)` per chart. Each song runs in its own try/catch — a mid-run
+`CreateChart(MixEnum.Phoenix2, …)` per chart, stamped with the picked version (a new version is created first through `CreateMixVersionCommand`). Each song runs in its own try/catch — a mid-run
 failure is reported in the results table and the remaining songs still run. The chart cache is
 cleared once at the end. Re-parsing after a partial run marks the songs that did get created
 as "already exists", so re-Confirm only retries the failures.
