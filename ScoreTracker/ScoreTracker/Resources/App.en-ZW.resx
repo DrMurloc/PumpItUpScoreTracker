@@ -698,6 +698,9 @@
   <data name="Added" xml:space="preserve">
 	  <value>Murpgrrgl</value>
   </data>
+  <data name="Added in {0}" xml:space="preserve">
+    <value>Murpgrrgl gl {0}</value>
+  </data>
   <data name="Added to Favorites!" xml:space="preserve">
     <value>Murpgrrgl grgl Gromorg!</value>
   </data>
@@ -2658,6 +2661,12 @@
   <data name="draw a random set of charts, presets included" xml:space="preserve">
     <value>grorpmorg gro romorg gro mrgl murgl, gromurgmurm murggrrglplgl</value>
   </data>
+  <data name="Draws from everything through {0}." xml:space="preserve">
+    <value>Blubrgl blarg algrog urgrogl {0}.</value>
+  </data>
+  <data name="Draws from {0}." xml:space="preserve">
+    <value>Blubrgl blarg {0}.</value>
+  </data>
   <data name="Drew 1 chart" xml:space="preserve">
     <value>Urgmurm 1 murgl</value>
   </data>
@@ -2806,6 +2815,9 @@
   </data>
   <data name="Every chart that moved, arrived, or left between {0} and {1}." xml:space="preserve">
     <value>Murgglorg murgl blubgrrgl maglgrorp, gromurgargl, argl rolurg blgrlarglblgrl {0} ro {1}.</value>
+  </data>
+  <data name="Every chart this batch creates is stamped with the Phoenix 2 patch you pick here." xml:space="preserve">
+    <value>Olga murgl grogl glorgrgl marglurgro arg brglmorgl mag gro Phoenix 2 grogmurgl mrp murpgl ap.</value>
   </data>
   <data name="Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more." xml:space="preserve">
     <value>Murgglorg murgl plglgrrgl blubmagl arglblgrl 3 blargblgrlmurp urgmurm lurg gromurp blarglurg — grorgl blargblgrlmurp ro mrpblarg morgmurm morgmrblub glorgmurp mrrgl.</value>
@@ -5086,6 +5098,9 @@
   <data name="New Username" xml:space="preserve">
 	  <value>Grgl Grrmrrgl</value>
   </data>
+  <data name="New version" xml:space="preserve">
+    <value>Rogl grogmurgl</value>
+  </data>
   <data name="Newest" xml:space="preserve">
     <value>Blarggl</value>
   </data>
@@ -5641,6 +5656,9 @@
   </data>
   <data name="Nothing on your desk." xml:space="preserve">
     <value>Mm, blub blub.</value>
+  </data>
+  <data name="Nothing picked draws from every version." xml:space="preserve">
+    <value>Bam murpgurg blubrgl blarg olga grogmurgl.</value>
   </data>
   <data name="Nothing selected — click a value." xml:space="preserve">
     <value>Bomo plagl — plagl a grumb.</value>
@@ -7384,6 +7402,12 @@
   </data>
   <data name="Rejected" xml:space="preserve">
     <value>Blorp</value>
+  </data>
+  <data name="Release date" xml:space="preserve">
+    <value>Blurgmorg morgro</value>
+  </data>
+  <data name="Released" xml:space="preserve">
+    <value>Blurgmorgl</value>
   </data>
   <data name="Relevant players" xml:space="preserve">
     <value>Murglgro morp</value>
@@ -9470,6 +9494,15 @@
   <data name="Through &quot;share with all tools&quot;" xml:space="preserve">
     <value>Blu murgblub blu argla Rorgl</value>
   </data>
+  <data name="Through a version" xml:space="preserve">
+    <value>Urgrogl a grogmurgl</value>
+  </data>
+  <data name="Through a version…" xml:space="preserve">
+    <value>Urgrogl a grogmurgl…</value>
+  </data>
+  <data name="Through {0}" xml:space="preserve">
+    <value>Urgrogl {0}</value>
+  </data>
   <data name="Tick counts are inferred: tap counts come from community simfiles, the totals from real plays, and the difference is the ticks. Treat charts within a few percent of each other as tied — the numbers are estimates right now." xml:space="preserve">
     <value>Prgl glorgmurp gro blogubgro: prub glorgmurp glorb blarg grogblub murglgru, gro mrglmrgl blarg urblarg lurg, ro gro grulm gro gro prgl. Glorg murgl arglblgrl a glub mrglgro blarg blub grombl plgl groblub — gro glorgmurpgl gro blogubgl ropla.</value>
   </data>
@@ -10010,6 +10043,12 @@
   </data>
   <data name="Verify the other account" xml:space="preserve">
     <value>Murpmorg mrp mrpblgrl grgl</value>
+  </data>
+  <data name="Version" xml:space="preserve">
+    <value>Grogmurgl</value>
+  </data>
+  <data name="Version name" xml:space="preserve">
+    <value>Grogmurgl mrg</value>
   </data>
   <data name="Very Easy" xml:space="preserve">
     <value>Mrgl Mrgl</value>

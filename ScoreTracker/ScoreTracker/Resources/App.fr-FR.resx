@@ -698,6 +698,9 @@
   <data name="Added" xml:space="preserve">
     <value>Ajouté</value>
   </data>
+  <data name="Added in {0}" xml:space="preserve">
+    <value>Ajouté dans {0}</value>
+  </data>
   <data name="Added to Favorites!" xml:space="preserve">
     <value>Ajouté aux Favoris !</value>
   </data>
@@ -2657,6 +2660,12 @@
   <data name="draw a random set of charts, presets included" xml:space="preserve">
     <value>tirer un lot de Charts au hasard, presets inclus</value>
   </data>
+  <data name="Draws from everything through {0}." xml:space="preserve">
+    <value>Le tirage prend tout jusqu'à {0}.</value>
+  </data>
+  <data name="Draws from {0}." xml:space="preserve">
+    <value>Le tirage prend {0}.</value>
+  </data>
   <data name="Drew 1 chart" xml:space="preserve">
     <value>1 chart tiré</value>
   </data>
@@ -2805,6 +2814,9 @@
   </data>
   <data name="Every chart that moved, arrived, or left between {0} and {1}." xml:space="preserve">
     <value>Tous les charts qui ont changé de niveau, sont arrivés ou sont partis entre {0} et {1}.</value>
+  </data>
+  <data name="Every chart this batch creates is stamped with the Phoenix 2 patch you pick here." xml:space="preserve">
+    <value>Chaque chart créé par ce lot portera la version de Phoenix 2 choisie ici.</value>
   </data>
   <data name="Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more." xml:space="preserve">
     <value>Chaque chart scoré à moins de 3 dossiers vote pour vos compétences — les dossiers plus proches et une plus grande couverture de la compétence comptent davantage.</value>
@@ -5085,6 +5097,9 @@
   <data name="New Username" xml:space="preserve">
     <value>Nouveau nom d'utilisateur</value>
   </data>
+  <data name="New version" xml:space="preserve">
+    <value>Nouvelle version</value>
+  </data>
   <data name="Newest" xml:space="preserve">
     <value>Récents</value>
   </data>
@@ -5640,6 +5655,9 @@
   </data>
   <data name="Nothing on your desk." xml:space="preserve">
     <value>Rien à traiter.</value>
+  </data>
+  <data name="Nothing picked draws from every version." xml:space="preserve">
+    <value>Sans sélection, le tirage prend toutes les versions.</value>
   </data>
   <data name="Nothing selected — click a value." xml:space="preserve">
     <value>Rien de sélectionné — cliquez sur une valeur.</value>
@@ -7383,6 +7401,12 @@
   </data>
   <data name="Rejected" xml:space="preserve">
     <value>Refusé</value>
+  </data>
+  <data name="Release date" xml:space="preserve">
+    <value>Date de sortie</value>
+  </data>
+  <data name="Released" xml:space="preserve">
+    <value>Sortie</value>
   </data>
   <data name="Relevant players" xml:space="preserve">
     <value>Joueurs pertinents</value>
@@ -9469,6 +9493,15 @@
   <data name="Through &quot;share with all tools&quot;" xml:space="preserve">
     <value>Via « partager avec tous les outils »</value>
   </data>
+  <data name="Through a version" xml:space="preserve">
+    <value>Jusqu'à une version</value>
+  </data>
+  <data name="Through a version…" xml:space="preserve">
+    <value>Jusqu'à une version…</value>
+  </data>
+  <data name="Through {0}" xml:space="preserve">
+    <value>Jusqu'à {0}</value>
+  </data>
   <data name="Tick counts are inferred: tap counts come from community simfiles, the totals from real plays, and the difference is the ticks. Treat charts within a few percent of each other as tied — the numbers are estimates right now." xml:space="preserve">
     <value>Les nombres de ticks sont déduits : les taps viennent de simfiles communautaires, les totaux de vraies parties, et la différence, ce sont les ticks. Considérez comme à égalité les charts à quelques pour cent près — pour l'instant ces chiffres sont des estimations.</value>
   </data>
@@ -10009,6 +10042,12 @@
   </data>
   <data name="Verify the other account" xml:space="preserve">
     <value>Vérifiez l'autre compte</value>
+  </data>
+  <data name="Version" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="Version name" xml:space="preserve">
+    <value>Nom de la version</value>
   </data>
   <data name="Very Easy" xml:space="preserve">
     <value>Très Facile</value>

@@ -697,6 +697,9 @@
   <data name="Added" xml:space="preserve">
     <value>Añadido</value>
   </data>
+  <data name="Added in {0}" xml:space="preserve">
+    <value>Añadido en {0}</value>
+  </data>
   <data name="Added to Favorites!" xml:space="preserve">
     <value>Añadido a favoritos!</value>
   </data>
@@ -2644,6 +2647,12 @@
   <data name="draw a random set of charts, presets included" xml:space="preserve">
     <value>sortea un set de charts aleatorio, con presets incluidos</value>
   </data>
+  <data name="Draws from everything through {0}." xml:space="preserve">
+    <value>Se sortea de todo hasta {0}.</value>
+  </data>
+  <data name="Draws from {0}." xml:space="preserve">
+    <value>Se sortea de {0}.</value>
+  </data>
   <data name="Drew 1 chart" xml:space="preserve">
     <value>1 chart sacado</value>
   </data>
@@ -2790,6 +2799,9 @@
   </data>
   <data name="Every chart that moved, arrived, or left between {0} and {1}." xml:space="preserve">
     <value>Todos los charts que cambiaron de nivel, llegaron o se fueron entre {0} y {1}.</value>
+  </data>
+  <data name="Every chart this batch creates is stamped with the Phoenix 2 patch you pick here." xml:space="preserve">
+    <value>Cada chart que cree este lote llevará el parche de Phoenix 2 que elijas aquí.</value>
   </data>
   <data name="Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more." xml:space="preserve">
     <value>Cada chart con score a 3 folders o menos vota por tus skills: los folders más cercanos y una mayor cobertura de la skill cuentan más.</value>
@@ -5056,6 +5068,9 @@
   <data name="New Username" xml:space="preserve">
     <value>Nuevo nombre de usuario</value>
   </data>
+  <data name="New version" xml:space="preserve">
+    <value>Nuevo parche</value>
+  </data>
   <data name="Newest" xml:space="preserve">
     <value>Recientes</value>
   </data>
@@ -5610,6 +5625,9 @@
   </data>
   <data name="Nothing on your desk." xml:space="preserve">
     <value>No hay nada pendiente.</value>
+  </data>
+  <data name="Nothing picked draws from every version." xml:space="preserve">
+    <value>Sin nada marcado se sortea de todos los parches.</value>
   </data>
   <data name="Nothing selected — click a value." xml:space="preserve">
     <value>Nada seleccionado — pulsa un valor.</value>
@@ -7344,6 +7362,12 @@
   </data>
   <data name="Rejected" xml:space="preserve">
     <value>Rechazada</value>
+  </data>
+  <data name="Release date" xml:space="preserve">
+    <value>Fecha de publicación</value>
+  </data>
+  <data name="Released" xml:space="preserve">
+    <value>Publicado</value>
   </data>
   <data name="Relevant players" xml:space="preserve">
     <value>Jugadores relevantes</value>
@@ -9412,6 +9436,15 @@
   <data name="Through &quot;share with all tools&quot;" xml:space="preserve">
     <value>Mediante «compartir con todas las herramientas»</value>
   </data>
+  <data name="Through a version" xml:space="preserve">
+    <value>Hasta un parche</value>
+  </data>
+  <data name="Through a version…" xml:space="preserve">
+    <value>Hasta un parche…</value>
+  </data>
+  <data name="Through {0}" xml:space="preserve">
+    <value>Hasta {0}</value>
+  </data>
   <data name="Tick counts are inferred: tap counts come from community simfiles, the totals from real plays, and the difference is the ticks. Treat charts within a few percent of each other as tied — the numbers are estimates right now." xml:space="preserve">
     <value>Los conteos de ticks son inferidos: los taps salen de simfiles de la comunidad, los totales de intentos reales, y la diferencia son los ticks. Trata como empatados los charts que estén a pocos puntos porcentuales — por ahora los números son estimaciones.</value>
   </data>
@@ -9948,6 +9981,12 @@
   </data>
   <data name="Verify the other account" xml:space="preserve">
     <value>Verifica la otra cuenta</value>
+  </data>
+  <data name="Version" xml:space="preserve">
+    <value>Parche</value>
+  </data>
+  <data name="Version name" xml:space="preserve">
+    <value>Nombre del parche</value>
   </data>
   <data name="Very Easy" xml:space="preserve">
     <value>Muy fácil</value>

@@ -698,6 +698,9 @@
   <data name="Added" xml:space="preserve">
 	  <value>Added</value>
   </data>
+  <data name="Added in {0}" xml:space="preserve">
+    <value>Added in {0}</value>
+  </data>
   <data name="Added to Favorites!" xml:space="preserve">
     <value>Added to Favorites!</value>
   </data>
@@ -2658,6 +2661,12 @@
   <data name="draw a random set of charts, presets included" xml:space="preserve">
     <value>draw a random set of charts, presets included</value>
   </data>
+  <data name="Draws from everything through {0}." xml:space="preserve">
+    <value>Draws from everything through {0}.</value>
+  </data>
+  <data name="Draws from {0}." xml:space="preserve">
+    <value>Draws from {0}.</value>
+  </data>
   <data name="Drew 1 chart" xml:space="preserve">
     <value>Drew 1 chart</value>
   </data>
@@ -2806,6 +2815,9 @@
   </data>
   <data name="Every chart that moved, arrived, or left between {0} and {1}." xml:space="preserve">
     <value>Every chart that moved, arrived, or left between {0} and {1}.</value>
+  </data>
+  <data name="Every chart this batch creates is stamped with the Phoenix 2 patch you pick here." xml:space="preserve">
+    <value>Every chart this batch creates is stamped with the Phoenix 2 patch you pick here.</value>
   </data>
   <data name="Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more." xml:space="preserve">
     <value>Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more.</value>
@@ -5086,6 +5098,9 @@
   <data name="New Username" xml:space="preserve">
 	  <value>New Username</value>
   </data>
+  <data name="New version" xml:space="preserve">
+    <value>New version</value>
+  </data>
   <data name="Newest" xml:space="preserve">
     <value>Newest</value>
   </data>
@@ -5641,6 +5656,9 @@
   </data>
   <data name="Nothing on your desk." xml:space="preserve">
     <value>Nothing on your desk.</value>
+  </data>
+  <data name="Nothing picked draws from every version." xml:space="preserve">
+    <value>Nothing picked draws from every version.</value>
   </data>
   <data name="Nothing selected — click a value." xml:space="preserve">
     <value>Nothing selected — click a value.</value>
@@ -7384,6 +7402,12 @@
   </data>
   <data name="Rejected" xml:space="preserve">
     <value>Rejected</value>
+  </data>
+  <data name="Release date" xml:space="preserve">
+    <value>Release date</value>
+  </data>
+  <data name="Released" xml:space="preserve">
+    <value>Released</value>
   </data>
   <data name="Relevant players" xml:space="preserve">
     <value>Relevant players</value>
@@ -9470,6 +9494,15 @@
   <data name="Through &quot;share with all tools&quot;" xml:space="preserve">
     <value>Through "share with all tools"</value>
   </data>
+  <data name="Through a version" xml:space="preserve">
+    <value>Through a version</value>
+  </data>
+  <data name="Through a version…" xml:space="preserve">
+    <value>Through a version…</value>
+  </data>
+  <data name="Through {0}" xml:space="preserve">
+    <value>Through {0}</value>
+  </data>
   <data name="Tick counts are inferred: tap counts come from community simfiles, the totals from real plays, and the difference is the ticks. Treat charts within a few percent of each other as tied — the numbers are estimates right now." xml:space="preserve">
     <value>Tick counts are inferred: tap counts come from community simfiles, the totals from real plays, and the difference is the ticks. Treat charts within a few percent of each other as tied — the numbers are estimates right now.</value>
   </data>
@@ -10010,6 +10043,12 @@
   </data>
   <data name="Verify the other account" xml:space="preserve">
     <value>Verify the other account</value>
+  </data>
+  <data name="Version" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="Version name" xml:space="preserve">
+    <value>Version name</value>
   </data>
   <data name="Very Easy" xml:space="preserve">
     <value>Very Easy</value>

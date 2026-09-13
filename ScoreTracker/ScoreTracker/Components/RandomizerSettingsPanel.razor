@@ -617,7 +617,7 @@
     private string VersionsHint => Settings.Versions.Count == 0
         ? L["Nothing picked draws from every version."]
         : MixVersionRange.ThroughName(_versions, Settings.Versions.ToArray()) is { } through
-            ? L["Draws from everything through v{0}.", through]
+            ? L["Draws from everything through {0}.", $"v{through}"]
             : L["Draws from {0}.", string.Join(", ",
                 _versions.Where(v => Settings.Versions.Contains(v.Name)).Select(v => "v" + v.Name))];
 

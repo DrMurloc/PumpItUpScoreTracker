@@ -1337,7 +1337,7 @@ else
             AddListChips(chips, _debutMixes, m => $"{L["Debut"]}: {m.GetName()}");
             // Every version up to one reads as a single chip; anything else lists the picks.
             if (_versions.Count > 0 && MixVersionRange.ThroughName(_mixVersions, _versions) is { } through)
-                chips.Add(new QueryChip($"{L["Through"]} v{through}", false, async () =>
+                chips.Add(new QueryChip(L["Through {0}", $"v{through}"], false, async () =>
                 {
                     _versions.Clear();
                     await ApplyChange();
