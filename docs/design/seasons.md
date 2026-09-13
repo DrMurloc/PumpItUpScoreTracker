@@ -1,6 +1,6 @@
 # Seasons
 
-Status: **design complete; slice 0 merged (2026-09-12); slice 1a in build (2026-09-13); slice 1b next on the owner's go.** Scoped and decided 2026-09-12 with the owner
+Status: **design complete; slice 0 merged (2026-09-12); slice 1a built (2026-09-13); slice 1b next on the owner's go.** Scoped and decided 2026-09-12 with the owner
 ([scoping artifact, Round 2c](https://claude.ai/code/artifact/de8ed96c-d3c2-47fe-a25e-1c726348ff53):
 the census, the re-scored feature table, the boolean analysis); mocks published and corrected the same
 day (§13, four sheets, Round 2). The decisions in §3 are the owner's where marked and *decided unless
@@ -341,7 +341,7 @@ The production code that touches the four flagged entities, measured 2026-09-12:
 | PlayerProgress | `EFPlayerStatsRepository`, `EFPlayerFolderLevelRepository`, `EFAccountPurgeRepository` |
 | Catalog | `EFChartRepository` (the per-mix chart dictionary; in 1b gains a per-season variant that overlays `ChartSeason`, D33) |
 | ChartIntelligence | `EFHardmodeChartRepository` (rewrites the all-time list through a filtered query, so it needs no change; the season rows it must not touch are invisible to it) |
-| Data | `ChartAttemptDbContext`; `DevCatalogWriter` (one raw `DELETE` by user, correct as is); `UserDataPurge` (deletes through EF and therefore through the filter — it drops the `AllTime` filter, or a purge would leave every season row behind) |
+| Data | `ChartAttemptDbContext`; `DevCatalogWriter` (one raw `DELETE` by user, correct as is; its bulk copy sets `SeasonId = 0` by hand, because it builds rows from the live schema and refuses a null before SQL sees the default); `UserDataPurge` (deletes through EF and therefore through the filter — it drops the `AllTime` filter, or a purge would leave every season row behind) |
 
 Twelve files, one raw-SQL reader, one filter-blind purge. Tests seed these tables in a handful of
 places and keep working because the column defaults to all-time. The API v2 and webhook payloads read
@@ -509,7 +509,7 @@ is visible to anyone else.
 | # | Slice | What lands | What you can test | Gate to the next |
 |---|---|---|---|---|
 | 0 | **Cache-key builder and ratchet** — *built 2026-09-12, branch `claude/seasons-feature-scoping-ca5bc5`* | Every hand-spelled memory-cache key moved to `CacheKeys` (`Mix` / `Viewer`, with mix-id overloads for the catalog); `CacheKeyTests` ratchets it with an allowlist that started at 27 files / 32 statements and ended empty; `LedgerCacheKeys` and `OfficialCacheKeys` delegate. No feature code. | Nothing visible. Fast suites green; the allowlist is empty. | Merged. |
-| 1a | **The schema, reading nothing new** — *in build 2026-09-13, branch `claude/seasons-slice-1a`* | `Seasons` vertical skeleton; `scores.Season` and `scores.ChartSeason` (D33); the `SeasonId` columns (`smallint`, 0 = all-time, D11) on the personal-best, player-stats, folder-level and Hardmode tables with season-first keys and indexes (D34); the named `AllTime` query filters (D12); the reader audit (§6.4) including the peer store's raw SQL and the filter-blind purge; `CacheKeys.Viewer` taking the season; the `Seasons:EnableUI` flag read at startup with the admin bypass (nothing behind it yet). No writer, no season row. | The whole site behaves exactly as before. The integration filter tests and the audit prove no read changed. This is the deploy that carries the index rebuilds on the record table, online and alone, so their cost is measured once and by itself. | A prod smoke after deploy: numbers on the PUMBILITY page, a community board and API v2 unchanged. |
+| 1a | **The schema, reading nothing new** — *built 2026-09-13, branch `claude/seasons-slice-1a`* | `Seasons` vertical skeleton; `scores.Season` and `scores.ChartSeason` (D33); the `SeasonId` columns (`smallint`, 0 = all-time, D11) on the personal-best, player-stats, folder-level and Hardmode tables with season-first keys and indexes (D34); the named `AllTime` query filters (D12); the reader audit (§6.4) including the peer store's raw SQL and the filter-blind purge; `CacheKeys.Viewer` taking the season; the `Seasons:EnableUI` flag read at startup with the admin bypass (nothing behind it yet). No writer, no season row. | The whole site behaves exactly as before. The integration filter tests and the audit prove no read changed. This is the deploy that carries the index rebuilds on the record table, online and alone, so their cost is measured once and by itself. | A prod smoke after deploy: numbers on the PUMBILITY page, a community board and API v2 unchanged. |
 | 1b | **Tracking begins** | `roll-season` (create the quarter's row; seal an ended one after seven days: `SealedAt`, D13); the seasonal write in the import chain with the counting rule (D15); the season pass in the rating saga (quiet) writing the season `PlayerStats` row and folder levels; the nightly rollup; the flagged score reader answering seasonal bests; undo/delete replay; the backfill button; the admin season console (live season, roll now, re-price, backfill). | Press **Backfill seasons**: Summer 2026 appears sealed with its rows and standings, Fall 2026 appears live; your own seasonal personal bests exist in SQL; an import you make writes a Fall 2026 row beside the all-time one; an undo removes it. Nothing player-facing changes. | Integration tests for the writer, the replay and the seal; one week of imports accumulating in prod while nobody sees them. |
 | 2a | **The view, with nothing flipped** | Picker option and pill, setting + cookie through the mix redirect, the shell seed, the intro dialog (once), the caption on excluded pages, the Account peers disclaimer. Every page still shows all-time numbers. | As admin: switch to Fall 2026, see the pill everywhere including static pages, get the intro once, see the caption on Weekly Charts; a non-admin sees none of it. The cookie survives a new tab; the anonymous default is all-time. | Plumbing proven before any number depends on it. |
 | 2b | **The marker** | `DifficultyBubble` overlay slot, chevron count (▲ / ▲▲ / signed number from ±3), the mix-invariant token pair, the chart page header line; the Discord text form. Ratings are flat, so nothing shows until the admin console pins one chart's season rating by hand. | Pin 4NT S22 to 21 in the console: ▼ appears on every bubble that draws 4NT in seasonal view, at every size, and nowhere in all-time view. Unpin, it vanishes. | Sheet B's ladder holds up in the real components. |
@@ -634,10 +634,12 @@ Built 2026-09-13 on `claude/seasons-slice-1a`, eight commits, docs first.
   contributions. Nothing drops them yet except the purge.
 - **The audit** (§6.4): `PeerScoreStore` gains `AND pr.SeasonId = 0` in both raw statements;
   `UserDataPurge.DeleteFor` / `DeleteForNullable` add `IgnoreQueryFilters()`; `DevCatalogWriter`'s raw
-  delete is already correct; the Hardmode census needs nothing.
+  delete is already correct, but its bulk copy names the season by hand — it builds rows from the live
+  schema and refuses a null before SQL sees the default, which the integration run found; the Hardmode
+  census needs nothing.
 - **The Seasons vertical skeleton**: `ScoreTracker.Seasons` with `Contracts/` (`ISeasonsUiGate`), `Wiring/`
-  (`AddSeasons()`, `AddSeasonsConsumers()` — empty until 1b, `SeasonsConfiguration`, `SeasonsModelContribution`
-  registering `scores.Season`), listed in `VerticalModelContributions.All()`, `VerticalBoundaryTests`'
+  (`AddSeasons()`, `SeasonsConfiguration`, `SeasonsModelContribution` registering `scores.Season`; the
+  consumer hook arrives with the roll in 1b), listed in `VerticalModelContributions.All()`, `VerticalBoundaryTests`'
   markers and `AccountPurgeCoverageTests`' vertical list; referenced from `Web`, `CompositionRoot` and the
   test projects; package allowlist row in `CLAUDE.md`.
 - **The flag**: `Seasons:EnableUI` bound in `Program.cs`, `Seasons` added to the AppHost's
@@ -649,7 +651,7 @@ Built 2026-09-13 on `claude/seasons-slice-1a`, eight commits, docs first.
 - **Tests.** `Tests`: `SeasonIdTests`, `CacheKeysTests` (the season segment). `Tests.Integration`: the
   migration applies on every run; `SeasonFilterTests` seed a season row per discriminated table and assert
   each existing reader returns only the all-time row, once more through the peer store's raw path; the
-  purge decoy carries a season row per discriminated table.
+  purge decoy carries a season row per discriminated table. On the final tree: 4,695 · 218 · 1,475 · 410 · 93.
 - **Post-deploy.** The migration bundle runs in the gated stage; read its duration, then the smoke of §12
   row 1a. Nothing to press.
 
