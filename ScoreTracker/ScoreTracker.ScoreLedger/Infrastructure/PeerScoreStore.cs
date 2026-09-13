@@ -236,6 +236,8 @@ internal sealed class PeerScoreStore
         await using var command = database.Database.GetDbConnection().CreateCommand();
         command.CommandTimeout = 180;
         Add(command, "@mix", MixIds.For(mix));
+        // Both statements pin the season by hand: raw SQL bypasses the AllTime query filter, and a
+        // season's rows would otherwise read as extra all-time bests (docs/design/seasons.md D12).
         if (ids == null)
         {
             // Everyone. Driven through ChartMix so the plan seeks the record table by chart
@@ -246,7 +248,7 @@ internal sealed class PeerScoreStore
                                   FROM scores.ChartMix cm
                                   JOIN scores.Chart c ON cm.ChartId = c.Id
                                   JOIN scores.PhoenixRecord pr ON c.Id = pr.ChartId
-                                  WHERE cm.MixId = @mix AND pr.MixId = @mix
+                                  WHERE cm.MixId = @mix AND pr.MixId = @mix AND pr.SeasonId = 0
                                     AND pr.Score IS NOT NULL AND pr.IsBroken = 0
                                   """;
         }
@@ -263,7 +265,7 @@ internal sealed class PeerScoreStore
             command.CommandText = $"""
                                    SELECT pr.UserId, pr.ChartId, pr.Score, pr.Plate, pr.RecordedDate
                                    FROM scores.PhoenixRecord pr
-                                   WHERE pr.MixId = @mix AND pr.Score IS NOT NULL AND pr.IsBroken = 0
+                                   WHERE pr.MixId = @mix AND pr.SeasonId = 0 AND pr.Score IS NOT NULL AND pr.IsBroken = 0
                                      AND pr.UserId IN ({string.Join(", ", names)})
                                    """;
         }

@@ -78,6 +78,7 @@ dotnet user-secrets set "Google:ClientId" "..." --project ScoreTracker/ScoreTrac
 | `Sendgrid:ApiKey` | Admin notification emails | [SendGrid](https://sendgrid.com/) account | Sends fail quietly at the call site; nothing else affected |
 | `AzureBlob:ConnectionString` | Photo uploads (tournament verification, qualifiers) | See below | Defaults to the Azurite emulator connection string |
 | `PiuGame:ServiceUsername` / `PiuGame:ServicePassword` | The Phoenix 2 leaderboard import (the P2 site's ranking pages are login-gated, unlike Phoenix) | A **dedicated dummy AM.PASS account** — never a real player's; automated logins run on it weekly | The Phoenix 2 import job fails loudly naming these keys; everything else unaffected |
+| `Seasons:EnableUI` | The seasonal view for non-admin accounts ([seasons](design/seasons.md) D27) | Not a credential — `true` or `false` | Off for everyone but admins, who see the seasonal surfaces regardless |
 
 All of these are **bring-your-own credentials**: if you want to test a feature that needs one, create your own (Discord application, Google OAuth client, Meta app, SendGrid account, storage account). No credentials are provided for local development — production ones are not shared.
 

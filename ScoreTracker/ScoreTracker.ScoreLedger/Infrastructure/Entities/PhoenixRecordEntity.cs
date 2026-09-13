@@ -1,10 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.ScoreLedger.Infrastructure.Entities;
 
-[Index(nameof(UserId), nameof(ChartId), nameof(MixId), IsUnique = true)]
-[Index(nameof(ChartId))]
 internal sealed class PhoenixRecordEntity
 {
     [Key] public Guid Id { get; set; }
@@ -13,6 +10,13 @@ internal sealed class PhoenixRecordEntity
     [Required] public Guid ChartId { get; set; }
 
     [Required] public Guid MixId { get; set; }
+
+    /// <summary>
+    ///     0 = the all-time best, otherwise the season this best belongs to (docs/design/seasons.md
+    ///     D11): a seasonal best is a second row beside the all-time one, hidden by the AllTime query
+    ///     filter unless a reader drops it. Keys and indexes live in ScoreLedgerModelContribution.
+    /// </summary>
+    public short SeasonId { get; set; }
 
     [Required] public DateTimeOffset RecordedDate { get; set; }
     public int? Score { get; set; }

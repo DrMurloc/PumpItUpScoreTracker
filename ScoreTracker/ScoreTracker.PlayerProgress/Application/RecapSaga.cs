@@ -461,7 +461,7 @@ internal sealed class RecapSaga :
         // subject's own set always recomputes so a fresh import reshapes their overlaps.
         // A Viewer key: each entry is one player's own top fifty. The recap reads all-time
         // (docs/design/seasons.md D18, §8.3).
-        var key = CacheKeys.Viewer(nameof(RecapSaga), mix, "Top50", type, userId);
+        var key = CacheKeys.Viewer(nameof(RecapSaga), mix, SeasonId.AllTime, "Top50", type, userId);
         if (!refresh && _cache.TryGetValue(key, out IReadOnlySet<Guid>? cached) && cached != null)
             return cached;
 

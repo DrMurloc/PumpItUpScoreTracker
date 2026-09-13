@@ -112,6 +112,16 @@ public sealed class AccountPurgeTests : IAsyncLifetime
         {
             var failure = await TryPlant(type, decoy, bystander, chartId, boardId);
             if (failure is not null) unplantable.Add(failure);
+
+            // A season row beside the all-time one for every season-discriminated table
+            // (docs/design/seasons.md D12, D22): the purge deletes through EF, so it has to drop the
+            // AllTime filter or a player's season rows outlive the account — and the raw count below
+            // is exactly what would see them survive.
+            if (type.GetProperty("SeasonId") is not null)
+            {
+                failure = await TryPlant(type, decoy, bystander, chartId, boardId, season: 20264);
+                if (failure is not null) unplantable.Add(failure);
+            }
         }
 
         // A type nobody can plant is a type this test silently stops covering, so it fails here
@@ -168,7 +178,8 @@ public sealed class AccountPurgeTests : IAsyncLifetime
     ///     Values are written through the CLR properties <em>before</em> the entity is tracked: a
     ///     string primary key still null at Add throws there, before any of this could fix it.
     /// </summary>
-    private async Task<string?> TryPlant(Type type, Guid ownerId, Guid bystanderId, Guid chartId, Guid boardId)
+    private async Task<string?> TryPlant(Type type, Guid ownerId, Guid bystanderId, Guid chartId, Guid boardId,
+        short season = 0)
     {
         try
         {
@@ -186,6 +197,7 @@ public sealed class AccountPurgeTests : IAsyncLifetime
                 // Foreign keys have to point at something real, so the ones the manifests actually
                 // reference are seeded once and shared by every probe row.
                 if (property.Name == owningColumn) slot.SetValue(instance, ownerId);
+                else if (clr == typeof(short) && property.Name == "SeasonId") slot.SetValue(instance, season);
                 else if (clr == typeof(Guid) && property.Name.EndsWith("UserId", StringComparison.Ordinal))
                     slot.SetValue(instance, bystanderId);
                 else if (clr == typeof(Guid) && property.Name == "ChartId") slot.SetValue(instance, chartId);

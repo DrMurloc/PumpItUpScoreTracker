@@ -45,7 +45,10 @@ public static class UserDataPurge
     public static Task DeleteFor<TEntity>(ChartAttemptDbContext database, string column, Guid userId,
         CancellationToken cancellationToken) where TEntity : class
     {
-        return database.Set<TEntity>().Where(e => EF.Property<Guid>(e, column) == userId)
+        // Every filter dropped, not just the season's: a purge that ran through the AllTime filter
+        // would leave a player's season rows behind while the coverage test stayed green
+        // (docs/design/seasons.md D12, D22).
+        return database.Set<TEntity>().IgnoreQueryFilters().Where(e => EF.Property<Guid>(e, column) == userId)
             .ExecuteDeleteAsync(cancellationToken);
     }
 
@@ -55,7 +58,7 @@ public static class UserDataPurge
     public static Task DeleteForNullable<TEntity>(ChartAttemptDbContext database, string column, Guid userId,
         CancellationToken cancellationToken) where TEntity : class
     {
-        return database.Set<TEntity>().Where(e => EF.Property<Guid?>(e, column) == userId)
+        return database.Set<TEntity>().IgnoreQueryFilters().Where(e => EF.Property<Guid?>(e, column) == userId)
             .ExecuteDeleteAsync(cancellationToken);
     }
 

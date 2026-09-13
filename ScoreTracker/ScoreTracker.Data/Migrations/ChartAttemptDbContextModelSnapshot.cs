@@ -97,6 +97,45 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("ChartFolderBaseline", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ChartSeasonEntity", b =>
+                {
+                    b.Property<short>("SeasonId")
+                        .HasColumnType("smallint");
+
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("HoldRank")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("HoldWeight")
+                        .HasColumnType("float");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("LivePlayers")
+                        .HasColumnType("int");
+
+                    b.Property<short>("MovedThisRoll")
+                        .HasColumnType("smallint");
+
+                    b.Property<int>("PrintedLevel")
+                        .HasColumnType("int");
+
+                    b.HasKey("SeasonId", "MixId", "ChartId");
+
+                    b.HasIndex("ChartId");
+
+                    b.ToTable("ChartSeason", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ChartSkillArchiveEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -783,6 +822,9 @@ namespace ScoreTracker.Data.Migrations
 
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.HardmodeChartEntity", b =>
                 {
+                    b.Property<short>("SeasonId")
+                        .HasColumnType("smallint");
+
                     b.Property<Guid>("MixId")
                         .HasColumnType("uniqueidentifier");
 
@@ -807,7 +849,7 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<double>("Points")
                         .HasColumnType("float");
 
-                    b.HasKey("MixId", "ChartId");
+                    b.HasKey("SeasonId", "MixId", "ChartId");
 
                     b.HasIndex("ChartId");
 
@@ -3190,6 +3232,9 @@ namespace ScoreTracker.Data.Migrations
 
             modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.PlayerFolderLevelEntity", b =>
                 {
+                    b.Property<short>("SeasonId")
+                        .HasColumnType("smallint");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -3218,7 +3263,7 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.HasKey("UserId", "MixId", "ChartType", "Level");
+                    b.HasKey("SeasonId", "UserId", "MixId", "ChartType", "Level");
 
                     b.ToTable("PlayerFolderLevel", "scores");
                 });
@@ -3368,6 +3413,9 @@ namespace ScoreTracker.Data.Migrations
 
             modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.PlayerStatsEntity", b =>
                 {
+                    b.Property<short>("SeasonId")
+                        .HasColumnType("smallint");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -3452,10 +3500,13 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<double>("SkillRating")
                         .HasColumnType("float");
 
+                    b.Property<double>("TotalPumbility")
+                        .HasColumnType("float");
+
                     b.Property<int>("TotalRating")
                         .HasColumnType("int");
 
-                    b.HasKey("UserId", "MixId");
+                    b.HasKey("SeasonId", "UserId", "MixId");
 
                     b.ToTable("PlayerStats", "scores");
                 });
@@ -3951,6 +4002,9 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<int?>("Score")
                         .HasColumnType("int");
 
+                    b.Property<short>("SeasonId")
+                        .HasColumnType("smallint");
+
                     b.Property<string>("Source")
                         .HasMaxLength(32)
                         .HasColumnType("nvarchar(32)");
@@ -3962,13 +4016,14 @@ namespace ScoreTracker.Data.Migrations
 
                     b.HasIndex("ChartId");
 
-                    b.HasIndex("MixId", "ChartId")
+                    b.HasIndex(new[] { "SeasonId", "MixId", "ChartId" }, "IX_PhoenixRecord_SeasonId_MixId_ChartId")
                         .HasAnnotation("SqlServer:Online", true);
 
-                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("MixId", "ChartId"), new[] { "UserId", "Score", "Plate", "IsBroken" });
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex(new[] { "SeasonId", "MixId", "ChartId" }, "IX_PhoenixRecord_SeasonId_MixId_ChartId"), new[] { "UserId", "Score", "Plate", "IsBroken" });
 
-                    b.HasIndex("UserId", "ChartId", "MixId")
-                        .IsUnique();
+                    b.HasIndex(new[] { "UserId", "SeasonId", "ChartId", "MixId" }, "IX_PhoenixRecord_UserId_SeasonId_ChartId_MixId")
+                        .IsUnique()
+                        .HasAnnotation("SqlServer:Online", true);
 
                     b.ToTable("PhoenixRecord", "scores");
                 });
@@ -4161,6 +4216,33 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("UserId", "StartedAt");
 
                     b.ToTable("ScoreSession", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.Seasons.Infrastructure.Entities.SeasonEntity", b =>
+                {
+                    b.Property<short>("Id")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTimeOffset>("EndsAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsBalanced")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset?>("SealedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("StartsAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Season", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.Translations.Infrastructure.Entities.TranslationBatchEntity", b =>
@@ -4517,6 +4599,15 @@ namespace ScoreTracker.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("WeeklyUserEntry", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ChartSeasonEntity", b =>
+                {
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ChartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.ChartVideoEntity", b =>

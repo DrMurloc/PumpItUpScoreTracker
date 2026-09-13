@@ -25,13 +25,32 @@ public sealed class ScoreLedgerModelContribution : IDbModelContribution
             .WithMany()
             .HasForeignKey(ba => ba.UserId);
 
-        // Covers the cohort ranking reads (mix + chart-set lookups projecting
-        // user/score/plate); without it they scan the whole table. Built ONLINE because
-        // the migration bundle applies against the live table during deploys.
+        // The season leads every index it is part of (docs/design/seasons.md D34): the all-time rows
+        // stay one dense range that seasonal inserts never split, and each season appends as its own
+        // cold range. Named, because two unnamed indexes over one column set collapse into one in the
+        // model (see the journal indexes below). Built ONLINE: the migration bundle applies against
+        // the live table during deploys.
+        //
+        // The unique key keeps the player first: EF's foreign-key convention would otherwise add a
+        // fourth index on UserId, and the per-player read seeks user then season regardless.
         modelBuilder.Entity<PhoenixRecordEntity>()
-            .HasIndex(e => new { e.MixId, e.ChartId })
+            .HasIndex(e => new { e.UserId, e.SeasonId, e.ChartId, e.MixId },
+                "IX_PhoenixRecord_UserId_SeasonId_ChartId_MixId")
+            .IsUnique()
+            .IsCreatedOnline();
+        // Covers the cohort ranking reads (mix + chart-set lookups projecting user/score/plate);
+        // without it they scan the whole table.
+        modelBuilder.Entity<PhoenixRecordEntity>()
+            .HasIndex(e => new { e.SeasonId, e.MixId, e.ChartId }, "IX_PhoenixRecord_SeasonId_MixId_ChartId")
             .IncludeProperties(e => new { e.UserId, e.Score, e.Plate, e.IsBroken })
             .IsCreatedOnline();
+        // The chart foreign key's own index, unchanged: a read by chart alone filters the season
+        // during the key lookups it already makes.
+        modelBuilder.Entity<PhoenixRecordEntity>().HasIndex(e => e.ChartId);
+        // Every read sees all-time bests unless it drops this filter by name (docs/design/seasons.md
+        // D12): a seasonal reader drops AllTime and applies its own season, UserDataPurge drops every
+        // filter, and PeerScoreStore's raw SQL spells SeasonId = 0 itself.
+        modelBuilder.Entity<PhoenixRecordEntity>().HasQueryFilter(QueryFilters.AllTime, e => e.SeasonId == 0);
 
         modelBuilder.Entity<ScoreSessionEntity>().ToTable("ScoreSession");
         // The restart-recovery pass asks only "which sessions never finished their derived work".

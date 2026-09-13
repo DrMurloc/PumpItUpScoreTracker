@@ -12,6 +12,7 @@ using ScoreTracker.Rivals.Contracts;
 using ScoreTracker.Rivals.Contracts.Queries;
 using ScoreTracker.Rivals.Domain;
 using ScoreTracker.SharedKernel.Caching;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 
@@ -185,7 +186,7 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
         var audience = await _visibility.GetAudience(me, cancellationToken);
         var visible = users.Values.Where(u => u.Id != me && audience.Describe(u.Id, u.IsPublic).CanView).ToArray();
         var levels = await _cache.GetOrCreateAsync(
-            CacheKeys.Viewer(nameof(PeerStandingReader), request.Mix, "RosterStats", setKey),
+            CacheKeys.Viewer(nameof(PeerStandingReader), request.Mix, SeasonId.AllTime, "RosterStats", setKey),
             async entry =>
             {
                 entry.AbsoluteExpirationRelativeToNow = ScoresTtl;
@@ -536,5 +537,5 @@ internal sealed class PeerStandingReader : IPeerStandingReader,
     // the seasonal view (docs/design/seasons.md D6), and a band's bucket is the only set-free key
     // in this reader.
     private static string RowsKey(MixEnum mix, string setKey, Guid chartId) =>
-        CacheKeys.Viewer(nameof(PeerStandingReader), mix, "Rows", setKey, chartId);
+        CacheKeys.Viewer(nameof(PeerStandingReader), mix, SeasonId.AllTime, "Rows", setKey, chartId);
 }

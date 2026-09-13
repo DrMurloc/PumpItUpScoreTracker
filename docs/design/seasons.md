@@ -1,6 +1,6 @@
 # Seasons
 
-Status: **design complete; slice 0 built and bug-checked (2026-09-12), slice 1a next on the owner's go.** Scoped and decided 2026-09-12 with the owner
+Status: **design complete; slice 0 merged (2026-09-12); slice 1a built (2026-09-13); slice 1b next on the owner's go.** Scoped and decided 2026-09-12 with the owner
 ([scoping artifact, Round 2c](https://claude.ai/code/artifact/de8ed96c-d3c2-47fe-a25e-1c726348ff53):
 the census, the re-scored feature table, the boolean analysis); mocks published and corrected the same
 day (§13, four sheets, Round 2). The decisions in §3 are the owner's where marked and *decided unless
@@ -18,7 +18,8 @@ The whole feature is one idea: **the score journal stays single, the personal-be
 seasonal personal best is a second best-attempt row in the same table, flagged for the season; every
 number derived from personal bests (PUMBILITY, folder completion, the boards) gets a season-flagged
 row written by the same code run a second time over the seasonal pool. Reads take the season. At the
-roll, the season's rows are copied to archive tables and deleted, and that deletion is the seal.
+roll, the ended season is stamped sealed and never written again; its rows stay where they are, cold
+under their season number, and the next season starts from an empty pool.
 
 Phoenix 2 only. Phoenix 1 has no seasons and never will (it is going offline-only).
 
@@ -83,29 +84,31 @@ Phoenix 2 only. Phoenix 1 has no seasons and never will (it is going offline-onl
 | D7 | **Season ratings are a symmetric diversity rule.** Per folder, charts ranked by weighted hold count in last season's pools (50 points at slot 1 → 1 at slot 50, the PUMBILITY tier lists' weighting): top 20% move −1, bottom 20% move +1, each from the chart's current season rating (D8); a chart in neither fifth **holds** where it is rather than snapping back to printed (decided unless objected — a snap-back would make a chart oscillate the season after it worked). Ties by fewer passers, then name. Folders with fewer than 50 folder-live players (three or more of their fifty in the folder) do not move. New charts enter at printed. | Owner: "underplayed charts are fine to rebalance too. The idea is diversity and to mix it up." The census (§5) showed the unheld charts are the unplayed ones, which is exactly what this rule moves. |
 | D8 | **Season ratings compound.** Each roll moves a chart one step from its *current* season rating, bounded to levels 1–29; a chart in the bottom fifth two seasons running sits at +2, and the marker carries the magnitude by **chevron count** (▲, ▲▲, then a signed number from ±3 — owner, 2026-09-12, over the signed-pill option). The What-moved page prints the running total ("22 → 24, second season up"). | Owner, 2026-09-12: "charts can be up/downrated multiple seasons in a row … I'll keep an eye on if anything gets out of hand." The rule self-corrects: an uprated chart pays more, gets pooled more, and leaves the bottom fifth; a downrated staple pays less and gets dropped. Round 1's ±1 cap is withdrawn. |
 | D9 | **Charts keep their printed level and folder everywhere.** The rating changes the price and the marker only. | Owner ("charts still show their official difficulty"). |
-| D10 | **Seasonal rows live in the live tables, not in twin tables.** A season discriminator on the personal-best, player-stats, folder-level and chart-mix tables; every reader of those tables is audited once. | Owner: "I would rather eat a one-time cost of auditing every place that uses the affected tables than permanently accept maintaining migrations for 2x the tables." |
-| D11 | **The discriminator is a `SeasonId` with `Guid.Empty` meaning all-time, not a bit.** | Decided unless objected. Same tables, same wipe-at-seal semantics, but a bit cannot hold two seasons at once, and the seven-day grace (D13) needs the ending season's rows and the new season's rows to coexist for a week. |
-| D12 | **An EF global query filter on each flagged entity excludes seasonal rows unless a reader opts in.** Raw SQL bypasses it and gets a ratchet. | Decided unless objected. Turns the one-time audit into a permanent default: a reader added next year cannot leak seasonal rows by forgetting a filter. First use of a global filter in the codebase. |
-| D13 | **The roll is the seal.** Seven days after the boundary: copy the ended season's rows into the archive tables, delete them in batches, and the season is sealed. During the seven days, in-window plays still land on the ended season. | Owner ("new season wipes/resets the rows. THAT'S what seals it"); the grace is decided unless objected. |
-| D14 | **Archive tables hold past seasons only** — personal bests, chart balances, standings, folder completion — and live in the `scores` schema. | Owner. They are live-read tables (the past-season pages), so they are not `archive`-schema tables, which mean *retired feature*. |
+| D10 | **Seasonal rows live in the live tables, not in twin tables.** A season discriminator on the personal-best, player-stats, folder-level and Hardmode tables; every reader of those tables is audited once. Season ratings are the one exception, in their own table (D33). | Owner: "I would rather eat a one-time cost of auditing every place that uses the affected tables than permanently accept maintaining migrations for 2x the tables." |
+| D11 | **The discriminator is a `smallint` season number, 0 = all-time — never a bit, never a Guid, never NULL.** The number is the calendar quarter, `YYYYQ`: 20263 is Summer 2026, 20264 is Fall 2026. | Owner, 2026-09-13 ("good call on smallint"; "index health is my biggest concern all around"). A bit cannot hold two seasons at once, and the seven-day grace (D13) needs the ending season's rows and the new season's rows to coexist for a week. A Guid spends sixteen bytes per index copy on a value with four distinct values a year. NULL was weighed and rejected: a key column cannot be NULL, and every season-taking query would grow an `IS NULL` branch that costs the seek. The calendar number is two bytes, monotonic and readable in raw SQL without a join. |
+| D12 | **An EF global query filter on each flagged entity excludes seasonal rows unless a reader opts out of it.** Named `AllTime`, so a seasonal reader drops that one filter by name and nothing else. Raw SQL bypasses it and gets a ratchet; the purge and the wipe drop it on purpose, because a player's rows go in every season. | Decided unless objected. Turns the one-time audit into a permanent default: a reader added next year cannot leak seasonal rows by forgetting a filter. First use of a global filter in the codebase. |
+| D13 | **The roll is the seal, and the seal is a stamp, not a wipe.** Seven days after the boundary the roll sets `SealedAt` on the ended season; from then on no import, undo, replay or backfill writes a row carrying that season number, and the rows stay in place under it. During the seven days, in-window plays still land on the ended season. | Owner, 2026-09-13, revising the 2026-09-12 wipe-at-seal ruling once season-first indexes (D34) made a sealed season a cold range with nothing to gain from a copy and a delete. The grace is decided unless objected. |
+| D14 | **No archive tables.** Past seasons are read from the same tables by season number; a sealed season's rows are a contiguous cold range in every season-first index (D34). If a table ever hurts, one season is one range to move. | Owner, 2026-09-13 ("lowers duplicate tables and column overhead"), replacing the four archive tables of the first cut. Growth is about 50k best rows a quarter today and ~250k at Phoenix 1 scale (§10.2). |
 | D15 | **The counting rule.** A recently-played play dated inside the window counts. A best-list card counts if it is dated inside the window **or** it raised an all-time record you already had. Anything else is an old score being seen for the first time and does not count. | Decided unless objected. A Phoenix 2 best-list card is stamped with the chart's *first* play, so an in-season upscore can wear a pre-season date ([stage-breaks-and-max-combo.md](stage-breaks-and-max-combo.md) §6); the "raised an existing record" half catches it, and a brand-new importer's old cards stay out. |
-| D16 | **Seasonal view is always the current season.** Past seasons are reachable from the season pages (previous / next, past-seasons dialog) and read the archive tables; no other surface reads a past season. | Decided unless objected. Keeps every flag a bool at the read sites and confines the second read shape to one page family, the way MoM reads frozen sessions. |
+| D16 | **Seasonal view is always the current season.** Past seasons are reachable from the season pages (previous / next, past-seasons dialog) and read the same tables by season number (D14); no other surface reads a past season. | Decided unless objected. Keeps every flag a bool at the read sites and confines the second read shape to one page family, the way MoM reads frozen sessions. |
 | D17 | **One canonical URL per page; seasonal is view state** (setting + cookie), never a route or query string. Crawlers see all-time. | Decided unless objected. No duplicate content, no sitemap change, the static pages resolve it the way they resolve the mix. |
 | D18 | **Not seasonal in v1:** titles, rating-history graphs, highlights and milestones, the community tier lists (Score / Pass / PG / Popularity / PUMBILITY lens), chart similarity, official-rank estimates. Tier-list *rows* show your seasonal score and the marker. | Decided unless objected. Titles are piugame facts; the rest are nightly community projections whose seasonal twins would double a six-job fan-out for a thin population. |
 | D19 | **Per-score PUMBILITY (`PhoenixRecordStats`) is not mirrored.** Seasonal pools are priced live from seasonal bests. | Decided unless objected. It is a pricing cache of 1.08M rows the census work already prefers to bypass; the season pass prices its fifty in milliseconds. |
 | D20 | **Season boards are static SSR** like the MoM season page, print their player count on every board, and under the floor say "12 players so far" instead of crowning three. | Decided unless objected. 376 Phoenix 2 importers today; honesty is copy, not code. |
 | D21 | **Excluded pages carry one line under the title** while seasonal view is on: *All-time. Weekly Charts are not part of seasons.* Never a banner. | Decided unless objected. |
-| D22 | **Deleting an account deletes its seasonal and archived rows too**, leaving gaps in past boards, as the weekly placings already do. | Decided unless objected. Consistent with the site's delete-my-data stance; the alternative (a blanked placeholder) keeps a score row tied to a deleted person. |
-| D23 | **Backfill replays the journal per quarter since Phoenix 2 launched.** Summer 2026 is archived by the backfill; the season running at launch becomes the live one, flat. | Owner ("we'll just be backfilling from everyone's first entry into Phoenix 2"). |
-| D24 | **A new `Seasons` vertical owns the season, the roll, the archive tables and the season pages.** The flagged rows stay with the verticals that own their tables; the season pass is a second call into their existing sagas. | Decided unless objected. Follows the WeeklyChallenge template; the Seasons vertical references nothing back. |
+| D22 | **Deleting an account deletes its seasonal rows too, sealed seasons included** (the purge drops the all-time filter), leaving gaps in past boards, as the weekly placings already do. | Decided unless objected. Consistent with the site's delete-my-data stance; the alternative (a blanked placeholder) keeps a score row tied to a deleted person. |
+| D23 | **Backfill replays the journal per quarter since Phoenix 2 launched.** Summer 2026 is written and sealed by the backfill; the season running at launch becomes the live one, flat. | Owner ("we'll just be backfilling from everyone's first entry into Phoenix 2"). |
+| D24 | **A new `Seasons` vertical owns the season row, the roll and the season pages.** The flagged rows stay with the verticals that own their tables, `ChartSeason` with Catalog (D33); the season pass is a second call into their existing sagas. | Decided unless objected. Follows the WeeklyChallenge template; the Seasons vertical references nothing back. |
 | D25 | **The 50-card list is an accepted risk, and the player is told once.** The first time an account turns seasonal view on, a dialog explains the feature and says, in substance: *this depends on your recent scores, which piugame caps at 50. Import after each session, or mid-session if you play big ones.* Dismissed once (`Universal__SeasonsIntroSeen`), never again. | Owner, 2026-09-12: "accepted risk. always has been." The dialog is mocked before it is built (§13). |
 | D26 | **The Account page's peers section carries a disclaimer**: peers, and what they scored, are always all-time; in seasonal view your own scores swap and theirs do not. | Owner. The Play page keeps all-time peers by D6; the explanation lives where the player picks their peer sources. |
 | D27 | **Everything player-facing ships behind `Seasons:EnableUI`** (config, default false). Off: no picker option, no pill state, no captions, no marker, no season routes, no widget — for anyone who is not an admin. Admins always see the full UI. The data side (the season row, the flagged rows, the season pass, the roll, the rollup, the backfill, the admin console) runs regardless, so seasonal history accumulates behind the scenes before anyone else sees it. | Owner: "we're gonna build this a small bit at a time … maintaining seasonal stuff behind the scenes for a little bit before we expose it to users other than me." Same shape as `PreventRecurringJobs`: a flag read once at startup, flowing from the AppHost locally. |
 | D28 | **Hardmode is a first-class citizen of a season: the season's hardmode chart list is locked at the roll and does not move until the next one.** The roll takes a copy of the all-time weekly list as it stands that day (the Hardmode census, board players included) and freezes it for the season; it does not run a second census of its own. The season running at launch takes the copy at launch. | Owner, 2026-09-12: "hard mode charts are identified at the beginning of the season and lock in until the next one." All-time Hardmode keeps its weekly recompute on the PUMBILITY page; a season gets a season-long board on the season page. Measured why the copy and not a site-only census: over PIU Scores pools alone the "every unheld chart" clause admits 2,242 charts today against the census's 1,211 with board players — the electorate is the point of that census, and a season should not redefine it. |
 | D29 | **Season hardmode PUMBILITY** is the hardmode pooling — Singles, Doubles, Combined, no pool gate, ranked on the total however many charts are held — over *seasonal* bests restricted to the season's list, priced at season ratings. The same six columns the Hardmode build put on `PlayerStats` (`HardmodeRating`, `HardmodeSinglesRating`, `HardmodeDoublesRating` and the three `*ChartsHeld` counts), on the season's row. | Follows from D28 and the standing Hardmode rules (no full-pool gate, ever). PIU Scores players only: official-board players do not import, so they are not in a season (their all-time hardmode rows live in `scores.OfficialHardmodeRating`, which seasons never touch). |
 | D30 | **Where it shows.** The season page carries a **Hardmode tab** (Singles · Doubles · Combined, season-long). The PUMBILITY page's Hardmode tab in seasonal view shows *your* season hardmode standing, pool and the locked qualifying list, and links to the season board; in all-time view it is exactly what the Hardmode build ships (weekly list, PIU Scores and Official Boards tabs). | Owner: "All-time does the weekly leaderboards in PUMBILITY page, and seasons has a season-long leaderboard on the season page." |
-| D31 | **`scores.HardmodeChart` (ChartIntelligence, `HardmodeChartEntity`) gains the `SeasonId` discriminator** (D10 shape): the all-time rows are rewritten by the census (`HardmodeCensusSaga`, `RebuildHardmodeChartsCommand`), a season's rows are written once at the roll (a copy of that day's all-time list, D28) and archived at the seal. | Decided unless objected. No second census, no second weekly job. The Hardmode board merged to main on 2026-09-12 (PR #333), so slice 5 has no external dependency left. |
+| D31 | **`scores.HardmodeChart` (ChartIntelligence, `HardmodeChartEntity`) gains the `SeasonId` discriminator** (D10 shape): the all-time rows are rewritten by the census (`HardmodeCensusSaga`, `RebuildHardmodeChartsCommand`), a season's rows are written once at the roll (a copy of that day's all-time list, D28) and stay in place at the seal (D14); the column itself lands in slice 1a with the others. | Decided unless objected. No second census, no second weekly job. The Hardmode board merged to main on 2026-09-12 (PR #333), so slice 5 has no external dependency left. |
 | D32 | **Season boards are the site's standard leaderboard row, nothing bespoke.** Rank through `RankDelta` (previous rank from the nightly rollup, so the arrows light up); the player through `UserLabel` with the 26px avatar and the flag wash under the name; the figures in `olb-grid` columns; row highlighting by the shared utility set with its precedence you → both → rival → community (`.olb-row-me`, `.is-both`, `.is-rival`, `.is-community`), which is how community members and rivals stand out on every board. Board-only rivals never appear (site players only, D29). | Owner, 2026-09-12: "make sure our leaderboards are using all the standard elements … avatar, flag, rank coloring, community/rivals highlighting." |
+| D33 | **`ChartMix` is untouched; a season's chart ratings live in `scores.ChartSeason`**, keyed `(SeasonId, MixId, ChartId)`, sparse: a row only where the season rating differs from the printed level, carried forward each season while it differs. Owned by Catalog as chart data; written through a Catalog command by the roll (slice 4) and the admin pin (2b); reads overlay it on the printed level. | Owner, 2026-09-13: "ChartMix is sacred. They're two different concepts." |
+| D34 | **Season-first keys and indexes.** `SeasonId` leads the primary keys of the stats, folder-level and Hardmode tables and the record table's board index, so all-time rows stay one dense range that seasonal inserts never split and each season appends as its own cold range. The one exception is the record table's unique index, which keeps the user first: EF's foreign-key convention would otherwise add a fourth index on `UserId`, and the per-player read seeks user then season regardless. | Owner, 2026-09-13 ("all the indexes you suggested make sense"); the exception found at build time. |
 
 Explicitly rejected: a separate season calendar from MoM's (two "seasons" on one site); twin tables
 per flagged entity (D10); reading seasonal bests from the journal on every request instead of keeping
@@ -119,7 +122,7 @@ not correctness).
 ### 4.1 The seasonal personal best
 
 The seasonal personal best is a row in the personal-best table with the season's id, keyed
-`(UserId, ChartId, MixId, SeasonId)`, written by the same handler that writes the all-time row
+`(UserId, SeasonId, ChartId, MixId)` (D34), written by the same handler that writes the all-time row
 (`UpdatePhoenixRecordHandler`), with the same best-attempt policy (a pass outranks a break, then score,
 plate as tiebreak) starting from an empty pool at the season start. Judgements and max combo ride
 along as they do all-time.
@@ -170,8 +173,9 @@ At the seal of season *N* (D13), for season *N+1*, over the sealed season's per-
 4. Top 20% → current season rating − 1. Bottom 20% → current season rating + 1. Everything else holds
    its current rating (D7, D8); a chart in a skipped folder holds too; a chart new since the season
    started enters at printed. Bounded to 1–29.
-5. Write one seasonal chart-mix row per Phoenix 2 chart for season *N+1* (§6.2) and the season's
-   "what moved" list (§8.1), each row carrying the delta from printed and the delta this roll.
+5. Write a `ChartSeason` row for season *N+1* for every chart whose rating differs from printed (§6.3,
+   D33) — a chart back at printed gets no row — each carrying the printed level, the move this roll and
+   the hold behind it; the What-moved section (§8.1) reads those rows.
 
 The rule moves a fixed fifth each way whatever the population's shape, which is what "mix it up" asks
 for. The census (§5) is the evidence that "held by nobody" means "played by nobody" on today's data:
@@ -274,54 +278,58 @@ Under D7, S22 moves 21 charts each way per season and S20 27.
 
 ```
 scores.Season                                  -- Seasons vertical
-  Id          uniqueidentifier PK
-  Year        int
-  Quarter     tinyint                          -- 1..4
+  Id          smallint PK                      -- the calendar quarter, YYYYQ: 20264 = Fall 2026 (D11); never identity
   Name        nvarchar(100)                    -- "Fall 2026", MoM's SeasonName
   StartsAt    datetimeoffset
   EndsAt      datetimeoffset
-  SealedAt    datetimeoffset NULL              -- set by the roll (D13)
+  SealedAt    datetimeoffset NULL              -- set by the roll (D13); the seal
   IsBalanced  bit                              -- D3: false for every season running at launch
-  CREATE UNIQUE INDEX UX_Season_Quarter ON scores.Season (Year, Quarter);   -- MoM's anti-runaway
 ```
 
-### 6.2 The discriminator on the live tables (D10, D11)
+The key is the quarter itself, so MoM's anti-runaway unique index over (year, quarter) is the primary
+key here.
 
-`SeasonId uniqueidentifier NOT NULL DEFAULT '00000000-…'` (`Guid.Empty` = all-time) on:
+### 6.2 The discriminator on the live tables (D10, D11, D34)
 
-| Table | Today's key | Becomes | Owner |
+`SeasonId smallint NOT NULL DEFAULT 0` (0 = all-time, D11) on:
+
+| Table | Today | After slice 1a | Owner |
 |---|---|---|---|
-| `scores.PhoenixRecord` | unique `(UserId, ChartId, MixId)` | unique `(UserId, ChartId, MixId, SeasonId)` | ScoreLedger |
-| `scores.PlayerStats` | PK `(UserId, MixId)` | PK `(UserId, MixId, SeasonId)`; + `TotalPumbility float` | PlayerProgress |
-| `scores.PlayerFolderLevel` | PK `(UserId, MixId, ChartType, Level)` | + `SeasonId` | PlayerProgress |
-| `scores.ChartMix` | unique `(ChartId, MixId)` | unique `(ChartId, MixId, SeasonId)`; a seasonal row's `Level` is the season rating | Catalog / Data |
-| `scores.HardmodeChart` | presence rows per (ChartId, MixId) | + `SeasonId`; all-time rows rewritten by the census, season rows written at the roll (D31) | ChartIntelligence |
+| `scores.PhoenixRecord` (1.13M rows) | PK `Id`; unique `(UserId, ChartId, MixId)`; `(MixId, ChartId)` incl. user, score, plate, broken; `(ChartId)`, EF's foreign-key index | unique `(UserId, SeasonId, ChartId, MixId)`; `(SeasonId, MixId, ChartId)` with the same includes; `(ChartId)` unchanged (D34). Both rebuilt indexes named, built online, created before the old ones drop so uniqueness never lapses | ScoreLedger |
+| `scores.PlayerStats` | PK `(UserId, MixId)` | PK `(SeasonId, UserId, MixId)`; + `TotalPumbility float` (empty until 1b) | PlayerProgress |
+| `scores.PlayerFolderLevel` | PK `(UserId, MixId, ChartType, Level)` | PK `(SeasonId, UserId, MixId, ChartType, Level)` | PlayerProgress |
+| `scores.HardmodeChart` | PK `(MixId, ChartId)` | PK `(SeasonId, MixId, ChartId)`; all-time rows rewritten by the census through the filter, season rows written at the roll (D31) | ChartIntelligence |
 
-Every existing row gets `Guid.Empty`. The unique-index changes on `PhoenixRecord` (1.12M rows) are a
-rebuild inside the deploy migration bundle — name both the dropped and the created index explicitly
-(EF collapses two indexes over the same columns into one unless both carry names). Global query filters (D12) on all four
-entities: `SeasonId == Guid.Empty` unless the reader opts in.
+Every existing row gets 0, and the column keeps its default so the previous app version's inserts land
+as all-time during the deploy window. `scores.ChartMix` is not touched (D33). Global query filters
+(D12), named `AllTime`, on all four entities: `SeasonId == 0` unless the reader drops that filter by
+name. `UserDataPurge` drops it always — a purge that ran through the filter would leave every season
+row behind while the coverage test stayed green.
 
 **Not mirrored:** `PhoenixRecordStats` (D19), `UserTitle` / `UserHighestTitle`, `PlayerHistory`,
-`ScoreHighlight`, `PlayerMilestone`, `PlayerHighlight`, every ChartIntelligence table (D18).
+`ScoreHighlight`, `PlayerMilestone`, `PlayerHighlight`, every ChartIntelligence table but Hardmode (D18).
 
-### 6.3 The archive (D14)
+### 6.3 Season ratings (D33)
 
 ```
-scores.SeasonPersonalBest    (SeasonId, UserId, ChartId, MixId) PK; Score, Plate, IsBroken, RecordedDate,
-                             Perfects..Misses, MaxCombo                       -- purge manifest: yes
-scores.SeasonStanding        (SeasonId, UserId, MixId) PK; the PlayerStats columns + SkillRank,
-                             SinglesRank, DoublesRank, CoOpRank, TotalRank      -- purge manifest: yes
-scores.SeasonFolderLevel     (SeasonId, UserId, MixId, ChartType, Level) PK; Size, Played, TierScore
-scores.SeasonChartLevel      (SeasonId, ChartId, MixId) PK; Level; PrintedLevel; Delta (Level − Printed),
-                             MovedThisRoll (−1/0/+1), HoldRank, HoldWeight, LivePlayers, IsHardmode
-                                                                               -- the "what moved" page
-                                                                               -- and the sealed hardmode list
+scores.ChartSeason                             -- Catalog, beside ChartMix
+  SeasonId       smallint          PK, season first
+  MixId          uniqueidentifier  PK
+  ChartId        uniqueidentifier  PK; FK → Chart
+  Level          int               -- the season rating, 1–29
+  PrintedLevel   int               -- ChartMix.Level at the roll, so the marker survives a re-level
+  MovedThisRoll  smallint          -- −1, 0, +1
+  HoldWeight     float NULL        -- the weighted hold that ranked it; NULL when pinned
+  HoldRank       int NULL
+  LivePlayers    int NULL
+  IsPinned       bit               -- set by the admin console (2b), cleared by the next roll
 ```
 
-All four are registered through the Seasons vertical's `IDbModelContribution` and listed in
-`VerticalModelContributions.All()`. The user-keyed three go in the vertical's `UserOwned` manifest
-(D22); `SeasonChartLevel` has no user key.
+Sparse: a row exists only where `Level` differs from `PrintedLevel`, carried forward each season while
+it differs; season one is flat and has none (D3), so the table holds roughly a thousand rows a season
+once balancing runs. Reads overlay it on `ChartMix.Level`; a chart with no row is at printed. Written
+by the roll (slice 4) and the admin pin (2b) through a Catalog command, never by a join from another
+vertical. Registered through Catalog's `IDbModelContribution`; no user key, so no purge manifest.
 
 ### 6.4 The audit (D10)
 
@@ -329,21 +337,30 @@ The production code that touches the four flagged entities, measured 2026-09-12:
 
 | Vertical | Files |
 |---|---|
-| ScoreLedger | `EFPhoenixRecordsRepository` (31 references, the one implementation of the record port), `EFPhoenixRecordStatsRepository`, `EFScorePopulationRepository`, `EFLedgerStatsRepository`, `EFAccountPurgeRepository`, **`PeerScoreStore` (raw `DbDataReader` SQL against `scores.PhoenixRecord` and `scores.ChartMix` — the one production reader the query filter cannot cover)** |
-| PlayerProgress | `EFPlayerStatsRepository`, `EFPlayerFolderLevelRepository`, `EFAccountPurgeRepository` |
-| Catalog | `EFChartRepository` (`ChartMix` → the per-mix chart dictionary; gains a per-season variant and cache key) |
-| Data | `ChartAttemptDbContext`, `DevCatalogWriter` (one raw `DELETE` by user, correct as is) |
+| ScoreLedger | `EFPhoenixRecordsRepository` (31 references, the one implementation of the record port), `EFScorePopulationRepository`, `EFLedgerStatsRepository`, `EFAccountPurgeRepository`, **`PeerScoreStore` (raw `DbDataReader` SQL against `scores.PhoenixRecord` and `scores.ChartMix` — the one production reader the query filter cannot cover)** |
+| PlayerProgress | `EFPlayerStatsRepository`, `EFPlayerFolderLevelRepository`, `EFAccountPurgeRepository`, `EFHardmodeRatingRepository` (five sites on the stats entity, all through the filter; it writes the Hardmode pool totals onto the stats row, which go per season in slice 5) |
+| Catalog | `EFChartRepository` (the per-mix chart dictionary; in 1b gains a per-season variant that overlays `ChartSeason`, D33) |
+| ChartIntelligence | `EFHardmodeChartRepository` (rewrites the all-time list through a filtered query, so it needs no change; the season rows it must not touch are invisible to it) |
+| Data | `ChartAttemptDbContext`; `DevCatalogWriter` (one raw `DELETE` by user, correct as is; its bulk copy sets `SeasonId = 0` by hand, because it builds rows from the live schema and refuses a null before SQL sees the default); `UserDataPurge` (deletes through EF and therefore through the filter — it drops the `AllTime` filter, or a purge would leave every season row behind) |
 
-Eleven files, one raw-SQL reader. Tests seed these tables in a handful of places and keep working
-because the column defaults to all-time. The API v2 and webhook payloads read through the same
-repositories and therefore through the filter; a content test (not just the approval-pinned shape)
-asserts a seasonal row never reaches them.
+Twelve files, one raw-SQL reader, one filter-blind purge. Tests seed these tables in a handful of
+places and keep working because the column defaults to all-time. The API v2 and webhook payloads read
+through the same repositories and therefore through the filter; integration tests seed a season row per
+table and assert every existing reader ignores it (the API approval suite mocks the mediator and cannot
+see a row), and the purge decoy carries a season row so account deletion is proven to cross seasons.
+
+`SeasonRawSqlTests` (§11) keeps production raw SQL honest from here on: a string literal naming one of
+the four tables names `SeasonId`, deletes excepted because a delete by user crosses seasons the way the
+purge does. The exploration workbench's probes (`PeerCacheProbeTests`, `HardmodeCensusProbeTests`,
+`OfficialCensusProbeTests`, `RealSessionShowcaseTests`) read `scores.PhoenixRecord` raw with no season
+predicate — manual-only and outside both the audit and the ratchet, but from 1b on they count rows
+production never sees; add `SeasonId = 0` when one is next used.
 
 ## 7. Jobs, the roll, the backfill
 
 | Job | Cadence | What it does |
 |---|---|---|
-| `roll-season` | Daily 11:15 UTC (after `try-schedule-mom`) | Stateless like MoM's: "does the quarter I stand in have its row?" → create it, `IsBalanced` per D3. Then, for any ended season past its seven days and not yet sealed: compute season ratings for the running season from the ended one (§4.3, only if the ended season `IsBalanced` or launch has passed), copy the ended season's flagged rows into the archive tables, delete them in batches of 10,000, stamp `SealedAt`, publish `SeasonSealedEvent`. Idempotent at every step; a crash mid-way resumes on the next tick. |
+| `roll-season` | Daily 11:15 UTC (after `try-schedule-mom`) | Stateless like MoM's: "does the quarter I stand in have its row?" → create it, `IsBalanced` per D3. Then, for any ended season past its seven days and not yet sealed: compute season ratings for the running season from the ended one (§4.3, only if the ended season `IsBalanced` or launch has passed), stamp `SealedAt` (D13: the rows stay where they are), publish `SeasonSealedEvent`. Idempotent at every step; a crash mid-way resumes on the next tick. |
 | `rollup-season-stats` | Nightly | Recompute every player's season `PlayerStats` row from seasonal bests (0.3 s for everyone today), so a board never depends on an import having fired the pass. |
 
 The import path itself: `HighlightCaptureSaga` runs the rating step in-process today; the season pass
@@ -352,7 +369,7 @@ stranded batches covers it for free, and `RebuildLatestSessions` replays it.
 
 **Backfill (D23)** is an admin button, one-shot and idempotent: for every quarter from Summer 2026 to
 the running one, replay the journal (official imports, in-window, D15) into seasonal personal bests,
-compute the standings, archive the ended quarters and leave the running one live and flat. Season
+compute the standings, seal the ended quarters and leave the running one live and flat. Season
 ratings are not backfilled (D3).
 
 ## 8. Surfaces
@@ -365,11 +382,11 @@ The full table with sizes is in the scoping artifact; this is the shape.
   PUMBILITY (Total · Singles · Doubles · CO-OP), **Hardmode (Singles · Doubles · Combined, D30)**, Folder
   completion, TOTAL PUMBILITY; your standing card;
   player counts on every board (D20); previous / next season; the past-seasons dialog (lazy island,
-  MoM's). Past seasons read the archive tables (D16). Route to be mocked; `/Seasons` is free
+  MoM's). Past seasons read the same tables by season number (D14, D16). Route to be mocked; `/Seasons` is free
   (MoM deliberately has no such route).
 - **What moved this season**: a section of the season page, per folder: the charts that moved up and
   down this roll with jackets, the hold counts behind them and the running total from printed
-  ("22 → 24 · second season up"), from `SeasonChartLevel`. The trust device for the rebalance and the
+  ("22 → 24 · second season up"), from `ChartSeason` (D33). The trust device for the rebalance and the
   page a Discord card links to.
 - **The bubble marker**: `DifficultyBubble` gains an overlay slot (it has none — the bubble is an image,
   or a CSS chip for legacy slots); a corner chevron, ▲ or ▼, stacked once more for a second step and a
@@ -418,8 +435,8 @@ Under D10 every one of these is the same move: a mirrored write with the seasona
 3. **Writes during import** — the session card line and any Discord card are an extra pricing pass, not
    a flipped read.
 4. **The season ratings** — made by the roll, read through the chart reader's flag.
-5. **The seal** — the archive copy and the delete (D13); nothing checks a sealed flag afterwards because
-   there is nothing left to write to.
+5. **The seal** — the `SealedAt` stamp (D13) and the rule behind it: the writer, undo, replay and the
+   backfill refuse a sealed season's number, so nothing is ever written to a season after its seal.
 6. **Carrying the flag** — §4.5; the cache-key builder and its ratchet are the real cost.
 7. **Peer selection** — D6, a rule inside the flag.
 
@@ -453,23 +470,25 @@ here as the checklist for the bug-checking sessions, one line of *what to verify
 
 | Where | Today | At Phoenix 1 scale | Notes |
 |---|---|---|---|
-| Seasonal personal bests, live | ~50k rows per quarter (45,062 pairs measured) | ~250k | Bounded: deleted at the seal. +5–25% of the all-time table at any moment; one index rebuild at the migration. |
-| Archive, per quarter | ~50k bests + ~400 standings + ~16k folder rows + 4.5k chart levels | ~250k + 2k + 80k + 4.5k | Permanent. Roughly 50–250 MB a year with indexes, against a database growing about 29 MB a day today (Azure storage metric, Aug–Sep 2026; 6% of the 50 GB cap used). |
-| `PlayerStats` / folder / chart-mix seasonal rows | hundreds / thousands | thousands | Nothing. |
+| Seasonal personal bests | ~50k rows per quarter (45,062 pairs measured) | ~250k | Permanent, in place (D14): about +4% of the record table per quarter today, each season its own cold range under the season-first indexes (D34). Three index rebuilds once, at the 1a migration. |
+| All season rows together | ~50k bests + ~400 stats + ~16k folder rows + ~1k chart ratings a quarter | ~250k + 2k + 80k + 1k | Roughly 50–250 MB a year with indexes, against a database growing about 29 MB a day today (Azure storage metric, Aug–Sep 2026; 6% of the 50 GB cap used). |
+| `PlayerStats` / folder / `ChartSeason` rows | hundreds / thousands / ~1k | thousands | Nothing. |
 | `PhoenixRecordStats` | not mirrored (D19) | — | The one table where mirroring would have been 1.08M rows of pricing cache. |
 | Compute at import | one extra pricing pass, milliseconds per player | same | Inside the existing failure-isolated chain. |
 | Nightly rollup | 0.3 s for everyone | a few seconds | |
-| The seal | ~50k row copy + batched delete | ~250k | Batches of 10,000 on a hot table; never one transaction. |
+| The seal | one `UPDATE` on the season row | same | Nothing moves (D13). |
 | Journal | unchanged by design | | Seasons should raise import frequency, which raises journal rows: the intended effect, perhaps +10–20%. |
 | Memory caches | a second per-mix chart dictionary (a few MB); read models keyed by view double lazily | | The peer stores are not duplicated (D6). |
 
-The one table that materially grows is the personal-best table plus its archive, and both are bounded
-per season and small beside the journal.
+The one table that materially grows is the personal-best table, by a bounded amount per season and
+small beside the journal.
 
 ## 11. Traps and ratchets that will go red if missed
 
-- `AccountPurgeCoverageTests` / `AccountPurgeTests`: every user-keyed archive table in the `UserOwned`
-  manifest, a decoy row per type; `PlayerStats` seasonal rows purge through the same `UserId`.
+- `AccountPurgeCoverageTests` / `AccountPurgeTests`: the season rows purge through the same `UserId` as
+  the all-time ones — `UserDataPurge` drops the `AllTime` filter, and the decoy carries a season row
+  per discriminated table.
+- `AppHostForwardingTests`: the `Seasons` section is forwarded, or the flag reads empty locally.
 - `ModelContributionRegistrationTests`: the Seasons contribution in `VerticalModelContributions.All()`.
 - `MessageTaxonomyTests` / `BusMessageSerializationTests`: `RollSeasonCommand` (trigger, plain record),
   `SeasonSealedEvent` (past tense, JSON round-trip; no opaque value types without a converter).
@@ -483,6 +502,8 @@ per season and small beside the journal.
 - `PumbilityPrecisionTests`: TOTAL PUMBILITY and the season pools are doubles; rounding at the razor.
 - `CacheKeyTests` (§4.5, §12.1): no hand-spelled key that names a mix, and no `CacheKeys.Mix` key
   whose parts name a player.
+- `SeasonRawSqlTests` (§6.4): production raw SQL naming a discriminated table names `SeasonId`; deletes
+  excepted.
 - Never edit an applied migration; the `PhoenixRecord` index change is a new migration with both index
   names spelled out.
 
@@ -497,17 +518,17 @@ is visible to anyone else.
 | # | Slice | What lands | What you can test | Gate to the next |
 |---|---|---|---|---|
 | 0 | **Cache-key builder and ratchet** — *built 2026-09-12, branch `claude/seasons-feature-scoping-ca5bc5`* | Every hand-spelled memory-cache key moved to `CacheKeys` (`Mix` / `Viewer`, with mix-id overloads for the catalog); `CacheKeyTests` ratchets it with an allowlist that started at 27 files / 32 statements and ended empty; `LedgerCacheKeys` and `OfficialCacheKeys` delegate. No feature code. | Nothing visible. Fast suites green; the allowlist is empty. | Merged. |
-| 1a | **The schema, reading nothing new** | `Seasons` vertical skeleton; `scores.Season`; the `SeasonId` columns (`Guid.Empty` = all-time) on the personal-best, player-stats, folder-level and chart-mix tables, with the key and index changes; the EF global query filters; the reader audit (§6.4) including the peer store's raw SQL; the `Seasons:EnableUI` flag read at startup with the admin bypass (nothing behind it yet). No writer, no season row. | The whole site behaves exactly as before. The API v2 content test and the audit prove no read changed. This is the deploy that carries the index rebuild on the record table, alone, so its cost is measured once and by itself. | A prod smoke after deploy: numbers on the PUMBILITY page, a community board and API v2 unchanged. |
-| 1b | **Tracking begins** | `roll-season` (create the quarter's row; seal an ended one after seven days: archive copy, batched delete, `SealedAt`); the seasonal write in the import chain with the counting rule (D15); the season pass in the rating saga (quiet) writing the season `PlayerStats` row and folder levels; the nightly rollup; the flagged score reader answering seasonal bests; the archive tables and purge manifests; undo/delete replay; the backfill button; the admin season console (live season, roll now, re-price, backfill). | Press **Backfill seasons**: Summer 2026 appears sealed with its archive rows and standings, Fall 2026 appears live; your own seasonal personal bests exist in SQL; an import you make writes a Fall 2026 row beside the all-time one; an undo removes it. Nothing player-facing changes. | Integration tests for the writer, the replay and the seal; one week of imports accumulating in prod while nobody sees them. |
-| 2a | **The view, with nothing flipped** | Picker option and pill, setting + cookie through the mix redirect, the shell seed, the intro dialog (once), the caption on excluded pages, the Account peers disclaimer. Every page still shows all-time numbers. | As admin: switch to Fall 2026, see the pill everywhere including static pages, get the intro once, see the caption on Weekly Charts; a non-admin sees none of it. The cookie survives a new tab; the anonymous default is all-time. | Plumbing proven before any number depends on it. |
+| 1a | **The schema, reading nothing new** — *built 2026-09-13, branch `claude/seasons-slice-1a`* | `Seasons` vertical skeleton; `scores.Season` and `scores.ChartSeason` (D33); the `SeasonId` columns (`smallint`, 0 = all-time, D11) on the personal-best, player-stats, folder-level and Hardmode tables with season-first keys and indexes (D34); the named `AllTime` query filters (D12); the reader audit (§6.4) including the peer store's raw SQL and the filter-blind purge; `CacheKeys.Viewer` taking the season; the `Seasons:EnableUI` flag read at startup with the admin bypass (nothing behind it yet). No writer, no season row. | The whole site behaves exactly as before. The integration filter tests and the audit prove no read changed. This is the deploy that carries the index rebuilds on the record table, online and alone, so their cost is measured once and by itself. | A prod smoke after deploy: numbers on the PUMBILITY page, a community board and API v2 unchanged; then eyeball the peer warm and cohort reads, which now seek the renamed board index with fresh statistics. |
+| 1b | **Tracking begins** | `roll-season` (create the quarter's row; seal an ended one after seven days: `SealedAt`, D13); the seasonal write in the import chain with the counting rule (D15); the season pass in the rating saga (quiet) writing the season `PlayerStats` row and folder levels; the nightly rollup; the flagged score reader answering seasonal bests; undo/delete replay; the backfill button; the admin season console (live season, roll now, re-price, backfill). | Press **Backfill seasons**: Summer 2026 appears sealed with its rows and standings, Fall 2026 appears live; your own seasonal personal bests exist in SQL; an import you make writes a Fall 2026 row beside the all-time one; an undo removes it. Nothing player-facing changes. | Integration tests for the writer, the replay and the seal; one week of imports accumulating in prod while nobody sees them. |
+| 2a | **The view, with nothing flipped** | Picker option and pill, setting + cookie through the mix redirect (parsed through `SeasonId.TryFrom`, so a malformed cookie or query string never throws), the shell seed, the intro dialog (once), the caption on excluded pages, the Account peers disclaimer. Every page still shows all-time numbers. | As admin: switch to Fall 2026, see the pill everywhere including static pages, get the intro once, see the caption on Weekly Charts; a non-admin sees none of it. The cookie survives a new tab; the anonymous default is all-time. | Plumbing proven before any number depends on it. |
 | 2b | **The marker** | `DifficultyBubble` overlay slot, chevron count (▲ / ▲▲ / signed number from ±3), the mix-invariant token pair, the chart page header line; the Discord text form. Ratings are flat, so nothing shows until the admin console pins one chart's season rating by hand. | Pin 4NT S22 to 21 in the console: ▼ appears on every bubble that draws 4NT in seasonal view, at every size, and nowhere in all-time view. Unpin, it vanishes. | Sheet B's ladder holds up in the real components. |
 | 2c | **PUMBILITY section flips** | Frame number and bar, Play (all-time peers, your season scores, season gains), Breakdown's fifty and titles-worth, day-one state; Phoenix 1 page hidden in seasonal view. | Your Fall 2026 number and fifty; Play's gains make sense; peers identical in both views; switching views and reloading never crosses numbers. | The first real surface on the flagged reader; the caches carry the view. |
 | 2d | **Chart page and Chart search flip** | Record card with two numbers, the *This season* scope on the chart board, quick record hidden; search facets, states, min/max, export on seasonal bests; markers on every bubble. | A chart you played this season shows season best over all-time; the season scope lists the right players; the SRP filters on season scores. | Static page reads the view from the request correctly. |
 | 2e | **Player, Community, Rivals flip** | Player page number, tiles, folder completion; Community Rankings on the season stats rows, By Chart and play counts; the Rivals page and head-to-head on season scores both sides, board-only rivals asterisked. | Rankings of your club for Fall 2026; head-to-head against a rival on season scores; a board-only rival still shows the all-time sweep score with the mark. | |
 | 2f | **The rest of the flips** | Tier-list rows (your score and marker; lists stay), the session card line and Discord line, the Season widget, existing widgets via the page context. | An import's session card shows the Fall 2026 gain and rank move; the widget shows your standing. | |
-| 3 | **The season page** | Static boards page: standing card, PUMBILITY (Total · Singles · Doubles · CO-OP), Folder completion, Total PUMBILITY; player counts and the floor; previous / next; the past-seasons dialog; standard rows with highlighting. Behind the flag route-wise (admin only). | Fall 2026 live boards with your rivals and clubmates lit; Summer 2026 sealed from the archive; the CO-OP board's honest count. | Sheet D held; boards read only the season stats rows and archives. |
-| 4 | **Balancing** | The roll computes season ratings from the sealed season's pools (D7, compounding per D8), writes the season chart-mix rows and `SeasonChartLevel`; the What-moved section on the season page; the admin dry run per folder. | Run the dry run against Fall 2026's pools today: 22 up and 22 down in S22, the lists match Sheet D's preview; nothing moves until the real roll. | Must be merged before the first roll you want balanced (the first roll after launch, D3). |
-| 5 | **Hardmode in seasons** | `SeasonId` on `scores.HardmodeChart`; the roll copies that day's list; the six hardmode columns on the season's `PlayerStats` row; the season page's Hardmode tab; the PUMBILITY Hardmode tab in seasonal view with the locked note. | Your season hardmode standing on both tabs agrees; the season list does not change when the census rewrites the all-time one. | Hardmode merged 2026-09-12 (PR #333); no external dependency. |
+| 3 | **The season page** | Static boards page: standing card, PUMBILITY (Total · Singles · Doubles · CO-OP), Folder completion, Total PUMBILITY; player counts and the floor; previous / next; the past-seasons dialog; standard rows with highlighting. Behind the flag route-wise (admin only). | Fall 2026 live boards with your rivals and clubmates lit; Summer 2026 sealed, read by season number; the CO-OP board's honest count. | Sheet D held; boards read only the season stats rows. |
+| 4 | **Balancing** | The roll computes season ratings from the sealed season's pools (D7, compounding per D8), writes the `ChartSeason` rows (D33); the What-moved section on the season page; the admin dry run per folder. | Run the dry run against Fall 2026's pools today: 22 up and 22 down in S22, the lists match Sheet D's preview; nothing moves until the real roll. | Must be merged before the first roll you want balanced (the first roll after launch, D3). |
+| 5 | **Hardmode in seasons** | the roll copies that day's Hardmode list into season rows (the column landed in 1a); the six hardmode columns on the season's `PlayerStats` row; the season page's Hardmode tab; the PUMBILITY Hardmode tab in seasonal view with the locked note. | Your season hardmode standing on both tabs agrees; the season list does not change when the census rewrites the all-time one. | Hardmode merged 2026-09-12 (PR #333); no external dependency. |
 | 6 | **Flip the flag** | `Seasons:EnableUI = true` in production config. No code. Optional the same week: a front-door line and a Discord announcement. | Everyone sees what you have been seeing. | The §10.1 checklist walked once as a bug-check session; the backfill run; slices 1b–3 live for long enough that Fall 2026's boards are real. |
 | 7 | **Fun leaderboards** | Plays, judgements, steps, stage breaks, play days; seasonal and all-time ("since 2026-07-30"); a journal rollup table of its own. | | Slice 2 of the feature proper; can slot anywhere after 3. |
 
@@ -536,7 +557,7 @@ cached object contains:
 |---|---|---|---|
 | `EFPhoenixRecordsRepository.ScoreCache(userId, mix)` (ScoreLedger; evicted in the same file ×4 and in ScoreLedger's `EFAccountPurgeRepository`) | per user × mix | the player's best scores | **yes** — seasonal bests differ |
 | `EFPlayerStatsRepository.CacheKey(mix, userId)` (PlayerProgress) | per user × mix | the `PlayerStats` row | **yes** — the season row is a different row |
-| `EFChartRepository.ChartCacheKey(mixId)` (Catalog) | per mix | the chart dictionary incl. `Chart.Level` | **yes** — a season's chart-mix rows change the level |
+| `EFChartRepository.ChartCacheKey(mixId)` (Catalog) | per mix | the chart dictionary incl. `Chart.Level` | **yes** — a season's `ChartSeason` rows change the level |
 | `PumbilityProjectionCache.Key(userId, mix)` (PlayerProgress; evicted by `PumbilityProjectionCacheConsumer`) | per user × mix | the projection sweep: all-time peers against the viewer's pool | **yes** — the viewer's pool is seasonal |
 | `PumbilityCohortCache` key (PlayerProgress) | mix × pool × band | the peer cohort reading; the viewer's fifty is placed onto it per request, never stored (its own header says so) | no |
 | `BlendedTierListHandler`, `PersonalizedBreakdownHandler`, `ProjectedScoresHandler` (ChartIntelligence) | mix × lens × type × level × user | the personalized lens over the viewer's scores | **yes** for the user-keyed variants; the `"community"` variants stay all-time |
@@ -559,9 +580,9 @@ that produce the same shape today and diverge in slice 1a:
 
 - `CacheKeys.Mix(owner, mix, parts…)` — a key that must never vary by view (community projections,
   catalog facts). This is a declaration, and the ratchet lets it through.
-- `CacheKeys.Viewer(owner, mix, parts…)` — a key whose object depends on the viewer's own scores or
-  on chart levels. In slice 1a it gains the season segment (`Guid.Empty` = all-time) and every caller
-  in the table above passes the view through.
+- `CacheKeys.Viewer(owner, mix, season, parts…)` — a key whose object depends on the viewer's own scores
+  or on chart levels. Since slice 1a it takes the season (`SeasonId.AllTime` = 0) as a required
+  parameter, so no caller can forget it; every caller passes all-time until a seasonal reader exists.
 
 `LedgerCacheKeys` and `OfficialCacheKeys` stay where they are (their vertical-local names are
 load-bearing for the eviction pairs) and build through the shared one. Per-user keys with no mix
@@ -602,29 +623,48 @@ touched: no SQL, no API shape, no partner-visible change.
 
 ### 12.2 Slice 1a — the schema, reading nothing new: where it lands
 
-- **Entities and keys.** `ScoreLedger/Infrastructure/Entities/PhoenixRecordEntity.cs` (unique
-  `(UserId, ChartId, MixId)` → add `SeasonId`), `PlayerProgress/Infrastructure/Entities/PlayerStatsEntity.cs`
-  (PK), `PlayerFolderLevelEntity.cs` (PK), `Data/Persistence/Entities/ChartMixEntity.cs` (unique
-  `(ChartId, MixId)`); registrations in `ScoreLedgerModelContribution`, `PlayerProgressModelContribution`
-  and `ChartAttemptDbContext`. One migration from `ScoreTracker.Data` with the CompositionRoot startup
-  project; both index names spelled out; `SeasonId` default `Guid.Empty` on every existing row.
-- **Global query filters** on the four entities in the same contributions; `IgnoreQueryFilters()` only
-  inside the seasonal read paths that arrive in 1b.
-- **The audit** (§6.4): `PeerScoreStore` gains `AND SeasonId = @allTime` in both raw statements;
-  `DevCatalogWriter`'s delete is already correct. A content test in `Tests.Api` asserts a seeded
-  seasonal row never appears in players/stats, charts, chart scores or a webhook payload.
-- **The Seasons vertical skeleton**: `ScoreTracker.Seasons` with `Contracts/`, `Wiring/` (`AddSeasons()`,
-  `AddSeasonsConsumers()`, `SeasonsModelContribution` registering `scores.Season`), listed in
-  `VerticalModelContributions.All()`; referenced from `Web` and `CompositionRoot`; package allowlist
-  row in `CLAUDE.md`.
-- **The flag**: `Seasons:EnableUI` bound at startup in `Program.cs`, forwarded from the AppHost like
-  the other sections, exposed through a small `ISeasonsUiGate` (true for admins always). Nothing reads
-  it yet.
-- **`CacheKeys.Viewer` takes the view** (§12.1): a season parameter, `Guid.Empty` = all-time, and every
-  `Viewer` caller passes it — the page's view where a request carries one (all-time until the flips in
-  slice 2), and all-time explicitly at the two import-time sites, `RecapSaga`'s top-50 sets and
-  `HighlightCaptureSaga`'s cohort, background consumers having no ambient view (§4.5). Nothing reads a
-  season yet, so every key still carries all-time.
+Built 2026-09-13 on `claude/seasons-slice-1a`, eight commits, docs first.
+
+- **The value type.** `SeasonId` in `ScoreTracker.SharedKernel/ValueTypes` — `short` backed, `AllTime` is 0,
+  `From(year, quarter)` builds the calendar number, `Year` / `Quarter` read it back, JSON converter on the
+  type per the bus rule, `InvalidSeasonIdException` beside `InvalidNameException`. It lives in the kernel
+  because `CacheKeys` takes it.
+- **Entities and keys.** `ScoreLedger/Infrastructure/Entities/PhoenixRecordEntity.cs` gains `SeasonId`; its
+  indexes move from attributes into `ScoreLedgerModelContribution`, named, the two rebuilt ones online.
+  `PlayerProgress/Infrastructure/Entities/PlayerStatsEntity.cs` (PK + `TotalPumbility`) and
+  `PlayerFolderLevelEntity.cs` (PK); `ChartIntelligence/Infrastructure/Entities/HardmodeChartEntity.cs` (PK).
+  New `Catalog/Infrastructure/Entities/ChartSeasonEntity.cs` registered in `CatalogModelContribution`; new
+  `Seasons/Infrastructure/Entities/SeasonEntity.cs` in `SeasonsModelContribution`. One migration from
+  `ScoreTracker.Data` with the CompositionRoot startup project, hand-edited: the record table's new indexes
+  created before the old ones drop, each primary key dropped right before it returns so no table is
+  without one for more than a statement, `SeasonId` default 0 on every existing row. Entities and migration land
+  in one commit, because the migrate call refuses a model with pending changes and every integration and
+  E2E run migrates from scratch.
+- **Global query filters** (D12), named `AllTime`, on the four discriminated entities in their
+  contributions. Nothing drops them yet except the purge.
+- **The audit** (§6.4): `PeerScoreStore` gains `AND pr.SeasonId = 0` in both raw statements;
+  `UserDataPurge.DeleteFor` / `DeleteForNullable` add `IgnoreQueryFilters()`; `DevCatalogWriter`'s raw
+  delete is already correct, but its bulk copy names the season by hand — it builds rows from the live
+  schema and refuses a null before SQL sees the default, which the integration run found; the Hardmode
+  census needs nothing.
+- **The Seasons vertical skeleton**: `ScoreTracker.Seasons` with `Contracts/` (`ISeasonsUiGate`), `Wiring/`
+  (`AddSeasons()`, `SeasonsConfiguration`, `SeasonsModelContribution` registering `scores.Season`; the
+  consumer hook arrives with the roll in 1b), listed in `VerticalModelContributions.All()`, `VerticalBoundaryTests`'
+  markers and `AccountPurgeCoverageTests`' vertical list; referenced from `Web`, `CompositionRoot` and the
+  test projects; package allowlist row in `CLAUDE.md`.
+- **The flag**: `Seasons:EnableUI` bound in `Program.cs`, `Seasons` added to the AppHost's
+  `forwardedSections`, exposed through `ISeasonsUiGate` (true for admins always). Nothing reads it yet.
+- **`CacheKeys.Viewer` takes the season** (§12.1): a required `SeasonId` parameter on both overloads,
+  every caller passing `SeasonId.AllTime` — the page's view where a request carries one (all-time until
+  the flips in slice 2), and all-time explicitly at the two import-time sites, `RecapSaga`'s top-50 sets
+  and `HighlightCaptureSaga`'s cohort, background consumers having no ambient view (§4.5).
+- **Tests.** `Tests`: `SeasonIdTests`, `CacheKeysTests` (the season segment). `Tests.Integration`: the
+  migration applies on every run; `SeasonFilterTests` seed a season row per discriminated table and assert
+  each existing reader returns only the all-time row, once more through the peer store's raw path; the
+  purge decoy carries a season row per discriminated table; the peer store's warm path, the everyone
+  statement, is proven the same way; `SeasonRawSqlTests` ratchets the raw-SQL rule. On the final tree, after main was merged in: 4,720 · 231 · 1,490 · 428 · 93.
+- **Post-deploy.** The migration bundle runs in the gated stage; read its duration, then the smoke of §12
+  row 1a. Nothing to press.
 
 ### 12.3 Slice 1b — tracking begins: where it lands
 
@@ -635,32 +675,29 @@ touched: no SQL, no API shape, no partner-visible change.
   and API paths never reach it.
 - **The season pass.** `HighlightCaptureSaga.Consume` runs `PlayerRatingSaga.CaptureSessionStats` a
   second time with the season, `quiet: true`; the folder-level write in the same saga runs twice the
-  same way. `RebuildLatestSessionsConsumer` and the flush rail replay both.
+  same way. `RebuildLatestSessionsConsumer` and the flush rail replay both. The Hardmode pool totals
+  `EFHardmodeRatingRepository` writes onto the stats row are slice 5's, per season.
 - **The reader.** `IScoreReader` gains a `ScoreScope` parameter (default all-time) on `GetBestScores`,
   `GetChartScores`, `GetPlayerScores` (both overloads), `GetClearCount`, `GetChartScoreAggregates`;
-  `EFPhoenixRecordsRepository` implements it with `IgnoreQueryFilters()` + `SeasonId == scope`.
-  `IChartRepository.GetCharts(mix)` gains the same for the season's chart-mix rows.
+  `EFPhoenixRecordsRepository` implements it by dropping the `AllTime` filter by name and applying `SeasonId == scope`.
+  `IChartRepository.GetCharts(mix)` gains the same, overlaying `ChartSeason` on `ChartMix.Level` (D33).
 - **The roll.** `RecurringJobRunner.PublishRollSeason` + the `Program.cs` registration
   (`roll-season`, `15 11 * * *`) → `RollSeasonCommand` → `SeasonRollSaga` in the Seasons vertical:
   create the quarter's row (MoM's `CurrentQuarter` / `EndOfSeason` arithmetic, copied), seal ended
-  seasons past seven days (archive copy per table, delete in batches of 10,000, `SealedAt`,
-  `SeasonSealedEvent`). Row in `docs/SCHEDULED-JOBS.md`.
+  seasons past seven days (`SealedAt`, `SeasonSealedEvent`; nothing moves, D13). Row in `docs/SCHEDULED-JOBS.md`.
 - **The rollup.** `rollup-season-stats` nightly → every player's season `PlayerStats` row from seasonal
   bests (the same `RecalculateCore` with the season).
-- **The archive.** `SeasonPersonalBest`, `SeasonStanding`, `SeasonFolderLevel`, `SeasonChartLevel`
-  entities in the Seasons vertical, the user-keyed three in its `UserOwned` manifest; rows in
-  `docs/DATABASE-SCHEMA.md`.
 - **Undo and delete.** `SessionUndoReplay` / `SessionReplayBuilder` rebuild the seasonal rows with the
-  window applied; `WipeUserScoresCommand` covers the seasonal rows by the same `UserId`; the account
-  purge covers the archive through the manifest.
+  window applied; `WipeUserScoresCommand` drops the `AllTime` filter so the seasonal rows go by the same `UserId`; the
+  account purge already does (1a).
 - **The backfill.** An admin button publishing `BackfillSeasonsCommand`: per quarter since Summer 2026,
-  replay the journal into seasonal bests, compute standings, archive the ended quarters, leave the
+  replay the journal into seasonal bests, compute standings, seal the ended quarters, leave the
   running one live and flat.
 - **The console.** `Pages/Admin/Seasons.razor`: live and next season, roll now, backfill, re-price a
   season; the rating pin and the dry run arrive with slices 2b and 4.
 - **Tests.** `Tests.Integration`: writer (in-window play, best-list upscore, first-ever importer,
-  manual excluded), replay on undo, seal idempotency and resume, backfill idempotency, purge of the
-  archive through the four-way ratchet. `Tests`: the counting rule as a pure policy, the roll's
+  manual excluded), replay on undo, seal idempotency and resume, backfill idempotency, the writer
+  refusing a sealed season's number. `Tests`: the counting rule as a pure policy, the roll's
   quarter arithmetic, the message taxonomy and JSON round trip of `RollSeasonCommand` /
   `SeasonSealedEvent`.
 
@@ -718,7 +755,7 @@ and What moved carries jackets and the running total.
 
 `CLAUDE.md` (the `Seasons` vertical in the layer table and the vertical list; the global-query-filter
 convention; the cache-key ratchet), `docs/ARCHITECTURE.md` (vertical list, code map, the view beside
-the mix in the shell section), `docs/DATABASE-SCHEMA.md` (`Season`, the four archive tables, the
+the mix in the shell section), `docs/DATABASE-SCHEMA.md` (`Season`, `ChartSeason`, the
 `SeasonId` columns), `docs/SCHEDULED-JOBS.md` (`roll-season`, `rollup-season-stats`),
 `docs/UX-GUIDELINES.md` (the season marker tokens and the caption rule), `docs/DOMAIN.md` (season,
 season rating, seasonal personal best, TOTAL PUMBILITY), the nine `docs/LOCALIZATION-*.md` glossaries

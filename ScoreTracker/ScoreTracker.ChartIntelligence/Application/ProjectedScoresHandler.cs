@@ -42,7 +42,7 @@ internal sealed class ProjectedScoresHandler
         // one folder. Same shape as the blend's cache, for the same reason — peers' play moving
         // under a six-hour-old answer is not something a reader can tell.
         // A Viewer key: a projection is computed from the viewer's own pool.
-        var cacheKey = CacheKeys.Viewer(nameof(ProjectedScoresHandler), request.Mix, request.ChartType, request.Level,
+        var cacheKey = CacheKeys.Viewer(nameof(ProjectedScoresHandler), request.Mix, SeasonId.AllTime, request.ChartType, request.Level,
             userId);
         return await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {

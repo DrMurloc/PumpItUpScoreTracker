@@ -577,7 +577,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         // competitive band, and the chart set at a level is the view's. Highlights read all-time
         // (docs/design/seasons.md D6, D18).
         return await _cache.GetOrCreateAsync(
-            CacheKeys.Viewer(nameof(HighlightCaptureSaga), mix, "Cohort", userId, type, (int)level),
+            CacheKeys.Viewer(nameof(HighlightCaptureSaga), mix, SeasonId.AllTime, "Cohort", userId, type, (int)level),
             async o =>
             {
                 o.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);

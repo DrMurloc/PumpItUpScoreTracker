@@ -170,6 +170,10 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
                 row["UserId"] = localUserId;
                 row["ChartId"] = s.ChartId;
                 row[MixIdColumn] = MixIds.For(s.Mix);
+                // The harness copies all-time bests; a season row is never something to take from
+                // production (docs/design/seasons.md D10). The column has a default, but the bulk copy
+                // builds its rows from the live schema and refuses a null before SQL sees it.
+                row["SeasonId"] = (short)0;
                 row["RecordedDate"] = s.RecordedAt;
                 row["Score"] = (object?)s.Score ?? DBNull.Value;
                 row["LetterGrade"] = (object?)s.LetterGrade ?? DBNull.Value;
