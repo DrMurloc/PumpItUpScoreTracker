@@ -93,6 +93,7 @@ public sealed class ChartV2Dto
         OriginalMix = chart.OriginalMix.ToString();
         Version = chart.Release?.Version;
         ReleaseDate = chart.Release?.ReleaseDate;
+        Debut = chart.Mix == chart.OriginalMix;
         SongName = chart.Song.Name.ToString();
         ImageUrl = chart.Song.ImagePath.ToString();
         Type = chart.Type.ToString();
@@ -122,6 +123,14 @@ public sealed class ChartV2Dto
 
     /// <summary>The day that patch shipped in Korea. Null when the patch is unknown or nobody dated it.</summary>
     public DateOnly? ReleaseDate { get; set; }
+
+    /// <summary>
+    ///     True when this mix is the one the chart first appeared in, so <c>version</c> is the patch
+    ///     that introduced the chart to the game. False on a carry-over, whose <c>version</c> is only
+    ///     the patch it arrived in this mix. Read off <c>originalMix</c>, so it holds even when the
+    ///     version is unknown.
+    /// </summary>
+    public bool Debut { get; set; }
 
     /// <summary>The song's name; songs are keyed by name in <c>/api/v2/songs</c>.</summary>
     public string SongName { get; set; }

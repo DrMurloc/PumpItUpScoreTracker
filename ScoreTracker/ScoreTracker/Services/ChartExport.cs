@@ -150,6 +150,8 @@ public static class ChartExport
         new("Version", false, (r, _) => r.Chart.Release?.Version ?? string.Empty),
         new("ReleaseDate", false,
             (r, _) => r.Chart.Release?.ReleaseDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty),
+        // Whether the exported mix is the chart's debut mix, so the patch above is the one that introduced it.
+        new("Debut", false, (r, _) => r.Chart.Mix == r.DebutMix ? "true" : "false"),
         new("LegacyDifficulty", false, (r, _) => r.Chart.Slot?.GetName() ?? string.Empty),
         new("SongType", false, (r, _) => r.Chart.Song.Type.ToString()),
         new("BPM", false, (r, _) => r.Chart.Song.Bpm?.ToString() ?? string.Empty),

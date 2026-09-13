@@ -140,6 +140,7 @@ public sealed class V2CatalogApiShapeTests
                   "originalMix": "Phoenix",
                   "version": null,
                   "releaseDate": null,
+                  "debut": true,
                   "songName": "Conflict",
                   "imageUrl": "https://piuimages.example.com/conflict.png",
                   "type": "Single",
