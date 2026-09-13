@@ -138,7 +138,7 @@
                 @foreach (var captured in _channels.Select(c => c.Channel))
                 {
                     <button type="button" class="rand-grade-chip @(Settings.Channels.Contains(captured) ? "on" : null)"
-                            @onclick="() => ToggleChannel(captured)">@L[captured.GetName()]</button>
+                            @onclick="() => ToggleChannel(captured)">@L[captured.GetLabelKey()]</button>
                 }
             </div>
             <MudText Typo="Typo.caption" Class="rand-section-hint">@ChannelsHint</MudText>
@@ -703,7 +703,7 @@
             if (Settings.Channels.Count == 0) return L["Nothing picked draws from every channel."];
             if (_channels.All(c => Settings.Channels.Contains(c.Channel)))
                 return L["Every channel picked; the same as nothing picked."];
-            var picks = _channels.Where(c => Settings.Channels.Contains(c.Channel)).Select(c => L[c.Channel.GetName()].Value);
+            var picks = _channels.Where(c => Settings.Channels.Contains(c.Channel)).Select(c => L[c.Channel.GetLabelKey()].Value);
             return L["Draws from {0} only.", string.Join(", ", picks)];
         }
     }

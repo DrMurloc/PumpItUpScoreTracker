@@ -1578,8 +1578,29 @@
   <data name="Changing the URL or the secret clears this." xml:space="preserve">
     <value>URL か秘密の値を変えると確認は解除されます。</value>
   </data>
+  <data name="Channel" xml:space="preserve">
+    <value>チャンネル</value>
+  </data>
   <data name="Channel Name" xml:space="preserve">
 	  <value>チャンネル名</value>
+  </data>
+  <data name="Channel: J-Music" xml:space="preserve">
+    <value>J-Music</value>
+  </data>
+  <data name="Channel: K-Pop" xml:space="preserve">
+    <value>K-Pop</value>
+  </data>
+  <data name="Channel: Original" xml:space="preserve">
+    <value>Original</value>
+  </data>
+  <data name="Channel: World Music" xml:space="preserve">
+    <value>World Music</value>
+  </data>
+  <data name="Channel: Xross" xml:space="preserve">
+    <value>Xross</value>
+  </data>
+  <data name="Channels" xml:space="preserve">
+    <value>チャンネル</value>
   </data>
   <data name="Chart" xml:space="preserve">
 	  <value>譜面</value>
@@ -2688,6 +2709,9 @@
   <data name="Draws from everything through {0}." xml:space="preserve">
     <value>{0}までの全アップデートから抽選します。</value>
   </data>
+  <data name="Draws from {0} only." xml:space="preserve">
+    <value>{0}のみから抽選します。</value>
+  </data>
   <data name="Draws from {0}." xml:space="preserve">
     <value>{0}から抽選します。</value>
   </data>
@@ -2830,6 +2854,9 @@
   <comment>イベントリンク</comment></data>
   <data name="Event mode or premium?" xml:space="preserve">
     <value>イベントモード？プレミアム？</value>
+  </data>
+  <data name="Every channel picked; the same as nothing picked." xml:space="preserve">
+    <value>全チャンネルを選ぶのは何も選ばないのと同じです。</value>
   </data>
   <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
     <value>ピアがPUMBILITYを築いているフォルダ {0} のすべての譜面を、持っているピアが少ない順に示します。あなたのレベル帯でスコアを出すのが最も難しい譜面である可能性が高いです。ピアの半数以上が譜面を持っているフォルダが対象です。</value>
@@ -5680,6 +5707,9 @@
   </data>
   <data name="Nothing on your desk." xml:space="preserve">
     <value>対応するものはありません。</value>
+  </data>
+  <data name="Nothing picked draws from every channel." xml:space="preserve">
+    <value>何も選ばなければ全チャンネルから抽選します。</value>
   </data>
   <data name="Nothing picked draws from every version." xml:space="preserve">
     <value>何も選ばなければ全アップデートから抽選します。</value>

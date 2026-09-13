@@ -1570,8 +1570,29 @@
   <data name="Changing the URL or the secret clears this." xml:space="preserve">
     <value>Cambiar la URL o el secreto anula esto.</value>
   </data>
+  <data name="Channel" xml:space="preserve">
+    <value>Canal</value>
+  </data>
   <data name="Channel Name" xml:space="preserve">
     <value>Nombre del canal</value>
+  </data>
+  <data name="Channel: J-Music" xml:space="preserve">
+    <value>J-Music</value>
+  </data>
+  <data name="Channel: K-Pop" xml:space="preserve">
+    <value>K-Pop</value>
+  </data>
+  <data name="Channel: Original" xml:space="preserve">
+    <value>Original</value>
+  </data>
+  <data name="Channel: World Music" xml:space="preserve">
+    <value>World Music</value>
+  </data>
+  <data name="Channel: Xross" xml:space="preserve">
+    <value>Xross</value>
+  </data>
+  <data name="Channels" xml:space="preserve">
+    <value>Canales</value>
   </data>
   <data name="Chart" xml:space="preserve">
     <value>Chart</value>
@@ -2674,6 +2695,9 @@
   <data name="Draws from everything through {0}." xml:space="preserve">
     <value>Se sortea de todo hasta {0}.</value>
   </data>
+  <data name="Draws from {0} only." xml:space="preserve">
+    <value>Se sortea solo de {0}.</value>
+  </data>
   <data name="Draws from {0}." xml:space="preserve">
     <value>Se sortea de {0}.</value>
   </data>
@@ -2814,6 +2838,9 @@
   </data>
   <data name="Event mode or premium?" xml:space="preserve">
     <value>¿Modo evento o premium?</value>
+  </data>
+  <data name="Every channel picked; the same as nothing picked." xml:space="preserve">
+    <value>Con todos los canales marcados es lo mismo que sin nada marcado.</value>
   </data>
   <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
     <value>Cada chart de {0}, las carpetas de las que tus pares sacan su PUMBILITY, con los que menos de ellos guardan primero. Probablemente sean los charts más difíciles de puntuar de tu rango de niveles. Una carpeta cuenta cuando al menos la mitad de tus pares guarda un chart de ella.</value>
@@ -5649,6 +5676,9 @@
   </data>
   <data name="Nothing on your desk." xml:space="preserve">
     <value>No hay nada pendiente.</value>
+  </data>
+  <data name="Nothing picked draws from every channel." xml:space="preserve">
+    <value>Sin nada marcado se sortea de todos los canales.</value>
   </data>
   <data name="Nothing picked draws from every version." xml:space="preserve">
     <value>Sin nada marcado se sortea de todos los parches.</value>

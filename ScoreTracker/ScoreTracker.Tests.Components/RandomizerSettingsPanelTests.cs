@@ -314,14 +314,14 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
         cut.WaitForAssertion(() => Assert.Equal(4, cut.FindAll(".rand-channel-chips .rand-grade-chip").Count));
         Assert.Contains("Nothing picked draws from every channel.", cut.Markup);
         // The mix's own set, in the game's order, by display name.
-        Assert.Equal(new[] { "Original", "K-Pop", "World Music", "Xross" },
+        Assert.Equal(new[] { "Channel: Original", "Channel: K-Pop", "Channel: World Music", "Channel: Xross" },
             cut.FindAll(".rand-channel-chips .rand-grade-chip").Select(c => c.TextContent.Trim()));
 
-        await cut.FindAll(".rand-channel-chips .rand-grade-chip").Single(c => c.TextContent.Trim() == "K-Pop")
+        await cut.FindAll(".rand-channel-chips .rand-grade-chip").Single(c => c.TextContent.Trim() == "Channel: K-Pop")
             .ClickAsync(new MouseEventArgs());
 
         Assert.Equal(new[] { Channel.KPop }, settings.Channels);
-        cut.WaitForAssertion(() => Assert.Contains("Draws from K-Pop only.", cut.Markup));
+        cut.WaitForAssertion(() => Assert.Contains("Draws from Channel: K-Pop only.", cut.Markup));
     }
 
     [Fact]

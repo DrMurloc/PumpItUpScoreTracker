@@ -1570,8 +1570,29 @@
   <data name="Changing the URL or the secret clears this." xml:space="preserve">
     <value>Mudar a URL ou o segredo cancela isto.</value>
   </data>
+  <data name="Channel" xml:space="preserve">
+    <value>Canal</value>
+  </data>
   <data name="Channel Name" xml:space="preserve">
     <value>Nome do canal</value>
+  </data>
+  <data name="Channel: J-Music" xml:space="preserve">
+    <value>J-Music</value>
+  </data>
+  <data name="Channel: K-Pop" xml:space="preserve">
+    <value>K-Pop</value>
+  </data>
+  <data name="Channel: Original" xml:space="preserve">
+    <value>Original</value>
+  </data>
+  <data name="Channel: World Music" xml:space="preserve">
+    <value>World Music</value>
+  </data>
+  <data name="Channel: Xross" xml:space="preserve">
+    <value>Xross</value>
+  </data>
+  <data name="Channels" xml:space="preserve">
+    <value>Canais</value>
   </data>
   <data name="Chart" xml:space="preserve">
     <value>chart</value>
@@ -2674,6 +2695,9 @@
   <data name="Draws from everything through {0}." xml:space="preserve">
     <value>O sorteio usa tudo até {0}.</value>
   </data>
+  <data name="Draws from {0} only." xml:space="preserve">
+    <value>O sorteio usa só {0}.</value>
+  </data>
   <data name="Draws from {0}." xml:space="preserve">
     <value>O sorteio usa {0}.</value>
   </data>
@@ -2814,6 +2838,9 @@
   </data>
   <data name="Event mode or premium?" xml:space="preserve">
     <value>Modo evento ou premium?</value>
+  </data>
+  <data name="Every channel picked; the same as nothing picked." xml:space="preserve">
+    <value>Com todos os canais marcados é o mesmo que sem nada marcado.</value>
   </data>
   <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
     <value>Cada chart de {0}, as pastas de onde seus pares tiram a PUMBILITY deles, começando pelos que menos deles mantêm. Provavelmente são os charts mais difíceis de pontuar na sua faixa de níveis. Uma pasta conta quando pelo menos metade dos seus pares mantém um chart dela.</value>
@@ -5649,6 +5676,9 @@
   </data>
   <data name="Nothing on your desk." xml:space="preserve">
     <value>Nada pendente.</value>
+  </data>
+  <data name="Nothing picked draws from every channel." xml:space="preserve">
+    <value>Sem nada marcado, o sorteio usa todos os canais.</value>
   </data>
   <data name="Nothing picked draws from every version." xml:space="preserve">
     <value>Sem nada marcado, o sorteio usa todas as atualizações.</value>

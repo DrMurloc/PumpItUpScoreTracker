@@ -352,7 +352,7 @@ else
                             var captured = channel;
                             <span class="srp-facet-chip srp-channel-chip @(_channels.Contains(captured) ? "srp-facet-chip-on" : "")"
                                   role="button" tabindex="0" @onclick="() => ToggleChannel(captured)">
-                                @L[captured.GetName()]@CountSuffix(_facetCounts?.Channels, captured)
+                                @L[captured.GetLabelKey()]@CountSuffix(_facetCounts?.Channels, captured)
                             </span>
                         }
                     </div>
@@ -1384,7 +1384,7 @@ else
                         await ApplyChange();
                     }));
             AddListChips(chips, _songTypes, t => L[SongTypeName(t)].Value);
-            AddListChips(chips, _channels, c => L[c.GetName()].Value);
+            AddListChips(chips, _channels, c => L[c.GetLabelKey()].Value);
             AddListChips(chips, _artists, a => a);
             AddListChips(chips, _stepArtists, a => $"{L["Step Artist"]}: {a}");
             if (_bpmMin != null || _bpmMax != null)

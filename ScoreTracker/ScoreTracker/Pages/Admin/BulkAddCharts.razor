@@ -109,7 +109,7 @@
                                 </tr>
                                 <tr>
                                     <td>@L["Channel"]</td>
-                                    <td>@(song.Channel is { } channel ? L[channel.GetName()].Value : "—")</td>
+                                    <td>@(song.Channel is { } channel ? L[channel.GetLabelKey()].Value : "—")</td>
                                 </tr>
                                 <tr>
                                     <td>@L["BPM"]</td>

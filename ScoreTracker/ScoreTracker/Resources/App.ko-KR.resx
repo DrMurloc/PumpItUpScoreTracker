@@ -1570,8 +1570,29 @@
   <data name="Changing the URL or the secret clears this." xml:space="preserve">
     <value>URL이나 비밀 값을 바꾸면 확인이 해제됩니다.</value>
   </data>
+  <data name="Channel" xml:space="preserve">
+    <value>채널</value>
+  </data>
   <data name="Channel Name" xml:space="preserve">
     <value>채널 이름</value>
+  </data>
+  <data name="Channel: J-Music" xml:space="preserve">
+    <value>J-Music</value>
+  </data>
+  <data name="Channel: K-Pop" xml:space="preserve">
+    <value>K-Pop</value>
+  </data>
+  <data name="Channel: Original" xml:space="preserve">
+    <value>Original</value>
+  </data>
+  <data name="Channel: World Music" xml:space="preserve">
+    <value>World Music</value>
+  </data>
+  <data name="Channel: Xross" xml:space="preserve">
+    <value>Xross</value>
+  </data>
+  <data name="Channels" xml:space="preserve">
+    <value>채널</value>
   </data>
   <data name="Chart" xml:space="preserve">
     <value>채보</value>
@@ -2674,6 +2695,9 @@
   <data name="Draws from everything through {0}." xml:space="preserve">
     <value>{0}까지의 모든 버전에서 뽑습니다.</value>
   </data>
+  <data name="Draws from {0} only." xml:space="preserve">
+    <value>{0}에서만 뽑습니다.</value>
+  </data>
   <data name="Draws from {0}." xml:space="preserve">
     <value>{0}에서 뽑습니다.</value>
   </data>
@@ -2814,6 +2838,9 @@
   </data>
   <data name="Event mode or premium?" xml:space="preserve">
     <value>이벤트 모드? 프리미엄?</value>
+  </data>
+  <data name="Every channel picked; the same as nothing picked." xml:space="preserve">
+    <value>모든 채널을 선택하면 아무것도 선택하지 않은 것과 같습니다.</value>
   </data>
   <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
     <value>동료들이 PUMBILITY를 쌓는 폴더 {0}의 모든 채보를, 보유한 동료가 적은 순으로 보여줍니다. 내 레벨대에서 점수를 내기 가장 어려운 채보일 가능성이 높습니다. 동료의 절반 이상이 채보를 보유한 폴더가 포함됩니다.</value>
@@ -5649,6 +5676,9 @@
   </data>
   <data name="Nothing on your desk." xml:space="preserve">
     <value>처리할 항목이 없습니다.</value>
+  </data>
+  <data name="Nothing picked draws from every channel." xml:space="preserve">
+    <value>아무것도 선택하지 않으면 모든 채널에서 뽑습니다.</value>
   </data>
   <data name="Nothing picked draws from every version." xml:space="preserve">
     <value>아무것도 선택하지 않으면 모든 버전에서 뽑습니다.</value>

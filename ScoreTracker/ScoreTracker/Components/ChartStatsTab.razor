@@ -47,7 +47,7 @@
         }
         @if (Chart.Song.Channel is { } channel)
         {
-            <div class="chart-details-meta-channel"><span class="chart-details-meta-label">@L["Channel"]</span><span>@L[channel.GetName()]</span></div>
+            <div class="chart-details-meta-channel"><span class="chart-details-meta-label">@L["Channel"]</span><span>@L[channel.GetLabelKey()]</span></div>
         }
         @* Two separate facts, because they answer different questions: how played this
            chart is across the whole mix, and how played it is against its own folder —

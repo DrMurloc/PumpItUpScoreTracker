@@ -34,6 +34,16 @@ public static class ChannelHelperMethods
     }
 
     /// <summary>
+    ///     The localization key the display name lives under: <c>Channel: K-Pop</c>. Keyed apart
+    ///     from the bare name because <c>Original</c> is already a key that means "the original
+    ///     text" of a translated comment — a collision is a keying problem, never a copy one.
+    /// </summary>
+    public static string GetLabelKey(this Channel channel)
+    {
+        return $"Channel: {channel.GetName()}";
+    }
+
+    /// <summary>
     ///     The enum name, case-insensitively — what the API's <c>channel</c> parameter and the
     ///     bulk-add JSON's <c>channel</c> field take. False for anything else, a display name
     ///     included: <c>K-Pop</c> is not a token.

@@ -25,6 +25,13 @@ public sealed class ChannelTests
         Assert.Equal(expected, channel.GetName());
     }
 
+    [Fact]
+    public void TheLabelKeyIsPrefixedSoOriginalNeverCollidesWithTheTranslationKey()
+    {
+        Assert.Equal("Channel: K-Pop", Channel.KPop.GetLabelKey());
+        Assert.Equal("Channel: Original", Channel.Original.GetLabelKey());
+    }
+
     [Theory]
     [InlineData("KPop", Channel.KPop)]
     [InlineData("kpop", Channel.KPop)]

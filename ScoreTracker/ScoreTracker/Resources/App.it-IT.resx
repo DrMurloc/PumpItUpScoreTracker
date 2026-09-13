@@ -1578,8 +1578,29 @@
   <data name="Changing the URL or the secret clears this." xml:space="preserve">
     <value>Cambiare l'URL o il segreto annulla questo.</value>
   </data>
+  <data name="Channel" xml:space="preserve">
+    <value>Canale</value>
+  </data>
   <data name="Channel Name" xml:space="preserve">
     <value>Nome del canale</value>
+  </data>
+  <data name="Channel: J-Music" xml:space="preserve">
+    <value>J-Music</value>
+  </data>
+  <data name="Channel: K-Pop" xml:space="preserve">
+    <value>K-Pop</value>
+  </data>
+  <data name="Channel: Original" xml:space="preserve">
+    <value>Original</value>
+  </data>
+  <data name="Channel: World Music" xml:space="preserve">
+    <value>World Music</value>
+  </data>
+  <data name="Channel: Xross" xml:space="preserve">
+    <value>Xross</value>
+  </data>
+  <data name="Channels" xml:space="preserve">
+    <value>Canali</value>
   </data>
   <data name="Chart" xml:space="preserve">
     <value>Chart</value>
@@ -2688,6 +2709,9 @@
   <data name="Draws from everything through {0}." xml:space="preserve">
     <value>Si pesca da tutto fino a {0}.</value>
   </data>
+  <data name="Draws from {0} only." xml:space="preserve">
+    <value>Si pesca solo da {0}.</value>
+  </data>
   <data name="Draws from {0}." xml:space="preserve">
     <value>Si pesca da {0}.</value>
   </data>
@@ -2830,6 +2854,9 @@
   </data>
   <data name="Event mode or premium?" xml:space="preserve">
     <value>Modalità evento o premium?</value>
+  </data>
+  <data name="Every channel picked; the same as nothing picked." xml:space="preserve">
+    <value>Con tutti i canali selezionati è come senza selezione.</value>
   </data>
   <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
     <value>Ogni chart di {0}, le cartelle da cui i tuoi pari costruiscono la loro PUMBILITY, a partire da quelle che meno di loro tengono. Probabilmente sono le chart su cui è più difficile fare punteggio nella tua fascia di livelli. Una cartella conta quando almeno metà dei tuoi pari ne tiene una chart.</value>
@@ -5680,6 +5707,9 @@
   </data>
   <data name="Nothing on your desk." xml:space="preserve">
     <value>Niente da esaminare.</value>
+  </data>
+  <data name="Nothing picked draws from every channel." xml:space="preserve">
+    <value>Senza selezione si pesca da tutti i canali.</value>
   </data>
   <data name="Nothing picked draws from every version." xml:space="preserve">
     <value>Senza selezione si pesca da tutte le versioni.</value>

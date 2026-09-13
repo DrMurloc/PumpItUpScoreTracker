@@ -788,8 +788,8 @@ public sealed class ChartsPageTests : ComponentTestBase
         cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".srp-channel-chip")));
 
         var chips = cut.FindAll(".srp-channel-chip").Select(c => c.TextContent.Trim()).ToArray();
-        Assert.StartsWith("Original", chips[0]);
-        Assert.StartsWith("K-Pop", chips[1]);
+        Assert.StartsWith("Channel: Original", chips[0]);
+        Assert.StartsWith("Channel: K-Pop", chips[1]);
         Assert.Contains("219", chips[1]);
         Assert.Equal(4, chips.Length);
 
