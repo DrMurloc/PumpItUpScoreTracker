@@ -285,4 +285,59 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
 
         Assert.Empty(settings.Versions);
     }
+
+    // ── The channels a draw may pull from (docs/design/song-channels.md §5) ────────────────
+
+    private void SeedChannels(params Channel[] channels)
+    {
+        Mediator.Setup(m => m.Send(It.IsAny<GetMixChannelsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(channels.Select(c => new MixChannelRecord(MixEnum.Phoenix, c, 1, 1)).ToArray());
+    }
+
+    [Fact]
+    public void ChannelsRowHidesUntilSomeSongCarriesAChannel()
+    {
+        SeedChannels();
+
+        var cut = Render(new RandomSettings());
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".rand-song-chips")));
+        Assert.Empty(cut.FindAll(".rand-channel-chips"));
+    }
+
+    [Fact]
+    public async Task ChannelChipsWriteTheExactSetIntoTheSettingsAndTheHintSaysSo()
+    {
+        SeedChannels(Channel.Original, Channel.KPop, Channel.WorldMusic, Channel.Xross);
+        var settings = new RandomSettings();
+        var cut = Render(settings);
+        cut.WaitForAssertion(() => Assert.Equal(4, cut.FindAll(".rand-channel-chips .rand-grade-chip").Count));
+        Assert.Contains("Nothing picked draws from every channel.", cut.Markup);
+        // The mix's own set, in the game's order, by display name.
+        Assert.Equal(new[] { "Original", "K-Pop", "World Music", "Xross" },
+            cut.FindAll(".rand-channel-chips .rand-grade-chip").Select(c => c.TextContent.Trim()));
+
+        await cut.FindAll(".rand-channel-chips .rand-grade-chip").Single(c => c.TextContent.Trim() == "K-Pop")
+            .ClickAsync(new MouseEventArgs());
+
+        Assert.Equal(new[] { Channel.KPop }, settings.Channels);
+        cut.WaitForAssertion(() => Assert.Contains("Draws from K-Pop only.", cut.Markup));
+    }
+
+    [Fact]
+    public async Task AllAndClearSetAndEmptyTheChannelPicks()
+    {
+        SeedChannels(Channel.Original, Channel.KPop);
+        var settings = new RandomSettings();
+        var cut = Render(settings);
+        cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll(".rand-channel-chips .rand-grade-chip").Count));
+
+        await cut.FindAll(".rand-channel-chips").Single().ParentElement!
+            .QuerySelectorAll(".rand-through-btn").First(b => b.TextContent.Trim() == "All").ClickAsync(new MouseEventArgs());
+        Assert.Equal(new[] { Channel.Original, Channel.KPop }, settings.Channels.OrderBy(c => c));
+
+        await cut.FindAll(".rand-channel-chips").Single().ParentElement!
+            .QuerySelectorAll(".rand-through-btn").First(b => b.TextContent.Trim() == "Clear").ClickAsync(new MouseEventArgs());
+        Assert.Empty(settings.Channels);
+    }
 }
