@@ -157,7 +157,7 @@ namespace ScoreTracker.PlayerProgress.Application
         // what the seasonal view swaps.
         private static string Key(Guid userId, MixEnum mix)
         {
-            return CacheKeys.Viewer(nameof(PumbilityProjectionCache), mix, userId);
+            return CacheKeys.Viewer(nameof(PumbilityProjectionCache), mix, SeasonId.AllTime, userId);
         }
     }
 }

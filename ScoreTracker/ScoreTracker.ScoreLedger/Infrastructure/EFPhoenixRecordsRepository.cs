@@ -321,11 +321,11 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
 
     // Internal so the purge repository evicts under the identical key rather than
     // reconstructing the format and drifting from it.
-    // A Viewer key: a player's own bests are exactly what the seasonal view swaps, so the season's
-    // segment lands here without this file knowing (CLAUDE.md "Cache keys").
+    // A Viewer key: a player's own bests are exactly what the seasonal view swaps. All-time until
+    // the reader takes a season (CLAUDE.md "Cache keys").
     internal static string ScoreCache(Guid userId, MixEnum mix)
     {
-        return CacheKeys.Viewer(nameof(EFPhoenixRecordsRepository), mix, userId);
+        return CacheKeys.Viewer(nameof(EFPhoenixRecordsRepository), mix, SeasonId.AllTime, userId);
     }
 
     public EFPhoenixRecordsRepository(IDbContextFactory<ChartAttemptDbContext> factory,

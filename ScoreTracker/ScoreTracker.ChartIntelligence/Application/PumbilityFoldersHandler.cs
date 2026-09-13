@@ -6,6 +6,7 @@ using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Caching;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.ChartIntelligence.Application;
@@ -36,7 +37,7 @@ internal sealed class PumbilityFoldersHandler
         // own pool (Viewer).
         var cacheKey = userId == null
             ? CacheKeys.Mix(nameof(PumbilityFoldersHandler), request.Mix, "community")
-            : CacheKeys.Viewer(nameof(PumbilityFoldersHandler), request.Mix, userId);
+            : CacheKeys.Viewer(nameof(PumbilityFoldersHandler), request.Mix, SeasonId.AllTime, userId);
         if (_cache.TryGetValue<IReadOnlyList<PumbilityFolderRecord>>(cacheKey, out var cached) &&
             cached is { Count: > 0 })
             return cached;

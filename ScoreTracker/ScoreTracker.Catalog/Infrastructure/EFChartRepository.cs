@@ -484,10 +484,10 @@ internal sealed class EFChartRepository : IChartRepository
         }))!;
     }
 
-    // A Viewer key: the dictionary carries Chart.Level, and a season's chart-mix rows change it.
+    // A Viewer key: the dictionary carries Chart.Level, and a season's ChartSeason rows change it.
     private static string ChartCacheKey(Guid mixId)
     {
-        return CacheKeys.Viewer(nameof(EFChartRepository), mixId, nameof(GetAllCharts));
+        return CacheKeys.Viewer(nameof(EFChartRepository), mixId, SeasonId.AllTime, nameof(GetAllCharts));
     }
 
     private const string MixLevelsCacheKey = $"{nameof(EFChartRepository)}__ChartMixLevels";

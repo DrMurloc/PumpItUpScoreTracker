@@ -6,6 +6,7 @@ using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Caching;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.ChartIntelligence.Application;
 
@@ -44,7 +45,7 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
         var cacheKey = userId == null
             ? CacheKeys.Mix(nameof(BlendedTierListHandler), request.Mix, lens, request.ChartType, request.Level,
                 "community")
-            : CacheKeys.Viewer(nameof(BlendedTierListHandler), request.Mix, lens, request.ChartType, request.Level,
+            : CacheKeys.Viewer(nameof(BlendedTierListHandler), request.Mix, SeasonId.AllTime, lens, request.ChartType, request.Level,
                 userId);
         return await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {

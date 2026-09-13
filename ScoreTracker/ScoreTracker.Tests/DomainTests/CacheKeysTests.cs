@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Threading;
 using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.ValueTypes;
 using Xunit;
 
 namespace ScoreTracker.Tests.DomainTests;
@@ -24,11 +25,23 @@ public sealed class CacheKeysTests
     {
         var userId = Guid.Parse("E38954C4-B1B1-418A-93F6-C4B25C98B713");
 
-        var viewer = CacheKeys.Viewer("EFPlayerStatsRepository", MixEnum.Phoenix2, userId);
+        var viewer = CacheKeys.Viewer("EFPlayerStatsRepository", MixEnum.Phoenix2, SeasonId.AllTime, userId);
         var mix = CacheKeys.Mix("EFPlayerStatsRepository", MixEnum.Phoenix2, userId);
 
-        Assert.Equal("EFPlayerStatsRepository__viewer__Phoenix2__e38954c4-b1b1-418a-93f6-c4b25c98b713", viewer);
+        Assert.Equal("EFPlayerStatsRepository__viewer__Phoenix2__0__e38954c4-b1b1-418a-93f6-c4b25c98b713", viewer);
         Assert.NotEqual(mix, viewer);
+    }
+
+    [Fact]
+    public void ASeasonIsItsOwnSegmentSoASeasonalReadNeverServesAnAllTimeEntry()
+    {
+        var userId = Guid.Parse("E38954C4-B1B1-418A-93F6-C4B25C98B713");
+
+        var allTime = CacheKeys.Viewer("EFPlayerStatsRepository", MixEnum.Phoenix2, SeasonId.AllTime, userId);
+        var fall = CacheKeys.Viewer("EFPlayerStatsRepository", MixEnum.Phoenix2, SeasonId.From(2026, 4), userId);
+
+        Assert.Equal("EFPlayerStatsRepository__viewer__Phoenix2__20264__e38954c4-b1b1-418a-93f6-c4b25c98b713", fall);
+        Assert.NotEqual(allTime, fall);
     }
 
     [Fact]
@@ -62,8 +75,8 @@ public sealed class CacheKeysTests
     {
         var mixId = Guid.Parse("A9B7D3C1-52E8-4F06-9B1A-2F8C33E01948");
 
-        Assert.Equal("EFChartRepository__viewer__a9b7d3c1-52e8-4f06-9b1a-2f8c33e01948__charts",
-            CacheKeys.Viewer("EFChartRepository", mixId, "charts"));
+        Assert.Equal("EFChartRepository__viewer__a9b7d3c1-52e8-4f06-9b1a-2f8c33e01948__0__charts",
+            CacheKeys.Viewer("EFChartRepository", mixId, SeasonId.AllTime, "charts"));
         Assert.Equal("EFChartRepository__a9b7d3c1-52e8-4f06-9b1a-2f8c33e01948__levels",
             CacheKeys.Mix("EFChartRepository", mixId, "levels"));
     }
