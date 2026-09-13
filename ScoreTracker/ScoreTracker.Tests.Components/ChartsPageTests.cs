@@ -223,7 +223,7 @@ public sealed class ChartsPageTests : ComponentTestBase
 
     /// <summary>Every long-tail filter key, in pick-list order.</summary>
     private const string EveryFilterKey =
-        "songType,artist,stepArtist,bpm,nps,noteCount,duration,skills,debutMix,version,legacySlot," +
+        "songType,channel,artist,stepArtist,bpm,nps,noteCount,duration,skills,debutMix,version,legacySlot," +
         "passDifficulty,scoreDifficulty,communityVote,passRate,scoringLevel,lists," +
         "phoenixGrade,phoenixPlate,phoenixScore,legacyGrade,recorded";
 
@@ -751,5 +751,80 @@ public sealed class ChartsPageTests : ComponentTestBase
         cut.WaitForAssertion(() => Assert.Contains("Debut mix", cut.Markup));
 
         Assert.Empty(cut.FindAll(".srp-through-select"));
+    }
+
+    // ── The Channel facet (docs/design/song-channels.md §5) ──────────────────────────────
+
+    private void SeedChannels(params Channel[] channels)
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetMixChannelsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(channels.Select(c => new MixChannelRecord(MixEnum.Phoenix, c, 1, 1)).ToArray());
+    }
+
+    private void SeedChannelCounts(params (Channel Channel, int Count)[] counts)
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<SearchChartsQuery>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<ChartSearchResultPage>, CancellationToken>((q, _) => _lastQuery = (SearchChartsQuery)q)
+            .ReturnsAsync(() => new ChartSearchResultPage(new[] { MakeResult("Nostalgia", 21) }, 1,
+                new ChartSearchFacetCounts(
+                    new Dictionary<ChartType, int>(), new Dictionary<SongType, int>(), new Dictionary<string, int>(),
+                    new Dictionary<TierListCategory, int>(), new Dictionary<TierListCategory, int>(),
+                    new Dictionary<TierListCategory, int>(), new Dictionary<LegacySlot, int>(),
+                    new Dictionary<MixEnum, int>(), new Dictionary<ChartScoreStateFilter, int>(),
+                    new Dictionary<int, int>(),
+                    Channels: counts.ToDictionary(c => c.Channel, c => c.Count))));
+    }
+
+    [Fact]
+    public async Task ChannelChipsCarryCountsInTheGamesOrderAndAPickNarrowsTheQuery()
+    {
+        ShowEveryFilter();
+        SeedChannels(Channel.Original, Channel.KPop, Channel.WorldMusic, Channel.Xross);
+        SeedChannelCounts((Channel.Original, 2997), (Channel.KPop, 219), (Channel.WorldMusic, 1088), (Channel.Xross, 371));
+
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".srp-card")));
+        await cut.Find("button[aria-label=Filters]").ClickAsync(new MouseEventArgs());
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".srp-channel-chip")));
+
+        var chips = cut.FindAll(".srp-channel-chip").Select(c => c.TextContent.Trim()).ToArray();
+        Assert.StartsWith("Original", chips[0]);
+        Assert.StartsWith("K-Pop", chips[1]);
+        Assert.Contains("219", chips[1]);
+        Assert.Equal(4, chips.Length);
+
+        await cut.FindAll(".srp-channel-chip")[1].ClickAsync(new MouseEventArgs());
+
+        cut.WaitForAssertion(() => Assert.Equal(new[] { Channel.KPop }, _lastQuery!.Channels));
+        Assert.Contains(cut.FindAll(".srp-chip"), c => c.TextContent.Contains("K-Pop"));
+    }
+
+    [Fact]
+    public async Task ChannelFacetHidesOnAMixWhoseSongsCarryNoChannel()
+    {
+        ShowEveryFilter();
+        SeedChannels();
+        SeedChannelCounts();
+
+        var cut = RenderComponent<Charts>();
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".srp-card")));
+        await cut.Find("button[aria-label=Filters]").ClickAsync(new MouseEventArgs());
+        cut.WaitForAssertion(() => Assert.Contains("Debut mix", cut.Markup));
+
+        Assert.Empty(cut.FindAll(".srp-channel-chip"));
+        Assert.DoesNotContain(cut.FindAll(".srp-facet-head"), h => h.TextContent.Trim() == "Channel");
+    }
+
+    [Fact]
+    public void AChannelInTheUrlFiltersTheQueryAndReadsAsAChip()
+    {
+        SeedChannels(Channel.Original, Channel.KPop, Channel.Xross);
+
+        Services.GetRequiredService<NavigationManager>().NavigateTo("/Charts?Channel=KPop,Xross");
+        var cut = RenderComponent<Charts>();
+
+        cut.WaitForAssertion(() => Assert.Equal(new[] { Channel.KPop, Channel.Xross }, _lastQuery!.Channels));
+        Assert.Contains("K-Pop", cut.Markup);
+        Assert.Contains("Xross", cut.Markup);
     }
 }
