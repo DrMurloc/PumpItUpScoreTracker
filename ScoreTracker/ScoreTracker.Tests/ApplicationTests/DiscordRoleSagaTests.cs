@@ -23,7 +23,7 @@ using Xunit;
 namespace ScoreTracker.Tests.ApplicationTests;
 
 /// <summary>
-///     The four facts, one at a time. Every test starts from a member who qualifies on all of them
+///     The five facts, one at a time. Every test starts from a member who qualifies on all of them
 ///     and knocks exactly one down, because the rule is an AND and a bug in it looks like one
 ///     conjunct quietly not being read.
 /// </summary>
@@ -62,6 +62,7 @@ public sealed class DiscordRoleSagaTests
             .ReturnsAsync(Array.Empty<CommunityDiscordGrantRecord>());
         _roles.Setup(r => r.GetGrantsForUser(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<CommunityDiscordGrantRecord>());
+        OptedOut(false);
 
         _bot.Setup(b => b.GetGuildRoles(Guild, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
@@ -123,6 +124,11 @@ public sealed class DiscordRoleSagaTests
         _bot.Setup(b => b.GetGuildMemberRoles(Guild, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<ulong, IReadOnlyCollection<ulong>> { [Snowflake] = roleIds });
     }
+
+    /// <summary>The fifth fact: the player's own say-so (D22).</summary>
+    private void OptedOut(bool optedOut = true) =>
+        _roles.Setup(r => r.GetOptedOutUsers(CommunityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(optedOut ? new HashSet<Guid> { UserId } : new HashSet<Guid>());
 
     private void NotInTheServer()
     {
@@ -538,6 +544,7 @@ public sealed class DiscordRoleSagaTests
         _bot.Verify(b => b.GetGuildMemberRoles(Guild, It.IsAny<CancellationToken>()), Times.Once);
         _bot.Verify(b => b.GetMemberRoles(It.IsAny<ulong>(), It.IsAny<ulong>(),
             It.IsAny<CancellationToken>()), Times.Never);
+        _roles.Verify(r => r.GetOptedOutUsers(CommunityId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     /// <summary>
@@ -720,5 +727,96 @@ public sealed class DiscordRoleSagaTests
         await Saga().ReconcileGuildMember(Guild, Snowflake, CancellationToken.None);
 
         VerifyNothingWritten();
+    }
+
+    // ---- the fifth fact: the player's own say-so (D22) --------------------------------------
+
+    /// <summary>
+    ///     Opting out is read by the rule, not done by the command: a member who qualifies on
+    ///     every other fact earns nothing while the row stands.
+    /// </summary>
+    [Fact]
+    public async Task AMemberWhoOptedOutEarnsNothing()
+    {
+        OptedOut();
+
+        await Saga().ReconcileOne(CommunityId, UserId, CancellationToken.None);
+
+        VerifyNothingWritten();
+        _roles.Verify(r => r.SaveGrant(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<ulong>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task OptingOutTakesEveryManagedRoleOffAndForgetsTheGrant()
+    {
+        OptedOut();
+        Holds("[P.B] BRONZE", "[PHOENIX] SINGLE BOSS BREAKER");
+        AlreadyHolds(BronzeRole, BreakerRole);
+
+        await Saga().ReconcileOne(CommunityId, UserId, CancellationToken.None);
+
+        VerifyRevoked(BronzeRole, Times.Once());
+        VerifyRevoked(BreakerRole, Times.Once());
+        _roles.Verify(r => r.DeleteGrant(CommunityId, UserId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     The join event is the angle most likely to hand a role straight back — it fires the
+    ///     moment somebody walks in — so it has to go through the same fact as everything else.
+    /// </summary>
+    [Fact]
+    public async Task WalkingIntoTheServerAfterOptingOutHandsNothingBack()
+    {
+        OptedOut();
+        _roles.Setup(r => r.GetServersByGuild(Guild, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new CommunityDiscordServerRecord(CommunityId, Guild, "Arrow Eclipse", Now) });
+        _mediator.Setup(m => m.Send(It.IsAny<GetUserByExternalLoginQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserBuilder().WithId(UserId).Build());
+
+        await Saga().ReconcileGuildMember(Guild, Snowflake, CancellationToken.None);
+
+        VerifyNothingWritten();
+    }
+
+    /// <summary>
+    ///     The dry run runs the same planner, so an admin sees the opt-out's revoke coming before
+    ///     Check now does it — and never sees it described as anything else.
+    /// </summary>
+    [Fact]
+    public async Task TheDryRunListsWhatOptingOutWillTakeOff()
+    {
+        OptedOut();
+        AlreadyHolds(BronzeRole);
+
+        var pending = await Saga().PreviewCommunity(CommunityId, CancellationToken.None);
+
+        var plan = Assert.Single(pending);
+        Assert.Equal(UserId, plan.UserId);
+        Assert.Equal(new[] { "[P.B] BRONZE" }, plan.Revoking);
+        Assert.Empty(plan.Granting);
+    }
+
+    /// <summary>
+    ///     A revoke pass attempts every role, not just the ones before the first refusal: somebody
+    ///     wearing one role above the bot used to keep the assignable one behind it too. The refusal
+    ///     still surfaces, and the grant row stays, because they are still wearing something.
+    /// </summary>
+    [Fact]
+    public async Task ARefusedRevokeDoesNotStopTheOthersComingOff()
+    {
+        InCommunity(null);
+        AlreadyHolds(BronzeRole, GoldRole);
+        _bot.Setup(b => b.RemoveRole(Guild, Snowflake, BronzeRole, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Missing Permissions"));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            Saga().ReconcileOne(CommunityId, UserId, CancellationToken.None));
+
+        VerifyRevoked(GoldRole, Times.Once());
+        _roles.Verify(r => r.SaveGrant(CommunityId, UserId, Snowflake, Now, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _roles.Verify(r => r.DeleteGrant(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }
