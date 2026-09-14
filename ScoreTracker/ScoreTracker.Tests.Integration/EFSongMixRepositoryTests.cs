@@ -77,6 +77,35 @@ public sealed class EFSongMixRepositoryTests : IAsyncLifetime
         Assert.Equal(Channel.Xross, (await charts.GetChart(MixEnum.Phoenix, chartId)).Song.Channel);
     }
 
+    /// <summary>
+    ///     The column a person types by hand when a returning song is seeded (D8): a spelling that
+    ///     differs only in case is the channel it names, and one nothing matches reads as unknown,
+    ///     which D7 already defines as absence. Never a throw — the parse happens inside the build
+    ///     of the per-mix chart dictionary, so one bad row would take the mix down, not one song.
+    /// </summary>
+    [Fact]
+    public async Task AHandWrittenRowIsCaseInsensitiveAndAnUnknownSpellingReadsAsNoChannel()
+    {
+        var oddCase = await _seed.SeedPhoenixChartAsync();
+        var displayName = await _seed.SeedPhoenixChartAsync(16);
+        var oddCaseSong = await SongOf(oddCase);
+        var displayNameSong = await SongOf(displayName);
+        await using (var db = await _fixture.DbContextFactory.CreateDbContextAsync())
+        {
+            db.Set<SongMixEntity>().Add(new SongMixEntity
+                { SongId = oddCaseSong, MixId = TestDataSeeder.PhoenixMixId, Channel = "kpop" });
+            // The game's own spelling, which is not the enum name.
+            db.Set<SongMixEntity>().Add(new SongMixEntity
+                { SongId = displayNameSong, MixId = TestDataSeeder.PhoenixMixId, Channel = "K-Pop" });
+            await db.SaveChangesAsync();
+        }
+
+        var charts = new EFChartRepository(new MemoryCache(new MemoryCacheOptions()), _fixture.DbContextFactory);
+
+        Assert.Equal(Channel.KPop, (await charts.GetChart(MixEnum.Phoenix, oddCase)).Song.Channel);
+        Assert.Null((await charts.GetChart(MixEnum.Phoenix, displayName)).Song.Channel);
+    }
+
     [Fact]
     public async Task AMixWithNoRowForTheSongReadsNoChannel()
     {

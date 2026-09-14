@@ -206,7 +206,6 @@ public sealed class E2ESeedData
             cancellationToken);
     }
 
-    /// <summary>A Phoenix best-score row (ScoreLedger-internal entity) — seeded with SQL.</summary>
     /// <summary>The chart's song sits in this channel on this mix — one SongMix row, written raw like every seed.</summary>
     public async Task SeedSongChannelAsync(Guid chartId, Guid mixId, string channel,
         CancellationToken cancellationToken = default)
@@ -217,6 +216,7 @@ public sealed class E2ESeedData
             cancellationToken);
     }
 
+    /// <summary>A Phoenix best-score row (ScoreLedger-internal entity) — seeded with SQL.</summary>
     public async Task SeedPhoenixScoreAsync(Guid userId, Guid chartId, int score, bool isBroken = false,
         CancellationToken cancellationToken = default)
     {

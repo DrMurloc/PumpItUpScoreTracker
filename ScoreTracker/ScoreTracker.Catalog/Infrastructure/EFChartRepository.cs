@@ -567,7 +567,11 @@ internal sealed class EFChartRepository : IChartRepository
                 new Song(r.SongName, Enum.Parse<SongType>(r.SongType), new Uri(r.ImagePath), r.Duration,
                     r.Artist ?? "Unknown",
                     Bpm.From(r.MinBpm, r.MaxBpm),
-                    r.Channel == null ? null : Enum.Parse<Channel>(r.Channel)),
+                    // TryParse, not Enum.Parse: this column is the one a person types by hand when a
+                    // returning song is seeded (D8), and a throw here would take down the whole mix's
+                    // chart dictionary, not one song. A spelling nothing matches reads as unknown,
+                    // which D7 already defines as absence everywhere.
+                    ChannelHelperMethods.TryParse(r.Channel, out var channel) ? channel : null),
                 Enum.Parse<ChartType>(r.ChartType),
                 r.Level, mix, r.StepArtist, r.NoteCount,
                 LegacySlotHelperMethods.ToNullableLegacySlot(r.LegacySlot),

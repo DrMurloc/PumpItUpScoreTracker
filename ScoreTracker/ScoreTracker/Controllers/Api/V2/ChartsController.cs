@@ -415,8 +415,10 @@ public sealed class ChartsController : ApiV2ControllerBase
 
         var settings = new RandomSettings { Count = count };
         if (picked is not null) settings.Versions = picked.ToHashSet(StringComparer.Ordinal);
-        if (debuts is not null) settings.Debut = true;
         if (channelPicks is not null) settings.Channels = channelPicks.ToHashSet();
+        // The debut pair stays a pair: the names imply the flag, and a bare debut= sets it. Anything
+        // between these two lines makes the else hang off the wrong condition.
+        if (debuts is not null) settings.Debut = true;
         else if (debut is not null) settings.Debut = debut;
 
         var types = chartTypes is null

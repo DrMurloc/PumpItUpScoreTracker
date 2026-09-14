@@ -917,4 +917,26 @@ public sealed class V2CatalogApiShapeTests
         _mediator.Verify(m => m.Send(It.Is<GetRandomChartsQuery>(q =>
             q.Settings.Channels.SetEquals(new[] { Channel.WorldMusic, Channel.Xross })), It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    /// <summary>
+    ///     A channel pick and the debut filter are independent halves of one draw. They were not:
+    ///     the channel assignment landed between the debut pair's if and its else, so naming a
+    ///     channel left Debut null and the draw carried carry-overs as well as debuts.
+    /// </summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ARandomDrawKeepsTheDebutFilterBesideAChannelPick(bool debut)
+    {
+        SeedPhoenix2Channels();
+        _mediator.Setup(m => m.Send(It.IsAny<GetRandomChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Chart>());
+
+        await WithContext(new ChartsController(_mediator.Object))
+            .GetRandom("Phoenix2", channels: new[] { "KPop" }, debut: debut);
+
+        _mediator.Verify(m => m.Send(It.Is<GetRandomChartsQuery>(q =>
+                q.Settings.Debut == debut && q.Settings.Channels.SetEquals(new[] { Channel.KPop })),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
 }

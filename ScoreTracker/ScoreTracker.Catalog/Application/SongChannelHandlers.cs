@@ -47,7 +47,7 @@ internal sealed class GetMixChannelsHandler : IRequestHandler<GetMixChannelsQuer
 
         public int GetHashCode(Name obj)
         {
-            return obj.ToString().ToUpperInvariant().GetHashCode();
+            return StringComparer.OrdinalIgnoreCase.GetHashCode(obj.ToString());
         }
     }
 }

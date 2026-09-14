@@ -24,7 +24,7 @@ $channelHandle = $state.channelHandle
 if (-not $channelHandle) { $channelHandle = '@PUMPITUPOfficial' }
 
 # the playlist title's parenthesis -> the enum name the blob's "channel" field takes
-$tokens = @{ 'ORIGINAL' = 'Original'; 'K-POP' = 'KPop'; 'KPOP' = 'KPop'; 'WORLD MUSIC' = 'WorldMusic'; 'J-MUSIC' = 'JMusic'; 'XROSS' = 'Xross' }
+$tokens = @{ 'ORIGINAL' = 'Original'; 'K-POP' = 'KPop'; 'KPOP' = 'KPop'; 'WORLD MUSIC' = 'WorldMusic'; 'WORLDMUSIC' = 'WorldMusic'; 'J-MUSIC' = 'JMusic'; 'JMUSIC' = 'JMusic'; 'XROSS' = 'Xross' }
 
 # ---- the playlists page: id + title pairs ----
 $r = Invoke-WebRequest -Uri "https://www.youtube.com/$channelHandle/playlists" -UserAgent $ua -TimeoutSec 30 -UseBasicParsing -Headers @{ 'Accept-Language' = 'en-US,en;q=0.9' }
@@ -84,20 +84,21 @@ foreach ($pl in $wanted) {
     $body = @{ context = @{ client = @{ clientName = 'WEB'; clientVersion = $clientVersion } }; browseId = "VL$($pl.Id)" } | ConvertTo-Json -Depth 5
     $resp = Invoke-WebRequest -Uri "https://www.youtube.com/youtubei/v1/browse?key=$apiKey" -Method Post -Body $body -ContentType 'application/json' -UserAgent $ua -TimeoutSec 30 -UseBasicParsing
     $json = $resp.Content
-    $count = 0
+    # distinct ids: a payload can carry a video in both shapes below, and the tally is a report
+    $seen = [System.Collections.Generic.HashSet[string]]::new()
     $rounds = 0
     while ($true) {
         foreach ($m in [regex]::Matches($json, '"contentId":\s*"([^"]{11})",\s*"contentType":\s*"LOCKUP_CONTENT_TYPE_VIDEO"')) {
             $vid = $m.Groups[1].Value
             if (-not $channels.ContainsKey($vid)) { $added++ }
             $channels[$vid] = $pl.Channel
-            $count++
+            [void]$seen.Add($vid)
         }
         foreach ($m in [regex]::Matches($json, '"playlistVideoRenderer":\s*\{\s*"videoId":\s*"([^"]{11})"')) {
             $vid = $m.Groups[1].Value
             if (-not $channels.ContainsKey($vid)) { $added++ }
             $channels[$vid] = $pl.Channel
-            $count++
+            [void]$seen.Add($vid)
         }
         $ct = [regex]::Match($json, '"continuationCommand":\s*\{\s*"token":\s*"([^"]+)"')
         $rounds++
@@ -107,7 +108,7 @@ foreach ($pl in $wanted) {
         $json = $resp.Content
         Start-Sleep -Milliseconds 400
     }
-    Write-Output ("  {0,-11} {1,4} videos  {2}" -f $pl.Channel, $count, $pl.Title)
+    Write-Output ("  {0,-11} {1,4} videos  {2}" -f $pl.Channel, $seen.Count, $pl.Title)
     Start-Sleep -Milliseconds 600
 }
 

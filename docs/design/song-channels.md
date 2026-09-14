@@ -59,6 +59,11 @@ scores.SongMix                                    -- Catalog-owned, registered l
 - **Composite key, no surrogate id**, the shape of ChartSkillMetric and ChartFolderBaseline in
   the same contribution. `Channel` is required: the row exists to say the channel, and no row
   means unknown (D7). Membership stays ChartMix's.
+- **The column is read with `TryParse`, never `Enum.Parse`.** It is the one column a person types
+  by hand — a returning song seeded through the ChartMix path gets its row the same way (D8) —
+  and the parse happens while the per-mix chart dictionary is being built, so a throw there takes
+  the whole mix down rather than one song. A spelling that differs only in case is the channel it
+  names; one nothing matches reads as unknown, which D7 already defines as absence everywhere.
 - **SharedKernel** gains the `Channel` enum beside `SongType`, with a display helper, and the
   `Song` record gains a trailing optional `Channel` — the song's channel on the mix the record
   was built for, so the 78 positional `new Song(` sites are untouched, the way `VersionStamp`
