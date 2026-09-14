@@ -9,6 +9,7 @@ using ScoreTracker.Identity.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.PlayerProgress.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Contracts.Messages;
+using ScoreTracker.Seasons.Contracts.Messages;
 using ScoreTracker.Translations.Contracts.Messages;
 using ScoreTracker.SharedKernel.Enums;
 
@@ -113,6 +114,9 @@ public sealed class RecurringJobRunner
 
     public Task PublishTryScheduleMoM() =>
         _bus.Publish(new TryScheduleMoMCommand());
+
+    public Task PublishRollSeason() =>
+        _bus.Publish(new RollSeasonCommand());
 
     public Task PublishProcessAccountPurges() =>
         _bus.Publish(new ProcessAccountPurgesCommand());

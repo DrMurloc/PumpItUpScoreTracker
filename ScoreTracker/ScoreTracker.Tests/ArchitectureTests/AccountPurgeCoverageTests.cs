@@ -180,6 +180,7 @@ public sealed class AccountPurgeCoverageTests
             x.AddRivalsConsumers();
             x.AddCommunityToolsConsumers();
             x.AddChartCommentsConsumers();
+            x.AddSeasonsConsumers();
             x.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
         });
 

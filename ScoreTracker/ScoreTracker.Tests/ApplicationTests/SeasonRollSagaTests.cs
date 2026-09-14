@@ -1,0 +1,113 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using MassTransit;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
+using ScoreTracker.Domain.Records;
+using ScoreTracker.Seasons.Application;
+using ScoreTracker.Seasons.Contracts.Events;
+using ScoreTracker.Seasons.Contracts.Messages;
+using ScoreTracker.Seasons.Domain;
+using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Tests.TestHelpers;
+using Xunit;
+
+namespace ScoreTracker.Tests.ApplicationTests;
+
+public sealed class SeasonRollSagaTests
+{
+    private static readonly SeasonId Summer = SeasonId.From(2026, 3);
+    private static readonly SeasonId Fall = SeasonId.From(2026, 4);
+
+    // Summer 2026 ends 2026-09-30 23:59:59 UTC-5, so its seal falls due seven days later — the same
+    // minute on 7 October, which is 04:59:59Z on the 8th. The boundary is inclusive: at this instant
+    // the seal is owed, and a second earlier it is not.
+    private static readonly DateTimeOffset SealDue = new(2026, 10, 8, 4, 59, 59, TimeSpan.Zero);
+
+    [Fact]
+    public async Task TheFirstRollOfAQuarterOpensItWithMoMsWindowAndAnnouncesIt()
+    {
+        var seasons = new Mock<ISeasonRepository>();
+        seasons.Setup(s => s.GetAll(It.IsAny<CancellationToken>())).ReturnsAsync(new List<SeasonRecord>());
+        var context = Context();
+
+        await Saga(seasons, new DateTimeOffset(2026, 10, 5, 12, 0, 0, TimeSpan.Zero)).Consume(context.Object);
+
+        seasons.Verify(s => s.Add(It.Is<SeasonRecord>(r =>
+            r.Id == Fall && r.Name == "Fall 2026" && !r.IsBalanced && r.SealedAt == null &&
+            r.StartsAt == new DateTimeOffset(2026, 10, 1, 0, 0, 0, SeasonCalendar.Offset) &&
+            r.EndsAt == new DateTimeOffset(2026, 12, 31, 23, 59, 59, SeasonCalendar.Offset)), It.IsAny<CancellationToken>()), Times.Once);
+        context.Verify(c => c.Publish(It.Is<SeasonOpenedEvent>(e => e.Season == Fall), It.IsAny<CancellationToken>()), Times.Once);
+        seasons.Verify(s => s.Seal(It.IsAny<SeasonId>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ASecondRollTheSameDayChangesNothing()
+    {
+        var seasons = new Mock<ISeasonRepository>();
+        seasons.Setup(s => s.GetAll(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<SeasonRecord> { SeasonRollSaga.Open(Fall) });
+        var context = Context();
+
+        await Saga(seasons, new DateTimeOffset(2026, 10, 5, 12, 0, 0, TimeSpan.Zero)).Consume(context.Object);
+
+        seasons.Verify(s => s.Add(It.IsAny<SeasonRecord>(), It.IsAny<CancellationToken>()), Times.Never);
+        seasons.Verify(s => s.Seal(It.IsAny<SeasonId>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+        context.Verify(c => c.Publish(It.IsAny<SeasonOpenedEvent>(), It.IsAny<CancellationToken>()), Times.Never);
+        context.Verify(c => c.Publish(It.IsAny<SeasonSealedEvent>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AnEndedSeasonIsSealedTheSecondItsGraceWeekIsOverAndNotBefore()
+    {
+        var seasons = new Mock<ISeasonRepository>();
+        seasons.Setup(s => s.GetAll(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<SeasonRecord> { SeasonRollSaga.Open(Fall), SeasonRollSaga.Open(Summer) });
+
+        await Saga(seasons, SealDue.AddSeconds(-1)).Consume(Context().Object);
+        seasons.Verify(s => s.Seal(It.IsAny<SeasonId>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+
+        var sealedAt = SealDue;
+        var context = Context();
+        await Saga(seasons, sealedAt).Consume(context.Object);
+
+        seasons.Verify(s => s.Seal(Summer, sealedAt, It.IsAny<CancellationToken>()), Times.Once);
+        seasons.Verify(s => s.Seal(Fall, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+        context.Verify(c => c.Publish(It.Is<SeasonSealedEvent>(e => e.Season == Summer && e.SealedAt == sealedAt),
+            It.IsAny<CancellationToken>()), Times.Once);
+        seasons.Verify(s => s.Add(It.IsAny<SeasonRecord>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ASealedSeasonIsNeverSealedAgain()
+    {
+        var seasons = new Mock<ISeasonRepository>();
+        seasons.Setup(s => s.GetAll(It.IsAny<CancellationToken>())).ReturnsAsync(new List<SeasonRecord>
+        {
+            SeasonRollSaga.Open(Fall),
+            SeasonRollSaga.Open(Summer) with { SealedAt = SealDue }
+        });
+        var context = Context();
+
+        await Saga(seasons, SealDue.AddDays(3)).Consume(context.Object);
+
+        seasons.Verify(s => s.Seal(It.IsAny<SeasonId>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+        context.Verify(c => c.Publish(It.IsAny<SeasonOpenedEvent>(), It.IsAny<CancellationToken>()), Times.Never);
+        context.Verify(c => c.Publish(It.IsAny<SeasonSealedEvent>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private static SeasonRollSaga Saga(Mock<ISeasonRepository> seasons, DateTimeOffset now)
+    {
+        return new SeasonRollSaga(seasons.Object, FakeDateTime.At(now).Object, NullLogger<SeasonRollSaga>.Instance);
+    }
+
+    private static Mock<ConsumeContext<RollSeasonCommand>> Context()
+    {
+        var context = new Mock<ConsumeContext<RollSeasonCommand>>();
+        context.SetupGet(c => c.Message).Returns(new RollSeasonCommand());
+        context.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
+        return context;
+    }
+}

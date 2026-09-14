@@ -1,3 +1,4 @@
+using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -12,9 +13,8 @@ namespace ScoreTracker.Seasons.Wiring;
 ///     Wires the Seasons vertical (docs/design/seasons.md D24): the quarterly season row, the roll
 ///     that opens and seals it, and the season pages to come. The season rows themselves — a
 ///     player's seasonal bests, stats and folder levels — stay with the verticals that own those
-///     tables under a <c>SeasonId</c>; this vertical owns the calendar. A consumer hook
-///     (<c>AddSeasonsConsumers</c>, the WeeklyChallenge shape) arrives with the first consumer,
-///     the roll, in slice 1b.
+///     tables under a <c>SeasonId</c>; this vertical owns the calendar. <c>AddSeasonsConsumers</c>
+///     names the roll (the WeeklyChallenge shape), since MassTransit's scan skips internal types.
 /// </summary>
 public static class SeasonsRegistrationExtensions
 {
@@ -28,5 +28,14 @@ public static class SeasonsRegistrationExtensions
         // Per request, like the user accessor it reads: the flag or the admin (D27).
         services.AddScoped<ISeasonsUiGate, SeasonsUiGate>();
         return services;
+    }
+
+    /// <summary>
+    ///     MassTransit's assembly scan skips internal types, so every consumer is named here and the
+    ///     hook is called from Program.cs's AddMassTransit block (CLAUDE.md, tripwire-tested).
+    /// </summary>
+    public static void AddSeasonsConsumers(this IRegistrationConfigurator configurator)
+    {
+        configurator.AddConsumer<SeasonRollSaga>();
     }
 }
