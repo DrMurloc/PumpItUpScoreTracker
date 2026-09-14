@@ -241,4 +241,57 @@ public sealed class SeasonFilterTests : IAsyncLifetime
         Assert.Equal(0, await CountPastTheFilter<PhoenixRecordEntity>(Fall2026));
         Assert.Equal(0, await CountPastTheFilter<PhoenixRecordEntity>(0));
     }
+
+    [Fact]
+    public async Task AStatsWriteThatNamesTheSeasonLandsBesideTheAllTimeRowAndReadsBackAlone()
+    {
+        var userId = Guid.NewGuid();
+        var repository = new EFPlayerStatsRepository(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions()));
+        await repository.SaveStats(MixEnum.Phoenix2, userId,
+            new PlayerStatsRecord(userId, 0, 1, 0, 0, 0, 100, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0),
+            CancellationToken.None);
+        await repository.SaveStats(MixEnum.Phoenix2, userId,
+            new PlayerStatsRecord(userId, 0, 1, 0, 0, 0, 40, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0, TotalPumbility: 1234.5),
+            Fall, CancellationToken.None);
+
+        var fresh = new EFPlayerStatsRepository(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions()));
+        var season = await fresh.GetStats(MixEnum.Phoenix2, userId, Fall, CancellationToken.None);
+        var seasonMany = (await fresh.GetStats(MixEnum.Phoenix2, new[] { userId }, Fall, CancellationToken.None)).ToArray();
+        var allTime = await fresh.GetStats(MixEnum.Phoenix2, userId, CancellationToken.None);
+        var seasonIds = (await fresh.GetUserIdsWithStats(MixEnum.Phoenix2, Fall, CancellationToken.None)).ToArray();
+
+        Assert.Equal(40, season.SkillRating);
+        Assert.Equal(1234.5, season.TotalPumbility);
+        Assert.Equal(40, Assert.Single(seasonMany).SkillRating);
+        Assert.Equal(100, allTime.SkillRating);
+        Assert.Equal(0, allTime.TotalPumbility);
+        Assert.Equal(userId, Assert.Single(seasonIds));
+
+        // The mix wipe takes every season's row in one delete.
+        await fresh.DeleteStats(MixEnum.Phoenix2, userId, CancellationToken.None);
+
+        Assert.Equal(0, await CountPastTheFilter<PlayerStatsEntity>(Fall2026));
+        Assert.Equal(0, await CountPastTheFilter<PlayerStatsEntity>(0));
+    }
+
+    [Fact]
+    public async Task AFolderWriteThatNamesTheSeasonLandsBesideTheAllTimeRowAndReadsBackAlone()
+    {
+        var userId = Guid.NewGuid();
+        var repository = new EFPlayerFolderLevelRepository(_fixture.DbContextFactory);
+        await repository.Save(userId,
+            new[] { new FolderLevelRecord(MixEnum.Phoenix, ChartType.Single, DifficultyLevel.From(22), 97, 60, 930_000, 930_000) },
+            Now, CancellationToken.None);
+        await repository.Save(userId,
+            new[] { new FolderLevelRecord(MixEnum.Phoenix, ChartType.Single, DifficultyLevel.From(22), 97, 3, 900_000, 0) },
+            Now, Fall, CancellationToken.None);
+
+        var season = (await repository.GetFolderLevels(MixEnum.Phoenix, userId, Fall, CancellationToken.None)).ToArray();
+        var allTime = (await repository.GetFolderLevels(MixEnum.Phoenix, userId, CancellationToken.None)).ToArray();
+
+        Assert.Equal(3, Assert.Single(season).Played);
+        Assert.Equal(60, Assert.Single(allTime).Played);
+        Assert.Equal(1, await CountPastTheFilter<PlayerFolderLevelEntity>(Fall2026));
+        Assert.Equal(1, await CountPastTheFilter<PlayerFolderLevelEntity>(0));
+    }
 }
