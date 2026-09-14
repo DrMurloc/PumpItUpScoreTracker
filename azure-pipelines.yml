@@ -95,7 +95,7 @@ stages:
           # the real-DB integration and E2E suites, whose coverage never reaches this
           # Windows analysis), and composition wiring are excluded from the metric —
           # they are still fully analyzed for issues.
-          sonar.coverage.exclusions=**/*.razor,ScoreTracker/ScoreTracker/**,**/Infrastructure/**,ScoreTracker/ScoreTracker.Data/**,ScoreTracker/ScoreTracker.CompositionRoot/**,ScoreTracker/ScoreTracker.AppHost/**,ScoreTracker/ScoreTracker.ServiceDefaults/**
+          sonar.coverage.exclusions=**/*.razor,ScoreTracker/ScoreTracker/**,**/Infrastructure/**,**/Wiring/**,ScoreTracker/ScoreTracker.Data/**,ScoreTracker/ScoreTracker.CompositionRoot/**,ScoreTracker/ScoreTracker.AppHost/**,ScoreTracker/ScoreTracker.ServiceDefaults/**
 
     - script: dotnet restore $(solution)
       displayName: 'Restore'
