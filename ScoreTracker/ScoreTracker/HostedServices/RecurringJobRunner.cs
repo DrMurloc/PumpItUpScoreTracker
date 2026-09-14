@@ -1,4 +1,4 @@
-using ScoreTracker.WeeklyChallenge.Contracts.Messages;
+﻿using ScoreTracker.WeeklyChallenge.Contracts.Messages;
 using ScoreTracker.Catalog.Contracts.Messages;
 using ScoreTracker.CommunityTools.Contracts.Messages;
 using ScoreTracker.Communities.Contracts.Messages;
@@ -117,6 +117,9 @@ public sealed class RecurringJobRunner
 
     public Task PublishRollSeason() =>
         _bus.Publish(new RollSeasonCommand());
+
+    public Task PublishRollupSeasonStats() =>
+        _bus.Publish(new RollupSeasonStatsCommand());
 
     public Task PublishProcessAccountPurges() =>
         _bus.Publish(new ProcessAccountPurgesCommand());

@@ -224,4 +224,12 @@ public interface IScoreReader
 
     Task<IEnumerable<ChartScoreAggregate>> GetChartScoreAggregates(MixEnum mix, SeasonId season,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Everyone holding a best in this season on this mix. The nightly rollup's electorate: a
+    ///     season's board must cover every player who scored in it, including one whose import-time
+    ///     pass failed and therefore has no season stats row to be found by (docs/design/seasons.md §7).
+    /// </summary>
+    Task<IReadOnlyList<Guid>> GetUsersWithRecords(MixEnum mix, SeasonId season,
+        CancellationToken cancellationToken = default);
 }

@@ -977,6 +977,18 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return removed;
     }
 
+    async Task<IReadOnlyList<Guid>> IScoreReader.GetUsersWithRecords(MixEnum mix, SeasonId season,
+        CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await Records(database, season)
+            .Where(p => p.MixId == mixId)
+            .Select(p => p.UserId)
+            .Distinct()
+            .ToArrayAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Guid>> GetUsersWithJudgedRecords(MixEnum mix,
         CancellationToken cancellationToken = default)
     {

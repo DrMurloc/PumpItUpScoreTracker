@@ -24,7 +24,8 @@ internal sealed class PlayerRatingSaga :
     IRequestHandler<RecalculatePumbilityCommand>,
     IRequestHandler<PlayerRatingSaga.CaptureSessionStats, PlayerRatingSaga.SessionStatsResult>,
     IConsumer<UserCreatedEvent>,
-    IConsumer<RecalculateMixRatingsCommand>
+    IConsumer<RecalculateMixRatingsCommand>,
+    IConsumer<RollupSeasonStatsCommand>
 {
     /// <summary>
     ///     The rating step of the session-snapshot pipeline: recalculates stats and
@@ -68,13 +69,15 @@ internal sealed class PlayerRatingSaga :
     private readonly IBus _bus;
     private readonly IMediator _mediator;
     private readonly IOfficialPlacementReader _officialBoards;
+    private readonly ISeasonReader _seasons;
     private readonly ILogger<PlayerRatingSaga> _logger;
 
     public PlayerRatingSaga(IScoreReader scores, IPhoenixRecordStatsRepository recordStats,
         IChartRepository charts, IPlayerStatsRepository stats, IScoreHighlightRepository highlights,
         IPlayerMilestoneRepository milestones, IDateTimeOffsetAccessor dateTime, IBus bus, IMediator mediator,
-        IOfficialPlacementReader officialBoards, ILogger<PlayerRatingSaga> logger)
+        IOfficialPlacementReader officialBoards, ISeasonReader seasons, ILogger<PlayerRatingSaga> logger)
     {
+        _seasons = seasons;
         _officialBoards = officialBoards;
         _logger = logger;
         _scores = scores;
@@ -232,6 +235,52 @@ internal sealed class PlayerRatingSaga :
 
         _logger.LogInformation("Re-priced {Count} of {Total} players on {Mix}", repriced, userIds.Length, mix);
     }
+
+    /// <summary>
+    ///     The nightly season rollup (docs/design/seasons.md §7): every player holding a best in an
+    ///     open season gets that season's stats row recomputed from those bests. The import already
+    ///     writes the row as a by-product of each session, so this exists for the cases that produce
+    ///     seasonal bests without it — the backfill, a failed pass, a crash between the two — and for
+    ///     the certainty that a board is never one dropped message behind.
+    ///     <para>
+    ///         One player's failure must not cost the rest of the sweep, the same rule the all-time
+    ///         re-pricing above follows: an account with unresolvable data would otherwise leave the
+    ///         season half rolled up with no way to tell which half.
+    ///     </para>
+    /// </summary>
+    public async Task Consume(ConsumeContext<RollupSeasonStatsCommand> context)
+    {
+        var requested = context.Message.Season;
+        var open = (await _seasons.GetSeasons(context.CancellationToken))
+            .Where(s => !s.IsSealed && (requested == null || s.Id == requested))
+            .ToArray();
+
+        foreach (var season in open)
+        foreach (var mix in SeasonedMixes)
+        {
+            var userIds = await _scores.GetUsersWithRecords(mix, season.Id, context.CancellationToken);
+            var rolled = 0;
+            foreach (var userId in userIds)
+                try
+                {
+                    await RecalculateCore(new RecalculateStatsCommand(userId, mix), null,
+                        context.CancellationToken, quiet: true, season.Id);
+                    rolled++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Season rollup failed for user {UserId} ({Mix}, {Season})", userId, mix,
+                        season.Id);
+                }
+
+            if (userIds.Count > 0)
+                _logger.LogInformation("Rolled up {Count} of {Total} players on {Mix} for {Season}", rolled,
+                    userIds.Count, mix, season.Id);
+        }
+    }
+
+    /// <summary>Phoenix 2 only: Phoenix 1 has no seasons and never will (docs/design/seasons.md §1).</summary>
+    private static readonly MixEnum[] SeasonedMixes = { MixEnum.Phoenix2 };
 
     public async Task Consume(ConsumeContext<UserCreatedEvent> context)
     {
