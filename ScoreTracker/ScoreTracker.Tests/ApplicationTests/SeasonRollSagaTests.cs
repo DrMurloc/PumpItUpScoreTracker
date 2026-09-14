@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -96,6 +96,57 @@ public sealed class SeasonRollSagaTests
         seasons.Verify(s => s.Seal(It.IsAny<SeasonId>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
         context.Verify(c => c.Publish(It.IsAny<SeasonOpenedEvent>(), It.IsAny<CancellationToken>()), Times.Never);
         context.Verify(c => c.Publish(It.IsAny<SeasonSealedEvent>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TheBackfillCreatesEveryQuarterSinceSummer2026AndAsksEachForItsReplay()
+    {
+        var seasons = new Mock<ISeasonRepository>();
+        seasons.Setup(s => s.GetAll(It.IsAny<CancellationToken>())).ReturnsAsync(new List<SeasonRecord>());
+        var context = BackfillContext();
+
+        // Standing in Fall 2026: Summer is the first season there has ever been, Fall the second.
+        await Saga(seasons, new DateTimeOffset(2026, 11, 5, 12, 0, 0, TimeSpan.Zero)).Consume(context.Object);
+
+        seasons.Verify(s => s.Add(It.Is<SeasonRecord>(r => r.Id == Summer), It.IsAny<CancellationToken>()), Times.Once);
+        seasons.Verify(s => s.Add(It.Is<SeasonRecord>(r => r.Id == Fall), It.IsAny<CancellationToken>()), Times.Once);
+        seasons.Verify(s => s.Add(It.IsAny<SeasonRecord>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        context.Verify(c => c.Publish(It.Is<SeasonBackfillRequestedEvent>(x => x.Season == Summer),
+            It.IsAny<CancellationToken>()), Times.Once);
+        context.Verify(c => c.Publish(It.Is<SeasonBackfillRequestedEvent>(x => x.Season == Fall),
+            It.IsAny<CancellationToken>()), Times.Once);
+        // The backfill never seals; the next roll stamps the ended quarters (D37).
+        seasons.Verify(s => s.Seal(It.IsAny<SeasonId>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task RunningTheBackfillTwiceCreatesNothingASecondTimeAndSkipsWhatIsSealed()
+    {
+        var seasons = new Mock<ISeasonRepository>();
+        seasons.Setup(s => s.GetAll(It.IsAny<CancellationToken>())).ReturnsAsync(new List<SeasonRecord>
+        {
+            SeasonRollSaga.Open(Summer) with { SealedAt = SealDue },
+            SeasonRollSaga.Open(Fall)
+        });
+        var context = BackfillContext();
+
+        await Saga(seasons, new DateTimeOffset(2026, 11, 5, 12, 0, 0, TimeSpan.Zero)).Consume(context.Object);
+
+        seasons.Verify(s => s.Add(It.IsAny<SeasonRecord>(), It.IsAny<CancellationToken>()), Times.Never);
+        // A sealed season is immutable, so there is nothing to replay into it (D13).
+        context.Verify(c => c.Publish(It.Is<SeasonBackfillRequestedEvent>(x => x.Season == Summer),
+            It.IsAny<CancellationToken>()), Times.Never);
+        context.Verify(c => c.Publish(It.Is<SeasonBackfillRequestedEvent>(x => x.Season == Fall),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private static Mock<ConsumeContext<BackfillSeasonsCommand>> BackfillContext()
+    {
+        var context = new Mock<ConsumeContext<BackfillSeasonsCommand>>();
+        context.SetupGet(c => c.Message).Returns(new BackfillSeasonsCommand());
+        context.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
+        return context;
     }
 
     private static SeasonRollSaga Saga(Mock<ISeasonRepository> seasons, DateTimeOffset now)

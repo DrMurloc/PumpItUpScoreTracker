@@ -16,7 +16,8 @@ namespace ScoreTracker.Seasons.Application;
 ///     them resumes on the next tick, and Roll now on the console is the same message.
 /// </summary>
 internal sealed class SeasonRollSaga(ISeasonRepository seasons, IDateTimeOffsetAccessor dateTime,
-    ILogger<SeasonRollSaga> logger) : IConsumer<RollSeasonCommand>
+        ILogger<SeasonRollSaga> logger)
+    : IConsumer<RollSeasonCommand>, IConsumer<BackfillSeasonsCommand>
 {
     public async Task Consume(ConsumeContext<RollSeasonCommand> context)
     {
@@ -38,6 +39,34 @@ internal sealed class SeasonRollSaga(ISeasonRepository seasons, IDateTimeOffsetA
             await seasons.Seal(ended.Id, now, cancellationToken);
             logger.LogInformation("Season {Season} ({Name}) sealed", ended.Id, ended.Name);
             await context.Publish(new SeasonSealedEvent(ended.Id, now), cancellationToken);
+        }
+    }
+
+    /// <summary>
+    ///     The backfill (D23, D37): every quarter from Summer 2026 to the one running now gets its
+    ///     row if it has none, and then its replay is asked for. Nothing is sealed here — the next
+    ///     roll stamps the ended quarters, so the seal stays in one place. Idempotent: an existing
+    ///     season is left as it stands, and replaying a season's bests lands on the same rows.
+    /// </summary>
+    public async Task Consume(ConsumeContext<BackfillSeasonsCommand> context)
+    {
+        var cancellationToken = context.CancellationToken;
+        var existing = (await seasons.GetAll(cancellationToken)).ToDictionary(s => s.Id);
+        var running = SeasonCalendar.QuarterAt(dateTime.Now);
+
+        for (var season = SeasonCalendar.First; season <= running; season = SeasonCalendar.Next(season))
+        {
+            if (!existing.TryGetValue(season, out var row))
+            {
+                row = Open(season);
+                await seasons.Add(row, cancellationToken);
+                logger.LogInformation("Season {Season} ({Name}) created by the backfill", row.Id, row.Name);
+            }
+
+            // A sealed season is immutable, so there is nothing to replay into it (D13).
+            if (row.IsSealed) continue;
+            await context.Publish(new SeasonBackfillRequestedEvent(row.Id, row.StartsAt, row.EndsAt),
+                cancellationToken);
         }
     }
 

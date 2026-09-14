@@ -1,4 +1,4 @@
-using MassTransit;
+﻿using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -61,5 +61,7 @@ public static class ScoreLedgerRegistrationExtensions
         configurator.AddConsumer<SessionRecoverySaga>();
         // Drops the importing player's held scores so their peers see the import.
         configurator.AddConsumer<PeerScoreCacheConsumer>();
+        // Rebuilds one season's pool from the journal, through the live writer.
+        configurator.AddConsumer<SeasonalBestBackfillConsumer>();
     }
 }
