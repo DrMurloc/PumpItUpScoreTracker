@@ -26,7 +26,8 @@ internal sealed record ChartVerdictInputs(
     MixEnum CurrentMix,
     MixEnum DebutMix,
     IReadOnlyList<MixLevel> MixLevels,
-    CruxEvidence? Crux = null);
+    CruxEvidence? Crux = null,
+    IReadOnlyDictionary<MixEnum, VersionStamp>? MixReleases = null);
 
 /// <summary>One badge's measured coverage, with the name a sentence would print.</summary>
 [ExcludeFromCodeCoverage]

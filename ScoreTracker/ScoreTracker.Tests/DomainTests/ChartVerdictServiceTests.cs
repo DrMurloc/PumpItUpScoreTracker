@@ -26,7 +26,8 @@ public sealed class ChartVerdictServiceTests
         MixEnum currentMix = MixEnum.Phoenix,
         MixEnum debutMix = MixEnum.Phoenix,
         IReadOnlyList<MixLevel>? mixLevels = null,
-        CruxEvidence? crux = null)
+        CruxEvidence? crux = null,
+        IReadOnlyDictionary<MixEnum, VersionStamp>? mixReleases = null)
     {
         // Averages and pass counts come from one population in production, so a level with
         // a score average has passers behind it unless a test says otherwise. Without this
@@ -37,7 +38,7 @@ public sealed class ChartVerdictServiceTests
         return new ChartVerdictInputs(passTier, scoreTier, letters, averages ?? Array.Empty<LevelAverage>(),
             passes, plates ?? Array.Empty<PhoenixPlate>(), medianClearScore,
             scoresTracked, passCount, badges ?? new Dictionary<string, BadgeEvidence>(), tensionFraction,
-            currentMix, debutMix, mixLevels ?? Array.Empty<MixLevel>(), crux);
+            currentMix, debutMix, mixLevels ?? Array.Empty<MixLevel>(), crux, mixReleases);
     }
 
     /// <summary>Comfortably over <see cref="ChartVerdictService.YieldKneeMinimumPassesPerLevel" />.</summary>
@@ -328,6 +329,100 @@ public sealed class ChartVerdictServiceTests
         var history = facets.OfType<HistoryVerdict>().Single();
         Assert.Null(history.Levels[0].AddedIn);
         Assert.Equal(stamp, history.Levels[1].AddedIn);
+    }
+
+    // ── The life as events (docs/design/song-channels.md D11) ──
+
+    [Fact]
+    public void HistoryEventsAreTheDebutAndEveryRerateAndNothingElse()
+    {
+        var facets = ChartVerdictService.ComputeFacets(Inputs(currentMix: MixEnum.Phoenix2, debutMix: MixEnum.XX,
+            mixLevels: new[]
+            {
+                new MixLevel(MixEnum.XX, 19), new MixLevel(MixEnum.Phoenix, 20), new MixLevel(MixEnum.Phoenix2, 20)
+            }));
+
+        var events = facets.OfType<HistoryVerdict>().Single().Events;
+
+        // Phoenix 2 carried D20 unchanged, so it has no event.
+        Assert.Equal(
+            new[] { (MixEnum.XX, ChartHistoryEventKind.Debuted, 19, 0), (MixEnum.Phoenix, ChartHistoryEventKind.Rerated, 20, 1) },
+            events.Select(e => (e.Mix, e.Kind, e.Level!.Value, e.Delta)).ToArray());
+    }
+
+    /// <summary>
+    ///     A chart on Prime 2, missing from XX and Phoenix, back on Phoenix 2 a level lower: one
+    ///     removal at XX's release — the first mix of the removal era it skipped — and one revival
+    ///     where it returns, marked against the level it held before.
+    /// </summary>
+    [Fact]
+    public void AMissingRemovalEraMixIsARemovalAtItsReleaseAndTheReturnIsARevival()
+    {
+        var xxRelease = new VersionStamp(MixEnum.XX, "1.00.0", new DateOnly(2019, 1, 7), 1);
+        var back = new VersionStamp(MixEnum.Phoenix2, "1.00.0", new DateOnly(2026, 7, 9), 1);
+        var facets = ChartVerdictService.ComputeFacets(Inputs(currentMix: MixEnum.Phoenix2, debutMix: MixEnum.Prime2,
+            mixLevels: new[] { new MixLevel(MixEnum.Prime2, 19), new MixLevel(MixEnum.Phoenix2, 18, back) },
+            mixReleases: new Dictionary<MixEnum, VersionStamp> { [MixEnum.XX] = xxRelease }));
+
+        var events = facets.OfType<HistoryVerdict>().Single().Events;
+
+        Assert.Equal(3, events.Count);
+        Assert.Equal((MixEnum.XX, ChartHistoryEventKind.Removed, xxRelease), (events[1].Mix, events[1].Kind, events[1].Stamp));
+        Assert.Null(events[1].Level);
+        Assert.Equal((MixEnum.Phoenix2, ChartHistoryEventKind.Revived, 18, -1, back),
+            (events[2].Mix, events[2].Kind, events[2].Level, events[2].Delta, events[2].Stamp));
+    }
+
+    /// <summary>
+    ///     Conflict on Phoenix: on XX, missing at Phoenix's launch, back in v2.00.0 a level lower,
+    ///     a level higher again on Phoenix 2. The row that arrived in a patch is a removal at the
+    ///     release and a revival at the patch.
+    /// </summary>
+    [Fact]
+    public void ARowThatArrivedInAPatchIsARemovalAtTheReleaseAndARevivalAtThePatch()
+    {
+        var launch = new VersionStamp(MixEnum.Phoenix, "1.00.0", new DateOnly(2023, 7, 4), 100);
+        var patch = new VersionStamp(MixEnum.Phoenix, "2.00.0", new DateOnly(2024, 5, 27), 200);
+        var facets = ChartVerdictService.ComputeFacets(Inputs(currentMix: MixEnum.Phoenix, debutMix: MixEnum.XX,
+            mixLevels: new[]
+            {
+                new MixLevel(MixEnum.XX, 13), new MixLevel(MixEnum.Phoenix, 12, patch), new MixLevel(MixEnum.Phoenix2, 13)
+            },
+            mixReleases: new Dictionary<MixEnum, VersionStamp> { [MixEnum.Phoenix] = launch }));
+
+        var events = facets.OfType<HistoryVerdict>().Single().Events;
+
+        Assert.Equal(
+            new[]
+            {
+                ChartHistoryEventKind.Debuted, ChartHistoryEventKind.Removed, ChartHistoryEventKind.Revived,
+                ChartHistoryEventKind.Rerated
+            },
+            events.Select(e => e.Kind).ToArray());
+        Assert.Equal(launch, events[1].Stamp);
+        Assert.Equal((patch, 12, -1), (events[2].Stamp, events[2].Level, events[2].Delta));
+        Assert.Equal((MixEnum.Phoenix2, 13, 1), (events[3].Mix, events[3].Level, events[3].Delta));
+    }
+
+    /// <summary>
+    ///     The legacy catalogs have holes, so a mix missing before the removal era — NXA here — is
+    ///     silence, not a removal.
+    /// </summary>
+    [Fact]
+    public void AGapInALegacyCatalogIsSilence()
+    {
+        var facets = ChartVerdictService.ComputeFacets(Inputs(currentMix: MixEnum.Phoenix2, debutMix: MixEnum.Exceed2,
+            mixLevels: new[]
+            {
+                new MixLevel(MixEnum.Exceed2, 20), new MixLevel(MixEnum.Zero, 19), new MixLevel(MixEnum.Nx2, 19),
+                new MixLevel(MixEnum.Fiesta, 19), new MixLevel(MixEnum.Prime2, 19), new MixLevel(MixEnum.XX, 19),
+                new MixLevel(MixEnum.Phoenix, 19), new MixLevel(MixEnum.Phoenix2, 19)
+            }));
+
+        var events = facets.OfType<HistoryVerdict>().Single().Events;
+
+        Assert.Equal(new[] { (MixEnum.Exceed2, ChartHistoryEventKind.Debuted), (MixEnum.Zero, ChartHistoryEventKind.Rerated) },
+            events.Select(e => (e.Mix, e.Kind)).ToArray());
     }
 
     [Fact]

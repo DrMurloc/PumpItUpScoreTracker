@@ -81,10 +81,38 @@ public enum CruxPlacement
     Closing
 }
 
-/// <summary>Debut mix and the chart's level in every mix that carries it, era order.</summary>
+/// <summary>
+///     Debut mix, the chart's level in every mix that carries it in era order, and its life as
+///     events, oldest first: the debut, every rerate, and within the removal era a removal at the
+///     release of a mix it is missing from and a revival where it returns. A mix where nothing
+///     happened has no event (docs/design/song-channels.md D11).
+/// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record HistoryVerdict(MixEnum DebutMix, IReadOnlyList<MixLevelRecord> Levels)
-    : ChartVerdictFacet;
+public sealed record HistoryVerdict(MixEnum DebutMix, IReadOnlyList<MixLevelRecord> Levels,
+    IReadOnlyList<ChartHistoryEvent> Events) : ChartVerdictFacet
+{
+    public HistoryVerdict(MixEnum debutMix, IReadOnlyList<MixLevelRecord> levels)
+        : this(debutMix, levels, Array.Empty<ChartHistoryEvent>())
+    {
+    }
+}
+
+/// <summary>
+///     One thing that happened to a chart: where, when the catalog names the patch, what, and the
+///     level it holds after — with the move against the level it held before, zero where it held.
+///     A removal names no level.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record ChartHistoryEvent(MixEnum Mix, ChartHistoryEventKind Kind, VersionStamp? Stamp, int? Level,
+    int Delta);
+
+public enum ChartHistoryEventKind
+{
+    Debuted,
+    Rerated,
+    Removed,
+    Revived
+}
 
 /// <summary>
 ///     The chart's level in one mix, with the patch its row entered that mix in when the catalog

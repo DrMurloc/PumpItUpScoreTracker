@@ -102,6 +102,12 @@ public sealed class ChartVerdictHandlerTests
         Assert.Null(history.Levels[0].AddedIn);
         Assert.Equal("1.06.0", history.Levels[1].AddedIn?.Version);
         Assert.Equal(new DateOnly(2024, 1, 30), history.Levels[1].AddedIn?.ReleaseDate);
+        // The life as events: the debut on XX, the rerate on Phoenix with its patch. Phoenix's only
+        // row is the one this chart arrived in, so that patch is the mix's release and no removal fires.
+        Assert.Equal(new[] { ChartHistoryEventKind.Debuted, ChartHistoryEventKind.Rerated },
+            history.Events.Select(e => e.Kind).ToArray());
+        Assert.Equal((MixEnum.Phoenix, 20, 1, "1.06.0"),
+            (history.Events[1].Mix, history.Events[1].Level, history.Events[1].Delta, history.Events[1].Stamp?.Version));
 
         var fingerprint = facets.OfType<StyleFingerprintVerdict>().Single();
         Assert.Equal("sustained", fingerprint.TopBadges.Single().Badge);

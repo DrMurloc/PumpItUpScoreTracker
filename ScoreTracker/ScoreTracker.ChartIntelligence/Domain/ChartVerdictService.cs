@@ -181,12 +181,69 @@ internal static class ChartVerdictService
         return Math.Abs(steps) < 1 ? null : new PlateResidualVerdict(steps);
     }
 
+    /// <summary>
+    ///     The mixes whose song lists the catalog holds in full, so an absence there is a removal
+    ///     and a row that arrived after the mix's release is a revival. The older catalogs have
+    ///     holes — of the charts that exist on both sides of Rebirth, 58% are missing from it,
+    ///     Infinity 33%, NXA 28% — so a gap there is silence, not a claim
+    ///     (docs/design/song-channels.md D11).
+    /// </summary>
+    private static readonly MixEnum[] RemovalEra = { MixEnum.Prime2, MixEnum.XX, MixEnum.Phoenix, MixEnum.Phoenix2 };
+
     private static HistoryVerdict? History(ChartVerdictInputs inputs)
     {
         if (inputs.MixLevels.Count == 0) return null;
         var levelsChanged = inputs.MixLevels.Select(l => l.Level).Distinct().Count() > 1;
         if (inputs.DebutMix == inputs.CurrentMix && !levelsChanged) return null;
         return new HistoryVerdict(inputs.DebutMix,
-            inputs.MixLevels.Select(l => new MixLevelRecord(l.Mix, l.Level, l.AddedIn)).ToArray());
+            inputs.MixLevels.Select(l => new MixLevelRecord(l.Mix, l.Level, l.AddedIn)).ToArray(),
+            HistoryEvents(inputs.MixLevels, inputs.MixReleases ?? new Dictionary<MixEnum, VersionStamp>()));
+    }
+
+    /// <summary>
+    ///     The chart's life as events, oldest first. The debut; then, per later mix it is in: a
+    ///     removal at the release of the first removal-era mix skipped on the way there, or — when
+    ///     the row itself arrived in a patch after that mix's release — at the release of that mix;
+    ///     a revival where it returns, marked against the level it held before; otherwise a rerate
+    ///     where the level moved. A mix where the level held gets nothing.
+    /// </summary>
+    private static IReadOnlyList<ChartHistoryEvent> HistoryEvents(IReadOnlyList<MixLevel> levels,
+        IReadOnlyDictionary<MixEnum, VersionStamp> releases)
+    {
+        var events = new List<ChartHistoryEvent>();
+        var previous = levels[0];
+        events.Add(new ChartHistoryEvent(previous.Mix, ChartHistoryEventKind.Debuted, previous.AddedIn,
+            previous.Level, 0));
+        foreach (var entry in levels.Skip(1))
+        {
+            // XX is the enum's zero, so "none skipped" has to be a null and never a default.
+            MixEnum? skipped = RemovalEra
+                .Where(mix => mix.DisplayOrder() > previous.Mix.DisplayOrder() && mix.DisplayOrder() < entry.Mix.DisplayOrder())
+                .Select(mix => (MixEnum?)mix)
+                .FirstOrDefault();
+            var removed = false;
+            if (skipped is { } gap)
+            {
+                events.Add(new ChartHistoryEvent(gap, ChartHistoryEventKind.Removed, releases.GetValueOrDefault(gap), null, 0));
+                removed = true;
+            }
+            else if (RemovalEra.Contains(entry.Mix) && entry.AddedIn != null
+                     && releases.TryGetValue(entry.Mix, out var release) && entry.AddedIn.SortOrder > release.SortOrder)
+            {
+                events.Add(new ChartHistoryEvent(entry.Mix, ChartHistoryEventKind.Removed, release, null, 0));
+                removed = true;
+            }
+
+            var delta = entry.Level - previous.Level;
+            if (removed)
+                events.Add(new ChartHistoryEvent(entry.Mix, ChartHistoryEventKind.Revived, entry.AddedIn, entry.Level,
+                    delta));
+            else if (delta != 0)
+                events.Add(new ChartHistoryEvent(entry.Mix, ChartHistoryEventKind.Rerated, entry.AddedIn, entry.Level,
+                    delta));
+            previous = entry;
+        }
+
+        return events;
     }
 }
