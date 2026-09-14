@@ -78,7 +78,7 @@ Phoenix 2 only. Phoenix 1 has no seasons and never will (it is going offline-onl
 | D1 | **Quarters on the March of Murlocs calendar.** Ends 23:59:59 UTC−5 on the last day of Mar / Jun / Sep / Dec; names from MoM's `SeasonName` (Winter · Spring · Summer · Fall + year). | Owner, 2026-09-12. One calendar, one word: MoM already owns "Season" and both resx keys. Four boards a year. |
 | D2 | **The toggle lives in the mix picker**, under Phoenix 2: *All-time* / *Fall 2026 season*. The pill reads "Phoenix 2 · Fall 2026". | Owner. A separate switch competes for the app bar and has to explain why it is greyed out on Phoenix 1. |
 | D3 | **Season one is flat.** Every chart at its printed level. **Balancing starts at the first roll after launch**, computed from the season that roll seals. | Owner ("no balancing" for season one). A rating players could not see from day one would make the "what moved" page lie, so no season that was already running at launch is balanced retroactively. |
-| D4 | **Official imports only. Manual, CSV and API writes never reach a seasonal row.** Quick record hides in seasonal view. | Owner. `ScoreJournalEntry.Source` already tells them apart; manual data stays sacred on the all-time side. |
+| D4 | **Official imports only. Manual, CSV and API writes never reach a seasonal row.** Quick record hides in seasonal view. | Owner. `ScoreJournalEntry.Source` already tells them apart; manual data stays sacred on the all-time side. Enforced in two places, because there are two write paths: `SeasonCountingPolicy` on the import, and the undo's `ReplaySeasons` — which must filter source *before* `BestOf`, since that treats a manual row as authoritative. |
 | D5 | **No opt-in.** Every importer is in. | Owner. |
 | D6 | **Peers stay all-time, and peer *selection* keys on your all-time standing.** On a peers surface only your scores swap. **Rivals flip:** the Rivals page, the rivals-of-you list and the head-to-head compare season scores on both sides, because a rival is a named site player who has season rows of their own. A board-only rival (an official-board tag) has no season data and shows all-time behind the existing asterisk mark. The Highlights feed stays all-time (it is play history). | Owner: peers all-time (2026-09-12); "Rivals page absolutely can support seasonal view" (same day, correcting Round 1's caption). The selection rule is the consequence of the first: chosen by a seasonal number, week one's peers are beginners. |
 | D7 | **Season ratings are a symmetric diversity rule.** Per folder, charts ranked by weighted hold count in last season's pools (50 points at slot 1 → 1 at slot 50, the PUMBILITY tier lists' weighting): top 20% move −1, bottom 20% move +1, each from the chart's current season rating (D8); a chart in neither fifth **holds** where it is rather than snapping back to printed (decided unless objected — a snap-back would make a chart oscillate the season after it worked). Ties by fewer passers, then name. Folders with fewer than 50 folder-live players (three or more of their fifty in the folder) do not move. New charts enter at printed. | Owner: "underplayed charts are fine to rebalance too. The idea is diversity and to mix it up." The census (§5) showed the unheld charts are the unplayed ones, which is exactly what this rule moves. |
@@ -726,6 +726,28 @@ Built 2026-09-14 on `claude/seasons-slice-1b`, seventeen commits, docs first and
   lifetime completion. And the **rollup's electorate** is who holds a seasonal best, not who already has a
   season stats row — the player whose pass failed has bests and no row, and is exactly who the rollup is
   for — which needed one new read, `IScoreReader.GetUsersWithRecords`.
+- **What the regression check found** (2026-09-14, after CI was green). Six defects, all now fixed and
+  pinned. The shape of five of them is the same: **a rule the read side already honored that the write
+  side did not**. (1) Nothing gated the write path to Phoenix 2, so Phoenix 1 — the larger importing
+  population — wrote seasonal rows that the rollup and the backfill both skip, orphans nothing would
+  ever recompute; the gate is now one shared `MixCapabilities.HasSeasons()` rather than an array
+  repeated per vertical. (2) The writer ignored the player's *record broken scores as your best*
+  setting, so an opted-out player collected broken seasonal bests that D38 then counted as folders
+  played; `IncludeBroken` rides `RecordObservedPlaysCommand`. (3) The undo's replay seated manual and
+  CSV scores against D4 — and worse than a missing filter, `SessionUndoReplay` treats a manual row as
+  *authoritative*, so a hand-typed number overwrote a real play even when lower. (4, 5)
+  `DeleteBrokenRecords` crossed seasons while `CountBrokenRecords` did not, so the button's number and
+  the delete disagreed and a player whose broken bests were only seasonal faced a disabled button over
+  rows that existed; both cross now, while the pricing-cache delete deliberately does not, because
+  `PhoenixRecordStats` is unmirrored (D19) and taking its chart ids across seasons deleted the pricing
+  row of a chart passed all-time and only failed this season. (6) The seasonal score cache lost its
+  expiry on the first write — `IMemoryCache.Set(key, value)` creates an entry with no options at all —
+  and a season's entry cannot be evicted by key, so a wipe left the process serving deleted scores and
+  the pass priced a board row from them. Two more: the import-time pass now runs for **every open
+  season** rather than the one the clock stands in, because the writer routes each play by its own date
+  and a grace-week import would otherwise leave the season it had just written into stale; and the undo
+  no longer deletes a seasonal best the window could not have produced, since a raise-clause row carries
+  an out-of-window date by construction.
 - **Tests.** `Tests`: `SeasonCountingPolicyTests`, `SeasonCalendarTests`, `SeasonRollSagaTests`, the seasonal
   branch of `UpdatePhoenixRecordHandlerTests`, the quiet pass in `PlayerRatingSagaTests`; the message taxonomy
   and JSON round trip are the existing ratchets' job. `Tests.Integration`: the writer end to end, undo removes
