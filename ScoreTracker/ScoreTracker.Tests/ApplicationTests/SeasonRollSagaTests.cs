@@ -9,6 +9,7 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Seasons.Application;
 using ScoreTracker.Seasons.Contracts.Events;
 using ScoreTracker.Seasons.Contracts.Messages;
+using ScoreTracker.Seasons.Contracts.Queries;
 using ScoreTracker.Seasons.Domain;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestHelpers;
@@ -147,6 +148,18 @@ public sealed class SeasonRollSagaTests
         context.SetupGet(c => c.Message).Returns(new BackfillSeasonsCommand());
         context.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
         return context;
+    }
+
+    [Fact]
+    public async Task TheConsoleReadsTheCalendarStraightFromTheRepository()
+    {
+        var seasons = new Mock<ISeasonRepository>();
+        var calendar = new List<SeasonRecord> { SeasonRollSaga.Open(Fall), SeasonRollSaga.Open(Summer) };
+        seasons.Setup(s => s.GetAll(It.IsAny<CancellationToken>())).ReturnsAsync(calendar);
+
+        var read = await new SeasonQueryHandler(seasons.Object).Handle(new GetSeasonsQuery(), CancellationToken.None);
+
+        Assert.Equal(calendar, read);
     }
 
     private static SeasonRollSaga Saga(Mock<ISeasonRepository> seasons, DateTimeOffset now)
