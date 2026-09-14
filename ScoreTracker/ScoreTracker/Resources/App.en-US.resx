@@ -1584,8 +1584,29 @@
   <data name="Changing the URL or the secret clears this." xml:space="preserve">
     <value>Changing the URL or the secret clears this.</value>
   </data>
+  <data name="Channel" xml:space="preserve">
+    <value>Channel</value>
+  </data>
   <data name="Channel Name" xml:space="preserve">
 	  <value>Channel Name</value>
+  </data>
+  <data name="Channel: J-Music" xml:space="preserve">
+    <value>J-Music</value>
+  </data>
+  <data name="Channel: K-Pop" xml:space="preserve">
+    <value>K-Pop</value>
+  </data>
+  <data name="Channel: Original" xml:space="preserve">
+    <value>Original</value>
+  </data>
+  <data name="Channel: World Music" xml:space="preserve">
+    <value>World Music</value>
+  </data>
+  <data name="Channel: Xross" xml:space="preserve">
+    <value>Xross</value>
+  </data>
+  <data name="Channels" xml:space="preserve">
+    <value>Channels</value>
   </data>
   <data name="Chart" xml:space="preserve">
 	  <value>Chart</value>
@@ -2378,6 +2399,9 @@
   <data name="Debut version" xml:space="preserve">
     <value>Debut version</value>
   </data>
+  <data name="Debuted" xml:space="preserve">
+    <value>Debuted</value>
+  </data>
   <data name="debuted at {0}" xml:space="preserve">
     <value>debuted at {0}</value>
   </data>
@@ -2619,6 +2643,12 @@
   <data name="Done — this channel now receives {0} for {1}." xml:space="preserve">
     <value>Done — this channel now receives {0} for {1}.</value>
   </data>
+  <data name="Done. Title roles from {0} are back on for {1} here." xml:space="preserve">
+    <value>Done. Title roles from {0} are back on for {1} here.</value>
+  </data>
+  <data name="Done. {0} won't get title roles from {1} in this server until you run {2}." xml:space="preserve">
+    <value>Done. {0} won't get title roles from {1} in this server until you run {2}.</value>
+  </data>
   <data name="Double" xml:space="preserve">
     <value>Double</value>
   </data>
@@ -2693,6 +2723,9 @@
   </data>
   <data name="Draws from everything through {0}." xml:space="preserve">
     <value>Draws from everything through {0}.</value>
+  </data>
+  <data name="Draws from {0} only." xml:space="preserve">
+    <value>Draws from {0} only.</value>
   </data>
   <data name="Draws from {0}." xml:space="preserve">
     <value>Draws from {0}.</value>
@@ -2842,6 +2875,9 @@
   </data>
   <data name="Event mode or premium?" xml:space="preserve">
     <value>Event mode or premium?</value>
+  </data>
+  <data name="Every channel picked; the same as nothing picked." xml:space="preserve">
+    <value>Every channel picked; the same as nothing picked.</value>
   </data>
   <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
     <value>Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it.</value>
@@ -3396,6 +3432,9 @@
   <data name="Give a song name." xml:space="preserve">
     <value>Give a song name.</value>
   </data>
+  <data name="Give me title roles here again" xml:space="preserve">
+    <value>Give me title roles here again</value>
+  </data>
   <data name="Give members a Discord role when they earn a Phoenix 2 title." xml:space="preserve">
     <value>Give members a Discord role when they earn a Phoenix 2 title.</value>
   </data>
@@ -3551,6 +3590,9 @@
   </data>
   <data name="Has errors" xml:space="preserve">
     <value>Has errors</value>
+  </data>
+  <data name="Hasn't turned title roles off with {0}" xml:space="preserve">
+    <value>Hasn't turned title roles off with {0}</value>
   </data>
   <data name="Hate or discrimination" xml:space="preserve">
     <value>Hate or discrimination</value>
@@ -4464,6 +4506,9 @@
   </data>
   <data name="Link Discord on my account" xml:space="preserve">
     <value>Link Discord on my account</value>
+  </data>
+  <data name="Link your Discord account on PIU Scores first, so we know who you are." xml:space="preserve">
+    <value>Link your Discord account on PIU Scores first, so we know who you are.</value>
   </data>
   <data name="Link your own Discord account first — setting the server means running a command as yourself in Discord." xml:space="preserve">
     <value>Link your own Discord account first — setting the server means running a command as yourself in Discord.</value>
@@ -5695,6 +5740,9 @@
   </data>
   <data name="Nothing on your desk." xml:space="preserve">
     <value>Nothing on your desk.</value>
+  </data>
+  <data name="Nothing picked draws from every channel." xml:space="preserve">
+    <value>Nothing picked draws from every channel.</value>
   </data>
   <data name="Nothing picked draws from every version." xml:space="preserve">
     <value>Nothing picked draws from every version.</value>
@@ -7582,6 +7630,9 @@
   <data name="Required to be listed — it is what a player reads before deciding." xml:space="preserve">
     <value>Required to be listed — it is what a player reads before deciding.</value>
   </data>
+  <data name="Rerated" xml:space="preserve">
+    <value>Rerated</value>
+  </data>
   <data name="rerated {0}" xml:space="preserve">
     <value>rerated {0}</value>
   </data>
@@ -7651,6 +7702,9 @@
   </data>
   <data name="Revisit Old Scores" xml:space="preserve">
     <value>Revisit Old Scores</value>
+  </data>
+  <data name="Revived" xml:space="preserve">
+    <value>Revived</value>
   </data>
   <data name="Revoke" xml:space="preserve">
     <value>Revoke</value>
@@ -7740,6 +7794,9 @@
   <data name="Run real events" xml:space="preserve">
     <value>Run real events</value>
   </data>
+  <data name="Run this in the Discord server the roles are in." xml:space="preserve">
+    <value>Run this in the Discord server the roles are in.</value>
+  </data>
   <data name="Running" xml:space="preserve">
     <value>Running</value>
   </data>
@@ -7799,6 +7856,9 @@
   </data>
   <data name="Saved." xml:space="preserve">
     <value>Saved.</value>
+  </data>
+  <data name="Saved: {0} won't get title roles from {1} here. But a role couldn't come off right now — it probably sits above the bot in Server Settings → Roles, so an admin needs to move it or take it off by hand." xml:space="preserve">
+    <value>Saved: {0} won't get title roles from {1} here. But a role couldn't come off right now — it probably sits above the bot in Server Settings → Roles, so an admin needs to move it or take it off by hand.</value>
   </data>
   <data name="scale" xml:space="preserve">
     <value>scale</value>
@@ -8855,6 +8915,9 @@
   <data name="Tags that left the boards" xml:space="preserve">
     <value>Tags that left the boards</value>
   </data>
+  <data name="Take off my title roles here and stop giving them to me" xml:space="preserve">
+    <value>Take off my title roles here and stop giving them to me</value>
+  </data>
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it.</value>
   </data>
@@ -9473,6 +9536,9 @@
   <data name="This season's boards are being set up. Check back shortly." xml:space="preserve">
     <value>This season's boards are being set up. Check back shortly.</value>
   </data>
+  <data name="This server doesn't hand out title roles." xml:space="preserve">
+    <value>This server doesn't hand out title roles.</value>
+  </data>
   <data name="This session isn't here." xml:space="preserve">
     <value>This session isn't here.</value>
   </data>
@@ -9607,6 +9673,12 @@
   </data>
   <data name="Title Master" xml:space="preserve">
     <value>Title Master</value>
+  </data>
+  <data name="Title roles from {0} are back on for {1} here, but I couldn't hand them out right now. The nightly check will." xml:space="preserve">
+    <value>Title roles from {0} are back on for {1} here, but I couldn't hand them out right now. The nightly check will.</value>
+  </data>
+  <data name="Title roles were already on for you here." xml:space="preserve">
+    <value>Title roles were already on for you here.</value>
   </data>
   <data name="Titles" xml:space="preserve">
     <value>Titles</value>
@@ -11150,6 +11222,9 @@
   </data>
   <data name="Your title" xml:space="preserve">
     <value>Your title</value>
+  </data>
+  <data name="Your title roles in this server" xml:space="preserve">
+    <value>Your title roles in this server</value>
   </data>
   <data name="Your tools" xml:space="preserve">
     <value>Your tools</value>

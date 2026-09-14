@@ -67,15 +67,17 @@
                     </MudTooltip>
                 }
             </div>
+            @* The chart's identity in the chart page's own words — type, song by, steps by, BPM,
+               notes — as one muted line under the title and above the tabs, so every tab has it
+               (docs/design/song-channels.md D10). A fact the catalog lacks drops out of the line,
+               the way it does on the page's hero. *@
+            <div class="chart-details-sub">@IdentityLine(ViewChart)</div>
+            @* The score alone: its age went to Score History, which dates every entry (round 3). *@
             @if (!IsDrilled && Score?.Score != null)
             {
                 <div class="chart-details-score">
                     <PeerScore Score="Score.Score.Value" IsBroken="Score.IsBroken" Mix="Mix" Plate="Score.Plate"
                                Standing="Standing" Chart="Chart" OnOpenBoard="ShowBoard"></PeerScore>
-                    @if (ScoreAgeDays != null)
-                    {
-                        <MudText Typo="Typo.caption" Class="chart-details-score-age">@L["Recorded {0} days ago", ScoreAgeDays]</MudText>
-                    }
                 </div>
             }
             @* Sticky so a tall header — video, title, your score — scrolls away underneath the
@@ -203,11 +205,20 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        margin: 8px 0;
+        margin: 8px 0 2px;
+    }
+
+    /* Tight under the title and tight over the score: video, title, this line and the score
+       are one block, and the gaps between them read as one gap (owner, round 3). */
+    .chart-details-sub {
+        color: var(--mud-palette-text-secondary);
+        font-size: .82rem;
+        line-height: 1.45;
+        margin: 0 0 4px;
     }
 
     .chart-details-score {
-        margin: 8px 0;
+        margin: 2px 0;
     }
 
     /* In flow, not sticky (owner, 2026-08-16, reversing the Slice 1 call): the strip was pinned
@@ -219,7 +230,7 @@
     .chart-details-tabs {
         display: flex;
         gap: 2px;
-        margin-top: 10px;
+        margin-top: 6px;
         overflow-x: auto;
         scrollbar-width: none;
         background: var(--mud-palette-surface);
@@ -275,13 +286,6 @@
         margin-bottom: 2px;
     }
 
-    /* Age reads under the score, not beside it (owner, piucenter round 3). */
-    .chart-details-score-age {
-        display: block;
-        margin-top: 2px;
-        color: var(--mud-palette-text-secondary);
-    }
-
     /* Section headings carry a hairline so Journey/Skills/Record read as their own
        blocks instead of bleeding together (owner, piucenter round 3). */
     .chart-details-dialog .mud-typography-overline {
@@ -314,6 +318,28 @@
     ///     to one question.
     /// </summary>
     private const string TabSettingKey = "ChartDetails__Tab";
+
+    /// <summary>
+    ///     The identity line under the title, in the chart page's words: the song type, <i>song by</i>,
+    ///     <i>steps by</i> when the catalog names one, the BPM, the note count — each piece only when
+    ///     the catalog has it, joined by middots.
+    /// </summary>
+    private string IdentityLine(Chart chart)
+    {
+        var pieces = new List<string>
+            { L[SongTypeText.Name(chart.Song.Type)].Value, L["song by {0}", chart.Song.Artist].Value };
+        if (chart.StepArtist != null && chart.StepArtist.ToString() != "Unknown")
+            pieces.Add(L["steps by {0}", chart.StepArtist].Value);
+        if (chart.Song.Bpm is { } bpm) pieces.Add(L["{0} BPM", BpmText(bpm)].Value);
+        if (chart.NoteCount is > 0) pieces.Add(L["{0} notes", chart.NoteCount.Value.ToString("N0")].Value);
+        return string.Join(" · ", pieces);
+    }
+
+    /// <summary>The page's own form: one number, or the range with an en dash.</summary>
+    private static string BpmText(Bpm bpm)
+    {
+        return bpm.Min == bpm.Max ? bpm.Min.ToString("0.##") : $"{bpm.Min:0.##}–{bpm.Max:0.##}";
+    }
 
     // MaxWidth.False on purpose: Small would tag the dialog `mud-dialog-width-sm`, which
     // charts.scss globally forces to `max-width: none !important`. The cap lives in this
@@ -409,10 +435,6 @@
     [Parameter] public EventCallback<Guid> OnToDo { get; set; }
 
     [Parameter] public EventCallback OnScoreRecorded { get; set; }
-
-    // Round 10: the active-lens meta row was removed — the placements chips already
-    // name every lens's tier, so it double-printed the active one.
-    [Parameter] public int? ScoreAgeDays { get; set; }
 
     /// <summary>
     ///     The chart's place on piugame's play ranking for the whole mix, and its place among

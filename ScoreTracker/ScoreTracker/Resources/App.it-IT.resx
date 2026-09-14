@@ -1584,8 +1584,29 @@
   <data name="Changing the URL or the secret clears this." xml:space="preserve">
     <value>Cambiare l'URL o il segreto annulla questo.</value>
   </data>
+  <data name="Channel" xml:space="preserve">
+    <value>Canale</value>
+  </data>
   <data name="Channel Name" xml:space="preserve">
     <value>Nome del canale</value>
+  </data>
+  <data name="Channel: J-Music" xml:space="preserve">
+    <value>J-Music</value>
+  </data>
+  <data name="Channel: K-Pop" xml:space="preserve">
+    <value>K-Pop</value>
+  </data>
+  <data name="Channel: Original" xml:space="preserve">
+    <value>Original</value>
+  </data>
+  <data name="Channel: World Music" xml:space="preserve">
+    <value>World Music</value>
+  </data>
+  <data name="Channel: Xross" xml:space="preserve">
+    <value>Xross</value>
+  </data>
+  <data name="Channels" xml:space="preserve">
+    <value>Canali</value>
   </data>
   <data name="Chart" xml:space="preserve">
     <value>Chart</value>
@@ -2378,6 +2399,9 @@
   <data name="Debut version" xml:space="preserve">
     <value>Versione di debutto</value>
   </data>
+  <data name="Debuted" xml:space="preserve">
+    <value>Debutto</value>
+  </data>
   <data name="debuted at {0}" xml:space="preserve">
     <value>debuttato a {0}</value>
   </data>
@@ -2619,6 +2643,12 @@
   <data name="Done — this channel now receives {0} for {1}." xml:space="preserve">
     <value>Fatto — questo canale ora riceve {0} per {1}.</value>
   </data>
+  <data name="Done. Title roles from {0} are back on for {1} here." xml:space="preserve">
+    <value>Fatto. I ruoli titolo di {0} sono di nuovo attivi per {1} qui.</value>
+  </data>
+  <data name="Done. {0} won't get title roles from {1} in this server until you run {2}." xml:space="preserve">
+    <value>Fatto. {0} non riceverà ruoli titolo da {1} in questo server finché non esegui {2}.</value>
+  </data>
   <data name="Double" xml:space="preserve">
     <value>Double</value>
   </data>
@@ -2693,6 +2723,9 @@
   </data>
   <data name="Draws from everything through {0}." xml:space="preserve">
     <value>Si pesca da tutto fino a {0}.</value>
+  </data>
+  <data name="Draws from {0} only." xml:space="preserve">
+    <value>Si pesca solo da {0}.</value>
   </data>
   <data name="Draws from {0}." xml:space="preserve">
     <value>Si pesca da {0}.</value>
@@ -2842,6 +2875,9 @@
   </data>
   <data name="Event mode or premium?" xml:space="preserve">
     <value>Modalità evento o premium?</value>
+  </data>
+  <data name="Every channel picked; the same as nothing picked." xml:space="preserve">
+    <value>Con tutti i canali selezionati è come senza selezione.</value>
   </data>
   <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
     <value>Ogni chart di {0}, le cartelle da cui i tuoi pari costruiscono la loro PUMBILITY, a partire da quelle che meno di loro tengono. Probabilmente sono le chart su cui è più difficile fare punteggio nella tua fascia di livelli. Una cartella conta quando almeno metà dei tuoi pari ne tiene una chart.</value>
@@ -3396,6 +3432,9 @@
   <data name="Give a song name." xml:space="preserve">
     <value>Inserisci il nome di una canzone.</value>
   </data>
+  <data name="Give me title roles here again" xml:space="preserve">
+    <value>Ridarmi i ruoli titolo qui</value>
+  </data>
   <data name="Give members a Discord role when they earn a Phoenix 2 title." xml:space="preserve">
     <value>Dai ai membri un ruolo Discord quando ottengono un titolo Phoenix 2.</value>
   </data>
@@ -3551,6 +3590,9 @@
   </data>
   <data name="Has errors" xml:space="preserve">
     <value>Contiene errori</value>
+  </data>
+  <data name="Hasn't turned title roles off with {0}" xml:space="preserve">
+    <value>Non ha disattivato i ruoli titolo con {0}</value>
   </data>
   <data name="Hate or discrimination" xml:space="preserve">
     <value>Odio o discriminazione</value>
@@ -4464,6 +4506,9 @@
   </data>
   <data name="Link Discord on my account" xml:space="preserve">
     <value>Collega Discord al mio account</value>
+  </data>
+  <data name="Link your Discord account on PIU Scores first, so we know who you are." xml:space="preserve">
+    <value>Collega prima il tuo account Discord su PIU Scores, così sappiamo chi sei.</value>
   </data>
   <data name="Link your own Discord account first — setting the server means running a command as yourself in Discord." xml:space="preserve">
     <value>Collega prima il tuo account Discord: designare il server significa eseguire un comando come te stesso su Discord.</value>
@@ -5695,6 +5740,9 @@
   </data>
   <data name="Nothing on your desk." xml:space="preserve">
     <value>Niente da esaminare.</value>
+  </data>
+  <data name="Nothing picked draws from every channel." xml:space="preserve">
+    <value>Senza selezione si pesca da tutti i canali.</value>
   </data>
   <data name="Nothing picked draws from every version." xml:space="preserve">
     <value>Senza selezione si pesca da tutte le versioni.</value>
@@ -7582,6 +7630,9 @@
   <data name="Required to be listed — it is what a player reads before deciding." xml:space="preserve">
     <value>Necessaria per essere elencati: è ciò che un giocatore legge prima di decidere.</value>
   </data>
+  <data name="Rerated" xml:space="preserve">
+    <value>Rivalutato</value>
+  </data>
   <data name="rerated {0}" xml:space="preserve">
     <value>rivalutato {0}</value>
   </data>
@@ -7651,6 +7702,9 @@
   </data>
   <data name="Revisit Old Scores" xml:space="preserve">
     <value>Rivedi i vecchi punteggi</value>
+  </data>
+  <data name="Revived" xml:space="preserve">
+    <value>Reintrodotto</value>
   </data>
   <data name="Revoke" xml:space="preserve">
     <value>Revoca</value>
@@ -7740,6 +7794,9 @@
   <data name="Run real events" xml:space="preserve">
     <value>Organizza eventi veri</value>
   </data>
+  <data name="Run this in the Discord server the roles are in." xml:space="preserve">
+    <value>Esegui questo nel server Discord in cui si trovano i ruoli.</value>
+  </data>
   <data name="Running" xml:space="preserve">
     <value>In esecuzione</value>
   </data>
@@ -7799,6 +7856,9 @@
   </data>
   <data name="Saved." xml:space="preserve">
     <value>Salvato.</value>
+  </data>
+  <data name="Saved: {0} won't get title roles from {1} here. But a role couldn't come off right now — it probably sits above the bot in Server Settings → Roles, so an admin needs to move it or take it off by hand." xml:space="preserve">
+    <value>Salvato: {0} non riceverà ruoli titolo da {1} qui. Ma un ruolo non è stato tolto per ora — probabilmente sta sopra il bot in Impostazioni server → Ruoli, quindi un amministratore deve spostarlo o toglierlo a mano.</value>
   </data>
   <data name="scale" xml:space="preserve">
     <value>scala</value>
@@ -8855,6 +8915,9 @@
   <data name="Tags that left the boards" xml:space="preserve">
     <value>Tag usciti dalle board</value>
   </data>
+  <data name="Take off my title roles here and stop giving them to me" xml:space="preserve">
+    <value>Togliermi i ruoli titolo qui e smettere di darmeli</value>
+  </data>
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>Rompi una volta ogni N note all'infinito e la tua vita converge da qualche parte. Sotto il dirupo converge a zero: la curva non si addolcisce, precipita. È il moltiplicatore che muore più in fretta di quanto tu riesca a ricostruirlo.</value>
   </data>
@@ -9473,6 +9536,9 @@
   <data name="This season's boards are being set up. Check back shortly." xml:space="preserve">
     <value>Le board di questa stagione sono in allestimento. Torna tra poco.</value>
   </data>
+  <data name="This server doesn't hand out title roles." xml:space="preserve">
+    <value>Questo server non distribuisce ruoli titolo.</value>
+  </data>
   <data name="This session isn't here." xml:space="preserve">
     <value>Questa sessione non è qui.</value>
   </data>
@@ -9607,6 +9673,12 @@
   </data>
   <data name="Title Master" xml:space="preserve">
     <value>Title Master</value>
+  </data>
+  <data name="Title roles from {0} are back on for {1} here, but I couldn't hand them out right now. The nightly check will." xml:space="preserve">
+    <value>I ruoli titolo di {0} sono di nuovo attivi per {1} qui, ma non sono riuscito ad assegnarli per ora. Il controllo notturno lo farà.</value>
+  </data>
+  <data name="Title roles were already on for you here." xml:space="preserve">
+    <value>I ruoli titolo erano già attivi per te qui.</value>
   </data>
   <data name="Titles" xml:space="preserve">
     <value>Titoli</value>
@@ -11150,6 +11222,9 @@
   </data>
   <data name="Your title" xml:space="preserve">
     <value>Il tuo titolo</value>
+  </data>
+  <data name="Your title roles in this server" xml:space="preserve">
+    <value>I tuoi ruoli titolo in questo server</value>
   </data>
   <data name="Your tools" xml:space="preserve">
     <value>I tuoi strumenti</value>

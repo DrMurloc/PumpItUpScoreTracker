@@ -119,7 +119,11 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
             // Only charts with a known patch count; an unknown patch reads as absence, never as a chip.
             Without(q with { Versions = null }).Where(r => r.Chart.AddedIn != null)
                 .GroupBy(r => r.Chart.AddedIn!.Version, StringComparer.Ordinal)
-                .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal));
+                .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal),
+            // The same rule for a channel: a song with none on this mix is absent, never a chip.
+            Without(q with { Channels = null }).Where(r => r.Chart.Song.Channel != null)
+                .GroupBy(r => r.Chart.Song.Channel!.Value)
+                .ToDictionary(g => g.Key, g => g.Count()));
     }
 
     /// <summary>No record at all is unplayed; otherwise the record's pass flag decides.</summary>
@@ -282,6 +286,10 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
 
         if (q.Versions is { Count: > 0 } &&
             (chart.AddedIn == null || !q.Versions.Contains(chart.AddedIn.Version, StringComparer.Ordinal)))
+            return false;
+
+        if (q.Channels is { Count: > 0 } &&
+            (song.Channel == null || !q.Channels.Contains(song.Channel.Value)))
             return false;
 
         if (q.LegacySlots is { Count: > 0 } &&

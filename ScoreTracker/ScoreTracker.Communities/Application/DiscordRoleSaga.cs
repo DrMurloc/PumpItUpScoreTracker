@@ -1,3 +1,4 @@
+using System.Runtime.ExceptionServices;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Communities.Contracts;
@@ -18,8 +19,10 @@ namespace ScoreTracker.Communities.Application;
 ///         The whole feature is one rule, and <see cref="ReconcileMember" /> is the only place it
 ///         is written down: a member holds a mapped role exactly while they are in the community,
 ///         in its designated server, holding the title, with no higher rung of the same pumbility
-///         pool. Every trigger — a title earned, a join, a leave, a ban, a purge, an admin edit,
-///         the sweep — funnels here, so nothing can compute roles a second way and disagree.
+///         pool, and not having turned the community's roles off themselves. Every trigger — a
+///         title earned, a join, a leave, a ban, a purge, an admin edit, the player's own
+///         <c>/piu roles off</c>, the sweep — funnels here, so nothing can compute roles a second
+///         way and disagree.
 ///     </para>
 ///     <para>
 ///         Reconciling is idempotent and reads current truth rather than a delta, which is what
@@ -355,7 +358,7 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
     // ---- the rule ---------------------------------------------------------------------------
 
     /// <summary>
-    ///     The four facts, decided but not acted on. Split from the writing half so the page's dry
+    ///     The five facts, decided but not acted on. Split from the writing half so the page's dry
     ///     run and the real reconcile cannot answer differently — a preview computed a second way
     ///     would become a lie the moment either drifted.
     /// </summary>
@@ -366,7 +369,11 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         // server to act on, and nothing to remember.
         if (discordUserId is not { } snowflake) return null;
 
-        var eligible = IsMember(context, userId) && context.LinkedMembers.ContainsKey(userId);
+        // The player's own say-so is a fact like the others (D22): somebody who turned the
+        // community's roles off earns nothing here, so every managed role they wear comes off
+        // below — and no angle, the join event included, can hand one back.
+        var eligible = IsMember(context, userId) && context.LinkedMembers.ContainsKey(userId) &&
+                       !context.OptedOut.Contains(userId);
         var earned = eligible ? DesiredRoles(context, userId) : EarnedRoles.None;
 
         var current = await CurrentRoles(context, snowflake, cancellationToken);
@@ -420,15 +427,30 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
 
         foreach (var roleId in plan.Grant)
             await _bot.AddRole(context.GuildId, plan.DiscordUserId, roleId, cancellationToken);
-        foreach (var roleId in plan.Revoke)
-            await _bot.RemoveRole(context.GuildId, plan.DiscordUserId, roleId, cancellationToken);
 
-        if (plan.HoldsAnything)
+        // Every revoke is attempted, not just the ones before the first refusal. A role that
+        // drifted above the bot cannot come off and Discord says so by throwing — and stopping
+        // there left somebody who had opted out still wearing the assignable role behind it. The
+        // refusal still surfaces, after the loop, so the caller knows the member is not settled.
+        Exception? refused = null;
+        foreach (var roleId in plan.Revoke)
+            try
+            {
+                await _bot.RemoveRole(context.GuildId, plan.DiscordUserId, roleId, cancellationToken);
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                refused ??= e;
+            }
+
+        // A refused revoke means they still wear something we handed out, whatever the plan said.
+        if (plan.HoldsAnything || refused != null)
             await _roles.SaveGrant(context.CommunityId, userId, plan.DiscordUserId, _dateTime.Now,
                 cancellationToken);
         else
             await ForgetGrant(context, userId, cancellationToken);
 
+        if (refused != null) ExceptionDispatchInfo.Throw(refused);
         return plan.HasWork;
     }
 
@@ -478,8 +500,24 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         var current = await CurrentRoles(context, discordUserId, cancellationToken);
         if (current == null) return;
 
+        // Every role is attempted, for the same reason ReconcileMember attempts every one: a role
+        // that drifted above the bot cannot come off and Discord says so by throwing, and stopping
+        // there left every role behind it standing. That is worst on the purge path, where the
+        // grant row — the last handle on the snowflake once Identity has dropped the external
+        // login — is deleted whether or not this succeeded, so a role skipped here is a role
+        // nothing can ever take back.
+        Exception? refused = null;
         foreach (var roleId in context.Managed.Where(current.Contains))
-            await _bot.RemoveRole(context.GuildId, discordUserId, roleId, cancellationToken);
+            try
+            {
+                await _bot.RemoveRole(context.GuildId, discordUserId, roleId, cancellationToken);
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                refused ??= e;
+            }
+
+        if (refused != null) ExceptionDispatchInfo.Throw(refused);
     }
 
     // ---- context ----------------------------------------------------------------------------
@@ -511,6 +549,8 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         var members = (await _communities.GetMemberRoles(communityId, cancellationToken))
             .ToDictionary(m => m.UserId, m => m.Role);
         var linked = await _users.GetExternalLogins(members.Keys, DiscordProvider, cancellationToken);
+        // The fifth fact (D22), read once for the community like the rest of the context.
+        var optedOut = await _roles.GetOptedOutUsers(communityId, cancellationToken);
 
         // ONE read for the whole community, scoped to the titles it actually maps. Reading a
         // member's titles individually pulled every row they hold — all 272 titles' worth, each
@@ -537,7 +577,7 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
             // the bot after we handed it out simply cannot come off, and Discord tells us so, but
             // one that is merely missing from the server must not be asked for at all.
             mappings.Select(m => m.RoleId).Where(live.Contains).ToHashSet(),
-            members, Snowflakes(linked), holders, roster, grantedUsers);
+            members, Snowflakes(linked), optedOut, holders, roster, grantedUsers);
     }
 
     /// <summary>
@@ -627,6 +667,8 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         IReadOnlySet<ulong> Managed,
         IReadOnlyDictionary<Guid, CommunityRole> Members,
         IReadOnlyDictionary<Guid, ulong> LinkedMembers,
+        /// <summary>Who has turned this community's roles off for themselves (D22).</summary>
+        IReadOnlySet<Guid> OptedOut,
         /// <summary>Which of the MAPPED titles each member holds. One read, not one per member.</summary>
         IReadOnlyDictionary<Guid, IReadOnlySet<string>> HoldersByUser,
         /// <summary>The server's members and their roles on a bulk pass; null when settling one person.</summary>

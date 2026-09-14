@@ -714,7 +714,6 @@ else
                         Standing="_detailsChart != null && _standings.TryGetValue(_detailsChart.Id, out var detailsStanding) ? detailsStanding : null"
                         BoardScope="_detailsBoardScope" BoardCommunity="_detailsBoardCommunity" InitialTab="_detailsTab"
                         IsToDo="_detailsChart != null && _todos.Contains(_detailsChart.Id)"
-                        ScoreAgeDays="@(_detailsChart != null && _scores.TryGetValue(_detailsChart.Id, out var detailsAge) ? (int)(_now - detailsAge.RecordedDate).TotalDays : null)"
                         OnToDo="ToggleToDo" OnScoreRecorded="RefreshScores"></ChartDetailsDialog>
     <ShareCardSettingsDialog @bind-Visible="_downloadOpen" SignedIn="CurrentUser.IsLoggedIn"
                              PhoenixScoring="!IsLegacy" OffersPumbility="PumbilityAvailable && !IsLegacy"

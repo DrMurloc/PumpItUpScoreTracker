@@ -35,7 +35,7 @@ public sealed class SearchChartsHandlerTests
         _charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
         _charts.Setup(c => c.GetChartMixLevels(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<(Guid, MixEnum, int, int?)>());
+            .ReturnsAsync(Array.Empty<(Guid, MixEnum, int, int?, VersionStamp?)>());
         _metrics.Setup(m => m.GetMetricsByChart(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillMetric>>());
         _tierLists.Setup(t => t.GetAllEntries(It.IsAny<MixEnum>(), It.IsAny<Name>(), It.IsAny<CancellationToken>()))
@@ -537,5 +537,51 @@ public sealed class SearchChartsHandlerTests
         // The carry-over debuted in XX, so it sorts with XX however recently Phoenix 2 picked it up.
         Assert.Equal(new[] { patch, launchNative, unknown, launchCarryOver }, newestFirst.Results.Select(r => r.Chart.Id));
         Assert.Equal(new[] { launchCarryOver, launchNative, patch, unknown }, oldestFirst.Results.Select(r => r.Chart.Id));
+    }
+
+    private static Chart InChannel(Chart chart, Channel channel)
+    {
+        return chart with { Song = chart.Song with { Channel = channel } };
+    }
+
+    [Fact]
+    public async Task ChannelFilterKeepsThePickedChannelsAndDropsSongsWithNoneOnThisMix()
+    {
+        var kpop = Guid.NewGuid();
+        var xross = Guid.NewGuid();
+        var original = Guid.NewGuid();
+        var unknown = Guid.NewGuid();
+        SeedMix(MixEnum.Phoenix2,
+            InChannel(MakeChart(kpop, MixEnum.Phoenix2, "Nostalgia", 21), Channel.KPop),
+            InChannel(MakeChart(xross, MixEnum.Phoenix2, "Dreamchasers", 22), Channel.Xross),
+            InChannel(MakeChart(original, MixEnum.Phoenix2, "Ghroth", 24), Channel.Original),
+            MakeChart(unknown, MixEnum.Phoenix2, "Mystery", 18));
+
+        var page = await BuildHandler().Handle(new SearchChartsQuery
+        {
+            Mix = MixEnum.Phoenix2, Channels = new[] { Channel.KPop, Channel.Xross }
+        }, CancellationToken.None);
+
+        Assert.Equal(new[] { kpop, xross }, page.Results.Select(r => r.Chart.Id).OrderBy(id => id == xross));
+    }
+
+    [Fact]
+    public async Task ChannelFacetCountsWithItsOwnFilterLiftedAndNeverCountsASongWithNoChannel()
+    {
+        SeedMix(MixEnum.Phoenix2,
+            InChannel(MakeChart(Guid.NewGuid(), MixEnum.Phoenix2, "A", 20), Channel.Original),
+            InChannel(MakeChart(Guid.NewGuid(), MixEnum.Phoenix2, "B", 21), Channel.Original),
+            InChannel(MakeChart(Guid.NewGuid(), MixEnum.Phoenix2, "C", 22), Channel.WorldMusic),
+            MakeChart(Guid.NewGuid(), MixEnum.Phoenix2, "D", 18));
+
+        var page = await BuildHandler().Handle(new SearchChartsQuery
+        {
+            Mix = MixEnum.Phoenix2, Channels = new[] { Channel.WorldMusic }, IncludeFacetCounts = true
+        }, CancellationToken.None);
+
+        Assert.Single(page.Results);
+        Assert.Equal(2, page.FacetCounts!.Channels![Channel.Original]);
+        Assert.Equal(1, page.FacetCounts.Channels[Channel.WorldMusic]);
+        Assert.Equal(2, page.FacetCounts.Channels.Count);
     }
 }

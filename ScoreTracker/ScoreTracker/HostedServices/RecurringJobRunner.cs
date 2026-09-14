@@ -1,4 +1,4 @@
-﻿using ScoreTracker.WeeklyChallenge.Contracts.Messages;
+using ScoreTracker.WeeklyChallenge.Contracts.Messages;
 using ScoreTracker.Catalog.Contracts.Messages;
 using ScoreTracker.CommunityTools.Contracts.Messages;
 using ScoreTracker.Communities.Contracts.Messages;

@@ -1,6 +1,7 @@
 # Discord role management — design
 
-> **Status: BUILT.** Workshopped and built 2026-09-09, one PR, 14 commits.
+> **Status: BUILT.** Workshopped and built 2026-09-09, one PR, 14 commits. The player's own
+> opt-out (D22–D25, §2, §3.4, §5.4) was workshopped and built 2026-09-14 in a second PR.
 >
 > Mock (owner-approved): <https://claude.ai/code/artifact/c143bfe5-cff8-4b9a-b878-665a1aac8197>
 
@@ -33,6 +34,8 @@ Owner calls from the 2026-09-09 workshop.
 | D5 | **Any of the 272 Phoenix 2 titles can be mapped.** No curated subset — the picker searches the shipped list. |
 | D6 | **Pumbility ladders are highest-only.** Reaching `[P.B] GOLD` strips `[P.B] BRONZE` and `[P.B] SILVER`. Everything else is keep-once-earned. |
 | D7 | **Gem sub-levels are never offered.** The 37-rung `Phoenix2PumbilityLevel` badge ladder is a display artifact; a role maps to a gem, not to `LV.3` inside one. |
+| D22 | **A player can turn a community's title roles off for themselves** with `/piu roles off`, run in the community's designated server, and back on with `/piu roles on` (owner, 2026-09-14). Keyed on the **community**, not the server: the preference survives an admin repointing the server under D14, and a community that designates the same server later is a new question rather than a covered one. One command covers every community designating the server — normally one — so the player never has to know which site community is behind the roles. |
+| D24 | **The command is visible everywhere and refuses where it does not apply** (owner, 2026-09-14), like `/piu link-server` and `/piu register` before it. Hiding it per *server* is possible — a guild-scoped registration in only the servers that hand out roles — but a guild command and a global command may share a name and both show, so it would need its own top-level command, and registration would become a second thing to keep in step with designations. Hiding it per *user* (only somebody with a PIU Scores link) is not possible at all: Discord's per-user command permissions can only be edited with a Bearer token from a server admin's own OAuth grant, never with the bot's, so no bot can drive them from its own data. |
 
 ### Authority
 
@@ -57,12 +60,16 @@ Owner calls from the 2026-09-09 workshop.
 | D17 | **Unlinking Discord publishes an event.** It was the one change nothing reported, so roles granted off the back of a sign-in outlived it until a sweep noticed. `ExternalLoginRemovedEvent` makes it immediate, which is what let the sweep drop to nightly without leaving a silent case. |
 | D19 | **Linking Discord publishes one too.** The mirror of D17, and the same reason: linking is the LAST step of ordinary onboarding — the community join happens before there is a Discord account, the server join before there is a site account to find — so it was the one step that fired nothing, leaving the player on a nightly sweep they cannot trigger (Check now is admin-only). |
 | D20 | **A system community may be owned, but never deleted.** World and the ninety-odd country communities are auto-joined and site-owned, and nothing guarded deletion because being ownerless left them with no Creator. Naming somebody on the row is a legitimate thing to do — it is how the official Discord gets its title roles — so the guard is explicit now (owner, 2026-09-09). Without it, World carrying every account on the site was one confirm from deletion. |
+| D23 | **The opt-out is a fifth fact in the rule, not an action the command takes** (2026-09-14). `Reconcile` reads it alongside membership and the linked account, so the join event, the nightly sweep, a title earned next week, an admin's Check now and the dry run all honor it, and nothing can hand the role back by accident. The command writes the fact and then runs the same reconcile inline, the way D18 hands a role out on the spot. It also made the two existing revoke loops honest: a revoke pass used to stop at the first role Discord refused, so somebody wearing one role above the bot kept the assignable one too. Every revoke is attempted now in both `ReconcileMember` and `Revoke`, the grant row stays while anything failed, and the failure surfaces after the loop. The second loop matters most on the purge, which deletes the grant row — the last handle on the snowflake — whether or not the revoke succeeded, so a role skipped there is a role nothing can ever take back. |
+| D26 | **A repointed server leaving an opt-out unliftable is accepted, not fixed** (owner, 2026-09-14, on the bug check). Lifting is only reachable by running the command in the designated server, so a player who opted out, whose admin then repoints the community elsewhere, cannot undo it from a Discord they are not in. That needs three things to line up at once and has never happened. It is also not purely a loss: the row persisting means that if they ever do join the new server, **their choice is remembered** rather than quietly reversed — which is the right direction for a privacy preference. No site-side switch is being built for it. |
+| D25 | **A player who is not in the community can still turn its roles off**, and a player with nothing to take off gets the same answer — the record simply waits (2026-09-14). Admins never see who opted out: the page gains the fact as a line under "When a role is given", not a list of names. The reply names the account the invocation resolved to, for the same reason D21 does. |
 
 ---
 
 ## 2. The rule
 
-Four facts. All four true ⇒ the role is held. Any one false ⇒ it is removed.
+Five facts — four at the first build, and the player's own say-so since 2026-09-14 (D22). All
+true ⇒ the role is held. Any one false ⇒ it is removed.
 
 ```
 holds(user, role) ⟺  ∃ mapping (community → title → role)
@@ -72,6 +79,7 @@ holds(user, role) ⟺  ∃ mapping (community → title → role)
                   ∧  user ∈ S
                   ∧  user holds title             on Phoenix 2
                   ∧  no higher rung of title's exclusivity group is held
+                  ∧  user has not turned community's roles off    (/piu roles off)
 ```
 
 ### 2.1 Where each fact lives
@@ -84,6 +92,7 @@ holds(user, role) ⟺  ∃ mapping (community → title → role)
 | Discord account linked | `IUserReader.GetExternalLogins` | link on `/Account`; unlink publishes `ExternalLoginRemovedEvent` (D17); account purge |
 | in the server | `IBotClient.GetMemberRoles` returns non-null | joins, leaves, kicked, banned |
 | holds the title | `ITitleRepository.GetCompletedTitles` | a score import earns one |
+| has not opted out | `CommunityDiscordOptOut` | `/piu roles off` writes the row, `/piu roles on` deletes it — both run in the designated server, both reconcile inline (D22) |
 
 A pass's work list is **members with Discord linked, plus anyone we still hold a grant for** — not
 the whole roster. A member with neither resolves to no account and no plan, so visiting them is a
@@ -119,7 +128,7 @@ be rejected.
 
 ## 3. The model
 
-Three tables, all Communities-owned, registered through the existing
+Four tables, all Communities-owned, registered through the existing
 `CommunitiesModelContribution`.
 
 ### 3.1 `CommunityDiscordServer`
@@ -177,6 +186,26 @@ Two failures it fixes, both of which strand roles permanently otherwise:
 Note the row is per member, not per role: what gets removed is drawn from the community's currently
 mapped roles, which is the same set the page calls managed (D12).
 
+### 3.4 `CommunityDiscordOptOut`
+
+One row per (community, player) who has turned that community's title roles off for themselves
+(D22). Unique on the pair.
+
+| Column | Notes |
+|---|---|
+| `Id` | key |
+| `CommunityId` | |
+| `UserId` | the purge key |
+| `OptedOutAt` | when |
+
+It is its own table rather than a flag on the grant row for one reason: a grant row means "this
+member holds at least one role we handed out" and is deleted the moment they hold nothing — which
+is exactly what turning the roles off makes true. An opt-out stored there would vanish in the same
+pass that acted on it, and the next sweep would hand everything back.
+
+The reconcile reads the community's opted-out set once per pass, next to its members and their
+titles (§2.1), so the fact costs one small read whichever angle the pass came in from.
+
 ---
 
 ## 4. Triggers
@@ -193,6 +222,7 @@ Every one of these ends in the same `Reconcile`.
 | admin edited a mapping | bulk reconcile over the community |
 | server designated or changed | bulk reconcile; the old server is stripped first (D14) |
 | **joined the Discord server** | `GuildMemberAdded`, plus the sweep as backstop |
+| turned the community's roles off or on | `/piu roles off` / `/piu roles on` — the command writes the row, then reconciles the player inline in every community designating the server (D22, D23) |
 
 ### 4.1 `PlayerTitlesChangedEvent`
 
@@ -265,6 +295,27 @@ as the tier list's title pointer) for somebody who granted the permission by han
 **Hierarchy and permission are different failures with different fixes**, which is why they are
 separate reasons: no amount of role reordering fixes a permission the bot was never given.
 
+### 5.4 `/piu roles off` and `/piu roles on`
+
+A `roles` group with two leaves and no options, both replying privately. Run in the server whose
+roles the player means; the interaction says which server that is, and `CommunityDiscordServer`
+says which communities hand out roles there — normally one, and the command covers all of them
+(D22). Refusals, in order: not in a server; no community designates this one ("This server doesn't
+hand out title roles"); the invoker has no PIU Scores link, which gets the same sentence
+`link-server` uses.
+
+`off` writes the row for each community, then runs `ReconcileOne` for the player in each — the
+existing rule with its fifth fact false, which takes every managed role off and forgets the grant
+(D23). `on` deletes the row and reconciles the same way, so an earned role is back before the reply
+lands. The reply names the account the invocation resolved to and the communities it covered, and
+tells the player the command that undoes it. When a role cannot come off — it sits above the bot —
+the row still stands, the reply says so, and the page's health list already names the role for the
+admin.
+
+The command literal rides into each reply as a placeholder argument rather than inside the
+translated sentence, so every locale prints the real command. (Murloc, whose alphabet has no `i`,
+had to mangle the earlier `/piu unregister` where it sat inside a value.)
+
 ---
 
 ## 6. Layers
@@ -282,6 +333,11 @@ separate reasons: no amount of role reordering fixes a permission the bot was ne
 **No new project references.** Everything Communities needs — titles, users, the bot — is already a
 Domain port it can see, and the one cross-vertical event rides a reference that already exists.
 
+The opt-out (2026-09-14) stays inside the same lines: the `roles` group in `PiuCommandCatalog`, its
+handler in `BotCommandSaga`, the fifth fact in `DiscordRoleSaga`, one entity, three repository
+members and a migration in Communities, one line on `/Community/Discord`, and nothing new in
+`Domain` or `Data`.
+
 ---
 
 ## 7. Deliberately not done
@@ -294,6 +350,17 @@ Domain port it can see, and the one cross-vertical event rides a reference that 
   `AlwaysDownloadUsers` stays off (D15).
 - **A Discord-side audit log.** The site's own activity surfaces are elsewhere and this feature is
   not the place to invent one.
+- **Hiding `/piu roles` per server, or per user.** D24 — the first costs a second command tree and a
+  registration to keep in step, the second Discord does not allow a bot to do at all.
+- **A site switch for the opt-out.** The command is symmetric, so a player undoes it where they did
+  it. Not revisited after the bug check either — see D26.
+- **A single-member path through `BuildContext`.** Settling one player loads the community's whole
+  membership, the mapped titles' holders and the members' Discord links, because the context is
+  shared with the whole-community pass. Considered and declined (owner, 2026-09-14): for a real
+  community that is three indexed reads, and the same path already runs on **every title change** —
+  which a score import triggers constantly — so a command used a handful of times a month adds no
+  cost class that is not already there. Worth revisiting only if World itself ever maps a title,
+  and at that point the join event and the title fan-out are the bigger callers, not the command.
 
 ---
 
@@ -397,6 +464,31 @@ A resx opens with the schema comment, and that comment contains **example `<data
 of those as the neighbour and splice a real entry *inside the comment*, where `GenerateResource`
 never sees it and the UI silently renders the key name. Anchor the scan after the last
 `</resheader>`.
+
+### 9.6 What the opt-out's bug check found (2026-09-14)
+
+Four fixes and one ratchet, all on the same PR.
+
+- **Every Discord-role read threw.** The shared `Servers(...)` helper returned
+  `IQueryable<CommunityDiscordServerRecord>` and its two callers filtered the **projection** — and
+  EF cannot translate a predicate back through a positional record's constructor, so `GetServer`
+  and `GetServersByGuild` failed at query-compile time, unconditionally. That is the whole feature,
+  plus `/Community/Discord`, `/piu link-server`, every reconcile and community deletion. It is the
+  same trap `EFHardmodeRatingRepository` shipped one day earlier (PR #338), and it survived 4,734
+  green tests for the same reason: **the repository had no integration test.**
+  `EFDiscordRoleRepositoryTests` is that missing ratchet — seven facts that execute the reads
+  rather than mocking them, which is the only kind of test this class of bug cannot pass.
+- **An unrecognized `roles` leaf turned roles back on.** `path[1] == "off"` meant everything else
+  fell into the branch that *deletes* the opt-out. A privacy preference fails closed: the leaf is
+  matched explicitly and an unknown one is refused.
+- **`/piu roles on` said "already on" over a failed pass.** The realistic caller is somebody whose
+  role is missing and who was never opted out, so nothing is lifted — and they were handed a
+  reassurance for a reconcile that had just thrown. The failure is reported first now.
+- **Recording the opt-out was check-then-insert against a unique index**, and the write sat outside
+  the loop's try, so with two communities on one server a throw on the first left the second never
+  written and said nothing. The insert treats its own unique violation as success — pressing once
+  and having the client retry is not an error — and the write is inside the same try the reconcile
+  has.
 
 ### 9.5 Testing
 

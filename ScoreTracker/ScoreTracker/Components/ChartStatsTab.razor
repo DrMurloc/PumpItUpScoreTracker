@@ -3,48 +3,95 @@
 @using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.ChartIntelligence.Contracts.Queries
 @using ScoreTracker.Web.Services
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Services.Theming
 @inject IMediator Mediator
 
-@* What the chart IS, extracted from ChartDetailsDialog: the meta grid, where the tier
-   lists place it, what it is made of, and the way out to PIU Center. It owns the three
-   reads that feed those — placements, the alias key, and the badge chips — so a host that
-   never shows this block never pays for them. *@
+@* What the chart IS, extracted from ChartDetailsDialog: its history and its channel as rows,
+   where the tier lists place it, what it is made of, and the way out to PIU Center. The
+   identity — type, artists, BPM, notes — reads under the title in the dialog's header instead
+   (docs/design/song-channels.md D10). It owns the reads that feed those — the verdict's
+   history, placements, the alias key, and the badge chips — so a host that never shows this
+   block never pays for them. *@
 @if (Chart != null)
 {
-    <div class="chart-details-meta">
-        @if (Chart.Song.Bpm != null)
+    <div class="chart-details-rows">
+        @* The chart's life as events (docs/design/song-channels.md D11): mix, the day, the patch
+           when numbered, the entry as a tag, the level with its mark. Each mix groups its events,
+           so a phone can stand the mix on its own line with the events indented beneath it, while
+           a wider dialog gives every event one line that names its mix. *@
+        <div class="chart-details-row chart-details-row-history">
+            <span class="chart-details-row-label">@L["History"]</span>
+            <span class="chart-details-row-value">
+                @foreach (var group in HistoryGroups())
+                {
+                    <span class="chart-details-mix">
+                        <span class="chart-details-mix-head">@group.Mix.GetName()</span>
+                        @foreach (var e in group.Events)
+                        {
+                            var before = Before(e);
+                            <span class="chart-details-event">
+                                <span class="chart-details-event-mix">@group.Mix.GetName()<span class="chart-details-sep">·</span></span>
+                                @for (var i = 0; i < before.Count; i++)
+                                {
+                                    if (i > 0)
+                                    {
+                                        <span class="chart-details-sep">·</span>
+                                    }
+                                    @before[i]
+                                }
+                                @if (before.Count > 0)
+                                {
+                                    <span class="chart-details-sep">·</span>
+                                }
+                                <span class="chart-details-tag chart-details-tag-@(e.Kind.ToString().ToLowerInvariant())">@KindLabel(e.Kind)</span>
+                                @if (e.Level is { } level)
+                                {
+                                    <span class="chart-details-sep">·</span>@Label(level)
+                                }
+                                @if (e.Delta != 0)
+                                {
+                                    <span class="chart-details-delta">@(e.Delta > 0 ? "▲" : "▼") @(e.Delta > 0 ? "+" : "")@e.Delta</span>
+                                }
+                            </span>
+                        }
+                    </span>
+                }
+            </span>
+        </div>
+        @* A filter as much as a fact, so the chip opens the chart search on it. Nothing when the
+           mix has no row for the song. *@
+        @if (Chart.Song.Channel is { } channel)
         {
-            <div><span class="chart-details-meta-label">@L["BPM"]</span><span>@Chart.Song.Bpm</span></div>
+            <div class="chart-details-row chart-details-row-channel">
+                <span class="chart-details-row-label">@L["Channel"]</span>
+                <span class="chart-details-row-value">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
+                             Href="@($"/Charts?Channel={channel}")">@L[channel.GetLabelKey()]</MudChip>
+                </span>
+            </div>
         }
-        @if (Chart.NoteCount != null)
-        {
-            <div><span class="chart-details-meta-label">@L["Note Count"]</span><span>@Chart.NoteCount</span></div>
-        }
-        @if (Chart.StepArtist != null)
-        {
-            <div><span class="chart-details-meta-label">@L["Step Artist"]</span><span>@Chart.StepArtist</span></div>
-        }
-        <div><span class="chart-details-meta-label">@L["Song Artist"]</span><span>@Chart.Song.Artist</span></div>
-        <div><span class="chart-details-meta-label">@L["Song Type"]</span><span>@Chart.Song.Type</span></div>
         @* Two separate facts, because they answer different questions: how played this
            chart is across the whole mix, and how played it is against its own folder —
            a chart four hundredth overall can still be the most played thing in its
            folder. Both are piugame's play ranking, not this site's score counts. *@
-        @if (OfficialPlace != null)
+        @if (OfficialPlace != null || OfficialFolderPlace != null)
         {
-            <div>
-                <span class="chart-details-meta-label">@L["Popularity overall"]</span>
-                <span>@L["#{0}", OfficialPlace.Value.ToString("N0")]</span>
-            </div>
-        }
-        @if (OfficialFolderPlace != null)
-        {
-            <div>
-                <span class="chart-details-meta-label">@L["Popularity in {0}", Chart.DifficultyString]</span>
-                <span>@L["#{0}", OfficialFolderPlace.Value.ToString("N0")]</span>
+            <div class="chart-details-row chart-details-row-played">
+                <span class="chart-details-row-label">@L["Played"]</span>
+                <span class="chart-details-row-value">
+                    @if (OfficialPlace != null)
+                    {
+                        <span class="chart-details-line">@L["Popularity overall"]<span class="chart-details-sep">·</span>@L["#{0}", OfficialPlace.Value.ToString("N0")]</span>
+                    }
+                    @if (OfficialFolderPlace != null)
+                    {
+                        <span class="chart-details-line">@L["Popularity in {0}", Chart.DifficultyString]<span class="chart-details-sep">·</span>@L["#{0}", OfficialFolderPlace.Value.ToString("N0")]</span>
+                    }
+                </span>
             </div>
         }
     </div>
@@ -73,19 +120,131 @@
 }
 
 <style>
-    .chart-details-meta {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 4px 12px;
+    /* Rows, not tiles: a short label column and one run of values per row, hairlines between.
+       Eight labelled tiles read as a wall and stacked sixteen lines deep inside a phone's dialog
+       (owner, round 3); the label column stays narrow enough for the 278px a phone leaves. */
+    .chart-details-rows {
+        display: flex;
+        flex-direction: column;
         margin-bottom: 8px;
     }
 
-    .chart-details-meta-label {
+    .chart-details-row {
+        display: grid;
+        grid-template-columns: 64px minmax(0, 1fr);
+        gap: 10px;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--mud-palette-lines-default);
+        align-items: baseline;
+    }
+
+    .chart-details-row:first-child {
+        padding-top: 2px;
+    }
+
+    .chart-details-row:last-child {
+        border-bottom: 0;
+    }
+
+    .chart-details-row-label {
         color: var(--mud-palette-text-secondary);
-        font-size: .7rem;
+        font-size: .68rem;
         text-transform: uppercase;
         letter-spacing: .08em;
+    }
+
+    .chart-details-row-value {
+        font-size: .88rem;
+        min-width: 0;
+    }
+
+    .chart-details-line,
+    .chart-details-mix,
+    .chart-details-event {
         display: block;
+    }
+
+    /* Wide: every event is one line that names its mix; the mix heading exists for the phone. */
+    .chart-details-mix-head {
+        display: none;
+    }
+
+    .chart-details-event-mix {
+        font-weight: 500;
+    }
+
+    .chart-details-sep {
+        opacity: .55;
+        margin: 0 5px;
+    }
+
+    /* The entry as a tag (round 4, variant B): a removal or a revival catches the eye in a long
+       life. Rerated wears the ramp's hard color, as its mark does; Revived the primary. */
+    .chart-details-tag {
+        display: inline-block;
+        font-size: .64rem;
+        font-weight: 600;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        padding: 1px 6px;
+        border-radius: 4px;
+        border: 1px solid currentColor;
+        line-height: 1.35;
+        vertical-align: 1px;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .chart-details-tag-rerated {
+        color: var(--diff-hard);
+    }
+
+    .chart-details-tag-removed {
+        border-style: dashed;
+    }
+
+    .chart-details-tag-revived {
+        color: var(--mud-palette-primary);
+    }
+
+    /* The page's timeline mark, in the ramp's hard color whichever way the level moved. */
+    .chart-details-delta {
+        margin-left: 4px;
+        color: var(--diff-hard);
+        font-weight: 800;
+        font-size: .8rem;
+        white-space: nowrap;
+    }
+
+    /* The phone form (owner, round 4): the label above its block so the events get the whole
+       width, the mix as its own line, each event hanging 14px in on a line of its own. */
+    @@media (max-width: 600px) {
+        .chart-details-row-history {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 4px;
+        }
+
+        .chart-details-mix + .chart-details-mix {
+            margin-top: 5px;
+        }
+
+        .chart-details-mix-head {
+            display: block;
+            font-weight: 500;
+        }
+
+        .chart-details-event-mix {
+            display: none;
+        }
+
+        .chart-details-event {
+            padding-left: 14px;
+            font-size: .78rem;
+            line-height: 1.5;
+        }
+
+        .chart-details-event .chart-details-sep {
+            margin: 0 4px;
+        }
     }
 
     .chart-details-placements, .chart-details-skills {
@@ -108,6 +267,9 @@
 </style>
 
 @code {
+    /// <summary>One mix and the events that happened to the chart there, in order.</summary>
+    private sealed record HistoryGroup(MixEnum Mix, IReadOnlyList<ChartHistoryEvent> Events);
+
     [Parameter] public Chart? Chart { get; set; }
 
     [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
@@ -124,7 +286,7 @@
 
     /// <summary>
     ///     Set false by a host that renders this behind a tab nobody has selected, so a panel
-    ///     out of sight issues none of its three reads.
+    ///     out of sight issues none of its reads.
     /// </summary>
     [Parameter] public bool Active { get; set; } = true;
 
@@ -136,6 +298,7 @@
 
     private Guid _loadedChartId = Guid.Empty;
     private string? _externalKey;
+    private HistoryVerdict? _history;
     private IReadOnlyList<(string Label, string Color)> _placements = Array.Empty<(string, string)>();
     private IReadOnlyList<TierListChartCard.CardSkillChip> _identityChips =
         Array.Empty<TierListChartCard.CardSkillChip>();
@@ -144,6 +307,9 @@
     {
         if (!Active || Chart == null || Chart.Id == _loadedChartId) return;
         _loadedChartId = Chart.Id;
+        // The same verdict the chart page draws its timeline from, cached per (chart, mix) by
+        // its handler, so the dialog and the page can never disagree about a rerate.
+        _history = (await Mediator.Send(new GetChartVerdictQuery(Chart.Id, Mix))).OfType<HistoryVerdict>().FirstOrDefault();
         _placements = await LoadPlacements(Chart.Id);
         // The alias table's key beats the guessed one (crawler project hardening).
         _externalKey = (await Mediator.Send(new GetChartStepAnalysisQuery(Chart.Id)))?.ExternalKey;
@@ -154,6 +320,53 @@
         _identityChips = IdentityChips.WithSpeedBand(
             IdentityChips.ToCardChips(identity.GetValueOrDefault(Chart.Id), false, L),
             await SpeedBand(Chart.Id), L);
+    }
+
+    /// <summary>
+    ///     The facet's events, grouped by mix so consecutive events in one mix share its line on
+    ///     a phone. Without a history facet — a debut with no rerate, for which the page shows no
+    ///     History section — the chart's own row still says when it arrived.
+    /// </summary>
+    private IReadOnlyList<HistoryGroup> HistoryGroups()
+    {
+        if (Chart == null) return Array.Empty<HistoryGroup>();
+        var events = _history?.Events is { Count: > 0 } known
+            ? known
+            : new[] { new ChartHistoryEvent(Chart.OriginalMix, ChartHistoryEventKind.Debuted, Chart.Debut, (int)Chart.Level, 0) };
+        var groups = new List<(MixEnum Mix, List<ChartHistoryEvent> Events)>();
+        foreach (var e in events)
+        {
+            if (groups.Count > 0 && groups[^1].Mix == e.Mix) groups[^1].Events.Add(e);
+            else groups.Add((e.Mix, new List<ChartHistoryEvent> { e }));
+        }
+
+        return groups.Select(g => new HistoryGroup(g.Mix, g.Events)).ToArray();
+    }
+
+    /// <summary>What precedes the entry on its line: the day the patch shipped, and the patch when it is numbered.</summary>
+    private static IReadOnlyList<string> Before(ChartHistoryEvent e)
+    {
+        var parts = new List<string>();
+        if (e.Stamp?.ReleaseDate is { } shipped) parts.Add(VersionStampText.Day(shipped));
+        if (e.Stamp != null && VersionStampText.Patch(e.Stamp) is { } patch) parts.Add(patch);
+        return parts;
+    }
+
+    private string KindLabel(ChartHistoryEventKind kind)
+    {
+        return kind switch
+        {
+            ChartHistoryEventKind.Debuted => L["Debuted"],
+            ChartHistoryEventKind.Rerated => L["Rerated"],
+            ChartHistoryEventKind.Removed => L["Removed"],
+            _ => L["Revived"]
+        };
+    }
+
+    /// <summary>The timeline's label for a level: the type's shorthand and the number, <c>D23</c>.</summary>
+    private string Label(int level)
+    {
+        return $"{Chart!.Type.GetShortHand()}{level}";
     }
 
     /// <summary>

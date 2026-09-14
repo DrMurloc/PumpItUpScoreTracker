@@ -304,6 +304,26 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("MixVersion", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.SongMixEntity", b =>
+                {
+                    b.Property<Guid>("SongId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.HasKey("SongId", "MixId");
+
+                    b.HasIndex("MixId", "Channel");
+
+                    b.ToTable("SongMix", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.SongNameLanguageEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -1104,6 +1124,31 @@ namespace ScoreTracker.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("CommunityDiscordGrant", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.Communities.Infrastructure.Entities.CommunityDiscordOptOutEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CommunityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("OptedOutAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("CommunityId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("CommunityDiscordOptOut", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.Communities.Infrastructure.Entities.CommunityDiscordServerEntity", b =>
@@ -4624,6 +4669,21 @@ namespace ScoreTracker.Data.Migrations
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.MixEntity", null)
                         .WithMany()
                         .HasForeignKey("MixId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.SongMixEntity", b =>
+                {
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.MixEntity", null)
+                        .WithMany()
+                        .HasForeignKey("MixId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.SongEntity", null)
+                        .WithMany()
+                        .HasForeignKey("SongId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

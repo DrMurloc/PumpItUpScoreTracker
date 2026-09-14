@@ -66,7 +66,11 @@ namespace ScoreTracker.Randomizer.Application
                      charts.Values.Where(c => !settings.ChartIds.Any() || settings.ChartIds.Contains(c.Id))
                          .Where(c => settings.Versions.Count == 0 ||
                                      (c.AddedIn != null && settings.Versions.Contains(c.AddedIn.Version)))
-                         .Where(c => settings.Debut == null || c.IsDebut == settings.Debut))
+                         .Where(c => settings.Debut == null || c.IsDebut == settings.Debut)
+                         // Channels the same way (docs/design/song-channels.md §5): empty draws from every
+                         // channel, and a song with no channel on this mix never matches a pick.
+                         .Where(c => settings.Channels.Count == 0 ||
+                                     (c.Song.Channel != null && settings.Channels.Contains(c.Song.Channel.Value))))
             {
                 double? scoringLevel = scoringLevels.TryGetValue(chart.Id, out var sl) ? sl : null;
                 if (settings.UseScoringLevels && scoringLevel == null)

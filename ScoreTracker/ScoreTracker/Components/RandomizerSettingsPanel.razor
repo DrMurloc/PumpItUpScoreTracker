@@ -121,6 +121,30 @@
         </div>
     </div>
 
+    @* The channels a draw may pull from (docs/design/song-channels.md §5): the mix's own chips
+       in the game's order, All and Clear. Nothing picked draws from every channel. Hidden where
+       the mix's songs carry no channel. *@
+    @if (HasChannels)
+    {
+        <div class="rand-settings-row">
+            <div class="rand-row-head">
+                <span class="rand-settings-label">@L["Channels"]</span>
+                <span class="rand-through">
+                    <button type="button" class="rand-through-btn" @onclick="SelectAllChannels">@L["All"]</button>
+                    <button type="button" class="rand-through-btn" @onclick="ClearChannels">@L["Clear"]</button>
+                </span>
+            </div>
+            <div class="rand-grade-chips rand-channel-chips">
+                @foreach (var captured in _channels.Select(c => c.Channel))
+                {
+                    <button type="button" class="rand-grade-chip @(Settings.Channels.Contains(captured) ? "on" : null)"
+                            @onclick="() => ToggleChannel(captured)">@L[captured.GetLabelKey()]</button>
+                }
+            </div>
+            <MudText Typo="Typo.caption" Class="rand-section-hint">@ChannelsHint</MudText>
+        </div>
+    }
+
     @* The patches a draw may pull from (docs/design/chart-versions.md §4): chips per patch of
        the mix, a Through select for the cab that is behind a version or the tournament that
        froze its pool, All and Clear. Nothing picked draws from every patch. Hidden where the
@@ -389,6 +413,10 @@
     /// <summary>The mix's patches, oldest first; loaded per mix, empty where nobody versioned it.</summary>
     private IReadOnlyList<MixVersionRecord> _versions = Array.Empty<MixVersionRecord>();
     private MixEnum? _versionsFor;
+    private IReadOnlyList<MixChannelRecord> _channels = Array.Empty<MixChannelRecord>();
+
+    /// <summary>Only once some song of the mix carries a channel — nothing until the backfill lands.</summary>
+    private bool HasChannels => _channels.Count > 0;
 
     /// <summary>Past one patch, and only once some chart carries one — the seeded rows alone make no draw narrower.</summary>
     private bool HasVersions => _versions.Count > 1 && _versions.Any(v => v.ChartCount > 0);
@@ -444,12 +472,18 @@
     {
         if (_versionsFor == Mix) return;
         await LoadVersions(Mix);
+        await LoadChannels(Mix);
     }
 
     private async Task LoadVersions(MixEnum mix)
     {
         _versionsFor = mix;
         _versions = await Mediator.Send(new GetMixVersionsQuery(mix)) ?? Array.Empty<MixVersionRecord>();
+    }
+
+    private async Task LoadChannels(MixEnum mix)
+    {
+        _channels = await Mediator.Send(new GetMixChannelsQuery(mix)) ?? Array.Empty<MixChannelRecord>();
     }
 
     protected override void OnParametersSet()
@@ -571,6 +605,9 @@
         // Version names belong to one mix; the picks cannot carry across.
         Settings.Versions.Clear();
         await LoadVersions(mix);
+        // A channel set belongs to one mix too: Phoenix 2 has no J-Music to carry a pick into.
+        Settings.Channels.Clear();
+        await LoadChannels(mix);
         if (!PlayerFiltersAvailable)
         {
             Settings.ClearStatus = null;
@@ -656,6 +693,36 @@
     private async Task ClearVersions()
     {
         Settings.Versions.Clear();
+        await Notify();
+    }
+
+    private string ChannelsHint
+    {
+        get
+        {
+            if (Settings.Channels.Count == 0) return L["Nothing picked draws from every channel."];
+            if (_channels.All(c => Settings.Channels.Contains(c.Channel)))
+                return L["Every channel picked; the same as nothing picked."];
+            var picks = _channels.Where(c => Settings.Channels.Contains(c.Channel)).Select(c => L[c.Channel.GetLabelKey()].Value);
+            return L["Draws from {0} only.", string.Join(", ", picks)];
+        }
+    }
+
+    private async Task ToggleChannel(Channel channel)
+    {
+        if (!Settings.Channels.Remove(channel)) Settings.Channels.Add(channel);
+        await Notify();
+    }
+
+    private async Task SelectAllChannels()
+    {
+        Settings.Channels = _channels.Select(c => c.Channel).ToHashSet();
+        await Notify();
+    }
+
+    private async Task ClearChannels()
+    {
+        Settings.Channels.Clear();
         await Notify();
     }
 

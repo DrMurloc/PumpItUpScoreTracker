@@ -33,6 +33,8 @@ internal sealed class ChartBuilder
     public ChartBuilder WithSongName(string name) { _song = _song with { Name = Name.From(name) }; return this; }
     public ChartBuilder WithArtist(string artist) { _song = _song with { Artist = Name.From(artist) }; return this; }
     public ChartBuilder WithSongType(SongType type) { _song = _song with { Type = type }; return this; }
+    /// <summary>The song's channel on the chart's mix; unset means the mix has no row for it.</summary>
+    public ChartBuilder WithChannel(Channel channel) { _song = _song with { Channel = channel }; return this; }
     public ChartBuilder WithType(ChartType type) { _type = type; return this; }
     public ChartBuilder WithLevel(int level) { _level = DifficultyLevel.From(level); return this; }
     public ChartBuilder WithLevel(DifficultyLevel level) { _level = level; return this; }

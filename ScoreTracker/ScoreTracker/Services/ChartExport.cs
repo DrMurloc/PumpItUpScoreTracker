@@ -157,6 +157,8 @@ public static class ChartExport
         new("Debut", false, (r, _) => r.Chart.IsDebut ? "true" : "false"),
         new("LegacyDifficulty", false, (r, _) => r.Chart.Slot?.GetName() ?? string.Empty),
         new("SongType", false, (r, _) => r.Chart.Song.Type.ToString()),
+        // The song's channel on the exported mix, as the site prints it; blank when unknown.
+        new("Channel", false, (r, _) => r.Chart.Song.Channel?.GetName() ?? string.Empty),
         new("BPM", false, (r, _) => r.Chart.Song.Bpm?.ToString() ?? string.Empty),
         new("DurationSeconds", false,
             (r, _) => ((int)r.Chart.Song.Duration.TotalSeconds).ToString(CultureInfo.InvariantCulture)),

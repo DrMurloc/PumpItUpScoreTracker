@@ -320,7 +320,7 @@ else
                 }
             </MudSelect>
 
-            @if (ShowsAny("songType", "artist", "stepArtist", "bpm", "nps", "noteCount", "duration"))
+            @if (ShowsAny("songType", "channel", "artist", "stepArtist", "bpm", "nps", "noteCount", "duration"))
             {
                 <MudText Typo="Typo.overline">@L["Content"]</MudText>
             }
@@ -334,7 +334,25 @@ else
                             var captured = type;
                             <span class="srp-facet-chip @(_songTypes.Contains(captured) ? "srp-facet-chip-on" : "")"
                                   role="button" tabindex="0" @onclick="() => ToggleSongType(captured)">
-                                @L[SongTypeName(captured)]@CountSuffix(_facetCounts?.SongTypes, captured)
+                                @L[SongTypeText.Name(captured)]@CountSuffix(_facetCounts?.SongTypes, captured)
+                            </span>
+                        }
+                    </div>
+                </div>
+            }
+            @* The song's channel on the mix in view, in the game's order (docs/design/song-channels.md §5).
+               A mix offers the channels its songs sit in, so Phoenix 2 never shows a J-Music chip. *@
+            @if (Shows("channel") && HasChannels)
+            {
+                <div class="srp-facet">
+                    <div class="srp-facet-head">@L["Channel"]</div>
+                    <div class="srp-chipset">
+                        @foreach (var channel in Enum.GetValues<Channel>().Where(c => HasAny(_facetCounts?.Channels, c, _channels.Contains(c))))
+                        {
+                            var captured = channel;
+                            <span class="srp-facet-chip srp-channel-chip @(_channels.Contains(captured) ? "srp-facet-chip-on" : "")"
+                                  role="button" tabindex="0" @onclick="() => ToggleChannel(captured)">
+                                @L[captured.GetLabelKey()]@CountSuffix(_facetCounts?.Channels, captured)
                             </span>
                         }
                     </div>
@@ -682,6 +700,7 @@ else
     private int? _levelMax;
     private List<ChartType> _types = new();
     private List<SongType> _songTypes = new();
+    private List<Channel> _channels = new();
     private List<string> _artists = new();
     private List<string> _stepArtists = new();
     private decimal? _bpmMin;
@@ -780,6 +799,10 @@ else
 
     /// <summary>The mix in view's patches, oldest first (docs/design/chart-versions.md §4).</summary>
     private IReadOnlyList<MixVersionRecord> _mixVersions = Array.Empty<MixVersionRecord>();
+    private IReadOnlyList<MixChannelRecord> _mixChannels = Array.Empty<MixChannelRecord>();
+
+    /// <summary>A mix offers a channel once some song of it sits there — nothing until the backfill lands.</summary>
+    private bool HasChannels => _mixChannels.Count > 0;
 
     /// <summary>
     ///     A single patch filters nothing, so the facet only exists past one (D6) — and only once
@@ -879,18 +902,6 @@ else
         };
     }
 
-    internal static string SongTypeName(SongType type)
-    {
-        return type switch
-        {
-            SongType.Arcade => "Arcade",
-            SongType.ShortCut => "Short Cut",
-            SongType.FullSong => "Full Song",
-            SongType.Remix => "Remix",
-            _ => type.ToString()
-        };
-    }
-
     private static List<int> ParseCsvInts(string? csv)
     {
         return csv?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -936,6 +947,7 @@ else
     [Parameter] [SupplyParameterFromQuery(Name = "Badges")] public string? BadgesParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "DebutMix")] public string? DebutMixParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Version")] public string? VersionParam { get; set; }
+    [Parameter] [SupplyParameterFromQuery(Name = "Channel")] public string? ChannelParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Debut")] public string? DebutParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Slots")] public string? SlotsParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "PassDiff")] public string? PassDiffParam { get; set; }
@@ -985,6 +997,7 @@ else
         _badges = ParseCsv(BadgesParam);
         _debutMixes = ParseCsvEnum<MixEnum>(DebutMixParam);
         _versions = ParseCsv(VersionParam);
+        _channels = ParseCsvEnum<Channel>(ChannelParam);
         _debutsOnly = DebutParam == "1";
         _legacySlots = ParseCsvEnum<LegacySlot>(SlotsParam);
         _passDifficulty = ParseCsvEnum<TierListCategory>(PassDiffParam);
@@ -1067,6 +1080,7 @@ else
             ["Badges"] = _badges.Count == 0 ? null : string.Join(',', _badges),
             ["DebutMix"] = Csv(_debutMixes),
             ["Version"] = _versions.Count == 0 ? null : string.Join(',', _versions),
+            ["Channel"] = Csv(_channels),
             ["Debut"] = _debutsOnly ? "1" : null,
             ["Slots"] = Csv(_legacySlots),
             ["PassDiff"] = Csv(_passDifficulty),
@@ -1176,6 +1190,7 @@ else
             Badges = _badges.Count == 0 ? null : _badges,
             DebutMixes = _debutMixes.Count == 0 ? null : _debutMixes,
             Versions = _versions.Count == 0 ? null : _versions,
+            Channels = _channels.Count == 0 ? null : _channels,
             DebutsOnly = _debutsOnly,
             LegacySlots = _legacySlots.Count == 0 ? null : _legacySlots,
             PassDifficulty = _passDifficulty.Count == 0 ? null : _passDifficulty,
@@ -1317,6 +1332,7 @@ else
         _stepArtistVocabulary = await Mediator.Send(new GetSearchStepArtistsQuery(_mix));
         _ranges = await Mediator.Send(new GetSearchRangesQuery(_mix));
         _mixVersions = await Mediator.Send(new GetMixVersionsQuery(_mix)) ?? Array.Empty<MixVersionRecord>();
+        _mixChannels = await Mediator.Send(new GetMixChannelsQuery(_mix)) ?? Array.Empty<MixChannelRecord>();
         // Only now: a throw part-way through would otherwise leave the drawer permanently
         // half-loaded, with no retry for the life of the circuit.
         _vocabularyLoaded = true;
@@ -1355,7 +1371,8 @@ else
                         _durationMax = null;
                         await ApplyChange();
                     }));
-            AddListChips(chips, _songTypes, t => L[SongTypeName(t)].Value);
+            AddListChips(chips, _songTypes, t => L[SongTypeText.Name(t)].Value);
+            AddListChips(chips, _channels, c => L[c.GetLabelKey()].Value);
             AddListChips(chips, _artists, a => a);
             AddListChips(chips, _stepArtists, a => $"{L["Step Artist"]}: {a}");
             if (_bpmMin != null || _bpmMax != null)
@@ -1503,6 +1520,7 @@ else
         _levelMax = null;
         _types.Clear();
         _songTypes.Clear();
+        _channels.Clear();
         _artists.Clear();
         _stepArtists.Clear();
         _bpmMin = null;
@@ -1567,6 +1585,7 @@ else
 
     private Task ToggleType(ChartType type) => Toggle(_types, type);
     private Task ToggleSongType(SongType type) => Toggle(_songTypes, type);
+    private Task ToggleChannel(Channel channel) => Toggle(_channels, channel);
     private Task ToggleScoreState(ChartScoreStateFilter state) => Toggle(_scoreStates, state);
     private Task ToggleCoOpPlayers(int players) => Toggle(_coOpPlayers, players);
     private Task ToggleSlot(LegacySlot slot) => Toggle(_legacySlots, slot);
@@ -1630,6 +1649,9 @@ else
             {
                 new("songType", L["Song Type"], true,
                     () => _songTypes.Count > 0, () => _songTypes.Clear()),
+                // Offered once the mix's songs carry channels — the window between the deploy and the backfill hides it.
+                new("channel", L["Channel"], HasChannels,
+                    () => _channels.Count > 0, () => _channels.Clear()),
                 new("artist", L["Song Artist"], true,
                     () => _artists.Count > 0, () => _artists.Clear()),
                 new("stepArtist", L["Step Artist"], true,

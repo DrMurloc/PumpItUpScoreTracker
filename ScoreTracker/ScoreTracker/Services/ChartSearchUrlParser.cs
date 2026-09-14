@@ -35,6 +35,7 @@ public static class ChartSearchUrlParser
             Badges = Csv(Str(query, "Badges")),
             DebutMixes = CsvEnum<MixEnum>(Str(query, "DebutMix")),
             Versions = Csv(Str(query, "Version")),
+            Channels = CsvEnum<Channel>(Str(query, "Channel")),
             LegacySlots = CsvEnum<LegacySlot>(Str(query, "Slots")),
             PassDifficulty = CsvEnum<TierListCategory>(Str(query, "PassDiff")),
             ScoreDifficulty = CsvEnum<TierListCategory>(Str(query, "ScoreDiff")),

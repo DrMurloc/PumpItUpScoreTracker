@@ -274,4 +274,24 @@ public sealed class DevCatalogWriterTests : IAsyncLifetime
         Assert.Empty(await ctx.Set<MixVersionEntity>().ToListAsync());
         Assert.Equal(0, await ctx.ChartMix.CountAsync(cm => cm.AddedInVersionId != null));
     }
+
+    // ── A song's channel per mix rides the harness too (docs/design/song-channels.md §3) ──
+
+    [Fact]
+    public async Task ChannelsLandAsOneSongMixRowPerSongPerMixAndNoneWhereTheWireHasNone()
+    {
+        var songOfTwoCharts = Guid.NewGuid();
+        var snapshot = Snapshot(
+            new DevChartRow(songOfTwoCharts, MixEnum.Phoenix2, MixEnum.Phoenix2, "Bad Apple!!", "Single", 15, 800, 1, "SUNNY", null, null, "WorldMusic"),
+            new DevChartRow(Guid.NewGuid(), MixEnum.Phoenix2, MixEnum.Phoenix2, "Bad Apple!!", "Double", 24, 1500, 1, "SUNNY", null, null, "WorldMusic"),
+            new DevChartRow(Guid.NewGuid(), MixEnum.Phoenix2, MixEnum.Phoenix2, "Mystery", "Single", 18, 900, 1, "EXC", null, null, null));
+
+        await BuildSeeder().ReplaceCatalog(snapshot);
+
+        Assert.Equal(1, await CountOf("SongMix"));
+        Assert.Equal("WorldMusic", await Scalar(
+            "SELECT sm.Channel FROM scores.SongMix sm JOIN scores.Song s ON s.Id = sm.SongId WHERE s.Name = N'Bad Apple!!'"));
+        Assert.Null(await Scalar(
+            "SELECT sm.Channel FROM scores.SongMix sm JOIN scores.Song s ON s.Id = sm.SongId WHERE s.Name = N'Mystery'"));
+    }
 }

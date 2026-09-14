@@ -219,7 +219,10 @@ shell's search covers "find another chart". Leaderboard rows reflow two-line; sc
   navigation into charts keeps working everywhere because `/Chart/{guid}` 301s forever.
   `ChartDetailsDialog` stays (widgets' quick-look surface) — shared pieces (skill bars, meta
   grid) extract into components both consume where practical (one concept, one component).
-  The dialog later gained the singles video side caption ([video-sides.md](video-sides.md)).
+  The dialog later gained the singles video side caption ([video-sides.md](video-sides.md)),
+  and with the channels work its header carries the chart's identity as one line under the
+  title while its Chart Stats tab carries the page's history timeline as lines and the song's
+  channel ([song-channels.md](song-channels.md) D10).
 - **Localization**: every new string through `L[…]`, all nine locales in the same pass. Verdict
   templates live Web-side (see [chart-verdicts.md](chart-verdicts.md) — the engine returns
   structured facts; Web renders words).

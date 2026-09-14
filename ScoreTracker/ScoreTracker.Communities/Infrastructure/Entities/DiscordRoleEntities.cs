@@ -69,3 +69,26 @@ internal sealed class CommunityDiscordGrantEntity
     public ulong DiscordUserId { get; set; }
     public DateTimeOffset LastReconciledAt { get; set; }
 }
+
+/// <summary>
+///     A player who has turned one community's title roles off for themselves
+///     (docs/design/discord-role-management.md D22). The reconcile reads it as its fifth fact.
+///     <para>
+///         Its own table rather than a flag on the grant row: a grant row means "holds at least one
+///         role we handed out" and is deleted the moment they hold nothing — which is exactly what
+///         opting out makes true, so a flag there would vanish in the same pass that acted on it and
+///         the next sweep would hand everything back.
+///     </para>
+/// </summary>
+[Index(nameof(CommunityId), nameof(UserId), IsUnique = true)]
+[Index(nameof(UserId))]
+internal sealed class CommunityDiscordOptOutEntity
+{
+    [Key] public Guid Id { get; set; }
+    public Guid CommunityId { get; set; }
+
+    /// <summary>The player. The purge key — this entity carries no second user column.</summary>
+    public Guid UserId { get; set; }
+
+    public DateTimeOffset OptedOutAt { get; set; }
+}
