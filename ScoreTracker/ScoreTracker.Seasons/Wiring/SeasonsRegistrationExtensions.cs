@@ -1,7 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Seasons.Application;
 using ScoreTracker.Seasons.Contracts;
+using ScoreTracker.Seasons.Domain;
+using ScoreTracker.Seasons.Infrastructure;
 
 namespace ScoreTracker.Seasons.Wiring;
 
@@ -18,6 +21,10 @@ public static class SeasonsRegistrationExtensions
     public static IServiceCollection AddSeasons(this IServiceCollection services)
     {
         services.AddSingleton<IDbModelContribution, SeasonsModelContribution>();
+        // One adapter serves the roll's write port and the published reader (D35) the Ledger's
+        // writer and Progression's season pass ask.
+        services.AddTransient<ISeasonRepository, EFSeasonRepository>();
+        services.AddTransient<ISeasonReader, EFSeasonRepository>();
         // Per request, like the user accessor it reads: the flag or the admin (D27).
         services.AddScoped<ISeasonsUiGate, SeasonsUiGate>();
         return services;
