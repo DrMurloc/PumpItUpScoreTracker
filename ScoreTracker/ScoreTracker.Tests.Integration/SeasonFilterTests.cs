@@ -2,6 +2,8 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
+using ScoreTracker.Catalog.Infrastructure;
+using ScoreTracker.Catalog.Infrastructure.Entities;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Infrastructure;
 using ScoreTracker.ChartIntelligence.Infrastructure.Entities;
@@ -293,5 +295,30 @@ public sealed class SeasonFilterTests : IAsyncLifetime
         Assert.Equal(60, Assert.Single(allTime).Played);
         Assert.Equal(1, await CountPastTheFilter<PlayerFolderLevelEntity>(Fall2026));
         Assert.Equal(1, await CountPastTheFilter<PlayerFolderLevelEntity>(0));
+    }
+
+    [Fact]
+    public async Task TheChartDictionaryOverlaysTheSeasonRatingWithoutMovingTheFolder()
+    {
+        var chartId = await _seed.SeedPhoenixChartAsync(22);
+        // The roll rated this 22 a 21 for the season (D33): priced at 21, still filed under 22.
+        await Plant(new ChartSeasonEntity
+        {
+            SeasonId = Fall2026, MixId = TestDataSeeder.PhoenixMixId, ChartId = chartId, Level = 21, PrintedLevel = 22,
+            MovedThisRoll = -1
+        });
+        var repository = new EFChartRepository(new MemoryCache(new MemoryCacheOptions()), _fixture.DbContextFactory);
+
+        var printed = (await repository.GetCharts(MixEnum.Phoenix, level: DifficultyLevel.From(22))).Single(c => c.Id == chartId);
+        var inItsFolder = (await repository.GetCharts(MixEnum.Phoenix, Fall, DifficultyLevel.From(22)))
+            .Single(c => c.Id == chartId);
+        var inTheLowerFolder = (await repository.GetCharts(MixEnum.Phoenix, Fall, DifficultyLevel.From(21)))
+            .Where(c => c.Id == chartId);
+        var unfiltered = (await repository.GetCharts(MixEnum.Phoenix, Fall)).Single(c => c.Id == chartId);
+
+        Assert.Equal(22, (int)printed.Level);
+        Assert.Equal(21, (int)inItsFolder.Level);
+        Assert.Empty(inTheLowerFolder);
+        Assert.Equal(21, (int)unfiltered.Level);
     }
 }

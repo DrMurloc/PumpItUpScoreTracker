@@ -12,6 +12,19 @@ public interface IChartRepository
         IEnumerable<Guid>? chartIds = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     The same charts as one season prices them (docs/design/seasons.md D33, §4.3): each chart's
+    ///     <see cref="Chart.Level" /> is its season rating where a <c>ChartSeason</c> row exists and
+    ///     the printed level otherwise. The <paramref name="level" /> filter still selects by the
+    ///     printed level — the folder a chart sits in does not move with its rating (§10.1) — so a
+    ///     22 rated 21 for the season is returned with <c>Level == 21</c> when the 22 folder is asked
+    ///     for, and not at all when the 21 folder is. A sibling rather than a defaulted parameter: a
+    ///     Moq setup is an expression tree, and CS0854 forbids omitting an optional argument in one.
+    /// </summary>
+    Task<IEnumerable<Chart>> GetCharts(MixEnum mix, SeasonId season, DifficultyLevel? level = null,
+        ChartType? type = null, IEnumerable<Guid>? chartIds = null,
+        CancellationToken cancellationToken = default);
+
     Task<IEnumerable<Name>> GetSongNames(MixEnum mix, CancellationToken cancellationToken = default);
 
     /// <summary>
