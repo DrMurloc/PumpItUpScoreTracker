@@ -2393,6 +2393,9 @@
   <data name="Debut version" xml:space="preserve">
     <value>Grglro grogmurgl</value>
   </data>
+  <data name="Debuted" xml:space="preserve">
+    <value>Blargmurmgl</value>
+  </data>
   <data name="debuted at {0}" xml:space="preserve">
     <value>blargmurmgl mr {0}</value>
   </data>
@@ -7597,6 +7600,9 @@
   <data name="Required to be listed — it is what a player reads before deciding." xml:space="preserve">
     <value>Marogl la blurgl — mo bloop am olo pragl golba.</value>
   </data>
+  <data name="Rerated" xml:space="preserve">
+    <value>Glgrglmagl</value>
+  </data>
   <data name="rerated {0}" xml:space="preserve">
     <value>glgrglmagl {0}</value>
   </data>
@@ -7666,6 +7672,9 @@
   </data>
   <data name="Revisit Old Scores" xml:space="preserve">
     <value>Grorpmrglgrorp Rgl Mgrlgmrg</value>
+  </data>
+  <data name="Revived" xml:space="preserve">
+    <value>Rlurbgmorgl</value>
   </data>
   <data name="Revoke" xml:space="preserve">
     <value>Murgloo</value>

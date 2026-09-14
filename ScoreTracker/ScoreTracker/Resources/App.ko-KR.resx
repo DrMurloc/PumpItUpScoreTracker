@@ -2380,6 +2380,9 @@
   <data name="Debut version" xml:space="preserve">
     <value>데뷔 버전</value>
   </data>
+  <data name="Debuted" xml:space="preserve">
+    <value>데뷔</value>
+  </data>
   <data name="debuted at {0}" xml:space="preserve">
     <value>{0}로 데뷔</value>
   </data>
@@ -7555,6 +7558,9 @@
   <data name="Required to be listed — it is what a player reads before deciding." xml:space="preserve">
     <value>목록에 오르려면 필요합니다 — 플레이어가 결정하기 전에 읽는 내용입니다.</value>
   </data>
+  <data name="Rerated" xml:space="preserve">
+    <value>조정됨</value>
+  </data>
   <data name="rerated {0}" xml:space="preserve">
     <value>{0}로 조정됨</value>
   </data>
@@ -7623,6 +7629,9 @@
   </data>
   <data name="Revisit Old Scores" xml:space="preserve">
     <value>오래된 점수 다시 보기</value>
+  </data>
+  <data name="Revived" xml:space="preserve">
+    <value>부활</value>
   </data>
   <data name="Revoke" xml:space="preserve">
     <value>취소</value>

@@ -2380,6 +2380,9 @@
   <data name="Debut version" xml:space="preserve">
     <value>Atualização de estreia</value>
   </data>
+  <data name="Debuted" xml:space="preserve">
+    <value>Estreia</value>
+  </data>
   <data name="debuted at {0}" xml:space="preserve">
     <value>estreou em {0}</value>
   </data>
@@ -7555,6 +7558,9 @@
   <data name="Required to be listed — it is what a player reads before deciding." xml:space="preserve">
     <value>Necessária para ser listada — é o que um jogador lê antes de decidir.</value>
   </data>
+  <data name="Rerated" xml:space="preserve">
+    <value>Reavaliado</value>
+  </data>
   <data name="rerated {0}" xml:space="preserve">
     <value>reavaliado para {0}</value>
   </data>
@@ -7623,6 +7629,9 @@
   </data>
   <data name="Revisit Old Scores" xml:space="preserve">
     <value>Revisite pontuações antigas</value>
+  </data>
+  <data name="Revived" xml:space="preserve">
+    <value>Reintroduzido</value>
   </data>
   <data name="Revoke" xml:space="preserve">
     <value>Revogar</value>
