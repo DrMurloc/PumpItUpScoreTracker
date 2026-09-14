@@ -120,7 +120,10 @@ when unknown. No history note: the channel is a present-tense fact like the leve
 
 **Chart details dialog.** The header carries the chart's identity as one muted line under the
 title, in the chart page's words — song type, *song by*, *steps by*, BPM, notes — above the
-tabs, so every tab has it; a fact the catalog lacks drops out of the line. The Chart Stats tab
+tabs, so every tab has it; a fact the catalog lacks drops out of the line. The song type goes
+through `SongTypeText`, the one place that turns the enum's `ShortCut` into the "Short Cut" the
+chart search has always shown, so it reads in the player's own locale here and on the chart
+page; printing the enum value is what served eight locales English on both. The Chart Stats tab
 is rows with a short label column rather than labelled tiles: a *History* row that is the
 chart's life as events — `Mix · Date · Version · Entry · Level`, the entry a tag (Debuted,
 Rerated, Removed, Revived), the ▲/▼ mark where the level moved, the version only when numbered,

@@ -640,7 +640,8 @@ public sealed class ChartDetailsDialogTests : TestContext
         var cut = RenderDialog(chart, ChartDetailsDialog.DetailsTab.Leaderboard);
 
         cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-sub")));
-        Assert.Equal("FullSong · song by msgoon · steps by SPHAM · 173 BPM · 1,111 notes",
+        // "Full Song", not the enum's FullSong: the type reads the way /Charts says it, in every locale.
+        Assert.Equal("Full Song · song by msgoon · steps by SPHAM · 173 BPM · 1,111 notes",
             cut.Find(".chart-details-sub").TextContent);
     }
 
@@ -651,7 +652,7 @@ public sealed class ChartDetailsDialogTests : TestContext
         var cut = RenderDialog(SetupChart(null), ChartDetailsDialog.DetailsTab.Leaderboard);
 
         cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-sub")));
-        Assert.Equal("FullSong · song by msgoon", cut.Find(".chart-details-sub").TextContent);
+        Assert.Equal("Full Song · song by msgoon", cut.Find(".chart-details-sub").TextContent);
     }
 
     /// <summary>

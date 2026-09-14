@@ -326,7 +326,8 @@
     /// </summary>
     private string IdentityLine(Chart chart)
     {
-        var pieces = new List<string> { chart.Song.Type.ToString(), L["song by {0}", chart.Song.Artist].Value };
+        var pieces = new List<string>
+            { L[SongTypeText.Name(chart.Song.Type)].Value, L["song by {0}", chart.Song.Artist].Value };
         if (chart.StepArtist != null && chart.StepArtist.ToString() != "Unknown")
             pieces.Add(L["steps by {0}", chart.StepArtist].Value);
         if (chart.Song.Bpm is { } bpm) pieces.Add(L["{0} BPM", BpmText(bpm)].Value);

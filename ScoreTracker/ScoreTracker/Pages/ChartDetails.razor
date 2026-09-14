@@ -43,7 +43,7 @@
         <div class="chart-hero-id">
             <h1 class="chart-hero-title">@_chart.Song.Name</h1>
             <div class="chart-hero-sub">
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@_chart.Song.Type</MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@L[SongTypeText.Name(_chart.Song.Type)]</MudChip>
                 <span>@L["song by {0}", _chart.Song.Artist]</span>
                 @if (_chart.StepArtist != null && _chart.StepArtist.ToString() != "Unknown")
                 {

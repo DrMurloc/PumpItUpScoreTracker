@@ -334,7 +334,7 @@ else
                             var captured = type;
                             <span class="srp-facet-chip @(_songTypes.Contains(captured) ? "srp-facet-chip-on" : "")"
                                   role="button" tabindex="0" @onclick="() => ToggleSongType(captured)">
-                                @L[SongTypeName(captured)]@CountSuffix(_facetCounts?.SongTypes, captured)
+                                @L[SongTypeText.Name(captured)]@CountSuffix(_facetCounts?.SongTypes, captured)
                             </span>
                         }
                     </div>
@@ -902,18 +902,6 @@ else
         };
     }
 
-    internal static string SongTypeName(SongType type)
-    {
-        return type switch
-        {
-            SongType.Arcade => "Arcade",
-            SongType.ShortCut => "Short Cut",
-            SongType.FullSong => "Full Song",
-            SongType.Remix => "Remix",
-            _ => type.ToString()
-        };
-    }
-
     private static List<int> ParseCsvInts(string? csv)
     {
         return csv?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -1383,7 +1371,7 @@ else
                         _durationMax = null;
                         await ApplyChange();
                     }));
-            AddListChips(chips, _songTypes, t => L[SongTypeName(t)].Value);
+            AddListChips(chips, _songTypes, t => L[SongTypeText.Name(t)].Value);
             AddListChips(chips, _channels, c => L[c.GetLabelKey()].Value);
             AddListChips(chips, _artists, a => a);
             AddListChips(chips, _stepArtists, a => $"{L["Step Artist"]}: {a}");
