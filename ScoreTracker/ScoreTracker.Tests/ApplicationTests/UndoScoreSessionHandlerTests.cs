@@ -8,6 +8,7 @@ using Moq;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.ScoreLedger.Application;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
@@ -33,10 +34,10 @@ public sealed class UndoScoreSessionHandlerTests
     private readonly Mock<IPhoenixRecordRepository> _records = new();
     private readonly Mock<IScoreSessionRepository> _sessions = new();
 
-    private UndoScoreSessionHandler Build()
+    private UndoScoreSessionHandler Build(Mock<ISeasonReader>? seasons = null)
     {
         return new UndoScoreSessionHandler(_sessions.Object, _journal.Object, _records.Object,
-            FakeDateTime.At(Now).Object, _bus.Object);
+            (seasons ?? FakeSeasons.None()).Object, FakeDateTime.At(Now).Object, _bus.Object);
     }
 
     private static ScoreSessionRecord Session(DateTimeOffset startedAt, Guid? owner = null)
@@ -72,6 +73,55 @@ public sealed class UndoScoreSessionHandlerTests
             .ReturnsAsync(inSession);
         _journal.Setup(j => j.GetChartHistories(UserId, It.IsAny<IEnumerable<Guid>>(),
             It.IsAny<CancellationToken>())).ReturnsAsync(survivors);
+    }
+
+    // The plays above all fall in Summer 2026, so a calendar holding that quarter is the one an
+    // undo of them has to rebuild alongside the all-time record.
+    private static readonly SeasonId Summer = SeasonId.From(2026, 3);
+
+    [Fact]
+    public async Task TheSeasonsRowIsRebuiltFromTheSurvivingPlaysInsideItsWindow()
+    {
+        GivenSession(Session(AfterFloor));
+        GivenPlays(new[] { Play(ChartA, 950_000, SessionId, 10) },
+            new[] { Play(ChartA, 910_000, null, 1) });
+
+        await Build(FakeSeasons.Of(Summer)).Handle(new UndoScoreSessionCommand(UserId, SessionId),
+            CancellationToken.None);
+
+        _records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
+            It.Is<RecordedPhoenixScore>(s => s.ChartId == ChartA && s.Score == (PhoenixScore)910_000),
+            Summer, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AChartWithNothingLeftInTheWindowLosesItsSeasonRowToo()
+    {
+        GivenSession(Session(AfterFloor));
+        GivenPlays(new[] { Play(ChartB, 912_000, SessionId, 10) }, Array.Empty<ScoreJournalEntry>());
+
+        await Build(FakeSeasons.Of(Summer)).Handle(new UndoScoreSessionCommand(UserId, SessionId),
+            CancellationToken.None);
+
+        _records.Verify(r => r.DeleteRecord(MixEnum.Phoenix, UserId, ChartB, Summer, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task AnUndoNeverReachesBackPastASeal()
+    {
+        // Nothing writes a sealed season (D13) — not an import, and not an undo either.
+        GivenSession(Session(AfterFloor));
+        GivenPlays(new[] { Play(ChartA, 950_000, SessionId, 10) },
+            new[] { Play(ChartA, 910_000, null, 1) });
+
+        await Build(FakeSeasons.WithSealed(new[] { Summer }, new[] { Summer }))
+            .Handle(new UndoScoreSessionCommand(UserId, SessionId), CancellationToken.None);
+
+        _records.Verify(r => r.UpdateBestAttempt(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<RecordedPhoenixScore>(), It.IsAny<SeasonId>(), It.IsAny<CancellationToken>()), Times.Never);
+        _records.Verify(r => r.DeleteRecord(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<Guid>(),
+            It.IsAny<SeasonId>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

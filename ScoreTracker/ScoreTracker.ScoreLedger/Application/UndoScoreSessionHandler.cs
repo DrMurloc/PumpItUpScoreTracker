@@ -7,6 +7,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.ScoreLedger.Domain;
+using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.ScoreLedger.Application;
 
@@ -21,6 +22,7 @@ internal sealed class UndoScoreSessionHandler(
         IScoreSessionRepository sessions,
         IScoreJournalRepository journal,
         IPhoenixRecordRepository records,
+        ISeasonReader seasons,
         IDateTimeOffsetAccessor dateTime,
         IBus bus)
     : IRequestHandler<UndoScoreSessionCommand, ScoreSessionUndoResult>
@@ -71,6 +73,8 @@ internal sealed class UndoScoreSessionHandler(
             restored++;
         }
 
+        await ReplaySeasons(session.Mix, request.UserId, chartIds, survivors, cancellationToken);
+
         await sessions.Delete(request.SessionId, cancellationToken);
         await bus.Publish(new ScoreSessionUndoneEvent(request.UserId, request.SessionId, session.Mix),
             cancellationToken);
@@ -81,5 +85,43 @@ internal sealed class UndoScoreSessionHandler(
             cancellationToken);
 
         return new ScoreSessionUndoResult(ScoreSessionUndoOutcome.Undone, restored, cleared);
+    }
+
+    /// <summary>
+    ///     The same replay again, once per open season, with that season's window applied
+    ///     (docs/design/seasons.md §4.1): the season's best on a chart is the best surviving play
+    ///     inside its window, and no surviving play in the window means the chart returns to unplayed
+    ///     for that season. Sealed seasons are skipped — nothing writes one (D13), so an undo cannot
+    ///     reach back past a seal any more than an import can.
+    ///     <para>
+    ///         A row the counting rule seated on the raise clause rather than on its date — an upscore
+    ///         wearing a pre-season stamp — is not reconstructible here, because whether a card raised
+    ///         a record is import-time knowledge the journal does not keep. Replaying by window is the
+    ///         rule the design chose knowing that; the nightly rollup recomputes standings from
+    ///         whatever bests survive either way.
+    ///     </para>
+    /// </summary>
+    private async Task ReplaySeasons(MixEnum mix, Guid userId, IReadOnlyList<Guid> chartIds,
+        IReadOnlyList<ScoreJournalEntry> survivors, CancellationToken cancellationToken)
+    {
+        if (chartIds.Count == 0) return;
+        var open = (await seasons.GetSeasons(cancellationToken)).Where(s => !s.IsSealed).ToArray();
+        if (open.Length == 0) return;
+
+        foreach (var season in open)
+        foreach (var chartId in chartIds)
+        {
+            var best = SessionUndoReplay.BestOf(survivors.Where(e =>
+                e.ChartId == chartId && e.Mix == mix && season.Holds(e.OccurredAt)));
+            if (best == null)
+            {
+                await records.DeleteRecord(mix, userId, chartId, season.Id, cancellationToken);
+                continue;
+            }
+
+            await records.UpdateBestAttempt(mix, userId,
+                new RecordedPhoenixScore(chartId, best.Score, best.Plate, best.IsBroken, best.OccurredAt,
+                    best.Source, best.Judgements), season.Id, cancellationToken);
+        }
     }
 }
