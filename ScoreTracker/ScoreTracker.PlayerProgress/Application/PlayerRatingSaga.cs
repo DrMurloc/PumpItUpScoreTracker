@@ -1,4 +1,4 @@
-﻿using MassTransit;
+using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.SharedKernel.Enums;
@@ -256,7 +256,7 @@ internal sealed class PlayerRatingSaga :
             .ToArray();
 
         foreach (var season in open)
-        foreach (var mix in SeasonedMixes)
+        foreach (var mix in Enum.GetValues<MixEnum>().Where(MixCapabilities.HasSeasons))
         {
             var userIds = await _scores.GetUsersWithRecords(mix, season.Id, context.CancellationToken);
             var rolled = 0;
@@ -278,9 +278,6 @@ internal sealed class PlayerRatingSaga :
                     userIds.Count, mix, season.Id);
         }
     }
-
-    /// <summary>Phoenix 2 only: Phoenix 1 has no seasons and never will (docs/design/seasons.md §1).</summary>
-    private static readonly MixEnum[] SeasonedMixes = { MixEnum.Phoenix2 };
 
     public async Task Consume(ConsumeContext<UserCreatedEvent> context)
     {

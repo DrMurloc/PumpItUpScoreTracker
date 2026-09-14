@@ -184,6 +184,21 @@ public sealed class SeasonalBestWriterTests
     }
 
     [Fact]
+    public async Task PhoenixOneNeverGetsASeasonalRowNoMatterWhatItImports()
+    {
+        // Phoenix 1 has no seasons and never will (§1). The rollup and the backfill both skip it, so
+        // a row written here would be an orphan nothing ever recomputes — and Phoenix 1 is the larger
+        // importing population of the two.
+        var records = new Mock<IPhoenixRecordRepository>();
+        var writer = SeasonalBests.Over(records, Calendar, InFall);
+
+        await writer.Write(MixEnum.Phoenix, Player, ScoreJournalEntry.OfficialImportSource,
+            new[] { new SeasonalBestWriter.Candidate(Play(950_000, InFall), false) }, CancellationToken.None);
+
+        records.VerifyNoOtherCalls();
+    }
+
+    [Fact]
     public async Task BeforeTheFirstRollTheWriterDoesNotEvenReadTheRecordTable()
     {
         var records = new Mock<IPhoenixRecordRepository>();

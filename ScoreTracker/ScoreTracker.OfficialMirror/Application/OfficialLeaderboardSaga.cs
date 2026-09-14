@@ -1,4 +1,4 @@
-﻿using ScoreTracker.Domain.Services;
+using ScoreTracker.Domain.Services;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
@@ -202,7 +202,8 @@ namespace ScoreTracker.OfficialMirror.Application
             // bests, so a play arriving through both paths is one row that the best raises to
             // IsBest rather than a second row racing it.
             await _mediator.Send(new RecordObservedPlaysCommand(userId, mix,
-                ScoreJournalEntry.OfficialImportSource, importSessionId, scrape.Plays), cancellationToken);
+                ScoreJournalEntry.OfficialImportSource, importSessionId, scrape.Plays, includeBroken),
+                cancellationToken);
             var toSave = await SaveBests(userId, mix, importSessionId, scores, cancellationToken);
             // Titles are announced last, now that we know whether this run saved any scores.
             // With a score batch, they ride its session snapshot card (SessionId flows to the

@@ -18,7 +18,8 @@ namespace ScoreTracker.Tests.Integration;
 /// <summary>
 ///     The counting rule against a real record table (docs/design/seasons.md D15, §4.1): the writer
 ///     composing the policy with the repository, so a seasonal row is proven to land beside the
-///     all-time one rather than merely asked for on a mock.
+///     all-time one rather than merely asked for on a mock. Phoenix 2 throughout: it is the only mix
+///     with seasons (§1), and the writer refuses every other one.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
 [ExcludeFromCodeCoverage]
@@ -73,23 +74,23 @@ public sealed class SeasonalBestWriterTests : IAsyncLifetime
         var userId = await _seed.SeedUserAsync();
         var chartId = await _seed.SeedPhoenixChartAsync(20);
         var records = Records();
-        await records.UpdateBestAttempt(MixEnum.Phoenix, userId,
+        await records.UpdateBestAttempt(MixEnum.Phoenix2, userId,
             new RecordedPhoenixScore(chartId, PhoenixScore.From(985_000), PhoenixPlate.SuperbGame, false, InFall,
                 ScoreJournalEntry.OfficialImportSource));
         var writer = Writer(records);
 
         // Well below the all-time best, so the import never offered it to the record handler — and
         // it is this season's best all the same.
-        await writer.Write(MixEnum.Phoenix, userId, ScoreJournalEntry.OfficialImportSource,
+        await writer.Write(MixEnum.Phoenix2, userId, ScoreJournalEntry.OfficialImportSource,
             new[] { Candidate(chartId, 900_000, InFall) }, CancellationToken.None);
 
-        Assert.Equal(900_000, (int)(await records.GetRecordedScore(MixEnum.Phoenix, userId, chartId, Fall))!.Score!.Value);
-        Assert.Equal(985_000, (int)(await records.GetRecordedScore(MixEnum.Phoenix, userId, chartId))!.Score!.Value);
+        Assert.Equal(900_000, (int)(await records.GetRecordedScore(MixEnum.Phoenix2, userId, chartId, Fall))!.Score!.Value);
+        Assert.Equal(985_000, (int)(await records.GetRecordedScore(MixEnum.Phoenix2, userId, chartId))!.Score!.Value);
 
-        await writer.Write(MixEnum.Phoenix, userId, ScoreJournalEntry.OfficialImportSource,
+        await writer.Write(MixEnum.Phoenix2, userId, ScoreJournalEntry.OfficialImportSource,
             new[] { Candidate(chartId, 930_000, InFall.AddHours(1)) }, CancellationToken.None);
 
-        Assert.Equal(930_000, (int)(await records.GetRecordedScore(MixEnum.Phoenix, userId, chartId, Fall))!.Score!.Value);
+        Assert.Equal(930_000, (int)(await records.GetRecordedScore(MixEnum.Phoenix2, userId, chartId, Fall))!.Score!.Value);
         // One row per season per chart, not one per run.
         Assert.Equal(1, await CountRows(Fall2026));
     }
@@ -101,10 +102,53 @@ public sealed class SeasonalBestWriterTests : IAsyncLifetime
         var chartId = await _seed.SeedPhoenixChartAsync(20);
         var records = Records();
 
-        await Writer(records).Write(MixEnum.Phoenix, userId, ScoreJournalEntry.OfficialImportSource,
+        await Writer(records).Write(MixEnum.Phoenix2, userId, ScoreJournalEntry.OfficialImportSource,
             new[] { Candidate(chartId, 985_000, LongAgo) }, CancellationToken.None);
 
         Assert.Equal(0, await CountRows(Fall2026));
+    }
+
+    [Fact]
+    public async Task AWipedSeasonStaysWipedOnceTheCachedDictionaryExpires()
+    {
+        // The seasonal score dictionary cannot be evicted by key — the wipe has no way to enumerate
+        // seasons from the Ledger — so its LIFETIME is its correctness bound. A write that dropped
+        // the expiry (IMemoryCache.Set(key, value) creates an entry with no options at all) would
+        // leave the process serving scores the database no longer has: the player re-imports, every
+        // candidate loses to a phantom, nothing is written, and the season pass prices a stats row
+        // from deleted scores onto the board.
+        var userId = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedPhoenixChartAsync(20);
+        var clock = new SteppableTime(DateTimeOffset.UtcNow);
+        var records = new EFPhoenixRecordsRepository(_fixture.DbContextFactory,
+            new MemoryCache(new MemoryCacheOptions { Clock = clock }), Mock.Of<IChartRepository>(),
+            new EFXXChartAttemptRepository(_fixture.DbContextFactory), Mock.Of<IMediator>(),
+            Mock.Of<IPlayerStatsReader>(), new PeerScoreStore(_fixture.DbContextFactory));
+
+        // Two writes: the second is the one that used to replace a lifetime-bound entry with a
+        // permanent one.
+        await records.UpdateBestAttempt(MixEnum.Phoenix2, userId,
+            new RecordedPhoenixScore(chartId, PhoenixScore.From(900_000), PhoenixPlate.RoughGame, false, InFall,
+                ScoreJournalEntry.OfficialImportSource), Fall);
+        await records.UpdateBestAttempt(MixEnum.Phoenix2, userId,
+            new RecordedPhoenixScore(chartId, PhoenixScore.From(930_000), PhoenixPlate.RoughGame, false, InFall,
+                ScoreJournalEntry.OfficialImportSource), Fall);
+        Assert.NotNull(await records.GetRecordedScore(MixEnum.Phoenix2, userId, chartId, Fall));
+
+        await records.DeleteAllForUser(userId, MixEnum.Phoenix2);
+        Assert.Equal(0, await CountRows(Fall2026));
+
+        // Inside the five minutes the entry is allowed to be stale; past them it must be gone.
+        clock.Advance(TimeSpan.FromMinutes(6));
+
+        Assert.Null(await records.GetRecordedScore(MixEnum.Phoenix2, userId, chartId, Fall));
+    }
+
+    /// <summary>A clock the memory cache reads, so a lifetime can be stepped past rather than waited out.</summary>
+    private sealed class SteppableTime(DateTimeOffset now) : Microsoft.Extensions.Internal.ISystemClock
+    {
+        public DateTimeOffset UtcNow { get; private set; } = now;
+        public void Advance(TimeSpan by) => UtcNow = UtcNow.Add(by);
     }
 
     private static SeasonalBestWriter.Candidate Candidate(Guid chartId, int score, DateTimeOffset at,

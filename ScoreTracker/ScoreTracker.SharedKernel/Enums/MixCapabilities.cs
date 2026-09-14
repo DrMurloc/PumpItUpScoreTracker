@@ -68,4 +68,16 @@ public static class MixCapabilities
     {
         return !mix.UsesLegacyScoring();
     }
+
+    /// <summary>
+    ///     Whether scores on this mix are also tracked against a quarterly season
+    ///     (docs/design/seasons.md §1): <b>Phoenix 2 only. Phoenix 1 has no seasons and never will</b>
+    ///     — it is going offline-only. Named here rather than repeated as a local array in each
+    ///     vertical that needs it, because the read side and the write side disagreeing about which
+    ///     mixes have seasons produces rows nothing ever recomputes.
+    /// </summary>
+    public static bool HasSeasons(this MixEnum mix)
+    {
+        return mix == MixEnum.Phoenix2;
+    }
 }

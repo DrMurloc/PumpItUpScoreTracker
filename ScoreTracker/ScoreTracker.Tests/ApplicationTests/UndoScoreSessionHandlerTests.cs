@@ -82,14 +82,14 @@ public sealed class UndoScoreSessionHandlerTests
     [Fact]
     public async Task TheSeasonsRowIsRebuiltFromTheSurvivingPlaysInsideItsWindow()
     {
-        GivenSession(Session(AfterFloor));
-        GivenPlays(new[] { Play(ChartA, 950_000, SessionId, 10) },
-            new[] { Play(ChartA, 910_000, null, 1) });
+        GivenSession(Session(AfterFloor, MixEnum.Phoenix2));
+        GivenPlays(new[] { PlayIn(MixEnum.Phoenix2, ChartA, 950_000, SessionId, 10) },
+            new[] { PlayIn(MixEnum.Phoenix2, ChartA, 910_000, null, 1) });
 
         await Build(FakeSeasons.Of(Summer)).Handle(new UndoScoreSessionCommand(UserId, SessionId),
             CancellationToken.None);
 
-        _records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
+        _records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix2, UserId,
             It.Is<RecordedPhoenixScore>(s => s.ChartId == ChartA && s.Score == (PhoenixScore)910_000),
             Summer, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -97,14 +97,78 @@ public sealed class UndoScoreSessionHandlerTests
     [Fact]
     public async Task AChartWithNothingLeftInTheWindowLosesItsSeasonRowToo()
     {
-        GivenSession(Session(AfterFloor));
-        GivenPlays(new[] { Play(ChartB, 912_000, SessionId, 10) }, Array.Empty<ScoreJournalEntry>());
+        GivenSession(Session(AfterFloor, MixEnum.Phoenix2));
+        GivenPlays(new[] { PlayIn(MixEnum.Phoenix2, ChartB, 912_000, SessionId, 10) },
+            Array.Empty<ScoreJournalEntry>());
 
         await Build(FakeSeasons.Of(Summer)).Handle(new UndoScoreSessionCommand(UserId, SessionId),
             CancellationToken.None);
 
-        _records.Verify(r => r.DeleteRecord(MixEnum.Phoenix, UserId, ChartB, Summer, It.IsAny<CancellationToken>()),
+        _records.Verify(r => r.DeleteRecord(MixEnum.Phoenix2, UserId, ChartB, Summer, It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task UndoingAPhoenixOneSessionTouchesNoSeasonAtAll()
+    {
+        // Phoenix 1 has no seasons and never will (§1); the replay must not invent rows for it.
+        GivenSession(Session(AfterFloor));
+        GivenPlays(new[] { Play(ChartA, 950_000, SessionId, 10) },
+            new[] { Play(ChartA, 910_000, null, 1) });
+
+        await Build(FakeSeasons.Of(Summer)).Handle(new UndoScoreSessionCommand(UserId, SessionId),
+            CancellationToken.None);
+
+        _records.Verify(r => r.UpdateBestAttempt(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<RecordedPhoenixScore>(), It.IsAny<SeasonId>(), It.IsAny<CancellationToken>()), Times.Never);
+        _records.Verify(r => r.DeleteRecord(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<Guid>(),
+            It.IsAny<SeasonId>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TheReplayNeverSeatsAHandTypedScoreInASeasonsPool()
+    {
+        // D4 is an owner ruling: official imports only. It bites hardest here, because
+        // SessionUndoReplay treats a manual row as AUTHORITATIVE — it overwrites rather than
+        // competes — so an unfiltered replay would seat a quick-recorded number over a real play
+        // even when the manual score is lower.
+        GivenSession(Session(AfterFloor, MixEnum.Phoenix2));
+        var manual = new ScoreJournalEntry(AfterFloor.AddMinutes(2), ScoreJournalEntry.ManualSource,
+            UserId, ChartA, (PhoenixScore)700_000, null, false, MixEnum.Phoenix2, null);
+        GivenPlays(new[] { PlayIn(MixEnum.Phoenix2, ChartA, 950_000, SessionId, 10) },
+            new[] { PlayIn(MixEnum.Phoenix2, ChartA, 910_000, null, 1), manual });
+
+        await Build(FakeSeasons.Of(Summer)).Handle(new UndoScoreSessionCommand(UserId, SessionId),
+            CancellationToken.None);
+
+        // The official survivor, not the hand-typed one that outranks it by authority.
+        _records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix2, UserId,
+            It.Is<RecordedPhoenixScore>(s => s.Score == (PhoenixScore)910_000), Summer,
+            It.IsAny<CancellationToken>()), Times.Once);
+        _records.Verify(r => r.UpdateBestAttempt(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.Is<RecordedPhoenixScore>(s => s.Score == (PhoenixScore)700_000), It.IsAny<SeasonId>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ARowTheWindowCouldNotHaveProducedIsLeftStandingRatherThanDeleted()
+    {
+        // A seasonal best seated by the raise clause carries a card date OUTSIDE the season by
+        // construction, so a window replay was never going to find its evidence. Deleting it would
+        // be the replay destroying what it cannot rebuild.
+        GivenSession(Session(AfterFloor, MixEnum.Phoenix2));
+        GivenPlays(new[] { PlayIn(MixEnum.Phoenix2, ChartB, 912_000, SessionId, 10) },
+            Array.Empty<ScoreJournalEntry>());
+        _records.Setup(r => r.GetRecordedScore(MixEnum.Phoenix2, UserId, ChartB, Summer,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RecordedPhoenixScore(ChartB, (PhoenixScore)985_000, null, false,
+                new DateTimeOffset(2025, 4, 1, 0, 0, 0, TimeSpan.Zero), ScoreJournalEntry.OfficialImportSource));
+
+        await Build(FakeSeasons.Of(Summer)).Handle(new UndoScoreSessionCommand(UserId, SessionId),
+            CancellationToken.None);
+
+        _records.Verify(r => r.DeleteRecord(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<Guid>(),
+            Summer, It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

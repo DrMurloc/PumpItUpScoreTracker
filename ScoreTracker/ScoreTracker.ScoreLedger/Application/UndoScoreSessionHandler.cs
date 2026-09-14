@@ -104,24 +104,36 @@ internal sealed class UndoScoreSessionHandler(
     private async Task ReplaySeasons(MixEnum mix, Guid userId, IReadOnlyList<Guid> chartIds,
         IReadOnlyList<ScoreJournalEntry> survivors, CancellationToken cancellationToken)
     {
-        if (chartIds.Count == 0) return;
+        if (chartIds.Count == 0 || !mix.HasSeasons()) return;
         var open = (await seasons.GetSeasons(cancellationToken)).Where(s => !s.IsSealed).ToArray();
         if (open.Length == 0) return;
 
         foreach (var season in open)
         foreach (var chartId in chartIds)
         {
+            // Official imports only, the same rule the writer applies (D4): the replay may not seat a
+            // hand-typed score in a season's pool. Source has to be filtered BEFORE BestOf rather than
+            // after, because BestOf treats a manual row as authoritative — it overwrites rather than
+            // competes, which is right for the all-time record and wrong for a season.
             var best = SessionUndoReplay.BestOf(survivors.Where(e =>
-                e.ChartId == chartId && e.Mix == mix && season.Holds(e.OccurredAt)));
-            if (best == null)
+                e.ChartId == chartId && e.Mix == mix && season.Holds(e.OccurredAt)
+                && e.Source == ScoreJournalEntry.OfficialImportSource));
+            if (best != null)
             {
-                await records.DeleteRecord(mix, userId, chartId, season.Id, cancellationToken);
+                await records.UpdateBestAttempt(mix, userId,
+                    new RecordedPhoenixScore(chartId, best.Score, best.Plate, best.IsBroken, best.OccurredAt,
+                        best.Source, best.Judgements), season.Id, cancellationToken);
                 continue;
             }
 
-            await records.UpdateBestAttempt(mix, userId,
-                new RecordedPhoenixScore(chartId, best.Score, best.Plate, best.IsBroken, best.OccurredAt,
-                    best.Source, best.Judgements), season.Id, cancellationToken);
+            // Nothing in the window survives. That means "delete" only for a row the window could have
+            // produced: a row the raise clause seated carries a card date OUTSIDE the season by
+            // construction, so a window replay was never going to find its evidence, and removing it
+            // would be the replay destroying what it cannot rebuild. Leave that one standing; the
+            // nightly rollup prices whatever is actually there either way.
+            var stored = await records.GetRecordedScore(mix, userId, chartId, season.Id, cancellationToken);
+            if (stored != null && !season.Holds(stored.RecordedDate)) continue;
+            await records.DeleteRecord(mix, userId, chartId, season.Id, cancellationToken);
         }
     }
 }

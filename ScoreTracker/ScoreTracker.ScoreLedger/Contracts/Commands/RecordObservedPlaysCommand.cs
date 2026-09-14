@@ -18,7 +18,11 @@ public sealed record RecordObservedPlaysCommand(
     MixEnum Mix,
     string Source,
     Guid? SessionId,
-    IReadOnlyList<RecordObservedPlaysCommand.ObservedPlay> Plays) : IRequest
+    IReadOnlyList<RecordObservedPlaysCommand.ObservedPlay> Plays,
+    // The player's "record broken scores as your best" setting. Every dated play is journaled either
+    // way -- a fail is history -- but a seasonal best is a BEST, and the all-time side has always
+    // filtered breaks out of the best list for a player who unticked this.
+    bool IncludeBroken = true) : IRequest
 {
     /// <summary>
     ///     One play. <paramref name="Score" /> is null for a stage break — the site prints no

@@ -34,6 +34,11 @@ internal sealed class SeasonalBestWriter(IPhoenixRecordRepository records, ISeas
         CancellationToken cancellationToken)
     {
         if (candidates.Count == 0) return;
+        // Phoenix 2 only (docs/design/seasons.md §1). The read side — the rollup, the backfill — has
+        // always skipped Phoenix 1, so a row written here for it would be an orphan nothing ever
+        // recomputes: never rolled up, never replayed, drifting from the journal for good. Phoenix 1
+        // is also the larger importing population, so the gate belongs at the write, not just the read.
+        if (!mix.HasSeasons()) return;
         // Before the first roll there is no season to write to, which is every deploy's first
         // hours and every test that never opened one.
         var calendar = await seasons.GetSeasons(cancellationToken);

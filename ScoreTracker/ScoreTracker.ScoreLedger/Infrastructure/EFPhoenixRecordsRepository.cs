@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -494,7 +494,11 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         await database.SaveChangesAsync(cancellationToken);
         var cache = await GetCachedScores(mix, userId, season, cancellationToken);
         cache[score.ChartId] = score;
-        _cache.Set(ScoreCache(userId, mix, season), cache);
+        // WITH the expiry, not the bare Set: IMemoryCache.Set(key, value) creates an entry carrying no
+        // MemoryCacheEntryOptions at all, so the first write of an import would replace a lifetime-bound
+        // entry with a permanent one. That matters most for a season's, which no delete path can evict
+        // by key — a wipe would then leave the process serving scores the database no longer has.
+        _cache.Set(ScoreCache(userId, mix, season), cache, ScoreCacheExpiry(season));
         // The peer store holds this player for everyone who has them as a peer — including
         // themselves: four of its readers ask it about one person, their own. The bus event that
         // normally drops them is debounced by minutes, which is fine for a peer and far too slow
@@ -509,6 +513,17 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return UpdateBestAttempt(mix, userId, score, SeasonId.AllTime, cancellationToken);
     }
 
+    /// <summary>
+    ///     How long a cached score dictionary lives. An all-time entry is evicted by key on every
+    ///     delete path, so it can afford an hour; a season's cannot be — the wipe and the purge have
+    ///     no way to enumerate seasons from here — so its lifetime IS its correctness bound, and both
+    ///     the read and the write take it from here so they cannot drift apart.
+    /// </summary>
+    private static DateTimeOffset ScoreCacheExpiry(SeasonId season)
+    {
+        return DateTimeOffset.Now + (season.IsAllTime ? TimeSpan.FromMinutes(60) : TimeSpan.FromMinutes(5));
+    }
+
     private async Task<ConcurrentDictionary<Guid, RecordedPhoenixScore>> GetCachedScores(MixEnum mix, Guid userId,
         SeasonId season, CancellationToken cancellationToken)
     {
@@ -516,7 +531,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         {
             // A season's entry is short-lived instead of evicted: the purge and the wipe cannot
             // enumerate seasons from here, and nothing reads a deleted account's entry anyway.
-            o.AbsoluteExpiration = DateTimeOffset.Now + (season.IsAllTime ? TimeSpan.FromMinutes(60) : TimeSpan.FromMinutes(5));
+            o.AbsoluteExpiration = ScoreCacheExpiry(season);
             var mixId = MixIds.For(mix);
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var rows = await Records(database, season)
@@ -945,7 +960,10 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     {
         var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        return await database.Set<PhoenixRecordEntity>()
+        // Across seasons, like the delete below: the button's number is the number that goes, and a
+        // player whose broken bests are only seasonal must not be shown a disabled button over rows
+        // that exist.
+        return await database.Set<PhoenixRecordEntity>().IgnoreQueryFilters()
             .CountAsync(p => p.UserId == userId && p.MixId == mixId && p.IsBroken
                              && p.Source == ScoreJournalEntry.OfficialImportSource, cancellationToken);
     }
@@ -958,20 +976,27 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         // The charts are read before the delete because the stats row is keyed by chart, not by
         // brokenness — once the records are gone there is nothing left to say which stats rows
         // belonged to them.
-        var chartIds = await database.Set<PhoenixRecordEntity>().IgnoreQueryFilters()
+        // The pricing cache is NOT mirrored per season (D19) — one all-time row per chart — so the
+        // charts whose stats rows go are the charts whose ALL-TIME record went. Reading them across
+        // seasons instead would delete the pricing row of a chart the player passed all-time and only
+        // failed this season, leaving a standing record with nothing behind it and no path back.
+        var chartIds = await database.Set<PhoenixRecordEntity>()
             .Where(p => p.UserId == userId && p.MixId == mixId && p.IsBroken
                         && p.Source == ScoreJournalEntry.OfficialImportSource)
             .Select(p => p.ChartId)
             .ToArrayAsync(cancellationToken);
-        if (chartIds.Length == 0) return 0;
-
+        var removedAny = await database.Set<PhoenixRecordEntity>().IgnoreQueryFilters()
+            .AnyAsync(p => p.UserId == userId && p.MixId == mixId && p.IsBroken
+                           && p.Source == ScoreJournalEntry.OfficialImportSource, cancellationToken);
+        if (!removedAny) return 0;
         var removed = await database.Set<PhoenixRecordEntity>().IgnoreQueryFilters()
             .Where(p => p.UserId == userId && p.MixId == mixId && p.IsBroken
                         && p.Source == ScoreJournalEntry.OfficialImportSource)
             .ExecuteDeleteAsync(cancellationToken);
-        await database.Set<PhoenixRecordStatsEntity>()
-            .Where(p => p.UserId == userId && p.MixId == mixId && chartIds.Contains(p.ChartId))
-            .ExecuteDeleteAsync(cancellationToken);
+        if (chartIds.Length > 0)
+            await database.Set<PhoenixRecordStatsEntity>()
+                .Where(p => p.UserId == userId && p.MixId == mixId && chartIds.Contains(p.ChartId))
+                .ExecuteDeleteAsync(cancellationToken);
         _cache.Remove(ScoreCache(userId, mix, SeasonId.AllTime));
         _peers.Evict(userId, mix);
         return removed;
