@@ -20,13 +20,28 @@ public sealed class PiuCommandCatalogTests
         var root = PiuCommandCatalog.Commands.Single();
         var suggest = root.SubCommands.Single(s => s.Name == "suggest");
         var random = root.SubCommands.Single(s => s.Name == "random");
-        var weekly = root.SubCommandGroups.Single().SubCommands.Single(s => s.Name == "weekly");
+        var weekly = root.SubCommandGroups.Single(g => g.Name == "register").SubCommands
+            .Single(s => s.Name == "weekly");
 
         Assert.Equal(4, suggest.Options.Single(o => o.Name == "goal").Choices!.Count);
         Assert.Equal(2, suggest.Options.Single(o => o.Name == "type").Choices!.Count);
         Assert.Equal(3, random.Options.Single(o => o.Name == "type").Choices!.Count);
         Assert.Equal(2, weekly.Options.Single(o => o.Name == "mix").Choices!.Count);
         Assert.Equal(9, weekly.Options.Single(o => o.Name == "language").Choices!.Count);
+    }
+
+    /// <summary>
+    ///     Both leaves reply privately — whose roles come off is nobody else's business — and take
+    ///     no options, since the server the command runs in is the whole input.
+    /// </summary>
+    [Fact]
+    public void TheRolesGroupHasTwoPrivateLeavesWithNoOptions()
+    {
+        var roles = PiuCommandCatalog.Commands.Single().SubCommandGroups.Single(g => g.Name == "roles");
+
+        Assert.Equal(new[] { "off", "on" }, roles.SubCommands.Select(s => s.Name).ToArray());
+        Assert.All(roles.SubCommands, s => Assert.True(s.Ephemeral));
+        Assert.All(roles.SubCommands, s => Assert.Empty(s.Options));
     }
 
     [Fact]

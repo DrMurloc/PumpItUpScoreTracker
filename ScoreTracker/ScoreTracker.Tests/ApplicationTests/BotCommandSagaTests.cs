@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 using MediatR;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Queries;
@@ -61,7 +62,7 @@ public sealed class BotCommandSagaTests
     private BotCommandSaga Saga() =>
         new(_bot.Object, _communities.Object, _feeds.Object, _mediator.Object, _currentUser.Object,
             _localizer.Object, _roleConfiguration.Object, _discordRoles.Object,
-            FakeDateTime.At(Now).Object, _bus.Object);
+            FakeDateTime.At(Now).Object, _bus.Object, NullLogger<BotCommandSaga>.Instance);
 
     private static HandleBotInteractionCommand Invoke(string[] path, Dictionary<string, string> options,
         bool canManage = false, string? userLocale = null) =>

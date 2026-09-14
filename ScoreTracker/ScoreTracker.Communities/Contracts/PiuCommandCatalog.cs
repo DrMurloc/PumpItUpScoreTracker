@@ -21,7 +21,7 @@ namespace ScoreTracker.Communities.Contracts
             {
                 new BotCommandDefinition(RootName, "PIU Scores tools",
                     new[] { Calc, Chart, Random, Suggest, Unregister, Feeds, LinkServer },
-                    new[] { Register })
+                    new[] { Register, Roles })
             };
 
         /// <summary>
@@ -187,6 +187,22 @@ namespace ScoreTracker.Communities.Contracts
                     new BotCommandOption("community", "Which of your communities",
                         BotCommandOptionType.String, Required: true, Autocomplete: true)
                 }, Ephemeral: true);
+
+        /// <summary>
+        ///     The player's own say-so on a community's title roles, run in the server that hands
+        ///     them out (docs/design/discord-role-management.md D22). No options: the server the
+        ///     command runs in is the whole input. Both leaves reply privately — whose roles come
+        ///     off is nobody else's business.
+        /// </summary>
+        private static BotSubCommandGroup Roles =>
+            new("roles", "Your title roles in this server",
+                new[]
+                {
+                    new BotSubCommand("off", "Take off my title roles here and stop giving them to me",
+                        Array.Empty<BotCommandOption>(), Ephemeral: true),
+                    new BotSubCommand("on", "Give me title roles here again",
+                        Array.Empty<BotCommandOption>(), Ephemeral: true)
+                });
 
         private static BotSubCommand Unregister =>
             new("unregister", "Stop one of this channel's feeds",
