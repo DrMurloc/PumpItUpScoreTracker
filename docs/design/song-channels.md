@@ -24,6 +24,7 @@ randomizer, API, chart details, yeah, basically all the stuff we touched in the 
 | D8 | **Every path that gives a song a mix writes the row**: the bulk-add batch from the JSON's `channel`, the dev harness from the API's `channel`, and a returning song seeded by hand gets its row by hand, as it gets its version stamp. | follows D2 |
 | D9 | **The dialog shows the page's two version facts, not the mock's three.** Between the mock and the build, [chart-versions.md](chart-versions.md) D13 retired "Released" from the site and the API: the debut fact now carries its patch and date, and Added in appears on a carry-over only. The dialog mirrors that. | chart-versions.md D13, same day |
 | D10 | **The dialog's header carries the identity; Chart Stats carries the history as lines.** At the field test the eight labelled tiles read as a wall, and inside a phone's dialog (326px wide, 278 inside the padding) the grid dropped to one column, sixteen lines deep. Song type, *song by*, *steps by*, BPM and notes became one muted line under the title, above the tabs, so every tab has it. Chart Stats became rows: *History* — the chart page's timeline as lines, the debut, every uprate or downrate with its mark and the patch it happened in, the mix in view, unchanged mixes skipped — and *Channel*, a chip that opens /Charts filtered on it. *Recorded N days ago* left the header, since Score History dates every entry; the score stays `PeerScore`. Mock round 3 ("Chart Stats Layout"), Mock 1 picked. | *"this area is starting to feel like a wall of text … that stuff should be a thin line between video and the tabs … For history, include uprates/downrates"*, 2026-09-13 |
+| D11 | **History is a list of events, mix first, with the entry as a tag; Removed and Revived are told where the catalog can back them.** Field test of D10: the *unchanged* line said nothing, the placeholder version *Release* said nothing the mix and the date did not, and a chart pulled from a mix and brought back later had no line at all. Each event reads `Mix · Date · Version · Entry · Level` with the ▲/▼ mark where the level moved, the entry a small tag (Debuted, Rerated, Removed, Revived — Variant B of the round-4 mock), the version only when it is a numbered patch. A mix where nothing happened has no line, so the mix in view appears only when it did something. **Removed and Revived are told from Prime 2 on** (Prime 2, XX, Phoenix, Phoenix 2): those song lists are complete and every arrival is stamped, so a chart present earlier and missing from one of them reads *Removed* at that mix's release and *Revived* when it returns, and a row that arrived in a patch while the chart existed before reads *Removed* at the release and *Revived* at the patch — Conflict on Phoenix, out at v1.00.0 and back at v2.00.0. The older catalogs have holes (of the charts on both sides of Rebirth 58% are missing from it, Extra 36%, Infinity 33%, NXA 28%), so a gap there is silence. Over Phoenix 2's 4,675 charts the rule finds 33 charts absent from a whole mix and back later (Prime 2 32, XX 1) and 34 that arrived in a patch after a release they were missing from (Prime 2 6, XX 15, Phoenix 13). On a phone the mix stands as its own line and each event sits indented beneath it. | *"I don't think we need lines for 'unchanged' … We don't need to say 'Release' … Are we marking if a song was removed in a mix? … `<Mix> · <Date> · <Version> · <Entry Type> · <DifficultyLevel>` … variant b. get it in"*, 2026-09-14 |
 
 ## 2. The channel
 
@@ -116,14 +117,16 @@ when unknown. No history note: the channel is a present-tense fact like the leve
 title, in the chart page's words — song type, *song by*, *steps by*, BPM, notes — above the
 tabs, so every tab has it; a fact the catalog lacks drops out of the line. The Chart Stats tab
 is rows with a short label column rather than labelled tiles: a *History* row that is the
-chart page's timeline as lines — the debut, every rerate with its ▲/▼ mark and the patch and
-date its row names, and the mix in view; a mix where nothing changed is skipped, so a chart
-alive since 2000 is a few lines — a *Channel* row whose chip opens /Charts filtered on the
-channel, and a *Played* row (popularity overall and in the folder) where the host passes the
-official board. The History reads the same `HistoryVerdict` the page draws its timeline from,
-with each mix's patch riding on `MixLevelRecord`; a debut with no rerate has no facet, and the
-chart's own row says when it arrived. *Recorded N days ago* left the header: Score History
-dates every entry (D4, D9, D10).
+chart's life as events — `Mix · Date · Version · Entry · Level`, the entry a tag (Debuted,
+Rerated, Removed, Revived), the ▲/▼ mark where the level moved, the version only when numbered,
+no line for a mix where nothing happened, Removed and Revived from Prime 2 on (D11) — a
+*Channel* row whose chip opens /Charts filtered on the channel, and a *Played* row (popularity
+overall and in the folder) where the host passes the official board. The events come from the
+same `HistoryVerdict` the page draws its timeline from (`HistoryVerdict.Events`, computed by the
+verdict service off each mix's rows and each mix's own release); a debut with no rerate has no
+facet, and the chart's own row says when it arrived. On a phone the History label sits above its
+block, the mix stands as its own line and each event sits indented beneath it. *Recorded N days
+ago* left the header: Score History dates every entry (D4, D9, D10, D11).
 
 **Admin BulkAddCharts.** The JSON names each song's `channel`; the preview shows it on the song's
 card; a missing or unrecognised value is a warning, never an error — the song imports with no
