@@ -192,6 +192,21 @@ public sealed class CommunityDiscordPageTests : ComponentTestBase
     }
 
     /// <summary>
+    ///     The page promises "all of these have to be true", so the player's own opt-out has to be
+    ///     on the list — otherwise an admin chasing a missing role is chasing a silent condition.
+    /// </summary>
+    [Fact]
+    public void ThePlayersOwnOptOutIsListedAmongTheFacts()
+    {
+        Given(_view);
+
+        var markup = Render().Markup;
+
+        Assert.Contains("turned title roles off", markup);
+        Assert.Contains("/piu roles off", markup);
+    }
+
+    /// <summary>
     ///     Designating a server is done as yourself in Discord, so the page checks up front rather
     ///     than letting an admin discover it mid-command.
     /// </summary>

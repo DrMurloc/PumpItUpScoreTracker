@@ -2,6 +2,7 @@ using System.Globalization;
 using MediatR;
 using ScoreTracker.Communities.Contracts.Messages;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts;
@@ -46,16 +47,19 @@ namespace ScoreTracker.Communities.Application
         private readonly IDiscordRoleService _discordRoles;
         private readonly IDateTimeOffsetAccessor _dateTime;
         private readonly IBus _bus;
+        private readonly ILogger<BotCommandSaga> _logger;
 
         public BotCommandSaga(IBotClient bot, ICommunityRepository communities,
             IDiscordFeedSubscriptionRepository feeds, IMediator mediator, ICurrentUserAccessor currentUser,
             ILocalizedTextAccessor localizer, IDiscordRoleRepository roleConfiguration,
-            IDiscordRoleService discordRoles, IDateTimeOffsetAccessor dateTime, IBus bus)
+            IDiscordRoleService discordRoles, IDateTimeOffsetAccessor dateTime, IBus bus,
+            ILogger<BotCommandSaga> logger)
         {
             _roleConfiguration = roleConfiguration;
             _discordRoles = discordRoles;
             _dateTime = dateTime;
             _bus = bus;
+            _logger = logger;
             _bot = bot;
             _communities = communities;
             _feeds = feeds;
@@ -79,6 +83,7 @@ namespace ScoreTracker.Communities.Application
                 "unregister" => await Unregister(interaction, culture, cancellationToken),
                 "feeds" => await Feeds(interaction, culture, cancellationToken),
                 "link-server" => await LinkServer(interaction, user, culture, cancellationToken),
+                "roles" => await TitleRoles(interaction, user, culture, cancellationToken),
                 _ => new BotReply(Text: _localizer.Get(culture, "That command isn't available yet."))
             };
         }
@@ -231,6 +236,88 @@ namespace ScoreTracker.Communities.Application
             return new BotReply(Text: _localizer.Get(invokerCulture,
                 "Done — this server now gives out {0}'s title roles. Set them up on the site under Discord.",
                 (string)community.Name));
+        }
+
+        /// <summary>
+        ///     The player's own say-so on a community's title roles, in the server that hands them
+        ///     out (docs/design/discord-role-management.md D22–D25). <c>off</c> records the opt-out
+        ///     for every community designating this server and <c>on</c> lifts it; either way the
+        ///     same reconcile the sweep runs settles the player on the spot, so the roles come off —
+        ///     or back — before the reply lands. The record is a fact the rule reads (D23), which
+        ///     is what keeps the join event and the nightly sweep from handing anything back.
+        /// </summary>
+        private async Task<BotReply> TitleRoles(BotInteraction interaction, User? user, string? culture,
+            CancellationToken cancellationToken)
+        {
+            if (interaction.GuildId is not { } guildId)
+                return new BotReply(Text: _localizer.Get(culture,
+                    "Run this in the Discord server the roles are in."));
+
+            var servers = await _roleConfiguration.GetServersByGuild(guildId, cancellationToken);
+            if (servers.Count == 0)
+                return new BotReply(Text: _localizer.Get(culture, "This server doesn't hand out title roles."));
+            if (user == null)
+                return new BotReply(Text: _localizer.Get(culture,
+                    "Link your Discord account on PIU Scores first, so we know who you are."));
+
+            // Matched explicitly rather than "off or else on": a privacy preference fails CLOSED.
+            // Anything unrecognized — a third leaf added later, a truncated path — would otherwise
+            // fall through to the branch that DELETES the opt-out.
+            var leaf = interaction.CommandPath.Count > 1 ? interaction.CommandPath[1] : string.Empty;
+            if (leaf is not ("off" or "on"))
+                return new BotReply(Text: _localizer.Get(culture, "That command isn't available yet."));
+
+            var turningOff = leaf == "off";
+            var lifted = 0;
+            var unsettled = false;
+            foreach (var server in servers)
+                // One community's failure must not eat the rest, and that covers the WRITE too:
+                // with two communities on one server, a throw on the first used to leave the second
+                // never written and the player told nothing.
+                try
+                {
+                    if (turningOff)
+                        await _roleConfiguration.SaveOptOut(server.CommunityId, user.Id, _dateTime.Now,
+                            cancellationToken);
+                    else if (await _roleConfiguration.DeleteOptOut(server.CommunityId, user.Id, cancellationToken))
+                        lifted++;
+
+                    await _discordRoles.ReconcileOne(server.CommunityId, user.Id, cancellationToken);
+                }
+                catch (Exception e) when (e is not OperationCanceledException)
+                {
+                    // A recorded opt-out stands even if the roles could not come off: a role
+                    // Discord refuses is the admin's to fix, and the player's preference must not
+                    // depend on it.
+                    unsettled = true;
+                    _logger.LogError(e, "Could not settle {UserId} in community {CommunityId} after /piu roles",
+                        user.Id, server.CommunityId);
+                }
+
+            // Named the way D21 names the account: a Discord linked to the wrong PIU Scores login
+            // is the commonest surprise, and the name is the whole diagnosis.
+            var account = (string)user.Name;
+            var communities = string.Join(", ", servers.Select(s => s.CommunityName));
+            if (turningOff)
+                return new BotReply(Text: unsettled
+                    ? _localizer.Get(culture,
+                        "Saved: {0} won't get title roles from {1} here. But a role couldn't come off right now — it probably sits above the bot in Server Settings → Roles, so an admin needs to move it or take it off by hand.",
+                        account, communities)
+                    : _localizer.Get(culture,
+                        "Done. {0} won't get title roles from {1} in this server until you run {2}.",
+                        account, communities, "`/piu roles on`"));
+
+            // The failure is reported BEFORE "already on". The realistic caller of /piu roles on is
+            // somebody whose role is missing, who was never opted out — so lifted is 0, and saying
+            // "already on" there is a reassurance handed out for a pass that just failed.
+            if (unsettled)
+                return new BotReply(Text: _localizer.Get(culture,
+                    "Title roles from {0} are back on for {1} here, but I couldn't hand them out right now. The nightly check will.",
+                    communities, account));
+            if (lifted == 0)
+                return new BotReply(Text: _localizer.Get(culture, "Title roles were already on for you here."));
+            return new BotReply(Text: _localizer.Get(culture,
+                "Done. Title roles from {0} are back on for {1} here.", communities, account));
         }
 
         /// <summary>

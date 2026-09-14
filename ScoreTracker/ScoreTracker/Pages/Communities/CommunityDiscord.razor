@@ -215,6 +215,14 @@ else
                 <MudListItem T="string" Icon="@Icons.Material.Filled.Check" IconColor="Color.Success">
                     @L["Holds the title on Phoenix 2, with no higher rung"]
                 </MudListItem>
+                @* The player's own say-so (D22). Listed because the heading promises "all of
+                   these have to be true" — a silent fifth condition would make it a lie, and an
+                   admin chasing a missing role would be chasing a choice. Who opted out is not
+                   shown anywhere; the command literal rides in as an argument so every locale
+                   prints the real command. *@
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Check" IconColor="Color.Success">
+                    @L["Hasn't turned title roles off with {0}", "/piu roles off"]
+                </MudListItem>
             </MudList>
             <div class="d-flex align-center flex-wrap mt-3" style="gap:12px">
                 <MudText Typo="Typo.body2" Class="mud-text-secondary">

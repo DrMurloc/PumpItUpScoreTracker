@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
 using MediatR;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using ScoreTracker.Communities.Application;
 using ScoreTracker.Communities.Contracts;
@@ -76,7 +77,7 @@ public sealed class LinkServerCommandTests
     private BotCommandSaga Saga() =>
         new(_bot.Object, _communities.Object, _feeds.Object, _mediator.Object, _currentUser.Object,
             _localizer.Object, _roleConfiguration.Object, _discordRoles.Object,
-            FakeDateTime.At(Now).Object, _bus.Object);
+            FakeDateTime.At(Now).Object, _bus.Object, NullLogger<BotCommandSaga>.Instance);
 
     private static HandleBotInteractionCommand Invoke(bool canManageGuild = true, ulong? guildId = Guild,
         string community = "Arrow Eclipse") =>

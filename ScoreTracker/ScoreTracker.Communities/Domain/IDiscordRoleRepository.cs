@@ -58,9 +58,24 @@ internal interface IDiscordRoleRepository
     /// <summary>Drops every grant a community holds — it stopped handing out roles entirely.</summary>
     Task DeleteGrantsForCommunity(Guid communityId, CancellationToken cancellationToken);
 
+    // ---- opt-outs ------------------------------------------------------------------------------
+
     /// <summary>
-    ///     Server, mappings and grants together, for a community that no longer exists. The
-    ///     community delete does not cascade here, so without this the rows outlive the club.
+    ///     Who has turned this community's title roles off for themselves — the rule's fifth fact
+    ///     (docs/design/discord-role-management.md D22), read once per reconcile pass.
+    /// </summary>
+    Task<IReadOnlySet<Guid>> GetOptedOutUsers(Guid communityId, CancellationToken cancellationToken);
+
+    /// <summary>Records the opt-out. Running it twice keeps the first date.</summary>
+    Task SaveOptOut(Guid communityId, Guid userId, DateTimeOffset optedOutAt,
+        CancellationToken cancellationToken);
+
+    /// <summary>Lifts it. False when there was nothing to lift, so the command can say so.</summary>
+    Task<bool> DeleteOptOut(Guid communityId, Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     Server, mappings, grants and opt-outs together, for a community that no longer exists.
+    ///     The community delete does not cascade here, so without this the rows outlive the club.
     /// </summary>
     Task DeleteAllForCommunity(Guid communityId, CancellationToken cancellationToken);
 }

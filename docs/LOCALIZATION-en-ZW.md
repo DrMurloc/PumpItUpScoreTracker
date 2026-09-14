@@ -749,3 +749,35 @@ table — a coined word is not un-coined by one string leaving.
 control for it only asked which one was which — and `Mrpmurg a grorpmurm` (Clear the level) and `Lurgplglgrgl
 urgro ulbog ub {0} ugmorgru` (Compare against all of {0} instead) retire with it. `ugmorgru` (instead) and
 `urgro` (against) stay in the tables; a coined word is not un-coined by one string leaving.
+
+## Discord title roles, the player's opt-out (2026-09-14)
+
+Twelve strings for `/piu roles off` and `/piu roles on` and the fourth line under *When a role is
+given* ([discord-role-management](design/discord-role-management.md) D22–D25). Reused as-is:
+`Gromurp` (your), `Grolurg` (done), `Murpmurm` (saved), `Mrglurg bam` (check now), `Murpgl` (bot),
+`Blubmurg Murmargl → Roglubrgl` (Server Settings → Roles), `roglub` / `roglubrgl` (role / roles),
+`mrgl` (title), `blubmurg` (server), `bagro` (back), `grorpmurg` (above), `olga` (everyone),
+`grogmurgl` (who), `Blub` (you), `bo` (the negation). `PIU Mgrlgmrg` (PIU Scores) keeps the acronym
+and pluralizes Score. The command literal is never inside a value — it rides in as `{0}`/`{2}`, which
+is also what lets every other locale print the real command.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| here | urgbam | Coined; not `grogl`, which is Hour. |
+| again | rurg | |
+| until | murlo | |
+| run (a command) | murgrab | Distinct from `grabmurp` (hand out / give out), which the older strings already use for both. |
+| me / my / I | grum | One word for the first person, like Tool/Tools. |
+| get | grolgo | Not `Grolub`, which is Publishes. |
+| already | amrog | |
+| but | mor | Not `Blub`, which is You. |
+| could / can | grarg | `bo grarg` = couldn't. Not `ulbog`, which is All. |
+| probably | prgloru | |
+| admin | grogmurpl | On `grogmurgl` (who) — the one who decides. |
+| nightly | molgurg | `Mrglurg molgurg` = the nightly check. Not `murm`, which is week. |
+| first | murgo | |
+| know | morgrol | Not `Rorgl`, which is Grade. |
+| we | glub | |
+| them | murgloru | |
+| by hand | mag bragl | |
+| from | urg | |

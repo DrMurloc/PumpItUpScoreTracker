@@ -22,5 +22,6 @@ public sealed class CommunitiesModelContribution : IDbModelContribution
         modelBuilder.Entity<CommunityDiscordServerEntity>().ToTable("CommunityDiscordServer");
         modelBuilder.Entity<CommunityTitleRoleEntity>().ToTable("CommunityTitleRole");
         modelBuilder.Entity<CommunityDiscordGrantEntity>().ToTable("CommunityDiscordGrant");
+        modelBuilder.Entity<CommunityDiscordOptOutEntity>().ToTable("CommunityDiscordOptOut");
     }
 }

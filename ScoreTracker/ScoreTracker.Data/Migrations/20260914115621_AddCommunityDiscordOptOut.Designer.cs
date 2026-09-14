@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ScoreTracker.Data.Persistence;
 
@@ -11,9 +12,11 @@ using ScoreTracker.Data.Persistence;
 namespace ScoreTracker.Data.Migrations
 {
     [DbContext(typeof(ChartAttemptDbContext))]
-    partial class ChartAttemptDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260914115621_AddCommunityDiscordOptOut")]
+    partial class AddCommunityDiscordOptOut
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -302,26 +305,6 @@ namespace ScoreTracker.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("MixVersion", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.SongMixEntity", b =>
-                {
-                    b.Property<Guid>("SongId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("MixId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Channel")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)");
-
-                    b.HasKey("SongId", "MixId");
-
-                    b.HasIndex("MixId", "Channel");
-
-                    b.ToTable("SongMix", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.SongNameLanguageEntity", b =>
@@ -4669,21 +4652,6 @@ namespace ScoreTracker.Data.Migrations
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.MixEntity", null)
                         .WithMany()
                         .HasForeignKey("MixId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.SongMixEntity", b =>
-                {
-                    b.HasOne("ScoreTracker.Data.Persistence.Entities.MixEntity", null)
-                        .WithMany()
-                        .HasForeignKey("MixId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ScoreTracker.Data.Persistence.Entities.SongEntity", null)
-                        .WithMany()
-                        .HasForeignKey("SongId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

@@ -2623,6 +2623,12 @@
   <data name="Done — this channel now receives {0} for {1}." xml:space="preserve">
     <value>Hecho — este canal ahora recibe {0} para {1}.</value>
   </data>
+  <data name="Done. Title roles from {0} are back on for {1} here." xml:space="preserve">
+    <value>Hecho. Los roles de título de {0} vuelven a estar activados para {1} aquí.</value>
+  </data>
+  <data name="Done. {0} won't get title roles from {1} in this server until you run {2}." xml:space="preserve">
+    <value>Hecho. {0} no recibirá roles de título de {1} en este servidor hasta que ejecutes {2}.</value>
+  </data>
   <data name="Double" xml:space="preserve">
     <value>Double</value>
   </data>
@@ -3397,6 +3403,9 @@
   <data name="Give a song name." xml:space="preserve">
     <value>Escribe el nombre de una canción.</value>
   </data>
+  <data name="Give me title roles here again" xml:space="preserve">
+    <value>Volver a darme roles de título aquí</value>
+  </data>
   <data name="Give members a Discord role when they earn a Phoenix 2 title." xml:space="preserve">
     <value>Da a los miembros un rol de Discord cuando consiguen un título de Phoenix 2.</value>
   </data>
@@ -3552,6 +3561,9 @@
   </data>
   <data name="Has errors" xml:space="preserve">
     <value>Tiene errores</value>
+  </data>
+  <data name="Hasn't turned title roles off with {0}" xml:space="preserve">
+    <value>No ha desactivado los roles de título con {0}</value>
   </data>
   <data name="Hate or discrimination" xml:space="preserve">
     <value>Odio o discriminación</value>
@@ -4461,6 +4473,9 @@
   </data>
   <data name="Link Discord on my account" xml:space="preserve">
     <value>Vincular Discord en mi cuenta</value>
+  </data>
+  <data name="Link your Discord account on PIU Scores first, so we know who you are." xml:space="preserve">
+    <value>Vincula primero tu cuenta de Discord en PIU Scores, para que sepamos quién eres.</value>
   </data>
   <data name="Link your own Discord account first — setting the server means running a command as yourself in Discord." xml:space="preserve">
     <value>Vincula primero tu propia cuenta de Discord: designar el servidor implica ejecutar un comando como tú mismo en Discord.</value>
@@ -7714,6 +7729,9 @@
   <data name="Run real events" xml:space="preserve">
     <value>Organiza eventos reales</value>
   </data>
+  <data name="Run this in the Discord server the roles are in." xml:space="preserve">
+    <value>Ejecuta esto en el servidor de Discord donde están los roles.</value>
+  </data>
   <data name="Running" xml:space="preserve">
     <value>En ejecución</value>
   </data>
@@ -7773,6 +7791,9 @@
   </data>
   <data name="Saved." xml:space="preserve">
     <value>Guardado.</value>
+  </data>
+  <data name="Saved: {0} won't get title roles from {1} here. But a role couldn't come off right now — it probably sits above the bot in Server Settings → Roles, so an admin needs to move it or take it off by hand." xml:space="preserve">
+    <value>Guardado: {0} no recibirá roles de título de {1} aquí. Pero un rol no se pudo quitar ahora mismo — probablemente está por encima del bot en Ajustes del servidor → Roles, así que un administrador tiene que moverlo o quitarlo a mano.</value>
   </data>
   <data name="scale" xml:space="preserve">
     <value>escala</value>
@@ -8809,6 +8830,9 @@
   <data name="Tags that left the boards" xml:space="preserve">
     <value>Tags que salieron de los tableros</value>
   </data>
+  <data name="Take off my title roles here and stop giving them to me" xml:space="preserve">
+    <value>Quitarme mis roles de título aquí y dejar de dármelos</value>
+  </data>
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>Falla una vez cada N notas indefinidamente y tu vida converge en algún punto. Por debajo del acantilado converge en cero: la curva no se suaviza, se despeña. Es el multiplicador muriendo más rápido de lo que puedes reconstruirlo.</value>
   </data>
@@ -9427,6 +9451,9 @@
   <data name="This season's boards are being set up. Check back shortly." xml:space="preserve">
     <value>Los tableros de esta temporada se están preparando. Vuelve en un rato.</value>
   </data>
+  <data name="This server doesn't hand out title roles." xml:space="preserve">
+    <value>Este servidor no reparte roles de título.</value>
+  </data>
   <data name="This session isn't here." xml:space="preserve">
     <value>Esta sesión no está aquí.</value>
   </data>
@@ -9561,6 +9588,12 @@
   </data>
   <data name="Title Master" xml:space="preserve">
     <value>Maestro/a de títulos</value>
+  </data>
+  <data name="Title roles from {0} are back on for {1} here, but I couldn't hand them out right now. The nightly check will." xml:space="preserve">
+    <value>Los roles de título de {0} vuelven a estar activados para {1} aquí, pero no pude repartirlos ahora mismo. La comprobación nocturna lo hará.</value>
+  </data>
+  <data name="Title roles were already on for you here." xml:space="preserve">
+    <value>Los roles de título ya estaban activados para ti aquí.</value>
   </data>
   <data name="Titles" xml:space="preserve">
     <value>Títulos</value>
@@ -11094,6 +11127,9 @@
   </data>
   <data name="Your title" xml:space="preserve">
     <value>Tu título</value>
+  </data>
+  <data name="Your title roles in this server" xml:space="preserve">
+    <value>Tus roles de título en este servidor</value>
   </data>
   <data name="Your tools" xml:space="preserve">
     <value>Tus herramientas</value>
