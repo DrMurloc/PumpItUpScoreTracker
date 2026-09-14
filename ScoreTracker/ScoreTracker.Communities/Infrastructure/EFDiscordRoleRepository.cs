@@ -19,8 +19,8 @@ internal sealed class EFDiscordRoleRepository : IDiscordRoleRepository
         CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        return await Servers(database)
-            .Where(s => s.CommunityId == communityId)
+        return await Named(database, database.Set<CommunityDiscordServerEntity>()
+                .Where(s => s.CommunityId == communityId))
             .FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -28,15 +28,16 @@ internal sealed class EFDiscordRoleRepository : IDiscordRoleRepository
         CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        return await Servers(database).ToArrayAsync(cancellationToken);
+        return await Named(database, database.Set<CommunityDiscordServerEntity>())
+            .ToArrayAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<CommunityDiscordServerRecord>> GetServersByGuild(ulong guildId,
         CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        return await Servers(database)
-            .Where(s => s.GuildId == guildId)
+        return await Named(database, database.Set<CommunityDiscordServerEntity>()
+                .Where(s => s.GuildId == guildId))
             .ToArrayAsync(cancellationToken);
     }
 
@@ -44,9 +45,18 @@ internal sealed class EFDiscordRoleRepository : IDiscordRoleRepository
     ///     A designation with its community's name attached, so a command run in the server can
     ///     say which community it acted for. An inner join on purpose: a designation whose community
     ///     is gone is nothing to sweep.
+    ///     <para>
+    ///         ⚠ Takes the rows ALREADY FILTERED and projects last. EF cannot translate a predicate
+    ///         back through a positional record's constructor, so a shared helper that returns
+    ///         <c>IQueryable&lt;TRecord&gt;</c> for callers to filter throws "could not be
+    ///         translated" at query-compile time — every read, unconditionally. That shipped once in
+    ///         EFHardmodeRatingRepository (PR #338) and again here the next day; both times every
+    ///         mocked suite stayed green, which is why EFDiscordRoleRepositoryTests now exists.
+    ///     </para>
     /// </summary>
-    private static IQueryable<CommunityDiscordServerRecord> Servers(ChartAttemptDbContext database) =>
-        from s in database.Set<CommunityDiscordServerEntity>()
+    private static IQueryable<CommunityDiscordServerRecord> Named(ChartAttemptDbContext database,
+        IQueryable<CommunityDiscordServerEntity> servers) =>
+        from s in servers
         join c in database.Set<CommunityEntity>() on s.CommunityId equals c.Id
         select new CommunityDiscordServerRecord(s.CommunityId, s.GuildId, s.GuildName, s.DesignatedAt, c.Name);
 
@@ -219,7 +229,21 @@ internal sealed class EFDiscordRoleRepository : IDiscordRoleRepository
             UserId = userId,
             OptedOutAt = optedOutAt
         }, cancellationToken);
-        await database.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await database.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // Check-then-insert loses a race with itself: two invocations in flight — a double
+            // click, or the client's own retry — both read "not opted out" and both insert, and
+            // the unique index refuses the second. The row the caller asked for exists either
+            // way, so saying so twice is the honest answer rather than an error the player caused
+            // by pressing once. Rethrown if it was some other write that failed.
+            if (!await database.Set<CommunityDiscordOptOutEntity>()
+                    .AnyAsync(o => o.CommunityId == communityId && o.UserId == userId, cancellationToken))
+                throw;
+        }
     }
 
     public async Task<bool> DeleteOptOut(Guid communityId, Guid userId, CancellationToken cancellationToken)
