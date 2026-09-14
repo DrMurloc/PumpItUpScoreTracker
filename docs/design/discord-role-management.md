@@ -60,7 +60,7 @@ Owner calls from the 2026-09-09 workshop.
 | D17 | **Unlinking Discord publishes an event.** It was the one change nothing reported, so roles granted off the back of a sign-in outlived it until a sweep noticed. `ExternalLoginRemovedEvent` makes it immediate, which is what let the sweep drop to nightly without leaving a silent case. |
 | D19 | **Linking Discord publishes one too.** The mirror of D17, and the same reason: linking is the LAST step of ordinary onboarding — the community join happens before there is a Discord account, the server join before there is a site account to find — so it was the one step that fired nothing, leaving the player on a nightly sweep they cannot trigger (Check now is admin-only). |
 | D20 | **A system community may be owned, but never deleted.** World and the ninety-odd country communities are auto-joined and site-owned, and nothing guarded deletion because being ownerless left them with no Creator. Naming somebody on the row is a legitimate thing to do — it is how the official Discord gets its title roles — so the guard is explicit now (owner, 2026-09-09). Without it, World carrying every account on the site was one confirm from deletion. |
-| D23 | **The opt-out is a fifth fact in the rule, not an action the command takes** (2026-09-14). `Reconcile` reads it alongside membership and the linked account, so the join event, the nightly sweep, a title earned next week, an admin's Check now and the dry run all honor it, and nothing can hand the role back by accident. The command writes the fact and then runs the same reconcile inline, the way D18 hands a role out on the spot. It also made one existing loop honest: a revoke pass used to stop at the first role Discord refused, so somebody wearing one role above the bot kept the assignable one too. Every revoke is attempted now, the grant row stays while anything failed, and the failure surfaces after the loop. |
+| D23 | **The opt-out is a fifth fact in the rule, not an action the command takes** (2026-09-14). `Reconcile` reads it alongside membership and the linked account, so the join event, the nightly sweep, a title earned next week, an admin's Check now and the dry run all honor it, and nothing can hand the role back by accident. The command writes the fact and then runs the same reconcile inline, the way D18 hands a role out on the spot. It also made the two existing revoke loops honest: a revoke pass used to stop at the first role Discord refused, so somebody wearing one role above the bot kept the assignable one too. Every revoke is attempted now in both `ReconcileMember` and `Revoke`, the grant row stays while anything failed, and the failure surfaces after the loop. The second loop matters most on the purge, which deletes the grant row — the last handle on the snowflake — whether or not the revoke succeeded, so a role skipped there is a role nothing can ever take back. |
 | D25 | **A player who is not in the community can still turn its roles off**, and a player with nothing to take off gets the same answer — the record simply waits (2026-09-14). Admins never see who opted out: the page gains the fact as a line under "When a role is given", not a list of names. The reply names the account the invocation resolved to, for the same reason D21 does. |
 
 ---
@@ -457,6 +457,31 @@ A resx opens with the schema comment, and that comment contains **example `<data
 of those as the neighbour and splice a real entry *inside the comment*, where `GenerateResource`
 never sees it and the UI silently renders the key name. Anchor the scan after the last
 `</resheader>`.
+
+### 9.6 What the opt-out's bug check found (2026-09-14)
+
+Four fixes and one ratchet, all on the same PR.
+
+- **Every Discord-role read threw.** The shared `Servers(...)` helper returned
+  `IQueryable<CommunityDiscordServerRecord>` and its two callers filtered the **projection** — and
+  EF cannot translate a predicate back through a positional record's constructor, so `GetServer`
+  and `GetServersByGuild` failed at query-compile time, unconditionally. That is the whole feature,
+  plus `/Community/Discord`, `/piu link-server`, every reconcile and community deletion. It is the
+  same trap `EFHardmodeRatingRepository` shipped one day earlier (PR #338), and it survived 4,734
+  green tests for the same reason: **the repository had no integration test.**
+  `EFDiscordRoleRepositoryTests` is that missing ratchet — seven facts that execute the reads
+  rather than mocking them, which is the only kind of test this class of bug cannot pass.
+- **An unrecognized `roles` leaf turned roles back on.** `path[1] == "off"` meant everything else
+  fell into the branch that *deletes* the opt-out. A privacy preference fails closed: the leaf is
+  matched explicitly and an unknown one is refused.
+- **`/piu roles on` said "already on" over a failed pass.** The realistic caller is somebody whose
+  role is missing and who was never opted out, so nothing is lifted — and they were handed a
+  reassurance for a reconcile that had just thrown. The failure is reported first now.
+- **Recording the opt-out was check-then-insert against a unique index**, and the write sat outside
+  the loop's try, so with two communities on one server a throw on the first left the second never
+  written and said nothing. The insert treats its own unique violation as success — pressing once
+  and having the client retry is not an error — and the write is inside the same try the reconcile
+  has.
 
 ### 9.5 Testing
 
