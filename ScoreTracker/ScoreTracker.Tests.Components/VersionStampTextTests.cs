@@ -8,8 +8,8 @@ namespace ScoreTracker.Tests.Components;
 
 /// <summary>
 ///     The one way a patch prints, shared by the chart page's fact strip and the dialog's
-///     History lines: a numbered version takes the v, a named one does not, and the date
-///     follows only when the catalog has it.
+///     History events: a numbered version takes the v, a version the catalog only names is the
+///     mix's own release and prints nothing of its own, and the date stands where it is known.
 /// </summary>
 public sealed class VersionStampTextTests
 {
@@ -18,6 +18,7 @@ public sealed class VersionStampTextTests
     {
         var stamp = new VersionStamp(MixEnum.Phoenix, "2.06.0", new DateOnly(2024, 12, 26), 160);
 
+        Assert.Equal("v2.06.0", VersionStampText.Patch(stamp));
         Assert.Equal("v2.06.0 · Dec 26, 2024", VersionStampText.Short(stamp));
     }
 
@@ -28,12 +29,19 @@ public sealed class VersionStampTextTests
     }
 
     [Theory]
-    [InlineData("Release", "Release · Sep 3, 2000")]
-    [InlineData("Pre-v1.10", "Pre-v1.10 · Sep 3, 2000")]
-    public void ANamedVersionPrintsWithoutTheV(string name, string expected)
+    [InlineData("Release")]
+    [InlineData("Pre-v1.10")]
+    public void ANamedVersionIsNoPatchAndLeavesTheDayAlone(string name)
     {
         var stamp = new VersionStamp(MixEnum.ObgSeasonEvolution, name, new DateOnly(2000, 9, 3), 1);
 
-        Assert.Equal(expected, VersionStampText.Short(stamp));
+        Assert.Null(VersionStampText.Patch(stamp));
+        Assert.Equal("Sep 3, 2000", VersionStampText.Short(stamp));
+    }
+
+    [Fact]
+    public void ANamedVersionWithNoDayNamesItselfRatherThanNothing()
+    {
+        Assert.Equal("Release", VersionStampText.Short(new VersionStamp(MixEnum.Extra, "Release", null, 1)));
     }
 }

@@ -19,33 +19,44 @@
 @if (Chart != null)
 {
     <div class="chart-details-rows">
-        @* The chart page's timeline as lines, in its words: the debut, every rerate with its
-           mark, and the mix in view, each with the patch and date its row names. A mix where
-           nothing changed is skipped, so a chart alive since 2000 is a few lines, not twenty-five. *@
+        @* The chart's life as events (docs/design/song-channels.md D11): mix, the day, the patch
+           when numbered, the entry as a tag, the level with its mark. Each mix groups its events,
+           so a phone can stand the mix on its own line with the events indented beneath it, while
+           a wider dialog gives every event one line that names its mix. *@
         <div class="chart-details-row chart-details-row-history">
             <span class="chart-details-row-label">@L["History"]</span>
             <span class="chart-details-row-value">
-                @foreach (var line in HistoryLines())
+                @foreach (var group in HistoryGroups())
                 {
-                    <span class="chart-details-line">
-                        <span class="chart-details-line-mix">@line.Mix.GetName()</span>
-                        @if (line.Stamp != null)
+                    <span class="chart-details-mix">
+                        <span class="chart-details-mix-head">@group.Mix.GetName()</span>
+                        @foreach (var e in group.Events)
                         {
-                            <span class="chart-details-sep">·</span>@VersionStampText.Short(line.Stamp)
-                        }
-                        <span class="chart-details-sep">·</span>
-                        @if (line.Kind == HistoryKind.Debut)
-                        {
-                            @L["debuted at {0}", Label(line.Level)]
-                        }
-                        else if (line.Kind == HistoryKind.Rerated)
-                        {
-                            @L["rerated {0}", Label(line.Level)]
-                            <span class="chart-details-delta">@(line.Delta > 0 ? "▲" : "▼") @(line.Delta > 0 ? "+" : "")@line.Delta</span>
-                        }
-                        else
-                        {
-                            @L["unchanged · {0}", Label(line.Level)]
+                            var before = Before(e);
+                            <span class="chart-details-event">
+                                <span class="chart-details-event-mix">@group.Mix.GetName()<span class="chart-details-sep">·</span></span>
+                                @for (var i = 0; i < before.Count; i++)
+                                {
+                                    if (i > 0)
+                                    {
+                                        <span class="chart-details-sep">·</span>
+                                    }
+                                    @before[i]
+                                }
+                                @if (before.Count > 0)
+                                {
+                                    <span class="chart-details-sep">·</span>
+                                }
+                                <span class="chart-details-tag chart-details-tag-@(e.Kind.ToString().ToLowerInvariant())">@KindLabel(e.Kind)</span>
+                                @if (e.Level is { } level)
+                                {
+                                    <span class="chart-details-sep">·</span>@Label(level)
+                                }
+                                @if (e.Delta != 0)
+                                {
+                                    <span class="chart-details-delta">@(e.Delta > 0 ? "▲" : "▼") @(e.Delta > 0 ? "+" : "")@e.Delta</span>
+                                }
+                            </span>
                         }
                     </span>
                 }
@@ -147,17 +158,52 @@
         min-width: 0;
     }
 
-    .chart-details-line {
+    .chart-details-line,
+    .chart-details-mix,
+    .chart-details-event {
         display: block;
     }
 
-    .chart-details-line-mix {
+    /* Wide: every event is one line that names its mix; the mix heading exists for the phone. */
+    .chart-details-mix-head {
+        display: none;
+    }
+
+    .chart-details-event-mix {
         font-weight: 500;
     }
 
     .chart-details-sep {
         opacity: .55;
         margin: 0 5px;
+    }
+
+    /* The entry as a tag (round 4, variant B): a removal or a revival catches the eye in a long
+       life. Rerated wears the ramp's hard color, as its mark does; Revived the primary. */
+    .chart-details-tag {
+        display: inline-block;
+        font-size: .64rem;
+        font-weight: 600;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        padding: 1px 6px;
+        border-radius: 4px;
+        border: 1px solid currentColor;
+        line-height: 1.35;
+        vertical-align: 1px;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .chart-details-tag-rerated {
+        color: var(--diff-hard);
+    }
+
+    .chart-details-tag-removed {
+        border-style: dashed;
+    }
+
+    .chart-details-tag-revived {
+        color: var(--mud-palette-primary);
     }
 
     /* The page's timeline mark, in the ramp's hard color whichever way the level moved. */
@@ -167,6 +213,38 @@
         font-weight: 800;
         font-size: .8rem;
         white-space: nowrap;
+    }
+
+    /* The phone form (owner, round 4): the label above its block so the events get the whole
+       width, the mix as its own line, each event hanging 14px in on a line of its own. */
+    @@media (max-width: 600px) {
+        .chart-details-row-history {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 4px;
+        }
+
+        .chart-details-mix + .chart-details-mix {
+            margin-top: 5px;
+        }
+
+        .chart-details-mix-head {
+            display: block;
+            font-weight: 500;
+        }
+
+        .chart-details-event-mix {
+            display: none;
+        }
+
+        .chart-details-event {
+            padding-left: 14px;
+            font-size: .78rem;
+            line-height: 1.5;
+        }
+
+        .chart-details-event .chart-details-sep {
+            margin: 0 4px;
+        }
     }
 
     .chart-details-placements, .chart-details-skills {
@@ -189,15 +267,8 @@
 </style>
 
 @code {
-    private enum HistoryKind
-    {
-        Debut,
-        Rerated,
-        Unchanged
-    }
-
-    /// <summary>One line of the History row: a mix, the patch its row names, and what the level did there.</summary>
-    private sealed record HistoryLine(MixEnum Mix, VersionStamp? Stamp, HistoryKind Kind, int Level, int Delta);
+    /// <summary>One mix and the events that happened to the chart there, in order.</summary>
+    private sealed record HistoryGroup(MixEnum Mix, IReadOnlyList<ChartHistoryEvent> Events);
 
     [Parameter] public Chart? Chart { get; set; }
 
@@ -252,38 +323,44 @@
     }
 
     /// <summary>
-    ///     The debut, every rerate, and the mix in view, in era order. A mix where the level held
-    ///     is skipped unless it is the one in view. Without a history facet — a debut with no
-    ///     rerate, for which the page shows no History section — the chart's own row still says
-    ///     when it arrived.
+    ///     The facet's events, grouped by mix so consecutive events in one mix share its line on
+    ///     a phone. Without a history facet — a debut with no rerate, for which the page shows no
+    ///     History section — the chart's own row still says when it arrived.
     /// </summary>
-    private IReadOnlyList<HistoryLine> HistoryLines()
+    private IReadOnlyList<HistoryGroup> HistoryGroups()
     {
-        if (Chart == null) return Array.Empty<HistoryLine>();
-        var levels = _history?.Levels;
-        if (levels == null || levels.Count == 0)
+        if (Chart == null) return Array.Empty<HistoryGroup>();
+        var events = _history?.Events is { Count: > 0 } known
+            ? known
+            : new[] { new ChartHistoryEvent(Chart.OriginalMix, ChartHistoryEventKind.Debuted, Chart.Debut, (int)Chart.Level, 0) };
+        var groups = new List<(MixEnum Mix, List<ChartHistoryEvent> Events)>();
+        foreach (var e in events)
         {
-            var own = new List<HistoryLine>
-                { new(Chart.OriginalMix, Chart.Debut, HistoryKind.Debut, (int)Chart.Level, 0) };
-            if (Chart.Mix != Chart.OriginalMix)
-                own.Add(new HistoryLine(Chart.Mix, Chart.AddedIn, HistoryKind.Unchanged, (int)Chart.Level, 0));
-            return own;
+            if (groups.Count > 0 && groups[^1].Mix == e.Mix) groups[^1].Events.Add(e);
+            else groups.Add((e.Mix, new List<ChartHistoryEvent> { e }));
         }
 
-        var lines = new List<HistoryLine>();
-        for (var i = 0; i < levels.Count; i++)
-        {
-            var entry = levels[i];
-            var delta = i == 0 ? 0 : entry.Level - levels[i - 1].Level;
-            var kind = i == 0 ? HistoryKind.Debut : delta != 0 ? HistoryKind.Rerated : HistoryKind.Unchanged;
-            if (kind == HistoryKind.Unchanged && entry.Mix != Chart.Mix) continue;
-            // The facet's stamp first; the chart's own stamps cover the two mixes it knows.
-            var stamp = entry.AddedIn
-                        ?? (entry.Mix == Chart.OriginalMix ? Chart.Debut : entry.Mix == Chart.Mix ? Chart.AddedIn : null);
-            lines.Add(new HistoryLine(entry.Mix, stamp, kind, entry.Level, delta));
-        }
+        return groups.Select(g => new HistoryGroup(g.Mix, g.Events)).ToArray();
+    }
 
-        return lines;
+    /// <summary>What precedes the entry on its line: the day the patch shipped, and the patch when it is numbered.</summary>
+    private static IReadOnlyList<string> Before(ChartHistoryEvent e)
+    {
+        var parts = new List<string>();
+        if (e.Stamp?.ReleaseDate is { } shipped) parts.Add(VersionStampText.Day(shipped));
+        if (e.Stamp != null && VersionStampText.Patch(e.Stamp) is { } patch) parts.Add(patch);
+        return parts;
+    }
+
+    private string KindLabel(ChartHistoryEventKind kind)
+    {
+        return kind switch
+        {
+            ChartHistoryEventKind.Debuted => L["Debuted"],
+            ChartHistoryEventKind.Rerated => L["Rerated"],
+            ChartHistoryEventKind.Removed => L["Removed"],
+            _ => L["Revived"]
+        };
     }
 
     /// <summary>The timeline's label for a level: the type's shorthand and the number, <c>D23</c>.</summary>

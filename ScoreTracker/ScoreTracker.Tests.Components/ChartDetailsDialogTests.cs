@@ -655,12 +655,12 @@ public sealed class ChartDetailsDialogTests : TestContext
     }
 
     /// <summary>
-    ///     History is the chart page's timeline as lines: the debut, every rerate with its mark and
-    ///     the patch it happened in, and the mix in view; a mix where nothing changed is skipped.
-    ///     The channel is a chip that opens the chart search filtered on it.
+    ///     History is the facet's events, one line each in the owner's grammar — mix, day, patch
+    ///     when numbered, the entry as a tag, the level with its mark — grouped by mix so a phone
+    ///     can head each group with the mix. The channel is a chip that opens the chart search on it.
     /// </summary>
     [Fact]
-    public void TheStatsTabListsTheDebutEveryRerateAndTheMixInView()
+    public void TheStatsTabListsTheChartsLifeAsEvents()
     {
         var chart = SetupChart(null) with
         {
@@ -673,35 +673,52 @@ public sealed class ChartDetailsDialogTests : TestContext
         _mediator.Setup(m => m.Send(It.IsAny<GetChartVerdictQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ChartVerdictFacet[]
             {
-                new HistoryVerdict(MixEnum.Prime, new[]
-                {
-                    new MixLevelRecord(MixEnum.Prime, 19),
-                    new MixLevelRecord(MixEnum.XX, 20, new VersionStamp(MixEnum.XX, "1.00.0", new DateOnly(2019, 1, 7), 1)),
-                    new MixLevelRecord(MixEnum.Phoenix, 20),
-                    new MixLevelRecord(MixEnum.Phoenix2, 19)
-                })
+                new HistoryVerdict(MixEnum.Prime,
+                    new[] { new MixLevelRecord(MixEnum.Prime, 19), new MixLevelRecord(MixEnum.Phoenix2, 19) },
+                    new[]
+                    {
+                        new ChartHistoryEvent(MixEnum.Prime, ChartHistoryEventKind.Debuted,
+                            new VersionStamp(MixEnum.Prime, "1.06.0", null, 60), 19, 0),
+                        new ChartHistoryEvent(MixEnum.Phoenix, ChartHistoryEventKind.Removed,
+                            new VersionStamp(MixEnum.Phoenix, "1.00.0", new DateOnly(2023, 7, 4), 100), null, 0),
+                        new ChartHistoryEvent(MixEnum.Phoenix, ChartHistoryEventKind.Revived,
+                            new VersionStamp(MixEnum.Phoenix, "2.00.0", new DateOnly(2024, 5, 27), 200), 18, -1),
+                        new ChartHistoryEvent(MixEnum.Phoenix2, ChartHistoryEventKind.Rerated,
+                            new VersionStamp(MixEnum.Phoenix2, "1.00.0", new DateOnly(2026, 7, 9), 10), 19, 1)
+                    })
             });
 
         var cut = RenderDialog(chart, ChartDetailsDialog.DetailsTab.Stats);
 
-        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-row-history .chart-details-line")));
-        var lines = cut.FindAll(".chart-details-row-history .chart-details-line").Select(l => l.TextContent).ToArray();
-        Assert.Equal(3, lines.Length);
-        Assert.Contains("Prime", lines[0]);
-        Assert.Contains("v1.06.0", lines[0]);
-        Assert.Contains("debuted at D19", lines[0]);
-        // The rerate's patch comes from the facet, which knows every mix's row.
-        Assert.Contains("XX", lines[1]);
-        Assert.Contains("v1.00.0 · Jan 7, 2019", lines[1]);
-        Assert.Contains("rerated D20", lines[1]);
-        Assert.Contains("+1", lines[1]);
-        // The mix in view always has a line; its patch is the chart's own AddedIn.
-        Assert.Contains("Phoenix 2", lines[2]);
-        Assert.Contains("v1.00.0 · Jul 9, 2026", lines[2]);
-        Assert.Contains("rerated D19", lines[2]);
-        Assert.Contains("-1", lines[2]);
-        // Phoenix carried D20 unchanged, so it has no line.
-        Assert.DoesNotContain(lines, l => l.Contains("unchanged"));
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-row-history .chart-details-event")));
+        var events = cut.FindAll(".chart-details-row-history .chart-details-event").Select(l => l.TextContent).ToArray();
+        Assert.Equal(4, events.Length);
+        // Mix, then the patch (no day known), then the entry and the level.
+        Assert.Contains("Prime", events[0]);
+        Assert.Contains("v1.06.0", events[0]);
+        Assert.Contains("Debuted", events[0]);
+        Assert.Contains("D19", events[0]);
+        // A removal is dated by the release and names no level.
+        Assert.Contains("Phoenix", events[1]);
+        Assert.Contains("Jul 4, 2023", events[1]);
+        Assert.Contains("v1.00.0", events[1]);
+        Assert.Contains("Removed", events[1]);
+        Assert.DoesNotContain("D1", events[1]);
+        // The revival carries its patch, its level, and the move against the level before.
+        Assert.Contains("May 27, 2024", events[2]);
+        Assert.Contains("v2.00.0", events[2]);
+        Assert.Contains("Revived", events[2]);
+        Assert.Contains("D18", events[2]);
+        Assert.Contains("-1", events[2]);
+        Assert.Contains("Phoenix 2", events[3]);
+        Assert.Contains("Rerated", events[3]);
+        Assert.Contains("D19", events[3]);
+        Assert.Contains("+1", events[3]);
+        // The entry is a tag of its kind, and the two Phoenix events share one mix group.
+        Assert.Single(cut.FindAll(".chart-details-tag-removed"));
+        Assert.Single(cut.FindAll(".chart-details-tag-revived"));
+        Assert.Equal(new[] { "Prime", "Phoenix", "Phoenix 2" },
+            cut.FindAll(".chart-details-mix-head").Select(h => h.TextContent).ToArray());
 
         var channel = cut.Find(".chart-details-row-channel [href]");
         Assert.Contains("World Music", channel.TextContent);
@@ -710,21 +727,24 @@ public sealed class ChartDetailsDialogTests : TestContext
 
     /// <summary>
     ///     A debut with no rerate has no history facet — the page shows no History section — but
-    ///     the dialog still says when the chart arrived, off the chart's own row. No channel, no row.
+    ///     the dialog still says when the chart arrived, off the chart's own row; a version the
+    ///     catalog only names prints nothing, the day standing for it. No channel, no row.
     /// </summary>
     [Fact]
-    public void ADebutWithNoRerateShowsOneHistoryLineAndNoChannelRow()
+    public void ADebutWithNoRerateShowsOneEventAndNoChannelRow()
     {
-        var stamp = new VersionStamp(MixEnum.Phoenix, "2.06.0", new DateOnly(2024, 12, 26), 160);
-        var chart = SetupChart(null) with { OriginalMix = MixEnum.Phoenix, AddedIn = stamp, Debut = stamp };
+        var stamp = new VersionStamp(MixEnum.Exceed2, "Release", new DateOnly(2004, 11, 30), 1);
+        var chart = SetupChart(null) with { OriginalMix = MixEnum.Exceed2, Mix = MixEnum.Exceed2, AddedIn = stamp, Debut = stamp };
 
         var cut = RenderDialog(chart, ChartDetailsDialog.DetailsTab.Stats);
 
-        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-row-history .chart-details-line")));
-        var line = Assert.Single(cut.FindAll(".chart-details-row-history .chart-details-line")).TextContent;
-        Assert.Contains("Phoenix", line);
-        Assert.Contains("v2.06.0 · Dec 26, 2024", line);
-        Assert.Contains("debuted at D20", line);
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-row-history .chart-details-event")));
+        var line = Assert.Single(cut.FindAll(".chart-details-row-history .chart-details-event")).TextContent;
+        Assert.Contains("Exceed 2", line);
+        Assert.Contains("Nov 30, 2004", line);
+        Assert.DoesNotContain("Release", line);
+        Assert.Contains("Debuted", line);
+        Assert.Contains("D20", line);
         Assert.Empty(cut.FindAll(".chart-details-row-channel"));
     }
 }

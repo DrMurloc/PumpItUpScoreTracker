@@ -63,7 +63,8 @@ public sealed class SongChannelTests : IAsyncLifetime
 
         await Expect(_page.Locator(".chart-details-row-channel"))
             .ToContainTextAsync("K-Pop", new LocatorAssertionsToContainTextOptions { Timeout = 30_000 });
-        // A seeded debut with no rerate: the History row is the one line the chart's own row can say.
-        await Expect(_page.Locator(".chart-details-row-history")).ToContainTextAsync("debuted at D21");
+        // A seeded debut with no rerate: the History row is the one event the chart's own row can say.
+        await Expect(_page.Locator(".chart-details-row-history")).ToContainTextAsync("Debuted");
+        await Expect(_page.Locator(".chart-details-row-history")).ToContainTextAsync("D21");
     }
 }
