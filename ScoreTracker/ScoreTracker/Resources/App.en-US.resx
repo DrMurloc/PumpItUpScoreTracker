@@ -1181,8 +1181,14 @@
   <data name="Backfill max combos" xml:space="preserve">
     <value>Backfill max combos</value>
   </data>
+  <data name="Backfill seasons" xml:space="preserve">
+    <value>Backfill seasons</value>
+  </data>
   <data name="Backfill stage break causes" xml:space="preserve">
     <value>Backfill stage break causes</value>
+  </data>
+  <data name="Backfilling seasons. The pools rebuild in the background; reload in a few minutes." xml:space="preserve">
+    <value>Backfilling seasons. The pools rebuild in the background; reload in a few minutes.</value>
   </data>
   <data name="Bad" xml:space="preserve">
     <value>Bad</value>
@@ -2780,6 +2786,12 @@
   </data>
   <data name="Ended" xml:space="preserve">
     <value>Ended</value>
+  </data>
+  <data name="Ended, not yet sealed" xml:space="preserve">
+    <value>Ended, not yet sealed</value>
+  </data>
+  <data name="Ends" xml:space="preserve">
+    <value>Ends</value>
   </data>
   <data name="Energy" xml:space="preserve">
     <value>Energy</value>
@@ -5329,6 +5341,9 @@
   <data name="No scores yet — Pumbility starts with your first import." xml:space="preserve">
     <value>No scores yet — Pumbility starts with your first import.</value>
   </data>
+  <data name="No season has been opened yet. Roll now creates the quarter we are standing in; Backfill seasons creates every quarter since Summer 2026 and rebuilds their pools from the score journal." xml:space="preserve">
+    <value>No season has been opened yet. Roll now creates the quarter we are standing in; Backfill seasons creates every quarter since Summer 2026 and rebuilds their pools from the score journal.</value>
+  </data>
   <data name="No sessions here" xml:space="preserve">
     <value>No sessions here</value>
   </data>
@@ -7676,11 +7691,17 @@
   <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
     <value>Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round.</value>
   </data>
+  <data name="Roll now" xml:space="preserve">
+    <value>Roll now</value>
+  </data>
   <data name="Roll up supplemented leaderboards" xml:space="preserve">
     <value>Roll up supplemented leaderboards</value>
   </data>
   <data name="Rolling 30-day spend" xml:space="preserve">
     <value>Rolling 30-day spend</value>
+  </data>
+  <data name="Rolling the season." xml:space="preserve">
+    <value>Rolling the season.</value>
   </data>
   <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
     <value>Rotate this week's board now? This closes the current week and draws the next set.</value>
@@ -7931,6 +7952,9 @@
   </data>
   <data name="Scrolling and links still work. Resume to use buttons." xml:space="preserve">
     <value>Scrolling and links still work. Resume to use buttons.</value>
+  </data>
+  <data name="Sealed {0}" xml:space="preserve">
+    <value>Sealed {0}</value>
   </data>
   <data name="Search" xml:space="preserve">
     <value>Search</value>
@@ -8642,6 +8666,9 @@
   </data>
   <data name="Starting import…" xml:space="preserve">
     <value>Starting import…</value>
+  </data>
+  <data name="Starts" xml:space="preserve">
+    <value>Starts</value>
   </data>
   <data name="Starts {0}" xml:space="preserve">
     <value>Starts {0}</value>

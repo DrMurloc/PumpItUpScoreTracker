@@ -1174,8 +1174,14 @@
   <data name="Backfill max combos" xml:space="preserve">
     <value>Preencher combos máximos</value>
   </data>
+  <data name="Backfill seasons" xml:space="preserve">
+    <value>Preencher temporadas</value>
+  </data>
   <data name="Backfill stage break causes" xml:space="preserve">
     <value>Preencher causas de stage break</value>
+  </data>
+  <data name="Backfilling seasons. The pools rebuild in the background; reload in a few minutes." xml:space="preserve">
+    <value>Preenchendo temporadas. Os grupos são reconstruídos em segundo plano; recarregue em alguns minutos.</value>
   </data>
   <data name="Bad" xml:space="preserve">
     <value>Bad</value>
@@ -2766,6 +2772,12 @@
   </data>
   <data name="Ended" xml:space="preserve">
     <value>Encerrada</value>
+  </data>
+  <data name="Ended, not yet sealed" xml:space="preserve">
+    <value>Encerrada, ainda não selada</value>
+  </data>
+  <data name="Ends" xml:space="preserve">
+    <value>Termina</value>
   </data>
   <data name="Energy" xml:space="preserve">
     <value>Energia</value>
@@ -5299,6 +5311,9 @@
   <data name="No scores yet — Pumbility starts with your first import." xml:space="preserve">
     <value>Nenhuma pontuação ainda — o Pumbility começa com a sua primeira importação.</value>
   </data>
+  <data name="No season has been opened yet. Roll now creates the quarter we are standing in; Backfill seasons creates every quarter since Summer 2026 and rebuilds their pools from the score journal." xml:space="preserve">
+    <value>Nenhuma temporada foi aberta ainda. Rodar agora cria o trimestre em que estamos; Preencher temporadas cria todos os trimestres desde o verão de 2026 e reconstrói seus grupos a partir do histórico de pontuações.</value>
+  </data>
   <data name="No sessions here" xml:space="preserve">
     <value>Nenhuma sessão aqui</value>
   </data>
@@ -7633,11 +7648,17 @@
   <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
     <value>Sorteie charts com o randomizer, rode brackets e drafts de cartas no seu local, e compartilhe uma visão ao vivo para que todo o fliperama — ou a stream — acompanhe a rodada.</value>
   </data>
+  <data name="Roll now" xml:space="preserve">
+    <value>Rodar agora</value>
+  </data>
   <data name="Roll up supplemented leaderboards" xml:space="preserve">
     <value>Compilar classificações complementadas</value>
   </data>
   <data name="Rolling 30-day spend" xml:space="preserve">
     <value>Gasto móvel de 30 dias</value>
+  </data>
+  <data name="Rolling the season." xml:space="preserve">
+    <value>Rodando a temporada.</value>
   </data>
   <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
     <value>Girar o quadro desta semana agora? Isso fecha a semana atual e sorteia o próximo conjunto.</value>
@@ -7884,6 +7905,9 @@
   </data>
   <data name="Scrolling and links still work. Resume to use buttons." xml:space="preserve">
     <value>A rolagem e os links continuam funcionando. Retome para usar os botões.</value>
+  </data>
+  <data name="Sealed {0}" xml:space="preserve">
+    <value>Selada em {0}</value>
   </data>
   <data name="Search" xml:space="preserve">
     <value>Buscar</value>
@@ -8586,6 +8610,9 @@
   </data>
   <data name="Starting import…" xml:space="preserve">
     <value>Iniciando importação…</value>
+  </data>
+  <data name="Starts" xml:space="preserve">
+    <value>Começa</value>
   </data>
   <data name="Starts {0}" xml:space="preserve">
     <value>Começa em {0}</value>

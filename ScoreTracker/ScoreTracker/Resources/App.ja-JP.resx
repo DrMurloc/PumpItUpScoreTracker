@@ -1181,8 +1181,14 @@
   <data name="Backfill max combos" xml:space="preserve">
     <value>最大コンボをバックフィル</value>
   </data>
+  <data name="Backfill seasons" xml:space="preserve">
+    <value>シーズンを再構築</value>
+  </data>
   <data name="Backfill stage break causes" xml:space="preserve">
     <value>Stage Break の原因をバックフィル</value>
+  </data>
+  <data name="Backfilling seasons. The pools rebuild in the background; reload in a few minutes." xml:space="preserve">
+    <value>シーズンを再構築しています。プールはバックグラウンドで再構築されます。数分後に再読み込みしてください。</value>
   </data>
   <data name="Bad" xml:space="preserve">
     <value>BAD</value>
@@ -2779,6 +2785,12 @@
 	  <value>終了日</value>
   </data>
   <data name="Ended" xml:space="preserve">
+    <value>終了</value>
+  </data>
+  <data name="Ended, not yet sealed" xml:space="preserve">
+    <value>終了、未確定</value>
+  </data>
+  <data name="Ends" xml:space="preserve">
     <value>終了</value>
   </data>
   <data name="Energy" xml:space="preserve">
@@ -5329,6 +5341,9 @@
   <data name="No scores yet — Pumbility starts with your first import." xml:space="preserve">
     <value>まだスコアがありません。PUMBILITYは最初のインポートから始まります。</value>
   </data>
+  <data name="No season has been opened yet. Roll now creates the quarter we are standing in; Backfill seasons creates every quarter since Summer 2026 and rebuilds their pools from the score journal." xml:space="preserve">
+    <value>シーズンはまだ開始されていません。「今すぐロール」は現在の四半期を作成します。「シーズンを再構築」は 2026 年夏以降のすべての四半期を作成し、スコア履歴からプールを再構築します。</value>
+  </data>
   <data name="No sessions here" xml:space="preserve">
     <value>セッションはありません</value>
   </data>
@@ -7676,11 +7691,17 @@
   <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
     <value>ランダマイザーでチャートを抽選し、ゲーセンでブラケットやカードドラフトを運営、ライブビューを共有すれば会場全体 — や配信 — がラウンドを追えます。</value>
   </data>
+  <data name="Roll now" xml:space="preserve">
+    <value>今すぐロール</value>
+  </data>
   <data name="Roll up supplemented leaderboards" xml:space="preserve">
     <value>補完ランキングを集計</value>
   </data>
   <data name="Rolling 30-day spend" xml:space="preserve">
     <value>直近30日の支出</value>
+  </data>
+  <data name="Rolling the season." xml:space="preserve">
+    <value>シーズンをロールしています。</value>
   </data>
   <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
     <value>今週のボードを今すぐ更新しますか？現在の週が締められ、次のセットが抽選されます。</value>
@@ -7931,6 +7952,9 @@
   </data>
   <data name="Scrolling and links still work. Resume to use buttons." xml:space="preserve">
     <value>スクロールとリンクは使えます。ボタンを使うには再開してください。</value>
+  </data>
+  <data name="Sealed {0}" xml:space="preserve">
+    <value>{0} に確定</value>
   </data>
   <data name="Search" xml:space="preserve">
     <value>検索</value>
@@ -8642,6 +8666,9 @@
   </data>
   <data name="Starting import…" xml:space="preserve">
     <value>インポートを開始しています…</value>
+  </data>
+  <data name="Starts" xml:space="preserve">
+    <value>開始</value>
   </data>
   <data name="Starts {0}" xml:space="preserve">
     <value>{0} 開始</value>
