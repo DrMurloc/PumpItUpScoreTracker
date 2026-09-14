@@ -22,7 +22,10 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
         // strips the Discord roles BEFORE calling this manifest, in the same consumer rather than
         // a second one racing it — the row is the only surviving handle on the snowflake once
         // Identity has dropped the external login.
-        typeof(CommunityDiscordGrantEntity)
+        typeof(CommunityDiscordGrantEntity),
+        // The player's own "no title roles from this community" — a preference, so it goes with
+        // the account rather than outliving it.
+        typeof(CommunityDiscordOptOutEntity)
     };
 
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;

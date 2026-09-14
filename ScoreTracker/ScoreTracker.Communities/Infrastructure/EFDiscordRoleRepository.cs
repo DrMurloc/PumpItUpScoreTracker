@@ -19,9 +19,8 @@ internal sealed class EFDiscordRoleRepository : IDiscordRoleRepository
         CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        return await database.Set<CommunityDiscordServerEntity>()
+        return await Servers(database)
             .Where(s => s.CommunityId == communityId)
-            .Select(s => new CommunityDiscordServerRecord(s.CommunityId, s.GuildId, s.GuildName, s.DesignatedAt))
             .FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -29,20 +28,27 @@ internal sealed class EFDiscordRoleRepository : IDiscordRoleRepository
         CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        return await database.Set<CommunityDiscordServerEntity>()
-            .Select(s => new CommunityDiscordServerRecord(s.CommunityId, s.GuildId, s.GuildName, s.DesignatedAt))
-            .ToArrayAsync(cancellationToken);
+        return await Servers(database).ToArrayAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<CommunityDiscordServerRecord>> GetServersByGuild(ulong guildId,
         CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        return await database.Set<CommunityDiscordServerEntity>()
+        return await Servers(database)
             .Where(s => s.GuildId == guildId)
-            .Select(s => new CommunityDiscordServerRecord(s.CommunityId, s.GuildId, s.GuildName, s.DesignatedAt))
             .ToArrayAsync(cancellationToken);
     }
+
+    /// <summary>
+    ///     A designation with its community's name attached, so a command run in the server can
+    ///     say which community it acted for. An inner join on purpose: a designation whose community
+    ///     is gone is nothing to sweep.
+    /// </summary>
+    private static IQueryable<CommunityDiscordServerRecord> Servers(ChartAttemptDbContext database) =>
+        from s in database.Set<CommunityDiscordServerEntity>()
+        join c in database.Set<CommunityEntity>() on s.CommunityId equals c.Id
+        select new CommunityDiscordServerRecord(s.CommunityId, s.GuildId, s.GuildName, s.DesignatedAt, c.Name);
 
     public async Task SaveServer(Guid communityId, ulong guildId, string guildName,
         DateTimeOffset designatedAt, CancellationToken cancellationToken)
@@ -188,9 +194,49 @@ internal sealed class EFDiscordRoleRepository : IDiscordRoleRepository
             .ExecuteDeleteAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlySet<Guid>> GetOptedOutUsers(Guid communityId, CancellationToken cancellationToken)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var users = await database.Set<CommunityDiscordOptOutEntity>()
+            .Where(o => o.CommunityId == communityId)
+            .Select(o => o.UserId)
+            .ToArrayAsync(cancellationToken);
+        return users.ToHashSet();
+    }
+
+    public async Task SaveOptOut(Guid communityId, Guid userId, DateTimeOffset optedOutAt,
+        CancellationToken cancellationToken)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var exists = await database.Set<CommunityDiscordOptOutEntity>()
+            .AnyAsync(o => o.CommunityId == communityId && o.UserId == userId, cancellationToken);
+        if (exists) return;
+
+        await database.Set<CommunityDiscordOptOutEntity>().AddAsync(new CommunityDiscordOptOutEntity
+        {
+            Id = Guid.NewGuid(),
+            CommunityId = communityId,
+            UserId = userId,
+            OptedOutAt = optedOutAt
+        }, cancellationToken);
+        await database.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<bool> DeleteOptOut(Guid communityId, Guid userId, CancellationToken cancellationToken)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var deleted = await database.Set<CommunityDiscordOptOutEntity>()
+            .Where(o => o.CommunityId == communityId && o.UserId == userId)
+            .ExecuteDeleteAsync(cancellationToken);
+        return deleted > 0;
+    }
+
     public async Task DeleteAllForCommunity(Guid communityId, CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        await database.Set<CommunityDiscordOptOutEntity>()
+            .Where(o => o.CommunityId == communityId)
+            .ExecuteDeleteAsync(cancellationToken);
         await database.Set<CommunityDiscordGrantEntity>()
             .Where(g => g.CommunityId == communityId)
             .ExecuteDeleteAsync(cancellationToken);

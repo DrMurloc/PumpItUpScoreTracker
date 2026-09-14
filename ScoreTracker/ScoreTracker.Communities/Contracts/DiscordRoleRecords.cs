@@ -3,10 +3,14 @@ using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Communities.Contracts;
 
-/// <summary>The Discord server a community hands out roles in.</summary>
+/// <summary>
+///     The Discord server a community hands out roles in. <see cref="CommunityName" /> rides
+///     along so a command run in the server can name the community it acted for without a second
+///     read per community.
+/// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record CommunityDiscordServerRecord(Guid CommunityId, ulong GuildId, string GuildName,
-    DateTimeOffset DesignatedAt);
+    DateTimeOffset DesignatedAt, string CommunityName = "");
 
 /// <summary>One title mapped to one Discord role.</summary>
 [ExcludeFromCodeCoverage]
