@@ -13,6 +13,11 @@ namespace ScoreTracker.Domain.Records
     ///         the presentation layer is the only thing entitled to spend. <see cref="TotalRating" />
     ///         is not a pool — it is the lifetime sum, shown under its own label — so it stays.
     ///     </para>
+    ///     <para>
+    ///         <see cref="TotalPumbility" /> is a season's whole-season grind board: every seasonal
+    ///         best's PUMBILITY summed, not a pool of fifty (docs/design/seasons.md §4.2, §6.2). It is
+    ///         written by the season pass and is zero on every all-time row, which is why it defaults.
+    ///     </para>
     /// </summary>
     [ExcludeFromCodeCoverage]
     public sealed record PlayerStatsRecord(Guid UserId, Rating TotalRating, DifficultyLevel HighestLevel,
@@ -25,7 +30,8 @@ namespace ScoreTracker.Domain.Records
         int? EstimatedPumbilityRank = null,
         int? EstimatedSinglesPumbilityRank = null,
         int? EstimatedDoublesPumbilityRank = null,
-        DateTimeOffset? PumbilityBoardAsOf = null)
+        DateTimeOffset? PumbilityBoardAsOf = null,
+        double TotalPumbility = 0)
     {
     }
 }
