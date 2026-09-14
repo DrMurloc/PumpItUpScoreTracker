@@ -114,4 +114,57 @@ internal interface IPhoenixRecordRepository
     /// </summary>
     Task SetMaxCombos(MixEnum mix, Guid userId, IReadOnlyList<(Guid ChartId, int? MaxCombo)> combos,
         CancellationToken cancellationToken = default);
+
+    // ---- The seasonal siblings (docs/design/seasons.md D12, §12.3) ----
+    //
+    // Each read or write above keeps its signature and works on the all-time rows the AllTime query
+    // filter serves; the sibling names the season and works on that season's rows instead. Siblings,
+    // not a defaulted parameter: a Moq setup is an expression tree, CS0854 forbids omitting an
+    // optional argument in one, and the handler suites set these up in dozens of places. Deletes that
+    // must cross seasons — the mix wipe, the broken-best cleanup — do it inside their one method
+    // rather than through a sibling, because there is no all-time-only version of a wipe.
+
+    Task UpdateBestAttempt(MixEnum mix, Guid userId, RecordedPhoenixScore score, SeasonId season,
+        CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(MixEnum mix, Guid userId, SeasonId season,
+        CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetPgUsers(MixEnum mix, ChartType chartType, DifficultyLevel level,
+        SeasonId season, CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(MixEnum mix, IEnumerable<Guid> userIds,
+        ChartType chartType, DifficultyLevel minimumLevel, DifficultyLevel maximumLevel, SeasonId season,
+        CancellationToken cancellationToken);
+
+    Task<RecordedPhoenixScore?> GetRecordedScore(MixEnum mix, Guid userId, Guid chartId, SeasonId season,
+        CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<UserPhoenixScore>> GetRecordedUserScores(MixEnum mix, Guid chartId, SeasonId season,
+        CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> GetRecordedScoresForChart(MixEnum mix,
+        Guid chartId, SeasonId season, CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<ChartScoreAggregate>> GetAllChartScoreAggregates(MixEnum mix, SeasonId season,
+        CancellationToken cancellationToken);
+
+    Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetPlayerScores(MixEnum mix,
+        IEnumerable<Guid> userIds, ChartType chartType, DifficultyLevel difficulty, SeasonId season,
+        CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetAllPlayerScores(MixEnum mix, ChartType chartType,
+        DifficultyLevel difficulty, SeasonId season, CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<ChartScoreAggregate>> GetMeaningfulScoresCount(MixEnum mix, ChartType chartType,
+        DifficultyLevel difficulty, SeasonId season, CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<UserPhoenixScore>> GetPhoenixScores(MixEnum mix, IEnumerable<Guid> userIds, Guid chartId,
+        SeasonId season, CancellationToken cancellationToken = default);
+
+    Task<int> GetClearCount(MixEnum mix, Guid userId, ChartType chartType, DifficultyLevel level, SeasonId season,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteRecord(MixEnum mix, Guid userId, Guid chartId, SeasonId season,
+        CancellationToken cancellationToken = default);
 }

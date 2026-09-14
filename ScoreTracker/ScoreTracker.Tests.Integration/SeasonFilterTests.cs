@@ -33,6 +33,7 @@ namespace ScoreTracker.Tests.Integration;
 public sealed class SeasonFilterTests : IAsyncLifetime
 {
     private const short Fall2026 = 20264;
+    private static readonly SeasonId Fall = SeasonId.From(2026, 4);
     private static readonly DateTimeOffset Now = new(2026, 10, 1, 12, 0, 0, TimeSpan.Zero);
 
     private readonly SqlServerFixture _fixture;
@@ -185,5 +186,59 @@ public sealed class SeasonFilterTests : IAsyncLifetime
         var peers = await store.OnCharts(MixEnum.Phoenix, new[] { userId }, new[] { chartId }, CancellationToken.None);
 
         Assert.Equal(950_000, (int)Assert.Single(peers).Score);
+    }
+
+    // Slice 1b: the reads that name a season drop the AllTime filter by name and see that season's
+    // rows instead (docs/design/seasons.md D12, §12.3) — a second row per chart, never the first one.
+    [Fact]
+    public async Task AReadThatNamesTheSeasonSeesTheSeasonsRowAndNotTheAllTimeOne()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedPhoenixChartAsync(20);
+        var records = Records();
+        await records.UpdateBestAttempt(MixEnum.Phoenix, userId,
+            new RecordedPhoenixScore(chartId, PhoenixScore.From(950_000), PhoenixPlate.SuperbGame, false, Now));
+        // The season's pool starts empty, so a lower score is still its best.
+        await records.UpdateBestAttempt(MixEnum.Phoenix, userId,
+            new RecordedPhoenixScore(chartId, PhoenixScore.From(900_000), PhoenixPlate.RoughGame, false, Now), Fall);
+
+        var own = await records.GetRecordedScore(MixEnum.Phoenix, userId, chartId, Fall);
+        var board = (await records.GetRecordedUserScores(MixEnum.Phoenix, chartId, Fall)).ToArray();
+        var bests = (await ((IScoreReader)records).GetBestScores(MixEnum.Phoenix, userId, Fall, CancellationToken.None))
+            .ToArray();
+        var allTime = await records.GetRecordedScore(MixEnum.Phoenix, userId, chartId);
+
+        Assert.Equal(900_000, (int)own!.Score!.Value);
+        Assert.Equal(900_000, (int)Assert.Single(board).Score);
+        Assert.Equal(900_000, (int)Assert.Single(bests).Score!.Value);
+        Assert.Equal(950_000, (int)allTime!.Score!.Value);
+        Assert.Equal(1, await CountPastTheFilter<PhoenixRecordEntity>(Fall2026));
+        Assert.Equal(1, await CountPastTheFilter<PhoenixRecordEntity>(0));
+    }
+
+    [Fact]
+    public async Task DeletingASeasonsRecordLeavesTheAllTimeOneAndAWipeTakesBoth()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedPhoenixChartAsync(20);
+        var records = Records();
+        await records.UpdateBestAttempt(MixEnum.Phoenix, userId,
+            new RecordedPhoenixScore(chartId, PhoenixScore.From(950_000), PhoenixPlate.SuperbGame, false, Now));
+        await records.UpdateBestAttempt(MixEnum.Phoenix, userId,
+            new RecordedPhoenixScore(chartId, PhoenixScore.From(900_000), PhoenixPlate.RoughGame, false, Now), Fall);
+
+        await records.DeleteRecord(MixEnum.Phoenix, userId, chartId, Fall);
+
+        Assert.Equal(0, await CountPastTheFilter<PhoenixRecordEntity>(Fall2026));
+        Assert.Equal(1, await CountPastTheFilter<PhoenixRecordEntity>(0));
+
+        await records.UpdateBestAttempt(MixEnum.Phoenix, userId,
+            new RecordedPhoenixScore(chartId, PhoenixScore.From(900_000), PhoenixPlate.RoughGame, false, Now), Fall);
+        // The mix wipe is one delete that crosses seasons: it drops every filter rather than
+        // running once per season it cannot enumerate from the Ledger.
+        await records.DeleteAllForUser(userId, MixEnum.Phoenix);
+
+        Assert.Equal(0, await CountPastTheFilter<PhoenixRecordEntity>(Fall2026));
+        Assert.Equal(0, await CountPastTheFilter<PhoenixRecordEntity>(0));
     }
 }

@@ -4,6 +4,7 @@ using ScoreTracker.Data.Persistence;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.ScoreLedger.Infrastructure.Entities;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.ScoreLedger.Infrastructure;
 
@@ -36,8 +37,10 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
     public async Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default)
     {
         await UserDataPurge.DeleteAll(_factory, UserOwned, userId, cancellationToken);
-        // The purge spans mixes, so every per-(user, mix) score cache entry goes with it.
+        // The purge spans mixes, so every per-(user, mix) score cache entry goes with it. Only the
+        // all-time entries are addressable from here; a season's entry runs on a short TTL instead
+        // (EFPhoenixRecordsRepository.GetCachedScores), and nothing reads a purged account's.
         foreach (var mix in Enum.GetValues<MixEnum>())
-            _cache.Remove(EFPhoenixRecordsRepository.ScoreCache(userId, mix));
+            _cache.Remove(EFPhoenixRecordsRepository.ScoreCache(userId, mix, SeasonId.AllTime));
     }
 }
