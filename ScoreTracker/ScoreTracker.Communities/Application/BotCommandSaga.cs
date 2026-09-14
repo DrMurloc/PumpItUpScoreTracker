@@ -260,30 +260,39 @@ namespace ScoreTracker.Communities.Application
                 return new BotReply(Text: _localizer.Get(culture,
                     "Link your Discord account on PIU Scores first, so we know who you are."));
 
-            var turningOff = interaction.CommandPath.Count > 1 && interaction.CommandPath[1] == "off";
+            // Matched explicitly rather than "off or else on": a privacy preference fails CLOSED.
+            // Anything unrecognized — a third leaf added later, a truncated path — would otherwise
+            // fall through to the branch that DELETES the opt-out.
+            var leaf = interaction.CommandPath.Count > 1 ? interaction.CommandPath[1] : string.Empty;
+            if (leaf is not ("off" or "on"))
+                return new BotReply(Text: _localizer.Get(culture, "That command isn't available yet."));
+
+            var turningOff = leaf == "off";
             var lifted = 0;
             var unsettled = false;
             foreach (var server in servers)
-            {
-                if (turningOff)
-                    await _roleConfiguration.SaveOptOut(server.CommunityId, user.Id, _dateTime.Now,
-                        cancellationToken);
-                else if (await _roleConfiguration.DeleteOptOut(server.CommunityId, user.Id, cancellationToken))
-                    lifted++;
-
+                // One community's failure must not eat the rest, and that covers the WRITE too:
+                // with two communities on one server, a throw on the first used to leave the second
+                // never written and the player told nothing.
                 try
                 {
+                    if (turningOff)
+                        await _roleConfiguration.SaveOptOut(server.CommunityId, user.Id, _dateTime.Now,
+                            cancellationToken);
+                    else if (await _roleConfiguration.DeleteOptOut(server.CommunityId, user.Id, cancellationToken))
+                        lifted++;
+
                     await _discordRoles.ReconcileOne(server.CommunityId, user.Id, cancellationToken);
                 }
                 catch (Exception e) when (e is not OperationCanceledException)
                 {
-                    // The row stands either way: a role Discord refuses to take off is the admin's
-                    // to fix, and the player's preference must not depend on it.
+                    // A recorded opt-out stands even if the roles could not come off: a role
+                    // Discord refuses is the admin's to fix, and the player's preference must not
+                    // depend on it.
                     unsettled = true;
                     _logger.LogError(e, "Could not settle {UserId} in community {CommunityId} after /piu roles",
                         user.Id, server.CommunityId);
                 }
-            }
 
             // Named the way D21 names the account: a Discord linked to the wrong PIU Scores login
             // is the commonest surprise, and the name is the whole diagnosis.
@@ -298,14 +307,17 @@ namespace ScoreTracker.Communities.Application
                         "Done. {0} won't get title roles from {1} in this server until you run {2}.",
                         account, communities, "`/piu roles on`"));
 
+            // The failure is reported BEFORE "already on". The realistic caller of /piu roles on is
+            // somebody whose role is missing, who was never opted out — so lifted is 0, and saying
+            // "already on" there is a reassurance handed out for a pass that just failed.
+            if (unsettled)
+                return new BotReply(Text: _localizer.Get(culture,
+                    "Title roles from {0} are back on for {1} here, but I couldn't hand them out right now. The nightly check will.",
+                    communities, account));
             if (lifted == 0)
                 return new BotReply(Text: _localizer.Get(culture, "Title roles were already on for you here."));
-            return new BotReply(Text: unsettled
-                ? _localizer.Get(culture,
-                    "Title roles from {0} are back on for {1} here, but I couldn't hand them out right now. The nightly check will.",
-                    communities, account)
-                : _localizer.Get(culture, "Done. Title roles from {0} are back on for {1} here.",
-                    communities, account));
+            return new BotReply(Text: _localizer.Get(culture,
+                "Done. Title roles from {0} are back on for {1} here.", communities, account));
         }
 
         /// <summary>

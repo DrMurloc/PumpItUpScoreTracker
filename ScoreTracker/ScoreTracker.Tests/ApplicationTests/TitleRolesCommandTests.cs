@@ -200,4 +200,60 @@ public sealed class TitleRolesCommandTests
         Assert.Contains("Link your Discord account", reply.Text);
         VerifyNothingRecorded();
     }
+
+    // ---- the bug check's findings -----------------------------------------------------------
+
+    /// <summary>
+    ///     A privacy preference fails closed. "off or else on" meant any unrecognized leaf — a
+    ///     third one added later, a truncated path — fell through to the branch that DELETES the
+    ///     opt-out, turning roles back on for somebody who never asked.
+    /// </summary>
+    [Fact]
+    public async Task AnUnrecognizedLeafIsRefusedRatherThanTurningRolesBackOn()
+    {
+        var reply = await Saga().Handle(Invoke("something-else"), CancellationToken.None);
+
+        Assert.Contains("isn't available", reply.Text);
+        VerifyNothingRecorded();
+    }
+
+    /// <summary>
+    ///     The realistic caller of /piu roles on is somebody whose role is missing and who was
+    ///     never opted out, so nothing is lifted. Reporting "already on" ahead of the failure
+    ///     handed them a reassurance for a pass that had just thrown.
+    /// </summary>
+    [Fact]
+    public async Task TurningOnReportsAFailedPassRatherThanSayingRolesWereAlreadyOn()
+    {
+        _roleConfiguration.Setup(r => r.DeleteOptOut(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _discordRoles.Setup(d => d.ReconcileOne(CommunityId, UserId, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Missing Permissions"));
+
+        var reply = await Saga().Handle(Invoke("on"), CancellationToken.None);
+
+        Assert.Contains("couldn't hand them out", reply.Text);
+        Assert.DoesNotContain("already on", reply.Text);
+    }
+
+    /// <summary>
+    ///     Two communities on one server: a write that throws for the first used to leave the
+    ///     second never written, and the player was told nothing about either.
+    /// </summary>
+    [Fact]
+    public async Task OneCommunitysWriteFailingStillRecordsTheRest()
+    {
+        Designated(new CommunityDiscordServerRecord(CommunityId, Guild, "Arrow Eclipse", Now, "Korea"),
+            new CommunityDiscordServerRecord(SecondCommunityId, Guild, "Arrow Eclipse", Now, "World"));
+        _roleConfiguration.Setup(r => r.SaveOptOut(CommunityId, UserId, Now, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("deadlock"));
+
+        var reply = await Saga().Handle(Invoke("off"), CancellationToken.None);
+
+        _roleConfiguration.Verify(r => r.SaveOptOut(SecondCommunityId, UserId, Now, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _discordRoles.Verify(d => d.ReconcileOne(SecondCommunityId, UserId, It.IsAny<CancellationToken>()),
+            Times.Once);
+        Assert.Contains("couldn't come off", reply.Text);
+    }
 }
