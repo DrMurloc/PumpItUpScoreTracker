@@ -40,7 +40,8 @@ public sealed class PiuCommandCatalogLocalizationTests
         var suggest = root.SubCommands.Single(s => s.Name == "suggest");
         var goal = suggest.Options.Single(o => o.Name == "goal");
         var mix = suggest.Options.Single(o => o.Name == "mix");
-        var weekly = root.SubCommandGroups.Single().SubCommands.Single(s => s.Name == "weekly");
+        var weekly = root.SubCommandGroups.Single(g => g.Name == "register").SubCommands
+            .Single(s => s.Name == "weekly");
         var language = weekly.Options.Single(o => o.Name == "language");
 
         Assert.Equal("칭호 사냥",
