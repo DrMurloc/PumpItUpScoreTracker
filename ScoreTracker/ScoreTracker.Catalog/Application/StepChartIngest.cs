@@ -104,7 +104,7 @@ internal sealed class StepChartIngest
     {
         var mixLevels = await _charts.GetChartMixLevels(cancellationToken);
         var byChart = new Dictionary<Guid, Dictionary<MixEnum, int?>>();
-        foreach (var (chartId, mix, _, noteCount) in mixLevels)
+        foreach (var (chartId, mix, _, noteCount, _) in mixLevels)
         {
             if (mix is not (MixEnum.Phoenix or MixEnum.Phoenix2)) continue;
             if (!byChart.TryGetValue(chartId, out var counts))

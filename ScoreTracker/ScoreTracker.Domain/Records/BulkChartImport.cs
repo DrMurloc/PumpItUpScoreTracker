@@ -15,14 +15,16 @@ public sealed record BulkChartsParseResult(
 
 /// <summary>
 ///     One song entry from the blob. <see cref="Song" /> is populated only when
-///     <see cref="Errors" /> is empty.
+///     <see cref="Errors" /> is empty. <see cref="Warnings" /> never block: a missing or
+///     unrecognised channel is one (docs/design/song-channels.md §5).
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record BulkSongParseResult(
     int Index,
     string DisplayName,
     BulkSongSpec? Song,
-    IReadOnlyList<string> Errors);
+    IReadOnlyList<string> Errors,
+    IReadOnlyList<string>? Warnings = null);
 
 /// <summary>A fully validated song ready to be created, with its charts.</summary>
 [ExcludeFromCodeCoverage]
@@ -34,7 +36,8 @@ public sealed record BulkSongSpec(
     Bpm Bpm,
     TimeSpan Duration,
     Uri ImageUrl,
-    IReadOnlyList<BulkChartSpec> Charts);
+    IReadOnlyList<BulkChartSpec> Charts,
+    Channel? Channel = null);
 
 /// <summary>A fully validated chart ready to be created for the song.</summary>
 [ExcludeFromCodeCoverage]

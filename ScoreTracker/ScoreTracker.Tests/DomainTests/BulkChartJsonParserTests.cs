@@ -18,6 +18,7 @@ public sealed class BulkChartJsonParserTests
               "koreanName": "디스트릭트 1",
               "artist": "Doin",
               "type": "Arcade",
+              "channel": "Original",
               "minBpm": 195,
               "maxBpm": 195,
               "durationSeconds": 105,
@@ -305,5 +306,43 @@ public sealed class BulkChartJsonParserTests
         Assert.NotEmpty(result.Songs[0].Errors);
         Assert.NotNull(result.Songs[1].Song);
         Assert.Empty(result.Songs[1].Errors);
+    }
+
+    // ── The channel (docs/design/song-channels.md §5): a warning, never an error ───────────
+
+    [Fact]
+    public void ChannelParsesByEnumNameCaseInsensitively()
+    {
+        var result = _parser.Parse(ValidBlob.Replace("\"channel\": \"Original\"", "\"channel\": \"kpop\""));
+
+        var song = Assert.Single(result.Songs);
+        Assert.Empty(song.Errors);
+        Assert.Equal(Channel.KPop, song.Song!.Channel);
+        Assert.Empty(song.Warnings!);
+    }
+
+    [Fact]
+    public void AMissingChannelIsAWarningAndTheSongStillImportsWithNone()
+    {
+        var result = _parser.Parse(ValidBlob.Replace("\"channel\": \"Original\",", ""));
+
+        var song = Assert.Single(result.Songs);
+        Assert.Empty(song.Errors);
+        Assert.NotNull(song.Song);
+        Assert.Null(song.Song!.Channel);
+        Assert.Contains(song.Warnings!, w => w.Contains("\"channel\" is missing"));
+    }
+
+    [Fact]
+    public void AnUnknownChannelIsAWarningListingTheValidTokens()
+    {
+        var result = _parser.Parse(ValidBlob.Replace("\"channel\": \"Original\"", "\"channel\": \"K-Pop\""));
+
+        var song = Assert.Single(result.Songs);
+        Assert.Empty(song.Errors);
+        Assert.Null(song.Song!.Channel);
+        var warning = Assert.Single(song.Warnings!);
+        Assert.Contains("'K-Pop' is not a channel", warning);
+        Assert.Contains("KPop", warning);
     }
 }

@@ -1578,8 +1578,29 @@
   <data name="Changing the URL or the secret clears this." xml:space="preserve">
     <value>Changer l'URL ou le secret annule cela.</value>
   </data>
+  <data name="Channel" xml:space="preserve">
+    <value>Chaîne</value>
+  </data>
   <data name="Channel Name" xml:space="preserve">
     <value>Nom de la chaîne</value>
+  </data>
+  <data name="Channel: J-Music" xml:space="preserve">
+    <value>J-Music</value>
+  </data>
+  <data name="Channel: K-Pop" xml:space="preserve">
+    <value>K-Pop</value>
+  </data>
+  <data name="Channel: Original" xml:space="preserve">
+    <value>Original</value>
+  </data>
+  <data name="Channel: World Music" xml:space="preserve">
+    <value>World Music</value>
+  </data>
+  <data name="Channel: Xross" xml:space="preserve">
+    <value>Xross</value>
+  </data>
+  <data name="Channels" xml:space="preserve">
+    <value>Chaînes</value>
   </data>
   <data name="Chart" xml:space="preserve">
     <value>Chart</value>
@@ -2371,6 +2392,9 @@
   <data name="Debut version" xml:space="preserve">
     <value>Version de début</value>
   </data>
+  <data name="Debuted" xml:space="preserve">
+    <value>Apparu</value>
+  </data>
   <data name="debuted at {0}" xml:space="preserve">
     <value>apparu en {0}</value>
   </data>
@@ -2687,6 +2711,9 @@
   <data name="Draws from everything through {0}." xml:space="preserve">
     <value>Le tirage prend tout jusqu'à {0}.</value>
   </data>
+  <data name="Draws from {0} only." xml:space="preserve">
+    <value>Le tirage ne prend que {0}.</value>
+  </data>
   <data name="Draws from {0}." xml:space="preserve">
     <value>Le tirage prend {0}.</value>
   </data>
@@ -2829,6 +2856,9 @@
   </data>
   <data name="Event mode or premium?" xml:space="preserve">
     <value>Mode event ou premium ?</value>
+  </data>
+  <data name="Every channel picked; the same as nothing picked." xml:space="preserve">
+    <value>Toutes les chaînes sélectionnées : comme sans sélection.</value>
   </data>
   <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
     <value>Chaque chart de {0}, les dossiers dont tes pairs tirent leur PUMBILITY, en commençant par ceux que le moins d'entre eux gardent. Ce sont sans doute les charts les plus durs à scorer dans ta tranche de niveaux. Un dossier compte quand au moins la moitié de tes pairs y gardent un chart.</value>
@@ -5680,6 +5710,9 @@
   <data name="Nothing on your desk." xml:space="preserve">
     <value>Rien à traiter.</value>
   </data>
+  <data name="Nothing picked draws from every channel." xml:space="preserve">
+    <value>Sans sélection, le tirage prend toutes les chaînes.</value>
+  </data>
   <data name="Nothing picked draws from every version." xml:space="preserve">
     <value>Sans sélection, le tirage prend toutes les versions.</value>
   </data>
@@ -7566,6 +7599,9 @@
   <data name="Required to be listed — it is what a player reads before deciding." xml:space="preserve">
     <value>Nécessaire pour être listé — c'est ce qu'un joueur lit avant de décider.</value>
   </data>
+  <data name="Rerated" xml:space="preserve">
+    <value>Réévalué</value>
+  </data>
   <data name="rerated {0}" xml:space="preserve">
     <value>réévalué {0}</value>
   </data>
@@ -7635,6 +7671,9 @@
   </data>
   <data name="Revisit Old Scores" xml:space="preserve">
     <value>Revisitez vos vieux scores</value>
+  </data>
+  <data name="Revived" xml:space="preserve">
+    <value>Réintégré</value>
   </data>
   <data name="Revoke" xml:space="preserve">
     <value>Révoquer</value>

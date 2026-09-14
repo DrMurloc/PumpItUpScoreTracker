@@ -57,7 +57,7 @@ internal sealed class StepChartReprocessConsumer : IConsumer<ReprocessStepFilesC
         var chartIds = await _steps.GetBankedChartIds(cancellationToken);
         var mixLevels = await _charts.GetChartMixLevels(cancellationToken);
         var noteCounts = new Dictionary<Guid, Dictionary<MixEnum, int?>>();
-        foreach (var (chartId, mix, _, noteCount) in mixLevels)
+        foreach (var (chartId, mix, _, noteCount, _) in mixLevels)
         {
             if (mix is not (MixEnum.Phoenix or MixEnum.Phoenix2)) continue;
             if (!noteCounts.TryGetValue(chartId, out var counts))

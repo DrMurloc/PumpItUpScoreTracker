@@ -15,6 +15,7 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using ScoreTracker.Tests.TestHelpers;
@@ -48,7 +49,12 @@ public sealed class ChartVerdictHandlerTests
             .ReturnsAsync(phoenixChart);
         // History reads the flat mix-level map: this chart was D19 in XX, D20 in Phoenix.
         _charts.Setup(c => c.GetChartMixLevels(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { (chartId, MixEnum.XX, 19, (int?)null), (chartId, MixEnum.Phoenix, 20, (int?)null) });
+            .ReturnsAsync(new[]
+            {
+                (chartId, MixEnum.XX, 19, (int?)null, (VersionStamp?)null),
+                (chartId, MixEnum.Phoenix, 20, (int?)null,
+                    (VersionStamp?)new VersionStamp(MixEnum.Phoenix, "1.06.0", new DateOnly(2024, 1, 30), 60))
+            });
         _charts.Setup(c => c.GetChartLetterGradeDifficulties(It.IsAny<IEnumerable<Guid>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<ChartLetterGradeDifficulty>());
@@ -92,6 +98,16 @@ public sealed class ChartVerdictHandlerTests
         var history = facets.OfType<HistoryVerdict>().Single();
         Assert.Equal(MixEnum.XX, history.DebutMix);
         Assert.Equal(new[] { 19, 20 }, history.Levels.Select(l => l.Level).ToArray());
+        // Each mix's patch rides with its level, so the rerate line can print the patch it happened in.
+        Assert.Null(history.Levels[0].AddedIn);
+        Assert.Equal("1.06.0", history.Levels[1].AddedIn?.Version);
+        Assert.Equal(new DateOnly(2024, 1, 30), history.Levels[1].AddedIn?.ReleaseDate);
+        // The life as events: the debut on XX, the rerate on Phoenix with its patch. Phoenix's only
+        // row is the one this chart arrived in, so that patch is the mix's release and no removal fires.
+        Assert.Equal(new[] { ChartHistoryEventKind.Debuted, ChartHistoryEventKind.Rerated },
+            history.Events.Select(e => e.Kind).ToArray());
+        Assert.Equal((MixEnum.Phoenix, 20, 1, "1.06.0"),
+            (history.Events[1].Mix, history.Events[1].Level, history.Events[1].Delta, history.Events[1].Stamp?.Version));
 
         var fingerprint = facets.OfType<StyleFingerprintVerdict>().Single();
         Assert.Equal("sustained", fingerprint.TopBadges.Single().Badge);

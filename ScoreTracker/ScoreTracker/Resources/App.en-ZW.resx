@@ -1578,8 +1578,29 @@
   <data name="Changing the URL or the secret clears this." xml:space="preserve">
     <value>Golba URL opa grumb, marogl alla.</value>
   </data>
+  <data name="Channel" xml:space="preserve">
+    <value>Glmurmblarg</value>
+  </data>
   <data name="Channel Name" xml:space="preserve">
 	  <value>Glmurmblarg Mrg</value>
+  </data>
+  <data name="Channel: J-Music" xml:space="preserve">
+    <value>Ogla Mlurg</value>
+  </data>
+  <data name="Channel: K-Pop" xml:space="preserve">
+    <value>Murgl Pop</value>
+  </data>
+  <data name="Channel: Original" xml:space="preserve">
+    <value>Grorglrgl</value>
+  </data>
+  <data name="Channel: World Music" xml:space="preserve">
+    <value>Olbrg Mlurg</value>
+  </data>
+  <data name="Channel: Xross" xml:space="preserve">
+    <value>Blorgrl</value>
+  </data>
+  <data name="Channels" xml:space="preserve">
+    <value>Glmurmblargrl</value>
   </data>
   <data name="Chart" xml:space="preserve">
 	  <value>Murgl</value>
@@ -2372,6 +2393,9 @@
   <data name="Debut version" xml:space="preserve">
     <value>Grglro grogmurgl</value>
   </data>
+  <data name="Debuted" xml:space="preserve">
+    <value>Blargmurmgl</value>
+  </data>
   <data name="debuted at {0}" xml:space="preserve">
     <value>blargmurmgl mr {0}</value>
   </data>
@@ -2688,6 +2712,9 @@
   <data name="Draws from everything through {0}." xml:space="preserve">
     <value>Blubrgl blarg algrog urgrogl {0}.</value>
   </data>
+  <data name="Draws from {0} only." xml:space="preserve">
+    <value>Blubrgl blarg {0} lurp.</value>
+  </data>
   <data name="Draws from {0}." xml:space="preserve">
     <value>Blubrgl blarg {0}.</value>
   </data>
@@ -2830,6 +2857,9 @@
   </data>
   <data name="Event mode or premium?" xml:space="preserve">
     <value>Argl murm ap urgmurm?</value>
+  </data>
+  <data name="Every channel picked; the same as nothing picked." xml:space="preserve">
+    <value>Olga glmurmblarg murpgurg; mrgl bam murpgurg.</value>
   </data>
   <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
     <value>Algro murgl gropmur {0}, a glargub morp maglmurp murgablar grglblarg PUMBILITY blarg, mag a mrp mggl ub grglblarg mrgloru murpargl. Blu blub murgab ro bru a mrrrglmrgl murgl ro mrglrgl gropmur morp grorpmurm murm. A glargub grorpgl ob og mggl blugro morp maglmurp mrgloru a murgl blarg ug.</value>
@@ -5681,6 +5711,9 @@
   <data name="Nothing on your desk." xml:space="preserve">
     <value>Mm, blub blub.</value>
   </data>
+  <data name="Nothing picked draws from every channel." xml:space="preserve">
+    <value>Bam murpgurg blubrgl blarg olga glmurmblarg.</value>
+  </data>
   <data name="Nothing picked draws from every version." xml:space="preserve">
     <value>Bam murpgurg blubrgl blarg olga grogmurgl.</value>
   </data>
@@ -7567,6 +7600,9 @@
   <data name="Required to be listed — it is what a player reads before deciding." xml:space="preserve">
     <value>Marogl la blurgl — mo bloop am olo pragl golba.</value>
   </data>
+  <data name="Rerated" xml:space="preserve">
+    <value>Glgrglmagl</value>
+  </data>
   <data name="rerated {0}" xml:space="preserve">
     <value>glgrglmagl {0}</value>
   </data>
@@ -7636,6 +7672,9 @@
   </data>
   <data name="Revisit Old Scores" xml:space="preserve">
     <value>Grorpmrglgrorp Rgl Mgrlgmrg</value>
+  </data>
+  <data name="Revived" xml:space="preserve">
+    <value>Rlurbgmorgl</value>
   </data>
   <data name="Revoke" xml:space="preserve">
     <value>Murgloo</value>

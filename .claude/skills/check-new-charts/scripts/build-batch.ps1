@@ -54,6 +54,15 @@ if (Test-Path $shippedPath) {
     foreach ($ss in $shipped.songs) { $shippedCharts[(Normalize $ss.name)] = @($ss.charts | Sort-Object) -join ',' }
 }
 
+# ---- load the channel per video (fetch-channels.ps1; optional) ----
+# docs/design/song-channels.md §6: the patch's per-version playlists name each video's channel.
+$channelsPath = Join-Path $StateDir 'channels.json'
+$videoChannels = @{}
+if (Test-Path $channelsPath) {
+    $cj = Get-Content $channelsPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    foreach ($prop in $cj.PSObject.Properties) { $videoChannels[$prop.Name] = [string]$prop.Value }
+}
+
 # ---- load fetched videos ----
 $videos = @()
 foreach ($f in Get-ChildItem (Join-Path $StateDir 'videos\*.json')) {
@@ -282,17 +291,32 @@ foreach ($name in ($songData.Keys | Sort-Object)) {
         $charts += ,$chart
     }
 
-    $included += ,([ordered]@{
+    # the channel is the playlist the chart videos sit in; consensus across them, a FLAG when none
+    $channelVotes = @{}
+    foreach ($c in $chartMap.Values) {
+        if ($videoChannels.ContainsKey($c.Hash)) { $channelVotes[$videoChannels[$c.Hash]] = 1 + [int]$channelVotes[$videoChannels[$c.Hash]] }
+    }
+    $channel = $null
+    if ($channelVotes.Count -gt 0) {
+        $channel = ($channelVotes.GetEnumerator() | Sort-Object -Property Value -Descending | Select-Object -First 1).Key
+        if ($channelVotes.Count -gt 1) { Note "FLAG [$name] chart videos sit in more than one channel playlist ($($channelVotes.Keys -join ', ')) -- taking $channel" }
+    } else {
+        Note "FLAG [$name] no channel -- none of its chart videos is in a fetched channel playlist (run fetch-channels.ps1 for this patch); the admin tool imports it with none"
+    }
+
+    $entry = [ordered]@{
         name            = $site.Name
         koreanName      = $kr
         artist          = $artist
         type            = $site.Type
-        minBpm          = $bpmMin
-        maxBpm          = $bpmMax
-        durationSeconds = [int]$duration
-        imageUrl        = $site.ImageUrl
-        charts          = $charts
-    })
+    }
+    if ($null -ne $channel) { $entry.channel = $channel }
+    $entry.minBpm          = $bpmMin
+    $entry.maxBpm          = $bpmMax
+    $entry.durationSeconds = [int]$duration
+    $entry.imageUrl        = $site.ImageUrl
+    $entry.charts          = $charts
+    $included += ,$entry
 }
 
 # ---- exclude songs already shipped in a previous batch ----

@@ -1578,8 +1578,29 @@
   <data name="Changing the URL or the secret clears this." xml:space="preserve">
     <value>Changing the URL or the secret clears this.</value>
   </data>
+  <data name="Channel" xml:space="preserve">
+    <value>Channel</value>
+  </data>
   <data name="Channel Name" xml:space="preserve">
 	  <value>Channel Name</value>
+  </data>
+  <data name="Channel: J-Music" xml:space="preserve">
+    <value>J-Music</value>
+  </data>
+  <data name="Channel: K-Pop" xml:space="preserve">
+    <value>K-Pop</value>
+  </data>
+  <data name="Channel: Original" xml:space="preserve">
+    <value>Original</value>
+  </data>
+  <data name="Channel: World Music" xml:space="preserve">
+    <value>World Music</value>
+  </data>
+  <data name="Channel: Xross" xml:space="preserve">
+    <value>Xross</value>
+  </data>
+  <data name="Channels" xml:space="preserve">
+    <value>Channels</value>
   </data>
   <data name="Chart" xml:space="preserve">
 	  <value>Chart</value>
@@ -2372,6 +2393,9 @@
   <data name="Debut version" xml:space="preserve">
     <value>Debut version</value>
   </data>
+  <data name="Debuted" xml:space="preserve">
+    <value>Debuted</value>
+  </data>
   <data name="debuted at {0}" xml:space="preserve">
     <value>debuted at {0}</value>
   </data>
@@ -2688,6 +2712,9 @@
   <data name="Draws from everything through {0}." xml:space="preserve">
     <value>Draws from everything through {0}.</value>
   </data>
+  <data name="Draws from {0} only." xml:space="preserve">
+    <value>Draws from {0} only.</value>
+  </data>
   <data name="Draws from {0}." xml:space="preserve">
     <value>Draws from {0}.</value>
   </data>
@@ -2830,6 +2857,9 @@
   </data>
   <data name="Event mode or premium?" xml:space="preserve">
     <value>Event mode or premium?</value>
+  </data>
+  <data name="Every channel picked; the same as nothing picked." xml:space="preserve">
+    <value>Every channel picked; the same as nothing picked.</value>
   </data>
   <data name="Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it." xml:space="preserve">
     <value>Every chart in {0}, the folders your peers build their PUMBILITY from, with the ones fewest of them keep first. These are likely to be the hardest charts to score in your level range. A folder counts when at least half your peers keep a chart from it.</value>
@@ -5681,6 +5711,9 @@
   <data name="Nothing on your desk." xml:space="preserve">
     <value>Nothing on your desk.</value>
   </data>
+  <data name="Nothing picked draws from every channel." xml:space="preserve">
+    <value>Nothing picked draws from every channel.</value>
+  </data>
   <data name="Nothing picked draws from every version." xml:space="preserve">
     <value>Nothing picked draws from every version.</value>
   </data>
@@ -7567,6 +7600,9 @@
   <data name="Required to be listed — it is what a player reads before deciding." xml:space="preserve">
     <value>Required to be listed — it is what a player reads before deciding.</value>
   </data>
+  <data name="Rerated" xml:space="preserve">
+    <value>Rerated</value>
+  </data>
   <data name="rerated {0}" xml:space="preserve">
     <value>rerated {0}</value>
   </data>
@@ -7636,6 +7672,9 @@
   </data>
   <data name="Revisit Old Scores" xml:space="preserve">
     <value>Revisit Old Scores</value>
+  </data>
+  <data name="Revived" xml:space="preserve">
+    <value>Revived</value>
   </data>
   <data name="Revoke" xml:space="preserve">
     <value>Revoke</value>

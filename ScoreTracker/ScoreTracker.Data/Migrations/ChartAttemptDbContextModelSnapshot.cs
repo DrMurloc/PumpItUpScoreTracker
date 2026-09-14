@@ -304,6 +304,26 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("MixVersion", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.SongMixEntity", b =>
+                {
+                    b.Property<Guid>("SongId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.HasKey("SongId", "MixId");
+
+                    b.HasIndex("MixId", "Channel");
+
+                    b.ToTable("SongMix", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.SongNameLanguageEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -4624,6 +4644,21 @@ namespace ScoreTracker.Data.Migrations
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.MixEntity", null)
                         .WithMany()
                         .HasForeignKey("MixId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ScoreTracker.Catalog.Infrastructure.Entities.SongMixEntity", b =>
+                {
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.MixEntity", null)
+                        .WithMany()
+                        .HasForeignKey("MixId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.SongEntity", null)
+                        .WithMany()
+                        .HasForeignKey("SongId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

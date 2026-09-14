@@ -43,7 +43,7 @@
         <div class="chart-hero-id">
             <h1 class="chart-hero-title">@_chart.Song.Name</h1>
             <div class="chart-hero-sub">
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@_chart.Song.Type</MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@L[SongTypeText.Name(_chart.Song.Type)]</MudChip>
                 <span>@L["song by {0}", _chart.Song.Artist]</span>
                 @if (_chart.StepArtist != null && _chart.StepArtist.ToString() != "Unknown")
                 {
@@ -114,6 +114,15 @@
                     <div>
                         <span class="chart-fact-value">@Stamp(added)</span>
                         <span class="chart-fact-label">@L["Added in {0}", _chart.Mix.GetName()]</span>
+                    </div>
+                }
+                @* The song's channel on the mix in view — a present-tense fact like the level, so no
+                   history note; nothing when the mix has no row for the song (docs/design/song-channels.md §5). *@
+                @if (_chart.Song.Channel is { } channel)
+                {
+                    <div>
+                        <span class="chart-fact-value">@L[channel.GetLabelKey()]</span>
+                        <span class="chart-fact-label">@L["Channel"]</span>
                     </div>
                 }
                 @if (Population != null)
@@ -242,12 +251,10 @@
 @inject NavigationManager Nav
 @inject IOptions<ChartCommentsConfiguration> Comments
 @code {
-    /// <summary>A patch and, when known, the day it shipped: <c>v2.12.0 · Dec 23, 2025</c>.</summary>
+    /// <summary>A patch and, when known, the day it shipped: <c>v2.12.0 · Dec 23, 2025</c> — the dialog's form too.</summary>
     private static string Stamp(VersionStamp stamp)
     {
-        return stamp.ReleaseDate is { } shipped
-            ? $"v{stamp.Version} · {shipped.ToString("MMM d, yyyy")}"
-            : $"v{stamp.Version}";
+        return VersionStampText.Short(stamp);
     }
 
     // The canonical vanity route. The GUID permalink and legacy /Record live in

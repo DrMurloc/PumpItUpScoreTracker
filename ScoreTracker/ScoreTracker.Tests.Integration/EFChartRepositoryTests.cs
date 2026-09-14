@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Catalog.Infrastructure;
 using ScoreTracker.Data.Repositories;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.Integration.Fixtures;
 using ScoreTracker.Tests.Integration.TestData;
@@ -428,5 +429,26 @@ public sealed class EFChartRepositoryTests : IAsyncLifetime
         await using var ctx = await _fixture.DbContextFactory.CreateDbContextAsync();
         var row = await ctx.ChartMix.SingleAsync(cm => cm.ChartId == chartId);
         Assert.Equal(version, row.AddedInVersionId);
+    }
+
+    /// <summary>
+    ///     The flat mix-levels read carries each row's patch beside its level, so a rerate in a
+    ///     chart's History can print the patch it happened in; a row that names no patch reads none.
+    /// </summary>
+    [Fact]
+    public async Task GetChartMixLevelsCarriesEachRowsPatch()
+    {
+        var version = await _seed.SeedMixVersionAsync(TestDataSeeder.PhoenixMixId, "2.06.0", new DateOnly(2024, 12, 26), 160);
+        var stamped = await _seed.SeedPhoenixChartAsync(addedInVersionId: version);
+        var bare = await _seed.SeedPhoenixChartAsync();
+
+        var rows = await BuildRepository().GetChartMixLevels();
+
+        var stampedRow = rows.Single(r => r.ChartId == stamped);
+        Assert.Equal(MixEnum.Phoenix, stampedRow.Mix);
+        Assert.Equal("2.06.0", stampedRow.AddedIn?.Version);
+        Assert.Equal(new DateOnly(2024, 12, 26), stampedRow.AddedIn?.ReleaseDate);
+        Assert.Equal(160, stampedRow.AddedIn?.SortOrder);
+        Assert.Null(rows.Single(r => r.ChartId == bare).AddedIn);
     }
 }

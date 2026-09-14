@@ -469,24 +469,42 @@ internal sealed class EFChartRepository : IChartRepository
         return result;
     }
 
-    public async Task<IReadOnlyList<(Guid ChartId, MixEnum Mix, int Level, int? NoteCount)>> GetChartMixLevels(
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<(Guid ChartId, MixEnum Mix, int Level, int? NoteCount, VersionStamp? AddedIn)>>
+        GetChartMixLevels(CancellationToken cancellationToken = default)
     {
         return (await _cache.GetOrCreateAsync(MixLevelsCacheKey, async entry =>
         {
             entry.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(14);
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var rows = await database.ChartMix
-                .Select(cm => new { cm.ChartId, cm.MixId, cm.Level, cm.NoteCount })
+            // The patch rides along as a left join, the way the per-mix dictionary carries it:
+            // a rerate line in the chart's History prints the patch it happened in.
+            var rows = await (from cm in database.ChartMix
+                    join v in database.Set<MixVersionEntity>() on cm.AddedInVersionId equals v.Id into versions
+                    from v in versions.DefaultIfEmpty()
+                    select new
+                    {
+                        cm.ChartId, cm.MixId, cm.Level, cm.NoteCount,
+                        VersionName = v == null ? null : v.Name,
+                        VersionDate = v == null ? null : v.ReleaseDate,
+                        VersionOrder = v == null ? (int?)null : v.SortOrder
+                    })
                 .ToArrayAsync(cancellationToken);
-            return (IReadOnlyList<(Guid, MixEnum, int, int?)>)rows
-                .Select(r => (r.ChartId, MixIds.ToEnum(r.MixId), r.Level, r.NoteCount))
+            return (IReadOnlyList<(Guid, MixEnum, int, int?, VersionStamp?)>)rows
+                .Select(r =>
+                {
+                    var mix = MixIds.ToEnum(r.MixId);
+                    return (r.ChartId, mix, r.Level, r.NoteCount,
+                        r.VersionName == null
+                            ? null
+                            : new VersionStamp(mix, r.VersionName, r.VersionDate, r.VersionOrder!.Value));
+                })
                 .ToArray();
         }))!;
     }
 
     // A Viewer key: the dictionary carries Chart.Level, and a season's ChartSeason rows change it.
-    private static string ChartCacheKey(Guid mixId)
+    /// <summary>The per-mix chart dictionary's key; the SongMix write evicts it too.</summary>
+    internal static string ChartCacheKey(Guid mixId)
     {
         return CacheKeys.Viewer(nameof(EFChartRepository), mixId, SeasonId.AllTime, nameof(GetAllCharts));
     }
@@ -514,6 +532,10 @@ internal sealed class EFChartRepository : IChartRepository
                     from om in origins.DefaultIfEmpty()
                     join dv in database.Set<MixVersionEntity>() on om.AddedInVersionId equals dv.Id into debuts
                     from dv in debuts.DefaultIfEmpty()
+                    // The song's channel on THIS mix, a left join for the same reason: no row is an
+                    // unknown channel, never a chart dropped (docs/design/song-channels.md §3).
+                    join sm in database.Set<SongMixEntity>() on new { cm.MixId, c.SongId } equals new { sm.MixId, sm.SongId } into songMixes
+                    from sm in songMixes.DefaultIfEmpty()
                     where cm.MixId == mixId
                     select new
                     {
@@ -537,13 +559,19 @@ internal sealed class EFChartRepository : IChartRepository
                         VersionOrder = v == null ? (int?)null : v.SortOrder,
                         DebutVersionName = dv == null ? null : dv.Name,
                         DebutVersionDate = dv == null ? null : dv.ReleaseDate,
-                        DebutVersionOrder = dv == null ? (int?)null : dv.SortOrder
+                        DebutVersionOrder = dv == null ? (int?)null : dv.SortOrder,
+                        Channel = sm == null ? null : sm.Channel
                     })
                 .ToListAsync(cancellationToken);
             return rows.ToDictionary(r => r.Id, r => new Chart(r.Id, MixIds.ToEnum(r.OriginalMixId),
                 new Song(r.SongName, Enum.Parse<SongType>(r.SongType), new Uri(r.ImagePath), r.Duration,
                     r.Artist ?? "Unknown",
-                    Bpm.From(r.MinBpm, r.MaxBpm)),
+                    Bpm.From(r.MinBpm, r.MaxBpm),
+                    // TryParse, not Enum.Parse: this column is the one a person types by hand when a
+                    // returning song is seeded (D8), and a throw here would take down the whole mix's
+                    // chart dictionary, not one song. A spelling nothing matches reads as unknown,
+                    // which D7 already defines as absence everywhere.
+                    ChannelHelperMethods.TryParse(r.Channel, out var channel) ? channel : null),
                 Enum.Parse<ChartType>(r.ChartType),
                 r.Level, mix, r.StepArtist, r.NoteCount,
                 LegacySlotHelperMethods.ToNullableLegacySlot(r.LegacySlot),

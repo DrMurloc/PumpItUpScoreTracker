@@ -1,4 +1,5 @@
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.ChartIntelligence.Domain;
 
@@ -25,7 +26,8 @@ internal sealed record ChartVerdictInputs(
     MixEnum CurrentMix,
     MixEnum DebutMix,
     IReadOnlyList<MixLevel> MixLevels,
-    CruxEvidence? Crux = null);
+    CruxEvidence? Crux = null,
+    IReadOnlyDictionary<MixEnum, VersionStamp>? MixReleases = null);
 
 /// <summary>One badge's measured coverage, with the name a sentence would print.</summary>
 [ExcludeFromCodeCoverage]
@@ -45,5 +47,6 @@ internal sealed record LevelAverage(int Level, double AverageScore);
 [ExcludeFromCodeCoverage]
 internal sealed record LevelPasses(int Level, int Passes);
 
+/// <summary>A chart's level in one mix, and the patch its row entered that mix in when the catalog names one.</summary>
 [ExcludeFromCodeCoverage]
-internal sealed record MixLevel(MixEnum Mix, int Level);
+internal sealed record MixLevel(MixEnum Mix, int Level, VersionStamp? AddedIn = null);

@@ -71,7 +71,7 @@ public sealed class BulkChartJsonParser : IBulkChartJsonParser
 
             return new BulkChartsParseResult(
                 entries.Select(e => new BulkSongParseResult(e.Index, e.DisplayName,
-                        e.Errors.Any() ? null : e.Song, e.Errors))
+                        e.Errors.Any() ? null : e.Song, e.Errors, e.Warnings))
                     .ToArray(),
                 Array.Empty<string>());
         }
@@ -84,6 +84,7 @@ public sealed class BulkChartJsonParser : IBulkChartJsonParser
         public string? RawName { get; set; }
         public BulkSongSpec? Song { get; set; }
         public List<string> Errors { get; } = new();
+        public List<string> Warnings { get; } = new();
     }
 
     private static WorkingEntry ParseSong(JsonElement element, int index)
@@ -122,12 +123,33 @@ public sealed class BulkChartJsonParser : IBulkChartJsonParser
         var duration = ParseDuration(raw.DurationSeconds, entry.Errors);
         var imageUrl = ParseImageUrl(raw.ImageUrl, entry.Errors);
         var charts = ParseCharts(raw.Charts, entry.Errors);
+        var channel = ParseChannel(raw.Channel, entry.Warnings);
 
         if (entry.Errors.Any()) return entry;
 
         entry.Song = new BulkSongSpec(name!.Value, koreanName!.Value, artist!.Value, type!.Value,
-            bpm!.Value, duration!.Value, imageUrl!, charts);
+            bpm!.Value, duration!.Value, imageUrl!, charts, channel);
         return entry;
+    }
+
+    /// <summary>
+    ///     The channel the song sits in on the Phoenix 2 cab, by enum name. Never an error: a
+    ///     batch is not blocked on it, the song imports with none and a warning says so
+    ///     (docs/design/song-channels.md §5).
+    /// </summary>
+    private static Channel? ParseChannel(string? value, ICollection<string> warnings)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            warnings.Add($"\"channel\" is missing — the song imports with no channel (one of: {string.Join(", ", Enum.GetNames<Channel>())}).");
+            return null;
+        }
+
+        if (ChannelHelperMethods.TryParse(value, out var channel)) return channel;
+
+        warnings.Add($"\"channel\" value '{value}' is not a channel — the song imports with no channel (one of: " +
+                     $"{string.Join(", ", Enum.GetNames<Channel>())}).");
+        return null;
     }
 
     private static Name? RequireName(string? value, string field, ICollection<string> errors, string hint = "")
@@ -337,6 +359,7 @@ public sealed class BulkChartJsonParser : IBulkChartJsonParser
         public decimal? MaxBpm { get; set; }
         public int? DurationSeconds { get; set; }
         public string? ImageUrl { get; set; }
+        public string? Channel { get; set; }
         public List<RawChart>? Charts { get; set; }
     }
 

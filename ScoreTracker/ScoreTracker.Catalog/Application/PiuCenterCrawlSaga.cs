@@ -303,7 +303,7 @@ internal sealed class PiuCenterCrawlSaga : IConsumer<CrawlPiuCenterCommand>,
             .ToDictionary(r => r.ChartId, r => r.NoteCount);
 
         var folders = new Dictionary<(MixEnum Mix, ChartType Type, int Level), List<ChartBadgeProfile>>();
-        foreach (var (chartId, mix, level, noteCount) in mixLevels)
+        foreach (var (chartId, mix, level, noteCount, _) in mixLevels)
         {
             if (!profiles.TryGetValue(chartId, out var profile)) continue;
             if (!typeById.TryGetValue(chartId, out var type)) continue;

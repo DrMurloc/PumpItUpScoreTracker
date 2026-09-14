@@ -8,6 +8,7 @@ using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Caching;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.ChartIntelligence.Application;
 
@@ -121,13 +122,12 @@ internal sealed class ChartVerdictHandler : IRequestHandler<GetChartVerdictQuery
             ? (double)analysis.TimeUnderTensionSeconds.Value / durationSeconds
             : (double?)null;
 
-        var mixLevels = (await MixLevelMap(cancellationToken)).TryGetValue(chartId, out var levels)
-            ? levels
-            : Array.Empty<MixLevel>();
+        var index = await MixLevelMap(cancellationToken);
+        var mixLevels = index.ByChart.TryGetValue(chartId, out var levels) ? levels : Array.Empty<MixLevel>();
 
         return new ChartVerdictInputs(passTier, scoreTier, letterPercentiles, averagesByLevel, passesByLevel,
             clearPlates, medianClearScore, records.Length, clears.Length, badgeWeights, tensionFraction,
-            mix, chart.OriginalMix, mixLevels, crux);
+            mix, chart.OriginalMix, mixLevels, crux, index.Releases);
     }
 
     private async Task<TierListCategory?> TierCategory(MixEnum mix, string tierListName, Guid chartId,
@@ -144,23 +144,35 @@ internal sealed class ChartVerdictHandler : IRequestHandler<GetChartVerdictQuery
     ///     sweep, cached daily:
     ///     the per-chart lookup is what History reads.
     /// </summary>
-    private async Task<IReadOnlyDictionary<Guid, IReadOnlyList<MixLevel>>> MixLevelMap(
-        CancellationToken cancellationToken)
+    /// <summary>
+    ///     Every chart's levels by mix, and each mix's own release: the earliest patch any of its
+    ///     rows names, which is what a Removed line is dated by.
+    /// </summary>
+    private sealed record MixLevelIndex(IReadOnlyDictionary<Guid, IReadOnlyList<MixLevel>> ByChart,
+        IReadOnlyDictionary<MixEnum, VersionStamp> Releases);
+
+    private async Task<MixLevelIndex> MixLevelMap(CancellationToken cancellationToken)
     {
         return (await _cache.GetOrCreateAsync(MixLevelsCacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24);
             var map = new Dictionary<Guid, List<MixLevel>>();
+            var releases = new Dictionary<MixEnum, VersionStamp>();
             // One flat ChartMix read, not a sweep of all ~30 full catalogs — the History
-            // facet only needs (chart, mix, level), and the catalog sweep took 9-15 seconds.
-            foreach (var (chartId, mix, level, _) in await _charts.GetChartMixLevels(cancellationToken))
+            // facet only needs (chart, mix, level) and the patch the row entered its mix in,
+            // and the catalog sweep took 9-15 seconds.
+            foreach (var (chartId, mix, level, _, addedIn) in await _charts.GetChartMixLevels(cancellationToken))
             {
                 if (!map.TryGetValue(chartId, out var levels)) map[chartId] = levels = new List<MixLevel>();
-                levels.Add(new MixLevel(mix, level));
+                levels.Add(new MixLevel(mix, level, addedIn));
+                if (addedIn != null && (!releases.TryGetValue(mix, out var first) || addedIn.SortOrder < first.SortOrder))
+                    releases[mix] = addedIn;
             }
 
-            return map.ToDictionary(kv => kv.Key,
-                kv => (IReadOnlyList<MixLevel>)kv.Value.OrderBy(l => l.Mix.DisplayOrder()).ToArray());
+            return new MixLevelIndex(
+                map.ToDictionary(kv => kv.Key,
+                    kv => (IReadOnlyList<MixLevel>)kv.Value.OrderBy(l => l.Mix.DisplayOrder()).ToArray()),
+                releases);
         }))!;
     }
 }

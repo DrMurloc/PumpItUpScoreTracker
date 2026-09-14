@@ -23,6 +23,7 @@ Complete example (two songs, three charts):
       "koreanName": "디스트릭트 1",
       "artist": "Doin",
       "type": "Arcade",
+      "channel": "Original",
       "minBpm": 195,
       "maxBpm": 195,
       "durationSeconds": 105,
@@ -48,6 +49,7 @@ Complete example (two songs, three charts):
       "koreanName": "바로크 바이러스 풀 송",
       "artist": "SHK",
       "type": "FullSong",
+      "channel": "Original",
       "minBpm": 158,
       "maxBpm": 158,
       "durationSeconds": 223,
@@ -73,6 +75,7 @@ Complete example (two songs, three charts):
 | `koreanName` | yes | Feeds the `ko-KR` culture-name row (`SetSongCultureName`). **Korean-session score imports match on this** — omitting it breaks imports for players whose PIU account renders Korean titles, which is why it is required even for songs whose Korean title equals the English one. |
 | `artist` | yes | Song artist (music, not steps). |
 | `type` | yes | One of the `SongType` enum names, case-insensitive: `Arcade`, `ShortCut`, `FullSong`, `Remix`. |
+| `channel` | no, but expected | One of the `Channel` enum names, case-insensitive: `Original`, `KPop`, `WorldMusic`, `JMusic`, `Xross` — the channel the song sits in on the Phoenix 2 cab. Confirm writes the song's Phoenix 2 `SongMix` row from it. A missing or unrecognised value is a **warning**, never an error: the song imports with no channel and the row can be set later ([song-channels.md](song-channels.md)). Not the chart-level `channelName`, which is the video's YouTube uploader. |
 | `minBpm` / `maxBpm` | yes (both) | Numbers, `> 0`, `maxBpm >= minBpm`. Fixed-tempo songs repeat the same value. |
 | `durationSeconds` | yes | Integer seconds, `1`–`3600`. |
 | `imageUrl` | yes | Absolute `http(s)` URL — give it the source Andamiro image (`song_img2/…`). On Confirm the image is **copied to the CDN** (`IFileUploadClient.CopyFromSource` → `piuimages.arroweclip.se/songs/<NameLettersAndDigits>.png`, matching the manual naming convention) and the song stores the CDN URL. A URL already on the CDN host is stored verbatim; a taken blob name (carried-over Phoenix song with the same name) gets a `-p2` suffix instead of overwriting the Phoenix art. If the copy fails, the source URL is stored, the results table says so, and the image can be rehosted later via the song-image update flow. |
@@ -98,7 +101,8 @@ numbers.
   missing/blank required fields, unknown `type` values, out-of-range `level`/`durationSeconds`/BPM,
   non-absolute `imageUrl`, URL-shaped `youtubeHash`, zero charts, duplicate song name within the blob.
 - **Warnings never block**: already-in-Phoenix-2 (entry is skipped on Confirm, everything else
-  still runs), already-in-Phoenix (informational only — verify the carry-over is intentional).
+  still runs), already-in-Phoenix (informational only — verify the carry-over is intentional), a missing or
+  unrecognised song `channel` (the song imports with none).
 - One bad song never hides the others: every entry gets its own preview card and error list.
 
 ## What Confirm does
@@ -123,7 +127,9 @@ tool and the workflow:
    the newest already-processed video (the watermark), walk the uploads newest-first until it:
    skip BGA videos, group chart videos by song, and pull the chart list (type/level),
    `youtubeHash`, `stepArtist`, `artist`, and BPM from titles/descriptions, `durationSeconds`
-   from video length.
+   from video length. The patch's per-version playlist names the version and, in its title's
+   parenthesis, the **channel** — `[PIU PHOENIX 2] v1.01.0 - STEP CHART VIDEO (K-POP)` — which
+   is where each song's `channel` comes from ([song-channels.md](song-channels.md) §6).
 2. **Official-site canonicalization** — YouTube titles carry small discrepancies, and name
    discrepancies break import matching, so the official site wins on names. Per song, from
    piugame.com: the canonical English `name`, the canonical Korean `koreanName`, and the

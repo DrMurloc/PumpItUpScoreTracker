@@ -337,4 +337,43 @@ public sealed class RandomizerSagaTests
 
         Assert.Equal(new[] { released.Id, unknown.Id }.OrderBy(id => id), result.Select(c => c.Id).OrderBy(id => id));
     }
+
+    // ── The channels a draw may pull from (docs/design/song-channels.md §5) ────────────────
+
+    [Fact]
+    public async Task GetIncludedRandomChartsKeepsOnlyThePickedChannelsAndDropsSongsWithNoChannel()
+    {
+        var (accessor, userId) = UserAccessor();
+        var kpop = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).WithChannel(Channel.KPop).Build();
+        var original = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).WithChannel(Channel.Original).Build();
+        var unknown = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var charts = ChartsReturning(new[] { kpop, original, unknown });
+        var settings = SinglesAtLevelTwenty();
+        settings.Channels.Add(Channel.KPop);
+
+        var saga = new RandomizerSaga(charts.Object, new Mock<IRandomizerRepository>().Object,
+            accessor.Object, ScoresReturning(userId, Array.Empty<RecordedPhoenixScore>()).Object,
+            new Mock<IRandomNumberGenerator>().Object, EmptyScoringLevels().Object);
+
+        var result = await saga.Handle(new GetIncludedRandomChartsQuery(settings), CancellationToken.None);
+
+        Assert.Equal(new[] { kpop.Id }, result.Select(c => c.Id).ToArray());
+    }
+
+    [Fact]
+    public async Task GetIncludedRandomChartsWithNoChannelPickedDrawsFromEveryChannelIncludingUnknown()
+    {
+        var (accessor, userId) = UserAccessor();
+        var xross = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).WithChannel(Channel.Xross).Build();
+        var unknown = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var charts = ChartsReturning(new[] { xross, unknown });
+
+        var saga = new RandomizerSaga(charts.Object, new Mock<IRandomizerRepository>().Object,
+            accessor.Object, ScoresReturning(userId, Array.Empty<RecordedPhoenixScore>()).Object,
+            new Mock<IRandomNumberGenerator>().Object, EmptyScoringLevels().Object);
+
+        var result = await saga.Handle(new GetIncludedRandomChartsQuery(SinglesAtLevelTwenty()), CancellationToken.None);
+
+        Assert.Equal(new[] { xross.Id, unknown.Id }.OrderBy(id => id), result.Select(c => c.Id).OrderBy(id => id));
+    }
 }

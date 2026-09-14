@@ -114,7 +114,13 @@ hides on a mix with no version data, and until some chart of the mix carries a p
 **Chart page.** *Debuted in Phoenix* carries the debut patch and its date, `v2.12.0 · Dec 23,
 2025`, when the origin mix's row knows it, and the mix alone when it does not. A carry-over adds
 *Added in Phoenix 2* with the patch it entered this mix in and that patch's date; a debut says
-nothing twice. Nothing shows for an unknown patch.
+nothing twice. Nothing shows for an unknown patch. The chart details dialog's Chart Stats tab
+carries the chart's whole life as History events since the channels work — each mix's patch rides
+on the history facet's `MixLevelRecord`, and the facet's `Events` name the debut, every rerate,
+and from Prime 2 on a removal at a mix's release and a revival where the chart returns
+([song-channels.md](song-channels.md) D10, D11). A version the catalog names rather than numbers
+(`Release`, `Pre-v1.10`) is the mix's own release and prints nothing of its own, the date alone
+standing for it; only a number takes the `v` (`VersionStampText`).
 
 **Admin BulkAddCharts.** A Version picker, newest by default, with a new-version entry of name and
 date. The picked version stamps every chart the batch creates. The JSON blob is unchanged.

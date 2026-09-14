@@ -48,6 +48,22 @@ public sealed class CatalogModelContribution : IDbModelContribution
             .HasForeignKey(e => e.AddedInVersionId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // A song's channel per mix: keyed on the pair, no surrogate, both keys declared here
+        // because the table is this vertical's while Song and Mix are Data's
+        // (docs/design/song-channels.md §3). The index is the facet's read.
+        modelBuilder.Entity<SongMixEntity>().ToTable("SongMix")
+            .HasKey(e => new { e.SongId, e.MixId });
+        modelBuilder.Entity<SongMixEntity>()
+            .HasIndex(e => new { e.MixId, e.Channel });
+        modelBuilder.Entity<SongMixEntity>()
+            .HasOne<SongEntity>()
+            .WithMany()
+            .HasForeignKey(e => e.SongId);
+        modelBuilder.Entity<SongMixEntity>()
+            .HasOne<MixEntity>()
+            .WithMany()
+            .HasForeignKey(e => e.MixId);
+
         // A chart's season rating where it differs from the printed level (docs/design/seasons.md
         // D33, §6.3): season first, so a season is its own range; sparse, so a flat season has no
         // rows. ChartMix itself is never touched by seasons.
