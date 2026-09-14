@@ -1033,6 +1033,55 @@ public sealed class PlayerRatingSagaTests
         Assert.Equal(new[] { passed.Id }, result.Select(r => r.ChartId));
     }
 
+    [Fact]
+    public async Task TheSeasonPassPricesTheSeasonsPoolIntoTheSeasonsRowAndSaysNothing()
+    {
+        // The same arithmetic a second time over a different pool (docs/design/seasons.md §4.2):
+        // the season's row gets the season's numbers, the all-time row is untouched, and the pass
+        // is quiet — no milestone, no event, no announcement of any kind (D18).
+        var userId = Guid.NewGuid();
+        var season = SeasonId.From(2026, 4);
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var scores = ScoresMockReturning(userId, new[] { Score(chart.Id, 985_000) }, season,
+            new[] { Score(chart.Id, 900_000) });
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, season, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var bus = new Mock<IBus>();
+        var milestones = new Mock<IPlayerMilestoneRepository>();
+        var saga = BuildSaga(scores, ChartsMockReturning(new[] { chart }), stats, bus, milestones: milestones);
+
+        await saga.Handle(new PlayerRatingSaga.CaptureSessionStats(userId, MixEnum.Phoenix,
+            new[] { chart.Id }, null, null, season), CancellationToken.None);
+
+        // Written to the season's row, and TOTAL PUMBILITY is the season's whole pool summed.
+        stats.Verify(s => s.SaveStats(MixEnum.Phoenix, userId,
+            It.Is<PlayerStatsRecord>(r => r.TotalPumbility > 0), season, It.IsAny<CancellationToken>()), Times.Once);
+        stats.Verify(s => s.SaveStats(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<PlayerStatsRecord>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        bus.VerifyNoOtherCalls();
+        milestones.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task TheAllTimeRowCarriesNoTotalPumbility()
+    {
+        // TotalRating is already the lifetime sum, and a lifetime is not a board anyone climbs.
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var saga = BuildSaga(ScoresMockReturning(userId, new[] { Score(chart.Id, 985_000) }),
+            ChartsMockReturning(new[] { chart }), stats);
+
+        await saga.Handle(new PlayerRatingSaga.CaptureSessionStats(userId, MixEnum.Phoenix,
+            new[] { chart.Id }, null), CancellationToken.None);
+
+        stats.Verify(s => s.SaveStats(MixEnum.Phoenix, userId,
+            It.Is<PlayerStatsRecord>(r => r.TotalPumbility == 0), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private static PlayerRatingSaga BuildSaga(
         Mock<IScoreReader>? scores = null,
         Mock<IChartRepository>? charts = null,
@@ -1063,6 +1112,10 @@ public sealed class PlayerRatingSagaTests
     {
         var m = new Mock<IChartRepository>();
         m.Setup(c => c.GetCharts(mix, It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
+                It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(result);
+        // A season prices the same charts through its own overlay; flat until slice 4 writes one.
+        m.Setup(c => c.GetCharts(mix, It.IsAny<SeasonId>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
         return m;
@@ -1120,6 +1173,16 @@ public sealed class PlayerRatingSagaTests
         m.Setup(s => s.GetBestScores(mix, userId, It.IsAny<CancellationToken>())).ReturnsAsync(result);
         m.Setup(s => s.GetBestScores(mix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
+        return m;
+    }
+
+    /// <summary>A reader whose all-time and seasonal pools differ, so a pass can be told apart.</summary>
+    private static Mock<IScoreReader> ScoresMockReturning(Guid userId, IEnumerable<RecordedPhoenixScore> allTime,
+        SeasonId season, IEnumerable<RecordedPhoenixScore> seasonal, MixEnum mix = MixEnum.Phoenix)
+    {
+        var m = ScoresMockReturning(userId, allTime, mix);
+        m.Setup(s => s.GetBestScores(mix, It.IsAny<Guid>(), season, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(seasonal);
         return m;
     }
 

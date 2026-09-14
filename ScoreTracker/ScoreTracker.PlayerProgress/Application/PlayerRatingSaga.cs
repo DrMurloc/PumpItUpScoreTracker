@@ -42,7 +42,9 @@ internal sealed class PlayerRatingSaga :
     /// </summary>
     public sealed record CaptureSessionStats(
         Guid UserId, MixEnum Mix, IReadOnlyList<Guid> ChangedChartIds, Guid? SessionId,
-        IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange>? Changes = null)
+        IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange>? Changes = null,
+        // The season pass runs this a second time over the seasonal pool, quiet (D18).
+        SeasonId Season = default)
         : IRequest<SessionStatsResult>;
 
     public sealed record SessionStatsResult(
@@ -90,9 +92,13 @@ internal sealed class PlayerRatingSaga :
         CancellationToken cancellationToken)
     {
         var result = await RecalculateCore(new RecalculateStatsCommand(request.UserId, request.Mix,
-            request.ChangedChartIds, request.SessionId), request.Changes, cancellationToken);
-        await Handle(new RecalculatePumbilityCommand(request.UserId, request.ChangedChartIds.ToArray(),
-            request.Mix), cancellationToken);
+                request.ChangedChartIds, request.SessionId), request.Changes, cancellationToken,
+            quiet: !request.Season.IsAllTime, request.Season);
+        // The per-score pricing cache is not mirrored per season (D19), so the season pass stops at
+        // its stats row: the Breakdown page prices a season's fifty live instead.
+        if (request.Season.IsAllTime)
+            await Handle(new RecalculatePumbilityCommand(request.UserId, request.ChangedChartIds.ToArray(),
+                request.Mix), cancellationToken);
         return result;
     }
 
@@ -251,15 +257,28 @@ internal sealed class PlayerRatingSaga :
     /// </summary>
     private async Task<SessionStatsResult> RecalculateCore(RecalculateStatsCommand request,
         IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange>? changes,
-        CancellationToken cancellationToken, bool quiet = false)
+        CancellationToken cancellationToken, bool quiet = false, SeasonId season = default)
     {
         var mix = request.Mix;
-        var oldStats = await _stats.GetStats(mix, request.UserId, cancellationToken);
+        // The season pass is this same call a second time (docs/design/seasons.md §4.2): the same
+        // arithmetic over the seasonal bests, priced by the season's chart ratings, written to the
+        // season's stats row. It is always quiet — no seasonal milestones, lamps or titles in v1
+        // (D18) — so everything below the SaveStats returns before it runs.
+        // Each read takes the all-time signature when there is no season, rather than the sibling
+        // with SeasonId.AllTime. The two are the same call in every implementation — but routing
+        // the all-time pass through the exact method it always used is what makes "this slice
+        // cannot have changed the all-time numbers" a fact about the code and not a claim.
+        var oldStats = season.IsAllTime
+            ? await _stats.GetStats(mix, request.UserId, cancellationToken)
+            : await _stats.GetStats(mix, request.UserId, season, cancellationToken);
         var scoring = ScoringConfiguration.PumbilityScoring(mix, true);
-        var charts =
-            (await _charts.GetCharts(mix, cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
-        var recorded =
-            (await _scores.GetBestScores(mix, request.UserId, cancellationToken)).ToArray();
+        var charts = (season.IsAllTime
+                ? await _charts.GetCharts(mix, cancellationToken: cancellationToken)
+                : await _charts.GetCharts(mix, season, cancellationToken: cancellationToken))
+            .ToDictionary(c => c.Id);
+        var recorded = (season.IsAllTime
+            ? await _scores.GetBestScores(mix, request.UserId, cancellationToken)
+            : await _scores.GetBestScores(mix, request.UserId, season, cancellationToken)).ToArray();
 
         // Phoenix 2's formula prices the plate (and zeroes stage breaks); Phoenix keeps its
         // historical plate-blind rating byte-identical.
@@ -335,11 +354,25 @@ internal sealed class PlayerRatingSaga :
             AverageOrDefault(top50Doubles.Select(s => (int)charts[s.ChartId].Level), 1),
             competitive,
             competitiveSingles,
-            competitiveDoubles
+            competitiveDoubles,
+            // The whole-season grind board: every seasonal best's PUMBILITY summed, unrounded
+            // (§4.2). Zero on the all-time row, where TotalRating is already this figure and the
+            // lifetime sum is not a board anyone climbs.
+            TotalPumbility: season.IsAllTime ? 0 : scores.Where(s => !s.IsBroken).Sum(s => s.Rating)
         );
 
-        newStats = await EstimateOfficialRanks(mix, newStats, cancellationToken);
-        await _stats.SaveStats(mix, request.UserId, newStats, cancellationToken);
+        // The official boards are all-time and piugame's: placing a season's pool on one would
+        // read as a rank the player does not hold, so a season row carries no estimate.
+        if (season.IsAllTime)
+        {
+            newStats = await EstimateOfficialRanks(mix, newStats, cancellationToken);
+            await _stats.SaveStats(mix, request.UserId, newStats, cancellationToken);
+        }
+        else
+        {
+            await _stats.SaveStats(mix, request.UserId, newStats, season, cancellationToken);
+        }
+
         if (quiet) return new SessionStatsResult(Array.Empty<PlayerMilestoneRecord>(), Array.Empty<Guid>());
 
         var gains = PumbilityGains(request, changes, scores, recorded, charts, mix, scoring);

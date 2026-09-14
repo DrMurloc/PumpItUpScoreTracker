@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -768,6 +768,10 @@ public sealed class HighlightCaptureSagaTests
         public Mock<IPlayerFolderLevelRepository> FolderLevels { get; } = new();
         public Mock<IScoreAttemptReader> Attempts { get; } = new();
         public Mock<IOfficialPlacementReader> OfficialPlacements { get; } = new();
+
+        // No season opened: the season pass finds nothing to write, which is the state every
+        // assertion in this suite is about (docs/design/seasons.md D18 keeps it quiet regardless).
+        public Mock<ISeasonReader> Seasons { get; } = FakeSeasons.None();
         public Mock<IMediator> Mediator { get; } = new();
         public HighlightCaptureSaga Saga { get; }
 
@@ -798,7 +802,7 @@ public sealed class HighlightCaptureSagaTests
             Saga = new HighlightCaptureSaga(Charts.Object, Scores.Object, PlayerStats.Object,
                 Highlights.Object, Milestones.Object, FolderLevels.Object, Mediator.Object,
                 new MemoryCache(new MemoryCacheOptions()), FakeDateTime.At(Now).Object,
-                Attempts.Object, OfficialPlacements.Object,
+                Attempts.Object, OfficialPlacements.Object, Seasons.Object,
                 NullLogger<HighlightCaptureSaga>.Instance);
         }
 
