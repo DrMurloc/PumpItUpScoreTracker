@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -16,6 +16,7 @@ using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -100,7 +101,7 @@ public sealed class LimboLeaderboardTests
         cache.Set(key, new[] { Row("STALE", 999_999) });
 
         var handler = new RecordObservedPlaysHandler(Mock.Of<IScoreJournalRepository>(), cache, Mock.Of<IChartRepository>(),
-            NullLogger<RecordObservedPlaysHandler>.Instance);
+            SeasonalBests.Inert(), NullLogger<RecordObservedPlaysHandler>.Instance);
         await handler.Handle(new RecordObservedPlaysCommand(Guid.NewGuid(), MixEnum.Phoenix2, "officialImport",
             Guid.NewGuid(), new[] { Play(Gargoyle, 312_004) }), CancellationToken.None);
 
@@ -115,7 +116,7 @@ public sealed class LimboLeaderboardTests
         cache.Set(untouched, new[] { Row("KEEP", 180_000) });
 
         var handler = new RecordObservedPlaysHandler(Mock.Of<IScoreJournalRepository>(), cache, Mock.Of<IChartRepository>(),
-            NullLogger<RecordObservedPlaysHandler>.Instance);
+            SeasonalBests.Inert(), NullLogger<RecordObservedPlaysHandler>.Instance);
         await handler.Handle(new RecordObservedPlaysCommand(Guid.NewGuid(), MixEnum.Phoenix2, "officialImport",
             Guid.NewGuid(), new[] { Play(Gargoyle, 312_004) }), CancellationToken.None);
 
@@ -130,7 +131,7 @@ public sealed class LimboLeaderboardTests
         cache.Set(key, new[] { Row("KEEP", 312_004) });
 
         var handler = new RecordObservedPlaysHandler(Mock.Of<IScoreJournalRepository>(), cache, Mock.Of<IChartRepository>(),
-            NullLogger<RecordObservedPlaysHandler>.Instance);
+            SeasonalBests.Inert(), NullLogger<RecordObservedPlaysHandler>.Instance);
         // Broken, nothing judged: never journaled (score-truth-model D7), so the board did not move.
         await handler.Handle(new RecordObservedPlaysCommand(Guid.NewGuid(), MixEnum.Phoenix2, "officialImport",
                 Guid.NewGuid(),

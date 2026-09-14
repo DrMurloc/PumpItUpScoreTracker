@@ -1074,7 +1074,7 @@ public sealed class UpdatePhoenixRecordHandlerTests
                 .Returns(Task.CompletedTask);
             Handler = new UpdatePhoenixRecordHandler(Records.Object, CurrentUser.Object, DateTime.Object,
                 Bus.Object, Scheduler.Object, Batches.Object, Journal.Object, Sessions.Object, Cache,
-                Charts.Object, Logger.Object);
+                Charts.Object, SeasonalBests.Inert(Records), Logger.Object);
         }
 
         /// <summary>The catalog's note count for the chart under test, as the write path reads it.</summary>

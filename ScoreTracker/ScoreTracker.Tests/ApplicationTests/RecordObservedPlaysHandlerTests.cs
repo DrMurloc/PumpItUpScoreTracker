@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -15,6 +15,7 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -321,7 +322,7 @@ public sealed class RecordObservedPlaysHandlerTests
                     CancellationToken>((_, _, causes, _) => Resolved.AddRange(causes))
                 .Returns(Task.CompletedTask);
             Handler = new RecordObservedPlaysHandler(Journal.Object, new MemoryCache(new MemoryCacheOptions()),
-                Charts.Object, Logger.Object);
+                Charts.Object, SeasonalBests.Inert(), Logger.Object);
         }
 
         public void GivenNoteCount(Guid chartId, int noteCount)

@@ -246,7 +246,11 @@ namespace ScoreTracker.OfficialMirror.Application
                         Source: ScoreJournalEntry.OfficialImportSource, Mix: mix,
                         SessionId: sessionId,
                         RecordedAt: score.RecordedAt,
-                        Judgements: score.Judgements),
+                        Judgements: score.Judgements,
+                        // The import already knows: a chart in existingScores is one we held a
+                        // record on, so this card raised it rather than being the first we ever
+                        // saw. The seasonal counting rule turns on exactly that (D15).
+                        RaisedExistingRecord: existingScores.ContainsKey(score.Chart.Id)),
                     cancellationToken);
                 count++;
                 batch.Add(new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, score.IsBroken,
