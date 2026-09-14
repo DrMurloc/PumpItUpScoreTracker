@@ -819,4 +819,28 @@ public sealed class DiscordRoleSagaTests
         _roles.Verify(r => r.DeleteGrant(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
+
+    /// <summary>
+    ///     The sibling of ARefusedRevokeDoesNotStopTheOthersComingOff, on the path where the REASON
+    ///     for the roles is going away rather than the member's standing changing. It matters most
+    ///     on the purge: RemoveAllForUser deletes the grant row whether or not this succeeded, and
+    ///     that row is the last handle on the Discord account once Identity has dropped the
+    ///     external login — so a role skipped here is a role nothing can ever take back.
+    /// </summary>
+    [Fact]
+    public async Task RevokingEverythingAttemptsEveryRolePastOneDiscordRefuses()
+    {
+        AlreadyHolds(BronzeRole, GoldRole, BreakerRole);
+        _roles.Setup(r => r.GetGrantsForUser(UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new CommunityDiscordGrantRecord(CommunityId, UserId, Snowflake, Now) });
+        _bot.Setup(b => b.RemoveRole(Guild, Snowflake, BronzeRole, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Missing Permissions"));
+
+        await Saga().RemoveAllForUser(UserId, CancellationToken.None);
+
+        VerifyRevoked(GoldRole, Times.Once());
+        VerifyRevoked(BreakerRole, Times.Once());
+        // The purge still completes — it must not stall on one community's Discord.
+        _roles.Verify(r => r.DeleteGrant(CommunityId, UserId, It.IsAny<CancellationToken>()), Times.Once);
+    }
 }

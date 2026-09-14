@@ -500,8 +500,24 @@ internal sealed class DiscordRoleSaga : IDiscordRoleService
         var current = await CurrentRoles(context, discordUserId, cancellationToken);
         if (current == null) return;
 
+        // Every role is attempted, for the same reason ReconcileMember attempts every one: a role
+        // that drifted above the bot cannot come off and Discord says so by throwing, and stopping
+        // there left every role behind it standing. That is worst on the purge path, where the
+        // grant row — the last handle on the snowflake once Identity has dropped the external
+        // login — is deleted whether or not this succeeded, so a role skipped here is a role
+        // nothing can ever take back.
+        Exception? refused = null;
         foreach (var roleId in context.Managed.Where(current.Contains))
-            await _bot.RemoveRole(context.GuildId, discordUserId, roleId, cancellationToken);
+            try
+            {
+                await _bot.RemoveRole(context.GuildId, discordUserId, roleId, cancellationToken);
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                refused ??= e;
+            }
+
+        if (refused != null) ExceptionDispatchInfo.Throw(refused);
     }
 
     // ---- context ----------------------------------------------------------------------------
