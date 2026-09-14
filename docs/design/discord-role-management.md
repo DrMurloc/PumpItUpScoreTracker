@@ -61,6 +61,7 @@ Owner calls from the 2026-09-09 workshop.
 | D19 | **Linking Discord publishes one too.** The mirror of D17, and the same reason: linking is the LAST step of ordinary onboarding — the community join happens before there is a Discord account, the server join before there is a site account to find — so it was the one step that fired nothing, leaving the player on a nightly sweep they cannot trigger (Check now is admin-only). |
 | D20 | **A system community may be owned, but never deleted.** World and the ninety-odd country communities are auto-joined and site-owned, and nothing guarded deletion because being ownerless left them with no Creator. Naming somebody on the row is a legitimate thing to do — it is how the official Discord gets its title roles — so the guard is explicit now (owner, 2026-09-09). Without it, World carrying every account on the site was one confirm from deletion. |
 | D23 | **The opt-out is a fifth fact in the rule, not an action the command takes** (2026-09-14). `Reconcile` reads it alongside membership and the linked account, so the join event, the nightly sweep, a title earned next week, an admin's Check now and the dry run all honor it, and nothing can hand the role back by accident. The command writes the fact and then runs the same reconcile inline, the way D18 hands a role out on the spot. It also made the two existing revoke loops honest: a revoke pass used to stop at the first role Discord refused, so somebody wearing one role above the bot kept the assignable one too. Every revoke is attempted now in both `ReconcileMember` and `Revoke`, the grant row stays while anything failed, and the failure surfaces after the loop. The second loop matters most on the purge, which deletes the grant row — the last handle on the snowflake — whether or not the revoke succeeded, so a role skipped there is a role nothing can ever take back. |
+| D26 | **A repointed server leaving an opt-out unliftable is accepted, not fixed** (owner, 2026-09-14, on the bug check). Lifting is only reachable by running the command in the designated server, so a player who opted out, whose admin then repoints the community elsewhere, cannot undo it from a Discord they are not in. That needs three things to line up at once and has never happened. It is also not purely a loss: the row persisting means that if they ever do join the new server, **their choice is remembered** rather than quietly reversed — which is the right direction for a privacy preference. No site-side switch is being built for it. |
 | D25 | **A player who is not in the community can still turn its roles off**, and a player with nothing to take off gets the same answer — the record simply waits (2026-09-14). Admins never see who opted out: the page gains the fact as a line under "When a role is given", not a list of names. The reply names the account the invocation resolved to, for the same reason D21 does. |
 
 ---
@@ -352,8 +353,14 @@ members and a migration in Communities, one line on `/Community/Discord`, and no
 - **Hiding `/piu roles` per server, or per user.** D24 — the first costs a second command tree and a
   registration to keep in step, the second Discord does not allow a bot to do at all.
 - **A site switch for the opt-out.** The command is symmetric, so a player undoes it where they did
-  it; a line on `/Account` listing the communities they have turned off is a later add if anyone
-  asks for it.
+  it. Not revisited after the bug check either — see D26.
+- **A single-member path through `BuildContext`.** Settling one player loads the community's whole
+  membership, the mapped titles' holders and the members' Discord links, because the context is
+  shared with the whole-community pass. Considered and declined (owner, 2026-09-14): for a real
+  community that is three indexed reads, and the same path already runs on **every title change** —
+  which a score import triggers constantly — so a command used a handful of times a month adds no
+  cost class that is not already there. Worth revisiting only if World itself ever maps a title,
+  and at that point the join event and the title fan-out are the bigger callers, not the command.
 
 ---
 
