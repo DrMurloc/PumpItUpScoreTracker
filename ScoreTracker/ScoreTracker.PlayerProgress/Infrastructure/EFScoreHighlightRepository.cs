@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Domain;
@@ -88,6 +88,8 @@ internal sealed class EFScoreHighlightRepository : IScoreHighlightRepository
         row.OfficialAsOf ??= detail.OfficialAsOf;
         row.CompetitiveBaseline ??= detail.CompetitiveBaseline;
         row.PumbilityGain ??= detail.PumbilityGain;
+        row.HardmodeGain ??= detail.HardmodeGain;
+        row.HardmodeRank ??= detail.HardmodeRank;
     }
 
     private static ScoreHighlightRecord ToRecord(ScoreHighlightEntity e)
@@ -96,7 +98,7 @@ internal sealed class EFScoreHighlightRepository : IScoreHighlightRepository
             e.ScoringLevel, new HighlightDetail(e.PumbilityRank, e.FolderDebutOrdinal, e.PeerCount, e.PeerBetterCount,
                 e.PeerPgCount, e.SkillTitleName, e.SkillTitleScore, e.SkillTitleThreshold,
                 e.PeerPercentile, e.AttemptsBeforeClear, e.OfficialPlace, e.OfficialBoardDepth, e.OfficialAsOf,
-                e.CompetitiveBaseline, e.PumbilityGain));
+                e.CompetitiveBaseline, e.PumbilityGain, e.HardmodeGain, e.HardmodeRank));
     }
 
     public async Task<IEnumerable<ScoreHighlightRecord>> GetHighlights(MixEnum mix, Guid userId,

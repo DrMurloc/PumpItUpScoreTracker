@@ -1,4 +1,4 @@
-namespace ScoreTracker.PlayerProgress.Contracts;
+﻿namespace ScoreTracker.PlayerProgress.Contracts;
 
 /// <summary>
 ///     The per-flag detail a highlighted score carries beyond its flag bits — computed at
@@ -33,4 +33,6 @@ public sealed record HighlightDetail(
     int? OfficialBoardDepth = null,
     DateTimeOffset? OfficialAsOf = null,
     double? CompetitiveBaseline = null,
-    double? PumbilityGain = null);
+    double? PumbilityGain = null,
+    double? HardmodeGain = null,
+    int? HardmodeRank = null);

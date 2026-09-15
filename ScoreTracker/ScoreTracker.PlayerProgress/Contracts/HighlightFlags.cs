@@ -1,4 +1,4 @@
-namespace ScoreTracker.PlayerProgress.Contracts;
+﻿namespace ScoreTracker.PlayerProgress.Contracts;
 
 /// <summary>
 ///     Noteworthy-score flags, captured at write time so they stay historically true
@@ -37,5 +37,17 @@ public enum HighlightFlags
     ///     Phoenix 2 300). Estimated against the last sealed snapshot, so the detail carries
     ///     the board's date — see <see cref="HighlightDetail.OfficialAsOf" />.
     /// </summary>
-    OfficialBoardPlacement = 64
+    OfficialBoardPlacement = 64,
+
+    /// <summary>
+    ///     The chart sat in the player's Hardmode fifty when the score landed - the literal twin
+    ///     of <see cref="PumbilityTop50" />, over the week's qualifying charts
+    ///     (docs/design/hardmode-leaderboard.md D21).
+    ///     <para>
+    ///         A pool under fifty displaces nothing, so for most accounts today this is set on
+    ///         every qualifying score they hold. That is the same bootstrap the normal top 50 had
+    ///         at Phoenix launch, and it tightens on its own as pools fill.
+    ///     </para>
+    /// </summary>
+    HardmodeTop50 = 128
 }
