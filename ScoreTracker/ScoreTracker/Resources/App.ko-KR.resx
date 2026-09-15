@@ -139,6 +139,9 @@
   <data name="#{0} / {1}" xml:space="preserve">
     <value>#{0} / {1}</value>
   </data>
+  <data name="#{0} in your Hardmode" xml:space="preserve">
+    <value>Hardmode 내 #{0}</value>
+  </data>
   <data name="#{0} in your PUMBILITY" xml:space="preserve">
     <value>내 PUMBILITY #{0}</value>
   </data>
@@ -147,6 +150,9 @@
   </data>
   <data name="#{0} of {1} peers" xml:space="preserve">
     <value>동급 {1}명 중 #{0}</value>
+  </data>
+  <data name="#{0} on the Hardmode board" xml:space="preserve">
+    <value>Hardmode 순위 #{0}</value>
   </data>
   <data name="#{0} PUMBILITY" xml:space="preserve">
     <value>PUMBILITY #{0}</value>
@@ -180,6 +186,15 @@
   </data>
   <data name="**Doubles competitive** {0:0.00} → **{1:0.00}**" xml:space="preserve">
     <value>**더블 경쟁 레벨** {0:0.00} → **{1:0.00}**</value>
+  </data>
+  <data name="**Hardmode (D)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**Hardmode (D)** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**Hardmode (S)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**Hardmode (S)** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**Hardmode** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**Hardmode** {0:N0} → **{1:N0}** (+{2:N0})</value>
   </data>
   <data name="**Limbo Day** — lowest passing score wins. No breaking." xml:space="preserve">
     <value>**림보 데이** — 가장 낮은 패스 점수가 승리. 브레이크 금지.</value>
@@ -3556,8 +3571,23 @@
   <data name="Hardmode charts held" xml:space="preserve">
     <value>보유한 하드모드 차트</value>
   </data>
+  <data name="Hardmode charts only" xml:space="preserve">
+    <value>Hardmode 채보만</value>
+  </data>
+  <data name="Hardmode fifty" xml:space="preserve">
+    <value>Hardmode 상위 50</value>
+  </data>
+  <data name="Hardmode is Phoenix 2 only." xml:space="preserve">
+    <value>Hardmode는 Phoenix 2 전용입니다.</value>
+  </data>
+  <data name="Hardmode ladders" xml:space="preserve">
+    <value>Hardmode 사다리</value>
+  </data>
   <data name="Hardmode leaderboard" xml:space="preserve">
     <value>하드모드 리더보드</value>
+  </data>
+  <data name="Hardmode {0}" xml:space="preserve">
+    <value>Hardmode {0}</value>
   </data>
   <data name="Has errors" xml:space="preserve">
     <value>오류 있음</value>
@@ -4662,6 +4692,9 @@
   </data>
   <data name="March of Murlocs session" xml:space="preserve">
     <value>March of Murlocs 세션</value>
+  </data>
+  <data name="Mark Hardmode charts" xml:space="preserve">
+    <value>Hardmode 채보 표시</value>
   </data>
   <data name="Marked for review" xml:space="preserve">
     <value>검토 대기로 표시됨</value>
@@ -7051,6 +7084,9 @@
   <data name="Pushing Title Charts" xml:space="preserve">
     <value>도전 중인 칭호 채보</value>
   </data>
+  <data name="Puts a glow on the difficulty bubble of every chart in the week's Hardmode list, everywhere on the site." xml:space="preserve">
+    <value>이번 주 Hardmode 목록에 있는 모든 채보의 난이도 버블을 사이트 전체에서 빛나게 합니다.</value>
+  </data>
   <data name="Quadratic: a level is worth {0} at 20 and {1} at 27. Below level 10 a chart is worth 0. CO-OP charts were priced at a flat 2,000 but never counted in the total." xml:space="preserve">
     <value>2차 함수: 레벨 하나의 가치는 20에서 {0}, 27에서 {1}입니다. 10레벨 미만 채보의 가치는 0입니다. CO-OP 채보는 고정 2,000으로 책정됐지만 총합에는 포함되지 않았습니다.</value>
   </data>
@@ -9166,6 +9202,9 @@
   <data name="The rainbow is expensive" xml:space="preserve">
     <value>레인보우는 비쌉니다</value>
   </data>
+  <data name="The rarest slice of every folder — the charts almost nobody holds in a top 50." xml:space="preserve">
+    <value>각 폴더에서 가장 희귀한 부분 — 상위 50에 넣는 사람이 거의 없는 채보입니다.</value>
+  </data>
   <data name="The roster is visible to everyone; management controls appear based on your role." xml:space="preserve">
     <value>멤버 목록은 모두에게 표시됩니다. 관리 기능은 역할에 따라 표시됩니다.</value>
   </data>
@@ -9273,6 +9312,9 @@
   </data>
   <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
     <value>이 공식들은 Team Infinitesimal이 NX2와 Prime에서 데이터마이닝한 것입니다. Phoenix나 Phoenix 2에서 재검증한 사람은 없으므로, 이 수치는 정확한 기체 값이 아니라 시스템의 형태로 받아들이세요.</value>
+  </data>
+  <data name="These ladders are priced against Hardmode charts only." xml:space="preserve">
+    <value>이 사다리는 Hardmode 채보만으로 계산됩니다.</value>
   </data>
   <data name="They ahead" xml:space="preserve">
     <value>상대 우세</value>
@@ -10309,6 +10351,9 @@
   <data name="What if someone cheats?" xml:space="preserve">
     <value>누가 부정행위를 하면요?</value>
   </data>
+  <data name="What is Hardmode?" xml:space="preserve">
+    <value>Hardmode란?</value>
+  </data>
   <data name="What is the meta?" xml:space="preserve">
     <value>메타가 뭔가요?</value>
   </data>
@@ -10362,6 +10407,9 @@
   </data>
   <data name="What the site uses today: grey → silver → green → gold → ice blue → prism, cut at 25 / 50 / 75 / 90 / 99 %." xml:space="preserve">
     <value>현재 사이트가 쓰는 기준: 회색 → 은색 → 초록 → 금색 → 얼음빛 파랑 → 프리즘, 25 / 50 / 75 / 90 / 99 %에서 구분.</value>
+  </data>
+  <data name="What this play added to your Hardmode pool" xml:space="preserve">
+    <value>이 플레이가 Hardmode 풀에 더한 값</value>
   </data>
   <data name="What this play added to your PUMBILITY" xml:space="preserve">
     <value>이 플레이가 PUMBILITY에 더한 값</value>
