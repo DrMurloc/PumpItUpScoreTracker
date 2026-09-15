@@ -616,6 +616,9 @@
           },
           "groupBySeed": {
             "type": "boolean"
+          },
+          "hardmodeOnly": {
+            "type": "boolean"
           }
         }
       }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -39,6 +39,8 @@ public sealed class ChartVideoPlayerTests : TestContext
         _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, double>());
         Services.AddScoped<ChartScoringLevels>();
+        // DifficultyBubble asks whether the chart is Hardmode on the same render.
+        Services.AddHardmodeStub();
         var localizer = new Mock<IStringLocalizer<App>>();
         localizer.Setup(l => l[It.IsAny<string>()])
             .Returns((string key) => new LocalizedString(key, key));

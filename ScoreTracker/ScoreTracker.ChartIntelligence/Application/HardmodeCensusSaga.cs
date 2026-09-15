@@ -1,5 +1,7 @@
 ﻿using MassTransit;
 using MediatR;
+using Microsoft.Extensions.Caching.Memory;
+using ScoreTracker.ChartIntelligence.Infrastructure;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
@@ -33,12 +35,13 @@ internal sealed class HardmodeCensusSaga :
     private readonly ILogger<HardmodeCensusSaga> _logger;
     private readonly IOfficialPoolReader _officialPools;
     private readonly IHardmodeChartRepository _repository;
+    private readonly IMemoryCache _cache;
     private readonly IChartScoringLevelRepository _scoringLevels;
     private readonly IScoreReader _scores;
 
     public HardmodeCensusSaga(IHardmodeChartRepository repository, IScoreReader scores,
         IOfficialPoolReader officialPools, IChartRepository charts, IChartScoringLevelRepository scoringLevels,
-        IDateTimeOffsetAccessor clock, IBus bus, ILogger<HardmodeCensusSaga> logger)
+        IDateTimeOffsetAccessor clock, IBus bus, IMemoryCache cache, ILogger<HardmodeCensusSaga> logger)
     {
         _repository = repository;
         _scores = scores;
@@ -48,6 +51,7 @@ internal sealed class HardmodeCensusSaga :
         _clock = clock;
         _bus = bus;
         _logger = logger;
+        _cache = cache;
     }
 
     public async Task Consume(ConsumeContext<RebuildHardmodeChartsCommand> context)
@@ -105,6 +109,9 @@ internal sealed class HardmodeCensusSaga :
             .ToArray();
 
         await _repository.Replace(mix, qualifying, _clock.Now, cancellationToken);
+        // Evict before announcing: the event's consumers reprice every account against the new
+        // list, and a stale read here would price them against last week's (D26).
+        _cache.Remove(HardmodeChartReader.CacheKey(mix));
         // Pools, not players: one account with a full singles AND doubles record contributes
         // three (combined, singles, doubles), so this reads about 3x the account count the
         // design doc quotes.

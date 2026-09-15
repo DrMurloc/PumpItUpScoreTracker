@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -65,6 +65,8 @@ public sealed class ModerationQueueTests : TestContext
         Services.AddSingleton(Options.Create(new ChartCommentsConfiguration()));
         Services.AddSingleton<IStringLocalizer<App>>(new PassThroughLocalizer());
         Services.AddScoped<ChartScoringLevels>();
+        // DifficultyBubble asks whether the chart is Hardmode on the same render.
+        Services.AddHardmodeStub();
 
         _currentUser.Setup(u => u.IsLoggedIn).Returns(true);
         _currentUser.SetupGet(u => u.User).Returns(Admin);
