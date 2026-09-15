@@ -120,6 +120,27 @@ public sealed class SeasonalBestBackfillConsumerTests
     }
 
     [Fact]
+    public async Task AClosedSeasonIsStillRebuilt()
+    {
+        // The whole point of a backfill, and the one thing the counting rule cannot do for it: there
+        // is no grace (D13), so a live import standing in Winter writes nothing into Fall. Naming the
+        // season is what lets the replay reach a window that closed — sealed or not.
+        var records = new Mock<IPhoenixRecordRepository>();
+        var winter = new DateTimeOffset(2027, 2, 10, 20, 0, 0, TimeSpan.Zero);
+        var writer = SeasonalBests.Over(records,
+            new[] { FakeSeasons.Quarter(SeasonId.From(2027, 1)), FakeSeasons.Quarter(Fall, true) }, winter);
+        GivenPlayers(Alice);
+        GivenPlays(Alice, Play(Alice, 940_000, InFall));
+
+        await new SeasonalBestBackfillConsumer(_journal.Object, writer,
+            NullLogger<SeasonalBestBackfillConsumer>.Instance).Consume(Context().Object);
+
+        records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix2, Alice,
+            It.Is<RecordedPhoenixScore>(s => s.Score!.Value == 940_000), Fall, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task PhoenixOneIsNeverBackfilled()
     {
         // Phoenix 1 has no seasons and never will (§1), so the consumer never asks about it.

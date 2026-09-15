@@ -136,9 +136,10 @@ public sealed class SeasonalBestWriterTests
     }
 
     [Fact]
-    public async Task PlaysOnBothSidesOfABoundaryGoToTheirOwnSeasons()
+    public async Task AnImportThatStraddlesABoundaryWritesOnlyTheRunningSeason()
     {
-        // The seven-day grace: two seasons accept writes at once, each from its own plays.
+        // No grace (D13): one import, two plays, and the September one is simply lost. Only Fall is
+        // writable, so the only row this can produce is Fall's.
         var records = new Mock<IPhoenixRecordRepository>();
         var writer = SeasonalBests.Over(records, Calendar, InFall);
 
@@ -149,9 +150,9 @@ public sealed class SeasonalBestWriterTests
         }, CancellationToken.None);
 
         records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix2, Player,
-            It.Is<RecordedPhoenixScore>(s => s.Score!.Value == 930_000), Summer, It.IsAny<CancellationToken>()), Times.Once);
-        records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix2, Player,
             It.Is<RecordedPhoenixScore>(s => s.Score!.Value == 940_000), Fall, It.IsAny<CancellationToken>()), Times.Once);
+        records.Verify(r => r.UpdateBestAttempt(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<RecordedPhoenixScore>(), Summer, It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -206,6 +207,41 @@ public sealed class SeasonalBestWriterTests
 
         await writer.Write(MixEnum.Phoenix2, Player, ScoreJournalEntry.OfficialImportSource,
             new[] { new SeasonalBestWriter.Candidate(Play(950_000, InFall), false) }, CancellationToken.None);
+
+        records.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task ANamedSeasonIsWrittenWhateverTheClockAndTheCalendarSay()
+    {
+        // The backfill's entry point. A rebuild replays a window that has closed, so the counting
+        // rule would refuse every one of these plays — which is right for a live import and wrong
+        // for a replay of a season we are naming outright.
+        var records = new Mock<IPhoenixRecordRepository>();
+        var writer = SeasonalBests.Over(records, Calendar, InFall);
+
+        await writer.WriteInto(MixEnum.Phoenix2, Player, Summer, new[]
+        {
+            new SeasonalBestWriter.Candidate(Play(910_000, InSummer), false),
+            new SeasonalBestWriter.Candidate(Play(945_000, InSummer.AddMinutes(6)), false)
+        }, CancellationToken.None);
+
+        records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix2, Player,
+            It.Is<RecordedPhoenixScore>(s => s.Score!.Value == 945_000), Summer, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ANamedSeasonStillRespectsTheStageBreakAndPhoenixOneGates()
+    {
+        var records = new Mock<IPhoenixRecordRepository>();
+        var writer = SeasonalBests.Over(records, Calendar, InFall);
+
+        await writer.WriteInto(MixEnum.Phoenix2, Player, Summer,
+            new[] { new SeasonalBestWriter.Candidate(Play(300_000, InSummer), false, IsStageBroken: true) },
+            CancellationToken.None);
+        await writer.WriteInto(MixEnum.Phoenix, Player, Summer,
+            new[] { new SeasonalBestWriter.Candidate(Play(950_000, InSummer), false) }, CancellationToken.None);
 
         records.VerifyNoOtherCalls();
     }

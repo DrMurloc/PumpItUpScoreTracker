@@ -22,10 +22,10 @@ public sealed class SeasonRollSagaTests
     private static readonly SeasonId Summer = SeasonId.From(2026, 3);
     private static readonly SeasonId Fall = SeasonId.From(2026, 4);
 
-    // Summer 2026 ends 2026-09-30 23:59:59 UTC-5, so its seal falls due seven days later — the same
-    // minute on 7 October, which is 04:59:59Z on the 8th. The boundary is inclusive: at this instant
-    // the seal is owed, and a second earlier it is not.
-    private static readonly DateTimeOffset SealDue = new(2026, 10, 8, 4, 59, 59, TimeSpan.Zero);
+    // Summer 2026 ends 2026-09-30 23:59:59 UTC-5, which is 04:59:59Z on 1 October. There is no
+    // grace (D13), so the seal falls due the very next second: at this instant the season is over
+    // and owed its stamp, and a second earlier it is still running.
+    private static readonly DateTimeOffset SealDue = new(2026, 10, 1, 5, 0, 0, TimeSpan.Zero);
 
     [Fact]
     public async Task TheFirstRollOfAQuarterOpensItWithMoMsWindowAndAnnouncesIt()
@@ -61,7 +61,7 @@ public sealed class SeasonRollSagaTests
     }
 
     [Fact]
-    public async Task AnEndedSeasonIsSealedTheSecondItsGraceWeekIsOverAndNotBefore()
+    public async Task AnEndedSeasonIsSealedTheSecondItsWindowClosesAndNotBefore()
     {
         var seasons = new Mock<ISeasonRepository>();
         seasons.Setup(s => s.GetAll(It.IsAny<CancellationToken>()))

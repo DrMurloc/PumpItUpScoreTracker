@@ -227,7 +227,7 @@ model references them, and no code reads them. Their PKs and indexes keep their 
 
 | Table | Purpose |
 |---|---|
-| `scores.Season` | One row per quarterly season, keyed by the calendar number `YYYYQ` (20264 = Fall 2026; never identity): `Name`, `StartsAt`, `EndsAt`, `SealedAt` (the seal — set by the roll seven days after the boundary; a sealed season is never written again) and `IsBalanced`. The season rows themselves live in the tables above under their `SeasonId`; there are no archive tables ([seasons](design/seasons.md) §6.1, D13, D14) |
+| `scores.Season` | One row per quarterly season, keyed by the calendar number `YYYYQ` (20264 = Fall 2026; never identity): `Name`, `StartsAt`, `EndsAt`, `SealedAt` (the seal — stamped by the first roll after the boundary; there is no grace, so a season stops taking writes at its boundary whether or not the stamp has landed) and `IsBalanced`. The season rows themselves live in the tables above under their `SeasonId`; there are no archive tables ([seasons](design/seasons.md) §6.1, D13, D14) |
 
 ## Archived
 

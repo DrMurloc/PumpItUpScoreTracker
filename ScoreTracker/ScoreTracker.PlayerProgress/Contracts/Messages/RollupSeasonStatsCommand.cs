@@ -9,8 +9,9 @@ namespace ScoreTracker.PlayerProgress.Contracts.Messages;
 ///     without ever running that pass.
 /// </summary>
 /// <param name="Season">
-///     One season, or null for every season still open — the running one, and an ended one still
-///     inside its seven-day grace. A sealed season is never recomputed (D13).
+///     One season, or null for every season the roll has not sealed. That is normally just the one
+///     running (D13, no grace), and briefly more after a backfill, which opens quarters without
+///     sealing them (D37). A sealed season is never recomputed.
 /// </param>
 [ExcludeFromCodeCoverage]
 public sealed record RollupSeasonStatsCommand(SeasonId? Season = null)

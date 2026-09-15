@@ -16,8 +16,9 @@ public sealed class SeasonCountingPolicyTests
     private static readonly DateTimeOffset InFall = new(2026, 11, 15, 20, 0, 0, TimeSpan.Zero);
     private static readonly DateTimeOffset BeforeSeasons = new(2026, 3, 1, 20, 0, 0, TimeSpan.Zero);
 
-    // The seven-day grace: Summer ended 2026-09-30 23:59:59 UTC-5 and is not yet sealed.
-    private static readonly DateTimeOffset InTheGrace = new(2026, 10, 3, 20, 0, 0, TimeSpan.Zero);
+    // Three days into Fall. Summer ended 2026-09-30 23:59:59 UTC-5 and the roll has not stamped
+    // it yet, which changes nothing: a closed season is closed whether or not its seal has landed.
+    private static readonly DateTimeOffset JustIntoFall = new(2026, 10, 3, 20, 0, 0, TimeSpan.Zero);
 
     private static SeasonRecord Season(SeasonId id, DateTimeOffset? sealedAt = null)
     {
@@ -32,10 +33,8 @@ public sealed class SeasonCountingPolicyTests
     private static readonly IReadOnlyList<SeasonRecord> Both = new[] { Season(Fall), Season(Summer) };
 
     [Fact]
-    public void AnInWindowPlayCountsForTheSeasonThatHoldsIt()
+    public void AnInWindowPlayCountsForTheSeasonRunningNow()
     {
-        Assert.Equal(Summer, SeasonCountingPolicy.SeasonFor(ScoreJournalEntry.OfficialImportSource, InSummer,
-            raisedExistingRecord: false, Both, InFall));
         Assert.Equal(Fall, SeasonCountingPolicy.SeasonFor(ScoreJournalEntry.OfficialImportSource, InFall,
             raisedExistingRecord: false, Both, InFall));
     }
@@ -68,28 +67,37 @@ public sealed class SeasonCountingPolicyTests
     }
 
     [Fact]
-    public void DuringTheGraceWeekAnInWindowPlayStillLandsOnTheEndedSeason()
+    public void APlayDatedInAnEndedSeasonIsLostRatherThanLanding()
     {
-        // Two seasons are live at once for seven days (D13): a play dated in September lands on
-        // Summer, one dated in October on Fall, both while the clock stands in the grace.
-        Assert.Equal(Summer, SeasonCountingPolicy.SeasonFor(ScoreJournalEntry.OfficialImportSource, InSummer,
-            raisedExistingRecord: false, Both, InTheGrace));
-        Assert.Equal(Fall, SeasonCountingPolicy.SeasonFor(ScoreJournalEntry.OfficialImportSource, InTheGrace,
-            raisedExistingRecord: false, Both, InTheGrace));
+        // No grace (D13, owner 2026-09-14). Summer closed three days ago and the roll has not sealed
+        // it yet, and it still takes nothing: a September play imported now counts for no season at
+        // all, while a play of the same import dated in October is Fall's.
+        Assert.Null(SeasonCountingPolicy.SeasonFor(ScoreJournalEntry.OfficialImportSource, InSummer,
+            raisedExistingRecord: false, Both, JustIntoFall));
+        Assert.Equal(Fall, SeasonCountingPolicy.SeasonFor(ScoreJournalEntry.OfficialImportSource, JustIntoFall,
+            raisedExistingRecord: false, Both, JustIntoFall));
+    }
+
+    [Fact]
+    public void AnUpscoreImportedAfterTheBoundaryBelongsToTheSeasonRunningNow()
+    {
+        // The other half of the same rule: the raise is something this import watched happen, so it
+        // is the new season's — never the ended one's, which is exactly what no grace means.
+        Assert.Equal(Fall, SeasonCountingPolicy.SeasonFor(ScoreJournalEntry.OfficialImportSource, InSummer,
+            raisedExistingRecord: true, Both, JustIntoFall));
     }
 
     [Fact]
     public void ASealedSeasonIsNeverWritten()
     {
-        var sealedSummer = new[] { Season(Fall), Season(Summer, sealedAt: InTheGrace) };
+        // The seal is the one thing that can stop the running season too: an admin sealing early,
+        // or a roll that stamped the quarter we stand in. Nothing is written while it holds.
+        var sealedFall = new[] { Season(Fall, sealedAt: JustIntoFall), Season(Summer) };
 
-        // A late play for the sealed season is ignored outright...
+        Assert.Null(SeasonCountingPolicy.SeasonFor(ScoreJournalEntry.OfficialImportSource, InFall,
+            raisedExistingRecord: false, sealedFall, InFall));
         Assert.Null(SeasonCountingPolicy.SeasonFor(ScoreJournalEntry.OfficialImportSource, InSummer,
-            raisedExistingRecord: false, sealedSummer, InFall));
-        // ...but a card dated inside it that raised a record we held is a raise the import watched
-        // happen, so it belongs to the season running now rather than being dropped.
-        Assert.Equal(Fall, SeasonCountingPolicy.SeasonFor(ScoreJournalEntry.OfficialImportSource, InSummer,
-            raisedExistingRecord: true, sealedSummer, InFall));
+            raisedExistingRecord: true, sealedFall, InFall));
     }
 
     [Fact]
@@ -102,8 +110,8 @@ public sealed class SeasonCountingPolicyTests
     [Fact]
     public void AnUpscoreWithNoRunningSeasonCountsForNothing()
     {
-        // Only the sealed season exists — the roll has not opened the quarter we stand in yet.
-        var onlySummer = new[] { Season(Summer, sealedAt: InTheGrace) };
+        // Only the previous season exists — the roll has not opened the quarter we stand in yet.
+        var onlySummer = new[] { Season(Summer, sealedAt: JustIntoFall) };
 
         Assert.Null(SeasonCountingPolicy.SeasonFor(ScoreJournalEntry.OfficialImportSource, InSummer,
             raisedExistingRecord: true, onlySummer, InFall));

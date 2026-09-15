@@ -45,6 +45,6 @@ internal static class FakeSeasons
             offset);
         return new SeasonRecord(id, $"Q{id.Quarter} {id.Year}",
             new DateTimeOffset(new DateTime(id.Year, month - 2, 1, 0, 0, 0), offset), ends,
-            isSealed ? ends.AddDays(7) : null, false);
+            isSealed ? ends.AddSeconds(1) : null, false);
     }
 }

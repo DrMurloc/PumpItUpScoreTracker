@@ -6,18 +6,12 @@ namespace ScoreTracker.Seasons.Domain;
 ///     The quarter arithmetic, copied from <c>MarchOfMurlocsHandler</c> so the two quarterly features
 ///     never disagree about the boundary minute (docs/design/seasons.md D36): a season is a calendar
 ///     quarter that ends at 23:59:59 UTC-5 on the last day of March, June, September or December.
-///     Pure, so the roll's idempotency and the grace week are unit-tested without a clock or a table.
+///     Pure, so the roll's idempotency and the boundary minute are unit-tested without a clock or a table.
 /// </summary>
 internal static class SeasonCalendar
 {
     /// <summary>The boundary offset March of Murlocs uses; a quarter turns over at midnight here.</summary>
     public static readonly TimeSpan Offset = TimeSpan.FromHours(-5);
-
-    /// <summary>
-    ///     D13: the roll seals a season seven days after its boundary; until then an in-window play
-    ///     still lands on the ended season.
-    /// </summary>
-    public static readonly TimeSpan Grace = TimeSpan.FromDays(7);
 
     /// <summary>Phoenix 2's first season, where the backfill starts (D23).</summary>
     public static readonly SeasonId First = SeasonId.From(2026, 3);
@@ -51,9 +45,15 @@ internal static class SeasonCalendar
         return $"{QuarterName(season.Quarter)} {season.Year}";
     }
 
-    public static bool IsPastGrace(SeasonId season, DateTimeOffset now)
+    /// <summary>
+    ///     Whether a season's window is behind us. There is no grace period (D13, owner 2026-09-14):
+    ///     a season is over at its boundary and the next roll seals it, so exactly one season is ever
+    ///     writable. You import before the season ends or the plays you did not import are lost —
+    ///     a board that kept shifting for a week after the quarter closed is not worth explaining.
+    /// </summary>
+    public static bool HasEnded(SeasonId season, DateTimeOffset now)
     {
-        return now >= EndOf(season) + Grace;
+        return now > EndOf(season);
     }
 
     private static string QuarterName(int quarter)

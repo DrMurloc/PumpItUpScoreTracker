@@ -1,7 +1,6 @@
 ﻿using MassTransit;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Domain.Models;
-using ScoreTracker.Domain.Records;
 using ScoreTracker.PlayerProgress.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.Seasons.Contracts.Events;
@@ -15,8 +14,15 @@ namespace ScoreTracker.ScoreLedger.Application;
 ///     is the point — a backfilled season and a tracked one are the same rows produced by the same
 ///     rule, so the boards cannot disagree about which of the two a player's history came from.
 ///     <para>
-///         Only the date clause of the counting rule can apply here: whether a card raised a record
-///         is import-time knowledge the journal does not keep (D15). A pre-season play that was
+///         The season is named rather than inferred, which is why this calls the writer's second
+///         entry point. A rebuild is replaying a window that has already closed, and no grace (D13)
+///         means the counting rule would refuse every one of those plays if it were asked — correctly,
+///         for a live import, and uselessly here. Naming the season is also honest about what a
+///         backfill is: not an import arriving, but a window we already know the bounds of.
+///     </para>
+///     <para>
+///         Only the date clause of the counting rule can apply here anyway: whether a card raised a
+///         record is import-time knowledge the journal does not keep (D15). A pre-season play that was
 ///         upscored in-season is therefore missed by the backfill and caught by live tracking, which
 ///         is the same asymmetry the undo replay carries.
 ///     </para>
@@ -42,7 +48,7 @@ internal sealed class SeasonalBestBackfillConsumer(IScoreJournalRepository journ
                         context.CancellationToken);
                     if (plays.Count == 0) continue;
 
-                    await seasonalBests.Write(mix, userId, ScoreJournalEntry.OfficialImportSource,
+                    await seasonalBests.WriteInto(mix, userId, e.Season,
                         plays.Select(p => new SeasonalBestWriter.Candidate(
                             new RecordedPhoenixScore(p.ChartId, p.Score, p.Plate, p.IsBroken, p.OccurredAt,
                                 p.Source, p.Judgements),

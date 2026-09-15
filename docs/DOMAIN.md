@@ -45,9 +45,10 @@ For solution layout and patterns, see [ARCHITECTURE.md](ARCHITECTURE.md). For pr
 - **Season** — a calendar quarter Phoenix 2 scores are also tracked against, so a player who started in
   April is not permanently behind one who started in 2022 ([design/seasons.md](design/seasons.md)). Keyed by
   the quarter itself as `YYYYQ` — 20264 is Fall 2026 — with `SeasonId.AllTime` (0) meaning "not a season,
-  the lifetime record". A season **opens** when the daily roll finds its quarter has no row, and is
-  **sealed** seven days after its boundary, after which nothing ever writes a row carrying its number; the
-  rows stay where they are, cold, under that number. Boundaries are MoM's: midnight UTC-5 on the first of
+  the lifetime record". A season **opens** when the daily roll finds its quarter has no row, and
+  **closes** at its boundary — there is no grace period, so a play you did not import before then is not in
+  that season, ever. The next roll **seals** it: a stamp, after which nothing writes a row carrying its
+  number; the rows stay where they are, cold, under that number. Boundaries are MoM's: midnight UTC-5 on the first of
   January, April, July and October. Phoenix 1 has no seasons and never will.
 - **Seasonal personal best** — a second best-attempt row on the same chart, carrying a season's number
   beside the all-time one, built from an empty pool at the season's start — so a run well below a player's

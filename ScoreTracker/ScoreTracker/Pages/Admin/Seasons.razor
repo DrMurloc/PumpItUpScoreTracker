@@ -112,15 +112,16 @@ else
         _seasons = await Mediator.Send(new GetSeasonsQuery());
     }
 
-    // The same message the 11:15 job publishes: open the quarter we stand in, seal any ended one
-    // past its seven days. Idempotent, so pressing it twice costs nothing.
+    // The same message the 11:15 job publishes: open the quarter we stand in, seal any whose window
+    // has closed. Idempotent, so pressing it twice costs nothing.
     private async Task RollNow()
     {
         await Publish(new RollSeasonCommand(), L["Rolling the season."].Value);
     }
 
     // Creates every quarter since Summer 2026 and asks each for its replay. The seal is left to
-    // the roll, so an ended quarter shows as "Ended, not yet sealed" until the next tick.
+    // the roll, so an ended quarter shows as "Ended, not yet sealed" until the next tick — a state
+    // about the stamp, not about writability: a closed season takes nothing either way (D13).
     private async Task Backfill()
     {
         await Publish(new BackfillSeasonsCommand(),

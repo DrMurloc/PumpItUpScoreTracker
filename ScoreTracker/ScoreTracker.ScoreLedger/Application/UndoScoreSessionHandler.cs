@@ -88,11 +88,11 @@ internal sealed class UndoScoreSessionHandler(
     }
 
     /// <summary>
-    ///     The same replay again, once per open season, with that season's window applied
+    ///     The same replay again for the running season, with its window applied
     ///     (docs/design/seasons.md §4.1): the season's best on a chart is the best surviving play
     ///     inside its window, and no surviving play in the window means the chart returns to unplayed
-    ///     for that season. Sealed seasons are skipped — nothing writes one (D13), so an undo cannot
-    ///     reach back past a seal any more than an import can.
+    ///     for that season. Only the running season, and only while unsealed — there is no grace
+    ///     (D13), so an undo cannot reach back past a boundary any more than an import can.
     ///     <para>
     ///         A row the counting rule seated on the raise clause rather than on its date — an upscore
     ///         wearing a pre-season stamp — is not reconstructible here, because whether a card raised
@@ -105,10 +105,10 @@ internal sealed class UndoScoreSessionHandler(
         IReadOnlyList<ScoreJournalEntry> survivors, CancellationToken cancellationToken)
     {
         if (chartIds.Count == 0 || !mix.HasSeasons()) return;
-        var open = (await seasons.GetSeasons(cancellationToken)).Where(s => !s.IsSealed).ToArray();
-        if (open.Length == 0) return;
+        // The running season, and only it: there is no grace (D13), so a closed season takes no
+        // further writes from an undo any more than it does from an import.
+        if (await seasons.GetSeasonAt(dateTime.Now, cancellationToken) is not { IsSealed: false } season) return;
 
-        foreach (var season in open)
         foreach (var chartId in chartIds)
         {
             // Official imports only, the same rule the writer applies (D4): the replay may not seat a

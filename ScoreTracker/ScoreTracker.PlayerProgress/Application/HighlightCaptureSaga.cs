@@ -185,11 +185,8 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         // ride the same pass, further down where the all-time ones are written.
         try
         {
-            // Every open season, not just the one the clock stands in: during the seven-day grace two
-            // are open at once and the writer routes each play by ITS OWN date, so a grace-week import
-            // can have written into the ended season while the clock reads the running one. Recomputing
-            // both is what keeps the board that is about to be sealed from missing the last plays into it.
-            foreach (var season in await OpenSeasons(e.Mix, context.CancellationToken))
+            // The running season, which is the only one an import can have written to (D13).
+            if (await RunningSeason(e.Mix, context.CancellationToken) is { } season)
                 await _mediator.Send(new PlayerRatingSaga.CaptureSessionStats(e.UserId, e.Mix,
                         e.Changes.Select(c => c.ChartId).Distinct().ToArray(), e.SessionId, e.Changes, season),
                     context.CancellationToken);
@@ -598,17 +595,15 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
     }
 
     /// <summary>
-    ///     The seasons an import may still write into (docs/design/seasons.md §1, D13): none at all
-    ///     unless the mix has seasons — Phoenix 1 never does — and otherwise every season not yet
-    ///     sealed, which is one outside the seven-day grace and two inside it.
+    ///     The one season an import can have written to (docs/design/seasons.md §1, D13): none at all
+    ///     unless the mix has seasons — Phoenix 1 never does — and otherwise the season the clock
+    ///     stands in, since there is no grace and a closed season takes no further plays.
     /// </summary>
-    private async Task<IReadOnlyList<SeasonId>> OpenSeasons(MixEnum mix, CancellationToken cancellationToken)
+    private async Task<SeasonId?> RunningSeason(MixEnum mix, CancellationToken cancellationToken)
     {
-        if (!mix.HasSeasons()) return Array.Empty<SeasonId>();
-        return (await _seasons.GetSeasons(cancellationToken))
-            .Where(s => !s.IsSealed)
-            .Select(s => s.Id)
-            .ToArray();
+        if (!mix.HasSeasons()) return null;
+        var running = await _seasons.GetSeasonAt(_dateTime.Now, cancellationToken);
+        return running is { IsSealed: false } ? running.Id : null;
     }
 
     /// <summary>
@@ -625,7 +620,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         if (touched.Count == 0) return;
         try
         {
-            foreach (var season in await OpenSeasons(e.Mix, cancellationToken))
+            if (await RunningSeason(e.Mix, cancellationToken) is { } season)
             {
                 var seasonBests = await _scores.GetBestScores(e.Mix, e.UserId, season, cancellationToken);
                 var passed = FolderLevelCalculator.PassedScores(seasonBests);
@@ -634,7 +629,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
                     .Where(l => l != null)
                     .Select(l => l!)
                     .ToArray();
-                if (levels.Length == 0) continue;
+                if (levels.Length == 0) return;
 
                 await _folderLevels.Save(e.UserId, levels, e.OccurredAt, season, cancellationToken);
             }

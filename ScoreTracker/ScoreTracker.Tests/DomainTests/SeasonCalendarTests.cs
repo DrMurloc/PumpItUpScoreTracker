@@ -43,12 +43,15 @@ public sealed class SeasonCalendarTests
     }
 
     [Fact]
-    public void TheGraceWeekEndsSevenDaysAfterTheBoundaryToTheSecond()
+    public void ASeasonHasEndedTheSecondAfterItsBoundaryAndNotAtIt()
     {
+        // No grace (D13): the last second of the quarter is still inside it, and the next second is
+        // not. The season is closed from there on, and the next roll is what stamps the seal.
         var boundary = SeasonCalendar.EndOf(Summer2026);
 
-        Assert.False(SeasonCalendar.IsPastGrace(Summer2026, boundary.AddDays(7).AddSeconds(-1)));
-        Assert.True(SeasonCalendar.IsPastGrace(Summer2026, boundary.AddDays(7)));
+        Assert.False(SeasonCalendar.HasEnded(Summer2026, boundary));
+        Assert.True(SeasonCalendar.HasEnded(Summer2026, boundary.AddSeconds(1)));
+        Assert.False(SeasonCalendar.HasEnded(Fall2026, boundary.AddSeconds(1)));
     }
 
     [Fact]

@@ -1090,7 +1090,7 @@ public sealed class PlayerRatingSagaTests
         var alice = Guid.NewGuid();
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var running = SeasonId.From(2026, 4);
-        var grace = SeasonId.From(2026, 3);
+        var ended = SeasonId.From(2026, 3);
         var old = SeasonId.From(2026, 2);
         var scores = ScoresMockReturning(alice, Array.Empty<RecordedPhoenixScore>());
         scores.Setup(s => s.GetUsersWithRecords(MixEnum.Phoenix2, It.IsAny<SeasonId>(),
@@ -1101,13 +1101,15 @@ public sealed class PlayerRatingSagaTests
         stats.Setup(s => s.GetStats(MixEnum.Phoenix2, alice, It.IsAny<SeasonId>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(ZeroStats(alice));
         var saga = BuildSaga(scores, ChartsMockReturning(new[] { chart }, MixEnum.Phoenix2), stats,
-            seasons: FakeSeasons.WithSealed(new[] { running, grace, old }, new[] { old }));
+            seasons: FakeSeasons.WithSealed(new[] { running, ended, old }, new[] { old }));
 
         await saga.Consume(ConsumeOf(new RollupSeasonStatsCommand()));
 
         stats.Verify(s => s.SaveStats(MixEnum.Phoenix2, alice, It.IsAny<PlayerStatsRecord>(), running,
             It.IsAny<CancellationToken>()), Times.Once);
-        stats.Verify(s => s.SaveStats(MixEnum.Phoenix2, alice, It.IsAny<PlayerStatsRecord>(), grace,
+        // An ended season the roll has not stamped yet — what a backfill leaves behind (D37) —
+        // is still priced. Only the seal stops the rollup.
+        stats.Verify(s => s.SaveStats(MixEnum.Phoenix2, alice, It.IsAny<PlayerStatsRecord>(), ended,
             It.IsAny<CancellationToken>()), Times.Once);
         stats.Verify(s => s.SaveStats(MixEnum.Phoenix2, alice, It.IsAny<PlayerStatsRecord>(), old,
             It.IsAny<CancellationToken>()), Times.Never);

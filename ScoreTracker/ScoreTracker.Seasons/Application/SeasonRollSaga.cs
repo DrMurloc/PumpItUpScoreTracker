@@ -11,9 +11,10 @@ namespace ScoreTracker.Seasons.Application;
 
 /// <summary>
 ///     The roll (docs/design/seasons.md §7, D13): stateless like March of Murlocs' scheduler. "Does
-///     the quarter I stand in have its row?" — create it; then every ended season past its seven
-///     days and not yet sealed gets its stamp. Each step is idempotent on its own, so a crash between
-///     them resumes on the next tick, and Roll now on the console is the same message.
+///     the quarter I stand in have its row?" — create it; then every ended season not yet sealed gets
+///     its stamp. There is no grace (D13): a season is closed at its boundary, so the seal is the next
+///     roll after it and one season is writable at a time. Each step is idempotent on its own, so a
+///     crash between them resumes on the next tick, and Roll now on the console is the same message.
 /// </summary>
 internal sealed class SeasonRollSaga(ISeasonRepository seasons, IDateTimeOffsetAccessor dateTime,
         ILogger<SeasonRollSaga> logger)
@@ -34,7 +35,7 @@ internal sealed class SeasonRollSaga(ISeasonRepository seasons, IDateTimeOffsetA
             await context.Publish(new SeasonOpenedEvent(opened.Id, opened.StartsAt, opened.EndsAt), cancellationToken);
         }
 
-        foreach (var ended in existing.Where(s => !s.IsSealed && SeasonCalendar.IsPastGrace(s.Id, now)))
+        foreach (var ended in existing.Where(s => !s.IsSealed && SeasonCalendar.HasEnded(s.Id, now)))
         {
             await seasons.Seal(ended.Id, now, cancellationToken);
             logger.LogInformation("Season {Season} ({Name}) sealed", ended.Id, ended.Name);
