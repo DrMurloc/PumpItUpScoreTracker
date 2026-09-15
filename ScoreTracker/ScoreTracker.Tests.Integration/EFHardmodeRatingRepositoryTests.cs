@@ -96,8 +96,9 @@ public sealed class EFHardmodeRatingRepositoryTests : IAsyncLifetime
         var board = await BuildRepository().GetBoard(Mix, null, null, CancellationToken.None);
 
         // Guid.Empty stands in for "nobody" in the read. Compared against a nullable instead,
-        // SQL's `UserId <> NULL` is unknown for every row and the count would read zero while
-        // the rows were filtered correctly - a disagreement with no symptom on the page.
+        // SQL's `stats.UserId = NULL` is unknown rather than false, so the "or it is your own
+        // row" arm never fires - invisible for an anonymous read, which has no own row, and the
+        // reason the substitution is made at the top of the method rather than per-arm.
         Assert.Equal(new[] { top }, board.Rows.Select(r => r.UserId));
     }
 

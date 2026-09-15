@@ -27,9 +27,9 @@ public sealed class HardmodeCharts
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IHardmodeChartReader _reader;
     private readonly IUiSettingsAccessor _settings;
-    private readonly Dictionary<MixEnum, Task<IReadOnlySet<Guid>>> _byMix = new();
+    private readonly Dictionary<MixEnum, IReadOnlySet<Guid>> _byMix = new();
     private readonly SemaphoreSlim _lock = new(1, 1);
-    private Task<bool>? _enabled;
+    private bool? _enabled;
 
     public HardmodeCharts(IHardmodeChartReader reader, IUiSettingsAccessor settings,
         ICurrentUserAccessor currentUser)
@@ -51,10 +51,11 @@ public sealed class HardmodeCharts
     ///         same reason.
     ///     </para>
     /// </summary>
-    public Task<bool> IsEnabled()
+    public async Task<bool> IsEnabled()
     {
-        if (!_currentUser.IsLoggedIn) return Task.FromResult(true);
-        return _enabled ??= ReadEnabled();
+        if (!_currentUser.IsLoggedIn) return true;
+        // The result, not the task - same reason as Qualifying below.
+        return _enabled ??= await _settings.GetSetting(SettingKey) is null;
     }
 
     /// <summary>
@@ -68,38 +69,36 @@ public sealed class HardmodeCharts
         return (await Qualifying(mix, cancellationToken)).Contains(chartId);
     }
 
+    /// <summary>
+    ///     The mix's list, read once per circuit.
+    ///     <para>
+    ///         ⚠ Memoizes the RESULT, never the Task, which is what <c>ChartScoringLevels</c> does
+    ///         and why. A cached faulted task is permanent: one transient database error while the
+    ///         first bubble on a page resolves would rethrow from every later bubble's
+    ///         <c>OnParametersSetAsync</c> for the life of the circuit — hours — killing it on
+    ///         each reconnect, on nearly every page of the site now that the glow is everywhere.
+    ///         Storing the result instead leaves the slot empty on failure, so the next render
+    ///         retries. It also means the read cannot inherit the first caller's cancellation.
+    ///     </para>
+    /// </summary>
     private async Task<IReadOnlySet<Guid>> Qualifying(MixEnum mix, CancellationToken cancellationToken)
     {
-        // The lock guards the DICTIONARY, not the read: several bubbles render concurrently on
-        // one circuit, and two of them racing to add the same mix would both issue the query.
+        // The lock is held ACROSS the read, so two bubbles racing on a cold mix issue one query
+        // rather than two. It is one query per circuit, so the contention is a non-issue and the
+        // alternative — releasing first — is what reintroduces the double read.
         await _lock.WaitAsync(cancellationToken);
-        Task<IReadOnlySet<Guid>> task;
         try
         {
-            if (!_byMix.TryGetValue(mix, out var existing))
-            {
-                existing = Read(mix, cancellationToken);
-                _byMix[mix] = existing;
-            }
-
-            task = existing;
+            if (_byMix.TryGetValue(mix, out var cached)) return cached;
+            var charts = await _reader.GetQualifyingCharts(mix, cancellationToken);
+            var ids = charts.Select(c => c.ChartId).ToHashSet();
+            _byMix[mix] = ids;
+            return ids;
         }
         finally
         {
             _lock.Release();
         }
-
-        return await task;
     }
 
-    private async Task<IReadOnlySet<Guid>> Read(MixEnum mix, CancellationToken cancellationToken)
-    {
-        var charts = await _reader.GetQualifyingCharts(mix, cancellationToken);
-        return charts.Select(c => c.ChartId).ToHashSet();
-    }
-
-    private async Task<bool> ReadEnabled()
-    {
-        return await _settings.GetSetting(SettingKey) is null;
-    }
 }

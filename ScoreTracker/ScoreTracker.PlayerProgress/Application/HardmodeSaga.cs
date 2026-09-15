@@ -72,7 +72,8 @@ internal sealed class HardmodeSaga :
         HardmodePoolMove Doubles,
         IReadOnlySet<Guid> Qualifying,
         IReadOnlyDictionary<Guid, int> Ranks,
-        IReadOnlyDictionary<Guid, double> Gains)
+        IReadOnlyDictionary<Guid, double> Gains,
+        bool Persisted = false)
     {
         /// <summary>A mix with no census — every consumer reads this as "Hardmode is not live here".</summary>
         public static HardmodeReprice None { get; } = new(HardmodePoolMove.None, HardmodePoolMove.None,
@@ -148,8 +149,12 @@ internal sealed class HardmodeSaga :
         if (qualifying.Count == 0) return HardmodeReprice.None;
 
         // Read before write, because the announcement is the DIFFERENCE and Save overwrites it.
-        // An account the sweep has never reached has no row, which reads as three zeroes — the
-        // same thing a first-ever qualifying score should announce.
+        //
+        // ⚠ A NULL row is not "zeroes". Save only touches accounts that already have a
+        // PlayerStats row, so a null here means the write below is going to skip this account
+        // entirely — and announcing "0 → N" against a number nothing persisted would mint the
+        // identical milestone again on the next import, and the one after. An existing row with
+        // zeroed Hardmode columns is the real first-ever case and comes back as a row.
         var before = await _ratings.Get(request.Mix, request.UserId, cancellationToken);
         var priced = await Priced(request.Mix, request.UserId, qualifying, cancellationToken);
         var after = Row(request.UserId, priced.Select(p => (p.Chart.Type, p.Value)).ToArray());
@@ -173,7 +178,7 @@ internal sealed class HardmodeSaga :
 
         return new HardmodeReprice(combined, singles, doubles,
             qualifying.Select(c => c.ChartId).ToHashSet(), ranks,
-            Gains(request, priced, qualifying));
+            Gains(request, priced, qualifying), before != null);
     }
 
     /// <summary>

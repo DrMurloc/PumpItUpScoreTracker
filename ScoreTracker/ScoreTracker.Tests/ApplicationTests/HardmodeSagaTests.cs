@@ -353,6 +353,48 @@ public sealed class HardmodeSagaTests
     }
 
     [Fact]
+    public async Task AnAccountWithNoStatsRowAnnouncesNothingBecauseNothingWasStored()
+    {
+        // ⚠ Save only touches accounts that already have a PlayerStats row, so this one's total
+        // is never persisted. Announcing "0 → N" against it would mint the identical milestone
+        // on the next import, and the one after. Normally unreachable - the rating step creates
+        // the row first - but that step is failure-isolated and this one runs regardless.
+        // Bug check, 2026-09-15.
+        var charts = Enumerable.Range(0, 3).Select(_ => Qualifying(21, ChartType.Single)).ToArray();
+        var ratings = new Mock<IHardmodeRatingRepository>();
+        var saga = Build(charts, Array.Empty<(Guid, Chart, int)>(), ratings, qualifying: charts,
+            bests: charts.Select((c, i) => (c, 990_000 - i * 10_000)).ToArray(),
+            before: null);
+
+        var result = await saga.Handle(new HardmodeSaga.RepriceHardmodePool(Guid.NewGuid(), MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.False(result.Persisted);
+        // The totals are still reported - the page reads live and is unaffected; it is the
+        // MILESTONE that has to stay silent.
+        Assert.True(result.Combined.New > 0);
+    }
+
+    [Fact]
+    public async Task AnExistingRowWithZeroesIsAGenuineFirstGain()
+    {
+        // The distinction the null check turns on: a row that EXISTS and is zeroed is the real
+        // first-ever Hardmode score, and it must announce.
+        var chart = Qualifying(21, ChartType.Single);
+        var user = Guid.NewGuid();
+        var ratings = new Mock<IHardmodeRatingRepository>();
+        var saga = Build(new[] { chart }, Array.Empty<(Guid, Chart, int)>(), ratings,
+            qualifying: new[] { chart }, bests: new[] { (chart, 970_000) },
+            before: new HardmodeRatingRow(user, 0, 0, 0, 0, 0, 0));
+
+        var result = await saga.Handle(new HardmodeSaga.RepriceHardmodePool(user, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.True(result.Persisted);
+        Assert.True(result.Combined.Gained);
+    }
+
+    [Fact]
     public async Task ABatchBeforeTheFirstCensusAnnouncesNothing()
     {
         var ratings = new Mock<IHardmodeRatingRepository>();

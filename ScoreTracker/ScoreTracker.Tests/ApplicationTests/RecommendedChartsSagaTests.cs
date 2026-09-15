@@ -127,6 +127,36 @@ public sealed class RecommendedChartsSagaTests
     }
 
     [Fact]
+    public async Task HardmodeOnlyNarrowsTheLevelBandRatherThanReplacingIt()
+    {
+        // ⚠ The regression this pins: `window` is a SENTINEL in Revisit Old Scores and Fill Gaps
+        // - null means "use my own default band". Composing the Hardmode filter into it turned
+        // null into non-null and deleted those bands, so a competitive-17 player who ticked
+        // "Hardmode charts only" was offered charts from every level in the game.
+        //
+        // Observed through the tier-list reads, which are what the band drives: the legacy
+        // CL-2..CL range asks for 15, 16 and 17. Under the bug the range became "every level
+        // present in the Hardmode list", so it asked for 26 and never for 15. Bug check,
+        // 2026-09-15.
+        var nearby = new ChartBuilder().WithType(ChartType.Single).WithLevel(16).Build();
+        var farAbove = new ChartBuilder().WithType(ChartType.Single).WithLevel(26).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCompetitiveLevel(17)
+            .WithCharts(nearby, farAbove)
+            // Both qualify, so only the LEVEL band can tell them apart.
+            .WithHardmodeCharts(nearby, farAbove);
+
+        await ctx.Saga.Handle(
+            new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0, HardmodeOnly: true),
+            CancellationToken.None);
+
+        ctx.Mediator.Verify(m => m.Send(It.Is<GetMyRelativeTierListQuery>(q => (int)q.Level == 15),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+        ctx.Mediator.Verify(m => m.Send(It.Is<GetMyRelativeTierListQuery>(q => (int)q.Level == 26),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task WithoutTheFilterEveryChartStaysEligible()
     {
         var qualifying = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();

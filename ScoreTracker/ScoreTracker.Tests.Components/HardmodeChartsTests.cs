@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -65,6 +65,31 @@ public sealed class HardmodeChartsTests
         settings.Verify(s => s.GetSetting(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<Guid?>()),
             Times.Once);
         reader.Verify(h => h.GetQualifyingCharts(MixEnum.Phoenix2, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ATransientReadFailureDoesNotPoisonTheCircuit()
+    {
+        // ⚠ Memoizing the TASK would cache the fault for the life of the circuit - hours - and
+        // every later bubble would rethrow from OnParametersSetAsync, killing the circuit on
+        // each reconnect, on nearly every page of the site. ChartScoringLevels stores the
+        // awaited value for exactly this reason. Bug check, 2026-09-15.
+        var settings = new Mock<IUiSettingsAccessor>();
+        settings.Setup(s => s.GetSetting(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<Guid?>()))
+            .ReturnsAsync((string?)null);
+        var reader = new Mock<IHardmodeChartReader>();
+        var calls = 0;
+        reader.Setup(h => h.GetQualifyingCharts(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .Returns(() => ++calls == 1
+                ? Task.FromException<IReadOnlyList<HardmodeChartEntry>>(new TimeoutException("transient"))
+                : Task.FromResult<IReadOnlyList<HardmodeChartEntry>>(new[] { Entry(Chart) }));
+        var marks = Build(settings, loggedIn: true, reader: reader);
+
+        await Assert.ThrowsAsync<TimeoutException>(() => marks.IsMarked(MixEnum.Phoenix2, Chart));
+
+        // The next render retries rather than rethrowing the first failure forever.
+        Assert.True(await marks.IsMarked(MixEnum.Phoenix2, Chart));
+        Assert.Equal(2, calls);
     }
 
     [Fact]

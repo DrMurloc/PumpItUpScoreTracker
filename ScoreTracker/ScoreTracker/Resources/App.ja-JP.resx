@@ -4047,6 +4047,9 @@
   <data name="in your communities" xml:space="preserve">
     <value>自分のコミュニティ内</value>
   </data>
+  <data name="In your Hardmode fifty" xml:space="preserve">
+    <value>Hardmode のトップ50入り</value>
+  </data>
   <data name="In your Hardmode pool" xml:space="preserve">
     <value>ハードモードプール内</value>
   </data>

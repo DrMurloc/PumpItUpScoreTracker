@@ -4030,6 +4030,9 @@
   <data name="in your communities" xml:space="preserve">
     <value>내 커뮤니티 소속</value>
   </data>
+  <data name="In your Hardmode fifty" xml:space="preserve">
+    <value>Hardmode 상위 50 안</value>
+  </data>
   <data name="In your Hardmode pool" xml:space="preserve">
     <value>내 하드모드 풀에 있음</value>
   </data>

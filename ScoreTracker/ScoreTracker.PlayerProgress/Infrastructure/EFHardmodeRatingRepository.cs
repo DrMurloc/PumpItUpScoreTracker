@@ -92,8 +92,9 @@ internal sealed class EFHardmodeRatingRepository : IHardmodeRatingRepository
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         // Guid.Empty stands in for an anonymous viewer rather than comparing against a nullable:
-        // SQL's three-valued logic makes `UserId = NULL` unknown, so a null viewer would match
-        // nobody and silently drop every row VisibleTo means to let through.
+        // SQL's three-valued logic makes `stats.UserId = NULL` unknown rather than false, so the
+        // "or it is your own row" arm would never fire. Public rows still come back on the other
+        // arm, which is why this reads as correct until a private viewer loses their own row.
         var viewer = viewerId ?? Guid.Empty;
 
         var rows = await VisibleTo(database, mix, viewer)

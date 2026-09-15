@@ -92,19 +92,20 @@ namespace ScoreTracker.PlayerProgress.Application
 
             // Hardmode is a FILTER over whichever goal was picked, not a sixth goal (D23): Score
             // Push becomes "improve the Hardmode scores you hold", Fill Gaps becomes "Hardmode
-            // charts you could pass". It composes into the level window because that predicate is
-            // already threaded through every builder that selects candidates - narrowing the
-            // chart DICTIONARY instead would break the builders that index it by a score's chart
-            // id, which is a different set. Builders with no window get the closing filter.
+            // charts you could pass".
+            //
+            // ⚠ It rides its OWN predicate rather than composing into the level window, because
+            // `window` is a sentinel: null means "use my own default band", and two builders read
+            // it that way. Folding the filter in turned null into non-null and deleted those
+            // bands outright, so Fill Gaps with Hardmode ticked offered a competitive-17 player
+            // D28s. Narrowing the chart DICTIONARY is the other wrong answer - several builders
+            // index it by a score's chart id, which is a different set. Builders that take
+            // neither get the closing filter at the end.
             var hardmodeOnly = request.HardmodeOnly
                 ? (await _hardmodeCharts.GetQualifyingCharts(mix, cancellationToken))
                     .Select(c => c.ChartId).ToHashSet()
                 : null;
-            if (hardmodeOnly != null)
-            {
-                var levelWindow = window;
-                window = chart => (levelWindow == null || levelWindow(chart)) && hardmodeOnly.Contains(chart.Id);
-            }
+            Func<Chart, bool>? eligible = hardmodeOnly == null ? null : c => hardmodeOnly.Contains(c.Id);
 
             var result = Enumerable.Empty<ChartRecommendation>();
             if (Include(RecommendationCategory.PushLevel))
@@ -116,23 +117,25 @@ namespace ScoreTracker.PlayerProgress.Application
                     playerStats.DoublesCompetitiveLevel, request.LevelOffset, feedback, request.ChartType, charts));
             if (Include(RecommendationCategory.FillScores))
                 result = result.Concat(await GetPassFills(mix, feedback, cancellationToken, competitiveLevel, scores,
-                    request.ChartType, request.LevelOffset, charts, window));
+                    request.ChartType, request.LevelOffset, charts, window, eligible));
             if (Include(RecommendationCategory.SkillTitles))
                 result = result.Concat(
                     await GetSkillTitleCharts(mix, feedback, cancellationToken, titles, request.ChartType, charts));
             if (Include(RecommendationCategory.RevisitOldScores))
                 result = result.Concat(await GetOldScores(mix, cancellationToken, competitiveLevel, scores, feedback,
-                    request.ChartType, request.LevelOffset, charts, window));
+                    request.ChartType, request.LevelOffset, charts, window, eligible));
             if (Include(RecommendationCategory.PushPGs))
                 result = result.Concat(
-                    await GetPGPushes(mix, feedback, cancellationToken, scores, request.ChartType, charts, window));
+                    await GetPGPushes(mix, feedback, cancellationToken, scores, request.ChartType, charts, window,
+                        eligible));
             if (Include(RecommendationCategory.ImproveTop50))
                 result = result.Concat(
                     await GetRandomFromTop50Charts(mix, feedback, request.ChartType, cancellationToken, charts,
-                        window));
+                        window, eligible));
             if (Include(RecommendationCategory.PushPumbility))
                 result = result.Concat(
-                    await GetPumbilityPushes(mix, feedback, request.ChartType, cancellationToken, charts, window));
+                    await GetPumbilityPushes(mix, feedback, request.ChartType, cancellationToken, charts, window,
+                        eligible));
             // Hot Streak runs only when explicitly requested: null Categories means the
             // every-category callers that predate the goal, and they must not start
             // paying for highlight and cohort reads.
@@ -391,7 +394,7 @@ namespace ScoreTracker.PlayerProgress.Application
             CancellationToken cancellationToken,
             DifficultyLevel competitiveLevel, RecordedPhoenixScore[] scores,
             IDictionary<string, ISet<Guid>> ignoredChartIds, ChartType? chartType, int levelOffset,
-            IDictionary<Guid, Chart> charts, Func<Chart, bool>? window)
+            IDictionary<Guid, Chart> charts, Func<Chart, bool>? window, Func<Chart, bool>? eligible)
         {
             // An explicit window replaces the legacy CL−2..CL band. With the scoring-level
             // basis the in-window charts' PRINTED levels drive which relative tier lists to
@@ -424,6 +427,7 @@ namespace ScoreTracker.PlayerProgress.Application
             var chartIds =
                 charts.Values
                     .Where(c => window?.Invoke(c) ?? (c.Level >= competitiveLevel - 2 && c.Level <= competitiveLevel))
+                    .Where(c => eligible == null || eligible(c))
                     .Select(c => c.Id)
                     .Distinct()
                     .ToHashSet();
@@ -451,7 +455,8 @@ namespace ScoreTracker.PlayerProgress.Application
 
         private async Task<IEnumerable<ChartRecommendation>> GetRandomFromTop50Charts(MixEnum mix,
             IDictionary<string, ISet<Guid>> ignoredChartIds, ChartType? chartType,
-            CancellationToken cancellationToken, IDictionary<Guid, Chart> charts, Func<Chart, bool>? window)
+            CancellationToken cancellationToken, IDictionary<Guid, Chart> charts, Func<Chart, bool>? window,
+            Func<Chart, bool>? eligible)
         {
             var skipped = ignoredChartIds.TryGetValue(RecommendationCategories.ImproveTop50, out var r)
                 ? r
@@ -465,6 +470,7 @@ namespace ScoreTracker.PlayerProgress.Application
                         cancellationToken)).Where(c => c.Score != null && c.Score < 1000000)
                     .Where(c => !skipped.Contains(c.ChartId))
                     .Where(c => window == null || (charts.TryGetValue(c.ChartId, out var chart) && window(chart)))
+                    .Where(c => eligible == null || (charts.TryGetValue(c.ChartId, out var e) && eligible(e)))
                     .OrderBy(c => random.Next(int.MaxValue))
                     .Take(chartType == ChartType.Single ? 6 : 3));
 
@@ -474,6 +480,7 @@ namespace ScoreTracker.PlayerProgress.Application
                         cancellationToken)).Where(c => c.Score != null && c.Score < 1000000)
                     .Where(c => !skipped.Contains(c.ChartId))
                     .Where(c => window == null || (charts.TryGetValue(c.ChartId, out var chart) && window(chart)))
+                    .Where(c => eligible == null || (charts.TryGetValue(c.ChartId, out var e) && eligible(e)))
                     .OrderBy(c => random.Next(int.MaxValue))
                     .Take(chartType == ChartType.Double ? 6 : 3));
             return result
@@ -495,7 +502,8 @@ namespace ScoreTracker.PlayerProgress.Application
         /// </summary>
         private async Task<IEnumerable<ChartRecommendation>> GetPumbilityPushes(MixEnum mix,
             IDictionary<string, ISet<Guid>> ignoredChartIds, ChartType? chartType,
-            CancellationToken cancellationToken, IDictionary<Guid, Chart> charts, Func<Chart, bool>? window)
+            CancellationToken cancellationToken, IDictionary<Guid, Chart> charts, Func<Chart, bool>? window,
+            Func<Chart, bool>? eligible)
         {
             var skipped = ignoredChartIds.TryGetValue(RecommendationCategories.PushPumbility, out var s)
                 ? s
@@ -513,6 +521,7 @@ namespace ScoreTracker.PlayerProgress.Application
                 .Where(kv => kv.Value > 0 && charts.ContainsKey(kv.Key) && !skipped.Contains(kv.Key))
                 .Where(kv => chartType == null || charts[kv.Key].Type == chartType)
                 .Where(kv => window == null || window(charts[kv.Key]))
+                .Where(kv => eligible == null || eligible(charts[kv.Key]))
                 .OrderByDescending(kv => kv.Value)
                 .Take(PumbilityPushDrawPool)
                 .ToArray();
@@ -547,7 +556,7 @@ namespace ScoreTracker.PlayerProgress.Application
         private async Task<IEnumerable<ChartRecommendation>> GetPGPushes(MixEnum mix,
             IDictionary<string, ISet<Guid>> ignoredChartIds, CancellationToken cancellationToken,
             RecordedPhoenixScore[] scores, ChartType? chartType, IDictionary<Guid, Chart> charts,
-            Func<Chart, bool>? window)
+            Func<Chart, bool>? window, Func<Chart, bool>? eligible)
         {
             var skipped = ignoredChartIds.TryGetValue(RecommendationCategories.PushPGs, out var c)
                 ? c
@@ -559,6 +568,7 @@ namespace ScoreTracker.PlayerProgress.Application
                     (chartType == null || charts[s.ChartId].Type == chartType))
                 .Where(s => !skipped.Contains(s.ChartId))
                 .Where(s => window == null || (charts.TryGetValue(s.ChartId, out var chart) && window(chart)))
+                .Where(s => eligible == null || (charts.TryGetValue(s.ChartId, out var c) && eligible(c)))
                 .OrderByDescending(s => charts[s.ChartId].Level)
                 .ThenBy(s => 1000000 - s.Score)
                 .Take(6)
@@ -570,7 +580,7 @@ namespace ScoreTracker.PlayerProgress.Application
         private async Task<IEnumerable<ChartRecommendation>> GetPassFills(MixEnum mix,
             IDictionary<string, ISet<Guid>> ignoredChartIds, CancellationToken cancellationToken,
             DifficultyLevel competitiveLevel, RecordedPhoenixScore[] scores, ChartType? chartType, int levelOffset,
-            IDictionary<Guid, Chart> charts, Func<Chart, bool>? window)
+            IDictionary<Guid, Chart> charts, Func<Chart, bool>? window, Func<Chart, bool>? eligible)
         {
             var skipped = ignoredChartIds.TryGetValue(RecommendationCategories.FillScores, out var c)
                 ? c
@@ -581,6 +591,7 @@ namespace ScoreTracker.PlayerProgress.Application
 
             var chartsResults = charts.Values
                 .Where(c => window?.Invoke(c) ?? includedLevels.Contains(c.Level))
+                .Where(c => eligible == null || eligible(c))
                 .Where(c => chartType == null || c.Type == chartType)
                 .ToDictionary(c => c.Id);
 

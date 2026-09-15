@@ -4046,6 +4046,9 @@
   <data name="in your communities" xml:space="preserve">
     <value>dans vos communautés</value>
   </data>
+  <data name="In your Hardmode fifty" xml:space="preserve">
+    <value>Dans vos cinquante Hardmode</value>
+  </data>
   <data name="In your Hardmode pool" xml:space="preserve">
     <value>Dans votre pool Hardmode</value>
   </data>

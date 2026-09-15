@@ -868,6 +868,32 @@ public sealed class HighlightCaptureSagaTests
     }
 
     [Fact]
+    public async Task ATotalThatWasNeverStoredIsNeverAnnounced()
+    {
+        // ⚠ Save only touches accounts with an existing PlayerStats row. Announcing a gain
+        // against a number nothing persisted mints the identical milestone on every subsequent
+        // import, forever. The skull itself still lands - the flag is about the score, not the
+        // board row. Bug check, 2026-09-15.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 950000);
+        ctx.GivenHardmodeStep(new HardmodeSaga.HardmodePoolMove(0, 3339.22, 11, 102, 301),
+            ranks: new Dictionary<Guid, int> { [chart.Id] = 4 }, persisted: false);
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Milestones.Verify(m => m.Append(It.IsAny<MixEnum>(), UserId,
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w => w.Any(x =>
+                x.Kind == MilestoneKind.HardmodePumbilityGain)),
+            It.IsAny<CancellationToken>()), Times.Never);
+        ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), UserId,
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.Flags.HasFlag(HighlightFlags.HardmodeTop50))),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task AFailedHardmodeStepStillPublishesTheSnapshot()
     {
         // Failure-isolated like the rating and title steps: a second board's total is never
@@ -983,9 +1009,15 @@ public sealed class HighlightCaptureSagaTests
         ///     What the Hardmode reprice reported for this batch — the three pools' movement, and
         ///     the combined-fifty slots and gains that decide the skull badge.
         /// </summary>
+        /// <param name="persisted">
+        ///     Whether the reprice found a PlayerStats row to write to. True is the normal case;
+        ///     false is an account the rating step never created a row for, whose total was
+        ///     therefore never stored and must not be announced.
+        /// </param>
         public void GivenHardmodeStep(HardmodeSaga.HardmodePoolMove combined,
             IReadOnlyDictionary<Guid, int>? ranks = null, IReadOnlyDictionary<Guid, double>? gains = null,
-            HardmodeSaga.HardmodePoolMove? singles = null, HardmodeSaga.HardmodePoolMove? doubles = null)
+            HardmodeSaga.HardmodePoolMove? singles = null, HardmodeSaga.HardmodePoolMove? doubles = null,
+            bool persisted = true)
         {
             Mediator.Setup(m => m.Send(It.IsAny<HardmodeSaga.RepriceHardmodePool>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new HardmodeSaga.HardmodeReprice(combined,
@@ -993,7 +1025,8 @@ public sealed class HighlightCaptureSagaTests
                     doubles ?? HardmodeSaga.HardmodePoolMove.None,
                     (ranks ?? new Dictionary<Guid, int>()).Keys.ToHashSet(),
                     ranks ?? new Dictionary<Guid, int>(),
-                    gains ?? new Dictionary<Guid, double>()));
+                    gains ?? new Dictionary<Guid, double>(),
+                    persisted));
         }
 
         public void GivenTitleStep(PlayerMilestoneRecord[] milestones, params TitleProgressDelta[] progress)

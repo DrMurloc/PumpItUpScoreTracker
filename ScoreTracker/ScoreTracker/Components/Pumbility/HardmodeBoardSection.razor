@@ -167,8 +167,6 @@
     private (MixEnum Mix, ChartType? Pool, Source Source)? _loadedFor;
     private IReadOnlyList<Row> _rows = Array.Empty<Row>();
 
-    /// <summary>How many accounts stand on this board that the viewer may not see (D17).</summary>
-
     private string PoolLabel => Pool switch
     {
         ChartType.Single => L["Singles"],

@@ -414,6 +414,11 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
     private List<PlayerMilestoneWrite> HardmodeMilestones(HardmodeSaga.HardmodeReprice hardmode, Guid? sessionId)
     {
         var lamps = new List<PlayerMilestoneWrite>();
+        // Nothing to announce if nothing was stored: an account with no PlayerStats row is
+        // skipped by the write, and a milestone against an unpersisted number repeats itself on
+        // every subsequent import. Normally unreachable - the rating step creates the row first -
+        // but that step is failure-isolated and this one runs regardless.
+        if (!hardmode.Persisted) return lamps;
         Add(MilestoneKind.HardmodePumbilityGain, hardmode.Combined);
         Add(MilestoneKind.HardmodeSinglesPumbilityGain, hardmode.Singles);
         Add(MilestoneKind.HardmodeDoublesPumbilityGain, hardmode.Doubles);
