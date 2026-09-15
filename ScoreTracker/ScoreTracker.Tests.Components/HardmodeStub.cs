@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
@@ -31,6 +31,7 @@ internal static class HardmodeStub
             .ReturnsAsync(Array.Empty<HardmodeChartEntry>());
         services.AddSingleton(reader.Object);
         services.TryAddUiSettings();
+        services.TryAddCurrentUser();
         services.AddScoped<HardmodeCharts>();
         return services;
     }
@@ -39,5 +40,15 @@ internal static class HardmodeStub
     {
         if (services.Any(d => d.ServiceType == typeof(IUiSettingsAccessor))) return;
         services.AddSingleton(new Mock<IUiSettingsAccessor>().Object);
+    }
+
+    /// <summary>
+    ///     The mark short-circuits for a signed-out viewer rather than reading a setting, so it
+    ///     needs to know which one it has.
+    /// </summary>
+    private static void TryAddCurrentUser(this IServiceCollection services)
+    {
+        if (services.Any(d => d.ServiceType == typeof(ICurrentUserAccessor))) return;
+        services.AddSingleton(new Mock<ICurrentUserAccessor>().Object);
     }
 }

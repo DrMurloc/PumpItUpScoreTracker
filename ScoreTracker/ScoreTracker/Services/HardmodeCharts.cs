@@ -1,4 +1,4 @@
-using ScoreTracker.Domain.SecondaryPorts;
+﻿using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Services.Contracts;
 
@@ -24,24 +24,36 @@ public sealed class HardmodeCharts
     /// </summary>
     public const string SettingKey = "Universal__HideHardmodeMark";
 
+    private readonly ICurrentUserAccessor _currentUser;
     private readonly IHardmodeChartReader _reader;
     private readonly IUiSettingsAccessor _settings;
     private readonly Dictionary<MixEnum, Task<IReadOnlySet<Guid>>> _byMix = new();
     private readonly SemaphoreSlim _lock = new(1, 1);
     private Task<bool>? _enabled;
 
-    public HardmodeCharts(IHardmodeChartReader reader, IUiSettingsAccessor settings)
+    public HardmodeCharts(IHardmodeChartReader reader, IUiSettingsAccessor settings,
+        ICurrentUserAccessor currentUser)
     {
         _reader = reader;
         _settings = settings;
+        _currentUser = currentUser;
     }
 
     /// <summary>
     ///     Whether this viewer marks Hardmode charts at all. Defaults on, and a signed-out
     ///     visitor has no settings to read — they get the default like anyone else.
+    ///     <para>
+    ///         ⚠ The signed-out branch must SHORT-CIRCUIT rather than ask the settings accessor.
+    ///         Its anonymous path is ProtectedBrowserStorage, which is JS interop and throws
+    ///         outside a live circuit — and the difficulty bubble renders on statically-rendered
+    ///         pages (the chart page, the weekly charts page), so asking there 500s the page for
+    ///         every signed-out visitor. <c>ScoreColorPreferences</c> guards the same way for the
+    ///         same reason.
+    ///     </para>
     /// </summary>
     public Task<bool> IsEnabled()
     {
+        if (!_currentUser.IsLoggedIn) return Task.FromResult(true);
         return _enabled ??= ReadEnabled();
     }
 
