@@ -826,6 +826,11 @@ and What moved carries jackets and the running total.
   all-time folder does.
 - Whether the Play page's "players holding your title" comparison stays visible in seasonal view (a
   seasonal number against an all-time cohort) or hides.
+- **How the last days of a season are signposted**, raised by the no-grace ruling (D13) and owed by
+  the view slices rather than by 1b, which ships nothing player-facing. "Import before the quarter
+  ends or those plays are not in this season" is a rule players can only follow if they are told when
+  the quarter ends; the season page and the import surfaces are where that lands. Nothing here is
+  decided — the options run from a line on the season page to a countdown in the import widget.
 
 ## 15. Docs to update in the build PRs
 
