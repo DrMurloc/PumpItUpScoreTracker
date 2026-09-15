@@ -72,7 +72,53 @@ Phoenix-1-era songs cut from Phoenix 2 cannot be refreshed from piugame at all:
 its board is no longer reachable by the direct login the tracker's own ACL uses. Those songs
 are counted and listed as unmatched, and their blobs are left exactly as they are.
 
-As of the 2026-09 board that split the non-arcade catalog 116 refreshable / 118 not.
+As of the 2026-09 board that splits the catalog 654 refreshable / 418 not — the 654 being
+every Phoenix 2 song, with nothing in the mix left unmatched.
+
+## How a song is matched, and why the mix is the answer
+
+A jacket is tied to its song by piugame itself — the name and the image URL come out of the
+same tile — so the only fuzzy step is tracker song ↔ piugame song.
+
+**Titles are not unique across the catalog, but they are unique within a mix.** The game
+cannot ship two songs called the same thing in one version, and this board is one mix's
+entire catalog (654 tiles, 654 `Phoenix2` songs in the tracker — they agree exactly). So the
+**mix is the disambiguator, not the name**: a row that is in `Phoenix2` is the row this board
+is talking about, and a row that is not has no art here to claim.
+
+That is what makes the twins safe. The catalog holds `Step` by KARA and `STEP` by SID-Sound
+as two different songs with two different blobs, normalizing to one key; only SID-Sound's is
+in Phoenix 2, so only it takes Phoenix 2's jacket and KARA's art is never touched. Same for
+`Further` (Doin's is the P2 one) and the duplicated `Baroque Virus - FULL SONG -` row.
+Matching on the *artist* instead gets these right only by luck — credit strings disagree
+constantly (`feat.` dropped, a remixer added) — and wrong silently when they happen to agree.
+
+Names are matched in two tiers. Tier 1 is the title as spelled, with every non-alphanumeric
+character removed — the same transform the blob names use. Tier 2 exists because piugame
+prints some titles with their Japanese or Korean original attached (`Kasou Shinja仮装信者`)
+and sometimes carries a `feat.` credit the tracker omits (`CROSS RAY (feat. 月下Lia)` vs
+`Cross Ray`); dropping the `feat.` clause and every non-ASCII character reconciles those four
+without guessing, and a tier-2 hit must be the **only** candidate so it can never quietly
+pick between two songs. Together they match 654 of 654.
+
+A song that is in the mix but that the board never names is reported as `UNMATCHED` and left
+alone — that means the two catalogs have drifted, not that the art is unchanged.
+
+Both scripts also **read their work back** rather than trusting a 2xx — the uploader
+re-fetches every blob it wrote from the origin (not the CDN, so a stale edge cache cannot
+fake a pass) and checks both the bytes and the served content type; the stamper re-lists and
+re-checks. And a downloaded file has to prove it is really an image of the right format
+before it can overwrite anything, because a fetch that answered with an error page or a
+truncated body still lands on disk under the right name.
+
+## Known catalog quirks this surfaced
+
+Not caused by the scripts, and not fixed by them — worth knowing:
+
+- `Further` by Doin and `Further` by DJ Bouche feat. EZGi are two different songs **sharing
+  one blob** (`songs/Further.png`), so one of them already shows the other's art.
+- `Adios` (Eun Ji Won / Everglow) and `PICK ME` each exist as two rows with different blobs.
+- `PRiMA MATERiA - SHORT CUT -` is stored with `Type = Arcade` rather than `ShortCut`.
 
 ## Notes
 

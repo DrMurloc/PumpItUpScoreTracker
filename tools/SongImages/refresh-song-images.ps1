@@ -45,7 +45,10 @@ $ErrorActionPreference = 'Stop'
 Import-Module (Join-Path $PSScriptRoot 'PiuImages.psm1') -Force
 
 $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126.0'
+# piugame.com is the Phoenix 2 site; the tracker mix of the same content is named Phoenix2.
+# These two must stay in step - the mix name is what gates the match (see below).
 $piuBase = 'https://piugame.com'
+$CrawlMixName = 'Phoenix2'
 if (-not $Date) { $Date = (Get-Date).ToUniversalTime().AddDays(-1).ToString('yyyyMM') }
 New-Item -ItemType Directory -Force $WorkDir | Out-Null
 $imageDir = Join-Path $WorkDir 'jackets'
@@ -152,13 +155,22 @@ function Get-TrackerSongs {
     $connection.Open()
     try {
         $command = $connection.CreateCommand()
-        $command.CommandText = 'SELECT Name, Type, Artist, ImagePath FROM scores.Song'
+        # InMix is the whole safety story for collisions - see the matching block below.
+        $command.CommandText = @"
+SELECT s.Name, s.Type, s.Artist, s.ImagePath,
+       CASE WHEN EXISTS (SELECT 1 FROM scores.Chart c
+                          JOIN scores.ChartMix cm ON cm.ChartId = c.Id
+                          JOIN scores.Mix m ON m.Id = cm.MixId
+                         WHERE c.SongId = s.Id AND m.Name = '$CrawlMixName') THEN 1 ELSE 0 END AS InMix
+FROM scores.Song s
+"@
         $reader = $command.ExecuteReader()
         $rows = @()
         while ($reader.Read()) {
             $rows += [pscustomobject]@{
                 Name = $reader['Name']; Type = $reader['Type']
                 Artist = $reader['Artist']; ImagePath = $reader['ImagePath']
+                InMix = [int]$reader['InMix']
             }
         }
         $reader.Close()
@@ -173,46 +185,59 @@ $songs = $allSongs
 if ($Types -notcontains 'All') { $songs = @($allSongs | Where-Object { $Types -contains $_.Type }) }
 Write-Host "in scope ($($Types -join ', ')): $($songs.Count) songs"
 
+# A song name is unique WITHIN a mix - the game cannot ship two songs called the same thing
+# in one version - and this board is one mix's whole catalog. So the mix is the disambiguator,
+# not the name: a tracker row that is in $CrawlMixName is the row this board is talking about,
+# and a row that is not simply has no art here to claim.
+#
+# That is what makes the twins safe. The catalog holds "Step" by KARA and "STEP" by SID-Sound
+# as two different songs with two different blobs, normalizing to one key; only SID-Sound's is
+# in Phoenix 2, so only it takes Phoenix 2's jacket and KARA's art is never touched. Same for
+# "Further" (Doin's is the P2 one) and the duplicated "Baroque Virus - FULL SONG -" row.
+# Matching on the artist instead would get these right only by luck - the credit strings
+# disagree constantly ("feat." dropped, a remixer added) - and wrong silently when they agree.
+$inMix = @($songs | Where-Object { $_.InMix -eq 1 })
+Write-Host "in $CrawlMixName (the only rows this board can speak for): $($inMix.Count)"
+
+# Tier 1 is the name as spelled. Tier 2 exists because piugame prints some titles with their
+# Japanese or Korean original attached ("Kasou Shinja仮装信者") and sometimes carries a feat.
+# credit the tracker omits ("CROSS RAY (feat. 月下Lia)" vs "Cross Ray"); dropping the feat.
+# clause and every non-ASCII character reconciles those four without guessing. A tier-2 hit
+# must be the ONLY candidate, so it can never quietly pick between two songs.
+function Get-BaseKey {
+    param([string]$Name)
+    $stripped = [regex]::Replace(($Name -as [string]), '\(?\s*feat\.?[^)]*\)?', ' ', 'IgnoreCase')
+    return (($stripped.ToCharArray() | Where-Object { [char]::IsLetterOrDigit($_) -and [int]$_ -lt 128 }) -join '').ToLowerInvariant()
+}
+
 $byKey = @{}
+$byBaseKey = @{}
 foreach ($c in $crawled) {
     $key = Get-NameKey $c.Name
     if ($key -and -not $byKey.ContainsKey($key)) { $byKey[$key] = $c }
-}
-
-# Titles are not unique. The catalog holds "Step" by KARA and "STEP" by SID-Sound as two
-# different songs with two different blobs, and they normalize to the same key - so a
-# name-only match would write SID-Sound's jacket over KARA's art and nothing would ever say
-# so. Any key that points at more than one blob ACROSS THE WHOLE CATALOG (computed before
-# the type filter, since the twins need not share a type) is ambiguous, and an ambiguous
-# match is only accepted when the artist agrees too.
-$blobsPerKey = @{}
-foreach ($song in $allSongs) {
-    $key = Get-NameKey $song.Name
-    if (-not $key) { continue }
-    if (-not $blobsPerKey.ContainsKey($key)) { $blobsPerKey[$key] = New-Object 'System.Collections.Generic.HashSet[string]' }
-    [void]$blobsPerKey[$key].Add([string]$song.ImagePath)
-}
-
-function Get-ArtistKey {
-    param([string]$Artist)
-    if (-not $Artist) { return '' }
-    return (($Artist.ToCharArray() | Where-Object { [char]::IsLetterOrDigit($_) }) -join '').ToLowerInvariant()
+    $baseKey = Get-BaseKey $c.Name
+    if (-not $baseKey) { continue }
+    if (-not $byBaseKey.ContainsKey($baseKey)) { $byBaseKey[$baseKey] = New-Object System.Collections.ArrayList }
+    [void]$byBaseKey[$baseKey].Add($c)
 }
 
 $plan = @()
 $unmatched = @()
-$ambiguous = @()
-foreach ($song in $songs) {
+foreach ($song in $inMix) {
     # Only CDN-hosted art can be replaced in place; a song still pointing at a foreign host
     # has no blob of ours to overwrite.
     if ($song.ImagePath -notlike 'https://piuimages.arroweclip.se/*') { continue }
     $key = Get-NameKey $song.Name
-    if (-not $byKey.ContainsKey($key)) { $unmatched += $song; continue }
-    $candidate = $byKey[$key]
-    if ($blobsPerKey[$key].Count -gt 1 -and (Get-ArtistKey $song.Artist) -ne (Get-ArtistKey $candidate.Artist)) {
-        $ambiguous += [pscustomobject]@{ Song = $song; Candidate = $candidate }
-        continue
+    $candidate = $null
+    if ($byKey.ContainsKey($key)) { $candidate = $byKey[$key] }
+    else {
+        $baseKey = Get-BaseKey $song.Name
+        if ($baseKey -and $byBaseKey.ContainsKey($baseKey) -and $byBaseKey[$baseKey].Count -eq 1) {
+            $candidate = $byBaseKey[$baseKey][0]
+            Write-Host "  matched by base name: '$($song.Name)' -> '$($candidate.Name)'"
+        }
     }
+    if ($null -eq $candidate) { $unmatched += $song; continue }
     $blobPath = $song.ImagePath -replace '^https://piuimages\.arroweclip\.se/', ''
     $plan += [pscustomobject]@{
         Name     = $song.Name
@@ -230,15 +255,17 @@ $plan = @($plan | Group-Object BlobPath | ForEach-Object { $_.Group | Select-Obj
 Write-Host ''
 Write-Host "matched to piugame art: $($plan.Count)"
 $plan | Group-Object Type | Sort-Object Name | ForEach-Object { Write-Host ("  {0,4}  {1}" -f $_.Count, $_.Name) }
-Write-Host "no longer on piugame (cut from Phoenix 2, left untouched): $($unmatched.Count)"
-$unmatched | Group-Object Type | Sort-Object Name | ForEach-Object { Write-Host ("  {0,4}  {1}" -f $_.Count, $_.Name) }
-if ($ambiguous.Count -gt 0) {
+$outOfMix = @($songs | Where-Object { $_.InMix -ne 1 })
+Write-Host "not in $CrawlMixName, so piugame has no current art for them (left untouched): $($outOfMix.Count)"
+$outOfMix | Group-Object Type | Sort-Object Name | ForEach-Object { Write-Host ("  {0,4}  {1}" -f $_.Count, $_.Name) }
+
+# A song this board should be able to name but cannot is the one outcome worth stopping for:
+# it means the title moved and the two catalogs have drifted, not that the art is unchanged.
+if ($unmatched.Count -gt 0) {
     Write-Host ''
-    Write-Host "SKIPPED $($ambiguous.Count) - another song shares this title and the artist does not match:"
-    foreach ($a in $ambiguous) {
-        Write-Host ("    {0} by {1}  ->  piugame has '{2}' by {3}" -f `
-                $a.Song.Name, $a.Song.Artist, $a.Candidate.Name, $a.Candidate.Artist)
-        Write-Host ("      left alone: {0}" -f ($a.Song.ImagePath -replace '^https://piuimages\.arroweclip\.se/', ''))
+    Write-Host "UNMATCHED - in $CrawlMixName but the board never named them. Their art is NOT refreshed:"
+    foreach ($u in $unmatched) {
+        Write-Host ("    {0}  ({1})  {2}" -f $u.Name, $u.Type, ($u.ImagePath -replace '^https://piuimages\.arroweclip\.se/', ''))
     }
 }
 if ($plan.Count -eq 0) { Write-Host ''; Write-Host 'nothing to refresh.'; return }
