@@ -62,6 +62,12 @@ public abstract class ComponentTestBase : TestContext
         Services.AddSingleton(HardmodeReader.Object);
         Services.AddScoped<HardmodeCharts>();
 
+        // A clock, because components that date anything take one and several suites were
+        // each stubbing their own. A suite that needs a specific instant still registers over
+        // this - the later registration is the one resolved.
+        Services.AddSingleton(Mock.Of<IDateTimeOffsetAccessor>(c =>
+            c.Now == new DateTimeOffset(2026, 7, 13, 0, 0, 0, TimeSpan.Zero)));
+
         // The shared LeaderboardDialog reads the relevant-players setting; an unconfigured mock
         // answers every getter with its default and keeps every consumer renderable. A suite that
         // registers its own before rendering still wins — the later registration is the one

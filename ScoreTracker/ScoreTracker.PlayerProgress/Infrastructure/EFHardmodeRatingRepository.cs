@@ -83,8 +83,8 @@ internal sealed class EFHardmodeRatingRepository : IHardmodeRatingRepository
     ///     <para>
     ///         Built for the viewer (D17): a private account is on its own board and nobody
     ///         else's, so the filter runs in SQL and a stranger's private row is never
-    ///         materialised here at all — only counted, so the page can say how many it left out.
-    ///         Places number over what came back, which is why they are viewer-shaped.
+    ///         materialised here at all. Places number over what came back, which is why they are
+    ///         viewer-shaped. The board no longer says how many it left out (D25).
     ///     </para>
     /// </summary>
     public async Task<HardmodeBoardRecord> GetBoard(MixEnum mix, ChartType? pool, Guid? viewerId,
@@ -92,8 +92,8 @@ internal sealed class EFHardmodeRatingRepository : IHardmodeRatingRepository
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         // Guid.Empty stands in for an anonymous viewer rather than comparing against a nullable:
-        // SQL's three-valued logic makes both `UserId = NULL` and `UserId <> NULL` unknown, so a
-        // null viewer would quietly read as "nobody is hidden" on the count below.
+        // SQL's three-valued logic makes `UserId = NULL` unknown, so a null viewer would match
+        // nobody and silently drop every row VisibleTo means to let through.
         var viewer = viewerId ?? Guid.Empty;
 
         var rows = await VisibleTo(database, mix, viewer)
@@ -111,14 +111,8 @@ internal sealed class EFHardmodeRatingRepository : IHardmodeRatingRepository
             .OrderByDescending(e => e.Hardmode)
             .ToArrayAsync(cancellationToken);
 
-        var hidden = await HiddenFrom(database, mix, viewer)
-            .CountAsync(e => (pool == ChartType.Single ? e.HardmodeSinglesRating
-                : pool == ChartType.Double ? e.HardmodeDoublesRating
-                : e.HardmodeRating) > 0, cancellationToken);
-
         return new HardmodeBoardRecord(
-            rows.Select((r, i) => new HardmodeBoardRow(i + 1, r.UserId, r.Hardmode, r.Held)).ToArray(),
-            hidden);
+            rows.Select((r, i) => new HardmodeBoardRow(i + 1, r.UserId, r.Hardmode, r.Held)).ToArray());
     }
 
     /// <summary>
@@ -140,21 +134,6 @@ internal sealed class EFHardmodeRatingRepository : IHardmodeRatingRepository
         return from stats in database.Set<PlayerStatsEntity>()
             join user in database.User on stats.UserId equals user.Id
             where stats.MixId == mixId && (user.IsPublic || stats.UserId == viewer)
-            select stats;
-    }
-
-    /// <summary>
-    ///     The complement of <see cref="VisibleTo" /> — the accounts this viewer may not see.
-    ///     Deliberately the negation of the same two terms and deliberately only ever counted:
-    ///     the page says how many are missing, and nothing about who.
-    /// </summary>
-    private static IQueryable<PlayerStatsEntity> HiddenFrom(ChartAttemptDbContext database, MixEnum mix,
-        Guid viewer)
-    {
-        var mixId = MixIds.For(mix);
-        return from stats in database.Set<PlayerStatsEntity>()
-            join user in database.User on stats.UserId equals user.Id
-            where stats.MixId == mixId && !user.IsPublic && stats.UserId != viewer
             select stats;
     }
 

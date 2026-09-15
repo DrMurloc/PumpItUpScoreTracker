@@ -69,30 +69,17 @@ public sealed class PumbilityHardmodePageTests : ComponentTestBase
     }
 
     [Fact]
-    public async Task TheBoardIsAskedForTheViewerAndSaysHowManyAccountsItLeftOut()
+    public async Task TheBoardIsAskedForTheViewerAndSaysNothingAboutWhoIsMissing()
     {
-        // A private account is on its own board and nobody else's (D17). The page cannot apply
-        // that rule - the read does - so what it owes is the viewer id and a line saying the
-        // field it printed is smaller than the population, since renumbered places hide it.
+        // D17 stands: a private account is on its own board and nobody else's, and the page
+        // cannot apply that rule - the read does - so what it still owes is the viewer id.
+        // The line saying how many were left out is gone (D25).
         var cut = Render(pool: null, board: new HardmodeBoardRecord(
-            new[] { new HardmodeBoardRow(1, Guid.NewGuid(), 14_000, 30) }, 3));
+            new[] { new HardmodeBoardRow(1, Guid.NewGuid(), 14_000, 30) }));
         await WaitForLoad(cut);
 
         Mediator.Verify(m => m.Send(It.Is<GetHardmodeBoardQuery>(q => q.ViewerId == Me),
             It.IsAny<CancellationToken>()), Times.AtLeastOnce);
-        cut.WaitForState(() => cut.Markup.Contains("hardmode-private"), TimeSpan.FromSeconds(5));
-        Assert.Contains("3 private accounts are on this board but are not shown.", cut.Markup);
-    }
-
-    [Fact]
-    public async Task TheBoardSaysNothingWhenEveryAccountOnItIsVisible()
-    {
-        var cut = Render(pool: null, board: new HardmodeBoardRecord(
-            new[] { new HardmodeBoardRow(1, Guid.NewGuid(), 14_000, 30) }, 0));
-        await WaitForLoad(cut);
-
-        // "0 private accounts are not shown" is a sentence about nothing, and a board that always
-        // carries the line trains the reader to stop seeing it.
         Assert.DoesNotContain("hardmode-private", cut.Markup);
     }
 
