@@ -106,19 +106,27 @@ public enum WinKind
 ///         rather than wrong, and rows regenerate on their next import.
 ///     </para>
 ///     <para>
-///         v4 added the two Hardmode kinds. Same reasoning as v2 and v3: a summary written before
-///         Hardmode announced itself is incomplete rather than wrong, and rows regenerate on their
-///         next import inside the 30-day window.
+///         <b>⚠ BUMP ONLY ON A BREAKING CHANGE</b> (owner, 2026-09-15). Adding a
+///         <see cref="WinKind" />, or an optional field, is ADDITIVE: a pre-change row is a
+///         complete summary under the rules of its day — nothing it should have carried is
+///         missing — so it keeps rendering, and the 30-day purge ages the old shapes out on its
+///         own. A bump is for a payload an old row can no longer be read as: a renamed or
+///         retyped field, a changed meaning, a removed kind.
 ///     </para>
 ///     <para>
-///         2026-08-14: <see cref="WinKind.PumbilityTitleSpan" /> and the all-titles inclusion landed
-///         WITHOUT a bump — deliberately. A pre-change row is a complete summary under the rules of
-///         its day (nothing it should have carried is missing), so it keeps rendering; the 30-day
-///         window ages the old shapes out on its own.
+///         The cost of getting this wrong is invisible and total. <see cref="EFPlayerHighlightRepository" />
+///         filters reads on the exact version and nothing regenerates old rows, so a needless bump
+///         empties the Community Highlights widget and the Rivals feed for EVERY player until each
+///         of them next imports — up to a week of blank feeds to gain nothing.
+///     </para>
+///     <para>
+///         2026-08-14 set the precedent: <see cref="WinKind.PumbilityTitleSpan" /> and the
+///         all-titles inclusion landed WITHOUT a bump. 2026-09-15's two Hardmode kinds were bumped
+///         to v4 and then reverted, which is what turned the precedent into this rule.
 ///     </para>
 /// </summary>
 [ExcludeFromCodeCoverage]
 public static class PlayerHighlightSchema
 {
-    public const int CurrentVersion = 4;
+    public const int CurrentVersion = 3;
 }

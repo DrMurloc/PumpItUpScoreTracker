@@ -1,4 +1,4 @@
-# Hardmode
+﻿# Hardmode
 
 A second PUMBILITY board, priced by the same formula over a different chart set: the rarest slice of
 every folder — the charts almost nobody holds in a top 50. Phoenix 2 only. Lives as a fourth tab in the
@@ -290,6 +290,30 @@ nearly every page on the site, at ~1,200 rows. The reader memoizes behind a `Cac
 catalog fact that must never vary by viewer), evicted on `HardmodeChartsRebuiltEvent`, which the census
 already publishes. The entry carries an explicit expiration — a two-argument `Set` silently drops the
 TTL, which is fatal for a key whose only other eviction is a weekly event.
+
+**D27 — a Hardmode session filling the Highlights section is the feature, not a blowout.** The
+skull sets a `HighlightFlags` bit, `IsFlagged` is "any flag at all", and the Highlights section
+draws one jacket card per flagged chart — so a twelve-chart Hardmode session shows twelve cards
+where an ordinary session shows two or three. That was raised as a defect and is not one (owner,
+2026-09-15): *"These are charts people are not naturally playing. By definition… If someone plays
+12 charts in this pool, they are looking for hard stuff. They want hard stuff highlighted."*
+
+The census agrees and always did. A qualifying chart gets **about half the plays** of the rest of
+its folder and scores lower there (S22 943.5k against 951.9k, S24 919.3k against 932.3k, D24
+944.6k against 955.7k), and the average account holds **7.6 of the 1,211** (§3). Playing twelve of
+them is not an ordinary session that happens to trip a flag — it is a deliberate trip into the
+part of the catalogue nobody refines, which is the whole reason this board exists. A section that
+capped it, or a flag that fed the badge but not `IsFlagged`, would be machinery for hiding the
+thing the feature is for.
+
+**D28 — the highlight schema bumps on BREAKING changes only.** Adding a `WinKind`, or an optional
+field, is additive: a pre-change row is a complete summary under the rules of its day, so it keeps
+rendering and the 30-day purge ages it out. A bump is for a payload an old row can no longer be
+read as. The two Hardmode kinds were bumped to v4 and reverted the same day (owner, 2026-09-15:
+*"can we only bump schema versions on breaking changes? This is additive, not breaking"*) — the
+cost is invisible and total, because the repository filters reads on the exact version and nothing
+regenerates old rows, so a needless bump empties the Community Highlights widget and the Rivals
+feed for every player until each next imports.
 
 ### What each surface renders
 
