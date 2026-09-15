@@ -1,4 +1,4 @@
-using ScoreTracker.Domain.Models.Titles.Phoenix;
+﻿using ScoreTracker.Domain.Models.Titles.Phoenix;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -96,6 +96,8 @@ internal static class PlayerHighlightPolicy
             wins.Add((PriorityPumbilityLevelUp, new SignificantWin(WinKind.PumbilityLevelUp,
                 Rank: levelUp.To.Index, PoolValue: levelUp.NewPool)));
 
+        wins.AddRange(ClassifyHardmode(e.Mix, e.Milestones));
+
         foreach (var change in e.Changes)
         {
             if (!charts.TryGetValue(change.ChartId, out var chart)) continue;
@@ -121,6 +123,50 @@ internal static class PlayerHighlightPolicy
         if (milestone.Kind == MilestoneKind.FolderProgress) return ClassifyFolderProgress(milestone);
 
         return null;
+    }
+
+    /// <summary>
+    ///     Hardmode's two feed rows (D18): a top place on its board, and a ladder rung its
+    ///     combined pool crossed.
+    ///     <para>
+    ///         Only the COMBINED pool speaks here. The per-type pools announce on the session
+    ///         page and in Discord, where the reader asked for this player; a feed is a list of
+    ///         other people's moments, and three rows for one batch would crowd out two other
+    ///         players.
+    ///     </para>
+    ///     <para>
+    ///         The board row is gated like <see cref="WinKind.TopPumbility" /> — a place nobody
+    ///         would mention is not a win. The rung row needs no gate: roughly a tenth of rated
+    ///         accounts clear BRONZE at all, so crossing one is already uncommon.
+    ///     </para>
+    /// </summary>
+    private static IEnumerable<(int Priority, SignificantWin Win)> ClassifyHardmode(MixEnum mix,
+        IReadOnlyList<PlayerMilestoneRecord> milestones)
+    {
+        if (mix != MixEnum.Phoenix2) yield break;
+
+        var moved = milestones.FirstOrDefault(m =>
+            m is { Kind: MilestoneKind.HardmodePumbilityGain, OldValue: not null, NewValue: not null });
+        if (moved == null) yield break;
+
+        // "place|field", written by the capture step because a rank is what the feed needs and
+        // a milestone is what reaches it.
+        var parts = (moved.Detail ?? string.Empty).Split('|');
+        if (parts.Length == 2 && int.TryParse(parts[0], out var place) && place <= PumbilityTopRank)
+            yield return (PriorityTopPumbility, new SignificantWin(WinKind.HardmodeBoard,
+                Rank: place, PoolValue: moved.NewValue));
+
+        // The rung the pool crossed, if it crossed one. Derived rather than stored, the way the
+        // level crossing is: the milestone already carries both sides of the move.
+        var rungs = Phoenix2TitleList.BuildList().OfType<Phoenix2PumbilityTitle>()
+            .Where(t => t.Pool == PumbilityPool.Total)
+            .OrderBy(t => t.CompletionRequired)
+            .ToArray();
+        var crossed = rungs.LastOrDefault(r => r.CompletionRequired > moved.OldValue!.Value
+                                               && r.CompletionRequired <= moved.NewValue!.Value);
+        if (crossed != null)
+            yield return (PriorityTitle, new SignificantWin(WinKind.HardmodeTitle,
+                TitleName: crossed.Name.ToString(), PoolValue: moved.NewValue));
     }
 
     /// <summary>

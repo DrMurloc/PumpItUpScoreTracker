@@ -1,4 +1,4 @@
-@using System.Globalization
+﻿@using System.Globalization
 @using MediatR
 @using ScoreTracker.Communities.Contracts
 @using ScoreTracker.Communities.Contracts.Queries
@@ -275,6 +275,8 @@ else
     {
         WinKind.NotablePg => $"💎 {L["only {0} have PG", Pct(win.RarityShare)]}",
         WinKind.TopPumbility => $"👑 {L["#{0} PUMBILITY", win.Rank ?? 0]}",
+        WinKind.HardmodeBoard => $"💀 {L["#{0} on the Hardmode board", win.Rank ?? 0]}",
+        WinKind.HardmodeTitle => $"💀 {L["Hardmode {0}", Bracket(win.TitleName ?? "")]}",
         WinKind.PeerElite => win.Rank == 1
             ? $"📊 {L["#1 of all peers"]}"
             : $"📊 {L["top {0}% of peers", PeerPct(win)]}",
@@ -343,6 +345,8 @@ else
     {
         WinKind.NotablePg => $"💎 {L["Rare PG"]}",
         WinKind.TopPumbility => $"👑 #{win.Rank ?? 0} PUMB",
+        WinKind.HardmodeBoard => $"💀 #{win.Rank ?? 0} {L["Hardmode"]}",
+        WinKind.HardmodeTitle => $"💀 {Bracket(win.TitleName ?? "")}",
         WinKind.PeerElite => win.Rank == 1 ? "📊 #1" : $"📊 {L["Top {0}%", PeerPct(win)]}",
         WinKind.FolderFirst => $"🆕 {Ordinal(win.Rank ?? 0)} · {win.Difficulty}",
         _ => string.Empty

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -548,4 +548,61 @@ public sealed class PlayerHighlightPolicyTests
 
         Assert.Empty(wins);
     }
+
+    [Fact]
+    public void ATopHardmodePlaceIsAWinAndAnOrdinaryOneIsNot()
+    {
+        // Gated like TopPumbility: a place nobody would mention is not a significant win.
+        var top = ClassifyHardmode(HardmodeGain(2999, 3339, "3|301"));
+        var ordinary = ClassifyHardmode(HardmodeGain(2999, 3339, "102|301"));
+
+        Assert.Contains(top, w => w.Kind == WinKind.HardmodeBoard && w.Rank == 3);
+        Assert.DoesNotContain(ordinary, w => w.Kind == WinKind.HardmodeBoard);
+    }
+
+    [Fact]
+    public void CrossingAHardmodeRungIsAWinWithoutARankGate()
+    {
+        // Roughly a tenth of rated accounts clear BRONZE at all, so crossing one is already
+        // uncommon - which is what a significant win is meant to be.
+        var wins = ClassifyHardmode(HardmodeGain(9800, 10200, "140|301"));
+
+        Assert.Contains(wins, w => w.Kind == WinKind.HardmodeTitle);
+    }
+
+    [Fact]
+    public void MovingInsideOneRungIsNotATitleWin()
+    {
+        var wins = ClassifyHardmode(HardmodeGain(2999, 3339, "140|301"));
+
+        Assert.DoesNotContain(wins, w => w.Kind == WinKind.HardmodeTitle);
+    }
+
+    [Fact]
+    public void HardmodeSaysNothingOnAMixWithoutACensus()
+    {
+        var wins = ClassifyHardmode(HardmodeGain(2999, 3339, "1|301"), MixEnum.Phoenix);
+
+        Assert.DoesNotContain(wins, w => w.Kind is WinKind.HardmodeBoard or WinKind.HardmodeTitle);
+    }
+
+    [Fact]
+    public void OnlyTheCombinedPoolReachesTheFeeds()
+    {
+        // The per-type pools announce on the session page and in Discord, where the reader
+        // asked for this player. A feed is other people's moments, and three rows for one
+        // batch would crowd out two other players.
+        var wins = ClassifyHardmode(new PlayerMilestoneRecord(
+            MilestoneKind.HardmodeSinglesPumbilityGain, null, When, 1995, 2244, null, "1|257"));
+
+        Assert.DoesNotContain(wins, w => w.Kind is WinKind.HardmodeBoard or WinKind.HardmodeTitle);
+    }
+
+    private static PlayerMilestoneRecord HardmodeGain(double from, double to, string standing) =>
+        new(MilestoneKind.HardmodePumbilityGain, null, When, from, to, null, standing);
+
+    private static IReadOnlyList<SignificantWin> ClassifyHardmode(PlayerMilestoneRecord milestone,
+        MixEnum mix = MixEnum.Phoenix2) =>
+        Classify(Event(mix, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(), milestone),
+            new Dictionary<Guid, Chart>(), Snapshot());
 }

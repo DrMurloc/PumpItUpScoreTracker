@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace ScoreTracker.PlayerProgress.Contracts;
 
@@ -70,7 +70,21 @@ public enum WinKind
     ///     uncollapsed (owner, 2026-08-14). TitleName is the rung reached, Detail the first rung
     ///     crossed. Only the pumbility ladders roll up; every other title family prints per rung.
     /// </summary>
-    PumbilityTitleSpan
+    PumbilityTitleSpan,
+
+    /// <summary>
+    ///     A top place on the Hardmode board (docs/design/hardmode-leaderboard.md D18). Rank is
+    ///     the place, PoolValue the Hardmode total. Gated the way TopPumbility is — a place
+    ///     nobody would mention is not a significant win.
+    /// </summary>
+    HardmodeBoard,
+
+    /// <summary>
+    ///     A Hardmode pool crossed a Phoenix 2 PUMBILITY rung. TitleName is the rung reached.
+    ///     Genuinely uncommon today — roughly a tenth of rated accounts clear BRONZE at all —
+    ///     which is what a significant win is supposed to be.
+    /// </summary>
+    HardmodeTitle
 }
 
 /// <summary>
@@ -92,6 +106,11 @@ public enum WinKind
 ///         rather than wrong, and rows regenerate on their next import.
 ///     </para>
 ///     <para>
+///         v4 added the two Hardmode kinds. Same reasoning as v2 and v3: a summary written before
+///         Hardmode announced itself is incomplete rather than wrong, and rows regenerate on their
+///         next import inside the 30-day window.
+///     </para>
+///     <para>
 ///         2026-08-14: <see cref="WinKind.PumbilityTitleSpan" /> and the all-titles inclusion landed
 ///         WITHOUT a bump — deliberately. A pre-change row is a complete summary under the rules of
 ///         its day (nothing it should have carried is missing), so it keeps rendering; the 30-day
@@ -101,5 +120,5 @@ public enum WinKind
 [ExcludeFromCodeCoverage]
 public static class PlayerHighlightSchema
 {
-    public const int CurrentVersion = 3;
+    public const int CurrentVersion = 4;
 }

@@ -422,7 +422,12 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         void Add(MilestoneKind kind, HardmodeSaga.HardmodePoolMove move)
         {
             if (!move.Gained) return;
-            lamps.Add(new PlayerMilestoneWrite(kind, sessionId, _dateTime.Now, move.Old, move.New));
+            // Detail carries the standing as "place|field", the way TitleProgress carries
+            // "S21|3120|4000" — the feeds need a rank to decide whether a climb is a win, and a
+            // milestone is what reaches them. Absent when the pool holds nothing rankable.
+            var standing = move.Rank is { } place && move.Field is { } field ? $"{place}|{field}" : null;
+            lamps.Add(new PlayerMilestoneWrite(kind, sessionId, _dateTime.Now, move.Old, move.New,
+                Detail: standing));
         }
     }
 
