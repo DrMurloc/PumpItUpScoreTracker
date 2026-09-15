@@ -265,6 +265,109 @@ public sealed class HardmodeSagaTests
         Assert.Equal(page.Combined.Held, Assert.Single(saved).Held);
     }
 
+    [Fact]
+    public async Task RepricingReportsTheMovementItWroteOverTheRowItReplaced()
+    {
+        // The announcement is the DIFFERENCE, and Save overwrites it — so the step has to read
+        // before it writes. An account the weekly sweep has never reached has no row at all,
+        // which reads as zero and is exactly what a first-ever qualifying score should announce.
+        var charts = Enumerable.Range(0, 3).Select(_ => Qualifying(21, ChartType.Single)).ToArray();
+        var user = Guid.NewGuid();
+        var ratings = new Mock<IHardmodeRatingRepository>();
+        var saga = Build(charts, Array.Empty<(Guid, Chart, int)>(), ratings, qualifying: charts,
+            bests: charts.Select((c, i) => (c, 990_000 - i * 10_000)).ToArray(),
+            before: new HardmodeRatingRow(user, 100, 100, 0, 1, 1, 0),
+            standing: (7, 301));
+
+        var result = await saga.Handle(new HardmodeSaga.RepriceHardmodePool(user, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.Equal(100, result.Combined.Old);
+        Assert.True(result.Combined.New > result.Combined.Old);
+        Assert.True(result.Combined.Gained);
+        Assert.Equal(3, result.Combined.Held);
+        // All three standings are read, the way PUMBILITY estimates all three official ranks (D20).
+        Assert.Equal(7, result.Combined.Rank);
+        Assert.Equal(301, result.Singles.Field);
+        Assert.Equal(7, result.Doubles.Rank);
+    }
+
+    [Fact]
+    public async Task OnAPoolShortOfFiftyAPlayBanksItsWholeValue()
+    {
+        // The teaching case: your normal pool is full so a play only wins what it beat, but a
+        // Hardmode pool holding a handful displaces nothing — so the same play is worth far more
+        // here. It is the mechanic, not an inflated number (design §10, D21).
+        var chart = Qualifying(21, ChartType.Single);
+        var user = Guid.NewGuid();
+        var ratings = new Mock<IHardmodeRatingRepository>();
+        var saga = Build(new[] { chart }, Array.Empty<(Guid, Chart, int)>(), ratings,
+            qualifying: new[] { chart }, bests: new[] { (chart, 970_000) });
+
+        var result = await saga.Handle(new HardmodeSaga.RepriceHardmodePool(user, MixEnum.Phoenix2,
+                new[] { new PlayerScoresUpdatedEvent.ScoreChange(chart.Id, true, null, 970_000, null, false) }),
+            CancellationToken.None);
+
+        var gain = Assert.Single(result.Gains);
+        Assert.Equal(chart.Id, gain.Key);
+        // A new pass into an empty pool is worth every point it brought, so the gain IS the value.
+        Assert.Equal(result.Combined.New, gain.Value, 6);
+    }
+
+    [Fact]
+    public async Task TheWeeklySweepRepricesWithoutAttributingAnything()
+    {
+        // No batch, no gains: attribution answers "what did tonight's play add", and a sweep
+        // is not a play. The totals still move.
+        var charts = Enumerable.Range(0, 3).Select(_ => Qualifying(21, ChartType.Single)).ToArray();
+        var ratings = new Mock<IHardmodeRatingRepository>();
+        var saga = Build(charts, Array.Empty<(Guid, Chart, int)>(), ratings, qualifying: charts,
+            bests: charts.Select((c, i) => (c, 990_000 - i * 10_000)).ToArray());
+
+        var result = await saga.Handle(new HardmodeSaga.RepriceHardmodePool(Guid.NewGuid(), MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.Empty(result.Gains);
+        Assert.True(result.Combined.New > 0);
+    }
+
+    [Fact]
+    public async Task RanksAreSlotsInTheCombinedFiftyNotThePerTypeOnes()
+    {
+        // PumbilityRank reads the combined pool and the score row reports one number; the skull
+        // badge mirrors that exactly rather than inventing a per-type rank.
+        var best = Qualifying(23, ChartType.Single);
+        var middle = Qualifying(22, ChartType.Double);
+        var worst = Qualifying(20, ChartType.Single);
+        var ratings = new Mock<IHardmodeRatingRepository>();
+        var saga = Build(new[] { best, middle, worst }, Array.Empty<(Guid, Chart, int)>(), ratings,
+            qualifying: new[] { best, middle, worst },
+            bests: new[] { (best, 990_000), (middle, 990_000), (worst, 990_000) });
+
+        var result = await saga.Handle(new HardmodeSaga.RepriceHardmodePool(Guid.NewGuid(), MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.Equal(1, result.Ranks[best.Id]);
+        Assert.Equal(2, result.Ranks[middle.Id]);
+        Assert.Equal(3, result.Ranks[worst.Id]);
+    }
+
+    [Fact]
+    public async Task ABatchBeforeTheFirstCensusAnnouncesNothing()
+    {
+        var ratings = new Mock<IHardmodeRatingRepository>();
+        var saga = Build(Array.Empty<Chart>(), Array.Empty<(Guid, Chart, int)>(), ratings,
+            qualifying: Array.Empty<Chart>());
+
+        var result = await saga.Handle(new HardmodeSaga.RepriceHardmodePool(Guid.NewGuid(), MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        // Every consumer reads this as "Hardmode is not live here", which is also what a mix
+        // without a census looks like.
+        Assert.Equal(HardmodeSaga.HardmodeReprice.None, result);
+        Assert.False(result.Combined.Gained);
+    }
+
     private static Chart Qualifying(int level, ChartType type)
     {
         return new ChartBuilder().WithType(type).WithLevel(level).WithMix(MixEnum.Phoenix2).Build();
@@ -281,8 +384,13 @@ public sealed class HardmodeSagaTests
     private static HardmodeSaga Build(IReadOnlyCollection<Chart> charts,
         IReadOnlyCollection<(Guid UserId, Chart Chart, int Score)> scores,
         Mock<IHardmodeRatingRepository> ratings, IReadOnlyCollection<Chart>? qualifying = null,
-        IReadOnlyCollection<(Chart Chart, int Score)>? bests = null)
+        IReadOnlyCollection<(Chart Chart, int Score)>? bests = null,
+        HardmodeRatingRow? before = null, (int Place, int Field)? standing = null)
     {
+        ratings.Setup(r => r.Get(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(before);
+        ratings.Setup(r => r.GetStanding(It.IsAny<MixEnum>(), It.IsAny<ChartType?>(), It.IsAny<Guid>(),
+            It.IsAny<CancellationToken>())).ReturnsAsync(standing);
         var list = (qualifying ?? charts)
             .Select(c => new HardmodeChartEntry(c.Id, c.Type, (int)c.Level, 0, 0, 40, 10)).ToArray();
         var reader = new Mock<IHardmodeChartReader>();

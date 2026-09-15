@@ -125,6 +125,9 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
                 l.Title, l.Detail))
             .ToList();
         var titleProgress = (IReadOnlyList<TitleProgressDelta>)Array.Empty<TitleProgressDelta>();
+        // Declared out here so a failed Hardmode step leaves it at None and every reader below
+        // sees "Hardmode is not live here" rather than a missing variable.
+        var hardmode = HardmodeSaga.HardmodeReprice.None;
 
         // The rating step: recalc + Pumbility record stats + rating milestones + the
         // CompetitiveImprover flags, which merge into the event so the ⬆ badge rides
@@ -166,7 +169,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         // second board's total is not worth losing the session card over.
         try
         {
-            await _mediator.Send(new HardmodeSaga.RepriceHardmodePool(e.UserId, e.Mix),
+            hardmode = await _mediator.Send(new HardmodeSaga.RepriceHardmodePool(e.UserId, e.Mix, e.Changes),
                 context.CancellationToken);
         }
         catch (Exception ex)
