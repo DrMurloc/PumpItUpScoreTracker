@@ -93,7 +93,9 @@ foreach ($item in $work) {
     }
     if ($item.Md5) { $headers['x-ms-blob-content-md5'] = $item.Md5 }
     try {
-        Invoke-WebRequest -Method Put -Uri $url -Headers $headers -ContentType '' -UseBasicParsing | Out-Null
+        # No -Body and no -ContentType: Set Blob Properties carries its values in headers
+        # only, and an empty -ContentType is a parameter-binding hazard for no gain.
+        Invoke-WebRequest -Method Put -Uri $url -Headers $headers -UseBasicParsing | Out-Null
         $done++
     }
     catch { $failed += "$($item.Name)  ->  $($_.Exception.Message)" }

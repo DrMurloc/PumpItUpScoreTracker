@@ -83,6 +83,23 @@ $script:TypeByExtension = @{
     'gif' = 'image/gif'; 'webp' = 'image/webp'; 'svg' = 'image/svg+xml'; 'ico' = 'image/x-icon'
 }
 
+# Reads the format out of the file's own magic bytes. A download that answered with an error
+# page, a login redirect or a truncated body still lands on disk as a file of the right name,
+# and uploading one of those would replace real art with garbage that only shows up as a
+# broken image on the site days later. The bytes have to say what the extension claims.
+function Get-ImageFormat {
+    param([Parameter(Mandatory)][byte[]]$Bytes)
+    if ($Bytes.Length -lt 12) { return $null }
+    $hex = ($Bytes[0..7] | ForEach-Object { $_.ToString('x2') }) -join ''
+    if ($hex -eq '89504e470d0a1a0a') { return 'png' }
+    if ($hex.StartsWith('ffd8ff')) { return 'jpg' }
+    if ($hex.StartsWith('47494638')) { return 'gif' }
+    $riff = [Text.Encoding]::ASCII.GetString($Bytes[0..3])
+    $webp = [Text.Encoding]::ASCII.GetString($Bytes[8..11])
+    if ($riff -eq 'RIFF' -and $webp -eq 'WEBP') { return 'webp' }
+    return $null
+}
+
 function Get-ContentTypeForPath {
     param([Parameter(Mandatory)][string]$Path)
     if ($Path -notmatch '\.([A-Za-z0-9]+)$') { return $null }
@@ -114,4 +131,4 @@ function Get-BlobList {
 }
 
 Export-ModuleMember -Function Get-PiuSecret, Get-BlobAccount, New-ContainerSas, Get-ContainerBaseUrl,
-    ConvertTo-BlobPath, Get-ContentTypeForPath, Get-BlobList
+    ConvertTo-BlobPath, Get-ContentTypeForPath, Get-ImageFormat, Get-BlobList

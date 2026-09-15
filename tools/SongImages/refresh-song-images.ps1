@@ -111,9 +111,13 @@ else {
         foreach ($chunk in $chunks) {
             $img = [regex]::Match($chunk, "background-image:url\('([^']*song_img2?/[^']+)'\)")
             $name = [regex]::Match($chunk, '<p class="t1">\s*([^<]*)</p>')
+            $artist = [regex]::Match($chunk, '<p class="t2">\s*([^<]*)</p>')
             if (-not ($img.Success -and $name.Success)) { continue }
+            # The artist rides along because two different songs can share a title - it is
+            # the only field that tells KARA's "Step" from SID-Sound's "STEP".
             $tiles += [pscustomobject]@{
                 Name     = [Net.WebUtility]::HtmlDecode($name.Groups[1].Value).Trim()
+                Artist   = if ($artist.Success) { [Net.WebUtility]::HtmlDecode($artist.Groups[1].Value).Trim() } else { '' }
                 ImageUrl = $img.Groups[1].Value
             }
         }
@@ -123,7 +127,8 @@ else {
         Start-Sleep -Milliseconds 300
     }
     $crawled = @($tiles | Group-Object Name | ForEach-Object {
-            [pscustomobject]@{ Name = $_.Name; ImageUrl = ($_.Group | Select-Object -First 1).ImageUrl }
+            $first = $_.Group | Select-Object -First 1
+            [pscustomobject]@{ Name = $_.Name; Artist = $first.Artist; ImageUrl = $first.ImageUrl }
         })
     if ($crawled.Count -eq 0) { throw "the board returned no songs for $Date - check the login and the date" }
     $crawled | Sort-Object Name | Export-Csv $crawlCsv -NoTypeInformation -Encoding UTF8
@@ -147,11 +152,14 @@ function Get-TrackerSongs {
     $connection.Open()
     try {
         $command = $connection.CreateCommand()
-        $command.CommandText = 'SELECT Name, Type, ImagePath FROM scores.Song'
+        $command.CommandText = 'SELECT Name, Type, Artist, ImagePath FROM scores.Song'
         $reader = $command.ExecuteReader()
         $rows = @()
         while ($reader.Read()) {
-            $rows += [pscustomobject]@{ Name = $reader['Name']; Type = $reader['Type']; ImagePath = $reader['ImagePath'] }
+            $rows += [pscustomobject]@{
+                Name = $reader['Name']; Type = $reader['Type']
+                Artist = $reader['Artist']; ImagePath = $reader['ImagePath']
+            }
         }
         $reader.Close()
         return $rows
@@ -159,9 +167,10 @@ function Get-TrackerSongs {
     finally { $connection.Close() }
 }
 
-$songs = @(Get-TrackerSongs)
-Write-Host "tracker catalog: $($songs.Count) songs"
-if ($Types -notcontains 'All') { $songs = @($songs | Where-Object { $Types -contains $_.Type }) }
+$allSongs = @(Get-TrackerSongs)
+Write-Host "tracker catalog: $($allSongs.Count) songs"
+$songs = $allSongs
+if ($Types -notcontains 'All') { $songs = @($allSongs | Where-Object { $Types -contains $_.Type }) }
 Write-Host "in scope ($($Types -join ', ')): $($songs.Count) songs"
 
 $byKey = @{}
@@ -170,20 +179,46 @@ foreach ($c in $crawled) {
     if ($key -and -not $byKey.ContainsKey($key)) { $byKey[$key] = $c }
 }
 
+# Titles are not unique. The catalog holds "Step" by KARA and "STEP" by SID-Sound as two
+# different songs with two different blobs, and they normalize to the same key - so a
+# name-only match would write SID-Sound's jacket over KARA's art and nothing would ever say
+# so. Any key that points at more than one blob ACROSS THE WHOLE CATALOG (computed before
+# the type filter, since the twins need not share a type) is ambiguous, and an ambiguous
+# match is only accepted when the artist agrees too.
+$blobsPerKey = @{}
+foreach ($song in $allSongs) {
+    $key = Get-NameKey $song.Name
+    if (-not $key) { continue }
+    if (-not $blobsPerKey.ContainsKey($key)) { $blobsPerKey[$key] = New-Object 'System.Collections.Generic.HashSet[string]' }
+    [void]$blobsPerKey[$key].Add([string]$song.ImagePath)
+}
+
+function Get-ArtistKey {
+    param([string]$Artist)
+    if (-not $Artist) { return '' }
+    return (($Artist.ToCharArray() | Where-Object { [char]::IsLetterOrDigit($_) }) -join '').ToLowerInvariant()
+}
+
 $plan = @()
 $unmatched = @()
+$ambiguous = @()
 foreach ($song in $songs) {
     # Only CDN-hosted art can be replaced in place; a song still pointing at a foreign host
     # has no blob of ours to overwrite.
     if ($song.ImagePath -notlike 'https://piuimages.arroweclip.se/*') { continue }
     $key = Get-NameKey $song.Name
     if (-not $byKey.ContainsKey($key)) { $unmatched += $song; continue }
+    $candidate = $byKey[$key]
+    if ($blobsPerKey[$key].Count -gt 1 -and (Get-ArtistKey $song.Artist) -ne (Get-ArtistKey $candidate.Artist)) {
+        $ambiguous += [pscustomobject]@{ Song = $song; Candidate = $candidate }
+        continue
+    }
     $blobPath = $song.ImagePath -replace '^https://piuimages\.arroweclip\.se/', ''
     $plan += [pscustomobject]@{
         Name     = $song.Name
         Type     = $song.Type
         BlobPath = $blobPath
-        SourceUrl = $byKey[$key].ImageUrl
+        SourceUrl = $candidate.ImageUrl
         LocalFile = Join-Path $imageDir (($blobPath -split '/')[-1])
     }
 }
@@ -197,6 +232,15 @@ Write-Host "matched to piugame art: $($plan.Count)"
 $plan | Group-Object Type | Sort-Object Name | ForEach-Object { Write-Host ("  {0,4}  {1}" -f $_.Count, $_.Name) }
 Write-Host "no longer on piugame (cut from Phoenix 2, left untouched): $($unmatched.Count)"
 $unmatched | Group-Object Type | Sort-Object Name | ForEach-Object { Write-Host ("  {0,4}  {1}" -f $_.Count, $_.Name) }
+if ($ambiguous.Count -gt 0) {
+    Write-Host ''
+    Write-Host "SKIPPED $($ambiguous.Count) - another song shares this title and the artist does not match:"
+    foreach ($a in $ambiguous) {
+        Write-Host ("    {0} by {1}  ->  piugame has '{2}' by {3}" -f `
+                $a.Song.Name, $a.Song.Artist, $a.Candidate.Name, $a.Candidate.Artist)
+        Write-Host ("      left alone: {0}" -f ($a.Song.ImagePath -replace '^https://piuimages\.arroweclip\.se/', ''))
+    }
+}
 if ($plan.Count -eq 0) { Write-Host ''; Write-Host 'nothing to refresh.'; return }
 
 # ------------------------------------------------------------- 3. download the fresh art
@@ -214,7 +258,27 @@ foreach ($item in $plan) {
 }
 Write-Host "  downloaded $downloaded of $($plan.Count) to $imageDir"
 $downloadFailed | Select-Object -First 10 | ForEach-Object { Write-Host "  DOWNLOAD FAILED: $_" }
-$plan = @($plan | Where-Object { Test-Path $_.LocalFile })
+
+# A download that answered with an error page, a login redirect or a truncated body still
+# lands on disk under the right name. The file's own magic bytes have to agree with the
+# extension of the blob it is about to replace, or it is dropped rather than uploaded -
+# overwriting real art with a broken image is the one failure here that is not self-healing.
+$rejected = @()
+$plan = @($plan | Where-Object {
+        if (-not (Test-Path $_.LocalFile)) { return $false }
+        $bytes = [IO.File]::ReadAllBytes($_.LocalFile)
+        $format = Get-ImageFormat -Bytes $bytes
+        $wanted = if ($_.BlobPath -match '\.([A-Za-z0-9]+)$') { $Matches[1].ToLowerInvariant() } else { '' }
+        if ($wanted -eq 'jpeg') { $wanted = 'jpg' }
+        if (-not $format) { $rejected += "$($_.Name)  ->  not an image ($($bytes.Length) bytes)"; return $false }
+        if ($format -ne $wanted) { $rejected += "$($_.Name)  ->  downloaded $format but the blob is .$wanted"; return $false }
+        return $true
+    })
+if ($rejected.Count -gt 0) {
+    Write-Host "  REJECTED $($rejected.Count) download(s) that are not valid art for their blob:"
+    $rejected | ForEach-Object { Write-Host "    $_" }
+}
+Write-Host "  $($plan.Count) verified image(s) ready"
 
 # --------------------------------------------- 4. compare against what the CDN serves now
 $account = Get-BlobAccount
@@ -272,6 +336,33 @@ foreach ($item in $changed) {
 Write-Host ''
 Write-Host "uploaded $uploaded of $($changed.Count). Failed: $($uploadFailed.Count)"
 $uploadFailed | Select-Object -First 10 | ForEach-Object { Write-Host "  FAILED: $_" }
+
+# Read every blob back and confirm it now IS the file that was sent, header included. A 201
+# says the service accepted the request, not that the blob a player will fetch is the right
+# art - and this is the run that overwrote the only copy, so "probably fine" is not good
+# enough. Reads go to the origin, not the CDN, so a stale edge cache cannot fake a pass.
+Write-Host ''
+Write-Host 'Verifying every upload by reading it back from the origin...'
+$verified = 0
+$bad = @()
+foreach ($item in $changed) {
+    $expected = Get-Md5 ([IO.File]::ReadAllBytes($item.LocalFile))
+    try {
+        $check = Invoke-WebRequest -Uri "$base/$(ConvertTo-BlobPath $item.BlobPath)?$sas" -UseBasicParsing -TimeoutSec 30
+        $actualMd5 = Get-Md5 $check.RawContentStream.ToArray()
+        $actualType = $check.Headers['Content-Type']
+        $wantType = Get-ContentTypeForPath $item.BlobPath
+        if ($actualMd5 -ne $expected) { $bad += "$($item.BlobPath)  ->  bytes differ from what was sent" }
+        elseif ($actualType -ne $wantType) { $bad += "$($item.BlobPath)  ->  serving $actualType, expected $wantType" }
+        else { $verified++ }
+    }
+    catch { $bad += "$($item.BlobPath)  ->  could not read back: $($_.Exception.Message)" }
+}
+Write-Host "  verified $verified of $($changed.Count)"
+if ($bad.Count -gt 0) {
+    Write-Host "  $($bad.Count) FAILED VERIFICATION - re-run to retry them:"
+    $bad | Select-Object -First 10 | ForEach-Object { Write-Host "    $_" }
+}
 
 Write-Host ''
 Write-Host 'These blobs were overwritten, so the CDN must be purged or it keeps serving the old art:'
