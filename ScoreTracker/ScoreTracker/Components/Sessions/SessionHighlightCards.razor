@@ -1,4 +1,4 @@
-@using ScoreTracker.Domain.Models
+﻿@using ScoreTracker.Domain.Models
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.ScoreLedger.Contracts
 @using ScoreTracker.SharedKernel.Enums
@@ -54,6 +54,16 @@
                         <span class="tier-chart-card-corner pmb-corner-gain hl-card-gain"
                               title="@L["What this play added to your PUMBILITY"]">
                             <PumbilityDelta Value="gain"></PumbilityDelta>
+                        </span>
+                    }
+                    @if (card.Score.Detail?.HardmodeGain is { } hardGain && hardGain > 0)
+                    {
+                        @* Same chip in the Hardmode mark. Both appear together on a qualifying
+                           chart and the two numbers usually differ hard - a full PUMBILITY pool
+                           banks only what the play beat, a short Hardmode pool banks all of it. *@
+                        <span class="tier-chart-card-corner hmd-corner-gain hl-card-gain"
+                              title="@L["What this play added to your Hardmode pool"]">
+                            <PumbilityDelta Value="hardGain"></PumbilityDelta>
                         </span>
                     }
                 </div>
@@ -158,7 +168,13 @@
             newer.CompetitiveBaseline ?? older.CompetitiveBaseline,
             newer.PumbilityGain == null && older.PumbilityGain == null
                 ? null
-                : (newer.PumbilityGain ?? 0) + (older.PumbilityGain ?? 0));
+                : (newer.PumbilityGain ?? 0) + (older.PumbilityGain ?? 0),
+            // Summed like its PUMBILITY twin: a pass and its later upscore are one story on one
+            // card, so the card owes the whole night's gain rather than the last capture's.
+            newer.HardmodeGain == null && older.HardmodeGain == null
+                ? null
+                : (newer.HardmodeGain ?? 0) + (older.HardmodeGain ?? 0),
+            newer.HardmodeRank ?? older.HardmodeRank);
     }
 
     /// <summary>

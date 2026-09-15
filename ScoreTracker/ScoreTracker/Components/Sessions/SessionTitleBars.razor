@@ -1,9 +1,15 @@
+﻿@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.Domain.Models.Titles.Phoenix2
 @using ScoreTracker.Web.Services
 @namespace ScoreTracker.Web.Components
 
 @* One bar per scope played, showing the title being worked on in it and how far the session
    travelled. The held segment is quiet and the travelled one glows: reading the climb is the
    point, and a bar that only showed the total would hide it. *@
+@* Two groups, never one list. "Titles you're working on" is a claim about titles the player
+   will actually earn; a Hardmode rail is the same Phoenix 2 ladder priced against a strict
+   subset, so a player past RED BERYL would read "33% to BRONZE" with nothing on the bar to say
+   why. The separate heading and the pointer under it are what make the bar true (design D22). *@
 @if (Bars.Count > 0)
 {
     <div class="sbd-section" data-testid="session-title-bars">
@@ -49,8 +55,55 @@
     </div>
 }
 
+@if (HardmodeBars.Count > 0)
+{
+    <div class="sbd-section" data-testid="session-hardmode-bars">
+        <div class="sbd-eyebrow sbd-section-head hmd-section-head">@L["Hardmode ladders"]</div>
+        @foreach (var bar in HardmodeBars)
+        {
+            <div class="sbd-tbar">
+                <div class="sbd-tbar-meta">
+                    <span class="sbd-tbar-scope">@ScopeOf(bar.Pool)</span>
+                    <span class="sbd-tbar-name">@bar.Title</span>
+                    <span class="sbd-tbar-pct">
+                        <span class="sbd-tbar-was">@Percent(bar.OldPercent) &rarr;</span> @Percent(bar.NewPercent)
+                    </span>
+                </div>
+                @* No level ticks: those frame a gem the player HOLDS, and a Hardmode pool is
+                   almost never in the same gem as the real one. The bar alone is the claim. *@
+                <div class="sbd-track">
+                    <span class="sbd-track-held" style="@($"width:{Clamp(bar.OldPercent)}%")"></span>
+                    <span class="sbd-track-gain hmd-track-gain"
+                          style="@($"left:{Clamp(bar.OldPercent)}%;width:{Clamp(bar.NewPercent) - Clamp(bar.OldPercent)}%")"></span>
+                </div>
+                <div class="sbd-tbar-cap">@L["{0} of {1} rating", bar.Current.ToString("N0"), bar.Required.ToString("N0")]</div>
+            </div>
+        }
+        @* Renders only where a Hardmode bar is on screen, and remembers its own dismissal — a
+           player who silenced the tier-list pointer has not silenced this one. *@
+        <TitleProgressPointer Show="true" SettingKey="@HardmodePointerKey" Glyph="💀"
+                              Href="/Pumbility/Hardmode"
+                              Text="@L["These ladders are priced against Hardmode charts only."]"
+                              LinkText="@L["What is Hardmode?"]"></TitleProgressPointer>
+    </div>
+}
+
 @code {
+    /// <summary>Its own dismissal, separate from the tier-list pointer's (D22).</summary>
+    public const string HardmodePointerKey = "Sessions__HardmodePointerDismissed";
+
     [Parameter] public IReadOnlyList<SessionTitleBarModel> Bars { get; set; } = Array.Empty<SessionTitleBarModel>();
+
+    [Parameter] public IReadOnlyList<HardmodeTitleBar> HardmodeBars { get; set; } =
+        Array.Empty<HardmodeTitleBar>();
+
+    /// <summary>The pool's own bracket, the notation the rails and the title list already use.</summary>
+    private static string ScopeOf(PumbilityPool pool) => pool switch
+    {
+        PumbilityPool.Singles => "[S]",
+        PumbilityPool.Doubles => "[D]",
+        _ => "[P.B]"
+    };
 
     private static double Clamp(double percent) => Math.Clamp(percent, 0, 1) * 100;
 

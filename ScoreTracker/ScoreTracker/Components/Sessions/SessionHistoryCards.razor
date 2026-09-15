@@ -67,7 +67,7 @@
                         {
                             @foreach (var milestone in row.Headline)
                             {
-                                <span class="sbd-card-tag">@Headline(milestone)</span>
+                                <span class="sbd-card-tag @(milestone.Kind == MilestoneKind.HardmodePumbilityGain ? "hmd-card-tag" : null)">@Headline(milestone)</span>
                             }
                         }
                         else
@@ -138,6 +138,8 @@
     {
         MilestoneKind.TitleCompleted => $"🏆 {milestone.Title}",
         MilestoneKind.PumbilityGain => $"📈 +{PumbilityFormat.Gain(milestone.NewValue!.Value - milestone.OldValue!.Value)}",
+        MilestoneKind.HardmodePumbilityGain =>
+            $"💀 +{PumbilityFormat.Gain(milestone.NewValue!.Value - milestone.OldValue!.Value)}",
         MilestoneKind.FolderPassLamp => $"🎉 {milestone.Detail}",
         _ => $"🏆 {milestone.Detail}"
     };

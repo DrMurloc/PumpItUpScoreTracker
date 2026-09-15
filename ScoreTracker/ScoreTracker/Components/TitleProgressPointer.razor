@@ -1,4 +1,4 @@
-@namespace ScoreTracker.Web.Components
+﻿@namespace ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Contracts
 @inject IUiSettingsAccessor UiSettings
 
@@ -11,33 +11,62 @@
 @if (Show && _read && !_dismissed)
 {
     <div class="title-pointer" data-testid="title-pointer">
-        <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Small" Class="title-pointer-ic"></MudIcon>
-        <span>@L["Looking for title progress?"]</span>
-        <a class="title-pointer-link" href="/Pumbility/Breakdown">@L["See the PUMBILITY page"]</a>
+        @if (Glyph is { Length: > 0 })
+        {
+            <span class="title-pointer-ic">@Glyph</span>
+        }
+        else
+        {
+            <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Small" Class="title-pointer-ic"></MudIcon>
+        }
+        <span>@Text</span>
+        <a class="title-pointer-link" href="@Href">@LinkText</a>
         <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Class="title-pointer-x"
                        OnClick="Dismiss" aria-label="@L["Dismiss"]" data-testid="title-pointer-dismiss"></MudIconButton>
     </div>
 }
 
 @code {
-    /// <summary>Set once the player closes the pointer. Its presence is the whole "dismissed" test.</summary>
+    /// <summary>
+    ///     The tier-list instance's key. A second instance supplies its own via
+    ///     <see cref="SettingKey" />, so dismissing one pointer never dismisses the other — they
+    ///     say different things and a player who silenced one may still want the other.
+    /// </summary>
     public const string DismissedKey = "TierLists__TitlePointerDismissed";
 
     /// <summary>Whether the folder on screen has title progress for this player.</summary>
     [Parameter] public bool Show { get; set; }
 
+    /// <summary>Which dismissal this instance remembers. Defaults to the tier-list one.</summary>
+    [Parameter] public string SettingKey { get; set; } = DismissedKey;
+
+    [Parameter] public string? Text { get; set; }
+
+    [Parameter] public string? LinkText { get; set; }
+
+    [Parameter] public string Href { get; set; } = "/Pumbility/Breakdown";
+
+    /// <summary>An emoji in place of the trophy, for a pointer whose subject has its own mark.</summary>
+    [Parameter] public string? Glyph { get; set; }
+
     private bool _read;
     private bool _dismissed;
 
+    protected override void OnParametersSet()
+    {
+        Text ??= L["Looking for title progress?"];
+        LinkText ??= L["See the PUMBILITY page"];
+    }
+
     protected override async Task OnInitializedAsync()
     {
-        _dismissed = await UiSettings.GetSetting(DismissedKey) is not null;
+        _dismissed = await UiSettings.GetSetting(SettingKey) is not null;
         _read = true;
     }
 
     private async Task Dismiss()
     {
         _dismissed = true;
-        await UiSettings.SetSetting(DismissedKey, "true");
+        await UiSettings.SetSetting(SettingKey, "true");
     }
 }

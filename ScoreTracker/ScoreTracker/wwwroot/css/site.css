@@ -1,4 +1,4 @@
-/* Self-hosted display face — headings, stat numerals, wordmark. Latin subset only:
+﻿/* Self-hosted display face — headings, stat numerals, wordmark. Latin subset only:
    Korean/Japanese glyphs fall through per-glyph to the system CJK fonts in the stack
    (see --font-display), which keeps mixed-script headings from going anemic. */
 @font-face {
@@ -20197,3 +20197,88 @@ a.peer-pop-row:hover {
     min-width: 0;
 }
 
+/* ---- Hardmode mark (docs/design/hardmode-leaderboard.md D19) --------------------------
+   One token, --hard-mark, for every surface that says a chart or a number is Hardmode:
+   the score badge, the gain chip, the milestone strip, the session rail's gain segment,
+   the history tag, the feed captions and the difficulty-bubble glow. Emitted by MixThemes
+   and mix-invariant, like the judgment and lifebar groups. */
+
+.hmd-badge {
+    color: var(--hard-mark);
+    border: 1px solid color-mix(in srgb, var(--hard-mark) 70%, transparent);
+    background: rgba(0, 0, 0, .82);
+    border-radius: 3px;
+    padding: 1px 5px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+/* The gain chip, matching .sbd-gain's geometry exactly so the two sit level on one score
+   line — they differ only in which pool they measure. */
+.hmd-gain {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: .74rem;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+    background: rgba(0, 0, 0, .82);
+    color: var(--hard-mark);
+    border: 1px solid var(--hard-mark);
+    border-radius: 2px;
+    padding: 1px 5px;
+    white-space: nowrap;
+}
+
+/* The card-corner variant, alongside .pmb-corner-gain. Declared after
+   .tier-chart-card-corner so it wins that rule's border shorthand on source order — the
+   same contract the card border language runs on. */
+.hmd-corner-gain {
+    border-color: var(--hard-mark);
+    color: var(--hard-mark);
+}
+
+/* The milestone strip. Same geometry as the amber PUMBILITY strip beside it; the rail's
+   colour is the only difference, which is what lets six strips read as two families. */
+.hmd-strip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    min-height: 34px;
+    border-left: 3px solid var(--hard-mark);
+    background: color-mix(in srgb, var(--hard-mark) 8%, transparent);
+}
+
+.hmd-strip-chip {
+    flex: none;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: .74rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--hard-mark);
+}
+
+.hmd-section-head {
+    color: var(--hard-mark);
+}
+
+.hmd-track-gain {
+    background: var(--hard-mark);
+}
+
+.hmd-card-tag {
+    color: var(--hard-mark);
+}
+
+/* The difficulty-bubble glow (D24). A drop-shadow filter rather than a border or a box
+   shadow, so it traces the bubble art's own alpha and haloes the shape instead of a
+   rectangle around it. Three stacked shadows: a tight core, a bloom, and a wide falloff
+   that survives a near-white album jacket, which is the ground with the least to bloom
+   into. Never suppressed anywhere, the Hardmode page's own list included — a folder where
+   every chart glows is the point there, not a defect. */
+.bubble-hardmode {
+    filter: drop-shadow(0 0 3px var(--hard-mark))
+    drop-shadow(0 0 9px var(--hard-mark))
+    drop-shadow(0 0 16px color-mix(in srgb, var(--hard-mark) 60%, transparent));
+}

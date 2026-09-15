@@ -1,4 +1,4 @@
-using MudBlazor;
+﻿using MudBlazor;
 using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.SharedKernel.Enums;
@@ -40,6 +40,17 @@ public sealed record MixPalette(
     public const string Error = "#C72020";
     public const string Success = "#6EDE7F";
     public const string Warning = "#FFC433";
+
+    /// <summary>
+    ///     The Hardmode mark (docs/design/hardmode-leaderboard.md D19): the red that says a chart
+    ///     is in the week's Hardmode list, or that a number belongs to the Hardmode pool rather
+    ///     than the PUMBILITY one. Mix-invariant like the judgment and lifebar groups.
+    ///     <para>
+    ///         Deliberately brighter than <see cref="Error" />, which is tuned to carry white
+    ///         label text on a filled alert rather than to glow at the edge of a bubble.
+    ///     </para>
+    /// </summary>
+    public const string HardmodeMark = "#FF3B3B";
 
     // Success and Warning are light enough that MudBlazor's default white label lands around
     // 1.6:1 on them. Both carry ink instead. Error is dark and keeps the white default.
@@ -580,6 +591,9 @@ public static class MixThemes
                      $"\n    --unplayed-grade: {UnpassedGradeHex};";
         var judgments = string.Join("\n", JudgmentColors.Select(kv =>
             $"    --judg-{kv.Key.ToString().ToLowerInvariant()}: {kv.Value};"));
+        // One token, not a ramp: the mark encodes membership rather than degree, so every
+        // surface that says "Hardmode" paints from the same red (D19).
+        var hardmode = $"    --hard-mark: {MixPalette.HardmodeMark};";
         // The rainbow ships as both its stops and a ready-made gradient, so markup can paint
         // the visible bar without re-listing seven colors at every call site.
         var lifeStops = string.Join("\n", LifeRainbowStops.Select((hex, i) =>
@@ -641,6 +655,7 @@ public static class MixThemes
 {brands}
 {chartTypes}
 {grades}
+{hardmode}
 {judgments}
 {life}
 {speed}

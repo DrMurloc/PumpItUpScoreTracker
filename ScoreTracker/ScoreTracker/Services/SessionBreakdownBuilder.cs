@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Models;
@@ -138,7 +138,10 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
             milestones.Where(m => m.Kind != MilestoneKind.TitleProgress).ToArray(),
             BuildTitleBars(milestones),
             CaptureWindowOpen(session),
-            highlights.Length + milestones.Length);
+            highlights.Length + milestones.Length,
+            // Derived, not stored: the Hardmode milestones already carry old and new, and the
+            // ladder is the vertical's own (D22).
+            HardmodeTitleBars.From(group.Mix, milestones));
     }
 
     /// <summary>
@@ -331,7 +334,11 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
     private static readonly MilestoneKind[] HeadlineOrder =
     {
         MilestoneKind.TitleCompleted, MilestoneKind.PumbilityGain, MilestoneKind.FolderPassLamp,
-        MilestoneKind.FolderGradeLamp, MilestoneKind.FolderPlateLamp
+        MilestoneKind.FolderGradeLamp, MilestoneKind.FolderPlateLamp,
+        // Last on purpose (design §10): with two slots, Hardmode only takes one on a session
+        // where nothing bigger happened - which is exactly the session that otherwise reads as
+        // though nothing happened at all.
+        MilestoneKind.HardmodePumbilityGain
     };
 
     private const int HeadlineCap = 2;
