@@ -1,4 +1,4 @@
-@using MediatR
+﻿@using MediatR
 @using ScoreTracker.ChartIntelligence.Contracts.Queries
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
@@ -250,7 +250,8 @@ else
                 config.ChartType, LevelOffset: 0, _mix,
                 Categories: categories.ToHashSet(),
                 LevelWindow: SuggestedGoals.BuildWindow(config),
-                HotStreak: SuggestedGoals.BuildHotStreakOptions(config))))
+                HotStreak: SuggestedGoals.BuildHotStreakOptions(config),
+                HardmodeOnly: config.HardmodeOnly)))
             .ToArray();
 
         var charts = await ChartCatalog.GetCharts(_mix);

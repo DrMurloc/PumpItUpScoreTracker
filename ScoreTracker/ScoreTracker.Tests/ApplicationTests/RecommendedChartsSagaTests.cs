@@ -107,6 +107,59 @@ public sealed class RecommendedChartsSagaTests
     }
 
     [Fact]
+    public async Task HardmodeOnlyNarrowsWhicheverGoalWasPicked()
+    {
+        // A filter, not a sixth goal (D23): Score Push still runs Score Push, over the week's
+        // qualifying charts alone.
+        var qualifying = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ordinary = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(qualifying, ordinary)
+            .WithScores(Score(qualifying.Id, 999500), Score(ordinary.Id, 999500))
+            .WithHardmodeCharts(qualifying);
+
+        var result = (await ctx.Saga.Handle(
+            new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0, HardmodeOnly: true),
+            CancellationToken.None)).ToArray();
+
+        Assert.Contains(result, r => r.ChartId == qualifying.Id);
+        Assert.DoesNotContain(result, r => r.ChartId == ordinary.Id);
+    }
+
+    [Fact]
+    public async Task WithoutTheFilterEveryChartStaysEligible()
+    {
+        var qualifying = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ordinary = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(qualifying, ordinary)
+            .WithScores(Score(qualifying.Id, 999500), Score(ordinary.Id, 999500))
+            .WithHardmodeCharts(qualifying);
+
+        var result = (await ctx.Saga.Handle(
+            new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0),
+            CancellationToken.None)).ToArray();
+
+        Assert.Contains(result, r => r.ChartId == ordinary.Id);
+    }
+
+    [Fact]
+    public async Task HardmodeOnlyOnAMixWithNoCensusSuggestsNothingRatherThanEverything()
+    {
+        // The failure mode worth pinning: an empty list must narrow to nothing, not fall open.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(chart)
+            .WithScores(Score(chart.Id, 999500));
+
+        var result = (await ctx.Saga.Handle(
+            new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0, HardmodeOnly: true),
+            CancellationToken.None)).ToArray();
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
     public async Task GetRecommendedChartsClampsCompetitiveLevelToTenWhenStatsAreLower()
     {
         // PlayerStats.CompetitiveLevel = 5 → clamped to 10. GetOldScores then iterates
@@ -704,6 +757,7 @@ public sealed class RecommendedChartsSagaTests
         public Mock<IRandomNumberGenerator> Random { get; } = new();
         public Mock<IScoreHighlightRepository> Highlights { get; } = new();
         public Mock<IPeerStandingReader> Peers { get; } = new();
+        public Mock<IHardmodeChartReader> HardmodeCharts { get; } = new();
         public RecommendedChartsSaga Saga { get; }
 
         public RecommendedChartsContext(Guid? currentUserId = null)
@@ -745,9 +799,21 @@ public sealed class RecommendedChartsSagaTests
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Dictionary<Guid, PeerStanding>());
 
+            HardmodeCharts.Setup(h => h.GetQualifyingCharts(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<HardmodeChartEntry>());
             Saga = new RecommendedChartsSaga(Mediator.Object, CurrentUser.Object, Users.Object, Stats.Object,
                 Scores.Object, Weekly.Object, ChartList.Object,
-                FakeDateTime.At(Now).Object, Random.Object, Highlights.Object, Peers.Object);
+                FakeDateTime.At(Now).Object, Random.Object, Highlights.Object, Peers.Object,
+                HardmodeCharts.Object);
+        }
+
+        /// <summary>The week's Hardmode list, for the goal-narrowing filter (D23).</summary>
+        public RecommendedChartsContext WithHardmodeCharts(params Chart[] charts)
+        {
+            HardmodeCharts.Setup(h => h.GetQualifyingCharts(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(charts.Select(c => new HardmodeChartEntry(c.Id, c.Type, (int)c.Level, 0, 0, 40, 10))
+                    .ToArray());
+            return this;
         }
 
         public RecommendedChartsContext WithCharts(params Chart[] charts)
@@ -878,8 +944,11 @@ public sealed class RecommendedChartsSagaTests
         dateTime ??= FakeDateTime.At(Now);
         random ??= new Mock<IRandomNumberGenerator>();
         highlights ??= new Mock<IScoreHighlightRepository>();
+        var hardmodeCharts = new Mock<IHardmodeChartReader>();
+        hardmodeCharts.Setup(h => h.GetQualifyingCharts(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<HardmodeChartEntry>());
         return new RecommendedChartsSaga(mediator.Object, currentUser.Object, users.Object, stats.Object,
             scores.Object, weeklyTournament.Object, chartList.Object, dateTime.Object,
-            random.Object, highlights.Object, Mock.Of<IPeerStandingReader>());
+            random.Object, highlights.Object, Mock.Of<IPeerStandingReader>(), hardmodeCharts.Object);
     }
 }

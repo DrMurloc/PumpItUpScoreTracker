@@ -1,4 +1,4 @@
-using ScoreTracker.Domain.Services;
+﻿using ScoreTracker.Domain.Services;
 using MediatR;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Commands;
@@ -34,14 +34,16 @@ namespace ScoreTracker.PlayerProgress.Application
         private readonly IRandomNumberGenerator _random;
         private readonly IScoreHighlightRepository _highlights;
         private readonly IPeerStandingReader _peers;
+        private readonly IHardmodeChartReader _hardmodeCharts;
 
         public RecommendedChartsSaga(IMediator mediator, ICurrentUserAccessor currentUser, IFeedbackRepository feedback,
             IPlayerStatsReader stats, IScoreReader scores,
             IWeeklyTournamentRepository weeklyTournament, IChartListRepository chartList,
             IDateTimeOffsetAccessor dateTime, IRandomNumberGenerator random, IScoreHighlightRepository highlights,
-            IPeerStandingReader peers)
+            IPeerStandingReader peers, IHardmodeChartReader hardmodeCharts)
         {
             _peers = peers;
+            _hardmodeCharts = hardmodeCharts;
             _mediator = mediator;
             _currentUser = currentUser;
             _feedback = feedback;
@@ -88,6 +90,22 @@ namespace ScoreTracker.PlayerProgress.Application
                 ? null
                 : await BuildLevelWindow(mix, request.LevelWindow, competitiveLevel, cancellationToken);
 
+            // Hardmode is a FILTER over whichever goal was picked, not a sixth goal (D23): Score
+            // Push becomes "improve the Hardmode scores you hold", Fill Gaps becomes "Hardmode
+            // charts you could pass". It composes into the level window because that predicate is
+            // already threaded through every builder that selects candidates - narrowing the
+            // chart DICTIONARY instead would break the builders that index it by a score's chart
+            // id, which is a different set. Builders with no window get the closing filter.
+            var hardmodeOnly = request.HardmodeOnly
+                ? (await _hardmodeCharts.GetQualifyingCharts(mix, cancellationToken))
+                    .Select(c => c.ChartId).ToHashSet()
+                : null;
+            if (hardmodeOnly != null)
+            {
+                var levelWindow = window;
+                window = chart => (levelWindow == null || levelWindow(chart)) && hardmodeOnly.Contains(chart.Id);
+            }
+
             var result = Enumerable.Empty<ChartRecommendation>();
             if (Include(RecommendationCategory.PushLevel))
                 result = result.Concat(await GetPushLevels(mix, feedback, cancellationToken, titles, scores,
@@ -121,6 +139,9 @@ namespace ScoreTracker.PlayerProgress.Application
             if (request.Categories?.Contains(RecommendationCategory.HotStreak) == true)
                 result = result.Concat(await GetHotStreakCharts(mix, feedback, request.ChartType, charts,
                     request.HotStreak ?? new HotStreakOptions(), scores, cancellationToken));
+            // The backstop, for the builders that pin their own levels and take no window at all
+            // (the pushing title, skill titles, weekly charts, Hot Streak's similarity reach).
+            if (hardmodeOnly != null) result = result.Where(r => hardmodeOnly.Contains(r.ChartId));
             return result.ToArray();
         }
 

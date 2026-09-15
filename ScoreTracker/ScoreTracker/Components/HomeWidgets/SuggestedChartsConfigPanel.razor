@@ -1,4 +1,4 @@
-@using ScoreTracker.HomePage.Contracts
+﻿@using ScoreTracker.HomePage.Contracts
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.ValueTypes
@@ -107,6 +107,16 @@
         <MudCheckBox T="bool" @bind-Value="_personalized" Label="@L["Personalized"]"/>
     }
 }
+@* The filter sits with the goal it narrows rather than with the level controls: it changes
+   what the goal MEANS, not how wide it reaches. Disabled with its reason showing on a mix
+   without a census - a control that vanishes reads as a bug (D23). *@
+<MudCheckBox T="bool" @bind-Value="_hardmodeOnly" Disabled="!HardmodeAvailable"
+             Label="@L["Hardmode charts only"]"></MudCheckBox>
+<MudText Typo="Typo.caption" Class="dash-muted ml-8" Style="margin-top:-6px;display:block">
+    @(HardmodeAvailable
+        ? L["The rarest slice of every folder — the charts almost nobody holds in a top 50."]
+        : L["Hardmode is Phoenix 2 only."])
+</MudText>
 <MudSelect T="MixEnum?" @bind-Value="_mix" Label="@L["Mix"]" Class="mb-3 mt-2">
     <MudSelectItem T="MixEnum?" Value="null">@L["Follow current mix"]</MudSelectItem>
     <MudSelectItem T="MixEnum?" Value="MixEnum.Phoenix">Phoenix</MudSelectItem>
@@ -139,6 +149,13 @@
     private SuggestedLookback _lookback = SuggestedLookback.Days30;
     private bool _includeOldScores;
     private bool _groupBySeed = true;
+    private bool _hardmodeOnly;
+
+    /// <summary>
+    ///     Phoenix 2 only today. Read from the pinned mix rather than the census, because the
+    ///     panel is a config surface and a query here would cost a read per drawer open.
+    /// </summary>
+    private bool HardmodeAvailable => _mix is null or MixEnum.Phoenix2;
 
     protected override void OnParametersSet()
     {
@@ -160,6 +177,7 @@
         _lookback = config.HotStreakLookback;
         _includeOldScores = config.HotStreakIncludeOldScores;
         _groupBySeed = config.GroupBySeed;
+        _hardmodeOnly = config.HardmodeOnly;
     }
 
     private void SetGoal(SuggestedGoal goal)
@@ -217,7 +235,8 @@
             HotStreakPeerPercentile = _goal == SuggestedGoal.HotStreak ? Math.Clamp(_peerPercentile, 0, 99) : 80,
             HotStreakLookback = _goal == SuggestedGoal.HotStreak ? _lookback : SuggestedLookback.Days30,
             HotStreakIncludeOldScores = _goal == SuggestedGoal.HotStreak && _includeOldScores,
-            GroupBySeed = _goal != SuggestedGoal.HotStreak || _groupBySeed
+            GroupBySeed = _goal != SuggestedGoal.HotStreak || _groupBySeed,
+            HardmodeOnly = HardmodeAvailable && _hardmodeOnly
         };
         await OnSave.InvokeAsync((WidgetConfigJson.Write(config), 1));
     }
