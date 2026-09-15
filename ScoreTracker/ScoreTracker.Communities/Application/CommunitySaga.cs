@@ -607,6 +607,21 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
                     lines.Add("📈 " + _localizer.Get(culture, "**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})",
                         m.OldValue, m.NewValue, m.NewValue - m.OldValue));
                     break;
+                // Hardmode's three, mirroring PUMBILITY's three. The skull replaces the chart
+                // emoji rather than joining it: in a plain-text feed with no colour, the glyph
+                // is the only thing separating the two families.
+                case MilestoneKind.HardmodePumbilityGain:
+                    lines.Add("💀 " + _localizer.Get(culture, "**Hardmode** {0:N0} → **{1:N0}** (+{2:N0})",
+                        m.OldValue, m.NewValue, m.NewValue - m.OldValue));
+                    break;
+                case MilestoneKind.HardmodeSinglesPumbilityGain:
+                    lines.Add("💀 " + _localizer.Get(culture, "**Hardmode (S)** {0:N0} → **{1:N0}** (+{2:N0})",
+                        m.OldValue, m.NewValue, m.NewValue - m.OldValue));
+                    break;
+                case MilestoneKind.HardmodeDoublesPumbilityGain:
+                    lines.Add("💀 " + _localizer.Get(culture, "**Hardmode (D)** {0:N0} → **{1:N0}** (+{2:N0})",
+                        m.OldValue, m.NewValue, m.NewValue - m.OldValue));
+                    break;
                 case MilestoneKind.OfficialPumbilityRank:
                     // A line in the stats block, never a card of its own. Estimated, so it
                     // wears the same tilde the chart placements do.
@@ -795,6 +810,10 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             parts.Add("👑 " + (d?.PumbilityRank != null
                 ? _localizer.Get(culture, "#{0} in your PUMBILITY", d.PumbilityRank)
                 : _localizer.Get(culture, "PUMBILITY top 50")));
+        if (flags.HasFlag(HighlightFlags.HardmodeTop50))
+            parts.Add("💀 " + (d?.HardmodeRank != null
+                ? _localizer.Get(culture, "#{0} in your Hardmode", d.HardmodeRank)
+                : _localizer.Get(culture, "Hardmode fifty")));
         if (flags.HasFlag(HighlightFlags.ScoreQuality90)) parts.Add(PeerCaption(d, best, culture));
         if (flags.HasFlag(HighlightFlags.FolderDebut))
             parts.Add("🆕 " + (d?.FolderDebutOrdinal != null

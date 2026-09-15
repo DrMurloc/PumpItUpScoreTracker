@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -37,6 +37,70 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class CommunitySagaTests
 {
     private static readonly DateTimeOffset Now = new(2026, 5, 1, 12, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public async Task HardmodeTakesThreeStatsLinesBesideTheThreePumbilityOnes()
+    {
+        // All three pools, because PUMBILITY does all three (D20). The skull replaces the chart
+        // emoji rather than joining it: in a plain-text feed with no colour, the glyph is the
+        // only thing keeping the two families apart.
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "drmurloc");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, chart, score: 950000);
+        var milestones = new[]
+        {
+            new PlayerMilestoneRecord(MilestoneKind.HardmodePumbilityGain, sessionId, Now, 2999.09, 3339.22,
+                null, null),
+            new PlayerMilestoneRecord(MilestoneKind.HardmodeSinglesPumbilityGain, sessionId, Now, 1995.50,
+                2244.10, null, null),
+            new PlayerMilestoneRecord(MilestoneKind.HardmodeDoublesPumbilityGain, sessionId, Now, 1003.58,
+                1343.72, null, null)
+        };
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix2, sessionId, milestones,
+            (chart.Id, true, HighlightFlags.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
+                t.Markdown.Contains("💀 **Hardmode** 2,999 → **3,339** (+340)")
+                && t.Markdown.Contains("💀 **Hardmode (S)** 1,996 → **2,244** (+249)")
+                && t.Markdown.Contains("💀 **Hardmode (D)** 1,004 → **1,344** (+340)"))),
+            It.IsAny<IEnumerable<ulong>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TheSkullRidesTheScoreRowBesideTheCrown()
+    {
+        // Both facts about one score, on one caption line - the crown's own rule applied to the
+        // skull rather than a second row for the second fact.
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "drmurloc");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, chart, score: 991204);
+
+        var change = new ScoreHighlightsCapturedEvent.HighlightedChange(chart.Id, true, null, 991204,
+            "UltimateGame", false,
+            HighlightFlags.PumbilityTop50 | HighlightFlags.HardmodeTop50,
+            new HighlightDetail(PumbilityRank: 31, HardmodeRank: 4));
+
+        await ctx.Saga.Consume(BuildContext(ScoreHighlightsCapturedEvent.Create(Now, userId,
+            MixEnum.Phoenix2, sessionId, new[] { change })));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotSection>().Any(s =>
+                s.Markdown.Contains("👑 #31 in your PUMBILITY")
+                && s.Markdown.Contains("💀 #4 in your Hardmode"))),
+            It.IsAny<IEnumerable<ulong>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
 
     [Fact]
     public async Task CreateCommunityThrowsWhenCommunityNameAlreadyExists()
