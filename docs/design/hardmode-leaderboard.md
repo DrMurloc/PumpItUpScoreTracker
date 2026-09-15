@@ -205,7 +205,8 @@ ports carry both directions rather than adding project references (D13).
 | **ChartIntelligence** | `HardmodeCut` (the rule) · `HardmodeCensusSaga` (the weekly sweep) · `HardmodeChart` table · `RebuildHardmodeChartsCommand` / `GetHardmodeChartsQuery` |
 | **PlayerProgress** | `HardmodeSaga` (site ratings, the weekly sweep AND the per-import reprice) · six `PlayerStats` columns · `GetHardmodePageQuery` / `GetHardmodeBoardQuery` — render-time reads of your own pool and the board |
 | **OfficialMirror** | `OfficialPoolReader` · `OfficialHardmodeRating` table + its writer |
-| **Web** | `/Pumbility/Hardmode` · `HardmodeBoardSection` · `HardmodeQualifyingSection` · the gold card state · the `/Admin` backfill button |
+| **Communities** | the Discord session card's Hardmode stats lines and per-row mark (§10) |
+| **Web** | `/Pumbility/Hardmode` · `HardmodeBoardSection` · `HardmodeQualifyingSection` · the gold card state · the `/Admin` backfill button · the `--hard-mark` token and the bubble glow · the session, feed and Suggested-Charts surfaces of §10 |
 
 Everything except the list and the ratings is computed at render time from the viewer's own records
 against the week's frozen list, so your number moves with your imports while the list holds until Sunday.
@@ -225,6 +226,82 @@ OfficialMirror's contract and ChartIntelligence cannot see it; the cost of stric
 reference, and a one-week-stale board population is acceptable on a board whose whole point is weekly
 stability. `/Admin` carries a one-shot button for the first run.
 
+## 10. Announcements
+
+Hardmode is a progress system, so it announces itself everywhere PUMBILITY does. Paragon levels on
+Phoenix 1 established that PIU Scores can drive a progression of its own without the official game
+minting it (owner, 2026-09-14) — the mirror is therefore deliberate and complete rather than a
+partial nod.
+
+**D18 — Hardmode announces on the surfaces PUMBILITY announces on, and skips two.** In: the session
+page's milestone strips and score badges, the session history card's headline tag, the Discord
+session card's stats block, and both significant-win feeds (the Community Highlights widget and the
+Rivals feed). Out: the session page's **ceremony band** and the **Account Stats widget** hero, both of
+which answer "what is your number" with one figure — a second headline figure there competes with the
+number it is a subset of, rather than adding to it (owner, 2026-09-14).
+
+**D19 — the mark is 💀 in red, and it is one token.** PUMBILITY's crown is gold; Hardmode's skull is
+red, and the two co-occur constantly on the same row, so they must separate at a glance without being
+read. Every mark paints from `--hard-mark`: badge, gain chip, strip rail, the session rail's gain
+segment, feed captions, and the difficulty-bubble glow. **Mix-invariant**, like `--judg-*` and
+`--life-*` — a Hardmode chart is a Hardmode chart in every theme, and the mark carries data meaning
+rather than brand.
+
+**D20 — all three pools announce.** Combined, Singles and Doubles, exactly as PUMBILITY's three do,
+on the session strips and in the Discord stats block alike. *"If pumbility does all 3, we do all 3"*
+(owner, 2026-09-14). The same rule settles the board standing the feed rows need: `PlayerRatingSaga`
+estimates the official rank on all three boards, so Hardmode reads all three standings.
+
+**D21 — the score badge is the literal twin.** `HardmodeTop50` means "this score sits in your Hardmode
+fifty", not "this is a qualifying chart". A pool under fifty displaces nothing, so for most accounts
+the badge lights up on every qualifying score — which is the same bootstrap the normal top 50 had when
+Phoenix launched and D10s were legitimately in people's fifties (owner, 2026-09-14). It is a feature of
+a young pool, not a defect: a player who barely touches these charts barely sees it, and a player who
+does fills their fifty fast and watches it tighten.
+
+**D22 — Hardmode rails never sit under "Titles you're working on".** That heading is a claim about
+titles the player will actually earn. A Hardmode rail is the same Phoenix 2 ladder priced against a
+subset, so a player past RED BERYL would read "33% to BRONZE" with nothing on the bar to say why.
+Hardmode rails take their own heading directly beneath, and a dismissable pointer
+(`TitleProgressPointer`, parameterized for a second instance) links to `/Pumbility/Hardmode`.
+
+**D23 — Suggested Charts takes Hardmode as a filter, not a goal.** A checkbox narrows whichever goal
+is selected to the week's qualifying charts, so Score Push becomes "improve the Hardmode scores you
+hold" and Fill Gaps becomes "Hardmode charts you could pass" — five builders reused rather than a
+sixth written. The right-hand column prints **rarity** ("held by N"), never a projected gain: with a
+pool under fifty every qualifying chart pays its full value, so ranking by gain collapses into ranking
+by level.
+
+**D24 — the glow is never suppressed, including on this page's own qualifying list.** The obvious
+objection is that a list where every chart qualifies is a wall of glow. That is the intent: *"That
+page should feel like a wall of boss charts"* (owner, 2026-09-14). One rule, no scoped exceptions, no
+pass-through parameter on `DifficultyBubble`. The glow defaults **on**, signed-out included, and the
+account toggle lives on `/Account` → Profile.
+
+**D25 — the private-account note under the board is removed, and its plumbing with it.** D17's
+*filtering* stands unchanged — a private account is on its own board and nobody else's, and the
+standing counts the same population the rows do. Only the line saying how many were left out goes
+(owner, 2026-09-14), along with `HardmodeBoardRecord.PrivateAccounts`, the repository's count query
+and its test assertions: a contract field nothing reads grows a second reader eventually.
+
+**D26 — the week's list is cached, because item D24 changed who reads it.** `IHardmodeChartReader` was
+an occasional read — once per Hardmode page load. A glow on every difficulty bubble makes it a read on
+nearly every page on the site, at ~1,200 rows. The reader memoizes behind a `CacheKeys.Mix(...)` key (a
+catalog fact that must never vary by viewer), evicted on `HardmodeChartsRebuiltEvent`, which the census
+already publishes. The entry carries an explicit expiration — a two-argument `Set` silently drops the
+TTL, which is fatal for a key whose only other eviction is a weekly event.
+
+### What each surface renders
+
+| Surface | What Hardmode adds |
+|---|---|
+| Session — milestone strips | Up to three strips (Combined/Singles/Doubles), red rail, `N0` totals and `PumbilityFormat.Gain` for the delta — the same precision the PUMBILITY strip beside it uses |
+| Session — score badges | `💀 #N` beside the crown, and the Hardmode gain chip beside the PUMBILITY one on the score line |
+| Session — title bars | Its own "Hardmode ladders" group plus the pointer (D22) |
+| Session — history cards | One headline tag, **last** in the two-slot priority order, so it only claims a slot on a session where nothing bigger happened |
+| Discord — stats block | One `💀` line per pool that moved; `💀` joins `👑` on the per-score rows |
+| Feeds (widget + rivals) | Two win kinds — a board placement, and a ladder rung crossed |
+
 ## 9. Known limits
 
 - **Phoenix 2 only.** Phoenix 1 would need its own census and has a different, much larger population.
@@ -233,5 +310,6 @@ stability. `/Admin` carries a one-shot button for the first run.
   averaging level 21 until the strong pools fill. Accepted (owner, 2026-09-12): it self-corrects, and the
   alternative was a board with one player on it.
 - **A partial pool's rails read empty.** By design — see §5.
-- Nothing here is seeded anywhere else on the site yet. If it takes, `IHardmodeChartReader` is how the
-  next surface reads the list.
+- **It is seeded across the site now** (§10): the session page, the Discord card, both highlight feeds,
+  Suggested Charts and every difficulty bubble read the list through `IHardmodeChartReader`, which is
+  exactly what D13 built it for.
