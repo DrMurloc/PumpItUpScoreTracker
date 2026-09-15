@@ -251,6 +251,11 @@ internal sealed class PlayerRatingSaga :
     public async Task Consume(ConsumeContext<RollupSeasonStatsCommand> context)
     {
         var requested = context.Message.Season;
+        // Every unsealed season, deliberately, where the write paths take only the running one (D13).
+        // A season stops taking new plays at its boundary but is still worth re-pricing until the seal:
+        // the backfill opens quarters without sealing them (D37), and the seal lands on the next roll,
+        // which can be up to a day after the quarter closed. Narrowing this to the running season would
+        // leave a backfilled quarter's bests with no standings at all.
         var open = (await _seasons.GetSeasons(context.CancellationToken))
             .Where(s => !s.IsSealed && (requested == null || s.Id == requested))
             .ToArray();
