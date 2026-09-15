@@ -124,11 +124,14 @@ public sealed class SeasonalBestBackfillConsumerTests
     {
         // The whole point of a backfill, and the one thing the counting rule cannot do for it: there
         // is no grace (D13), so a live import standing in Winter writes nothing into Fall. Naming the
-        // season is what lets the replay reach a window that closed — sealed or not.
+        // season is what lets the replay reach a window that has closed. Fall is unsealed here
+        // because that is what a backfill sees — the roll's backfill path opens quarters without
+        // sealing them (D37) and asks for a replay of each unsealed one, so a sealed season never
+        // reaches this consumer at all.
         var records = new Mock<IPhoenixRecordRepository>();
         var winter = new DateTimeOffset(2027, 2, 10, 20, 0, 0, TimeSpan.Zero);
         var writer = SeasonalBests.Over(records,
-            new[] { FakeSeasons.Quarter(SeasonId.From(2027, 1)), FakeSeasons.Quarter(Fall, true) }, winter);
+            new[] { FakeSeasons.Quarter(SeasonId.From(2027, 1)), FakeSeasons.Quarter(Fall) }, winter);
         GivenPlayers(Alice);
         GivenPlays(Alice, Play(Alice, 940_000, InFall));
 
