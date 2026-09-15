@@ -1,4 +1,4 @@
-namespace ScoreTracker.PlayerProgress.Contracts;
+﻿namespace ScoreTracker.PlayerProgress.Contracts;
 
 /// <summary>
 ///     Session-level milestone kinds. Stored by name (not value) so reordering the enum
@@ -66,5 +66,18 @@ public enum MilestoneKind
     ///     Mints on improvement only — an undo recomputes stats downward and must not
     ///     announce the rank it just cost.
     /// </summary>
-    OfficialPumbilityRank
+    OfficialPumbilityRank,
+
+    /// <summary>
+    ///     The Hardmode combined pool went up. OldValue &#8594; NewValue. Phoenix 2 only, and only
+    ///     after the first census - a mix with no Hardmode list mints none of these
+    ///     (docs/design/hardmode-leaderboard.md D18).
+    /// </summary>
+    HardmodePumbilityGain,
+
+    /// <summary>Hardmode Singles pool went up. OldValue &#8594; NewValue. Phoenix 2 only.</summary>
+    HardmodeSinglesPumbilityGain,
+
+    /// <summary>Hardmode Doubles pool went up. OldValue &#8594; NewValue. Phoenix 2 only.</summary>
+    HardmodeDoublesPumbilityGain
 }

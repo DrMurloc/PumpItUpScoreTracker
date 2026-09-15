@@ -1,4 +1,4 @@
-using Bunit;
+﻿using Bunit;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
@@ -7,6 +7,7 @@ using MudBlazor;
 using MudBlazor.Services;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Services;
 using ScoreTracker.Web.Services.Contracts;
@@ -37,6 +38,9 @@ public abstract class ComponentTestBase : TestContext
     /// </summary>
     protected Mock<IUiSettingsAccessor> UiSettings { get; } = new();
 
+    /// <summary>The week's Hardmode list, which decides whether a difficulty bubble glows.</summary>
+    protected Mock<IHardmodeChartReader> HardmodeReader { get; } = new();
+
     protected ComponentTestBase()
     {
         Services.AddSingleton(CurrentUser.Object);
@@ -49,6 +53,20 @@ public abstract class ComponentTestBase : TestContext
             .ReturnsAsync(new Dictionary<Guid, double>());
         Services.AddSingleton(Mediator.Object);
         Services.AddScoped<ChartScoringLevels>();
+
+        // DifficultyBubble asks this on every render. The suite's own reader is registered
+        // here so a test can populate the list; an unconfigured one answers empty, which is a
+        // mix with no census - so nothing glows unless a suite says so.
+        HardmodeReader.Setup(h => h.GetQualifyingCharts(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<HardmodeChartEntry>());
+        Services.AddSingleton(HardmodeReader.Object);
+        Services.AddScoped<HardmodeCharts>();
+
+        // A clock, because components that date anything take one and several suites were
+        // each stubbing their own. A suite that needs a specific instant still registers over
+        // this - the later registration is the one resolved.
+        Services.AddSingleton(Mock.Of<IDateTimeOffsetAccessor>(c =>
+            c.Now == new DateTimeOffset(2026, 7, 13, 0, 0, 0, TimeSpan.Zero)));
 
         // The shared LeaderboardDialog reads the relevant-players setting; an unconfigured mock
         // answers every getter with its default and keeps every consumer renderable. A suite that

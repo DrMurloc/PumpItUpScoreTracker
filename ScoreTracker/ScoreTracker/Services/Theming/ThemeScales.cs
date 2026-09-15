@@ -1,4 +1,4 @@
-using ScoreTracker.Domain.Models;
+﻿using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.SharedKernel.Enums;
 
@@ -187,6 +187,13 @@ public static class ThemeScales
     public static string LifeOverflow => "var(--life-overflow)";
 
     public static string LifeDanger => "var(--life-danger)";
+
+    /// <summary>
+    ///     The Hardmode mark (D19) - one token for every surface that says a chart or a number is
+    ///     Hardmode, so the badge, the gain chip, the strip rail, the feed caption and the bubble
+    ///     glow cannot drift apart.
+    /// </summary>
+    public static string HardmodeMark => "var(--hard-mark)";
 
     /// <summary>
     ///     The step-chart strip's panel token for a lane (lane = panel % 5): the classic skin's

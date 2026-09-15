@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Web.Services;
@@ -82,6 +82,28 @@ public static class ShareCardTitles
         clarifiers.Add(date);
         return new Header(title, string.Join(" · ", clarifiers),
             string.Format(localize("Personalized for {0}"), playerTag));
+    }
+
+    /// <summary>
+    ///     The Hardmode pool's header. Carries the HELD COUNT, because a Hardmode pool is short of
+    ///     fifty for almost everyone and a card of eleven charts titled "Your top 50" would read
+    ///     as a broken render rather than as an honest short pool.
+    /// </summary>
+    public static Header Hardmode(string? poolLabel, string mixName, string date, string playerTag,
+        int held, int poolSize, Func<string, string> localize)
+    {
+        var title = $"{localize("Hardmode")} \u2014 " + string.Format(localize("{0} of {1}"), held, poolSize);
+        var clarifiers = new List<string>();
+        if (poolLabel != null) clarifiers.Add(poolLabel);
+        clarifiers.Add(mixName);
+        clarifiers.Add(date);
+        return new Header(title, string.Join(" \u00b7 ", clarifiers),
+            string.Format(localize("Personalized for {0}"), playerTag));
+    }
+
+    public static string HardmodeFileName(MixEnum mix, string pool, string date)
+    {
+        return $"Hardmode_{mix}_{Slug(pool)}_{date}.png";
     }
 
     public static string PoolFileName(MixEnum mix, string pool, string date)

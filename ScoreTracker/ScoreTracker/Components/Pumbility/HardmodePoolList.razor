@@ -10,10 +10,15 @@
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Services.Theming
+@using Microsoft.JSInterop
+@using ScoreTracker.SharedKernel.Models
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Components
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
 @inject IUiSettingsAccessor UiSettings
+@inject IJSRuntime JSRuntime
+@inject IDateTimeOffsetAccessor Clock
 
 @* Your Hardmode fifty, banded by what each chart is worth to you — the Breakdown page's own
    treatment of a pool, in the three densities, with the value on the card's nameline and your
@@ -26,6 +31,20 @@
 <div class="pmb-peers-controls">
     <span class="pmb-peers-controls-start"></span>
     <span class="pmb-peers-controls-end">
+        @* Download beside the density trio, exactly where the Breakdown page's top 50 puts it
+           (D34) - this list is the same object, priced over a different chart set. *@
+        @if (_building)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2"></MudProgressCircular>
+        }
+        else if (Pool.Count > 0)
+        {
+            <MudTooltip Text="@L["Download"]">
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary"
+                               OnClick="() => _downloadOpen = true" aria-label="@L["Download"]"
+                               data-testid="hardmode-pool-download"></MudIconButton>
+            </MudTooltip>
+        }
         <MudButtonGroup OverrideStyles="false">
             <MudTooltip Text="@L["Comfortable"]">
                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy"
@@ -121,6 +140,8 @@
                                            ShowToDo="false"
                                            CornerBadge="@row.Entry.Value.ToString("N2")"
                                            CornerBadgeClass="pmb-corner-gain"
+                                           CornerBadgeStart="@(_density == UiDensity.Compact ? Grade(row) : null)"
+                                           CornerBadgeStartClass="pmb-corner-gain"
                                            OnOpen="OpenById"></TierListChartCard>
                     }
                 </div>
@@ -129,6 +150,10 @@
     }
 </div>
 
+<ShareCardSettingsDialog @bind-Visible="_downloadOpen" SignedIn="true"
+                         SampleBuilder="BuildSampleCard" OnDownload="Download"
+                         FileName="@DownloadFileName"></ShareCardSettingsDialog>
+
 @code {
     public const string DensitySettingKey = "Density__HardmodePool";
 
@@ -136,7 +161,8 @@
 
     private sealed record Row(Chart Chart, PoolEntry Entry);
 
-    private sealed record Section(string Key, string Name, string Color, IReadOnlyList<Row> Rows);
+    private sealed record Section(string Key, string Name, string Color, IReadOnlyList<Row> Rows,
+        RarityBand Band);
 
     [Parameter] [EditorRequired] public MixEnum Mix { get; set; }
 
@@ -145,10 +171,22 @@
 
     [Parameter] public IReadOnlyList<PoolEntry> Pool { get; set; } = Array.Empty<PoolEntry>();
 
+    /// <summary>Which pool the fifty are, for the card's header. Null = combined.</summary>
+    [Parameter] public ChartType? Pool_ { get; set; }
+
     [Parameter] public EventCallback<Chart> OnOpen { get; set; }
 
     [Parameter] public EventCallback<PeerBoardRequest> OnOpenBoard { get; set; }
 
+    /// <summary>A pool is fifty, which is what the card's "11 of 50" is counted against.</summary>
+    private const int PoolSize = 50;
+
+    /// <summary>Where the card points a reader who sees it in a Discord channel.</summary>
+    private const string ShareUrl = "https://piuscores.arroweclip.se/Pumbility/Hardmode";
+
+    private PumbilityShareCard _card = null!;
+    private bool _downloadOpen;
+    private bool _building;
     private UiDensity _density = UiDensity.Comfortable;
     private HashSet<string> _collapsed = new();
     private IReadOnlyDictionary<Guid, PeerStanding> _standings = new Dictionary<Guid, PeerStanding>();
@@ -177,19 +215,21 @@
 
             var mean = rows.Average(r => r.Entry.Value);
             var deviation = Math.Sqrt(rows.Average(r => Math.Pow(r.Entry.Value - mean, 2)));
-            var bands = new (string Key, string Name, string Color)[]
+            // The band travels with the section so the download colours from the same ramp the
+            // page does rather than re-deriving it from a CSS string.
+            var bands = new (string Key, string Name, string Color, RarityBand Band)[]
             {
-                ("highest", L["Highest"], "var(--rarity-prism)"),
-                ("high", L["High"], "var(--rarity-gold)"),
-                ("average", L["Average"], "var(--rarity-emerald)"),
-                ("low", L["Low"], "var(--rarity-silver)"),
-                ("lowest", L["Lowest"], "var(--rarity-common)")
+                ("highest", L["Highest"], "var(--rarity-prism)", RarityBand.Prism),
+                ("high", L["High"], "var(--rarity-gold)", RarityBand.Gold),
+                ("average", L["Average"], "var(--rarity-emerald)", RarityBand.Emerald),
+                ("low", L["Low"], "var(--rarity-silver)", RarityBand.Silver),
+                ("lowest", L["Lowest"], "var(--rarity-common)", RarityBand.Common)
             };
 
             return rows.GroupBy(r => Band(r.Entry.Value, mean, deviation))
                 .OrderBy(g => g.Key)
                 .Select(g => new Section(bands[g.Key].Key, bands[g.Key].Name, bands[g.Key].Color,
-                    g.OrderByDescending(r => r.Entry.Value).ToArray()))
+                    g.OrderByDescending(r => r.Entry.Value).ToArray(), bands[g.Key].Band))
                 .ToArray();
         }
     }
@@ -199,6 +239,75 @@
         if (deviation <= 0) return 2;
         var z = (value - mean) / deviation;
         return z >= 1.2 ? 0 : z >= .4 ? 1 : z >= -.4 ? 2 : z >= -1.2 ? 3 : 4;
+    }
+
+    // Your grade in Compact's other corner. Without this the printed value wins the one corner
+    // Compact has and the card shows no grade at all - which is what the Breakdown list's own
+    // pool solved the same way. A pool row is never broken: a broken run prices to zero and can
+    // hold no slot.
+    private RenderFragment Grade(Row row) => builder =>
+    {
+        builder.OpenComponent<LetterGradeIcon>(0);
+        builder.AddComponentParameter(1, nameof(LetterGradeIcon.Grade), row.Entry.Score.LetterGradeFor(Mix));
+        builder.AddComponentParameter(2, nameof(LetterGradeIcon.Height), 14);
+        builder.CloseComponent();
+    };
+
+    /// <summary>
+    ///     The sections as the card draws them. Same shape the Breakdown page's top 50 hands the
+    ///     composer, so the picture says what the page says - including the value under each
+    ///     tile, which is this list's whole reason for existing.
+    /// </summary>
+    public IReadOnlyList<PumbilityShareSection> ShareSections() =>
+        Sections.Select(s => new PumbilityShareSection(s.Name, null,
+                s.Rows.Select(r => new PumbilityShareTile(r.Chart, r.Entry.Score, r.Entry.Plate,
+                    r.Entry.IsBroken, IsToDo: false, Carried: false, Gain: null, Expected: null,
+                    r.Entry.Value)).ToArray(),
+                s.Band))
+            .ToArray();
+
+    /// <summary>Which pool the card is of - said only where pools are per type.</summary>
+    private string? SharePoolLabel => Mix != MixEnum.Phoenix2 ? null :
+        Pool_ switch
+        {
+            ChartType.Single => L["Singles pool"],
+            ChartType.Double => L["Doubles pool"],
+            null => L["All pools"],
+            var other => other.ToString()
+        };
+
+    private string DownloadFileName =>
+        ShareCardTitles.HardmodeFileName(Mix, Pool_?.ToString() ?? "All", Clock.Now.ToString("yyyy-MM-dd"));
+
+    private ShareCardTitles.Header ShareHeader => ShareCardTitles.Hardmode(SharePoolLabel, Mix.GetName(),
+        Clock.Now.ToString("yyyy-MM-dd"), CurrentUser.User.GameTag ?? CurrentUser.User.Name,
+        Pool.Count, PoolSize, key => L[key].Value);
+
+    private Task<TierListShareCard?> BuildSampleCard(ShareCardOptions options)
+    {
+        var charts = ShareSections().SelectMany(s => s.Tiles).Select(t => t.Chart).DistinctBy(c => c.Id)
+            .ToArray();
+        return Task.FromResult(_card.Sample(charts, options, Mix, _skills, ShareHeader, ShareUrl));
+    }
+
+    private async Task Download(ShareCardDownloadRequest request)
+    {
+        _building = true;
+        try
+        {
+            var rows = await _card.ComposeRows(ShareSections(), request.Options, Mix, _skills, request.Token);
+            if (rows.Count == 0) return;
+            await _card.Download(_card.Card(ShareHeader, ShareUrl, rows, request.Options, Mix), request,
+                DownloadFileName);
+        }
+        catch (OperationCanceledException)
+        {
+            // The dialog's Cancel (or its close) stopped the download; nothing to deliver.
+        }
+        finally
+        {
+            _building = false;
+        }
     }
 
     private static RecordedPhoenixScore ScoreOf(Row row)
@@ -222,6 +331,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        _card = new PumbilityShareCard(Mediator, JSRuntime, CurrentUser.User.Id, key => L[key].Value);
         if (Enum.TryParse<UiDensity>(await UiSettings.GetSetting(DensitySettingKey), out var density))
             _density = density;
         var collapsed = await UiSettings.GetSetting(CollapsedSettingKey);

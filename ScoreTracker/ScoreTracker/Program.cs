@@ -306,6 +306,9 @@ builder.Services.Configure<KeyVaultConfiguration>(builder.Configuration.GetSecti
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services.AddScoped<IStringLocalizer<App>, StringLocalizer<App>>();
 builder.Services.AddScoped<ChartScoringLevels>();
+// Same lifetime and the same job as the line above: one read per circuit, shared by
+// every difficulty bubble on the page (docs/design/hardmode-leaderboard.md D24).
+builder.Services.AddScoped<HardmodeCharts>();
 builder.Services.AddScoped<PageDockService>();
 builder.Services.AddScoped<ShellContext>();
 builder.Services.AddScoped<ShellModelFactory>();

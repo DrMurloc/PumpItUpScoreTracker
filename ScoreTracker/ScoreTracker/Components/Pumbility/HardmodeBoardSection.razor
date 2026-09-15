@@ -130,17 +130,6 @@
         }
     }
 
-    @* The field shrinking in silence is the part that would mislead: with the rows renumbered
-       over what you may see, a filtered board looks exactly like a complete one. Same wording
-       as the peers roster one page over, because it is the same fact about the same population. *@
-    @if (!_loading && _privateAccounts > 0)
-    {
-        <p class="pmb-roster-note" data-testid="hardmode-private">
-            @(_privateAccounts == 1
-                ? L["1 private account is on this board but is not shown."]
-                : L["{0} private accounts are on this board but are not shown.", _privateAccounts])
-        </p>
-    }
 </section>
 
 @code {
@@ -177,9 +166,6 @@
     private bool _loading = true;
     private (MixEnum Mix, ChartType? Pool, Source Source)? _loadedFor;
     private IReadOnlyList<Row> _rows = Array.Empty<Row>();
-
-    /// <summary>How many accounts stand on this board that the viewer may not see (D17).</summary>
-    private int _privateAccounts;
 
     private string PoolLabel => Pool switch
     {
@@ -236,7 +222,6 @@
     private async Task Load()
     {
         _loading = true;
-        _privateAccounts = 0;
         _rows = _source == Source.Site ? await SiteRows() : await OfficialRows();
         _loading = false;
     }
@@ -248,7 +233,6 @@
         // see, which is what lets the standing strip above agree with the rows.
         var me = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : (Guid?)null;
         var board = await Mediator.Send(new GetHardmodeBoardQuery(Mix, Pool, me));
-        _privateAccounts = board.PrivateAccounts;
         var rows = board.Rows;
         var ids = rows.Select(r => r.UserId).Distinct().ToArray();
         var users = (await Users.GetUsers(ids)).ToDictionary(u => u.Id);

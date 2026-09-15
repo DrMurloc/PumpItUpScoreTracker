@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
 namespace ScoreTracker.PlayerProgress.Infrastructure.Entities;
@@ -85,4 +85,14 @@ internal sealed class ScoreHighlightEntity
     ///     the one the ceremony band headlines.
     /// </summary>
     public double? PumbilityGain { get; set; }
+
+    /// <summary>
+    ///     What this play added to the Hardmode combined pool, and the slot it took in that
+    ///     fifty. Set only on a qualifying chart, and only where the batch moved it; the same
+    ///     combined-pool rule PumbilityGain follows, because the row reports one number per
+    ///     family (docs/design/hardmode-leaderboard.md D21). Never backfilled.
+    /// </summary>
+    public double? HardmodeGain { get; set; }
+
+    public int? HardmodeRank { get; set; }
 }

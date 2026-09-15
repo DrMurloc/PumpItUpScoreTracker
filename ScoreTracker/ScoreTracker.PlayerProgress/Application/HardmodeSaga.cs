@@ -29,7 +29,7 @@ internal sealed class HardmodeSaga :
     IConsumer<HardmodeChartsRebuiltEvent>,
     IRequestHandler<GetHardmodePageQuery, HardmodePageRecord>,
     IRequestHandler<GetHardmodeBoardQuery, HardmodeBoardRecord>,
-    IRequestHandler<HardmodeSaga.RepriceHardmodePool, Unit>
+    IRequestHandler<HardmodeSaga.RepriceHardmodePool, HardmodeSaga.HardmodeReprice>
 {
     /// <summary>
     ///     Reprice ONE account against the current chart list. The list is weekly so the board
@@ -39,8 +39,47 @@ internal sealed class HardmodeSaga :
     ///         An in-process step of the score-batch pipeline, like the rating and title steps,
     ///         rather than a bus message of its own — ordering comes from pipeline shape.
     ///     </para>
+    ///     <para>
+    ///         <paramref name="Changes" /> is the batch that triggered it, and is what lets the
+    ///         step report a per-chart gain rather than only a total; null (the weekly sweep, a
+    ///         backfill) reprices and reports the totals with no attribution.
+    ///     </para>
     /// </summary>
-    public sealed record RepriceHardmodePool(Guid UserId, MixEnum Mix) : IRequest<Unit>;
+    public sealed record RepriceHardmodePool(Guid UserId, MixEnum Mix,
+        IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange>? Changes = null) : IRequest<HardmodeReprice>;
+
+    /// <summary>
+    ///     One pool across the batch. <paramref name="Rank" /> and <paramref name="Field" /> are
+    ///     the account's standing on that pool's board afterwards — null when it holds nothing
+    ///     there, which is the same rule the page's own standing applies.
+    /// </summary>
+    public sealed record HardmodePoolMove(double Old, double New, int Held, int? Rank, int? Field)
+    {
+        public static HardmodePoolMove None { get; } = new(0, 0, 0, null, null);
+
+        public bool Gained => New > Old;
+    }
+
+    /// <summary>
+    ///     What the Hardmode step learned, for the capture saga to turn into milestones, flags and
+    ///     detail. Carries the qualifying set it already read so capture does not read it again,
+    ///     and the combined-pool ranks and gains so the score badge and its chip cost no further
+    ///     work (docs/design/hardmode-leaderboard.md §10).
+    /// </summary>
+    public sealed record HardmodeReprice(
+        HardmodePoolMove Combined,
+        HardmodePoolMove Singles,
+        HardmodePoolMove Doubles,
+        IReadOnlySet<Guid> Qualifying,
+        IReadOnlyDictionary<Guid, int> Ranks,
+        IReadOnlyDictionary<Guid, double> Gains,
+        bool Persisted = false)
+    {
+        /// <summary>A mix with no census — every consumer reads this as "Hardmode is not live here".</summary>
+        public static HardmodeReprice None { get; } = new(HardmodePoolMove.None, HardmodePoolMove.None,
+            HardmodePoolMove.None, new HashSet<Guid>(), new Dictionary<Guid, int>(),
+            new Dictionary<Guid, double>());
+    }
 
     /// <summary>A pool is fifty, which is what makes a threshold a per-chart ask.</summary>
     private const int PoolSize = 50;
@@ -103,19 +142,96 @@ internal sealed class HardmodeSaga :
             rows.Length, qualifying.Count);
     }
 
-    public async Task<Unit> Handle(RepriceHardmodePool request, CancellationToken cancellationToken)
+    public async Task<HardmodeReprice> Handle(RepriceHardmodePool request,
+        CancellationToken cancellationToken)
     {
         var qualifying = await _hardmodeCharts.GetQualifyingCharts(request.Mix, cancellationToken);
-        if (qualifying.Count == 0) return Unit.Value;
+        if (qualifying.Count == 0) return HardmodeReprice.None;
 
+        // Read before write, because the announcement is the DIFFERENCE and Save overwrites it.
+        //
+        // ⚠ A NULL row is not "zeroes". Save only touches accounts that already have a
+        // PlayerStats row, so a null here means the write below is going to skip this account
+        // entirely — and announcing "0 → N" against a number nothing persisted would mint the
+        // identical milestone again on the next import, and the one after. An existing row with
+        // zeroed Hardmode columns is the real first-ever case and comes back as a row.
+        var before = await _ratings.Get(request.Mix, request.UserId, cancellationToken);
         var priced = await Priced(request.Mix, request.UserId, qualifying, cancellationToken);
+        var after = Row(request.UserId, priced.Select(p => (p.Chart.Type, p.Value)).ToArray());
 
         // Written even when it prices to nothing: a player who lost their only qualifying score
         // has to stop carrying last week's number, and Save touches this account alone.
-        await _ratings.Save(request.Mix,
-            new[] { Row(request.UserId, priced.Select(p => (p.Chart.Type, p.Value)).ToArray()) },
+        await _ratings.Save(request.Mix, new[] { after }, cancellationToken);
+
+        var combined = await Move(request, before?.Combined ?? 0, after.Combined, after.Held, null,
             cancellationToken);
-        return Unit.Value;
+        var singles = await Move(request, before?.Singles ?? 0, after.Singles, after.SinglesHeld,
+            ChartType.Single, cancellationToken);
+        var doubles = await Move(request, before?.Doubles ?? 0, after.Doubles, after.DoublesHeld,
+            ChartType.Double, cancellationToken);
+
+        // Rank and gain both speak for the COMBINED pool, the way PumbilityRank and PumbilityGain
+        // do: the score row reports one number, and the per-type pools are the page's business.
+        var fifty = Fifty(priced, null);
+        var ranks = fifty.Select((p, i) => (p.Record.ChartId, Rank: i + 1))
+            .ToDictionary(x => x.ChartId, x => x.Rank);
+
+        return new HardmodeReprice(combined, singles, doubles,
+            qualifying.Select(c => c.ChartId).ToHashSet(), ranks,
+            Gains(request, priced, qualifying), before != null);
+    }
+
+    /// <summary>
+    ///     One pool's movement plus where it leaves the account standing. The standing is read on
+    ///     every pool because PUMBILITY's own rank estimate reads all three boards
+    ///     (<c>PlayerRatingSaga.EstimateOfficialRanks</c>) — one indexed count each, in a
+    ///     background consumer (D20).
+    /// </summary>
+    private async Task<HardmodePoolMove> Move(RepriceHardmodePool request, double old, double now, int held,
+        ChartType? pool, CancellationToken cancellationToken)
+    {
+        var standing = await _ratings.GetStanding(request.Mix, pool, request.UserId, cancellationToken);
+        return new HardmodePoolMove(old, now, held, standing?.Place, standing?.Field);
+    }
+
+    /// <summary>
+    ///     What each play in the batch added to the Hardmode combined pool, through the same
+    ///     attribution the PUMBILITY gain badge uses — so the two chips on one score line are
+    ///     computed the same way and differ only in which pool they measure.
+    ///     <para>
+    ///         The partial-pool case is where they diverge in practice, and the shared helper
+    ///         already handles it: past the leavers a pool was not full, so an entrant displaced
+    ///         nothing and banks its whole value. That is why a play worth +12 to PUMBILITY can be
+    ///         worth +340 here.
+    ///     </para>
+    /// </summary>
+    private static IReadOnlyDictionary<Guid, double> Gains(RepriceHardmodePool request,
+        IReadOnlyList<(RecordedPhoenixScore Record, Chart Chart, double Value)> priced,
+        IReadOnlyList<HardmodeChartEntry> qualifying)
+    {
+        if (request.Changes == null || request.Changes.Count == 0)
+            return new Dictionary<Guid, double>();
+
+        var wanted = qualifying.Select(c => c.ChartId).ToHashSet();
+        var scoring = ScoringConfiguration.PumbilityScoring(request.Mix, false);
+
+        // A new pass held no seat whatever preceded it — a broken run prices to zero here and was
+        // never in the pool, so treating it as a clean prior collapses a real entry to a delta.
+        var prior = request.Changes
+            .Where(c => wanted.Contains(c.ChartId))
+            .GroupBy(c => c.ChartId)
+            .ToDictionary(g => g.Key, g => g.Any(c => c.IsNewPass) ? null : g.Select(c => c.OldScore).Max());
+
+        var attributed = priced
+            .Select(p => new PumbilityAttribution.Priced(p.Record.ChartId,
+                !prior.TryGetValue(p.Record.ChartId, out var old) ? p.Value
+                : old == null ? null
+                : scoring.GetScore(p.Chart, PhoenixScore.From(old.Value),
+                    p.Record.Plate ?? ScoringConfiguration.ExpectedPlateForScore(old.Value), false),
+                p.Value))
+            .ToArray();
+
+        return PumbilityAttribution.GainsPerChart(attributed, PoolSize);
     }
 
     public async Task<HardmodePageRecord> Handle(GetHardmodePageQuery request,

@@ -114,6 +114,16 @@
         </MudSelect>
     </MudItem>
     <MudItem xs="12">
+        @* A display setting, so it sits with the theme rather than with the privacy ones.
+           Defaults ON for everyone, signed-out included (D24), which is why the stored value is
+           the opt-OUT: the common case writes nothing. *@
+        <MudSwitch T="bool" Label=@L["Mark Hardmode charts"] Value="_markHardmode"
+                   ValueChanged="UpdateHardmodeMark" Color="Color.Primary"></MudSwitch>
+        <MudText Typo="Typo.body2" Style="opacity:.75;" Class="ml-11">
+            @L["Puts a glow on the difficulty bubble of every chart in the week's Hardmode list, everywhere on the site."]
+        </MudText>
+    </MudItem>
+    <MudItem xs="12">
         <MudSwitch T="bool" Disabled="_isUpdatingUser" Label=@L["Public"] Value="_isPublic" ValueChanged="() => _showPublicConfirmDialog = true" Color="Color.Success"></MudSwitch>
     </MudItem>
     @* Sharing needs a public profile, so the switch is absent rather than disabled when private
@@ -336,6 +346,7 @@
     private string _themeOverride = MixThemes.MatchMixValue;
     private PendingAccountDeletion? _pendingDeletion;
     private bool _shareWithAllTools;
+    private bool _markHardmode = true;
     private int _connectedToolCount;
     protected override async Task OnInitializedAsync()
     {
@@ -344,6 +355,8 @@
         _currentCulture = SupportedCultures.ResolveClosest(await UiSettings.GetSetting("Culture"))
                           ?? SupportedCultures.Automatic;
         _themeOverride = await UiSettings.GetSetting(MixThemes.OverrideSettingKey) ?? MixThemes.MatchMixValue;
+        // Absence means on: only the opt-out is ever written.
+        _markHardmode = await UiSettings.GetSetting(HardmodeCharts.SettingKey) is null;
         _id = CurrentUser.User.Id.ToString();
         _name = CurrentUser.User.Name;
         _countryName = CurrentUser.User.Country;
@@ -377,6 +390,19 @@
 
         await UiSettings.SetSetting("Culture", newCulture);
         NavManager.NavigateTo($"/Culture/Set?culture={newCulture}&redirectUrl={returnUrl}", forceLoad: true);
+    }
+
+    /// <summary>
+    ///     Written as an opt-OUT, so the default costs no row. A full reload because the mark is
+    ///     resolved per circuit and every bubble already on screen was rendered under the old
+    ///     answer - the same reason the theme override reloads.
+    /// </summary>
+    private async Task UpdateHardmodeMark(bool marked)
+    {
+        _markHardmode = marked;
+        if (marked) await UiSettings.ClearSetting(HardmodeCharts.SettingKey);
+        else await UiSettings.SetSetting(HardmodeCharts.SettingKey, "true");
+        NavManager.NavigateTo("/Account", forceLoad: true);
     }
 
     private async Task UpdateThemeOverride(string newValue)

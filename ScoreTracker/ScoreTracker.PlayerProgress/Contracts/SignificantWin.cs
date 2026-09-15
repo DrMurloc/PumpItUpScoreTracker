@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace ScoreTracker.PlayerProgress.Contracts;
 
@@ -70,7 +70,21 @@ public enum WinKind
     ///     uncollapsed (owner, 2026-08-14). TitleName is the rung reached, Detail the first rung
     ///     crossed. Only the pumbility ladders roll up; every other title family prints per rung.
     /// </summary>
-    PumbilityTitleSpan
+    PumbilityTitleSpan,
+
+    /// <summary>
+    ///     A top place on the Hardmode board (docs/design/hardmode-leaderboard.md D18). Rank is
+    ///     the place, PoolValue the Hardmode total. Gated the way TopPumbility is — a place
+    ///     nobody would mention is not a significant win.
+    /// </summary>
+    HardmodeBoard,
+
+    /// <summary>
+    ///     A Hardmode pool crossed a Phoenix 2 PUMBILITY rung. TitleName is the rung reached.
+    ///     Genuinely uncommon today — roughly a tenth of rated accounts clear BRONZE at all —
+    ///     which is what a significant win is supposed to be.
+    /// </summary>
+    HardmodeTitle
 }
 
 /// <summary>
@@ -92,10 +106,23 @@ public enum WinKind
 ///         rather than wrong, and rows regenerate on their next import.
 ///     </para>
 ///     <para>
-///         2026-08-14: <see cref="WinKind.PumbilityTitleSpan" /> and the all-titles inclusion landed
-///         WITHOUT a bump — deliberately. A pre-change row is a complete summary under the rules of
-///         its day (nothing it should have carried is missing), so it keeps rendering; the 30-day
-///         window ages the old shapes out on its own.
+///         <b>⚠ BUMP ONLY ON A BREAKING CHANGE</b> (owner, 2026-09-15). Adding a
+///         <see cref="WinKind" />, or an optional field, is ADDITIVE: a pre-change row is a
+///         complete summary under the rules of its day — nothing it should have carried is
+///         missing — so it keeps rendering, and the 30-day purge ages the old shapes out on its
+///         own. A bump is for a payload an old row can no longer be read as: a renamed or
+///         retyped field, a changed meaning, a removed kind.
+///     </para>
+///     <para>
+///         The cost of getting this wrong is invisible and total. <see cref="EFPlayerHighlightRepository" />
+///         filters reads on the exact version and nothing regenerates old rows, so a needless bump
+///         empties the Community Highlights widget and the Rivals feed for EVERY player until each
+///         of them next imports — up to a week of blank feeds to gain nothing.
+///     </para>
+///     <para>
+///         2026-08-14 set the precedent: <see cref="WinKind.PumbilityTitleSpan" /> and the
+///         all-titles inclusion landed WITHOUT a bump. 2026-09-15's two Hardmode kinds were bumped
+///         to v4 and then reverted, which is what turned the precedent into this rule.
 ///     </para>
 /// </summary>
 [ExcludeFromCodeCoverage]

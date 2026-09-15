@@ -100,10 +100,16 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         var writes = new List<ScoreHighlightWrite>();
         var lamps = new List<PlayerMilestoneWrite>();
 
+        // Hoisted out of ComputeFlags: the Hardmode step below writes highlight rows too, and a
+        // row it has to CREATE needs the chart's level. Loading it twice would be two reads of
+        // the same charts in one batch.
+        CaptureData? captured = null;
+
         if (e.Mix is MixEnum.Phoenix or MixEnum.Phoenix2 && e.Changes.Any())
             try
             {
-                writes = await ComputeFlags(e, flags, details, lamps, context.CancellationToken);
+                captured = await LoadCaptureData(e, context.CancellationToken);
+                writes = await ComputeFlags(e, captured, flags, details, lamps, context.CancellationToken);
             }
             catch (Exception ex)
             {
@@ -116,6 +122,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
                 flags.Clear();
                 details.Clear();
                 lamps.Clear();
+                captured = null;
             }
 
         if (writes.Count > 0)
@@ -128,6 +135,9 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
                 l.Title, l.Detail))
             .ToList();
         var titleProgress = (IReadOnlyList<TitleProgressDelta>)Array.Empty<TitleProgressDelta>();
+        // Declared out here so a failed Hardmode step leaves it at None and every reader below
+        // sees "Hardmode is not live here" rather than a missing variable.
+        var hardmode = HardmodeSaga.HardmodeReprice.None;
 
         // The rating step: recalc + Pumbility record stats + rating milestones + the
         // CompetitiveImprover flags, which merge into the event so the ⬆ badge rides
@@ -169,8 +179,26 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         // second board's total is not worth losing the session card over.
         try
         {
-            await _mediator.Send(new HardmodeSaga.RepriceHardmodePool(e.UserId, e.Mix),
+            hardmode = await _mediator.Send(new HardmodeSaga.RepriceHardmodePool(e.UserId, e.Mix, e.Changes),
                 context.CancellationToken);
+
+            // Hardmode announces on the surfaces PUMBILITY announces on (D18), so its movement
+            // mints the same shape of milestone and its scores wear the same shape of mark. Both
+            // happen HERE rather than in the step, because a milestone is a capture fact: the
+            // step's job is the board, and the sweep calls it too.
+            var hardmodeLamps = HardmodeMilestones(hardmode, e.SessionId);
+            if (hardmodeLamps.Count > 0)
+            {
+                await _milestones.Append(e.Mix, e.UserId, hardmodeLamps, context.CancellationToken);
+                milestones.AddRange(hardmodeLamps.Select(l => new PlayerMilestoneRecord(l.Kind, l.SessionId,
+                    l.OccurredAt, l.OldValue, l.NewValue, l.Title, l.Detail)));
+            }
+
+            // Mutates the same dictionaries the event is built from below, so the mark reaches
+            // the Discord card and the feeds in the same publish rather than trailing it.
+            var hardmodeWrites = FlagHardmode(e, hardmode, captured, flags, details);
+            if (hardmodeWrites.Count > 0)
+                await _highlights.UpsertFlags(e.Mix, e.UserId, hardmodeWrites, context.CancellationToken);
         }
         catch (Exception ex)
         {
@@ -241,11 +269,10 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         Dictionary<(ChartType Type, DifficultyLevel Level), int> FolderClears,
         PlayerStatsRecord Stats);
 
-    private async Task<List<ScoreHighlightWrite>> ComputeFlags(PlayerScoresUpdatedEvent e,
+    private async Task<List<ScoreHighlightWrite>> ComputeFlags(PlayerScoresUpdatedEvent e, CaptureData data,
         Dictionary<Guid, HighlightFlags> flags, Dictionary<Guid, HighlightDetail> details,
         List<PlayerMilestoneWrite> lamps, CancellationToken cancellationToken)
     {
-        var data = await LoadCaptureData(e, cancellationToken);
         var known = e.Changes
             .Where(c => data.Charts.ContainsKey(c.ChartId) && data.Bests.ContainsKey(c.ChartId))
             .ToArray();
@@ -399,6 +426,81 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
     private static HighlightDetail Detail(Dictionary<Guid, HighlightDetail> details, Guid id)
     {
         return details.TryGetValue(id, out var d) ? d : new HighlightDetail();
+    }
+
+    /// <summary>
+    ///     Hardmode's three pool milestones, mirroring PUMBILITY's three exactly (D20) — it is
+    ///     the same progression shape, so it gets the same strip, the same Discord line and the
+    ///     same history tag. Only pools that actually moved mint one: a session that touched no
+    ///     qualifying chart announces nothing, which is most sessions.
+    /// </summary>
+    private List<PlayerMilestoneWrite> HardmodeMilestones(HardmodeSaga.HardmodeReprice hardmode, Guid? sessionId)
+    {
+        var lamps = new List<PlayerMilestoneWrite>();
+        // Nothing to announce if nothing was stored: an account with no PlayerStats row is
+        // skipped by the write, and a milestone against an unpersisted number repeats itself on
+        // every subsequent import. Normally unreachable - the rating step creates the row first -
+        // but that step is failure-isolated and this one runs regardless.
+        if (!hardmode.Persisted) return lamps;
+        Add(MilestoneKind.HardmodePumbilityGain, hardmode.Combined);
+        Add(MilestoneKind.HardmodeSinglesPumbilityGain, hardmode.Singles);
+        Add(MilestoneKind.HardmodeDoublesPumbilityGain, hardmode.Doubles);
+        return lamps;
+
+        void Add(MilestoneKind kind, HardmodeSaga.HardmodePoolMove move)
+        {
+            if (!move.Gained) return;
+            // Detail carries the standing as "place|field", the way TitleProgress carries
+            // "S21|3120|4000" — the feeds need a rank to decide whether a climb is a win, and a
+            // milestone is what reaches them. Absent when the pool holds nothing rankable.
+            var standing = move.Rank is { } place && move.Field is { } field ? $"{place}|{field}" : null;
+            lamps.Add(new PlayerMilestoneWrite(kind, sessionId, _dateTime.Now, move.Old, move.New,
+                Detail: standing));
+        }
+    }
+
+    /// <summary>
+    ///     The skull beside the crown: every changed score that sits in the viewer's Hardmode
+    ///     fifty, carrying its slot and what tonight's play added to that pool (D21).
+    ///     <para>
+    ///         Deliberately the literal twin of <see cref="FlagTop50" /> rather than "this is a
+    ///         qualifying chart" — a pool under fifty therefore lights up nearly everything it
+    ///         holds, which is the same bootstrap the normal top 50 had and tightens on its own.
+    ///     </para>
+    ///     <para>
+    ///         Returns writes rather than mutating alone, because these land after the first
+    ///         upsert; <c>UpsertFlags</c> ORs into the row that already exists and creates one
+    ///         where it does not, which is why the chart's level has to be to hand.
+    ///     </para>
+    /// </summary>
+    private static List<ScoreHighlightWrite> FlagHardmode(PlayerScoresUpdatedEvent e,
+        HardmodeSaga.HardmodeReprice hardmode, CaptureData? data,
+        Dictionary<Guid, HighlightFlags> flags, Dictionary<Guid, HighlightDetail> details)
+    {
+        var writes = new List<ScoreHighlightWrite>();
+        if (data == null || hardmode.Ranks.Count == 0) return writes;
+
+        foreach (var change in e.Changes)
+        {
+            if (!hardmode.Ranks.TryGetValue(change.ChartId, out var rank)) continue;
+            if (!data.Charts.TryGetValue(change.ChartId, out var chart)) continue;
+            // A broken run prices to zero and holds no slot, so it cannot be in the fifty at
+            // all — but the best on record is what the pool was priced from, not this change.
+            if (!data.Bests.TryGetValue(change.ChartId, out var best) || best.IsBroken || best.Score == null)
+                continue;
+
+            var gain = hardmode.Gains.TryGetValue(change.ChartId, out var g) && g > 0 ? g : (double?)null;
+            flags[change.ChartId] = flags.GetValueOrDefault(change.ChartId) | HighlightFlags.HardmodeTop50;
+            details[change.ChartId] = (details.GetValueOrDefault(change.ChartId) ?? new HighlightDetail())
+                with { HardmodeRank = rank, HardmodeGain = gain };
+
+            writes.Add(new ScoreHighlightWrite(change.ChartId, e.SessionId, e.OccurredAt,
+                HighlightFlags.HardmodeTop50, chart.Level,
+                data.ScoringLevels.TryGetValue(change.ChartId, out var sl) ? sl : null,
+                details[change.ChartId]));
+        }
+
+        return writes;
     }
 
     private static void FlagTop50(PlayerScoresUpdatedEvent.ScoreChange[] known,

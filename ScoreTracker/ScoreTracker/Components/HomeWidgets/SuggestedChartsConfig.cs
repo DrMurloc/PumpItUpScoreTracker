@@ -1,4 +1,4 @@
-using ScoreTracker.Domain.Models.Titles;
+﻿using ScoreTracker.Domain.Models.Titles;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -107,6 +107,15 @@ public sealed record SuggestedChartsConfig
 
     /// <summary>Hot Streak: one section per seed (off = one flat list with "≈ seed" details).</summary>
     public bool GroupBySeed { get; set; } = true;
+
+    /// <summary>
+    ///     Narrow whichever goal is selected to the week's Hardmode charts
+    ///     (docs/design/hardmode-leaderboard.md D23). A filter rather than a sixth goal, so
+    ///     Score Push becomes "improve the Hardmode scores you hold" and Fill Gaps becomes
+    ///     "Hardmode charts you could pass". Phoenix 2 only; a mix with no census yields nothing
+    ///     and the panel says so rather than hiding the control.
+    /// </summary>
+    public bool HardmodeOnly { get; set; }
 }
 
 public static class SuggestedGoals

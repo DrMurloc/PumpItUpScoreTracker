@@ -13,6 +13,16 @@
         <MudText Typo="Typo.body2" Class="mud-text-secondary">@Description</MudText>
     </div>
 }
+else if (IsHardmode)
+{
+    @* Hardmode announces on the same surfaces PUMBILITY does (design D18), so it takes the same
+       strip - in the mark's red rather than the amber, which is what lets a session that moved
+       both read as two families instead of six numbers in a pile. *@
+    <div class="hmd-strip" data-testid="milestone-strip">
+        <span class="hmd-strip-chip">@L["Hardmode"]</span>
+        <MudText Typo="Typo.body2">@Description</MudText>
+    </div>
+}
 else
 {
     <div class="d-flex align-center gap-2 px-3 py-0 mud-warning-hover" style="border-left: 3px solid var(--mud-palette-warning); background: rgba(255,196,51,.07)" data-testid="milestone-strip">
@@ -31,8 +41,14 @@ else
     /// </summary>
     [Parameter] public PumbilityLevelChange? LevelChange { get; set; }
 
+    /// <summary>The three Hardmode pools, which take the red strip rather than the amber one.</summary>
+    private bool IsHardmode => Milestone.Kind is MilestoneKind.HardmodePumbilityGain
+        or MilestoneKind.HardmodeSinglesPumbilityGain or MilestoneKind.HardmodeDoublesPumbilityGain;
+
     private string KindLabel => Milestone.Kind switch
     {
+        MilestoneKind.HardmodePumbilityGain or MilestoneKind.HardmodeSinglesPumbilityGain
+            or MilestoneKind.HardmodeDoublesPumbilityGain => L["Hardmode"],
         MilestoneKind.PumbilityGain or MilestoneKind.SinglesPumbilityGain
             or MilestoneKind.DoublesPumbilityGain => "PUMBILITY",
         MilestoneKind.SinglesCompetitiveGain or MilestoneKind.DoublesCompetitiveGain => @L["Competitive"],
@@ -53,6 +69,12 @@ else
         MilestoneKind.SinglesPumbilityGain =>
             $"{L["Singles"]} {Milestone.OldValue:N0} → {Milestone.NewValue:N0} (+{PumbilityFormat.Gain(Milestone.NewValue!.Value - Milestone.OldValue!.Value)})",
         MilestoneKind.DoublesPumbilityGain =>
+            $"{L["Doubles"]} {Milestone.OldValue:N0} → {Milestone.NewValue:N0} (+{PumbilityFormat.Gain(Milestone.NewValue!.Value - Milestone.OldValue!.Value)})",
+        MilestoneKind.HardmodePumbilityGain =>
+            $"{Milestone.OldValue:N0} → {Milestone.NewValue:N0} (+{PumbilityFormat.Gain(Milestone.NewValue!.Value - Milestone.OldValue!.Value)})",
+        MilestoneKind.HardmodeSinglesPumbilityGain =>
+            $"{L["Singles"]} {Milestone.OldValue:N0} → {Milestone.NewValue:N0} (+{PumbilityFormat.Gain(Milestone.NewValue!.Value - Milestone.OldValue!.Value)})",
+        MilestoneKind.HardmodeDoublesPumbilityGain =>
             $"{L["Doubles"]} {Milestone.OldValue:N0} → {Milestone.NewValue:N0} (+{PumbilityFormat.Gain(Milestone.NewValue!.Value - Milestone.OldValue!.Value)})",
         MilestoneKind.SinglesCompetitiveGain =>
             $"{L["Singles"]} {Milestone.OldValue:0.00} → {Milestone.NewValue:0.00}",

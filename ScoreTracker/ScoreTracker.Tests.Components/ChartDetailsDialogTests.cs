@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -72,6 +72,8 @@ public sealed class ChartDetailsDialogTests : TestContext
         _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, double>());
         Services.AddScoped<ChartScoringLevels>();
+        // DifficultyBubble asks whether the chart is Hardmode on the same render.
+        Services.AddHardmodeStub();
         _mediator.Setup(m => m.Send(It.IsAny<GetTierListWithFallbackQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TierListResult(Array.Empty<SongTierListEntry>(), false));
         _mediator.Setup(m => m.Send(It.IsAny<GetChartIdentityQuery>(), It.IsAny<CancellationToken>()))

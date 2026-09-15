@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -21,7 +21,8 @@ public sealed record SessionBreakdown(
     IReadOnlyList<PlayerMilestoneRecord> Milestones,
     IReadOnlyList<SessionTitleBarModel> TitleBars,
     bool CaptureWindowOpen = false,
-    int CapturedRows = 0)
+    int CapturedRows = 0,
+    IReadOnlyList<HardmodeTitleBar>? HardmodeBars = null)
 {
     /// <summary>
     ///     Show the patience card: capture could still be running AND has produced nothing yet.

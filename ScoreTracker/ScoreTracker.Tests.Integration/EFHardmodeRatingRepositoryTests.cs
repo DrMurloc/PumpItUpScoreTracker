@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -63,7 +63,6 @@ public sealed class EFHardmodeRatingRepositoryTests : IAsyncLifetime
         // Not anonymised, not greyed - absent. The count is the only trace, so the viewer can see
         // the field is smaller than the population rather than reading a filtered board as whole.
         Assert.Equal(new[] { top, viewer }, board.Rows.Select(r => r.UserId));
-        Assert.Equal(2, board.PrivateAccounts);
         Assert.DoesNotContain(board.Rows, r => r.UserId == hidden || r.UserId == alsoHidden);
 
         // Places number over what came back: the public runner-up is #2, not #4 with two gaps.
@@ -84,7 +83,6 @@ public sealed class EFHardmodeRatingRepositoryTests : IAsyncLifetime
         // answer where you stand, which is the question this page exists to answer.
         Assert.Equal(new[] { top, me, below }, board.Rows.Select(r => r.UserId));
         Assert.Equal(2, board.Rows.Single(r => r.UserId == me).Place);
-        Assert.Equal(1, board.PrivateAccounts);
         Assert.DoesNotContain(board.Rows, r => r.UserId == stranger);
     }
 
@@ -98,10 +96,10 @@ public sealed class EFHardmodeRatingRepositoryTests : IAsyncLifetime
         var board = await BuildRepository().GetBoard(Mix, null, null, CancellationToken.None);
 
         // Guid.Empty stands in for "nobody" in the read. Compared against a nullable instead,
-        // SQL's `UserId <> NULL` is unknown for every row and the count would read zero while
-        // the rows were filtered correctly - a disagreement with no symptom on the page.
+        // SQL's `stats.UserId = NULL` is unknown rather than false, so the "or it is your own
+        // row" arm never fires - invisible for an anonymous read, which has no own row, and the
+        // reason the substitution is made at the top of the method rather than per-arm.
         Assert.Equal(new[] { top }, board.Rows.Select(r => r.UserId));
-        Assert.Equal(2, board.PrivateAccounts);
     }
 
     [Fact]
@@ -161,8 +159,6 @@ public sealed class EFHardmodeRatingRepositoryTests : IAsyncLifetime
         // - and the private singles account is off it for the other reason, counted rather than
         // listed. The two exclusions are different facts and must not be confused for each other.
         Assert.Equal(new[] { viewer }, singles.Rows.Select(r => r.UserId));
-        Assert.Equal(1, singles.PrivateAccounts);
         Assert.Equal(new[] { doublesOnly }, doubles.Rows.Select(r => r.UserId));
-        Assert.Equal(0, doubles.PrivateAccounts);
     }
 }

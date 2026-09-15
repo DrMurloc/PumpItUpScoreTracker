@@ -1,4 +1,4 @@
-@using System.ComponentModel.DataAnnotations
+﻿@using System.ComponentModel.DataAnnotations
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Domain.SecondaryPorts
@@ -8,6 +8,7 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Components
 @inject ChartScoringLevels ScoringLevels
+@inject HardmodeCharts Hardmode
 @if (Chart != null || (Type != null && Level != null))
 {
     @* MudTooltip renders a popover, which throws in static SSR (no provider in the static
@@ -46,14 +47,29 @@
         @* Legacy chips are deliberately rendered, not image bubbles: pre-Exceed slots have no
            official art, and looking different from the modern bubbles IS the message — these
            numbers live on a different scale (docs/design/legacy-mixes.md). *@
-        : @<MudImage tabindex="0" Src="@DifficultyBubblePath" Height="Height ?? (Small ? 22 : 35)" Alt="@DiffString" ObjectFit="ObjectFit.ScaleDown"></MudImage>;
+        @* The glow is a drop-shadow filter on the image, so it traces the bubble art's own
+           alpha and haloes the shape rather than boxing it (D24). Never suppressed anywhere,
+           the Hardmode page's own qualifying list included - a folder where every chart glows
+           is the point there. *@
+        : @<MudImage tabindex="0" Src="@DifficultyBubblePath" Height="Height ?? (Small ? 22 : 35)" Alt="@DiffString" ObjectFit="ObjectFit.ScaleDown" Class="@(_isHardmode ? "bubble-hardmode" : null)"></MudImage>;
 
     private double? _scoringLevel;
+    private bool _isHardmode;
     private string ScoringLevelString => _scoringLevel == null ? "" : $"{_scoringLevel:0.0}";
 
     protected override async Task OnParametersSetAsync()
     {
-        _scoringLevel = Chart == null ? null : await ScoringLevels.GetScoringLevel(Chart.Id);
+        if (Chart == null)
+        {
+            _scoringLevel = null;
+            _isHardmode = false;
+            return;
+        }
+
+        // Both memoized per circuit, so forty bubbles on a page cost one read each rather than
+        // forty. The chart-less mode has no id to ask about and never glows.
+        _scoringLevel = await ScoringLevels.GetScoringLevel(Chart.Id);
+        _isHardmode = await Hardmode.IsMarked(Chart.Mix, Chart.Id);
     }
 
     [Parameter]

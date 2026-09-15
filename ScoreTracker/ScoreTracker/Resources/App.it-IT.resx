@@ -139,6 +139,9 @@
   <data name="#{0} / {1}" xml:space="preserve">
     <value>#{0} / {1}</value>
   </data>
+  <data name="#{0} in your Hardmode" xml:space="preserve">
+    <value>#{0} nel tuo Hardmode</value>
+  </data>
   <data name="#{0} in your PUMBILITY" xml:space="preserve">
     <value>#{0} nel tuo PUMBILITY</value>
   </data>
@@ -147,6 +150,9 @@
   </data>
   <data name="#{0} of {1} peers" xml:space="preserve">
     <value>#{0} su {1} pari</value>
+  </data>
+  <data name="#{0} on the Hardmode board" xml:space="preserve">
+    <value>#{0} nella classifica Hardmode</value>
   </data>
   <data name="#{0} PUMBILITY" xml:space="preserve">
     <value>#{0} in PUMBILITY</value>
@@ -180,6 +186,15 @@
   </data>
   <data name="**Doubles competitive** {0:0.00} → **{1:0.00}**" xml:space="preserve">
     <value>**Competitivo Doubles** {0:0.00} → **{1:0.00}**</value>
+  </data>
+  <data name="**Hardmode (D)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**Hardmode (D)** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**Hardmode (S)** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**Hardmode (S)** {0:N0} → **{1:N0}** (+{2:N0})</value>
+  </data>
+  <data name="**Hardmode** {0:N0} → **{1:N0}** (+{2:N0})" xml:space="preserve">
+    <value>**Hardmode** {0:N0} → **{1:N0}** (+{2:N0})</value>
   </data>
   <data name="**Limbo Day** — lowest passing score wins. No breaking." xml:space="preserve">
     <value>**Giorno Limbo** — vince il punteggio di pass più basso. Senza break.</value>
@@ -3585,8 +3600,23 @@
   <data name="Hardmode charts held" xml:space="preserve">
     <value>Chart Hardmode nel tuo pool</value>
   </data>
+  <data name="Hardmode charts only" xml:space="preserve">
+    <value>Solo chart Hardmode</value>
+  </data>
+  <data name="Hardmode fifty" xml:space="preserve">
+    <value>I cinquanta di Hardmode</value>
+  </data>
+  <data name="Hardmode is Phoenix 2 only." xml:space="preserve">
+    <value>Hardmode esiste solo su Phoenix 2.</value>
+  </data>
+  <data name="Hardmode ladders" xml:space="preserve">
+    <value>Scale Hardmode</value>
+  </data>
   <data name="Hardmode leaderboard" xml:space="preserve">
     <value>Classifica Hardmode</value>
+  </data>
+  <data name="Hardmode {0}" xml:space="preserve">
+    <value>Hardmode {0}</value>
   </data>
   <data name="Has errors" xml:space="preserve">
     <value>Contiene errori</value>
@@ -4028,6 +4058,9 @@
   </data>
   <data name="in your communities" xml:space="preserve">
     <value>nelle tue comunità</value>
+  </data>
+  <data name="In your Hardmode fifty" xml:space="preserve">
+    <value>Nei tuoi cinquanta di Hardmode</value>
   </data>
   <data name="In your Hardmode pool" xml:space="preserve">
     <value>Nel tuo pool Hardmode</value>
@@ -4696,6 +4729,9 @@
   </data>
   <data name="March of Murlocs session" xml:space="preserve">
     <value>Sessione March of Murlocs</value>
+  </data>
+  <data name="Mark Hardmode charts" xml:space="preserve">
+    <value>Evidenzia le chart Hardmode</value>
   </data>
   <data name="Marked for review" xml:space="preserve">
     <value>Segnato per la revisione</value>
@@ -7103,6 +7139,9 @@
   <data name="Pushing Title Charts" xml:space="preserve">
     <value>Chart del titolo in corso</value>
   </data>
+  <data name="Puts a glow on the difficulty bubble of every chart in the week's Hardmode list, everywhere on the site." xml:space="preserve">
+    <value>Aggiunge un bagliore alla bolla di difficoltà di ogni chart della lista Hardmode della settimana, in tutto il sito.</value>
+  </data>
   <data name="Quadratic: a level is worth {0} at 20 and {1} at 27. Below level 10 a chart is worth 0. CO-OP charts were priced at a flat 2,000 but never counted in the total." xml:space="preserve">
     <value>Quadratica: un livello vale {0} a 20 e {1} a 27. Sotto il livello 10 un chart vale 0. I chart CO-OP erano valutati a 2.000 fissi ma non hanno mai contato nel totale.</value>
   </data>
@@ -9251,6 +9290,9 @@
   <data name="The rainbow is expensive" xml:space="preserve">
     <value>Il Rainbow costa caro</value>
   </data>
+  <data name="The rarest slice of every folder — the charts almost nobody holds in a top 50." xml:space="preserve">
+    <value>La fetta più rara di ogni cartella: le chart che quasi nessuno tiene in un top 50.</value>
+  </data>
   <data name="The roster is visible to everyone; management controls appear based on your role." xml:space="preserve">
     <value>L'elenco dei membri è visibile a tutti; i controlli di gestione appaiono in base al tuo ruolo.</value>
   </data>
@@ -9358,6 +9400,9 @@
   </data>
   <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
     <value>Team Infinitesimal ha estratto queste formule dal codice di NX2 e Prime. Nessuno le ha riverificate su Phoenix o Phoenix 2, quindi considera i numeri come la forma del sistema e non come valori esatti del cabinato.</value>
+  </data>
+  <data name="These ladders are priced against Hardmode charts only." xml:space="preserve">
+    <value>Queste scale sono calcolate solo sulle chart Hardmode.</value>
   </data>
   <data name="They ahead" xml:space="preserve">
     <value>Lui avanti</value>
@@ -10399,6 +10444,9 @@
   <data name="What if someone cheats?" xml:space="preserve">
     <value>E se qualcuno bara?</value>
   </data>
+  <data name="What is Hardmode?" xml:space="preserve">
+    <value>Cos'è Hardmode?</value>
+  </data>
   <data name="What is the meta?" xml:space="preserve">
     <value>Qual è il meta?</value>
   </data>
@@ -10452,6 +10500,9 @@
   </data>
   <data name="What the site uses today: grey → silver → green → gold → ice blue → prism, cut at 25 / 50 / 75 / 90 / 99 %." xml:space="preserve">
     <value>Quello che il sito usa oggi: grigio → argento → verde → oro → azzurro ghiaccio → prisma, tagliato a 25 / 50 / 75 / 90 / 99 %.</value>
+  </data>
+  <data name="What this play added to your Hardmode pool" xml:space="preserve">
+    <value>Quanto questa giocata ha aggiunto al tuo pool Hardmode</value>
   </data>
   <data name="What this play added to your PUMBILITY" xml:space="preserve">
     <value>Quanto questa giocata ha aggiunto alla tua PUMBILITY</value>

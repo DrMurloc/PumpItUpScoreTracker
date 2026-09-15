@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -757,6 +757,163 @@ public sealed class HighlightCaptureSagaTests
             }, sessionId);
     }
 
+    [Fact]
+    public async Task HardmodeMovementMintsAMilestonePerPoolThatMoved()
+    {
+        // Mirrors PUMBILITY's three exactly (D20) - same progression shape, same strips,
+        // same Discord lines. A pool that did not move mints nothing.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 950000);
+        ctx.GivenHardmodeStep(new HardmodeSaga.HardmodePoolMove(2999.09, 3339.22, 11, 102, 301),
+            singles: new HardmodeSaga.HardmodePoolMove(1995.50, 2244.10, 6, 112, 257));
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Milestones.Verify(m => m.Append(It.IsAny<MixEnum>(), UserId,
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w =>
+                w.Count() == 2
+                && w.Any(x => x.Kind == MilestoneKind.HardmodePumbilityGain
+                              && x.OldValue == 2999.09 && x.NewValue == 3339.22)
+                && w.Any(x => x.Kind == MilestoneKind.HardmodeSinglesPumbilityGain)
+                // Doubles never moved, so it never speaks.
+                && w.All(x => x.Kind != MilestoneKind.HardmodeDoublesPumbilityGain)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AQuietHardmodePoolAnnouncesNothing()
+    {
+        // Most sessions touch no qualifying chart at all, and that has to be silent rather
+        // than a strip reading "3,339 to 3,339".
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 950000);
+        ctx.GivenHardmodeStep(new HardmodeSaga.HardmodePoolMove(3339.22, 3339.22, 11, 102, 301));
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Milestones.Verify(m => m.Append(It.IsAny<MixEnum>(), UserId,
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w => w.Any(x =>
+                x.Kind == MilestoneKind.HardmodePumbilityGain)),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TheSkullFlagsAScoreInTheHardmodeFiftyAndCarriesItsSlotAndGain()
+    {
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 950000);
+        ctx.GivenHardmodeStep(new HardmodeSaga.HardmodePoolMove(0, 340.1, 1, 102, 301),
+            ranks: new Dictionary<Guid, int> { [chart.Id] = 4 },
+            gains: new Dictionary<Guid, double> { [chart.Id] = 340.1 });
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        // A second upsert, after capture's own: UpsertFlags ORs into the row that exists and
+        // creates one where it does not, which is why the chart's level has to be to hand.
+        ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), UserId,
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.HardmodeTop50) && x.Level == 21
+                && x.Detail != null && x.Detail.HardmodeRank == 4 && x.Detail.HardmodeGain == 340.1)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TheSkullRidesThePublishedEventRatherThanTrailingIt()
+    {
+        // The Discord card and both feeds render from this event alone, so a mark that landed
+        // only in the table would be invisible to all three.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 950000);
+        ctx.GivenHardmodeStep(new HardmodeSaga.HardmodePoolMove(0, 340.1, 1, 1, 301),
+            ranks: new Dictionary<Guid, int> { [chart.Id] = 4 },
+            gains: new Dictionary<Guid, double> { [chart.Id] = 340.1 });
+
+        var context = ctx.Context(NewPassEvent(chart));
+        await ctx.Saga.Consume(context);
+
+        Mock.Get(context).Verify(c => c.Publish(It.Is<ScoreHighlightsCapturedEvent>(e =>
+                e.Changes.Any(ch => ch.ChartId == chart.Id
+                                    && ch.Flags.HasFlag(HighlightFlags.HardmodeTop50)
+                                    && ch.Detail!.HardmodeRank == 4)
+                && e.Milestones.Any(m => m.Kind == MilestoneKind.HardmodePumbilityGain)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ABrokenBestNeverWearsTheSkull()
+    {
+        // A broken run prices to zero and holds no slot, so it cannot be in the fifty at all -
+        // the same rule the crown follows.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBrokenBest(chart, 950000);
+        ctx.GivenHardmodeStep(new HardmodeSaga.HardmodePoolMove(0, 340.1, 1, 102, 301),
+            ranks: new Dictionary<Guid, int> { [chart.Id] = 4 });
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), UserId,
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.Flags.HasFlag(HighlightFlags.HardmodeTop50))),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ATotalThatWasNeverStoredIsNeverAnnounced()
+    {
+        // ⚠ Save only touches accounts with an existing PlayerStats row. Announcing a gain
+        // against a number nothing persisted mints the identical milestone on every subsequent
+        // import, forever. The skull itself still lands - the flag is about the score, not the
+        // board row. Bug check, 2026-09-15.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 950000);
+        ctx.GivenHardmodeStep(new HardmodeSaga.HardmodePoolMove(0, 3339.22, 11, 102, 301),
+            ranks: new Dictionary<Guid, int> { [chart.Id] = 4 }, persisted: false);
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Milestones.Verify(m => m.Append(It.IsAny<MixEnum>(), UserId,
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w => w.Any(x =>
+                x.Kind == MilestoneKind.HardmodePumbilityGain)),
+            It.IsAny<CancellationToken>()), Times.Never);
+        ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), UserId,
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.Flags.HasFlag(HighlightFlags.HardmodeTop50))),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AFailedHardmodeStepStillPublishesTheSnapshot()
+    {
+        // Failure-isolated like the rating and title steps: a second board's total is never
+        // worth losing the session card over.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 950000);
+        ctx.Mediator.Setup(m => m.Send(It.IsAny<HardmodeSaga.RepriceHardmodePool>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("board unreachable"));
+
+        var context = ctx.Context(NewPassEvent(chart));
+        await ctx.Saga.Consume(context);
+
+        Mock.Get(context).Verify(c => c.Publish(It.Is<ScoreHighlightsCapturedEvent>(e =>
+                e.Changes.Any(ch => ch.ChartId == chart.Id)
+                && e.Milestones.All(m => m.Kind != MilestoneKind.HardmodePumbilityGain)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private sealed class HandlerContext
     {
         private readonly List<RecordedPhoenixScore> _bests = new();
@@ -799,6 +956,9 @@ public sealed class HighlightCaptureSagaTests
             OfficialPlacements.Setup(o => o.EstimatePlacements(It.IsAny<MixEnum>(), UserId,
                     It.IsAny<IReadOnlyList<(Guid, int)>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Dictionary<Guid, OfficialPlacementReading>());
+            // The default is a mix with no census, which is what every mix but Phoenix 2 is.
+            Mediator.Setup(m => m.Send(It.IsAny<HardmodeSaga.RepriceHardmodePool>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(HardmodeSaga.HardmodeReprice.None);
             Saga = new HighlightCaptureSaga(Charts.Object, Scores.Object, PlayerStats.Object,
                 Highlights.Object, Milestones.Object, FolderLevels.Object, Mediator.Object,
                 new MemoryCache(new MemoryCacheOptions()), FakeDateTime.At(Now).Object,
@@ -847,6 +1007,30 @@ public sealed class HighlightCaptureSagaTests
             Mediator.Setup(m => m.Send(It.IsAny<PlayerRatingSaga.CaptureSessionStats>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new PlayerRatingSaga.SessionStatsResult(milestones, improverChartIds));
+        }
+
+        /// <summary>
+        ///     What the Hardmode reprice reported for this batch — the three pools' movement, and
+        ///     the combined-fifty slots and gains that decide the skull badge.
+        /// </summary>
+        /// <param name="persisted">
+        ///     Whether the reprice found a PlayerStats row to write to. True is the normal case;
+        ///     false is an account the rating step never created a row for, whose total was
+        ///     therefore never stored and must not be announced.
+        /// </param>
+        public void GivenHardmodeStep(HardmodeSaga.HardmodePoolMove combined,
+            IReadOnlyDictionary<Guid, int>? ranks = null, IReadOnlyDictionary<Guid, double>? gains = null,
+            HardmodeSaga.HardmodePoolMove? singles = null, HardmodeSaga.HardmodePoolMove? doubles = null,
+            bool persisted = true)
+        {
+            Mediator.Setup(m => m.Send(It.IsAny<HardmodeSaga.RepriceHardmodePool>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new HardmodeSaga.HardmodeReprice(combined,
+                    singles ?? HardmodeSaga.HardmodePoolMove.None,
+                    doubles ?? HardmodeSaga.HardmodePoolMove.None,
+                    (ranks ?? new Dictionary<Guid, int>()).Keys.ToHashSet(),
+                    ranks ?? new Dictionary<Guid, int>(),
+                    gains ?? new Dictionary<Guid, double>(),
+                    persisted));
         }
 
         public void GivenTitleStep(PlayerMilestoneRecord[] milestones, params TitleProgressDelta[] progress)

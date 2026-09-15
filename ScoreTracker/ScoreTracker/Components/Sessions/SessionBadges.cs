@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Localization;
+﻿using Microsoft.Extensions.Localization;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -45,6 +45,15 @@ internal static class SessionBadges
         if (includeGain && detail?.PumbilityGain is { } gain && gain > 0)
             yield return new SessionBadge($"+{PumbilityFormat.Gain(gain)}",
                 l["What this play added to your PUMBILITY"].Value, "sbd-gain");
+        // The skull follows the crown for the crown's own reason: pool membership first, then
+        // what tonight's play on it was worth. On a Hardmode pool short of fifty the second
+        // number is usually far the larger of the two, because nothing had to be displaced.
+        if (score.Flags.HasFlag(HighlightFlags.HardmodeTop50))
+            yield return new SessionBadge(detail?.HardmodeRank is { } hard ? $"💀 #{hard}" : "💀",
+                l["In your Hardmode fifty"].Value, "sbd-badge hmd-badge");
+        if (includeGain && detail?.HardmodeGain is { } hardGain && hardGain > 0)
+            yield return new SessionBadge($"+{PumbilityFormat.Gain(hardGain)}",
+                l["What this play added to your Hardmode pool"].Value, "hmd-gain");
         // No ScoreQuality90 badge: it said "top 10% among comparable players", and the
         // standing line beneath now says exactly where you placed among them. The flag
         // itself is untouched — it still rides the Discord card and seeds hot streaks.

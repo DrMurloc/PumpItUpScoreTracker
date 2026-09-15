@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using ScoreTracker.ChartIntelligence.Application;
@@ -233,7 +234,7 @@ public sealed class HardmodeCensusSagaTests
 
         return new HardmodeCensusSaga(repository.Object, scores.Object, officialPools.Object,
             chartRepository.Object, scoringLevels.Object, FakeDateTime.At(At).Object, bus.Object,
-            NullLogger<HardmodeCensusSaga>.Instance);
+            new MemoryCache(new MemoryCacheOptions()), NullLogger<HardmodeCensusSaga>.Instance);
     }
 
     private static ConsumeContext<RebuildHardmodeChartsCommand> Context(RebuildHardmodeChartsCommand message)

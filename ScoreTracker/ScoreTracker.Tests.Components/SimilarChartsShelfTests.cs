@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -48,6 +48,8 @@ public sealed class SimilarChartsShelfTests : TestContext
         Services.AddSingleton(_mediator.Object);
         Services.AddSingleton(_currentUser.Object);
         Services.AddScoped<ChartScoringLevels>();
+        // DifficultyBubble asks whether the chart is Hardmode on the same render.
+        Services.AddHardmodeStub();
         var localizer = new Mock<IStringLocalizer<App>>();
         localizer.Setup(l => l[It.IsAny<string>()])
             .Returns((string key) => new LocalizedString(key, key));

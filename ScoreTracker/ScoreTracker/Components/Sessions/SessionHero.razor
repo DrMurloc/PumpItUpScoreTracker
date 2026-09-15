@@ -1,4 +1,4 @@
-@using ScoreTracker.Domain.Models
+﻿@using ScoreTracker.Domain.Models
 @using ScoreTracker.EventCompetition.Contracts
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.ScoreLedger.Contracts
@@ -102,7 +102,8 @@
     }
     else
     {
-    <SessionTitleBars Bars="Breakdown.TitleBars"></SessionTitleBars>
+    <SessionTitleBars Bars="Breakdown.TitleBars"
+                      HardmodeBars="@(Breakdown.HardmodeBars ?? Array.Empty<HardmodeTitleBar>())"></SessionTitleBars>
 
     @if (Breakdown.Milestones.Count > 0)
     {

@@ -168,6 +168,13 @@
 
     public const string CollapsedSettingKey = "Hardmode__CollapsedSections";
 
+    /// <summary>
+    ///     The folder last looked at, as "Single|21". Every other FolderPicker on the site either
+    ///     lives on a routed page or resets; this section is deep inside a single-route page, so
+    ///     a setting is the only place the choice can live.
+    /// </summary>
+    public const string FolderSettingKey = "Hardmode__Folder";
+
     private enum HardmodeState
     {
         NotPlayed,
@@ -343,6 +350,12 @@
 
         _qualifying = await Mediator.Send(new GetHardmodeChartsQuery(Mix));
 
+        // Where you were last time, if that folder still has anything in it. The week's census
+        // moves the list under people, so a remembered folder can empty out - and then this
+        // falls through to the same rule a first visit uses.
+        if (ParseFolder(await UiSettings.GetSetting(FolderSettingKey)) is { } saved && !IsMissing(saved.Type, saved.Level))
+            (_type, _level) = saved;
+
         // Open on a folder that has something in it rather than on an empty S21.
         if (IsMissing(_type, _level))
         {
@@ -357,8 +370,23 @@
     private async Task PickFolder((ChartType Type, int Level) folder)
     {
         (_type, _level) = folder;
+        await UiSettings.SetSetting(FolderSettingKey, $"{folder.Type}|{folder.Level}");
         await LoadSkills();
         await LoadStandings();
+    }
+
+    /// <summary>
+    ///     "Single|21" back into a folder. Anything unparseable reads as no preference rather
+    ///     than throwing: a setting is player-editable data, not a contract.
+    /// </summary>
+    private static (ChartType Type, int Level)? ParseFolder(string? setting)
+    {
+        var parts = (setting ?? string.Empty).Split('|');
+        return parts.Length == 2
+               && Enum.TryParse<ChartType>(parts[0], out var type)
+               && int.TryParse(parts[1], out var level)
+            ? (type, level)
+            : null;
     }
 
     /// <summary>
