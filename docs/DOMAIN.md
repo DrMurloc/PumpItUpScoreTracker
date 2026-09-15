@@ -42,6 +42,26 @@ For solution layout and patterns, see [ARCHITECTURE.md](ARCHITECTURE.md). For pr
 - **Playstyle archetype** — the five labels the chip wears beside a player on the official rankings, a community board and the season recap: **Pass Pusher · Pass Refiner · Balanced Player · Competitive · Perfectionist**, banded off the average score of the player's top-50 PUMBILITY pool by `RecapPlayerTypeCalculator`, and shown only from ten pooled charts up (below that the average says more about sample size than about play). **The cutoffs are per mix and are each mix's own letter-grade floors**: Phoenix 950,000 / 970,000 / 980,000 / 995,000 (AAA · S · SS · SSS+), Phoenix 2 **970,000 / 975,000 / 980,000 / 985,000** (S · S+ · SS · SS+), so on Phoenix 2 each archetype is exactly one grade rung — a fifty averaging an S+ is a Balanced Player. Phoenix 2 was re-cut on 2026-09-12 because its formula had collapsed 90% of players into two labels ([design/pumbility-overhaul.md §4.15](design/pumbility-overhaul.md)). **They are lateral, not a ladder** (owner, 2026-09-11): no surface may describe one as above another, and the band tracks neither PUMBILITY (they correlate 0.350) nor difficulty (median pool level is 22.0–22.4 in all five) — only how hard the player scores what they hold. Colours are the grade-metal ladder, `MixThemes.PlayerTypeHex`, emitted as `--ptype-*`.
 - **Competitive Level progress** — a tier/level system tracking a player's competitive standing, driven primarily by Weekly Charts performance. UI at `Pages/Progress/CompetitiveLevel.razor`.
 - **Peers** — the settled UI term for *players near your competitive level*: the cohort the bucket-cached machinery (`CohortScoreProvider`, half-level buckets ±0.5) ranks a player's scores against. "You beat 80% of Peers" means your best on that chart beats 80% of that cohort's bests. First shipped in the Hot Streak widget goal; older copy ("competitive matches" on Account Stats) predates the term.
+- **Season** — a calendar quarter Phoenix 2 scores are also tracked against, so a player who started in
+  April is not permanently behind one who started in 2022 ([design/seasons.md](design/seasons.md)). Keyed by
+  the quarter itself as `YYYYQ` — 20264 is Fall 2026 — with `SeasonId.AllTime` (0) meaning "not a season,
+  the lifetime record". A season **opens** when the daily roll finds its quarter has no row, and
+  **closes** at its boundary — there is no grace period, so a play you did not import before then is not in
+  that season, ever. The next roll **seals** it: a stamp, after which nothing writes a row carrying its
+  number; the rows stay where they are, cold, under that number. Boundaries are MoM's: midnight UTC-5 on the first of
+  January, April, July and October. Phoenix 1 has no seasons and never will.
+- **Seasonal personal best** — a second best-attempt row on the same chart, carrying a season's number
+  beside the all-time one, built from an empty pool at the season's start — so a run well below a player's
+  lifetime best is still that season's best. Only an official import seeds one, and only a play dated
+  inside the window or a card that raised a record the player already held (the counting rule: a Phoenix 2
+  best-list card wears the chart's *first* play, so an in-season upscore arrives looking ancient). Manual,
+  CSV and API scores never count.
+- **TOTAL PUMBILITY** — a season's whole-season grind board: every seasonal best's PUMBILITY summed rather
+  than the top fifty, so it rewards breadth over a quarter. Unrounded like every pool, and zero on an
+  all-time row, where `TotalRating` is already the lifetime figure.
+- **Season rating** — a chart's level *for one season*, where balancing has moved it off its printed level.
+  Sparse: a `ChartSeason` row exists only where the two differ, and a chart with no row prices at printed.
+  `ChartMix` is never touched by seasons. The folder a chart sits in does not move with its rating.
 
 ## Community-tracked systems
 

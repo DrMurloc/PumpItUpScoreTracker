@@ -2,6 +2,8 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
+using ScoreTracker.Catalog.Infrastructure;
+using ScoreTracker.Catalog.Infrastructure.Entities;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Infrastructure;
 using ScoreTracker.ChartIntelligence.Infrastructure.Entities;
@@ -33,6 +35,7 @@ namespace ScoreTracker.Tests.Integration;
 public sealed class SeasonFilterTests : IAsyncLifetime
 {
     private const short Fall2026 = 20264;
+    private static readonly SeasonId Fall = SeasonId.From(2026, 4);
     private static readonly DateTimeOffset Now = new(2026, 10, 1, 12, 0, 0, TimeSpan.Zero);
 
     private readonly SqlServerFixture _fixture;
@@ -185,5 +188,137 @@ public sealed class SeasonFilterTests : IAsyncLifetime
         var peers = await store.OnCharts(MixEnum.Phoenix, new[] { userId }, new[] { chartId }, CancellationToken.None);
 
         Assert.Equal(950_000, (int)Assert.Single(peers).Score);
+    }
+
+    // Slice 1b: the reads that name a season drop the AllTime filter by name and see that season's
+    // rows instead (docs/design/seasons.md D12, §12.3) — a second row per chart, never the first one.
+    [Fact]
+    public async Task AReadThatNamesTheSeasonSeesTheSeasonsRowAndNotTheAllTimeOne()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedPhoenixChartAsync(20);
+        var records = Records();
+        await records.UpdateBestAttempt(MixEnum.Phoenix, userId,
+            new RecordedPhoenixScore(chartId, PhoenixScore.From(950_000), PhoenixPlate.SuperbGame, false, Now));
+        // The season's pool starts empty, so a lower score is still its best.
+        await records.UpdateBestAttempt(MixEnum.Phoenix, userId,
+            new RecordedPhoenixScore(chartId, PhoenixScore.From(900_000), PhoenixPlate.RoughGame, false, Now), Fall);
+
+        var own = await records.GetRecordedScore(MixEnum.Phoenix, userId, chartId, Fall);
+        var board = (await records.GetRecordedUserScores(MixEnum.Phoenix, chartId, Fall)).ToArray();
+        var bests = (await ((IScoreReader)records).GetBestScores(MixEnum.Phoenix, userId, Fall, CancellationToken.None))
+            .ToArray();
+        var allTime = await records.GetRecordedScore(MixEnum.Phoenix, userId, chartId);
+
+        Assert.Equal(900_000, (int)own!.Score!.Value);
+        Assert.Equal(900_000, (int)Assert.Single(board).Score);
+        Assert.Equal(900_000, (int)Assert.Single(bests).Score!.Value);
+        Assert.Equal(950_000, (int)allTime!.Score!.Value);
+        Assert.Equal(1, await CountPastTheFilter<PhoenixRecordEntity>(Fall2026));
+        Assert.Equal(1, await CountPastTheFilter<PhoenixRecordEntity>(0));
+    }
+
+    [Fact]
+    public async Task DeletingASeasonsRecordLeavesTheAllTimeOneAndAWipeTakesBoth()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedPhoenixChartAsync(20);
+        var records = Records();
+        await records.UpdateBestAttempt(MixEnum.Phoenix, userId,
+            new RecordedPhoenixScore(chartId, PhoenixScore.From(950_000), PhoenixPlate.SuperbGame, false, Now));
+        await records.UpdateBestAttempt(MixEnum.Phoenix, userId,
+            new RecordedPhoenixScore(chartId, PhoenixScore.From(900_000), PhoenixPlate.RoughGame, false, Now), Fall);
+
+        await records.DeleteRecord(MixEnum.Phoenix, userId, chartId, Fall);
+
+        Assert.Equal(0, await CountPastTheFilter<PhoenixRecordEntity>(Fall2026));
+        Assert.Equal(1, await CountPastTheFilter<PhoenixRecordEntity>(0));
+
+        await records.UpdateBestAttempt(MixEnum.Phoenix, userId,
+            new RecordedPhoenixScore(chartId, PhoenixScore.From(900_000), PhoenixPlate.RoughGame, false, Now), Fall);
+        // The mix wipe is one delete that crosses seasons: it drops every filter rather than
+        // running once per season it cannot enumerate from the Ledger.
+        await records.DeleteAllForUser(userId, MixEnum.Phoenix);
+
+        Assert.Equal(0, await CountPastTheFilter<PhoenixRecordEntity>(Fall2026));
+        Assert.Equal(0, await CountPastTheFilter<PhoenixRecordEntity>(0));
+    }
+
+    [Fact]
+    public async Task AStatsWriteThatNamesTheSeasonLandsBesideTheAllTimeRowAndReadsBackAlone()
+    {
+        var userId = Guid.NewGuid();
+        var repository = new EFPlayerStatsRepository(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions()));
+        await repository.SaveStats(MixEnum.Phoenix2, userId,
+            new PlayerStatsRecord(userId, 0, 1, 0, 0, 0, 100, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0),
+            CancellationToken.None);
+        await repository.SaveStats(MixEnum.Phoenix2, userId,
+            new PlayerStatsRecord(userId, 0, 1, 0, 0, 0, 40, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0, TotalPumbility: 1234.5),
+            Fall, CancellationToken.None);
+
+        var fresh = new EFPlayerStatsRepository(_fixture.DbContextFactory, new MemoryCache(new MemoryCacheOptions()));
+        var season = await fresh.GetStats(MixEnum.Phoenix2, userId, Fall, CancellationToken.None);
+        var seasonMany = (await fresh.GetStats(MixEnum.Phoenix2, new[] { userId }, Fall, CancellationToken.None)).ToArray();
+        var allTime = await fresh.GetStats(MixEnum.Phoenix2, userId, CancellationToken.None);
+        var seasonIds = (await fresh.GetUserIdsWithStats(MixEnum.Phoenix2, Fall, CancellationToken.None)).ToArray();
+
+        Assert.Equal(40, season.SkillRating);
+        Assert.Equal(1234.5, season.TotalPumbility);
+        Assert.Equal(40, Assert.Single(seasonMany).SkillRating);
+        Assert.Equal(100, allTime.SkillRating);
+        Assert.Equal(0, allTime.TotalPumbility);
+        Assert.Equal(userId, Assert.Single(seasonIds));
+
+        // The mix wipe takes every season's row in one delete.
+        await fresh.DeleteStats(MixEnum.Phoenix2, userId, CancellationToken.None);
+
+        Assert.Equal(0, await CountPastTheFilter<PlayerStatsEntity>(Fall2026));
+        Assert.Equal(0, await CountPastTheFilter<PlayerStatsEntity>(0));
+    }
+
+    [Fact]
+    public async Task AFolderWriteThatNamesTheSeasonLandsBesideTheAllTimeRowAndReadsBackAlone()
+    {
+        var userId = Guid.NewGuid();
+        var repository = new EFPlayerFolderLevelRepository(_fixture.DbContextFactory);
+        await repository.Save(userId,
+            new[] { new FolderLevelRecord(MixEnum.Phoenix, ChartType.Single, DifficultyLevel.From(22), 97, 60, 930_000, 930_000) },
+            Now, CancellationToken.None);
+        await repository.Save(userId,
+            new[] { new FolderLevelRecord(MixEnum.Phoenix, ChartType.Single, DifficultyLevel.From(22), 97, 3, 900_000, 0) },
+            Now, Fall, CancellationToken.None);
+
+        var season = (await repository.GetFolderLevels(MixEnum.Phoenix, userId, Fall, CancellationToken.None)).ToArray();
+        var allTime = (await repository.GetFolderLevels(MixEnum.Phoenix, userId, CancellationToken.None)).ToArray();
+
+        Assert.Equal(3, Assert.Single(season).Played);
+        Assert.Equal(60, Assert.Single(allTime).Played);
+        Assert.Equal(1, await CountPastTheFilter<PlayerFolderLevelEntity>(Fall2026));
+        Assert.Equal(1, await CountPastTheFilter<PlayerFolderLevelEntity>(0));
+    }
+
+    [Fact]
+    public async Task TheChartDictionaryOverlaysTheSeasonRatingWithoutMovingTheFolder()
+    {
+        var chartId = await _seed.SeedPhoenixChartAsync(22);
+        // The roll rated this 22 a 21 for the season (D33): priced at 21, still filed under 22.
+        await Plant(new ChartSeasonEntity
+        {
+            SeasonId = Fall2026, MixId = TestDataSeeder.PhoenixMixId, ChartId = chartId, Level = 21, PrintedLevel = 22,
+            MovedThisRoll = -1
+        });
+        var repository = new EFChartRepository(new MemoryCache(new MemoryCacheOptions()), _fixture.DbContextFactory);
+
+        var printed = (await repository.GetCharts(MixEnum.Phoenix, level: DifficultyLevel.From(22))).Single(c => c.Id == chartId);
+        var inItsFolder = (await repository.GetCharts(MixEnum.Phoenix, Fall, DifficultyLevel.From(22)))
+            .Single(c => c.Id == chartId);
+        var inTheLowerFolder = (await repository.GetCharts(MixEnum.Phoenix, Fall, DifficultyLevel.From(21)))
+            .Where(c => c.Id == chartId);
+        var unfiltered = (await repository.GetCharts(MixEnum.Phoenix, Fall)).Single(c => c.Id == chartId);
+
+        Assert.Equal(22, (int)printed.Level);
+        Assert.Equal(21, (int)inItsFolder.Level);
+        Assert.Empty(inTheLowerFolder);
+        Assert.Equal(21, (int)unfiltered.Level);
     }
 }

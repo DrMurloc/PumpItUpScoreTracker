@@ -17,12 +17,31 @@ internal sealed class EFPlayerFolderLevelRepository : IPlayerFolderLevelReposito
         _factory = factory;
     }
 
-    public async Task<IEnumerable<FolderLevelRecord>> GetFolderLevels(MixEnum mix, Guid userId,
+    /// <summary>
+    ///     The folder table as one season sees it: the AllTime filter's rows, or — that filter
+    ///     dropped by name, never wholesale — the rows carrying <paramref name="season" />
+    ///     (docs/design/seasons.md D12).
+    /// </summary>
+    private static IQueryable<PlayerFolderLevelEntity> Folders(ChartAttemptDbContext database, SeasonId season)
+    {
+        if (season.IsAllTime) return database.Set<PlayerFolderLevelEntity>();
+        var value = season.Value;
+        return database.Set<PlayerFolderLevelEntity>().IgnoreQueryFilters([QueryFilters.AllTime])
+            .Where(e => e.SeasonId == value);
+    }
+
+    public Task<IEnumerable<FolderLevelRecord>> GetFolderLevels(MixEnum mix, Guid userId,
+        CancellationToken cancellationToken)
+    {
+        return GetFolderLevels(mix, userId, SeasonId.AllTime, cancellationToken);
+    }
+
+    public async Task<IEnumerable<FolderLevelRecord>> GetFolderLevels(MixEnum mix, Guid userId, SeasonId season,
         CancellationToken cancellationToken)
     {
         var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var rows = await database.Set<PlayerFolderLevelEntity>()
+        var rows = await Folders(database, season)
             .Where(e => e.UserId == userId && e.MixId == mixId)
             .ToArrayAsync(cancellationToken);
 
@@ -37,7 +56,13 @@ internal sealed class EFPlayerFolderLevelRepository : IPlayerFolderLevelReposito
             .Cast<FolderLevelRecord>();
     }
 
-    public async Task Save(Guid userId, IEnumerable<FolderLevelRecord> levels, DateTimeOffset asOf,
+    public Task Save(Guid userId, IEnumerable<FolderLevelRecord> levels, DateTimeOffset asOf,
+        CancellationToken cancellationToken)
+    {
+        return Save(userId, levels, asOf, SeasonId.AllTime, cancellationToken);
+    }
+
+    public async Task Save(Guid userId, IEnumerable<FolderLevelRecord> levels, DateTimeOffset asOf, SeasonId season,
         CancellationToken cancellationToken)
     {
         var writes = levels.ToArray();
@@ -48,7 +73,7 @@ internal sealed class EFPlayerFolderLevelRepository : IPlayerFolderLevelReposito
         {
             var mixId = MixIds.For(mixGroup.Key);
             var levelNumbers = mixGroup.Select(l => (int)l.Level).Distinct().ToArray();
-            var existing = await database.Set<PlayerFolderLevelEntity>()
+            var existing = await Folders(database, season)
                 .Where(e => e.UserId == userId && e.MixId == mixId && levelNumbers.Contains(e.Level))
                 .ToArrayAsync(cancellationToken);
 
@@ -60,7 +85,8 @@ internal sealed class EFPlayerFolderLevelRepository : IPlayerFolderLevelReposito
                 {
                     row = new PlayerFolderLevelEntity
                     {
-                        UserId = userId, MixId = mixId, ChartType = typeName, Level = (int)level.Level
+                        UserId = userId, MixId = mixId, SeasonId = season.Value, ChartType = typeName,
+                        Level = (int)level.Level
                     };
                     await database.AddAsync(row, cancellationToken);
                 }

@@ -7,6 +7,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.ScoreLedger.Domain;
+using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.ScoreLedger.Application;
 
@@ -21,6 +22,7 @@ internal sealed class UndoScoreSessionHandler(
         IScoreSessionRepository sessions,
         IScoreJournalRepository journal,
         IPhoenixRecordRepository records,
+        ISeasonReader seasons,
         IDateTimeOffsetAccessor dateTime,
         IBus bus)
     : IRequestHandler<UndoScoreSessionCommand, ScoreSessionUndoResult>
@@ -71,6 +73,8 @@ internal sealed class UndoScoreSessionHandler(
             restored++;
         }
 
+        await ReplaySeasons(session.Mix, request.UserId, chartIds, survivors, cancellationToken);
+
         await sessions.Delete(request.SessionId, cancellationToken);
         await bus.Publish(new ScoreSessionUndoneEvent(request.UserId, request.SessionId, session.Mix),
             cancellationToken);
@@ -81,5 +85,55 @@ internal sealed class UndoScoreSessionHandler(
             cancellationToken);
 
         return new ScoreSessionUndoResult(ScoreSessionUndoOutcome.Undone, restored, cleared);
+    }
+
+    /// <summary>
+    ///     The same replay again for the running season, with its window applied
+    ///     (docs/design/seasons.md §4.1): the season's best on a chart is the best surviving play
+    ///     inside its window, and no surviving play in the window means the chart returns to unplayed
+    ///     for that season. Only the running season, and only while unsealed — there is no grace
+    ///     (D13), so an undo cannot reach back past a boundary any more than an import can.
+    ///     <para>
+    ///         A row the counting rule seated on the raise clause rather than on its date — an upscore
+    ///         wearing a pre-season stamp — is not reconstructible here, because whether a card raised
+    ///         a record is import-time knowledge the journal does not keep. Replaying by window is the
+    ///         rule the design chose knowing that; the nightly rollup recomputes standings from
+    ///         whatever bests survive either way.
+    ///     </para>
+    /// </summary>
+    private async Task ReplaySeasons(MixEnum mix, Guid userId, IReadOnlyList<Guid> chartIds,
+        IReadOnlyList<ScoreJournalEntry> survivors, CancellationToken cancellationToken)
+    {
+        if (chartIds.Count == 0 || !mix.HasSeasons()) return;
+        // The running season, and only it: there is no grace (D13), so a closed season takes no
+        // further writes from an undo any more than it does from an import.
+        if (await seasons.GetSeasonAt(dateTime.Now, cancellationToken) is not { IsSealed: false } season) return;
+
+        foreach (var chartId in chartIds)
+        {
+            // Official imports only, the same rule the writer applies (D4): the replay may not seat a
+            // hand-typed score in a season's pool. Source has to be filtered BEFORE BestOf rather than
+            // after, because BestOf treats a manual row as authoritative — it overwrites rather than
+            // competes, which is right for the all-time record and wrong for a season.
+            var best = SessionUndoReplay.BestOf(survivors.Where(e =>
+                e.ChartId == chartId && e.Mix == mix && season.Holds(e.OccurredAt)
+                && e.Source == ScoreJournalEntry.OfficialImportSource));
+            if (best != null)
+            {
+                await records.UpdateBestAttempt(mix, userId,
+                    new RecordedPhoenixScore(chartId, best.Score, best.Plate, best.IsBroken, best.OccurredAt,
+                        best.Source, best.Judgements), season.Id, cancellationToken);
+                continue;
+            }
+
+            // Nothing in the window survives. That means "delete" only for a row the window could have
+            // produced: a row the raise clause seated carries a card date OUTSIDE the season by
+            // construction, so a window replay was never going to find its evidence, and removing it
+            // would be the replay destroying what it cannot rebuild. Leave that one standing; the
+            // nightly rollup prices whatever is actually there either way.
+            var stored = await records.GetRecordedScore(mix, userId, chartId, season.Id, cancellationToken);
+            if (stored != null && !season.Holds(stored.RecordedDate)) continue;
+            await records.DeleteRecord(mix, userId, chartId, season.Id, cancellationToken);
+        }
     }
 }

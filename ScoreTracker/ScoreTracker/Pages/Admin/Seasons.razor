@@ -1,0 +1,147 @@
+@page "/Admin/Seasons"
+@rendermode RenderModes.Interactive
+@using MassTransit
+@using MediatR
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Seasons.Contracts.Messages
+@using ScoreTracker.Seasons.Contracts.Queries
+@inject IMediator Mediator
+@inject IBus Bus
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser
+@inject IDateTimeOffsetAccessor Clock
+
+<PageTitle>@L["Seasons"]</PageTitle>
+
+@* The season calendar's one pane of glass. Both buttons publish the same messages the schedule
+   does — a hand-run catch-up must not drift from the nightly path. Nothing here is player-facing:
+   the seasonal surfaces arrive behind Seasons:EnableUI in a later slice. *@
+
+<MudBreadcrumbs Items="_crumbs" Class="pa-0 mb-2"></MudBreadcrumbs>
+<MudText Typo="Typo.h4" Class="mb-1">@L["Seasons"]</MudText>
+
+@if (_seasons == null)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Small"/>
+}
+else
+{
+    @if (_seasons.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Class="mb-3" data-testid="seasons-none">
+            @L["No season has been opened yet. Roll now creates the quarter we are standing in; Backfill seasons creates every quarter since Summer 2026 and rebuilds their pools from the score journal."]
+        </MudAlert>
+    }
+
+    <div class="mb-3">
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="_working"
+                   OnClick="RollNow" data-testid="seasons-roll">@L["Roll now"]</MudButton>
+        <MudButton Color="Color.Warning" Variant="Variant.Outlined" Class="ml-2" Disabled="_working"
+                   OnClick="Backfill" data-testid="seasons-backfill">@L["Backfill seasons"]</MudButton>
+    </div>
+
+    @if (_message != null)
+    {
+        <MudAlert Severity="Severity.Success" Class="mb-3" data-testid="seasons-message">@_message</MudAlert>
+    }
+
+    @if (_seasons.Count > 0)
+    {
+        <MudSimpleTable Dense="true" Hover="true" data-testid="seasons-table">
+            <thead>
+            <tr>
+                <th>@L["Season"]</th>
+                <th>@L["Starts"]</th>
+                <th>@L["Ends"]</th>
+                <th>@L["Status"]</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var season in _seasons)
+            {
+                <tr>
+                    <td>@season.Name <MudText Typo="Typo.caption" Class="ml-1">@season.Id</MudText></td>
+                    <td>@season.StartsAt.ToString("yyyy-MM-dd")</td>
+                    <td>@season.EndsAt.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        @if (season.SealedAt is { } sealedAt)
+                        {
+                            @L["Sealed {0}", sealedAt.ToString("yyyy-MM-dd")]
+                        }
+                        else if (season.Holds(Clock.Now))
+                        {
+                            @L["Running"]
+                        }
+                        else
+                        {
+                            @L["Ended, not yet sealed"]
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </MudSimpleTable>
+    }
+}
+
+@code {
+    private IReadOnlyList<SeasonRecord>? _seasons;
+    private List<BreadcrumbItem> _crumbs = new();
+    private bool _working;
+    private string? _message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.User.IsAdmin)
+        {
+            NavManager.NavigateTo("/");
+            return;
+        }
+
+        _crumbs = new List<BreadcrumbItem>
+        {
+            new(L["Admin"].Value, "/Admin"),
+            new(L["Seasons"].Value, null, true)
+        };
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        _seasons = await Mediator.Send(new GetSeasonsQuery());
+    }
+
+    // The same message the 11:15 job publishes: open the quarter we stand in, seal any whose window
+    // has closed. Idempotent, so pressing it twice costs nothing.
+    private async Task RollNow()
+    {
+        await Publish(new RollSeasonCommand(), L["Rolling the season."].Value);
+    }
+
+    // Creates every quarter since Summer 2026 and asks each for its replay. The seal is left to
+    // the roll, so an ended quarter shows as "Ended, not yet sealed" until the next tick — a state
+    // about the stamp, not about writability: a closed season takes nothing either way (D13).
+    private async Task Backfill()
+    {
+        await Publish(new BackfillSeasonsCommand(),
+            L["Backfilling seasons. The pools rebuild in the background; reload in a few minutes."].Value);
+    }
+
+    private async Task Publish<T>(T message, string confirmation) where T : class
+    {
+        _working = true;
+        _message = null;
+        try
+        {
+            await Bus.Publish(message);
+            _message = confirmation;
+        }
+        finally
+        {
+            _working = false;
+        }
+
+        await Load();
+    }
+}

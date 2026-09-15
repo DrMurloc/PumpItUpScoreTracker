@@ -29,27 +29,52 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
         }
 
         // A Viewer key: the season's stats row is a different row, and this is where that lands.
-        private string CacheKey(MixEnum mix, Guid userId)
+        private static string CacheKey(MixEnum mix, Guid userId, SeasonId season)
         {
-            return CacheKeys.Viewer(nameof(EFPlayerStatsRepository), mix, SeasonId.AllTime, userId);
+            return CacheKeys.Viewer(nameof(EFPlayerStatsRepository), mix, season, userId);
         }
 
-        public async Task<IEnumerable<Guid>> GetUserIdsWithStats(MixEnum mix, CancellationToken cancellationToken)
+        /// <summary>
+        ///     The stats table as one season sees it: the AllTime filter's rows, or — that filter
+        ///     dropped by name, never wholesale — the rows carrying <paramref name="season" />
+        ///     (docs/design/seasons.md D12).
+        /// </summary>
+        private static IQueryable<PlayerStatsEntity> Stats(ChartAttemptDbContext database, SeasonId season)
+        {
+            if (season.IsAllTime) return database.Set<PlayerStatsEntity>();
+            var value = season.Value;
+            return database.Set<PlayerStatsEntity>().IgnoreQueryFilters([QueryFilters.AllTime])
+                .Where(p => p.SeasonId == value);
+        }
+
+        public Task<IEnumerable<Guid>> GetUserIdsWithStats(MixEnum mix, CancellationToken cancellationToken)
+        {
+            return GetUserIdsWithStats(mix, SeasonId.AllTime, cancellationToken);
+        }
+
+        public async Task<IEnumerable<Guid>> GetUserIdsWithStats(MixEnum mix, SeasonId season,
+            CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var mixId = MixIds.For(mix);
-            return await database.Set<PlayerStatsEntity>()
+            return await Stats(database, season)
                 .Where(p => p.MixId == mixId)
                 .Select(p => p.UserId)
                 .ToArrayAsync(cancellationToken);
         }
 
-        public async Task SaveStats(MixEnum mix, Guid userId, PlayerStatsRecord newStats,
+        public Task SaveStats(MixEnum mix, Guid userId, PlayerStatsRecord newStats,
+            CancellationToken cancellationToken)
+        {
+            return SaveStats(mix, userId, newStats, SeasonId.AllTime, cancellationToken);
+        }
+
+        public async Task SaveStats(MixEnum mix, Guid userId, PlayerStatsRecord newStats, SeasonId season,
             CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var mixId = MixIds.For(mix);
-            var entity = await database.Set<PlayerStatsEntity>()
+            var entity = await Stats(database, season)
                 .FirstOrDefaultAsync(p => p.UserId == userId && p.MixId == mixId, cancellationToken);
             if (entity == null)
             {
@@ -57,6 +82,8 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                 {
                     UserId = userId,
                     MixId = mixId,
+                    SeasonId = season.Value,
+                    TotalPumbility = newStats.TotalPumbility,
                     CoOpRating = newStats.CoOpRating,
                     SinglesRating = newStats.SinglesRating,
                     DoublesRating = newStats.DoublesRating,
@@ -103,22 +130,32 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                 entity.EstimatedSinglesPumbilityRank = newStats.EstimatedSinglesPumbilityRank;
                 entity.EstimatedDoublesPumbilityRank = newStats.EstimatedDoublesPumbilityRank;
                 entity.PumbilityBoardAsOf = newStats.PumbilityBoardAsOf;
+                entity.TotalPumbility = newStats.TotalPumbility;
             }
 
             await database.SaveChangesAsync(cancellationToken);
-            _cache.Remove(CacheKey(mix, userId));
+            _cache.Remove(CacheKey(mix, userId, season));
         }
 
-        public async Task<PlayerStatsRecord> GetStats(MixEnum mix, Guid userId, CancellationToken cancellationToken)
+        public Task<PlayerStatsRecord> GetStats(MixEnum mix, Guid userId, CancellationToken cancellationToken)
         {
-            return await _cache.GetOrCreateAsync(CacheKey(mix, userId), async o =>
+            return GetStats(mix, userId, SeasonId.AllTime, cancellationToken);
+        }
+
+        public async Task<PlayerStatsRecord> GetStats(MixEnum mix, Guid userId, SeasonId season,
+            CancellationToken cancellationToken)
+        {
+            return await _cache.GetOrCreateAsync(CacheKey(mix, userId, season), async o =>
             {
                 await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-                o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(30);
+                // A season's entry is short-lived instead of evicted: the wipe cannot enumerate
+                // seasons from here, and the nightly rollup rewrites every season row anyway.
+                o.AbsoluteExpiration = DateTimeOffset.Now +
+                                       (season.IsAllTime ? TimeSpan.FromMinutes(30) : TimeSpan.FromMinutes(5));
 
                 var mixId = MixIds.For(mix);
                 var entity =
-                    await database.Set<PlayerStatsEntity>()
+                    await Stats(database, season)
                         .FirstOrDefaultAsync(p => p.UserId == userId && p.MixId == mixId, cancellationToken);
                 if (entity == null)
                     return new PlayerStatsRecord(userId, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1);
@@ -131,16 +168,22 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                     entity.AverageDoublesScore, entity.AverageDoublesLevel, entity.CompetitiveLevel,
                     entity.SinglesCompetitiveLevel, entity.DoublesCompetitiveLevel,
                     entity.EstimatedPumbilityRank, entity.EstimatedSinglesPumbilityRank,
-                    entity.EstimatedDoublesPumbilityRank, entity.PumbilityBoardAsOf);
+                    entity.EstimatedDoublesPumbilityRank, entity.PumbilityBoardAsOf, entity.TotalPumbility);
             });
         }
 
-        public async Task<IEnumerable<PlayerStatsRecord>> GetStats(MixEnum mix, IEnumerable<Guid> userIds,
+        public Task<IEnumerable<PlayerStatsRecord>> GetStats(MixEnum mix, IEnumerable<Guid> userIds,
             CancellationToken cancellationToken)
+        {
+            return GetStats(mix, userIds, SeasonId.AllTime, cancellationToken);
+        }
+
+        public async Task<IEnumerable<PlayerStatsRecord>> GetStats(MixEnum mix, IEnumerable<Guid> userIds,
+            SeasonId season, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var mixId = MixIds.For(mix);
-            return await database.Set<PlayerStatsEntity>()
+            return await Stats(database, season)
                 .Where(s => userIds.Contains(s.UserId) && s.MixId == mixId).Select(entity =>
                     new PlayerStatsRecord(entity.UserId, entity.TotalRating, entity.HighestLevel, entity.ClearCount,
                         entity.CoOpRating,
@@ -150,7 +193,7 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                         entity.AverageDoublesScore, entity.AverageDoublesLevel, entity.CompetitiveLevel,
                         entity.SinglesCompetitiveLevel, entity.DoublesCompetitiveLevel,
                         entity.EstimatedPumbilityRank, entity.EstimatedSinglesPumbilityRank,
-                        entity.EstimatedDoublesPumbilityRank, entity.PumbilityBoardAsOf))
+                        entity.EstimatedDoublesPumbilityRank, entity.PumbilityBoardAsOf, entity.TotalPumbility))
                 .ToArrayAsync(cancellationToken);
         }
 
@@ -227,15 +270,14 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var mixId = MixIds.For(mix);
-            var entity = await database.Set<PlayerStatsEntity>()
-                .FirstOrDefaultAsync(p => p.UserId == userId && p.MixId == mixId, cancellationToken);
-            if (entity != null)
-            {
-                database.Set<PlayerStatsEntity>().Remove(entity);
-                await database.SaveChangesAsync(cancellationToken);
-            }
+            // The mix wipe crosses seasons (docs/design/seasons.md D12): every filter dropped, so a
+            // player's season rows go with the all-time one they were computed beside. Only the
+            // all-time cache entry is addressable from here; a season's runs on a short TTL.
+            await database.Set<PlayerStatsEntity>().IgnoreQueryFilters()
+                .Where(p => p.UserId == userId && p.MixId == mixId)
+                .ExecuteDeleteAsync(cancellationToken);
 
-            _cache.Remove(CacheKey(mix, userId));
+            _cache.Remove(CacheKey(mix, userId, SeasonId.AllTime));
         }
     }
 }

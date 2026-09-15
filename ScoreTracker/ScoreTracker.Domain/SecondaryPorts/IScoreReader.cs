@@ -179,4 +179,57 @@ public interface IScoreReader
     /// </summary>
     Task<IEnumerable<UserLegacyScore>> GetPlayerLegacyScores(MixEnum mix, IEnumerable<Guid> userIds,
         IEnumerable<Guid> chartIds, CancellationToken cancellationToken = default);
+
+    // ---- The seasonal siblings (docs/design/seasons.md D12, §12.3) ----
+    //
+    // Every best-backed read above keeps its signature and answers from the AllTime query filter;
+    // the sibling here names the season and reads that season's rows instead. Siblings rather than a
+    // defaulted parameter, because a Moq setup is an expression tree and CS0854 forbids omitting an
+    // optional argument in one — a defaulted parameter would have broken every existing setup in the
+    // suites for no behavioural gain. The two peer-store reads (GetPlayerScores by chart set,
+    // GetPlayerScoresInLevelRange) have no sibling: peers are all-time by decision (D6). The journal
+    // and legacy reads have none because seasons do not touch those tables.
+
+    Task<IEnumerable<RecordedPhoenixScore>> GetBestScores(MixEnum mix, Guid userId, SeasonId season,
+        CancellationToken cancellationToken);
+
+    Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> GetScores(MixEnum mix, ChartType chartType,
+        DifficultyLevel level, SeasonId season, CancellationToken cancellationToken);
+
+    Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> GetChartScores(MixEnum mix, Guid chartId,
+        SeasonId season, CancellationToken cancellationToken);
+
+    Task<IEnumerable<RecordedPhoenixScore>> GetScores(MixEnum mix, IEnumerable<Guid> userIds, ChartType chartType,
+        DifficultyLevel minimumLevel, DifficultyLevel maximumLevel, SeasonId season,
+        CancellationToken cancellationToken);
+
+    Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetPgUsers(MixEnum mix, ChartType chartType, DifficultyLevel level,
+        SeasonId season, CancellationToken cancellationToken);
+
+    Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetPlayerScores(MixEnum mix,
+        IEnumerable<Guid> userIds, ChartType chartType, DifficultyLevel difficulty, SeasonId season,
+        CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetBrokenBests(MixEnum mix, IEnumerable<Guid> userIds,
+        IEnumerable<Guid> chartIds, SeasonId season, CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<UserPhoenixScore>> GetPhoenixScores(MixEnum mix, IEnumerable<Guid> userIds, Guid chartId,
+        SeasonId season, CancellationToken cancellationToken = default);
+
+    Task<int> GetClearCount(MixEnum mix, Guid userId, ChartType chartType, DifficultyLevel level, SeasonId season,
+        CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> GetVerifiedBests(MixEnum mix,
+        IReadOnlyCollection<Guid> userIds, SeasonId season, CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<ChartScoreAggregate>> GetChartScoreAggregates(MixEnum mix, SeasonId season,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Everyone holding a best in this season on this mix. The nightly rollup's electorate: a
+    ///     season's board must cover every player who scored in it, including one whose import-time
+    ///     pass failed and therefore has no season stats row to be found by (docs/design/seasons.md §7).
+    /// </summary>
+    Task<IReadOnlyList<Guid>> GetUsersWithRecords(MixEnum mix, SeasonId season,
+        CancellationToken cancellationToken = default);
 }

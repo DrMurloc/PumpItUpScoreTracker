@@ -1,4 +1,4 @@
-﻿using MassTransit;
+using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -49,13 +49,16 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
     private readonly IScoreReader _scores;
     private readonly IScoreAttemptReader _attempts;
     private readonly IOfficialPlacementReader _officialPlacements;
+    private readonly ISeasonReader _seasons;
 
     public HighlightCaptureSaga(IChartRepository charts, IScoreReader scores,
         IPlayerStatsReader playerStats, IScoreHighlightRepository highlights,
         IPlayerMilestoneRepository milestones, IPlayerFolderLevelRepository folderLevels, IMediator mediator,
         IMemoryCache cache, IDateTimeOffsetAccessor dateTime, IScoreAttemptReader attempts,
-        IOfficialPlacementReader officialPlacements, ILogger<HighlightCaptureSaga> logger)
+        IOfficialPlacementReader officialPlacements, ISeasonReader seasons,
+        ILogger<HighlightCaptureSaga> logger)
     {
+        _seasons = seasons;
         _attempts = attempts;
         _officialPlacements = officialPlacements;
         _charts = charts;
@@ -175,6 +178,25 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
                 e.UserId, e.Mix);
         }
 
+        // The season step: the same rating arithmetic a second time over the seasonal pool, into
+        // the season's stats row (docs/design/seasons.md §4.2). Quiet by construction — no seasonal
+        // milestone, lamp or title in v1 (D18) — and failure-isolated like the three above, because
+        // a second pool's total is not worth losing the session card over. Its own folder levels
+        // ride the same pass, further down where the all-time ones are written.
+        try
+        {
+            // The running season, which is the only one an import can have written to (D13).
+            if (await RunningSeason(e.Mix, context.CancellationToken) is { } season)
+                await _mediator.Send(new PlayerRatingSaga.CaptureSessionStats(e.UserId, e.Mix,
+                        e.Changes.Select(c => c.ChartId).Distinct().ToArray(), e.SessionId, e.Changes, season),
+                    context.CancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Season pass failed for user {UserId} ({Mix}) — the season row keeps its last total",
+                e.UserId, e.Mix);
+        }
+
         await context.Publish(ScoreHighlightsCapturedEvent.Create(e.OccurredAt, e.UserId, e.Mix, e.SessionId,
             e.Changes.Select(c => new ScoreHighlightsCapturedEvent.HighlightedChange(c.ChartId, c.IsNewPass,
                 c.OldScore, c.NewScore, c.Plate, c.IsBroken,
@@ -256,6 +278,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         }
 
         await SaveFolderLevels(e, touchedFolders, cancellationToken);
+        await SaveSeasonFolderLevels(e, touchedFolders, data, cancellationToken);
 
         await FlagOfficialPlacements(e, known, data, flags, details, cancellationToken);
         await RecordAttempts(e, known, data, details, cancellationToken);
@@ -567,6 +590,54 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         {
             _logger.LogError(ex, "Folder level write failed for user {UserId} ({Mix}) — {Count} folders skipped",
                 e.UserId, e.Mix, levels.Count);
+        }
+
+    }
+
+    /// <summary>
+    ///     The one season an import can have written to (docs/design/seasons.md §1, D13): none at all
+    ///     unless the mix has seasons — Phoenix 1 never does — and otherwise the season the clock
+    ///     stands in, since there is no grace and a closed season takes no further plays.
+    /// </summary>
+    private async Task<SeasonId?> RunningSeason(MixEnum mix, CancellationToken cancellationToken)
+    {
+        if (!mix.HasSeasons()) return null;
+        var running = await _seasons.GetSeasonAt(_dateTime.Now, cancellationToken);
+        return running is { IsSealed: false } ? running.Id : null;
+    }
+
+    /// <summary>
+    ///     The same folders again over the seasonal pool (docs/design/seasons.md §4.2, D38): the
+    ///     identical calculator, given the season's bests instead of the all-time ones, so a broken
+    ///     in-window play counts as played exactly as it does all-time — this is one rule run twice,
+    ///     not two rules. Folders are chosen by the batch, as above; only the scores filling them
+    ///     differ. Failure-isolated for the same reason: a second set of folders is not worth losing
+    ///     the session card over.
+    /// </summary>
+    private async Task SaveSeasonFolderLevels(PlayerScoresUpdatedEvent e,
+        IReadOnlyCollection<FolderLevelRecord> touched, CaptureData data, CancellationToken cancellationToken)
+    {
+        if (touched.Count == 0) return;
+        try
+        {
+            if (await RunningSeason(e.Mix, cancellationToken) is { } season)
+            {
+                var seasonBests = await _scores.GetBestScores(e.Mix, e.UserId, season, cancellationToken);
+                var passed = FolderLevelCalculator.PassedScores(seasonBests);
+                var levels = touched
+                    .Select(f => FolderLevelCalculator.ComputeOne(e.Mix, f.Type, f.Level, data.Charts.Values, passed))
+                    .Where(l => l != null)
+                    .Select(l => l!)
+                    .ToArray();
+                if (levels.Length == 0) return;
+
+                await _folderLevels.Save(e.UserId, levels, e.OccurredAt, season, cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Season folder write failed for user {UserId} ({Mix}) — {Count} folders skipped",
+                e.UserId, e.Mix, touched.Count);
         }
     }
 

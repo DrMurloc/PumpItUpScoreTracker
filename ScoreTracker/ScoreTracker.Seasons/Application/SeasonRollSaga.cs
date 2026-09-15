@@ -1,0 +1,84 @@
+using MassTransit;
+using Microsoft.Extensions.Logging;
+using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Seasons.Contracts.Events;
+using ScoreTracker.Seasons.Contracts.Messages;
+using ScoreTracker.Seasons.Domain;
+using ScoreTracker.SharedKernel.ValueTypes;
+
+namespace ScoreTracker.Seasons.Application;
+
+/// <summary>
+///     The roll (docs/design/seasons.md §7, D13): stateless like March of Murlocs' scheduler. "Does
+///     the quarter I stand in have its row?" — create it; then every ended season not yet sealed gets
+///     its stamp. There is no grace (D13): a season is closed at its boundary, so the seal is the next
+///     roll after it and one season is writable at a time. Each step is idempotent on its own, so a
+///     crash between them resumes on the next tick, and Roll now on the console is the same message.
+/// </summary>
+internal sealed class SeasonRollSaga(ISeasonRepository seasons, IDateTimeOffsetAccessor dateTime,
+        ILogger<SeasonRollSaga> logger)
+    : IConsumer<RollSeasonCommand>, IConsumer<BackfillSeasonsCommand>
+{
+    public async Task Consume(ConsumeContext<RollSeasonCommand> context)
+    {
+        var now = dateTime.Now;
+        var cancellationToken = context.CancellationToken;
+        var existing = await seasons.GetAll(cancellationToken);
+
+        var running = SeasonCalendar.QuarterAt(now);
+        if (existing.All(s => s.Id != running))
+        {
+            var opened = Open(running);
+            await seasons.Add(opened, cancellationToken);
+            logger.LogInformation("Season {Season} ({Name}) opened", opened.Id, opened.Name);
+            await context.Publish(new SeasonOpenedEvent(opened.Id, opened.StartsAt, opened.EndsAt), cancellationToken);
+        }
+
+        foreach (var ended in existing.Where(s => !s.IsSealed && SeasonCalendar.HasEnded(s.Id, now)))
+        {
+            await seasons.Seal(ended.Id, now, cancellationToken);
+            logger.LogInformation("Season {Season} ({Name}) sealed", ended.Id, ended.Name);
+            await context.Publish(new SeasonSealedEvent(ended.Id, now), cancellationToken);
+        }
+    }
+
+    /// <summary>
+    ///     The backfill (D23, D37): every quarter from Summer 2026 to the one running now gets its
+    ///     row if it has none, and then its replay is asked for. Nothing is sealed here — the next
+    ///     roll stamps the ended quarters, so the seal stays in one place. Idempotent: an existing
+    ///     season is left as it stands, and replaying a season's bests lands on the same rows.
+    /// </summary>
+    public async Task Consume(ConsumeContext<BackfillSeasonsCommand> context)
+    {
+        var cancellationToken = context.CancellationToken;
+        var existing = (await seasons.GetAll(cancellationToken)).ToDictionary(s => s.Id);
+        var running = SeasonCalendar.QuarterAt(dateTime.Now);
+
+        for (var season = SeasonCalendar.First; season <= running; season = SeasonCalendar.Next(season))
+        {
+            if (!existing.TryGetValue(season, out var row))
+            {
+                row = Open(season);
+                await seasons.Add(row, cancellationToken);
+                logger.LogInformation("Season {Season} ({Name}) created by the backfill", row.Id, row.Name);
+            }
+
+            // A sealed season is immutable, so there is nothing to replay into it (D13).
+            if (row.IsSealed) continue;
+            await context.Publish(new SeasonBackfillRequestedEvent(row.Id, row.StartsAt, row.EndsAt),
+                cancellationToken);
+        }
+    }
+
+    /// <summary>
+    ///     A quarter's row as the roll writes it. Never balanced here (D3): a season running when
+    ///     balancing ships stays flat, and the roll that computes ratings (slice 4) is what marks a
+    ///     later quarter balanced.
+    /// </summary>
+    internal static SeasonRecord Open(SeasonId season)
+    {
+        return new SeasonRecord(season, SeasonCalendar.NameOf(season), SeasonCalendar.StartOf(season),
+            SeasonCalendar.EndOf(season), null, false);
+    }
+}

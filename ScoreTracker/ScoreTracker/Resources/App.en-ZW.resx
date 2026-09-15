@@ -1181,8 +1181,14 @@
   <data name="Backfill max combos" xml:space="preserve">
     <value>Mrglrglmrp gro grogrgl</value>
   </data>
+  <data name="Backfill seasons" xml:space="preserve">
+    <value>Blogrual maglgrgl</value>
+  </data>
   <data name="Backfill stage break causes" xml:space="preserve">
     <value>Mrglrglmrp mrpmurg arglglorg grorpmur</value>
+  </data>
+  <data name="Backfilling seasons. The pools rebuild in the background; reload in a few minutes." xml:space="preserve">
+    <value>Blogrual maglgrgl. Bo problmo rugla plu argla; roloragl blu.</value>
   </data>
   <data name="Bad" xml:space="preserve">
     <value>Blab</value>
@@ -2813,6 +2819,12 @@
   </data>
   <data name="Ended" xml:space="preserve">
     <value>Lurgblub</value>
+  </data>
+  <data name="Ended, not yet sealed" xml:space="preserve">
+    <value>Grubla, morgl blump</value>
+  </data>
+  <data name="Ends" xml:space="preserve">
+    <value>Grubla</value>
   </data>
   <data name="Energy" xml:space="preserve">
     <value>Glorgur</value>
@@ -5374,6 +5386,9 @@
   <data name="No scores yet — Pumbility starts with your first import." xml:space="preserve">
     <value>Mrp mgrlgmrg argl — Pumbility rglmagl glgrgl gromurp murpargl glorggl.</value>
   </data>
+  <data name="No season has been opened yet. Roll now creates the quarter we are standing in; Backfill seasons creates every quarter since Summer 2026 and rebuilds their pools from the score journal." xml:space="preserve">
+    <value>Morgl maglgrgl ablurgl. Rolagl mub bo plarma; blogrual maglgrgl bo alma plarma o 2026 grumla, roloragl bo problmo.</value>
+  </data>
   <data name="No sessions here" xml:space="preserve">
     <value>Mo orgab</value>
   </data>
@@ -7730,11 +7745,17 @@
   <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
     <value>Romagl murgl glgrgl mrp rmrgmrml, plgl mrpurgmrgl ro mrpmorg mrgrorp mr gromurp blgrlglorg, ro murmmurm gro mrmrp murmblub blarg mrp grorpro grglgro — argl mrp grogrorp — grorp urgblub mrp urgblgrl.</value>
   </data>
+  <data name="Roll now" xml:space="preserve">
+    <value>Rolagl mub</value>
+  </data>
   <data name="Roll up supplemented leaderboards" xml:space="preserve">
     <value>Mrgloru blurgmorglmrgl Mrglrmrglrgl</value>
   </data>
   <data name="Rolling 30-day spend" xml:space="preserve">
     <value>Grolur 30-grrglmrgl grumgl</value>
+  </data>
+  <data name="Rolling the season." xml:space="preserve">
+    <value>Rolagl bo maglgrgl.</value>
   </data>
   <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
     <value>Murgmurg grglmrp grrglmurg mrglblarg magl? Grglmrp gromurg mrp grglblargblarg plglmorg ro lurgmagl mrp grorpglorg gro.</value>
@@ -7991,6 +8012,9 @@
   </data>
   <data name="Scrolling and links still work. Resume to use buttons." xml:space="preserve">
     <value>Glrmurgro arg plglrgl larg murmgl. Gurglurg ro gro prglglubarg.</value>
+  </data>
+  <data name="Sealed {0}" xml:space="preserve">
+    <value>Blump {0}</value>
   </data>
   <data name="Search" xml:space="preserve">
     <value>Grrglgro</value>
@@ -8702,6 +8726,9 @@
   </data>
   <data name="Starting import…" xml:space="preserve">
     <value>Rglplglblub glorggl…</value>
+  </data>
+  <data name="Starts" xml:space="preserve">
+    <value>Ablurgl</value>
   </data>
   <data name="Starts {0}" xml:space="preserve">
     <value>Grolp {0}</value>

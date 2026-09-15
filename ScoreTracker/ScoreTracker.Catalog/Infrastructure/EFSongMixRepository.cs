@@ -4,6 +4,7 @@ using ScoreTracker.Catalog.Domain;
 using ScoreTracker.Catalog.Infrastructure.Entities;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Catalog.Infrastructure;
 
@@ -33,7 +34,9 @@ internal sealed class EFSongMixRepository : ISongMixRepository
 
         row.Channel = channel.ToString();
         await database.SaveChangesAsync(cancellationToken);
-        // The channel rides the per-mix chart dictionary, which caches for a fortnight.
-        _cache.Remove(EFChartRepository.ChartCacheKey(mixId));
+        // The channel rides the per-mix chart dictionary, which caches for a fortnight. Only the
+        // printed dictionary is addressable here; a season's overlay is built from it on a one-hour
+        // TTL, so it picks the new channel up as it expires.
+        _cache.Remove(EFChartRepository.ChartCacheKey(mixId, SeasonId.AllTime));
     }
 }

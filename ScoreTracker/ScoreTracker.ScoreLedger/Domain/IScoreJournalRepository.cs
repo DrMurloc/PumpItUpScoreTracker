@@ -105,6 +105,20 @@ internal interface IScoreJournalRepository
     /// <summary>Every player holding at least one judged row in the mix — the backfill's work list.</summary>
     Task<IReadOnlyList<Guid>> GetUsersWithJudgedEntries(MixEnum mix, CancellationToken cancellationToken);
 
+    /// <summary>
+    ///     Every player with an official-import play inside a window — the season backfill's work
+    ///     list (docs/design/seasons.md §7). Inclusive at both ends, like a season's own window.
+    /// </summary>
+    Task<IReadOnlyList<Guid>> GetUsersWithPlaysInWindow(MixEnum mix, DateTimeOffset from, DateTimeOffset to,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     One player's official-import plays inside a window, oldest first: what a season's pool
+    ///     would have been built from had the writer been running at the time.
+    /// </summary>
+    Task<IReadOnlyList<ScoreJournalEntry>> GetPlaysInWindow(Guid userId, MixEnum mix, DateTimeOffset from,
+        DateTimeOffset to, CancellationToken cancellationToken);
+
     /// <summary>One player's judged rows in one mix, for the backfill to re-solve.</summary>
     Task<IReadOnlyList<ScoreJournalEntry>> GetJudgedEntries(Guid userId, MixEnum mix,
         CancellationToken cancellationToken);

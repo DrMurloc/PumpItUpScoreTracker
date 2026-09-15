@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -26,6 +26,9 @@
     <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
     <!-- Transitional (P5): the single ChartAttemptDbContext still lives in ScoreTracker.Data. -->
     <ProjectReference Include="..\ScoreTracker.Data\ScoreTracker.Data.csproj" />
+    <!-- The season calendar's contracts: the Ledger consumes SeasonBackfillRequestedEvent.
+         One direction only - Seasons references nothing back (docs/design/seasons.md D35). -->
+    <ProjectReference Include="..\ScoreTracker.Seasons\ScoreTracker.Seasons.csproj" />
     <!-- Transitional (P5): UpdatePhoenixBestAttemptCommand and GetPhoenixRecordsQuery are still
          sent by Application sagas (OfficialLeaderboardSaga et al.), so those records stay in
          Application until the OfficialMirror extraction; the Ledger implements their handlers. -->

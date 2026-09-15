@@ -390,7 +390,9 @@ internal sealed class EFChartRepository : IChartRepository
     {
         foreach (var mixId in new[] { MixIds.XX, MixIds.Phoenix, MixIds.Phoenix2 })
         {
-            var key = ChartCacheKey(mixId);
+            // Only the all-time dictionaries are addressable from here; a season's overlay runs on
+            // a short TTL instead (GetAllCharts), and the admin pin that changes it evicts by name.
+            var key = ChartCacheKey(mixId, SeasonId.AllTime);
             _cache.Remove(key);
         }
 
@@ -469,6 +471,18 @@ internal sealed class EFChartRepository : IChartRepository
         return result;
     }
 
+    public async Task<IEnumerable<Chart>> GetCharts(MixEnum mix, SeasonId season, DifficultyLevel? level = null,
+        ChartType? type = null, IEnumerable<Guid>? chartIds = null, CancellationToken cancellationToken = default)
+    {
+        // Selection runs on the printed dictionary — the folder a chart sits in never moves with its
+        // season rating (docs/design/seasons.md §10.1 row 10) — and only the charts selected are then
+        // read back through the season's overlay, so the level a caller sees is the season's.
+        var printed = await GetCharts(mix, level, type, chartIds, cancellationToken);
+        if (season.IsAllTime) return printed;
+        var rated = await GetAllCharts(mix, season, cancellationToken);
+        return printed.Select(c => rated.TryGetValue(c.Id, out var chart) ? chart : c).ToArray();
+    }
+
     public async Task<IReadOnlyList<(Guid ChartId, MixEnum Mix, int Level, int? NoteCount, VersionStamp? AddedIn)>>
         GetChartMixLevels(CancellationToken cancellationToken = default)
     {
@@ -503,18 +517,52 @@ internal sealed class EFChartRepository : IChartRepository
     }
 
     // A Viewer key: the dictionary carries Chart.Level, and a season's ChartSeason rows change it.
-    /// <summary>The per-mix chart dictionary's key; the SongMix write evicts it too.</summary>
-    internal static string ChartCacheKey(Guid mixId)
+    /// <summary>
+    ///     The per-mix chart dictionary's key. Internal because the SongMix write evicts it too — a
+    ///     channel rides this dictionary — and it names the season because a season prices the same
+    ///     charts differently. A seasonal overlay is built from the printed dictionary and cached for
+    ///     an hour, so evicting the printed one is enough: the overlays inherit the change as they expire.
+    /// </summary>
+    internal static string ChartCacheKey(Guid mixId, SeasonId season)
     {
-        return CacheKeys.Viewer(nameof(EFChartRepository), mixId, SeasonId.AllTime, nameof(GetAllCharts));
+        return CacheKeys.Viewer(nameof(EFChartRepository), mixId, season, nameof(GetAllCharts));
     }
 
     private const string MixLevelsCacheKey = $"{nameof(EFChartRepository)}__ChartMixLevels";
 
-    private async Task<IDictionary<Guid, Chart>> GetAllCharts(MixEnum mix, CancellationToken cancellationToken)
+    private Task<IDictionary<Guid, Chart>> GetAllCharts(MixEnum mix, CancellationToken cancellationToken)
+    {
+        return GetAllCharts(mix, SeasonId.AllTime, cancellationToken);
+    }
+
+    /// <summary>
+    ///     The per-mix dictionary as one season prices it (docs/design/seasons.md D33): the printed
+    ///     dictionary with each chart's <see cref="Chart.Level" /> replaced by its season rating where
+    ///     a ChartSeason row exists. Built from the cached printed dictionary plus one small read, and
+    ///     kept an hour rather than a fortnight — the roll writes ratings once a quarter, and the pin
+    ///     that changes one by hand can afford to wait that long or evict by name.
+    /// </summary>
+    private async Task<IDictionary<Guid, Chart>> GetAllCharts(MixEnum mix, SeasonId season,
+        CancellationToken cancellationToken)
     {
         var mixId = MixIds.For(mix);
-        return await _cache.GetOrCreateAsync<IDictionary<Guid, Chart>>(ChartCacheKey(mixId), async entry =>
+        if (!season.IsAllTime)
+            return await _cache.GetOrCreateAsync<IDictionary<Guid, Chart>>(ChartCacheKey(mixId, season), async entry =>
+            {
+                entry.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(1);
+                var printed = await GetAllCharts(mix, SeasonId.AllTime, cancellationToken);
+                await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+                var value = season.Value;
+                var ratings = await database.Set<ChartSeasonEntity>()
+                    .Where(r => r.SeasonId == value && r.MixId == mixId)
+                    .ToDictionaryAsync(r => r.ChartId, r => r.Level, cancellationToken);
+                return printed.ToDictionary(p => p.Key,
+                    p => ratings.TryGetValue(p.Key, out var rating)
+                        ? p.Value with { Level = DifficultyLevel.From(rating) }
+                        : p.Value);
+            }) ?? new Dictionary<Guid, Chart>();
+
+        return await _cache.GetOrCreateAsync<IDictionary<Guid, Chart>>(ChartCacheKey(mixId, season), async entry =>
         {
             entry.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(14);
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);

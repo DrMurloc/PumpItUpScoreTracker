@@ -1181,8 +1181,14 @@
   <data name="Backfill max combos" xml:space="preserve">
     <value>Remplir les combos max</value>
   </data>
+  <data name="Backfill seasons" xml:space="preserve">
+    <value>Reconstituer les saisons</value>
+  </data>
   <data name="Backfill stage break causes" xml:space="preserve">
     <value>Remplir les causes de stage break</value>
+  </data>
+  <data name="Backfilling seasons. The pools rebuild in the background; reload in a few minutes." xml:space="preserve">
+    <value>Reconstitution des saisons en cours. Les pools se reconstruisent en arrière-plan ; rechargez dans quelques minutes.</value>
   </data>
   <data name="Bad" xml:space="preserve">
     <value>Bad</value>
@@ -2812,6 +2818,12 @@
   </data>
   <data name="Ended" xml:space="preserve">
     <value>Terminée</value>
+  </data>
+  <data name="Ended, not yet sealed" xml:space="preserve">
+    <value>Terminée, pas encore scellée</value>
+  </data>
+  <data name="Ends" xml:space="preserve">
+    <value>Fin</value>
   </data>
   <data name="Energy" xml:space="preserve">
     <value>Énergie</value>
@@ -5373,6 +5385,9 @@
   <data name="No scores yet — Pumbility starts with your first import." xml:space="preserve">
     <value>Aucun score pour l'instant — Pumbility démarre avec votre première importation.</value>
   </data>
+  <data name="No season has been opened yet. Roll now creates the quarter we are standing in; Backfill seasons creates every quarter since Summer 2026 and rebuilds their pools from the score journal." xml:space="preserve">
+    <value>Aucune saison n'a encore été ouverte. Lancer maintenant crée le trimestre en cours ; Reconstituer les saisons crée chaque trimestre depuis l'été 2026 et reconstruit leurs pools à partir du journal des scores.</value>
+  </data>
   <data name="No sessions here" xml:space="preserve">
     <value>Aucune session ici</value>
   </data>
@@ -7729,11 +7744,17 @@
   <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
     <value>Tirez des charts au randomizer, gérez brackets et drafts de cartes dans votre salle, et partagez une vue en direct pour que toute la salle — ou le stream — suive la manche.</value>
   </data>
+  <data name="Roll now" xml:space="preserve">
+    <value>Lancer maintenant</value>
+  </data>
   <data name="Roll up supplemented leaderboards" xml:space="preserve">
     <value>Compiler les leaderboards complétés</value>
   </data>
   <data name="Rolling 30-day spend" xml:space="preserve">
     <value>Dépense glissante sur 30 jours</value>
+  </data>
+  <data name="Rolling the season." xml:space="preserve">
+    <value>Lancement de la saison.</value>
   </data>
   <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
     <value>Faire tourner le tableau de la semaine maintenant ? Cela clôt la semaine en cours et tire le prochain set.</value>
@@ -7990,6 +8011,9 @@
   </data>
   <data name="Scrolling and links still work. Resume to use buttons." xml:space="preserve">
     <value>Le défilement et les liens fonctionnent toujours. Reprenez pour utiliser les boutons.</value>
+  </data>
+  <data name="Sealed {0}" xml:space="preserve">
+    <value>Scellée le {0}</value>
   </data>
   <data name="Search" xml:space="preserve">
     <value>Chercher</value>
@@ -8701,6 +8725,9 @@
   </data>
   <data name="Starting import…" xml:space="preserve">
     <value>Démarrage de l'importation…</value>
+  </data>
+  <data name="Starts" xml:space="preserve">
+    <value>Début</value>
   </data>
   <data name="Starts {0}" xml:space="preserve">
     <value>Commence le {0}</value>

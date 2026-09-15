@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -44,17 +44,23 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     }
 
     public async Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> GetRecordedScoresForChart(
-        MixEnum mix, Guid chartId, CancellationToken cancellationToken = default)
+        MixEnum mix, Guid chartId, SeasonId season, CancellationToken cancellationToken = default)
     {
         var mixId = MixIds.For(mix);
         // One chart, straight off the ChartId index — no folder scan, no joins.
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        return (await database.Set<PhoenixRecordEntity>()
+        return (await Records(database, season)
                 .Where(pr => pr.ChartId == chartId && pr.MixId == mixId)
                 .ToArrayAsync(cancellationToken))
             .Select(pb => (pb.UserId,
                 new RecordedPhoenixScore(pb.ChartId, pb.Score, PhoenixPlateHelperMethods.TryParse(pb.Plate),
                     pb.IsBroken, pb.RecordedDate, pb.Source, JudgementsOf(pb))));
+    }
+
+    public Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> GetRecordedScoresForChart(
+        MixEnum mix, Guid chartId, CancellationToken cancellationToken = default)
+    {
+        return GetRecordedScoresForChart(mix, chartId, SeasonId.AllTime, cancellationToken);
     }
 
     Task<IEnumerable<RecordedPhoenixScore>> IScoreReader.GetScores(MixEnum mix, IEnumerable<Guid> userIds,
@@ -154,7 +160,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     }
 
     async Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> IScoreReader.GetVerifiedBests(MixEnum mix,
-        IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken)
+        IReadOnlyCollection<Guid> userIds, SeasonId season, CancellationToken cancellationToken)
     {
         if (userIds.Count == 0) return Array.Empty<(Guid, RecordedPhoenixScore)>();
 
@@ -164,7 +170,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         // 2026-07-06, and among the null rows the journal can classify, official imports beat
         // manual and CSV plays about twenty to one. A row a human typed is the thing being
         // excluded, and those are stamped.
-        return (await database.Set<PhoenixRecordEntity>()
+        return (await Records(database, season)
                 .Where(pba => pba.MixId == mixId
                               && userIds.Contains(pba.UserId)
                               && !pba.IsBroken
@@ -178,6 +184,12 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             .Select(pba => (pba.UserId, new RecordedPhoenixScore(pba.ChartId, pba.Score,
                 PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, pba.RecordedDate, pba.Source)))
             .ToArray();
+    }
+
+    Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> IScoreReader.GetVerifiedBests(MixEnum mix,
+        IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken)
+    {
+        return ((IScoreReader)this).GetVerifiedBests(mix, userIds, SeasonId.AllTime, cancellationToken);
     }
 
     async Task<IReadOnlyList<(Guid UserId, DateTimeOffset LastRecordedAt)>> IScoreReader.GetVerifiedRecordActivity(
@@ -311,6 +323,70 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 r.TripleS, r.DoubleS, r.SingleS, r.A));
     }
 
+    // The seasonal siblings of the reads above (docs/design/seasons.md D12, §12.3), each forwarding to
+    // the public method that takes the season.
+    Task<IEnumerable<RecordedPhoenixScore>> IScoreReader.GetBestScores(MixEnum mix, Guid userId, SeasonId season,
+        CancellationToken cancellationToken)
+    {
+        return GetRecordedScores(mix, userId, season, cancellationToken);
+    }
+
+    async Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> IScoreReader.GetScores(MixEnum mix,
+        ChartType chartType, DifficultyLevel level, SeasonId season, CancellationToken cancellationToken)
+    {
+        return await GetAllPlayerScores(mix, chartType, level, season, cancellationToken);
+    }
+
+    Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> IScoreReader.GetChartScores(MixEnum mix,
+        Guid chartId, SeasonId season, CancellationToken cancellationToken)
+    {
+        return GetRecordedScoresForChart(mix, chartId, season, cancellationToken);
+    }
+
+    Task<IEnumerable<RecordedPhoenixScore>> IScoreReader.GetScores(MixEnum mix, IEnumerable<Guid> userIds,
+        ChartType chartType, DifficultyLevel minimumLevel, DifficultyLevel maximumLevel, SeasonId season,
+        CancellationToken cancellationToken)
+    {
+        return GetRecordedScores(mix, userIds, chartType, minimumLevel, maximumLevel, season, cancellationToken);
+    }
+
+    Task<IEnumerable<(Guid UserId, Guid ChartId)>> IScoreReader.GetPgUsers(MixEnum mix, ChartType chartType,
+        DifficultyLevel level, SeasonId season, CancellationToken cancellationToken)
+    {
+        return GetPgUsers(mix, chartType, level, season, cancellationToken);
+    }
+
+    Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> IScoreReader.GetPlayerScores(MixEnum mix,
+        IEnumerable<Guid> userIds, ChartType chartType, DifficultyLevel difficulty, SeasonId season,
+        CancellationToken cancellationToken)
+    {
+        return GetPlayerScores(mix, userIds, chartType, difficulty, season, cancellationToken);
+    }
+
+    Task<IEnumerable<(Guid UserId, Guid ChartId)>> IScoreReader.GetBrokenBests(MixEnum mix,
+        IEnumerable<Guid> userIds, IEnumerable<Guid> chartIds, SeasonId season, CancellationToken cancellationToken)
+    {
+        return GetBrokenBests(mix, userIds, chartIds, season, cancellationToken);
+    }
+
+    Task<IEnumerable<UserPhoenixScore>> IScoreReader.GetPhoenixScores(MixEnum mix, IEnumerable<Guid> userIds,
+        Guid chartId, SeasonId season, CancellationToken cancellationToken)
+    {
+        return GetPhoenixScores(mix, userIds, chartId, season, cancellationToken);
+    }
+
+    Task<int> IScoreReader.GetClearCount(MixEnum mix, Guid userId, ChartType chartType, DifficultyLevel level,
+        SeasonId season, CancellationToken cancellationToken)
+    {
+        return GetClearCount(mix, userId, chartType, level, season, cancellationToken);
+    }
+
+    Task<IEnumerable<ChartScoreAggregate>> IScoreReader.GetChartScoreAggregates(MixEnum mix, SeasonId season,
+        CancellationToken cancellationToken)
+    {
+        return GetAllChartScoreAggregates(mix, season, cancellationToken);
+    }
+
     private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
     private readonly PeerScoreStore _peers;
@@ -323,9 +399,22 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     // reconstructing the format and drifting from it.
     // A Viewer key: a player's own bests are exactly what the seasonal view swaps. All-time until
     // the reader takes a season (CLAUDE.md "Cache keys").
-    internal static string ScoreCache(Guid userId, MixEnum mix)
+    internal static string ScoreCache(Guid userId, MixEnum mix, SeasonId season)
     {
-        return CacheKeys.Viewer(nameof(EFPhoenixRecordsRepository), mix, SeasonId.AllTime, userId);
+        return CacheKeys.Viewer(nameof(EFPhoenixRecordsRepository), mix, season, userId);
+    }
+
+    /// <summary>
+    ///     The record table as one season sees it: the AllTime filter's rows, or — that filter
+    ///     dropped by name, never wholesale — the rows carrying <paramref name="season" />
+    ///     (docs/design/seasons.md D12).
+    /// </summary>
+    private static IQueryable<PhoenixRecordEntity> Records(ChartAttemptDbContext database, SeasonId season)
+    {
+        if (season.IsAllTime) return database.Set<PhoenixRecordEntity>();
+        var value = season.Value;
+        return database.Set<PhoenixRecordEntity>().IgnoreQueryFilters([QueryFilters.AllTime])
+            .Where(p => p.SeasonId == value);
     }
 
     public EFPhoenixRecordsRepository(IDbContextFactory<ChartAttemptDbContext> factory,
@@ -364,12 +453,12 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     }
 
     public async Task UpdateBestAttempt(MixEnum mix, Guid userId, RecordedPhoenixScore score,
-        CancellationToken cancellationToken = default)
+        SeasonId season, CancellationToken cancellationToken = default)
     {
         var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var existing =
-            await database.Set<PhoenixRecordEntity>().FirstOrDefaultAsync(
+            await Records(database, season).FirstOrDefaultAsync(
                 pba => pba.UserId == userId && pba.ChartId == score.ChartId && pba.MixId == mixId,
                 cancellationToken);
         if (existing == null)
@@ -380,6 +469,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 UserId = userId,
                 Id = new Guid(),
                 MixId = mixId,
+                SeasonId = season.Value,
                 IsBroken = score.IsBroken,
                 Score = score.Score,
                 LetterGrade = score.Score?.LetterGradeFor(mix).GetName(),
@@ -402,25 +492,49 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         }
 
         await database.SaveChangesAsync(cancellationToken);
-        var cache = await GetCachedScores(mix, userId, cancellationToken);
+        var cache = await GetCachedScores(mix, userId, season, cancellationToken);
         cache[score.ChartId] = score;
-        _cache.Set(ScoreCache(userId, mix), cache);
+        // WITH the expiry, not the bare Set: IMemoryCache.Set(key, value) creates an entry carrying no
+        // MemoryCacheEntryOptions at all, so the first write of an import would replace a lifetime-bound
+        // entry with a permanent one. That matters most for a season's, which no delete path can evict
+        // by key — a wipe would then leave the process serving scores the database no longer has.
+        _cache.Set(ScoreCache(userId, mix, season), cache, ScoreCacheExpiry(season));
         // The peer store holds this player for everyone who has them as a peer — including
         // themselves: four of its readers ask it about one person, their own. The bus event that
         // normally drops them is debounced by minutes, which is fine for a peer and far too slow
         // for the player who just recorded the score (docs/design/pumbility-overhaul.md §6.14).
-        _peers.Evict(userId, mix);
+        // The peer stores hold all-time bests only (D6); a seasonal write leaves them alone.
+        if (season.IsAllTime) _peers.Evict(userId, mix);
+    }
+
+    public Task UpdateBestAttempt(MixEnum mix, Guid userId, RecordedPhoenixScore score,
+        CancellationToken cancellationToken = default)
+    {
+        return UpdateBestAttempt(mix, userId, score, SeasonId.AllTime, cancellationToken);
+    }
+
+    /// <summary>
+    ///     How long a cached score dictionary lives. An all-time entry is evicted by key on every
+    ///     delete path, so it can afford an hour; a season's cannot be — the wipe and the purge have
+    ///     no way to enumerate seasons from here — so its lifetime IS its correctness bound, and both
+    ///     the read and the write take it from here so they cannot drift apart.
+    /// </summary>
+    private static DateTimeOffset ScoreCacheExpiry(SeasonId season)
+    {
+        return DateTimeOffset.Now + (season.IsAllTime ? TimeSpan.FromMinutes(60) : TimeSpan.FromMinutes(5));
     }
 
     private async Task<ConcurrentDictionary<Guid, RecordedPhoenixScore>> GetCachedScores(MixEnum mix, Guid userId,
-        CancellationToken cancellationToken)
+        SeasonId season, CancellationToken cancellationToken)
     {
-        return await _cache.GetOrCreateAsync(ScoreCache(userId, mix), async o =>
+        return await _cache.GetOrCreateAsync(ScoreCache(userId, mix, season), async o =>
         {
-            o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(60);
+            // A season's entry is short-lived instead of evicted: the purge and the wipe cannot
+            // enumerate seasons from here, and nothing reads a deleted account's entry anyway.
+            o.AbsoluteExpiration = ScoreCacheExpiry(season);
             var mixId = MixIds.For(mix);
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var rows = await database.Set<PhoenixRecordEntity>()
+            var rows = await Records(database, season)
                 .Where(pba => pba.UserId == userId && pba.MixId == mixId)
                 .Select(pba => new RecordedPhoenixScore(pba.ChartId, pba.Score,
                     PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, pba.RecordedDate, pba.Source,
@@ -433,14 +547,20 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     }
 
     public async Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(MixEnum mix, Guid userId,
+        SeasonId season, CancellationToken cancellationToken = default)
+    {
+        return (await GetCachedScores(mix, userId, season, cancellationToken)).Values;
+    }
+
+    public Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(MixEnum mix, Guid userId,
         CancellationToken cancellationToken = default)
     {
-        return (await GetCachedScores(mix, userId, cancellationToken)).Values;
+        return GetRecordedScores(mix, userId, SeasonId.AllTime, cancellationToken);
     }
 
     public async Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetPgUsers(MixEnum mix, ChartType chartType,
         DifficultyLevel level,
-        CancellationToken cancellationToken = default)
+        SeasonId season, CancellationToken cancellationToken = default)
     {
         var mixId = MixIds.For(mix);
         var intLevel = (int)level;
@@ -448,7 +568,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return (await (from cm in database.ChartMix
                 join c in database.Chart on cm.ChartId equals c.Id
-                join pba in database.Set<PhoenixRecordEntity>() on c.Id equals pba.ChartId
+                join pba in Records(database, season) on c.Id equals pba.ChartId
                 where cm.MixId == mixId && pba.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString &&
                       pba.Score == 1000000
                 select pba).ToArrayAsync(cancellationToken))
@@ -456,9 +576,16 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 (pb.UserId, pb.ChartId));
     }
 
+    public Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetPgUsers(MixEnum mix, ChartType chartType,
+        DifficultyLevel level,
+        CancellationToken cancellationToken = default)
+    {
+        return GetPgUsers(mix, chartType, level, SeasonId.AllTime, cancellationToken);
+    }
+
     public async Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(MixEnum mix, IEnumerable<Guid> userIds,
         ChartType chartType, DifficultyLevel minimumLevel, DifficultyLevel maximumLevel,
-        CancellationToken cancellationToken)
+        SeasonId season, CancellationToken cancellationToken)
     {
         var userIdArray = userIds.ToArray();
         var mixId = MixIds.For(mix);
@@ -468,7 +595,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return (await (from cm in database.ChartMix
                 join c in database.Chart on cm.ChartId equals c.Id
-                join pba in database.Set<PhoenixRecordEntity>() on c.Id equals pba.ChartId
+                join pba in Records(database, season) on c.Id equals pba.ChartId
                 where userIdArray.Contains(pba.UserId)
                       && cm.MixId == mixId && pba.MixId == mixId && cm.Level >= intMin && cm.Level <= intMax &&
                       c.Type == chartTypeString
@@ -478,18 +605,31 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                     pb.IsBroken, pb.RecordedDate, Judgements: JudgementsOf(pb)));
     }
 
+    public Task<IEnumerable<RecordedPhoenixScore>> GetRecordedScores(MixEnum mix, IEnumerable<Guid> userIds,
+        ChartType chartType, DifficultyLevel minimumLevel, DifficultyLevel maximumLevel,
+        CancellationToken cancellationToken)
+    {
+        return GetRecordedScores(mix, userIds, chartType, minimumLevel, maximumLevel, SeasonId.AllTime, cancellationToken);
+    }
+
     public async Task<RecordedPhoenixScore?> GetRecordedScore(MixEnum mix, Guid userId, Guid chartId,
+        SeasonId season, CancellationToken cancellationToken = default)
+    {
+        return (await GetCachedScores(mix, userId, season, cancellationToken)).TryGetValue(chartId, out var r) ? r : null;
+    }
+
+    public Task<RecordedPhoenixScore?> GetRecordedScore(MixEnum mix, Guid userId, Guid chartId,
         CancellationToken cancellationToken = default)
     {
-        return (await GetCachedScores(mix, userId, cancellationToken)).TryGetValue(chartId, out var r) ? r : null;
+        return GetRecordedScore(mix, userId, chartId, SeasonId.AllTime, cancellationToken);
     }
 
     public async Task<IEnumerable<UserPhoenixScore>> GetRecordedUserScores(MixEnum mix, Guid chartId,
-        CancellationToken cancellationToken = default)
+        SeasonId season, CancellationToken cancellationToken = default)
     {
         var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        return await (from pba in database.Set<PhoenixRecordEntity>()
+        return await (from pba in Records(database, season)
                 join u in database.User on pba.UserId equals u.Id
                 where pba.ChartId == chartId && pba.MixId == mixId && pba.Score != null
                 select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
@@ -498,21 +638,33 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             .ToArrayAsync(cancellationToken);
     }
 
+    public Task<IEnumerable<UserPhoenixScore>> GetRecordedUserScores(MixEnum mix, Guid chartId,
+        CancellationToken cancellationToken = default)
+    {
+        return GetRecordedUserScores(mix, chartId, SeasonId.AllTime, cancellationToken);
+    }
+
     public async Task<IEnumerable<ChartScoreAggregate>> GetAllChartScoreAggregates(MixEnum mix,
-        CancellationToken cancellationToken)
+        SeasonId season, CancellationToken cancellationToken)
     {
         var mixId = MixIds.For(mix);
         // The Plate column stores GetName() spellings ("Perfect Game", with the space) —
         // matching ToString() ("PerfectGame") counts zero PGs on every chart.
         var perfectGame = PhoenixPlate.PerfectGame.GetName();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        return await (from pba in database.Set<PhoenixRecordEntity>()
+        return await (from pba in Records(database, season)
             where pba.Score != null && pba.MixId == mixId
             group pba by pba.ChartId
             into g
             select new ChartScoreAggregate(g.Key, g.Count(), g.Count(p => !p.IsBroken),
                 g.Count(p => !p.IsBroken && p.Plate == perfectGame)))
             .ToArrayAsync(cancellationToken);
+    }
+
+    public Task<IEnumerable<ChartScoreAggregate>> GetAllChartScoreAggregates(MixEnum mix,
+        CancellationToken cancellationToken)
+    {
+        return GetAllChartScoreAggregates(mix, SeasonId.AllTime, cancellationToken);
     }
 
     // Both cohort reads are served from memory (PeerScoreStore, docs/design/pumbility-overhaul.md
@@ -529,7 +681,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     }
 
     public async Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetBrokenBests(MixEnum mix,
-        IEnumerable<Guid> userIds, IEnumerable<Guid> chartIds, CancellationToken cancellationToken = default)
+        IEnumerable<Guid> userIds, IEnumerable<Guid> chartIds, SeasonId season, CancellationToken cancellationToken = default)
     {
         var userIdArray = userIds.Distinct().ToArray();
         var chartIdArray = chartIds.Distinct().ToArray();
@@ -538,13 +690,19 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         // The mirror image of the cohort read above: only the rows it refuses. A best is one row
         // per player and chart, so a broken row here means the player has never passed it.
-        return (await database.Set<PhoenixRecordEntity>()
+        return (await Records(database, season)
                 .Where(pba => chartIdArray.Contains(pba.ChartId) && pba.MixId == mixId && pba.IsBroken &&
                               userIdArray.Contains(pba.UserId))
                 .Select(pba => new { pba.UserId, pba.ChartId })
                 .ToArrayAsync(cancellationToken))
             .Select(r => (r.UserId, r.ChartId))
             .ToArray();
+    }
+
+    public Task<IEnumerable<(Guid UserId, Guid ChartId)>> GetBrokenBests(MixEnum mix,
+        IEnumerable<Guid> userIds, IEnumerable<Guid> chartIds, CancellationToken cancellationToken = default)
+    {
+        return GetBrokenBests(mix, userIds, chartIds, SeasonId.AllTime, cancellationToken);
     }
 
     public async Task<IEnumerable<UserPhoenixScore>> GetPlayerScoresInLevelRange(MixEnum mix,
@@ -557,7 +715,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
 
     public async Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetPlayerScores(
         MixEnum mix, IEnumerable<Guid> userIds, ChartType chartType, DifficultyLevel difficulty,
-        CancellationToken cancellationToken = default)
+        SeasonId season, CancellationToken cancellationToken = default)
     {
         var userIdArray = userIds.ToArray();
         var mixId = MixIds.For(mix);
@@ -568,7 +726,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         // distributions and competitive-neighbor reads never see broken rows.
         return (await (from cm in database.ChartMix
                 join c in database.Chart on cm.ChartId equals c.Id
-                join pba in database.Set<PhoenixRecordEntity>() on c.Id equals pba.ChartId
+                join pba in Records(database, season) on c.Id equals pba.ChartId
                 where
                     userIdArray.Contains(pba.UserId) && !pba.IsBroken &&
                     cm.MixId == mixId && pba.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString
@@ -578,10 +736,17 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                     pb.IsBroken, pb.RecordedDate, Judgements: JudgementsOf(pb))));
     }
 
+    public Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetPlayerScores(
+        MixEnum mix, IEnumerable<Guid> userIds, ChartType chartType, DifficultyLevel difficulty,
+        CancellationToken cancellationToken = default)
+    {
+        return GetPlayerScores(mix, userIds, chartType, difficulty, SeasonId.AllTime, cancellationToken);
+    }
+
 
     public async Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetAllPlayerScores(MixEnum mix,
         ChartType chartType,
-        DifficultyLevel difficulty, CancellationToken cancellationToken = default)
+        DifficultyLevel difficulty, SeasonId season, CancellationToken cancellationToken = default)
     {
         var mixId = MixIds.For(mix);
         var intLevel = (int)difficulty;
@@ -589,7 +754,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return (await (from cm in database.ChartMix
                 join c in database.Chart on cm.ChartId equals c.Id
-                join pba in database.Set<PhoenixRecordEntity>() on c.Id equals pba.ChartId
+                join pba in Records(database, season) on c.Id equals pba.ChartId
                 where cm.MixId == mixId && pba.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString
                 select pba).ToArrayAsync(cancellationToken))
             .Select(pb => (pb.UserId,
@@ -597,9 +762,16 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                     pb.IsBroken, pb.RecordedDate, Judgements: JudgementsOf(pb))));
     }
 
+    public Task<IEnumerable<(Guid userId, RecordedPhoenixScore record)>> GetAllPlayerScores(MixEnum mix,
+        ChartType chartType,
+        DifficultyLevel difficulty, CancellationToken cancellationToken = default)
+    {
+        return GetAllPlayerScores(mix, chartType, difficulty, SeasonId.AllTime, cancellationToken);
+    }
+
     public async Task<IEnumerable<ChartScoreAggregate>> GetMeaningfulScoresCount(MixEnum mix, ChartType chartType,
         DifficultyLevel difficulty,
-        CancellationToken cancellationToken = default)
+        SeasonId season, CancellationToken cancellationToken = default)
     {
         var mixId = MixIds.For(mix);
         var intLevel = (int)difficulty;
@@ -611,21 +783,28 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return (await (from cm in database.ChartMix
                 join c in database.Chart on cm.ChartId equals c.Id
-                join pr in database.Set<PhoenixRecordEntity>() on cm.ChartId equals pr.ChartId
+                join pr in Records(database, season) on cm.ChartId equals pr.ChartId
                 where cm.MixId == mixId && pr.MixId == mixId && cm.Level == intLevel && c.Type == chartTypeString
                       && cohort.Contains(pr.UserId)
                 select pr).ToArrayAsync(cancellationToken))
             .GroupBy(c => c.ChartId).Select(g => new ChartScoreAggregate(g.Key, g.Count()));
     }
 
+    public Task<IEnumerable<ChartScoreAggregate>> GetMeaningfulScoresCount(MixEnum mix, ChartType chartType,
+        DifficultyLevel difficulty,
+        CancellationToken cancellationToken = default)
+    {
+        return GetMeaningfulScoresCount(mix, chartType, difficulty, SeasonId.AllTime, cancellationToken);
+    }
+
     public async Task<IEnumerable<UserPhoenixScore>> GetPhoenixScores(MixEnum mix, IEnumerable<Guid> userIds,
         Guid chartId,
-        CancellationToken cancellationToken = default)
+        SeasonId season, CancellationToken cancellationToken = default)
     {
         var userIdArray = userIds.Distinct().ToArray();
         var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        return await (from pba in database.Set<PhoenixRecordEntity>()
+        return await (from pba in Records(database, season)
                 join u in database.User on pba.UserId equals u.Id
                 where pba.ChartId == chartId && pba.MixId == mixId && pba.Score != null &&
                       userIdArray.Contains(pba.UserId)
@@ -635,13 +814,26 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             .ToArrayAsync(cancellationToken);
     }
 
-    public async Task<int> GetClearCount(MixEnum mix, Guid userId, ChartType chartType, DifficultyLevel level,
+    public Task<IEnumerable<UserPhoenixScore>> GetPhoenixScores(MixEnum mix, IEnumerable<Guid> userIds,
+        Guid chartId,
         CancellationToken cancellationToken = default)
+    {
+        return GetPhoenixScores(mix, userIds, chartId, SeasonId.AllTime, cancellationToken);
+    }
+
+    public async Task<int> GetClearCount(MixEnum mix, Guid userId, ChartType chartType, DifficultyLevel level,
+        SeasonId season, CancellationToken cancellationToken = default)
     {
         var chartIds = (await _charts.GetCharts(mix, level, chartType, null, cancellationToken))
             .Select(c => c.Id).Distinct().ToHashSet();
-        return (await GetCachedScores(mix, userId, cancellationToken)).Count(c =>
+        return (await GetCachedScores(mix, userId, season, cancellationToken)).Count(c =>
             chartIds.Contains(c.Key) && !c.Value.IsBroken);
+    }
+
+    public Task<int> GetClearCount(MixEnum mix, Guid userId, ChartType chartType, DifficultyLevel level,
+        CancellationToken cancellationToken = default)
+    {
+        return GetClearCount(mix, userId, chartType, level, SeasonId.AllTime, cancellationToken);
     }
 
     public async Task<IEnumerable<UserChartAggregate>> Handle(GetPlayerChartAggregatesQuery request,
@@ -738,18 +930,26 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     }
 
     public async Task DeleteRecord(MixEnum mix, Guid userId, Guid chartId,
-        CancellationToken cancellationToken = default)
+        SeasonId season, CancellationToken cancellationToken = default)
     {
         var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        await database.Set<PhoenixRecordEntity>()
+        await Records(database, season)
             .Where(p => p.UserId == userId && p.ChartId == chartId && p.MixId == mixId)
             .ExecuteDeleteAsync(cancellationToken);
-        await database.Set<PhoenixRecordStatsEntity>()
-            .Where(p => p.UserId == userId && p.ChartId == chartId && p.MixId == mixId)
-            .ExecuteDeleteAsync(cancellationToken);
-        _cache.Remove(ScoreCache(userId, mix));
-        _peers.Evict(userId, mix);
+        // The pricing cache is not mirrored (D19): only the all-time row has one to remove.
+        if (season.IsAllTime)
+            await database.Set<PhoenixRecordStatsEntity>()
+                .Where(p => p.UserId == userId && p.ChartId == chartId && p.MixId == mixId)
+                .ExecuteDeleteAsync(cancellationToken);
+        _cache.Remove(ScoreCache(userId, mix, season));
+        if (season.IsAllTime) _peers.Evict(userId, mix);
+    }
+
+    public Task DeleteRecord(MixEnum mix, Guid userId, Guid chartId,
+        CancellationToken cancellationToken = default)
+    {
+        return DeleteRecord(mix, userId, chartId, SeasonId.AllTime, cancellationToken);
     }
 
     // Imported breaks only, and the same predicate on both the count and the delete so the number
@@ -760,7 +960,10 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     {
         var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        return await database.Set<PhoenixRecordEntity>()
+        // Across seasons, like the delete below: the button's number is the number that goes, and a
+        // player whose broken bests are only seasonal must not be shown a disabled button over rows
+        // that exist.
+        return await database.Set<PhoenixRecordEntity>().IgnoreQueryFilters()
             .CountAsync(p => p.UserId == userId && p.MixId == mixId && p.IsBroken
                              && p.Source == ScoreJournalEntry.OfficialImportSource, cancellationToken);
     }
@@ -773,23 +976,42 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         // The charts are read before the delete because the stats row is keyed by chart, not by
         // brokenness — once the records are gone there is nothing left to say which stats rows
         // belonged to them.
+        // The pricing cache is NOT mirrored per season (D19) — one all-time row per chart — so the
+        // charts whose stats rows go are the charts whose ALL-TIME record went. Reading them across
+        // seasons instead would delete the pricing row of a chart the player passed all-time and only
+        // failed this season, leaving a standing record with nothing behind it and no path back.
         var chartIds = await database.Set<PhoenixRecordEntity>()
             .Where(p => p.UserId == userId && p.MixId == mixId && p.IsBroken
                         && p.Source == ScoreJournalEntry.OfficialImportSource)
             .Select(p => p.ChartId)
             .ToArrayAsync(cancellationToken);
-        if (chartIds.Length == 0) return 0;
-
-        var removed = await database.Set<PhoenixRecordEntity>()
+        var removedAny = await database.Set<PhoenixRecordEntity>().IgnoreQueryFilters()
+            .AnyAsync(p => p.UserId == userId && p.MixId == mixId && p.IsBroken
+                           && p.Source == ScoreJournalEntry.OfficialImportSource, cancellationToken);
+        if (!removedAny) return 0;
+        var removed = await database.Set<PhoenixRecordEntity>().IgnoreQueryFilters()
             .Where(p => p.UserId == userId && p.MixId == mixId && p.IsBroken
                         && p.Source == ScoreJournalEntry.OfficialImportSource)
             .ExecuteDeleteAsync(cancellationToken);
-        await database.Set<PhoenixRecordStatsEntity>()
-            .Where(p => p.UserId == userId && p.MixId == mixId && chartIds.Contains(p.ChartId))
-            .ExecuteDeleteAsync(cancellationToken);
-        _cache.Remove(ScoreCache(userId, mix));
+        if (chartIds.Length > 0)
+            await database.Set<PhoenixRecordStatsEntity>()
+                .Where(p => p.UserId == userId && p.MixId == mixId && chartIds.Contains(p.ChartId))
+                .ExecuteDeleteAsync(cancellationToken);
+        _cache.Remove(ScoreCache(userId, mix, SeasonId.AllTime));
         _peers.Evict(userId, mix);
         return removed;
+    }
+
+    async Task<IReadOnlyList<Guid>> IScoreReader.GetUsersWithRecords(MixEnum mix, SeasonId season,
+        CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await Records(database, season)
+            .Where(p => p.MixId == mixId)
+            .Select(p => p.UserId)
+            .Distinct()
+            .ToArrayAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<Guid>> GetUsersWithJudgedRecords(MixEnum mix,
@@ -820,7 +1042,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 row.MaxCombo = maxCombo;
 
         await database.SaveChangesAsync(cancellationToken);
-        _cache.Remove(ScoreCache(userId, mix));
+        _cache.Remove(ScoreCache(userId, mix, SeasonId.AllTime));
     }
 
     public async Task DeleteAllForUser(Guid userId, MixEnum? mix = null,
@@ -828,7 +1050,9 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     {
         var mixId = mix == null ? (Guid?)null : MixIds.For(mix.Value);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        await database.Set<PhoenixRecordEntity>()
+        // A wipe crosses seasons (docs/design/seasons.md D12): every filter dropped, or the
+        // player's season rows would outlive the all-time ones they were copied from.
+        await database.Set<PhoenixRecordEntity>().IgnoreQueryFilters()
             .Where(p => p.UserId == userId && (mixId == null || p.MixId == mixId))
             .ExecuteDeleteAsync(cancellationToken);
         await database.Set<PhoenixRecordStatsEntity>()
@@ -836,7 +1060,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             .ExecuteDeleteAsync(cancellationToken);
         // Cheaper to drop every per-(user, mix) entry than to reason about which survived.
         foreach (var cached in Enum.GetValues<MixEnum>())
-            _cache.Remove(ScoreCache(userId, cached));
+            _cache.Remove(ScoreCache(userId, cached, SeasonId.AllTime));
         // A null mix is an every-mix wipe, which Evict already reads as "all of them".
         _peers.Evict(userId, mix);
     }

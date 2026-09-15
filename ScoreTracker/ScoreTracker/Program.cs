@@ -30,6 +30,7 @@ using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.Randomizer.Wiring;
 using ScoreTracker.Rivals.Wiring;
+using ScoreTracker.Seasons.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.Translations.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
@@ -124,6 +125,7 @@ builder.Services.AddMassTransit(o =>
     o.AddRandomizerConsumers();
     o.AddHomePageConsumers();
     o.AddRivalsConsumers();
+    o.AddSeasonsConsumers();
 
     o.AddDelayedMessageScheduler();
 
@@ -468,6 +470,13 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     // list whose whole point is weekly stability.
     ("rebuild-hardmode-charts",          r => r.PublishRebuildHardmodeCharts(),           "0 18 * * 0"), // Sundays 14:00 ET
     ("try-schedule-mom",                 r => r.PublishTryScheduleMoM(),                  "0 11 * * *"), // 06:00 ET
+    // After MoM has seated its quarter: open the season the clock stands in, seal any ended one past
+    // its seven days (docs/design/seasons.md §7, D13). Stateless and idempotent; Roll now is the same message.
+    ("roll-season",                      r => r.PublishRollSeason(),                      "15 11 * * *"), // 06:15 ET
+    // Every open season's stats rows rebuilt from its bests, so a board never depends on an import
+    // having fired the in-process pass (docs/design/seasons.md §7). After the tier lists, before the
+    // morning's first imports land.
+    ("rollup-season-stats",              r => r.PublishRollupSeasonStats(),               "45 10 * * *"), // 05:45 ET
     ("process-account-purges",           r => r.PublishProcessAccountPurges(),            "30 11 * * *"), // 06:30 ET — merged-account grace-window purges
     ("crawl-piucenter",                  r => r.PublishCrawlPiuCenter(),                  "0 6 * * 1"),  // Mondays 01:00 ET — gap-driven, near no-op unless piucenter shipped a new data release
     ("purge-player-highlights",          r => r.PublishPurgePlayerHighlights(),           "0 9 * * 0"),  // Sundays 09:00 UTC — 30-day significant-wins retention (payload + community index)

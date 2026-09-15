@@ -1,4 +1,4 @@
-﻿using MassTransit;
+using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.SharedKernel.Enums;
@@ -24,7 +24,8 @@ internal sealed class PlayerRatingSaga :
     IRequestHandler<RecalculatePumbilityCommand>,
     IRequestHandler<PlayerRatingSaga.CaptureSessionStats, PlayerRatingSaga.SessionStatsResult>,
     IConsumer<UserCreatedEvent>,
-    IConsumer<RecalculateMixRatingsCommand>
+    IConsumer<RecalculateMixRatingsCommand>,
+    IConsumer<RollupSeasonStatsCommand>
 {
     /// <summary>
     ///     The rating step of the session-snapshot pipeline: recalculates stats and
@@ -42,7 +43,9 @@ internal sealed class PlayerRatingSaga :
     /// </summary>
     public sealed record CaptureSessionStats(
         Guid UserId, MixEnum Mix, IReadOnlyList<Guid> ChangedChartIds, Guid? SessionId,
-        IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange>? Changes = null)
+        IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange>? Changes = null,
+        // The season pass runs this a second time over the seasonal pool, quiet (D18).
+        SeasonId Season = default)
         : IRequest<SessionStatsResult>;
 
     public sealed record SessionStatsResult(
@@ -66,13 +69,15 @@ internal sealed class PlayerRatingSaga :
     private readonly IBus _bus;
     private readonly IMediator _mediator;
     private readonly IOfficialPlacementReader _officialBoards;
+    private readonly ISeasonReader _seasons;
     private readonly ILogger<PlayerRatingSaga> _logger;
 
     public PlayerRatingSaga(IScoreReader scores, IPhoenixRecordStatsRepository recordStats,
         IChartRepository charts, IPlayerStatsRepository stats, IScoreHighlightRepository highlights,
         IPlayerMilestoneRepository milestones, IDateTimeOffsetAccessor dateTime, IBus bus, IMediator mediator,
-        IOfficialPlacementReader officialBoards, ILogger<PlayerRatingSaga> logger)
+        IOfficialPlacementReader officialBoards, ISeasonReader seasons, ILogger<PlayerRatingSaga> logger)
     {
+        _seasons = seasons;
         _officialBoards = officialBoards;
         _logger = logger;
         _scores = scores;
@@ -90,9 +95,13 @@ internal sealed class PlayerRatingSaga :
         CancellationToken cancellationToken)
     {
         var result = await RecalculateCore(new RecalculateStatsCommand(request.UserId, request.Mix,
-            request.ChangedChartIds, request.SessionId), request.Changes, cancellationToken);
-        await Handle(new RecalculatePumbilityCommand(request.UserId, request.ChangedChartIds.ToArray(),
-            request.Mix), cancellationToken);
+                request.ChangedChartIds, request.SessionId), request.Changes, cancellationToken,
+            quiet: !request.Season.IsAllTime, request.Season);
+        // The per-score pricing cache is not mirrored per season (D19), so the season pass stops at
+        // its stats row: the Breakdown page prices a season's fifty live instead.
+        if (request.Season.IsAllTime)
+            await Handle(new RecalculatePumbilityCommand(request.UserId, request.ChangedChartIds.ToArray(),
+                request.Mix), cancellationToken);
         return result;
     }
 
@@ -227,6 +236,54 @@ internal sealed class PlayerRatingSaga :
         _logger.LogInformation("Re-priced {Count} of {Total} players on {Mix}", repriced, userIds.Length, mix);
     }
 
+    /// <summary>
+    ///     The nightly season rollup (docs/design/seasons.md §7): every player holding a best in an
+    ///     open season gets that season's stats row recomputed from those bests. The import already
+    ///     writes the row as a by-product of each session, so this exists for the cases that produce
+    ///     seasonal bests without it — the backfill, a failed pass, a crash between the two — and for
+    ///     the certainty that a board is never one dropped message behind.
+    ///     <para>
+    ///         One player's failure must not cost the rest of the sweep, the same rule the all-time
+    ///         re-pricing above follows: an account with unresolvable data would otherwise leave the
+    ///         season half rolled up with no way to tell which half.
+    ///     </para>
+    /// </summary>
+    public async Task Consume(ConsumeContext<RollupSeasonStatsCommand> context)
+    {
+        var requested = context.Message.Season;
+        // Every unsealed season, deliberately, where the write paths take only the running one (D13).
+        // A season stops taking new plays at its boundary but is still worth re-pricing until the seal:
+        // the backfill opens quarters without sealing them (D37), and the seal lands on the next roll,
+        // which can be up to a day after the quarter closed. Narrowing this to the running season would
+        // leave a backfilled quarter's bests with no standings at all.
+        var open = (await _seasons.GetSeasons(context.CancellationToken))
+            .Where(s => !s.IsSealed && (requested == null || s.Id == requested))
+            .ToArray();
+
+        foreach (var season in open)
+        foreach (var mix in Enum.GetValues<MixEnum>().Where(MixCapabilities.HasSeasons))
+        {
+            var userIds = await _scores.GetUsersWithRecords(mix, season.Id, context.CancellationToken);
+            var rolled = 0;
+            foreach (var userId in userIds)
+                try
+                {
+                    await RecalculateCore(new RecalculateStatsCommand(userId, mix), null,
+                        context.CancellationToken, quiet: true, season.Id);
+                    rolled++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Season rollup failed for user {UserId} ({Mix}, {Season})", userId, mix,
+                        season.Id);
+                }
+
+            if (userIds.Count > 0)
+                _logger.LogInformation("Rolled up {Count} of {Total} players on {Mix} for {Season}", rolled,
+                    userIds.Count, mix, season.Id);
+        }
+    }
+
     public async Task Consume(ConsumeContext<UserCreatedEvent> context)
     {
         // New users start with a Phoenix stats row (default mix at release); other mixes'
@@ -251,15 +308,28 @@ internal sealed class PlayerRatingSaga :
     /// </summary>
     private async Task<SessionStatsResult> RecalculateCore(RecalculateStatsCommand request,
         IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange>? changes,
-        CancellationToken cancellationToken, bool quiet = false)
+        CancellationToken cancellationToken, bool quiet = false, SeasonId season = default)
     {
         var mix = request.Mix;
-        var oldStats = await _stats.GetStats(mix, request.UserId, cancellationToken);
+        // The season pass is this same call a second time (docs/design/seasons.md §4.2): the same
+        // arithmetic over the seasonal bests, priced by the season's chart ratings, written to the
+        // season's stats row. It is always quiet — no seasonal milestones, lamps or titles in v1
+        // (D18) — so everything below the SaveStats returns before it runs.
+        // Each read takes the all-time signature when there is no season, rather than the sibling
+        // with SeasonId.AllTime. The two are the same call in every implementation — but routing
+        // the all-time pass through the exact method it always used is what makes "this slice
+        // cannot have changed the all-time numbers" a fact about the code and not a claim.
+        var oldStats = season.IsAllTime
+            ? await _stats.GetStats(mix, request.UserId, cancellationToken)
+            : await _stats.GetStats(mix, request.UserId, season, cancellationToken);
         var scoring = ScoringConfiguration.PumbilityScoring(mix, true);
-        var charts =
-            (await _charts.GetCharts(mix, cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
-        var recorded =
-            (await _scores.GetBestScores(mix, request.UserId, cancellationToken)).ToArray();
+        var charts = (season.IsAllTime
+                ? await _charts.GetCharts(mix, cancellationToken: cancellationToken)
+                : await _charts.GetCharts(mix, season, cancellationToken: cancellationToken))
+            .ToDictionary(c => c.Id);
+        var recorded = (season.IsAllTime
+            ? await _scores.GetBestScores(mix, request.UserId, cancellationToken)
+            : await _scores.GetBestScores(mix, request.UserId, season, cancellationToken)).ToArray();
 
         // Phoenix 2's formula prices the plate (and zeroes stage breaks); Phoenix keeps its
         // historical plate-blind rating byte-identical.
@@ -335,11 +405,25 @@ internal sealed class PlayerRatingSaga :
             AverageOrDefault(top50Doubles.Select(s => (int)charts[s.ChartId].Level), 1),
             competitive,
             competitiveSingles,
-            competitiveDoubles
+            competitiveDoubles,
+            // The whole-season grind board: every seasonal best's PUMBILITY summed, unrounded
+            // (§4.2). Zero on the all-time row, where TotalRating is already this figure and the
+            // lifetime sum is not a board anyone climbs.
+            TotalPumbility: season.IsAllTime ? 0 : scores.Where(s => !s.IsBroken).Sum(s => s.Rating)
         );
 
-        newStats = await EstimateOfficialRanks(mix, newStats, cancellationToken);
-        await _stats.SaveStats(mix, request.UserId, newStats, cancellationToken);
+        // The official boards are all-time and piugame's: placing a season's pool on one would
+        // read as a rank the player does not hold, so a season row carries no estimate.
+        if (season.IsAllTime)
+        {
+            newStats = await EstimateOfficialRanks(mix, newStats, cancellationToken);
+            await _stats.SaveStats(mix, request.UserId, newStats, cancellationToken);
+        }
+        else
+        {
+            await _stats.SaveStats(mix, request.UserId, newStats, season, cancellationToken);
+        }
+
         if (quiet) return new SessionStatsResult(Array.Empty<PlayerMilestoneRecord>(), Array.Empty<Guid>());
 
         var gains = PumbilityGains(request, changes, scores, recorded, charts, mix, scoring);

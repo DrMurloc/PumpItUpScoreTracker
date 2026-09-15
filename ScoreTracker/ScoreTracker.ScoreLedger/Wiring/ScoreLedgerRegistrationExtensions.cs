@@ -36,6 +36,8 @@ public static class ScoreLedgerRegistrationExtensions
         // Every player's passing bests, held for the two reads that ask about other people.
         // Singleton or it is not a cache; evicted per player by PeerScoreCacheConsumer.
         services.AddSingleton<PeerScoreStore>();
+        // The seasonal half of a personal best, applied identically by both official paths.
+        services.AddTransient<SeasonalBestWriter>();
         services.AddSingleton<IDbModelContribution, ScoreLedgerModelContribution>();
         return services;
     }
@@ -59,5 +61,7 @@ public static class ScoreLedgerRegistrationExtensions
         configurator.AddConsumer<SessionRecoverySaga>();
         // Drops the importing player's held scores so their peers see the import.
         configurator.AddConsumer<PeerScoreCacheConsumer>();
+        // Rebuilds one season's pool from the journal, through the live writer.
+        configurator.AddConsumer<SeasonalBestBackfillConsumer>();
     }
 }

@@ -1,4 +1,4 @@
-﻿using ScoreTracker.Domain.Services;
+using ScoreTracker.Domain.Services;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
@@ -202,7 +202,8 @@ namespace ScoreTracker.OfficialMirror.Application
             // bests, so a play arriving through both paths is one row that the best raises to
             // IsBest rather than a second row racing it.
             await _mediator.Send(new RecordObservedPlaysCommand(userId, mix,
-                ScoreJournalEntry.OfficialImportSource, importSessionId, scrape.Plays), cancellationToken);
+                ScoreJournalEntry.OfficialImportSource, importSessionId, scrape.Plays, includeBroken),
+                cancellationToken);
             var toSave = await SaveBests(userId, mix, importSessionId, scores, cancellationToken);
             // Titles are announced last, now that we know whether this run saved any scores.
             // With a score batch, they ride its session snapshot card (SessionId flows to the
@@ -246,7 +247,11 @@ namespace ScoreTracker.OfficialMirror.Application
                         Source: ScoreJournalEntry.OfficialImportSource, Mix: mix,
                         SessionId: sessionId,
                         RecordedAt: score.RecordedAt,
-                        Judgements: score.Judgements),
+                        Judgements: score.Judgements,
+                        // The import already knows: a chart in existingScores is one we held a
+                        // record on, so this card raised it rather than being the first we ever
+                        // saw. The seasonal counting rule turns on exactly that (D15).
+                        RaisedExistingRecord: existingScores.ContainsKey(score.Chart.Id)),
                     cancellationToken);
                 count++;
                 batch.Add(new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, score.IsBroken,

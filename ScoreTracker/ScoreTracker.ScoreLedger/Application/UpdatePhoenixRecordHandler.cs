@@ -29,6 +29,7 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         IScoreSessionRepository sessions,
         IMemoryCache cache,
         IChartRepository charts,
+        SeasonalBestWriter seasonalBests,
         ILogger<UpdatePhoenixRecordHandler> logger)
     : IRequestHandler<UpdatePhoenixBestAttemptCommand>,
         IConsumer<UpdatePhoenixRecordHandler.TryFireScoreCommand>,
@@ -122,9 +123,14 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         // time; the clock only stamps submissions the site never dated.
         var recordedAt = request.RecordedAt ?? dateTimeOffset.Now;
 
-        await records.UpdateBestAttempt(request.Mix, user.User.Id,
-            new RecordedPhoenixScore(request.ChartId, request.Score, plate, request.IsBroken,
-                recordedAt, request.Source, judgements), cancellationToken);
+        var recorded = new RecordedPhoenixScore(request.ChartId, request.Score, plate, request.IsBroken,
+            recordedAt, request.Source, judgements);
+        await records.UpdateBestAttempt(request.Mix, user.User.Id, recorded, cancellationToken);
+        // The seasonal half of the same best, when the counting rule claims it (D15). After the
+        // all-time write, so a failure here cannot cost the record itself; before the journal, which
+        // is the record's history and indifferent to seasons.
+        await seasonalBests.Write(request.Mix, user.User.Id, request.Source,
+            new[] { new SeasonalBestWriter.Candidate(recorded, request.RaisedExistingRecord) }, cancellationToken);
         // The journal is the record's history: it gets the resulting best-attempt state,
         // exactly and only when that state changes.
         var entry = new ScoreJournalEntry(recordedAt, request.Source, user.User.Id,

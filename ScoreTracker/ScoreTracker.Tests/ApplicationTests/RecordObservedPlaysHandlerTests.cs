@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Moq;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.ScoreLedger.Application;
@@ -15,6 +16,7 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -160,6 +162,47 @@ public sealed class RecordObservedPlaysHandlerTests
 
         ctx.Logger.Verify(l => l.Log(LogLevel.Warning, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(),
             It.IsAny<Exception?>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Never);
+    }
+
+    // PlayedAt is inside this quarter, so a play judged on its own date lands in it.
+    private static readonly SeasonId Season = SeasonId.From(PlayedAt.Year, (PlayedAt.Month - 1) / 3 + 1);
+
+    [Fact]
+    public async Task ABrokenRunDoesNotBecomeASeasonalBestForAPlayerWhoOptedOut()
+    {
+        // Every dated play is journaled either way — a fail is history — but the all-time best list
+        // has always filtered breaks out for a player who unticked "record broken scores as your
+        // best", and a seasonal best is a best. Without this they collect broken seasonal bests on
+        // every chart they have not passed in-window, and each one counts the chart as PLAYED for
+        // their seasonal folder completion (D38).
+        var ctx = new HandlerContext();
+        ctx.GivenNoteCount(ChartId, 1000);
+
+        await ctx.SeasonalHandler.Handle(new RecordObservedPlaysCommand(UserId, MixEnum.Phoenix2,
+            ScoreJournalEntry.OfficialImportSource, Guid.NewGuid(),
+            new[] { new RecordObservedPlaysCommand.ObservedPlay(ChartId, (PhoenixScore)500_000, null, true, PlayedAt, null) },
+            IncludeBroken: false), CancellationToken.None);
+
+        ctx.SeasonRecords.Verify(r => r.UpdateBestAttempt(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<RecordedPhoenixScore>(), It.IsAny<SeasonId>(), It.IsAny<CancellationToken>()), Times.Never);
+        // Still journaled: the opt-out governs what counts as a best, not what happened.
+        ctx.Journal.Verify(j => j.AppendObservations(
+            It.Is<IReadOnlyList<ScoreJournalEntry>>(e => e.Count == 1), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ABrokenRunIsASeasonalBestForAPlayerWhoOptedIn()
+    {
+        var ctx = new HandlerContext();
+        ctx.GivenNoteCount(ChartId, 1000);
+
+        await ctx.SeasonalHandler.Handle(new RecordObservedPlaysCommand(UserId, MixEnum.Phoenix2,
+            ScoreJournalEntry.OfficialImportSource, Guid.NewGuid(),
+            new[] { new RecordObservedPlaysCommand.ObservedPlay(ChartId, (PhoenixScore)500_000, null, true, PlayedAt, null) },
+            IncludeBroken: true), CancellationToken.None);
+
+        ctx.SeasonRecords.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix2, UserId,
+            It.IsAny<RecordedPhoenixScore>(), Season, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private static RecordObservedPlaysCommand Command(params RecordObservedPlaysCommand.ObservedPlay[] plays)
@@ -321,8 +364,17 @@ public sealed class RecordObservedPlaysHandlerTests
                     CancellationToken>((_, _, causes, _) => Resolved.AddRange(causes))
                 .Returns(Task.CompletedTask);
             Handler = new RecordObservedPlaysHandler(Journal.Object, new MemoryCache(new MemoryCacheOptions()),
-                Charts.Object, Logger.Object);
+                Charts.Object, SeasonalBests.Inert(), Logger.Object);
+            // A second handler whose seasonal writer sees a real, open season, for the facts about
+            // what does and does not reach a season's pool.
+            SeasonalHandler = new RecordObservedPlaysHandler(Journal.Object,
+                new MemoryCache(new MemoryCacheOptions()), Charts.Object,
+                SeasonalBests.Over(SeasonRecords, new[] { FakeSeasons.Quarter(Season) }, PlayedAt),
+                Logger.Object);
         }
+
+        public RecordObservedPlaysHandler SeasonalHandler { get; }
+        public Mock<IPhoenixRecordRepository> SeasonRecords { get; } = new();
 
         public void GivenNoteCount(Guid chartId, int noteCount)
         {

@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
@@ -18,7 +19,7 @@ namespace ScoreTracker.ScoreLedger.Application;
 ///     collapses onto one row by its play key.
 /// </summary>
 internal sealed class RecordObservedPlaysHandler(IScoreJournalRepository journal, IMemoryCache cache,
-        IChartRepository charts, ILogger<RecordObservedPlaysHandler> logger)
+        IChartRepository charts, SeasonalBestWriter seasonalBests, ILogger<RecordObservedPlaysHandler> logger)
     : IRequestHandler<RecordObservedPlaysCommand>
 {
     public async Task Handle(RecordObservedPlaysCommand request, CancellationToken cancellationToken)
@@ -58,6 +59,22 @@ internal sealed class RecordObservedPlaysHandler(IScoreJournalRepository journal
             .ToArray();
 
         await journal.AppendObservations(entries, cancellationToken);
+
+        // A season's pool starts empty, so a run below the player's all-time best is still that
+        // season's best on the chart — and these are the only rows those runs ever produce, since
+        // the import filtered them out before the record handler saw them (seasons.md §4.1). Judged
+        // on their own play time and nothing else: none of them raised an all-time record.
+        // A break is journaled regardless, but it only becomes a BEST for a player who opted in --
+        // the same rule the all-time best list applies. Without this a player who unticked the
+        // setting collects broken seasonal bests on every chart they have not passed in-window, and
+        // per D38 each one counts the chart as played for their seasonal folder completion.
+        await seasonalBests.Write(request.Mix, request.UserId, request.Source,
+            entries.Where(e => request.IncludeBroken || !e.IsBroken)
+                .Select(e => new SeasonalBestWriter.Candidate(
+                new RecordedPhoenixScore(e.ChartId, e.Score, e.Plate, e.IsBroken, e.OccurredAt, e.Source,
+                    e.Judgements),
+                    RaisedExistingRecord: false, e.IsStageBroken)).ToArray(),
+            cancellationToken);
 
         // A replay can settle a run the session recorded earlier, so every chart this write gave a
         // judged stage break is re-solved against the whole session.

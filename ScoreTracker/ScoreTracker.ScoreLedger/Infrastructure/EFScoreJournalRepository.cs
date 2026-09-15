@@ -419,6 +419,34 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             .ToArrayAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Guid>> GetUsersWithPlaysInWindow(MixEnum mix, DateTimeOffset from,
+        DateTimeOffset to, CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.Set<ScoreEventJournalEntity>()
+            .Where(e => e.MixId == mixId && e.Source == ScoreJournalEntry.OfficialImportSource
+                                         && e.OccurredAt >= from && e.OccurredAt <= to)
+            .Select(e => e.UserId)
+            .Distinct()
+            .ToArrayAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ScoreJournalEntry>> GetPlaysInWindow(Guid userId, MixEnum mix,
+        DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return (await database.Set<ScoreEventJournalEntity>()
+                .Where(e => e.UserId == userId && e.MixId == mixId
+                                               && e.Source == ScoreJournalEntry.OfficialImportSource
+                                               && e.OccurredAt >= from && e.OccurredAt <= to)
+                .OrderBy(e => e.OccurredAt)
+                .ToArrayAsync(cancellationToken))
+            .Select(Map)
+            .ToArray();
+    }
+
     public async Task<IReadOnlyList<ScoreJournalEntry>> GetJudgedEntries(Guid userId, MixEnum mix,
         CancellationToken cancellationToken)
     {
