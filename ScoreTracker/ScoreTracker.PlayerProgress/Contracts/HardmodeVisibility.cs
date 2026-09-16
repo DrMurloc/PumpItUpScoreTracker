@@ -20,6 +20,16 @@ public static class HardmodeVisibility
             or MilestoneKind.HardmodeDoublesPumbilityGain;
     }
 
+    /// <summary>
+    ///     Whether a batch carries any Hardmode fact at all. A consumer asks this before reading the
+    ///     player's switch, so a batch with nothing to strip never costs a settings read.
+    /// </summary>
+    public static bool Carries(ScoreHighlightsCapturedEvent e)
+    {
+        return e.Milestones.Any(m => IsHardmode(m.Kind)) ||
+               e.Changes.Any(c => c.Flags.HasFlag(HighlightFlags.HardmodeTop50));
+    }
+
     public static HighlightFlags Strip(HighlightFlags flags)
     {
         return flags & ~HighlightFlags.HardmodeTop50;

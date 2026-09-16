@@ -59,7 +59,7 @@ internal sealed class PlayerHighlightCapturer : IPlayerHighlightCapturer
         // decided here, at write time, rather than when a feed reads: classification keeps an
         // event's top wins only, so a Hardmode win left in would push out a real one for good.
         // Only a batch that carries Hardmode facts costs a settings read.
-        if (CarriesHardmode(e) && !HardmodeOptIn.IsOn(
+        if (HardmodeVisibility.Carries(e) && !HardmodeOptIn.IsOn(
                 await _mediator.Send(new GetUserUiSettingsQuery(e.UserId), cancellationToken)))
             e = HardmodeVisibility.Strip(e);
 
@@ -81,12 +81,6 @@ internal sealed class PlayerHighlightCapturer : IPlayerHighlightCapturer
         if (stored)
             await _bus.Publish(new PlayerHighlightsStoredEvent(e.EventId, e.UserId, e.Mix, e.OccurredAt),
                 cancellationToken);
-    }
-
-    private static bool CarriesHardmode(ScoreHighlightsCapturedEvent e)
-    {
-        return e.Milestones.Any(m => HardmodeVisibility.IsHardmode(m.Kind)) ||
-               e.Changes.Any(c => c.Flags.HasFlag(HighlightFlags.HardmodeTop50));
     }
 
     private async Task<RaritySnapshot> GetRaritySnapshot(MixEnum mix, CancellationToken cancellationToken)

@@ -49,6 +49,7 @@ public sealed class CommunitySagaTests
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
         var ctx = new HandlerContext();
         ctx.GivenUser(userId, name: "drmurloc");
+        ctx.GivenHardmodeOn(userId);
         ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
         ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, chart, score: 950000);
         var milestones = new[]
@@ -83,6 +84,7 @@ public sealed class CommunitySagaTests
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
         var ctx = new HandlerContext();
         ctx.GivenUser(userId, name: "drmurloc");
+        ctx.GivenHardmodeOn(userId);
         ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
         ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, chart, score: 991204);
 
@@ -100,6 +102,167 @@ public sealed class CommunitySagaTests
                 && s.Markdown.Contains("💀 #4 in your Hardmode"))),
             It.IsAny<IEnumerable<ulong>>(),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task WithHardmodeOffTheCardAnnouncesNoHardmode()
+    {
+        // Every account starts off (D30). The crown and the PUMBILITY line stay; every skull goes,
+        // including the one on a score's caption and the three pool lines.
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "drmurloc");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, chart, score: 991204);
+        var change = new ScoreHighlightsCapturedEvent.HighlightedChange(chart.Id, true, null, 991204,
+            "UltimateGame", false, HighlightFlags.PumbilityTop50 | HighlightFlags.HardmodeTop50,
+            new HighlightDetail(PumbilityRank: 31, HardmodeRank: 4));
+
+        await ctx.Saga.Consume(BuildContext(ScoreHighlightsCapturedEvent.Create(Now, userId, MixEnum.Phoenix2,
+            Guid.NewGuid(), new[] { change }, TheOwnersSession())));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => AllMarkdown(msgs.Single()).Contains("👑 #31 in your PUMBILITY")
+                                                       && AllMarkdown(msgs.Single()).Contains("📈 **PUMBILITY** 17,738")
+                                                       && !AllMarkdown(msgs.Single()).Contains("💀")),
+            It.IsAny<IEnumerable<ulong>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task WithHardmodeOffASkullOnlyScoreDoesNotTakeAnArtRow()
+    {
+        // Any flag promotes a score to an art row, so the strip has to happen before the rows are
+        // picked: five S22s outrank an S14 whose only flag was the skull.
+        var userId = Guid.NewGuid();
+        var charts = Enumerable.Range(0, 5)
+            .Select(i => new ChartBuilder().WithType(ChartType.Single).WithLevel(22).WithSongName($"Staple {i}").Build())
+            .Append(new ChartBuilder().WithType(ChartType.Single).WithLevel(14).WithSongName("Skull Only").Build())
+            .ToArray();
+        var off = new HandlerContext();
+        var on = new HandlerContext();
+        foreach (var ctx in new[] { off, on })
+        {
+            ctx.GivenUser(userId, name: "drmurloc");
+            ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+            ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, charts, score: 980000);
+        }
+
+        on.GivenHardmodeOn(userId);
+        var e = ScoreHighlightsCapturedEvent.Create(Now, userId, MixEnum.Phoenix2, Guid.NewGuid(),
+            charts.Select(c => new ScoreHighlightsCapturedEvent.HighlightedChange(c.Id, true, null, 980000,
+                "MarvelousGame", false,
+                c.Level == 14 ? HighlightFlags.HardmodeTop50 : HighlightFlags.None,
+                c.Level == 14 ? new HighlightDetail(HardmodeRank: 3) : null)).ToArray());
+
+        await off.Saga.Consume(BuildContext(e));
+        await on.Saga.Consume(BuildContext(e));
+
+        off.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => !msgs.Single().Blocks.OfType<RichBotSection>()
+                .Any(s => s.Markdown.Contains("Skull Only"))),
+            It.IsAny<IEnumerable<ulong>>(), It.IsAny<CancellationToken>()), Times.Once);
+        on.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotSection>()
+                .Any(s => s.Markdown.Contains("Skull Only") && s.Markdown.Contains("💀 #3 in your Hardmode"))),
+            It.IsAny<IEnumerable<ulong>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task EveryHardmodeRungCrossedGetsALineAndEachPoolItsProgress()
+    {
+        // DrMurloc's real 2026-09-15 session (D33): combined crossed BRONZE, singles five
+        // INTERMEDIATE rungs, doubles none. No level-up on the Hardmode line, because the
+        // batch crossed into a gem and the BRONZE line already says it.
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "drmurloc");
+        ctx.GivenHardmodeOn(userId);
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, chart, score: 980993);
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix2, Guid.NewGuid(),
+            TheOwnersSession(), (chart.Id, true, HighlightFlags.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs =>
+                AllMarkdown(msgs.Single()).Contains("💀 **Hardmode** 3,339 → **11,132**")
+                && !AllMarkdown(msgs.Single()).Contains("🆙")
+                && AllMarkdown(msgs.Single()).Contains("💀 **[P.B] BRONZE** reached on Hardmode")
+                && AllMarkdown(msgs.Single()).Contains("💀 **[S] INTERMEDIATE LV.1** reached on Hardmode")
+                && AllMarkdown(msgs.Single()).Contains("💀 **[S] INTERMEDIATE LV.5** reached on Hardmode")
+                && !AllMarkdown(msgs.Single()).Contains("[D] INTERMEDIATE LV.1** reached")
+                && AllMarkdown(msgs.Single()).Contains("💀 Hardmode [P.B] SILVER 0% → **45%**")
+                && AllMarkdown(msgs.Single()).Contains("💀 Hardmode [S] INTERMEDIATE LV.6 0% → **10%**")
+                && AllMarkdown(msgs.Single()).Contains("💀 Hardmode [D] INTERMEDIATE LV.1 26% → **40%**")),
+            It.IsAny<IEnumerable<ulong>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AHardmodeLevelCrossingInsideAGemRidesTheCombinedLine()
+    {
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "drmurloc");
+        ctx.GivenHardmodeOn(userId);
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, chart, score: 980993);
+        var milestones = new[]
+        {
+            new PlayerMilestoneRecord(MilestoneKind.HardmodePumbilityGain, null, Now, 10420, 11131.72, null, null)
+        };
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix2, Guid.NewGuid(), milestones,
+            (chart.Id, true, HighlightFlags.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => AllMarkdown(msgs.Single())
+                .Contains("💀 **Hardmode** 10,420 → **11,132** (+712) · 🆙 **BRONZE LV.1 → LV.3**")),
+            It.IsAny<IEnumerable<ulong>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AFailedSettingsReadAnnouncesNoHardmodeAndStillSendsTheCard()
+    {
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "drmurloc");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, chart, score: 980993);
+        ctx.Mediator.Setup(m => m.Send(It.IsAny<GetUserUiSettingsQuery>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("settings unavailable"));
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix2, Guid.NewGuid(),
+            TheOwnersSession(), (chart.Id, true, HighlightFlags.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => AllMarkdown(msgs.Single()).Contains("📈 **PUMBILITY** 17,738")
+                                                       && !AllMarkdown(msgs.Single()).Contains("💀")),
+            It.IsAny<IEnumerable<ulong>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>DrMurloc's real 2026-09-15 milestones: PUMBILITY plus all three Hardmode pools.</summary>
+    private static PlayerMilestoneRecord[] TheOwnersSession()
+    {
+        return new[]
+        {
+            new PlayerMilestoneRecord(MilestoneKind.PumbilityGain, null, Now, 17738.06, 17764.06, null, null),
+            new PlayerMilestoneRecord(MilestoneKind.HardmodePumbilityGain, null, Now, 3339.22, 11131.72, null,
+                "25|235"),
+            new PlayerMilestoneRecord(MilestoneKind.HardmodeSinglesPumbilityGain, null, Now, 1995.50, 9104.54,
+                null, "18|205"),
+            new PlayerMilestoneRecord(MilestoneKind.HardmodeDoublesPumbilityGain, null, Now, 1343.72, 2027.18,
+                null, "45|166")
+        };
+    }
+
+    private static string AllMarkdown(RichBotMessage message)
+    {
+        return string.Join("\n", message.Blocks.OfType<RichBotText>().Select(b => b.Markdown)
+            .Concat(message.Blocks.OfType<RichBotSection>().Select(b => b.Markdown)));
     }
 
     [Fact]
@@ -1783,6 +1946,16 @@ public sealed class CommunitySagaTests
             Communities.Setup(c => c.GetCommunityByName(It.Is<Name>(n => (string)n == name),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Community(Name.From(name), Guid.Empty, CommunityPrivacyType.Public, true));
+        }
+
+        public void GivenHardmodeOn(Guid userId)
+        {
+            Mediator.Setup(m => m.Send(It.Is<GetUserUiSettingsQuery>(q => q.UserId == userId),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    [HardmodeOptIn.SettingKey] = "true"
+                });
         }
 
         public void GivenUser(Guid userId, string name)
