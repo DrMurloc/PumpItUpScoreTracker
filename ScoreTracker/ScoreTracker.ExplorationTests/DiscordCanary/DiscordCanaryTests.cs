@@ -87,10 +87,14 @@ public sealed class DiscordCanaryTests
             new IRichBotBlock[]
             {
                 new RichBotDivider(),
-                new RichBotText("📈 **PUMBILITY** 21,480 → **21,530** (+50)"),
+                // The Hardmode lines a player with Hardmode on gets (hardmode-leaderboard.md D33).
+                new RichBotText("📈 **PUMBILITY** 21,480 → **21,530** (+50)\n" +
+                                "💀 **Hardmode** 10,420 → **11,132** (+712) · 🆙 **BRONZE LV.1 → LV.3**"),
                 new RichBotDivider(),
                 new RichBotText("🏅 **[Intermediate Lv. 10]** completed\n" +
+                                "💀 **[S] INTERMEDIATE LV.5** reached on Hardmode\n" +
                                 "🏅 [Advanced Lv. 3] 62% → **71%**\n" +
+                                "💀 Hardmode [P.B] SILVER 0% → **45%**\n" +
                                 "🎉 #DIFFICULTY|s18# **All passed!**\n" +
                                 "🏆 **#1** on Witch Doctor #DIFFICULTY|d19# weekly"),
                 new RichBotDivider(),
