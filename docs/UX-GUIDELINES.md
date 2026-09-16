@@ -97,6 +97,7 @@ The rungs the codebase already turns on, and what each one carries:
 |---|---|---|
 | **1280** | Mud `Lg` | Tier Lists folds into Play ([static-shell.md §11.1](design/static-shell.md)). Picked over a tighter ~1150 so that landscape iPads (1180/1194) sit on the folded side rather than rendering every nav label in their tightest configuration |
 | **960** | Mud `Md` | The shell's desktop/mobile switch |
+| **900** | the Desktop rung | The chart page's hero goes two-column, and the PUMBILITY presence graph turns its titles across. Below it — the Fold unfolded, portrait tablets, phones — the graph runs titles down, as it always does in the dialog ([chart-presence-graph.md](design/chart-presence-graph.md) D5) |
 | **760 / 600 / 500** | the boards | A board sheds one column at a time: song titles step aside at 760, long labels fall back to short forms at 500. **Figures never stack — every value keeps its own column** |
 | **`(min-aspect-ratio: 1/1), (min-width: 700px)`** | the More sheet | Squarish-or-wide gets the icon grid, narrow-and-tall the drill-down. **The width floor carries both the portrait tablet and the fold** — both are taller than 1:1 and both fail the aspect half, so the floor is the only thing keeping either off the phone treatment. That is why it is 700 and not a rounder number |
 | **`max-height: 520px`** | the session breakdown | The rule no width query can express — see below |
