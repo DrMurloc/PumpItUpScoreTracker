@@ -54,8 +54,13 @@ public sealed class HardmodeCensusProbeTests
                 .Add(key);
         }
 
-        var folders = charts.Values.GroupBy(c => (c.Type, c.Level)).OrderBy(g => g.Key.Type).ThenBy(g => g.Key.Level);
+        // The floor is on the cut, never on the pools (D29): the fifties above were built from every
+        // chart PUMBILITY pays for, because a level-12 chart still pushes the charts below it down a
+        // slot in the pool of a player who holds one. Only the folders offered start at 14.
+        var folders = charts.Values.Where(c => c.Level >= MinimumLevel)
+            .GroupBy(c => (c.Type, c.Level)).OrderBy(g => g.Key.Type).ThenBy(g => g.Key.Level);
         var listed = 0;
+        var mostHeldListed = 0;
         foreach (var folder in folders)
         {
             var rows = folder
@@ -67,28 +72,40 @@ public sealed class HardmodeCensusProbeTests
             var unheld = rows.Count(r => r.Holders == 0);
             var cut = Cut(rows.Length, unheld);
             listed += cut;
+            // The green end (D32): the most-held charts the red cut left, never one nobody holds.
+            var mostHeld = rows.Skip(cut).Where(r => r.Holders > 0)
+                .OrderByDescending(r => r.Points).ThenBy(r => r.ScoringLevel).ThenBy(r => r.Name)
+                .Take(Math.Min(25, rows.Length / 4))
+                .ToArray();
+            mostHeldListed += mostHeld.Length;
             var tag = (folder.Key.Type == ChartType.Single ? "S" : "D") + folder.Key.Level;
-            _output.WriteLine($"{tag,-4} folder {rows.Length,4} · unheld {unheld,4} · cut {cut,4}");
+            _output.WriteLine($"{tag,-4} folder {rows.Length,4} · unheld {unheld,4} · cut {cut,4} · most held {mostHeld.Length,3}");
             if (!Detail.Contains(tag)) continue;
             foreach (var (row, i) in rows.Take(cut + 4).Select((r, i) => (r, i)))
                 _output.WriteLine($"     {i + 1,3}. {row.Name,-36} pts {row.Points,7:N0} · held by {row.Holders,4}" +
                                   (i < cut ? "  <<HARD" : string.Empty));
+            foreach (var row in mostHeld)
+                _output.WriteLine($"          {row.Name,-36} pts {row.Points,7:N0} · held by {row.Holders,4}  <<MOST HELD");
         }
 
-        _output.WriteLine($"TOTAL qualifying {listed}");
+        _output.WriteLine($"TOTAL qualifying {listed} · most held {mostHeldListed}");
         Assert.True(listed > 0, "The census produced no charts — check the connection points at a populated database.");
     }
 
+    /// <summary>The first folder the census offers (design doc D29). Pools still price everything from 10.</summary>
+    private const int MinimumLevel = 14;
+
     /// <summary>
-    ///     The cut (design doc D1/D2): 25, or a quarter of the folder if that is fewer, or every
-    ///     unheld chart when there are more of those — and exactly one from a folder of four or
-    ///     fewer, so a two-chart folder is not silently excluded.
+    ///     The cut (design doc D1/D2, as revised): 25, or a quarter of the folder if that is fewer, or
+    ///     every unheld chart when there are more of those — and at least one from a folder of four or
+    ///     fewer, so a two-chart folder is not silently excluded. D2 became a floor rather than a cap on
+    ///     2026-09-12; this copy had kept the cap, so it disagreed with the census on tiny folders.
     /// </summary>
     private static int Cut(int folderSize, int unheld)
     {
-        if (folderSize <= 4) return 1;
-        var flat = Math.Min(25, folderSize / 4);
-        return Math.Max(flat, unheld);
+        if (folderSize <= 0) return 0;
+        if (folderSize <= 4) return Math.Max(1, Math.Min(unheld, folderSize));
+        return Math.Max(Math.Min(25, folderSize / 4), Math.Min(unheld, folderSize));
     }
 
     private sealed record ChartRow(Guid ChartId, string Name, ChartType Type, int Level, double ScoringLevel);
