@@ -1,6 +1,9 @@
 using MassTransit;
+using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Identity.Contracts.Queries;
+using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.PlayerProgress.Domain;
 using ScoreTracker.SharedKernel.Caching;
@@ -30,13 +33,16 @@ internal sealed class PlayerHighlightCapturer : IPlayerHighlightCapturer
     private readonly IBus _bus;
     private readonly IMemoryCache _cache;
     private readonly IChartRepository _charts;
+    private readonly IMediator _mediator;
     private readonly IPlayerHighlightRepository _highlights;
     private readonly IPlayerStatsReader _playerStats;
     private readonly IScoreReader _scores;
 
     public PlayerHighlightCapturer(IChartRepository charts, IScoreReader scores,
-        IPlayerHighlightRepository highlights, IPlayerStatsReader playerStats, IMemoryCache cache, IBus bus)
+        IPlayerHighlightRepository highlights, IPlayerStatsReader playerStats, IMemoryCache cache, IBus bus,
+        IMediator mediator)
     {
+        _mediator = mediator;
         _charts = charts;
         _scores = scores;
         _highlights = highlights;
@@ -48,6 +54,14 @@ internal sealed class PlayerHighlightCapturer : IPlayerHighlightCapturer
     public async Task Capture(ScoreHighlightsCapturedEvent e, CancellationToken cancellationToken)
     {
         if (e.Changes.Count == 0 && e.Milestones.Count == 0) return;
+
+        // Hardmode reaches the feeds only for a player who switched it on (D30), and it is
+        // decided here, at write time, rather than when a feed reads: classification keeps an
+        // event's top wins only, so a Hardmode win left in would push out a real one for good.
+        // Only a batch that carries Hardmode facts costs a settings read.
+        if (CarriesHardmode(e) && !HardmodeOptIn.IsOn(
+                await _mediator.Send(new GetUserUiSettingsQuery(e.UserId), cancellationToken)))
+            e = HardmodeVisibility.Strip(e);
 
         var charts = (await _charts.GetCharts(e.Mix,
                 chartIds: e.Changes.Select(c => c.ChartId).Distinct(),
@@ -67,6 +81,12 @@ internal sealed class PlayerHighlightCapturer : IPlayerHighlightCapturer
         if (stored)
             await _bus.Publish(new PlayerHighlightsStoredEvent(e.EventId, e.UserId, e.Mix, e.OccurredAt),
                 cancellationToken);
+    }
+
+    private static bool CarriesHardmode(ScoreHighlightsCapturedEvent e)
+    {
+        return e.Milestones.Any(m => HardmodeVisibility.IsHardmode(m.Kind)) ||
+               e.Changes.Any(c => c.Flags.HasFlag(HighlightFlags.HardmodeTop50));
     }
 
     private async Task<RaritySnapshot> GetRaritySnapshot(MixEnum mix, CancellationToken cancellationToken)

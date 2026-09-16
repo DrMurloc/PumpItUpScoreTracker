@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
+using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -11,6 +12,7 @@ using ScoreTracker.PlayerProgress.Application;
 using ScoreTracker.PlayerProgress.Domain;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.SharedKernel.Enums;
@@ -30,6 +32,8 @@ public sealed class PlayerHighlightSagaTests
     private readonly Mock<IPlayerStatsReader> _playerStats = new();
     private readonly Mock<IScoreReader> _scores = new();
     private readonly Mock<IBus> _bus = new();
+    private readonly Mock<IMediator> _mediator = new();
+    private IDictionary<string, string> _settings = new Dictionary<string, string>();
 
     // The capture logic lives in the capturer now; the saga just delegates + isolates failures.
     private PlayerHighlightCapturer Capturer()
@@ -40,8 +44,10 @@ public sealed class PlayerHighlightSagaTests
                 It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<IReadOnlyList<SignificantWin>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
+        _mediator.Setup(m => m.Send(It.IsAny<GetUserUiSettingsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => _settings);
         return new(_charts.Object, _scores.Object, _highlights.Object, _playerStats.Object,
-            new MemoryCache(new MemoryCacheOptions()), _bus.Object);
+            new MemoryCache(new MemoryCacheOptions()), _bus.Object, _mediator.Object);
     }
 
     private void SetupPopulation(Chart chart, int pgHolders, int activePlayers)
@@ -88,6 +94,62 @@ public sealed class PlayerHighlightSagaTests
         _bus.Verify(b => b.Publish(It.Is<PlayerHighlightsStoredEvent>(p => p.EventId == e.EventId
             && p.UserId == userId && p.Mix == MixEnum.Phoenix), It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task AHardmodeRungIsNotAWinForAPlayerWithHardmodeOff()
+    {
+        // Every account starts off (D30), and the feeds follow the switch from the moment it
+        // changes: the win is never written, rather than written and hidden on read.
+        var chart = new ChartBuilder().WithLevel(24).WithType(ChartType.Double).Build();
+        SetupPopulation(chart, pgHolders: 500, activePlayers: 1000);
+
+        await Capturer().Capture(RungEvent(Guid.NewGuid()), CancellationToken.None);
+
+        _highlights.Verify(h => h.Add(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<MixEnum>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<IReadOnlyList<SignificantWin>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AHardmodeRungIsAWinForAPlayerWithHardmodeOn()
+    {
+        var chart = new ChartBuilder().WithLevel(24).WithType(ChartType.Double).Build();
+        SetupPopulation(chart, pgHolders: 500, activePlayers: 1000);
+        _settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            [HardmodeOptIn.SettingKey] = "true"
+        };
+        var userId = Guid.NewGuid();
+
+        await Capturer().Capture(RungEvent(userId), CancellationToken.None);
+
+        _highlights.Verify(h => h.Add(It.IsAny<Guid>(), userId, MixEnum.Phoenix2, It.IsAny<DateTimeOffset>(),
+            It.IsAny<Guid?>(),
+            It.Is<IReadOnlyList<SignificantWin>>(w => w.Any(x => x.Kind == WinKind.HardmodeTitle
+                                                              && x.TitleName == "[P.B] BRONZE")),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ABatchWithNoHardmodeInItNeverAsksForTheSetting()
+    {
+        var chart = new ChartBuilder().WithLevel(24).WithType(ChartType.Double).WithSongName("Bee").Build();
+        SetupPopulation(chart, pgHolders: 5, activePlayers: 1000);
+
+        await Capturer().Capture(PgEvent(Guid.NewGuid(), chart.Id), CancellationToken.None);
+
+        _mediator.Verify(m => m.Send(It.IsAny<GetUserUiSettingsQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    private static ScoreHighlightsCapturedEvent RungEvent(Guid userId) =>
+        ScoreHighlightsCapturedEvent.Create(When, userId, MixEnum.Phoenix2, sessionId: null,
+            Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
+            new[]
+            {
+                new PlayerMilestoneRecord(MilestoneKind.HardmodePumbilityGain, null, When, 9800, 10200, null,
+                    "140|301")
+            });
 
     [Fact]
     public async Task CapturerWritesNothingWhenThereAreNoBigWins()

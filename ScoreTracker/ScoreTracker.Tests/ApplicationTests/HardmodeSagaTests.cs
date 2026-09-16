@@ -423,6 +423,48 @@ public sealed class HardmodeSagaTests
         return context.Object;
     }
 
+    [Fact]
+    public async Task TheStandingIsTheViewersOwnRowOnTheirOwnBoard()
+    {
+        // The banner's "#N of M" (D31) is read off the board the viewer's own Hardmode tab draws,
+        // so the two cannot disagree.
+        var viewer = Guid.NewGuid();
+        var charts = Enumerable.Range(0, 5)
+            .Select(i => new ChartBuilder().WithLevel(21).WithType(ChartType.Single).WithMix(MixEnum.Phoenix2).Build())
+            .ToArray();
+        var ratings = new Mock<IHardmodeRatingRepository>();
+        var saga = Build(charts, Array.Empty<(Guid, Chart, int)>(), ratings);
+        // After Build, whose own board stub would otherwise answer first.
+        ratings.Setup(r => r.GetBoard(MixEnum.Phoenix2, null, viewer, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new HardmodeBoardRecord(new[]
+            {
+                new HardmodeBoardRow(1, Guid.NewGuid(), 17779.1, 50),
+                new HardmodeBoardRow(2, viewer, 11131.72, 34),
+                new HardmodeBoardRow(3, Guid.NewGuid(), 2000, 4)
+            }));
+
+        var standing = await saga.Handle(new GetHardmodeStandingQuery(MixEnum.Phoenix2, viewer),
+            CancellationToken.None);
+
+        Assert.Equal(new HardmodeStandingRecord(11131.72, 34, 2, 3, 5), standing);
+    }
+
+    [Fact]
+    public async Task AViewerWithNoHardmodeNumberGetsTheFieldAndNoPlace()
+    {
+        var viewer = Guid.NewGuid();
+        var charts = new[] { new ChartBuilder().WithLevel(21).WithMix(MixEnum.Phoenix2).Build() };
+        var ratings = new Mock<IHardmodeRatingRepository>();
+        var saga = Build(charts, Array.Empty<(Guid, Chart, int)>(), ratings);
+        ratings.Setup(r => r.GetBoard(MixEnum.Phoenix2, null, viewer, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new HardmodeBoardRecord(new[] { new HardmodeBoardRow(1, Guid.NewGuid(), 900, 3) }));
+
+        var standing = await saga.Handle(new GetHardmodeStandingQuery(MixEnum.Phoenix2, viewer),
+            CancellationToken.None);
+
+        Assert.Equal(new HardmodeStandingRecord(0, 0, null, 1, 1), standing);
+    }
+
     private static HardmodeSaga Build(IReadOnlyCollection<Chart> charts,
         IReadOnlyCollection<(Guid UserId, Chart Chart, int Score)> scores,
         Mock<IHardmodeRatingRepository> ratings, IReadOnlyCollection<Chart>? qualifying = null,
