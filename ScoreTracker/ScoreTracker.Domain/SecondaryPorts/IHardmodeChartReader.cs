@@ -23,6 +23,15 @@ namespace ScoreTracker.Domain.SecondaryPorts
         /// </summary>
         Task<IReadOnlyList<HardmodeChartEntry>> GetQualifyingCharts(MixEnum mix,
             CancellationToken cancellationToken);
+
+        /// <summary>
+        ///     The other end of the same census: each folder's most-held charts, the difficulty
+        ///     glow's green (docs/design/hardmode-leaderboard.md D32). Same row shape, with
+        ///     <see cref="HardmodeChartEntry.FolderCut" /> holding the size of that end. Display
+        ///     only — nothing is priced against it. Empty until the census has run.
+        /// </summary>
+        Task<IReadOnlyList<HardmodeChartEntry>> GetMostHeldCharts(MixEnum mix,
+            CancellationToken cancellationToken);
     }
 
     /// <summary>

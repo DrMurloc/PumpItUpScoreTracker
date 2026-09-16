@@ -144,6 +144,89 @@ public sealed class HardmodeCutTests
         Assert.All(qualifying, c => Assert.Equal(0, c.Holders));
     }
 
+    [Theory]
+    [InlineData(13, false)]
+    [InlineData(10, false)]
+    [InlineData(14, true)]
+    [InlineData(26, true)]
+    public void TheCensusOffersFoldersFromLevelFourteenUp(int level, bool offered)
+    {
+        // Below 14 the list recorded which charts nobody had played, not which were hard (D29).
+        Assert.Equal(offered, HardmodeCut.IsOffered(level));
+    }
+
+    [Theory]
+    [InlineData(170, 25)] // S21 — the flat 25
+    [InlineData(66, 16)] // S23 — a quarter
+    [InlineData(13, 3)] // S25
+    [InlineData(4, 1)] // D28
+    [InlineData(2, 0)] // S26 — no floor: nothing is priced against this end
+    [InlineData(0, 0)]
+    public void TheMostHeldEndIsTwentyFiveOrAQuarterWhicheverIsFewer(int folderSize, int expected)
+    {
+        Assert.Equal(expected, HardmodeCut.MostHeldSize(folderSize));
+    }
+
+    [Fact]
+    public void TheMostHeldEndTakesTheMostHeldChartsFirst()
+    {
+        var folder = Enumerable.Range(0, 8)
+            .Select(i => Candidate($"Chart {i:00}", points: (i + 1) * 100, holders: i + 1))
+            .ToArray();
+
+        // Eight charts: the Hardmode cut takes the two least held, the most-held end the two most.
+        var mostHeld = HardmodeCut.MostHeld(folder);
+
+        Assert.Equal(new[] { "Chart 07", "Chart 06" }, mostHeld.Select(c => c.Name));
+    }
+
+    [Fact]
+    public void TheMostHeldEndNeverTakesAChartTheHardmodeCutTook()
+    {
+        // Five of eight nobody holds, so the Hardmode cut opens to all five; the most-held end
+        // (two) must come from the three that are left, and never re-take a red one.
+        var folder = Enumerable.Range(0, 8)
+            .Select(i => Candidate($"Chart {i:00}", points: i < 5 ? 0 : i * 100, holders: i < 5 ? 0 : i))
+            .ToArray();
+
+        var hard = HardmodeCut.Qualifying(folder).Select(c => c.Name).ToHashSet();
+        var mostHeld = HardmodeCut.MostHeld(folder);
+
+        Assert.Equal(new[] { "Chart 07", "Chart 06" }, mostHeld.Select(c => c.Name));
+        Assert.DoesNotContain(mostHeld, c => hard.Contains(c.Name));
+    }
+
+    [Fact]
+    public void TheMostHeldEndNeverTakesAChartNobodyHolds()
+    {
+        // Seven of eight nobody holds: the Hardmode cut takes all seven, and one held chart is
+        // left for an end sized two. An unheld chart is the opposite fact, so the end stays short.
+        var folder = Enumerable.Range(0, 8)
+            .Select(i => Candidate($"Chart {i:00}", points: i < 7 ? 0 : 500, holders: i < 7 ? 0 : 9))
+            .ToArray();
+
+        var mostHeld = HardmodeCut.MostHeld(folder);
+
+        Assert.Equal("Chart 07", Assert.Single(mostHeld).Name);
+    }
+
+    [Fact]
+    public void TiedMostHeldChartsBreakOnScoringLevelAscendingThenName()
+    {
+        var folder = new[]
+        {
+            Candidate("Rare 1", points: 1, holders: 1), Candidate("Rare 2", points: 2, holders: 1),
+            Candidate("Rare 3", points: 3, holders: 1), Candidate("Rare 4", points: 4, holders: 1),
+            Candidate("Rare 5", points: 5, holders: 1), Candidate("Rare 6", points: 6, holders: 1),
+            Candidate("Hard staple", points: 900, holders: 30, scoringLevel: 21.8),
+            Candidate("B staple", points: 900, holders: 30, scoringLevel: 20.2),
+            Candidate("A staple", points: 900, holders: 30, scoringLevel: 20.2)
+        };
+
+        // Nine charts, so each end takes two: easier first, then alphabetical inside a tie.
+        Assert.Equal(new[] { "A staple", "B staple" }, HardmodeCut.MostHeld(folder).Select(c => c.Name));
+    }
+
     private static HardmodeCandidate Candidate(string name, double points, int holders,
         double? scoringLevel = 21.0, int level = 21)
     {

@@ -21,7 +21,7 @@ public sealed class SeasonRawSqlTests
     // scores.PhoenixRecord, [scores].[PhoenixRecord], [{Schema}].[PhoenixRecord] — never the C# entity
     // names, which carry no schema prefix.
     private static readonly Regex TableMention = new(
-        @"(?:scores\]?\.\[?|\]\.\[)(?:PhoenixRecord|PlayerStats|PlayerFolderLevel|HardmodeChart)\b",
+        @"(?:scores\]?\.\[?|\]\.\[)(?:PhoenixRecord|PlayerStats|PlayerFolderLevel|HardmodeChart|MostHeldChart)\b",
         RegexOptions.Compiled);
 
     private static readonly Regex SqlVerb = new(@"\b(?:SELECT|INSERT|UPDATE|MERGE)\b", RegexOptions.Compiled);

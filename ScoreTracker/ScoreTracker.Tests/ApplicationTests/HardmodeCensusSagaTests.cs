@@ -11,6 +11,7 @@ using ScoreTracker.ChartIntelligence.Application;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Domain;
+using ScoreTracker.ChartIntelligence.Infrastructure;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
@@ -54,7 +55,7 @@ public sealed class HardmodeCensusSagaTests
                 && written.All(w => w.FolderSize == 52 && w.FolderCut == 13)
                 && written.Take(2).All(w => w.Holders == 0 && w.Points == 0)
                 && written.Skip(2).All(w => w.Holders == 1)),
-            At, It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<IReadOnlyCollection<HardmodeChartRecord>>(), At, It.IsAny<CancellationToken>()), Times.Once);
         bus.Verify(b => b.Publish(
             It.Is<HardmodeChartsRebuiltEvent>(e =>
                 e.Mix == MixEnum.Phoenix2 && e.QualifyingCharts == 13 && e.PoolsCounted == 2),
@@ -78,7 +79,7 @@ public sealed class HardmodeCensusSagaTests
             // combined pool and the singles pool both count the same slot.
             w.First().Points == 0
             && w.Skip(1).First().Points == 2
-            && w.All(r2 => r2.Holders <= 1)), At, It.IsAny<CancellationToken>()), Times.Once);
+            && w.All(r2 => r2.Holders <= 1)), It.IsAny<IReadOnlyCollection<HardmodeChartRecord>>(), At, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -94,7 +95,7 @@ public sealed class HardmodeCensusSagaTests
         await saga.Consume(Context(new RebuildHardmodeChartsCommand(MixEnum.Phoenix2)));
 
         repository.Verify(r => r.Replace(MixEnum.Phoenix2, It.Is<IReadOnlyCollection<HardmodeChartRecord>>(w =>
-            w.All(x => x.Holders <= 1)), At, It.IsAny<CancellationToken>()), Times.Once);
+            w.All(x => x.Holders <= 1)), It.IsAny<IReadOnlyCollection<HardmodeChartRecord>>(), At, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -110,7 +111,7 @@ public sealed class HardmodeCensusSagaTests
 
         // No full pool anywhere, so there is no census to take and last week's list stands.
         repository.Verify(r => r.Replace(It.IsAny<MixEnum>(), It.IsAny<IReadOnlyCollection<HardmodeChartRecord>>(),
-            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<IReadOnlyCollection<HardmodeChartRecord>>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
         bus.Verify(b => b.Publish(It.IsAny<HardmodeChartsRebuiltEvent>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
@@ -132,7 +133,7 @@ public sealed class HardmodeCensusSagaTests
         bus.Verify(b => b.Publish(It.Is<HardmodeChartsRebuiltEvent>(e => e.PoolsCounted == 1),
             It.IsAny<CancellationToken>()), Times.Once);
         repository.Verify(r => r.Replace(MixEnum.Phoenix2, It.Is<IReadOnlyCollection<HardmodeChartRecord>>(w =>
-            w.Any(x => x.Holders == 1)), At, It.IsAny<CancellationToken>()), Times.Once);
+            w.Any(x => x.Holders == 1)), It.IsAny<IReadOnlyCollection<HardmodeChartRecord>>(), At, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -145,7 +146,7 @@ public sealed class HardmodeCensusSagaTests
         await saga.Consume(Context(new RebuildHardmodeChartsCommand(MixEnum.Phoenix2)));
 
         repository.Verify(r => r.Replace(It.IsAny<MixEnum>(), It.IsAny<IReadOnlyCollection<HardmodeChartRecord>>(),
-            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<IReadOnlyCollection<HardmodeChartRecord>>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -167,7 +168,7 @@ public sealed class HardmodeCensusSagaTests
         repository.Verify(r => r.Replace(MixEnum.Phoenix2,
             It.Is<IReadOnlyCollection<HardmodeChartRecord>>(rows =>
                 rows.Count > 0 && rows.All(x => x.Level >= 10)),
-            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<IReadOnlyCollection<HardmodeChartRecord>>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -185,7 +186,84 @@ public sealed class HardmodeCensusSagaTests
 
         repository.Verify(r => r.Replace(MixEnum.Phoenix2,
             It.Is<IReadOnlyCollection<HardmodeChartRecord>>(rows => rows.Count == 15),
-            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<IReadOnlyCollection<HardmodeChartRecord>>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task WritesTheMostHeldEndBesideTheListInTheSameReplace()
+    {
+        // The folder of the first test: 52 singles, one voter holding the last fifty. The list
+        // takes 13 (the two nobody holds lead it); the most-held end takes 13 of the 39 left,
+        // the voter's top slots first, and none of them red (D32).
+        var charts = Folder(52, ChartType.Single, 21);
+        var pool = FullPool(charts.Skip(2));
+        var repository = new Mock<IHardmodeChartRepository>();
+        IReadOnlyCollection<HardmodeChartRecord>? hard = null;
+        IReadOnlyCollection<HardmodeChartRecord>? mostHeld = null;
+        var saga = Build(charts, new[] { (Guid.NewGuid(), pool) }, repository, new Mock<IBus>());
+        repository.Setup(r => r.Replace(MixEnum.Phoenix2, It.IsAny<IReadOnlyCollection<HardmodeChartRecord>>(),
+                It.IsAny<IReadOnlyCollection<HardmodeChartRecord>>(), At, It.IsAny<CancellationToken>()))
+            .Callback((MixEnum _, IReadOnlyCollection<HardmodeChartRecord> h,
+                IReadOnlyCollection<HardmodeChartRecord> m, DateTimeOffset _, CancellationToken _) =>
+            {
+                hard = h;
+                mostHeld = m;
+            })
+            .Returns(Task.CompletedTask);
+
+        await saga.Consume(Context(new RebuildHardmodeChartsCommand(MixEnum.Phoenix2)));
+
+        Assert.NotNull(hard);
+        Assert.NotNull(mostHeld);
+        Assert.Equal(13, mostHeld!.Count);
+        Assert.All(mostHeld, m => Assert.True(m.Holders == 1 && m.FolderSize == 52 && m.FolderCut == 13));
+        Assert.Empty(mostHeld.Select(m => m.ChartId).Intersect(hard!.Select(h => h.ChartId)));
+        // The voter's top slots are the folder's most held. Scores inside one grade band price the
+        // same, so the band the end stops in splits on chart id rather than on pool order - hence
+        // the first fifteen of the pool rather than exactly the first thirteen.
+        var topSlots = pool.Take(15).Select(c => c.Id).ToHashSet();
+        Assert.All(mostHeld, m => Assert.Contains(m.ChartId, topSlots));
+    }
+
+    [Fact]
+    public async Task FoldersBelowFourteenAreNotOfferedButTheirChartsStillFillPools()
+    {
+        // A voter whose fifty is 45 S21s and five S13s. The floor is on the cut (D29): the S13s
+        // are never offered, but they still fill the last five slots, so the pool is a real
+        // fifty and votes. Filtering them out of the pools instead would leave 45 charts - a
+        // partial pool, no census at all - and would misplace every slot below them.
+        var high = Folder(60, ChartType.Single, 21);
+        var low = Folder(10, ChartType.Single, 13);
+        var repository = new Mock<IHardmodeChartRepository>();
+        var bus = new Mock<IBus>();
+        var saga = Build(high.Concat(low).ToArray(),
+            new[] { (Guid.NewGuid(), high.Take(45).Concat(low).ToArray()) }, repository, bus);
+
+        await saga.Consume(Context(new RebuildHardmodeChartsCommand(MixEnum.Phoenix2)));
+
+        repository.Verify(r => r.Replace(MixEnum.Phoenix2,
+            It.Is<IReadOnlyCollection<HardmodeChartRecord>>(rows =>
+                rows.Count > 0 && rows.All(x => x.Level == 21)),
+            It.Is<IReadOnlyCollection<HardmodeChartRecord>>(rows => rows.All(x => x.Level == 21)),
+            At, It.IsAny<CancellationToken>()), Times.Once);
+        bus.Verify(b => b.Publish(It.Is<HardmodeChartsRebuiltEvent>(e => e.PoolsCounted == 2),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task EvictsBothCachedListsBeforeAnnouncing()
+    {
+        var charts = Folder(52, ChartType.Single, 21);
+        var cache = new MemoryCache(new MemoryCacheOptions());
+        cache.Set(HardmodeChartReader.CacheKey(MixEnum.Phoenix2), "last week", TimeSpan.FromHours(1));
+        cache.Set(HardmodeChartReader.MostHeldCacheKey(MixEnum.Phoenix2), "last week", TimeSpan.FromHours(1));
+        var saga = Build(charts, new[] { (Guid.NewGuid(), FullPool(charts.Skip(2))) },
+            new Mock<IHardmodeChartRepository>(), new Mock<IBus>(), cache: cache);
+
+        await saga.Consume(Context(new RebuildHardmodeChartsCommand(MixEnum.Phoenix2)));
+
+        Assert.False(cache.TryGetValue(HardmodeChartReader.CacheKey(MixEnum.Phoenix2), out _));
+        Assert.False(cache.TryGetValue(HardmodeChartReader.MostHeldCacheKey(MixEnum.Phoenix2), out _));
     }
 
     private static Chart[] Folder(int count, ChartType type, int level)
@@ -204,7 +282,7 @@ public sealed class HardmodeCensusSagaTests
 
     private static HardmodeCensusSaga Build(IReadOnlyCollection<Chart> charts,
         IReadOnlyCollection<(Guid UserId, Chart[] Pool)> pools, Mock<IHardmodeChartRepository> repository,
-        Mock<IBus> bus, IReadOnlyList<OfficialPoolSlots>? official = null)
+        Mock<IBus> bus, IReadOnlyList<OfficialPoolSlots>? official = null, IMemoryCache? cache = null)
     {
         var chartRepository = new Mock<IChartRepository>();
         chartRepository.Setup(r => r.GetCharts(MixEnum.Phoenix2, null, null, null, It.IsAny<CancellationToken>()))
@@ -230,11 +308,11 @@ public sealed class HardmodeCensusSagaTests
             .ReturnsAsync(new Dictionary<Guid, double>());
 
         repository.Setup(r => r.Replace(It.IsAny<MixEnum>(), It.IsAny<IReadOnlyCollection<HardmodeChartRecord>>(),
-            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+            It.IsAny<IReadOnlyCollection<HardmodeChartRecord>>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         return new HardmodeCensusSaga(repository.Object, scores.Object, officialPools.Object,
             chartRepository.Object, scoringLevels.Object, FakeDateTime.At(At).Object, bus.Object,
-            new MemoryCache(new MemoryCacheOptions()), NullLogger<HardmodeCensusSaga>.Instance);
+            cache ?? new MemoryCache(new MemoryCacheOptions()), NullLogger<HardmodeCensusSaga>.Instance);
     }
 
     private static ConsumeContext<RebuildHardmodeChartsCommand> Context(RebuildHardmodeChartsCommand message)
