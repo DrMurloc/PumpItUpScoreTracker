@@ -1,7 +1,8 @@
 ﻿# Hardmode
 
 A second PUMBILITY board, priced by the same formula over a different chart set: the rarest slice of
-every folder — the charts almost nobody holds in a top 50. Phoenix 2 only. Lives as a fourth tab in the
+every folder from level 14 up — the charts almost nobody holds in a top 50. Phoenix 2 only, and opt-in
+(D30): the board and the tab are there for everyone, the announcements only for players who turn it on. Lives as a fourth tab in the
 PUMBILITY section (`/Pumbility/Hardmode`) while we find out whether the community bites.
 
 The point is not a second skill ranking. It is a **reason to go play the charts nobody plays**, and the
@@ -11,7 +12,8 @@ board is shaped so that going and playing them is what moves you up.
 
 ## 1. What qualifies
 
-Once a weekend, every folder (chart type × level) on Phoenix 2 gives up its rarest charts.
+Once a weekend, every folder (chart type × level) from level 14 up on Phoenix 2 gives up its rarest
+charts (D29).
 
 A chart's rarity is a **weighted hold count**: for every player with a full 50-chart pool, a chart scores
 `51 − slot` where `slot` is its place in that pool — 50 points at slot 1, 1 point at slot 50. A chart
@@ -60,7 +62,14 @@ were taken on a level-10-floored universe, which is now what ships.
 The census below level 20 is decided by a small group and says so on the
 page — see §6.
 
-On the measured 2026-09-06 population the list comes out at **1,211 charts**, 955 of them below level 20.
+On the measured 2026-09-06 population the list came out at **1,211 charts**, 955 of them below level 20.
+
+**Level 14 and up since D29.** D4's every-level rule was measured again on 2026-09-16 and cut back: below
+14 the list records which charts nobody has played rather than which ones are hard, so the census stops
+offering those folders. The floor applies to the cut and never to the pools — a level-12 chart still sits
+in the fifty of a player who holds one and still pushes the charts below it down a slot, because that is
+the pool the player actually has. On the 2026-09-15 population the list is **810 charts**, 554 of them
+between 14 and 19.
 
 ## 2. Who votes
 
@@ -75,8 +84,8 @@ A partial pool does not vote (D6): its slot 1 would carry 50 points off three ch
 can read **"held by nobody"** on a page where the viewer is holding it — the caption's tooltip names the
 population.
 
-⚠ The mirrored chart boards only exist at level 20 and up, so a board player's reconstructed pool is
-level-20-plus by construction. On Phoenix 2 they are the large half of the electorate, which is one of the
+⚠ The mirrored chart boards do not exist between levels 10 and 19 (a handful exist below 10, which price
+zero), so a board player's reconstructed pool is level-20-plus by construction. On Phoenix 2 they are the large half of the electorate, which is one of the
 two reasons the sub-20 census is thin.
 
 ## 3. The number
@@ -168,7 +177,8 @@ A Phoenix 2 chart is worth at most `base × 1.52`, and a player can only hold it
 chart is worth less than that. That ceiling collapses the electorate going down: **1,412** pool holders
 could hold an S22, **318** an S17, **ten** an S10.
 
-So every folder at level 17 and below carries a warning in the qualifying-charts list (D11): *few players
+So every folder at level 17 and below — which since D29 means 14 to 17 — carries a warning in the
+qualifying-charts list (D11): *few players
 hold a chart this low in a top 50, so this folder is decided by a small group — expect the list to change
 substantially week to week as players join or their PUMBILITY climbs.* The threshold is the level, not a
 computed electorate, because a fixed number is what a reader can check against the folder they are
@@ -201,12 +211,12 @@ ports carry both directions rather than adding project references (D13).
 
 | Layer | What |
 |---|---|
-| **Domain** | `IOfficialPoolReader` (board pools, implemented in OfficialMirror) · `IHardmodeChartReader` (the week's list, implemented in ChartIntelligence) · `HardmodeChartsRebuiltEvent` — in `Domain/Events/` because its consumers live in verticals that cannot reference the publisher |
-| **ChartIntelligence** | `HardmodeCut` (the rule) · `HardmodeCensusSaga` (the weekly sweep) · `HardmodeChart` table · `RebuildHardmodeChartsCommand` / `GetHardmodeChartsQuery` |
-| **PlayerProgress** | `HardmodeSaga` (site ratings, the weekly sweep AND the per-import reprice) · six `PlayerStats` columns · `GetHardmodePageQuery` / `GetHardmodeBoardQuery` — render-time reads of your own pool and the board |
+| **Domain** | `IOfficialPoolReader` (board pools, implemented in OfficialMirror) · `IHardmodeChartReader` (the week's list and, since D32, its most-held end; implemented in ChartIntelligence) · `HardmodeChartsRebuiltEvent` — in `Domain/Events/` because its consumers live in verticals that cannot reference the publisher |
+| **ChartIntelligence** | `HardmodeCut` (the rule, the level-14 floor of D29 and the most-held pick of D32) · `HardmodeCensusSaga` (the weekly sweep) · `HardmodeChart` and `MostHeldChart` tables, rewritten in one save · `RebuildHardmodeChartsCommand` / `GetHardmodeChartsQuery` |
+| **PlayerProgress** | `HardmodeSaga` (site ratings, the weekly sweep AND the per-import reprice) · six `PlayerStats` columns · `GetHardmodePageQuery` / `GetHardmodeBoardQuery` / `GetHardmodeStandingQuery` — render-time reads of your own pool, the board and your place on it · `HardmodeOptIn` (the setting, D30), `HardmodeVisibility` (what "off" strips, D30) and `HardmodeLadders` (rungs crossed and the level crossing, D33) in Contracts · the feed's write-time gate |
 | **OfficialMirror** | `OfficialPoolReader` · `OfficialHardmodeRating` table + its writer |
-| **Communities** | the Discord session card's Hardmode stats lines and per-row mark (§10) |
-| **Web** | `/Pumbility/Hardmode` · `HardmodeBoardSection` · `HardmodeQualifyingSection` · the gold card state · the `/Admin` backfill button · the `--hard-mark` token and the bubble glow · the session, feed and Suggested-Charts surfaces of §10 |
+| **Communities** | the Discord session card's Hardmode stats lines, per-row mark and title-progress lines (§10), all behind the player's switch |
+| **Web** | `/Pumbility/Hardmode` · `HardmodeBoardSection` · `HardmodeQualifyingSection` · `HardmodeOptInRow` · the gold card state · the `/Admin` backfill button · the `--hard-mark` and `--easy-mark` tokens and `DifficultyGlow` · `HardmodeBanner` on the Sessions page · the session, feed and Suggested-Charts surfaces of §10 |
 
 Everything except the list and the ratings is computed at render time from the viewer's own records
 against the week's frozen list, so your number moves with your imports while the list holds until Sunday.
@@ -276,7 +286,8 @@ by level.
 objection is that a list where every chart qualifies is a wall of glow. That is the intent: *"That
 page should feel like a wall of boss charts"* (owner, 2026-09-14). One rule, no scoped exceptions, no
 pass-through parameter on `DifficultyBubble`. The glow defaults **on**, signed-out included, and the
-account toggle lives on `/Account` → Profile.
+account toggle lives on `/Account` → Profile. D32 makes it the difficulty glow — its own switch, and a
+green end — without changing either of those.
 
 **D25 — the private-account note under the board is removed, and its plumbing with it.** D17's
 *filtering* stands unchanged — a private account is on its own board and nobody else's, and the
@@ -315,7 +326,88 @@ cost is invisible and total, because the repository filters reads on the exact v
 regenerates old rows, so a needless bump empties the Community Highlights widget and the Rivals
 feed for every player until each next imports.
 
+**D29 — Hardmode starts at level 14.** Below 14 the list measures who has not played a chart, not how
+hard it is (owner, 2026-09-16, on a measurement taken the same day). For each folder the population was
+narrowed to the players whose top 50 a chart at that level could ever enter — their fiftieth chart worth
+less than a perfect score there — and every chart on the folder's list was asked how many of those
+players have played it at all, failed attempts included:
+
+| Folders | Listed charts played by nobody who could hold them | Listed charts with 3+ such plays |
+|---|---|---|
+| Singles 10–12, doubles 10–11 | 52–87% | none — only 8–30 site accounts could hold a chart that low |
+| Singles 13, doubles 12–13 | 42–59% | 2–11% |
+| 14–19 | singles 17–33%, doubles 24–46% (doubles 18–19 thinnest) | the played ones are genuinely hard: those players score 8,500–18,000 below their own folder average on them |
+| 20+ (official-board players counted) | none | all of them, from 913–1,468 players per folder |
+
+The floor applies to the cut, never to the pools (§1). On the 2026-09-15 population it takes the list
+from 1,208 charts to 810, the board's top 25 pools from an average chart level of 17.0 to 19.5, and the
+board's rank correlation with real PUMBILITY from 0.27 to 0.48. §6's disclaimer keeps its threshold, so
+it now covers 14–17.
+
+**A top-100 census below level 20 was measured and rejected in the same round.** It widens who votes,
+but once charts that sit deeper in a pool count as held, what is left to fill the cut is the charts
+nobody has played: S18 went from 32% to 54% unplayed, D18 from 46% to 75%. It also dropped played hard
+charts, such as Mr. Larpus S15 — 33 players, who score 37,412 below their own S15 average. The floor
+bought nearly the same board improvement without that cost.
+
+**D30 — Hardmode is opt-in, and switching it off hides the announcements, not the facts** (owner,
+2026-09-16: it *"reduces UI bloat unless they're opted in"*). The switch is the UiSetting
+`Universal__HardmodeOptIn`, absent meaning off, so every account starts off and the default costs no
+row. Verticals read it through `GetUserUiSettingsQuery`, which is uncached, so a switch flipped before an
+import applies to that import. What it governs, and from when:
+
+- **Render time, so it follows the switch backwards** — the session page: milestone strips, `💀` badges,
+  gain chips, the Hardmode ladders and their pointer, the history-card tag, and a chart's place in
+  Highlights when the skull was its only reason. Turning it on fills Hardmode into sessions already there.
+- **Announce time, so it follows the switch from then on** — the Discord session card and both
+  significant-win feeds. A card or a feed row that already went out stays as it went, both ways.
+- **Never** — the census, the ratings, the board (every account stays ranked: a board of opted-in players
+  alone would launch empty), the milestones and flags the capture step writes, the Hardmode tab, and the
+  Suggested Charts filter. The facts are written for everyone, which is what lets the session page follow
+  the switch backwards.
+
+The switch belongs to the player whose scores they are: a visitor to your session page sees what your
+switch says. One rule strips a batch (`HardmodeVisibility`), so the session page and the Discord card
+cannot disagree about what "off" removes. The card strips **before** it picks its highlighted rows,
+because any flag at all promotes a score to an art row there — a skull-only score would otherwise still
+take one. The feeds gate at write time rather than read time, because classification keeps only an
+event's top wins and a Hardmode win left in would push out a real one.
+
+**D31 — the Sessions page advertises Hardmode, once.** A callout in D19's red at the top of your own
+Sessions page, on Phoenix 2, while Hardmode is off: what Hardmode is, your own standing when you have one
+(your Hardmode number, how much of a fifty you hold, your place on the board) or the week's list size and
+the board's field when you have none, and a button to the Hardmode tab, where the switch sits under the
+number. Its × hides it for good (`Sessions__HardmodeBannerDismissed`), turning Hardmode on retires it,
+and a visitor never sees it.
+
+**D32 — the bubble glow is the difficulty glow, and it has a green end.** The glow is no longer
+Hardmode's: it has its own switch, **Show difficulty glow**, which keeps D24's default (on, signed-out
+visitors included) and the stored opt-out key `Universal__HideHardmodeMark`, so a player who turned the
+Hardmode mark off keeps the glow off. Red stays the week's Hardmode list. Green is the other end of the
+same Sunday count — each folder's most-held charts, `min(25, ⌊folder ÷ 4⌋)` of them, most weighted
+points first, never a chart the red cut took and never one nobody holds — stored beside the list in
+`scores.MostHeldChart`, same season shape, rewritten in the same save. Both ends start at 14 (D29). The
+green is **mint**, `--easy-mark` (owner, 2026-09-16), mix-invariant like `--hard-mark`, and deliberately
+not Phoenix 2's own acid green: every glow renders on Phoenix 2, where the buttons, the links and the
+emerald rarity step are already green. The bubble's tooltip says which end it is.
+
+**D33 — Hardmode title progress rides the Discord card, the way PUMBILITY's does.** For a player with
+Hardmode on, the card mirrors PUMBILITY's three kinds of progress line, all derived from the Hardmode
+milestones the capture step already writes — no new milestone kind, no storage, no schema bump:
+
+- the 🆙 level crossing on the combined Hardmode line, suppressed when the same batch crossed into a new
+  gem, which that rung's own line already says (`PumbilityLevelChange`'s rule);
+- one line per ladder rung each pool crossed, lowest first — `💀 **[P.B] BRONZE** reached on Hardmode` —
+  listed the way title completions are;
+- one progress line per pool that moved a whole percent, using the percentages the session page's
+  Hardmode ladders draw.
+
+`HardmodeLadders` holds the rung rule, and the feed's rung row reads it too, so the card and the feeds
+cannot disagree about which rung a batch crossed.
+
 ### What each surface renders
+
+Every row renders only for a player with Hardmode on (D30).
 
 | Surface | What Hardmode adds |
 |---|---|
@@ -323,8 +415,11 @@ feed for every player until each next imports.
 | Session — score badges | `💀 #N` beside the crown, and the Hardmode gain chip beside the PUMBILITY one on the score line |
 | Session — title bars | Its own "Hardmode ladders" group plus the pointer (D22) |
 | Session — history cards | One headline tag, **last** in the two-slot priority order, so it only claims a slot on a session where nothing bigger happened |
-| Discord — stats block | One `💀` line per pool that moved; `💀` joins `👑` on the per-score rows |
+| Discord — stats block | One `💀` line per pool that moved, the combined one carrying its 🆙 level crossing (D33); `💀` joins `👑` on the per-score rows |
+| Discord — achievements block | One `💀` line per rung reached, and one `💀` progress line per pool (D33) |
 | Feeds (widget + rivals) | Two win kinds — a board placement, and a ladder rung crossed |
+
+The Sessions-page banner (D31) is the one Hardmode surface that renders only while Hardmode is **off**.
 
 ## 9. Known limits
 
@@ -332,7 +427,11 @@ feed for every player until each next imports.
 - **The day-one board rewards breadth over difficulty.** With 955 sub-20 charts against 256 at level 20+,
   fifty slots are far easier to fill with level-14 charts, so accounts averaging level 14 outrank accounts
   averaging level 21 until the strong pools fill. Accepted (owner, 2026-09-12): it self-corrects, and the
-  alternative was a board with one player on it.
+  alternative was a board with one player on it. D29's floor softened it (554 charts at 14–19 against the
+  same 256; the top 25 pools average level 19.5 rather than 17.0) without removing it.
+- **14–19 is decided with noise.** Measured for D29: 17–33% of each singles list and 24–46% of each
+  doubles list in that range has not been played by anyone who could hold it. The listed charts that
+  have been played are genuinely hard; the rest are there because nobody went.
 - **A partial pool's rails read empty.** By design — see §5.
 - **It is seeded across the site now** (§10): the session page, the Discord card, both highlight feeds,
   Suggested Charts and every difficulty bubble read the list through `IHardmodeChartReader`, which is
