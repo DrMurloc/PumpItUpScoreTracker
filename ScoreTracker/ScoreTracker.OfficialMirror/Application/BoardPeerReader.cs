@@ -339,6 +339,15 @@ internal sealed class BoardPeerReader
         return rows.Select(r => new BoardScoreReading(r.PlayerId, r.ChartId, r.Level, r.Score)).ToArray();
     }
 
+    /// <summary>Every chart a chart board has been mirrored for on the mix, whichever sweep first saw it.</summary>
+    public async Task<IReadOnlySet<Guid>> GetChartsWithBoards(MixEnum mix, CancellationToken cancellationToken)
+    {
+        return (await _snapshots.GetBoards(mix, cancellationToken))
+            .Where(b => b.LeaderboardType == LeaderboardTypes.Chart && b.ChartId != null)
+            .Select(b => b.ChartId!.Value)
+            .ToHashSet();
+    }
+
     public async Task<BoardScoreReadings> GetBoardScoresOn(MixEnum mix,
         IReadOnlyCollection<int> boardPlayerIds, IReadOnlyCollection<Guid> chartIds,
         CancellationToken cancellationToken)

@@ -332,6 +332,24 @@ public sealed class BoardPeerReaderTests
     }
 
     [Fact]
+    public async Task TheChartsWithBoardsAreEveryChartBoardAndNoRatingBoard()
+    {
+        var ranked = Guid.NewGuid();
+        var alsoRanked = Guid.NewGuid();
+        _snapshots.Setup(s => s.GetBoards(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new BoardDimension(1, LeaderboardTypes.Rating, PumbilityBoards.Combined, null, null, null),
+                new BoardDimension(2, LeaderboardTypes.Chart, "Chart S21", ranked, "Single", 21),
+                new BoardDimension(3, LeaderboardTypes.Chart, "Chart D23", alsoRanked, "Double", 23)
+            });
+
+        var charts = await Subject.GetChartsWithBoards(MixEnum.Phoenix2, CancellationToken.None);
+
+        Assert.Equal(new[] { ranked, alsoRanked }.ToHashSet(), charts);
+    }
+
+    [Fact]
     public async Task AMixThatHasNeverBeenSweptHasNoAnswerAtAll()
     {
         _snapshots.Setup(s => s.GetLatestSealed(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))

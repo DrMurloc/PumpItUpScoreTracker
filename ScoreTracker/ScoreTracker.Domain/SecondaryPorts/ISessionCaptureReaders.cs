@@ -110,6 +110,13 @@ namespace ScoreTracker.Domain.SecondaryPorts
         Task<BoardScoreReadings> GetBoardScoresOn(MixEnum mix,
             IReadOnlyCollection<int> boardPlayerIds, IReadOnlyCollection<Guid> chartIds,
             CancellationToken cancellationToken);
+
+        /// <summary>
+        ///     The charts piugame publishes a ranking for on a mix — the only charts a board player
+        ///     can ever be seen holding, since their scores come from those rankings alone. A count
+        ///     of how many board players hold a chart means nothing for a chart outside this set.
+        /// </summary>
+        Task<IReadOnlySet<Guid>> GetChartsWithBoards(MixEnum mix, CancellationToken cancellationToken);
     }
 
     /// <summary>
