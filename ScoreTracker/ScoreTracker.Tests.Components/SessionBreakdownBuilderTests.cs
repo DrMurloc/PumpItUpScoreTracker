@@ -10,6 +10,7 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Rivals.Contracts.Queries;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts;
@@ -317,6 +318,57 @@ public sealed class SessionBreakdownBuilderTests
         Assert.All(model.Hero.Scores, s => Assert.Null(s.Detail));
     }
 
+    [Fact]
+    public async Task WithHardmodeOffTheOwnersSessionShowsNoHardmode()
+    {
+        // Every account starts off (hardmode-leaderboard.md D30). The facts were captured all the
+        // same, so the page strips them at render time: no skull flag, no Hardmode rank or gain, no
+        // Hardmode strips, ladders or history tag - and a skull-only score is not a highlight.
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[] { Row(chart.Id, Start, 980993, false, ScoreEventClassification.NewPass) };
+
+        var (_, model) = await BuildWith(chart, rows, mix: MixEnum.Phoenix2, highlights: HardmodeHighlights(chart),
+            milestones: HardmodeMilestones());
+
+        var score = Assert.Single(model.Hero!.Scores);
+        Assert.False(score.IsFlagged);
+        Assert.Null(score.Detail!.HardmodeRank);
+        Assert.Null(score.Detail.HardmodeGain);
+        Assert.DoesNotContain(model.Hero.Milestones, m => HardmodeVisibility.IsHardmode(m.Kind));
+        Assert.Empty(model.Hero.HardmodeBars!);
+        Assert.DoesNotContain(model.History.Single().Headline, m => HardmodeVisibility.IsHardmode(m.Kind));
+    }
+
+    [Fact]
+    public async Task WithHardmodeOnTheSameSessionShowsItAll()
+    {
+        // The switch works backwards: the same captured rows, and the session fills back in.
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[] { Row(chart.Id, Start, 980993, false, ScoreEventClassification.NewPass) };
+
+        var (_, model) = await BuildWith(chart, rows, mix: MixEnum.Phoenix2, highlights: HardmodeHighlights(chart),
+            milestones: HardmodeMilestones(), hardmodeOn: true);
+
+        var score = Assert.Single(model.Hero!.Scores);
+        Assert.True(score.Flags.HasFlag(HighlightFlags.HardmodeTop50));
+        Assert.Equal(1, score.Detail!.HardmodeRank);
+        Assert.Contains(model.Hero.Milestones, m => m.Kind == MilestoneKind.HardmodePumbilityGain);
+        Assert.NotEmpty(model.Hero.HardmodeBars!);
+        Assert.Contains(model.History.Single().Headline, m => m.Kind == MilestoneKind.HardmodePumbilityGain);
+    }
+
+    private static ScoreHighlightRecord[] HardmodeHighlights(Chart chart) => new[]
+    {
+        new ScoreHighlightRecord(chart.Id, Session, Start, HighlightFlags.HardmodeTop50, 21, 21.0,
+            new HighlightDetail(HardmodeRank: 1, HardmodeGain: 354.24))
+    };
+
+    private static PlayerMilestoneRecord[] HardmodeMilestones() => new[]
+    {
+        new PlayerMilestoneRecord(MilestoneKind.HardmodePumbilityGain, Session, Start, 3339.22, 11131.72, null,
+            "25|235")
+    };
+
     private static async Task<SessionsPageModel> Build(Chart chart,
         RecentSessionsPage.ScoreEventRecord[] rows,
         MixEnum mix = MixEnum.Phoenix, UserPhoenixScore[]? phoenix1 = null,
@@ -330,9 +382,17 @@ public sealed class SessionBreakdownBuilderTests
         RecentSessionsPage.ScoreEventRecord[] rows,
         MixEnum mix = MixEnum.Phoenix, UserPhoenixScore[]? phoenix1 = null,
         bool captured = true, int? sessionEndedMinutesAgo = null, ScoreHighlightRecord[]? highlights = null,
-        IReadOnlyDictionary<ScoreOnChart, PeerStanding>? standings = null)
+        IReadOnlyDictionary<ScoreOnChart, PeerStanding>? standings = null,
+        PlayerMilestoneRecord[]? milestones = null, bool hardmodeOn = false)
     {
         var mediator = new Mock<IMediator>();
+        if (hardmodeOn)
+            mediator.Setup(m => m.Send(It.Is<GetUserUiSettingsQuery>(q => q.UserId == User),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    [HardmodeOptIn.SettingKey] = "true"
+                });
         var group = new RecentSessionsPage.SessionGroup(Session, null, mix, "officialImport",
             rows.Min(r => r.OccurredAt), rows.Max(r => r.OccurredAt), rows);
 
@@ -362,7 +422,7 @@ public sealed class SessionBreakdownBuilderTests
                 }
                 : Array.Empty<ScoreHighlightRecord>()));
         mediator.Setup(m => m.Send(It.IsAny<GetPlayerMilestonesForSessionsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<PlayerMilestoneRecord>());
+            .ReturnsAsync(milestones ?? Array.Empty<PlayerMilestoneRecord>());
         mediator.Setup(m => m.Send(It.IsAny<GetPeerStandingsForScoresQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(standings ?? new Dictionary<ScoreOnChart, PeerStanding>());
         mediator.Setup(m => m.Send(It.IsAny<GetPlayerStatsQuery>(), It.IsAny<CancellationToken>()))
