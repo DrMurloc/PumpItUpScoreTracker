@@ -195,6 +195,51 @@ public sealed class ChartPumbilityPresenceTests : ComponentTestBase
         Assert.Empty(rows[3].QuerySelectorAll(".presence-bar"));
     }
 
+    [Fact]
+    public void AFadedTitleNeverSetsTheShareScaleWhileASolidTitleHoldsTheChart()
+    {
+        // DIAMOND LV.2 is faded at 90%; the solid titles top out at 40%, so the panel stays at half scale
+        // and the faded bar stops at its top.
+        var cut = Render(Presence(1), true);
+
+        Assert.Equal(new[] { "25%", "50%" }, ShareTicks(cut));
+        Assert.Equal("height:100%", cut.FindAll("[data-testid=presence-col]")[2]
+            .QuerySelector(".presence-bar")!.GetAttribute("style"));
+    }
+
+    [Fact]
+    public void ASolidTitlePastFortyFivePercentOpensTheFullShareScale()
+    {
+        var presence = Presence(1);
+
+        var cut = Render(presence with
+        {
+            Columns = presence.Columns.Select((c, i) => i == 1 ? c with { Holders = 20 } : c).ToArray()
+        }, true);
+
+        Assert.Equal(new[] { "50%", "100%" }, ShareTicks(cut));
+    }
+
+    [Fact]
+    public void WhenOnlyFadedTitlesHoldTheChartTheirShareSetsTheScale()
+    {
+        var presence = Presence(2);
+
+        var cut = Render(presence with
+        {
+            Columns = presence.Columns
+                .Select(c => c.IsThin ? c : c with { Holders = 0, Spots = null, Dots = Array.Empty<double>() })
+                .ToArray()
+        }, true);
+
+        Assert.Equal(new[] { "50%", "100%" }, ShareTicks(cut));
+    }
+
+    private static string[] ShareTicks(IRenderedComponent<ChartPumbilityPresence> cut)
+    {
+        return cut.FindAll(".presence-gutter span").Take(2).Select(s => s.TextContent).ToArray();
+    }
+
     private IRenderedComponent<ChartPumbilityPresence> Render(ChartPumbilityPresenceRecord? presence,
         bool titlesAcross = false)
     {

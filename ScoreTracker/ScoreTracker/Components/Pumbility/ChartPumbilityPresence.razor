@@ -293,10 +293,15 @@
         return (50 - spot) / 49 * 100;
     }
 
-    /// <summary>The share panel reads half scale unless a title passes 45%, so a typical peak is not a sliver.</summary>
+    /// <summary>
+    ///     The share panel reads half scale unless a title passes 45%, so a typical peak is not a sliver. A faded
+    ///     title only sets the scale when no solid title holds the chart: a title of two players reads 50% on one
+    ///     holder and would halve every other bar, so while a solid title holds it a faded bar stops at the top.
+    /// </summary>
     private static double ShareScale(ChartPumbilityPresenceRecord presence)
     {
-        return presence.Columns.Any(c => c.Share > .45) ? 1 : .5;
+        var solid = presence.Columns.Where(c => !c.IsThin && c.Share > 0).ToArray();
+        return (solid.Length > 0 ? solid : presence.Columns).Any(c => c.Share > .45) ? 1 : .5;
     }
 
     private static double ShareFraction(ChartPumbilityPresenceRecord presence, double share)
