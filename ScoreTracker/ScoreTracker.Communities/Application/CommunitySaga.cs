@@ -9,7 +9,6 @@ using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Identity.Contracts.Events;
-using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
@@ -183,7 +182,8 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         // hardmode-leaderboard.md D30), so the batch is stripped before anything below reads it:
         // every flagged score is promoted to an art row, and a skull-only score would otherwise
         // still take one. A batch with no Hardmode in it never asks.
-        if (HardmodeVisibility.Carries(e) && !await HardmodeIsOn(e.UserId, context.CancellationToken))
+        if (HardmodeVisibility.Carries(e) &&
+            !await HardmodeOptIn.Read(_mediator, e.UserId, context.CancellationToken))
             e = HardmodeVisibility.Strip(e);
 
         var bests = (await _scores.GetBestScores(e.Mix, e.UserId, context.CancellationToken))
@@ -315,23 +315,6 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             daily, dailyChartId, reclears, bigGain?.ChartId);
         await SendRichToCommunityDiscords(user.Id,
             culture => new[] { BuildSnapshotCard(inputs, folderStats, culture) }, context.CancellationToken);
-    }
-
-    /// <summary>
-    ///     The player's Hardmode switch. A failed read counts as off: the switch decides whether
-    ///     Hardmode is announced at all, and announcing it for a player who never asked is the
-    ///     worse way for a transient failure to go.
-    /// </summary>
-    private async Task<bool> HardmodeIsOn(Guid userId, CancellationToken cancellationToken)
-    {
-        try
-        {
-            return HardmodeOptIn.IsOn(await _mediator.Send(new GetUserUiSettingsQuery(userId), cancellationToken));
-        }
-        catch (Exception) when (!cancellationToken.IsCancellationRequested)
-        {
-            return false;
-        }
     }
 
     // A new pass on a chart the player already cleared (non-broken) in another mix is a

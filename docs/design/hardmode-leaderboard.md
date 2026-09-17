@@ -354,7 +354,9 @@ bought nearly the same board improvement without that cost.
 2026-09-16: it *"reduces UI bloat unless they're opted in"*). The switch is the UiSetting
 `Universal__HardmodeOptIn`, absent meaning off, so every account starts off and the default costs no
 row. Verticals read it through `GetUserUiSettingsQuery`, which is uncached, so a switch flipped before an
-import applies to that import. What it governs, and from when:
+import applies to that import. Every surface reads it through one helper (`HardmodeOptIn.Read`), where a
+failed read counts as off: the switch only decides whether Hardmode rides on top, so a transient failure
+costs the Hardmode lines and never the card, the feed row or the page. What it governs, and from when:
 
 - **Render time, so it follows the switch backwards** — the session page: milestone strips, `💀` badges,
   gain chips, the Hardmode ladders and their pointer, the history-card tag, and a chart's place in

@@ -131,6 +131,28 @@ public sealed class PlayerHighlightSagaTests
     }
 
     [Fact]
+    public async Task AFailedSettingsReadDropsOnlyTheHardmodeWins()
+    {
+        // The switch decides whether Hardmode is announced, not whether the batch is: a transient
+        // failure reading it costs the Hardmode rung and keeps the rare PG beside it.
+        var chart = new ChartBuilder().WithLevel(24).WithType(ChartType.Double).WithSongName("Bee").Build();
+        SetupPopulation(chart, pgHolders: 5, activePlayers: 1000);
+        var userId = Guid.NewGuid();
+        var capturer = Capturer();
+        _mediator.Setup(m => m.Send(It.IsAny<GetUserUiSettingsQuery>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("settings unavailable"));
+        var e = ScoreHighlightsCapturedEvent.Create(When, userId, MixEnum.Phoenix2, sessionId: null,
+            PgEvent(userId, chart.Id).Changes, RungEvent(userId).Milestones);
+
+        await capturer.Capture(e, CancellationToken.None);
+
+        _highlights.Verify(h => h.Add(e.EventId, userId, MixEnum.Phoenix2, When, null,
+            It.Is<IReadOnlyList<SignificantWin>>(w => w.Any(x => x.Kind == WinKind.NotablePg)
+                                                      && w.All(x => x.Kind != WinKind.HardmodeTitle)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task ABatchWithNoHardmodeInItNeverAsksForTheSetting()
     {
         var chart = new ChartBuilder().WithLevel(24).WithType(ChartType.Double).WithSongName("Bee").Build();

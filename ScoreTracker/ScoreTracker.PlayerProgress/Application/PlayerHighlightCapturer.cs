@@ -2,7 +2,6 @@ using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.PlayerProgress.Domain;
@@ -59,8 +58,7 @@ internal sealed class PlayerHighlightCapturer : IPlayerHighlightCapturer
         // decided here, at write time, rather than when a feed reads: classification keeps an
         // event's top wins only, so a Hardmode win left in would push out a real one for good.
         // Only a batch that carries Hardmode facts costs a settings read.
-        if (HardmodeVisibility.Carries(e) && !HardmodeOptIn.IsOn(
-                await _mediator.Send(new GetUserUiSettingsQuery(e.UserId), cancellationToken)))
+        if (HardmodeVisibility.Carries(e) && !await HardmodeOptIn.Read(_mediator, e.UserId, cancellationToken))
             e = HardmodeVisibility.Strip(e);
 
         var charts = (await _charts.GetCharts(e.Mix,

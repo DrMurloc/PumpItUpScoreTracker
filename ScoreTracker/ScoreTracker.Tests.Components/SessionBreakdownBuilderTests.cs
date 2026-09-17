@@ -357,6 +357,22 @@ public sealed class SessionBreakdownBuilderTests
         Assert.Contains(model.History.Single().Headline, m => m.Kind == MilestoneKind.HardmodePumbilityGain);
     }
 
+    [Fact]
+    public async Task AFailedSettingsReadStillRendersTheSessionWithHardmodeOff()
+    {
+        // The switch only decides whether Hardmode rides on top: a transient failure reading it
+        // costs the Hardmode, never the page.
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[] { Row(chart.Id, Start, 980993, false, ScoreEventClassification.NewPass) };
+
+        var (_, model) = await BuildWith(chart, rows, mix: MixEnum.Phoenix2, highlights: HardmodeHighlights(chart),
+            milestones: HardmodeMilestones(), settingsFail: true);
+
+        var score = Assert.Single(model.Hero!.Scores);
+        Assert.False(score.IsFlagged);
+        Assert.DoesNotContain(model.Hero.Milestones, m => HardmodeVisibility.IsHardmode(m.Kind));
+    }
+
     private static ScoreHighlightRecord[] HardmodeHighlights(Chart chart) => new[]
     {
         new ScoreHighlightRecord(chart.Id, Session, Start, HighlightFlags.HardmodeTop50, 21, 21.0,
@@ -383,7 +399,7 @@ public sealed class SessionBreakdownBuilderTests
         MixEnum mix = MixEnum.Phoenix, UserPhoenixScore[]? phoenix1 = null,
         bool captured = true, int? sessionEndedMinutesAgo = null, ScoreHighlightRecord[]? highlights = null,
         IReadOnlyDictionary<ScoreOnChart, PeerStanding>? standings = null,
-        PlayerMilestoneRecord[]? milestones = null, bool hardmodeOn = false)
+        PlayerMilestoneRecord[]? milestones = null, bool hardmodeOn = false, bool settingsFail = false)
     {
         var mediator = new Mock<IMediator>();
         if (hardmodeOn)
@@ -393,6 +409,9 @@ public sealed class SessionBreakdownBuilderTests
                 {
                     [HardmodeOptIn.SettingKey] = "true"
                 });
+        if (settingsFail)
+            mediator.Setup(m => m.Send(It.IsAny<GetUserUiSettingsQuery>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InvalidOperationException("settings unavailable"));
         var group = new RecentSessionsPage.SessionGroup(Session, null, mix, "officialImport",
             rows.Min(r => r.OccurredAt), rows.Max(r => r.OccurredAt), rows);
 

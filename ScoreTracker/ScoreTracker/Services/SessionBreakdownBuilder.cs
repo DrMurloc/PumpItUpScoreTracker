@@ -6,7 +6,6 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using MediatR;
 using ScoreTracker.Catalog.Contracts.Queries;
-using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.Rivals.Contracts.Queries;
@@ -92,9 +91,9 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
     ///     sees what the owner's switch says. Read at render time, so the page follows the switch
     ///     backwards — the capture step wrote every Hardmode fact regardless.
     /// </summary>
-    private async Task<bool> HardmodeIsOn(Guid userId, CancellationToken cancellationToken)
+    private Task<bool> HardmodeIsOn(Guid userId, CancellationToken cancellationToken)
     {
-        return HardmodeOptIn.IsOn(await mediator.Send(new GetUserUiSettingsQuery(userId), cancellationToken));
+        return HardmodeOptIn.Read(mediator, userId, cancellationToken);
     }
 
     private static readonly SessionsPageModel Empty =
