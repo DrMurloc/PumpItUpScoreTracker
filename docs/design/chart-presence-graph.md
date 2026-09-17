@@ -7,8 +7,8 @@ title where it starts showing up near the top of people's lists, the title where
 it, and the title where it slides to the bottom and drops out.
 
 Phoenix 2 only, and the gem ladder only (`[P.B]` BRONZE through ABYSS ABSOLUTE, not the `[S]` / `[D]`
-rungs). Workshopped with the owner on 2026-09-16 over four mock rounds:
-https://claude.ai/artifact/RUjWAzfF752sqXh1tYXJXz
+rungs). Workshopped with the owner on 2026-09-16 over four mock rounds, and a fifth on 2026-09-17 for the
+note on charts the official rankings undercount (§8): https://claude.ai/artifact/RUjWAzfF752sqXh1tYXJXz
 
 ---
 
@@ -31,7 +31,9 @@ Above the graph, a sentence and up to two short lines:
 - `Rates higher than other D23s at DIAMOND, about the same at RED BERYL.` — the folder comparison summed
   up per gem (§5).
 - `You're DIAMOND LV.4: it's #11 in your top 50.` — for a signed-in player on a gem; their title is tinted
-  and their own spot is a diamond.
+  and their own spot is a diamond. The diamond marks a spot, so it draws only when the chart is in their top
+  50 (D16): otherwise the title keeps its tint, the across flag says `You`, and the line reads `You're
+  DIAMOND LV.4: it isn't in your top 50.`
 
 **Tooltips are short** (D3), in the owner's words: `27% hold it` · `Typically #13–#30 in top 50, centered
 around #21` · `Rates higher than other D23s` · `Low data count for this title, read loosely` · `You: #11 in
@@ -153,7 +155,52 @@ itself is held and the rest its folder's shadow. Lighter than the daily chart-si
 **Until the first run the card does not render.** Trigger the job once in `/hangfire` after deploy, or wait
 for 12:30 UTC.
 
-## 8. Decisions
+## 8. Held by more than shown
+
+**piugame's chart rankings stop at 300 places, and a crowded one hides holders** (D14). An official-ranking
+player's fifty is rebuilt from the chart rankings (§2). When a chart's ranking is full and even its last place
+is a high score, a ranking player who holds the chart in their top 50 with a lower score is on no ranking of it
+at all. Their fifty is rebuilt without it and still passes the total check
+([pumbility-overhaul.md](pumbility-overhaul.md) D60), because the fifty-first chart slides in and fills the
+total back up. The census counts them as not holding it, so from DIAMOND up, where the ranking players are, the
+graph reads low. Measured on the local copy against the 2026-09-06 sweep: of 81 linked DIAMOND-and-up accounts
+that pass the check, 42 hold at least one chart below a full ranking's last place, 2.5 each on average. The Last
+Rebellion D23 is held by 54% of them, and the rankings see 37%.
+
+**A ranking is crowded** when all 300 places are taken and its last place scores at or above its folder's bar. A
+single reads one level up, the way it prices:
+
+| Folders | Last place at or above |
+|---|---|
+| D20 · D21 · S20 | S+ · 975,000 |
+| D22 · D23 · S21 · S22 | S · 970,000 |
+| D24 and up · S23 and up | AAA+ · 960,000 |
+
+That flags 81 charts on the 2026-09-06 sweep: S20 22 · S21 15 · S22 10 · S23 3 · D20 11 · D21 8 · D22 5 · D23 4 ·
+D24 3. The bars are high on purpose. In the owner's words: *"I want to make sure we're not just overlabelling like
+1/4 of a folder as 'too easy' simply because of a few hidden scores."* D20 was not in the owner's list; the
+approved mock grouped it with D21.
+
+**What a crowded chart's graph adds** (D15, the mock's Callout + titles with wording 1):
+
+- **A callout** under the sentences, above the graph. Heading: `Likely more common than shown`. Body: `This chart
+  is popular or easy enough that its official top 300 only reaches down to SSS (990,893). From DIAMOND up,
+  players who hold it in their top 50 with a lower score can't be counted, so it's likely in more top 50s than
+  this shows.` The grade and score are the ranking's last place. The gem is the lowest title whose players
+  include official-ranking players.
+- **A dashed extension past the share bar** on every title whose players include official-ranking players: above
+  the bar when titles run across, right of it when they run down. The title's tooltip adds `Likely held by more
+  players than shown`. A title counted over PIU Scores accounts alone is never marked, because their fifties
+  come from their own records.
+- **A legend key**, `Likely more than shown`.
+
+**Read when the chart is viewed, not stored.** The ranking's depth and last place come from the mirror's latest
+sealed sweep, cached per sweep, so a new sweep moves the note without waiting for the census.
+
+**The Play page sets these charts apart too**, in a section called *Held by more than shown*
+([pumbility-overhaul.md](pumbility-overhaul.md) D70).
+
+## 9. Decisions
 
 | # | Decision | Why |
 |---|---|---|
@@ -170,11 +217,17 @@ for 12:30 UTC.
 | D11 | **A chart with no official chart ranking counts PIU Scores players only.** | Decided unless objected; the ranking cannot show those charts. |
 | D12 | **A stored daily census.** | Owner: "table with job sounds fine". |
 | D13 | **A chart counted over PIU Scores players only opens its gems by those players, not by everyone.** | A bug check found a chart below 20 fading every DIAMOND level after LV.1; owner, 2026-09-16: "k". |
+| D14 | **A chart's official ranking is crowded when all 300 places are taken and its last place is at or above its folder's bar: S+ for D20, D21 and S20; S for D22, D23, S21 and S22; AAA+ from D24 and S23.** | Owner, 2026-09-17: "D21/S20 - S+, D22/S21 - S, D23/S22 - S, D24/S23 - AAA+, D25/S24 and above - AAA+". D20 follows the approved mock. |
+| D15 | **A crowded chart gets a callout, plus a dashed extension and a tooltip line on every title that counts official-ranking players.** | Owner, on the round five mock: "I like Callout + titles. Wording 1.", with *hold* for *keep*: "we're using 'hold it' not 'keep it' as the terminology". |
+| D16 | **Your diamond draws only when the chart is in your top 50.** Titles down used to draw it beside your title's name either way, just left of #50, where it read as a spot. | Owner, 2026-09-17: "don't place a dot for you if you don't have the chart in your top 50. I think right now it's putting the dot at the far left." |
 
-## 9. Known limits
+## 10. Known limits
 
 - **The Fold's real width is unmeasured.** Published Z Fold 7 viewports are arithmetic and disagree. D5
   does not lean on it: a Fold unfolded is under the 900 rung on every figure published.
 - **Official-ranking players are placed by the published number, their fifty rebuilt.** A rebuilt fifty can
   sit a little under the number it was placed by. Same trade the Breakdown card makes.
 - **A tie at #50** is broken by chart id when a fifty is chosen, as everywhere else a top 50 is built.
+- **A crowded ranking is a sign, not a count** (§8). It marks the charts where holders are most likely hidden;
+  it says nothing about how many. A chart under its bar can still hide a few holders, which is the price of
+  keeping the note rare.
