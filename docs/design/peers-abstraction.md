@@ -164,7 +164,7 @@ the split the old ranking saga used and the reason a fresh import recolors immed
   `PeerStandingPopover` on click (which carries D42's line under a grade rule), and stops the click there. `ScoreBreakdown` no longer takes a
   ranking. Hosts: the Sessions rows and highlight cards, the tier-list card and table, the chart
   details dialog, the chart page's *Your best*, the upload results table.
-- `PeersAndColorsPanel`, its own tab on `/Account` (`?tab=peers`, D35); the Profile tab's summary card and the dialog behind it went with the field test.
+- `PeersAndColorsPanel`, its own tab on `/Account` (`?tab=peers`, D35); the Profile tab's summary card and the dialog behind it went with the field test. Its Glow section also carries the difficulty glow switch, saved with the rest of the tab ([hardmode-leaderboard.md](hardmode-leaderboard.md) D34).
 - The Account Stats widget's roster (D18); the chart boards' passes-first order (D21).
 
 ## 5. What the player-page PR left behind, and what this one does with it
