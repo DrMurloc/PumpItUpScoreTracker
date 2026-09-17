@@ -46,6 +46,9 @@ internal sealed class PeerScoreStore
     /// <summary>How long the chart dimension is trusted. A content update is not a busy hour.</summary>
     private static readonly TimeSpan ChartsTtl = TimeSpan.FromHours(1);
 
+    /// <summary>How many players one read names, under SQL Server's 2,100 parameters a command.</summary>
+    private const int PlayersPerRead = 2000;
+
     private readonly Dictionary<MixEnum, (IReadOnlyDictionary<Guid, Chart> Charts, DateTimeOffset ReadAt)>
         _charts = new();
 
@@ -233,65 +236,80 @@ internal sealed class PeerScoreStore
         var charts = await Charts(mix, database, cancellationToken);
 
         await database.Database.OpenConnectionAsync(cancellationToken);
-        await using var command = database.Database.GetDbConnection().CreateCommand();
-        command.CommandTimeout = 180;
-        Add(command, "@mix", MixIds.For(mix));
-        // Both statements pin the season by hand: raw SQL bypasses the AllTime query filter, and a
-        // season's rows would otherwise read as extra all-time bests (docs/design/seasons.md D12).
-        if (ids == null)
-        {
-            // Everyone. Driven through ChartMix so the plan seeks the record table by chart
-            // instead of scanning every mix ever played: the same read without the join took
-            // five minutes rather than fifteen seconds.
-            command.CommandText = """
-                                  SELECT pr.UserId, pr.ChartId, pr.Score, pr.Plate, pr.RecordedDate
-                                  FROM scores.ChartMix cm
-                                  JOIN scores.Chart c ON cm.ChartId = c.Id
-                                  JOIN scores.PhoenixRecord pr ON c.Id = pr.ChartId
-                                  WHERE cm.MixId = @mix AND pr.MixId = @mix AND pr.SeasonId = 0
-                                    AND pr.Score IS NOT NULL AND pr.IsBroken = 0
-                                  """;
-        }
-        else
-        {
-            // A named few, which the unique index over player, chart and mix seeks directly.
-            var names = new string[ids.Length];
-            for (var i = 0; i < ids.Length; i++)
-            {
-                names[i] = $"@u{i}";
-                Add(command, names[i], ids[i]);
-            }
-
-            command.CommandText = $"""
-                                   SELECT pr.UserId, pr.ChartId, pr.Score, pr.Plate, pr.RecordedDate
-                                   FROM scores.PhoenixRecord pr
-                                   WHERE pr.MixId = @mix AND pr.SeasonId = 0 AND pr.Score IS NOT NULL AND pr.IsBroken = 0
-                                     AND pr.UserId IN ({string.Join(", ", names)})
-                                   """;
-        }
 
         // The plate takes a handful of spellings across a million rows, so it is interned into its
         // parsed form once instead of parsed per row.
         var plates = new Dictionary<string, PhoenixPlate?>(StringComparer.Ordinal);
 
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
+        if (ids == null)
         {
-            var chartId = reader.GetGuid(1);
-            if (!charts.TryGetValue(chartId, out var chart)) continue;
-
-            var userId = reader.GetGuid(0);
-            if (!fetched.TryGetValue(userId, out var rows)) fetched[userId] = rows = new List<Row>();
-
-            var plateText = reader.IsDBNull(3) ? string.Empty : reader.GetString(3);
-            if (!plates.TryGetValue(plateText, out var plate))
-                plates[plateText] = plate = PhoenixPlateHelperMethods.TryParse(plateText);
-
-            rows.Add(new Row(chartId, reader.GetInt32(2),
-                reader.GetFieldValue<DateTimeOffset>(4).UtcTicks, chart.Level, plate, chart.Type));
+            await ReadInto(null);
+        }
+        else
+        {
+            // SQL Server takes 2,100 parameters a command and the mix is one of them, so a longer list — a
+            // census naming the whole ladder to a cold store — is read in pieces.
+            foreach (var named in ids.Chunk(PlayersPerRead)) await ReadInto(named);
         }
 
         return fetched;
+
+        async Task ReadInto(Guid[]? named)
+        {
+            await using var command = database.Database.GetDbConnection().CreateCommand();
+            command.CommandTimeout = 180;
+            Add(command, "@mix", MixIds.For(mix));
+            // Both statements pin the season by hand: raw SQL bypasses the AllTime query filter, and a
+            // season's rows would otherwise read as extra all-time bests (docs/design/seasons.md D12).
+            if (named == null)
+            {
+                // Everyone. Driven through ChartMix so the plan seeks the record table by chart
+                // instead of scanning every mix ever played: the same read without the join took
+                // five minutes rather than fifteen seconds.
+                command.CommandText = """
+                                      SELECT pr.UserId, pr.ChartId, pr.Score, pr.Plate, pr.RecordedDate
+                                      FROM scores.ChartMix cm
+                                      JOIN scores.Chart c ON cm.ChartId = c.Id
+                                      JOIN scores.PhoenixRecord pr ON c.Id = pr.ChartId
+                                      WHERE cm.MixId = @mix AND pr.MixId = @mix AND pr.SeasonId = 0
+                                        AND pr.Score IS NOT NULL AND pr.IsBroken = 0
+                                      """;
+            }
+            else
+            {
+                // A named few, which the unique index over player, chart and mix seeks directly.
+                var names = new string[named.Length];
+                for (var i = 0; i < named.Length; i++)
+                {
+                    names[i] = $"@u{i}";
+                    Add(command, names[i], named[i]);
+                }
+
+                command.CommandText = $"""
+                                       SELECT pr.UserId, pr.ChartId, pr.Score, pr.Plate, pr.RecordedDate
+                                       FROM scores.PhoenixRecord pr
+                                       WHERE pr.MixId = @mix AND pr.SeasonId = 0 AND pr.Score IS NOT NULL AND pr.IsBroken = 0
+                                         AND pr.UserId IN ({string.Join(", ", names)})
+                                       """;
+            }
+
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                var chartId = reader.GetGuid(1);
+                if (!charts.TryGetValue(chartId, out var chart)) continue;
+
+                var userId = reader.GetGuid(0);
+                if (!fetched.TryGetValue(userId, out var rows)) fetched[userId] = rows = new List<Row>();
+
+                var plateText = reader.IsDBNull(3) ? string.Empty : reader.GetString(3);
+                if (!plates.TryGetValue(plateText, out var plate))
+                    plates[plateText] = plate = PhoenixPlateHelperMethods.TryParse(plateText);
+
+                rows.Add(new Row(chartId, reader.GetInt32(2),
+                    reader.GetFieldValue<DateTimeOffset>(4).UtcTicks, chart.Level, plate, chart.Type));
+            }
+        }
     }
 
     /// <summary>

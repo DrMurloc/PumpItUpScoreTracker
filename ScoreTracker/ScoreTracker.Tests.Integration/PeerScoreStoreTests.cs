@@ -187,6 +187,25 @@ public sealed class PeerScoreStoreTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task AReadNamingMorePlayersThanOneCommandCanBindFindsEveryOneOfThem()
+    {
+        // SQL Server takes 2,100 parameters a command, and the presence census names the whole ladder to a
+        // store that may be cold. The read splits the names, so a player at each end of a long list is found.
+        var first = await _seed.SeedUserAsync();
+        var last = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedPhoenixChartAsync(20);
+        foreach (var userId in new[] { first, last })
+            await Writer().UpdateBestAttempt(MixEnum.Phoenix, userId, new RecordedPhoenixScore(chartId,
+                PhoenixScore.From(950_000), PhoenixPlate.SuperbGame, false, RecordedAt));
+        var named = Enumerable.Range(0, 4_500).Select(_ => Guid.NewGuid()).Prepend(first).Append(last).ToArray();
+
+        var rows = await Store().InLevelRange(MixEnum.Phoenix, named, ChartType.Single, 20, 20,
+            CancellationToken.None);
+
+        Assert.Equal(new[] { first, last }.OrderBy(g => g), rows.Select(r => r.UserId).OrderBy(g => g));
+    }
+
+    [Fact]
     public async Task APrivatePlayerIsMaskedAndSaysSo()
     {
         // The contract the SQL always had: the name arrives already masked and IsPublic says
