@@ -8,7 +8,9 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Services.Theming
+@using ScoreTracker.Domain.SecondaryPorts
 @inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
 
 @* What the chart IS, extracted from ChartDetailsDialog: its history and its channel as rows,
    where the tier lists place it, what it is made of, and the way out to PIU Center. The
@@ -113,6 +115,9 @@
        A pre-crawl chart shows nothing rather than falling back to the rollup tags — an arbitrary
        "Technical" is worse than silence (docs/design/nuke-old-skill-categories.md). *@
     <IdentityChipGroups Chips="_identityChips"></IdentityChipGroups>
+    @* The chart page's presence graph, in the same place under the chips; the dialog is never wide
+       enough to turn its titles across (docs/design/chart-presence-graph.md D5, D7). *@
+    <ChartPumbilityPresence Presence="_presence" Chart="Chart"></ChartPumbilityPresence>
     <MudText Typo="Typo.overline">@L["Charts like this"]</MudText>
     <SimilarChartsCompactGrid ChartId="Chart.Id" Mix="Mix" Active="Active"
                               OnChartSelected="OnSimilarChartSelected"></SimilarChartsCompactGrid>
@@ -302,6 +307,7 @@
     private IReadOnlyList<(string Label, string Color)> _placements = Array.Empty<(string, string)>();
     private IReadOnlyList<TierListChartCard.CardSkillChip> _identityChips =
         Array.Empty<TierListChartCard.CardSkillChip>();
+    private ChartPumbilityPresenceRecord? _presence;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -320,6 +326,8 @@
         _identityChips = IdentityChips.WithSpeedBand(
             IdentityChips.ToCardChips(identity.GetValueOrDefault(Chart.Id), false, L),
             await SpeedBand(Chart.Id), L);
+        _presence = await Mediator.Send(new GetChartPumbilityPresenceQuery(Chart.Id, Mix,
+            CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null));
     }
 
     /// <summary>

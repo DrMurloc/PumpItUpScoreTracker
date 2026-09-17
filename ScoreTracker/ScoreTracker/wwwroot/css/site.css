@@ -5420,6 +5420,762 @@ html.sheet-open .more-sheet-scrim {
     color: var(--mix-ink-muted);
 }
 
+/* The PUMBILITY presence graph (docs/design/chart-presence-graph.md). Titles down by default; a host that
+   allows it turns the titles across at the Desktop rung. Every mark sits at a percent of its panel, with
+   the panels themselves at fixed heights, so nothing needs a script to draw or to reflow on an unfold. */
+.presence {
+    --presence-ground: var(--mix-bg);
+    margin-top: 14px;
+    container-type: inline-size;
+    container-name: presence;
+}
+
+.chart-details-dialog .presence {
+    --presence-ground: var(--mix-surface);
+}
+
+.presence-caption {
+    font-size: .92rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin: 4px 0;
+    max-width: 64ch;
+}
+
+.presence-line {
+    font-size: .86rem;
+    line-height: 1.4;
+    margin: 0 0 4px;
+    max-width: 64ch;
+}
+
+.presence-mark,
+.presence-you {
+    position: absolute;
+    display: block;
+}
+
+.is-thin .presence-mark {
+    opacity: .42;
+}
+
+.presence-ghost {
+    background: color-mix(in srgb, var(--mix-ink) 14%, transparent);
+    border-radius: 2px;
+}
+
+.presence-ghost-median {
+    background: color-mix(in srgb, var(--mix-ink) 50%, transparent);
+}
+
+.presence-whisker,
+.presence-cap {
+    background: color-mix(in srgb, var(--mix-secondary) 70%, transparent);
+}
+
+.presence-box {
+    background: var(--mix-secondary);
+    border-radius: 1.5px;
+    box-shadow: 0 0 0 2px var(--presence-ground);
+}
+
+.presence-median {
+    background: var(--mix-ink);
+}
+
+.presence-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--mix-secondary);
+    box-shadow: 0 0 0 1.5px var(--presence-ground);
+}
+
+.presence-you {
+    width: 7px;
+    height: 7px;
+    background: var(--mix-accent);
+    box-shadow: 0 0 0 2px var(--presence-ground);
+}
+
+/* The diamond that points out your title beside its name, or above its column. */
+.presence-you-mark {
+    display: inline-block;
+    flex: none;
+    width: 6px;
+    height: 6px;
+    background: var(--mix-accent);
+    box-shadow: 0 0 0 1.5px var(--presence-ground);
+    transform: rotate(45deg);
+}
+
+.presence-bar {
+    background: var(--mix-secondary);
+}
+
+.presence-tip {
+    display: none;
+    position: absolute;
+    z-index: 6;
+    width: max-content;
+    max-width: 230px;
+    padding: 7px 10px;
+    background: var(--mix-nav);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 25%, transparent);
+    border-radius: 4px;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .5);
+    font-size: 12.5px;
+    line-height: 1.45;
+    text-align: left;
+    pointer-events: none;
+}
+
+.presence-tip-head {
+    display: block;
+    margin-bottom: 2px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 1.3;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.presence-tip-line,
+.presence-tip-muted,
+.presence-tip-you {
+    display: block;
+    color: var(--mix-ink);
+}
+
+.presence-tip-muted {
+    color: var(--mix-ink-muted);
+}
+
+.presence-tip-you {
+    margin-top: 4px;
+    padding-top: 3px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+}
+
+.presence-col:focus-within .presence-tip,
+.presence-row:focus-within .presence-tip {
+    display: block;
+}
+
+@media (hover: hover) {
+    .presence-col:hover .presence-tip,
+    .presence-row:not(.presence-head):hover .presence-tip {
+        display: block;
+    }
+
+    .presence-col:hover,
+    .presence-row:not(.presence-head):hover {
+        background: color-mix(in srgb, var(--mix-ink) 6%, transparent);
+    }
+}
+
+/* Titles across: a gutter of tick labels, then one grid column per title over two panels. */
+.presence-across {
+    display: none;
+    margin-top: 10px;
+}
+
+@media (min-width: 900px) {
+    .presence-can-cross .presence-across {
+        display: block;
+    }
+
+    .presence-can-cross .presence-down {
+        display: none;
+    }
+}
+
+/* Your column's flag, a row above the plot: the diamond and "You", or the diamond alone on a narrow column. */
+.presence-flag {
+    display: grid;
+    grid-template-columns: 32px repeat(var(--presence-columns), minmax(0, 1fr));
+    height: 14px;
+}
+
+.presence-flag-you {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    container-type: inline-size;
+}
+
+.presence-flag-you b {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 10.5px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--mix-ink);
+}
+
+@container (max-width: 37.98px) {
+    .presence-flag-you b {
+        display: none;
+    }
+}
+
+.presence-plot {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+}
+
+.presence-gutter {
+    position: relative;
+    height: 328px;
+}
+
+.presence-gutter span {
+    position: absolute;
+    right: 5px;
+    transform: translateY(-50%);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.presence-cols {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--presence-columns), minmax(0, 1fr));
+    height: 328px;
+}
+
+.presence-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.presence-grid i {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 9%, transparent);
+}
+
+.presence-grid i.is-base {
+    border-top-color: color-mix(in srgb, var(--mix-ink) 26%, transparent);
+}
+
+.presence-panel {
+    position: absolute;
+    left: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 10px;
+    line-height: 14px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.presence-col {
+    position: relative;
+    border-radius: 4px;
+    outline: none;
+}
+
+.presence-col:focus-visible {
+    box-shadow: inset 0 0 0 1.5px var(--mix-ink);
+}
+
+.presence-col.is-you {
+    background: color-mix(in srgb, var(--mix-accent) 9%, transparent);
+}
+
+/* A faint rule where one gem gives way to the next. */
+.presence-col.is-gem-start::before {
+    content: "";
+    position: absolute;
+    top: 10px;
+    bottom: 2px;
+    left: 0;
+    border-left: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+}
+
+.presence-share {
+    position: absolute;
+    top: 18px;
+    left: 0;
+    right: 0;
+    height: 64px;
+}
+
+.presence-spots {
+    position: absolute;
+    top: 112px;
+    left: 0;
+    right: 0;
+    height: 210px;
+}
+
+.presence-across .presence-mark,
+.presence-across .presence-you {
+    left: 50%;
+}
+
+.presence-across .presence-bar {
+    bottom: 0;
+    width: min(18px, 56%);
+    transform: translateX(-50%);
+    border-radius: 3px 3px 0 0;
+}
+
+.presence-peak {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, -4px);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--mix-ink);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.presence-col.is-thin .presence-peak {
+    color: var(--mix-ink-muted);
+}
+
+.presence-across .presence-ghost {
+    width: min(23px, 90%);
+    min-height: 2px;
+    transform: translateX(-50%);
+}
+
+.presence-across .presence-ghost-median {
+    width: min(23px, 90%);
+    height: 2px;
+    transform: translate(-50%, -50%);
+}
+
+.presence-across .presence-whisker {
+    width: 1.25px;
+    transform: translateX(-50%);
+}
+
+.presence-across .presence-cap {
+    width: min(8px, 30%);
+    height: 1.25px;
+    transform: translate(-50%, -50%);
+}
+
+.presence-across .presence-box {
+    width: min(14px, 50%);
+    min-height: 2px;
+    transform: translateX(-50%);
+}
+
+.presence-across .presence-median {
+    width: min(16px, 60%);
+    height: 2px;
+    transform: translate(-50%, -50%);
+}
+
+.presence-across .presence-dot {
+    transform: translate(-50%, -50%);
+}
+
+.presence-across .presence-you {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.presence-col .presence-tip {
+    top: 112px;
+    left: calc(100% + 6px);
+}
+
+.presence-col.is-flip .presence-tip {
+    left: auto;
+    right: calc(100% + 6px);
+}
+
+/* Gem names on the first row, a bracket under a gem that opens, its level numbers below. */
+.presence-labels {
+    display: grid;
+    grid-template-columns: 32px repeat(var(--presence-columns), minmax(0, 1fr));
+    grid-template-rows: auto 7px auto;
+    row-gap: 2px;
+    margin-top: 6px;
+}
+
+.presence-gem {
+    grid-row: 1;
+    justify-self: center;
+    align-self: start;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 10.5px;
+    line-height: 1.2;
+    letter-spacing: .06em;
+    color: var(--mix-ink);
+}
+
+.presence-bracket {
+    grid-row: 2;
+    margin: 0 6px;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 30%, transparent);
+    border-bottom: 0;
+}
+
+.presence-level {
+    grid-row: 3;
+    align-self: start;
+    text-align: center;
+    white-space: nowrap;
+    container-type: inline-size;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 10.5px;
+    letter-spacing: .04em;
+    color: var(--mix-ink-muted);
+}
+
+/* A column too narrow for "LV.1" keeps the number. */
+@container (max-width: 29.98px) {
+    .presence-level-prefix {
+        display: none;
+    }
+}
+
+@container presence (max-width: 959.98px) {
+    .presence-gem.is-single {
+        grid-row: 1 / span 3;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+    }
+}
+
+/* Titles down: one row per title, the spot axis running #50 on the left to #1 on the right. */
+.presence-down {
+    margin-top: 10px;
+}
+
+.presence-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr) 38px 30px;
+    column-gap: 7px;
+    align-items: center;
+    min-height: 20px;
+    border-radius: 3px;
+    outline: none;
+}
+
+@container presence (min-width: 440px) {
+    .presence-row {
+        grid-template-columns: 128px minmax(0, 1fr) 110px 40px;
+        column-gap: 12px;
+        min-height: 23px;
+    }
+
+    .presence-down .presence-box {
+        height: 10px;
+    }
+
+    .presence-down .presence-median {
+        height: 12px;
+    }
+
+    .presence-down .presence-ghost {
+        height: 17px;
+    }
+
+    .presence-down .presence-ghost-median {
+        height: 19px;
+    }
+
+    .presence-head .is-narrow {
+        display: none;
+    }
+}
+
+@container presence (max-width: 439.98px) {
+    .presence-head .is-wide {
+        display: none;
+    }
+}
+
+.presence-row.is-gem-start {
+    margin-top: 7px;
+}
+
+/* A faint rule where one gem gives way to the next. */
+.presence-row.is-gem-start::before {
+    content: "";
+    position: absolute;
+    top: -4px;
+    left: 0;
+    right: 0;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+}
+
+.presence-head + .presence-row {
+    margin-top: 2px;
+}
+
+.presence-head + .presence-row::before {
+    content: none;
+}
+
+.presence-row:focus-visible {
+    box-shadow: inset 0 0 0 1.5px var(--mix-ink);
+}
+
+.presence-row.is-you {
+    background: color-mix(in srgb, var(--mix-accent) 9%, transparent);
+}
+
+.presence-row-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+}
+
+.presence-row-gem {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 11.5px;
+    letter-spacing: .05em;
+    color: var(--mix-ink);
+}
+
+.presence-row-level {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    flex: none;
+    margin-left: auto;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .04em;
+    color: var(--mix-ink-muted);
+}
+
+.presence-row-plot {
+    position: relative;
+    height: 18px;
+    container-type: inline-size;
+}
+
+/* Every ten spots where the plot has room for the labels; #25 alone between the ends where it has not. */
+@container (max-width: 169.98px) {
+    .presence-row-plot .is-fine {
+        display: none;
+    }
+}
+
+@container (min-width: 170px) {
+    .presence-row-plot .is-coarse {
+        display: none;
+    }
+}
+
+.presence-row-grid {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    border-left: 1px solid color-mix(in srgb, var(--mix-ink) 9%, transparent);
+}
+
+.presence-down .presence-mark,
+.presence-down .presence-you {
+    top: 50%;
+}
+
+.presence-down .presence-ghost {
+    height: 16px;
+    min-width: 2px;
+    transform: translateY(-50%);
+}
+
+.presence-down .presence-ghost-median {
+    width: 2px;
+    height: 18px;
+    transform: translate(-50%, -50%);
+}
+
+.presence-down .presence-whisker {
+    height: 1.25px;
+    transform: translateY(-50%);
+}
+
+.presence-down .presence-cap {
+    width: 1.25px;
+    height: 6px;
+    transform: translate(-50%, -50%);
+}
+
+.presence-down .presence-box {
+    height: 9px;
+    min-width: 2px;
+    transform: translateY(-50%);
+}
+
+.presence-down .presence-median {
+    width: 2px;
+    height: 11px;
+    transform: translate(-50%, -50%);
+}
+
+.presence-down .presence-dot {
+    transform: translate(-50%, -50%);
+}
+
+.presence-down .presence-you {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.presence-row-share {
+    position: relative;
+    height: 8px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--mix-ink) 7%, transparent);
+}
+
+.presence-down .presence-bar {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    border-radius: 0 3px 3px 0;
+}
+
+.presence-row-value {
+    justify-self: end;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.presence-row-value.is-peak {
+    font-size: 11px;
+    color: var(--mix-ink);
+}
+
+.presence-row.is-thin .presence-row-value {
+    color: var(--mix-ink-muted);
+}
+
+.presence-head {
+    min-height: 18px;
+}
+
+.presence-head .presence-row-title,
+.presence-head .presence-row-share {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 10px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.presence-head .presence-row-share {
+    grid-column: 3 / span 2;
+    height: auto;
+    background: none;
+}
+
+.presence-head .presence-row-plot b {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.presence-head .presence-row-plot b:first-child {
+    transform: translate(-100%, -50%);
+}
+
+.presence-head .presence-row-plot b:last-child {
+    transform: translate(0, -50%);
+}
+
+.presence-row .presence-tip {
+    top: calc(100% + 2px);
+    left: 0;
+}
+
+.presence-row.is-flip .presence-tip {
+    top: auto;
+    bottom: calc(100% + 2px);
+}
+
+.presence-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 14px;
+    margin-top: 8px;
+    font-size: 11.5px;
+    color: var(--mix-ink-muted);
+}
+
+.presence-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.presence-legend svg {
+    display: block;
+    flex: none;
+}
+
+.presence-key-bar {
+    fill: var(--mix-secondary);
+}
+
+.presence-key-thin {
+    opacity: .42;
+}
+
+.presence-key-whisker {
+    stroke: var(--mix-secondary);
+    stroke-width: 1.25;
+    opacity: .7;
+}
+
+.presence-key-median {
+    stroke: var(--mix-ink);
+    stroke-width: 2;
+}
+
+.presence-key-ghost {
+    fill: var(--mix-ink);
+    opacity: .18;
+}
+
+.presence-key-ghost-median {
+    stroke: var(--mix-ink);
+    stroke-width: 2;
+    opacity: .5;
+}
+
+.presence-key-you {
+    fill: var(--mix-accent);
+}
+
 /* History band. */
 .chart-timeline {
     display: flex;

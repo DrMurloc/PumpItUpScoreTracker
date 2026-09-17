@@ -460,6 +460,7 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     ("process-pumbility-tier-list",      r => r.PublishProcessPumbilityTierList(),        "30 10 * * *"), // 05:30 ET
     ("calculate-chart-letter-difficulties", r => r.PublishCalculateChartLetterDifficulties(), "0 10 * * *"), // 05:00 ET
     ("recalculate-chart-similarity",     r => r.PublishRecalculateChartSimilarity(),      "0 12 * * *"), // 07:00 ET — order-independent: reads only the piucenter crawl, not the jobs above
+    ("rebuild-chart-pumbility-presence", r => r.PublishRebuildChartPresence(),            "30 12 * * *"), // 07:30 ET — order-independent: reads scores and the official ranking, not the jobs above
 
     ("start-leaderboard-import",         r => r.PublishStartLeaderboardImport(),          "30 10 * * 0"), // Sundays 05:30 ET
     // The P2 pumbility board recomputes daily at 01:00 GMT+9 (16:00 UTC); Sundays 16:30 UTC

@@ -1,0 +1,462 @@
+@using System.Globalization
+@using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@namespace ScoreTracker.Web.Components
+
+@* The PUMBILITY presence graph (docs/design/chart-presence-graph.md): per title, the share of its players
+   holding the chart in their top 50 above where it sits in those top 50s, with the rest of its folder as a
+   grey shadow behind. Titles across renders only for a host that allows it, and CSS shows it at the Desktop
+   rung; titles down renders everywhere and shows below that rung. HTML and CSS against percent positions,
+   no script: each title's tooltip renders hidden with the title and opens on hover, focus or tap. *@
+@if (Presence is { } presence && Chart != null)
+{
+    <div class="presence @(TitlesAcross ? "presence-can-cross" : null)" data-testid="chart-presence">
+        <span class="chart-overline">@L["PUMBILITY top 50s by title"]</span>
+        <p class="presence-caption" data-testid="presence-headline">@Headline(presence)</p>
+        @if (RatingLine(presence) is { } rating)
+        {
+            <p class="presence-line" data-testid="presence-rating">@rating</p>
+        }
+        @if (ViewerLine(presence) is { } you)
+        {
+            <p class="presence-line" data-testid="presence-you">@you</p>
+        }
+
+        @if (TitlesAcross)
+        {
+            <div class="presence-across" data-testid="presence-across">
+                @if (presence.Viewer is { } flag)
+                {
+                    <div class="presence-flag" style="--presence-columns:@presence.Columns.Count" aria-hidden="true">
+                        <span class="presence-flag-you" style="grid-column:@(flag.Column + 2)"><i class="presence-you-mark"></i><b>@L["You"]</b></span>
+                    </div>
+                }
+                <div class="presence-plot">
+                    <div class="presence-gutter" aria-hidden="true">
+                        @foreach (var share in ShareTicks(presence))
+                        {
+                            <span style="top:@Css(ShareTop(presence, share))px">@Percent(share)</span>
+                        }
+                        @foreach (var spot in SpotTicks)
+                        {
+                            <span style="top:@Css(SpotTop + SpotHeight * (spot - 1) / 49.0)px">@L["#{0}", spot]</span>
+                        }
+                    </div>
+                    <div class="presence-cols" style="--presence-columns:@presence.Columns.Count">
+                        <div class="presence-grid" aria-hidden="true">
+                            <span class="presence-panel" style="top:0">@L["% hold it"]</span>
+                            <span class="presence-panel" style="top:@Css(SpotTop - 20)px">@L["Spot in top 50"]</span>
+                            @foreach (var share in ShareTicks(presence).Prepend(0))
+                            {
+                                <i class="@(share == 0 ? "is-base" : null)" style="top:@Css(ShareTop(presence, share))px"></i>
+                            }
+                            @foreach (var spot in SpotTicks)
+                            {
+                                <i style="top:@Css(SpotTop + SpotHeight * (spot - 1) / 49.0)px"></i>
+                            }
+                        </div>
+                        @for (var i = 0; i < presence.Columns.Count; i++)
+                        {
+                            var column = presence.Columns[i];
+                            var isYou = presence.Viewer?.Column == i;
+                            var gemStart = i > 0 && presence.Columns[i - 1].Gem != column.Gem;
+                            <div class="presence-col @(column.IsThin ? "is-thin" : null) @(isYou ? "is-you" : null) @(gemStart ? "is-gem-start" : null) @(i >= presence.Columns.Count / 2 ? "is-flip" : null)"
+                                 role="group" tabindex="0" aria-label="@Describe(presence, i)" data-testid="presence-col">
+                                <div class="presence-share">
+                                    @if (column.Share > 0)
+                                    {
+                                        <i class="presence-bar presence-mark" style="height:@Css(Math.Max(ShareFraction(presence, column.Share) * 100, 3))%"></i>
+                                    }
+                                    @if (presence.MostHeld == i)
+                                    {
+                                        <b class="presence-peak" style="bottom:@Css(ShareFraction(presence, column.Share) * 100)%">@Percent(column.Share)</b>
+                                    }
+                                </div>
+                                <div class="presence-spots">
+                                    @if (column.Folder is { } folder)
+                                    {
+                                        <i class="presence-ghost presence-mark" style="top:@Css(Down(folder.P25))%;height:@Css(Down(folder.P75) - Down(folder.P25))%"></i>
+                                        <i class="presence-ghost-median presence-mark" style="top:@Css(Down(folder.Median))%"></i>
+                                    }
+                                    @if (column.Dots.Count > 0)
+                                    {
+                                        @foreach (var dot in column.Dots)
+                                        {
+                                            <i class="presence-dot presence-mark" style="top:@Css(Down(dot))%"></i>
+                                        }
+                                    }
+                                    else if (column.Spots is { } spots)
+                                    {
+                                        <i class="presence-whisker presence-mark" style="top:@Css(Down(spots.Min))%;height:@Css(Down(spots.P25) - Down(spots.Min))%"></i>
+                                        <i class="presence-whisker presence-mark" style="top:@Css(Down(spots.P75))%;height:@Css(Down(spots.Max) - Down(spots.P75))%"></i>
+                                        <i class="presence-cap presence-mark" style="top:@Css(Down(spots.Min))%"></i>
+                                        <i class="presence-cap presence-mark" style="top:@Css(Down(spots.Max))%"></i>
+                                        <i class="presence-box presence-mark" style="top:@Css(Down(spots.P25))%;height:@Css(Down(spots.P75) - Down(spots.P25))%"></i>
+                                        <i class="presence-median presence-mark" style="top:@Css(Down(spots.Median))%"></i>
+                                    }
+                                    @if (isYou && presence.Viewer!.Spot is { } mine)
+                                    {
+                                        <i class="presence-you" style="top:@Css(Down(mine))%"></i>
+                                    }
+                                </div>
+                                <div class="presence-tip" role="tooltip">@TipLines(presence, i)</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="presence-labels" style="--presence-columns:@presence.Columns.Count" aria-hidden="true">
+                    @foreach (var (gem, start, size) in Gems(presence))
+                    {
+                        <span class="presence-gem @(size == 1 ? "is-single" : null)" style="grid-column:@(start + 2) / span @size">@GemName(gem)</span>
+                        @if (size > 1)
+                        {
+                            <i class="presence-bracket" style="grid-column:@(start + 2) / span @size"></i>
+                        }
+                    }
+                    @for (var i = 0; i < presence.Columns.Count; i++)
+                    {
+                        @if (presence.Columns[i].Level is { } level)
+                        {
+                            <span class="presence-level" style="grid-column:@(i + 2)"><span class="presence-level-prefix">LV.</span>@level</span>
+                        }
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="presence-down" data-testid="presence-down">
+            <div class="presence-row presence-head" aria-hidden="true">
+                <span class="presence-row-title">@L["Title"]</span>
+                <span class="presence-row-plot">
+                    @foreach (var (spot, only) in RowTicks)
+                    {
+                        <b class="@only" style="left:@Css(Across(spot))%">@L["#{0}", spot]</b>
+                    }
+                </span>
+                <span class="presence-row-share"><span class="is-wide">@L["% hold it"]</span><span class="is-narrow">@L["Hold"]</span></span>
+            </div>
+            @for (var i = 0; i < presence.Columns.Count; i++)
+            {
+                var column = presence.Columns[i];
+                var isYou = presence.Viewer?.Column == i;
+                var gemStart = i == 0 || presence.Columns[i - 1].Gem != column.Gem;
+                <div class="presence-row @(column.IsThin ? "is-thin" : null) @(isYou ? "is-you" : null) @(gemStart ? "is-gem-start" : null) @(i >= presence.Columns.Count - 4 ? "is-flip" : null)"
+                     role="group" tabindex="0" aria-label="@Describe(presence, i)" data-testid="presence-row">
+                    <span class="presence-row-title">
+                        <span class="presence-row-gem">@(gemStart ? GemName(column.Gem) : null)</span>
+                        @if (column.Level is { } level)
+                        {
+                            <span class="presence-row-level">
+                                @if (isYou)
+                                {
+                                    <i class="presence-you-mark"></i>
+                                }
+                                @($"LV.{level}")
+                            </span>
+                        }
+                        else if (isYou)
+                        {
+                            <i class="presence-you-mark"></i>
+                        }
+                    </span>
+                    <span class="presence-row-plot">
+                        @foreach (var (spot, only) in RowTicks)
+                        {
+                            <i class="presence-row-grid @only" style="left:@Css(Across(spot))%"></i>
+                        }
+                        @if (column.Folder is { } folder)
+                        {
+                            <i class="presence-ghost presence-mark" style="left:@Css(Across(folder.P75))%;width:@Css(Across(folder.P25) - Across(folder.P75))%"></i>
+                            <i class="presence-ghost-median presence-mark" style="left:@Css(Across(folder.Median))%"></i>
+                        }
+                        @if (column.Dots.Count > 0)
+                        {
+                            @foreach (var dot in column.Dots)
+                            {
+                                <i class="presence-dot presence-mark" style="left:@Css(Across(dot))%"></i>
+                            }
+                        }
+                        else if (column.Spots is { } spots)
+                        {
+                            <i class="presence-whisker presence-mark" style="left:@Css(Across(spots.Max))%;width:@Css(Across(spots.P75) - Across(spots.Max))%"></i>
+                            <i class="presence-whisker presence-mark" style="left:@Css(Across(spots.P25))%;width:@Css(Across(spots.Min) - Across(spots.P25))%"></i>
+                            <i class="presence-cap presence-mark" style="left:@Css(Across(spots.Min))%"></i>
+                            <i class="presence-cap presence-mark" style="left:@Css(Across(spots.Max))%"></i>
+                            <i class="presence-box presence-mark" style="left:@Css(Across(spots.P75))%;width:@Css(Across(spots.P25) - Across(spots.P75))%"></i>
+                            <i class="presence-median presence-mark" style="left:@Css(Across(spots.Median))%"></i>
+                        }
+                        @if (isYou && presence.Viewer!.Spot is { } mine)
+                        {
+                            <i class="presence-you" style="left:@Css(Across(mine))%"></i>
+                        }
+                    </span>
+                    <span class="presence-row-share">
+                        @if (column.Share > 0)
+                        {
+                            <i class="presence-bar presence-mark" style="width:@Css(Math.Max(column.Share * 100, 3))%"></i>
+                        }
+                    </span>
+                    <span class="presence-row-value @(presence.MostHeld == i ? "is-peak" : null)">@(column.Players == 0 ? "—" : Percent(column.Share))</span>
+                    <div class="presence-tip" role="tooltip">@TipLines(presence, i)</div>
+                </div>
+            }
+        </div>
+
+        <div class="presence-legend">
+            <span>
+                <svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true">
+                    <rect class="presence-key-bar" x="3" y="3" width="10" height="9" rx="2"/>
+                </svg>
+                @L["% hold it"]
+            </span>
+            <span>
+                <svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true">
+                    <line class="presence-key-whisker" x1="1" y1="6" x2="4" y2="6"/>
+                    <rect class="presence-key-bar" x="4" y="2" width="8" height="8" rx="1.5"/>
+                    <line class="presence-key-median" x1="8" y1="1" x2="8" y2="11"/>
+                    <line class="presence-key-whisker" x1="12" y1="6" x2="15" y2="6"/>
+                </svg>
+                @L["Where it typically sits"]
+            </span>
+            <span>
+                <svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true">
+                    <rect class="presence-key-ghost" x="1" y="1" width="14" height="10" rx="1.5"/>
+                    <line class="presence-key-ghost-median" x1="8" y1="0" x2="8" y2="12"/>
+                </svg>
+                @L["Other {0}s", Chart.DifficultyString]
+            </span>
+            <span>
+                <svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true">
+                    <rect class="presence-key-bar presence-key-thin" x="3" y="2" width="10" height="8" rx="1.5"/>
+                </svg>
+                @L["Low data count"]
+            </span>
+            @if (presence.Viewer != null)
+            {
+                <span>
+                    <svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true">
+                        <path class="presence-key-you" d="M8,1L13,6L8,11L3,6Z"/>
+                    </svg>
+                    @L["You"]
+                </span>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>The chart's census reading. Null draws nothing: no census yet, or nobody on the ladder holds its folder.</summary>
+    [Parameter] [EditorRequired] public ChartPumbilityPresenceRecord? Presence { get; set; }
+
+    /// <summary>The chart itself, which names its folder: other D23s for a D23.</summary>
+    [Parameter] [EditorRequired] public Chart? Chart { get; set; }
+
+    /// <summary>
+    ///     Whether this host may turn the titles across at the Desktop rung. The chart page may; the dialog is
+    ///     never wide enough, so it keeps titles down and never renders the other layout.
+    /// </summary>
+    [Parameter] public bool TitlesAcross { get; set; }
+
+    private static readonly int[] SpotTicks = { 1, 10, 20, 30, 40, 50 };
+
+    /// <summary>
+    ///     The spot axis of a row, #1 first and #50 last, each with the class that limits it to one plot width:
+    ///     every ten where the plot has room, and #25 alone between the ends where it has not.
+    /// </summary>
+    private static readonly (int Spot, string? Only)[] RowTicks =
+        { (1, null), (10, "is-fine"), (20, "is-fine"), (25, "is-coarse"), (30, "is-fine"), (40, "is-fine"), (50, null) };
+
+    /// <summary>Where the share panel sits in the across layout, under its label.</summary>
+    private const double ShareTopPx = 18;
+
+    private const double ShareHeight = 64;
+
+    private const double SpotTop = ShareTopPx + ShareHeight + 30;
+
+    private const double SpotHeight = 210;
+
+    private static string Css(double value)
+    {
+        return value.ToString("0.###", CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>How far down the spot panel a spot sits, #1 at the top.</summary>
+    private static double Down(double spot)
+    {
+        return (spot - 1) / 49 * 100;
+    }
+
+    /// <summary>How far along a row a spot sits, #50 at the left and #1 at the right.</summary>
+    private static double Across(double spot)
+    {
+        return (50 - spot) / 49 * 100;
+    }
+
+    /// <summary>The share panel reads half scale unless a title passes 45%, so a typical peak is not a sliver.</summary>
+    private static double ShareScale(ChartPumbilityPresenceRecord presence)
+    {
+        return presence.Columns.Any(c => c.Share > .45) ? 1 : .5;
+    }
+
+    private static double ShareFraction(ChartPumbilityPresenceRecord presence, double share)
+    {
+        return Math.Min(share / ShareScale(presence), 1);
+    }
+
+    private static double[] ShareTicks(ChartPumbilityPresenceRecord presence)
+    {
+        var scale = ShareScale(presence);
+        return new[] { scale / 2, scale };
+    }
+
+    private static double ShareTop(ChartPumbilityPresenceRecord presence, double share)
+    {
+        return ShareTopPx + ShareHeight * (1 - ShareFraction(presence, share));
+    }
+
+    private static string Percent(double share)
+    {
+        if (share <= 0) return "0%";
+        return share < .01 ? "<1%" : $"{(int)Math.Round(share * 100, MidpointRounding.AwayFromZero)}%";
+    }
+
+    private string Spot(double spot)
+    {
+        return L["#{0}", (int)Math.Round(spot, MidpointRounding.AwayFromZero)];
+    }
+
+    private string SpotList(IReadOnlyList<double> spots)
+    {
+        var named = spots.Select(Spot).ToArray();
+        return named.Length == 1 ? named[0] : L["{0} and {1}", string.Join(", ", named[..^1]), named[^1]];
+    }
+
+    private static string GemName(Name gem)
+    {
+        return gem.ToString().Replace("[P.B] ", string.Empty);
+    }
+
+    private static string Title(PumbilityPresenceColumn column)
+    {
+        return column.Level is { } level ? $"{GemName(column.Gem)} LV.{level}" : GemName(column.Gem);
+    }
+
+    private string GemList(IReadOnlyList<Name> gems)
+    {
+        var named = gems.Select(GemName).ToArray();
+        return named.Length == 1 ? named[0] : L["{0} and {1}", string.Join(", ", named[..^1]), named[^1]];
+    }
+
+    /// <summary>The gems along the across layout, each with the column it starts at and how many it spans.</summary>
+    private static IEnumerable<(Name Gem, int Start, int Size)> Gems(ChartPumbilityPresenceRecord presence)
+    {
+        var start = 0;
+        while (start < presence.Columns.Count)
+        {
+            var gem = presence.Columns[start].Gem;
+            var size = 1;
+            while (start + size < presence.Columns.Count && presence.Columns[start + size].Gem == gem) size++;
+            yield return (gem, start, size);
+            start += size;
+        }
+    }
+
+    private string Headline(ChartPumbilityPresenceRecord presence)
+    {
+        if (presence.MostHeld is not { } index)
+            return L["Nobody on the PUMBILITY ladder holds this chart in their top 50 yet."];
+        var column = presence.Columns[index];
+        return column.Dots.Count > 0
+            ? L["Most held at {0}: {1} hold it, at {2} in their top 50.", Title(column), Percent(column.Share),
+                SpotList(column.Dots)]
+            : L["Most held at {0}: {1} hold it, typically around {2} in their top 50.", Title(column),
+                Percent(column.Share), Spot(column.Spots!.Median)];
+    }
+
+    private string? RatingLine(ChartPumbilityPresenceRecord presence)
+    {
+        if (presence.Ratings.Count == 0) return null;
+        var folder = Chart!.DifficultyString;
+        var clauses = presence.Ratings.Select((run, i) => i == 0
+            ? run.Rating switch
+            {
+                PumbilityPresenceRating.Higher => L["Rates higher than other {0}s at {1}", folder, GemList(run.Gems)],
+                PumbilityPresenceRating.Lower => L["Rates lower than other {0}s at {1}", folder, GemList(run.Gems)],
+                _ => L["Rates about like other {0}s at {1}", folder, GemList(run.Gems)]
+            }
+            : run.Rating switch
+            {
+                PumbilityPresenceRating.Higher => L["higher at {0}", GemList(run.Gems)],
+                PumbilityPresenceRating.Lower => L["lower at {0}", GemList(run.Gems)],
+                _ => L["about the same at {0}", GemList(run.Gems)]
+            });
+        return string.Join(", ", clauses.Select(c => c.Value)) + ".";
+    }
+
+    private string? ViewerLine(ChartPumbilityPresenceRecord presence)
+    {
+        if (presence.Viewer is not { } viewer) return null;
+        var title = Title(presence.Columns[viewer.Column]);
+        return viewer.Spot is { } spot
+            ? L["You're {0}: it's {1} in your top 50.", title, Spot(spot)]
+            : L["You're {0}: it isn't in your top 50.", title];
+    }
+
+    /// <summary>One tooltip line and the class that sets it: a plain line, a caveat in muted ink, or yours under a rule.</summary>
+    private readonly record struct TipLine(string Text, string Kind);
+
+    /// <summary>What a title's tooltip says, line by line: the share, where it typically sits, the rating, the caveat, you.</summary>
+    private IReadOnlyList<TipLine> Lines(ChartPumbilityPresenceRecord presence, int index)
+    {
+        var column = presence.Columns[index];
+        var lines = new List<TipLine>();
+        if (column.Players == 0)
+        {
+            lines.Add(new TipLine(L["No players on this title yet"], "presence-tip-muted"));
+            return lines;
+        }
+
+        lines.Add(new TipLine(L["{0} hold it", Percent(column.Share)], "presence-tip-line"));
+        if (column.Dots.Count > 0)
+            lines.Add(new TipLine(L["At {0} in top 50", SpotList(column.Dots)], "presence-tip-line"));
+        else if (column.Spots is { } spots)
+            lines.Add(new TipLine(Round(spots.P25) == Round(spots.P75)
+                ? L["Typically {0} in top 50", Spot(spots.Median)]
+                : L["Typically {0}–{1} in top 50, centered around {2}", Spot(spots.P25), Spot(spots.P75), Spot(spots.Median)],
+                "presence-tip-line"));
+
+        var folder = Chart!.DifficultyString;
+        if (column.Rating is { } rating)
+            lines.Add(new TipLine(rating switch
+            {
+                PumbilityPresenceRating.Higher => L["Rates higher than other {0}s", folder],
+                PumbilityPresenceRating.Lower => L["Rates lower than other {0}s", folder],
+                _ => L["Rates about like other {0}s", folder]
+            }, "presence-tip-line"));
+        if (column.IsThin) lines.Add(new TipLine(L["Low data count for this title, read loosely"], "presence-tip-muted"));
+        if (presence.Viewer is { } viewer && viewer.Column == index)
+            lines.Add(new TipLine(viewer.Spot is { } mine ? L["You: {0} in your top 50", Spot(mine)] : L["Not in your top 50"],
+                "presence-tip-you"));
+        return lines;
+    }
+
+    private static int Round(double spot)
+    {
+        return (int)Math.Round(spot, MidpointRounding.AwayFromZero);
+    }
+
+    private string Describe(ChartPumbilityPresenceRecord presence, int index)
+    {
+        return string.Join(". ", Lines(presence, index).Select(l => l.Text).Prepend(Title(presence.Columns[index])));
+    }
+
+    private RenderFragment TipLines(ChartPumbilityPresenceRecord presence, int index) => __builder =>
+    {
+        <span class="presence-tip-head">@Title(presence.Columns[index])</span>
+        @foreach (var line in Lines(presence, index))
+        {
+            <span class="@line.Kind">@line.Text</span>
+        }
+    };
+}
