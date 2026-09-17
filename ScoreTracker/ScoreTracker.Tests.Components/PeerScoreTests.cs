@@ -229,6 +229,24 @@ public sealed class PeerScoreTests : ComponentTestBase
     }
 
     [Fact]
+    public async Task UnderAGradeRuleThePopoverIsToldToSayHowFar()
+    {
+        _settings.Setup(s => s.GetSetting(ScoreColorSettings.SettingKey, default, null))
+            .ReturnsAsync(new ScoreColorSettings(ScoreColorSystem.JudgementSpectrum, GlowRule.LastPercentOfGrade, 20)
+                .Serialize());
+
+        var cut = RenderWithPopovers(Standing(better: 5));
+        await cut.Find("[data-testid='peer-score']").ClickAsync(new MouseEventArgs());
+
+        cut.WaitForAssertion(() =>
+        {
+            var popover = cut.FindComponent<PeerStandingPopover>().Instance;
+            Assert.True(popover.ShowNextGrade);
+            Assert.Equal(PhoenixLetterGrade.S, popover.Progress?.Grade);
+        });
+    }
+
+    [Fact]
     public void TheGlowIsOneClassAndOffIsOff()
     {
         _settings.Setup(s => s.GetSetting(ScoreColorSettings.SettingKey, default, null))

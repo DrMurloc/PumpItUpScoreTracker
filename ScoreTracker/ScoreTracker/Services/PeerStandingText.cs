@@ -1,5 +1,9 @@
+using System.Net;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.Web.Services;
 
@@ -35,6 +39,24 @@ public static class PeerStandingText
         var beat = l["You beat {0}%", Math.Round((standing.Percentile ?? 0) * 100)].Value;
         return $"{beat} · {NotPassed(standing, l)}";
     }
+
+    /// <summary>
+    ///     "950 to SSS", the number in bold — the points still to go to the next grade; SSS+ counts to a
+    ///     Perfect Game. Markup, because the emphasis sits inside a translated sentence, so every
+    ///     argument is encoded before it joins it.
+    /// </summary>
+    public static MarkupString ToNextGrade(GradeProgress progress, IStringLocalizer<App> l)
+    {
+        var points = $"<b>{WebUtility.HtmlEncode(progress.PointsToNext.ToString("N0"))}</b>";
+        return (MarkupString)(progress.NextGrade is { } next
+            ? l["{0} to {1} (next grade)", points, WebUtility.HtmlEncode(next.GetName())].Value
+            : l["{0} to a Perfect Game", points].Value);
+    }
+
+    /// <summary>"81% of the way through SS+" — how much of its current grade the score already covers, rounded down.</summary>
+    public static string ThroughGrade(GradeProgress progress, IStringLocalizer<App> l) =>
+        l["{0}% of the way through {1}", progress.PointsIntoGrade * 100 / progress.GradeWidth,
+            progress.Grade.GetName()].Value;
 
     public static string NotPassed(PeerStanding standing, IStringLocalizer<App> l)
     {
