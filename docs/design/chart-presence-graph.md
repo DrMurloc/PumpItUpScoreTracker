@@ -65,6 +65,11 @@ SILVER 30 · GOLD 38 · PLATINUM 59 · DIAMOND 477 · RED BERYL 478 · ALEXANDRI
 DIAMOND and RED BERYL open and the graph has sixteen columns. The rule opens more gems as Phoenix 2 fills
 up, with no code change.
 
+- **A chart counted over PIU Scores players only opens its gems by those players alone** (D13). The ranking
+  players are what carry DIAMOND and RED BERYL past 125. Opened by everyone, a level-19 chart's DIAMOND levels
+  held 13–27 PIU Scores players each, so every level after LV.1 drew faded and got no folder call. Opened by
+  its own players, the same chart reads DIAMOND whole on about 95. So the columns of a chart below 20 can
+  differ from a chart above it.
 - **A title with fewer than 25 players draws faded**, and its tooltip adds the low-data line. DIAMOND LV.2
   had 19 that day.
 - **Under five holders, each holder is a dot** — a box needs five.
@@ -164,6 +169,7 @@ for 12:30 UTC.
 | D10 | **Spots are places in the top 50; ties share the middle spot.** | Decided unless objected; 81% of spots tie. |
 | D11 | **A chart with no official chart ranking counts PIU Scores players only.** | Decided unless objected; the ranking cannot show those charts. |
 | D12 | **A stored daily census.** | Owner: "table with job sounds fine". |
+| D13 | **A chart counted over PIU Scores players only opens its gems by those players, not by everyone.** | A bug check found a chart below 20 fading every DIAMOND level after LV.1; owner, 2026-09-16: "k". |
 
 ## 9. Known limits
 
