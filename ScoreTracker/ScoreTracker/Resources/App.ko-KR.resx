@@ -1432,6 +1432,9 @@
   <data name="Breakdown" xml:space="preserve">
     <value>구성</value>
   </data>
+  <data name="Brighter the closer" xml:space="preserve">
+    <value>가까울수록 더 밝게</value>
+  </data>
   <data name="Broken" xml:space="preserve">
     <value>브레이크 오프</value>
   </data>
@@ -2962,6 +2965,9 @@
   <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
     <value>파일의 모든 행이 우선합니다. 지금 기록보다 나빠도 덮어씁니다.</value>
   </data>
+  <data name="Every score that qualifies wears the same glow." xml:space="preserve">
+    <value>조건에 맞는 모든 점수가 같은 발광을 냅니다.</value>
+  </data>
   <data name="Every season re-balances every chart from how hard it is to score, then freezes." xml:space="preserve">
     <value>시즌마다 모든 채보를 점수 내기 어려운 정도에 따라 다시 보정한 뒤 고정합니다.</value>
   </data>
@@ -3093,6 +3099,15 @@
   </data>
   <data name="Failed: {0}{1}" xml:space="preserve">
     <value>실패: {0}{1}</value>
+  </data>
+  <data name="Faint at the bottom of a grade, full at the next one." xml:space="preserve">
+    <value>랭크의 시작점에서는 희미하고, 다음 랭크에서 가장 밝습니다.</value>
+  </data>
+  <data name="Faint at {0} points away, full at the next grade." xml:space="preserve">
+    <value>{0}점 남았을 때 희미하고, 다음 랭크에서 가장 밝습니다.</value>
+  </data>
+  <data name="Faint where the last {0}% starts, full at the next grade." xml:space="preserve">
+    <value>마지막 {0}%가 시작되는 곳에서 희미하고, 다음 랭크에서 가장 밝습니다.</value>
   </data>
   <data name="Fairly rated to pass" xml:space="preserve">
     <value>클리어 난이도는 표기 그대로</value>
@@ -3454,14 +3469,26 @@
   <data name="Glow" xml:space="preserve">
     <value>발광</value>
   </data>
+  <data name="Glow: % of a grade" xml:space="preserve">
+    <value>% 구간</value>
+  </data>
+  <data name="Glow: in the last" xml:space="preserve">
+    <value>랭크의 마지막</value>
+  </data>
   <data name="Glow: place" xml:space="preserve">
     <value>위</value>
   </data>
   <data name="Glow: places" xml:space="preserve">
     <value>위</value>
   </data>
+  <data name="Glow: points from the next grade" xml:space="preserve">
+    <value>점 미만</value>
+  </data>
   <data name="Glow: Top" xml:space="preserve">
     <value>상위</value>
+  </data>
+  <data name="Glow: under" xml:space="preserve">
+    <value>다음 랭크까지</value>
   </data>
   <data name="Glows red on the charts in each folder that almost nobody holds in a PUMBILITY top 50, and green on the ones the most players hold. Phoenix 2, rebuilt every Sunday." xml:space="preserve">
     <value>각 폴더에서 PUMBILITY 상위 50에 거의 아무도 보유하지 않은 채보는 빨간색으로, 가장 많은 플레이어가 보유한 채보는 초록색으로 빛납니다. Phoenix 2, 매주 일요일에 다시 만들어집니다.</value>
@@ -3555,6 +3582,9 @@
   </data>
   <data name="Grouped by" xml:space="preserve">
     <value>그룹 기준</value>
+  </data>
+  <data name="Grows with the grade: the last {0} points of an S, {1} of an AAA, {2} of a Phoenix 2 A." xml:space="preserve">
+    <value>랭크 폭에 맞춰 늘어납니다. S는 마지막 {0}점, AAA는 {1}점, Phoenix 2의 A는 {2}점입니다.</value>
   </data>
   <data name="Had a bad import?" xml:space="preserve">
     <value>잘못 가져오셨나요?</value>
@@ -5347,6 +5377,9 @@
   <data name="No peer holds it" xml:space="preserve">
     <value>보유한 동료 없음</value>
   </data>
+  <data name="No peers needed. SSS+ counts a Perfect Game as its next line." xml:space="preserve">
+    <value>동료가 필요 없습니다. SSS+는 퍼펙트 게임을 다음 기준선으로 봅니다.</value>
+  </data>
   <data name="No peers yet." xml:space="preserve">
     <value>아직 동료가 없습니다.</value>
   </data>
@@ -6001,6 +6034,9 @@
   <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
     <value>점수, 등급, 플레이트 또는 클리어를 레벨별로 보여주는 구성 가능한 그래프.</value>
   </data>
+  <data name="One glow" xml:space="preserve">
+    <value>발광 하나</value>
+  </data>
   <data name="One hue — the current mix's — from dark to bright. Ordered by lightness alone, so it reads the same for every kind of color vision." xml:space="preserve">
     <value>현재 시리즈의 색 하나로 어두운 곳에서 밝은 곳까지. 밝기만으로 순서를 매기므로 어떤 색각에서도 똑같이 읽힙니다.</value>
   </data>
@@ -6034,8 +6070,8 @@
   <data name="one per level bucket" xml:space="preserve">
     <value>레벨 구간별 1개</value>
   </data>
-  <data name="One rule, one glow. The color is the spectrum; the glow says a score crossed the line you set." xml:space="preserve">
-    <value>규칙 하나, 발광 하나. 색상이 스펙트럼이고, 발광은 점수가 내가 정한 선을 넘었다는 신호입니다.</value>
+  <data name="One rule. The glow says a score crossed the line you set; the two grade options can also brighten as a score closes in." xml:space="preserve">
+    <value>규칙 하나. 발광은 점수가 내가 정한 선을 넘었다는 신호이며, 두 가지 랭크 옵션은 점수가 가까워질수록 더 밝아질 수도 있습니다.</value>
   </data>
   <data name="One session" xml:space="preserve">
     <value>세션 하나</value>
@@ -11941,11 +11977,17 @@
   <data name="{0} titles, and the game shows you none of your progress." xml:space="preserve">
     <value>칭호 {0}개, 그런데 게임은 진행도를 전혀 보여주지 않습니다.</value>
   </data>
+  <data name="{0} to a Perfect Game" xml:space="preserve">
+    <value>퍼펙트 게임까지 {0}</value>
+  </data>
   <data name="{0} to next level" xml:space="preserve">
     <value>다음 레벨까지 {0}</value>
   </data>
   <data name="{0} to PG" xml:space="preserve">
     <value>PG까지 {0}</value>
+  </data>
+  <data name="{0} to {1} (next grade)" xml:space="preserve">
+    <value>{1}까지 {0}</value>
   </data>
   <data name="{0} tools can read your scores." xml:space="preserve">
     <value>도구 {0}개가 여러분의 점수를 읽을 수 있습니다.</value>
@@ -12000,6 +12042,9 @@
   </data>
   <data name="{0}% of the bar" xml:space="preserve">
     <value>바의 {0}%</value>
+  </data>
+  <data name="{0}% of the way through {1}" xml:space="preserve">
+    <value>{1}의 {0}% 지점</value>
   </data>
   <data name="{0}% of {1}" xml:space="preserve">
     <value>{1}의 {0}%</value>
