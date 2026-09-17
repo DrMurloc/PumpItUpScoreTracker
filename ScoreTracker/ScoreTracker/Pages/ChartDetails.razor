@@ -138,6 +138,9 @@
                 }
             </div>
             <ChartVerdictCard Facets="_facets" Identity="_identityChips"></ChartVerdictCard>
+            @* Under the chips, in the static hero so the headline is text a crawler reads
+               (docs/design/chart-presence-graph.md D7). Nothing renders on a mix without a census. *@
+            <ChartPumbilityPresence Presence="_presence" Chart="_chart" TitlesAcross="true"></ChartPumbilityPresence>
             <div class="chart-hero-actions">
                 <MudLink Href="@PiuCenterUrl" Target="_blank" Typo="Typo.caption">@L["View full chart on PIU Center"]</MudLink>
             </div>
@@ -284,6 +287,7 @@
     private ChartStepChartRecord? _stepChart;
     private IReadOnlyList<TierListChartCard.CardSkillChip> _identityChips =
         Array.Empty<TierListChartCard.CardSkillChip>();
+    private ChartPumbilityPresenceRecord? _presence;
 
 
     /// <summary>
@@ -373,6 +377,8 @@
         _identityChips = IdentityChips.WithSpeedBand(
             IdentityChips.ToCardChips(identity.TryGetValue(chart.Id, out var record) ? record : null, false, L),
             await SpeedBand(chart.Id, chartMix), L);
+        _presence = await Mediator.Send(new GetChartPumbilityPresenceQuery(chart.Id, chartMix,
+            CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null));
     }
 
     /// <summary>

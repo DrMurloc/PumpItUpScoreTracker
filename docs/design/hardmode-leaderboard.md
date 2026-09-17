@@ -286,8 +286,8 @@ by level.
 objection is that a list where every chart qualifies is a wall of glow. That is the intent: *"That
 page should feel like a wall of boss charts"* (owner, 2026-09-14). One rule, no scoped exceptions, no
 pass-through parameter on `DifficultyBubble`. The glow defaults **on**, signed-out included, and the
-account toggle lives on `/Account` → Profile. D32 makes it the difficulty glow — its own switch, and a
-green end — without changing either of those.
+account toggle lived on `/Account` → Profile until D34 moved it beside the score glows. D32 makes it the
+difficulty glow — its own switch, and a green end — without changing either of those.
 
 **D25 — the private-account note under the board is removed, and its plumbing with it.** D17's
 *filtering* stands unchanged — a private account is on its own board and nobody else's, and the
@@ -406,6 +406,13 @@ milestones the capture step already writes — no new milestone kind, no storage
 
 `HardmodeLadders` holds the rung rule, and the feed's rung row reads it too, so the card and the feeds
 cannot disagree about which rung a batch crossed.
+
+**D34 — the difficulty glow switch sits with the score glows.** Owner, 2026-09-17: *"move the glow toggle
+to the 'Scores and glows' section"*, meaning *"the hard/easy glow"*. **Show difficulty glow** leaves the
+Profile tab for the Glow section of `/Account` → Peers & score colors (`?tab=peers`), under the score glow
+rules, so every setting that makes something glow lives in one place. It keeps D24's default and D32's
+stored opt-out key. It also follows that tab's draft: nothing is written until Save, and leaving the tab
+discards the change.
 
 ### What each surface renders
 

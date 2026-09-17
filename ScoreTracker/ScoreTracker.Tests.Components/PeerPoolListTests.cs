@@ -246,6 +246,59 @@ public sealed class PeerPoolListTests : ComponentTestBase
         Assert.Equal("under 5", nobody.QuerySelector("td.pmb-num")!.TextContent.Trim());
     }
 
+    [Fact]
+    public void UnderPrevalenceTheChartsACrowdedRankingUndercountsLeaveTheirTierAndLeadTheList()
+    {
+        var f = new Fixture()
+            .Held("Staple", TierListCategory.Overrated, holders: 17, points: 550, mine: null)
+            .Held("Crowded", TierListCategory.Easy, holders: 8, points: 200, mine: null)
+            .Held("AlsoCrowded", TierListCategory.Overrated, holders: 12, points: 400, mine: null)
+            .Undercounted("Crowded", "AlsoCrowded");
+
+        var cut = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
+            .Add(x => x.Density, UiDensity.Comfortable));
+
+        Assert.Equal(new[] { "Held by more than shown", "Staple" },
+            cut.FindAll(".tier-section-name").Select(n => n.TextContent).ToArray());
+        Assert.Equal("2 charts the official rankings undercount", cut.Find(".tier-section-stat").TextContent);
+        // The most held first, as a tier orders them; the Staple tier keeps only the chart the count can see.
+        Assert.Equal(new[] { "AlsoCrowded", "Crowded", "Staple" },
+            cut.FindAll(".tier-chart-card-name").Select(n => n.TextContent).ToArray());
+        Assert.Single(cut.FindAll("[data-testid=ppl-section-HeldByMore]"));
+    }
+
+    [Fact]
+    public void UnderRarityTheChartsACrowdedRankingUndercountsCloseTheListFolded()
+    {
+        var f = new Fixture()
+            .Held("Few", TierListCategory.Underrated, holders: 2, points: 40, mine: null, scored: 9)
+            .Held("Crowded", TierListCategory.Overrated, holders: 20, points: 500, mine: null, scored: 22)
+            .Undercounted("Crowded");
+
+        var cut = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
+            .Add(x => x.GroupBy, PeerGrouping.Rarity).Add(x => x.Density, UiDensity.Comfortable));
+
+        Assert.Equal(new[] { "Kept by 1–10%", "Held by more than shown" },
+            cut.FindAll(".tier-section-name").Select(n => n.TextContent).ToArray());
+        Assert.Equal("1 chart the official rankings undercount", cut.Find(".tier-section-stat").TextContent);
+        Assert.Single(cut.FindAll(".tier-section-body"));
+        Assert.DoesNotContain("Crowded", cut.Find(".tier-section-body").TextContent);
+    }
+
+    [Fact]
+    public void ProjectedGainsHasNoSectionForUndercountedCharts()
+    {
+        var f = new Fixture()
+            .Held("Crowded", TierListCategory.Overrated, holders: 12, points: 500, mine: null, gain: 18.4, projected: 987_475)
+            .Undercounted("Crowded");
+
+        var cut = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
+            .Add(x => x.Gains, f.Gains).Add(x => x.GroupBy, PeerGrouping.ProjectedGains)
+            .Add(x => x.Density, UiDensity.Comfortable));
+
+        Assert.Equal(new[] { "+15 to +25" }, cut.FindAll(".tier-section-name").Select(n => n.TextContent).ToArray());
+    }
+
     // ------------------------------------------------------------------ fixture
 
     /// <summary>
@@ -337,12 +390,21 @@ public sealed class PeerPoolListTests : ComponentTestBase
             return this;
         }
 
+        /// <summary>Charts the page says are held by more peers than their count shows.</summary>
+        public Fixture Undercounted(params string[] names)
+        {
+            foreach (var name in names) _undercounted.Add(_ids[name]);
+            return this;
+        }
+
+        private readonly HashSet<Guid> _undercounted = new();
+
         public PumbilityPeersPageRecord Page()
         {
             return new PumbilityPeersPageRecord(MixEnum.Phoenix2, ChartType.Single,
                 new Dictionary<ChartType, PeerGroup> { [ChartType.Single] = PeerGroup.Pumbility(17_609.59, 23, 50) },
                 _entries, _alone, Array.Empty<PeerRosterEntry>(), 0, null, _unheld,
-                new Dictionary<ChartType, IReadOnlyList<int>> { [ChartType.Single] = _levels });
+                new Dictionary<ChartType, IReadOnlyList<int>> { [ChartType.Single] = _levels }, _undercounted);
         }
 
         private Chart NewChart(string name, int level = 21)

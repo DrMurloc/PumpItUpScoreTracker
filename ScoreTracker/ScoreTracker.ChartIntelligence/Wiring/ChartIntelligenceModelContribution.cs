@@ -40,6 +40,18 @@ public sealed class ChartIntelligenceModelContribution : IDbModelContribution
             .WithMany()
             .HasForeignKey(e => e.ChartId);
 
+        // The PUMBILITY presence census (docs/design/chart-presence-graph.md §7): a mix's columns in its two
+        // layouts (D13), and a row per (mix, chart, column). The page reads one chart, so its rows are one
+        // PK-prefix seek.
+        modelBuilder.Entity<ChartPumbilityPresenceColumnEntity>().ToTable("ChartPumbilityPresenceColumn")
+            .HasKey(e => new { e.MixId, e.CountsBoardPlayers, e.ColumnOrder });
+        modelBuilder.Entity<ChartPumbilityPresenceEntity>().ToTable("ChartPumbilityPresence")
+            .HasKey(e => new { e.MixId, e.ChartId, e.ColumnOrder });
+        modelBuilder.Entity<ChartPumbilityPresenceEntity>()
+            .HasOne<ChartEntity>()
+            .WithMany()
+            .HasForeignKey(e => e.ChartId);
+
         modelBuilder.Entity<CoOpRatingEntity>().ToTable("CoOpRating")
             .HasOne<ChartEntity>()
             .WithMany()

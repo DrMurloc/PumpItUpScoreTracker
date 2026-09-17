@@ -104,6 +104,33 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ChartBoardDepthsCountOneSnapshotsRowsInTheirScopeBoardByBoard()
+    {
+        var snapshots = Snapshots();
+        var (week1Id, board, alice, _) = await SeedSealedSnapshot(Week1);
+        var carol = (await snapshots.EnsurePlayers(MixEnum.Phoenix2, new[] { ("carol", (Uri?)null) }, Week1,
+            CancellationToken.None)).Single();
+        var rating = await snapshots.EnsureBoard(MixEnum.Phoenix2, LeaderboardTypes.Rating, "PUMBILITY", null, null,
+            null, CancellationToken.None);
+        await snapshots.WritePlacements(week1Id, new[]
+        {
+            new PlacementRow(board.Id, carol.Id, 3, 950000, true),
+            new PlacementRow(rating.Id, alice.Id, 1, 25000)
+        }, CancellationToken.None);
+        var week2Id = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week2, CancellationToken.None);
+        await snapshots.WritePlacements(week2Id, new[] { new PlacementRow(board.Id, alice.Id, 1, 999000) },
+            CancellationToken.None);
+
+        var official = await snapshots.GetChartBoardDepths(week1Id, PlacementScope.OfficialOnly,
+            CancellationToken.None);
+        var supplemented = await snapshots.GetChartBoardDepths(week1Id, PlacementScope.IncludingSupplemented,
+            CancellationToken.None);
+
+        Assert.Equal(new ChartBoardDepth(board.Id, board.ChartId!.Value, 2, 990000m), Assert.Single(official));
+        Assert.Equal(new ChartBoardDepth(board.Id, board.ChartId!.Value, 3, 950000m), Assert.Single(supplemented));
+    }
+
+    [Fact]
     public async Task OnlyAFreshHeartbeatCountsAsALiveRun()
     {
         var snapshots = Snapshots();

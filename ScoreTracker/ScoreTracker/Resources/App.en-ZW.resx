@@ -157,6 +157,9 @@
   <data name="#{0} PUMBILITY" xml:space="preserve">
     <value>#{0} PUMBILITY</value>
   </data>
+  <data name="% hold it" xml:space="preserve">
+    <value>% mrgloru ug</value>
+  </data>
   <data name="(edited)" xml:space="preserve">
     <value>(blurgro)</value>
   </data>
@@ -279,6 +282,9 @@
   </data>
   <data name="1 chart" xml:space="preserve">
     <value>1 murgl</value>
+  </data>
+  <data name="1 chart the official rankings undercount" xml:space="preserve">
+    <value>1 murgl a urgmrmurg maglmrpplgl glubgrorp</value>
   </data>
   <data name="1 hour 45 minutes of real time." xml:space="preserve">
     <value>1 grogl 45 rglrglgrorp mrgl ogro grglmrgl.</value>
@@ -594,6 +600,9 @@
   </data>
   <data name="about half of a modern chart is hold ticks" xml:space="preserve">
     <value>ro blugro blarg a murg murgl gro gurg prgl</value>
+  </data>
+  <data name="about the same at {0}" xml:space="preserve">
+    <value>ro a plom og {0}</value>
   </data>
   <data name="About The Site" xml:space="preserve">
 	  <value>Rrglrmrgl Mrp Plglmorg</value>
@@ -1074,6 +1083,9 @@
   </data>
   <data name="at {0}" xml:space="preserve">
     <value>og {0}</value>
+  </data>
+  <data name="At {0} in top 50" xml:space="preserve">
+    <value>Og {0} gropmur ropgl 50</value>
   </data>
   <data name="at {0} or better" xml:space="preserve">
     <value>og {0} ol mrrgl</value>
@@ -3699,6 +3711,9 @@
   <data name="held" xml:space="preserve">
     <value>glorgblgrl</value>
   </data>
+  <data name="Held by more than shown" xml:space="preserve">
+    <value>Mrgloru bu mrrgl grogrgl blgrlargl</value>
+  </data>
   <data name="held by nobody" xml:space="preserve">
     <value>grogro bu bomorp</value>
   </data>
@@ -3731,6 +3746,9 @@
   </data>
   <data name="High" xml:space="preserve">
     <value>Mrrgl</value>
+  </data>
+  <data name="higher at {0}" xml:space="preserve">
+    <value>mrrglgro og {0}</value>
   </data>
   <data name="higher average score" xml:space="preserve">
     <value>mrrglgro rorg mrglrgl</value>
@@ -3770,6 +3788,9 @@
   </data>
   <data name="History" xml:space="preserve">
     <value>Lurgmrmorg</value>
+  </data>
+  <data name="Hold" xml:space="preserve">
+    <value>Mrgloru</value>
   </data>
   <data name="hold at least one" xml:space="preserve">
     <value>mrgloru mr mggl mrp</value>
@@ -4584,6 +4605,15 @@
   <data name="Like {0}" xml:space="preserve">
     <value>Plglro {0}</value>
   </data>
+  <data name="Likely held by more players than shown" xml:space="preserve">
+    <value>Murgab mrgloru bu mrrgl morp grogrgl blgrlargl</value>
+  </data>
+  <data name="Likely more common than shown" xml:space="preserve">
+    <value>Murgab mrrgl grolurgmrp grogrgl blgrlargl</value>
+  </data>
+  <data name="Likely more than shown" xml:space="preserve">
+    <value>Murgab mrrgl grogrgl blgrlargl</value>
+  </data>
   <data name="Limbo" xml:space="preserve">
     <value>Plglmurm</value>
   </data>
@@ -4700,11 +4730,20 @@
   <data name="Low" xml:space="preserve">
     <value>Murm</value>
   </data>
+  <data name="Low data count" xml:space="preserve">
+    <value>Glub gru grorp</value>
+  </data>
+  <data name="Low data count for this title, read loosely" xml:space="preserve">
+    <value>Glub gru grorp ba blu mrgl, rorgmo blorpgl</value>
+  </data>
   <data name="Low tick share is what makes a low score reachable: hold everything, good every tap, and a chart under the dashed line can pass with an F. On a typical level 18 that floor is a D — about 591,000." xml:space="preserve">
     <value>Mgl prgl grulgro gro blarg grogl a mgl mrglrgl grabgro: gurg blubgro, lurggrgl blub prub, ro a murgl blogro gro glarg blarg lurggro plgl a Ｆ. Ur a groblub grorpmurm 18 ur blogl gro a Ｄ — ro 591,000.</value>
   </data>
   <data name="Lower" xml:space="preserve">
 	  <value>Lurgro</value>
+  </data>
+  <data name="lower at {0}" xml:space="preserve">
+    <value>glubgro og {0}</value>
   </data>
   <data name="lower average score" xml:space="preserve">
     <value>glubgro rorg mrglrgl</value>
@@ -5044,6 +5083,12 @@
   </data>
   <data name="Most clears stall below {0} — the steepest step on this board." xml:space="preserve">
     <value>Mrrrgl lurgmrgl blgrlblub blgrlblarg {0} — mrp blubplglblarg glorgmagl lurg grglmrp mrglblarg.</value>
+  </data>
+  <data name="Most held at {0}: {1} hold it, at {2} in their top 50." xml:space="preserve">
+    <value>Mrrrgl mrgloru og {0}: {1} mrgloru ug, og {2} gropmur grglblarg ropgl 50.</value>
+  </data>
+  <data name="Most held at {0}: {1} hold it, typically around {2} in their top 50." xml:space="preserve">
+    <value>Mrrrgl mrgloru og {0}: {1} mrgloru ug, rorggl ro {2} gropmur grglblarg ropgl 50.</value>
   </data>
   <data name="Most history" xml:space="preserve">
     <value>Mrrrgl lurgmrmorg</value>
@@ -5419,6 +5464,9 @@
   <data name="no plate bonus" xml:space="preserve">
     <value>mo plglub urgmrglublgl</value>
   </data>
+  <data name="No players on this title yet" xml:space="preserve">
+    <value>Mo morp ap blu mrgl larg</value>
+  </data>
   <data name="No plays match." xml:space="preserve">
     <value>Bo lurg groblub.</value>
   </data>
@@ -5581,6 +5629,9 @@
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>Urggro maglgrorp morg mrp PUMBILITY mrglblarg grglmrp plglmorg.</value>
   </data>
+  <data name="Nobody on the PUMBILITY ladder holds this chart in their top 50 yet." xml:space="preserve">
+    <value>Momorp ap a PUMBILITY gropla mrgloru blu murgl gropmur grglblarg ropgl 50 larg.</value>
+  </data>
   <data name="Nobody rivals you yet" xml:space="preserve">
     <value>Urggro Murgmorp blub argl</value>
   </data>
@@ -5667,6 +5718,9 @@
   </data>
   <data name="Not in anyone's PUMBILITY" xml:space="preserve">
     <value>Blarg mrp morp PUMBILITY</value>
+  </data>
+  <data name="Not in your top 50" xml:space="preserve">
+    <value>Bo gropmur gromurp ropgl 50</value>
   </data>
   <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
     <value>Murm mrp {0} — rgl {1} murgl rolurg glgrgl mrp mrgl.</value>
@@ -6233,6 +6287,9 @@
   </data>
   <data name="Other" xml:space="preserve">
 	  <value>Mrpblgrl</value>
+  </data>
+  <data name="Other {0}s" xml:space="preserve">
+    <value>Ugmorg {0}</value>
   </data>
   <data name="outscored {0}" xml:space="preserve">
     <value>blargmrpmurp {0}</value>
@@ -7184,6 +7241,9 @@
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>PUMBILITY blarg 50</value>
   </data>
+  <data name="PUMBILITY top 50s by title" xml:space="preserve">
+    <value>PUMBILITY ropgl 50 bu mrgl</value>
+  </data>
   <data name="PUMBILITY — combined" xml:space="preserve">
     <value>PUMBILITY — murgblub</value>
   </data>
@@ -7358,6 +7418,24 @@
   </data>
   <data name="Rate limited" xml:space="preserve">
     <value>Murgm murmo</value>
+  </data>
+  <data name="Rates about like other {0}s" xml:space="preserve">
+    <value>Mrglrg ro plglro ugmorg {0}</value>
+  </data>
+  <data name="Rates about like other {0}s at {1}" xml:space="preserve">
+    <value>Mrglrg ro plglro ugmorg {0} og {1}</value>
+  </data>
+  <data name="Rates higher than other {0}s" xml:space="preserve">
+    <value>Mrglrg mrrglgro grogrgl ugmorg {0}</value>
+  </data>
+  <data name="Rates higher than other {0}s at {1}" xml:space="preserve">
+    <value>Mrglrg mrrglgro grogrgl ugmorg {0} og {1}</value>
+  </data>
+  <data name="Rates lower than other {0}s" xml:space="preserve">
+    <value>Mrglrg glubgro grogrgl ugmorg {0}</value>
+  </data>
+  <data name="Rates lower than other {0}s at {1}" xml:space="preserve">
+    <value>Mrglrg glubgro grogrgl ugmorg {0} og {1}</value>
   </data>
   <data name="Rating" xml:space="preserve">
     <value>Mrglrg</value>
@@ -8752,6 +8830,9 @@
   <data name="Splits" xml:space="preserve">
     <value>Mrargl</value>
   </data>
+  <data name="Spot in top 50" xml:space="preserve">
+    <value>Mroglub gropmur ropgl 50</value>
+  </data>
   <data name="Spreadsheet is uploading and being processed..." xml:space="preserve">
 	  <value>Blgrlgrrglmaglmorg urg glorgmrblarg ro morgmorg plglglorgmurm...</value>
   </data>
@@ -9554,6 +9635,9 @@
   <data name="This chart is on the right side of the video" xml:space="preserve">
     <value>Grglmrp murgl lu ur a rulurg blgrlgro ub a grrrgl</value>
   </data>
+  <data name="This chart is popular or easy enough that its official top 300 only reaches down to {0} ({1}). From {2} up, players who hold it in their top 50 with a lower score can't be counted, so it's likely in more top 50s than this shows." xml:space="preserve">
+    <value>Blu murgl arg grolurgmrp ol mrgl blurg argo ug urgmrmurg ropgl 300 ub murgro blogro ro {0} ({1}). Blarg {2} ur gro, morp murpo mrgloru ug gropmur grglblarg ropgl 50 mag a glubgro mrglrgl bo gab bru grorpgro, op ug arg murgab gropmur mrrgl ropgl 50 grogrgl blu romorg.</value>
+  </data>
   <data name="This community doesn't give out Discord roles." xml:space="preserve">
     <value>Blu plglmurgblub bo grabmurp Discord roglubrgl.</value>
   </data>
@@ -10061,6 +10145,12 @@
   </data>
   <data name="Type {0} to confirm" xml:space="preserve">
     <value>Larbo {0} probu</value>
+  </data>
+  <data name="Typically {0} in top 50" xml:space="preserve">
+    <value>Rorggl {0} gropmur ropgl 50</value>
+  </data>
+  <data name="Typically {0}–{1} in top 50, centered around {2}" xml:space="preserve">
+    <value>Rorggl {0}–{1} gropmur ropgl 50, mogrglgro ro {2}</value>
   </data>
   <data name="Ultra Popular" xml:space="preserve">
     <value>Blubmr Grolurgmrp</value>
@@ -10636,6 +10726,9 @@
   <data name="Where every song starts you." xml:space="preserve">
     <value>Blarggrorp murgglorg mrgl rglmagl blub.</value>
   </data>
+  <data name="Where it typically sits" xml:space="preserve">
+    <value>Gorpo ug rorggl mrogl</value>
+  </data>
   <data name="Where life settles" xml:space="preserve">
     <value>Blarggrorp glorgrgl grrglmaglglorg</value>
   </data>
@@ -11028,6 +11121,12 @@
   <data name="You're the creator of {0} communities. Someone has to own them, so pick a new creator for each — or delete it, if you're the only one left." xml:space="preserve">
     <value>Golu grumba {0} malu. Burgo prala, oba blurp.</value>
   </data>
+  <data name="You're {0}: it isn't in your top 50." xml:space="preserve">
+    <value>Blub arg {0}: ug bo gropmur gromurp ropgl 50.</value>
+  </data>
+  <data name="You're {0}: it's {1} in your top 50." xml:space="preserve">
+    <value>Blub arg {0}: ug arg {1} gropmur gromurp ropgl 50.</value>
+  </data>
   <data name="You've been banned from this community and can't rejoin." xml:space="preserve">
     <value>Plglgrrgl murmmrp morgmrgl romurg grglmrp plglmurgblub ro blargmr arglmurp.</value>
   </data>
@@ -11036,6 +11135,9 @@
   </data>
   <data name="you:" xml:space="preserve">
     <value>blub:</value>
+  </data>
+  <data name="You: {0} in your top 50" xml:space="preserve">
+    <value>Blub: {0} gropmur gromurp ropgl 50</value>
   </data>
   <data name="You: {0} · similar players average {1}" xml:space="preserve">
     <value>Blub: {0} · maglarglblgrl morp rorg {1}</value>
@@ -11556,6 +11658,9 @@
   <data name="{0} charts removed from songs that stayed" xml:space="preserve">
     <value>{0} murgl grorpmorglurg romurg mrgl blubgrrgl grorpgrgl</value>
   </data>
+  <data name="{0} charts the official rankings undercount" xml:space="preserve">
+    <value>{0} murgl a urgmrmurg maglmrpplgl glubgrorp</value>
+  </data>
   <data name="{0} charts were re-stepped." xml:space="preserve">
     <value>{0} murgl glmagl gl-plglmorgplgl.</value>
   </data>
@@ -11678,6 +11783,9 @@
   </data>
   <data name="{0} haven't passed it" xml:space="preserve">
     <value>{0} rorggurg rglplgl mrp</value>
+  </data>
+  <data name="{0} hold it" xml:space="preserve">
+    <value>{0} mrgloru ug</value>
   </data>
   <data name="{0} hours, {1} minutes" xml:space="preserve">
     <value>{0} obla, {1} malbu</value>

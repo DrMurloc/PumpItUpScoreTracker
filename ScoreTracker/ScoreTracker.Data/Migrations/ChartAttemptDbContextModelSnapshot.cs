@@ -717,6 +717,91 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("ChartPreferenceRating", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartPumbilityPresenceColumnEntity", b =>
+                {
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("CountsBoardPlayers")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ColumnOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Band")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTimeOffset>("ComputedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Players")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SitePlayers")
+                        .HasColumnType("int");
+
+                    b.HasKey("MixId", "CountsBoardPlayers", "ColumnOrder");
+
+                    b.ToTable("ChartPumbilityPresenceColumn", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartPumbilityPresenceEntity", b =>
+                {
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ColumnOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("CountsBoardPlayers")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Dots")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<double?>("FolderMedian")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("FolderP25")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("FolderP75")
+                        .HasColumnType("float");
+
+                    b.Property<int>("FolderSpots")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Holders")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("SpotMax")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("SpotMedian")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("SpotMin")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("SpotP25")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("SpotP75")
+                        .HasColumnType("float");
+
+                    b.HasKey("MixId", "ChartId", "ColumnOrder");
+
+                    b.HasIndex("ChartId");
+
+                    b.ToTable("ChartPumbilityPresence", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartScoreStatsEntity", b =>
                 {
                     b.Property<Guid>("MixId")
@@ -4726,6 +4811,15 @@ namespace ScoreTracker.Data.Migrations
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.SongEntity", null)
                         .WithMany()
                         .HasForeignKey("SongId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartPumbilityPresenceEntity", b =>
+                {
+                    b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ChartId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

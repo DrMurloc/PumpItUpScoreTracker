@@ -93,6 +93,13 @@ public sealed class RecurringJobRunner
     public Task PublishRebuildHardmodeCharts() =>
         _bus.Publish(new RebuildHardmodeChartsCommand(MixEnum.Phoenix2));
 
+    /// <summary>
+    ///     The daily PUMBILITY presence census behind the chart page's graph
+    ///     (docs/design/chart-presence-graph.md). Phoenix 2 alone — the gem ladder is Phoenix 2's.
+    /// </summary>
+    public Task PublishRebuildChartPresence() =>
+        _bus.Publish(new RebuildChartPresenceCommand(MixEnum.Phoenix2));
+
     public Task PublishCalculateChartLetterDifficulties() =>
         Task.WhenAll(
             _bus.Publish(new RecalculateChartLetterDifficultiesCommand(MixEnum.Phoenix)),

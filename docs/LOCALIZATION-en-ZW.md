@@ -817,6 +817,43 @@ next batch finds them. Reused from this doc as-is:
 | green | gromurg | Recovered from the rarity ramp (*grey → silver → green*) and the folder-heat legend. |
 | red | ro | Recovered from the folder-heat legend (*ro = Mrglrlgl*). Shares its spelling with `ro` (to). |
 
+## The presence graph (2026-09-16)
+
+Coined for the chart page's PUMBILITY presence graph ([chart-presence-graph.md](design/chart-presence-graph.md)):
+the caption, the folder rating line, the axis labels, the legend and each title's tooltip. Reused, not
+re-coined: `mrgloru` (hold), `gropmur` (in), `ropgl 50` (top 50), `grglblarg` (their), `gromurp` (your),
+`Blub` (you), `arg` (is), `ug` (it), `bo` (not), `mo` (no), `Momorp` (nobody), `larg` (yet), `a` (the),
+`og` (at), `ap` (on), `ba` (for), `bu` (by), `blu` (this), `Mrgl` (title), `murgl` (chart), `morp`
+(players), `gropla` (ladder), `Mrrrgl` (most), `mrrglgro` / `glubgro` (higher / lower), `grogrgl` (than),
+`ugmorg` (other), `plglro` (like), `ro` (about, and around), `mrglrg` (rating, here *rates*), `gorpo`
+(where), `mrogl` (sits), `gru` (data), `grorp` (number, here *count*), `plom` (same) and `rorgmo` (reads).
+
+| English | en-ZW | Notes |
+|---|---|---|
+| low (few) | glub | The root of `glubgro` (lower) and `Glubglub` (lowest). |
+| typically | rorggl | On `rorg` (average): what a chart usually does is its average. |
+| spot (a place in a top 50) | mroglub | `mrogl` (sits) + `ub`: the place a chart sits. |
+| centered | mogrglgro | `mogrgl` (middle) + `gro`, the participle ending `brolgro` (frozen) uses. |
+| loosely | blorpgl | Coined. |
+
+## The popular-chart note (2026-09-17)
+
+Coined for the presence graph's note on a chart whose official ranking is crowded, its dashed marks and
+legend key, and the Play page's *Held by more than shown* section
+([chart-presence-graph.md](design/chart-presence-graph.md) §8). Reused, not re-coined: `murgab` (likely),
+`blgrlargl` (shown), `romorg` (shows), `mrrgl` (more), `grogrgl` (than), `mrgloru` (hold), `bu` (by), `morp`
+(players), `murpo` (who), `murgl` (chart), `urgmrmurg` (official), `Maglmrpplgl` (rankings), `ropgl` (top),
+`ub` (only), `murgro` (reaches), `blogro` (down), `ro` (to), `Blarg` (from), `ur gro` (and up, from *{0} and
+up*), `gropmur` (in), `grglblarg` (their), `mag` (with), `glubgro` (lower), `mrglrgl` (score), `bo gab bru`
+(can't be), `op` (so), `ug arg` (it's), `blu` (this), `arg` (is), `ol` (or), `Mrgl` (easy), `blurg` (enough) and
+`argo` (that).
+
+| English | en-ZW | Notes |
+|---|---|---|
+| popular / common (widely held) | grolurgmrp | The existing *Popular*, reused for *more common*: a chart held in more top 50s is a more popular one. |
+| undercount | glubgrorp | `glub` (under) + `grorp` (count). |
+| counted | grorpgro | `grorp` + `gro`, the participle ending `mogrglgro` (centered) uses. |
+
 ## The near-grade glow batch (2026-09-17)
 
 Coined for the two grade glow rules on the Account tab and the popover's distance line

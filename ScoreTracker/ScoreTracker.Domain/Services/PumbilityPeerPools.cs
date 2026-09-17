@@ -78,32 +78,12 @@ public static class PumbilityPeerPools
         IEnumerable<BoardPeerScore>? boardScores = null,
         IReadOnlyDictionary<PeerVoice, double>? boardTotals = null)
     {
-        var byPeer = new Dictionary<PeerVoice, List<(Guid ChartId, double Rating, int Score)>>();
         var scores = new Dictionary<Guid, List<int>>();
-
-        // A board row carries a score and no plate, so it is priced at the plate that score most
-        // plausibly carries — the same expectation the projection uses for an unplayed chart.
-        var all = records
-            .Select(r => (Voice: PeerVoice.Account(r.UserId), r.ChartId, Score: (int)r.Score, r.Plate, r.IsBroken))
-            .Concat((boardScores ?? Array.Empty<BoardPeerScore>())
-                .Select(b => (b.Voice, b.ChartId, b.Score,
-                    Plate: (PhoenixPlate?)ScoringConfiguration.ExpectedPlateForScore(PhoenixScore.From(b.Score)),
-                    IsBroken: false)));
-
-        foreach (var record in all)
+        var byPeer = Price(records, peers, charts, scoring, boardScores, (chartId, score) =>
         {
-            var voice = record.Voice;
-            if (!peers.Contains(voice) || !charts.TryGetValue(record.ChartId, out var chart)) continue;
-            if (!scores.TryGetValue(record.ChartId, out var voices)) scores[record.ChartId] = voices = new List<int>();
-            voices.Add(record.Score);
-
-            var rating = scoring.GetScore(chart, PhoenixScore.From(record.Score),
-                record.Plate ?? PhoenixPlate.RoughGame, record.IsBroken);
-            if (rating <= 0) continue;
-            if (!byPeer.TryGetValue(voice, out var priced))
-                byPeer[voice] = priced = new List<(Guid, double, int)>();
-            priced.Add((record.ChartId, rating, record.Score));
-        }
+            if (!scores.TryGetValue(chartId, out var voices)) scores[chartId] = voices = new List<int>();
+            voices.Add(score);
+        });
 
         var pools = new Dictionary<PeerVoice, IReadOnlySet<Guid>>();
         var averages = new Dictionary<PeerVoice, double>();
@@ -111,7 +91,7 @@ public static class PumbilityPeerPools
         var points = new Dictionary<Guid, int>();
         foreach (var (peer, priced) in byPeer)
         {
-            var pool = priced.OrderByDescending(p => p.Rating).ThenBy(p => p.ChartId).Take(PoolSize).ToArray();
+            var pool = Fifty(priced);
             pools[peer] = pool.Select(p => p.ChartId).ToHashSet();
             // The same fifty, measured on score instead of value — what an archetype bands on
             // (D69). Taken here because this is where the fifty is chosen; rebuilding it from the
@@ -143,7 +123,69 @@ public static class PumbilityPeerPools
 
         return new PeerPoolSummary(peers, pools, summary, boardTotals, averages);
     }
+
+    /// <summary>
+    ///     Every peer's fifty in pool order, with what each chart is worth in it — the fifty
+    ///     <see cref="Build" /> counts, for a caller that needs a chart's place in a pool rather than
+    ///     only whether the pool holds it. A peer with nothing priceable gets an empty fifty.
+    /// </summary>
+    public static IReadOnlyDictionary<PeerVoice, IReadOnlyList<PoolSlot>> Fifties(
+        IEnumerable<UserPhoenixScore> records, IReadOnlySet<PeerVoice> peers,
+        IReadOnlyDictionary<Guid, Chart> charts, ScoringConfiguration scoring,
+        IEnumerable<BoardPeerScore>? boardScores = null)
+    {
+        var byPeer = Price(records, peers, charts, scoring, boardScores, null);
+        return peers.ToDictionary(peer => peer, peer => byPeer.TryGetValue(peer, out var priced)
+            ? (IReadOnlyList<PoolSlot>)Fifty(priced).Select(p => new PoolSlot(p.ChartId, p.Rating)).ToArray()
+            : Array.Empty<PoolSlot>());
+    }
+
+    /// <summary>
+    ///     Every peer's priced charts. A board row carries a score and no plate, so it is priced at the
+    ///     plate that score most plausibly carries — the same expectation the projection uses for an
+    ///     unplayed chart. <paramref name="scored" /> hears every peer's score on a known chart, priced
+    ///     at zero or not, before anything is left out of a pool.
+    /// </summary>
+    private static Dictionary<PeerVoice, List<(Guid ChartId, double Rating, int Score)>> Price(
+        IEnumerable<UserPhoenixScore> records, IReadOnlySet<PeerVoice> peers,
+        IReadOnlyDictionary<Guid, Chart> charts, ScoringConfiguration scoring,
+        IEnumerable<BoardPeerScore>? boardScores, Action<Guid, int>? scored)
+    {
+        var byPeer = new Dictionary<PeerVoice, List<(Guid ChartId, double Rating, int Score)>>();
+        var all = records
+            .Select(r => (Voice: PeerVoice.Account(r.UserId), r.ChartId, Score: (int)r.Score, r.Plate, r.IsBroken))
+            .Concat((boardScores ?? Array.Empty<BoardPeerScore>())
+                .Select(b => (b.Voice, b.ChartId, b.Score,
+                    Plate: (PhoenixPlate?)ScoringConfiguration.ExpectedPlateForScore(PhoenixScore.From(b.Score)),
+                    IsBroken: false)));
+
+        foreach (var record in all)
+        {
+            var voice = record.Voice;
+            if (!peers.Contains(voice) || !charts.TryGetValue(record.ChartId, out var chart)) continue;
+            scored?.Invoke(record.ChartId, record.Score);
+
+            var rating = scoring.GetScore(chart, PhoenixScore.From(record.Score),
+                record.Plate ?? PhoenixPlate.RoughGame, record.IsBroken);
+            if (rating <= 0) continue;
+            if (!byPeer.TryGetValue(voice, out var priced))
+                byPeer[voice] = priced = new List<(Guid, double, int)>();
+            priced.Add((record.ChartId, rating, record.Score));
+        }
+
+        return byPeer;
+    }
+
+    /// <summary>A peer's pool: the fifty highest-priced charts, ties broken by chart id.</summary>
+    private static (Guid ChartId, double Rating, int Score)[] Fifty(
+        IEnumerable<(Guid ChartId, double Rating, int Score)> priced)
+    {
+        return priced.OrderByDescending(p => p.Rating).ThenBy(p => p.ChartId).Take(PoolSize).ToArray();
+    }
 }
+
+/// <summary>One chart in a PUMBILITY pool and what it is worth there.</summary>
+public readonly record struct PoolSlot(Guid ChartId, double Rating);
 
 /// <summary>
 ///     One board peer's published score on one chart — what the mirror has instead of a record

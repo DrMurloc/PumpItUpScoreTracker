@@ -199,6 +199,43 @@ public sealed class PumbilityPeerPoolsTests
         Assert.Empty(PumbilityPeerPools.LevelsInReach(Summary(Array.Empty<PeerVoice>()), catalog));
     }
 
+    [Fact]
+    public void AFiftyIsInPoolOrderWithWhatEachChartIsWorthAndHoldsTheChartsTheCountHolds()
+    {
+        var charts = Enumerable.Range(0, 52).Select(i => Chart(24 - i / 4)).ToArray();
+        var peer = Guid.NewGuid();
+        var records = charts.Select((c, i) => Score(peer, c.Id, 990_000 - i * 1_000)).ToArray();
+        var catalog = charts.ToDictionary(c => c.Id);
+        var expected = records
+            .Select(r => new PoolSlot(r.ChartId,
+                Scoring.GetScore(catalog[r.ChartId], r.Score, PhoenixPlate.MarvelousGame, false)))
+            .OrderByDescending(s => s.Rating).ThenBy(s => s.ChartId)
+            .Take(50).ToArray();
+
+        var fifty = PumbilityPeerPools.Fifties(records, Voices(peer), catalog, Scoring)[PeerVoice.Account(peer)];
+
+        Assert.Equal(expected, fifty);
+        Assert.Equal(PumbilityPeerPools.Build(records, Voices(peer), catalog, Scoring).Pools[PeerVoice.Account(peer)],
+            fifty.Select(s => s.ChartId).ToHashSet());
+    }
+
+    [Fact]
+    public void ABoardPeersChartIsPricedAtItsScoresPlateAndAPeerWithNothingPriceableHasAnEmptyFifty()
+    {
+        var s22 = Chart(22);
+        var catalog = new[] { s22 }.ToDictionary(c => c.Id);
+        var board = PeerVoice.FromBoard(7, "BOARD#1234");
+        var idle = PeerVoice.Account(Guid.NewGuid());
+        var score = PhoenixScore.From(996_000);
+
+        var fifties = PumbilityPeerPools.Fifties(Array.Empty<UserPhoenixScore>(), new[] { board, idle }.ToHashSet(),
+            catalog, Scoring, new[] { new BoardPeerScore(board, s22.Id, 996_000) });
+
+        var slot = Assert.Single(fifties[board]);
+        Assert.Equal(Scoring.GetScore(s22, score, ScoringConfiguration.ExpectedPlateForScore(score), false), slot.Rating);
+        Assert.Empty(fifties[idle]);
+    }
+
     /// <summary>A summary holding exactly these pools, one per peer in order, and no chart statistics.</summary>
     private static PeerPoolSummary Summary(PeerVoice[] peers, params Guid[][] pools)
     {

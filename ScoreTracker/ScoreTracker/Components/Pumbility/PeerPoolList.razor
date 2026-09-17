@@ -251,15 +251,20 @@ else
 
     public const string UnkeptKey = "Unkept";
 
+    public const string HeldByMoreKey = "HeldByMore";
+
     public static readonly IReadOnlySet<string> DefaultCollapsed = new HashSet<string>
     {
         TierListCategory.VeryHard.ToString(), TierListCategory.Underrated.ToString()
     };
 
-    /// <summary>The Rarity sections folded by default: the bands a quarter of the peers or more keep (D66).</summary>
+    /// <summary>
+    ///     The Rarity sections folded by default: the bands a quarter of the peers or more keep (D66), and the charts
+    ///     held by more than shown beside them.
+    /// </summary>
     public static readonly IReadOnlySet<string> RarityDefaultCollapsed = new HashSet<string>
     {
-        RarityBand.Emerald.ToString(), RarityBand.Silver.ToString(), RarityBand.Common.ToString()
+        RarityBand.Emerald.ToString(), RarityBand.Silver.ToString(), RarityBand.Common.ToString(), HeldByMoreKey
     };
 
     /// <summary>The gain bands under Projected gains, in PUMBILITY points, biggest first (D42).</summary>
@@ -367,6 +372,16 @@ else
         // even show under this grouping (owner, field test round one). Projected gains keeps them.
         if (GainsOnly) held = held.Where(r => r.Pays).ToList();
 
+        // A chart the count undersells leaves its tier and leads the list, where the most-held charts are.
+        var more = held.Where(r => Page.UndercountedCharts.Contains(r.Chart.Id)).ToArray();
+        if (more.Length > 0)
+        {
+            sections.Add(HeldByMoreSection(GainsOnly
+                ? more.OrderByDescending(r => r.Gain).ToArray()
+                : more.OrderByDescending(r => r.Entry!.Share).ThenByDescending(r => r.Entry!.Points).ToArray()));
+            held = held.Where(r => !Page.UndercountedCharts.Contains(r.Chart.Id)).ToList();
+        }
+
         foreach (var tier in PumbilityTierNames.Tiers)
         {
             var rows = held.Where(r => r.Entry!.Tier == tier);
@@ -399,6 +414,16 @@ else
         return low == 0 ? L["Under +{0}", high] : L["+{0} to +{1}", low, high];
     }
 
+    /// <summary>
+    ///     The charts held by more peers than their count shows: a crowded official ranking hides some of the
+    ///     peers who hold them (docs/design/pumbility-overhaul.md §3.10).
+    /// </summary>
+    private Section HeldByMoreSection(IReadOnlyList<Row> rows) =>
+        new(HeldByMoreKey, L["Held by more than shown"], "var(--mix-primary)", rows,
+            rows.Count == 1
+                ? L["1 chart the official rankings undercount"]
+                : L["{0} charts the official rankings undercount", rows.Count], "pmb-more-section");
+
     private bool IsRarity => GroupBy == PeerGrouping.Rarity;
 
     /// <summary>The bands rarest first — the order the Rarity sections render in.</summary>
@@ -412,15 +437,18 @@ else
     ///     levels and the charts no peer holds — the charts nobody keeps in a section of their own, then the
     ///     rest banded by the share of the peers who keep it, rarest
     ///     first. Inside a band the fewest keepers lead, then the lowest in the pools that keep it, then
-    ///     the fewest who played it, then the harder chart.
+    ///     the fewest who played it, then the harder chart. The charts held by more than shown close the list,
+    ///     where the most-kept charts are.
     /// </summary>
     private IReadOnlyList<Section> RaritySections()
     {
-        var rows = Page.Entries.Where(InReach)
+        var inReach = Page.Entries.Where(InReach)
             .Concat(Page.UnheldCharts)
             .Where(e => Charts.ContainsKey(e.ChartId))
             .Select(e => new Row(Charts[e.ChartId], e, Gains.GetValueOrDefault(e.ChartId), null))
             .ToArray();
+        var more = RarestFirst(inReach.Where(r => Page.UndercountedCharts.Contains(r.Chart.Id))).ToArray();
+        var rows = inReach.Where(r => !Page.UndercountedCharts.Contains(r.Chart.Id)).ToArray();
 
         var sections = new List<Section>();
         // Nobody keeping a chart is always a section of its own, ahead of the rarest band rather than inside it.
@@ -435,20 +463,24 @@ else
 
         foreach (var band in RarityBands)
         {
-            var inBand = rows.Where(r => r.Entry!.Holders > 0 && BandOf(r.Entry!) == band)
-                .OrderBy(r => KeptShare(r.Entry!))
-                .ThenBy(r => r.Entry!.Share)
-                .ThenBy(r => r.Entry!.Scored)
-                .ThenByDescending(r => (int)r.Chart.Level)
-                .ThenBy(r => r.Chart.Song.Name.ToString(), StringComparer.OrdinalIgnoreCase)
-                .ToArray();
+            var inBand = RarestFirst(rows.Where(r => r.Entry!.Holders > 0 && BandOf(r.Entry!) == band)).ToArray();
             if (inBand.Length == 0) continue;
             sections.Add(new Section(band.ToString(), RarityBandName(band), ThemeScales.CssVar(band), inBand, null,
                 "pmb-rarity-section", Band: band));
         }
 
+        if (more.Length > 0) sections.Add(HeldByMoreSection(more));
+
         return sections;
     }
+
+    /// <summary>Rarity's order: the fewest keepers first, then the lowest in the pools that keep it, the fewest who played it, the harder chart.</summary>
+    private static IEnumerable<Row> RarestFirst(IEnumerable<Row> rows) => rows
+        .OrderBy(r => KeptShare(r.Entry!))
+        .ThenBy(r => r.Entry!.Share)
+        .ThenBy(r => r.Entry!.Scored)
+        .ThenByDescending(r => (int)r.Chart.Level)
+        .ThenBy(r => r.Chart.Song.Name.ToString(), StringComparer.OrdinalIgnoreCase);
 
     private bool InReach(PeerPoolEntry entry) =>
         Page.LevelsInReach.TryGetValue(entry.ChartType, out var levels) &&

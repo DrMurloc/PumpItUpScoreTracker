@@ -214,6 +214,44 @@ public sealed partial class PumbilityProjectionSagaTests
     }
 
     [Fact]
+    public async Task AChartIsUndercountedWhereItsRankingIsCrowdedAndARankingPlayerIsAPeer()
+    {
+        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_609.59)
+            .WithChart(out var crowded, ChartType.Single, 21)
+            .WithChart(out var roomy, ChartType.Single, 22)
+            .WithChart(out var doubles, ChartType.Double, 23);
+        ctx.WithPumbilityPeer(out var peer, crowded, 990_000)
+            .WithPeerPhoenix2Score(peer, roomy, 985_000)
+            .WithPeerPhoenix2Score(peer, doubles, 980_000);
+        // A ranking player is a singles peer only, so the doubles count comes from accounts alone.
+        ctx.WithBoardPeer(ChartType.Single, 11, "AZUL#1041", (crowded, 995_000), (roomy, 991_000));
+        // Every ranking ends over its bar; the S22 one has places left.
+        ctx.WithChartRanking(crowded, 300, 990_893).WithChartRanking(roomy, 150, 990_000)
+            .WithChartRanking(doubles, 300, 990_000);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPeersPageQuery(ctx.UserId, MixEnum.Phoenix2, null),
+            CancellationToken.None);
+
+        Assert.Contains(page.Entries, e => e.ChartId == doubles.Id);
+        Assert.Equal(new[] { crowded.Id }, page.UndercountedCharts.ToArray());
+    }
+
+    [Fact]
+    public async Task NoChartIsUndercountedWhereEveryPeerIsAnAccount()
+    {
+        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_609.59)
+            .WithChart(out var crowded, ChartType.Single, 21);
+        ctx.WithPumbilityPeer(crowded, 990_000).WithChartRanking(crowded, 300, 990_893);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPeersPageQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Single),
+            CancellationToken.None);
+
+        Assert.Contains(page.Entries, e => e.ChartId == crowded.Id);
+        Assert.Empty(page.UndercountedCharts);
+        ctx.Official.Verify(o => o.GetChartRankings(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task Phoenix1RarityReadsTheCompetitiveBandsPools()
     {
         var ctx = new ProjectionContext()

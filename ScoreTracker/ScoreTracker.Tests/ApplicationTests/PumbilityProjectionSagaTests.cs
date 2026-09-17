@@ -762,12 +762,44 @@ public sealed partial class PumbilityProjectionSagaTests
             // are written against cohort membership and level-when-set, so faking it would leave
             // the plumbing this fixture exists to drive unexercised.
             Saga = new PumbilityProjectionSaga(Mediator.Object,
-                new ScoreProjector(Scores.Object, Stats.Object, History.Object, NoBoard.Reader), Cache, Scores.Object, Stats.Object,
-                Users.Object, CurrentUser.Object);
+                new ScoreProjector(Scores.Object, Stats.Object, History.Object, Official.Object), Cache, Scores.Object, Stats.Object,
+                Users.Object, CurrentUser.Object, Official.Object);
         }
 
         public Guid UserId { get; } = Guid.NewGuid();
         public Mock<IMediator> Mediator { get; } = new();
+
+        /// <summary>The mirror: empty unless a test puts a board peer or a chart ranking on it.</summary>
+        public Mock<IOfficialPlacementReader> Official { get; } = NoBoard.Mock();
+
+        private readonly List<BoardPeerReading> _boardPeers = new();
+        private readonly List<BoardScoreReading> _boardScores = new();
+        private readonly Dictionary<Guid, OfficialChartRanking> _rankings = new();
+
+        /// <summary>A player from the official ranking, a PUMBILITY peer for one type, and what the rankings show they scored.</summary>
+        public ProjectionContext WithBoardPeer(ChartType type, int boardPlayerId, string tag,
+            params (Chart Chart, int Score)[] scores)
+        {
+            _boardPeers.Add(new BoardPeerReading(new[] { boardPlayerId }, tag, 9_000, null));
+            foreach (var (chart, score) in scores)
+                _boardScores.Add(new BoardScoreReading(boardPlayerId, chart.Id, chart.Level, score));
+            Official.Setup(o => o.GetBoardPeers(MixEnum.Phoenix2, type, It.IsAny<double>(), It.IsAny<double>(),
+                    It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(() => new BoardPeerGroupReading(Now, _boardPeers));
+            Official.Setup(o => o.GetBoardScores(MixEnum.Phoenix2, type, It.IsAny<IReadOnlyCollection<int>>(),
+                    It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(() => _boardScores);
+            return this;
+        }
+
+        /// <summary>A chart's official ranking in the latest sweep.</summary>
+        public ProjectionContext WithChartRanking(Chart chart, int places, int lowestScore)
+        {
+            _rankings[chart.Id] = new OfficialChartRanking(places, lowestScore);
+            Official.Setup(o => o.GetChartRankings(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(() => _rankings);
+            return this;
+        }
         public Mock<IPlayerStatsReader> Stats { get; } = new();
         public Mock<IScoreReader> Scores { get; } = new();
         public Mock<IPlayerHistoryRepository> History { get; } = new();

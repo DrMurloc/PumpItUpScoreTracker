@@ -760,6 +760,22 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
             .ToArray();
     }
 
+    public async Task<IReadOnlyList<ChartBoardDepth>> GetChartBoardDepths(int snapshotId, PlacementScope scope,
+        CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        // Grouped in SQL: one snapshot holds every row of every chart board, and the answer is one row per board.
+        return await (
+                from placement in Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
+                join board in database.Set<OfficialLeaderboardEntity>() on placement.LeaderboardId equals board.Id
+                where placement.SnapshotId == snapshotId && board.LeaderboardType == LeaderboardTypes.Chart &&
+                      board.ChartId != null
+                group placement.Score by new { board.Id, ChartId = board.ChartId!.Value }
+                into rows
+                select new ChartBoardDepth(rows.Key.Id, rows.Key.ChartId, rows.Count(), rows.Min()))
+            .ToArrayAsync(ct);
+    }
+
     public async Task UpsertMissingCharts(MixEnum mix, IReadOnlyCollection<MissingChartSighting> sightings,
         DateTimeOffset seenAt, CancellationToken ct)
     {

@@ -44,6 +44,12 @@ internal enum PlacementScope
 /// </summary>
 internal sealed record ChartBoardHigh(int PlayerId, Guid ChartId, string ChartType, int Level, decimal Score);
 
+/// <summary>
+///     One chart board in one snapshot: how many rows it holds and the lowest score among them, which on a full
+///     board is its last place. <see cref="Lowest" /> is decimal because a placement's score is.
+/// </summary>
+internal sealed record ChartBoardDepth(int LeaderboardId, Guid ChartId, int Places, decimal Lowest);
+
 internal sealed record BoardRecordRow(int LeaderboardId, int HighScore, int AchievedSnapshotId);
 
 /// <summary>

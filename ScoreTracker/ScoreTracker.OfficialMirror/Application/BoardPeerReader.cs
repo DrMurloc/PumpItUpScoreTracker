@@ -26,9 +26,9 @@ namespace ScoreTracker.OfficialMirror.Application;
 internal sealed class BoardPeerReader
 {
     /// <summary>
-    ///     How long the qualified set is held. The mirror is swept weekly and the key carries the
-    ///     snapshot, so a new sweep is a new key rather than a stale answer; this only bounds how
-    ///     long a dead snapshot's set occupies memory.
+    ///     How long the qualified set and the chart rankings are held. The mirror is swept weekly and
+    ///     each key carries the snapshot, so a new sweep is a new key rather than a stale answer; this
+    ///     only bounds how long a dead snapshot's answer occupies memory.
     /// </summary>
     private static readonly TimeSpan QualifiedTtl = TimeSpan.FromHours(12);
 
@@ -337,6 +337,44 @@ internal sealed class BoardPeerReader
             cancellationToken);
 
         return rows.Select(r => new BoardScoreReading(r.PlayerId, r.ChartId, r.Level, r.Score)).ToArray();
+    }
+
+    /// <summary>Every chart a chart board has been mirrored for on the mix, whichever sweep first saw it.</summary>
+    public async Task<IReadOnlySet<Guid>> GetChartsWithBoards(MixEnum mix, CancellationToken cancellationToken)
+    {
+        return (await _snapshots.GetBoards(mix, cancellationToken))
+            .Where(b => b.LeaderboardType == LeaderboardTypes.Chart && b.ChartId != null)
+            .Select(b => b.ChartId!.Value)
+            .ToHashSet();
+    }
+
+    /// <summary>
+    ///     Every chart ranking in the latest sealed sweep, piugame's own rows only: how many places it holds and
+    ///     its lowest score. A chart the sweep saw under more than one board reads the fullest of them. Held per
+    ///     sweep, since every chart page and every peer list asks the same question until the next one.
+    /// </summary>
+    public async Task<IReadOnlyDictionary<Guid, OfficialChartRanking>> GetChartRankings(MixEnum mix,
+        CancellationToken cancellationToken)
+    {
+        var latest = await _snapshots.GetLatestSealed(mix, cancellationToken);
+        if (latest?.CompletedAt == null) return new Dictionary<Guid, OfficialChartRanking>();
+
+        var key = CacheKeys.Mix(nameof(BoardPeerReader), mix, "ChartRankings", latest.Id);
+        if (_cache.TryGetValue(key, out IReadOnlyDictionary<Guid, OfficialChartRanking>? cached) && cached != null)
+            return cached;
+
+        var rankings = (await _snapshots.GetChartBoardDepths(latest.Id, PlacementScope.OfficialOnly,
+                cancellationToken))
+            .GroupBy(board => board.ChartId)
+            .ToDictionary(chart => chart.Key, chart =>
+            {
+                var fullest = chart.OrderByDescending(board => board.Places).ThenBy(board => board.LeaderboardId)
+                    .First();
+                return new OfficialChartRanking(fullest.Places, (int)fullest.Lowest);
+            });
+
+        _cache.Set(key, (IReadOnlyDictionary<Guid, OfficialChartRanking>)rankings, QualifiedTtl);
+        return rankings;
     }
 
     public async Task<BoardScoreReadings> GetBoardScoresOn(MixEnum mix,

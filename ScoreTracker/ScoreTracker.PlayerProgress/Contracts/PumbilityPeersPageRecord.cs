@@ -37,6 +37,11 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 ///     Per lit type, the levels at least half of the peers holding anything keep a chart of, ascending
 ///     (<see cref="PumbilityPeerPools.LevelsInReach" />).
 /// </param>
+/// <param name="Undercounted">
+///     The charts in <paramref name="Entries" /> and <paramref name="Unheld" /> held by more peers than the count
+///     shows: a crowded official ranking (docs/design/chart-presence-graph.md §8) on a type whose peers include an
+///     official-ranking player, whose hold of the chart the ranking can hide.
+/// </param>
 [ExcludeFromCodeCoverage]
 public sealed record PumbilityPeersPageRecord(
     MixEnum Mix,
@@ -48,10 +53,14 @@ public sealed record PumbilityPeersPageRecord(
     int PrivatePeers,
     PeerRosterEntry? You,
     IReadOnlyList<PeerPoolEntry>? Unheld = null,
-    IReadOnlyDictionary<ChartType, IReadOnlyList<int>>? RarityLevels = null)
+    IReadOnlyDictionary<ChartType, IReadOnlyList<int>>? RarityLevels = null,
+    IReadOnlySet<Guid>? Undercounted = null)
 {
     /// <summary><see cref="Unheld" />, never null.</summary>
     public IReadOnlyList<PeerPoolEntry> UnheldCharts => Unheld ?? Array.Empty<PeerPoolEntry>();
+
+    /// <summary><see cref="Undercounted" />, never null.</summary>
+    public IReadOnlySet<Guid> UndercountedCharts => Undercounted ?? new HashSet<Guid>();
 
     /// <summary><see cref="RarityLevels" />, never null: a type absent from it has no level in reach.</summary>
     public IReadOnlyDictionary<ChartType, IReadOnlyList<int>> LevelsInReach =>

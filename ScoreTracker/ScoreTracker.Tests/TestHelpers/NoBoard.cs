@@ -9,8 +9,8 @@ using ScoreTracker.SharedKernel.Enums;
 namespace ScoreTracker.Tests.TestHelpers;
 
 /// <summary>
-///     A mirror with nothing on it: no board peers and no board scores, so a projection is exactly
-///     the site's own peers. Every suite that is not measuring the board half reads this, which is
+///     A mirror with nothing on it: no board peers, no board scores and no chart rankings, so a projection is
+///     exactly the site's own peers. Every suite that is not measuring the board half reads this, which is
 ///     what keeps "did the board change this" answerable by looking at one stub.
 /// </summary>
 internal static class NoBoard
@@ -30,6 +30,8 @@ internal static class NoBoard
                 It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<int>(), It.IsAny<int>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<BoardScoreReading>());
+        reader.Setup(r => r.GetChartRankings(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, OfficialChartRanking>());
         return reader;
     }
 }
