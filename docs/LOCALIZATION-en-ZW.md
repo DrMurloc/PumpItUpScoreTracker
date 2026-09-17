@@ -781,3 +781,23 @@ is also what lets every other locale print the real command.
 | them | murgloru | |
 | by hand | mag bragl | |
 | from | urg | |
+
+## The presence graph (2026-09-16)
+
+Coined for the chart page's PUMBILITY presence graph ([chart-presence-graph.md](design/chart-presence-graph.md)):
+the caption, the folder rating line, the axis labels, the legend and each title's tooltip. Reused, not
+re-coined: `mrgloru` (hold), `gropmur` (in), `ropgl 50` (top 50), `grglblarg` (their), `gromurp` (your),
+`Blub` (you), `arg` (is), `ug` (it), `bo` (not), `mo` (no), `Momorp` (nobody), `larg` (yet), `a` (the),
+`og` (at), `ap` (on), `ba` (for), `bu` (by), `blu` (this), `Mrgl` (title), `murgl` (chart), `morp`
+(players), `gropla` (ladder), `Mrrrgl` (most), `mrrglgro` / `glubgro` (higher / lower), `grogrgl` (than),
+`ugmorg` (other), `plglro` (like), `ro` (about, and around), `mrglrg` (rating, here *rates*), `gorpo`
+(where), `mrogl` (sits), `gru` (data), `grorp` (number, here *count*) and `rorgmo` (reads).
+
+| English | en-ZW | Notes |
+|---|---|---|
+| same | plom | Recovered from the calculator's *the same PUMBILITY* → `a plom PUMBILITY`. |
+| low (few) | glub | The root of `glubgro` (lower) and `Glubglub` (lowest). |
+| typically | rorggl | On `rorg` (average): what a chart usually does is its average. |
+| spot (a place in a top 50) | mroglub | `mrogl` (sits) + `ub`: the place a chart sits. |
+| centered | mogrglgro | `mogrgl` (middle) + `gro`, the participle ending `brolgro` (frozen) uses. |
+| loosely | blorpgl | Coined. |

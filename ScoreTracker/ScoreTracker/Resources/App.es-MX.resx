@@ -157,6 +157,9 @@
   <data name="#{0} PUMBILITY" xml:space="preserve">
     <value>#{0} en PUMBILITY</value>
   </data>
+  <data name="% hold it" xml:space="preserve">
+    <value>% lo tienen</value>
+  </data>
   <data name="(edited)" xml:space="preserve">
     <value>(editado)</value>
   </data>
@@ -591,6 +594,9 @@
   </data>
   <data name="about half of a modern chart is hold ticks" xml:space="preserve">
     <value>alrededor de la mitad de un chart moderno son ticks de hold</value>
+  </data>
+  <data name="about the same at {0}" xml:space="preserve">
+    <value>más o menos igual en {0}</value>
   </data>
   <data name="About The Site" xml:space="preserve">
     <value>Acerca del sitio</value>
@@ -1062,6 +1068,9 @@
   </data>
   <data name="at {0}" xml:space="preserve">
     <value>con {0}</value>
+  </data>
+  <data name="At {0} in top 50" xml:space="preserve">
+    <value>En el {0} del top 50</value>
   </data>
   <data name="at {0} or better" xml:space="preserve">
     <value>con {0} o mejor</value>
@@ -3652,6 +3661,9 @@
   <data name="High" xml:space="preserve">
     <value>Alto</value>
   </data>
+  <data name="higher at {0}" xml:space="preserve">
+    <value>más arriba en {0}</value>
+  </data>
   <data name="higher average score" xml:space="preserve">
     <value>puntaje promedio más alto</value>
   </data>
@@ -3690,6 +3702,9 @@
   </data>
   <data name="History" xml:space="preserve">
     <value>Historial</value>
+  </data>
+  <data name="Hold" xml:space="preserve">
+    <value>Tienen</value>
   </data>
   <data name="hold at least one" xml:space="preserve">
     <value>tienen al menos uno</value>
@@ -4615,11 +4630,20 @@
   <data name="Low" xml:space="preserve">
     <value>Bajo</value>
   </data>
+  <data name="Low data count" xml:space="preserve">
+    <value>Pocos datos</value>
+  </data>
+  <data name="Low data count for this title, read loosely" xml:space="preserve">
+    <value>Pocos datos para este título: tómalo con cautela</value>
+  </data>
   <data name="Low tick share is what makes a low score reachable: hold everything, good every tap, and a chart under the dashed line can pass with an F. On a typical level 18 that floor is a D — about 591,000." xml:space="preserve">
     <value>Una proporción baja de ticks es lo que hace alcanzable una puntuación baja: mantén todos los holds, haz good en cada tap, y un chart bajo la línea discontinua puede pasar con un F. En un nivel 18 típico ese piso es un D — unos 591,000.</value>
   </data>
   <data name="Lower" xml:space="preserve">
 	  <value>Inferiores</value>
+  </data>
+  <data name="lower at {0}" xml:space="preserve">
+    <value>más abajo en {0}</value>
   </data>
   <data name="lower average score" xml:space="preserve">
     <value>puntaje promedio más bajo</value>
@@ -4956,6 +4980,12 @@
   </data>
   <data name="Most clears stall below {0} — the steepest step on this board." xml:space="preserve">
     <value>La mayoría de los clears se estancan bajo {0} — el escalón más empinado de este tablero.</value>
+  </data>
+  <data name="Most held at {0}: {1} hold it, at {2} in their top 50." xml:space="preserve">
+    <value>Más presente en {0}: {1} lo tienen, en el {2} de su top 50.</value>
+  </data>
+  <data name="Most held at {0}: {1} hold it, typically around {2} in their top 50." xml:space="preserve">
+    <value>Más presente en {0}: {1} lo tienen, normalmente alrededor del {2} de su top 50.</value>
   </data>
   <data name="Most history" xml:space="preserve">
     <value>Más historial</value>
@@ -5326,6 +5356,9 @@
   <data name="no plate bonus" xml:space="preserve">
     <value>sin bonus por placa</value>
   </data>
+  <data name="No players on this title yet" xml:space="preserve">
+    <value>Todavía no hay jugadores con este título</value>
+  </data>
   <data name="No plays match." xml:space="preserve">
     <value>Ningún intento coincide.</value>
   </data>
@@ -5488,6 +5521,9 @@
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>Nadie subió en el tablero PUMBILITY esta semana.</value>
   </data>
+  <data name="Nobody on the PUMBILITY ladder holds this chart in their top 50 yet." xml:space="preserve">
+    <value>Nadie en la escalera de PUMBILITY tiene todavía este chart en su top 50.</value>
+  </data>
   <data name="Nobody rivals you yet" xml:space="preserve">
     <value>Nadie te tiene como rival todavía</value>
   </data>
@@ -5574,6 +5610,9 @@
   </data>
   <data name="Not in anyone's PUMBILITY" xml:space="preserve">
     <value>En ninguna PUMBILITY</value>
+  </data>
+  <data name="Not in your top 50" xml:space="preserve">
+    <value>No está en tu top 50</value>
   </data>
   <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
     <value>No está en {0} — sus {1} charts se fueron con la canción.</value>
@@ -6132,6 +6171,9 @@
   </data>
   <data name="Other" xml:space="preserve">
     <value>Otro</value>
+  </data>
+  <data name="Other {0}s" xml:space="preserve">
+    <value>Otros {0}</value>
   </data>
   <data name="outscored {0}" xml:space="preserve">
     <value>superaste a {0}</value>
@@ -7075,6 +7117,9 @@
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>Top 50 de PUMBILITY</value>
   </data>
+  <data name="PUMBILITY top 50s by title" xml:space="preserve">
+    <value>Top 50 de PUMBILITY por título</value>
+  </data>
   <data name="PUMBILITY — combined" xml:space="preserve">
     <value>PUMBILITY — combinada</value>
   </data>
@@ -7251,6 +7296,24 @@
   </data>
   <data name="Rate limited" xml:space="preserve">
     <value>Limitadas</value>
+  </data>
+  <data name="Rates about like other {0}s" xml:space="preserve">
+    <value>Queda más o menos como otros {0}</value>
+  </data>
+  <data name="Rates about like other {0}s at {1}" xml:space="preserve">
+    <value>Queda más o menos como otros {0} en {1}</value>
+  </data>
+  <data name="Rates higher than other {0}s" xml:space="preserve">
+    <value>Queda más arriba que otros {0}</value>
+  </data>
+  <data name="Rates higher than other {0}s at {1}" xml:space="preserve">
+    <value>Queda más arriba que otros {0} en {1}</value>
+  </data>
+  <data name="Rates lower than other {0}s" xml:space="preserve">
+    <value>Queda más abajo que otros {0}</value>
+  </data>
+  <data name="Rates lower than other {0}s at {1}" xml:space="preserve">
+    <value>Queda más abajo que otros {0} en {1}</value>
   </data>
   <data name="Rating" xml:space="preserve">
     <value>Rating</value>
@@ -8620,6 +8683,9 @@
   <data name="Splits" xml:space="preserve">
     <value>Splits</value>
   </data>
+  <data name="Spot in top 50" xml:space="preserve">
+    <value>Lugar en el top 50</value>
+  </data>
   <data name="Spreadsheet is uploading and being processed..." xml:space="preserve">
     <value>El Spreadsheet se está subiendo y procesando...</value>
   </data>
@@ -9919,6 +9985,12 @@
   <data name="Type {0} to confirm" xml:space="preserve">
     <value>Escribe {0} para confirmar</value>
   </data>
+  <data name="Typically {0} in top 50" xml:space="preserve">
+    <value>Normalmente en el {0} del top 50</value>
+  </data>
+  <data name="Typically {0}–{1} in top 50, centered around {2}" xml:space="preserve">
+    <value>Normalmente entre el {0} y el {1} del top 50, alrededor del {2}</value>
+  </data>
   <data name="Ultra Popular" xml:space="preserve">
     <value>Ultra popular</value>
   </data>
@@ -10489,6 +10561,9 @@
   <data name="Where every song starts you." xml:space="preserve">
     <value>Donde te deja el inicio de cada canción.</value>
   </data>
+  <data name="Where it typically sits" xml:space="preserve">
+    <value>Dónde suele quedar</value>
+  </data>
   <data name="Where life settles" xml:space="preserve">
     <value>Dónde se estabiliza la vida</value>
   </data>
@@ -10876,6 +10951,12 @@
   <data name="You're the creator of {0} communities. Someone has to own them, so pick a new creator for each — or delete it, if you're the only one left." xml:space="preserve">
     <value>Eres el creador de {0} comunidades. Alguien tiene que quedárselas, así que elige un nuevo creador para cada una, o elimínala si eres el único que queda.</value>
   </data>
+  <data name="You're {0}: it isn't in your top 50." xml:space="preserve">
+    <value>Eres {0}: no está en tu top 50.</value>
+  </data>
+  <data name="You're {0}: it's {1} in your top 50." xml:space="preserve">
+    <value>Eres {0}: está en el {1} de tu top 50.</value>
+  </data>
   <data name="You've been banned from this community and can't rejoin." xml:space="preserve">
     <value>Usted fue baneado de esta comunidad y no puede volver a unirse.</value>
   </data>
@@ -10884,6 +10965,9 @@
   </data>
   <data name="you:" xml:space="preserve">
     <value>tú:</value>
+  </data>
+  <data name="You: {0} in your top 50" xml:space="preserve">
+    <value>Tú: el {0} de tu top 50</value>
   </data>
   <data name="You: {0} · similar players average {1}" xml:space="preserve">
     <value>Tú: {0} · promedio de jugadores similares: {1}</value>
@@ -11523,6 +11607,9 @@
   </data>
   <data name="{0} haven't passed it" xml:space="preserve">
     <value>{0} no lo han pasado</value>
+  </data>
+  <data name="{0} hold it" xml:space="preserve">
+    <value>{0} lo tienen</value>
   </data>
   <data name="{0} hours, {1} minutes" xml:space="preserve">
     <value>{0} horas, {1} minutos</value>
