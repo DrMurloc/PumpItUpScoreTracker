@@ -150,7 +150,10 @@
                 </MudRadio>
             </div>
             @* The two grade rules (D39, D43): each carries quick-select chips that set its number and
-               select it, and the one selected carries the One glow / Brighter the closer choice. *@
+               select it, and the one selected carries the One glow / Brighter the closer choice. A chip
+               selects through its own click: its chip set shows the rule's number whichever rule is on,
+               so the chip already showing it reports no change, and a button inside the radio's label
+               never reaches the radio. *@
             <div class="pcd-opt pcd-radio" data-testid="pcd-glow-UnderPointsToNextGrade">
                 <MudRadio T="GlowRule" Value="GlowRule.UnderPointsToNextGrade" Color="Color.Primary" Dense="true">
                 <span class="pcd-opt-body">
@@ -167,7 +170,7 @@
                                 SelectedColor="Color.Primary" Class="pcd-chips">
                         @foreach (var points in PointsQuickSelects)
                         {
-                            <MudChip T="int" Value="points" Text="@points.ToString("N0")"></MudChip>
+                            <MudChip T="int" Value="points" Text="@points.ToString("N0")" OnClick="() => SetPoints(points)"></MudChip>
                         }
                     </MudChipSet>
                     @if (_colors.Glow == GlowRule.UnderPointsToNextGrade)
@@ -195,7 +198,7 @@
                                 SelectedColor="Color.Primary" Class="pcd-chips">
                         @foreach (var share in ShareQuickSelects)
                         {
-                            <MudChip T="int" Value="share" Text="@((share / 100.0).ToString("P0"))"></MudChip>
+                            <MudChip T="int" Value="share" Text="@((share / 100.0).ToString("P0"))" OnClick="() => SetShare(share)"></MudChip>
                         }
                     </MudChipSet>
                     @if (_colors.Glow == GlowRule.LastPercentOfGrade)

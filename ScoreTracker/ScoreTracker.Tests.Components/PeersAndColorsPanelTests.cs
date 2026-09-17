@@ -180,6 +180,26 @@ public sealed class PeersAndColorsPanelTests : ComponentTestBase
                 GlowRule.UnderPointsToNextGrade, 2500, GlowStrength.One)), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    ///     On a peer rule the 1,000 and 20% chips already read as selected, because each grade rule's chips show
+    ///     its number. Tapping one still has to select its rule, though the chip set sees no change to report.
+    /// </summary>
+    [Theory]
+    [InlineData("pcd-glow-UnderPointsToNextGrade", GlowRule.UnderPointsToNextGrade, 1000)]
+    [InlineData("pcd-glow-LastPercentOfGrade", GlowRule.LastPercentOfGrade, 20)]
+    public async Task AChipAlreadyShowingItsRulesNumberStillSelectsTheRule(string option, GlowRule rule, int threshold)
+    {
+        var cut = RenderLoadedPanel();
+        var highlighted = cut.Find($"[data-testid='{option}'] .mud-chip-selected");
+
+        await highlighted.ClickAsync(new MouseEventArgs());
+        await cut.Find("[data-testid='pcd-save']").ClickAsync(new MouseEventArgs());
+
+        _settings.Verify(s => s.SetSetting(ScoreColorSettings.SettingKey,
+            It.Is<string>(v => ScoreColorSettings.Parse(v).Glow == rule && ScoreColorSettings.Parse(v).GlowThreshold == threshold),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task TheStrengthChoiceSitsBeneathTheSelectedGradeRuleOnly()
     {
