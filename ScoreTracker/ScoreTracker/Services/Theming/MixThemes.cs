@@ -52,6 +52,14 @@ public sealed record MixPalette(
     /// </summary>
     public const string HardmodeMark = "#FF3B3B";
 
+    /// <summary>
+    ///     The difficulty glow's other end (docs/design/hardmode-leaderboard.md D32): the mint that
+    ///     says a chart is one of its folder's most held. Mix-invariant like <see cref="HardmodeMark" />,
+    ///     and deliberately not a theme green: the glow only renders on Phoenix 2, whose primary, links
+    ///     and emerald rarity step are already green, and a halo in the same hue reads as chrome.
+    /// </summary>
+    public const string EasyMark = "#2EF2A8";
+
     // Success and Warning are light enough that MudBlazor's default white label lands around
     // 1.6:1 on them. Both carry ink instead. Error is dark and keeps the white default.
     public const string SuccessContrast = "#08260E";
@@ -592,8 +600,9 @@ public static class MixThemes
         var judgments = string.Join("\n", JudgmentColors.Select(kv =>
             $"    --judg-{kv.Key.ToString().ToLowerInvariant()}: {kv.Value};"));
         // One token, not a ramp: the mark encodes membership rather than degree, so every
-        // surface that says "Hardmode" paints from the same red (D19).
-        var hardmode = $"    --hard-mark: {MixPalette.HardmodeMark};";
+        // surface that says "Hardmode" paints from the same red (D19). The difficulty glow's
+        // most-held end rides beside it on the same terms (D32).
+        var hardmode = $"    --hard-mark: {MixPalette.HardmodeMark};\n    --easy-mark: {MixPalette.EasyMark};";
         // The rainbow ships as both its stops and a ready-made gradient, so markup can paint
         // the visible bar without re-listing seven colors at every call site.
         var lifeStops = string.Join("\n", LifeRainbowStops.Select((hex, i) =>

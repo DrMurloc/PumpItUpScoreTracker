@@ -13,6 +13,8 @@ using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts.Commands;
+using ScoreTracker.PlayerProgress.Contracts;
+using ScoreTracker.Web.Services;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Components.Account;
 using ScoreTracker.Web.Services.Contracts;
@@ -153,5 +155,48 @@ public sealed class ProfilePanelTests : ComponentTestBase
         await ChooseAsync(panel, SupportedCultures.Automatic);
 
         Assert.False(NavigatedTo("/Culture/Set"));
+    }
+
+    private MudSwitch<bool> Switch(IRenderedComponent<ProfilePanel> panel, string label)
+    {
+        return panel.FindComponents<MudSwitch<bool>>().Select(s => s.Instance).Single(s => s.Label == label);
+    }
+
+    /// <summary>
+    ///     Hardmode is opt-in (hardmode-leaderboard.md D30): every account starts off, switching on
+    ///     writes the setting, switching off clears it, and neither reloads the page.
+    /// </summary>
+    [Fact]
+    public async Task HardmodeStartsOffAndItsSwitchWritesAndClearsTheOptIn()
+    {
+        var panel = RenderWithStoredLanguage(null);
+        Assert.False(Switch(panel, "Hardmode").Value);
+
+        await panel.InvokeAsync(() => Switch(panel, "Hardmode").ValueChanged.InvokeAsync(true));
+        await panel.InvokeAsync(() => Switch(panel, "Hardmode").ValueChanged.InvokeAsync(false));
+
+        _uiSettings.Verify(u => u.SetSetting(HardmodeOptIn.SettingKey, "true", It.IsAny<CancellationToken>()),
+            Times.Once);
+        _uiSettings.Verify(u => u.ClearSetting(HardmodeOptIn.SettingKey, It.IsAny<CancellationToken>()), Times.Once);
+        Assert.False(NavigatedTo("/Account"));
+    }
+
+    /// <summary>
+    ///     The glow is its own switch now (D32) and reads the key "Mark Hardmode charts" wrote, so a
+    ///     player who turned that off finds the glow off.
+    /// </summary>
+    [Fact]
+    public async Task TheDifficultyGlowSwitchKeepsTheOldOptOut()
+    {
+        _uiSettings.Setup(u => u.GetSetting("Universal__HideHardmodeMark", It.IsAny<CancellationToken>(),
+                It.IsAny<Guid?>()))
+            .ReturnsAsync("true");
+        var panel = RenderWithStoredLanguage(null);
+        Assert.False(Switch(panel, "Show difficulty glow").Value);
+
+        await panel.InvokeAsync(() => Switch(panel, "Show difficulty glow").ValueChanged.InvokeAsync(true));
+
+        _uiSettings.Verify(u => u.ClearSetting(DifficultyGlow.SettingKey, It.IsAny<CancellationToken>()), Times.Once);
+        Assert.True(NavigatedTo("/Account"));
     }
 }

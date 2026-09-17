@@ -223,6 +223,9 @@
   <data name="**{0}** paragon → {1}" xml:space="preserve">
     <value>**{0}** 파라곤 → {1}</value>
   </data>
+  <data name="**{0}** reached on Hardmode" xml:space="preserve">
+    <value>Hardmode에서 **{0}** 달성</value>
+  </data>
   <data name="**{0}** ~#{1:0} → ~#{2:0}" xml:space="preserve">
     <value>**{0}** ~#{1:0} → ~#{2:0}</value>
   </data>
@@ -861,6 +864,9 @@
   </data>
   <data name="Almost anything goes. The one thing you cannot do is count a chart twice." xml:space="preserve">
     <value>거의 뭐든 됩니다. 딱 하나, 같은 채보를 두 번 세는 것만 안 됩니다.</value>
+  </data>
+  <data name="Almost nobody holds this in a PUMBILITY top 50 — one of this week's Hardmode charts." xml:space="preserve">
+    <value>PUMBILITY 상위 50에 이 채보를 보유한 사람은 거의 없습니다 — 이번 주 Hardmode 채보 중 하나입니다.</value>
   </data>
   <data name="Already exists in the Phoenix 2 catalog — will be skipped." xml:space="preserve">
     <value>Phoenix 2 카탈로그에 이미 존재합니다 — 건너뜁니다.</value>
@@ -1711,6 +1717,9 @@
   <data name="Charts covered" xml:space="preserve">
     <value>포함된 채보</value>
   </data>
+  <data name="charts held" xml:space="preserve">
+    <value>보유한 채보</value>
+  </data>
   <data name="Charts in both sessions" xml:space="preserve">
     <value>두 세션에 모두 있는 채보</value>
   </data>
@@ -1728,6 +1737,9 @@
   </data>
   <data name="Charts Played" xml:space="preserve">
     <value>플레이한 채보</value>
+  </data>
+  <data name="charts qualify this week" xml:space="preserve">
+    <value>이번 주 대상 채보</value>
   </data>
   <data name="charts re-rated" xml:space="preserve">
     <value>채보 재평가</value>
@@ -3451,6 +3463,9 @@
   <data name="Glow: Top" xml:space="preserve">
     <value>상위</value>
   </data>
+  <data name="Glows red on the charts in each folder that almost nobody holds in a PUMBILITY top 50, and green on the ones the most players hold. Phoenix 2, rebuilt every Sunday." xml:space="preserve">
+    <value>각 폴더에서 PUMBILITY 상위 50에 거의 아무도 보유하지 않은 채보는 빨간색으로, 가장 많은 플레이어가 보유한 채보는 초록색으로 빛납니다. Phoenix 2, 매주 일요일에 다시 만들어집니다.</value>
+  </data>
   <data name="Go public" xml:space="preserve">
     <value>공개로 전환</value>
   </data>
@@ -3589,6 +3604,15 @@
   <data name="Hardmode fifty" xml:space="preserve">
     <value>Hardmode 상위 50</value>
   </data>
+  <data name="Hardmode is off for you, so it stays out of your sessions and Discord cards. Your Hardmode scores are counted either way." xml:space="preserve">
+    <value>Hardmode가 꺼져 있어 세션과 Discord 카드에는 표시되지 않습니다. Hardmode 점수는 어느 쪽이든 집계됩니다.</value>
+  </data>
+  <data name="Hardmode is off for you." xml:space="preserve">
+    <value>Hardmode가 꺼져 있습니다.</value>
+  </data>
+  <data name="Hardmode is on. It shows on your sessions, your Discord cards and the highlight feeds." xml:space="preserve">
+    <value>Hardmode가 켜져 있습니다. 세션, Discord 카드, 하이라이트 피드에 표시됩니다.</value>
+  </data>
   <data name="Hardmode is Phoenix 2 only." xml:space="preserve">
     <value>Hardmode는 Phoenix 2 전용입니다.</value>
   </data>
@@ -3598,8 +3622,17 @@
   <data name="Hardmode leaderboard" xml:space="preserve">
     <value>하드모드 리더보드</value>
   </data>
+  <data name="Hardmode PUMBILITY" xml:space="preserve">
+    <value>Hardmode PUMBILITY</value>
+  </data>
   <data name="Hardmode {0}" xml:space="preserve">
     <value>Hardmode {0}</value>
+  </data>
+  <data name="Hardmode {0} {1}% → **{2}%**" xml:space="preserve">
+    <value>Hardmode {0} {1}% → **{2}%**</value>
+  </data>
+  <data name="Hardmode: PUMBILITY on the charts nobody plays" xml:space="preserve">
+    <value>Hardmode: 아무도 플레이하지 않는 채보로 겨루는 PUMBILITY</value>
   </data>
   <data name="Has errors" xml:space="preserve">
     <value>오류 있음</value>
@@ -4707,9 +4740,6 @@
   </data>
   <data name="March of Murlocs session" xml:space="preserve">
     <value>March of Murlocs 세션</value>
-  </data>
-  <data name="Mark Hardmode charts" xml:space="preserve">
-    <value>Hardmode 채보 표시</value>
   </data>
   <data name="Marked for review" xml:space="preserve">
     <value>검토 대기로 표시됨</value>
@@ -5986,6 +6016,9 @@
   <data name="One more hasn't passed it" xml:space="preserve">
     <value>1명이 아직 클리어하지 못했습니다</value>
   </data>
+  <data name="One of the most-held charts in this folder's PUMBILITY top 50s." xml:space="preserve">
+    <value>이 폴더에서 PUMBILITY 상위 50에 가장 많이 보유된 채보 중 하나입니다.</value>
+  </data>
   <data name="One of your all-time best — you beat {0}% of Peers." xml:space="preserve">
     <value>역대 최고 기록 중 하나 — 동급 플레이어의 {0}%를 이겼습니다.</value>
   </data>
@@ -6760,6 +6793,9 @@
   <data name="Players Like You" xml:space="preserve">
     <value>나와 비슷한 플레이어</value>
   </data>
+  <data name="players on the board" xml:space="preserve">
+    <value>보드의 플레이어</value>
+  </data>
   <data name="Players opening your site or your source from the directory, counted since the tool was listed." xml:space="preserve">
     <value>디렉터리에서 여러분의 사이트나 소스를 연 플레이어 수입니다. 목록에 오른 이후의 누계입니다.</value>
   </data>
@@ -7101,9 +7137,6 @@
   </data>
   <data name="Pushing Title Charts" xml:space="preserve">
     <value>도전 중인 칭호 채보</value>
-  </data>
-  <data name="Puts a glow on the difficulty bubble of every chart in the week's Hardmode list, everywhere on the site." xml:space="preserve">
-    <value>이번 주 Hardmode 목록에 있는 모든 채보의 난이도 버블을 사이트 전체에서 빛나게 합니다.</value>
   </data>
   <data name="Quadratic: a level is worth {0} at 20 and {1} at 27. Below level 10 a chart is worth 0. CO-OP charts were priced at a flat 2,000 but never counted in the total." xml:space="preserve">
     <value>2차 함수: 레벨 하나의 가치는 20에서 {0}, 27에서 {1}입니다. 10레벨 미만 채보의 가치는 0입니다. CO-OP 채보는 고정 2,000으로 책정됐지만 총합에는 포함되지 않았습니다.</value>
@@ -8059,6 +8092,9 @@
   <data name="see and manage what this channel is registered for" xml:space="preserve">
     <value>이 채널의 등록 상태를 확인하고 관리합니다</value>
   </data>
+  <data name="See Hardmode" xml:space="preserve">
+    <value>Hardmode 보기</value>
+  </data>
   <data name="See Leaderboards" xml:space="preserve">
     <value>리더보드 보기</value>
   </data>
@@ -8278,6 +8314,9 @@
   <data name="Show all {0} scores" xml:space="preserve">
     <value>{0}개 기록 모두 보기</value>
   </data>
+  <data name="Show difficulty glow" xml:space="preserve">
+    <value>난이도 발광 표시</value>
+  </data>
   <data name="Show Extra Info" xml:space="preserve">
     <value>추가 정보 표시</value>
   </data>
@@ -8352,6 +8391,9 @@
   </data>
   <data name="Shown once." xml:space="preserve">
     <value>한 번만 표시됩니다.</value>
+  </data>
+  <data name="Shows Hardmode on your session page, your Discord session cards and the highlight feeds. Your Hardmode number and board place are kept either way." xml:space="preserve">
+    <value>세션 페이지, Discord 세션 카드, 하이라이트 피드에 Hardmode를 표시합니다. Hardmode 수치와 보드 순위는 어느 쪽이든 유지됩니다.</value>
   </data>
   <data name="Shuffle suggestions" xml:space="preserve">
     <value>추천 섞기</value>
@@ -9244,6 +9286,9 @@
   <data name="The S17 pays Base(18) = {0} — a Single is priced one level up. Perfect Game is the plate bonus, not a grade: a 1,000,000 keeps SSS+’s ×{1} and adds +{2}." xml:space="preserve">
     <value>S17은 Base(18) = {0}로 계산됩니다 — 싱글은 한 레벨 위로 책정됩니다. Perfect Game은 등급이 아니라 플레이트 보너스입니다: 1,000,000도 SSS+의 ×{1}을 유지하고 +{2}를 더합니다.</value>
   </data>
+  <data name="The same formula, priced over the rarest slice of every folder — the charts almost nobody holds in a top 50. The list is rebuilt every Sunday." xml:space="preserve">
+    <value>같은 공식을 각 폴더에서 가장 희귀한 채보들에 적용합니다 — 상위 50에 거의 아무도 보유하지 않은 채보들입니다. 목록은 매주 일요일에 다시 만들어집니다.</value>
+  </data>
   <data name="The same ladders the Breakdown page draws, asked of your Hardmode pool instead of your whole record book." xml:space="preserve">
     <value>분석 페이지가 그리는 것과 같은 래더를, 전체 기록이 아니라 하드모드 풀에 대해 계산합니다.</value>
   </data>
@@ -9870,6 +9915,9 @@
   </data>
   <data name="Turn On" xml:space="preserve">
     <value>켜기</value>
+  </data>
+  <data name="Turn on Hardmode" xml:space="preserve">
+    <value>Hardmode 켜기</value>
   </data>
   <data name="Turning it off doesn't touch your profile. Your scores stay visible on PIU Scores either way." xml:space="preserve">
     <value>끄더라도 프로필은 그대로입니다. 점수는 어느 쪽이든 PIU Scores에서 계속 보입니다.</value>
@@ -11028,6 +11076,9 @@
   </data>
   <data name="Your note" xml:space="preserve">
     <value>내 메모</value>
+  </data>
+  <data name="Your number and board place are real either way — turn it on to see Hardmode on your sessions, your Discord cards and the highlight feeds." xml:space="preserve">
+    <value>내 수치와 보드 순위는 어느 쪽이든 그대로입니다 — 켜면 세션, Discord 카드, 하이라이트 피드에 Hardmode가 표시됩니다.</value>
   </data>
   <data name="your only session this season" xml:space="preserve">
     <value>이번 시즌 유일한 세션</value>

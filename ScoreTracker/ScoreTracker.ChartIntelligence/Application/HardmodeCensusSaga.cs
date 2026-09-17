@@ -93,9 +93,13 @@ internal sealed class HardmodeCensusSaga :
             return;
         }
 
-        var qualifying = charts.Values
+        // Every chart above voted in the pools; only the folders offered start at level 14 (D29). A
+        // floor on the charts dictionary instead would rebuild every low player's fifty without the
+        // charts they actually hold, and hand them slots they do not have.
+        var folders = charts.Values
+            .Where(c => HardmodeCut.IsOffered((int)c.Level))
             .GroupBy(c => (c.Type, Level: (int)c.Level))
-            .SelectMany(folder =>
+            .Select(folder =>
             {
                 var candidates = folder.Select(c => new HardmodeCandidate(c.Id, c.Song.Name.ToString(), c.Type,
                     (int)c.Level, scoringLevels.TryGetValue(c.Id, out var level) && level > 0 ? level : null,
@@ -103,20 +107,27 @@ internal sealed class HardmodeCensusSaga :
                     holders.TryGetValue(c.Id, out var held) ? held.Count : 0)).ToArray();
                 var size = candidates.Length;
                 var cut = HardmodeCut.Qualifying(candidates);
-                return cut.Select(c => new HardmodeChartRecord(c.ChartId, c.ChartType, c.Level, c.Points,
-                    c.Holders, size, cut.Count));
+                var mostHeld = HardmodeCut.MostHeld(candidates);
+                return (Qualifying: cut.Select(c => new HardmodeChartRecord(c.ChartId, c.ChartType, c.Level,
+                        c.Points, c.Holders, size, cut.Count)),
+                    MostHeld: mostHeld.Select(c => new HardmodeChartRecord(c.ChartId, c.ChartType, c.Level,
+                        c.Points, c.Holders, size, mostHeld.Count)));
             })
             .ToArray();
+        var qualifying = folders.SelectMany(f => f.Qualifying).ToArray();
+        var mostHeldCharts = folders.SelectMany(f => f.MostHeld).ToArray();
 
-        await _repository.Replace(mix, qualifying, _clock.Now, cancellationToken);
+        await _repository.Replace(mix, qualifying, mostHeldCharts, _clock.Now, cancellationToken);
         // Evict before announcing: the event's consumers reprice every account against the new
-        // list, and a stale read here would price them against last week's (D26).
+        // list, and a stale read here would price them against last week's (D26). The most-held
+        // end goes with it, so no bubble pairs this week's red with last week's green.
         _cache.Remove(HardmodeChartReader.CacheKey(mix));
+        _cache.Remove(HardmodeChartReader.MostHeldCacheKey(mix));
         // Pools, not players: one account with a full singles AND doubles record contributes
         // three (combined, singles, doubles), so this reads about 3x the account count the
         // design doc quotes.
-        _logger.LogInformation("Hardmode census for {Mix}: {Charts} charts from {Pools} pools", mix,
-            qualifying.Length, pools);
+        _logger.LogInformation("Hardmode census for {Mix}: {Charts} charts and {MostHeld} most held from {Pools} pools",
+            mix, qualifying.Length, mostHeldCharts.Length, pools);
         await _bus.Publish(new HardmodeChartsRebuiltEvent(mix, qualifying.Length, pools), cancellationToken);
     }
 

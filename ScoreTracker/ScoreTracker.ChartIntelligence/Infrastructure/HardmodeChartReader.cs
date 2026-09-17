@@ -36,6 +36,10 @@ internal sealed class HardmodeChartReader : IHardmodeChartReader
     /// </summary>
     internal static string CacheKey(MixEnum mix) => CacheKeys.Mix(nameof(HardmodeChartReader), mix);
 
+    /// <summary>The most-held end's own key (D32) — a catalog fact on the same terms as the list.</summary>
+    internal static string MostHeldCacheKey(MixEnum mix) =>
+        CacheKeys.Mix(nameof(HardmodeChartReader), mix, "MostHeld");
+
     /// <summary>
     ///     Cached because D24 changed who reads this. It used to be one read per Hardmode page
     ///     load; a glow on every difficulty bubble makes it a read on nearly every page on the
@@ -53,6 +57,23 @@ internal sealed class HardmodeChartReader : IHardmodeChartReader
             // Relative, so the cache measures expiry on its own clock.
             entry.AbsoluteExpirationRelativeToNow = CacheFor;
             var charts = await _repository.Get(mix, cancellationToken);
+            return (IReadOnlyList<HardmodeChartEntry>)charts
+                .Select(c => new HardmodeChartEntry(c.ChartId, c.ChartType, c.Level, c.Points, c.Holders,
+                    c.FolderSize, c.FolderCut)).ToArray();
+        }))!;
+    }
+
+    /// <summary>
+    ///     The difficulty glow's green end (D32), read by every bubble exactly as the list is, so it
+    ///     carries the same explicit expiration and the census evicts it beside the list's.
+    /// </summary>
+    public async Task<IReadOnlyList<HardmodeChartEntry>> GetMostHeldCharts(MixEnum mix,
+        CancellationToken cancellationToken)
+    {
+        return (await _cache.GetOrCreateAsync(MostHeldCacheKey(mix), async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = CacheFor;
+            var charts = await _repository.GetMostHeld(mix, cancellationToken);
             return (IReadOnlyList<HardmodeChartEntry>)charts
                 .Select(c => new HardmodeChartEntry(c.ChartId, c.ChartType, c.Level, c.Points, c.Holders,
                     c.FolderSize, c.FolderCut)).ToArray();

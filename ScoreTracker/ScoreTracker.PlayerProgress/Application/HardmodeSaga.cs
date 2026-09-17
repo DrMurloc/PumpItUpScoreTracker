@@ -29,6 +29,7 @@ internal sealed class HardmodeSaga :
     IConsumer<HardmodeChartsRebuiltEvent>,
     IRequestHandler<GetHardmodePageQuery, HardmodePageRecord>,
     IRequestHandler<GetHardmodeBoardQuery, HardmodeBoardRecord>,
+    IRequestHandler<GetHardmodeStandingQuery, HardmodeStandingRecord>,
     IRequestHandler<HardmodeSaga.RepriceHardmodePool, HardmodeSaga.HardmodeReprice>
 {
     /// <summary>
@@ -286,6 +287,21 @@ internal sealed class HardmodeSaga :
         CancellationToken cancellationToken)
     {
         return await _ratings.GetBoard(request.Mix, request.Pool, request.ViewerId, cancellationToken);
+    }
+
+    /// <summary>
+    ///     The viewer's place on their own combined board (D31), read off that board rather than
+    ///     counted separately, so the banner's "#N of M" is the board's own and a player with no
+    ///     Hardmode number still gets the field it would join.
+    /// </summary>
+    public async Task<HardmodeStandingRecord> Handle(GetHardmodeStandingQuery request,
+        CancellationToken cancellationToken)
+    {
+        var board = await _ratings.GetBoard(request.Mix, null, request.ViewerId, cancellationToken);
+        var mine = board.Rows.FirstOrDefault(r => r.UserId == request.ViewerId);
+        var qualifying = await _hardmodeCharts.GetQualifyingCharts(request.Mix, cancellationToken);
+        return new HardmodeStandingRecord(mine?.Hardmode ?? 0, mine?.Held ?? 0, mine?.Place, board.Rows.Count,
+            qualifying.Count);
     }
 
     /// <summary>

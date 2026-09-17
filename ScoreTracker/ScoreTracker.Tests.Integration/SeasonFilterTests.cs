@@ -147,20 +147,31 @@ public sealed class SeasonFilterTests : IAsyncLifetime
         var seasonal = await _seed.SeedPhoenixChartAsync(21);
         var repository = new EFHardmodeChartRepository(_fixture.DbContextFactory);
         var census = new[] { new HardmodeChartRecord(kept, ChartType.Single, 20, 10, 3, 50, 5) };
-        await repository.Replace(MixEnum.Phoenix, census, Now, CancellationToken.None);
+        var staple = await _seed.SeedPhoenixChartAsync(20);
+        var mostHeld = new[] { new HardmodeChartRecord(staple, ChartType.Single, 20, 900, 40, 50, 12) };
+        await repository.Replace(MixEnum.Phoenix, census, mostHeld, Now, CancellationToken.None);
         // The copy a season takes at its roll (D31): the weekly census must neither read nor
-        // delete it, or the season's locked list would drift with the all-time one.
+        // delete it, or the season's locked list would drift with the all-time one. The most-held
+        // end (hardmode-leaderboard.md D32) carries the same season key and must behave the same.
         await Plant(new HardmodeChartEntity
         {
             SeasonId = Fall2026, MixId = MixIds.For(MixEnum.Phoenix), ChartId = seasonal, Level = 21, Points = 1,
             Holders = 1, FolderSize = 50, FolderCut = 5, ComputedAt = Now
         });
+        await Plant(new MostHeldChartEntity
+        {
+            SeasonId = Fall2026, MixId = MixIds.For(MixEnum.Phoenix), ChartId = seasonal, Level = 21, Points = 700,
+            Holders = 30, FolderSize = 50, FolderCut = 12, ComputedAt = Now
+        });
 
-        await repository.Replace(MixEnum.Phoenix, census, Now.AddDays(7), CancellationToken.None);
+        await repository.Replace(MixEnum.Phoenix, census, mostHeld, Now.AddDays(7), CancellationToken.None);
         var list = await repository.Get(MixEnum.Phoenix, CancellationToken.None);
+        var held = await repository.GetMostHeld(MixEnum.Phoenix, CancellationToken.None);
 
         Assert.Equal(kept, Assert.Single(list).ChartId);
+        Assert.Equal(staple, Assert.Single(held).ChartId);
         Assert.Equal(1, await CountPastTheFilter<HardmodeChartEntity>(Fall2026));
+        Assert.Equal(1, await CountPastTheFilter<MostHeldChartEntity>(Fall2026));
     }
 
     [Fact]

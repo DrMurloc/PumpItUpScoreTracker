@@ -11,6 +11,7 @@
 @using ScoreTracker.Identity.Contracts
 @using ScoreTracker.Identity.Contracts.Commands
 @using ScoreTracker.Identity.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.ScoreLedger.Contracts
 @using ScoreTracker.ScoreLedger.Contracts.Commands
 @using ScoreTracker.ScoreLedger.Contracts.Queries
@@ -114,13 +115,24 @@
         </MudSelect>
     </MudItem>
     <MudItem xs="12">
+        @* Hardmode is opt-in (docs/design/hardmode-leaderboard.md D30): the stored value is the
+           opt-IN, so every account starts off and the default writes nothing. The same setting as
+           the switch under the Hardmode tab's number. *@
+        <MudSwitch T="bool" Label=@L["Hardmode"] Value="_hardmodeOn"
+                   ValueChanged="UpdateHardmode" Color="Color.Primary" data-testid="profile-hardmode"></MudSwitch>
+        <MudText Typo="Typo.body2" Style="opacity:.75;" Class="ml-11">
+            @L["Shows Hardmode on your session page, your Discord session cards and the highlight feeds. Your Hardmode number and board place are kept either way."]
+        </MudText>
+    </MudItem>
+    <MudItem xs="12">
         @* A display setting, so it sits with the theme rather than with the privacy ones.
            Defaults ON for everyone, signed-out included (D24), which is why the stored value is
-           the opt-OUT: the common case writes nothing. *@
-        <MudSwitch T="bool" Label=@L["Mark Hardmode charts"] Value="_markHardmode"
-                   ValueChanged="UpdateHardmodeMark" Color="Color.Primary"></MudSwitch>
+           the opt-OUT: the common case writes nothing. Its own switch since D32 — the glow is not
+           Hardmode's, and it glows whether or not Hardmode is on. *@
+        <MudSwitch T="bool" Label=@L["Show difficulty glow"] Value="_showGlow"
+                   ValueChanged="UpdateDifficultyGlow" Color="Color.Primary" data-testid="profile-difficulty-glow"></MudSwitch>
         <MudText Typo="Typo.body2" Style="opacity:.75;" Class="ml-11">
-            @L["Puts a glow on the difficulty bubble of every chart in the week's Hardmode list, everywhere on the site."]
+            @L["Glows red on the charts in each folder that almost nobody holds in a PUMBILITY top 50, and green on the ones the most players hold. Phoenix 2, rebuilt every Sunday."]
         </MudText>
     </MudItem>
     <MudItem xs="12">
@@ -346,7 +358,8 @@
     private string _themeOverride = MixThemes.MatchMixValue;
     private PendingAccountDeletion? _pendingDeletion;
     private bool _shareWithAllTools;
-    private bool _markHardmode = true;
+    private bool _showGlow = true;
+    private bool _hardmodeOn;
     private int _connectedToolCount;
     protected override async Task OnInitializedAsync()
     {
@@ -356,7 +369,12 @@
                           ?? SupportedCultures.Automatic;
         _themeOverride = await UiSettings.GetSetting(MixThemes.OverrideSettingKey) ?? MixThemes.MatchMixValue;
         // Absence means on: only the opt-out is ever written.
-        _markHardmode = await UiSettings.GetSetting(HardmodeCharts.SettingKey) is null;
+        _showGlow = await UiSettings.GetSetting(DifficultyGlow.SettingKey) is null;
+        // And the reverse for Hardmode: absence means off (D30).
+        _hardmodeOn = HardmodeOptIn.IsOn(new Dictionary<string, string>
+        {
+            [HardmodeOptIn.SettingKey] = await UiSettings.GetSetting(HardmodeOptIn.SettingKey) ?? string.Empty
+        });
         _id = CurrentUser.User.Id.ToString();
         _name = CurrentUser.User.Name;
         _countryName = CurrentUser.User.Country;
@@ -393,16 +411,27 @@
     }
 
     /// <summary>
-    ///     Written as an opt-OUT, so the default costs no row. A full reload because the mark is
+    ///     Written as an opt-OUT, so the default costs no row. A full reload because the glow is
     ///     resolved per circuit and every bubble already on screen was rendered under the old
     ///     answer - the same reason the theme override reloads.
     /// </summary>
-    private async Task UpdateHardmodeMark(bool marked)
+    private async Task UpdateDifficultyGlow(bool shown)
     {
-        _markHardmode = marked;
-        if (marked) await UiSettings.ClearSetting(HardmodeCharts.SettingKey);
-        else await UiSettings.SetSetting(HardmodeCharts.SettingKey, "true");
+        _showGlow = shown;
+        if (shown) await UiSettings.ClearSetting(DifficultyGlow.SettingKey);
+        else await UiSettings.SetSetting(DifficultyGlow.SettingKey, "true");
         NavManager.NavigateTo("/Account", forceLoad: true);
+    }
+
+    /// <summary>
+    ///     Written as an opt-IN (D30). No reload: nothing on this page draws Hardmode, and every
+    ///     surface that does reads the setting when it renders or announces.
+    /// </summary>
+    private async Task UpdateHardmode(bool on)
+    {
+        _hardmodeOn = on;
+        if (on) await UiSettings.SetSetting(HardmodeOptIn.SettingKey, "true");
+        else await UiSettings.ClearSetting(HardmodeOptIn.SettingKey);
     }
 
     private async Task UpdateThemeOverride(string newValue)

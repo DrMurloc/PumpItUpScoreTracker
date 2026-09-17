@@ -38,7 +38,7 @@ public abstract class ComponentTestBase : TestContext
     /// </summary>
     protected Mock<IUiSettingsAccessor> UiSettings { get; } = new();
 
-    /// <summary>The week's Hardmode list, which decides whether a difficulty bubble glows.</summary>
+    /// <summary>The week's Hardmode list and its most-held end, which decide how a difficulty bubble glows.</summary>
     protected Mock<IHardmodeChartReader> HardmodeReader { get; } = new();
 
     protected ComponentTestBase()
@@ -59,8 +59,10 @@ public abstract class ComponentTestBase : TestContext
         // mix with no census - so nothing glows unless a suite says so.
         HardmodeReader.Setup(h => h.GetQualifyingCharts(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<HardmodeChartEntry>());
+        HardmodeReader.Setup(h => h.GetMostHeldCharts(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<HardmodeChartEntry>());
         Services.AddSingleton(HardmodeReader.Object);
-        Services.AddScoped<HardmodeCharts>();
+        Services.AddScoped<DifficultyGlow>();
 
         // A clock, because components that date anything take one and several suites were
         // each stubbing their own. A suite that needs a specific instant still registers over

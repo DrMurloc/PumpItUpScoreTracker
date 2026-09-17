@@ -20282,3 +20282,101 @@ a.peer-pop-row:hover {
     drop-shadow(0 0 9px var(--hard-mark))
     drop-shadow(0 0 16px color-mix(in srgb, var(--hard-mark) 60%, transparent));
 }
+
+/* The difficulty glow's most-held end (docs/design/hardmode-leaderboard.md D32): the same three
+   stacked shadows as the Hardmode red above, in the mix-invariant mint, so the two ends read as one
+   family. Mint rather than a theme green because the glow only renders on Phoenix 2, whose primary
+   is already green. */
+.bubble-easy {
+    filter: drop-shadow(0 0 3px var(--easy-mark))
+    drop-shadow(0 0 9px var(--easy-mark))
+    drop-shadow(0 0 16px color-mix(in srgb, var(--easy-mark) 60%, transparent));
+}
+
+/* The Sessions-page Hardmode banner (D31): the March of Murlocs callout's geometry in D19's red,
+   sitting above the hero rather than inside it, with a close at its far corner. Declared after
+   .mom-callout's rules so its margins win on source order. */
+.hmd-callout {
+    position: relative;
+    margin: 0 0 14px;
+    padding-right: 44px;
+    border-color: color-mix(in srgb, var(--hard-mark) 50%, transparent);
+    background: color-mix(in srgb, var(--hard-mark) 7%, transparent);
+}
+
+.hmd-callout .ico {
+    font-size: 24px;
+    line-height: 1;
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--hard-mark) 70%, transparent));
+}
+
+.hmd-callout-body {
+    flex: 1 1 380px;
+    min-width: 0;
+}
+
+.hmd-callout-say {
+    margin: 0 0 10px;
+    font-size: 13.5px;
+    line-height: 1.45;
+    max-width: 68ch;
+}
+
+.hmd-callout .fact:first-child b {
+    color: var(--hard-mark);
+}
+
+.hmd-callout-off {
+    margin: 10px 0 0;
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+}
+
+.hmd-callout-x {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    color: var(--mix-ink-muted);
+}
+
+@media (max-width: 700px) {
+    .hmd-callout {
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+/* The Hardmode switch under the Hardmode tab's number (D30): red while off, because off is the
+   state it is asking you to change, and quiet once it is on. */
+.hmd-optin {
+    display: flex;
+    align-items: center;
+    gap: 10px 14px;
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--hard-mark) 45%, transparent);
+    background: color-mix(in srgb, var(--hard-mark) 6%, transparent);
+}
+
+.hmd-optin-on {
+    border-color: color-mix(in srgb, var(--mix-ink) 12%, transparent);
+    background: color-mix(in srgb, var(--mix-surface) 60%, transparent);
+}
+
+.hmd-optin-glyph {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.hmd-optin-say {
+    margin: 0;
+    flex: 1 1 280px;
+    font-size: 13.5px;
+    line-height: 1.45;
+}
+
+.hmd-optin-on .hmd-optin-say {
+    color: var(--mix-ink-muted);
+}

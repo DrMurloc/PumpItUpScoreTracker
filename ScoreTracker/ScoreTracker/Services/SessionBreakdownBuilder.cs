@@ -40,9 +40,10 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
         if (selected == null) return Empty;
 
         var sessions = await mediator.Send(new GetScoreSessionsQuery(userId), cancellationToken);
+        var hardmode = await HardmodeIsOn(userId, cancellationToken);
         return new SessionsPageModel(
-            await BuildOne(userId, selected, sessions, cancellationToken),
-            await BuildHistory(userId, feed.Groups, sessions, cancellationToken),
+            await BuildOne(userId, selected, sessions, hardmode, cancellationToken),
+            await BuildHistory(userId, feed.Groups, sessions, hardmode, cancellationToken),
             feed.TotalGroups, undone);
     }
 
@@ -60,7 +61,8 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
         var sessions = await mediator.Send(new GetScoreSessionsQuery(userId), cancellationToken);
         return current with
         {
-            Hero = await BuildOne(userId, selected, sessions, cancellationToken),
+            Hero = await BuildOne(userId, selected, sessions, await HardmodeIsOn(userId, cancellationToken),
+                cancellationToken),
             SelectedSessionWasUndone = undone
         };
     }
@@ -77,9 +79,21 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
         var sessions = await mediator.Send(new GetScoreSessionsQuery(userId), cancellationToken);
         return current with
         {
-            History = await BuildHistory(userId, feed.Groups, sessions, cancellationToken),
+            History = await BuildHistory(userId, feed.Groups, sessions,
+                await HardmodeIsOn(userId, cancellationToken), cancellationToken),
             TotalGroups = feed.TotalGroups
         };
+    }
+
+    /// <summary>
+    ///     The page owner's Hardmode switch (docs/design/hardmode-leaderboard.md D30). The owner's,
+    ///     never the viewer's: the switch belongs to the player whose scores these are, so a visitor
+    ///     sees what the owner's switch says. Read at render time, so the page follows the switch
+    ///     backwards — the capture step wrote every Hardmode fact regardless.
+    /// </summary>
+    private Task<bool> HardmodeIsOn(Guid userId, CancellationToken cancellationToken)
+    {
+        return HardmodeOptIn.Read(mediator, userId, cancellationToken);
     }
 
     private static readonly SessionsPageModel Empty =
@@ -105,7 +119,7 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
     }
 
     private async Task<SessionBreakdown> BuildOne(Guid userId, RecentSessionsPage.SessionGroup group,
-        IReadOnlyList<ScoreSessionRecord> sessions, CancellationToken cancellationToken)
+        IReadOnlyList<ScoreSessionRecord> sessions, bool hardmode, CancellationToken cancellationToken)
     {
         var chartIds = group.Rows.Select(r => r.ChartId).Distinct().ToArray();
         var charts = (await mediator.Send(new GetChartsQuery(group.Mix, ChartIds: chartIds), cancellationToken))
@@ -119,6 +133,13 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
             ? Array.Empty<PlayerMilestoneRecord>()
             : (await mediator.Send(new GetPlayerMilestonesForSessionsQuery(userId, new[] { group.SessionId.Value }),
                 cancellationToken)).ToArray();
+        if (!hardmode)
+        {
+            // Stripped before anything below reads them, so the strips, badges, gain chips,
+            // ladders, pointer and Highlights all agree that Hardmode is off (D30).
+            highlights = highlights.Select(HardmodeVisibility.Strip).ToArray();
+            milestones = HardmodeVisibility.Strip(milestones).ToArray();
+        }
 
         var pinned = PinHighlights(group.Rows, highlights);
         var phoenix1 = await Phoenix1Bests(userId, group.Mix, chartIds, cancellationToken);
@@ -304,7 +325,7 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
     /// </summary>
     private async Task<IReadOnlyList<SessionHistoryRow>> BuildHistory(Guid userId,
         IReadOnlyList<RecentSessionsPage.SessionGroup> groups, IReadOnlyList<ScoreSessionRecord> sessions,
-        CancellationToken cancellationToken)
+        bool hardmode, CancellationToken cancellationToken)
     {
         var charts = new Dictionary<Guid, Chart>();
         foreach (var byMix in groups.GroupBy(g => g.Mix))
@@ -321,6 +342,8 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
             ? Array.Empty<PlayerMilestoneRecord>()
             : (await mediator.Send(new GetPlayerMilestonesForSessionsQuery(userId, sessionIds), cancellationToken))
                 .ToArray();
+        // The history card's Hardmode tag goes with everything else Hardmode (D30).
+        if (!hardmode) milestones = HardmodeVisibility.Strip(milestones).ToArray();
 
         return groups.Select(g => ToHistoryRow(g, sessions, charts, milestones)).ToArray();
     }
