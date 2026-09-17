@@ -195,6 +195,9 @@ public static class ThemeScales
     /// </summary>
     public static string HardmodeMark => "var(--hard-mark)";
 
+    /// <summary>The difficulty glow's most-held end (D32), mix-invariant like the Hardmode mark.</summary>
+    public static string EasyMark => "var(--easy-mark)";
+
     /// <summary>
     ///     The step-chart strip's panel token for a lane (lane = panel % 5): the classic skin's
     ///     upper-red / lower-blue / center-yellow, mix-invariant

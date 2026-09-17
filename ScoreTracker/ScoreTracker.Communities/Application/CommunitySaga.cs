@@ -178,6 +178,14 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         var user = await _users.GetUser(e.UserId, context.CancellationToken);
         if (user == null) return;
 
+        // Hardmode is announced only for a player who switched it on (docs/design/
+        // hardmode-leaderboard.md D30), so the batch is stripped before anything below reads it:
+        // every flagged score is promoted to an art row, and a skull-only score would otherwise
+        // still take one. A batch with no Hardmode in it never asks.
+        if (HardmodeVisibility.Carries(e) &&
+            !await HardmodeOptIn.Read(_mediator, e.UserId, context.CancellationToken))
+            e = HardmodeVisibility.Strip(e);
+
         var bests = (await _scores.GetBestScores(e.Mix, e.UserId, context.CancellationToken))
             .Where(s => s.Score != null)
             .ToDictionary(s => s.ChartId);
@@ -593,6 +601,8 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         // achievements block already announces (docs/design/pumbility-levels.md §5). The label is
         // the game's own notation, so it carries no localizer key.
         var levelUp = PumbilityLevelChange.TryFrom(mix, milestones);
+        // Hardmode's level crossing rides the combined Hardmode line the same way (D33).
+        var hardmodeLevelUp = HardmodeLadders.LevelChange(mix, milestones);
 
         var lines = new List<string>();
         foreach (var m in milestones)
@@ -612,7 +622,10 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
                 // is the only thing separating the two families.
                 case MilestoneKind.HardmodePumbilityGain:
                     lines.Add("💀 " + _localizer.Get(culture, "**Hardmode** {0:N0} → **{1:N0}** (+{2:N0})",
-                        m.OldValue, m.NewValue, m.NewValue - m.OldValue));
+                                  m.OldValue, m.NewValue, m.NewValue - m.OldValue)
+                              + (hardmodeLevelUp == null
+                                  ? string.Empty
+                                  : $" · 🆙 **{hardmodeLevelUp.CrossingText()}**"));
                     break;
                 case MilestoneKind.HardmodeSinglesPumbilityGain:
                     lines.Add("💀 " + _localizer.Get(culture, "**Hardmode (S)** {0:N0} → **{1:N0}** (+{2:N0})",
@@ -657,6 +670,11 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         // the 4000-char budget (not a name cap) is the only backstop.
         lines.AddRange(titles.Select(t =>
             "🏅 " + _localizer.Get(culture, "**{0}** completed", Bracket(t.Title))));
+        // Hardmode's rungs, listed the way title completions are: every rung each pool crossed,
+        // lowest first (D33). A batch from a player with Hardmode off carries no Hardmode
+        // milestones by now, so this is empty for them.
+        lines.AddRange(HardmodeLadders.RungsCrossed(e.Mix, e.Milestones).Select(r =>
+            "💀 " + _localizer.Get(culture, "**{0}** reached on Hardmode", Bracket(r.Title))));
 
         // Folder movement gets the full spectrum here — every tier crossing and every grade
         // improvement. The homepage Community Highlights widget is the surface that keeps a high
@@ -688,6 +706,12 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         lines.AddRange(e.TitleProgress.Take(ProgressDeltaCap).Select(d =>
             "🏅 " + _localizer.Get(culture, "{0} {1}% → **{2}%**",
                 Bracket(d.Title), (int)(d.OldPercent * 100), (int)(d.NewPercent * 100))));
+        // And Hardmode's ladders beside them (D33): the bars the session page draws, one per pool
+        // that moved a whole percent — the same rule the title deltas are filtered by.
+        lines.AddRange(HardmodeTitleBars.From(e.Mix, e.Milestones)
+            .Where(b => (int)(b.NewPercent * 100) > (int)(b.OldPercent * 100))
+            .Select(b => "💀 " + _localizer.Get(culture, "Hardmode {0} {1}% → **{2}%**",
+                Bracket(b.Title), (int)(b.OldPercent * 100), (int)(b.NewPercent * 100))));
 
         return lines;
     }

@@ -1,0 +1,89 @@
+@namespace ScoreTracker.Web.Components
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.Contracts
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+
+@* The one-time Hardmode advert at the top of your own Sessions page (docs/design/
+   hardmode-leaderboard.md D31). It shows only while Hardmode is off, only on Phoenix 2, and only
+   to the page's owner — a visitor has nothing to switch on here. The × hides it for good, and
+   switching Hardmode on retires it too. The standing it quotes is real, because the Hardmode
+   number keeps counting while the switch is off (D30). Renders nothing until everything it
+   depends on has been read, so a dismissed banner never flashes on the way in. *@
+@if (_standing != null)
+{
+    <div class="mom-callout hmd-callout" data-testid="hardmode-banner">
+        <div class="ico" aria-hidden="true">💀</div>
+        <div class="hmd-callout-body">
+            <h3>@L["Hardmode: PUMBILITY on the charts nobody plays"]</h3>
+            <p class="hmd-callout-say">
+                @L["The same formula, priced over the rarest slice of every folder — the charts almost nobody holds in a top 50. The list is rebuilt every Sunday."]
+            </p>
+            <div class="facts">
+                @if (_standing.Place is { } place)
+                {
+                    <span class="fact" data-testid="hardmode-banner-standing">
+                        <b>@_standing.Total.ToString("N0")</b><span>@L["Hardmode PUMBILITY"]</span>
+                    </span>
+                    <span class="fact">
+                        <b>@L["{0} of {1}", _standing.Held, PoolSize]</b><span>@L["charts held"]</span>
+                    </span>
+                    <span class="fact">
+                        <b>@L["#{0} of {1}", place, _standing.Field]</b><span>@L["on the board"]</span>
+                    </span>
+                }
+                else
+                {
+                    <span class="fact" data-testid="hardmode-banner-list">
+                        <b>@_standing.QualifyingCharts.ToString("N0")</b><span>@L["charts qualify this week"]</span>
+                    </span>
+                    <span class="fact">
+                        <b>@_standing.Field.ToString("N0")</b><span>@L["players on the board"]</span>
+                    </span>
+                }
+            </div>
+            <p class="hmd-callout-off">
+                @L["Hardmode is off for you, so it stays out of your sessions and Discord cards. Your Hardmode scores are counted either way."]
+            </p>
+        </div>
+        <div class="act">
+            <MudButton Href="/Pumbility/Hardmode" Variant="Variant.Filled" Color="Color.Primary"
+                       data-testid="hardmode-banner-link">@L["See Hardmode"]</MudButton>
+        </div>
+        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Class="hmd-callout-x"
+                       OnClick="Dismiss" aria-label="@L["Dismiss"]" data-testid="hardmode-banner-dismiss"></MudIconButton>
+    </div>
+}
+
+@code {
+    /// <summary>Set once the owner closes the banner. Its presence is the whole "already dismissed" test.</summary>
+    public const string DismissedKey = "Sessions__HardmodeBannerDismissed";
+
+    private const int PoolSize = 50;
+
+    /// <summary>Whose Sessions page this is. The banner speaks only to them.</summary>
+    [Parameter] public Guid OwnerId { get; set; }
+
+    private HardmodeStandingRecord? _standing;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Cheapest refusals first: a visitor and a Phoenix 1 viewer cost no settings read at all.
+        if (!CurrentUser.IsLoggedIn || CurrentUser.User.Id != OwnerId) return;
+        if (await UiSettings.GetSelectedMix() != MixEnum.Phoenix2) return;
+        if (await UiSettings.GetSetting(DismissedKey) is not null) return;
+        if (!string.IsNullOrWhiteSpace(await UiSettings.GetSetting(HardmodeOptIn.SettingKey))) return;
+        _standing = await Mediator.Send(new GetHardmodeStandingQuery(MixEnum.Phoenix2, OwnerId));
+    }
+
+    private async Task Dismiss()
+    {
+        _standing = null;
+        await UiSettings.SetSetting(DismissedKey, "true");
+    }
+}

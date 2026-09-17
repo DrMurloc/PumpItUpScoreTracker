@@ -27,6 +27,10 @@
         </div>
     </div>
 
+    @* The one-time Hardmode advert (D31). It decides for itself whether it shows: owner only,
+       Phoenix 2 only, Hardmode off, not dismissed. *@
+    <HardmodeBanner OwnerId="UserIdParam"></HardmodeBanner>
+
     @if (_firstLoad)
     {
         @* Skeletons match the shape they become — never a lone spinner on a data page. *@

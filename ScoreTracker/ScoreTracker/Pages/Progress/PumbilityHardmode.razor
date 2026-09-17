@@ -39,6 +39,10 @@
         {
             <HardmodeHero Page="_page" Pool="ctx.Pool" OnPoolChanged="ctx.ChangePool"></HardmodeHero>
 
+            @* The switch lives directly under the number it does not change (D30) — where the
+               Sessions banner sends you. *@
+            <HardmodeOptInRow></HardmodeOptInRow>
+
             <HardmodeBoardSection Mix="ctx.Mix" Pool="ctx.Pool" Standing="Standing"></HardmodeBoardSection>
 
             @if (RailsFor(ctx.Pool).Count > 0)

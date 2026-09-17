@@ -782,6 +782,41 @@ is also what lets every other locale print the real command.
 | by hand | mag bragl | |
 | from | urg | |
 
+## The Hardmode switch and the difficulty glow (2026-09-16)
+
+Nineteen strings for the Hardmode switch, the Sessions banner, the glow's two ends and the Discord
+card's Hardmode rungs ([hardmode-leaderboard.md](design/hardmode-leaderboard.md) D30–D33). **Nothing
+was coined.** A first draft borrowed words the file already spends on something else — `grolub`
+for *slice* is Publishes, `urgrog` for *over* is ahead, `glargrog` for *place* is the MoM window — and
+re-coined two it already had (`brolgur` beside `urblarg` for *real*, `murglmurm` beside
+`Glorgmurpgrrgl` for *difficulty*), so each went back to the word the file already used. The ones
+below were in the resx but in no table, which is how the draft missed them; they are tabulated so the
+next batch finds them. Reused from this doc as-is:
+`Mrglmorg` (Hardmode), `grogro` (hold), `grabmrp` (qualify), `mrrrglmurp` (rarest), `grogblub`
+(folder), `murm` (week), `Murgromurm` (Sunday), `blargmurm` (formula), `gogl` (priced), `grorp`
+(number), `grorpgl` (counts), `mrgloru` (kept), `mrgrglmurm` (recalculate, for *rebuilt*), `romorg` (show), `Roglurg`
+(glows), `Glorgmorg` (feed), `Gurbl` (card), `gromurp` (your), `a` (the), `ap` (on, and), `ro` (to),
+`op` (so), `argo` (that).
+
+| English | en-ZW | Notes |
+|---|---|---|
+| difficulty | glorgmurpgrrgl | Recovered from *Difficulty* and *Shown Difficulty*. |
+| place (a board place) | blgrlmagl | Recovered from *Place* and *Best place*. |
+| real | urblarg | Recovered from *real charts* and *real plays*. |
+| either way | arplo bam | Recovered from the Community Tools announcement (*visible on PIU Scores either way*). |
+| slice | grop | Recovered from the Hardmode tab's own *the rarest slice of every folder*. |
+| over (priced over) | grglglorg | Recovered from *PUMBILITY over time*. |
+| in | gropmur | Recovered from *{0}% in* and *#{0} in your Hardmode*. |
+| stay / stays | murmo | Recovered from the same announcement (*Your scores stay visible*). |
+| session / sessions | orgab | Recovered from *Session*; number unmarked, like Tool/Tools. |
+| on (switched on) / Turn On | gorb | Recovered from *Turn On* and *Auto Submit On*. Distinct from `ap`, the preposition. |
+| off (switched off) | morg | Recovered from *Off*. Shares its spelling with `Morg` (Type), as `Mrgl` is both Easy and Song. |
+| same | plom | Recovered from *Worth about the same*. |
+| nobody | bomorp | Recovered from *nobody* and *held by nobody*. |
+| highlight / highlights | Murmmurmgro | Recovered from *Community Highlights*. |
+| green | gromurg | Recovered from the rarity ramp (*grey → silver → green*) and the folder-heat legend. |
+| red | ro | Recovered from the folder-heat legend (*ro = Mrglrlgl*). Shares its spelling with `ro` (to). |
+
 ## The presence graph (2026-09-16)
 
 Coined for the chart page's PUMBILITY presence graph ([chart-presence-graph.md](design/chart-presence-graph.md)):
@@ -791,11 +826,10 @@ re-coined: `mrgloru` (hold), `gropmur` (in), `ropgl 50` (top 50), `grglblarg` (t
 `og` (at), `ap` (on), `ba` (for), `bu` (by), `blu` (this), `Mrgl` (title), `murgl` (chart), `morp`
 (players), `gropla` (ladder), `Mrrrgl` (most), `mrrglgro` / `glubgro` (higher / lower), `grogrgl` (than),
 `ugmorg` (other), `plglro` (like), `ro` (about, and around), `mrglrg` (rating, here *rates*), `gorpo`
-(where), `mrogl` (sits), `gru` (data), `grorp` (number, here *count*) and `rorgmo` (reads).
+(where), `mrogl` (sits), `gru` (data), `grorp` (number, here *count*), `plom` (same) and `rorgmo` (reads).
 
 | English | en-ZW | Notes |
 |---|---|---|
-| same | plom | Recovered from the calculator's *the same PUMBILITY* → `a plom PUMBILITY`. |
 | low (few) | glub | The root of `glubgro` (lower) and `Glubglub` (lowest). |
 | typically | rorggl | On `rorg` (average): what a chart usually does is its average. |
 | spot (a place in a top 50) | mroglub | `mrogl` (sits) + `ub`: the place a chart sits. |

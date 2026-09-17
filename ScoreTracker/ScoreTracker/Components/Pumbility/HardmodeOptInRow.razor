@@ -1,0 +1,72 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.Web.Services.Contracts
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+
+@* The Hardmode switch, directly under the Hardmode tab's number (docs/design/
+   hardmode-leaderboard.md D30) — where the Sessions banner sends you. The same setting as the
+   switch on /Account → Profile. It reads as a question while off and gets out of the way once on:
+   the number above it is real either way, so the only thing the switch decides is whether
+   Hardmode is also announced on your sessions, your Discord card and the feeds. Nothing for a
+   signed-out visitor, who has no switch; nothing until the setting is read, so it never flips on
+   the way in. *@
+@if (_read)
+{
+    @if (_on)
+    {
+        <div class="hmd-optin hmd-optin-on" data-testid="hardmode-optin-on">
+            <span class="hmd-optin-glyph" aria-hidden="true">💀</span>
+            <p class="hmd-optin-say">
+                @L["Hardmode is on. It shows on your sessions, your Discord cards and the highlight feeds."]
+            </p>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="_saving" OnClick="() => Set(false)"
+                       data-testid="hardmode-optin-turn-off">@L["Turn Off"]</MudButton>
+        </div>
+    }
+    else
+    {
+        <div class="hmd-optin" data-testid="hardmode-optin-off">
+            <span class="hmd-optin-glyph" aria-hidden="true">💀</span>
+            <p class="hmd-optin-say">
+                <b>@L["Hardmode is off for you."]</b>
+                @L["Your number and board place are real either way — turn it on to see Hardmode on your sessions, your Discord cards and the highlight feeds."]
+            </p>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_saving" OnClick="() => Set(true)"
+                       data-testid="hardmode-optin-turn-on">@L["Turn on Hardmode"]</MudButton>
+        </div>
+    }
+}
+
+@code {
+    private bool _on;
+    private bool _read;
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn) return;
+        _on = !string.IsNullOrWhiteSpace(await UiSettings.GetSetting(HardmodeOptIn.SettingKey));
+        _read = true;
+    }
+
+    /// <summary>
+    ///     Writes a value to switch it on and clears the key to switch it off: absence is off, so the
+    ///     default account costs no row (D30).
+    /// </summary>
+    private async Task Set(bool on)
+    {
+        _saving = true;
+        try
+        {
+            if (on) await UiSettings.SetSetting(HardmodeOptIn.SettingKey, "true");
+            else await UiSettings.ClearSetting(HardmodeOptIn.SettingKey);
+            _on = on;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

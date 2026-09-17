@@ -30,6 +30,16 @@ public sealed class ChartIntelligenceModelContribution : IDbModelContribution
             .WithMany()
             .HasForeignKey(e => e.ChartId);
 
+        // The same census's other end (docs/design/hardmode-leaderboard.md D32), in the same shape
+        // and behind the same filter, so the census rewrites both all-time lists the same way.
+        modelBuilder.Entity<MostHeldChartEntity>().ToTable("MostHeldChart")
+            .HasKey(e => new { e.SeasonId, e.MixId, e.ChartId });
+        modelBuilder.Entity<MostHeldChartEntity>().HasQueryFilter(QueryFilters.AllTime, e => e.SeasonId == 0);
+        modelBuilder.Entity<MostHeldChartEntity>()
+            .HasOne<ChartEntity>()
+            .WithMany()
+            .HasForeignKey(e => e.ChartId);
+
         // The PUMBILITY presence census (docs/design/chart-presence-graph.md §7): a mix's columns, and a
         // row per (mix, chart, column). The page reads one chart, so its rows are one PK-prefix seek.
         modelBuilder.Entity<ChartPumbilityPresenceColumnEntity>().ToTable("ChartPumbilityPresenceColumn")

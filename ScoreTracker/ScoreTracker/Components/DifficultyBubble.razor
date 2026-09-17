@@ -8,7 +8,7 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Components
 @inject ChartScoringLevels ScoringLevels
-@inject HardmodeCharts Hardmode
+@inject DifficultyGlow Glow
 @if (Chart != null || (Type != null && Level != null))
 {
     @* MudTooltip renders a popover, which throws in static SSR (no provider in the static
@@ -28,6 +28,13 @@
                     }
                     <MudText Typo="Typo.caption">@Chart.StepArtist</MudText><br/>
                     <MudText Typo="Typo.caption">@ScoringLevelString</MudText>
+                    @if (GlowReason is { } reason)
+                    {
+                        @* Says which end of the folder the glow marks, so the glow explains itself
+                           the first time a player wonders why this bubble is lit (D32). *@
+                        <br/>
+                        <MudText Typo="Typo.caption">@reason</MudText>
+                    }
                 }
                 else
                 {
@@ -48,13 +55,28 @@
            official art, and looking different from the modern bubbles IS the message — these
            numbers live on a different scale (docs/design/legacy-mixes.md). *@
         @* The glow is a drop-shadow filter on the image, so it traces the bubble art's own
-           alpha and haloes the shape rather than boxing it (D24). Never suppressed anywhere,
-           the Hardmode page's own qualifying list included - a folder where every chart glows
-           is the point there. *@
-        : @<MudImage tabindex="0" Src="@DifficultyBubblePath" Height="Height ?? (Small ? 22 : 35)" Alt="@DiffString" ObjectFit="ObjectFit.ScaleDown" Class="@(_isHardmode ? "bubble-hardmode" : null)"></MudImage>;
+           alpha and haloes the shape rather than boxing it (D24). Red for the week's Hardmode
+           charts, mint for each folder's most held (D32). Never suppressed anywhere, the
+           Hardmode page's own qualifying list included - a folder where every chart glows is
+           the point there. *@
+        : @<MudImage tabindex="0" Src="@DifficultyBubblePath" Height="Height ?? (Small ? 22 : 35)" Alt="@DiffString" ObjectFit="ObjectFit.ScaleDown" Class="@GlowClass"></MudImage>;
 
     private double? _scoringLevel;
-    private bool _isHardmode;
+    private DifficultyGlowKind _glow;
+
+    private string? GlowClass => _glow switch
+    {
+        DifficultyGlowKind.Hard => "bubble-hardmode",
+        DifficultyGlowKind.Easy => "bubble-easy",
+        _ => null
+    };
+
+    private string? GlowReason => _glow switch
+    {
+        DifficultyGlowKind.Hard => L["Almost nobody holds this in a PUMBILITY top 50 — one of this week's Hardmode charts."],
+        DifficultyGlowKind.Easy => L["One of the most-held charts in this folder's PUMBILITY top 50s."],
+        _ => null
+    };
     private string ScoringLevelString => _scoringLevel == null ? "" : $"{_scoringLevel:0.0}";
 
     protected override async Task OnParametersSetAsync()
@@ -62,14 +84,14 @@
         if (Chart == null)
         {
             _scoringLevel = null;
-            _isHardmode = false;
+            _glow = DifficultyGlowKind.None;
             return;
         }
 
         // Both memoized per circuit, so forty bubbles on a page cost one read each rather than
         // forty. The chart-less mode has no id to ask about and never glows.
         _scoringLevel = await ScoringLevels.GetScoringLevel(Chart.Id);
-        _isHardmode = await Hardmode.IsMarked(Chart.Mix, Chart.Id);
+        _glow = await Glow.GlowFor(Chart.Mix, Chart.Id);
     }
 
     [Parameter]

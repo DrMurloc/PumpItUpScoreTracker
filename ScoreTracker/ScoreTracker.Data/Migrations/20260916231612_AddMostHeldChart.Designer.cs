@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ScoreTracker.Data.Persistence;
 
@@ -11,9 +12,11 @@ using ScoreTracker.Data.Persistence;
 namespace ScoreTracker.Data.Migrations
 {
     [DbContext(typeof(ChartAttemptDbContext))]
-    partial class ChartAttemptDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260916231612_AddMostHeldChart")]
+    partial class AddMostHeldChart
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -715,88 +718,6 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("MixId", "ChartId");
 
                     b.ToTable("ChartPreferenceRating", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartPumbilityPresenceColumnEntity", b =>
-                {
-                    b.Property<Guid>("MixId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("ColumnOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Band")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.Property<DateTimeOffset>("ComputedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<int>("Players")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SitePlayers")
-                        .HasColumnType("int");
-
-                    b.HasKey("MixId", "ColumnOrder");
-
-                    b.ToTable("ChartPumbilityPresenceColumn", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartPumbilityPresenceEntity", b =>
-                {
-                    b.Property<Guid>("MixId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("ColumnOrder")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("CountsBoardPlayers")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Dots")
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.Property<double?>("FolderMedian")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("FolderP25")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("FolderP75")
-                        .HasColumnType("float");
-
-                    b.Property<int>("FolderSpots")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Holders")
-                        .HasColumnType("int");
-
-                    b.Property<double?>("SpotMax")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("SpotMedian")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("SpotMin")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("SpotP25")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("SpotP75")
-                        .HasColumnType("float");
-
-                    b.HasKey("MixId", "ChartId", "ColumnOrder");
-
-                    b.HasIndex("ChartId");
-
-                    b.ToTable("ChartPumbilityPresence", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartScoreStatsEntity", b =>
@@ -4808,15 +4729,6 @@ namespace ScoreTracker.Data.Migrations
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.SongEntity", null)
                         .WithMany()
                         .HasForeignKey("SongId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartPumbilityPresenceEntity", b =>
-                {
-                    b.HasOne("ScoreTracker.Data.Persistence.Entities.ChartEntity", null)
-                        .WithMany()
-                        .HasForeignKey("ChartId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

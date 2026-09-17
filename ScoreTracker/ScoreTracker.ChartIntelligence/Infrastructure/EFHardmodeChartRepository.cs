@@ -18,13 +18,17 @@ internal sealed class EFHardmodeChartRepository : IHardmodeChartRepository
     }
 
     public async Task Replace(MixEnum mix, IReadOnlyCollection<HardmodeChartRecord> charts,
-        DateTimeOffset computedAt, CancellationToken cancellationToken)
+        IReadOnlyCollection<HardmodeChartRecord> mostHeld, DateTimeOffset computedAt,
+        CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var mixId = MixIds.For(mix);
-        var existing = await database.Set<HardmodeChartEntity>().Where(e => e.MixId == mixId)
-            .ToArrayAsync(cancellationToken);
-        database.Set<HardmodeChartEntity>().RemoveRange(existing);
+        // Both reads go through the AllTime filter, so a season's copy of either list is invisible
+        // here and survives the rewrite (docs/design/seasons.md D31).
+        database.Set<HardmodeChartEntity>().RemoveRange(await database.Set<HardmodeChartEntity>()
+            .Where(e => e.MixId == mixId).ToArrayAsync(cancellationToken));
+        database.Set<MostHeldChartEntity>().RemoveRange(await database.Set<MostHeldChartEntity>()
+            .Where(e => e.MixId == mixId).ToArrayAsync(cancellationToken));
         await database.Set<HardmodeChartEntity>().AddRangeAsync(charts.Select(c => new HardmodeChartEntity
         {
             MixId = mixId,
@@ -36,6 +40,18 @@ internal sealed class EFHardmodeChartRepository : IHardmodeChartRepository
             FolderCut = c.FolderCut,
             ComputedAt = computedAt
         }), cancellationToken);
+        await database.Set<MostHeldChartEntity>().AddRangeAsync(mostHeld.Select(c => new MostHeldChartEntity
+        {
+            MixId = mixId,
+            ChartId = c.ChartId,
+            Level = c.Level,
+            Points = c.Points,
+            Holders = c.Holders,
+            FolderSize = c.FolderSize,
+            FolderCut = c.FolderCut,
+            ComputedAt = computedAt
+        }), cancellationToken);
+        // One save for both lists: a glow must never pair this week's red with last week's green.
         await database.SaveChangesAsync(cancellationToken);
     }
 
@@ -48,6 +64,18 @@ internal sealed class EFHardmodeChartRepository : IHardmodeChartRepository
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var mixId = MixIds.For(mix);
         return await (from row in database.Set<HardmodeChartEntity>().Where(e => e.MixId == mixId)
+                join chart in database.Set<ChartEntity>() on row.ChartId equals chart.Id
+                select new HardmodeChartRecord(row.ChartId, Enum.Parse<ChartType>(chart.Type), row.Level,
+                    row.Points, row.Holders, row.FolderSize, row.FolderCut))
+            .ToArrayAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<HardmodeChartRecord>> GetMostHeld(MixEnum mix,
+        CancellationToken cancellationToken)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var mixId = MixIds.For(mix);
+        return await (from row in database.Set<MostHeldChartEntity>().Where(e => e.MixId == mixId)
                 join chart in database.Set<ChartEntity>() on row.ChartId equals chart.Id
                 select new HardmodeChartRecord(row.ChartId, Enum.Parse<ChartType>(chart.Type), row.Level,
                     row.Points, row.Holders, row.FolderSize, row.FolderCut))

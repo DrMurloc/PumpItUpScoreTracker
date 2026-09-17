@@ -156,17 +156,14 @@ internal static class PlayerHighlightPolicy
             yield return (PriorityTopPumbility, new SignificantWin(WinKind.HardmodeBoard,
                 Rank: place, PoolValue: moved.NewValue));
 
-        // The rung the pool crossed, if it crossed one. Derived rather than stored, the way the
-        // level crossing is: the milestone already carries both sides of the move.
-        var rungs = Phoenix2TitleList.BuildList().OfType<Phoenix2PumbilityTitle>()
-            .Where(t => t.Pool == PumbilityPool.Total)
-            .OrderBy(t => t.CompletionRequired)
-            .ToArray();
-        var crossed = rungs.LastOrDefault(r => r.CompletionRequired > moved.OldValue!.Value
-                                               && r.CompletionRequired <= moved.NewValue!.Value);
+        // The highest rung the combined pool crossed, if it crossed one. Derived rather than
+        // stored, the way the level crossing is, and through the same rule the Discord card lists
+        // its rungs with (D33) so the two cannot name different rungs for one batch.
+        var crossed = HardmodeLadders.RungsCrossed(mix, milestones)
+            .LastOrDefault(r => r.Pool == PumbilityPool.Total);
         if (crossed != null)
             yield return (PriorityTitle, new SignificantWin(WinKind.HardmodeTitle,
-                TitleName: crossed.Name.ToString(), PoolValue: moved.NewValue));
+                TitleName: crossed.Title, PoolValue: moved.NewValue));
     }
 
     /// <summary>

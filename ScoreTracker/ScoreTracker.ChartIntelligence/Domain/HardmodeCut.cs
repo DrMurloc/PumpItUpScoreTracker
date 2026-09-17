@@ -20,6 +20,24 @@ internal static class HardmodeCut
     /// </summary>
     public const int TinyFolder = 4;
 
+    /// <summary>
+    ///     The first level the census offers a folder at (D29). Below it the list recorded which
+    ///     charts nobody had played rather than which were hard: in singles 10–12 and doubles 10–11
+    ///     not one listed chart had three plays from a player who could hold it.
+    ///     <para>
+    ///         ⚠ A floor on the CUT, never on the pools. A level-12 chart still sits in the fifty of a
+    ///         player who holds one and still pushes every chart below it down a slot, so the pools
+    ///         are built from everything PUMBILITY pays for and only the folders offered start here.
+    ///     </para>
+    /// </summary>
+    public const int MinimumLevel = 14;
+
+    /// <summary>Whether the census offers this folder at all (D29).</summary>
+    public static bool IsOffered(int level)
+    {
+        return level >= MinimumLevel;
+    }
+
     /// <summary>What one chart's place in one pool is worth to it.</summary>
     public static int SlotWeight(int slot)
     {
@@ -71,6 +89,35 @@ internal static class HardmodeCut
         var ordered = InCutOrder(folder);
         var unheld = ordered.Count(c => c.Holders == 0);
         return ordered.Take(CutSize(ordered.Count, unheld)).ToArray();
+    }
+
+    /// <summary>
+    ///     How many charts a folder's most-held end takes: twenty-five, or a quarter of the folder if
+    ///     that is fewer (D32). No floor for tiny folders: the floor on the Hardmode cut exists so a
+    ///     folder is never dropped from a list that is priced, and nothing is priced against this one.
+    /// </summary>
+    public static int MostHeldSize(int folderSize)
+    {
+        return folderSize <= 0 ? 0 : Math.Min(FlatCut, folderSize / 4);
+    }
+
+    /// <summary>
+    ///     The difficulty glow's green end (D32): the folder's most-held charts, most weighted points
+    ///     first, then scoring level ascending, then name. Never a chart the Hardmode cut took — a
+    ///     folder whose unheld charts outnumber the rest cannot also call them its most held — and
+    ///     never a chart nobody holds. The whole rule in one call, like <see cref="Qualifying" />.
+    /// </summary>
+    public static IReadOnlyList<HardmodeCandidate> MostHeld(IEnumerable<HardmodeCandidate> folder)
+    {
+        var all = folder as IReadOnlyCollection<HardmodeCandidate> ?? folder.ToArray();
+        var hard = Qualifying(all).Select(c => c.ChartId).ToHashSet();
+        return all
+            .Where(c => c.Holders > 0 && !hard.Contains(c.ChartId))
+            .OrderByDescending(c => c.Points)
+            .ThenBy(c => c.ScoringLevel ?? c.Level)
+            .ThenBy(c => c.Name, StringComparer.OrdinalIgnoreCase)
+            .Take(MostHeldSize(all.Count))
+            .ToArray();
     }
 }
 

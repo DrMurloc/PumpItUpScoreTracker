@@ -226,6 +226,9 @@
   <data name="**{0}** paragon → {1}" xml:space="preserve">
     <value>Paragon de **{0}** → {1}</value>
   </data>
+  <data name="**{0}** reached on Hardmode" xml:space="preserve">
+    <value>**{0}** alcançado no Hardmode</value>
+  </data>
   <data name="**{0}** ~#{1:0} → ~#{2:0}" xml:space="preserve">
     <value>**{0}** ~#{1:0} → ~#{2:0}</value>
   </data>
@@ -867,6 +870,9 @@
   </data>
   <data name="Almost anything goes. The one thing you cannot do is count a chart twice." xml:space="preserve">
     <value>Quase tudo vale. A única coisa que você não pode fazer é contar um chart duas vezes.</value>
+  </data>
+  <data name="Almost nobody holds this in a PUMBILITY top 50 — one of this week's Hardmode charts." xml:space="preserve">
+    <value>Quase ninguém tem este chart num top 50 de PUMBILITY — um dos charts Hardmode desta semana.</value>
   </data>
   <data name="Already exists in the Phoenix 2 catalog — will be skipped." xml:space="preserve">
     <value>Já existe no catálogo do Phoenix 2 — será ignorada.</value>
@@ -1720,6 +1726,9 @@
   <data name="Charts covered" xml:space="preserve">
     <value>Charts cobertos</value>
   </data>
+  <data name="charts held" xml:space="preserve">
+    <value>charts que você tem</value>
+  </data>
   <data name="Charts in both sessions" xml:space="preserve">
     <value>Charts nas duas sessões</value>
   </data>
@@ -1737,6 +1746,9 @@
   </data>
   <data name="Charts Played" xml:space="preserve">
     <value>Charts jogados</value>
+  </data>
+  <data name="charts qualify this week" xml:space="preserve">
+    <value>charts qualificados nesta semana</value>
   </data>
   <data name="charts re-rated" xml:space="preserve">
     <value>charts reavaliados</value>
@@ -3460,6 +3472,9 @@
   <data name="Glow: Top" xml:space="preserve">
     <value>Top</value>
   </data>
+  <data name="Glows red on the charts in each folder that almost nobody holds in a PUMBILITY top 50, and green on the ones the most players hold. Phoenix 2, rebuilt every Sunday." xml:space="preserve">
+    <value>Brilha em vermelho nos charts de cada pasta que quase ninguém tem num top 50 de PUMBILITY, e em verde nos que mais jogadores têm. Phoenix 2, reconstruído todo domingo.</value>
+  </data>
   <data name="Go public" xml:space="preserve">
     <value>Tornar público</value>
   </data>
@@ -3598,6 +3613,15 @@
   <data name="Hardmode fifty" xml:space="preserve">
     <value>Os cinquenta do Hardmode</value>
   </data>
+  <data name="Hardmode is off for you, so it stays out of your sessions and Discord cards. Your Hardmode scores are counted either way." xml:space="preserve">
+    <value>O Hardmode está desligado para você, então ele fica fora das suas sessões e dos cards do Discord. Suas pontuações do Hardmode contam de qualquer jeito.</value>
+  </data>
+  <data name="Hardmode is off for you." xml:space="preserve">
+    <value>O Hardmode está desligado para você.</value>
+  </data>
+  <data name="Hardmode is on. It shows on your sessions, your Discord cards and the highlight feeds." xml:space="preserve">
+    <value>O Hardmode está ligado. Ele aparece nas suas sessões, nos seus cards do Discord e nos feeds de destaques.</value>
+  </data>
   <data name="Hardmode is Phoenix 2 only." xml:space="preserve">
     <value>Hardmode é exclusivo do Phoenix 2.</value>
   </data>
@@ -3607,8 +3631,17 @@
   <data name="Hardmode leaderboard" xml:space="preserve">
     <value>Classificação Hardmode</value>
   </data>
+  <data name="Hardmode PUMBILITY" xml:space="preserve">
+    <value>PUMBILITY do Hardmode</value>
+  </data>
   <data name="Hardmode {0}" xml:space="preserve">
     <value>Hardmode {0}</value>
+  </data>
+  <data name="Hardmode {0} {1}% → **{2}%**" xml:space="preserve">
+    <value>Hardmode {0} {1}% → **{2}%**</value>
+  </data>
+  <data name="Hardmode: PUMBILITY on the charts nobody plays" xml:space="preserve">
+    <value>Hardmode: PUMBILITY nos charts que ninguém joga</value>
   </data>
   <data name="Has errors" xml:space="preserve">
     <value>Contém erros</value>
@@ -4731,9 +4764,6 @@
   </data>
   <data name="March of Murlocs session" xml:space="preserve">
     <value>Sessão de March of Murlocs</value>
-  </data>
-  <data name="Mark Hardmode charts" xml:space="preserve">
-    <value>Marcar charts do Hardmode</value>
   </data>
   <data name="Marked for review" xml:space="preserve">
     <value>Marcada para revisão</value>
@@ -6025,6 +6055,9 @@
   <data name="One more hasn't passed it" xml:space="preserve">
     <value>Mais um não passou</value>
   </data>
+  <data name="One of the most-held charts in this folder's PUMBILITY top 50s." xml:space="preserve">
+    <value>Um dos charts mais presentes nos top 50 de PUMBILITY desta pasta.</value>
+  </data>
   <data name="One of your all-time best — you beat {0}% of Peers." xml:space="preserve">
     <value>Um dos seus melhores de todos os tempos — você venceu {0}% dos seus pares.</value>
   </data>
@@ -6802,6 +6835,9 @@
   <data name="Players Like You" xml:space="preserve">
     <value>Jogadores como você</value>
   </data>
+  <data name="players on the board" xml:space="preserve">
+    <value>jogadores no quadro</value>
+  </data>
   <data name="Players opening your site or your source from the directory, counted since the tool was listed." xml:space="preserve">
     <value>Jogadores que abrem o seu site ou o seu código pelo diretório, contados desde que a ferramenta foi listada.</value>
   </data>
@@ -7146,9 +7182,6 @@
   </data>
   <data name="Pushing Title Charts" xml:space="preserve">
     <value>Charts do título atual</value>
-  </data>
-  <data name="Puts a glow on the difficulty bubble of every chart in the week's Hardmode list, everywhere on the site." xml:space="preserve">
-    <value>Adiciona um brilho à bolha de dificuldade de cada chart da lista Hardmode da semana, em todo o site.</value>
   </data>
   <data name="Quadratic: a level is worth {0} at 20 and {1} at 27. Below level 10 a chart is worth 0. CO-OP charts were priced at a flat 2,000 but never counted in the total." xml:space="preserve">
     <value>Quadrática: um nível vale {0} no 20 e {1} no 27. Abaixo do nível 10 um chart vale 0. Os charts CO-OP eram precificados a 2.000 fixos mas nunca contaram no total.</value>
@@ -8122,6 +8155,9 @@
   <data name="see and manage what this channel is registered for" xml:space="preserve">
     <value>veja e gerencie os registros deste canal</value>
   </data>
+  <data name="See Hardmode" xml:space="preserve">
+    <value>Ver Hardmode</value>
+  </data>
   <data name="See Leaderboards" xml:space="preserve">
     <value>Ver classificações</value>
   </data>
@@ -8341,6 +8377,9 @@
   <data name="Show all {0} scores" xml:space="preserve">
     <value>Ver todas as {0} pontuações</value>
   </data>
+  <data name="Show difficulty glow" xml:space="preserve">
+    <value>Mostrar brilho de dificuldade</value>
+  </data>
   <data name="Show Extra Info" xml:space="preserve">
     <value>Mostrar informações extras</value>
   </data>
@@ -8415,6 +8454,9 @@
   </data>
   <data name="Shown once." xml:space="preserve">
     <value>Mostrada uma única vez.</value>
+  </data>
+  <data name="Shows Hardmode on your session page, your Discord session cards and the highlight feeds. Your Hardmode number and board place are kept either way." xml:space="preserve">
+    <value>Mostra o Hardmode na sua página de sessões, nos seus cards de sessão do Discord e nos feeds de destaques. Seu número do Hardmode e sua posição no quadro são mantidos de qualquer jeito.</value>
   </data>
   <data name="Shuffle suggestions" xml:space="preserve">
     <value>Embaralhar sugestões</value>
@@ -9310,6 +9352,9 @@
   <data name="The S17 pays Base(18) = {0} — a Single is priced one level up. Perfect Game is the plate bonus, not a grade: a 1,000,000 keeps SSS+’s ×{1} and adds +{2}." xml:space="preserve">
     <value>O S17 paga Base(18) = {0} — um Single é precificado um nível acima. Perfect Game é o bônus de plate, não um grau: um 1.000.000 mantém o ×{1} de SSS+ e soma +{2}.</value>
   </data>
+  <data name="The same formula, priced over the rarest slice of every folder — the charts almost nobody holds in a top 50. The list is rebuilt every Sunday." xml:space="preserve">
+    <value>A mesma fórmula, calculada sobre a fatia mais rara de cada pasta — os charts que quase ninguém tem num top 50. A lista é reconstruída todo domingo.</value>
+  </data>
   <data name="The same ladders the Breakdown page draws, asked of your Hardmode pool instead of your whole record book." xml:space="preserve">
     <value>As mesmas escadas que a página de Detalhamento desenha, pedidas à sua bolsa Hardmode em vez de a todo o seu registro.</value>
   </data>
@@ -9936,6 +9981,9 @@
   </data>
   <data name="Turn On" xml:space="preserve">
     <value>Ligar</value>
+  </data>
+  <data name="Turn on Hardmode" xml:space="preserve">
+    <value>Ligar o Hardmode</value>
   </data>
   <data name="Turning it off doesn't touch your profile. Your scores stay visible on PIU Scores either way." xml:space="preserve">
     <value>Desligar não mexe no seu perfil. Suas pontuações continuam visíveis no PIU Scores de qualquer forma.</value>
@@ -11112,6 +11160,9 @@
   </data>
   <data name="Your note" xml:space="preserve">
     <value>Sua nota</value>
+  </data>
+  <data name="Your number and board place are real either way — turn it on to see Hardmode on your sessions, your Discord cards and the highlight feeds." xml:space="preserve">
+    <value>Seu número e sua posição no quadro valem de qualquer jeito — ligue para ver o Hardmode nas suas sessões, nos seus cards do Discord e nos feeds de destaques.</value>
   </data>
   <data name="your only session this season" xml:space="preserve">
     <value>sua única sessão nesta temporada</value>

@@ -8,7 +8,7 @@ using ScoreTracker.Web.Services.Contracts;
 namespace ScoreTracker.Tests.Components;
 
 /// <summary>
-///     DifficultyBubble injects <see cref="HardmodeCharts" /> on every render, so any suite that
+///     DifficultyBubble injects <see cref="DifficultyGlow" /> on every render, so any suite that
 ///     renders anything containing a chart needs it registered — including the suites that build
 ///     their own service collection instead of inheriting <see cref="ComponentTestBase" />.
 ///     <para>
@@ -29,10 +29,12 @@ internal static class HardmodeStub
         var reader = new Mock<IHardmodeChartReader>();
         reader.Setup(h => h.GetQualifyingCharts(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<HardmodeChartEntry>());
+        reader.Setup(h => h.GetMostHeldCharts(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<HardmodeChartEntry>());
         services.AddSingleton(reader.Object);
         services.TryAddUiSettings();
         services.TryAddCurrentUser();
-        services.AddScoped<HardmodeCharts>();
+        services.AddScoped<DifficultyGlow>();
         return services;
     }
 
