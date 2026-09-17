@@ -137,7 +137,8 @@ ladder in front of that request.
   shadow beside them.
 - **Writes**: `scores.ChartPumbilityPresenceColumn` (one row per column: the title, its players, how many
   are PIU Scores accounts) and `scores.ChartPumbilityPresence` (one row per chart per column where the chart
-  or its folder is held), both replaced per mix.
+  or its folder is held), both replaced per mix in one transaction: a page read during the write still
+  gets the previous census, and a write that fails leaves the previous census in place.
 
 Measured on the local copy (scores through 2026-09-15): 297 PIU Scores accounts and 1,000 ranking rows on a
 gem; 43,469 site scores and 140,442 ranking bests priced; 56,866 held spots folded (47 ms in a prototype);
