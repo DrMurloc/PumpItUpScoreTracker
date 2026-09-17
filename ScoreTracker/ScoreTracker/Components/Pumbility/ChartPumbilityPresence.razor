@@ -1,5 +1,6 @@
 @using System.Globalization
 @using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
 @namespace ScoreTracker.Web.Components
@@ -8,7 +9,9 @@
    holding the chart in their top 50 above where it sits in those top 50s, with the rest of its folder as a
    grey shadow behind. Titles across renders only for a host that allows it, and CSS shows it at the Desktop
    rung; titles down renders everywhere and shows below that rung. HTML and CSS against percent positions,
-   no script: each title's tooltip renders hidden with the title and opens on hover, focus or tap. *@
+   no script: each title's tooltip renders hidden with the title and opens on hover, focus or tap. A chart
+   whose official ranking is crowded adds a callout, and a dashed extension past the share bar of every
+   title it undercounts (§8). *@
 @if (Presence is { } presence && Chart != null)
 {
     <div class="presence @(TitlesAcross ? "presence-can-cross" : null)" data-testid="chart-presence">
@@ -22,14 +25,29 @@
         {
             <p class="presence-line" data-testid="presence-you">@you</p>
         }
+        @if (CrowdingNote(presence) is { } note)
+        {
+            <div class="presence-note" role="note" data-testid="presence-note">
+                <span class="presence-note-glyph" aria-hidden="true">↑</span>
+                <span class="presence-note-head">@L["Likely more common than shown"]</span>
+                <span class="presence-note-body">@note</span>
+            </div>
+        }
 
         @if (TitlesAcross)
         {
             <div class="presence-across" data-testid="presence-across">
                 @if (presence.Viewer is { } flag)
                 {
+                    @* The diamond marks a spot, so a chart outside your top 50 flags your column with the word alone. *@
                     <div class="presence-flag" style="--presence-columns:@presence.Columns.Count" aria-hidden="true">
-                        <span class="presence-flag-you" style="grid-column:@(flag.Column + 2)"><i class="presence-you-mark"></i><b>@L["You"]</b></span>
+                        <span class="presence-flag-you @(flag.Spot == null ? "is-word" : null)" style="grid-column:@(flag.Column + 2)">
+                            @if (flag.Spot != null)
+                            {
+                                <i class="presence-you-mark"></i>
+                            }
+                            <b>@L["You"]</b>
+                        </span>
                     </div>
                 }
                 <div class="presence-plot">
@@ -66,11 +84,15 @@
                                 <div class="presence-share">
                                     @if (column.Share > 0)
                                     {
-                                        <i class="presence-bar presence-mark" style="height:@Css(Math.Max(ShareFraction(presence, column.Share) * 100, 3))%"></i>
+                                        <i class="presence-bar presence-mark" style="height:@Css(BarHeight(presence, column))%"></i>
+                                    }
+                                    @if (column.Undercounted)
+                                    {
+                                        <i class="presence-more" style="bottom:@Css(BarHeight(presence, column))%"></i>
                                     }
                                     @if (presence.MostHeld == i)
                                     {
-                                        <b class="presence-peak" style="bottom:@Css(ShareFraction(presence, column.Share) * 100)%">@Percent(column.Share)</b>
+                                        <b class="presence-peak @(column.Undercounted ? "is-more" : null)" style="bottom:@Css(ShareFraction(presence, column.Share) * 100)%">@Percent(column.Share)</b>
                                     }
                                 </div>
                                 <div class="presence-spots">
@@ -148,14 +170,14 @@
                         @if (column.Level is { } level)
                         {
                             <span class="presence-row-level">
-                                @if (isYou)
+                                @if (isYou && presence.Viewer!.Spot != null)
                                 {
                                     <i class="presence-you-mark"></i>
                                 }
                                 @($"LV.{level}")
                             </span>
                         }
-                        else if (isYou)
+                        else if (isYou && presence.Viewer!.Spot != null)
                         {
                             <i class="presence-you-mark"></i>
                         }
@@ -196,6 +218,10 @@
                         {
                             <i class="presence-bar presence-mark" style="width:@Css(Math.Max(column.Share * 100, 3))%"></i>
                         }
+                        @if (column.Undercounted)
+                        {
+                            <i class="presence-more" style="--presence-bar:@Css(column.Share > 0 ? Math.Max(column.Share * 100, 3) : 0)%"></i>
+                        }
                     </span>
                     <span class="presence-row-value @(presence.MostHeld == i ? "is-peak" : null)">@(column.Players == 0 ? "—" : Percent(column.Share))</span>
                     <div class="presence-tip" role="tooltip">@TipLines(presence, i)</div>
@@ -232,13 +258,22 @@
                 </svg>
                 @L["Low data count"]
             </span>
-            @if (presence.Viewer != null)
+            @if (presence.Viewer is { Spot: not null })
             {
                 <span>
                     <svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true">
                         <path class="presence-key-you" d="M8,1L13,6L8,11L3,6Z"/>
                     </svg>
                     @L["You"]
+                </span>
+            }
+            @if (presence.Columns.Any(c => c.Undercounted))
+            {
+                <span>
+                    <svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true">
+                        <rect class="presence-key-more" x="3" y="2" width="10" height="8" rx="2"/>
+                    </svg>
+                    @L["Likely more than shown"]
                 </span>
             }
         </div>
@@ -320,6 +355,12 @@
         return ShareTopPx + ShareHeight * (1 - ShareFraction(presence, share));
     }
 
+    /// <summary>How tall a title's share bar stands in its panel, as a percent: never under 3 once anyone holds the chart.</summary>
+    private static double BarHeight(ChartPumbilityPresenceRecord presence, PumbilityPresenceColumn column)
+    {
+        return column.Share > 0 ? Math.Max(ShareFraction(presence, column.Share) * 100, 3) : 0;
+    }
+
     private static string Percent(double share)
     {
         if (share <= 0) return "0%";
@@ -399,6 +440,20 @@
         return string.Join(", ", clauses.Select(c => c.Value)) + ".";
     }
 
+    /// <summary>
+    ///     The callout's body on a chart whose official ranking is crowded: the grade and score of the ranking's
+    ///     lowest place, and the lowest title whose count it can miss holders on.
+    /// </summary>
+    private string? CrowdingNote(ChartPumbilityPresenceRecord presence)
+    {
+        if (presence.Crowding is not { } crowding ||
+            presence.Columns.FirstOrDefault(c => c.Undercounted) is not { } first)
+            return null;
+        var lowest = PhoenixScore.From(crowding.LowestScore);
+        return L["This chart is popular or easy enough that its official top 300 only reaches down to {0} ({1}). From {2} up, players who hold it in their top 50 with a lower score can't be counted, so it's likely in more top 50s than this shows.",
+            lowest.LetterGradeFor(Chart!.Mix).GetName(), crowding.LowestScore.ToString("N0"), GemName(first.Gem)];
+    }
+
     private string? ViewerLine(ChartPumbilityPresenceRecord presence)
     {
         if (presence.Viewer is not { } viewer) return null;
@@ -408,10 +463,16 @@
             : L["You're {0}: it isn't in your top 50.", title];
     }
 
-    /// <summary>One tooltip line and the class that sets it: a plain line, a caveat in muted ink, or yours under a rule.</summary>
+    /// <summary>
+    ///     One tooltip line and the class that sets it: a plain line, the undercount in the note's colour, a caveat in
+    ///     muted ink, or yours under a rule.
+    /// </summary>
     private readonly record struct TipLine(string Text, string Kind);
 
-    /// <summary>What a title's tooltip says, line by line: the share, where it typically sits, the rating, the caveat, you.</summary>
+    /// <summary>
+    ///     What a title's tooltip says, line by line: the share, whether it is undercounted, where it typically sits,
+    ///     the rating, the caveat, you.
+    /// </summary>
     private IReadOnlyList<TipLine> Lines(ChartPumbilityPresenceRecord presence, int index)
     {
         var column = presence.Columns[index];
@@ -423,6 +484,8 @@
         }
 
         lines.Add(new TipLine(L["{0} hold it", Percent(column.Share)], "presence-tip-line"));
+        if (column.Undercounted)
+            lines.Add(new TipLine(L["Likely held by more players than shown"], "presence-tip-line presence-tip-more"));
         if (column.Dots.Count > 0)
             lines.Add(new TipLine(L["At {0} in top 50", SpotList(column.Dots)], "presence-tip-line"));
         else if (column.Spots is { } spots)

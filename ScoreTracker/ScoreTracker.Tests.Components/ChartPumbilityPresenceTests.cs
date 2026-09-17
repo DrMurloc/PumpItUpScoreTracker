@@ -93,17 +93,35 @@ public sealed class ChartPumbilityPresenceTests : ComponentTestBase
         Assert.Equal("presence-tip-you", tip.ClassName);
         Assert.DoesNotContain("is-you", rows[0].ClassName);
         Assert.Null(rows[0].QuerySelector(".presence-you-mark"));
+        Assert.Contains(LegendKeys(cut), key => key == "You");
     }
 
     [Fact]
-    public void YourColumnCarriesAFlagAboveItWhenTitlesRunAcross()
+    public void YourColumnCarriesAFlagWithTheDiamondWhenTitlesRunAcross()
     {
-        var cut = Render(Presence(1) with { Viewer = new PumbilityPresenceViewer(2, null) }, true);
+        var cut = Render(Presence(1) with { Viewer = new PumbilityPresenceViewer(2, 7) }, true);
 
         var flag = cut.Find(".presence-flag-you");
         Assert.Equal("grid-column:4", flag.GetAttribute("style"));
-        Assert.Equal("You", flag.TextContent);
+        Assert.Equal("You", flag.TextContent.Trim());
+        Assert.NotNull(flag.QuerySelector(".presence-you-mark"));
+        Assert.DoesNotContain("is-word", flag.ClassName);
         Assert.Contains("is-you", cut.FindAll("[data-testid=presence-col]")[2].ClassName);
+    }
+
+    [Fact]
+    public void AChartOutsideYourTopFiftyDrawsNoDiamondAnywhere()
+    {
+        var cut = Render(Presence(1) with { Viewer = new PumbilityPresenceViewer(2, null) }, true);
+
+        // The flag keeps the word, which stays at every width; the row keeps its tint.
+        var flag = cut.Find(".presence-flag-you");
+        Assert.Equal("You", flag.TextContent.Trim());
+        Assert.Contains("is-word", flag.ClassName);
+        Assert.Contains("is-you", cut.FindAll("[data-testid=presence-row]")[2].ClassName);
+        Assert.Empty(cut.FindAll(".presence-you-mark"));
+        Assert.Empty(cut.FindAll(".presence-you"));
+        Assert.DoesNotContain(LegendKeys(cut), key => key == "You");
     }
 
     [Fact]
@@ -120,7 +138,9 @@ public sealed class ChartPumbilityPresenceTests : ComponentTestBase
         var cut = Render(Presence(1) with { Viewer = new PumbilityPresenceViewer(1, null) });
 
         Assert.Equal("You're DIAMOND LV.1: it isn't in your top 50.", cut.Find("[data-testid=presence-you]").TextContent);
-        Assert.Equal("Not in your top 50", Lines(cut.FindAll("[data-testid=presence-row]")[1]).Last());
+        var row = cut.FindAll("[data-testid=presence-row]")[1];
+        Assert.Equal("Not in your top 50", Lines(row).Last());
+        Assert.Null(row.QuerySelector(".presence-you-mark"));
     }
 
     [Fact]
@@ -233,6 +253,78 @@ public sealed class ChartPumbilityPresenceTests : ComponentTestBase
         }, true);
 
         Assert.Equal(new[] { "50%", "100%" }, ShareTicks(cut));
+    }
+
+    [Fact]
+    public void ACrowdedRankingsChartSaysItIsLikelyMoreCommonFromTheFirstTitleItUndercounts()
+    {
+        var cut = Render(Crowded(), true);
+
+        var note = cut.Find("[data-testid=presence-note]");
+        Assert.Equal("note", note.GetAttribute("role"));
+        Assert.Equal("Likely more common than shown", note.QuerySelector(".presence-note-head")!.TextContent);
+        Assert.Equal(
+            "This chart is popular or easy enough that its official top 300 only reaches down to SSS (990,893). " +
+            "From DIAMOND up, players who hold it in their top 50 with a lower score can't be counted, so it's " +
+            "likely in more top 50s than this shows.",
+            note.QuerySelector(".presence-note-body")!.TextContent);
+        Assert.Contains(LegendKeys(cut), key => key == "Likely more than shown");
+    }
+
+    [Fact]
+    public void EveryTitleACrowdedRankingUndercountsDrawsADashedBoxPastItsBarAndSaysSo()
+    {
+        var cut = Render(Crowded(), true);
+
+        var columns = cut.FindAll("[data-testid=presence-col]");
+        Assert.Empty(columns[0].QuerySelectorAll(".presence-more"));
+        // Across, the box sits on the bar's top: DIAMOND LV.1 holds 40% on the half scale.
+        Assert.Equal("bottom:80%", columns[1].QuerySelector(".presence-more")!.GetAttribute("style"));
+        Assert.Contains("is-more", columns[1].QuerySelector(".presence-peak")!.ClassName);
+        // Down, it starts where the bar ends, and where nobody is seen holding the chart, at the track's start.
+        var rows = cut.FindAll("[data-testid=presence-row]");
+        Assert.Equal("--presence-bar:40%", rows[1].QuerySelector(".presence-more")!.GetAttribute("style"));
+        Assert.Equal("--presence-bar:0%", rows[3].QuerySelector(".presence-more")!.GetAttribute("style"));
+        Assert.Equal(new[] { "40% hold it", "Likely held by more players than shown" }, Lines(rows[1]).Take(2));
+        Assert.Equal("presence-tip-line presence-tip-more",
+            rows[1].QuerySelectorAll(".presence-tip > *")[2].ClassName);
+        Assert.DoesNotContain("Likely held by more players than shown", Lines(rows[0]));
+    }
+
+    [Fact]
+    public void AChartWhoseRankingIsNotCrowdedHasNoNoteNoMarksAndNoKey()
+    {
+        var cut = Render(Presence(1), true);
+
+        Assert.Empty(cut.FindAll("[data-testid=presence-note]"));
+        Assert.Empty(cut.FindAll(".presence-more"));
+        Assert.DoesNotContain(LegendKeys(cut), key => key == "Likely more than shown");
+    }
+
+    /// <summary>
+    ///     The four titles on a chart whose ranking is crowded, every DIAMOND level counting ranking players: LV.3
+    ///     holds 25 of them, none seen holding the chart.
+    /// </summary>
+    private static ChartPumbilityPresenceRecord Crowded()
+    {
+        var presence = Presence(1);
+        return presence with
+        {
+            Columns = presence.Columns
+                .Select((c, i) => i switch
+                {
+                    0 => c,
+                    3 => c with { Players = 25, Undercounted = true },
+                    _ => c with { Undercounted = true }
+                })
+                .ToArray(),
+            Crowding = new PumbilityPresenceCrowding(990_893)
+        };
+    }
+
+    private static string[] LegendKeys(IRenderedComponent<ChartPumbilityPresence> cut)
+    {
+        return cut.FindAll(".presence-legend > span").Select(s => s.TextContent.Trim()).ToArray();
     }
 
     private static string[] ShareTicks(IRenderedComponent<ChartPumbilityPresence> cut)
