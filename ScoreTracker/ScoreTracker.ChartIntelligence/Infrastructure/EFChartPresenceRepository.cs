@@ -25,6 +25,9 @@ internal sealed class EFChartPresenceRepository : IChartPresenceRepository
     {
         var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // One transaction: the deletes run immediately rather than riding SaveChanges, so outside one a
+        // page read mid-insert would find no census, and a failed insert would leave none until the next run.
+        await using var transaction = await database.Database.BeginTransactionAsync(cancellationToken);
         await database.Set<ChartPumbilityPresenceEntity>().Where(e => e.MixId == mixId)
             .ExecuteDeleteAsync(cancellationToken);
         await database.Set<ChartPumbilityPresenceColumnEntity>().Where(e => e.MixId == mixId)
@@ -62,6 +65,7 @@ internal sealed class EFChartPresenceRepository : IChartPresenceRepository
                 FolderP75 = r.Folder?.P75
             }), cancellationToken);
         await database.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task<ChartPresenceColumns> GetColumns(MixEnum mix, CancellationToken cancellationToken)

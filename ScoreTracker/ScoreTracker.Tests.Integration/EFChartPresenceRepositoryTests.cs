@@ -85,6 +85,24 @@ public sealed class EFChartPresenceRepositoryTests : IAsyncLifetime
         Assert.Single(await repository.GetRows(MixEnum.Phoenix, old, CancellationToken.None));
     }
 
+    [Fact]
+    public async Task ACensusWhoseWriteFailsLeavesThePreviousCensusInPlace()
+    {
+        // The write's deletes run ahead of its inserts, so a failed insert is only harmless when both
+        // commit together. A row naming a chart the catalog does not hold fails on its foreign key.
+        var chart = await new TestDataSeeder(_fixture.DbContextFactory).SeedChartAsync(22);
+        var repository = Repository();
+        await repository.Replace(MixEnum.Phoenix2, Census("[P.B] BRONZE", chart), ComputedAt, CancellationToken.None);
+
+        await Assert.ThrowsAnyAsync<Exception>(() => repository.Replace(MixEnum.Phoenix2,
+            Census("[P.B] SILVER", Guid.NewGuid()), ComputedAt.AddDays(1), CancellationToken.None));
+
+        var columns = await repository.GetColumns(MixEnum.Phoenix2, CancellationToken.None);
+        Assert.Equal(Name.From("[P.B] BRONZE"), Assert.Single(columns.Rows).Band);
+        Assert.Equal(ComputedAt, columns.ComputedAt);
+        Assert.Single(await repository.GetRows(MixEnum.Phoenix2, chart, CancellationToken.None));
+    }
+
     private static ChartPresenceCensusResult Census(string band, Guid chart)
     {
         return new ChartPresenceCensusResult(new[] { new ChartPresenceColumnRow(0, Name.From(band), 30, 30) },
