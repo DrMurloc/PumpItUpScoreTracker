@@ -16,7 +16,8 @@
 
 @* The one place the three peer settings live (docs/design/peers-abstraction.md D1, D14, D15):
    who your peers are, which color system paints your scores, and what lights the glow — its own
-   tab on /Account (D35), not a dialog. Every change repaints the preview; nothing is written until
+   tab on /Account (D35), not a dialog. The difficulty glow's switch sits with the score glows
+   (hardmode-leaderboard.md D34). Every change repaints the preview; nothing is written until
    Save, and leaving the tab discards the draft. The tally under the sources is the same union the
    standing reader will compute, because the catalog hands over the member sets. *@
 <div class="pcd" data-testid="peers-panel">
@@ -217,6 +218,13 @@
                 </MudRadio>
             </div>
         </MudRadioGroup>
+        @* The chart side's glow, red on a folder's Hardmode charts and mint on its most-held ones, beside the
+           score side's rules. Stored as the opt-out, so the default writes nothing. *@
+        <div class="pcd-difficulty-glow" data-testid="pcd-difficulty-glow">
+            <MudSwitch T="bool" Label="@L["Show difficulty glow"]" Value="_showDifficultyGlow"
+                       ValueChanged="SetDifficultyGlow" Color="Color.Primary"></MudSwitch>
+            <span class="pcd-opt-help ml-11">@L["Glows red on the charts in each folder that almost nobody holds in a PUMBILITY top 50, and green on the ones the most players hold. Phoenix 2, rebuilt every Sunday."]</span>
+        </div>
     </section>
 
     <section class="pcd-section">
@@ -254,6 +262,7 @@
     private int _points = ScoreColorSettings.DefaultPoints;
     private int _share = ScoreColorSettings.DefaultGradePercent;
     private bool _saving;
+    private bool _showDifficultyGlow = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -264,6 +273,8 @@
         _percent = _colors.Glow == GlowRule.TopPercent ? _colors.GlowThreshold : 10;
         _points = _colors.Glow == GlowRule.UnderPointsToNextGrade ? _colors.GlowThreshold : ScoreColorSettings.DefaultPoints;
         _share = _colors.Glow == GlowRule.LastPercentOfGrade ? _colors.GlowThreshold : ScoreColorSettings.DefaultGradePercent;
+        // Absence means on: only the opt-out is ever written.
+        _showDifficultyGlow = await UiSettings.GetSetting(DifficultyGlow.SettingKey) is null;
         _catalog = null;
         _catalog = await Mediator.Send(new GetPeerSourceCatalogQuery(await UiSettings.GetSelectedMix()));
         // A community you left, or were banned from, is still in the saved selection. The catalog
@@ -279,6 +290,8 @@
         try
         {
             await Preferences.Save(_colors, _sources);
+            if (_showDifficultyGlow) await UiSettings.ClearSetting(DifficultyGlow.SettingKey);
+            else await UiSettings.SetSetting(DifficultyGlow.SettingKey, "true");
             Snackbar.Add(L["Peers and score colors saved"], Severity.Success);
         }
         finally
@@ -396,6 +409,8 @@
     }
 
     private void SetStrength(GlowStrength strength) => _colors = _colors with { Strength = strength };
+
+    private void SetDifficultyGlow(bool shown) => _showDifficultyGlow = shown;
 
     /// <summary>One glow / Brighter the closer, with a line saying what the choice does at the rule's number.</summary>
     private RenderFragment StrengthChoice => @<text>

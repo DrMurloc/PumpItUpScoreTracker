@@ -20408,6 +20408,15 @@ a.peer-pop-row:hover {
     border-top: 1px dashed color-mix(in srgb, var(--mix-ink) 18%, transparent);
 }
 
+/* The difficulty glow switch, under the score glow rules and set apart from them by a rule. */
+.pcd-difficulty-glow {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 7%, transparent);
+}
+
 .pcd-preview {
     background: var(--mix-bg);
     border-radius: 6px;

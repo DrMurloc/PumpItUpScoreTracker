@@ -15,6 +15,7 @@ using ScoreTracker.Rivals.Contracts;
 using ScoreTracker.Rivals.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Components.Account;
+using ScoreTracker.Web.Services;
 using ScoreTracker.Web.Services.Contracts;
 using ScoreTracker.Web.Services.Theming;
 using Xunit;
@@ -122,6 +123,50 @@ public sealed class PeersAndColorsPanelTests : ComponentTestBase
             It.Is<string>(v => v.Contains("Rivals") && v.Contains("Competitive")), It.IsAny<CancellationToken>()), Times.Once);
         _settings.Verify(s => s.SetSetting(ScoreColorSettings.SettingKey,
             It.Is<string>(v => v.Contains("system=Podium")), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     The difficulty glow's switch sits in the Glow section (hardmode-leaderboard.md D34). It reads the stored
+    ///     opt-out, and like everything else on the tab it writes nothing until Save.
+    /// </summary>
+    [Fact]
+    public async Task TheDifficultyGlowSwitchReadsTheOptOutAndSavesWithTheTab()
+    {
+        _settings.Setup(s => s.GetSetting(DifficultyGlow.SettingKey, It.IsAny<CancellationToken>(), It.IsAny<Guid?>()))
+            .ReturnsAsync("true");
+        var cut = RenderPanel();
+        cut.WaitForAssertion(() => Assert.NotNull(cut.Find("[data-testid='pcd-tally']")));
+        Assert.False(DifficultyGlowSwitch(cut).Value);
+
+        await cut.InvokeAsync(() => DifficultyGlowSwitch(cut).ValueChanged.InvokeAsync(true));
+        _settings.Verify(s => s.ClearSetting(DifficultyGlow.SettingKey, It.IsAny<CancellationToken>()), Times.Never);
+
+        await cut.Find("[data-testid='pcd-save']").ClickAsync(new MouseEventArgs());
+
+        _settings.Verify(s => s.ClearSetting(DifficultyGlow.SettingKey, It.IsAny<CancellationToken>()), Times.Once);
+        _settings.Verify(s => s.SetSetting(DifficultyGlow.SettingKey, It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task SwitchingTheDifficultyGlowOffWritesTheOptOutOnSave()
+    {
+        var cut = RenderPanel();
+        cut.WaitForAssertion(() => Assert.NotNull(cut.Find("[data-testid='pcd-tally']")));
+        Assert.True(DifficultyGlowSwitch(cut).Value);
+        // In the Glow section, with the score glow rules.
+        Assert.NotNull(cut.FindAll("section.pcd-section").Single(s => s.QuerySelector("[data-testid='pcd-glow-Off']") != null)
+            .QuerySelector("[data-testid='pcd-difficulty-glow']"));
+
+        await cut.InvokeAsync(() => DifficultyGlowSwitch(cut).ValueChanged.InvokeAsync(false));
+        await cut.Find("[data-testid='pcd-save']").ClickAsync(new MouseEventArgs());
+
+        _settings.Verify(s => s.SetSetting(DifficultyGlow.SettingKey, "true", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private static MudSwitch<bool> DifficultyGlowSwitch(IRenderedFragment cut)
+    {
+        return cut.FindComponents<MudSwitch<bool>>().Select(s => s.Instance).Single(s => s.Label == "Show difficulty glow");
     }
 
     /// <summary>

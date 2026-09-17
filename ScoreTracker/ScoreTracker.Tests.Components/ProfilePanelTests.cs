@@ -180,23 +180,4 @@ public sealed class ProfilePanelTests : ComponentTestBase
         _uiSettings.Verify(u => u.ClearSetting(HardmodeOptIn.SettingKey, It.IsAny<CancellationToken>()), Times.Once);
         Assert.False(NavigatedTo("/Account"));
     }
-
-    /// <summary>
-    ///     The glow is its own switch now (D32) and reads the key "Mark Hardmode charts" wrote, so a
-    ///     player who turned that off finds the glow off.
-    /// </summary>
-    [Fact]
-    public async Task TheDifficultyGlowSwitchKeepsTheOldOptOut()
-    {
-        _uiSettings.Setup(u => u.GetSetting("Universal__HideHardmodeMark", It.IsAny<CancellationToken>(),
-                It.IsAny<Guid?>()))
-            .ReturnsAsync("true");
-        var panel = RenderWithStoredLanguage(null);
-        Assert.False(Switch(panel, "Show difficulty glow").Value);
-
-        await panel.InvokeAsync(() => Switch(panel, "Show difficulty glow").ValueChanged.InvokeAsync(true));
-
-        _uiSettings.Verify(u => u.ClearSetting(DifficultyGlow.SettingKey, It.IsAny<CancellationToken>()), Times.Once);
-        Assert.True(NavigatedTo("/Account"));
-    }
 }
