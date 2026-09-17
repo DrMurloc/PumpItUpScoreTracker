@@ -19540,6 +19540,32 @@ a.peer-pop-row:hover {
     flex: 0 0 72px;
 }
 
+/* The grade rules' labels run long enough to wrap around their field on a phone. */
+.pcd-opt-wrap {
+    flex-wrap: wrap;
+    row-gap: 2px;
+}
+
+/* A grade rule's quick selects: small outlined chips in a row under its help line. */
+.pcd-chips {
+    margin-top: 4px;
+}
+
+.pcd .pcd-chips .mud-chip {
+    margin: 0 5px 4px 0;
+}
+
+/* One glow / Brighter the closer, under whichever grade rule is selected. */
+.pcd-strength {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px dashed color-mix(in srgb, var(--mix-ink) 18%, transparent);
+}
+
 .pcd-preview {
     background: var(--mix-bg);
     border-radius: 6px;

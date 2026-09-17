@@ -111,7 +111,7 @@
 
     <section class="pcd-section">
         <MudText Typo="Typo.subtitle1" Class="pcd-title">@L["Glow"]</MudText>
-        <MudText Typo="Typo.caption" Class="pcd-help">@L["One rule, one glow. The color is the spectrum; the glow says a score crossed the line you set."]</MudText>
+        <MudText Typo="Typo.caption" Class="pcd-help">@L["One rule. The glow says a score crossed the line you set; the two grade options can also brighten as a score closes in."]</MudText>
         <MudRadioGroup T="GlowRule" Value="_colors.Glow" ValueChanged="SetGlow">
             <div class="pcd-opt pcd-radio" data-testid="pcd-glow-PerfectGames">
                 <MudRadio T="GlowRule" Value="GlowRule.PerfectGames" Color="Color.Primary" Dense="true">
@@ -146,6 +146,62 @@
                         %
                     </span>
                     <span class="pcd-opt-help">@L["of your peers."]</span>
+                </span>
+                </MudRadio>
+            </div>
+            @* The two grade rules (D39, D43): each carries quick-select chips that set its number and
+               select it, and the one selected carries the One glow / Brighter the closer choice. *@
+            <div class="pcd-opt pcd-radio" data-testid="pcd-glow-UnderPointsToNextGrade">
+                <MudRadio T="GlowRule" Value="GlowRule.UnderPointsToNextGrade" Color="Color.Primary" Dense="true">
+                <span class="pcd-opt-body">
+                    <span class="pcd-opt-label pcd-opt-inline pcd-opt-wrap">
+                        @L["Glow: under"]
+                        <MudNumericField T="int" Value="_points" ValueChanged="SetPoints" Min="1" Max="ScoreColorSettings.MaxPoints"
+                                         Class="pcd-num" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                         HideSpinButtons="true" aria-label="@L["Glow: points from the next grade"]"></MudNumericField>
+                        @L["Glow: points from the next grade"]
+                    </span>
+                    <span class="pcd-opt-help">@L["No peers needed. SSS+ counts a Perfect Game as its next line."]</span>
+                    <MudChipSet T="int" SelectedValue="_points" SelectedValueChanged="SetPoints"
+                                SelectionMode="SelectionMode.SingleSelection" Size="Size.Small" Variant="Variant.Outlined"
+                                SelectedColor="Color.Primary" Class="pcd-chips">
+                        @foreach (var points in PointsQuickSelects)
+                        {
+                            <MudChip T="int" Value="points" Text="@points.ToString("N0")"></MudChip>
+                        }
+                    </MudChipSet>
+                    @if (_colors.Glow == GlowRule.UnderPointsToNextGrade)
+                    {
+                        @StrengthChoice
+                    }
+                </span>
+                </MudRadio>
+            </div>
+            <div class="pcd-opt pcd-radio" data-testid="pcd-glow-LastPercentOfGrade">
+                <MudRadio T="GlowRule" Value="GlowRule.LastPercentOfGrade" Color="Color.Primary" Dense="true">
+                <span class="pcd-opt-body">
+                    <span class="pcd-opt-label pcd-opt-inline pcd-opt-wrap">
+                        @L["Glow: in the last"]
+                        <MudNumericField T="int" Value="_share" ValueChanged="SetShare" Min="1" Max="ScoreColorSettings.MaxGradePercent"
+                                         Class="pcd-num" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                         HideSpinButtons="true" aria-label="@L["Glow: % of a grade"]"></MudNumericField>
+                        @L["Glow: % of a grade"]
+                    </span>
+                    <span class="pcd-opt-help">@(L["Grows with the grade: the last {0} points of an S, {1} of an AAA, {2} of a Phoenix 2 A.",
+                                                      (5_000 * _share / 100).ToString("N0"), (10_000 * _share / 100).ToString("N0"),
+                                                      (100_000 * _share / 100).ToString("N0")])</span>
+                    <MudChipSet T="int" SelectedValue="_share" SelectedValueChanged="SetShare"
+                                SelectionMode="SelectionMode.SingleSelection" Size="Size.Small" Variant="Variant.Outlined"
+                                SelectedColor="Color.Primary" Class="pcd-chips">
+                        @foreach (var share in ShareQuickSelects)
+                        {
+                            <MudChip T="int" Value="share" Text="@((share / 100.0).ToString("P0"))"></MudChip>
+                        }
+                    </MudChipSet>
+                    @if (_colors.Glow == GlowRule.LastPercentOfGrade)
+                    {
+                        @StrengthChoice
+                    }
                 </span>
                 </MudRadio>
             </div>
@@ -187,8 +243,13 @@
     private PeerSourceCatalog? _catalog;
     private PeerSourceSelection _sources = PeerSourceSelection.Default;
     private ScoreColorSettings _colors = ScoreColorSettings.Default;
+    private static readonly int[] PointsQuickSelects = { 500, 1_000, 2_500, 5_000 };
+    private static readonly int[] ShareQuickSelects = { 10, 20, 30, 50, 100 };
+
     private int _places = 1;
     private int _percent = 10;
+    private int _points = ScoreColorSettings.DefaultPoints;
+    private int _share = ScoreColorSettings.DefaultGradePercent;
     private bool _saving;
 
     protected override async Task OnInitializedAsync()
@@ -198,6 +259,8 @@
         _colors = await Preferences.GetColors();
         _places = _colors.Glow == GlowRule.TopPlaces ? _colors.GlowThreshold : 1;
         _percent = _colors.Glow == GlowRule.TopPercent ? _colors.GlowThreshold : 10;
+        _points = _colors.Glow == GlowRule.UnderPointsToNextGrade ? _colors.GlowThreshold : ScoreColorSettings.DefaultPoints;
+        _share = _colors.Glow == GlowRule.LastPercentOfGrade ? _colors.GlowThreshold : ScoreColorSettings.DefaultGradePercent;
         _catalog = null;
         _catalog = await Mediator.Send(new GetPeerSourceCatalogQuery(await UiSettings.GetSelectedMix()));
         // A community you left, or were banned from, is still in the saved selection. The catalog
@@ -296,7 +359,13 @@
     private void SetGlow(GlowRule glow) => _colors = _colors with
     {
         Glow = glow,
-        GlowThreshold = ScoreColorSettings.Clamp(glow, glow == GlowRule.TopPlaces ? _places : _percent)
+        GlowThreshold = ScoreColorSettings.Clamp(glow, glow switch
+        {
+            GlowRule.TopPlaces => _places,
+            GlowRule.UnderPointsToNextGrade => _points,
+            GlowRule.LastPercentOfGrade => _share,
+            _ => _percent
+        })
     };
 
     private void SetPlaces(int places)
@@ -310,6 +379,41 @@
         _percent = ScoreColorSettings.Clamp(GlowRule.TopPercent, percent);
         _colors = _colors with { Glow = GlowRule.TopPercent, GlowThreshold = _percent };
     }
+
+    private void SetPoints(int points)
+    {
+        _points = ScoreColorSettings.Clamp(GlowRule.UnderPointsToNextGrade, points);
+        _colors = _colors with { Glow = GlowRule.UnderPointsToNextGrade, GlowThreshold = _points };
+    }
+
+    private void SetShare(int share)
+    {
+        _share = ScoreColorSettings.Clamp(GlowRule.LastPercentOfGrade, share);
+        _colors = _colors with { Glow = GlowRule.LastPercentOfGrade, GlowThreshold = _share };
+    }
+
+    private void SetStrength(GlowStrength strength) => _colors = _colors with { Strength = strength };
+
+    /// <summary>One glow / Brighter the closer, with a line saying what the choice does at the rule's number.</summary>
+    private RenderFragment StrengthChoice => @<text>
+        <span class="pcd-strength" data-testid="pcd-glow-strength">
+            <MudToggleGroup T="GlowStrength" Value="_colors.Strength" ValueChanged="SetStrength"
+                            SelectionMode="SelectionMode.SingleSelection" Color="Color.Primary" Size="Size.Small"
+                            Outlined="true" Delimiters="true">
+                <MudToggleItem Value="GlowStrength.One" Text="@L["One glow"]"></MudToggleItem>
+                <MudToggleItem Value="GlowStrength.BrighterTheCloser" Text="@L["Brighter the closer"]"></MudToggleItem>
+            </MudToggleGroup>
+            <span class="pcd-opt-help" data-testid="pcd-glow-strength-caption">@StrengthCaption</span>
+        </span>
+    </text>;
+
+    private string StrengthCaption => _colors.Strength == GlowStrength.One
+        ? L["Every score that qualifies wears the same glow."]
+        : _colors.Glow == GlowRule.UnderPointsToNextGrade
+            ? L["Faint at {0} points away, full at the next grade.", _points.ToString("N0")]
+            : _share == ScoreColorSettings.MaxGradePercent
+                ? L["Faint at the bottom of a grade, full at the next one."]
+                : L["Faint where the last {0}% starts, full at the next grade.", _share];
 
     private string SystemLabel(ScoreColorSystem system) => system switch
     {

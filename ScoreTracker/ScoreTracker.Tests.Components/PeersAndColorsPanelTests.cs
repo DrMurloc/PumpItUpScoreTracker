@@ -157,4 +157,80 @@ public sealed class PeersAndColorsPanelTests : ComponentTestBase
             Assert.Contains("PG · 12 of 88 peers have it", preview.TextContent);
         });
     }
+
+    private IRenderedFragment RenderLoadedPanel()
+    {
+        var cut = RenderPanel();
+        cut.WaitForAssertion(() => Assert.NotNull(cut.Find("[data-testid='pcd-tally']")));
+        return cut;
+    }
+
+    [Fact]
+    public async Task AChipSetsItsNumberAndSelectsItsRule()
+    {
+        var cut = RenderLoadedPanel();
+
+        var chip = cut.FindAll("[data-testid='pcd-glow-UnderPointsToNextGrade'] .mud-chip")
+            .Single(c => c.TextContent.Contains((2500).ToString("N0")));
+        await chip.ClickAsync(new MouseEventArgs());
+        await cut.Find("[data-testid='pcd-save']").ClickAsync(new MouseEventArgs());
+
+        _settings.Verify(s => s.SetSetting(ScoreColorSettings.SettingKey,
+            It.Is<string>(v => ScoreColorSettings.Parse(v) == new ScoreColorSettings(ScoreColorSystem.JudgementSpectrum,
+                GlowRule.UnderPointsToNextGrade, 2500, GlowStrength.One)), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TheStrengthChoiceSitsBeneathTheSelectedGradeRuleOnly()
+    {
+        var cut = RenderLoadedPanel();
+        Assert.Empty(cut.FindAll("[data-testid='pcd-glow-strength']"));
+
+        await cut.Find("[data-testid='pcd-glow-UnderPointsToNextGrade'] input[type='radio']").ClickAsync(new MouseEventArgs());
+        cut.WaitForAssertion(() =>
+            Assert.Single(cut.FindAll("[data-testid='pcd-glow-UnderPointsToNextGrade'] [data-testid='pcd-glow-strength']")));
+        Assert.Empty(cut.FindAll("[data-testid='pcd-glow-LastPercentOfGrade'] [data-testid='pcd-glow-strength']"));
+
+        await cut.Find("[data-testid='pcd-glow-LastPercentOfGrade'] input[type='radio']").ClickAsync(new MouseEventArgs());
+        cut.WaitForAssertion(() =>
+            Assert.Single(cut.FindAll("[data-testid='pcd-glow-LastPercentOfGrade'] [data-testid='pcd-glow-strength']")));
+        Assert.Empty(cut.FindAll("[data-testid='pcd-glow-UnderPointsToNextGrade'] [data-testid='pcd-glow-strength']"));
+    }
+
+    [Fact]
+    public async Task BrighterTheCloserAtAHundredPercentSaysItSpansTheWholeGradeAndSaves()
+    {
+        var cut = RenderLoadedPanel();
+
+        var hundred = cut.FindAll("[data-testid='pcd-glow-LastPercentOfGrade'] .mud-chip").Last();
+        await hundred.ClickAsync(new MouseEventArgs());
+        var brighter = cut.FindAll("[data-testid='pcd-glow-strength'] .mud-toggle-item")
+            .Single(b => b.TextContent.Contains("Brighter the closer"));
+        await brighter.ClickAsync(new MouseEventArgs());
+
+        cut.WaitForAssertion(() => Assert.Contains("Faint at the bottom of a grade, full at the next one.",
+            cut.Find("[data-testid='pcd-glow-strength-caption']").TextContent));
+
+        await cut.Find("[data-testid='pcd-save']").ClickAsync(new MouseEventArgs());
+
+        _settings.Verify(s => s.SetSetting(ScoreColorSettings.SettingKey,
+            It.Is<string>(v => ScoreColorSettings.Parse(v) == new ScoreColorSettings(ScoreColorSystem.JudgementSpectrum,
+                GlowRule.LastPercentOfGrade, 100, GlowStrength.BrighterTheCloser)), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ASavedGradeRuleOpensSelectedWithItsNumberAndStrength()
+    {
+        _settings.Setup(s => s.GetSetting(ScoreColorSettings.SettingKey, default, null))
+            .ReturnsAsync(new ScoreColorSettings(ScoreColorSystem.JudgementSpectrum, GlowRule.UnderPointsToNextGrade, 750,
+                GlowStrength.BrighterTheCloser).Serialize());
+
+        var cut = RenderLoadedPanel();
+
+        cut.WaitForAssertion(() =>
+        {
+            var caption = cut.Find("[data-testid='pcd-glow-UnderPointsToNextGrade'] [data-testid='pcd-glow-strength-caption']");
+            Assert.Contains($"Faint at {(750).ToString("N0")} points away, full at the next grade.", caption.TextContent);
+        });
+    }
 }
