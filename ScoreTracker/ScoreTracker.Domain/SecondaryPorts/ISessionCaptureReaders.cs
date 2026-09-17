@@ -117,7 +117,20 @@ namespace ScoreTracker.Domain.SecondaryPorts
         ///     of how many board players hold a chart means nothing for a chart outside this set.
         /// </summary>
         Task<IReadOnlySet<Guid>> GetChartsWithBoards(MixEnum mix, CancellationToken cancellationToken);
+
+        /// <summary>
+        ///     Every chart ranking in the last sealed sweep, piugame's own rows only: how many places it
+        ///     published and the lowest score on it. Empty when the mix has never been swept. What
+        ///     <see cref="Services.CrowdedRanking" /> reads to decide whether a ranking can hide the players
+        ///     who hold its chart (docs/design/chart-presence-graph.md §8).
+        /// </summary>
+        Task<IReadOnlyDictionary<Guid, OfficialChartRanking>> GetChartRankings(MixEnum mix,
+            CancellationToken cancellationToken);
     }
+
+    /// <summary>One chart's official ranking as the last sweep saw it: how many places it held, and its lowest score.</summary>
+    [ExcludeFromCodeCoverage]
+    public sealed record OfficialChartRanking(int Places, int LowestScore);
 
     /// <summary>
     ///     One window's worth of board players and the snapshot they were read from. The date rides

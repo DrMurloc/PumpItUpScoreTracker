@@ -49,6 +49,12 @@ internal sealed class OfficialPlacementReader(IMediator mediator, BoardPeerReade
         return boardPeers.GetChartsWithBoards(mix, cancellationToken);
     }
 
+    public Task<IReadOnlyDictionary<Guid, OfficialChartRanking>> GetChartRankings(MixEnum mix,
+        CancellationToken cancellationToken)
+    {
+        return boardPeers.GetChartRankings(mix, cancellationToken);
+    }
+
     public async Task<IReadOnlyDictionary<Guid, OfficialPlacementReading>> EstimatePlacements(MixEnum mix,
         Guid userId, IReadOnlyList<(Guid ChartId, int Score)> scores, CancellationToken cancellationToken)
     {

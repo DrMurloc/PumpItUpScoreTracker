@@ -350,6 +350,38 @@ public sealed class BoardPeerReaderTests
     }
 
     [Fact]
+    public async Task EachChartRankingReadsItsFullestBoardInTheLatestSweep()
+    {
+        var renamed = Guid.NewGuid();
+        var single = Guid.NewGuid();
+        _snapshots.Setup(s => s.GetLatestSealed(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SnapshotRun(17, SweptAt, SweptAt, false, "Sealed", 0, 0, 0, null));
+        _snapshots.Setup(s => s.GetChartBoardDepths(17, PlacementScope.OfficialOnly, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                // A chart the sweep saw under a second board name, which holds a few stray rows.
+                new ChartBoardDepth(2, renamed, 4, 999_000.00m), new ChartBoardDepth(3, renamed, 300, 990_893.00m),
+                new ChartBoardDepth(4, single, 155, 823_474.00m)
+            });
+
+        var rankings = await Subject.GetChartRankings(MixEnum.Phoenix2, CancellationToken.None);
+
+        Assert.Equal(new OfficialChartRanking(300, 990_893), rankings[renamed]);
+        Assert.Equal(new OfficialChartRanking(155, 823_474), rankings[single]);
+    }
+
+    [Fact]
+    public async Task AMixThatHasNeverBeenSweptHasNoChartRankings()
+    {
+        _snapshots.Setup(s => s.GetLatestSealed(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((SnapshotRun?)null);
+
+        Assert.Empty(await Subject.GetChartRankings(MixEnum.Phoenix2, CancellationToken.None));
+        _snapshots.Verify(s => s.GetChartBoardDepths(It.IsAny<int>(), It.IsAny<PlacementScope>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task AMixThatHasNeverBeenSweptHasNoAnswerAtAll()
     {
         _snapshots.Setup(s => s.GetLatestSealed(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))

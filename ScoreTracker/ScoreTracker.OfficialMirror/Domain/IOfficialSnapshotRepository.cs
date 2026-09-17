@@ -223,6 +223,13 @@ internal interface IOfficialSnapshotRepository
     Task<IReadOnlyList<(int SnapshotId, DateTimeOffset CompletedAt, decimal MinScore, int Count)>>
         GetBoardFloorHistory(MixEnum mix, string boardName, PlacementScope scope, CancellationToken ct);
 
+    /// <summary>
+    ///     Every chart board in one snapshot: how many rows it holds and its lowest score. One row per
+    ///     board, so a chart the sweep saw under two boards comes back twice.
+    /// </summary>
+    Task<IReadOnlyList<ChartBoardDepth>> GetChartBoardDepths(int snapshotId, PlacementScope scope,
+        CancellationToken ct);
+
     /// <summary>One row per distinct unmapped chart; re-sightings refresh LastIdentified.</summary>
     Task UpsertMissingCharts(MixEnum mix, IReadOnlyCollection<MissingChartSighting> sightings,
         DateTimeOffset seenAt, CancellationToken ct);
