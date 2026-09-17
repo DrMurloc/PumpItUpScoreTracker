@@ -853,3 +853,28 @@ up*), `gropmur` (in), `grglblarg` (their), `mag` (with), `glubgro` (lower), `mrg
 | popular / common (widely held) | grolurgmrp | The existing *Popular*, reused for *more common*: a chart held in more top 50s is a more popular one. |
 | undercount | glubgrorp | `glub` (under) + `grorp` (count). |
 | counted | grorpgro | `grorp` + `gro`, the participle ending `mogrglgro` (centered) uses. |
+
+## The near-grade glow batch (2026-09-17)
+
+Coined for the two grade glow rules on the Account tab and the popover's distance line
+([peers-abstraction.md](design/peers-abstraction.md) D39–D43). Every candidate was checked against the
+existing en-ZW values first: `murmo` (stay), `gorb` (on), `murgo`, `morgab` and `ab` were already spent,
+so each meaning got a fresh word. Reused as-is: `Roglurg` (glow), `Rorgl` (grade), `mrglublgl` (points),
+`grorpglorg` (next), `grgl` (to, as in `{0} grgl PG`), `glub` (under), `lug` (last), `gropmur` (in,
+through), `blogl` (a grade's floor), `mrglmr` (full), `plom` (same), `grabmrp` (qualify), `maglmurp`
+(peers), `Ulboglurg` (Perfect Game), `grorpgl` (counts), `gorpo` (where), `grolp` (starts), and
+`morpgl` (rule) and `glorgmurgl` (line) from the retired Glow caption.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| faint | blurmo | |
+| brighten / brighter | glorrg / glorrrg | The comparative takes one more `r`, the intensity device. |
+| near / closer | gulmo / gulrrmo | The same device on the nearness word. Distinct from `Grorp`, the verb *close*. |
+| wears | blogarm | |
+| away (points away) | ruglo | |
+| grows | gulbarg | |
+| needed | mublar | |
+| as | ulo | |
+| option / options | brolum | Number unmarked, like Tool/Tools. |
+| also | ugl | |
+| way (of the way through) | gorlub | |

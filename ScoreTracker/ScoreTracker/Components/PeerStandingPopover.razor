@@ -6,12 +6,15 @@
 @* What a score's standing is made of, source by source (docs/design/peers-abstraction.md D11–D13):
    the headline in the score's own color, who has not passed the chart rather than who tops it,
    then one line per source the player ticked — each opening that source's own board when the
-   host can — and the chart it is all about. Never a hover tooltip: a phone has no hover. *@
+   host can — and the chart it is all about. Never a hover tooltip: a phone has no hover. Under a
+   grade glow rule every state also says how far the score is from its next grade (D42): that glow
+   needs no peers, so it explains itself even where no peer has measured the score. *@
 <div class="peer-pop" data-testid="peer-standing-popover" role="dialog"
      aria-label="@L["Where this score stands among your peers"]">
     @if (!SourcesChosen)
     {
         <div class="peer-pop-empty">@L["You have no peer groups selected."]</div>
+        @NextGradeLine
         <div class="peer-pop-foot">
             <span>@L["Scores render plain until you choose some."]</span>
             <a href="/Account?tab=peers">@L["Choose peers"] ›</a>
@@ -24,6 +27,7 @@
            passed this" here states a fact nobody checked, and on a chart the viewer has just
            Perfect-Gamed it is plainly wrong. *@
         <div class="peer-pop-empty">@L["Still working out where this sits."]</div>
+        @NextGradeLine
     }
     else if (Standing is not { HasCohort: true })
     {
@@ -36,6 +40,7 @@
                 <span class="peer-pop-muted">@L["{0} of them tried and broke.", broke.Broke]</span>
             }
         </div>
+        @NextGradeLine
         @if (Standing is { Sources.Count: > 0 })
         {
             <div class="peer-pop-foot"><span>@string.Join(" · ", Standing.Sources.Select(s => $"{Glyph(s)} 0 / {s.Members}"))</span></div>
@@ -47,6 +52,7 @@
             @PeerStandingText.Standing(Standing, IsPerfectGame, L)
         </div>
         <div class="peer-pop-sub">@PeerStandingText.Summary(Standing, L)</div>
+        @NextGradeLine
         <div class="peer-pop-rows">
             @foreach (var source in Standing.Sources)
             {
@@ -99,6 +105,24 @@
     [Parameter] public bool SourcesChosen { get; set; } = true;
 
     [Parameter] public EventCallback<PeerBoardRequest> OnOpenBoard { get; set; }
+
+    /// <summary>Where the score sits in its grade. The line needs it; null prints no line.</summary>
+    [Parameter] public GradeProgress? Progress { get; set; }
+
+    /// <summary>A grade glow rule is on, so the popover says how far the score is from its next grade.</summary>
+    [Parameter] public bool ShowNextGrade { get; set; }
+
+    /// <summary>A Perfect Game has nothing left to reach, so it prints no line.</summary>
+    private RenderFragment NextGradeLine => @<text>
+        @if (ShowNextGrade && Progress is { IsPerfectGame: false } progress)
+        {
+            <div class="peer-pop-next" data-testid="peer-pop-next">
+                <span class="peer-pop-next-arrow" aria-hidden="true">▲</span>
+                <span>@PeerStandingText.ToNextGrade(progress, L)</span>
+                <span class="peer-pop-next-sub">@PeerStandingText.ThroughGrade(progress, L)</span>
+            </div>
+        }
+    </text>;
 
     private string ChartName => Chart == null ? string.Empty : $"{Chart.Song.Name} {Chart.DifficultyString}";
 

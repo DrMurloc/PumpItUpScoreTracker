@@ -1452,6 +1452,9 @@
   <data name="Breakdown" xml:space="preserve">
     <value>Maglgrogrrgl</value>
   </data>
+  <data name="Brighter the closer" xml:space="preserve">
+    <value>Glorrrg ur gulrrmo</value>
+  </data>
   <data name="Broken" xml:space="preserve">
     <value>Morgl</value>
   </data>
@@ -2990,6 +2993,9 @@
   <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
     <value>Grorp mrogl blub murgblub grolub, gro rorgl mrrgl morgl blurgo mrgl grgl.</value>
   </data>
+  <data name="Every score that qualifies wears the same glow." xml:space="preserve">
+    <value>Olga mrglrgl argo grabmrp blogarm ur plom roglurg.</value>
+  </data>
   <data name="Every season re-balances every chart from how hard it is to score, then freezes." xml:space="preserve">
     <value>Ulbog maglgrgl mrggrulmgro ulbog murgl gam gam brglgro blu gab ap mrglrgl, bam brolgro.</value>
   </data>
@@ -3121,6 +3127,15 @@
   </data>
   <data name="Failed: {0}{1}" xml:space="preserve">
     <value>Blorp: {0}{1}</value>
+  </data>
+  <data name="Faint at the bottom of a grade, full at the next one." xml:space="preserve">
+    <value>Blurmo og ur blogl ub a rorgl, mrglmr og ur grorpglorg mrp.</value>
+  </data>
+  <data name="Faint at {0} points away, full at the next grade." xml:space="preserve">
+    <value>Blurmo og {0} mrglublgl ruglo, mrglmr og ur grorpglorg rorgl.</value>
+  </data>
+  <data name="Faint where the last {0}% starts, full at the next grade." xml:space="preserve">
+    <value>Blurmo gorpo ur lug {0}% grolp, mrglmr og ur grorpglorg rorgl.</value>
   </data>
   <data name="Fairly rated to pass" xml:space="preserve">
     <value>Urgglorg maglmr grgl maglplgl</value>
@@ -3483,14 +3498,26 @@
   <data name="Glow" xml:space="preserve">
     <value>Roglurg</value>
   </data>
+  <data name="Glow: % of a grade" xml:space="preserve">
+    <value>% ub a rorgl</value>
+  </data>
+  <data name="Glow: in the last" xml:space="preserve">
+    <value>Gropmur ur lug</value>
+  </data>
   <data name="Glow: place" xml:space="preserve">
     <value>murlog</value>
   </data>
   <data name="Glow: places" xml:space="preserve">
     <value>murlog</value>
   </data>
+  <data name="Glow: points from the next grade" xml:space="preserve">
+    <value>mrglublgl urg ur grorpglorg rorgl</value>
+  </data>
   <data name="Glow: Top" xml:space="preserve">
     <value>Mrrgl</value>
+  </data>
+  <data name="Glow: under" xml:space="preserve">
+    <value>Glub</value>
   </data>
   <data name="Glows red on the charts in each folder that almost nobody holds in a PUMBILITY top 50, and green on the ones the most players hold. Phoenix 2, rebuilt every Sunday." xml:space="preserve">
     <value>Roglurg ro ap a murgl gropmur olga grogblub argo mrrgl bomorp grogro gropmur a PUMBILITY ropgl 50, ap gromurg ap a mrp a mrrrgl morp grogro. Phoenix 2, mrgrglmurm olga Murgromurm.</value>
@@ -3584,6 +3611,9 @@
   </data>
   <data name="Grouped by" xml:space="preserve">
     <value>Murmblargargl murm</value>
+  </data>
+  <data name="Grows with the grade: the last {0} points of an S, {1} of an AAA, {2} of a Phoenix 2 A." xml:space="preserve">
+    <value>Gulbarg mag ur rorgl: ur lug {0} mrglublgl ub a Ｓ, {1} ub a AAA, {2} ub a Phoenix 2 A.</value>
   </data>
   <data name="Had a bad import?" xml:space="preserve">
     <value>Grabo malu?</value>
@@ -5422,6 +5452,9 @@
   <data name="No peer holds it" xml:space="preserve">
     <value>Mo maglmurp mrgloru</value>
   </data>
+  <data name="No peers needed. SSS+ counts a Perfect Game as its next line." xml:space="preserve">
+    <value>Mo maglmurp mublar. SSS+ grorpgl a Ulboglurg ulo ug grorpglorg glorgmurgl.</value>
+  </data>
   <data name="No peers yet." xml:space="preserve">
     <value>Mo maglmurp blub.</value>
   </data>
@@ -6086,6 +6119,9 @@
   <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
     <value>Argl grorprogrogrrgl groblgrl mrgl gromurp mgrlgmrg, urglurg, murp, argl lurgmrgl murm grorpmurm.</value>
   </data>
+  <data name="One glow" xml:space="preserve">
+    <value>Mrp roglurg</value>
+  </data>
   <data name="One hue — the current mix's — from dark to bright. Ordered by lightness alone, so it reads the same for every kind of color vision." xml:space="preserve">
     <value>Mrp glarg — ur gromrggrog lurgmurg — blarg groglurg ro morpprgl. Morgblurgglarg bu maglrorgplgl lrglro, ro mrp grglgrog ur prglmurp ba grolurg blubro ob grolor glrlrgl.</value>
   </data>
@@ -6119,8 +6155,8 @@
   <data name="one per level bucket" xml:space="preserve">
     <value>argl morg grorpmurm urgrgl</value>
   </data>
-  <data name="One rule, one glow. The color is the spectrum; the glow says a score crossed the line you set." xml:space="preserve">
-    <value>Mrp morpgl, mrp roglurg. Ur grolor ur ur glargmargmorg; ur roglurg mrglrgl a mrglrgl arglurgmurgl ur glorgmurgl murg blurg.</value>
+  <data name="One rule. The glow says a score crossed the line you set; the two grade options can also brighten as a score closes in." xml:space="preserve">
+    <value>Mrp morpgl. Ur roglurg mrglrgl a mrglrgl arglurgmurgl ur glorgmurgl murg blurg; ur blurg rorgl brolum gab ugl glorrg ulo a mrglrgl gulmo gropmur.</value>
   </data>
   <data name="One session" xml:space="preserve">
     <value>Ogro orgab</value>
@@ -12117,11 +12153,17 @@
   <data name="{0} titles, and the game shows you none of your progress." xml:space="preserve">
     <value>{0} mrgl, ro mrp glorgargl urgblgrl blub rglmagl mrgl gromurp mrglrlgl.</value>
   </data>
+  <data name="{0} to a Perfect Game" xml:space="preserve">
+    <value>{0} grgl a Ulboglurg</value>
+  </data>
   <data name="{0} to next level" xml:space="preserve">
     <value>{0} ma grorpglorg grorpmurm</value>
   </data>
   <data name="{0} to PG" xml:space="preserve">
     <value>{0} grgl PG</value>
+  </data>
+  <data name="{0} to {1} (next grade)" xml:space="preserve">
+    <value>{0} grgl {1}</value>
   </data>
   <data name="{0} tools can read your scores." xml:space="preserve">
     <value>{0} rorgl murp blurgl murgm Mgrlgmrg.</value>
@@ -12176,6 +12218,9 @@
   </data>
   <data name="{0}% of the bar" xml:space="preserve">
     <value>{0}% mrgl mrp mr</value>
+  </data>
+  <data name="{0}% of the way through {1}" xml:space="preserve">
+    <value>{0}% ub ur gorlub gropmur {1}</value>
   </data>
   <data name="{0}% of {1}" xml:space="preserve">
     <value>{0}% mrgl {1}</value>

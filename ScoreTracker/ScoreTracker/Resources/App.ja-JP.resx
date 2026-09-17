@@ -1452,6 +1452,9 @@
   <data name="Breakdown" xml:space="preserve">
     <value>内訳</value>
   </data>
+  <data name="Brighter the closer" xml:space="preserve">
+    <value>近いほど明るく</value>
+  </data>
   <data name="Broken" xml:space="preserve">
     <value>Break Off</value>
   </data>
@@ -2990,6 +2993,9 @@
   <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
     <value>ファイルのすべての行が優先されます。今の記録より悪くても上書きされます。</value>
   </data>
+  <data name="Every score that qualifies wears the same glow." xml:space="preserve">
+    <value>条件を満たすスコアはすべて同じ発光になります。</value>
+  </data>
   <data name="Every season re-balances every chart from how hard it is to score, then freezes." xml:space="preserve">
     <value>シーズンごとに全譜面をスコアの出しにくさで再調整し、その後は固定します。</value>
   </data>
@@ -3121,6 +3127,15 @@
   </data>
   <data name="Failed: {0}{1}" xml:space="preserve">
     <value>失敗: {0}{1}</value>
+  </data>
+  <data name="Faint at the bottom of a grade, full at the next one." xml:space="preserve">
+    <value>ランクの下端ではかすかに、次のランクで最大になります。</value>
+  </data>
+  <data name="Faint at {0} points away, full at the next grade." xml:space="preserve">
+    <value>残り{0}点でかすかに、次のランクで最大になります。</value>
+  </data>
+  <data name="Faint where the last {0}% starts, full at the next grade." xml:space="preserve">
+    <value>最後の{0}%が始まる所でかすかに、次のランクで最大になります。</value>
   </data>
   <data name="Fairly rated to pass" xml:space="preserve">
     <value>クリア難度は表記どおり</value>
@@ -3483,14 +3498,26 @@
   <data name="Glow" xml:space="preserve">
     <value>発光</value>
   </data>
+  <data name="Glow: % of a grade" xml:space="preserve">
+    <value>%</value>
+  </data>
+  <data name="Glow: in the last" xml:space="preserve">
+    <value>ランクの最後の</value>
+  </data>
   <data name="Glow: place" xml:space="preserve">
     <value>位</value>
   </data>
   <data name="Glow: places" xml:space="preserve">
     <value>位</value>
   </data>
+  <data name="Glow: points from the next grade" xml:space="preserve">
+    <value>点未満</value>
+  </data>
   <data name="Glow: Top" xml:space="preserve">
     <value>上位</value>
+  </data>
+  <data name="Glow: under" xml:space="preserve">
+    <value>次のランクまで</value>
   </data>
   <data name="Glows red on the charts in each folder that almost nobody holds in a PUMBILITY top 50, and green on the ones the most players hold. Phoenix 2, rebuilt every Sunday." xml:space="preserve">
     <value>各フォルダで PUMBILITY トップ50 にほとんど誰も入れていない譜面を赤く、最も多くのプレイヤーが入れている譜面を緑に光らせます。Phoenix 2、毎週日曜に作り直し。</value>
@@ -3584,6 +3611,9 @@
   </data>
   <data name="Grouped by" xml:space="preserve">
     <value>グループ化</value>
+  </data>
+  <data name="Grows with the grade: the last {0} points of an S, {1} of an AAA, {2} of a Phoenix 2 A." xml:space="preserve">
+    <value>ランクの幅に合わせて広がります。Sなら最後の{0}点、AAAなら{1}点、Phoenix 2のAなら{2}点です。</value>
   </data>
   <data name="Had a bad import?" xml:space="preserve">
     <value>インポートを間違えましたか？</value>
@@ -5422,6 +5452,9 @@
   <data name="No peer holds it" xml:space="preserve">
     <value>持っているピアはいない</value>
   </data>
+  <data name="No peers needed. SSS+ counts a Perfect Game as its next line." xml:space="preserve">
+    <value>ピアは不要です。SSS+はパーフェクトゲームを次のラインとして数えます。</value>
+  </data>
   <data name="No peers yet." xml:space="preserve">
     <value>まだピアはいません。</value>
   </data>
@@ -6086,6 +6119,9 @@
   <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
     <value>スコア・グレード・プレート・クリアをレベル別に表示する設定可能なグラフ。</value>
   </data>
+  <data name="One glow" xml:space="preserve">
+    <value>ひとつの発光</value>
+  </data>
   <data name="One hue — the current mix's — from dark to bright. Ordered by lightness alone, so it reads the same for every kind of color vision." xml:space="preserve">
     <value>現在のバージョンの色ひとつで、暗いところから明るいところへ。明るさだけで順序付けるので、どの色覚でも同じように読めます。</value>
   </data>
@@ -6119,8 +6155,8 @@
   <data name="one per level bucket" xml:space="preserve">
     <value>レベル帯ごとに 1 譜面</value>
   </data>
-  <data name="One rule, one glow. The color is the spectrum; the glow says a score crossed the line you set." xml:space="preserve">
-    <value>ルールはひとつ、発光もひとつ。色がスペクトラムで、発光はスコアが設定した線を越えた合図です。</value>
+  <data name="One rule. The glow says a score crossed the line you set; the two grade options can also brighten as a score closes in." xml:space="preserve">
+    <value>ルールはひとつ。発光はスコアが設定した線を越えた合図で、ふたつのランク設定では近づくほど明るくすることもできます。</value>
   </data>
   <data name="One session" xml:space="preserve">
     <value>1セッション</value>
@@ -12117,11 +12153,17 @@
   <data name="{0} titles, and the game shows you none of your progress." xml:space="preserve">
     <value>称号は {0} 個ありますが、ゲームは進捗を一切見せてくれません。</value>
   </data>
+  <data name="{0} to a Perfect Game" xml:space="preserve">
+    <value>パーフェクトゲームまで{0}</value>
+  </data>
   <data name="{0} to next level" xml:space="preserve">
     <value>次のレベルまで{0}</value>
   </data>
   <data name="{0} to PG" xml:space="preserve">
     <value>PGまで{0}</value>
+  </data>
+  <data name="{0} to {1} (next grade)" xml:space="preserve">
+    <value>{1}まで{0}</value>
   </data>
   <data name="{0} tools can read your scores." xml:space="preserve">
     <value>{0} 個のツールがあなたのスコアを読めます。</value>
@@ -12176,6 +12218,9 @@
   </data>
   <data name="{0}% of the bar" xml:space="preserve">
     <value>バーの {0}%</value>
+  </data>
+  <data name="{0}% of the way through {1}" xml:space="preserve">
+    <value>{1}の{0}%地点</value>
   </data>
   <data name="{0}% of {1}" xml:space="preserve">
     <value>{1} の {0}%</value>
