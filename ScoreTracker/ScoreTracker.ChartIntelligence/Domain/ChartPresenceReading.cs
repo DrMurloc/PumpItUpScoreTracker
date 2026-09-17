@@ -25,17 +25,19 @@ internal static class ChartPresenceReading
         IReadOnlyList<ChartPresenceRow> rows, DateTimeOffset computedAt, double? viewerPumbility,
         double? viewerSpot)
     {
-        if (columns.Count == 0 || rows.Count == 0) return null;
+        if (rows.Count == 0) return null;
 
+        // A chart reads the layout it was counted over: everyone, or the PIU Scores accounts alone (D13).
         var countsBoardPlayers = rows[0].CountsBoardPlayers;
         var byColumn = rows.ToDictionary(r => r.Column);
-        var ordered = columns.OrderBy(c => c.Order).ToArray();
+        var ordered = columns.Where(c => c.CountsBoardPlayers == countsBoardPlayers).OrderBy(c => c.Order).ToArray();
+        if (ordered.Length == 0) return null;
         var bands = ordered.Select(c => PumbilityBand.ByName(PumbilityPool.Total, c.Band)).ToArray();
 
         var presence = ordered.Select((column, i) =>
         {
             var band = bands[i];
-            var players = countsBoardPlayers ? column.Players : column.SitePlayers;
+            var players = column.Players;
             byColumn.TryGetValue(column.Order, out var row);
             return new PumbilityPresenceColumn(column.Band, band?.Gem ?? column.Band, band?.Level, players,
                 row?.Holders ?? 0, row?.Spots, row?.Dots ?? Array.Empty<double>(),

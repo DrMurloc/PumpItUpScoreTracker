@@ -38,8 +38,11 @@ public sealed class EFChartPresenceRepositoryTests : IAsyncLifetime
         var census = new ChartPresenceCensusResult(
             new[]
             {
-                new ChartPresenceColumnRow(0, Name.From("[P.B] BRONZE"), 23, 23),
-                new ChartPresenceColumnRow(1, Name.From("[P.B] DIAMOND LV.1"), 27, 25)
+                new ChartPresenceColumnRow(true, 0, Name.From("[P.B] BRONZE"), 23, 23),
+                new ChartPresenceColumnRow(true, 1, Name.From("[P.B] DIAMOND LV.1"), 27, 25),
+                // The same place in the other layout, counted over PIU Scores accounts alone.
+                new ChartPresenceColumnRow(false, 0, Name.From("[P.B] BRONZE"), 23, 23),
+                new ChartPresenceColumnRow(false, 1, Name.From("[P.B] DIAMOND"), 95, 95)
             },
             new[]
             {
@@ -105,7 +108,7 @@ public sealed class EFChartPresenceRepositoryTests : IAsyncLifetime
 
     private static ChartPresenceCensusResult Census(string band, Guid chart)
     {
-        return new ChartPresenceCensusResult(new[] { new ChartPresenceColumnRow(0, Name.From(band), 30, 30) },
+        return new ChartPresenceCensusResult(new[] { new ChartPresenceColumnRow(true, 0, Name.From(band), 30, 30) },
             new[]
             {
                 new ChartPresenceRow(chart, 0, true, 6, new PumbilitySpots(1, 2, 3, 4, 5), Array.Empty<double>(), 0,

@@ -166,7 +166,7 @@ public sealed class ChartPresenceSagaTests
     {
         _repository.Setup(r => r.GetColumns(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ChartPresenceColumns(
-                new[] { new ChartPresenceColumnRow(0, Name.From("[P.B] BRONZE"), 30, 30) }, At));
+                new[] { new ChartPresenceColumnRow(true, 0, Name.From("[P.B] BRONZE"), 30, 30) }, At));
         _repository.Setup(r => r.GetRows(MixEnum.Phoenix2, chartId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {

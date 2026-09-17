@@ -139,6 +139,32 @@ public sealed class ChartPresenceCensusTests
         Assert.False(census.Rows.Single(r => r.ChartId == unranked.Id).CountsBoardPlayers);
     }
 
+    [Fact]
+    public void AChartWithoutAnOfficialRankingOpensItsGemsByThePiuScoresAccountsAlone()
+    {
+        // 125 ranking players open DIAMOND into its levels for everyone. The 30 PIU Scores accounts on it are
+        // too few to open it, so the chart only they can be seen holding reads DIAMOND whole.
+        var ranked = Chart(22);
+        var unranked = Chart(19);
+        var voices = Enumerable.Range(0, 125).Select(_ => Board(17_500, ranked.Id))
+            .Concat(Enumerable.Range(0, 30).Select(_ => Account(17_500, ranked.Id, unranked.Id)))
+            .ToArray();
+
+        var census = ChartPresenceCensus.Take(voices, Catalog(ranked, unranked), Ranked(ranked));
+
+        var everyone = census.Columns.Where(c => c.CountsBoardPlayers).ToArray();
+        var accounts = census.Columns.Where(c => !c.CountsBoardPlayers).ToArray();
+        Assert.Equal(12, everyone.Length);
+        Assert.Equal(8, accounts.Length);
+        var diamond = accounts.Single(c => c.Band == Name.From("[P.B] DIAMOND"));
+        Assert.Equal((30, 30), (diamond.Players, diamond.SitePlayers));
+
+        var unrankedRow = Assert.Single(census.Rows, r => r.ChartId == unranked.Id);
+        Assert.Equal((false, diamond.Order, 30), (unrankedRow.CountsBoardPlayers, unrankedRow.Column, unrankedRow.Holders));
+        Assert.All(census.Rows.Where(r => r.ChartId == ranked.Id), r => Assert.True(r.CountsBoardPlayers));
+        Assert.Equal(155, census.Rows.Where(r => r.ChartId == ranked.Id).Sum(r => r.Holders));
+    }
+
     private static PresenceVoice Account(double pumbility, params Guid[] fifty)
     {
         return new PresenceVoice(PeerVoice.Account(Guid.NewGuid()), pumbility, false, Fifty(fifty));

@@ -28,13 +28,30 @@ public sealed class ChartPresenceReadingTests
     }
 
     [Fact]
-    public void AChartWithoutAnOfficialRankingIsSharedOverPiuScoresAccountsOnly()
+    public void AChartWithoutAnOfficialRankingReadsTheColumnsCountedOverPiuScoresAccountsAlone()
     {
-        var ranked = Read(new[] { Column(0, "[P.B] DIAMOND", 400, 80) }, Row(0, 20));
-        var unranked = Read(new[] { Column(0, "[P.B] DIAMOND", 400, 80) }, Row(0, 20) with { CountsBoardPlayers = false });
+        // Everyone opens DIAMOND into its levels; the 80 PIU Scores accounts on it read DIAMOND whole.
+        var columns = new[]
+        {
+            Column(0, "[P.B] DIAMOND LV.1", 200, 45), Column(1, "[P.B] DIAMOND LV.2", 200, 35),
+            AccountsColumn(0, "[P.B] DIAMOND", 80)
+        };
 
-        Assert.Equal(0.05, ranked.Columns[0].Share);
-        Assert.Equal((80, 0.25), (unranked.Columns[0].Players, unranked.Columns[0].Share));
+        var ranked = Read(columns, Row(0, 20), Row(1, 10));
+        var unranked = Read(columns, Row(0, 20) with { CountsBoardPlayers = false });
+
+        Assert.Equal(new[] { "[P.B] DIAMOND LV.1", "[P.B] DIAMOND LV.2" }, ranked.Columns.Select(c => c.Band.ToString()));
+        Assert.Equal(0.1, ranked.Columns[0].Share);
+        var diamond = Assert.Single(unranked.Columns);
+        Assert.Equal(("[P.B] DIAMOND", (int?)null, 80, 0.25), (diamond.Band.ToString(), diamond.Level, diamond.Players,
+            diamond.Share));
+    }
+
+    [Fact]
+    public void AChartWhoseLayoutWasNeverWrittenDrawsNothing()
+    {
+        Assert.Null(ChartPresenceReading.Read(new[] { Column(0, "[P.B] DIAMOND", 400) },
+            new[] { Row(0, 20) with { CountsBoardPlayers = false } }, At, null, null));
     }
 
     [Fact]
@@ -146,7 +163,12 @@ public sealed class ChartPresenceReadingTests
 
     private static ChartPresenceColumnRow Column(int order, string band, int players, int? sitePlayers = null)
     {
-        return new ChartPresenceColumnRow(order, Name.From(band), players, sitePlayers ?? players);
+        return new ChartPresenceColumnRow(true, order, Name.From(band), players, sitePlayers ?? players);
+    }
+
+    private static ChartPresenceColumnRow AccountsColumn(int order, string band, int players)
+    {
+        return new ChartPresenceColumnRow(false, order, Name.From(band), players, players);
     }
 
     private static ChartPresenceRow Row(int column, int holders)

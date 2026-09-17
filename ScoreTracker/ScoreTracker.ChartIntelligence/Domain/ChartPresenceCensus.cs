@@ -14,15 +14,21 @@ internal sealed record PresenceVoice(PeerVoice Voice, double Pumbility, bool IsB
     IReadOnlyList<PoolSlot> Fifty);
 
 /// <summary>A census column: the title it stands for and everyone standing on it.</summary>
+/// <param name="CountsBoardPlayers">
+///     The layout the column belongs to: true for the one counted over everyone, false for the one counted
+///     over PIU Scores accounts alone, which a chart without an official ranking reads.
+/// </param>
 /// <param name="SitePlayers">The PIU Scores accounts among <paramref name="Players" />.</param>
-internal sealed record ChartPresenceColumnRow(int Order, Name Band, int Players, int SitePlayers);
+internal sealed record ChartPresenceColumnRow(bool CountsBoardPlayers, int Order, Name Band, int Players,
+    int SitePlayers);
 
 /// <summary>
 ///     One chart on one column: its holders' spots, and the spots every other chart of its folder
 ///     takes on the same title.
 /// </summary>
 /// <param name="CountsBoardPlayers">
-///     False for a chart piugame publishes no ranking for, which no board player can be seen holding.
+///     False for a chart piugame publishes no ranking for, which no board player can be seen holding; its
+///     <paramref name="Column" /> is then a column of the layout counted over PIU Scores accounts alone.
 /// </param>
 internal sealed record ChartPresenceRow(Guid ChartId, int Column, bool CountsBoardPlayers, int Holders,
     PumbilitySpots? Spots, IReadOnlyList<double> Dots, int FolderSpots, PumbilitySpotBox? Folder);
@@ -88,8 +94,30 @@ internal static class ChartPresenceCensus
         return spots;
     }
 
+    /// <summary>
+    ///     Two layouts. The charts piugame ranks are counted over everyone. The charts it does not rank are
+    ///     counted over the PIU Scores accounts alone, whose gems open by those accounts: the ranking players
+    ///     are what carry a gem past the opening, and a chart they can never be seen holding would otherwise
+    ///     read every level of it thin (D11, D13).
+    /// </summary>
     public static ChartPresenceCensusResult Take(IReadOnlyCollection<PresenceVoice> voices,
         IReadOnlyDictionary<Guid, Chart> charts, IReadOnlySet<Guid> chartsWithBoards)
+    {
+        var everyone = Layout(true, voices, charts, chartsWithBoards.Contains);
+        var accounts = Layout(false, voices.Where(v => !v.IsBoardPlayer).ToArray(), charts,
+            chartId => !chartsWithBoards.Contains(chartId));
+        return new ChartPresenceCensusResult(everyone.Columns.Concat(accounts.Columns).ToArray(),
+            everyone.Rows.Concat(accounts.Rows).ToArray());
+    }
+
+    /// <summary>
+    ///     One layout: its columns over the voices given, and a row on them for each chart it writes. A
+    ///     folder's spots come from every chart of the folder either way, so a chart's shadow is the whole
+    ///     rest of its folder on those voices.
+    /// </summary>
+    private static ChartPresenceCensusResult Layout(bool countsBoardPlayers,
+        IReadOnlyCollection<PresenceVoice> voices, IReadOnlyDictionary<Guid, Chart> charts,
+        Func<Guid, bool> writesRowsFor)
     {
         var columns = Columns(voices.Select(v => v.Pumbility));
         var players = new int[columns.Count];
@@ -114,7 +142,7 @@ internal static class ChartPresenceCensus
 
         var rows = new List<ChartPresenceRow>();
         var others = new int[Bins];
-        foreach (var chart in charts.Values)
+        foreach (var chart in charts.Values.Where(c => writesRowsFor(c.Id)))
             for (var column = 0; column < columns.Count; column++)
             {
                 held.TryGetValue((chart.Id, column), out var own);
@@ -126,14 +154,15 @@ internal static class ChartPresenceCensus
                 var otherSpots = others.Sum();
                 if (holders == 0 && otherSpots == 0) continue;
 
-                rows.Add(new ChartPresenceRow(chart.Id, column, chartsWithBoards.Contains(chart.Id), holders,
+                rows.Add(new ChartPresenceRow(chart.Id, column, countsBoardPlayers, holders,
                     holders == 0 ? null : Spread(own!, holders),
                     holders is > 0 and < HoldersForABox ? Each(own!) : Array.Empty<double>(),
                     otherSpots, otherSpots == 0 ? null : Box(others, otherSpots)));
             }
 
         return new ChartPresenceCensusResult(
-            columns.Select((band, i) => new ChartPresenceColumnRow(i, band.Name, players[i], sitePlayers[i]))
+            columns.Select((band, i) =>
+                    new ChartPresenceColumnRow(countsBoardPlayers, i, band.Name, players[i], sitePlayers[i]))
                 .ToArray(),
             rows);
     }

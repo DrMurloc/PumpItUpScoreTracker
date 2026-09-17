@@ -37,6 +37,7 @@ internal sealed class EFChartPresenceRepository : IChartPresenceRepository
             new ChartPumbilityPresenceColumnEntity
             {
                 MixId = mixId,
+                CountsBoardPlayers = c.CountsBoardPlayers,
                 ColumnOrder = c.Order,
                 Band = c.Band.ToString(),
                 Players = c.Players,
@@ -74,10 +75,11 @@ internal sealed class EFChartPresenceRepository : IChartPresenceRepository
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var rows = await database.Set<ChartPumbilityPresenceColumnEntity>()
             .Where(e => e.MixId == mixId)
-            .OrderBy(e => e.ColumnOrder)
+            .OrderByDescending(e => e.CountsBoardPlayers).ThenBy(e => e.ColumnOrder)
             .ToArrayAsync(cancellationToken);
         return new ChartPresenceColumns(
-            rows.Select(e => new ChartPresenceColumnRow(e.ColumnOrder, Name.From(e.Band), e.Players, e.SitePlayers))
+            rows.Select(e => new ChartPresenceColumnRow(e.CountsBoardPlayers, e.ColumnOrder, Name.From(e.Band),
+                    e.Players, e.SitePlayers))
                 .ToArray(),
             rows.Length == 0 ? null : rows[0].ComputedAt);
     }

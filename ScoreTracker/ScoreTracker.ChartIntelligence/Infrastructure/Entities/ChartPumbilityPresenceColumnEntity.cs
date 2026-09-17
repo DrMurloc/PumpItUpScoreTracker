@@ -9,13 +9,17 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure.Entities
     {
         public Guid MixId { get; set; }
 
+        // The layout: true for the columns counted over everyone, false for the columns counted over
+        // PIU Scores accounts alone, which a chart with no official ranking reads.
+        public bool CountsBoardPlayers { get; set; }
+
         public int ColumnOrder { get; set; }
 
         [MaxLength(64)] public string Band { get; set; } = string.Empty;
 
         public int Players { get; set; }
 
-        // The PIU Scores accounts among Players, the denominator for a chart with no official ranking.
+        // The PIU Scores accounts among Players.
         public int SitePlayers { get; set; }
 
         public DateTimeOffset ComputedAt { get; set; }
