@@ -48,6 +48,7 @@ namespace ScoreTracker.PlayerProgress.Application
         private readonly PumbilityProjectionCache _cache;
         private readonly ICurrentUserAccessor _currentUser;
         private readonly IMediator _mediator;
+        private readonly IOfficialPlacementReader _official;
         private readonly IScoreProjector _projector;
         private readonly IScoreReader _scores;
         private readonly IPlayerStatsReader _stats;
@@ -55,7 +56,7 @@ namespace ScoreTracker.PlayerProgress.Application
 
         public PumbilityProjectionSaga(IMediator mediator, IScoreProjector projector,
             PumbilityProjectionCache cache, IScoreReader scores, IPlayerStatsReader stats, IUserReader users,
-            ICurrentUserAccessor currentUser)
+            ICurrentUserAccessor currentUser, IOfficialPlacementReader official)
         {
             _mediator = mediator;
             _projector = projector;
@@ -64,6 +65,7 @@ namespace ScoreTracker.PlayerProgress.Application
             _stats = stats;
             _users = users;
             _currentUser = currentUser;
+            _official = official;
         }
 
         public async Task<PumbilityProjection> Handle(ProjectPumbilityGainsQuery request,
@@ -166,8 +168,30 @@ namespace ScoreTracker.PlayerProgress.Application
             }
 
             var (roster, privatePeers, you) = await Roster(mix, userId, lit, sweep, myPools, cancellationToken);
+            var undercounted = await Undercounted(mix, lit, sweep, entries.Concat(unheld), charts, cancellationToken);
             return new PumbilityPeersPageRecord(mix, pool, groups, entries, alone, roster, privatePeers, you,
-                unheld, rarityLevels);
+                unheld, rarityLevels, undercounted);
+        }
+
+        /// <summary>
+        ///     The listed charts whose count runs low: those with a crowded official ranking
+        ///     (docs/design/chart-presence-graph.md §8), on a type whose peers include an official-ranking player,
+        ///     the only kind of peer whose fifty is rebuilt from the rankings.
+        /// </summary>
+        private async Task<IReadOnlySet<Guid>> Undercounted(MixEnum mix, IEnumerable<ChartType> lit,
+            ProjectionSweep sweep, IEnumerable<PeerPoolEntry> listed, IReadOnlyDictionary<Guid, Chart> charts,
+            CancellationToken cancellationToken)
+        {
+            var rebuilt = lit.Where(type => sweep.PeerPools[type].Peers.Any(peer => peer.IsFromBoard)).ToHashSet();
+            if (rebuilt.Count == 0) return new HashSet<Guid>();
+
+            var rankings = await _official.GetChartRankings(mix, cancellationToken);
+            return listed.Where(entry => rebuilt.Contains(entry.ChartType))
+                .Where(entry => rankings.TryGetValue(entry.ChartId, out var ranking) &&
+                                charts.TryGetValue(entry.ChartId, out var chart) &&
+                                CrowdedRanking.HidesHolders(chart, ranking))
+                .Select(entry => entry.ChartId)
+                .ToHashSet();
         }
 
         /// <summary>
