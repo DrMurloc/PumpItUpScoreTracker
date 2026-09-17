@@ -12,7 +12,7 @@
    channel), and opens the standing popover on tap. The tap stops here: a host whose surface also
    opens something (the tier card's head, a row's name) never sees it. *@
 <span class="peer-score-anchor">
-    <span class="peer-score @Style.GlowClass @(CanOpen ? "peer-score-open" : null) @Class" style="@Style.Style"
+    <span class="peer-score @Style.GlowClass @(CanOpen ? "peer-score-open" : null) @Class" style="@(Style.Style + Style.GlowStyle)"
           role="@(CanOpen ? "button" : null)" tabindex="@(CanOpen ? "0" : null)"
           aria-haspopup="@(CanOpen ? "dialog" : null)" aria-expanded="@(CanOpen ? _open.ToString().ToLowerInvariant() : null)"
           aria-label="@(CanOpen ? L["Where this score stands among your peers"].Value : null)"
@@ -32,6 +32,7 @@
             {
                 <PeerStandingPopover Standing="Standing" IsPerfectGame="IsPerfectGame" ColorStyle="@Style.Style"
                                      ChartId="ChartId" Chart="Chart" SourcesChosen="SourcesChosen"
+                                     Progress="Progress" ShowNextGrade="(Settings ?? _settings).IsGradeRule"
                                      OnOpenBoard="OpenBoard"></PeerStandingPopover>
             }
         </MudPopover>
@@ -115,11 +116,12 @@
 
     private bool IsPerfectGame => Score != null && (int)Score.Value == PerfectGame && !IsBroken;
 
-    private PhoenixLetterGrade? Grade => Score?.LetterGradeFor(Mix);
+    /// <summary>Where the score sits in its grade on its own mix; null for a broken run, which is never painted.</summary>
+    private GradeProgress? Progress => IsBroken || Score == null ? null : GradeProgress.Of(Score.Value, Mix);
 
-    private ScoreStyle Style => IsBroken || Score == null
-        ? ScoreStyle.Plain
-        : ThemeScales.ScoreStyleFor(Standing, IsPerfectGame, Grade, Settings ?? _settings);
+    private ScoreStyle Style => Progress is { } progress
+        ? ThemeScales.ScoreStyleFor(Standing, progress, Settings ?? _settings)
+        : ScoreStyle.Plain;
 
     private string? StandingText => IsBroken ? null : PeerStandingText.Standing(Standing, IsPerfectGame, L);
 

@@ -19268,6 +19268,29 @@ button.judg-strip:focus-visible {
     margin-top: 3px;
 }
 
+/* How far the score is from its next grade, while a grade glow rule is on (peers-abstraction.md D42). */
+.peer-pop-next {
+    display: grid;
+    grid-template-columns: 12px minmax(0, 1fr);
+    column-gap: 6px;
+    align-items: baseline;
+    margin-top: 9px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--mix-primary) 7%, transparent);
+}
+
+.peer-pop-next-arrow {
+    color: var(--mix-primary);
+    font-size: .55rem;
+}
+
+.peer-pop-next-sub {
+    grid-column: 2;
+    color: var(--mix-ink-muted);
+    font-size: .72rem;
+}
+
 .peer-pop-rows {
     margin: 10px 0 8px;
     border-top: 1px solid color-mix(in srgb, var(--mix-ink) 7%, transparent);
@@ -19515,6 +19538,32 @@ a.peer-pop-row:hover {
 .pcd-num {
     width: 72px;
     flex: 0 0 72px;
+}
+
+/* The grade rules' labels run long enough to wrap around their field on a phone. */
+.pcd-opt-wrap {
+    flex-wrap: wrap;
+    row-gap: 2px;
+}
+
+/* A grade rule's quick selects: small outlined chips in a row under its help line. */
+.pcd-chips {
+    margin-top: 4px;
+}
+
+.pcd .pcd-chips .mud-chip {
+    margin: 0 5px 4px 0;
+}
+
+/* One glow / Brighter the closer, under whichever grade rule is selected. */
+.pcd-strength {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px dashed color-mix(in srgb, var(--mix-ink) 18%, transparent);
 }
 
 .pcd-preview {

@@ -1440,6 +1440,9 @@
   <data name="Breakdown" xml:space="preserve">
     <value>Breakdown</value>
   </data>
+  <data name="Brighter the closer" xml:space="preserve">
+    <value>Brighter the closer</value>
+  </data>
   <data name="Broken" xml:space="preserve">
     <value>Broken</value>
   </data>
@@ -2978,6 +2981,9 @@
   <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
     <value>Every row in the file wins, even where it is worse than what you have.</value>
   </data>
+  <data name="Every score that qualifies wears the same glow." xml:space="preserve">
+    <value>Every score that qualifies wears the same glow.</value>
+  </data>
   <data name="Every season re-balances every chart from how hard it is to score, then freezes." xml:space="preserve">
     <value>Every season re-balances every chart from how hard it is to score, then freezes.</value>
   </data>
@@ -3109,6 +3115,15 @@
   </data>
   <data name="Failed: {0}{1}" xml:space="preserve">
     <value>Failed: {0}{1}</value>
+  </data>
+  <data name="Faint at the bottom of a grade, full at the next one." xml:space="preserve">
+    <value>Faint at the bottom of a grade, full at the next one.</value>
+  </data>
+  <data name="Faint at {0} points away, full at the next grade." xml:space="preserve">
+    <value>Faint at {0} points away, full at the next grade.</value>
+  </data>
+  <data name="Faint where the last {0}% starts, full at the next grade." xml:space="preserve">
+    <value>Faint where the last {0}% starts, full at the next grade.</value>
   </data>
   <data name="Fairly rated to pass" xml:space="preserve">
     <value>Fairly rated to pass</value>
@@ -3471,14 +3486,26 @@
   <data name="Glow" xml:space="preserve">
     <value>Glow</value>
   </data>
+  <data name="Glow: % of a grade" xml:space="preserve">
+    <value>% of a grade</value>
+  </data>
+  <data name="Glow: in the last" xml:space="preserve">
+    <value>In the last</value>
+  </data>
   <data name="Glow: place" xml:space="preserve">
     <value>place</value>
   </data>
   <data name="Glow: places" xml:space="preserve">
     <value>places</value>
   </data>
+  <data name="Glow: points from the next grade" xml:space="preserve">
+    <value>points from the next grade</value>
+  </data>
   <data name="Glow: Top" xml:space="preserve">
     <value>Top</value>
+  </data>
+  <data name="Glow: under" xml:space="preserve">
+    <value>Under</value>
   </data>
   <data name="Glows red on the charts in each folder that almost nobody holds in a PUMBILITY top 50, and green on the ones the most players hold. Phoenix 2, rebuilt every Sunday." xml:space="preserve">
     <value>Glows red on the charts in each folder that almost nobody holds in a PUMBILITY top 50, and green on the ones the most players hold. Phoenix 2, rebuilt every Sunday.</value>
@@ -3572,6 +3599,9 @@
   </data>
   <data name="Grouped by" xml:space="preserve">
     <value>Grouped by</value>
+  </data>
+  <data name="Grows with the grade: the last {0} points of an S, {1} of an AAA, {2} of a Phoenix 2 A." xml:space="preserve">
+    <value>Grows with the grade: the last {0} points of an S, {1} of an AAA, {2} of a Phoenix 2 A.</value>
   </data>
   <data name="Had a bad import?" xml:space="preserve">
     <value>Had a bad import?</value>
@@ -5377,6 +5407,9 @@
   <data name="No peer holds it" xml:space="preserve">
     <value>No peer holds it</value>
   </data>
+  <data name="No peers needed. SSS+ counts a Perfect Game as its next line." xml:space="preserve">
+    <value>No peers needed. SSS+ counts a Perfect Game as its next line.</value>
+  </data>
   <data name="No peers yet." xml:space="preserve">
     <value>No peers yet.</value>
   </data>
@@ -6032,6 +6065,9 @@
   <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
     <value>One configurable graph of your scores, grades, plates, or clears by level.</value>
   </data>
+  <data name="One glow" xml:space="preserve">
+    <value>One glow</value>
+  </data>
   <data name="One hue — the current mix's — from dark to bright. Ordered by lightness alone, so it reads the same for every kind of color vision." xml:space="preserve">
     <value>One hue — the current mix's — from dark to bright. Ordered by lightness alone, so it reads the same for every kind of color vision.</value>
   </data>
@@ -6065,8 +6101,8 @@
   <data name="one per level bucket" xml:space="preserve">
     <value>one per level bucket</value>
   </data>
-  <data name="One rule, one glow. The color is the spectrum; the glow says a score crossed the line you set." xml:space="preserve">
-    <value>One rule, one glow. The color is the spectrum; the glow says a score crossed the line you set.</value>
+  <data name="One rule. The glow says a score crossed the line you set; the two grade options can also brighten as a score closes in." xml:space="preserve">
+    <value>One rule. The glow says a score crossed the line you set; the two grade options can also brighten as a score closes in.</value>
   </data>
   <data name="One session" xml:space="preserve">
     <value>One session</value>
@@ -12009,11 +12045,17 @@
   <data name="{0} titles, and the game shows you none of your progress." xml:space="preserve">
     <value>{0} titles, and the game shows you none of your progress.</value>
   </data>
+  <data name="{0} to a Perfect Game" xml:space="preserve">
+    <value>{0} to a Perfect Game</value>
+  </data>
   <data name="{0} to next level" xml:space="preserve">
     <value>{0} to next level</value>
   </data>
   <data name="{0} to PG" xml:space="preserve">
     <value>{0} to PG</value>
+  </data>
+  <data name="{0} to {1} (next grade)" xml:space="preserve">
+    <value>{0} to {1}</value>
   </data>
   <data name="{0} tools can read your scores." xml:space="preserve">
     <value>{0} tools can read your scores.</value>
@@ -12068,6 +12110,9 @@
   </data>
   <data name="{0}% of the bar" xml:space="preserve">
     <value>{0}% of the bar</value>
+  </data>
+  <data name="{0}% of the way through {1}" xml:space="preserve">
+    <value>{0}% of the way through {1}</value>
   </data>
   <data name="{0}% of {1}" xml:space="preserve">
     <value>{0}% of {1}</value>

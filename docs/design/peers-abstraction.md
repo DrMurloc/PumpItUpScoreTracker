@@ -4,6 +4,10 @@
 > <https://claude.ai/code/artifact/d55f9dd3-24d8-432e-b2ef-8209fb2a9c7c>, label "Round 3"), owner
 > rulings D1–D24 below, built on `claude/peers-score-coloring-2e210e`.
 >
+> The two near-grade glow rules (D39–D43) were workshopped in two rounds on 2026-09-17 (mock:
+> <https://claude.ai/artifact/BGYvWYU9JswVPX26hzEqzc>, label "Round 2") and built on
+> `claude/score-coloring-glow-92618f`.
+>
 > This document started life (2026-08-16) as a drafting note about an abstraction the site kept
 > reinventing. The player-page work left the visibility seam behind (§5); this pass makes the
 > *peers* half real: a player chooses who their peers are, once, on `/Account`, and every surface
@@ -54,7 +58,7 @@ Owner rulings from the 2026-09-05 workshop, in his words where quoted.
 | D12 | **Each source line opens that source's own existing board** in the chart details dialog — Rivals, Community (that club), Region, World, Competitive Peers, PUMBILITY peers. **No "your peers" board scope**: *"People can use Rivals if they want to build a better custom leaderboard. Otherwise we're just building a 2nd rivals system."* |
 | D13 | **The popover leads with who has not passed it, not with the top score.** *"Get rid of 'top score' in the popover, replace it with a breakdown of how many of your peers haven't even passed the chart."* |
 | D14 | **Nine color systems, one radio.** Peer standing · judgement spectrum (today's rarity ramp, the default); Peer standing · classic (the retired Raider.io ladder, hues retuned, **pink on top**); Peer standing · letter-grade metals (below-A green → A copper → AAA silver → S gold → SSS ice → SSS+ at the top 1%); Peer standing · podium (gold #1, silver #2, copper #3, plain below — *"Medals for a place, not a share"*); Peer standing · single hue (the mix primary from dark to bright, ordered by lightness alone); Peer standing · result screen (the judgement colors literally, Miss red at the bottom — the one ladder that starts red, opt-in only); Peer standing · three steps (plain / gold / ice); Actual letter grade; No color. *Actual plate* was proposed and cut: *"no plate."* |
-| D15 | **Glow is a threshold signal, not a spectrum.** *"The color is the spectrum."* One radio rule — Perfect Games only · Top N places · Top N% · Off — and one strength for whatever it lights. **Off switches off the Perfect Game glow too**: *"having PG only lets them opt back into PGs."* The three-step glow ramp that used to order the rarity bands retires from score coloring; the printed standing is the second channel (UX rule 8). Default: Top 10%. |
+| D15 | **Glow is a threshold signal, not a spectrum.** *"The color is the spectrum."* One radio rule — Perfect Games only · Top N places · Top N% · Off — and one strength for whatever it lights. **Off switches off the Perfect Game glow too**: *"having PG only lets them opt back into PGs."* The three-step glow ramp that used to order the rarity bands retires from score coloring; the printed standing is the second channel (UX rule 8). Default: Top 10%. *Amended by D40: the two grade rules may brighten as a score closes in; the peer rules keep one strength.* |
 | D16 | **"#1" became "Top N places."** *"Make #1 into configurable 'Top X' (non percentile)."* Ties share a place, so a Top 1 rule lights every tied first. |
 | D17 | **The tier-card score is its own tap target.** The Comfortable card's head strip opens details; the score inside it opened details too, and its `ScoreBreakdown` rendered with the tooltip off (the stacked grade/plate layout needs bare children), so the standing was unreachable. The score now stops propagation and opens the popover; the jacket and the name keep opening details. Table density gets the popover on its Better Than cell. |
 | D18 | **The Account Stats widget lists your peers**, nearest competitive level first, capped at 25 as today, each row tagged with why they are a peer (RIVAL, community initials, ±0.5, PMB). Board-only rivals close the list with a BOARD tag and no level. *"Match players on"* keeps choosing which level the rows print and sort by; who is on the list comes from the setting. |
@@ -79,6 +83,11 @@ Owner rulings from the 2026-09-05 workshop, in his words where quoted.
 | D36 | **PUMBILITY peers include official board players** ([pumbility-overhaul.md](pumbility-overhaul.md) D59–D62, 2026-09-06). Owner: *"for all intents and purposes, just like we do with rivals, these are your peers."* A player on the mix's per-type PUMBILITY board whose pool sits in the same window, and whose fifty the mirror can rebuild, joins the source — so this is the first source that lands on **both** sides of D3: the projection it calibrates and the standing it paints are the same set. D3 is otherwise unchanged; competitive-level peers and the community sources are untouched. |
 | D37 | **A board peer is a board-only rival in every way that shows.** Named by its public tag, carrying no competitive level because the boards publish none, its standings wearing the mirror's asterisk and as-of date, counting only on the charts the mirror publishes — the treatment D8 already gives a ghost. `RivalSubject`'s site-or-tag shape generalises rather than a second one being invented. The roster gains the **BOARD** tag it already has for a ghost (D18) and no new column. **The asterisk and the as-of ride a number quoted from the board, never a headcount** (owner, 2026-09-11, correcting the reading that every surface naming a board peer dates them): a surface that only says how many of your peers came off the board — the PUMBILITY Breakdown card's level tiles ([pumbility-overhaul.md](pumbility-overhaul.md) D67) — draws no board standing, so it prints no date. |
 | D38 | **A private account that qualifies on the board is read as a board player** — public tag, public rows, nothing of its PIU Scores record. Owner: *"That'll keep them from showing scores outside of what's publicly visible already"*, and on where it lives: *"mirror should not be pretending there's a linked account when that linked account is private."* So the rule sits in the mirror's own resolution, not beside `PlayerVisibilityReader`, and both the projection and the standing get one answer. A private account **not** on the board is unchanged: counted in every number, named nowhere. |
+| D39 | **Two glow rules measure a score against its next grade, not against peers** (owner, 2026-09-17: *"let's support 'Glow under X points' and 'Glow in last %'"*). *Under N points from the next grade* — 1 to 5,000, default 1,000, lit when the score is strictly under N away — and *In the last N % of a grade* — 1 to 100, default 20. The tab labels them the way it labels *Top N places*; the mocks printed a *Glow:* prefix before every option, which is only the resx keys' disambiguation and never showed on the tab. They exist side by side because grades are not the same width: on Phoenix 2, S through SSS+ span 5,000 points each, AA+ through AAA+ 10,000, A+ and AA 20,000 and A 100,000, so 1,000 points is a fifth of an S and a hundredth of an A, and at 5,000 every score from S up glows but the few sitting exactly on a grade's floor, while a share means the same thing at every grade. Both read the score's own mix's cutoffs, need no peers — a score no peer has passed still glows — and sit in the one glow radio, so a player picks one rule. |
+| D40 | **The grade rules may brighten as a score closes in** — *One glow* or *Brighter the closer*, one choice kept across both rules, default One glow. Brighter the closer is faint where the window opens and full at the next grade; at 100 % it runs from the bottom of each grade to the next one. This amends D15 for these two rules only: the peer rules keep one strength. *Hotter the closer* (a halo whose hue warms), a tenth color system painting closeness, and a glow on the letter art were mocked in the first round and not taken up (*"For now, let's support…"*; *"don't do hotter the closer"*; *"Don't worry about letter grade glows"*). |
+| D41 | **SSS+ reaches for the Perfect Game.** The top grade has no grade above it, so its next line is 1,000,000: 999,420 is 580 away. A Perfect Game itself glows at full strength under both grade rules, as it does under every rule except Off, and a broken run never glows. |
+| D42 | **The popover says how far.** While a grade rule is on, the standing popover carries one line — *950 to SSS · 81% of the way through SS+* — in every state, including a chart no peer has passed, because the glow it explains needs no peers. Under a peer rule, or on a Perfect Game, the line does not show. |
+| D43 | **Quick selects, and the strength beneath the rule it shapes.** Each grade rule carries small chips — 500 · 1,000 · 2,500 · 5,000 points; 10 · 20 · 30 · 50 · 100 % — that set its number and select the rule, the way typing in its field does (*"lets have the dense/mini chips there as quick selects"*); One glow / Brighter the closer sits beneath whichever grade rule is selected (*"beneath whichever closeness glow you select"*). Top N places and Top N % keep their plain fields. |
 
 ## 3. What a peer pool is
 
@@ -141,15 +150,18 @@ the split the old ranking saga used and the reason a fresh import recolors immed
 
 ### 4.4 Web
 
-- `ScoreColorSettings` (`Universal__ScoreColors`): the color system and the glow rule with its
-  threshold; `ThemeScales.ScoreStyle(standing, isPerfectGame, grade, settings)` is the one place
-  band cutoffs and the glow rule live. Two token groups join `MixThemes`: `--classic-1..7`
+- `ScoreColorSettings` (`Universal__ScoreColors`): the color system, the glow rule with its
+  threshold, and the grade rules' strength (D39, D40); `ThemeScales.ScoreStyleFor(standing, progress, settings)`
+  is the one place band cutoffs and the glow rules live. The grade rules read `GradeProgress`
+  (SharedKernel): a score's grade, its next line, the points to it and how far through the grade it
+  sits, on the score's own mix. Two token groups join `MixThemes`: `--classic-1..7`
   (mix-invariant, the retuned Raider.io ladder) and `--hue-1..6` (per mix, six lightness steps of
   the primary). Podium, grade metals, result screen and three steps reuse the plate, judgement and
   rarity tokens.
 - `PeerScore` — the one component for "your score, colored by your standing": wraps
-  `ScoreBreakdown`, applies color and the single glow class, prints the standing text, opens
-  `PeerStandingPopover` on click, and stops the click there. `ScoreBreakdown` no longer takes a
+  `ScoreBreakdown`, applies color and the glow — the single glow class, or for Brighter the closer
+  a per-score strength that never reaches the popover's headline — prints the standing text, opens
+  `PeerStandingPopover` on click (which carries D42's line under a grade rule), and stops the click there. `ScoreBreakdown` no longer takes a
   ranking. Hosts: the Sessions rows and highlight cards, the tier-list card and table, the chart
   details dialog, the chart page's *Your best*, the upload results table.
 - `PeersAndColorsPanel`, its own tab on `/Account` (`?tab=peers`, D35); the Profile tab's summary card and the dialog behind it went with the field test.

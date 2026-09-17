@@ -41,6 +41,54 @@ public sealed class PeerStandingPopoverTests : ComponentTestBase
             .Add(x => x.OnOpenBoard, onOpen));
     }
 
+    private static GradeProgress Progress(int score) => GradeProgress.Of(PhoenixScore.From(score), MixEnum.Phoenix2);
+
+    private IRenderedComponent<PeerStandingPopover> RenderUnderAGradeRule(PeerStanding? standing, int score,
+        bool sourcesChosen = true, bool showNextGrade = true)
+    {
+        return RenderComponent<PeerStandingPopover>(p => p
+            .Add(x => x.Standing, standing)
+            .Add(x => x.Chart, TestChart())
+            .Add(x => x.SourcesChosen, sourcesChosen)
+            .Add(x => x.Progress, Progress(score))
+            .Add(x => x.ShowNextGrade, showNextGrade));
+    }
+
+    [Fact]
+    public void UnderAGradeRuleTheLineSaysHowFarToTheNextGrade()
+    {
+        var cut = RenderUnderAGradeRule(Full(), 989_050);
+
+        var line = cut.Find("[data-testid='peer-pop-next']");
+        Assert.Contains("<b>950</b> to SSS", line.InnerHtml);
+        Assert.Contains("81% of the way through SS+", line.TextContent);
+    }
+
+    [Fact]
+    public void SssPlusCountsToAPerfectGame()
+    {
+        var cut = RenderUnderAGradeRule(Full(), 999_420);
+
+        Assert.Contains("<b>580</b> to a Perfect Game", cut.Find("[data-testid='peer-pop-next']").InnerHtml);
+    }
+
+    [Fact]
+    public void TheLineShowsInEveryStateBecauseTheGlowNeedsNoPeers()
+    {
+        var noPeerPassed = PeerStanding.NoCohort(12, 3, Array.Empty<PeerStandingSource>());
+
+        Assert.Single(RenderUnderAGradeRule(noPeerPassed, 989_050).FindAll("[data-testid='peer-pop-next']"));
+        Assert.Single(RenderUnderAGradeRule(null, 989_050).FindAll("[data-testid='peer-pop-next']"));
+        Assert.Single(RenderUnderAGradeRule(null, 989_050, sourcesChosen: false).FindAll("[data-testid='peer-pop-next']"));
+    }
+
+    [Fact]
+    public void APeerRuleOrAPerfectGamePrintsNoLine()
+    {
+        Assert.Empty(RenderUnderAGradeRule(Full(), 989_050, showNextGrade: false).FindAll("[data-testid='peer-pop-next']"));
+        Assert.Empty(RenderUnderAGradeRule(Full(), 1_000_000).FindAll("[data-testid='peer-pop-next']"));
+    }
+
     [Fact]
     public void LeadsWithThePlaceThenWhoHasNotPassedItThenOneLinePerSource()
     {
