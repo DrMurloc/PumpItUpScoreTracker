@@ -197,6 +197,38 @@ public sealed class PeerScoreTests : ComponentTestBase
     }
 
     [Fact]
+    public void AGradeRuleLightsAScoreNoPeerHasMeasured()
+    {
+        _settings.Setup(s => s.GetSetting(ScoreColorSettings.SettingKey, default, null))
+            .ReturnsAsync(new ScoreColorSettings(ScoreColorSystem.JudgementSpectrum, GlowRule.UnderPointsToNextGrade, 1000)
+                .Serialize());
+
+        // 974,400 is 600 short of S+.
+        var cut = Render(974_400, null);
+
+        Assert.Contains(ThemeScales.ScoreGlowClass, cut.Find("[data-testid='peer-score']").ClassName);
+    }
+
+    [Fact]
+    public async Task BrighterTheCloserGlowsOnTheScoreAndNeverOnThePopoversHeadline()
+    {
+        _settings.Setup(s => s.GetSetting(ScoreColorSettings.SettingKey, default, null))
+            .ReturnsAsync(new ScoreColorSettings(ScoreColorSystem.JudgementSpectrum, GlowRule.LastPercentOfGrade, 100,
+                GlowStrength.BrighterTheCloser).Serialize());
+
+        var cut = RenderWithPopovers(Standing(better: 5));
+        var score = cut.Find("[data-testid='peer-score']");
+        Assert.Contains(ThemeScales.ScoreGlowCloserClass, score.ClassName);
+        Assert.Contains("text-shadow", score.GetAttribute("style"));
+
+        await score.ClickAsync(new MouseEventArgs());
+
+        cut.WaitForAssertion(() =>
+            Assert.DoesNotContain("text-shadow",
+                cut.Find("[data-testid='peer-pop-head']").GetAttribute("style") ?? string.Empty));
+    }
+
+    [Fact]
     public void TheGlowIsOneClassAndOffIsOff()
     {
         _settings.Setup(s => s.GetSetting(ScoreColorSettings.SettingKey, default, null))

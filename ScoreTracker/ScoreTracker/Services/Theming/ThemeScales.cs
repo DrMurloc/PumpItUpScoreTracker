@@ -1,6 +1,8 @@
-﻿using ScoreTracker.Domain.Models;
+﻿using System.Globalization;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.Web.Services.Theming;
 
@@ -241,22 +243,34 @@ public static class ThemeScales
     /// </summary>
     public static string SpeedColor(int band) => $"var(--speed-{Math.Clamp(band, 0, 4) + 1})";
 
-    /// <summary>The one glow a lit score wears (peers-abstraction.md D15): a threshold, not a spectrum.</summary>
+    /// <summary>
+    ///     The one glow a lit score wears (peers-abstraction.md D15): every peer rule, and a grade rule at
+    ///     One glow.
+    /// </summary>
     public const string ScoreGlowClass = "rarity-glow-2";
 
     /// <summary>
+    ///     A grade rule at Brighter the closer (D40). The class marks the score; the glow itself rides
+    ///     <see cref="ScoreStyle.GlowStyle" />, because its strength differs score by score.
+    /// </summary>
+    public const string ScoreGlowCloserClass = "score-glow-closer";
+
+    /// <summary>
     ///     How a player's OWN score is painted, from the peers they chose and the color system and
-    ///     glow rule they picked (docs/design/peers-abstraction.md D14–D16). The single place the
-    ///     nine systems' cutoffs and the glow rule live; every surface renders through
+    ///     glow rule they picked (docs/design/peers-abstraction.md D14–D16, D39–D41). The single place
+    ///     the nine systems' cutoffs and the glow rules live; every surface renders through
     ///     <c>PeerScore</c>, which calls this. A system that reads the standing paints nothing when
     ///     no peer has passed the chart — plain ink, the popover says why — while the two that do
-    ///     not (the actual grade, none) never look at it.
+    ///     not (the actual grade, none) never look at it. The grade rules read only
+    ///     <paramref name="progress" />, so they light a score no peer has measured. A null
+    ///     <paramref name="progress" /> is a score that is not there to paint.
     /// </summary>
-    public static ScoreStyle ScoreStyleFor(PeerStanding? standing, bool isPerfectGame, PhoenixLetterGrade? grade,
+    public static ScoreStyle ScoreStyleFor(PeerStanding? standing, GradeProgress? progress,
         ScoreColorSettings settings)
     {
         var measured = standing is { HasCohort: true };
         var percentile = measured ? standing!.Percentile!.Value : 0;
+        var isPerfectGame = progress is { IsPerfectGame: true };
         var token = settings.System switch
         {
             ScoreColorSystem.JudgementSpectrum => measured ? CssVar(BandFor(percentile)) : string.Empty,
@@ -266,23 +280,59 @@ public static class ThemeScales
             ScoreColorSystem.SingleHue => measured ? HueToken(percentile) : string.Empty,
             ScoreColorSystem.ResultScreen => measured ? ResultScreenToken(percentile) : string.Empty,
             ScoreColorSystem.ThreeSteps => measured ? ThreeStepToken(percentile) : string.Empty,
-            ScoreColorSystem.ActualGrade => grade is { } actual ? GradeColor(actual) : string.Empty,
+            ScoreColorSystem.ActualGrade => progress is { } actual ? GradeColor(actual.Grade) : string.Empty,
             _ => string.Empty
         };
 
         // A Perfect Game is the ceiling: it is inside any top-N rule whether or not a peer has
-        // passed the chart, and it is exactly what the Perfect Games rule names. Off is off.
+        // passed the chart, it is exactly what the Perfect Games rule names, and it sits on the line
+        // a grade rule measures to. Off is off.
+        var closeness = settings.IsGradeRule && progress is { } reached
+            ? GradeCloseness(settings.Glow, settings.GlowThreshold, reached)
+            : null;
         var lit = settings.Glow switch
         {
             GlowRule.PerfectGames => isPerfectGame,
             GlowRule.TopPlaces => isPerfectGame || (measured && standing!.Place <= settings.GlowThreshold),
             GlowRule.TopPercent => isPerfectGame ||
                                    (measured && percentile >= 1 - settings.GlowThreshold / 100.0),
+            GlowRule.UnderPointsToNextGrade or GlowRule.LastPercentOfGrade => closeness != null,
             _ => false
         };
 
-        return new ScoreStyle(token.Length == 0 ? string.Empty : $"color:{token};",
-            lit ? ScoreGlowClass : string.Empty);
+        var color = token.Length == 0 ? string.Empty : $"color:{token};";
+        if (!lit) return new ScoreStyle(color, string.Empty, string.Empty);
+        return closeness is { } near && settings.Strength == GlowStrength.BrighterTheCloser
+            ? new ScoreStyle(color, ScoreGlowCloserClass, CloserGlow(near))
+            : new ScoreStyle(color, ScoreGlowClass, string.Empty);
+    }
+
+    /// <summary>
+    ///     How far into a grade rule's window a score sits: null outside it, 0 where it opens, 1 at the
+    ///     next grade. Under N points is strictly under. The last N% takes in the point it opens at, in
+    ///     whole numbers so a score exactly on that edge is inside it, and at 100% it opens at the
+    ///     grade's floor.
+    /// </summary>
+    private static double? GradeCloseness(GlowRule glow, int threshold, GradeProgress progress)
+    {
+        if (glow == GlowRule.UnderPointsToNextGrade)
+            return progress.PointsToNext < threshold ? 1 - progress.PointsToNext / (double)threshold : null;
+
+        var opensAt = progress.GradeWidth * (100L - threshold);
+        var reached = progress.PointsIntoGrade * 100L;
+        return reached >= opensAt ? (reached - opensAt) / (double)(progress.GradeWidth * (long)threshold) : null;
+    }
+
+    /// <summary>
+    ///     Brighter the closer: a faint halo where the window opens, stronger than the one glow at the
+    ///     line. Built from currentColor so it wears the score's own color, and written with invariant
+    ///     numbers — a comma decimal is not CSS, and the browser would drop the whole declaration.
+    /// </summary>
+    private static string CloserGlow(double closeness)
+    {
+        var strength = .15 + .85 * Math.Clamp(closeness, 0, 1);
+        return string.Create(CultureInfo.InvariantCulture,
+            $"text-shadow:0 0 {1.5 + 3.5 * strength:0.0}px color-mix(in srgb, currentColor {35 + 65 * strength:0}%, transparent),0 0 {3 + 15 * strength:0.0}px color-mix(in srgb, currentColor {10 + 75 * strength:0}%, transparent);");
     }
 
     /// <summary>The classic ladder's seven rungs at 10 / 25 / 50 / 75 / 90 / 99 %.</summary>
@@ -378,8 +428,13 @@ public static class ThemeScales
     }
 }
 
-/// <summary>What <see cref="ThemeScales.ScoreStyleFor" /> hands a surface: an inline color fragment (or none) and the glow class (or none).</summary>
-public readonly record struct ScoreStyle(string Style, string GlowClass)
+/// <summary>
+///     What <see cref="ThemeScales.ScoreStyleFor" /> hands a surface: an inline color fragment (or
+///     none), the glow class (or none), and the inline glow Brighter the closer draws (or none). The
+///     color and the glow stay apart so a surface can borrow the color alone, as the popover's
+///     headline does.
+/// </summary>
+public readonly record struct ScoreStyle(string Style, string GlowClass, string GlowStyle)
 {
-    public static ScoreStyle Plain { get; } = new(string.Empty, string.Empty);
+    public static ScoreStyle Plain { get; } = new(string.Empty, string.Empty, string.Empty);
 }

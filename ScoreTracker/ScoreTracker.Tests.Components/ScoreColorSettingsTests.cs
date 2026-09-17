@@ -50,6 +50,50 @@ public sealed class ScoreColorSettingsTests
         Assert.Equal(10, ScoreColorSettings.Clamp(GlowRule.TopPercent, null));
     }
 
+    [Theory]
+    [InlineData(GlowRule.UnderPointsToNextGrade, 2500, GlowStrength.BrighterTheCloser)]
+    [InlineData(GlowRule.LastPercentOfGrade, 100, GlowStrength.One)]
+    public void RoundTripsAGradeRuleWithItsStrength(GlowRule rule, int threshold, GlowStrength strength)
+    {
+        var original = new ScoreColorSettings(ScoreColorSystem.SingleHue, rule, threshold, strength);
+
+        Assert.Equal(original, ScoreColorSettings.Parse(original.Serialize()));
+    }
+
+    [Fact]
+    public void GradeRuleLimitsAndDefaults()
+    {
+        Assert.Equal(5000, ScoreColorSettings.Clamp(GlowRule.UnderPointsToNextGrade, 9000));
+        Assert.Equal(1000, ScoreColorSettings.Clamp(GlowRule.UnderPointsToNextGrade, null));
+        Assert.Equal(100, ScoreColorSettings.Clamp(GlowRule.LastPercentOfGrade, 150));
+        Assert.Equal(20, ScoreColorSettings.Clamp(GlowRule.LastPercentOfGrade, null));
+        Assert.Equal(1, ScoreColorSettings.Clamp(GlowRule.LastPercentOfGrade, 0));
+    }
+
+    /// <summary>
+    ///     A release from before the grade rules cannot parse the rule and falls back to Top 10%; a
+    ///     2,500 written where it looks for a threshold would have read as the top 50% of peers.
+    /// </summary>
+    [Fact]
+    public void AGradeRulesNumberIsWrittenWhereAnOlderReleaseDoesNotLookForIt()
+    {
+        var saved = new ScoreColorSettings(ScoreColorSystem.JudgementSpectrum, GlowRule.UnderPointsToNextGrade, 2500)
+            .Serialize();
+
+        Assert.Contains("near=2500", saved);
+        Assert.DoesNotContain("threshold=", saved);
+    }
+
+    [Fact]
+    public void ASaveWithoutAStrengthOrWithAnUnknownOneIsOneGlow()
+    {
+        Assert.Equal(GlowStrength.One,
+            ScoreColorSettings.Parse("v1,system=Podium,glow=TopPlaces,threshold=3").Strength);
+        var unknown = ScoreColorSettings.Parse("v1,glow=LastPercentOfGrade,near=30,strength=Sparkly");
+        Assert.Equal(GlowStrength.One, unknown.Strength);
+        Assert.Equal(30, unknown.GlowThreshold);
+    }
+
     [Fact]
     public void OnlyTheActualGradeAndNoneIgnoreTheStanding()
     {

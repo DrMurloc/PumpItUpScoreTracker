@@ -44,6 +44,8 @@ public sealed class GradeProgressTests
         Assert.Equal(PhoenixLetterGrade.SSSPlus, progress.Grade);
         Assert.Null(progress.NextGrade);
         Assert.Equal(580, progress.PointsToNext);
+        Assert.Equal(4420, progress.PointsIntoGrade);
+        Assert.Equal(5000, progress.GradeWidth);
         Assert.Equal(.884, progress.ShareThrough, 3);
         Assert.False(progress.IsPerfectGame);
     }
