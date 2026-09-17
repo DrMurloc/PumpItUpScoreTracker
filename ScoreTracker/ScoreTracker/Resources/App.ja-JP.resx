@@ -283,6 +283,9 @@
   <data name="1 chart" xml:space="preserve">
     <value>1譜面</value>
   </data>
+  <data name="1 chart the official rankings undercount" xml:space="preserve">
+    <value>公開ランキングで実際より少なく数えられている譜面 1</value>
+  </data>
   <data name="1 hour 45 minutes of real time." xml:space="preserve">
     <value>リアルタイムで1時間45分。</value>
   </data>
@@ -3678,6 +3681,9 @@
   <data name="held" xml:space="preserve">
     <value>維持</value>
   </data>
+  <data name="Held by more than shown" xml:space="preserve">
+    <value>表示より多く保有されている</value>
+  </data>
   <data name="held by nobody" xml:space="preserve">
     <value>誰も保持していない</value>
   </data>
@@ -4568,6 +4574,15 @@
   </data>
   <data name="Like {0}" xml:space="preserve">
     <value>{0} に似た譜面</value>
+  </data>
+  <data name="Likely held by more players than shown" xml:space="preserve">
+    <value>表示より多くのプレイヤーが保有している可能性が高い</value>
+  </data>
+  <data name="Likely more common than shown" xml:space="preserve">
+    <value>表示より保有者が多い可能性</value>
+  </data>
+  <data name="Likely more than shown" xml:space="preserve">
+    <value>表示より多い可能性</value>
   </data>
   <data name="Limbo" xml:space="preserve">
     <value>Limbo</value>
@@ -9584,6 +9599,9 @@
   <data name="This chart is on the right side of the video" xml:space="preserve">
     <value>この譜面は動画の右側にあります</value>
   </data>
+  <data name="This chart is popular or easy enough that its official top 300 only reaches down to {0} ({1}). From {2} up, players who hold it in their top 50 with a lower score can't be counted, so it's likely in more top 50s than this shows." xml:space="preserve">
+    <value>この譜面は人気がある、または簡単なため、公開ランキングのトップ300は{0}（{1}）までしか届きません。{2}以上では、それより低いスコアでトップ50に入れているプレイヤーを数えられないため、表示より多くのトップ50に入っている可能性が高いです。</value>
+  </data>
   <data name="This community doesn't give out Discord roles." xml:space="preserve">
     <value>このコミュニティは Discord ロールを付与しません。</value>
   </data>
@@ -11603,6 +11621,9 @@
   </data>
   <data name="{0} charts removed from songs that stayed" xml:space="preserve">
     <value>残った曲から削除された {0} 譜面</value>
+  </data>
+  <data name="{0} charts the official rankings undercount" xml:space="preserve">
+    <value>公開ランキングで実際より少なく数えられている譜面 {0}</value>
   </data>
   <data name="{0} charts were re-stepped." xml:space="preserve">
     <value>{0} 件の譜面が変更されました。</value>

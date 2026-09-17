@@ -283,6 +283,9 @@
   <data name="1 chart" xml:space="preserve">
     <value>1개 채보</value>
   </data>
+  <data name="1 chart the official rankings undercount" xml:space="preserve">
+    <value>공식 랭킹에서 실제보다 적게 집계되는 채보 1개</value>
+  </data>
   <data name="1 hour 45 minutes of real time." xml:space="preserve">
     <value>실제 시간으로 1시간 45분.</value>
   </data>
@@ -3661,6 +3664,9 @@
   <data name="held" xml:space="preserve">
     <value>유지</value>
   </data>
+  <data name="Held by more than shown" xml:space="preserve">
+    <value>보이는 것보다 많이 보유</value>
+  </data>
   <data name="held by nobody" xml:space="preserve">
     <value>아무도 보유하지 않음</value>
   </data>
@@ -4548,6 +4554,15 @@
   </data>
   <data name="Like {0}" xml:space="preserve">
     <value>{0} 같은 채보</value>
+  </data>
+  <data name="Likely held by more players than shown" xml:space="preserve">
+    <value>표시된 것보다 더 많은 플레이어가 보유했을 가능성이 높음</value>
+  </data>
+  <data name="Likely more common than shown" xml:space="preserve">
+    <value>보이는 것보다 흔할 가능성</value>
+  </data>
+  <data name="Likely more than shown" xml:space="preserve">
+    <value>표시보다 많을 가능성</value>
   </data>
   <data name="Limbo" xml:space="preserve">
     <value>Limbo</value>
@@ -9526,6 +9541,9 @@
   <data name="This chart is on the right side of the video" xml:space="preserve">
     <value>이 채보는 영상의 오른쪽에 있습니다</value>
   </data>
+  <data name="This chart is popular or easy enough that its official top 300 only reaches down to {0} ({1}). From {2} up, players who hold it in their top 50 with a lower score can't be counted, so it's likely in more top 50s than this shows." xml:space="preserve">
+    <value>이 채보는 인기가 많거나 쉬워서 공식 랭킹 상위 300이 {0}({1})까지만 내려갑니다. {2} 이상에서는 그보다 낮은 점수로 상위 50에 넣은 플레이어를 집계할 수 없으므로, 표시보다 더 많은 상위 50에 들어 있을 가능성이 높습니다.</value>
+  </data>
   <data name="This community doesn't give out Discord roles." xml:space="preserve">
     <value>이 커뮤니티는 Discord 역할을 부여하지 않습니다.</value>
   </data>
@@ -11535,6 +11553,9 @@
   </data>
   <data name="{0} charts removed from songs that stayed" xml:space="preserve">
     <value>남아 있는 노래에서 삭제된 채보 {0}개</value>
+  </data>
+  <data name="{0} charts the official rankings undercount" xml:space="preserve">
+    <value>공식 랭킹에서 실제보다 적게 집계되는 채보 {0}개</value>
   </data>
   <data name="{0} charts were re-stepped." xml:space="preserve">
     <value>채보 {0}개가 변경되었습니다.</value>

@@ -283,6 +283,9 @@
   <data name="1 chart" xml:space="preserve">
     <value>1 chart</value>
   </data>
+  <data name="1 chart the official rankings undercount" xml:space="preserve">
+    <value>1 chart the official rankings undercount</value>
+  </data>
   <data name="1 hour 45 minutes of real time." xml:space="preserve">
     <value>1 hour 45 minutes of real time.</value>
   </data>
@@ -3678,6 +3681,9 @@
   <data name="held" xml:space="preserve">
     <value>held</value>
   </data>
+  <data name="Held by more than shown" xml:space="preserve">
+    <value>Held by more than shown</value>
+  </data>
   <data name="held by nobody" xml:space="preserve">
     <value>held by nobody</value>
   </data>
@@ -4568,6 +4574,15 @@
   </data>
   <data name="Like {0}" xml:space="preserve">
     <value>Like {0}</value>
+  </data>
+  <data name="Likely held by more players than shown" xml:space="preserve">
+    <value>Likely held by more players than shown</value>
+  </data>
+  <data name="Likely more common than shown" xml:space="preserve">
+    <value>Likely more common than shown</value>
+  </data>
+  <data name="Likely more than shown" xml:space="preserve">
+    <value>Likely more than shown</value>
   </data>
   <data name="Limbo" xml:space="preserve">
     <value>Limbo</value>
@@ -9584,6 +9599,9 @@
   <data name="This chart is on the right side of the video" xml:space="preserve">
     <value>This chart is on the right side of the video</value>
   </data>
+  <data name="This chart is popular or easy enough that its official top 300 only reaches down to {0} ({1}). From {2} up, players who hold it in their top 50 with a lower score can't be counted, so it's likely in more top 50s than this shows." xml:space="preserve">
+    <value>This chart is popular or easy enough that its official top 300 only reaches down to {0} ({1}). From {2} up, players who hold it in their top 50 with a lower score can't be counted, so it's likely in more top 50s than this shows.</value>
+  </data>
   <data name="This community doesn't give out Discord roles." xml:space="preserve">
     <value>This community doesn't give out Discord roles.</value>
   </data>
@@ -11603,6 +11621,9 @@
   </data>
   <data name="{0} charts removed from songs that stayed" xml:space="preserve">
     <value>{0} charts removed from songs that stayed</value>
+  </data>
+  <data name="{0} charts the official rankings undercount" xml:space="preserve">
+    <value>{0} charts the official rankings undercount</value>
   </data>
   <data name="{0} charts were re-stepped." xml:space="preserve">
     <value>{0} charts were re-stepped.</value>

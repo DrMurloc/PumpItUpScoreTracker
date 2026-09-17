@@ -283,6 +283,9 @@
   <data name="1 chart" xml:space="preserve">
     <value>1 chart</value>
   </data>
+  <data name="1 chart the official rankings undercount" xml:space="preserve">
+    <value>1 chart que les classements officiels sous-estiment</value>
+  </data>
   <data name="1 hour 45 minutes of real time." xml:space="preserve">
     <value>1 heure 45 minutes de temps réel.</value>
   </data>
@@ -3677,6 +3680,9 @@
   <data name="held" xml:space="preserve">
     <value>maintenu</value>
   </data>
+  <data name="Held by more than shown" xml:space="preserve">
+    <value>Plus présents qu'il n'y paraît</value>
+  </data>
   <data name="held by nobody" xml:space="preserve">
     <value>personne ne l’a</value>
   </data>
@@ -4567,6 +4573,15 @@
   </data>
   <data name="Like {0}" xml:space="preserve">
     <value>Comme {0}</value>
+  </data>
+  <data name="Likely held by more players than shown" xml:space="preserve">
+    <value>Sans doute plus de joueurs l'ont qu'il n'y paraît</value>
+  </data>
+  <data name="Likely more common than shown" xml:space="preserve">
+    <value>Sans doute plus courant qu'il n'y paraît</value>
+  </data>
+  <data name="Likely more than shown" xml:space="preserve">
+    <value>Sans doute plus qu'affiché</value>
   </data>
   <data name="Limbo" xml:space="preserve">
     <value>Limbo</value>
@@ -9583,6 +9598,9 @@
   <data name="This chart is on the right side of the video" xml:space="preserve">
     <value>Ce chart est sur le côté droit de la vidéo</value>
   </data>
+  <data name="This chart is popular or easy enough that its official top 300 only reaches down to {0} ({1}). From {2} up, players who hold it in their top 50 with a lower score can't be counted, so it's likely in more top 50s than this shows." xml:space="preserve">
+    <value>Ce chart est assez populaire ou facile pour que son top 300 officiel ne descende que jusqu'à {0} ({1}). À partir de {2}, les joueurs qui l'ont dans leur top 50 avec un score plus bas ne peuvent pas être comptés, il est donc sans doute dans plus de top 50 qu'il n'y paraît.</value>
+  </data>
   <data name="This community doesn't give out Discord roles." xml:space="preserve">
     <value>Cette communauté n'attribue pas de rôles Discord.</value>
   </data>
@@ -11602,6 +11620,9 @@
   </data>
   <data name="{0} charts removed from songs that stayed" xml:space="preserve">
     <value>{0} charts retirés de chansons restées</value>
+  </data>
+  <data name="{0} charts the official rankings undercount" xml:space="preserve">
+    <value>{0} charts que les classements officiels sous-estiment</value>
   </data>
   <data name="{0} charts were re-stepped." xml:space="preserve">
     <value>{0} charts ont été re-chorégraphiés.</value>

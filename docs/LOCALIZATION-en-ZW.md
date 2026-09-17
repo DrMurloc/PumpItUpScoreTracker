@@ -835,3 +835,21 @@ re-coined: `mrgloru` (hold), `gropmur` (in), `ropgl 50` (top 50), `grglblarg` (t
 | spot (a place in a top 50) | mroglub | `mrogl` (sits) + `ub`: the place a chart sits. |
 | centered | mogrglgro | `mogrgl` (middle) + `gro`, the participle ending `brolgro` (frozen) uses. |
 | loosely | blorpgl | Coined. |
+
+## The popular-chart note (2026-09-17)
+
+Coined for the presence graph's note on a chart whose official ranking is crowded, its dashed marks and
+legend key, and the Play page's *Held by more than shown* section
+([chart-presence-graph.md](design/chart-presence-graph.md) §8). Reused, not re-coined: `murgab` (likely),
+`blgrlargl` (shown), `romorg` (shows), `mrrgl` (more), `grogrgl` (than), `mrgloru` (hold), `bu` (by), `morp`
+(players), `murpo` (who), `murgl` (chart), `urgmrmurg` (official), `Maglmrpplgl` (rankings), `ropgl` (top),
+`ub` (only), `murgro` (reaches), `blogro` (down), `ro` (to), `Blarg` (from), `ur gro` (and up, from *{0} and
+up*), `gropmur` (in), `grglblarg` (their), `mag` (with), `glubgro` (lower), `mrglrgl` (score), `bo gab bru`
+(can't be), `op` (so), `ug arg` (it's), `blu` (this), `arg` (is), `ol` (or), `Mrgl` (easy), `blurg` (enough) and
+`argo` (that).
+
+| English | en-ZW | Notes |
+|---|---|---|
+| popular / common (widely held) | grolurgmrp | The existing *Popular*, reused for *more common*: a chart held in more top 50s is a more popular one. |
+| undercount | glubgrorp | `glub` (under) + `grorp` (count). |
+| counted | grorpgro | `grorp` + `gro`, the participle ending `mogrglgro` (centered) uses. |

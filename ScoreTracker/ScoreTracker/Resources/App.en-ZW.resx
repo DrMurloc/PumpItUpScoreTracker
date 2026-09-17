@@ -283,6 +283,9 @@
   <data name="1 chart" xml:space="preserve">
     <value>1 murgl</value>
   </data>
+  <data name="1 chart the official rankings undercount" xml:space="preserve">
+    <value>1 murgl a urgmrmurg maglmrpplgl glubgrorp</value>
+  </data>
   <data name="1 hour 45 minutes of real time." xml:space="preserve">
     <value>1 grogl 45 rglrglgrorp mrgl ogro grglmrgl.</value>
   </data>
@@ -3678,6 +3681,9 @@
   <data name="held" xml:space="preserve">
     <value>glorgblgrl</value>
   </data>
+  <data name="Held by more than shown" xml:space="preserve">
+    <value>Mrgloru bu mrrgl grogrgl blgrlargl</value>
+  </data>
   <data name="held by nobody" xml:space="preserve">
     <value>grogro bu bomorp</value>
   </data>
@@ -4568,6 +4574,15 @@
   </data>
   <data name="Like {0}" xml:space="preserve">
     <value>Plglro {0}</value>
+  </data>
+  <data name="Likely held by more players than shown" xml:space="preserve">
+    <value>Murgab mrgloru bu mrrgl morp grogrgl blgrlargl</value>
+  </data>
+  <data name="Likely more common than shown" xml:space="preserve">
+    <value>Murgab mrrgl grolurgmrp grogrgl blgrlargl</value>
+  </data>
+  <data name="Likely more than shown" xml:space="preserve">
+    <value>Murgab mrrgl grogrgl blgrlargl</value>
   </data>
   <data name="Limbo" xml:space="preserve">
     <value>Plglmurm</value>
@@ -9584,6 +9599,9 @@
   <data name="This chart is on the right side of the video" xml:space="preserve">
     <value>Grglmrp murgl lu ur a rulurg blgrlgro ub a grrrgl</value>
   </data>
+  <data name="This chart is popular or easy enough that its official top 300 only reaches down to {0} ({1}). From {2} up, players who hold it in their top 50 with a lower score can't be counted, so it's likely in more top 50s than this shows." xml:space="preserve">
+    <value>Blu murgl arg grolurgmrp ol mrgl blurg argo ug urgmrmurg ropgl 300 ub murgro blogro ro {0} ({1}). Blarg {2} ur gro, morp murpo mrgloru ug gropmur grglblarg ropgl 50 mag a glubgro mrglrgl bo gab bru grorpgro, op ug arg murgab gropmur mrrgl ropgl 50 grogrgl blu romorg.</value>
+  </data>
   <data name="This community doesn't give out Discord roles." xml:space="preserve">
     <value>Blu plglmurgblub bo grabmurp Discord roglubrgl.</value>
   </data>
@@ -11603,6 +11621,9 @@
   </data>
   <data name="{0} charts removed from songs that stayed" xml:space="preserve">
     <value>{0} murgl grorpmorglurg romurg mrgl blubgrrgl grorpgrgl</value>
+  </data>
+  <data name="{0} charts the official rankings undercount" xml:space="preserve">
+    <value>{0} murgl a urgmrmurg maglmrpplgl glubgrorp</value>
   </data>
   <data name="{0} charts were re-stepped." xml:space="preserve">
     <value>{0} murgl glmagl gl-plglmorgplgl.</value>
