@@ -116,7 +116,21 @@ internal sealed class ChartPresenceSaga :
             spot = await SpotInOwnFifty(request.Mix, viewer, request.ChartId, cancellationToken);
         }
 
-        return ChartPresenceReading.Read(columns.Rows, rows, computedAt, pumbility, spot);
+        return ChartPresenceReading.Read(columns.Rows, rows, computedAt, pumbility, spot,
+            await CrowdingOf(request.Mix, request.ChartId, cancellationToken));
+    }
+
+    /// <summary>
+    ///     The chart's official ranking in the latest sweep when it is crowded enough to hide the players who
+    ///     hold the chart (docs/design/chart-presence-graph.md §8), or null.
+    /// </summary>
+    private async Task<PumbilityPresenceCrowding?> CrowdingOf(MixEnum mix, Guid chartId,
+        CancellationToken cancellationToken)
+    {
+        var rankings = await _official.GetChartRankings(mix, cancellationToken);
+        if (!rankings.TryGetValue(chartId, out var ranking)) return null;
+        var chart = await _charts.GetChart(mix, chartId, cancellationToken);
+        return CrowdedRanking.HidesHolders(chart, ranking) ? new PumbilityPresenceCrowding(ranking.LowestScore) : null;
     }
 
     /// <summary>

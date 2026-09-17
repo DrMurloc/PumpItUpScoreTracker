@@ -7,8 +7,8 @@ namespace ScoreTracker.ChartIntelligence.Domain;
 
 /// <summary>
 ///     Reads one chart's census rows into what the graph draws (docs/design/chart-presence-graph.md
-///     §1, §5): each title's share and spots, the title most of its players hold it on, how it rates
-///     against its folder, and where the viewer stands.
+///     §1, §5, §8): each title's share and spots, the title most of its players hold it on, how it rates
+///     against its folder, where the viewer stands, and which titles a crowded ranking undercounts.
 /// </summary>
 internal static class ChartPresenceReading
 {
@@ -21,9 +21,10 @@ internal static class ChartPresenceReading
     /// <summary>Spots the rest of the folder must take on a title before its shadow draws.</summary>
     public const int FolderSpotsToDraw = ChartPresenceCensus.HoldersForABox;
 
+    /// <param name="crowding">The chart's official ranking when it is crowded, or null.</param>
     public static ChartPumbilityPresenceRecord? Read(IReadOnlyList<ChartPresenceColumnRow> columns,
         IReadOnlyList<ChartPresenceRow> rows, DateTimeOffset computedAt, double? viewerPumbility,
-        double? viewerSpot)
+        double? viewerSpot, PumbilityPresenceCrowding? crowding = null)
     {
         if (rows.Count == 0) return null;
 
@@ -41,7 +42,9 @@ internal static class ChartPresenceReading
             byColumn.TryGetValue(column.Order, out var row);
             return new PumbilityPresenceColumn(column.Band, band?.Gem ?? column.Band, band?.Level, players,
                 row?.Holders ?? 0, row?.Spots, row?.Dots ?? Array.Empty<double>(),
-                row is { FolderSpots: >= FolderSpotsToDraw } ? row.Folder : null, Rate(players, row));
+                row is { FolderSpots: >= FolderSpotsToDraw } ? row.Folder : null, Rate(players, row),
+                // Only official-ranking players can go unseen, and they are whoever a title counts past its accounts.
+                crowding != null && players > column.SitePlayers);
         }).ToArray();
 
         PumbilityPresenceViewer? viewer = null;
@@ -51,7 +54,8 @@ internal static class ChartPresenceReading
             if (column >= 0) viewer = new PumbilityPresenceViewer(column, viewerSpot);
         }
 
-        return new ChartPumbilityPresenceRecord(presence, MostHeld(presence), Runs(presence), viewer, computedAt);
+        return new ChartPumbilityPresenceRecord(presence, MostHeld(presence), Runs(presence), viewer, computedAt,
+            crowding);
     }
 
     private static PumbilityPresenceRating? Rate(int players, ChartPresenceRow? row)

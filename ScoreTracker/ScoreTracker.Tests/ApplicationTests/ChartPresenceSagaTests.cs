@@ -114,6 +114,32 @@ public sealed class ChartPresenceSagaTests
     }
 
     [Fact]
+    public async Task TheReadCarriesTheChartsOfficialRankingOnlyWhenItIsCrowded()
+    {
+        // Two S22s whose rankings end on the same score, over the S22 bar of 970,000: one full, one with places left.
+        var full = Chart(22);
+        var roomy = Chart(22);
+        Census(full.Id);
+        Census(roomy.Id);
+        _official.Setup(o => o.GetChartRankings(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, OfficialChartRanking>
+            {
+                [full.Id] = new(300, 982_882),
+                [roomy.Id] = new(155, 982_882)
+            });
+        _charts.Setup(c => c.GetChart(MixEnum.Phoenix2, full.Id, It.IsAny<CancellationToken>())).ReturnsAsync(full);
+        _charts.Setup(c => c.GetChart(MixEnum.Phoenix2, roomy.Id, It.IsAny<CancellationToken>())).ReturnsAsync(roomy);
+
+        var crowded = await Saga().Handle(new GetChartPumbilityPresenceQuery(full.Id, MixEnum.Phoenix2, null),
+            CancellationToken.None);
+        var uncrowded = await Saga().Handle(new GetChartPumbilityPresenceQuery(roomy.Id, MixEnum.Phoenix2, null),
+            CancellationToken.None);
+
+        Assert.Equal(new PumbilityPresenceCrowding(982_882), crowded!.Crowding);
+        Assert.Null(uncrowded!.Crowding);
+    }
+
+    [Fact]
     public async Task TheReadAnswersNothingBeforeTheFirstCensus()
     {
         _repository.Setup(r => r.GetColumns(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
@@ -161,9 +187,11 @@ public sealed class ChartPresenceSagaTests
             .ReturnsAsync(Array.Empty<BoardScoreReading>());
     }
 
-    /// <summary>A census of one BRONZE column holding the chart.</summary>
+    /// <summary>A census of one BRONZE column holding the chart, on a mix whose rankings crowd nothing.</summary>
     private void Census(Guid chartId)
     {
+        _official.Setup(o => o.GetChartRankings(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, OfficialChartRanking>());
         _repository.Setup(r => r.GetColumns(MixEnum.Phoenix2, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ChartPresenceColumns(
                 new[] { new ChartPresenceColumnRow(true, 0, Name.From("[P.B] BRONZE"), 30, 30) }, At));

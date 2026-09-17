@@ -55,6 +55,22 @@ public sealed class ChartPresenceReadingTests
     }
 
     [Fact]
+    public void ACrowdedRankingUndercountsOnlyTheTitlesThatCountRankingPlayers()
+    {
+        // PLATINUM is PIU Scores accounts alone; DIAMOND LV.1 counts 155 ranking players beside its 45 accounts.
+        var columns = new[] { Column(0, "[P.B] PLATINUM", 59), Column(1, "[P.B] DIAMOND LV.1", 200, 45) };
+        var crowding = new PumbilityPresenceCrowding(990_893);
+
+        var crowded = ChartPresenceReading.Read(columns, new[] { Row(0, 5), Row(1, 60) }, At, null, null, crowding)!;
+        var uncrowded = Read(columns, Row(0, 5), Row(1, 60));
+
+        Assert.Equal(crowding, crowded.Crowding);
+        Assert.Equal(new[] { false, true }, crowded.Columns.Select(c => c.Undercounted));
+        Assert.Null(uncrowded.Crowding);
+        Assert.All(uncrowded.Columns, c => Assert.False(c.Undercounted));
+    }
+
+    [Fact]
     public void TheMostHeldTitleIsTheHighestShareAmongTitlesWithEnoughPlayers()
     {
         var columns = new[]

@@ -17,13 +17,22 @@ namespace ScoreTracker.ChartIntelligence.Contracts;
 ///     The folder comparison per gem, in ladder order: each gem takes the rating most of its
 ///     holders sit under, and neighbouring gems that agree share one run.
 /// </param>
+/// <param name="Crowding">
+///     The chart's official ranking when it is full to a score high enough to hide players who hold the
+///     chart (docs/design/chart-presence-graph.md §8), and null for every other chart.
+/// </param>
 [ExcludeFromCodeCoverage]
 public sealed record ChartPumbilityPresenceRecord(
     IReadOnlyList<PumbilityPresenceColumn> Columns,
     int? MostHeld,
     IReadOnlyList<PumbilityPresenceRun> Ratings,
     PumbilityPresenceViewer? Viewer,
-    DateTimeOffset ComputedAt);
+    DateTimeOffset ComputedAt,
+    PumbilityPresenceCrowding? Crowding = null);
+
+/// <summary>A crowded official ranking: the lowest score on it, which is what it takes to be seen holding the chart.</summary>
+[ExcludeFromCodeCoverage]
+public sealed record PumbilityPresenceCrowding(int LowestScore);
 
 /// <summary>
 ///     One title's column: a gem, or one of its levels once the gem is opened.
@@ -36,6 +45,10 @@ public sealed record ChartPumbilityPresenceRecord(
 /// <param name="Dots">Each holder's spot, when there are too few holders for a box; empty otherwise.</param>
 /// <param name="Folder">Where the rest of the chart's folder sits on this title, when there is enough of it to draw.</param>
 /// <param name="Rating">How the chart rates against the rest of its folder here, or null without enough to say.</param>
+/// <param name="Undercounted">
+///     True when the chart's ranking is crowded and this title counts official-ranking players, so some of
+///     its holders can be missing from the count.
+/// </param>
 [ExcludeFromCodeCoverage]
 public sealed record PumbilityPresenceColumn(
     Name Band,
@@ -46,7 +59,8 @@ public sealed record PumbilityPresenceColumn(
     PumbilitySpots? Spots,
     IReadOnlyList<double> Dots,
     PumbilitySpotBox? Folder,
-    PumbilityPresenceRating? Rating)
+    PumbilityPresenceRating? Rating,
+    bool Undercounted = false)
 {
     /// <summary>The share of the title's players holding the chart in their top 50.</summary>
     public double Share => Players == 0 ? 0 : (double)Holders / Players;
