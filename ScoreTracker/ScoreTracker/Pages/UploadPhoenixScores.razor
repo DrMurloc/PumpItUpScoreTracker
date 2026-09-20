@@ -482,6 +482,7 @@
         _scores.Clear();
         _importCompleted = false;
         _importStatus = L["Starting Import..."].Value;
+        await RememberSelectedCard();
         var result = await Mediator.Send(new StartOfficialImportCommand(
             new StoredCredentialSource(blob.KeyId, blob.Ciphertext), _currentMix, _selectedId, _selectedGameTag,
             _includeBroken));
@@ -544,8 +545,15 @@
         {
             // Signs in as a side effect of listing the cards, so a bad password is caught here —
             // and the card picker fills in, which the player needed anyway.
-            _cards = await Mediator.Send(new GetGameCardsQuery(_username, _password, _currentMix));
-            if (_cards.Any() && string.IsNullOrWhiteSpace(_selectedId)) await SelectId(_cards.First().Id);
+            _cards = (await Mediator.Send(new GetGameCardsQuery(_username, _password, _currentMix))).ToArray();
+            if (_cards.Any() && string.IsNullOrWhiteSpace(_selectedId))
+            {
+                // The active card, matching what an import that names no card reads. Kept on the
+                // account here because from now on Import takes the saved-password path, which
+                // never lists the cards again.
+                await SelectId((_cards.FirstOrDefault(c => c.IsActive) ?? _cards.First()).Id);
+                await RememberSelectedCard();
+            }
 
             var stored = await Mediator.Send(new StoreImportCredentialCommand(_username, _password));
             await ClientStore.Write(new StoredCredentialBlob(stored.KeyId, stored.Ciphertext, 0));
@@ -576,6 +584,15 @@
         _selectedGameTag = _cards.First(c => c.Id == id).GameTag;
         _selectedId = id;
         await CheckMergeInvite();
+    }
+
+    // The widget, the Score check and the next visit to this page all read the card from the
+    // account, so every path that imports with a card writes it back first.
+    private async Task RememberSelectedCard()
+    {
+        if (string.IsNullOrWhiteSpace(_selectedId)) return;
+        await UiSettings.SetSetting("PhoenixScoreUpload__LastGameId", _selectedId);
+        await UiSettings.SetSetting("PhoenixScoreUpload__LastGameTag", _selectedGameTag);
     }
 
     private Guid? _mergeInviteUserId;
@@ -654,8 +671,7 @@
                 _selectedGameTag = _cards.First().GameTag;
                 await CheckMergeInvite();
             }
-            await UiSettings.SetSetting($"PhoenixScoreUpload__LastGameId", _selectedId);
-            await UiSettings.SetSetting($"PhoenixScoreUpload__LastGameTag", _selectedGameTag);
+            await RememberSelectedCard();
 
             _scores.Clear();
             _importCompleted = false;

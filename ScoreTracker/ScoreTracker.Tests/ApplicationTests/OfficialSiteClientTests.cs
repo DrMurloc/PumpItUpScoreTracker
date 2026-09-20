@@ -392,6 +392,71 @@ public sealed class OfficialSiteClientTests
     private static readonly Guid ImportUserId = Guid.NewGuid();
     private static readonly DateTimeOffset T0 = new(2026, 7, 17, 23, 0, 0, TimeSpan.FromHours(9));
 
+    // ───────────────────────────────────────────────────────────────────────────
+    // Which game card a run reads. The harness's account holds one card, "card1", and it is
+    // the active one.
+
+    [Fact]
+    public async Task AScrapeThatNamesAnotherCardSwitchesToItFirst()
+    {
+        var h = new ImportHarness();
+        h.GivenBestScorePage(1);
+
+        await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card2",
+            includeBroken: false, maxPages: null, CancellationToken.None);
+
+        h.Api.Verify(a => a.SetCard(MixEnum.Phoenix2, h.Session, "card2", It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public async Task AScrapeThatNamesNoCardReadsTheActiveOneAndSwitchesNothing(string? cardId)
+    {
+        // The widget, a saved password and the Score check send a blank card for an account that
+        // has never picked one. Posting that blank to the site's card switch is never right.
+        var h = new ImportHarness();
+        var chart = h.GivenChart(new ChartBuilder().WithSongName("Only").WithNoteCount(100).Build());
+        var card = Card(chart, 950000, T0);
+        h.GivenBestScorePage(1, card);
+        h.GivenBestScorePage(2, card);
+
+        var results = (await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", cardId,
+            includeBroken: false, maxPages: null, CancellationToken.None)).Bests.ToArray();
+
+        Assert.Single(results);
+        h.Api.Verify(a => a.SetCard(It.IsAny<MixEnum>(), It.IsAny<HttpClient>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AccountDataForANamedCardSwitchesToItFirst()
+    {
+        var h = new ImportHarness();
+
+        await h.Client.GetAccountData(MixEnum.Phoenix2, "sid", "card2", CancellationToken.None);
+
+        h.Api.Verify(a => a.SetCard(MixEnum.Phoenix2, h.Session, "card2", It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public async Task AccountDataThatNamesNoCardReadsTheActiveOneAndSwitchesNothing(string? cardId)
+    {
+        var h = new ImportHarness();
+
+        var data = await h.Client.GetAccountData(MixEnum.Phoenix2, "sid", cardId, CancellationToken.None);
+
+        Assert.Equal("TAG", data.AccountName.ToString());
+        h.Api.Verify(a => a.SetCard(It.IsAny<MixEnum>(), It.IsAny<HttpClient>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     [Fact]
     public async Task DatedWalkPagesPastAlreadyHeldChartsToReachABuriedUpscore()
     {

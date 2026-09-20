@@ -59,12 +59,20 @@ internal interface IOfficialSiteClient
     ///     (redesigned) walk ignores it and instead stops on its up-score window. Returns the
     ///     best-list scrape AND the recently-played window it read alongside it, which the
     ///     caller journals as observations.
+    ///     <para>
+    ///         <paramref name="id" /> is the game card to read. Null or blank reads whichever card
+    ///         is active on the account and switches nothing.
+    ///     </para>
     /// </summary>
-    Task<ScrapedScores> GetRecordedScores(MixEnum mix, Guid userId, string sid, string id,
+    Task<ScrapedScores> GetRecordedScores(MixEnum mix, Guid userId, string sid, string? id,
         bool includeBroken,
         int? maxPages,
         CancellationToken cancellationToken);
 
+    /// <summary>
+    ///     <paramref name="id" /> is the game card to read. Null or blank reads whichever card is
+    ///     active on the account and switches nothing.
+    /// </summary>
     Task<PiuGameAccountDataImport>
         GetAccountData(MixEnum mix, string sid, string? id, CancellationToken cancellationToken);
 

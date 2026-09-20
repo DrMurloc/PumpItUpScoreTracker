@@ -177,4 +177,23 @@ public sealed class BeginScoreSessionHandlerTests
         sessions.Verify(s => s.Open(id, userId, MixEnum.Phoenix, ScoreJournalEntry.OfficialImportSource,
             "SHIRONEKO", "2", Now, It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Theory]
+    [InlineData("", "")]
+    [InlineData("  ", "  ")]
+    [InlineData(null, null)]
+    public async Task ARunThatNamedNoCardOpensASessionWithNoTag(string? tag, string? cardId)
+    {
+        // The sessions page prints "imported from {tag}" whenever a tag is present, so a blank
+        // one has to be stored as absent rather than as an empty string.
+        var sessions = new Mock<IScoreSessionRepository>();
+        var handler = new BeginScoreSessionHandler(sessions.Object, FakeDateTime.At(Now).Object);
+        var userId = Guid.NewGuid();
+
+        var id = await handler.Handle(new BeginScoreSessionCommand(userId, MixEnum.Phoenix2,
+            ScoreJournalEntry.OfficialImportSource, tag, cardId), CancellationToken.None);
+
+        sessions.Verify(s => s.Open(id, userId, MixEnum.Phoenix2, ScoreJournalEntry.OfficialImportSource,
+            null, null, Now, It.IsAny<CancellationToken>()), Times.Once);
+    }
 }

@@ -71,7 +71,9 @@ Unlock fails (`CredentialUnlockException`) → the widget shows the typed-entry 
 ### C. Typed one-time import (widget with no stored credential; Upload page unchecked)
 `StartOfficialImportCommand(Typed(username, password), mix, …)` → OfficialMirror handler → `SignIn` → `sid` → publish `RunOfficialImportCommand`. Nothing stored.
 
-**Card/gametag step.** Skip-gametag ON → reuse the stored `PhoenixScoreUpload__LastGameId` (UiSettings), no card fetch. OFF or no stored card → after `SignIn`, fetch `IOfficialSiteClient.GetGameCards(mix, sid)` on the circuit, show the picker, then publish with the chosen `cardId`.
+**Card/gametag step.** The widget, the Upload page's saved-password Import and the Score check all send the card the account last imported with — `PhoenixScoreUpload__LastGameId` / `PhoenixScoreUpload__LastGameTag` (UiSettings) — and none of them fetches the card list. An account with neither setting sends blanks, and **a run that names no card reads whichever card is active on the account**: `IOfficialSiteClient.GetAccountData` and `GetRecordedScores` post a card switch only for a named card, so nothing is switched and piugame serves the active profile. The session such a run opens records no tag (`BeginScoreSessionCommand` stores a blank as absent), which is what keeps the sessions page from printing an empty "imported from".
+
+The two settings are written by the Upload page alone, by every path there that imports with a card in hand: the typed Import, the saved-password Import, and "Remember my password" — which picks the account's active card when none is chosen yet, because from that press onwards Import takes the saved-password path and never lists the cards again. The widget never writes them, so an account that has only ever imported from the widget keeps following its active card.
 
 **Where the sid mint happens:** on the circuit (fast; ~1 network call), so `InvalidCredentialException` surfaces inline exactly like today. Only the multi-minute scrape is backgrounded.
 

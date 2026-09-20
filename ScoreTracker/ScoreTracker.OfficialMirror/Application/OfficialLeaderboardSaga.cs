@@ -122,9 +122,6 @@ namespace ScoreTracker.OfficialMirror.Application
 
             var accountData =
                 await _officialSite.GetAccountData(mix, sid, cardId, cancellationToken);
-            if (accountData.AccountName != expectedGameTag)
-            {
-            }
 
             // A signed-in session that can't resolve to a game account (wrong card, no profile
             // yet) is terminal — surface it as an error and stop rather than scraping nothing
