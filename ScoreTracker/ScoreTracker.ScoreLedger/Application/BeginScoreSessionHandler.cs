@@ -11,8 +11,15 @@ internal sealed class BeginScoreSessionHandler(IScoreSessionRepository sessions,
     public async Task<Guid> Handle(BeginScoreSessionCommand request, CancellationToken cancellationToken)
     {
         var id = Guid.NewGuid();
-        await sessions.Open(id, request.UserId, request.Mix, request.Source, request.AccountTag, request.CardId,
-            dateTime.Now, cancellationToken);
+        // A run that named no card sends blanks. Stored as absent, so the session reads as having
+        // no tag rather than an empty one.
+        await sessions.Open(id, request.UserId, request.Mix, request.Source, BlankAsAbsent(request.AccountTag),
+            BlankAsAbsent(request.CardId), dateTime.Now, cancellationToken);
         return id;
+    }
+
+    private static string? BlankAsAbsent(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value;
     }
 }

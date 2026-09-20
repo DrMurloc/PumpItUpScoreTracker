@@ -448,7 +448,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     }
 
     public async Task<ScrapedScores> GetRecordedScores(MixEnum mix, Guid userId,
-        string sid, string id,
+        string sid, string? id,
         bool includeBroken,
         int? maxPages, CancellationToken cancellationToken)
     {
@@ -459,7 +459,9 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
 
         var gameCards = await _piuGame.GetCards(mix, sessionId, cancellationToken);
         var activeCard = gameCards.FirstOrDefault(c => c.IsActive);
-        if (activeCard != null && activeCard.Id != id) await _piuGame.SetCard(mix, sessionId, id, cancellationToken);
+        // A run that named no card reads the active one as it stands.
+        if (!string.IsNullOrWhiteSpace(id) && activeCard != null && activeCard.Id != id)
+            await _piuGame.SetCard(mix, sessionId, id, cancellationToken);
 
         var accountInfo = await _piuGame.GetAccountData(mix, sessionId, cancellationToken);
 
@@ -919,7 +921,8 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     {
         var client = _piuGame.ClientForSid(mix, sid);
 
-        if (id != null) await _piuGame.SetCard(mix, client, id, cancellationToken);
+        // A run that named no card reads the active one as it stands.
+        if (!string.IsNullOrWhiteSpace(id)) await _piuGame.SetCard(mix, client, id, cancellationToken);
 
         var importedData = await _piuGame.GetAccountData(mix, client, cancellationToken);
         ThrowIfAccountInvalid(importedData);

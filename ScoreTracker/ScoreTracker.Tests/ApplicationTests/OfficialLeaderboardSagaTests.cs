@@ -83,7 +83,8 @@ public sealed class OfficialLeaderboardSagaTests
         string accountName = "NEWTAG",
         int maxPages = 5,
         Dictionary<string, string>? uiSettings = null,
-        MixEnum mix = MixEnum.Phoenix)
+        MixEnum mix = MixEnum.Phoenix,
+        string cardId = "card1")
     {
         var existingUser = new User(ImportUserId, Name.From("OldName"), true, Name.From("OLDTAG"),
             new Uri("https://example.invalid/old-avatar.png"), Name.From("Canada"));
@@ -97,12 +98,12 @@ public sealed class OfficialLeaderboardSagaTests
         var site = new Mock<IOfficialSiteClient>();
         site.Setup(s => s.SignIn(mix, "user", "pass", It.IsAny<CancellationToken>()))
             .ReturnsAsync("sid123");
-        site.Setup(s => s.GetAccountData(mix, It.IsAny<string>(), "card1", It.IsAny<CancellationToken>()))
+        site.Setup(s => s.GetAccountData(mix, It.IsAny<string>(), cardId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PiuGameAccountDataImport(NewAvatar, Name.From(accountName),
                 new[] { Name.From("Title A"), Name.From("Title B") }, "sid123"));
         site.Setup(s => s.GetScorePageCount(mix, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(maxPages);
-        site.Setup(s => s.GetRecordedScores(mix, ImportUserId, It.IsAny<string>(), "card1", It.IsAny<bool>(),
+        site.Setup(s => s.GetRecordedScores(mix, ImportUserId, It.IsAny<string>(), cardId, It.IsAny<bool>(),
                 It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ScrapedScores((officialScores ?? Array.Empty<OfficialRecordedScore>()).ToArray(),
                 Array.Empty<RecordObservedPlaysCommand.ObservedPlay>()));
@@ -237,6 +238,30 @@ public sealed class OfficialLeaderboardSagaTests
         await saga.Handle(ImportCommand(mix: MixEnum.Phoenix2), CancellationToken.None);
 
         identity.Verify(i => i.LinkPlayer(MixEnum.Phoenix2, "NEWTAG", ImportUserId,
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnImportThatNamesNoCardOrTagStillSavesWhatTheAccountHolds()
+    {
+        // The widget, a saved password and the Score check all send blanks for an account that
+        // has never picked a card. The run reads the account as it stands: its scores save and
+        // the tag it links is the one the account page reported.
+        var chart = new ChartBuilder().Build();
+        var f = ArrangeImport(
+            officialScores: new[] { new OfficialRecordedScore(chart, 920000, PhoenixPlate.FairGame) },
+            existingScores: Array.Empty<RecordedPhoenixScore>(),
+            cardId: "");
+        var identity = new Mock<IOfficialPlayerIdentityRepository>();
+        var saga = BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, mediator: f.Mediator,
+            sessionDelivery: f.SessionDelivery, bus: f.Bus, identity: identity);
+
+        await saga.Handle(new ImportOfficialPlayerScoresCommand("user", "pass", "", "", false),
+            CancellationToken.None);
+
+        f.Mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.ChartId == chart.Id),
+            It.IsAny<CancellationToken>()), Times.Once);
+        identity.Verify(i => i.LinkPlayer(MixEnum.Phoenix, "NEWTAG", ImportUserId,
             It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
