@@ -15,6 +15,9 @@ using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Identity.Contracts;
+using ScoreTracker.Identity.Contracts.Commands;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.Rivals.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Commands;
@@ -376,6 +379,88 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
         });
         _mediator.Verify(m => m.Send(It.IsAny<StartOfficialImportCommand>(), It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task RememberingAPasswordKeepsTheActiveCardOnTheAccount()
+    {
+        // Once a password is saved, Import takes the saved-password path and never lists the
+        // cards again, so the pick made here is the only one this page will make. Left in memory,
+        // it was gone on the next page load and every import after it named no card at all.
+        GivenTheAccountHoldsCards(
+            new GameCardRecord("SIDECARD", "9990001", false),
+            new GameCardRecord("MAINCARD", "9990002", true));
+
+        var cut = RenderComponent<UploadPhoenixScores>();
+        await RememberAPassword(cut);
+
+        cut.WaitForAssertion(() =>
+        {
+            _uiSettings.Verify(u => u.SetSetting("PhoenixScoreUpload__LastGameId", "9990002",
+                It.IsAny<CancellationToken>()), Times.Once);
+            _uiSettings.Verify(u => u.SetSetting("PhoenixScoreUpload__LastGameTag", "MAINCARD",
+                It.IsAny<CancellationToken>()), Times.Once);
+        });
+    }
+
+    [Fact]
+    public async Task ASavedPasswordImportSendsAndKeepsTheCardChosenOnThePage()
+    {
+        // The typed import has always written the card it used back to the account; the
+        // saved-password import sent the card and never kept it, so a card chosen from the list
+        // lasted until the next page load and the old one came back.
+        GivenTheAccountHoldsCards(
+            new GameCardRecord("SIDECARD", "9990001", false),
+            new GameCardRecord("MAINCARD", "9990002", true));
+        _mediator.Setup(m => m.Send(It.IsAny<StartOfficialImportCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImportStartResult(ImportStartOutcome.Started));
+        var cut = RenderComponent<UploadPhoenixScores>();
+        await RememberAPassword(cut);
+        cut.WaitForAssertion(() => Assert.Contains("Saved on this device", cut.Markup));
+
+        var picker = cut.FindComponent<MudBlazor.MudSelect<string>>();
+        await cut.InvokeAsync(() => picker.Instance.ValueChanged.InvokeAsync("9990001"));
+        await ImportButtons(cut).First().ClickAsync(new MouseEventArgs());
+
+        cut.WaitForAssertion(() =>
+        {
+            _mediator.Verify(m => m.Send(
+                It.Is<StartOfficialImportCommand>(c => c.CardId == "9990001" && c.ExpectedGameTag == "SIDECARD"),
+                It.IsAny<CancellationToken>()), Times.Once);
+            _uiSettings.Verify(u => u.SetSetting("PhoenixScoreUpload__LastGameId", "9990001",
+                It.IsAny<CancellationToken>()), Times.Once);
+            _uiSettings.Verify(u => u.SetSetting("PhoenixScoreUpload__LastGameTag", "SIDECARD",
+                It.IsAny<CancellationToken>()), Times.Once);
+        });
+    }
+
+    private void GivenTheAccountHoldsCards(params GameCardRecord[] cards)
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetGameCardsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cards);
+        _mediator.Setup(m => m.Send(It.IsAny<GetUsersByGameTagQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<User>());
+    }
+
+    // Types a credential and presses Remember, with the consent dialog already answered on an
+    // earlier visit. From the write onwards the device reads back as holding a saved password.
+    private async Task RememberAPassword(IRenderedComponent<UploadPhoenixScores> cut)
+    {
+        _uiSettings.Setup(u => u.GetSetting("RememberPasswordConsent", It.IsAny<CancellationToken>(),
+            It.IsAny<Guid?>())).ReturnsAsync("1");
+        var keyId = Guid.NewGuid();
+        _mediator.Setup(m => m.Send(It.IsAny<StoreImportCredentialCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new StoredImportCredential(keyId, "sealed"));
+        _clientStore.Setup(s => s.Write(It.IsAny<StoredCredentialBlob>(), It.IsAny<CancellationToken>()))
+            .Callback(() => _clientStore.Setup(s => s.Read(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new StoredCredentialBlob(keyId, "sealed", 0)))
+            .Returns(Task.CompletedTask);
+
+        // MudTextField binds on change, not input.
+        await cut.Find("input[type=text]").ChangeAsync(new ChangeEventArgs { Value = "player" });
+        await cut.Find("input[type=password]").ChangeAsync(new ChangeEventArgs { Value = "hunter2" });
+        await cut.FindAll("button").First(b => b.TextContent.Contains("Remember my password on this device"))
+            .ClickAsync(new MouseEventArgs());
     }
 
     [Theory]
