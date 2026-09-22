@@ -71,7 +71,7 @@ else
         @if (_derivedGrade != null)
         {
             <span class="qr-grade-toggle" title="@L["Broken"]" @onclick="ToggleBroken">
-                <LetterGradeIcon Grade="_derivedGrade" IsBroken="_broken" Height="26"/>
+                <LetterGradeIcon Grade="_derivedGrade" IsBroken="_broken" Height="26" Mix="Mix"/>
             </span>
         }
     </div>
@@ -125,7 +125,7 @@ else
     private const string BrokenResult = "Broken";
 
     private string _resultValue =>
-        _plate is { } p ? p.GetShorthand() : _broken ? BrokenResult : string.Empty;
+        _plate is { } p ? p.GetShorthand(Mix) : _broken ? BrokenResult : string.Empty;
 
     private void OnResultChanged(string? value)
     {
@@ -141,7 +141,7 @@ else
         }
         else
         {
-            _plate = PhoenixPlateHelperMethods.ParseShorthand(value);
+            _plate = AwardSets.ParseShorthand(value, Mix);
             _broken = false;
         }
     }

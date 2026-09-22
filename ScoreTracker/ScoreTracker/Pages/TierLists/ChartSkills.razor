@@ -1758,7 +1758,7 @@ else
     /// <summary>Community and Personalized both section by the lens; they differ only in data.</summary>
     private bool IsTierView => _groupBy is "Difficulty" or "Personalized";
 
-    private bool CanPersonalize => CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && !IsLegacy;
+    private bool CanPersonalize => CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _currentMix.HasPumbility();
 
     private bool IsSkillView => _groupBy == "Speed";
 
@@ -1779,7 +1779,7 @@ else
     // The PUMBILITY pools price no co-op charts (includeCoOp: false, and CO-OP has no rating),
     // so the lens has nothing to say on CoOp folders and is not offered there — no explanation,
     // same as Chabala on folders without links.
-    private bool PumbilityAvailable => _chartType != ChartType.CoOp;
+    private bool PumbilityAvailable => _chartType != ChartType.CoOp && _currentMix.HasPumbility();
 
     // Personalization is a VIEW now, not a switch riding on top of one (owner, 2026-08-11) —
     // except on the two views that don't section by the lens, where the Shown Difficulty picker

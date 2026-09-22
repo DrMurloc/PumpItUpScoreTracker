@@ -14,7 +14,8 @@ Inputs (all CSV/JSON, standard library only):
   export-Phoenix2.csv       the same for Phoenix 2
   patches.csv               Mix, Version, ReleaseDate — every Rise patch, dated from the Steam notices
   jackets-manifest.csv      title, gameId, file, ... — the jackets already on the CDN under songs/
-  durations.csv (optional)  Title, Seconds — song lengths where measured; 00:00:00 otherwise
+  durations.csv (optional)  Title, Seconds — song lengths where measured; 0 otherwise
+  arcade-additions.csv (optional)  Title, Version — Arcade Station songs a patch after 1.4.0 added
 
 Every Guid is a v5 of its natural key, so a re-run emits the same ids and every INSERT is
 guarded by NOT EXISTS: the scripts are no-ops the second time.
@@ -137,6 +138,12 @@ def main(inputs, out):
     with open(os.path.join(inputs, 'jackets-manifest.csv'), encoding='utf-8-sig') as f:
         for row in csv.DictReader(f):
             jackets[norm(row['title'])] = row['file']
+    additions = {}
+    apath = os.path.join(inputs, 'arcade-additions.csv')
+    if os.path.exists(apath):
+        with open(apath, encoding='utf-8-sig') as f:
+            for row in csv.DictReader(f):
+                additions[norm(row['Title'])] = row['Version'].strip()
     durations = {}
     dpath = os.path.join(inputs, 'durations.csv')
     if os.path.exists(dpath):
@@ -255,9 +262,10 @@ def main(inputs, out):
                     continue
                 fuzzy.append((row['Title'], names2[m[0]]))
                 k = m[0]
+            version = additions.get(k, ARCADE_LAUNCH)
             for t, label in (('S', 'Single'), ('D', 'Double')):
                 for lv in p2[k][t]:
-                    arcade_rows.append({'name': names2[k], 'type': label, 'level': lv,
+                    arcade_rows.append({'name': names2[k], 'type': label, 'level': lv, 'version': version,
                                         'id': guid('RiseArcade', 'chartmix', k, label, lv)})
     counts['Rise Arcade rows'] = len(arcade_rows)
 
@@ -299,7 +307,7 @@ def main(inputs, out):
     # s2: songs and charts
     s2 = [head]
     for s in songs_new:
-        dur = f"'{s['duration'] // 3600:02d}:{s['duration'] % 3600 // 60:02d}:{s['duration'] % 60:02d}'"
+        dur = s['duration'] * 10_000_000  # Song.Duration is a TimeSpan stored as ticks in a bigint
         s2.append(f"IF NOT EXISTS (SELECT 1 FROM [scores].[Song] WHERE [Id] = '{s['id']}') "
                   f"INSERT INTO [scores].[Song] ([Id], [Name], [ImagePath], [Type], [Duration], [MinBpm], [MaxBpm], [Artist]) "
                   f"VALUES ('{s['id']}', {q(s['name'])}, {q(s['image'])}, '{s['type']}', {dur}, NULL, NULL, {q(s['artist'])});")
@@ -334,11 +342,11 @@ def main(inputs, out):
     s3.append('COMMIT;')
 
     # s4: Rise Arcade membership
-    launch = guid('RiseArcade', 'version', ARCADE_LAUNCH)
     s4 = [head]
     for a in arcade_rows:
+        version_id = guid('RiseArcade', 'version', a['version'])
         s4.append(f"INSERT INTO [scores].[ChartMix] ([Id], [ChartId], [MixId], [Level], [NoteCount], [AddedInVersionId]) "
-                  f"SELECT '{a['id']}', cm.ChartId, @RiseArcade, cm.[Level], cm.[NoteCount], '{launch}' "
+                  f"SELECT '{a['id']}', cm.ChartId, @RiseArcade, cm.[Level], cm.[NoteCount], '{version_id}' "
                   f"FROM [scores].[ChartMix] cm JOIN [scores].[Chart] c ON c.Id = cm.ChartId JOIN [scores].[Song] s ON s.Id = c.SongId "
                   f"WHERE cm.MixId = @Phoenix2 AND s.[Name] = {q(a['name'])} AND c.[Type] = '{a['type']}' AND cm.[Level] = {a['level']} "
                   f"AND NOT EXISTS (SELECT 1 FROM [scores].[ChartMix] x WHERE x.ChartId = cm.ChartId AND x.MixId = @RiseArcade);")

@@ -45,7 +45,7 @@ public sealed class V2PlaysApiShapeTests
                 new Claim(ToolKeyAuthenticationScheme.ToolIdClaim, asTool.Value.ToString())
             }, "ApiV2"));
 
-        return new PlayersController(_mediator.Object, _currentUser.Object)
+        return new PlayersController(_mediator.Object, _currentUser.Object, ApiTestClock.Accessor)
         {
             ControllerContext = new ControllerContext { HttpContext = context }
         };
@@ -147,27 +147,94 @@ public sealed class V2PlaysApiShapeTests
         Assert.Equal(StatusCodes.Status404NotFound, ((ObjectResult)result).StatusCode);
     }
 
+    // 990 Perfects and 10 Greats with the combo intact: nothing below Great, so a Full Combo on
+    // Rise, and (.995 × 996 + .005 × 1000) / 1000 = 996,020.
+    private static ObservedPlayDto FullComboPlay(string? award)
+    {
+        return new ObservedPlayDto(ApiTestData.ChartId1, null, null, null, Perfects: 990, Greats: 10, Goods: 0,
+            Bads: 0, Misses: 0, MaxCombo: 1000, Score: 996_020, IsBroken: false, Award: award,
+            PlayedAt: ApiTestData.Date1);
+    }
+
     [Fact]
-    public async Task AnAwardTheMixDoesNotHandOutIsRefusedAndAMarkReadsAsItsPlate()
+    public async Task AnAwardTheMixDoesNotHandOutIsRefused()
     {
         var refused = await Controller().RecordPlays(Request(PerfectPlay(ApiTestData.ChartId1, award: "TG")));
+
         Assert.Equal(StatusCodes.Status400BadRequest, ((ObjectResult)refused).StatusCode);
         Assert.EndsWith("/award-invalid", ProblemType(refused));
+    }
 
-        await Controller().RecordPlays(Request(PerfectPlay(ApiTestData.ChartId1, award: "fc")));
+    [Fact]
+    public async Task TheAwardIsDerivedFromTheJudgmentsAndAClaimOnlyHasToAgree()
+    {
+        // Omitted: derived. A Full Combo run on Rise stores the plate the mark coincides with.
+        await Controller().RecordPlays(Request(FullComboPlay(award: null)));
         _mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.Plate == PhoenixPlate.UltimateGame),
+            It.IsAny<CancellationToken>()), Times.Once);
+
+        // Claimed in the mix's own shorthand and earned: fine.
+        var agreed = await Controller().RecordPlays(Request(FullComboPlay(award: "fc")));
+        Assert.Equal(StatusCodes.Status200OK, ((ObjectResult)agreed).StatusCode);
+
+        // Claimed and not earned — ten Greats are not a Perfect Game: refused, nothing written.
+        var overclaimed = await Controller().RecordPlays(Request(FullComboPlay(award: "PG")));
+        Assert.Equal(StatusCodes.Status400BadRequest, ((ObjectResult)overclaimed).StatusCode);
+        Assert.EndsWith("/award-does-not-reconcile", ProblemType(overclaimed));
+        _mediator.Verify(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()),
+            Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task ABreakIsJournaledAndSeatedOnlyWherePlayerSeatsBreaks()
+    {
+        var broken = PerfectPlay(ApiTestData.ChartId1) with { IsBroken = true, Award = "PG" };
+
+        // Rise's default is Phoenix's — a break is history, never a best.
+        await Controller().RecordPlays(Request(broken));
+        _mediator.Verify(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _mediator.Verify(m => m.Send(It.Is<RecordObservedPlaysCommand>(c =>
+                !c.IncludeBroken && c.Plays.Count == 1 && c.Plays[0].IsBroken && c.Plays[0].Plate == null),
+            It.IsAny<CancellationToken>()), Times.Once);
+
+        // The tool's own choice outranks the default, and a break still carries no award.
+        await Controller().RecordPlays(new RecordPlaysRequestDto("Rise", "capture", new[] { broken },
+            RecordBrokenAsBest: true));
+        _mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.IsBroken && c.Plate == null),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _mediator.Verify(m => m.Send(It.Is<RecordObservedPlaysCommand>(c => c.IncludeBroken),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task ABrokenPlayCarriesNoAward()
+    public async Task OneRequestIsOneSessionOnBothPaths()
     {
-        var broken = PerfectPlay(ApiTestData.ChartId1) with { IsBroken = true, Award = "PG" };
+        UpdatePhoenixBestAttemptCommand? best = null;
+        RecordObservedPlaysCommand? observed = null;
+        _mediator.Setup(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<UpdatePhoenixBestAttemptCommand, CancellationToken>((c, _) => best = c)
+            .Returns(Task.CompletedTask);
+        _mediator.Setup(m => m.Send(It.IsAny<RecordObservedPlaysCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<RecordObservedPlaysCommand, CancellationToken>((c, _) => observed = c)
+            .Returns(Task.CompletedTask);
 
-        await Controller().RecordPlays(Request(broken));
+        await Controller().RecordPlays(Request(PerfectPlay(ApiTestData.ChartId1)));
 
-        _mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.IsBroken && c.Plate == null),
-            It.IsAny<CancellationToken>()), Times.Once);
+        Assert.NotNull(best!.SessionId);
+        Assert.Equal(best.SessionId, observed!.SessionId);
+    }
+
+    [Fact]
+    public async Task APlayTimeIsRequiredAndCannotBeInTheFuture()
+    {
+        var omitted = PerfectPlay(ApiTestData.ChartId1) with { PlayedAt = default };
+        var future = PerfectPlay(ApiTestData.ChartId1) with { PlayedAt = ApiTestClock.Now.AddDays(1) };
+        var justNow = PerfectPlay(ApiTestData.ChartId1) with { PlayedAt = ApiTestClock.Now.AddMinutes(1) };
+
+        Assert.EndsWith("/played-at-invalid", ProblemType(await Controller().RecordPlays(Request(omitted))));
+        Assert.EndsWith("/played-at-invalid", ProblemType(await Controller().RecordPlays(Request(future))));
+        Assert.Equal(StatusCodes.Status200OK, ((ObjectResult)await Controller().RecordPlays(Request(justNow))).StatusCode);
     }
 
     [Fact]

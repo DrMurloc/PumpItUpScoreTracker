@@ -30,7 +30,10 @@ public readonly record struct GradeProgress(
     {
         var grade = score.LetterGradeFor(mix);
         var floor = (int)grade.GetMinimumScoreFor(mix);
-        var reachesForPerfectGame = grade == PhoenixLetterGrade.SSSPlus;
+        // The top of the mix's ladder reaches for the perfect game — SSS+ on a Phoenix mix, SSS on
+        // Rise, whose ladder has no plus tiers — rather than the enum's top value, which a mix
+        // may not have; asking for the score above 1,000,000 would throw.
+        var reachesForPerfectGame = (int)grade.GetMaximumScoreFor(mix) == (int)PhoenixScore.Max;
         var line = reachesForPerfectGame ? (int)PhoenixScore.Max : (int)grade.GetMaximumScoreFor(mix) + 1;
         PhoenixLetterGrade? next = reachesForPerfectGame ? null : PhoenixScore.From(line).LetterGradeFor(mix);
 

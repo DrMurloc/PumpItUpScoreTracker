@@ -19,6 +19,7 @@ using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Dtos.ApiV2;
 using ScoreTracker.Web.Security;
+using ScoreTracker.Web.Services;
 
 namespace ScoreTracker.Web.Controllers.Api.V2;
 
@@ -35,12 +36,14 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 public sealed class PlayersController : ApiV2ControllerBase
 {
     private readonly ICurrentUserAccessor _currentUser;
+    private readonly IDateTimeOffsetAccessor _clock;
     private readonly IMediator _mediator;
 
-    public PlayersController(IMediator mediator, ICurrentUserAccessor currentUser)
+    public PlayersController(IMediator mediator, ICurrentUserAccessor currentUser, IDateTimeOffsetAccessor clock)
     {
         _mediator = mediator;
         _currentUser = currentUser;
+        _clock = clock;
     }
 
     /// <summary>
@@ -94,6 +97,11 @@ public sealed class PlayersController : ApiV2ControllerBase
 
         var charts = (await _mediator.Send(new GetChartsQuery(mix))).ToDictionary(c => c.Id);
         var source = "api:" + body.Source;
+        var now = _clock.Now;
+        // Whether a break on a chart the player has never passed is seated as their best: the
+        // tool's own choice, else the mix's default — the same default the import page reads.
+        var recordBrokenAsBest = body.RecordBrokenAsBest ?? BrokenScorePreference.DefaultFor(mix);
+        var awards = mix.AwardsOf();
         var resolved = new List<(Chart Chart, ObservedPlayDto Play, PhoenixScore Score, PhoenixPlate? Award,
             JudgementCounts Judgements)>();
         for (var i = 0; i < body.Plays.Count; i++)
@@ -106,6 +114,11 @@ public sealed class PlayersController : ApiV2ControllerBase
                 return Problem("judgments-invalid", $"Play {i}: judgment counts cannot be negative.");
             if (!PhoenixScore.TryParse(play.Score, out var score))
                 return Problem("score-invalid", $"Play {i}: the score is not a Phoenix score.");
+            // The play time is the journal's key and the record's date: an omitted one would file
+            // the play in year 1, a future one ahead of everything the player does next.
+            if (play.PlayedAt == default || play.PlayedAt > now.AddMinutes(5))
+                return Problem("played-at-invalid", $"Play {i}: playedAt must be when the play happened.",
+                    detail: "An omitted or future play time cannot be journaled.");
             var screen = new ScoreScreen(play.Perfects, play.Greats, play.Goods, play.Bads, play.Misses, play.MaxCombo);
             var expected = (int)screen.CalculatePhoenixScore;
             if (screen.TotalCount == 0 || play.MaxCombo > screen.TotalCount ||
@@ -113,29 +126,53 @@ public sealed class PlayersController : ApiV2ControllerBase
                 return Problem("judgments-do-not-reconcile", "The judgments do not produce the score.",
                     detail: $"Play {i}: {play.Perfects}/{play.Greats}/{play.Goods}/{play.Bads}/{play.Misses} " +
                             $"with max combo {play.MaxCombo} scores {expected:N0}, not {play.Score:N0}.");
-            PhoenixPlate? award = null;
+            // The award is a function of the judgments (PlateTolerance is the rule), so it is
+            // derived here; a caller's claim only has to agree with it. A break carries none.
+            var award = play.IsBroken ? null : DeriveAward(awards, play);
             if (!play.IsBroken && !string.IsNullOrWhiteSpace(play.Award))
             {
-                award = AwardSets.TryParseShorthand(play.Award, mix);
-                if (award == null)
+                var claimed = AwardSets.TryParseShorthand(play.Award, mix);
+                if (claimed == null)
                     return Problem("award-invalid", $"Play {i}: not an award {mixName} hands out.",
-                        detail: "Valid values: " + string.Join(", ", mix.AwardsOf().Select(a => a.GetShorthand(mix))));
+                        detail: "Valid values: " + string.Join(", ", awards.Select(a => a.GetShorthand(mix))));
+                if (claimed != award)
+                    return Problem("award-does-not-reconcile", "The judgments do not earn the award.",
+                        detail: $"Play {i}: {play.Perfects}/{play.Greats}/{play.Goods}/{play.Bads}/{play.Misses} " +
+                                $"earns {(award == null ? "no award" : award.Value.GetShorthand(mix))}, " +
+                                $"not {claimed.Value.GetShorthand(mix)}.");
             }
 
             resolved.Add((chart, play, score, award,
                 new JudgementCounts(play.Perfects, play.Greats, play.Goods, play.Bads, play.Misses, play.MaxCombo)));
         }
 
-        // The record first — keep-best, so only a play that beats it moves it, dated by the play —
-        // then the journal, which is idempotent on play time and so never journals a record's play twice.
+        // One session for everything this request saw, so the record path and the journal file
+        // the plays under the same sitting. The record first — keep-best, so only a play that
+        // beats it moves it, dated by the play; a break only where the player seats breaks — then
+        // the journal, which is idempotent on play time and so never journals a record's play twice.
+        var sessionId = Guid.NewGuid();
         foreach (var (chart, play, score, award, judgements) in resolved)
-            await _mediator.Send(new UpdatePhoenixBestAttemptCommand(chart.Id, play.IsBroken, score, award,
-                KeepBestStats: true, Source: source, Mix: mix, RecordedAt: play.PlayedAt, Judgements: judgements));
-        await _mediator.Send(new RecordObservedPlaysCommand(_currentUser.User.Id, mix, source, null,
+            if (!play.IsBroken || recordBrokenAsBest)
+                await _mediator.Send(new UpdatePhoenixBestAttemptCommand(chart.Id, play.IsBroken, score, award,
+                    KeepBestStats: true, Source: source, Mix: mix, SessionId: sessionId, RecordedAt: play.PlayedAt,
+                    Judgements: judgements));
+        await _mediator.Send(new RecordObservedPlaysCommand(_currentUser.User.Id, mix, source, sessionId,
             resolved.Select(r => new RecordObservedPlaysCommand.ObservedPlay(r.Chart.Id, r.Score, r.Award,
-                r.Play.IsBroken, r.Play.PlayedAt, r.Judgements)).ToArray()));
+                r.Play.IsBroken, r.Play.PlayedAt, r.Judgements)).ToArray(), IncludeBroken: recordBrokenAsBest));
 
         return Ok(new RecordPlaysResultDto(resolved.Count, mix.ToString(), ScoringModelOf(mix)));
+    }
+
+    /// <summary>
+    ///     The award a run earned on this mix: the strictest plate rule it satisfies that the mix
+    ///     hands out. A plate mix falls through to Rough Game; a mark mix (Rise) to no mark.
+    /// </summary>
+    private static PhoenixPlate? DeriveAward(IReadOnlyList<PhoenixPlate> awards, ObservedPlayDto play)
+    {
+        foreach (var rule in PhoenixPlateHelperMethods.Tolerances)
+            if (awards.Contains(rule.Plate) && rule.Tolerates(play.Greats, play.Goods, play.Bads, play.Misses))
+                return rule.Plate;
+        return awards.Contains(PhoenixPlate.RoughGame) ? PhoenixPlate.RoughGame : null;
     }
 
     private static Chart? ResolveChart(IReadOnlyDictionary<Guid, Chart> charts, ObservedPlayDto play)
@@ -508,9 +545,9 @@ public sealed class PlayersController : ApiV2ControllerBase
         }
 
         var charts = (await _mediator.Send(new GetChartsQuery(mix))).ToDictionary(c => c.Id);
-        // Only the Phoenix mixes have a PUMBILITY formula — asking for one on a legacy mix throws.
-        // Legacy rows report a null rating rather than a fabricated number.
-        var scoring = mix.UsesLegacyScoring() ? null : ScoringConfiguration.PumbilityScoring(mix, true);
+        // Only a mix with a PUMBILITY formula can price a row — asking for one elsewhere throws.
+        // Rows on any other mix report a null rating rather than a fabricated number.
+        var scoring = mix.HasPumbility() ? ScoringConfiguration.PumbilityScoring(mix, true) : null;
 
         var rows = (await _mediator.Send(new GetPhoenixRecordsQuery(userId, mix)))
             .Where(r => charts.ContainsKey(r.ChartId))

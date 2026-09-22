@@ -381,7 +381,7 @@ The reference list the owner asked for (2026-09-22). "Works" means on both new m
 | Spreadsheet upload | one upload page for both mixes: Song, Difficulty (`S16`, `HDB23`, `D20`), Score, Plate or mark (`PG`/`FC`/`NM` accepted), IsBroken; keep-best by default |
 | Score art | Rise letters, broken letters and mark badges from the game (D12) with a per-mix art path; Rise Arcade draws the site's Phoenix set |
 | Passed-in-another-mix border | on, but only within a platform: Rise ↔ Rise Arcade, and the arcade family among themselves (D6) |
-| Tier lists | open on both mixes with community votes; the score-derived lenses fill in as scores accumulate |
+| Tier lists | open on both mixes with community votes and the pass tiers; the score-derived lenses weight players by the competitive level on their PlayerStats row, which only a mix with PUMBILITY writes, so they arrive with phase 3 |
 | Player page, journal, sessions | records and the score journal on both mixes; the rating tiles, PUMBILITY and official standing hidden rather than drawn as zeros |
 | API | `GET api/v2/mixes` lists both with `scoringModel: phoenix`; every v2 read takes them; **`POST api/v2/players/me/plays`** (D14) accepts a judged play with the score checksum, the capture app's endpoint; v1 unchanged |
 | Off the nav | PUMBILITY, the recap, Titles, Weekly Charts, March of Murlocs, the Leaderboards group and the two Phoenix calculators are not offered on either Rise mix (owner, 2026-09-22); reached by URL they explain themselves, as on a legacy mix — no route gate (§11.2, `MixCapabilities`) |
@@ -565,10 +565,12 @@ mix.
 - `Pages/Progress/Player.razor`: the PUMBILITY, rating and official-standing tiles hide behind `HasPumbility()` /
   `HasOfficialBoards()` instead of drawing zeros. `Services/ShareCardComposer.cs:179`: `mix is not (Phoenix or
   Phoenix2)` → `ScoringModel`, so a Rise share card carries its letter and mark.
-- `HostedServices/RecurringJobRunner.cs`: `ProcessScoresTiersListCommand`, `RecalculateScoringDifficultyCommand`,
-  `ProcessPassTierListCommand`, `RecalculateChartLetterDifficultiesCommand` and `RecalculateChartSimilarityCommand`
-  each publish for the two mixes too (one line each); the weekly rotation, Daily Step, the PUMBILITY tier list,
-  Hardmode and the leaderboard import do not. No new job, no SCHEDULED-JOBS row.
+- `HostedServices/RecurringJobRunner.cs`: `ProcessPassTierListCommand` and `RecalculateChartSimilarityCommand`
+  publish for the two mixes too; the score tier list, the scoring-difficulty and letter-difficulty lenses weight
+  players by the competitive level on their PlayerStats row — which only a mix with PUMBILITY writes — and walk
+  the plus tiers, so they stay off the Rise mixes with the weekly rotation, Daily Step, the PUMBILITY tier list,
+  Hardmode and the leaderboard import (the bug check found the fan-out faulting on the first score). No new job,
+  no SCHEDULED-JOBS row.
 - `Services/HomeDashboard/WidgetRegistry.cs`: the two mixes on every widget whose data exists on them (quick record,
   import, account stats, by-level breakdown, sessions); not the PUMBILITY widget, not Daily Step (its rotation is
   off).

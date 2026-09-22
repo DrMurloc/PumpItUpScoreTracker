@@ -64,7 +64,7 @@ public static class ShareCardComposer
                     corner = $"+{PumbilityFormat.Gain(f.Gain.Value)}";
                     cornerHex = MixThemes.RarityHex(mix, RarityBand.Gold);
                     if (f.ExpectedScore is { } expected)
-                        expectedUrl = ShareCardImages.LetterGrade(expected.LetterGradeFor(mix), false);
+                        expectedUrl = ShareCardImages.LetterGrade(expected.LetterGradeFor(mix), false, mix);
                 }
             }
             else if (f.CurrentPumbility is > 0)
@@ -75,7 +75,7 @@ public static class ShareCardComposer
         }
 
         var gradeUrl = o.LetterGrades && f.Score is { } graded
-            ? ShareCardImages.LetterGrade(graded.LetterGradeFor(mix), f.Broken)
+            ? ShareCardImages.LetterGrade(graded.LetterGradeFor(mix), f.Broken, mix)
             : null;
         var plateUrl = o.Plates && f.Plate is { } plate ? ShareCardImages.Plate(plate) : null;
 

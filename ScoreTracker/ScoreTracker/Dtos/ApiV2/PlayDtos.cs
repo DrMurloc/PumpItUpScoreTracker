@@ -4,8 +4,11 @@ namespace ScoreTracker.Web.Dtos.ApiV2;
 ///     The body of <c>POST api/v2/players/me/plays</c> (docs/design/rise.md §6.3): judged plays a
 ///     tool observed for the caller. <paramref name="Source" /> names the tool — one to thirty-two
 ///     letters, digits, dots, underscores or dashes — and is what the journal shows as the origin.
+///     <paramref name="RecordBrokenAsBest" /> says whether a break on a chart the player has never
+///     passed is seated as their best; omitted, the mix's default applies (the one the import page reads).
 /// </summary>
-public sealed record RecordPlaysRequestDto(string? Mix, string? Source, IReadOnlyList<ObservedPlayDto>? Plays);
+public sealed record RecordPlaysRequestDto(string? Mix, string? Source, IReadOnlyList<ObservedPlayDto>? Plays,
+    bool? RecordBrokenAsBest = null);
 
 /// <summary>
 ///     One play as the tool saw it. The chart is named by <paramref name="ChartId" /> or by song,
