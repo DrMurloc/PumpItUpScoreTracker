@@ -41,15 +41,16 @@ public sealed class CatalogV2ReadHandlerTests
         Assert.Equal(mixes.OrderBy(m => m.SortOrder).Select(m => m.Mix), mixes.Select(m => m.Mix));
     }
 
-    // The field a consumer must branch on before reading any score.
+    // The field a consumer must branch on before reading any score: the Phoenix generation and
+    // the two Rise mixes score on the Phoenix formula, every older mix on the era model.
     [Fact]
-    public async Task OnlyPhoenixMixesReportModernScoring()
+    public async Task OnlyPhoenixScoredMixesReportModernScoring()
     {
         var mixes = await new GetMixesHandler().Handle(new GetMixesQuery(), CancellationToken.None);
 
-        Assert.All(mixes.Where(m => m.Mix is MixEnum.Phoenix or MixEnum.Phoenix2),
+        Assert.All(mixes.Where(m => m.Mix is MixEnum.Phoenix or MixEnum.Phoenix2 or MixEnum.Rise or MixEnum.RiseArcade),
             m => Assert.False(m.UsesLegacyScoring));
-        Assert.All(mixes.Where(m => m.Mix is not (MixEnum.Phoenix or MixEnum.Phoenix2)),
+        Assert.All(mixes.Where(m => m.Mix is not (MixEnum.Phoenix or MixEnum.Phoenix2 or MixEnum.Rise or MixEnum.RiseArcade)),
             m => Assert.True(m.UsesLegacyScoring));
     }
 

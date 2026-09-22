@@ -124,13 +124,33 @@ public static class PhoenixLetterGradeHelperMethods
     private static readonly IReadOnlyDictionary<PhoenixLetterGrade, int> Phoenix1Floors =
         CachedRanges.ToDictionary(kv => kv.Key, kv => (int)kv.Value.MinimumScore);
 
+    // Pump It Up RISE grades on nine rungs with no plus tiers and no AAA (docs/design/rise.md
+    // §5.2): SSS 990k, SS 970k, S 950k and AA 900k are the published table, confirmed on the
+    // owner's result screens; A through D are placeholder floors (D11) that ship until a
+    // recorded play disproves one, and the capture app's grade log will do that for free.
+    // F stays 0 as the catch-all, as in the other tables.
+    private static readonly IReadOnlyDictionary<PhoenixLetterGrade, int> RiseFloors =
+        new Dictionary<PhoenixLetterGrade, int>
+        {
+            [PhoenixLetterGrade.F] = 0,
+            [PhoenixLetterGrade.D] = 450000,
+            [PhoenixLetterGrade.C] = 550000,
+            [PhoenixLetterGrade.B] = 650000,
+            [PhoenixLetterGrade.A] = 750000,
+            [PhoenixLetterGrade.AA] = 900000,
+            [PhoenixLetterGrade.S] = 950000,
+            [PhoenixLetterGrade.SS] = 970000,
+            [PhoenixLetterGrade.SSS] = 990000
+        };
+
     // One floors table per ladder; a mix names its ladder on its profile. Grades highest-floor-
     // first, so a score resolves to the first grade it clears.
     private static readonly IReadOnlyDictionary<GradeLadder, IReadOnlyDictionary<PhoenixLetterGrade, int>> Floors =
         new Dictionary<GradeLadder, IReadOnlyDictionary<PhoenixLetterGrade, int>>
         {
             [GradeLadder.Phoenix1] = Phoenix1Floors,
-            [GradeLadder.Phoenix2] = Phoenix2Floors
+            [GradeLadder.Phoenix2] = Phoenix2Floors,
+            [GradeLadder.Rise] = RiseFloors
         };
 
     private static readonly IReadOnlyDictionary<GradeLadder, IReadOnlyList<(PhoenixLetterGrade Grade, int Floor)>>

@@ -11,7 +11,10 @@ public enum ScoringModel
 public enum GradeLadder
 {
     Phoenix1,
-    Phoenix2
+    Phoenix2,
+
+    /// <summary>Nine grades and no plus tiers (docs/design/rise.md §5.2).</summary>
+    Rise
 }
 
 /// <summary>What a mix hands out beside the grade.</summary>
@@ -19,6 +22,12 @@ public enum AwardSet
 {
     /// <summary>The eight Phoenix plates, Rough Game through Perfect Game.</summary>
     PhoenixPlates,
+
+    /// <summary>
+    ///     Rise's three marks — Perfect Game, Full Combo, No Miss — stored as the Phoenix plates they
+    ///     coincide with and shown under their own names (docs/design/rise.md D5).
+    /// </summary>
+    RiseMarks,
     None
 }
 
@@ -107,6 +116,19 @@ public static class MixProfiles
             ScoringModel.Phoenix, GradeLadder.Phoenix2, AwardSet.PhoenixPlates, OfficialSite: MixEnum.Phoenix2,
             Platform.Pad, HasLifebarModel: true, new MixArt("Phoenix2", null, HasHalfDoubleBubble: true),
             MixFeatures.Phoenix);
+        // Pump It Up RISE (docs/design/rise.md §3): Phoenix-scored on a keyboard, no site, no lifebar
+        // the site models (D9), Rise's own nine-grade ladder and three marks, the Phoenix 2 stepballs
+        // (D12) with Rise's own letters and marks, and none of the Phoenix-generation features until
+        // phase 3 tunes them.
+        all[MixEnum.Rise] = new MixProfile(
+            ScoringModel.Phoenix, GradeLadder.Rise, AwardSet.RiseMarks, OfficialSite: null, Platform.Keyboard,
+            HasLifebarModel: false, new MixArt("Phoenix2", "Rise", HasHalfDoubleBubble: true), MixFeatures.None);
+        // The Arcade Station plays the Phoenix 2 charts as-is — Phoenix 2 grades, plates and art —
+        // on the same keyboard.
+        all[MixEnum.RiseArcade] = new MixProfile(
+            ScoringModel.Phoenix, GradeLadder.Phoenix2, AwardSet.PhoenixPlates, OfficialSite: null,
+            Platform.Keyboard, HasLifebarModel: false, new MixArt("Phoenix2", null, HasHalfDoubleBubble: true),
+            MixFeatures.None);
         return all;
     }
 }

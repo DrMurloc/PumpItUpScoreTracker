@@ -71,6 +71,47 @@ public sealed class GetCrossMixPassesHandlerTests
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public async Task AKeyboardMixUnionsOnlyTheOtherKeyboardMix()
+    {
+        var arcadePass = Guid.NewGuid();
+        var records = new Mock<IPhoenixRecordRepository>();
+        records.Setup(r => r.GetRecordedScores(It.IsAny<MixEnum>(), UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
+        records.Setup(r => r.GetRecordedScores(MixEnum.RiseArcade, UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new RecordedPhoenixScore(arcadePass, PhoenixScore.From(950000), null, false, DateTimeOffset.MinValue)
+            });
+        var xxAttempts = new Mock<IXXChartAttemptRepository>();
+        var handler = BuildHandler(records, xxAttempts);
+
+        var result = await handler.Handle(new GetCrossMixPassesQuery(MixEnum.Rise, UserId), CancellationToken.None);
+
+        // Rise ↔ Rise Arcade cross; a pad clear says nothing about a keyboard one (rise.md D6).
+        Assert.Equal(new[] { arcadePass }, result);
+        records.Verify(r => r.GetRecordedScores(MixEnum.Phoenix, UserId, It.IsAny<CancellationToken>()), Times.Never);
+        records.Verify(r => r.GetRecordedScores(MixEnum.Phoenix2, UserId, It.IsAny<CancellationToken>()), Times.Never);
+        xxAttempts.Verify(x => x.GetBestAttempts(It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task APadMixNeverReadsTheKeyboardMixes()
+    {
+        var records = new Mock<IPhoenixRecordRepository>();
+        records.Setup(r => r.GetRecordedScores(It.IsAny<MixEnum>(), UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<RecordedPhoenixScore>());
+        var handler = BuildHandler(records, new Mock<IXXChartAttemptRepository>());
+
+        await handler.Handle(new GetCrossMixPassesQuery(MixEnum.Phoenix2, UserId), CancellationToken.None);
+
+        records.Verify(r => r.GetRecordedScores(MixEnum.Phoenix, UserId, It.IsAny<CancellationToken>()), Times.Once);
+        records.Verify(r => r.GetRecordedScores(MixEnum.Rise, UserId, It.IsAny<CancellationToken>()), Times.Never);
+        records.Verify(r => r.GetRecordedScores(MixEnum.RiseArcade, UserId, It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
     private static GetCrossMixPassesHandler BuildHandler(Mock<IPhoenixRecordRepository> records,
         Mock<IXXChartAttemptRepository> xxAttempts, bool hasAccess = true)
     {

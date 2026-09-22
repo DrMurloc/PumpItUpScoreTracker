@@ -35,7 +35,9 @@
     "Prime2",
     "Infinity",
     "Pro",
-    "Pro2"
+    "Pro2",
+    "Rise",
+    "RiseArcade"
   ],
   "widgets": [
     {
@@ -90,7 +92,9 @@
                 "Prime2",
                 "Infinity",
                 "Pro",
-                "Pro2"
+                "Pro2",
+                "Rise",
+                "RiseArcade"
               ]
             },
             "nullable": true
@@ -157,7 +161,9 @@
               "Prime2",
               "Infinity",
               "Pro",
-              "Pro2"
+              "Pro2",
+              "Rise",
+              "RiseArcade"
             ],
             "nullable": true
           },
@@ -225,7 +231,9 @@
               "Prime2",
               "Infinity",
               "Pro",
-              "Pro2"
+              "Pro2",
+              "Rise",
+              "RiseArcade"
             ],
             "nullable": true
           },
@@ -309,7 +317,9 @@
               "Prime2",
               "Infinity",
               "Pro",
-              "Pro2"
+              "Pro2",
+              "Rise",
+              "RiseArcade"
             ],
             "nullable": true
           },
@@ -382,7 +392,9 @@
               "Prime2",
               "Infinity",
               "Pro",
-              "Pro2"
+              "Pro2",
+              "Rise",
+              "RiseArcade"
             ],
             "nullable": true
           }
@@ -440,7 +452,9 @@
               "Prime2",
               "Infinity",
               "Pro",
-              "Pro2"
+              "Pro2",
+              "Rise",
+              "RiseArcade"
             ],
             "nullable": true
           },
@@ -531,7 +545,9 @@
               "Prime2",
               "Infinity",
               "Pro",
-              "Pro2"
+              "Pro2",
+              "Rise",
+              "RiseArcade"
             ],
             "nullable": true
           },
@@ -665,7 +681,9 @@
         "Prime2",
         "Infinity",
         "Pro",
-        "Pro2"
+        "Pro2",
+        "Rise",
+        "RiseArcade"
       ],
       "configSchema": {
         "type": "object",
@@ -702,7 +720,9 @@
               "Prime2",
               "Infinity",
               "Pro",
-              "Pro2"
+              "Pro2",
+              "Rise",
+              "RiseArcade"
             ],
             "nullable": true
           },
@@ -859,7 +879,9 @@
         "Prime2",
         "Infinity",
         "Pro",
-        "Pro2"
+        "Pro2",
+        "Rise",
+        "RiseArcade"
       ],
       "configSchema": {
         "type": "object",
@@ -896,7 +918,9 @@
               "Prime2",
               "Infinity",
               "Pro",
-              "Pro2"
+              "Pro2",
+              "Rise",
+              "RiseArcade"
             ],
             "nullable": true
           },
@@ -949,7 +973,9 @@
         "Prime2",
         "Infinity",
         "Pro",
-        "Pro2"
+        "Pro2",
+        "Rise",
+        "RiseArcade"
       ],
       "configSchema": {
         "type": "object",
@@ -986,7 +1012,9 @@
               "Prime2",
               "Infinity",
               "Pro",
-              "Pro2"
+              "Pro2",
+              "Rise",
+              "RiseArcade"
             ],
             "nullable": true
           },

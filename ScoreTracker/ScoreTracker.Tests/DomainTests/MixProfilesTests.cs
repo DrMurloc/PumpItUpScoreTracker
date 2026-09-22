@@ -72,6 +72,58 @@ public sealed class MixProfilesTests
                 MixProfiles.For(mix).GradeLadder);
     }
 
+    [Theory]
+    [InlineData(MixEnum.Rise)]
+    [InlineData(MixEnum.RiseArcade)]
+    public void ARiseMixIsPhoenixScoredOnAKeyboardWithNoSiteAndNoPhoenixFeature(MixEnum mix)
+    {
+        var profile = MixProfiles.For(mix);
+
+        Assert.False(mix.UsesLegacyScoring());
+        Assert.True(mix.IsPrimary());
+        Assert.Equal(Platform.Keyboard, profile.Platform);
+        Assert.Null(profile.OfficialSite);
+        Assert.False(mix.HasOfficialSite());
+        Assert.False(profile.HasLifebarModel);
+        Assert.False(mix.HasPumbility());
+        Assert.False(mix.HasOfficialBoards());
+        Assert.False(mix.HasWeeklyBoard());
+        Assert.False(mix.HasMarchOfMurlocs());
+        Assert.False(mix.HasPhoenixCalculators());
+        Assert.False(mix.HasRecap());
+        Assert.False(mix.HasSeasons());
+        Assert.Equal("Phoenix2", profile.Art.BubbleFolder);
+        Assert.True(profile.Art.HasHalfDoubleBubble);
+    }
+
+    [Fact]
+    public void RiseGradesOnItsOwnLadderWithMarksAndItsOwnLetters()
+    {
+        var rise = MixProfiles.For(MixEnum.Rise);
+        Assert.Equal(GradeLadder.Rise, rise.GradeLadder);
+        Assert.Equal(AwardSet.RiseMarks, rise.Awards);
+        Assert.Equal("Rise", rise.Art.ScoreArtFolder);
+    }
+
+    [Fact]
+    public void RiseArcadeIsPhoenix2InEverythingButThePlatform()
+    {
+        var arcade = MixProfiles.For(MixEnum.RiseArcade);
+        var phoenix2 = MixProfiles.For(MixEnum.Phoenix2);
+        Assert.Equal(phoenix2.GradeLadder, arcade.GradeLadder);
+        Assert.Equal(phoenix2.Awards, arcade.Awards);
+        Assert.Equal(phoenix2.Art, arcade.Art);
+        Assert.Equal(Platform.Keyboard, arcade.Platform);
+    }
+
+    [Fact]
+    public void TheRiseMixesFollowPhoenix2InThePicker()
+    {
+        Assert.True(MixEnum.Rise.DisplayOrder() > MixEnum.Phoenix2.DisplayOrder());
+        Assert.True(MixEnum.RiseArcade.DisplayOrder() > MixEnum.Rise.DisplayOrder());
+        Assert.Equal("Rise Arcade", MixEnum.RiseArcade.GetName());
+    }
+
     [Fact]
     public void ThePhoenixGenerationDrawsItsOwnBubblesAndTheFlatScoreArt()
     {
