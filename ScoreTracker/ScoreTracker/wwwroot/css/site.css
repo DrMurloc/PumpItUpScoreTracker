@@ -444,6 +444,23 @@ body {
     box-shadow: 0 0 8px var(--mix-glow);
 }
 
+/* The mix dropdown's primary rows lead with the game's wordmark in a fixed slot, so the names
+   line up whatever the mark's width. */
+.mix-row-mark {
+    width: 56px;
+    flex: 0 0 56px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.mix-row-logo {
+    height: 22px;
+    width: auto;
+    max-width: 56px;
+    object-fit: contain;
+}
+
 /* App-bar chart search — a quiet pill that matches the mix pill, not a form field.
    The outlined border and dropdown caret are stripped; focus brings the theme primary in. */
 .appbar-search .mud-input-control {
