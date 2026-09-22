@@ -10,6 +10,7 @@ using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts;
+using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Exceptions;
@@ -53,6 +54,100 @@ public sealed class PlayersController : ApiV2ControllerBase
     ///         turns this endpoint into an account-enumeration oracle.
     ///     </para>
     /// </summary>
+    public const int MaxPlaysPerRequest = 100;
+    public const int MaxSourceLength = 32;
+
+    // ScoreScreen's formula matches the game to ±1 (it floors where the machine sometimes does
+    // not), so a play one point off still reconciles; two points off is a misread.
+    private const int ChecksumTolerance = 1;
+
+    /// <summary>
+    ///     <c>POST me/plays</c> — judged plays a tool observed for the caller, the one write on v2
+    ///     (docs/design/rise.md §6.3): built for the RISE capture app and open to any tool acting
+    ///     with a player's own token. Every play's score is recomputed from its five judgment counts
+    ///     and max combo, and a play that does not reconcile refuses the whole request — the
+    ///     checksum that keeps a misread screen out of a record. A play that reconciles goes
+    ///     through the ledger's best-attempt policy, so it becomes the record only where it beats
+    ///     it, and into the journal either way, dated by the play time the tool observed.
+    /// </summary>
+    [HttpPost("me/plays")]
+    [ProducesResponseType(typeof(RecordPlaysResultDto), StatusCodes.Status200OK, "application/json")]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RecordPlays([FromBody] RecordPlaysRequestDto? body)
+    {
+        if (User.ToolId() is not null)
+            return Problem("tool-has-no-self", "A tool has no 'me'.",
+                detail: "Plays are recorded with the player's own token.");
+        if (body is null) return Problem("body-required", "A request body is required.");
+        if (!V2MixParser.TryParse(body.Mix, out var mix)) return MixRequiredProblem();
+        var mixName = mix.GetName();
+        if (mix.UsesLegacyScoring())
+            return Problem("legacy-mix", "This mix is not Phoenix-scored.",
+                detail: $"{mixName} keeps a letter grade, not five judgments and a 1,000,000-point score.");
+        if (string.IsNullOrWhiteSpace(body.Source) || body.Source.Length > MaxSourceLength ||
+            !body.Source.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '_' or '-'))
+            return Problem("source-required", "The source names the tool that observed the plays.",
+                detail: $"One to {MaxSourceLength} letters, digits, '.', '_' or '-'.");
+        if (body.Plays is null || body.Plays.Count == 0 || body.Plays.Count > MaxPlaysPerRequest)
+            return Problem("plays-required", $"Between one and {MaxPlaysPerRequest} plays per request.");
+
+        var charts = (await _mediator.Send(new GetChartsQuery(mix))).ToDictionary(c => c.Id);
+        var source = "api:" + body.Source;
+        var resolved = new List<(Chart Chart, ObservedPlayDto Play, PhoenixScore Score, PhoenixPlate? Award,
+            JudgementCounts Judgements)>();
+        for (var i = 0; i < body.Plays.Count; i++)
+        {
+            var play = body.Plays[i];
+            var chart = ResolveChart(charts, play);
+            if (chart == null) return NotFoundProblem($"Play {i}: no chart matches on {mixName}.");
+            if (play.Perfects < 0 || play.Greats < 0 || play.Goods < 0 || play.Bads < 0 || play.Misses < 0 ||
+                play.MaxCombo < 0)
+                return Problem("judgments-invalid", $"Play {i}: judgment counts cannot be negative.");
+            if (!PhoenixScore.TryParse(play.Score, out var score))
+                return Problem("score-invalid", $"Play {i}: the score is not a Phoenix score.");
+            var screen = new ScoreScreen(play.Perfects, play.Greats, play.Goods, play.Bads, play.Misses, play.MaxCombo);
+            var expected = (int)screen.CalculatePhoenixScore;
+            if (screen.TotalCount == 0 || play.MaxCombo > screen.TotalCount ||
+                Math.Abs(expected - play.Score) > ChecksumTolerance)
+                return Problem("judgments-do-not-reconcile", "The judgments do not produce the score.",
+                    detail: $"Play {i}: {play.Perfects}/{play.Greats}/{play.Goods}/{play.Bads}/{play.Misses} " +
+                            $"with max combo {play.MaxCombo} scores {expected:N0}, not {play.Score:N0}.");
+            PhoenixPlate? award = null;
+            if (!play.IsBroken && !string.IsNullOrWhiteSpace(play.Award))
+            {
+                award = AwardSets.TryParseShorthand(play.Award, mix);
+                if (award == null)
+                    return Problem("award-invalid", $"Play {i}: not an award {mixName} hands out.",
+                        detail: "Valid values: " + string.Join(", ", mix.AwardsOf().Select(a => a.GetShorthand(mix))));
+            }
+
+            resolved.Add((chart, play, score, award,
+                new JudgementCounts(play.Perfects, play.Greats, play.Goods, play.Bads, play.Misses, play.MaxCombo)));
+        }
+
+        // The record first — keep-best, so only a play that beats it moves it, dated by the play —
+        // then the journal, which is idempotent on play time and so never journals a record's play twice.
+        foreach (var (chart, play, score, award, judgements) in resolved)
+            await _mediator.Send(new UpdatePhoenixBestAttemptCommand(chart.Id, play.IsBroken, score, award,
+                KeepBestStats: true, Source: source, Mix: mix, RecordedAt: play.PlayedAt, Judgements: judgements));
+        await _mediator.Send(new RecordObservedPlaysCommand(_currentUser.User.Id, mix, source, null,
+            resolved.Select(r => new RecordObservedPlaysCommand.ObservedPlay(r.Chart.Id, r.Score, r.Award,
+                r.Play.IsBroken, r.Play.PlayedAt, r.Judgements)).ToArray()));
+
+        return Ok(new RecordPlaysResultDto(resolved.Count, mix.ToString(), ScoringModelOf(mix)));
+    }
+
+    private static Chart? ResolveChart(IReadOnlyDictionary<Guid, Chart> charts, ObservedPlayDto play)
+    {
+        if (play.ChartId is { } id) return charts.GetValueOrDefault(id);
+        if (string.IsNullOrWhiteSpace(play.SongName) || play.Level is null ||
+            !Enum.TryParse<ChartType>(play.ChartType, true, out var type)) return null;
+        return charts.Values.FirstOrDefault(c => c.Type == type && (int)c.Level == play.Level &&
+                                                 string.Equals(c.Song.Name.ToString(), play.SongName.Trim(),
+                                                     StringComparison.OrdinalIgnoreCase));
+    }
+
     private async Task<(Guid? UserId, ObjectResult? Failure)> ResolvePlayer(string playerId)
     {
         var toolId = User.ToolId();

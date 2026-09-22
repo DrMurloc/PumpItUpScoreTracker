@@ -403,7 +403,7 @@ seeded and everything after it field-tested.
 | 5 | `tools: RiseCatalog` | the Python tool and its README (§11.3); nothing generated is committed | not in the solution. Run it, apply s1–s4 to the Aspire database, and 6–8 are field-testable |
 | 6 | `feat(web): the Rise and Rise Arcade themes` | two `MixPalette`s with their ramps, `ThemedMixes`, `CssClassFor` | the theme tests; no stylesheet change |
 | 7 | `feat(web): the pages learn the two mixes` | `RecurringJobRunner` (five publishes), `WidgetRegistry`, `Player.razor` tiles, `StaticHeadResolver`, `UploadPhoenixScores` site-less flow | Tests.Components: the nav on Rise, the upload page on Rise, three marks vs eight plates, the bubble. **The owner's copy is asked for here** — the upload page's Rise lines and the two SEO descriptions |
-| 8 | `feat(api): POST api/v2/players/me/plays` | the action on `PlayersController`, the DTO, the checksum, dispatch to `RecordObservedPlaysCommand` | Tests.Api goldens for the request, 201 and 400 |
+| 8 | `feat(api): POST api/v2/players/me/plays` | the action on `PlayersController`, the DTO, the checksum, dispatch to `RecordObservedPlaysCommand` | Tests.Api goldens for the request, 200 and 400 |
 | 9 | `i18n: every new string in nine locales` | the resx keys, inserted alphabetically, all nine at once | the parity and alphabetical ratchets — which is why no earlier commit adds a key to one locale |
 
 After the PR: the pipeline applies the migration; the owner runs s1–s4 in order; the 59 sprites should be up before
@@ -578,7 +578,7 @@ mix.
   them with `scoringModel: phoenix`: the `Tests.Api` golden grows two rows, additive but a contract change, said so
   in the PR. NEW `POST api/v2/players/me/plays` on `PlayersController` (§6.3, D14): DTO in `Dtos/ApiV2/`, the
   judgment checksum validated at the boundary, dispatches `RecordObservedPlaysCommand`; a `Tests.Api` golden for the
-  request and the 201 / 400 shapes; an API.md row. v1 `ApiMixParser` untouched.
+  request and the 200 / 400 shapes; an API.md row. v1 `ApiMixParser` untouched.
 - Localization: the three mark names, the upload page's Rise lines, and whatever a hidden page still lacks (most
   already carry their legacy-mix line) — all nine locales, alphabetical, the last commit.
 - `Tests.Components`: a Rise half-double renders the image and an Infinity one the chip; `RecordScoreForm` offers
