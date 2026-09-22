@@ -1,6 +1,6 @@
 # Pump It Up RISE — two keyboard mixes
 
-Status: **design complete for phase 1, no code; next is the technical-scope pass (§8.1) on the owner's go.**
+Status: **design and technical scope complete for phase 1 (§11), no code; the build starts on the owner's go.**
 Researched 2026-09-14 → 2026-09-22 from the owner's install, his screenshots, two community sheets, two wikis and the
 Steam patch notes; the owner took the high-level plan to two Rise players (Sneezle, Dave) on 2026-09-21 and their
 answers are folded in; every open question of §9 was answered by 2026-09-22. Every decision below is the owner's
@@ -89,7 +89,11 @@ Owner decisions are marked **(owner, date)**; the rest are mine, decided unless 
   grade is derived from the score at read time and never stored.
 - **D12 (owner, 2026-09-21). Art.** RISE's own grade and mark art, exported from the game files, serves the Rise
   mix; Rise Arcade reuses the site's Phoenix art, which is what the Arcade Station itself draws. Rise singles use the
-  **Phoenix 2 stepballs for now**; half-doubles stay the CSS chip. Each mix gets its own palette, mocked before build.
+  **Phoenix 2 stepballs for now**; half-doubles draw the **H. DOUBLE stepball** (owner, 2026-09-22, picked from the mock): piugame's own
+  Phoenix 2 half-double layers — `hd_bg.png` / `hd_text.png`, the RISE MIX channel's, blue on the arcade — composed
+  the way the site's flattened stepballs are (ring at 0.98, word at 1.54, digits at 1.2, fitted against the CDN's
+  `d20.png`) and shifted onto the Pro series' Half-Double violet (hue 258); 25 files, `difficulty/Phoenix2/hdb4.png`
+  … `hdb28.png`, uploaded and verified 2026-09-22. Rise Arcade has no half-doubles. Each mix gets its own palette, mocked before build.
 - **D13 (owner, 2026-09-21). Both mixes are top-level in the picker.**
 - **D14 (owner, 2026-09-22). The score endpoint is a v2 write for observed plays** (§6.3), specified in phase 1 so
   the capture app builds against a fixed contract; v1 stays frozen.
@@ -136,7 +140,7 @@ were asking the wrong question move to the right field:
 | `BackfillStageBreakCausesConsumer` | every non-legacy mix | every mix with a lifebar model |
 | `BackfillMaxCombosConsumer`, `BrokenRecordCleanupSaga` | every non-legacy mix | unchanged in effect (they want Phoenix-scored) — read `ScoringModel` |
 | `RecordScoreForm` plate picker, `PhoenixScoreFileExtractor` plate shorthand, `PhoenixPlateHelperMethods.GetName` | the eight plates, always | the profile's `Awards` (values + display names) |
-| `ApiMixParser` (v1) | Phoenix, Phoenix2 only | every Phoenix-scored mix (§6.3) |
+| `ApiMixParser` (v1) | Phoenix, Phoenix2 only | untouched — v1 is frozen; the v2 surface takes both mixes (D14, §6.3) |
 
 Adding a mix after this is a profile row, an enum value, a `MixIds` Guid and a `scores.Mix` row.
 
@@ -344,7 +348,7 @@ Manual entry and spreadsheet upload need neither.
   `2026-09-21/art/`). `ShareCardImages.LetterGrade` / `Plate` gain the per-mix folder that `DifficultyBubble` already
   has (`letters/{mix}/…`, `plates/{mix}/…`, flat fallback), and the owner uploads the set to the CDN. Rise Arcade
   points at the Phoenix set.
-- **Difficulty:** half-doubles already render as the CSS chip on any mix. Rise singles reuse the Phoenix 2 stepballs
+- **Difficulty:** half-doubles draw the H. DOUBLE stepball (D12). Rise singles reuse the Phoenix 2 stepballs
   for now (D12); Rise Arcade reuses them too, which is what the station draws.
 - **Picker:** both mixes top-level (D1). Phase-2 pages answer through `MixUnavailableNotice` ("not built yet"
   for PUMBILITY, weekly boards, March of Murlocs; "this mix never had it" for official boards and titles).
@@ -372,7 +376,7 @@ The reference list the owner asked for (2026-09-22). "Works" means on both new m
 | Mix picker | **Rise** and **Rise Arcade** beside the three primaries, each with its own theme (D15) and pill; the anonymous mix cookie, the account default and the shell seed all accept them |
 | Catalog, Rise | every song on the community sheet (421 on 2026-09-21) with its 5K Single and 6K Half-Double charts at Rise's levels, each stamped with the Rise patch it arrived in; 50 songs new to the site with their jackets (uploaded 2026-09-22) |
 | Catalog, Rise Arcade | the 352-song Arcade Station list (§4.2) as membership rows on the Phoenix 2 charts, Single and Double, Phoenix 2 levels and note counts |
-| Chart pages and search | `/Charts` browse and search, the canonical chart page, the details dialog and the app-bar search on both mixes; half-doubles render as the existing chip, singles as Phoenix 2 stepballs (D12) |
+| Chart pages and search | `/Charts` browse and search, the canonical chart page, the details dialog and the app-bar search on both mixes; half-doubles draw the H. DOUBLE stepball, singles the Phoenix 2 stepballs (D12) |
 | Recording | manual entry on the chart page, the details dialog, the SRP quick record and the Quick Record widget; Rise grades with no plus tiers on the published ladder (§5.2); Rise's three marks as its plates, shown as Perfect Game / Full Combo / No Miss (D5); Rise Arcade with Phoenix 2 grades and the eight plates; the broken flag on both |
 | Spreadsheet upload | one upload page for both mixes: Song, Difficulty (`S16`, `HDB23`, `D20`), Score, Plate or mark (`PG`/`FC`/`NM` accepted), IsBroken; keep-best by default |
 | Score art | Rise letters, broken letters and mark badges from the game (D12) with a per-mix art path; Rise Arcade draws the site's Phoenix set |
@@ -380,7 +384,7 @@ The reference list the owner asked for (2026-09-22). "Works" means on both new m
 | Tier lists | open on both mixes with community votes; the score-derived lenses fill in as scores accumulate |
 | Player page, journal, sessions | records and the score journal on both mixes; the rating tiles, PUMBILITY and official standing hidden rather than drawn as zeros |
 | API | `GET api/v2/mixes` lists both with `scoringModel: phoenix`; every v2 read takes them; **`POST api/v2/players/me/plays`** (D14) accepts a judged play with the score checksum, the capture app's endpoint; v1 unchanged |
-| Says "not built yet" | PUMBILITY pages, weekly boards, March of Murlocs, the recap, the Phoenix calculators; "this mix never had it" for official boards and titles |
+| Off the nav | PUMBILITY, the recap, Titles, Weekly Charts, March of Murlocs, the Leaderboards group and the two Phoenix calculators are not offered on either Rise mix (owner, 2026-09-22); reached by URL they explain themselves, as on a legacy mix — no route gate (§11.2, `MixCapabilities`) |
 | Not in phase 1 | leaderboards and PUMBILITY tuning (phase 3), the capture app (phase 2), Discord announcements for the new mixes, `/Admin/BulkAddCharts` learning a mix (future Rise songs arrive through the catalog tool's SQL until then) |
 | Docs and locales | DOMAIN.md, API.md, UX-GUIDELINES.md, DATABASE-SCHEMA.md updated; every new string in all nine locales |
 
@@ -446,3 +450,174 @@ settle for free; whether Rise Arcade follows Phoenix 2 where Phoenix 2 added a c
 - The game install: `resources.assets` / `sharedassets0.assets` (grade, mark and Arcade Station sprites, readable
   with UnityPy); the IL2CPP string table (server hosts, AES); Steam Cloud saves (encrypted); the in-game guidebook
   images under `StreamingAssets/Guidebook/`.
+
+---
+
+## 11. Technical scope (phase 1)
+
+Written 2026-09-22 against the code at `b9feba3b`; every file named here was read. The build order is §8.1; this is
+what each step touches, by project. One PR, docs first, locales last. **No new vertical, no new table, no new bus
+message, no new recurring job.**
+
+### 11.1 The shape of the change
+
+A new mix is data plus one profile row — that is the point of `MixProfile` (§3) — and most of phase 1 is making
+that sentence true. Today some thirty places spell "Phoenix or Phoenix 2" by hand, and each is a place a Rise
+player gets a wrong answer or a crash. They come in four kinds:
+
+| Kind | What happens on Rise today | Fix |
+|---|---|---|
+| A boolean asked the wrong question (`UsesLegacyScoring()`) | Rise is Phoenix-scored, so every "not legacy" branch fires: the nav offers PUMBILITY, the import page asks for piugame credentials, the bubble path is `difficulty/Rise/s16.png` (404), the cross-mix border unions the pad mixes | the profile fields (§3 table) |
+| An explicit mix list | `RecurringJobRunner` rebuilds tier lists for Phoenix and Phoenix 2 only; `WidgetRegistry` offers each widget to those two; `WipeUserScoresHandler.ParallelMixes`; `ThemedMixes`; `StaticHeadResolver` | add the two mixes where the feature works; leave the list alone where it does not |
+| A switch that throws | `ScoringConfiguration.PumbilityScoring(mix)` throws for any mix but the two Phoenix ones, and the rating step of `HighlightCaptureSaga` reaches it on every score event | gate the callers on `HasPumbility()`; the throw stays, it is right |
+| A switch with a safe default | `TitleLadders.For` → `NeverExisted`, `TitleLists.HasDifficultyTitles` → false, `PumbilityPoolBands.For` → empty, `GetAccentColor` → grey, `V2MixParser` → any enum name | nothing, or a Rise case where the default is wrong (the accent) |
+
+### 11.2 By project
+
+**SharedKernel** — where the two mixes become real.
+
+- `Enums/MixEnum.cs`: `Rise` (`[Description("Rise")]`) and `RiseArcade` (`[Description("Rise Arcade")]`; `GetName()`
+  feeds the picker, the chart-page slug `rise-arcade` and the mix cookie); `IsPrimary()` includes both (D13);
+  `DisplayOrder()` 290 / 300; `GetAccentColor()` two cases from the palettes (D15); `UsesLegacyScoring()` becomes
+  `MixProfiles.For(mix).ScoringModel == ScoringModel.Legacy`.
+- NEW `Enums/MixProfile.cs`: `sealed record MixProfile(ScoringModel, GradeLadder, AwardSet, OfficialSite, Platform,
+  LifebarModel, IReadOnlyList<ChartType> ChartTypes, ArtSet Art)` and `MixProfiles.For(MixEnum)` — a dictionary over
+  all 33 values, the §3 table verbatim. Rise: Phoenix · **Rise** · **RiseMarks** · None · Keyboard · None ·
+  {Single, HalfDouble} · Rise letters on Phoenix 2 stepballs. Rise Arcade: Phoenix · Phoenix2 · PhoenixPlates ·
+  None · Keyboard · None · {Single, Double} · Phoenix 2 everything.
+- `Enums/MixCapabilities.cs`: the six flags read the profile. Phase-1 answers for both Rise mixes: `HasPumbility`,
+  `HasRecap`, `HasOfficialBoards`, `HasWeeklyBoard`, `HasMarchOfMurlocs`, `HasPhoenixCalculators` all **false**.
+  That is the entire "off the nav" rule: `ShellNav` and `ShellMoreSheet` already gate on these plus
+  `TitleLadders.HasLadder`, so on Rise the menu is Home · Tier Lists · Charts · Import Scores · My Sessions · Rivals ·
+  Chart Randomizer · Community · Lifebar Calculator · Mix Changes · About. The lifebar calculator and the mix diff
+  stay because neither reads the selected mix (they stand on legacy mixes too). A page reached by URL anyway
+  explains itself the way it does on a legacy mix; no route gate comes back.
+- `Enums/PhoenixLetterGrade.cs`: `GradeLadder { Phoenix1, Phoenix2, Rise }`; a `RiseFloors` table (§5.2 — nine
+  grades, no plus tiers, the placeholder low floors of D11); `LetterGradeFor` / `GetMinimumScoreFor` /
+  `GetMaximumScoreFor` pick the table off the profile instead of `mix == Phoenix2`. `RecapPlayerTypeCalculator` and
+  the calculator models keep their Phoenix tables (both features are off).
+- `Enums/PhoenixPlate.cs` and its helpers: `AwardSet { PhoenixPlates, RiseMarks, None }`; `RiseMarks` = `PerfectGame`,
+  `UltimateGame`, `SuperbGame` shown as Perfect Game / Full Combo / No Miss with shorthands `PG` / `FC` / `NM` (D5);
+  `GetName(mix)` and the shorthand parse read the profile.
+- `DomainTests`: every `MixEnum` value has a profile; the 31 existing mixes answer `UsesLegacyScoring`, `IsPrimary` and
+  every capability flag exactly as before (a table test — the regression net for the refactor); the Rise ladder at
+  every boundary and the absence of plus grades; mark parsing round-trips.
+
+**Domain** — no change. `TitleLists`, `ScoreProjector` and the Phoenix 2 title classes never see the new mixes.
+
+**Data**
+
+- `Persistence/MixIds.cs`: two Guids, minted once, hardcoded here, in the migration and in the tool's `MixMap` (the
+  PumpoutExtractor rule).
+- `Migrations/<stamp>_RiseMixes.cs`: `IF NOT EXISTS … INSERT [scores].[Mix]` for both rows (`Rise`, `RiseArcade` —
+  `Name` is `MaxLength(10)`, exactly ten), SortOrder 290 / 300, IsPrimary 1 — the `LegacyMixCatalog` pattern, data
+  only, no model change.
+- No new table, no new column: `ChartMix.NoteCount` is already nullable (D10 needs that), `Chart.Type` already stores
+  `HalfDouble`, `MixVersion.Name` is `MaxLength(16)`.
+
+**Catalog** — no code. `MixVersion` rows arrive by SQL (§11.3); `GetMixVersionsQuery`, `api/v2/versions`, the chart
+slugs (`ChartSlugs.MixSlug` is `Slugify(GetName())`) and the `AddedInVersionId` stamps work unchanged.
+`StepChartIngest` and `PiuCenterCrawlSaga` stay Phoenix-only by design.
+
+**ScoreLedger**
+
+- `WipeUserScoresHandler.ParallelMixes` → every Phoenix-scored mix from the profile (Your Data must delete a Rise
+  record too).
+- `GetCrossMixPassesHandler` → every Phoenix-scored mix **on the viewer's platform** (D6: Rise ↔ Rise Arcade, the pad
+  family among themselves, never across).
+- `BackfillMaxCombosConsumer`, `BrokenRecordCleanupSaga` → read `ScoringModel` (same effect, right question);
+  `BackfillStageBreakCausesConsumer` → mixes with a lifebar model, so never Rise (D9).
+- `RecordObservedPlaysCommand` is the v2 write's target, unchanged; keep-best is the ledger's existing policy.
+
+**PlayerProgress**
+
+- The rating step of `HighlightCaptureSaga` and the player-stats recompute skip a mix whose `HasPumbility()` is false
+  before `PumbilityScoring` is reached; today a Rise score event would throw inside a failure-isolated step and log
+  an error per session.
+- `TitleLadders.For` already answers `NeverExisted` for both, so Titles is off the nav and the page says so.
+
+**ChartIntelligence** — no code. `TierListSaga`, the scoring-difficulty and letter-difficulty lenses, similarity and
+community votes are per-mix already; what changes is who asks them to run (`RecurringJobRunner`, below). Hardmode,
+the PUMBILITY tier list and the folders stay Phoenix 2.
+
+**OfficialMirror** — `PiuGameConfiguration.BaseUrlFor` reads `OfficialSite` and answers null for a site-less mix; its
+callers already sit behind the import page and the leaderboard job, neither of which reaches Rise.
+`GetChartTypeFromUrl` keeps skipping `hd` (D8).
+
+**Communities, Rivals, CommunityTools, EventCompetition, WeeklyChallenge, Seasons, Identity, HomePage, Translations,
+Randomizer** — no change. The randomizer draws from the selected mix's charts and just works; the Discord bot's
+Phoenix 2 default and the role table are Phoenix 2 by design; peers and rivals read the score reader, which is per
+mix.
+
+**Web**
+
+- Theme — `Services/Theming/MixThemes.cs`: two `MixPalette`s from the approved mocks (D15) with their hue and rarity
+  ramps, `ThemedMixes` += both, `CssClassFor` → `theme-rise` / `theme-rise-arcade`. Nothing in `site.css` keys on a
+  theme class; no stylesheet change.
+- Art — `Services/ShareCardImages.cs`: `DifficultyBubble` → `difficulty/{profile.Art}/…` (both Rise mixes answer
+  `Phoenix2`: the singles and doubles are the Phoenix 2 stepballs, D12, and the 25 half-double files are there);
+  `LetterGrade` → `letters/Rise/{grade}.png` and `_broken` on Rise, the flat set elsewhere; `Plate` →
+  `plates/Rise/{pg|ug|sg}.png` on Rise. `Components/DifficultyBubble.razor`: the half-double chip only where the art
+  set has no half-double bubble (Infinity keeps its chip). `LetterGradeIcon` is unchanged; it reads `ShareCardImages`.
+- Shell — nothing. `ShellMixMenu` lists `IsPrimary()` by `DisplayOrder()`, the nav gates on the flags,
+  `ShellModelFactory` parses the cookie by enum name.
+- Recording — `Components/RecordScoreForm.razor`: the award picker from `profile.Awards`;
+  `Services/PhoenixScoreFileExtractor.cs`: `PG` / `FC` / `NM` beside the plate codes (`HDB23` already parses);
+  `Pages/UploadPhoenixScores.razor`: a site-less Phoenix mix gets the spreadsheet flow alone — no credential fields,
+  no piugame session; the copy is the owner's.
+- `Pages/Progress/Player.razor`: the PUMBILITY, rating and official-standing tiles hide behind `HasPumbility()` /
+  `HasOfficialBoards()` instead of drawing zeros. `Services/ShareCardComposer.cs:179`: `mix is not (Phoenix or
+  Phoenix2)` → `ScoringModel`, so a Rise share card carries its letter and mark.
+- `HostedServices/RecurringJobRunner.cs`: `ProcessScoresTiersListCommand`, `RecalculateScoringDifficultyCommand`,
+  `ProcessPassTierListCommand`, `RecalculateChartLetterDifficultiesCommand` and `RecalculateChartSimilarityCommand`
+  each publish for the two mixes too (one line each); the weekly rotation, Daily Step, the PUMBILITY tier list,
+  Hardmode and the leaderboard import do not. No new job, no SCHEDULED-JOBS row.
+- `Services/HomeDashboard/WidgetRegistry.cs`: the two mixes on every widget whose data exists on them (quick record,
+  import, account stats, by-level breakdown, sessions); not the PUMBILITY widget, not Daily Step (its rotation is
+  off).
+- `Services/StaticHeadResolver.cs`: Rise descriptions for the SEO head (two `mix is Phoenix or Phoenix2 ? mix :
+  Phoenix` fallbacks); the copy is the owner's.
+- API — `V2MixParser` parses by enum name, so every v2 read takes both mixes with no change. `GET api/v2/mixes` lists
+  them with `scoringModel: phoenix`: the `Tests.Api` golden grows two rows, additive but a contract change, said so
+  in the PR. NEW `POST api/v2/players/me/plays` on `PlayersController` (§6.3, D14): DTO in `Dtos/ApiV2/`, the
+  judgment checksum validated at the boundary, dispatches `RecordObservedPlaysCommand`; a `Tests.Api` golden for the
+  request and the 201 / 400 shapes; an API.md row. v1 `ApiMixParser` untouched.
+- Localization: the three mark names, the upload page's Rise lines, and whatever a hidden page still lacks (most
+  already carry their legacy-mix line) — all nine locales, alphabetical, the last commit.
+- `Tests.Components`: a Rise half-double renders the image and an Infinity one the chip; `RecordScoreForm` offers
+  three marks on Rise and eight plates on Rise Arcade; `ShellNav` on Rise offers none of the gated items; the upload
+  page on Rise shows no credential fields.
+
+### 11.3 The SQL — `tools/RiseCatalog/`
+
+A console app beside `PumpoutExtractor`, under its rules: not in the solution, Sonar-excluded, output to Downloads,
+reviewed and run by hand, nothing generated enters the repo. Inputs: a CSV export of the community sheet, Dave's
+Arcade Station list, the site's `/Charts/Export.csv` for Phoenix and Phoenix 2 (or `export-prod-catalog.py` against
+the local prod-synced database), `title-to-id.json`, and the Steam news patch dates. The order-preserving single
+mapper (`mapper.py`, §4.3) ports over as `Matcher.cs` with the five confirmed readings baked in.
+
+Four idempotent single-transaction scripts, `IF NOT EXISTS` per row, every Guid deterministic (v5 from
+`mix|song|type|level`) so a re-run is a no-op:
+
+| Script | Rows (2026-09-22 counts) | Needs |
+|---|---|---|
+| `s1-rise-versions.sql` | `scores.MixVersion`: the 14 Rise patches on the sheet (`Base`, `0.2.1` … `0.8.1`, `1.0.0` … `1.3.0`, `1.5.0`) plus `1.4.0`; Rise Arcade `1.4.0` and later; dated from the Steam notices | the Rise mixes migration |
+| `s2-rise-songs-charts.sql` | `scores.Song`: 50 (artist and BPM from the sheet, `Type` from the channel, `ImagePath` the jackets already on the CDN, `Duration` measured by the tool from the game's audio clips, `00:00` where it cannot); `scores.Chart`: 16 Rise-only singles on existing songs + 216 singles on the new songs + 1,173 half-doubles, `OriginalMixId = Rise`, `StepArtist` NULL | s1 |
+| `s3-rise-membership.sql` | `scores.ChartMix` for Rise: ≈1,800 singles (1,571 onto existing arcade charts at Rise's level, the rest onto s2's rows) + 1,173 half-doubles; `NoteCount` NULL (D10); `AddedInVersionId` = the song's arrival patch | s2 |
+| `s4-rise-arcade-membership.sql` | `scores.ChartMix` for Rise Arcade: 2,385 rows (1,472 S + 913 D) onto the Phoenix 2 charts of the 352 songs, Phoenix 2 level and note count copied; `AddedInVersionId` = `1.4.0` unless a later notice added the song | s1 |
+
+Plus `reports/`: the alignment sheet (every automatic reading), unmatched names, and `art-needed.txt` (expected
+empty — the 50 are up).
+
+### 11.4 Docs, in the first commit
+
+This doc's status; DOMAIN.md (Rise, Rise Arcade, half-double, the marks); API.md (the mixes list, the plays write);
+UX-GUIDELINES.md (two palettes); DATABASE-SCHEMA.md (`scores.Mix` "33 mixes", the MixVersion note); CLAUDE.md, one
+line under Domain models: a new mix is a profile row, an enum value, a `MixIds` Guid and a `scores.Mix` row.
+
+### 11.5 Owner-owed before the PR merges
+
+- The 59 sprites, now with paths: `letters/Rise/<grade>.png` and `letters/Rise/<grade>_broken.png` for `sss ss s aa a
+  b c d f`; `plates/Rise/pg.png`, `ug.png`, `sg.png` (shown as Perfect Game / Full Combo / No Miss).
+- The four scripts against prod after the migration deploys, in order.
+- The SEO descriptions and the upload page's Rise copy.
