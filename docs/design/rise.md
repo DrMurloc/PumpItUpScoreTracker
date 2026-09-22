@@ -388,30 +388,26 @@ The reference list the owner asked for (2026-09-22). "Works" means on both new m
 | Not in phase 1 | leaderboards and PUMBILITY tuning (phase 3), the capture app (phase 2), Discord announcements for the new mixes, `/Admin/BulkAddCharts` learning a mix (future Rise songs arrive through the catalog tool's SQL until then) |
 | Docs and locales | DOMAIN.md, API.md, UX-GUIDELINES.md, DATABASE-SCHEMA.md updated; every new string in all nine locales |
 
-### 8.1 Phase-1 build order (proposed, for the technical-scope pass)
+### 8.1 Phase-1 commit order (2026-09-22, supersedes the proposed build order)
 
-The commit series, each green on its own, docs first and localization last, one PR:
+One PR, nine commits, each green on `dotnet build` plus the three fast suites on its own; integration and E2E once
+before the PR opens. Docs first, locales last. The tool comes right after the mixes so the local database can be
+seeded and everything after it field-tested.
 
-1. **Profile.** `MixProfile` + `MixProfiles.For(mix)` in SharedKernel with a DomainTest that every enum value has
-   one; `UsesLegacyScoring()`, `MixCapabilities.*`, `LetterGradeFor`/`GetMinimumScoreFor`/`GetMaximumScoreFor` become
-   reads off it; the dozen wrong-question call sites of §3 move to the right field (official site, art, platform,
-   lifebar). No behavior change for the 30 existing mixes — the test is the existing suites staying green.
-2. **The two mixes.** `MixEnum.Rise`, `MixEnum.RiseArcade`, their `MixIds` Guids, one migration seeding the two
-   `scores.Mix` rows (SortOrder after Phoenix 2, both primary), their profiles, the Rise floors table and the
-   RiseMarks award vocabulary with display names.
-3. **Theme and art.** Two `MixPalette`s, `ThemedMixes`, the CSS classes, per-mix letter and plate paths in
-   `ShareCardImages` (`letters/{mix}/…`, `plates/{mix}/…`, flat fallback), the owner uploads the Rise set and the
-   50 jackets.
-4. **Catalog tooling.** `tools/RiseCatalog/` (the `PumpoutExtractor` precedent): reads the sheet snapshot, Dave's
-   list, the site's Phoenix exports and `title-to-id.json`; emits idempotent SQL to Downloads — Rise songs, charts,
-   membership rows and `MixVersion` rows; Rise Arcade membership rows on the Phoenix 2 charts. Bulk data never
-   enters the repo.
-5. **Recording.** The upload page driven by the profile (site-less Phoenix mix = spreadsheet flow alone), the
-   RISE mark shorthand in the extractor, the profile's award list in `RecordScoreForm`.
-6. **The v2 write.** `POST api/v2/players/me/plays` on `RecordObservedPlaysCommand` + the best-attempt policy, the
-   judgment checksum, a `Tests.Api` golden.
-7. **Docs and locales.** DOMAIN.md (RISE terms), API.md, UX-GUIDELINES.md, DATABASE-SCHEMA.md (the two rows),
-   this doc's status; new strings in all nine locales.
+| # | Commit | What lands | Green because |
+|---|---|---|---|
+| 1 | `docs: RISE phase 1 — the two mixes, the profile, the v2 plays write` | DOMAIN.md, API.md, UX-GUIDELINES.md, DATABASE-SCHEMA.md ("33 mixes"), CLAUDE.md's one line, this doc's status → building | docs only |
+| 2 | `feat(kernel): MixProfile — one record per mix` | `MixProfile`, `MixProfiles.For` for the 31 existing values, `GradeLadder` and `AwardSet` with only today's sets; `UsesLegacyScoring()`, the six `MixCapabilities` flags and the three floor lookups delegate to it | no behavior change; a DomainTest pins every flag for all 31 mixes, and one asserts every enum value has a profile |
+| 3 | `refactor: ask the profile, not the boolean` | the §3 call sites: `BaseUrlFor` (site), `ShareCardImages` + `DifficultyBubble` (art — the half-double chip only where the art set has no half-double bubble), `GetCrossMixPassesHandler` (platform), the stage-break backfill (lifebar), the max-combo backfill, broken-record cleanup and `WipeUserScoresHandler` (scoring model), `ShareCardComposer:179`, `RecordScoreForm` + `PhoenixScoreFileExtractor` + `PhoenixPlateHelperMethods` (awards), the `HasPumbility()` guard before the rating step | still no behavior change for the 31; ApplicationTests for the cross-mix platform gate, the wipe list and the rating guard |
+| 4 | `feat: Rise and Rise Arcade` | the two enum values (descriptions, primary, display order, accents), their profiles with `RiseFloors` and `RiseMarks` (names, `PG`/`FC`/`NM`), `MixIds`, the data-only migration seeding `scores.Mix` | DomainTests for the ladder boundaries and the marks; the `api/v2/mixes` golden grows two rows if it enumerates the enum. Both mixes are pickable from here, drawn in the Phoenix theme until 6 |
+| 5 | `tools: RiseCatalog` | the console app and its README (§11.3); nothing generated is committed | not in the solution. Run it, apply s1–s4 to the Aspire database, and 6–8 are field-testable |
+| 6 | `feat(web): the Rise and Rise Arcade themes` | two `MixPalette`s with their ramps, `ThemedMixes`, `CssClassFor` | the theme tests; no stylesheet change |
+| 7 | `feat(web): the pages learn the two mixes` | `RecurringJobRunner` (five publishes), `WidgetRegistry`, `Player.razor` tiles, `StaticHeadResolver`, `UploadPhoenixScores` site-less flow | Tests.Components: the nav on Rise, the upload page on Rise, three marks vs eight plates, the bubble. **The owner's copy is asked for here** — the upload page's Rise lines and the two SEO descriptions |
+| 8 | `feat(api): POST api/v2/players/me/plays` | the action on `PlayersController`, the DTO, the checksum, dispatch to `RecordObservedPlaysCommand` | Tests.Api goldens for the request, 201 and 400 |
+| 9 | `i18n: every new string in nine locales` | the resx keys, inserted alphabetically, all nine at once | the parity and alphabetical ratchets — which is why no earlier commit adds a key to one locale |
+
+After the PR: the pipeline applies the migration; the owner runs s1–s4 in order; the 59 sprites should be up before
+merge (§11.5).
 
 **Phase 2 — the capture app**: screen-grab and F12 modes, template-matched
 digits on the fixed result layout, the score and accuracy checksums, chart resolution against the Rise catalog,
