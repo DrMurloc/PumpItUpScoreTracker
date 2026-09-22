@@ -117,10 +117,13 @@ public sealed class MixProfilesTests
     }
 
     [Fact]
-    public void TheRiseMixesFollowPhoenix2InThePicker()
+    public void TheRiseMixesSitBetweenTheTwoPhoenixGenerations()
     {
-        Assert.True(MixEnum.Rise.DisplayOrder() > MixEnum.Phoenix2.DisplayOrder());
-        Assert.True(MixEnum.RiseArcade.DisplayOrder() > MixEnum.Rise.DisplayOrder());
+        // The picker lists DisplayOrder descending, newest first: Phoenix 2, Rise, Rise Arcade, Phoenix, XX
+        // (owner, 2026-09-22) — so Rise outranks its Arcade Station.
+        Assert.True(MixEnum.Phoenix.DisplayOrder() < MixEnum.RiseArcade.DisplayOrder());
+        Assert.True(MixEnum.RiseArcade.DisplayOrder() < MixEnum.Rise.DisplayOrder());
+        Assert.True(MixEnum.Rise.DisplayOrder() < MixEnum.Phoenix2.DisplayOrder());
         Assert.Equal("Rise Arcade", MixEnum.RiseArcade.GetName());
     }
 
