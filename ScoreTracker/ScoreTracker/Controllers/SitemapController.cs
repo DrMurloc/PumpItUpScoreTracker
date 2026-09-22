@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Xml.Linq;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -58,8 +58,8 @@ namespace ScoreTracker.Web.Controllers
             // Tier-lists overhaul C3: one canonical URL per Singles/Doubles folder that
             // actually has charts — each is an indexable community tier list.
             pages.AddRange(charts
-                .Where(c => c.Type is ChartType.Single or ChartType.Double)
-                .Select(c => (c.Type, Level: (int)c.Level))
+                .Where(c => c.Type.Category() != ChartTypeCategory.CoOp)
+                .Select(c => (Type: c.Type.Category(), Level: (int)c.Level))
                 .Distinct()
                 .OrderBy(f => f.Type).ThenBy(f => f.Level)
                 .Select(f => $"https://piuscores.arroweclip.se/TierLists/{f.Type}/{f.Level}"));

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using ScoreTracker.Application.Queries;
@@ -421,8 +421,10 @@ public sealed class ChartsController : ApiV2ControllerBase
         if (debuts is not null) settings.Debut = true;
         else if (debut is not null) settings.Debut = debut;
 
+        // Unasked, a draw covers every type the mix has except co-op, whose "level" is a player
+        // count and whose weights are a separate bucket. On RISE that means half-doubles.
         var types = chartTypes is null
-            ? new[] { ChartType.Single, ChartType.Double }
+            ? MixProfiles.For(mix).ChartTypes.Where(t => t.Category() != ChartTypeCategory.CoOp).ToArray()
             : chartTypes.Where(s => Enum.TryParse<ChartType>(s, true, out _))
                 .Select(s => Enum.Parse<ChartType>(s, true)).ToArray();
 

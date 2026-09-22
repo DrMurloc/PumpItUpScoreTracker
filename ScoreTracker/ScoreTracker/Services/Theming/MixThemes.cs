@@ -576,11 +576,10 @@ public static class MixThemes
         PlateColors[PhoenixPlateHelperMethods.ParseShorthand(plateShorthand)];
 
     /// <summary>Chart-type color — red Single / green Double / gold Co-Op, the game's ball vocabulary.</summary>
-    public static string ChartTypeHex(ChartType type) => type switch
+    public static string ChartTypeHex(ChartType type) => type.Category() switch
     {
-        ChartType.Single or ChartType.SinglePerformance => SinglesTypeHex,
-        ChartType.Double or ChartType.DoublePerformance or ChartType.HalfDouble => DoublesTypeHex,
-        ChartType.CoOp => CoOpTypeHex,
+        ChartTypeCategory.Double => DoublesTypeHex,
+        ChartTypeCategory.CoOp => CoOpTypeHex,
         _ => SinglesTypeHex
     };
 

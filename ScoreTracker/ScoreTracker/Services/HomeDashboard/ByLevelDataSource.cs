@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
@@ -115,10 +115,7 @@ public sealed class ByLevelDataSource
     private static int Bucket(Chart chart) =>
         chart.Type == ChartType.CoOp ? chart.PlayerCount : (int)chart.Level;
 
-    private static ChartType Normalize(ChartType type) => type switch
-    {
-        ChartType.Single or ChartType.SinglePerformance => ChartType.Single,
-        ChartType.CoOp => ChartType.CoOp,
-        _ => ChartType.Double // Double, DoublePerformance, HalfDouble
-    };
+    // The folder a chart counts in, as the type that heads it: the performance types and
+    // half-doubles fold into Singles and Doubles (docs/design/rise.md §3.1).
+    private static ChartType Normalize(ChartType type) => type.Category().HeadType();
 }
