@@ -121,40 +121,57 @@ public static class PhoenixLetterGradeHelperMethods
             [PhoenixLetterGrade.SSSPlus] = 995000
         };
 
-    // Grades highest-floor-first, per mix, so a score resolves to the first grade it clears.
-    private static readonly IReadOnlyList<(PhoenixLetterGrade Grade, int Floor)> Phoenix1FloorsDescending =
-        Enum.GetValues<PhoenixLetterGrade>()
-            .Select(g => (g, (int)CachedRanges[g].MinimumScore))
-            .OrderByDescending(x => x.Item2).ToArray();
+    private static readonly IReadOnlyDictionary<PhoenixLetterGrade, int> Phoenix1Floors =
+        CachedRanges.ToDictionary(kv => kv.Key, kv => (int)kv.Value.MinimumScore);
 
-    private static readonly IReadOnlyList<(PhoenixLetterGrade Grade, int Floor)> Phoenix2FloorsDescending =
-        Phoenix2Floors.Select(kv => (kv.Key, kv.Value)).OrderByDescending(x => x.Item2).ToArray();
+    // One floors table per ladder; a mix names its ladder on its profile. Grades highest-floor-
+    // first, so a score resolves to the first grade it clears.
+    private static readonly IReadOnlyDictionary<GradeLadder, IReadOnlyDictionary<PhoenixLetterGrade, int>> Floors =
+        new Dictionary<GradeLadder, IReadOnlyDictionary<PhoenixLetterGrade, int>>
+        {
+            [GradeLadder.Phoenix1] = Phoenix1Floors,
+            [GradeLadder.Phoenix2] = Phoenix2Floors
+        };
+
+    private static readonly IReadOnlyDictionary<GradeLadder, IReadOnlyList<(PhoenixLetterGrade Grade, int Floor)>>
+        FloorsDescending = Floors.ToDictionary(kv => kv.Key,
+            kv => (IReadOnlyList<(PhoenixLetterGrade, int)>)kv.Value.Select(f => (f.Key, f.Value))
+                .OrderByDescending(x => x.Item2).ToArray());
 
     private static readonly IDictionary<string, PhoenixLetterGrade> Parser =
         Enum.GetValues<PhoenixLetterGrade>().ToDictionary(e => e.GetName());
+
+    private static GradeLadder LadderOf(MixEnum mix)
+    {
+        return MixProfiles.For(mix).GradeLadder;
+    }
 
     /// <summary>
     ///     The minimum score that earns <paramref name="letterGrade" /> in the given mix. Phoenix 2
     ///     shifted the sub-AAA cutoffs (see <see cref="Phoenix2Floors" />); every other mix uses the
     ///     original Phoenix table. There is deliberately no mix-less overload — every score→grade
-    ///     boundary names its mix.
+    ///     boundary names its mix. Throws for a grade the mix's ladder does not have.
     /// </summary>
     public static PhoenixScore GetMinimumScoreFor(this PhoenixLetterGrade letterGrade, MixEnum mix)
     {
-        return mix == MixEnum.Phoenix2 ? Phoenix2Floors[letterGrade] : CachedRanges[letterGrade].MinimumScore;
+        return Floors[LadderOf(mix)].TryGetValue(letterGrade, out var floor)
+            ? floor
+            : throw new ArgumentOutOfRangeException(nameof(letterGrade), letterGrade,
+                "The mix's grade ladder has no such grade");
     }
 
     /// <summary>
     ///     The top score of <paramref name="letterGrade" />'s band in the given mix — one below
-    ///     the next grade's floor, or the perfect 1,000,000 for SSS+.
+    ///     the next grade's floor, or the perfect 1,000,000 for the top of the ladder.
     /// </summary>
     public static PhoenixScore GetMaximumScoreFor(this PhoenixLetterGrade letterGrade, MixEnum mix)
     {
-        var floors = mix == MixEnum.Phoenix2 ? Phoenix2FloorsDescending : Phoenix1FloorsDescending;
+        var floors = FloorsDescending[LadderOf(mix)];
         for (var i = 0; i < floors.Count; i++)
             if (floors[i].Grade == letterGrade)
                 return i == 0 ? 1_000_000 : floors[i - 1].Floor - 1;
-        throw new Exception($"Score floor not set up for {letterGrade}");
+        throw new ArgumentOutOfRangeException(nameof(letterGrade), letterGrade,
+            "The mix's grade ladder has no such grade");
     }
 
     /// <summary>
@@ -164,8 +181,13 @@ public static class PhoenixLetterGradeHelperMethods
     /// </summary>
     public static PhoenixLetterGrade LetterGradeFor(this PhoenixScore score, MixEnum mix)
     {
-        var floors = mix == MixEnum.Phoenix2 ? Phoenix2FloorsDescending : Phoenix1FloorsDescending;
-        return floors.First(f => (int)score >= f.Floor).Grade;
+        return FloorsDescending[LadderOf(mix)].First(f => (int)score >= f.Floor).Grade;
+    }
+
+    /// <summary>The grades a mix's ladder has, lowest first — every value on Phoenix, a subset on a mix without plus tiers.</summary>
+    public static IReadOnlyList<PhoenixLetterGrade> LadderFor(MixEnum mix)
+    {
+        return FloorsDescending[LadderOf(mix)].Select(f => f.Grade).Reverse().ToArray();
     }
 
     public static double GetModifier(this PhoenixLetterGrade enumValue)

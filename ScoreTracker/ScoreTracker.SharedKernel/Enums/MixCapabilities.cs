@@ -13,13 +13,16 @@ namespace ScoreTracker.SharedKernel.Enums;
 ///     They live here, together, because the desktop menu and the phone's More sheet are two
 ///     renderings of one set of rules, and two copies of a rule is precisely how the
 ///     recording form lost its legacy branch (docs/design/legacy-mixes.md).
+///
+///     Each answer is the mix's profile's (<see cref="MixProfiles" />), not a guess off its
+///     scoring model: a Phoenix-scored mix with no PUMBILITY formula exists now.
 /// </summary>
 public static class MixCapabilities
 {
-    /// <summary>PUMBILITY prices a 1,000,000-scale score; no older mix has one.</summary>
+    /// <summary>PUMBILITY prices a 1,000,000-scale score with a formula the mix has; no older mix has one.</summary>
     public static bool HasPumbility(this MixEnum mix)
     {
-        return !mix.UsesLegacyScoring();
+        return MixProfiles.For(mix).Features.Pumbility;
     }
 
     /// <summary>The season recap is computed from Phoenix 1 data only, for now (owner, 2026-08-10).</summary>
@@ -34,7 +37,7 @@ public static class MixCapabilities
     /// </summary>
     public static bool HasOfficialBoards(this MixEnum mix)
     {
-        return !mix.UsesLegacyScoring();
+        return MixProfiles.For(mix).Features.OfficialBoards;
     }
 
     /// <summary>
@@ -46,14 +49,9 @@ public static class MixCapabilities
     /// </summary>
     public static bool HasWeeklyBoard(this MixEnum mix)
     {
-        return !mix.UsesLegacyScoring();
+        return MixProfiles.For(mix).Features.WeeklyBoard;
     }
 
-    /// <summary>
-    ///     The Phoenix score and rating calculators answer Phoenix questions. The lifebar
-    ///     calculator and the mix diff are deliberately absent: neither reads the selected mix,
-    ///     so both stand on every mix.
-    /// </summary>
     /// <summary>
     ///     March of Murlocs is a Phoenix-lineage event (docs/design/march-of-murlocs.md D19): it prices a
     ///     1,000,000-scale score against a chart's level, which no legacy mix has. Phoenix 2 has the
@@ -61,12 +59,17 @@ public static class MixCapabilities
     /// </summary>
     public static bool HasMarchOfMurlocs(this MixEnum mix)
     {
-        return !mix.UsesLegacyScoring();
+        return MixProfiles.For(mix).Features.MarchOfMurlocs;
     }
 
+    /// <summary>
+    ///     The Phoenix score and rating calculators answer Phoenix questions. The lifebar
+    ///     calculator and the mix diff are deliberately absent: neither reads the selected mix,
+    ///     so both stand on every mix.
+    /// </summary>
     public static bool HasPhoenixCalculators(this MixEnum mix)
     {
-        return !mix.UsesLegacyScoring();
+        return MixProfiles.For(mix).Features.PhoenixCalculators;
     }
 
     /// <summary>

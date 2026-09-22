@@ -57,10 +57,12 @@ public static class MixEnumHelperMethods
     ///     Phoenix-era mixes track numeric 1M-scale scores with plates; everything else
     ///     (XX and older, plus the Infinity/Pro line) uses the legacy model — letter
     ///     grade + broken flag + optional era-scale score (docs/design/legacy-mixes.md).
+    ///     Answers the scoring question only — a mix's site, ladder, awards, platform and
+    ///     features are their own questions on its profile (<see cref="MixProfiles" />).
     /// </summary>
     public static bool UsesLegacyScoring(this MixEnum enumValue)
     {
-        return enumValue is not (MixEnum.Phoenix or MixEnum.Phoenix2);
+        return MixProfiles.For(enumValue).ScoringModel == ScoringModel.Legacy;
     }
 
     /// <summary>Primary mixes show directly in the mix picker; the rest live behind "More". Mirrors Mix.IsPrimary.</summary>
