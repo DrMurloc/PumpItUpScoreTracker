@@ -92,6 +92,8 @@ Owner decisions are marked **(owner, date)**; the rest are mine, decided unless 
 - **D13 (owner, 2026-09-21). Both mixes are top-level in the picker.**
 - **D14 (owner, 2026-09-22). The score endpoint is a v2 write for observed plays** (§6.3), specified in phase 1 so
   the capture app builds against a fixed contract; v1 stays frozen.
+- **D16 (owner, 2026-09-22). Jackets are the rectangular key visuals, uncut.** The game's 1920×1080 stills as they
+  are — never squares, never resized; the card aesthetics are not being redone for tiny squares.
 - **D15 (owner, 2026-09-22). The two palettes are approved as mocked** (round 1: Rise = R!SE yellow primary with
   hot pink and cyan on ink-navy; Rise Arcade = aqua primary, lavender accent and the shared yellow on indigo).
 
@@ -155,9 +157,13 @@ Adding a mix after this is a profile row, an enum value, a `MixIds` Guid and a `
 - **Launch metadata:** the Pump Pro+ launch PDF (BPM for launch songs), the Steam DLC store pages (track lists).
 - **Songs new to the tracker:** 50 (RISE Vol.1 originals not already in the arcade, all 20 Vol.2, the contest five,
   a few Variety crossovers, a few spellings). They need Song rows with artist and BPM (both in hand) and images.
-- **Images.** The game keeps three per song, keyed by an internal id rather than a title: an **88×88 square snippet**
-  (what the wheel draws — a crop of the arcade jacket), a **576×324 eyecatch** and a **1920×1080 still** (the preview
-  panel). No full square jacket ships. The ids are the arcade's own song codes for arcade songs (`b29`, `e928`,
+- **Images.** The game keeps three per song, keyed by an internal id rather than a title: an **88×88 snippet** (what
+  the wheel draws), a **576×324 eyecatch** and a **1920×1080 still** (the preview panel). All three come from one 16:9
+  key visual; the official BGA video's thumbnail is the same visual with the title laid over it, at 480×360. **That
+  key visual is the jacket** (D16): piugame's own jackets are 700×393 rectangles of the same visuals with the title
+  added, the cards draw jackets with `object-fit: cover`, and the RISE stills go up **untouched at 1920×1080**
+  (`2026-09-22-jackets/`, one file per named song under the `songs/` naming rule — `Name.Where(IsAsciiLetterOrDigit)`
+  — plus a manifest). The ids are the arcade's own song codes for arcade songs (`b29`, `e928`,
   `18d0`) and a 10001+ block for RISE-era songs; matching the wheel thumbnails in the owner's channel screenshots
   against the 88×88 snippets named all 48 RISE Vol.1 and Vol.2 songs plus Into the PIUniverse! (`title-to-id.json`
   in the bundle; every match unique, no conflicts). The contest five still need one CONTEST-channel screenshot.
@@ -196,9 +202,11 @@ single levels onto its arcade charts, each arcade chart carrying its Phoenix 1 l
 | singles on songs the tracker lacks | new song + new chart rows | 216 on 50 songs |
 
 Only a song whose alignment is ambiguous (two equally good alignments, a two-level shift, or a RISE-only chart sitting
-beside an arcade chart another RISE chart already took) goes to the owner: **5 songs, 17 charts** (`2026-09-21/
-rise-singles-review-v2.xlsx`, first tab; the second tab is every automatic decision with its reading). Every
-half-double is a new chart row regardless (D7).
+beside an arcade chart another RISE chart already took) went to the owner: 5 songs, 17 charts (`2026-09-21/
+rise-singles-review-v2.xlsx`; the second tab is every automatic decision with its reading). **Reviewed and confirmed
+in-game 2026-09-22 — every reading held** (Like Me S16 is the arcade S14 moved two; Sorceress Elise S18/S19 are the
+17 and 18 moved one and its S21 is gone; Close Your Eye S8/S17 and Hello S19 are RISE-only; L (PIU Edit) S10 is the
+arcade S12 moved two). No mapping is outstanding. Every half-double is a new chart row regardless (D7).
 
 ### 4.4 Versions
 
@@ -364,9 +372,11 @@ digits on the fixed result layout, the score and accuracy checksums, chart resol
 Answered 2026-09-21: low floors ship as a placeholder and disproofs are recorded (D11); Rise singles use Phoenix 2
 stepballs (D12); both mixes are top-level (D13); each mix gets its own palette (D12).
 
-1. **Images for the 50 RISE-only songs.** Three assets exist per song (§4.1); the 88×88 snippet is the true jacket
-   crop but tiny, the 1920×1080 still is full-size but a BGA frame. Owner picks; the ids are already named for all
-   but the contest five.
+1. **Naming the last 11 RISE-only songs' images.** 40 of the songs new to the tracker have their still named and
+   filed (§4.1); the remaining 11 are Variety-channel songs (Fantasia Sonata Destiny, MYTH Re:LEASE, PATHFINDER,
+   Conflict -NOMA CONCEiVER REMiX-, Aleph-0, Assault TAXI, Save Yourself, Bamboo, PHYSALIS, ULTRA SYNERGY MATRIX,
+   Entrance (PIU Edit)), which seven wheel screenshots of the VARIETY channel would pair to their ids. The sheet spells
+   one Vol.2 song "Pop & Pump & FIVE!!"; the game and Steam say "DIVE!!".
 2. ~~The score endpoint~~ — decided, D14.
 3. ~~Palettes~~ — approved, D15.
 
