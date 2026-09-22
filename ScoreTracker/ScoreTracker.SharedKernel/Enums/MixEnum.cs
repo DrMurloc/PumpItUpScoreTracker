@@ -112,9 +112,12 @@ public static class MixEnumHelperMethods
             MixEnum.Prime2 => 250,
             MixEnum.XX => 260,
             MixEnum.Phoenix => 270,
+            // RISE launched in 2025, between the two Phoenix generations, and the picker lists
+            // newest first (descending) — so the pair sits under Phoenix 2 and above Phoenix, Rise
+            // before its Arcade Station (owner, 2026-09-22).
+            MixEnum.RiseArcade => 274,
+            MixEnum.Rise => 276,
             MixEnum.Phoenix2 => 280,
-            MixEnum.Rise => 290,
-            MixEnum.RiseArcade => 300,
             _ => 0
         };
     }

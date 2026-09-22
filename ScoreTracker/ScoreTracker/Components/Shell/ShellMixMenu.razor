@@ -13,9 +13,15 @@
         <i class="mix-dot"></i>@Model.CurrentMix.GetName()
     </button>
     <div class="shell-menu-panel" data-menu-panel>
+        @* Each primary row leads with the game's own wordmark (owner, 2026-09-22): the arcade
+           logos and RISE's, from wwwroot/img/mixes/. The Arcade Station has no mark of its own,
+           so it wears RISE's and the name tells the two apart. Legacy rows stay text. *@
         @foreach (var mix in Primary)
         {
-            <ShellMenuItem Href="@SetMixHref(mix)" FullLoad="true">@mix.GetName()</ShellMenuItem>
+            <ShellMenuItem Href="@SetMixHref(mix)" FullLoad="true">
+                <span class="mix-row-mark"><img class="mix-row-logo" src="@LogoFor(mix)" alt=""/></span>
+                <span>@mix.GetName()</span>
+            </ShellMenuItem>
         }
         <details class="shell-disclosure">
             <summary class="shell-menu-item">
@@ -74,4 +80,11 @@
 
     private string SetMixHref(MixEnum mix) =>
         $"/Mix/Set?mix={mix}&redirectUrl={HttpUtility.UrlEncode(Model.ReturnUrl)}";
+
+    /// <summary>The wordmark a primary row leads with; the Arcade Station wears RISE's.</summary>
+    public static string LogoFor(MixEnum mix) => mix switch
+    {
+        MixEnum.RiseArcade => "/img/mixes/rise.png",
+        _ => $"/img/mixes/{mix.ToString().ToLowerInvariant()}.png"
+    };
 }

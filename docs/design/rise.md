@@ -1,6 +1,6 @@
 # Pump It Up RISE — two keyboard mixes
 
-Status: **phase 1 built — [PR #349](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/349)** (2026-09-22), in the commit order of §8.1; the owner-owed steps are §11.5.
+Status: **phase 1 merged — [PR #349](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/349)** (2026-09-22), in the commit order of §8.1; the picker order and wordmarks follow in [PR #351](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/351); the owner-owed steps are §11.5.
 Researched 2026-09-14 → 2026-09-22 from the owner's install, his screenshots, two community sheets, two wikis and the
 Steam patch notes; the owner took the high-level plan to two Rise players (Sneezle, Dave) on 2026-09-21 and their
 answers are folded in; every open question of §9 was answered by 2026-09-22. Every decision below is the owner's
@@ -50,9 +50,10 @@ Owner decisions are marked **(owner, date)**; the rest are mine, decided unless 
 
 - **D1 (owner, 2026-09-21). Two mixes: `Rise` and `RiseArcade`.** Separate ecosystems, separate records,
   separate vocabularies. Display names "Rise" and "Rise Arcade"; `scores.Mix.Name` keeps `MaxLength(10)`, so the
-  enum names are the DB names (`RiseArcade` is exactly ten characters, the `Phoenix2` precedent). Sort order after
-  Phoenix 2. Both are top-level in the mix picker, since they are the only mixes still receiving updates (decided
-  unless objected; §9 Q4).
+  enum names are the DB names (`RiseArcade` is exactly ten characters, the `Phoenix2` precedent). Sort order
+  between Phoenix and Phoenix 2 — RISE launched between the two generations and the picker lists newest first
+  (owner, 2026-09-22; first shipped after Phoenix 2, moved by the `RiseMixOrder` migration). Both are top-level
+  in the mix picker, since they are the only mixes still receiving updates (decided unless objected; §9 Q4).
 - **D2 (owner, 2026-09-15, confirmed by the phase-1 scope). Phoenix-scored storage from day one.** Both mixes
   answer false to the legacy-scoring check: records live in `PhoenixRecord`, the journal writes its Phoenix side,
   `BestAttemptPolicy` applies. Storing RISE as a legacy mix and flipping later would strand every phase-1 row on the
@@ -411,7 +412,7 @@ merge (§11.5).
 
 **Phase 2 — the capture app**: screen-grab and F12 modes, template-matched
 digits on the fixed result layout, the score and accuracy checksums, chart resolution against the Rise catalog,
-`POST api/phoenixScores`. Skips Challenge aggregates (division badge in the header). Learns note counts (D10).
+`POST api/v2/players/me/plays` (D14). Skips Challenge aggregates (division badge in the header). Learns note counts (D10).
 
 **Phase 3 — boards and PUMBILITY** with their own tuning; revisit the capability answers.
 
@@ -474,7 +475,7 @@ player gets a wrong answer or a crash. They come in four kinds:
 
 - `Enums/MixEnum.cs`: `Rise` (`[Description("Rise")]`) and `RiseArcade` (`[Description("Rise Arcade")]`; `GetName()`
   feeds the picker, the chart-page slug `rise-arcade` and the mix cookie); `IsPrimary()` includes both (D13);
-  `DisplayOrder()` 290 / 300; `GetAccentColor()` two cases from the palettes (D15); `UsesLegacyScoring()` becomes
+  `DisplayOrder()` 276 / 274 — under Phoenix 2 and above Phoenix, Rise before its Arcade Station, RISE having launched between the two generations (owner, 2026-09-22; the picker sorts descending); `GetAccentColor()` two cases from the palettes (D15); `UsesLegacyScoring()` becomes
   `MixProfiles.For(mix).ScoringModel == ScoringModel.Legacy`.
 - NEW `Enums/MixProfile.cs`: `sealed record MixProfile(ScoringModel, GradeLadder, AwardSet Awards, MixEnum? OfficialSite,
   Platform, bool HasLifebarModel, MixArt Art, MixFeatures Features)` — `MixArt` is two folder pointers (bubbles,
@@ -508,7 +509,7 @@ player gets a wrong answer or a crash. They come in four kinds:
   PumpoutExtractor rule).
 - `Migrations/<stamp>_RiseMixes.cs`: `IF NOT EXISTS … INSERT [scores].[Mix]` for both rows (`Rise`, `RiseArcade` —
   `Name` is `MaxLength(10)`, exactly ten), SortOrder 290 / 300, IsPrimary 1 — the `LegacyMixCatalog` pattern, data
-  only, no model change.
+  only, no model change. `Migrations/<stamp>_RiseMixOrder.cs` then moves them to 276 / 274 (D1, the picker order).
 - No new table, no new column: `ChartMix.NoteCount` is already nullable (D10 needs that), `Chart.Type` already stores
   `HalfDouble`, `MixVersion.Name` is `MaxLength(16)`.
 
@@ -556,8 +557,10 @@ mix.
   `LetterGrade` → `letters/Rise/{grade}.png` and `_broken` on Rise, the flat set elsewhere; `Plate` →
   `plates/Rise/{pg|ug|sg}.png` on Rise. `Components/DifficultyBubble.razor`: the half-double chip only where the art
   set has no half-double bubble (Infinity keeps its chip). `LetterGradeIcon` is unchanged; it reads `ShareCardImages`.
-- Shell — nothing. `ShellMixMenu` lists `IsPrimary()` by `DisplayOrder()`, the nav gates on the flags,
-  `ShellModelFactory` parses the cookie by enum name.
+- Shell — `ShellMixMenu` lists `IsPrimary()` by `DisplayOrder()` and each primary row leads with its game's
+  wordmark from `wwwroot/img/mixes/` (the arcade logos, RISE's Steam wordmark; the Arcade Station wears RISE's —
+  owner, 2026-09-22); legacy rows stay text. The nav gates on the flags; `ShellModelFactory` parses the cookie by
+  enum name.
 - Recording — `Components/RecordScoreForm.razor`: the award picker from `profile.Awards`;
   `Services/PhoenixScoreFileExtractor.cs`: `PG` / `FC` / `NM` beside the plate codes (`HDB23` already parses);
   `Pages/UploadPhoenixScores.razor`: a site-less Phoenix mix gets the spreadsheet flow alone — no credential fields,
