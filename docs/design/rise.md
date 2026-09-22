@@ -90,6 +90,10 @@ Owner decisions are marked **(owner, date)**; the rest are mine, decided unless 
   mix; Rise Arcade reuses the site's Phoenix art, which is what the Arcade Station itself draws. Rise singles use the
   **Phoenix 2 stepballs for now**; half-doubles stay the CSS chip. Each mix gets its own palette, mocked before build.
 - **D13 (owner, 2026-09-21). Both mixes are top-level in the picker.**
+- **D14 (owner, 2026-09-22). The score endpoint is a v2 write for observed plays** (§6.3), specified in phase 1 so
+  the capture app builds against a fixed contract; v1 stays frozen.
+- **D15 (owner, 2026-09-22). The two palettes are approved as mocked** (round 1: Rise = R!SE yellow primary with
+  hot pink and cyan on ink-navy; Rise Arcade = aqua primary, lavender accent and the shared yellow on indigo).
 
 ---
 
@@ -290,7 +294,7 @@ Phoenix codes and stores per §5.3.
 `RecordScoreForm` already adapts by scoring model and reads its prefill from the store the mix uses. Its plate list
 becomes the profile's award list with the profile's names.
 
-### 6.3 API — the capture app needs a write endpoint (owner's call pending)
+### 6.3 API — a v2 write for observed plays (D14)
 
 Two ways to give the phase-2 capture app somewhere to post.
 
@@ -313,8 +317,8 @@ for a play that beats the record, so it is a controller and a golden rather than
 public surface to pin in `Tests.Api`, and one more thing partner tools can call, which is also the point: a future
 photo extractor or partner tool posts plays the same way.
 
-Recommendation: the v2 write, specified now so phase 2 builds against a fixed contract; v1 stays frozen. Manual entry
-and spreadsheet upload need neither.
+Decided (owner, 2026-09-22): the v2 write, specified now so phase 2 builds against a fixed contract; v1 stays frozen.
+Manual entry and spreadsheet upload need neither.
 
 ---
 
@@ -363,9 +367,8 @@ stepballs (D12); both mixes are top-level (D13); each mix gets its own palette (
 1. **Images for the 50 RISE-only songs.** Three assets exist per song (§4.1); the 88×88 snippet is the true jacket
    crop but tiny, the 1920×1080 still is full-size but a BGA frame. Owner picks; the ids are already named for all
    but the contest five.
-2. **The score endpoint for the capture app.** Widen the frozen v1 `POST api/phoenixScores` to the RISE mixes, or add
-   a v2 write that carries judgments; both sides in §6.3, the owner's call.
-3. **Palettes.** Own palette per mix (D12); the proposed pair is mocked for the owner's field test.
+2. ~~The score endpoint~~ — decided, D14.
+3. ~~Palettes~~ — approved, D15.
 
 Not blocking, still open: the grey-grade rule (§5.5); whether Rise Arcade follows Phoenix 2 where Phoenix 2 added a
 chart to an existing song.
