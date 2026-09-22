@@ -149,9 +149,15 @@ Adding a mix after this is a profile row, an enum value, a `MixIds` Guid and a `
   Title / Artist / BPM / Channel table. The official YouTube channel posts no RISE chart videos, so the
   check-new-charts skill cannot be repurposed; a RISE variant walks the patch notes instead.
 - **Launch metadata:** the Pump Pro+ launch PDF (BPM for launch songs), the Steam DLC store pages (track lists).
-- **Songs new to the tracker:** ~45 (10 RISE Vol.1 originals not already in the arcade, all 20 Vol.2, five
-  Variety crossovers, the contest five, a few spellings). They need Song rows with artist and BPM (both in hand)
-  and jackets (§9 Q2).
+- **Songs new to the tracker:** 50 (RISE Vol.1 originals not already in the arcade, all 20 Vol.2, the contest five,
+  a few Variety crossovers, a few spellings). They need Song rows with artist and BPM (both in hand) and images.
+- **Images.** The game keeps three per song, keyed by an internal id rather than a title: an **88×88 square snippet**
+  (what the wheel draws — a crop of the arcade jacket), a **576×324 eyecatch** and a **1920×1080 still** (the preview
+  panel). No full square jacket ships. The ids are the arcade's own song codes for arcade songs (`b29`, `e928`,
+  `18d0`) and a 10001+ block for RISE-era songs; matching the wheel thumbnails in the owner's channel screenshots
+  against the 88×88 snippets named all 48 RISE Vol.1 and Vol.2 songs plus Into the PIUniverse! (`title-to-id.json`
+  in the bundle; every match unique, no conflicts). The contest five still need one CONTEST-channel screenshot.
+  Which asset the `songs/` folder gets is the owner's call (§9 Q1).
 
 ### 4.2 Rise Arcade
 
@@ -169,21 +175,26 @@ Adding a mix after this is a profile row, an enum value, a `MixIds` Guid and a `
 
 ### 4.3 Identity rules
 
-| RISE chart | Treatment | Count today |
-|---|---|---|
-| Single at a level Phoenix 2 gives that song | membership row on that chart | 1,448 |
-| Single at the level **Phoenix 1** gave it (Phoenix 2 re-rated it later) | membership row on that chart; RISE was cut from the Phoenix 1 catalog | 80 |
-| Single one level off an unused arcade single | a re-rate: membership row on that chart at RISE's level — **owner reviews** | 53 |
-| Single with no arcade single within one level | new chart row, `OriginalMix = Rise` — **owner reviews** | 21 |
-| Singles on songs the tracker lacks | new song + new chart rows | 216 charts on 57 songs |
-| Every half-double | new chart row, `OriginalMix = Rise`, `Type = HalfDouble` | ~1,000 |
-| Arcade singles RISE does not carry | nothing | 43 |
+Rules from the owner (2026-09-21): charts keep their order across mixes (an order swap has happened twice in the
+series' history); a re-rate moves one level, rarely two, never three; RISE was cut from the Phoenix 1 catalog, so
+Phoenix 2's later re-rates are re-rates of RISE charts too; a RISE single that matches nothing arcade within two
+levels is RISE-only. The mapper (`mapper.py` in the bundle) is an order-preserving alignment of each song's RISE
+single levels onto its arcade charts, each arcade chart carrying its Phoenix 1 level and its Phoenix 2 level:
 
-The 53 + 21 need the owner's eye before the script runs: `2026-09-21/rise-singles-review.xlsx` in the bundle lists each
-with the song's Phoenix 1 and Phoenix 2 level sets, the re-rates between them, the RISE level in question and the
-proposed mapping. Sneezle's
-"the note count should match" test cannot arbitrate them: RISE changed hold sections and counts hold ticks
-differently (§4.5), so totals differ even on identical step patterns.
+| RISE single | Treatment | Count |
+|---|---|---|
+| at the chart's Phoenix 1 level | membership row on that chart | 1,448 |
+| at a level a chart Phoenix 2 added | membership row on that chart | 56 |
+| one level off the chart, Phoenix 2 later made the same move | membership row; RISE re-rated first | 13 |
+| one level off the chart, Phoenix 2 did not follow | membership row at RISE's level | 54 |
+| no arcade single within two levels | new chart row, `OriginalMix = Rise` | 16 |
+| arcade singles RISE does not carry | nothing | 34 |
+| singles on songs the tracker lacks | new song + new chart rows | 216 on 50 songs |
+
+Only a song whose alignment is ambiguous (two equally good alignments, a two-level shift, or a RISE-only chart sitting
+beside an arcade chart another RISE chart already took) goes to the owner: **5 songs, 17 charts** (`2026-09-21/
+rise-singles-review-v2.xlsx`, first tab; the second tab is every automatic decision with its reading). Every
+half-double is a new chart row regardless (D7).
 
 ### 4.4 Versions
 
@@ -349,11 +360,9 @@ digits on the fixed result layout, the score and accuracy checksums, chart resol
 Answered 2026-09-21: low floors ship as a placeholder and disproofs are recorded (D11); Rise singles use Phoenix 2
 stepballs (D12); both mixes are top-level (D13); each mix gets its own palette (D12).
 
-1. **Jackets for the ~45 RISE-only songs.** The game's per-song images are 1920×1080 stills, the same picture the
-   wheel shows, keyed by the arcade's internal song codes rather than titles (the title map is inside the encrypted
-   database). Pending the owner's confirmation that the stills are what the `songs/` folder wants (cropped to the
-   site's square), and a way to name the ~53 RISE- and CONTEST-channel ones: seven screenshots of those two
-   channels' wheels pair each still with its title.
+1. **Images for the 50 RISE-only songs.** Three assets exist per song (§4.1); the 88×88 snippet is the true jacket
+   crop but tiny, the 1920×1080 still is full-size but a BGA frame. Owner picks; the ids are already named for all
+   but the contest five.
 2. **The score endpoint for the capture app.** Widen the frozen v1 `POST api/phoenixScores` to the RISE mixes, or add
    a v2 write that carries judgments; both sides in §6.3, the owner's call.
 3. **Palettes.** Own palette per mix (D12); the proposed pair is mocked for the owner's field test.
