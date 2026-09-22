@@ -1,6 +1,6 @@
 # Pump It Up RISE — two keyboard mixes
 
-Status: **phase 1 built — [PR #349](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/349)** (2026-09-22), in the commit order of §8.1; the owner-owed steps are §11.5.
+Status: **phase 1 merged — [PR #349](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/349)** (2026-09-22), in the commit order of §8.1; the picker order and wordmarks follow in [PR #351](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/351); the owner-owed steps are §11.5.
 Researched 2026-09-14 → 2026-09-22 from the owner's install, his screenshots, two community sheets, two wikis and the
 Steam patch notes; the owner took the high-level plan to two Rise players (Sneezle, Dave) on 2026-09-21 and their
 answers are folded in; every open question of §9 was answered by 2026-09-22. Every decision below is the owner's
