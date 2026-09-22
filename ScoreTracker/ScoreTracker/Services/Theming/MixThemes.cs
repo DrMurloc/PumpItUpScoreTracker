@@ -174,6 +174,9 @@ public static class MixThemes
             Sapphire: "#29C9F7",
             Prism: "#E9FFD9"));
 
+    // The R!SE yellow both Rise palettes carry: Rise as its primary, the Arcade Station as its second color.
+    private const string RiseYellowHex = "#FFC61A";
+
     // Pump It Up RISE, the comic-pop PC game (docs/design/rise.md D15): R!SE yellow on an
     // ink-navy ground, the profile screen's hot pink and cyan as secondary and accent, the 5K
     // and 6K badge colors for the chart series.
@@ -182,7 +185,7 @@ public static class MixThemes
         Surface: "#1A1C27",
         SurfaceMuted: "#252838",
         Nav: "#12131D",
-        Primary: "#FFC61A",
+        Primary: RiseYellowHex,
         // Yellow cannot carry white button text.
         PrimaryContrast: "#1B1400",
         Secondary: "#FF3D8A",
@@ -196,7 +199,7 @@ public static class MixThemes
             Common: "#9C9AA8",
             Silver: "#DAD8E0",
             Emerald: "#3EDC5F",
-            Gold: "#FFC61A",
+            Gold: RiseYellowHex,
             Sapphire: "#45A8FF",
             Prism: "#FFF3C4"));
 
@@ -209,7 +212,7 @@ public static class MixThemes
         Nav: "#090C2C",
         Primary: "#5AC5DE",
         PrimaryContrast: "#061219",
-        Secondary: "#FFC61A",
+        Secondary: RiseYellowHex,
         Accent: "#B48CFF",
         Ink: "#EEF0FA",
         InkMuted: "#98A2C8",
@@ -220,7 +223,7 @@ public static class MixThemes
             Common: "#8E95B3",
             Silver: "#D0D7EA",
             Emerald: "#3ED36A",
-            Gold: "#FFC61A",
+            Gold: RiseYellowHex,
             Sapphire: "#5AC5DE",
             Prism: "#E6F4FF"));
 
@@ -459,7 +462,7 @@ public static class MixThemes
             [MixEnum.XX] = new[] { "#6E5573", "#9A6A9E", "#FF2FA0", "#FF6FBF", "#FFA8D8", "#FFE0F1" },
             [MixEnum.Phoenix] = new[] { "#55677A", "#6C8CAE", "#3FA9F5", "#7CC4FF", "#B3DEFF", "#E6F5FF" },
             [MixEnum.Phoenix2] = new[] { "#5D7A62", "#6FA274", "#4FE33F", "#8CEF80", "#C2F7BB", "#EAFFE6" },
-            [MixEnum.Rise] = new[] { "#7A6A3A", "#A88F3E", "#FFC61A", "#FFD65A", "#FFE79A", "#FFF6D6" },
+            [MixEnum.Rise] = new[] { "#7A6A3A", "#A88F3E", RiseYellowHex, "#FFD65A", "#FFE79A", "#FFF6D6" },
             [MixEnum.RiseArcade] = new[] { "#4A6E7A", "#5D93A6", "#5AC5DE", "#8CD9EA", "#BDEAF3", "#E8F8FC" }
         };
 

@@ -189,8 +189,6 @@ else if (_profile != null)
     private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private MixEnum _currentMix = MixEnum.Phoenix;
 
-    private bool IsLegacy => _currentMix.UsesLegacyScoring();
-
     // PUMBILITY, the competitive levels and the rating tiles exist only where a formula does —
     // a Phoenix-scored mix without one (Rise) hides them rather than printing zeros.
     private bool HasRatings => _currentMix.HasPumbility();

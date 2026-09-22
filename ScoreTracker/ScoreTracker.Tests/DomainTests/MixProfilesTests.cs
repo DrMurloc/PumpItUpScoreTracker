@@ -23,14 +23,14 @@ public sealed class MixProfilesTests
         MixEnum.Pro, MixEnum.Pro2
     };
 
-    public static IEnumerable<object[]> EveryMix()
+    public static TheoryData<MixEnum> EveryMix()
     {
-        return Enum.GetValues<MixEnum>().Select(m => new object[] { m });
+        return new TheoryData<MixEnum>(Enum.GetValues<MixEnum>());
     }
 
-    public static IEnumerable<object[]> EveryPreProfileMix()
+    public static TheoryData<MixEnum> EveryPreProfileMix()
     {
-        return PreProfileMixes.Select(m => new object[] { m });
+        return new TheoryData<MixEnum>(PreProfileMixes);
     }
 
     [Theory]
