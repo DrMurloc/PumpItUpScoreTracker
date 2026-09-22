@@ -617,7 +617,9 @@ line under Domain models: a new mix is a profile row, an enum value, a `MixIds` 
 
 ### 11.5 Owner-owed before the PR merges
 
-- The 59 sprites, now with paths: `letters/Rise/<grade>.png` and `letters/Rise/<grade>_broken.png` for `sss ss s aa a
-  b c d f`; `plates/Rise/pg.png`, `ug.png`, `sg.png` (shown as Perfect Game / Full Combo / No Miss).
+- ~~The 59 sprites~~ **Uploaded 2026-09-22** (owner-authorized, create-only, verified by read-back and through the
+  CDN): `letters/Rise/<grade>.png` (the game's `DanceGrade_Image_Rank*`) and `letters/Rise/<grade>_broken.png`
+  (its grey `MultiPlay_Break_Rank*`) for `sss ss s aa a b c d f`; `plates/Rise/pg.png`, `ug.png`, `sg.png` (the
+  Perfect Game / Full Combo / No Miss word-art badges). Uploader beside the sprites in the bundle.
 - The four scripts against prod after the migration deploys, in order.
 - The SEO descriptions and the upload page's Rise copy.
