@@ -1,4 +1,4 @@
-using ScoreTracker.SharedKernel.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Tests.TestData;
 using Xunit;
 
@@ -45,7 +45,7 @@ public sealed class ChartTests
     {
         var chart = new ChartBuilder().WithType(ChartType.HalfDouble).WithLevel(12).Build();
 
-        Assert.Equal("HDB12", chart.DifficultyString);
+        Assert.Equal("HD12", chart.DifficultyString);
     }
 
     [Fact]

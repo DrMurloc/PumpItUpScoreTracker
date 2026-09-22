@@ -129,4 +129,24 @@ public sealed class DifficultyLevelTests
         Assert.Equal(ChartType.Double, type);
         Assert.Equal(22, (int)level);
     }
+
+    [Fact]
+    public void HalfDoublesPrintAsHd()
+    {
+        Assert.Equal("HD23", DifficultyLevel.ToShorthand(ChartType.HalfDouble, DifficultyLevel.From(23)));
+    }
+
+    // HD replaced HDB on 2026-09-22; anything written before it — a spreadsheet column, a saved
+    // preset — still has to read, so the old spelling stays a parse-only alias.
+    [Theory]
+    [InlineData("HD23")]
+    [InlineData("HDB23")]
+    [InlineData("hdb23")]
+    public void BothHalfDoubleSpellingsParse(string shortHand)
+    {
+        var (type, level) = DifficultyLevel.ParseShortHand(shortHand);
+
+        Assert.Equal(ChartType.HalfDouble, type);
+        Assert.Equal(23, (int)level);
+    }
 }

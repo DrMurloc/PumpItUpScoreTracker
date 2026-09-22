@@ -147,9 +147,9 @@
             ? $"{Chart.Slot.Value.GetName().ToUpperInvariant()} {Chart.Level}"
             : Chart.Type == ChartType.CoOp
                 ? $"CO-OP ×{Chart.PlayerCount} · {Chart.Level}"
-                : $"HDB {Chart.Level}"
+                : $"HD {Chart.Level}"
         : Level != null
-            ? $"HDB {(int)Level.Value}"
+            ? $"HD {(int)Level.Value}"
             : DiffString;
 
     // Modern mixes keep their per-mix bubble art; every numbered legacy mix
