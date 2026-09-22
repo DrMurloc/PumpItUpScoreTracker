@@ -126,14 +126,19 @@ public static class PhoenixLetterGradeHelperMethods
 
     // Pump It Up RISE grades on nine rungs with no plus tiers and no AAA (docs/design/rise.md
     // §5.2): SSS 990k, SS 970k, S 950k and AA 900k are the published table, confirmed on the
-    // owner's result screens; A through D are placeholder floors (D11) that ship until a
-    // recorded play disproves one, and the capture app's grade log will do that for free.
-    // F stays 0 as the catch-all, as in the other tables.
+    // owner's result screens. A through D are placeholder floors (D11) that ship until a
+    // recorded play disproves one. The owner's 2026-09-22 Warm Up screens (1948 S26) BRACKET
+    // them — an F at 469,066, a C at 563,324 and at 608,610, a B at 678,406, an A at 777,366 —
+    // and disproved the first: D at 450k read the 469,066 as a D where the game showed an F,
+    // so D moved to 500k, the round value inside (469,066 … 563,324]. C, B and A sit inside
+    // their brackets untouched; the capture app's grade log will tighten them for free.
+    // PhoenixLetterGradeTests pins every screen above to the grade it showed. F stays 0 as
+    // the catch-all, as in the other tables.
     private static readonly IReadOnlyDictionary<PhoenixLetterGrade, int> RiseFloors =
         new Dictionary<PhoenixLetterGrade, int>
         {
             [PhoenixLetterGrade.F] = 0,
-            [PhoenixLetterGrade.D] = 450000,
+            [PhoenixLetterGrade.D] = 500000,
             [PhoenixLetterGrade.C] = 550000,
             [PhoenixLetterGrade.B] = 650000,
             [PhoenixLetterGrade.A] = 750000,
