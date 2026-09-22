@@ -8779,6 +8779,12 @@
   <data name="Spot in top 50" xml:space="preserve">
     <value>상위 50 내 순위</value>
   </data>
+  <data name="Spreadsheet Import Columns" xml:space="preserve">
+    <value>열: Song, Difficulty (S16, HDB23, D20), Score, Plate (PG, FC, NM — 아케이드 시리즈에서는 플레이트 코드), IsBroken.</value>
+  </data>
+  <data name="Spreadsheet Import Lede" xml:space="preserve">
+    <value>{0}의 기록은 게임 안에 저장되므로, 사이트는 직접 작성한 스프레드시트에서 읽어옵니다. 한 줄에 한 채보, 더 좋은 점수가 이전 점수를 대체합니다.</value>
+  </data>
   <data name="Spreadsheet is uploading and being processed..." xml:space="preserve">
     <value>스프레드시트를 업로드하고 처리하는 중...</value>
   </data>

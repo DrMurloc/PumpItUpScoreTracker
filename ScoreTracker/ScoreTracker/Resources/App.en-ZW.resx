@@ -8833,6 +8833,12 @@
   <data name="Spot in top 50" xml:space="preserve">
     <value>Mroglub gropmur ropgl 50</value>
   </data>
+  <data name="Spreadsheet Import Columns" xml:space="preserve">
+    <value>Mrgl: Murgro, Gromurp, Mgrlgmrg, Blarg, Mrmurm.</value>
+  </data>
+  <data name="Spreadsheet Import Lede" xml:space="preserve">
+    <value>{0} mrglgl grrgl mgrlgmrg, blub murpgrrgl gromurp grgl ro mrgl: mrp mrp gromurp, murg mrmurm mrgl blarg.</value>
+  </data>
   <data name="Spreadsheet is uploading and being processed..." xml:space="preserve">
 	  <value>Blgrlgrrglmaglmorg urg glorgmrblarg ro morgmorg plglglorgmurm...</value>
   </data>

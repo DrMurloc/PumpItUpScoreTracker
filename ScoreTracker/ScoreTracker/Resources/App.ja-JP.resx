@@ -8833,6 +8833,12 @@
   <data name="Spot in top 50" xml:space="preserve">
     <value>トップ50内の順位</value>
   </data>
+  <data name="Spreadsheet Import Columns" xml:space="preserve">
+    <value>列: Song、Difficulty（S16、HDB23、D20）、Score、Plate（PG・FC・NM。アーケード版ではプレートのコード）、IsBroken。</value>
+  </data>
+  <data name="Spreadsheet Import Lede" xml:space="preserve">
+    <value>{0} の記録はゲーム内に保存されるため、サイトはあなたが記入したスプレッドシートから読み取ります。1行に1譜面、より良いスコアが以前のスコアを置き換えます。</value>
+  </data>
   <data name="Spreadsheet is uploading and being processed..." xml:space="preserve">
 	  <value>CSVファイルの処理中</value>
   </data>
