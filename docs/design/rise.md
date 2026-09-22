@@ -164,8 +164,9 @@ Adding a mix after this is a profile row, an enum value, a `MixIds` Guid and a `
   key visual is the jacket** (D16): piugame's own jackets are 700×393 rectangles of the same visuals with the title
   added, the cards draw jackets with `object-fit: cover`, and the RISE stills go up **untouched at 1920×1080**
   (`2026-09-22-jackets/`, one file per song under the `songs/` naming rule — `Name.Where(IsAsciiLetterOrDigit)` —
-  plus a manifest). **All 50 songs new to the tracker are named and filed** (2026-09-22, from the owner's RISE, REMIX
-  and VARIETY channel screenshots; every thumbnail match unique). `title-to-id.json` in the bundle is the
+  plus a manifest). **All 50 songs new to the tracker are named, filed and uploaded to the CDN** (2026-09-22, from the owner's RISE,
+  REMIX and VARIETY channel screenshots, every thumbnail match unique; `songs/<name>.png`, `image/png`,
+  create-only, verified by read-back). `title-to-id.json` in the bundle is the
   title → game-id map for every song seen on a wheel, which is also what a RISE new-song batch will need. The ids are the arcade's own song codes for arcade songs (`b29`, `e928`,
   `18d0`) and a 10001+ block for RISE-era songs; matching the wheel thumbnails in the owner's channel screenshots
   against the 88×88 snippets named all 48 RISE Vol.1 and Vol.2 songs plus Into the PIUniverse! (`title-to-id.json`
@@ -361,6 +362,27 @@ on Phoenix 2 charts, versions) as idempotent SQL in Downloads plus the generator
 precedent; the upload page and manual entry; the v1 mix parser; docs (this, DOMAIN.md for the RISE terms,
 API.md for the mix values, UX-GUIDELINES.md for the palettes); tests (profile completeness, ladder, mark mapping,
 platform gate on the cross-mix union).
+
+### 8.0 What phase 1 delivers, feature by feature
+
+The reference list the owner asked for (2026-09-22). "Works" means on both new mixes unless a column says otherwise.
+
+| Area | At the end of phase 1 |
+|---|---|
+| Mix picker | **Rise** and **Rise Arcade** beside the three primaries, each with its own theme (D15) and pill; the anonymous mix cookie, the account default and the shell seed all accept them |
+| Catalog, Rise | every song on the community sheet (421 on 2026-09-21) with its 5K Single and 6K Half-Double charts at Rise's levels, each stamped with the Rise patch it arrived in; 50 songs new to the site with their jackets (uploaded 2026-09-22) |
+| Catalog, Rise Arcade | the 352-song Arcade Station list (§4.2) as membership rows on the Phoenix 2 charts, Single and Double, Phoenix 2 levels and note counts |
+| Chart pages and search | `/Charts` browse and search, the canonical chart page, the details dialog and the app-bar search on both mixes; half-doubles render as the existing chip, singles as Phoenix 2 stepballs (D12) |
+| Recording | manual entry on the chart page, the details dialog, the SRP quick record and the Quick Record widget; Rise grades with no plus tiers on the published ladder (§5.2); Rise's three marks as its plates, shown as Perfect Game / Full Combo / No Miss (D5); Rise Arcade with Phoenix 2 grades and the eight plates; the broken flag on both |
+| Spreadsheet upload | one upload page for both mixes: Song, Difficulty (`S16`, `HDB23`, `D20`), Score, Plate or mark (`PG`/`FC`/`NM` accepted), IsBroken; keep-best by default |
+| Score art | Rise letters, broken letters and mark badges from the game (D12) with a per-mix art path; Rise Arcade draws the site's Phoenix set |
+| Passed-in-another-mix border | on, but only within a platform: Rise ↔ Rise Arcade, and the arcade family among themselves (D6) |
+| Tier lists | open on both mixes with community votes; the score-derived lenses fill in as scores accumulate |
+| Player page, journal, sessions | records and the score journal on both mixes; the rating tiles, PUMBILITY and official standing hidden rather than drawn as zeros |
+| API | `GET api/v2/mixes` lists both with `scoringModel: phoenix`; every v2 read takes them; **`POST api/v2/players/me/plays`** (D14) accepts a judged play with the score checksum, the capture app's endpoint; v1 unchanged |
+| Says "not built yet" | PUMBILITY pages, weekly boards, March of Murlocs, the recap, the Phoenix calculators; "this mix never had it" for official boards and titles |
+| Not in phase 1 | leaderboards and PUMBILITY tuning (phase 3), the capture app (phase 2), Discord announcements for the new mixes, `/Admin/BulkAddCharts` learning a mix (future Rise songs arrive through the catalog tool's SQL until then) |
+| Docs and locales | DOMAIN.md, API.md, UX-GUIDELINES.md, DATABASE-SCHEMA.md updated; every new string in all nine locales |
 
 ### 8.1 Phase-1 build order (proposed, for the technical-scope pass)
 
