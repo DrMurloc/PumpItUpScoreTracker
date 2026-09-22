@@ -1,6 +1,6 @@
 # Pump It Up RISE — two keyboard mixes
 
-Status: **design and technical scope complete for phase 1 (§11), no code; the build starts on the owner's go.**
+Status: **building phase 1** (owner's go 2026-09-22), in the commit order of §8.1.
 Researched 2026-09-14 → 2026-09-22 from the owner's install, his screenshots, two community sheets, two wikis and the
 Steam patch notes; the owner took the high-level plan to two Rise players (Sneezle, Dave) on 2026-09-21 and their
 answers are folded in; every open question of §9 was answered by 2026-09-22. Every decision below is the owner's
@@ -123,7 +123,7 @@ value has one):
 | `OfficialSite` | Phoenix1 / Phoenix2 | None | None | None |
 | `Platform` | Pad | **Keyboard** | **Keyboard** | Pad |
 | `LifebarModel` | Phoenix | None | None | None |
-| `ChartTypes` | S, D, CoOp, SP, DP | S, **HalfDouble** | S, D | per mix |
+| `ChartTypes` | S, D, CoOp, SP, DP | S, **HalfDouble** | S, D | per mix — *not in the record yet: nothing reads it in phase 1, and the legacy mixes' sets would be guesses* |
 | `Art` | own palette, bubbles, letters | own palette, **Rise letters + marks**, chip bubbles | own palette, Phoenix letters/plates/bubbles | Phoenix letters, XX bubbles, chips |
 
 The existing helpers stay and delegate: `UsesLegacyScoring()` reads `ScoringModel`, the `MixCapabilities` flags
@@ -400,7 +400,7 @@ seeded and everything after it field-tested.
 | 2 | `feat(kernel): MixProfile — one record per mix` | `MixProfile`, `MixProfiles.For` for the 31 existing values, `GradeLadder` and `AwardSet` with only today's sets; `UsesLegacyScoring()`, the six `MixCapabilities` flags and the three floor lookups delegate to it | no behavior change; a DomainTest pins every flag for all 31 mixes, and one asserts every enum value has a profile |
 | 3 | `refactor: ask the profile, not the boolean` | the §3 call sites: `BaseUrlFor` (site), `ShareCardImages` + `DifficultyBubble` (art — the half-double chip only where the art set has no half-double bubble), `GetCrossMixPassesHandler` (platform), the stage-break backfill (lifebar), the max-combo backfill, broken-record cleanup and `WipeUserScoresHandler` (scoring model), `ShareCardComposer:179`, `RecordScoreForm` + `PhoenixScoreFileExtractor` + `PhoenixPlateHelperMethods` (awards), the `HasPumbility()` guard before the rating step | still no behavior change for the 31; ApplicationTests for the cross-mix platform gate, the wipe list and the rating guard |
 | 4 | `feat: Rise and Rise Arcade` | the two enum values (descriptions, primary, display order, accents), their profiles with `RiseFloors` and `RiseMarks` (names, `PG`/`FC`/`NM`), `MixIds`, the data-only migration seeding `scores.Mix` | DomainTests for the ladder boundaries and the marks; the `api/v2/mixes` golden grows two rows if it enumerates the enum. Both mixes are pickable from here, drawn in the Phoenix theme until 6 |
-| 5 | `tools: RiseCatalog` | the console app and its README (§11.3); nothing generated is committed | not in the solution. Run it, apply s1–s4 to the Aspire database, and 6–8 are field-testable |
+| 5 | `tools: RiseCatalog` | the Python tool and its README (§11.3); nothing generated is committed | not in the solution. Run it, apply s1–s4 to the Aspire database, and 6–8 are field-testable |
 | 6 | `feat(web): the Rise and Rise Arcade themes` | two `MixPalette`s with their ramps, `ThemedMixes`, `CssClassFor` | the theme tests; no stylesheet change |
 | 7 | `feat(web): the pages learn the two mixes` | `RecurringJobRunner` (five publishes), `WidgetRegistry`, `Player.razor` tiles, `StaticHeadResolver`, `UploadPhoenixScores` site-less flow | Tests.Components: the nav on Rise, the upload page on Rise, three marks vs eight plates, the bubble. **The owner's copy is asked for here** — the upload page's Rise lines and the two SEO descriptions |
 | 8 | `feat(api): POST api/v2/players/me/plays` | the action on `PlayersController`, the DTO, the checksum, dispatch to `RecordObservedPlaysCommand` | Tests.Api goldens for the request, 201 and 400 |
@@ -476,8 +476,9 @@ player gets a wrong answer or a crash. They come in four kinds:
   feeds the picker, the chart-page slug `rise-arcade` and the mix cookie); `IsPrimary()` includes both (D13);
   `DisplayOrder()` 290 / 300; `GetAccentColor()` two cases from the palettes (D15); `UsesLegacyScoring()` becomes
   `MixProfiles.For(mix).ScoringModel == ScoringModel.Legacy`.
-- NEW `Enums/MixProfile.cs`: `sealed record MixProfile(ScoringModel, GradeLadder, AwardSet, OfficialSite, Platform,
-  LifebarModel, IReadOnlyList<ChartType> ChartTypes, ArtSet Art)` and `MixProfiles.For(MixEnum)` — a dictionary over
+- NEW `Enums/MixProfile.cs`: `sealed record MixProfile(ScoringModel, GradeLadder, AwardSet Awards, MixEnum? OfficialSite,
+  Platform, bool HasLifebarModel, MixArt Art, MixFeatures Features)` — `MixArt` is two folder pointers (bubbles,
+  score art), `MixFeatures` the five nav answers and `MixProfiles.For(MixEnum)` — a dictionary over
   all 33 values, the §3 table verbatim. Rise: Phoenix · **Rise** · **RiseMarks** · None · Keyboard · None ·
   {Single, HalfDouble} · Rise letters on Phoenix 2 stepballs. Rise Arcade: Phoenix · Phoenix2 · PhoenixPlates ·
   None · Keyboard · None · {Single, Double} · Phoenix 2 everything.
@@ -586,11 +587,12 @@ mix.
 
 ### 11.3 The SQL — `tools/RiseCatalog/`
 
-A console app beside `PumpoutExtractor`, under its rules: not in the solution, Sonar-excluded, output to Downloads,
-reviewed and run by hand, nothing generated enters the repo. Inputs: a CSV export of the community sheet, Dave's
+A Python tool beside `tools/YouTubePlaylists` (system Python, standard library only), under the PumpoutExtractor
+rules: not in the solution, Sonar-excluded, output to Downloads, reviewed and run by hand, nothing generated
+enters the repo. Inputs: a CSV export of the community sheet, Dave's
 Arcade Station list, the site's `/Charts/Export.csv` for Phoenix and Phoenix 2 (or `export-prod-catalog.py` against
 the local prod-synced database), `title-to-id.json`, and the Steam news patch dates. The order-preserving single
-mapper (`mapper.py`, §4.3) ports over as `Matcher.cs` with the five confirmed readings baked in.
+mapper (`mapper.py`, §4.3) is its alignment step, with the five confirmed readings baked in.
 
 Four idempotent single-transaction scripts, `IF NOT EXISTS` per row, every Guid deterministic (v5 from
 `mix|song|type|level`) so a re-run is a no-op:
