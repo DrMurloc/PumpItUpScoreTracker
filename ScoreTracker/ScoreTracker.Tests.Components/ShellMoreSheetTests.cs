@@ -20,6 +20,27 @@ public sealed class ShellMoreSheetTests : ComponentTestBase
 {
     private static readonly Guid UserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
+    [Theory]
+    [InlineData(MixEnum.Rise)]
+    [InlineData(MixEnum.RiseArcade)]
+    public void ARiseMixOffersNothingItCannotAnswerYet(MixEnum mix)
+    {
+        // Every feature the profile answers false for stays off the sheet (docs/design/rise.md
+        // §11.2); what the mix can answer — charts, tier lists, the import, sessions — stays on.
+        var sheet = Render(Model(mix: mix));
+        var hrefs = sheet.FindAll("a").Select(a => a.GetAttribute("href") ?? string.Empty).ToArray();
+
+        foreach (var gated in new[]
+                 {
+                     "/Pumbility", "/Titles", "/WeeklyCharts", "/MarchOfMurlocs", "/OfficialLeaderboards",
+                     "/PhoenixCalculator", "/PumbilityCalculator", "/Players", "/Popularity", "/WhatItTakes"
+                 })
+            Assert.DoesNotContain(hrefs, h => h.StartsWith(gated, StringComparison.Ordinal));
+        Assert.Contains("/Charts", hrefs);
+        Assert.Contains("/UploadPhoenixScores", hrefs);
+        Assert.Contains(hrefs, h => h.StartsWith("/Player/", StringComparison.Ordinal) && h.EndsWith("/Sessions"));
+    }
+
     private static ShellViewModel Model(bool loggedIn = true,
         MixEnum mix = MixEnum.Phoenix, bool hasRecap = false,
         IReadOnlyList<TournamentRecord>? events = null)

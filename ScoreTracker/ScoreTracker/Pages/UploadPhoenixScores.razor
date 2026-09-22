@@ -47,6 +47,26 @@
     return;
 }
 
+@if (!_currentMix.HasOfficialSite())
+{
+    @* A Phoenix-scored mix with no site to pull from (Rise keeps its records inside the game):
+       the spreadsheet IS the import, so the page is the upload and nothing else. The
+       credential card and the console-script steps would ask for a site that does not exist —
+       ManualSiteHost throws on one. The same UploadFile path the expander uses, so a row reads
+       in the mix's own vocabulary (S16 / HDB23, PG / FC / NM) and keeps the better score. *@
+    <MudCard Class="mt-4">
+        <MudCardHeader><h2>@L["Import Scores"]</h2></MudCardHeader>
+        <MudCardContent>
+            <MudText Typo="Typo.body2" Class="mb-3">@L["Spreadsheet Import Lede", _currentMix.GetName()]</MudText>
+            <MudText Typo="Typo.caption" Class="d-block mb-4">@L["Spreadsheet Import Columns"]</MudText>
+            <MudButton HtmlTag="label" for="uploadInput" Color="Color.Primary" Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.UploadFile" Disabled="_isImporting">@L["Upload CSV"]</MudButton>
+        </MudCardContent>
+    </MudCard>
+    <InputFile id="uploadInput" OnChange="@UploadFile" hidden accept=".csv,.xlsx"/>
+    return;
+}
+
 @* The form is the page (design doc D1/D2): credentials, options and Import sit above the fold;
    the script/CSV flow lives in the manual-import expander below. *@
 <MudCard Class="mt-4">

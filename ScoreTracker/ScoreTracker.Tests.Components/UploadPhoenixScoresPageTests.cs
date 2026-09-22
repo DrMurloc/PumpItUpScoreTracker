@@ -95,6 +95,24 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
             Guid.NewGuid(), "Tester", true, null, new Uri("https://piu.test/avatar.png"), null));
     }
 
+    [Theory]
+    [InlineData(MixEnum.Rise)]
+    [InlineData(MixEnum.RiseArcade)]
+    public void ASiteLessPhoenixMixGetsTheSpreadsheetUploadAlone(MixEnum mix)
+    {
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(mix);
+
+        var cut = RenderComponent<UploadPhoenixScores>();
+
+        // Nothing to pull from piugame: no credentials, no Import seat, no console script —
+        // the CSV upload is the page (docs/design/rise.md §11.2).
+        Assert.DoesNotContain(cut.FindAll("input"), i => i.GetAttribute("type") == "password");
+        Assert.Empty(ImportButtons(cut));
+        Assert.Contains("Upload CSV", cut.Markup);
+        Assert.DoesNotContain("Manual import", cut.Markup);
+        Assert.Single(cut.FindAll("input#uploadInput"));
+    }
+
     private static Chart MakeChart() =>
         new(Guid.NewGuid(), MixEnum.Phoenix,
             new Song("District 1", SongType.Arcade, new Uri("https://piu.test/art.png"),

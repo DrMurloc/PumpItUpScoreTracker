@@ -44,19 +44,25 @@ public sealed class RecurringJobRunner
     public Task PublishFlushOverdueScoreBatches() =>
         _bus.Publish(new FlushOverdueScoreBatchesCommand());
 
-    // Phoenix 2 tier lists are live (owner, 2026-08-13): every tier-list compute job fans out
-    // per mix, like the rotations below. Each consumer's own thin-data guards keep a mix with
+    // Phoenix 2 tier lists are live (owner, 2026-08-13), and the Rise mixes joined them in phase 1
+    // (docs/design/rise.md §11.2): every tier-list compute job fans out per mix, like the rotations
+    // below — the weekly and Daily Step rotations, the PUMBILITY list, Hardmode and the leaderboard
+    // import stay with the mixes that have those features. Each consumer's own thin-data guards keep a mix with
     // little volume quiet rather than wrong — the PUMBILITY job's full-pool gate in particular
     // writes nothing until a mix has real pools.
     public Task PublishProcessScoresTiersList() =>
         Task.WhenAll(
             _bus.Publish(new ProcessScoresTiersListCommand(MixEnum.Phoenix)),
-            _bus.Publish(new ProcessScoresTiersListCommand(MixEnum.Phoenix2)));
+            _bus.Publish(new ProcessScoresTiersListCommand(MixEnum.Phoenix2)),
+            _bus.Publish(new ProcessScoresTiersListCommand(MixEnum.Rise)),
+            _bus.Publish(new ProcessScoresTiersListCommand(MixEnum.RiseArcade)));
 
     public Task PublishCalculateScoringDifficulty() =>
         Task.WhenAll(
             _bus.Publish(new RecalculateScoringDifficultyCommand(MixEnum.Phoenix)),
-            _bus.Publish(new RecalculateScoringDifficultyCommand(MixEnum.Phoenix2)));
+            _bus.Publish(new RecalculateScoringDifficultyCommand(MixEnum.Phoenix2)),
+            _bus.Publish(new RecalculateScoringDifficultyCommand(MixEnum.Rise)),
+            _bus.Publish(new RecalculateScoringDifficultyCommand(MixEnum.RiseArcade)));
 
     // Weekly boards are parallel per mix (like Daily Step below). A daily cadence can't rely on the
     // manual per-mix trigger the Weekly page uses, so the job fans out to each supported mix; a mix
@@ -77,7 +83,9 @@ public sealed class RecurringJobRunner
     public Task PublishProcessPassTierList() =>
         Task.WhenAll(
             _bus.Publish(new ProcessPassTierListCommand(MixEnum.Phoenix)),
-            _bus.Publish(new ProcessPassTierListCommand(MixEnum.Phoenix2)));
+            _bus.Publish(new ProcessPassTierListCommand(MixEnum.Phoenix2)),
+            _bus.Publish(new ProcessPassTierListCommand(MixEnum.Rise)),
+            _bus.Publish(new ProcessPassTierListCommand(MixEnum.RiseArcade)));
 
     public Task PublishProcessPumbilityTierList() =>
         Task.WhenAll(
@@ -103,7 +111,9 @@ public sealed class RecurringJobRunner
     public Task PublishCalculateChartLetterDifficulties() =>
         Task.WhenAll(
             _bus.Publish(new RecalculateChartLetterDifficultiesCommand(MixEnum.Phoenix)),
-            _bus.Publish(new RecalculateChartLetterDifficultiesCommand(MixEnum.Phoenix2)));
+            _bus.Publish(new RecalculateChartLetterDifficultiesCommand(MixEnum.Phoenix2)),
+            _bus.Publish(new RecalculateChartLetterDifficultiesCommand(MixEnum.Rise)),
+            _bus.Publish(new RecalculateChartLetterDifficultiesCommand(MixEnum.RiseArcade)));
 
     // Was the per-mix note's one deliberate holdout while the similarity inputs — the piucenter
     // crawl — described Phoenix charts only; the self-run Phoenix 2 snapshot (banked 2026-08-26)
@@ -111,7 +121,9 @@ public sealed class RecurringJobRunner
     public Task PublishRecalculateChartSimilarity() =>
         Task.WhenAll(
             _bus.Publish(new RecalculateChartSimilarityCommand(MixEnum.Phoenix)),
-            _bus.Publish(new RecalculateChartSimilarityCommand(MixEnum.Phoenix2)));
+            _bus.Publish(new RecalculateChartSimilarityCommand(MixEnum.Phoenix2)),
+            _bus.Publish(new RecalculateChartSimilarityCommand(MixEnum.Rise)),
+            _bus.Publish(new RecalculateChartSimilarityCommand(MixEnum.RiseArcade)));
 
     public Task PublishStartLeaderboardImport() =>
         _bus.Publish(new StartLeaderboardImportCommand());

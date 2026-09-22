@@ -32,7 +32,7 @@ else if (_profile != null)
 {
     <MudPaper Class="pa-4 mb-4" data-testid="player-hero">
         <div class="ph-top">
-            @if (!IsLegacy)
+            @if (HasRatings)
             {
                 <div class="ph-pum">
                     @* The level gem is Phoenix 2's ladder alone; on Phoenix the number stands by
@@ -71,7 +71,7 @@ else if (_profile != null)
                         </div>
                     }
                 </div>
-                @if (!IsLegacy)
+                @if (HasRatings)
                 {
                     <div class="ph-cl">
                         <span class="ph-cl-eyebrow">@L["Competitive Level"]</span>
@@ -83,7 +83,7 @@ else if (_profile != null)
         </div>
         @* Ratings are Phoenix-lineage and come back empty on a legacy mix; the page hides what they
            feed rather than printing zeros as if they were measurements. *@
-        @if (!IsLegacy)
+        @if (HasRatings)
         {
             <div class="cmp-tiles">
                 <div class="cmp-tile"><div class="cmp-tile-label">@L["Total Rating"]</div><div class="cmp-tile-num">@_profile.TotalRating.ToString("N0")</div></div>
@@ -191,6 +191,10 @@ else if (_profile != null)
 
     private bool IsLegacy => _currentMix.UsesLegacyScoring();
 
+    // PUMBILITY, the competitive levels and the rating tiles exist only where a formula does —
+    // a Phoenix-scored mix without one (Rise) hides them rather than printing zeros.
+    private bool HasRatings => _currentMix.HasPumbility();
+
     // piugame publishes each chart board 300 deep on Phoenix 2 and 100 deep on Phoenix, so a
     // placement is a "Top 300" or a "Top 100" by mix.
     private int BoardDepth => _currentMix == MixEnum.Phoenix2 ? 300 : 100;
@@ -263,7 +267,9 @@ else if (_profile != null)
 
         // The official site publishes boards for the current generation only, so an older mix
         // has no standing to ask about.
-        _standing = IsLegacy ? null : await Mediator.Send(new GetOfficialPlayerStandingQuery(_currentMix, UserIdParam));
+        _standing = _currentMix.HasOfficialBoards()
+            ? await Mediator.Send(new GetOfficialPlayerStandingQuery(_currentMix, UserIdParam))
+            : null;
         _charts = await ChartCatalog.GetCharts(_currentMix);
         _loading = false;
 
@@ -273,7 +279,7 @@ else if (_profile != null)
         if (ShowsHeadToHead)
         {
             _compareLevel = null;
-            if (!IsLegacy)
+            if (HasRatings)
             {
                 var mine = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _currentMix));
                 var singlesGap = Math.Abs(mine.SinglesCompetitiveLevel - _profile.SinglesCompetitiveLevel);

@@ -42,6 +42,14 @@
         </div>
     </div>
 
+    @* A Phoenix-scored mix without a PUMBILITY formula (Rise, until phase 3) has nothing to
+       rank on yet: the board says so rather than printing an empty table under a heading. *@
+    @if (!IsLegacy && !_currentMix.HasPumbility())
+    {
+        <MixUnavailableNotice Mix="_currentMix" Subject="@L["Leaderboards"]"
+                              Kind="MixUnavailableNotice.NoticeKind.NotYetBuilt"/>
+    }
+
     @* Singles / Doubles / CoOp split the Phoenix per-type ratings. A legacy mix has one
        number and one board, so the group would be four buttons that all do the same thing. *@
     <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-2 mt-2 flex-wrap">
@@ -436,6 +444,9 @@
                 .ToArray();
             return;
         }
+
+        // No formula, no fifty — and PumbilityScoring would throw for the mix.
+        if (!_currentMix.HasPumbility()) return;
 
         var scoringConfig = ScoringConfiguration.PumbilityScoring(_currentMix, true);
         var top50 = await Mediator.Send(new GetTop50ForPlayerQuery(userId, chartType, Mix: _currentMix));
