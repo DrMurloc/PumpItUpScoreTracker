@@ -681,19 +681,19 @@ section, which is not a seasons surface (D49) and ships to everyone.
 | 0 | **Cache-key builder and ratchet** — *built 2026-09-12, branch `claude/seasons-feature-scoping-ca5bc5`* | Every hand-spelled memory-cache key moved to `CacheKeys` (`Mix` / `Viewer`, with mix-id overloads for the catalog); `CacheKeyTests` ratchets it with an allowlist that started at 27 files / 32 statements and ended empty; `LedgerCacheKeys` and `OfficialCacheKeys` delegate. No feature code. | Nothing visible. Fast suites green; the allowlist is empty. | Merged. |
 | 1a | **The schema, reading nothing new** — *merged 2026-09-13, PR #337* | `Seasons` vertical skeleton; `scores.Season` and `scores.ChartSeason` (D33); the `SeasonId` columns (`smallint`, 0 = all-time, D11) on the personal-best, player-stats, folder-level and Hardmode tables with season-first keys and indexes (D34); the named `AllTime` query filters (D12); the reader audit (§6.4) including the peer store's raw SQL and the filter-blind purge; `CacheKeys.Viewer` taking the season; the `Seasons:EnableUI` flag read at startup with the admin bypass (nothing behind it yet). No writer, no season row. | The whole site behaves exactly as before. The integration filter tests and the audit prove no read changed. This is the deploy that carries the index rebuilds on the record table, online and alone, so their cost is measured once and by itself. | A prod smoke after deploy: numbers on the PUMBILITY page, a community board and API v2 unchanged; then eyeball the peer warm and cohort reads, which now seek the renamed board index with fresh statistics. |
 | 1b | **Tracking begins** — *built 2026-09-14, branch `claude/seasons-slice-1b`* | `roll-season` (create the quarter's row; seal one whose window has closed: `SealedAt`, D13); the seasonal write in the import chain with the counting rule (D15); the season pass in the rating saga (quiet) writing the season `PlayerStats` row and folder levels; the nightly rollup; the flagged score reader answering seasonal bests; undo/delete replay; the backfill button; the admin season console (the calendar, roll now, backfill). | Press **Backfill seasons**: every quarter since Summer 2026 appears with its pool rebuilt and its standings rolled up, the ended ones reading *Ended, not yet sealed* until the next roll stamps them (D37); your own seasonal personal bests exist in SQL; an import you make writes a row for the running season beside the all-time one; an undo removes it. Nothing player-facing changes. | Integration tests for the writer, the replay and the seal; one week of imports accumulating in prod while nobody sees them. |
-| 1c | **Season PUMBILITY** | The `SeasonPumbilityScoring` factory (D39: the official config with the continuous scale on and a Perfect Game at 1.505); `RecalculateCore` prices a season with it and all-time with the official one; the rollup prices a named sealed season when asked (D50) and the console's re-price press; the all-time pass fills `TotalPumbility` with Completion's definition (D40). No migration. | As admin: after Backfill and one re-price, Summer 2026's rows in SQL carry the continuous numbers and every all-time row is unchanged to the cent; a second press changes nothing. | Lands before the 2026-10-01 roll and the retrofit covers one sealed season; after it, the same press covers two. |
-| 2a | **The view, with nothing flipped** | Picker option and pill, setting + cookie through the mix redirect (parsed through `SeasonId.TryFrom`, so a malformed cookie or query string never throws), the shell seed, the intro dialog (once), the caption on excluded pages, the Account peers disclaimer. Every page still shows all-time numbers. | As admin: switch to Fall 2026, see the pill everywhere including static pages, get the intro once, see the caption on Weekly Charts; a non-admin sees none of it. The cookie survives a new tab; the anonymous default is all-time. | Plumbing proven before any number depends on it. |
+| 1c | **Season PUMBILITY** | The `SeasonPumbilityScoring` factory (D39: the official config with the continuous scale on and a Perfect Game at 1.505); `RecalculateCore` prices a season with it and all-time with the official one; the rollup prices a named sealed season when asked (D50) and the console's re-price press; the all-time pass fills `TotalPumbility` with Completion's definition (D40); and the formula sanity check (§14) as a probe in the exploration workbench that re-prices every pool under both formulas against the prod-synced database and prints rank moves and the SSS+-to-PG share. No migration. | As admin: after Backfill and one re-price, Summer 2026's rows in SQL carry the continuous numbers and every all-time row is unchanged to the cent; a second press changes nothing; the probe's table reads sane. | Lands before the 2026-10-01 roll and the retrofit covers one sealed season; after it, the same press covers two. |
+| 2a | **The view, with nothing flipped** | Picker option and pill — days left in the pill, where Sheet A put it (the last-days signposting, decided here, §14) — setting + cookie through the mix redirect (parsed through `SeasonId.TryFrom`, so a malformed cookie or query string never throws), the shell seed, the intro dialog (once), the caption on excluded pages, the Account peers disclaimer. Every page still shows all-time numbers. | As admin: switch to Fall 2026, see the pill everywhere including static pages, get the intro once, see the caption on Weekly Charts; a non-admin sees none of it. The cookie survives a new tab; the anonymous default is all-time. | Plumbing proven before any number depends on it. |
 | 2b | **The marker** | `DifficultyBubble` overlay slot, chevron count (▲ / ▲▲ / signed number from ±3), the mix-invariant token pair, the chart page header line; the Discord text form. Ratings are flat, so nothing shows until the admin console pins one chart's season rating by hand. | Pin 4NT S22 to 21 in the console: ▼ appears on every bubble that draws 4NT in seasonal view, at every size, and nowhere in all-time view. Unpin, it vanishes. | Sheet B's ladder holds up in the real components. |
-| 2c | **PUMBILITY section flips** | Frame number and bar, Play (all-time peers, your season scores, season gains), Breakdown's fifty and titles-worth, day-one state; Phoenix 1 page hidden in seasonal view. | Your Fall 2026 number and fifty; Play's gains make sense; peers identical in both views; switching views and reloading never crosses numbers. | The first real surface on the flagged reader; the caches carry the view. |
+| 2c | **PUMBILITY section flips** | Frame number and bar, Play (all-time peers, your season scores, season gains), Breakdown's fifty and titles-worth (the title-cohort comparison is decided here, §14 — recommended hidden in seasonal view), day-one state; Phoenix 1 page hidden in seasonal view. | Your Fall 2026 number and fifty; Play's gains make sense; peers identical in both views; switching views and reloading never crosses numbers. | The first real surface on the flagged reader; the caches carry the view. |
 | 2d | **Chart page and Chart search flip** | Record card with two numbers, the *This season* scope on the chart board, quick record hidden; search facets, states, min/max, export on seasonal bests; markers on every bubble. | A chart you played this season shows season best over all-time; the season scope lists the right players; the SRP filters on season scores. | Static page reads the view from the request correctly. |
-| 2e | **Player, Community, Rivals flip** | Player page number, tiles, folder completion; Community Rankings on the season stats rows, By Chart and play counts; the Rivals page and head-to-head on season scores both sides, board-only rivals asterisked. | Rankings of your club for Fall 2026; head-to-head against a rival on season scores; a board-only rival still shows the all-time sweep score with the mark. | |
-| 2f | **The rest of the flips** | Tier-list rows (your score and marker; lists stay), the session card line and Discord line, the Season widget, existing widgets via the page context. | An import's session card shows the Fall 2026 gain and rank move; the widget shows your standing. | |
-| 3 | **The Leaderboards vertical and the section, all-time first** | The vertical skeleton (`AddLeaderboards`, `AddLeaderboardsConsumers`, the model contribution); the standings table (D44) and the stats fact (D43); the `rebuild-leaderboards` job; the section (D49) with PUMBILITY, CO-OP Completion (D41), Hardmode through the existing read, Completion (D40); the Compete entry; the World card's link and the Hardmode page's board tabs retired into it; in seasonal view the season chrome and the season's boards, the past-seasons dialog, standard rows with highlighting. The seasonal half behind the flag route-wise; the all-time half for everyone. | The all-time boards match the World Rankings and the Hardmode tabs they replaced, row for row; Fall 2026's boards with your rivals and clubmates lit; Summer 2026 by season number; arrows the morning after a move. | Sheet D redone as the section in both views (§13). The first slice a non-admin sees anything of. |
+| 2e | **Player, Community, Rivals flip** | Player page number, tiles, folder completion (broken-as-played is decided here, D38, §14); Community Rankings on the season stats rows, By Chart and play counts; the Rivals page and head-to-head on season scores both sides, board-only rivals asterisked. | Rankings of your club for Fall 2026; head-to-head against a rival on season scores; a board-only rival still shows the all-time sweep score with the mark. | |
+| 2f | **The rest of the flips** | Tier-list rows (your score and marker; lists stay), the session card line and Discord line, the "ends in N days" line on the import surfaces (§14), the Season widget, existing widgets via the page context. | An import's session card shows the Fall 2026 gain and rank move; the widget shows your standing. | |
+| 3 | **The Leaderboards vertical and the section, all-time first** | The vertical skeleton (`AddLeaderboards`, `AddLeaderboardsConsumers`, the model contribution); the standings table (D44) and the stats fact (D43); the `rebuild-leaderboards` job; the section (D49) with PUMBILITY, CO-OP Completion (D41), Hardmode through the existing read, Completion (D40); the Compete entry; the World card's link and the Hardmode page's board tabs retired into it; in seasonal view the season chrome and the season's boards, the past-seasons dialog, standard rows with highlighting. The seasonal half behind the flag route-wise; the all-time half for everyone. | The all-time boards match the World Rankings and the Hardmode tabs they replaced, row for row; the Completion census (§14) — the top ten read against the prod-synced database before it ships; Fall 2026's boards with your rivals and clubmates lit; Summer 2026 by season number; arrows the morning after a move. | Sheet D redone as the section in both views (§13). The first slice a non-admin sees anything of. |
 | 4 | **Balancing** | The roll computes season ratings from the sealed season's pools (D7, compounding per D8), writes the `ChartSeason` rows (D33); the What-moved section on the season page; the admin dry run per folder. | Run the dry run against Fall 2026's pools today: 22 up and 22 down in S22, the lists match Sheet D's preview; nothing moves until the real roll. | Must be merged before the first roll you want balanced (the first roll after launch, D3). |
-| 5 | **List-boards: Hardmode and themes** | `LeaderboardBoard` / `LeaderboardBoardChart` (D45); the roll copies that day's Hardmode list into the season's board; the `ThemeMatcher` kinds, the console's matcher editor, dry run and per-season activation (D46); the chart-tag table and its console (D47); list-board standings from the stats fact and the rebuild; the section's Hardmode page in seasonal view and the theme pages; the PUMBILITY page's Hardmode tab in seasonal view with the locked note (D30). | Activate a Banya theme for the running season: its list freezes, its board fills after one rebuild, a Banya song added to the catalog afterwards does not appear. The season's Hardmode list does not change when the weekly census rewrites the all-time one; your season Hardmode standing on both tabs agrees. | Slice 3 merged. The first themes and the Stamina rule are loops (§14). |
+| 5 | **List-boards: Hardmode and themes** | `LeaderboardBoard` / `LeaderboardBoardChart` (D45); the roll copies that day's Hardmode list into the season's board; the `ThemeMatcher` kinds, the console's matcher editor, dry run and per-season activation (D46); the chart-tag table and its console (D47; the Gimmick tagging loop runs on it, §14); the Stamina rule iterated through the dry run against the local catalog until it reads right or becomes a finite list (§14); list-board standings from the stats fact and the rebuild; the section's Hardmode page in seasonal view and the theme pages; the PUMBILITY page's Hardmode tab in seasonal view with the locked note (D30). | Pick the first two or three themes here (§14). Activate a Banya theme for the running season: its list freezes, its board fills after one rebuild, a Banya song added to the catalog afterwards does not appear. The season's Hardmode list does not change when the weekly census rewrites the all-time one; your season Hardmode standing on both tabs agrees. | Slice 3 merged. The Stamina rule, the tagging and the first themes run inside it (§14). |
 | 6 | **Flip the flag** | `Seasons:EnableUI = true` in production config. No code. Optional the same week: a front-door line and a Discord announcement. | Everyone sees what you have been seeing. | The §10.1 checklist walked once as a bug-check session; the backfill run; slices 1b–3 live for long enough that Fall 2026's boards are real. |
 | 7 | **Side boards** | The plays-journaled fact from ScoreLedger, published after the journal write (D43); the five keys (D48) from the fact and from the journal reader on rebuild; the Plays page in both views with the "since 2026-07-30" line; an undo rebuilds the player's rows. | Your play count moves on the next import; undo the import and it moves back; the all-time figures match a hand count from the journal. | Slice 3 merged; can slot before 5. |
-| 8 | **CO-OP levels and CO-OP PUMBILITY** | The anchoring census (§14) seeding `CoOpDifficulty` (D42); the console pin; the season and official configs pricing a co-op on the Doubles curve at its level when one exists; the CO-OP PUMBILITY board (D41) in both views, re-priced by the chart-difficulty event. | Pin a co-op two levels up in the console: the board re-prices; the flat CO-OP Rating on the player page does not move. | The census loop first. Slots anywhere after 3. |
+| 8 | **CO-OP levels and CO-OP PUMBILITY** | Two halves, with the anchoring census between them (§14). First: the probe (the pass-anchored and the score-anchored level for every co-op, side by side), `CoOpDifficulty` (D42) seeded from it, the console pin, the season and official configs pricing a co-op on the Doubles curve at its level when one exists, the CO-OP PUMBILITY board (D41) in both views re-priced by the chart-difficulty event — the board can go live on seeded and hand-pinned levels, because the table is the truth. Second, once the loop has chosen the blend: the census saga. | Pin a co-op two levels up in the console: the board re-prices; the flat CO-OP Rating on the player page does not move. | The loop between the halves: whether the two anchors agree well enough to blend, or the board changes shape. Slots anywhere after 3. |
 
 Later, in this order of value: the all-time Hardmode board folded into the list-board mechanism (D45;
 its six columns then stop being written), season rewards (decide how many places pay before a season
@@ -975,50 +975,57 @@ for its own sake.
 ## 14. Open
 
 Standing questions, and the loops the 2026-09-22 round added. Each loop is a working session on the
-prod-synced local database or a curation pass with the owner; none of them blocks the slice it is listed
-under from being scaffolded, and each ends in a ruling that lands here as a decision. When each one runs
-is the owner's call; none ran on 2026-09-22.
+prod-synced local database or a curation pass with the owner, and each ends in a ruling that lands here
+as a decision. **A loop runs inside the slice that builds its tool** (owner, 2026-09-22: "loops should
+be in the slices that build their tools, yes"): the slice's PR opens with the tool, the loop runs on it
+against real data, and the ruling lands before the slice ships. The slice rows in §12 say where. None
+ran on 2026-09-22.
 
-- **The CO-OP anchoring census** (D42; gates slice 8): one level per co-op from the pass tier list per
-  player count and the score-anchoring the scoring-difficulty saga already does for Singles and Doubles,
-  with the players' Doubles competitive levels as the anchor; decide the blend; seed `CoOpDifficulty`;
-  check the result against the [CO-OP] title holders the flat rating already places.
-- **The season-formula sanity check** (D39; with slice 1c): re-price everyone's current pool under
-  season PUMBILITY against the official number — how many ranks move and where, and what share of a top
-  pool the SSS+-to-PG band is worth. The "SSS+s become the meta" test.
-- **The Completion census** (D40; with slice 3): who tops the whole-game sum today and by how much the
-  "all the 12s" acceptance actually costs; whether the sub-10 zero or the co-op exclusion changes the
-  top ten.
-- **The Stamina rule** (D46, D47; gates the first stamina theme): run the candidate rule — duration at
-  least 2:30 or a Remix or Full Song, level 18 up, the piucenter Stamina-and-Runs badges as a second
-  opinion — over the Phoenix 2 catalog, read the list, refine it or reduce it to a finite list.
-- **Gimmick tagging** (D47): the first hand-tagged list, from the owner's knowledge and the stepfile
-  detection findings of 2026-08-29; whether the detection is worth building as a seeder.
-- **The first themed season** (D46): which two or three themes run, dry-run their lists, name them.
+- **The CO-OP anchoring census** (D42; inside slice 8, between its two halves): the first half is a
+  probe that prints, for every co-op, the pass-anchored level (the co-op pass tier list per player
+  count) and the score-anchored level (the scoring-difficulty saga's method, with the players' Doubles
+  competitive levels as the anchor), the level table seeded from it, and the pin console; the loop
+  decides the blend, checked against the [CO-OP] title holders the flat rating already places; the
+  second half is the census saga with that blend. If the two anchors do not agree well enough to blend,
+  the CO-OP PUMBILITY board changes shape — tier-priced, or dropped.
+- **The season-formula sanity check** (D39; inside slice 1c): a probe in the exploration workbench
+  re-prices everyone's current pool under season PUMBILITY against the official number — how many
+  ranks move and where, and what share of a top pool the SSS+-to-PG band is worth. The "SSS+s become
+  the meta" test.
+- **The Completion census** (D40; inside slice 3): the all-time Completion board, rebuilt locally
+  against the prod-synced database and read before it ships — who tops the whole-game sum and by how
+  much the "all the 12s" acceptance actually costs; whether the sub-10 zero or the co-op exclusion
+  changes the top ten.
+- **The Stamina rule** (D46, D47; inside slice 5, through the matcher's dry run): run the candidate
+  rule — duration at least 2:30 or a Remix or Full Song, level 18 up, the piucenter Stamina-and-Runs
+  badges as a second opinion — over the Phoenix 2 catalog, read the list, refine it or reduce it to a
+  finite list.
+- **Gimmick tagging** (D47; inside slice 5, once the tag console exists): the first hand-tagged list,
+  from the owner's knowledge and the stepfile detection findings of 2026-08-29; whether the detection
+  is worth building as a seeder.
+- **The first themed season** (D46; inside slice 5, its last step): which two or three themes run,
+  dry-run their lists, name them.
 - The 20 / 20 / 50 numbers in D7 are first guesses; re-read them after the first balanced season with
-  the census in §5 re-run.
-- Season rewards: what the top of a sealed board earns, and how many places.
-- Whether folder completion on the player page in seasonal view should count broken plays as "played"
-  the way the all-time folder does (D38).
-- Whether the Play page's "players holding your title" comparison stays visible in seasonal view (a
-  seasonal number, under a different formula, against an all-time cohort) or hides. The formula change
-  tilts this toward hiding.
-- **How the last days of a season are signposted**, raised by the no-grace ruling (D13) and owed by
-  the view slices rather than by 1b, which ships nothing player-facing. "Import before the quarter
-  ends or those plays are not in this season" is a rule players can only follow if they are told when
-  the quarter ends; the section and the import surfaces are where that lands. Nothing here is
-  decided — the options run from a line on the section to a countdown in the import widget.
-- **Folding the all-time Hardmode board into the list-board mechanism** (D45): a cleanup after slice 5
-  that retires the six columns' writer.
+  the census in §5 re-run. Outside any slice: it needs a sealed balanced season.
+- Season rewards: what the top of a sealed board earns, and how many places. Outside any slice: a
+  product decision, taken before the flag flips (slice 6).
 
-Proposed on 2026-09-22 and **not ruled on**: folding most of the loops above into the slice that builds
-their tool — the formula sanity check into 1c as an exploration-workbench probe, the Completion census
-into 3 as the rebuilt board read locally, the Stamina rule and the first themes into 5 through the
-matcher's dry run, the signposting into 2a (days left in the pill) and 2f (a line on the import
-surfaces), the CO-OP anchoring into 8 as a checkpoint between a probe-plus-pin-console first half and
-the census saga second half — and building the all-time Hardmode board as a list-board in slice 3, the
-list tables pulled forward from 5, instead of the later cleanup. §12 reads as written until the owner
-rules; the 20 / 20 / 50 re-read and rewards stay outside any slice either way.
+Decided at build, in the slice that touches them (recommendations recorded, none ruled on):
+
+- **How the last days of a season are signposted**, raised by the no-grace ruling (D13): "import before
+  the quarter ends or those plays are not in this season" is a rule players can only follow if they are
+  told when the quarter ends. Recommended: days left in the pill, where Sheet A already places it (2a),
+  and one line on the import surfaces (2f); the alternative is a countdown in the import widget.
+- Whether the Play page's "players holding your title" comparison stays visible in seasonal view (2c):
+  a seasonal number, under a different formula, against an all-time cohort. Recommended hidden.
+- Whether folder completion on the player page in seasonal view counts a broken play as "played" the
+  way the all-time folder does (D38; 2e). Recommended unchanged.
+
+Still open, **not ruled on**: whether slice 3 builds the all-time Hardmode board as a list-board from
+day one — the list refreshed by the weekly census event, the two list tables pulled forward from
+slice 5 — rather than rendering it through the six columns and folding it in as a cleanup after slice 5
+that retires the six columns' writer (D45). Recommended yes: the six columns would keep feeding the
+Hardmode page's own standing and nothing would need retiring. Slices 3 and 5 read as written until it is.
 
 ## 15. Docs to update in the build PRs
 
