@@ -110,6 +110,11 @@ player sits at **#10** on day one with 25 qualifying charts played.
 
 ## 4. Two boards, not one
 
+> **2026-09-22 — the boards move.** The seasons feedback round decided one PIU Scores Leaderboards
+> section that reads the view ([seasons.md](seasons.md) D49): the two board tabs below move to its
+> Hardmode page, all-time and seasonal, and this page keeps your standing, your pool and the qualifying
+> list and links out. Until seasons slice 3 ships, everything in this section stands as built.
+
 "PIU Scores" and "Official Boards" are separate tabs over the same three pools (D9). The top of the
 official boards plays everything and would occupy the same places on both, and a board player has no site
 profile to open — their rows carry the `*` mark the rivals and chart boards already use for mirrored data.
