@@ -356,6 +356,10 @@ aggregate + new ports, if structural), this file, and — only if deferred work 
 - **The directory's World card shows member count + your PUMBILITY, not your world rank** —
   computing a live rank means sorting the whole World membership on a directory load; deferred
   with the rank-delta snapshot work.
+- **2026-09-22 — World's board moves** ([seasons.md](seasons.md) D49): the site-wide rankings become
+  the PIU Scores Leaderboards section, read in both views, whose nightly rank snapshot is the deferred
+  rank-delta work above. The World card links there; the community leaderboard page stays for user and
+  regional communities.
 - **Players tab dropped entirely** (owner call): ranking rows deep-link straight to
   `/Community/Player`.
 

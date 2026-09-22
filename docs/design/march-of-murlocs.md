@@ -689,6 +689,9 @@ the persistence gap cannot bite. A board carrying a two-type table would be mean
 `Phoenix2PumbilityScoring` mirrors piugame's own number and must stay discrete-grade /
 additive-plate — `/Pumbility` and the reconciliation probes compare it against the live site.
 PUMBILITY+ is a tournament formula on both mixes. Two configs (pumbility vs. PUMBILITY+), never merged. Comment both.
+Since 2026-09-22 a third: **season PUMBILITY** ([seasons.md](seasons.md) D39) is the official Phoenix 2 config
+with the continuous scale on and a Perfect Game at 1.505, its own factory, merged with neither — the mirror
+stays discrete, PUMBILITY+ stays a stamina formula.
 
 ### 9.7 Ratchets that will go red if missed
 
