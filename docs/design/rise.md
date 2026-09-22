@@ -87,7 +87,8 @@ Owner decisions are marked **(owner, date)**; the rest are mine, decided unless 
 - **D11 (owner, 2026-09-21). The RISE grade ladder is the published one** (§5.2), shipped with the unmeasured low
   floors as a placeholder. Ingested letter grades (the capture app reads the grade off the result screen) are
   checked against the table and every disproof is recorded, the way Phoenix 2's floors were found. Safe because a
-  grade is derived from the score at read time and never stored.
+  grade is derived from the score at read time and never stored. First disproof, 2026-09-22: the 450,000 D floor
+  fell to an F at 469,066 and moved to 500,000 (§5.2); C, B and A are bracketed by the same screens and stand.
 - **D12 (owner, 2026-09-21). Art.** RISE's own grade and mark art, exported from the game files, serves the Rise
   mix; Rise Arcade reuses the site's Phoenix art, which is what the Arcade Station itself draws. Rise singles use the
   **Phoenix 2 stepballs for now**; half-doubles draw the **H. DOUBLE stepball** (owner, 2026-09-22, picked from the mock): piugame's own
@@ -259,12 +260,24 @@ chart score.
 | SS | 970,000 | JP wiki; bracket (968,683 … 974,233] |
 | S | 950,000 | JP wiki; bracket (949,834 … 953,852] |
 | AA | 900,000 | JP wiki; bracket (848,246 … 915,325] |
-| A | 750,000 **?** | JP wiki's own question mark; nothing below 826,833 measured |
-| B, C, D, F | unknown | placeholder: Phoenix 1's 650k / 550k / 450k until the owner's low runs land |
+| A | 750,000 **?** | JP wiki's own question mark; placeholder, inside the bracket (678,406 … 777,366] |
+| B | 650,000 | placeholder (Phoenix 1's), inside the bracket (608,610 … 678,406] |
+| C | 550,000 | placeholder (Phoenix 1's), inside the bracket (469,066 … 563,324] |
+| D | 500,000 | **corrected 2026-09-22** — Phoenix 1's 450,000 was disproved by an F at 469,066; the floor lies in (469,066 … 563,324] and 500,000 is the round value inside it, below C |
+| F | 0 | the catch-all |
 
 No plus tiers, no AAA: it is Phoenix 1's SSS / S / AAA / AA floors with each letter shifted down one rung. The
 ladder is a floors table like the two Phoenix ones; the lookup walks it unchanged. **Rise Arcade uses the Phoenix 2
 table** — its 919,853 read A+, which only the Phoenix 2 floors produce.
+
+The low brackets are the owner's 2026-09-22 Steam result screens, every one 1948 S26 in Warm Up: an F at 469,066
+(47.13%), a C at 563,324 and at 608,610, a B at 678,406 and a grey A at 777,366 (a broken run — the grey changes
+the color, not the letter, so it brackets the same way). Read together: D in (469,066 … 563,324], C in the same
+window and above D, B in (608,610 … 678,406], A in (678,406 … 777,366]. The first placeholder to fall was D — at
+450,000 the 469,066 read D where the game showed F — and it moved to 500,000, the round value inside its window,
+matching the ladder's other round floors. C, B and A survive their brackets untouched and stay placeholders until
+a screen lands inside one of the gaps; `PhoenixLetterGradeTests` pins each screen above to the grade it showed, so
+a floor that moves must keep reading them the way the game did (D11).
 
 ### 5.3 Marks are three of the Phoenix plates
 
@@ -436,6 +449,8 @@ settle for free; whether Rise Arcade follows Phoenix 2 where Phoenix 2 added a c
 - Owner's in-game checks (2026-09-21): records do not cross stations; hold heads are notes in RISE mode and not in
   the Arcade Station; the Arcade Station counters (269 → 352); 40 screenshots, 18 distinct result screens
   (`2026-09-21/rise-result-screens.csv`).
+- Owner's Warm Up result screens (2026-09-22, Steam screenshots, all 1948 S26): the five low grades — F 469,066, C
+  563,324 and 608,610, B 678,406, grey A 777,366 — that bracket the sub-AA floors and disproved the 450,000 D (§5.2).
 - [新・Pump It Up Wiki, RISE](https://wikiwiki.jp/piujpn/Pump%20It%20Up%20RISE) — the rank table, the grey-grade
   rule, hold judgment, the changed hold sections.
 - [namu wiki, 펌프 잇 업 RISE](https://namu.wiki/w/%ED%8E%8C%ED%94%84%20%EC%9E%87%20%EC%97%85%20RISE) and its
