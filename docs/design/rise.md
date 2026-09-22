@@ -94,7 +94,9 @@ Owner decisions are marked **(owner, date)**; the rest are mine, decided unless 
   Phoenix 2 half-double layers — `hd_bg.png` / `hd_text.png`, the RISE MIX channel's, blue on the arcade — composed
   the way the site's flattened stepballs are (ring at 0.98, word at 1.54, digits at 1.2, fitted against the CDN's
   `d20.png`) and shifted onto the Pro series' Half-Double violet (hue 258); 25 files, `difficulty/Phoenix2/hdb4.png`
-  … `hdb28.png`, uploaded and verified 2026-09-22. Rise Arcade has no half-doubles. Each mix gets its own palette, mocked before build.
+  … `hdb28.png`, uploaded and verified 2026-09-22. The files keep their `hdb` names after the shorthand
+  became `HD` (owner, 2026-09-22): an asset path no player reads is not worth a re-upload and a purge. Rise
+  Arcade has no half-doubles. Each mix gets its own palette, mocked before build.
 - **D13 (owner, 2026-09-21). Both mixes are top-level in the picker.**
 - **D14 (owner, 2026-09-22). The score endpoint is a v2 write for observed plays** (§6.3), specified in phase 1 so
   the capture app builds against a fixed contract; v1 stays frozen.
@@ -124,7 +126,7 @@ value has one):
 | `OfficialSite` | Phoenix1 / Phoenix2 | None | None | None |
 | `Platform` | Pad | **Keyboard** | **Keyboard** | Pad |
 | `LifebarModel` | Phoenix | None | None | None |
-| `ChartTypes` | S, D, CoOp, SP, DP | S, **HalfDouble** | S, D | per mix — *not in the record yet: nothing reads it in phase 1, and the legacy mixes' sets would be guesses* |
+| `ChartTypes` | S, D, CoOp | S, **HalfDouble** | S, D | S, D, CoOp, SP, DP, HalfDouble — the full historical set. SP/DP end at XX and half-doubles at the Infinity/Pro line, but a picker hides a tab with nothing in it, so the profile declares the superset rather than guessing per mix |
 | `Art` | own palette, bubbles, letters | own palette, **Rise letters + marks**, chip bubbles | own palette, Phoenix letters/plates/bubbles | Phoenix letters, XX bubbles, chips |
 
 The existing helpers stay and delegate: `UsesLegacyScoring()` reads `ScoringModel`, the `MixCapabilities` flags
@@ -142,6 +144,32 @@ were asking the wrong question move to the right field:
 | `BackfillMaxCombosConsumer`, `BrokenRecordCleanupSaga` | every non-legacy mix | unchanged in effect (they want Phoenix-scored) — read `ScoringModel` |
 | `RecordScoreForm` plate picker, `PhoenixScoreFileExtractor` plate shorthand, `PhoenixPlateHelperMethods.GetName` | the eight plates, always | the profile's `Awards` (values + display names) |
 | `ApiMixParser` (v1) | Phoenix, Phoenix2 only | untouched — v1 is frozen; the v2 surface takes both mixes (D14, §6.3) |
+
+### 3.1 Chart type vs. category
+
+`ChartType` is what a chart **is** — the pad layout it was stepped for. `ChartTypeCategory` is what it **counts
+as** — the folder a player browses it in. Singles is `{Single, SinglePerformance}`, Doubles is
+`{Double, DoublePerformance, HalfDouble}`, CoOp is `{CoOp}`.
+
+**The category is the folder key** (owner, 2026-09-22). A folder is (category, level), so the picker's tabs, the
+tier lists and their `/TierLists/{category}/{level}` URLs, player-page folder completion, the By-Level widget, the
+community boards and the randomizer's level weights all speak categories. The category's member names are
+`Single` / `Double` / `CoOp` — the exact strings those routes, the `TierLists__ChartType` UiSetting and the API
+parameters already carry — so nothing stored, linked or published has to change.
+
+What stays a type: the art (a half-double draws the H. DOUBLE stepball), `ScoringConfiguration`'s per-type
+modifiers, the catalog's chart identity, the upload vocabulary (`HD23`), the `chartTypes` API parameter and the
+`scores.Chart.Type` column itself.
+
+Only the Infinity/Pro line carries both `Double` and `HalfDouble` charts, so folding the two together is invisible
+on every modern mix. The two places it does show — folder completion on a legacy player page, and a legacy Doubles
+draw in the randomizer — are correct rather than regressions: half-doubles are part of the folder, the way Double
+Performance always was (owner, 2026-09-22).
+
+Which tabs a mix offers comes from its `ChartTypes` row, mapped through categories and deduped: Rise offers
+Singles and H. DOUBLE and no CoOp. A category holding exactly one of the mix's types is labeled by that type, so
+Rise's second tab reads **H. DOUBLE** while Phoenix 2's reads **Doubles**.
+
 
 Adding a mix after this is a profile row, an enum value, a `MixIds` Guid and a `scores.Mix` row.
 
@@ -300,7 +328,7 @@ answer.
 ### 6.1 Spreadsheet upload
 
 `PhoenixScoreFileExtractor.GetScores(file, mix)` is already mix-parameterized (Song, Difficulty, Score, Plate,
-IsBroken) and `DifficultyLevel.ParseShortHand` already reads `HDB16`. What is missing is a page: `/UploadPhoenixScores`
+IsBroken) and `DifficultyLevel.ParseShortHand` already reads `HD16`. What is missing is a page: `/UploadPhoenixScores`
 is the piugame-credential importer and refuses a legacy mix; a Phoenix-scored mix with no official site needs the
 spreadsheet flow alone. One page, driven by the profile: on an official-site mix it is today's importer, on a
 site-less Phoenix mix it is the upload alone. Plate shorthand accepts the RISE marks (`PG`, `FC`, `NM`) beside the
@@ -379,7 +407,7 @@ The reference list the owner asked for (2026-09-22). "Works" means on both new m
 | Catalog, Rise Arcade | the 352-song Arcade Station list (§4.2) as membership rows on the Phoenix 2 charts, Single and Double, Phoenix 2 levels and note counts |
 | Chart pages and search | `/Charts` browse and search, the canonical chart page, the details dialog and the app-bar search on both mixes; half-doubles draw the H. DOUBLE stepball, singles the Phoenix 2 stepballs (D12) |
 | Recording | manual entry on the chart page, the details dialog, the SRP quick record and the Quick Record widget; Rise grades with no plus tiers on the published ladder (§5.2); Rise's three marks as its plates, shown as Perfect Game / Full Combo / No Miss (D5); Rise Arcade with Phoenix 2 grades and the eight plates; the broken flag on both |
-| Spreadsheet upload | one upload page for both mixes: Song, Difficulty (`S16`, `HDB23`, `D20`), Score, Plate or mark (`PG`/`FC`/`NM` accepted), IsBroken; keep-best by default |
+| Spreadsheet upload | one upload page for both mixes: Song, Difficulty (`S16`, `HD23`, `D20`), Score, Plate or mark (`PG`/`FC`/`NM` accepted), IsBroken; keep-best by default |
 | Score art | Rise letters, broken letters and mark badges from the game (D12) with a per-mix art path; Rise Arcade draws the site's Phoenix set |
 | Passed-in-another-mix border | on, but only within a platform: Rise ↔ Rise Arcade, and the arcade family among themselves (D6) |
 | Tier lists | open on both mixes with community votes and the pass tiers; the score-derived lenses weight players by the competitive level on their PlayerStats row, which only a mix with PUMBILITY writes, so they arrive with phase 3 |
@@ -562,7 +590,7 @@ mix.
   owner, 2026-09-22); legacy rows stay text. The nav gates on the flags; `ShellModelFactory` parses the cookie by
   enum name.
 - Recording — `Components/RecordScoreForm.razor`: the award picker from `profile.Awards`;
-  `Services/PhoenixScoreFileExtractor.cs`: `PG` / `FC` / `NM` beside the plate codes (`HDB23` already parses);
+  `Services/PhoenixScoreFileExtractor.cs`: `PG` / `FC` / `NM` beside the plate codes (`HD23` already parses);
   `Pages/UploadPhoenixScores.razor`: a site-less Phoenix mix gets the spreadsheet flow alone — no credential fields,
   no piugame session; the copy is the owner's.
 - `Pages/Progress/Player.razor`: the PUMBILITY, rating and official-standing tiles hide behind `HasPumbility()` /
