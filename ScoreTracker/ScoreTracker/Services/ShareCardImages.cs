@@ -1,4 +1,4 @@
-using ScoreTracker.SharedKernel.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 
@@ -24,9 +24,24 @@ public static class ShareCardImages
         var folder = chartType is ChartType.SinglePerformance or ChartType.DoublePerformance || mix == null
             ? null
             : MixProfiles.For(mix.Value).Art.BubbleFolder;
+        var file = BubbleFileName(difficultyString);
         return folder == null
-            ? $"{Root}/difficulty/{difficultyString.ToLower()}.png"
-            : $"{Root}/difficulty/{folder}/{difficultyString.ToLower()}.png";
+            ? $"{Root}/difficulty/{file}.png"
+            : $"{Root}/difficulty/{folder}/{file}.png";
+    }
+
+    /// <summary>
+    ///     The bubble's file stem. It is the difficulty shorthand, except that the 25 half-double
+    ///     stepballs were uploaded as <c>hdb4</c>…<c>hdb28</c> before the shorthand became HD
+    ///     (docs/design/rise.md D12) — an asset path no player reads was not worth a re-upload
+    ///     and a CDN purge, so the name is translated here instead.
+    /// </summary>
+    private static string BubbleFileName(string difficultyString)
+    {
+        var lower = difficultyString.ToLower();
+        return lower.StartsWith("hd", StringComparison.Ordinal) && !lower.StartsWith("hdb", StringComparison.Ordinal)
+            ? $"hdb{lower[2..]}"
+            : lower;
     }
 
     public static string DifficultyBubble(MixEnum mix, ChartType chartType, DifficultyLevel level) =>

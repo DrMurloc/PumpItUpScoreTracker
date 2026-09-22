@@ -467,10 +467,7 @@
                   "enum": [
                     "Single",
                     "Double",
-                    "SinglePerformance",
-                    "DoublePerformance",
-                    "CoOp",
-                    "HalfDouble"
+                    "CoOp"
                   ]
                 },
                 "level": {
