@@ -1,4 +1,4 @@
-@using MediatR
+﻿@using MediatR
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.HomePage.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
@@ -47,7 +47,7 @@
             @if (_open)
             {
                 <FolderGrid IsSelected="IsSelected" IsDisabled="IsAtCap" LevelPicked="Toggle"
-                            ShowCoOp="true"></FolderGrid>
+                            Mix="@(_mix ?? MixEnum.Phoenix)" ShowCoOp="true"></FolderGrid>
             }
         </div>
     </MudPopover>
@@ -101,19 +101,19 @@
             stats.DoublesCompetitiveLevel);
     }
 
-    private bool IsSelected(ChartType type, int level) =>
-        _folders.Any(f => f.Type == type && f.Level == level);
+    private bool IsSelected(ChartTypeCategory category, int level) =>
+        _folders.Any(f => f.Type == category && f.Level == level);
 
     // At the cap every unpicked cell greys out, so the grid says "full" instead of going quiet
     // on a tap. The picked ones stay live — removing is how you make room.
-    private bool IsAtCap(ChartType type, int level) =>
-        _folders.Count >= _capacity && !IsSelected(type, level);
+    private bool IsAtCap(ChartTypeCategory category, int level) =>
+        _folders.Count >= _capacity && !IsSelected(category, level);
 
     // Toggle-and-stay: tapping a picked folder drops it, tapping a new one adds it while there
     // is room. A full widget ignores the tap rather than evicting something the player chose.
-    private void Toggle((ChartType Type, int Level) folder)
+    private void Toggle((ChartTypeCategory Category, int Level) folder)
     {
-        var existing = _folders.FirstOrDefault(f => f.Type == folder.Type && f.Level == folder.Level);
+        var existing = _folders.FirstOrDefault(f => f.Type == folder.Category && f.Level == folder.Level);
         if (existing != null)
         {
             _folders.Remove(existing);
@@ -121,14 +121,14 @@
         }
 
         if (_folders.Count >= _capacity) return;
-        _folders.Add(new FolderLevelsTarget { Type = folder.Type, Level = folder.Level });
+        _folders.Add(new FolderLevelsTarget { Type = folder.Category, Level = folder.Level });
     }
 
     private void Remove(FolderLevelsTarget folder) => _folders.Remove(folder);
 
-    private string FolderName(FolderLevelsTarget folder) => folder.Type == ChartType.CoOp
+    private string FolderName(FolderLevelsTarget folder) => folder.Type == ChartTypeCategory.CoOp
         ? L["CO-OP {0}", folder.Level].Value
-        : $"{folder.Type.GetShortHand()}{folder.Level}";
+        : $"{FolderLabels.ShortHandFor(folder.Type, _mix ?? MixEnum.Phoenix)}{folder.Level}";
 
     private async Task Save()
     {

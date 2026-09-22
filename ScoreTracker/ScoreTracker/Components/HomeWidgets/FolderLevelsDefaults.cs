@@ -1,4 +1,4 @@
-using ScoreTracker.SharedKernel.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Services.HomeDashboard;
 
@@ -34,8 +34,8 @@ public static class FolderLevelsDefaults
     public static List<FolderLevelsTarget> Suggest(int capacity, double singlesCompetitive,
         double doublesCompetitive)
     {
-        var singles = Walk(ChartType.Single, singlesCompetitive).GetEnumerator();
-        var doubles = Walk(ChartType.Double, doublesCompetitive).GetEnumerator();
+        var singles = Walk(ChartTypeCategory.Single, singlesCompetitive).GetEnumerator();
+        var doubles = Walk(ChartTypeCategory.Double, doublesCompetitive).GetEnumerator();
 
         var picks = new List<FolderLevelsTarget>();
         var takeSingles = true;
@@ -60,17 +60,17 @@ public static class FolderLevelsDefaults
         return picks;
     }
 
-    // Level, then one up, then one down, widening — clamped to the levels the type actually has.
-    private static IEnumerable<FolderLevelsTarget> Walk(ChartType type, double competitive)
+    // Level, then one up, then one down, widening — clamped to the levels the folder actually has.
+    private static IEnumerable<FolderLevelsTarget> Walk(ChartTypeCategory category, double competitive)
     {
-        var (min, max) = FolderLevels.Range(type);
+        var (min, max) = FolderLevels.Range(category);
         var centre = Math.Clamp((int)Math.Floor(competitive), min, max);
-        yield return new FolderLevelsTarget { Type = type, Level = centre };
+        yield return new FolderLevelsTarget { Type = category, Level = centre };
 
         for (var offset = 1; offset <= max - min; offset++)
         {
-            if (centre + offset <= max) yield return new FolderLevelsTarget { Type = type, Level = centre + offset };
-            if (centre - offset >= min) yield return new FolderLevelsTarget { Type = type, Level = centre - offset };
+            if (centre + offset <= max) yield return new FolderLevelsTarget { Type = category, Level = centre + offset };
+            if (centre - offset >= min) yield return new FolderLevelsTarget { Type = category, Level = centre - offset };
         }
     }
 }

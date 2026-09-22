@@ -4,7 +4,7 @@ using ScoreTracker.SharedKernel.ValueTypes;
 namespace ScoreTracker.Web.Components;
 
 /// <summary>
-///     Which difficulty folders a folder selector offers per chart type — the single source
+///     Which difficulty folders a folder selector offers per category — the single source
 ///     both <see cref="FolderGrid" /> (the level grid) and <see cref="FolderPicker" /> (its
 ///     stepper + clamp) read, so the two never drift.
 ///     <para>
@@ -19,18 +19,18 @@ public static class FolderLevels
 {
     public const int MaxSingleLevel = 26;
 
-    /// <summary>The inclusive [min, max] level range a picker offers for the type.</summary>
-    public static (int Min, int Max) Range(ChartType type) => type switch
+    /// <summary>The inclusive [min, max] level range a picker offers for the folder.</summary>
+    public static (int Min, int Max) Range(ChartTypeCategory category) => category switch
     {
-        ChartType.CoOp => (2, 5),
-        ChartType.Single => (1, MaxSingleLevel),
+        ChartTypeCategory.CoOp => (2, 5),
+        ChartTypeCategory.Single => (1, MaxSingleLevel),
         _ => (1, DifficultyLevel.Max)
     };
 
-    /// <summary>The concrete levels a picker lists for the type, low to high.</summary>
-    public static IEnumerable<int> LevelsFor(ChartType type)
+    /// <summary>The concrete levels a picker lists for the folder, low to high.</summary>
+    public static IEnumerable<int> LevelsFor(ChartTypeCategory category)
     {
-        var (min, max) = Range(type);
+        var (min, max) = Range(category);
         return Enumerable.Range(min, max - min + 1);
     }
 }

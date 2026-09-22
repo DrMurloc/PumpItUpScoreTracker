@@ -1,14 +1,15 @@
-using ScoreTracker.SharedKernel.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Web.Components.HomeWidgets;
 
 /// <summary>
 ///     One folder the widget tracks. Level carries the player count for co-op, matching
-///     Chart.Level's own convention.
+///     Chart.Level's own convention. Type is the folder's category — its JSON values are
+///     Single / Double / CoOp either way, so configs written before the category read as-is.
 /// </summary>
 public sealed record FolderLevelsTarget
 {
-    public ChartType Type { get; set; } = ChartType.Single;
+    public ChartTypeCategory Type { get; set; } = ChartTypeCategory.Single;
 
     public int Level { get; set; } = 20;
 }

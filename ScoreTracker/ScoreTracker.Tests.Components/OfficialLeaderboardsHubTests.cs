@@ -627,7 +627,7 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
             .Add(x => x.Charts, new Dictionary<Guid, Chart> { [s20.Id] = s20 }));
         Assert.Contains("Hottest Charts", cut.Markup);
 
-        cut.InvokeAsync(() => cut.Instance.SetFolder((ChartType.Single, 20)));
+        cut.InvokeAsync(() => cut.Instance.SetFolder((ChartTypeCategory.Single, 20)));
         Assert.DoesNotContain("Hottest Charts", cut.Markup);
 
         cut.InvokeAsync(() => cut.Instance.ClearFolder());
@@ -713,7 +713,7 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
             .Add(x => x.Charts, new Dictionary<Guid, Chart> { [s20.Id] = s20, [d24.Id] = d24 }));
         Assert.Equal(2, cut.FindAll(".olb-poprow").Count);
 
-        cut.InvokeAsync(() => cut.Instance.SetFolder((ChartType.Single, 20)));
+        cut.InvokeAsync(() => cut.Instance.SetFolder((ChartTypeCategory.Single, 20)));
 
         Assert.Single(cut.FindAll(".olb-poprow"));
         Assert.Contains("Papasito", cut.Markup);

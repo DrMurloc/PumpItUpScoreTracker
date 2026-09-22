@@ -1,9 +1,8 @@
-using System;
-using System.Linq;
 using Bunit;
+using Microsoft.AspNetCore.Components.Web;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Components;
 using Xunit;
-using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
 
 namespace ScoreTracker.Tests.Components;
 
@@ -15,40 +14,40 @@ namespace ScoreTracker.Tests.Components;
 public sealed class FolderPickerTests : ComponentTestBase
 {
     [Fact]
-    public void ByDefaultTheSteppersWalkOneLevelAtATime()
+    public async Task ByDefaultTheSteppersWalkOneLevelAtATime()
     {
-        (ChartType Type, int Level)? picked = null;
+        (ChartTypeCategory Category, int Level)? picked = null;
         var cut = RenderComponent<FolderPicker>(p => p
-            .Add(x => x.Type, ChartType.Double)
+            .Add(x => x.Category, ChartTypeCategory.Double)
             .Add(x => x.Level, 20)
             .Add(x => x.FolderChanged, f => picked = f));
 
-        cut.FindAll("button.mud-icon-button")[1].Click();
+        await cut.FindAll("button.mud-icon-button")[1].ClickAsync(new MouseEventArgs());
 
-        Assert.Equal((ChartType.Double, 21), picked);
+        Assert.Equal((ChartTypeCategory.Double, 21), picked);
     }
 
     [Fact]
-    public void TheSteppersSkipStraightPastFoldersTheHostHasNothingFor()
+    public async Task TheSteppersSkipStraightPastFoldersTheHostHasNothingFor()
     {
         // Marching one level at a time through greyed-out folders is not navigation.
-        (ChartType Type, int Level)? picked = null;
+        (ChartTypeCategory Category, int Level)? picked = null;
         var cut = RenderComponent<FolderPicker>(p => p
-            .Add(x => x.Type, ChartType.Double)
+            .Add(x => x.Category, ChartTypeCategory.Double)
             .Add(x => x.Level, 20)
             .Add(x => x.IsMissing, (_, l) => l is not (20 or 25))
             .Add(x => x.FolderChanged, f => picked = f));
 
-        cut.FindAll("button.mud-icon-button")[1].Click();
+        await cut.FindAll("button.mud-icon-button")[1].ClickAsync(new MouseEventArgs());
 
-        Assert.Equal((ChartType.Double, 25), picked);
+        Assert.Equal((ChartTypeCategory.Double, 25), picked);
     }
 
     [Fact]
     public void AStepperWithNoEnabledFolderLeftIsDisabled()
     {
         var cut = RenderComponent<FolderPicker>(p => p
-            .Add(x => x.Type, ChartType.Double)
+            .Add(x => x.Category, ChartTypeCategory.Double)
             .Add(x => x.Level, 20)
             .Add(x => x.IsMissing, (_, l) => l != 20));
 
@@ -61,9 +60,21 @@ public sealed class FolderPickerTests : ComponentTestBase
     public void TheLabelNamesTheFolderInView()
     {
         var cut = RenderComponent<FolderPicker>(p => p
-            .Add(x => x.Type, ChartType.Single)
+            .Add(x => x.Category, ChartTypeCategory.Single)
             .Add(x => x.Level, 18));
 
         Assert.Contains("S18", cut.Markup);
+    }
+
+    // On a mix whose doubles folder is its half-doubles, the button says so rather than D18.
+    [Fact]
+    public void TheLabelWearsTheMixesOwnShorthand()
+    {
+        var cut = RenderComponent<FolderPicker>(p => p
+            .Add(x => x.Category, ChartTypeCategory.Double)
+            .Add(x => x.Mix, MixEnum.Rise)
+            .Add(x => x.Level, 18));
+
+        Assert.Contains("HD18", cut.Markup);
     }
 }

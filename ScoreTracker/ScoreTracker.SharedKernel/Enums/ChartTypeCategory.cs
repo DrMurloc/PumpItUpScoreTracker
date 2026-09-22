@@ -70,16 +70,26 @@ public static class ChartTypeCategories
         return MixProfiles.For(mix).ChartTypes.Where(type => category.Includes(type)).OrderBy(t => t).ToArray();
     }
 
-    /// <summary>The shorthand a folder wears: <c>S</c>, <c>D</c> or <c>CoOp</c>.</summary>
-    public static string GetShortHand(this ChartTypeCategory category)
+    /// <summary>
+    ///     The chart type that heads this folder — Single, Double or CoOp. Queries, stored rows
+    ///     and routes that predate the category speak this. A folder holding more than one of a
+    ///     mix's types (the legacy line's doubles) needs <see cref="TypesOn" /> instead.
+    /// </summary>
+    public static ChartType HeadType(this ChartTypeCategory category)
     {
         return category switch
         {
-            ChartTypeCategory.Single => ChartType.Single.GetShortHand(),
-            ChartTypeCategory.Double => ChartType.Double.GetShortHand(),
-            ChartTypeCategory.CoOp => ChartType.CoOp.GetShortHand(),
-            _ => throw new ArgumentOutOfRangeException(nameof(category), category, "This category has no shorthand")
+            ChartTypeCategory.Single => ChartType.Single,
+            ChartTypeCategory.Double => ChartType.Double,
+            ChartTypeCategory.CoOp => ChartType.CoOp,
+            _ => throw new ArgumentOutOfRangeException(nameof(category), category, "This category has no type")
         };
+    }
+
+    /// <summary>The shorthand a folder wears: <c>S</c>, <c>D</c> or <c>CoOp</c>.</summary>
+    public static string GetShortHand(this ChartTypeCategory category)
+    {
+        return category.HeadType().GetShortHand();
     }
 
     private static readonly IReadOnlyList<ChartTypeCategory> Ordered = Enum.GetValues<ChartTypeCategory>();

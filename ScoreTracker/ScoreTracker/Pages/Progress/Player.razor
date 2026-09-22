@@ -1,4 +1,4 @@
-@page "/Player/{UserIdParam:guid}"
+﻿@page "/Player/{UserIdParam:guid}"
 @rendermode RenderModes.Interactive
 @using MediatR
 @using ScoreTracker.Domain.Models.Titles.Phoenix2
@@ -152,7 +152,7 @@ else if (_profile != null)
     {
         <MudPaper Class="pa-4 mb-4" data-testid="head-to-head">
             <HeadToHead Record="_headToHead" Charts="_charts" YourAvatar="@MyAvatar" Mix="_currentMix"
-                        FolderType="_compareType" FolderLevel="_compareLevel"
+                        Folder="_compareFolder" FolderLevel="_compareLevel"
                         FolderChanged="OnFolderChanged" OnOpenChart="OpenChart"></HeadToHead>
         </MudPaper>
         <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"></ChartDetailsDialog>
@@ -197,7 +197,7 @@ else if (_profile != null)
     // placement is a "Top 300" or a "Top 100" by mix.
     private int BoardDepth => _currentMix == MixEnum.Phoenix2 ? 300 : 100;
 
-    private ChartType _compareType = ChartType.Double;
+    private ChartTypeCategory _compareFolder = ChartTypeCategory.Double;
     private int? _compareLevel;
     private RivalHeadToHeadRecord? _headToHead;
     private bool _detailsOpen;
@@ -282,10 +282,10 @@ else if (_profile != null)
                 var mine = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _currentMix));
                 var singlesGap = Math.Abs(mine.SinglesCompetitiveLevel - _profile.SinglesCompetitiveLevel);
                 var doublesGap = Math.Abs(mine.DoublesCompetitiveLevel - _profile.DoublesCompetitiveLevel);
-                var (type, myLevel, theirLevel) = singlesGap <= doublesGap
-                    ? (ChartType.Single, mine.SinglesCompetitiveLevel, _profile.SinglesCompetitiveLevel)
-                    : (ChartType.Double, mine.DoublesCompetitiveLevel, _profile.DoublesCompetitiveLevel);
-                _compareType = type;
+                var (folder, myLevel, theirLevel) = singlesGap <= doublesGap
+                    ? (ChartTypeCategory.Single, mine.SinglesCompetitiveLevel, _profile.SinglesCompetitiveLevel)
+                    : (ChartTypeCategory.Double, mine.DoublesCompetitiveLevel, _profile.DoublesCompetitiveLevel);
+                _compareFolder = folder;
                 _compareLevel = Math.Clamp((int)Math.Round((myLevel + theirLevel) / 2), 1, (int)DifficultyLevel.Max);
             }
 
@@ -294,9 +294,9 @@ else if (_profile != null)
     }
 
     /// <summary>Null level is "All folders" — the query treats a missing folder as unfiltered.</summary>
-    private async Task OnFolderChanged((ChartType Type, int? Level) folder)
+    private async Task OnFolderChanged((ChartTypeCategory Category, int? Level) folder)
     {
-        _compareType = folder.Type;
+        _compareFolder = folder.Category;
         _compareLevel = folder.Level;
         await LoadHeadToHead();
     }
@@ -304,7 +304,7 @@ else if (_profile != null)
     private async Task LoadHeadToHead()
     {
         _headToHead = await Mediator.Send(new GetPlayerHeadToHeadQuery(_currentMix, UserIdParam,
-            _compareLevel == null ? null : _compareType,
+            _compareLevel == null ? null : _compareFolder.HeadType(),
             _compareLevel == null ? null : DifficultyLevel.From(_compareLevel.Value)));
     }
 

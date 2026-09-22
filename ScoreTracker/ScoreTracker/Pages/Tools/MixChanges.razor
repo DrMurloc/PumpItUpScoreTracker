@@ -1,4 +1,4 @@
-@page "/MixChanges"
+﻿@page "/MixChanges"
 @page "/MixChanges/{FromSlug}/{ToSlug}"
 @rendermode RenderModes.Interactive
 @using MediatR
@@ -117,8 +117,8 @@
                    moved in or out of are disabled, so the picker doubles as a map of where
                    the mix actually churned. *@
                 <div class="mc-filters">
-                    <FolderPicker Type="_folder.Type" Level="_folder.Level" ShowCoOp="false"
-                                  IsMissing="(t, l) => !HasChanges(t, l)" FolderChanged="SetFolder"></FolderPicker>
+                    <FolderPicker Category="_folder.Category" Mix="_to" Level="_folder.Level" ShowCoOp="false"
+                                  IsMissing="(c, l) => !HasChanges(c, l)" FolderChanged="SetFolder"></FolderPicker>
                     <span class="mc-filter-sep"></span>
                     @foreach (var (dir, text) in DirectionFilters)
                     {
@@ -138,7 +138,7 @@
 
                 <section class="mc-fgroup">
                     <div class="mc-fhead">
-                        <DifficultyBubble Type="_folder.Type" Level="DifficultyLevel.From(_folder.Level)"
+                        <DifficultyBubble Type="_folder.Category.HeadType()" Level="DifficultyLevel.From(_folder.Level)"
                                           Mix="_groupByDestination ? _to : _from" Small="true"></DifficultyBubble>
                         <span class="mc-ftitle">@L["{0} folder", _folder.Label]</span>
                         <span class="mc-fcount">
@@ -263,7 +263,7 @@
 
     private int _direction;
     private bool _groupByDestination;
-    private FolderKey _folder = new(ChartType.Double, 20);
+    private FolderKey _folder = new(ChartTypeCategory.Double, 20);
 
     private static readonly (int Direction, string Text)[] DirectionFilters =
     {
@@ -385,7 +385,7 @@
     private void SetDirection(int direction)
     {
         _direction = direction;
-        if (!HasChanges(_folder.Type, _folder.Level)) _folder = DefaultFolder();
+        if (!HasChanges(_folder.Category, _folder.Level)) _folder = DefaultFolder();
     }
 
     private void SetGrouping(bool byDestination)
@@ -393,12 +393,12 @@
         _groupByDestination = byDestination;
         // Grouping by destination is a different set of folders; the one in view may not be
         // one of them any more.
-        if (!HasChanges(_folder.Type, _folder.Level)) _folder = DefaultFolder();
+        if (!HasChanges(_folder.Category, _folder.Level)) _folder = DefaultFolder();
     }
 
-    private void SetFolder((ChartType Type, int Level) folder)
+    private void SetFolder((ChartTypeCategory Category, int Level) folder)
     {
-        _folder = new FolderKey(folder.Type, folder.Level);
+        _folder = new FolderKey(folder.Category, folder.Level);
     }
 
     /// <summary>
@@ -411,15 +411,15 @@
         var best = Moves
             .GroupBy(KeyFor)
             .OrderByDescending(g => g.Count())
-            .ThenBy(g => g.Key.Type)
+            .ThenBy(g => g.Key.Category)
             .ThenBy(g => g.Key.Level)
             .FirstOrDefault();
-        return best?.Key ?? new FolderKey(ChartType.Double, 20);
+        return best?.Key ?? new FolderKey(ChartTypeCategory.Double, 20);
     }
 
-    private bool HasChanges(ChartType type, int level)
+    private bool HasChanges(ChartTypeCategory category, int level)
     {
-        return Moves.Any(m => KeyFor(m) == new FolderKey(type, level));
+        return Moves.Any(m => KeyFor(m) == new FolderKey(category, level));
     }
 
     /// <summary>Every rerate the direction filter allows, before the folder narrows it.</summary>
@@ -432,7 +432,7 @@
 
     private FolderKey KeyFor(MixDiffMoveRecord move)
     {
-        return new FolderKey(move.After.Type, _groupByDestination ? move.After.Level : move.Before.Level);
+        return new FolderKey(move.After.Type.Category(), _groupByDestination ? move.After.Level : move.Before.Level);
     }
 
     /// <summary>A row knows which chart you meant, so the answer names that chart.</summary>
@@ -447,8 +447,8 @@
         _answer = MixChangesAnswerModel.For(song, null, _beforeBySong, _afterBySong);
     }
 
-    private sealed record FolderKey(ChartType Type, int Level)
+    private sealed record FolderKey(ChartTypeCategory Category, int Level)
     {
-        public string Label => $"{Type.GetShortHand()}{Level}";
+        public string Label => $"{Category.GetShortHand()}{Level}";
     }
 }

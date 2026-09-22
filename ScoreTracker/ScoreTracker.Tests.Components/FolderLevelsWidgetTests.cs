@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -54,8 +54,9 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
     }
 
     /// <summary>A folder of <paramref name="size" /> charts, the first <paramref name="scores" /> passed.</summary>
-    private void GivenFolder(ChartType type, int level, int size, params int[] scores)
+    private void GivenFolder(ChartTypeCategory category, int level, int size, params int[] scores)
     {
+        var type = category.HeadType();
         for (var i = 0; i < size; i++)
         {
             var chart = new Chart(Guid.NewGuid(), MixEnum.Phoenix,
@@ -70,7 +71,7 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
     }
 
     private IRenderedComponent<FolderLevelsWidget> Render(string sizePreset,
-        params (ChartType Type, int Level)[] folders)
+        params (ChartTypeCategory Type, int Level)[] folders)
     {
         var config = new FolderLevelsConfig
         {
@@ -86,9 +87,9 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
     [Fact]
     public void OneByOneGivesASingleFolderTheWholeCell()
     {
-        GivenFolder(ChartType.Single, 22, 10, 930000, 930000, 930000, 930000, 930000);
+        GivenFolder(ChartTypeCategory.Single, 22, 10, 930000, 930000, 930000, 930000, 930000);
 
-        var cut = Render("1x1", (ChartType.Single, 22));
+        var cut = Render("1x1", (ChartTypeCategory.Single, 22));
 
         Assert.Single(cut.FindAll(".dash-fl-hero"));
         Assert.Contains("AA+", cut.Markup);
@@ -102,10 +103,10 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
     [Fact]
     public void TwoByOneStacksARowPerFolderWithoutTicks()
     {
-        GivenFolder(ChartType.Single, 22, 10, 930000, 930000, 930000, 930000, 930000, 930000);
-        GivenFolder(ChartType.Double, 18, 4, 990000, 990000);
+        GivenFolder(ChartTypeCategory.Single, 22, 10, 930000, 930000, 930000, 930000, 930000, 930000);
+        GivenFolder(ChartTypeCategory.Double, 18, 4, 990000, 990000);
 
-        var cut = Render("2x1", (ChartType.Single, 22), (ChartType.Double, 18));
+        var cut = Render("2x1", (ChartTypeCategory.Single, 22), (ChartTypeCategory.Double, 18));
 
         Assert.Equal(2, cut.FindAll(".dash-fl-row").Count);
         Assert.Empty(cut.FindAll(".fl-tick"));
@@ -114,9 +115,9 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
     [Fact]
     public void TwoRowsAreEnoughToCutTheTierTicksIn()
     {
-        GivenFolder(ChartType.Single, 22, 10, 930000);
+        GivenFolder(ChartTypeCategory.Single, 22, 10, 930000);
 
-        var cut = Render("2x2", (ChartType.Single, 22));
+        var cut = Render("2x2", (ChartTypeCategory.Single, 22));
 
         // 20/40/60/80 — 100 is the track own end, so it never gets one.
         Assert.Equal(4, cut.FindAll(".fl-tick").Count);
@@ -127,10 +128,10 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
     {
         // A row is the same height at every stacked size, so detail splits on one line rather
         // than easing in: 2x1 is the compact variant, 2x2 and taller carry the counts.
-        GivenFolder(ChartType.Single, 22, 10, 930000, 930000);
+        GivenFolder(ChartTypeCategory.Single, 22, 10, 930000, 930000);
 
-        var compact = Render("2x1", (ChartType.Single, 22));
-        var tall = Render("2x2", (ChartType.Single, 22));
+        var compact = Render("2x1", (ChartTypeCategory.Single, 22));
+        var tall = Render("2x2", (ChartTypeCategory.Single, 22));
 
         Assert.Empty(compact.FindAll(".dash-fl-row-count"));
         Assert.Contains("2 of 10", tall.Markup);
@@ -145,8 +146,8 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
     {
         // Ten configured folders, so every size is asked for more than it can hold.
         var targets = Enumerable.Range(16, 10)
-            .Select(level => (ChartType.Single, level)).ToArray();
-        foreach (var (_, level) in targets) GivenFolder(ChartType.Single, level, 4, 930000);
+            .Select(level => (ChartTypeCategory.Single, level)).ToArray();
+        foreach (var (_, level) in targets) GivenFolder(ChartTypeCategory.Single, level, 4, 930000);
 
         var cut = Render(sizePreset, targets);
 
@@ -162,8 +163,8 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
         // Nothing configured: the widget picks folders rather than showing an empty prompt.
         for (var level = 15; level <= 25; level++)
         {
-            GivenFolder(ChartType.Single, level, 4, 930000);
-            GivenFolder(ChartType.Double, level, 4, 930000);
+            GivenFolder(ChartTypeCategory.Single, level, 4, 930000);
+            GivenFolder(ChartTypeCategory.Double, level, 4, 930000);
         }
 
         var cut = Render("2x2");
@@ -179,9 +180,9 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
     [Fact]
     public void ALampedFolderSaysSoInsteadOfShowingAHundredPercent()
     {
-        GivenFolder(ChartType.Single, 24, 3, 880000, 890000, 900000);
+        GivenFolder(ChartTypeCategory.Single, 24, 3, 880000, 890000, 900000);
 
-        var cut = Render("2x1", (ChartType.Single, 24));
+        var cut = Render("2x1", (ChartTypeCategory.Single, 24));
 
         Assert.Contains("Folder Lamp", cut.Markup);
         Assert.DoesNotContain("100% complete", cut.Markup);
@@ -190,9 +191,9 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
     [Fact]
     public void AFolderWithNoChartsInTheMixIsDroppedRatherThanRenderedEmpty()
     {
-        GivenFolder(ChartType.Single, 22, 4, 930000);
+        GivenFolder(ChartTypeCategory.Single, 22, 4, 930000);
 
-        var cut = Render("2x1", (ChartType.Single, 22), (ChartType.Single, 26));
+        var cut = Render("2x1", (ChartTypeCategory.Single, 22), (ChartTypeCategory.Single, 26));
 
         Assert.Single(cut.FindAll(".dash-fl-row"));
     }
@@ -209,9 +210,9 @@ public sealed class FolderLevelsWidgetTests : ComponentTestBase
     [Fact]
     public void AnUntouchedFolderShowsNoGradeRatherThanAnF()
     {
-        GivenFolder(ChartType.Single, 25, 8);
+        GivenFolder(ChartTypeCategory.Single, 25, 8);
 
-        var cut = Render("2x1", (ChartType.Single, 25));
+        var cut = Render("2x1", (ChartTypeCategory.Single, 25));
 
         Assert.Contains("0% complete", cut.Markup);
         Assert.Contains("var(--unplayed-grade)", cut.Markup);
