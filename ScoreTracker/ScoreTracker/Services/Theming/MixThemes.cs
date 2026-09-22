@@ -95,7 +95,8 @@ public static class MixThemes
     public const string MatchMixValue = "MatchMix";
 
     /// <summary>Mixes that have a calibrated theme (also the /Account override choices).</summary>
-    public static readonly MixEnum[] ThemedMixes = { MixEnum.XX, MixEnum.Phoenix, MixEnum.Phoenix2 };
+    public static readonly MixEnum[] ThemedMixes =
+        { MixEnum.XX, MixEnum.Phoenix, MixEnum.Phoenix2, MixEnum.Rise, MixEnum.RiseArcade };
 
     // Latin glyphs and all numerals render in the display face; Korean/Japanese glyphs fall
     // through per-glyph to bold-capable system CJK fonts, so mixed-script headings keep weight.
@@ -173,14 +174,65 @@ public static class MixThemes
             Sapphire: "#29C9F7",
             Prism: "#E9FFD9"));
 
+    // Pump It Up RISE, the comic-pop PC game (docs/design/rise.md D15): R!SE yellow on an
+    // ink-navy ground, the profile screen's hot pink and cyan as secondary and accent, the 5K
+    // and 6K badge colors for the chart series.
+    private static readonly MixPalette Rise = new(
+        Background: "#0E0F16",
+        Surface: "#1A1C27",
+        SurfaceMuted: "#252838",
+        Nav: "#12131D",
+        Primary: "#FFC61A",
+        // Yellow cannot carry white button text.
+        PrimaryContrast: "#1B1400",
+        Secondary: "#FF3D8A",
+        Accent: "#45D5FF",
+        Ink: "#F4F2F8",
+        InkMuted: "#A6A5B8",
+        Glow: "rgba(255, 198, 26, .40)",
+        ChartSingles: "#FF5A4E",
+        ChartDoubles: "#4C8DFF",
+        Rarity: new RarityRamp(
+            Common: "#9C9AA8",
+            Silver: "#DAD8E0",
+            Emerald: "#3EDC5F",
+            Gold: "#FFC61A",
+            Sapphire: "#45A8FF",
+            Prism: "#FFF3C4"));
+
+    // The Arcade Station: midnight water, aqua stepball rings, lavender cards, the same Rise
+    // yellow as its second color; the arcade's red and green stepballs for the chart series.
+    private static readonly MixPalette RiseArcade = new(
+        Background: "#05061A",
+        Surface: "#10143A",
+        SurfaceMuted: "#192050",
+        Nav: "#090C2C",
+        Primary: "#5AC5DE",
+        PrimaryContrast: "#061219",
+        Secondary: "#FFC61A",
+        Accent: "#B48CFF",
+        Ink: "#EEF0FA",
+        InkMuted: "#98A2C8",
+        Glow: "rgba(90, 197, 222, .40)",
+        ChartSingles: "#FF4B3A",
+        ChartDoubles: "#7CE23A",
+        Rarity: new RarityRamp(
+            Common: "#8E95B3",
+            Silver: "#D0D7EA",
+            Emerald: "#3ED36A",
+            Gold: "#FFC61A",
+            Sapphire: "#5AC5DE",
+            Prism: "#E6F4FF"));
+
     private static readonly IReadOnlyDictionary<MixEnum, MudTheme> Themes =
-        new[] { MixEnum.XX, MixEnum.Phoenix, MixEnum.Phoenix2 }
-            .ToDictionary(m => m, m => Build(PaletteFor(m)));
+        ThemedMixes.ToDictionary(m => m, m => Build(PaletteFor(m)));
 
     public static MixPalette PaletteFor(MixEnum mix) => mix switch
     {
         MixEnum.XX => XX,
         MixEnum.Phoenix2 => Phoenix2,
+        MixEnum.Rise => Rise,
+        MixEnum.RiseArcade => RiseArcade,
         _ => Phoenix
     };
 
@@ -201,6 +253,8 @@ public static class MixThemes
     {
         MixEnum.XX => "theme-xx",
         MixEnum.Phoenix2 => "theme-phoenix2",
+        MixEnum.Rise => "theme-rise",
+        MixEnum.RiseArcade => "theme-rise-arcade",
         _ => "theme-phoenix"
     };
 
@@ -404,7 +458,9 @@ public static class MixThemes
         {
             [MixEnum.XX] = new[] { "#6E5573", "#9A6A9E", "#FF2FA0", "#FF6FBF", "#FFA8D8", "#FFE0F1" },
             [MixEnum.Phoenix] = new[] { "#55677A", "#6C8CAE", "#3FA9F5", "#7CC4FF", "#B3DEFF", "#E6F5FF" },
-            [MixEnum.Phoenix2] = new[] { "#5D7A62", "#6FA274", "#4FE33F", "#8CEF80", "#C2F7BB", "#EAFFE6" }
+            [MixEnum.Phoenix2] = new[] { "#5D7A62", "#6FA274", "#4FE33F", "#8CEF80", "#C2F7BB", "#EAFFE6" },
+            [MixEnum.Rise] = new[] { "#7A6A3A", "#A88F3E", "#FFC61A", "#FFD65A", "#FFE79A", "#FFF6D6" },
+            [MixEnum.RiseArcade] = new[] { "#4A6E7A", "#5D93A6", "#5AC5DE", "#8CD9EA", "#BDEAF3", "#E8F8FC" }
         };
 
     /// <summary>Raw hex for a classic-ladder rung, lowest (0) to highest (6). For render targets that cannot read tokens.</summary>
