@@ -1,9 +1,10 @@
 # Pump It Up RISE — two keyboard mixes
 
-Status: **design, no code.** Researched 2026-09-14 → 2026-09-21 from the owner's install, his screenshots, two
-community sheets, two wikis and the Steam patch notes; the owner took the high-level plan to two Rise players
-(Sneezle, Dave) on 2026-09-21 and their answers are folded in. Every decision below is the owner's where marked;
-the rest are *decided unless he objects*. The research bundle (every source file, the exported game art, the
+Status: **design complete for phase 1, no code; next is the technical-scope pass (§8.1) on the owner's go.**
+Researched 2026-09-14 → 2026-09-22 from the owner's install, his screenshots, two community sheets, two wikis and the
+Steam patch notes; the owner took the high-level plan to two Rise players (Sneezle, Dave) on 2026-09-21 and their
+answers are folded in; every open question of §9 was answered by 2026-09-22. Every decision below is the owner's
+where marked; the rest are *decided unless he objects*. The research bundle (every source file, the exported game art, the
 result-screen table) is in the owner's `Downloads\rise-research-2026-09-14\`.
 
 Three phases (owner, 2026-09-21): **1.** add RISE as two mixes with their catalog, scoring rules, art and
@@ -162,8 +163,10 @@ Adding a mix after this is a profile row, an enum value, a `MixIds` Guid and a `
   key visual; the official BGA video's thumbnail is the same visual with the title laid over it, at 480×360. **That
   key visual is the jacket** (D16): piugame's own jackets are 700×393 rectangles of the same visuals with the title
   added, the cards draw jackets with `object-fit: cover`, and the RISE stills go up **untouched at 1920×1080**
-  (`2026-09-22-jackets/`, one file per named song under the `songs/` naming rule — `Name.Where(IsAsciiLetterOrDigit)`
-  — plus a manifest). The ids are the arcade's own song codes for arcade songs (`b29`, `e928`,
+  (`2026-09-22-jackets/`, one file per song under the `songs/` naming rule — `Name.Where(IsAsciiLetterOrDigit)` —
+  plus a manifest). **All 50 songs new to the tracker are named and filed** (2026-09-22, from the owner's RISE, REMIX
+  and VARIETY channel screenshots; every thumbnail match unique). `title-to-id.json` in the bundle is the
+  title → game-id map for every song seen on a wheel, which is also what a RISE new-song batch will need. The ids are the arcade's own song codes for arcade songs (`b29`, `e928`,
   `18d0`) and a 10001+ block for RISE-era songs; matching the wheel thumbnails in the owner's channel screenshots
   against the 88×88 snippets named all 48 RISE Vol.1 and Vol.2 songs plus Into the PIUniverse! (`title-to-id.json`
   in the bundle; every match unique, no conflicts). The contest five still need one CONTEST-channel screenshot.
@@ -359,6 +362,31 @@ precedent; the upload page and manual entry; the v1 mix parser; docs (this, DOMA
 API.md for the mix values, UX-GUIDELINES.md for the palettes); tests (profile completeness, ladder, mark mapping,
 platform gate on the cross-mix union).
 
+### 8.1 Phase-1 build order (proposed, for the technical-scope pass)
+
+The commit series, each green on its own, docs first and localization last, one PR:
+
+1. **Profile.** `MixProfile` + `MixProfiles.For(mix)` in SharedKernel with a DomainTest that every enum value has
+   one; `UsesLegacyScoring()`, `MixCapabilities.*`, `LetterGradeFor`/`GetMinimumScoreFor`/`GetMaximumScoreFor` become
+   reads off it; the dozen wrong-question call sites of §3 move to the right field (official site, art, platform,
+   lifebar). No behavior change for the 30 existing mixes — the test is the existing suites staying green.
+2. **The two mixes.** `MixEnum.Rise`, `MixEnum.RiseArcade`, their `MixIds` Guids, one migration seeding the two
+   `scores.Mix` rows (SortOrder after Phoenix 2, both primary), their profiles, the Rise floors table and the
+   RiseMarks award vocabulary with display names.
+3. **Theme and art.** Two `MixPalette`s, `ThemedMixes`, the CSS classes, per-mix letter and plate paths in
+   `ShareCardImages` (`letters/{mix}/…`, `plates/{mix}/…`, flat fallback), the owner uploads the Rise set and the
+   50 jackets.
+4. **Catalog tooling.** `tools/RiseCatalog/` (the `PumpoutExtractor` precedent): reads the sheet snapshot, Dave's
+   list, the site's Phoenix exports and `title-to-id.json`; emits idempotent SQL to Downloads — Rise songs, charts,
+   membership rows and `MixVersion` rows; Rise Arcade membership rows on the Phoenix 2 charts. Bulk data never
+   enters the repo.
+5. **Recording.** The upload page driven by the profile (site-less Phoenix mix = spreadsheet flow alone), the
+   RISE mark shorthand in the extractor, the profile's award list in `RecordScoreForm`.
+6. **The v2 write.** `POST api/v2/players/me/plays` on `RecordObservedPlaysCommand` + the best-attempt policy, the
+   judgment checksum, a `Tests.Api` golden.
+7. **Docs and locales.** DOMAIN.md (RISE terms), API.md, UX-GUIDELINES.md, DATABASE-SCHEMA.md (the two rows),
+   this doc's status; new strings in all nine locales.
+
 **Phase 2 — the capture app**: screen-grab and F12 modes, template-matched
 digits on the fixed result layout, the score and accuracy checksums, chart resolution against the Rise catalog,
 `POST api/phoenixScores`. Skips Challenge aggregates (division badge in the header). Learns note counts (D10).
@@ -369,19 +397,14 @@ digits on the fixed result layout, the score and accuracy checksums, chart resol
 
 ## 9. Open questions (phase 1)
 
-Answered 2026-09-21: low floors ship as a placeholder and disproofs are recorded (D11); Rise singles use Phoenix 2
-stepballs (D12); both mixes are top-level (D13); each mix gets its own palette (D12).
+None outstanding. Answered 2026-09-21/22: low floors ship as a placeholder and disproofs are recorded (D11); Rise
+singles use Phoenix 2 stepballs (D12); both mixes are top-level (D13); the v2 observed-plays write (D14); the
+palettes (D15); uncut key visuals as jackets (D16); the singles mapping confirmed in-game (§4.3); every new song's
+image named (§4.1).
 
-1. **Naming the last 11 RISE-only songs' images.** 40 of the songs new to the tracker have their still named and
-   filed (§4.1); the remaining 11 are Variety-channel songs (Fantasia Sonata Destiny, MYTH Re:LEASE, PATHFINDER,
-   Conflict -NOMA CONCEiVER REMiX-, Aleph-0, Assault TAXI, Save Yourself, Bamboo, PHYSALIS, ULTRA SYNERGY MATRIX,
-   Entrance (PIU Edit)), which seven wheel screenshots of the VARIETY channel would pair to their ids. The sheet spells
-   one Vol.2 song "Pop & Pump & FIVE!!"; the game and Steam say "DIVE!!".
-2. ~~The score endpoint~~ — decided, D14.
-3. ~~Palettes~~ — approved, D15.
-
-Not blocking, still open: the grey-grade rule (§5.5); whether Rise Arcade follows Phoenix 2 where Phoenix 2 added a
-chart to an existing song.
+Not blocking, still open, for phase 2 or later: the grey-grade rule (§5.5), which the capture app's disproof log will
+settle for free; whether Rise Arcade follows Phoenix 2 where Phoenix 2 added a chart to an existing song; the sheet's
+"Pop & Pump & FIVE!!" spelling (the game and Steam say "DIVE!!" — the catalog uses the game's).
 
 ---
 
