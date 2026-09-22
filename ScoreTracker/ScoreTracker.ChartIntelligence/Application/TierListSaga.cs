@@ -1,4 +1,4 @@
-using ScoreTracker.Domain.Services;
+﻿using ScoreTracker.Domain.Services;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Domain;
 using MassTransit;
@@ -127,13 +127,15 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         var mix = context.Message.Mix;
         // Levels 10 through 29 — DifficultyLevel.Max. The peer group guards below stop reaching
         // above 29 for the upper folders rather than the loop stopping short of them.
+        // The types this mix has, minus co-op, which the loop below walks by player count.
+        // RISE's doubles folder is half-doubles, so that is what gets a folder here.
+        var folderTypes = MixProfiles.For(mix).ChartTypes
+            .Where(t => t.Category() != ChartTypeCategory.CoOp).ToArray();
         foreach (var level in Enumerable.Range(10, 20))
+        foreach (var chartType in folderTypes)
         {
-            await ProcessPgTierList(mix, level, ChartType.Single, context.CancellationToken);
-            await ProcessPgTierList(mix, level, ChartType.Double, context.CancellationToken);
-
-            await ProcessPassTierList(mix, level, ChartType.Single, context.CancellationToken);
-            await ProcessPassTierList(mix, level, ChartType.Double, context.CancellationToken);
+            await ProcessPgTierList(mix, level, chartType, context.CancellationToken);
+            await ProcessPassTierList(mix, level, chartType, context.CancellationToken);
         }
 
         foreach (var playerCount in Enumerable.Range(2, 5))
@@ -147,7 +149,8 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     {
         var mix = context.Message.Mix;
         for (var level = 1; level <= 29; level++)
-            foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
+            foreach (var chartType in MixProfiles.For(mix).ChartTypes
+                         .Where(t => t.Category() != ChartTypeCategory.CoOp))
             {
                 var folderRecords = (await _scores.GetScores(mix, chartType, level,
                     context.CancellationToken)).ToArray();
@@ -159,7 +162,7 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
                 var playerLevels =
                     (await _playerStats.GetStats(mix, folderRecords.Select(r => r.UserId).Distinct().ToArray(),
                         context.CancellationToken))
-                    .ToDictionary(s => s.UserId, s => chartType is ChartType.Single
+                    .ToDictionary(s => s.UserId, s => chartType.Category() is ChartTypeCategory.Single
                         ? s.SinglesCompetitiveLevel
                         : s.DoublesCompetitiveLevel);
                 var stats = allPhoenixScores.Keys.ToDictionary(id => id, id => level + .5 - playerLevels[id]);
