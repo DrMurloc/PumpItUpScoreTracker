@@ -26,7 +26,9 @@
                        you are currently in is ever emitted as tokens. *@
                     <div class="av-avail">
                         <span class="av-cap">@L["Available in"]</span>
-                        @foreach (var mix in MixThemes.ThemedMixes)
+                        @* The mixes piugame ships avatars for — a keyboard mix never will, so a
+                           chip saying "not in Rise" would be noise rather than information. *@
+                        @foreach (var mix in new[] { MixEnum.XX, MixEnum.Phoenix, MixEnum.Phoenix2 })
                         {
                             var has = _selected.Mixes.Contains(mix);
                             <span class="av-mixtag @(has ? "" : "av-off")"

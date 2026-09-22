@@ -152,6 +152,8 @@ internal sealed class PlayerRatingSaga :
 
     public async Task Handle(RecalculateStatsCommand request, CancellationToken cancellationToken)
     {
+        // No formula, no stats row: PumbilityScoring throws for such a mix, on purpose.
+        if (!request.Mix.HasPumbility()) return;
         // The public recalc entry (admin tools, scheduled maintenance) — the session
         // pipeline goes through CaptureSessionStats, which needs the core's outputs. No change
         // set here, so no old scores, so no per-chart PUMBILITY split: an admin recalculation
@@ -183,6 +185,8 @@ internal sealed class PlayerRatingSaga :
     public async Task Handle(RecalculatePumbilityCommand request, CancellationToken cancellationToken)
     {
         var mix = request.Mix;
+        // No formula, no fifty: PumbilityScoring throws for such a mix, on purpose.
+        if (!mix.HasPumbility()) return;
         var scores = (await _scores.GetPlayerScores(mix, new[] { request.UserId },
             request.chartIds,
             cancellationToken)).ToArray();

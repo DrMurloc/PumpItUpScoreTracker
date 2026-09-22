@@ -740,6 +740,26 @@ public sealed class HighlightCaptureSagaTests
             It.IsAny<IEnumerable<ScoreHighlightWrite>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public async Task AMixWithoutAPumbilityFormulaNeverReachesTheRatingStep()
+    {
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        var legacyEvent = PlayerScoresUpdatedEvent.Create(Now, UserId, MixEnum.XX,
+            new[]
+            {
+                new PlayerScoresUpdatedEvent.ScoreChange(chart.Id, IsNewPass: true, OldScore: null,
+                    NewScore: 910000, Plate: "FairGame", IsBroken: false)
+            }, null);
+
+        await ctx.Saga.Consume(ctx.Context(legacyEvent));
+
+        // PumbilityScoring throws for a mix without a formula; the step is skipped, not failed.
+        ctx.Mediator.Verify(m => m.Send(It.IsAny<PlayerRatingSaga.CaptureSessionStats>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private static PlayerScoresUpdatedEvent NewPassesEvent(params Chart[] charts)
     {
         return PlayerScoresUpdatedEvent.Create(Now, UserId, MixEnum.Phoenix,

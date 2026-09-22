@@ -45,7 +45,10 @@ public sealed class RecurringJobRunner
         _bus.Publish(new FlushOverdueScoreBatchesCommand());
 
     // Phoenix 2 tier lists are live (owner, 2026-08-13): every tier-list compute job fans out
-    // per mix, like the rotations below. Each consumer's own thin-data guards keep a mix with
+    // per mix, like the rotations below. The Rise mixes (docs/design/rise.md §11.2) get the pass
+    // tiers and the similarity pool only in phase 1: the score-derived lenses weight players by
+    // the competitive level on their PlayerStats row, which only a mix with PUMBILITY writes, and
+    // the letter-difficulty walk asks every plus tier for a floor Rise's ladder does not have. Each consumer's own thin-data guards keep a mix with
     // little volume quiet rather than wrong — the PUMBILITY job's full-pool gate in particular
     // writes nothing until a mix has real pools.
     public Task PublishProcessScoresTiersList() =>
@@ -77,7 +80,9 @@ public sealed class RecurringJobRunner
     public Task PublishProcessPassTierList() =>
         Task.WhenAll(
             _bus.Publish(new ProcessPassTierListCommand(MixEnum.Phoenix)),
-            _bus.Publish(new ProcessPassTierListCommand(MixEnum.Phoenix2)));
+            _bus.Publish(new ProcessPassTierListCommand(MixEnum.Phoenix2)),
+            _bus.Publish(new ProcessPassTierListCommand(MixEnum.Rise)),
+            _bus.Publish(new ProcessPassTierListCommand(MixEnum.RiseArcade)));
 
     public Task PublishProcessPumbilityTierList() =>
         Task.WhenAll(
@@ -111,7 +116,9 @@ public sealed class RecurringJobRunner
     public Task PublishRecalculateChartSimilarity() =>
         Task.WhenAll(
             _bus.Publish(new RecalculateChartSimilarityCommand(MixEnum.Phoenix)),
-            _bus.Publish(new RecalculateChartSimilarityCommand(MixEnum.Phoenix2)));
+            _bus.Publish(new RecalculateChartSimilarityCommand(MixEnum.Phoenix2)),
+            _bus.Publish(new RecalculateChartSimilarityCommand(MixEnum.Rise)),
+            _bus.Publish(new RecalculateChartSimilarityCommand(MixEnum.RiseArcade)));
 
     public Task PublishStartLeaderboardImport() =>
         _bus.Publish(new StartLeaderboardImportCommand());

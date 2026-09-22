@@ -25,7 +25,7 @@ public static class ShareCardSample
     public static IReadOnlyList<ShareCardComposer.TileFacts> Facts(IReadOnlyList<Chart> charts, MixEnum mix,
         Func<Chart, IReadOnlyList<TierListChartCard.CardSkillChip>?> skills, Func<Chart, string?> bubble)
     {
-        var scoring = !mix.UsesLegacyScoring();
+        var scoring = mix.HasPumbility();
         var facts = new List<ShareCardComposer.TileFacts>();
         for (var i = 0; i < Math.Min(Size, charts.Count); i++)
         {

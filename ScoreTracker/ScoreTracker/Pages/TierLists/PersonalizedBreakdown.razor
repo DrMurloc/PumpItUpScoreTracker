@@ -1446,9 +1446,10 @@ else
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
-        // The lenses that personalize don't exist for legacy mixes; CoOp never
-        // personalizes. Soft-land those on the tier list instead of a dead page.
-        if (_currentMix.UsesLegacyScoring())
+        // The lenses that personalize price with PUMBILITY, which a legacy mix and a mix
+        // without a formula both lack; CoOp never personalizes. Soft-land those on the tier
+        // list instead of a dead page.
+        if (!_currentMix.HasPumbility())
         {
             NavManager.NavigateTo("/TierLists");
             return;

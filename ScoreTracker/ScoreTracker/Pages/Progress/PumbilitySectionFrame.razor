@@ -159,7 +159,7 @@ else if (_mixKnown)
         }
 
         var selected = await UiSettings.GetSelectedMix();
-        _currentMix = selected.UsesLegacyScoring() ? MixEnum.Phoenix : selected;
+        _currentMix = selected.HasPumbility() ? selected : MixEnum.Phoenix;
 
         // Reached by URL on a mix that has no such page — send them somewhere that means
         // something rather than rendering an empty argument.

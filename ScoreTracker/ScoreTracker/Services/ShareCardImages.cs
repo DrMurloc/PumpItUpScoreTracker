@@ -7,7 +7,8 @@ namespace ScoreTracker.Web.Services;
 /// <summary>
 ///     The image URLs a share card is built from. The renderer fetches them itself, so every
 ///     caller has to spell them the same way — they were spelled twice before the peers page
-///     grew a Download button of its own.
+///     grew a Download button of its own. Which folder a mix draws from is the mix's profile's
+///     answer (<see cref="MixArt" />), never a guess off its scoring model.
 /// </summary>
 public static class ShareCardImages
 {
@@ -15,31 +16,50 @@ public static class ShareCardImages
 
     /// <summary>
     ///     The difficulty bubble, spelled exactly as <c>DifficultyBubble</c> spells it on the
-    ///     page. Modern mixes keep their per-mix art; SP/DP predate it and every legacy mix — XX
-    ///     included — reuses the XX set, so both are served flat.
+    ///     page. SP/DP predate per-mix art and are served flat everywhere; otherwise the mix's
+    ///     profile names its bubble folder, null meaning the flat XX set every legacy mix draws.
     /// </summary>
-    public static string DifficultyBubble(MixEnum? mix, ChartType chartType, string difficultyString) =>
-        chartType is ChartType.SinglePerformance or ChartType.DoublePerformance ||
-        mix?.UsesLegacyScoring() == true
+    public static string DifficultyBubble(MixEnum? mix, ChartType chartType, string difficultyString)
+    {
+        var folder = chartType is ChartType.SinglePerformance or ChartType.DoublePerformance || mix == null
+            ? null
+            : MixProfiles.For(mix.Value).Art.BubbleFolder;
+        return folder == null
             ? $"{Root}/difficulty/{difficultyString.ToLower()}.png"
-            : $"{Root}/difficulty/{mix}/{difficultyString.ToLower()}.png";
+            : $"{Root}/difficulty/{folder}/{difficultyString.ToLower()}.png";
+    }
 
     public static string DifficultyBubble(MixEnum mix, ChartType chartType, DifficultyLevel level) =>
         DifficultyBubble(mix, chartType, DifficultyLevel.ToShorthand(chartType, level));
 
     /// <summary>
     ///     One chart's bubble, or null where the page renders a legacy chip instead: pre-Exceed
-    ///     slots, Half-Double and levelled legacy co-ops have no bubble art in any set, so a card
-    ///     that drew one would be inventing it.
+    ///     slots, a half-double on a mix whose bubble set has no H. DOUBLE stepball, and levelled
+    ///     legacy co-ops have no bubble art, so a card that drew one would be inventing it.
     /// </summary>
     public static string? DifficultyBubble(Chart chart) =>
-        chart.Slot != null || chart.Type == ChartType.HalfDouble ||
+        chart.Slot != null ||
+        (chart.Type == ChartType.HalfDouble && !MixProfiles.For(chart.Mix).Art.HasHalfDoubleBubble) ||
         (chart.Type == ChartType.CoOp && chart.Mix.UsesLegacyScoring() && chart.Level != chart.PlayerCount)
             ? null
             : DifficultyBubble(chart.Mix, chart.Type, chart.DifficultyString);
 
-    public static string LetterGrade(PhoenixLetterGrade grade, bool isBroken) =>
-        $"{Root}/letters/{grade.ToString().ToLower()}{(isBroken ? "_broken" : "")}.png";
+    /// <summary>The letter, from the mix's own letter set where it has one and the flat Phoenix set otherwise.</summary>
+    public static string LetterGrade(PhoenixLetterGrade grade, bool isBroken, MixEnum? mix = null)
+    {
+        var folder = mix == null ? null : MixProfiles.For(mix.Value).Art.ScoreArtFolder;
+        var file = $"{grade.ToString().ToLower()}{(isBroken ? "_broken" : "")}.png";
+        return folder == null ? $"{Root}/letters/{file}" : $"{Root}/letters/{folder}/{file}";
+    }
 
-    public static string Plate(PhoenixPlate plate) => $"{Root}/plates/{plate.GetShorthand().ToLower()}.png";
+    /// <summary>
+    ///     The plate — or the mark a mix shows in its place — from the mix's own set where it has
+    ///     one. The file is always named by the stored plate's shorthand, whatever the mix calls it.
+    /// </summary>
+    public static string Plate(PhoenixPlate plate, MixEnum? mix = null)
+    {
+        var folder = mix == null ? null : MixProfiles.For(mix.Value).Art.ScoreArtFolder;
+        var file = $"{plate.GetShorthand().ToLower()}.png";
+        return folder == null ? $"{Root}/plates/{file}" : $"{Root}/plates/{folder}/{file}";
+    }
 }

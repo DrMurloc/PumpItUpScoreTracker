@@ -116,9 +116,16 @@ else
 
     private string ScoreString => (Score == null ? "" : ((int)Score).ToString("N0"));
     private string BrokenPiece => IsBroken ? "_broken" : "";
-    private string LetterGradeImage =>
-        $"https://piuimages.arroweclip.se/letters/{Score?.LetterGradeFor(Mix).ToString().ToLower()}{BrokenPiece}.png";
+    // The mix picks the letter set (docs/design/rise.md D12); spelled by ShareCardImages so a
+    // downloaded card and the page ask for the same picture.
+    private string LetterGradeImage => Score is { } scored
+        ? ScoreTracker.Web.Services.ShareCardImages.LetterGrade(scored.LetterGradeFor(Mix), IsBroken, Mix)
+        : string.Empty;
 
-    private string PlateImage => $"https://piuimages.arroweclip.se/plates/{ShownPlate?.GetShorthand().ToLower()}.png";
+    // The mix picks the plate set (docs/design/rise.md D12): Rise draws its marks, everything
+    // else the flat Phoenix plates. Spelled by ShareCardImages, like every other score picture.
+    private string PlateImage => ShownPlate is { } plate
+        ? ScoreTracker.Web.Services.ShareCardImages.Plate(plate, Mix)
+        : string.Empty;
 
 }

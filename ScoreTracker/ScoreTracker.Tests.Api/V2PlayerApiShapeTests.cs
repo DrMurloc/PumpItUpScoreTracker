@@ -28,7 +28,7 @@ public sealed class V2PlayerApiShapeTests
     {
         var currentUser = new Mock<ICurrentUserAccessor>();
         currentUser.SetupGet(c => c.User).Returns(ApiTestData.PublicUser);
-        _controller = new PlayersController(_mediator.Object, currentUser.Object)
+        _controller = new PlayersController(_mediator.Object, currentUser.Object, ApiTestClock.Accessor)
         {
             ControllerContext = new ControllerContext
             {
@@ -213,7 +213,7 @@ public sealed class V2PlayerApiShapeTests
     {
         var currentUser = new Mock<ICurrentUserAccessor>();
         currentUser.SetupGet(c => c.User).Returns(ApiTestData.PrivateUser);
-        var controller = new PlayersController(_mediator.Object, currentUser.Object)
+        var controller = new PlayersController(_mediator.Object, currentUser.Object, ApiTestClock.Accessor)
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };

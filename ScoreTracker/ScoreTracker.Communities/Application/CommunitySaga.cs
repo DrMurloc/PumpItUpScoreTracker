@@ -330,9 +330,12 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         if (candidates.Count == 0) return candidates;
 
         var clearedElsewhere = new HashSet<Guid>();
+        // Only a mix on the same platform can have cleared a chart "elsewhere" (docs/design/rise.md D6).
+        var platform = MixProfiles.For(e.Mix).Platform;
         foreach (var otherMix in Enum.GetValues<MixEnum>())
         {
-            if (otherMix == e.Mix || otherMix.UsesLegacyScoring()) continue;
+            if (otherMix == e.Mix || otherMix.UsesLegacyScoring() ||
+                MixProfiles.For(otherMix).Platform != platform) continue;
             foreach (var score in await _scores.GetBestScores(otherMix, e.UserId, cancellationToken))
                 if (!score.IsBroken) clearedElsewhere.Add(score.ChartId);
         }

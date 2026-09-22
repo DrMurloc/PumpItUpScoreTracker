@@ -52,7 +52,7 @@ public sealed class V2CommunityFilterTests
                 new Claim(ToolKeyAuthenticationScheme.ToolIdClaim, asTool.Value.ToString())
             }, "ApiV2"));
 
-        return new PlayersController(_mediator.Object, _currentUser.Object)
+        return new PlayersController(_mediator.Object, _currentUser.Object, ApiTestClock.Accessor)
         {
             ControllerContext = new ControllerContext { HttpContext = context }
         };

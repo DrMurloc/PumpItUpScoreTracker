@@ -76,8 +76,8 @@ public sealed class ChartScoresController : ApiV2ControllerBase
         var page = rows.Skip(offset).Take(pageSize).ToArray();
         var identities = await PlayerIdentities.Resolve(_mediator, page.Select(r => r.UserId).ToArray());
 
-        // Only the Phoenix mixes have a PUMBILITY formula — asking for one on a legacy mix throws.
-        var scoring = mix.UsesLegacyScoring() ? null : ScoringConfiguration.PumbilityScoring(mix, true);
+        // Only a mix with a PUMBILITY formula can price a row — asking for one elsewhere throws.
+        var scoring = mix.HasPumbility() ? ScoringConfiguration.PumbilityScoring(mix, true) : null;
         var data = new List<ChartScoreDto>(page.Length);
         foreach (var row in page)
         {

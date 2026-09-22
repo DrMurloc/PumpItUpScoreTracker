@@ -51,7 +51,11 @@ public static class MixIds
         [MixEnum.Prime] = Guid.Parse("D8316882-8D08-4993-B692-D0608392FB02"),
         [MixEnum.Prime2] = Guid.Parse("00E93A6B-9C39-452F-96B0-1DF42DBDD0AC"),
         [MixEnum.Pro] = Guid.Parse("00D66EAF-5408-46F1-A88E-74406891C9D6"),
-        [MixEnum.Pro2] = Guid.Parse("745660B3-15DB-42D1-AD0C-0EE775503F62")
+        [MixEnum.Pro2] = Guid.Parse("745660B3-15DB-42D1-AD0C-0EE775503F62"),
+        // Minted once on 2026-09-22 and seeded by the RiseMixes migration; tools/RiseCatalog
+        // stamps the same ids into the generated catalog scripts (docs/design/rise.md §11.3).
+        [MixEnum.Rise] = Guid.Parse("8FF3F8AA-3870-4FFB-85F6-97340E091506"),
+        [MixEnum.RiseArcade] = Guid.Parse("71B55C75-38BE-492C-97D3-29BE828C83B6")
     };
 
     private static readonly IReadOnlyDictionary<Guid, MixEnum> ByGuid =

@@ -330,7 +330,7 @@ public sealed class StaticHeadResolver
     private async Task<StaticHeadModel?> ResolveMarchOfMurlocs(Guid? seasonId, MixEnum currentMix,
         CancellationToken cancellationToken)
     {
-        var mix = currentMix is MixEnum.Phoenix or MixEnum.Phoenix2 ? currentMix : MixEnum.Phoenix;
+        var mix = currentMix.HasMarchOfMurlocs() ? currentMix : MixEnum.Phoenix;
         var page = await _mediator.Send(new GetMoMSeasonPageQuery(mix, seasonId), cancellationToken);
         if (page == null) return null;
         var sessions = page.Boards.Sum(b => b.Rows.Count);
@@ -346,7 +346,7 @@ public sealed class StaticHeadResolver
     private async Task<StaticHeadModel> ResolveWeeklyCharts(MixEnum currentMix,
         CancellationToken cancellationToken)
     {
-        var mix = currentMix is MixEnum.Phoenix or MixEnum.Phoenix2 ? currentMix : MixEnum.Phoenix;
+        var mix = currentMix.HasWeeklyBoard() ? currentMix : MixEnum.Phoenix;
         var board = await _mediator.Send(new GetWeeklyBoardQuery(mix), cancellationToken);
         var daily = await _mediator.Send(new GetDailyStepBoardQuery(mix), cancellationToken);
 

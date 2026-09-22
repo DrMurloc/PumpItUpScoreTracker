@@ -31,10 +31,14 @@ internal sealed class GetCrossMixPassesHandler : IRequestHandler<GetCrossMixPass
             return new HashSet<Guid>();
 
         var passes = new HashSet<Guid>();
+        // A pass counts across mixes only within a platform: a keyboard clear says nothing
+        // about a pad clear, and the other way round (docs/design/rise.md D6).
+        var platform = MixProfiles.For(request.ExcludingMix).Platform;
         // Phoenix-family mixes live in the phoenix records store; legacy mixes (XX and
         // older) live in the BestAttempt store and are skipped here.
         foreach (var mix in Enum.GetValues<MixEnum>()
-                     .Where(m => m != request.ExcludingMix && !m.UsesLegacyScoring()))
+                     .Where(m => m != request.ExcludingMix && !m.UsesLegacyScoring() &&
+                                 MixProfiles.For(m).Platform == platform))
             passes.UnionWith((await _records.GetRecordedScores(mix, userId, cancellationToken))
                 .Where(r => !r.IsBroken)
                 .Select(r => r.ChartId));
@@ -42,7 +46,7 @@ internal sealed class GetCrossMixPassesHandler : IRequestHandler<GetCrossMixPass
         // Legacy side: XX only for now — the per-mix attempt read is a whole-catalog
         // join, so folding all 28 legacy mixes into this union should wait until legacy
         // scores exist in volume (and then likely as a single grouped query).
-        if (request.ExcludingMix != MixEnum.XX)
+        if (request.ExcludingMix != MixEnum.XX && MixProfiles.For(MixEnum.XX).Platform == platform)
             passes.UnionWith((await _xxAttempts.GetBestAttempts(userId, MixEnum.XX, cancellationToken))
                 .Where(a => !(a.BestAttempt?.IsBroken ?? true))
                 .Select(a => a.Chart.Id));

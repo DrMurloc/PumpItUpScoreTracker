@@ -141,21 +141,24 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
 
         // The rating step: recalc + Pumbility record stats + rating milestones + the
         // CompetitiveImprover flags, which merge into the event so the ⬆ badge rides
-        // the card instead of trailing it.
-        try
-        {
-            var stats = await _mediator.Send(new PlayerRatingSaga.CaptureSessionStats(e.UserId, e.Mix,
-                    e.Changes.Select(c => c.ChartId).Distinct().ToArray(), e.SessionId, e.Changes),
-                context.CancellationToken);
-            milestones.AddRange(stats.Milestones);
-            foreach (var chartId in stats.ImproverChartIds)
-                flags[chartId] = flags.GetValueOrDefault(chartId) | HighlightFlags.CompetitiveImprover;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Rating step failed for user {UserId} ({Mix}) — snapshot ships without stats",
-                e.UserId, e.Mix);
-        }
+        // the card instead of trailing it. A mix without a PUMBILITY formula has no stats
+        // to capture, and asking would throw — skipped rather than logged as a failure
+        // on every session.
+        if (e.Mix.HasPumbility())
+            try
+            {
+                var stats = await _mediator.Send(new PlayerRatingSaga.CaptureSessionStats(e.UserId, e.Mix,
+                        e.Changes.Select(c => c.ChartId).Distinct().ToArray(), e.SessionId, e.Changes),
+                    context.CancellationToken);
+                milestones.AddRange(stats.Milestones);
+                foreach (var chartId in stats.ImproverChartIds)
+                    flags[chartId] = flags.GetValueOrDefault(chartId) | HighlightFlags.CompetitiveImprover;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Rating step failed for user {UserId} ({Mix}) — snapshot ships without stats",
+                    e.UserId, e.Mix);
+            }
 
         // The title step: completions + paragon gains (announced by the card, not the
         // legacy message) and the per-title progress deltas.

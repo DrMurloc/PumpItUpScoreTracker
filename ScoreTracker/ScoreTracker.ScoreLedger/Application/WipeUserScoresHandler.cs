@@ -13,7 +13,9 @@ internal sealed class WipeUserScoresHandler : IRequestHandler<WipeUserScoresComm
 {
     // The mixes with parallel derived state (stats/titles/history pipelines). XX keeps its
     // legacy tables and never rides the PlayerScoresUpdatedEvent pipelines.
-    private static readonly MixEnum[] ParallelMixes = { MixEnum.Phoenix, MixEnum.Phoenix2 };
+    // The mixes with a stats-and-titles pipeline to reset — exactly the ones with PUMBILITY.
+    private static readonly MixEnum[] ParallelMixes =
+        Enum.GetValues<MixEnum>().Where(m => m.HasPumbility()).ToArray();
 
     private readonly IBus _bus;
     private readonly IDateTimeOffsetAccessor _dateTime;

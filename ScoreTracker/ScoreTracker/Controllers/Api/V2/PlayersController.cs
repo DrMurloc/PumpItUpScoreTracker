@@ -10,6 +10,7 @@ using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts;
+using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Exceptions;
@@ -18,6 +19,7 @@ using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Dtos.ApiV2;
 using ScoreTracker.Web.Security;
+using ScoreTracker.Web.Services;
 
 namespace ScoreTracker.Web.Controllers.Api.V2;
 
@@ -34,12 +36,14 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 public sealed class PlayersController : ApiV2ControllerBase
 {
     private readonly ICurrentUserAccessor _currentUser;
+    private readonly IDateTimeOffsetAccessor _clock;
     private readonly IMediator _mediator;
 
-    public PlayersController(IMediator mediator, ICurrentUserAccessor currentUser)
+    public PlayersController(IMediator mediator, ICurrentUserAccessor currentUser, IDateTimeOffsetAccessor clock)
     {
         _mediator = mediator;
         _currentUser = currentUser;
+        _clock = clock;
     }
 
     /// <summary>
@@ -53,6 +57,163 @@ public sealed class PlayersController : ApiV2ControllerBase
     ///         turns this endpoint into an account-enumeration oracle.
     ///     </para>
     /// </summary>
+    public const int MaxPlaysPerRequest = 100;
+    public const int MaxSourceLength = 32;
+
+    // ScoreScreen's formula matches the game to ±1 (it floors where the machine sometimes does
+    // not), so a play one point off still reconciles; two points off is a misread.
+    private const int ChecksumTolerance = 1;
+
+    /// <summary>
+    ///     <c>POST me/plays</c> — judged plays a tool observed for the caller, the one write on v2
+    ///     (docs/design/rise.md §6.3): built for the RISE capture app and open to any tool acting
+    ///     with a player's own token. Every play's score is recomputed from its five judgment counts
+    ///     and max combo, and a play that does not reconcile refuses the whole request — the
+    ///     checksum that keeps a misread screen out of a record. The award is derived from the same
+    ///     counts, and a claimed one has to agree. A play that reconciles goes through the ledger's
+    ///     best-attempt policy, so it becomes the record only where it beats it (a break only where
+    ///     the player seats breaks), and into the journal either way, dated by the play time the
+    ///     tool observed, all of one request under one session.
+    /// </summary>
+    [HttpPost("me/plays")]
+    [ProducesResponseType(typeof(RecordPlaysResultDto), StatusCodes.Status200OK, "application/json")]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RecordPlays([FromBody] RecordPlaysRequestDto? body)
+    {
+        if (User.ToolId() is not null)
+            return Problem("tool-has-no-self", "A tool has no 'me'.",
+                detail: "Plays are recorded with the player's own token.");
+        if (body is null) return Problem("body-required", "A request body is required.");
+        if (!V2MixParser.TryParse(body.Mix, out var mix)) return MixRequiredProblem();
+        if (RequestProblem(body, mix) is { } requestProblem) return requestProblem;
+
+        var charts = (await _mediator.Send(new GetChartsQuery(mix))).ToDictionary(c => c.Id);
+        var now = _clock.Now;
+        var resolved = new List<ResolvedPlay>();
+        // The count was bounded above; Take keeps the bound visible to a reader as well as an analyzer.
+        foreach (var play in body.Plays!.Take(MaxPlaysPerRequest))
+        {
+            var (resolvedPlay, problem) = ResolvePlay(resolved.Count, play, mix, charts, now);
+            if (problem != null) return problem;
+            resolved.Add(resolvedPlay!);
+        }
+
+        // Whether a break on a chart the player has never passed is seated as their best: the
+        // tool's own choice, else the mix's default — the same default the import page reads.
+        var recordBrokenAsBest = body.RecordBrokenAsBest ?? BrokenScorePreference.DefaultFor(mix);
+        await Record(mix, "api:" + body.Source, recordBrokenAsBest, resolved);
+        return Ok(new RecordPlaysResultDto(resolved.Count, mix.ToString(), ScoringModelOf(mix)));
+    }
+
+    private sealed record ResolvedPlay(Chart Chart, ObservedPlayDto Play, PhoenixScore Score, PhoenixPlate? Award,
+        JudgementCounts Judgements);
+
+    private ObjectResult? RequestProblem(RecordPlaysRequestDto body, MixEnum mix)
+    {
+        if (mix.UsesLegacyScoring())
+            return Problem("legacy-mix", "This mix is not Phoenix-scored.",
+                detail: $"{mix.GetName()} keeps a letter grade, not five judgments and a 1,000,000-point score.");
+        if (string.IsNullOrWhiteSpace(body.Source) || body.Source.Length > MaxSourceLength ||
+            !body.Source.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '_' or '-'))
+            return Problem("source-required", "The source names the tool that observed the plays.",
+                detail: $"One to {MaxSourceLength} letters, digits, '.', '_' or '-'.");
+        if (body.Plays is null || body.Plays.Count == 0 || body.Plays.Count > MaxPlaysPerRequest)
+            return Problem("plays-required", $"Between one and {MaxPlaysPerRequest} plays per request.");
+        return null;
+    }
+
+    private (ResolvedPlay? Play, ObjectResult? Problem) ResolvePlay(int index, ObservedPlayDto play, MixEnum mix,
+        IReadOnlyDictionary<Guid, Chart> charts, DateTimeOffset now)
+    {
+        var chart = ResolveChart(charts, play);
+        if (chart == null) return (null, NotFoundProblem($"Play {index}: no chart matches on {mix.GetName()}."));
+        if (play.Perfects < 0 || play.Greats < 0 || play.Goods < 0 || play.Bads < 0 || play.Misses < 0 ||
+            play.MaxCombo < 0)
+            return (null, Problem("judgments-invalid", $"Play {index}: judgment counts cannot be negative."));
+        if (!PhoenixScore.TryParse(play.Score, out var score))
+            return (null, Problem("score-invalid", $"Play {index}: the score is not a Phoenix score."));
+        // The play time is the journal's key and the record's date: an omitted one would file
+        // the play in year 1, a future one ahead of everything the player does next.
+        if (play.PlayedAt == default || play.PlayedAt > now.AddMinutes(5))
+            return (null, Problem("played-at-invalid", $"Play {index}: playedAt must be when the play happened.",
+                detail: "An omitted or future play time cannot be journaled."));
+        var screen = new ScoreScreen(play.Perfects, play.Greats, play.Goods, play.Bads, play.Misses, play.MaxCombo);
+        var expected = (int)screen.CalculatePhoenixScore;
+        if (screen.TotalCount == 0 || play.MaxCombo > screen.TotalCount ||
+            Math.Abs(expected - play.Score) > ChecksumTolerance)
+            return (null, Problem("judgments-do-not-reconcile", "The judgments do not produce the score.",
+                detail: $"Play {index}: {play.Perfects}/{play.Greats}/{play.Goods}/{play.Bads}/{play.Misses} " +
+                        $"with max combo {play.MaxCombo} scores {expected:N0}, not {play.Score:N0}."));
+        var (award, awardProblem) = ResolveAward(index, play, mix);
+        if (awardProblem != null) return (null, awardProblem);
+        return (new ResolvedPlay(chart, play, score, award,
+            new JudgementCounts(play.Perfects, play.Greats, play.Goods, play.Bads, play.Misses, play.MaxCombo)), null);
+    }
+
+    /// <summary>
+    ///     The award is a function of the judgments (<see cref="PhoenixPlateHelperMethods.Tolerances" />
+    ///     is the rule), so it is derived here; a caller's claim only has to agree with it. A
+    ///     break carries none.
+    /// </summary>
+    private (PhoenixPlate? Award, ObjectResult? Problem) ResolveAward(int index, ObservedPlayDto play, MixEnum mix)
+    {
+        var awards = mix.AwardsOf();
+        var award = play.IsBroken ? null : DeriveAward(awards, play);
+        if (play.IsBroken || string.IsNullOrWhiteSpace(play.Award)) return (award, null);
+
+        var claimed = AwardSets.TryParseShorthand(play.Award, mix);
+        if (claimed == null)
+            return (null, Problem("award-invalid", $"Play {index}: not an award {mix.GetName()} hands out.",
+                detail: "Valid values: " + string.Join(", ", awards.Select(a => a.GetShorthand(mix)))));
+        if (claimed != award)
+            return (null, Problem("award-does-not-reconcile", "The judgments do not earn the award.",
+                detail: $"Play {index}: {play.Perfects}/{play.Greats}/{play.Goods}/{play.Bads}/{play.Misses} " +
+                        $"earns {(award == null ? "no award" : award.Value.GetShorthand(mix))}, " +
+                        $"not {claimed.Value.GetShorthand(mix)}."));
+        return (award, null);
+    }
+
+    /// <summary>
+    ///     One session for everything a request saw, so the record path and the journal file the
+    ///     plays under the same sitting. The record first — keep-best, so only a play that beats
+    ///     it moves it, dated by the play; a break only where the player seats breaks — then the
+    ///     journal, which is idempotent on play time and so never journals a record's play twice.
+    /// </summary>
+    private async Task Record(MixEnum mix, string source, bool recordBrokenAsBest, IReadOnlyList<ResolvedPlay> plays)
+    {
+        var sessionId = Guid.NewGuid();
+        foreach (var r in plays.Where(r => !r.Play.IsBroken || recordBrokenAsBest))
+            await _mediator.Send(new UpdatePhoenixBestAttemptCommand(r.Chart.Id, r.Play.IsBroken, r.Score, r.Award,
+                KeepBestStats: true, Source: source, Mix: mix, SessionId: sessionId, RecordedAt: r.Play.PlayedAt,
+                Judgements: r.Judgements));
+        await _mediator.Send(new RecordObservedPlaysCommand(_currentUser.User.Id, mix, source, sessionId,
+            plays.Select(r => new RecordObservedPlaysCommand.ObservedPlay(r.Chart.Id, r.Score, r.Award,
+                r.Play.IsBroken, r.Play.PlayedAt, r.Judgements)).ToArray(), IncludeBroken: recordBrokenAsBest));
+    }
+
+    /// <summary>
+    ///     The award a run earned on this mix: the strictest plate rule it satisfies that the mix
+    ///     hands out. A plate mix falls through to Rough Game; a mark mix (Rise) to no mark.
+    /// </summary>
+    private static PhoenixPlate? DeriveAward(IReadOnlyList<PhoenixPlate> awards, ObservedPlayDto play)
+    {
+        foreach (var rule in PhoenixPlateHelperMethods.Tolerances)
+            if (awards.Contains(rule.Plate) && rule.Tolerates(play.Greats, play.Goods, play.Bads, play.Misses))
+                return rule.Plate;
+        return awards.Contains(PhoenixPlate.RoughGame) ? PhoenixPlate.RoughGame : null;
+    }
+
+    private static Chart? ResolveChart(IReadOnlyDictionary<Guid, Chart> charts, ObservedPlayDto play)
+    {
+        if (play.ChartId is { } id) return charts.GetValueOrDefault(id);
+        if (string.IsNullOrWhiteSpace(play.SongName) || play.Level is null ||
+            !Enum.TryParse<ChartType>(play.ChartType, true, out var type)) return null;
+        return charts.Values.FirstOrDefault(c => c.Type == type && (int)c.Level == play.Level &&
+                                                 string.Equals(c.Song.Name.ToString(), play.SongName.Trim(),
+                                                     StringComparison.OrdinalIgnoreCase));
+    }
+
     private async Task<(Guid? UserId, ObjectResult? Failure)> ResolvePlayer(string playerId)
     {
         var toolId = User.ToolId();
@@ -248,7 +409,7 @@ public sealed class PlayersController : ApiV2ControllerBase
     {
         if (!TryReadRequest(mixValue, limit, out var mix, out var pageSize, out var mixFailure))
             return mixFailure!;
-        if (mix.UsesLegacyScoring()) return NoPumbilityProblem(mix);
+        if (!mix.HasPumbility()) return NoPumbilityProblem(mix);
 
         var (ids, communityKey, failure) = await ReadableWithin(community);
         if (ids is null) return failure!;
@@ -317,7 +478,7 @@ public sealed class PlayersController : ApiV2ControllerBase
         if (resolved is null) return failure!;
         var userId = resolved.Value;
         if (!V2MixParser.TryParse(mixValue, out var mix)) return MixRequiredProblem();
-        if (mix.UsesLegacyScoring()) return NoPumbilityProblem(mix);
+        if (!mix.HasPumbility()) return NoPumbilityProblem(mix);
 
         // The bulk read rather than the single one: the single read answers a player with no row
         // with a zeroed record, and a zero PUMBILITY is not the same fact as no record at all.
@@ -413,9 +574,9 @@ public sealed class PlayersController : ApiV2ControllerBase
         }
 
         var charts = (await _mediator.Send(new GetChartsQuery(mix))).ToDictionary(c => c.Id);
-        // Only the Phoenix mixes have a PUMBILITY formula — asking for one on a legacy mix throws.
-        // Legacy rows report a null rating rather than a fabricated number.
-        var scoring = mix.UsesLegacyScoring() ? null : ScoringConfiguration.PumbilityScoring(mix, true);
+        // Only a mix with a PUMBILITY formula can price a row — asking for one elsewhere throws.
+        // Rows on any other mix report a null rating rather than a fabricated number.
+        var scoring = mix.HasPumbility() ? ScoringConfiguration.PumbilityScoring(mix, true) : null;
 
         var rows = (await _mediator.Send(new GetPhoenixRecordsQuery(userId, mix)))
             .Where(r => charts.ContainsKey(r.ChartId))

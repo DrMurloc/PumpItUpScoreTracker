@@ -8833,6 +8833,12 @@
   <data name="Spot in top 50" xml:space="preserve">
     <value>Posto nella top 50</value>
   </data>
+  <data name="Spreadsheet Import Columns" xml:space="preserve">
+    <value>Colonne: Song, Difficulty (S16, HDB23, D20), Score, Plate (PG, FC o NM; il codice della targa su un Mix arcade), IsBroken.</value>
+  </data>
+  <data name="Spreadsheet Import Lede" xml:space="preserve">
+    <value>{0} tiene i record dentro al gioco, quindi il sito li legge da un foglio di calcolo che compili tu: una riga per chart, e un punteggio migliore sostituisce uno peggiore.</value>
+  </data>
   <data name="Spreadsheet is uploading and being processed..." xml:space="preserve">
     <value>Lo Spreadsheet è in fase di caricamento ed elaborazione...</value>
   </data>

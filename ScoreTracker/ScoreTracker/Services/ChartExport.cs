@@ -91,7 +91,10 @@ public static class ChartExport
         LegacyFamily,
 
         /// <summary>Phoenix 2 alone: the only mix whose journal is a gap-free play log.</summary>
-        Phoenix2Only
+        Phoenix2Only,
+
+        /// <summary>The mixes with a PUMBILITY formula — a Phoenix-scored mix without one has nothing to price with.</summary>
+        Pumbility
     }
 
     public sealed record Column(string Key, bool RequiresUser,
@@ -106,6 +109,7 @@ public static class ChartExport
             Scope.PhoenixFamily => !legacy,
             Scope.LegacyFamily => legacy,
             Scope.Phoenix2Only => mix == MixEnum.Phoenix2,
+            Scope.Pumbility => mix.HasPumbility(),
             _ => true
         }).ToArray();
     }
@@ -180,7 +184,7 @@ public static class ChartExport
             ? string.Empty
             : PumbilityFor(r.Chart.Mix)
                 .GetScore(r.Chart, m.PhoenixScore.Value, m.PhoenixPlate ?? PhoenixPlate.RoughGame, m.IsBroken)
-                .ToString("0.00", CultureInfo.InvariantCulture)), Scope.PhoenixFamily),
+                .ToString("0.00", CultureInfo.InvariantCulture)), Scope.Pumbility),
         // Family-scoped: a Phoenix column on an XX search only ever produced a blank column,
         // and offering it read as a bug rather than as absence.
         new("MyPhoenixScore", true, (r, _) => Mine(r, m => Num(m.PhoenixScore, "0")), Scope.PhoenixFamily),

@@ -24,7 +24,8 @@ internal sealed class BackfillStageBreakCausesConsumer(IScoreJournalRepository j
     ///     Phoenix-family mixes only. A cause is read against a mix's grade floors and its life
     ///     bar, neither of which a legacy mix has.
     /// </summary>
-    private static readonly MixEnum[] Mixes = Enum.GetValues<MixEnum>().Where(m => !m.UsesLegacyScoring()).ToArray();
+    private static readonly MixEnum[] Mixes =
+        Enum.GetValues<MixEnum>().Where(m => MixProfiles.For(m).HasLifebarModel).ToArray();
 
     public async Task Consume(ConsumeContext<BackfillStageBreakCausesCommand> context)
     {

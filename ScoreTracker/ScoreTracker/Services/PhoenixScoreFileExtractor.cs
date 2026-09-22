@@ -65,18 +65,12 @@ public sealed class PhoenixScoreFileExtractor : IPhoenixScoreFileExtractor
                 }
 
                 // A failed stage is awarded no plate, so a broken row needs none and keeps none.
-                PhoenixPlate? plate = isBroken ? null : record.Plate.Trim().ToLower() switch
-                {
-                    "rg" => PhoenixPlate.RoughGame,
-                    "tg" => PhoenixPlate.TalentedGame,
-                    "pg" => PhoenixPlate.PerfectGame,
-                    "ug" => PhoenixPlate.UltimateGame,
-                    "fg" => PhoenixPlate.FairGame,
-                    "sg" => PhoenixPlate.SuperbGame,
-                    "eg" => PhoenixPlate.ExtremeGame,
-                    "mg" => PhoenixPlate.MarvelousGame,
-                    _ => throw new ScoreFileParseException("Plate is invalid")
-                };
+                // The award column reads in the mix's own vocabulary — the eight plate codes on a
+                // Phoenix mix, the three marks on Rise — and nothing the mix does not award.
+                PhoenixPlate? plate = isBroken
+                    ? null
+                    : AwardSets.TryParseShorthand(record.Plate, mix) ??
+                      throw new ScoreFileParseException("Plate is invalid");
 
                 var name = (Name)record.Song;
                 var (chartType, level) = DifficultyLevel.ParseShortHand(record.Difficulty);

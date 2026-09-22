@@ -63,7 +63,9 @@ public sealed class PiuGameConfiguration
     /// </summary>
     public string BaseUrlFor(MixEnum mix)
     {
-        return mix switch
+        // The profile says which site, if any, publishes this mix; a site-less mix (every
+        // legacy mix, the Rise mixes) has nothing to scrape and this still throws for it.
+        return MixProfiles.For(mix).OfficialSite switch
         {
             MixEnum.Phoenix => BaseUrl,
             MixEnum.Phoenix2 => Phoenix2BaseUrl,

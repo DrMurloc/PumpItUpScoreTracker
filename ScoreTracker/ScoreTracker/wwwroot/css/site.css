@@ -589,6 +589,26 @@ body.theme-phoenix2 {
     min-height: 100vh;
 }
 
+/* RISE: the yellow of the title and the profile's hot pink, on ink navy. */
+body.theme-rise {
+    background:
+        radial-gradient(1200px 700px at 75% -15%, rgba(255, 198, 26, .10), transparent 55%),
+        radial-gradient(1000px 800px at 10% 115%, rgba(255, 61, 138, .07), transparent 60%),
+        var(--mix-bg);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+/* RISE's Arcade Station: aqua stepball light over midnight water, lavender below. */
+body.theme-rise-arcade {
+    background:
+        radial-gradient(1200px 700px at 70% -15%, rgba(90, 197, 222, .10), transparent 55%),
+        radial-gradient(1000px 800px at 15% 115%, rgba(180, 140, 255, .07), transparent 60%),
+        var(--mix-bg);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
 /* ===== Mobile: bottom nav + More sheet ===== */
 
 .bottom-nav {

@@ -1,3 +1,4 @@
+using System;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 using Xunit;
@@ -46,6 +47,51 @@ public sealed class PhoenixLetterGradeTests
         // resolution anymore, so every caller states which table it means.
         Assert.Equal(PhoenixLetterGrade.AA, PhoenixScore.From(900000).LetterGradeFor(MixEnum.Phoenix));
         Assert.Equal(PhoenixLetterGrade.APlus, PhoenixScore.From(900000).LetterGradeFor(MixEnum.Phoenix2));
+    }
+
+    [Theory]
+    [InlineData(1000000, PhoenixLetterGrade.SSS)]
+    [InlineData(990000, PhoenixLetterGrade.SSS)]
+    [InlineData(989999, PhoenixLetterGrade.SS)]
+    [InlineData(970000, PhoenixLetterGrade.SS)]
+    [InlineData(969999, PhoenixLetterGrade.S)]
+    [InlineData(950000, PhoenixLetterGrade.S)]
+    [InlineData(949999, PhoenixLetterGrade.AA)]
+    [InlineData(900000, PhoenixLetterGrade.AA)]
+    [InlineData(899999, PhoenixLetterGrade.A)]
+    [InlineData(750000, PhoenixLetterGrade.A)]
+    [InlineData(749999, PhoenixLetterGrade.B)]
+    [InlineData(650000, PhoenixLetterGrade.B)]
+    [InlineData(550000, PhoenixLetterGrade.C)]
+    [InlineData(450000, PhoenixLetterGrade.D)]
+    [InlineData(449999, PhoenixLetterGrade.F)]
+    [InlineData(0, PhoenixLetterGrade.F)]
+    public void RiseGradesOnNineRungsWithNoPlusTiers(int score, PhoenixLetterGrade expected)
+    {
+        Assert.Equal(expected, PhoenixScore.From(score).LetterGradeFor(MixEnum.Rise));
+    }
+
+    [Fact]
+    public void TheRiseLadderHasExactlyTheNineGradesTheGameShows()
+    {
+        Assert.Equal(new[]
+            {
+                PhoenixLetterGrade.F, PhoenixLetterGrade.D, PhoenixLetterGrade.C, PhoenixLetterGrade.B,
+                PhoenixLetterGrade.A, PhoenixLetterGrade.AA, PhoenixLetterGrade.S, PhoenixLetterGrade.SS,
+                PhoenixLetterGrade.SSS
+            },
+            PhoenixLetterGradeHelperMethods.LadderFor(MixEnum.Rise));
+        Assert.Equal(16, PhoenixLetterGradeHelperMethods.LadderFor(MixEnum.Phoenix).Count);
+        Assert.Equal(16, PhoenixLetterGradeHelperMethods.LadderFor(MixEnum.RiseArcade).Count);
+    }
+
+    [Fact]
+    public void AGradeOffTheRiseLadderHasNoFloorThere()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => PhoenixLetterGrade.SSSPlus.GetMinimumScoreFor(MixEnum.Rise));
+        Assert.Throws<ArgumentOutOfRangeException>(() => PhoenixLetterGrade.AAA.GetMaximumScoreFor(MixEnum.Rise));
+        Assert.Equal(1_000_000, (int)PhoenixLetterGrade.SSS.GetMaximumScoreFor(MixEnum.Rise));
+        Assert.Equal(989_999, (int)PhoenixLetterGrade.SS.GetMaximumScoreFor(MixEnum.Rise));
     }
 
     [Fact]

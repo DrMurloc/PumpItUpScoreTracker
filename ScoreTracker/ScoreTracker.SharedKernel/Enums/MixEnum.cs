@@ -41,7 +41,13 @@ public enum MixEnum
     [Description("Prime 2")] Prime2,
     Infinity,
     Pro,
-    [Description("Pro 2")] Pro2
+    [Description("Pro 2")] Pro2,
+
+    // Pump It Up RISE, the Steam PC game (docs/design/rise.md): the keyboard game proper,
+    // and its Arcade Station, which plays the Phoenix 2 charts. Two mixes because the game
+    // keeps their records apart (D1).
+    Rise,
+    [Description("Rise Arcade")] RiseArcade
 }
 
 [ExcludeFromCodeCoverage]
@@ -57,16 +63,18 @@ public static class MixEnumHelperMethods
     ///     Phoenix-era mixes track numeric 1M-scale scores with plates; everything else
     ///     (XX and older, plus the Infinity/Pro line) uses the legacy model — letter
     ///     grade + broken flag + optional era-scale score (docs/design/legacy-mixes.md).
+    ///     Answers the scoring question only — a mix's site, ladder, awards, platform and
+    ///     features are their own questions on its profile (<see cref="MixProfiles" />).
     /// </summary>
     public static bool UsesLegacyScoring(this MixEnum enumValue)
     {
-        return enumValue is not (MixEnum.Phoenix or MixEnum.Phoenix2);
+        return MixProfiles.For(enumValue).ScoringModel == ScoringModel.Legacy;
     }
 
     /// <summary>Primary mixes show directly in the mix picker; the rest live behind "More". Mirrors Mix.IsPrimary.</summary>
     public static bool IsPrimary(this MixEnum enumValue)
     {
-        return enumValue is MixEnum.XX or MixEnum.Phoenix or MixEnum.Phoenix2;
+        return enumValue is MixEnum.XX or MixEnum.Phoenix or MixEnum.Phoenix2 or MixEnum.Rise or MixEnum.RiseArcade;
     }
 
     /// <summary>Timeline position, oldest lowest. Mirrors the Mix table's SortOrder seed values.</summary>
@@ -105,6 +113,8 @@ public static class MixEnumHelperMethods
             MixEnum.XX => 260,
             MixEnum.Phoenix => 270,
             MixEnum.Phoenix2 => 280,
+            MixEnum.Rise => 290,
+            MixEnum.RiseArcade => 300,
             _ => 0
         };
     }
@@ -114,7 +124,7 @@ public static class MixEnumHelperMethods
     ///     same art as the Discord logo emojis; Phoenix 2's deepened slightly from the
     ///     sampled value for stripe contrast, owner call). The session-snapshot card's
     ///     accent stripe uses this so the mix reads at a glance while several run in
-    ///     parallel.
+    ///     parallel. The Rise pair carry their palettes' primaries (docs/design/rise.md D15).
     /// </summary>
     public static uint GetAccentColor(this MixEnum enumValue)
     {
@@ -123,6 +133,8 @@ public static class MixEnumHelperMethods
             MixEnum.Phoenix => 0x1D9BCCu,
             MixEnum.Phoenix2 => 0x6CA832u,
             MixEnum.XX => 0xD49D3Bu,
+            MixEnum.Rise => 0xFFC61Au,
+            MixEnum.RiseArcade => 0x5AC5DEu,
             _ => 0x6E8CA0u
         };
     }

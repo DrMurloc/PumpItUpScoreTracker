@@ -17,6 +17,8 @@ The site is dark-only by design (the arcade is dark; the games are dark; the old
 | **XX** | Violet-black ground, dueling magenta + cyan neon, XX-logo yellow accent |
 | **Phoenix** | Cosmic blue ground, electric-blue chrome, fire and gold as accents |
 | **Phoenix 2** | Acid green on teal space, electric magenta accent |
+| **Rise** | The comic-pop PC game: R!SE yellow on ink-navy, the profile's hot pink and cyan as secondary and accent |
+| **Rise Arcade** | The Arcade Station: aqua stepball rings on midnight water, lavender cards, the same Rise yellow as its second color |
 
 The palette record is the single source of truth: it builds the MudBlazor `MudTheme` **and** emits the `--mix-*` CSS custom properties, so Mud components and hand-styled markup can never drift apart.
 

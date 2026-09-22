@@ -1152,6 +1152,35 @@ public sealed class PlayerRatingSagaTests
         return context.Object;
     }
 
+    [Fact]
+    public async Task RecalculatingPumbilityOnAMixWithoutAFormulaReadsAndWritesNothing()
+    {
+        var stats = new Mock<IPlayerStatsRepository>();
+        var scores = new Mock<IScoreReader>();
+        var saga = BuildSaga(scores: scores, stats: stats);
+
+        // PumbilityScoring throws for such a mix, so the handler must stop before asking.
+        await saga.Handle(new RecalculatePumbilityCommand(Guid.NewGuid(), Array.Empty<Guid>(), MixEnum.XX),
+            CancellationToken.None);
+
+        scores.VerifyNoOtherCalls();
+        stats.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task RecalculatingStatsOnAMixWithoutAFormulaReadsAndWritesNothing()
+    {
+        var stats = new Mock<IPlayerStatsRepository>();
+        var scores = new Mock<IScoreReader>();
+        var saga = BuildSaga(scores: scores, stats: stats);
+
+        await saga.Handle(new RecalculateStatsCommand(Guid.NewGuid(), MixEnum.XX, Array.Empty<Guid>(), null),
+            CancellationToken.None);
+
+        scores.VerifyNoOtherCalls();
+        stats.VerifyNoOtherCalls();
+    }
+
     private static PlayerRatingSaga BuildSaga(
         Mock<IScoreReader>? scores = null,
         Mock<IChartRepository>? charts = null,
