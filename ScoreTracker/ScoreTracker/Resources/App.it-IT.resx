@@ -3615,6 +3615,9 @@
   <data name="Grows with the grade: the last {0} points of an S, {1} of an AAA, {2} of a Phoenix 2 A." xml:space="preserve">
     <value>Cresce con il voto: gli ultimi {0} punti di una S, {1} di una AAA, {2} di una A di Phoenix 2.</value>
   </data>
+  <data name="H. DOUBLE" xml:space="preserve">
+    <value>H. DOUBLE</value>
+  </data>
   <data name="Had a bad import?" xml:space="preserve">
     <value>Importazione sbagliata?</value>
   </data>

@@ -3615,6 +3615,9 @@
   <data name="Grows with the grade: the last {0} points of an S, {1} of an AAA, {2} of a Phoenix 2 A." xml:space="preserve">
     <value>ランクの幅に合わせて広がります。Sなら最後の{0}点、AAAなら{1}点、Phoenix 2のAなら{2}点です。</value>
   </data>
+  <data name="H. DOUBLE" xml:space="preserve">
+    <value>ハーフダブル</value>
+  </data>
   <data name="Had a bad import?" xml:space="preserve">
     <value>インポートを間違えましたか？</value>
   </data>

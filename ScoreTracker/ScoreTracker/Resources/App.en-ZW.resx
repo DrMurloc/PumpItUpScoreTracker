@@ -3615,6 +3615,9 @@
   <data name="Grows with the grade: the last {0} points of an S, {1} of an AAA, {2} of a Phoenix 2 A." xml:space="preserve">
     <value>Gulbarg mag ur rorgl: ur lug {0} mrglublgl ub a Ｓ, {1} ub a AAA, {2} ub a Phoenix 2 A.</value>
   </data>
+  <data name="H. DOUBLE" xml:space="preserve">
+    <value>Mrmurm-Groggl</value>
+  </data>
   <data name="Had a bad import?" xml:space="preserve">
     <value>Grabo malu?</value>
   </data>

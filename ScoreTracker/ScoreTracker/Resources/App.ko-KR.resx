@@ -3598,6 +3598,9 @@
   <data name="Grows with the grade: the last {0} points of an S, {1} of an AAA, {2} of a Phoenix 2 A." xml:space="preserve">
     <value>랭크 폭에 맞춰 늘어납니다. S는 마지막 {0}점, AAA는 {1}점, Phoenix 2의 A는 {2}점입니다.</value>
   </data>
+  <data name="H. DOUBLE" xml:space="preserve">
+    <value>하프 더블</value>
+  </data>
   <data name="Had a bad import?" xml:space="preserve">
     <value>잘못 가져오셨나요?</value>
   </data>
