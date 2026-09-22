@@ -15,7 +15,7 @@ map.
 | Status | **Frozen.** Still supported, still tested, no new endpoints | Where new work lands |
 | Auth | Personal token (Basic) | Personal token (Basic) **or** tool key (Bearer) |
 | Reads | Your own data | Your own data, or any player who shared with your tool |
-| Writes | Yes | **None.** Every mutation stays on v1 with a personal token |
+| Writes | Yes | **One.** `POST api/v2/players/me/plays` — an observed play, personal token only. Every other mutation stays on v1 with a personal token |
 | Errors | Plain text / status codes | `application/problem+json` (RFC 9457) |
 | Paging | Page numbers | Opaque cursors — follow `next`, never construct it |
 | `mix` | Optional, defaults to Phoenix | **Required**, all 30 mixes accepted |
