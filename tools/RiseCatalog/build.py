@@ -40,6 +40,9 @@ MIX = {
 IMAGE_ROOT = 'https://piuimages.arroweclip.se/songs/'
 # The sheet's spellings the game disagrees with; the catalog uses the game's.
 TITLE_FIXES = {'Pop & Pump & FIVE!!': 'Pop & Pump & DIVE!!'}
+# Cells the sheet has wrong, by (title, column): the arcade's CO5M1C R4ILR0AD singles are 10/15/18/21.
+LEVEL_FIXES = {('COSM1C R4ILROAD', 'S1'): 10}
+MIN_LEVEL, MAX_LEVEL = 1, 29  # DifficultyLevel's range; a value outside it stops the run, never a silent drop
 CATEGORY_TYPE = {'REMIX': 'Remix'}  # every other category is an Arcade song
 ARCADE_LAUNCH = '1.4.0'  # the Arcade Station's patch: every Rise Arcade chart's arrival version
 INF = 10 ** 6
@@ -123,6 +126,21 @@ def align(a, b, max_shift=2, ins=2.5, dele=1.5, alt=None):
     return c, k, path(0, 0)
 
 
+def levels(row, columns):
+    """The levels a sheet row carries in these columns, fixed where LEVEL_FIXES says so and refused
+    outside DifficultyLevel's range — a typo like 110 would otherwise become a chart the site cannot load."""
+    out = []
+    for col in columns:
+        raw = row[col].strip()
+        if not raw:
+            continue
+        value = LEVEL_FIXES.get((row['Title'].strip(), col), int(raw))
+        if not MIN_LEVEL <= value <= MAX_LEVEL:
+            raise SystemExit(f"{row['Title']} {col} = {raw}: not a level {MIN_LEVEL}-{MAX_LEVEL}; add it to LEVEL_FIXES")
+        out.append(value)
+    return sorted(out)
+
+
 def main(inputs, out):
     os.makedirs(os.path.join(out, 'reports'), exist_ok=True)
     p1, names1 = load_export(os.path.join(inputs, 'export-Phoenix.csv'))
@@ -163,8 +181,8 @@ def main(inputs, out):
         title = TITLE_FIXES.get(title, title)
         version = (r['Version'] or 'Base').strip()
         versions_used.add(version)
-        singles = sorted(int(r[f'S{i}']) for i in range(1, 7) if r[f'S{i}'].strip())
-        halves = sorted(int(r[f'HD{i}']) for i in range(1, 7) if r[f'HD{i}'].strip())
+        singles = levels(r, ['S1', 'S2', 'S3', 'S4', 'S5', 'S6'])
+        halves = levels(r, ['HD1', 'HD2', 'HD3', 'HD4', 'HD5', 'HD6'])
         k = norm(title)
         if k not in known:
             m = difflib.get_close_matches(k, list(known), n=1, cutoff=0.85)
