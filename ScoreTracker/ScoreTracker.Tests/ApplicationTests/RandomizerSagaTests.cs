@@ -1,4 +1,4 @@
-using ScoreTracker.Randomizer.Domain;
+﻿using ScoreTracker.Randomizer.Domain;
 using ScoreTracker.Randomizer.Contracts.Queries;
 using ScoreTracker.Randomizer.Contracts.Commands;
 using ScoreTracker.Randomizer.Application;
@@ -375,5 +375,28 @@ public sealed class RandomizerSagaTests
         var result = await saga.Handle(new GetIncludedRandomChartsQuery(SinglesAtLevelTwenty()), CancellationToken.None);
 
         Assert.Equal(new[] { xross.Id, unknown.Id }.OrderBy(id => id), result.Select(c => c.Id).OrderBy(id => id));
+    }
+
+    // A half-double is weighted out of the doubles bucket. Before the folder became a category
+    // it fell through to the co-op branch and read PlayerCountWeights[1], which is not a key.
+    [Fact]
+    public async Task HalfDoublesAreWeightedOutOfTheDoublesBucket()
+    {
+        var (accessor, userId) = UserAccessor();
+        var halfDouble = new ChartBuilder().WithLevel(20).WithType(ChartType.HalfDouble).Build();
+        var miss = new ChartBuilder().WithLevel(15).WithType(ChartType.HalfDouble).Build();
+        var charts = ChartsReturning(new[] { halfDouble, miss });
+        var saga = new RandomizerSaga(charts.Object, new Mock<IRandomizerRepository>().Object,
+            accessor.Object, ScoresReturning(userId, Array.Empty<RecordedPhoenixScore>()).Object,
+            new Mock<IRandomNumberGenerator>().Object,
+            EmptyScoringLevels().Object);
+
+        var settings = new RandomSettings { Count = 3 };
+        settings.DoubleLevelWeights[20] = 1;
+        settings.SongTypeWeights[SongType.Arcade] = 1;
+
+        var result = await saga.Handle(new GetIncludedRandomChartsQuery(settings), CancellationToken.None);
+
+        Assert.Equal(new[] { halfDouble.Id }, result.Select(c => c.Id).ToArray());
     }
 }

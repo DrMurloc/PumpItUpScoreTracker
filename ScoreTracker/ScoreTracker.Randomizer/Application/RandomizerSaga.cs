@@ -1,4 +1,4 @@
-using ScoreTracker.Randomizer.Domain;
+﻿using ScoreTracker.Randomizer.Domain;
 using ScoreTracker.Randomizer.Contracts.Queries;
 using ScoreTracker.Randomizer.Contracts.Commands;
 using MediatR;
@@ -121,10 +121,13 @@ namespace ScoreTracker.Randomizer.Application
                 var level = settings.UseScoringLevels
                     ? (int)Math.Floor(scoringLevel!.Value)
                     : (int)chart.Level;
-                var levelWeight = chart.Type switch
+                // One weight bucket per folder, so a half-double is weighted as the double it
+                // sits beside rather than falling through to the co-op player counts — where
+                // its PlayerCount of 1 is not even a key (docs/design/rise.md §3.1).
+                var levelWeight = chart.Type.Category() switch
                 {
-                    ChartType.Single or ChartType.SinglePerformance => settings.LevelWeights[level],
-                    ChartType.Double or ChartType.DoublePerformance => settings.DoubleLevelWeights[level],
+                    ChartTypeCategory.Single => settings.LevelWeights[level],
+                    ChartTypeCategory.Double => settings.DoubleLevelWeights[level],
                     _ => settings.PlayerCountWeights[chart.PlayerCount]
                 };
 
@@ -165,13 +168,13 @@ namespace ScoreTracker.Randomizer.Application
                 };
 
                 newSettings.ClearLevelWeights();
-                if (typeMinimum.Key == ChartType.Single)
+                if (typeMinimum.Key.Category() == ChartTypeCategory.Single)
                     newSettings.LevelWeights = request.Settings.LevelWeights.ToDictionary();
 
-                if (typeMinimum.Key == ChartType.Double)
+                if (typeMinimum.Key.Category() == ChartTypeCategory.Double)
                     newSettings.DoubleLevelWeights = request.Settings.DoubleLevelWeights.ToDictionary();
 
-                if (typeMinimum.Key == ChartType.CoOp)
+                if (typeMinimum.Key.Category() == ChartTypeCategory.CoOp)
                     newSettings.PlayerCountWeights = request.Settings.PlayerCountWeights.ToDictionary();
                 newSettings.ClearChartTypeLevelMinimums();
                 newSettings.ClearLevelMinimums();
@@ -213,15 +216,15 @@ namespace ScoreTracker.Randomizer.Application
                 newSettings.ClearChartTypeLevelMinimums();
                 newSettings.ClearChartTypeMinimums();
                 newSettings.ClearCustomMinimums();
-                if (chartType == ChartType.Single)
+                if (chartType.Category() == ChartTypeCategory.Single)
                     newSettings.LevelWeights = DifficultyLevel.All.ToDictionary(t => (int)t, t => t == level ? 1 : 0);
 
 
-                if (chartType == ChartType.Double)
+                if (chartType.Category() == ChartTypeCategory.Double)
                     newSettings.DoubleLevelWeights =
                         DifficultyLevel.All.ToDictionary(t => (int)t, t => t == level ? 1 : 0);
 
-                if (chartType == ChartType.CoOp)
+                if (chartType.Category() == ChartTypeCategory.CoOp)
                     newSettings.PlayerCountWeights =
                         newSettings.PlayerCountWeights.ToDictionary(kv => kv.Key, kv => kv.Key == level ? 1 : 0);
                 var result = await Handle(new GetRandomChartsQuery(newSettings, request.Mix), cancellationToken);
@@ -241,11 +244,11 @@ namespace ScoreTracker.Randomizer.Application
                 newSettings.ClearCustomMinimums();
                 foreach (var (chartType, level) in bucket.GetDifficulties())
                 {
-                    if (chartType == ChartType.Single)
+                    if (chartType.Category() == ChartTypeCategory.Single)
                         newSettings.LevelWeights[level] = customMinimum.Value;
-                    if (chartType == ChartType.Double)
+                    if (chartType.Category() == ChartTypeCategory.Double)
                         newSettings.DoubleLevelWeights[level] = customMinimum.Value;
-                    if (chartType == ChartType.CoOp)
+                    if (chartType.Category() == ChartTypeCategory.CoOp)
                         newSettings.PlayerCountWeights[level] = customMinimum.Value;
                 }
 
