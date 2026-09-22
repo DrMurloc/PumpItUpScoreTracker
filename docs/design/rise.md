@@ -82,11 +82,14 @@ Owner decisions are marked **(owner, date)**; the rest are mine, decided unless 
 - **D10. Note counts are per mix and learned, never derived.** RISE-mode judgment totals do not equal the arcade
   note counts (§4.5); `ChartMix.NoteCount` already exists per mix and starts null for Rise. The Arcade Station's
   totals equal our Phoenix 2 counts exactly, so Rise Arcade rows inherit them.
-- **D11. The RISE grade ladder is the published one** (§5.2), with the unmeasured low floors as a placeholder to be
-  corrected from the owner's runs. Safe because a grade is derived from the score at read time and never stored.
-- **D12. Art.** RISE's own grade and mark art, exported from the game files, serves the Rise mix; Rise Arcade
-  reuses the site's Phoenix art, which is what the Arcade Station itself draws. Each mix gets its own palette
-  (owner, 2026-09-21).
+- **D11 (owner, 2026-09-21). The RISE grade ladder is the published one** (§5.2), shipped with the unmeasured low
+  floors as a placeholder. Ingested letter grades (the capture app reads the grade off the result screen) are
+  checked against the table and every disproof is recorded, the way Phoenix 2's floors were found. Safe because a
+  grade is derived from the score at read time and never stored.
+- **D12 (owner, 2026-09-21). Art.** RISE's own grade and mark art, exported from the game files, serves the Rise
+  mix; Rise Arcade reuses the site's Phoenix art, which is what the Arcade Station itself draws. Rise singles use the
+  **Phoenix 2 stepballs for now**; half-doubles stay the CSS chip. Each mix gets its own palette, mocked before build.
+- **D13 (owner, 2026-09-21). Both mixes are top-level in the picker.**
 
 ---
 
@@ -168,14 +171,17 @@ Adding a mix after this is a profile row, an enum value, a `MixIds` Guid and a `
 
 | RISE chart | Treatment | Count today |
 |---|---|---|
-| Single at the same level as an arcade single of that song | membership row on that chart | 1,422 |
-| Single one level off an unused arcade single | a re-rate: membership row on that chart at RISE's level | 120 |
-| Single with no arcade single within one level | new chart row, `OriginalMix = Rise` | 28 |
-| Singles on songs the tracker lacks | new song + new chart rows | 248 charts on 57 songs |
+| Single at a level Phoenix 2 gives that song | membership row on that chart | 1,448 |
+| Single at the level **Phoenix 1** gave it (Phoenix 2 re-rated it later) | membership row on that chart; RISE was cut from the Phoenix 1 catalog | 80 |
+| Single one level off an unused arcade single | a re-rate: membership row on that chart at RISE's level — **owner reviews** | 53 |
+| Single with no arcade single within one level | new chart row, `OriginalMix = Rise` — **owner reviews** | 21 |
+| Singles on songs the tracker lacks | new song + new chart rows | 216 charts on 57 songs |
 | Every half-double | new chart row, `OriginalMix = Rise`, `Type = HalfDouble` | ~1,000 |
 | Arcade singles RISE does not carry | nothing | 43 |
 
-The 120 + 28 need the owner's eye before the script runs (the per-song comparison CSV is in the bundle). Sneezle's
+The 53 + 21 need the owner's eye before the script runs: `2026-09-21/rise-singles-review.xlsx` in the bundle lists each
+with the song's Phoenix 1 and Phoenix 2 level sets, the re-rates between them, the RISE level in question and the
+proposed mapping. Sneezle's
 "the note count should match" test cannot arbitrate them: RISE changed hold sections and counts hold ticks
 differently (§4.5), so totals differ even on identical step patterns.
 
@@ -273,12 +279,31 @@ Phoenix codes and stores per §5.3.
 `RecordScoreForm` already adapts by scoring model and reads its prefill from the store the mix uses. Its plate list
 becomes the profile's award list with the profile's names.
 
-### 6.3 API
+### 6.3 API — the capture app needs a write endpoint (owner's call pending)
 
-`POST api/phoenixScores` (song, type, level, score, plate, broken, mix; `KeepBestStats`) is what the phase-3 capture
-app will call, but v1's `ApiMixParser` admits only Phoenix and Phoenix 2 by design. Phase 1 widens it to every
-Phoenix-scored mix (a golden-file change in `Tests.Api`, additive); v2's `scoringModel` already derives from the
-profile and needs nothing.
+Two ways to give the phase-2 capture app somewhere to post.
+
+**Widen v1.** `POST api/phoenixScores` (song, type, level, score, plate, broken, mix; `KeepBestStats`) exists, and
+its `ApiMixParser` admits only Phoenix and Phoenix 2 by design; admitting every Phoenix-scored mix is a parser change
+and an additive golden. Against it: v1 is frozen and Phoenix-shaped. Its mix *defaults to Phoenix 1*, so a client
+that forgets the field writes Phoenix 1 records with no error (the hazard behind
+`mix-defaults-to-phoenix-on-contracts`). It takes score, plate and broken only, so the five judgments, max combo,
+accuracy and the grade the screen showed are dropped at the door, and D10 (learned note counts) and D11 (recorded
+grade disproofs) both need exactly those. And it records a *best*, not a *play*, so the journal gets no judged entry
+and the session cards have nothing to draw.
+
+**A v2 write for observed plays.** v2 already requires the mix on every call and publishes `scoringModel`; it has no
+write endpoint today. `POST api/v2/players/me/plays` would take mix, chart (song + type + level, or chart id), the
+five judgments, max combo, score, accuracy as shown, broken, the grade and mark as shown, `observedAt` and a `source`
+(screen grab, screenshot). The server recomputes the score from the judgments and rejects a capture that does not
+reconcile, the checksum the arcade-photo extractor used. It lands on ScoreLedger's existing
+`RecordObservedPlaysCommand` (judged plays into the journal, idempotent on play time), plus the best-attempt policy
+for a play that beats the record, so it is a controller and a golden rather than a new pipeline. Against it: a new
+public surface to pin in `Tests.Api`, and one more thing partner tools can call, which is also the point: a future
+photo extractor or partner tool posts plays the same way.
+
+Recommendation: the v2 write, specified now so phase 2 builds against a fixed contract; v1 stays frozen. Manual entry
+and spreadsheet upload need neither.
 
 ---
 
@@ -292,9 +317,8 @@ profile and needs nothing.
   `2026-09-21/art/`). `ShareCardImages.LetterGrade` / `Plate` gain the per-mix folder that `DifficultyBubble` already
   has (`letters/{mix}/…`, `plates/{mix}/…`, flat fallback), and the owner uploads the set to the CDN. Rise Arcade
   points at the Phoenix set.
-- **Difficulty:** half-doubles already render as the CSS chip on any mix. Rise singles: chips styled on the game's
-  own red (5K) and blue (6K) level badges, so the whole row is one vocabulary and there is no asset dependency
-  (§9 Q3). Rise Arcade reuses the Phoenix 2 bubbles, which is what the station draws.
+- **Difficulty:** half-doubles already render as the CSS chip on any mix. Rise singles reuse the Phoenix 2 stepballs
+  for now (D12); Rise Arcade reuses them too, which is what the station draws.
 - **Picker:** both mixes top-level (D1). Phase-2 pages answer through `MixUnavailableNotice` ("not built yet"
   for PUMBILITY, weekly boards, March of Murlocs; "this mix never had it" for official boards and titles).
 - **Localization:** mix names stay untranslated proper nouns; the mark names and new page copy land in all nine
@@ -322,16 +346,17 @@ digits on the fixed result layout, the score and accuracy checksums, chart resol
 
 ## 9. Open questions (phase 1)
 
-1. **Low grade floors.** Ship the placeholder (A 750k, B 650k, C 550k, D 450k) and correct from the owner's tank
-   runs? Recommended: yes — derived at read time, so a fix is retroactive.
-2. **Jackets for the ~45 RISE-only songs.** The only source is the game's own asset bundles (per-song preview
-   images, plainly named). Extract them, as the site already mirrors piugame's art? Recommended: yes.
-3. **Rise single difficulty display.** CSS chips in the game's red/blue badge style (recommended, no assets), or
-   reuse the Phoenix 2 stepball art?
-4. **Both mixes top-level in the picker?** Recommended: yes.
-5. **Widen the v1 score POST to the RISE mixes in phase 1** so the capture app has its endpoint on day one?
-   Recommended: yes; it is a parser change and a golden file.
-6. **Rise Arcade palette.** Its own, derived from the Arcade Station's screens (recommended), or share Phoenix's?
+Answered 2026-09-21: low floors ship as a placeholder and disproofs are recorded (D11); Rise singles use Phoenix 2
+stepballs (D12); both mixes are top-level (D13); each mix gets its own palette (D12).
+
+1. **Jackets for the ~45 RISE-only songs.** The game's per-song images are 1920×1080 stills, the same picture the
+   wheel shows, keyed by the arcade's internal song codes rather than titles (the title map is inside the encrypted
+   database). Pending the owner's confirmation that the stills are what the `songs/` folder wants (cropped to the
+   site's square), and a way to name the ~53 RISE- and CONTEST-channel ones: seven screenshots of those two
+   channels' wheels pair each still with its title.
+2. **The score endpoint for the capture app.** Widen the frozen v1 `POST api/phoenixScores` to the RISE mixes, or add
+   a v2 write that carries judgments; both sides in §6.3, the owner's call.
+3. **Palettes.** Own palette per mix (D12); the proposed pair is mocked for the owner's field test.
 
 Not blocking, still open: the grey-grade rule (§5.5); whether Rise Arcade follows Phoenix 2 where Phoenix 2 added a
 chart to an existing song.
