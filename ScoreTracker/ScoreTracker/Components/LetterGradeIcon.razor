@@ -1,6 +1,7 @@
 ﻿@using System.ComponentModel.DataAnnotations
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services
 @using Align = MudBlazor.Align
 @namespace ScoreTracker.Web.Components
 
@@ -27,14 +28,22 @@
     [Parameter]
     public bool IsBroken { get; set; } = false;
 
+    /// <summary>The mix whose letter set to draw; null draws the flat Phoenix set.</summary>
+    [Parameter]
+    public MixEnum? Mix { get; set; }
+
     private PhoenixLetterGrade? Shown => Grade
                                          ?? (LegacyGrade != null
                                              && Enum.TryParse<PhoenixLetterGrade>(LegacyGrade.Value.ToString(), out var equivalent)
                                              ? equivalent
                                              : null);
 
-    private string LetterGradeImage =>
-        $"https://piuimages.arroweclip.se/letters/{Shown?.ToString().ToLower()}{BrokenPiece}.png";
+    // The mix picks the letter set (docs/design/rise.md D12): its own where it has one, the
+    // flat Phoenix set otherwise. Spelled by ShareCardImages so a downloaded card and the page
+    // ask for the same picture.
+    private string LetterGradeImage => Shown is { } grade
+        ? ShareCardImages.LetterGrade(grade, IsBroken, Mix)
+        : string.Empty;
 
 
     private string BrokenPiece => IsBroken ? "_broken" : "";

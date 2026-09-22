@@ -177,7 +177,7 @@
         // clamped to Phoenix here since the section was built; every older mix does the same,
         // because a board that exists beats a refusal on a page that is about someone else's
         // numbers anyway.
-        if (_mix.UsesLegacyScoring()) _mix = MixEnum.Phoenix;
+        if (!_mix.HasOfficialBoards()) _mix = MixEnum.Phoenix;
         _supplemented = await UiSettings.GetSetting(SupplementedSetting) == bool.TrueString;
         _summary = await Mediator.Send(new GetSupplementedSummaryQuery(_mix));
 

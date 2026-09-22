@@ -73,6 +73,15 @@ public static class MixCapabilities
     }
 
     /// <summary>
+    ///     Whether piugame publishes this mix, so the site can read a player's records off it.
+    ///     A mix without one imports from a spreadsheet only; asking its base URL throws.
+    /// </summary>
+    public static bool HasOfficialSite(this MixEnum mix)
+    {
+        return MixProfiles.For(mix).OfficialSite != null;
+    }
+
+    /// <summary>
     ///     Whether scores on this mix are also tracked against a quarterly season
     ///     (docs/design/seasons.md §1): <b>Phoenix 2 only. Phoenix 1 has no seasons and never will</b>
     ///     — it is going offline-only. Named here rather than repeated as a local array in each

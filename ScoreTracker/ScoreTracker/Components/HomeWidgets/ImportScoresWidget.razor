@@ -40,7 +40,7 @@ else if (_allMixes && _mix == null)
         }
     </MudSelect>
 }
-else if (_mix is { } m && m.UsesLegacyScoring())
+else if (_mix is { } m && !m.HasOfficialSite())
 {
     <div class="dash-widget-message" style="gap:.75rem">
         <MudText Typo="Typo.body2">@L["{0} scores import from a spreadsheet.", m.GetName()]</MudText>
@@ -179,7 +179,7 @@ else
     {
         return InvokeAsync(async () =>
         {
-            if (_mix != null && !_mix.Value.UsesLegacyScoring())
+            if (_mix != null && _mix.Value.HasOfficialSite())
                 await RefreshCredentialState();
             // Drop back to the idle view so the refreshed credential picks the right variant.
             if (_state is ImportUiState.Idle or ImportUiState.UnlockFailed)
@@ -211,7 +211,7 @@ else
             return;
         }
 
-        if (_mix != null && !_mix.Value.UsesLegacyScoring())
+        if (_mix != null && _mix.Value.HasOfficialSite())
             await RefreshCredentialState();
         _loaded = true;
     }
@@ -227,7 +227,7 @@ else
         _mix = mix;
         _state = ImportUiState.Idle;
         _error = null;
-        if (mix != null && !mix.Value.UsesLegacyScoring())
+        if (mix != null && mix.Value.HasOfficialSite())
             await RefreshCredentialState();
     }
 

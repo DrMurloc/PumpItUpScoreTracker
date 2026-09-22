@@ -1475,6 +1475,8 @@ else
         }
 
         if (_chartType == ChartType.CoOp) return;
+        // Everything below prices with PUMBILITY; a mix without a formula has no fifty and no gains.
+        if (!_currentMix.HasPumbility()) return;
         if (options.BoundaryTop50 && _top50TypeIds == null)
         {
             _top50TypeIds = (await Mediator.Send(

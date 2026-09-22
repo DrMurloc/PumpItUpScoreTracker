@@ -80,9 +80,9 @@ else
                    Clearable="true" Dense="true" Margin="Margin.Dense" Disabled="Disabled || _isSaving"
                    Class="qr-plate-field">
             <MudSelectItem T="string" Value="@BrokenResult">@L["Broken"]</MudSelectItem>
-            @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+            @foreach (var plate in Mix.AwardsOf())
             {
-                <MudSelectItem T="string" Value="@plate.GetShorthand()">@plate.GetShorthand()</MudSelectItem>
+                <MudSelectItem T="string" Value="@plate.GetShorthand(Mix)">@plate.GetShorthand(Mix)</MudSelectItem>
             }
         </MudSelect>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="qr-save-btn"

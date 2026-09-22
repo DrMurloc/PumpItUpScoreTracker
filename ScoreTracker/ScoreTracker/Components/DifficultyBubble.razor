@@ -130,15 +130,17 @@
                                      ? $"{Type.Value.GetShortHand()}{(int)Level.Value}"
                                      : string.Empty);
 
-    // Chip cases: pre-Exceed slots, Half-Double (no bubble art exists in any set),
-    // and legacy co-ops that carry a real difficulty next to their player count. The
-    // chart-less path only ever hits the Half-Double case.
+    // Chip cases: pre-Exceed slots, a Half-Double on a mix whose bubble set has no H. DOUBLE
+    // stepball (Infinity's; the Phoenix 2 set has one, docs/design/rise.md D12), and legacy
+    // co-ops that carry a real difficulty next to their player count. The chart-less path
+    // only ever hits the Half-Double case.
     private bool UseLegacyChip =>
         (Chart != null &&
          (Chart.Slot != null ||
-          Chart.Type == ChartType.HalfDouble ||
+          (Chart.Type == ChartType.HalfDouble && !MixProfiles.For(Chart.Mix).Art.HasHalfDoubleBubble) ||
           (Chart.Type == ChartType.CoOp && Chart.Mix.UsesLegacyScoring() && Chart.Level != Chart.PlayerCount)))
-        || (Chart == null && Type == ChartType.HalfDouble);
+        || (Chart == null && Type == ChartType.HalfDouble &&
+            !(Mix is { } bubbleMix && MixProfiles.For(bubbleMix).Art.HasHalfDoubleBubble));
 
     private string ChipText => Chart != null
         ? Chart.Slot != null

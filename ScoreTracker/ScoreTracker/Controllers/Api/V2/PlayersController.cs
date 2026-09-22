@@ -248,7 +248,7 @@ public sealed class PlayersController : ApiV2ControllerBase
     {
         if (!TryReadRequest(mixValue, limit, out var mix, out var pageSize, out var mixFailure))
             return mixFailure!;
-        if (mix.UsesLegacyScoring()) return NoPumbilityProblem(mix);
+        if (!mix.HasPumbility()) return NoPumbilityProblem(mix);
 
         var (ids, communityKey, failure) = await ReadableWithin(community);
         if (ids is null) return failure!;
@@ -317,7 +317,7 @@ public sealed class PlayersController : ApiV2ControllerBase
         if (resolved is null) return failure!;
         var userId = resolved.Value;
         if (!V2MixParser.TryParse(mixValue, out var mix)) return MixRequiredProblem();
-        if (mix.UsesLegacyScoring()) return NoPumbilityProblem(mix);
+        if (!mix.HasPumbility()) return NoPumbilityProblem(mix);
 
         // The bulk read rather than the single one: the single read answers a player with no row
         // with a zeroed record, and a zero PUMBILITY is not the same fact as no record at all.

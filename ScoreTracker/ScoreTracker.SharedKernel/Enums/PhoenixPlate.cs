@@ -125,4 +125,9 @@ public static class PhoenixPlateHelperMethods
     {
         return ShorthandParser[value];
     }
+
+    public static PhoenixPlate? TryParseShorthand(string? value)
+    {
+        return value != null && ShorthandParser.TryGetValue(value, out var plate) ? plate : null;
+    }
 }

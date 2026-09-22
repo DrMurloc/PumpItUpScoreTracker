@@ -176,7 +176,7 @@ public static class ShareCardComposer
     public static double? CurrentPumbility(Chart chart, PhoenixScore? score, PhoenixPlate? plate, bool isBroken,
         MixEnum mix)
     {
-        if (score == null || mix is not (MixEnum.Phoenix or MixEnum.Phoenix2)) return null;
+        if (score == null || !mix.HasPumbility()) return null;
         return ScoringConfiguration.PumbilityScoring(mix, false)
             .GetScore(chart, score.Value, plate ?? PhoenixPlate.RoughGame, isBroken);
     }
