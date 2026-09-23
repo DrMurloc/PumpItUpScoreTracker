@@ -63,12 +63,27 @@ public sealed class PhoenixLetterGradeTests
     [InlineData(749999, PhoenixLetterGrade.B)]
     [InlineData(650000, PhoenixLetterGrade.B)]
     [InlineData(550000, PhoenixLetterGrade.C)]
-    [InlineData(450000, PhoenixLetterGrade.D)]
-    [InlineData(449999, PhoenixLetterGrade.F)]
+    [InlineData(549999, PhoenixLetterGrade.D)]
+    [InlineData(500000, PhoenixLetterGrade.D)]
+    [InlineData(499999, PhoenixLetterGrade.F)]
     [InlineData(0, PhoenixLetterGrade.F)]
     public void RiseGradesOnNineRungsWithNoPlusTiers(int score, PhoenixLetterGrade expected)
     {
         Assert.Equal(expected, PhoenixScore.From(score).LetterGradeFor(MixEnum.Rise));
+    }
+
+    [Theory]
+    [InlineData(469066, PhoenixLetterGrade.F)]
+    [InlineData(563324, PhoenixLetterGrade.C)]
+    [InlineData(608610, PhoenixLetterGrade.C)]
+    [InlineData(678406, PhoenixLetterGrade.B)]
+    [InlineData(777366, PhoenixLetterGrade.A)]
+    public void TheRiseLowFloorsReadEveryRecordedResultScreenTheWayTheGameDid(int score, PhoenixLetterGrade shown)
+    {
+        // The owner's 2026-09-22 Warm Up screens (1948 S26; docs/design/rise.md §5.2) bracket the
+        // placeholder low floors of D11. The F at 469,066 disproved D at 450,000; a floor that moves
+        // must keep reading each of these screens as the grade the game showed.
+        Assert.Equal(shown, PhoenixScore.From(score).LetterGradeFor(MixEnum.Rise));
     }
 
     [Fact]
