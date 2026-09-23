@@ -96,7 +96,6 @@ public sealed class ChartUrlCutoverTests : IAsyncLifetime
         // Slugs keep unicode, so the Location header has to carry the path percent-encoded — a raw
         // "più" reached the browser mangled, and the redirect it followed matched no chart.
         await _fixture.Seed.SeedPhoenixChartAsync("Allegro Più Mosso", 19, "Single");
-        _fixture.ClearCaches();
 
         var response = await _client.GetAsync("/Charts/Phoenix/Allegro-Pi%C3%B9-Mosso/S19");
 
@@ -109,7 +108,6 @@ public sealed class ChartUrlCutoverTests : IAsyncLifetime
     public async Task TheGuidPermalinkOfANonAsciiTitle301sToTheEscapedCanonical()
     {
         var chartId = await _fixture.Seed.SeedPhoenixChartAsync("Allegro Più Mosso", 19, "Single");
-        _fixture.ClearCaches();
 
         var response = await _client.GetAsync($"/Chart/{chartId}");
 
@@ -123,7 +121,6 @@ public sealed class ChartUrlCutoverTests : IAsyncLifetime
         // The mix switcher sends you back through /Mix/Set's LocalRedirect, so the shell has to hand it
         // the encoded path: a decoded "più" came back out of the redirect mangled, and the page 404'd.
         await _fixture.Seed.SeedPhoenixChartAsync("Allegro Più Mosso", 19, "Single");
-        _fixture.ClearCaches();
 
         var page = await (await _client.GetAsync(EscapedCanonical)).Content.ReadAsStringAsync();
         var link = Regex.Match(page, @"href=""(/Mix/Set\?mix=Phoenix2&amp;redirectUrl=[^""]+)""");

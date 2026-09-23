@@ -76,7 +76,6 @@ public sealed class ScoreImportTests : IAsyncLifetime
         var stager = await _fixture.Seed.SeedPhoenix2ChartAsync("STAGER", 17, "Single");
         var dreamchasers = await _fixture.Seed.SeedPhoenix2ChartAsync("Dreamchasers", 20, "Double");
         var tbh = await _fixture.Seed.SeedPhoenix2ChartAsync("T.B.H", 20, "Single");
-        _fixture.ClearCaches();
 
         await PiuGameLoginFlow.LogInAsNewUserAsync(_page, "Phoenix 2");
         _fixture.PiuGame.Reset();
