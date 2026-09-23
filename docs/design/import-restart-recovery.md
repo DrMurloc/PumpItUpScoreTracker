@@ -135,6 +135,13 @@ upload and API submissions never mint an `ImportResult`, so a restart still lose
 work. Accepted (owner, 2026-08-09) — a small use case, and the journal-latest fallback is an
 extension rather than a redesign if it ever matters.
 
+> **Amended 2026-09-23 (owner):** plays posted through `POST api/v2/players/me/plays` stopped being the
+> small case — the RISE capture app posts every play there. They gather into *sittings*
+> ([rise.md](rise.md) §12, D21–D22): each sitting is a stored session, announced by replaying it from the
+> journal when it closes, and a ScoreLedger sweep on the same five-minute tick closes any sitting whose
+> scheduled close was lost. Import recovery here is unchanged. A sitting has no `ImportResult`, so the boot
+> pass and the OfficialMirror half of the sweep still skip it; its own close does the work.
+
 ## 4. The startup recovery pass
 
 > **The boot pass has no scheduled job behind it.** `RecoverInterruptedImportsConsumer`'s

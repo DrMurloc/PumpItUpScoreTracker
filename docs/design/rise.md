@@ -1,6 +1,6 @@
 # Pump It Up RISE — two keyboard mixes
 
-Status: **phase 1 merged — [PR #349](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/349)** (2026-09-22), in the commit order of §8.1; the picker order and wordmarks follow in [PR #351](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/351); the owner-owed steps are §11.5.
+Status: **phase 1 merged — [PR #349](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/349)** (2026-09-22), in the commit order of §8.1; the picker order and wordmarks follow in [PR #351](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/351); the owner-owed steps are §11.5. Discord session cards for both mixes, and the sittings the plays endpoint gathers plays into, are §12 (scoped 2026-09-23).
 Researched 2026-09-14 → 2026-09-22 from the owner's install, his screenshots, two community sheets, two wikis and the
 Steam patch notes; the owner took the high-level plan to two Rise players (Sneezle, Dave) on 2026-09-21 and their
 answers are folded in; every open question of §9 was answered by 2026-09-22. Every decision below is the owner's
@@ -432,7 +432,7 @@ The reference list the owner asked for (2026-09-22). "Works" means on both new m
 | Player page, journal, sessions | records and the score journal on both mixes; the rating tiles, PUMBILITY and official standing hidden rather than drawn as zeros |
 | API | `GET api/v2/mixes` lists both with `scoringModel: phoenix`; every v2 read takes them; **`POST api/v2/players/me/plays`** (D14) accepts a judged play with the score checksum, the capture app's endpoint; v1 unchanged |
 | Off the nav | PUMBILITY, the recap, Titles, Weekly Charts, March of Murlocs, the Leaderboards group and the two Phoenix calculators are not offered on either Rise mix (owner, 2026-09-22); reached by URL they explain themselves, as on a legacy mix — no route gate (§11.2, `MixCapabilities`) |
-| Not in phase 1 | leaderboards and PUMBILITY tuning (phase 3), the capture app (phase 2), Discord announcements for the new mixes, `/Admin/BulkAddCharts` learning a mix (future Rise songs arrive through the catalog tool's SQL until then) |
+| Not in phase 1 | leaderboards and PUMBILITY tuning (phase 3), the capture app (phase 2), Discord announcements for the new mixes (scoped afterwards, §12), `/Admin/BulkAddCharts` learning a mix (future Rise songs arrive through the catalog tool's SQL until then) |
 | Docs and locales | DOMAIN.md, API.md, UX-GUIDELINES.md, DATABASE-SCHEMA.md updated; every new string in all nine locales |
 
 ### 8.1 Phase-1 commit order (2026-09-22, supersedes the proposed build order)
@@ -674,3 +674,69 @@ line under Domain models: a new mix is a profile row, an enum value, a `MixIds` 
   Perfect Game / Full Combo / No Miss word-art badges). Uploader beside the sprites in the bundle.
 - The four scripts against prod after the migration deploys, in order.
 - The SEO descriptions and the upload page's Rise copy.
+
+---
+
+## 12. Discord session cards
+
+Phase 1 left Discord out (§8.0). The owner scoped it on 2026-09-23: the session snapshot card posts for both RISE
+mixes, carrying everything that does not depend on a feature RISE lacks. Titles, PUMBILITY, Hardmode, the weekly
+boards and the Daily Step stay off the card because RISE has none of them.
+
+### 12.1 Decisions
+
+- **D17 (owner, 2026-09-23). The card carries what every Phoenix-scored mix can offer:** new passes and upscores,
+  folder completion (the clears line, folder movement, the 🎉 and 🏆 lamps), competitive level, and every
+  per-score caption that needs neither PUMBILITY nor official boards: folder completion, folder debut, tries
+  before the clear, peer standing and the 💥 big gain. The PUMBILITY top-50 caption and the official-board
+  placement stay behind `HasPumbility` and `HasOfficialBoards`.
+- **D18 (owner, 2026-09-23). Discord difficulty bubbles resolve by folder.** Every `#DIFFICULTY|…#` token on every
+  Discord post draws its `ChartTypeCategory`'s bubble, so a RISE half-double wears its level's Doubles bubble
+  (HD23 → D23). There are no half-double emoji, and none are planned.
+- **D19 (owner, 2026-09-23). RISE draws its own grades and marks.** 22 guild emoji, uploaded 2026-09-23 from the
+  sprites under `letters/Rise` and `plates/Rise`: the nine grades, their nine grey broken versions, the three
+  marks (Perfect Game, Full Combo, No Miss) and the RISE wordmark. The mix's art set (`MixArt.ScoreArtFolder`)
+  picks the set, so Rise Arcade keeps the Phoenix emoji. The wordmark is the footer logo on both RISE mixes. A
+  token with no emoji is dropped rather than printed as text.
+- **D20. Competitive level exists on a Phoenix-scored mix without PUMBILITY.** The same formula (level and
+  score) without PUMBILITY pricing: the stats row carries competitive level, clears and highest level, and zero
+  wherever a pool would be. Singles and doubles competitive each read the mix's own type for that folder
+  (`ChartTypeCategory.TypeOn`), so RISE's half-doubles are its doubles and Phoenix's numbers do not move. The
+  player page shows the two competitive levels on RISE, so the card never announces a number the site hides.
+- **D21 (owner, 2026-09-23). Plays through the plays endpoint gather into sittings, one card each.** A play joins
+  the player's open sitting on its mix when it was played within 15 minutes of that sitting's plays; otherwise it
+  starts a new sitting. A sitting closes after 15 minutes with no play arriving, timed by the site's clock, so a
+  PC clock that is off cannot split one. Membership reads play time, so a backlog a tool sends late sorts into
+  the sittings it was played in. A sitting is a stored session — one row on the Undo page — so the Sessions
+  page's 8-hour fold, a separate change, covers sittings with no migration.
+- **D22 (owner, 2026-09-23). A sitting's card is built from the journal.** Nothing waits in memory: a closing
+  sitting is replayed from the journal the way restart recovery rebuilds an interrupted import
+  (`ReplaySessionCommand`), and the five-minute sweep closes any sitting whose scheduled close was lost. A deploy
+  in the middle of a sitting still ends in one card, and the next play after the restart rejoins the open
+  sitting. This revises the 2026-08-09 scope of import-restart-recovery.md §3.1 for these sessions.
+- **D23. A sitting that ended more than a day before it closed records without a card.** Everything else about it
+  runs — highlights, lamps, competitive level — and only the Discord post is skipped, so a week-old offline
+  backlog does not flood a channel. *Decided unless he objects.*
+
+### 12.2 What stays as it is
+
+Manual entry and the spreadsheet upload keep the two-minute batch; they arrive in bursts. A Warm Up play and an
+Arcade Station play belong to two mixes, so they make two sittings and two cards. The capture app needs no change
+for any of this; its offline outbox is separate work (the handoff note in the owner's Downloads, 2026-09-23).
+
+### 12.3 The first card after this ships
+
+A player's first RISE card announces "competitive 0.00 → N", the line any account's first import shows, because a
+stats row seen for the first time has nothing to compare against. It shows no folder-movement lines, because a
+folder's first reading is stored silently (folder-level-progression.md §5.3). Folder lamps fire from the start.
+
+### 12.4 Shape
+
+| Vertical | What changes |
+|---|---|
+| ScoreLedger | `JoinSittingsCommand` and `SittingSaga`: the join, the scheduled close, and the sweep on `OverdueScoreBatchesFlushedEvent`. `SittingPlanner`, `UpdatePhoenixBestAttemptCommand.DeferAnnouncement`, `ReplaySessionCommand.Announce`, `ScoreBatchPolicy.SittingQuietWindow`. A sitting is a `ScoreSession` row whose source starts `api:`, with `LastActivityAt` holding its last arrival; no migration |
+| PlayerProgress | The rating step runs on every Phoenix-scored mix and `RecalculateCore` skips PUMBILITY where the mix has none; the highlight step opens to every Phoenix-scored mix; `CompetitiveLevels.Floor` and the competitive peer lookup read the mix's doubles type; `ScoreHighlightsCapturedEvent.Announce` |
+| Communities | `CommunitySaga` sends art-set grade and mark tokens and skips the card when `Announce` is off |
+| Domain | `PlayerScoresUpdatedEvent.Announce`, `EmojiTokens`, `ScoreJournalEntry.PlaysApiSourcePrefix` |
+| Data | `DiscordEmojiTokens`: category bubbles, the RISE emoji, unknown tokens dropped |
+| Web | `PlayersController` records into sittings; the Sessions page waits out a sitting's quiet window; `Player.razor` shows competitive level on RISE |
