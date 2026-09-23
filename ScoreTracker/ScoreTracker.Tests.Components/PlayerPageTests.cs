@@ -172,4 +172,20 @@ public sealed class PlayerPageTests : ComponentTestBase
         Assert.DoesNotContain("Total Rating", xx.Markup);
         Assert.Contains("Folder Completion", xx.Markup);
     }
+
+    [Fact]
+    public void OnRiseTheCompetitiveLevelsShowAndTheRatingTilesDoNot()
+    {
+        GivenViewer(Guid.NewGuid());
+        _settings.Setup(u => u.GetSelectedMix()).ReturnsAsync(MixEnum.Rise);
+
+        var cut = Render();
+
+        Assert.Contains("Competitive Level", cut.Markup);
+        Assert.Contains("21.63", cut.Markup);
+        Assert.Contains("22.05", cut.Markup);
+        // RISE's doubles folder holds its half-doubles, and the label says so.
+        Assert.Contains(">HD<", cut.Markup);
+        Assert.DoesNotContain("Total Rating", cut.Markup);
+    }
 }

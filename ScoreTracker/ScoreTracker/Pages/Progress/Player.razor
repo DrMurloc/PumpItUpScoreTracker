@@ -71,12 +71,12 @@ else if (_profile != null)
                         </div>
                     }
                 </div>
-                @if (HasRatings)
+                @if (HasCompetitive)
                 {
                     <div class="ph-cl">
                         <span class="ph-cl-eyebrow">@L["Competitive Level"]</span>
                         <div class="ph-cl-row"><span class="ph-cl-singles">S</span><b>@_profile.SinglesCompetitiveLevel.ToString("N2")</b></div>
-                        <div class="ph-cl-row"><span class="ph-cl-doubles">D</span><b>@_profile.DoublesCompetitiveLevel.ToString("N2")</b></div>
+                        <div class="ph-cl-row"><span class="ph-cl-doubles">@DoublesShortHand</span><b>@_profile.DoublesCompetitiveLevel.ToString("N2")</b></div>
                     </div>
                 }
             </div>
@@ -189,9 +189,14 @@ else if (_profile != null)
     private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private MixEnum _currentMix = MixEnum.Phoenix;
 
-    // PUMBILITY, the competitive levels and the rating tiles exist only where a formula does —
-    // a Phoenix-scored mix without one (Rise) hides them rather than printing zeros.
+    // PUMBILITY and the rating tiles exist only where a formula does — a Phoenix-scored mix
+    // without one (Rise) hides them rather than printing zeros. Competitive level exists on
+    // every Phoenix-scored mix.
     private bool HasRatings => _currentMix.HasPumbility();
+    private bool HasCompetitive => !_currentMix.UsesLegacyScoring();
+
+    // The doubles folder's own type labels its level: D, or HD on RISE.
+    private string DoublesShortHand => ChartTypeCategory.Double.TypeOn(_currentMix).GetShortHand();
 
     // piugame publishes each chart board 300 deep on Phoenix 2 and 100 deep on Phoenix, so a
     // placement is a "Top 300" or a "Top 100" by mix.
@@ -277,7 +282,7 @@ else if (_profile != null)
         if (ShowsHeadToHead)
         {
             _compareLevel = null;
-            if (HasRatings)
+            if (HasCompetitive)
             {
                 var mine = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _currentMix));
                 var singlesGap = Math.Abs(mine.SinglesCompetitiveLevel - _profile.SinglesCompetitiveLevel);

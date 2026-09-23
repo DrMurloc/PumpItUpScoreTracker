@@ -207,11 +207,13 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             var query = database.Set<PlayerStatsEntity>().Where(p => p.MixId == mixId);
             var min = competitiveLevel - range;
             var max = competitiveLevel + range;
+            // The mix says which of its types fills the Singles and Doubles folders, so RISE's
+            // half-doubles read the doubles level.
             if (chartType == null)
                 query = query.Where(p => p.CompetitiveLevel >= min && p.CompetitiveLevel <= max);
-            else if (chartType == ChartType.Single)
+            else if (chartType == ChartTypeCategory.Single.TypeOn(mix))
                 query = query.Where(p => p.SinglesCompetitiveLevel >= min && p.SinglesCompetitiveLevel <= max);
-            else if (chartType == ChartType.Double)
+            else if (chartType == ChartTypeCategory.Double.TypeOn(mix))
                 query = query.Where(p => p.DoublesCompetitiveLevel >= min && p.DoublesCompetitiveLevel <= max);
 
             return await query.Select(p => p.UserId).Distinct().ToArrayAsync(cancellationToken);

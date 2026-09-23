@@ -259,7 +259,7 @@ internal static class PlayerHighlightPolicy
         // a feed as much as on a card: see CompetitiveLevels.Floor.
         if (change.Flags.HasFlag(HighlightFlags.FolderDebut)
             && change.Detail?.FolderDebutOrdinal is { } ordinal && ordinal <= FolderFirstMaxOrdinal
-            && (int)chart.Level >= CompetitiveLevels.Floor(chart.Type, stats))
+            && (int)chart.Level >= CompetitiveLevels.Floor(chart.Mix, chart.Type, stats))
             return (PriorityFolderFirst, Win(WinKind.FolderFirst, chart, change.NewScore, rank: ordinal));
 
         return null;

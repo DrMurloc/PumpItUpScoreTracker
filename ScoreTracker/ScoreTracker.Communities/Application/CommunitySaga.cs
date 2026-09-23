@@ -271,7 +271,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             var stats = await _playerStats.GetStats(e.Mix, e.UserId, context.CancellationToken);
             weekly = (await _mediator.Send(new GetUserWeeklyPlacementsQuery(e.UserId, e.Mix,
                     known.Select(c => c.ChartId).Distinct().ToArray()), context.CancellationToken))
-                .Where(w => (int)charts[w.ChartId].Level >= CompetitiveFor(charts[w.ChartId].Type, stats) - 5)
+                .Where(w => (int)charts[w.ChartId].Level >= CompetitiveFor(e.Mix, charts[w.ChartId].Type, stats) - 5)
                 .OrderByDescending(w => (int)charts[w.ChartId].Level)
                 .Take(WeeklyLineCap)
                 .ToArray();
@@ -910,14 +910,11 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
 
     // The competitive level for a chart's type; co-op (and anything without a competitive
     // side) returns 0, so its gate threshold is −5 and it never gets filtered.
-    private static double CompetitiveFor(ChartType type, PlayerStatsRecord stats)
+    // The mix says which of its types fills the Singles and Doubles folders.
+    private static double CompetitiveFor(MixEnum mix, ChartType type, PlayerStatsRecord stats)
     {
-        return type switch
-        {
-            ChartType.Single => stats.SinglesCompetitiveLevel,
-            ChartType.Double => stats.DoublesCompetitiveLevel,
-            _ => 0
-        };
+        if (type == ChartTypeCategory.Single.TypeOn(mix)) return stats.SinglesCompetitiveLevel;
+        return type == ChartTypeCategory.Double.TypeOn(mix) ? stats.DoublesCompetitiveLevel : 0;
     }
 
     public async Task Consume(ConsumeContext<UserUpdatedEvent> context)
