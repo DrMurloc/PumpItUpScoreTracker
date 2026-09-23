@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
@@ -34,8 +35,10 @@ internal sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
     // A session envelope groups journal rows across event batches: same (user, mix,
     // source) within the gap = one session. Envelopes are identity only — they never
     // delay the 2-minute event batches. In-memory by design: a restart closes open
-    // sessions and the next submission starts a fresh one.
-    private static readonly TimeSpan SessionGap = TimeSpan.FromHours(8);
+    // sessions and the next submission starts a fresh one. Only writes without an id of
+    // their own ride it; the read side folds everything else on the same silence
+    // (SessionFold), which is why the gap is that constant rather than a second eight.
+    private static readonly TimeSpan SessionGap = SessionFold.QuietGap;
 
     // Keyed per (user, mix): parallel-mix submissions accumulate independently.
     private readonly ConcurrentDictionary<(Guid UserId, MixEnum Mix), BatchState> _batches = new();
