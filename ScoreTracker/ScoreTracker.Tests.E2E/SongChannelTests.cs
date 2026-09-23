@@ -27,10 +27,6 @@ public sealed class SongChannelTests : IAsyncLifetime
         await _fixture.ResetDatabaseAsync();
         var chartId = await _fixture.Seed.SeedPhoenixChartAsync("Nostalgia", 21, "Double");
         await _fixture.Seed.SeedSongChannelAsync(chartId, E2ESeedData.PhoenixMixId, "KPop");
-        // Again after seeding: the app is live throughout, the chart dictionary caches for a
-        // fortnight, and a raw-SQL seed goes around the write path that would evict it. Without
-        // this the page renders the world as it was before the seed.
-        _fixture.ClearCaches();
         _browser = await _fixture.NewBrowserContextAsync();
         _page = await _browser.NewPageAsync();
     }

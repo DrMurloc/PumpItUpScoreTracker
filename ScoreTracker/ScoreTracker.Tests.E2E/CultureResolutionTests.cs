@@ -153,7 +153,6 @@ public sealed class CultureResolutionTests : IAsyncLifetime
         Assert.Contains(EnglishNav, await GetAsync("/", SpanishBrowser));
 
         await _fixture.Seed.ClearCultureAsync(userId);
-        _fixture.ClearCaches();
 
         // The setting is gone but the cookie is not, and the cookie outranks the browser — so
         // this still reads English. That is the half a clear-only fix would leave behind.

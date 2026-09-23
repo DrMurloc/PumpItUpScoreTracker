@@ -176,10 +176,6 @@ public sealed class MarchOfMurlocsTests : IAsyncLifetime
         await _fixture.Seed.SeedJournalRowAsync(me, slam, now.AddDays(-1), 900000, "SuperbGame", false, null,
             "officialImport");
 
-        // Seeding happened after the reset, and the catalog caches a whole mix for a fortnight
-        // under one key: without this the app serves the world as it was before these charts.
-        _fixture.ClearCaches();
-
         await _page.GotoAsync($"{_fixture.BaseUrl}/Login");
         await _page.EvaluateAsync(
             "id => fetch('/Login/Dev', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'userId=' + id })",

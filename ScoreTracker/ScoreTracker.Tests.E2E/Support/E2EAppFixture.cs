@@ -1,10 +1,12 @@
-using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using System.Data.Common;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -25,7 +27,9 @@ namespace ScoreTracker.Tests.E2E.Support;
 ///     WebApplicationFactory (real MassTransit in-memory bus, real Hangfire, real
 ///     migrations via AutoMigrate), and a headless Playwright Chromium.
 ///     Between tests, <see cref="ResetDatabaseAsync" /> respawns the scores schema
-///     and flushes the app's memory cache.
+///     and flushes the app's memory cache, and every write a test makes through
+///     <see cref="DbContextFactory" /> or <see cref="Seed" /> flushes it again (see
+///     <see cref="WritesEvictTheAppCache" />).
 /// </summary>
 public sealed class E2EAppFixture : IAsyncLifetime
 {
@@ -88,6 +92,7 @@ public sealed class E2EAppFixture : IAsyncLifetime
 
         var contextOptions = new DbContextOptionsBuilder<ChartAttemptDbContext>()
             .UseSqlServer(_sqlContainer.GetConnectionString())
+            .AddInterceptors(new WritesEvictTheAppCache(ClearCaches))
             .Options;
         DbContextFactory = new TestDbContextFactory(contextOptions);
         Seed = new E2ESeedData(DbContextFactory);
@@ -135,14 +140,8 @@ public sealed class E2EAppFixture : IAsyncLifetime
     }
 
     /// <summary>
-    ///     Drops every in-memory cache the running app holds.
-    ///     <para>
-    ///         Call it AFTER seeding as well as before. The app is live while a test seeds, and
-    ///         several catalog reads cache a whole table under one key for days (charts a
-    ///         fortnight, tier lists a day), evicted in production only by the write path that a
-    ///         raw-SQL seed goes around. Without the second call, a read landing between the reset
-    ///         and the seed serves the previous test's world for the rest of the run.
-    ///     </para>
+    ///     Drops every in-memory cache the running app holds. A test never needs to call it after
+    ///     seeding — <see cref="WritesEvictTheAppCache" /> already has, after every write.
     /// </summary>
     public void ClearCaches()
     {
@@ -170,6 +169,53 @@ public sealed class E2EAppFixture : IAsyncLifetime
         public ChartAttemptDbContext CreateDbContext()
         {
             return new ChartAttemptDbContext(options, VerticalModelContributions.All());
+        }
+    }
+
+    /// <summary>
+    ///     Flushes the app's memory cache after every write the harness makes.
+    ///     <para>
+    ///         The app is live while a test seeds, and several catalog reads cache a whole table
+    ///         under one key for days (charts a fortnight, tier lists a day). In production the
+    ///         write path evicts them; a raw-SQL seed goes around that path. So a read landing
+    ///         between the reset and the seed — a previous test's circuit, a bus consumer still
+    ///         finishing its work — cached an empty catalog, and the test then served that world
+    ///         for its whole run: the weekly board listing "1 charts" over zero cards.
+    ///     </para>
+    ///     <para>
+    ///         Flushing after the seed was a rule each test had to remember, and 13 of 19 test files
+    ///         did not. Here it happens on the write itself, so no test can forget. Reads pass
+    ///         through untouched — a test asserting on a row the app wrote must not flush the
+    ///         cache it is about to exercise. Every harness write is autocommit or its own
+    ///         <c>SaveChanges</c> transaction, so the data has landed by the time this fires.
+    ///     </para>
+    /// </summary>
+    private sealed class WritesEvictTheAppCache(Action clearCaches) : ISaveChangesInterceptor, IDbCommandInterceptor
+    {
+        public int SavedChanges(SaveChangesCompletedEventData eventData, int result)
+        {
+            clearCaches();
+            return result;
+        }
+
+        public ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData eventData, int result,
+            CancellationToken cancellationToken = default)
+        {
+            clearCaches();
+            return ValueTask.FromResult(result);
+        }
+
+        public int NonQueryExecuted(DbCommand command, CommandExecutedEventData eventData, int result)
+        {
+            clearCaches();
+            return result;
+        }
+
+        public ValueTask<int> NonQueryExecutedAsync(DbCommand command, CommandExecutedEventData eventData,
+            int result, CancellationToken cancellationToken = default)
+        {
+            clearCaches();
+            return ValueTask.FromResult(result);
         }
     }
 }

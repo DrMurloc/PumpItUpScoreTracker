@@ -38,10 +38,6 @@ public sealed class TierListTests : IAsyncLifetime
         // The details dialog leads with the video (C6) — give every folder chart one.
         foreach (var chartId in new[] { easy1, easy2, hard, overrated })
             await _fixture.Seed.SeedChartVideoAsync(chartId, "https://e2e-files.invalid/video");
-        // Raw-SQL seeding goes around the eviction the real write path performs, and the catalog
-        // caches whole tables under one key for days — so a read landing between the reset and
-        // this line serves the previous test's world for the rest of the run.
-        _fixture.ClearCaches();
 
         _browser = await _fixture.NewBrowserContextAsync();
         _page = await _browser.NewPageAsync();
