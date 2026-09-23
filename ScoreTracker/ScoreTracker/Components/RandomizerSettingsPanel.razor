@@ -1,4 +1,4 @@
-@namespace ScoreTracker.Web.Components
+﻿@namespace ScoreTracker.Web.Components
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.SharedKernel.Enums
@@ -225,8 +225,8 @@
                                 <div class="folder-picker-pop">
                                     @if (_selectorOpen)
                                     {
-                                        <FolderGrid InitialType="ChartType.Single" IsSelected="IsLevelActive"
-                                                    LevelPicked="ToggleFolder"></FolderGrid>
+                                        <FolderGrid InitialCategory="ChartTypeCategory.Single" Mix="Mix"
+                                                    IsSelected="IsLevelActive" LevelPicked="ToggleFolder"></FolderGrid>
                                     }
                                 </div>
                             </MudPopover>
@@ -460,13 +460,13 @@
                                  + Settings.LevelMinimums.Sum(kv => kv.Value ?? 0)
                                  + Settings.ChartTypeMinimums.Sum(kv => kv.Value ?? 0);
 
-    private IEnumerable<(ChartType Type, int Level)> WeightRows =>
+    private IEnumerable<(ChartTypeCategory Category, int Level)> WeightRows =>
         Settings.LevelWeights.Where(kv => kv.Value > 0).OrderBy(kv => kv.Key)
-            .Select(kv => (ChartType.Single, kv.Key))
+            .Select(kv => (ChartTypeCategory.Single, kv.Key))
         .Concat(Settings.DoubleLevelWeights.Where(kv => kv.Value > 0).OrderBy(kv => kv.Key)
-            .Select(kv => (ChartType.Double, kv.Key)))
+            .Select(kv => (ChartTypeCategory.Double, kv.Key)))
         .Concat(Settings.PlayerCountWeights.Where(kv => kv.Value > 0).OrderBy(kv => kv.Key)
-            .Select(kv => (ChartType.CoOp, kv.Key)));
+            .Select(kv => (ChartTypeCategory.CoOp, kv.Key)));
 
     protected override async Task OnParametersSetAsync()
     {
@@ -515,44 +515,47 @@
         return keys.Max() - keys.Min() + 1 != keys.Length;
     }
 
-    private IDictionary<int, int> DictFor(ChartType type)
+    // One weight bucket per folder. The three dictionaries are named for the chart types that
+    // headed them before the folder became a category; their stored shape is deliberately
+    // untouched, because saved presets carry it.
+    private IDictionary<int, int> DictFor(ChartTypeCategory category)
     {
-        return type == ChartType.Single ? Settings.LevelWeights :
-            type == ChartType.Double ? Settings.DoubleLevelWeights : Settings.PlayerCountWeights;
+        return category == ChartTypeCategory.Single ? Settings.LevelWeights :
+            category == ChartTypeCategory.Double ? Settings.DoubleLevelWeights : Settings.PlayerCountWeights;
     }
 
-    private bool IsLevelActive(ChartType type, int level)
+    private bool IsLevelActive(ChartTypeCategory category, int level)
     {
-        return DictFor(type).TryGetValue(level, out var weight) && weight > 0;
+        return DictFor(category).TryGetValue(level, out var weight) && weight > 0;
     }
 
-    private string FolderLabel(ChartType type, int level)
+    private string FolderLabel(ChartTypeCategory category, int level)
     {
-        return type == ChartType.CoOp ? $"{L["CoOp"]} ×{level}" : $"{type.GetShortHand()}{level}";
+        return FolderLabels.WithLevel(L, category, Mix, level);
     }
 
-    private async Task ToggleFolder((ChartType Type, int Level) folder)
+    private async Task ToggleFolder((ChartTypeCategory Category, int Level) folder)
     {
         // The first change in the selector is what engages weighted mode — opening and
         // looking around leaves the sliders in charge.
         _weightedMode = true;
         _confirmingBack = false;
-        var dict = DictFor(folder.Type);
+        var dict = DictFor(folder.Category);
         if (!dict.ContainsKey(folder.Level)) return;
 
         dict[folder.Level] = dict[folder.Level] > 0 ? 0 : 1;
         await Notify();
     }
 
-    private async Task SetWeight(ChartType type, int level, int weight)
+    private async Task SetWeight(ChartTypeCategory category, int level, int weight)
     {
-        DictFor(type)[level] = weight;
+        DictFor(category)[level] = weight;
         await Notify();
     }
 
-    private async Task RemoveLevel(ChartType type, int level)
+    private async Task RemoveLevel(ChartTypeCategory category, int level)
     {
-        DictFor(type)[level] = 0;
+        DictFor(category)[level] = 0;
         await Notify();
     }
 

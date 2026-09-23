@@ -53,9 +53,9 @@ Verified against [NamuWiki's Basic System page](https://en.namu.wiki/w/%ED%8E%8C
 5. **All mixes ship at once** — no phased rollout by mix. The mix picker shows Phoenix 2 / Phoenix / XX, with a "More" expander for everything else.
 6. **Both attribution kinds**: *origin* (`Chart.OriginalMixId`, one mix per chart) **and** *membership* (`ChartMix` rows per mix with era-correct levels). Membership = **ever available during that mix** (not just its final patch) so mid-mix-removed charts stay recordable.
 7. **Pre-Exceed charts display their slot names** (Easy/Normal/Hard/Crazy/Freestyle/Nightmare/Another) — "Crazy 7" is *not* "S7" and the UI must never imply the scales translate. Slot is also **identity**: the same song can have Hard 5 and Crazy 5 (both Single, same number), so slot participates in matching and storage, not just display.
-8. **Legacy difficulty bubbles are CSS chips, not images.** No official art exists for pre-Exceed slots; the combinatorics (~80–100 PNGs incl. Another variants, `??`, HDB) are hostile; and a rendered chip *looking different* from image bubbles is the message (different scale). Exceed → Prime 2 reuse the existing XX bubble image set (same S/D notation) via a one-line routing change.
+8. **Legacy difficulty bubbles are CSS chips, not images.** No official art exists for pre-Exceed slots; the combinatorics (~80–100 PNGs incl. Another variants, `??`, HD) are hostile; and a rendered chip *looking different* from image bubbles is the message (different scale). Exceed → Prime 2 reuse the existing XX bubble image set (same S/D notation) via a one-line routing change.
 9. **Routine collapses onto Co-Op.** Routine-mode charts span NX → Prime 2 + Infinity in pumpout and are Co-Op's ancestor (mainline renamed the concept). They carry player-count labels (84×2P, 13×3P, 4×4P, 1×5P; unlabeled ⇒ 2) *and* real difficulty levels. No `ChartType.Routine`; instead `Chart` gains an explicit `PlayerCount` and Co-Op rows may carry a genuine difficulty in `ChartMix.Level` (see Domain).
-10. **HalfDouble stays a real chart type** (physically different pad layout; 86 charts, all removed by XX). Parking HDB imports entirely remains an owner option if the surface should shrink.
+10. **HalfDouble stays a real chart type** (physically different pad layout; 86 charts, all removed by XX). Parking HD imports entirely remains an owner option if the surface should shrink.
 11. **No per-mix themes for legacy mixes** — selecting one filters content but inherits the current theme. Theme pill stays Phoenix 2 / Phoenix / XX only.
 12. **Data delivery**: bulk data lands as idempotent SQL scripts in the owner's Downloads folder, run manually (same mechanism as the delivered corrections script). Schema changes ride normal EF migrations.
 
@@ -86,7 +86,7 @@ Verified against [NamuWiki's Basic System page](https://en.namu.wiki/w/%ED%8E%8C
 
 - **`DifficultyBubble`** grows a legacy branch (one component, per the one-concept rule):
   - Modern branch unchanged; **Exceed → Prime 2 route to the XX image folder** (same trick as the existing SP/DP special case).
-  - Legacy branch renders a CSS chip when the chart carries a slot: `CRAZY 7`, `NIGHTMARE 9`, `ANOTHER CRAZY 7`; also Infinity `HDB12`, levelled co-ops (`CO-OP ×2 · 15`), and unrated `??`. Colors via a new **`--slot-*` semantic token group** + `ThemeScales.SlotColor(...)` accessor (classic wheel colors — Crazy red, Freestyle green, Nightmare purple), satisfying the `UiColorTokenTests` ratchet. Tooltip: "Crazy 7 — The Premiere 2 scale; not comparable to modern levels."
+  - Legacy branch renders a CSS chip when the chart carries a slot: `CRAZY 7`, `NIGHTMARE 9`, `ANOTHER CRAZY 7`; also Infinity `HD12`, levelled co-ops (`CO-OP ×2 · 15`), and unrated `??`. Colors via a new **`--slot-*` semantic token group** + `ThemeScales.SlotColor(...)` accessor (classic wheel colors — Crazy red, Freestyle green, Nightmare purple), satisfying the `UiColorTokenTests` ratchet. Tooltip: "Crazy 7 — The Premiere 2 scale; not comparable to modern levels."
 - **`MixSelector`** shared component: Phoenix 2 / Phoenix / XX visible, "More Mixes" expands into **collections** (Prime, Fiesta, NX, Exceed / Zero, Premiere / Prex, Classic, American) that open in place on click — a flat list of 28 was unusable (owner field-test round 1), and click-not-hover keeps the same interaction on mobile.
 - **Route gating: removed 2026-08-09.** `LegacyMixGate` (Services/) was a route allowlist: pre-XX mixes reached only validated routes and everything else redirected to `/TierLists`, with the nav hiding the rest off the same flag. It was born as a crash guard — field-test round 1 found `TitleSaga` throwing under Prime — and grew, because the only way off the list was to field-test a page and add a line, and nobody did.
 
@@ -117,7 +117,7 @@ Verified against [NamuWiki's Basic System page](https://en.namu.wiki/w/%ED%8E%8C
 | Change | Detail |
 |---|---|
 | `MixEnum` +28 | 23 mainline + `Infinity`, `Pro`, `Pro2`; appended after `Phoenix2`; `[Description]` full names; `GetAccentColor` falls to the default steel until per-mix brand colors are wanted. |
-| `ChartType` +1 | `HalfDouble` ("HDB") only — **no Routine** (decision 9). |
+| `ChartType` +1 | `HalfDouble` ("HD") only — **no Routine** (decision 9). |
 | New `LegacySlot` enum | `Easy, Normal, Hard, Crazy, Freestyle, Nightmare, Practice` + `Another*` variants (the combinations observed in pumpout labels). |
 | `Chart` +2 | `LegacySlot? Slot` (null for all modern charts) and explicit `PlayerCount` (replaces the `Type == CoOp ? Level : 1` pun; backfilled so existing behavior is identical). `DifficultyString` unchanged. |
 | `MixIds` | 28 new deterministic Guids. |

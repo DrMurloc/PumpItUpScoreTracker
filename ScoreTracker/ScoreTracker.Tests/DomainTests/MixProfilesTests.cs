@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using ScoreTracker.SharedKernel.Enums;
@@ -134,5 +134,48 @@ public sealed class MixProfilesTests
         Assert.Equal(new MixArt("Phoenix2", null, true), MixProfiles.For(MixEnum.Phoenix2).Art);
         Assert.Equal(MixArt.Flat, MixProfiles.For(MixEnum.XX).Art);
         Assert.Equal(MixArt.Flat, MixProfiles.For(MixEnum.Prime2).Art);
+    }
+
+    [Fact]
+    public void EveryMixDeclaresTheChartTypesItHas()
+    {
+        foreach (var mix in Enum.GetValues<MixEnum>())
+            Assert.NotEmpty(MixProfiles.For(mix).ChartTypes);
+    }
+
+    [Fact]
+    public void RiseIsSinglesAndHalfDoublesAndTheArcadeIsSinglesAndDoubles()
+    {
+        Assert.Equal(new[] { ChartType.Single, ChartType.HalfDouble }, MixProfiles.For(MixEnum.Rise).ChartTypes);
+        Assert.Equal(new[] { ChartType.Single, ChartType.Double }, MixProfiles.For(MixEnum.RiseArcade).ChartTypes);
+    }
+
+    [Fact]
+    public void RiseOffersSinglesAndDoublesAndNoCoOpFolder()
+    {
+        Assert.Equal(new[] { ChartTypeCategory.Single, ChartTypeCategory.Double },
+            ChartTypeCategories.CategoriesFor(MixEnum.Rise));
+        Assert.Equal(new[] { ChartTypeCategory.Single, ChartTypeCategory.Double, ChartTypeCategory.CoOp },
+            ChartTypeCategories.CategoriesFor(MixEnum.Phoenix2));
+    }
+
+    // The tab is labeled by the one type when a folder holds exactly one of the mix's types:
+    // RISE's doubles folder is half-doubles and says so, Phoenix 2's is doubles.
+    [Fact]
+    public void AFolderKnowsWhichOfTheMixesTypesItHolds()
+    {
+        Assert.Equal(new[] { ChartType.HalfDouble }, ChartTypeCategory.Double.TypesOn(MixEnum.Rise));
+        Assert.Equal(new[] { ChartType.Double }, ChartTypeCategory.Double.TypesOn(MixEnum.Phoenix2));
+        Assert.Empty(ChartTypeCategory.CoOp.TypesOn(MixEnum.Rise));
+    }
+
+    // The legacy line is declared as the superset rather than guessed per mix; the picker hides
+    // a folder with no charts in it.
+    [Fact]
+    public void TheLegacyLineDeclaresEveryTypeTheSeriesHasHad()
+    {
+        Assert.Contains(ChartType.HalfDouble, MixProfiles.For(MixEnum.Infinity).ChartTypes);
+        Assert.Contains(ChartType.SinglePerformance, MixProfiles.For(MixEnum.XX).ChartTypes);
+        Assert.DoesNotContain(ChartType.HalfDouble, MixProfiles.For(MixEnum.Phoenix2).ChartTypes);
     }
 }

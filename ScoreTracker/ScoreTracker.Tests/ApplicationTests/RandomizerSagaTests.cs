@@ -1,4 +1,4 @@
-using ScoreTracker.Randomizer.Domain;
+﻿using ScoreTracker.Randomizer.Domain;
 using ScoreTracker.Randomizer.Contracts.Queries;
 using ScoreTracker.Randomizer.Contracts.Commands;
 using ScoreTracker.Randomizer.Application;
@@ -375,5 +375,150 @@ public sealed class RandomizerSagaTests
         var result = await saga.Handle(new GetIncludedRandomChartsQuery(SinglesAtLevelTwenty()), CancellationToken.None);
 
         Assert.Equal(new[] { xross.Id, unknown.Id }.OrderBy(id => id), result.Select(c => c.Id).OrderBy(id => id));
+    }
+
+    // A half-double is weighted out of the doubles bucket. Before the folder became a category
+    // it fell through to the co-op branch and read PlayerCountWeights[1], which is not a key.
+    [Fact]
+    public async Task HalfDoublesAreWeightedOutOfTheDoublesBucket()
+    {
+        var (accessor, userId) = UserAccessor();
+        var halfDouble = new ChartBuilder().WithLevel(20).WithType(ChartType.HalfDouble).Build();
+        var miss = new ChartBuilder().WithLevel(15).WithType(ChartType.HalfDouble).Build();
+        var charts = ChartsReturning(new[] { halfDouble, miss });
+        var saga = new RandomizerSaga(charts.Object, new Mock<IRandomizerRepository>().Object,
+            accessor.Object, ScoresReturning(userId, Array.Empty<RecordedPhoenixScore>()).Object,
+            new Mock<IRandomNumberGenerator>().Object,
+            EmptyScoringLevels().Object);
+
+        var settings = new RandomSettings { Count = 3 };
+        settings.DoubleLevelWeights[20] = 1;
+        settings.SongTypeWeights[SongType.Arcade] = 1;
+
+        var result = await saga.Handle(new GetIncludedRandomChartsQuery(settings), CancellationToken.None);
+
+        Assert.Equal(new[] { halfDouble.Id }, result.Select(c => c.Id).ToArray());
+    }
+
+    private static Mock<IRandomNumberGenerator> PicksTheFirst()
+    {
+        var random = new Mock<IRandomNumberGenerator>();
+        random.Setup(r => r.Next(It.IsAny<int>())).Returns(0);
+        random.Setup(r => r.NextDouble()).Returns(0.5);
+        return random;
+    }
+
+    private RandomizerSaga SagaOver(Mock<ICurrentUserAccessor> accessor, Guid userId, params Chart[] charts)
+    {
+        return new RandomizerSaga(ChartsReturning(charts).Object, new Mock<IRandomizerRepository>().Object,
+            accessor.Object, ScoresReturning(userId, Array.Empty<RecordedPhoenixScore>()).Object,
+            PicksTheFirst().Object, EmptyScoringLevels().Object);
+    }
+
+    // The three minimum passes each re-draw with one bucket carried over, and each picked the
+    // bucket by matching the chart type exactly before the folder became a category.
+    [Fact]
+    public async Task AMinimumPerChartTypeDrawsFromEachFoldersOwnWeights()
+    {
+        var (accessor, userId) = UserAccessor();
+        var single = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var halfDouble = new ChartBuilder().WithLevel(20).WithType(ChartType.HalfDouble).Build();
+        var saga = SagaOver(accessor, userId, single, halfDouble);
+
+        var settings = new RandomSettings { Count = 2 };
+        settings.LevelWeights[20] = 1;
+        settings.DoubleLevelWeights[20] = 1;
+        settings.SongTypeWeights[SongType.Arcade] = 1;
+        settings.ChartTypeMinimums[ChartType.Single] = 1;
+        settings.ChartTypeMinimums[ChartType.Double] = 1;
+        settings.ChartTypeMinimums[ChartType.CoOp] = 1;
+
+        var result = await saga.Handle(new GetRandomChartsQuery(settings, MixEnum.Phoenix), CancellationToken.None);
+
+        // One draw per minimum: the singles pass can only reach the single, the doubles pass
+        // the half-double, and the co-op pass has nothing to reach.
+        Assert.Contains(single.Id, result.Select(c => c.Id));
+        Assert.Contains(halfDouble.Id, result.Select(c => c.Id));
+    }
+
+    [Fact]
+    public async Task AMinimumPerFolderAndLevelReadsHalfDoublesAsDoubles()
+    {
+        var (accessor, userId) = UserAccessor();
+        var halfDouble = new ChartBuilder().WithLevel(20).WithType(ChartType.HalfDouble).Build();
+        var elsewhere = new ChartBuilder().WithLevel(15).WithType(ChartType.HalfDouble).Build();
+        var saga = SagaOver(accessor, userId, halfDouble, elsewhere);
+
+        var settings = new RandomSettings { Count = 1 };
+        settings.DoubleLevelWeights[20] = 1;
+        settings.SongTypeWeights[SongType.Arcade] = 1;
+        settings.ChartTypeLevelMinimums["HD20"] = 1;
+        settings.ChartTypeLevelMinimums["S20"] = 1;
+        settings.ChartTypeLevelMinimums["CoOp2"] = 1;
+
+        var result = await saga.Handle(new GetRandomChartsQuery(settings, MixEnum.Phoenix), CancellationToken.None);
+
+        Assert.Contains(halfDouble.Id, result.Select(c => c.Id));
+        Assert.DoesNotContain(elsewhere.Id, result.Select(c => c.Id));
+    }
+
+    [Fact]
+    public async Task ABucketMinimumFillsEveryFolderTheBucketNames()
+    {
+        var (accessor, userId) = UserAccessor();
+        var single = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var halfDouble = new ChartBuilder().WithLevel(20).WithType(ChartType.HalfDouble).Build();
+        var saga = SagaOver(accessor, userId, single, halfDouble);
+
+        var settings = new RandomSettings { Count = 1 };
+        settings.LevelWeights[20] = 1;
+        settings.DoubleLevelWeights[20] = 1;
+        settings.SongTypeWeights[SongType.Arcade] = 1;
+        // "sdc20" is singles, doubles and co-op at level 20 — the co-op leg has no chart,
+        // which is the empty sub-draw the pass has to survive.
+        settings.CustomMinimums["sdc20"] = 1;
+
+        var result = await saga.Handle(new GetRandomChartsQuery(settings, MixEnum.Phoenix), CancellationToken.None);
+
+        Assert.NotEmpty(result);
+        Assert.All(result, c => Assert.Contains(c.Id, new[] { single.Id, halfDouble.Id }));
+    }
+
+    // A pool of nothing used to reach NextRandomGuid, which indexes a distribution it never
+    // built: KeyNotFoundException, a 500 on /ChartRandomizer and on api/v2/charts/random.
+    // Repeats being on is what got it past the too-small-pool early return.
+    [Fact]
+    public async Task ADrawThatReachesNoChartComesBackEmptyRatherThanThrowing()
+    {
+        var (accessor, userId) = UserAccessor();
+        var elsewhere = new ChartBuilder().WithLevel(15).WithType(ChartType.Single).Build();
+        var saga = SagaOver(accessor, userId, elsewhere);
+
+        var settings = new RandomSettings { Count = 3, AllowRepeats = true };
+        settings.LevelWeights[20] = 1;
+        settings.SongTypeWeights[SongType.Arcade] = 1;
+
+        var result = await saga.Handle(new GetRandomChartsQuery(settings, MixEnum.Phoenix), CancellationToken.None);
+
+        Assert.Empty(result);
+    }
+
+    // The same hole one level down: a minimum pass re-enters the draw with one bucket carried,
+    // so a co-op minimum on a mix with no co-op charts was its own empty pool.
+    [Fact]
+    public async Task AMinimumWhoseOwnLegReachesNothingDoesNotSinkTheDraw()
+    {
+        var (accessor, userId) = UserAccessor();
+        var single = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var saga = SagaOver(accessor, userId, single);
+
+        var settings = new RandomSettings { Count = 1, AllowRepeats = true };
+        settings.LevelWeights[20] = 1;
+        settings.SongTypeWeights[SongType.Arcade] = 1;
+        settings.ChartTypeMinimums[ChartType.CoOp] = 1;
+
+        var result = await saga.Handle(new GetRandomChartsQuery(settings, MixEnum.Phoenix), CancellationToken.None);
+
+        Assert.Equal(new[] { single.Id }, result.Select(c => c.Id).ToArray());
     }
 }

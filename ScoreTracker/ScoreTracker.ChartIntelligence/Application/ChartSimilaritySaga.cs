@@ -1,4 +1,4 @@
-using MassTransit;
+﻿using MassTransit;
 using MediatR;
 using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Queries;
@@ -38,7 +38,11 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
     IRequestHandler<GetFilteredSimilarChartsQuery, FilteredSimilarChartsRecord>,
     IRequestHandler<GetLeastSimilarChartsQuery, IReadOnlyList<ChartSimilarityRecord>>
 {
-    private static readonly ChartType[] SimilarityChartTypes = { ChartType.Single, ChartType.Double };
+    // Similarity pools by folder, not by pad layout: a half-double is compared against the
+    // doubles it shares a folder with (owner, 2026-09-22). Co-op has no pool — its "level" is
+    // a player count, so the features the calculator reads do not line up.
+    private static readonly ChartTypeCategory[] SimilarityFolders =
+        { ChartTypeCategory.Single, ChartTypeCategory.Double };
 
     private readonly IChartRepository _charts;
     private readonly IDateTimeOffsetAccessor _clock;
@@ -62,7 +66,7 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
         var cancellationToken = context.CancellationToken;
 
         var charts = (await _charts.GetCharts(mix, cancellationToken: cancellationToken))
-            .Where(c => SimilarityChartTypes.Contains(c.Type))
+            .Where(c => SimilarityFolders.Contains(c.Type.Category()))
             .ToArray();
         if (charts.Length == 0) return;
         var chartIds = charts.Select(c => c.Id).ToArray();
@@ -71,9 +75,9 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
         var stepAnalyses = await _mediator.Send(new GetChartStepAnalysesQuery(chartIds), cancellationToken);
         var scoringLevels = await _scoringLevels.GetScoringLevels(mix, cancellationToken);
 
-        foreach (var chartType in SimilarityChartTypes)
+        foreach (var folder in SimilarityFolders)
         {
-            var typeCharts = charts.Where(c => c.Type == chartType).ToArray();
+            var typeCharts = charts.Where(c => c.Type.Category() == folder).ToArray();
             if (typeCharts.Length == 0) continue;
 
             var pool = typeCharts.Select(chart => BuildFeatures(chart, badgeCoverage, stepAnalyses, scoringLevels)).ToArray();
@@ -195,7 +199,7 @@ internal sealed class ChartSimilaritySaga : IConsumer<RecalculateChartSimilarity
     {
         var allCharts = (await _charts.GetCharts(mix, cancellationToken: cancellationToken)).ToArray();
         var anchorChart = allCharts.FirstOrDefault(c => c.Id == chartId);
-        if (anchorChart == null || !SimilarityChartTypes.Contains(anchorChart.Type)) return null;
+        if (anchorChart == null || !SimilarityFolders.Contains(anchorChart.Type.Category())) return null;
 
         var charts = allCharts.Where(c => c.Type == anchorChart.Type).ToArray();
         var chartIds = charts.Select(c => c.Id).ToArray();

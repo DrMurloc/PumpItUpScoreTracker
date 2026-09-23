@@ -307,7 +307,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         var passCharts = known
             .Where(c => c.IsNewPass && !c.IsBroken)
             .Select(c => charts[c.ChartId])
-            .Where(c => c.Type is ChartType.Single or ChartType.Double);
+            .Where(c => c.Type.Category() != ChartTypeCategory.CoOp);
         var folderStats = await FolderProgress(e.Mix, e.UserId, passCharts, FolderLineCap,
             context.CancellationToken);
 

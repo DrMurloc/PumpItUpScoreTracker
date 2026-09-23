@@ -1,4 +1,4 @@
-using ScoreTracker.SharedKernel.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Components.HomeWidgets;
 
 namespace ScoreTracker.Web.Services.HomeDashboard;
@@ -199,7 +199,7 @@ public static class ByLevelAggregator
 
     private static bool Matches(BreakdownRecord r, Draw draw) =>
         draw.Type == null
-            ? r.Type is ChartType.Single or ChartType.Double
+            ? r.Type.Category() != ChartTypeCategory.CoOp
             : r.Type == draw.Type;
 
     private static IReadOnlyList<BreakdownRecord> Folder(

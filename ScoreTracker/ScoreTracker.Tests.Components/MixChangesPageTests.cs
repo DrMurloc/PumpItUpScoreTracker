@@ -153,9 +153,9 @@ public sealed class MixChangesPageTests : ComponentTestBase
         var page = RenderPage();
         var picker = page.FindComponent<FolderPicker>().Instance;
 
-        Assert.False(picker.IsMissing(ChartType.Double, 20));
-        Assert.True(picker.IsMissing(ChartType.Double, 19));
-        Assert.True(picker.IsMissing(ChartType.Single, 16));
+        Assert.False(picker.IsMissing(ChartTypeCategory.Double, 20));
+        Assert.True(picker.IsMissing(ChartTypeCategory.Double, 19));
+        Assert.True(picker.IsMissing(ChartTypeCategory.Single, 16));
         // Co-op charts have no level to move between, so the page hides that tab entirely.
         Assert.False(picker.ShowCoOp);
     }
@@ -177,7 +177,7 @@ public sealed class MixChangesPageTests : ComponentTestBase
 
         var page = RenderPage();
         var picker = page.FindComponent<FolderPicker>();
-        page.InvokeAsync(() => picker.Instance.FolderChanged.InvokeAsync((ChartType.Double, 12)))
+        page.InvokeAsync(() => picker.Instance.FolderChanged.InvokeAsync((ChartTypeCategory.Double, 12)))
             .GetAwaiter().GetResult();
 
         Assert.Contains("D12 folder", page.Find(".mc-fhead").TextContent);

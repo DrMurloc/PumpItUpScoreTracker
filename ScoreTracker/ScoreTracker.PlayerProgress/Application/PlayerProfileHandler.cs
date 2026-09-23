@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -60,17 +60,15 @@ internal sealed class PlayerProfileHandler : IRequestHandler<GetPlayerProfileQue
                     ? (PhoenixLetterGrade?)s.Score.Value.LetterGradeFor(request.Mix)
                     : null);
 
-        // One record per (type, level) folder — singles and doubles are separate folders with
+        // One record per (folder, level) — singles and doubles are separate folders with
         // separate standings, so the page draws them as two graphs rather than stacking two
-        // types into one column. Co-op "levels" are player counts, not difficulty, so they
-        // stay off a difficulty axis.
+        // types into one column. The performance types and half-doubles count in the folder
+        // they belong to (docs/design/rise.md §3.1). Co-op "levels" are player counts, not
+        // difficulty, so they stay off a difficulty axis.
         var completion = charts
-            .Where(c => c.Type is ChartType.Single or ChartType.Double or ChartType.SinglePerformance
-                or ChartType.DoublePerformance)
+            .Where(c => c.Type.Category() != ChartTypeCategory.CoOp)
             .GroupBy(c => (
-                Type: c.Type is ChartType.Single or ChartType.SinglePerformance
-                    ? ChartType.Single
-                    : ChartType.Double,
+                Type: c.Type.Category().HeadType(),
                 Level: (int)c.Level))
             .OrderBy(g => g.Key.Type).ThenBy(g => g.Key.Level)
             .Select(g =>

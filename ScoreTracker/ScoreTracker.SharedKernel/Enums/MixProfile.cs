@@ -1,4 +1,4 @@
-namespace ScoreTracker.SharedKernel.Enums;
+﻿namespace ScoreTracker.SharedKernel.Enums;
 
 /// <summary>How a mix scores a play: the 1,000,000-point Phoenix formula, or the era model of letter + broken flag.</summary>
 public enum ScoringModel
@@ -78,6 +78,7 @@ public sealed record MixProfile(
     MixEnum? OfficialSite,
     Platform Platform,
     bool HasLifebarModel,
+    IReadOnlyList<ChartType> ChartTypes,
     MixArt Art,
     MixFeatures Features);
 
@@ -90,9 +91,22 @@ public static class MixProfiles
     // Every mix before Phoenix: era scoring, no site the tracker reads, the flat art set, and
     // none of the Phoenix-generation features. XX is a legacy mix here even though xx.piugame.com
     // exists — the tracker never reads it (PiuGameConfiguration).
+    // Every chart type the series has ever had. The performance types end at XX and the
+    // six-panel half-doubles at the Infinity/Pro line, but a picker hides a folder with no
+    // charts in it, so the legacy profile declares the superset instead of guessing which of
+    // twenty-eight mixes had which (docs/design/rise.md §3.1).
+    private static readonly IReadOnlyList<ChartType> EveryLegacyType = new[]
+    {
+        ChartType.Single, ChartType.Double, ChartType.CoOp,
+        ChartType.SinglePerformance, ChartType.DoublePerformance, ChartType.HalfDouble
+    };
+
+    private static readonly IReadOnlyList<ChartType> SingleDoubleCoOp = new[]
+        { ChartType.Single, ChartType.Double, ChartType.CoOp };
+
     private static readonly MixProfile Legacy = new(
         ScoringModel.Legacy, GradeLadder.Phoenix1, AwardSet.None, OfficialSite: null, Platform.Pad,
-        HasLifebarModel: false, MixArt.Flat, MixFeatures.None);
+        HasLifebarModel: false, EveryLegacyType, MixArt.Flat, MixFeatures.None);
 
     private static readonly IReadOnlyDictionary<MixEnum, MixProfile> All = Build();
 
@@ -108,27 +122,28 @@ public static class MixProfiles
         var all = Enum.GetValues<MixEnum>().ToDictionary(m => m, _ => Legacy);
         all[MixEnum.Phoenix] = new MixProfile(
             ScoringModel.Phoenix, GradeLadder.Phoenix1, AwardSet.PhoenixPlates, OfficialSite: MixEnum.Phoenix,
-            Platform.Pad, HasLifebarModel: true, new MixArt("Phoenix", null, HasHalfDoubleBubble: false),
-            MixFeatures.Phoenix);
+            Platform.Pad, HasLifebarModel: true, SingleDoubleCoOp,
+            new MixArt("Phoenix", null, HasHalfDoubleBubble: false), MixFeatures.Phoenix);
         // The Phoenix 2 stepball set carries the H. DOUBLE bubble piugame drew for the RISE MIX
         // channel (docs/design/rise.md D12); Phoenix 2 itself has no half-double charts to draw with it.
         all[MixEnum.Phoenix2] = new MixProfile(
             ScoringModel.Phoenix, GradeLadder.Phoenix2, AwardSet.PhoenixPlates, OfficialSite: MixEnum.Phoenix2,
-            Platform.Pad, HasLifebarModel: true, new MixArt("Phoenix2", null, HasHalfDoubleBubble: true),
-            MixFeatures.Phoenix);
+            Platform.Pad, HasLifebarModel: true, SingleDoubleCoOp,
+            new MixArt("Phoenix2", null, HasHalfDoubleBubble: true), MixFeatures.Phoenix);
         // Pump It Up RISE (docs/design/rise.md §3): Phoenix-scored on a keyboard, no site, no lifebar
         // the site models (D9), Rise's own nine-grade ladder and three marks, the Phoenix 2 stepballs
         // (D12) with Rise's own letters and marks, and none of the Phoenix-generation features until
         // phase 3 tunes them.
         all[MixEnum.Rise] = new MixProfile(
             ScoringModel.Phoenix, GradeLadder.Rise, AwardSet.RiseMarks, OfficialSite: null, Platform.Keyboard,
-            HasLifebarModel: false, new MixArt("Phoenix2", "Rise", HasHalfDoubleBubble: true), MixFeatures.None);
+            HasLifebarModel: false, new[] { ChartType.Single, ChartType.HalfDouble },
+            new MixArt("Phoenix2", "Rise", HasHalfDoubleBubble: true), MixFeatures.None);
         // The Arcade Station plays the Phoenix 2 charts as-is — Phoenix 2 grades, plates and art —
         // on the same keyboard.
         all[MixEnum.RiseArcade] = new MixProfile(
             ScoringModel.Phoenix, GradeLadder.Phoenix2, AwardSet.PhoenixPlates, OfficialSite: null,
-            Platform.Keyboard, HasLifebarModel: false, new MixArt("Phoenix2", null, HasHalfDoubleBubble: true),
-            MixFeatures.None);
+            Platform.Keyboard, HasLifebarModel: false, new[] { ChartType.Single, ChartType.Double },
+            new MixArt("Phoenix2", null, HasHalfDoubleBubble: true), MixFeatures.None);
         return all;
     }
 }

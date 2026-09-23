@@ -1,14 +1,16 @@
 @namespace ScoreTracker.Web.Components
 @using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.SharedKernel.ValueTypes
-@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
-@* The difficulty selector's shared guts (one concept, one component): the
-   Singles/Doubles/CoOp segment row + the level grid. Type tabs are internal state — the
-   panel stays open across type switches in every host.
+@* The difficulty selector's shared guts (one concept, one component): the folder tab row +
+   the level grid. Tabs are internal state — the panel stays open across tab switches in
+   every host.
+
+   A folder is a category, not a chart type (docs/design/rise.md §3.1), and which folders a
+   mix offers comes from its profile: RISE has singles and half-doubles, so it shows two tabs
+   and the second one says H. DOUBLE.
 
    THIS IS A POPOVER CONTROL, like a date picker: it is opened from a button, it takes
-   the picks, it closes. It is never chrome plopped onto a page — three type tabs over a
+   the picks, it closes. It is never chrome plopped onto a page — three tabs over a
    thirty-cell grid is a whole screen of controls, and inline it drowns whatever it was
    meant to help you configure. FolderPicker wraps it for single-pick navigation (tier
    lists); FolderLevelsConfigPanel wraps it behind "Select Folders" for multi-toggle.
@@ -17,82 +19,85 @@
    move behind a button the next time that page is touched. *@
 <div class="folder-grid">
     <MudButtonGroup OverrideStyles="false" Class="folder-picker-types">
-        <MudButton Variant="@TypeVariant(ChartType.Single)" Color="Color.Primary" Size="Size.Small"
-                   Disabled="@(!HasAny(ChartType.Single))"
-                   OnClick="() => _pendingType = ChartType.Single">@L["Singles"]</MudButton>
-        <MudButton Variant="@TypeVariant(ChartType.Double)" Color="Color.Primary" Size="Size.Small"
-                   Disabled="@(!HasAny(ChartType.Double))"
-                   OnClick="() => _pendingType = ChartType.Double">@L["Doubles"]</MudButton>
-        @if (ShowCoOp)
+        @foreach (var category in Categories)
         {
-            <MudButton Variant="@TypeVariant(ChartType.CoOp)" Color="Color.Primary" Size="Size.Small"
-                       Disabled="@(!HasAny(ChartType.CoOp))"
-                       OnClick="() => _pendingType = ChartType.CoOp">@L["CoOp"]</MudButton>
+            var captured = category;
+            <MudButton Variant="@TypeVariant(captured)" Color="Color.Primary" Size="Size.Small"
+                       Disabled="@(!HasAny(captured))"
+                       OnClick="() => _pendingCategory = captured">@FolderLabels.For(L, captured, Mix)</MudButton>
         }
     </MudButtonGroup>
     <div class="folder-picker-levels">
-        @foreach (var level in LevelsFor(_pendingType))
+        @foreach (var level in LevelsFor(_pendingCategory))
         {
             var captured = level;
-            var missing = IsMissing(_pendingType, captured);
-            <button type="button" disabled="@(missing || IsDisabled(_pendingType, captured))"
-                    class="folder-picker-level @(IsSelected(_pendingType, captured) ? "folder-picker-current" : null) @(missing ? "folder-picker-level-off" : null)"
-                    @onclick="() => LevelPicked.InvokeAsync((_pendingType, captured))">@captured</button>
+            var missing = IsMissing(_pendingCategory, captured);
+            <button type="button" disabled="@(missing || IsDisabled(_pendingCategory, captured))"
+                    class="folder-picker-level @(IsSelected(_pendingCategory, captured) ? "folder-picker-current" : null) @(missing ? "folder-picker-level-off" : null)"
+                    @onclick="() => LevelPicked.InvokeAsync((_pendingCategory, captured))">@captured</button>
         }
     </div>
 </div>
 
 @code {
-    private ChartType _pendingType;
+    private ChartTypeCategory _pendingCategory;
 
     /// <summary>The tab shown on first render (and after a host re-anchor).</summary>
-    [Parameter] public ChartType InitialType { get; set; } = ChartType.Single;
+    [Parameter] public ChartTypeCategory InitialCategory { get; set; } = ChartTypeCategory.Single;
+
+    /// <summary>Which mix's folders these are — it decides the tabs and what each one is called.</summary>
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
 
     /// <summary>Hosts without co-op data (e.g. the popularity board) hide the CoOp tab.</summary>
     [Parameter] public bool ShowCoOp { get; set; } = true;
 
-    /// <summary>Which (type, level) cells render highlighted.</summary>
-    [Parameter] public Func<ChartType, int, bool> IsSelected { get; set; } = (_, _) => false;
+    /// <summary>Which (folder, level) cells render highlighted.</summary>
+    [Parameter] public Func<ChartTypeCategory, int, bool> IsSelected { get; set; } = (_, _) => false;
 
     /// <summary>
     ///     Which folders this host has nothing for — the mix diff, where most folders
     ///     changed nothing. Distinct from <see cref="IsDisabled" /> on purpose: that is a
     ///     transient refusal and every cell can be refused at once, so it must never take a
     ///     tab away (you would be locked out of switching tabs to get back under the cap).
-    ///     This one is structural, so a type with nothing in it loses its tab and the grid
+    ///     This one is structural, so a folder with nothing in it loses its tab and the grid
     ///     never opens onto a wall of dead cells.
     /// </summary>
-    [Parameter] public Func<ChartType, int, bool> IsMissing { get; set; } = (_, _) => false;
-
-    private bool HasAny(ChartType type)
-    {
-        return LevelsFor(type).Any(level => !IsMissing(type, level));
-    }
+    [Parameter] public Func<ChartTypeCategory, int, bool> IsMissing { get; set; } = (_, _) => false;
 
     /// <summary>Fired per tap; the host decides toggle-and-stay (multi) or pick-and-close (single).</summary>
-    [Parameter] public EventCallback<(ChartType Type, int Level)> LevelPicked { get; set; }
+    [Parameter] public EventCallback<(ChartTypeCategory Category, int Level)> LevelPicked { get; set; }
 
     /// <summary>
     ///     Which cells refuse a tap. A multi-select host at its cap greys the rest rather than
     ///     swallowing the click — a dead button that still looks live reads as a broken grid.
     /// </summary>
-    [Parameter] public Func<ChartType, int, bool> IsDisabled { get; set; } = (_, _) => false;
+    [Parameter] public Func<ChartTypeCategory, int, bool> IsDisabled { get; set; } = (_, _) => false;
+
+    private IReadOnlyList<ChartTypeCategory> Categories => ChartTypeCategories.CategoriesFor(Mix)
+        .Where(c => ShowCoOp || c != ChartTypeCategory.CoOp).ToArray();
+
+    private bool HasAny(ChartTypeCategory category)
+    {
+        return LevelsFor(category).Any(level => !IsMissing(category, level));
+    }
 
     protected override void OnInitialized()
     {
         // Opening on a tab whose every level is disabled shows nothing pickable, so a
-        // sparse host anchors on the first type that actually has a folder.
-        _pendingType = HasAny(InitialType)
-            ? InitialType
-            : new[] { ChartType.Single, ChartType.Double, ChartType.CoOp }.FirstOrDefault(HasAny, InitialType);
+        // sparse host anchors on the first folder that actually has something in it. A mix
+        // that does not have the requested folder at all (co-op on RISE) anchors too.
+        var offered = Categories;
+        _pendingCategory = offered.Contains(InitialCategory) && HasAny(InitialCategory)
+            ? InitialCategory
+            : offered.FirstOrDefault(HasAny, offered.FirstOrDefault(InitialCategory));
     }
 
-    private Variant TypeVariant(ChartType type)
+    private Variant TypeVariant(ChartTypeCategory category)
     {
-        return _pendingType == type ? Variant.Filled : Variant.Outlined;
+        return _pendingCategory == category ? Variant.Filled : Variant.Outlined;
     }
 
     // Singles cap at 26, doubles at the game ceiling, co-op at player counts — FolderLevels
     // is the shared source so this grid and the picker's stepper never disagree.
-    private static IEnumerable<int> LevelsFor(ChartType type) => FolderLevels.LevelsFor(type);
+    private static IEnumerable<int> LevelsFor(ChartTypeCategory category) => FolderLevels.LevelsFor(category);
 }

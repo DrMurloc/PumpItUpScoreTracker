@@ -117,7 +117,7 @@
     </MudButtonGroup>
     @if (!_songsView)
     {
-        <FolderPicker Type="_folderType" Level="_folderLevel" ShowCoOp="false"
+        <FolderPicker Category="_folder" Mix="Mix" Level="_folderLevel" ShowCoOp="false"
                       FolderChanged="SetFolder"></FolderPicker>
         @if (_folderLevel != null)
         {
@@ -377,7 +377,7 @@ else
 
     private bool _loading = true;
     private bool _songsView;
-    private ChartType _folderType = ChartType.Single;
+    private ChartTypeCategory _folder = ChartTypeCategory.Single;
     private int? _folderLevel;
     private bool _detailsOpen;
     private Chart? _detailsChart;
@@ -406,7 +406,7 @@ else
         _folderLevel == null
             ? _popularity
             : _popularity.Where(r => Charts.TryGetValue(r.ChartId, out var c) &&
-                                     c.Type == _folderType && (int)c.Level == _folderLevel.Value);
+                                     c.Type.Category() == _folder && (int)c.Level == _folderLevel.Value);
 
     private IEnumerable<Row> VisibleRows =>
         Visible.Where(r => Charts.ContainsKey(r.ChartId)).Select(r => new Row(r, Charts[r.ChartId]));
@@ -539,9 +539,9 @@ else
         _detailsOpen = true;
     }
 
-    internal void SetFolder((ChartType Type, int Level) folder)
+    internal void SetFolder((ChartTypeCategory Category, int Level) folder)
     {
-        _folderType = folder.Type;
+        _folder = folder.Category;
         _folderLevel = folder.Level;
         StateHasChanged();
     }

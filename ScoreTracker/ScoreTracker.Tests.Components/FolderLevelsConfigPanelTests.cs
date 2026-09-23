@@ -43,7 +43,7 @@ public sealed class FolderLevelsConfigPanelTests : ComponentTestBase
     }
 
     private IRenderedComponent<FolderLevelsConfigPanel> Render(string sizePreset,
-        params (ChartType Type, int Level)[] folders)
+        params (ChartTypeCategory Type, int Level)[] folders)
     {
         var config = new FolderLevelsConfig
         {
@@ -57,7 +57,7 @@ public sealed class FolderLevelsConfigPanelTests : ComponentTestBase
     [Fact]
     public void TheGridHidesBehindASelectFoldersButtonRatherThanSittingOnThePanel()
     {
-        var cut = Render("2x2", (ChartType.Single, 22));
+        var cut = Render("2x2", (ChartTypeCategory.Single, 22));
 
         var trigger = cut.Find(".fl-cfg-anchor button");
         Assert.Contains("Select Folders", trigger.TextContent);
@@ -71,14 +71,14 @@ public sealed class FolderLevelsConfigPanelTests : ComponentTestBase
     [Fact]
     public void ThePanelSaysHowManySlotsTheSizeHolds()
     {
-        Assert.Contains("1 of 7 folders", Render("2x3", (ChartType.Single, 22)).Markup);
-        Assert.Contains("1 of 4 folders", Render("2x2", (ChartType.Single, 22)).Markup);
+        Assert.Contains("1 of 7 folders", Render("2x3", (ChartTypeCategory.Single, 22)).Markup);
+        Assert.Contains("1 of 4 folders", Render("2x2", (ChartTypeCategory.Single, 22)).Markup);
     }
 
     [Fact]
     public void PicksShowAsChipsSoTheChoiceIsVisibleWithTheGridClosed()
     {
-        var cut = Render("2x2", (ChartType.Single, 22), (ChartType.Double, 18));
+        var cut = Render("2x2", (ChartTypeCategory.Single, 22), (ChartTypeCategory.Double, 18));
 
         Assert.Contains("S22", cut.Markup);
         Assert.Contains("D18", cut.Markup);
@@ -91,8 +91,8 @@ public sealed class FolderLevelsConfigPanelTests : ComponentTestBase
         // and swallowing the tap.
         var picked = new HashSet<int> { 20, 21, 22, 23 };
         var cut = RenderComponent<FolderGrid>(p => p
-            .Add(g => g.IsSelected, (t, l) => t == ChartType.Single && picked.Contains(l))
-            .Add(g => g.IsDisabled, (t, l) => !(t == ChartType.Single && picked.Contains(l))));
+            .Add(g => g.IsSelected, (c, l) => c == ChartTypeCategory.Single && picked.Contains(l))
+            .Add(g => g.IsDisabled, (c, l) => !(c == ChartTypeCategory.Single && picked.Contains(l))));
 
         var cells = cut.FindAll(".folder-picker-level");
         var live = cells.Where(c => c.ClassList.Contains("folder-picker-current")).ToArray();

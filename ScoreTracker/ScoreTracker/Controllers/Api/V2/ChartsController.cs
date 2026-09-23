@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using ScoreTracker.Application.Queries;
@@ -421,8 +421,10 @@ public sealed class ChartsController : ApiV2ControllerBase
         if (debuts is not null) settings.Debut = true;
         else if (debut is not null) settings.Debut = debut;
 
+        // Unasked, a draw covers every type the mix has except co-op, whose "level" is a player
+        // count and whose weights are a separate bucket. On RISE that means half-doubles.
         var types = chartTypes is null
-            ? new[] { ChartType.Single, ChartType.Double }
+            ? MixProfiles.For(mix).ChartTypes.Where(t => t.Category() != ChartTypeCategory.CoOp).ToArray()
             : chartTypes.Where(s => Enum.TryParse<ChartType>(s, true, out _))
                 .Select(s => Enum.Parse<ChartType>(s, true)).ToArray();
 
@@ -469,11 +471,16 @@ public sealed class ChartsController : ApiV2ControllerBase
         if (minLevel > maxLevel)
             return Problem("invalid-level", "minLevel must not exceed maxLevel.");
 
+        // Weights live in one bucket per folder, so the asked-for types are folded into folders
+        // before they are set: a caller asking only for half-doubles is asking for the doubles
+        // bucket, and matching ChartType.Double exactly would leave every weight at zero and
+        // draw nothing (docs/design/rise.md §3.1).
+        var weightBuckets = types.Select(t => t.Category()).ToHashSet();
         for (var level = minLevel ?? DifficultyLevel.Min; level <= (maxLevel ?? DifficultyLevel.Max); level++)
         {
-            if (types.Contains(ChartType.Single)) settings.LevelWeights[level] = 1;
-            if (types.Contains(ChartType.Double)) settings.DoubleLevelWeights[level] = 1;
-            if (types.Contains(ChartType.CoOp) && level <= 5) settings.PlayerCountWeights[level] = 1;
+            if (weightBuckets.Contains(ChartTypeCategory.Single)) settings.LevelWeights[level] = 1;
+            if (weightBuckets.Contains(ChartTypeCategory.Double)) settings.DoubleLevelWeights[level] = 1;
+            if (weightBuckets.Contains(ChartTypeCategory.CoOp) && level <= 5) settings.PlayerCountWeights[level] = 1;
         }
 
         try

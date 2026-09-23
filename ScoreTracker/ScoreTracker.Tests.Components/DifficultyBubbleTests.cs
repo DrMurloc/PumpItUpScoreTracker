@@ -1,4 +1,4 @@
-using Bunit;
+﻿using Bunit;
 using Microsoft.AspNetCore.Components;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -58,7 +58,7 @@ public sealed class DifficultyBubbleTests : ComponentTestBase
 
         Assert.Single(cut.FindAll(".legacy-chip"));
         Assert.Empty(cut.FindAll("img"));
-        Assert.Contains("HDB 12", cut.Markup);
+        Assert.Contains("HD 12", cut.Markup);
     }
 
     [Fact]

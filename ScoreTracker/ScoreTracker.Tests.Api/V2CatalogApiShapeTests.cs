@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Catalog.Contracts;
@@ -698,6 +698,40 @@ public sealed class V2CatalogApiShapeTests
 
         _mediator.Verify(m => m.Send(It.Is<GetRandomChartsQuery>(q =>
             q.Settings.Versions.SetEquals(new[] { "1.01.0" }) && q.Settings.Debut == true), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     Weights live in one bucket per folder. RISE has no Double charts, so matching the
+    ///     chart type exactly left DoubleLevelWeights at zero and the draw could only ever
+    ///     return singles.
+    /// </summary>
+    [Fact]
+    public async Task ARiseDrawWeightsItsHalfDoublesAsDoubles()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetRandomChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Chart>());
+
+        await WithContext(new ChartsController(_mediator.Object)).GetRandom("Rise");
+
+        _mediator.Verify(m => m.Send(It.Is<GetRandomChartsQuery>(q =>
+                q.Settings.DoubleLevelWeights.Values.Any(w => w > 0)
+                && q.Settings.LevelWeights.Values.Any(w => w > 0)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AskingOnlyForHalfDoublesStillFillsTheDoublesBucket()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetRandomChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Chart>());
+
+        await WithContext(new ChartsController(_mediator.Object))
+            .GetRandom("Rise", chartTypes: new[] { "HalfDouble" });
+
+        _mediator.Verify(m => m.Send(It.Is<GetRandomChartsQuery>(q =>
+                q.Settings.DoubleLevelWeights.Values.Any(w => w > 0)
+                && q.Settings.LevelWeights.Values.All(w => w == 0)),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

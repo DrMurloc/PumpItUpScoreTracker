@@ -61,9 +61,7 @@ public sealed class BunitEventDispatchTests
         ["CommunityToolsReviewPageTests.cs"] = 5,
         ["ConsoleWebhooksPageTests.cs"] = 4,
         ["DrawCardTileTests.cs"] = 2,
-        ["FolderGridTests.cs"] = 2,
         ["FolderLevelsConfigPanelTests.cs"] = 2,
-        ["FolderPickerTests.cs"] = 2,
         ["LeaderboardDialogTests.cs"] = 1,
         // The three in the InvokeAsync helper are the ApexChart workaround, not debt: a
         // page that parks work on the dispatcher needs the dispatcher pumped, and the

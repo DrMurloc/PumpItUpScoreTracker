@@ -10,7 +10,7 @@ public sealed class FolderLevelsTests
     [Fact]
     public void SinglesStopAt26_NoHarderSingleExistsYet()
     {
-        var levels = FolderLevels.LevelsFor(ChartType.Single).ToArray();
+        var levels = FolderLevels.LevelsFor(ChartTypeCategory.Single).ToArray();
 
         Assert.Equal(26, levels.Max());
         Assert.Contains(26, levels);
@@ -21,7 +21,7 @@ public sealed class FolderLevelsTests
     [Fact]
     public void DoublesRunToTheGameCeiling()
     {
-        var levels = FolderLevels.LevelsFor(ChartType.Double).ToArray();
+        var levels = FolderLevels.LevelsFor(ChartTypeCategory.Double).ToArray();
 
         Assert.Equal((int)DifficultyLevel.Max, levels.Max());
         Assert.Equal(1, levels.Min());
@@ -30,16 +30,25 @@ public sealed class FolderLevelsTests
     [Fact]
     public void CoOpLevelsArePlayerCountsTwoThroughFive()
     {
-        var levels = FolderLevels.LevelsFor(ChartType.CoOp).ToArray();
+        var levels = FolderLevels.LevelsFor(ChartTypeCategory.CoOp).ToArray();
 
         Assert.Equal(new[] { 2, 3, 4, 5 }, levels);
     }
 
     [Theory]
-    [InlineData(ChartType.Single, 1, 26)]
-    [InlineData(ChartType.CoOp, 2, 5)]
-    public void RangeIsInclusivePerType(ChartType type, int min, int max)
+    [InlineData(ChartTypeCategory.Single, 1, 26)]
+    [InlineData(ChartTypeCategory.CoOp, 2, 5)]
+    public void RangeIsInclusivePerFolder(ChartTypeCategory category, int min, int max)
     {
-        Assert.Equal((min, max), FolderLevels.Range(type));
+        Assert.Equal((min, max), FolderLevels.Range(category));
+    }
+
+    // A half-double folder is a doubles folder, so it offers the doubles range rather than
+    // falling through to something of its own.
+    [Fact]
+    public void HalfDoublesShareTheDoublesRange()
+    {
+        Assert.Equal(FolderLevels.Range(ChartTypeCategory.Double),
+            FolderLevels.Range(ChartType.HalfDouble.Category()));
     }
 }

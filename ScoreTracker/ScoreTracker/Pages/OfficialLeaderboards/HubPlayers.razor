@@ -141,7 +141,7 @@ else
                hold a placement — the grid greys those out and the ◄ ► steppers skip past them.
                Co-op is exempt: its folder number is how many players a chart takes, not a
                difficulty, so every co-op folder is 2 through 5 and all of them have boards. *@
-            <FolderPicker Type="_folderType" Level="_folderLevel" FolderChanged="SetFolder"
+            <FolderPicker Category="_folder" Mix="Mix" Level="_folderLevel" FolderChanged="SetFolder"
                           IsMissing="Unboarded"></FolderPicker>
             @if (_folderLevel != null)
             {
@@ -341,12 +341,12 @@ else
     ///     players (2–5), not difficulty, so comparing it against a difficulty floor would
     ///     disable the whole tab.
     /// </summary>
-    private static bool Unboarded(ScoreTracker.SharedKernel.Enums.ChartType type, int level) =>
-        type != ScoreTracker.SharedKernel.Enums.ChartType.CoOp && level < FirstBoardedLevel;
+    private static bool Unboarded(ScoreTracker.SharedKernel.Enums.ChartTypeCategory category, int level) =>
+        category != ScoreTracker.SharedKernel.Enums.ChartTypeCategory.CoOp && level < FirstBoardedLevel;
 
     private string _placementFilter = string.Empty;
-    private ScoreTracker.SharedKernel.Enums.ChartType _folderType =
-        ScoreTracker.SharedKernel.Enums.ChartType.Single;
+    private ScoreTracker.SharedKernel.Enums.ChartTypeCategory _folder =
+        ScoreTracker.SharedKernel.Enums.ChartTypeCategory.Single;
     private int? _folderLevel;
 
     /// <summary>
@@ -361,11 +361,11 @@ else
                     || SongName(r).Contains(_placementFilter, StringComparison.OrdinalIgnoreCase))
         .Where(r => _folderLevel == null
                     || (Charts.TryGetValue(r.ChartId, out var chart)
-                        && chart.Type == _folderType && chart.Level == _folderLevel));
+                        && chart.Type.Category() == _folder && chart.Level == _folderLevel));
 
-    private void SetFolder((ScoreTracker.SharedKernel.Enums.ChartType Type, int Level) folder)
+    private void SetFolder((ScoreTracker.SharedKernel.Enums.ChartTypeCategory Category, int Level) folder)
     {
-        _folderType = folder.Type;
+        _folder = folder.Category;
         _folderLevel = folder.Level;
     }
 

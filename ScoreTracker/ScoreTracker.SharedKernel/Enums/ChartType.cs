@@ -11,10 +11,10 @@ public enum ChartType
     [Description("DP")] DoublePerformance,
     [Description("CoOp")] CoOp,
 
-    // Legacy-only pad layout (middle six panels); every HDB chart was removed by
-    // XX. Routine deliberately has NO value here — it collapses onto CoOp with a
-    // real difficulty level (docs/design/legacy-mixes.md).
-    [Description("HDB")] HalfDouble
+    // The six-panel pad layout: the Infinity/Pro line's HD charts, all removed by XX,
+    // and RISE's 6K H.DOUBLE. Routine deliberately has NO value here — it collapses
+    // onto CoOp with a real difficulty level (docs/design/legacy-mixes.md).
+    [Description("HD")] HalfDouble
 }
 
 [ExcludeFromCodeCoverage]
@@ -24,6 +24,9 @@ public static class ChartTypeHelperMethods
     {
         if (shortHand.Equals("c", StringComparison.OrdinalIgnoreCase) ||
             shortHand.Equals("CoOp", StringComparison.OrdinalIgnoreCase)) return ChartType.CoOp;
+        // The shorthand became HD on 2026-09-22 (docs/design/rise.md §3.1). HDB still
+        // parses so a spreadsheet, a saved preset or a link written before it still reads.
+        if (shortHand.Equals("HDB", StringComparison.OrdinalIgnoreCase)) return ChartType.HalfDouble;
         foreach (var field in typeof(ChartType).GetFields())
             if (Attribute.GetCustomAttribute(field,
                     typeof(DescriptionAttribute)) is DescriptionAttribute attribute)

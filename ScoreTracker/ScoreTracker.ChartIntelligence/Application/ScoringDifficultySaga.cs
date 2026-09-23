@@ -1,4 +1,4 @@
-using ScoreTracker.ChartIntelligence.Contracts.Messages;
+﻿using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using MassTransit;
 using MediatR;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
@@ -122,8 +122,10 @@ namespace ScoreTracker.ChartIntelligence.Application
 
         public async Task Consume(ConsumeContext<RecalculateChartLetterDifficultiesCommand> context)
         {
+            // The types this mix actually has rather than a fixed three — a mix whose doubles
+            // folder is half-doubles gets those walked instead of an empty D folder.
             foreach (var level in DifficultyLevel.All)
-            foreach (var chartType in new[] { ChartType.Single, ChartType.Double, ChartType.CoOp })
+            foreach (var chartType in MixProfiles.For(context.Message.Mix).ChartTypes)
                 await UpdateChartLetterLevel(context.Message.Mix, chartType, level, context.CancellationToken);
         }
 
@@ -134,13 +136,14 @@ namespace ScoreTracker.ChartIntelligence.Application
             var charts = (await _chartRepository.GetCharts(mix, cancellationToken: cancellationToken))
                 .ToDictionary(c => c.Id);
             foreach (var level in DifficultyLevel.All)
-            foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
+            foreach (var chartType in MixProfiles.For(mix).ChartTypes
+                         .Where(t => t.Category() != ChartTypeCategory.CoOp))
             {
                 var max = level + LevelDiff;
                 var min = level - LevelDiff;
                 if (min < 1) min = 1;
-                if (max > 26 && chartType == ChartType.Single) max = 26;
-                if (max > 27 && chartType == ChartType.Double) max = 27;
+                if (max > 26 && chartType.Category() == ChartTypeCategory.Single) max = 26;
+                if (max > 27 && chartType.Category() == ChartTypeCategory.Double) max = 27;
 
                 var phoenixScores = new List<(Guid UserId, RecordedPhoenixScore Record)>();
                 for (var l = min; l <= max; l++)

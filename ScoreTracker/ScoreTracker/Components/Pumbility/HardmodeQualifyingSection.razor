@@ -36,7 +36,7 @@
 
     <div class="pmb-peers-controls">
         <span class="pmb-peers-controls-start">
-            <FolderPicker Type="_type" Level="_level" ShowCoOp="false" IsMissing="IsMissing"
+            <FolderPicker Category="_folder" Mix="Mix" Level="_level" ShowCoOp="false" IsMissing="IsMissing"
                           FolderChanged="PickFolder"></FolderPicker>
         </span>
         <span class="pmb-peers-controls-end">
@@ -207,7 +207,7 @@
 
     [Parameter] public EventCallback<PeerBoardRequest> OnOpenBoard { get; set; }
 
-    private ChartType _type = ChartType.Single;
+    private ChartTypeCategory _folder = ChartTypeCategory.Single;
     private int _level = 21;
     private UiDensity _density = UiDensity.Comfortable;
     private HashSet<string> _collapsed = new();
@@ -235,7 +235,7 @@
     ///     one, and this list is a rarity reading rather than the cut itself.)
     /// </summary>
     private IReadOnlyList<HardmodeChartRecord> Folder => _qualifying
-        .Where(c => c.ChartType == _type && c.Level == _level)
+        .Where(c => c.ChartType.Category() == _folder && c.Level == _level)
         .OrderBy(c => c.Points)
         .ThenBy(c => Charts.TryGetValue(c.ChartId, out var chart) ? chart.Song.Name.ToString() : string.Empty,
             StringComparer.OrdinalIgnoreCase)
@@ -334,9 +334,9 @@
     }
 
     /// <summary>Folders with nothing in the list are greyed rather than hidden — the holes are the map.</summary>
-    private bool IsMissing(ChartType type, int level)
+    private bool IsMissing(ChartTypeCategory category, int level)
     {
-        return !_qualifying.Any(c => c.ChartType == type && c.Level == level);
+        return !_qualifying.Any(c => c.ChartType.Category() == category && c.Level == level);
     }
 
     protected override async Task OnInitializedAsync()
@@ -353,24 +353,25 @@
         // Where you were last time, if that folder still has anything in it. The week's census
         // moves the list under people, so a remembered folder can empty out - and then this
         // falls through to the same rule a first visit uses.
-        if (ParseFolder(await UiSettings.GetSetting(FolderSettingKey)) is { } saved && !IsMissing(saved.Type, saved.Level))
-            (_type, _level) = saved;
+        if (ParseFolder(await UiSettings.GetSetting(FolderSettingKey)) is { } saved
+            && !IsMissing(saved.Category, saved.Level))
+            (_folder, _level) = saved;
 
         // Open on a folder that has something in it rather than on an empty S21.
-        if (IsMissing(_type, _level))
+        if (IsMissing(_folder, _level))
         {
             var first = _qualifying.OrderBy(c => c.ChartType).ThenByDescending(c => c.Level).FirstOrDefault();
-            if (first != null) (_type, _level) = (first.ChartType, first.Level);
+            if (first != null) (_folder, _level) = (first.ChartType.Category(), first.Level);
         }
 
         await LoadSkills();
         await LoadStandings();
     }
 
-    private async Task PickFolder((ChartType Type, int Level) folder)
+    private async Task PickFolder((ChartTypeCategory Category, int Level) folder)
     {
-        (_type, _level) = folder;
-        await UiSettings.SetSetting(FolderSettingKey, $"{folder.Type}|{folder.Level}");
+        (_folder, _level) = folder;
+        await UiSettings.SetSetting(FolderSettingKey, $"{folder.Category}|{folder.Level}");
         await LoadSkills();
         await LoadStandings();
     }
@@ -379,13 +380,13 @@
     ///     "Single|21" back into a folder. Anything unparseable reads as no preference rather
     ///     than throwing: a setting is player-editable data, not a contract.
     /// </summary>
-    private static (ChartType Type, int Level)? ParseFolder(string? setting)
+    private static (ChartTypeCategory Category, int Level)? ParseFolder(string? setting)
     {
         var parts = (setting ?? string.Empty).Split('|');
         return parts.Length == 2
-               && Enum.TryParse<ChartType>(parts[0], out var type)
+               && ChartTypeCategories.TryParse(parts[0], out var category)
                && int.TryParse(parts[1], out var level)
-            ? (type, level)
+            ? (category, level)
             : null;
     }
 

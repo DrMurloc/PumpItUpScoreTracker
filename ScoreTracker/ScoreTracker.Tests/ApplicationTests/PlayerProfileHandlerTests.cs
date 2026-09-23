@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -127,6 +127,29 @@ public sealed class PlayerProfileHandlerTests
         Assert.Equal(1, doubles.GradeCounts[PhoenixLetterGrade.SSS]);
         Assert.DoesNotContain(profile.FolderCompletion, f => f.Level == 20 && f.Type == ChartType.Single);
         Assert.DoesNotContain(profile.FolderCompletion, f => f.Level == 2);
+    }
+
+    // A folder is a category, so a half-double counts in the doubles folder the way Double
+    // Performance always has (docs/design/rise.md 3.1).
+    [Fact]
+    public async Task HalfDoublesCountInTheDoublesFolder()
+    {
+        TargetIs(isPublic: true);
+        var halfDouble = new ChartBuilder().WithLevel(18).WithType(ChartType.HalfDouble).Build();
+        var perf = new ChartBuilder().WithLevel(18).WithType(ChartType.DoublePerformance).Build();
+        _charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(),
+                It.IsAny<ChartType?>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { halfDouble, perf });
+        _scores.Setup(s => s.GetBestScores(It.IsAny<MixEnum>(), Target, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+                { new RecordedPhoenixScore(halfDouble.Id, 990000, PhoenixPlate.SuperbGame, false, Now) });
+
+        var profile = await Build().Handle(new GetPlayerProfileQuery(Target, MixEnum.Phoenix), CancellationToken.None);
+
+        var doubles = profile!.FolderCompletion.Single(f => f.Level == 18 && f.Type == ChartType.Double);
+        Assert.Equal(2, doubles.Total);
+        Assert.Equal(1, doubles.Passed);
+        Assert.DoesNotContain(profile.FolderCompletion, f => f.Type == ChartType.HalfDouble);
     }
 
     [Fact]

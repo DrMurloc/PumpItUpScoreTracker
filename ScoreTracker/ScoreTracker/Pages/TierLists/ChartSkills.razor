@@ -1,4 +1,4 @@
-@page "/TierLists"
+﻿@page "/TierLists"
 @page "/TierLists/{ChartTypeRoute}/{LevelRoute:int}"
 @rendermode RenderModes.Interactive
 @using MediatR
@@ -60,8 +60,9 @@ else
         <div class="tier-toolbar-row">
             @* CoOp folders are never marked missing: the lens is not offered there, so picking
                one swaps the lens (Chabala precedent) rather than dead-ending on a greyed grid. *@
-            <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"
-                          IsMissing="@((t, l) => t != ChartType.CoOp && !PumbilityFolderHasData(t, l))"></FolderPicker>
+            <FolderPicker Category="_folder" Mix="_currentMix" Level="_level" Disabled="_isLoading"
+                          FolderChanged="ChangeFolder"
+                          IsMissing="@((c, l) => c != ChartTypeCategory.CoOp && !PumbilityFolderHasData(c, l))"></FolderPicker>
             @* Four views, one visible answer to "what am I looking at". Personalized was a
                switch riding on top of this group until 2026-08-11, which meant the state was
                spread across two controls and one of them was invisible in screenshots. *@
@@ -279,7 +280,7 @@ else
                 {
                     <MudText Typo="Typo.overline">@L["Folder Levels"]</MudText>
                     <MudGrid>
-                        <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == _level) || (_chartType == ChartType.CoOp && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
+                        <TitleProgressBar AverageRating="_averageRating" Titles="_titleProgress.Where(t => (t.Title is PhoenixDifficultyTitle pdt && pdt.Level == _level) || (_folder == ChartTypeCategory.CoOp && t.Title is PhoenixCoOpTitle))"></TitleProgressBar>
                     </MudGrid>
                 }
             </div>
@@ -298,7 +299,7 @@ else
     }
     @if (_tierListType == "Chabala" && ChabalaAvailable)
     {
-        <MudLink Href="@_chabalaLinks[(_chartType, _level)]" Target="_blank">@L["Original Chabala Tier List"]</MudLink>
+        <MudLink Href="@_chabalaLinks[(_folder.HeadType(), _level)]" Target="_blank">@L["Original Chabala Tier List"]</MudLink>
     }
     @if (_groupBy == "Score Ranking")
     {
@@ -688,7 +689,7 @@ else
                    switches above — this one stays live in every density. *@
                 <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowOtherMixPasses" ValueChanged="SetShowOtherMixPasses"
                            Label=@L["Show Passed in Other Mixes"]></MudSwitch>
-                @if (!IsLegacy && _chartType != ChartType.CoOp)
+                @if (!IsLegacy && _folder != ChartTypeCategory.CoOp)
                 {
                     <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowProjectedScore" ValueChanged="SetShowProjectedScore"
                                Disabled="_density == UiDensity.Compact" Label=@L["Show Projected Score"]></MudSwitch>
@@ -1113,7 +1114,7 @@ else
     private int _highestNoteCount = 0;
     private decimal _lowestBpm = 0;
     private decimal _highestBpm = 0;
-    private ChartType _chartType = ChartType.Double;
+    private ChartTypeCategory _folder = ChartTypeCategory.Double;
     // Round-2 decision: density persists PER PAGE ("you use different ones based on
     // your current task"), never a site-wide Universal__ key.
     private const string DensitySettingKey = "Density__TierLists";
@@ -1230,10 +1231,10 @@ else
         await SaveSettings();
         // Same shape as the cross-mix switch: the folder load skips the read when the switch is
         // off, so turning it back on inside a folder backfills what that load never fetched.
-        if (show && CurrentUser.IsLoggedIn && !IsLegacy && _chartType != ChartType.CoOp)
+        if (show && CurrentUser.IsLoggedIn && !IsLegacy && _folder != ChartTypeCategory.CoOp)
         {
             _projectedScores = await Mediator.Send(
-                new GetProjectedScoresQuery(_chartType, _level, _currentMix));
+                new GetProjectedScoresQuery(_folder.TypeOn(_currentMix), _level, _currentMix));
         }
     }
 
@@ -1455,7 +1456,7 @@ else
         _ => L[_groupBy]
     };
 
-    private string DownloadFileName => ShareCardTitles.TierListFileName(_currentMix, _chartType, _level,
+    private string DownloadFileName => ShareCardTitles.TierListFileName(_currentMix, _folder.TypeOn(_currentMix), _level,
         ShareSubjectKey, _now.ToString("yyyy-MM-dd"));
 
     // The share-only reads, fetched when a toggle first asks for them (the page's own
@@ -1474,13 +1475,13 @@ else
             _otherMixPassesLoaded = true;
         }
 
-        if (_chartType == ChartType.CoOp) return;
+        if (_folder == ChartTypeCategory.CoOp) return;
         // Everything below prices with PUMBILITY; a mix without a formula has no fifty and no gains.
         if (!_currentMix.HasPumbility()) return;
         if (options.BoundaryTop50 && _top50TypeIds == null)
         {
             _top50TypeIds = (await Mediator.Send(
-                    new GetTop50ForPlayerQuery(CurrentUser.User.Id, _chartType, 50, _currentMix), cancellationToken))
+                    new GetTop50ForPlayerQuery(CurrentUser.User.Id, _folder.TypeOn(_currentMix), 50, _currentMix), cancellationToken))
                 .Select(s => s.ChartId).ToHashSet();
             _top50CombinedIds = (await Mediator.Send(
                     new GetTop50ForPlayerQuery(CurrentUser.User.Id, null, 50, _currentMix), cancellationToken))
@@ -1489,7 +1490,7 @@ else
 
         if (options.Pumbility && options.ExpectedGains && _shareGains == null)
             _shareGains = await Mediator.Send(
-                new ProjectPumbilityGainsQuery(CurrentUser.User.Id, _currentMix, _chartType), cancellationToken);
+                new ProjectPumbilityGainsQuery(CurrentUser.User.Id, _currentMix, _folder.TypeOn(_currentMix)), cancellationToken);
     }
 
     private ShareCardComposer.TileFacts FactsFor(SongTierListEntry entry, ShareCardOptions options)
@@ -1523,9 +1524,9 @@ else
     private TierListShareCard BuildCard(IReadOnlyList<TierListShareCard.Row> rows, ShareCardOptions options)
     {
         var palette = MixThemes.PaletteFor(_currentMix);
-        var folder = _chartType == ChartType.CoOp
+        var folder = _folder == ChartTypeCategory.CoOp
             ? $"{L["CoOp"]} ×{_level}"
-            : $"{L[_chartType == ChartType.Single ? "Singles" : "Doubles"]} {_level}";
+            : $"{FolderLabels.For(L, _folder, _currentMix)} {_level}";
         // The header rule (design doc §9): the title says what the rows are, the subtitle how
         // to read them, the stamp whose reading it is. The mix rides the card itself: with 31
         // selectable mixes, a shared "Singles 18" screenshot is meaningless without it. GetName,
@@ -1533,7 +1534,7 @@ else
         var header = ShareCardTitles.TierList(folder, ShareView, ShareLensName, PersonalizedActive,
             CurrentUser.IsLoggedIn ? CurrentUser.User.GameTag ?? CurrentUser.User.Name : string.Empty,
             ShareGroupingName, _currentMix.GetName(), _now.ToString("yyyy-MM-dd"), key => L[key].Value);
-        var linkUrl = $"https://piuscores.arroweclip.se/TierLists/{_chartType}/{_level}";
+        var linkUrl = $"https://piuscores.arroweclip.se/TierLists/{_folder}/{_level}";
         return new TierListShareCard(
             header.Title,
             header.Subtitle,
@@ -1544,7 +1545,7 @@ else
             palette.Ink,
             palette.InkMuted,
             linkUrl,
-            DifficultyBubblePath(_chartType, _level),
+            DifficultyBubblePath(_folder.TypeOn(_currentMix), _level),
             rows,
             // Anonymous downloads carry no personal state, so a legend would be
             // explaining borders that are not in the picture.
@@ -1737,7 +1738,7 @@ else
     private int _peerCount;
     // Folders the PUMBILITY lens can answer for, for whichever peer group is in play. Null while
     // the lens is not selected, which is also what makes the picker gate a no-op elsewhere.
-    private HashSet<(ChartType Type, int Level)>? _pumbilityFolders;
+    private HashSet<(ChartTypeCategory Folder, int Level)>? _pumbilityFolders;
     private bool _isProvisionalFallback = false;
     private MixEnum _currentMix = MixEnum.Phoenix;
     private int _averageRating = 1;
@@ -1758,7 +1759,7 @@ else
     /// <summary>Community and Personalized both section by the lens; they differ only in data.</summary>
     private bool IsTierView => _groupBy is "Difficulty" or "Personalized";
 
-    private bool CanPersonalize => CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _currentMix.HasPumbility();
+    private bool CanPersonalize => CurrentUser.IsLoggedIn && _folder != ChartTypeCategory.CoOp && _currentMix.HasPumbility();
 
     private bool IsSkillView => _groupBy == "Speed";
 
@@ -1774,12 +1775,12 @@ else
     // lens, so there the annotation would only repeat the heading the card already sits under.
     private bool ShowLensAnnotation => !IsTierView;
 
-    private bool ChabalaAvailable => _currentMix == MixEnum.Phoenix && _chabalaLinks.ContainsKey((_chartType, _level));
+    private bool ChabalaAvailable => _currentMix == MixEnum.Phoenix && _chabalaLinks.ContainsKey((_folder.HeadType(), _level));
 
     // The PUMBILITY pools price no co-op charts (includeCoOp: false, and CO-OP has no rating),
     // so the lens has nothing to say on CoOp folders and is not offered there — no explanation,
     // same as Chabala on folders without links.
-    private bool PumbilityAvailable => _chartType != ChartType.CoOp && _currentMix.HasPumbility();
+    private bool PumbilityAvailable => _folder != ChartTypeCategory.CoOp && _currentMix.HasPumbility();
 
     // Personalization is a VIEW now, not a switch riding on top of one (owner, 2026-08-11) —
     // except on the two views that don't section by the lens, where the Shown Difficulty picker
@@ -1808,7 +1809,7 @@ else
 
     private const int MinCohortPeers = 3;
 
-    private string BreakdownUrl => $"/TierLists/{_chartType}/{_level}/Breakdown?Lens={_tierListType}";
+    private string BreakdownUrl => $"/TierLists/{_folder}/{_level}/Breakdown?Lens={_tierListType}";
 
     private bool Passed(Guid chartId) => _scores.TryGetValue(chartId, out var s) && !s.IsBroken;
 
@@ -1842,12 +1843,12 @@ else
         return ChangeGrouping(grouping);
     }
 
-    private async Task ChangeFolder((ChartType Type, int Level) folder)
+    private async Task ChangeFolder((ChartTypeCategory Category, int Level) folder)
     {
-        _chartType = folder.Type;
+        _folder = folder.Category;
         _level = folder.Level;
         _thinCohort = null;
-        if (_chartType == ChartType.CoOp && _level is < 2 or > 5)
+        if (_folder == ChartTypeCategory.CoOp && _level is < 2 or > 5)
         {
             _level = 2;
         }
@@ -1939,7 +1940,7 @@ else
     private async Task SetQueryString(bool replace = false)
     {
         var url = NavManager.GetUriWithQueryParameters(
-            $"/TierLists/{_chartType}/{_level}",
+            $"/TierLists/{_folder}/{_level}",
             new Dictionary<string, object?> { { "TierListType", _tierListType } });
         await JSRuntime.InvokeVoidAsync(replace ? "history.replaceState" : "history.pushState", null, "", url);
     }
@@ -2032,9 +2033,9 @@ else
         // has an answer rather than on a dead page — silently, per the owner: an explanation
         // for a folder the reader may not have chosen deliberately is noise.
         await LoadPumbilityFolders(cancellationToken);
-        if (!PumbilityFolderHasData(_chartType, _level))
+        if (!PumbilityFolderHasData(_folder, _level))
         {
-            var nearest = NearestPumbilityFolder(_chartType, _level);
+            var nearest = NearestPumbilityFolder(_folder, _level);
             if (nearest != null && nearest.Value.Level != _level)
             {
                 _level = nearest.Value.Level;
@@ -2047,7 +2048,7 @@ else
         }
 
         await UiSettings.SetSetting("TierLists__Level", _level.ToString(), cancellationToken);
-        await UiSettings.SetSetting("TierLists__ChartType", _chartType.ToString(), cancellationToken);
+        await UiSettings.SetSetting("TierLists__ChartType", _folder.ToString(), cancellationToken);
         // The view toggle is a real choice on every mix, so it persists on every mix.
         await UiSettings.SetSetting("TierLists__GroupBy", _groupBy, cancellationToken);
         if (!IsLegacy)
@@ -2059,7 +2060,7 @@ else
         }
 
         _charts = _allCharts.Values
-            .Where(c => c.Level == _level && c.Type == _chartType)
+            .Where(c => c.Level == _level && c.Type.Category() == _folder)
             .ToDictionary(c => c.Id);
         _folderScores = _scores.Where(kv => _charts.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
@@ -2101,14 +2102,14 @@ else
         // change (the full load runs once, so it can't live there). Off for Phoenix/legacy and
         // signed-out — exactly where the retired track's bar was off.
         _hasTitleProgress = CurrentUser.IsLoggedIn
-                         && FolderTitleTrack.HasTitleProgress(_currentMix, _chartType, _level, _allCharts, _scores);
+                         && FolderTitleTrack.HasTitleProgress(_currentMix, _folder.TypeOn(_currentMix), _level, _allCharts, _scores);
 
         // Folder standing, recomputed per folder alongside the pointer's gate. Signed-out visitors
         // have no standing to show.
         if (CurrentUser.IsLoggedIn)
         {
             var passed = FolderLevelRecord.PassedScores(_folderScores.Values);
-            _folderLevel = FolderLevelRecord.For(_currentMix, _chartType, _level, _charts.Values, passed);
+            _folderLevel = FolderLevelRecord.For(_currentMix, _folder.TypeOn(_currentMix), _level, _charts.Values, passed);
             _folderGrades = _charts.Values
                 .Select(c => passed.TryGetValue(c.Id, out var score) ? score : (int?)null)
                 .Where(s => s != null)
@@ -2136,7 +2137,7 @@ else
         }
 
         // Population phase — works logged-out, renders as soon as it lands.
-        var blended = await Mediator.Send(new GetBlendedTierListQuery(_chartType, _level, _tierListType,
+        var blended = await Mediator.Send(new GetBlendedTierListQuery(_folder.TypeOn(_currentMix), _level, _tierListType,
             PersonalizedActive, Mix: _currentMix), cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -2164,8 +2165,8 @@ else
 
         // Only when the switch asks for it: this is a peer sweep, and no other part of the page
         // needs it. SetShowProjectedScore backfills when it comes back on inside a folder.
-        _projectedScores = _settings.ShowProjectedScore && CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp
-            ? await Mediator.Send(new GetProjectedScoresQuery(_chartType, _level, _currentMix), cancellationToken)
+        _projectedScores = _settings.ShowProjectedScore && CurrentUser.IsLoggedIn && _folder != ChartTypeCategory.CoOp
+            ? await Mediator.Send(new GetProjectedScoresQuery(_folder.TypeOn(_currentMix), _level, _currentMix), cancellationToken)
             : new Dictionary<Guid, PhoenixScore>();
 
         // The blank-page guard is dead (rule 9): render every chart we can resolve and
@@ -2197,13 +2198,13 @@ else
         var crossMixTask = _settings.ShowOtherMixPasses
             ? Mediator.Send(new GetCrossMixPassesQuery(_currentMix), cancellationToken)
             : Task.FromResult<IReadOnlySet<Guid>>(new HashSet<Guid>());
-        var competitiveTask = Mediator.Send(new GetCompetitivePlayersQuery(_chartType, _currentMix), cancellationToken);
+        var competitiveTask = Mediator.Send(new GetCompetitivePlayersQuery(_folder.TypeOn(_currentMix), _currentMix), cancellationToken);
         // Round 7: pass standing among similar players, from the folder's materialized
         // cohort histograms. CoOp has no cohort data (the rebuild covers S/D only).
-        var cohortTask = _chartType == ChartType.CoOp
+        var cohortTask = _folder == ChartTypeCategory.CoOp
             ? Task.FromResult<FolderCohortSummaryRecord?>(null)
-            : Mediator.Send(new GetFolderCohortStatsQuery(_currentMix, _chartType, _level,
-                _chartType == ChartType.Single ? _singlesCompetitive : _doublesCompetitive, PassedCount),
+            : Mediator.Send(new GetFolderCohortStatsQuery(_currentMix, _folder.TypeOn(_currentMix), _level,
+                _folder == ChartTypeCategory.Single ? _singlesCompetitive : _doublesCompetitive, PassedCount),
                 cancellationToken);
         _standings = await standingsTask;
         _otherMixPasses = await crossMixTask;
@@ -2213,7 +2214,7 @@ else
         cancellationToken.ThrowIfCancellationRequested();
 
         var baseRating = DifficultyLevel.From(_level).BaseRating;
-        if (_chartType == ChartType.CoOp)
+        if (_folder == ChartTypeCategory.CoOp)
         {
             baseRating = 2000;
         }
@@ -2303,24 +2304,24 @@ else
     ///     below your range nothing can reach your top 50, above it nobody at your level has
     ///     played these (design doc §6).
     /// </summary>
-    private bool PumbilityFolderHasData(ChartType type, int level) =>
+    private bool PumbilityFolderHasData(ChartTypeCategory folder, int level) =>
         // An EMPTY set means the PUMBILITY lists have not been built for this mix, not that
         // every folder is unanswerable — gating on it would disable the whole picker and
         // strand the reader.
         _pumbilityFolders == null || _pumbilityFolders.Count == 0
-        || _pumbilityFolders.Contains((type, level));
+        || _pumbilityFolders.Contains((folder, level));
 
     /// <summary>
     ///     The nearest folder of the same type the lens can answer for, or null when it can
     ///     answer for none. Ties break downward: a folder below you is one you have outgrown,
     ///     which is a gentler landing than one you cannot play yet.
     /// </summary>
-    private (ChartType Type, int Level)? NearestPumbilityFolder(ChartType type, int level) =>
+    private (ChartTypeCategory Folder, int Level)? NearestPumbilityFolder(ChartTypeCategory folder, int level) =>
         _pumbilityFolders?
-            .Where(f => f.Type == type)
+            .Where(f => f.Folder == folder)
             .OrderBy(f => Math.Abs(f.Level - level))
             .ThenBy(f => f.Level)
-            .Select(f => ((ChartType, int)?)f)
+            .Select(f => ((ChartTypeCategory, int)?)f)
             .FirstOrDefault();
 
     private async Task LoadPumbilityFolders(CancellationToken cancellationToken)
@@ -2333,7 +2334,7 @@ else
 
         _pumbilityFolders = (await Mediator.Send(new GetPumbilityFoldersQuery(PersonalizedActive,
                     PersonalizedActive ? CurrentUser.User.Id : null, _currentMix), cancellationToken))
-            .Select(f => (f.ChartType, f.Level)).ToHashSet();
+            .Select(f => (f.ChartType.Category(), f.Level)).ToHashSet();
     }
 
     /// <summary>
@@ -2679,7 +2680,7 @@ else
                 return;
             }
 
-            if (Enum.TryParse<ChartType>(await legacyTypeTask, out var savedLegacyType)) _chartType = savedLegacyType;
+            if (ChartTypeCategories.TryParse(await legacyTypeTask, out var savedLegacyType)) _folder = savedLegacyType;
             if (int.TryParse(await legacyLevelTask, out var savedLegacyLevel)) _level = savedLegacyLevel;
             // The Tier List / My Progress toggle is remembered here too. Only the LENS stays
             // unremembered on a legacy mix, because it is forced to Community rather than
@@ -2687,14 +2688,14 @@ else
             _groupBy = await legacyGroupByTask ?? "Difficulty";
             // Old catalogs don't cover every modern folder — land on the mix's
             // fullest folder when the remembered one doesn't exist here.
-            if (!_allCharts.Values.Any(c => c.Type == _chartType && c.Level == _level))
+            if (!_allCharts.Values.Any(c => c.Type.Category() == _folder && c.Level == _level))
             {
                 var biggest = _allCharts.Values
-                    .Where(c => c.Type is ChartType.Single or ChartType.Double)
-                    .GroupBy(c => (c.Type, Level: (int)c.Level))
+                    .Where(c => c.Type.Category() != ChartTypeCategory.CoOp)
+                    .GroupBy(c => (Folder: c.Type.Category(), Level: (int)c.Level))
                     .OrderByDescending(g => g.Count())
                     .First().Key;
-                _chartType = biggest.Type;
+                _folder = biggest.Folder;
                 _level = biggest.Level;
             }
 
@@ -2736,7 +2737,7 @@ else
             }
             if (stats.SinglesCompetitiveLevel > 1 && stats.SinglesCompetitiveLevel > stats.DoublesCompetitiveLevel)
             {
-                _chartType = ChartType.Single;
+                _folder = ChartTypeCategory.Single;
                 _level = (int)Math.Round(stats.SinglesCompetitiveLevel);
             }
             _todos = (await todosTask).Where(c => c.ListType == ChartListType.ToDo).Select(c => c.ChartId).Distinct().ToHashSet();
@@ -2776,7 +2777,7 @@ else
         // Saved settings refine the competitive-level smart default; when unset they fall
         // through to the stats-derived folder instead of clobbering it with 18/Double.
         _level = int.TryParse(await levelSettingTask, out var savedLevel) ? savedLevel : _level;
-        _chartType = Enum.TryParse<ChartType>(await chartTypeSettingTask, out var savedType) ? savedType : _chartType;
+        _folder = ChartTypeCategories.TryParse(await chartTypeSettingTask, out var savedType) ? savedType : _folder;
         var savedLens = await listTypeSettingTask;
         _tierListType = LensKeys.FirstOrDefault(k => string.Equals(k, savedLens, StringComparison.OrdinalIgnoreCase)) ?? "Pass";
         // No migration from TierLists__UsePersonalized, which defaulted ON: nobody chose that,
@@ -2789,13 +2790,13 @@ else
         {
             _level = DifficultyFilter.Value;
         }
-        if (Enum.TryParse<ChartType>(ChartTypeFilter, out var chartTypeParam))
+        if (ChartTypeCategories.TryParse(ChartTypeFilter, out var chartTypeParam))
         {
-            _chartType = chartTypeParam;
+            _folder = chartTypeParam;
         }
-        if (Enum.TryParse<ChartType>(ChartTypeRoute, true, out var routeType))
+        if (ChartTypeCategories.TryParse(ChartTypeRoute, out var routeType))
         {
-            _chartType = routeType;
+            _folder = routeType;
         }
         if (LevelRoute is >= 1 and <= 29)
         {
@@ -2811,7 +2812,7 @@ else
 
         // Guards: CoOp folders are 2-5 players; folders without Chabala data fall back to
         // the default lens; retired or login-gated groupings fall back to the tier-list view.
-        if (_chartType == ChartType.CoOp && _level is < 2 or > 5)
+        if (_folder == ChartTypeCategory.CoOp && _level is < 2 or > 5)
         {
             _level = 2;
         }
