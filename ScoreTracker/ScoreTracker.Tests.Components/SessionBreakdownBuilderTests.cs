@@ -412,7 +412,7 @@ public sealed class SessionBreakdownBuilderTests
         if (settingsFail)
             mediator.Setup(m => m.Send(It.IsAny<GetUserUiSettingsQuery>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new InvalidOperationException("settings unavailable"));
-        var group = new RecentSessionsPage.SessionGroup(Session, null, mix, "officialImport",
+        var group = new RecentSessionsPage.SessionGroup(Session, new[] { Session }, null, mix, "officialImport",
             rows.Min(r => r.OccurredAt), rows.Max(r => r.OccurredAt), rows);
 
         // Wall clock, deliberately distinct from the journal's play date: "is capture still

@@ -26,12 +26,22 @@ internal interface IScoreJournalRepository
     Task AppendObservations(IReadOnlyList<ScoreJournalEntry> entries, CancellationToken cancellationToken);
 
     /// <summary>
-    ///     Paged groups across every mix, newest activity first: one group per
-    ///     SessionId, and one per (mix, calendar day) for rows predating session
-    ///     capture. Rows ride along; each group carries its mix.
+    ///     Paged sessions across every mix, newest activity first. The keys (one per stored
+    ///     SessionId, one per (mix, calendar day) for rows predating session capture) are folded
+    ///     into sessions by <see cref="SessionFold" /> before the page is cut, so the total counts
+    ///     sessions and none straddles two pages. Rows ride along; each group carries its mix and
+    ///     every stored id folded into it.
     /// </summary>
     Task<(int TotalGroups, IReadOnlyList<JournalSessionRows> Groups)> GetSessionGroups(Guid userId,
         int page, int pageSize, DateTimeOffset? before, CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     The folded session holding one stored session, wherever it sits in the history — what a
+    ///     deep link to an import opens. Null when no play carries that id any more, which only an
+    ///     undo does.
+    /// </summary>
+    Task<JournalSessionRows?> GetSessionGroupContaining(Guid userId, Guid sessionId,
+        CancellationToken cancellationToken);
 
     /// <summary>
     ///     Full journal history for the given charts, oldest first — classification input.
@@ -160,8 +170,13 @@ internal interface IScoreJournalRepository
         CancellationToken cancellationToken);
 }
 
+/// <summary>
+///     One folded session and its rows. <see cref="SessionId" /> is its handle, the newest stored
+///     session in it; <see cref="SessionIds" /> is every stored session folded in, oldest first.
+/// </summary>
 internal sealed record JournalSessionRows(
     Guid? SessionId,
+    IReadOnlyList<Guid> SessionIds,
     DateOnly? Day,
     MixEnum Mix,
     IReadOnlyList<ScoreJournalEntry> Rows);

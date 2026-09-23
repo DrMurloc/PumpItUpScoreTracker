@@ -126,7 +126,7 @@ public sealed class SessionHeroMoMOnRampTests : ComponentTestBase
         var scores = new[] { new SessionScore(row, chart, HighlightFlags.None, null) };
 
         return new SessionBreakdown(
-            new RecentSessionsPage.SessionGroup(Session, null, MixEnum.Phoenix, "officialImport",
+            new RecentSessionsPage.SessionGroup(Session, new[] { Session }, null, MixEnum.Phoenix, "officialImport",
                 Start, Start.AddMinutes(118), new[] { row }),
             new ScoreSessionRecord(Session, Guid.NewGuid(), MixEnum.Phoenix, "officialImport",
                 "DRMURLOC #7251", "01", Start, Start.AddMinutes(118), 1, 1, 0),

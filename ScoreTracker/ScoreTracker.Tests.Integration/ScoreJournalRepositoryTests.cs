@@ -138,6 +138,109 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ImportsWithinEightHoursOfEachOtherPageAsOneSessionCarryingEveryId()
+    {
+        // The owner's case: an import per hour is one night, and a page of one session holds all
+        // of it — the fold runs before the page is cut, so a night never straddles two pages.
+        var userId = await _seed.SeedUserAsync();
+        var chartA = await _seed.SeedChartAsync();
+        var chartB = await _seed.SeedChartAsync();
+        var imports = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
+        var lastNight = Guid.NewGuid();
+        var repo = BuildRepository();
+        await repo.Append(Entry(userId, chartA, Now.AddHours(-2), 900000, imports[0], MixEnum.Phoenix2),
+            CancellationToken.None);
+        await repo.Append(Entry(userId, chartB, Now.AddHours(-1), 910000, imports[1], MixEnum.Phoenix2),
+            CancellationToken.None);
+        await repo.Append(Entry(userId, chartA, Now, 950000, imports[2], MixEnum.Phoenix2), CancellationToken.None);
+        // Ten quiet hours before the first import: a different night.
+        await repo.Append(Entry(userId, chartB, Now.AddHours(-12), 880000, lastNight, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        var (total, groups) = await repo.GetSessionGroups(userId, page: 1, pageSize: 1, before: null,
+            CancellationToken.None);
+
+        Assert.Equal(2, total);
+        var tonight = Assert.Single(groups);
+        Assert.Equal(imports[2], tonight.SessionId);
+        Assert.Equal(imports, tonight.SessionIds);
+        Assert.Equal(3, tonight.Rows.Count);
+
+        var (_, secondPage) = await repo.GetSessionGroups(userId, page: 2, pageSize: 1, before: null,
+            CancellationToken.None);
+        Assert.Equal(lastNight, Assert.Single(secondPage).SessionId);
+    }
+
+    [Fact]
+    public async Task TheBeforeFilterTestsASessionsLastPlay()
+    {
+        // A night that crossed midnight ended after it, so "before midnight" leaves the whole night
+        // out rather than the half of it that happened to be earlier.
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var midnight = new DateTimeOffset(2026, 4, 30, 0, 0, 0, TimeSpan.Zero);
+        var repo = BuildRepository();
+        await repo.Append(Entry(userId, chart, midnight.AddHours(-1), 900000, Guid.NewGuid()),
+            CancellationToken.None);
+        await repo.Append(Entry(userId, chart, midnight.AddHours(1), 910000, Guid.NewGuid()),
+            CancellationToken.None);
+
+        var (total, groups) = await repo.GetSessionGroups(userId, page: 1, pageSize: 10, before: midnight,
+            CancellationToken.None);
+
+        Assert.Equal(0, total);
+        Assert.Empty(groups);
+    }
+
+    [Fact]
+    public async Task APreCaptureDayAndTheFirstStoredSessionAfterItFoldWithBothKindsOfRows()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chartA = await _seed.SeedChartAsync();
+        var chartB = await _seed.SeedChartAsync();
+        var session = Guid.NewGuid();
+        var repo = BuildRepository();
+        await repo.Append(Entry(userId, chartA, Now.AddHours(-3), 900000), CancellationToken.None);
+        await repo.Append(Entry(userId, chartB, Now, 910000, session), CancellationToken.None);
+
+        var (total, groups) = await repo.GetSessionGroups(userId, page: 1, pageSize: 10, before: null,
+            CancellationToken.None);
+
+        Assert.Equal(1, total);
+        var group = Assert.Single(groups);
+        Assert.Equal(session, group.SessionId);
+        Assert.Null(group.Day);
+        Assert.Equal(2, group.Rows.Count);
+    }
+
+    [Fact]
+    public async Task AnyStoredIdFindsItsSessionFromAnywhereInTheHistory()
+    {
+        // A Discord card from last week links an import a dozen sessions back; the lookup finds the
+        // night holding it without paging to it.
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        var oldNight = new[] { Guid.NewGuid(), Guid.NewGuid() };
+        var oldStart = Now.AddDays(-20);
+        await repo.Append(Entry(userId, chart, oldStart, 880000, oldNight[0]), CancellationToken.None);
+        await repo.Append(Entry(userId, chart, oldStart.AddMinutes(45), 890000, oldNight[1]),
+            CancellationToken.None);
+        for (var day = 1; day <= 12; day++)
+            await repo.Append(Entry(userId, chart, oldStart.AddDays(day), 890000 + day * 1000, Guid.NewGuid()),
+                CancellationToken.None);
+
+        var found = await repo.GetSessionGroupContaining(userId, oldNight[0], CancellationToken.None);
+        var missing = await repo.GetSessionGroupContaining(userId, Guid.NewGuid(), CancellationToken.None);
+
+        Assert.NotNull(found);
+        Assert.Equal(oldNight[1], found!.SessionId);
+        Assert.Equal(oldNight, found.SessionIds);
+        Assert.Equal(2, found.Rows.Count);
+        Assert.Null(missing);
+    }
+
+    [Fact]
     public async Task ReimportingTheSameWindowLeavesOneRowPerPlay()
     {
         // A journal row is one play, keyed by the site's stamped play time. The import
