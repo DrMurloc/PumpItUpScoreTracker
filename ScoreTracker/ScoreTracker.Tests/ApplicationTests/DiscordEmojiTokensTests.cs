@@ -44,6 +44,56 @@ public sealed class DiscordEmojiTokensTests
         Assert.Equal(emoji, DiscordEmojiTokens.Replace(token));
     }
 
+    [Theory]
+    [InlineData("#DIFFICULTY|HD23#", "<:d23:1238568690711007292>")]
+    [InlineData("#DIFFICULTY|hd4#", "<:d4:1238582925575065641>")]
+    [InlineData("#DIFFICULTY|HDB16#", "<:d16:1238568698135056434>")]
+    public void AHalfDoubleWearsItsLevelsDoublesStepball(string token, string emoji)
+    {
+        Assert.Equal(emoji, DiscordEmojiTokens.Replace(token));
+    }
+
+    [Theory]
+    [InlineData("#LETTERGRADE|Rise/SSS|False#", "<:rise_sss:1552390855631839383>")]
+    [InlineData("#LETTERGRADE|Rise/AA|True#", "<:rise_aa_broken:1552390479654555788>")]
+    [InlineData("#LETTERGRADE|rise/f#", "<:rise_f:1552390646013235371>")]
+    [InlineData("#PLATE|Rise/PerfectGame#", "<:rise_pg:1552390750107340890>")]
+    [InlineData("#PLATE|Rise/UltimateGame#", "<:rise_fc:1552390700962943036>")]
+    [InlineData("#PLATE|Rise/SuperbGame#", "<:rise_nm:1552390727974260796>")]
+    public void RiseTokensDrawRisesOwnGradesAndMarks(string token, string emoji)
+    {
+        Assert.Equal(emoji, DiscordEmojiTokens.Replace(token));
+    }
+
+    [Theory]
+    [InlineData("#MIX|Rise#")]
+    [InlineData("#MIX|RiseArcade#")]
+    public void BothRiseMixesWearTheRiseWordmark(string token)
+    {
+        Assert.Equal("<:rise_logo:1552390373316235364>", DiscordEmojiTokens.Replace(token));
+    }
+
+    [Theory]
+    [InlineData("#MIX|Nope#")]
+    [InlineData("#DIFFICULTY|UCS5#")]
+    [InlineData("#DIFFICULTY|S99#")]
+    [InlineData("#DIFFICULTY|Hard#")]
+    [InlineData("#LETTERGRADE|Rise/SSSPlus|False#")]
+    [InlineData("#LETTERGRADE|Nope/SS|False#")]
+    [InlineData("#PLATE|Rise/RoughGame#")]
+    [InlineData("#PLATE|NotAPlate#")]
+    public void ATokenNothingResolvesIsDroppedRatherThanPrinted(string token)
+    {
+        Assert.Equal("before  after", DiscordEmojiTokens.Replace($"before {token} after"));
+    }
+
+    [Fact]
+    public void AGradeAndAwardWrittenBackToBackBothResolve()
+    {
+        Assert.Equal("<:rise_ss:1552390816037863544><:rise_nm:1552390727974260796>",
+            DiscordEmojiTokens.Replace("#LETTERGRADE|Rise/SS|False##PLATE|Rise/SuperbGame#"));
+    }
+
     [Fact]
     public void EmptyTokensDisappear()
     {

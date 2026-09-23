@@ -14,6 +14,7 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.Services;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -495,8 +496,14 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         RecordedPhoenixScore best, string reclearMark)
     {
         return $"#DIFFICULTY|{chart.DifficultyString}# {chart.Song.Name}{reclearMark} — **{(int)best.Score!.Value:N0}**" +
-               UpscoreDelta(change, chart, best) +
-               $" #LETTERGRADE|{best.Score!.Value.LetterGradeFor(chart.Mix)}|{best.IsBroken}##PLATE|{best.Plate}#";
+               UpscoreDelta(change, chart, best) + " " + GradeAndAward(chart, best);
+    }
+
+    // The grade and award emoji a score row ends with, in the chart's mix's own art.
+    private static string GradeAndAward(Chart chart, RecordedPhoenixScore best)
+    {
+        return EmojiTokens.LetterGrade(chart.Mix, best.Score!.Value.LetterGradeFor(chart.Mix), best.IsBroken) +
+               EmojiTokens.Plate(chart.Mix, best.Plate);
     }
 
     // The gain an upscore earned, plus the grade it came from when it crossed one:
@@ -512,7 +519,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         var oldLetter = PhoenixScore.From(change.OldScore.Value).LetterGradeFor(chart.Mix);
         return oldLetter == best.Score!.Value.LetterGradeFor(chart.Mix)
             ? gain
-            : gain + $" #LETTERGRADE|{oldLetter}|False# →";
+            : gain + $" {EmojiTokens.LetterGrade(chart.Mix, oldLetter, false)} →";
     }
 
     private void AddOverflowLine(List<IRichBotBlock> blocks, SnapshotInputs inputs, string? culture,
@@ -688,7 +695,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
 
         foreach (var lamp in e.Milestones.Where(m => m.Kind is MilestoneKind.FolderPassLamp
                      or MilestoneKind.FolderGradeLamp or MilestoneKind.FolderPlateLamp))
-            lines.Add(LampLine(lamp, culture));
+            lines.Add(LampLine(e.Mix, lamp, culture));
 
         lines.AddRange(weekly.Select(w =>
             "🏆 " + _localizer.Get(culture, "**#{0}** on {1} {2} weekly",
@@ -746,7 +753,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         return detail.IsLamp ? line + " 🎉" : line;
     }
 
-    private string LampLine(PlayerMilestoneRecord m, string? culture)
+    private string LampLine(MixEnum mix, PlayerMilestoneRecord m, string? culture)
     {
         var detail = (m.Detail ?? string.Empty).Split('|');
         return m.Kind switch
@@ -756,7 +763,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             MilestoneKind.FolderGradeLamp when detail.Length == 2 =>
                 $"🏆 #DIFFICULTY|{detail[0]}# {_localizer.Get(culture, "**All {0} or better**", detail[1])}",
             MilestoneKind.FolderPlateLamp when detail.Length == 2 =>
-                $"🏆 #DIFFICULTY|{detail[0]}# {_localizer.Get(culture, "**All {0} or better**", $"#PLATE|{detail[1]}#")}",
+                $"🏆 #DIFFICULTY|{detail[0]}# {_localizer.Get(culture, "**All {0} or better**", EmojiTokens.PlateNamed(mix, detail[1]))}",
             _ => $"🏆 {m.Detail}"
         };
     }
@@ -802,7 +809,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         RecordedPhoenixScore best, bool bigGain, string reclearMark, string? culture)
     {
         return $"#DIFFICULTY|{chart.DifficultyString}# {SongLink(change, chart, bigGain)}{reclearMark}\n" +
-               $"**{(int)best.Score!.Value:N0}** #LETTERGRADE|{best.Score!.Value.LetterGradeFor(chart.Mix)}|{best.IsBroken}##PLATE|{best.Plate}#" +
+               $"**{(int)best.Score!.Value:N0}** " + GradeAndAward(chart, best) +
                FlagCaption(change, chart, best, bigGain, culture);
     }
 
@@ -811,7 +818,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     {
         return $"#DIFFICULTY|{chart.DifficultyString}# {SongLink(change, chart, bigGain)} " +
                $"**{(int)best.Score!.Value:N0}**" + UpscoreDelta(change, chart, best) +
-               $" #LETTERGRADE|{best.Score!.Value.LetterGradeFor(chart.Mix)}|{best.IsBroken}##PLATE|{best.Plate}#" +
+               " " + GradeAndAward(chart, best) +
                FlagCaption(change, chart, best, bigGain, culture);
     }
 
