@@ -93,6 +93,16 @@ public sealed class ChartTypeCategoryTests
         Assert.Equal(expected, parsed);
     }
 
+    // A chart type added without a folder, or a category cast from a number, says so rather
+    // than quietly answering Singles and putting the chart in the wrong folder.
+    [Fact]
+    public void AnUnknownTypeOrFolderRefusesToGuess()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => ((ChartType)99).Category());
+        Assert.Throws<ArgumentOutOfRangeException>(() => ((ChartTypeCategory)99).HeadType());
+        Assert.Throws<ArgumentOutOfRangeException>(() => ((ChartTypeCategory)99).GetShortHand());
+    }
+
     [Theory]
     [InlineData(ChartTypeCategory.Single, "S")]
     [InlineData(ChartTypeCategory.Double, "D")]
