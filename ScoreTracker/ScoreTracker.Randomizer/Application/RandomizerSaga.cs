@@ -275,6 +275,13 @@ namespace ScoreTracker.Randomizer.Application
 
             for (var i = 0; i < remaining; i++)
             {
+                // A filter that reaches no chart is a real answer: hand back the draw so far
+                // rather than asking the distribution for a pick it cannot make. The early
+                // return above only covers this while repeats are off — with repeats on, and
+                // inside a minimum pass whose own leg reaches nothing, an empty pool arrives
+                // here and NextRandomGuid indexes an empty distribution.
+                if (includedCharts.Length == 0) break;
+
                 var nextGuid = NextRandomGuid(includedCharts);
                 if (!request.Settings.AllowRepeats)
                     includedCharts = includedCharts.Where(kv => kv.Key != nextGuid).ToArray();

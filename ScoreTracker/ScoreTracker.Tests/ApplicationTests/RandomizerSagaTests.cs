@@ -483,4 +483,42 @@ public sealed class RandomizerSagaTests
         Assert.NotEmpty(result);
         Assert.All(result, c => Assert.Contains(c.Id, new[] { single.Id, halfDouble.Id }));
     }
+
+    // A pool of nothing used to reach NextRandomGuid, which indexes a distribution it never
+    // built: KeyNotFoundException, a 500 on /ChartRandomizer and on api/v2/charts/random.
+    // Repeats being on is what got it past the too-small-pool early return.
+    [Fact]
+    public async Task ADrawThatReachesNoChartComesBackEmptyRatherThanThrowing()
+    {
+        var (accessor, userId) = UserAccessor();
+        var elsewhere = new ChartBuilder().WithLevel(15).WithType(ChartType.Single).Build();
+        var saga = SagaOver(accessor, userId, elsewhere);
+
+        var settings = new RandomSettings { Count = 3, AllowRepeats = true };
+        settings.LevelWeights[20] = 1;
+        settings.SongTypeWeights[SongType.Arcade] = 1;
+
+        var result = await saga.Handle(new GetRandomChartsQuery(settings, MixEnum.Phoenix), CancellationToken.None);
+
+        Assert.Empty(result);
+    }
+
+    // The same hole one level down: a minimum pass re-enters the draw with one bucket carried,
+    // so a co-op minimum on a mix with no co-op charts was its own empty pool.
+    [Fact]
+    public async Task AMinimumWhoseOwnLegReachesNothingDoesNotSinkTheDraw()
+    {
+        var (accessor, userId) = UserAccessor();
+        var single = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var saga = SagaOver(accessor, userId, single);
+
+        var settings = new RandomSettings { Count = 1, AllowRepeats = true };
+        settings.LevelWeights[20] = 1;
+        settings.SongTypeWeights[SongType.Arcade] = 1;
+        settings.ChartTypeMinimums[ChartType.CoOp] = 1;
+
+        var result = await saga.Handle(new GetRandomChartsQuery(settings, MixEnum.Phoenix), CancellationToken.None);
+
+        Assert.Equal(new[] { single.Id }, result.Select(c => c.Id).ToArray());
+    }
 }
