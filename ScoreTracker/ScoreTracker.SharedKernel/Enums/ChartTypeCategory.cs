@@ -23,6 +23,17 @@ public enum ChartTypeCategory
 
 public static class ChartTypeCategories
 {
+    /// <summary>
+    ///     A folder from a string a reader supplied — a route segment, a query parameter, a saved
+    ///     setting. <see cref="Enum.TryParse{T}(string, bool, out T)" /> alone is not enough:
+    ///     it happily accepts any number, so "/TierLists/7/20" would parse to an undefined
+    ///     category and throw the first time anything asked it for its type or its shorthand.
+    /// </summary>
+    public static bool TryParse(string? text, out ChartTypeCategory category)
+    {
+        return Enum.TryParse(text, true, out category) && Enum.IsDefined(category);
+    }
+
     /// <summary>The folder a chart of this type is browsed in.</summary>
     public static ChartTypeCategory Category(this ChartType type)
     {
@@ -84,6 +95,19 @@ public static class ChartTypeCategories
             ChartTypeCategory.CoOp => ChartType.CoOp,
             _ => throw new ArgumentOutOfRangeException(nameof(category), category, "This category has no type")
         };
+    }
+
+    /// <summary>
+    ///     This folder's chart type <i>on this mix</i> — what a contract that still takes a single
+    ///     <see cref="ChartType" /> has to be handed, because asking a mix for charts of a type it
+    ///     does not have returns nothing. RISE's doubles folder answers HalfDouble, Phoenix 2's
+    ///     answers Double. A folder holding several of a mix's types (the legacy line's doubles)
+    ///     answers the first, which is the type that headed it before the category existed.
+    /// </summary>
+    public static ChartType TypeOn(this ChartTypeCategory category, MixEnum mix)
+    {
+        var types = category.TypesOn(mix);
+        return types.Count == 0 ? category.HeadType() : types[0];
     }
 
     /// <summary>The shorthand a folder wears: <c>S</c>, <c>D</c> or <c>CoOp</c>.</summary>

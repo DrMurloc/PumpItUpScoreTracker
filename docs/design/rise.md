@@ -162,9 +162,14 @@ modifiers, the catalog's chart identity, the upload vocabulary (`HD23`), the `ch
 `scores.Chart.Type` column itself.
 
 Only the Infinity/Pro line carries both `Double` and `HalfDouble` charts, so folding the two together is invisible
-on every modern mix. The two places it does show — folder completion on a legacy player page, and a legacy Doubles
-draw in the randomizer — are correct rather than regressions: half-doubles are part of the folder, the way Double
-Performance always was (owner, 2026-09-22).
+on every modern mix. Where it does show it is correct rather than a regression — half-doubles are part of the
+folder, the way Double Performance always was (owner, 2026-09-22): folder completion on a legacy player page, a
+legacy Doubles draw in the randomizer (and an `api/v2` draw asked with no `chartTypes`, which covers every type the
+mix has), and a legacy mix's tier list, whose folder is the same category the picker names.
+
+A contract that still takes a single `ChartType` is handed `category.TypeOn(mix)`, never the category's head type:
+asking RISE for `ChartType.Double` charts returns nothing, because it has none. `HeadType()` is for the places that
+want the canonical name of the folder itself — a bucket key, a label comparison — not for a query.
 
 Which tabs a mix offers comes from its `ChartTypes` row, mapped through categories and deduped: Rise offers
 Singles and H. DOUBLE and no CoOp. A category holding exactly one of the mix's types is labeled by that type, so

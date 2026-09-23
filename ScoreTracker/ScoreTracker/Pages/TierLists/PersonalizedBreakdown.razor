@@ -1425,7 +1425,7 @@ else
         // are folder-scoped and stay.
         _isLoading = true;
         StateHasChanged();
-        _breakdown = await Mediator.Send(new GetPersonalizedTierListBreakdownQuery(_folder.HeadType(), _level, _lens, Mix: _currentMix));
+        _breakdown = await Mediator.Send(new GetPersonalizedTierListBreakdownQuery(_folder.TypeOn(_currentMix), _level, _lens, Mix: _currentMix));
         RebuildViews();
         _isLoading = false;
         StateHasChanged();
@@ -1456,7 +1456,7 @@ else
             return;
         }
 
-        _folder = Enum.TryParse<ChartTypeCategory>(ChartTypeRoute, true, out var routeType)
+        _folder = ChartTypeCategories.TryParse(ChartTypeRoute, out var routeType)
             ? routeType
             : ChartTypeCategory.Double;
         if (LevelRoute is >= 1 and <= 29)
@@ -1511,7 +1511,7 @@ else
         // The skill chips and the score-quality rankings went with the skill profile: both only
         // ever fed it, and this page is read on every "how is this personalized?" click.
         _breakdown = await Mediator.Send(
-            new GetPersonalizedTierListBreakdownQuery(_folder.HeadType(), _level, _lens, Mix: _currentMix));
+            new GetPersonalizedTierListBreakdownQuery(_folder.TypeOn(_currentMix), _level, _lens, Mix: _currentMix));
 
         RebuildViews();
         _isLoading = false;

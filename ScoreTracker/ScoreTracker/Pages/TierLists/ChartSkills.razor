@@ -1234,7 +1234,7 @@ else
         if (show && CurrentUser.IsLoggedIn && !IsLegacy && _folder != ChartTypeCategory.CoOp)
         {
             _projectedScores = await Mediator.Send(
-                new GetProjectedScoresQuery(_folder.HeadType(), _level, _currentMix));
+                new GetProjectedScoresQuery(_folder.TypeOn(_currentMix), _level, _currentMix));
         }
     }
 
@@ -1456,7 +1456,7 @@ else
         _ => L[_groupBy]
     };
 
-    private string DownloadFileName => ShareCardTitles.TierListFileName(_currentMix, _folder.HeadType(), _level,
+    private string DownloadFileName => ShareCardTitles.TierListFileName(_currentMix, _folder.TypeOn(_currentMix), _level,
         ShareSubjectKey, _now.ToString("yyyy-MM-dd"));
 
     // The share-only reads, fetched when a toggle first asks for them (the page's own
@@ -1481,7 +1481,7 @@ else
         if (options.BoundaryTop50 && _top50TypeIds == null)
         {
             _top50TypeIds = (await Mediator.Send(
-                    new GetTop50ForPlayerQuery(CurrentUser.User.Id, _folder.HeadType(), 50, _currentMix), cancellationToken))
+                    new GetTop50ForPlayerQuery(CurrentUser.User.Id, _folder.TypeOn(_currentMix), 50, _currentMix), cancellationToken))
                 .Select(s => s.ChartId).ToHashSet();
             _top50CombinedIds = (await Mediator.Send(
                     new GetTop50ForPlayerQuery(CurrentUser.User.Id, null, 50, _currentMix), cancellationToken))
@@ -1490,7 +1490,7 @@ else
 
         if (options.Pumbility && options.ExpectedGains && _shareGains == null)
             _shareGains = await Mediator.Send(
-                new ProjectPumbilityGainsQuery(CurrentUser.User.Id, _currentMix, _folder.HeadType()), cancellationToken);
+                new ProjectPumbilityGainsQuery(CurrentUser.User.Id, _currentMix, _folder.TypeOn(_currentMix)), cancellationToken);
     }
 
     private ShareCardComposer.TileFacts FactsFor(SongTierListEntry entry, ShareCardOptions options)
@@ -1545,7 +1545,7 @@ else
             palette.Ink,
             palette.InkMuted,
             linkUrl,
-            DifficultyBubblePath(_folder.HeadType(), _level),
+            DifficultyBubblePath(_folder.TypeOn(_currentMix), _level),
             rows,
             // Anonymous downloads carry no personal state, so a legend would be
             // explaining borders that are not in the picture.
@@ -2102,14 +2102,14 @@ else
         // change (the full load runs once, so it can't live there). Off for Phoenix/legacy and
         // signed-out — exactly where the retired track's bar was off.
         _hasTitleProgress = CurrentUser.IsLoggedIn
-                         && FolderTitleTrack.HasTitleProgress(_currentMix, _folder.HeadType(), _level, _allCharts, _scores);
+                         && FolderTitleTrack.HasTitleProgress(_currentMix, _folder.TypeOn(_currentMix), _level, _allCharts, _scores);
 
         // Folder standing, recomputed per folder alongside the pointer's gate. Signed-out visitors
         // have no standing to show.
         if (CurrentUser.IsLoggedIn)
         {
             var passed = FolderLevelRecord.PassedScores(_folderScores.Values);
-            _folderLevel = FolderLevelRecord.For(_currentMix, _folder.HeadType(), _level, _charts.Values, passed);
+            _folderLevel = FolderLevelRecord.For(_currentMix, _folder.TypeOn(_currentMix), _level, _charts.Values, passed);
             _folderGrades = _charts.Values
                 .Select(c => passed.TryGetValue(c.Id, out var score) ? score : (int?)null)
                 .Where(s => s != null)
@@ -2137,7 +2137,7 @@ else
         }
 
         // Population phase — works logged-out, renders as soon as it lands.
-        var blended = await Mediator.Send(new GetBlendedTierListQuery(_folder.HeadType(), _level, _tierListType,
+        var blended = await Mediator.Send(new GetBlendedTierListQuery(_folder.TypeOn(_currentMix), _level, _tierListType,
             PersonalizedActive, Mix: _currentMix), cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -2166,7 +2166,7 @@ else
         // Only when the switch asks for it: this is a peer sweep, and no other part of the page
         // needs it. SetShowProjectedScore backfills when it comes back on inside a folder.
         _projectedScores = _settings.ShowProjectedScore && CurrentUser.IsLoggedIn && _folder != ChartTypeCategory.CoOp
-            ? await Mediator.Send(new GetProjectedScoresQuery(_folder.HeadType(), _level, _currentMix), cancellationToken)
+            ? await Mediator.Send(new GetProjectedScoresQuery(_folder.TypeOn(_currentMix), _level, _currentMix), cancellationToken)
             : new Dictionary<Guid, PhoenixScore>();
 
         // The blank-page guard is dead (rule 9): render every chart we can resolve and
@@ -2198,12 +2198,12 @@ else
         var crossMixTask = _settings.ShowOtherMixPasses
             ? Mediator.Send(new GetCrossMixPassesQuery(_currentMix), cancellationToken)
             : Task.FromResult<IReadOnlySet<Guid>>(new HashSet<Guid>());
-        var competitiveTask = Mediator.Send(new GetCompetitivePlayersQuery(_folder.HeadType(), _currentMix), cancellationToken);
+        var competitiveTask = Mediator.Send(new GetCompetitivePlayersQuery(_folder.TypeOn(_currentMix), _currentMix), cancellationToken);
         // Round 7: pass standing among similar players, from the folder's materialized
         // cohort histograms. CoOp has no cohort data (the rebuild covers S/D only).
         var cohortTask = _folder == ChartTypeCategory.CoOp
             ? Task.FromResult<FolderCohortSummaryRecord?>(null)
-            : Mediator.Send(new GetFolderCohortStatsQuery(_currentMix, _folder.HeadType(), _level,
+            : Mediator.Send(new GetFolderCohortStatsQuery(_currentMix, _folder.TypeOn(_currentMix), _level,
                 _folder == ChartTypeCategory.Single ? _singlesCompetitive : _doublesCompetitive, PassedCount),
                 cancellationToken);
         _standings = await standingsTask;
@@ -2680,7 +2680,7 @@ else
                 return;
             }
 
-            if (Enum.TryParse<ChartTypeCategory>(await legacyTypeTask, out var savedLegacyType)) _folder = savedLegacyType;
+            if (ChartTypeCategories.TryParse(await legacyTypeTask, out var savedLegacyType)) _folder = savedLegacyType;
             if (int.TryParse(await legacyLevelTask, out var savedLegacyLevel)) _level = savedLegacyLevel;
             // The Tier List / My Progress toggle is remembered here too. Only the LENS stays
             // unremembered on a legacy mix, because it is forced to Community rather than
@@ -2777,7 +2777,7 @@ else
         // Saved settings refine the competitive-level smart default; when unset they fall
         // through to the stats-derived folder instead of clobbering it with 18/Double.
         _level = int.TryParse(await levelSettingTask, out var savedLevel) ? savedLevel : _level;
-        _folder = Enum.TryParse<ChartTypeCategory>(await chartTypeSettingTask, out var savedType) ? savedType : _folder;
+        _folder = ChartTypeCategories.TryParse(await chartTypeSettingTask, out var savedType) ? savedType : _folder;
         var savedLens = await listTypeSettingTask;
         _tierListType = LensKeys.FirstOrDefault(k => string.Equals(k, savedLens, StringComparison.OrdinalIgnoreCase)) ?? "Pass";
         // No migration from TierLists__UsePersonalized, which defaulted ON: nobody chose that,
@@ -2790,11 +2790,11 @@ else
         {
             _level = DifficultyFilter.Value;
         }
-        if (Enum.TryParse<ChartTypeCategory>(ChartTypeFilter, out var chartTypeParam))
+        if (ChartTypeCategories.TryParse(ChartTypeFilter, out var chartTypeParam))
         {
             _folder = chartTypeParam;
         }
-        if (Enum.TryParse<ChartTypeCategory>(ChartTypeRoute, true, out var routeType))
+        if (ChartTypeCategories.TryParse(ChartTypeRoute, out var routeType))
         {
             _folder = routeType;
         }

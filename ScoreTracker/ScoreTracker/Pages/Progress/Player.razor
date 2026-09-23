@@ -304,7 +304,7 @@ else if (_profile != null)
     private async Task LoadHeadToHead()
     {
         _headToHead = await Mediator.Send(new GetPlayerHeadToHeadQuery(_currentMix, UserIdParam,
-            _compareLevel == null ? null : _compareFolder.HeadType(),
+            _compareLevel == null ? null : _compareFolder.TypeOn(_currentMix),
             _compareLevel == null ? null : DifficultyLevel.From(_compareLevel.Value)));
     }
 

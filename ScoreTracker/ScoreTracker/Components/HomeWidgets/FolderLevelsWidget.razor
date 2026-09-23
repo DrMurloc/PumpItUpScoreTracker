@@ -157,7 +157,7 @@ else
                 var folder = charts.Where(c => c.Type.Category() == target.Type && (int)c.Level == target.Level)
                     .ToArray();
                 if (folder.Length == 0) return null;
-                var level = FolderLevelRecord.For(_mix, target.Type.HeadType(), DifficultyLevel.From(target.Level),
+                var level = FolderLevelRecord.For(_mix, target.Type.TypeOn(_mix), DifficultyLevel.From(target.Level),
                     folder, passed);
                 var grades = folder
                     .Select(c => passed.TryGetValue(c.Id, out var score) ? score : (int?)null)

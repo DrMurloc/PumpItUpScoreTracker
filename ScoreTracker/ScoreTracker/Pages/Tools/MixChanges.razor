@@ -138,9 +138,9 @@
 
                 <section class="mc-fgroup">
                     <div class="mc-fhead">
-                        <DifficultyBubble Type="_folder.Category.HeadType()" Level="DifficultyLevel.From(_folder.Level)"
+                        <DifficultyBubble Type="_folder.Category.TypeOn(_to)" Level="DifficultyLevel.From(_folder.Level)"
                                           Mix="_groupByDestination ? _to : _from" Small="true"></DifficultyBubble>
-                        <span class="mc-ftitle">@L["{0} folder", _folder.Label]</span>
+                        <span class="mc-ftitle">@L["{0} folder", _folder.Label(_to)]</span>
                         <span class="mc-fcount">
                             @(_groupByDestination
                                 ? L["{0} arrived", FolderMoves.Count()]
@@ -449,6 +449,6 @@
 
     private sealed record FolderKey(ChartTypeCategory Category, int Level)
     {
-        public string Label => $"{Category.GetShortHand()}{Level}";
+        public string Label(MixEnum mix) => $"{FolderLabels.ShortHandFor(Category, mix)}{Level}";
     }
 }

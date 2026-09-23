@@ -384,7 +384,7 @@
     {
         var parts = (setting ?? string.Empty).Split('|');
         return parts.Length == 2
-               && Enum.TryParse<ChartTypeCategory>(parts[0], out var category)
+               && ChartTypeCategories.TryParse(parts[0], out var category)
                && int.TryParse(parts[1], out var level)
             ? (category, level)
             : null;

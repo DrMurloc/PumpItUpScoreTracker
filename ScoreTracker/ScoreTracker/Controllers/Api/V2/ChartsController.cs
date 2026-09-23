@@ -471,11 +471,16 @@ public sealed class ChartsController : ApiV2ControllerBase
         if (minLevel > maxLevel)
             return Problem("invalid-level", "minLevel must not exceed maxLevel.");
 
+        // Weights live in one bucket per folder, so the asked-for types are folded into folders
+        // before they are set: a caller asking only for half-doubles is asking for the doubles
+        // bucket, and matching ChartType.Double exactly would leave every weight at zero and
+        // draw nothing (docs/design/rise.md §3.1).
+        var weightBuckets = types.Select(t => t.Category()).ToHashSet();
         for (var level = minLevel ?? DifficultyLevel.Min; level <= (maxLevel ?? DifficultyLevel.Max); level++)
         {
-            if (types.Contains(ChartType.Single)) settings.LevelWeights[level] = 1;
-            if (types.Contains(ChartType.Double)) settings.DoubleLevelWeights[level] = 1;
-            if (types.Contains(ChartType.CoOp) && level <= 5) settings.PlayerCountWeights[level] = 1;
+            if (weightBuckets.Contains(ChartTypeCategory.Single)) settings.LevelWeights[level] = 1;
+            if (weightBuckets.Contains(ChartTypeCategory.Double)) settings.DoubleLevelWeights[level] = 1;
+            if (weightBuckets.Contains(ChartTypeCategory.CoOp) && level <= 5) settings.PlayerCountWeights[level] = 1;
         }
 
         try

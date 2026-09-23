@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using ScoreTracker.SharedKernel.Enums;
 using Xunit;
@@ -44,6 +44,53 @@ public sealed class ChartTypeCategoryTests
         Assert.True(Enum.TryParse<ChartTypeCategory>(stored, true, out var parsed));
         Assert.Equal(expected, parsed);
         Assert.Equal(stored, expected.ToString());
+    }
+
+    /// <summary>
+    ///     A contract that still takes one ChartType has to be handed the type the mix actually
+    ///     has, or it asks for charts that are not there: RISE has no Double rows at all.
+    /// </summary>
+    [Theory]
+    [InlineData(MixEnum.Rise, ChartType.HalfDouble)]
+    [InlineData(MixEnum.Phoenix2, ChartType.Double)]
+    [InlineData(MixEnum.RiseArcade, ChartType.Double)]
+    [InlineData(MixEnum.Infinity, ChartType.Double)]
+    public void AFolderAnswersTheTypeTheMixHasForIt(MixEnum mix, ChartType expected)
+    {
+        Assert.Equal(expected, ChartTypeCategory.Double.TypeOn(mix));
+        Assert.Equal(ChartType.Single, ChartTypeCategory.Single.TypeOn(mix));
+    }
+
+    // A mix without the folder at all still answers something rather than throwing.
+    [Fact]
+    public void AFolderTheMixDoesNotHaveFallsBackToItsHeadType()
+    {
+        Assert.Equal(ChartType.CoOp, ChartTypeCategory.CoOp.TypeOn(MixEnum.Rise));
+    }
+
+    /// <summary>
+    ///     Enum.TryParse accepts any number, so "/TierLists/7/20" would parse to an undefined
+    ///     category and throw the moment anything asked it for its type or its shorthand. A route
+    ///     segment and a query parameter are reader-supplied data, not a contract.
+    /// </summary>
+    [Theory]
+    [InlineData("7")]
+    [InlineData("-1")]
+    [InlineData("HalfDouble")]
+    [InlineData("")]
+    [InlineData(null)]
+    public void AnUndefinedFolderDoesNotParse(string? text)
+    {
+        Assert.False(ChartTypeCategories.TryParse(text, out _));
+    }
+
+    [Theory]
+    [InlineData("Double", ChartTypeCategory.Double)]
+    [InlineData("coop", ChartTypeCategory.CoOp)]
+    public void ADefinedFolderStillParsesCaseInsensitively(string text, ChartTypeCategory expected)
+    {
+        Assert.True(ChartTypeCategories.TryParse(text, out var parsed));
+        Assert.Equal(expected, parsed);
     }
 
     [Theory]
