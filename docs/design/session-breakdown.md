@@ -19,6 +19,11 @@
 > **Revised 2026-09-11** (D50–D51): "+N over P1" marks only the first Phoenix 2 play past
 > your Phoenix 1 best, and "Attempt N" counts every play of the chart in its mix rather than
 > the plays in one session.
+>
+> **Revised 2026-09-23 — the eight-hour session** (§8, D52–D58): a session is a player's plays in
+> one mix until eight hours pass with no play. Five imports in an hour are one session on this page
+> and on the API, while each import keeps its own stored row underneath for Undo, restart recovery
+> and its own Discord card.
 
 The page stops being a list of equal cards. **The most recent session renders big**; everything
 older collapses to a board-skinned table with a date, three counts and a **View** button that
@@ -87,6 +92,13 @@ positions.
 | D49 | **Attempt threading**: adjacent same-chart rows in All plays are joined by a dotted rail; ~~the "Attempt N" caption renders only once the chart reaches **5+ plays in the session**~~ (**superseded 2026-09-11 by D51**: the number counts every play of the chart in its mix, and the newest play carries it too). To keep threads adjacent, All plays orders level-desc → chart → time-desc. The journal stays a flat neutral log (D6) — the rail annotates, it never groups or hides. |
 | D50 | **"+N over P1" marks the first Phoenix 2 play past your Phoenix 1 best, and only that one** (owner, 2026-09-10: *"it should only show the FIRST time"*). Every session row carries `PreviousBest` — the best **passing** score in that mix before the play — not just upscores, and a play whose previous best already reached the Phoenix 1 best wears no mark. Before this, a repeat or a play that never became the record carried no previous best, so every one of them that scored above Phoenix 1 earned the mark again. Passing-only is also what the classifier compares against: `BestAttemptPolicy` ranks any pass above any break, so a failed first attempt at 960,000 no longer turns a later 930,000 upscore over a 900,000 pass into "Played". |
 | D51 | **"Attempt N" is the play's number among every play of that chart in its mix** (owner, 2026-09-10: *"how many times you've played a chart ever in a mix, not just within the one session"*). The session feed counts the chart's journal rows in that mix up to and including the play — records, plays that never beat one, stage breaks — and carries the number on the row. The caption prints on every play from attempt 5 up, the newest included (owner, 2026-09-11: the most recent play is the one whose number a player looks for) — reversing D49's bare newest row, so a chart played once in a session carries its number too. The number is what the journal saw — every best-list change, plus whatever the recently-played window (the last 50 plays) held at each import — so a player who plays more than 50 songs between imports gets a lower number, and on Phoenix 1 it counts from the June 2026 backfill. |
+| D52 | **A session is a player's plays in one mix until eight hours pass with no play** (owner, 2026-09-23: *"if someone imports like 5 times in a row over 1 hour, that's all one session still, even if it fired off multiple notifications"*). The page folds stored sessions on read (§8). Every stored session keeps its row and its id, so Undo, restart recovery and each import's own Discord card still work one import at a time. |
+| D53 | **The fold runs on play time, and mix is the only split.** Play time is the journal's clock, the one this page already shows and sorts by, so a night imported the next morning still files under the night. Imports, CSV uploads, manual entries, API plays and every card a player imports from fold together when they share a mix. |
+| D54 | **A folded session is handled by its newest stored session.** That id is what the URL, the card highlight and View use; every stored id the session holds travels with it as `SessionIds`. A fold made only of pre-capture days has no id, as a day bucket never had. |
+| D55 | **Any stored id opens its session from anywhere in the history.** A `?session=` link resolves through the fold rather than through the page of cards on show. Before this, a link older than the eight newest sessions announced that its session had been undone. An id with no plays left is still the undone state (§2.3). |
+| D56 | **A session's three numbers count its plays.** Passes, Upscores and Plays come off the journal rows, on the hero and on the card alike. The `ScoreSession` counts were never plays: each batch drain adds the new passes and upscores it carried, and nothing else, so every session since 2026-08-01 printed passes + upscores under "Plays". |
+| D57 | **Capture and cards span the fold.** The capture window is open while any stored session in the fold is still inside `ScoreBatchPolicy.WorkExpectedWithin`, and the header names every card the session pulled from, oldest first. |
+| D58 | **The public API groups like the page** (owner, 2026-09-23: *"group it like the page"*). `GET api/v2/players/{id}/sessions` returns folded sessions: `sessionId` is the newest stored session in each, and the new `sessionIds` lists every one folded in, so the `sessionId` a journal entry or a score-push webhook carries always appears in exactly one session. The endpoint also stops cutting a player off after their newest 50 sessions. |
 
 ### Deliberately not decided here
 
@@ -561,3 +573,104 @@ PR opens.
 | C7 | `SessionHighlightCards` + gain chip (D41/D48); peer sections, their tests, and the Communities query deleted together (D42) |
 | C8 | E2E `PlayerSessionsTests` rework |
 | C9 | i18n — every new key into all locales in one pass, alphabetical insertion, en-ZW in the Murloc alphabet |
+
+---
+
+## 8. The eight-hour session (2026-09-23)
+
+Decisions D52–D58. The owner's bug: *"if someone imports like 5 times in a row over 1 hour,
+that's all one session still, even if it fired off multiple notifications."* He believed it
+already worked. It never had.
+
+### 8.1 Why it never worked
+
+The session envelope (`PlayerScoreBatchAccumulator`, 2026-07-05) groups a player's writes that
+land within eight hours of each other — but only writes that arrive **without an id of their
+own**, which in practice means manual entries. Every other writer brings one. An official import
+opens a session per run (`BeginScoreSessionCommand`, which records the card for Undo), a CSV
+upload stamps one per upload, and `POST api/v2/players/me/plays` mints one per request. The page
+grouped the journal strictly by `SessionId`, so five imports in an hour were five sessions, and a
+RISE watcher night (one play per request) was a session per play. §2.2's *"a session envelope
+spans 8 h, so one session emits many batches"* describes the envelope; imports never produced
+one.
+
+### 8.2 The fold
+
+Read-side only. Every stored session keeps its row and its id: an import run, a CSV upload, a
+manual envelope, an API request, a RISE sitting. Undo (§2.3, [delete-my-data.md](delete-my-data.md)
+§6), restart recovery ([import-restart-recovery.md](import-restart-recovery.md)) and each import's
+own Discord card all work per stored session, and none of that moves. What changes is what a read
+calls a session.
+
+- **Keys.** One per stored session, one per (mix, calendar day) for rows predating session
+  capture. These are the keys the page already paged over; each now carries its first play as well
+  as its last.
+- **The rule** (`SessionFold`, ScoreLedger `Domain/`). Per mix, keys in order of their first play.
+  A key joins the open session when its first play lands within eight hours of the latest play the
+  session holds so far. An overlap is a gap of zero, and exactly eight hours still joins, as it
+  does in the envelope. The eight hours are one constant shared with the envelope, so a manual
+  session and a folded one mean the same thing.
+- **Before paging.** The fold runs over every key the player has, then the page is cut. A session
+  never straddles two pages, `TotalGroups` counts folded sessions, and the Before filter tests a
+  folded session's last play.
+- **Identity** (D54). A folded session carries every stored id it holds as `SessionIds`. Its
+  `SessionId` is the newest of them.
+
+### 8.3 What the page does with a fold
+
+- **Highlights and milestones load for every stored id.** The ceremony band and the title bars
+  already take the earliest old value and the latest new one across a session's batches, so a
+  night of imports reads as one night of batches with no change to either.
+- **The capture window spans the fold** (D57). It is open while any stored session in it is still
+  inside the window, and the patience card still needs nothing captured anywhere in the session
+  (D38). A new import joining a night whose earlier imports already captured therefore shows the
+  earlier highlights while it works, and the page refreshes when its capture lands (D39).
+- **The header names every card** the session pulled from, oldest first, joined into the existing
+  "imported from" line. A second card is exactly the wrong-card case the line exists for.
+- **The three numbers count plays** (D56).
+- **March of Murlocs** detection already reads the session's span, so a run imported partway
+  through is one night there too.
+
+### 8.4 Deep links (D55)
+
+A Discord card links `?session={id}` with the id of the import that sent it, and the Community
+Highlights and Rivals feeds link the same way. The page used to look for that id among the eight
+cards on show. Anything older fell through to "That session was undone", which was false.
+`GetSessionContainingQuery` now answers with the folded session holding that id wherever it sits
+in the history, so every card of a night opens the whole night. When no session holds the id,
+the undo message still stands, because only an undo removes a stored session's plays.
+
+### 8.5 The API (D58)
+
+`GET api/v2/players/{id}/sessions` returns the same folded sessions. `sessionId` is the newest
+stored session in each. The new `sessionIds` lists every one folded in, so the `sessionId` on a
+journal entry (`{id}/journal`) or a score-push webhook always appears in exactly one session.
+`startedAt` and `lastActivityAt` are the first and last play and `scoreCount` counts the plays, as
+before, now across the fold.
+
+The walk behind the endpoint also stopped cutting players off. It asked the session read for 500
+groups a page, the read clamps a page to 50, and the loop's arithmetic believed the 500, so it
+stopped after a player's newest 50 sessions across every mix and reported no next page. The page
+size now comes from the read itself (`GetRecentSessionsQuery.MaxPageSize`).
+
+### 8.6 Honesty boundaries
+
+1. **Play time, not arrival time.** A best that the importer had to journal at the moment it found
+   it — a Phoenix 2 best-list card still wearing its chart's first-play date, whose own play has
+   left the recent window (`UpdatePhoenixRecordHandler`) — carries the import time. That one row
+   stretches its stored session to the import, and in the rare case a later session starts within
+   eight hours of that import, the two fold.
+2. **Nothing about the fold is stored.** It is recomputed from every key the player has on each
+   read, so a change to the rule redraws history, backwards included.
+3. **One stored session is never split.** A single import holding two nights, because the player
+   imported once after both, is one session, as it always was.
+
+### 8.7 Commit order
+
+| # | Commit |
+|---|---|
+| F1 | This section, D52–D58, the Session entry in DOMAIN.md, API.md, delete-my-data.md §4 |
+| F2 | ScoreLedger: `SessionFold` and the one eight-hour constant the envelope now reads, with unit tests |
+| F3 | ScoreLedger: the journal read folds before paging and carries every stored id; `GetSessionContainingQuery`; handler and real-database tests |
+| F4 | Web: the builder reads every stored id in the fold; deep links through the lookup; counts from plays; capture window and cards across the fold |
+| F5 | API: `sessionIds`, the walk fix, and the endpoint's first wire-shape test |
