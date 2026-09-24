@@ -43,6 +43,13 @@ public sealed record ScoreJournalEntry(
     public const string CsvSource = "csv";
 
     /// <summary>
+    ///     What every source written through <c>POST api/v2/players/me/plays</c> starts with, ahead of
+    ///     the tool's own name for itself. Only that endpoint writes it, which is how a session knows
+    ///     it is a sitting.
+    /// </summary>
+    public const string PlaysApiSourcePrefix = "api:";
+
+    /// <summary>
     ///     The 2026-06 journal seed from PhoenixRecord — history, not activity; volume
     ///     reads exclude it. Only the seed migration ever writes this value.
     /// </summary>

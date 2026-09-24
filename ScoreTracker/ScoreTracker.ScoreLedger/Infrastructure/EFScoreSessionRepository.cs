@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.ScoreLedger.Infrastructure.Entities;
@@ -111,6 +112,50 @@ internal sealed class EFScoreSessionRepository : IScoreSessionRepository
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         await database.Set<ScoreSessionEntity>().Where(s => s.Id == id).ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task<OpenSitting?> GetOpenSitting(Guid userId, MixEnum mix, DateTimeOffset activeSince,
+        CancellationToken cancellationToken = default)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var sitting = await database.Set<ScoreSessionEntity>()
+            .Where(s => s.UserId == userId && s.MixId == mixId && s.ProcessedAt == null
+                        && s.Source.StartsWith(ScoreJournalEntry.PlaysApiSourcePrefix)
+                        && s.LastActivityAt >= activeSince)
+            .OrderByDescending(s => s.LastActivityAt)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (sitting is null) return null;
+
+        var plays = database.Set<ScoreEventJournalEntity>()
+            .Where(j => j.UserId == userId && j.SessionId == sitting.Id)
+            .Select(j => (DateTimeOffset?)j.OccurredAt);
+        var first = await plays.MinAsync(cancellationToken);
+        var last = await plays.MaxAsync(cancellationToken);
+        return new OpenSitting(sitting.Id, first ?? sitting.StartedAt, last ?? sitting.StartedAt);
+    }
+
+    public async Task TouchArrival(Guid id, DateTimeOffset at, CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        await database.Set<ScoreSessionEntity>()
+            .Where(s => s.Id == id && s.LastActivityAt < at)
+            .ExecuteUpdateAsync(u => u.SetProperty(s => s.LastActivityAt, at), cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ScoreSessionRecord>> ListOverdueSittings(DateTimeOffset quietSince, int take,
+        CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return (await database.Set<ScoreSessionEntity>()
+                .Where(s => s.ProcessedAt == null && s.NewCount == 0 && s.UpscoreCount == 0
+                            && s.Source.StartsWith(ScoreJournalEntry.PlaysApiSourcePrefix)
+                            && s.LastActivityAt <= quietSince)
+                .OrderBy(s => s.LastActivityAt)
+                .Take(take)
+                .ToArrayAsync(cancellationToken))
+            .Select(Map)
+            .ToArray();
     }
 
     private static ScoreSessionRecord Map(ScoreSessionEntity e)

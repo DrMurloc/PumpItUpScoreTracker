@@ -734,7 +734,7 @@ folder's first reading is stored silently (folder-level-progression.md §5.3). F
 
 | Vertical | What changes |
 |---|---|
-| ScoreLedger | `JoinSittingsCommand` and `SittingSaga`: the join, the scheduled close, and the sweep on `OverdueScoreBatchesFlushedEvent`. `SittingPlanner`, `UpdatePhoenixBestAttemptCommand.DeferAnnouncement`, `ReplaySessionCommand.Announce`, `ScoreBatchPolicy.SittingQuietWindow`. A sitting is a `ScoreSession` row whose source starts `api:`, with `LastActivityAt` holding its last arrival; no migration |
+| ScoreLedger | `RecordSittingPlaysCommand` and `SittingSaga`: recording into a sitting (the whole request under one per-player lock, so a second request never reads a sitting before the first has written it), the scheduled close, and the sweep on `OverdueScoreBatchesFlushedEvent`. `SittingPlanner`, `UpdatePhoenixBestAttemptCommand.DeferAnnouncement`, `ReplaySessionCommand.Announce`, `ScoreBatchPolicy.SittingQuietWindow`. A sitting is a `ScoreSession` row whose source starts `api:`, with `LastActivityAt` holding its last arrival; no migration |
 | PlayerProgress | The rating step runs on every Phoenix-scored mix and `RecalculateCore` skips PUMBILITY where the mix has none; the highlight step opens to every Phoenix-scored mix; `CompetitiveLevels.Floor` and the competitive peer lookup read the mix's doubles type; `ScoreHighlightsCapturedEvent.Announce` |
 | Communities | `CommunitySaga` sends art-set grade and mark tokens and skips the card when `Announce` is off |
 | Domain | `PlayerScoresUpdatedEvent.Announce`, `EmojiTokens`, `ScoreJournalEntry.PlaysApiSourcePrefix` |

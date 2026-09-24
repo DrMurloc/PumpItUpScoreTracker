@@ -59,4 +59,22 @@ internal interface IScoreSessionRepository
     Task<IReadOnlyList<ScoreSessionRecord>> ListLatestPerUser(CancellationToken cancellationToken = default);
 
     Task Delete(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     The player's sitting on this mix that is still taking plays: the newest unannounced
+    ///     plays-endpoint session whose last play arrived at or after <paramref name="activeSince" />,
+    ///     with the span of play times its journal holds (its start time while the journal holds none).
+    /// </summary>
+    Task<OpenSitting?> GetOpenSitting(Guid userId, MixEnum mix, DateTimeOffset activeSince,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Records that a play for this sitting arrived at <paramref name="at" />.</summary>
+    Task TouchArrival(Guid id, DateTimeOffset at, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Sittings whose scheduled close never ran: unannounced, never replayed, and quiet since at
+    ///     least <paramref name="quietSince" />. Oldest first, at most <paramref name="take" />.
+    /// </summary>
+    Task<IReadOnlyList<ScoreSessionRecord>> ListOverdueSittings(DateTimeOffset quietSince, int take,
+        CancellationToken cancellationToken = default);
 }
