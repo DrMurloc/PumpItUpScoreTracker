@@ -1453,6 +1453,51 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task AQuietSnapshotPostsNoCard()
+    {
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).WithMix(MixEnum.Rise).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Rise, userId, chart, score: 975000);
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Rise, null,
+            (chart.Id, true, HighlightFlags.None)) with { Announce = false }));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(It.IsAny<IEnumerable<RichBotMessage>>(),
+            It.IsAny<IEnumerable<ulong>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ARiseCardWritesItsGradeMarkAndLampInRisesOwnArt()
+    {
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.HalfDouble).WithLevel(20).WithMix(MixEnum.Rise).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Rise, userId, chart, score: 975000);
+        var lamps = new[]
+        {
+            new PlayerMilestoneRecord(MilestoneKind.FolderPlateLamp, null, Now, null, null, null,
+                "HD20|UltimateGame")
+        };
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Rise, null, lamps,
+            (chart.Id, true, HighlightFlags.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Any(m =>
+                m.Header!.Markdown.Contains("[Rise] ")
+                && m.Footer!.Contains("#MIX|Rise#")
+                && AllMarkdown(m).Contains("#LETTERGRADE|Rise/SS|False##PLATE|Rise/SuperbGame#")
+                && AllMarkdown(m).Contains("**All #PLATE|Rise/UltimateGame# or better**"))),
+            It.Is<IEnumerable<ulong>>(ids => ids.Contains(12345ul)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task FlaggedRowsLeadTheCardAndSpellOutTheirFlags()
     {
         // A flagged pass outranks a higher-level unflagged one for the art slots, its

@@ -21,6 +21,9 @@ public sealed record UpdatePhoenixBestAttemptCommand(Guid ChartId,
     bool RaisedExistingRecord = false,
     // The site's word that the stage broke: the play is journaled and never seated, whatever
     // the opt-in says (docs/design/stage-breaks-and-max-combo.md D10).
-    bool IsStageBroken = false) : IRequest
+    bool IsStageBroken = false,
+    // A play recorded into a sitting is announced when the sitting closes, so it never joins the
+    // two-minute batch (docs/design/rise.md §12).
+    bool DeferAnnouncement = false) : IRequest
 {
 }

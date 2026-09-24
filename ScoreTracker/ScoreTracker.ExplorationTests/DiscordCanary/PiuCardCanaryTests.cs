@@ -50,6 +50,76 @@ public sealed class PiuCardCanaryTests
     public Task PostsTheKoreanSampleCards() =>
         PostAndVerify(KoreanSessionSnapshotCard, KoreanWeeklyLineupCard, KoreanOfficialDigestCard);
 
+    [DiscordCanaryFact]
+    public async Task PostsTheRiseSessionCardsWithEveryEmojiResolved()
+    {
+        var texts = await PostAndRead(RiseSessionSnapshotCard, RiseArcadeSessionSnapshotCard);
+
+        foreach (var text in texts)
+        {
+            Assert.DoesNotContain("#LETTERGRADE|", text);
+            Assert.DoesNotContain("#PLATE|", text);
+            Assert.DoesNotContain("#DIFFICULTY|", text);
+            Assert.DoesNotContain("#MIX|", text);
+            Assert.Contains("<:rise_logo:", text);
+        }
+
+        var rise = texts.Single(t => t.Contains("[Rise] "));
+        Assert.Contains("<:rise_ss:", rise);
+        Assert.Contains("<:rise_fc:", rise);
+        Assert.Contains("<:rise_a_broken:", rise);
+        Assert.Contains("<:d21:", rise);
+        Assert.Contains("<:piu_eg:", texts.Single(t => t.Contains("[Rise Arcade] ")));
+    }
+
+    // The RISE session card as CommunitySaga composes it: RISE's own grade and mark emoji, a
+    // half-double wearing its level's Doubles stepball, competitive level and folder lines, and the
+    // RISE wordmark in the footer.
+    private static RichBotMessage RiseSessionSnapshotCard(string marker) =>
+        new(new RichBotSection("### [Rise] **alice** — passed 2 · upscored 1\n-# S19–HD21", SongArt),
+            new IRichBotBlock[]
+            {
+                new RichBotDivider(),
+                new RichBotText("📈 **Singles competitive** 18.20 → **18.46**\n" +
+                                "📈 **Doubles competitive** 19.10 → **19.35**"),
+                new RichBotDivider(),
+                new RichBotText("🎉 #DIFFICULTY|HD21# **All passed!**\n" +
+                                "🏆 #DIFFICULTY|HD21# **All #PLATE|Rise/SuperbGame# or better**"),
+                new RichBotDivider(),
+                new RichBotSection(
+                    $"#DIFFICULTY|HD21# **[Conflict]({ChartBase}/00000000-0000-0000-0000-0000000000e1)**\n" +
+                    "**986,410** #LETTERGRADE|Rise/SS|False##PLATE|Rise/UltimateGame#", SongArt),
+                new RichBotText(
+                    "-# More scores\n" +
+                    "#DIFFICULTY|S19# Trashy Innocence — **961,020** #LETTERGRADE|Rise/S|False##PLATE|Rise/SuperbGame#\n" +
+                    "#DIFFICULTY|S20# Bee — **841,300** (+12,040) #LETTERGRADE|Rise/A|True##PLATE|#"),
+                new RichBotDivider(),
+                new RichBotText("#DIFFICULTY|HD21# 12/12 · #DIFFICULTY|S19# 7/40")
+            },
+            $"#MIX|Rise# Rise · PIU Scores · {marker}",
+            MixEnum.Rise.GetAccentColor(),
+            new[]
+            {
+                new RichBotLink("See more",
+                    new Uri($"{PlayerBase}/00000000-0000-0000-0000-0000000000e0/Sessions"))
+            });
+
+    // Rise Arcade keeps the Phoenix grades, plates and stepballs and wears the RISE wordmark.
+    private static RichBotMessage RiseArcadeSessionSnapshotCard(string marker) =>
+        new(new RichBotSection("### [Rise Arcade] **alice** — passed 1\n-# D22", SongArt),
+            new IRichBotBlock[]
+            {
+                new RichBotDivider(),
+                new RichBotSection(
+                    $"#DIFFICULTY|D22# **[Conflict]({ChartBase}/00000000-0000-0000-0000-0000000000f1)**\n" +
+                    "**978,210** #LETTERGRADE|SS|False##PLATE|ExtremeGame#", SongArt),
+                new RichBotDivider(),
+                new RichBotText("#DIFFICULTY|D22# 4/31")
+            },
+            $"#MIX|RiseArcade# Rise Arcade · PIU Scores · {marker}",
+            MixEnum.RiseArcade.GetAccentColor(),
+            Array.Empty<RichBotLink>());
+
     // The L-series localization, sampled in Korean: the session snapshot, the weekly
     // lineup, and the official digest exactly as a ko-KR-registered channel receives them
     // (strings verbatim from App.ko-KR.resx).
@@ -331,6 +401,12 @@ public sealed class PiuCardCanaryTests
     // components attached (independent REST readback, not just "the send didn't throw").
     private static async Task PostAndVerify(params Func<string, RichBotMessage>[] cardFactories)
     {
+        await PostAndRead(cardFactories);
+    }
+
+    // Posts the cards to the lab channel, reads them back, and returns each delivered card's text.
+    private static async Task<IReadOnlyList<string>> PostAndRead(params Func<string, RichBotMessage>[] cardFactories)
+    {
         var token = DiscordCanaryTests.CanaryToken!;
         var channelId = DiscordCanaryTests.CanaryChannel!.Value;
         var marker = $"canary {Guid.NewGuid():N}";
@@ -358,5 +434,6 @@ public sealed class PiuCardCanaryTests
 
         Assert.Equal(cards.Length, mine.Length);
         await bot.Stop();
+        return mine.Select(m => string.Join("\n", DiscordCanaryTests.ComponentTexts(m.Components))).ToArray();
     }
 }

@@ -741,7 +741,87 @@ public sealed class HighlightCaptureSagaTests
     }
 
     [Fact]
-    public async Task AMixWithoutAPumbilityFormulaNeverReachesTheRatingStep()
+    public async Task ARiseFolderCompletionFiresItsLampsWithoutAskingForPumbilityOrOfficialBoards()
+    {
+        var chartA = new ChartBuilder().WithType(ChartType.HalfDouble).WithLevel(20).WithMix(MixEnum.Rise).Build();
+        var chartB = new ChartBuilder().WithType(ChartType.HalfDouble).WithLevel(20).WithMix(MixEnum.Rise).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chartA, chartB);
+        ctx.GivenBest(chartA, 981000);
+        ctx.GivenBest(chartB, 970500);
+
+        await ctx.Saga.Consume(ctx.Context(RisePassEvent(chartB, 970500)));
+
+        ctx.Milestones.Verify(m => m.Append(MixEnum.Rise, UserId,
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w =>
+                w.Any(x => x.Kind == MilestoneKind.FolderPassLamp && x.Detail == "HD20")
+                && w.Any(x => x.Kind == MilestoneKind.FolderGradeLamp && x.Detail == "HD20|SS")),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Mediator.Verify(m => m.Send(It.IsAny<GetTop50ForPlayerQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        ctx.OfficialPlacements.Verify(o => o.EstimatePlacements(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<IReadOnlyList<(Guid, int)>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ARiseHalfDoubleMeetsItsPeersOnTheDoublesLevel()
+    {
+        var chart = new ChartBuilder().WithType(ChartType.HalfDouble).WithLevel(20).WithMix(MixEnum.Rise).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 990000);
+        ctx.GivenCompetitive(singles: 12, doubles: 20);
+        ctx.GivenCohort(chart, new PhoenixScore[] { 900000, 950000, 960000 });
+
+        await ctx.Saga.Consume(ctx.Context(RisePassEvent(chart, 990000)));
+
+        ctx.PlayerStats.Verify(p => p.GetPlayersByCompetitiveRange(MixEnum.Rise, ChartType.HalfDouble, 20, .5,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ARiseSessionReachesTheRatingStep()
+    {
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).WithMix(MixEnum.Rise).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 950000);
+        ctx.GivenRatingStep(Array.Empty<PlayerMilestoneRecord>());
+
+        await ctx.Saga.Consume(ctx.Context(RisePassEvent(chart, 950000)));
+
+        // A mix without PUMBILITY still has a competitive level to capture.
+        ctx.Mediator.Verify(m => m.Send(It.Is<PlayerRatingSaga.CaptureSessionStats>(c => c.Mix == MixEnum.Rise),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AQuietBatchPublishesAQuietSnapshot()
+    {
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).WithMix(MixEnum.Rise).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 950000);
+        var context = ctx.Context(RisePassEvent(chart, 950000) with { Announce = false });
+
+        await ctx.Saga.Consume(context);
+
+        Mock.Get(context).Verify(c => c.Publish(It.Is<ScoreHighlightsCapturedEvent>(e => !e.Announce),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private static PlayerScoresUpdatedEvent RisePassEvent(Chart chart, int score)
+    {
+        return PlayerScoresUpdatedEvent.Create(Now, UserId, MixEnum.Rise,
+            new[]
+            {
+                new PlayerScoresUpdatedEvent.ScoreChange(chart.Id, IsNewPass: true, OldScore: null,
+                    NewScore: score, Plate: "FairGame", IsBroken: false)
+            }, null);
+    }
+
+    [Fact]
+    public async Task ALegacyMixNeverReachesTheRatingStep()
     {
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var ctx = new HandlerContext();
@@ -755,7 +835,7 @@ public sealed class HighlightCaptureSagaTests
 
         await ctx.Saga.Consume(ctx.Context(legacyEvent));
 
-        // PumbilityScoring throws for a mix without a formula; the step is skipped, not failed.
+        // A legacy mix keeps no stats row; the step is skipped, not failed.
         ctx.Mediator.Verify(m => m.Send(It.IsAny<PlayerRatingSaga.CaptureSessionStats>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }

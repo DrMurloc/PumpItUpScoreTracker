@@ -16,6 +16,8 @@ internal static class CompetitiveLevels
 {
     /// <summary>
     ///     The player's competitive level for a chart type, floored to a whole difficulty level.
+    ///     The mix says which of its types fills the Singles and Doubles folders, so RISE's
+    ///     half-doubles read the doubles level.
     ///     <para>
     ///         Co-Op has no competitive discipline of its own, so it reads the overall level —
     ///         which on Phoenix and Phoenix 2 excludes co-op folders from debuts ENTIRELY, and is
@@ -29,11 +31,8 @@ internal static class CompetitiveLevels
     ///         flag — folder completion is deliberately un-floored and fires normally.
     ///     </para>
     /// </summary>
-    public static int Floor(ChartType type, PlayerStatsRecord stats) =>
-        (int)Math.Floor(type switch
-        {
-            ChartType.Single => stats.SinglesCompetitiveLevel,
-            ChartType.Double => stats.DoublesCompetitiveLevel,
-            _ => stats.CompetitiveLevel
-        });
+    public static int Floor(MixEnum mix, ChartType type, PlayerStatsRecord stats) =>
+        (int)Math.Floor(type == ChartTypeCategory.Single.TypeOn(mix) ? stats.SinglesCompetitiveLevel
+            : type == ChartTypeCategory.Double.TypeOn(mix) ? stats.DoublesCompetitiveLevel
+            : stats.CompetitiveLevel);
 }

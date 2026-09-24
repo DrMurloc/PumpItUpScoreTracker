@@ -58,7 +58,8 @@ public sealed class PlayersController : ApiV2ControllerBase
     ///     </para>
     /// </summary>
     public const int MaxPlaysPerRequest = 100;
-    public const int MaxSourceLength = 32;
+    // The stored source is "api:" followed by the tool's name, and the source columns hold 32.
+    public const int MaxSourceLength = 28;
 
     // ScoreScreen's formula matches the game to ±1 (it floors where the machine sometimes does
     // not), so a play one point off still reconciles; two points off is a misread.
@@ -74,7 +75,9 @@ public sealed class PlayersController : ApiV2ControllerBase
     ///     them is taken as read, score and claimed award alike, as long as the two agree. A play
     ///     that passes goes through the ledger's best-attempt policy, so it becomes the record only
     ///     where it beats it (a break only where the player seats breaks), and into the journal
-    ///     either way, dated by the play time the tool observed, all of one request under one session.
+    ///     either way, dated by the play time the tool observed. The ledger gathers the plays into
+    ///     sittings by that play time and announces each sitting once, after 15 minutes with nothing
+    ///     arriving (docs/design/rise.md §12).
     /// </summary>
     [HttpPost("me/plays")]
     [ProducesResponseType(typeof(RecordPlaysResultDto), StatusCodes.Status200OK, "application/json")]
@@ -103,7 +106,10 @@ public sealed class PlayersController : ApiV2ControllerBase
         // Whether a break on a chart the player has never passed is seated as their best: the
         // tool's own choice, else the mix's default — the same default the import page reads.
         var recordBrokenAsBest = body.RecordBrokenAsBest ?? BrokenScorePreference.DefaultFor(mix);
-        await Record(mix, "api:" + body.Source, recordBrokenAsBest, resolved);
+        await _mediator.Send(new RecordSittingPlaysCommand(_currentUser.User.Id, mix,
+            ScoreJournalEntry.PlaysApiSourcePrefix + body.Source,
+            resolved.Select(r => new RecordObservedPlaysCommand.ObservedPlay(r.Chart.Id, r.Score, r.Award,
+                r.Play.IsBroken, r.Play.PlayedAt, r.Judgements)).ToArray(), recordBrokenAsBest));
         return Ok(new RecordPlaysResultDto(resolved.Count, mix.ToString(), ScoringModelOf(mix)));
     }
 
@@ -237,24 +243,6 @@ public sealed class PlayersController : ApiV2ControllerBase
     private static string Breakdown(JudgementCounts judgements)
     {
         return $"{judgements.Perfects}/{judgements.Greats}/{judgements.Goods}/{judgements.Bads}/{judgements.Misses}";
-    }
-
-    /// <summary>
-    ///     One session for everything a request saw, so the record path and the journal file the
-    ///     plays under the same sitting. The record first — keep-best, so only a play that beats
-    ///     it moves it, dated by the play; a break only where the player seats breaks — then the
-    ///     journal, which is idempotent on play time and so never journals a record's play twice.
-    /// </summary>
-    private async Task Record(MixEnum mix, string source, bool recordBrokenAsBest, IReadOnlyList<ResolvedPlay> plays)
-    {
-        var sessionId = Guid.NewGuid();
-        foreach (var r in plays.Where(r => !r.Play.IsBroken || recordBrokenAsBest))
-            await _mediator.Send(new UpdatePhoenixBestAttemptCommand(r.Chart.Id, r.Play.IsBroken, r.Score, r.Award,
-                KeepBestStats: true, Source: source, Mix: mix, SessionId: sessionId, RecordedAt: r.Play.PlayedAt,
-                Judgements: r.Judgements));
-        await _mediator.Send(new RecordObservedPlaysCommand(_currentUser.User.Id, mix, source, sessionId,
-            plays.Select(r => new RecordObservedPlaysCommand.ObservedPlay(r.Chart.Id, r.Score, r.Award,
-                r.Play.IsBroken, r.Play.PlayedAt, r.Judgements)).ToArray(), IncludeBroken: recordBrokenAsBest));
     }
 
     /// <summary>

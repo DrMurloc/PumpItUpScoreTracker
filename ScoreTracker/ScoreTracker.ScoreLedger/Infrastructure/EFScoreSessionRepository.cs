@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.ScoreLedger.Infrastructure.Entities;
@@ -111,6 +112,68 @@ internal sealed class EFScoreSessionRepository : IScoreSessionRepository
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         await database.Set<ScoreSessionEntity>().Where(s => s.Id == id).ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<OpenSitting>> GetOpenSittings(Guid userId, MixEnum mix,
+        DateTimeOffset activeSince, CancellationToken cancellationToken = default)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // A replayed sitting carries its counts before capture stamps it processed, and its replay
+        // moved LastActivityAt to the replay's own time — so without the counts test a sitting being
+        // announced would look open, and a play joining it would never be announced itself.
+        var sittings = await database.Set<ScoreSessionEntity>()
+            .Where(s => s.UserId == userId && s.MixId == mixId && s.ProcessedAt == null
+                        && s.NewCount == 0 && s.UpscoreCount == 0
+                        && s.Source.StartsWith(ScoreJournalEntry.PlaysApiSourcePrefix)
+                        && s.LastActivityAt >= activeSince)
+            .Select(s => new { s.Id, s.StartedAt })
+            .ToArrayAsync(cancellationToken);
+        if (sittings.Length == 0) return Array.Empty<OpenSitting>();
+
+        var ids = sittings.Select(s => (Guid?)s.Id).ToArray();
+        var spans = await database.Set<ScoreEventJournalEntity>()
+            .Where(j => j.UserId == userId && ids.Contains(j.SessionId))
+            .GroupBy(j => j.SessionId!.Value)
+            .Select(g => new { Id = g.Key, First = g.Min(j => j.OccurredAt), Last = g.Max(j => j.OccurredAt) })
+            .ToDictionaryAsync(span => span.Id, cancellationToken);
+        return sittings.Select(s => spans.TryGetValue(s.Id, out var span)
+                ? new OpenSitting(s.Id, span.First, span.Last)
+                : new OpenSitting(s.Id, s.StartedAt, s.StartedAt))
+            .ToArray();
+    }
+
+    public async Task TouchArrival(Guid id, DateTimeOffset at, CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        await database.Set<ScoreSessionEntity>()
+            .Where(s => s.Id == id && s.LastActivityAt < at)
+            .ExecuteUpdateAsync(u => u.SetProperty(s => s.LastActivityAt, at), cancellationToken);
+    }
+
+    public async Task<DateTimeOffset?> GetLastPlayedAt(Guid userId, Guid sessionId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.Set<ScoreEventJournalEntity>()
+            .Where(j => j.UserId == userId && j.SessionId == sessionId)
+            .Select(j => (DateTimeOffset?)j.OccurredAt)
+            .MaxAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ScoreSessionRecord>> ListOverdueSittings(DateTimeOffset quietSince, int take,
+        CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return (await database.Set<ScoreSessionEntity>()
+                .Where(s => s.ProcessedAt == null && s.NewCount == 0 && s.UpscoreCount == 0
+                            && s.Source.StartsWith(ScoreJournalEntry.PlaysApiSourcePrefix)
+                            && s.LastActivityAt <= quietSince)
+                .OrderBy(s => s.LastActivityAt)
+                .Take(take)
+                .ToArrayAsync(cancellationToken))
+            .Select(Map)
+            .ToArray();
     }
 
     private static ScoreSessionRecord Map(ScoreSessionEntity e)

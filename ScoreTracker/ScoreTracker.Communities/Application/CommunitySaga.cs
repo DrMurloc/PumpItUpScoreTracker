@@ -14,6 +14,7 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.Services;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -175,6 +176,8 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     public async Task Consume(ConsumeContext<ScoreHighlightsCapturedEvent> context)
     {
         var e = context.Message;
+        // A late backlog is recorded and captured like any session but posts no card.
+        if (!e.Announce) return;
         var user = await _users.GetUser(e.UserId, context.CancellationToken);
         if (user == null) return;
 
@@ -270,7 +273,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             var stats = await _playerStats.GetStats(e.Mix, e.UserId, context.CancellationToken);
             weekly = (await _mediator.Send(new GetUserWeeklyPlacementsQuery(e.UserId, e.Mix,
                     known.Select(c => c.ChartId).Distinct().ToArray()), context.CancellationToken))
-                .Where(w => (int)charts[w.ChartId].Level >= CompetitiveFor(charts[w.ChartId].Type, stats) - 5)
+                .Where(w => (int)charts[w.ChartId].Level >= CompetitiveFor(e.Mix, charts[w.ChartId].Type, stats) - 5)
                 .OrderByDescending(w => (int)charts[w.ChartId].Level)
                 .Take(WeeklyLineCap)
                 .ToArray();
@@ -495,8 +498,14 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         RecordedPhoenixScore best, string reclearMark)
     {
         return $"#DIFFICULTY|{chart.DifficultyString}# {chart.Song.Name}{reclearMark} — **{(int)best.Score!.Value:N0}**" +
-               UpscoreDelta(change, chart, best) +
-               $" #LETTERGRADE|{best.Score!.Value.LetterGradeFor(chart.Mix)}|{best.IsBroken}##PLATE|{best.Plate}#";
+               UpscoreDelta(change, chart, best) + " " + GradeAndAward(chart, best);
+    }
+
+    // The grade and award emoji a score row ends with, in the chart's mix's own art.
+    private static string GradeAndAward(Chart chart, RecordedPhoenixScore best)
+    {
+        return EmojiTokens.LetterGrade(chart.Mix, best.Score!.Value.LetterGradeFor(chart.Mix), best.IsBroken) +
+               EmojiTokens.Plate(chart.Mix, best.Plate);
     }
 
     // The gain an upscore earned, plus the grade it came from when it crossed one:
@@ -512,7 +521,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         var oldLetter = PhoenixScore.From(change.OldScore.Value).LetterGradeFor(chart.Mix);
         return oldLetter == best.Score!.Value.LetterGradeFor(chart.Mix)
             ? gain
-            : gain + $" #LETTERGRADE|{oldLetter}|False# →";
+            : gain + $" {EmojiTokens.LetterGrade(chart.Mix, oldLetter, false)} →";
     }
 
     private void AddOverflowLine(List<IRichBotBlock> blocks, SnapshotInputs inputs, string? culture,
@@ -537,7 +546,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
 
     private RichBotSection HeaderSection(SnapshotInputs inputs, string? culture)
     {
-        var span = LevelSpan(inputs.Known
+        var span = LevelSpan(inputs.E.Mix, inputs.Known
             .Where(c => inputs.Charts[c.ChartId].Type != ChartType.CoOp)
             .Select(c => inputs.Charts[c.ChartId]).ToArray());
         if (inputs.Known.Any(c => inputs.Charts[c.ChartId].Type == ChartType.CoOp))
@@ -688,7 +697,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
 
         foreach (var lamp in e.Milestones.Where(m => m.Kind is MilestoneKind.FolderPassLamp
                      or MilestoneKind.FolderGradeLamp or MilestoneKind.FolderPlateLamp))
-            lines.Add(LampLine(lamp, culture));
+            lines.Add(LampLine(e.Mix, lamp, culture));
 
         lines.AddRange(weekly.Select(w =>
             "🏆 " + _localizer.Get(culture, "**#{0}** on {1} {2} weekly",
@@ -746,7 +755,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         return detail.IsLamp ? line + " 🎉" : line;
     }
 
-    private string LampLine(PlayerMilestoneRecord m, string? culture)
+    private string LampLine(MixEnum mix, PlayerMilestoneRecord m, string? culture)
     {
         var detail = (m.Detail ?? string.Empty).Split('|');
         return m.Kind switch
@@ -756,7 +765,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             MilestoneKind.FolderGradeLamp when detail.Length == 2 =>
                 $"🏆 #DIFFICULTY|{detail[0]}# {_localizer.Get(culture, "**All {0} or better**", detail[1])}",
             MilestoneKind.FolderPlateLamp when detail.Length == 2 =>
-                $"🏆 #DIFFICULTY|{detail[0]}# {_localizer.Get(culture, "**All {0} or better**", $"#PLATE|{detail[1]}#")}",
+                $"🏆 #DIFFICULTY|{detail[0]}# {_localizer.Get(culture, "**All {0} or better**", EmojiTokens.PlateNamed(mix, detail[1]))}",
             _ => $"🏆 {m.Detail}"
         };
     }
@@ -783,11 +792,14 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         return string.Join(" · ", parts);
     }
 
-    private static string LevelSpan(IReadOnlyList<Chart> charts)
+    // One range per folder, each labelled by the type that fills it on the mix: S and D, or S and HD
+    // on RISE.
+    private static string LevelSpan(MixEnum mix, IReadOnlyList<Chart> charts)
     {
         var parts = new List<string>();
-        foreach (var (type, shortHand) in new[] { (ChartType.Single, "S"), (ChartType.Double, "D") })
+        foreach (var type in new[] { ChartTypeCategory.Single.TypeOn(mix), ChartTypeCategory.Double.TypeOn(mix) })
         {
+            var shortHand = type.GetShortHand();
             var levels = charts.Where(c => c.Type == type).Select(c => (int)c.Level).ToArray();
             if (!levels.Any()) continue;
             var min = levels.Min();
@@ -802,7 +814,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         RecordedPhoenixScore best, bool bigGain, string reclearMark, string? culture)
     {
         return $"#DIFFICULTY|{chart.DifficultyString}# {SongLink(change, chart, bigGain)}{reclearMark}\n" +
-               $"**{(int)best.Score!.Value:N0}** #LETTERGRADE|{best.Score!.Value.LetterGradeFor(chart.Mix)}|{best.IsBroken}##PLATE|{best.Plate}#" +
+               $"**{(int)best.Score!.Value:N0}** " + GradeAndAward(chart, best) +
                FlagCaption(change, chart, best, bigGain, culture);
     }
 
@@ -811,7 +823,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     {
         return $"#DIFFICULTY|{chart.DifficultyString}# {SongLink(change, chart, bigGain)} " +
                $"**{(int)best.Score!.Value:N0}**" + UpscoreDelta(change, chart, best) +
-               $" #LETTERGRADE|{best.Score!.Value.LetterGradeFor(chart.Mix)}|{best.IsBroken}##PLATE|{best.Plate}#" +
+               " " + GradeAndAward(chart, best) +
                FlagCaption(change, chart, best, bigGain, culture);
     }
 
@@ -903,14 +915,11 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
 
     // The competitive level for a chart's type; co-op (and anything without a competitive
     // side) returns 0, so its gate threshold is −5 and it never gets filtered.
-    private static double CompetitiveFor(ChartType type, PlayerStatsRecord stats)
+    // The mix says which of its types fills the Singles and Doubles folders.
+    private static double CompetitiveFor(MixEnum mix, ChartType type, PlayerStatsRecord stats)
     {
-        return type switch
-        {
-            ChartType.Single => stats.SinglesCompetitiveLevel,
-            ChartType.Double => stats.DoublesCompetitiveLevel,
-            _ => 0
-        };
+        if (type == ChartTypeCategory.Single.TypeOn(mix)) return stats.SinglesCompetitiveLevel;
+        return type == ChartTypeCategory.Double.TypeOn(mix) ? stats.DoublesCompetitiveLevel : 0;
     }
 
     public async Task Consume(ConsumeContext<UserUpdatedEvent> context)

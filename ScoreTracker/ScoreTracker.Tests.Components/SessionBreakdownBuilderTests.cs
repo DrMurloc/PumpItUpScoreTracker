@@ -142,6 +142,36 @@ public sealed class SessionBreakdownBuilderTests
     }
 
     [Fact]
+    public async Task ASittingStaysPendingThroughItsQuietWindowWhereAnImportHasLongSinceSettled()
+    {
+        // A sitting is only announced once 15 minutes pass with nothing arriving, so ten minutes after
+        // its last play its capture has not started, while an import's has long finished.
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
+
+        var sitting = await Build(chart, rows, captured: false, sessionEndedMinutesAgo: 10,
+            source: "api:watcher-grab", newCount: 0);
+        var import = await Build(chart, rows, captured: false, sessionEndedMinutesAgo: 10);
+
+        Assert.True(sitting.Hero!.CapturePending);
+        Assert.False(import.Hero!.CapturePending);
+    }
+
+    [Fact]
+    public async Task AReplayedSittingWaitsOnlyForItsCaptureLikeAnyOtherSession()
+    {
+        // A replay sets the counts and stamps its own time as the last activity; from there the
+        // capture window is an ordinary one, so a sitting whose capture wrote no rows stops waiting.
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
+
+        var replayed = await Build(chart, rows, captured: false, sessionEndedMinutesAgo: 10,
+            source: "api:watcher-grab", newCount: 1);
+
+        Assert.False(replayed.Hero!.CapturePending);
+    }
+
+    [Fact]
     public async Task ASessionPredatingTheSessionTableIsNeverPending()
     {
         // No ScoreSession row means no wall clock to test against — and those sessions are
@@ -619,9 +649,11 @@ public sealed class SessionBreakdownBuilderTests
     private static async Task<SessionsPageModel> Build(Chart chart,
         RecentSessionsPage.ScoreEventRecord[] rows,
         MixEnum mix = MixEnum.Phoenix, UserPhoenixScore[]? phoenix1 = null,
-        bool captured = true, int? sessionEndedMinutesAgo = null, ScoreHighlightRecord[]? highlights = null)
+        bool captured = true, int? sessionEndedMinutesAgo = null, ScoreHighlightRecord[]? highlights = null,
+        string source = "officialImport", int newCount = 1)
     {
-        return (await BuildWith(chart, rows, mix, phoenix1, captured, sessionEndedMinutesAgo, highlights))
+        return (await BuildWith(chart, rows, mix, phoenix1, captured, sessionEndedMinutesAgo, highlights,
+                source: source, newCount: newCount))
             .Model;
     }
 
@@ -630,7 +662,8 @@ public sealed class SessionBreakdownBuilderTests
         MixEnum mix = MixEnum.Phoenix, UserPhoenixScore[]? phoenix1 = null,
         bool captured = true, int? sessionEndedMinutesAgo = null, ScoreHighlightRecord[]? highlights = null,
         IReadOnlyDictionary<ScoreOnChart, PeerStanding>? standings = null,
-        PlayerMilestoneRecord[]? milestones = null, bool hardmodeOn = false, bool settingsFail = false)
+        PlayerMilestoneRecord[]? milestones = null, bool hardmodeOn = false, bool settingsFail = false,
+        string source = "officialImport", int newCount = 1)
     {
         var mediator = new Mock<IMediator>();
         if (hardmodeOn)
@@ -653,9 +686,9 @@ public sealed class SessionBreakdownBuilderTests
             ? Array.Empty<ScoreSessionRecord>()
             : new[]
             {
-                new ScoreSessionRecord(Session, User, mix, "officialImport", "SHIRONEKO", "2",
+                new ScoreSessionRecord(Session, User, mix, source, "SHIRONEKO", "2",
                     now.AddMinutes(-sessionEndedMinutesAgo.Value - 5),
-                    now.AddMinutes(-sessionEndedMinutesAgo.Value), rows.Length, 1, 0)
+                    now.AddMinutes(-sessionEndedMinutesAgo.Value), rows.Length, newCount, 0)
             };
 
         Setup(mediator, new GetRecentSessionsQuery(User, 1, 20),

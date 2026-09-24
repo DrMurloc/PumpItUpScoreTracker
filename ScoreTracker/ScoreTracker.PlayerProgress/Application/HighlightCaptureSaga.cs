@@ -105,7 +105,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         // the same charts in one batch.
         CaptureData? captured = null;
 
-        if (e.Mix is MixEnum.Phoenix or MixEnum.Phoenix2 && e.Changes.Any())
+        if (!e.Mix.UsesLegacyScoring() && e.Changes.Any())
             try
             {
                 captured = await LoadCaptureData(e, context.CancellationToken);
@@ -141,10 +141,10 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
 
         // The rating step: recalc + Pumbility record stats + rating milestones + the
         // CompetitiveImprover flags, which merge into the event so the ⬆ badge rides
-        // the card instead of trailing it. A mix without a PUMBILITY formula has no stats
-        // to capture, and asking would throw — skipped rather than logged as a failure
-        // on every session.
-        if (e.Mix.HasPumbility())
+        // the card instead of trailing it. A legacy mix keeps no stats row, so it is skipped
+        // rather than logged as a failure on every session; a Phoenix-scored mix without a
+        // PUMBILITY formula still gets its competitive level.
+        if (!e.Mix.UsesLegacyScoring())
             try
             {
                 var stats = await _mediator.Send(new PlayerRatingSaga.CaptureSessionStats(e.UserId, e.Mix,
@@ -233,7 +233,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
                 c.OldScore, c.NewScore, c.Plate, c.IsBroken,
                 flags.TryGetValue(c.ChartId, out var f) ? f : HighlightFlags.None,
                 details.GetValueOrDefault(c.ChartId))).ToArray(),
-            milestones, titleProgress));
+            milestones, titleProgress, e.Announce));
     }
 
     public async Task<IEnumerable<ScoreHighlightRecord>> Handle(GetScoreHighlightsQuery request,
@@ -295,7 +295,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
             await FlagScoreQuality(e, folder.Key, folder.ToArray(), data, flags, details, cancellationToken);
             var newPasses = folder.Where(c => c.IsNewPass && !data.Bests[c.ChartId].IsBroken).ToArray();
             CaptureFolderLamps(e, folder.ToArray(), folder.Key, data, newPasses.Length, lamps);
-            FlagFolderCompletionAndDebut(folder.Key, newPasses, data, flags, details);
+            FlagFolderCompletionAndDebut(e.Mix, folder.Key, newPasses, data, flags, details);
 
             var level = FolderLevelCalculator.ComputeOne(e.Mix, folder.Key.Type, folder.Key.Level,
                 data.Charts.Values, passed);
@@ -310,7 +310,8 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         await SaveFolderLevels(e, touchedFolders, cancellationToken);
         await SaveSeasonFolderLevels(e, touchedFolders, data, cancellationToken);
 
-        await FlagOfficialPlacements(e, known, data, flags, details, cancellationToken);
+        if (e.Mix.HasOfficialBoards())
+            await FlagOfficialPlacements(e, known, data, flags, details, cancellationToken);
         await RecordAttempts(e, known, data, details, cancellationToken);
 
         // A row is written when the batch learned ANYTHING about the score — a flag, or just
@@ -401,10 +402,13 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
     {
         var charts = (await _charts.GetCharts(e.Mix, cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
         var bests = (await _scores.GetBestScores(e.Mix, e.UserId, cancellationToken)).ToDictionary(s => s.ChartId);
-        // Ordered pumbility-desc, so a chart's index is its rank in the player's Pumbility.
-        var top50 = (await _mediator.Send(new GetTop50ForPlayerQuery(e.UserId, null, Mix: e.Mix), cancellationToken))
+        // Ordered pumbility-desc, so a chart's index is its rank in the player's Pumbility. A mix
+        // without a PUMBILITY formula has no fifty to rank in.
+        var top50 = e.Mix.HasPumbility()
+            ? (await _mediator.Send(new GetTop50ForPlayerQuery(e.UserId, null, Mix: e.Mix), cancellationToken))
             .Select((s, i) => (s.ChartId, Rank: i + 1))
-            .ToDictionary(x => x.ChartId, x => x.Rank);
+            .ToDictionary(x => x.ChartId, x => x.Rank)
+            : new Dictionary<Guid, int>();
         var scoringLevels = await _mediator.Send(new GetChartScoringLevelsQuery(e.Mix), cancellationToken);
 
         // Competitive levels gate two flags: a chart more than 5 levels under the player's
@@ -528,11 +532,13 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         CaptureData data, Dictionary<Guid, HighlightFlags> flags, Dictionary<Guid, HighlightDetail> details,
         CancellationToken cancellationToken)
     {
-        if (folder.Type is not (ChartType.Single or ChartType.Double)) return;
+        // The mix says which of its types fills the Singles and Doubles folders.
+        var singlesType = ChartTypeCategory.Single.TypeOn(e.Mix);
+        if (folder.Type != singlesType && folder.Type != ChartTypeCategory.Double.TypeOn(e.Mix)) return;
 
         // Owner call: below (competitive − 5) for the chart's type, peer comparison is noise
         // (a 23-competitive player back-filling S5s). Skip the whole folder — no cohort, no flag.
-        var competitive = folder.Type == ChartType.Single
+        var competitive = folder.Type == singlesType
             ? data.Stats.SinglesCompetitiveLevel
             : data.Stats.DoublesCompetitiveLevel;
         if ((int)folder.Level < competitive - 5) return;
@@ -571,7 +577,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         }
     }
 
-    private static void FlagFolderCompletionAndDebut((ChartType Type, DifficultyLevel Level) folder,
+    private static void FlagFolderCompletionAndDebut(MixEnum mix, (ChartType Type, DifficultyLevel Level) folder,
         PlayerScoresUpdatedEvent.ScoreChange[] newPasses, CaptureData data,
         Dictionary<Guid, HighlightFlags> flags, Dictionary<Guid, HighlightDetail> details)
     {
@@ -596,7 +602,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         //
         // A batch landing several at once debuts its top ones by noteworthy ordering; the ordinal
         // (First/Second/Third) is the prior clear count plus place.
-        if ((int)folder.Level < CompetitiveLevels.Floor(folder.Type, data.Stats)) return;
+        if ((int)folder.Level < CompetitiveLevels.Floor(mix, folder.Type, data.Stats)) return;
         var priorClears = clears - newPasses.Length;
         var debutSlots = 3 - priorClears;
         if (debutSlots <= 0) return;

@@ -152,8 +152,8 @@ internal sealed class PlayerRatingSaga :
 
     public async Task Handle(RecalculateStatsCommand request, CancellationToken cancellationToken)
     {
-        // No formula, no stats row: PumbilityScoring throws for such a mix, on purpose.
-        if (!request.Mix.HasPumbility()) return;
+        // A legacy mix keeps no stats row.
+        if (request.Mix.UsesLegacyScoring()) return;
         // The public recalc entry (admin tools, scheduled maintenance) — the session
         // pipeline goes through CaptureSessionStats, which needs the core's outputs. No change
         // set here, so no old scores, so no per-chart PUMBILITY split: an admin recalculation
@@ -326,7 +326,10 @@ internal sealed class PlayerRatingSaga :
         var oldStats = season.IsAllTime
             ? await _stats.GetStats(mix, request.UserId, cancellationToken)
             : await _stats.GetStats(mix, request.UserId, season, cancellationToken);
-        var scoring = ScoringConfiguration.PumbilityScoring(mix, true);
+        // A Phoenix-scored mix without a PUMBILITY formula still gets its competitive level,
+        // clears and highest level; every rating is zero and no pool is kept.
+        var hasPumbility = mix.HasPumbility();
+        var scoring = hasPumbility ? ScoringConfiguration.PumbilityScoring(mix, true) : null;
         var charts = (season.IsAllTime
                 ? await _charts.GetCharts(mix, cancellationToken: cancellationToken)
                 : await _charts.GetCharts(mix, season, cancellationToken: cancellationToken))
@@ -339,6 +342,7 @@ internal sealed class PlayerRatingSaga :
         // historical plate-blind rating byte-identical.
         double Rate(RecordedPhoenixScore s)
         {
+            if (scoring == null) return 0;
             return mix == MixEnum.Phoenix2
                 ? scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level, s.Score!.Value,
                     s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken)
@@ -358,16 +362,17 @@ internal sealed class PlayerRatingSaga :
                     charts[s.ChartId].Type),
                 s.Score!.Value)).ToArray();
 
-        var top50 = scores
+        var pooled = hasPumbility ? scores : Array.Empty<ChartRating>();
+        var top50 = pooled
             .Where(s => !s.IsBroken && s.Type != ChartType.CoOp)
             .OrderByDescending(s => s.Rating)
             .Take(50).ToArray();
 
-        var top50Singles = scores.Where(s => !s.IsBroken && s.Type == ChartType.Single)
+        var top50Singles = pooled.Where(s => !s.IsBroken && s.Type == ChartType.Single)
             .OrderByDescending(s => s.Rating)
             .Take(50).ToArray();
 
-        var top50Doubles = scores.Where(s => !s.IsBroken && s.Type == ChartType.Double)
+        var top50Doubles = pooled.Where(s => !s.IsBroken && s.Type == ChartType.Double)
             .OrderByDescending(s => s.Rating)
             .Take(50).ToArray();
 
@@ -376,13 +381,17 @@ internal sealed class PlayerRatingSaga :
         var competitive =
             AvgOr0(competitiveScores.OrderByDescending(e => e.CompetitiveLevel).Take(100)
                 .Select(s => s.CompetitiveLevel).ToArray());
+        // The mix says which of its types fills the Singles and Doubles folders, so RISE's
+        // half-doubles make its doubles level.
+        var singlesType = ChartTypeCategory.Single.TypeOn(mix);
+        var doublesType = ChartTypeCategory.Double.TypeOn(mix);
         var competitiveSingles =
-            AvgOr0(competitiveScores.Where(s => s.Type == ChartType.Single)
+            AvgOr0(competitiveScores.Where(s => s.Type == singlesType)
                 .OrderByDescending(s => s.CompetitiveLevel)
                 .Take(50).Select(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score))
                 .ToArray());
         var competitiveDoubles =
-            AvgOr0(competitiveScores.Where(s => s.Type == ChartType.Double).OrderByDescending(s => s.CompetitiveLevel)
+            AvgOr0(competitiveScores.Where(s => s.Type == doublesType).OrderByDescending(s => s.CompetitiveLevel)
                 .Take(50).Select(s => ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score))
                 .ToArray());
 
@@ -420,7 +429,8 @@ internal sealed class PlayerRatingSaga :
         // read as a rank the player does not hold, so a season row carries no estimate.
         if (season.IsAllTime)
         {
-            newStats = await EstimateOfficialRanks(mix, newStats, cancellationToken);
+            if (mix.HasOfficialBoards())
+                newStats = await EstimateOfficialRanks(mix, newStats, cancellationToken);
             await _stats.SaveStats(mix, request.UserId, newStats, cancellationToken);
         }
         else
@@ -430,7 +440,9 @@ internal sealed class PlayerRatingSaga :
 
         if (quiet) return new SessionStatsResult(Array.Empty<PlayerMilestoneRecord>(), Array.Empty<Guid>());
 
-        var gains = PumbilityGains(request, changes, scores, recorded, charts, mix, scoring);
+        var gains = scoring == null
+            ? new Dictionary<Guid, double>()
+            : PumbilityGains(request, changes, scores, recorded, charts, mix, scoring);
         var improvers = await FlagCompetitiveImprovers(request, oldStats, newStats, competitiveScores, charts,
             gains, cancellationToken);
         var milestones = await CaptureRatingMilestones(request, oldStats, newStats, cancellationToken);
@@ -621,9 +633,9 @@ internal sealed class PlayerRatingSaga :
         var baselines = new Dictionary<Guid, double>();
         foreach (var (type, oldLevel, improved) in new[]
                  {
-                     (ChartType.Single, oldStats.SinglesCompetitiveLevel,
+                     (ChartTypeCategory.Single.TypeOn(request.Mix), oldStats.SinglesCompetitiveLevel,
                          newStats.SinglesCompetitiveLevel > oldStats.SinglesCompetitiveLevel),
-                     (ChartType.Double, oldStats.DoublesCompetitiveLevel,
+                     (ChartTypeCategory.Double.TypeOn(request.Mix), oldStats.DoublesCompetitiveLevel,
                          newStats.DoublesCompetitiveLevel > oldStats.DoublesCompetitiveLevel)
                  })
         {

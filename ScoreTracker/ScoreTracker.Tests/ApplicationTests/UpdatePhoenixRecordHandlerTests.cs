@@ -61,6 +61,25 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
+    public async Task APlayRecordedIntoASittingSavesTheRecordAndLeavesTheAnnouncementToTheSitting()
+    {
+        var ctx = new HandlerContext();
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 950000,
+                Plate: PhoenixPlate.SuperbGame, KeepBestStats: true, SessionId: Guid.NewGuid(),
+                DeferAnnouncement: true),
+            CancellationToken.None);
+
+        ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId, It.IsAny<RecordedPhoenixScore>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Batches.Verify(b => b.AddToBatch(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<DateTime>(),
+            It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<PhoenixScore?>(), It.IsAny<Guid>()), Times.Never);
+        ctx.Scheduler.Verify(s => s.SchedulePublish(It.IsAny<DateTime>(),
+            It.IsAny<UpdatePhoenixRecordHandler.TryFireScoreCommand>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task ABestWhoseTimeAnotherPlayHoldsIsJournaledWhenTheImportFoundIt()
     {
         // A Phoenix 2 best-list card keeps its chart's first-play date as the score improves, so a

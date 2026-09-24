@@ -123,7 +123,7 @@ internal sealed class SessionRecoverySaga :
         // way a live batch does. Stamping on publish would mark a session processed whose work is
         // still in flight, and lose it for good if this process dies again.
         await _bus.Publish(PlayerScoresUpdatedEvent.Create(_dateTime.Now, request.UserId, session.Mix,
-            ScoreChangeAssembler.Build(batch, bests), request.SessionId), cancellationToken);
+            ScoreChangeAssembler.Build(batch, bests), request.SessionId, request.Announce), cancellationToken);
 
         return replayed.Count;
     }

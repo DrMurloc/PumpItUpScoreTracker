@@ -33,6 +33,8 @@ public static class ScoreLedgerRegistrationExtensions
         // handler instances (moved here from Web.Accessors — it has no ASP.NET
         // dependency and the Ledger owns the batching seam).
         services.AddSingleton<IPlayerScoreBatchAccumulator, PlayerScoreBatchAccumulator>();
+        // One caller at a time per player and mix on a sitting; singleton or it guards nothing.
+        services.AddSingleton<SittingGate>();
         // Every player's passing bests, held for the two reads that ask about other people.
         // Singleton or it is not a cache; evicted per player by PeerScoreCacheConsumer.
         services.AddSingleton<PeerScoreStore>();
@@ -63,5 +65,7 @@ public static class ScoreLedgerRegistrationExtensions
         configurator.AddConsumer<PeerScoreCacheConsumer>();
         // Rebuilds one season's pool from the journal, through the live writer.
         configurator.AddConsumer<SeasonalBestBackfillConsumer>();
+        // Closes plays-endpoint sittings: the scheduled close, and the sweep for a lost one.
+        configurator.AddConsumer<SittingSaga>();
     }
 }

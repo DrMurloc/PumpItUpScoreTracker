@@ -1181,6 +1181,39 @@ public sealed class PlayerRatingSagaTests
         stats.VerifyNoOtherCalls();
     }
 
+    [Fact]
+    public async Task ARiseSessionStoresCompetitiveLevelWithoutPricingPumbility()
+    {
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).WithMix(MixEnum.Rise).Build();
+        var halfDouble = new ChartBuilder().WithType(ChartType.HalfDouble).WithLevel(20).WithMix(MixEnum.Rise)
+            .Build();
+        var userId = Guid.NewGuid();
+        var officialBoards = new Mock<IOfficialPlacementReader>();
+        var recordStats = new Mock<IPhoenixRecordStatsRepository>();
+        PlayerStatsRecord? saved = null;
+        var saga = BuildSaga(charts: ChartsMockReturning(new[] { single, halfDouble }, MixEnum.Rise),
+            scores: ScoresMockReturning(userId,
+                new[] { Score(single.Id, 990000), Score(halfDouble.Id, 982500) }, MixEnum.Rise),
+            stats: CapturingStats(userId, r => saved = r), officialBoards: officialBoards,
+            recordStats: recordStats);
+
+        var result = await saga.Handle(new PlayerRatingSaga.CaptureSessionStats(userId, MixEnum.Rise,
+            new[] { single.Id, halfDouble.Id }, Guid.NewGuid()), CancellationToken.None);
+
+        Assert.NotNull(saved);
+        Assert.Equal(0d, saved!.SkillRating);
+        Assert.Equal(0, (int)saved.TotalRating);
+        Assert.Equal(2, saved.ClearCount);
+        Assert.True(Near(saved.SinglesCompetitiveLevel, 20 + 25000 / 17500.0));
+        // The half-doubles are RISE's doubles.
+        Assert.True(Near(saved.DoublesCompetitiveLevel, 21));
+        Assert.Contains(result.Milestones, m => m.Kind == MilestoneKind.SinglesCompetitiveGain);
+        Assert.Contains(result.Milestones, m => m.Kind == MilestoneKind.DoublesCompetitiveGain);
+        Assert.Contains(halfDouble.Id, result.ImproverChartIds);
+        officialBoards.VerifyNoOtherCalls();
+        recordStats.VerifyNoOtherCalls();
+    }
+
     private static PlayerRatingSaga BuildSaga(
         Mock<IScoreReader>? scores = null,
         Mock<IChartRepository>? charts = null,

@@ -61,4 +61,25 @@ public static class ScoreBatchPolicy
     ///     </para>
     /// </summary>
     public static readonly TimeSpan StaleAfter = TimeSpan.FromMinutes(30);
+
+    /// <summary>
+    ///     The gap that ends a sitting — the plays the plays endpoint records. A play joins the open
+    ///     sitting when it was played within this of the sitting's plays, and a sitting closes and
+    ///     announces itself once this long passes with no play arriving (docs/design/rise.md §12).
+    /// </summary>
+    public static readonly TimeSpan SittingQuietWindow = TimeSpan.FromMinutes(15);
+
+    /// <summary>
+    ///     How long past its last arrival an unannounced sitting waits before the sweep closes it: the
+    ///     quiet window plus the sweep's own five-minute tick, so the scheduled close normally gets
+    ///     there first and the sweep only catches one that was lost.
+    /// </summary>
+    public static readonly TimeSpan SittingOverdueAfter = SittingQuietWindow + TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    ///     A sitting whose last play is older than this when it closes — a backlog a tool sent late —
+    ///     records and captures as usual but posts no Discord card, so an old backlog cannot flood a
+    ///     channel (docs/design/rise.md D23).
+    /// </summary>
+    public static readonly TimeSpan SittingCardCutoff = TimeSpan.FromDays(1);
 }

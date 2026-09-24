@@ -148,6 +148,8 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         var isNewScore = (existing?.IsBroken ?? true) && !request.IsBroken;
         var isUpscore = existing?.Score != null && request.Score != null && existing.Score < request.Score;
         if (!isNewScore && !isUpscore) return;
+        // A sitting announces itself when it closes; the batch would announce each play on its own.
+        if (request.DeferAnnouncement) return;
 
         // Batch up score posts to reduce noise. AddToBatch atomically creates-or-extends
         // the (user, mix) batch; only schedule a drain when this call created the batch.
