@@ -248,6 +248,8 @@ public sealed class V2PlaysApiShapeTests
     [InlineData("")]
     [InlineData("screen grab")]
     [InlineData("a-name-that-runs-past-the-thirty-two-limit")]
+    // "api:" plus a 29-character name overflows the 32-character source column.
+    [InlineData("abcdefghijklmnopqrstuvwxyz123")]
     public async Task TheSourceNamesTheToolInOneToken(string? source)
     {
         var result = await Controller().RecordPlays(new RecordPlaysRequestDto("Rise", source,

@@ -58,7 +58,8 @@ public sealed class PlayersController : ApiV2ControllerBase
     ///     </para>
     /// </summary>
     public const int MaxPlaysPerRequest = 100;
-    public const int MaxSourceLength = 32;
+    // The stored source is "api:" followed by the tool's name, and the source columns hold 32.
+    public const int MaxSourceLength = 28;
 
     // ScoreScreen's formula matches the game to ±1 (it floors where the machine sometimes does
     // not), so a play one point off still reconciles; two points off is a misread.
