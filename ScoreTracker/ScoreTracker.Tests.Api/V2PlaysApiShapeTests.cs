@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -284,5 +285,167 @@ public sealed class V2PlaysApiShapeTests
             .ToArray();
         var oversized = await Controller().RecordPlays(Request(tooMany));
         Assert.EndsWith("/plays-required", ProblemType(oversized));
+    }
+
+    // A best read off a song list: the score, and nothing that proves it.
+    private static ObservedPlayDto ScoreOnly(int score, string? award = null, bool isBroken = false)
+    {
+        return new ObservedPlayDto(ApiTestData.ChartId1, null, null, null, Perfects: null, Greats: null, Goods: null,
+            Bads: null, Misses: null, MaxCombo: null, Score: score, IsBroken: isBroken, Award: award,
+            PlayedAt: ApiTestData.Date1);
+    }
+
+    [Fact]
+    public async Task APlayCanArriveWithoutItsJudgments()
+    {
+        // The body as a tool that read only the score sends it: no counts, no max combo, no award.
+        var body = JsonSerializer.Deserialize<RecordPlaysRequestDto>("""
+            {
+              "mix": "Rise",
+              "source": "capture",
+              "plays": [
+                {
+                  "chartId": "11111111-1111-1111-1111-111111111111",
+                  "score": 990000,
+                  "isBroken": false,
+                  "playedAt": "2026-01-15T00:00:00+00:00"
+                }
+              ]
+            }
+            """, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+        var result = await Controller().RecordPlays(body);
+
+        JsonApproval.AssertWireShape("""
+            {
+              "recorded": 1,
+              "mix": "Rise",
+              "scoringModel": "phoenix"
+            }
+            """, result);
+        _mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c =>
+                c.ChartId == ApiTestData.ChartId1 && c.KeepBestStats && (int)c.Score!.Value == 990_000 &&
+                c.Plate == null && c.Judgements == null && c.RecordedAt == ApiTestData.Date1),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _mediator.Verify(m => m.Send(It.Is<RecordObservedPlaysCommand>(c =>
+                c.Plays.Count == 1 && c.Plays[0].Judgements == null && c.Plays[0].Plate == null &&
+                c.Plays[0].PlayedAt == ApiTestData.Date1),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(1000, null, null, null, null, null)]
+    [InlineData(1000, 0, 0, 0, 0, null)]
+    [InlineData(null, null, null, null, null, 1000)]
+    public async Task TheJudgmentsComeAllSixOrNone(int? perfects, int? greats, int? goods, int? bads, int? misses,
+        int? maxCombo)
+    {
+        var partial = PerfectPlay(ApiTestData.ChartId1) with
+        {
+            Perfects = perfects, Greats = greats, Goods = goods, Bads = bads, Misses = misses, MaxCombo = maxCombo
+        };
+
+        var result = await Controller().RecordPlays(Request(partial));
+
+        Assert.Equal(StatusCodes.Status400BadRequest, ((ObjectResult)result).StatusCode);
+        Assert.EndsWith("/judgments-incomplete", ProblemType(result));
+        _mediator.Verify(m => m.Send(It.IsAny<RecordObservedPlaysCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task ZeroesAreJudgmentsNotTheirAbsence()
+    {
+        var zeroes = PerfectPlay(ApiTestData.ChartId1) with
+        {
+            Perfects = 0, Greats = 0, Goods = 0, Bads = 0, Misses = 0, MaxCombo = 0
+        };
+
+        var result = await Controller().RecordPlays(Request(zeroes));
+
+        Assert.EndsWith("/judgments-do-not-reconcile", ProblemType(result));
+    }
+
+    [Fact]
+    public async Task JudgmentsTheFormulaCannotScoreDoNotReconcile()
+    {
+        // Ten thousand notes is past any chart. The formula scores such a screen as zero, and a zero
+        // claimed alongside it must not pass as a zero-point Perfect Game.
+        var unscorable = PerfectPlay(ApiTestData.ChartId1, award: null, score: 0) with
+        {
+            Perfects = 10_000, MaxCombo = 10_000
+        };
+
+        var result = await Controller().RecordPlays(Request(unscorable));
+
+        Assert.Equal(StatusCodes.Status400BadRequest, ((ObjectResult)result).StatusCode);
+        Assert.EndsWith("/judgments-do-not-reconcile", ProblemType(result));
+        _mediator.Verify(m => m.Send(It.IsAny<RecordObservedPlaysCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task WithoutJudgmentsTheAwardIsTheOneSent()
+    {
+        // Nothing checks a Full Combo below a million without the counts, so the claim stands.
+        await Controller().RecordPlays(Request(ScoreOnly(996_020, award: "FC")));
+        _mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c =>
+                c.Plate == PhoenixPlate.UltimateGame && c.Judgements == null),
+            It.IsAny<CancellationToken>()), Times.Once);
+
+        // And none was sent, so none is recorded.
+        await Controller().RecordPlays(Request(ScoreOnly(996_020)));
+        _mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c =>
+                c.Plate == null && c.Judgements == null),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task WithoutJudgmentsOnlyAMillionIsAPerfectGame()
+    {
+        // A million is a Perfect Game whether or not it says so.
+        await Controller().RecordPlays(Request(ScoreOnly(1_000_000)));
+        var claimed = await Controller().RecordPlays(Request(ScoreOnly(1_000_000, award: "pg")));
+        Assert.Equal(StatusCodes.Status200OK, ((ObjectResult)claimed).StatusCode);
+        _mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c =>
+                c.Plate == PhoenixPlate.PerfectGame),
+            It.IsAny<CancellationToken>()), Times.Exactly(2));
+
+        // The score disagreeing with the award is refused, the same as judgments disagreeing with it.
+        var otherAward = await Controller().RecordPlays(Request(ScoreOnly(1_000_000, award: "FC")));
+        Assert.Equal(StatusCodes.Status400BadRequest, ((ObjectResult)otherAward).StatusCode);
+        Assert.EndsWith("/award-does-not-reconcile", ProblemType(otherAward));
+        var perfectBelow = await Controller().RecordPlays(Request(ScoreOnly(999_990, award: "PG")));
+        Assert.EndsWith("/award-does-not-reconcile", ProblemType(perfectBelow));
+        _mediator.Verify(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()),
+            Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task WithoutJudgmentsAPassScoresAboveZero()
+    {
+        // A score left out of the body reads as zero, and with no judgments nothing else would notice.
+        var pass = await Controller().RecordPlays(Request(ScoreOnly(0)));
+        Assert.Equal(StatusCodes.Status400BadRequest, ((ObjectResult)pass).StatusCode);
+        Assert.EndsWith("/score-invalid", ProblemType(pass));
+        _mediator.Verify(m => m.Send(It.IsAny<RecordObservedPlaysCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        // A break can score zero; the ledger decides whether anything was hit.
+        var broken = await Controller().RecordPlays(Request(ScoreOnly(0, isBroken: true)));
+        Assert.Equal(StatusCodes.Status200OK, ((ObjectResult)broken).StatusCode);
+    }
+
+    [Fact]
+    public async Task OneRequestCanMixJudgedAndUnjudgedPlays()
+    {
+        var result = await Controller().RecordPlays(Request(PerfectPlay(ApiTestData.ChartId2), ScoreOnly(990_000)));
+
+        Assert.Equal(StatusCodes.Status200OK, ((ObjectResult)result).StatusCode);
+        _mediator.Verify(m => m.Send(It.Is<RecordObservedPlaysCommand>(c =>
+                c.Plays.Count == 2 &&
+                c.Plays[0].ChartId == ApiTestData.ChartId2 && c.Plays[0].Judgements!.Perfects == 1000 &&
+                c.Plays[1].ChartId == ApiTestData.ChartId1 && c.Plays[1].Judgements == null),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 }
