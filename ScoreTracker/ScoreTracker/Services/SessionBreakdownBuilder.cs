@@ -213,12 +213,15 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
     ///     </para>
     ///     <para>
     ///         Sessions predating the ScoreSession table have no wall clock to test, so their
-    ///         window is never open: they are historical by definition.
+    ///         window is never open: they are historical by definition. A sitting is only
+    ///         announced once its quiet window has passed, so its capture starts that much later.
     ///     </para>
     /// </summary>
     private bool CaptureWindowOpen(ScoreSessionRecord? session)
     {
-        return session != null && clock.Now - session.LastActivityAt < CaptureWindow;
+        if (session == null) return false;
+        var window = session.IsSitting ? ScoreBatchPolicy.SittingQuietWindow + CaptureWindow : CaptureWindow;
+        return clock.Now - session.LastActivityAt < window;
     }
 
     /// <summary>

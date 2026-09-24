@@ -85,20 +85,16 @@ public sealed class V2PlaysApiShapeTests
     }
 
     [Fact]
-    public async Task ThePlayGoesThroughKeepBestAndIntoTheJournalDatedByThePlay()
+    public async Task ThePlayGoesToTheLedgerDatedByThePlayWithItsJudgments()
     {
         await Controller().RecordPlays(Request(PerfectPlay(ApiTestData.ChartId1)));
 
-        _mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c =>
-                c.ChartId == ApiTestData.ChartId1 && c.KeepBestStats && c.Mix == MixEnum.Rise &&
-                !c.IsBroken && (int)c.Score!.Value == 1_000_000 && c.Plate == PhoenixPlate.PerfectGame &&
-                c.Source == "api:capture" && c.RecordedAt == ApiTestData.Date1 &&
-                c.Judgements!.Perfects == 1000 && c.Judgements.MaxCombo == 1000),
-            It.IsAny<CancellationToken>()), Times.Once);
-        _mediator.Verify(m => m.Send(It.Is<RecordObservedPlaysCommand>(c =>
+        _mediator.Verify(m => m.Send(It.Is<RecordSittingPlaysCommand>(c =>
                 c.UserId == ApiTestData.PublicUserId && c.Mix == MixEnum.Rise && c.Source == "api:capture" &&
-                c.Plays.Count == 1 && c.Plays[0].ChartId == ApiTestData.ChartId1 &&
-                c.Plays[0].PlayedAt == ApiTestData.Date1),
+                !c.RecordBrokenAsBest && c.Plays.Count == 1 && c.Plays[0].ChartId == ApiTestData.ChartId1 &&
+                !c.Plays[0].IsBroken && (int)c.Plays[0].Score!.Value == 1_000_000 &&
+                c.Plays[0].Plate == PhoenixPlate.PerfectGame && c.Plays[0].PlayedAt == ApiTestData.Date1 &&
+                c.Plays[0].Judgements!.Perfects == 1000 && c.Plays[0].Judgements!.MaxCombo == 1000),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -114,9 +110,7 @@ public sealed class V2PlaysApiShapeTests
 
         Assert.Equal(StatusCodes.Status400BadRequest, ((ObjectResult)result).StatusCode);
         Assert.EndsWith("/judgments-do-not-reconcile", ProblemType(result));
-        _mediator.Verify(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-        _mediator.Verify(m => m.Send(It.IsAny<RecordObservedPlaysCommand>(), It.IsAny<CancellationToken>()),
+        _mediator.Verify(m => m.Send(It.IsAny<RecordSittingPlaysCommand>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -135,7 +129,7 @@ public sealed class V2PlaysApiShapeTests
         var result = await Controller().RecordPlays(Request(PerfectPlay(song: "conflict", type: "single", level: 20)));
 
         Assert.Equal(StatusCodes.Status200OK, ((ObjectResult)result).StatusCode);
-        _mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.ChartId == ApiTestData.ChartId1),
+        _mediator.Verify(m => m.Send(It.Is<RecordSittingPlaysCommand>(c => c.Plays[0].ChartId == ApiTestData.ChartId1),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -170,7 +164,7 @@ public sealed class V2PlaysApiShapeTests
     {
         // Omitted: derived. A Full Combo run on Rise stores the plate the mark coincides with.
         await Controller().RecordPlays(Request(FullComboPlay(award: null)));
-        _mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.Plate == PhoenixPlate.UltimateGame),
+        _mediator.Verify(m => m.Send(It.Is<RecordSittingPlaysCommand>(c => c.Plays[0].Plate == PhoenixPlate.UltimateGame),
             It.IsAny<CancellationToken>()), Times.Once);
 
         // Claimed in the mix's own shorthand and earned: fine.
@@ -181,48 +175,37 @@ public sealed class V2PlaysApiShapeTests
         var overclaimed = await Controller().RecordPlays(Request(FullComboPlay(award: "PG")));
         Assert.Equal(StatusCodes.Status400BadRequest, ((ObjectResult)overclaimed).StatusCode);
         Assert.EndsWith("/award-does-not-reconcile", ProblemType(overclaimed));
-        _mediator.Verify(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()),
+        _mediator.Verify(m => m.Send(It.IsAny<RecordSittingPlaysCommand>(), It.IsAny<CancellationToken>()),
             Times.Exactly(2));
     }
 
     [Fact]
-    public async Task ABreakIsJournaledAndSeatedOnlyWherePlayerSeatsBreaks()
+    public async Task ABreakCarriesNoAwardAndTheToolsSeatingChoiceTravelsWithIt()
     {
         var broken = PerfectPlay(ApiTestData.ChartId1) with { IsBroken = true, Award = "PG" };
 
         // Rise's default is Phoenix's — a break is history, never a best.
         await Controller().RecordPlays(Request(broken));
-        _mediator.Verify(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-        _mediator.Verify(m => m.Send(It.Is<RecordObservedPlaysCommand>(c =>
-                !c.IncludeBroken && c.Plays.Count == 1 && c.Plays[0].IsBroken && c.Plays[0].Plate == null),
+        _mediator.Verify(m => m.Send(It.Is<RecordSittingPlaysCommand>(c =>
+                !c.RecordBrokenAsBest && c.Plays.Count == 1 && c.Plays[0].IsBroken && c.Plays[0].Plate == null),
             It.IsAny<CancellationToken>()), Times.Once);
 
         // The tool's own choice outranks the default, and a break still carries no award.
         await Controller().RecordPlays(new RecordPlaysRequestDto("Rise", "capture", new[] { broken },
             RecordBrokenAsBest: true));
-        _mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.IsBroken && c.Plate == null),
-            It.IsAny<CancellationToken>()), Times.Once);
-        _mediator.Verify(m => m.Send(It.Is<RecordObservedPlaysCommand>(c => c.IncludeBroken),
+        _mediator.Verify(m => m.Send(It.Is<RecordSittingPlaysCommand>(c =>
+                c.RecordBrokenAsBest && c.Plays[0].IsBroken && c.Plays[0].Plate == null),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task OneRequestIsOneSessionOnBothPaths()
+    public async Task EveryPlayOfARequestTravelsInOneCommand()
     {
-        UpdatePhoenixBestAttemptCommand? best = null;
-        RecordObservedPlaysCommand? observed = null;
-        _mediator.Setup(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
-            .Callback<UpdatePhoenixBestAttemptCommand, CancellationToken>((c, _) => best = c)
-            .Returns(Task.CompletedTask);
-        _mediator.Setup(m => m.Send(It.IsAny<RecordObservedPlaysCommand>(), It.IsAny<CancellationToken>()))
-            .Callback<RecordObservedPlaysCommand, CancellationToken>((c, _) => observed = c)
-            .Returns(Task.CompletedTask);
+        await Controller().RecordPlays(Request(PerfectPlay(ApiTestData.ChartId1), PerfectPlay(ApiTestData.ChartId2)));
 
-        await Controller().RecordPlays(Request(PerfectPlay(ApiTestData.ChartId1)));
-
-        Assert.NotNull(best!.SessionId);
-        Assert.Equal(best.SessionId, observed!.SessionId);
+        _mediator.Verify(m => m.Send(It.Is<RecordSittingPlaysCommand>(c =>
+                c.Plays.Select(p => p.ChartId).SequenceEqual(new[] { ApiTestData.ChartId1, ApiTestData.ChartId2 })),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

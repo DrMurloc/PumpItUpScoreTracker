@@ -73,7 +73,8 @@ public sealed class PlayersController : ApiV2ControllerBase
     ///     counts, and a claimed one has to agree. A play that reconciles goes through the ledger's
     ///     best-attempt policy, so it becomes the record only where it beats it (a break only where
     ///     the player seats breaks), and into the journal either way, dated by the play time the
-    ///     tool observed, all of one request under one session.
+    ///     tool observed. The ledger gathers the plays into sittings by that play time and announces
+    ///     each sitting once, after 15 minutes with nothing arriving (docs/design/rise.md §12).
     /// </summary>
     [HttpPost("me/plays")]
     [ProducesResponseType(typeof(RecordPlaysResultDto), StatusCodes.Status200OK, "application/json")]
@@ -102,7 +103,10 @@ public sealed class PlayersController : ApiV2ControllerBase
         // Whether a break on a chart the player has never passed is seated as their best: the
         // tool's own choice, else the mix's default — the same default the import page reads.
         var recordBrokenAsBest = body.RecordBrokenAsBest ?? BrokenScorePreference.DefaultFor(mix);
-        await Record(mix, "api:" + body.Source, recordBrokenAsBest, resolved);
+        await _mediator.Send(new RecordSittingPlaysCommand(_currentUser.User.Id, mix,
+            ScoreJournalEntry.PlaysApiSourcePrefix + body.Source,
+            resolved.Select(r => new RecordObservedPlaysCommand.ObservedPlay(r.Chart.Id, r.Score, r.Award,
+                r.Play.IsBroken, r.Play.PlayedAt, r.Judgements)).ToArray(), recordBrokenAsBest));
         return Ok(new RecordPlaysResultDto(resolved.Count, mix.ToString(), ScoringModelOf(mix)));
     }
 
@@ -172,24 +176,6 @@ public sealed class PlayersController : ApiV2ControllerBase
                         $"earns {(award == null ? "no award" : award.Value.GetShorthand(mix))}, " +
                         $"not {claimed.Value.GetShorthand(mix)}."));
         return (award, null);
-    }
-
-    /// <summary>
-    ///     One session for everything a request saw, so the record path and the journal file the
-    ///     plays under the same sitting. The record first — keep-best, so only a play that beats
-    ///     it moves it, dated by the play; a break only where the player seats breaks — then the
-    ///     journal, which is idempotent on play time and so never journals a record's play twice.
-    /// </summary>
-    private async Task Record(MixEnum mix, string source, bool recordBrokenAsBest, IReadOnlyList<ResolvedPlay> plays)
-    {
-        var sessionId = Guid.NewGuid();
-        foreach (var r in plays.Where(r => !r.Play.IsBroken || recordBrokenAsBest))
-            await _mediator.Send(new UpdatePhoenixBestAttemptCommand(r.Chart.Id, r.Play.IsBroken, r.Score, r.Award,
-                KeepBestStats: true, Source: source, Mix: mix, SessionId: sessionId, RecordedAt: r.Play.PlayedAt,
-                Judgements: r.Judgements));
-        await _mediator.Send(new RecordObservedPlaysCommand(_currentUser.User.Id, mix, source, sessionId,
-            plays.Select(r => new RecordObservedPlaysCommand.ObservedPlay(r.Chart.Id, r.Score, r.Award,
-                r.Play.IsBroken, r.Play.PlayedAt, r.Judgements)).ToArray(), IncludeBroken: recordBrokenAsBest));
     }
 
     /// <summary>

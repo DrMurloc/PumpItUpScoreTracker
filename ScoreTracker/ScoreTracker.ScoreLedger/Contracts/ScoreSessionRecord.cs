@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Records;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.ScoreLedger.Contracts;
@@ -36,4 +37,10 @@ public sealed record ScoreSessionRecord(
     public static readonly DateTimeOffset UndoFloor = new(2026, 8, 1, 5, 0, 0, TimeSpan.Zero);
 
     public bool CanUndo => StartedAt >= UndoFloor;
+
+    /// <summary>
+    ///     A sitting: plays the plays endpoint recorded, announced once its quiet window has passed
+    ///     with nothing arriving (docs/design/rise.md §12).
+    /// </summary>
+    public bool IsSitting => Source.StartsWith(ScoreJournalEntry.PlaysApiSourcePrefix, StringComparison.Ordinal);
 }
