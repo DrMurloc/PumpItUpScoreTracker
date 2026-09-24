@@ -105,6 +105,16 @@ Owner decisions are marked **(owner, date)**; the rest are mine, decided unless 
   are — never squares, never resized; the card aesthetics are not being redone for tiny squares.
 - **D15 (owner, 2026-09-22). The two palettes are approved as mocked** (round 1: Rise = R!SE yellow primary with
   hot pink and cyan on ink-navy; Rise Arcade = aqua primary, lavender accent and the shared yellow on indigo).
+- **D24 (owner, 2026-09-23). Judgments are optional on the plays write** (§6.3): "Judgements should never be
+  mandatory." The capture app's bulk mode reads each chart's best off RISE's Warm Up song list (a score, the
+  accuracy and the max combo; no judgments, no mark) and records it as a play, the way a first import records the
+  official best list. The five counts and the max combo travel together: send all six and the checksum stands as
+  before, send none and the score is taken as read, send some and the request is refused. The plate stays
+  optional: judgments that disagree with it are a bad request, the same as judgments that disagree with the score,
+  and without judgments a plate is taken as sent. A million sent with neither judgments nor a plate records a
+  Perfect Game, and a pass without judgments must score above zero, since an omitted score reads as zero.
+  *Decided unless he objects:* without judgments the score still has to agree with the plate — only 1,000,000 is a
+  Perfect Game, so a PG below it, or any other plate at it, is refused.
 
 ---
 
@@ -382,6 +392,15 @@ photo extractor or partner tool posts plays the same way.
 
 Decided (owner, 2026-09-22): the v2 write, specified now so phase 2 builds against a fixed contract; v1 stays frozen.
 Manual entry and spreadsheet upload need neither.
+
+**Judgments optional (D24, owner, 2026-09-23).** A play may arrive without its judgments. The five counts and
+`maxCombo` are optional and travel together — all six or none, `judgments-incomplete` otherwise. With them nothing
+changes: the score is recomputed and a play that does not reconcile refuses the request, and the award is derived
+from the counts, a claimed one having to agree. Without them the score is taken as read and a claimed `award` as
+sent, provided the two agree (only 1,000,000 is a Perfect Game; `award-does-not-reconcile` otherwise); a million
+sent with no `award` records a Perfect Game, and a pass has to score above zero (`score-invalid`). The ledger
+already records plays without judgments — the official best list arrives that way — so both of its commands
+receive none.
 
 ---
 
