@@ -119,8 +119,12 @@ internal sealed class EFScoreSessionRepository : IScoreSessionRepository
     {
         var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // A replayed sitting carries its counts before capture stamps it processed, and its replay
+        // moved LastActivityAt to the replay's own time — so without the counts test a sitting being
+        // announced would look open, and a play joining it would never be announced itself.
         var sitting = await database.Set<ScoreSessionEntity>()
             .Where(s => s.UserId == userId && s.MixId == mixId && s.ProcessedAt == null
+                        && s.NewCount == 0 && s.UpscoreCount == 0
                         && s.Source.StartsWith(ScoreJournalEntry.PlaysApiSourcePrefix)
                         && s.LastActivityAt >= activeSince)
             .OrderByDescending(s => s.LastActivityAt)

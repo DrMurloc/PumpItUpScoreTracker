@@ -43,4 +43,10 @@ public sealed record ScoreSessionRecord(
     ///     with nothing arriving (docs/design/rise.md §12).
     /// </summary>
     public bool IsSitting => Source.StartsWith(ScoreJournalEntry.PlaysApiSourcePrefix, StringComparison.Ordinal);
+
+    /// <summary>
+    ///     A sitting that has not closed yet: neither replayed (a replay sets the counts) nor announced.
+    ///     Its capture cannot start until its quiet window has passed.
+    /// </summary>
+    public bool IsAwaitingClose => IsSitting && ProcessedAt == null && NewCount == 0 && UpscoreCount == 0;
 }

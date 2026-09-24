@@ -104,6 +104,18 @@ public sealed class ScoreSessionSittingTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ASittingBeingAnnouncedIsNotOpenEvenThoughItsReplayJustTouchedIt()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var sitting = Guid.NewGuid();
+        await Sessions().Open(sitting, userId, MixEnum.Rise, Source, null, null, Now.AddMinutes(-20));
+        // The replay writes the counts and its own time, and capture has not stamped it yet.
+        await Sessions().SetCounts(sitting, Now, 2, 1);
+
+        Assert.Null(await Sessions().GetOpenSitting(userId, MixEnum.Rise, Now.AddMinutes(-15)));
+    }
+
+    [Fact]
     public async Task AnArrivalStampOnlyEverMovesForward()
     {
         var userId = await _seed.SeedUserAsync();

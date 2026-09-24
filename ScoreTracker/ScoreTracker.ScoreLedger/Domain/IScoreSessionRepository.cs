@@ -61,8 +61,8 @@ internal interface IScoreSessionRepository
     Task Delete(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     The player's sitting on this mix that is still taking plays: the newest unannounced
-    ///     plays-endpoint session whose last play arrived at or after <paramref name="activeSince" />,
+    ///     The player's sitting on this mix that is still taking plays: the newest plays-endpoint
+    ///     session neither replayed nor announced whose last play arrived at or after <paramref name="activeSince" />,
     ///     with the span of play times its journal holds (its start time while the journal holds none).
     /// </summary>
     Task<OpenSitting?> GetOpenSitting(Guid userId, MixEnum mix, DateTimeOffset activeSince,
