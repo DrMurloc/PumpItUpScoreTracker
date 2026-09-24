@@ -53,13 +53,37 @@ public sealed class PhoenixScoreFileExtractorTests
         Assert.Equal(590032, (int)score.Score!.Value);
     }
 
-    [Fact]
-    public async Task APassingRowStillNeedsAPlate()
+    [Theory]
+    [InlineData(MixEnum.Phoenix2)]
+    [InlineData(MixEnum.RiseArcade)]
+    public async Task APassingRowOnAPlateMixStillNeedsAPlate(MixEnum mix)
     {
-        var (scores, errors) = await Extract(Header + "\"Arcana Force\",D20,990032,sss,,false\r\n");
+        // Where the plates are handed out, every pass earns at least a Rough Game.
+        var (scores, errors) = await Extract(Header + "\"Arcana Force\",D20,990032,sss,,false\r\n", mix);
 
         Assert.Empty(scores);
         Assert.Single(errors);
+    }
+
+    [Fact]
+    public async Task ARiseClearWithNoMarkImportsWithNone()
+    {
+        // Rise's marks start at No Miss, so a clear with a miss carries none and its cell is blank.
+        var (scores, errors) = await Extract(Header + "\"Arcana Force\",S16,950032,aa,,false\r\n", MixEnum.Rise);
+
+        var score = Assert.Single(scores);
+        Assert.Empty(errors);
+        Assert.False(score.IsBroken);
+        Assert.Null(score.Plate);
+    }
+
+    [Fact]
+    public async Task ARiseMarkImportsAsThePlateItIsStoredUnder()
+    {
+        var (scores, errors) = await Extract(Header + "\"Arcana Force\",HD16,990032,ss,NM,false\r\n", MixEnum.Rise);
+
+        Assert.Empty(errors);
+        Assert.Equal(PhoenixPlate.SuperbGame, Assert.Single(scores).Plate);
     }
 
     [Fact]
