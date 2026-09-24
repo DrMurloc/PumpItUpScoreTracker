@@ -299,12 +299,18 @@ public sealed class JournalEntryDto
     public JudgmentsDto? Judgments { get; set; }
 }
 
-/// <summary>One import or play session: a burst of activity the site grouped together.</summary>
+/// <summary>
+///     One play session: a player's plays in one mix until eight hours pass with no play — the
+///     grouping the site's Sessions page shows. Every import, upload or API request is recorded as
+///     its own stored session underneath, so one session can hold several; <c>sessionIds</c> lists
+///     them.
+/// </summary>
 public sealed class SessionDto
 {
     public SessionDto(RecentSessionsPage.SessionGroup group)
     {
         SessionId = group.SessionId;
+        SessionIds = group.SessionIds.ToArray();
         Mix = group.Mix.ToString();
         Source = group.Source;
         StartedAt = group.Start;
@@ -312,22 +318,35 @@ public sealed class SessionDto
         ScoreCount = group.Rows.Count;
     }
 
-    /// <summary>Null for activity that predates session capture, grouped by calendar day instead.</summary>
+    /// <summary>
+    ///     The newest stored session in this one. Null only for activity that predates session
+    ///     capture, grouped by calendar day instead.
+    /// </summary>
     public Guid? SessionId { get; set; }
+
+    /// <summary>
+    ///     Every stored session folded into this one, oldest first — an import run, an upload, one
+    ///     API request. The <c>sessionId</c> on a journal entry or a score-push webhook appears in
+    ///     exactly one session's list. Empty for activity that predates session capture.
+    /// </summary>
+    public Guid[] SessionIds { get; set; }
 
     /// <summary>The mix the session's scores are in.</summary>
     public string Mix { get; set; }
 
-    /// <summary>Where the session's scores came from: <c>officialImport</c>, <c>csv</c> or <c>manual</c>.</summary>
+    /// <summary>
+    ///     Where most of the session's plays came from — <c>officialImport</c>, <c>csv</c>,
+    ///     <c>manual</c>, or <c>api:</c> followed by the name of the tool that posted them, for example.
+    /// </summary>
     public string Source { get; set; }
 
-    /// <summary>When the session's first score arrived.</summary>
+    /// <summary>When the session's first play happened — the official site's play time for an import.</summary>
     public DateTimeOffset StartedAt { get; set; }
 
-    /// <summary>When the session's last score arrived.</summary>
+    /// <summary>When the session's last play happened.</summary>
     public DateTimeOffset LastActivityAt { get; set; }
 
-    /// <summary>How many scores the session carried.</summary>
+    /// <summary>How many plays the session holds.</summary>
     public int ScoreCount { get; set; }
 }
 

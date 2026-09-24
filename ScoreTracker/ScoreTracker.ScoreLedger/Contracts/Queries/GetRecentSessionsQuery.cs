@@ -15,4 +15,13 @@ namespace ScoreTracker.ScoreLedger.Contracts.Queries;
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record GetRecentSessionsQuery(Guid UserId, int Page = 1, int PageSize = 10,
-    DateTimeOffset? Before = null) : IQuery<RecentSessionsPage>;
+    DateTimeOffset? Before = null) : IQuery<RecentSessionsPage>
+{
+    /// <summary>
+    ///     The most sessions one page returns; a larger <see cref="PageSize" /> is clamped to it,
+    ///     because every row of every session on the page is classified against its chart's whole
+    ///     history. A caller walking the pages has to step by this, not by what it asked for — the
+    ///     API walk once stepped by 500 and stopped after the first 50 sessions.
+    /// </summary>
+    public const int MaxPageSize = 50;
+}

@@ -623,7 +623,11 @@ public sealed class PlayersController : ApiV2ControllerBase
         });
     }
 
-    /// <summary>Import and play sessions, newest first.</summary>
+    /// <summary>
+    ///     Play sessions, newest first: a player's plays in one mix until eight hours pass with no
+    ///     play, the grouping the site's Sessions page shows. Several imports in one night are one
+    ///     session, listing every one of them in <c>sessionIds</c>.
+    /// </summary>
     /// <param name="playerId">A player id from <c>/api/v2/players</c>, or <c>me</c> with a personal token.</param>
     /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
@@ -654,19 +658,22 @@ public sealed class PlayersController : ApiV2ControllerBase
         // The session read pages across every mix, so this walks it until the requested mix has
         // filled the window. It used to take one 500-group slice and filter that, which put a
         // silent ceiling on a heavy player: the tail vanished and the reported total was the count
-        // within the slice rather than the real one.
+        // within the slice rather than the real one. The walk that replaced it still asked for 500
+        // and stepped by 500, while the read clamps a page to 50 — so it stopped after the newest
+        // 50 sessions all the same. It steps by what the read actually returns now.
         //
         // Total is null rather than wrong. Counting a player's sessions in one mix means walking
         // every page to the end, which is the second full pass the envelope documents null for.
+        const int readPage = GetRecentSessionsQuery.MaxPageSize;
         var wanted = offset + pageSize + 1;
         var filtered = new List<RecentSessionsPage.SessionGroup>();
         for (var page = 1; filtered.Count < wanted; page++)
         {
-            var batch = await _mediator.Send(new GetRecentSessionsQuery(userId, page, MaxLimit));
+            var batch = await _mediator.Send(new GetRecentSessionsQuery(userId, page, readPage));
             if (batch.Groups.Count == 0) break;
 
             filtered.AddRange(batch.Groups.Where(g => g.Mix == mix));
-            if (page * MaxLimit >= batch.TotalGroups) break;
+            if (page * readPage >= batch.TotalGroups) break;
         }
 
         var rows = filtered.Skip(offset).Take(pageSize).Select(g => new SessionDto(g)).ToArray();

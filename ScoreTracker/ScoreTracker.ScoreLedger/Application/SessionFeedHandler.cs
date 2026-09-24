@@ -41,7 +41,8 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
             return new RecentSessionsPage(0, Array.Empty<RecentSessionsPage.SessionGroup>());
 
         var (total, groups) = await _journal.GetSessionGroups(request.UserId,
-            Math.Max(1, request.Page), Math.Clamp(request.PageSize, 1, 50), request.Before, cancellationToken);
+            Math.Max(1, request.Page), Math.Clamp(request.PageSize, 1, GetRecentSessionsQuery.MaxPageSize),
+            request.Before, cancellationToken);
         return new RecentSessionsPage(total, await ClassifyGroups(request.UserId, groups, cancellationToken));
     }
 
