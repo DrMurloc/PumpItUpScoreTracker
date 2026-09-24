@@ -373,6 +373,237 @@ public sealed class SessionBreakdownBuilderTests
         Assert.DoesNotContain(model.Hero.Milestones, m => HardmodeVisibility.IsHardmode(m.Kind));
     }
 
+    [Fact]
+    public async Task ALinkToAnEarlierImportOfTheNightOpensTheWholeNight()
+    {
+        // Each import sends its own Discord card and links its own id; the night holds both.
+        var chart = ChartAt(ChartType.Single, 21);
+        var earlier = Guid.NewGuid();
+        var night = Night(chart, earlier);
+        var (_, builder) = Harness(new RecentSessionsPage(1, new[] { night }), chart);
+
+        var model = await builder.Build(User, earlier, 1, 20, null, CancellationToken.None);
+
+        Assert.Same(night, model.Hero!.Group);
+        Assert.False(model.SelectedSessionWasUndone);
+    }
+
+    [Fact]
+    public async Task ALinkOffThePageOnShowIsLookedUpRatherThanCalledUndone()
+    {
+        // A card from last week is several pages back. Searching only the cards on show is what
+        // made an old link announce that its session had been undone.
+        var chart = ChartAt(ChartType.Single, 21);
+        var lastWeek = Guid.NewGuid();
+        var linked = Group(new[]
+        {
+            Row(chart.Id, Start.AddDays(-7), 900000, false, ScoreEventClassification.NewPass) with
+            {
+                SessionId = lastWeek
+            }
+        }, lastWeek);
+        var (mediator, builder) = Harness(new RecentSessionsPage(9, new[] { Night(chart, Guid.NewGuid()) }), chart,
+            containing: linked);
+
+        var model = await builder.Build(User, lastWeek, 1, 20, null, CancellationToken.None);
+
+        Assert.Same(linked, model.Hero!.Group);
+        Assert.False(model.SelectedSessionWasUndone);
+        mediator.Verify(m => m.Send(It.Is<GetSessionContainingQuery>(q => q.UserId == User && q.SessionId == lastWeek),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ALinkNothingHoldsAnyMoreShowsTheNewestAndSaysItWasUndone()
+    {
+        var chart = ChartAt(ChartType.Single, 21);
+        var newest = Night(chart, Guid.NewGuid());
+        var (_, builder) = Harness(new RecentSessionsPage(1, new[] { newest }), chart);
+
+        var model = await builder.Build(User, Guid.NewGuid(), 1, 20, null, CancellationToken.None);
+
+        Assert.Same(newest, model.Hero!.Group);
+        Assert.True(model.SelectedSessionWasUndone);
+    }
+
+    [Fact]
+    public async Task EveryImportInTheNightLoadsItsHighlightsAndMilestones()
+    {
+        var chart = ChartAt(ChartType.Single, 21);
+        var earlier = Guid.NewGuid();
+        var (mediator, builder) = Harness(new RecentSessionsPage(1, new[] { Night(chart, earlier) }), chart);
+
+        await builder.Build(User, null, 1, 20, null, CancellationToken.None);
+
+        mediator.Verify(m => m.Send(
+            It.Is<GetScoreHighlightsForSessionsQuery>(q =>
+                q.SessionIds.Contains(earlier) && q.SessionIds.Contains(Session)),
+            It.IsAny<CancellationToken>()), Times.Once);
+        // Once for the hero, once for the history cards, both across the whole night.
+        mediator.Verify(m => m.Send(
+            It.Is<GetPlayerMilestonesForSessionsQuery>(q =>
+                q.SessionIds.Contains(earlier) && q.SessionIds.Contains(Session)),
+            It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task APoolThatRoseInThreeImportsIsOneMovementOnTheHeroAndTheCard()
+    {
+        // Rendered as stored, the hero printed a PUMBILITY strip per import and the card a headline
+        // per import, for one night's climb.
+        var chart = ChartAt(ChartType.Single, 21);
+        var earlier = Guid.NewGuid();
+        var middle = Guid.NewGuid();
+        var night = Night(chart, earlier) with { SessionIds = new[] { earlier, middle, Session } };
+        var milestones = new[]
+        {
+            new PlayerMilestoneRecord(MilestoneKind.PumbilityGain, earlier, Start.AddMinutes(5), 8000, 8100, null,
+                null),
+            new PlayerMilestoneRecord(MilestoneKind.PumbilityGain, middle, Start.AddMinutes(25), 8100, 8120, null,
+                null),
+            new PlayerMilestoneRecord(MilestoneKind.PumbilityGain, Session, Start.AddMinutes(45), 8120, 8150, null,
+                null)
+        };
+        var (_, builder) = Harness(new RecentSessionsPage(1, new[] { night }), chart, milestones: milestones);
+
+        var model = await builder.Build(User, null, 1, 20, null, CancellationToken.None);
+
+        var strip = Assert.Single(model.Hero!.Milestones, m => m.Kind == MilestoneKind.PumbilityGain);
+        Assert.Equal(8000, strip.OldValue);
+        Assert.Equal(8150, strip.NewValue);
+        Assert.Equal(8000, model.Hero.Ceremony.PumbilityOld);
+        Assert.Equal(8150, model.Hero.Ceremony.PumbilityNew);
+        var headline = Assert.Single(model.History.Single().Headline);
+        Assert.Equal(8000, headline.OldValue);
+        Assert.Equal(8150, headline.NewValue);
+    }
+
+    [Fact]
+    public async Task TheNightStaysWatchableWhileItsNewestImportIsStillBeingCaptured()
+    {
+        // The earlier import captured long ago; the one that just landed is still inside the
+        // window, and the page must keep listening for it.
+        var chart = ChartAt(ChartType.Single, 21);
+        var earlier = Guid.NewGuid();
+        var sessions = new[]
+        {
+            Stored(earlier, "MURLOC#1", endedMinutesAgo: 60),
+            Stored(Session, "MURLOC#1", endedMinutesAgo: 1)
+        };
+        var highlights = new[]
+        {
+            new ScoreHighlightRecord(chart.Id, earlier, Start, HighlightFlags.FolderDebut, 21, 21.0, null)
+        };
+        var (_, builder) = Harness(new RecentSessionsPage(1, new[] { Night(chart, earlier) }), chart, sessions,
+            highlights);
+
+        var model = await builder.Build(User, null, 1, 20, null, CancellationToken.None);
+
+        Assert.True(model.Hero!.CaptureWindowOpen);
+        Assert.False(model.Hero.CapturePending);
+    }
+
+    [Fact]
+    public async Task PlaysCountsEveryPlayRatherThanTheRecordChanges()
+    {
+        // The session row counts what each batch changed: one new pass here. The night held three
+        // plays, and "Plays" says three on the hero and on the card alike.
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[]
+        {
+            Row(chart.Id, Start, 400000, true, ScoreEventClassification.Played),
+            Row(chart.Id, Start.AddMinutes(4), 420000, true, ScoreEventClassification.Played),
+            Row(chart.Id, Start.AddMinutes(8), 912400, false, ScoreEventClassification.NewPass)
+        };
+        var sessions = new[] { Stored(Session, null, endedMinutesAgo: 90, scoreCount: 1, newCount: 1) };
+        var (_, builder) = Harness(new RecentSessionsPage(1, new[] { Group(rows, Session) }), chart, sessions);
+
+        var model = await builder.Build(User, null, 1, 20, null, CancellationToken.None);
+
+        Assert.Equal(3, model.Hero!.PlayCount);
+        var card = model.History.Single();
+        Assert.Equal(3, card.Plays);
+        Assert.Equal(1, card.Passes);
+    }
+
+    [Fact]
+    public async Task EveryCardTheNightPulledFromIsNamedOldestFirst()
+    {
+        // A second card in one night is the wrong-card case the line exists for.
+        var chart = ChartAt(ChartType.Single, 21);
+        var earlier = Guid.NewGuid();
+        var middle = Guid.NewGuid();
+        var night = Night(chart, earlier) with { SessionIds = new[] { earlier, middle, Session } };
+        var sessions = new[]
+        {
+            Stored(Session, "MURLOC#1", endedMinutesAgo: 30),
+            Stored(earlier, "MURLOC#1", endedMinutesAgo: 120),
+            Stored(middle, "ALT#2", endedMinutesAgo: 60)
+        };
+        var (_, builder) = Harness(new RecentSessionsPage(1, new[] { night }), chart, sessions);
+
+        var model = await builder.Build(User, null, 1, 20, null, CancellationToken.None);
+
+        Assert.Equal("MURLOC#1, ALT#2", model.Hero!.AccountTag);
+        Assert.Equal("MURLOC#1, ALT#2", model.History.Single().AccountTag);
+    }
+
+    /// <summary>Two imports of one night: the pass in the earlier one, the upscore in the newest.</summary>
+    private static RecentSessionsPage.SessionGroup Night(Chart chart, Guid earlierImport)
+    {
+        return Group(new[]
+        {
+            Row(chart.Id, Start.AddMinutes(40), 931000, false, ScoreEventClassification.Upscore),
+            Row(chart.Id, Start, 905000, false, ScoreEventClassification.NewPass) with { SessionId = earlierImport }
+        }, Session) with { SessionIds = new[] { earlierImport, Session } };
+    }
+
+    private static RecentSessionsPage.SessionGroup Group(RecentSessionsPage.ScoreEventRecord[] rows, Guid handle)
+    {
+        return new RecentSessionsPage.SessionGroup(handle, new[] { handle }, null, MixEnum.Phoenix,
+            "officialImport", rows.Min(r => r.OccurredAt), rows.Max(r => r.OccurredAt), rows);
+    }
+
+    /// <summary>A ScoreSession row, its wall clock measured back from the harness's clock.</summary>
+    private static ScoreSessionRecord Stored(Guid id, string? tag, int endedMinutesAgo, int scoreCount = 2,
+        int newCount = 1)
+    {
+        var now = Start.AddHours(4);
+        return new ScoreSessionRecord(id, User, MixEnum.Phoenix, "officialImport", tag, null,
+            now.AddMinutes(-endedMinutesAgo - 5), now.AddMinutes(-endedMinutesAgo), scoreCount, newCount,
+            scoreCount - newCount);
+    }
+
+    private static (Mock<IMediator> Mediator, SessionBreakdownBuilder Builder) Harness(RecentSessionsPage feed,
+        Chart chart, IReadOnlyList<ScoreSessionRecord>? sessions = null, ScoreHighlightRecord[]? highlights = null,
+        PlayerMilestoneRecord[]? milestones = null, RecentSessionsPage.SessionGroup? containing = null)
+    {
+        var mediator = new Mock<IMediator>();
+        Setup(mediator, new GetRecentSessionsQuery(User, 1, 20), feed);
+        Setup(mediator, new GetScoreSessionsQuery(User), sessions ?? Array.Empty<ScoreSessionRecord>());
+        mediator.Setup(m => m.Send(It.IsAny<GetSessionContainingQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(containing);
+        mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { chart });
+        mediator.Setup(m => m.Send(It.IsAny<GetScoreHighlightsForSessionsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(highlights ?? Array.Empty<ScoreHighlightRecord>());
+        mediator.Setup(m => m.Send(It.IsAny<GetPlayerMilestonesForSessionsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(milestones ?? Array.Empty<PlayerMilestoneRecord>());
+        mediator.Setup(m => m.Send(It.IsAny<GetPeerStandingsForScoresQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<ScoreOnChart, PeerStanding>());
+        mediator.Setup(m => m.Send(It.IsAny<GetPlayerStatsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PlayerStatsRecord(User, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+                22.6, 22.6, 23.4));
+
+        var ledger = new Mock<IScoreReader>();
+        ledger.Setup(s => s.GetPlayerScores(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<UserPhoenixScore>());
+        var clock = new Mock<IDateTimeOffsetAccessor>();
+        clock.SetupGet(c => c.Now).Returns(Start.AddHours(4));
+        return (mediator, new SessionBreakdownBuilder(mediator.Object, ledger.Object, clock.Object));
+    }
+
     private static ScoreHighlightRecord[] HardmodeHighlights(Chart chart) => new[]
     {
         new ScoreHighlightRecord(chart.Id, Session, Start, HighlightFlags.HardmodeTop50, 21, 21.0,

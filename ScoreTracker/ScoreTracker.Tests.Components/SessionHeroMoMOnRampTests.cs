@@ -128,8 +128,11 @@ public sealed class SessionHeroMoMOnRampTests : ComponentTestBase
         return new SessionBreakdown(
             new RecentSessionsPage.SessionGroup(Session, new[] { Session }, null, MixEnum.Phoenix, "officialImport",
                 Start, Start.AddMinutes(118), new[] { row }),
-            new ScoreSessionRecord(Session, Guid.NewGuid(), MixEnum.Phoenix, "officialImport",
-                "DRMURLOC #7251", "01", Start, Start.AddMinutes(118), 1, 1, 0),
+            new[]
+            {
+                new ScoreSessionRecord(Session, Guid.NewGuid(), MixEnum.Phoenix, "officialImport",
+                    "DRMURLOC #7251", "01", Start, Start.AddMinutes(118), 1, 1, 0)
+            },
             new System.Collections.Generic.Dictionary<Guid, Chart> { [chart.Id] = chart }, scores,
             new SessionCeremony(64612, 64466, 64612, 22.62, 22.68, null, null, 22.68, 23.4, 131, 148,
                 Start.AddDays(-6)),

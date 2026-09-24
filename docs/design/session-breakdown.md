@@ -97,7 +97,7 @@ positions.
 | D54 | **A folded session is handled by its newest stored session.** That id is what the URL, the card highlight and View use; every stored id the session holds travels with it as `SessionIds`. A fold made only of pre-capture days has no id, as a day bucket never had. |
 | D55 | **Any stored id opens its session from anywhere in the history.** A `?session=` link resolves through the fold rather than through the page of cards on show. Before this, a link older than the eight newest sessions announced that its session had been undone. An id with no plays left is still the undone state (§2.3). |
 | D56 | **A session's three numbers count its plays.** Passes, Upscores and Plays come off the journal rows, on the hero and on the card alike. The `ScoreSession` counts were never plays: each batch drain adds the new passes and upscores it carried, and nothing else, so every session since 2026-08-01 printed passes + upscores under "Plays". |
-| D57 | **Capture and cards span the fold.** The capture window is open while any stored session in the fold is still inside `ScoreBatchPolicy.WorkExpectedWithin`, and the header names every card the session pulled from, oldest first. |
+| D57 | **Capture, cards and movements span the fold.** The capture window is open while any stored session in the fold is still inside `ScoreBatchPolicy.WorkExpectedWithin`; the header names every card the session pulled from, oldest first; and a pool, a competitive level, an estimated place or a folder that moved in several imports reads as one movement, earliest old to latest new, on the hero and on the card. |
 | D58 | **The public API groups like the page** (owner, 2026-09-23: *"group it like the page"*). `GET api/v2/players/{id}/sessions` returns folded sessions: `sessionId` is the newest stored session in each, and the new `sessionIds` lists every one folded in, so the `sessionId` a journal entry or a score-push webhook carries always appears in exactly one session. The endpoint also stops cutting a player off after their newest 50 sessions. |
 
 ### Deliberately not decided here
@@ -627,6 +627,12 @@ calls a session.
   earlier highlights while it works, and the page refreshes when its capture lands (D39).
 - **The header names every card** the session pulled from, oldest first, joined into the existing
   "imported from" line. A second card is exactly the wrong-card case the line exists for.
+- **One movement, one line.** Capture mints a milestone per batch, so a pool that rose in three
+  imports arrives as three. The hero's strips and the card's headline collapse each running value
+  (per board, for the estimated place) and each folder to one movement, earliest old to latest new
+  (`SessionMilestones`, Web). A long single import that drained in several batches had the same
+  duplicate strips before any of this; it gets the same fix. Events stay one line each: a title
+  completing, a folder lamping.
 - **The three numbers count plays** (D56).
 - **March of Murlocs** detection already reads the session's span, so a run imported partway
   through is one night there too.
@@ -672,5 +678,5 @@ size now comes from the read itself (`GetRecentSessionsQuery.MaxPageSize`).
 | F1 | This section, D52–D58, the Session entry in DOMAIN.md, API.md, delete-my-data.md §4 |
 | F2 | ScoreLedger: `SessionFold` and the one eight-hour constant the envelope now reads, with unit tests |
 | F3 | ScoreLedger: the journal read folds before paging and carries every stored id; `GetSessionContainingQuery`; handler and real-database tests |
-| F4 | Web: the builder reads every stored id in the fold; deep links through the lookup; counts from plays; capture window and cards across the fold |
+| F4 | Web: the builder reads every stored id in the fold; deep links through the lookup; counts from plays; capture window, cards and movements across the fold |
 | F5 | API: `sessionIds`, the walk fix, and the endpoint's first wire-shape test |
