@@ -624,8 +624,8 @@ public sealed class PlayersController : ApiV2ControllerBase
     }
 
     /// <summary>
-    ///     Play sessions, newest first: a player's plays in one mix until eight hours pass with no
-    ///     play, the grouping the site's Sessions page shows. Several imports in one night are one
+    ///     Play sessions, newest first: a player's imports in one mix until eight hours pass without
+    ///     one, the grouping the site's Sessions page shows. Several imports in one night are one
     ///     session, listing every one of them in <c>sessionIds</c>.
     /// </summary>
     /// <param name="playerId">A player id from <c>/api/v2/players</c>, or <c>me</c> with a personal token.</param>

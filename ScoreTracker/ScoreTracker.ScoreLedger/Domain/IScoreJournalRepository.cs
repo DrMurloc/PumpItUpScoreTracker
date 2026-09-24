@@ -28,8 +28,9 @@ internal interface IScoreJournalRepository
     /// <summary>
     ///     Paged sessions across every mix, newest activity first. The keys (one per stored
     ///     SessionId, one per (mix, calendar day) for rows predating session capture) are folded
-    ///     into sessions by <see cref="SessionFold" /> before the page is cut, so the total counts
-    ///     sessions and none straddles two pages. Rows ride along; each group carries its mix and
+    ///     into sessions by <see cref="SessionFold" /> — by when each import ran, from its
+    ///     ScoreSession row — before the page is cut, so the total counts sessions and none
+    ///     straddles two pages. Rows ride along; each group carries its mix and
     ///     every stored id folded into it.
     /// </summary>
     Task<(int TotalGroups, IReadOnlyList<JournalSessionRows> Groups)> GetSessionGroups(Guid userId,

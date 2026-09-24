@@ -6,9 +6,10 @@ namespace ScoreTracker.ScoreLedger.Contracts;
 /// <summary>
 ///     One page of a player's journal, grouped into sessions, newest activity first — ACROSS
 ///     mixes: the page is one continuous timeline (owner call), each group carrying its mix. A
-///     session is a player's plays in one mix until eight hours pass with no play, so it can hold
-///     several stored sessions — five imports in an hour are one group (docs/design/session-breakdown.md
-///     §8). Rows predating session capture group by calendar day and fold by the same rule.
+///     session is a player's imports in one mix until eight hours pass without one, by when each
+///     import ran, so it can hold several stored sessions — five imports in an hour are one group
+///     (docs/design/session-breakdown.md §8). A stored session with no recorded import time stands
+///     alone, and rows predating session capture group by calendar day, as they always did.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record RecentSessionsPage(int TotalGroups, IReadOnlyList<RecentSessionsPage.SessionGroup> Groups)

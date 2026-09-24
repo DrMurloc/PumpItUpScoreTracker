@@ -152,7 +152,7 @@ Sessions onto the table is real but costs history, so it stays a separate change
 answer for the back catalogue.
 
 **Since 2026-09-23 the two lists also count differently.** The Sessions page folds a mix's stored
-sessions into one while no eight-hour gap separates their plays, so a night of five imports is one
+sessions into one while no eight hours pass between its imports, so a night of five imports is one
 session there ([session-breakdown.md §8](session-breakdown.md)). Undo keeps listing this table's
 rows, one import at a time, because an import is the unit a player undoes.
 

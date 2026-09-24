@@ -300,10 +300,10 @@ public sealed class JournalEntryDto
 }
 
 /// <summary>
-///     One play session: a player's plays in one mix until eight hours pass with no play — the
+///     One play session: a player's imports in one mix until eight hours pass without one — the
 ///     grouping the site's Sessions page shows. Every import, upload or API request is recorded as
-///     its own stored session underneath, so one session can hold several; <c>sessionIds</c> lists
-///     them.
+///     its own stored session underneath, so one session can hold several imports;
+///     <c>sessionIds</c> lists them. An upload or API request is a session on its own.
 /// </summary>
 public sealed class SessionDto
 {

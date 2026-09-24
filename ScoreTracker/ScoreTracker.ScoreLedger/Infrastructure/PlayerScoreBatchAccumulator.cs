@@ -36,7 +36,7 @@ internal sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
     // source) within the gap = one session. Envelopes are identity only — they never
     // delay the 2-minute event batches. In-memory by design: a restart closes open
     // sessions and the next submission starts a fresh one. Only writes without an id of
-    // their own ride it; the read side folds everything else on the same silence
+    // their own ride it; the read side folds recorded imports on the same silence
     // (SessionFold), which is why the gap is that constant rather than a second eight.
     private static readonly TimeSpan SessionGap = SessionFold.QuietGap;
 

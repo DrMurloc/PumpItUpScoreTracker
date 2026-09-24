@@ -13,7 +13,7 @@ namespace ScoreTracker.Tests.Api;
 
 /// <summary>
 ///     <c>GET api/v2/players/{id}/sessions</c> — sessions as the site's Sessions page groups them: a
-///     player's plays in one mix until eight hours pass with no play, several imports to a night
+///     player's imports in one mix until eight hours pass without one, several imports to a night
 ///     (docs/design/session-breakdown.md §8.5).
 /// </summary>
 public sealed class V2SessionsApiShapeTests
