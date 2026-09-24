@@ -546,7 +546,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
 
     private RichBotSection HeaderSection(SnapshotInputs inputs, string? culture)
     {
-        var span = LevelSpan(inputs.Known
+        var span = LevelSpan(inputs.E.Mix, inputs.Known
             .Where(c => inputs.Charts[c.ChartId].Type != ChartType.CoOp)
             .Select(c => inputs.Charts[c.ChartId]).ToArray());
         if (inputs.Known.Any(c => inputs.Charts[c.ChartId].Type == ChartType.CoOp))
@@ -792,11 +792,14 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         return string.Join(" · ", parts);
     }
 
-    private static string LevelSpan(IReadOnlyList<Chart> charts)
+    // One range per folder, each labelled by the type that fills it on the mix: S and D, or S and HD
+    // on RISE.
+    private static string LevelSpan(MixEnum mix, IReadOnlyList<Chart> charts)
     {
         var parts = new List<string>();
-        foreach (var (type, shortHand) in new[] { (ChartType.Single, "S"), (ChartType.Double, "D") })
+        foreach (var type in new[] { ChartTypeCategory.Single.TypeOn(mix), ChartTypeCategory.Double.TypeOn(mix) })
         {
+            var shortHand = type.GetShortHand();
             var levels = charts.Where(c => c.Type == type).Select(c => (int)c.Level).ToArray();
             if (!levels.Any()) continue;
             var min = levels.Min();
