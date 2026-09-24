@@ -113,6 +113,30 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
         Assert.Single(cut.FindAll("input#uploadInput"));
     }
 
+    [Fact]
+    public async Task ASiteLessMixConfirmsAndSavesTheFileOnItsOwnCard()
+    {
+        // The card is the whole page there, so the confirm, the save and the outcome follow the
+        // upload inside it.
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(MixEnum.Rise);
+        var chartId = Guid.NewGuid();
+        GivenTheFileParsesTo(new RecordedPhoenixScore(chartId, 950000, null, false, Uploaded));
+
+        var cut = RenderComponent<UploadPhoenixScores>();
+        cut.FindComponent<InputFile>().UploadFiles(InputFileContent.CreateFromText("Song,Difficulty,Score,Plate", "rise-scores.csv"));
+        cut.WaitForAssertion(() => Assert.Contains(cut.FindAll("button"), b => b.TextContent.Contains("Save Scores")));
+        await cut.FindAll("button").First(b => b.TextContent.Contains("Save Scores")).ClickAsync(new MouseEventArgs());
+
+        cut.WaitForAssertion(() =>
+        {
+            _mediator.Verify(m => m.Send(
+                It.Is<UpdatePhoenixBestAttemptCommand>(c =>
+                    c.ChartId == chartId && c.Mix == MixEnum.Rise && !c.IsBroken && c.Plate == null),
+                It.IsAny<CancellationToken>()), Times.Once);
+            Assert.Contains("Phoenix Import Saving Success", cut.Markup);
+        });
+    }
+
     private static Chart MakeChart() =>
         new(Guid.NewGuid(), MixEnum.Phoenix,
             new Song("District 1", SongType.Arcade, new Uri("https://piu.test/art.png"),
