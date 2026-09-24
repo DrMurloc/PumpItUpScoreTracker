@@ -704,8 +704,8 @@ boards and the Daily Step stay off the card because RISE has none of them.
   (`ChartTypeCategory.TypeOn`), so RISE's half-doubles are its doubles and Phoenix's numbers do not move. The
   player page shows the two competitive levels on RISE, so the card never announces a number the site hides.
 - **D21 (owner, 2026-09-23). Plays through the plays endpoint gather into sittings, one card each.** A play joins
-  the player's open sitting on its mix when it was played within 15 minutes of that sitting's plays; otherwise it
-  starts a new sitting. A sitting closes after 15 minutes with no play arriving, timed by the site's clock, so a
+  an open sitting on its mix when it was played within 15 minutes of that sitting's plays, before them or after,
+  and the nearer one when it is within 15 minutes of two; otherwise it starts a new sitting. A sitting closes after 15 minutes with no play arriving, timed by the site's clock, so a
   PC clock that is off cannot split one. Membership reads play time, so a backlog a tool sends late sorts into
   the sittings it was played in. A sitting is a stored session — one row on the Undo page — so the Sessions
   page's 8-hour fold, a separate change, covers sittings with no migration.
@@ -726,8 +726,8 @@ for any of this; its offline outbox is separate work (the handoff note in the ow
 
 ### 12.3 The first card after this ships
 
-A player's first RISE card announces "competitive 0.00 → N", the line any account's first import shows, because a
-stats row seen for the first time has nothing to compare against. It shows no folder-movement lines, because a
+A player's first RISE card announces "competitive 1.00 → N", the line any account's first import shows, because a
+stats row seen for the first time is compared against the 1.00 floor every player starts from. It shows no folder-movement lines, because a
 folder's first reading is stored silently (folder-level-progression.md §5.3). Folder lamps fire from the start.
 
 ### 12.4 Shape
