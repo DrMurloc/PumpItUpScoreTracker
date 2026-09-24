@@ -153,13 +153,13 @@ public sealed class PlayersController : ApiV2ControllerBase
         var sent = new[] { play.Perfects, play.Greats, play.Goods, play.Bads, play.Misses, play.MaxCombo };
         if (sent.Any(count => count < 0))
             return (null, Problem("judgments-invalid", $"Play {index}: judgment counts cannot be negative."));
+        if (play is { Perfects: { } perfects, Greats: { } greats, Goods: { } goods, Bads: { } bads,
+                Misses: { } misses, MaxCombo: { } maxCombo })
+            return (new JudgementCounts(perfects, greats, goods, bads, misses, maxCombo), null);
         if (sent.All(count => count == null)) return (null, null);
-        if (sent.Any(count => count == null))
-            return (null, Problem("judgments-incomplete", "The judgments are all six numbers or none of them.",
-                detail: $"Play {index}: perfects, greats, goods, bads, misses and maxCombo are sent together " +
-                        "or left out together."));
-        return (new JudgementCounts(play.Perfects!.Value, play.Greats!.Value, play.Goods!.Value, play.Bads!.Value,
-            play.Misses!.Value, play.MaxCombo!.Value), null);
+        return (null, Problem("judgments-incomplete", "The judgments are all six numbers or none of them.",
+            detail: $"Play {index}: perfects, greats, goods, bads, misses and maxCombo are sent together " +
+                    "or left out together."));
     }
 
     /// <summary>
@@ -168,12 +168,11 @@ public sealed class PlayersController : ApiV2ControllerBase
     /// </summary>
     private ObjectResult? ScoreProblem(int index, ObservedPlayDto play, JudgementCounts? judgements)
     {
-        if (judgements == null)
+        if (judgements is not { MaxCombo: { } maxCombo })
             return !play.IsBroken && play.Score == 0
                 ? Problem("score-invalid", $"Play {index}: a pass without judgments scores above zero.")
                 : null;
 
-        var maxCombo = judgements.MaxCombo!.Value;
         var screen = new ScoreScreen(judgements.Perfects, judgements.Greats, judgements.Goods, judgements.Bads,
             judgements.Misses, maxCombo);
         var expected = (int)screen.CalculatePhoenixScore;
