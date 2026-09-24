@@ -100,6 +100,10 @@ internal sealed class SittingSaga(
         if (sitting is null || sitting.ProcessedAt is not null) return;
         if (sitting.NewCount > 0 || sitting.UpscoreCount > 0) return;
         if (dateTime.Now - sitting.LastActivityAt < ScoreBatchPolicy.SittingQuietWindow) return;
-        await mediator.Send(new ReplaySessionCommand(userId, sessionId), cancellationToken);
+        // A sitting whose last play is more than a day old by the time it closes is a backlog a tool
+        // sent late: it records and captures as usual, and posts no card.
+        var lastPlayed = await sessions.GetLastPlayedAt(userId, sessionId, cancellationToken);
+        var announce = lastPlayed == null || dateTime.Now - lastPlayed.Value <= ScoreBatchPolicy.SittingCardCutoff;
+        await mediator.Send(new ReplaySessionCommand(userId, sessionId, announce), cancellationToken);
     }
 }

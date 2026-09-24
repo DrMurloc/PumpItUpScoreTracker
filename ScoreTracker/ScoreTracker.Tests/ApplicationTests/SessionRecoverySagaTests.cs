@@ -110,6 +110,24 @@ public sealed class SessionRecoverySagaTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task AReplayTellsTheCardWhetherToPost(bool announce)
+    {
+        var ctx = new SagaContext();
+        var chart = Guid.NewGuid();
+        ctx.WithSession();
+        ctx.WithJournal(new[] { Row(chart, 920_000, Now.AddMinutes(-20)) });
+        ctx.WithRecords(new RecordedPhoenixScore(chart, PhoenixScore.From(920_000), PhoenixPlate.MarvelousGame,
+            false, Now.AddMinutes(-20)));
+
+        await ctx.Saga.Handle(new ReplaySessionCommand(UserId, SessionId, announce), CancellationToken.None);
+
+        ctx.Bus.Verify(b => b.Publish(It.Is<PlayerScoresUpdatedEvent>(e => e.Announce == announce),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     /// <summary>
     ///     The pass that sends this reads candidates from one vertical and gates them in another,
     ///     so a live drain can land in between. The handler is the last line of defence against

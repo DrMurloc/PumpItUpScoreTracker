@@ -75,4 +75,11 @@ public static class ScoreBatchPolicy
     ///     there first and the sweep only catches one that was lost.
     /// </summary>
     public static readonly TimeSpan SittingOverdueAfter = SittingQuietWindow + TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    ///     A sitting whose last play is older than this when it closes — a backlog a tool sent late —
+    ///     records and captures as usual but posts no Discord card, so an old backlog cannot flood a
+    ///     channel (docs/design/rise.md D23).
+    /// </summary>
+    public static readonly TimeSpan SittingCardCutoff = TimeSpan.FromDays(1);
 }

@@ -71,6 +71,9 @@ internal interface IScoreSessionRepository
     /// <summary>Records that a play for this sitting arrived at <paramref name="at" />.</summary>
     Task TouchArrival(Guid id, DateTimeOffset at, CancellationToken cancellationToken = default);
 
+    /// <summary>When the latest play this session's journal holds was played; null when it holds none.</summary>
+    Task<DateTimeOffset?> GetLastPlayedAt(Guid userId, Guid sessionId, CancellationToken cancellationToken = default);
+
     /// <summary>
     ///     Sittings whose scheduled close never ran: unannounced, never replayed, and quiet since at
     ///     least <paramref name="quietSince" />. Oldest first, at most <paramref name="take" />.

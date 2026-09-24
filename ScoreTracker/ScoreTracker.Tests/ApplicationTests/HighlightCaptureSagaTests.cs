@@ -795,6 +795,21 @@ public sealed class HighlightCaptureSagaTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task AQuietBatchPublishesAQuietSnapshot()
+    {
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).WithMix(MixEnum.Rise).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 950000);
+        var context = ctx.Context(RisePassEvent(chart, 950000) with { Announce = false });
+
+        await ctx.Saga.Consume(context);
+
+        Mock.Get(context).Verify(c => c.Publish(It.Is<ScoreHighlightsCapturedEvent>(e => !e.Announce),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private static PlayerScoresUpdatedEvent RisePassEvent(Chart chart, int score)
     {
         return PlayerScoresUpdatedEvent.Create(Now, UserId, MixEnum.Rise,

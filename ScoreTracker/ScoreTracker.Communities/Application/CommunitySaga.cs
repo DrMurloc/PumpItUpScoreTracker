@@ -176,6 +176,8 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     public async Task Consume(ConsumeContext<ScoreHighlightsCapturedEvent> context)
     {
         var e = context.Message;
+        // A late backlog is recorded and captured like any session but posts no card.
+        if (!e.Announce) return;
         var user = await _users.GetUser(e.UserId, context.CancellationToken);
         if (user == null) return;
 

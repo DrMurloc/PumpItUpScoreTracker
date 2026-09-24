@@ -233,7 +233,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
                 c.OldScore, c.NewScore, c.Plate, c.IsBroken,
                 flags.TryGetValue(c.ChartId, out var f) ? f : HighlightFlags.None,
                 details.GetValueOrDefault(c.ChartId))).ToArray(),
-            milestones, titleProgress));
+            milestones, titleProgress, e.Announce));
     }
 
     public async Task<IEnumerable<ScoreHighlightRecord>> Handle(GetScoreHighlightsQuery request,

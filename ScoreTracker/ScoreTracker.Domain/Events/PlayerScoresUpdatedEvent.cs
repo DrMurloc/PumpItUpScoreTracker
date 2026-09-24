@@ -11,7 +11,9 @@ namespace ScoreTracker.Domain.Events;
 ///     Mix is additive (Phoenix 2 rollout) — SchemaVersion stays 1; a missing mix on an
 ///     old payload means Phoenix. SessionId is additive on the same precedent: the
 ///     Session Batcher's play-session / import-run id, null on old payloads and on
-///     batches that predate session capture.
+///     batches that predate session capture. Announce is additive too: false only for a
+///     sitting closed more than a day after its last play, whose Discord card is skipped
+///     while every other consumer runs as usual.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record PlayerScoresUpdatedEvent(
@@ -21,15 +23,16 @@ public sealed record PlayerScoresUpdatedEvent(
     Guid UserId,
     MixEnum Mix,
     IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange> Changes,
-    Guid? SessionId = null)
+    Guid? SessionId = null,
+    bool Announce = true)
 {
     public const int CurrentSchemaVersion = 1;
 
     public static PlayerScoresUpdatedEvent Create(DateTimeOffset occurredAt, Guid userId, MixEnum mix,
-        IReadOnlyList<ScoreChange> changes, Guid? sessionId = null)
+        IReadOnlyList<ScoreChange> changes, Guid? sessionId = null, bool announce = true)
     {
         return new PlayerScoresUpdatedEvent(Guid.NewGuid(), occurredAt, CurrentSchemaVersion, userId, mix, changes,
-            sessionId);
+            sessionId, announce);
     }
 
     [ExcludeFromCodeCoverage]

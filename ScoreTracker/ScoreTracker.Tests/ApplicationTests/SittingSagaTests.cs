@@ -117,15 +117,33 @@ public sealed class SittingSagaTests
     }
 
     [Fact]
-    public async Task AQuietSittingIsReplayedFromTheJournal()
+    public async Task AQuietSittingIsReplayedFromTheJournalAndAnnounced()
     {
         var id = Guid.NewGuid();
         _sessions.Setup(s => s.Get(id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Sitting(id, ScoreBatchPolicy.SittingQuietWindow));
+        _sessions.Setup(s => s.GetLastPlayedAt(UserId, id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Now.AddMinutes(-16));
 
         await Saga().Consume(ContextOf(new SittingSaga.CloseSittingCommand(UserId, MixEnum.Rise, id)));
 
-        _mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == id && c.UserId == UserId),
+        _mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c =>
+                c.SessionId == id && c.UserId == UserId && c.Announce),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ASittingWhoseLastPlayIsMoreThanADayOldRecordsWithoutACard()
+    {
+        var id = Guid.NewGuid();
+        _sessions.Setup(s => s.Get(id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Sitting(id, ScoreBatchPolicy.SittingQuietWindow));
+        _sessions.Setup(s => s.GetLastPlayedAt(UserId, id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Now.AddDays(-2));
+
+        await Saga().Consume(ContextOf(new SittingSaga.CloseSittingCommand(UserId, MixEnum.Rise, id)));
+
+        _mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == id && !c.Announce),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

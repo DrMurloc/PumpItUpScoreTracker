@@ -10,7 +10,8 @@ namespace ScoreTracker.PlayerProgress.Contracts.Events;
 ///     failed (that section is simply absent). The one Discord card renders from THIS
 ///     event alone: changes with their final flags (CompetitiveImprover included — it
 ///     no longer trails), every milestone the batch minted (lamps, ratings, titles,
-///     weekly placements), and the per-title progress deltas.
+///     weekly placements), and the per-title progress deltas. <see cref="Announce" /> false
+///     carries a late backlog through untouched except that no Discord card posts for it.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record ScoreHighlightsCapturedEvent(
@@ -21,16 +22,17 @@ public sealed record ScoreHighlightsCapturedEvent(
     Guid? SessionId,
     IReadOnlyList<ScoreHighlightsCapturedEvent.HighlightedChange> Changes,
     IReadOnlyList<PlayerMilestoneRecord> Milestones,
-    IReadOnlyList<TitleProgressDelta> TitleProgress)
+    IReadOnlyList<TitleProgressDelta> TitleProgress,
+    bool Announce = true)
 {
     public static ScoreHighlightsCapturedEvent Create(DateTimeOffset occurredAt, Guid userId, MixEnum mix,
         Guid? sessionId, IReadOnlyList<HighlightedChange> changes,
         IReadOnlyList<PlayerMilestoneRecord>? milestones = null,
-        IReadOnlyList<TitleProgressDelta>? titleProgress = null)
+        IReadOnlyList<TitleProgressDelta>? titleProgress = null, bool announce = true)
     {
         return new ScoreHighlightsCapturedEvent(Guid.NewGuid(), occurredAt, userId, mix, sessionId, changes,
             milestones ?? Array.Empty<PlayerMilestoneRecord>(),
-            titleProgress ?? Array.Empty<TitleProgressDelta>());
+            titleProgress ?? Array.Empty<TitleProgressDelta>(), announce);
     }
 
     [ExcludeFromCodeCoverage]

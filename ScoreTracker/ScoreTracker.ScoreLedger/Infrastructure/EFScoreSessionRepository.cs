@@ -143,6 +143,16 @@ internal sealed class EFScoreSessionRepository : IScoreSessionRepository
             .ExecuteUpdateAsync(u => u.SetProperty(s => s.LastActivityAt, at), cancellationToken);
     }
 
+    public async Task<DateTimeOffset?> GetLastPlayedAt(Guid userId, Guid sessionId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.Set<ScoreEventJournalEntity>()
+            .Where(j => j.UserId == userId && j.SessionId == sessionId)
+            .Select(j => (DateTimeOffset?)j.OccurredAt)
+            .MaxAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<ScoreSessionRecord>> ListOverdueSittings(DateTimeOffset quietSince, int take,
         CancellationToken cancellationToken = default)
     {

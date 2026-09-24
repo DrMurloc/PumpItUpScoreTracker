@@ -1453,6 +1453,23 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task AQuietSnapshotPostsNoCard()
+    {
+        var userId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).WithMix(MixEnum.Rise).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Rise, userId, chart, score: 975000);
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Rise, null,
+            (chart.Id, true, HighlightFlags.None)) with { Announce = false }));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(It.IsAny<IEnumerable<RichBotMessage>>(),
+            It.IsAny<IEnumerable<ulong>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task ARiseCardWritesItsGradeMarkAndLampInRisesOwnArt()
     {
         var userId = Guid.NewGuid();

@@ -59,6 +59,21 @@ public sealed class ScoreSessionSittingTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task TheLastPlayedTimeIsTheLatestPlayTheSittingsJournalHolds()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chartA = await _seed.SeedChartAsync();
+        var chartB = await _seed.SeedChartAsync();
+        var sitting = Guid.NewGuid();
+        await Sessions().Open(sitting, userId, MixEnum.Rise, Source, null, null, Now);
+        await Journal().Append(Play(userId, chartA, Now.AddDays(-3), sitting), CancellationToken.None);
+        await Journal().Append(Play(userId, chartB, Now.AddDays(-2), sitting), CancellationToken.None);
+
+        Assert.Equal(Now.AddDays(-2), await Sessions().GetLastPlayedAt(userId, sitting));
+        Assert.Null(await Sessions().GetLastPlayedAt(userId, Guid.NewGuid()));
+    }
+
+    [Fact]
     public async Task ASittingWithNothingJournaledYetSpansItsStart()
     {
         var userId = await _seed.SeedUserAsync();
