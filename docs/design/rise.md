@@ -273,8 +273,9 @@ the Rise mix gets `MixVersion` rows and every membership row an `AddedInVersionI
 RISE-mode judgment totals against our arcade counts: 4NT S22 **1,078 vs 1,100**; Darkside Of The Mind S23 1,333 =
 1,333 (twice); Aragami S22 **1,356 vs 1,349**. The Japanese wiki says RISE changed charts in long-hold sections
 (added taps, other panels) and the Korean wiki that hold ticks are judged differently — so RISE totals are neither
-the arcade's nor the arcade's plus one per hold. They are learned per chart from result screens (every capture
-carries the five counts), stored in the Rise membership row's `NoteCount`, and stay null until seen. Everything that
+the arcade's nor the arcade's plus one per hold. They are learned per chart from result screens (a result-screen
+capture carries the five counts; a best read off a song list carries none, D24), stored in the Rise membership
+row's `NoteCount`, and stay null until seen. Everything that
 reads a note count (the max-combo solver, the stage-break solver, the calculators) treats null as unknown, which it
 already does.
 
@@ -394,9 +395,10 @@ Decided (owner, 2026-09-22): the v2 write, specified now so phase 2 builds again
 Manual entry and spreadsheet upload need neither.
 
 **Judgments optional (D24, owner, 2026-09-23).** A play may arrive without its judgments. The five counts and
-`maxCombo` are optional and travel together — all six or none, `judgments-incomplete` otherwise. With them nothing
-changes: the score is recomputed and a play that does not reconcile refuses the request, and the award is derived
-from the counts, a claimed one having to agree. Without them the score is taken as read and a claimed `award` as
+`maxCombo` are optional and travel together — all six or none, `judgments-incomplete` otherwise. With them the
+checks are the old ones: the score is recomputed and a play that does not reconcile refuses the request, and the
+award is derived from the counts, a claimed one having to agree. What did change for a judged play is that a count
+left out no longer reads as zero, so a client whose serializer drops zero-valued fields has to send them. Without them the score is taken as read and a claimed `award` as
 sent, provided the two agree (only 1,000,000 is a Perfect Game; `award-does-not-reconcile` otherwise); a million
 sent with no `award` records a Perfect Game, and a pass has to score above zero (`score-invalid`). The ledger
 already records plays without judgments — the official best list arrives that way — so both of its commands
