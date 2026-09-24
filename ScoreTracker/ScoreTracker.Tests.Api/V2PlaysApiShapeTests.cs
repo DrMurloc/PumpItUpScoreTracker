@@ -367,6 +367,24 @@ public sealed class V2PlaysApiShapeTests
     }
 
     [Fact]
+    public async Task JudgmentsTheFormulaCannotScoreDoNotReconcile()
+    {
+        // Ten thousand notes is past any chart. The formula scores such a screen as zero, and a zero
+        // claimed alongside it must not pass as a zero-point Perfect Game.
+        var unscorable = PerfectPlay(ApiTestData.ChartId1, award: null, score: 0) with
+        {
+            Perfects = 10_000, MaxCombo = 10_000
+        };
+
+        var result = await Controller().RecordPlays(Request(unscorable));
+
+        Assert.Equal(StatusCodes.Status400BadRequest, ((ObjectResult)result).StatusCode);
+        Assert.EndsWith("/judgments-do-not-reconcile", ProblemType(result));
+        _mediator.Verify(m => m.Send(It.IsAny<RecordObservedPlaysCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task WithoutJudgmentsTheAwardIsTheOneSent()
     {
         // Nothing checks a Full Combo below a million without the counts, so the claim stands.

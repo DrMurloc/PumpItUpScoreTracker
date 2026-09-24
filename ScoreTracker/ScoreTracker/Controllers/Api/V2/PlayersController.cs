@@ -175,9 +175,13 @@ public sealed class PlayersController : ApiV2ControllerBase
 
         var screen = new ScoreScreen(judgements.Perfects, judgements.Greats, judgements.Goods, judgements.Bads,
             judgements.Misses, maxCombo);
+        // The formula scores a screen it cannot read as zero, so a zero would otherwise match it.
+        if (!screen.IsValid)
+            return Problem("judgments-do-not-reconcile", "The judgments do not produce the score.",
+                detail: $"Play {index}: {Breakdown(judgements)} with max combo {maxCombo} is not a play the " +
+                        "formula can score: the counts total 1 to 9,999 notes and the combo stays within them.");
         var expected = (int)screen.CalculatePhoenixScore;
-        if (screen.TotalCount > 0 && maxCombo <= screen.TotalCount &&
-            Math.Abs(expected - play.Score) <= ChecksumTolerance) return null;
+        if (Math.Abs(expected - play.Score) <= ChecksumTolerance) return null;
         return Problem("judgments-do-not-reconcile", "The judgments do not produce the score.",
             detail: $"Play {index}: {Breakdown(judgements)} with max combo {maxCombo} scores {expected:N0}, " +
                     $"not {play.Score:N0}.");
