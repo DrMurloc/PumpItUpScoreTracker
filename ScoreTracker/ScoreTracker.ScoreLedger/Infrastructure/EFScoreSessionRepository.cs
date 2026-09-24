@@ -114,29 +114,33 @@ internal sealed class EFScoreSessionRepository : IScoreSessionRepository
         await database.Set<ScoreSessionEntity>().Where(s => s.Id == id).ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task<OpenSitting?> GetOpenSitting(Guid userId, MixEnum mix, DateTimeOffset activeSince,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<OpenSitting>> GetOpenSittings(Guid userId, MixEnum mix,
+        DateTimeOffset activeSince, CancellationToken cancellationToken = default)
     {
         var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         // A replayed sitting carries its counts before capture stamps it processed, and its replay
         // moved LastActivityAt to the replay's own time — so without the counts test a sitting being
         // announced would look open, and a play joining it would never be announced itself.
-        var sitting = await database.Set<ScoreSessionEntity>()
+        var sittings = await database.Set<ScoreSessionEntity>()
             .Where(s => s.UserId == userId && s.MixId == mixId && s.ProcessedAt == null
                         && s.NewCount == 0 && s.UpscoreCount == 0
                         && s.Source.StartsWith(ScoreJournalEntry.PlaysApiSourcePrefix)
                         && s.LastActivityAt >= activeSince)
-            .OrderByDescending(s => s.LastActivityAt)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (sitting is null) return null;
+            .Select(s => new { s.Id, s.StartedAt })
+            .ToArrayAsync(cancellationToken);
+        if (sittings.Length == 0) return Array.Empty<OpenSitting>();
 
-        var plays = database.Set<ScoreEventJournalEntity>()
-            .Where(j => j.UserId == userId && j.SessionId == sitting.Id)
-            .Select(j => (DateTimeOffset?)j.OccurredAt);
-        var first = await plays.MinAsync(cancellationToken);
-        var last = await plays.MaxAsync(cancellationToken);
-        return new OpenSitting(sitting.Id, first ?? sitting.StartedAt, last ?? sitting.StartedAt);
+        var ids = sittings.Select(s => (Guid?)s.Id).ToArray();
+        var spans = await database.Set<ScoreEventJournalEntity>()
+            .Where(j => j.UserId == userId && ids.Contains(j.SessionId))
+            .GroupBy(j => j.SessionId!.Value)
+            .Select(g => new { Id = g.Key, First = g.Min(j => j.OccurredAt), Last = g.Max(j => j.OccurredAt) })
+            .ToDictionaryAsync(span => span.Id, cancellationToken);
+        return sittings.Select(s => spans.TryGetValue(s.Id, out var span)
+                ? new OpenSitting(s.Id, span.First, span.Last)
+                : new OpenSitting(s.Id, s.StartedAt, s.StartedAt))
+            .ToArray();
     }
 
     public async Task TouchArrival(Guid id, DateTimeOffset at, CancellationToken cancellationToken = default)

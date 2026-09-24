@@ -8,8 +8,8 @@ using ScoreTracker.Tests.Integration.TestData;
 namespace ScoreTracker.Tests.Integration;
 
 /// <summary>
-///     The session repository's sitting reads against a real database: which session is a player's
-///     open sitting and what span of play times it holds, the arrival stamp, and the sweep's list.
+///     The session repository's sitting reads against a real database: which sessions are a player's
+///     open sittings and what span of play times each holds, the arrival stamp, and the sweep's list.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
 [ExcludeFromCodeCoverage]
@@ -40,22 +40,29 @@ public sealed class ScoreSessionSittingTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task AnOpenSittingSpansThePlayTimesItsJournalHolds()
+    public async Task EachOpenSittingSpansThePlayTimesItsOwnJournalHolds()
     {
         var userId = await _seed.SeedUserAsync();
         var chartA = await _seed.SeedChartAsync();
         var chartB = await _seed.SeedChartAsync();
-        var sitting = Guid.NewGuid();
-        await Sessions().Open(sitting, userId, MixEnum.Rise, Source, null, null, Now.AddMinutes(-5));
-        await Journal().Append(Play(userId, chartA, Now.AddMinutes(-30), sitting), CancellationToken.None);
-        await Journal().Append(Play(userId, chartB, Now.AddMinutes(-10), sitting), CancellationToken.None);
+        var live = Guid.NewGuid();
+        var backlog = Guid.NewGuid();
+        await Sessions().Open(live, userId, MixEnum.Rise, Source, null, null, Now.AddMinutes(-5));
+        await Journal().Append(Play(userId, chartA, Now.AddMinutes(-30), live), CancellationToken.None);
+        await Journal().Append(Play(userId, chartB, Now.AddMinutes(-10), live), CancellationToken.None);
+        await Sessions().Open(backlog, userId, MixEnum.Rise, Source, null, null, Now.AddMinutes(-2));
+        await Journal().Append(Play(userId, chartA, Now.AddDays(-2), backlog), CancellationToken.None);
+        await Journal().Append(Play(userId, chartB, Now.AddDays(-2).AddMinutes(12), backlog),
+            CancellationToken.None);
 
-        var open = await Sessions().GetOpenSitting(userId, MixEnum.Rise, Now.AddMinutes(-15));
+        var open = (await Sessions().GetOpenSittings(userId, MixEnum.Rise, Now.AddMinutes(-15)))
+            .ToDictionary(s => s.Id);
 
-        Assert.NotNull(open);
-        Assert.Equal(sitting, open!.Id);
-        Assert.Equal(Now.AddMinutes(-30), open.FirstPlayedAt);
-        Assert.Equal(Now.AddMinutes(-10), open.LastPlayedAt);
+        Assert.Equal(2, open.Count);
+        Assert.Equal(Now.AddMinutes(-30), open[live].FirstPlayedAt);
+        Assert.Equal(Now.AddMinutes(-10), open[live].LastPlayedAt);
+        Assert.Equal(Now.AddDays(-2), open[backlog].FirstPlayedAt);
+        Assert.Equal(Now.AddDays(-2).AddMinutes(12), open[backlog].LastPlayedAt);
     }
 
     [Fact]
@@ -80,9 +87,9 @@ public sealed class ScoreSessionSittingTests : IAsyncLifetime
         var sitting = Guid.NewGuid();
         await Sessions().Open(sitting, userId, MixEnum.Rise, Source, null, null, Now);
 
-        var open = await Sessions().GetOpenSitting(userId, MixEnum.Rise, Now.AddMinutes(-15));
+        var open = Assert.Single(await Sessions().GetOpenSittings(userId, MixEnum.Rise, Now.AddMinutes(-15)));
 
-        Assert.Equal(Now, open!.FirstPlayedAt);
+        Assert.Equal(Now, open.FirstPlayedAt);
         Assert.Equal(Now, open.LastPlayedAt);
     }
 
@@ -100,7 +107,7 @@ public sealed class ScoreSessionSittingTests : IAsyncLifetime
         await Sessions().MarkProcessed(announced, Now);
         await Sessions().Open(otherMix, userId, MixEnum.RiseArcade, Source, null, null, Now);
 
-        Assert.Null(await Sessions().GetOpenSitting(userId, MixEnum.Rise, Now.AddMinutes(-15)));
+        Assert.Empty(await Sessions().GetOpenSittings(userId, MixEnum.Rise, Now.AddMinutes(-15)));
     }
 
     [Fact]
@@ -112,7 +119,7 @@ public sealed class ScoreSessionSittingTests : IAsyncLifetime
         // The replay writes the counts and its own time, and capture has not stamped it yet.
         await Sessions().SetCounts(sitting, Now, 2, 1);
 
-        Assert.Null(await Sessions().GetOpenSitting(userId, MixEnum.Rise, Now.AddMinutes(-15)));
+        Assert.Empty(await Sessions().GetOpenSittings(userId, MixEnum.Rise, Now.AddMinutes(-15)));
     }
 
     [Fact]

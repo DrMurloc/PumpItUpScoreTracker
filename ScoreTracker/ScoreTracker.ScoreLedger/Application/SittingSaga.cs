@@ -39,7 +39,7 @@ internal sealed class SittingSaga(
         var now = dateTime.Now;
         using var entered = await gate.Enter(request.UserId, request.Mix, cancellationToken);
 
-        var open = await sessions.GetOpenSitting(request.UserId, request.Mix,
+        var open = await sessions.GetOpenSittings(request.UserId, request.Mix,
             now - ScoreBatchPolicy.SittingQuietWindow, cancellationToken);
         var plan = SittingPlanner.Plan(open, request.Plays.Select(p => p.PlayedAt).ToArray(),
             ScoreBatchPolicy.SittingQuietWindow);

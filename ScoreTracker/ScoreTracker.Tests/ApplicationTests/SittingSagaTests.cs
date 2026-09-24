@@ -26,6 +26,13 @@ public sealed class SittingSagaTests
     private readonly Mock<IMessageScheduler> _scheduler = new();
     private readonly Mock<IScoreSessionRepository> _sessions = new();
 
+    public SittingSagaTests()
+    {
+        _sessions.Setup(s => s.GetOpenSittings(It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<DateTimeOffset>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<OpenSitting>());
+    }
+
     private SittingSaga Saga()
     {
         return new SittingSaga(_sessions.Object, _mediator.Object, _scheduler.Object, FakeDateTime.At(Now).Object,
@@ -90,9 +97,9 @@ public sealed class SittingSagaTests
     public async Task APlayWithinTheGapJoinsTheOpenSitting()
     {
         var open = Guid.NewGuid();
-        _sessions.Setup(s => s.GetOpenSitting(UserId, MixEnum.Rise, Now - ScoreBatchPolicy.SittingQuietWindow,
+        _sessions.Setup(s => s.GetOpenSittings(UserId, MixEnum.Rise, Now - ScoreBatchPolicy.SittingQuietWindow,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new OpenSitting(open, Now.AddMinutes(-40), Now.AddMinutes(-4)));
+            .ReturnsAsync(new[] { new OpenSitting(open, Now.AddMinutes(-40), Now.AddMinutes(-4)) });
 
         await Saga().Handle(Record(false, Play(Now.AddMinutes(-1))), CancellationToken.None);
 
