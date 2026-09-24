@@ -51,8 +51,8 @@ public sealed class SessionMilestonesTests
         // folder stood before either.
         var milestones = new[]
         {
-            Folder(0, new FolderProgressDetail("S22", 80, PhoenixLetterGrade.AAA, 60, null)),
-            Folder(40, new FolderProgressDetail("S22", 80, PhoenixLetterGrade.AAPlus, null, PhoenixLetterGrade.AAA)),
+            Folder(0, new FolderProgressDetail("S22", 80, PhoenixLetterGrade.AAPlus, 60, null)),
+            Folder(40, new FolderProgressDetail("S22", 80, PhoenixLetterGrade.AAA, null, PhoenixLetterGrade.AAPlus)),
             Folder(20, new FolderProgressDetail("D23", 40, null, 20, null))
         };
 
@@ -63,8 +63,47 @@ public sealed class SessionMilestonesTests
             m => m.Detail!.StartsWith("S22", StringComparison.Ordinal)).Detail)!;
         Assert.Equal(60, s22.FromTier);
         Assert.Equal(80, s22.Tier);
-        Assert.Equal(PhoenixLetterGrade.AAA, s22.FromGrade);
-        Assert.Equal(PhoenixLetterGrade.AAPlus, s22.Grade);
+        Assert.Equal(PhoenixLetterGrade.AAPlus, s22.FromGrade);
+        Assert.Equal(PhoenixLetterGrade.AAA, s22.Grade);
+    }
+
+    [Fact]
+    public void AFolderWhoseGradeFellBackStatesWhereItEndedWithoutAnArrow()
+    {
+        // The grade rose in one import and a weak new pass carried it back in the next. "AA → AA"
+        // would print a standstill as progress; the line states where the folder ended instead.
+        var milestones = new[]
+        {
+            Folder(0, new FolderProgressDetail("S22", 80, PhoenixLetterGrade.AAA, null, PhoenixLetterGrade.AA)),
+            Folder(40, new FolderProgressDetail("S22", 100, PhoenixLetterGrade.AA, 80, null))
+        };
+
+        var s22 = FolderProgressDetail.TryParse(Assert.Single(SessionMilestones.Collapse(milestones)).Detail)!;
+
+        Assert.Equal(80, s22.FromTier);
+        Assert.Equal(100, s22.Tier);
+        Assert.Equal(PhoenixLetterGrade.AA, s22.Grade);
+        Assert.Null(s22.FromGrade);
+    }
+
+    [Fact]
+    public void HardmodeCollapsesWhateverStandingEachImportReached()
+    {
+        // Hardmode's detail is the standing the pool reached, which moves every batch; it must not
+        // split the night back into a strip per import.
+        var milestones = new[]
+        {
+            new PlayerMilestoneRecord(MilestoneKind.HardmodePumbilityGain, Guid.NewGuid(), Start, 3300, 3350, null,
+                "12|40"),
+            new PlayerMilestoneRecord(MilestoneKind.HardmodePumbilityGain, Guid.NewGuid(), Start.AddMinutes(30),
+                3350, 3420, null, "9|41")
+        };
+
+        var hardmode = Assert.Single(SessionMilestones.Collapse(milestones));
+
+        Assert.Equal(3300, hardmode.OldValue);
+        Assert.Equal(3420, hardmode.NewValue);
+        Assert.Equal("9|41", hardmode.Detail);
     }
 
     [Fact]

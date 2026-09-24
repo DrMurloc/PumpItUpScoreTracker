@@ -39,10 +39,11 @@ internal static class SessionMilestones
         var all = milestones.ToArray();
         var collapsed = new List<PlayerMilestoneRecord>();
 
-        foreach (var run in all.Where(m => RunningValues.Contains(m.Kind)).GroupBy(m => (m.Kind, m.Detail)))
+        foreach (var run in all.Where(m => RunningValues.Contains(m.Kind)).GroupBy(m => (m.Kind, Board(m))))
         {
             var ordered = run.OrderBy(m => m.OccurredAt).ToArray();
-            // A first placing has no old figure, and a session that began unplaced still did.
+            // A first placing has no old figure, and a session that began unplaced still did. The
+            // latest milestone's detail rides along: for Hardmode it is the standing the pool reached.
             collapsed.Add(ordered[^1] with { OldValue = ordered[0].OldValue });
         }
 
@@ -55,19 +56,39 @@ internal static class SessionMilestones
     }
 
     /// <summary>
+    ///     Which of a kind's milestones are the same running value. Only the estimated place names
+    ///     something in its detail — the board — and each board is its own value. Hardmode's detail
+    ///     is the standing the pool reached in that batch, which moves with every batch, so keying on
+    ///     it would leave a strip per import again.
+    /// </summary>
+    private static string? Board(PlayerMilestoneRecord milestone)
+    {
+        return milestone.Kind == MilestoneKind.OfficialPumbilityRank ? milestone.Detail : null;
+    }
+
+    /// <summary>
     ///     One folder's movements across the session: its latest tier and grade, from the tier and
     ///     grade it held before the first batch that moved each. A payload this version cannot read
     ///     passes through untouched rather than being guessed at.
+    ///     <para>
+    ///         A "from" only survives when the session ended above it. A later batch can carry the
+    ///         folder's grade back down — a weak new pass lowers it — and the arrow would then print
+    ///         a standstill or a drop as if it were progress. Without it the line states where the
+    ///         folder ended, which is true either way.
+    ///     </para>
     /// </summary>
     private static IEnumerable<PlayerMilestoneRecord> SpanFolder(IReadOnlyList<PlayerMilestoneRecord> ordered)
     {
         var details = ordered.Select(m => FolderProgressDetail.TryParse(m.Detail)).ToArray();
         if (ordered.Count == 1 || details.Any(d => d == null)) return ordered;
 
-        var spanned = details[^1]! with
+        var last = details[^1]!;
+        var fromTier = details.FirstOrDefault(d => d!.TierMoved)?.FromTier;
+        var fromGrade = details.FirstOrDefault(d => d!.GradeMoved)?.FromGrade;
+        var spanned = last with
         {
-            FromTier = details.FirstOrDefault(d => d!.TierMoved)?.FromTier,
-            FromGrade = details.FirstOrDefault(d => d!.GradeMoved)?.FromGrade
+            FromTier = fromTier < last.Tier ? fromTier : null,
+            FromGrade = fromGrade < last.Grade ? fromGrade : null
         };
         return new[] { ordered[^1] with { Detail = spanned.Format() } };
     }
