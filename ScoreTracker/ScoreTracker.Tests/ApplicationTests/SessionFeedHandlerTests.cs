@@ -58,7 +58,8 @@ public sealed class SessionFeedHandlerTests
     {
         var ctx = new HandlerContext(isPublic: false, viewerId: UserId);
         var rows = new[] { Entry(Now, 950000) };
-        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix, rows));
+        ctx.GivenGroups(new JournalSessionRows(null, Array.Empty<Guid>(), DateOnly.FromDateTime(Now.Date),
+            MixEnum.Phoenix, rows));
         ctx.GivenHistories(rows);
 
         var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId),
@@ -80,7 +81,8 @@ public sealed class SessionFeedHandlerTests
             Entry(Now.AddDays(-1), 950000),
             Entry(Now, 950000)
         };
-        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix, rows));
+        ctx.GivenGroups(new JournalSessionRows(null, Array.Empty<Guid>(), DateOnly.FromDateTime(Now.Date),
+            MixEnum.Phoenix, rows));
         ctx.GivenHistories(rows);
 
         var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId),
@@ -106,7 +108,8 @@ public sealed class SessionFeedHandlerTests
             Entry(Now.AddDays(-1), 900000, mix: MixEnum.Phoenix2),
             Entry(Now, 930000, mix: MixEnum.Phoenix2)
         };
-        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2, rows));
+        ctx.GivenGroups(new JournalSessionRows(null, Array.Empty<Guid>(), DateOnly.FromDateTime(Now.Date),
+            MixEnum.Phoenix2, rows));
         ctx.GivenHistories(rows);
 
         var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId), CancellationToken.None);
@@ -126,7 +129,8 @@ public sealed class SessionFeedHandlerTests
         var observed = new ScoreJournalEntry(Now, "officialImport", UserId, ChartId, 955000, PhoenixPlate.FairGame,
             false, MixEnum.Phoenix2, IsBest: false);
         var rows = new[] { record, observed };
-        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2, rows));
+        ctx.GivenGroups(new JournalSessionRows(null, Array.Empty<Guid>(), DateOnly.FromDateTime(Now.Date),
+            MixEnum.Phoenix2, rows));
         ctx.GivenHistories(rows);
 
         var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId), CancellationToken.None);
@@ -146,7 +150,8 @@ public sealed class SessionFeedHandlerTests
         var stageBreak = new ScoreJournalEntry(Now, "officialImport", UserId, ChartId, null, null, true,
             MixEnum.Phoenix2, null, judgements, false, IsStageBroken: true);
         var rows = new[] { Entry(Now.AddDays(-1), 900000, mix: MixEnum.Phoenix2), stageBreak };
-        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2, rows));
+        ctx.GivenGroups(new JournalSessionRows(null, Array.Empty<Guid>(), DateOnly.FromDateTime(Now.Date),
+            MixEnum.Phoenix2, rows));
         ctx.GivenHistories(rows);
 
         var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId), CancellationToken.None);
@@ -176,8 +181,8 @@ public sealed class SessionFeedHandlerTests
         var ctx = new HandlerContext();
         var priorMixBest = Entry(Now.AddMonths(-2), 961000, mix: MixEnum.Phoenix);
         var firstPhoenix2 = Entry(Now, 949000, mix: MixEnum.Phoenix2);
-        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2,
-            new[] { firstPhoenix2 }));
+        ctx.GivenGroups(new JournalSessionRows(null, Array.Empty<Guid>(), DateOnly.FromDateTime(Now.Date),
+            MixEnum.Phoenix2, new[] { firstPhoenix2 }));
         ctx.GivenHistories(new[] { priorMixBest, firstPhoenix2 });
 
         var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId),
@@ -196,8 +201,8 @@ public sealed class SessionFeedHandlerTests
         var ctx = new HandlerContext();
         var priorMixBest = Entry(Now.AddMonths(-2), 981199, mix: MixEnum.Phoenix);
         var firstPhoenix2 = Entry(Now, 981239, mix: MixEnum.Phoenix2);
-        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2,
-            new[] { firstPhoenix2 }));
+        ctx.GivenGroups(new JournalSessionRows(null, Array.Empty<Guid>(), DateOnly.FromDateTime(Now.Date),
+            MixEnum.Phoenix2, new[] { firstPhoenix2 }));
         ctx.GivenHistories(new[] { priorMixBest, firstPhoenix2 });
 
         var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId),
@@ -216,8 +221,8 @@ public sealed class SessionFeedHandlerTests
         var ctx = new HandlerContext();
         var p1 = Entry(Now.AddMonths(-2), 961000, mix: MixEnum.Phoenix);
         var p2 = Entry(Now, 949000, mix: MixEnum.Phoenix2);
-        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2,
-            new[] { p2 }));
+        ctx.GivenGroups(new JournalSessionRows(null, Array.Empty<Guid>(), DateOnly.FromDateTime(Now.Date),
+            MixEnum.Phoenix2, new[] { p2 }));
         ctx.GivenHistories(new[] { p1, p2 });
 
         var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId), CancellationToken.None);
@@ -233,8 +238,8 @@ public sealed class SessionFeedHandlerTests
         // A Phoenix 2-debut song, never cleared in any other mix -> plain New Pass, no badge.
         var ctx = new HandlerContext();
         var p2 = Entry(Now, 982000, mix: MixEnum.Phoenix2);
-        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2,
-            new[] { p2 }));
+        ctx.GivenGroups(new JournalSessionRows(null, Array.Empty<Guid>(), DateOnly.FromDateTime(Now.Date),
+            MixEnum.Phoenix2, new[] { p2 }));
         ctx.GivenHistories(new[] { p2 });
 
         var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId), CancellationToken.None);
@@ -264,7 +269,8 @@ public sealed class SessionFeedHandlerTests
                 PhoenixPlate.FairGame, false, MixEnum.Phoenix2, IsBest: false),
             Entry(Now, 930000, mix: MixEnum.Phoenix2)
         };
-        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2, tonight));
+        ctx.GivenGroups(new JournalSessionRows(null, Array.Empty<Guid>(), DateOnly.FromDateTime(Now.Date),
+            MixEnum.Phoenix2, tonight));
         ctx.GivenHistories(earlier.Concat(tonight).Append(phoenix1));
 
         var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId), CancellationToken.None);
@@ -282,7 +288,8 @@ public sealed class SessionFeedHandlerTests
             true, MixEnum.Phoenix2, IsBest: false, IsStageBroken: true);
         var pass = Entry(Now, 912000, mix: MixEnum.Phoenix2);
         var rows = new[] { stageBreak, pass };
-        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2, rows));
+        ctx.GivenGroups(new JournalSessionRows(null, Array.Empty<Guid>(), DateOnly.FromDateTime(Now.Date),
+            MixEnum.Phoenix2, rows));
         ctx.GivenHistories(rows);
 
         var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId), CancellationToken.None);
@@ -299,7 +306,8 @@ public sealed class SessionFeedHandlerTests
             Entry(Now.AddDays(-1), 950000, plate: PhoenixPlate.FairGame),
             Entry(Now, 950000, plate: PhoenixPlate.SuperbGame)
         };
-        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix, rows));
+        ctx.GivenGroups(new JournalSessionRows(null, Array.Empty<Guid>(), DateOnly.FromDateTime(Now.Date),
+            MixEnum.Phoenix, rows));
         ctx.GivenHistories(rows);
 
         var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId),
@@ -319,7 +327,7 @@ public sealed class SessionFeedHandlerTests
             Entry(Now.AddMinutes(-90), 900000, sessionId: sessionId, source: "officialImport"),
             Entry(Now, 950000, sessionId: sessionId, source: "officialImport")
         };
-        ctx.GivenGroups(new JournalSessionRows(sessionId, null, MixEnum.Phoenix, rows));
+        ctx.GivenGroups(new JournalSessionRows(sessionId, new[] { sessionId }, null, MixEnum.Phoenix, rows));
         ctx.GivenHistories(rows);
 
         var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId),
@@ -332,6 +340,99 @@ public sealed class SessionFeedHandlerTests
         Assert.Equal(Now, group.End);
         // Newest first within the group.
         Assert.Equal(Now, group.Rows[0].OccurredAt);
+    }
+
+    [Fact]
+    public async Task GroupsCarryEveryStoredSessionFoldedIntoThem()
+    {
+        // Two imports forty minutes apart are one session. Highlights, milestones and the journal's
+        // own session ids all join on the imports, so every one of their ids has to travel.
+        var first = Guid.NewGuid();
+        var last = Guid.NewGuid();
+        var ctx = new HandlerContext();
+        var rows = new[]
+        {
+            Entry(Now.AddMinutes(-40), 900000, sessionId: first, source: "officialImport"),
+            Entry(Now, 950000, sessionId: last, source: "officialImport")
+        };
+        ctx.GivenGroups(new JournalSessionRows(last, new[] { first, last }, null, MixEnum.Phoenix, rows));
+        ctx.GivenHistories(rows);
+
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId), CancellationToken.None);
+
+        var group = page.Groups.Single();
+        Assert.Equal(last, group.SessionId);
+        Assert.Equal(new[] { first, last }, group.SessionIds);
+        Assert.Equal(2, group.Rows.Count);
+    }
+
+    [Fact]
+    public async Task ASessionAnUndoEmptiedBetweenTheTwoReadsIsDropped()
+    {
+        // Keys and rows are separate reads. A session with nothing left in it has no span to show,
+        // and asking it for one would take the page down.
+        var ctx = new HandlerContext();
+        var rows = new[] { Entry(Now, 950000) };
+        ctx.GivenGroups(
+            new JournalSessionRows(Guid.NewGuid(), new[] { Guid.NewGuid() }, null, MixEnum.Phoenix,
+                Array.Empty<ScoreJournalEntry>()),
+            new JournalSessionRows(null, Array.Empty<Guid>(), DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix,
+                rows));
+        ctx.GivenHistories(rows);
+
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId), CancellationToken.None);
+
+        Assert.Single(page.Groups);
+    }
+
+    [Fact]
+    public async Task ALinkToAnyImportOfANightOpensTheWholeNightClassified()
+    {
+        // Each import still sends its own Discord card, and each card links its own import.
+        var first = Guid.NewGuid();
+        var last = Guid.NewGuid();
+        var ctx = new HandlerContext();
+        var rows = new[]
+        {
+            Entry(Now.AddMinutes(-40), 900000, sessionId: first, source: "officialImport"),
+            Entry(Now, 950000, sessionId: last, source: "officialImport")
+        };
+        ctx.Journal.Setup(j => j.GetSessionGroupContaining(UserId, first, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new JournalSessionRows(last, new[] { first, last }, null, MixEnum.Phoenix, rows));
+        ctx.GivenHistories(rows);
+
+        var group = await ctx.Handler.Handle(new GetSessionContainingQuery(UserId, first), CancellationToken.None);
+
+        Assert.NotNull(group);
+        Assert.Equal(last, group!.SessionId);
+        var byTime = group.Rows.OrderBy(r => r.OccurredAt).ToArray();
+        Assert.Equal(ScoreEventClassification.NewPass, byTime[0].Classification);
+        Assert.Equal(ScoreEventClassification.Upscore, byTime[1].Classification);
+    }
+
+    [Fact]
+    public async Task ALinkToAnImportWithNoPlaysLeftFindsNothing()
+    {
+        // Only an undo removes a stored session's plays, and the page says so rather than guess.
+        var ctx = new HandlerContext();
+
+        var group = await ctx.Handler.Handle(new GetSessionContainingQuery(UserId, Guid.NewGuid()),
+            CancellationToken.None);
+
+        Assert.Null(group);
+    }
+
+    [Fact]
+    public async Task APrivatePlayersSessionDoesNotOpenByLinkForAnyoneElse()
+    {
+        var ctx = new HandlerContext(isPublic: false, viewerId: Guid.NewGuid());
+
+        var group = await ctx.Handler.Handle(new GetSessionContainingQuery(UserId, Guid.NewGuid()),
+            CancellationToken.None);
+
+        Assert.Null(group);
+        ctx.Journal.Verify(j => j.GetSessionGroupContaining(It.IsAny<Guid>(), It.IsAny<Guid>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private static ScoreJournalEntry Entry(DateTimeOffset at, int score, bool isBroken = false,

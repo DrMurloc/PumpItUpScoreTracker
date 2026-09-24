@@ -100,9 +100,12 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
         new(null, Array.Empty<SessionHistoryRow>(), 0, false);
 
     /// <summary>
-    ///     Which group the hero shows. A Discord card outlives the session it links to — undo
-    ///     deletes the journal rows — so a deep link that finds nothing is a real state, not a
-    ///     404-shaped hole (§2.3).
+    ///     Which session the hero shows. A deep link names one stored session — the import whose
+    ///     Discord card was tapped — and the session holding it can sit anywhere in the history, so
+    ///     it is looked up rather than searched for among the cards on show (D55); a card from last
+    ///     week used to announce that its session had been undone. A Discord card does outlive its
+    ///     session, because undo deletes the journal rows, so a link that finds nothing is still a
+    ///     real state and not a 404-shaped hole (§2.3).
     /// </summary>
     private async Task<(RecentSessionsPage Feed, RecentSessionsPage.SessionGroup? Selected, bool Undone)> Select(
         Guid userId, Guid? selectedSessionId, int page, int pageSize, DateTimeOffset? before,
@@ -110,12 +113,13 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
     {
         var feed = await mediator.Send(new GetRecentSessionsQuery(userId, page, pageSize, before),
             cancellationToken);
-        if (feed.Groups.Count == 0) return (feed, null, false);
+        if (selectedSessionId is not { } linkedId) return (feed, feed.Groups.FirstOrDefault(), false);
 
-        var selected = selectedSessionId == null
-            ? feed.Groups[0]
-            : feed.Groups.FirstOrDefault(g => g.SessionId == selectedSessionId);
-        return (feed, selected ?? feed.Groups[0], selectedSessionId != null && selected == null);
+        var linked = feed.Groups.FirstOrDefault(g => g.SessionIds.Contains(linkedId))
+                     ?? await mediator.Send(new GetSessionContainingQuery(userId, linkedId), cancellationToken);
+        return linked != null
+            ? (feed, linked, false)
+            : (feed, feed.Groups.FirstOrDefault(), feed.Groups.Count > 0);
     }
 
     private async Task<SessionBreakdown> BuildOne(Guid userId, RecentSessionsPage.SessionGroup group,
@@ -125,13 +129,14 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
         var charts = (await mediator.Send(new GetChartsQuery(group.Mix, ChartIds: chartIds), cancellationToken))
             .ToDictionary(c => c.Id);
 
-        var highlights = group.SessionId == null
+        // Every stored session in the fold: a night of five imports captured five times.
+        var highlights = group.SessionIds.Count == 0
             ? Array.Empty<ScoreHighlightRecord>()
-            : (await mediator.Send(new GetScoreHighlightsForSessionsQuery(userId, new[] { group.SessionId.Value }),
+            : (await mediator.Send(new GetScoreHighlightsForSessionsQuery(userId, group.SessionIds),
                 cancellationToken)).ToArray();
-        var milestones = group.SessionId == null
+        var milestones = group.SessionIds.Count == 0
             ? Array.Empty<PlayerMilestoneRecord>()
-            : (await mediator.Send(new GetPlayerMilestonesForSessionsQuery(userId, new[] { group.SessionId.Value }),
+            : (await mediator.Send(new GetPlayerMilestonesForSessionsQuery(userId, group.SessionIds),
                 cancellationToken)).ToArray();
         if (!hardmode)
         {
@@ -153,16 +158,29 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
             .ToArray();
 
         var stats = await mediator.Send(new GetPlayerStatsQuery(userId, group.Mix), cancellationToken);
-        var session = sessions.FirstOrDefault(s => s.Id == group.SessionId);
-        return new SessionBreakdown(group, session, charts, scores,
+        var stored = StoredSessions(group, sessions);
+        return new SessionBreakdown(group, stored, charts, scores,
             BuildCeremony(milestones, stats),
-            milestones.Where(m => m.Kind != MilestoneKind.TitleProgress).ToArray(),
+            // One strip per movement, not per import: the pool that rose in three imports rose
+            // once tonight (§8.3). Title progress collapses separately, into the bars.
+            SessionMilestones.Collapse(milestones.Where(m => m.Kind != MilestoneKind.TitleProgress)),
             BuildTitleBars(milestones),
-            CaptureWindowOpen(session),
+            CaptureWindowOpen(stored),
             highlights.Length + milestones.Length,
             // Derived, not stored: the Hardmode milestones already carry old and new, and the
             // ladder is the vertical's own (D22).
             HardmodeTitleBars.From(group.Mix, milestones));
+    }
+
+    /// <summary>
+    ///     The <c>ScoreSession</c> rows of the stored sessions a session holds, oldest first. A
+    ///     session predating that table has none, and everything reading these treats absence as
+    ///     "historical".
+    /// </summary>
+    private static IReadOnlyList<ScoreSessionRecord> StoredSessions(RecentSessionsPage.SessionGroup group,
+        IReadOnlyList<ScoreSessionRecord> sessions)
+    {
+        return sessions.Where(s => group.SessionIds.Contains(s.Id)).OrderBy(s => s.StartedAt).ToArray();
     }
 
     /// <summary>
@@ -213,16 +231,18 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
     ///     </para>
     ///     <para>
     ///         Sessions predating the ScoreSession table have no wall clock to test, so their
-    ///         window is never open: they are historical by definition. A sitting that has not
+    ///         window is never open: they are historical by definition. A folded session is open
+    ///         while any import in it is (D57) — the newest import of the night is the one still
+    ///         being captured, whatever the earlier ones already wrote. A sitting that has not
     ///         closed yet is only announced once its quiet window has passed, so its capture starts
     ///         that much later; once replayed, its window runs from the replay like any session's.
     ///     </para>
     /// </summary>
-    private bool CaptureWindowOpen(ScoreSessionRecord? session)
+    private bool CaptureWindowOpen(IReadOnlyList<ScoreSessionRecord> stored)
     {
-        if (session == null) return false;
-        var window = session.IsAwaitingClose ? ScoreBatchPolicy.SittingQuietWindow + CaptureWindow : CaptureWindow;
-        return clock.Now - session.LastActivityAt < window;
+        return stored.Any(s =>
+            clock.Now - s.LastActivityAt <
+            (s.IsAwaitingClose ? ScoreBatchPolicy.SittingQuietWindow + CaptureWindow : CaptureWindow));
     }
 
     /// <summary>
@@ -270,8 +290,8 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
     }
 
     /// <summary>
-    ///     A session is many two-minute batches inside an eight-hour envelope, so a stat can move
-    ///     several times. The band shows the whole session's travel: earliest old, latest new.
+    ///     A session is many two-minute batches, and a folded one several imports, so a stat can
+    ///     move several times. The band shows the whole session's travel: earliest old, latest new.
     /// </summary>
     private static SessionCeremony BuildCeremony(IReadOnlyList<PlayerMilestoneRecord> milestones,
         PlayerStatsRecord stats)
@@ -341,7 +361,7 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
                 charts[chart.Id] = chart;
         }
 
-        var sessionIds = groups.Where(g => g.SessionId != null).Select(g => g.SessionId!.Value).ToArray();
+        var sessionIds = groups.SelectMany(g => g.SessionIds).Distinct().ToArray();
         var milestones = sessionIds.Length == 0
             ? Array.Empty<PlayerMilestoneRecord>()
             : (await mediator.Send(new GetPlayerMilestonesForSessionsQuery(userId, sessionIds), cancellationToken))
@@ -374,9 +394,8 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
         IReadOnlyList<ScoreSessionRecord> sessions, IReadOnlyDictionary<Guid, Chart> charts,
         IReadOnlyList<PlayerMilestoneRecord> milestones)
     {
-        // Counts come denormalized off the session row where one exists and off the journal
-        // where it does not — sessions predate that table and the page keeps them all.
-        var session = sessions.FirstOrDefault(s => s.Id == group.SessionId);
+        // Counts come off the journal, the same three numbers the hero prints (D56). The
+        // ScoreSession counts are record changes, not plays, and a folded session holds several.
         var played = group.Rows
             .Select(r => charts.GetValueOrDefault(r.ChartId))
             .Where(c => c != null)
@@ -385,22 +404,25 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
             .OrderByDescending(c => (int)c.Level)
             .ToArray();
 
-        var headline = milestones
-            .Where(m => m.SessionId == group.SessionId && Array.IndexOf(HeadlineOrder, m.Kind) >= 0)
+        // The night's movements, not one per import: a PUMBILITY gain made across three imports
+        // is one headline carrying all of it (§8.3).
+        var headline = SessionMilestones.Collapse(milestones
+                .Where(m => m.SessionId is { } id && group.SessionIds.Contains(id)))
+            .Where(m => Array.IndexOf(HeadlineOrder, m.Kind) >= 0)
             .OrderBy(m => Array.IndexOf(HeadlineOrder, m.Kind))
             .Take(HeadlineCap)
             .ToArray();
 
         return new SessionHistoryRow(group.SessionId, group.Day, group.Mix, group.Source,
             group.Start, group.End,
-            session?.NewCount ?? group.Rows.Count(r => r.Classification == ScoreEventClassification.NewPass),
-            session?.UpscoreCount ?? group.Rows.Count(r => r.Classification == ScoreEventClassification.Upscore),
-            session?.ScoreCount ?? group.Rows.Count,
+            group.Rows.Count(r => r.Classification == ScoreEventClassification.NewPass),
+            group.Rows.Count(r => r.Classification == ScoreEventClassification.Upscore),
+            group.Rows.Count,
             played.Take(TopChartsPerCard).ToArray(),
             Math.Max(0, played.Length - TopChartsPerCard),
             LevelSpan(played),
             headline,
-            session?.AccountTag);
+            SessionCards.Tags(StoredSessions(group, sessions)));
     }
 
     /// <summary>

@@ -66,16 +66,18 @@ public sealed class PlayersController : ApiV2ControllerBase
     private const int ChecksumTolerance = 1;
 
     /// <summary>
-    ///     <c>POST me/plays</c> — judged plays a tool observed for the caller, the one write on v2
+    ///     <c>POST me/plays</c> — plays a tool observed for the caller, the one write on v2
     ///     (docs/design/rise.md §6.3): built for the RISE capture app and open to any tool acting
-    ///     with a player's own token. Every play's score is recomputed from its five judgment counts
-    ///     and max combo, and a play that does not reconcile refuses the whole request — the
-    ///     checksum that keeps a misread screen out of a record. The award is derived from the same
-    ///     counts, and a claimed one has to agree. A play that reconciles goes through the ledger's
-    ///     best-attempt policy, so it becomes the record only where it beats it (a break only where
-    ///     the player seats breaks), and into the journal either way, dated by the play time the
-    ///     tool observed. The ledger gathers the plays into sittings by that play time and announces
-    ///     each sitting once, after 15 minutes with nothing arriving (docs/design/rise.md §12).
+    ///     with a player's own token. The judgments are optional. A play that carries them has its
+    ///     score recomputed from its five counts and max combo, and one that does not reconcile
+    ///     refuses the whole request — the checksum that keeps a misread screen out of a record; its
+    ///     award is derived from the same counts, and a claimed one has to agree. A play without
+    ///     them is taken as read, score and claimed award alike, as long as the two agree. A play
+    ///     that passes goes through the ledger's best-attempt policy, so it becomes the record only
+    ///     where it beats it (a break only where the player seats breaks), and into the journal
+    ///     either way, dated by the play time the tool observed. The ledger gathers the plays into
+    ///     sittings by that play time and announces each sitting once, after 15 minutes with nothing
+    ///     arriving (docs/design/rise.md §12).
     /// </summary>
     [HttpPost("me/plays")]
     [ProducesResponseType(typeof(RecordPlaysResultDto), StatusCodes.Status200OK, "application/json")]
@@ -112,7 +114,7 @@ public sealed class PlayersController : ApiV2ControllerBase
     }
 
     private sealed record ResolvedPlay(Chart Chart, ObservedPlayDto Play, PhoenixScore Score, PhoenixPlate? Award,
-        JudgementCounts Judgements);
+        JudgementCounts? Judgements);
 
     private ObjectResult? RequestProblem(RecordPlaysRequestDto body, MixEnum mix)
     {
@@ -133,9 +135,8 @@ public sealed class PlayersController : ApiV2ControllerBase
     {
         var chart = ResolveChart(charts, play);
         if (chart == null) return (null, NotFoundProblem($"Play {index}: no chart matches on {mix.GetName()}."));
-        if (play.Perfects < 0 || play.Greats < 0 || play.Goods < 0 || play.Bads < 0 || play.Misses < 0 ||
-            play.MaxCombo < 0)
-            return (null, Problem("judgments-invalid", $"Play {index}: judgment counts cannot be negative."));
+        var (judgements, judgementsProblem) = ReadJudgements(index, play);
+        if (judgementsProblem != null) return (null, judgementsProblem);
         if (!PhoenixScore.TryParse(play.Score, out var score))
             return (null, Problem("score-invalid", $"Play {index}: the score is not a Phoenix score."));
         // The play time is the journal's key and the record's date: an omitted one would file
@@ -143,50 +144,116 @@ public sealed class PlayersController : ApiV2ControllerBase
         if (play.PlayedAt == default || play.PlayedAt > now.AddMinutes(5))
             return (null, Problem("played-at-invalid", $"Play {index}: playedAt must be when the play happened.",
                 detail: "An omitted or future play time cannot be journaled."));
-        var screen = new ScoreScreen(play.Perfects, play.Greats, play.Goods, play.Bads, play.Misses, play.MaxCombo);
-        var expected = (int)screen.CalculatePhoenixScore;
-        if (screen.TotalCount == 0 || play.MaxCombo > screen.TotalCount ||
-            Math.Abs(expected - play.Score) > ChecksumTolerance)
-            return (null, Problem("judgments-do-not-reconcile", "The judgments do not produce the score.",
-                detail: $"Play {index}: {play.Perfects}/{play.Greats}/{play.Goods}/{play.Bads}/{play.Misses} " +
-                        $"with max combo {play.MaxCombo} scores {expected:N0}, not {play.Score:N0}."));
-        var (award, awardProblem) = ResolveAward(index, play, mix);
+        if (ScoreProblem(index, play, judgements) is { } scoreProblem) return (null, scoreProblem);
+        var (award, awardProblem) = ResolveAward(index, play, score, judgements, mix);
         if (awardProblem != null) return (null, awardProblem);
-        return (new ResolvedPlay(chart, play, score, award,
-            new JudgementCounts(play.Perfects, play.Greats, play.Goods, play.Bads, play.Misses, play.MaxCombo)), null);
+        return (new ResolvedPlay(chart, play, score, award, judgements), null);
     }
 
     /// <summary>
-    ///     The award is a function of the judgments (<see cref="PhoenixPlateHelperMethods.Tolerances" />
-    ///     is the rule), so it is derived here; a caller's claim only has to agree with it. A
-    ///     break carries none.
+    ///     The five counts and the max combo, read as one set: all six sent, or none of them for a
+    ///     play whose judgments were never read. Anything in between is refused rather than half-used.
     /// </summary>
-    private (PhoenixPlate? Award, ObjectResult? Problem) ResolveAward(int index, ObservedPlayDto play, MixEnum mix)
+    private (JudgementCounts? Judgements, ObjectResult? Problem) ReadJudgements(int index, ObservedPlayDto play)
     {
-        var awards = mix.AwardsOf();
-        var award = play.IsBroken ? null : DeriveAward(awards, play);
-        if (play.IsBroken || string.IsNullOrWhiteSpace(play.Award)) return (award, null);
+        var sent = new[] { play.Perfects, play.Greats, play.Goods, play.Bads, play.Misses, play.MaxCombo };
+        if (sent.Any(count => count < 0))
+            return (null, Problem("judgments-invalid", $"Play {index}: judgment counts cannot be negative."));
+        if (play is { Perfects: { } perfects, Greats: { } greats, Goods: { } goods, Bads: { } bads,
+                Misses: { } misses, MaxCombo: { } maxCombo })
+            return (new JudgementCounts(perfects, greats, goods, bads, misses, maxCombo), null);
+        if (sent.All(count => count == null)) return (null, null);
+        return (null, Problem("judgments-incomplete", "The judgments are all six numbers or none of them.",
+            detail: $"Play {index}: perfects, greats, goods, bads, misses and maxCombo are sent together " +
+                    "or left out together."));
+    }
 
-        var claimed = AwardSets.TryParseShorthand(play.Award, mix);
+    /// <summary>
+    ///     Judgments have to reproduce the score. Without them the score is taken as read, except
+    ///     that a pass never scores zero — which is what a score left out of the request reads as.
+    /// </summary>
+    private ObjectResult? ScoreProblem(int index, ObservedPlayDto play, JudgementCounts? judgements)
+    {
+        if (judgements is not { MaxCombo: { } maxCombo })
+            return !play.IsBroken && play.Score == 0
+                ? Problem("score-invalid", $"Play {index}: a pass without judgments scores above zero.")
+                : null;
+
+        var screen = new ScoreScreen(judgements.Perfects, judgements.Greats, judgements.Goods, judgements.Bads,
+            judgements.Misses, maxCombo);
+        // The formula scores a screen it cannot read as zero, so a zero would otherwise match it.
+        if (!screen.IsValid)
+            return Problem("judgments-do-not-reconcile", "The judgments do not produce the score.",
+                detail: $"Play {index}: {Breakdown(judgements)} with max combo {maxCombo} is not a play the " +
+                        "formula can score: the counts total 1 to 9,999 notes and the combo stays within them.");
+        var expected = (int)screen.CalculatePhoenixScore;
+        if (Math.Abs(expected - play.Score) <= ChecksumTolerance) return null;
+        return Problem("judgments-do-not-reconcile", "The judgments do not produce the score.",
+            detail: $"Play {index}: {Breakdown(judgements)} with max combo {maxCombo} scores {expected:N0}, " +
+                    $"not {play.Score:N0}.");
+    }
+
+    /// <summary>
+    ///     The award a play carries. With judgments it is derived from them
+    ///     (<see cref="PhoenixPlateHelperMethods.Tolerances" /> is the rule) and a caller's claim only
+    ///     has to agree; without them a claim stands unless the score contradicts it. A break carries
+    ///     none.
+    /// </summary>
+    private (PhoenixPlate? Award, ObjectResult? Problem) ResolveAward(int index, ObservedPlayDto play,
+        PhoenixScore score, JudgementCounts? judgements, MixEnum mix)
+    {
+        if (play.IsBroken) return (null, null);
+        var awards = mix.AwardsOf();
+        PhoenixPlate? claimed = null;
+        if (!string.IsNullOrWhiteSpace(play.Award))
+        {
+            claimed = AwardSets.TryParseShorthand(play.Award, mix);
+            if (claimed == null)
+                return (null, Problem("award-invalid", $"Play {index}: not an award {mix.GetName()} hands out.",
+                    detail: "Valid values: " + string.Join(", ", awards.Select(a => a.GetShorthand(mix)))));
+        }
+
+        if (judgements == null) return AwardFromScore(index, score, claimed, awards, mix);
+        var earned = DeriveAward(awards, judgements);
+        if (claimed == null || claimed == earned) return (earned, null);
+        return (null, Problem("award-does-not-reconcile", "The judgments do not earn the award.",
+            detail: $"Play {index}: {Breakdown(judgements)} earns " +
+                    $"{(earned == null ? "no award" : earned.Value.GetShorthand(mix))}, " +
+                    $"not {claimed.Value.GetShorthand(mix)}."));
+    }
+
+    /// <summary>
+    ///     A play without judgments keeps the award it was sent with, as long as the score agrees:
+    ///     only 1,000,000 is a Perfect Game, and a million sent with no award is one.
+    /// </summary>
+    private (PhoenixPlate? Award, ObjectResult? Problem) AwardFromScore(int index, PhoenixScore score,
+        PhoenixPlate? claimed, IReadOnlyList<PhoenixPlate> awards, MixEnum mix)
+    {
+        var isPerfect = score == PhoenixScore.Max;
         if (claimed == null)
-            return (null, Problem("award-invalid", $"Play {index}: not an award {mix.GetName()} hands out.",
-                detail: "Valid values: " + string.Join(", ", awards.Select(a => a.GetShorthand(mix)))));
-        if (claimed != award)
-            return (null, Problem("award-does-not-reconcile", "The judgments do not earn the award.",
-                detail: $"Play {index}: {play.Perfects}/{play.Greats}/{play.Goods}/{play.Bads}/{play.Misses} " +
-                        $"earns {(award == null ? "no award" : award.Value.GetShorthand(mix))}, " +
-                        $"not {claimed.Value.GetShorthand(mix)}."));
-        return (award, null);
+            return (isPerfect && awards.Contains(PhoenixPlate.PerfectGame) ? PhoenixPlate.PerfectGame : null, null);
+        var claimsPerfect = claimed == PhoenixPlate.PerfectGame;
+        if (claimsPerfect == isPerfect) return (claimed, null);
+        return (null, Problem("award-does-not-reconcile", "The score does not earn the award.",
+            detail: isPerfect
+                ? $"Play {index}: 1,000,000 is a Perfect Game, not {claimed.Value.GetShorthand(mix)}."
+                : $"Play {index}: {(int)score:N0} is not a Perfect Game; only 1,000,000 is."));
+    }
+
+    private static string Breakdown(JudgementCounts judgements)
+    {
+        return $"{judgements.Perfects}/{judgements.Greats}/{judgements.Goods}/{judgements.Bads}/{judgements.Misses}";
     }
 
     /// <summary>
     ///     The award a run earned on this mix: the strictest plate rule it satisfies that the mix
     ///     hands out. A plate mix falls through to Rough Game; a mark mix (Rise) to no mark.
     /// </summary>
-    private static PhoenixPlate? DeriveAward(IReadOnlyList<PhoenixPlate> awards, ObservedPlayDto play)
+    private static PhoenixPlate? DeriveAward(IReadOnlyList<PhoenixPlate> awards, JudgementCounts judgements)
     {
         foreach (var rule in PhoenixPlateHelperMethods.Tolerances)
-            if (awards.Contains(rule.Plate) && rule.Tolerates(play.Greats, play.Goods, play.Bads, play.Misses))
+            if (awards.Contains(rule.Plate) &&
+                rule.Tolerates(judgements.Greats, judgements.Goods, judgements.Bads, judgements.Misses))
                 return rule.Plate;
         return awards.Contains(PhoenixPlate.RoughGame) ? PhoenixPlate.RoughGame : null;
     }
@@ -610,7 +677,11 @@ public sealed class PlayersController : ApiV2ControllerBase
         });
     }
 
-    /// <summary>Import and play sessions, newest first.</summary>
+    /// <summary>
+    ///     Play sessions, newest first: a player's imports in one mix until eight hours pass without
+    ///     one, the grouping the site's Sessions page shows. Several imports in one night are one
+    ///     session, listing every one of them in <c>sessionIds</c>.
+    /// </summary>
     /// <param name="playerId">A player id from <c>/api/v2/players</c>, or <c>me</c> with a personal token.</param>
     /// <param name="mixValue">Required. An enum name from <c>/api/v2/mixes</c>.</param>
     /// <param name="cursor">The opaque cursor from a previous page's <c>next</c> link.</param>
@@ -641,19 +712,22 @@ public sealed class PlayersController : ApiV2ControllerBase
         // The session read pages across every mix, so this walks it until the requested mix has
         // filled the window. It used to take one 500-group slice and filter that, which put a
         // silent ceiling on a heavy player: the tail vanished and the reported total was the count
-        // within the slice rather than the real one.
+        // within the slice rather than the real one. The walk that replaced it still asked for 500
+        // and stepped by 500, while the read clamps a page to 50 — so it stopped after the newest
+        // 50 sessions all the same. It steps by what the read actually returns now.
         //
         // Total is null rather than wrong. Counting a player's sessions in one mix means walking
         // every page to the end, which is the second full pass the envelope documents null for.
+        const int readPage = GetRecentSessionsQuery.MaxPageSize;
         var wanted = offset + pageSize + 1;
         var filtered = new List<RecentSessionsPage.SessionGroup>();
         for (var page = 1; filtered.Count < wanted; page++)
         {
-            var batch = await _mediator.Send(new GetRecentSessionsQuery(userId, page, MaxLimit));
+            var batch = await _mediator.Send(new GetRecentSessionsQuery(userId, page, readPage));
             if (batch.Groups.Count == 0) break;
 
             filtered.AddRange(batch.Groups.Where(g => g.Mix == mix));
-            if (page * MaxLimit >= batch.TotalGroups) break;
+            if (page * readPage >= batch.TotalGroups) break;
         }
 
         var rows = filtered.Skip(offset).Take(pageSize).Select(g => new SessionDto(g)).ToArray();

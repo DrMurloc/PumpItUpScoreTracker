@@ -176,50 +176,94 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
         Guid userId, int page, int pageSize, DateTimeOffset? before, CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var rows = database.Set<ScoreEventJournalEntity>().Where(e => e.UserId == userId);
+        // The keys are small (one per stored session, one per pre-capture mix-day), so the whole
+        // history folds in memory BEFORE the page is cut: a session never straddles two pages, and
+        // only the paged sessions' rows are loaded.
+        var ordered = (await FoldedSessions(database, userId, cancellationToken))
+            .Where(s => before == null || s.End < before)
+            .OrderByDescending(s => s.End)
+            .ToArray();
+        var pageSessions = ordered.Skip((page - 1) * pageSize).Take(pageSize).ToArray();
+        if (pageSessions.Length == 0) return (ordered.Length, Array.Empty<JournalSessionRows>());
 
-        // Group keys are small (one per session / per pre-capture mix-day), so paging
-        // happens in memory over the keys and only the paged groups' rows are loaded.
-        // A session belongs to exactly one mix by construction (the batcher keys
-        // envelopes per (user, mix, source)).
+        return (ordered.Length, await Load(database, userId, pageSessions, cancellationToken));
+    }
+
+    public async Task<JournalSessionRows?> GetSessionGroupContaining(Guid userId, Guid sessionId,
+        CancellationToken cancellationToken)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // The whole history folds even for one lookup. Imports each within eight hours of the last
+        // can chain back any distance, so nothing short of every key says where this session starts.
+        var session = (await FoldedSessions(database, userId, cancellationToken))
+            .FirstOrDefault(s => s.SessionIds.Contains(sessionId));
+        return session == null ? null : (await Load(database, userId, new[] { session }, cancellationToken))[0];
+    }
+
+    private static async Task<IReadOnlyList<FoldedSession>> FoldedSessions(ChartAttemptDbContext database,
+        Guid userId, CancellationToken cancellationToken)
+    {
+        var rows = database.Set<ScoreEventJournalEntity>().Where(e => e.UserId == userId);
+        // A stored session belongs to exactly one mix by construction (the batcher keys envelopes
+        // per (user, mix, source), and every other writer opens one per mix).
         var sessionKeys = await rows.Where(e => e.SessionId != null)
             .GroupBy(e => e.SessionId)
-            .Select(g => new { SessionId = g.Key, MixId = g.Max(e => e.MixId), Latest = g.Max(e => e.OccurredAt) })
+            .Select(g => new
+            {
+                SessionId = g.Key, MixId = g.Max(e => e.MixId), Start = g.Min(e => e.OccurredAt),
+                End = g.Max(e => e.OccurredAt)
+            })
             .ToArrayAsync(cancellationToken);
         var dayKeys = await rows.Where(e => e.SessionId == null)
             .GroupBy(e => new { e.MixId, e.OccurredAt.Date })
-            .Select(g => new { g.Key.MixId, Day = g.Key.Date, Latest = g.Max(e => e.OccurredAt) })
+            .Select(g => new
+            {
+                g.Key.MixId, Day = g.Key.Date, Start = g.Min(e => e.OccurredAt), End = g.Max(e => e.OccurredAt)
+            })
             .ToArrayAsync(cancellationToken);
+        // When each import ran, by the wall clock: the ScoreSession row. Only a stored session that
+        // has one is grouped (D53). Every official import and score check opens one, as does the
+        // manual-entry envelope; a CSV upload, an API request and anything before the table shipped
+        // (2026-08-01) has none, and shows exactly as it always did.
+        var imported = await database.Set<ScoreSessionEntity>()
+            .Where(s => s.UserId == userId)
+            .Select(s => new { s.Id, s.StartedAt, s.LastActivityAt })
+            .ToDictionaryAsync(s => s.Id, s => new ImportWindow(s.StartedAt, s.LastActivityAt), cancellationToken);
 
-        var ordered = sessionKeys.Select(k => (k.SessionId, Day: (DateTime?)null, k.MixId, k.Latest))
-            .Concat(dayKeys.Select(k => (SessionId: (Guid?)null, Day: (DateTime?)k.Day, k.MixId, k.Latest)))
-            .Where(k => before == null || k.Latest < before)
-            .OrderByDescending(k => k.Latest)
-            .ToArray();
-        var pageKeys = ordered.Skip((page - 1) * pageSize).Take(pageSize).ToArray();
-        if (pageKeys.Length == 0) return (ordered.Length, Array.Empty<JournalSessionRows>());
+        return SessionFold.Fold(sessionKeys
+            .Select(k => new StoredSessionKey(k.SessionId, null, MixIds.ToEnum(k.MixId), k.Start, k.End,
+                imported.GetValueOrDefault(k.SessionId!.Value)))
+            .Concat(dayKeys.Select(k => new StoredSessionKey(null, DateOnly.FromDateTime(k.Day),
+                MixIds.ToEnum(k.MixId), k.Start, k.End))));
+    }
 
-        var sessionIds = pageKeys.Where(k => k.SessionId != null).Select(k => k.SessionId).ToArray();
+    /// <summary>Loads the rows of folded sessions: every stored session in them and every pre-capture day.</summary>
+    private static async Task<IReadOnlyList<JournalSessionRows>> Load(ChartAttemptDbContext database,
+        Guid userId, IReadOnlyList<FoldedSession> sessions, CancellationToken cancellationToken)
+    {
+        var sessionIds = sessions.SelectMany(s => s.SessionIds).Select(id => (Guid?)id).ToArray();
         // Day buckets load by date (a superset across mixes) and split per mix below.
-        var days = pageKeys.Where(k => k.Day != null).Select(k => k.Day!.Value).ToArray();
-        var pageRows = (await rows.Where(e =>
-                    (e.SessionId != null && sessionIds.Contains(e.SessionId)) ||
-                    (e.SessionId == null && days.Contains(e.OccurredAt.Date)))
+        var days = sessions.SelectMany(s => s.Days).Distinct()
+            .Select(d => d.ToDateTime(TimeOnly.MinValue))
+            .ToArray();
+        var rows = (await database.Set<ScoreEventJournalEntity>()
+                .Where(e => e.UserId == userId &&
+                            ((e.SessionId != null && sessionIds.Contains(e.SessionId)) ||
+                             (e.SessionId == null && days.Contains(e.OccurredAt.Date))))
                 .ToArrayAsync(cancellationToken))
             .Select(Map)
             .ToArray();
 
-        var groups = pageKeys.Select(k => new JournalSessionRows(
-                k.SessionId,
-                k.Day == null ? null : DateOnly.FromDateTime(k.Day.Value),
-                MixIds.ToEnum(k.MixId),
-                pageRows.Where(r => k.SessionId != null
-                        ? r.SessionId == k.SessionId
-                        : r.SessionId == null && r.OccurredAt.Date == k.Day!.Value
-                                              && MixIds.For(r.Mix) == k.MixId)
+        return sessions.Select(s => new JournalSessionRows(
+                s.SessionId,
+                s.SessionIds,
+                s.Day,
+                s.Mix,
+                rows.Where(r => r.SessionId != null
+                        ? s.SessionIds.Contains(r.SessionId.Value)
+                        : r.Mix == s.Mix && s.Days.Contains(DateOnly.FromDateTime(r.OccurredAt.Date)))
                     .ToArray()))
             .ToArray();
-        return (ordered.Length, groups);
     }
 
     public async Task<IReadOnlyList<ScoreJournalEntry>> GetChartHistories(Guid userId,
