@@ -52,15 +52,23 @@
     @* A Phoenix-scored mix with no site to pull from (Rise keeps its records inside the game):
        the spreadsheet IS the import, so the page is the upload and nothing else. The
        credential card and the console-script steps would ask for a site that does not exist —
-       ManualSiteHost throws on one. The same UploadFile path the expander uses, so a row reads
-       in the mix's own vocabulary (S16 / HDB23, PG / FC / NM) and keeps the better score. *@
+       ManualSiteHost throws on one. The same UploadFile path and steps the expander uses, so a
+       row reads in the mix's own vocabulary (S16 / HD23, PG / FC / NM) and the file is confirmed
+       and saved right here. *@
     <MudCard Class="mt-4">
         <MudCardHeader><h2>@L["Import Scores"]</h2></MudCardHeader>
         <MudCardContent>
             <MudText Typo="Typo.body2" Class="mb-3">@L["Spreadsheet Import Lede", _currentMix.GetName()]</MudText>
             <MudText Typo="Typo.caption" Class="d-block mb-4">@L["Spreadsheet Import Columns"]</MudText>
-            <MudButton HtmlTag="label" for="uploadInput" Color="Color.Primary" Variant="Variant.Filled"
-                       StartIcon="@Icons.Material.Filled.UploadFile" Disabled="_isImporting">@L["Upload CSV"]</MudButton>
+            @if (_csvStep == CsvStep.Idle)
+            {
+                <MudButton HtmlTag="label" for="uploadInput" Color="Color.Primary" Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.UploadFile" Disabled="_isImporting">@L["Upload CSV"]</MudButton>
+            }
+            else
+            {
+                @CsvProgress
+            }
         </MudCardContent>
     </MudCard>
     <InputFile id="uploadInput" OnChange="@UploadFile" hidden accept=".csv,.xlsx"/>
@@ -295,44 +303,99 @@
 <MudExpansionPanels Class="mt-4">
     <MudExpansionPanel Text="@L["Manual import — console script + CSV"]">
         <MudText Typo="Typo.caption" Class="d-block mb-3">@L["For re-importing older scores"]</MudText>
+        @if (_csvStep == CsvStep.Idle)
+        {
+            @* Page range comes first — the copied script embeds it, so copying before
+               picking pages would hand out a stale script. *@
+            <ol class="import-manual-steps">
+                <li>
+                    <MudText Typo="Typo.body2">@L["Import Manual Step 1"]</MudText>
+                    <MudGrid Spacing="2" Class="mt-0">
+                        <MudItem xs="6" sm="3">
+                            <MudNumericField T="int" Min="1" Label="@L["From page"]" @bind-Value="_startPage"></MudNumericField>
+                        </MudItem>
+                        <MudItem xs="6" sm="3">
+                            <MudNumericField T="int?" Min="1" Label="@L["To page"]" @bind-Value="_endPage" Clearable="true"></MudNumericField>
+                        </MudItem>
+                    </MudGrid>
+                </li>
+                <li>
+                    <MudText Typo="Typo.body2">@L["Import Manual Step 2"]</MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Class="mt-1"
+                               StartIcon="@Icons.Material.Filled.ContentCopy"
+                               OnClick="CopyPIUGameScript">@L["Copy Script"]</MudButton>
+                </li>
+                <li>
+                    <MudText Typo="Typo.body2">@L["Import Manual Step 3", ManualSiteHost]</MudText>
+                </li>
+                <li>
+                    <MudText Typo="Typo.body2">@L["Import Manual Step 4"]</MudText>
+                    <MudButton HtmlTag="label"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               Class="mt-1"
+                               StartIcon="@Icons.Material.Filled.UploadFile"
+                               for="uploadInput">@L["Upload CSV"]</MudButton>
+                </li>
+            </ol>
+        }
+        else
+        {
+            @CsvProgress
+        }
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+<PageDock>
+    <MudButton Class="dock-cta"
+               Disabled="@ImportDisabled"
+               StartIcon="@(_isImporting ? null : Icons.Material.Filled.ImportExport)"
+               OnClick="ImportScores">
+        @if (_isImporting)
+        {
+            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
+        }
+        @L["Import"]
+    </MudButton>
+</PageDock>
+<InputFile id="uploadInput" OnChange="@UploadFile" hidden accept=".csv,.xlsx"/>
+
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser;
+@inject IUiSettingsAccessor UiSettings;
+@inject BrokenScorePreference BrokenScores;
+@inject IMediator Mediator;
+@inject ISnackbar Snackbar;
+@inject IPhoenixScoreFileExtractor Extractor;
+@inject IJSRuntime JSRuntime;
+@inject ILogger<UploadPhoenixScores> Logger;
+@inject IImportCredentialClientStore ClientStore;
+@inject IDialogService DialogService;
+@inject IUiNotificationHub UiHub;
+@inject IOptions<PiuGameConfiguration> PiuGameSites;
+@code
+{
+    // The spreadsheet pipeline's own states — the password form is not a step, it is the page.
+    private enum CsvStep
+    {
+        Idle,
+        Uploading,
+        Confirming,
+        Saving,
+        Finished
+    }
+
+    private CsvStep _csvStep = CsvStep.Idle;
+
+    /// <summary>
+    ///     Every spreadsheet step after a file is picked: the parse, the confirm, the save and how
+    ///     it ended. The site-less card and the manual-import panel both render it beneath their
+    ///     own Idle step.
+    /// </summary>
+    private RenderFragment CsvProgress => @<text>
         @switch (_csvStep)
         {
-            case CsvStep.Idle:
-                @* Page range comes first — the copied script embeds it, so copying before
-                   picking pages would hand out a stale script. *@
-                <ol class="import-manual-steps">
-                    <li>
-                        <MudText Typo="Typo.body2">@L["Import Manual Step 1"]</MudText>
-                        <MudGrid Spacing="2" Class="mt-0">
-                            <MudItem xs="6" sm="3">
-                                <MudNumericField T="int" Min="1" Label="@L["From page"]" @bind-Value="_startPage"></MudNumericField>
-                            </MudItem>
-                            <MudItem xs="6" sm="3">
-                                <MudNumericField T="int?" Min="1" Label="@L["To page"]" @bind-Value="_endPage" Clearable="true"></MudNumericField>
-                            </MudItem>
-                        </MudGrid>
-                    </li>
-                    <li>
-                        <MudText Typo="Typo.body2">@L["Import Manual Step 2"]</MudText>
-                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Class="mt-1"
-                                   StartIcon="@Icons.Material.Filled.ContentCopy"
-                                   OnClick="CopyPIUGameScript">@L["Copy Script"]</MudButton>
-                    </li>
-                    <li>
-                        <MudText Typo="Typo.body2">@L["Import Manual Step 3", ManualSiteHost]</MudText>
-                    </li>
-                    <li>
-                        <MudText Typo="Typo.body2">@L["Import Manual Step 4"]</MudText>
-                        <MudButton HtmlTag="label"
-                                   Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   Size="Size.Small"
-                                   Class="mt-1"
-                                   StartIcon="@Icons.Material.Filled.UploadFile"
-                                   for="uploadInput">@L["Upload CSV"]</MudButton>
-                    </li>
-                </ol>
-                break;
             case CsvStep.Uploading:
                 <MudText Typo="Typo.body2" Class="mb-2">@L["Phoenix Import Uploading"]</MudText>
                 <MudProgressLinear Indeterminate="true" Color="Color.Primary" Size="Size.Large"></MudProgressLinear>
@@ -382,49 +445,8 @@
                 </div>
                 break;
         }
-    </MudExpansionPanel>
-</MudExpansionPanels>
+    </text>;
 
-<PageDock>
-    <MudButton Class="dock-cta"
-               Disabled="@ImportDisabled"
-               StartIcon="@(_isImporting ? null : Icons.Material.Filled.ImportExport)"
-               OnClick="ImportScores">
-        @if (_isImporting)
-        {
-            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
-        }
-        @L["Import"]
-    </MudButton>
-</PageDock>
-<InputFile id="uploadInput" OnChange="@UploadFile" hidden accept=".csv,.xlsx"/>
-
-@inject NavigationManager NavManager
-@inject ICurrentUserAccessor CurrentUser;
-@inject IUiSettingsAccessor UiSettings;
-@inject BrokenScorePreference BrokenScores;
-@inject IMediator Mediator;
-@inject ISnackbar Snackbar;
-@inject IPhoenixScoreFileExtractor Extractor;
-@inject IJSRuntime JSRuntime;
-@inject ILogger<UploadPhoenixScores> Logger;
-@inject IImportCredentialClientStore ClientStore;
-@inject IDialogService DialogService;
-@inject IUiNotificationHub UiHub;
-@inject IOptions<PiuGameConfiguration> PiuGameSites;
-@code
-{
-    // The spreadsheet pipeline's own states — the password form is not a step, it is the page.
-    private enum CsvStep
-    {
-        Idle,
-        Uploading,
-        Confirming,
-        Saving,
-        Finished
-    }
-
-    private CsvStep _csvStep = CsvStep.Idle;
     private MixEnum _currentMix = MixEnum.Phoenix;
     private int _maxSaving = 0;
     private int _currentSaved = 0;

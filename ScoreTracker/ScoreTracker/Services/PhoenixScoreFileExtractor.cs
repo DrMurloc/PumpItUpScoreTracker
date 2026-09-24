@@ -66,8 +66,12 @@ public sealed class PhoenixScoreFileExtractor : IPhoenixScoreFileExtractor
 
                 // A failed stage is awarded no plate, so a broken row needs none and keeps none.
                 // The award column reads in the mix's own vocabulary — the eight plate codes on a
-                // Phoenix mix, the three marks on Rise — and nothing the mix does not award.
-                PhoenixPlate? plate = isBroken
+                // Phoenix mix, the three marks on Rise — and nothing the mix does not award. A mix
+                // that hands out Rough Game plates every pass; under Rise's marks a clear with a
+                // miss earns none, so a blank cell there is a plain clear.
+                var unmarkedClear = string.IsNullOrWhiteSpace(record.Plate) &&
+                                    !mix.AwardsOf().Contains(PhoenixPlate.RoughGame);
+                PhoenixPlate? plate = isBroken || unmarkedClear
                     ? null
                     : AwardSets.TryParseShorthand(record.Plate, mix) ??
                       throw new ScoreFileParseException("Plate is invalid");
