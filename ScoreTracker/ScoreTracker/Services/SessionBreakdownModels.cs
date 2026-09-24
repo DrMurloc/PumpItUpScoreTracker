@@ -9,12 +9,14 @@ namespace ScoreTracker.Web.Services;
 
 /// <summary>
 ///     Everything the hero renders for one session, assembled once so the components stay
-///     dispatch-free. See docs/design/session-breakdown.md §2.
+///     dispatch-free. See docs/design/session-breakdown.md §2. A session can hold several stored
+///     sessions — five imports in an hour are one (§8) — and <see cref="Sessions" /> carries the
+///     rows of every one of them that has a <c>ScoreSession</c> row, oldest first.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record SessionBreakdown(
     RecentSessionsPage.SessionGroup Group,
-    ScoreSessionRecord? Session,
+    IReadOnlyList<ScoreSessionRecord> Sessions,
     IReadOnlyDictionary<Guid, Chart> Charts,
     IReadOnlyList<SessionScore> Scores,
     SessionCeremony Ceremony,
@@ -32,20 +34,41 @@ public sealed record SessionBreakdown(
     /// </summary>
     public bool CapturePending => CaptureWindowOpen && CapturedRows == 0;
     /// <summary>
-    ///     The import's game tag, when this session came from one. The wrong-card case is
-    ///     exactly when a player stares at a session thinking "these aren't my scores", so
-    ///     naming the account it pulled from is worth the row it takes.
+    ///     The game tags this session's imports pulled from. The wrong-card case is exactly when
+    ///     a player stares at a session thinking "these aren't my scores", so naming the account
+    ///     is worth the row it takes — and a second card in one night is that case, so every one
+    ///     is named.
     /// </summary>
-    public string? AccountTag => Session?.AccountTag;
+    public string? AccountTag => SessionCards.Tags(Sessions);
 
     public int PassCount => Group.Rows.Count(r => r.Classification == ScoreEventClassification.NewPass);
     public int UpscoreCount => Group.Rows.Count(r => r.Classification == ScoreEventClassification.Upscore);
 
     /// <summary>
-    ///     Denormalized off the session row where one exists, counted off the journal where it
-    ///     does not. Sessions predate the ScoreSession table by design, and the page keeps them.
+    ///     Every play the session holds (D56). Not the <c>ScoreSession</c> count: that is what each
+    ///     batch drain added — new passes and upscores, never the plays that moved nothing — so it
+    ///     printed passes + upscores under "Plays" on every session it existed for.
     /// </summary>
-    public int PlayCount => Session?.ScoreCount ?? Group.Rows.Count;
+    public int PlayCount => Group.Rows.Count;
+}
+
+/// <summary>Which cards a session's imports came from.</summary>
+public static class SessionCards
+{
+    /// <summary>
+    ///     Every distinct game tag, oldest import first, joined into the one "imported from" line;
+    ///     null when no import carried one.
+    /// </summary>
+    public static string? Tags(IEnumerable<ScoreSessionRecord> sessions)
+    {
+        var tags = sessions
+            .OrderBy(s => s.StartedAt)
+            .Select(s => s.AccountTag)
+            .OfType<string>()
+            .Distinct()
+            .ToArray();
+        return tags.Length == 0 ? null : string.Join(", ", tags);
+    }
 }
 
 /// <summary>One journal row with whatever capture learned about it.</summary>

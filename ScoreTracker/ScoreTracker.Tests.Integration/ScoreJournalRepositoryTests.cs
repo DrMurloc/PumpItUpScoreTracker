@@ -138,6 +138,178 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ImportsRunWithinEightHoursOfEachOtherPageAsOneSessionCarryingEveryId()
+    {
+        // The owner's case: an import per hour is one night, and a page of one session holds all
+        // of it — the fold runs before the page is cut, so a night never straddles two pages.
+        var userId = await _seed.SeedUserAsync();
+        var chartA = await _seed.SeedChartAsync();
+        var chartB = await _seed.SeedChartAsync();
+        var imports = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
+        var lastNight = Guid.NewGuid();
+        var repo = BuildRepository();
+        await repo.Append(Entry(userId, chartA, Now.AddHours(-2), 900000, imports[0], MixEnum.Phoenix2),
+            CancellationToken.None);
+        await repo.Append(Entry(userId, chartB, Now.AddHours(-1), 910000, imports[1], MixEnum.Phoenix2),
+            CancellationToken.None);
+        await repo.Append(Entry(userId, chartA, Now, 950000, imports[2], MixEnum.Phoenix2), CancellationToken.None);
+        await repo.Append(Entry(userId, chartB, Now.AddHours(-12), 880000, lastNight, MixEnum.Phoenix2),
+            CancellationToken.None);
+        await Imported(imports[0], userId, Now.AddHours(-2), MixEnum.Phoenix2);
+        await Imported(imports[1], userId, Now.AddHours(-1), MixEnum.Phoenix2);
+        await Imported(imports[2], userId, Now, MixEnum.Phoenix2);
+        // Ten hours without an import before the first of tonight's: a different session.
+        await Imported(lastNight, userId, Now.AddHours(-12), MixEnum.Phoenix2);
+
+        var (total, groups) = await repo.GetSessionGroups(userId, page: 1, pageSize: 1, before: null,
+            CancellationToken.None);
+
+        Assert.Equal(2, total);
+        var tonight = Assert.Single(groups);
+        Assert.Equal(imports[2], tonight.SessionId);
+        Assert.Equal(imports, tonight.SessionIds);
+        Assert.Equal(3, tonight.Rows.Count);
+
+        var (_, secondPage) = await repo.GetSessionGroups(userId, page: 2, pageSize: 1, before: null,
+            CancellationToken.None);
+        Assert.Equal(lastNight, Assert.Single(secondPage).SessionId);
+    }
+
+    [Fact]
+    public async Task AnImportCarryingAnOldDatedPlayPullsNoOtherNightIn()
+    {
+        // The bug check's shape: an import holding a stage break the site dated weeks back. Grouped
+        // by play time it spanned every night since; grouped by import time it is tonight, and the
+        // old play simply rides inside it, as it always did.
+        var userId = await _seed.SeedUserAsync();
+        var chartA = await _seed.SeedChartAsync();
+        var chartB = await _seed.SeedChartAsync();
+        var tonight = Guid.NewGuid();
+        var tenDaysAgo = Guid.NewGuid();
+        var repo = BuildRepository();
+        await repo.Append(Entry(userId, chartA, Now.AddDays(-27), 400000, tonight, isBroken: true),
+            CancellationToken.None);
+        await repo.Append(Entry(userId, chartB, Now, 950000, tonight), CancellationToken.None);
+        await repo.Append(Entry(userId, chartB, Now.AddDays(-10), 900000, tenDaysAgo), CancellationToken.None);
+        await Imported(tonight, userId, Now);
+        await Imported(tenDaysAgo, userId, Now.AddDays(-10));
+
+        var (total, groups) = await repo.GetSessionGroups(userId, page: 1, pageSize: 10, before: null,
+            CancellationToken.None);
+
+        Assert.Equal(2, total);
+        Assert.Equal(tonight, groups[0].SessionId);
+        Assert.Equal(2, groups[0].Rows.Count);
+        Assert.Equal(tenDaysAgo, groups[1].SessionId);
+    }
+
+    [Fact]
+    public async Task AStoredSessionWithNoImportTimeIsNeverGrouped()
+    {
+        // A CSV upload, an API request, anything from before the session table: no import time, so
+        // nothing to group by, and nothing is inferred from the plays' dates instead.
+        var userId = await _seed.SeedUserAsync();
+        var chartA = await _seed.SeedChartAsync();
+        var chartB = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        await repo.Append(Entry(userId, chartA, Now.AddMinutes(-30), 900000, Guid.NewGuid()),
+            CancellationToken.None);
+        await repo.Append(Entry(userId, chartB, Now, 910000, Guid.NewGuid()), CancellationToken.None);
+
+        var (total, groups) = await repo.GetSessionGroups(userId, page: 1, pageSize: 10, before: null,
+            CancellationToken.None);
+
+        Assert.Equal(2, total);
+        Assert.All(groups, g => Assert.Single(g.SessionIds));
+    }
+
+    [Fact]
+    public async Task APreCaptureDayNeverGroupsWithTheImportAfterIt()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chartA = await _seed.SeedChartAsync();
+        var chartB = await _seed.SeedChartAsync();
+        var session = Guid.NewGuid();
+        var repo = BuildRepository();
+        await repo.Append(Entry(userId, chartA, Now.AddHours(-3), 900000), CancellationToken.None);
+        await repo.Append(Entry(userId, chartB, Now, 910000, session), CancellationToken.None);
+        await Imported(session, userId, Now);
+
+        var (total, groups) = await repo.GetSessionGroups(userId, page: 1, pageSize: 10, before: null,
+            CancellationToken.None);
+
+        Assert.Equal(2, total);
+        Assert.Equal(session, groups[0].SessionId);
+        Assert.Null(groups[1].SessionId);
+        Assert.NotNull(groups[1].Day);
+    }
+
+    [Fact]
+    public async Task TheBeforeFilterTestsASessionsLastPlay()
+    {
+        // A night that crossed midnight ended after it, so "before midnight" leaves the whole night
+        // out rather than the half of it that happened to be earlier.
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var midnight = new DateTimeOffset(2026, 4, 30, 0, 0, 0, TimeSpan.Zero);
+        var beforeMidnight = Guid.NewGuid();
+        var afterMidnight = Guid.NewGuid();
+        var repo = BuildRepository();
+        await repo.Append(Entry(userId, chart, midnight.AddHours(-1), 900000, beforeMidnight),
+            CancellationToken.None);
+        await repo.Append(Entry(userId, chart, midnight.AddHours(1), 910000, afterMidnight),
+            CancellationToken.None);
+        await Imported(beforeMidnight, userId, midnight.AddHours(-1));
+        await Imported(afterMidnight, userId, midnight.AddHours(1));
+
+        var (total, groups) = await repo.GetSessionGroups(userId, page: 1, pageSize: 10, before: midnight,
+            CancellationToken.None);
+
+        Assert.Equal(0, total);
+        Assert.Empty(groups);
+    }
+
+    [Fact]
+    public async Task AnyStoredIdFindsItsSessionFromAnywhereInTheHistory()
+    {
+        // A Discord card from last week links an import a dozen sessions back; the lookup finds the
+        // night holding it without paging to it.
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        var oldNight = new[] { Guid.NewGuid(), Guid.NewGuid() };
+        var oldStart = Now.AddDays(-20);
+        await repo.Append(Entry(userId, chart, oldStart, 880000, oldNight[0]), CancellationToken.None);
+        await repo.Append(Entry(userId, chart, oldStart.AddMinutes(45), 890000, oldNight[1]),
+            CancellationToken.None);
+        await Imported(oldNight[0], userId, oldStart);
+        await Imported(oldNight[1], userId, oldStart.AddMinutes(45));
+        for (var day = 1; day <= 12; day++)
+        {
+            var later = Guid.NewGuid();
+            await repo.Append(Entry(userId, chart, oldStart.AddDays(day), 890000 + day * 1000, later),
+                CancellationToken.None);
+            await Imported(later, userId, oldStart.AddDays(day));
+        }
+
+        var found = await repo.GetSessionGroupContaining(userId, oldNight[0], CancellationToken.None);
+        var missing = await repo.GetSessionGroupContaining(userId, Guid.NewGuid(), CancellationToken.None);
+
+        Assert.NotNull(found);
+        Assert.Equal(oldNight[1], found!.SessionId);
+        Assert.Equal(oldNight, found.SessionIds);
+        Assert.Equal(2, found.Rows.Count);
+        Assert.Null(missing);
+    }
+
+    /// <summary>The session row an import opens: when it ran, by the wall clock.</summary>
+    private Task Imported(Guid sessionId, Guid userId, DateTimeOffset startedAt, MixEnum mix = MixEnum.Phoenix)
+    {
+        return new EFScoreSessionRepository(_fixture.DbContextFactory).Open(sessionId, userId, mix,
+            ScoreJournalEntry.OfficialImportSource, null, null, startedAt, CancellationToken.None);
+    }
+
+    [Fact]
     public async Task ReimportingTheSameWindowLeavesOneRowPerPlay()
     {
         // A journal row is one play, keyed by the site's stamped play time. The import

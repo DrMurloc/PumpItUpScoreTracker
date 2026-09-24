@@ -9,14 +9,16 @@ using ScoreTracker.SharedKernel.Enums;
 namespace ScoreTracker.ScoreLedger.Application;
 
 /// <summary>
-///     The Sessions page's journal read: pages session groups and classifies every row
-///     against the chart's prior journal state <em>in the same mix</em>. The journal is
-///     complete back to the 2026-06 backfill, so "no prior row" genuinely means a first
-///     entry. Mix scoping matters because Phoenix and Phoenix 2 share chart ids (a
-///     returning song is one ChartId in both), so a first-ever Phoenix 2 play must read as
-///     a New Pass, not an Upscore/Clear over the player's Phoenix 1 best.
+///     The Sessions page's journal read: pages sessions (stored sessions folded on the eight-hour
+///     rule, docs/design/session-breakdown.md §8) and classifies every row against the chart's
+///     prior journal state <em>in the same mix</em>. The journal is complete back to the 2026-06
+///     backfill, so "no prior row" genuinely means a first entry. Mix scoping matters because
+///     Phoenix and Phoenix 2 share chart ids (a returning song is one ChartId in both), so a
+///     first-ever Phoenix 2 play must read as a New Pass, not an Upscore/Clear over the player's
+///     Phoenix 1 best.
 /// </summary>
-internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuery, RecentSessionsPage>
+internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuery, RecentSessionsPage>,
+    IRequestHandler<GetSessionContainingQuery, RecentSessionsPage.SessionGroup?>
 {
     private readonly IScoreJournalRepository _journal;
     private readonly IUserReader _users;
@@ -35,17 +37,43 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
     public async Task<RecentSessionsPage> Handle(GetRecentSessionsQuery request,
         CancellationToken cancellationToken)
     {
-        // Defense in depth behind the page's redirect: non-public players read as empty
-        // to everyone but themselves.
-        var user = await _users.GetUser(request.UserId, cancellationToken);
-        var isOwner = _currentUser.IsLoggedIn && _currentUser.User.Id == request.UserId;
-        if (user is not { IsPublic: true } && !isOwner)
+        if (!await CanRead(request.UserId, cancellationToken))
             return new RecentSessionsPage(0, Array.Empty<RecentSessionsPage.SessionGroup>());
 
         var (total, groups) = await _journal.GetSessionGroups(request.UserId,
-            Math.Max(1, request.Page), Math.Clamp(request.PageSize, 1, 50), request.Before, cancellationToken);
+            Math.Max(1, request.Page), Math.Clamp(request.PageSize, 1, GetRecentSessionsQuery.MaxPageSize),
+            request.Before, cancellationToken);
+        return new RecentSessionsPage(total, await ClassifyGroups(request.UserId, groups, cancellationToken));
+    }
+
+    public async Task<RecentSessionsPage.SessionGroup?> Handle(GetSessionContainingQuery request,
+        CancellationToken cancellationToken)
+    {
+        if (!await CanRead(request.UserId, cancellationToken)) return null;
+
+        var group = await _journal.GetSessionGroupContaining(request.UserId, request.SessionId,
+            cancellationToken);
+        return group == null
+            ? null
+            : (await ClassifyGroups(request.UserId, new[] { group }, cancellationToken)).FirstOrDefault();
+    }
+
+    /// <summary>
+    ///     Defense in depth behind the page's redirect: a non-public player's sessions read as
+    ///     nothing to everyone but themselves.
+    /// </summary>
+    private async Task<bool> CanRead(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await _users.GetUser(userId, cancellationToken);
+        var isOwner = _currentUser.IsLoggedIn && _currentUser.User.Id == userId;
+        return user is { IsPublic: true } || isOwner;
+    }
+
+    private async Task<IReadOnlyList<RecentSessionsPage.SessionGroup>> ClassifyGroups(Guid userId,
+        IReadOnlyList<JournalSessionRows> groups, CancellationToken cancellationToken)
+    {
         var chartIds = groups.SelectMany(g => g.Rows).Select(r => r.ChartId).Distinct().ToArray();
-        var histories = (await _journal.GetChartHistories(request.UserId, chartIds,
+        var histories = (await _journal.GetChartHistories(userId, chartIds,
                 cancellationToken))
             .GroupBy(r => r.ChartId)
             .ToDictionary(g => g.Key, g => g.OrderBy(r => r.OccurredAt).ToArray());
@@ -57,13 +85,16 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
         var anyNewPass = groups.Any(g => g.Rows.Any(r => !r.IsBroken
             && Classify(r, History(histories, r)).Classification == ScoreEventClassification.NewPass));
         var xxCleared = anyNewPass
-            ? (await _scores.GetBestXXAttempts(request.UserId, cancellationToken))
+            ? (await _scores.GetBestXXAttempts(userId, cancellationToken))
                 .Where(a => a.BestAttempt is { IsBroken: false })
                 .Select(a => a.Chart.Id).ToHashSet()
             : new HashSet<Guid>();
 
-        return new RecentSessionsPage(total, groups.Select(g => new RecentSessionsPage.SessionGroup(
+        // The keys and the rows are two reads, so an undo landing between them can leave a session
+        // with nothing in it. It is gone; drop it rather than take the page down asking its span.
+        return groups.Where(g => g.Rows.Count > 0).Select(g => new RecentSessionsPage.SessionGroup(
                 g.SessionId,
+                g.SessionIds,
                 g.Day,
                 g.Mix,
                 DominantSource(g.Rows),
@@ -72,7 +103,7 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
                 g.Rows.OrderByDescending(r => r.OccurredAt)
                     .Select(r => Classify(r, History(histories, r), xxCleared))
                     .ToArray()))
-            .ToArray());
+            .ToArray();
     }
 
     private static ScoreJournalEntry[] History(IReadOnlyDictionary<Guid, ScoreJournalEntry[]> histories,
