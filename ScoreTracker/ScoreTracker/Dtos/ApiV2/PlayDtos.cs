@@ -39,3 +39,9 @@ public sealed record ObservedPlayDto(
 
 /// <summary>What the write did: how many plays were recorded, on which mix.</summary>
 public sealed record RecordPlaysResultDto(int Recorded, string Mix, string ScoringModel);
+
+/// <summary>
+///     The body of <c>POST api/v2/players/me/sittings/close</c> (docs/design/rise.md D25): the mix whose
+///     open sittings end now. Required, as the mix is on the plays write.
+/// </summary>
+public sealed record CloseSittingsRequestDto(string? Mix);

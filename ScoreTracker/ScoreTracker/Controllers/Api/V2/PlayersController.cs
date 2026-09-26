@@ -66,7 +66,7 @@ public sealed class PlayersController : ApiV2ControllerBase
     private const int ChecksumTolerance = 1;
 
     /// <summary>
-    ///     <c>POST me/plays</c> — plays a tool observed for the caller, the one write on v2
+    ///     <c>POST me/plays</c> — plays a tool observed for the caller, the first write on v2
     ///     (docs/design/rise.md §6.3): built for the RISE capture app and open to any tool acting
     ///     with a player's own token. The judgments are optional. A play that carries them has its
     ///     score recomputed from its five counts and max combo, and one that does not reconcile
@@ -76,8 +76,9 @@ public sealed class PlayersController : ApiV2ControllerBase
     ///     that passes goes through the ledger's best-attempt policy, so it becomes the record only
     ///     where it beats it (a break only where the player seats breaks), and into the journal
     ///     either way, dated by the play time the tool observed. The ledger gathers the plays into
-    ///     sittings by that play time and announces each sitting once, after 15 minutes with nothing
-    ///     arriving (docs/design/rise.md §12).
+    ///     sittings by that play time and announces each sitting once: when the tool closes it
+    ///     (<c>POST me/sittings/close</c>), or after the mix's quiet window passes with nothing
+    ///     arriving — 15 minutes, and 4 hours on RISE (docs/design/rise.md §12, D25).
     /// </summary>
     [HttpPost("me/plays")]
     [ProducesResponseType(typeof(RecordPlaysResultDto), StatusCodes.Status200OK, "application/json")]
@@ -113,14 +114,43 @@ public sealed class PlayersController : ApiV2ControllerBase
         return Ok(new RecordPlaysResultDto(resolved.Count, mix.ToString(), ScoringModelOf(mix)));
     }
 
+    /// <summary>
+    ///     <c>POST me/sittings/close</c> — the caller's tool says their session is over: every sitting
+    ///     they still have open on the mix closes now and is announced the way a sitting that went
+    ///     quiet is — the Discord session card, highlights, folder lamps — and the next play on the mix
+    ///     starts a new sitting (docs/design/rise.md D25). Built so the RISE capture app decides when a
+    ///     session ends; a sitting nobody closes waits out the mix's quiet window, which on RISE is the
+    ///     4-hour fallback for an app that crashed or reset before it could. Answers 204 whether or not
+    ///     anything was open, so a tool can repeat a close whose answer it never saw.
+    /// </summary>
+    [HttpPost("me/sittings/close")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CloseSittings([FromBody] CloseSittingsRequestDto? body)
+    {
+        if (User.ToolId() is not null)
+            return Problem("tool-has-no-self", "A tool has no 'me'.",
+                detail: "Sittings are closed with the player's own token.");
+        if (body is null) return Problem("body-required", "A request body is required.");
+        if (!V2MixParser.TryParse(body.Mix, out var mix)) return MixRequiredProblem();
+        if (mix.UsesLegacyScoring()) return LegacyMixProblem(mix);
+
+        await _mediator.Send(new CloseOpenSittingsCommand(_currentUser.User.Id, mix));
+        return NoContent();
+    }
+
+    private ObjectResult LegacyMixProblem(MixEnum mix)
+    {
+        return Problem("legacy-mix", "This mix is not Phoenix-scored.",
+            detail: $"{mix.GetName()} keeps a letter grade, not five judgments and a 1,000,000-point score.");
+    }
+
     private sealed record ResolvedPlay(Chart Chart, ObservedPlayDto Play, PhoenixScore Score, PhoenixPlate? Award,
         JudgementCounts? Judgements);
 
     private ObjectResult? RequestProblem(RecordPlaysRequestDto body, MixEnum mix)
     {
-        if (mix.UsesLegacyScoring())
-            return Problem("legacy-mix", "This mix is not Phoenix-scored.",
-                detail: $"{mix.GetName()} keeps a letter grade, not five judgments and a 1,000,000-point score.");
+        if (mix.UsesLegacyScoring()) return LegacyMixProblem(mix);
         if (string.IsNullOrWhiteSpace(body.Source) || body.Source.Length > MaxSourceLength ||
             !body.Source.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '_' or '-'))
             return Problem("source-required", "The source names the tool that observed the plays.",
