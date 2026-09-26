@@ -115,25 +115,40 @@ public sealed class V2ConventionTests
     }
 
     /// <summary>
-    ///     Every v2 action tells Swagger what a 200 looks like. Without the declaration the docs
-    ///     page shows a bare "200 Success" with no schema — which is what the whole v2 surface
-    ///     showed until 2026-09-05 — and a maker learns the shape by calling. Additive: a new
-    ///     action fails here until it declares its type.
+    ///     Every v2 action tells Swagger what its success looks like: a 200 and its type, or a 204
+    ///     for a write with nothing to say back (closing a sitting, docs/design/rise.md D25). Without
+    ///     the declaration the docs page shows a bare "200 Success" with no schema — which is what the
+    ///     whole v2 surface showed until 2026-09-05 — and a maker learns the shape by calling.
+    ///     Additive: a new action fails here until it declares one.
     /// </summary>
     [Fact]
     public void EveryV2ActionDeclaresItsSuccessShape()
     {
-        var offenders = typeof(ApiV2ControllerBase).Assembly.GetTypes()
-            .Where(t => !t.IsAbstract && typeof(ApiV2ControllerBase).IsAssignableFrom(t))
-            .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-                .Where(m => m.GetCustomAttributes<HttpMethodAttribute>().Any()))
-            .Where(m => !m.GetCustomAttributes<ProducesResponseTypeAttribute>()
+        var offenders = V2Actions()
+            .Where(m => !DeclaresNoContent(m) && !m.GetCustomAttributes<ProducesResponseTypeAttribute>()
                 .Any(a => a.StatusCode == StatusCodes.Status200OK && a.Type != typeof(void)))
             .Select(m => $"{m.DeclaringType!.Name}.{m.Name}")
             .OrderBy(x => x)
             .ToArray();
 
         Assert.Empty(offenders);
+    }
+
+    private static IEnumerable<MethodInfo> V2Actions()
+    {
+        return typeof(ApiV2ControllerBase).Assembly.GetTypes()
+            .Where(t => !t.IsAbstract && typeof(ApiV2ControllerBase).IsAssignableFrom(t))
+            .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                .Where(m => m.GetCustomAttributes<HttpMethodAttribute>().Any()));
+    }
+
+    // A 204 has no body, so there is no type to declare and no content type to name — and an action
+    // that answers one declares no 200 beside it.
+    private static bool DeclaresNoContent(MethodInfo action)
+    {
+        var declared = action.GetCustomAttributes<ProducesResponseTypeAttribute>().ToArray();
+        return declared.Any(a => a.StatusCode == StatusCodes.Status204NoContent)
+               && declared.All(a => a.StatusCode != StatusCodes.Status200OK);
     }
 
     /// <summary>
@@ -162,9 +177,8 @@ public sealed class V2ConventionTests
             .ToArray();
         Assert.Empty(filters);
 
-        var untyped = controllers.Where(t => !t.IsAbstract)
-            .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-                .Where(m => m.GetCustomAttributes<HttpMethodAttribute>().Any()))
+        var untyped = V2Actions()
+            .Where(m => !DeclaresNoContent(m))
             .Where(m => !m.GetCustomAttributes<ProducesResponseTypeAttribute>()
                 .Where(a => a.StatusCode == StatusCodes.Status200OK)
                 .Any(a =>
