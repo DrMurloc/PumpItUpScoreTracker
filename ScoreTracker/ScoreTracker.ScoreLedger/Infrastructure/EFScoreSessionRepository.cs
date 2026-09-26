@@ -161,12 +161,14 @@ internal sealed class EFScoreSessionRepository : IScoreSessionRepository
             .MaxAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<ScoreSessionRecord>> ListOverdueSittings(DateTimeOffset quietSince, int take,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ScoreSessionRecord>> ListOverdueSittings(IReadOnlyCollection<MixEnum> mixes,
+        DateTimeOffset quietSince, int take, CancellationToken cancellationToken = default)
     {
+        var mixIds = mixes.Select(MixIds.For).ToArray();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return (await database.Set<ScoreSessionEntity>()
-                .Where(s => s.ProcessedAt == null && s.NewCount == 0 && s.UpscoreCount == 0
+                .Where(s => mixIds.Contains(s.MixId)
+                            && s.ProcessedAt == null && s.NewCount == 0 && s.UpscoreCount == 0
                             && s.Source.StartsWith(ScoreJournalEntry.PlaysApiSourcePrefix)
                             && s.LastActivityAt <= quietSince)
                 .OrderBy(s => s.LastActivityAt)

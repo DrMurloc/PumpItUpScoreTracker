@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -88,7 +89,7 @@ public sealed class SittingSagaTests
             c.SessionId == opened && c.Plays.Single() == play), It.IsAny<CancellationToken>()), Times.Once);
         _sessions.Verify(s => s.TouchArrival(opened, Now, It.IsAny<CancellationToken>()), Times.Once);
         _scheduler.Verify(s => s.SchedulePublish(
-            Now.UtcDateTime + ScoreBatchPolicy.SittingQuietWindow + ScoreBatchPolicy.DrainBuffer,
+            Now.UtcDateTime + ScoreBatchPolicy.SittingQuietWindow(MixEnum.Rise) + ScoreBatchPolicy.DrainBuffer,
             It.Is<SittingSaga.CloseSittingCommand>(c => c.SessionId == opened && c.UserId == UserId),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -97,8 +98,8 @@ public sealed class SittingSagaTests
     public async Task APlayWithinTheGapJoinsTheOpenSitting()
     {
         var open = Guid.NewGuid();
-        _sessions.Setup(s => s.GetOpenSittings(UserId, MixEnum.Rise, Now - ScoreBatchPolicy.SittingQuietWindow,
-                It.IsAny<CancellationToken>()))
+        _sessions.Setup(s => s.GetOpenSittings(UserId, MixEnum.Rise,
+                Now - ScoreBatchPolicy.SittingQuietWindow(MixEnum.Rise), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { new OpenSitting(open, Now.AddMinutes(-40), Now.AddMinutes(-4)) });
 
         await Saga().Handle(Record(false, Play(Now.AddMinutes(-1))), CancellationToken.None);
@@ -128,7 +129,7 @@ public sealed class SittingSagaTests
     {
         var id = Guid.NewGuid();
         _sessions.Setup(s => s.Get(id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Sitting(id, ScoreBatchPolicy.SittingQuietWindow));
+            .ReturnsAsync(Sitting(id, ScoreBatchPolicy.SittingQuietWindow(MixEnum.Rise)));
         _sessions.Setup(s => s.GetLastPlayedAt(UserId, id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Now.AddMinutes(-16));
 
@@ -144,7 +145,7 @@ public sealed class SittingSagaTests
     {
         var id = Guid.NewGuid();
         _sessions.Setup(s => s.Get(id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Sitting(id, ScoreBatchPolicy.SittingQuietWindow));
+            .ReturnsAsync(Sitting(id, ScoreBatchPolicy.SittingQuietWindow(MixEnum.Rise)));
         _sessions.Setup(s => s.GetLastPlayedAt(UserId, id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Now.AddDays(-2));
 
@@ -189,8 +190,12 @@ public sealed class SittingSagaTests
     {
         var first = Guid.NewGuid();
         var second = Guid.NewGuid();
-        _sessions.Setup(s => s.ListOverdueSittings(Now - ScoreBatchPolicy.SittingOverdueAfter, 25,
-                It.IsAny<CancellationToken>()))
+        _sessions.Setup(s => s.ListOverdueSittings(It.IsAny<IReadOnlyCollection<MixEnum>>(),
+                It.IsAny<DateTimeOffset>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ScoreSessionRecord>());
+        _sessions.Setup(s => s.ListOverdueSittings(
+                It.Is<IReadOnlyCollection<MixEnum>>(m => m.Contains(MixEnum.Rise)),
+                Now - ScoreBatchPolicy.SittingOverdueAfter(MixEnum.Rise), 25, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Sitting(first, TimeSpan.FromHours(2)), Sitting(second, TimeSpan.FromHours(1)) });
         _sessions.Setup(s => s.Get(first, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Sitting(first, TimeSpan.FromHours(2)));
@@ -203,5 +208,22 @@ public sealed class SittingSagaTests
             It.IsAny<CancellationToken>()), Times.Once);
         _mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == second),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TheSweepAsksAboutEveryPhoenixScoredMixAndNoOther()
+    {
+        _sessions.Setup(s => s.ListOverdueSittings(It.IsAny<IReadOnlyCollection<MixEnum>>(),
+                It.IsAny<DateTimeOffset>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ScoreSessionRecord>());
+
+        await Saga().Consume(ContextOf(new OverdueScoreBatchesFlushedEvent(Now)));
+
+        var asked = _sessions.Invocations
+            .Where(i => i.Method.Name == nameof(IScoreSessionRepository.ListOverdueSittings))
+            .SelectMany(i => (IReadOnlyCollection<MixEnum>)i.Arguments[0])
+            .ToArray();
+        Assert.Equal(Enum.GetValues<MixEnum>().Where(m => !m.UsesLegacyScoring()).OrderBy(m => m),
+            asked.OrderBy(m => m));
     }
 }

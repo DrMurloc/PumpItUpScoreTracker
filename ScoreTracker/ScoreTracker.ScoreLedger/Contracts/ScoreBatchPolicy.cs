@@ -1,3 +1,5 @@
+using ScoreTracker.SharedKernel.Enums;
+
 namespace ScoreTracker.ScoreLedger.Contracts;
 
 /// <summary>
@@ -62,19 +64,30 @@ public static class ScoreBatchPolicy
     /// </summary>
     public static readonly TimeSpan StaleAfter = TimeSpan.FromMinutes(30);
 
-    /// <summary>
-    ///     The gap that ends a sitting — the plays the plays endpoint records. A play joins the open
-    ///     sitting when it was played within this of the sitting's plays, and a sitting closes and
-    ///     announces itself once this long passes with no play arriving (docs/design/rise.md §12).
-    /// </summary>
-    public static readonly TimeSpan SittingQuietWindow = TimeSpan.FromMinutes(15);
+    // The sweep job's own cadence (docs/SCHEDULED-JOBS.md, flush-overdue-score-batches).
+    private static readonly TimeSpan SweepTick = TimeSpan.FromMinutes(5);
 
     /// <summary>
-    ///     How long past its last arrival an unannounced sitting waits before the sweep closes it: the
-    ///     quiet window plus the sweep's own five-minute tick, so the scheduled close normally gets
-    ///     there first and the sweep only catches one that was lost.
+    ///     The gap that ends a sitting on this mix — the plays the plays endpoint records. A play joins
+    ///     an open sitting when it was played within this of the sitting's plays, and a sitting closes
+    ///     and announces itself once this long passes with no play arriving (docs/design/rise.md §12).
+    ///     The mix's profile holds it (<see cref="MixProfile.SittingWindow" />), so a mix whose players
+    ///     sit longer says so there rather than in a check here.
     /// </summary>
-    public static readonly TimeSpan SittingOverdueAfter = SittingQuietWindow + TimeSpan.FromMinutes(5);
+    public static TimeSpan SittingQuietWindow(MixEnum mix)
+    {
+        return MixProfiles.For(mix).SittingWindow;
+    }
+
+    /// <summary>
+    ///     How long past its last arrival an unannounced sitting on this mix waits before the sweep
+    ///     closes it: the mix's quiet window plus the sweep's own five-minute tick, so the scheduled
+    ///     close normally gets there first and the sweep only catches one that was lost.
+    /// </summary>
+    public static TimeSpan SittingOverdueAfter(MixEnum mix)
+    {
+        return SittingQuietWindow(mix) + SweepTick;
+    }
 
     /// <summary>
     ///     A sitting whose last play is older than this when it closes — a backlog a tool sent late —
