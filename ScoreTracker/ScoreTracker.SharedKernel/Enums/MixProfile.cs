@@ -115,6 +115,11 @@ public static class MixProfiles
     // though the plays endpoint never takes one.
     private static readonly TimeSpan QuarterHourSitting = TimeSpan.FromMinutes(15);
 
+    // RISE is played at a desk, breaks and all, and the capture app says when a session is over by
+    // closing its sitting. These 4 hours are only the fallback for an app that crashed or reset before
+    // it could (docs/design/rise.md D25).
+    private static readonly TimeSpan RiseSitting = TimeSpan.FromHours(4);
+
     private static readonly MixProfile Legacy = new(
         ScoringModel.Legacy, GradeLadder.Phoenix1, AwardSet.None, OfficialSite: null, Platform.Pad,
         HasLifebarModel: false, EveryLegacyType, MixArt.Flat, MixFeatures.None, QuarterHourSitting);
@@ -148,13 +153,13 @@ public static class MixProfiles
         all[MixEnum.Rise] = new MixProfile(
             ScoringModel.Phoenix, GradeLadder.Rise, AwardSet.RiseMarks, OfficialSite: null, Platform.Keyboard,
             HasLifebarModel: false, new[] { ChartType.Single, ChartType.HalfDouble },
-            new MixArt("Phoenix2", "Rise", HasHalfDoubleBubble: true), MixFeatures.None, QuarterHourSitting);
+            new MixArt("Phoenix2", "Rise", HasHalfDoubleBubble: true), MixFeatures.None, RiseSitting);
         // The Arcade Station plays the Phoenix 2 charts as-is — Phoenix 2 grades, plates and art —
         // on the same keyboard.
         all[MixEnum.RiseArcade] = new MixProfile(
             ScoringModel.Phoenix, GradeLadder.Phoenix2, AwardSet.PhoenixPlates, OfficialSite: null,
             Platform.Keyboard, HasLifebarModel: false, new[] { ChartType.Single, ChartType.Double },
-            new MixArt("Phoenix2", null, HasHalfDoubleBubble: true), MixFeatures.None, QuarterHourSitting);
+            new MixArt("Phoenix2", null, HasHalfDoubleBubble: true), MixFeatures.None, RiseSitting);
         return all;
     }
 }

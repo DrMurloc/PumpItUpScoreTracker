@@ -52,10 +52,15 @@ public sealed class SittingSagaTests
         return new RecordSittingPlaysCommand(UserId, MixEnum.Rise, Source, plays, recordBrokenAsBest);
     }
 
-    private static ScoreSessionRecord Sitting(Guid id, TimeSpan quietFor, int newCount = 0,
-        DateTimeOffset? processedAt = null)
+    private static RecordSittingPlaysCommand RecordOn(MixEnum mix, params RecordObservedPlaysCommand.ObservedPlay[] plays)
     {
-        return new ScoreSessionRecord(id, UserId, MixEnum.Rise, Source, null, null, Now.AddHours(-1),
+        return new RecordSittingPlaysCommand(UserId, mix, Source, plays, false);
+    }
+
+    private static ScoreSessionRecord Sitting(Guid id, TimeSpan quietFor, int newCount = 0,
+        DateTimeOffset? processedAt = null, MixEnum mix = MixEnum.Rise)
+    {
+        return new ScoreSessionRecord(id, UserId, mix, Source, null, null, Now.AddHours(-1),
             Now - quietFor, newCount, newCount, 0, processedAt);
     }
 
@@ -196,11 +201,11 @@ public sealed class SittingSagaTests
         _sessions.Setup(s => s.ListOverdueSittings(
                 It.Is<IReadOnlyCollection<MixEnum>>(m => m.Contains(MixEnum.Rise)),
                 Now - ScoreBatchPolicy.SittingOverdueAfter(MixEnum.Rise), 25, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { Sitting(first, TimeSpan.FromHours(2)), Sitting(second, TimeSpan.FromHours(1)) });
+            .ReturnsAsync(new[] { Sitting(first, TimeSpan.FromHours(6)), Sitting(second, TimeSpan.FromHours(5)) });
         _sessions.Setup(s => s.Get(first, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Sitting(first, TimeSpan.FromHours(2)));
+            .ReturnsAsync(Sitting(first, TimeSpan.FromHours(6)));
         _sessions.Setup(s => s.Get(second, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Sitting(second, TimeSpan.FromHours(1)));
+            .ReturnsAsync(Sitting(second, TimeSpan.FromHours(5)));
 
         await Saga().Consume(ContextOf(new OverdueScoreBatchesFlushedEvent(Now)));
 
@@ -208,6 +213,84 @@ public sealed class SittingSagaTests
             It.IsAny<CancellationToken>()), Times.Once);
         _mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == second),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TheSweepWaitsOutEachMixsOwnWindow()
+    {
+        // RISE keeps a quiet sitting open for 4 hours, the pad mixes for 15 minutes, and the sweep
+        // gives each its own ask so the long window never crowds the short one out of the cap.
+        _sessions.Setup(s => s.ListOverdueSittings(It.IsAny<IReadOnlyCollection<MixEnum>>(),
+                It.IsAny<DateTimeOffset>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ScoreSessionRecord>());
+
+        await Saga().Consume(ContextOf(new OverdueScoreBatchesFlushedEvent(Now)));
+
+        _sessions.Verify(s => s.ListOverdueSittings(
+            It.Is<IReadOnlyCollection<MixEnum>>(m =>
+                m.Count == 2 && m.Contains(MixEnum.Rise) && m.Contains(MixEnum.RiseArcade)),
+            Now - TimeSpan.FromHours(4) - TimeSpan.FromMinutes(5), 25, It.IsAny<CancellationToken>()), Times.Once);
+        _sessions.Verify(s => s.ListOverdueSittings(
+            It.Is<IReadOnlyCollection<MixEnum>>(m =>
+                m.Count == 2 && m.Contains(MixEnum.Phoenix) && m.Contains(MixEnum.Phoenix2)),
+            Now - TimeSpan.FromMinutes(20), 25, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ARisePlayHoursAfterTheLastStillJoinsTheOpenSitting()
+    {
+        // Three hours away from the desk is still one evening on RISE (docs/design/rise.md D25), and
+        // the sitting's close moves out to 4 hours past this arrival.
+        var open = Guid.NewGuid();
+        _sessions.Setup(s => s.GetOpenSittings(UserId, MixEnum.Rise, Now - TimeSpan.FromHours(4),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new OpenSitting(open, Now.AddHours(-4), Now.AddHours(-3).AddMinutes(-10)) });
+
+        await Saga().Handle(Record(false, Play(Now.AddMinutes(-10))), CancellationToken.None);
+
+        _sessions.Verify(s => s.Open(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<string>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _mediator.Verify(m => m.Send(It.Is<RecordObservedPlaysCommand>(c => c.SessionId == open),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _scheduler.Verify(s => s.SchedulePublish(
+            Now.UtcDateTime + TimeSpan.FromHours(4) + ScoreBatchPolicy.DrainBuffer,
+            It.Is<SittingSaga.CloseSittingCommand>(c => c.SessionId == open), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ARiseSittingQuietForAnHourIsNotClosedByItsTimer()
+    {
+        var id = Guid.NewGuid();
+        _sessions.Setup(s => s.Get(id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Sitting(id, TimeSpan.FromHours(1)));
+
+        await Saga().Consume(ContextOf(new SittingSaga.CloseSittingCommand(UserId, MixEnum.Rise, id)));
+
+        _mediator.Verify(m => m.Send(It.IsAny<ReplaySessionCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task APhoenix2SittingKeepsItsFifteenMinutes()
+    {
+        // D25 is RISE's alone: on Phoenix 2 a play 25 minutes after the last starts a sitting of its
+        // own, and that sitting closes 15 minutes after this arrival.
+        var earlier = Guid.NewGuid();
+        _sessions.Setup(s => s.GetOpenSittings(UserId, MixEnum.Phoenix2, Now - TimeSpan.FromMinutes(15),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new OpenSitting(earlier, Now.AddMinutes(-40), Now.AddMinutes(-26)) });
+
+        await Saga().Handle(RecordOn(MixEnum.Phoenix2, Play(Now.AddMinutes(-1))), CancellationToken.None);
+
+        _sessions.Verify(s => s.Open(It.IsAny<Guid>(), UserId, MixEnum.Phoenix2, Source, null, null, Now,
+            It.IsAny<CancellationToken>()), Times.Once);
+        _mediator.Verify(m => m.Send(It.Is<RecordObservedPlaysCommand>(c => c.SessionId == earlier),
+            It.IsAny<CancellationToken>()), Times.Never);
+        _scheduler.Verify(s => s.SchedulePublish(
+            Now.UtcDateTime + TimeSpan.FromMinutes(15) + ScoreBatchPolicy.DrainBuffer,
+            It.IsAny<SittingSaga.CloseSittingCommand>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
