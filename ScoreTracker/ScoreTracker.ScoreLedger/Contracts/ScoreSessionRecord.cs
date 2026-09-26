@@ -39,14 +39,15 @@ public sealed record ScoreSessionRecord(
     public bool CanUndo => StartedAt >= UndoFloor;
 
     /// <summary>
-    ///     A sitting: plays the plays endpoint recorded, announced once its quiet window has passed
-    ///     with nothing arriving (docs/design/rise.md §12).
+    ///     A sitting: plays the plays endpoint recorded, announced once when it closes — when the tool
+    ///     closes it, or once its mix's quiet window has passed with nothing arriving
+    ///     (docs/design/rise.md §12).
     /// </summary>
     public bool IsSitting => Source.StartsWith(ScoreJournalEntry.PlaysApiSourcePrefix, StringComparison.Ordinal);
 
     /// <summary>
     ///     A sitting that has not closed yet: neither replayed (a replay sets the counts) nor announced.
-    ///     Its capture cannot start until its quiet window has passed.
+    ///     Its capture cannot start until it closes.
     /// </summary>
     public bool IsAwaitingClose => IsSitting && ProcessedAt == null && NewCount == 0 && UpscoreCount == 0;
 }
