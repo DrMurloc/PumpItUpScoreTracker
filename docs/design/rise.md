@@ -1,6 +1,6 @@
 # Pump It Up RISE — two keyboard mixes
 
-Status: **phase 1 merged — [PR #349](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/349)** (2026-09-22), in the commit order of §8.1; the picker order and wordmarks follow in [PR #351](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/351); the owner-owed steps are §11.5. Discord session cards for both mixes, and the sittings the plays endpoint gathers plays into, are §12 (scoped 2026-09-23).
+Status: **phase 1 merged — [PR #349](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/349)** (2026-09-22), in the commit order of §8.1; the picker order and wordmarks follow in [PR #351](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/351); the owner-owed steps are §11.5. Discord session cards for both mixes, and the sittings the plays endpoint gathers plays into, are §12 (scoped 2026-09-23); on RISE a sitting slides on 4 hours and the capture app closes it (D25, 2026-09-26).
 Researched 2026-09-14 → 2026-09-22 from the owner's install, his screenshots, two community sheets, two wikis and the
 Steam patch notes; the owner took the high-level plan to two Rise players (Sneezle, Dave) on 2026-09-21 and their
 answers are folded in; every open question of §9 was answered by 2026-09-22. Every decision below is the owner's
@@ -139,6 +139,7 @@ value has one):
 | `LifebarModel` | Phoenix | None | None | None |
 | `ChartTypes` | S, D, CoOp | S, **HalfDouble** | S, D | S, D, CoOp, SP, DP, HalfDouble — the full historical set. SP/DP end at XX and half-doubles at the Infinity/Pro line, but a picker hides a tab with nothing in it, so the profile declares the superset rather than guessing per mix |
 | `Art` | own palette, bubbles, letters | own palette, **Rise letters + marks**, chip bubbles | own palette, Phoenix letters/plates/bubbles | Phoenix letters, XX bubbles, chips |
+| `SittingWindow` | 15 minutes | **4 hours** (D25) | **4 hours** (D25) | 15 minutes, never read — the plays endpoint takes Phoenix-scored mixes only |
 
 The existing helpers stay and delegate: `UsesLegacyScoring()` reads `ScoringModel`, the `MixCapabilities` flags
 read the profile, `LetterGradeFor` / `GetMinimumScoreFor` / `GetMaximumScoreFor` pick the floors table off
@@ -408,6 +409,10 @@ sent, provided the two agree (only 1,000,000 is a Perfect Game; `award-does-not-
 sent with no `award` records a Perfect Game, and a pass has to score above zero (`score-invalid`). The ledger
 already records plays without judgments — the official best list arrives that way — so both of its commands
 receive none.
+
+**Closing a sitting (D25, owner, 2026-09-26).** A second write, `POST api/v2/players/me/sittings/close` with
+`{ "mix": … }`, ends the caller's open sittings on that mix and announces them right away. The capture app calls it
+when its session ends; §12 has the rule.
 
 ---
 
@@ -734,7 +739,7 @@ boards and the Daily Step stay off the card because RISE has none of them.
   and the nearer one when it is within 15 minutes of two; otherwise it starts a new sitting. A sitting closes after 15 minutes with no play arriving, timed by the site's clock, so a
   PC clock that is off cannot split one. Membership reads play time, so a backlog a tool sends late sorts into
   the sittings it was played in. A sitting is a stored session — one row on the Undo page — so the Sessions
-  page's 8-hour fold, a separate change, covers sittings with no migration.
+  page's 8-hour fold, a separate change, covers sittings with no migration. *Revised for both RISE mixes by D25.*
 - **D22 (owner, 2026-09-23). A sitting's card is built from the journal.** Nothing waits in memory: a closing
   sitting is replayed from the journal the way restart recovery rebuilds an interrupted import
   (`ReplaySessionCommand`), and the five-minute sweep closes any sitting whose scheduled close was lost. A deploy
@@ -743,12 +748,34 @@ boards and the Daily Step stay off the card because RISE has none of them.
 - **D23. A sitting that ended more than a day before it closed records without a card.** Everything else about it
   runs — highlights, lamps, competitive level — and only the Discord post is skipped, so a week-old offline
   backlog does not flood a channel. *Decided unless he objects.*
+- **D25 (owner, 2026-09-26). On RISE a sitting slides on 4 hours, and the capture app closes it.** This revises
+  D21 for Rise and Rise Arcade. A play joins an open sitting when it was played within 4 hours of that sitting's
+  plays, and a sitting closes after 4 hours with no play arriving: *"just as a fallback to keep weird client side
+  crashes or resets from causing sessions to get locked."* The app says when a session is over with
+  `POST api/v2/players/me/sittings/close`, which closes every open sitting the caller has on a mix and announces
+  each one the way a timed close does. *"Everything else happens client side"*: when RISE closes, N minutes without
+  a play, a bulk capture run. None of it reaches the site, and nothing about a session is stored for it — no
+  session key, no saved setting (*"No we're not doing server side saved settings for this stuff."*). Once a sitting
+  closes, the next play on that mix starts a new one however soon it arrives. The window is a profile field
+  (`SittingWindow`, §3), not a mix check. The close shuts whatever is open on the mix when it lands, so the app
+  sends it in order with its plays — after the session's last play is answered, before the next session's first —
+  and a retry follows the same order. *Decided unless he objects:* the route and its bare `204`, answered whether
+  or not anything was open, so a repeat never announces anything twice; Phoenix and Phoenix 2 keep D21's 15 minutes; and a
+  sitting that has not closed shows on the Sessions page without the patience card. Its capture has not started,
+  so the card ([session-breakdown.md](session-breakdown.md) D37) would spin for as long as the session runs; the
+  page shows the plays, and the highlights arrive when it closes.
 
 ### 12.2 What stays as it is
 
 Manual entry and the spreadsheet upload keep the two-minute batch; they arrive in bursts. A Warm Up play and an
-Arcade Station play belong to two mixes, so they make two sittings and two cards. The capture app needs no change
-for any of this; its offline outbox is separate work (the handoff note in the owner's Downloads, 2026-09-23).
+Arcade Station play belong to two mixes, so they make two sittings and two cards. The capture app's offline outbox
+is separate work (the handoff note in the owner's Downloads, 2026-09-23).
+
+Under D25 the app closes each mix it posted to when its session ends. The contract it builds against is the note in
+the owner's Downloads, 2026-09-26. A capture app that predates it never closes, so once D25 deploys its RISE
+sittings wait out the 4-hour fallback until the player updates. Everything a close sets off waits with them: the
+card, the highlights, the folder lamps and competitive level, and the plays reaching other players' peer standings
+all arrive 4 hours after the last play.
 
 ### 12.3 The first card after this ships
 
@@ -766,3 +793,11 @@ folder's first reading is stored silently (folder-level-progression.md §5.3). F
 | Domain | `PlayerScoresUpdatedEvent.Announce`, `EmojiTokens`, `ScoreJournalEntry.PlaysApiSourcePrefix` |
 | Data | `DiscordEmojiTokens`: category bubbles, the RISE emoji, unknown tokens dropped |
 | Web | `PlayersController` records into sittings; the Sessions page waits out a sitting's quiet window; `Player.razor` shows competitive level on RISE |
+
+D25 adds, with no migration:
+
+| Vertical | What changes |
+|---|---|
+| SharedKernel | `MixProfile.SittingWindow`: 4 hours on both RISE mixes, 15 minutes on every other |
+| ScoreLedger | Every sitting timer reads the mix's window: the sittings still open, the planner's gap, the scheduled close and its quiet check. The sweep asks once per window (`ListOverdueSittings` takes the mixes), so RISE sittings still inside their 4 hours never fill its cap. `CloseOpenSittingsCommand` closes every open sitting a player has on a mix, under the same per-player lock as recording, skipping the quiet check |
+| Web | `PlayersController` gains `POST me/sittings/close`; the Sessions page shows a sitting that has not closed without the patience card |

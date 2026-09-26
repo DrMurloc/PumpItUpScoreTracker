@@ -233,16 +233,20 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IScoreReader led
     ///         Sessions predating the ScoreSession table have no wall clock to test, so their
     ///         window is never open: they are historical by definition. A folded session is open
     ///         while any import in it is (D57) — the newest import of the night is the one still
-    ///         being captured, whatever the earlier ones already wrote. A sitting that has not
-    ///         closed yet is only announced once its quiet window has passed, so its capture starts
-    ///         that much later; once replayed, its window runs from the replay like any session's.
+    ///         being captured, whatever the earlier ones already wrote.
+    ///     </para>
+    ///     <para>
+    ///         A sitting that has not closed opens no window at all. Its capture starts when it
+    ///         closes — when the tool that posted it says so, or once its mix's quiet window passes,
+    ///         which is 4 hours on RISE — so until then nothing is in flight, and a "working it out"
+    ///         card would spin for as long as the player keeps playing (docs/design/rise.md D25).
+    ///         The close replays it, which stamps the replay's own time as its last activity, so from
+    ///         there its window runs like any session's.
     ///     </para>
     /// </summary>
     private bool CaptureWindowOpen(IReadOnlyList<ScoreSessionRecord> stored)
     {
-        return stored.Any(s =>
-            clock.Now - s.LastActivityAt <
-            (s.IsAwaitingClose ? ScoreBatchPolicy.SittingQuietWindow + CaptureWindow : CaptureWindow));
+        return stored.Any(s => !s.IsAwaitingClose && clock.Now - s.LastActivityAt < CaptureWindow);
     }
 
     /// <summary>

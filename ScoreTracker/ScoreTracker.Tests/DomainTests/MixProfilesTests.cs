@@ -169,6 +169,26 @@ public sealed class MixProfilesTests
         Assert.Empty(ChartTypeCategory.CoOp.TypesOn(MixEnum.Rise));
     }
 
+    // D21's window: a play more than 15 minutes from a sitting's plays starts a new one, and a
+    // sitting with nothing arriving for 15 minutes closes (docs/design/rise.md §12).
+    [Theory]
+    [InlineData(MixEnum.Phoenix)]
+    [InlineData(MixEnum.Phoenix2)]
+    public void APadMixSitsOnFifteenMinutes(MixEnum mix)
+    {
+        Assert.Equal(TimeSpan.FromMinutes(15), MixProfiles.For(mix).SittingWindow);
+    }
+
+    // D25 (owner, 2026-09-26): on RISE the capture app closes a sitting, and 4 quiet hours are only
+    // the fallback for one that never got to.
+    [Theory]
+    [InlineData(MixEnum.Rise)]
+    [InlineData(MixEnum.RiseArcade)]
+    public void ARiseSittingWaitsOutFourHours(MixEnum mix)
+    {
+        Assert.Equal(TimeSpan.FromHours(4), MixProfiles.For(mix).SittingWindow);
+    }
+
     // The legacy line is declared as the superset rather than guessed per mix; the picker hides
     // a folder with no charts in it.
     [Fact]

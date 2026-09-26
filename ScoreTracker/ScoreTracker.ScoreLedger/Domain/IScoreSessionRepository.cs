@@ -76,9 +76,11 @@ internal interface IScoreSessionRepository
     Task<DateTimeOffset?> GetLastPlayedAt(Guid userId, Guid sessionId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     Sittings whose scheduled close never ran: unannounced, never replayed, and quiet since at
-    ///     least <paramref name="quietSince" />. Oldest first, at most <paramref name="take" />.
+    ///     Sittings on <paramref name="mixes" /> whose scheduled close never ran: unannounced, never
+    ///     replayed, and quiet since at least <paramref name="quietSince" />. Oldest first, at most
+    ///     <paramref name="take" />. Asked per group of mixes because each mix keeps a quiet sitting open
+    ///     for its own window.
     /// </summary>
-    Task<IReadOnlyList<ScoreSessionRecord>> ListOverdueSittings(DateTimeOffset quietSince, int take,
-        CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ScoreSessionRecord>> ListOverdueSittings(IReadOnlyCollection<MixEnum> mixes,
+        DateTimeOffset quietSince, int take, CancellationToken cancellationToken = default);
 }

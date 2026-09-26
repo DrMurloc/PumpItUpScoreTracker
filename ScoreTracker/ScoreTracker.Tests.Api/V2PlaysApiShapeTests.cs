@@ -16,7 +16,7 @@ using Xunit;
 namespace ScoreTracker.Tests.Api;
 
 /// <summary>
-///     Pins <c>POST api/v2/players/me/plays</c>, the one write on v2 (docs/design/rise.md §6.3):
+///     Pins <c>POST api/v2/players/me/plays</c>, the first write on v2 (docs/design/rise.md §6.3):
 ///     its 201 body, and the refusals a tool has to be able to act on — the judgment checksum
 ///     above all, since it is what keeps a misread screen out of a record.
 /// </summary>

@@ -153,8 +153,25 @@ public sealed class ScoreSessionSittingTests : IAsyncLifetime
         await Sessions().Open(import, userId, MixEnum.Rise, ScoreJournalEntry.OfficialImportSource, null, null,
             Now.AddHours(-2));
 
-        var overdue = await Sessions().ListOverdueSittings(Now.AddMinutes(-20), 25);
+        var overdue = await Sessions().ListOverdueSittings(new[] { MixEnum.Rise }, Now.AddMinutes(-20), 25);
 
         Assert.Equal(lost, Assert.Single(overdue).Id);
+    }
+
+    [Fact]
+    public async Task TheSweepListsOnlySittingsOnTheMixesItAsksAbout()
+    {
+        // Each mix keeps a quiet sitting open for its own window, so the sweep asks per window and a
+        // quiet sitting on a mix outside the ask is not this ask's to close.
+        var userId = await _seed.SeedUserAsync();
+        var rise = Guid.NewGuid();
+        var phoenix2 = Guid.NewGuid();
+        await Sessions().Open(rise, userId, MixEnum.Rise, Source, null, null, Now.AddHours(-2));
+        await Sessions().Open(phoenix2, userId, MixEnum.Phoenix2, Source, null, null, Now.AddHours(-2));
+
+        var overdue = await Sessions().ListOverdueSittings(new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
+            Now.AddMinutes(-20), 25);
+
+        Assert.Equal(phoenix2, Assert.Single(overdue).Id);
     }
 }

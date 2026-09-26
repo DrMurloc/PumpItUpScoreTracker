@@ -142,32 +142,38 @@ public sealed class SessionBreakdownBuilderTests
     }
 
     [Fact]
-    public async Task ASittingStaysPendingThroughItsQuietWindowWhereAnImportHasLongSinceSettled()
+    public async Task ASittingThatHasNotClosedShowsItsPlaysWithoutThePatienceCard()
     {
-        // A sitting is only announced once 15 minutes pass with nothing arriving, so ten minutes after
-        // its last play its capture has not started, while an import's has long finished.
+        // A sitting's capture starts when it closes, which on RISE can be hours after its plays
+        // land (docs/design/rise.md D25). A minute after its last play nothing is in flight, so it
+        // shows no card and opens no window, where an import a minute old is being captured.
         var chart = ChartAt(ChartType.Single, 21);
         var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
 
-        var sitting = await Build(chart, rows, captured: false, sessionEndedMinutesAgo: 10,
+        var sitting = await Build(chart, rows, captured: false, sessionEndedMinutesAgo: 1,
             source: "api:watcher-grab", newCount: 0);
-        var import = await Build(chart, rows, captured: false, sessionEndedMinutesAgo: 10);
+        var import = await Build(chart, rows, captured: false, sessionEndedMinutesAgo: 1);
 
-        Assert.True(sitting.Hero!.CapturePending);
-        Assert.False(import.Hero!.CapturePending);
+        Assert.False(sitting.Hero!.CaptureWindowOpen);
+        Assert.False(sitting.Hero.CapturePending);
+        Assert.True(import.Hero!.CapturePending);
     }
 
     [Fact]
     public async Task AReplayedSittingWaitsOnlyForItsCaptureLikeAnyOtherSession()
     {
         // A replay sets the counts and stamps its own time as the last activity; from there the
-        // capture window is an ordinary one, so a sitting whose capture wrote no rows stops waiting.
+        // capture window is an ordinary one: the card shows while capture runs, and a sitting whose
+        // capture wrote no rows stops waiting.
         var chart = ChartAt(ChartType.Single, 21);
         var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
 
+        var justClosed = await Build(chart, rows, captured: false, sessionEndedMinutesAgo: 1,
+            source: "api:watcher-grab", newCount: 1);
         var replayed = await Build(chart, rows, captured: false, sessionEndedMinutesAgo: 10,
             source: "api:watcher-grab", newCount: 1);
 
+        Assert.True(justClosed.Hero!.CapturePending);
         Assert.False(replayed.Hero!.CapturePending);
     }
 
