@@ -757,8 +757,10 @@ boards and the Daily Step stay off the card because RISE has none of them.
   a play, a bulk capture run. None of it reaches the site, and nothing about a session is stored for it — no
   session key, no saved setting (*"No we're not doing server side saved settings for this stuff."*). Once a sitting
   closes, the next play on that mix starts a new one however soon it arrives. The window is a profile field
-  (`SittingWindow`, §3), not a mix check. *Decided unless he objects:* the route and its bare `204`, answered
-  whether or not anything was open so the call is safe to repeat; Phoenix and Phoenix 2 keep D21's 15 minutes; and a
+  (`SittingWindow`, §3), not a mix check. The close shuts whatever is open on the mix when it lands, so the app
+  sends it in order with its plays — after the session's last play is answered, before the next session's first —
+  and a retry follows the same order. *Decided unless he objects:* the route and its bare `204`, answered whether
+  or not anything was open, so a repeat never announces anything twice; Phoenix and Phoenix 2 keep D21's 15 minutes; and a
   sitting that has not closed shows on the Sessions page without the patience card. Its capture has not started,
   so the card ([session-breakdown.md](session-breakdown.md) D37) would spin for as long as the session runs; the
   page shows the plays, and the highlights arrive when it closes.
@@ -771,7 +773,9 @@ is separate work (the handoff note in the owner's Downloads, 2026-09-23).
 
 Under D25 the app closes each mix it posted to when its session ends. The contract it builds against is the note in
 the owner's Downloads, 2026-09-26. A capture app that predates it never closes, so once D25 deploys its RISE
-sittings wait out the 4-hour fallback and each card arrives 4 hours after the last play, until the player updates.
+sittings wait out the 4-hour fallback until the player updates. Everything a close sets off waits with them: the
+card, the highlights, the folder lamps and competitive level, and the plays reaching other players' peer standings
+all arrive 4 hours after the last play.
 
 ### 12.3 The first card after this ships
 

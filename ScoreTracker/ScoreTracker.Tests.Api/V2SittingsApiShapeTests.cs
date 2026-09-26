@@ -13,8 +13,8 @@ namespace ScoreTracker.Tests.Api;
 
 /// <summary>
 ///     Pins <c>POST api/v2/players/me/sittings/close</c>, the second write on v2 (docs/design/rise.md
-///     D25): the bare 204 a capture app reads as done, answered whether or not anything was open so a
-///     retry is safe, and the refusals it has to be able to act on.
+///     D25): the bare 204 a capture app reads as done, answered whether or not anything was open, and
+///     the refusals it has to be able to act on.
 /// </summary>
 public sealed class V2SittingsApiShapeTests
 {

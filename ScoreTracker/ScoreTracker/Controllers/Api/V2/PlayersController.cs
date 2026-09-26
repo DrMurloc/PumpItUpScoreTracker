@@ -121,7 +121,9 @@ public sealed class PlayersController : ApiV2ControllerBase
     ///     starts a new sitting (docs/design/rise.md D25). Built so the RISE capture app decides when a
     ///     session ends; a sitting nobody closes waits out the mix's quiet window, which on RISE is the
     ///     4-hour fallback for an app that crashed or reset before it could. Answers 204 whether or not
-    ///     anything was open, so a tool can repeat a close whose answer it never saw.
+    ///     anything was open, and a repeat never announces anything twice. It closes whatever is open
+    ///     when it lands, though, so a tool sends it in order with its plays: after the session's last
+    ///     play is answered, and before the next session's first — a retry included.
     /// </summary>
     [HttpPost("me/sittings/close")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
