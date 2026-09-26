@@ -309,4 +309,75 @@ public sealed class SittingSagaTests
         Assert.Equal(Enum.GetValues<MixEnum>().Where(m => !m.UsesLegacyScoring()).OrderBy(m => m),
             asked.OrderBy(m => m));
     }
+
+    private void OpenOnRise(params (Guid Id, TimeSpan QuietFor, DateTimeOffset LastPlayed)[] sittings)
+    {
+        _sessions.Setup(s => s.GetOpenSittings(UserId, MixEnum.Rise, DateTimeOffset.MinValue,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(sittings.Select(s => new OpenSitting(s.Id, s.LastPlayed.AddHours(-1), s.LastPlayed))
+                .ToArray());
+        foreach (var (id, quietFor, lastPlayed) in sittings)
+        {
+            _sessions.Setup(s => s.Get(id, It.IsAny<CancellationToken>())).ReturnsAsync(Sitting(id, quietFor));
+            _sessions.Setup(s => s.GetLastPlayedAt(UserId, id, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(lastPlayed);
+        }
+    }
+
+    [Fact]
+    public async Task ClosingAnnouncesEveryOpenSittingOnTheMixWithoutWaitingOutItsWindow()
+    {
+        // The capture app says the session is over two minutes after its last play; neither sitting is
+        // anywhere near its 4 quiet hours, and both are announced now (docs/design/rise.md D25).
+        var live = Guid.NewGuid();
+        var backlog = Guid.NewGuid();
+        OpenOnRise((live, TimeSpan.FromMinutes(2), Now.AddMinutes(-3)),
+            (backlog, TimeSpan.FromMinutes(1), Now.AddHours(-6)));
+
+        await Saga().Handle(new CloseOpenSittingsCommand(UserId, MixEnum.Rise), CancellationToken.None);
+
+        _mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c =>
+                c.SessionId == live && c.UserId == UserId && c.Announce),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == backlog && c.Announce),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ClosingWithNothingOpenIsNothingToDo()
+    {
+        await Saga().Handle(new CloseOpenSittingsCommand(UserId, MixEnum.Rise), CancellationToken.None);
+
+        _mediator.Verify(m => m.Send(It.IsAny<ReplaySessionCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task ClosingASittingWhoseLastPlayIsMoreThanADayOldRecordsWithoutACard()
+    {
+        // D23 holds on a close the tool asked for too: an offline backlog closes quietly.
+        var backlog = Guid.NewGuid();
+        OpenOnRise((backlog, TimeSpan.FromMinutes(1), Now.AddDays(-2)));
+
+        await Saga().Handle(new CloseOpenSittingsCommand(UserId, MixEnum.Rise), CancellationToken.None);
+
+        _mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == backlog && !c.Announce),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ClosingNeverAnnouncesASittingThatAlreadyWas()
+    {
+        // The lookup and the close are one read apart; a sitting that was replayed or announced in
+        // between is left alone rather than announced twice.
+        var replayed = Guid.NewGuid();
+        OpenOnRise((replayed, TimeSpan.FromMinutes(2), Now.AddMinutes(-3)));
+        _sessions.Setup(s => s.Get(replayed, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Sitting(replayed, TimeSpan.FromMinutes(2), newCount: 2));
+
+        await Saga().Handle(new CloseOpenSittingsCommand(UserId, MixEnum.Rise), CancellationToken.None);
+
+        _mediator.Verify(m => m.Send(It.IsAny<ReplaySessionCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
 }

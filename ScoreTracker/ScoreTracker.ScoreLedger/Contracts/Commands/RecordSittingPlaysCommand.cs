@@ -8,8 +8,9 @@ namespace ScoreTracker.ScoreLedger.Contracts.Commands;
 ///     player's open sitting on the mix when it was played within the mix's
 ///     <see cref="ScoreBatchPolicy.SittingQuietWindow(MixEnum)" /> of that sitting's plays, or starts a
 ///     new one; a play that beats the record becomes the record, and every play lands in the journal
-///     under its sitting. A sitting announces itself once, when the quiet window passes with nothing
-///     arriving (docs/design/rise.md §12).
+///     under its sitting. A sitting announces itself once: when the quiet window passes with nothing
+///     arriving, or sooner when the tool closes it with <see cref="CloseOpenSittingsCommand" />
+///     (docs/design/rise.md §12).
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record RecordSittingPlaysCommand(
