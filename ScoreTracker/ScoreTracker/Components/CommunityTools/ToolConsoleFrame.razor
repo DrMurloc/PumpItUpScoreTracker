@@ -70,6 +70,7 @@ else
 
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
+@inject NavigationManager NavManager
 @code {
     /// <summary>Which nav entry is lit. Matches the route segment.</summary>
     [Parameter] [EditorRequired] public string Section { get; set; } = "overview";
@@ -87,6 +88,14 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
+        // A console is its maker's, so a visitor who is not signed in has nothing to see until they are.
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo(
+                SignInReturnUrl.Append("/Login", "/" + NavManager.ToBaseRelativePath(NavManager.Uri)), true);
+            return;
+        }
+
         await Load();
     }
 
