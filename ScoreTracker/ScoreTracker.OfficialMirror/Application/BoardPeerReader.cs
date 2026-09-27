@@ -242,13 +242,13 @@ internal sealed class BoardPeerReader
         var key = CacheKeys.Mix(nameof(BoardPeerReader), mix, "Qualified", pool, snapshotId);
         if (_cache.TryGetValue(key, out IReadOnlySet<int>? cached) && cached != null) return cached;
 
-        var history = (await PricedRows(mix, pool, everyone.Select(p => p.PlayerId).Distinct().ToArray(),
+        var priced = (await PricedRows(mix, pool, everyone.Select(p => p.PlayerId).Distinct().ToArray(),
                 cancellationToken))
             .GroupBy(r => r.PlayerId)
             .ToDictionary(g => g.Key, g => g.ToArray());
 
         var qualified = everyone
-            .Where(row => history.TryGetValue(row.PlayerId, out var theirs)
+            .Where(row => priced.TryGetValue(row.PlayerId, out var theirs)
                           && BoardPoolCheck.Confirms(
                               BoardPoolCheck.Rebuild(theirs.Select(r => (r.Type, r.Level, r.Score))),
                               (double)row.Score))
