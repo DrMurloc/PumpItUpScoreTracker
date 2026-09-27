@@ -269,12 +269,13 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
     ///         arrived, inside a process that is still running. The scores are safe either way —
     ///         they were written on submission — but everything derived from them (highlights,
     ///         folder lamps, ratings, titles, the session card) hangs off the drain, so a lost
-    ///         schedule strands all of it while the import reports success.
+    ///         schedule strands all of it.
     ///     </para>
     ///     <para>
     ///         It does NOT cover a restart: the accumulator is in memory, so a batch caught by one
-    ///         is already gone by the time this runs and there is nothing here to find. That half
-    ///         is the session replay in OfficialMirror, on the same message.
+    ///         is already gone by the time this runs and there is nothing here to find. Typed
+    ///         entries lost that way stay lost, as they always have; an import the restart cut
+    ///         short is replayed by OfficialMirror's startup pass.
     ///     </para>
     /// </summary>
     public async Task Consume(ConsumeContext<FlushOverdueScoreBatchesCommand> context)
@@ -288,11 +289,8 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
             await PublishScoreEvents(due.UserId, due.Batch, context.CancellationToken);
         }
 
-        // The journal-replay half runs only now, never alongside. Both halves are in scope for the
-        // very same sessions on the tick this job exists for, and a session stays unprocessed until
-        // its capture chain ends — so a replay racing this drain would find the session still
-        // unmarked and announce the batch a second time. Publishing the second half from the end of
-        // the first is what makes their "disjoint" claim true rather than merely likely.
+        // The journal-replay halves — the sittings sweep, and the replay of failed import runs — run
+        // only now, off the same tick, never alongside this drain.
         await bus.Publish(new OverdueScoreBatchesFlushedEvent(dateTimeOffset.Now),
             context.CancellationToken);
     }

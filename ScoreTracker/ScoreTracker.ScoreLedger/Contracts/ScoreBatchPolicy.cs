@@ -18,8 +18,10 @@ public static class ScoreBatchPolicy
 {
     /// <summary>
     ///     How long a batch waits before announcing itself — ⚠ measured from the LATEST score in
-    ///     it, not the first. Every score pushes the deadline out again, so an import that writes
-    ///     for six minutes announces nothing until two minutes after its last write.
+    ///     it, not the first. Every score pushes the deadline out again, so a player typing in a set
+    ///     of scores gets one announcement two minutes after the last. Only typed entries ride the
+    ///     batch: an import announces the moment its last score saves, and a CSV upload drains it
+    ///     when the upload ends (docs/design/import-restart-recovery.md §0).
     /// </summary>
     public static readonly TimeSpan HoldWindow = TimeSpan.FromMinutes(2);
 
@@ -34,35 +36,13 @@ public static class ScoreBatchPolicy
     ///     drain, and enough room for capture itself to run.
     ///     <para>
     ///         ⚠ Not a guarantee. A restart erases the accumulator, so a batch caught inside the
-    ///         hold window is gone and its work does not land until the next process start recovers
-    ///         it; a drain lost without a restart waits for the five-minute sweep instead
-    ///         (docs/design/import-restart-recovery.md §4 and §4.3). Either way a reader that stops
-    ///         waiting is simply early, which is why nothing may treat the end of this as proof
-    ///         that there was nothing to wait for.
+    ///         hold window is gone, and an import the restart cut short does not announce until the
+    ///         next process start replays it (docs/design/import-restart-recovery.md §0). Either way
+    ///         a reader that stops waiting is simply early, which is why nothing may treat the end of
+    ///         this as proof that there was nothing to wait for.
     ///     </para>
     /// </summary>
     public static readonly TimeSpan WorkExpectedWithin = HoldWindow + DrainBuffer + TimeSpan.FromMinutes(2);
-
-    /// <summary>
-    ///     How long after a run reports its ending the mid-life sweep waits before treating its
-    ///     session as stranded.
-    ///     <para>
-    ///         ⚠ Deliberately NOT <see cref="WorkExpectedWithin" />, though it looks like the same
-    ///         question. That constant is a *reader's* patience — how long a page keeps a spinner
-    ///         up — and its two minutes of headroom past the drain is an assumption about how long
-    ///         capture takes. The sweep needs the opposite bias: capture is what eventually stamps
-    ///         the session processed, so anything short enough to be a good spinner is short enough
-    ///         to declare a chain stranded while it is still running, and announce over the top of
-    ///         it. Sharing one constant means every change to the spinner silently retunes the
-    ///         double-announcement window.
-    ///     </para>
-    ///     <para>
-    ///         Generous on purpose. The failure it recovers from ran eleven hours undetected, so
-    ///         the difference between four minutes and half an hour costs nothing that matters,
-    ///         and buys room for a first full-account import whose capture legitimately runs long.
-    ///     </para>
-    /// </summary>
-    public static readonly TimeSpan StaleAfter = TimeSpan.FromMinutes(30);
 
     // The sweep job's own cadence (docs/SCHEDULED-JOBS.md, flush-overdue-score-batches).
     private static readonly TimeSpan SweepTick = TimeSpan.FromMinutes(5);

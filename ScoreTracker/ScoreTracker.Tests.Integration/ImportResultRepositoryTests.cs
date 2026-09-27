@@ -118,26 +118,71 @@ public sealed class ImportResultRepositoryTests : IAsyncLifetime
         Assert.Equal(ImportOutcome.CredentialRejected, recent.Single().Outcome);
     }
 
+    /// <summary>
+    ///     The startup pass closes what never finished and began more than a day before the boot, in one
+    ///     statement, as Interrupted and already acknowledged — no notice about a press that old — and
+    ///     leaves every other row alone.
+    /// </summary>
     [Fact]
-    public async Task RunsAreFoundByTheSessionsTheRecoveryPassArrivesWith()
+    public async Task AbandonedRunsCloseSilentlyAndNothingElseMoves()
     {
         var userId = Guid.NewGuid();
-        var sessionId = Guid.NewGuid();
-        var runId = await OpenRun(userId, Now.AddMinutes(-20), sessionId);
-        await OpenRun(userId, Now.AddMinutes(-5), Guid.NewGuid());
+        var repo = Repo();
+        var abandoned = await OpenRun(userId, Now.AddDays(-3));
+        var recent = await OpenRun(userId, Now.AddHours(-2));
+        var finished = await OpenRun(userId, Now.AddDays(-4));
+        await repo.Close(finished, Now.AddDays(-4).AddMinutes(1), ImportOutcome.PiuGameError, 0);
+        // A player whose latest run is the abandoned one — exactly who a notice would reach.
+        var lapsed = Guid.NewGuid();
+        await OpenRun(lapsed, Now.AddDays(-2));
 
-        var found = await Repo().GetForSessions(new[] { sessionId });
+        var closed = await repo.CloseAbandoned(Now.AddDays(-1), Now);
 
-        var run = Assert.Single(found);
-        Assert.Equal(runId, run.Id);
-        Assert.Equal(sessionId, run.SessionId);
-        Assert.Null(run.FinishedAt);
+        Assert.Equal(2, closed);
+        var rows = (await repo.GetRecent(userId, 10)).ToDictionary(r => r.Id);
+        Assert.Equal(ImportOutcome.Interrupted, rows[abandoned].Outcome);
+        Assert.Equal(Now, rows[abandoned].FinishedAt);
+        Assert.Null(rows[recent].FinishedAt);
+        Assert.Equal(ImportOutcome.PiuGameError, rows[finished].Outcome);
+        Assert.Null(await repo.GetUnacknowledgedInterrupted(lapsed));
     }
 
     [Fact]
-    public async Task AskingForNoSessionsTouchesNothing()
+    public async Task TheStartupPassGetsEveryRunInsideItsWindowNewestFirst()
     {
-        Assert.Empty(await Repo().GetForSessions(Array.Empty<Guid>()));
+        var repo = Repo();
+        var session = Guid.NewGuid();
+        var older = await OpenRun(Guid.NewGuid(), Now.AddHours(-20), session);
+        var newer = await OpenRun(Guid.NewGuid(), Now.AddMinutes(-2));
+        await repo.Close(newer, Now.AddMinutes(-1), ImportOutcome.Completed, 3);
+        await OpenRun(Guid.NewGuid(), Now.AddHours(-30)); // before the window
+        await OpenRun(Guid.NewGuid(), Now); // after the boot — live
+
+        var found = await repo.GetStartedBetween(Now.AddDays(-1), Now);
+
+        Assert.Equal(new[] { newer, older }, found.Select(r => r.Id));
+        Assert.Equal(session, found[1].SessionId);
+        Assert.Null(found[1].FinishedAt);
+        Assert.NotNull(found[0].FinishedAt);
+    }
+
+    [Fact]
+    public async Task TheTickGetsOnlyRunsThatSavedAndThenFailed()
+    {
+        var repo = Repo();
+        var failed = await OpenRun(Guid.NewGuid(), Now.AddHours(-2), Guid.NewGuid());
+        await repo.Close(failed, Now.AddHours(-2).AddMinutes(3), ImportOutcome.PiuScoresError, 4);
+        var completed = await OpenRun(Guid.NewGuid(), Now.AddHours(-2), Guid.NewGuid());
+        await repo.Close(completed, Now.AddHours(-2).AddMinutes(3), ImportOutcome.Completed, 4);
+        var noSession = await OpenRun(Guid.NewGuid(), Now.AddHours(-2));
+        await repo.Close(noSession, Now.AddHours(-2).AddMinutes(1), ImportOutcome.CredentialRejected, null);
+        var stale = await OpenRun(Guid.NewGuid(), Now.AddDays(-3), Guid.NewGuid());
+        await repo.Close(stale, Now.AddDays(-3).AddMinutes(1), ImportOutcome.PiuGameError, 0);
+        await OpenRun(Guid.NewGuid(), Now.AddMinutes(-1), Guid.NewGuid()); // still running
+
+        var found = await repo.GetFailedSince(Now.AddDays(-1));
+
+        Assert.Equal(failed, Assert.Single(found).Id);
     }
 
     /// <summary>

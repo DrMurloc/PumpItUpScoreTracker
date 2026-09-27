@@ -48,22 +48,13 @@ public sealed class SessionRecoverySagaTests
                 FakeDateTime.At(Now).Object, NullLogger<SessionRecoverySaga>.Instance);
         }
 
-        public void WithUnprocessed(params ScoreSessionRecord[] sessions)
-        {
-            Sessions.Setup(s => s.ListUnprocessed(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(sessions);
-        }
-
-        public static ScoreSessionRecord Session(Guid userId, MixEnum mix) =>
-            new(Guid.NewGuid(), userId, mix, ScoreJournalEntry.OfficialImportSource, null, null,
-                Now.AddMinutes(-30), Now.AddMinutes(-10), 0, 0, 0);
-
-        public void WithSession(DateTimeOffset? processedAt = null, MixEnum mix = MixEnum.Phoenix)
+        public void WithSession(DateTimeOffset? processedAt = null, MixEnum mix = MixEnum.Phoenix,
+            int newCount = 0, int upscoreCount = 0)
         {
             Sessions.Setup(s => s.Get(SessionId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ScoreSessionRecord(SessionId, UserId, mix,
                     ScoreJournalEntry.OfficialImportSource, null, null, Now.AddMinutes(-30),
-                    Now.AddMinutes(-10), 0, 0, 0, processedAt));
+                    Now.AddMinutes(-10), newCount + upscoreCount, newCount, upscoreCount, processedAt));
         }
 
         public void WithJournal(ScoreJournalEntry[] entries, ScoreJournalEntry[]? histories = null)
@@ -144,6 +135,28 @@ public sealed class SessionRecoverySagaTests
         Assert.Equal(0, count);
         ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoresUpdatedEvent>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    /// <summary>
+    ///     The counts are written at the moment of announcement, and the processed stamp only when
+    ///     capture ends — so a session with counts and no stamp was announced and is still being
+    ///     captured, or lost its capture. Replaying it would post a second card.
+    /// </summary>
+    [Theory]
+    [InlineData(3, 0)]
+    [InlineData(0, 2)]
+    public async Task AnAlreadyAnnouncedSessionIsNotReplayed(int newCount, int upscoreCount)
+    {
+        var ctx = new SagaContext();
+        ctx.WithSession(newCount: newCount, upscoreCount: upscoreCount);
+
+        var count = await ctx.Saga.Handle(new ReplaySessionCommand(UserId, SessionId), CancellationToken.None);
+
+        Assert.Equal(0, count);
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoresUpdatedEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        ctx.Sessions.Verify(s => s.SetCounts(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(), It.IsAny<int>(),
+            It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -260,23 +273,5 @@ public sealed class SessionRecoverySagaTests
 
         ctx.Sessions.Verify(s => s.MarkProcessed(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(),
             It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    /// <summary>
-    ///     ⚠ The query reports candidates and gates none of them. It is shared with the boot pass,
-    ///     where an in-memory filter would let a player's fresh submission hide their own
-    ///     prior-process orphan — and an orphan never seen is never closed and never disclosed.
-    /// </summary>
-    [Fact]
-    public async Task UnprocessedReportsEverySessionTheLedgerHasNotStamped()
-    {
-        var ctx = new SagaContext();
-        var a = SagaContext.Session(UserId, MixEnum.Phoenix);
-        var b = SagaContext.Session(Guid.NewGuid(), MixEnum.Phoenix2);
-        ctx.WithUnprocessed(a, b);
-
-        var result = await ctx.Saga.Handle(new GetUnprocessedSessionsQuery(), CancellationToken.None);
-
-        Assert.Equal(new[] { a.Id, b.Id }, result.Select(s => s.Id));
     }
 }

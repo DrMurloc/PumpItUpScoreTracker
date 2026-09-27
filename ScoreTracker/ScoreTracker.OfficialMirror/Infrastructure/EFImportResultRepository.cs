@@ -57,14 +57,38 @@ internal sealed class EFImportResultRepository : IImportResultRepository
             .ExecuteUpdateAsync(u => u.SetProperty(r => r.SessionId, sessionId), cancellationToken);
     }
 
-    public async Task<IReadOnlyList<ImportRunForSession>> GetForSessions(IReadOnlyCollection<Guid> sessionIds,
+    public async Task<int> CloseAbandoned(DateTimeOffset startedBefore, DateTimeOffset at,
         CancellationToken cancellationToken = default)
     {
-        if (sessionIds.Count == 0) return Array.Empty<ImportRunForSession>();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return await database.Set<ImportResultEntity>()
-            .Where(r => r.SessionId != null && sessionIds.Contains(r.SessionId.Value))
-            .Select(r => new ImportRunForSession(r.Id, r.SessionId!.Value, r.StartedAt, r.FinishedAt))
+            .Where(r => r.FinishedAt == null && r.StartedAt < startedBefore)
+            .ExecuteUpdateAsync(u => u
+                .SetProperty(r => r.FinishedAt, at)
+                .SetProperty(r => r.Outcome, ImportOutcome.Interrupted.ToString())
+                .SetProperty(r => r.AcknowledgedAt, at), cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ImportRunForRecovery>> GetStartedBetween(DateTimeOffset from,
+        DateTimeOffset before, CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.Set<ImportResultEntity>()
+            .Where(r => r.StartedAt >= from && r.StartedAt < before)
+            .OrderByDescending(r => r.StartedAt)
+            .Select(r => new ImportRunForRecovery(r.Id, r.UserId, r.SessionId, r.StartedAt, r.FinishedAt))
+            .ToArrayAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ImportRunForRecovery>> GetFailedSince(DateTimeOffset finishedFrom,
+        CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var completed = ImportOutcome.Completed.ToString();
+        return await database.Set<ImportResultEntity>()
+            .Where(r => r.FinishedAt >= finishedFrom && r.SessionId != null && r.Outcome != completed)
+            .OrderByDescending(r => r.FinishedAt)
+            .Select(r => new ImportRunForRecovery(r.Id, r.UserId, r.SessionId, r.StartedAt, r.FinishedAt))
             .ToArrayAsync(cancellationToken);
     }
 

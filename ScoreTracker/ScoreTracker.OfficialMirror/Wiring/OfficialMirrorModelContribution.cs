@@ -72,9 +72,9 @@ public sealed class OfficialMirrorModelContribution : IDbModelContribution
         // Index rides the entity attribute (UserId, StartedAt) — every read of this table is
         // one player's runs, newest first.
         modelBuilder.Entity<ImportResultEntity>().ToTable("ImportResult");
-        // The restart-recovery pass arrives holding session ids and needs the run behind each one
-        // (docs/design/import-restart-recovery.md §3.1). Every other read on this table leads with
-        // UserId, so without this it scans.
-        modelBuilder.Entity<ImportResultEntity>().HasIndex(e => e.SessionId);
+        // The five-minute tick asks for the runs that failed in the last day, and the startup pass
+        // closes the ones that never finished (docs/design/import-restart-recovery.md §0). Every other
+        // read on this table leads with UserId, so without this both scan.
+        modelBuilder.Entity<ImportResultEntity>().HasIndex(e => e.FinishedAt);
     }
 }

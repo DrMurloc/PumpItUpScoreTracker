@@ -76,18 +76,6 @@ internal sealed class EFScoreSessionRepository : IScoreSessionRepository
             .ExecuteUpdateAsync(u => u.SetProperty(s => s.ProcessedAt, at), cancellationToken);
     }
 
-    public async Task<IReadOnlyList<ScoreSessionRecord>> ListUnprocessed(
-        CancellationToken cancellationToken = default)
-    {
-        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        return (await database.Set<ScoreSessionEntity>()
-                .Where(s => s.ProcessedAt == null)
-                .OrderBy(s => s.StartedAt)
-                .ToArrayAsync(cancellationToken))
-            .Select(Map)
-            .ToArray();
-    }
-
     public async Task<ScoreSessionRecord?> Get(Guid id, CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);

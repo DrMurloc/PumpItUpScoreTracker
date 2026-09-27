@@ -7,18 +7,17 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
-using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Domain;
 
 namespace ScoreTracker.ScoreLedger.Application;
 
 /// <summary>
-///     Restart recovery for the score pipeline (docs/design/import-restart-recovery.md).
+///     Rebuilds a session's announcement from the journal (docs/design/import-restart-recovery.md §0).
 ///     <para>
-///         A batch lives in memory for two minutes before it announces itself, so a restart in
-///         that window keeps every score and loses everything derived from them — highlights,
-///         folder lamps, ratings, titles, the personalized tier list, the session card — while the
-///         import reports success. This rebuilds the lost announcement from the journal.
+///         Scores are durable the moment they save; everything derived from them — highlights,
+///         folder lamps, ratings, titles, the personalized tier list, the session card — hangs off
+///         the announcement. An import the process died under never sent one, and a sitting sends
+///         its only one from here, so this is how both get their derived work.
 ///     </para>
 ///     <para>
 ///         The marker is stamped here rather than sent from PlayerProgress: that vertical cannot
@@ -29,7 +28,6 @@ namespace ScoreTracker.ScoreLedger.Application;
 /// </summary>
 internal sealed class SessionRecoverySaga :
     IRequestHandler<ReplaySessionCommand, int>,
-    IRequestHandler<GetUnprocessedSessionsQuery, IReadOnlyList<ScoreSessionRecord>>,
     IConsumer<ScoreHighlightsCapturedEvent>
 {
     private readonly IDateTimeOffsetAccessor _dateTime;
@@ -51,33 +49,18 @@ internal sealed class SessionRecoverySaga :
         _logger = logger;
     }
 
-    /// <summary>
-    ///     Every session whose derived work never ran. Callers gate them; this reports them.
-    ///     <para>
-    ///         ⚠ Deliberately does not consult the accumulator. Filtering on a live batch here
-    ///         reads as a safety net and is one for the sweep, but it is keyed on (user, mix) while
-    ///         a session is (user, mix, source) — so a manual entry opening a batch hides that
-    ///         player's unrelated import orphan from the <em>boot</em> pass, which shares this
-    ///         query. A player who submits anything in the seconds between Kestrel accepting
-    ///         traffic and the startup publisher firing would bury their own interrupted run, and
-    ///         an interrupted run that is never seen is never closed and never disclosed. The
-    ///         sweep gets its ordering from pipeline shape instead (OverdueScoreBatchesFlushedEvent).
-    ///     </para>
-    /// </summary>
-    public Task<IReadOnlyList<ScoreSessionRecord>> Handle(GetUnprocessedSessionsQuery request,
-        CancellationToken cancellationToken)
-    {
-        return _sessions.ListUnprocessed(cancellationToken);
-    }
-
     public async Task<int> Handle(ReplaySessionCommand request, CancellationToken cancellationToken)
     {
         var session = await _sessions.Get(request.SessionId, cancellationToken);
         if (session is null) return 0;
-        // Re-checked here rather than trusted from the caller: the pass that sends this reads its
-        // candidates from one vertical and gates them in another, and a live drain can land in
-        // between.
+        // Re-checked here rather than trusted from the caller, which reads its candidates in another
+        // vertical. ProcessedAt is an END marker — the capture chain stamps it when it finishes — so on
+        // its own it cannot tell "never announced" from "announced, and capture is still working". The
+        // counts can: they are written at the moment of announcement, so a session carrying any was
+        // already announced, and replaying it would publish the same scores twice and post a second
+        // card.
         if (session.ProcessedAt is not null) return 0;
+        if (session.NewCount > 0 || session.UpscoreCount > 0) return 0;
 
         var entries = await _journal.GetSessionEntries(request.UserId, request.SessionId, cancellationToken);
         var chartIds = entries.Select(e => e.ChartId).Distinct().ToArray();
@@ -107,8 +90,7 @@ internal sealed class SessionRecoverySaga :
             .Where(r => involved.Contains(r.ChartId))
             .ToDictionary(r => r.ChartId);
 
-        // SET, not add: Touch already ran for any batch that drained before the interruption, and
-        // the counts here are the whole session's totals recomputed from the journal.
+        // SET, not add: the counts here are the whole session's totals recomputed from the journal.
         await _sessions.SetCounts(request.SessionId, _dateTime.Now, batch.NewChartIds.Length,
             batch.UpscoredChartIds.Count, cancellationToken);
 

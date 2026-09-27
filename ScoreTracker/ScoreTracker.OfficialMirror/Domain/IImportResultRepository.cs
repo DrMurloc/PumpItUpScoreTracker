@@ -40,13 +40,28 @@ internal interface IImportResultRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     The runs behind a set of score sessions. The startup recovery pass arrives holding
-    ///     session ids — it reads its candidates from the Ledger, which owns the "did the derived
-    ///     work run" marker — and needs each one's run to decide whether the batch had its chance
-    ///     to drain (docs/design/import-restart-recovery.md §3.1). A session with no run is a
-    ///     manual, CSV or API submission and simply comes back absent.
+    ///     Closes every run that never reported back and began before <paramref name="startedBefore" />,
+    ///     as Interrupted and already acknowledged: a notice about a press that old helps nobody, and
+    ///     its session is too old to announce. Only OPEN rows, like <see cref="Close" />. Returns how
+    ///     many it closed.
     /// </summary>
-    Task<IReadOnlyList<ImportRunForSession>> GetForSessions(IReadOnlyCollection<Guid> sessionIds,
+    Task<int> CloseAbandoned(DateTimeOffset startedBefore, DateTimeOffset at,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Every run that began at or after <paramref name="from" /> and before
+    ///     <paramref name="before" />, newest first — the startup pass's candidates
+    ///     (docs/design/import-restart-recovery.md §0).
+    /// </summary>
+    Task<IReadOnlyList<ImportRunForRecovery>> GetStartedBetween(DateTimeOffset from, DateTimeOffset before,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Runs that saved into a session and then ended in anything but Completed, at or after
+    ///     <paramref name="finishedFrom" /> — the one way an import's announcement can go missing on a
+    ///     live process.
+    /// </summary>
+    Task<IReadOnlyList<ImportRunForRecovery>> GetFailedSince(DateTimeOffset finishedFrom,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -72,6 +87,6 @@ internal interface IImportResultRepository
     Task Acknowledge(Guid id, DateTimeOffset at, CancellationToken cancellationToken = default);
 }
 
-/// <summary>An import run seen from its session — what the recovery pass needs to judge it.</summary>
-internal sealed record ImportRunForSession(Guid Id, Guid SessionId, DateTimeOffset StartedAt,
+/// <summary>An import run as the recovery passes see it: whose, which session, and whether it ended.</summary>
+internal sealed record ImportRunForRecovery(Guid Id, Guid UserId, Guid? SessionId, DateTimeOffset StartedAt,
     DateTimeOffset? FinishedAt);

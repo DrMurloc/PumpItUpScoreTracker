@@ -40,13 +40,6 @@ internal interface IScoreSessionRepository
     /// </summary>
     Task MarkProcessed(Guid id, DateTimeOffset at, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    ///     Sessions whose derived work never ran. Naturally tiny — every session predating the
-    ///     column is backfilled as processed — so this is the cheap end to start a recovery pass
-    ///     from (docs/design/import-restart-recovery.md §3.1).
-    /// </summary>
-    Task<IReadOnlyList<ScoreSessionRecord>> ListUnprocessed(CancellationToken cancellationToken = default);
-
     Task<ScoreSessionRecord?> Get(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>Newest first — the order the Undo page lists them in.</summary>
