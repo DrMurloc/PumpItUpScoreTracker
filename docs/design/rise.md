@@ -1,6 +1,6 @@
 # Pump It Up RISE — two keyboard mixes
 
-Status: **phase 1 merged — [PR #349](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/349)** (2026-09-22), in the commit order of §8.1; the picker order and wordmarks follow in [PR #351](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/351); the owner-owed steps are §11.5. Discord session cards for both mixes, and the sittings the plays endpoint gathers plays into, are §12 (scoped 2026-09-23); on RISE a sitting slides on 4 hours and the capture app closes it (D25, 2026-09-26).
+Status: **phase 1 merged — [PR #349](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/349)** (2026-09-22), in the commit order of §8.1; the picker order and wordmarks follow in [PR #351](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/351); the owner-owed steps are §11.5. Discord session cards for both mixes, and the sittings the plays endpoint gathers plays into, are §12 (scoped 2026-09-23); on RISE a sitting slides on 4 hours and the capture app closes it (D25, 2026-09-26). The import page and the Import Scores widget offer the capture app's download on both mixes (§6.4, D26, 2026-09-27).
 Researched 2026-09-14 → 2026-09-22 from the owner's install, his screenshots, two community sheets, two wikis and the
 Steam patch notes; the owner took the high-level plan to two Rise players (Sneezle, Dave) on 2026-09-21 and their
 answers are folded in; every open question of §9 was answered by 2026-09-22. Every decision below is the owner's
@@ -115,6 +115,10 @@ Owner decisions are marked **(owner, date)**; the rest are mine, decided unless 
   Perfect Game, and a pass without judgments must score above zero, since an omitted score reads as zero.
   *Decided unless he objects:* without judgments the score still has to agree with the plate — only 1,000,000 is a
   Perfect Game, so a PG below it, or any other plate at it, is refused.
+- **D26 (owner, 2026-09-27). The site offers the capture app's download on the import page and the Import Scores
+  widget** (§6.4): "This download button should also be what shows on the import widget for the homepage," with a
+  short explanation of the app on the import page. Both RISE mixes, no other. The link to the app's privacy page
+  ships while the owner rewrites that page: "Include it for now."
 
 ---
 
@@ -139,6 +143,7 @@ value has one):
 | `LifebarModel` | Phoenix | None | None | None |
 | `ChartTypes` | S, D, CoOp | S, **HalfDouble** | S, D | S, D, CoOp, SP, DP, HalfDouble — the full historical set. SP/DP end at XX and half-doubles at the Infinity/Pro line, but a picker hides a tab with nothing in it, so the profile declares the superset rather than guessing per mix |
 | `Art` | own palette, bubbles, letters | own palette, **Rise letters + marks**, chip bubbles | own palette, Phoenix letters/plates/bubbles | Phoenix letters, XX bubbles, chips |
+| `Features` | PUMBILITY, official boards, weekly board, March of Murlocs, the Phoenix calculators | **the capture app's download** only (D26) | **the capture app's download** only (D26) | none |
 | `SittingWindow` | 15 minutes | **4 hours** (D25) | **4 hours** (D25) | 15 minutes, never read — the plays endpoint takes Phoenix-scored mixes only |
 
 The existing helpers stay and delegate: `UsesLegacyScoring()` reads `ScoringModel`, the `MixCapabilities` flags
@@ -414,6 +419,31 @@ receive none.
 `{ "mix": … }`, ends the caller's open sittings on that mix and announces them right away. The capture app calls it
 when its session ends; §12 has the rule.
 
+### 6.4 The capture app's download (D26)
+
+The capture app shipped as **PIU Scores Watcher**, a Windows app in its own repository
+([DrMurloc/PiuScoresWatcher](https://github.com/DrMurloc/PiuScoresWatcher)) that posts through §6.3. The site offers
+its download in two places, on the two RISE mixes and no other: `MixCapabilities.HasScoresWatcher()` reads the
+profile's `Features.ScoresWatcher`, which only they set (§3).
+
+- **The import page.** On a RISE mix `/UploadPhoenixScores` is one Import Scores card in two columns. The
+  watcher leads: its icon, the app's own headline ("Play RISE. It does the rest."), two sentences on what it does —
+  including that its bulk capture reads the bests a player already has off Warm Up's song list — **Download for
+  Windows**, *What it looks at and sends* (the app's privacy page, in a new tab) and a caption that sends the player
+  to Account → API for the token the app asks for. The spreadsheet upload of §6.1 sits beside it, introduced as the
+  do-it-yourself alternative, its Upload CSV outlined so the download is the card's one filled button. On a phone
+  the columns stack, the watcher first.
+- **The Import Scores widget.** On a RISE mix the widget's spreadsheet state gives way to one line naming the app,
+  the same download button and *How it works*, a link to the import page. XX and older keep the spreadsheet.
+
+The button is one shared component, `ScoresWatcherDownload`, and it links GitHub's
+`releases/latest/download/PiuScoresWatcher-win-Setup.exe`: every release reaches players without a site change, and
+the site shows no version or size to go stale. Phones see the same button, which says Windows. The bulk-capture
+sentence names Warm Up because the app reads only Warm Up's song list (its D45), so one sentence is true on both
+mixes. The two URLs live in `CommunityToolLinks`, beside the one other tool the import copy names. The product name
+stays English in every locale. Mocked and approved 2026-09-27
+([canvas](https://claude.ai/artifact/XU627DpXC1pVBMBUW11JRq)).
+
 ---
 
 ## 7. UI
@@ -432,6 +462,7 @@ when its session ends; §12 has the rule.
   for PUMBILITY, weekly boards, March of Murlocs; "this mix never had it" for official boards and titles).
 - **Localization:** mix names stay untranslated proper nouns; the mark names and new page copy land in all nine
   locales in the same pass.
+- **The capture app:** the import page and the Import Scores widget offer its download on both mixes (§6.4, D26).
 
 ---
 
@@ -490,6 +521,7 @@ merge (§11.5).
 **Phase 2 — the capture app**: screen-grab and F12 modes, template-matched
 digits on the fixed result layout, the score and accuracy checksums, chart resolution against the Rise catalog,
 `POST api/v2/players/me/plays` (D14). Skips Challenge aggregates (division badge in the header). Learns note counts (D10).
+Shipped as PIU Scores Watcher in its own repository; the site offers its download (§6.4, D26).
 
 **Phase 3 — boards and PUMBILITY** with their own tuning; revisit the capability answers.
 

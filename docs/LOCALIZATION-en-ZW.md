@@ -53,7 +53,9 @@ exists because a rule with no ratchet is what produced the five dialects.
   alone (`BPM`, `NPS`, `CSV`, `URL`, `MB`, `SSS`, `AA`, `PG`, `MG`, `UG`, `API`, `PUMBILITY`), as
   are the protected proper nouns: `Pump It Up`, `Phoenix`, `Discord`, `PIUGame.com`, `piugame.com`,
   `PIU Center`, `piucenter`, `Start.GG`, `SkillAttack`, `piuscores`, `DrMurloc`, `YouTube`,
-  `Iolite Sky`, `BITE`, `Murloc`, `Claude` (the translation pipeline's model vendor, added 2026-08-24). A Murloc still has to be able to find the login page.
+  `Iolite Sky`, `BITE`, `Murloc`, `Claude` (the translation pipeline's model vendor, added 2026-08-24), `Windows`
+  (the system the RISE capture app runs on) and `Warm Up` (RISE's own name for its mode, as the game prints it),
+  both added 2026-09-27. A Murloc still has to be able to find the login page.
 
 ## Syllable inventory
 
