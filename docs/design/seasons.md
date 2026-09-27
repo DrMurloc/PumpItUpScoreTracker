@@ -496,8 +496,8 @@ are catalog-shaped and need none. All five land in the migrations of the slices 
 | `rebuild-leaderboards` | Nightly, after the rollup and the roll | Recompute every standing for all-time and every open season from the published ports (D43, D44), re-rank each board, stamp yesterday's rank as the previous rank. The retrofit is the same rebuild for a named sealed season after its rollup has been re-run. |
 
 The import path itself: `HighlightCaptureSaga` runs the rating step in-process today; the season pass
-is a second in-process step behind it, failure-isolated, quiet (§4.2). The flush job that recovers
-stranded batches covers it for free, and `RebuildLatestSessions` replays it.
+is a second in-process step behind it, failure-isolated, quiet (§4.2). A replayed session re-runs it —
+startup recovery, the five-minute tick's replay of a failed import — and `RebuildLatestSessions` replays it.
 
 **Backfill (D23)** is an admin button, one-shot and idempotent: for every quarter from Summer 2026 to
 the running one, create the season row if missing and ask for its replay — the journal (official

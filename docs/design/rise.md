@@ -767,7 +767,8 @@ boards and the Daily Step stay off the card because RISE has none of them.
 
 ### 12.2 What stays as it is
 
-Manual entry and the spreadsheet upload keep the two-minute batch; they arrive in bursts. A Warm Up play and an
+Manual entry keeps the two-minute batch; it arrives in bursts. The spreadsheet upload rides the same batch and
+drains it the moment the upload ends ([import-restart-recovery.md](import-restart-recovery.md) §0). A Warm Up play and an
 Arcade Station play belong to two mixes, so they make two sittings and two cards. The capture app's offline outbox
 is separate work (the handoff note in the owner's Downloads, 2026-09-23).
 

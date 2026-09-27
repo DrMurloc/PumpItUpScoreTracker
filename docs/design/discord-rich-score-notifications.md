@@ -22,31 +22,24 @@ Owner feedback after iteration 2 ran live. Three asks plus a sort bug, one PR:
    only backstop), and the **folder line are reserved first**; only the score buckets flex to
    fit, overflowing the rest into the "+N more" count. The folder breakdown always survives on
    the bottom.
-2. **Site-detected titles ride the main card, parked on the open batch.** All title completions
-   are top priority and show in a card. The title path **parks** the site-only badges
-   (`CompletionRequired == 0`) on the open score batch via
-   `IPlayerScoreBatchAccumulator.TryAddDetectedTitles`, and `CaptureSessionTitles` takes them
-   with `TakeDetectedTitles` and merges them into the card's own batch crossings. Badges carry no
-   requirement to climb, so they trail the ladder crossings, alphabetically.
-
-   The hand-off is safe on **timing, not luck**: the import publishes `TitlesDetectedEvent`
-   immediately after its last score save, and that batch does not drain for another two minutes.
-   The parked titles live in a slot of their own on the accumulator, **not** on `BatchState` —
-   `TakeBatch` destroys the batch at drain time, before the title step that reads them runs.
-   Taking on read is what makes a badge announceable exactly once.
+2. **Site-detected titles ride the main card, on the event itself** (reshaped 2026-09-26). All title
+   completions are top priority and show in a card. An import hands the titles piugame reported to its
+   one announcement (`PlayerScoresUpdatedEvent.TitlesFound`), and `CaptureSessionTitles` saves them
+   first, mints the site-only badges (`CompletionRequired == 0`) it had not seen before and lists them
+   after the card's own ladder crossings, alphabetically — badges carry no requirement to climb.
+   *Supersedes parking them on the open score batch, which was safe only because an import's batch
+   waited two minutes after its last save; that wait is gone
+   ([import-restart-recovery.md](import-restart-recovery.md) §0).*
 
    ⚠ **The card must never find these by reading the session's milestone rows.** That was the
    original design and it caused every card in a session to repeat the previous ones' titles: a
    session envelope spans **8 hours** while a batch drains after **2 minutes**, so one session
    emits many cards and the unbounded read handed each of them everything earned since the
-   session opened. Equally, do not split the park and any "drain the batch now" trigger across
-   two published messages — consumers run concurrently, and `TakeBatch` (an in-memory op at the
-   head of the drain) beats a multi-round-trip title diff every time.
+   session opened.
 
-   A **zero-score** import (detected a badge but saved no scores) has no batch to park on, so
-   `TryAddDetectedTitles` refuses and its titles render as their own rich **titles-card**
-   (`NewTitlesAcquiredEvent`, upgraded from the old plain-text list — owner Q1=a). Same fallback
-   if the batch already drained. Big fresh imports showing nothing but titles is intended.
+   A **zero-score** import (detected a badge but changed no scores) posts no snapshot card, so its
+   titles go out on `TitlesDetectedEvent` and render as their own rich **titles-card**
+   (`NewTitlesAcquiredEvent`, upgraded from the old plain-text list — owner Q1=a).
 3. **Peer comparison stops below competitive − 5.** A chart more than 5 levels under the player's
    competitive level for its type (singles competitive → singles charts, doubles → doubles) is
    noise (a 23-competitive player back-filling S5s). The `ScoreQuality90` flag is skipped

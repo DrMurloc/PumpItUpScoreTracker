@@ -4,6 +4,15 @@ Status: **built** on `claude/pumbility-mismatch-detector-378a55`, not yet PR'd. 
 (2051 / 148 / 557 / 209). **Deferred: the nine-locale sweep** — the panel's strings render English
 by key-fallback and the locale-parity ratchet stays green because no locale carries the keys yet.
 
+> **One run, three depths** (owner, 2026-09-26: *"just make the deep scan a bool that tells the import to
+> go further"*). A check and a deep scan are the import itself with a second pass. `RunOfficialImportCommand`
+> carries the `ImportKind`, and `RunOfficialImportConsumer` runs every kind: pass 1 is the ordinary walk and
+> save; pass 2 re-reads the levels the census says disagree (Check) or every best-score page (Deep scan)
+> into the same run, which then announces once ([import-restart-recovery.md](import-restart-recovery.md) §0).
+> `RunImportCheckCommand`, its consumer and `ExecuteImportCheckCommand` are gone; the start command, the
+> credits and the site-wide deep-scan slot are unchanged. Where the sections below say the check runs an
+> import and then its own step, those are now pass 1 and pass 2 of one run.
+
 > **A check saves what it finds** (owner call, 2026-08-03). Nobody looks at a list of their own
 > scores from the official site and declines one, so anything a run recovers is written on the spot
 > as a normal import — same session, same journal, same rating sweep — and lands on the player's
@@ -243,7 +252,7 @@ Everything scraping-side is **OfficialMirror** — it is the PiuGame anti-corrup
 |---|---|
 | `GetPlayDataCensus(mix, sid, ct)`, `GetPumbilityTotal(mix, sid, ct)`, `GetPlayLogPage(...)` | `IPiuGameApi` (internal) + `PiuGameApi` |
 | Census normalisation (cumulative→exact, bucket→level) | `OfficialMirror/Domain`, pure and unit-testable |
-| `StartImportCheckCommand` → `RunImportCheckCommand` (bus) → consumer → saga | mirrors `StartOfficialImportCommand` exactly, including `SetScopedUser` |
+| `StartImportCheckCommand` → `RunOfficialImportCommand(Kind)` (bus) → `RunOfficialImportConsumer` | the check's start handler spends the credit; everything after it is the import's own run (2026-09-26) |
 | `ImportCheckCompletedEvent` (a count, not a verdict) | `OfficialMirror/Contracts/Events` |
 | `ImportCheckCompletedEvent` (the verdict itself — nothing stores it) | `OfficialMirror/Contracts/Events`, bridged to `UiTopics.User` |
 | `User.DeepScansRemaining` + `SpendDeepScanCommand` / `GetDeepScansRemainingQuery` / `ResetDeepScansCommand` | `ScoreTracker.Data` entity; Identity owns the operations |

@@ -1,6 +1,7 @@
 # Import Restart Recovery
 
-Status: **designed** 2026-08-09, not built. Scoped to one failure: **the process going away
+Status: **built** 2026-08-09, **reshaped 2026-09-26** — §0 is the model now; the rest records the design
+it replaced and why. Scoped to one failure: **the process going away
 mid-import**. A consumer throwing on a healthy process is a different problem with a different
 answer (retries hung off the import-status work) and is deliberately out of scope here.
 
@@ -12,6 +13,45 @@ answer (retries hung off the import-status work) and is deliberately out of scop
 > The credential blob lives in the player's browser and PIU Scores holds only the key that unwraps
 > it, so there is nothing server-side to resume from and nothing new is stored to create one. This
 > is the same standing rule `SessionModeNeverPersistsBodyTests` ratchets for the delivery path.
+
+## 0. The model since 2026-09-26
+
+> **Owner, 2026-09-26:** the two-minute batch *"only existed to aggregate when someone is manually typing
+> in a bunch of scores"*, and imports *"really don't need to wait for that 2 minute aggregator"* — it was
+> *"created when importing was RARE"*. An import fires its event as soon as its scores are all saved, from
+> the changes it already holds, and a check and a deep scan are depths of that one import run.
+
+- **An import never enters the batch.** Every save the run makes passes `DeferAnnouncement`, and
+  `UpdatePhoenixBestAttemptCommand` hands back what it changed (`ScoreSaveResult`: a new pass, an upscore
+  and the score it replaced, or nothing). The run keeps those results and, once every score is saved,
+  sends `AnnounceScoreChangesCommand` once. The Ledger folds them by one rule — a new pass wins, an upscore
+  keeps the first score it replaced, which is also the batch's rule and the replay's — takes any typed-entry
+  batch the player has open into the same announcement, so one burst is still one capture, and publishes
+  `PlayerScoresUpdatedEvent` carrying the titles piugame reported (`TitlesFound`). When nothing changed
+  there is no score event: the session is stamped processed and the titles go out on
+  `TitlesDetectedEvent`, as they always did.
+- **§1's dangerous window is gone.** Nothing waits after an import: the announcement is sent before the run
+  is closed, so "Completed" means the follow-up has started.
+- **A run that fails after saving still announces what it saved** (not on shutdown — that is the
+  startup pass's job). Every path announces at most once.
+- **Recovery reads import runs, not unprocessed sessions.** §3.1 started from the sessions because a
+  finished run did not mean its batch had drained; now it does. The startup pass runs a few minutes after
+  boot, so a process being replaced has finished first. It closes runs that never finished and started
+  more than a day earlier silently — `Interrupted`, already acknowledged, no notice about a weeks-old
+  press — then takes every run that began in the day before the boot, newest first: it replays the
+  session and, if the run never finished, closes it `Interrupted`. The five-minute tick replays the
+  session of every run that ended with a failure in the last day, the one way an import's announcement
+  can go missing on a live process. `ReplaySessionCommand` skips a session that is processed **or already
+  announced** (its counts are written at the announcement), so neither pass can post a card twice. There
+  is no cap and no unprocessed-session scan, which is what let 25 never-announced typed entries wall
+  recovery off completely.
+- **What still rides the batch:** the score form and the v1 record API, its original job, and the CSV
+  upload, which drains it the moment the upload ends (`DrainScoreBatchCommand`) and falls back to the
+  two-minute timer if the page is gone before it can.
+
+The sections below are the 2026-08-09 design and its amendments. Where they describe imports riding the
+batch, the session-first candidate query, `GetUnprocessedSessionsQuery`, `StaleAfter` or the 25-session
+cap, this section supersedes them.
 
 ## 1. The problem
 
@@ -109,6 +149,10 @@ different questions.
 
 ### 3.1 Start from the marker, not from the clock
 
+> **Reversed 2026-09-26 (§0).** A finished import now means its announcement went out, so the pass
+> reads the import runs directly. The unprocessed-session list below also held every typed entry that
+> never announced, and 25 of those were enough to hide every stranded import behind them.
+
 **Order matters here, and getting it backwards costs a magic number.** Ask ScoreLedger for
 **unprocessed sessions** *first*, then let OfficialMirror gate each one on its own run:
 
@@ -205,6 +249,10 @@ deploy sees the entire history as unprocessed and tries to replay all of it. "Un
 never be able to mean "predates the feature".
 
 ### 4.3 The mid-life sweep
+
+> **Superseded 2026-09-26 (§0).** Imports no longer ride the batch, so the replay half now takes only
+> runs that ended with a failure in the last day, and `ReplaySessionCommand` refuses a session that
+> already announced. The stale-and-undrained gate, `StaleAfter` and the 25-session cap below are history.
 
 The boot pass answers "the process died". `flush-overdue-score-batches` (every 5 minutes, §1.1)
 answers the other one: **the process is fine and the drain still never happened.** Two halves,
@@ -443,11 +491,17 @@ line belongs in `docs/API.md` beside the webhook payload description.
 
 ## 9. Deliberately not covered
 
-- **Resuming a mid-scrape run.** No sid, no password, by design (§0).
-- **A consumer throwing on a healthy process.** Different failure, different fix.
-- **Manual / CSV / API batches.** Out of reach of the import-table anchor (§3).
-- **A crash inside `HighlightCaptureSaga` on a process that then keeps running.** The stamp is
-  absent, so the next boot recovers it — but not before.
+- **Resuming a mid-scrape run.** No sid, no password, by design (the owner call at the top).
+- **A consumer throwing on a healthy process** — except an import whose announcement throws: the run
+  closes with a failure and the five-minute tick replays it (§0).
+- **Typed entries and v1 API record calls.** They ride the two-minute window, and a restart inside it
+  loses their derived work; the five-minute tick only drains a lost timer on a live process. A CSV upload
+  drains the window when it ends, so only a restart during the upload itself costs its follow-up.
+- **A capture chain that dies after its announcement.** The session's counts were written at the
+  announcement, and replaying an announced session would post its card twice, so nothing replays it
+  (owner, 2026-09-26: that window was always out of scope).
+- **Titles on a replay.** A replayed event carries no titles; the next import sends the account's full
+  list again.
 
 ## 10. Ownership
 
