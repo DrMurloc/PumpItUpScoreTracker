@@ -881,8 +881,31 @@
         var cancellationToken = _currentCancellation.Token;
         _currentSaved = 0;
         var startTime = DateTimeOffset.Now;
-        // One upload = one session.
-        var uploadSessionId = Guid.NewGuid();
+        var mix = _currentMix;
+        try
+        {
+            await SaveRows(startTime, cancellationToken);
+        }
+        finally
+        {
+            // The rows ride the Ledger's CSV session and its two-minute batch, like typed entries, so
+            // the Ledger opens the session Undo lists. But a file is the whole burst — nobody uploads a
+            // second one a minute later — so the batch is announced the moment the upload ends:
+            // finished, cancelled or failed. Not the page's token: a cancelled upload still announces
+            // what it saved. If the circuit is gone before this runs, the batch's own timer does it.
+            try
+            {
+                await Mediator.Send(new DrainScoreBatchCommand(_userId, mix), CancellationToken.None);
+            }
+            catch (Exception e)
+            {
+                Logger.LogWarning(e, "Could not announce the CSV upload right away; its batch timer will");
+            }
+        }
+    }
+
+    private async Task SaveRows(DateTimeOffset startTime, CancellationToken cancellationToken)
+    {
         var myScores = (await Mediator.Send(new GetPhoenixRecordsQuery(_userId, _currentMix), cancellationToken)).ToDictionary(s => s.ChartId);
         // A CSV is a manual submission: a passing row is what the player wants shown, so it is
         // authoritative and may lower a record (docs/design/score-truth-model.md D9). A broken row is
@@ -916,8 +939,7 @@
             try
             {
                 await Mediator.Send(new UpdatePhoenixBestAttemptCommand(best.ChartId, best.IsBroken, best.Score, best.Plate,
-                    KeepBestStats: best.IsBroken, Source: ScoreJournalEntry.CsvSource, Mix: _currentMix,
-                    SessionId: uploadSessionId),
+                    KeepBestStats: best.IsBroken, Source: ScoreJournalEntry.CsvSource, Mix: _currentMix),
                     cancellationToken);
             }
             catch (OperationCanceledException)

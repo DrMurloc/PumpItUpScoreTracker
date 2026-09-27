@@ -23,6 +23,7 @@ using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
@@ -361,6 +362,61 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
         cut.WaitForAssertion(() => _mediator.Verify(m => m.Send(
             It.Is<UpdatePhoenixBestAttemptCommand>(c => c.ChartId == chartId && !c.IsBroken && !c.KeepBestStats),
             It.IsAny<CancellationToken>()), Times.Once));
+    }
+
+    [Fact]
+    public async Task AnUploadSavesIntoTheLedgersCsvSessionAndAnnouncesTheMomentItEnds()
+    {
+        // The page used to mint its own session id, which the Ledger treats as a caller that opened its
+        // own session — so no session row was ever written and Undo could not list the upload. Now the
+        // Ledger's CSV envelope opens it, and the upload drains the batch instead of waiting it out.
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(MixEnum.Phoenix2);
+        var first = Guid.NewGuid();
+        var last = Guid.NewGuid();
+        GivenTheFileParsesTo(
+            new RecordedPhoenixScore(first, 950000, PhoenixPlate.FairGame, false, Uploaded),
+            new RecordedPhoenixScore(last, 960000, PhoenixPlate.FairGame, false, Uploaded));
+        var order = new List<string>();
+        _mediator.Setup(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<ScoreSaveResult>, CancellationToken>((c, _) =>
+                order.Add(((UpdatePhoenixBestAttemptCommand)c).ChartId == last ? "last" : "first"))
+            .ReturnsAsync(default(ScoreSaveResult));
+        _mediator.Setup(m => m.Send(It.IsAny<DrainScoreBatchCommand>(), It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("drain"))
+            .Returns(Task.CompletedTask);
+
+        var cut = await UploadAndSave();
+
+        cut.WaitForAssertion(() => Assert.Equal(new[] { "first", "last", "drain" }, order));
+        _mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c =>
+                c.SessionId == null && c.Source == ScoreJournalEntry.CsvSource && !c.DeferAnnouncement),
+            It.IsAny<CancellationToken>()), Times.Exactly(2));
+        _mediator.Verify(m => m.Send(It.Is<DrainScoreBatchCommand>(c => c.Mix == MixEnum.Phoenix2),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnUploadThatFailsPartWayStillAnnouncesWhatItSaved()
+    {
+        var saved = Guid.NewGuid();
+        var failing = Guid.NewGuid();
+        GivenTheFileParsesTo(
+            new RecordedPhoenixScore(saved, 950000, PhoenixPlate.FairGame, false, Uploaded),
+            new RecordedPhoenixScore(failing, 960000, PhoenixPlate.FairGame, false, Uploaded));
+        _mediator.Setup(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.ChartId == failing),
+            It.IsAny<CancellationToken>())).ThrowsAsync(new TimeoutException("sql"));
+
+        try
+        {
+            await UploadAndSave();
+        }
+        catch (TimeoutException)
+        {
+            // The failure itself is the page's to show; what matters here is what reached the Ledger.
+        }
+
+        _mediator.Verify(m => m.Send(It.Is<DrainScoreBatchCommand>(c => c.Mix == MixEnum.Phoenix),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private void GivenTheRecords(params RecordedPhoenixScore[] records)
