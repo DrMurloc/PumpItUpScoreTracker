@@ -26,8 +26,9 @@ internal interface IImportResultRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     Points the run at the score session it saved into, once one exists. Separate from Open
-    ///     because a run that dies before its first save legitimately has none.
+    ///     Points the run at its score session, the moment that session opens and before the
+    ///     scrape: restart recovery finds a run only through this link. Separate from Open because
+    ///     a run can end before it opens one — a deep scan refused its site-wide slot never does.
     /// </summary>
     Task AttachSession(Guid id, Guid sessionId, CancellationToken cancellationToken = default);
 

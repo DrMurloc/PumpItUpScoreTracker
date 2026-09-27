@@ -35,6 +35,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class ImportCheckSagaTests
 {
     private static readonly Guid UserId = Guid.NewGuid();
+    private static readonly Guid SessionId = Guid.NewGuid();
     private static readonly Guid ChartId = Guid.NewGuid();
     private static readonly Guid OtherChartId = Guid.NewGuid();
 
@@ -260,12 +261,9 @@ public sealed class ImportCheckSagaTests
     }
 
     [Fact]
-    public async Task TheImportAndTheDeeperReadShareOneSession()
+    public async Task TheImportAndTheDeeperReadSaveIntoTheRunsSession()
     {
         var mediator = Mediator();
-        var sessionId = Guid.NewGuid();
-        mediator.Setup(m => m.Send(It.IsAny<BeginScoreSessionCommand>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(sessionId);
         var site = Site(Census(("18", 2)));
         site.Setup(s => s.GetBestScoresIn(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
                 It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
@@ -277,41 +275,30 @@ public sealed class ImportCheckSagaTests
 
         await Build(mediator: mediator, site: site, records: Records(1)).Handle(Execute(), CancellationToken.None);
 
-        // One button press must not put two rows seconds apart in the sessions list.
+        // The consumer opened the session and pointed the run at it. Both halves save there, so one
+        // button press is one row in the sessions list, and it is the row recovery would replay.
         mediator.Verify(m => m.Send(It.IsAny<BeginScoreSessionCommand>(), It.IsAny<CancellationToken>()),
-            Times.Once);
-        mediator.Verify(m => m.Send(It.Is<ExecuteImportCommand>(c => c.SessionId == sessionId),
+            Times.Never);
+        mediator.Verify(m => m.Send(It.Is<ExecuteImportCommand>(c => c.SessionId == SessionId),
             It.IsAny<CancellationToken>()), Times.Once);
-        mediator.Verify(m => m.Send(It.Is<SaveOfficialScoresCommand>(c => c.SessionId == sessionId),
+        mediator.Verify(m => m.Send(It.Is<SaveOfficialScoresCommand>(c => c.SessionId == SessionId),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task ADeepScanWaitsRatherThanPilingOntoTheOnesAlreadyWalkingTheSite()
+    public async Task TheRunCountsWhatBothHalvesSaved()
     {
-        var site = Site(Census(("18", 1)));
+        var mediator = Mediator();
+        mediator.Setup(m => m.Send(It.IsAny<ExecuteImportCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(2);
+        mediator.Setup(m => m.Send(It.IsAny<SaveOfficialScoresCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
 
-        await Build(guard: Guard(deepSlot: false), site: site)
-            .Handle(Execute(deepScan: true), CancellationToken.None);
+        var saved = await Build(mediator: mediator, site: Site(Census(("18", 2))), records: Records(1))
+            .Handle(Execute(), CancellationToken.None);
 
-        site.Verify(s => s.GetOfficialCensus(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
-            It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task TheGlobalDeepScanSlotIsAlwaysReturned()
-    {
-        var guard = Guard();
-        var site = Site();
-        site.Setup(s => s.GetBestScoresIn(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
-                It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new TimeoutException("piugame fell over"));
-
-        await Assert.ThrowsAsync<TimeoutException>(() =>
-            Build(guard: guard, site: site).Handle(Execute(deepScan: true), CancellationToken.None));
-
-        // A scan that dies mid-walk must not hold a site-wide slot until the process restarts.
-        guard.Verify(g => g.EndDeepScan(), Times.Once);
+        // One press: the import inside the run and the repair after it saved into the same session.
+        Assert.Equal(3, saved);
     }
 
     // ---- builders ----
@@ -325,7 +312,7 @@ public sealed class ImportCheckSagaTests
     private static ExecuteImportCheckCommand Execute(bool deepScan = false, bool includeBroken = false)
     {
         return new ExecuteImportCheckCommand(UserId, MixEnum.Phoenix, "sid", "card", "TAG #1", deepScan,
-            includeBroken);
+            includeBroken, SessionId);
     }
 
     private static Chart Chart(Guid id)
@@ -349,11 +336,10 @@ public sealed class ImportCheckSagaTests
             .ToArray();
     }
 
-    private static Mock<IImportConcurrencyGuard> Guard(bool userSlot = true, bool deepSlot = true)
+    private static Mock<IImportConcurrencyGuard> Guard(bool userSlot = true)
     {
         var guard = new Mock<IImportConcurrencyGuard>();
         guard.Setup(g => g.TryBegin(It.IsAny<Guid>())).Returns(userSlot);
-        guard.Setup(g => g.TryBeginDeepScan()).Returns(deepSlot);
         return guard;
     }
 
@@ -377,8 +363,6 @@ public sealed class ImportCheckSagaTests
             .ReturnsAsync(0);
         mediator.Setup(m => m.Send(It.IsAny<SaveOfficialScoresCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
-        mediator.Setup(m => m.Send(It.IsAny<BeginScoreSessionCommand>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Guid.NewGuid());
         mediator.Setup(m => m.Send(It.IsAny<GetDeepScansRemainingQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(scansLeft);
         mediator.Setup(m => m.Send(It.IsAny<SpendDeepScanCommand>(), It.IsAny<CancellationToken>()))
