@@ -27,8 +27,9 @@ Inputs, all CSV/JSON (the research bundle's `2026-09-22-catalog-inputs/` is a co
 | `jackets-manifest.csv` | The jackets already on the CDN under `songs/` (`title, gameId, file, …`) |
 | `durations.csv` (optional) | `Title, Seconds` for the new songs where measured; `00:00:00` otherwise |
 
-Outputs, four single-transaction scripts (`SET XACT_ABORT ON`, a `RAISERROR` on any count that comes up short
-rolls the whole script back) plus `reports/`:
+Outputs, four single-transaction scripts (`SET XACT_ABORT ON`; a missing Rise mix row or any count that comes up
+short `THROW`s, which rolls the whole script back — a `RAISERROR` would only print, and the script would go on to
+`COMMIT`) plus `reports/`:
 
 | Script | Rows | Needs |
 |---|---|---|

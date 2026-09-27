@@ -61,6 +61,17 @@ def q(s):
     return "N'" + str(s).replace("'", "''") + "'"
 
 
+def at_least(count_sql, expected, what, why=''):
+    """A closing count check: fewer rows than expected throws with both numbers, which rolls the script back."""
+    tail = f", {q(': ' + why)}" if why else ''
+    return (f"SET @n = ({count_sql});\n"
+            f"IF @n < {expected}\n"
+            "BEGIN\n"
+            f"    SET @msg = CONCAT({q(f'Expected {expected} {what}, found ')}, @n{tail});\n"
+            "    THROW 50000, @msg, 1;\n"
+            "END;")
+
+
 def image_name(title):
     return ''.join(c for c in title if c.isascii() and c.isalnum()) + '.png'
 
@@ -304,12 +315,16 @@ def main(inputs, out):
     if missing_versions:
         raise SystemExit(f'patches.csv lacks Rise versions the sheet uses: {sorted(missing_versions)}')
 
+    # Every check stops the script with THROW, which honors XACT_ABORT: the transaction rolls back and COMMIT never
+    # runs. RAISERROR does not; it prints the error and the script carries on to COMMIT whatever it had written.
     head = ("SET XACT_ABORT ON;\nSET NOCOUNT ON;\nBEGIN TRAN;\n"
             f"DECLARE @Rise uniqueidentifier = '{MIX['Rise']}';\n"
             f"DECLARE @RiseArcade uniqueidentifier = '{MIX['RiseArcade']}';\n"
             f"DECLARE @Phoenix uniqueidentifier = '{MIX['Phoenix']}';\n"
             f"DECLARE @Phoenix2 uniqueidentifier = '{MIX['Phoenix2']}';\n"
-            "IF NOT EXISTS (SELECT 1 FROM [scores].[Mix] WHERE [Id] = @Rise) RAISERROR('The RiseMixes migration has not run', 16, 1);\n")
+            "DECLARE @n int, @msg nvarchar(400);\n"
+            "IF NOT EXISTS (SELECT 1 FROM [scores].[Mix] WHERE [Id] = @Rise) "
+            "THROW 50000, N'The RiseMixes migration has not run', 1;\n")
 
     # s1: the patches
     s1 = [head]
@@ -337,8 +352,8 @@ def main(inputs, out):
         s2.append(f"IF NOT EXISTS (SELECT 1 FROM [scores].[Chart] WHERE [Id] = '{c['id']}') "
                   f"INSERT INTO [scores].[Chart] ([Id], [SongId], [Level], [Type], [StepArtist], [OriginalMixId], [PlayerCount]) "
                   f"VALUES ('{c['id']}', {song_sql}, {c['level']}, '{c['type']}', NULL, @Rise, 1);")
-    s2.append(f"IF (SELECT COUNT(*) FROM [scores].[Chart] WHERE [OriginalMixId] = @Rise) < {len(charts_new)} "
-              f"RAISERROR('Expected {len(charts_new)} Rise-origin charts', 16, 1);")
+    s2.append(at_least("SELECT COUNT(*) FROM [scores].[Chart] WHERE [OriginalMixId] = @Rise", len(charts_new),
+                       'Rise-origin charts'))
     s2.append('COMMIT;')
 
     # s3: Rise membership
@@ -355,8 +370,8 @@ def main(inputs, out):
             where = (f"WHERE s.[Name] = {q(name)} AND c.[Type] = '{ctype}' AND cm.[Level] = {origin_level} "
                      f"AND NOT EXISTS (SELECT 1 FROM [scores].[ChartMix] x WHERE x.ChartId = c.Id AND x.MixId = @Rise)")
         s3.append(f"INSERT INTO [scores].[ChartMix] ([Id], [ChartId], [MixId], [Level], [NoteCount], [AddedInVersionId]) {src} {where};")
-    s3.append(f"IF (SELECT COUNT(*) FROM [scores].[ChartMix] WHERE [MixId] = @Rise) < {len(membership)} "
-              f"RAISERROR('Expected {len(membership)} Rise membership rows — a song name did not resolve', 16, 1);")
+    s3.append(at_least("SELECT COUNT(*) FROM [scores].[ChartMix] WHERE [MixId] = @Rise", len(membership),
+                       'Rise membership rows', 'a song name did not resolve'))
     s3.append('COMMIT;')
 
     # s4: Rise Arcade membership
@@ -368,8 +383,8 @@ def main(inputs, out):
                   f"FROM [scores].[ChartMix] cm JOIN [scores].[Chart] c ON c.Id = cm.ChartId JOIN [scores].[Song] s ON s.Id = c.SongId "
                   f"WHERE cm.MixId = @Phoenix2 AND s.[Name] = {q(a['name'])} AND c.[Type] = '{a['type']}' AND cm.[Level] = {a['level']} "
                   f"AND NOT EXISTS (SELECT 1 FROM [scores].[ChartMix] x WHERE x.ChartId = cm.ChartId AND x.MixId = @RiseArcade);")
-    s4.append(f"IF (SELECT COUNT(*) FROM [scores].[ChartMix] WHERE [MixId] = @RiseArcade) < {len(arcade_rows)} "
-              f"RAISERROR('Expected {len(arcade_rows)} Rise Arcade membership rows', 16, 1);")
+    s4.append(at_least("SELECT COUNT(*) FROM [scores].[ChartMix] WHERE [MixId] = @RiseArcade", len(arcade_rows),
+                       'Rise Arcade membership rows'))
     s4.append('COMMIT;')
 
     for name, lines in (('s1-rise-versions.sql', s1), ('s2-rise-songs-charts.sql', s2),
