@@ -918,6 +918,9 @@
   <data name="An import is already running" xml:space="preserve">
     <value>インポートは既に実行中です</value>
   </data>
+  <data name="An import is running on this mix. Save again once it finishes." xml:space="preserve">
+    <value>このバージョンはインポート中です。完了してからもう一度保存してください。</value>
+  </data>
   <data name="an SSS+" xml:space="preserve">
     <value>SSS+</value>
   </data>
@@ -11012,6 +11015,9 @@
   </data>
   <data name="You call the API when you want it. Skip this screen." xml:space="preserve">
     <value>必要なときに API を呼んでください。この画面は飛ばして構いません。</value>
+  </data>
+  <data name="You can import again in {0} min." xml:space="preserve">
+    <value>{0}分後にもう一度インポートできます。</value>
   </data>
   <data name="You can leave once your key exists." xml:space="preserve">
     <value>キーができたら離れられます。</value>
