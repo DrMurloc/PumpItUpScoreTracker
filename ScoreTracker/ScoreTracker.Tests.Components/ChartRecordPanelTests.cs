@@ -39,6 +39,7 @@ public sealed class ChartRecordPanelTests : ComponentTestBase
     public ChartRecordPanelTests()
     {
         CurrentUser.SetupGet(u => u.IsLoggedIn).Returns(true);
+        CurrentUser.SetupGet(u => u.User).Returns(new User(Guid.NewGuid(), "Tester", true, null, new Uri("https://piu.test/avatar.png"), null));
         Services.AddSingleton(_mediator.Object);
         Services.AddSingleton(Mock.Of<IDateTimeOffsetAccessor>(c => c.Now == DateTimeOffset.UtcNow));
 

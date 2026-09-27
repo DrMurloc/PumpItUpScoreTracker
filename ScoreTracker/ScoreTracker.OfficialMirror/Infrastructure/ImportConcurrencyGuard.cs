@@ -1,27 +1,52 @@
 using System.Collections.Concurrent;
 using ScoreTracker.OfficialMirror.Domain;
+using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.OfficialMirror.Infrastructure;
 
-// Singleton: one shared set of user ids with an import in flight. TryAdd/TryRemove are atomic,
-// so concurrent Start attempts race cleanly — exactly one wins the slot.
+// Singleton: one shared map of the users with an import in flight, and when each user last started one
+// on each mix. TryAdd/TryRemove are atomic, so concurrent Start attempts race cleanly — exactly one wins.
 internal sealed class ImportConcurrencyGuard : IImportConcurrencyGuard
 {
+    /// <summary>
+    ///     How long after a run starts before the next may start on the same mix (owner, 2026-09-27: to stop
+    ///     button spam overloading piugame).
+    /// </summary>
+    public static readonly TimeSpan Cooldown = TimeSpan.FromMinutes(5);
+
     // Deep scans are the only work heavy enough to need a site-wide cap. Two at a time keeps a
     // second player from waiting on a 240-page walk without ever doubling that load again.
     private const int ConcurrentDeepScans = 2;
 
-    private readonly ConcurrentDictionary<Guid, byte> _running = new();
+    private readonly ConcurrentDictionary<Guid, MixEnum> _running = new();
+    private readonly ConcurrentDictionary<(Guid UserId, MixEnum Mix), DateTimeOffset> _lastStarted = new();
     private readonly SemaphoreSlim _deepScans = new(ConcurrentDeepScans, ConcurrentDeepScans);
 
-    public bool TryBegin(Guid userId)
+    public ImportSlot TryBegin(Guid userId, MixEnum mix, DateTimeOffset now, bool cooldownApplies)
     {
-        return _running.TryAdd(userId, 0);
+        if (!_running.TryAdd(userId, mix)) return ImportSlot.AlreadyRunning;
+        if (!cooldownApplies || !_lastStarted.TryGetValue((userId, mix), out var started) ||
+            now - started >= Cooldown)
+            return ImportSlot.Taken;
+
+        // Taken for a moment and handed straight back: a refusal holds nothing.
+        _running.TryRemove(userId, out _);
+        return new ImportSlot(ImportSlotOutcome.CoolingDown, Cooldown - (now - started));
+    }
+
+    public void Started(Guid userId, MixEnum mix, DateTimeOffset at)
+    {
+        _lastStarted[(userId, mix)] = at;
     }
 
     public void End(Guid userId)
     {
         _running.TryRemove(userId, out _);
+    }
+
+    public bool IsRunning(Guid userId, MixEnum mix)
+    {
+        return _running.TryGetValue(userId, out var running) && running == mix;
     }
 
     public bool TryBeginDeepScan()

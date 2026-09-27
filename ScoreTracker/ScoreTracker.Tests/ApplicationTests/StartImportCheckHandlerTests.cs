@@ -15,6 +15,7 @@ using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Tests.TestData;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -27,6 +28,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 public sealed class StartImportCheckHandlerTests
 {
     private static readonly Guid UserId = Guid.NewGuid();
+    private static readonly DateTimeOffset Now = new(2026, 9, 27, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
     public async Task StartingHandsTheScrapeToTheBusAndKeepsThePasswordOnTheCircuit()
@@ -135,6 +137,35 @@ public sealed class StartImportCheckHandlerTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task ACheckWaitsOutTheCooldownLikeTheImportButton()
+    {
+        var guard = Guard();
+        guard.Setup(g => g.TryBegin(UserId, MixEnum.Phoenix, Now, true))
+            .Returns(new ImportSlot(ImportSlotOutcome.CoolingDown, TimeSpan.FromMinutes(4)));
+        var bus = new Mock<IBus>();
+
+        var result = await Build(bus: bus, guard: guard).Handle(Start(), CancellationToken.None);
+
+        Assert.Equal(ImportCheckStartOutcome.CoolingDown, result.Outcome);
+        Assert.Equal(TimeSpan.FromMinutes(4), result.RetryAfter);
+        bus.Verify(b => b.Publish(It.IsAny<RunOfficialImportCommand>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ADeepScanNeverWaitsOutTheCooldownButStartsIt()
+    {
+        // The monthly allowance already rations deep scans (owner, 2026-09-27); it still reads more of
+        // piugame than any other run, so the Import button waits after one.
+        var guard = Guard();
+
+        var result = await Build(guard: guard).Handle(Start(deepScan: true), CancellationToken.None);
+
+        Assert.Equal(ImportCheckStartOutcome.Started, result.Outcome);
+        guard.Verify(g => g.TryBegin(UserId, MixEnum.Phoenix, Now, false), Times.Once);
+        guard.Verify(g => g.Started(UserId, MixEnum.Phoenix, Now), Times.Once);
+    }
+
     // ---- builders ----
 
     private static StartImportCheckCommand Start(bool deepScan = false, bool includeBroken = false)
@@ -146,7 +177,9 @@ public sealed class StartImportCheckHandlerTests
     private static Mock<IImportConcurrencyGuard> Guard(bool userSlot = true)
     {
         var guard = new Mock<IImportConcurrencyGuard>();
-        guard.Setup(g => g.TryBegin(It.IsAny<Guid>())).Returns(userSlot);
+        guard.Setup(g => g.TryBegin(It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<DateTimeOffset>(),
+                It.IsAny<bool>()))
+            .Returns(userSlot ? ImportSlot.Taken : ImportSlot.AlreadyRunning);
         return guard;
     }
 
@@ -178,6 +211,7 @@ public sealed class StartImportCheckHandlerTests
             currentUser.Object,
             (guard ?? Guard()).Object,
             (mediator ?? Mediator()).Object,
-            site.Object);
+            site.Object,
+            FakeDateTime.At(Now).Object);
     }
 }

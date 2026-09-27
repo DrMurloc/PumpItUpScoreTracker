@@ -548,6 +548,10 @@
                 _isImporting = false;
                 Snackbar.Add(L["An import is already running"].Value, Severity.Info);
                 break;
+            case ImportStartOutcome.CoolingDown:
+                _isImporting = false;
+                Snackbar.Add(L["You can import again in {0} min.", ImportCooldown.MinutesLeft(result.RetryAfter)].Value, Severity.Error);
+                break;
         }
     }
 
@@ -741,6 +745,10 @@
                     _isImporting = false;
                     Snackbar.Add(L["An import is already running"].Value, Severity.Info);
                     break;
+                case ImportStartOutcome.CoolingDown:
+                    _isImporting = false;
+                    Snackbar.Add(L["You can import again in {0} min.", ImportCooldown.MinutesLeft(result.RetryAfter)].Value, Severity.Error);
+                    break;
             }
         }
         catch (InvalidCredentialException)
@@ -876,6 +884,14 @@
 
     private async Task SaveScores()
     {
+        // Nothing else saves on a mix while it imports (docs/design/import-restart-recovery.md §0). Asked
+        // once, at the press: an import started mid-upload lets the upload finish.
+        if (await Mediator.Send(new GetImportInProgressQuery(_userId, _currentMix)))
+        {
+            Snackbar.Add(L["An import is running on this mix. Save again once it finishes."].Value, Severity.Error);
+            return;
+        }
+
         _csvStep = CsvStep.Saving;
         _currentCancellation = new CancellationTokenSource();
         var cancellationToken = _currentCancellation.Token;

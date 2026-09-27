@@ -1,4 +1,7 @@
 ﻿using MediatR;
+using ScoreTracker.OfficialMirror.Contracts.Queries;
+using ScoreTracker.OfficialMirror.Contracts.Commands;
+using ScoreTracker.OfficialMirror.Contracts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Catalog.Contracts.Commands;
@@ -424,5 +427,91 @@ public sealed class PhoenixScoresApiShapeTests
         mediator.Verify(m => m.Send(It.IsAny<GetChartQuery>(), It.IsAny<CancellationToken>()), Times.Never);
         mediator.Verify(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    [Fact]
+    public async Task RecordScoreOnAMixThePlayerIsImportingIsAConflict()
+    {
+        var (controller, mediator) = BuildVerifiableController();
+        mediator.Setup(m => m.Send(It.IsAny<GetChartQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApiTestData.Chart1);
+        mediator.Setup(m => m.Send(It.Is<GetImportInProgressQuery>(q =>
+                q.UserId == ApiTestData.PublicUserId && q.Mix == MixEnum.Phoenix2),
+            It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var result = await controller.RecordScore(RecordScoreBody("Phoenix2"));
+
+        var conflict = Assert.IsType<ConflictObjectResult>(result);
+        Assert.Equal("An import is running for this mix. Try again when it finishes.", (string)conflict.Value!);
+        mediator.Verify(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    private static PhoenixImportRequestDto ImportBody(string? gameTag = null)
+    {
+        return new PhoenixImportRequestDto { Username = "player1", Password = "hunter2", GameTag = gameTag ?? "" };
+    }
+
+    private static void ImportAnswers(Mock<IMediator> mediator, OfficialImportResult result)
+    {
+        mediator.Setup(m => m.Send(It.IsAny<ImportOfficialPlayerScoresCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(result);
+    }
+
+    [Fact]
+    public async Task AnImportRunsOffTheCredentialsAndTheNamedTag()
+    {
+        var (controller, mediator) = BuildVerifiableController();
+        ImportAnswers(mediator, new OfficialImportResult(OfficialImportOutcome.Imported));
+
+        var result = await controller.ImportScores(ImportBody("TAG"));
+
+        Assert.IsType<OkResult>(result);
+        mediator.Verify(m => m.Send(It.Is<ImportOfficialPlayerScoresCommand>(c =>
+                c.Username == "player1" && c.Password.Reveal() == "hunter2" && c.GameTag == "TAG" &&
+                c.Mix == MixEnum.Phoenix),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnImportNamingATagTheAccountLacksIsABadRequest()
+    {
+        var (controller, mediator) = BuildVerifiableController();
+        ImportAnswers(mediator, new OfficialImportResult(OfficialImportOutcome.GameTagNotFound));
+
+        var result = await controller.ImportScores(ImportBody("NOBODY"));
+
+        var bad = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal("GameTag NOBODY couldn't be found for player1.", (string)bad.Value!);
+    }
+
+    [Fact]
+    public async Task AnImportWhileOneIsRunningIsAConflict()
+    {
+        var (controller, mediator) = BuildVerifiableController();
+        ImportAnswers(mediator, new OfficialImportResult(OfficialImportOutcome.AlreadyRunning));
+
+        var result = await controller.ImportScores(ImportBody());
+
+        var conflict = Assert.IsType<ConflictObjectResult>(result);
+        Assert.Equal("An import is already running for this account. Try again when it finishes.",
+            (string)conflict.Value!);
+    }
+
+    [Fact]
+    public async Task AnImportInsideTheCooldownIsTooManyRequestsWithTheWaitInSeconds()
+    {
+        // Owner, 2026-09-27: five minutes between imports on a mix — a script gets the button's answer.
+        var (controller, mediator) = BuildVerifiableController();
+        ImportAnswers(mediator, new OfficialImportResult(OfficialImportOutcome.CoolingDown,
+            TimeSpan.FromSeconds(89.2)));
+
+        var result = await controller.ImportScores(ImportBody());
+
+        var refused = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status429TooManyRequests, refused.StatusCode);
+        Assert.Equal("An import started less than five minutes ago. Try again in 90 seconds.",
+            (string)refused.Value!);
+        Assert.Equal("90", controller.Response.Headers.RetryAfter.ToString());
     }
 }

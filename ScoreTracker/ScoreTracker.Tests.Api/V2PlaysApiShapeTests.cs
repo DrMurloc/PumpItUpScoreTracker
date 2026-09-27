@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Json;
 using MediatR;
+using ScoreTracker.OfficialMirror.Contracts.Queries;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -429,5 +430,45 @@ public sealed class V2PlaysApiShapeTests
                 c.Plays[0].ChartId == ApiTestData.ChartId2 && c.Plays[0].Judgements!.Perfects == 1000 &&
                 c.Plays[1].ChartId == ApiTestData.ChartId1 && c.Plays[1].Judgements == null),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task PlaysOnAMixThePlayerIsImportingAreRefusedAsAConflict()
+    {
+        // Owner, 2026-09-27: nothing else saves on a mix while it imports. The request is fine; the
+        // account is busy, so it is 409 and the tool sends the plays again later.
+        _mediator.Setup(m => m.Send(It.Is<GetImportInProgressQuery>(q =>
+                q.UserId == ApiTestData.PublicUserId && q.Mix == MixEnum.Rise),
+            It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var result = await Controller().RecordPlays(Request(PerfectPlay(ApiTestData.ChartId1)));
+
+        Assert.Equal(StatusCodes.Status409Conflict, ((ObjectResult)result).StatusCode);
+        Assert.EndsWith("/import-running", ProblemType(result));
+        _mediator.Verify(m => m.Send(It.IsAny<RecordSittingPlaysCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task AnImportOnAnotherMixLeavesPlaysRecording()
+    {
+        _mediator.Setup(m => m.Send(It.Is<GetImportInProgressQuery>(q => q.Mix == MixEnum.Phoenix2),
+            It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var result = await Controller().RecordPlays(Request(PerfectPlay(ApiTestData.ChartId1)));
+
+        Assert.Equal(StatusCodes.Status200OK, ((ObjectResult)result).StatusCode);
+    }
+
+    [Fact]
+    public async Task AMalformedRequestHearsAboutItselfBeforeTheImport()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetImportInProgressQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await Controller().RecordPlays(new RecordPlaysRequestDto("Rise", "capture",
+            Array.Empty<ObservedPlayDto>()));
+
+        Assert.Equal(StatusCodes.Status400BadRequest, ((ObjectResult)result).StatusCode);
     }
 }

@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
@@ -68,7 +69,7 @@ public sealed class OfficialLeaderboardSagaTests
 
     private static ImportOfficialPlayerScoresCommand ImportCommand(MixEnum mix = MixEnum.Phoenix)
     {
-        return new ImportOfficialPlayerScoresCommand("user", "pass", "card1", "NEWTAG", false, mix);
+        return new ImportOfficialPlayerScoresCommand("user", "pass", "NEWTAG", false, mix);
     }
 
     private sealed record ImportFixture(
@@ -110,8 +111,9 @@ public sealed class OfficialLeaderboardSagaTests
                 It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ScrapedScores((officialScores ?? Array.Empty<OfficialRecordedScore>()).ToArray(),
                 Array.Empty<RecordObservedPlaysCommand.ObservedPlay>()));
+        // The card the v1 import picks off the same sign-in: the one tagged NEWTAG.
         site.Setup(s => s.GetGameCards(mix, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<GameCardRecord>());
+            .ReturnsAsync(new[] { new GameCardRecord(Name.From("NEWTAG"), Id: cardId, IsActive: true) });
 
         var mediator = new Mock<IMediator>();
         mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsQuery>(), It.IsAny<CancellationToken>()))
@@ -392,8 +394,8 @@ public sealed class OfficialLeaderboardSagaTests
         var saga = BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, mediator: f.Mediator,
             sessionDelivery: f.SessionDelivery, bus: f.Bus, identity: identity);
 
-        await saga.Handle(new ImportOfficialPlayerScoresCommand("user", "pass", "", "", false),
-            CancellationToken.None);
+        await saga.Handle(new ExecuteImportCommand(ImportUserId, MixEnum.Phoenix, "sid123", "", "", false,
+            Guid.NewGuid(), ImportKind.Standard), CancellationToken.None);
 
         f.Mediator.Verify(m => m.Send(It.Is<UpdatePhoenixBestAttemptCommand>(c => c.ChartId == chart.Id),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -588,7 +590,7 @@ public sealed class OfficialLeaderboardSagaTests
     {
         // Locked decision: /Login/PiuGame stays pinned to Phoenix 1 as the identity source,
         // so P2 card aliases enter through the first P2 import — additively only.
-        var f = ArrangeImport(mix: MixEnum.Phoenix2);
+        var f = ArrangeImport(mix: MixEnum.Phoenix2, cardId: "7770001");
         f.Site.Setup(s => s.GetGameCards(MixEnum.Phoenix2, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
@@ -622,8 +624,9 @@ public sealed class OfficialLeaderboardSagaTests
 
         await saga.Handle(ImportCommand(), CancellationToken.None);
 
+        // Once, for the v1 import's own card choice; a backfill would be a second read.
         f.Site.Verify(s => s.GetGameCards(It.IsAny<MixEnum>(), It.IsAny<string>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<CancellationToken>()), Times.Once);
         f.Mediator.Verify(m => m.Send(It.IsAny<CreateExternalLoginCommand>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
@@ -859,6 +862,108 @@ public sealed class OfficialLeaderboardSagaTests
             Times.Never);
     }
 
+    // ───────────────────────────────────────────────────────────────────────────
+    // The v1 import API obeys the Import button's slot and cooldown (owner, 2026-09-27).
+
+    private static Mock<IImportConcurrencyGuard> GuardAnswering(ImportSlot slot)
+    {
+        var guard = new Mock<IImportConcurrencyGuard>();
+        guard.Setup(g => g.TryBegin(It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<bool>())).Returns(slot);
+        return guard;
+    }
+
+    [Theory]
+    [InlineData(false, OfficialImportOutcome.AlreadyRunning)]
+    [InlineData(true, OfficialImportOutcome.CoolingDown)]
+    public async Task AV1ImportRefusedByTheSlotNeverSignsIn(bool coolingDown, OfficialImportOutcome outcome)
+    {
+        var f = ArrangeImport();
+        var guard = GuardAnswering(coolingDown
+            ? new ImportSlot(ImportSlotOutcome.CoolingDown, TimeSpan.FromMinutes(3))
+            : ImportSlot.AlreadyRunning);
+        var saga = BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, mediator: f.Mediator,
+            sessionDelivery: f.SessionDelivery, bus: f.Bus, guard: guard);
+
+        var result = await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        Assert.Equal(outcome, result.Outcome);
+        f.Site.Verify(s => s.SignIn(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        guard.Verify(g => g.TryBegin(ImportUserId, MixEnum.Phoenix, Now, true), Times.Once);
+        guard.Verify(g => g.End(It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AV1ImportStartsTheClockAndHandsTheSlotBack()
+    {
+        var f = ArrangeImport();
+        var guard = GuardAnswering(ImportSlot.Taken);
+        var saga = BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, mediator: f.Mediator,
+            sessionDelivery: f.SessionDelivery, bus: f.Bus, guard: guard);
+
+        var result = await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        Assert.Equal(OfficialImportOutcome.Imported, result.Outcome);
+        guard.Verify(g => g.Started(ImportUserId, MixEnum.Phoenix, Now), Times.Once);
+        guard.Verify(g => g.End(ImportUserId), Times.Once);
+    }
+
+    [Fact]
+    public async Task AV1ImportThatFailsStillHandsTheSlotBack()
+    {
+        var f = ArrangeImport();
+        f.Site.Setup(s => s.SignIn(MixEnum.Phoenix, "user", "pass", It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidCredentialException("no"));
+        var guard = GuardAnswering(ImportSlot.Taken);
+        var saga = BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, mediator: f.Mediator,
+            sessionDelivery: f.SessionDelivery, bus: f.Bus, guard: guard);
+
+        await Assert.ThrowsAsync<InvalidCredentialException>(() => saga.Handle(ImportCommand(),
+            CancellationToken.None));
+
+        guard.Verify(g => g.End(ImportUserId), Times.Once);
+        // A mistyped password is not an import: the clock never starts.
+        guard.Verify(g => g.Started(It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<DateTimeOffset>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task AV1ImportPicksTheNamedCardOffItsOwnSignIn()
+    {
+        var f = ArrangeImport(cardId: "card2");
+        f.Site.Setup(s => s.GetGameCards(MixEnum.Phoenix, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new GameCardRecord(Name.From("OTHER"), Id: "card1", IsActive: true),
+                new GameCardRecord(Name.From("NEWTAG"), Id: "card2", IsActive: false)
+            });
+        var saga = BuildImportSaga(f);
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        f.Site.Verify(s => s.SignIn(MixEnum.Phoenix, "user", "pass", It.IsAny<CancellationToken>()), Times.Once);
+        f.Site.Verify(s => s.GetAccountData(MixEnum.Phoenix, It.IsAny<string>(), "card2",
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AV1ImportNamingACardTheAccountLacksImportsNothing()
+    {
+        var f = ArrangeImport();
+        var guard = GuardAnswering(ImportSlot.Taken);
+        var saga = BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, mediator: f.Mediator,
+            sessionDelivery: f.SessionDelivery, bus: f.Bus, guard: guard);
+
+        var result = await saga.Handle(new ImportOfficialPlayerScoresCommand("user", "pass", "NOBODY", false),
+            CancellationToken.None);
+
+        Assert.Equal(OfficialImportOutcome.GameTagNotFound, result.Outcome);
+        f.Site.Verify(s => s.GetAccountData(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        guard.Verify(g => g.End(ImportUserId), Times.Once);
+    }
+
     private static OfficialLeaderboardSaga BuildSaga(
         Mock<IOfficialSiteClient>? officialSite = null,
         Mock<IOfficialPlayerIdentityRepository>? identity = null,
@@ -868,7 +973,8 @@ public sealed class OfficialLeaderboardSagaTests
         Mock<IBus>? bus = null,
         Mock<IFileUploadClient>? files = null,
         Mock<IChartRepository>? charts = null,
-        Mock<IDateTimeOffsetAccessor>? dateTime = null)
+        Mock<IDateTimeOffsetAccessor>? dateTime = null,
+        Mock<IImportConcurrencyGuard>? guard = null)
     {
         officialSite ??= new Mock<IOfficialSiteClient>();
         identity ??= new Mock<IOfficialPlayerIdentityRepository>();
@@ -882,6 +988,6 @@ public sealed class OfficialLeaderboardSagaTests
         return new OfficialLeaderboardSaga(officialSite.Object,
             identity.Object, currentUser.Object, mediator.Object, sessionDelivery.Object,
             NullLogger<OfficialLeaderboardSaga>.Instance, bus.Object, files.Object, charts.Object,
-            dateTime.Object);
+            dateTime.Object, (guard ?? new Mock<IImportConcurrencyGuard>()).Object);
     }
 }

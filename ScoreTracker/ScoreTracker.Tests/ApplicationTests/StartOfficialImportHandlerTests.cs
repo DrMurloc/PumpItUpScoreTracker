@@ -15,12 +15,15 @@ using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Tests.TestData;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
 
 public sealed class StartOfficialImportHandlerTests
 {
+    private static readonly DateTimeOffset Now = new(2026, 9, 27, 12, 0, 0, TimeSpan.Zero);
+
     private static (StartOfficialImportHandler handler, Mock<IOfficialSiteClient> site, Mock<IMediator> mediator,
         Mock<IBus> bus, Mock<IImportConcurrencyGuard> guard, Guid userId) Build()
     {
@@ -31,10 +34,11 @@ public sealed class StartOfficialImportHandlerTests
         var mediator = new Mock<IMediator>();
         var bus = new Mock<IBus>();
         var guard = new Mock<IImportConcurrencyGuard>();
-        // No import in flight by default; the AlreadyRunning test overrides this.
-        guard.Setup(g => g.TryBegin(It.IsAny<Guid>())).Returns(true);
+        // No import in flight and no cooldown by default; the refusal tests override this.
+        guard.Setup(g => g.TryBegin(It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<bool>())).Returns(ImportSlot.Taken);
         var handler = new StartOfficialImportHandler(site.Object, mediator.Object, bus.Object, currentUser.Object,
-            guard.Object);
+            guard.Object, FakeDateTime.At(Now).Object);
         return (handler, site, mediator, bus, guard, userId);
     }
 
@@ -75,7 +79,8 @@ public sealed class StartOfficialImportHandlerTests
     public async Task SecondConcurrentImportReturnsAlreadyRunningAndPublishesNothing()
     {
         var (handler, site, _, bus, guard, _) = Build();
-        guard.Setup(g => g.TryBegin(It.IsAny<Guid>())).Returns(false);
+        guard.Setup(g => g.TryBegin(It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<bool>())).Returns(ImportSlot.AlreadyRunning);
 
         var result = await handler.Handle(new StartOfficialImportCommand(
             new TypedCredentialSource("player1", "hunter2"), MixEnum.Phoenix, "card1", "TAG", false),
@@ -141,5 +146,54 @@ public sealed class StartOfficialImportHandlerTests
         Assert.Equal(ImportStartOutcome.InvalidCredentials, result.Outcome);
         bus.Verify(b => b.Publish(It.IsAny<RunOfficialImportCommand>(), It.IsAny<CancellationToken>()), Times.Never);
         guard.Verify(g => g.End(userId), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnImportInsideTheCooldownIsRefusedBeforePiugameIsTouched()
+    {
+        // Owner, 2026-09-27: five minutes between imports on a mix, to stop button spam overloading piugame.
+        var (handler, site, _, bus, guard, _) = Build();
+        guard.Setup(g => g.TryBegin(It.IsAny<Guid>(), MixEnum.Phoenix2, Now, true))
+            .Returns(new ImportSlot(ImportSlotOutcome.CoolingDown, TimeSpan.FromSeconds(130)));
+
+        var result = await handler.Handle(new StartOfficialImportCommand(
+            new TypedCredentialSource("player1", "hunter2"), MixEnum.Phoenix2, "card1", "TAG", false),
+            CancellationToken.None);
+
+        Assert.Equal(ImportStartOutcome.CoolingDown, result.Outcome);
+        Assert.Equal(TimeSpan.FromSeconds(130), result.RetryAfter);
+        site.Verify(s => s.SignIn(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        bus.Verify(b => b.Publish(It.IsAny<RunOfficialImportCommand>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TheCooldownStartsWhenTheRunIsHandedOff()
+    {
+        var (handler, site, _, _, guard, userId) = Build();
+        site.Setup(s => s.SignIn(MixEnum.Phoenix, "player1", "hunter2", It.IsAny<CancellationToken>()))
+            .ReturnsAsync("sid123");
+
+        await handler.Handle(new StartOfficialImportCommand(
+            new TypedCredentialSource("player1", "hunter2"), MixEnum.Phoenix, "card1", "TAG", false),
+            CancellationToken.None);
+
+        guard.Verify(g => g.Started(userId, MixEnum.Phoenix, Now), Times.Once);
+    }
+
+    [Fact]
+    public async Task AMistypedPasswordStartsNoCooldown()
+    {
+        var (handler, site, _, _, guard, _) = Build();
+        site.Setup(s => s.SignIn(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidCredentialException("no"));
+
+        await handler.Handle(new StartOfficialImportCommand(
+            new TypedCredentialSource("player1", "wrong"), MixEnum.Phoenix, "card1", "TAG", false),
+            CancellationToken.None);
+
+        guard.Verify(g => g.Started(It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<DateTimeOffset>()),
+            Times.Never);
     }
 }

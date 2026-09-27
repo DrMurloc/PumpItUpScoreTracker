@@ -26,15 +26,17 @@ internal sealed class StartImportCheckHandler : IRequestHandler<StartImportCheck
     private readonly IImportConcurrencyGuard _guard;
     private readonly IMediator _mediator;
     private readonly IOfficialSiteClient _officialSite;
+    private readonly IDateTimeOffsetAccessor _dateTime;
 
     public StartImportCheckHandler(IBus bus, ICurrentUserAccessor currentUser, IImportConcurrencyGuard guard,
-        IMediator mediator, IOfficialSiteClient officialSite)
+        IMediator mediator, IOfficialSiteClient officialSite, IDateTimeOffsetAccessor dateTime)
     {
         _bus = bus;
         _currentUser = currentUser;
         _guard = guard;
         _mediator = mediator;
         _officialSite = officialSite;
+        _dateTime = dateTime;
     }
 
     public async Task<ImportCheckStartResult> Handle(StartImportCheckCommand request,
@@ -45,8 +47,13 @@ internal sealed class StartImportCheckHandler : IRequestHandler<StartImportCheck
 
         if (request.DeepScan && left == 0)
             return new ImportCheckStartResult(ImportCheckStartOutcome.NoDeepScansLeft, 0);
-        if (!_guard.TryBegin(userId))
+        // A deep scan never waits out the five minutes — the monthly allowance is its limit — but a
+        // check does, like the Import button.
+        var slot = _guard.TryBegin(userId, request.Mix, _dateTime.Now, cooldownApplies: !request.DeepScan);
+        if (slot.Outcome == ImportSlotOutcome.AlreadyRunning)
             return new ImportCheckStartResult(ImportCheckStartOutcome.AlreadyRunning, left);
+        if (slot.Outcome == ImportSlotOutcome.CoolingDown)
+            return new ImportCheckStartResult(ImportCheckStartOutcome.CoolingDown, left, slot.RetryAfter);
 
         // The slot is held until the background job releases it; only the pre-flight failures
         // below hand it back.
@@ -83,6 +90,8 @@ internal sealed class StartImportCheckHandler : IRequestHandler<StartImportCheck
                     request.DeepScan ? ImportKind.DeepScan : ImportKind.Check),
                 cancellationToken);
             handedOff = true;
+            // A deep scan starts the clock too: it reads more of piugame than any other run.
+            _guard.Started(userId, request.Mix, _dateTime.Now);
             return new ImportCheckStartResult(ImportCheckStartOutcome.Started, left);
         }
         finally

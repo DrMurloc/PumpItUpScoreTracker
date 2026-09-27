@@ -84,6 +84,7 @@ public sealed class PlayersController : ApiV2ControllerBase
     [ProducesResponseType(typeof(RecordPlaysResultDto), StatusCodes.Status200OK, "application/json")]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status404NotFound)]
+    [ProducesProblem(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> RecordPlays([FromBody] RecordPlaysRequestDto? body)
     {
         if (User.ToolId() is not null)
@@ -107,6 +108,11 @@ public sealed class PlayersController : ApiV2ControllerBase
         // Whether a break on a chart the player has never passed is seated as their best: the
         // tool's own choice, else the mix's default — the same default the import page reads.
         var recordBrokenAsBest = body.RecordBrokenAsBest ?? BrokenScorePreference.DefaultFor(mix);
+        // Nothing else saves on a mix while the player imports it (docs/design/import-restart-recovery.md §0).
+        // Asked last, so a request with a problem of its own hears about that first.
+        if (await _mediator.Send(new GetImportInProgressQuery(_currentUser.User.Id, mix)))
+            return Problem("import-running", "An import is running for this mix.", StatusCodes.Status409Conflict,
+                "The player's official import is saving scores on this mix. Nothing was recorded; send the plays again once it finishes.");
         await _mediator.Send(new RecordSittingPlaysCommand(_currentUser.User.Id, mix,
             ScoreJournalEntry.PlaysApiSourcePrefix + body.Source,
             resolved.Select(r => new RecordObservedPlaysCommand.ObservedPlay(r.Chart.Id, r.Score, r.Award,

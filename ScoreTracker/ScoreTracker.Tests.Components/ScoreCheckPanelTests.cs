@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Bunit;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Components.Web;
 using Moq;
 using MudBlazor;
 using AngleSharp.Dom;
@@ -31,6 +32,7 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
 {
     private readonly UiNotificationHub _hub = new();
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<ISnackbar> _snackbar = new();
     private readonly Guid _me = Guid.NewGuid();
 
     public ScoreCheckPanelTests()
@@ -40,7 +42,7 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
             .Returns(new User(_me, "Me", true, null, new Uri("https://piu.test/me.png"), null));
         Services.AddSingleton(_mediator.Object);
         Services.AddSingleton<IUiNotificationHub>(_hub);
-        Services.AddSingleton(Mock.Of<ISnackbar>());
+        Services.AddSingleton(_snackbar.Object);
         // The panel reads the player's broken-scores choice at press time, so a run can repair
         // exactly what an import would have saved.
         Services.AddScoped<BrokenScorePreference>();
@@ -179,5 +181,21 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
 
         Assert.NotEmpty(buttons);
         Assert.All(buttons, b => Assert.True(b.HasAttribute("disabled")));
+    }
+
+    [Fact]
+    public async Task ACheckInsideTheCooldownSaysHowLongIsLeft()
+    {
+        // Owner, 2026-09-27: five minutes between imports on a mix, told as an error toast.
+        _mediator.Setup(m => m.Send(It.IsAny<StartImportCheckCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImportCheckStartResult(ImportCheckStartOutcome.CoolingDown, 3,
+                TimeSpan.FromSeconds(190)));
+        var panel = Render();
+
+        await Button(panel, "Import and check").ClickAsync(new MouseEventArgs());
+
+        _snackbar.Verify(s => s.Add("You can import again in 4 min.", It.IsAny<Severity>(),
+            It.IsAny<Action<SnackbarOptions>>(), It.IsAny<string>()), Times.Once);
+        Assert.False(Button(panel, "Import and check").HasAttribute("disabled"));
     }
 }

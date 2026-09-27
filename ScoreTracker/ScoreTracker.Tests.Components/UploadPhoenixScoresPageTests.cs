@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using MudBlazor;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Events;
@@ -589,5 +590,43 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
 
         _mediator.Verify(m => m.Send(It.Is<GetGameCardsQuery>(q => q.Mix == mix), It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task ACsvUploadWhileTheMixIsImportingSavesNothingAndSaysWhy()
+    {
+        // Owner, 2026-09-27: nothing else saves on a mix while it imports.
+        var snackbar = new Mock<ISnackbar>();
+        Services.AddSingleton(snackbar.Object);
+        GivenTheFileParsesTo(new RecordedPhoenixScore(Guid.NewGuid(), 950000, PhoenixPlate.FairGame, false, Uploaded));
+        _mediator.Setup(m => m.Send(It.Is<GetImportInProgressQuery>(q => q.Mix == MixEnum.Phoenix),
+            It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await UploadAndSave();
+
+        snackbar.Verify(s => s.Add("An import is running on this mix. Save again once it finishes.",
+            Severity.Error, It.IsAny<Action<SnackbarOptions>>(), It.IsAny<string>()), Times.Once);
+        _mediator.Verify(m => m.Send(It.IsAny<UpdatePhoenixBestAttemptCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _mediator.Verify(m => m.Send(It.IsAny<DrainScoreBatchCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task AnImportInsideTheCooldownSaysHowLongIsLeftAndFreesTheButtons()
+    {
+        var snackbar = new Mock<ISnackbar>();
+        Services.AddSingleton(snackbar.Object);
+        StoreCredential();
+        _mediator.Setup(m => m.Send(It.IsAny<StartOfficialImportCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImportStartResult(ImportStartOutcome.CoolingDown, TimeSpan.FromMinutes(2)));
+
+        var cut = RenderComponent<UploadPhoenixScores>();
+        cut.WaitForAssertion(() => Assert.All(ImportButtons(cut), b => Assert.False(b.HasAttribute("disabled"))));
+        await ImportButtons(cut).First().ClickAsync(new MouseEventArgs());
+
+        snackbar.Verify(s => s.Add("You can import again in 2 min.", Severity.Error,
+            It.IsAny<Action<SnackbarOptions>>(), It.IsAny<string>()), Times.Once);
+        cut.WaitForAssertion(() => Assert.All(ImportButtons(cut), b => Assert.False(b.HasAttribute("disabled"))));
     }
 }

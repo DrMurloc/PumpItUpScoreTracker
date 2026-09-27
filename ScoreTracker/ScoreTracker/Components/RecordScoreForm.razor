@@ -1,4 +1,6 @@
 @using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.OfficialMirror.Contracts.Queries
 @using ScoreTracker.ScoreLedger.Contracts.Commands
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
@@ -7,6 +9,7 @@
 @namespace ScoreTracker.Web.Components
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
+@inject ICurrentUserAccessor CurrentUser
 
 @* The record inputs, extracted from the Quick Record widget so the SRP's ✎ dialog and the
    widget share one behavior: the row adapts by scoring model — Phoenix/Phoenix 2 keep
@@ -219,6 +222,15 @@ else
             }
             else
             {
+                // Nothing else saves on a mix while it imports (docs/design/import-restart-recovery.md §0).
+                if (CurrentUser.IsLoggedIn &&
+                    await Mediator.Send(new GetImportInProgressQuery(CurrentUser.User.Id, Mix)))
+                {
+                    Snackbar.Add(L["An import is running on this mix. Save again once it finishes."].Value, Severity.Error);
+                    _isSaving = false;
+                    return;
+                }
+
                 var parsed = PhoenixScore.TryParse(_score!.Value, out var s) ? (PhoenixScore?)s : null;
                 await Mediator.Send(new UpdatePhoenixBestAttemptCommand(Chart.Id, _broken, parsed, _plate,
                     Mix: Mix));

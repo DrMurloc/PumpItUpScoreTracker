@@ -27,7 +27,8 @@ using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.OfficialMirror.Application
 {
-    internal sealed class OfficialLeaderboardSaga : IRequestHandler<ImportOfficialPlayerScoresCommand>,
+    internal sealed class OfficialLeaderboardSaga :
+        IRequestHandler<ImportOfficialPlayerScoresCommand, OfficialImportResult>,
         IRequestHandler<ExecuteImportCommand, int>,
         IRequestHandler<UpdateSongImagesCommand>,
         IRequestHandler<GetGameCardsQuery, IEnumerable<GameCardRecord>>,
@@ -45,6 +46,7 @@ namespace ScoreTracker.OfficialMirror.Application
         private readonly ISessionDeliveryClient _sessionDelivery;
         private readonly ILogger _logger;
         private readonly IDateTimeOffsetAccessor _dateTime;
+        private readonly IImportConcurrencyGuard _guard;
 
         public OfficialLeaderboardSaga(IOfficialSiteClient officialSite,
             IOfficialPlayerIdentityRepository identity,
@@ -53,8 +55,9 @@ namespace ScoreTracker.OfficialMirror.Application
             ISessionDeliveryClient sessionDelivery,
             ILogger<OfficialLeaderboardSaga> logger,
             IBus bus, IFileUploadClient files, IChartRepository charts,
-            IDateTimeOffsetAccessor dateTime)
+            IDateTimeOffsetAccessor dateTime, IImportConcurrencyGuard guard)
         {
+            _guard = guard;
             _sessionDelivery = sessionDelivery;
             _officialSite = officialSite;
             _identity = identity;
@@ -87,11 +90,43 @@ namespace ScoreTracker.OfficialMirror.Application
                 cancellationToken);
         }
 
-        public async Task Handle(ImportOfficialPlayerScoresCommand request, CancellationToken cancellationToken)
+        public async Task<OfficialImportResult> Handle(ImportOfficialPlayerScoresCommand request,
+            CancellationToken cancellationToken)
         {
-            var sid = await _officialSite.SignIn(request.Mix, request.Username, request.Password, cancellationToken);
-            _ = await RunImport(_currentUser.User.Id, request.Mix, sid, request.Id, request.ExpectedGameTag,
-                request.IncludeBroken, cancellationToken);
+            var userId = _currentUser.User.Id;
+            // Before the sign-in, so a call refused here costs piugame nothing — the same slot and cooldown
+            // as the Import button, so a script cannot do what the button no longer can, and the save lock
+            // sees this import too.
+            var slot = _guard.TryBegin(userId, request.Mix, _dateTime.Now, cooldownApplies: true);
+            if (slot.Outcome == ImportSlotOutcome.AlreadyRunning)
+                return new OfficialImportResult(OfficialImportOutcome.AlreadyRunning);
+            if (slot.Outcome == ImportSlotOutcome.CoolingDown)
+                return new OfficialImportResult(OfficialImportOutcome.CoolingDown, slot.RetryAfter);
+
+            try
+            {
+                var sid = await _officialSite.SignIn(request.Mix, request.Username, request.Password,
+                    cancellationToken);
+                // The card list comes off the same sign-in; an account with no card at all throws here, as
+                // it always has.
+                var cards = (await _officialSite.GetGameCards(request.Mix, sid, cancellationToken)).ToArray();
+                var card = cards.First();
+                if (!string.IsNullOrWhiteSpace(request.GameTag))
+                {
+                    var named = cards.FirstOrDefault(c => c.GameTag == request.GameTag);
+                    if (named == null) return new OfficialImportResult(OfficialImportOutcome.GameTagNotFound);
+                    card = named;
+                }
+
+                _guard.Started(userId, request.Mix, _dateTime.Now);
+                await RunImport(userId, request.Mix, sid, card.Id, card.GameTag, request.IncludeBroken,
+                    cancellationToken);
+                return new OfficialImportResult(OfficialImportOutcome.Imported);
+            }
+            finally
+            {
+                _guard.End(userId);
+            }
         }
 
         public Task<int> Handle(ExecuteImportCommand request, CancellationToken cancellationToken)

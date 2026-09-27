@@ -6,6 +6,7 @@
 @using ScoreTracker.OfficialMirror.Contracts.Commands
 @using ScoreTracker.OfficialMirror.Contracts.Events
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.UiNotifications
 
 @* Finds scores PIUGAME has that never reached us and adds them, as a normal import. Nothing is
@@ -138,6 +139,8 @@
             ImportCheckStartOutcome.CredentialUnlockFailed => L["Saved credentials could not be unlocked."],
             ImportCheckStartOutcome.AlreadyRunning => L["An import is already running."],
             ImportCheckStartOutcome.NoDeepScansLeft => L["None left — next on {0}", NextUnlock],
+            ImportCheckStartOutcome.CoolingDown => L["You can import again in {0} min.",
+                ImportCooldown.MinutesLeft(result.RetryAfter)],
             _ => L["Something went wrong."]
         }, Severity.Warning);
     }
