@@ -57,7 +57,7 @@ public sealed class ConsoleWebhooksPageTests : ComponentTestBase
             webhookUrl is null ? WebhookMode.None : WebhookMode.ScorePush, webhookUrl,
             Array.Empty<MixEnum>(), 0, DateTimeOffset.Now, null, null, null,
             "X-PIU-Scores-Token", true, hasSecret,
-            null, null, null, null, null, false, null, ToolKind.Integrated, true, webhookUrl is not null);
+            null, null, null, null, null, false, null, null, ToolKind.Integrated, true, webhookUrl is not null);
     }
 
     private IRenderedComponent<ConsoleWebhooks> Render()

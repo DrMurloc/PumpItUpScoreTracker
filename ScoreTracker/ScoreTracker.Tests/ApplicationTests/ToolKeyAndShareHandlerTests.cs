@@ -15,6 +15,7 @@ using ScoreTracker.CommunityTools.Wiring;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts;
 using ScoreTracker.Identity.Contracts.Queries;
@@ -49,6 +50,7 @@ public sealed class ToolKeyAndShareHandlerTests
     private readonly MemoryCache _cache = new(new MemoryCacheOptions());
     private readonly Mock<IToolRepository> _tools = new();
     private readonly Mock<IUserReader> _users = new();
+    private readonly Mock<IBotClient> _bot = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
 
     public ToolKeyAndShareHandlerTests()
@@ -398,7 +400,8 @@ public sealed class ToolKeyAndShareHandlerTests
     {
         return new ToolManagementSaga(_tools.Object, _users.Object, _currentUser.Object,
             FakeDateTime.At(Now).Object, _mediator.Object, _secrets.Object, _webhooks.Object,
-            Options.Create(new CommunityToolsConfiguration()), _repositories.Object, _bans.Object, Reach());
+            Options.Create(new CommunityToolsConfiguration()), _repositories.Object, _bans.Object, Reach(),
+            new DiscordNames(_bot.Object, _cache, NullLogger<DiscordNames>.Instance));
     }
 
     // Same guard owning a community carries. Without it: request deletion owning nothing, register
@@ -683,6 +686,28 @@ public sealed class ToolKeyAndShareHandlerTests
         var reading = await Reach().ToolIdsReading(player, CancellationToken.None);
 
         Assert.Equal(new[] { direct, reachable }.OrderBy(id => id), reading.OrderBy(id => id));
+    }
+
+    // The console shows the maker which account DrMurloc will reach them on, so the record carries
+    // both the linked id and the handle Discord reports for it.
+    [Fact]
+    public async Task AToolRecordCarriesTheMakersLinkedDiscordAccount()
+    {
+        const ulong discordId = 123456789012345678;
+        _users.Setup(u => u.GetExternalLogins(It.IsAny<IEnumerable<Guid>>(), ToolReach.DiscordProvider,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, string> { [MakerId] = discordId.ToString() });
+        _bot.Setup(b => b.GetUser(discordId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BotUser(discordId, "stepmaniac_77", "StepManiac"));
+        _tools.Setup(t => t.CountKeysFor(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<DateTimeOffset>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, int>());
+
+        var record = await ManagementSaga().Handle(new GetToolQuery(ToolId), CancellationToken.None);
+
+        Assert.Equal(discordId.ToString(), record!.MakerDiscordId);
+        Assert.Equal("stepmaniac_77", record.MakerDiscordHandle);
+        Assert.True(record.CanTakePlayers);
     }
 
     [Fact]

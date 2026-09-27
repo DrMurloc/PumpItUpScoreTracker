@@ -45,6 +45,11 @@ public sealed record ToolRecord(
     ///     The maker's own, or an admin's view of it — never on a player-facing surface.
     /// </summary>
     string? MakerDiscordId,
+    /// <summary>
+    ///     That account's handle, looked up from Discord. Null when there is no link, or when Discord
+    ///     could not be asked — the id is still there to link to.
+    /// </summary>
+    string? MakerDiscordHandle,
     ToolKind Kind,
     /// <summary>
     ///     Whether the console shows an API group at all. A listing-only tool has none and is not

@@ -48,7 +48,7 @@ public sealed class ToolWebhookPanelTests : ComponentTestBase
             savedUrl is null ? WebhookMode.None : WebhookMode.ScorePush, savedUrl,
             new[] { MixEnum.Phoenix }, 0, DateTimeOffset.Now, null, null, null,
             hasHeader ? "X-PIU-Scores-Token" : null, hasHeader, hasSecret,
-            null, null, null, null, null, false, null, ToolKind.Integrated, true, savedUrl is not null);
+            null, null, null, null, null, false, null, null, ToolKind.Integrated, true, savedUrl is not null);
     }
 
     private IRenderedComponent<ToolWebhookPanel> Render(ToolRecord tool,

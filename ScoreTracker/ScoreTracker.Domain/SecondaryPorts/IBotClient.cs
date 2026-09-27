@@ -75,6 +75,12 @@ namespace ScoreTracker.Domain.SecondaryPorts
         public Task<BotGuild?> GetGuild(ulong guildId, CancellationToken cancellationToken = default);
 
         /// <summary>
+        ///     Any Discord account by its id, whether or not it shares a server with the bot — Discord
+        ///     answers a user id for anyone. Null when there is no such account.
+        /// </summary>
+        public Task<BotUser?> GetUser(ulong userId, CancellationToken cancellationToken = default);
+
+        /// <summary>
         ///     Every role in the server, each already carrying whether the bot may assign it —
         ///     see <see cref="BotGuildRole.BlockedReason" />. Empty when the bot is not in the
         ///     server. Ordered strongest-first, the way Discord's own settings list reads.

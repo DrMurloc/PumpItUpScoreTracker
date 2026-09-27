@@ -66,7 +66,7 @@ public sealed class CommunityToolsReviewPageTests : ComponentTestBase
             "https://planner.example/hook", Array.Empty<MixEnum>(), 3, Now, null, rejection, Now,
             "X-Planner-Token", true, true,
             repository, repository is null ? null : "tusa", repository is null ? null : Now,
-            "tusa.piu", Now, repository is not null, null, ToolKind.Integrated, true, true);
+            "tusa.piu", Now, repository is not null, null, null, ToolKind.Integrated, true, true);
     }
 
     private IRenderedFragment Render()

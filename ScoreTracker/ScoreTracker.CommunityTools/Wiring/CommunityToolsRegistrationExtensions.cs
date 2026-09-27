@@ -19,6 +19,7 @@ public static class CommunityToolsRegistrationExtensions
     {
         services.AddTransient<IToolRepository, EFToolRepository>();
         services.AddTransient<ToolReach>();
+        services.AddTransient<DiscordNames>();
         services.AddTransient<IToolKeyRepository, EFToolKeyRepository>();
         services.AddTransient<IWebhookDeliveryRepository, EFWebhookDeliveryRepository>();
         services.AddTransient<IToolSecretProtector, ToolSecretProtector>();
