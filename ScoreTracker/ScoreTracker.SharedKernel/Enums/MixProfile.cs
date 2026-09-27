@@ -52,16 +52,19 @@ public sealed record MixArt(string? BubbleFolder, string? ScoreArtFolder, bool H
 /// <summary>
 ///     The nav's honest answers for a mix: whether it is fair to put each link in front of a
 ///     player of it (see <see cref="MixCapabilities" /> for why these are not a route gate).
+///     <c>ScoresWatcher</c> is the download of the RISE capture app, which reads RISE and nothing
+///     else (docs/design/rise.md D26).
 /// </summary>
 public sealed record MixFeatures(
     bool Pumbility,
     bool OfficialBoards,
     bool WeeklyBoard,
     bool MarchOfMurlocs,
-    bool PhoenixCalculators)
+    bool PhoenixCalculators,
+    bool ScoresWatcher)
 {
-    public static readonly MixFeatures Phoenix = new(true, true, true, true, true);
-    public static readonly MixFeatures None = new(false, false, false, false, false);
+    public static readonly MixFeatures Phoenix = new(true, true, true, true, true, ScoresWatcher: false);
+    public static readonly MixFeatures None = new(false, false, false, false, false, ScoresWatcher: false);
 }
 
 /// <summary>
@@ -149,17 +152,19 @@ public static class MixProfiles
         // Pump It Up RISE (docs/design/rise.md §3): Phoenix-scored on a keyboard, no site, no lifebar
         // the site models (D9), Rise's own nine-grade ladder and three marks, the Phoenix 2 stepballs
         // (D12) with Rise's own letters and marks, and none of the Phoenix-generation features until
-        // phase 3 tunes them.
+        // phase 3 tunes them. What it has instead is the capture app, which reads its result screens (D26).
         all[MixEnum.Rise] = new MixProfile(
             ScoringModel.Phoenix, GradeLadder.Rise, AwardSet.RiseMarks, OfficialSite: null, Platform.Keyboard,
             HasLifebarModel: false, new[] { ChartType.Single, ChartType.HalfDouble },
-            new MixArt("Phoenix2", "Rise", HasHalfDoubleBubble: true), MixFeatures.None, RiseSitting);
+            new MixArt("Phoenix2", "Rise", HasHalfDoubleBubble: true), MixFeatures.None with { ScoresWatcher = true },
+            RiseSitting);
         // The Arcade Station plays the Phoenix 2 charts as-is — Phoenix 2 grades, plates and art —
-        // on the same keyboard.
+        // on the same keyboard, and the capture app reads its result screens too.
         all[MixEnum.RiseArcade] = new MixProfile(
             ScoringModel.Phoenix, GradeLadder.Phoenix2, AwardSet.PhoenixPlates, OfficialSite: null,
             Platform.Keyboard, HasLifebarModel: false, new[] { ChartType.Single, ChartType.Double },
-            new MixArt("Phoenix2", null, HasHalfDoubleBubble: true), MixFeatures.None, RiseSitting);
+            new MixArt("Phoenix2", null, HasHalfDoubleBubble: true), MixFeatures.None with { ScoresWatcher = true },
+            RiseSitting);
         return all;
     }
 }
