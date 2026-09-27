@@ -22,7 +22,7 @@ namespace ScoreTracker.CommunityTools.Infrastructure;
 ///         is the failure surface that actually occurs.
 ///     </para>
 /// </summary>
-internal sealed class RepositoryReachabilityClient : IRepositoryReachabilityClient
+internal sealed class RepositoryReachabilityClient
 {
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
 
@@ -79,5 +79,23 @@ internal sealed class RepositoryReachabilityClient : IRepositoryReachabilityClie
             }
 
         return WebhookFailureReason.InvalidResponse;
+    }
+}
+
+/// <summary>
+///     What one anonymous fetch produced, in the console's closed vocabulary. No exception text —
+///     the same rule the webhook console follows, and for the same reason.
+/// </summary>
+[ExcludeFromCodeCoverage]
+internal sealed record RepositoryReachability(bool Reachable, WebhookFailureReason Reason, int? StatusCode)
+{
+    public static RepositoryReachability Ok(int statusCode)
+    {
+        return new RepositoryReachability(true, WebhookFailureReason.None, statusCode);
+    }
+
+    public static RepositoryReachability Failed(WebhookFailureReason reason, int? statusCode)
+    {
+        return new RepositoryReachability(false, reason, statusCode);
     }
 }

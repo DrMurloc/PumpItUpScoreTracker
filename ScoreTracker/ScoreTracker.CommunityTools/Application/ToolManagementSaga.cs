@@ -47,7 +47,6 @@ internal sealed class ToolManagementSaga :
     private readonly IToolSecretReader _secrets;
     private readonly IToolMakerBanRepository _bans;
     private readonly DiscordNames _discordNames;
-    private readonly IRepositoryReachabilityClient _repositories;
     private readonly ToolReach _reach;
     private readonly IToolRepository _tools;
     private readonly IUserReader _users;
@@ -55,13 +54,12 @@ internal sealed class ToolManagementSaga :
     public ToolManagementSaga(IToolRepository tools, IUserReader users, ICurrentUserAccessor currentUser,
         IDateTimeOffsetAccessor dateTime, IMediator mediator, IToolSecretReader secrets,
         IWebhookDeliveryClient client, IOptions<CommunityToolsConfiguration> configuration,
-        IRepositoryReachabilityClient repositories, IToolMakerBanRepository bans, ToolReach reach,
+        IToolMakerBanRepository bans, ToolReach reach,
         DiscordNames discordNames)
     {
         _bans = bans;
         _reach = reach;
         _discordNames = discordNames;
-        _repositories = repositories;
         _configuration = configuration;
         _tools = tools;
         _users = users;

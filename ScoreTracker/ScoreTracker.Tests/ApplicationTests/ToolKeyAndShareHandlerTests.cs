@@ -44,7 +44,6 @@ public sealed class ToolKeyAndShareHandlerTests
     private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IToolSecretReader> _secrets = new();
     private readonly Mock<IToolMakerBanRepository> _bans = new();
-    private readonly Mock<IRepositoryReachabilityClient> _repositories = new();
     private readonly Mock<IWebhookDeliveryClient> _webhooks = new();
     private readonly Mock<IToolKeyRepository> _keys = new();
     private readonly MemoryCache _cache = new(new MemoryCacheOptions());
@@ -400,7 +399,7 @@ public sealed class ToolKeyAndShareHandlerTests
     {
         return new ToolManagementSaga(_tools.Object, _users.Object, _currentUser.Object,
             FakeDateTime.At(Now).Object, _mediator.Object, _secrets.Object, _webhooks.Object,
-            Options.Create(new CommunityToolsConfiguration()), _repositories.Object, _bans.Object, Reach(),
+            Options.Create(new CommunityToolsConfiguration()), _bans.Object, Reach(),
             new DiscordNames(_bot.Object, _cache, NullLogger<DiscordNames>.Instance));
     }
 
