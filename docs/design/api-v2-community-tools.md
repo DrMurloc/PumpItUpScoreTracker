@@ -352,10 +352,13 @@ Effective read access for tool T over player P:
    explicit ToolShare(T, P)
 OR (P.ShareWithAllTools AND T.AcceptsAllToolsShare AND NOT ToolBlock(T, P)
     AND T.WebhookMode <> PiuGameSession        -- never by blanket consent
-    AND T.RepositoryUrl is published and checked
-    AND T.DiscordHandle is set
+    AND T's maker has Discord linked            -- or T is grandfathered
     AND T.OwnerUserId is not banned)
 ```
+
+The Discord term replaced "source published and checked" and "handle set" on 2026-09-27 — see
+[toolmaker-requirements.md §10](toolmaker-requirements.md). It is applied in `ToolReach`, which reads
+the link through `IUserReader`; the repository takes the answer as an input.
 
 **`T.Visibility` is not a term and must not become one.** Listing is a directory concern; the
 conditions above are the access ones. The `Visibility = Public` check that once sat in
@@ -951,6 +954,11 @@ public source repository and its maker's Discord handle, and without both it can
 maker. Four published rules gate being listed, and a maker who breaks them can be banned from making
 tools at all. PIU Tracker is grandfathered by id. See
 [toolmaker-requirements.md](toolmaker-requirements.md).
+
+**Superseded again, 2026-09-27.** The source check and the typed handle are retired: a tool reaches
+other players — directly or through all-tools sharing — once its maker has a Discord account linked,
+and listing asks for a source link that DrMurloc reads by hand. See
+[toolmaker-requirements.md §10](toolmaker-requirements.md).
 
 ## 17. Unverified
 

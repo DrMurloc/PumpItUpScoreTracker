@@ -20,6 +20,10 @@ data, the published rules for being listed, and a way to stop a maker who breaks
 > - **One string in the voice sweep had no resx entry in any locale**, including `en-US`, so it fell
 >   back to its key and rendered English everywhere since #212. Fixed in passing.
 
+> **Superseded in part, 2026-09-27.** The source check and the typed Discord handle are retired. The
+> one gate is now a Discord account **linked** to the maker's PIU Scores account — see §10. §2's
+> predicate, its reachability check, and the handle field below describe what shipped on 2026-08-03.
+
 ---
 
 ## 1. What this adds
@@ -43,6 +47,9 @@ CanBeSharedWithOthers =
    AND RepositoryCheckedAt is not null
    AND DiscordHandle is not null
 ```
+
+> **Superseded 2026-09-27** by §10: the predicate is `the maker has Discord linked`. The entry-point
+> table below still holds, with `ToolReach` in place of the two repository queries.
 
 **A tool that fails it can read exactly one player: its maker.** It still works — keys mint,
 webhooks fire, the maker is auto-connected to their own tool as before, and everything in
@@ -274,3 +281,80 @@ the gate's own machinery.
   so DrMurloc can reach them, and check nothing. A guild-membership gate would need a bot lookup and
   would still fail every maker who signed in with Google.
 - **The site-wide voice sweep** — ~37 further first-person-plural strings outside CommunityTools.
+
+## 10. The Discord link (2026-09-27)
+
+> Owner, 2026-09-27: *"let's remove the git hub check requirement. All it's going to do is make
+> people create fake github repos to register. I'll personally vet git repos if people go public with
+> their listing."* Then: *"lets require the discord link then"* and *"share with all tools works as
+> soon as you have discord linked. that gives me a identifier for them which is most of what I
+> want."*
+
+**What set it off.** A player followed PandaGames' invite link, pressed Connect, and the page died.
+The tool's source link 404s to anonymous visitors, so it had never been checked; the invite page
+offered Connect regardless; and the refusal `ConnectToolCommand` threw went uncaught, because the
+connect dialog carries none — by design for the rare session-mode race it was written for, and fatal
+here, where the refusal was certain.
+
+### The rule
+
+```
+CanTakePlayers = the maker has a Discord account linked to their PIU Scores account
+                 (scores.ExternalLogin, provider "Discord")
+              OR the tool is grandfathered
+```
+
+- **A linked account, not a typed handle.** Discord's own sign-in proves the account is the maker's,
+  and the link stores the Discord user id — an identifier nobody can type in by hand.
+- **The source check is gone.** No Check the link, no `RepositoryCheckedAt`. A source link is
+  optional until a maker asks to be listed; DrMurloc reads it during review.
+- **Listing needs a source link and a linked Discord.**
+- **A maker who unlinks Discord** stops taking new players and leaves the all-tools pool. Players who
+  connected directly stay connected, the same way a deliberate grant always outlived the old gate.
+
+### Where it is enforced
+
+`ToolReach` (CommunityTools, Application) is the one place the rule is applied: Connect, the
+directory, a player's connections, the API's readable-players and can-read checks, the webhook
+fan-out, the invite preview, the console's player counts and the listing request. The link is read
+through `IUserReader.GetExternalLogins` — the port Discord role management already uses — so
+CommunityTools never reads Identity's tables. `EFToolRepository` keeps the SQL (direct shares, bans,
+blocks, the pool) and takes "the maker is reachable" as an input instead of deciding it.
+
+The all-tools pool in [api-v2-community-tools.md §5](api-v2-community-tools.md) now reads
+`T's maker has Discord linked` where it read the source and handle terms. Visibility is still not a
+term.
+
+### What people see
+
+| Who | Where | What |
+|---|---|---|
+| Player | Invite page | When the maker has not linked, the reason replaces the read-scope box and the Connect / Sign in buttons |
+| Maker | Console, Settings | **Contact & source**: the linked account, or Link Discord (returns to the console afterwards); the source link is optional |
+| Maker | Console, Players | While unlinked, a warning that nobody can connect through the invite links yet |
+| Maker | Setup wizard | The handle box is gone; the wizard says where to link, since leaving for Discord mid-wizard would lose what was typed |
+| DrMurloc | Review queue | The linked account with a link to its Discord profile; no reachability chip |
+| Player | Account | "Share my scores with community tools" names the new rule. No separate notice goes out |
+
+The account name comes from the bot: Discord's API answers a user id for any account, and the answer
+is cached. When Discord cannot answer, the console shows **Linked** with a View on Discord link in
+place of the name.
+
+### Data
+
+`RepositoryCheckedAt` and `DiscordHandle` leave the model and stay in `scores.Tool` with their data —
+the migration is emptied by hand, so the handles makers typed stay queryable for reaching anyone who
+has not linked yet.
+
+PIU Tracker keeps its grandfather. Its maker has Discord linked, so the exemption changes nothing
+today; it stays so the tool's players never depend on one account setting.
+
+### Also in this pass
+
+- **Logged-out visitors crashed three pages.** `/CommunityTools`, `/Developers` and the tool console
+  each load "your" data as they open, and an anonymous visitor has none. They are sent to sign in
+  now, the way `/Account` does.
+- **Sign-in returns you where you started.** `/Login` dropped a return address, so the invite page's
+  "You'll come back here after signing in" never held. The front door now passes `returnUrl` to
+  every sign-in button and the provider sign-in keeps it. New accounts still go to `/Setup` first
+  ([new-user-setup.md](new-user-setup.md) D13).
