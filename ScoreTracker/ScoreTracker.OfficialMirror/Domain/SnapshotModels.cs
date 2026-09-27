@@ -39,10 +39,11 @@ internal enum PlacementScope
 }
 
 /// <summary>
-///     One board player's best seen score on one chart, with what that chart is, so a caller can
-///     price it without a second read. <see cref="Score" /> is decimal because a placement's is.
+///     One board player's score on one chart in one sealed week, with what that chart is, so a
+///     caller can price it without a second read. <see cref="Score" /> is decimal because a
+///     placement's is.
 /// </summary>
-internal sealed record ChartBoardHigh(int PlayerId, Guid ChartId, string ChartType, int Level, decimal Score);
+internal sealed record ChartBoardScore(int PlayerId, Guid ChartId, string ChartType, int Level, decimal Score);
 
 /// <summary>
 ///     One chart board in one snapshot: how many rows it holds and the lowest score among them, which on a full

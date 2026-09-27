@@ -10,7 +10,7 @@ using ScoreTracker.SharedKernel.ValueTypes;
 namespace ScoreTracker.OfficialMirror.Infrastructure;
 
 /// <summary>
-///     Board players' PUMBILITY pools, rebuilt from the mirrored per-chart boards
+///     Board players' PUMBILITY pools, rebuilt from the latest sealed week's per-chart boards
 ///     (docs/design/hardmode-leaderboard.md §2). The mirror is the only thing that can price a
 ///     board row: a row carries a score and no plate, so the plate has to be inferred, and that
 ///     inference is this vertical's business.
@@ -63,28 +63,34 @@ internal sealed class OfficialPoolReader : IOfficialPoolReader, IOfficialPoolSou
     public async Task<IReadOnlyList<OfficialPricedPool>> GetPricedPools(MixEnum mix,
         CancellationToken cancellationToken)
     {
+        // The latest sealed week and nothing older, the same week the PUMBILITY peers are read from.
+        // A mix that has never sealed one has no board players to count.
+        var latest = await _snapshots.GetLatestSealed(mix, cancellationToken);
+        if (latest == null) return Array.Empty<OfficialPricedPool>();
+
         // OfficialOnly, and not by default: supplemented rows are this site's own additions to
         // piugame's boards, and counting them would let our data vote in our own census of what
         // the world plays (supplemented-leaderboards.md §7).
-        var highs = await _snapshots.GetChartBoardHighs(mix, PlacementScope.OfficialOnly, cancellationToken);
-        if (highs.Count == 0) return Array.Empty<OfficialPricedPool>();
+        var scores = await _snapshots.GetChartBoardScoresIn(mix, latest.Id, PlacementScope.OfficialOnly,
+            cancellationToken);
+        if (scores.Count == 0) return Array.Empty<OfficialPricedPool>();
 
         // Board players already linked to a site account are dropped: they count once, through
         // their own records, which carry real plates.
         var linked = await LinkedPlayerIds(mix, cancellationToken);
         var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
         var byPlayer = new Dictionary<int, List<OfficialPricedChart>>();
-        foreach (var high in highs)
+        foreach (var row in scores)
         {
-            if (linked.Contains(high.PlayerId)) continue;
-            if (!Enum.TryParse<ChartType>(high.ChartType, out var chartType)) continue;
+            if (linked.Contains(row.PlayerId)) continue;
+            if (!Enum.TryParse<ChartType>(row.ChartType, out var chartType)) continue;
             if (chartType is not (ChartType.Single or ChartType.Double)) continue;
-            var score = PhoenixScore.From((int)high.Score);
-            var value = scoring.GetScore(chartType, DifficultyLevel.From(high.Level), score,
+            var score = PhoenixScore.From((int)row.Score);
+            var value = scoring.GetScore(chartType, DifficultyLevel.From(row.Level), score,
                 ScoringConfiguration.ExpectedPlateForScore(score));
             if (value <= 0) continue;
-            (byPlayer.TryGetValue(high.PlayerId, out var list) ? list : byPlayer[high.PlayerId] = new())
-                .Add(new OfficialPricedChart(high.ChartId, chartType, value));
+            (byPlayer.TryGetValue(row.PlayerId, out var list) ? list : byPlayer[row.PlayerId] = new())
+                .Add(new OfficialPricedChart(row.ChartId, chartType, value));
         }
 
         return byPlayer.Select(kv => new OfficialPricedPool(kv.Key,

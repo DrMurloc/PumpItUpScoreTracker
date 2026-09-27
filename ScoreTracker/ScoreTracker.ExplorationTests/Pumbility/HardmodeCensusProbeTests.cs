@@ -165,8 +165,8 @@ public sealed class HardmodeCensusProbeTests
                 Add(reader.GetString(0), reader.GetGuid(1), reader.GetInt32(2),
                     reader.IsDBNull(3) ? null : PhoenixPlateHelperMethods.TryParse(reader.GetString(3)));
 
-        // Board pools: the best score the mirror holds per (player, chart) across every snapshot,
-        // plate inferred from the score because a board row never carries one.
+        // Board pools: each player's score per chart in the latest sealed week, the week the census
+        // reads, plate inferred from the score because a board row never carries one.
         const string boardSql = """
                                 SELECT 'B:' + CONVERT(varchar(20), p.PlayerId), l.ChartId, MAX(p.Score)
                                 FROM scores.OfficialLeaderboardPlacement p
@@ -174,6 +174,9 @@ public sealed class HardmodeCensusProbeTests
                                 LEFT JOIN scores.OfficialPlayer op ON op.Id = p.PlayerId
                                 WHERE l.LeaderboardType = 'Chart' AND l.MixId = @mix AND l.ChartId IS NOT NULL
                                   AND op.UserId IS NULL
+                                  AND p.SnapshotId = (SELECT TOP 1 s.Id FROM scores.OfficialLeaderboardSnapshot s
+                                                      WHERE s.MixId = @mix AND s.CompletedAt IS NOT NULL
+                                                      ORDER BY s.CompletedAt DESC)
                                 GROUP BY p.PlayerId, l.ChartId
                                 """;
         await using (var reader = await Read(boardSql))

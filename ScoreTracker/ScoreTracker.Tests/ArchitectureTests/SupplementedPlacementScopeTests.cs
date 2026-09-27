@@ -71,7 +71,7 @@ public sealed class SupplementedPlacementScopeTests
             // The chart-shaped reads. GetChartPlacementsFor was missing from this list and took no
             // scope, which is how supplemented rows reached the chart dialog's PUMBILITY board — a
             // board a player reads as piugame's own (bug check 2026-09-06).
-            "GetChartPlacementsFor", "GetChartScoresIn", "GetChartBoardDepths"
+            "GetChartPlacementsFor", "GetChartScoresIn", "GetChartBoardDepths", "GetChartBoardScoresIn"
         };
 
         // Split on the statement terminator, not on newlines: a signature wide enough to wrap

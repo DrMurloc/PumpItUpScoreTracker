@@ -328,26 +328,27 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
             .ToArrayAsync(ct);
     }
 
-    public async Task<IReadOnlyList<ChartBoardHigh>> GetChartBoardHighs(MixEnum mix, PlacementScope scope,
-        CancellationToken ct)
+    public async Task<IReadOnlyList<ChartBoardScore>> GetChartBoardScoresIn(MixEnum mix, int snapshotId,
+        PlacementScope scope, CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
         var mixId = MixIds.For(mix);
-        // Grouped in SQL rather than in memory: this is every placement on every chart board of
-        // every snapshot, and the answer is one row per player per chart.
+        // One snapshot is a range of the clustered key. Grouped so a chart the sweep saw under two
+        // board names, or a player a board lists twice, still reads as one row per player per chart.
         return await (
                 from placement in Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
                 join board in database.Set<OfficialLeaderboardEntity>()
                     on placement.LeaderboardId equals board.Id
                 join chart in database.Set<ChartEntity>() on board.ChartId equals chart.Id
                 join chartMix in database.Set<ChartMixEntity>() on chart.Id equals chartMix.ChartId
-                where board.MixId == mixId && board.LeaderboardType == "Chart" && board.ChartId != null
+                where placement.SnapshotId == snapshotId
+                      && board.MixId == mixId && board.LeaderboardType == "Chart" && board.ChartId != null
                       && chartMix.MixId == mixId
                 group new { placement.Score, chart.Type, chartMix.Level } by
                     new { placement.PlayerId, ChartId = chart.Id }
-                into highs
-                select new ChartBoardHigh(highs.Key.PlayerId, highs.Key.ChartId, highs.Min(h => h.Type),
-                    highs.Min(h => h.Level), highs.Max(h => h.Score)))
+                into scores
+                select new ChartBoardScore(scores.Key.PlayerId, scores.Key.ChartId, scores.Min(h => h.Type),
+                    scores.Min(h => h.Level), scores.Max(h => h.Score)))
             .ToArrayAsync(ct);
     }
 
